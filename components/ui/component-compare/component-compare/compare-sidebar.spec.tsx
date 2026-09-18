@@ -65,6 +65,27 @@ describe('CompareSidebar collapse', () => {
     expect(getByText('a')).toBeTruthy();
   });
 
+  it('does not arm the width transition in the same commit as the restored state', () => {
+    // both landing together makes the browser animate 280px -> 36px on every reload, which is the
+    // "slides shut on load" this feature is supposed to avoid.
+    localStorage.setItem(STORAGE_KEY, 'true');
+    const { container } = render(<CompareSidebar groups={groups} onSelect={() => {}} />);
+
+    const sidebar = container.querySelector('[data-collapsed]') as HTMLElement;
+    expect(sidebar).not.toBeNull();
+    expect(sidebar.className).not.toMatch(/animated/);
+  });
+
+  it('falls back to the default when moved to a scope with nothing stored', () => {
+    localStorage.setItem(STORAGE_KEY, 'true');
+    const { container, rerender } = render(<CompareSidebar groups={groups} onSelect={() => {}} />);
+    expect(container.querySelector('[data-collapsed]')).not.toBeNull();
+
+    rerender(<CompareSidebar groups={groups} onSelect={() => {}} collapseStorageKey="a-fresh-scope" />);
+    // the previous scope's preference must not carry over into one that has never been set
+    expect(container.querySelector('[data-collapsed]')).toBeNull();
+  });
+
   it('defers to the caller when collapse is controlled', () => {
     const changes: boolean[] = [];
     const { container } = render(

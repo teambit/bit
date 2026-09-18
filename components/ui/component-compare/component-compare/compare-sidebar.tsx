@@ -55,6 +55,7 @@ export function CompareSidebar({
   collapseStorageKey = DEFAULT_COLLAPSE_STORAGE_KEY,
 }: CompareSidebarProps) {
   const [remembered, remember, hydrated] = usePersistedToggle(collapseStorageKey, false);
+  const animated = useAnimateAfter(hydrated);
   // uncontrolled by default so every surface that renders the sidebar gets the memory for free
   const isControlled = collapsed !== undefined;
   const isCollapsed = isControlled ? collapsed : remembered;
@@ -72,9 +73,7 @@ export function CompareSidebar({
       className={compose(
         styles.sidebar,
         isCollapsed && styles.sidebarCollapsed,
-        // only animate once the remembered value has been applied, so a sidebar that was left
-        // collapsed does not visibly slide shut on every page load
-        hydrated && styles.animated,
+        animated && styles.animated,
         className
       )}
       data-collapsed={isCollapsed || undefined}
@@ -265,6 +264,27 @@ function SidebarComponentItem({ item, isSelected, selectedFile, onSelect, defaul
       )}
     </div>
   );
+}
+
+/**
+ * True from the frame *after* `ready`, never in the same one.
+ *
+ * The restored collapse state and the transition class must not land in the same commit: the browser
+ * would see a width change on a newly-transitionable element and animate 280px → 36px on every
+ * reload, which is exactly the "slides shut on load" this is meant to prevent. Waiting a frame means
+ * the restored width is already in place by the time transitions turn on, so only real toggles
+ * animate.
+ */
+function useAnimateAfter(ready: boolean): boolean {
+  const [animated, setAnimated] = useState(false);
+
+  useEffect(() => {
+    if (!ready || animated) return undefined;
+    const frame = requestAnimationFrame(() => setAnimated(true));
+    return () => cancelAnimationFrame(frame);
+  }, [ready, animated]);
+
+  return animated;
 }
 
 function compose(...classes: Array<string | false | undefined>): string {

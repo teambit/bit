@@ -6,6 +6,16 @@ import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
  */
 const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
+function read(storageKey: string, defaultValue: boolean): boolean {
+  try {
+    const stored = globalThis.localStorage?.getItem(storageKey);
+    if (stored === 'true' || stored === 'false') return stored === 'true';
+  } catch {
+    // storage unavailable — fall through to the default
+  }
+  return defaultValue;
+}
+
 /**
  * A boolean UI preference that survives reloads.
  *
@@ -15,9 +25,9 @@ const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : us
  * renders identical.
  *
  * The correction happens in a *layout* effect, so it lands before the browser paints and the reader
- * never sees a frame of the default. Callers still get `hydrated` — the value is only trustworthy
- * after that first commit, and a transition keyed off it would otherwise animate from a state that
- * was never really on screen.
+ * never sees a frame of the default. `hydrated` reports when that has happened: the value is only
+ * trustworthy afterwards, and a caller animating this preference has to hold its transition back
+ * until then or it animates from a state that was never really on screen.
  *
  * Storage failures are non-fatal: a preference that cannot be persisted (private mode, disabled
  * storage, quota) degrades to an in-memory toggle rather than breaking the surface using it.
@@ -27,17 +37,14 @@ export function usePersistedToggle(
   defaultValue: boolean
 ): [value: boolean, setValue: (next: boolean) => void, hydrated: boolean] {
   const [value, setValue] = useState(defaultValue);
-  const [hydrated, setHydrated] = useState(false);
+  // which key produced `value`. Without it, moving a mounted caller to a key that has nothing stored
+  // would leave the previous key's preference on screen instead of falling back to the default.
+  const [hydratedKey, setHydratedKey] = useState<string | undefined>(undefined);
 
   useIsomorphicLayoutEffect(() => {
-    try {
-      const stored = globalThis.localStorage?.getItem(storageKey);
-      if (stored === 'true' || stored === 'false') setValue(stored === 'true');
-    } catch {
-      // storage unavailable — keep the default
-    }
-    setHydrated(true);
-  }, [storageKey]);
+    setValue(read(storageKey, defaultValue));
+    setHydratedKey(storageKey);
+  }, [storageKey, defaultValue]);
 
   const update = useCallback(
     (next: boolean) => {
@@ -51,5 +58,5 @@ export function usePersistedToggle(
     [storageKey]
   );
 
-  return [value, update, hydrated];
+  return [value, update, hydratedKey === storageKey];
 }
