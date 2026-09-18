@@ -24,7 +24,6 @@ import type {
   CompareGroupByOption,
   CompareSidebarGroup,
   ComponentComparePair,
-  ComponentActionsContext,
 } from '@teambit/component.ui.component-compare.component-compare';
 import { InlineCompareEmpty } from '@teambit/component.ui.component-compare.context';
 import { ComponentUrl } from '@teambit/component.modules.component-url';
@@ -58,14 +57,12 @@ export type LaneCompareProps = {
   /** slot-contributed API diff insight renderers (from componentCompareUI.registerApiDiffInsight) */
   apiDiffInsights?: ApiDiffInsight[];
   /**
-   * Lets the host add its own per-component controls to each component's header — this is how a host
-   * with review affordances (bit.cloud's change-request view) attaches them to a component without
-   * lane-compare knowing anything about reviews.
-   *
-   * Must be referentially stable across renders; see `InlineComponentCompareProps['renderActions']`
-   * for why.
+   * Host-owned controls rendered in every component's header — this is how a host with review
+   * affordances (bit.cloud's change-request view) attaches them to a component without lane-compare
+   * knowing anything about reviews. The component reads which component it belongs to from
+   * `useComponentCompareIdentity()`.
    */
-  renderComponentActions?: (context: ComponentActionsContext) => React.ReactNode;
+  ComponentActions?: React.ComponentType;
 } & HTMLAttributes<HTMLDivElement>;
 
 type ViewMode = 'code' | 'preview' | 'docs' | 'dependencies' | 'tests' | 'config' | 'api';
@@ -213,7 +210,7 @@ function LaneCompareInline({
   groupBy: _groupByProp,
   envIcons,
   apiDiffInsights,
-  renderComponentActions,
+  ComponentActions,
   ...rest
 }: LaneCompareProps) {
   const { loadingLaneDiff, componentsToDiff, laneComponentDiffByCompId } =
@@ -326,16 +323,27 @@ function LaneCompareInline({
   const urlComponentId = searchParams.get('componentId') || undefined;
   const urlFile = searchParams.get('file') || undefined;
   const lastUrlSelection = useRef(`${urlComponentId ?? ''}|${urlFile ?? ''}`);
+  const pendingScroll = useRef<{ id: string; file?: string } | undefined>(undefined);
   useEffect(() => {
     const key = `${urlComponentId ?? ''}|${urlFile ?? ''}`;
     // seeded with the mount-time value, so this skips the first run and leaves the initial scroll
-    // below to handle page load (it waits for the diff to finish loading; this does not).
+    // below to handle page load.
     if (key === lastUrlSelection.current) return;
     lastUrlSelection.current = key;
     setSelectedIdState(urlComponentId);
     setSelectedFileState(urlFile);
-    if (urlComponentId) scrollToElement(diffPaneRef.current, urlComponentId, urlFile);
+    // recorded rather than scrolled to directly: a navigation can land mid-reload, when the pane is
+    // replaced by the skeleton and there is nothing to scroll. the effect below picks it up once the
+    // pane is back.
+    if (urlComponentId) pendingScroll.current = { id: urlComponentId, file: urlFile };
   }, [urlComponentId, urlFile]);
+
+  useEffect(() => {
+    const pending = pendingScroll.current;
+    if (!pending || loadingLaneDiff || !diffPaneRef.current) return;
+    pendingScroll.current = undefined;
+    scrollToElement(diffPaneRef.current, pending.id, pending.file);
+  }, [loadingLaneDiff, urlComponentId, urlFile]);
 
   // Scroll to selected component on initial page load from URL
   const initialScrollDone = useRef(false);
@@ -795,7 +803,7 @@ function LaneCompareInline({
                           accentColor={(c.changeType && ACCENT_COLORS[c.changeType]) || undefined}
                           host={host}
                           dataAttributes={componentDataAttrs.get(c.idStr)}
-                          renderActions={renderComponentActions}
+                          HeaderActions={ComponentActions}
                         />
                       ))}
                     </div>

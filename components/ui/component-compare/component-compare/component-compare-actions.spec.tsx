@@ -1,7 +1,8 @@
 import React from 'react';
 import { render } from '@testing-library/react';
 import { ComponentCompareHeader, InlineComponentCompare } from './component-compare';
-import type { ComponentActionsContext } from './component-compare';
+import { useComponentCompareIdentity } from './component-identity-context';
+import type { ComponentCompareIdentity } from './component-identity-context';
 
 // component-compare pulls in the API diff view, which pulls in shiki — an ESM-only package that
 // jest's transform does not process. None of it is reachable in this suite (panels stay unmounted,
@@ -32,42 +33,43 @@ describe('host-contributed component actions', () => {
     expect(container.querySelector('[class*="headerActions"]')).toBeNull();
   });
 
-  it('asks the host for actions with the identity of the component being rendered', () => {
-    const calls: ComponentActionsContext[] = [];
+  it('tells the actions component which component it is in, without being handed it', () => {
+    // the point of the context: the host writes a plain component and reads identity from a hook,
+    // rather than lane-compare threading a context object down through every panel.
+    const seen: Array<ComponentCompareIdentity | undefined> = [];
 
-    render(
-      <InlineComponentCompare
-        name="button"
-        baseId="teambit.base-ui/button@1.0.0"
-        compareId="teambit.base-ui/button@2.0.0"
-        renderActions={(context) => {
-          calls.push(context);
-          return <span>action</span>;
-        }}
-      />
-    );
+    function Actions() {
+      seen.push(useComponentCompareIdentity());
+      return <span>action</span>;
+    }
 
-    expect(calls).toEqual([
-      {
-        name: 'button',
-        // without the version: the stable identity of the row, which is what a host keys its own
-        // per-component data (reviews, feedback threads) by
-        componentId: 'teambit.base-ui/button',
-        baseId: 'teambit.base-ui/button@1.0.0',
-        compareId: 'teambit.base-ui/button@2.0.0',
-      },
-    ]);
-  });
-
-  it('renders what the host returned', () => {
     const { getByText } = render(
       <InlineComponentCompare
         name="button"
         baseId="teambit.base-ui/button@1.0.0"
         compareId="teambit.base-ui/button@2.0.0"
-        renderActions={() => <span>3 open</span>}
+        HeaderActions={Actions}
       />
     );
-    expect(getByText('3 open')).toBeTruthy();
+
+    expect(getByText('action')).toBeTruthy();
+    expect(seen[0]).toEqual({
+      name: 'button',
+      // without the version: the stable identity of the component, which is what a host keys its own
+      // per-component data (reviews, feedback threads) by
+      componentId: 'teambit.base-ui/button',
+      baseId: 'teambit.base-ui/button@1.0.0',
+      compareId: 'teambit.base-ui/button@2.0.0',
+    });
+  });
+
+  it('leaves the identity undefined outside a compare panel', () => {
+    let seen: ComponentCompareIdentity | undefined | 'unset' = 'unset';
+    function Probe() {
+      seen = useComponentCompareIdentity();
+      return null;
+    }
+    render(<Probe />);
+    expect(seen).toBeUndefined();
   });
 });
