@@ -299,7 +299,7 @@ export class ComponentWriterMain {
     // fixDirs* passes (which may still adjust writeToPath); otherwise fail here when the target dir is occupied.
     // the workspace root is never relocated (see relocateOccupiedDirs), so its own check runs either way.
     if (this.consumer && (!opts.writeToEmptyDir || componentRootDir === WORKSPACE_ROOT_DIR)) {
-      this.throwErrorWhenDirectoryNotEmpty(component, componentRootDir, existingComponentMap, opts, writeToPath);
+      this.throwErrorWhenDirectoryNotEmpty(component, componentRootDir, existingComponentMap, opts);
     }
     return {
       workspace: this.workspace,
@@ -354,15 +354,15 @@ run "bit remove ${component.id.toStringWithoutVersion()}" first if the workspace
    * target directory already belongs to this exact component (so overriding it in place is safe).
    */
   private shouldSkipDirConflictCheck(
+    component: ConsumerComponent,
     componentDirRelative: PathLinuxRelative,
     componentMap: ComponentMap | null | undefined,
-    opts: ManyComponentsWriterParams,
-    writeToPath?: string
+    opts: ManyComponentsWriterParams
   ): boolean {
     if (opts.skipWritingToFs) return true;
     if (!componentMap) return false;
     // no writeToPath: it goes to the default directory. an existing componentMap means the component is not new.
-    if (!writeToPath) return true;
+    if (!this.getWriteToPath(component, opts)) return true;
     // writeToPath specified and that directory is already used for that component. compare against the
     // normalized componentDirRelative (not the raw opts.writeToPath, which may be absolute/OS-specific).
     return componentMap.rootDir === componentDirRelative;
@@ -471,10 +471,9 @@ use --override to overwrite them`
     component: ConsumerComponent,
     componentDirRelative: PathLinuxRelative,
     componentMap: ComponentMap | null | undefined,
-    opts: ManyComponentsWriterParams,
-    writeToPath?: string
+    opts: ManyComponentsWriterParams
   ) {
-    if (this.shouldSkipDirConflictCheck(componentDirRelative, componentMap, opts, writeToPath)) return;
+    if (this.shouldSkipDirConflictCheck(component, componentDirRelative, componentMap, opts)) return;
 
     const componentDir = this.consumer.toAbsolutePath(componentDirRelative);
     if (!fs.pathExistsSync(componentDir)) return;
@@ -523,7 +522,7 @@ either use --path to specify a different directory or modify "defaultDirectory" 
       // the workspace root is a target only for a workspace-root component, and "._1" is not the
       // workspace root. its conflicts are handled by throwForOccupiedWorkspaceRoot.
       if (currentDir === WORKSPACE_ROOT_DIR) return;
-      if (this.shouldSkipDirConflictCheck(currentDir, componentMap, opts)) return;
+      if (this.shouldSkipDirConflictCheck(componentWriter.component, currentDir, componentMap, opts)) return;
       const unavailableReason = this.getDirUnavailableReason(currentDir, componentMap);
       if (!unavailableReason) return;
 

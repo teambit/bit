@@ -241,6 +241,44 @@ describe('writing the workspace-root component in the same batch as a component 
   });
 });
 
+describe('deciding whether the directory-conflict check applies to a component', () => {
+  /**
+   * the decision turns on whether *this* component was asked to go somewhere, which is not the same
+   * question as the directory it ends up at: without --path that directory is the default one, and
+   * with --path-per-id the batch-level path answers for the wrong component. so it is resolved the
+   * same way the write itself resolves it.
+   */
+  function shouldSkip(opts: Record<string, any>, rootDir?: string, dir = 'some-dir') {
+    const main = Object.create(ComponentWriterMain.prototype);
+    const component = { id: { toStringWithoutVersion: () => 'my-scope/comp1' } };
+    return main.shouldSkipDirConflictCheck(component, dir, rootDir === undefined ? undefined : { rootDir }, opts);
+  }
+
+  it('should check a component asked for a directory it does not already own', () => {
+    expect(shouldSkip({ writeToPath: 'some-dir' }, 'other-dir')).to.be.false;
+  });
+
+  it('should skip a component asked for the directory it holds today, it overrides itself in place', () => {
+    expect(shouldSkip({ writeToPath: 'some-dir' }, 'some-dir')).to.be.true;
+  });
+
+  it('should skip a tracked component that was asked for nothing, it goes to its default directory', () => {
+    expect(shouldSkip({}, 'other-dir')).to.be.true;
+  });
+
+  it('should take the path asked for this component, not the one asked for the batch', () => {
+    expect(shouldSkip({ writeToPathPerId: { 'my-scope/comp1': 'some-dir' } }, 'other-dir')).to.be.false;
+  });
+
+  it('should check a component that is not tracked yet, whatever was asked for it', () => {
+    expect(shouldSkip({})).to.be.false;
+  });
+
+  it('should skip everything when nothing is written to the filesystem at all', () => {
+    expect(shouldSkip({ skipWritingToFs: true, writeToPath: 'some-dir' }, 'other-dir')).to.be.true;
+  });
+});
+
 describe('the destination of an already tracked workspace-root component', () => {
   it('should be the workspace root, whatever path the caller derived without --path', async () => {
     const writer = Object.create(ComponentWriter.prototype);
