@@ -24,7 +24,6 @@
   "teambit.dependencies/pnpm",
   "teambit.compilation/multi-compiler",
   "teambit.ui-foundation/ui",
-  "teambit.scope/gc",
   "teambit.generator/generator",
   "teambit.envs/envs",
   "teambit.envs/env",

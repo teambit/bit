@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import type { Command, CommandOptions } from '@teambit/cli';
 import { arrowSymbol, formatHint, formatItem, formatSuccessSummary, formatTitle, joinSections } from '@teambit/cli';
 import { BitError } from '@teambit/bit-error';
-import type { GcMain } from './gc.main.runtime';
+import type { ClearCacheMain } from './clear-cache.main.runtime';
 import type { GcResult } from './workspace-garbage-collector';
 
 export type GcCmdOpts = {
@@ -46,7 +46,7 @@ export class GcCmd implements Command {
   loader = true;
   skipWorkspace = true;
 
-  constructor(private gc: GcMain) {
+  constructor(private clearCache: ClearCacheMain) {
     this.extendedDescription = `a workspace keeps every version of every component it has ever imported. each new version brings
 the source files of that version with it, and nothing removes the ones it superseded, so the local
 scope keeps growing - often to several gigabytes.
@@ -69,7 +69,7 @@ keeps all history, since there the scope is the source of truth rather than a ca
 
   async report(args: [], opts: GcCmdOpts) {
     if (opts.restore || opts.restoreOverwrite) {
-      await this.gc.restore(Boolean(opts.restoreOverwrite));
+      await this.clearCache.restoreGarbageCollected(Boolean(opts.restoreOverwrite));
       return formatSuccessSummary('restored the objects of the previous run');
     }
     const result = await this.runGc(opts);
@@ -79,14 +79,14 @@ keeps all history, since there the scope is the source of truth rather than a ca
 
   async json(args: [], opts: GcCmdOpts) {
     if (opts.restore || opts.restoreOverwrite) {
-      await this.gc.restore(Boolean(opts.restoreOverwrite));
+      await this.clearCache.restoreGarbageCollected(Boolean(opts.restoreOverwrite));
       return { restored: true };
     }
     return (await this.runGc(opts)) || { completed: true };
   }
 
   private async runGc(opts: GcCmdOpts) {
-    return this.gc.garbageCollect({
+    return this.clearCache.garbageCollect({
       dryRun: opts.dryRun,
       verbose: opts.verbose,
       backup: opts.backup,

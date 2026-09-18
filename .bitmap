@@ -737,20 +737,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/fs/remove-empty-dir"
     },
-    "gc": {
-        "name": "gc",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.scope",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/scope/gc",
-        "config": {
-            "teambit.harmony/envs/core-aspect-env@2.1.1": {},
-            "teambit.envs/envs": {
-                "env": "teambit.harmony/envs/core-aspect-env"
-            }
-        }
-    },
     "generator": {
         "name": "generator",
         "scope": "teambit.generator",
