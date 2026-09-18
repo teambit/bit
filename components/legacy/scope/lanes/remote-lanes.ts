@@ -150,6 +150,31 @@ export class RemoteLanes {
     }
   }
 
+  /**
+   * every head this scope tracks for a remote, keyed by component-id, the default lane (main)
+   * included. unlike `getAllRemoteLaneIds`, nothing is filtered out - the garbage collector needs
+   * all of them, since a head we track for a remote must never be deleted.
+   */
+  async getAllRefsPerComponent(): Promise<Map<string, Ref[]>> {
+    // `dot: true` because a scope or lane name may start with a dot, and glob skips those by
+    // default. missing one here would let the collector delete a head it must keep.
+    const matches = await glob(path.join('*', '*'), { cwd: this.basePath, dot: true });
+    const laneIds = matches
+      .map((match) => match.split(path.sep))
+      .map(([head, ...tail]) => LaneId.from(tail.join('/'), head));
+    const refsPerComponent = new Map<string, Ref[]>();
+    await pMapSeries(laneIds, async (laneId) => {
+      const laneComponents = await this.getRemoteLane(laneId);
+      laneComponents.forEach(({ id, head }) => {
+        const key = id.toStringWithoutVersion();
+        const existing = refsPerComponent.get(key);
+        if (existing) existing.push(head);
+        else refsPerComponent.set(key, [head]);
+      });
+    });
+    return refsPerComponent;
+  }
+
   async getAllRemoteLaneIds(): Promise<LaneId[]> {
     const matches = await glob(path.join('*', '*'), { cwd: this.basePath });
     // in the future, lane-name might have slashes, so until the first slash is the scope.

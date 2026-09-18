@@ -16,6 +16,9 @@ export const errorSymbol = chalk.red('\u2716');
 /** Neutral bullet for informational items (no success/failure connotation) */
 export const bulletSymbol = chalk.dim('\u203A');
 
+/** Transition between a before and an after value, e.g. a size before and after a cleanup */
+export const arrowSymbol = chalk.dim('\u2192');
+
 /** Format a single item with 3-space indent + symbol + text. Defaults to bullet symbol. */
 export function formatItem(text: string, symbol?: string): string {
   const s = symbol ?? bulletSymbol;

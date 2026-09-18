@@ -47,6 +47,7 @@ export { ComponentVersion } from './component-version';
 export { validateVersionInstance } from './version-validator';
 export { typesObj, typesToObject, Types } from './object-registrar';
 export { GarbageCollectorOpts, ScopeDescriptor } from './scope';
+export { DELETED_OBJECTS_DIR } from './garbage-collector';
 export { loadScopeIfExist } from './scope-loader';
 export { ScopeComponentsImporter, errorIsTypeOfMissingObject } from './component-ops/scope-components-importer';
 export { multipleVersionDependenciesToConsumer, VersionDependencies } from './version-dependencies';

@@ -388,6 +388,13 @@ auto-format component source code
 formats component files using the formatter configured by each component's environment (Prettier, etc.). by default formats all components. use --changed to format only new and modified components. supports check mode to verify formatting without making changes.
 Flags: --changed, --check, --json
 
+## bit gc
+
+remove objects from the local scope that are no longer needed
+
+a workspace keeps every version of every component it has ever imported. each new version brings the source files of that version with it, and nothing removes the ones it superseded, so the local scope keeps growing - often to several gigabytes. this command removes the versions nothing points at anymore. it keeps the version each component is checked out at, every head (of the workspace, of its lanes and of the remotes it tracks), anything snapped locally and not exported yet, and the dependencies of all of those. everything it removes can be fetched again from the remote on demand, which bit already does whenever a version it needs is not in the local scope. the trade-off is that history is no longer local: "bit log", "bit blame" and diffing against an old version will fetch from the remote instead of answering offline. use --keep-versions to keep the last few versions of each workspace component if that matters to you. run with --dry-run first to see how much there is to gain. in a bare scope (a scope that is not backed by a workspace) this instead runs the collector that keeps all history, since there the scope is the source of truth rather than a cache.
+Flags: --dry-run, --keep-versions <number>, --backup, --restore, --restore-overwrite, --verbose, --json
+
 ## bit git <sub-command>
 
 Git utilities for Bit repositories

@@ -21,6 +21,7 @@ system <sub-command> - access system-level operations and debugging tools
 Subcommands: log, tail-log
 doctor [diagnosis-name] - diagnose and troubleshoot workspace issues
 clear-cache - remove cached data to resolve stale data issues
+gc - remove objects from the local scope that are no longer needed
 
 Workspace commands
 details - show expanded details from the last command that provided them (e.g. tag, snap)
