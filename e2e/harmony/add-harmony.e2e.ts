@@ -339,6 +339,48 @@ describe('add command on Harmony', function () {
       });
     });
   });
+  describe('a member imported on its own into a workspace that has no root', () => {
+    let rootIdWithVersion: string;
+    let bitMapAfterImport: Record<string, any>;
+    const rootDataOf = (id: string) =>
+      helper.command.catComponent(id).extensions.find((ext) => ext.name === 'teambit.workspace/workspace-root')?.data;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1";\n');
+      helper.command.addComponent('comp1', { i: 'comp1' });
+      helper.fs.outputFile('README.md', '# workspace root\n');
+      helper.command.addComponent('.', { i: 'ws-root' });
+      helper.command.tagAllWithoutBuild('--ignore-issues "*"');
+      helper.command.export();
+      rootIdWithVersion = `${helper.scopes.remote}/ws-root@0.0.1`;
+
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponentWithoutInstall('comp1');
+      bitMapAfterImport = helper.bitMap.read();
+    });
+    it('should carry the root it was tagged in as aspect data on the version it imported', () => {
+      expect(rootDataOf('comp1@0.0.1')).to.deep.equal({ root: rootIdWithVersion });
+    });
+    it('should not bring the root component along, the pointer is provenance and not a dependency', () => {
+      expect(bitMapAfterImport).to.not.have.property('ws-root');
+      expect(helper.command.listParsed().map((comp) => comp.id)).to.deep.equal([`${helper.scopes.remote}/comp1`]);
+    });
+    describe('tagging it here, where there is no root to record', () => {
+      before(() => {
+        helper.command.tagAllWithoutBuild('--unmodified');
+      });
+      it('should drop the root of the workspace it came from, not carry it into the new version', () => {
+        // a version naming a root it was never made in would send a consumer after the wrong root
+        // files. aspect data is recomputed per tag rather than inherited from the model, so the
+        // pointer does not survive - the entry itself does, carried by its (empty) config.
+        expect(rootDataOf('comp1@0.0.2')?.root).to.be.undefined;
+      });
+      it('should leave the version it was imported at untouched', () => {
+        expect(rootDataOf('comp1@0.0.1')).to.deep.equal({ root: rootIdWithVersion });
+      });
+    });
+  });
   describe('env of the workspace-root component', () => {
     // one status per workspace state, the assertions read from it
     let status: Record<string, any>;
