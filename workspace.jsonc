@@ -628,7 +628,7 @@
         "stringify-package": "1.0.1",
         "strip-ansi": "6.0.0",
         "stylus-lookup": "3.0.2",
-        "subscriptions-transport-ws": "0.9.18",
+        "subscriptions-transport-ws": "0.9.19",
         "symlink-dir": "^9.0.0",
         "table": "6.7.3",
         "tar": "7.4.3",
