@@ -23,11 +23,7 @@ import { ObjectList } from './object-list';
 import BitRawObject from './raw-object';
 import Ref from './ref';
 import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
-import {
-  getMaxSizeForObjects,
-  getMaxBytesForObjects,
-  createInMemoryCache,
-} from '@teambit/harmony.modules.in-memory-cache';
+import { getCacheOptionsForObjects, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { ScopeMeta, Lane, ModelComponent } from '../models';
 
 type ContentTransformer = (content: Buffer) => Buffer;
@@ -51,7 +47,7 @@ export default class Repository {
     this.scopeJson = scopeJson;
     this.onRead = (content: Buffer) => Repository.onPostObjectRead?.(content) || content;
     this.onPersist = (content: Buffer) => Repository.onPreObjectPersist?.(content) || content;
-    this.cache = createInMemoryCache({ maxSize: getMaxSizeForObjects(), maxBytes: getMaxBytesForObjects() });
+    this.cache = createInMemoryCache(getCacheOptionsForObjects());
   }
 
   get persistMutex() {
@@ -457,8 +453,7 @@ export default class Repository {
   }
 
   /**
-   * `size` is the approximate memory footprint of the object (its inflated content size), which is what
-   * bounds the cache. when unknown, a default estimate is used.
+   * `size` is the object's inflated content size (see `InMemoryCache.set`).
    */
   setCache(object: BitObject, size?: number) {
     this.cache.set(object.hash().toString(), object, size);
@@ -703,7 +698,7 @@ export default class Repository {
     if (this.scopeJson.groupName) options.gid = await resolveGroupId(this.scopeJson.groupName);
     const hash = object.hash();
     // update the cache. this also replaces the size-estimate of objects that were cached by `add()`.
-    if (this.cache.has(hash.toString())) this.setCache(object, inflatedSize);
+    if (this.cache.has(hash.toString())) this.cache.set(hash.toString(), object, inflatedSize);
     const objectPath = this.objectPath(hash);
     logger.trace(`repository._writeOne: ${objectPath}`);
     // Run hook to transform content pre persisting
