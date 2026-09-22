@@ -23,8 +23,13 @@ describe('isOwnedByNestedComponent', () => {
   it('should not claim a directory that merely shares a prefix with a nested one', () => {
     expect(isOwnedByNestedComponent('packages/comp10/index.js', nested)).to.be.false;
   });
-  it('should not claim the nested root-dir itself, only what is under it', () => {
-    expect(isOwnedByNestedComponent('packages/comp1', nested)).to.be.false;
+  it('should claim the nested root-dir itself, a file cannot sit where the directory is', () => {
+    // an older root carries it as a plain file, from before the component was extracted there.
+    // writing it over the directory fails the checkout with EISDIR - see isOwnedByNestedComponent
+    expect(isOwnedByNestedComponent('packages/comp1', nested)).to.be.true;
+  });
+  it('should not claim a sibling whose name merely starts with a nested one', () => {
+    expect(isOwnedByNestedComponent('packages/comp10', nested)).to.be.false;
   });
   it('should claim nothing when no component is nested, the ordinary case', () => {
     expect(isOwnedByNestedComponent('packages/comp1/index.js', [])).to.be.false;

@@ -38,7 +38,13 @@ export function isOwnedByNestedComponent(
   relativePath: PathLinuxRelative,
   nestedRootDirs: PathLinuxRelative[]
 ): boolean {
-  return nestedRootDirs.some((nestedRootDir) => relativePath.startsWith(`${nestedRootDir}/`));
+  return nestedRootDirs.some(
+    // the nested root-dir itself, not only what is under it: the root can carry a plain file exactly
+    // where the component's directory now is - it was one before the component was extracted there.
+    // a file and a directory cannot share a path, and writing the stale file over it fails the whole
+    // checkout with EISDIR. the directory is the nested component's, so the root gives up the path.
+    (nestedRootDir) => relativePath === nestedRootDir || relativePath.startsWith(`${nestedRootDir}/`)
+  );
 }
 
 export default class ComponentWriter {
