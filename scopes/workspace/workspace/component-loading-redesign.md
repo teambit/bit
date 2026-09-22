@@ -363,8 +363,7 @@ Observations:
   `loadDocs:false`/`loadCompositions:false`, but they are **ineffective on the batch path**:
   `workspace-component-loader.ts:479-480` calls `executeLoadSlot(component)` without forwarding
   `loadOpts` (the single-component path at :1083/:1092 does forward them).
-- `workspace.get` shows **3349 calls for 331 components (~10×)**. Not yet explained — likely
-  redundant re-entry through the aspect/env path.
+- `workspace.get` shows **3349 calls for 331 components (~10×)** — explained and tested in §4.4.
 
 ### 4.3 ⚠️ Aggregate self-time does not predict wall-time — validate before building
 
@@ -403,6 +402,46 @@ estimate produced **no measurable wall change**, and cost memory. Two lessons:
 **Method for the rest of this effort:** every perf claim lands with an interleaved wall-clock A/B on
 `scripts/bench-component-loading.js` and a peak-RSS comparison. No merges justified by profiler
 self-time alone.
+
+### 4.4 The `workspace.get` 10× call count: explained, tested, and not worth a cache
+
+Attributing every `workspace.get` call by caller (temporary stack-tally instrumentation, since
+removed) on a warm `bit status`:
+
+| caller                                         | calls | note                            |
+| ---------------------------------------------- | ----- | ------------------------------- |
+| `envs` → `getEnvComponentByEnvId` (`opts={}`)  | 2520  | resolving the **env** component |
+| the batch load path (one per component)        | 331   | expected                        |
+| `component-dependency-factory`                 | 329   | ~one per component              |
+| `envs` (with `loadExtensions/executeLoadSlot`) | 162   | a second envs path              |
+| misc                                           | 7     |                                 |
+
+**80% of all `workspace.get` calls are the envs aspect re-resolving the env component** — and this
+workspace has **4 distinct envs**. `getEnvComponentByEnvId`
+(`scopes/envs/envs/environments.main.runtime.ts`) does `host.get(envId)` on every call, and its
+callers (dependency-resolver, dev-files, preview, and the env-descriptor path) each run per
+component.
+
+Memoizing it by `envId` was implemented and measured:
+
+| metric                        | without memo | with memo | result                     |
+| ----------------------------- | ------------ | --------- | -------------------------- |
+| `workspace.get` calls         | 3349         | 835       | **−75%**                   |
+| `workspace.get` self-time     | 5.48s        | 5.09s     | −0.39s — **nearly free**   |
+| `bit status` wall (median, 9) | 9.59s        | 9.45s     | −0.14s (−1.5%), consistent |
+| peak RSS                      | ~1234MB      | ~1246MB   | +12MB, within noise        |
+
+**Conclusion: real but small, and the wrong fix.** Removing 75% of the calls moved
+`workspace.get` self-time by only 0.39s, which proves those 2514 calls were already cheap cache
+hits — the alarming 10× count was a **third red herring**, consistent with §4.3. The 1.5% wall gain
+is genuine but would be bought by adding a 12th ad-hoc cache, with its own invalidation surface, to
+a system whose stated core problem (§1.2) is _~11 uncoordinated caches_. That is the anti-pattern
+this effort exists to remove.
+
+**Where it belongs instead:** this is direct evidence for the standalone **`EnvResolver`** of §2.4 —
+env identity is asked for constantly and should be resolvable from S0-S2 data with one owner and one
+cache, rather than by loading a full env Component through the general loader 2682 times. Fold it
+into Phase 5, and do not bolt on a point-memo before then.
 
 ---
 
@@ -461,6 +500,12 @@ self-time alone.
      `legacy-load-deps` 50% figure; **Phase 3 (cache consolidation) is promoted instead**, since the
      loadOpts-in-cache-key problem blocks every partial-loading idea in Phases 2 and 4. All further
      perf claims require an interleaved wall-clock A/B plus peak-RSS comparison.
+  6. **The `workspace.get` 10× count was chased down and also rejected** (§4.4). 80% of the 3349
+     calls are the envs aspect re-resolving one of only 4 distinct envs. Memoizing removes 75% of
+     the calls for −0.14s (−1.5%) wall — real, but it buys that by adding a 12th ad-hoc cache to the
+     ~11 the effort exists to consolidate. Recorded as evidence for the §2.4 `EnvResolver` (Phase 5)
+     instead. Net result of this session: three candidate quick wins investigated, **all three
+     rejected on measurement**, and the prioritization metric itself invalidated.
      PR #10445 closed unmerged (see §3 for the rationale). The abandoned May branch
      `refactor/component-loading-v2-take-3` (`UnifiedComponentLoader` behind `BIT_LOADER=new`) predates
      this document and is superseded by the phase plan — not to be resumed.
