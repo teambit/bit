@@ -109,6 +109,15 @@ path: ${err.path}`);
     return deflate(this.serialize());
   }
 
+  /**
+   * same as `compress`, but also returns the size of the uncompressed content, which approximates the
+   * memory footprint of the object.
+   */
+  async compressWithSize(): Promise<{ buffer: Buffer; inflatedSize: number }> {
+    const serialized = this.serialize();
+    return { buffer: await deflate(serialized), inflatedSize: serialized.byteLength };
+  }
+
   serialize(): Buffer {
     const buffer = this.toBuffer();
     return Buffer.concat([Buffer.from(this.getHeader(buffer)), buffer] as unknown as Uint8Array[]);

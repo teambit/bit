@@ -217,13 +217,13 @@ export default class Repository {
       // @ts-ignore @todo: fix! it should return BitObject | null.
       return null;
     }
-    const size = fileContentsRaw.byteLength;
+    const compressedSize = fileContentsRaw.byteLength;
     const fileContents = this.onRead(fileContentsRaw);
     // uncomment to debug the transformed objects by onRead
     // console.log('transformedContent load', ref.toString(), BitObject.parseSync(fileContents).getType());
     const { object: parsedObject, inflatedSize } = await BitObject.parseObjectWithSize(fileContents, objectPath);
     const maxSizeToCache = 100 * 1024; // 100KB
-    if (size < maxSizeToCache) {
+    if (compressedSize < maxSizeToCache) {
       // don't cache big files (mainly artifacts) to prevent out-of-memory
       this.setCache(parsedObject, inflatedSize);
     }
@@ -698,11 +698,12 @@ export default class Repository {
    * Symlink makes the index outdated.
    */
   async _writeOne(object: BitObject): Promise<boolean> {
-    const contents = await object.compress();
+    const { buffer: contents, inflatedSize } = await object.compressWithSize();
     const options: ChownOptions = {};
     if (this.scopeJson.groupName) options.gid = await resolveGroupId(this.scopeJson.groupName);
     const hash = object.hash();
-    if (this.cache.has(hash.toString())) this.cache.set(hash.toString(), object); // update the cache
+    // update the cache. this also replaces the size-estimate of objects that were cached by `add()`.
+    if (this.cache.has(hash.toString())) this.setCache(object, inflatedSize);
     const objectPath = this.objectPath(hash);
     logger.trace(`repository._writeOne: ${objectPath}`);
     // Run hook to transform content pre persisting

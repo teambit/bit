@@ -34,6 +34,14 @@ describe('LRUCacheAdapter', () => {
       cache.set('c', 'c');
       expect(cache.keys().sort()).to.deep.equal(['b', 'c']);
     });
+    it('should re-account the size of an entry that is set again', () => {
+      const cache = new LRUCacheAdapter<string>({ maxBytes: DEFAULT_ENTRY_SIZE * 2 });
+      cache.set('a', 'a'); // charged the default estimate
+      cache.set('b', 'b', 10);
+      cache.set('a', 'a', DEFAULT_ENTRY_SIZE * 2); // the real size is the whole budget, "b" must go
+      expect(cache.has('a')).to.be.true;
+      expect(cache.has('b')).to.be.false;
+    });
     it('should apply a count limit on top of the bytes limit when both are given', () => {
       const cache = new LRUCacheAdapter<string>({ maxBytes: 10_000, maxSize: 2 });
       cache.set('a', 'a', 1);
