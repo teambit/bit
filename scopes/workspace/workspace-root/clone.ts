@@ -180,11 +180,7 @@ class WorkspaceCloner {
   private async writeMembers(
     entries: VersionedBitmapEntry[]
   ): Promise<{ components: ComponentID[]; missing: string[] }> {
-    const writeToPathPerId: Record<string, string> = {};
-    entries.forEach((entry) => {
-      if (entry.rootDir === WORKSPACE_ROOT_DIR) return;
-      writeToPathPerId[entry.id] = resolveComponentDir(this.workspacePath, entry);
-    });
+    const writeToPathPerId = resolveWriteToPathPerId(this.workspacePath, entries);
     throwForOverlappingDirs(writeToPathPerId);
     const ids = Object.keys(writeToPathPerId);
     if (!ids.length) return { components: [], missing: [] };
@@ -316,6 +312,34 @@ export function resolveComponentDir(workspacePath: string, entry: VersionedBitma
     );
   }
   return target;
+}
+
+/**
+ * where each member the root lists is written to, by id.
+ *
+ * built through a Map rather than straight onto the object the importer takes, because an id read
+ * out of a remote `.bitmap` is an arbitrary string: assigning one that reads `__proto__` runs the
+ * inherited setter instead of creating an own property, and two entries can resolve to a single id
+ * (the key and the name/scope fields are independent, see readVersionedBitmapEntries) so the later
+ * one overwrites the earlier. either way that member leaves no trace here - it is absent from the
+ * import request, and absent from the missing-members report too, since that reports what the remote
+ * did not have. the clone comes out short of a component with nothing to say why, so a collision is
+ * refused instead.
+ */
+export function resolveWriteToPathPerId(
+  workspacePath: string,
+  entries: VersionedBitmapEntry[]
+): Record<string, string> {
+  const dirPerId = new Map<string, string>();
+  entries.forEach((entry) => {
+    if (entry.rootDir === WORKSPACE_ROOT_DIR) return;
+    if (dirPerId.has(entry.id)) {
+      throw new BitError(`unable to clone, the root component lists "${entry.id}" more than once`);
+    }
+    dirPerId.set(entry.id, resolveComponentDir(workspacePath, entry));
+  });
+  // defines every key as an own property, `__proto__` included
+  return Object.fromEntries(dirPerId);
 }
 
 /**

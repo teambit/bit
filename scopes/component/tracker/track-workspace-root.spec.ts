@@ -214,6 +214,7 @@ describe('tracking the workspace root', function () {
       tracked = await setupWorkspace({
         'index.js': 'module.exports = {};\n',
         'packages/comp1/index.js': 'module.exports = () => "comp1";\n',
+        'packages/nested-ws/.bitmap': '{}\n',
       });
       await tracked.tracker.addForCLI({
         componentPaths: [inWs(tracked, 'packages/comp1')],
@@ -233,6 +234,21 @@ describe('tracking the workspace root', function () {
             componentPaths: [tracked.workspacePath],
             id: 'ws-root',
             main: inWs(tracked, 'packages/comp1/index.js'),
+            override: false,
+            root: true,
+          }),
+        'was excluded from file list'
+      );
+    });
+    it('should refuse the map of a nested workspace too, which no scan yields either', async () => {
+      // it is kept out of every scan rather than dropped by an ignore rule, so the ignore rules have
+      // nothing to say about it - the check has to ask the scan patterns, not only them
+      await expectToReject(
+        () =>
+          tracked.tracker.addForCLI({
+            componentPaths: [tracked.workspacePath],
+            id: 'ws-root',
+            main: inWs(tracked, 'packages/nested-ws/.bitmap'),
             override: false,
             root: true,
           }),

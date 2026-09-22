@@ -3,11 +3,13 @@ import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
 import { ComponentID } from '@teambit/component-id';
+import { WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import {
   ensureEmptyDir,
   resolveClonePath,
   resolveComponentDir,
   resolveThroughExistingAncestors,
+  resolveWriteToPathPerId,
   throwForOverlappingDirs,
   topmostAbsentDir,
 } from './clone';
@@ -249,5 +251,40 @@ describe('throwForOverlappingDirs', () => {
   it('should not read a shared prefix as containment', () => {
     const dirs = { a: path.join(ws, 'comps/a'), b: path.join(ws, 'comps/a-b') };
     expect(() => throwForOverlappingDirs(dirs)).to.not.throw();
+  });
+});
+
+describe('resolveWriteToPathPerId', () => {
+  const ws = path.resolve(os.tmpdir(), 'ws');
+  it('should place every member the root lists at the directory it recorded', () => {
+    const entries = [
+      { id: 'scope/a', rootDir: 'comps/a' },
+      { id: 'scope/b', rootDir: 'comps/b' },
+    ];
+    expect(resolveWriteToPathPerId(ws, entries)).to.deep.equal({
+      'scope/a': path.join(ws, 'comps/a'),
+      'scope/b': path.join(ws, 'comps/b'),
+    });
+  });
+  it('should leave out the root itself, it is written before the members', () => {
+    const entries = [
+      { id: 'scope/root', rootDir: WORKSPACE_ROOT_DIR },
+      { id: 'scope/a', rootDir: 'comps/a' },
+    ];
+    expect(Object.keys(resolveWriteToPathPerId(ws, entries))).to.deep.equal(['scope/a']);
+  });
+  it('should keep an id reading __proto__ rather than let it set the prototype and vanish', () => {
+    // a remote map names it, so the id is not bit's to trust. assigned onto an object literal it
+    // would leave no own property and the member would be dropped from the import, unreported
+    const result = resolveWriteToPathPerId(ws, [{ id: '__proto__', rootDir: 'comps/a' }]);
+    expect(Object.keys(result)).to.deep.equal(['__proto__']);
+    expect(Object.getPrototypeOf(result)).to.equal(Object.prototype);
+  });
+  it('should refuse two entries resolving to one id, the later would overwrite the earlier', () => {
+    const entries = [
+      { id: 'scope/a', rootDir: 'comps/a' },
+      { id: 'scope/a', rootDir: 'comps/a-again' },
+    ];
+    expect(() => resolveWriteToPathPerId(ws, entries)).to.throw('more than once');
   });
 });
