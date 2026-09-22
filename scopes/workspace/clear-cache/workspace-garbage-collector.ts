@@ -122,10 +122,15 @@ ${list}`);
 
   const versionSizes = new Map<string, number>();
   const refsByType = new Map<string, Ref[]>();
+  const recentlyWrittenVersions: string[] = [];
+  const settledBefore = startedAt - RECENT_WRITE_MARGIN_MS;
   let totalSize = 0;
-  allObjects.forEach(({ ref, type, size }) => {
+  allObjects.forEach(({ ref, type, size, mtimeMs }) => {
     totalSize += size;
-    if (type === Version.name) versionSizes.set(ref.toString(), size);
+    if (type === Version.name) {
+      versionSizes.set(ref.toString(), size);
+      if (mtimeMs > settledBefore) recentlyWrittenVersions.push(ref.toString());
+    }
     const existing = refsByType.get(type);
     if (existing) existing.push(ref);
     else refsByType.set(type, [ref]);
@@ -225,19 +230,44 @@ ${list}`);
   // and `bit stash load` reads the parent of the stashed snap as the base of its three-way merge.
   // they arrive as bare hashes with no component to resolve them against, so the ancestry is
   // walked directly rather than through `keepUnexportedHistory`.
-  const bareRoots = compact([
-    ...scope.stagedSnaps.getAll(),
-    ...(await getStashedHashes(scope.path)),
-    ...repo.unmergedComponents.getComponents().flatMap((unmerged) => [
+  const bareRoots = compact([...scope.stagedSnaps.getAll(), ...(await getStashedHashes(scope.path))]).map((hash) =>
+    hash.toString()
+  );
+  await keepAncestryOf(bareRoots);
+
+  // a merge that hasn't been resolved yet. the incoming side may have been imported from one scope
+  // in order to be exported onward to another, and it's the target's head that bounds what export
+  // has to send - not the head of the scope it came from. rather than work out which remote is
+  // which, the chain is kept whole: an unresolved merge is a passing state on a handful of
+  // components, so keeping more of it than strictly needed costs little and guessing wrong here
+  // breaks the merge.
+  const unmergedRoots = compact(
+    repo.unmergedComponents.getComponents().flatMap((unmerged) => [
       unmerged.head,
       // `unrelated` is a boolean on entries written by older versions, which carry no extra hashes.
       ...(typeof unmerged.unrelated === 'object'
         ? [unmerged.unrelated.headOnCurrentLane, unmerged.unrelated.unrelatedHead]
         : []),
-    ]),
-  ]).map((hash) => hash.toString());
-  await keepAncestryOf(bareRoots);
+    ])
+  ).map((hash) => hash.toString());
+  await keepAncestryOf(unmergedRoots, { stopAtRemote: false });
+
   await keepUnexportedHistory();
+
+  /**
+   * a version written around the time this run started is one nobody may be pointing at yet: an
+   * import or a snap writes the `Version` and its `Source` objects first and updates the
+   * `ModelComponent` after, so a run that reads the components in between sees garbage that isn't.
+   *
+   * it goes in as a root rather than being skipped when candidates are picked, because that is
+   * what carries its `Source` objects with it. sparing the version alone would leave exactly the
+   * state this collector exists to avoid - a version that looks complete with its files gone, so
+   * the importer never fetches and something fails later trying to read them.
+   *
+   * this narrows the window rather than closing it. only a scope-wide lock held across every
+   * object write would close it, and there is none today. the cost of being wrong is one more run.
+   */
+  recentlyWrittenVersions.forEach(addRoot);
 
   if (keepVersions > 0) await keepRecentVersions();
 
@@ -266,18 +296,10 @@ ${list}`);
   const deletedByType: { [type: string]: { count: number; size: number } } = {};
   let deletedSize = 0;
   /**
-   * anything written around the time this run started is left alone.
-   *
-   * an import or a snap writes its `Version` and `Source` objects first and only then points the
-   * `ModelComponent` at them. a run that reads the components in between sees objects nothing
-   * refers to yet and would take them for garbage. an object that has been sitting here longer
-   * than the margin cannot be in that gap.
-   *
-   * this narrows the window rather than closing it - only a scope-wide lock held across every
-   * object write would do that, and there is none today. the cost of being wrong is one more run
-   * to collect them.
+   * the other half of the recent-write margin. a fresh `Version` was kept as a root above, which
+   * brought its files with it; this catches a `Source` written just before the `Version` that will
+   * refer to it, which no root can speak for yet.
    */
-  const settledBefore = startedAt - RECENT_WRITE_MARGIN_MS;
   let recentlyWritten = 0;
   allObjects.forEach(({ ref, type, size, mtimeMs }) => {
     if (type !== Version.name && type !== Source.name) return;
@@ -331,7 +353,7 @@ ${list}`);
    * directly - and stops at the same boundary, a snap the remote already has. past that point the
    * history is re-fetchable, which is the history this collector exists to prune.
    */
-  async function keepAncestryOf(hashes: string[]) {
+  async function keepAncestryOf(hashes: string[], { stopAtRemote = true } = {}) {
     const seen = new Set<string>();
     const queue = [...hashes];
     while (queue.length) {
@@ -341,7 +363,7 @@ ${list}`);
       // a hash we don't have marks the edge of what was ever fetched - nothing to keep or walk
       if (!versionSizes.has(hash)) continue;
       addRoot(hash);
-      if (remoteRefs.has(hash)) continue;
+      if (stopAtRemote && remoteRefs.has(hash)) continue;
       const version = (await Ref.from(hash).load(repo)) as Version | undefined;
       if (!version) continue;
       version.parents.forEach((parent) => queue.push(parent.toString()));

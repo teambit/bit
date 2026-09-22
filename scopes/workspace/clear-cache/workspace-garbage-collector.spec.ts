@@ -161,8 +161,12 @@ describe('collectGarbageInWorkspace', () => {
         [ComponentID.fromObject({ scope: COMP_SCOPE, name: COMP_NAME }).changeVersion('0.0.2')],
         {}
       );
-      expect(result.deletedObjects).to.equal(1); // only the Source, not the Version just touched
+      expect(result.deletedObjects).to.equal(0);
       expect(await objectExists(Ref.from(VERSION_HASHES['0.0.1']))).to.be.true;
+      // the files go with it. a version kept while its sources are deleted looks complete to the
+      // importer, so it never fetches and something fails later trying to read them - the one
+      // state this collector must never produce.
+      expect(await objectExists(sources['0.0.1'].hash())).to.be.true;
     });
 
     it('should report what it deleted', async () => {
