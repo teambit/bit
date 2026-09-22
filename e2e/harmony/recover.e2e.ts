@@ -1,10 +1,7 @@
 import { IssuesClasses } from '@teambit/component-issues';
-import chai, { expect } from 'chai';
-import chaiFs from 'chai-fs';
+import { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import { Extensions } from '@teambit/legacy.constants';
-
-chai.use(chaiFs);
 
 describe('bit recover command', function () {
   this.timeout(0);
@@ -369,8 +366,9 @@ describe('bit recover command', function () {
       before(() => {
         helper.scopeHelper.setWorkspaceWithRemoteScope();
         helper.fixtures.populateComponents(2);
-        helper.command.tagWithoutBuild();
-        helper.command.export();
+        // no tag/export here on purpose: this asserts that a pattern matching zero SOFT-DELETED
+        // components errors out, and nothing is soft-deleted in this workspace either way. the
+        // tag+export this used to run produced history the assertion never looks at.
       });
       it('should throw an error when no soft-deleted components match', () => {
         expect(() => helper.command.recover('nonexistent*')).to.throw('no soft-deleted components found');
