@@ -1,13 +1,7 @@
-import chai, { expect } from 'chai';
+import { expect } from 'chai';
 import path from 'path';
-import chaiFs from 'chai-fs';
-import assertArrays from 'chai-arrays';
 
 import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
-
-chai.use(chaiFs);
-
-chai.use(assertArrays);
 
 describe('pkg extension', function () {
   this.timeout(0);
@@ -66,9 +60,6 @@ describe('pkg extension', function () {
       });
     });
   });
-  // TODO: implement once we can extend a specific env with new methods (to apply config changes)
-  // and maybe to also apply custom compiler which change props
-  describe.skip('config added by an env', function () {});
   describe('config added by extension', function () {
     const EXTENSIONS_BASE_FOLDER = 'extension-add-config';
     const config = { key: 'val' };
@@ -107,17 +98,12 @@ describe('pkg extension', function () {
         const packageJson = helper.packageJson.read(isTypeCapsuleDir);
         expect(packageJson).to.not.have.property('my-custom-key');
       });
-      it.skip('should have the updated config in another extension asks for the component', function () {});
     });
-    describe.skip('conflict between few extensions on simple config', function () {
-      it.skip('should merge them', function () {});
-    });
-    describe.skip('conflict between extension and user overrides ', function () {
-      it.skip('should prefer user config', function () {});
-    });
-    describe.skip('extensions that add protected fields', function () {
-      // dependencies, devDeps, peerDeps, overrides, name, main file
-      it.skip('should ignore all protected fields', function () {});
-    });
+    // still uncovered, tracked here rather than as empty describe.skip/it.skip stubs:
+    // - config added by an env (needs the ability to extend a specific env with new methods)
+    // - another extension asking for the component's config
+    // - conflict resolution: between two extensions, and between an extension and user overrides
+    // - extensions attempting to set protected fields (dependencies, devDeps, peerDeps, overrides,
+    //   name, main file) should be ignored
   });
 });
