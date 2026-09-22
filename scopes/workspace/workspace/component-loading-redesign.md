@@ -204,9 +204,10 @@ earlier ones teach us).
 ### Phase 2 — Quick perf wins on existing seams
 
 - [x] Benchmark harness committed + baseline recorded (see §4) — **gate for the rest of the phase**
-- [ ] **Forward `loadOpts` in the batch `executeLoadSlot` path** (`workspace-component-loader.ts:479-480`)
-      — prerequisite that makes the existing `loadDocs`/`loadCompositions` opt-outs actually work
-- [ ] Default `loadDocs: false, loadCompositions: false` for non-UI flows (~1.9s of `status`, §4.2)
+- [x] ~~Forward `loadOpts` in the batch `executeLoadSlot` path~~ — **implemented, measured, rejected.**
+      Halved `on-load` aggregate self-time with **no wall change** and **+67MB RSS** (§4.3). Not merged.
+- [ ] ~~Default `loadDocs: false, loadCompositions: false` for non-UI flows~~ — **blocked**: `status`
+      already sets them; they can't take effect until the cache stops keying on them (Phase 3)
 - [ ] Lazy file contents in `ModelComponent.toConsumerComponent` (targets `graph`, and the RSS trend)
 - [ ] `bit deps usage`: ids + stored deps instead of full load
 - [ ] IDE metadata endpoint (`api-for-ide.ts`): S0-S2-level data only
@@ -338,45 +339,83 @@ Numbers below are aggregate self-time across ~313 components at ~6× concurrency
 
 ### 4.2 Re-profile 2026-09-22 (`bit status`, 331 components, 9.43s wall)
 
-`BIT_LOAD_PROFILE=1 bit status`, aggregate self-time 68.1s across ~7.2× effective concurrency
-(so `~wall ≈ self / 7.2`).
+`BIT_LOAD_PROFILE=1 bit status`, aggregate self-time 68.1s (wall was 9.43s — the sum exceeds wall
+because concurrently-interleaved spans each count their own `await` time).
 
-| stage                                        | self-time | calls | ~wall | share |
-| -------------------------------------------- | --------- | ----- | ----- | ----- |
-| `legacy-load-deps`                           | 34.3s     | 331   | ~4.8s | 50%   |
-| `on-load` (docs, compositions, schema, pkg…) | 13.7s     | 2317  | ~1.9s | 20%   |
-| `dependency-resolution`                      | 6.7s      | 331   | ~0.9s | 10%   |
-| `workspace.get`                              | 5.5s      | 3349  | ~0.8s | 8%    |
-| `execute-load-slot` (own)                    | 4.5s      | 331   | ~0.6s | 7%    |
-| `consumer-fs-load`                           | ~0s self  | 7     | —     | —     |
+> **Do not read these as wall-time budgets.** §4.3 shows, by direct experiment, that cutting a row
+> here in half changed wall by nothing. Use this table to find _where to look_, never to size a win.
 
-**The structural finding holds, and is now the clear majority of the cost.**
+| stage                                        | self-time | calls | share of self-time |
+| -------------------------------------------- | --------- | ----- | ------------------ |
+| `legacy-load-deps`                           | 34.3s     | 331   | 50%                |
+| `on-load` (docs, compositions, schema, pkg…) | 13.7s     | 2317  | 20%                |
+| `dependency-resolution`                      | 6.7s      | 331   | 10%                |
+| `workspace.get`                              | 5.5s      | 3349  | 8%                 |
+| `execute-load-slot` (own)                    | 4.5s      | 331   | 7%                 |
+| `consumer-fs-load`                           | ~0s self  | 7     | —                  |
+
+Observations:
 
 - `legacy-load-deps` is **50% of all load self-time** — still dependency-object materialization on
   cache _hit_, not resolution. Per-component it improved (137ms → 104ms, −24%) but it did not change
-  shape. This is the single biggest lever and it is squarely Phase 4 (§2.1 defer dependency-object
-  construction), not a Phase-2 quick win. Confirmed twice now, three months apart.
-- `on-load` is **20%** across **2317 calls** (331 components × ~7 handlers) — the cheap, safe win.
-  `bit status` already passes `loadDocs:false`/`loadCompositions:false`, but they are **ineffective
-  on the batch path**: `workspace-component-loader.ts:479-480` calls `executeLoadSlot(component)`
-  without forwarding `loadOpts` (the single-component path at :1083/:1092 does forward them).
-  Fixing that forwarding is a one-line change gating ~1.9s of wall.
+  shape. Same picture as June, three months apart.
+- `on-load` is **20%** across **2317 calls** (331 components × ~7 handlers). `bit status` passes
+  `loadDocs:false`/`loadCompositions:false`, but they are **ineffective on the batch path**:
+  `workspace-component-loader.ts:479-480` calls `executeLoadSlot(component)` without forwarding
+  `loadOpts` (the single-component path at :1083/:1092 does forward them).
 - `workspace.get` shows **3349 calls for 331 components (~10×)**. Not yet explained — likely
-  redundant re-entry through the aspect/env path. Worth a look before Phase 4; may be a cheap win or
-  may be inherent to the recursion described in §1.4.
+  redundant re-entry through the aspect/env path.
+
+### 4.3 ⚠️ Aggregate self-time does not predict wall-time — validate before building
+
+The `on-load` row above was tested directly, and the result invalidates the metric this section is
+built on. Forwarding `loadOpts` on the batch path (the "one-line fix") was implemented and measured:
+
+| metric                         | without fix | with fix    | result                 |
+| ------------------------------ | ----------- | ----------- | ---------------------- |
+| `on-load` aggregate self-time  | 13.7s       | 6.6s        | **−52%**               |
+| total load self-time           | 68.1s       | 53.5s       | **−21%**               |
+| **`bit status` wall (median)** | **9.05s**   | **8.98s**   | **−0.07s — noise**     |
+| **peak RSS**                   | **~1228MB** | **~1295MB** | **+67MB — consistent** |
+
+Wall is the median of 9 runs per variant, **interleaved** (A/B/A/B/A/B, recompiling between) to
+cancel drift. Drift matters: the same unchanged code measured 9.43s and 8.99s twenty minutes apart,
+a larger gap than the effect being tested. RSS is 4 runs per variant with zero overlap between the
+two sets.
+
+So halving the aggregate self-time of a stage worth "~1.9s of wall" by the divide-by-concurrency
+estimate produced **no measurable wall change**, and cost memory. Two lessons:
+
+1. **Aggregate self-time is a hypothesis generator, not a size estimate.** Spans are summed across
+   concurrently-interleaved async work on one JS thread, so most of what is counted is `await` time
+   overlapping other work, not critical-path CPU. Dividing by observed concurrency does **not**
+   recover wall-time. This is the third time the metric has misled this effort (the earlier "39s"
+   correction, the deps-cache fs-scan of #10445, and now this). **Do not size or prioritize work
+   from §4.1/§4.2 numbers — A/B the wall-clock first.**
+2. **Forwarding `loadOpts` costs memory because the cache key embeds it.**
+   `createComponentCacheKey` (`workspace-component-loader.ts:1260`) includes
+   `loadDocs`/`loadCompositions`, and `componentsCache.set` at :1096 stores under it, so `status`'s
+   components get cached under a second key alongside the default one — §1.2's "same component
+   cached as separate opaque blobs", made worse. Any future partial-loading work has this same trap
+   waiting for it, which is an argument for doing **Phase 3 (cache consolidation, one key per
+   `(id, stage)`) before Phase 2/4 laziness work**, not after.
+
+**Method for the rest of this effort:** every perf claim lands with an interleaved wall-clock A/B on
+`scripts/bench-component-loading.js` and a peak-RSS comparison. No merges justified by profiler
+self-time alone.
 
 ---
 
 ## Status
 
-| Phase                   | State                                    | OpenSpec change                | PRs                                                                      |
-| ----------------------- | ---------------------------------------- | ------------------------------ | ------------------------------------------------------------------------ |
-| 1 — Observability       | done                                     | `component-load-observability` | [#10418](https://github.com/teambit/bit/pull/10418)                      |
-| 2 — Quick perf wins     | re-scoped, 1/7 done                      | —                              | [#10445](https://github.com/teambit/bit/pull/10445) (closed, not merged) |
-| 3 — Cache consolidation | not started                              | —                              | —                                                                        |
-| 4 — Staged pipeline     | not started — **next high-value target** | —                              | —                                                                        |
-| 5 — Env planner         | not started                              | —                              | —                                                                        |
-| 6 — Legacy inversion    | not started                              | —                              | —                                                                        |
+| Phase                   | State                                       | OpenSpec change                | PRs                                                                      |
+| ----------------------- | ------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------ |
+| 1 — Observability       | done                                        | `component-load-observability` | [#10418](https://github.com/teambit/bit/pull/10418)                      |
+| 2 — Quick perf wins     | re-scoped, 1/7 done                         | —                              | [#10445](https://github.com/teambit/bit/pull/10445) (closed, not merged) |
+| 3 — Cache consolidation | not started — **promoted, do first** (§4.3) | —                              | —                                                                        |
+| 4 — Staged pipeline     | not started — blocked on Phase 3            | —                              | —                                                                        |
+| 5 — Env planner         | not started                                 | —                              | —                                                                        |
+| 6 — Legacy inversion    | not started                                 | —                              | —                                                                        |
 
 **Log:**
 
@@ -414,6 +453,14 @@ Numbers below are aggregate self-time across ~313 components at ~6× concurrency
      but the batch path drops them (`workspace-component-loader.ts:479-480` doesn't forward
      `loadOpts`), leaving ~1.9s of `on-load` work on the table across 2317 handler calls.
   4. New unexplained signal: `workspace.get` is called **3349× for 331 components (~10×)**.
+  5. **The cheap win was implemented and rejected on measurement** (§4.3). Forwarding `loadOpts`
+     halved `on-load` self-time but moved wall by −0.07s (noise) and cost +67MB RSS, because the
+     component cache keys on `loadDocs`/`loadCompositions` and so stores a second copy. This
+     invalidated the prioritization metric: **aggregate self-time does not predict wall-time**, for
+     the third time in this effort. Phase 4 is therefore _not_ promoted on the strength of the
+     `legacy-load-deps` 50% figure; **Phase 3 (cache consolidation) is promoted instead**, since the
+     loadOpts-in-cache-key problem blocks every partial-loading idea in Phases 2 and 4. All further
+     perf claims require an interleaved wall-clock A/B plus peak-RSS comparison.
      PR #10445 closed unmerged (see §3 for the rationale). The abandoned May branch
      `refactor/component-loading-v2-take-3` (`UnifiedComponentLoader` behind `BIT_LOADER=new`) predates
      this document and is superseded by the phase plan — not to be resumed.
