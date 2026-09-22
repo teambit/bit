@@ -579,18 +579,14 @@ describe('add command on Harmony', function () {
       // lane, and a clone that let the lane decide the root too would not find it.
       let clonePath: string;
       before(() => {
-        clonePath = path.join(helper.scopes.e2eDir, 'pinned-root');
-        // the clone makes a workspace here, and it refuses to run inside one - so a rerun of this
-        // file against the same e2e directory starts from nothing
-        fs.removeSync(clonePath);
+        // a workspace of its own, so it is taken from the helper: the directory is empty and named
+        // afresh, which a clone needs, and it goes in what the helper clears - a run interrupted
+        // around the clone leaves nothing behind, and "--debug" keeps it like every other workspace
+        clonePath = helper.fs.createNewDirectory();
         helper.command.runCmd(
           `bit clone ${helper.scopes.remote}/ws-root@${rootMainHead} ${clonePath} --lane ${helper.scopes.remote}/dev -x`,
           helper.scopes.e2eDir
         );
-      });
-      after(() => {
-        // it is a workspace of its own, made outside the helper, so it is not in what the helper clears
-        fs.removeSync(clonePath);
       });
       it('should write the root files of the version asked for, not of its head on the lane', () => {
         expect(rootMainHead).to.not.equal(rootLaneHead);
