@@ -5,6 +5,7 @@
   "teambit.workspace/workspace",
   "teambit.workspace/workspace-config-files",
   "teambit.workspace/install",
+  "teambit.workspace/workspace-root",
   "teambit.defender/eslint",
   "teambit.defender/prettier",
   "teambit.compilation/compiler",

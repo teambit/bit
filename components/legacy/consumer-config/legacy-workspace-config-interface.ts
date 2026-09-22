@@ -30,5 +30,6 @@ export interface ILegacyWorkspaceConfig {
   write: (options: { workspaceDir: PathOsBasedAbsolute }) => Promise<void>;
   toVinyl: (workspaceDir: PathOsBasedAbsolute) => Promise<AbstractVinyl[] | undefined>;
   ignoredFiles?: string[];
+  trackAllFiles?: boolean;
   _legacyPlainObject: () => { [prop: string]: any } | undefined;
 }

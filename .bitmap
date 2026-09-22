@@ -2319,6 +2319,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/workspace-config-files"
     },
+    "workspace-root": {
+        "name": "workspace-root",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.workspace",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/workspace/workspace-root",
+        "config": {
+            "teambit.harmony/envs/core-aspect-env@2.1.1": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-aspect-env"
+            }
+        }
+    },
     "yarn": {
         "name": "yarn",
         "scope": "teambit.dependencies",

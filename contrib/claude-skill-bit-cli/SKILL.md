@@ -110,6 +110,7 @@ rename <current-name> <new-name> - change a component name
 Workspace & Project Setup
 new <template-name> <workspace-name> - create a new Bit workspace from a template
 init [path] - initialize a Bit workspace in an existing project
+clone <component-id> [dir] - create a workspace from its workspace-root component, with every component it lists
 
 Testing & Quality
 artifacts <component-pattern> - view and download build artifacts
