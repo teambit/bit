@@ -148,12 +148,19 @@ export default class AddComponents {
    * one by accident, and there is none to create here - the add either refreshes the root that exists
    * or names a second owner for ".", which has its own message saying who holds it.
    */
-  private throwForWorkspaceRootFlagMismatch(resolvedPaths: PathOsBased[]) {
-    const tracksRoot = resolvedPaths.some(
-      (onePath) =>
-        (pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(onePath)) || WORKSPACE_ROOT_DIR) ===
-        WORKSPACE_ROOT_DIR
+  /**
+   * the paths reach here as the user typed them - relative to the cwd, or absolute - so the workspace
+   * root arrives as ".", as "", or as the workspace path itself, depending on where the command ran.
+   */
+  private isWorkspaceRootPath(onePath: PathOsBased): boolean {
+    return (
+      (pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(onePath)) || WORKSPACE_ROOT_DIR) ===
+      WORKSPACE_ROOT_DIR
     );
+  }
+
+  private throwForWorkspaceRootFlagMismatch(resolvedPaths: PathOsBased[]) {
+    const tracksRoot = resolvedPaths.some((onePath) => this.isWorkspaceRootPath(onePath));
     if (tracksRoot && !this.root && !this.bitMap.getWorkspaceRootMap()) {
       throw new BitError(`unable to track the workspace root without the --root flag.
 it makes the workspace itself a component - it owns every file no other component claims, .bitmap included, and every other component becomes a member of it.
@@ -738,7 +745,11 @@ you can add the directory these files are located at and it'll change the root d
     allPaths.forEach((componentPath) => {
       // the dirname of "." is "." itself - the workspace root is not a wildcard expansion of itself.
       const foundDir = allPaths.find((p) => p !== componentPath && p === path.dirname(componentPath));
-      if (foundDir && componentPathsStats[foundDir]) {
+      // nor of what sits directly below it. the workspace root contains every other component by
+      // design, so a component inside it is no reason to drop it: it was asked for by name, and the
+      // --root flag says so in as many words (see throwForWorkspaceRootFlagMismatch). without this,
+      // "bit add . comp --root" tracks comp alone and reports success, the root never created.
+      if (foundDir && componentPathsStats[foundDir] && !this.isWorkspaceRootPath(foundDir)) {
         logger.debug(`add-components._removeDirectoriesWhenTheirFilesAreAdded, ignoring ${foundDir}`);
         delete componentPathsStats[foundDir];
       }

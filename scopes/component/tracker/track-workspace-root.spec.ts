@@ -49,6 +49,17 @@ describe('tracking the workspace root', function () {
 
   const inWs = (tracked: Tracked, relPath: string) => path.join(tracked.workspacePath, relPath);
 
+  /** relative paths, as the command gets them: "." only means the workspace root when the cwd is it */
+  const addFrom = async (tracked: Tracked, componentPaths: string[], root?: boolean) => {
+    const originalCwd = process.cwd();
+    process.chdir(tracked.workspacePath);
+    try {
+      return await tracked.tracker.addForCLI({ componentPaths, override: false, root });
+    } finally {
+      process.chdir(originalCwd);
+    }
+  };
+
   const rootDirOf = (tracked: Tracked, name: string) =>
     tracked.workspace.bitMap.getBitmapEntry(tracked.workspace.consumer.getParsedId(name), { ignoreVersion: true })
       .rootDir;
@@ -276,16 +287,6 @@ describe('tracking the workspace root', function () {
 
   describe('the --root flag, which spells out the intent to track the workspace root', () => {
     let tracked: Tracked;
-    // relative paths, as the command gets them: "." only means the workspace root when the cwd is it
-    const addFrom = async (componentPaths: string[], root?: boolean) => {
-      const originalCwd = process.cwd();
-      process.chdir(tracked.workspacePath);
-      try {
-        return await tracked.tracker.addForCLI({ componentPaths, override: false, root });
-      } finally {
-        process.chdir(originalCwd);
-      }
-    };
     before(async () => {
       tracked = await setupWorkspace({
         'index.js': 'module.exports = {};\n',
@@ -296,20 +297,43 @@ describe('tracking the workspace root', function () {
       await destroyWorkspace(tracked.workspaceData);
     });
     it('should refuse the workspace root without it, naming the command that does it', async () => {
-      await expectToReject(() => addFrom([WORKSPACE_ROOT_DIR]), 'bit add . --root');
+      await expectToReject(() => addFrom(tracked, [WORKSPACE_ROOT_DIR]), 'bit add . --root');
     });
     it('should refuse it when none of the paths is the workspace root, rather than ignore it', async () => {
-      await expectToReject(() => addFrom(['packages/comp1'], true), 'none of the given paths is the workspace root');
+      await expectToReject(
+        () => addFrom(tracked, ['packages/comp1'], true),
+        'none of the given paths is the workspace root'
+      );
     });
     it('should leave an ordinary component alone, the flag is for the root and nothing else', async () => {
-      const results = await addFrom(['packages/comp1']);
+      const results = await addFrom(tracked, ['packages/comp1']);
       expect(results.addedComponents).to.have.lengthOf(1);
       expect(rootDirOf(tracked, 'comp1')).to.equal('packages/comp1');
     });
     it('should track the workspace root with it', async () => {
-      const results = await addFrom([WORKSPACE_ROOT_DIR], true);
+      const results = await addFrom(tracked, [WORKSPACE_ROOT_DIR], true);
       expect(results.addedComponents).to.have.lengthOf(1);
       expect(rootDirOf(tracked, results.addedComponents[0].id.toStringWithoutVersion())).to.equal(WORKSPACE_ROOT_DIR);
+    });
+  });
+
+  describe('adding the workspace root together with a component directly inside it', () => {
+    let tracked: Tracked;
+    before(async () => {
+      tracked = await setupWorkspace({
+        'index.js': 'module.exports = {};\n',
+        'comp1/index.js': 'module.exports = () => "comp1";\n',
+      });
+    });
+    after(async () => {
+      await destroyWorkspace(tracked.workspaceData);
+    });
+    it('should track both, the root is not a wildcard expansion of the directory below it', async () => {
+      const results = await addFrom(tracked, [WORKSPACE_ROOT_DIR, 'comp1'], true);
+      expect(results.addedComponents).to.have.lengthOf(2);
+      expect(rootDirOf(tracked, 'comp1')).to.equal('comp1');
+      const root = results.addedComponents.find((added) => added.id.fullName !== 'comp1');
+      expect(rootDirOf(tracked, root!.id.toStringWithoutVersion())).to.equal(WORKSPACE_ROOT_DIR);
     });
   });
 });
