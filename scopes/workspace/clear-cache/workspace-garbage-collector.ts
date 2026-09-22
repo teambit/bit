@@ -459,6 +459,9 @@ ${list}`);
         const version = (await Ref.from(hash).load(repo)) as Version | undefined;
         if (!version) return;
         version.flattenedDependencies.forEach((dependency) => dependencies.add(dependency.toString()));
+        // an env or aspect the version was built with. versions written by older bits record these
+        // only here, so taking `flattenedDependencies` at its word would miss them.
+        version.extensions.extensionsBitIds.forEach((extension) => dependencies.add(extension.toString()));
       },
       { concurrency }
     );
@@ -466,6 +469,9 @@ ${list}`);
       [...dependencies],
       async (idStr) => {
         const id = ComponentID.fromString(idStr);
+        // a snap dependency names its version by hash, so it stands without the component object.
+        // same reasoning as the checked-out ids: a missing model must not take it down with it.
+        addRoot(id.version);
         const component = await scope.getModelComponentIfExist(id.changeVersion(undefined));
         if (!component) return;
         addRoot(component.getRef(id.version as string));

@@ -16,6 +16,12 @@ import { logger } from '@teambit/legacy.logger';
 type Lanes = { [laneName: string]: LaneComponent[] };
 
 /**
+ * dropped when listing remote-lane files. a lane name is free-form, so there's no shape to test
+ * against - only these, which the filesystem puts there and bit never does.
+ */
+const FS_METADATA_FILES = ['.DS_Store', 'Thumbs.db', 'desktop.ini'];
+
+/**
  * A remote lane's `scope` and `name` originate from a Lane object served by a remote scope, i.e.
  * untrusted input, and are used as path segments when composing the remote-lane refs file path. A
  * traversal shape there could escape the scope's refs directory and let a malicious/compromised
@@ -157,9 +163,12 @@ export class RemoteLanes {
    */
   async getAllRefsPerComponent(): Promise<Map<string, Ref[]>> {
     // `dot: true` because a scope or lane name may start with a dot, and glob skips those by
-    // default. missing one here would let the collector delete a head it must keep.
-    const matches = await glob(path.join('*', '*'), { cwd: this.basePath, dot: true });
+    // default. missing one here would let the collector delete a head it must keep. that also
+    // sweeps up whatever else the filesystem leaves lying around, hence `nodir` and the exclusion
+    // below - one .DS_Store would otherwise be parsed as a lane and fail every run.
+    const matches = await glob(path.join('*', '*'), { cwd: this.basePath, dot: true, nodir: true });
     const laneIds = matches
+      .filter((match) => !FS_METADATA_FILES.includes(path.basename(match)))
       .map((match) => match.split(path.sep))
       .map(([head, ...tail]) => LaneId.from(tail.join('/'), head));
     const refsPerComponent = new Map<string, Ref[]>();

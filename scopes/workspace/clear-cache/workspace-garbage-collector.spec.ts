@@ -20,7 +20,12 @@ const VERSION_HASHES = {
   '0.0.3': '3333333333333333333333333333333333333333',
 };
 
-function buildVersion(hash: string, source: Source, parents: string[]): Version {
+function buildVersion(
+  hash: string,
+  source: Source,
+  parents: string[],
+  extraContents: Record<string, any> = {}
+): Version {
   const contents = {
     mainFile: 'index.ts',
     files: [{ file: source.hash().toString(), relativePath: 'index.ts', name: 'index.ts', test: false }],
@@ -33,6 +38,7 @@ function buildVersion(hash: string, source: Source, parents: string[]): Version 
     peerPackageDependencies: {},
     extensions: [],
     bindingPrefix: '@bit',
+    ...extraContents,
   };
   return Version.parse(JSON.stringify(contents), hash);
 }
@@ -451,6 +457,71 @@ describe('collectGarbageInWorkspace', () => {
       ]);
       expect(result.deletedObjects).to.be.greaterThan(0); // the run did proceed
       expect(await objectExists(Ref.from(VERSION_HASHES['0.0.1']))).to.be.true;
+    });
+  });
+
+  describe("with an env named only in a version's extensions", () => {
+    /** the env's old version, used by the head of the component under test */
+    const ENV = { old: '6'.repeat(40), head: '7'.repeat(40) };
+    const ENV_NAME = 'my-env';
+    let envSources: { [version: string]: Source };
+
+    beforeEach(async () => {
+      await markAsExported();
+      envSources = {
+        old: Source.from(Buffer.from('the contents of the env at 1.0.0')),
+        head: Source.from(Buffer.from('the contents of the env at 2.0.0')),
+      };
+      const envComponent = ModelComponent.from({
+        name: ENV_NAME,
+        scope: COMP_SCOPE,
+        lang: 'javascript',
+        deprecated: false,
+        bindingPrefix: '@bit',
+        versions: { '1.0.0': Ref.from(ENV.old), '2.0.0': Ref.from(ENV.head) },
+        head: Ref.from(ENV.head),
+      });
+      // the head of the component under test, rewritten to name the env in `extensions` and in
+      // nothing else - versions written by older bits record it only there.
+      const headWithEnv = buildVersion(VERSION_HASHES['0.0.3'], sources['0.0.3'], [VERSION_HASHES['0.0.2']], {
+        extensions: [{ extensionId: { scope: COMP_SCOPE, name: ENV_NAME, version: '1.0.0' } }],
+      });
+      const objects = [
+        envComponent,
+        headWithEnv,
+        buildVersion(ENV.old, envSources.old, []),
+        buildVersion(ENV.head, envSources.head, [ENV.old]),
+        ...Object.values(envSources),
+      ];
+      objects.forEach((object) => {
+        object.validateBeforePersist = false;
+      });
+      await scope.objects.writeObjectsToTheFS(objects);
+      // exported, so the env's older version is collectable rather than kept as local history
+      await scope.objects.remoteLanes.addEntry(
+        LaneId.from(DEFAULT_LANE, COMP_SCOPE),
+        ComponentID.fromObject({ scope: COMP_SCOPE, name: ENV_NAME }),
+        Ref.from(ENV.head)
+      );
+      await scope.objects.remoteLanes.write();
+    });
+
+    it('should keep that version of the env, which flattenedDependencies does not mention', async () => {
+      await runGc();
+      expect(await objectExists(Ref.from(ENV.old))).to.be.true;
+      expect(await objectExists(envSources.old.hash())).to.be.true;
+    });
+  });
+
+  describe('when the filesystem leaves a metadata file among the remote-lane refs', () => {
+    it('should ignore it rather than fail the whole run', async () => {
+      await markAsExported();
+      // macOS drops these next to the lane files, and they are not lanes.
+      await fs.outputFile(path.join(scope.path, 'refs', 'remotes', COMP_SCOPE, '.DS_Store'), 'not a lane');
+      const result = await runGc();
+      expect(result.deletedObjects).to.equal(2);
+      // the remote head is still a root, so the lane refs really were read
+      expect(await objectExists(Ref.from(VERSION_HASHES['0.0.3']))).to.be.true;
     });
   });
 
