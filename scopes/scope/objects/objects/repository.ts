@@ -35,7 +35,8 @@ const TRASH_DIR = 'trash';
  */
 const OBJECT_HEADER_CHUNK_SIZE = 4096;
 
-export type ObjectWithType = { ref: Ref; type: string; size: number };
+/** `mtimeMs` lets a caller tell an object that has been here a while from one just written */
+export type ObjectWithType = { ref: Ref; type: string; size: number; mtimeMs: number };
 /** `unreadable` holds the objects that couldn't be classified, so a caller can refuse to act on a partial inventory */
 export type ObjectsWithType = { objects: ObjectWithType[]; unreadable: Ref[] };
 
@@ -309,7 +310,7 @@ export default class Repository {
     try {
       const stat = await fs.stat(objectPath);
       const type = (await this.readObjectType(objectPath, stat.size)) as string;
-      return { object: { ref, type, size: stat.size } };
+      return { object: { ref, type, size: stat.size, mtimeMs: stat.mtimeMs } };
     } catch (err: any) {
       logger.warn(`Repository.listObjectsWithType, failed reading ${objectPath}. Error: ${err.message}`);
       return { unreadable: ref };

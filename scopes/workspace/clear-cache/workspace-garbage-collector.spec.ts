@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import fs from 'fs-extra';
+import { glob } from 'glob';
 import os from 'os';
 import path from 'path';
 import { ComponentID } from '@teambit/component-id';
@@ -95,13 +96,31 @@ describe('collectGarbageInWorkspace', () => {
     await scope.objects.remoteLanes.write();
   }
 
+  /**
+   * the collector leaves alone anything written in the last few minutes, since another process
+   * may be halfway through writing a `Version` and the component that will point at it. every
+   * object a test writes is brand new, so they all have to be aged first for the run to consider
+   * them at all.
+   *
+   * only real objects are touched - a temp file's age is the subject of its own test.
+   */
+  async function settleObjects() {
+    const objectsPath = scope.objects.getPath();
+    const matches = await glob(path.join('*', '*'), { cwd: objectsPath });
+    const objects = matches.filter((match) => /^[0-9a-f]{38}$/.test(path.basename(match)));
+    const anHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    await Promise.all(objects.map((object) => fs.utimes(path.join(objectsPath, object), anHourAgo, anHourAgo)));
+  }
+
   /** the workspace is checked out at 0.0.2, while the component's head is 0.0.3 */
-  const runGc = (opts = {}) =>
-    collectGarbageInWorkspace(
+  const runGc = async (opts = {}) => {
+    await settleObjects();
+    return collectGarbageInWorkspace(
       scope,
       [ComponentID.fromObject({ scope: COMP_SCOPE, name: COMP_NAME }).changeVersion('0.0.2')],
       opts
     );
+  };
 
   describe('with a component whose older version nothing points at', () => {
     beforeEach(async () => {
@@ -130,6 +149,22 @@ describe('collectGarbageInWorkspace', () => {
       );
       expect(modelComponent).to.not.be.undefined;
     });
+    it('should leave a freshly written object alone, as another process may be mid-write', async () => {
+      // an import writes the Version and Source first and points the ModelComponent at them after.
+      // a run that reads the components in between would see an object nothing refers to yet.
+      const collectable = scope.objects.objectPath(Ref.from(VERSION_HASHES['0.0.1']));
+      await settleObjects();
+      const now = new Date();
+      await fs.utimes(collectable, now, now);
+      const result = await collectGarbageInWorkspace(
+        scope,
+        [ComponentID.fromObject({ scope: COMP_SCOPE, name: COMP_NAME }).changeVersion('0.0.2')],
+        {}
+      );
+      expect(result.deletedObjects).to.equal(1); // only the Source, not the Version just touched
+      expect(await objectExists(Ref.from(VERSION_HASHES['0.0.1']))).to.be.true;
+    });
+
     it('should report what it deleted', async () => {
       const result = await runGc();
       expect(result.deletedObjects).to.equal(2); // the Version object and its Source

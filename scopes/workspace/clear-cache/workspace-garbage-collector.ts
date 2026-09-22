@@ -27,6 +27,12 @@ const STRAY_TEMP_FILE = /^[0-9a-f]{38}\.\d+$/;
 const STRAY_TEMP_FILE_MIN_AGE_MS = 60 * 60 * 1000;
 
 /**
+ * how recently an object must have been written for this run to decline to judge it. covers the
+ * gap between another process writing a `Version` and pointing a `ModelComponent` at it.
+ */
+const RECENT_WRITE_MARGIN_MS = 5 * 60 * 1000;
+
+/**
  * `bit stash` writes a `Version` object into the local scope and records only its hash in a file
  * here. deliberately nothing else refers to it - not the component, not a lane, not `.bitmap`.
  */
@@ -96,6 +102,8 @@ export async function collectGarbageInWorkspace(
   const { dryRun = false, verbose = false, keepVersions = 0, backup = false } = opts;
   const repo = scope.objects;
   const concurrency = concurrentIOLimit();
+  // taken before anything is read, so it's never later than the inventory it will be compared to
+  const startedAt = Date.now();
 
   logger.debug(`gc, classifying the objects of ${scope.name}`);
   const { objects: allObjects, unreadable } = await repo.listObjectsWithType();
@@ -241,9 +249,27 @@ ${list}`);
   const refsToDelete: Ref[] = [];
   const deletedByType: { [type: string]: { count: number; size: number } } = {};
   let deletedSize = 0;
-  allObjects.forEach(({ ref, type, size }) => {
+  /**
+   * anything written around the time this run started is left alone.
+   *
+   * an import or a snap writes its `Version` and `Source` objects first and only then points the
+   * `ModelComponent` at them. a run that reads the components in between sees objects nothing
+   * refers to yet and would take them for garbage. an object that has been sitting here longer
+   * than the margin cannot be in that gap.
+   *
+   * this narrows the window rather than closing it - only a scope-wide lock held across every
+   * object write would do that, and there is none today. the cost of being wrong is one more run
+   * to collect them.
+   */
+  const settledBefore = startedAt - RECENT_WRITE_MARGIN_MS;
+  let recentlyWritten = 0;
+  allObjects.forEach(({ ref, type, size, mtimeMs }) => {
     if (type !== Version.name && type !== Source.name) return;
     if (keep.has(ref.toString())) return;
+    if (mtimeMs > settledBefore) {
+      recentlyWritten += 1;
+      return;
+    }
     refsToDelete.push(ref);
     deletedSize += size;
     if (!deletedByType[type]) deletedByType[type] = { count: 0, size: 0 };
@@ -251,6 +277,9 @@ ${list}`);
     deletedByType[type].size += size;
     if (verbose) logger.console(`gc, deleting ${type} ${ref.toString()}`);
   });
+  if (recentlyWritten) {
+    logger.debug(`gc, keeping ${recentlyWritten} objects that were written too recently to judge`);
+  }
 
   const strayFiles = await removeStrayTempFiles(repo.getPath(), dryRun);
 
