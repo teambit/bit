@@ -400,6 +400,45 @@ describe('collectGarbageInWorkspace', () => {
     });
   });
 
+  describe('with a staged snap that no head reaches', () => {
+    /** a snap recorded in staged-snaps whose chain hangs off 0.0.1, not off the head */
+    const STAGED_HASH = '8'.repeat(40);
+    let stagedSource: Source;
+
+    beforeEach(async () => {
+      await markAsExported();
+      stagedSource = Source.from(Buffer.from('the contents of a staged snap'));
+      const stagedVersion = buildVersion(STAGED_HASH, stagedSource, [VERSION_HASHES['0.0.1']]);
+      stagedVersion.validateBeforePersist = false;
+      stagedSource.validateBeforePersist = false;
+      await scope.objects.writeObjectsToTheFS([stagedVersion, stagedSource]);
+      scope.stagedSnaps.addSnap(STAGED_HASH);
+      await scope.stagedSnaps.write();
+    });
+
+    it('should keep its unexported ancestry, since export sends the whole chain', async () => {
+      await runGc();
+      expect(await objectExists(Ref.from(STAGED_HASH))).to.be.true;
+      // 0.0.1 is reachable from the staged snap and from nowhere else that keeps it
+      expect(await objectExists(Ref.from(VERSION_HASHES['0.0.1']))).to.be.true;
+      expect(await objectExists(sources['0.0.1'].hash())).to.be.true;
+    });
+  });
+
+  describe('with a component whose model object is missing', () => {
+    it('should still keep the snap the workspace is checked out at', async () => {
+      await markAsExported();
+      // the bitmap names a snap hash, which stands on its own - losing the component object must
+      // not take the version the working directory is being diffed against with it.
+      await settleObjects();
+      const result = await collectGarbageInWorkspace(scope, [
+        ComponentID.fromObject({ scope: COMP_SCOPE, name: 'no-such-component' }).changeVersion(VERSION_HASHES['0.0.1']),
+      ]);
+      expect(result.deletedObjects).to.be.greaterThan(0); // the run did proceed
+      expect(await objectExists(Ref.from(VERSION_HASHES['0.0.1']))).to.be.true;
+    });
+  });
+
   describe('with a component that was never exported', () => {
     it('should keep its entire history, as nothing can bring these snaps back', async () => {
       const result = await runGc();
@@ -460,6 +499,30 @@ describe('collectGarbageInWorkspace', () => {
       }
       expect(error).to.be.an('error');
       expect(error?.message).to.have.string('not safe to run gc');
+      expect(await objectExists(Ref.from(VERSION_HASHES['0.0.1']))).to.be.true;
+      expect(await objectExists(sources['0.0.1'].hash())).to.be.true;
+    });
+
+    it('should keep the parent of the stashed snap, which stash load reads as its merge base', async () => {
+      // the stash Version's parent is the pre-stash version; `addComponentDataToRepo` sets it
+      // precisely so that "stash-load" has a base for its three-way merge.
+      const stashedSource = Source.from(Buffer.from('the contents of a stashed snap'));
+      const STASHED_HASH = '9'.repeat(40);
+      // its parent is 0.0.1, the version that is otherwise collectable
+      const stashedVersion = buildVersion(STASHED_HASH, stashedSource, [VERSION_HASHES['0.0.1']]);
+      const objects = [stashedVersion, stashedSource];
+      objects.forEach((object) => {
+        object.validateBeforePersist = false;
+      });
+      await scope.objects.writeObjectsToTheFS(objects);
+      await fs.outputJson(path.join(scope.path, 'stash', 'stash-1.json'), {
+        metadata: { message: 'a stash' },
+        stashCompsData: [
+          { id: { scope: COMP_SCOPE, name: COMP_NAME }, hash: STASHED_HASH, isNew: false, bitmapEntry: {} },
+        ],
+      });
+      await runGc();
+      expect(await objectExists(Ref.from(STASHED_HASH))).to.be.true;
       expect(await objectExists(Ref.from(VERSION_HASHES['0.0.1']))).to.be.true;
       expect(await objectExists(sources['0.0.1'].hash())).to.be.true;
     });

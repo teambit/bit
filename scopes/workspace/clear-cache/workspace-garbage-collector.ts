@@ -183,6 +183,10 @@ ${list}`);
     await pMapPool(
       workspaceIds,
       async (id) => {
+        // a snap id is already the hash, so it stands on its own. rooting it before the lookup
+        // means a component object that is missing or unreadable can't take the version the
+        // workspace is sitting on down with it. a tag resolves through the component below.
+        addRoot(id.version);
         const component = await scope.getModelComponentIfExist(id.changeVersion(undefined));
         if (!component) return null;
         addRoot(id.hasVersion() ? component.getRef(id.version as string) : component.getHead());
@@ -208,19 +212,31 @@ ${list}`);
   // heads we track for remotes. deleting one would break the diverge calculation, which can no
   // longer reach it and has no way to tell that it's gone rather than never-fetched.
   const remoteRefsPerComponent = await repo.remoteLanes.getAllRefsPerComponent();
-  remoteRefsPerComponent.forEach((refs) => refs.forEach(addRoot));
+  const remoteRefs = new Set<string>();
+  remoteRefsPerComponent.forEach((refs) =>
+    refs.forEach((ref) => {
+      addRoot(ref);
+      remoteRefs.add(ref.toString());
+    })
+  );
 
-  // snaps that were created here and never exported. nothing can bring these back.
-  scope.stagedSnaps.getAll().forEach(addRoot);
-  repo.unmergedComponents.getComponents().forEach((unmerged) => {
-    addRoot(unmerged.head);
-    // `unrelated` is a boolean on entries written by older versions, which carry no extra hashes.
-    if (typeof unmerged.unrelated === 'object') {
-      addRoot(unmerged.unrelated.headOnCurrentLane);
-      addRoot(unmerged.unrelated.unrelatedHead);
-    }
-  });
-  (await getStashedHashes(scope.path)).forEach(addRoot);
+  // snaps that were created here and never exported. nothing can bring these back, and for these
+  // the tip alone is not enough: export sends the whole chain up to what the remote already has,
+  // and `bit stash load` reads the parent of the stashed snap as the base of its three-way merge.
+  // they arrive as bare hashes with no component to resolve them against, so the ancestry is
+  // walked directly rather than through `keepUnexportedHistory`.
+  const bareRoots = compact([
+    ...scope.stagedSnaps.getAll(),
+    ...(await getStashedHashes(scope.path)),
+    ...repo.unmergedComponents.getComponents().flatMap((unmerged) => [
+      unmerged.head,
+      // `unrelated` is a boolean on entries written by older versions, which carry no extra hashes.
+      ...(typeof unmerged.unrelated === 'object'
+        ? [unmerged.unrelated.headOnCurrentLane, unmerged.unrelated.unrelatedHead]
+        : []),
+    ]),
+  ]).map((hash) => hash.toString());
+  await keepAncestryOf(bareRoots);
   await keepUnexportedHistory();
 
   if (keepVersions > 0) await keepRecentVersions();
@@ -306,6 +322,31 @@ ${list}`);
     strayFiles: strayFiles.count,
     strayFilesSize: strayFiles.size,
   };
+
+  /**
+   * walk back from a bare hash through `Version.parents`, keeping every ancestor still here.
+   *
+   * this is what `keepUnexportedHistory` does for the heads it can attribute to a component. a
+   * staged snap, a stash and an unmerged head are hashes on their own, so the chain is followed
+   * directly - and stops at the same boundary, a snap the remote already has. past that point the
+   * history is re-fetchable, which is the history this collector exists to prune.
+   */
+  async function keepAncestryOf(hashes: string[]) {
+    const seen = new Set<string>();
+    const queue = [...hashes];
+    while (queue.length) {
+      const hash = queue.pop() as string;
+      if (seen.has(hash)) continue;
+      seen.add(hash);
+      // a hash we don't have marks the edge of what was ever fetched - nothing to keep or walk
+      if (!versionSizes.has(hash)) continue;
+      addRoot(hash);
+      if (remoteRefs.has(hash)) continue;
+      const version = (await Ref.from(hash).load(repo)) as Version | undefined;
+      if (!version) continue;
+      version.parents.forEach((parent) => queue.push(parent.toString()));
+    }
+  }
 
   /**
    * snaps that were created here and not exported yet must be kept in full, not only their tip -
