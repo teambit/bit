@@ -211,7 +211,10 @@ export class InstallMain {
       }
     }
 
-    // set workspace in install context
+    // set workspace in install context. `_installModules` sets these too, but the work below it
+    // (_addPackages, the preInstallSlot) already runs as part of the installation, and a stale
+    // "after package manager" flag from an earlier install in this process would let it compile
+    // against the pre-install dependency state.
     this.workspace.inInstallContext = true;
     this.workspace.inInstallAfterPmContext = false;
     if (packages && packages.length) {
@@ -371,11 +374,22 @@ export class InstallMain {
   }
 
   private async _installModules(options?: ModulesInstallOptions): Promise<ComponentMap<string>> {
+    // components are loaded here before the envs are loaded as aspects, so envs legitimately appear
+    // "not loaded" while this runs. every caller is by definition running an installation, so the
+    // flags that mute those premature warnings belong here rather than at each entry point - an
+    // entry point that forgot them reported "env was not loaded (run bit install)" on a healthy
+    // workspace, while itself running the very install it suggested.
+    const prevInInstallContext = this.workspace.inInstallContext;
+    const prevInInstallAfterPmContext = this.workspace.inInstallAfterPmContext;
+    this.workspace.inInstallContext = true;
+    this.workspace.inInstallAfterPmContext = false;
     this.logger.profile('install.total');
     try {
       return await this._installModulesProfiled(options);
     } finally {
       this.logger.profile('install.total');
+      this.workspace.inInstallContext = prevInInstallContext;
+      this.workspace.inInstallAfterPmContext = prevInInstallAfterPmContext;
     }
   }
 

@@ -11,7 +11,7 @@ import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
 import type { ExportMain } from '@teambit/export';
 import { ExportAspect } from '@teambit/export';
-import type { LaneId } from '@teambit/lane-id';
+import { LaneId } from '@teambit/lane-id';
 import type { WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
 import { mockWorkspace, destroyWorkspace } from '@teambit/workspace.testing.mock-workspace';
 import { mockComponents, modifyMockedComponents } from '@teambit/component.testing.mock-components';
@@ -19,10 +19,12 @@ import { ChangeType } from '@teambit/lanes.entities.lane-diff';
 import { ComponentID } from '@teambit/component-id';
 import { partitionSwitchIds } from './switch-lanes';
 import { LanesAspect } from './lanes.aspect';
-import type { LanesMain } from './lanes.main.runtime';
+import type { LanesMain, LaneUpdateDependentsSource } from './lanes.main.runtime';
+import { LaneUpdatesCmd } from './lane.cmd';
 import type { MergeLanesMain } from '@teambit/merge-lanes';
 import { MergeLanesAspect } from '@teambit/merge-lanes';
 import { GraphqlAspect, type GraphqlMain } from '@teambit/graphql';
+import { loadScope } from '@teambit/legacy.scope';
 
 describe('LanesAspect', function () {
   this.timeout(0);
@@ -543,5 +545,125 @@ describe('partitionSwitchIds', () => {
   it('a main-only component that the lane never carried is still taken at its main version', () => {
     const { ids } = partitionSwitchIds([ours], [ours, oursOnMainOnly], ['acme.shop']);
     expect(ids.map((i) => i.toString())).to.have.members([oursOnMainOnly.toString(), ours.toString()]);
+  });
+});
+
+describe('lane updates (Ripple CI cascade entries)', function () {
+  this.timeout(0);
+  let lanes: LanesMain;
+  let workspaceData: WorkspaceData;
+  let laneId: LaneId;
+  let cascadedId: ComponentID;
+  before(async () => {
+    workspaceData = mockWorkspace();
+    const { workspacePath, remoteScopePath } = workspaceData;
+    await mockComponents(workspacePath);
+    const harmony = await loadManyAspects([SnappingAspect, ExportAspect, LanesAspect, WorkspaceAspect], workspacePath);
+    const snapping: SnappingMain = harmony.get(SnappingAspect.id);
+    lanes = harmony.get(LanesAspect.id);
+    await lanes.createLane('stage');
+    await snapping.snap({ pattern: 'comp1', build: false, ignoreIssues: 'MissingManuallyConfiguredPackages' });
+    const exporter: ExportMain = harmony.get(ExportAspect.id);
+    await exporter.export();
+    laneId = lanes.getCurrentLaneId() as LaneId;
+
+    // mimic the Ripple CI cascade producer: add a hidden update-dependents entry (a dependent of comp1, which
+    // doesn't need to exist for the lane object) to the lane on the remote. the remote scope is loaded through
+    // the cache on purpose, so the Fs network the workspace uses to reach this remote sees the same objects.
+    const remoteScope = await loadScope(remoteScopePath);
+    const remoteLane = await remoteScope.lanes.loadLane(laneId);
+    if (!remoteLane) throw new Error('expected the lane to exist on the remote after export');
+    const [laneComponent] = remoteLane.components;
+    cascadedId = ComponentID.fromString(`${laneComponent.id.scope}/dependent-of-comp1`).changeVersion(
+      laneComponent.head.toString()
+    );
+    remoteLane.addComponentToUpdateDependents(cascadedId);
+    await remoteScope.lanes.saveLane(remoteLane, { laneHistoryMsg: 'test: cascade update-dependents' });
+  });
+  after(async () => {
+    await destroyWorkspace(workspaceData);
+  });
+  it('getLaneUpdateDependents() should read the cascaded entries from the remote lane', async () => {
+    const result = await lanes.getLaneUpdateDependents(laneId);
+    expect(result.source).to.equal('remote');
+    expect(result.ids.map((id) => id.toString())).to.deep.equal([cascadedId.toString()]);
+  });
+  it('undoLaneUpdateDependents() should remove the entries from the remote lane', async () => {
+    const result = await lanes.undoLaneUpdateDependents(laneId);
+    expect(result.remoteChanged).to.be.true;
+    expect(result.remoteSkipped).to.be.false;
+    expect(result.removed.map((id) => id.toString())).to.deep.equal([cascadedId.toString()]);
+
+    const remoteScope = await loadScope(workspaceData.remoteScopePath);
+    const remoteLane = await remoteScope.lanes.loadLane(laneId);
+    expect(remoteLane?.updateDependents).to.be.undefined;
+
+    const after = await lanes.getLaneUpdateDependents(laneId);
+    expect(after.source).to.equal('remote');
+    expect(after.ids).to.have.lengthOf(0);
+  });
+  it('undoLaneUpdateDependents() should clean local entries the remote no longer has', async () => {
+    // mimic an undo whose remote removal succeeded but whose local save failed: the previous test left the
+    // remote lane clean, so re-adding the entry locally makes it stale by definition.
+    const remoteIds = await lanes.getLaneUpdateDependents(laneId);
+    expect(remoteIds.ids).to.have.lengthOf(0);
+    const localScope = await loadScope(path.join(workspaceData.workspacePath, '.bit'));
+    const localLane = await localScope.lanes.loadLane(laneId);
+    if (!localLane) throw new Error('expected the lane to exist locally');
+    localLane.addComponentToUpdateDependents(cascadedId);
+    await localScope.lanes.saveLane(localLane, { laneHistoryMsg: 'test: stale local entry' });
+
+    const result = await lanes.undoLaneUpdateDependents(laneId);
+    expect(result.removed).to.have.lengthOf(0);
+    expect(result.remoteChanged).to.be.false;
+    expect(result.localChanged).to.be.true;
+
+    const afterLocal = await localScope.lanes.loadLane(laneId);
+    expect(afterLocal?.updateDependents).to.be.undefined;
+  });
+  it('removeUpdateDependents() should remove nothing when given an empty list, not everything', async () => {
+    // an empty list means the caller resolved zero entries. reading it as "remove all" would let a
+    // remote call that asks to remove nothing wipe the whole cascade.
+    const localScope = await loadScope(path.join(workspaceData.workspacePath, '.bit'));
+    const localLane = await localScope.lanes.loadLane(laneId);
+    if (!localLane) throw new Error('expected the lane to exist locally');
+    localLane.addComponentToUpdateDependents(cascadedId);
+    await localScope.lanes.saveLane(localLane, { laneHistoryMsg: 'test: entry that must survive' });
+
+    expect(await lanes.removeUpdateDependents(laneId, [])).to.be.false;
+    const afterEmpty = await localScope.lanes.loadLane(laneId);
+    expect(afterEmpty?.updateDependents?.map((id) => id.toString())).to.deep.equal([cascadedId.toString()]);
+
+    // omitting the ids is what removes all of them
+    expect(await lanes.removeUpdateDependents(laneId)).to.be.true;
+    const afterAll = await localScope.lanes.loadLane(laneId);
+    expect(afterAll?.updateDependents).to.be.undefined;
+  });
+});
+
+describe('LaneUpdatesCmd', () => {
+  const stubbedLaneId = LaneId.from('my-lane', 'org.scope');
+  function createCmd(result: { source: LaneUpdateDependentsSource; remoteError?: string }) {
+    const lanes = {
+      getCurrentLaneId: () => stubbedLaneId,
+      getLaneUpdateDependents: async () => ({ laneId: stubbedLaneId, ids: [], ...result }),
+    } as unknown as LanesMain;
+    return new LaneUpdatesCmd(lanes);
+  }
+  it('should say the lane is missing on the remote, rather than report a fetch failure', async () => {
+    const output = await createCmd({ source: 'no-remote-lane' }).report([''], {});
+    expect(output).to.include('not found on the remote');
+    expect(output).to.not.include('undefined');
+  });
+  it('should report the remote error when the fetch actually failed', async () => {
+    const output = await createCmd({ source: 'remote-unavailable', remoteError: 'connection refused' }).report(
+      [''],
+      {}
+    );
+    expect(output).to.include('could not be fetched: connection refused');
+  });
+  it('should not add a source hint when the entries came from the remote', async () => {
+    const output = await createCmd({ source: 'remote' }).report([''], {});
+    expect(output).to.not.include('showing the local lane object');
   });
 });

@@ -27,6 +27,11 @@ export interface Network {
   latestVersions(bitIds: ComponentIdList): Promise<string[]>;
   graph(bitId?: ComponentID): Promise<DependencyGraph>;
   listLanes(name?: string, mergeData?: boolean): Promise<LaneData[]>;
+  /**
+   * remove hidden `lane.updateDependents` entries (the dependents Ripple CI cascaded onto the lane)
+   * from the lane on this remote. omitting `ids` removes all of them. resolves to true if the lane changed.
+   */
+  removeLaneUpdateDependents(laneId: string, ids?: string[]): Promise<boolean>;
   hasObjects(hashes: string[]): Promise<string[]>;
   doctor(diagnosisName?: string): Promise<DoctorResponse>;
 }

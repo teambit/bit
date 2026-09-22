@@ -434,3 +434,23 @@ describe('comment preservation during install', function () {
     expect(workspaceConfigAfter).to.include('// this dependency must stay pinned');
   });
 });
+
+describe('repeat install with nothing changed', function () {
+  this.timeout(0);
+  let helper: Helper;
+  let secondInstallOutput: string;
+  before(() => {
+    helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
+    helper.extensions.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
+    helper.fixtures.populateComponents(1);
+    helper.command.install();
+    secondInstallOutput = stripAnsi(helper.command.install());
+  });
+  after(() => {
+    helper.scopeHelper.destroy();
+  });
+  it('should let the package manager return early instead of reinstalling', () => {
+    expect(secondInstallOutput).to.include('Already up to date');
+  });
+});
