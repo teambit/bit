@@ -81,6 +81,7 @@ export default class ScopeHelper {
     if (opts?.disablePreview ?? true) this.workspaceJsonc.disablePreview();
     if (opts?.disableMissingManuallyConfiguredPackagesIssue ?? true)
       this.workspaceJsonc.disableMissingManuallyConfiguredPackagesIssue();
+    this.workspaceJsonc.neverBuildNativeAccelerators();
 
     if (opts?.registry) {
       this._writeNpmrc({

@@ -16,7 +16,7 @@ In this repo:
 
 - `scopes/dependencies/pnpm/lynx.ts` builds the `InstallOptions`, passes every
   project manifest in memory, and maps the result (`stats.added + removed +
-  linkedToRoot > 0`) to `dependenciesChanged`. It also keeps Bit's `bit:` block
+linkedToRoot > 0`) to `dependenciesChanged`. It also keeps Bit's `bit:` block
   in `pnpm-lock.yaml` (`readBitLockfileAttrs` / `addBitAttributesToLockfile`).
 - `scopes/dependencies/pnpm/pnpm-prune-modules.ts` removes virtual-store
   directories the current lockfile no longer lists, after every install.
@@ -118,9 +118,9 @@ always name a target.
 `@pnpm/napi` parses lockfiles without going through the engine:
 
 ```js
-const napi = require('@pnpm/napi') // from the bit installation's node_modules
-const wanted = await napi.readLockfile({ dir, kind: 'wanted' }) // pnpm-lock.yaml
-const current = await napi.readLockfile({ dir, kind: 'current' }) // node_modules/.pnpm/lock.yaml
+const napi = require('@pnpm/napi'); // from the bit installation's node_modules
+const wanted = await napi.readLockfile({ dir, kind: 'wanted' }); // pnpm-lock.yaml
+const current = await napi.readLockfile({ dir, kind: 'current' }); // node_modules/.pnpm/lock.yaml
 ```
 
 The current lockfile records what was materialized: only snapshots the

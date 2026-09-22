@@ -554,6 +554,7 @@ describe('DepenendencyResolverMain.getComponentEnvPolicyFromEnv()', () => {
       {} as any,
       {
         isCoreEnv: () => false,
+        isLegacyCoreEnv: () => false,
       } as any,
       {} as any,
       {} as any,
