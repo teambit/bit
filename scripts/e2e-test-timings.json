@@ -211,7 +211,6 @@
   "e2e/harmony/use.e2e.ts": 15,
   "e2e/harmony/validate.e2e.ts": 161,
   "e2e/harmony/workspace-config.e2e.ts": 15,
-  "e2e/harmony/yarn-env-as-package.e2e.ts": 15,
   "e2e/performance/filesystem-read.e2e.ts": 15,
   "e2e/typescript/typescript.e2e.ts": 24
 }
