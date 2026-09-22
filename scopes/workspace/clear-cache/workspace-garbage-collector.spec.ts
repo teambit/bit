@@ -618,6 +618,48 @@ describe('collectGarbageInWorkspace', () => {
       // the remote head is still a root, so the lane refs really were read
       expect(await objectExists(Ref.from(VERSION_HASHES['0.0.3']))).to.be.true;
     });
+
+    it('should still read a real lane that happens to be named that way', async () => {
+      // the name is not what disqualifies a file - failing to read as a lane is. a lane may be
+      // called `.DS_Store`, and skipping it would delete the head it holds.
+      await markAsExported(); // so 0.0.1 is collectable and only the lane below can save it
+      await scope.objects.remoteLanes.addEntry(
+        LaneId.from('.DS_Store', COMP_SCOPE),
+        ComponentID.fromObject({ scope: COMP_SCOPE, name: COMP_NAME }),
+        Ref.from(VERSION_HASHES['0.0.1'])
+      );
+      await scope.objects.remoteLanes.write();
+      await runGc();
+      expect(await objectExists(Ref.from(VERSION_HASHES['0.0.1']))).to.be.true;
+      expect(await objectExists(sources['0.0.1'].hash())).to.be.true;
+    });
+  });
+
+  describe('with a resolved unrelated merge', () => {
+    /** the other side of the merge - a lane component that shared main's name */
+    const UNRELATED_HASH = '3'.repeat(39) + 'a';
+    let unrelatedSource: Source;
+
+    beforeEach(async () => {
+      await markAsExported();
+      unrelatedSource = Source.from(Buffer.from('the contents of the unrelated side'));
+      const unrelatedVersion = buildVersion(UNRELATED_HASH, unrelatedSource, []);
+      // the head version records it, and `refsWithOptions` does not report it
+      const headWithUnrelated = buildVersion(VERSION_HASHES['0.0.3'], sources['0.0.3'], [VERSION_HASHES['0.0.2']], {
+        unrelated: { head: UNRELATED_HASH, laneId: { scopeName: COMP_SCOPE, name: 'other-lane' } },
+      });
+      const objects = [unrelatedVersion, unrelatedSource, headWithUnrelated];
+      objects.forEach((object) => {
+        object.validateBeforePersist = false;
+      });
+      await scope.objects.writeObjectsToTheFS(objects);
+    });
+
+    it('should keep the other head, which the diverge calculation loads before it can skip it', async () => {
+      await runGc();
+      expect(await objectExists(Ref.from(UNRELATED_HASH))).to.be.true;
+      expect(await objectExists(unrelatedSource.hash())).to.be.true;
+    });
   });
 
   describe('with a component that was never exported', () => {

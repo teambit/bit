@@ -287,7 +287,7 @@ ${list}`);
   if (keepVersions > 0) await keepRecentVersions();
 
   logger.debug(`gc, ${rootVersions.size} root versions before resolving dependencies`);
-  await keepFlattenedDependencies();
+  await keepReferencedVersions();
   logger.debug(`gc, ${rootVersions.size} root versions in total`);
 
   // expand each kept version into the objects it points at: its files, its build artifacts and its
@@ -474,19 +474,20 @@ ${list}`);
   }
 
   /**
-   * dependencies are needed at the exact version they're pinned to - that's what gets isolated into
-   * a capsule on build.
+   * the versions a kept version names elsewhere than in its own file list: its dependencies at the
+   * exact version they're pinned to (that's what gets isolated into a capsule on build), the env
+   * or aspect it was built with, and the other side of a resolved unrelated merge.
    *
    * `flattenedDependencies` is already transitive, so one pass over it would be enough on its own.
-   * an env named only in `extensions` is not in anyone's flattened list though, so rooting it adds
-   * a version whose own dependencies nothing has accounted for - hence the loop, which runs until
-   * a pass stops adding roots.
+   * the other two are not in anyone's flattened list though, so rooting one adds a version whose
+   * own references nothing has accounted for - hence the loop, which runs until a pass adds none.
    */
-  async function keepFlattenedDependencies() {
+  async function keepReferencedVersions() {
     const seen = new Set<string>();
     let frontier = [...rootVersions];
     while (frontier.length) {
       const dependencies = new Set<string>();
+      const added: string[] = [];
       await pMapPool(
         frontier,
         async (hash) => {
@@ -496,10 +497,17 @@ ${list}`);
           // an env or aspect the version was built with. versions written by older bits record
           // these only here, so taking `flattenedDependencies` at its word would miss them.
           version.extensions.extensionsBitIds.forEach((extension) => dependencies.add(extension.toString()));
+          // the other side of a resolved unrelated merge - a component created on a lane under a
+          // name main already had. the diverge calculation loads it before it can tell that it's
+          // unrelated, so it has to be here. `refsWithOptions` doesn't report it.
+          const unrelatedHead = version.unrelated?.head?.toString();
+          if (unrelatedHead && !rootVersions.has(unrelatedHead)) {
+            addRoot(unrelatedHead);
+            if (rootVersions.has(unrelatedHead)) added.push(unrelatedHead);
+          }
         },
         { concurrency }
       );
-      const added: string[] = [];
       await pMapPool(
         [...dependencies].filter((idStr) => !seen.has(idStr)),
         async (idStr) => {

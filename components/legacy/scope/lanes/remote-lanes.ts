@@ -16,8 +16,9 @@ import { logger } from '@teambit/legacy.logger';
 type Lanes = { [laneName: string]: LaneComponent[] };
 
 /**
- * dropped when listing remote-lane files. a lane name is free-form, so there's no shape to test
- * against - only these, which the filesystem puts there and bit never does.
+ * names the filesystem puts among the remote-lane files. a lane may legitimately be called any of
+ * these, so the name alone is never reason to skip one - it only excuses a file that also failed
+ * to read as a lane.
  */
 const FS_METADATA_FILES = ['.DS_Store', 'Thumbs.db', 'desktop.ini'];
 
@@ -164,16 +165,24 @@ export class RemoteLanes {
   async getAllRefsPerComponent(): Promise<Map<string, Ref[]>> {
     // `dot: true` because a scope or lane name may start with a dot, and glob skips those by
     // default. missing one here would let the collector delete a head it must keep. that also
-    // sweeps up whatever else the filesystem leaves lying around, hence `nodir` and the exclusion
-    // below - one .DS_Store would otherwise be parsed as a lane and fail every run.
+    // sweeps up whatever the filesystem leaves lying around, hence `nodir` and the rescue below.
     const matches = await glob(path.join('*', '*'), { cwd: this.basePath, dot: true, nodir: true });
     const laneIds = matches
-      .filter((match) => !FS_METADATA_FILES.includes(path.basename(match)))
       .map((match) => match.split(path.sep))
       .map(([head, ...tail]) => LaneId.from(tail.join('/'), head));
     const refsPerComponent = new Map<string, Ref[]>();
     await pMapSeries(laneIds, async (laneId) => {
-      const laneComponents = await this.getRemoteLane(laneId);
+      let laneComponents: LaneComponent[];
+      try {
+        laneComponents = await this.getRemoteLane(laneId);
+      } catch (err: any) {
+        // `.DS_Store` and friends live here on some systems and are not lanes. they're recognised
+        // by failing to read rather than by name, because a lane is allowed to be called that and
+        // dropping a real one would delete the head it holds. anything else that fails to read is
+        // a lane we can't account for, and the caller must not proceed without it.
+        if (FS_METADATA_FILES.includes(laneId.name)) return;
+        throw err;
+      }
       laneComponents.forEach(({ id, head }) => {
         const key = id.toStringWithoutVersion();
         const existing = refsPerComponent.get(key);
