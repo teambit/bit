@@ -23,7 +23,11 @@ import { ObjectList } from './object-list';
 import BitRawObject from './raw-object';
 import Ref from './ref';
 import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
-import { getMaxSizeForObjects, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import {
+  getMaxSizeForObjects,
+  getMaxBytesForObjects,
+  createInMemoryCache,
+} from '@teambit/harmony.modules.in-memory-cache';
 import { ScopeMeta, Lane, ModelComponent } from '../models';
 
 type ContentTransformer = (content: Buffer) => Buffer;
@@ -47,7 +51,7 @@ export default class Repository {
     this.scopeJson = scopeJson;
     this.onRead = (content: Buffer) => Repository.onPostObjectRead?.(content) || content;
     this.onPersist = (content: Buffer) => Repository.onPreObjectPersist?.(content) || content;
-    this.cache = createInMemoryCache({ maxSize: getMaxSizeForObjects() });
+    this.cache = createInMemoryCache({ maxSize: getMaxSizeForObjects(), maxBytes: getMaxBytesForObjects() });
   }
 
   get persistMutex() {
@@ -217,11 +221,11 @@ export default class Repository {
     const fileContents = this.onRead(fileContentsRaw);
     // uncomment to debug the transformed objects by onRead
     // console.log('transformedContent load', ref.toString(), BitObject.parseSync(fileContents).getType());
-    const parsedObject = await BitObject.parseObject(fileContents, objectPath);
+    const { object: parsedObject, inflatedSize } = await BitObject.parseObjectWithSize(fileContents, objectPath);
     const maxSizeToCache = 100 * 1024; // 100KB
     if (size < maxSizeToCache) {
       // don't cache big files (mainly artifacts) to prevent out-of-memory
-      this.setCache(parsedObject);
+      this.setCache(parsedObject, inflatedSize);
     }
     return parsedObject;
   }
@@ -452,8 +456,12 @@ export default class Repository {
     }
   }
 
-  setCache(object: BitObject) {
-    this.cache.set(object.hash().toString(), object);
+  /**
+   * `size` is the approximate memory footprint of the object (its inflated content size), which is what
+   * bounds the cache. when unknown, a default estimate is used.
+   */
+  setCache(object: BitObject, size?: number) {
+    this.cache.set(object.hash().toString(), object, size);
     return this;
   }
 

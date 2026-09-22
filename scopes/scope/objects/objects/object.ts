@@ -123,6 +123,18 @@ path: ${err.path}`);
   }
 
   /**
+   * same as `parseObject`, but also returns the size of the inflated content, which approximates the
+   * memory footprint of the parsed object.
+   */
+  static async parseObjectWithSize(
+    fileContents: Buffer,
+    filePath?: string
+  ): Promise<{ object: BitObject; inflatedSize: number }> {
+    const buffer = await inflate(fileContents, filePath);
+    return { object: parse(buffer), inflatedSize: buffer.byteLength };
+  }
+
+  /**
    * same as `parseObject`, however, if the type is not one of the given "typeNames", it returns null.
    * the performance improvement is huge compare to "parseObject", as it doesn't parse the object if not needed.
    */
