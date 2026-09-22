@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'fs';
 import type { ComponentType } from 'react';
 import type { AspectDefinition } from '@teambit/aspect-loader';
-import { getAspectDirFromBvm } from '@teambit/aspect-loader';
+import { getAspectArtifactDir, filterCoreAspectDefs } from '@teambit/aspect-loader';
 import type { CacheMain } from '@teambit/cache';
 import { CacheAspect } from '@teambit/cache';
 import type { CLIMain } from '@teambit/cli';
@@ -38,6 +38,8 @@ import createRspackSsrConfig from './rspack/rspack.ssr.config';
 import { writeBundleStats } from './rspack/bundle-stats';
 import type { StartPlugin, StartPluginOptions } from './start-plugin';
 import { BundleUiTask, BUNDLE_UI_HASH_FILENAME, getUiRootEntryName, getUiRootHtmlFilename } from './bundle-ui.task';
+import type { UiVendorDllPaths } from './ui-vendor-dll';
+import { resolveUiVendorDllPaths } from './ui-vendor-dll';
 
 export type UIDeps = [PubsubMain, CLIMain, GraphqlMain, ExpressMain, ComponentMain, CacheMain, LoggerMain];
 
@@ -241,8 +243,13 @@ export class UiMain {
    * what gets built. Each entry emits its own `<entry>.html`, and the ssr build (scope only) is a
    * second compilation over that root's entry.
    */
-  async build(uiRootAspectIdOrName?: string, customOutputPath?: string): Promise<any> {
-    this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}"`);
+  async build(
+    uiRootAspectIdOrName?: string,
+    customOutputPath?: string,
+    options?: { forPreBundle?: boolean }
+  ): Promise<any> {
+    const forPreBundle = options?.forPreBundle || false;
+    this.logger.debug(`build, uiRootAspectIdOrName: "${uiRootAspectIdOrName}", forPreBundle: ${forPreBundle}`);
     const maybeUiRoot = this.getUi(uiRootAspectIdOrName);
 
     if (!maybeUiRoot) throw new UnknownUI(uiRootAspectIdOrName, this.possibleUis());
@@ -254,7 +261,7 @@ export class UiMain {
     const entries = await pMapSeries(this.getUiRoots(), async ([rootAspectId, root]) => ({
       name: getUiRootEntryName(rootAspectId),
       // sequentially: `resolveAspects` imports and isolates, which is not safe to run in parallel.
-      files: [await this.generateRoot(await root.resolveAspects(UIRuntime.name), rootAspectId)],
+      files: [await this.generateRoot(await this.resolveUiAspects(root, forPreBundle), rootAspectId)],
       title: root.name,
       root,
     }));
@@ -627,6 +634,10 @@ export class UiMain {
     const cachedBundleUiHash = this.readBundleUiHash(uiRootAspectId);
     const isLocalBuildAvailable = existsSync(join(uiRoot.path, await this.publicDir(uiRoot)));
 
+    this.logger.debug(
+      `shouldServeBundleUi, currentBundleUiHash: ${currentBundleUiHash}, cachedBundleUiHash: ${cachedBundleUiHash}, bundleUiPath: ${this.getBundleUiPath()}, isLocalBuildAvailable: ${isLocalBuildAvailable}, force: ${force}`
+    );
+
     return currentBundleUiHash === cachedBundleUiHash && !isLocalBuildAvailable && !force;
   }
 
@@ -681,8 +692,22 @@ export class UiMain {
     return this.createBuildUiHash(uiRoot, runtime);
   }
 
-  async createBundleUiHash(uiRoot: UIRoot, runtime = 'ui'): Promise<string> {
-    const aspects = await uiRoot.resolveAspects(runtime);
+  /**
+   * the aspects a UI bundle is built from.
+   *
+   * for a *shipped* pre-bundle (`forPreBundle`) only bit's own aspects count: the artifact has to
+   * describe bit, not whichever workspace produced it. bit's repo uses `teambit.react/react` as an
+   * env, and letting that leak in bakes a versioned workspace aspect into an artifact no user
+   * workspace can match. see `bundle-plan.md` §17.
+   */
+  private async resolveUiAspects(uiRoot: UIRoot, forPreBundle = false): Promise<AspectDefinition[]> {
+    const aspects = await uiRoot.resolveAspects(UIRuntime.name);
+    return forPreBundle ? filterCoreAspectDefs(aspects) : aspects;
+  }
+
+  async createBundleUiHash(uiRoot: UIRoot, runtime = 'ui', forPreBundle = false): Promise<string> {
+    const resolved = await uiRoot.resolveAspects(runtime);
+    const aspects = forPreBundle ? filterCoreAspectDefs(resolved) : resolved;
     aspects.sort((a, b) => ((a.getId || a.aspectPath) > (b.getId || b.aspectPath) ? 1 : -1));
     const aspectIds = aspects.map((aspect) => aspect.getId || aspect.aspectPath);
     return sha1(aspectIds.join(''));
@@ -693,11 +718,11 @@ export class UiMain {
    * keyed by root aspect id, rather than a bare hash per directory.
    */
   private readBundleUiHash(uiRootAspectId: string) {
-    const bundleUiPathFromBvm = this.getBundleUiPath();
-    if (!bundleUiPathFromBvm) {
+    const bundleUiPath = this.getBundleUiPath();
+    if (!bundleUiPath) {
       return '';
     }
-    const hashFilePath = join(bundleUiPathFromBvm, BUNDLE_UI_HASH_FILENAME);
+    const hashFilePath = join(bundleUiPath, BUNDLE_UI_HASH_FILENAME);
     if (!existsSync(hashFilePath)) return '';
     try {
       const hashes = JSON.parse(readFileSync(hashFilePath).toString());
@@ -711,13 +736,29 @@ export class UiMain {
   }
 
   private getBundleUiPath(): string | undefined {
-    try {
-      const uiPathFromBvm = getAspectDirFromBvm(UIAspect.id);
-      return join(uiPathFromBvm, BundleUiTask.getArtifactDirectory());
-    } catch (err) {
-      this.logger.error(`getBundleUiPath, getAspectDirFromBvm failed with err: ${err}`);
-      return undefined;
+    const bundleUiPath = getAspectArtifactDir(UIAspect.id, BundleUiTask.getArtifactDirectory());
+    if (!bundleUiPath) {
+      this.logger.debug('getBundleUiPath, no pre-built UI bundle found');
     }
+    return bundleUiPath;
+  }
+
+  /**
+   * absolute paths to the shipped UI vendor DLL artifact (a manifest + a chunk exposing
+   * `window.__bitUiVendor__`), or `undefined` if this bit installation doesn't have one - an older
+   * bundle, a build with the artifact stripped, or a bit version that predates this feature. safe to
+   * call unconditionally; never throws.
+   *
+   * `cssPath` is the stylesheet of every module in the chunk: once `DllReferencePlugin` intercepts
+   * them the consumer's own build compiles none of their css, so a consumer that serves the chunk
+   * has to serve this alongside it. It is `undefined` on its own (the rest of the paths still
+   * returned) for an artifact built before the dll emitted css.
+   *
+   * pass `manifestPath` to `createUiVendorDllReference`, not straight to `DllReferencePlugin` - see
+   * that function's own doc for why.
+   */
+  getUiVendorDllPaths(): UiVendorDllPaths | undefined {
+    return resolveUiVendorDllPaths(getAspectArtifactDir(UIAspect.id, BundleUiTask.getArtifactDirectory()));
   }
 
   private async buildIfNoBundle(uiRootAspectId: string, uiRoot: UIRoot): Promise<boolean> {

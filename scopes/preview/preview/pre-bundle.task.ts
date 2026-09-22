@@ -4,7 +4,8 @@ import { CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
 import type { Capsule } from '@teambit/isolator';
 import type { Logger } from '@teambit/logger';
 import type { UIRoot, UiMain } from '@teambit/ui';
-import { generateBundleHash, getBundleArtifactDef } from './pre-bundle-utils';
+import { filterCoreAspectDefs } from '@teambit/aspect-loader';
+import { generateBundleHash, getBundleArtifactDef, getAspectIds } from './pre-bundle-utils';
 import { RUNTIME_NAME, buildPreBundlePreview } from './pre-bundle';
 import { PreviewAspect } from './preview.aspect';
 
@@ -33,9 +34,12 @@ export class PreBundlePreviewTask implements BuildTask {
       const outputPath = join(capsule.path, CAPSULE_ARTIFACTS_DIR, BUNDLE_DIR);
       this.logger.info(`Generating UI bundle at ${outputPath}...`);
       const [, uiRoot] = this.ui.getUi() as [string, UIRoot];
-      const resolvedAspects = await uiRoot.resolveAspects(RUNTIME_NAME);
+      // the artifact describes bit, not the workspace it was built in - see `filterCoreAspectDefs`
+      const resolvedAspects = filterCoreAspectDefs(await uiRoot.resolveAspects(RUNTIME_NAME));
+      this.logger.debug(`PreBundlePreviewTask, aspect ids: ${getAspectIds(resolvedAspects).join(', ')}`);
       await buildPreBundlePreview(resolvedAspects, outputPath);
-      await this.generateHash(outputPath);
+      // hash the same list that was bundled, so the artifact and its `.hash` cannot disagree
+      generateBundleHash(resolvedAspects, outputPath);
     } catch (error) {
       this.logger.error('Generating UI bundle failed', error);
       throw new Error('Generating UI bundle failed');
@@ -45,13 +49,5 @@ export class PreBundlePreviewTask implements BuildTask {
       componentsResults: [],
       artifacts: [getBundleArtifactDef(BUNDLE_DIR, '')],
     };
-  }
-
-  private async generateHash(outputPath: string): Promise<void> {
-    const maybeUiRoot = this.ui.getUi();
-    if (!maybeUiRoot) throw new Error('no uiRoot found');
-
-    const [, uiRoot] = maybeUiRoot;
-    await generateBundleHash(uiRoot, RUNTIME_NAME, outputPath);
   }
 }

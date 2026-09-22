@@ -30,18 +30,78 @@ export type HttpHelperOptions = {
    * protocol tests use); the workspace root serves the local workspace.
    */
   uiRootAspectId?: string;
+  /**
+   * the binary that spawns the server. Defaults to the plain, non-bundled bit - what's under test
+   * in an http-protocol e2e is import/export over HTTP, not whether the bundle's `bit start` can
+   * itself serve an arbitrary remote scope (a separately tracked, currently-unsupported-by-default
+   * capability, see bundle-plan.md §14/D15). This is a no-op outside a bundle run, since
+   * `nonBundledBitBin` then equals `bitBin` anyway. Pass an explicit `serverBin` if a future test
+   * specifically wants to exercise the bundle (or some other binary) as the server.
+   */
+  serverBin?: string;
 };
+
+export type UiE2eMode = 'rebuild' | 'prebuilt';
+
+/**
+ * Which mode to run the UI-bundling sanity suites in (`ui-ssr.e2e.ts`, `ui-start.e2e.ts`), or
+ * `undefined` to skip them.
+ *
+ * These start a real `bit start` server, so they are expensive (a `--rebuild` run is minutes on a
+ * cold cache - see `START_TIMEOUT`) and binary-sensitive (`prebuilt` mode only proves anything once
+ * a real ui/preview pre-bundle is baked into the binary under test). Both the plain e2e job and the
+ * esbuild-bundle one sweep every e2e spec file under the e2e directory, so left un-gated these
+ * would run - and `--rebuild` would fail - under the bundle job, whose default distribution does
+ * not ship the UI toolchain (rspack et al., see the `--ui-bundling` externals group, bundle-plan
+ * §8.3). Skipping unless a mode is explicitly requested is what keeps them out of that sweep; a
+ * dedicated CI step that wants this coverage sets `BIT_E2E_UI_MODE` and targets these two files
+ * directly rather than relying on the glob. See bundle-plan/11-e2e-suite.md for the full recipe and
+ * current CI status (as of this writing, no CI job sets this - it is supported but not yet wired
+ * in, see §10/§11).
+ *
+ * - `rebuild` — local/dev default. Starts the plain, non-bundled binary (`bd`/`bit` on PATH, see
+ *   `CommandHelper.nonBundledBitBin`) with `--rebuild`, compiling the UI fresh from this repo's
+ *   rspack config every run. Slow, but needs no pre-built artifact - the right choice while
+ *   iterating locally, since producing a real local pre-bundle is itself slow (bundle-plan §17i).
+ *   Run with e.g. `BIT_E2E_UI_MODE=rebuild npx mocha --require ./babel-register
+ *   e2e/harmony/ui-start.e2e.ts` — NOT `npm run e2e-test -- <file>`; that script's spec glob is
+ *   baked into the command string, so appended args add to it rather than replacing it.
+ * - `prebuilt` — bundle-validation. Starts whatever binary `--bit_bin` selected
+ *   (`CommandHelper.bitBin`), meant to be a freshly built esbuild CLI bundle with a real ui/preview
+ *   pre-bundle already in it (bundle-plan §17i), and does **not** pass `--rebuild` - the bundled
+ *   binary cannot rebuild the UI (no rspack), so this mode instead proves `bit start` serves the
+ *   shipped pre-bundle (`shouldServeBundleUi`/`getBundleUiPath`) rather than falling back to one.
+ *   `npm run e2e-test:bundle` (`scripts/e2e-with-bundle.js`) already builds/reuses that bundle and
+ *   points `--bit_bin` at it, and forwards explicit spec paths instead of the full glob when given
+ *   any - so `BIT_E2E_UI_MODE=prebuilt npm run e2e-test:bundle -- e2e/harmony/ui-start.e2e.ts
+ *   e2e/harmony/ui-ssr.e2e.ts` is the whole recipe, *provided* `.bundle-cache/` (or the capsules)
+ *   already hold a pre-bundle built from current source - `ensureBundle` does not produce one, only
+ *   restores whatever cache exists (bundle-plan §17i's `bd build ... --tasks BundleUI,PreBundlePreview`
+ *   + `npm run bundle:prebundle-cache:save` is what fills that cache).
+ */
+export function uiE2eMode(): UiE2eMode | undefined {
+  const mode = process.env.BIT_E2E_UI_MODE;
+  return mode === 'rebuild' || mode === 'prebuilt' ? mode : undefined;
+}
+
+/** the `HttpHelperOptions` for the mode `uiE2eMode()` returned. See its doc for what each means. */
+export function uiE2eHttpHelperOptions(helper: Helper, mode: UiE2eMode): HttpHelperOptions {
+  return mode === 'prebuilt' ? { serverBin: helper.command.bitBin } : { extraArgs: ['--rebuild'] };
+}
 
 export class HttpHelper {
   httpProcess: ChildProcess;
   /** everything `bit start` wrote to stderr, for tests asserting a clean startup */
   stderr = '';
+  private serverBin: string;
 
   constructor(
     private helper: Helper,
     private port = DEFAULT_HTTP_PORT,
     private options: HttpHelperOptions = {}
-  ) {}
+  ) {
+    this.serverBin = options.serverBin || helper.command.nonBundledBitBin;
+  }
 
   private get uiRootAspectId(): string {
     return this.options.uiRootAspectId || SCOPE_UI_ROOT;
@@ -62,11 +122,17 @@ export class HttpHelper {
     const timeoutMs = this.options.startTimeoutMs ?? START_TIMEOUT;
     return new Promise((resolve, reject) => {
       const args = ['start', '--verbose', '--log', '--port', String(this.port), ...(this.options.extraArgs || [])];
-      const cmd = `${this.helper.command.bitBin} ${args.join(' ')}`;
+      const cmd = `${this.serverBin} ${args.join(' ')}`;
       const { cwd } = this;
       if (this.helper.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line no-console
       if (this.helper.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line
-      this.httpProcess = childProcess.spawn(this.helper.command.bitBin, args, { cwd });
+      // `serverBin` (e.g. `CommandHelper.bitBin`) may be a full command, not just a bin name - "node
+      // /path/to/bundle/bin/bit" for a bundle under test (see its own doc). `spawn(command, args)`
+      // does not go through a shell, so passing that whole string as `command` looks for a single
+      // executable literally named "node /path/to/...", which is never found (ENOENT) - split it
+      // into the program and its leading args instead.
+      const [program, ...programArgs] = this.serverBin.split(' ');
+      this.httpProcess = childProcess.spawn(program, [...programArgs, ...args], { cwd });
       let stdoutData = '';
       let stderrData = '';
       let settled = false;
@@ -109,6 +175,14 @@ export class HttpHelper {
       this.httpProcess.on('close', (code) => {
         if (this.helper.debugMode) console.log(`child process exited with code ${code}`);
         settle(() => reject(new Error(`http exited with code ${code}\n${stderrData}`)));
+      });
+      // without this, a spawn failure (e.g. `program` not found) is an *unhandled* 'error' event -
+      // node throws it from deep inside its internals rather than rejecting this promise, and since
+      // that throw happens outside this executor's call stack, neither resolve nor reject ever
+      // fires. mocha's `before()` then hangs forever instead of failing with the real cause.
+      this.httpProcess.on('error', (err) => {
+        if (this.helper.debugMode) console.log(`spawn error: ${err}`);
+        settle(() => reject(err));
       });
     });
   }
@@ -190,7 +264,7 @@ export class HttpHelper {
   private isBitServerProcess(pid: number): boolean {
     const cmd = this.processCommand(pid);
     if (!cmd) return false;
-    return cmd.includes('@teambit/bit') || cmd.includes(this.helper.command.bitBin) || /\bbit\b.*\bstart\b/.test(cmd);
+    return cmd.includes('@teambit/bit') || cmd.includes(this.serverBin) || /\bbit\b.*\bstart\b/.test(cmd);
   }
   private async waitForPortToBeFree(timeoutMs = PORT_FREE_TIMEOUT): Promise<void> {
     const startTime = Date.now();

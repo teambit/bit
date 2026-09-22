@@ -30,11 +30,13 @@ export default class CommandHelper {
   scopes: ScopesData;
   debugMode: boolean;
   bitBin: string;
+  nonBundledBitBin: string;
   featuresToggle: string | string[] | undefined;
   constructor(scopes: ScopesData, debugMode: boolean) {
     this.scopes = scopes;
     this.debugMode = debugMode;
     this.bitBin = this.getBitBin(); // e.g. npm run e2e-test --bit_bin=bit-dev
+    this.nonBundledBitBin = this.getNonBundledBitBin();
   }
 
   /**
@@ -66,6 +68,23 @@ export default class CommandHelper {
    */
   getBitBin() {
     if (process.env.npm_config_bit_bin) return process.env.npm_config_bit_bin;
+    return this.getNonBundledBitBin();
+  }
+
+  /**
+   * The same resolution `getBitBin()` falls back to, minus the `--bit-bin`/`npm_config_bit_bin`
+   * override - i.e. always the plain, non-bundled binary (repo's own `bd`/`bit`, a bvm link, or
+   * whatever's on PATH), even when the whole suite is running against the esbuild CLI bundle.
+   *
+   * Exists for infrastructure that spins up a *second*, incidental bit process as scaffolding for a
+   * test - e.g. `HttpHelper` starting a remote scope's UI server so an http-protocol test can
+   * exercise import/export over it - where what's under test is the client (the bundle), not
+   * whether the bundle can also serve as that scaffolding. See bundle-plan.md §14 (2026-08-12): the
+   * bundle doesn't rebuild a UI server for an arbitrary remote scope by default (D15), so using
+   * `bitBin` for both sides conflates "does the bundle's `bit start` work" with "does import/export
+   * over HTTP work" - two different, separately-tracked questions.
+   */
+  getNonBundledBitBin(): string {
     const [processBin, processPath] = process.argv;
     if (processBin.endsWith('node')) {
       const binDir = path.dirname(processPath);

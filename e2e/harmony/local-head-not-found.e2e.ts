@@ -1,6 +1,7 @@
 import path from 'path';
 import chai, { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
+import { DEFAULT_ENV } from '@teambit/envs';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import chaiFs from 'chai-fs';
 
@@ -80,8 +81,10 @@ describe('local head Version object is missing from scope', function () {
     });
     it('should not fetch the core env component into the local scope, it ships with bit', () => {
       const output = helper.command.envs();
-      expect(output).to.have.string('teambit.harmony/node');
-      expect(() => helper.command.catComponent('teambit.harmony/node')).to.throw();
+      // the assertion is about core envs in general, so it follows DEFAULT_ENV rather than naming
+      // one - which env a component with no explicit env lands on is not what this test is for.
+      expect(output).to.have.string(DEFAULT_ENV);
+      expect(() => helper.command.catComponent(DEFAULT_ENV)).to.throw();
     });
   });
 });

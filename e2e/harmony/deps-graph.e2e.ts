@@ -227,24 +227,17 @@ export default new ${className}();
       await npmCiRegistry.init();
       npmCiRegistry.setRegistry();
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('minimumReleaseAge', 0);
-      helper.env.setCustomNewEnv(
-        undefined,
-        undefined,
-        {
-          policy: {
-            peers: [
-              {
-                name: '@pnpm.e2e/abc',
-                version: '*',
-                supportedRange: '*',
-              },
-            ],
-          },
+      helper.env.setPolicyOnlyEnv({
+        policy: {
+          peers: [
+            {
+              name: '@pnpm.e2e/abc',
+              version: '*',
+              supportedRange: '*',
+            },
+          ],
         },
-        false,
-        'custom-env/env',
-        'custom-env/env'
-      );
+      });
       helper.fs.createFile('bar', 'bar.js', 'require("@pnpm.e2e/abc"); // eslint-disable-line');
       helper.command.addComponent('bar');
       helper.extensions.addExtensionToVariant('bar', `${helper.scopes.remote}/custom-env/env`, {});
@@ -309,14 +302,7 @@ export default new ${className}();
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       await npmCiRegistry.init();
       npmCiRegistry.setRegistry();
-      helper.env.setCustomNewEnv(
-        undefined,
-        undefined,
-        { policy: { peers: [] } },
-        false,
-        'custom-env/env',
-        'custom-env/env'
-      );
+      helper.env.setPolicyOnlyEnv({ policy: { peers: [] } });
       helper.fs.createFile('comp1', 'comp1.js', 'require("@pnpm.e2e/foo"); // eslint-disable-line');
       helper.command.addComponent('comp1');
       helper.extensions.addExtensionToVariant('comp1', `${helper.scopes.remote}/custom-env/env`, {});

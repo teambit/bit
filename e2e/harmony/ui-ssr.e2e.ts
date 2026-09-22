@@ -1,9 +1,10 @@
 import { expect } from 'chai';
 import { IS_WINDOWS } from '@teambit/legacy.constants';
 import { Helper } from '@teambit/legacy.e2e-helper';
-import { HttpHelper } from '../http-helper';
+import { HttpHelper, uiE2eMode, uiE2eHttpHelperOptions } from '../http-helper';
 
 const PORT = 3025;
+const mode = uiE2eMode();
 
 /**
  * The scope UI root is the only one built with `ssr: true`, and its ssr middleware swallows a render
@@ -11,8 +12,13 @@ const PORT = 3025;
  * working page in a browser, so a broken ssr bundle is invisible without asserting on the *served
  * html* - which is what this file does. It is how "Invalid tag" (react #65), caused by `.cjs` modules
  * being emitted as assets in the ssr build, went unnoticed for months.
+ *
+ * Skipped unless `BIT_E2E_UI_MODE` is set (`rebuild` or `prebuilt` - see `uiE2eMode` in
+ * `../http-helper.ts` for what each does, why this suite opts out of the ordinary e2e sweep by
+ * default, and the exact commands for both modes - including validating the real esbuild CLI
+ * bundle with its baked-in ui/preview pre-bundle, not just this repo's dev binary).
  */
-(IS_WINDOWS ? describe.skip : describe)('scope UI server-side rendering', function () {
+(IS_WINDOWS || !mode ? describe.skip : describe)('scope UI server-side rendering', function () {
   this.timeout(0);
   let helper: Helper;
   let httpHelper: HttpHelper;
@@ -22,10 +28,8 @@ const PORT = 3025;
 
   before(async () => {
     helper = new Helper();
-    // `--rebuild` so the ssr bundle is compiled from this repo's rspack config. without it the
-    // server serves the pre-built bundle shipped by the installed bit version, and the assertions
-    // below would describe that release rather than the code under test.
-    httpHelper = new HttpHelper(helper, PORT, { extraArgs: ['--rebuild'] });
+    // `mode` is never undefined here: the describe block above is skipped entirely otherwise.
+    httpHelper = new HttpHelper(helper, PORT, uiE2eHttpHelperOptions(helper, mode as NonNullable<typeof mode>));
     helper.scopeHelper.setWorkspaceWithRemoteScope();
     helper.fixtures.populateComponents(1, false);
     helper.command.tagAllWithoutBuild();

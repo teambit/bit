@@ -1,13 +1,15 @@
 import { expect } from 'chai';
 import { IS_WINDOWS } from '@teambit/legacy.constants';
 import { Helper } from '@teambit/legacy.e2e-helper';
-import { HttpHelper } from '../http-helper';
+import { HttpHelper, uiE2eMode, uiE2eHttpHelperOptions } from '../http-helper';
 
 const SCOPE_PORT = 3030;
 const WORKSPACE_PORT = 3031;
 
 const SCOPE_UI_ROOT = 'teambit.scope/scope';
 const WORKSPACE_UI_ROOT = 'teambit.workspace/workspace';
+
+const mode = uiE2eMode();
 
 /** scripts and stylesheets the served document tells the browser to load */
 function referencedAssets(html: string): string[] {
@@ -25,10 +27,12 @@ function referencedAssets(html: string): string[] {
  * filename, an asset emitted under a path the server does not expose, a root whose entry was never
  * built - and only the running server shows them.
  *
- * `--rebuild` throughout: without it the server serves the pre-built bundle from the installed bit
- * version, so the assertions would describe that release instead of the code under test.
+ * Skipped unless `BIT_E2E_UI_MODE` is set (`rebuild` or `prebuilt` - see `uiE2eMode` in
+ * `../http-helper.ts` for what each does, why this suite opts out of the ordinary e2e sweep by
+ * default, and the exact commands for both modes - including validating the real esbuild CLI
+ * bundle with its baked-in ui/preview pre-bundle, not just this repo's dev binary).
  */
-(IS_WINDOWS ? describe.skip : describe)('bit start', function () {
+(IS_WINDOWS || !mode ? describe.skip : describe)('bit start', function () {
   this.timeout(0);
 
   describe('scope UI, on a bare scope', () => {
@@ -38,8 +42,9 @@ function referencedAssets(html: string): string[] {
 
     before(async () => {
       helper = new Helper();
+      // `mode` is never undefined here: the describe block above is skipped entirely otherwise.
       httpHelper = new HttpHelper(helper, SCOPE_PORT, {
-        extraArgs: ['--rebuild'],
+        ...uiE2eHttpHelperOptions(helper, mode as NonNullable<typeof mode>),
         uiRootAspectId: SCOPE_UI_ROOT,
       });
       helper.scopeHelper.setWorkspaceWithRemoteScope();
@@ -111,7 +116,7 @@ function referencedAssets(html: string): string[] {
     before(async () => {
       helper = new Helper();
       httpHelper = new HttpHelper(helper, WORKSPACE_PORT, {
-        extraArgs: ['--rebuild'],
+        ...uiE2eHttpHelperOptions(helper, mode as NonNullable<typeof mode>),
         uiRootAspectId: WORKSPACE_UI_ROOT,
       });
       helper.scopeHelper.setWorkspaceWithRemoteScope();

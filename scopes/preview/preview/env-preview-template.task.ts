@@ -76,11 +76,15 @@ export class EnvPreviewTemplateTask implements BuildTask {
       const target = await this.getEnvTargetFromComponent(context, component, envDef, htmlConfig);
       if (!target) return undefined;
       const shouldUseDefaultBundler = this.shouldUseDefaultBundler(envDef);
-      let envToGetBundler = this.envs.getEnvsEnvDefinition().env;
-      let groupEnvId = 'default';
-      if (!shouldUseDefaultBundler) {
-        envToGetBundler = env;
-        groupEnvId = envDef.id;
+      let envToGetBundler = env;
+      let groupEnvId = envDef.id;
+      if (shouldUseDefaultBundler) {
+        // teambit.envs/env is no longer a core aspect, so it may not be loaded. in that case there
+        // is no bundler to generate the env template with, skip it (like envs without a preview).
+        const envsEnvDef = this.envs.getEnvsEnvDefinition();
+        if (!envsEnvDef) return undefined;
+        envToGetBundler = envsEnvDef.env;
+        groupEnvId = 'default';
       }
       if (!grouped[groupEnvId]) {
         grouped[groupEnvId] = {

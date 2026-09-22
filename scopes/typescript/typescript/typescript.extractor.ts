@@ -196,7 +196,10 @@ export class TypeScriptExtractor implements SchemaExtractor {
 
   dispose() {
     if (!this.tsserver) return;
-    this.tsserver.killTsServer();
+    // via tsMain, so the aspect drops its reference too - extractors share that one client, and a
+    // later one would otherwise pick up this now-dead client from `getTsserverClient()`.
+    this.tsMain.killTsserverClient();
+    this.tsserver = undefined;
   }
 
   async computeIdentifiers(node: Node, context: SchemaExtractorContext) {

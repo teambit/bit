@@ -12,13 +12,14 @@ import {
 import type { Compiler, TranspileFileOutputOneFile } from '@teambit/compiler';
 import type { Capsule, IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
 import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
-import { compact, uniq, difference, groupBy, defaultsDeep } from 'lodash';
+import { compact, uniq, groupBy, defaultsDeep, partition } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import type { ExtensionManifest, Aspect } from '@teambit/harmony';
 import type { Component, ComponentID, LoadAspectsOptions, ResolveAspectsOptions } from '@teambit/component';
 import type { Logger } from '@teambit/logger';
 import type { EnvsMain } from '@teambit/envs';
+import { aspectLoadInFlightKey, resolveLegacyCoreEnvId } from '@teambit/envs';
 import type { NodeLinker } from '@teambit/dependency-resolver';
 import { BitError } from '@teambit/bit-error';
 import type { ScopeMain } from './scope.main.runtime';
@@ -119,16 +120,49 @@ needed-for: ${neededFor || '<unknown>'}`);
     opts: {
       packageManagerConfigRootDir?: string;
       workspaceName?: string;
-      loadCustomEnvs?: string;
+      loadCustomEnvs?: boolean;
     } = {}
   ): Promise<{ manifests: ManifestOrAspect[]; potentialPluginsIds: string[] }> {
     ids = uniq(ids);
-    const optsWithDefaults = { loadCustomEnvs: false, ...opts };
     this.logger.debug(`getManifestsGraphRecursively, ids:\n${ids.join('\n')}`);
-    const nonVisitedId = ids.filter((id) => !visited.includes(id));
+    let nonVisitedId = ids.filter((id) => !visited.includes(id));
+    // break re-entrant load cycles: an aspect's manifest deps (or its env) may lead back to an
+    // aspect that a parent call in the current chain is already loading - the nested calls start
+    // with a fresh `visited` list, so without this guard such cycles never converge (same
+    // approach as the workspace-side inFlightAspectsLoads).
+    const [inFlightIds, idsToLoad] = partition(nonVisitedId, (id) =>
+      this.scope.inFlightAspectLoads.has(aspectLoadInFlightKey(id))
+    );
+    if (inFlightIds.length) {
+      this.logger.debug(
+        `getManifestsGraphRecursively, skipping aspects that are already loading: ${inFlightIds.join(', ')}`
+      );
+    }
+    nonVisitedId = idsToLoad;
     if (!nonVisitedId.length) {
       return { manifests: [], potentialPluginsIds: [] };
     }
+    const inFlightAdded = nonVisitedId.map(aspectLoadInFlightKey);
+    inFlightAdded.forEach((id) => this.scope.inFlightAspectLoads.add(id));
+    try {
+      return await this.getManifestsGraphAfterInFlightCheck(nonVisitedId, visited, throwOnError, lane, opts);
+    } finally {
+      inFlightAdded.forEach((id) => this.scope.inFlightAspectLoads.delete(id));
+    }
+  }
+
+  private async getManifestsGraphAfterInFlightCheck(
+    nonVisitedId: string[],
+    visited: string[],
+    throwOnError: boolean,
+    lane?: Lane,
+    opts: {
+      packageManagerConfigRootDir?: string;
+      workspaceName?: string;
+      loadCustomEnvs?: boolean;
+    } = {}
+  ): Promise<{ manifests: ManifestOrAspect[]; potentialPluginsIds: string[] }> {
+    const optsWithDefaults = { loadCustomEnvs: false, ...opts };
     const components = await this.getNonLoadedAspects(nonVisitedId, lane);
     // This is usually not required, right now it required when signing aspects with custom envs.
     // if you see another case where it's required, please consult @Gilad before passing it as true
@@ -173,13 +207,29 @@ needed-for: ${neededFor || '<unknown>'}`);
   }
 
   private async getNonLoadedAspects(ids: string[], lane?: Lane): Promise<Component[]> {
+    // envs that used to be core aspects keep the old single-instance behavior: if some version of
+    // them is already loaded (e.g. the workspace version), reuse it and don't load another copy
+    // (a copy may be requested with a different version, e.g. when it's a dependency of another
+    // loaded aspect, and loading it would re-register slots and build tasks). old components have
+    // them saved in the model without a version - resolve those to their pinned version so they
+    // can be imported and loaded as regular external envs.
+    ids = compact(
+      ids.map((id) => {
+        const idWithoutVersion = id.split('@')[0];
+        if (!this.envs.isLegacyCoreEnv(idWithoutVersion)) return id;
+        if (this.aspectLoader.isAspectLoadedIgnoringVersion(idWithoutVersion)) return undefined;
+        return resolveLegacyCoreEnvId(id);
+      })
+    );
     const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
     if (!notLoadedIds.length) return [];
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
-    const idsWithoutCore: string[] = difference(ids, coreAspectsStringIds);
+    // filter out core aspects also when they are requested with a version (e.g. when they are
+    // dependencies of a loaded aspect, the version is the component version)
+    const idsWithoutCore: string[] = notLoadedIds.filter((id) => !coreAspectsStringIds.includes(id.split('@')[0]));
     const aspectIds = idsWithoutCore.filter((id) => !id.startsWith('file://'));
     // TODO: use diff instead of filter twice
-    const localAspects = ids.filter((id) => id.startsWith('file://'));
+    const localAspects = notLoadedIds.filter((id) => id.startsWith('file://'));
     this.scope.localAspects = uniq(this.scope.localAspects.concat(localAspects));
     // load local aspects for debugging purposes.
     await this.aspectLoader.loadAspectFromPath(localAspects);

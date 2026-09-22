@@ -53,6 +53,16 @@ import { DebugLoadCmd } from './debug-load.cmd';
 import { EnvsUpdateCmd } from './envs-subcommands/envs-update.cmd';
 import { UnuseCmd } from './unuse.cmd';
 import { LocalOnlyCmd, LocalOnlyListCmd, LocalOnlySetCmd, LocalOnlyUnsetCmd } from './commands/local-only-cmd';
+import {
+  AspectCmd,
+  GetAspectCmd,
+  ListAspectCmd,
+  ListCoreAspectCmd,
+  SetAspectCmd,
+  UnsetAspectCmd,
+  UpdateAspectCmd,
+} from './aspect.cmd';
+import { WorkspaceAspectsManager } from './workspace-aspects-manager';
 import type { ConfigStoreMain } from '@teambit/config-store';
 import { ConfigStoreAspect } from '@teambit/config-store';
 
@@ -165,11 +175,25 @@ export class WorkspaceMain {
       // avoid loading the consumer/workspace for "bit init". otherwise, "bit init --reset" can't fix corrupted .bitmap
       return undefined;
     }
+    const getAspectCmd = (workspaceInstance?: Workspace) => {
+      const aspectsManager = new WorkspaceAspectsManager(workspaceInstance, aspectLoader);
+      const aspectCmd = new AspectCmd();
+      aspectCmd.commands = [
+        new ListAspectCmd(aspectsManager),
+        new ListCoreAspectCmd(aspectsManager),
+        new GetAspectCmd(aspectsManager),
+        new SetAspectCmd(aspectsManager),
+        new UnsetAspectCmd(aspectsManager),
+        new UpdateAspectCmd(aspectsManager),
+      ];
+      return aspectCmd;
+    };
     const bitConfig: any = harmony.config.get('teambit.harmony/bit');
     const consumer = await getConsumer(bitConfig.cwd);
     if (!consumer) {
       const capsuleCmd = getCapsulesCommands(isolator, scope, configStore, undefined);
       cli.register(capsuleCmd);
+      cli.register(getAspectCmd());
       return undefined;
     }
     // TODO: get the 'workspace' name in a better way
@@ -279,6 +303,7 @@ export class WorkspaceMain {
     const commands: CommandList = [
       new EjectConfCmd(workspace),
       capsuleCmd,
+      getAspectCmd(workspace),
       new UseCmd(workspace),
       new UnuseCmd(workspace),
       new DebugLoadCmd(workspace),

@@ -1,4 +1,5 @@
 import chai, { expect } from 'chai';
+import stripAnsi from 'strip-ansi';
 import path from 'path';
 import { Extensions } from '@teambit/legacy.constants';
 import { Helper } from '@teambit/legacy.e2e-helper';
@@ -416,6 +417,9 @@ describe('merge lanes - edge cases and special scenarios (part 2)', function () 
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
+      // the merge below runs --build and expects the test to fail. the default env has no
+      // tester, so configure a node env (vitest tester) and install it
+      helper.env.setBitdevNodeEnv();
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
@@ -435,7 +439,7 @@ describe('merge lanes - edge cases and special scenarios (part 2)', function () 
     describe('without --loose flag', () => {
       it('should fail when merging with --build due to test failures', () => {
         const output = helper.command.mergeLane('dev', '--build --no-squash');
-        expect(output).to.have.string('Total Snapped: 0');
+        expect(stripAnsi(output)).to.have.string('Total Snapped: 0');
       });
     });
     describe('with --loose flag', () => {
@@ -445,10 +449,10 @@ describe('merge lanes - edge cases and special scenarios (part 2)', function () 
         mergeOutput = helper.command.mergeLane('dev', '--build --loose --no-squash');
       });
       it('should succeed despite test failures', () => {
-        expect(mergeOutput).to.have.string('Total Snapped: 1');
+        expect(stripAnsi(mergeOutput)).to.have.string('Total Snapped: 1');
       });
       it('should indicate that the test failed', () => {
-        expect(mergeOutput).to.include('task "teambit.defender/tester:JestTest" has failed');
+        expect(mergeOutput).to.include('task "teambit.defender/tester:VitestTest" has failed');
       });
     });
   });

@@ -1,7 +1,23 @@
 import fs from 'fs-extra';
 import { expect } from 'chai';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { Helper } from '@teambit/legacy.e2e-helper';
+
+/** this file lives at <repo>/e2e/harmony */
+// @ts-ignore
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+
+/**
+ * the versions of the given typings packages that the running bit repo itself resolves. Read at
+ * runtime rather than pinned here, so a repo-side bump does not silently put this suite back into
+ * the version mismatch it is avoiding.
+ */
+function typesVersionsOfThisRepo(names: string[]): Record<string, string> {
+  return Object.fromEntries(
+    names.map((name) => [name, fs.readJsonSync(path.join(repoRoot, 'node_modules', name, 'package.json')).version])
+  );
+}
 
 /**
  * `enableGlobalVirtualStore` moves the dependency directories out of the workspace's
@@ -23,9 +39,10 @@ describe('installing with the global virtual store', function () {
       helper.scopeHelper.reInitWorkspace();
       helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('enableGlobalVirtualStore', true);
       helper.fixtures.populateComponents(1);
-      // the compile assertion below needs an env that has a compiler. name it, so that what this
-      // file covers stays the store layout rather than whatever the default env provides.
-      helper.command.setEnv('comp1', 'teambit.harmony/node');
+      // the default env has no compiler, and the last assertion here is about a dist. a
+      // workspace-local env keeps the subject of this suite intact - it installs nothing, so what
+      // the global store does or does not serve is still what the assertions measure.
+      helper.env.setTsEnv();
       helper.command.install('is-positive@1.0.0');
     });
     it('should not create the dependency directories inside the workspace', () => {
@@ -67,6 +84,16 @@ describe('installing with the global virtual store', function () {
       helper.workspaceJsonc.disablePreview();
       helper.fixtures.populateExtensions(1);
       helper.extensions.addExtensionToVariant('extensions', 'teambit.harmony/aspect');
+      // the aspect env pins older typings than this repo uses (@types/react@17 against its 19).
+      // The bridge maps the program's `react` to whatever the workspace hoisted, which is right
+      // for the workspace's own packages - but bit's sources share that program, because a core
+      // aspect in the dev repo exposes `types: index.ts`, and they need the repo's typings. The
+      // mismatch fails the compile for reasons that have nothing to do with reachability, which
+      // is what this suite measures. Align the workspace on the repo's versions so the bridge is
+      // the only variable left: with it disabled the compile still fails, with 47 errors.
+      helper.workspaceJsonc.addKeyValToDependencyResolver('policy', {
+        dependencies: typesVersionsOfThisRepo(['@types/react', '@types/react-dom', '@types/mime']),
+      });
       helper.command.install();
       // throws on a failed build pipeline, which is the assertion: the TSCompiler task is what
       // breaks when the types below cannot be reached

@@ -1,1 +1,1 @@
-export { McpConfigWriter, SetupOptions, RulesOptions } from './mcp-config-writer';
+export { McpConfigWriter, SetupOptions, RulesOptions, MCP_RULES_TEMPLATE_FILENAMES } from './mcp-config-writer';
