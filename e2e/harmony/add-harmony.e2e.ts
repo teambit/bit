@@ -295,28 +295,19 @@ describe('add command on Harmony', function () {
         expect(path.join(helper.scopes.localPath, 'README.md')).to.be.a.file().with.content('# my own readme\n');
       });
     });
-    describe('importing it onto the root with a directory or a symlink in the way', () => {
+    describe('importing it onto the root with a directory in the way', () => {
       before(() => {
         helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
       });
+      // this is also what proves "--path ." reaches the preflight at all. the symlink rule it enforces
+      // is covered above, where --override fails to waive it, and its variants - a dangling link, a
+      // link at the destination rather than above it - are in component-writer.spec.ts against the
+      // preflight directly. a second command-level symlink case would only repeat that pair.
       it('should report a directory at a file path as a conflict rather than fail reading it', () => {
         helper.fs.createNewDirectoryInLocalWorkspace('README.md');
         const cmd = () => helper.command.importComponentWithoutInstall('ws-root', '--path .');
         expect(cmd).to.throw('use --override');
-      });
-      // the variants of the rule itself - a dangling link, a link at the destination rather than above
-      // it - are in component-writer.spec.ts, against the preflight directly. what needs the command
-      // is that it runs at all and that --override does not waive it, which the case below proves.
-      it('should refuse a symlinked ancestor directory even with --override, rather than write through it', () => {
-        fs.rmdirSync(path.join(helper.scopes.localPath, 'README.md'));
-        const outside = path.join(helper.scopes.localPath, '..', `outside-${path.basename(helper.scopes.localPath)}`);
-        fs.mkdirSync(outside);
-        fs.symlinkSync(outside, path.join(helper.scopes.localPath, 'docs'));
-        const cmd = () => helper.command.importComponentWithoutInstall('ws-root', '--path . --override');
-        expect(cmd).to.throw('symbolic link');
-        expect(path.join(outside, 'guide.md')).to.not.be.a.path();
-        fs.removeSync(outside);
       });
     });
     describe('importing it onto the root of a workspace that already tracks components', () => {
