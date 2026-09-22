@@ -25,7 +25,7 @@ export class LRUCacheAdapter<T extends {} = any> implements InMemoryCache<T> {
 
   set(key: string, value: T, size?: number) {
     // lru-cache throws when a size is given to a cache that is not bounded by size, and requires a positive integer.
-    const setOptions = this.cache.maxSize && size ? { size: Math.max(1, Math.ceil(size)) } : undefined;
+    const setOptions = this.cache.maxSize && size !== undefined ? { size: Math.max(1, Math.ceil(size)) } : undefined;
     // lru-cache re-accounts the size of an existing key only when its value changes. re-setting the same
     // value with a (more accurate) size would keep the old size, so remove it first.
     if (setOptions && this.cache.has(key)) this.cache.delete(key);

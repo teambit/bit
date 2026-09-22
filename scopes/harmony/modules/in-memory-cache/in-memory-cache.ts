@@ -37,7 +37,7 @@ export function getMaxSizeForComponents(): number {
  * applied only when configured explicitly.
  */
 export function getMaxSizeForObjects(): number | undefined {
-  return getNumberFromConfig(CFG_CACHE_MAX_ITEMS_OBJECTS) || undefined;
+  return getPositiveNumberFromConfig(CFG_CACHE_MAX_ITEMS_OBJECTS);
 }
 
 /**
@@ -46,6 +46,18 @@ export function getMaxSizeForObjects(): number | undefined {
  * a few thousand big objects may cause OOM.
  */
 export function getCacheOptionsForObjects(): CacheOptions {
-  const maxMb = getNumberFromConfig(CFG_CACHE_MAX_OBJECTS_MB) || DEFAULT_MAX_OBJECTS_MB;
-  return { maxSize: getMaxSizeForObjects(), maxBytes: maxMb * 1024 * 1024, defaultEntrySize: ESTIMATED_OBJECT_SIZE };
+  const maxMb = getPositiveNumberFromConfig(CFG_CACHE_MAX_OBJECTS_MB) || DEFAULT_MAX_OBJECTS_MB;
+  return {
+    maxSize: getMaxSizeForObjects(),
+    maxBytes: Math.ceil(maxMb * 1024 * 1024),
+    defaultEntrySize: ESTIMATED_OBJECT_SIZE,
+  };
+}
+
+/**
+ * lru-cache throws on non-positive or non-finite limits, which would fail every command. ignore such values.
+ */
+function getPositiveNumberFromConfig(key: string): number | undefined {
+  const value = getNumberFromConfig(key);
+  return value && Number.isFinite(value) && value > 0 ? Math.ceil(value) : undefined;
 }

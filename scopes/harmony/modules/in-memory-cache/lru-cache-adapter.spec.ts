@@ -39,6 +39,11 @@ describe('LRUCacheAdapter', () => {
       cache.set('c', 'c');
       expect(cache.keys().sort()).to.deep.equal(['b', 'c']);
     });
+    it('should charge an explicit zero size as the minimum, not as the default estimate', () => {
+      const cache = new LRUCacheAdapter<string>({ maxBytes: 10, defaultEntrySize: DEFAULT_ENTRY_SIZE });
+      for (let i = 0; i < 10; i += 1) cache.set(`key-${i}`, 'value', 0);
+      expect(cache.keys()).to.have.lengthOf(10);
+    });
     it('should re-account the size of an entry that is set again', () => {
       const cache = new LRUCacheAdapter<string>({
         maxBytes: DEFAULT_ENTRY_SIZE * 2,
