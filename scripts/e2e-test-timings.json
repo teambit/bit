@@ -203,7 +203,6 @@
   "e2e/harmony/track-directories-harmony.e2e.ts": 47,
   "e2e/harmony/tsconfig-env-mismatch.e2e.ts": 129,
   "e2e/harmony/typescript-tsserver.e2e.ts": 15,
-  "e2e/harmony/ui-ssr.e2e.ts": 27,
   "e2e/harmony/ui-start.e2e.ts": 64,
   "e2e/harmony/uninstall-cmd.e2e.ts": 15,
   "e2e/harmony/untag-harmony.e2e.ts": 43,
