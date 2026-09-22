@@ -5,11 +5,20 @@ import { CloudAspect, type CloudMain } from '@teambit/cloud';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
 import { getCloudDomain } from '@teambit/legacy.constants';
+import { fetchWithAgent } from '@teambit/scope.network';
 import { readLastExport, type LastExportData } from '@teambit/export';
 import { stripComponentVersion } from './ripple-utils';
 import stripAnsi from 'strip-ansi';
 import { RippleAspect } from './ripple.aspect';
-import { RippleCmd, RippleListCmd, RippleLogCmd, RippleErrorsCmd, RippleRetryCmd, RippleStopCmd } from './ripple.cmd';
+import {
+  RippleCmd,
+  RippleListCmd,
+  RippleLogCmd,
+  RippleErrorsCmd,
+  RippleRetryCmd,
+  RippleStopCmd,
+  RippleSimulateCmd,
+} from './ripple.cmd';
 
 export type JobStatus = {
   startedAt?: string;
@@ -29,6 +38,16 @@ export type RippleJob = {
 };
 
 export type RippleJobFull = RippleJob & { hash?: string; ciGraph?: string; ciComponentGraph?: string };
+
+/**
+ * where Ripple CI looks for dependents of the lane components when simulating. the server can't resolve
+ * the dependents graph without a positive search base, so the caller always sets `scopeIds` or `ownerIds`.
+ */
+export type SimulateNetwork = {
+  scopeIds?: string[];
+  ownerIds?: string[];
+  excludeScopeIds?: string[];
+};
 
 export type BuildTaskStatus = {
   status?: string;
@@ -150,11 +169,54 @@ export class RippleMain {
     }
   `;
 
+  private static SIMULATE_LANE = `
+    mutation simulateLane($laneId: String, $options: SimulateLaneOptions) {
+      simulateLane(laneId: $laneId, options: $options) {
+        id
+        slug
+        name
+        laneId
+        simulation
+        status { startedAt finishedAt phase }
+      }
+    }
+  `;
+
+  /**
+   * the same lookup as GET_JOB_BY_SLUG without the two CI graph blobs, which the simulate flow never reads.
+   * a simulation is a wide dependents fan-out, so those blobs are unbounded and the poll can run 3 times.
+   */
+  private static GET_JOB_BY_SLUG_MINIMAL = `
+    query getJobBySlug($slug: ID!) {
+      getJob(slug: $slug) {
+        id
+        slug
+        name
+        laneId
+        simulation
+        status { startedAt finishedAt phase }
+      }
+    }
+  `;
+
+  /** how many times to look the persisted job up, and the backoff between the attempts */
+  private static JOB_LOOKUP_ATTEMPTS = 3;
+  private static JOB_LOOKUP_DELAY_MS = 200;
+
   private ensureAuthenticated(): void {
     if (!this.cloud.getAuthToken()) {
       throw new Error('You are not logged in. Please run "bit login" first.');
     }
   }
+
+  /**
+   * every Ripple CI GraphQL request goes through this, so it honors the configured proxy, CA and network
+   * settings, the same way the cloud aspect reaches bit.cloud. kept as a field so tests can replace it:
+   * the agent-wrapped fetcher doesn't go through the global fetch.
+   * the log-streaming endpoint (`getContainerLog`) deliberately stays on the global fetch - it reads the
+   * response as a web stream (`body.getReader()`), which the agent-wrapped node-fetch response doesn't have.
+   */
+  private fetcher: typeof fetchWithAgent = fetchWithAgent;
 
   private async fetchRippleGQL<T>(query: string, variables?: Record<string, any>): Promise<T | null> {
     this.ensureAuthenticated();
@@ -164,7 +226,7 @@ export class RippleMain {
       'Content-Type': 'application/json',
       ...this.cloud.getAuthHeader(),
     };
-    const response = await fetch(graphqlUrl, { method: 'POST', headers, body });
+    const response = await this.fetcher(graphqlUrl, { method: 'POST', headers, body });
     if (!response.ok) {
       const text = await response.text().catch(() => '');
       throw new Error(`Ripple CI API returned HTTP ${response.status}: ${text}`);
@@ -357,6 +419,60 @@ export class RippleMain {
   }
 
   /**
+   * start a simulation job for a lane. Ripple CI builds the dependents of the lane components (searched in
+   * the given network of scopes/owners) against the lane heads, without merging or publishing anything.
+   * the schema also accepts an `incrementStrategy`, but a simulation publishes nothing so it's not exposed
+   * and the server default is used.
+   * `options.network` is always sent (empty when no filter is given): the schema marks `options` as
+   * optional, but the resolver reads `options.network` unconditionally and fails when it's omitted.
+   */
+  async simulateLane(laneId: string, network?: SimulateNetwork): Promise<RippleJob | null> {
+    const filters = Object.entries(network || {}).filter(([, values]) => values?.length);
+    const options = { network: Object.fromEntries(filters) };
+    const data = await this.fetchRippleGQL<{ simulateLane: RippleJob }>(RippleMain.SIMULATE_LANE, {
+      laneId,
+      options,
+    });
+    const job = data?.simulateLane;
+    if (!job) return null;
+    // the mutation returns the job before it's persisted: only the slug is set, id and status are null.
+    // fetch the persisted job so callers get the real id, which "ripple log/errors" need.
+    if (!job.id && job.slug) return (await this.getPersistedJobBySlug(job.slug)) ?? job;
+    return job;
+  }
+
+  /**
+   * poll for the persisted job: the simulate mutation responds before the job is written, so a single
+   * immediate lookup can still come back empty. the delay doubles between the attempts, to cover more
+   * server lag with the same number of requests. returns null once the budget is spent - the simulation is
+   * already running by then, so the caller reports it without an id rather than failing the command.
+   */
+  private async getPersistedJobBySlug(slug: string): Promise<RippleJob | null> {
+    for (let attempt = 1; attempt <= RippleMain.JOB_LOOKUP_ATTEMPTS; attempt += 1) {
+      const data = await this.fetchRippleGQL<{ getJob: RippleJob }>(RippleMain.GET_JOB_BY_SLUG_MINIMAL, {
+        slug,
+      }).catch((err: Error) => {
+        this.logger.debug(`simulateLane: lookup of job "${slug}" failed on attempt ${attempt}: ${err.message}`);
+        return null;
+      });
+      if (data?.getJob?.id) return data.getJob;
+      if (attempt < RippleMain.JOB_LOOKUP_ATTEMPTS) {
+        await new Promise((resolve) => setTimeout(resolve, RippleMain.JOB_LOOKUP_DELAY_MS * 2 ** (attempt - 1)));
+      }
+    }
+    this.logger.debug(`simulateLane: job "${slug}" was not persisted after ${RippleMain.JOB_LOOKUP_ATTEMPTS} lookups`);
+    return null;
+  }
+
+  /**
+   * whether the current lane was exported at least once. undefined when not on a lane / no workspace.
+   */
+  isCurrentLaneExported(): boolean | undefined {
+    if (!this.workspace || !this.getCurrentLaneId()) return undefined;
+    return this.workspace.consumer.bitMap.isLaneExported;
+  }
+
+  /**
    * detect the current lane from the workspace.
    * returns the laneId in "scope/lane-name" format, or undefined if not on a lane.
    */
@@ -434,6 +550,7 @@ export class RippleMain {
       new RippleErrorsCmd(ripple),
       new RippleRetryCmd(ripple),
       new RippleStopCmd(ripple),
+      new RippleSimulateCmd(ripple),
     ];
     cli.register(rippleCmd);
 

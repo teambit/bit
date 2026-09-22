@@ -105,6 +105,9 @@ export class Remote {
   listLanes(name?: string, mergeData?: boolean): Promise<LaneData[]> {
     return this.connect().then((network) => network.listLanes(name, mergeData));
   }
+  removeLaneUpdateDependents(laneId: string, ids?: string[]): Promise<boolean> {
+    return this.connect().then((network) => network.removeLaneUpdateDependents(laneId, ids));
+  }
   async hasObjects(hashes: string[]): Promise<string[]> {
     return this.connect().then((network) => network.hasObjects(hashes));
   }

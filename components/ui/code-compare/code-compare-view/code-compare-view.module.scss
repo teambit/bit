@@ -5,7 +5,9 @@
   min-height: 250px;
   display: flex;
   flex-direction: column;
-  background: var(--on-surface-neutral-low-color, #282828) !important;
+  // surface token, not the `on-surface` foreground this used to paint with (#9598A1 in the base
+  // theme) — that rendered the diff container grey on a light page.
+  background: var(--surface-color, #fff);
   transition: height 0.4s ease-in-out;
 }
 
@@ -25,8 +27,16 @@
 
 .loader {
   width: 100%;
-  color: var(--on-surface-neutral-low-color, #282828);
-  background-image: linear-gradient(to right, currentColor 0%, #2b2b2b 30%, #2b2b2b 50%, currentColor 100%);
+  // Skeleton shimmer built from theme surfaces. It previously ran from `on-surface-neutral-low`
+  // to a hard-coded #2b2b2b, which on a light page produced grey-on-grey bands.
+  color: var(--surface-neutral-color, #fff);
+  background-image: linear-gradient(
+    to right,
+    currentColor 0%,
+    var(--surface-neutral-hover-color, #f4f5f6) 30%,
+    var(--surface-neutral-hover-color, #f4f5f6) 50%,
+    currentColor 100%
+  );
   opacity: 1;
   visibility: visible;
   transition:
@@ -41,7 +51,13 @@
   }
 
   > div {
-    background-image: linear-gradient(to right, currentColor 0%, #2b2b2b 30%, #2b2b2b 50%, currentColor 100%);
+    background-image: linear-gradient(
+      to right,
+      currentColor 0%,
+      var(--surface-neutral-hover-color, #f4f5f6) 30%,
+      var(--surface-neutral-hover-color, #f4f5f6) 50%,
+      currentColor 100%
+    );
     visibility: visible;
     opacity: 1;
     transition:
