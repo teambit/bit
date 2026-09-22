@@ -190,6 +190,8 @@ ${list}`);
 
   // the version each workspace component is checked out at - `bit status` diffs the working
   // directory against it, so it's read on virtually every command.
+  /** where each workspace component is checked out, kept for the `--keep-versions` walk */
+  const checkedOutHeads: { component: ModelComponent; head: Ref }[] = [];
   const workspaceComponents = compact(
     await pMapPool(
       workspaceIds,
@@ -200,7 +202,12 @@ ${list}`);
         addRoot(id.version);
         const component = await scope.getModelComponentIfExist(id.changeVersion(undefined));
         if (!component) return null;
-        addRoot(id.hasVersion() ? component.getRef(id.version as string) : component.getHead());
+        // the head is the fallback for a version the component can't resolve - a lane snap, say,
+        // which `addRoot(id.version)` above has already taken care of on its own.
+        const checkedOut =
+          (id.hasVersion() ? component.getRef(id.version as string) : undefined) || component.getHead();
+        addRoot(checkedOut);
+        if (checkedOut) checkedOutHeads.push({ component, head: checkedOut });
         return component;
       },
       { concurrency }
@@ -218,6 +225,8 @@ ${list}`);
       const component = componentsById.get(id.toStringWithoutVersion());
       if (component && id.version) laneHeads.push({ component, head: Ref.from(id.version) });
     });
+    // the lane's readme is pointed at separately and needn't be among the components above
+    addRoot(lane.readmeComponent?.head);
   });
 
   // heads we track for remotes. deleting one would break the diverge calculation, which can no
@@ -299,6 +308,9 @@ ${list}`);
   // histories, scope metadata. together they're a fraction of a percent of the scope and they're
   // what makes the rest of it navigable, so they're never candidates for deletion.
   const refsToDelete: Ref[] = [];
+  /** the same refs, split out so the removal can take the versions first - see below */
+  const versionRefsToDelete: Ref[] = [];
+  const versionHashesToDelete = new Set<string>();
   const deletedByType: { [type: string]: { count: number; size: number } } = {};
   let deletedSize = 0;
   /**
@@ -315,6 +327,10 @@ ${list}`);
       return;
     }
     refsToDelete.push(ref);
+    if (type === Version.name) {
+      versionRefsToDelete.push(ref);
+      versionHashesToDelete.add(ref.toString());
+    }
     deletedSize += size;
     if (!deletedByType[type]) deletedByType[type] = { count: 0, size: 0 };
     deletedByType[type].count += 1;
@@ -328,13 +344,19 @@ ${list}`);
   const strayFiles = await removeStrayTempFiles(repo.getPath(), dryRun);
 
   if (!dryRun && refsToDelete.length) {
-    if (backup) {
-      logger.debug(`gc, moving ${refsToDelete.length} objects to ${DELETED_OBJECTS_DIR}`);
-      await repo.moveObjectsToDir(refsToDelete, DELETED_OBJECTS_DIR);
-    } else {
-      logger.debug(`gc, deleting ${refsToDelete.length} objects`);
-      await repo.deleteObjectsFromFS(refsToDelete);
-    }
+    const remove = async (refs: Ref[]) => {
+      if (!refs.length) return;
+      if (backup) await repo.moveObjectsToDir(refs, DELETED_OBJECTS_DIR);
+      else await repo.deleteObjectsFromFS(refs);
+    };
+    logger.debug(`gc, ${backup ? 'moving' : 'deleting'} ${refsToDelete.length} objects`);
+    // versions first, and only then the files they point at - two passes, because each one deletes
+    // concurrently and nothing here is transactional. a run that dies partway through, or a single
+    // filesystem error, leaves whatever it had finished. this way that is a source with no version,
+    // which the next run collects; the other way round it is a version whose files are gone, which
+    // reads as fully cached, is never re-fetched and is never repaired.
+    await remove(versionRefsToDelete);
+    await remove(refsToDelete.filter((ref) => !versionHashesToDelete.has(ref.toString())));
   }
 
   return {
@@ -425,8 +447,12 @@ ${list}`);
    * came straight from the objects.
    */
   async function keepRecentVersions() {
+    // counted back from where the workspace actually sits, which is not always the head. asking
+    // for the last N versions of a component checked out behind its head and getting the head's
+    // history instead is not the history that was asked for - and the head is kept regardless, so
+    // starting there as well would just double what N means.
     const startingPoints = [
-      ...workspaceComponents.map((component) => ({ component, head: component.getHead() })),
+      ...checkedOutHeads,
       ...laneHeads.filter(({ component }) =>
         workspaceComponentIds.has(component.toComponentId().toStringWithoutVersion())
       ),
@@ -449,35 +475,50 @@ ${list}`);
 
   /**
    * dependencies are needed at the exact version they're pinned to - that's what gets isolated into
-   * a capsule on build. `flattenedDependencies` is already transitive, so one pass is enough.
+   * a capsule on build.
+   *
+   * `flattenedDependencies` is already transitive, so one pass over it would be enough on its own.
+   * an env named only in `extensions` is not in anyone's flattened list though, so rooting it adds
+   * a version whose own dependencies nothing has accounted for - hence the loop, which runs until
+   * a pass stops adding roots.
    */
   async function keepFlattenedDependencies() {
-    const dependencies = new Set<string>();
-    await pMapPool(
-      [...rootVersions],
-      async (hash) => {
-        const version = (await Ref.from(hash).load(repo)) as Version | undefined;
-        if (!version) return;
-        version.flattenedDependencies.forEach((dependency) => dependencies.add(dependency.toString()));
-        // an env or aspect the version was built with. versions written by older bits record these
-        // only here, so taking `flattenedDependencies` at its word would miss them.
-        version.extensions.extensionsBitIds.forEach((extension) => dependencies.add(extension.toString()));
-      },
-      { concurrency }
-    );
-    await pMapPool(
-      [...dependencies],
-      async (idStr) => {
-        const id = ComponentID.fromString(idStr);
-        // a snap dependency names its version by hash, so it stands without the component object.
-        // same reasoning as the checked-out ids: a missing model must not take it down with it.
-        addRoot(id.version);
-        const component = await scope.getModelComponentIfExist(id.changeVersion(undefined));
-        if (!component) return;
-        addRoot(component.getRef(id.version as string));
-      },
-      { concurrency }
-    );
+    const seen = new Set<string>();
+    let frontier = [...rootVersions];
+    while (frontier.length) {
+      const dependencies = new Set<string>();
+      await pMapPool(
+        frontier,
+        async (hash) => {
+          const version = (await Ref.from(hash).load(repo)) as Version | undefined;
+          if (!version) return;
+          version.flattenedDependencies.forEach((dependency) => dependencies.add(dependency.toString()));
+          // an env or aspect the version was built with. versions written by older bits record
+          // these only here, so taking `flattenedDependencies` at its word would miss them.
+          version.extensions.extensionsBitIds.forEach((extension) => dependencies.add(extension.toString()));
+        },
+        { concurrency }
+      );
+      const added: string[] = [];
+      await pMapPool(
+        [...dependencies].filter((idStr) => !seen.has(idStr)),
+        async (idStr) => {
+          seen.add(idStr);
+          const id = ComponentID.fromString(idStr);
+          // a snap dependency names its version by hash, so it stands without the component
+          // object. same as the checked-out ids: a missing model must not take it down with it.
+          const component = await scope.getModelComponentIfExist(id.changeVersion(undefined));
+          const hashes = compact([id.version, component?.getRef(id.version as string)?.toString()]);
+          hashes.forEach((hash) => {
+            addRoot(hash);
+            // only what is actually here is worth walking, which is what `addRoot` decides
+            if (rootVersions.has(hash)) added.push(hash);
+          });
+        },
+        { concurrency }
+      );
+      frontier = added;
+    }
   }
 }
 

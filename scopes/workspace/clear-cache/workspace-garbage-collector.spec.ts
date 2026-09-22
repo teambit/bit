@@ -194,9 +194,21 @@ describe('collectGarbageInWorkspace', () => {
       expect(await objectExists(Ref.from(VERSION_HASHES['0.0.1']))).to.be.true;
       expect(await objectExists(sources['0.0.1'].hash())).to.be.true;
     });
-    it('should still delete versions beyond the requested number', async () => {
+    it('should count back from where the workspace is checked out, not from the head', async () => {
+      // checked out at 0.0.2 while the head is 0.0.3. two versions back from 0.0.2 reaches 0.0.1;
+      // two back from the head would stop at 0.0.2, which is a root of its own either way - so
+      // 0.0.1 is what tells the two apart.
       await runGc({ keepVersions: 2 });
+      expect(await objectExists(Ref.from(VERSION_HASHES['0.0.1']))).to.be.true;
+      expect(await objectExists(sources['0.0.1'].hash())).to.be.true;
+    });
+
+    it('should still delete versions beyond the requested number', async () => {
+      // one version back from the checked-out 0.0.2 is 0.0.2 itself, so 0.0.1 is still beyond it.
+      // the head is kept because it is a head, not because of this option.
+      await runGc({ keepVersions: 1 });
       expect(await objectExists(Ref.from(VERSION_HASHES['0.0.1']))).to.be.false;
+      expect(await objectExists(Ref.from(VERSION_HASHES['0.0.3']))).to.be.true;
     });
 
     describe('when the component is on an exported lane', () => {
@@ -510,6 +522,89 @@ describe('collectGarbageInWorkspace', () => {
       await runGc();
       expect(await objectExists(Ref.from(ENV.old))).to.be.true;
       expect(await objectExists(envSources.old.hash())).to.be.true;
+    });
+
+    it('should keep what that env itself depends on, which no other root accounts for', async () => {
+      // the env is reached only through `extensions`, so it is added as a root after the first
+      // pass over the roots - its own flattened list has to be picked up by a later one.
+      const DEP_HASH = '5'.repeat(40);
+      const depSource = Source.from(Buffer.from('the contents of a dependency of the env'));
+      const depComponent = ModelComponent.from({
+        name: 'env-dep',
+        scope: COMP_SCOPE,
+        lang: 'javascript',
+        deprecated: false,
+        bindingPrefix: '@bit',
+        versions: { '1.0.0': Ref.from(DEP_HASH) },
+        head: Ref.from('0'.repeat(40)), // a head we don't have, so nothing else roots DEP_HASH
+      });
+      const envWithDep = buildVersion(ENV.old, envSources.old, [], {
+        flattenedDependencies: [{ scope: COMP_SCOPE, name: 'env-dep', version: '1.0.0' }],
+      });
+      const objects = [depComponent, depSource, buildVersion(DEP_HASH, depSource, []), envWithDep];
+      objects.forEach((object) => {
+        object.validateBeforePersist = false;
+      });
+      await scope.objects.writeObjectsToTheFS(objects);
+      await runGc();
+      expect(await objectExists(Ref.from(DEP_HASH))).to.be.true;
+      expect(await objectExists(depSource.hash())).to.be.true;
+    });
+  });
+
+  describe('with a lane that has a readme', () => {
+    const README_HASH = '4'.repeat(40);
+    let readmeSource: Source;
+
+    beforeEach(async () => {
+      await markAsExported();
+      readmeSource = Source.from(Buffer.from('the contents of a lane readme'));
+      const readmeVersion = buildVersion(README_HASH, readmeSource, []);
+      const readmeComponent = ModelComponent.from({
+        name: 'lane-readme',
+        scope: COMP_SCOPE,
+        lang: 'javascript',
+        deprecated: false,
+        bindingPrefix: '@bit',
+        versions: { '1.0.0': Ref.from(README_HASH) },
+        head: Ref.from('0'.repeat(40)), // not the readme, so only the lane pointer keeps it
+      });
+      const lane = Lane.create('lane-with-readme', COMP_SCOPE);
+      lane.setReadmeComponent(ComponentID.fromObject({ scope: COMP_SCOPE, name: 'lane-readme' }));
+      lane.readmeComponent!.head = Ref.from(README_HASH);
+      const objects = [lane, readmeComponent, readmeVersion, readmeSource];
+      objects.forEach((object) => {
+        object.validateBeforePersist = false;
+      });
+      await scope.objects.writeObjectsToTheFS(objects);
+    });
+
+    it('should keep the readme it points at, which is not among the lane components', async () => {
+      await runGc();
+      expect(await objectExists(Ref.from(README_HASH))).to.be.true;
+      expect(await objectExists(readmeSource.hash())).to.be.true;
+    });
+  });
+
+  describe('the order objects are removed in', () => {
+    it('should take the versions before the files they point at', async () => {
+      await markAsExported();
+      const batches: string[][] = [];
+      const original = scope.objects.deleteObjectsFromFS.bind(scope.objects);
+      // nothing here is transactional, so if a run dies partway through it must be a source with
+      // no version left behind, never a version whose files are gone.
+      (scope.objects as any).deleteObjectsFromFS = async (refs: Ref[]) => {
+        batches.push(refs.map((ref) => ref.toString()));
+        return original(refs);
+      };
+      try {
+        await runGc();
+      } finally {
+        (scope.objects as any).deleteObjectsFromFS = original;
+      }
+      expect(batches).to.have.lengthOf(2);
+      expect(batches[0]).to.deep.equal([VERSION_HASHES['0.0.1']]);
+      expect(batches[1]).to.deep.equal([sources['0.0.1'].hash().toString()]);
     });
   });
 
