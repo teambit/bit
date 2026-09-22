@@ -269,6 +269,16 @@ describe('collectGarbageInWorkspace', () => {
       expect(await objectExists(sources['0.0.1'].hash())).to.be.true;
     });
 
+    it('should count what an earlier backup left behind, since it still sits inside the scope', async () => {
+      const first = await runGc({ backup: true });
+      expect(first.backupDirSize).to.equal(0); // nothing was there before this run
+      const second = await runGc();
+      // the objects moved aside are still on disk; a scope that keeps shrinking in the report
+      // while the disk doesn't is the thing to avoid.
+      expect(second.backupDirSize).to.equal(first.deletedSize);
+      expect(second.totalSize).to.be.at.least(first.deletedSize);
+    });
+
     it('should empty the backup directory once restored, so a later restore cannot replay it', async () => {
       const result = await runGc({ backup: true });
       const backupDir = result.backupDir as string;

@@ -71,6 +71,8 @@ export type GcResult = {
   strayFiles: number;
   /** freed regardless of --backup, which applies to objects only */
   strayFilesSize: number;
+  /** what earlier --backup runs left behind, measured before this one moves anything into it */
+  backupDirSize: number;
 };
 
 /**
@@ -104,6 +106,10 @@ export async function collectGarbageInWorkspace(
   const concurrency = concurrentIOLimit();
   // taken before anything is read, so it's never later than the inventory it will be compared to
   const startedAt = Date.now();
+
+  // measured before anything moves into it, so this run's own objects are not counted twice - they
+  // are still in `objects/` when the inventory below is taken.
+  const backupDirSize = await getDirSize(path.join(scope.path, DELETED_OBJECTS_DIR));
 
   logger.debug(`gc, classifying the objects of ${scope.name}`);
   const { objects: allObjects, unreadable } = await repo.listObjectsWithType();
@@ -336,13 +342,16 @@ ${list}`);
     backupDir: backup && !dryRun && refsToDelete.length ? path.join(scope.path, DELETED_OBJECTS_DIR) : undefined,
     backup,
     totalObjects: allObjects.length,
-    totalSize: totalSize + strayFiles.size,
+    // the backup directory is inside the scope, so its bytes are part of what the scope weighs.
+    // leaving them out would report a scope that keeps shrinking while the disk doesn't.
+    totalSize: totalSize + strayFiles.size + backupDirSize,
     deletedObjects: refsToDelete.length,
     deletedSize,
     deletedByType,
     keptVersions: rootVersions.size,
     strayFiles: strayFiles.count,
     strayFilesSize: strayFiles.size,
+    backupDirSize,
   };
 
   /**
@@ -527,6 +536,22 @@ it is only created by a garbage collection that ran with --backup`);
   }
   await scope.objects.restoreFromDir(DELETED_OBJECTS_DIR, overwrite);
   await fs.remove(deletedObjectsDir);
+}
+
+/** total bytes under a directory, or 0 if it isn't there */
+async function getDirSize(dirPath: string): Promise<number> {
+  if (!(await fs.pathExists(dirPath))) return 0;
+  const files = await glob('**/*', { cwd: dirPath, nodir: true, dot: true });
+  const sizes = await Promise.all(
+    files.map(async (file) => {
+      try {
+        return (await fs.stat(path.join(dirPath, file))).size;
+      } catch {
+        return 0;
+      }
+    })
+  );
+  return sizes.reduce((sum, size) => sum + size, 0);
 }
 
 /**

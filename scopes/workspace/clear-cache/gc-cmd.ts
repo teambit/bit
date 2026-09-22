@@ -126,17 +126,25 @@ keeps all history, since there the scope is the source of truth rather than a ca
       return formatSuccessSummary(`removed ${result.deletedObjects} objects, freed ${formatBytes(freedSize)}`);
     })();
 
+    // what will be sitting in the backup directory once this run is done. it is inside the scope,
+    // so it is part of the size reported above and worth naming rather than leaving unexplained.
+    const inBackup = result.backupDirSize + (backedUp && !result.dryRun ? result.deletedSize : 0);
     const sizeLine = formatItem(
       backedUp
         ? `scope: ${chalk.bold(formatBytes(sizeAfter))} ` +
             chalk.dim(
               result.dryRun
                 ? `(${formatBytes(result.deletedSize)} of it would move to the backup directory)`
-                : `(${formatBytes(result.deletedSize)} of it is now in the backup directory)`
+                : `(${formatBytes(inBackup)} of it is in the backup directory)`
             )
         : `scope: ${formatBytes(result.totalSize)} ${arrowSymbol} ${chalk.bold(formatBytes(sizeAfter))}` +
             (result.dryRun ? ` ${chalk.dim(`(would free ${formatBytes(freedSize)})`)}` : '')
     );
+    // on a backup run the size line already says so
+    const backupLine =
+      !backedUp && result.backupDirSize
+        ? formatItem(`${formatBytes(result.backupDirSize)} of it is a backup directory from an earlier run`)
+        : '';
     const byType = Object.entries(result.deletedByType).map(([type, stats]) =>
       formatItem(`${type}: ${stats.count} objects ${chalk.dim(`(${formatBytes(stats.size)})`)}`)
     );
@@ -158,11 +166,16 @@ keeps all history, since there the scope is the source of truth rather than a ca
         formatHint('run "bit gc --restore" to bring them back')
       );
     }
+    if (!result.backupDir && result.backupDirSize) {
+      hints.push(
+        formatHint('run "bit gc --restore" to bring the backed-up objects back, or remove that directory to free it')
+      );
+    }
     if (!result.dryRun && result.deletedObjects) {
       hints.push(formatHint('anything removed will be fetched from the remote again when it is needed'));
     }
 
-    const summary = [sizeLine, ...byType, keptLine, strayLine].filter(Boolean).join('\n');
+    const summary = [sizeLine, backupLine, ...byType, keptLine, strayLine].filter(Boolean).join('\n');
     return joinSections([`${header}\n${summary}`, hints.join('\n')]);
   }
 }
