@@ -4,7 +4,7 @@ import os from 'os';
 import path from 'path';
 import { ComponentID } from '@teambit/component-id';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
-import { Lane, ModelComponent, Ref, Source, Version } from '@teambit/objects';
+import { Lane, ModelComponent, Ref, Repository, Source, Version } from '@teambit/objects';
 import { Scope } from '@teambit/legacy.scope';
 import { collectGarbageInWorkspace, restoreDeletedObjects } from './workspace-garbage-collector';
 
@@ -222,6 +222,22 @@ describe('collectGarbageInWorkspace', () => {
       expect(await objectExists(Ref.from(VERSION_HASHES['0.0.1']))).to.be.true;
       expect(await objectExists(sources['0.0.1'].hash())).to.be.true;
     });
+
+    it('should empty the backup directory once restored, so a later restore cannot replay it', async () => {
+      const result = await runGc({ backup: true });
+      const backupDir = result.backupDir as string;
+      await restoreDeletedObjects(scope);
+      // the objects are back in the scope. a second copy of them here is the disk space this
+      // command exists to reclaim, and restoring it again would undo whatever ran since.
+      expect(await fs.pathExists(backupDir)).to.be.false;
+      let error: Error | undefined;
+      try {
+        await restoreDeletedObjects(scope);
+      } catch (err: any) {
+        error = err;
+      }
+      expect(error?.message).to.have.string('nothing to restore');
+    });
   });
 
   describe('with an orphaned tag', () => {
@@ -308,6 +324,38 @@ describe('collectGarbageInWorkspace', () => {
       expect(await objectExists(Ref.from(VERSION_HASHES['0.0.1']))).to.be.true;
       expect(await objectExists(sources['0.0.1'].hash())).to.be.true;
     });
+
+    it('should refuse to run when a stash parses but has no "stashCompsData"', async () => {
+      // valid json, but not a stash bit could load either. reading it as an empty stash is the one
+      // reading that deletes the snaps it was holding.
+      await fs.outputJson(path.join(scope.path, 'stash', 'stash-1.json'), { metadata: { message: 'a stash' } });
+      let error: Error | undefined;
+      try {
+        await runGc();
+      } catch (err: any) {
+        error = err;
+      }
+      expect(error).to.be.an('error');
+      expect(error?.message).to.have.string('not safe to run gc');
+      expect(await objectExists(Ref.from(VERSION_HASHES['0.0.1']))).to.be.true;
+      expect(await objectExists(sources['0.0.1'].hash())).to.be.true;
+    });
+
+    it('should refuse to run when a stashed component has no hash, rather than skip it', async () => {
+      await fs.outputJson(path.join(scope.path, 'stash', 'stash-1.json'), {
+        metadata: { message: 'a stash' },
+        stashCompsData: [{ id: { scope: COMP_SCOPE, name: COMP_NAME }, isNew: false, bitmapEntry: {} }],
+      });
+      let error: Error | undefined;
+      try {
+        await runGc();
+      } catch (err: any) {
+        error = err;
+      }
+      expect(error).to.be.an('error');
+      expect(error?.message).to.have.string('not safe to run gc');
+      expect(await objectExists(Ref.from(VERSION_HASHES['0.0.1']))).to.be.true;
+    });
   });
 
   describe('when an object cannot be classified', () => {
@@ -332,21 +380,83 @@ describe('collectGarbageInWorkspace', () => {
     });
   });
 
+  /**
+   * the collector classifies every object by type, and the whole design rests on doing that from
+   * each file's header rather than by inflating its contents - a scope is mostly `Source` objects,
+   * and they are the ones it must never have to read.
+   */
+  describe('classifying the objects', () => {
+    let contentReads: number;
+    const original = {
+      onPostObjectRead: Repository.onPostObjectRead,
+      hasPostObjectReadTransformer: Repository.hasPostObjectReadTransformer,
+    };
+
+    beforeEach(() => {
+      contentReads = 0;
+      // the scope aspect installs this hook whether or not anything registered a transformer, so
+      // its presence alone must not be taken as a reason to read contents.
+      Repository.onPostObjectRead = (content) => {
+        contentReads += 1;
+        return content;
+      };
+    });
+
+    afterEach(() => {
+      Repository.onPostObjectRead = original.onPostObjectRead;
+      Repository.hasPostObjectReadTransformer = original.hasPostObjectReadTransformer;
+    });
+
+    it('should not read object contents when no transformer is registered', async () => {
+      Repository.hasPostObjectReadTransformer = () => false;
+      const { objects, unreadable } = await scope.objects.listObjectsWithType();
+      expect(unreadable).to.have.lengthOf(0);
+      expect(objects).to.have.length.greaterThan(0);
+      expect(contentReads).to.equal(0);
+    });
+
+    it('should read them in full when a transformer is registered, as the header is transformed too', async () => {
+      Repository.hasPostObjectReadTransformer = () => true;
+      const { objects, unreadable } = await scope.objects.listObjectsWithType();
+      expect(unreadable).to.have.lengthOf(0);
+      expect(contentReads).to.equal(objects.length);
+      expect(objects.some((object) => object.type === Source.name)).to.be.true;
+    });
+  });
+
   describe('stray temp files of interrupted writes', () => {
     beforeEach(async () => {
       await markAsExported();
     });
 
-    it('should remove them', async () => {
-      const strayPath = path.join(
+    const strayContents = 'leftovers';
+    let strayPath: string;
+
+    beforeEach(async () => {
+      strayPath = path.join(
         scope.objects.getPath(),
         VERSION_HASHES['0.0.1'].slice(0, 2),
         `${VERSION_HASHES['0.0.1'].slice(2)}.3955502210`
       );
-      await fs.outputFile(strayPath, 'leftovers');
+      await fs.outputFile(strayPath, strayContents);
+    });
+
+    it('should remove them', async () => {
       const result = await runGc();
       expect(result.strayFiles).to.equal(1);
       expect(await fs.pathExists(strayPath)).to.be.false;
+    });
+
+    it('should count their bytes, as they are deleted outright and so are part of what was freed', async () => {
+      const result = await runGc();
+      expect(result.strayFilesSize).to.equal(strayContents.length);
+    });
+
+    it('should include their bytes in the scope size, which is measured before they are removed', async () => {
+      const withStray = await runGc({ dryRun: true });
+      await fs.remove(strayPath);
+      const withoutStray = await runGc({ dryRun: true });
+      expect(withStray.totalSize - withoutStray.totalSize).to.equal(strayContents.length);
     });
   });
 });

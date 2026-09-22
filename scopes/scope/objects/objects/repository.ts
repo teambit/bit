@@ -112,6 +112,15 @@ export default class Repository {
    */
   static onPostObjectRead?: (content: Buffer) => Buffer;
 
+  /**
+   * whether `onPostObjectRead` actually transforms anything.
+   *
+   * the scope aspect installs the hook above unconditionally - it's a reduce over a slot that is
+   * usually empty - so the hook being set says nothing about whether object content is transformed.
+   * only a caller that can skip reading content altogether needs to tell the two apart.
+   */
+  static hasPostObjectReadTransformer?: () => boolean;
+
   async reLoadScopeIndex() {
     this.scopeIndex = await this.loadOptionallyCreateScopeIndex();
   }
@@ -309,7 +318,12 @@ export default class Repository {
 
   private async readObjectType(objectPath: string, size: number): Promise<string> {
     const readInFull = async () => BitObject.parseObjectType(this.onRead(await fs.readFile(objectPath)), objectPath);
-    if (Repository.onPostObjectRead) return readInFull();
+    // when there's no way to tell, assume the content is transformed and read in full. it's the
+    // slow answer, never the wrong one.
+    const isTransformed = Repository.hasPostObjectReadTransformer
+      ? Repository.hasPostObjectReadTransformer()
+      : Boolean(Repository.onPostObjectRead);
+    if (isTransformed) return readInFull();
     const chunkSize = Math.min(OBJECT_HEADER_CHUNK_SIZE, size);
     // `Uint8Array` rather than `Buffer` - see `parseObjectTypeFromChunk`
     const chunk = new Uint8Array(chunkSize);

@@ -40,16 +40,22 @@ export type WorkspaceGcOptions = {
   backup?: boolean;
 };
 
+type StrayTempFiles = { count: number; size: number };
+
 export type GcResult = {
   dryRun: boolean;
   backupDir?: string;
   totalObjects: number;
+  /** everything the scope holds, the stray temp files included */
   totalSize: number;
   deletedObjects: number;
+  /** the objects only. with --backup these bytes move to the backup directory rather than leave */
   deletedSize: number;
   deletedByType: { [type: string]: { count: number; size: number } };
   keptVersions: number;
   strayFiles: number;
+  /** freed regardless of --backup, which applies to objects only */
+  strayFilesSize: number;
 };
 
 /**
@@ -244,12 +250,13 @@ ${list}`);
     dryRun,
     backupDir: backup && !dryRun && refsToDelete.length ? path.join(scope.path, DELETED_OBJECTS_DIR) : undefined,
     totalObjects: allObjects.length,
-    totalSize,
+    totalSize: totalSize + strayFiles.size,
     deletedObjects: refsToDelete.length,
     deletedSize,
     deletedByType,
     keptVersions: rootVersions.size,
-    strayFiles,
+    strayFiles: strayFiles.count,
+    strayFilesSize: strayFiles.size,
   };
 
   /**
@@ -356,23 +363,48 @@ async function getStashedHashes(scopePath: string): Promise<string[]> {
   const hashesPerFile = await Promise.all(
     files.map(async (file) => {
       const filePath = path.join(stashDir, file);
-      try {
-        const content = await fs.readJson(filePath);
-        return (content.stashCompsData || []).map((compData) => compData.hash).filter(Boolean);
-      } catch (err: any) {
-        // the same reasoning as an object we can't classify: a stash file is the only record of the
-        // snaps it holds, so failing to read one means we don't know what must survive. an empty
-        // list here is reserved for a stash that parsed and holds nothing.
-        throw new BitError(`unable to read the stash file "${filePath}", so it is not safe to run gc.
+      // the same reasoning as an object we can't classify: a stash file is the only record of the
+      // snaps it holds, so failing to make sense of one means we don't know what must survive. an
+      // empty list here is reserved for a stash that parsed and genuinely holds nothing.
+      const unusable = (reason: string) =>
+        new BitError(`unable to read the stash file "${filePath}", so it is not safe to run gc.
 a stash is the only record of the snaps it holds - they exist nowhere else, and deleting them
 cannot be undone. fix or remove the file and run gc again.
-Error: ${err.message}`);
+Error: ${reason}`);
+      let content: Record<string, any>;
+      try {
+        content = await fs.readJson(filePath);
+      } catch (err: any) {
+        throw unusable(err.message);
       }
+      // parsing is not the same as understanding. this is the shape `StashData.fromObject` needs,
+      // and a file that doesn't have it is one `bit stash load` couldn't read either - so reading
+      // it as "holds no snaps" is precisely the assumption that would delete them.
+      const compsData = content?.stashCompsData;
+      if (!Array.isArray(compsData)) throw unusable('"stashCompsData" is missing or is not an array');
+      return compsData.map((compData, index) => {
+        const hash = compData?.hash;
+        if (typeof hash !== 'string' || !hash) {
+          throw unusable(`the entry at index ${index} of "stashCompsData" has no "hash"`);
+        }
+        return hash;
+      });
     })
   );
   return hashesPerFile.flat();
 }
 
+/**
+ * bring back everything sitting in the backup directory.
+ *
+ * successive --backup runs add to that directory rather than replace it, on the grounds that
+ * throwing away an earlier backup to make room for a later one is the more expensive mistake. so
+ * this restores every run that is still backed up, not only the last one.
+ *
+ * the directory is removed once its contents are back in the scope. leaving it would hold on to a
+ * second copy of every object - the disk space this command exists to reclaim - and would let a
+ * later restore replay objects that a gc since then deliberately removed.
+ */
 export async function restoreDeletedObjects(scope: Scope, overwrite = false) {
   const deletedObjectsDir = path.join(scope.path, DELETED_OBJECTS_DIR);
   if (!(await fs.pathExists(deletedObjectsDir))) {
@@ -380,15 +412,33 @@ export async function restoreDeletedObjects(scope: Scope, overwrite = false) {
 it is only created by a garbage collection that ran with --backup`);
   }
   await scope.objects.restoreFromDir(DELETED_OBJECTS_DIR, overwrite);
+  await fs.remove(deletedObjectsDir);
 }
 
-async function removeStrayTempFiles(objectsPath: string, dryRun: boolean): Promise<number> {
+/**
+ * their size is measured, not only their count: these files are deleted outright (even with
+ * --backup, which only applies to objects), so their bytes are part of what the run frees and
+ * leaving them out understates it - an interrupted write of a large file is exactly the case where
+ * the number matters.
+ */
+async function removeStrayTempFiles(objectsPath: string, dryRun: boolean): Promise<StrayTempFiles> {
   const matches = await glob(path.join('*', '*'), { cwd: objectsPath });
   const strays = matches.filter((match) => STRAY_TEMP_FILE.test(path.basename(match)));
-  if (!strays.length) return 0;
+  if (!strays.length) return { count: 0, size: 0 };
   logger.debug(`gc, ${strays.length} stray temp files of interrupted writes`);
+  const sizes = await Promise.all(
+    strays.map(async (stray) => {
+      try {
+        return (await fs.stat(path.join(objectsPath, stray))).size;
+      } catch {
+        // a temp file that vanished between the glob and the stat. it being gone is the outcome
+        // we're after anyway, it just doesn't count towards what this run freed.
+        return 0;
+      }
+    })
+  );
   if (!dryRun) {
     await Promise.all(strays.map((stray) => fs.remove(path.join(objectsPath, stray))));
   }
-  return strays.length;
+  return { count: strays.length, size: sizes.reduce((sum, size) => sum + size, 0) };
 }

@@ -5970,7 +5970,7 @@
       [
         "",
         "restore",
-        "restore the objects of a previous run that used --backup"
+        "bring back everything previous runs moved aside with --backup, and empty that directory"
       ],
       [
         "",

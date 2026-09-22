@@ -35,7 +35,12 @@ export class ClearCacheMain {
    */
   async garbageCollect(opts: WorkspaceGcOptions = {}): Promise<GcResult | undefined> {
     const scope = await this.getScopeOrThrow();
-    const consumer = await this.getConsumerGracefully();
+    // deliberately not `getConsumerGracefully`. it's only the absence of a workspace that may send
+    // us down the bare-scope path, and `loadConsumerIfExist` already returns `undefined` for
+    // exactly that. swallowing the rest would let a workspace with an unreadable `.bitmap` be
+    // collected as if it were a bare scope, which is a different root set - no checked-out
+    // versions, no stash - and deleting by it is not recoverable.
+    const consumer = await loadConsumerIfExist();
     if (!consumer) {
       await scope.garbageCollect({ dryRun: opts.dryRun, verbose: opts.verbose });
       return undefined;

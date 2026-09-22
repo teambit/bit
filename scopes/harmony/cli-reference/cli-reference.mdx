@@ -1138,7 +1138,7 @@ keeps all history, since there the scope is the source of truth rather than a ca
 | `--dry-run`                |       `-d`       | show what would be removed without removing anything                                                  |
 | `--keep-versions <number>` |                  | keep the last N versions of each workspace component, so their recent history stays available offline |
 | `--backup`                 |                  | move the objects into a "deleted-objects" directory instead of deleting them. frees no disk space     |
-| `--restore`                |                  | restore the objects of a previous run that used --backup                                              |
+| `--restore`                |                  | bring back everything previous runs moved aside with --backup, and empty that directory               |
 | `--restore-overwrite`      |                  | same as --restore, but overwrite objects that already exist                                           |
 | `--verbose`                |       `-v`       | log every object being removed                                                                        |
 | `--json`                   |       `-j`       | return the results in json format                                                                     |

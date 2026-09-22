@@ -38,7 +38,7 @@ export class GcCmd implements Command {
       'keep the last N versions of each workspace component, so their recent history stays available offline',
     ],
     ['', 'backup', 'move the objects into a "deleted-objects" directory instead of deleting them. frees no disk space'],
-    ['', 'restore', 'restore the objects of a previous run that used --backup'],
+    ['', 'restore', 'bring back everything previous runs moved aside with --backup, and empty that directory'],
     ['', 'restore-overwrite', 'same as --restore, but overwrite objects that already exist'],
     ['v', 'verbose', 'log every object being removed'],
     ['j', 'json', 'return the results in json format'],
@@ -70,7 +70,7 @@ keeps all history, since there the scope is the source of truth rather than a ca
   async report(args: [], opts: GcCmdOpts) {
     if (opts.restore || opts.restoreOverwrite) {
       await this.clearCache.restoreGarbageCollected(Boolean(opts.restoreOverwrite));
-      return formatSuccessSummary('restored the objects of the previous run');
+      return formatSuccessSummary('restored the objects from the backup directory');
     }
     const result = await this.runGc(opts);
     if (!result) return formatSuccessSummary('garbage collection completed');
@@ -95,10 +95,12 @@ keeps all history, since there the scope is the source of truth rather than a ca
   }
 
   private formatResult(result: GcResult): string {
-    const sizeAfter = result.totalSize - result.deletedSize;
     // with --backup the objects are only moved aside, so nothing is freed until the backup
-    // directory is removed. saying otherwise would contradict the hint printed right below.
+    // directory is removed. saying otherwise would contradict the hint printed right below. the
+    // stray temp files are deleted either way, so their bytes are freed in both modes.
     const backedUp = Boolean(result.backupDir);
+    const freedSize = (backedUp ? 0 : result.deletedSize) + result.strayFilesSize;
+    const sizeAfter = result.totalSize - freedSize;
     const header = (() => {
       if (result.dryRun)
         return formatTitle(`[dry-run] ${result.deletedObjects} of ${result.totalObjects} objects can be removed`);
@@ -106,15 +108,15 @@ keeps all history, since there the scope is the source of truth rather than a ca
         return formatSuccessSummary(
           `moved ${result.deletedObjects} objects (${formatBytes(result.deletedSize)}) to the backup directory`
         );
-      return formatSuccessSummary(`removed ${result.deletedObjects} objects, freed ${formatBytes(result.deletedSize)}`);
+      return formatSuccessSummary(`removed ${result.deletedObjects} objects, freed ${formatBytes(freedSize)}`);
     })();
 
     const sizeLine = formatItem(
       backedUp
-        ? `scope: ${chalk.bold(formatBytes(result.totalSize))} ` +
+        ? `scope: ${chalk.bold(formatBytes(sizeAfter))} ` +
             chalk.dim(`(${formatBytes(result.deletedSize)} of it is now in the backup directory)`)
         : `scope: ${formatBytes(result.totalSize)} ${arrowSymbol} ${chalk.bold(formatBytes(sizeAfter))}` +
-            (result.dryRun ? ` ${chalk.dim(`(would free ${formatBytes(result.deletedSize)})`)}` : '')
+            (result.dryRun ? ` ${chalk.dim(`(would free ${formatBytes(freedSize)})`)}` : '')
     );
     const byType = Object.entries(result.deletedByType).map(([type, stats]) =>
       formatItem(`${type}: ${stats.count} objects ${chalk.dim(`(${formatBytes(stats.size)})`)}`)
@@ -122,7 +124,8 @@ keeps all history, since there the scope is the source of truth rather than a ca
     const keptLine = formatItem(`keeping ${result.keptVersions} versions and everything they point at`);
     const strayLine = result.strayFiles
       ? formatItem(
-          `${result.strayFiles} leftover temp ${result.strayFiles === 1 ? 'file' : 'files'} of interrupted writes`
+          `${result.strayFiles} leftover temp ${result.strayFiles === 1 ? 'file' : 'files'} of interrupted writes ` +
+            chalk.dim(`(${formatBytes(result.strayFilesSize)})`)
         )
       : '';
 
