@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import { glob } from 'glob';
 import os from 'os';
 import path from 'path';
+import zlib from 'zlib';
 import { ComponentID } from '@teambit/component-id';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
 import { Lane, ModelComponent, Ref, Repository, Source, Version } from '@teambit/objects';
@@ -561,6 +562,25 @@ describe('collectGarbageInWorkspace', () => {
   describe('when an object cannot be classified', () => {
     beforeEach(async () => {
       await markAsExported();
+    });
+
+    it('should refuse to run when a header names a type nothing is registered under', async () => {
+      // a damaged header that still inflates would otherwise classify as a type of its own: not a
+      // Version, so never a root, and not a Source, so never deleted - leaving the object in place
+      // while the files it points at are collected.
+      const objectPath = scope.objects.objectPath(Ref.from(VERSION_HASHES['0.0.2']));
+      const header = Buffer.from(`Vrsion ${VERSION_HASHES['0.0.2']} 2\u0000{}`);
+      await fs.writeFile(objectPath, zlib.deflateSync(header));
+      let error: Error | undefined;
+      try {
+        await runGc();
+      } catch (err: any) {
+        error = err;
+      }
+      expect(error).to.be.an('error');
+      expect(error?.message).to.have.string('not safe to run gc');
+      expect(await objectExists(Ref.from(VERSION_HASHES['0.0.1']))).to.be.true;
+      expect(await objectExists(sources['0.0.1'].hash())).to.be.true;
     });
 
     it('should refuse to delete anything rather than act on a partial inventory', async () => {

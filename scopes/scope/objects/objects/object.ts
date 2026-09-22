@@ -144,7 +144,9 @@ path: ${err.path}`);
    * buffer, so there's no need to inflate the entire object. `Z_SYNC_FLUSH` tells zlib to return
    * whatever it managed to inflate instead of throwing on the truncated input.
    * returns null when the header is not fully contained in the given chunk, in which case the
-   * caller should fall back to inflating the whole file.
+   * caller should fall back to inflating the whole file. a header that is there but names a type
+   * nothing is registered under throws instead: reading it as a type of its own would let a
+   * damaged object pass for classified, and the caller acts on the inventory being complete.
    *
    * the chunk is a `Uint8Array` rather than a `Buffer` because newer `@types/node` make `Buffer`
    * generic, which no longer matches zlib's `InputType` under the typescript version our envs ship.
@@ -159,7 +161,9 @@ path: ${err.path}`);
     const firstNullByteLocation = buffer.indexOf(NULL_BYTE);
     if (firstNullByteLocation === -1) return null;
     const [type] = buffer.slice(0, firstNullByteLocation).toString().split(SPACE_DELIMITER);
-    return type || null;
+    if (!type) return null;
+    if (!types[type]) throw new UnknownObjectType(type);
+    return type;
   }
 
   /**
@@ -167,7 +171,9 @@ path: ${err.path}`);
    */
   static async parseObjectType(fileContents: Buffer, filePath?: string): Promise<string> {
     const buffer = await inflate(fileContents, filePath);
-    return extractHeaderAndContent(buffer).type;
+    const { type } = extractHeaderAndContent(buffer);
+    if (!types[type]) throw new UnknownObjectType(type);
+    return type;
   }
 
   /**
