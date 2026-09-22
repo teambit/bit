@@ -79,7 +79,7 @@ class WorkspaceCloner {
     const laneId = options.lane ? await this.switchToLane(options.lane) : undefined;
     const { versionedRootId, entries } = await this.fetchRoot(rootId);
     await this.writeRoot(versionedRootId);
-    const { components, missing } = await this.writeMembers(entries);
+    const { components, missing } = await this.writeMembers(entries, versionedRootId);
     const installationError = options.skipDependencyInstallation ? undefined : await this.installGracefully();
     return {
       rootId: versionedRootId,
@@ -178,9 +178,10 @@ class WorkspaceCloner {
    * first export lists its members by their default scope, and a member may have stayed behind.
    */
   private async writeMembers(
-    entries: VersionedBitmapEntry[]
+    entries: VersionedBitmapEntry[],
+    rootId: ComponentID
   ): Promise<{ components: ComponentID[]; missing: string[] }> {
-    const writeToPathPerId = resolveWriteToPathPerId(this.workspacePath, entries);
+    const writeToPathPerId = resolveWriteToPathPerId(this.workspacePath, entries, rootId);
     throwForOverlappingDirs(writeToPathPerId);
     const ids = Object.keys(writeToPathPerId);
     if (!ids.length) return { components: [], missing: [] };
@@ -284,7 +285,9 @@ export async function cloneWorkspace(
  * (see SCAN_IGNORE_LIST). a map that lists a member in one of them writes into the workings of the
  * clone - `.bit` holds the objects the clone is being read from.
  */
-const RESERVED_DIRS = [BIT_HIDDEN_DIR, DOT_GIT_DIR, BIT_WORKSPACE_TMP_DIRNAME, 'node_modules'];
+const RESERVED_DIRS = [BIT_HIDDEN_DIR, DOT_GIT_DIR, BIT_WORKSPACE_TMP_DIRNAME, 'node_modules'].map((dir) =>
+  dir.toLowerCase()
+);
 
 /**
  * the directory of a component the root lists, inside the workspace. the list comes from a remote,
@@ -305,7 +308,10 @@ export function resolveComponentDir(workspacePath: string, entry: VersionedBitma
   const relative = target ? path.relative(workspacePath, target) : undefined;
   // a leading ".." is only a way out when it is the whole segment: a directory may be named "..cache"
   const climbsOut = relative === '..' || relative?.startsWith(`..${path.sep}`);
-  const isReserved = relative?.split(path.sep).some((segment) => RESERVED_DIRS.includes(segment));
+  // case-folded: on a case-insensitive filesystem ".BIT/objects" is the local scope the clone is
+  // being read out of. nothing legitimate is named this way on the filesystems that tell them apart
+  // either, so the same list is refused everywhere rather than by platform
+  const isReserved = relative?.split(path.sep).some((segment) => RESERVED_DIRS.includes(segment.toLowerCase()));
   if (!target || !relative || climbsOut || isReserved || path.isAbsolute(relative)) {
     throw new BitError(
       `unable to clone, the root component lists "${entry.id}" at "${entry.rootDir}", which is not a directory inside the workspace`
@@ -328,11 +334,26 @@ export function resolveComponentDir(workspacePath: string, entry: VersionedBitma
  */
 export function resolveWriteToPathPerId(
   workspacePath: string,
-  entries: VersionedBitmapEntry[]
+  entries: VersionedBitmapEntry[],
+  rootId: ComponentID
 ): Record<string, string> {
   const dirPerId = new Map<string, string>();
+  let rootSeen = false;
   entries.forEach((entry) => {
-    if (entry.rootDir === WORKSPACE_ROOT_DIR) return;
+    if (entry.rootDir === WORKSPACE_ROOT_DIR) {
+      // the root's own entry, skipped because the root is written before the members (see writeRoot).
+      // anything else at the workspace root is a map bit did not write - it refuses a second entry
+      // there on load - and passing over it would leave that member out of the clone without a word.
+      // matched on the name rather than the whole id: a root versioned before its first export lists
+      // itself by its default scope, which is not necessarily the scope it was exported to
+      if (rootSeen || nameOfVersionedId(entry.id) !== rootId.fullName) {
+        throw new BitError(
+          `unable to clone, the root component lists "${entry.id}" at the workspace root, which only "${rootId.toStringWithoutVersion()}" occupies`
+        );
+      }
+      rootSeen = true;
+      return;
+    }
     if (dirPerId.has(entry.id)) {
       throw new BitError(`unable to clone, the root component lists "${entry.id}" more than once`);
     }
@@ -340,6 +361,11 @@ export function resolveWriteToPathPerId(
   });
   // defines every key as an own property, `__proto__` included
   return Object.fromEntries(dirPerId);
+}
+
+/** an id out of a versioned `.bitmap` is "scope/name", or "name" for a component never exported */
+function nameOfVersionedId(id: string): string {
+  return id.split('/').slice(1).join('/') || id;
 }
 
 /**
@@ -356,15 +382,22 @@ export function throwForOverlappingDirs(dirPerId: Record<string, string>): void 
       `unable to clone, the root component lists "${id}" at "${dir}", which overlaps the directory it lists "${otherId}" at`
     );
   };
+  // the question here is which destinations land on one another, not what a path is named, so the
+  // comparison is case-folded: on a case-insensitive filesystem "Packages/Foo" and "packages/foo" are
+  // one directory. a workspace whose members differ only by the case of their directories cannot be
+  // cloned on macOS or Windows at all, so it is refused everywhere rather than on some platforms -
+  // one behaviour, and a message instead of one member's files landing on the other's. the paths
+  // themselves are untouched, the writes and the message keep their own spelling
+  const sameDir = (dir: string) => dir.toLowerCase();
   Object.entries(dirPerId).forEach(([id, dir]) => {
-    const taken = idByDir.get(dir);
+    const taken = idByDir.get(sameDir(dir));
     if (taken) refuse(id, taken, dir);
-    idByDir.set(dir, id);
+    idByDir.set(sameDir(dir), id);
   });
   Object.entries(dirPerId).forEach(([id, dir]) => {
     // every level above it, so a component nested any number of levels inside another is caught
     for (let parent = path.dirname(dir); parent !== path.dirname(parent); parent = path.dirname(parent)) {
-      const owner = idByDir.get(parent);
+      const owner = idByDir.get(sameDir(parent));
       if (owner) refuse(id, owner, dir);
     }
   });

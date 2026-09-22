@@ -301,7 +301,7 @@ describe('add command on Harmony', function () {
         helper.scopeHelper.addRemoteScope();
       });
       it('should report a directory at a file path as a conflict rather than fail reading it', () => {
-        fs.mkdirSync(path.join(helper.scopes.localPath, 'README.md'));
+        helper.fs.createNewDirectoryInLocalWorkspace('README.md');
         const cmd = () => helper.command.importComponentWithoutInstall('ws-root', '--path .');
         expect(cmd).to.throw('use --override');
       });

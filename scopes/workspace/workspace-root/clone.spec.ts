@@ -78,6 +78,12 @@ describe('resolveComponentDir', () => {
     const resolve = () => resolveComponentDir(workspacePath, { id: 'a', rootDir: 'packages/node_modules/a' });
     expect(resolve).to.throw('not a directory inside the workspace');
   });
+  it('should refuse one of them spelled in another case, a filesystem may read it as the same dir', () => {
+    ['.BIT/objects', '.Git/hooks', 'NODE_MODULES/evil', '.bittmp/x'].forEach((rootDir) => {
+      const resolve = () => resolveComponentDir(workspacePath, { id: 'a', rootDir });
+      expect(resolve, rootDir).to.throw('not a directory inside the workspace');
+    });
+  });
   it('should accept a directory whose name starts with dots, it is not a way out', () => {
     expect(resolveComponentDir(workspacePath, { id: 'a', rootDir: '..cache' })).to.equal(
       path.join(workspacePath, '..cache')
@@ -252,31 +258,58 @@ describe('throwForOverlappingDirs', () => {
     const dirs = { a: path.join(ws, 'comps/a'), b: path.join(ws, 'comps/a-b') };
     expect(() => throwForOverlappingDirs(dirs)).to.not.throw();
   });
+  it('should refuse two directories a case-insensitive filesystem reads as one', () => {
+    const dirs = { a: path.join(ws, 'Packages/Foo'), b: path.join(ws, 'packages/foo') };
+    expect(() => throwForOverlappingDirs(dirs)).to.throw('overlaps the directory');
+  });
+  it('should refuse containment that differs only by case at a level above', () => {
+    const dirs = { a: path.join(ws, 'Comps/A'), b: path.join(ws, 'comps/a/src/b') };
+    expect(() => throwForOverlappingDirs(dirs)).to.throw('overlaps the directory');
+  });
 });
 
 describe('resolveWriteToPathPerId', () => {
   const ws = path.resolve(os.tmpdir(), 'ws');
+  const rootId = ComponentID.fromString('my-org.my-scope/my-root');
   it('should place every member the root lists at the directory it recorded', () => {
     const entries = [
       { id: 'scope/a', rootDir: 'comps/a' },
       { id: 'scope/b', rootDir: 'comps/b' },
     ];
-    expect(resolveWriteToPathPerId(ws, entries)).to.deep.equal({
+    expect(resolveWriteToPathPerId(ws, entries, rootId)).to.deep.equal({
       'scope/a': path.join(ws, 'comps/a'),
       'scope/b': path.join(ws, 'comps/b'),
     });
   });
   it('should leave out the root itself, it is written before the members', () => {
     const entries = [
-      { id: 'scope/root', rootDir: WORKSPACE_ROOT_DIR },
+      { id: 'my-org.my-scope/my-root', rootDir: WORKSPACE_ROOT_DIR },
       { id: 'scope/a', rootDir: 'comps/a' },
     ];
-    expect(Object.keys(resolveWriteToPathPerId(ws, entries))).to.deep.equal(['scope/a']);
+    expect(Object.keys(resolveWriteToPathPerId(ws, entries, rootId))).to.deep.equal(['scope/a']);
+  });
+  it('should leave out a root listed by another scope, an unexported root names its default one', () => {
+    const entries = [{ id: 'some-other-scope/my-root', rootDir: WORKSPACE_ROOT_DIR }];
+    expect(resolveWriteToPathPerId(ws, entries, rootId)).to.deep.equal({});
+  });
+  it('should refuse a member the map puts at the workspace root, only the root occupies it', () => {
+    const entries = [
+      { id: 'my-org.my-scope/my-root', rootDir: WORKSPACE_ROOT_DIR },
+      { id: 'scope/a', rootDir: WORKSPACE_ROOT_DIR },
+    ];
+    expect(() => resolveWriteToPathPerId(ws, entries, rootId)).to.throw('at the workspace root');
+  });
+  it('should refuse a second entry at the workspace root even when it names the root again', () => {
+    const entries = [
+      { id: 'my-org.my-scope/my-root', rootDir: WORKSPACE_ROOT_DIR },
+      { id: 'my-org.my-scope/my-root', rootDir: WORKSPACE_ROOT_DIR },
+    ];
+    expect(() => resolveWriteToPathPerId(ws, entries, rootId)).to.throw('at the workspace root');
   });
   it('should keep an id reading __proto__ rather than let it set the prototype and vanish', () => {
     // a remote map names it, so the id is not bit's to trust. assigned onto an object literal it
     // would leave no own property and the member would be dropped from the import, unreported
-    const result = resolveWriteToPathPerId(ws, [{ id: '__proto__', rootDir: 'comps/a' }]);
+    const result = resolveWriteToPathPerId(ws, [{ id: '__proto__', rootDir: 'comps/a' }], rootId);
     expect(Object.keys(result)).to.deep.equal(['__proto__']);
     expect(Object.getPrototypeOf(result)).to.equal(Object.prototype);
   });
@@ -285,6 +318,6 @@ describe('resolveWriteToPathPerId', () => {
       { id: 'scope/a', rootDir: 'comps/a' },
       { id: 'scope/a', rootDir: 'comps/a-again' },
     ];
-    expect(() => resolveWriteToPathPerId(ws, entries)).to.throw('more than once');
+    expect(() => resolveWriteToPathPerId(ws, entries, rootId)).to.throw('more than once');
   });
 });
