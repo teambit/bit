@@ -45,6 +45,12 @@ export type ImportOptions = {
   mergeStrategy?: MergeStrategy;
   filterEnvs?: string[];
   writeToPath?: string;
+  /**
+   * a directory per component, keyed by the id without its version, for writing components that each
+   * go to its own place in one import rather than one import per directory (see the same prop on
+   * ManyComponentsWriterParams).
+   */
+  writeToPathPerId?: Record<string, string>;
   writeConfig?: boolean;
   override?: boolean;
   installNpmPackages: boolean; // default: true
@@ -389,6 +395,7 @@ export default class ImportComponents {
     return {
       components,
       writeToPath: this.options.writeToPath,
+      writeToPathPerId: this.options.writeToPathPerId,
       writeConfig: this.options.writeConfig,
       skipDependencyInstallation: !this.options.installNpmPackages,
       skipWriteConfigFiles: !this.options.writeConfigFiles,
@@ -1110,6 +1117,7 @@ otherwise, if tagged/snapped, "bit reset" it, then bit rename it.`);
     const manyComponentsWriterOpts: ManyComponentsWriterParams = {
       components: componentsToWrite,
       writeToPath: this.options.writeToPath,
+      writeToPathPerId: this.options.writeToPathPerId,
       writeConfig: this.options.writeConfig,
       skipDependencyInstallation: !this.options.installNpmPackages,
       skipWriteConfigFiles: !this.options.writeConfigFiles,

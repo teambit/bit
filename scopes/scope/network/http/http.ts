@@ -765,6 +765,19 @@ export class Http implements Network {
     }));
   }
 
+  async removeLaneUpdateDependents(laneId: string, ids?: string[]): Promise<boolean> {
+    const REMOVE_LANE_UPDATE_DEPENDENTS = gql`
+      query RemoveLaneUpdateDependents($laneId: String!, $ids: [String!]) {
+        lanes {
+          removeUpdateDependents(laneId: $laneId, ids: $ids)
+        }
+      }
+    `;
+
+    const res = await this.graphClientRequest(REMOVE_LANE_UPDATE_DEPENDENTS, Verb.WRITE, { laneId, ids });
+    return Boolean(res.lanes.removeUpdateDependents);
+  }
+
   private async searchWithSuggest(
     queryStr: string
   ): Promise<{ components?: string[]; lanes?: string[]; organizations?: string[]; scopes?: string[] }> {

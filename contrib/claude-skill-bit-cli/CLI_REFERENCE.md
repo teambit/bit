@@ -5,7 +5,7 @@
 track existing directory contents as new components in the workspace
 
 Registers one or more directories as Bit components without changing your files. Each provided path becomes a component root tracked by Bit.
-Flags: --id <name>, --main <file>, --namespace <namespace>, --override <boolean>, --scope <string>, --env <string>, --json
+Flags: --id <name>, --main <file>, --namespace <namespace>, --override <boolean>, --scope <string>, --env <string>, --root, --json
 
 ## bit app [sub-command]
 
@@ -154,7 +154,7 @@ Flags: --message <message>, --lane <lane>, --build, --strict, --dry-run, --keep-
 Tags and exports new semantic versions after merging a PR to main.
 
 By default, bumps patch versions when merging to main. If specific configuration variables are set, it can use commit messages or explicit flags to determine the version bump. Runs install, tag, build, and export, then archives the remote lane and syncs lockfiles. Use in merge-to-main CI pipelines to publish releases.
-Flags: --message <message>, --build, --strict, --increment <level>, --prerelease-id <id>, --patch, --minor, --major, --pre-release [identifier], --auto-tag-increment <level>, --increment-by <number>, --versions-file <path>, --verbose, --auto-merge-resolve <merge-strategy>, --force-theirs, --lane-name <name>, --skip-push, --no-bitmap-commit
+Flags: --message <message>, --build, --strict, --increment <level>, --prerelease-id <id>, --patch, --minor, --major, --pre-release [identifier], --auto-tag-increment <level>, --increment-by <number>, --no-skip-published-versions, --versions-file <path>, --verbose, --auto-merge-resolve <merge-strategy>, --force-theirs, --lane-name <name>, --skip-push, --no-bitmap-commit
 
 ## bit ci sync [lane]
 
@@ -169,6 +169,13 @@ remove cached data to resolve stale data issues
 
 clears various caches that Bit uses to improve performance. useful when experiencing stale data issues or unexpected behavior. this command removes: 1) components cache on the filesystem (mainly the dependencies graph and docs) 2) scope's index file, which maps the component-id:object-hash note: this cache has minimal impact on disk space. to free significant disk space, use "bit capsule delete --all" to remove build capsules.
 Flags: --remote <remote-name>
+
+## bit clone <component-id> [dir]
+
+create a workspace from its workspace-root component, with every component it lists
+
+the workspace-root component is the one tracked at a workspace root ("bit add ."). it versions the workspace's own files - workspace.jsonc, .bitmap, lockfile, configs - and this command makes a workspace out of it, the way "git clone" makes a working tree out of a repository: the root files land at the root, every component the root lists is imported into the directory it records, then the dependencies are installed. the components come at their heads on main, or on the lane given with --lane. a version on the root id pins the root files only. runs outside a workspace. the directory must be empty or not exist, and defaults to the component name.
+Flags: --lane <lane-id>, --remote <url>, --skip-dependency-installation
 
 ## bit compile [component-names...]
 
@@ -439,7 +446,7 @@ Flags: --name <workspace-name>, --generator <env-id>, --standalone, --no-package
 install workspace dependencies
 
 installs workspace dependencies and prepares the workspace for development. when packages are specified, adds them to workspace.jsonc policy and installs. when no packages specified, installs existing dependencies. automatically imports components, compiles components, links to node_modules, and writes config files.
-Flags: --type [lifecycleType], --update, --save-prefix [savePrefix], --skip-dedupe, --skip-import, --skip-compile, --skip-write-config-files, --add-missing-deps, --skip-unavailable, --add-missing-peers, --recurring-install, --no-optional [noOptional], --lockfile-only, --allow-scripts [pkgNames], --disallow-scripts [pkgNames]
+Flags: --type [lifecycleType], --update, --save-prefix [savePrefix], --skip-dedupe, --skip-import, --skip-compile, --skip-write-config-files, --add-missing-deps, --skip-unavailable, --add-missing-peers, --recurring-install, --no-optional [noOptional], --lockfile-only, --restore, --allow-scripts [pkgNames], --disallow-scripts [pkgNames]
 
 ## bit internalize [component-pattern]
 
@@ -556,6 +563,13 @@ revert to a previous history of the current lane. see also "bit lane checkout"
 
 revert is similar to "lane checkout", but it keeps the versions and only changes the files. choose one or the other based on your needs. if you want to continue working on this lane and need the changes from the history to be the head, then use "lane revert". if you want to fork the lane from a certain point in history, use "lane checkout" and create a new lane from it.
 Flags: --skip-dependency-installation, --restore-deleted-components, --json
+
+## bit lane updates [lane-name]
+
+show the dependents Ripple CI cascaded onto a lane, default to the current lane
+
+after a lane is exported, Ripple CI may snap the dependents of the lane components against the new heads and add them to the lane as hidden "update" entries. they are part of the lane graph (Ripple CI builds them, merge refreshes them) but stay hidden from the workspace ("bit status", .bitmap). the entries are read from the remote lane. the local lane object is used only when the remote is unavailable. use --undo to remove them from the lane, on the remote and locally, e.g. when the cascade is not wanted.
+Flags: --undo, --json
 
 ## bit lane merge-move <new-lane-name>
 
@@ -798,6 +812,13 @@ Flags: --lane <lane>, --json
 stop a running Ripple CI job (auto-detects current lane when no job-id given)
 Flags: --lane <lane>, --json
 
+## bit ripple simulate
+
+start a Ripple CI simulation for a lane to reveal which dependents break (auto-detects current lane)
+
+a simulation builds the dependents of the lane components against the lane heads on bit.cloud, without merging or publishing anything. it's the way to get dependent coverage for a change before the lane is merged. the simulation runs against the lane as it exists on bit.cloud, so export the lane first. simulations are heavy jobs and are billed as such. run them at review time, not on every change. dependents are searched in the lane's own scope by default. widen or narrow the search with --scopes, --owners and --exclude-scopes. follow the job with "bit ripple log". once it finishes, "bit ripple errors" shows what broke. both take the job id printed when the simulation starts.
+Flags: --lane <lane>, --scopes <scopes>, --owners <owners>, --exclude-scopes <scopes>, --json
+
 ## bit run [app-name]
 
 start an application component locally
@@ -946,7 +967,7 @@ similar to linux "tail -f" command
 create immutable component snapshots with semantic version tags
 
 creates tagged versions using semantic versioning (semver) for component releases. tags are immutable and exportable. by default tags all new and modified components. supports version specification per pattern using "@" (e.g. foo@1.0.0, bar@minor). use for official releases. for development versions, use 'bit snap' instead.
-Flags: --message <message>, --unmodified, --editor [editor], --versions-file <path>, --ver <version>, --increment <level>, --prerelease-id <id>, --patch, --minor, --major, --pre-release [identifier], --auto-tag-increment <level>, --snapped, --unmerged, --skip-tests, --skip-tasks <string>, --skip-auto-tag, --soft, --persist [skip-build], --disable-tag-pipeline, --ignore-build-errors, --rebuild-deps-graph, --no-lock-deps, --increment-by <number>, --ignore-issues <issues>, --ignore-newest-version, --fail-fast, --build, --loose
+Flags: --message <message>, --unmodified, --editor [editor], --versions-file <path>, --ver <version>, --increment <level>, --prerelease-id <id>, --patch, --minor, --major, --pre-release [identifier], --auto-tag-increment <level>, --snapped, --unmerged, --skip-tests, --skip-tasks <string>, --skip-auto-tag, --soft, --persist [skip-build], --disable-tag-pipeline, --ignore-build-errors, --rebuild-deps-graph, --no-lock-deps, --increment-by <number>, --skip-published-versions, --ignore-issues <issues>, --ignore-newest-version, --fail-fast, --build, --loose
 
 ## bit templates
 
@@ -1028,7 +1049,7 @@ writes configuration files (tsconfig.json, eslintrc.js, etc.) to your workspace 
 ## bit ws-config write
 
 write config files in the workspace. useful for IDEs
-Flags: --clean, --writers <writers>, --silent, --no-dedupe, --dry-run, --dry-run-with-content, --verbose, --json
+Flags: --clean, --writers <writers>, --silent, --force, --no-dedupe, --dry-run, --dry-run-with-content, --verbose, --json
 
 ## bit ws-config clean
 

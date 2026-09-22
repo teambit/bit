@@ -4,5 +4,8 @@ export { ExportValidate } from './export-validate';
 export { FetchMissingHistory } from './fetch-missing-history';
 export { FetchVersionHistory } from './fetch-version-history';
 export { RemovePendingDir } from './remove-pending-dir';
+export type { RemovePendingDirResult } from './remove-pending-dir';
+export { PendingDirStatus } from './pending-dir-status';
+export type { PendingDirStatusResult } from './pending-dir-status';
 export { FetchMissingDeps } from './fetch-missing-deps';
 export { PostSign } from './post-sign';

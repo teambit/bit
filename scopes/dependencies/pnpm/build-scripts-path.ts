@@ -6,21 +6,46 @@ import type { Logger } from '@teambit/logger';
 
 /**
  * pnpm's engine spawns dependency lifecycle scripts with the PATH of this
- * process, extended only with the relevant `node_modules/.bin` directories. It
- * ships no `node-gyp` of its own, so a native package that shells out to
- * `node-gyp rebuild` — `node-gyp-build`, `node-pre-gyp`, or a plain
- * `"install": "node-gyp rebuild"` — fails with `spawn node-gyp ENOENT` unless
- * something else put `node-gyp` on PATH.
+ * process, extended only with the relevant `node_modules/.bin` directories, and
+ * its install binding takes no `extraBinPaths` or env overrides — so `process.env`
+ * is the one place to shape what those scripts find. Two things go there.
  *
- * npm solves this with a wrapper script directory it prepends to PATH, and Bit
- * used to inherit that wrapper from `@pnpm/npm-lifecycle`. Reproduce it here
- * over the `node-gyp` that Bit depends on.
+ * The directory of the Node running Bit goes *first*. `node` in a build script
+ * — `"install": "node install.js"`, `node-gyp-build`, `prebuild-install` — is
+ * whatever PATH resolves, and a native addon built against that Node's headers
+ * (ssh2 passes `--target=${process.version}` to node-gyp explicitly) only loads
+ * into that Node. What loads the dependency afterwards is this process — `bit
+ * run`, envs, `bit build` all `require` it — so the addon has to match this
+ * process's Node, and a machine whose own `node` is older than Bit's otherwise
+ * segfaults there. The engine also identifies the host Node by `node --version`
+ * on PATH and keys the store's side-effects cache and the global virtual store
+ * by it, so this keeps those keys matching what Bit loads. npm always prepends
+ * `dirname(process.execPath)` for the same reason, and the `bit` wrapper bvm
+ * writes exports the same PATH for the whole process.
  *
- * The directory is *appended*, so a `node-gyp` the user installed themselves
- * still takes precedence, and it goes on `process.env` because the N-API
- * install binding accepts no `extraBinPaths`.
+ * A `node-gyp` wrapper goes *last*. The engine ships no `node-gyp` of its own,
+ * so a native package that shells out to `node-gyp rebuild` — `node-gyp-build`,
+ * `node-pre-gyp`, or a plain `"install": "node-gyp rebuild"` — fails with
+ * `spawn node-gyp ENOENT` unless something else put `node-gyp` on PATH. npm
+ * solves this with a wrapper script directory of its own; reproduce it here over
+ * the `node-gyp` that Bit depends on. Appended, so a `node-gyp` the user
+ * installed themselves still takes precedence.
  */
-export function addNodeGypToPath(logger?: Logger): void {
+export function prepareBuildScriptsPath(logger?: Logger): void {
+  addNodeToPath();
+  addNodeGypToPath(logger);
+}
+
+function addNodeToPath(): void {
+  const nodeDir = dirname(process.execPath);
+  const currentPath = process.env.PATH ?? '';
+  if (currentPath.split(delimiter)[0] === nodeDir) return;
+  // The inherited value is kept as is after the prefix: an empty component in
+  // it means the working directory, so it must not be dropped as noise.
+  process.env.PATH = currentPath === '' ? nodeDir : `${nodeDir}${delimiter}${currentPath}`;
+}
+
+function addNodeGypToPath(logger?: Logger): void {
   let dir: string;
   try {
     dir = writeShims();

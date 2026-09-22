@@ -307,8 +307,9 @@ describe('custom env', function () {
       });
       it('should remove the env not only from envs/envs but also from root', () => {
         const bitMap = helper.bitMap.read();
-        expect(bitMap.comp1.config).to.not.have.property(`${envId}@0.0.1`);
-        expect(bitMap.comp1.config).to.not.have.property(Extensions.envs);
+        // the env was the only config, so the entire "config" property is removed.
+        // this covers both the root aspect-id and envs/envs.
+        expect(bitMap.comp1).to.not.have.property('config');
       });
     });
     describe('set up the env and then replace it with another env without mentioning the version', () => {

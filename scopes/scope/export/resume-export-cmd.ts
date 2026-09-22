@@ -1,27 +1,194 @@
 import chalk from 'chalk';
+import { uniq } from 'lodash';
+import yesno from 'yesno';
 import type { Command, CommandOptions } from '@teambit/cli';
+import {
+  canPromptUser,
+  errorSymbol,
+  formatHint,
+  formatItem,
+  formatSection,
+  formatSuccessSummary,
+  formatWarningSummary,
+  joinSections,
+  warnSymbol,
+} from '@teambit/cli';
+import { BitError } from '@teambit/bit-error';
+import type { Logger } from '@teambit/logger';
 import type { ScopeMain } from '@teambit/scope';
-import { resumeExport } from './export-scope-components';
+import type { PendingDirScopes } from './export-scope-components';
+import { deletePendingExport, probePendingExport, resumeExport } from './export-scope-components';
+
+export type ResumeExportOptions = { delete?: boolean; force?: boolean };
 
 export class ResumeExportCmd implements Command {
   name = 'resume-export <export-id> <remotes...>';
   description = 'EXPERIMENTAL. resume failed export';
   extendedDescription = `resume failed export to persist the pending objects on the given remotes.
 the export-id is the id the client received in the error message during the failure.
-alternatively, exporting to any one of the failed scopes, throws server-is-busy error with the export-id`;
+alternatively, exporting to any one of the failed scopes, throws server-is-busy error with the export-id.
+
+"--delete" discards the pending objects instead of persisting them, which frees the export-queue of these
+scopes. it is only the right move when no scope has persisted this export yet, e.g. when it failed during
+the validation step, or when the export was abandoned and is now blocking others. if the export failed
+during the persist step, some scopes are already updated - deleting the rest would leave them with
+dependencies that were never exported, so run without "--delete" to persist the remaining scopes instead.
+the command checks which scopes still hold the pending objects and asks for confirmation before deleting.
+pass all the scopes that were used for the export, the export error lists them.
+only run it once the export is over: the check and the deletion are separate requests, so an export that
+persists a scope in between can still leave the scopes inconsistent`;
   alias = '';
-  options = [] as CommandOptions;
+  options = [
+    ['', 'delete', 'discard the pending objects of this export-id instead of persisting them'],
+    ['', 'force', 'for --delete, skip the confirmation prompt. needed when running non-interactively'],
+  ] as CommandOptions;
   loader = true;
   group = 'advanced';
   private = true;
   remoteOp = true;
 
-  constructor(private scope: ScopeMain) {}
+  constructor(
+    private scope: ScopeMain,
+    private logger: Logger
+  ) {}
 
-  async report([exportId, remotes]: [string, string[]]): Promise<string> {
+  async report([exportId, remotes]: [string, string[]], options: ResumeExportOptions): Promise<string> {
+    if (options.delete) return this.deletePendingObjects(exportId, remotes, Boolean(options.force));
     const exportedIds = await resumeExport(this.scope.legacyScope, exportId, remotes);
     if (!exportedIds.length) return chalk.yellow('no components were left to persist for this export-id');
     return `the following components were persisted successfully:
 ${exportedIds.join('\n')}`;
+  }
+
+  private async deletePendingObjects(exportId: string, remoteNames: string[], force: boolean): Promise<string> {
+    // a repeated scope would be probed and deleted twice in parallel, and would count twice in every
+    // total below - including the all-probes-failed check, which compares against unique scope names
+    const remotes = uniq(remoteNames);
+    const probe = await probePendingExport(this.scope.legacyScope, exportId, remotes);
+    const probeFailed = Object.keys(probe.failed);
+    if (probeFailed.length === remotes.length) {
+      throw new BitError(`failed reaching all the given scopes:
+${this.failedLines(probe.failed).join('\n')}`);
+    }
+    // a scope that reports "absent" has nothing for us to delete, so leave it out of the request entirely.
+    const scopesToClear = [...probe.present, ...probe.unknown];
+    if (!scopesToClear.length) {
+      const nothingFound = `no pending objects of "${exportId}" were found, nothing to delete`;
+      return joinSections([
+        this.formatFailedSection(probe.failed),
+        // don't call it a success when some scopes never answered - they may well be holding the objects
+        probeFailed.length
+          ? formatWarningSummary(`${nothingFound} on the scopes that answered`)
+          : formatSuccessSummary(nothingFound),
+      ]);
+    }
+    // print what the probe found in both modes. "--force" skips the prompt, not the findings
+    this.logger.console(this.formatProbeResult(exportId, probe, scopesToClear));
+    if (!force) await this.confirmDeletion(exportId, scopesToClear);
+    const result = await deletePendingExport(this.scope.legacyScope, exportId, scopesToClear);
+    return this.formatDeleteResult(exportId, result, probe);
+  }
+
+  /**
+   * the whole point of the probe: show what was found before destroying it, loudest when a scope
+   * reports "absent" and so this export may be partially persisted already.
+   */
+  private formatProbeResult(exportId: string, probe: PendingDirScopes, scopesToClear: string[]): string {
+    const sections: string[] = [
+      formatSection(
+        'pending objects to delete',
+        `(of the export-id "${exportId}")`,
+        scopesToClear.map((scopeName) => formatItem(scopeName))
+      ),
+    ];
+    // any "absent" scope is a possible partial persist, whether the rest answered "present" or are
+    // unknown old servers. unknown scopes get deleted too, so the warning matters just as much there.
+    if (probe.absent.length) {
+      sections.push(
+        formatSection(
+          `${warnSymbol} scopes that no longer hold these objects`,
+          `a scope drops the pending objects as soon as it persisted them, so this export may be
+partially persisted already. if it is, deleting the rest leaves these scopes with
+dependencies that were never exported. run without "--delete" to persist instead.`,
+          probe.absent.map((scopeName) => formatItem(scopeName, warnSymbol))
+        )
+      );
+    }
+    if (probe.unknown.length) {
+      sections.push(
+        formatWarningSummary(
+          `${probe.unknown.length} scope(s) run a server that can't report whether anything is pending, so the check above skipped them`
+        )
+      );
+    }
+    sections.push(this.formatFailedSection(probe.failed));
+    return joinSections(sections);
+  }
+
+  private async confirmDeletion(exportId: string, scopesToClear: string[]): Promise<void> {
+    if (!canPromptUser()) {
+      throw new BitError(`unable to prompt for confirmation in a non-interactive terminal.
+review the list above and re-run with "--force" to delete`);
+    }
+    const ok = await yesno({
+      question: `deleting the pending objects of "${exportId}" from ${scopesToClear.length} scope(s) cannot be undone.
+${chalk.bold('Would you like to proceed? [yes(y)/no(n)]')}`,
+    });
+    if (!ok) throw new BitError('aborted, nothing was deleted');
+  }
+
+  private formatDeleteResult(exportId: string, result: PendingDirScopes, probe: PendingDirScopes): string {
+    // a scope whose probe failed was never attempted, so it may still be holding the objects and
+    // blocking the queue. it belongs in the final report just as much as a failed deletion does,
+    // and with "--force" this is the only place the user gets to see it.
+    const failed = { ...probe.failed, ...result.failed };
+    const failedScopes = Object.keys(failed);
+    // "present" here means the remote had the objects and removed them, "unknown" that it removed
+    // without reporting. either way they're cleared. "absent" means there was nothing to remove
+    const cleared = result.present.length + result.unknown.length;
+    if (!cleared && !result.absent.length) {
+      // every scope failed. "absent" counts as an answer, so this list is never empty here
+      throw new BitError(`failed removing the pending objects of "${exportId}" from all the given scopes:
+${this.failedLines(failed).join('\n')}`);
+    }
+    const clearedMsg = `deleted the pending objects of "${exportId}" from ${cleared} scope(s)`;
+    let summary: string;
+    if (failedScopes.length) summary = formatWarningSummary(`${clearedMsg}, ${failedScopes.length} failed`);
+    // the scopes persisted between the probe and the deletion, so there was nothing left to delete
+    else if (!cleared) summary = formatSuccessSummary(`nothing was pending anymore, no objects were deleted`);
+    else summary = formatSuccessSummary(clearedMsg);
+    const untouched = probe.absent.length + result.absent.length;
+    const hint = untouched ? formatHint(`(${untouched} scope(s) had nothing pending and were left untouched)`) : '';
+    return joinSections([this.formatRaceSection(probe, result), this.formatFailedSection(failed), summary, hint]);
+  }
+
+  /**
+   * the probe is a snapshot, not a reservation, so a scope can persist the export in the gap between
+   * the check and the deletion. that leaves the same partial persist the probe exists to prevent, and
+   * the only trace of it is a scope that held the objects during the probe but not during the
+   * deletion. it can't be prevented from here - it needs the two operations to exclude each other on
+   * the server - so at least report it instead of counting it as an ordinary no-op.
+   */
+  private formatRaceSection(probe: PendingDirScopes, result: PendingDirScopes): string {
+    const changedMidway = probe.present.filter((scopeName) => result.absent.includes(scopeName));
+    return formatSection(
+      `${warnSymbol} scopes that changed while this command ran`,
+      `these scopes held the pending objects during the check but not during the deletion.
+something else persisted or removed them in between, so this export may now be
+partially persisted. verify it before relying on the result above.`,
+      changedMidway.map((scopeName) => formatItem(scopeName, warnSymbol))
+    );
+  }
+
+  private formatFailedSection(failed: { [scopeName: string]: string }): string {
+    return formatSection(
+      `${errorSymbol} failed scopes`,
+      '(these scopes could not be reached, nothing was deleted from them)',
+      this.failedLines(failed).map((line) => formatItem(line, errorSymbol))
+    );
+  }
+
+  private failedLines(failed: { [scopeName: string]: string }): string[] {
+    return Object.entries(failed).map(([scopeName, message]) => `${scopeName} - ${message}`);
   }
 }

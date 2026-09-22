@@ -34,6 +34,7 @@ Registers one or more directories as Bit components without changing your files.
 | `--override <boolean>`    |       `-o`       | override existing component if exists (default = false)                                         |
 | `--scope <string>`        |       `-s`       | sets the component's scope. if not entered, the default-scope from workspace.jsonc will be used |
 | `--env <string>`          |       `-e`       | set the component's environment. (overrides the env from variants if exists)                    |
+| `--root`                  |                  | track the workspace root itself as a component, which owns every file no other component claims |
 | `--json`                  |       `-j`       | output as json format                                                                           |
 
 ---
@@ -452,6 +453,7 @@ By default, bumps patch versions when merging to main. If specific configuration
 | `--pre-release [identifier]`            |                  | syntactic sugar for "--increment prerelease" and `--prerelease-id <identifier>`                                                                                                                                                                                                                                                                                                          |
 | `--auto-tag-increment <level>`          |                  | the increment level to use for auto-tagged dependents. options are: [major, premajor, minor, preminor, patch, prepatch, prerelease]. by default, dependents are bumped by a patch, unless --increment is one of [prepatch, prerelease, preminor, premajor], which they follow. note that dependents are auto-tagged transitively, so the entire dependents graph is bumped by this level |
 | `--increment-by <number>`               |                  | (default to 1) increment semver flag (patch/minor/major) by. e.g. incrementing patch by 2: 0.0.1 -> 0.0.3.                                                                                                                                                                                                                                                                               |
+| `--no-skip-published-versions`          |                  | tag the computed version even when the registry already has it. by default, a version that is already published is skipped in favor of the next one, so that a run following a publish-succeeded-but-export-failed run is not rejected by the registry                                                                                                                                   |
 | `--versions-file <path>`                |                  | path to a file containing component versions. format: "component-id: version"                                                                                                                                                                                                                                                                                                            |
 | `--verbose`                             |                  | show verbose output                                                                                                                                                                                                                                                                                                                                                                      |
 | `--auto-merge-resolve <merge-strategy>` |       `-r`       | in case of merge conflict during checkout, resolve according to the provided strategy: [ours, theirs, manual]                                                                                                                                                                                                                                                                            |
@@ -498,6 +500,28 @@ note: this cache has minimal impact on disk space. to free significant disk spac
 | **Option**               | **Option alias** | **Description**                        |
 | ------------------------ | :--------------: | -------------------------------------- |
 | `--remote <remote-name>` |       `-r`       | clear memory cache from a remote scope |
+
+---
+
+## clone
+
+**Description**: create a workspace from its workspace-root component, with every component it lists  
+the workspace-root component is the one tracked at a workspace root ("bit add ."). it versions the workspace's own files - workspace.jsonc, .bitmap, lockfile, configs - and this command makes a workspace out of it, the way "git clone" makes a working tree out of a repository: the root files land at the root, every component the root lists is imported into the directory it records, then the dependencies are installed.  
+the components come at their heads on main, or on the lane given with --lane. a version on the root id pins the root files only.  
+runs outside a workspace. the directory must be empty or not exist, and defaults to the component name.
+
+`bit clone <component-id> [dir]`
+
+| **Arg**        |                                    **Description**                                     |
+| -------------- | :------------------------------------------------------------------------------------: |
+| `component-id` |      the workspace-root component, with its scope. a version pins the root files       |
+| `dir`          | where to create the workspace. defaults to the component name, must be empty or absent |
+
+| **Option**                       | **Option alias** | **Description**                                                                                                              |
+| -------------------------------- | :--------------: | ---------------------------------------------------------------------------------------------------------------------------- |
+| `--lane <lane-id>`               |       `-l`       | clone the workspace as it is on this lane ("scope/name"): it comes out on the lane, with the components at their heads there |
+| `--remote <url>`                 |                  | url of the scope hosting the components, when it is neither on bit.cloud nor in the global remotes                           |
+| `--skip-dependency-installation` |       `-x`       | do not install the dependencies, and so do not compile, after the clone                                                      |
 
 ---
 
@@ -1289,6 +1313,7 @@ automatically imports components, compiles components, links to node_modules, an
 | `--recurring-install`           |                  | automatically run install again if there are non loaded old envs in your workspace                     |
 | `--no-optional [noOptional]`    |                  | do not install optional dependencies (works with pnpm only)                                            |
 | `--lockfile-only`               |                  | dependencies are not written to node_modules. Only the lockfile is updated                             |
+| `--restore`                     |                  | reconstruct the lockfile from each workspace component's stored dependency graph before installing     |
 | `--allow-scripts [pkgNames]`    |                  | a comma separated list of package names that are allowed to run installation scripts                   |
 | `--disallow-scripts [pkgNames]` |                  | a comma separated list of package names that are NOT allowed to run installation scripts               |
 
@@ -1595,6 +1620,22 @@ if you want to fork the lane from a certain point in history, use "lane checkout
 | `--skip-dependency-installation` |       `-x`       | do not install dependencies of the checked out components     |
 | `--restore-deleted-components`   |                  | restore components that were deleted after this history point |
 | `--json`                         |       `-j`       | return the revert result in json format                       |
+
+### lane updates
+
+**Usage**: `lane updates [lane-name]`
+
+**Description**: show the dependents Ripple CI cascaded onto a lane, default to the current lane  
+after a lane is exported, Ripple CI may snap the dependents of the lane components against the new  
+heads and add them to the lane as hidden "update" entries. they are part of the lane graph (Ripple CI builds them, merge  
+refreshes them) but stay hidden from the workspace ("bit status", .bitmap).  
+the entries are read from the remote lane. the local lane object is used only when the remote is unavailable.  
+use --undo to remove them from the lane, on the remote and locally, e.g. when the cascade is not wanted.
+
+| **Option** | **Option alias** | **Description**                                                         |
+| ---------- | :--------------: | ----------------------------------------------------------------------- |
+| `--undo`   |                  | remove the cascaded dependents from the lane, on the remote and locally |
+| `--json`   |       `-j`       | return the results in json format                                       |
 
 ### lane merge
 
@@ -2331,6 +2372,28 @@ view, retry, and manage Ripple CI jobs that build your components in the cloud a
 | `--lane <lane>` |                  | lane ID to find the latest job for (default: detected from .bitmap) |
 | `--json`        |       `-j`       | return the output as JSON                                           |
 
+### ripple simulate
+
+**Usage**: `ripple simulate`
+
+**Description**: start a Ripple CI simulation for a lane to reveal which dependents break (auto-detects current lane)  
+a simulation builds the dependents of the lane components against the lane heads on bit.cloud,  
+without merging or publishing anything. it's the way to get dependent coverage for a change before the lane is merged.  
+the simulation runs against the lane as it exists on bit.cloud, so export the lane first.  
+simulations are heavy jobs and are billed as such. run them at review time, not on every change.  
+dependents are searched in the lane's own scope by default. widen or narrow the search with --scopes, --owners and  
+--exclude-scopes.  
+follow the job with "bit ripple log". once it finishes, "bit ripple errors" shows what broke. both take the job id  
+printed when the simulation starts.
+
+| **Option**                  | **Option alias** | **Description**                                                              |
+| --------------------------- | :--------------: | ---------------------------------------------------------------------------- |
+| `--lane <lane>`             |                  | lane ID to simulate, e.g. "scope/lane-name" (default: detected from .bitmap) |
+| `--scopes <scopes>`         |                  | comma-separated scopes to search for dependents in (default: the lane scope) |
+| `--owners <owners>`         |                  | comma-separated owners (organizations) to search for dependents in           |
+| `--exclude-scopes <scopes>` |                  | comma-separated scopes to exclude from the dependents search                 |
+| `--json`                    |       `-j`       | return the output as JSON                                                    |
+
 ---
 
 ## run
@@ -2778,6 +2841,7 @@ use for official releases. for development versions, use 'bit snap' instead.
 | `--rebuild-deps-graph`         |                  | do not reuse the saved dependencies graph, instead build it from scratch                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `--no-lock-deps`               |                  | do not save the dependencies graph in the tag                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `--increment-by <number>`      |                  | (default to 1) increment semver flag (patch/minor/major) by. e.g. incrementing patch by 2: 0.0.1 -> 0.0.3.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `--skip-published-versions`    |                  | skip versions that are already in the registry. useful when a previous run published the packages but failed before exporting                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `--ignore-issues <issues>`     |       `-i`       | ignore component issues (shown in "bit status" as "issues found"), issues to ignore: [MissingPackagesDependenciesOnFs, MissingManuallyConfiguredPackages, UntrackedDependencies, ResolveErrors, RelativeComponents, RelativeComponentsAuthored, ParseErrors, MissingDists, LegacyInsideHarmony, MissingDependenciesOnFs, ImportNonMainFiles, MultipleEnvs, MissingLinksFromNodeModulesToSrc, CircularDependencies, DuplicateComponentAndPackage, MergeConfigHasConflict, NonLoadedEnv, ExternalEnvWithoutVersion, RemovedDependencies, RemovedEnv, DeprecatedDependencies, SelfReference, ImportFromDirectory, LoadFailures] to ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify "\*". |
 | `--ignore-newest-version`      |       `-I`       | allow tagging even when the component has newer versions e.g. for hotfixes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `--fail-fast`                  |                  | stop pipeline execution on the first failed task (by default a task is skipped only when its dependency failed)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
@@ -3008,6 +3072,7 @@ useful for enabling proper IntelliSense, linting, and type-checking in your IDE.
 | `--clean`                |       `-c`       | delete existing config files from the workspace. highly recommended to run it with "--dry-run" first                         |
 | `--writers <writers>`    |       `-w`       | only write config files for the given writers. use comma to separate multiple writers. use ws-config list to see all writers |
 | `--silent`               |       `-s`       | do not prompt for confirmation                                                                                               |
+| `--force`                |       `-f`       | override config files that already exist in the workspace and were not generated by bit. by default they are left untouched  |
 | `--no-dedupe`            |                  | write configs inside each one of the component's dir, avoid deduping                                                         |
 | `--dry-run`              |                  | show the paths that configs will be written per env                                                                          |
 | `--dry-run-with-content` |                  | use with --json flag. show the config content and the paths that will be written per env                                     |

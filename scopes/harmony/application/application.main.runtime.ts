@@ -31,6 +31,7 @@ import { AppService } from './application.service';
 import { AppCmd, AppListCmd } from './app.cmd';
 import { AppPlugin, BIT_APP_PATTERN } from './app.plugin';
 import { AppTypePlugin } from './app-type.plugin';
+import { selectAppsPluginDefs } from './select-apps-plugin-defs';
 import { AppContext } from './app-context';
 import { DeployTask } from './deploy.task';
 
@@ -273,11 +274,15 @@ export class ApplicationMain {
     const isApp = this.hasAppTypePattern(component, appTypesPatterns);
     if (!isApp) return undefined;
 
-    const allPluginDefs = this.aspectLoader.getPluginDefs();
-
-    const appsPluginDefs = allPluginDefs.filter((pluginDef) => {
-      return appTypesPatterns.includes(pluginDef.pattern.toString());
-    });
+    // the same app-type can be registered more than once, when two versions of the aspect that defines it are loaded
+    // (harmony registers extensions by their full id, including the version, so both providers run).
+    // in such a case, the app file matches both plugin-defs and is registered twice into the app-slot, where the last
+    // registration overwrites the previous one, possibly with an outdated implementation of the app-type.
+    const appsPluginDefs = selectAppsPluginDefs(
+      this.aspectLoader.getPluginDefsByAspectId(),
+      appTypesPatterns,
+      component.state.aspects.ids
+    );
     // const fileResolver = this.aspectLoader.pluginFileResolver(component, rootDir);
 
     const plugins = this.aspectLoader.getPluginsFromDefs(component, rootDir, appsPluginDefs);

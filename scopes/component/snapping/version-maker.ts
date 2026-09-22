@@ -13,7 +13,10 @@ import type { Consumer } from '@teambit/legacy.consumer';
 import { NewerVersionFound } from '@teambit/legacy.consumer';
 import type { Component } from '@teambit/component';
 import { RemoveAspect, deleteComponentsFiles } from '@teambit/remove';
+import { formatItem, formatSection, formatWarningSummary } from '@teambit/cli';
 import { getValidVersionOrReleaseType } from '@teambit/pkg.modules.semver-helper';
+import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
+import { PkgAspect, getPublishRegistry, shouldPublishToExternalRegistry } from '@teambit/pkg';
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { isSnap as isSnapVersion } from '@teambit/component-version';
@@ -24,10 +27,14 @@ import { DependenciesGraph } from '@teambit/objects';
 import type { MessagePerComponent } from './message-per-component';
 import { MessagePerComponentFetcher } from './message-per-component';
 import { VersionFileParser } from './version-file-parser';
+import type { VersionCandidate } from './published-versions';
+import { createIsVersionPublished, skipPublishedVersions } from './published-versions';
 import type { DependencyResolverMain, ComponentRangePrefix } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect, COMPONENT_DEP_TYPE } from '@teambit/dependency-resolver';
+import type { Registries } from '@teambit/pkg.entities.registry';
 import type { ScopeMain, StagedConfig } from '@teambit/scope';
 import type { Workspace, AutoTagResult } from '@teambit/workspace';
+import { findWorkspaceRootMap, writeWorkspaceRoot } from '@teambit/workspace-root';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import type { PackageIntegritiesByPublishedPackages, SnappingMain, TagDataPerComp } from './snapping.main.runtime';
 import type { LaneId } from '@teambit/lane-id';
@@ -56,6 +63,10 @@ export type BasicTagParams = BasicTagSnapParams & {
   versionsFile?: string;
   unmodified?: boolean;
   ignoreIssues?: string;
+  /**
+   * when the computed version is already in the registry, tag the next version that isn't.
+   */
+  skipPublishedVersions?: boolean;
 };
 
 export type VersionMakerParams = {
@@ -72,6 +83,11 @@ export type VersionMakerParams = {
   exitOnFirstFailedTask?: boolean;
   updateDependentsOnLane?: boolean;
   setHeadAsParent?: boolean;
+  /**
+   * the workspace-root component that joined the batch on its own, being new or modified. see
+   * SnappingMain.getWorkspaceRootToTagAlong.
+   */
+  autoAddedWorkspaceRoot?: ComponentID;
 } & BasicTagParams;
 
 export type GraphComponentDependency = {
@@ -147,6 +163,7 @@ function promoteDependencyResolverData(component: ConsumerComponent, graphDepend
     ],
   };
 }
+type ComputedVersion = { componentToTag: ConsumerComponent; version: string };
 
 /**
  * create a tag or a snap of the given components and save them in the local scope.
@@ -211,6 +228,7 @@ export class VersionMaker {
     this.params.isSnap ? this.setHashes() : await this.setFutureVersions(autoTagIds);
     // go through all dependencies and update their versions
     this.updateDependenciesVersions();
+    this.recordWorkspaceRoot();
     await this.addLogToComponents(componentsToTag, autoTagComponents, messagePerId);
     // don't move it down. otherwise, it'll be empty and we don't know which components were during merge.
     // (it's being deleted in snapping.main.runtime - `_addCompToObjects` method)
@@ -530,7 +548,7 @@ export class VersionMaker {
     if (!versionsFile) return;
 
     const allComponentsToTag = ComponentIdList.fromArray([...idsToTag, ...autoTagIds]);
-    const versionFileParser = new VersionFileParser(allComponentsToTag);
+    const versionFileParser = new VersionFileParser(allComponentsToTag, this.params.autoAddedWorkspaceRoot);
     const tagDataFromFile = await versionFileParser.parseVersionsFile(versionsFile);
     this.params.tagDataPerComp = tagDataFromFile;
   }
@@ -622,14 +640,23 @@ export class VersionMaker {
     const isPreReleaseLike = releaseType
       ? ['prerelease', 'premajor', 'preminor', 'prepatch'].includes(releaseType)
       : false;
-    await Promise.all(
+    const computedVersions: ComputedVersion[] = await Promise.all(
       this.allComponentsToTag.map(async (componentToTag) => {
         const isAutoTag = autoTagIds.hasWithoutVersion(componentToTag.id);
         const modelComponent = await this.legacyScope.sources.findOrAddComponent(componentToTag);
         const nextVersion = componentToTag.componentMap?.nextVersion?.version;
+        const isAutoAddedRoot = Boolean(this.params.autoAddedWorkspaceRoot?.isEqualWithoutVersion(componentToTag.id));
+        // the root joined the batch on its own. a version given for the members - `--ver`, the id, or
+        // a versions-file DEFAULT - is not meant for it, so it is bumped the way an auto-tagged
+        // dependent is.
+        const bumpRootAsPatch = () =>
+          soft ? 'patch' : modelComponent.getVersionToAdd('patch', undefined, incrementBy, preReleaseId);
         const getNewVersion = (): string => {
           if (tagDataPerComp) {
             const tagData = tagDataPerComp.find((t) => t.componentId.isEqualWithoutVersion(componentToTag.id));
+            // a versions file names the components being tagged. it covers the root only when it names
+            // it, see VersionFileParser - otherwise the root is still bumped on its own.
+            if (!tagData && isAutoAddedRoot) return bumpRootAsPatch();
             if (!tagData) throw new Error(`tag-data is missing for ${componentToTag.id.toStringWithoutVersion()}`);
             if (!tagData.versionToTag)
               throw new Error(`tag-data.TagResults is missing for ${componentToTag.id.toStringWithoutVersion()}`);
@@ -665,15 +692,88 @@ export class VersionMaker {
             }
             return soft ? 'patch' : modelComponent.getVersionToAdd('patch', undefined, incrementBy, preReleaseId);
           }
+          if (isAutoAddedRoot) return bumpRootAsPatch();
           const versionByEnteredId = this.getVersionByEnteredId(this.ids, componentToTag, modelComponent);
           return soft
             ? versionByEnteredId || exactVersion || (releaseType as string)
             : versionByEnteredId ||
                 modelComponent.getVersionToAdd(releaseType, exactVersion, incrementBy, preReleaseId);
         };
-        const newVersion = getNewVersion();
-        componentToTag.setNewVersion(newVersion);
+        return { componentToTag, version: getNewVersion() };
       })
+    );
+    const versionsToSkip = await this.getVersionsPublishedToRegistry(computedVersions);
+    computedVersions.forEach(({ componentToTag, version }) => {
+      componentToTag.setNewVersion(versionsToSkip.get(componentToTag.id.toStringWithoutVersion()) || version);
+    });
+  }
+
+  /**
+   * a version that is already in the registry can't be published again, so tagging it only fails
+   * later on, during the publish task. see `published-versions.ts` for how the registry gets ahead
+   * of the scope in the first place, and why a probe is enough to detect it.
+   *
+   * only derived versions are checked. a version given explicitly - `--ver`, a versions file, or
+   * on the id itself ("foo@1.2.3") - is tagged as given, the registry is not consulted for it.
+   *
+   * @returns the version to tag instead, by component id, for the components that collided.
+   */
+  private async getVersionsPublishedToRegistry(computedVersions: ComputedVersion[]): Promise<Map<string, string>> {
+    const { soft, exactVersion, tagDataPerComp } = this.params;
+    // on a soft-tag the "version" is a release-type (e.g. "patch"), there is nothing to look up yet.
+    if (!this.params.skipPublishedVersions || soft || exactVersion || tagDataPerComp) return new Map();
+    // only an external registry can get ahead of the scope: a component published to bit's own
+    // registry gets there during the export itself, so the export failing leaves nothing behind.
+    // by default nothing is published externally, which makes this a no-op for most workspaces.
+    const candidates = computedVersions.flatMap(({ componentToTag, version }): VersionCandidate[] => {
+      if (this.hasExplicitVersion(componentToTag)) return [];
+      const pkgConfig = componentToTag.extensions.findExtension(PkgAspect.id)?.config;
+      if (!shouldPublishToExternalRegistry(pkgConfig)) return [];
+      return [
+        {
+          id: componentToTag.id.toStringWithoutVersion(),
+          packageName: componentIdToPackageName(componentToTag),
+          version,
+          registryUrl: getPublishRegistry(pkgConfig),
+        },
+      ];
+    });
+    if (!candidates.length) return new Map();
+    let registries: Registries;
+    try {
+      registries = await this.dependencyResolver.getRegistries();
+    } catch (err: any) {
+      // skipping published versions is a safety net for a stuck release, never a reason to fail one.
+      this.snapping.logger.console(
+        formatWarningSummary(`unable to check the registry for published versions, tagging without it: ${err.message}`)
+      );
+      return new Map();
+    }
+    const skipped = await skipPublishedVersions(candidates, createIsVersionPublished(registries, this.snapping.logger));
+    if (skipped.length) {
+      // one section rather than a line per component: a run that got stuck can collide on all of them
+      this.snapping.logger.console(
+        formatSection(
+          'Versions already in the registry',
+          'an earlier run published these versions, tagging the next free one instead',
+          skipped.map(({ packageName, version, versionToTag }) =>
+            formatItem(`${packageName}: ${version} is taken, tagging ${versionToTag}`)
+          )
+        )
+      );
+    }
+    return new Map(skipped.map(({ id, versionToTag }) => [id, versionToTag]));
+  }
+
+  /**
+   * whether the version was given by the user for this specific component: on the id ("foo@1.2.3")
+   * or on the soft-tag now being persisted. `--ver` and a versions file are explicit for the whole run.
+   */
+  private hasExplicitVersion(componentToTag: ConsumerComponent): boolean {
+    const enteredVersion = this.ids.searchWithoutVersion(componentToTag.id)?.version;
+    const softTagVersion = this.params.persist ? componentToTag.componentMap?.nextVersion?.version : undefined;
+    return [enteredVersion, softTagVersion].some(
+      (given) => given && Boolean(getValidVersionOrReleaseType(given).exactVersion)
     );
   }
 
@@ -789,6 +889,37 @@ export class VersionMaker {
       });
       changeExtensionsVersion(oneComponentToTag);
       oneComponentToTag = updateDepsResolverData(oneComponentToTag);
+    });
+  }
+
+  /**
+   * every member of a workspace-root component records the root it is snapped in, at the version the
+   * root has after this batch: its new version when it is snapped along, otherwise the one in .bitmap.
+   * tag and snap bring a new or modified root into the batch (see SnappingMain.getWorkspaceRootToTagAlong),
+   * so the version is only missing on the paths that don't, such as a merge snap made while the root
+   * was never snapped. the root itself records nothing here, it carries the isRoot marker instead.
+   * see WorkspaceRootMain.
+   *
+   * a workspace with no root of its own writes nothing, and has nothing to undo either: aspect data is
+   * supplied fresh by the loader on every load rather than inherited from the version before it, so a
+   * component imported from a workspace that had a root arrives here without one. what does carry over
+   * is the extension's (empty) config, which is why the entry itself outlives the data it held.
+   */
+  private recordWorkspaceRoot() {
+    const consumer = this.consumer;
+    if (!consumer) return;
+    const rootMap = findWorkspaceRootMap(consumer.bitMap);
+    if (!rootMap) return;
+    const rootInBatch = this.allComponentsToTag.find((component) => component.id.isEqualWithoutVersion(rootMap.id));
+    const rootId = rootInBatch ? rootInBatch.id.changeVersion(rootInBatch.version) : rootMap.id;
+    this.allComponentsToTag.forEach((component) => {
+      // the root records no root of its own, it carries the isRoot marker the loader gives it
+      if (component.id.isEqualWithoutVersion(rootMap.id)) return;
+      // hidden lane entries (lane.updateDependents) cascade into the batch from the scope rather than
+      // from the workspace, so they were not snapped in this root. absence from .bitmap is how they
+      // are told apart elsewhere in this file as well
+      if (!consumer.bitMap.getComponentIfExist(component.id, { ignoreVersion: true })) return;
+      writeWorkspaceRoot(component.extensions, rootId);
     });
   }
 

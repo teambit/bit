@@ -698,15 +698,22 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
     };
     process.on('SIGINT', warnCancelExport);
     let centralHubResults;
-    if (resumeExportId) {
-      const remotes = manyObjectsPerRemote.map((o) => o.remote);
-      await validateRemotes(remotes, resumeExportId);
-      await persistRemotes(manyObjectsPerRemote, resumeExportId);
-    } else if (this.shouldPushToCentralHub(manyObjectsPerRemote, scopeRemotes, originDirectly)) {
-      centralHubResults = await pushAllToCentralHub();
-    } else {
-      // await pushToRemotes();
-      await this.pushToRemotesCarefully(manyObjectsPerRemote, resumeExportId);
+    try {
+      if (resumeExportId) {
+        const remotes = manyObjectsPerRemote.map((o) => o.remote);
+        await validateRemotes(remotes, resumeExportId);
+        await persistRemotes(manyObjectsPerRemote, resumeExportId);
+      } else if (this.shouldPushToCentralHub(manyObjectsPerRemote, scopeRemotes, originDirectly)) {
+        centralHubResults = await pushAllToCentralHub();
+      } else {
+        // await pushToRemotes();
+        await this.pushToRemotesCarefully(manyObjectsPerRemote, resumeExportId);
+      }
+    } catch (err: any) {
+      throw addScopesInvolvedToError(
+        err,
+        manyObjectsPerRemote.map((o) => o.remote.name)
+      );
     }
 
     this.logger.setStatusLine('updating data locally...');
@@ -951,7 +958,7 @@ ${localOnlyExportPending.map((c) => c.toString()).join('\n')}`);
   ]) {
     const logger = loggerMain.createLogger(ExportAspect.id);
     const exportMain = new ExportMain(workspace, remove, depResolver, logger, eject);
-    cli.register(new ResumeExportCmd(scope), new ExportCmd(exportMain));
+    cli.register(new ResumeExportCmd(scope, logger), new ExportCmd(exportMain));
     return exportMain;
   }
 }
@@ -1012,6 +1019,20 @@ async function updateLanesAfterExport(consumer: Consumer, lane: Lane) {
 
 export function isUserTryingToExportLanes(consumer: Consumer) {
   return consumer.isOnLane();
+}
+
+/**
+ * a failed export leaves the objects in the pending-objects dir of every scope it was pushed to, but the
+ * error tells only about the scope that failed (e.g. server-is-busy, which is thrown per scope). without
+ * the full list, cleaning up a stuck export means guessing which other scopes hold the same pending dir.
+ * only the client knows all the scopes of the export, so add them to the error.
+ */
+function addScopesInvolvedToError(err: any, scopeNames: string[]): any {
+  // guard against a non-error being thrown, in which case setting "message" would throw and hide the original error
+  if (!scopeNames.length || typeof err?.message !== 'string') return err;
+  err.message = `${err.message}
+the following scopes were used for this export: ${scopeNames.join(', ')}`;
+  return err;
 }
 
 export default ExportMain;

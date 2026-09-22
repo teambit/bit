@@ -65,7 +65,7 @@ export class HostInitializerMain {
     workspaceConfigProps: WorkspaceExtensionProps = {},
     generator?: string,
     agent?: string,
-    options: { skipAgent?: boolean; skipDefaultMcp?: boolean } = {}
+    options: { skipDefaultMcp?: boolean; skipAgentInstructions?: boolean } = {}
   ): Promise<{ created: boolean; consumer: Consumer; agentFileWritten?: string; mcpFileWritten?: string }> {
     const consumerInfo = await getWorkspaceInfo(absPath || process.cwd());
     // if "bit init" was running without any flags, the user is probably trying to init a new workspace but wasn't aware
@@ -122,7 +122,9 @@ export class HostInitializerMain {
     let agentFileWritten: string | undefined;
     let mcpFileWritten: string | undefined;
     if (created) {
-      if (!options.skipAgent) {
+      // a clone skips both: its root files come from the component, and only what the component
+      // versions belongs at the root
+      if (!options.skipAgentInstructions) {
         agentFileWritten = await HostInitializerMain.writeAgentInstructions(consumerPath, agent);
       }
       // Keep `.mcp.json` in sync with the agent template, which tells the

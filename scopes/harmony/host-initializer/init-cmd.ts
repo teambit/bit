@@ -209,7 +209,7 @@ supports various reset options to recover from corrupted state or restart from s
       workspaceExtensionProps,
       interactiveConfig?.generator || generator,
       agentType,
-      { skipAgent: Boolean(noAgent), skipDefaultMcp: Boolean(noMcp) || userOptedOutOfMcp }
+      { skipAgentInstructions: Boolean(noAgent), skipDefaultMcp: Boolean(noMcp) || userOptedOutOfMcp }
     );
 
     return HostInitializerMain.generateInitMessage(

@@ -207,10 +207,28 @@ class BitLogger implements IBitLogger {
    * [2020-12-04 16:24:46.110 -0500] INFO	 (31641): loadingComponent: 18ms. (total repeating 32ms)
    */
   profile(id: string, console?: boolean, level: Level = 'info') {
+    const shouldWriteToConsole = console || this.shouldConsoleProfiler;
+    // profiling keeps state per id and formats a message. when the line is going to be discarded
+    // anyway, skip it altogether - otherwise turning the level off removes only the printing, not
+    // the cost of the profiling itself.
+    // the check (and later the write) use the dedicated file logger, not `this.logger` - which
+    // `switchToConsoleLogger`/`switchToSSELogger` can repoint at a console/SSE-only pino instance
+    // with its own level - so profiling always persists to debug.log regardless of the active
+    // display mode. the file logger's level can still change between the two calls of a
+    // measurement (e.g. via `bit --log`), so also drop the measurement this call would have
+    // closed. only the measurement of this id is dropped, to not touch the ones of a request that
+    // runs in parallel.
+    if (!shouldWriteToConsole && !pinoLogger.isLevelEnabled(level)) {
+      this.profiler.discard(id);
+      return;
+    }
     const msg = this.profiler.profile(id);
     if (!msg) return;
     const fullMsg = `${id}: ${msg}`;
-    console || this.shouldConsoleProfiler ? this.console(fullMsg) : this[level](fullMsg);
+    // always record it in the log file, and also print it to the screen when requested. (previously
+    // these were mutually exclusive, so enabling console output silently dropped the debug.log entry)
+    pinoLogger[level](this.withTracePrefix(level, fullMsg));
+    if (shouldWriteToConsole) this.console(fullMsg);
   }
 
   registerOnBeforeExitFn(fn: Function) {

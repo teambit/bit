@@ -20,12 +20,16 @@
     //cannot assign max-width directly to right side
     max-width: calc(100% - 32px);
   }
-  background: var(--on-surface-neutral-low-color, #282828) !important;
+  // No background here. `--on-surface-neutral-low-color` is a *foreground* token (#9598A1 in the
+  // base theme, #282828 in dark), so using it as a surface painted the diff pane grey on a light
+  // page and near-black on a dark one. It existed because Monaco did not paint its own surface;
+  // the shiki DiffViewer sets `background: var(--surface-color)` itself, so the pane inherits.
 }
 
 .left {
   position: relative;
-  background: var(--on-surface-neutral-low-color, #282828);
+  // file tree surface — a real surface token, not the `on-surface` foreground used before.
+  background: var(--surface-color, #fff);
   // this is to fix the right panel when it gets too big or too small
   min-width: 200px;
   max-width: calc(100% - 200px);
@@ -35,11 +39,15 @@
     //cannot assign max-width directly to right side
     max-width: calc(100% - 32px);
   }
+
+  // the rail shares the page surface, so without an edge the collapsed state looks like blank page.
+  border-right: 1px solid var(--border-medium-color, #ededed);
 }
 
 .splitter {
   position: relative;
-  background: var(--on-surface-neutral-low-color, #282828);
+  // divider between the file tree and the diff — a border token, not the `on-surface` foreground.
+  background: var(--border-medium-color, #ededed);
   // display: none;
 
   > :first-child {
@@ -65,13 +73,28 @@
 
 .codeCompareTreeCollapse {
   padding: 8px;
-  background: var(--on-surface-neutral-low-color, #282828);
+  // matches the file-tree surface beside it, so it follows the page theme.
+  background: var(--surface-color, #fff);
   cursor: pointer;
+}
 
-  img {
-    width: 16px;
-    filter: brightness(0) invert(1);
-  }
+// The sidebar toggle icon is a remote SVG whose own fill is #2B2B2B. It used to be forced white with
+// `filter: brightness(0) invert(1)`, which only worked while this panel was permanently dark — on a
+// light surface the control disappeared entirely. Painting it through a mask lets it take the theme
+// foreground, so it stays visible in both themes.
+.sidebarIcon {
+  display: block;
+  width: 16px;
+  height: 16px;
+  background-color: var(--on-surface-color, #2b2b2b);
+  -webkit-mask-image: var(--code-compare-sidebar-icon);
+  mask-image: var(--code-compare-sidebar-icon);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
 }
 
 .codeCompareTree {

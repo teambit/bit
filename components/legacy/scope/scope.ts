@@ -670,8 +670,18 @@ once done, to continue working, please run "bit cc"`
     return this.objects.readObjectsFromPendingDir(pendingDir);
   }
 
-  async removePendingDir(clientId: string) {
+  /**
+   * whether this scope still holds the pending objects of the given client-id. because
+   * `ExportPersist` deletes the pending-dir as soon as it persisted, a "false" here means this scope
+   * either persisted this export already or never took part in it.
+   */
+  async hasPendingDir(clientId: string): Promise<boolean> {
+    return fs.pathExists(this.getPendingDirPath(clientId));
+  }
+
+  async removePendingDir(clientId: string): Promise<{ existed: boolean }> {
     const pendingDir = this.getPendingDirPath(clientId);
+    const existed = await this.hasPendingDir(clientId);
     try {
       await fs.remove(pendingDir); // no error is thrown if not exists
     } catch (err: any) {
@@ -685,6 +695,7 @@ once done, to continue working, please run "bit cc"`
         throw err;
       }
     }
+    return { existed };
   }
 
   async garbageCollect(opts: GarbageCollectorOpts) {
@@ -760,8 +771,11 @@ once done, to continue working, please run "bit cc"`
     this.objects.scopeJson = scopeJson;
   }
 
-  public async getDependenciesGraphByComponentIds(componentIds: ComponentID[]): Promise<DependenciesGraph | undefined> {
-    if (!isFeatureEnabled(DEPS_GRAPH)) return undefined;
+  public async getDependenciesGraphByComponentIds(
+    componentIds: ComponentID[],
+    options?: { ignoreFeatureToggle?: boolean }
+  ): Promise<DependenciesGraph | undefined> {
+    if (!options?.ignoreFeatureToggle && !isFeatureEnabled(DEPS_GRAPH)) return undefined;
     let allGraph: DependenciesGraph | undefined;
     await pMapPool(
       componentIds,
