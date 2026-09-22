@@ -596,15 +596,40 @@ Error: ${reason}`);
  * the directory is removed once its contents are back in the scope. leaving it would hold on to a
  * second copy of every object - the disk space this command exists to reclaim - and would let a
  * later restore replay objects that a gc since then deliberately removed.
+ *
+ * it is moved aside before anything is copied, rather than emptied in place. a `--backup` running
+ * at the same time then writes into a fresh `deleted-objects` that this restore neither copies from
+ * nor deletes; otherwise objects moved there mid-restore would be removed from the backup without
+ * ever having been brought back. the move is a rename within the scope directory, so it is atomic.
  */
 export async function restoreDeletedObjects(scope: Scope, overwrite = false) {
   const deletedObjectsDir = path.join(scope.path, DELETED_OBJECTS_DIR);
-  if (!(await fs.pathExists(deletedObjectsDir))) {
+  // a directory left behind by a restore that was interrupted after the rename. its contents never
+  // made it back, and nothing else will look for them, so they are picked up here.
+  const leftovers = await glob(`${DELETED_OBJECTS_DIR}.restoring-*`, { cwd: scope.path });
+  if (!(await fs.pathExists(deletedObjectsDir)) && !leftovers.length) {
     throw new BitError(`there is nothing to restore, "${deletedObjectsDir}" doesn't exist.
 it is only created by a garbage collection that ran with --backup`);
   }
-  await scope.objects.restoreFromDir(DELETED_OBJECTS_DIR, overwrite);
-  await fs.remove(deletedObjectsDir);
+  const staged = [...leftovers];
+  if (await fs.pathExists(deletedObjectsDir)) {
+    const stagingDir = `${DELETED_OBJECTS_DIR}.restoring-${Date.now()}`;
+    await fs.move(deletedObjectsDir, path.join(scope.path, stagingDir));
+    staged.push(stagingDir);
+  }
+  for (const stagingDir of staged) {
+    try {
+      await scope.objects.restoreFromDir(stagingDir, overwrite);
+    } catch (err: any) {
+      // put it back under the name the next `--restore` will look for, so a failure here doesn't
+      // leave the objects somewhere nothing goes looking.
+      if (!(await fs.pathExists(deletedObjectsDir))) {
+        await fs.move(path.join(scope.path, stagingDir), deletedObjectsDir);
+      }
+      throw err;
+    }
+    await fs.remove(path.join(scope.path, stagingDir));
+  }
 }
 
 /** total bytes under a directory, or 0 if it isn't there */

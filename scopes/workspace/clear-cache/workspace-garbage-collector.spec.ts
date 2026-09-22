@@ -298,6 +298,35 @@ describe('collectGarbageInWorkspace', () => {
       expect(second.totalSize).to.be.at.least(first.deletedSize);
     });
 
+    it('should leave alone a backup taken while it was restoring', async () => {
+      const first = await runGc({ backup: true });
+      const backupDir = first.backupDir as string;
+      // stand in for a concurrent `--backup`: something lands in `deleted-objects` after the
+      // restore has taken what was there. it must still be there afterwards.
+      const concurrentPath = path.join(backupDir, 'ab', 'c'.repeat(38));
+      const original = scope.objects.restoreFromDir.bind(scope.objects);
+      (scope.objects as any).restoreFromDir = async (dir: string, overwrite: boolean) => {
+        await fs.outputFile(concurrentPath, 'moved aside by another run');
+        return original(dir, overwrite);
+      };
+      try {
+        await restoreDeletedObjects(scope);
+      } finally {
+        (scope.objects as any).restoreFromDir = original;
+      }
+      expect(await fs.pathExists(concurrentPath)).to.be.true;
+    });
+
+    it('should pick up a backup left behind by an interrupted restore', async () => {
+      const first = await runGc({ backup: true });
+      const backupDir = first.backupDir as string;
+      // what an interrupted restore leaves: renamed aside, contents never copied back
+      await fs.move(backupDir, `${backupDir}.restoring-1700000000000`);
+      await restoreDeletedObjects(scope);
+      expect(await objectExists(Ref.from(VERSION_HASHES['0.0.1']))).to.be.true;
+      expect(await fs.pathExists(`${backupDir}.restoring-1700000000000`)).to.be.false;
+    });
+
     it('should empty the backup directory once restored, so a later restore cannot replay it', async () => {
       const result = await runGc({ backup: true });
       const backupDir = result.backupDir as string;
