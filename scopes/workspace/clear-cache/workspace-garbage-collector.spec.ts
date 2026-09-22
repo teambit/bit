@@ -6,7 +6,7 @@ import path from 'path';
 import zlib from 'zlib';
 import { ComponentID } from '@teambit/component-id';
 import { LaneId, DEFAULT_LANE } from '@teambit/lane-id';
-import { Lane, ModelComponent, Ref, Repository, Source, Version } from '@teambit/objects';
+import { Lane, LaneHistory, ModelComponent, Ref, Repository, Source, Version } from '@teambit/objects';
 import { Scope } from '@teambit/legacy.scope';
 import { collectGarbageInWorkspace, restoreDeletedObjects } from './workspace-garbage-collector';
 
@@ -578,6 +578,44 @@ describe('collectGarbageInWorkspace', () => {
       await runGc();
       expect(await objectExists(Ref.from(DEP_HASH))).to.be.true;
       expect(await objectExists(depSource.hash())).to.be.true;
+    });
+  });
+
+  describe('with a version recorded only in a lane history entry', () => {
+    /** a version that was on the lane once and has since left it */
+    const HISTORIC_HASH = '2'.repeat(39) + 'b';
+    let historicSource: Source;
+
+    beforeEach(async () => {
+      await markAsExported();
+      historicSource = Source.from(Buffer.from('the contents of a version the lane once had'));
+      const historicVersion = buildVersion(HISTORIC_HASH, historicSource, []);
+      const lane = Lane.create('a-lane', COMP_SCOPE);
+      const laneHistory = LaneHistory.parse(
+        JSON.stringify({
+          name: 'a-lane',
+          scope: COMP_SCOPE,
+          laneHash: lane.hash().toString(),
+          history: {
+            'an-entry': {
+              log: { date: '1700000000000' },
+              // `bit lane checkout-history` hands checkout exactly this
+              components: [`${COMP_SCOPE}/${COMP_NAME}@${HISTORIC_HASH}`],
+            },
+          },
+        })
+      );
+      const objects = [lane, laneHistory, historicVersion, historicSource];
+      objects.forEach((object) => {
+        object.validateBeforePersist = false;
+      });
+      await scope.objects.writeObjectsToTheFS(objects);
+    });
+
+    it('should keep it, since checking out that entry asks for exactly that version', async () => {
+      await runGc();
+      expect(await objectExists(Ref.from(HISTORIC_HASH))).to.be.true;
+      expect(await objectExists(historicSource.hash())).to.be.true;
     });
   });
 

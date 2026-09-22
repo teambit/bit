@@ -8,7 +8,7 @@ import { logger } from '@teambit/legacy.logger';
 import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import type { Repository } from '@teambit/objects';
-import { Lane, ModelComponent, Ref, Source, Version } from '@teambit/objects';
+import { Lane, LaneHistory, ModelComponent, Ref, Source, Version } from '@teambit/objects';
 import { getAllVersionsInfo } from '@teambit/component.snap-distance';
 import type { Scope } from '@teambit/legacy.scope';
 import { DELETED_OBJECTS_DIR } from '@teambit/legacy.scope';
@@ -240,6 +240,17 @@ ${list}`);
     });
     // the lane's readme is pointed at separately and needn't be among the components above
     addRoot(lane.readmeComponent?.head);
+  });
+
+  // `bit lane history` can check out or revert to any entry it recorded, and it hands checkout the
+  // exact versions written there. a version that has since left the lane is reachable from nothing
+  // else, and on a lane that was never exported it is here and nowhere else.
+  const laneHistories = await loadObjectsOfType<LaneHistory>(LaneHistory.name);
+  laneHistories.forEach((laneHistory) => {
+    Object.values(laneHistory.getHistory()).forEach((item) => {
+      const ids = [...item.components, ...(item.deleted || []), ...(item.updateDependents || [])];
+      ids.forEach((idStr) => addRoot(ComponentID.fromString(idStr).version));
+    });
   });
 
   // heads we track for remotes. deleting one would break the diverge calculation, which can no
@@ -607,15 +618,26 @@ export async function restoreDeletedObjects(scope: Scope, overwrite = false) {
   // a directory left behind by a restore that was interrupted after the rename. its contents never
   // made it back, and nothing else will look for them, so they are picked up here.
   const leftovers = await glob(`${DELETED_OBJECTS_DIR}.restoring-*`, { cwd: scope.path });
-  if (!(await fs.pathExists(deletedObjectsDir)) && !leftovers.length) {
+  // each one is claimed by renaming it again, under a name only this call knows. a second restore
+  // running at the same time finds the old name gone and moves on, rather than both copying from a
+  // directory one of them is about to remove.
+  const staged: string[] = [];
+  const claim = async (dir: string): Promise<string | undefined> => {
+    const claimed = `${DELETED_OBJECTS_DIR}.restoring-${Date.now()}-${process.pid}-${staged.length}`;
+    try {
+      await fs.move(path.join(scope.path, dir), path.join(scope.path, claimed));
+    } catch {
+      return undefined; // someone else got there first
+    }
+    return claimed;
+  };
+  for (const dir of [...leftovers, DELETED_OBJECTS_DIR]) {
+    const claimed = await claim(dir);
+    if (claimed) staged.push(claimed);
+  }
+  if (!staged.length) {
     throw new BitError(`there is nothing to restore, "${deletedObjectsDir}" doesn't exist.
 it is only created by a garbage collection that ran with --backup`);
-  }
-  const staged = [...leftovers];
-  if (await fs.pathExists(deletedObjectsDir)) {
-    const stagingDir = `${DELETED_OBJECTS_DIR}.restoring-${Date.now()}`;
-    await fs.move(deletedObjectsDir, path.join(scope.path, stagingDir));
-    staged.push(stagingDir);
   }
   for (const stagingDir of staged) {
     try {
