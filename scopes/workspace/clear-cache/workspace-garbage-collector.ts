@@ -7,6 +7,7 @@ import { ComponentID } from '@teambit/component-id';
 import { logger } from '@teambit/legacy.logger';
 import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
+import type { Repository } from '@teambit/objects';
 import { Lane, ModelComponent, Ref, Source, Version } from '@teambit/objects';
 import { getAllVersionsInfo } from '@teambit/component.snap-distance';
 import type { Scope } from '@teambit/legacy.scope';
@@ -18,6 +19,12 @@ import { DELETED_OBJECTS_DIR } from '@teambit/legacy.scope';
  * ever cleans them up.
  */
 const STRAY_TEMP_FILE = /^[0-9a-f]{38}\.\d+$/;
+
+/**
+ * how long a file of that shape has to have been sitting there before it counts as abandoned
+ * rather than as a write someone is in the middle of.
+ */
+const STRAY_TEMP_FILE_MIN_AGE_MS = 60 * 60 * 1000;
 
 /**
  * `bit stash` writes a `Version` object into the local scope and records only its hash in a file
@@ -44,6 +51,8 @@ type StrayTempFiles = { count: number; size: number };
 
 export type GcResult = {
   dryRun: boolean;
+  /** what --backup asked for. `backupDir` only says where objects went, so a dry run has none */
+  backup: boolean;
   backupDir?: string;
   totalObjects: number;
   /** everything the scope holds, the stray temp files included */
@@ -135,16 +144,25 @@ ${list}`);
   };
 
   const components = await loadObjectsOfType<ModelComponent>(ModelComponent.name);
-  const lanes = await loadObjectsOfType<Lane>(Lane.name);
+  const liveLanes = await loadObjectsOfType<Lane>(Lane.name);
+  // `bit lane remove` moves the `Lane` object to the trash rather than deleting it, so that it can
+  // be brought back. a lane sitting there still names the snaps it held, and if those are gone the
+  // lane comes back empty-handed. the collector for bare scopes has always counted them; this one
+  // has the same reason to.
+  const lanes = [...liveLanes, ...(await getTrashedLanes(repo))];
   const componentsById = new Map(
     components.map((component) => [component.toComponentId().toStringWithoutVersion(), component])
   );
 
   // the head of every component. `bit log`, `bit status` and the diverge calculation all start
   // there, and it's what `VersionHistory` is repaired from when it turns out to be incomplete.
+  const detachedHeads: { component: ModelComponent; head: Ref }[] = [];
   components.forEach((component) => {
     addRoot(component.getHead());
-    component.detachedHeads.getAllHeads().forEach(addRoot);
+    component.detachedHeads.getAllHeads().forEach((head) => {
+      addRoot(head);
+      detachedHeads.push({ component, head });
+    });
     // an orphaned tag reached this scope through some other remote's cache rather than through the
     // component's origin, which is the whole reason bit holds on to it locally. re-fetching it is
     // not something we can count on, so it is treated like anything else that exists only here.
@@ -249,6 +267,7 @@ ${list}`);
   return {
     dryRun,
     backupDir: backup && !dryRun && refsToDelete.length ? path.join(scope.path, DELETED_OBJECTS_DIR) : undefined,
+    backup,
     totalObjects: allObjects.length,
     totalSize: totalSize + strayFiles.size,
     deletedObjects: refsToDelete.length,
@@ -273,6 +292,9 @@ ${list}`);
       // whoever checked the lane out, and these components were loaded straight from the objects.
       ...components.map((component) => ({ component, head: component.getHead() })),
       ...laneHeads,
+      // a detached head is a tip like any other, and rooting it alone keeps only that snap. its
+      // unexported parents are reachable from nowhere else, so they need the same walk.
+      ...detachedHeads,
     ];
     await pMapPool(
       startingPoints,
@@ -416,29 +438,64 @@ it is only created by a garbage collection that ran with --backup`);
 }
 
 /**
+ * the lanes `bit lane remove` put in the trash. they still name the snaps they held, and the trash
+ * exists so the lane can be brought back - which it can't be if its objects went in the meantime.
+ *
+ * only `Lane` objects are of interest; everything else in there is a component or a version that
+ * the rest of the root set already speaks for.
+ */
+async function getTrashedLanes(repo: Repository): Promise<Lane[]> {
+  const refs = await repo.listTrash();
+  if (!refs.length) return [];
+  logger.debug(`gc, reading ${refs.length} objects from the trash`);
+  try {
+    const objects = await repo.getFromTrash(refs);
+    return objects.filter((object) => object instanceof Lane) as Lane[];
+  } catch (err: any) {
+    // same reasoning as a stash we can't read: the trash is a recovery mechanism, and not knowing
+    // what's in it means not knowing which snaps a restored lane would come back looking for.
+    throw new BitError(`unable to read the trash of the scope, so it is not safe to run gc.
+the trash holds lanes that "bit lane remove" can bring back, and gc needs to know which snaps they
+point at. empty the trash directory ("${repo.getTrashDir()}") if you don't need it, and run again.
+Error: ${err.message}`);
+  }
+}
+
+/**
  * their size is measured, not only their count: these files are deleted outright (even with
  * --backup, which only applies to objects), so their bytes are part of what the run frees and
  * leaving them out understates it - an interrupted write of a large file is exactly the case where
  * the number matters.
+ *
+ * only files that have been sitting there a while are touched. a temp file of this shape is also
+ * what an object write in progress looks like, and unlinking one out from under another bit
+ * process would fail its rename. an interrupted write is old by definition, so waiting costs
+ * nothing and the race goes away.
  */
 async function removeStrayTempFiles(objectsPath: string, dryRun: boolean): Promise<StrayTempFiles> {
   const matches = await glob(path.join('*', '*'), { cwd: objectsPath });
-  const strays = matches.filter((match) => STRAY_TEMP_FILE.test(path.basename(match)));
+  const candidates = matches.filter((match) => STRAY_TEMP_FILE.test(path.basename(match)));
+  if (!candidates.length) return { count: 0, size: 0 };
+  const staleBefore = Date.now() - STRAY_TEMP_FILE_MIN_AGE_MS;
+  const strays = compact(
+    await Promise.all(
+      candidates.map(async (candidate) => {
+        try {
+          const stat = await fs.stat(path.join(objectsPath, candidate));
+          if (stat.mtimeMs > staleBefore) return null;
+          return { file: candidate, size: stat.size };
+        } catch {
+          // it vanished between the glob and the stat - either another process finished its rename
+          // or something else cleaned up. either way it's not ours to count or remove.
+          return null;
+        }
+      })
+    )
+  );
   if (!strays.length) return { count: 0, size: 0 };
   logger.debug(`gc, ${strays.length} stray temp files of interrupted writes`);
-  const sizes = await Promise.all(
-    strays.map(async (stray) => {
-      try {
-        return (await fs.stat(path.join(objectsPath, stray))).size;
-      } catch {
-        // a temp file that vanished between the glob and the stat. it being gone is the outcome
-        // we're after anyway, it just doesn't count towards what this run freed.
-        return 0;
-      }
-    })
-  );
   if (!dryRun) {
-    await Promise.all(strays.map((stray) => fs.remove(path.join(objectsPath, stray))));
+    await Promise.all(strays.map(({ file }) => fs.remove(path.join(objectsPath, file))));
   }
-  return { count: strays.length, size: sizes.reduce((sum, size) => sum + size, 0) };
+  return { count: strays.length, size: strays.reduce((sum, { size }) => sum + size, 0) };
 }

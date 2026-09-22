@@ -208,6 +208,13 @@ describe('collectGarbageInWorkspace', () => {
       expect(await objectExists(Ref.from(VERSION_HASHES['0.0.1']))).to.be.true;
       expect(await objectExists(sources['0.0.1'].hash())).to.be.true;
     });
+
+    it('should carry the requested backup mode, which has no directory to be inferred from', async () => {
+      // without this the preview reads as a plain deletion and claims disk savings that the real
+      // --backup run would not make, since it only moves the bytes within the scope.
+      expect((await runGc({ dryRun: true, backup: true })).backup).to.be.true;
+      expect((await runGc({ dryRun: true })).backup).to.be.false;
+    });
   });
 
   describe('--backup', () => {
@@ -237,6 +244,41 @@ describe('collectGarbageInWorkspace', () => {
         error = err;
       }
       expect(error?.message).to.have.string('nothing to restore');
+    });
+  });
+
+  describe('with a lane that was removed', () => {
+    /** a snap that only the removed lane ever pointed at */
+    const TRASHED_LANE_SNAP = 'd'.repeat(40);
+    let trashedLaneSource: Source;
+
+    beforeEach(async () => {
+      await markAsExported();
+      trashedLaneSource = Source.from(Buffer.from('the contents of a snap on a removed lane'));
+      const laneVersion = buildVersion(TRASHED_LANE_SNAP, trashedLaneSource, [VERSION_HASHES['0.0.3']]);
+      const lane = Lane.create('removed-lane', COMP_SCOPE);
+      lane.addComponent({
+        id: ComponentID.fromObject({ scope: COMP_SCOPE, name: COMP_NAME }),
+        head: Ref.from(TRASHED_LANE_SNAP),
+      });
+      const objects = [lane, laneVersion, trashedLaneSource];
+      objects.forEach((object) => {
+        object.validateBeforePersist = false;
+      });
+      await scope.objects.writeObjectsToTheFS(objects);
+      // deliberately not registered in remoteLanes: a remote ref is a root of its own, so an
+      // exported lane's snaps survive whether or not the trash is read, and the test would pass
+      // for the wrong reason.
+      //
+      // what `bit lane remove` does: the Lane object goes to the trash, from where it can be
+      // brought back.
+      await scope.objects.moveObjectsToTrash([lane.hash()]);
+    });
+
+    it('should keep the snaps it points at, so restoring the lane does not come back to nothing', async () => {
+      await runGc();
+      expect(await objectExists(Ref.from(TRASHED_LANE_SNAP))).to.be.true;
+      expect(await objectExists(trashedLaneSource.hash())).to.be.true;
     });
   });
 
@@ -274,6 +316,52 @@ describe('collectGarbageInWorkspace', () => {
       await runGc();
       expect(await objectExists(Ref.from(ORPHANED_HASH))).to.be.true;
       expect(await objectExists(orphanedSource.hash())).to.be.true;
+    });
+  });
+
+  describe('with a detached head', () => {
+    /** a locally created lineage hanging off 0.0.3: detachedParent -> detachedHead */
+    const DETACHED = { parent: 'e'.repeat(40), head: 'f'.repeat(40) };
+    let detachedSources: { [snap: string]: Source };
+
+    beforeEach(async () => {
+      await markAsExported();
+      detachedSources = {
+        parent: Source.from(Buffer.from('the contents of a detached parent')),
+        head: Source.from(Buffer.from('the contents of a detached head')),
+      };
+      const detachedVersions = [
+        buildVersion(DETACHED.parent, detachedSources.parent, [VERSION_HASHES['0.0.3']]),
+        buildVersion(DETACHED.head, detachedSources.head, [DETACHED.parent]),
+      ];
+      const modelComponent = ModelComponent.from({
+        name: COMP_NAME,
+        scope: COMP_SCOPE,
+        lang: 'javascript',
+        deprecated: false,
+        bindingPrefix: '@bit',
+        versions: {
+          '0.0.1': Ref.from(VERSION_HASHES['0.0.1']),
+          '0.0.2': Ref.from(VERSION_HASHES['0.0.2']),
+          '0.0.3': Ref.from(VERSION_HASHES['0.0.3']),
+        },
+        head: Ref.from(VERSION_HASHES['0.0.3']),
+      });
+      modelComponent.detachedHeads.setHead(Ref.from(DETACHED.head));
+      const objects = [modelComponent, ...detachedVersions, ...Object.values(detachedSources)];
+      objects.forEach((object) => {
+        object.validateBeforePersist = false;
+      });
+      await scope.objects.writeObjectsToTheFS(objects);
+    });
+
+    it('should keep its unexported ancestry, not only the tip', async () => {
+      await runGc();
+      expect(await objectExists(Ref.from(DETACHED.head))).to.be.true;
+      // the tip is a root on its own. the parent is what proves the chain was walked, and it is
+      // reachable from nowhere else - nothing can bring it back.
+      expect(await objectExists(Ref.from(DETACHED.parent))).to.be.true;
+      expect(await objectExists(detachedSources.parent.hash())).to.be.true;
     });
   });
 
@@ -432,6 +520,12 @@ describe('collectGarbageInWorkspace', () => {
     const strayContents = 'leftovers';
     let strayPath: string;
 
+    /** an interrupted write is old by definition; a fresh one is someone writing right now */
+    const backdate = async (filePath: string) => {
+      const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+      await fs.utimes(filePath, twoHoursAgo, twoHoursAgo);
+    };
+
     beforeEach(async () => {
       strayPath = path.join(
         scope.objects.getPath(),
@@ -439,6 +533,7 @@ describe('collectGarbageInWorkspace', () => {
         `${VERSION_HASHES['0.0.1'].slice(2)}.3955502210`
       );
       await fs.outputFile(strayPath, strayContents);
+      await backdate(strayPath);
     });
 
     it('should remove them', async () => {
@@ -457,6 +552,21 @@ describe('collectGarbageInWorkspace', () => {
       await fs.remove(strayPath);
       const withoutStray = await runGc({ dryRun: true });
       expect(withStray.totalSize - withoutStray.totalSize).to.equal(strayContents.length);
+    });
+
+    it('should leave a recent one alone, as it may be an object write in progress', async () => {
+      // a file of this shape is also what write-file-atomic leaves while it writes, and unlinking
+      // one out from under another bit process would fail its rename.
+      const freshPath = path.join(
+        scope.objects.getPath(),
+        VERSION_HASHES['0.0.2'].slice(0, 2),
+        `${VERSION_HASHES['0.0.2'].slice(2)}.1234567890`
+      );
+      await fs.outputFile(freshPath, 'a write in progress');
+      const result = await runGc();
+      expect(result.strayFiles).to.equal(1);
+      expect(await fs.pathExists(freshPath)).to.be.true;
+      expect(await fs.pathExists(strayPath)).to.be.false;
     });
   });
 });

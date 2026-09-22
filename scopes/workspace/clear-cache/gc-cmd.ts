@@ -68,8 +68,8 @@ keeps all history, since there the scope is the source of truth rather than a ca
   }
 
   async report(args: [], opts: GcCmdOpts) {
-    if (opts.restore || opts.restoreOverwrite) {
-      await this.clearCache.restoreGarbageCollected(Boolean(opts.restoreOverwrite));
+    if (isRestore(opts)) {
+      await this.runRestore(opts);
       return formatSuccessSummary('restored the objects from the backup directory');
     }
     const result = await this.runGc(opts);
@@ -78,11 +78,20 @@ keeps all history, since there the scope is the source of truth rather than a ca
   }
 
   async json(args: [], opts: GcCmdOpts) {
-    if (opts.restore || opts.restoreOverwrite) {
-      await this.clearCache.restoreGarbageCollected(Boolean(opts.restoreOverwrite));
+    if (isRestore(opts)) {
+      await this.runRestore(opts);
       return { restored: true };
     }
     return (await this.runGc(opts)) || { completed: true };
+  }
+
+  private async runRestore(opts: GcCmdOpts) {
+    // restore writes objects back and then empties the backup directory, so there is nothing for
+    // --dry-run to show. rather than quietly doing it anyway, say the combination means nothing.
+    if (opts.dryRun) {
+      throw new BitError('--dry-run cannot be combined with --restore or --restore-overwrite');
+    }
+    return this.clearCache.restoreGarbageCollected(Boolean(opts.restoreOverwrite));
   }
 
   private async runGc(opts: GcCmdOpts) {
@@ -98,12 +107,18 @@ keeps all history, since there the scope is the source of truth rather than a ca
     // with --backup the objects are only moved aside, so nothing is freed until the backup
     // directory is removed. saying otherwise would contradict the hint printed right below. the
     // stray temp files are deleted either way, so their bytes are freed in both modes.
-    const backedUp = Boolean(result.backupDir);
+    //
+    // this asks what was requested rather than where objects landed: a dry run has no backup
+    // directory, and reading that as "not a backup" would preview a saving the real run wouldn't
+    // make.
+    const backedUp = result.backup;
     const freedSize = (backedUp ? 0 : result.deletedSize) + result.strayFilesSize;
     const sizeAfter = result.totalSize - freedSize;
     const header = (() => {
-      if (result.dryRun)
-        return formatTitle(`[dry-run] ${result.deletedObjects} of ${result.totalObjects} objects can be removed`);
+      if (result.dryRun) {
+        const fate = backedUp ? 'can be moved to the backup directory' : 'can be removed';
+        return formatTitle(`[dry-run] ${result.deletedObjects} of ${result.totalObjects} objects ${fate}`);
+      }
       if (backedUp)
         return formatSuccessSummary(
           `moved ${result.deletedObjects} objects (${formatBytes(result.deletedSize)}) to the backup directory`
@@ -114,7 +129,11 @@ keeps all history, since there the scope is the source of truth rather than a ca
     const sizeLine = formatItem(
       backedUp
         ? `scope: ${chalk.bold(formatBytes(sizeAfter))} ` +
-            chalk.dim(`(${formatBytes(result.deletedSize)} of it is now in the backup directory)`)
+            chalk.dim(
+              result.dryRun
+                ? `(${formatBytes(result.deletedSize)} of it would move to the backup directory)`
+                : `(${formatBytes(result.deletedSize)} of it is now in the backup directory)`
+            )
         : `scope: ${formatBytes(result.totalSize)} ${arrowSymbol} ${chalk.bold(formatBytes(sizeAfter))}` +
             (result.dryRun ? ` ${chalk.dim(`(would free ${formatBytes(freedSize)})`)}` : '')
     );
@@ -130,7 +149,9 @@ keeps all history, since there the scope is the source of truth rather than a ca
       : '';
 
     const hints: string[] = [];
-    if (result.dryRun && result.deletedObjects) hints.push(formatHint('re-run without --dry-run to remove them'));
+    if (result.dryRun && result.deletedObjects) {
+      hints.push(formatHint(`re-run without --dry-run to ${backedUp ? 'move' : 'remove'} them`));
+    }
     if (result.backupDir) {
       hints.push(
         formatHint(`objects were moved to ${result.backupDir}. no disk space was freed until it is removed.`),
@@ -144,6 +165,10 @@ keeps all history, since there the scope is the source of truth rather than a ca
     const summary = [sizeLine, ...byType, keptLine, strayLine].filter(Boolean).join('\n');
     return joinSections([`${header}\n${summary}`, hints.join('\n')]);
   }
+}
+
+function isRestore(opts: GcCmdOpts): boolean {
+  return Boolean(opts.restore || opts.restoreOverwrite);
 }
 
 function parseKeepVersions(value?: string): number | undefined {
