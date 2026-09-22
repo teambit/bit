@@ -145,6 +145,11 @@ keeps all history, since there the scope is the source of truth rather than a ca
       !backedUp && result.backupDirSize
         ? formatItem(`${formatBytes(result.backupDirSize)} of it is a backup directory from an earlier run`)
         : '';
+    // named rather than silently swelling the total: gc frees neither, so a reader who sees the
+    // scope hold steady deserves to know which part of it was never a candidate.
+    const retainedLine = result.retainedDirsSize
+      ? formatItem(`${formatBytes(result.retainedDirsSize)} of it is the trash and the stash, which gc never touches`)
+      : '';
     const byType = Object.entries(result.deletedByType).map(([type, stats]) =>
       formatItem(`${type}: ${stats.count} objects ${chalk.dim(`(${formatBytes(stats.size)})`)}`)
     );
@@ -175,7 +180,7 @@ keeps all history, since there the scope is the source of truth rather than a ca
       hints.push(formatHint('anything removed will be fetched from the remote again when it is needed'));
     }
 
-    const summary = [sizeLine, backupLine, ...byType, keptLine, strayLine].filter(Boolean).join('\n');
+    const summary = [sizeLine, backupLine, retainedLine, ...byType, keptLine, strayLine].filter(Boolean).join('\n');
     return joinSections([`${header}\n${summary}`, hints.join('\n')]);
   }
 }

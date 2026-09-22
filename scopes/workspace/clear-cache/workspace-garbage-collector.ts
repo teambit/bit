@@ -38,6 +38,9 @@ const RECENT_WRITE_MARGIN_MS = 5 * 60 * 1000;
  */
 const STASH_DIR = 'stash';
 
+/** where `bit lane remove` and a few recovery paths put objects they may need to bring back */
+const TRASH_DIR = 'trash';
+
 export type WorkspaceGcOptions = {
   dryRun?: boolean;
   verbose?: boolean;
@@ -61,7 +64,7 @@ export type GcResult = {
   backup: boolean;
   backupDir?: string;
   totalObjects: number;
-  /** everything the scope holds, the stray temp files included */
+  /** everything the scope holds on disk - live objects, stray temp files, trash, stash, backup */
   totalSize: number;
   deletedObjects: number;
   /** the objects only. with --backup these bytes move to the backup directory rather than leave */
@@ -73,6 +76,8 @@ export type GcResult = {
   strayFilesSize: number;
   /** what earlier --backup runs left behind, measured before this one moves anything into it */
   backupDirSize: number;
+  /** the trash and the stash, which are part of the scope's weight but never freed by gc */
+  retainedDirsSize: number;
 };
 
 /**
@@ -108,8 +113,16 @@ export async function collectGarbageInWorkspace(
   const startedAt = Date.now();
 
   // measured before anything moves into it, so this run's own objects are not counted twice - they
-  // are still in `objects/` when the inventory below is taken.
-  const backupDirSize = await getDirSize(path.join(scope.path, DELETED_OBJECTS_DIR));
+  // are still in `objects/` when the inventory below is taken. the trash and the stash are here for
+  // the same reason the backup directory is: they sit inside the scope and weigh what they weigh,
+  // and a report that leaves them out has the scope shrinking while the disk does not. gc frees
+  // none of the three, so they stay on both sides of the before/after.
+  const [backupDirSize, retainedDirsSize] = await Promise.all([
+    getDirSize(path.join(scope.path, DELETED_OBJECTS_DIR)),
+    Promise.all([getDirSize(path.join(scope.path, TRASH_DIR)), getDirSize(path.join(scope.path, STASH_DIR))]).then(
+      (sizes) => sizes.reduce((sum, size) => sum + size, 0)
+    ),
+  ]);
 
   logger.debug(`gc, classifying the objects of ${scope.name}`);
   const { objects: allObjects, unreadable } = await repo.listObjectsWithType();
@@ -366,7 +379,7 @@ ${list}`);
     totalObjects: allObjects.length,
     // the backup directory is inside the scope, so its bytes are part of what the scope weighs.
     // leaving them out would report a scope that keeps shrinking while the disk doesn't.
-    totalSize: totalSize + strayFiles.size + backupDirSize,
+    totalSize: totalSize + strayFiles.size + backupDirSize + retainedDirsSize,
     deletedObjects: refsToDelete.length,
     deletedSize,
     deletedByType,
@@ -374,6 +387,7 @@ ${list}`);
     strayFiles: strayFiles.count,
     strayFilesSize: strayFiles.size,
     backupDirSize,
+    retainedDirsSize,
   };
 
   /**
@@ -597,14 +611,18 @@ it is only created by a garbage collection that ran with --backup`);
 async function getDirSize(dirPath: string): Promise<number> {
   if (!(await fs.pathExists(dirPath))) return 0;
   const files = await glob('**/*', { cwd: dirPath, nodir: true, dot: true });
-  const sizes = await Promise.all(
-    files.map(async (file) => {
+  // pooled like every other walk here: a backup or a trash can hold as many files as the scope
+  // itself, and one pending stat each is a lot of promises to be holding for a number.
+  const sizes = await pMapPool(
+    files,
+    async (file) => {
       try {
         return (await fs.stat(path.join(dirPath, file))).size;
       } catch {
         return 0;
       }
-    })
+    },
+    { concurrency: concurrentIOLimit() }
   );
   return sizes.reduce((sum, size) => sum + size, 0);
 }
@@ -650,8 +668,9 @@ async function removeStrayTempFiles(objectsPath: string, dryRun: boolean): Promi
   if (!candidates.length) return { count: 0, size: 0 };
   const staleBefore = Date.now() - STRAY_TEMP_FILE_MIN_AGE_MS;
   const strays = compact(
-    await Promise.all(
-      candidates.map(async (candidate) => {
+    await pMapPool(
+      candidates,
+      async (candidate) => {
         try {
           const stat = await fs.stat(path.join(objectsPath, candidate));
           // a name is not enough to act on when `fs.remove` would take a whole tree with it. an
@@ -664,7 +683,8 @@ async function removeStrayTempFiles(objectsPath: string, dryRun: boolean): Promi
           // or something else cleaned up. either way it's not ours to count or remove.
           return null;
         }
-      })
+      },
+      { concurrency: concurrentIOLimit() }
     )
   );
   if (!strays.length) return { count: 0, size: 0 };

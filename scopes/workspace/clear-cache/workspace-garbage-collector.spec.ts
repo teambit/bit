@@ -689,6 +689,11 @@ describe('collectGarbageInWorkspace', () => {
       });
     });
 
+    it('should count the stash towards the scope size, since gc never frees it', async () => {
+      const result = await runGc();
+      expect(result.retainedDirsSize).to.be.greaterThan(0);
+    });
+
     it('should keep the stashed version and its files, as nothing can bring them back', async () => {
       const result = await runGc();
       expect(result.deletedObjects).to.equal(0);
