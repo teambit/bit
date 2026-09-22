@@ -440,13 +440,14 @@ run "bit remove ${component.id.toStringWithoutVersion()}" first if the workspace
    * other occupied directory. a file identical to its incoming copy is not overwritten in any sense
    * that matters, and this is what lets the files `bit init` generates (agent instructions, mcp config)
    * meet their own versioned copies. workspace.jsonc is the exception: the freshly initialized one is
-   * meant to be replaced by the versioned one.
+   * meant to be replaced by the versioned one - and only while the map is still empty, which is what
+   * `bit init` leaves behind. once the workspace tracks a component the file is the user's own like
+   * any other, whichever component that is: the exemption is about what `bit init` just wrote, not
+   * about who owns the root.
    */
   private throwForOccupiedWorkspaceRoot(component: ConsumerComponent, opts: ManyComponentsWriterParams) {
     if (!opts.throwForExistingDir) return;
-    const isFreshWorkspace = this.consumer.bitMap.components.every((componentMap) =>
-      componentMap.id.isEqualWithoutVersion(component.id)
-    );
+    const isFreshWorkspace = !this.consumer.bitMap.components.length;
     const generatedByInit = isFreshWorkspace ? [WORKSPACE_JSONC] : [];
     const filesToOverwrite = this.filesThatWouldLand(component)
       .filter((file) => {
