@@ -552,6 +552,9 @@ async function removeStrayTempFiles(objectsPath: string, dryRun: boolean): Promi
       candidates.map(async (candidate) => {
         try {
           const stat = await fs.stat(path.join(objectsPath, candidate));
+          // a name is not enough to act on when `fs.remove` would take a whole tree with it. an
+          // interrupted write leaves a file; anything else here is not ours to delete.
+          if (!stat.isFile()) return null;
           if (stat.mtimeMs > staleBefore) return null;
           return { file: candidate, size: stat.size };
         } catch {

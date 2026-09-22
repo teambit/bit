@@ -652,6 +652,20 @@ describe('collectGarbageInWorkspace', () => {
       expect(withStray.totalSize - withoutStray.totalSize).to.equal(strayContents.length);
     });
 
+    it('should leave a directory of that name alone, since removing it would take its contents', async () => {
+      const dirPath = path.join(
+        scope.objects.getPath(),
+        VERSION_HASHES['0.0.3'].slice(0, 2),
+        `${VERSION_HASHES['0.0.3'].slice(2)}.9876543210`
+      );
+      const nestedPath = path.join(dirPath, 'something-else');
+      await fs.outputFile(nestedPath, 'not ours to delete');
+      await backdate(dirPath);
+      const result = await runGc();
+      expect(result.strayFiles).to.equal(1); // the file, not the directory
+      expect(await fs.pathExists(nestedPath)).to.be.true;
+    });
+
     it('should leave a recent one alone, as it may be an object write in progress', async () => {
       // a file of this shape is also what write-file-atomic leaves while it writes, and unlinking
       // one out from under another bit process would fail its rename.
