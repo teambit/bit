@@ -179,7 +179,7 @@ export default class NodeModuleLinker {
     const filesToBind = componentMap.getAllFilesPaths();
     await Promise.all(
       filesToBind.map(async (file) => {
-        const fileWithRootDir = componentMap.rootDir ? path.join(componentMap.rootDir, file) : file;
+        const fileWithRootDir = path.join(componentMap.rootDir as string, file);
         const dest = path.join(linkPath, file);
         let stat;
         try {
@@ -199,10 +199,14 @@ export default class NodeModuleLinker {
       })
     );
 
-    if (IS_WINDOWS && componentMap.rootDir) {
+    if (IS_WINDOWS) {
       // symlink the entire source directory into "_src" in node-modules.
       this.dataToPersist.addSymlink(
-        Symlink.makeInstance(componentMap.rootDir, path.join(linkPath, SOURCE_DIR_SYMLINK_TO_NM), component.id)
+        Symlink.makeInstance(
+          componentMap.rootDir as string,
+          path.join(linkPath, SOURCE_DIR_SYMLINK_TO_NM),
+          component.id
+        )
       );
     }
   }

@@ -43,7 +43,6 @@ export interface ManyComponentsWriterParams {
   throwForExistingDir?: boolean;
   // when the target dir is occupied, import into an available empty dir (e.g. "foo" => "foo_1") instead of failing.
   writeToEmptyDir?: boolean;
-  pnpmVcsRoot?: boolean;
   writeConfig?: boolean;
   skipDependencyInstallation?: boolean;
   verbose?: boolean;
@@ -116,7 +115,7 @@ export class ComponentWriterMain {
         opts.mergeStrategy
       );
     }
-    if (this.workspace.externalPackageManagerIsUsed() && !this.isPnpmVcsWorkspace()) {
+    if (this.workspace.externalPackageManagerIsUsed()) {
       await this.installer.writeDependenciesToPackageJson();
     } else if (!opts.skipDependencyInstallation) {
       installationError = await this.installPackagesGracefully(
@@ -127,14 +126,6 @@ export class ComponentWriterMain {
       compilationError = await this.compileGracefully();
     }
     return { installationError, compilationError, workspaceConfigUpdateResult };
-  }
-
-  private isPnpmVcsWorkspace(): boolean {
-    const rootMap = this.consumer.bitMap.components.find(
-      (component) => !component.rootDir && component.useExplicitFiles
-    );
-    const trackerConfig = rootMap?.config?.['teambit.component/tracker'];
-    return Boolean(trackerConfig && trackerConfig !== '-' && trackerConfig.pnpmVcs?.schemaVersion === 1);
   }
 
   private async installPackagesGracefully(
@@ -177,9 +168,6 @@ export class ComponentWriterMain {
     await dataToPersist.persistAllToFS();
   }
   private async populateComponentsFilesToWrite(opts: ManyComponentsWriterParams) {
-    if (opts.pnpmVcsRoot && opts.components.length !== 1) {
-      throw new BitError('a pnpm VCS root bootstrap must write exactly one component');
-    }
     const writeComponentsParams = opts.components.map((component) =>
       this.getWriteParamsOfOneComponent(component, opts)
     );
@@ -197,7 +185,7 @@ export class ComponentWriterMain {
           (await componentWriter.addComponentToBitMap(componentWriter.writeToPath));
         const componentConfigPath = path.join(
           this.workspace.path,
-          componentWriter.existingComponentMap.rootDir || '',
+          componentWriter.existingComponentMap.rootDir,
           COMPONENT_CONFIG_FILE_NAME
         );
         const componentConfigExist = await fs.pathExists(componentConfigPath);
@@ -321,8 +309,6 @@ export class ComponentWriterMain {
       writeConfig: opts.writeConfig,
       skipUpdatingBitMap: opts.skipUpdatingBitMap,
       existingComponentMap: existingComponentMap ?? undefined,
-      useExplicitFiles: Boolean(opts.pnpmVcsRoot),
-      componentConfig: pnpmVcsRootConfig ? { 'teambit.component/tracker': pnpmVcsRootConfig } : undefined,
     };
   }
   /**
@@ -598,21 +584,6 @@ either use --path to specify a different directory or modify "defaultDirectory" 
     const logger = loggerMain.createLogger(ComponentWriterAspect.id);
     return new ComponentWriterMain(install, compiler, workspace, logger, mover, configMerger);
   }
-}
-
-export function getPnpmVcsRootTrackerConfig(component: ConsumerComponent): Record<string, any> | undefined {
-  const trackerEntry = component.extensions.findCoreExtension('teambit.component/tracker');
-  const pnpmVcs = trackerEntry?.config?.pnpmVcs;
-  const workspace = pnpmVcs?.workspace;
-  if (
-    pnpmVcs?.schemaVersion !== 1 ||
-    workspace?.schemaVersion !== 1 ||
-    workspace.rootComponent !== component.id.toStringWithoutVersion() ||
-    !Array.isArray(workspace.components)
-  ) {
-    return undefined;
-  }
-  return trackerEntry?.config;
 }
 
 ComponentWriterAspect.addRuntime(ComponentWriterMain);

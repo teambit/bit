@@ -528,12 +528,8 @@ export class Component {
       if (!inScopeWithAnyVersion) throw new ComponentsPendingImport([id.toString()]);
     }
     const deprecated = componentFromModel ? componentFromModel.deprecated : false;
-    const componentDir = componentMap.getComponentDir();
-    if (!componentDir && !componentMap.useExplicitFiles) {
-      throw new ComponentNotFoundInPath(componentDir);
-    }
-    const compDirAbs = componentDir ? path.join(consumer.getPath(), componentDir) : consumer.getPath();
-    if (!fs.existsSync(compDirAbs)) throw new ComponentNotFoundInPath(componentDir);
+    const compDirAbs = path.join(consumer.getPath(), componentMap.getComponentDir());
+    if (!fs.existsSync(compDirAbs)) throw new ComponentNotFoundInPath(componentMap.getComponentDir());
 
     // Load the base entry from the root dir in map file in case it was imported using -path
     // Or created using bit create so we don't want all the path but only the relative one

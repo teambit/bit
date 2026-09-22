@@ -16,6 +16,7 @@ import type { PathLinux, PathLinuxRelative, PathOsBased } from '@teambit/legacy.
 import { pathNormalizeToLinux, pathRelativeLinux, removeFileExtension } from '@teambit/legacy.utils';
 import type { ResolvedPackageData } from '../resolve-pkg-data';
 import type { ComponentMap } from '@teambit/legacy.bit-map';
+import { WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import { SNAP_VERSION_PREFIX } from '@teambit/component-package-version';
 import type { DependencyResolverMain, DependencyDetector } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
@@ -129,7 +130,7 @@ export class AutoDetectDeps {
     cacheResolvedDependencies: Record<string, any>,
     cacheProjectAst: Record<string, any> | undefined
   ): Promise<{ dependenciesData: DependenciesData; debugDependenciesData: DebugDependencies }> {
-    const componentDir = path.join(this.consumerPath, this.componentMap.rootDir || '');
+    const componentDir = path.join(this.consumerPath, this.componentMap.rootDir);
     const allFiles = this.componentMap.getAllFilesPaths();
     const envDetectors = await this.getEnvDetectors();
     // find the dependencies (internal files and packages) through automatic dependency resolution
@@ -228,7 +229,7 @@ export class AutoDetectDeps {
     destination: string | null | undefined;
   } {
     let depFileRelative: PathLinux = depFile; // dependency file path relative to consumer root
-    const rootDir = this.componentMap.rootDir || '';
+    const rootDir = this.componentMap.rootDir;
     // The depFileRelative is relative to rootDir, change it to be relative to current consumer.
     // We can't use path.resolve(rootDir, fileDep) because this might not work when running
     // bit commands not from root, because resolve take by default the process.cwd
@@ -518,10 +519,11 @@ export class AutoDetectDeps {
         result.set(configuredPackageName, componentMap.id);
         continue;
       }
-      if (!componentMap.useExplicitFiles || !componentMap.files?.some((file) => file.relativePath === 'package.json')) {
-        continue;
-      }
-      const manifestPath = path.join(this.consumerPath, componentMap.rootDir || '', 'package.json');
+      // a component tracks its package.json as source only under trackAllFiles, e.g. a pnpm project.
+      // the workspace root is never depended on as a package, whatever its package.json says.
+      if (componentMap.rootDir === WORKSPACE_ROOT_DIR) continue;
+      if (!componentMap.files?.some((file) => file.relativePath === 'package.json')) continue;
+      const manifestPath = path.join(this.consumerPath, componentMap.rootDir, 'package.json');
       try {
         const packageName = fs.readJsonSync(manifestPath).name;
         if (typeof packageName === 'string' && packageName) result.set(packageName, componentMap.id);
@@ -543,7 +545,7 @@ export class AutoDetectDeps {
         if (!hasExtension) return true;
         // the missing file has extension, e.g. "index.js". It's possible that this file doesn't exist in the source
         // but will be available in the dists. so if found same filename without the extension, we assume it's fine.
-        const rootDirAbs = this.consumer.toAbsolutePath(this.componentMap.rootDir || '');
+        const rootDirAbs = this.consumer.toAbsolutePath(this.componentMap.rootDir);
         const filePathAbs = path.resolve(rootDirAbs, file);
         const relativeToCompDir = path.relative(rootDirAbs, filePathAbs);
         const relativeToCompDirWithoutExt = removeFileExtension(relativeToCompDir);

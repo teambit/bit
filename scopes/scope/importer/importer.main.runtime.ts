@@ -37,7 +37,7 @@ import ImportComponents from './import-components';
 import type { ListerMain } from '@teambit/lister';
 import { ListerAspect } from '@teambit/lister';
 import type { PnpmVcsImportPlan } from '@teambit/tracker';
-import { applyPnpmImportPlan, createPnpmVcsImportPlan, TrackerAspect } from '@teambit/tracker';
+import { applyPnpmImportPlan, createPnpmVcsImportPlan, isPnpmWorkspace } from '@teambit/tracker';
 
 export class ImporterMain {
   constructor(
@@ -78,7 +78,8 @@ export class ImporterMain {
     const results = await importComponents.importComponents();
     Analytics.setExtraData('num_components', results.importedIds.length);
     if (results.writtenComponents?.length) {
-      if (this.isPnpmVcsWorkspace()) {
+      // a pnpm workspace lists its packages in its own manifest, not in workspace.jsonc
+      if (isPnpmWorkspace(this.workspace)) {
         const plan = await this.getPnpmVcsImportPlan(results.writtenComponents);
         if (plan) await applyPnpmImportPlan(this.workspace.path, plan);
       } else {
@@ -87,14 +88,6 @@ export class ImporterMain {
     }
     await consumer.onDestroy('import');
     return results;
-  }
-
-  private isPnpmVcsWorkspace(): boolean {
-    const rootMap = this.workspace.consumer.bitMap.components.find(
-      (component) => !component.rootDir && component.useExplicitFiles
-    );
-    const trackerConfig = rootMap?.config?.[TrackerAspect.id];
-    return Boolean(trackerConfig && trackerConfig !== '-' && trackerConfig.pnpmVcs?.schemaVersion === 1);
   }
 
   /**

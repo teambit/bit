@@ -26,8 +26,6 @@ export type ComponentWriterProps = {
   deleteBitDirContent?: boolean;
   existingComponentMap?: ComponentMap;
   skipUpdatingBitMap?: boolean;
-  useExplicitFiles?: boolean;
-  componentConfig?: { [aspectId: string]: Record<string, any> | '-' };
 };
 
 /**
@@ -64,8 +62,6 @@ export default class ComponentWriter {
   deleteBitDirContent: boolean | undefined;
   existingComponentMap: ComponentMap | undefined;
   skipUpdatingBitMap?: boolean;
-  useExplicitFiles: boolean;
-  componentConfig?: { [aspectId: string]: Record<string, any> | '-' };
 
   constructor({
     component,
@@ -81,8 +77,6 @@ export default class ComponentWriter {
     deleteBitDirContent,
     existingComponentMap,
     skipUpdatingBitMap,
-    useExplicitFiles = false,
-    componentConfig,
   }: ComponentWriterProps) {
     this.component = component;
     this.writeToPath = writeToPath;
@@ -98,8 +92,6 @@ export default class ComponentWriter {
     this.deleteBitDirContent = deleteBitDirContent;
     this.existingComponentMap = existingComponentMap;
     this.skipUpdatingBitMap = skipUpdatingBitMap;
-    this.useExplicitFiles = useExplicitFiles;
-    this.componentConfig = componentConfig;
   }
 
   async populateComponentsFilesToWrite(): Promise<Component> {
@@ -164,22 +156,13 @@ export default class ComponentWriter {
       ? undefined
       : await this.workspace.componentDefaultScopeFromComponentDirAndName(rootDir, bitId.fullName);
 
-    const componentMap = this.bitMap.addComponent({
+    return this.bitMap.addComponent({
       componentId: compId,
       files: filesForBitMap,
       defaultScope,
       mainFile: pathNormalizeToLinux(this.component.mainFile),
-      rootDir: rootDir || undefined,
-      config: this.componentConfig,
+      rootDir,
     });
-    // Harmony normally ignores package.json because Bit generates it. A model
-    // component that explicitly contains package.json (such as a pnpm VCS
-    // component) owns that manifest as source, so directory scanning must not
-    // silently drop it after import.
-    if (this.useExplicitFiles || filesForBitMap.some((file) => file.relativePath === 'package.json')) {
-      componentMap.useExplicitFiles = true;
-    }
-    return componentMap;
   }
 
   private async replaceSnapWithTagIfNeeded(): Promise<ComponentID> {

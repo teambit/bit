@@ -54,7 +54,6 @@ ${COMPONENT_PATTERN_HELP}`,
     ['', 'verbose', 'display detailed information about components that legitimately were not switched'],
     ['j', 'json', 'return the output as JSON'],
     ['', 'branch', 'create and checkout a new git branch named after the lane'],
-    ['', 'pnpm-vcs-bootstrap', 'switch a validated pnpm VCS root bootstrap workspace'],
   ] as CommandOptions;
   loader = true;
 
@@ -76,7 +75,6 @@ ${COMPONENT_PATTERN_HELP}`,
       verbose,
       json = false,
       branch = false,
-      pnpmVcsBootstrap = false,
     }: {
       head?: boolean;
       skipFetch?: boolean;
@@ -92,7 +90,6 @@ ${COMPONENT_PATTERN_HELP}`,
       verbose?: boolean;
       json?: boolean;
       branch?: boolean;
-      pnpmVcsBootstrap?: boolean;
     }
   ) {
     const switchResult = await this.lanes.switchLanes(lane, {
@@ -105,7 +102,6 @@ ${COMPONENT_PATTERN_HELP}`,
       pattern,
       skipDependencyInstallation,
       branch,
-      pnpmVcsBootstrap,
     });
     const { components, failedComponents, installationError, compilationError, gitBranchWarning } = switchResult;
 

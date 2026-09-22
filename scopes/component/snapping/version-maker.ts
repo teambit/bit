@@ -369,7 +369,7 @@ export class VersionMaker {
     for (const consumerComponent of this.allComponentsToTag) {
       const component = this._findWorkspaceCompByConsumerComp(consumerComponent);
       const componentMap = consumerComponent.componentMap;
-      const componentRelativeDir = componentMap?.rootDir || (componentMap?.useExplicitFiles ? '.' : undefined);
+      const componentRelativeDir = componentMap?.rootDir;
       if (componentRelativeDir && component) {
         components.push({
           component,
