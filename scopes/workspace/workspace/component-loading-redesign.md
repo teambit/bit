@@ -1,7 +1,7 @@
 # Component Loading Redesign
 
-**Status:** Phase 1 shipped; Phase 2 in progress
-**Last updated:** 2026-06-15 (code references are against `master` @ `59855b104`; line numbers will drift)
+**Status:** Phase 1 shipped; Phase 2 reassessed and re-scoped (see [Status](#status))
+**Last updated:** 2026-09-22 (code references are against `master` @ `59855b104`; line numbers will drift)
 
 This document is the source of truth for a multi-phase effort to simplify Bit's component-loading
 mechanism: fewer caches, a staged (lazy) loading pipeline, a single env/aspect load planner, and a
@@ -204,11 +204,20 @@ earlier ones teach us).
 ### Phase 2 — Quick perf wins on existing seams
 
 - [x] Benchmark harness committed + baseline recorded (see §4) — **gate for the rest of the phase**
-- [ ] Lazy file contents in `ModelComponent.toConsumerComponent`
+- [ ] **Forward `loadOpts` in the batch `executeLoadSlot` path** (`workspace-component-loader.ts:479-480`)
+      — prerequisite that makes the existing `loadDocs`/`loadCompositions` opt-outs actually work
+- [ ] Default `loadDocs: false, loadCompositions: false` for non-UI flows (~1.9s of `status`, §4.2)
+- [ ] Lazy file contents in `ModelComponent.toConsumerComponent` (targets `graph`, and the RSS trend)
 - [ ] `bit deps usage`: ids + stored deps instead of full load
 - [ ] IDE metadata endpoint (`api-for-ide.ts`): S0-S2-level data only
 - [ ] `bit remove` / forking: drop full-component loads where only ids/paths are used
-- [ ] Default `loadDocs: false, loadCompositions: false` for non-UI flows
+
+**Explicitly dropped from this phase:** narrowing the deps-cache freshness fs scan (PR #10445,
+closed 2026-09-22). It cut warm `status` fs syscalls 37% (74.3k → 46.4k) but moved wall ~0.3s —
+the syscalls are `stat`/`lstat`/`readdir`, which overlap with CPU on a warm SSD — in exchange for
+narrowing the invalidation signal of the highest-blast-radius cache in the loader. Bad trade. The
+useful output of that work is the §4.1/§4.2 profiling and the node_modules invalidation constraints
+recorded in the deps-cache notes.
 
 ### Phase 3 — Cache consolidation
 
@@ -250,17 +259,41 @@ The `Peak RSS` column is the worst case across the four commands (`bit graph`). 
 median seconds. Per-command peak RSS for the baseline: status 1237MB, list 425MB, show 253MB,
 graph 2013MB.
 
-| Milestone              | `bit status` | `bit list` | `bit show <comp>` | `bit graph --json` | Peak RSS |
-| ---------------------- | ------------ | ---------- | ----------------- | ------------------ | -------- |
-| Baseline (pre-Phase 2) | 11.24s       | 1.59s      | 1.73s             | 20.49s             | 2013MB   |
-| After Phase 2          | —            | —          | —                 | —                  | —        |
-| After Phase 3          | —            | —          | —                 | —                  | —        |
-| After Phase 4          | —            | —          | —                 | —                  | —        |
-| After Phase 5          | —            | —          | —                 | —                  | —        |
+| Milestone                | `bit status` | `bit list` | `bit show <comp>` | `bit graph --json` | Peak RSS |
+| ------------------------ | ------------ | ---------- | ----------------- | ------------------ | -------- |
+| Baseline (pre-Phase 2)   | 11.24s       | 1.59s      | 1.73s             | 20.49s             | 2013MB   |
+| Re-baseline (2026-09-22) | 9.43s        | 1.72s      | 1.23s             | 18.59s             | 2352MB   |
+| After Phase 2            | —            | —          | —                 | —                  | —        |
+| After Phase 3            | —            | —          | —                 | —                  | —        |
+| After Phase 4            | —            | —          | —                 | —                  | —        |
+| After Phase 5            | —            | —          | —                 | —                  | —        |
 
 Baseline measured 2026-06-15 on darwin (Apple silicon), `bit` @ 1.13.222, node v22.20.0,
 `bit show teambit.workspace/workspace`. The two clear hotspots are `bit status` (11s) and
 `bit graph` (20s, 2GB).
+
+**Re-baseline 2026-09-22** — same machine/method, `bit` @ 2.2.57, node v22.20.0. Note the workspace
+grew from ~313 to **331 components** (+5.8%), so per-component deltas are better than the raw wall
+numbers suggest. Per-command peak RSS: status 1239MB, list 549MB, show 260MB, graph 2352MB.
+
+| metric            | baseline | re-baseline | raw Δ  | per-component Δ |
+| ----------------- | -------- | ----------- | ------ | --------------- |
+| `bit status` wall | 11.24s   | 9.43s       | −16.1% | −20.6%          |
+| `bit graph` wall  | 20.49s   | 18.59s      | −9.3%  | −14.2%          |
+| `bit show` wall   | 1.73s    | 1.23s       | −28.9% | n/a (1 comp)    |
+| `bit list` wall   | 1.59s    | 1.72s       | +8.2%  | +2.3% (flat)    |
+| `bit graph` RSS   | 2013MB   | 2352MB      | +16.8% | +10.4%          |
+| `bit list` RSS    | 425MB    | 549MB       | +29.2% | +22.2%          |
+
+Two things to read from this:
+
+- **The wall-time gains came from outside this effort.** No Phase-2 item shipped, yet `status` and
+  `graph` improved materially — from targeted fixes landed independently (batching/deduping
+  dependency imports when building graphs from fs, dropping a per-invocation hard-link-directory
+  load, unifying component load paths). The redesign plan is not what moved these numbers.
+- **Memory is trending the wrong way.** `graph` peak RSS is up 339MB and `list` up 124MB, beyond
+  what the +5.8% component growth explains. No phase currently targets memory; §2.1 lazy file
+  contents is the closest lever.
 
 ### 4.1 Profiling findings (where the warm load time actually goes)
 
@@ -303,18 +336,47 @@ Numbers below are aggregate self-time across ~313 components at ~6× concurrency
   `deps usage`/IDE/`remove`/forking; `loadDocs/loadCompositions: false` trims `status`'s slot work
   (~1.7s). The big `status` number is deferred to the staged-loading phase.
 
+### 4.2 Re-profile 2026-09-22 (`bit status`, 331 components, 9.43s wall)
+
+`BIT_LOAD_PROFILE=1 bit status`, aggregate self-time 68.1s across ~7.2× effective concurrency
+(so `~wall ≈ self / 7.2`).
+
+| stage                                        | self-time | calls | ~wall | share |
+| -------------------------------------------- | --------- | ----- | ----- | ----- |
+| `legacy-load-deps`                           | 34.3s     | 331   | ~4.8s | 50%   |
+| `on-load` (docs, compositions, schema, pkg…) | 13.7s     | 2317  | ~1.9s | 20%   |
+| `dependency-resolution`                      | 6.7s      | 331   | ~0.9s | 10%   |
+| `workspace.get`                              | 5.5s      | 3349  | ~0.8s | 8%    |
+| `execute-load-slot` (own)                    | 4.5s      | 331   | ~0.6s | 7%    |
+| `consumer-fs-load`                           | ~0s self  | 7     | —     | —     |
+
+**The structural finding holds, and is now the clear majority of the cost.**
+
+- `legacy-load-deps` is **50% of all load self-time** — still dependency-object materialization on
+  cache _hit_, not resolution. Per-component it improved (137ms → 104ms, −24%) but it did not change
+  shape. This is the single biggest lever and it is squarely Phase 4 (§2.1 defer dependency-object
+  construction), not a Phase-2 quick win. Confirmed twice now, three months apart.
+- `on-load` is **20%** across **2317 calls** (331 components × ~7 handlers) — the cheap, safe win.
+  `bit status` already passes `loadDocs:false`/`loadCompositions:false`, but they are **ineffective
+  on the batch path**: `workspace-component-loader.ts:479-480` calls `executeLoadSlot(component)`
+  without forwarding `loadOpts` (the single-component path at :1083/:1092 does forward them).
+  Fixing that forwarding is a one-line change gating ~1.9s of wall.
+- `workspace.get` shows **3349 calls for 331 components (~10×)**. Not yet explained — likely
+  redundant re-entry through the aspect/env path. Worth a look before Phase 4; may be a cheap win or
+  may be inherent to the recursion described in §1.4.
+
 ---
 
 ## Status
 
-| Phase                   | State       | OpenSpec change                | PRs                                                 |
-| ----------------------- | ----------- | ------------------------------ | --------------------------------------------------- |
-| 1 — Observability       | done        | `component-load-observability` | [#10418](https://github.com/teambit/bit/pull/10418) |
-| 2 — Quick perf wins     | in progress | —                              | —                                                   |
-| 3 — Cache consolidation | not started | —                              | —                                                   |
-| 4 — Staged pipeline     | not started | —                              | —                                                   |
-| 5 — Env planner         | not started | —                              | —                                                   |
-| 6 — Legacy inversion    | not started | —                              | —                                                   |
+| Phase                   | State                                    | OpenSpec change                | PRs                                                                      |
+| ----------------------- | ---------------------------------------- | ------------------------------ | ------------------------------------------------------------------------ |
+| 1 — Observability       | done                                     | `component-load-observability` | [#10418](https://github.com/teambit/bit/pull/10418)                      |
+| 2 — Quick perf wins     | re-scoped, 1/7 done                      | —                              | [#10445](https://github.com/teambit/bit/pull/10445) (closed, not merged) |
+| 3 — Cache consolidation | not started                              | —                              | —                                                                        |
+| 4 — Staged pipeline     | not started — **next high-value target** | —                              | —                                                                        |
+| 5 — Env planner         | not started                              | —                              | —                                                                        |
+| 6 — Legacy inversion    | not started                              | —                              | —                                                                        |
 
 **Log:**
 
@@ -340,3 +402,18 @@ Numbers below are aggregate self-time across ~313 components at ~6× concurrency
   file-content reads (`consumer-fs-load`, 5.8s) → the target for lazy file contents. (Correction: an
   earlier "39s" figure was aggregate-concurrent self-time, not wall; warm wall is ~13s.) Direction
   for the next Phase-2 PR intentionally left open.
+- 2026-09-22 — **Phase 2 reassessed after a 3-month gap.** Re-baselined (§4) and re-profiled (§4.2).
+  Findings:
+  1. `status` −16% / `graph` −9% / `show` −29% since June, **with no Phase-2 item shipped** — the
+     gains came from targeted fixes landed outside this effort. Peak RSS regressed (`graph` +339MB,
+     `list` +124MB); nothing currently targets memory.
+  2. The structural conclusion is confirmed a second time: `legacy-load-deps` is now **50% of all
+     load self-time**, still materialization-on-cache-hit. Phase 4 is the lever; Phase 2 was never
+     going to move it. Phase 4 promoted to the next high-value target.
+  3. Found the concrete cheap win: `bit status` already sets `loadDocs:false`/`loadCompositions:false`
+     but the batch path drops them (`workspace-component-loader.ts:479-480` doesn't forward
+     `loadOpts`), leaving ~1.9s of `on-load` work on the table across 2317 handler calls.
+  4. New unexplained signal: `workspace.get` is called **3349× for 331 components (~10×)**.
+     PR #10445 closed unmerged (see §3 for the rationale). The abandoned May branch
+     `refactor/component-loading-v2-take-3` (`UnifiedComponentLoader` behind `BIT_LOADER=new`) predates
+     this document and is superseded by the phase plan — not to be resumed.
