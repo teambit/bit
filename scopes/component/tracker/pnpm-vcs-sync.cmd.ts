@@ -3,9 +3,10 @@ import path from 'path';
 import { glob } from 'glob';
 import cloneDeep from 'lodash/cloneDeep';
 import isEqual from 'lodash/isEqual';
+import omit from 'lodash/omit';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import type { Command, CommandOptions } from '@teambit/cli';
-import { formatItem, formatSection, formatSuccessSummary, joinSections } from '@teambit/cli';
+import { errorSymbol, formatItem, formatSection, formatSuccessSummary, joinSections } from '@teambit/cli';
 import { BitError } from '@teambit/bit-error';
 import type { AspectData, Component } from '@teambit/component';
 import { ComponentID } from '@teambit/component-id';
@@ -24,6 +25,8 @@ import type { TrackerMain } from './tracker.main.runtime';
 
 export const PNPM_WORKSPACE_MANIFEST = 'pnpm-workspace.yaml';
 const PACKAGE_JSON = 'package.json';
+/** the aspect id, not the aspect: this file is loaded by the aspect's own runtime */
+const TRACKER_ASPECT_ID = 'teambit.component/tracker';
 const DEPENDENCY_FIELDS = ['dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies'];
 /** the env of a project with scripts to run, unless "--env" names another one */
 export const PNPM_WORKSPACE_ENV = 'teambit.envs/pnpm-workspace-env';
@@ -90,20 +93,16 @@ safe to re-run: tracked projects keep their ids, new ones are added, and the one
 
   async report(args: string[], flags: SyncFlags): Promise<string> {
     const result = await this.json(args, flags);
-    const synced = formatSection(
-      'synchronized components',
-      '',
-      result.components.map(({ id, rootDir }) => formatItem(`${id} (${rootDir})`))
-    );
+    // the synchronized components are listed by --json only, a large workspace would flood the terminal
     const removed = result.removedComponents.length
       ? formatSection(
           'removed components',
           'their projects left the pnpm workspace',
-          result.removedComponents.map((id) => formatItem(id))
+          result.removedComponents.map((id) => formatItem(id, errorSymbol))
         )
       : '';
     const summary = formatSuccessSummary(`synchronized ${result.components.length} pnpm workspace components`);
-    return joinSections([synced, removed, summary]);
+    return joinSections([removed, summary]);
   }
 
   async json(_args: string[], { env }: SyncFlags): Promise<PnpmVcsSyncResult> {
@@ -292,16 +291,43 @@ async function trackPnpmProject(
     ).componentId;
   // a project that left the workspace and came back is no longer removed
   workspace.bitMap.removeComponentConfig(componentId, Extensions.remove, false);
-  await setProjectEnv(workspace, componentId, project.hasScripts, envResolver);
-  if (project.packageName) {
-    workspace.bitMap.addComponentConfig(
-      componentId,
-      DependencyResolverAspect.id,
-      { packageName: project.packageName },
-      true
-    );
-  }
+  const syncedEnv = await setProjectEnv(workspace, componentId, project.hasScripts, envResolver);
+  setProjectPackageName(workspace, componentId, project.packageName);
+  const marker: PnpmProjectMarker = { pnpmProject: syncedEnv ? { env: syncedEnv } : {} };
+  workspace.bitMap.addComponentConfig(componentId, TRACKER_ASPECT_ID, marker);
   return componentId;
+}
+
+/**
+ * on every project sync tracks, so a later sync tells its own components - the ones it may untrack or
+ * move to another env - from the rest of the workspace. "env" is the env sync assigned the project, which a
+ * later sync may replace, unlike an env the user configured.
+ */
+type PnpmProjectMarker = { pnpmProject: { env?: string } };
+
+function readProjectMarker(componentMap: ComponentMap): PnpmProjectMarker['pnpmProject'] | undefined {
+  const trackerConfig = componentMap.config?.[TRACKER_ASPECT_ID];
+  if (!trackerConfig || trackerConfig === '-') return undefined;
+  const marker = trackerConfig.pnpmProject;
+  return marker && typeof marker === 'object' ? marker : undefined;
+}
+
+/** the name the package.json gives, or none when it gives none - a stale name would stay the package's */
+function setProjectPackageName(workspace: Workspace, componentId: ComponentID, packageName: string | undefined) {
+  if (packageName) {
+    workspace.bitMap.addComponentConfig(componentId, DependencyResolverAspect.id, { packageName }, true);
+    return;
+  }
+  const dependencyResolverConfig = getComponentMap(workspace, componentId).config?.[DependencyResolverAspect.id];
+  if (!dependencyResolverConfig || dependencyResolverConfig === '-' || !('packageName' in dependencyResolverConfig)) {
+    return;
+  }
+  const rest = omit(dependencyResolverConfig, 'packageName');
+  if (Object.keys(rest).length) {
+    workspace.bitMap.addComponentConfig(componentId, DependencyResolverAspect.id, rest);
+  } else {
+    workspace.bitMap.removeComponentConfig(componentId, DependencyResolverAspect.id, false);
+  }
 }
 
 async function trackPnpmWorkspaceRoot(workspace: Workspace, tracker: TrackerMain): Promise<ComponentID> {
@@ -324,31 +350,34 @@ async function trackPnpmWorkspaceRoot(workspace: Workspace, tracker: TrackerMain
 /**
  * a project builds and tests through its own package scripts: one that has any gets the env that runs
  * them, one that has none gets the empty env - the one the workspace root gets. a re-run moves a
- * project between the two as its scripts change, but an env the user configured stays.
+ * project between the two as its scripts change, and to another env given by --env, but an env the
+ * user configured stays. returns the env sync assigned, none when the user's env stays.
  */
 async function setProjectEnv(
   workspace: Workspace,
   componentId: ComponentID,
   hasScripts: boolean,
   envResolver: ProjectEnvResolver
-) {
+): Promise<string | undefined> {
   const componentMap = getComponentMap(workspace, componentId);
   const envsConfig = componentMap.config?.[Extensions.envs];
   const currentEnv = envsConfig && envsConfig !== '-' ? envsConfig.env : undefined;
-  const syncedEnvs = [WORKSPACE_ROOT_ENV, envResolver.envId];
-  if (currentEnv && !syncedEnvs.includes(currentEnv)) return;
+  const previouslySyncedEnv = readProjectMarker(componentMap)?.env;
+  const syncedEnvs = [WORKSPACE_ROOT_ENV, envResolver.envId, previouslySyncedEnv];
+  if (currentEnv && !syncedEnvs.includes(currentEnv)) return undefined;
   const targetEnv = hasScripts ? envResolver.envId : WORKSPACE_ROOT_ENV;
-  if (currentEnv === targetEnv) return;
+  if (currentEnv === targetEnv) return targetEnv;
   if (currentEnv) removeEnvConfig(workspace, componentMap, currentEnv);
   if (!hasScripts) {
     // the env aspect and the env selection, both objects - never the "-" of a removed aspect
     Object.entries(configForWorkspaceRoot()).forEach(([aspectId, config]) =>
       workspace.bitMap.addComponentConfig(componentId, aspectId, config as Record<string, any>)
     );
-    return;
+    return targetEnv;
   }
   workspace.bitMap.addComponentConfig(componentId, await envResolver.getConfigId(), {});
   workspace.bitMap.addComponentConfig(componentId, Extensions.envs, { env: targetEnv });
+  return targetEnv;
 }
 
 /** the env's own entry, with or without a version, and the env selection */
@@ -361,19 +390,16 @@ function removeEnvConfig(workspace: Workspace, componentMap: ComponentMap, envId
 
 /**
  * the components of the projects that left the pnpm workspace: tracked by an earlier sync, which is
- * what the package-name config tells - nothing else sets it - and no longer listed. a component that
- * was never snapped is untracked; a snapped one is marked removed, the way "bit delete" marks it, so
- * the removal is recorded on the next snap.
+ * what its marker tells, and no longer listed. a component that was never snapped is untracked; a
+ * snapped one is marked removed, the way "bit delete" marks it, so the removal is recorded on the
+ * next snap.
  */
 function removeLeftProjects(workspace: Workspace, projectRootDirs: Set<string>): string[] {
   const bitMap = workspace.consumer.bitMap;
   const leftProjects = bitMap.components.filter((componentMap) => {
     if (componentMap.rootDir === WORKSPACE_ROOT_DIR || projectRootDirs.has(componentMap.rootDir)) return false;
     if (componentMap.isRemoved()) return false;
-    const dependencyResolverConfig = componentMap.config?.[DependencyResolverAspect.id];
-    return Boolean(
-      dependencyResolverConfig && dependencyResolverConfig !== '-' && dependencyResolverConfig.packageName
-    );
+    return Boolean(readProjectMarker(componentMap));
   });
   leftProjects.forEach((componentMap) => {
     if (componentMap.id.hasVersion()) {
@@ -418,7 +444,7 @@ export async function applyPnpmImportPlan(workspacePath: string, plan: PnpmVcsIm
   await bindWorkspaceReferencesToCatalog(workspacePath, plan, localPackageNames);
   const importedPackageNames = new Set(plan.components.map(({ packageName }) => packageName));
   const catalogOf = (catalogName: string): Record<string, string> => {
-    if (catalogName === 'default' && (manifest.catalog || !manifest.catalogs?.default)) {
+    if (catalogName === 'default' && (manifest.catalog !== undefined || !manifest.catalogs?.default)) {
       return (manifest.catalog ||= {});
     }
     manifest.catalogs ||= {};
@@ -551,15 +577,13 @@ export function resolvePnpmVcsCatalogBindings(
 ): PnpmVcsCatalogBinding[] {
   const references = collectCatalogReferences(packageManifest);
   const workspace = asRecord(workspaceManifest);
-  const defaultCatalog = asRecord(workspace.catalog);
   const namedCatalogs = asRecord(workspace.catalogs);
+  // pnpm reads "catalog" and "catalogs.default" as one catalog. the top-level one wins when present, the
+  // way applyPnpmImportPlan writes it
+  const defaultCatalog =
+    workspace.catalog !== undefined ? asRecord(workspace.catalog) : asRecord(namedCatalogs.default);
   const bindings = references.map(({ catalogName, packageName }) => {
-    const catalog =
-      catalogName === 'default'
-        ? Object.keys(defaultCatalog).length
-          ? defaultCatalog
-          : asRecord(namedCatalogs.default)
-        : asRecord(namedCatalogs[catalogName]);
+    const catalog = catalogName === 'default' ? defaultCatalog : asRecord(namedCatalogs[catalogName]);
     const rawSpecifier = catalog[packageName];
     return {
       catalogName,

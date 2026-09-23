@@ -133,6 +133,19 @@ describe('bit pnpm sync', function () {
       expect(math.config?.[Extensions.envs]).to.deep.equal({ env: 'teambit.harmony/empty-env' });
     });
 
+    it('should move a project from the env an earlier sync gave to the one given now', async () => {
+      await setupPnpmWorkspace(withBuildScript);
+      stubEnvVersion();
+      await syncPnpmWorkspace(workspace, tracker, { env: PNPM_ENV });
+
+      await syncPnpmWorkspace(workspace, tracker, { env: 'my-org.envs/other-scripts' });
+
+      const math = entryAt('packages/math')!;
+      expect(math.config?.[`${PNPM_ENV}@1.0.0`]).to.be.undefined;
+      expect(math.config?.['my-org.envs/other-scripts@1.0.0']).to.deep.equal({});
+      expect(math.config?.[Extensions.envs]).to.deep.equal({ env: 'my-org.envs/other-scripts' });
+    });
+
     it('should keep an env the user configured', async () => {
       await setupPnpmWorkspace(withBuildScript);
       stubEnvVersion();
@@ -160,6 +173,53 @@ describe('bit pnpm sync', function () {
     expect(result.removedComponents).to.have.lengthOf(1);
     expect(result.removedComponents[0]).to.have.string('acme/app');
     expect(entryAt('packages/app')).to.be.undefined;
+  });
+
+  it('should untrack a nameless project that left the pnpm workspace too', async () => {
+    await setupPnpmWorkspace({ ...twoPackages, 'packages/app/package.json': { private: true } });
+    await syncPnpmWorkspace(workspace, tracker);
+    await fs.writeFile(
+      path.join(workspaceData.workspacePath, 'pnpm-workspace.yaml'),
+      'packages:\n  - packages/*\n  - "!packages/app"\n'
+    );
+
+    const result = await syncPnpmWorkspace(workspace, tracker);
+
+    expect(result.removedComponents).to.have.lengthOf(1);
+    expect(entryAt('packages/app')).to.be.undefined;
+  });
+
+  it('should leave alone a component it did not track, even one with a package name of its own', async () => {
+    await setupPnpmWorkspace({ ...twoPackages, 'tools/lint/index.js': 'module.exports = 3;\n' });
+    const { componentId } = await tracker.track({ rootDir: 'tools/lint', componentName: 'tools/lint' });
+    workspace.bitMap.addComponentConfig(componentId, DEPENDENCY_RESOLVER, { packageName: '@acme/lint' });
+
+    const result = await syncPnpmWorkspace(workspace, tracker);
+
+    expect(result.removedComponents).to.deep.equal([]);
+    expect(entryAt('tools/lint')).to.not.be.undefined;
+  });
+
+  it('should drop the package name a package.json no longer gives', async () => {
+    await setupPnpmWorkspace(twoPackages);
+    await syncPnpmWorkspace(workspace, tracker);
+    await fs.outputJson(path.join(workspaceData.workspacePath, 'packages/math/package.json'), { private: true });
+
+    await syncPnpmWorkspace(workspace, tracker);
+
+    expect(entryAt('packages/math')!.config?.[DEPENDENCY_RESOLVER]).to.be.undefined;
+  });
+
+  it('should track the package.json of a project that was a component before the sync', async () => {
+    await setupPnpmWorkspace(twoPackages);
+    // before the sync, bit generates package.json, so it is not source
+    await tracker.track({ rootDir: 'packages/math', componentName: 'acme/math' });
+    expect(entryAt('packages/math')!.files.map((file) => file.relativePath)).to.not.include('package.json');
+
+    await syncPnpmWorkspace(workspace, tracker);
+    await workspace.consumer.bitMap.loadFilesOf(entryAt('packages/math')!);
+
+    expect(entryAt('packages/math')!.files.map((file) => file.relativePath)).to.include('package.json');
   });
 
   it('should refuse a project nested in another one before changing anything', async () => {
@@ -395,6 +455,14 @@ describe('pnpm catalog bindings', () => {
     expect(resolvePnpmVcsCatalogBindings(manifest, workspaceManifest)).to.deep.equal([
       { catalogName: 'default', packageName: '@acme/math', specifier: 'workspace:*' },
       { catalogName: 'testing', packageName: '@acme/test-utils', specifier: '2.0.0' },
+    ]);
+  });
+
+  it('should read the default catalog the way an import writes it, when both of its forms are there', () => {
+    const manifest = { dependencies: { '@acme/math': 'catalog:' } };
+    const workspaceManifest = { catalog: {}, catalogs: { default: { '@acme/math': '1.0.0' } } };
+    expect(resolvePnpmVcsCatalogBindings(manifest, workspaceManifest)).to.deep.equal([
+      { catalogName: 'default', packageName: '@acme/math', specifier: null },
     ]);
   });
 

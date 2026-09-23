@@ -153,9 +153,12 @@ async function copyOutputsToCapsules(context, tree, treeDir, outputDirs) {
       if (!capsule) return;
       await Promise.all(
         outputDirs.map(async (outputDir) => {
+          // a capsule is reused across builds, so what an earlier build left must not pass as this one's output
+          const target = path.join(capsule.path, outputDir);
+          await fs.rm(target, { recursive: true, force: true });
           const source = path.join(treeDir, rootDir, outputDir);
           if (!(await exists(source))) return;
-          await fs.cp(source, path.join(capsule.path, outputDir), { recursive: true, force: true });
+          await fs.cp(source, target, { recursive: true, force: true });
         })
       );
     })
