@@ -1,9 +1,5 @@
-import chai, { expect } from 'chai';
+import { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
-import chaiFs from 'chai-fs';
-import chaiString from 'chai-string';
-chai.use(chaiFs);
-chai.use(chaiString);
 
 describe('script command', function () {
   this.timeout(0);
@@ -66,6 +62,13 @@ describe('script command', function () {
       it('should show the script output', () => {
         expect(output).to.have.string('hello from script');
       });
+      // folded in from a "multiple environments with same env but different components" describe that
+      // built its own workspace, custom env and compile only to re-assert this file's existing
+      // --list and test-script expectations; the env id appearing in the run output was its one
+      // unique claim, so it lives here now.
+      it('should mention the env in the output', () => {
+        expect(output).to.have.string(envId);
+      });
     });
 
     describe('bit script async-script', () => {
@@ -110,7 +113,6 @@ describe('script command', function () {
 
   describe('environment without scripts config', () => {
     before(() => {
-      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.extensions.addExtensionToVariant('*', 'teambit.react/react');
@@ -130,64 +132,11 @@ describe('script command', function () {
     });
   });
 
-  describe('multiple environments with same env but different components', () => {
-    let envId: string;
-
-    before(() => {
-      helper.scopeHelper.reInitWorkspace();
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-
-      const envName = helper.env.setCustomEnv('env-with-scripts');
-      envId = `${helper.scopes.remote}/${envName}`;
-
-      // Create components with the same env
-      helper.fixtures.populateComponents(2);
-
-      helper.extensions.addExtensionToVariant('comp1', envId);
-      helper.extensions.addExtensionToVariant('comp2', envId);
-
-      // Configure scripts to allow this env
-      helper.workspaceJsonc.addKeyVal('teambit.workspace/scripts', {
-        envs: [envId],
-      });
-
-      helper.command.compile();
-    });
-
-    describe('bit script --list', () => {
-      let output: string;
-      before(() => {
-        output = helper.command.runCmd('bit script --list');
-      });
-      it('should list scripts from the environment', () => {
-        expect(output).to.have.string(envId);
-      });
-      it('should show the scripts', () => {
-        expect(output).to.have.string('test-script');
-        expect(output).to.have.string('echo hello from script');
-      });
-    });
-
-    describe('bit script test-script', () => {
-      let output: string;
-      before(() => {
-        output = helper.command.runCmd('bit script test-script');
-      });
-      it('should run for all components', () => {
-        expect(output).to.have.string('hello from script');
-      });
-      it('should mention the env in the output', () => {
-        expect(output).to.have.string(envId);
-      });
-    });
-  });
-
   describe('env version mismatch', () => {
     let envId: string;
     let envIdWithDifferentVersion: string;
 
     before(() => {
-      helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.setWorkspaceWithRemoteScope();
 
       const envName = helper.env.setCustomEnv('env-with-scripts');

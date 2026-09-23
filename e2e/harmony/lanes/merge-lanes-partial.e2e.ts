@@ -1,7 +1,5 @@
-import chai, { expect } from 'chai';
+import { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
-import chaiFs from 'chai-fs';
-chai.use(chaiFs);
 
 describe('merge lanes - partial merge functionality', function () {
   this.timeout(0);

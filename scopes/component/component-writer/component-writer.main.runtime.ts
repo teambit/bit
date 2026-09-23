@@ -19,19 +19,27 @@ import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import type { PathLinuxRelative } from '@teambit/legacy.utils';
 import { isDir, isDirEmptySync, pathNormalizeToLinux } from '@teambit/legacy.utils';
 import type { ComponentMap } from '@teambit/legacy.bit-map';
-import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy.constants';
+import { isWorkspaceMapFile, WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
+import { isWorkspaceRootComponent } from '@teambit/workspace-root';
+import { COMPONENT_CONFIG_FILE_NAME, WORKSPACE_JSONC } from '@teambit/legacy.constants';
 import { DataToPersist } from '@teambit/component.sources';
 import type { ConfigMergerMain, WorkspaceConfigUpdateResult } from '@teambit/config-merger';
 import { ConfigMergerAspect } from '@teambit/config-merger';
 import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import type { Consumer } from '@teambit/legacy.consumer';
 import type { ComponentWriterProps } from './component-writer';
-import ComponentWriter from './component-writer';
+import ComponentWriter, { isOwnedByNestedComponent } from './component-writer';
 import { ComponentWriterAspect } from './component-writer.aspect';
 
 export interface ManyComponentsWriterParams {
   components: ConsumerComponent[];
   writeToPath?: string;
+  /**
+   * a directory per component, keyed by the id without its version, for writing a set of components
+   * that each go to its own place - as "--path" does for a whole batch. a component the map does not
+   * name falls back to writeToPath, and then to the default directory.
+   */
+  writeToPathPerId?: Record<string, string>;
   throwForExistingDir?: boolean;
   // when the target dir is occupied, import into an available empty dir (e.g. "foo" => "foo_1") instead of failing.
   writeToEmptyDir?: boolean;
@@ -272,15 +280,26 @@ export class ComponentWriterMain {
     component: ConsumerComponent,
     opts: ManyComponentsWriterParams
   ): ComponentWriterProps {
-    const componentRootDir: PathLinuxRelative = opts.writeToPath
-      ? pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(path.resolve(opts.writeToPath)))
+    // "--path ." resolves to an empty relative path. normalize it to "." so it is a real rootDir
+    // rather than a falsy one that later turns into an undefined path segment.
+    const writeToPath = this.getWriteToPath(component, opts);
+    const componentRootDir: PathLinuxRelative = writeToPath
+      ? pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(path.resolve(writeToPath))) || WORKSPACE_ROOT_DIR
       : this.consumer.composeRelativeComponentPath(component.id);
     // components can't be saved with multiple versions, so we can ignore the version to find the component in bit.map
     const existingComponentMap = this.consumer?.bitMap.getComponentIfExist(component.id, { ignoreVersion: true });
+    // a component already tracked at the root is written there whatever path was derived above, e.g. by
+    // a checkout or a re-import, so the guards of the root run for it as well
+    if (componentRootDir === WORKSPACE_ROOT_DIR || existingComponentMap?.rootDir === WORKSPACE_ROOT_DIR) {
+      this.throwForNonWorkspaceRootComponent(component);
+      // the symlink rule is about where a write lands, and --track-only writes nothing (skipWritingToFs)
+      if (!opts.skipWritingToFs) this.throwForSymlinksInTheWay(component, opts.writeConfig);
+    }
     // with --write-to-empty-dir, dir-conflict resolution is deferred to relocateOccupiedDirs() so it runs after the
     // fixDirs* passes (which may still adjust writeToPath); otherwise fail here when the target dir is occupied.
-    if (this.consumer && !opts.writeToEmptyDir) {
-      this.throwErrorWhenDirectoryNotEmpty(componentRootDir, existingComponentMap, opts);
+    // the workspace root is never relocated (see relocateOccupiedDirs), so its own check runs either way.
+    if (this.consumer && (!opts.writeToEmptyDir || componentRootDir === WORKSPACE_ROOT_DIR)) {
+      this.throwErrorWhenDirectoryNotEmpty(component, componentRootDir, existingComponentMap, opts);
     }
     return {
       workspace: this.workspace,
@@ -292,9 +311,19 @@ export class ComponentWriterMain {
       existingComponentMap: existingComponentMap ?? undefined,
     };
   }
+  /**
+   * where this component was asked to go, if anywhere: its own entry in writeToPathPerId, else the
+   * writeToPath of the whole batch.
+   */
+  private getWriteToPath(component: ConsumerComponent, opts: ManyComponentsWriterParams): string | undefined {
+    return opts.writeToPathPerId?.[component.id.toStringWithoutVersion()] || opts.writeToPath;
+  }
+
   private moveComponentsIfNeeded(opts: ManyComponentsWriterParams) {
-    if (opts.writeToPath && this.consumer) {
+    if (this.consumer) {
       opts.components.forEach((component) => {
+        const writeToPath = this.getWriteToPath(component, opts);
+        if (!writeToPath) return;
         const componentMap = component.componentMap as ComponentMap;
         if (!componentMap.rootDir) {
           throw new BitError(`unable to use "--path" flag.
@@ -305,8 +334,16 @@ to move all component files to a different directory, run bit remove and then bi
         // @ts-ignore relativeWrittenPath is set at this point
         const absoluteWrittenPath = this.consumer.toAbsolutePath(relativeWrittenPath);
         // @ts-ignore this.writeToPath is set at this point
-        const absoluteWriteToPath = path.resolve(opts.writeToPath); // don't use consumer.toAbsolutePath, it might be an inner dir
+        const absoluteWriteToPath = path.resolve(writeToPath); // don't use consumer.toAbsolutePath, it might be an inner dir
         if (relativeWrittenPath && absoluteWrittenPath !== absoluteWriteToPath) {
+          // a component tracked at the workspace root is the workspace. moving it schedules the removal
+          // of the directory it leaves, which there is the workspace tree (see moveExistingComponent)
+          if (componentMap.rootDir === WORKSPACE_ROOT_DIR) {
+            throw new BitError(
+              `unable to write "${component.id.toString()}" to "${writeToPath}", it is tracked at the workspace root, which is the workspace itself.
+run "bit remove ${component.id.toStringWithoutVersion()}" first if the workspace should stop tracking its root`
+            );
+          }
           this.mover.moveExistingComponent(component, absoluteWrittenPath, absoluteWriteToPath);
         }
       });
@@ -317,6 +354,7 @@ to move all component files to a different directory, run bit remove and then bi
    * target directory already belongs to this exact component (so overriding it in place is safe).
    */
   private shouldSkipDirConflictCheck(
+    component: ConsumerComponent,
     componentDirRelative: PathLinuxRelative,
     componentMap: ComponentMap | null | undefined,
     opts: ManyComponentsWriterParams
@@ -324,18 +362,125 @@ to move all component files to a different directory, run bit remove and then bi
     if (opts.skipWritingToFs) return true;
     if (!componentMap) return false;
     // no writeToPath: it goes to the default directory. an existing componentMap means the component is not new.
-    if (!opts.writeToPath) return true;
+    if (!this.getWriteToPath(component, opts)) return true;
     // writeToPath specified and that directory is already used for that component. compare against the
     // normalized componentDirRelative (not the raw opts.writeToPath, which may be absolute/OS-specific).
     return componentMap.rootDir === componentDirRelative;
   }
 
+  /**
+   * a workspace-root component's files land in the workspace tree itself, where a path may be a
+   * symbolic link the user made - a directory on the way, or the destination itself. a write through
+   * it would land the file wherever the link points, so every existing path on the way to an incoming
+   * file has to be real. this is about where the write goes, not what it replaces, so --override does
+   * not waive it (it waives the conflict check, which is the other place the destination is looked at).
+   */
+  /**
+   * the incoming files a write would actually land at the workspace root. a component nested in the
+   * root owns its own directory, and populateFilesToWriteToComponentDir leaves those files alone - so
+   * the checks below must not reject an import over a path it would never touch. an older version of
+   * the root, snapped before that component was extracted out of it, still carries them.
+   */
+  private filesThatWouldLand(component: ConsumerComponent) {
+    const nestedRootDirs = this.consumer.bitMap.getNestedRootDirs(WORKSPACE_ROOT_DIR);
+    return component.files.filter((file) => {
+      const relativePath = pathNormalizeToLinux(file.relative);
+      // the live map is never written from a versioned copy either, so a workspace whose own .bitmap
+      // is a symbolic link must not fail an import over a file that would not be touched
+      if (isWorkspaceMapFile(relativePath)) return false;
+      return !isOwnedByNestedComponent(relativePath, nestedRootDirs);
+    });
+  }
+
+  private throwForSymlinksInTheWay(component: ConsumerComponent, writeConfig?: boolean) {
+    const pathsInTheWay = new Set<string>();
+    const landing = this.filesThatWouldLand(component).map((file) => pathNormalizeToLinux(file.relative));
+    // the config file is generated rather than versioned, so it is not among the component's files -
+    // it still lands at the root, and this rule is about where a write goes. the flag the caller
+    // passed does not settle whether it lands: the writer turns config writing on by itself when a
+    // config file is already at the rootDir (see populateComponentsFilesToWrite), which a symlink
+    // pointing at an existing file reads as. it is looked up the same way, so a broken one - which
+    // the writer would not write through either - does not fail the write for nothing.
+    if (writeConfig || fs.existsSync(this.consumer.toAbsolutePath(COMPONENT_CONFIG_FILE_NAME))) {
+      landing.push(COMPONENT_CONFIG_FILE_NAME);
+    }
+    landing.forEach((relativePath) => {
+      const segments = relativePath.split('/');
+      segments.forEach((_, index) => pathsInTheWay.add(segments.slice(0, index + 1).join('/')));
+    });
+    pathsInTheWay.forEach((pathInTheWay) => {
+      const stat = lstatIfExists(this.consumer.toAbsolutePath(pathInTheWay));
+      if (!stat?.isSymbolicLink()) return;
+      throw new BitError(
+        `unable to write "${component.id.toString()}" to the workspace root, "${pathInTheWay}" is a symbolic link and the files would be written through it`
+      );
+    });
+  }
+
+  /**
+   * only a workspace-root component may be written to ".". any other component written there would own
+   * every unclaimed file in the workspace from the next scan on, and drop out of install and link. a
+   * workspace-root component is told by the marker its versions carry (see WorkspaceRootData) - a
+   * .bitmap among its files is not enough, a component snapped before maps were excluded from
+   * component scans may carry one.
+   */
+  private throwForNonWorkspaceRootComponent(component: ConsumerComponent) {
+    if (isWorkspaceRootComponent(component.extensions)) return;
+    throw new BitError(
+      `unable to import "${component.id.toString()}" to the workspace root, it is not a workspace-root component. use --path to write it to a directory`
+    );
+  }
+
+  /**
+   * the workspace root is never empty - it holds .bit, .bitmap and workspace.jsonc - so "not empty"
+   * says nothing about a conflict there. the target is only reachable for a workspace-root component.
+   * restoring a git-free workspace from its scope starts from `bit init`, and the root files are meant
+   * to land on top of the ones it generated. every other existing file at the root is the user's own,
+   * whether or not the workspace tracks components yet, so overwriting it takes --override like any
+   * other occupied directory. a file identical to its incoming copy is not overwritten in any sense
+   * that matters, and this is what lets the files `bit init` generates (agent instructions, mcp config)
+   * meet their own versioned copies. workspace.jsonc is the exception: the freshly initialized one is
+   * meant to be replaced by the versioned one - and only while the map is still empty, which is what
+   * `bit init` leaves behind. once the workspace tracks a component the file is the user's own like
+   * any other, whichever component that is: the exemption is about what `bit init` just wrote, not
+   * about who owns the root.
+   */
+  private throwForOccupiedWorkspaceRoot(component: ConsumerComponent, opts: ManyComponentsWriterParams) {
+    if (!opts.throwForExistingDir) return;
+    const isFreshWorkspace = !this.consumer.bitMap.components.length;
+    const generatedByInit = isFreshWorkspace ? [WORKSPACE_JSONC] : [];
+    const filesToOverwrite = this.filesThatWouldLand(component)
+      .filter((file) => {
+        const relativePath = pathNormalizeToLinux(file.relative);
+        if (generatedByInit.includes(relativePath)) return false;
+        const absolutePath = this.consumer.toAbsolutePath(relativePath);
+        // lstat rather than exists: a symlink in the way, dangling or not, is a conflict and not a path
+        // to write through, and so is a directory. only a regular file is compared with the incoming copy.
+        const stat = lstatIfExists(absolutePath);
+        if (!stat) return false;
+        if (!stat.isFile()) return true;
+        // compared byte for byte through latin1, which maps each byte to one character. Buffer.equals is
+        // avoided because its signature differs between @types/node majors, and an aspect build type-checks
+        // this file with whichever version its capsule resolves.
+        return fs.readFileSync(absolutePath, 'latin1') !== file.contents.toString('latin1');
+      })
+      .map((file) => pathNormalizeToLinux(file.relative));
+    if (!filesToOverwrite.length) return;
+    const shown = filesToOverwrite.slice(0, 10).join(', ');
+    const rest = filesToOverwrite.length > 10 ? ` and ${filesToOverwrite.length - 10} more` : '';
+    throw new BitError(
+      `unable to import "${component.id.toString()}" to the workspace root, it would overwrite ${shown}${rest}.
+use --override to overwrite them`
+    );
+  }
+
   private throwErrorWhenDirectoryNotEmpty(
+    component: ConsumerComponent,
     componentDirRelative: PathLinuxRelative,
     componentMap: ComponentMap | null | undefined,
     opts: ManyComponentsWriterParams
   ) {
-    if (this.shouldSkipDirConflictCheck(componentDirRelative, componentMap, opts)) return;
+    if (this.shouldSkipDirConflictCheck(component, componentDirRelative, componentMap, opts)) return;
 
     const componentDir = this.consumer.toAbsolutePath(componentDirRelative);
     if (!fs.pathExistsSync(componentDir)) return;
@@ -350,6 +495,10 @@ either use --path to specify a different directory or modify "defaultDirectory" 
     }
     if (!isDir(componentDir)) {
       throw new BitError(`unable to import to ${componentDir} because it's a file`);
+    }
+    if (componentDirRelative === WORKSPACE_ROOT_DIR) {
+      this.throwForOccupiedWorkspaceRoot(component, opts);
+      return;
     }
     if (!isDirEmptySync(componentDir) && opts.throwForExistingDir) {
       throw new BitError(
@@ -377,7 +526,10 @@ either use --path to specify a different directory or modify "defaultDirectory" 
     componentWriterInstances.forEach((componentWriter) => {
       const currentDir = componentWriter.writeToPath;
       const componentMap = componentWriter.existingComponentMap;
-      if (this.shouldSkipDirConflictCheck(currentDir, componentMap, opts)) return;
+      // the workspace root is a target only for a workspace-root component, and "._1" is not the
+      // workspace root. its conflicts are handled by throwForOccupiedWorkspaceRoot.
+      if (currentDir === WORKSPACE_ROOT_DIR) return;
+      if (this.shouldSkipDirConflictCheck(componentWriter.component, currentDir, componentMap, opts)) return;
       const unavailableReason = this.getDirUnavailableReason(currentDir, componentMap);
       if (!unavailableReason) return;
 
@@ -446,4 +598,13 @@ export function incrementPathRecursively(p: string, allPaths: string[]) {
     newPath = incrementPath(p, (num += 1));
   }
   return newPath;
+}
+
+function lstatIfExists(absolutePath: string): fs.Stats | undefined {
+  try {
+    return fs.lstatSync(absolutePath);
+  } catch (err: any) {
+    if (err.code === 'ENOENT') return undefined;
+    throw err;
+  }
 }

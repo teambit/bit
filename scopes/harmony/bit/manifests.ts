@@ -49,6 +49,7 @@ import { WebpackAspect } from '@teambit/webpack';
 import { WorkspaceAspect } from '@teambit/workspace';
 import { WorkspaceConfigFilesAspect } from '@teambit/workspace-config-files';
 import { InstallAspect } from '@teambit/install';
+import { WorkspaceRootAspect } from '@teambit/workspace-root';
 import { LinterAspect } from '@teambit/linter';
 import { FormatterAspect } from '@teambit/formatter';
 import { ValidatorAspect } from '@teambit/validator';
@@ -125,6 +126,7 @@ export const manifestsMap = {
   [WorkspaceAspect.id]: WorkspaceAspect,
   [WorkspaceConfigFilesAspect.id]: WorkspaceConfigFilesAspect,
   [InstallAspect.id]: InstallAspect,
+  [WorkspaceRootAspect.id]: WorkspaceRootAspect,
   [ESLintAspect.id]: ESLintAspect,
   [PrettierAspect.id]: PrettierAspect,
   [CompilerAspect.id]: CompilerAspect,

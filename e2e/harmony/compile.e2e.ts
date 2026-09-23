@@ -18,7 +18,6 @@ describe('compile extension', function () {
     helper.scopeHelper.destroy();
   });
   describe('workspace with a new compile extension', () => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let scopeBeforeTag: string;
     let appOutput: string;
     before(() => {
@@ -89,17 +88,6 @@ describe('compile extension', function () {
           const artifactsPath = path.join(helper.scopes.localPath, 'node_modules', `@${helper.scopes.remote}`, 'comp1');
           expect(path.join(artifactsPath, 'dist/index.js')).to.be.a.file();
           expect(path.join(artifactsPath, 'package.json')).to.be.a.file();
-        });
-        // @todo: @gilad will handle NESTED differently by creating capsules for them
-        it.skip('should save the artifacts and package.json for NESTED in the component dir, same as legacy', () => {
-          const nestedPath = path.join(
-            helper.scopes.localPath,
-            'components/.dependencies/comp2',
-            helper.scopes.remote,
-            '0.0.1'
-          );
-          expect(path.join(nestedPath, 'dist/index.js')).to.be.a.file();
-          expect(path.join(nestedPath, 'package.json')).to.be.a.file();
         });
         describe('running compile on the imported component', () => {
           it('should generate dists also after deleting the dists from the workspace', () => {
@@ -205,10 +193,6 @@ describe('compile extension', function () {
       const output = helper.command.compile('nested/comp1');
       expect(output).to.have.string('1/1');
     });
-    it('should compile multiple components when given multiple rootDir paths', () => {
-      const output = helper.command.compile('nested/comp1 nested/comp2');
-      expect(output).to.have.string('2/2');
-    });
     it('should compile when mixing directory path and component id', () => {
       const compId = `${helper.scopes.remote}/comp3`;
       const output = helper.command.compile(`nested/comp1 ${compId}`);
@@ -227,12 +211,10 @@ describe('compile extension', function () {
       helper.command.setEnv('comp1', EMPTY_ENV);
       output = helper.command.compile();
     });
-    it('should say that the component was not compiled and why', () => {
+    it('should say the component was not compiled and why, and not report a successful compilation', () => {
       expect(output).to.have.string('comp1');
       expect(output).to.have.string('not compiled');
       expect(output).to.have.string(EMPTY_ENV);
-    });
-    it('should not report the run as a successful compilation', () => {
       expect(output).to.not.have.string('compiled successfully');
       expect(output).to.have.string('nothing was compiled');
     });

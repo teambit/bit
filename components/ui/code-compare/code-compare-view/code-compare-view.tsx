@@ -125,7 +125,11 @@ export function CodeCompareView({
             ignoreWhitespace={ignoreWhitespace}
             editorViewMode={view}
             wordWrap={wrap}
-            diffOnly={diffOnly}
+            // A file with no changes has nothing to collapse *toward*: diff-only would hide 100% of
+            // it and leave a pane containing only an "Expand N unchanged lines" button, which reads
+            // as a broken view. The file tree only surfaces an UNCHANGED file when it is explicitly
+            // selected, so that is exactly when the reader wants to see it.
+            diffOnly={diffOnly && fileStatus !== 'UNCHANGED'}
             Loader={<CodeCompareViewLoader />}
             fullScreen={isFullScreen}
           />

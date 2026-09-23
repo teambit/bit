@@ -13,8 +13,15 @@ describe('bit lane diff operations', function () {
     helper.scopeHelper.destroy();
   });
 
-  describe('bit lane diff on the workspace', () => {
-    let diffOutput: string;
+  // main has foo, the lane "dev" has foo-v2. every arg form below resolves to the same pair of
+  // lanes, so they share one workspace and only differ in how from/to are given on the command line.
+  describe('diffing the current lane against main', () => {
+    const expectMainToDevDiff = (diffOutput: string) => {
+      expect(diffOutput).to.have.string('--- foo.js (main)');
+      expect(diffOutput).to.have.string('+++ foo.js (dev)');
+      expect(diffOutput).to.have.string(`-module.exports = function foo() { return 'got foo'; }`);
+      expect(diffOutput).to.have.string(`+module.exports = function foo() { return 'got foo v2'; }`);
+    };
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.createComponentBarFoo();
@@ -24,44 +31,47 @@ describe('bit lane diff operations', function () {
       helper.command.createLane();
       helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
       helper.command.snapAllComponentsWithoutBuild();
-      diffOutput = helper.command.diffLane();
     });
-    it('should show the diff correctly', () => {
-      expect(diffOutput).to.have.string('--- foo.js (main)');
-      expect(diffOutput).to.have.string('+++ foo.js (dev)');
-
-      expect(diffOutput).to.have.string(`-module.exports = function foo() { return 'got foo'; }`);
-      expect(diffOutput).to.have.string(`+module.exports = function foo() { return 'got foo v2'; }`);
+    describe('with no args', () => {
+      let diffOutput: string;
+      before(() => {
+        diffOutput = helper.command.diffLane();
+      });
+      it('should show the diff correctly', () => {
+        expectMainToDevDiff(diffOutput);
+      });
+      it('should not show the id field as it is redundant', () => {
+        expect(diffOutput).to.not.have.string('--- Id');
+        expect(diffOutput).to.not.have.string('+++ Id');
+      });
     });
-    it('should not show the id field as it is redundant', () => {
-      expect(diffOutput).to.not.have.string('--- Id');
-      expect(diffOutput).to.not.have.string('+++ Id');
+    describe('with {toLane} being the default lane', () => {
+      let diffOutput: string;
+      before(() => {
+        diffOutput = helper.command.diffLane('main');
+      });
+      it('should show the diff correctly', () => {
+        expectMainToDevDiff(diffOutput);
+      });
     });
-  });
-
-  describe('bit lane diff {toLane - default} on the workspace', () => {
-    let diffOutput: string;
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
-      helper.command.snapAllComponentsWithoutBuild();
-      helper.command.export();
-      helper.command.createLane();
-      helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
-      helper.command.snapAllComponentsWithoutBuild();
-      diffOutput = helper.command.diffLane('main');
+    describe('with {fromLane} {toLane}', () => {
+      let diffOutput: string;
+      before(() => {
+        diffOutput = helper.command.diffLane('main dev');
+      });
+      it('should show the diff correctly', () => {
+        expectMainToDevDiff(diffOutput);
+      });
     });
-    it('should show the diff correctly', () => {
-      expect(diffOutput).to.have.string('--- foo.js (main)');
-      expect(diffOutput).to.have.string('+++ foo.js (dev)');
-
-      expect(diffOutput).to.have.string(`-module.exports = function foo() { return 'got foo'; }`);
-      expect(diffOutput).to.have.string(`+module.exports = function foo() { return 'got foo v2'; }`);
-    });
-    it('should not show the id field as it is redundant', () => {
-      expect(diffOutput).to.not.have.string('--- Id');
-      expect(diffOutput).to.not.have.string('+++ Id');
+    describe('on the scope, after exporting the lane', () => {
+      let diffOutput: string;
+      before(() => {
+        helper.command.exportLane();
+        diffOutput = helper.command.diffLane('dev', true);
+      });
+      it('should show the diff correctly', () => {
+        expectMainToDevDiff(diffOutput);
+      });
     });
   });
 
@@ -79,7 +89,7 @@ describe('bit lane diff operations', function () {
       helper.command.switchLocalLane('main');
       helper.command.createLane('stage');
       helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV3);
-      helper.command.snapAllComponents();
+      helper.command.snapAllComponentsWithoutBuild();
 
       diffOutput = helper.command.diffLane('dev');
     });
@@ -93,55 +103,6 @@ describe('bit lane diff operations', function () {
     it('should not show the id field as it is redundant', () => {
       expect(diffOutput).to.not.have.string('--- Id');
       expect(diffOutput).to.not.have.string('+++ Id');
-    });
-  });
-
-  describe('bit lane diff {fromLane} {toLane} on the workspace', () => {
-    let diffOutput: string;
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
-      helper.command.snapAllComponentsWithoutBuild();
-      helper.command.export();
-      helper.command.createLane();
-      helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
-      helper.command.snapAllComponentsWithoutBuild();
-      diffOutput = helper.command.diffLane('main dev');
-    });
-    it('should show the diff correctly', () => {
-      expect(diffOutput).to.have.string('--- foo.js (main)');
-      expect(diffOutput).to.have.string('+++ foo.js (dev)');
-
-      expect(diffOutput).to.have.string(`-module.exports = function foo() { return 'got foo'; }`);
-      expect(diffOutput).to.have.string(`+module.exports = function foo() { return 'got foo v2'; }`);
-    });
-    it('should not show the id field as it is redundant', () => {
-      expect(diffOutput).to.not.have.string('--- Id');
-      expect(diffOutput).to.not.have.string('+++ Id');
-    });
-  });
-
-  describe('bit lane diff on the scope', () => {
-    let diffOutput: string;
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
-      helper.command.snapAllComponentsWithoutBuild();
-      helper.command.export();
-      helper.command.createLane();
-      helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
-      helper.command.snapAllComponentsWithoutBuild();
-      helper.command.exportLane();
-      diffOutput = helper.command.diffLane('dev', true);
-    });
-    it('should show the diff correctly', () => {
-      expect(diffOutput).to.have.string('--- foo.js (main)');
-      expect(diffOutput).to.have.string('+++ foo.js (dev)');
-
-      expect(diffOutput).to.have.string(`-module.exports = function foo() { return 'got foo'; }`);
-      expect(diffOutput).to.have.string(`+module.exports = function foo() { return 'got foo v2'; }`);
     });
   });
 });

@@ -8,9 +8,9 @@ chai.use(chaiFs);
 
 /**
  * e2e coverage for the state-model-v2 behaviours of `bit ci sync` — where the reconciler's state comes
- * from, rather than the reconcile cycle itself. Same environment contract as `ci-sync.e2e.ts`: a local
- * bare git repo as `origin`, a file:// remote scope, no git-host credentials (PR-less path), and ONE
- * cell per reconcile run.
+ * from, rather than the reconcile cycle itself. Same environment contract as the rest of the
+ * `bit ci sync` e2e suite (ci-sync-lane-cycle and friends): a local bare git repo as `origin`, a
+ * file:// remote scope, no git-host credentials (PR-less path), and ONE cell per reconcile run.
  */
 describe('bit ci sync — state model v2', function () {
   this.timeout(0);
@@ -217,7 +217,7 @@ describe('bit ci sync — state model v2', function () {
     it('should KEEP a branch whose tip is a developer’s .bitmap commit when the lane is removed, twice', () => {
       // An unexported snap whose commit carries ONLY `.bitmap` — the marker defence in isolation. A
       // commit that bundles the source edit too reads as dev work outright (`unmerged-commits`) and is
-      // covered by the bundled-commit suite in ci-sync.e2e.ts.
+      // covered by the bundled-commit suite in ci-sync-convergence.e2e.ts.
       gitFetch();
       helper.command.runCmd(`git checkout -f -B ${LANE} origin/${LANE}`);
       helper.fs.outputFile('comp2/index.js', comp2Src('unexported-local-snap'));
