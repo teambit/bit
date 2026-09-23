@@ -98,6 +98,55 @@ describe('bit pnpm sync', function () {
     expect(workspace.consumer.bitMap.components).to.have.lengthOf(3);
   });
 
+  describe('the env of a project', () => {
+    const PNPM_ENV = 'my-org.envs/pnpm-scripts';
+    const withBuildScript = {
+      ...twoPackages,
+      'packages/math/package.json': { name: '@acme/math', scripts: { build: 'tsc' } },
+    };
+    // a custom env is configured by its version, which the remote would be asked for
+    const stubEnvVersion = () => {
+      workspace.resolveEnvIdWithPotentialVersionForConfig = async (envId) => `${envId.toStringWithoutVersion()}@1.0.0`;
+    };
+
+    it('should get the pnpm env when it has a script to run, and the empty env otherwise', async () => {
+      await setupPnpmWorkspace(withBuildScript);
+      stubEnvVersion();
+      await syncPnpmWorkspace(workspace, tracker, { env: PNPM_ENV });
+
+      const math = entryAt('packages/math')!;
+      expect(math.config?.[`${PNPM_ENV}@1.0.0`]).to.deep.equal({});
+      expect(math.config?.[Extensions.envs]).to.deep.equal({ env: PNPM_ENV });
+      expect(entryAt('packages/app')!.config?.[Extensions.envs]).to.deep.equal({ env: 'teambit.harmony/empty-env' });
+    });
+
+    it('should move to the empty env on a re-run once its scripts are gone', async () => {
+      await setupPnpmWorkspace(withBuildScript);
+      stubEnvVersion();
+      await syncPnpmWorkspace(workspace, tracker, { env: PNPM_ENV });
+      await fs.outputJson(path.join(workspaceData.workspacePath, 'packages/math/package.json'), { name: '@acme/math' });
+
+      await syncPnpmWorkspace(workspace, tracker, { env: PNPM_ENV });
+
+      const math = entryAt('packages/math')!;
+      expect(math.config?.[`${PNPM_ENV}@1.0.0`]).to.be.undefined;
+      expect(math.config?.[Extensions.envs]).to.deep.equal({ env: 'teambit.harmony/empty-env' });
+    });
+
+    it('should keep an env the user configured', async () => {
+      await setupPnpmWorkspace(withBuildScript);
+      stubEnvVersion();
+      await syncPnpmWorkspace(workspace, tracker, { env: PNPM_ENV });
+      const math = entryAt('packages/math')!;
+      workspace.bitMap.removeComponentConfig(math.id, `${PNPM_ENV}@1.0.0`, false);
+      workspace.bitMap.addComponentConfig(math.id, Extensions.envs, { env: 'teambit.harmony/node' });
+
+      await syncPnpmWorkspace(workspace, tracker, { env: PNPM_ENV });
+
+      expect(entryAt('packages/math')!.config?.[Extensions.envs]).to.deep.equal({ env: 'teambit.harmony/node' });
+    });
+  });
+
   it('should untrack a never-snapped project that left the pnpm workspace', async () => {
     await setupPnpmWorkspace(twoPackages);
     await syncPnpmWorkspace(workspace, tracker);
@@ -267,6 +316,58 @@ describe('pnpm workspace import plan', () => {
     } finally {
       await fs.remove(workspaceDir);
     }
+  });
+
+  describe('a package imported without the sibling it refers to by "workspace:"', () => {
+    let workspaceDir: string;
+    const appManifest = {
+      name: '@acme/app',
+      dependencies: { '@acme/math': 'workspace:*', '@acme/strings': 'workspace:^' },
+    };
+    const importApp = async () => {
+      await fs.outputJson(path.join(workspaceDir, 'components/app/package.json'), appManifest);
+      const workspaceStub = {
+        path: workspaceDir,
+        consumer: { bitMap: { getComponentIdByRootPath: () => ({ toString: () => 'acme.scope/root' }) } },
+      } as any;
+      const mathDependency = { type: 'package', version: '0.0.0-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' };
+      const stringsDependency = { type: 'package', version: '1.0.0' };
+      const dependencyResolverStub = {
+        getDependenciesFromLegacyComponent: () => ({
+          findByPkgNameOrCompId: (name: string) =>
+            ({ '@acme/math': mathDependency, '@acme/strings': stringsDependency })[name],
+        }),
+      } as any;
+      const component = {
+        id: { toString: () => 'acme.scope/app@aaaa' },
+        componentMap: { rootDir: 'components/app' },
+        files: [{ relative: 'package.json', contents: Buffer.from(JSON.stringify(appManifest)) }],
+      } as any;
+      const plan = await createPnpmVcsImportPlan(workspaceStub, dependencyResolverStub, [component]);
+      await applyPnpmImportPlan(workspaceDir, plan!);
+    };
+    beforeEach(async () => {
+      workspaceDir = await fs.mkdtemp(path.join(os.tmpdir(), 'bit-pnpm-workspace-ref-'));
+      await fs.writeFile(path.join(workspaceDir, 'pnpm-workspace.yaml'), "packages:\n  - 'components/*'\n");
+      await fs.outputJson(path.join(workspaceDir, 'components/strings/package.json'), { name: '@acme/strings' });
+    });
+    afterEach(async () => {
+      await fs.remove(workspaceDir);
+    });
+    it('should bind the missing sibling to its exact version through the catalog', async () => {
+      await importApp();
+      const manifest = await fs.readJson(path.join(workspaceDir, 'components/app/package.json'));
+      expect(manifest.dependencies['@acme/math']).to.equal('catalog:');
+      const workspaceManifest = parseYaml(await fs.readFile(path.join(workspaceDir, 'pnpm-workspace.yaml'), 'utf8'));
+      expect(workspaceManifest.catalog).to.deep.equal({
+        '@acme/math': '0.0.0-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+      });
+    });
+    it('should leave a reference to a sibling the workspace has as is', async () => {
+      await importApp();
+      const manifest = await fs.readJson(path.join(workspaceDir, 'components/app/package.json'));
+      expect(manifest.dependencies['@acme/strings']).to.equal('workspace:^');
+    });
   });
 });
 

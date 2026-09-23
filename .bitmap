@@ -1395,6 +1395,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/pnpm"
     },
+    "pnpm-workspace-env": {
+        "name": "pnpm-workspace-env",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.envs",
+        "mainFile": "index.js",
+        "rootDir": "scopes/envs/pnpm-workspace-env",
+        "config": {
+            "teambit.harmony/empty-env": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/empty-env"
+            }
+        }
+    },
     "prettier": {
         "name": "prettier",
         "scope": "teambit.defender",

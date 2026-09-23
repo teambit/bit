@@ -11,16 +11,15 @@ import type { InstallMain } from '@teambit/install';
 import { InstallAspect } from '@teambit/install';
 import { LaneId } from '@teambit/lane-id';
 import type { VersionedBitmapEntry } from '@teambit/legacy.bit-map';
-import { isWorkspaceMapFile, readVersionedBitmapEntries, WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
+import { WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import { BIT_HIDDEN_DIR, BIT_WORKSPACE_TMP_DIRNAME, DOT_GIT_DIR } from '@teambit/legacy.constants';
-import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import type { ScopeMain } from '@teambit/scope';
 import { ScopeAspect } from '@teambit/scope';
 import { Remote } from '@teambit/scope.remotes';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
 import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
-import { isWorkspaceRootComponent } from './workspace-root-data';
+import { isWorkspaceRootComponent, readRootBitmapEntries } from './workspace-root-data';
 
 export type LoadBit = (workspacePath?: string) => Promise<Harmony>;
 
@@ -151,8 +150,7 @@ class WorkspaceCloner {
         `unable to clone "${versionedRootId.toString()}", it is not a workspace-root component. a workspace is cloned from the component tracked at its root, run "bit add ." there to create one`
       );
     }
-    const bitmapFile = rootComponent.files.find((file) => isWorkspaceMapFile(pathNormalizeToLinux(file.relative)));
-    const entries = bitmapFile ? readVersionedBitmapEntries(bitmapFile.contents.toString()) : [];
+    const entries = readRootBitmapEntries(rootComponent.files);
     return { versionedRootId, entries };
   }
 

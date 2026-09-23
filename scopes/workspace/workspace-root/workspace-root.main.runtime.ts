@@ -4,6 +4,7 @@ import { CLIAspect, MainRuntime } from '@teambit/cli';
 import type { Component, ComponentMain } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
 import { ComponentID } from '@teambit/component-id';
+import type { VersionedBitmapEntry } from '@teambit/legacy.bit-map';
 import { WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import type { Workspace } from '@teambit/workspace';
@@ -14,7 +15,12 @@ import { CloneCmd } from './clone.cmd';
 import { WorkspaceRootAspect } from './workspace-root.aspect';
 import { WorkspaceRootFragment } from './workspace-root.fragment';
 import type { WorkspaceRootData } from './workspace-root-data';
-import { findWorkspaceRootMap, isWorkspaceRootComponent, readWorkspaceRoot } from './workspace-root-data';
+import {
+  findWorkspaceRootMap,
+  isWorkspaceRootComponent,
+  readRootBitmapEntries,
+  readWorkspaceRoot,
+} from './workspace-root-data';
 
 /**
  * the workspace-root component is the one tracked at the workspace root (rootDir "."). it versions
@@ -78,6 +84,16 @@ export class WorkspaceRootMain {
    */
   getRootOf(component: Component): ComponentID | undefined {
     return readWorkspaceRoot(this.extensionsOf(component));
+  }
+
+  /**
+   * the components a workspace-root component lists, each with the directory it records for it - the
+   * root's own entry left out. the ids are "scope/name" with no version, the `.bitmap` it versions has
+   * none (see normalizeBitmapContentForVersioning). a workspace-root component that lists nothing, or a
+   * component that is not one, gives an empty list.
+   */
+  listMembers(root: Component): VersionedBitmapEntry[] {
+    return readRootBitmapEntries(root.filesystem.files).filter((entry) => entry.rootDir !== WORKSPACE_ROOT_DIR);
   }
 
   private extensionsOf(component: Component) {

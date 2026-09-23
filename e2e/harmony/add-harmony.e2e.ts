@@ -607,4 +607,62 @@ describe('add command on Harmony', function () {
       });
     });
   });
+  describe('a pnpm workspace built by the package scripts, through the pnpm-workspace env', () => {
+    // app's build requires the output of math's build, so it only passes when the workspace is built
+    // as a whole, in pnpm's order, with the packages linked to one another
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      // the env is plain javascript that runs as source, so it is taken from this repo as is,
+      // tagged or not
+      fs.copySync(
+        path.join(__dirname, '../../scopes/envs/pnpm-workspace-env'),
+        path.join(helper.scopes.localPath, 'envs/pnpm-env'),
+        { filter: (src) => path.basename(src) !== 'node_modules' }
+      );
+      helper.command.addComponent('envs/pnpm-env', '-i pnpm-env --env teambit.harmony/empty-env');
+      helper.fs.outputFile('package.json', '{ "name": "@acme/repo", "private": true }\n');
+      helper.fs.outputFile('pnpm-workspace.yaml', 'packages:\n  - packages/*\n');
+      helper.fs.outputFile('.gitignore', 'node_modules\ndist\n');
+      helper.fs.outputFile(
+        'packages/math/package.json',
+        JSON.stringify({
+          name: '@acme/math',
+          main: 'dist/index.js',
+          scripts: { build: 'node build.js' },
+        })
+      );
+      helper.fs.outputFile(
+        'packages/math/build.js',
+        "require('fs').mkdirSync('dist', { recursive: true });\n" +
+          "require('fs').writeFileSync('dist/index.js', 'module.exports = (a, b) => a + b;');\n"
+      );
+      helper.fs.outputFile(
+        'packages/app/package.json',
+        JSON.stringify({
+          name: '@acme/app',
+          main: 'dist/index.js',
+          dependencies: { '@acme/math': 'workspace:*' },
+          scripts: { build: 'node build.js', test: "node -e \"require('./dist') === 3 && console.log('app works')\"" },
+        })
+      );
+      helper.fs.outputFile(
+        'packages/app/build.js',
+        "require('fs').mkdirSync('dist', { recursive: true });\n" +
+          "require('fs').writeFileSync('dist/index.js', `module.exports = ${require('@acme/math')(1, 2)};`);\n"
+      );
+      helper.command.runCmd('pnpm install');
+      helper.command.runCmd(`bit pnpm sync --env ${helper.scopes.remote}/pnpm-env`);
+      // the packages are private, with no version, and linked by the names in their package.json
+      helper.command.link();
+    });
+    it('should compile through the build scripts, in the workspace', () => {
+      helper.command.compile();
+      expect(path.join(helper.scopes.localPath, 'packages/app/dist/index.js')).to.be.a.file();
+    });
+    it('should build the packages in a pnpm workspace of their own, running the build and the test scripts', () => {
+      const output = helper.command.build();
+      expect(output).to.have.string('app works');
+      expect(output).to.have.string('build succeeded');
+    });
+  });
 });

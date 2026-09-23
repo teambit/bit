@@ -8,7 +8,7 @@ import type { Command, CommandOptions } from '@teambit/cli';
 import { formatItem, formatSection, formatSuccessSummary, joinSections } from '@teambit/cli';
 import { BitError } from '@teambit/bit-error';
 import type { AspectData, Component } from '@teambit/component';
-import type { ComponentID } from '@teambit/component-id';
+import { ComponentID } from '@teambit/component-id';
 import type { ComponentMap } from '@teambit/legacy.bit-map';
 import { WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
@@ -19,12 +19,16 @@ import { OutsideWorkspaceError, WorkspaceAspect } from '@teambit/workspace';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { snapToSemver } from '@teambit/component-package-version';
-import { configForWorkspaceRoot } from './add-components';
+import { configForWorkspaceRoot, WORKSPACE_ROOT_ENV } from './add-components';
 import type { TrackerMain } from './tracker.main.runtime';
 
 export const PNPM_WORKSPACE_MANIFEST = 'pnpm-workspace.yaml';
 const PACKAGE_JSON = 'package.json';
 const DEPENDENCY_FIELDS = ['dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies'];
+/** the env of a project with scripts to run, unless "--env" names another one */
+export const PNPM_WORKSPACE_ENV = 'teambit.envs/pnpm-workspace-env';
+/** the scripts the env runs. a project with none of them has nothing to build, so it gets the empty env */
+const ENV_SCRIPTS = ['build', 'test', 'lint'];
 
 export type PnpmVcsSyncResult = {
   schemaVersion: 2;
@@ -55,7 +59,12 @@ type PnpmVcsCatalogBindingsData = {
   bindings: PnpmVcsCatalogBinding[];
 };
 
-type SyncFlags = Record<string, never>;
+type SyncFlags = { env?: string };
+
+export type PnpmSyncOptions = {
+  /** the env of the projects that have scripts to run. defaults to PNPM_WORKSPACE_ENV */
+  env?: string;
+};
 
 export class PnpmSyncCmd implements Command {
   name = 'sync';
@@ -65,7 +74,14 @@ workspace-root component. package.json and the lockfile are tracked as source (t
 safe to re-run: tracked projects keep their ids, new ones are added, and the ones that left the workspace are removed.`;
   group = 'workspace-setup';
   loader = true;
-  options = [['j', 'json', 'return the synchronization result in JSON format']] as CommandOptions;
+  options = [
+    ['j', 'json', 'return the synchronization result in JSON format'],
+    [
+      '',
+      'env <env-id>',
+      `the env of the projects with a build, test or lint script (default: ${PNPM_WORKSPACE_ENV}). the others get the empty env`,
+    ],
+  ] as CommandOptions;
 
   constructor(
     private workspace: Workspace,
@@ -90,9 +106,9 @@ safe to re-run: tracked projects keep their ids, new ones are added, and the one
     return joinSections([synced, removed, summary]);
   }
 
-  async json(_args: string[], _flags: SyncFlags): Promise<PnpmVcsSyncResult> {
+  async json(_args: string[], { env }: SyncFlags): Promise<PnpmVcsSyncResult> {
     if (!this.workspace) throw new OutsideWorkspaceError();
-    const result = await syncPnpmWorkspace(this.workspace, this.tracker);
+    const result = await syncPnpmWorkspace(this.workspace, this.tracker, { env });
     await this.workspace.consumer.onDestroy('pnpm-sync');
     return result;
   }
@@ -103,10 +119,12 @@ export class PnpmCmd implements Command {
   description = 'adopt and maintain a raw pnpm workspace with Bit';
   group = 'workspace-setup';
   loader = true;
-  options = [['j', 'json', 'return the synchronization result in JSON format']] as CommandOptions;
   commands: Command[] = [];
+  options: CommandOptions;
 
-  constructor(private syncCmd: PnpmSyncCmd) {}
+  constructor(private syncCmd: PnpmSyncCmd) {
+    this.options = syncCmd.options;
+  }
 
   report(args: string[], flags: SyncFlags): Promise<string> {
     return this.syncCmd.report(args, flags);
@@ -123,13 +141,34 @@ type PnpmWorkspaceManifest = {
   catalogs?: Record<string, Record<string, string>>;
 };
 
-type PackageManifest = { name?: string };
+type PackageManifest = { name?: string; scripts?: Record<string, string> };
 
 type PnpmProject = {
   rootDir: string;
   componentName: string;
   packageName?: string;
+  /** whether the project has any script the env runs */
+  hasScripts: boolean;
 };
+
+/**
+ * the env "bit env set" would write for the projects that have scripts to run. resolved once, and
+ * only when needed: a custom env is configured by its version, which may take asking the remote.
+ */
+class ProjectEnvResolver {
+  private configId?: Promise<string>;
+
+  constructor(
+    private workspace: Workspace,
+    readonly envId: string
+  ) {}
+
+  /** the env's config key, "scope/name@version" for a custom env */
+  getConfigId(): Promise<string> {
+    this.configId ||= this.workspace.resolveEnvIdWithPotentialVersionForConfig(ComponentID.fromString(this.envId));
+    return this.configId;
+  }
+}
 
 /**
  * a pnpm workspace adopted by "bit pnpm sync": the workspace root is tracked as a component, and the
@@ -150,7 +189,11 @@ export function isPnpmWorkspace(workspace: Workspace): boolean {
  * re-running is safe. a project tracked already keeps its id - even when its package was renamed
  * since, the id is anchored to the directory - and only has its config refreshed.
  */
-export async function syncPnpmWorkspace(workspace: Workspace, tracker: TrackerMain): Promise<PnpmVcsSyncResult> {
+export async function syncPnpmWorkspace(
+  workspace: Workspace,
+  tracker: TrackerMain,
+  options: PnpmSyncOptions = {}
+): Promise<PnpmVcsSyncResult> {
   const workspaceManifestPath = path.join(workspace.path, PNPM_WORKSPACE_MANIFEST);
   if (!(await fs.pathExists(workspaceManifestPath))) {
     throw new BitError(`unable to find ${PNPM_WORKSPACE_MANIFEST} in ${workspace.path}`);
@@ -167,8 +210,9 @@ export async function syncPnpmWorkspace(workspace: Workspace, tracker: TrackerMa
 
   const removedComponents = removeLeftProjects(workspace, new Set(projects.map((project) => project.rootDir)));
   const components: PnpmVcsSyncResult['components'] = [];
+  const envResolver = new ProjectEnvResolver(workspace, options.env || PNPM_WORKSPACE_ENV);
   for (const project of projects) {
-    const componentId = await trackPnpmProject(workspace, tracker, project);
+    const componentId = await trackPnpmProject(workspace, tracker, project, envResolver);
     components.push(syncedComponent(workspace, componentId, project.rootDir));
   }
   const rootId = await trackPnpmWorkspaceRoot(workspace, tracker);
@@ -187,9 +231,10 @@ async function discoverPnpmProjects(workspacePath: string, patterns: string[]): 
   return Promise.all(
     manifestFiles.map(async (manifestFile) => {
       const rootDir = pathNormalizeToLinux(path.dirname(manifestFile));
-      const { name } = await readPackageManifest(path.join(workspacePath, manifestFile));
+      const { name, scripts } = await readPackageManifest(path.join(workspacePath, manifestFile));
       const packageName = typeof name === 'string' && name ? name : undefined;
-      return { rootDir, componentName: sanitizePnpmComponentName(packageName || rootDir), packageName };
+      const hasScripts = ENV_SCRIPTS.some((script) => typeof scripts?.[script] === 'string');
+      return { rootDir, componentName: sanitizePnpmComponentName(packageName || rootDir), packageName, hasScripts };
     })
   );
 }
@@ -227,7 +272,12 @@ async function enableTrackAllFiles(workspace: Workspace) {
   consumer.bitMap.trackAllFiles = true;
 }
 
-async function trackPnpmProject(workspace: Workspace, tracker: TrackerMain, project: PnpmProject) {
+async function trackPnpmProject(
+  workspace: Workspace,
+  tracker: TrackerMain,
+  project: PnpmProject,
+  envResolver: ProjectEnvResolver
+) {
   // the map holds the entries of every lane at once, so a directory is looked up regardless of the lane
   const existingId = workspace.consumer.bitMap.getComponentIdByRootPath(project.rootDir);
   const componentId =
@@ -242,7 +292,7 @@ async function trackPnpmProject(workspace: Workspace, tracker: TrackerMain, proj
     ).componentId;
   // a project that left the workspace and came back is no longer removed
   workspace.bitMap.removeComponentConfig(componentId, Extensions.remove, false);
-  addEmptyEnvIfUnset(workspace, componentId);
+  await setProjectEnv(workspace, componentId, project.hasScripts, envResolver);
   if (project.packageName) {
     workspace.bitMap.addComponentConfig(
       componentId,
@@ -272,16 +322,41 @@ async function trackPnpmWorkspaceRoot(workspace: Workspace, tracker: TrackerMain
 }
 
 /**
- * a project builds and tests through its own package scripts, not through a bit env, so it gets the
- * empty env - the one the workspace root gets. an env the user configured stays.
+ * a project builds and tests through its own package scripts: one that has any gets the env that runs
+ * them, one that has none gets the empty env - the one the workspace root gets. a re-run moves a
+ * project between the two as its scripts change, but an env the user configured stays.
  */
-function addEmptyEnvIfUnset(workspace: Workspace, componentId: ComponentID) {
+async function setProjectEnv(
+  workspace: Workspace,
+  componentId: ComponentID,
+  hasScripts: boolean,
+  envResolver: ProjectEnvResolver
+) {
   const componentMap = getComponentMap(workspace, componentId);
-  if (componentMap.config?.[Extensions.envs]) return;
-  // the env aspect and the env selection, both objects - never the "-" of a removed aspect
-  Object.entries(configForWorkspaceRoot()).forEach(([aspectId, config]) =>
-    workspace.bitMap.addComponentConfig(componentId, aspectId, config as Record<string, any>)
-  );
+  const envsConfig = componentMap.config?.[Extensions.envs];
+  const currentEnv = envsConfig && envsConfig !== '-' ? envsConfig.env : undefined;
+  const syncedEnvs = [WORKSPACE_ROOT_ENV, envResolver.envId];
+  if (currentEnv && !syncedEnvs.includes(currentEnv)) return;
+  const targetEnv = hasScripts ? envResolver.envId : WORKSPACE_ROOT_ENV;
+  if (currentEnv === targetEnv) return;
+  if (currentEnv) removeEnvConfig(workspace, componentMap, currentEnv);
+  if (!hasScripts) {
+    // the env aspect and the env selection, both objects - never the "-" of a removed aspect
+    Object.entries(configForWorkspaceRoot()).forEach(([aspectId, config]) =>
+      workspace.bitMap.addComponentConfig(componentId, aspectId, config as Record<string, any>)
+    );
+    return;
+  }
+  workspace.bitMap.addComponentConfig(componentId, await envResolver.getConfigId(), {});
+  workspace.bitMap.addComponentConfig(componentId, Extensions.envs, { env: targetEnv });
+}
+
+/** the env's own entry, with or without a version, and the env selection */
+function removeEnvConfig(workspace: Workspace, componentMap: ComponentMap, envId: string) {
+  Object.keys(componentMap.config || {})
+    .filter((aspectId) => aspectId === envId || aspectId.startsWith(`${envId}@`))
+    .forEach((aspectId) => workspace.bitMap.removeComponentConfig(componentMap.id, aspectId, false));
+  workspace.bitMap.removeComponentConfig(componentMap.id, Extensions.envs, false);
 }
 
 /**
@@ -339,14 +414,8 @@ export async function applyPnpmImportPlan(workspacePath: string, plan: PnpmVcsIm
   const uncoveredRootDirs = plan.components.map(({ rootDir }) => rootDir).filter((dir) => !coveredRootDirs.has(dir));
   if (uncoveredRootDirs.length) manifest.packages = [...(manifest.packages || []), ...uncoveredRootDirs];
 
-  const manifestFiles = await discoverPnpmProjectManifests(workspacePath, manifest.packages || []);
-  const localPackageNames = new Set<string>();
-  await Promise.all(
-    manifestFiles.map(async (manifestFile) => {
-      const projectManifest = await readPackageManifest(path.join(workspacePath, manifestFile));
-      if (projectManifest.name) localPackageNames.add(projectManifest.name);
-    })
-  );
+  const localPackageNames = await readLocalPackageNames(workspacePath, manifest.packages || []);
+  await bindWorkspaceReferencesToCatalog(workspacePath, plan, localPackageNames);
   const importedPackageNames = new Set(plan.components.map(({ packageName }) => packageName));
   const catalogOf = (catalogName: string): Record<string, string> => {
     if (catalogName === 'default' && (manifest.catalog || !manifest.catalogs?.default)) {
@@ -378,6 +447,54 @@ async function readPnpmWorkspaceManifest(manifestPath: string): Promise<PnpmWork
   } catch (error: any) {
     throw new BitError(`unable to read ${manifestPath}: ${error.message}`);
   }
+}
+
+async function readLocalPackageNames(workspacePath: string, patterns: string[]): Promise<Set<string>> {
+  const manifestFiles = await discoverPnpmProjectManifests(workspacePath, patterns);
+  const localPackageNames = new Set<string>();
+  await Promise.all(
+    manifestFiles.map(async (manifestFile) => {
+      const projectManifest = await readPackageManifest(path.join(workspacePath, manifestFile));
+      if (projectManifest.name) localPackageNames.add(projectManifest.name);
+    })
+  );
+  return localPackageNames;
+}
+
+/**
+ * an imported package refers to a sibling by "workspace:", which only resolves when the sibling is in
+ * this workspace too. the plan binds only the siblings that are not (see createPnpmVcsImportPlan), and
+ * those references become "catalog:", so the catalog decides: the exact version now, "workspace:*" once
+ * the sibling is imported as well.
+ */
+async function bindWorkspaceReferencesToCatalog(
+  workspacePath: string,
+  plan: PnpmVcsImportPlan,
+  localPackageNames: Set<string>
+): Promise<void> {
+  const boundPackageNames = new Set(
+    plan.catalogs
+      .filter(({ catalogName, packageName }) => catalogName === 'default' && !localPackageNames.has(packageName))
+      .map(({ packageName }) => packageName)
+  );
+  if (!boundPackageNames.size) return;
+  await Promise.all(
+    plan.components.map(async ({ rootDir }) => {
+      const packageManifestPath = path.join(workspacePath, rootDir, PACKAGE_JSON);
+      const packageManifest = await readPackageManifest(packageManifestPath);
+      let changed = false;
+      for (const field of DEPENDENCY_FIELDS) {
+        const dependencies = packageManifest[field as keyof PackageManifest] as Record<string, string> | undefined;
+        Object.entries(dependencies || {}).forEach(([packageName, specifier]) => {
+          if (typeof specifier !== 'string' || !specifier.startsWith('workspace:')) return;
+          if (!boundPackageNames.has(packageName)) return;
+          dependencies![packageName] = 'catalog:';
+          changed = true;
+        });
+      }
+      if (changed) await fs.writeJson(packageManifestPath, packageManifest, { spaces: 2 });
+    })
+  );
 }
 
 export async function discoverPnpmProjectManifests(workspacePath: string, patterns: string[]): Promise<string[]> {
@@ -563,6 +680,10 @@ export async function createPnpmVcsImportPlan(
     });
   }
 
+  const workspaceManifest = await readPnpmWorkspaceManifest(path.join(workspace.path, PNPM_WORKSPACE_MANIFEST));
+  const localPackageNames = await readLocalPackageNames(workspace.path, workspaceManifest.packages || []);
+  plannedComponents.forEach(({ packageName }) => localPackageNames.add(packageName));
+
   for (const component of pnpmComponents) {
     const manifest = parseComponentPackageJson(component);
     const dependencies = dependencyResolver.getDependenciesFromLegacyComponent(component, { includeHidden: true });
@@ -570,9 +691,12 @@ export async function createPnpmVcsImportPlan(
       const entries = manifest[field];
       if (!entries || typeof entries !== 'object' || Array.isArray(entries)) continue;
       for (const [dependencyName, rawSpecifier] of Object.entries(entries)) {
-        // a "workspace:" reference resolves through pnpm on its own, there is no catalog entry to bind
-        if (typeof rawSpecifier !== 'string' || !rawSpecifier.startsWith('catalog:')) continue;
-        const catalogName = rawSpecifier.slice('catalog:'.length) || 'default';
+        if (typeof rawSpecifier !== 'string') continue;
+        const isWorkspaceReference = rawSpecifier.startsWith('workspace:');
+        if (!isWorkspaceReference && !rawSpecifier.startsWith('catalog:')) continue;
+        // a "workspace:" reference to a package this workspace has resolves through pnpm on its own
+        if (isWorkspaceReference && localPackageNames.has(dependencyName)) continue;
+        const catalogName = isWorkspaceReference ? 'default' : rawSpecifier.slice('catalog:'.length) || 'default';
         const dependency = dependencies.findByPkgNameOrCompId(dependencyName);
         // declared in package.json but never imported by the code, so bit recorded no dependency - and no
         // version to bind. the entry stays as the pnpm manifest has it, which is versioned with the root.
