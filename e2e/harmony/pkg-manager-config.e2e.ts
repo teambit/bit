@@ -1,13 +1,8 @@
 import path from 'path';
-import chai, { expect } from 'chai';
-import chaiString from 'chai-string';
-import chaiFs from 'chai-fs';
+import { expect } from 'chai';
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 import type { ModulesManifest } from '../modules-manifest';
 import { readModulesManifest } from '../modules-manifest';
-
-chai.use(chaiFs);
-chai.use(chaiString);
 
 (supportNpmCiRegistryTesting ? describe : describe.skip)(
   'workspace package-manager config is read when installation is in a capsule',
@@ -34,39 +29,6 @@ chai.use(chaiString);
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.workspaceJsonc.setupDefault();
-    });
-    // skipped: yarn support is deprecated and planned for removal
-    describe.skip('using Yarn', () => {
-      before(() => {
-        helper.scopeHelper.reInitWorkspace({
-          yarnRCConfig: {
-            packageExtensions: {
-              'lodash.get@*': {
-                dependencies: {
-                  'is-positive': '1.0.0',
-                },
-              },
-            },
-          },
-        });
-        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', `teambit.dependencies/yarn`);
-        helper.scopeHelper.addRemoteScope();
-        helper.workspaceJsonc.setupDefault();
-        helper.workspaceJsonc.addKeyValToWorkspace('resolveAspectsFromNodeModules', false);
-        helper.workspaceJsonc.addKeyValToWorkspace('resolveEnvsFromRoots', false);
-        helper.fixtures.populateComponents(1);
-        helper.extensions.addExtensionToVariant('comp1', `${envId1}@0.0.1`);
-        helper.capsules.removeScopeAspectCapsules();
-        helper.command.status(); // populate capsules.
-      });
-      it('packageExtensions is taken into account when running install in the capsule', () => {
-        const { scopeAspectsCapsulesRootDir } = helper.command.capsuleListParsed();
-        const isPositivePath = path.join(
-          scopeAspectsCapsulesRootDir,
-          `${helper.scopes.remote}_node-env-1@0.0.1/node_modules/is-positive`
-        );
-        expect(isPositivePath).to.be.a.path();
-      });
     });
     describe('using pnpm', () => {
       let modulesState: ModulesManifest | null;

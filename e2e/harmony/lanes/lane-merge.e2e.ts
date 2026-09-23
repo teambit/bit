@@ -135,20 +135,6 @@ describe('bit lane merge operations', function () {
     it('bit status should be clean', () => {
       helper.command.expectStatusToBeClean();
     });
-    // previously, the behavior was to checkout to the same version it had before
-    it.skip('should checkout to the same version the origin branch had before the switch', () => {
-      helper.bitMap.expectToHaveId('bar/foo', '0.0.1');
-    });
-    // previously, the behavior was to checkout to the same version it had before
-    it.skip('bit status should not show the component as modified only as pending update', () => {
-      const status = helper.command.statusJson();
-      expect(status.modifiedComponents).to.have.lengthOf(0);
-      expect(status.outdatedComponents).to.have.lengthOf(1);
-      expect(status.importPendingComponents).to.have.lengthOf(0);
-      expect(status.stagedComponents).to.have.lengthOf(0);
-      expect(status.invalidComponents).to.have.lengthOf(0);
-      expect(status.newComponents).to.have.lengthOf(0);
-    });
   });
 
   describe('head on the lane is not in the filesystem', () => {

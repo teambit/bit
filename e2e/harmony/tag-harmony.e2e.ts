@@ -72,6 +72,15 @@ describe('tag components on Harmony', function () {
       const show = helper.command.showComponentParsed('comp1');
       expect(show.dependencies[0].id).to.equal(`${helper.scopes.remote}/comp2@0.0.2`);
     });
+    // used to be a separate "builder data saved in the model" describe, paying for its own full build
+    // tag just for this assertion. comp1@latest here is already the product of a build tag.
+    it('should not save the build data twice', () => {
+      const comp1 = helper.command.catComponent('comp1@latest');
+      const builderExt = helper.general.getExtension(comp1, Extensions.builder);
+      const taskIds = builderExt.data.pipeline.map((p) => `${p.taskId}:${p.taskName}`);
+      const taskIdsUniq = uniq(taskIds);
+      expect(taskIds.length).to.equal(taskIdsUniq.length);
+    });
     describe('auto-tag', () => {
       before(() => {
         helper.fs.appendFile('comp2/index.js');
@@ -265,16 +274,21 @@ describe('tag components on Harmony', function () {
       expect(comp.buildStatus).to.equal('succeed');
     });
   });
+  // every describe in here starts from the same state, which used to be rebuilt from scratch by each
+  // of them. it's built once and restored from a clone instead.
   describe('modified one component, the rest are auto-tag pending', () => {
+    let autoTagPendingWs: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.fixtures.populateComponents();
+      helper.fixtures.populateComponents(3);
       helper.command.tagAllWithoutBuild();
       // modify only comp3. so then comp1 and comp2 are auto-tag pending
       helper.fs.appendFile('comp3/index.js');
+      autoTagPendingWs = helper.scopeHelper.cloneWorkspace();
     });
     describe('tag with specific version', () => {
       before(() => {
+        helper.scopeHelper.getClonedWorkspace(autoTagPendingWs);
         helper.command.tagAllWithoutBuild('--ver 1.0.0');
       });
       it('should set the specified version to the modified component and bumped by patch the auto-tagged', () => {
@@ -294,6 +308,68 @@ describe('tag components on Harmony', function () {
         expect(bitMap.comp3.version).to.equal('2.0.0');
         expect(bitMap.comp1.version).to.equal('2.0.0');
         expect(bitMap.comp2.version).to.equal('2.0.0');
+      });
+    });
+    describe('auto-tag with pre-release', () => {
+      let tagOutput: string;
+      before(() => {
+        helper.scopeHelper.getClonedWorkspace(autoTagPendingWs);
+        tagOutput = helper.command.tagWithoutBuild('comp3', '--unmodified --increment prerelease --prerelease-id dev');
+      });
+      it('should auto-tag dependents according to the pre-release version', () => {
+        expect(tagOutput).to.have.string('3 component(s) tagged');
+        expect(tagOutput).to.have.string('auto-tagged dependents');
+        const details = helper.command.runCmd('bit details');
+        expect(details).to.have.string('comp1@0.0.2-dev.0');
+      });
+    });
+    describe('with --auto-tag-increment', () => {
+      before(() => {
+        helper.scopeHelper.getClonedWorkspace(autoTagPendingWs);
+        helper.command.tagAllWithoutBuild('--major --auto-tag-increment major');
+      });
+      it('should bump the auto-tagged dependents by the given level rather than by patch', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap.comp3.version).to.equal('1.0.0');
+        // comp2 is a direct dependent, comp1 is a transitive one. both are auto-tagged.
+        expect(bitMap.comp2.version).to.equal('1.0.0');
+        expect(bitMap.comp1.version).to.equal('1.0.0');
+      });
+    });
+    describe('with --auto-tag-increment different than the modified level', () => {
+      before(() => {
+        helper.scopeHelper.getClonedWorkspace(autoTagPendingWs);
+        helper.command.tagAllWithoutBuild('--major --auto-tag-increment minor');
+      });
+      it('should bump the modified and the auto-tagged by their own levels', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap.comp3.version).to.equal('1.0.0');
+        expect(bitMap.comp2.version).to.equal('0.1.0');
+        expect(bitMap.comp1.version).to.equal('0.1.0');
+      });
+    });
+    describe('--auto-tag-increment along with --skip-auto-tag', () => {
+      let result: string;
+      before(() => {
+        helper.scopeHelper.getClonedWorkspace(autoTagPendingWs);
+        result = helper.general.runWithTryCatch('bit tag --auto-tag-increment major --skip-auto-tag');
+      });
+      it('should throw an error', () => {
+        expect(result).to.have.string('you can use either --auto-tag-increment or --skip-auto-tag, but not both');
+      });
+    });
+    // the --prerelease-id is relevant for the dependents too, so a pre-release --auto-tag-increment
+    // should be enough to justify it, even when the modified components get a plain major.
+    describe('--auto-tag-increment with a pre-release level and --prerelease-id', () => {
+      before(() => {
+        helper.scopeHelper.getClonedWorkspace(autoTagPendingWs);
+        helper.command.tagAllWithoutBuild('--major --auto-tag-increment prerelease --prerelease-id dev');
+      });
+      it('should use the prerelease identifier for the auto-tagged dependents', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap.comp3.version).to.equal('1.0.0');
+        expect(bitMap.comp2.version).to.equal('0.0.2-dev.0');
+        expect(bitMap.comp1.version).to.equal('0.0.2-dev.0');
       });
     });
   });
@@ -365,66 +441,6 @@ describe('tag components on Harmony', function () {
       });
     });
   });
-  describe('auto-tag with pre-release', () => {
-    let tagOutput: string;
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.fixtures.populateComponents(3);
-      helper.command.tagAllWithoutBuild();
-      tagOutput = helper.command.tagWithoutBuild('comp3', '--unmodified --increment prerelease --prerelease-id dev');
-    });
-    it('should auto-tag dependents according to the pre-release version', () => {
-      expect(tagOutput).to.have.string('3 component(s) tagged');
-      expect(tagOutput).to.have.string('auto-tagged dependents');
-      const details = helper.command.runCmd('bit details');
-      expect(details).to.have.string('comp1@0.0.2-dev.0');
-    });
-  });
-  describe('auto-tag with --auto-tag-increment', () => {
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.fixtures.populateComponents(3);
-      helper.command.tagAllWithoutBuild();
-      // modify only comp3. so then comp1 and comp2 are auto-tag pending
-      helper.fs.appendFile('comp3/index.js');
-      helper.command.tagAllWithoutBuild('--major --auto-tag-increment major');
-    });
-    it('should bump the auto-tagged dependents by the given level rather than by patch', () => {
-      const bitMap = helper.bitMap.read();
-      expect(bitMap.comp3.version).to.equal('1.0.0');
-      // comp2 is a direct dependent, comp1 is a transitive one. both are auto-tagged.
-      expect(bitMap.comp2.version).to.equal('1.0.0');
-      expect(bitMap.comp1.version).to.equal('1.0.0');
-    });
-  });
-  describe('auto-tag with --auto-tag-increment different than the modified level', () => {
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.fixtures.populateComponents(3);
-      helper.command.tagAllWithoutBuild();
-      helper.fs.appendFile('comp3/index.js');
-      helper.command.tagAllWithoutBuild('--major --auto-tag-increment minor');
-    });
-    it('should bump the modified and the auto-tagged by their own levels', () => {
-      const bitMap = helper.bitMap.read();
-      expect(bitMap.comp3.version).to.equal('1.0.0');
-      expect(bitMap.comp2.version).to.equal('0.1.0');
-      expect(bitMap.comp1.version).to.equal('0.1.0');
-    });
-  });
-  describe('--auto-tag-increment along with --skip-auto-tag', () => {
-    let result: string;
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.fixtures.populateComponents(3);
-      helper.command.tagAllWithoutBuild();
-      helper.fs.appendFile('comp3/index.js');
-      result = helper.general.runWithTryCatch('bit tag --auto-tag-increment major --skip-auto-tag');
-    });
-    it('should throw an error', () => {
-      expect(result).to.have.string('you can use either --auto-tag-increment or --skip-auto-tag, but not both');
-    });
-  });
   describe('invalid --auto-tag-increment level', () => {
     let result: string;
     before(() => {
@@ -435,23 +451,6 @@ describe('tag components on Harmony', function () {
     });
     it('should throw an error', () => {
       expect(result).to.have.string('invalid auto-tag-increment level "nope"');
-    });
-  });
-  // the --prerelease-id is relevant for the dependents too, so a pre-release --auto-tag-increment
-  // should be enough to justify it, even when the modified components get a plain major.
-  describe('--auto-tag-increment with a pre-release level and --prerelease-id', () => {
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.fixtures.populateComponents(3);
-      helper.command.tagAllWithoutBuild();
-      helper.fs.appendFile('comp3/index.js');
-      helper.command.tagAllWithoutBuild('--major --auto-tag-increment prerelease --prerelease-id dev');
-    });
-    it('should use the prerelease identifier for the auto-tagged dependents', () => {
-      const bitMap = helper.bitMap.read();
-      expect(bitMap.comp3.version).to.equal('1.0.0');
-      expect(bitMap.comp2.version).to.equal('0.0.2-dev.0');
-      expect(bitMap.comp1.version).to.equal('0.0.2-dev.0');
     });
   });
   describe('invalid pre-release after normal tag', () => {
@@ -469,6 +468,14 @@ describe('tag components on Harmony', function () {
       const comp = helper.command.catComponent('comp1');
       const ver1Hash = comp.versions['0.0.1'];
       expect(comp.head).to.equal(ver1Hash);
+    });
+    // used to be a separate "package.json update" describe with this exact same before hook.
+    it('should update package.json on the workspace with the new tag', () => {
+      const pkgJson = helper.fs.readJsonFile(
+        path.join('node_modules', `@${helper.scopes.remote}/comp1`, 'package.json')
+      );
+      expect(pkgJson.version).to.equal('0.0.1');
+      expect(pkgJson.componentId.version).to.equal('0.0.1');
     });
   });
   describe('soft-tag pre-release', () => {
@@ -491,20 +498,6 @@ describe('tag components on Harmony', function () {
       it('should use the data in the .bitmap file and tag as a pre-release version', () => {
         expect(tagOutput).to.have.string('comp1@0.0.1-dev.0');
       });
-    });
-  });
-  describe('builder data saved in the model', () => {
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.fixtures.populateComponents(1);
-      helper.command.tagAllComponents();
-    });
-    it('should not save the build data twice', () => {
-      const comp1 = helper.command.catComponent('comp1@latest');
-      const builderExt = helper.general.getExtension(comp1, Extensions.builder);
-      const taskIds = builderExt.data.pipeline.map((p) => `${p.taskId}:${p.taskName}`);
-      const taskIdsUniq = uniq(taskIds);
-      expect(taskIds.length).to.equal(taskIdsUniq.length);
     });
   });
   describe('soft tag --minor with auto-tag', () => {
@@ -536,20 +529,6 @@ describe('tag components on Harmony', function () {
     it('should not throw', () => {
       // don't skip the build here. otherwise, you won't be able to reproduce.
       expect(() => helper.command.tagAllComponents()).not.to.throw();
-    });
-  });
-  describe('package.json update', () => {
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.fixtures.populateComponents(1);
-      helper.command.tagAllWithoutBuild();
-    });
-    it('should update package.json on the workspace with the new tag', () => {
-      const pkgJson = helper.fs.readJsonFile(
-        path.join('node_modules', `@${helper.scopes.remote}/comp1`, 'package.json')
-      );
-      expect(pkgJson.version).to.equal('0.0.1');
-      expect(pkgJson.componentId.version).to.equal('0.0.1');
     });
   });
   describe('tagging a snapped component by specifying the id', () => {

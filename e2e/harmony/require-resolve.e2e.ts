@@ -1,10 +1,6 @@
-import chai, { expect } from 'chai';
+import { expect } from 'chai';
 import { IssuesClasses } from '@teambit/component-issues';
 import { Helper } from '@teambit/legacy.e2e-helper';
-import chaiFs from 'chai-fs';
-import chaiString from 'chai-string';
-chai.use(chaiFs);
-chai.use(chaiString);
 
 describe('require.resolve detection', function () {
   this.timeout(0);

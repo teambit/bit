@@ -1,10 +1,7 @@
-import chai, { expect } from 'chai';
+import { expect } from 'chai';
 import * as path from 'path';
 import { IS_WINDOWS } from '@teambit/legacy.constants';
 import { Helper } from '@teambit/legacy.e2e-helper';
-import chaiFs from 'chai-fs';
-
-chai.use(chaiFs);
 
 describe('typescript', function () {
   this.timeout(0);

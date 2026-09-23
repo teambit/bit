@@ -14,12 +14,6 @@ describe('loadBit()', function () {
     helper.scopeHelper.setWorkspaceWithRemoteScope();
   });
 
-  it('should return a valid workspace instance', async () => {
-    const harmony = await loadBit(helper.scopes.localPath);
-    const workspace = harmony.get<Workspace>(WorkspaceAspect.id);
-    expect(workspace.path).to.eq(helper.scopes.localPath);
-  });
-
   async function createScope(path: string) {
     const harmony = await loadBit(path);
     const scope = harmony.get<ScopeMain>(ScopeAspect.id);
@@ -27,12 +21,15 @@ describe('loadBit()', function () {
     return scope;
   }
 
-  it('should create and load three different scopes', async () => {
+  it('should load a valid workspace and create and load three different scopes', async () => {
     const { scopePath, scopeName } = helper.scopeHelper.getNewBareScope();
     const scopeA = await createScope(scopePath);
     const scopeB = await createScope(helper.scopes.remotePath);
-    const scopeC = await createScope(helper.scopes.localPath);
-    // expect(workspace.path).to.eq(helper.scopes.localPath);
+    // the workspace instance and the local scope are taken off the same loadBit call - a separate
+    // test used to assert the workspace path and paid for a second full aspect-graph load
+    const localHarmony = await loadBit(helper.scopes.localPath);
+    expect(localHarmony.get<Workspace>(WorkspaceAspect.id).path).to.eq(helper.scopes.localPath);
+    const scopeC = localHarmony.get<ScopeMain>(ScopeAspect.id);
     expect(scopeA.name.startsWith(scopeName)).to.be.true;
     expect(scopeB.name.startsWith(helper.scopes.remote)).to.be.true;
     expect(scopeC.name.startsWith(helper.scopes.local)).to.be.true;
@@ -43,13 +40,12 @@ describe('loadBit()', function () {
     const workspaceJsonc = helper.workspaceJsonc.read();
     workspaceJsonc['teambit.workspace/workspace'].defaultScope = 'hi/';
     helper.workspaceJsonc.write(workspaceJsonc);
-    let error: Error;
+    let error: Error | undefined;
     try {
       await loadBit(helper.scopes.localPath);
     } catch (err: any) {
       error = err;
     }
-    // @ts-ignore
-    expect(error.name).to.equal('InvalidScopeName');
+    expect(error?.name).to.equal('InvalidScopeName');
   });
 });

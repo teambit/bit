@@ -1,19 +1,13 @@
 import stripAnsi from 'strip-ansi';
-import chai, { expect } from 'chai';
+import { expect } from 'chai';
 import path from 'path';
-import assertArrays from 'chai-arrays';
 
 import {
   UNABLE_TO_LOAD_EXTENSION,
   UNABLE_TO_LOAD_EXTENSION_FROM_LIST,
 } from '../../scopes/harmony/aspect-loader/constants';
-import { CannotLoadExtension } from '../../scopes/harmony/aspect-loader/exceptions';
 // TODO: think about how to change this require or move this tests
 import { Helper } from '@teambit/legacy.e2e-helper';
-import chaiFs from 'chai-fs';
-chai.use(chaiFs);
-
-chai.use(assertArrays);
 
 describe('load extensions', function () {
   this.timeout(0);
@@ -52,13 +46,8 @@ describe('load extensions', function () {
         helper.command.install();
         helper.command.compile();
       });
-      // TODO: implement
-      it.skip('when config set to throw error on failed extensions', () => {
-        const func = () => helper.command.status();
-        const origError = new Error('error by purpose');
-        const error = new CannotLoadExtension('non-requireable-aspect', origError);
-        helper.general.expectToThrow(func, error);
-      });
+      // the "throw on failed extensions" side was never implemented - a permanently-skipped test for
+      // it used to sit here. only the ignore-errors behaviour below is actually wired up.
       describe('when config set to ignore error on failed extensions', () => {
         before(() => {
           // TODO: set config to ignore errors and restore it in the end
@@ -84,12 +73,8 @@ describe('load extensions', function () {
         helper.command.install();
         helper.command.compile();
       });
-      it.skip('when config set to throw error on failed extensions', () => {
-        const func = () => helper.command.status();
-        const error = new Error('error in provider');
-        helper.general.expectToThrow(func, error);
-      });
-      // TODO: implement
+      // same here: the "throw on failed extensions" variant is unimplemented, so only the
+      // ignore-errors behaviour is asserted.
       describe('when config set to ignore error on failed extensions', () => {
         before(() => {
           // TODO: set config to ignore errors and restore it in the end
@@ -120,10 +105,8 @@ describe('load extensions', function () {
       helper.scopeHelper.reInitWorkspace({ addRemoteScopeAsDefaultScope: false });
       helper.fixtures.copyFixtureExtensions('dummy-extension');
       helper.command.addComponent('dummy-extension');
-      helper.fixtures.copyFixtureExtensions('non-requireable-aspect');
-      helper.fixtures.copyFixtureExtensions('extension-provider-error');
-      helper.command.addComponent('extension-provider-error');
-      helper.command.addComponent('non-requireable-aspect');
+      // the non-requireable / provider-error fixtures used to be tracked here for two describes that
+      // only held skipped tests. nothing references them now, so they are no longer installed+compiled
       helper.fs.outputFile(path.join('affected-comp1', 'comp1.js'), '');
       helper.command.addComponent('affected-comp1', { i: 'affected/comp1' });
       helper.fs.outputFile(path.join('not-affected-comp2', 'comp2.js'), '');
@@ -147,56 +130,9 @@ describe('load extensions', function () {
         expect(output).to.not.have.string('dummy extension runs');
       });
     });
-    describe('non requireable extension', () => {
-      before(() => {
-        helper.extensions.setExtensionToVariant('affected-comp1', 'my-scope/non-requireable-aspect', config);
-      });
-      it.skip('when config set to throw error on failed extensions', () => {
-        const func = () => helper.command.showComponent('affected/comp1');
-        const origError = new Error('error by purpose');
-        const error = new CannotLoadExtension('non-requireable-aspect', origError);
-        helper.general.expectToThrow(func, error);
-      });
-      // TODO: implement
-      describe.skip('when config set to ignore error on failed extensions', () => {
-        before(() => {
-          // TODO: set config to ignore errors and restore it in the end
-          output = helper.command.status();
-        });
-        it('should load the component with problematic extension without error', () => {
-          expect(output).to.have.string('Id');
-          expect(output).to.have.string('Language');
-          expect(output).to.have.string('Main File');
-        });
-        it('should show a warning about the problematic extension', () => {
-          expect(output).to.have.string(UNABLE_TO_LOAD_EXTENSION('non-requireable-aspect'));
-        });
-      });
-    });
-    describe('extension with provider error', () => {
-      before(() => {
-        helper.extensions.setExtensionToVariant('affected-comp1', 'my-scope/extension-provider-error', config);
-      });
-      it.skip('when config set to throw error on failed extensions', () => {
-        const func = () => helper.command.showComponent('affected/comp1');
-        const error = new Error('error in provider');
-        helper.general.expectToThrow(func, error);
-      });
-      // TODO: implement
-      describe.skip('when config set to ignore error on failed extensions', () => {
-        before(() => {
-          // TODO: set config to ignore errors and restore it in the end
-          output = helper.command.showComponent('affected/comp1');
-        });
-        it('should load the component with problematic extension without error', () => {
-          expect(output).to.have.string('Id');
-          expect(output).to.have.string('Language');
-          expect(output).to.have.string('Main File');
-        });
-        it('should show a warning about the problematic extension', () => {
-          expect(output).to.have.string(UNABLE_TO_LOAD_EXTENSION_FROM_LIST(['extension-provider-error']));
-        });
-      });
-    });
+    // the "non requireable extension" and "extension with provider error" variants used to have a
+    // describe each here, but every test inside them was skipped (an unimplemented throw-on-error
+    // case plus a skipped ignore-errors block), so they only ran setExtensionToVariant setup and
+    // asserted nothing. both failure modes are covered against the workspace above.
   });
 });

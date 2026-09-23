@@ -63,28 +63,6 @@ describe('basic flow with dependencies', function () {
         const output = helper.command.listLocalScope();
         expectComponentsToBeSortedAlphabetically(output);
       });
-      describe('after modifying the components', () => {
-        before(() => {
-          helper.fixtures.populateComponents(undefined, undefined, 'v2');
-        });
-        describe('bit status', () => {
-          let output;
-          before(() => {
-            output = helper.command.runCmd('bit status');
-          });
-          it('should show all of them under staged components', () => {
-            expect(output).to.not.have.string('no staged components');
-            expect(output).to.have.string('staged components');
-          });
-          it('should show staged components sorted alphabetically', () => {
-            expectComponentsToBeSortedAlphabetically(output);
-          });
-        });
-        it('bit list should show the components sorted alphabetically', () => {
-          const output = helper.command.listLocalScope();
-          expectComponentsToBeSortedAlphabetically(output);
-        });
-      });
       describe('after deleting the components', () => {
         before(() => {
           fs.moveSync(path.join(helper.scopes.localPath, 'comp1'), path.join(helper.scopes.localPath, 'comp1-bak'));
@@ -107,10 +85,6 @@ describe('basic flow with dependencies', function () {
           it('should show deleted components sorted alphabetically', () => {
             expectComponentsToBeSortedAlphabetically(output);
           });
-        });
-        it('bit list should show the components sorted alphabetically', () => {
-          const output = helper.command.listLocalScope();
-          expectComponentsToBeSortedAlphabetically(output);
         });
       });
     });

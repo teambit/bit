@@ -248,48 +248,13 @@ describe('bit lane multiple scopes', function () {
     });
   });
 
-  describe('multiple scopes - using FetchMissingHistory action', () => {
+  // both remote-actions below run against the same world (comp1 owned by another remote, two tags
+  // on main plus a snap on the lane, all exported). the lane-scope is cloned after that setup so
+  // each action can delete objects from it and start from the same state.
+  describe('multiple scopes - fetching missing history into the lane-scope', () => {
     let anotherRemote: string;
-    const getFirstTagFromRemote = () =>
-      helper.command.catComponent(`${anotherRemote}/comp1@0.0.1`, helper.scopes.remotePath);
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
-      anotherRemote = scopeName;
-      helper.scopeHelper.addRemoteScope(scopePath);
-      helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
-      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
-      helper.fixtures.populateComponents(1);
-      helper.command.setScope(anotherRemote, 'comp1');
-      helper.command.tagAllWithoutBuild();
-      helper.command.tagAllWithoutBuild('--unmodified');
-      helper.command.export();
-      helper.command.createLane();
-      helper.command.snapAllComponentsWithoutBuild('--unmodified');
-      helper.command.export();
-
-      // currently, the objects from remote2 are in remote. so simulate a case where it's missing.
-      const firstTagHash = helper.command.catComponent('comp1').versions['0.0.1'];
-      const objectPath = helper.general.getHashPathOfObject(firstTagHash);
-      helper.fs.deleteRemoteObject(objectPath);
-
-      // an intermediate step. make sure the object is missing.
-      expect(getFirstTagFromRemote).to.throw();
-
-      helper.command.runAction(FetchMissingHistory.name, helper.scopes.remote, { ids: [`${anotherRemote}/comp1`] });
-    });
-    it('the remote should have the history of a component from the other remote', () => {
-      expect(getFirstTagFromRemote).to.not.throw();
-    });
-  });
-
-  /**
-   * FetchVersionHistory is a lightweight alternative to FetchMissingHistory.
-   * It only fetches the VersionHistory object (the graph of snaps) without fetching all Version objects.
-   * This is useful during export to quickly get the version-history graph without blocking for long.
-   */
-  describe('multiple scopes - using FetchVersionHistory action', () => {
-    let anotherRemote: string;
+    let firstTagHash: string;
+    let remoteAfterExport: string;
     const getFirstTagFromRemote = () =>
       helper.command.catComponent(`${anotherRemote}/comp1@0.0.1`, helper.scopes.remotePath);
     const getVersionHistoryFromRemote = () =>
@@ -310,35 +275,56 @@ describe('bit lane multiple scopes', function () {
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.export();
 
-      // get the first tag hash to delete it
-      const firstTagHash = helper.command.catComponent('comp1').versions['0.0.1'];
-
-      // delete both the Version object and the VersionHistory object from the lane-scope (helper.scopes.remotePath)
-      const versionObjectPath = helper.general.getHashPathOfObject(firstTagHash);
-      helper.fs.deleteRemoteObject(versionObjectPath);
-
-      const versionHistory = getVersionHistoryFromRemote();
-      const versionHistoryPath = helper.general.getHashPathOfObject(versionHistory.hash);
-      helper.fs.deleteRemoteObject(versionHistoryPath);
-
-      // intermediate step: make sure both are missing
-      // catComponent throws when Version object is missing
-      expect(getFirstTagFromRemote).to.throw();
-      // catVersionHistory returns empty versions array when VersionHistory object is missing
-      const emptyVersionHistory = getVersionHistoryFromRemote();
-      expect(emptyVersionHistory.versions).to.have.lengthOf(0);
-
-      helper.command.runAction(FetchVersionHistory.name, helper.scopes.remote, { ids: [`${anotherRemote}/comp1`] });
+      firstTagHash = helper.command.catComponent('comp1').versions['0.0.1'];
+      remoteAfterExport = helper.scopeHelper.cloneRemoteScope();
     });
-    it('the remote should have the VersionHistory object with populated versions', () => {
-      const versionHistory = getVersionHistoryFromRemote();
-      expect(versionHistory).to.have.property('versions');
-      // should have at least 3 versions: 0.0.1, 0.0.2 (tags), and the snap on the lane
-      expect(versionHistory.versions.length).to.be.greaterThan(0);
+
+    describe('using the FetchMissingHistory action', () => {
+      before(() => {
+        helper.scopeHelper.getClonedRemoteScope(remoteAfterExport);
+        // currently, the objects from remote2 are in remote. so simulate a case where it's missing.
+        helper.fs.deleteRemoteObject(helper.general.getHashPathOfObject(firstTagHash));
+        // an intermediate step. make sure the object is missing.
+        expect(getFirstTagFromRemote).to.throw();
+
+        helper.command.runAction(FetchMissingHistory.name, helper.scopes.remote, { ids: [`${anotherRemote}/comp1`] });
+      });
+      it('the remote should have the history of a component from the other remote', () => {
+        expect(getFirstTagFromRemote).to.not.throw();
+      });
     });
-    it('the remote should NOT have the Version object (only VersionHistory was fetched)', () => {
-      // This proves FetchVersionHistory only fetches the VersionHistory, not all Version objects
-      expect(getFirstTagFromRemote).to.throw();
+
+    /**
+     * FetchVersionHistory is a lightweight alternative to FetchMissingHistory.
+     * It only fetches the VersionHistory object (the graph of snaps) without fetching all Version objects.
+     * This is useful during export to quickly get the version-history graph without blocking for long.
+     */
+    describe('using the FetchVersionHistory action', () => {
+      before(() => {
+        helper.scopeHelper.getClonedRemoteScope(remoteAfterExport);
+        // delete both the Version object and the VersionHistory object from the lane-scope
+        helper.fs.deleteRemoteObject(helper.general.getHashPathOfObject(firstTagHash));
+        const versionHistory = getVersionHistoryFromRemote();
+        helper.fs.deleteRemoteObject(helper.general.getHashPathOfObject(versionHistory.hash));
+
+        // intermediate step: make sure both are missing.
+        // catComponent throws when the Version object is missing; catVersionHistory returns an
+        // empty versions array when the VersionHistory object is missing.
+        expect(getFirstTagFromRemote).to.throw();
+        expect(getVersionHistoryFromRemote().versions).to.have.lengthOf(0);
+
+        helper.command.runAction(FetchVersionHistory.name, helper.scopes.remote, { ids: [`${anotherRemote}/comp1`] });
+      });
+      it('the remote should have the VersionHistory object with populated versions', () => {
+        const versionHistory = getVersionHistoryFromRemote();
+        expect(versionHistory).to.have.property('versions');
+        // should have at least 3 versions: 0.0.1, 0.0.2 (tags), and the snap on the lane
+        expect(versionHistory.versions.length).to.be.greaterThan(0);
+      });
+      it('the remote should NOT have the Version object (only VersionHistory was fetched)', () => {
+        // This proves FetchVersionHistory only fetches the VersionHistory, not all Version objects
+        expect(getFirstTagFromRemote).to.throw();
+      });
     });
   });
 

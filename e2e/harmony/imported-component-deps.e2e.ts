@@ -103,7 +103,7 @@ const isPositive = require('is-positive');
       helper.workspaceJsonc.setupDefault();
       helper.command.import(`${helper.scopes.remote}/comp1`);
     });
-    it('should install component dependencies from their respective models to the imported components', () => {
+    it('should not show the imported component as modified', () => {
       const diff = helper.command.diff();
       expect(diff).to.include('there are no modified components to diff');
     });
