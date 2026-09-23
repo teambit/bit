@@ -232,11 +232,17 @@ ${list}`);
 
   // heads of every component on every local lane, `updateDependents` included.
   const laneHeads: { component: ModelComponent; head: Ref }[] = [];
+  /** lane heads whose component object isn't here, so `keepUnexportedHistory` can't walk them */
+  const unattachedLaneHeads: string[] = [];
   lanes.forEach((lane) => {
     lane.toComponentIdsIncludeUpdateDependents().forEach((id) => {
       addRoot(id.version);
+      if (!id.version) return;
       const component = componentsById.get(id.toStringWithoutVersion());
-      if (component && id.version) laneHeads.push({ component, head: Ref.from(id.version) });
+      // without a component the tip would be rooted on its own and its chain left to the deletion
+      // pass, which is the wrong half to keep for a lane that was never exported.
+      if (component) laneHeads.push({ component, head: Ref.from(id.version) });
+      else unattachedLaneHeads.push(id.version);
     });
     // the lane's readme is pointed at separately and needn't be among the components above
     addRoot(lane.readmeComponent?.head);
@@ -272,7 +278,7 @@ ${list}`);
   const bareRoots = compact([...scope.stagedSnaps.getAll(), ...(await getStashedHashes(scope.path))]).map((hash) =>
     hash.toString()
   );
-  await keepAncestryOf(bareRoots);
+  await keepAncestryOf([...bareRoots, ...unattachedLaneHeads]);
 
   // a merge that hasn't been resolved yet. the incoming side may have been imported from one scope
   // in order to be exported onward to another, and it's the target's head that bounds what export

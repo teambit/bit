@@ -619,6 +619,43 @@ describe('collectGarbageInWorkspace', () => {
     });
   });
 
+  describe('with a lane component whose model object is missing', () => {
+    /** an unexported lane chain: parent -> tip, for a component with no ModelComponent here */
+    const ORPHAN = { parent: '1'.repeat(39) + 'c', tip: '1'.repeat(39) + 'd' };
+    let orphanSources: { [snap: string]: Source };
+
+    beforeEach(async () => {
+      await markAsExported();
+      orphanSources = {
+        parent: Source.from(Buffer.from('the contents of an orphan lane parent')),
+        tip: Source.from(Buffer.from('the contents of an orphan lane tip')),
+      };
+      const lane = Lane.create('orphan-lane', COMP_SCOPE);
+      lane.addComponent({
+        id: ComponentID.fromObject({ scope: COMP_SCOPE, name: 'no-model-here' }),
+        head: Ref.from(ORPHAN.tip),
+      });
+      const objects = [
+        lane,
+        buildVersion(ORPHAN.parent, orphanSources.parent, []),
+        buildVersion(ORPHAN.tip, orphanSources.tip, [ORPHAN.parent]),
+        ...Object.values(orphanSources),
+      ];
+      objects.forEach((object) => {
+        object.validateBeforePersist = false;
+      });
+      await scope.objects.writeObjectsToTheFS(objects);
+    });
+
+    it('should still walk its ancestry, which no remote can bring back', async () => {
+      await runGc();
+      expect(await objectExists(Ref.from(ORPHAN.tip))).to.be.true;
+      // the tip is rooted on its own; the parent is what proves the chain was followed
+      expect(await objectExists(Ref.from(ORPHAN.parent))).to.be.true;
+      expect(await objectExists(orphanSources.parent.hash())).to.be.true;
+    });
+  });
+
   describe('with a lane that has a readme', () => {
     const README_HASH = '4'.repeat(40);
     let readmeSource: Source;
