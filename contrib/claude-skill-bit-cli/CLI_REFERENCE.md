@@ -439,7 +439,7 @@ Flags: --path <path>, --objects, --override, --verbose, --json, --skip-dependenc
 initialize a Bit workspace in an existing project
 
 creates Bit configuration files in an existing project directory to start tracking components. if already a workspace, validates and repairs Bit files as needed. supports various reset options to recover from corrupted state or restart from scratch.
-Flags: --name <workspace-name>, --generator <env-id>, --standalone, --no-package-json, --reset, --reset-new, --reset-lane-new, --reset-hard, --reset-scope, --default-directory <default-directory>, --default-scope <default-scope>, --force, --bare [name], --shared <groupname>, --external-package-manager, --skip-interactive, --agent [type]
+Flags: --name <workspace-name>, --generator <env-id>, --standalone, --no-package-json, --reset, --reset-new, --reset-lane-new, --reset-hard, --reset-scope, --default-directory <default-directory>, --default-scope <default-scope>, --force, --bare [name], --shared <groupname>, --external-package-manager, --skip-interactive, --agent [type], --no-agent, --no-mcp
 
 ## bit install [packages...]
 
@@ -710,6 +710,18 @@ test and validate component patterns
 this command helps validating a pattern before using it in other commands. NOTE: always wrap the pattern with quotes to avoid collision with shell commands. depending on your shell, it might be single or double quotes. a pattern can be a simple component-id or component-name. e.g. 'ui/button'. a pattern can be used with wildcards for multiple component ids, e.g. 'org.scope/utils/**' or '**/utils/**' to capture all org/scopes. to enter multiple patterns, separate them by a comma, e.g. 'ui/_, lib/_' to exclude, use '!'. e.g. 'ui/**, !ui/button' the matching algorithm is from multimatch (@see https://github.com/sindresorhus/multimatch). to filter by a state or attribute, prefix the pattern with "$". e.g. '$deprecated', '$modified'. list of supported states: [new, modified, deprecated, deleted, internal, snappedOnMain, softTagged, codeModified, localOnly]. to filter by multi-params state/attribute, separate the params with ":", e.g. '$env:teambit.react/react'. list of supported multi-params states: [env]. to match a state and another criteria, use " AND " keyword. e.g. '$modified AND teambit.workspace/\*\* AND $env:teambit.react/react'.
 Flags: --json, --remote
 
+## bit pnpm [sub-command]
+
+adopt and maintain a raw pnpm workspace with Bit
+Flags: --json, --env <env-id>
+
+## bit pnpm sync
+
+discover pnpm workspace projects and synchronize them with Bit components
+
+tracks every project "pnpm-workspace.yaml" lists as a component, and the workspace root as the workspace-root component. package.json and the lockfile are tracked as source (trackAllFiles). safe to re-run: tracked projects keep their ids, new ones are added, and the ones that left the workspace are removed.
+Flags: --json, --env <env-id>
+
 ## bit recover <component-pattern>
 
 restore soft-deleted components
@@ -909,7 +921,7 @@ Flags: --json, --legacy, --remote, --browser, --compare
 create immutable component snapshots for development versions
 
 creates snapshots with hash-based versions for development and testing. snapshots are immutable and exportable. by default snaps only new and modified components. use for development iterations before creating semantic version tags. snapshots maintain component history and enable collaboration without formal releases.
-Flags: --message <message>, --unmodified, --unmerged, --build, --editor [editor], --skip-tests, --skip-tasks <string>, --skip-auto-snap, --disable-snap-pipeline, --ignore-build-errors, --loose, --rebuild-deps-graph, --no-lock-deps, --ignore-issues <issues>, --fail-fast
+Flags: --json, --message <message>, --unmodified, --unmerged, --build, --editor [editor], --skip-tests, --skip-tasks <string>, --skip-auto-snap, --disable-snap-pipeline, --ignore-build-errors, --loose, --rebuild-deps-graph, --no-lock-deps, --ignore-issues <issues>, --fail-fast
 
 ## bit start [component-pattern]
 

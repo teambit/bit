@@ -1872,6 +1872,48 @@
     "private": false
   },
   {
+    "name": "pnpm [sub-command]",
+    "alias": "",
+    "options": [
+      [
+        "j",
+        "json",
+        "return the synchronization result in JSON format"
+      ],
+      [
+        "",
+        "env <env-id>",
+        "the env of the projects with a build, test or lint script (default: teambit.envs/pnpm-workspace-env). the others get the empty env"
+      ]
+    ],
+    "description": "adopt and maintain a raw pnpm workspace with Bit",
+    "extendedDescription": "",
+    "group": "workspace-setup",
+    "private": false,
+    "commands": [
+      {
+        "name": "sync",
+        "alias": "",
+        "options": [
+          [
+            "j",
+            "json",
+            "return the synchronization result in JSON format"
+          ],
+          [
+            "",
+            "env <env-id>",
+            "the env of the projects with a build, test or lint script (default: teambit.envs/pnpm-workspace-env). the others get the empty env"
+          ]
+        ],
+        "description": "discover pnpm workspace projects and synchronize them with Bit components",
+        "extendedDescription": "tracks every project \"pnpm-workspace.yaml\" lists as a component, and the workspace root as the\nworkspace-root component. package.json and the lockfile are tracked as source (trackAllFiles).\nsafe to re-run: tracked projects keep their ids, new ones are added, and the ones that left the workspace are removed.",
+        "group": "workspace-setup",
+        "private": false
+      }
+    ]
+  },
+  {
     "name": "create <template-name> <component-names...>",
     "alias": "",
     "options": [
@@ -3677,6 +3719,11 @@
     "name": "snap [component-pattern]",
     "alias": "",
     "options": [
+      [
+        "j",
+        "json",
+        "return the snap result in JSON format"
+      ],
       [
         "m",
         "message <message>",
@@ -5525,6 +5572,16 @@
         "",
         "agent [type]",
         "create an AI agent instructions file. options: claude, cursor, copilot (default: AGENTS.md)"
+      ],
+      [
+        "",
+        "no-agent",
+        "do not create AI agent instructions"
+      ],
+      [
+        "",
+        "no-mcp",
+        "do not create a default Bit Cloud MCP configuration"
       ]
     ],
     "description": "initialize a Bit workspace in an existing project",

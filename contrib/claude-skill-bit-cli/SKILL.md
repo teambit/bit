@@ -108,6 +108,8 @@ remove <component-pattern> - untrack components from the workspace
 rename <current-name> <new-name> - change a component name
 
 Workspace & Project Setup
+pnpm [sub-command] - adopt and maintain a raw pnpm workspace with Bit
+Subcommands: sync
 new <template-name> <workspace-name> - create a new Bit workspace from a template
 init [path] - initialize a Bit workspace in an existing project
 clone <component-id> [dir] - create a workspace from its workspace-root component, with every component it lists
