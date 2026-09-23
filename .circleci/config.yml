@@ -139,6 +139,10 @@ commands:
             # skips one unless the skip is spelled out, and the set of packages that ask to build
             # changes with every dependency bump.
             pnpm config set --location=project strictDepBuilds false
+            # subscriptions-transport-ws is split in two: apollo-server-core asks for ^0.9.19
+            # while @teambit/graphql pins 0.9.18. Hoisted, that hands apollo-link-ws and
+            # @teambit/graphql separate physical copies, and WebSocketLink's
+            # `paramsOrClient instanceof SubscriptionClient` check then fails across them.
             pnpm config set --location=project --json overrides '{
               "uri-js": "npm:uri-js-replace",
               "cross-spawn@7": "^7.0.5",
@@ -149,7 +153,8 @@ commands:
               "ajv@6": "^6.12.6",
               "@teambit/semantics.entities.semantic-schema": "^0.0.99",
               "@pnpm/util.lex-comparator": "3.0.2",
-              "@pnpm/config.nerf-dart": "1.0.1"
+              "@pnpm/config.nerf-dart": "1.0.1",
+              "subscriptions-transport-ws@0.9": "^0.9.19"
             }'
             # Pin the release selected by setup_bit_version. Without the version, pnpm 12's default
             # 24-hour minimum release age can select an older Bit release instead of the latest one.

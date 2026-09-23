@@ -26,6 +26,7 @@ import { head, uniq } from 'lodash';
 import type { WorkerMain } from '@teambit/worker';
 import { WorkerAspect } from '@teambit/worker';
 import { ComponentID } from '@teambit/component-id';
+import { AsyncLocalStorage } from 'async_hooks';
 import type { EnvService } from './services';
 import type { Environment } from './environment';
 import { EnvsAspect } from './environments.aspect';
@@ -120,6 +121,8 @@ export class EnvsMain {
    * Ids of envs (not neccesrraly loaded successfully)
    */
   public envIds = new Set<string>();
+  /** set inside a `skipNotLoadedWarnings` scope. see that method. */
+  private notLoadedWarningsMuted = new AsyncLocalStorage<true>();
 
   static runtime = MainRuntime;
 
@@ -208,6 +211,32 @@ export class EnvsMain {
     this.failedToLoadExt.clear();
   }
 
+  /**
+   * run `fn` with the "env was not loaded" warnings muted.
+   *
+   * the workspace loads components in groups, and one of those groups holds components that are
+   * loaded only so they can be registered as the env of another component. the env of *those*
+   * components (the env-of-env) is scheduled only when the env component itself is one of the
+   * requested ids, so during that pass an unregistered env says nothing about whether it's
+   * installed - warning about it is a false positive. e.g. "bit show <comp>" used to report that
+   * the env of <comp>'s env "was not loaded (run bit install)" on a perfectly healthy workspace.
+   *
+   * this is a scope rather than a param because the warning is reached from many aspects that
+   * calculate the env during the load slot (tester, docs, pkg, compositions, dev-files), so muting
+   * a single call site only moves the warning to the next one. it is execution-local rather than a
+   * field because loads run concurrently (the graphql resolver fans ids out with Promise.all), and
+   * a shared flag would let one load mute an unrelated one and hide a genuinely missing env.
+   */
+  async skipNotLoadedWarnings<T>(fn: () => Promise<T>): Promise<T> {
+    // the promise is created inside run() so the whole execution of `fn` is within the scope.
+    // (assigned via `let` because some @types/node versions type `run` as returning void)
+    let promise!: Promise<T>;
+    this.notLoadedWarningsMuted.run(true, () => {
+      promise = fn();
+    });
+    return promise;
+  }
+
   getFailedToLoadEnvs() {
     const failedToLoadEnvs = Array.from(this.failedToLoadEnvs);
     // Add all extensions which are also envs
@@ -240,9 +269,15 @@ export class EnvsMain {
       'teambit.envs/env',
       'teambit.mdx/readme',
       'teambit.harmony/bit-custom-aspect',
-      // note: empty-env is deliberately not listed here although it is a core aspect. components
-      // listed here are excluded from the env load-groups (their own env is assumed to be core as
-      // well), while empty-env's own env is an external env that must be loaded like any other.
+      // empty-env ships with bit like the envs above. leaving it out makes every isCoreEnv() guard
+      // treat it as an external env: `bit install` then adds its npm package to the env root and
+      // pulls the entire bit core into the workspace, and env-policy/dev-files lookups fetch the
+      // env component from the remote instead of using the loaded aspect.
+      // listing it was once reverted because, in the bit repo itself, loading the empty-env
+      // component alone (e.g. `bit show teambit.harmony/empty-env`) reports its own env
+      // (core-aspect-env) as not loaded. that is how the load-groups treat every core env here
+      // (react/node/aspect report the same) and the component still compiles and builds.
+      'teambit.harmony/empty-env',
     ];
   }
 
@@ -698,7 +733,7 @@ export class EnvsMain {
           this.envIds.add(envDef.id);
           return envDef;
         }
-        if (!opts.skipWarnings) {
+        if (!opts.skipWarnings && !this.notLoadedWarningsMuted.getStore()) {
           // Do not allow a non existing env
           this.printWarningIfFirstTime(
             matchedEntry.id.toString(),

@@ -34,6 +34,24 @@ export default class Lanes {
     return lane;
   }
 
+  /**
+   * remove the hidden `lane.updateDependents` entries, the dependents Ripple CI cascaded onto the lane.
+   * this is the one implementation of the removal: the cloud UI and "bit lane updates --undo" reach it
+   * through the graphql resolver, a file-system remote through `Fs`.
+   * only OMITTING `ids` removes all of them. an empty array removes nothing - it comes from a caller that
+   * resolved zero entries, and must not be read as "remove everything".
+   * returns true if the lane has changed.
+   */
+  async removeUpdateDependents(laneId: LaneId, ids?: ComponentID[]): Promise<boolean> {
+    const lane = await this.loadLane(laneId);
+    if (!lane) throw new LaneNotFound(laneId.scope, laneId.toString());
+    if (ids) lane.removeComponentsFromUpdateDependents(ids);
+    else lane.removeAllUpdateDependents();
+    if (!lane.hasChanged) return false;
+    await this.saveLane(lane, { laneHistoryMsg: 'remove update-dependents' });
+    return true;
+  }
+
   async getOrCreateLaneHistory(laneObject: Lane): Promise<LaneHistory> {
     const emptyLaneHistory = LaneHistory.fromLaneObject(laneObject);
     const existingLaneHistory = (await this.objects.load(emptyLaneHistory.hash(), false)) as LaneHistory;

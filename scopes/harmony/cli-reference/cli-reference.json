@@ -1494,6 +1494,43 @@
             "description": "the Ripple CI job ID to stop (optional — auto-detects from current lane)"
           }
         ]
+      },
+      {
+        "name": "simulate",
+        "alias": "",
+        "options": [
+          [
+            "",
+            "lane <lane>",
+            "lane ID to simulate, e.g. \"scope/lane-name\" (default: detected from .bitmap)"
+          ],
+          [
+            "",
+            "scopes <scopes>",
+            "comma-separated scopes to search for dependents in (default: the lane scope)"
+          ],
+          [
+            "",
+            "owners <owners>",
+            "comma-separated owners (organizations) to search for dependents in"
+          ],
+          [
+            "",
+            "exclude-scopes <scopes>",
+            "comma-separated scopes to exclude from the dependents search"
+          ],
+          [
+            "j",
+            "json",
+            "return the output as JSON"
+          ]
+        ],
+        "description": "start a Ripple CI simulation for a lane to reveal which dependents break (auto-detects current lane)",
+        "extendedDescription": "a simulation builds the dependents of the lane components against the lane heads on bit.cloud,\nwithout merging or publishing anything. it's the way to get dependent coverage for a change before the lane is merged.\nthe simulation runs against the lane as it exists on bit.cloud, so export the lane first.\nsimulations are heavy jobs and are billed as such. run them at review time, not on every change.\ndependents are searched in the lane's own scope by default. widen or narrow the search with --scopes, --owners and\n--exclude-scopes.\nfollow the job with \"bit ripple log\". once it finishes, \"bit ripple errors\" shows what broke. both take the job id\nprinted when the simulation starts.",
+        "group": "ungrouped",
+        "private": false,
+        "remoteOp": true,
+        "skipWorkspace": true
       }
     ]
   },
@@ -1817,6 +1854,11 @@
         "e",
         "env <string>",
         "set the component's environment. (overrides the env from variants if exists)"
+      ],
+      [
+        "",
+        "root",
+        "track the workspace root itself as a component, which owns every file no other component claims"
       ],
       [
         "j",
@@ -4612,6 +4654,28 @@
         ]
       },
       {
+        "name": "updates [lane-name]",
+        "alias": "",
+        "options": [
+          [
+            "",
+            "undo",
+            "remove the cascaded dependents from the lane, on the remote and locally"
+          ],
+          [
+            "j",
+            "json",
+            "return the results in json format"
+          ]
+        ],
+        "description": "show the dependents Ripple CI cascaded onto a lane, default to the current lane",
+        "extendedDescription": "after a lane is exported, Ripple CI may snap the dependents of the lane components against the new\nheads and add them to the lane as hidden \"update\" entries. they are part of the lane graph (Ripple CI builds them, merge\nrefreshes them) but stay hidden from the workspace (\"bit status\", .bitmap).\nthe entries are read from the remote lane. the local lane object is used only when the remote is unavailable.\nuse --undo to remove them from the lane, on the remote and locally, e.g. when the cascade is not wanted.",
+        "group": "collaborate",
+        "private": false,
+        "remoteOp": true,
+        "skipWorkspace": true
+      },
+      {
         "name": "merge <lane> [pattern]",
         "alias": "",
         "options": [
@@ -6379,6 +6443,43 @@
       {
         "name": "component-pattern",
         "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+      }
+    ]
+  },
+  {
+    "name": "clone <component-id> [dir]",
+    "alias": "",
+    "options": [
+      [
+        "l",
+        "lane <lane-id>",
+        "clone the workspace as it is on this lane (\"scope/name\"): it comes out on the lane, with the components at their heads there"
+      ],
+      [
+        "",
+        "remote <url>",
+        "url of the scope hosting the components, when it is neither on bit.cloud nor in the global remotes"
+      ],
+      [
+        "x",
+        "skip-dependency-installation",
+        "do not install the dependencies, and so do not compile, after the clone"
+      ]
+    ],
+    "description": "create a workspace from its workspace-root component, with every component it lists",
+    "extendedDescription": "the workspace-root component is the one tracked at a workspace root (\"bit add .\"). it versions the workspace's own files - workspace.jsonc, .bitmap, lockfile, configs - and this command makes a workspace out of it, the way \"git clone\" makes a working tree out of a repository: the root files land at the root, every component the root lists is imported into the directory it records, then the dependencies are installed.\nthe components come at their heads on main, or on the lane given with --lane. a version on the root id pins the root files only.\nruns outside a workspace. the directory must be empty or not exist, and defaults to the component name.",
+    "group": "workspace-setup",
+    "private": false,
+    "remoteOp": true,
+    "skipWorkspace": true,
+    "arguments": [
+      {
+        "name": "component-id",
+        "description": "the workspace-root component, with its scope. a version pins the root files"
+      },
+      {
+        "name": "dir",
+        "description": "where to create the workspace. defaults to the component name, must be empty or absent"
       }
     ]
   }

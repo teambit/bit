@@ -137,7 +137,11 @@ export default class Version extends BitObject {
   componentId?: ComponentID; // can help debugging errors when validating Version object
   bitVersion?: string;
   modified: Log[] = []; // currently mutation could happen as a result of either "squash" or "sign".
-  origin?: VersionOrigin; // for debugging purposes
+  // where this version was made: the component id it was snapped as, and the lane it was snapped on
+  // (absent on main). set on every snap and tag, see SnappingMain.addSource. it is read as data, not
+  // only as a debugging aid: Scope.isPartOfLaneHistoryOrMain tells a snap of a given lane from one of
+  // main by it, and ModelComponent.filterLeanLaneRefs keeps the refs a lean lane scope owns by it.
+  origin?: VersionOrigin;
   hidden?: boolean; // whether the version is hidden from commands such as "bit log", "bit blame". (needed for un-meaningful snaps, such as merged-lane snap prior to the tag)
   batchId?: string; // a shared UUID for all versions created in the same snap/tag operation
 

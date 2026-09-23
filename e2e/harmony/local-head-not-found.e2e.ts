@@ -1,3 +1,4 @@
+import path from 'path';
 import { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
@@ -43,6 +44,41 @@ describe('local head Version object is missing from scope', function () {
       expect(output).to.not.include('does not exist on graph');
       expect(output).to.not.include('ComponentNotFound');
       expect(output).to.match(/bit import .*--objects/);
+    });
+  });
+  describe('the head Version object is missing locally while the remote has it', () => {
+    // the state a fetch leaves behind when it completes while the remote is mid-export
+    let head: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      // objects only: the component is loaded from the scope, the way an env or an aspect is
+      helper.command.importComponent('comp1', '--objects');
+      head = helper.command.getHead(`${helper.scopes.remote}/comp1`);
+      helper.fs.deleteObject(helper.general.getHashPathOfObject(head));
+    });
+    it('should fetch the missing Version object rather than fail', () => {
+      const output = helper.command.showComponent(`${helper.scopes.remote}/comp1`);
+      expect(output).to.have.string('comp1@0.0.1');
+    });
+    it('should write the fetched Version object to the local scope', () => {
+      const objectPath = path.join(helper.scopes.localPath, '.bit/objects', helper.general.getHashPathOfObject(head));
+      expect(objectPath).to.be.a.file();
+    });
+  });
+  describe('bit envs with a component on a core env', () => {
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.fixtures.populateComponents(1, false);
+    });
+    it('should not fetch the core env component into the local scope, it ships with bit', () => {
+      const output = helper.command.envs();
+      expect(output).to.have.string('teambit.harmony/node');
+      expect(() => helper.command.catComponent('teambit.harmony/node')).to.throw();
     });
   });
 });

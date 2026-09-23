@@ -176,6 +176,8 @@ $inline-code-font: 'JetBrains Mono', ui-monospace, monospace;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  height: var(--component-header-height, 44px);
+  box-sizing: border-box;
   padding: 12px 20px;
   background: $inline-surface-color;
   border-bottom: 1px solid $inline-border-color;
