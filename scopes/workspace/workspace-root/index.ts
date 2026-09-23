@@ -4,6 +4,7 @@ export type { WorkspaceRootData } from './workspace-root-data';
 export type { CloneOptions, CloneResult } from './clone';
 export {
   findWorkspaceRootMap,
+  isPnpmWorkspaceRoot,
   isWorkspaceRootComponent,
   readWorkspaceRoot,
   writeWorkspaceRoot,

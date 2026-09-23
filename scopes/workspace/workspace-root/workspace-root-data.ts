@@ -1,3 +1,5 @@
+import fs from 'fs-extra';
+import path from 'path';
 import { ComponentID } from '@teambit/component-id';
 import type { BitMap, ComponentMap, VersionedBitmapEntry } from '@teambit/legacy.bit-map';
 import { isWorkspaceMapFile, readVersionedBitmapEntries } from '@teambit/legacy.bit-map';
@@ -25,6 +27,16 @@ export type WorkspaceRootData = {
    */
   root?: string;
 };
+
+export const PNPM_WORKSPACE_MANIFEST = 'pnpm-workspace.yaml';
+
+/**
+ * a workspace whose root component is a pnpm workspace. pnpm installs it from the packages' own
+ * manifests, so bit neither installs it nor writes dependencies into the root package.json.
+ */
+export function isPnpmWorkspaceRoot(workspacePath: string, bitMap: BitMap): boolean {
+  return Boolean(findWorkspaceRootMap(bitMap)) && fs.existsSync(path.join(workspacePath, PNPM_WORKSPACE_MANIFEST));
+}
 
 /**
  * the entry of the component that owns the workspace root (rootDir "."), if the workspace has one.
