@@ -58,8 +58,8 @@ export class MissingHandler {
       if (resolvedPackageData.componentId) {
         foundPackages.components.push(resolvedPackageData);
       } else {
-        const version = resolvedPackageData.versionUsedByDependent || resolvedPackageData.concreteVersion;
-        if (!version) throw new Error(`unable to find the version for a package ${packageName}`);
+        // a private package of a pnpm workspace may have no version. any version of it is the one there
+        const version = resolvedPackageData.versionUsedByDependent || resolvedPackageData.concreteVersion || '*';
         const packageWithVersion = {
           [resolvedPackageData.name]: version,
         };
