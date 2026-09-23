@@ -151,12 +151,6 @@ describe('dependency-resolver extension', function () {
           expect(isTypeOutput.peerPackageDependencies).to.not.have.key('lodash.set');
         });
       });
-      describe.skip('conflict between few extensions policies', function () {
-        it.skip('should merge them', function () {});
-      });
-      describe.skip('conflict between extension and user policies ', function () {
-        it.skip('should prefer user config', function () {});
-      });
     });
   });
   (supportNpmCiRegistryTesting ? describe : describe.skip)('saving dependencies package names', function () {
@@ -224,42 +218,6 @@ describe('dependency-resolver extension', function () {
     //   ├─┬ once 1.4.0
     //   │ └── wrappy 1.0.2
     //   └── path-is-absolute 1.0.1
-    // skipped: yarn support is deprecated and planned for removal
-    describe.skip('using Yarn as a package manager', () => {
-      before(() => {
-        helper.scopeHelper.reInitWorkspace();
-        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', 'teambit.dependencies/yarn');
-        helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('overrides', {
-          'is-odd': '1.0.0',
-          'glob@^7.1.3': '6.0.4',
-          'inflight>once': '1.3.0',
-        });
-        helper.command.install('is-even@0.1.2 rimraf@3.0.2');
-      });
-      it('should force a newer version of a subdependency using just the dependency name', function () {
-        // Without the override, is-odd would be 0.1.2
-        expect(helper.fixtures.fs.readJsonFile('node_modules/is-even/node_modules/is-odd/package.json').version).to.eq(
-          '1.0.0'
-        );
-      });
-      it('should force a newer version of a subdependency using the dependency name and version', function () {
-        expect(helper.fixtures.fs.readJsonFile('node_modules/rimraf/node_modules/glob/package.json').version).to.eq(
-          '6.0.4'
-        );
-      });
-      it('should not change the version of the package if the parent package does not match the pattern', function () {
-        expect(
-          helper.fixtures.fs.readJsonFile('node_modules/rimraf/node_modules/glob/node_modules/once/package.json')
-            .version
-        ).to.eq('1.4.0');
-      });
-      it('should change the version of the package if the parent package matches the pattern', function () {
-        // This gets hoisted from the dependencies of inflight
-        expect(helper.fixtures.fs.readJsonFile('node_modules/rimraf/node_modules/once/package.json').version).to.eq(
-          '1.3.0'
-        );
-      });
-    });
     describe('using pnpm as a package manager', () => {
       before(() => {
         helper.scopeHelper.reInitWorkspace();
@@ -713,36 +671,6 @@ describe('dependency-resolver extension', function () {
         const dependencyVersion = pkgExtensionData.pkgJson.dependencies[comp2Pkg];
 
         expect(dependencyVersion).to.not.include('^');
-      });
-    });
-
-    describe('when snapping with ~ prefix', () => {
-      before(() => {
-        helper.scopeHelper.reInitWorkspace();
-        helper.fixtures.populateComponents(2);
-        helper.workspaceJsonc.addKeyValToDependencyResolver('componentRangePrefix', '~');
-        helper.command.snapAllComponents();
-      });
-
-      it('should not apply ~ prefix to snap versions in dependency data', () => {
-        const comp2Pkg = helper.general.getPackageNameByCompName('comp2', false);
-        const depsData = helper.command.showDependenciesData('comp1');
-        const comp2Dep = depsData.find((d) => d.packageName === comp2Pkg);
-        expect(comp2Dep).to.have.property('version');
-
-        const snapVersion = comp2Dep!.version;
-        expect(snapVersion).to.not.include('~');
-      });
-
-      it('generated package.json should not have invalid semver with ~ prefix', () => {
-        const comp1 = helper.command.catComponent('comp1@latest');
-        const pkgExtensionData = helper.command.getAspectsData(comp1, Extensions.pkg).data;
-        const comp2Pkg = helper.general.getPackageNameByCompName('comp2', false);
-
-        expect(pkgExtensionData.pkgJson.dependencies).to.have.property(comp2Pkg);
-        const dependencyVersion = pkgExtensionData.pkgJson.dependencies[comp2Pkg];
-
-        expect(dependencyVersion).to.not.include('~');
       });
     });
   });

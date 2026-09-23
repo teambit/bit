@@ -1,10 +1,5 @@
-import chai, { expect } from 'chai';
-import chaiFs from 'chai-fs';
-import chaiString from 'chai-string';
+import { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(chaiFs);
-chai.use(chaiString);
 
 describe('updates from main and lane', function () {
   this.timeout(0);

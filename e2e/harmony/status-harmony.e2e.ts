@@ -29,8 +29,8 @@ describe('status command on Harmony', function () {
     before(() => {
       helper.scopeHelper.reInitWorkspace({ addRemoteScopeAsDefaultScope: false });
       helper.fixtures.populateComponents(1);
-      helper.command.status(); // to populate the cache
-      // as an intermediate step, make sure the missing-dist is not an issue.
+      // as an intermediate step, make sure the missing-dist is not an issue. (this runs bit status,
+      // which also populates the cache.)
       helper.command.expectStatusToNotHaveIssue(IssuesClasses.MissingDists.name);
       const distDir = 'node_modules/@my-scope/comp1/dist';
       const distDirInBitRoots = 'node_modules/.bit_roots/teambit.harmony_node/node_modules/@my-scope/comp1/dist';
@@ -54,8 +54,8 @@ describe('status command on Harmony', function () {
     before(() => {
       helper.scopeHelper.reInitWorkspace({ addRemoteScopeAsDefaultScope: false });
       helper.fixtures.populateComponents(1);
-      helper.command.status(); // to populate the cache
-      // as an intermediate step, make sure the missing-links is not an issue.
+      // as an intermediate step, make sure the missing-links is not an issue. (this runs bit status,
+      // which also populates the cache.)
       helper.command.expectStatusToNotHaveIssue(IssuesClasses.MissingLinksFromNodeModulesToSrc.name);
       const pkgDir = 'node_modules/@my-scope/comp1';
       helper.fs.deletePath(pkgDir);

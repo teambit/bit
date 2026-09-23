@@ -1,8 +1,5 @@
-import chai, { expect } from 'chai';
-import chaiFs from 'chai-fs';
+import { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
-
-chai.use(chaiFs);
 
 describe('test command on Harmony', function () {
   this.timeout(0);

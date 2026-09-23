@@ -1,8 +1,5 @@
-import chai, { expect } from 'chai';
-import path from 'path';
+import { expect } from 'chai';
 import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
-import chaiFs from 'chai-fs';
-chai.use(chaiFs);
 
 describe('merge lanes - diverge functionality', function () {
   this.timeout(0);
@@ -108,35 +105,6 @@ describe('merge lanes - diverge functionality', function () {
     });
   });
 
-  describe('getting new files when lane is diverge from another lane', () => {
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.fixtures.populateComponents(1);
-      helper.command.tagAllWithoutBuild();
-      helper.command.export();
-      helper.command.createLane('lane-a');
-      helper.fixtures.populateComponents(1, false, 'version2');
-      helper.command.snapComponentWithoutBuild('comp1');
-      helper.command.export();
-      helper.command.createLane('lane-b');
-      helper.fixtures.populateComponents(1, false, 'version3');
-      helper.command.snapComponentWithoutBuild('comp1');
-      helper.command.export();
-      helper.command.switchLocalLane('lane-a');
-      helper.fs.outputFile('comp1/new-file.ts');
-      helper.command.snapComponentWithoutBuild('comp1');
-      helper.command.export();
-
-      helper.scopeHelper.reInitWorkspace();
-      helper.scopeHelper.addRemoteScope();
-      helper.command.importLane('lane-b');
-      helper.command.mergeLane(`${helper.scopes.remote}/lane-a`);
-    });
-    it('should add the newly added file', () => {
-      expect(path.join(helper.scopes.localPath, helper.scopes.remote, 'comp1/new-file.ts')).to.be.a.file();
-    });
-  });
-
   describe('merge file changes from one lane to another', () => {
     let authorScope;
     let appOutputV2: string;
@@ -149,6 +117,8 @@ describe('merge lanes - diverge functionality', function () {
       authorScope = helper.scopeHelper.cloneWorkspace();
       helper.command.createLane('dev2');
       appOutputV2 = helper.fixtures.populateComponents(undefined, undefined, ' v2');
+      // a file that exists only on dev2, so the merge has to fetch its object from the remote lane
+      helper.fs.outputFile('comp1/new-file.ts');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
@@ -160,6 +130,9 @@ describe('merge lanes - diverge functionality', function () {
       helper.fs.outputFile('app.js', fixtures.appPrintComp1(helper.scopes.remote));
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal(appOutputV2);
+    });
+    it('should write a file that was added only on the merged remote lane', () => {
+      helper.fs.expectFileToExist('comp1/new-file.ts');
     });
   });
 });

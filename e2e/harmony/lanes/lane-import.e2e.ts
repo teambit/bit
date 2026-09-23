@@ -189,7 +189,9 @@ describe('bit lane import operations', function () {
     });
   });
 
-  describe('import from a lane to main', () => {
+  // importing a snap that lives on lane-a must be blocked from a workspace that isn't on lane-a.
+  // both contexts below start from the same exported lane, so it's built once.
+  describe('importing a lane-a snap from a workspace that is not on lane-a', () => {
     let headOnLaneA: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
@@ -198,33 +200,29 @@ describe('bit lane import operations', function () {
       helper.command.snapAllComponentsWithoutBuild();
       headOnLaneA = helper.command.getHeadOfLane('lane-a', 'comp1');
       helper.command.export();
-      helper.scopeHelper.reInitWorkspace();
-      helper.scopeHelper.addRemoteScope();
     });
-    it('should block the import', () => {
-      expect(() => helper.command.importComponent(`comp1@${headOnLaneA}`)).to.throw(
-        `unable to import the following component(s) as they belong to other lane(s)`
-      );
+    describe('when on main', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+      });
+      it('should block the import', () => {
+        expect(() => helper.command.importComponent(`comp1@${headOnLaneA}`)).to.throw(
+          `unable to import the following component(s) as they belong to other lane(s)`
+        );
+      });
     });
-  });
-
-  describe('import from one lane to another directly when current lane does not have the component', () => {
-    let headOnLaneA: string;
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.command.createLane('lane-a');
-      helper.fixtures.populateComponents(1, false);
-      helper.command.snapAllComponentsWithoutBuild();
-      headOnLaneA = helper.command.getHeadOfLane('lane-a', 'comp1');
-      helper.command.export();
-      helper.scopeHelper.reInitWorkspace();
-      helper.scopeHelper.addRemoteScope();
-      helper.command.createLane('lane-b');
-    });
-    it('should block the import', () => {
-      expect(() => helper.command.importComponent(`comp1@${headOnLaneA}`)).to.throw(
-        `unable to import the following component(s) as they belong to other lane(s)`
-      );
+    describe('when on another lane that does not have the component', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.createLane('lane-b');
+      });
+      it('should block the import', () => {
+        expect(() => helper.command.importComponent(`comp1@${headOnLaneA}`)).to.throw(
+          `unable to import the following component(s) as they belong to other lane(s)`
+        );
+      });
     });
   });
 
