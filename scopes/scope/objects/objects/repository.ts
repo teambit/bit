@@ -22,6 +22,7 @@ import type { ObjectItem } from './object-list';
 import { ObjectList } from './object-list';
 import BitRawObject from './raw-object';
 import Ref from './ref';
+import { LiveObjects } from './live-objects';
 import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { getCacheOptionsForObjects, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { ScopeMeta, Lane, ModelComponent } from '../models';
@@ -29,6 +30,7 @@ import { ScopeMeta, Lane, ModelComponent } from '../models';
 type ContentTransformer = (content: Buffer) => Buffer;
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 const TRASH_DIR = 'trash';
+const MAX_COMPRESSED_SIZE_TO_CACHE = 100 * 1024; // don't cache big files (mainly artifacts) to prevent out-of-memory
 
 export default class Repository {
   objects: { [key: string]: BitObject } = {};
@@ -39,6 +41,7 @@ export default class Repository {
   scopePath: string;
   scopeIndex: ScopeIndex;
   protected cache: InMemoryCache<BitObject>;
+  private liveObjects = new LiveObjects();
   remoteLanes!: RemoteLanes;
   unmergedComponents!: UnmergedComponents;
   _persistMutex?: Mutex;
@@ -218,10 +221,10 @@ export default class Repository {
     // uncomment to debug the transformed objects by onRead
     // console.log('transformedContent load', ref.toString(), BitObject.parseSync(fileContents).getType());
     const { object: parsedObject, inflatedSize } = await BitObject.parseObjectWithSize(fileContents, objectPath);
-    const maxSizeToCache = 100 * 1024; // 100KB
-    if (compressedSize < maxSizeToCache) {
-      // don't cache big files (mainly artifacts) to prevent out-of-memory
+    if (compressedSize < MAX_COMPRESSED_SIZE_TO_CACHE) {
       this.setCache(parsedObject, inflatedSize);
+    } else {
+      this.liveObjects.set(ref.toString(), parsedObject, inflatedSize, false);
     }
     return parsedObject;
   }
@@ -456,26 +459,39 @@ export default class Repository {
    * `size` is the object's inflated content size (see `InMemoryCache.set`).
    */
   setCache(object: BitObject, size?: number) {
-    this.cache.set(object.hash().toString(), object, size);
+    const key = object.hash().toString();
+    this.cache.set(key, object, size);
+    this.liveObjects.set(key, object, size, true);
     return this;
   }
 
+  /**
+   * an object evicted from the cache is still returned as long as it's in use elsewhere (see `LiveObjects`).
+   */
   getCache(ref: Ref): BitObject | undefined {
-    return this.cache.get(ref.toString());
+    const key = ref.toString();
+    const cached = this.cache.get(key);
+    if (cached) return cached;
+    const live = this.liveObjects.get(key);
+    if (!live) return undefined;
+    if (live.cacheable) this.cache.set(key, live.object, live.size); // it's in use again
+    return live.object;
   }
 
   removeFromCache(ref: Ref) {
     this.cache.delete(ref.toString());
+    this.liveObjects.delete(ref.toString());
   }
 
   async clearCache() {
     logger.debug('repository.clearCache');
-    this.cache.deleteAll();
+    this.clearObjectsFromCache();
     await this.init();
   }
   clearObjectsFromCache() {
     logger.debug('repository.clearObjectsFromCache');
     this.cache.deleteAll();
+    this.liveObjects.clear();
   }
 
   backup(dirName?: string) {
@@ -697,8 +713,10 @@ export default class Repository {
     const options: ChownOptions = {};
     if (this.scopeJson.groupName) options.gid = await resolveGroupId(this.scopeJson.groupName);
     const hash = object.hash();
-    // update the cache. this also replaces the size-estimate of objects that were cached by `add()`.
+    // the written object is now the up-to-date one. this also replaces the size-estimate of objects that
+    // were cached by `add()`.
     if (this.cache.has(hash.toString())) this.cache.set(hash.toString(), object, inflatedSize);
+    this.liveObjects.set(hash.toString(), object, inflatedSize, contents.byteLength < MAX_COMPRESSED_SIZE_TO_CACHE);
     const objectPath = this.objectPath(hash);
     logger.trace(`repository._writeOne: ${objectPath}`);
     // Run hook to transform content pre persisting
