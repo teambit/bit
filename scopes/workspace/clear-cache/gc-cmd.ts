@@ -1,6 +1,14 @@
 import chalk from 'chalk';
 import type { Command, CommandOptions } from '@teambit/cli';
-import { arrowSymbol, formatHint, formatItem, formatSuccessSummary, formatTitle, joinSections } from '@teambit/cli';
+import {
+  arrowSymbol,
+  formatBytes,
+  formatHint,
+  formatItem,
+  formatSuccessSummary,
+  formatTitle,
+  joinSections,
+} from '@teambit/cli';
 import { BitError } from '@teambit/bit-error';
 import type { ClearCacheMain } from './clear-cache.main.runtime';
 import type { GcResult } from './workspace-garbage-collector';
@@ -14,13 +22,6 @@ export type GcCmdOpts = {
   verbose?: boolean;
   json?: boolean;
 };
-
-function formatBytes(bytes: number): string {
-  if (!bytes) return '0 B';
-  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
-  return `${(bytes / 1024 ** i).toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
-}
 
 export class GcCmd implements Command {
   name = 'gc';
@@ -105,12 +106,8 @@ keeps all history, since there the scope is the source of truth rather than a ca
 
   private formatResult(result: GcResult): string {
     // with --backup the objects are only moved aside, so nothing is freed until the backup
-    // directory is removed. saying otherwise would contradict the hint printed right below. the
-    // stray temp files are deleted either way, so their bytes are freed in both modes.
-    //
-    // this asks what was requested rather than where objects landed: a dry run has no backup
-    // directory, and reading that as "not a backup" would preview a saving the real run wouldn't
-    // make.
+    // directory is removed. the stray temp files are deleted either way. what was requested is
+    // asked rather than `backupDir`, which a dry run never has.
     const backedUp = result.backup;
     const freedSize = (backedUp ? 0 : result.deletedSize) + result.strayFilesSize;
     const sizeAfter = result.totalSize - freedSize;
@@ -170,8 +167,7 @@ keeps all history, since there the scope is the source of truth rather than a ca
         formatHint(`objects were moved to ${result.backupDir}. no disk space was freed until it is removed.`),
         formatHint('run "bit gc --restore" to bring them back')
       );
-    }
-    if (!result.backupDir && result.backupDirSize) {
+    } else if (result.backupDirSize) {
       hints.push(
         formatHint('run "bit gc --restore" to bring the backed-up objects back, or remove that directory to free it')
       );

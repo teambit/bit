@@ -166,10 +166,7 @@ export class RemoteLanes {
     // `dot: true` because a scope or lane name may start with a dot, and glob skips those by
     // default. missing one here would let the collector delete a head it must keep. that also
     // sweeps up whatever the filesystem leaves lying around, hence `nodir` and the rescue below.
-    const matches = await glob(path.join('*', '*'), { cwd: this.basePath, dot: true, nodir: true });
-    const laneIds = matches
-      .map((match) => match.split(path.sep))
-      .map(([head, ...tail]) => LaneId.from(tail.join('/'), head));
+    const laneIds = await this.listLaneFiles({ dot: true, nodir: true });
     const refsPerComponent = new Map<string, Ref[]>();
     await pMapSeries(laneIds, async (laneId) => {
       let laneComponents: LaneComponent[];
@@ -194,13 +191,15 @@ export class RemoteLanes {
   }
 
   async getAllRemoteLaneIds(): Promise<LaneId[]> {
-    const matches = await glob(path.join('*', '*'), { cwd: this.basePath });
+    const laneIds = await this.listLaneFiles();
+    return laneIds.filter((remoteLaneId) => !remoteLaneId.isDefault() && remoteLaneId.name !== PREVIOUS_DEFAULT_LANE);
+  }
+
+  private async listLaneFiles(globOptions: { dot?: boolean; nodir?: boolean } = {}): Promise<LaneId[]> {
+    const matches = await glob(path.join('*', '*'), { cwd: this.basePath, ...globOptions });
     // in the future, lane-name might have slashes, so until the first slash is the scope.
     // the rest are the name
-    return matches
-      .map((match) => match.split(path.sep))
-      .map(([head, ...tail]) => LaneId.from(tail.join('/'), head))
-      .filter((remoteLaneId) => !remoteLaneId.isDefault() && remoteLaneId.name !== PREVIOUS_DEFAULT_LANE);
+    return matches.map((match) => match.split(path.sep)).map(([head, ...tail]) => LaneId.from(tail.join('/'), head));
   }
 
   async getAllRemoteLaneIdsOfScope(scopeName: string): Promise<LaneId[]> {

@@ -38,9 +38,6 @@ const RECENT_WRITE_MARGIN_MS = 5 * 60 * 1000;
  */
 const STASH_DIR = 'stash';
 
-/** where `bit lane remove` and a few recovery paths put objects they may need to bring back */
-const TRASH_DIR = 'trash';
-
 export type WorkspaceGcOptions = {
   dryRun?: boolean;
   verbose?: boolean;
@@ -57,6 +54,9 @@ export type WorkspaceGcOptions = {
 };
 
 type StrayTempFiles = { count: number; size: number };
+
+/** a head to walk back from, along with the component it belongs to */
+type ComponentHead = { component: ModelComponent; head?: Ref };
 
 export type GcResult = {
   dryRun: boolean;
@@ -117,12 +117,12 @@ export async function collectGarbageInWorkspace(
   // the same reason the backup directory is: they sit inside the scope and weigh what they weigh,
   // and a report that leaves them out has the scope shrinking while the disk does not. gc frees
   // none of the three, so they stay on both sides of the before/after.
-  const [backupDirSize, retainedDirsSize] = await Promise.all([
+  const [backupDirSize, trashSize, stashSize] = await Promise.all([
     getDirSize(path.join(scope.path, DELETED_OBJECTS_DIR)),
-    Promise.all([getDirSize(path.join(scope.path, TRASH_DIR)), getDirSize(path.join(scope.path, STASH_DIR))]).then(
-      (sizes) => sizes.reduce((sum, size) => sum + size, 0)
-    ),
+    getDirSize(repo.getTrashDir()),
+    getDirSize(path.join(scope.path, STASH_DIR)),
   ]);
+  const retainedDirsSize = trashSize + stashSize;
 
   logger.debug(`gc, classifying the objects of ${scope.name}`);
   const { objects: allObjects, unreadable } = await repo.listObjectsWithType();
@@ -139,7 +139,7 @@ delete them and run gc again:
 ${list}`);
   }
 
-  const versionSizes = new Map<string, number>();
+  const versionHashes = new Set<string>();
   const refsByType = new Map<string, Ref[]>();
   const recentlyWrittenVersions: string[] = [];
   const settledBefore = startedAt - RECENT_WRITE_MARGIN_MS;
@@ -147,7 +147,7 @@ ${list}`);
   allObjects.forEach(({ ref, type, size, mtimeMs }) => {
     totalSize += size;
     if (type === Version.name) {
-      versionSizes.set(ref.toString(), size);
+      versionHashes.add(ref.toString());
       if (mtimeMs > settledBefore) recentlyWrittenVersions.push(ref.toString());
     }
     const existing = refsByType.get(type);
@@ -166,8 +166,15 @@ ${list}`);
   const addRoot = (ref?: Ref | string | null) => {
     if (!ref) return;
     const hash = ref.toString();
-    if (versionSizes.has(hash)) rootVersions.add(hash);
+    if (versionHashes.has(hash)) rootVersions.add(hash);
   };
+  /** `addRoot`, reporting whether the hash is a root only as of this call - i.e. one still to walk */
+  const addNewRoot = (hash: string): boolean => {
+    if (rootVersions.has(hash)) return false;
+    addRoot(hash);
+    return rootVersions.has(hash);
+  };
+  const componentKey = (component: ModelComponent) => component.toComponentId().toStringWithoutVersion();
 
   const loadObjectsOfType = async <T>(type: string): Promise<T[]> => {
     const refs = refsByType.get(type) || [];
@@ -182,13 +189,15 @@ ${list}`);
   // lane comes back empty-handed. the collector for bare scopes has always counted them; this one
   // has the same reason to.
   const lanes = [...liveLanes, ...(await getTrashedLanes(repo))];
-  const componentsById = new Map(
-    components.map((component) => [component.toComponentId().toStringWithoutVersion(), component])
-  );
+  const componentsById = new Map(components.map((component) => [componentKey(component), component]));
+  // every component object has just been loaded, so going back through the scope is only for the
+  // one it can't be matched to by id - a symlink, say.
+  const getComponent = async (id: ComponentID): Promise<ModelComponent | undefined> =>
+    componentsById.get(id.toStringWithoutVersion()) || scope.getModelComponentIfExist(id.changeVersion(undefined));
 
   // the head of every component. `bit log`, `bit status` and the diverge calculation all start
   // there, and it's what `VersionHistory` is repaired from when it turns out to be incomplete.
-  const detachedHeads: { component: ModelComponent; head: Ref }[] = [];
+  const detachedHeads: ComponentHead[] = [];
   components.forEach((component) => {
     addRoot(component.getHead());
     component.detachedHeads.getAllHeads().forEach((head) => {
@@ -202,9 +211,8 @@ ${list}`);
   });
 
   // the version each workspace component is checked out at - `bit status` diffs the working
-  // directory against it, so it's read on virtually every command.
-  /** where each workspace component is checked out, kept for the `--keep-versions` walk */
-  const checkedOutHeads: { component: ModelComponent; head: Ref }[] = [];
+  // directory against it, so it's read on virtually every command. kept for `--keep-versions` too.
+  const checkedOutHeads: ComponentHead[] = [];
   const workspaceComponents = compact(
     await pMapPool(
       workspaceIds,
@@ -213,7 +221,7 @@ ${list}`);
         // means a component object that is missing or unreadable can't take the version the
         // workspace is sitting on down with it. a tag resolves through the component below.
         addRoot(id.version);
-        const component = await scope.getModelComponentIfExist(id.changeVersion(undefined));
+        const component = await getComponent(id);
         if (!component) return null;
         // the head is the fallback for a version the component can't resolve - a lane snap, say,
         // which `addRoot(id.version)` above has already taken care of on its own.
@@ -226,13 +234,11 @@ ${list}`);
       { concurrency }
     )
   );
-  const workspaceComponentIds = new Set(
-    workspaceComponents.map((component) => component.toComponentId().toStringWithoutVersion())
-  );
+  const workspaceComponentIds = new Set(workspaceComponents.map(componentKey));
 
   // heads of every component on every local lane, `updateDependents` included.
-  const laneHeads: { component: ModelComponent; head: Ref }[] = [];
-  /** lane heads whose component object isn't here, so `keepUnexportedHistory` can't walk them */
+  const laneHeads: ComponentHead[] = [];
+  /** lane heads whose component object isn't here, so `keepHistoryOf` can't walk them */
   const unattachedLaneHeads: string[] = [];
   lanes.forEach((lane) => {
     lane.toComponentIdsIncludeUpdateDependents().forEach((id) => {
@@ -274,10 +280,8 @@ ${list}`);
   // the tip alone is not enough: export sends the whole chain up to what the remote already has,
   // and `bit stash load` reads the parent of the stashed snap as the base of its three-way merge.
   // they arrive as bare hashes with no component to resolve them against, so the ancestry is
-  // walked directly rather than through `keepUnexportedHistory`.
-  const bareRoots = compact([...scope.stagedSnaps.getAll(), ...(await getStashedHashes(scope.path))]).map((hash) =>
-    hash.toString()
-  );
+  // walked directly rather than through `keepHistoryOf`.
+  const bareRoots = [...scope.stagedSnaps.getAll(), ...(await getStashedHashes(scope.path))];
   await keepAncestryOf([...bareRoots, ...unattachedLaneHeads]);
 
   // a merge that hasn't been resolved yet. the incoming side may have been imported from one scope
@@ -297,7 +301,18 @@ ${list}`);
   ).map((hash) => hash.toString());
   await keepAncestryOf(unmergedRoots, { stopAtRemote: false });
 
-  await keepUnexportedHistory();
+  // snaps that were created here and not exported yet must be kept in full, not only their tip -
+  // export sends the entire chain up to what the remote already has. `staged-snaps` normally
+  // records them, but it's written per-snap and older workspaces predate it, so the chains are
+  // walked rather than trusted. a detached head is a tip like any other: its unexported parents are
+  // reachable from nowhere else.
+  //
+  // `getHeadRegardlessOfLane` is of no use here or below: `laneHeadLocal` is populated at runtime
+  // by whoever checked the lane out, and these components were loaded straight from the objects.
+  await keepHistoryOf(
+    [...components.map((component) => ({ component, head: component.getHead() })), ...laneHeads, ...detachedHeads],
+    { stopAtRemote: true }
+  );
 
   /**
    * a version written around the time this run started is one nobody may be pointing at yet: an
@@ -314,33 +329,27 @@ ${list}`);
    */
   recentlyWrittenVersions.forEach(addRoot);
 
-  if (keepVersions > 0) await keepRecentVersions();
+  // `--keep-versions N`. counted back from where the workspace actually sits, which is not always
+  // the head: the last N versions of a component checked out behind its head are not the head's.
+  // the head is kept regardless, so starting there as well would just double what N means. on a
+  // lane the recent history asked for is the lane's, hence its heads too.
+  if (keepVersions > 0) {
+    await keepHistoryOf(
+      [...checkedOutHeads, ...laneHeads.filter(({ component }) => workspaceComponentIds.has(componentKey(component)))],
+      { limit: keepVersions }
+    );
+  }
 
   logger.debug(`gc, ${rootVersions.size} root versions before resolving dependencies`);
-  await keepReferencedVersions();
+  const keep = await keepReferencedVersions();
   logger.debug(`gc, ${rootVersions.size} root versions in total`);
-
-  // expand each kept version into the objects it points at: its files, its build artifacts and its
-  // dependency-graph objects. deliberately not its parents - that's the history being pruned.
-  const keep = new Set<string>();
-  await pMapPool(
-    [...rootVersions],
-    async (hash) => {
-      const version = (await Ref.from(hash).load(repo)) as Version | undefined;
-      if (!version) return;
-      keep.add(hash);
-      version.refsWithOptions(false, true).forEach((ref) => keep.add(ref.toString()));
-    },
-    { concurrency }
-  );
 
   // everything that is neither a Version nor a Source is structural - components, lanes, version
   // histories, scope metadata. together they're a fraction of a percent of the scope and they're
   // what makes the rest of it navigable, so they're never candidates for deletion.
-  const refsToDelete: Ref[] = [];
-  /** the same refs, split out so the removal can take the versions first - see below */
+  // split by type so the removal can take the versions first - see below
   const versionRefsToDelete: Ref[] = [];
-  const versionHashesToDelete = new Set<string>();
+  const sourceRefsToDelete: Ref[] = [];
   const deletedByType: { [type: string]: { count: number; size: number } } = {};
   let deletedSize = 0;
   /**
@@ -356,11 +365,8 @@ ${list}`);
       recentlyWritten += 1;
       return;
     }
-    refsToDelete.push(ref);
-    if (type === Version.name) {
-      versionRefsToDelete.push(ref);
-      versionHashesToDelete.add(ref.toString());
-    }
+    if (type === Version.name) versionRefsToDelete.push(ref);
+    else sourceRefsToDelete.push(ref);
     deletedSize += size;
     if (!deletedByType[type]) deletedByType[type] = { count: 0, size: 0 };
     deletedByType[type].count += 1;
@@ -373,31 +379,30 @@ ${list}`);
 
   const strayFiles = await removeStrayTempFiles(repo.getPath(), dryRun);
 
-  if (!dryRun && refsToDelete.length) {
+  const deletedObjects = versionRefsToDelete.length + sourceRefsToDelete.length;
+  if (!dryRun && deletedObjects) {
     const remove = async (refs: Ref[]) => {
       if (!refs.length) return;
       if (backup) await repo.moveObjectsToDir(refs, DELETED_OBJECTS_DIR);
       else await repo.deleteObjectsFromFS(refs);
     };
-    logger.debug(`gc, ${backup ? 'moving' : 'deleting'} ${refsToDelete.length} objects`);
+    logger.debug(`gc, ${backup ? 'moving' : 'deleting'} ${deletedObjects} objects`);
     // versions first, and only then the files they point at - two passes, because each one deletes
     // concurrently and nothing here is transactional. a run that dies partway through, or a single
     // filesystem error, leaves whatever it had finished. this way that is a source with no version,
     // which the next run collects; the other way round it is a version whose files are gone, which
     // reads as fully cached, is never re-fetched and is never repaired.
     await remove(versionRefsToDelete);
-    await remove(refsToDelete.filter((ref) => !versionHashesToDelete.has(ref.toString())));
+    await remove(sourceRefsToDelete);
   }
 
   return {
     dryRun,
-    backupDir: backup && !dryRun && refsToDelete.length ? path.join(scope.path, DELETED_OBJECTS_DIR) : undefined,
+    backupDir: backup && !dryRun && deletedObjects ? path.join(scope.path, DELETED_OBJECTS_DIR) : undefined,
     backup,
     totalObjects: allObjects.length,
-    // the backup directory is inside the scope, so its bytes are part of what the scope weighs.
-    // leaving them out would report a scope that keeps shrinking while the disk doesn't.
     totalSize: totalSize + strayFiles.size + backupDirSize + retainedDirsSize,
-    deletedObjects: refsToDelete.length,
+    deletedObjects,
     deletedSize,
     deletedByType,
     keptVersions: rootVersions.size,
@@ -410,7 +415,7 @@ ${list}`);
   /**
    * walk back from a bare hash through `Version.parents`, keeping every ancestor still here.
    *
-   * this is what `keepUnexportedHistory` does for the heads it can attribute to a component. a
+   * this is what `keepHistoryOf` does for the heads it can attribute to a component. a
    * staged snap, a stash and an unmerged head are hashes on their own, so the chain is followed
    * directly - and stops at the same boundary, a snap the remote already has. past that point the
    * history is re-fetchable, which is the history this collector exists to prune.
@@ -423,7 +428,7 @@ ${list}`);
       if (seen.has(hash)) continue;
       seen.add(hash);
       // a hash we don't have marks the edge of what was ever fetched - nothing to keep or walk
-      if (!versionSizes.has(hash)) continue;
+      if (!versionHashes.has(hash)) continue;
       addRoot(hash);
       if (stopAtRemote && remoteRefs.has(hash)) continue;
       const version = (await Ref.from(hash).load(repo)) as Version | undefined;
@@ -433,29 +438,17 @@ ${list}`);
   }
 
   /**
-   * snaps that were created here and not exported yet must be kept in full, not only their tip -
-   * export sends the entire chain up to what the remote already has.
-   *
-   * this covers both the main head and every local-lane head. `staged-snaps` normally records
-   * them, but it's written per-snap and older workspaces predate it, so the chains are walked
-   * rather than trusted.
+   * keep the history behind each head, walked through its component. `stopAtRemote` ends each walk
+   * at what the remote already has, which is what makes it the unexported part; `limit` keeps only
+   * the first N versions, which the traversal returns head first.
    */
-  async function keepUnexportedHistory() {
-    const startingPoints = [
-      // `getHeadRegardlessOfLane` is not used here: `laneHeadLocal` is populated at runtime by
-      // whoever checked the lane out, and these components were loaded straight from the objects.
-      ...components.map((component) => ({ component, head: component.getHead() })),
-      ...laneHeads,
-      // a detached head is a tip like any other, and rooting it alone keeps only that snap. its
-      // unexported parents are reachable from nowhere else, so they need the same walk.
-      ...detachedHeads,
-    ];
+  async function keepHistoryOf(startingPoints: ComponentHead[], { stopAtRemote = false, limit = Infinity } = {}) {
     await pMapPool(
       startingPoints,
       async ({ component, head }) => {
         if (!head) return;
-        const remoteHeads = remoteRefsPerComponent.get(component.toComponentId().toStringWithoutVersion()) || [];
-        if (remoteHeads.some((remoteHead) => remoteHead.isEqual(head))) return; // nothing local
+        const remoteHeads = stopAtRemote ? remoteRefsPerComponent.get(componentKey(component)) || [] : undefined;
+        if (remoteHeads?.some((remoteHead) => remoteHead.isEqual(head))) return; // nothing local
         const versionsInfo = await getAllVersionsInfo({
           modelComponent: component,
           repo,
@@ -463,42 +456,7 @@ ${list}`);
           stopAt: remoteHeads,
           throws: false,
         });
-        versionsInfo.forEach((versionInfo) => addRoot(versionInfo.ref));
-      },
-      { concurrency }
-    );
-  }
-
-  /**
-   * `--keep-versions N`. the traversal returns the head first, so the first N are the most recent.
-   *
-   * every head a workspace component has is walked, not only its main one. on a lane, the recent
-   * history the user asked for is the lane's, and `getHeadRegardlessOfLane` can't find it here:
-   * `laneHeadLocal` is populated at runtime by whoever checked the lane out, while these components
-   * came straight from the objects.
-   */
-  async function keepRecentVersions() {
-    // counted back from where the workspace actually sits, which is not always the head. asking
-    // for the last N versions of a component checked out behind its head and getting the head's
-    // history instead is not the history that was asked for - and the head is kept regardless, so
-    // starting there as well would just double what N means.
-    const startingPoints = [
-      ...checkedOutHeads,
-      ...laneHeads.filter(({ component }) =>
-        workspaceComponentIds.has(component.toComponentId().toStringWithoutVersion())
-      ),
-    ];
-    await pMapPool(
-      startingPoints,
-      async ({ component, head }) => {
-        if (!head) return;
-        const versionsInfo = await getAllVersionsInfo({
-          modelComponent: component,
-          repo,
-          startFrom: head,
-          throws: false,
-        });
-        versionsInfo.slice(0, keepVersions).forEach((versionInfo) => addRoot(versionInfo.ref));
+        versionsInfo.slice(0, limit).forEach((versionInfo) => addRoot(versionInfo.ref));
       },
       { concurrency }
     );
@@ -512,8 +470,13 @@ ${list}`);
    * `flattenedDependencies` is already transitive, so one pass over it would be enough on its own.
    * the other two are not in anyone's flattened list though, so rooting one adds a version whose
    * own references nothing has accounted for - hence the loop, which runs until a pass adds none.
+   *
+   * each version is loaded once, here, so this is also where it's expanded into the objects it
+   * points at: its files, its build artifacts and its dependency-graph objects. deliberately not
+   * its parents - that's the history being pruned. returns the hashes of everything to keep.
    */
-  async function keepReferencedVersions() {
+  async function keepReferencedVersions(): Promise<Set<string>> {
+    const kept = new Set<string>();
     const seen = new Set<string>();
     let frontier = [...rootVersions];
     while (frontier.length) {
@@ -524,6 +487,8 @@ ${list}`);
         async (hash) => {
           const version = (await Ref.from(hash).load(repo)) as Version | undefined;
           if (!version) return;
+          kept.add(hash);
+          version.refsWithOptions(false, true).forEach((ref) => kept.add(ref.toString()));
           version.flattenedDependencies.forEach((dependency) => dependencies.add(dependency.toString()));
           // an env or aspect the version was built with. versions written by older bits record
           // these only here, so taking `flattenedDependencies` at its word would miss them.
@@ -532,10 +497,7 @@ ${list}`);
           // name main already had. the diverge calculation loads it before it can tell that it's
           // unrelated, so it has to be here. `refsWithOptions` doesn't report it.
           const unrelatedHead = version.unrelated?.head?.toString();
-          if (unrelatedHead && !rootVersions.has(unrelatedHead)) {
-            addRoot(unrelatedHead);
-            if (rootVersions.has(unrelatedHead)) added.push(unrelatedHead);
-          }
+          if (unrelatedHead && addNewRoot(unrelatedHead)) added.push(unrelatedHead);
         },
         { concurrency }
       );
@@ -546,18 +508,18 @@ ${list}`);
           const id = ComponentID.fromString(idStr);
           // a snap dependency names its version by hash, so it stands without the component
           // object. same as the checked-out ids: a missing model must not take it down with it.
-          const component = await scope.getModelComponentIfExist(id.changeVersion(undefined));
+          const component = await getComponent(id);
           const hashes = compact([id.version, component?.getRef(id.version as string)?.toString()]);
+          // only what is actually here and not walked yet is worth walking
           hashes.forEach((hash) => {
-            addRoot(hash);
-            // only what is actually here is worth walking, which is what `addRoot` decides
-            if (rootVersions.has(hash)) added.push(hash);
+            if (addNewRoot(hash)) added.push(hash);
           });
         },
         { concurrency }
       );
       frontier = added;
     }
+    return kept;
   }
 }
 

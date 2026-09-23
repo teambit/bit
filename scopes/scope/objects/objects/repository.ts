@@ -31,9 +31,11 @@ const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 const TRASH_DIR = 'trash';
 /**
  * how much of an object file to read when all that's needed is its header. the header holds the
- * type and is a few dozen bytes, so a single 4KB chunk always inflates to far more than enough.
+ * type and is a few dozen bytes, which 512 compressed bytes always cover - and every byte past it
+ * is inflated for nothing (4KB inflates ten times as much, across every object in the scope). a
+ * chunk that falls short anyway is read in full.
  */
-const OBJECT_HEADER_CHUNK_SIZE = 4096;
+const OBJECT_HEADER_CHUNK_SIZE = 512;
 
 /** `mtimeMs` lets a caller tell an object that has been here a while from one just written */
 export type ObjectWithType = { ref: Ref; type: string; size: number; mtimeMs: number };
@@ -309,7 +311,7 @@ export default class Repository {
     const objectPath = this.objectPath(ref);
     try {
       const stat = await fs.stat(objectPath);
-      const type = (await this.readObjectType(objectPath, stat.size)) as string;
+      const type = await this.readObjectType(objectPath, stat.size);
       return { object: { ref, type, size: stat.size, mtimeMs: stat.mtimeMs } };
     } catch (err: any) {
       logger.warn(`Repository.listObjectsWithType, failed reading ${objectPath}. Error: ${err.message}`);

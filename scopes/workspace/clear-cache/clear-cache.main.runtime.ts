@@ -17,9 +17,9 @@ import { collectGarbageInWorkspace, restoreDeletedObjects } from './workspace-ga
  * avoid adding `workspace` / `scope` aspects as dependencies to this aspect.
  * the clear-cache command is often being used when the workspace/scope is not working properly.
  *
- * `bit gc` lives here for the same reason: it is the other command that prunes local state, and
- * keeping it here is what lets both of them reach the scope and the consumer lazily instead of
- * pulling the workspace and scope aspects into this graph.
+ * `bit gc` lives here because it is the other command that prunes local state, and it reaches the
+ * scope and the consumer lazily like the rest of this aspect. unlike `clear-cache` though, it isn't
+ * special-cased in `load-bit.ts`, so it runs with the full aspect graph loaded.
  */
 export class ClearCacheMain {
   async clearCache(): Promise<CacheClearResult> {

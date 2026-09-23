@@ -17,6 +17,7 @@ export {
   errorSymbol,
   bulletSymbol,
   arrowSymbol,
+  formatBytes,
   formatItem,
   formatSection,
   formatTitle,
