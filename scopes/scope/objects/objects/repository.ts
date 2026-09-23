@@ -708,21 +708,20 @@ export default class Repository {
    * this method doesn't write to scopeIndex. so using this method for ModelComponent or
    * Symlink makes the index outdated.
    */
-  async _writeOne(object: BitObject): Promise<boolean> {
+  async _writeOne(object: BitObject): Promise<void> {
     const { buffer: contents, inflatedSize } = await object.compressWithSize();
     const options: ChownOptions = {};
     if (this.scopeJson.groupName) options.gid = await resolveGroupId(this.scopeJson.groupName);
     const hash = object.hash();
-    // the written object is now the up-to-date one. this also replaces the size-estimate of objects that
-    // were cached by `add()`.
-    if (this.cache.has(hash.toString())) this.cache.set(hash.toString(), object, inflatedSize);
-    this.liveObjects.set(hash.toString(), object, inflatedSize, contents.byteLength < MAX_COMPRESSED_SIZE_TO_CACHE);
     const objectPath = this.objectPath(hash);
     logger.trace(`repository._writeOne: ${objectPath}`);
     // Run hook to transform content pre persisting
     const transformedContent = this.onPersist(contents);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return writeFile(objectPath, transformedContent, options);
+    await writeFile(objectPath, transformedContent, options);
+    // once written, the object is the up-to-date one. this also replaces the size-estimate of objects that
+    // were cached by `add()`.
+    if (this.cache.has(hash.toString())) this.cache.set(hash.toString(), object, inflatedSize);
+    this.liveObjects.set(hash.toString(), object, inflatedSize, contents.byteLength < MAX_COMPRESSED_SIZE_TO_CACHE);
   }
 
   async writeObjectsToPendingDir(objectList: ObjectList, pendingDir: PathOsBasedAbsolute) {

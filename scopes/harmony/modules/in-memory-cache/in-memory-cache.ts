@@ -37,7 +37,8 @@ export function getMaxSizeForComponents(): number {
  * applied only when configured explicitly.
  */
 export function getMaxSizeForObjects(): number | undefined {
-  return getPositiveNumberFromConfig(CFG_CACHE_MAX_ITEMS_OBJECTS);
+  const maxSize = getPositiveNumberFromConfig(CFG_CACHE_MAX_ITEMS_OBJECTS);
+  return maxSize && Math.ceil(maxSize);
 }
 
 /**
@@ -59,5 +60,5 @@ export function getCacheOptionsForObjects(): CacheOptions {
  */
 function getPositiveNumberFromConfig(key: string): number | undefined {
   const value = getNumberFromConfig(key);
-  return value && Number.isFinite(value) && value > 0 ? Math.ceil(value) : undefined;
+  return value && Number.isFinite(value) && value > 0 ? value : undefined;
 }
