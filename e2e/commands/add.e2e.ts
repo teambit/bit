@@ -5,6 +5,7 @@ import * as path from 'path';
 import { OutsideWorkspaceError } from '@teambit/workspace';
 import { statusInvalidComponentsMsg } from '@teambit/legacy.constants';
 import { MainFileIsDir, PathOutsideConsumer, VersionShouldBeRemoved } from '@teambit/tracker';
+import { InvalidName } from '@teambit/legacy-bit-id';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
 import assertArrays from 'chai-arrays';
@@ -71,6 +72,13 @@ describe('bit add command', function () {
       helper.fs.createFile('bar', 'foo2.js');
       const addCmd = () => helper.command.addComponent('bar', { n: 'test', i: 'jaja' });
       expect(addCmd).to.throw('please use either [id] or [namespace] to add a particular component');
+    });
+    // the name rules themselves are unit-tested in @teambit/legacy-bit-id (is-valid-id-chunk.spec). this
+    // guards the wiring: that an id given with -i is validated at all before it reaches the .bitmap.
+    it('Should throw InvalidName when the id given with -i is not a valid component name', () => {
+      helper.fs.createFile('bar', 'foo.js');
+      const addCmd = () => helper.command.addComponent('bar', { i: 'bar/fo.o' });
+      helper.general.expectToThrow(addCmd, new InvalidName('bar/fo.o'));
     });
     it('Define dynamic main file ', () => {
       const mainFileOs = path.normalize('{PARENT}/{PARENT}.js');

@@ -376,11 +376,10 @@ describe('merge lanes - edge cases and special scenarios', function () {
     });
   });
 
-  // the non-diverged variant of this (main not tagged again, so the merge is a fast-forward) asserted
-  // exactly the same two things, so only the diverged case is kept - it reaches the same file-removal
-  // through the harder three-way merge.
-  describe('when a file was deleted on the other lane but exist current and on the base and both lanes are diverged', () => {
-    let mergeOutput: string;
+  // one setup, two merge paths: while main is still at the common base the merge is a fast-forward
+  // (the lane version is applied as is), once main gets a new tag it's a three-way merge.
+  describe('when a file was deleted on the other lane but exist current and on the base', () => {
+    let beforeMerge: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1, false);
@@ -392,15 +391,34 @@ describe('merge lanes - edge cases and special scenarios', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
       helper.command.switchLocalLane('main', '-x');
-      helper.command.tagAllWithoutBuild('--unmodified');
-      helper.command.export();
-      mergeOutput = helper.command.mergeLane('lane-a', '-x --no-auto-snap --no-squash');
+      beforeMerge = helper.scopeHelper.cloneWorkspace();
     });
-    it('should indicate that this file was removed in the output', () => {
-      expect(mergeOutput).to.have.string('removed foo.js');
+    describe('when main is still at the base (fast-forward)', () => {
+      let mergeOutput: string;
+      before(() => {
+        mergeOutput = helper.command.mergeLane('lane-a', '-x --no-auto-snap');
+      });
+      it('should indicate that this file was removed in the output', () => {
+        expect(mergeOutput).to.have.string('removed foo.js');
+      });
+      it('should remove this file from the filesystem ', () => {
+        expect(path.join(helper.scopes.localPath, 'comp1/foo.js')).to.not.be.a.path();
+      });
     });
-    it('should remove this file from the filesystem ', () => {
-      expect(path.join(helper.scopes.localPath, 'comp1/foo.js')).to.not.be.a.path();
+    describe('when both lanes are diverged', () => {
+      let mergeOutput: string;
+      before(() => {
+        helper.scopeHelper.getClonedWorkspace(beforeMerge);
+        helper.command.tagAllWithoutBuild('--unmodified');
+        helper.command.export();
+        mergeOutput = helper.command.mergeLane('lane-a', '-x --no-auto-snap --no-squash');
+      });
+      it('should indicate that this file was removed in the output', () => {
+        expect(mergeOutput).to.have.string('removed foo.js');
+      });
+      it('should remove this file from the filesystem ', () => {
+        expect(path.join(helper.scopes.localPath, 'comp1/foo.js')).to.not.be.a.path();
+      });
     });
   });
 });

@@ -300,6 +300,9 @@ describe('bit checkout command', function () {
         const fileContent = fs.readFileSync(path.join(helper.scopes.localPath, 'bar/foo.js')).toString();
         expect(fileContent.endsWith('\n')).to.be.true;
       });
+      it('should update bitmap with the specified version', () => {
+        expect(helper.bitMap.read()['bar/foo'].version).to.equal('0.0.1');
+      });
       it('should show the component as modified', () => {
         const statusOutput = helper.command.runCmd('bit status');
         expect(statusOutput).to.have.string('modified components');
@@ -329,6 +332,9 @@ describe('bit checkout command', function () {
       it('should rewrite the file according to the used version', () => {
         const fileContent = fs.readFileSync(path.join(helper.scopes.localPath, 'bar/foo.js')).toString();
         expect(fileContent).to.be.equal(`${barFooV1}${EOL}`);
+      });
+      it('should update bitmap with the used version', () => {
+        expect(helper.bitMap.read()['bar/foo'].version).to.equal('0.0.1');
       });
       it('should not show the component as modified', () => {
         const statusOutput = helper.command.runCmd('bit status');

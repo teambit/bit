@@ -434,6 +434,20 @@ describe('run bit init', function () {
         expect(output).to.have.string('initialized a bit workspace');
       });
 
+      // each flag is its own key in the bypass guard of handleInteractiveMode, read off an untyped flags
+      // record, so a renamed option would silently fall through to the interactive prompt
+      it('should skip interactive mode with --external-package-manager and with --standalone', () => {
+        ['--external-package-manager', '--standalone'].forEach((flag, index) => {
+          if (index > 0) {
+            helper.scopeHelper.cleanWorkspace();
+            helper.git.initNewGitRepo();
+          }
+          const output = helper.command.init(flag, true);
+          expect(output, flag).to.not.have.string('Interactive setup for existing Git repository');
+          expect(output, flag).to.have.string('initialized a bit workspace');
+        });
+      });
+
       it('should run interactive mode by default in git repository', () => {
         // First verify we have a clean git repo and no existing workspace
         const gitDir = path.join(helper.scopes.localPath, '.git');

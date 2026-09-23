@@ -117,6 +117,8 @@ describe('merge lanes - diverge functionality', function () {
       authorScope = helper.scopeHelper.cloneWorkspace();
       helper.command.createLane('dev2');
       appOutputV2 = helper.fixtures.populateComponents(undefined, undefined, ' v2');
+      // a file that exists only on dev2, so the merge has to fetch its object from the remote lane
+      helper.fs.outputFile('comp1/new-file.ts');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
@@ -128,6 +130,9 @@ describe('merge lanes - diverge functionality', function () {
       helper.fs.outputFile('app.js', fixtures.appPrintComp1(helper.scopes.remote));
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal(appOutputV2);
+    });
+    it('should write a file that was added only on the merged remote lane', () => {
+      helper.fs.expectFileToExist('comp1/new-file.ts');
     });
   });
 });

@@ -115,6 +115,16 @@ describe('pattern command', function () {
       expect(result).to.include('found 3 components');
     });
 
+    // remote has its own negation handling on top of the shared pool filter: negated patterns are left out
+    // when deriving which scopes to fetch, and only then applied to the fetched ids
+    it('should support wildcard exclusion patterns from remote', () => {
+      const result = helper.command.pattern(`${scopeName}/**, !${scopeName}/utils/fs/*`, '--remote');
+      expect(result).to.include('utils/is/string');
+      expect(result).to.include('utils/is/type');
+      expect(result).to.not.include('utils/fs/read');
+      expect(result).to.include('found 2 components');
+    });
+
     it('should throw error when pattern does not include scope name', () => {
       expect(() => helper.command.pattern('invalid-pattern', '--remote')).to.throw(
         'when using --remote, the pattern must include the scope name'

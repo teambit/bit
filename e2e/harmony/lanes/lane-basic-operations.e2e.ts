@@ -17,18 +17,20 @@ describe('bit lane basic operations', function () {
   });
 
   describe('creating a new lane without any component', () => {
+    // the workspace's own default-scope (not a configured remote) is what the lane tracks here. the
+    // remote-as-default-scope case is what practically every other lane e2e sets up.
     before(() => {
-      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.reInitWorkspace({ addRemoteScopeAsDefaultScope: false });
       helper.command.createLane();
     });
     it('bit lane should show the active lane', () => {
       const output = helper.command.listLanes();
-      expect(output).to.have.string(`current lane - ${helper.scopes.remote}/dev`);
+      expect(output).to.have.string(`current lane - my-scope/dev`);
       expect(output).to.have.string('main');
     });
     it('should set the remote-scope to the default-scope and remote-name to the local-lane', () => {
       const laneData = helper.command.showOneLane('dev');
-      expect(laneData).to.have.string(`${helper.scopes.remote}${LANE_REMOTE_DELIMITER}dev`);
+      expect(laneData).to.have.string(`my-scope${LANE_REMOTE_DELIMITER}dev`);
     });
     describe('changing the tracking data', () => {
       let output: string;
@@ -37,7 +39,7 @@ describe('bit lane basic operations', function () {
       });
       it('should output the changes', () => {
         expect(removeChalkCharacters(output)).to.have.string(
-          `the remote-scope of dev has been changed from ${helper.scopes.remote} to my-remote`
+          `the remote-scope of dev has been changed from my-scope to my-remote`
         );
       });
       it('bit lane show should show the changed values', () => {

@@ -138,6 +138,9 @@ describe('harmony extension config', function () {
           it('should have version for extension in the component models when tagging the extension before component', () => {
             expect(componentModel.extensions[0].extensionId.version).to.equal('0.0.1');
           });
+          it('should not insert the pre-tagged extension into the component dev deps', () => {
+            expect(componentModel.devDependencies).to.be.of.length(0);
+          });
         });
         describe('exporting component with extension', () => {
           let localBeforeExport;

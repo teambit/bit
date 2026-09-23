@@ -23,6 +23,8 @@ describe('bit checkout command when on a lane', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
       originalWs = helper.scopeHelper.cloneWorkspace();
+      // a real change on comp2, so a checkout that writes files before aborting shows on the filesystem
+      helper.fs.appendFile('comp2/index.js', '\n// remote-head-change');
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       comp2RemoteHead = helper.command.getHeadOfLane('dev', 'comp2');
       helper.command.export();
@@ -41,6 +43,10 @@ describe('bit checkout command when on a lane', function () {
     it('should not update the non-merge-pending component to the latest', () => {
       const bitmap = helper.bitMap.read();
       expect(bitmap.comp2.version).to.not.equal(comp2RemoteHead);
+    });
+    // .bitmap is persisted only at the end of a command, so it alone can't catch files written before the abort
+    it('should not write the files of the non-merge-pending component', () => {
+      expect(helper.fs.readFile('comp2/index.js')).to.not.include('remote-head-change');
     });
   });
   describe('checkout head on main when some components are not available on main', () => {

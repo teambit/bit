@@ -15,10 +15,12 @@ describe('bit lane management', function () {
     helper.scopeHelper.destroy();
   });
 
-  describe('rename an exported lane', () => {
+  // created with an alias: the rename has to replace tracking data keyed by the alias, not the lane
+  // name. (a rename of a lane without an alias is covered by rename-lane.e2e.ts)
+  describe('rename an exported lane that has an alias', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.command.createLane('dev');
+      helper.command.createLane('dev', '--alias d');
       helper.fixtures.populateComponents(1);
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
@@ -32,6 +34,9 @@ describe('bit lane management', function () {
     it('should change the current lane', () => {
       const lanes = helper.command.listLanesParsed();
       expect(lanes.currentLane).to.equal('new-lane');
+    });
+    it('bit status should not throw', () => {
+      expect(() => helper.command.status()).to.not.throw();
     });
     // asserted on the file itself, not only through the CLI. kept before the export below, which
     // this describe performs inside an it
@@ -63,9 +68,10 @@ describe('bit lane management', function () {
       helper.command.snapAllComponentsWithoutBuild();
     });
 
-    it('bit lane --details should show the lanes and mark the current one', () => {
+    it('bit lane --details should show the lanes, mark the current one and list its components', () => {
       const output = helper.command.listLanes('--details');
       expect(output).to.have.string(`current lane - ${helper.scopes.remote}/dev`);
+      expect(output).to.have.string('comp1');
     });
 
     it('change-scope should throw InvalidScopeName for an invalid scope-name', () => {

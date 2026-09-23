@@ -29,6 +29,8 @@ describe('dynamic namespaces', function () {
     });
     it('should save the component correctly on the model', () => {
       expect(catComp.name).to.equal(componentName);
+      // the legacy "box" field would be prepended to the name when loaded, so the name check alone can't catch it
+      expect(catComp).to.not.have.property('box');
     });
     it('bit status should show the component as staged', () => {
       const statusOutput = helper.command.runCmd('bit status');
