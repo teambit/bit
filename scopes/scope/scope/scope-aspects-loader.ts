@@ -20,7 +20,6 @@ import type { Component, ComponentID, LoadAspectsOptions, ResolveAspectsOptions 
 import type { Logger } from '@teambit/logger';
 import type { EnvsMain } from '@teambit/envs';
 import type { NodeLinker } from '@teambit/dependency-resolver';
-import { BitError } from '@teambit/bit-error';
 import type { ScopeMain } from './scope.main.runtime';
 import type { ConfigStoreMain } from '@teambit/config-store';
 
@@ -253,9 +252,9 @@ needed-for: ${neededFor || '<unknown>'}`);
     const distDir = compiler?.distDir || DEFAULT_DIST_DIRNAME;
     const distExists = existsSync(join(capsule.path, distDir));
     if (distExists) return;
-    if (!compiler) {
-      throw new BitError(`unable to compile aspect/env ${component.id.toString()}, no compiler found`);
-    }
+    // an aspect whose env has no compiler, e.g. a JS env using the empty-env, runs as its source. the
+    // aspect-loader resolves its plugin files from the source then, see pluginFileResolver
+    if (!compiler) return;
 
     const compiledCode = (
       await Promise.all(

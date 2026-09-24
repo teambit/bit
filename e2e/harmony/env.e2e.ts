@@ -1,6 +1,8 @@
 import chai, { expect } from 'chai';
+import fs from 'fs-extra';
+import path from 'path';
 import { Extensions } from '@teambit/legacy.constants';
-import { Helper } from '@teambit/legacy.e2e-helper';
+import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 import { IssuesClasses } from '@teambit/component-issues';
 import chaiFs from 'chai-fs';
 import chaiString from 'chai-string';
@@ -180,3 +182,135 @@ describe('env command', function () {
     });
   });
 });
+
+/**
+ * the core empty-env provides nothing: no compiler, tester, linter or preview. an env written in plain
+ * JS can use it as its own env (env-of-env) - its source is its package, so nothing needs compiling -
+ * and components using that env should work end to end, including for consumers.
+ */
+(supportNpmCiRegistryTesting ? describe : describe.skip)(
+  'a JS env whose env is the core empty-env, used by JS components, end to end',
+  function () {
+    this.timeout(0);
+    const EMPTY_ENV = 'teambit.harmony/empty-env';
+    let helper: Helper;
+    let npmCiRegistry: NpmCiRegistry;
+    let appOutput: string;
+    let envId: string;
+    before(async () => {
+      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      npmCiRegistry = new NpmCiRegistry(helper);
+      await npmCiRegistry.init();
+      npmCiRegistry.configureCiInPackageJsonHarmony();
+      // the env contributes a package.json prop, which proves it was loaded and applied
+      helper.fs.outputFile(
+        'my-env/my-env.bit-env.js',
+        `class MyEnv {
+  constructor() {
+    this.name = 'my-env';
+  }
+  package() {
+    return () => ({ packageJsonProps: { main: '{main}.js', myEnvMarker: 'set-by-my-env' }, npmIgnore: [] });
+  }
+}
+module.exports.default = new MyEnv();
+`
+      );
+      helper.fs.outputFile('my-env/index.js', `module.exports = require('./my-env.bit-env');`);
+      helper.command.addComponent('my-env');
+      helper.command.setEnv('my-env', EMPTY_ENV);
+      envId = `${helper.scopes.remote}/my-env`;
+      // comp1 requires comp2 by its package name. nothing gets compiled.
+      appOutput = helper.fixtures.populateComponents(2, true, '', false);
+      helper.command.setEnv('comp1', envId);
+      helper.command.setEnv('comp2', envId);
+      helper.command.install();
+    });
+    after(() => {
+      npmCiRegistry.destroy();
+      helper.scopeHelper.destroy();
+    });
+    it('the env should use the empty-env and the components should use the env', () => {
+      expect(helper.env.getComponentEnv('my-env')).to.equal(EMPTY_ENV);
+      expect(helper.env.getComponentEnv('comp1')).to.equal(envId);
+    });
+    it('should apply the env to the components in the workspace', () => {
+      const pkgName = helper.general.getPackageNameByCompName('comp1');
+      const packageJson = helper.fs.readJsonFile(`node_modules/${pkgName}/package.json`);
+      expect(packageJson.myEnvMarker).to.equal('set-by-my-env');
+    });
+    it('should run in the workspace without compilation', () => {
+      expect(helper.command.runCmd('node app.js')).to.have.string(appOutput);
+    });
+    it('should have no component issues', () => {
+      helper.command.expectStatusToNotHaveIssues();
+    });
+    describe('tag, publish and export', () => {
+      before(() => {
+        helper.command.tagAllComponents();
+        helper.command.export();
+      });
+      it('should generate a package.json with the env props, main pointing to the source and the component deps', () => {
+        const capsule = helper.command.getCapsuleOfComponent('comp1@0.0.1');
+        const packageJson = fs.readJsonSync(path.join(capsule, 'package.json'));
+        expect(packageJson.main).to.equal('index.js');
+        expect(packageJson.myEnvMarker).to.equal('set-by-my-env');
+        expect(packageJson.dependencies).to.have.property(helper.general.getPackageNameByCompName('comp2'));
+      });
+      it('should work when installed as a package in a new workspace', () => {
+        helper.scopeHelper.reInitWorkspace();
+        const pkgName = helper.general.getPackageNameByCompName('comp1');
+        helper.command.install(pkgName);
+        const output = helper.command.runCmd(`node -e "console.log(require('${pkgName}')())"`);
+        expect(output).to.have.string(appOutput);
+      });
+      describe('importing the component into a new workspace', () => {
+        before(() => {
+          helper.scopeHelper.reInitWorkspace();
+          helper.scopeHelper.addRemoteScope();
+          npmCiRegistry.setResolver();
+          helper.command.importComponent('comp1');
+        });
+        it('should load the env from its package, with no issues', () => {
+          expect(helper.env.getComponentEnv('comp1')).to.equal(`${envId}@0.0.1`);
+          helper.command.expectStatusToNotHaveIssues();
+        });
+        it('should run the imported component', () => {
+          const pkgName = helper.general.getPackageNameByCompName('comp1');
+          const output = helper.command.runCmd(`node -e "console.log(require('${pkgName}')())"`);
+          expect(output).to.have.string(appOutput);
+        });
+        it('should apply the env again when tagging the imported component', () => {
+          helper.command.tagAllComponents('--unmodified');
+          const capsule = helper.command.getCapsuleOfComponent('comp1@0.0.2');
+          const packageJson = fs.readJsonSync(path.join(capsule, 'package.json'));
+          expect(packageJson.myEnvMarker).to.equal('set-by-my-env');
+        });
+      });
+      describe('importing the component into a workspace that loads its envs from the scope', () => {
+        // a workspace whose envs are not installed - e.g. one whose packages are installed by another
+        // package manager - loads them from the scope, isolated in capsules. the env's capsule has no dist
+        // and the empty-env no compiler to create one, so the source is what runs, as from node_modules.
+        before(() => {
+          helper.scopeHelper.reInitWorkspace();
+          helper.scopeHelper.addRemoteScope();
+          npmCiRegistry.setResolver();
+          helper.command.importComponent('comp1');
+          helper.fs.deletePath(`node_modules/${helper.general.getPackageNameByCompName('my-env')}`);
+          helper.workspaceJsonc.addKeyValToWorkspace('resolveAspectsFromNodeModules', false);
+        });
+        it('should load the env, with no issues', () => {
+          expect(helper.env.getComponentEnv('comp1')).to.equal(`${envId}@0.0.1`);
+          helper.command.expectStatusToNotHaveIssues();
+        });
+        it('should apply the env when tagging the imported component', () => {
+          helper.command.tagAllComponents('--unmodified');
+          const capsule = helper.command.getCapsuleOfComponent('comp1@0.0.2');
+          const packageJson = fs.readJsonSync(path.join(capsule, 'package.json'));
+          expect(packageJson.myEnvMarker).to.equal('set-by-my-env');
+        });
+      });
+    });
+  }
+);
