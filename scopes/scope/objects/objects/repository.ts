@@ -801,7 +801,12 @@ export default class Repository {
     // once written, the object is the up-to-date one. this also replaces the size-estimate of objects that
     // were cached by `add()`.
     if (this.cache.has(hash.toString())) this.cache.set(hash.toString(), object, inflatedSize);
-    this.liveObjects.set(hash.toString(), object, inflatedSize, contents.byteLength < MAX_COMPRESSED_SIZE_TO_CACHE);
+    this.liveObjects.set(
+      hash.toString(),
+      object,
+      inflatedSize,
+      transformedContent.byteLength < MAX_COMPRESSED_SIZE_TO_CACHE
+    );
   }
 
   async writeObjectsToPendingDir(objectList: ObjectList, pendingDir: PathOsBasedAbsolute) {
