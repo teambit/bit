@@ -17,6 +17,7 @@ import {
   createPnpmVcsCatalogBindingsOnLoad,
   createPnpmVcsImportPlan,
   discoverPnpmProjectManifests,
+  pnpmSupportsWorkspaceCatalogs,
   resolvePnpmVcsCatalogBindings,
   sanitizePnpmComponentName,
   syncPnpmWorkspace,
@@ -356,7 +357,7 @@ describe('pnpm workspace import plan', () => {
         dependencies: { '@acme/math': 'catalog:' },
       });
 
-      await applyPnpmImportPlan(workspaceDir, {
+      const firstBound = await applyPnpmImportPlan(workspaceDir, {
         schemaVersion: 1,
         components: [
           {
@@ -381,9 +382,10 @@ describe('pnpm workspace import plan', () => {
       );
       let workspaceManifest = parseYaml(await fs.readFile(path.join(workspaceDir, 'pnpm-workspace.yaml'), 'utf8'));
       expect(workspaceManifest.catalog['@acme/math']).to.equal('0.0.0-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb');
+      expect(firstBound).to.deep.equal([]);
 
       await fs.outputJson(path.join(workspaceDir, 'components/math/package.json'), { name: '@acme/math' });
-      await applyPnpmImportPlan(workspaceDir, {
+      const secondBound = await applyPnpmImportPlan(workspaceDir, {
         schemaVersion: 1,
         components: [
           {
@@ -397,6 +399,8 @@ describe('pnpm workspace import plan', () => {
 
       workspaceManifest = parseYaml(await fs.readFile(path.join(workspaceDir, 'pnpm-workspace.yaml'), 'utf8'));
       expect(workspaceManifest.catalog['@acme/math']).to.equal('workspace:*');
+      // what only a recent pnpm reads, so the import can tell a user of an older one
+      expect(secondBound).to.deep.equal(['@acme/math']);
       expect(workspaceManifest.packages).to.deep.equal(['components/app', 'components/math']);
     } finally {
       await fs.remove(workspaceDir);
@@ -460,6 +464,19 @@ describe('pnpm workspace import plan', () => {
       const manifest = await fs.readJson(path.join(workspaceDir, 'components/app/package.json'));
       expect(manifest.dependencies['@acme/strings']).to.equal('workspace:^');
     });
+  });
+});
+
+describe('pnpm support of "workspace:" catalog values', () => {
+  it('should accept the releases from the one that added it, on both lines', () => {
+    ['11.26.0', '11.27.1', '12.2.0', '12.6.0', '13.0.0'].forEach(
+      (version) => expect(pnpmSupportsWorkspaceCatalogs(version), version).to.be.true
+    );
+  });
+  it('should refuse the releases before it, the 12.0 and 12.1 lines included', () => {
+    ['11.25.0', '12.0.0-rc.0', '12.0.0', '12.1.0', '10.34.5'].forEach(
+      (version) => expect(pnpmSupportsWorkspaceCatalogs(version), version).to.be.false
+    );
   });
 });
 

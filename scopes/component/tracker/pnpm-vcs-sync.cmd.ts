@@ -1,6 +1,8 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { glob } from 'glob';
+import execa from 'execa';
+import semver from 'semver';
 import cloneDeep from 'lodash/cloneDeep';
 import isEqual from 'lodash/isEqual';
 import omit from 'lodash/omit';
@@ -428,7 +430,31 @@ function syncedComponent(workspace: Workspace, componentId: ComponentID, rootDir
  * version when it is not. only the pnpm manifest is edited, and only when something changed - a
  * clone restores the versioned one as is. the packages' own manifests are the user's, never rewritten.
  */
-export async function applyPnpmImportPlan(workspacePath: string, plan: PnpmVcsImportPlan): Promise<void> {
+/**
+ * pnpm reads a "workspace:" value in a catalog since pnpm/pnpm#14332, released in 11.26.0 and 12.2.0.
+ * an older pnpm refuses to install the workspace once an import binds a local package that way.
+ */
+export const PNPM_WORKSPACE_CATALOGS_RANGE = '>=11.26.0 <12.0.0-0 || >=12.2.0';
+
+export function pnpmSupportsWorkspaceCatalogs(pnpmVersion: string): boolean {
+  return semver.satisfies(pnpmVersion, PNPM_WORKSPACE_CATALOGS_RANGE);
+}
+
+/** the version of the pnpm the user runs in the workspace, or undefined when there is none to run */
+export async function getUserPnpmVersion(workspacePath: string): Promise<string | undefined> {
+  try {
+    const { stdout } = await execa('pnpm', ['--version'], { cwd: workspacePath });
+    return semver.valid(stdout.trim()) || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * returns the packages the import bound to "workspace:*" in a catalog, which only a recent pnpm reads
+ * (see PNPM_WORKSPACE_CATALOGS_RANGE)
+ */
+export async function applyPnpmImportPlan(workspacePath: string, plan: PnpmVcsImportPlan): Promise<string[]> {
   const manifestPath = path.join(workspacePath, PNPM_WORKSPACE_MANIFEST);
   const manifest = await readPnpmWorkspaceManifest(manifestPath);
   const originalManifest = cloneDeep(manifest);
@@ -451,17 +477,22 @@ export async function applyPnpmImportPlan(workspacePath: string, plan: PnpmVcsIm
     manifest.catalogs ||= {};
     return (manifest.catalogs[catalogName] ||= {});
   };
+  const workspaceBoundPackageNames = new Set<string>();
   [manifest.catalog, ...Object.values(manifest.catalogs || {})].forEach((catalog) => {
     importedPackageNames.forEach((packageName) => {
-      if (catalog?.[packageName]) catalog[packageName] = 'workspace:*';
+      if (!catalog?.[packageName]) return;
+      catalog[packageName] = 'workspace:*';
+      workspaceBoundPackageNames.add(packageName);
     });
   });
   plan.catalogs.forEach(({ catalogName, packageName, specifier }) => {
-    catalogOf(catalogName)[packageName] = localPackageNames.has(packageName) ? 'workspace:*' : specifier;
+    const isLocal = localPackageNames.has(packageName);
+    catalogOf(catalogName)[packageName] = isLocal ? 'workspace:*' : specifier;
+    if (isLocal) workspaceBoundPackageNames.add(packageName);
   });
 
-  if (isEqual(manifest, originalManifest)) return;
-  await fs.writeFile(manifestPath, stringifyYaml(manifest));
+  if (!isEqual(manifest, originalManifest)) await fs.writeFile(manifestPath, stringifyYaml(manifest));
+  return [...workspaceBoundPackageNames].sort();
 }
 
 async function readPnpmWorkspaceManifest(manifestPath: string): Promise<PnpmWorkspaceManifest> {

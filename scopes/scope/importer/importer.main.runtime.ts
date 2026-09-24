@@ -37,7 +37,13 @@ import ImportComponents from './import-components';
 import type { ListerMain } from '@teambit/lister';
 import { ListerAspect } from '@teambit/lister';
 import type { PnpmVcsImportPlan } from '@teambit/tracker';
-import { applyPnpmImportPlan, createPnpmVcsImportPlan, isPnpmWorkspace } from '@teambit/tracker';
+import {
+  applyPnpmImportPlan,
+  createPnpmVcsImportPlan,
+  getUserPnpmVersion,
+  isPnpmWorkspace,
+  pnpmSupportsWorkspaceCatalogs,
+} from '@teambit/tracker';
 
 export class ImporterMain {
   constructor(
@@ -81,13 +87,24 @@ export class ImporterMain {
       // a pnpm workspace lists its packages in its own manifest, not in workspace.jsonc
       if (isPnpmWorkspace(this.workspace)) {
         const plan = await this.getPnpmVcsImportPlan(results.writtenComponents);
-        if (plan) await applyPnpmImportPlan(this.workspace.path, plan);
+        if (plan) {
+          const workspaceBoundPackageNames = await applyPnpmImportPlan(this.workspace.path, plan);
+          if (workspaceBoundPackageNames.length) await this.warnForPnpmWithoutWorkspaceCatalogs();
+        }
       } else {
         await this.removeFromWorkspaceConfig(results.writtenComponents);
       }
     }
     await consumer.onDestroy('import');
     return results;
+  }
+
+  private async warnForPnpmWithoutWorkspaceCatalogs() {
+    const pnpmVersion = await getUserPnpmVersion(this.workspace.path);
+    if (!pnpmVersion || pnpmSupportsWorkspaceCatalogs(pnpmVersion)) return;
+    this.logger.consoleWarning(
+      `the import bound local packages to "workspace:*" in the pnpm catalog, which pnpm ${pnpmVersion} does not read. "pnpm install" needs pnpm 11.26.0 or later on 11, or 12.2.0 or later`
+    );
   }
 
   /**
