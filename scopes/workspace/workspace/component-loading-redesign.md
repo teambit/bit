@@ -1,7 +1,7 @@
 # Component Loading Redesign
 
-**Status:** Phase 1 shipped; Phase 2 re-scoped; Phase 3's premise disproved; object-cache fix in review (see [Status](#status))
-**Last updated:** 2026-09-22 (code references are against `master` @ `59855b104`; line numbers will drift)
+**Status:** Phase 1 shipped; Phase 2 re-scoped; Phase 3's premise disproved; object-cache fix shipped (see [Status](#status))
+**Last updated:** 2026-09-24 (code references are against `master` @ `59855b104`, §4.5 @ `9307c9c6a`; line numbers will drift)
 
 This document is the source of truth for a multi-phase effort to simplify Bit's component-loading
 mechanism: fewer caches, a staged (lazy) loading pipeline, a single env/aspect load planner, and a
@@ -467,7 +467,7 @@ re-parsed ~4,000. Caching everything costs ~124MB inflated (22MB on disk).
 
 The count cap had been lowered twice for OOM reasons (10K → 5K → 3K), and objects range from bytes
 to ~1.7MB, so raising the count would repeat a known mistake. Fixed instead by **bounding the cache
-by approximate inflated bytes** (256MB default) — [#10723](https://github.com/teambit/bit/pull/10723):
+by approximate inflated bytes** (256MB default) — [#10723](https://github.com/teambit/bit/pull/10723) (merged):
 
 | interleaved A/B                   | old (3,000 objects) | byte budget | result                |
 | --------------------------------- | ------------------- | ----------- | --------------------- |
@@ -477,9 +477,32 @@ by approximate inflated bytes** (256MB default) — [#10723](https://github.com/
 | `bit graph --json` wall (3 pairs) | 20.91s              | 19.94s      | −0.97s (−5%)          |
 | `bit list` / `bit show`           | —                   | —           | neutral               |
 
-It wins on memory too, because every re-parse of an evicted object allocated a new copy. This is
+It wins on memory too, but not because the old cache retained duplicates: only ~78 duplicate copies
+(2.6MB) were live at the end of the old run. The win is **churn**: each of the ~4,000 re-parses
+inflated and parsed a fresh copy that became garbage, so the old policy did 8,702 parses vs 4,715.
+Peak `arrayBuffers` fell ~214→~103MB, peak `heapUsed` ~840→~768MB, and GC time ~820→~635ms. This is
 the first change in this effort that moved wall-time by more than noise — and none of the phases
 pointed at it.
+
+**The cache is essential, but a byte budget alone has a cliff.** With the cache disabled (`max 1`),
+`status` takes 22.4s with 31,213 parses. A workspace whose working set exceeds the budget falls back
+to master's thrashing, and was slightly _worse_ than master at 3×. So #10723 also added a **weak layer** (`LiveObjects`, `objects/live-objects.ts`): a
+hash → `WeakRef` map with a `FinalizationRegistry`. On an LRU miss, it returns the object if
+something else (e.g. a loaded component) still references it; it never keeps anything alive by
+itself. Objects too big for the LRU (>100KB compressed) are tracked there too. Alone it's
+insufficient (9.5s vs 7.7s: most objects are unreferenced between uses); on top of the LRU it's a no-op while
+the budget fits and removes the cliff when it doesn't. Simulated larger workspaces (both limits
+shrunk by the same factor, `status`, median of 2, builds alternated):
+
+| simulated size | master         | byte budget    | byte budget + weak |
+| -------------- | -------------- | -------------- | ------------------ |
+| this repo      | 8.9s / 1317MB  | 7.7s / 1140MB  | 7.8s / 1110MB      |
+| 3×             | 10.5s / 1629MB | 11.2s / 1683MB | **8.7s / 1200MB**  |
+| 5×             | 12.1s / 1934MB | 12.1s / 1874MB | **9.2s / 1303MB**  |
+
+Correctness notes for anyone touching it: a `ModelComponent`'s hash is name-based, so one hash maps
+to different content over time — every path that writes, removes, or clears the LRU must update the
+weak map too (`_writeOne` only after the write succeeds; `removeFromCache`; `clearObjectsFromCache`).
 
 Other hotspots from the same profile, not yet acted on (each needs its own A/B):
 
@@ -501,7 +524,7 @@ Other hotspots from the same profile, not yet acted on (each needs its own A/B):
 | Phase                   | State                                           | OpenSpec change                | PRs                                                                                                                           |
 | ----------------------- | ----------------------------------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
 | 1 — Observability       | done                                            | `component-load-observability` | [#10418](https://github.com/teambit/bit/pull/10418)                                                                           |
-| 2 — Quick perf wins     | re-scoped, 1/7 done; object-cache fix in review | —                              | [#10445](https://github.com/teambit/bit/pull/10445) (closed, not merged), [#10723](https://github.com/teambit/bit/pull/10723) |
+| 2 — Quick perf wins     | re-scoped, 1/7 done; object-cache fix merged    | —                              | [#10445](https://github.com/teambit/bit/pull/10445) (closed, not merged), [#10723](https://github.com/teambit/bit/pull/10723) |
 | 3 — Cache consolidation | not started — premise disproved, demoted (§4.5) | —                              | —                                                                                                                             |
 | 4 — Staged pipeline     | not started                                     | —                              | —                                                                                                                             |
 | 5 — Env planner         | not started                                     | —                              | —                                                                                                                             |
@@ -569,3 +592,8 @@ Other hotspots from the same profile, not yet acted on (each needs its own A/B):
   `status` **−15% wall, ~−170MB RSS**, `graph` −5%, others neutral (§4.5). First change in this
   effort to move wall-time beyond noise. Phase 3 demoted; next candidates are the remaining §4.5
   hotspots, each gated on its own A/B.
+- 2026-09-24 — **#10723 merged** (`9307c9c6a`). Beyond the byte budget, it added a weak layer over the
+  objects LRU after simulation showed the budget alone regresses to master (slightly worse at 3×)
+  once a workspace outgrows it; with the weak layer, 3×/5× stay 17-24% faster and 26-33% leaner
+  than master (§4.5). Also recorded why RSS dropped: fewer throwaway copies from re-parsing
+  (8,702 → 4,715 parses), not retained duplicates.
