@@ -281,34 +281,24 @@ module.exports.default = new MyEnv();
           const output = helper.command.runCmd(`node -e "console.log(require('${pkgName}')())"`);
           expect(output).to.have.string(appOutput);
         });
-        it('should apply the env again when tagging the imported component', () => {
-          helper.command.tagAllComponents('--unmodified');
-          const capsule = helper.command.getCapsuleOfComponent('comp1@0.0.2');
-          const packageJson = fs.readJsonSync(path.join(capsule, 'package.json'));
-          expect(packageJson.myEnvMarker).to.equal('set-by-my-env');
-        });
-      });
-      describe('importing the component into a workspace that loads its envs from the scope', () => {
-        // a workspace whose envs are not installed - e.g. one whose packages are installed by another
-        // package manager - loads them from the scope, isolated in capsules. the env's capsule has no dist
-        // and the empty-env no compiler to create one, so the source is what runs, as from node_modules.
-        before(() => {
-          helper.scopeHelper.reInitWorkspace();
-          helper.scopeHelper.addRemoteScope();
-          npmCiRegistry.setResolver();
-          helper.command.importComponent('comp1');
-          helper.fs.deletePath(`node_modules/${helper.general.getPackageNameByCompName('my-env')}`);
-          helper.workspaceJsonc.addKeyValToWorkspace('resolveAspectsFromNodeModules', false);
-        });
-        it('should load the env, with no issues', () => {
-          expect(helper.env.getComponentEnv('comp1')).to.equal(`${envId}@0.0.1`);
-          helper.command.expectStatusToNotHaveIssues();
-        });
-        it('should apply the env when tagging the imported component', () => {
-          helper.command.tagAllComponents('--unmodified');
-          const capsule = helper.command.getCapsuleOfComponent('comp1@0.0.2');
-          const packageJson = fs.readJsonSync(path.join(capsule, 'package.json'));
-          expect(packageJson.myEnvMarker).to.equal('set-by-my-env');
+        describe('when the workspace loads its envs from the scope', () => {
+          // a workspace whose envs are not installed - e.g. one whose packages are installed by another
+          // package manager - loads them from the scope, isolated in capsules. the env's capsule has no dist
+          // and the empty-env no compiler to create one, so the source is what runs, as from node_modules.
+          before(() => {
+            helper.fs.deletePath(`node_modules/${helper.general.getPackageNameByCompName('my-env')}`);
+            helper.workspaceJsonc.addKeyValToWorkspace('resolveAspectsFromNodeModules', false);
+          });
+          it('should load the env, with no issues', () => {
+            expect(helper.env.getComponentEnv('comp1')).to.equal(`${envId}@0.0.1`);
+            helper.command.expectStatusToNotHaveIssues();
+          });
+          it('should apply the env when tagging the imported component', () => {
+            helper.command.tagAllComponents('--unmodified');
+            const capsule = helper.command.getCapsuleOfComponent('comp1@0.0.2');
+            const packageJson = fs.readJsonSync(path.join(capsule, 'package.json'));
+            expect(packageJson.myEnvMarker).to.equal('set-by-my-env');
+          });
         });
       });
     });
