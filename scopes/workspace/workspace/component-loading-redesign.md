@@ -1,7 +1,7 @@
 # Component Loading Redesign
 
-**Status:** Phase 1 shipped; Phase 2 in progress
-**Last updated:** 2026-06-15 (code references are against `master` @ `59855b104`; line numbers will drift)
+**Status:** Phase 1 shipped; Phase 2 re-scoped; Phase 3's premise disproved; object-cache fix shipped (see [Status](#status))
+**Last updated:** 2026-09-24 (code references are against `master` @ `59855b104`, §4.5 @ `9307c9c6a`; line numbers will drift)
 
 This document is the source of truth for a multi-phase effort to simplify Bit's component-loading
 mechanism: fewer caches, a staged (lazy) loading pipeline, a single env/aspect load planner, and a
@@ -67,7 +67,9 @@ Problems:
 
 - The workspace cache key embeds serialized `loadOpts`
   (`createComponentCacheKey`, `workspace-component-loader.ts:990`), so the same component loaded
-  with different options is cached as separate opaque blobs.
+  with different options is cached under separate keys. _(Measured 2026-09-22: the keys point to
+  the same object, so this costs no memory — the real issue is that a key describes the request,
+  not what was loaded. See §4.3 item 2.)_
 - Invalidation requires three coordinated calls (`workspace.ts:829-841`:
   `componentLoader.clearCache` + legacy `clearComponentsCache` + `componentStatusLoader.clearCache`).
 - Cache hits are silent — a stale cache is indistinguishable from a fresh load in the logs.
@@ -204,13 +206,29 @@ earlier ones teach us).
 ### Phase 2 — Quick perf wins on existing seams
 
 - [x] Benchmark harness committed + baseline recorded (see §4) — **gate for the rest of the phase**
-- [ ] Lazy file contents in `ModelComponent.toConsumerComponent`
+- [x] ~~Forward `loadOpts` in the batch `executeLoadSlot` path~~ — **implemented, measured, rejected.**
+      Halved `on-load` aggregate self-time with **no wall change** and **+67MB RSS** (§4.3). Not merged.
+- [ ] ~~Default `loadDocs: false, loadCompositions: false` for non-UI flows~~ — **blocked**: `status`
+      already sets them; they can't take effect until the cache stops keying on them (Phase 3)
+- [ ] Lazy file contents in `ModelComponent.toConsumerComponent` (targets `graph`, and the RSS trend)
 - [ ] `bit deps usage`: ids + stored deps instead of full load
 - [ ] IDE metadata endpoint (`api-for-ide.ts`): S0-S2-level data only
 - [ ] `bit remove` / forking: drop full-component loads where only ids/paths are used
-- [ ] Default `loadDocs: false, loadCompositions: false` for non-UI flows
+
+**Explicitly dropped from this phase:** narrowing the deps-cache freshness fs scan (PR #10445,
+closed 2026-09-22). It cut warm `status` fs syscalls 37% (74.3k → 46.4k) but moved wall ~0.3s —
+the syscalls are `stat`/`lstat`/`readdir`, which overlap with CPU on a warm SSD — in exchange for
+narrowing the invalidation signal of the highest-blast-radius cache in the loader. Bad trade. The
+useful output of that work is the §4.1/§4.2 profiling and the node_modules invalidation constraints
+recorded in the deps-cache notes.
 
 ### Phase 3 — Cache consolidation
+
+> **Reassessed 2026-09-22 — not a perf lever.** Its promotion (§4.3) rested on the component cache
+> holding duplicate copies; measured, it holds exactly one object per id (§4.3 item 2, §4.5). What
+> remains is simplification and a correctness hazard (keys describe the request, not the content),
+> worth doing only alongside partial-loading work that needs it. The 500-component cap on these
+> caches is the one open perf question here (§4.5).
 
 - [ ] Introduce `ComponentCacheManager` (unused, with tests)
 - [ ] Migrate the workspace loader's four caches onto it
@@ -250,17 +268,41 @@ The `Peak RSS` column is the worst case across the four commands (`bit graph`). 
 median seconds. Per-command peak RSS for the baseline: status 1237MB, list 425MB, show 253MB,
 graph 2013MB.
 
-| Milestone              | `bit status` | `bit list` | `bit show <comp>` | `bit graph --json` | Peak RSS |
-| ---------------------- | ------------ | ---------- | ----------------- | ------------------ | -------- |
-| Baseline (pre-Phase 2) | 11.24s       | 1.59s      | 1.73s             | 20.49s             | 2013MB   |
-| After Phase 2          | —            | —          | —                 | —                  | —        |
-| After Phase 3          | —            | —          | —                 | —                  | —        |
-| After Phase 4          | —            | —          | —                 | —                  | —        |
-| After Phase 5          | —            | —          | —                 | —                  | —        |
+| Milestone                | `bit status` | `bit list` | `bit show <comp>` | `bit graph --json` | Peak RSS |
+| ------------------------ | ------------ | ---------- | ----------------- | ------------------ | -------- |
+| Baseline (pre-Phase 2)   | 11.24s       | 1.59s      | 1.73s             | 20.49s             | 2013MB   |
+| Re-baseline (2026-09-22) | 9.43s        | 1.72s      | 1.23s             | 18.59s             | 2352MB   |
+| After Phase 2            | —            | —          | —                 | —                  | —        |
+| After Phase 3            | —            | —          | —                 | —                  | —        |
+| After Phase 4            | —            | —          | —                 | —                  | —        |
+| After Phase 5            | —            | —          | —                 | —                  | —        |
 
 Baseline measured 2026-06-15 on darwin (Apple silicon), `bit` @ 1.13.222, node v22.20.0,
 `bit show teambit.workspace/workspace`. The two clear hotspots are `bit status` (11s) and
 `bit graph` (20s, 2GB).
+
+**Re-baseline 2026-09-22** — same machine/method, `bit` @ 2.2.57, node v22.20.0. Note the workspace
+grew from ~313 to **331 components** (+5.8%), so per-component deltas are better than the raw wall
+numbers suggest. Per-command peak RSS: status 1239MB, list 549MB, show 260MB, graph 2352MB.
+
+| metric            | baseline | re-baseline | raw Δ  | per-component Δ |
+| ----------------- | -------- | ----------- | ------ | --------------- |
+| `bit status` wall | 11.24s   | 9.43s       | −16.1% | −20.6%          |
+| `bit graph` wall  | 20.49s   | 18.59s      | −9.3%  | −14.2%          |
+| `bit show` wall   | 1.73s    | 1.23s       | −28.9% | n/a (1 comp)    |
+| `bit list` wall   | 1.59s    | 1.72s       | +8.2%  | +2.3% (flat)    |
+| `bit graph` RSS   | 2013MB   | 2352MB      | +16.8% | +10.4%          |
+| `bit list` RSS    | 425MB    | 549MB       | +29.2% | +22.2%          |
+
+Two things to read from this:
+
+- **The wall-time gains came from outside this effort.** No Phase-2 item shipped, yet `status` and
+  `graph` improved materially — from targeted fixes landed independently (batching/deduping
+  dependency imports when building graphs from fs, dropping a per-invocation hard-link-directory
+  load, unifying component load paths). The redesign plan is not what moved these numbers.
+- **Memory is trending the wrong way.** `graph` peak RSS is up 339MB and `list` up 124MB, beyond
+  what the +5.8% component growth explains. No phase currently targets memory; §2.1 lazy file
+  contents is the closest lever.
 
 ### 4.1 Profiling findings (where the warm load time actually goes)
 
@@ -303,18 +345,190 @@ Numbers below are aggregate self-time across ~313 components at ~6× concurrency
   `deps usage`/IDE/`remove`/forking; `loadDocs/loadCompositions: false` trims `status`'s slot work
   (~1.7s). The big `status` number is deferred to the staged-loading phase.
 
+### 4.2 Re-profile 2026-09-22 (`bit status`, 331 components, 9.43s wall)
+
+`BIT_LOAD_PROFILE=1 bit status`, aggregate self-time 68.1s (wall was 9.43s — the sum exceeds wall
+because concurrently-interleaved spans each count their own `await` time).
+
+> **Do not read these as wall-time budgets.** §4.3 shows, by direct experiment, that cutting a row
+> here in half changed wall by nothing. Use this table to find _where to look_, never to size a win.
+
+| stage                                        | self-time | calls | share of self-time |
+| -------------------------------------------- | --------- | ----- | ------------------ |
+| `legacy-load-deps`                           | 34.3s     | 331   | 50%                |
+| `on-load` (docs, compositions, schema, pkg…) | 13.7s     | 2317  | 20%                |
+| `dependency-resolution`                      | 6.7s      | 331   | 10%                |
+| `workspace.get`                              | 5.5s      | 3349  | 8%                 |
+| `execute-load-slot` (own)                    | 4.5s      | 331   | 7%                 |
+| `consumer-fs-load`                           | ~0s self  | 7     | —                  |
+
+Observations:
+
+- `legacy-load-deps` is **50% of all load self-time** — still dependency-object materialization on
+  cache _hit_, not resolution. Per-component it improved (137ms → 104ms, −24%) but it did not change
+  shape. Same picture as June, three months apart.
+- `on-load` is **20%** across **2317 calls** (331 components × ~7 handlers). `bit status` passes
+  `loadDocs:false`/`loadCompositions:false`, but they are **ineffective on the batch path**:
+  `workspace-component-loader.ts:479-480` calls `executeLoadSlot(component)` without forwarding
+  `loadOpts` (the single-component path at :1083/:1092 does forward them).
+- `workspace.get` shows **3349 calls for 331 components (~10×)** — explained and tested in §4.4.
+
+### 4.3 ⚠️ Aggregate self-time does not predict wall-time — validate before building
+
+The `on-load` row above was tested directly, and the result invalidates the metric this section is
+built on. Forwarding `loadOpts` on the batch path (the "one-line fix") was implemented and measured:
+
+| metric                         | without fix | with fix    | result                 |
+| ------------------------------ | ----------- | ----------- | ---------------------- |
+| `on-load` aggregate self-time  | 13.7s       | 6.6s        | **−52%**               |
+| total load self-time           | 68.1s       | 53.5s       | **−21%**               |
+| **`bit status` wall (median)** | **9.05s**   | **8.98s**   | **−0.07s — noise**     |
+| **peak RSS**                   | **~1228MB** | **~1295MB** | **+67MB — consistent** |
+
+Wall is the median of 9 runs per variant, **interleaved** (A/B/A/B/A/B, recompiling between) to
+cancel drift. Drift matters: the same unchanged code measured 9.43s and 8.99s twenty minutes apart,
+a larger gap than the effect being tested. RSS is 4 runs per variant with zero overlap between the
+two sets.
+
+So halving the aggregate self-time of a stage worth "~1.9s of wall" by the divide-by-concurrency
+estimate produced **no measurable wall change**, and cost memory. Two lessons:
+
+1. **Aggregate self-time is a hypothesis generator, not a size estimate.** Spans are summed across
+   concurrently-interleaved async work on one JS thread, so most of what is counted is `await` time
+   overlapping other work, not critical-path CPU. Dividing by observed concurrency does **not**
+   recover wall-time. This is the third time the metric has misled this effort (the earlier "39s"
+   correction, the deps-cache fs-scan of #10445, and now this). **Do not size or prioritize work
+   from §4.1/§4.2 numbers — A/B the wall-clock first.**
+2. ~~Forwarding `loadOpts` costs memory because the cache key embeds it.~~ **Retracted (§4.5).**
+   Instrumenting the cache showed every id does get two keys, but **both point to the same object**
+   (with or without the fix) — the partial-key entry is later mutated in place into the full
+   component. So there is no second copy; the +67MB has some other cause and is unexplained. What
+   _is_ true is subtler: the key records what the caller _asked for_, not what was loaded — `getMany`
+   stores every result under the full key (:203) regardless of its options and ignores
+   `storeInCache`. With the forwarding fix, docs-less components would have been served to later
+   full `get`s. That's a correctness hazard for partial loading, not a memory one.
+
+**Method for the rest of this effort:** every perf claim lands with an interleaved wall-clock A/B on
+`scripts/bench-component-loading.js` and a peak-RSS comparison. No merges justified by profiler
+self-time alone.
+
+### 4.4 The `workspace.get` 10× call count: explained, tested, and not worth a cache
+
+Attributing every `workspace.get` call by caller (temporary stack-tally instrumentation, since
+removed) on a warm `bit status`:
+
+| caller                                         | calls | note                            |
+| ---------------------------------------------- | ----- | ------------------------------- |
+| `envs` → `getEnvComponentByEnvId` (`opts={}`)  | 2520  | resolving the **env** component |
+| the batch load path (one per component)        | 331   | expected                        |
+| `component-dependency-factory`                 | 329   | ~one per component              |
+| `envs` (with `loadExtensions/executeLoadSlot`) | 162   | a second envs path              |
+| misc                                           | 7     |                                 |
+
+**80% of all `workspace.get` calls are the envs aspect re-resolving the env component** — and this
+workspace has **4 distinct envs**. `getEnvComponentByEnvId`
+(`scopes/envs/envs/environments.main.runtime.ts`) does `host.get(envId)` on every call, and its
+callers (dependency-resolver, dev-files, preview, and the env-descriptor path) each run per
+component.
+
+Memoizing it by `envId` was implemented and measured:
+
+| metric                        | without memo | with memo | result                     |
+| ----------------------------- | ------------ | --------- | -------------------------- |
+| `workspace.get` calls         | 3349         | 835       | **−75%**                   |
+| `workspace.get` self-time     | 5.48s        | 5.09s     | −0.39s — **nearly free**   |
+| `bit status` wall (median, 9) | 9.59s        | 9.45s     | −0.14s (−1.5%), consistent |
+| peak RSS                      | ~1234MB      | ~1246MB   | +12MB, within noise        |
+
+**Conclusion: real but small, and the wrong fix.** Removing 75% of the calls moved
+`workspace.get` self-time by only 0.39s, which proves those 2514 calls were already cheap cache
+hits — the alarming 10× count was a **third red herring**, consistent with §4.3. The 1.5% wall gain
+is genuine but would be bought by adding a 12th ad-hoc cache, with its own invalidation surface, to
+a system whose stated core problem (§1.2) is _~11 uncoordinated caches_. That is the anti-pattern
+this effort exists to remove.
+
+**Where it belongs instead:** this is direct evidence for the standalone **`EnvResolver`** of §2.4 —
+env identity is asked for constantly and should be resolvable from S0-S2 data with one owner and one
+cache, rather than by loading a full env Component through the general loader 2682 times. Fold it
+into Phase 5, and do not bolt on a point-memo before then.
+
+### 4.5 A real CPU profile: a third of `status` is the object layer, and it was thrashing
+
+The span profiler (§4.1-4.4) misled three times, so `bit status` was profiled with V8 instead
+(`node --cpu-prof`). V8 samples measure on-thread time, which _does_ sum to wall-time (9.17s
+sampled: 7.7s JS/native, 0.83s GC, 0.46s idle). **Use this, not `BIT_LOAD_PROFILE`, to decide
+where to work.**
+
+The dominant cost is not in the component loader at all: **`@teambit/objects` is 1.7s self / 3.1s
+inclusive** — about a third of wall. Mostly `parseObject` (1.1s, Version/ModelComponent/Source
+JSON parsing). Counting parses per hash showed **half of them were repeats**: status touches ~4,700
+distinct objects, and the `Repository` LRU was capped at **3,000 objects**, so it evicted and
+re-parsed ~4,000. Caching everything costs ~124MB inflated (22MB on disk).
+
+The count cap had been lowered twice for OOM reasons (10K → 5K → 3K), and objects range from bytes
+to ~1.7MB, so raising the count would repeat a known mistake. Fixed instead by **bounding the cache
+by approximate inflated bytes** (256MB default) — [#10723](https://github.com/teambit/bit/pull/10723) (merged):
+
+| interleaved A/B                   | old (3,000 objects) | byte budget | result                |
+| --------------------------------- | ------------------- | ----------- | --------------------- |
+| `bit status` wall (median, 8)     | 8.64s               | 7.37s       | **−1.27s (−15%)**     |
+| `bit status` wall range           | 8.50-8.91s          | 7.36-7.48s  | no overlap, 8/8 pairs |
+| `bit status` peak RSS             | ~1305MB             | ~1130MB     | **~−170MB**           |
+| `bit graph --json` wall (3 pairs) | 20.91s              | 19.94s      | −0.97s (−5%)          |
+| `bit list` / `bit show`           | —                   | —           | neutral               |
+
+It wins on memory too, but not because the old cache retained duplicates: only ~78 duplicate copies
+(2.6MB) were live at the end of the old run. The win is **churn**: each of the ~4,000 re-parses
+inflated and parsed a fresh copy that became garbage, so the old policy did 8,702 parses vs 4,715.
+Peak `arrayBuffers` fell ~214→~103MB, peak `heapUsed` ~840→~768MB, and GC time ~820→~635ms. This is
+the first change in this effort that moved wall-time by more than noise — and none of the phases
+pointed at it.
+
+**The cache is essential, but a byte budget alone has a cliff.** With the cache disabled (`max 1`),
+`status` takes 22.4s with 31,213 parses. A workspace whose working set exceeds the budget falls back
+to master's thrashing, and was slightly _worse_ than master at 3×. So #10723 also added a **weak layer** (`LiveObjects`, `objects/live-objects.ts`): a
+hash → `WeakRef` map with a `FinalizationRegistry`. On an LRU miss, it returns the object if
+something else (e.g. a loaded component) still references it; it never keeps anything alive by
+itself. Objects too big for the LRU (>100KB compressed) are tracked there too. Alone it's
+insufficient (9.5s vs 7.7s: most objects are unreferenced between uses); on top of the LRU it's a no-op while
+the budget fits and removes the cliff when it doesn't. Simulated larger workspaces (both limits
+shrunk by the same factor, `status`, median of 2, builds alternated):
+
+| simulated size | master         | byte budget    | byte budget + weak |
+| -------------- | -------------- | -------------- | ------------------ |
+| this repo      | 8.9s / 1317MB  | 7.7s / 1140MB  | 7.8s / 1110MB      |
+| 3×             | 10.5s / 1629MB | 11.2s / 1683MB | **8.7s / 1200MB**  |
+| 5×             | 12.1s / 1934MB | 12.1s / 1874MB | **9.2s / 1303MB**  |
+
+Correctness notes for anyone touching it: a `ModelComponent`'s hash is name-based, so one hash maps
+to different content over time — every path that writes, removes, or clears the LRU must update the
+weak map too (`_writeOne` only after the write succeeds; `removeFromCache`; `clearObjectsFromCache`).
+
+Other hotspots from the same profile, not yet acted on (each needs its own A/B):
+
+- `ModelComponent.versionsIncludeOrphaned` — a getter that spreads `{...versions,
+...orphanedVersions}` on **every access** (~375ms). Components in this repo have thousands of
+  tags; `sources.get` calls it to read a single key.
+- `getTagOfRefIfExists` — linear scan over all tags (~150ms self).
+- `Version.calculateHash` from `isComponentModified` (~285ms).
+- `status` parses ~3,300 `Source` objects (file contents from the model): the "lazy file contents"
+  item of Phase 2 would remove these parses entirely, not just the repeats.
+- The **component** caches are capped at **500**. This workspace has 339, so it never thrashes —
+  but a >500-component workspace would re-load whole components, a far steeper cliff than this one.
+  Worth measuring on a large workspace before anything else in Phase 3.
+
 ---
 
 ## Status
 
-| Phase                   | State       | OpenSpec change                | PRs                                                 |
-| ----------------------- | ----------- | ------------------------------ | --------------------------------------------------- |
-| 1 — Observability       | done        | `component-load-observability` | [#10418](https://github.com/teambit/bit/pull/10418) |
-| 2 — Quick perf wins     | in progress | —                              | —                                                   |
-| 3 — Cache consolidation | not started | —                              | —                                                   |
-| 4 — Staged pipeline     | not started | —                              | —                                                   |
-| 5 — Env planner         | not started | —                              | —                                                   |
-| 6 — Legacy inversion    | not started | —                              | —                                                   |
+| Phase                   | State                                           | OpenSpec change                | PRs                                                                                                                           |
+| ----------------------- | ----------------------------------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| 1 — Observability       | done                                            | `component-load-observability` | [#10418](https://github.com/teambit/bit/pull/10418)                                                                           |
+| 2 — Quick perf wins     | re-scoped, 1/7 done; object-cache fix merged    | —                              | [#10445](https://github.com/teambit/bit/pull/10445) (closed, not merged), [#10723](https://github.com/teambit/bit/pull/10723) |
+| 3 — Cache consolidation | not started — premise disproved, demoted (§4.5) | —                              | —                                                                                                                             |
+| 4 — Staged pipeline     | not started                                     | —                              | —                                                                                                                             |
+| 5 — Env planner         | not started                                     | —                              | —                                                                                                                             |
+| 6 — Legacy inversion    | not started                                     | —                              | —                                                                                                                             |
 
 **Log:**
 
@@ -340,3 +554,46 @@ Numbers below are aggregate self-time across ~313 components at ~6× concurrency
   file-content reads (`consumer-fs-load`, 5.8s) → the target for lazy file contents. (Correction: an
   earlier "39s" figure was aggregate-concurrent self-time, not wall; warm wall is ~13s.) Direction
   for the next Phase-2 PR intentionally left open.
+- 2026-09-22 — **Phase 2 reassessed after a 3-month gap.** Re-baselined (§4) and re-profiled (§4.2).
+  Findings:
+  1. `status` −16% / `graph` −9% / `show` −29% since June, **with no Phase-2 item shipped** — the
+     gains came from targeted fixes landed outside this effort. Peak RSS regressed (`graph` +339MB,
+     `list` +124MB); nothing currently targets memory.
+  2. The structural conclusion is confirmed a second time: `legacy-load-deps` is now **50% of all
+     load self-time**, still materialization-on-cache-hit. Phase 4 is the lever; Phase 2 was never
+     going to move it. Phase 4 promoted to the next high-value target.
+  3. Found the concrete cheap win: `bit status` already sets `loadDocs:false`/`loadCompositions:false`
+     but the batch path drops them (`workspace-component-loader.ts:479-480` doesn't forward
+     `loadOpts`), leaving ~1.9s of `on-load` work on the table across 2317 handler calls.
+  4. New unexplained signal: `workspace.get` is called **3349× for 331 components (~10×)**.
+  5. **The cheap win was implemented and rejected on measurement** (§4.3). Forwarding `loadOpts`
+     halved `on-load` self-time but moved wall by −0.07s (noise) and cost +67MB RSS, because the
+     component cache keys on `loadDocs`/`loadCompositions` and so stores a second copy. This
+     invalidated the prioritization metric: **aggregate self-time does not predict wall-time**, for
+     the third time in this effort. Phase 4 is therefore _not_ promoted on the strength of the
+     `legacy-load-deps` 50% figure; **Phase 3 (cache consolidation) is promoted instead**, since the
+     loadOpts-in-cache-key problem blocks every partial-loading idea in Phases 2 and 4. All further
+     perf claims require an interleaved wall-clock A/B plus peak-RSS comparison.
+  6. **The `workspace.get` 10× count was chased down and also rejected** (§4.4). 80% of the 3349
+     calls are the envs aspect re-resolving one of only 4 distinct envs. Memoizing removes 75% of
+     the calls for −0.14s (−1.5%) wall — real, but it buys that by adding a 12th ad-hoc cache to the
+     ~11 the effort exists to consolidate. Recorded as evidence for the §2.4 `EnvResolver` (Phase 5)
+     instead. Net result of this session: three candidate quick wins investigated, **all three
+     rejected on measurement**, and the prioritization metric itself invalidated.
+     PR #10445 closed unmerged (see §3 for the rationale). The abandoned May branch
+     `refactor/component-loading-v2-take-3` (`UnifiedComponentLoader` behind `BIT_LOADER=new`) predates
+     this document and is superseded by the phase plan — not to be resumed.
+- 2026-09-22 — **Phase 3 started, and its premise disproved in the first hour.** Instrumenting the
+  component cache found one object per id (two keys, same object), so consolidating it saves no
+  memory; §4.3's explanation of the +67MB was wrong and is retracted. Switched tools: a V8 CPU
+  profile (`node --cpu-prof`) — unlike span self-time, it sums to wall — showed a third of warm
+  `status` in `@teambit/objects`, half of whose parses were repeats caused by the 3,000-object LRU
+  cap. Bounding that cache by bytes instead ([#10723](https://github.com/teambit/bit/pull/10723)):
+  `status` **−15% wall, ~−170MB RSS**, `graph` −5%, others neutral (§4.5). First change in this
+  effort to move wall-time beyond noise. Phase 3 demoted; next candidates are the remaining §4.5
+  hotspots, each gated on its own A/B.
+- 2026-09-24 — **#10723 merged** (`9307c9c6a`). Beyond the byte budget, it added a weak layer over the
+  objects LRU after simulation showed the budget alone regresses to master (slightly worse at 3×)
+  once a workspace outgrows it; with the weak layer, 3×/5× stay 17-24% faster and 26-33% leaner
+  than master (§4.5). Also recorded why RSS dropped: fewer throwaway copies from re-parsing
+  (8,702 → 4,715 parses), not retained duplicates.
