@@ -268,36 +268,61 @@ describe('pnpm workspace discovery', () => {
 });
 
 describe('pnpm workspace import plan', () => {
-  it('should leave a catalog entry alone when the code never imports the package', async () => {
-    const workspaceDir = await fs.mkdtemp(path.join(os.tmpdir(), 'bit-pnpm-plan-'));
-    try {
-      await fs.writeFile(path.join(workspaceDir, 'pnpm-workspace.yaml'), "catalog:\n  lodash: '4.17.21'\n");
-      const workspaceStub = {
-        path: workspaceDir,
-        consumer: { bitMap: { getComponentIdByRootPath: () => ({ toString: () => 'acme.scope/root' }) } },
-      } as any;
-      // bit detects dependencies from the code, so a package only package.json declares has no dependency
-      const dependencyResolverStub = {
-        getDependenciesFromLegacyComponent: () => ({ findByPkgNameOrCompId: () => undefined }),
-      } as any;
-      const component = {
-        id: { toString: () => 'acme.scope/app@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' },
-        componentMap: { rootDir: 'packages/app' },
-        files: [
-          {
-            relative: 'package.json',
-            contents: Buffer.from(JSON.stringify({ name: '@acme/app', dependencies: { lodash: 'catalog:' } })),
-          },
-        ],
-      } as any;
-
-      const plan = await createPnpmVcsImportPlan(workspaceStub, dependencyResolverStub, [component]);
-
+  describe('a catalog entry of a package the code never imports', () => {
+    // bit detects dependencies from the code, so a package only package.json declares has no dependency
+    const planImport = async (workspaceManifest: string, snappedSpecifier?: string) => {
+      const workspaceDir = await fs.mkdtemp(path.join(os.tmpdir(), 'bit-pnpm-plan-'));
+      try {
+        await fs.writeFile(path.join(workspaceDir, 'pnpm-workspace.yaml'), workspaceManifest);
+        const workspaceStub = {
+          path: workspaceDir,
+          consumer: { bitMap: { getComponentIdByRootPath: () => ({ toString: () => 'acme.scope/root' }) } },
+        } as any;
+        const dependencyResolverStub = {
+          getDependenciesFromLegacyComponent: () => ({ findByPkgNameOrCompId: () => undefined }),
+        } as any;
+        const trackerData = snappedSpecifier
+          ? {
+              pnpmVcsCatalogBindings: {
+                schemaVersion: 1,
+                bindings: [{ catalogName: 'default', packageName: 'lodash', specifier: snappedSpecifier }],
+              },
+            }
+          : undefined;
+        const component = {
+          id: { toString: () => 'acme.scope/app@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' },
+          componentMap: { rootDir: 'packages/app' },
+          extensions: { findCoreExtension: () => (trackerData ? { data: trackerData } : undefined) },
+          files: [
+            {
+              relative: 'package.json',
+              contents: Buffer.from(JSON.stringify({ name: '@acme/app', dependencies: { lodash: 'catalog:' } })),
+            },
+          ],
+        } as any;
+        return await createPnpmVcsImportPlan(workspaceStub, dependencyResolverStub, [component]);
+      } finally {
+        await fs.remove(workspaceDir);
+      }
+    };
+    it('should leave it alone when the catalog has it', async () => {
+      const plan = await planImport("catalog:\n  lodash: '4.17.21'\n", '^4.17.0');
       expect(plan?.components.map(({ packageName }) => packageName)).to.deep.equal(['@acme/app']);
       expect(plan?.catalogs).to.deep.equal([]);
-    } finally {
-      await fs.remove(workspaceDir);
-    }
+    });
+    it('should add the range the component was snapped with when the catalog is without it', async () => {
+      // the component came from another pnpm workspace, whose catalog had the entry
+      const plan = await planImport('packages: []\n', '^4.17.0');
+      expect(plan?.catalogs).to.deep.equal([{ catalogName: 'default', packageName: 'lodash', specifier: '^4.17.0' }]);
+    });
+    it('should not add a "workspace:" entry, the package it named is not here', async () => {
+      const plan = await planImport('packages: []\n', 'workspace:*');
+      expect(plan?.catalogs).to.deep.equal([]);
+    });
+    it('should add nothing when the component was snapped with no such entry', async () => {
+      const plan = await planImport('packages: []\n');
+      expect(plan?.catalogs).to.deep.equal([]);
+    });
   });
 
   it('should leave the pnpm manifest byte-identical when the imported packages are covered already', async () => {
@@ -401,6 +426,7 @@ describe('pnpm workspace import plan', () => {
       const component = {
         id: { toString: () => 'acme.scope/app@aaaa' },
         componentMap: { rootDir: 'components/app' },
+        extensions: { findCoreExtension: () => undefined },
         files: [{ relative: 'package.json', contents: Buffer.from(JSON.stringify(appManifest)) }],
       } as any;
       const plan = await createPnpmVcsImportPlan(workspaceStub, dependencyResolverStub, [component]);

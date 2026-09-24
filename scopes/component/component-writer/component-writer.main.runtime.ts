@@ -118,8 +118,11 @@ export class ComponentWriterMain {
     if (isPnpmWorkspaceRoot(this.workspace.path, this.consumer.bitMap)) {
       // pnpm installs a pnpm workspace from the packages' own manifests. bit neither writes the dependencies
       // into the root package.json, which the root component owns, nor installs and compiles, which would run
-      // the build scripts of the source just written
-      this.logger.console(formatHint('run "pnpm install" to install the dependencies of the written components'));
+      // the build scripts of the source just written. a caller that skips the installation, e.g. a clone,
+      // tells the user about it on its own
+      if (!opts.skipDependencyInstallation) {
+        this.logger.console(formatHint('run "pnpm install" to install the dependencies of the written components'));
+      }
     } else if (this.workspace.externalPackageManagerIsUsed()) {
       await this.installer.writeDependenciesToPackageJson();
     } else if (!opts.skipDependencyInstallation) {

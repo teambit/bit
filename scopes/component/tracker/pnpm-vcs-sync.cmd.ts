@@ -711,6 +711,8 @@ export async function createPnpmVcsImportPlan(
   for (const component of pnpmComponents) {
     const manifest = parseComponentPackageJson(component);
     const dependencies = dependencyResolver.getDependenciesFromLegacyComponent(component, { includeHidden: true });
+    const snappedBindings = readSnappedCatalogBindings(component);
+    const targetBindings = resolvePnpmVcsCatalogBindings(manifest, workspaceManifest);
     for (const field of DEPENDENCY_FIELDS) {
       const entries = manifest[field];
       if (!entries || typeof entries !== 'object' || Array.isArray(entries)) continue;
@@ -723,8 +725,25 @@ export async function createPnpmVcsImportPlan(
         const catalogName = isWorkspaceReference ? 'default' : rawSpecifier.slice('catalog:'.length) || 'default';
         const dependency = dependencies.findByPkgNameOrCompId(dependencyName);
         // declared in package.json but never imported by the code, so bit recorded no dependency - and no
-        // version to bind. the entry stays as the pnpm manifest has it, which is versioned with the root.
-        if (!dependency) continue;
+        // version to bind. the entry stays as this workspace's catalog has it. a catalog without it - the
+        // component came from another workspace - gets the range the component was snapped with.
+        if (!dependency) {
+          if (isWorkspaceReference) continue;
+          const findBinding = (bindings: PnpmVcsCatalogBinding[]) =>
+            bindings.find(
+              (candidate) => candidate.catalogName === catalogName && candidate.packageName === dependencyName
+            );
+          const snappedSpecifier = findBinding(snappedBindings)?.specifier;
+          if (
+            findBinding(targetBindings)?.specifier ||
+            !snappedSpecifier ||
+            snappedSpecifier.startsWith('workspace:')
+          ) {
+            continue;
+          }
+          setCatalogBinding(catalogBindings, { catalogName, packageName: dependencyName, specifier: snappedSpecifier });
+          continue;
+        }
         const binding = {
           catalogName,
           packageName: dependencyName,
@@ -737,14 +756,7 @@ export async function createPnpmVcsImportPlan(
                   ?.componentId.toString()
               : undefined,
         };
-        const key = `${catalogName}\0${dependencyName}`;
-        const existing = catalogBindings.get(key);
-        if (existing && (existing.specifier !== binding.specifier || existing.componentId !== binding.componentId)) {
-          throw new BitError(
-            `imported components require conflicting ${catalogName} catalog bindings for ${dependencyName}`
-          );
-        }
-        catalogBindings.set(key, binding);
+        setCatalogBinding(catalogBindings, binding);
       }
     }
   }
@@ -756,6 +768,27 @@ export async function createPnpmVcsImportPlan(
       `${left.catalogName}\0${left.packageName}`.localeCompare(`${right.catalogName}\0${right.packageName}`)
     ),
   };
+}
+
+type PlannedCatalogBinding = PnpmVcsImportPlan['catalogs'][number];
+
+function setCatalogBinding(catalogBindings: Map<string, PlannedCatalogBinding>, binding: PlannedCatalogBinding) {
+  const key = `${binding.catalogName}\0${binding.packageName}`;
+  const existing = catalogBindings.get(key);
+  if (existing && (existing.specifier !== binding.specifier || existing.componentId !== binding.componentId)) {
+    throw new BitError(
+      `imported components require conflicting ${binding.catalogName} catalog bindings for ${binding.packageName}`
+    );
+  }
+  catalogBindings.set(key, binding);
+}
+
+/** the catalog entries the component referred to when it was snapped, see createPnpmVcsCatalogBindingsOnLoad */
+function readSnappedCatalogBindings(component: ConsumerComponent): PnpmVcsCatalogBinding[] {
+  const data = component.extensions.findCoreExtension(TRACKER_ASPECT_ID)?.data?.pnpmVcsCatalogBindings as
+    | PnpmVcsCatalogBindingsData
+    | undefined;
+  return data?.bindings || [];
 }
 
 function findPackageJsonFile(component: ConsumerComponent) {
