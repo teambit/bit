@@ -15,6 +15,7 @@ import { WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { Extensions } from '@teambit/legacy.constants';
 import { pathNormalizeToLinux } from '@teambit/legacy.utils';
+import { PackageJsonFile } from '@teambit/component.sources';
 import type { Workspace } from '@teambit/workspace';
 import { OutsideWorkspaceError, WorkspaceAspect } from '@teambit/workspace';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
@@ -506,11 +507,13 @@ async function bindWorkspaceReferencesToCatalog(
   if (!boundPackageNames.size) return;
   await Promise.all(
     plan.components.map(async ({ rootDir }) => {
-      const packageManifestPath = path.join(workspacePath, rootDir, PACKAGE_JSON);
-      const packageManifest = await readPackageManifest(packageManifestPath);
+      // the file is the user's source, so it is written back with the indentation and newlines it has
+      const packageJsonFile = await PackageJsonFile.load(workspacePath, rootDir);
+      if (!packageJsonFile.fileExist) return;
+      const packageManifest = packageJsonFile.packageJsonObject;
       let changed = false;
       for (const field of DEPENDENCY_FIELDS) {
-        const dependencies = packageManifest[field as keyof PackageManifest] as Record<string, string> | undefined;
+        const dependencies = packageManifest[field] as Record<string, string> | undefined;
         Object.entries(dependencies || {}).forEach(([packageName, specifier]) => {
           if (typeof specifier !== 'string' || !specifier.startsWith('workspace:')) return;
           if (!boundPackageNames.has(packageName)) return;
@@ -518,7 +521,7 @@ async function bindWorkspaceReferencesToCatalog(
           changed = true;
         });
       }
-      if (changed) await fs.writeJson(packageManifestPath, packageManifest, { spaces: 2 });
+      if (changed) await packageJsonFile.write();
     })
   );
 }

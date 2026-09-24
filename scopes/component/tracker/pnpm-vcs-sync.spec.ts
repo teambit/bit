@@ -409,8 +409,8 @@ describe('pnpm workspace import plan', () => {
       name: '@acme/app',
       dependencies: { '@acme/math': 'workspace:*', '@acme/strings': 'workspace:^' },
     };
-    const importApp = async () => {
-      await fs.outputJson(path.join(workspaceDir, 'components/app/package.json'), appManifest);
+    const importApp = async (appManifestContent = JSON.stringify(appManifest)) => {
+      await fs.outputFile(path.join(workspaceDir, 'components/app/package.json'), appManifestContent);
       const workspaceStub = {
         path: workspaceDir,
         consumer: { bitMap: { getComponentIdByRootPath: () => ({ toString: () => 'acme.scope/root' }) } },
@@ -448,6 +448,12 @@ describe('pnpm workspace import plan', () => {
       expect(workspaceManifest.catalog).to.deep.equal({
         '@acme/math': '0.0.0-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
       });
+    });
+    it('should keep the indentation and the newlines of the package.json it rewrites', async () => {
+      await importApp(`${JSON.stringify(appManifest, null, 4).replace(/\n/g, '\r\n')}\r\n`);
+      const content = await fs.readFile(path.join(workspaceDir, 'components/app/package.json'), 'utf8');
+      const expected = { ...appManifest, dependencies: { ...appManifest.dependencies, '@acme/math': 'catalog:' } };
+      expect(content).to.equal(`${JSON.stringify(expected, null, 4).replace(/\n/g, '\r\n')}\r\n`);
     });
     it('should leave a reference to a sibling the workspace has as is', async () => {
       await importApp();
