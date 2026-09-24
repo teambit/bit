@@ -14,7 +14,13 @@ import { glob } from 'glob';
 import { removeEmptyDir } from '@teambit/toolbox.fs.remove-empty-dir';
 import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
 import type { Types, ScopeJson } from '@teambit/legacy.scope';
-import { HashNotFound, OutdatedIndexJson, UnmergedComponents, RemoteLanes } from '@teambit/legacy.scope';
+import {
+  HashNotFound,
+  OutdatedIndexJson,
+  UnknownObjectType,
+  UnmergedComponents,
+  RemoteLanes,
+} from '@teambit/legacy.scope';
 import type { IndexType, IndexItem } from './scope-index';
 import { ScopeIndex } from './scope-index';
 import BitObject from './object';
@@ -314,7 +320,7 @@ export default class Repository {
     const objectPath = this.objectPath(ref);
     try {
       const stat = await fs.stat(objectPath);
-      const type = await this.readObjectType(objectPath, stat.size);
+      const type = await this.readObjectType(objectPath);
       return { object: { ref, type, size: stat.size, mtimeMs: stat.mtimeMs } };
     } catch (err: any) {
       logger.warn(`Repository.listObjectsWithType, failed reading ${objectPath}. Error: ${err.message}`);
@@ -322,24 +328,38 @@ export default class Repository {
     }
   }
 
-  private async readObjectType(objectPath: string, size: number): Promise<string> {
+  private async readObjectType(objectPath: string): Promise<string> {
     const readInFull = async () => BitObject.parseObjectType(this.onRead(await fs.readFile(objectPath)), objectPath);
-    // when there's no way to tell, assume the content is transformed and read in full. it's the
-    // slow answer, never the wrong one.
-    const isTransformed = Repository.hasPostObjectReadTransformer
+    if (this.isContentTransformed()) return readInFull();
+    return (await this.readTypeFromHeader(objectPath)) || readInFull();
+  }
+
+  /**
+   * whether object files have to go through `onPostObjectRead` before their header can be read.
+   * when there's no way to tell, assume they do. it's the slow answer, never the wrong one.
+   */
+  private isContentTransformed(): boolean {
+    return Repository.hasPostObjectReadTransformer
       ? Repository.hasPostObjectReadTransformer()
       : Boolean(Repository.onPostObjectRead);
-    if (isTransformed) return readInFull();
-    const chunkSize = Math.min(OBJECT_HEADER_CHUNK_SIZE, size);
+  }
+
+  /**
+   * the type an object file names in its header, read from the first chunk of the file only.
+   * null when that chunk doesn't hold the whole header, in which case the file has to be read in
+   * full. throws `UnknownObjectType` when the header names a type nothing is registered under.
+   */
+  private async readTypeFromHeader(objectPath: string): Promise<string | null> {
     // `Uint8Array` rather than `Buffer` - see `parseObjectTypeFromChunk`
-    const chunk = new Uint8Array(chunkSize);
+    const chunk = new Uint8Array(OBJECT_HEADER_CHUNK_SIZE);
     const fileDescriptor = await fs.open(objectPath, 'r');
+    let bytesRead: number;
     try {
-      await fs.read(fileDescriptor, chunk, 0, chunkSize, 0);
+      ({ bytesRead } = await fs.read(fileDescriptor, chunk, 0, chunk.length, 0));
     } finally {
       await fs.close(fileDescriptor);
     }
-    return BitObject.parseObjectTypeFromChunk(chunk) || readInFull();
+    return BitObject.parseObjectTypeFromChunk(chunk.subarray(0, bytesRead));
   }
 
   async loadRefDeleteIfInvalid(ref: Ref) {
@@ -359,11 +379,23 @@ export default class Repository {
 
   async loadRefOnlyIfType(ref: Ref, types: Types): Promise<BitObject | null> {
     const objectPath = this.objectPath(ref);
-    const fileContentsRaw = await fs.readFile(objectPath);
-    const fileContents = this.onRead(fileContentsRaw);
     const typeNames = types.map((type) => type.name);
-    const parsedObject = await BitObject.parseObjectOnlyIfType(fileContents, typeNames, objectPath);
-    return parsedObject;
+    // most of a scope is file contents, which callers of this never ask for. the header says
+    // whether an object is wanted, so the rest of the file is only read and inflated when it is.
+    // transformed content has no header to read on its own, so it keeps to the single full read.
+    if (!this.isContentTransformed()) {
+      let type: string | null;
+      try {
+        type = await this.readTypeFromHeader(objectPath);
+      } catch (err: any) {
+        // an unregistered type is not one of the types asked for - the same answer the full read gives
+        if (err instanceof UnknownObjectType) return null;
+        throw err;
+      }
+      if (type && !typeNames.includes(type)) return null;
+    }
+    const fileContents = this.onRead(await fs.readFile(objectPath));
+    return BitObject.parseObjectOnlyIfType(fileContents, typeNames, objectPath);
   }
 
   async listRefs(cwd = this.getPath()): Promise<Array<Ref>> {
