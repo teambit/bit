@@ -1,7 +1,5 @@
-import chai, { expect } from 'chai';
+import { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
-import chaiFs from 'chai-fs';
-chai.use(chaiFs);
 
 describe('lane with multiple components with the same name but different scope-name', function () {
   this.timeout(0);
@@ -52,9 +50,6 @@ describe('lane with multiple components with the same name but different scope-n
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.scopeHelper.addRemoteScope(anotherRemotePath);
-    });
-    after(() => {
-      helper.command.resetFeatures();
     });
     it('should not fail due to duplication of the same name in the same workspace', () => {
       expect(() => helper.command.importLane('lane-a')).to.not.throw();

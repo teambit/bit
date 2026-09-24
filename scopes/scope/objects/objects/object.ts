@@ -1,4 +1,4 @@
-import { inflateSync } from 'zlib';
+import { constants, inflateSync } from 'zlib';
 
 import { NULL_BYTE, SPACE_DELIMITER } from '@teambit/legacy.constants';
 import { deflate, inflate } from '@teambit/legacy.utils';
@@ -153,6 +153,45 @@ path: ${err.path}`);
     const { type } = extractHeaderAndContent(buffer);
     if (typeNames.includes(type)) return parse(buffer);
     return null;
+  }
+
+  /**
+   * extract only the object type out of the first chunk of a compressed object file.
+   *
+   * the type is the first token of the header, which sits at the very beginning of the inflated
+   * buffer, so there's no need to inflate the entire object. `Z_SYNC_FLUSH` tells zlib to return
+   * whatever it managed to inflate instead of throwing on the truncated input.
+   * returns null when the header is not fully contained in the given chunk, in which case the
+   * caller should fall back to inflating the whole file. a header that is there but names a type
+   * nothing is registered under throws instead: reading it as a type of its own would let a
+   * damaged object pass for classified, and the caller acts on the inventory being complete.
+   *
+   * the chunk is a `Uint8Array` rather than a `Buffer` because newer `@types/node` make `Buffer`
+   * generic, which no longer matches zlib's `InputType` under the typescript version our envs ship.
+   */
+  static parseObjectTypeFromChunk(chunk: Uint8Array): string | null {
+    let buffer: Buffer;
+    try {
+      buffer = inflateSync(chunk, { finishFlush: constants.Z_SYNC_FLUSH });
+    } catch {
+      return null;
+    }
+    const firstNullByteLocation = buffer.indexOf(NULL_BYTE);
+    if (firstNullByteLocation === -1) return null;
+    const [type] = buffer.slice(0, firstNullByteLocation).toString().split(SPACE_DELIMITER);
+    if (!type) return null;
+    if (!types[type]) throw new UnknownObjectType(type);
+    return type;
+  }
+
+  /**
+   * same as `parseObjectTypeFromChunk`, only it gets the entire (inflated) object.
+   */
+  static async parseObjectType(fileContents: Buffer, filePath?: string): Promise<string> {
+    const buffer = await inflate(fileContents, filePath);
+    const { type } = extractHeaderAndContent(buffer);
+    if (!types[type]) throw new UnknownObjectType(type);
+    return type;
   }
 
   /**

@@ -21,6 +21,7 @@ system <sub-command> - access system-level operations and debugging tools
 Subcommands: log, tail-log
 doctor [diagnosis-name] - diagnose and troubleshoot workspace issues
 clear-cache - remove cached data to resolve stale data issues
+gc - remove objects from the local scope that are no longer needed
 
 Workspace commands
 details - show expanded details from the last command that provided them (e.g. tag, snap)
@@ -110,6 +111,7 @@ rename <current-name> <new-name> - change a component name
 Workspace & Project Setup
 new <template-name> <workspace-name> - create a new Bit workspace from a template
 init [path] - initialize a Bit workspace in an existing project
+clone <component-id> [dir] - create a workspace from its workspace-root component, with every component it lists
 
 Testing & Quality
 artifacts <component-pattern> - view and download build artifacts

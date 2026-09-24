@@ -254,10 +254,6 @@ describe('custom env', function () {
         const tagOutput = helper.general.runWithTryCatch('bit tag -m msg');
         expect(tagOutput).to.have.string('failed loading env - external env without a version');
       });
-      describe('running any other command', () => {
-        // @Gilad TODO
-        it.skip('should warn or error about the misconfigured env and suggest to enter the version', () => {});
-      });
     });
 
     describe('set up the env using bit env set without a version', () => {
@@ -374,6 +370,11 @@ describe('custom env', function () {
       it('bit status should show the RemovedEnv issue', () => {
         helper.command.expectStatusToHaveIssue(IssuesClasses.RemovedEnv.name);
       });
+      it('bit envs should show the env as deleted', () => {
+        const envsOutput = helper.command.envs();
+        expect(envsOutput).to.have.string('(deleted)');
+        expect(envsOutput).to.have.string(envName);
+      });
       it('replacing the env should fix the issue', () => {
         helper.command.replaceEnv(envId, `${envId}@0.0.2`);
         helper.command.expectStatusToNotHaveIssue(IssuesClasses.RemovedEnv.name);
@@ -415,9 +416,6 @@ describe('custom env', function () {
       it('bit status should not show it as an issue', () => {
         helper.command.expectStatusToNotHaveIssue(IssuesClasses.MultipleEnvs.name);
       });
-    });
-    after(() => {
-      npmCiRegistry.destroy();
     });
   });
 });

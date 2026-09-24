@@ -85,12 +85,10 @@ describe('optional dependencies', function () {
         path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_button/package.json`)
       );
     });
-    it('should add optionalDependencies to package.json', () => {
+    it('should add optionalDependencies and peerDependenciesMeta to package.json', () => {
       expect(buttonPkgJson.optionalDependencies).to.eql({
         'is-odd': '3.0.1',
       });
-    });
-    it('should add peerDependenciesMeta to package.json', () => {
       expect(buttonPkgJson.peerDependenciesMeta).to.eql({
         react: {
           optional: true,

@@ -16,6 +16,17 @@ export const errorSymbol = chalk.red('\u2716');
 /** Neutral bullet for informational items (no success/failure connotation) */
 export const bulletSymbol = chalk.dim('\u203A');
 
+/** Transition between a before and an after value, e.g. a size before and after a cleanup */
+export const arrowSymbol = chalk.dim('\u2192');
+
+/** Human-readable byte size, in 1024 steps, e.g. `1.5 MB` */
+export function formatBytes(bytes: number): string {
+  if (!bytes) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+  return `${(bytes / 1024 ** i).toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
+}
+
 /** Format a single item with 3-space indent + symbol + text. Defaults to bullet symbol. */
 export function formatItem(text: string, symbol?: string): string {
   const s = symbol ?? bulletSymbol;

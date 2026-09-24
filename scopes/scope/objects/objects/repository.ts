@@ -31,6 +31,18 @@ type ContentTransformer = (content: Buffer) => Buffer;
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 const TRASH_DIR = 'trash';
 const MAX_COMPRESSED_SIZE_TO_CACHE = 100 * 1024; // don't cache big files (mainly artifacts) to prevent out-of-memory
+/**
+ * how much of an object file to read when all that's needed is its header. the header holds the
+ * type and is a few dozen bytes, which 512 compressed bytes always cover - and every byte past it
+ * is inflated for nothing (4KB inflates ten times as much, across every object in the scope). a
+ * chunk that falls short anyway is read in full.
+ */
+const OBJECT_HEADER_CHUNK_SIZE = 512;
+
+/** `mtimeMs` lets a caller tell an object that has been here a while from one just written */
+export type ObjectWithType = { ref: Ref; type: string; size: number; mtimeMs: number };
+/** `unreadable` holds the objects that couldn't be classified, so a caller can refuse to act on a partial inventory */
+export type ObjectsWithType = { objects: ObjectWithType[]; unreadable: Ref[] };
 
 export default class Repository {
   objects: { [key: string]: BitObject } = {};
@@ -97,14 +109,23 @@ export default class Repository {
    * Note: This function cannot be async because it's used by the synchronous `loadSync` method
    * which needs to maintain sync behavior for compatibility with existing code.
    */
-  static onPreObjectPersist: (content: Buffer) => Buffer;
+  static onPreObjectPersist?: (content: Buffer) => Buffer;
 
   /**
    * Hook for transforming content after objects are read from the filesystem.
    * Note: This function cannot be async because it's used by the synchronous `loadSync` method
    * which needs to maintain sync behavior for compatibility with existing code.
    */
-  static onPostObjectRead: (content: Buffer) => Buffer;
+  static onPostObjectRead?: (content: Buffer) => Buffer;
+
+  /**
+   * whether `onPostObjectRead` actually transforms anything.
+   *
+   * the scope aspect installs the hook above unconditionally - it's a reduce over a slot that is
+   * usually empty - so the hook being set says nothing about whether object content is transformed.
+   * only a caller that can skip reading content altogether needs to tell the two apart.
+   */
+  static hasPostObjectReadTransformer?: () => boolean;
 
   async reLoadScopeIndex() {
     this.scopeIndex = await this.loadOptionallyCreateScopeIndex();
@@ -260,6 +281,65 @@ export default class Repository {
       }
     );
     return objects;
+  }
+
+  /**
+   * classify every object in the scope by its type, along with its size on the filesystem.
+   *
+   * needed by the garbage collector, which must know the type of each object but has no use for
+   * its content. inflating every object would mean inflating gigabytes of file-content (`Source`)
+   * objects, so only the first chunk of each file is read - enough to hold the header, which is
+   * where the type is. when a content transformer is registered (`onPostObjectRead`), it applies
+   * to the whole buffer, so in that case the file is read in full.
+   */
+  async listObjectsWithType(): Promise<ObjectsWithType> {
+    const refs = await this.listRefs();
+    const concurrency = concurrentIOLimit();
+    logger.debug(`Repository.listObjectsWithType, classifying ${refs.length} objects`);
+    const results = await pMapPool(refs, (ref) => this.getObjectTypeGracefully(ref), { concurrency });
+    const objects = compact(results.map((result) => result.object));
+    const unreadable = compact(results.map((result) => result.unreadable));
+    if (unreadable.length) {
+      logger.warn(`Repository.listObjectsWithType, unable to classify ${unreadable.length} objects`);
+    }
+    return { objects, unreadable };
+  }
+
+  /**
+   * the objects that couldn't be classified are reported rather than skipped. a caller that acts on
+   * this inventory (the garbage collector) has to know that it's incomplete, because an object it
+   * can't see is one it can't reason about.
+   */
+  private async getObjectTypeGracefully(ref: Ref): Promise<{ object?: ObjectWithType; unreadable?: Ref }> {
+    const objectPath = this.objectPath(ref);
+    try {
+      const stat = await fs.stat(objectPath);
+      const type = await this.readObjectType(objectPath, stat.size);
+      return { object: { ref, type, size: stat.size, mtimeMs: stat.mtimeMs } };
+    } catch (err: any) {
+      logger.warn(`Repository.listObjectsWithType, failed reading ${objectPath}. Error: ${err.message}`);
+      return { unreadable: ref };
+    }
+  }
+
+  private async readObjectType(objectPath: string, size: number): Promise<string> {
+    const readInFull = async () => BitObject.parseObjectType(this.onRead(await fs.readFile(objectPath)), objectPath);
+    // when there's no way to tell, assume the content is transformed and read in full. it's the
+    // slow answer, never the wrong one.
+    const isTransformed = Repository.hasPostObjectReadTransformer
+      ? Repository.hasPostObjectReadTransformer()
+      : Boolean(Repository.onPostObjectRead);
+    if (isTransformed) return readInFull();
+    const chunkSize = Math.min(OBJECT_HEADER_CHUNK_SIZE, size);
+    // `Uint8Array` rather than `Buffer` - see `parseObjectTypeFromChunk`
+    const chunk = new Uint8Array(chunkSize);
+    const fileDescriptor = await fs.open(objectPath, 'r');
+    try {
+      await fs.read(fileDescriptor, chunk, 0, chunkSize, 0);
+    } finally {
+      await fs.close(fileDescriptor);
+    }
+    return BitObject.parseObjectTypeFromChunk(chunk) || readInFull();
   }
 
   async loadRefDeleteIfInvalid(ref: Ref) {

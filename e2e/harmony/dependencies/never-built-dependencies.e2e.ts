@@ -42,43 +42,4 @@ chai.use(chaiFs);
       ).not.to.be.a.path();
     });
   });
-  // skipped: yarn support is deprecated and planned for removal
-  describe.skip('using yarn', () => {
-    let npmCiRegistry: NpmCiRegistry;
-    before(async () => {
-      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setWorkspaceWithRemoteScope({
-        yarnRCConfig: {
-          unsafeHttpWhitelist: ['localhost'],
-        },
-      });
-      helper.workspaceJsonc.setPackageManager(`teambit.dependencies/yarn`);
-      npmCiRegistry = new NpmCiRegistry(helper);
-      await npmCiRegistry.init();
-
-      npmCiRegistry.setRegistry();
-      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('neverBuiltDependencies', [
-        '@pnpm.e2e/pre-and-postinstall-scripts-example',
-      ]);
-      helper.command.install('@pnpm.e2e/pre-and-postinstall-scripts-example');
-    });
-    after(() => {
-      npmCiRegistry.destroy();
-      helper.scopeHelper.destroy();
-    });
-    it('should not build the dependency', async () => {
-      expect(
-        path.join(
-          helper.fixtures.scopes.localPath,
-          'node_modules/@pnpm.e2e/pre-and-postinstall-scripts-example/package.json'
-        )
-      ).to.be.a.path();
-      expect(
-        path.join(
-          helper.fixtures.scopes.localPath,
-          'node_modules/@pnpm.e2e/pre-and-postinstall-scripts-example/generated-by-preinstall.js'
-        )
-      ).not.to.be.a.path();
-    });
-  });
 });

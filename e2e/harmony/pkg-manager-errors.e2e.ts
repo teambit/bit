@@ -1,14 +1,13 @@
-import chai, { expect } from 'chai';
+import { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
-import chaiFs from 'chai-fs';
-chai.use(chaiFs);
 
-describe('bit checkout command', function () {
+// named for "bit checkout" historically, but it covers every command that installs as a side effect:
+// checkout, switch and import all have to surface a package-manager failure instead of throwing.
+describe('commands that install, when the package-manager fails', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.scopeHelper.reInitWorkspace();
   });
   after(() => {
     helper.scopeHelper.destroy();

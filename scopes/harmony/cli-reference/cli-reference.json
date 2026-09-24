@@ -1856,6 +1856,11 @@
         "set the component's environment. (overrides the env from variants if exists)"
       ],
       [
+        "",
+        "root",
+        "track the workspace root itself as a component, which owns every file no other component claims"
+      ],
+      [
         "j",
         "json",
         "output as json format"
@@ -5949,6 +5954,52 @@
     "skipWorkspace": true
   },
   {
+    "name": "gc",
+    "alias": "",
+    "options": [
+      [
+        "d",
+        "dry-run",
+        "show what would be removed without removing anything"
+      ],
+      [
+        "",
+        "keep-versions <number>",
+        "keep the last N versions of each workspace component, so their recent history stays available offline"
+      ],
+      [
+        "",
+        "backup",
+        "move the objects into a \"deleted-objects\" directory instead of deleting them. frees no disk space"
+      ],
+      [
+        "",
+        "restore",
+        "bring back everything previous runs moved aside with --backup, and empty that directory"
+      ],
+      [
+        "",
+        "restore-overwrite",
+        "same as --restore, but overwrite objects that already exist"
+      ],
+      [
+        "v",
+        "verbose",
+        "log every object being removed"
+      ],
+      [
+        "j",
+        "json",
+        "return the results in json format"
+      ]
+    ],
+    "description": "remove objects from the local scope that are no longer needed",
+    "extendedDescription": "a workspace keeps every version of every component it has ever imported. each new version brings\nthe source files of that version with it, and nothing removes the ones it superseded, so the local\nscope keeps growing - often to several gigabytes.\n\nthis command removes the versions nothing points at anymore. it keeps the version each component is\nchecked out at, every head (of the workspace, of its lanes and of the remotes it tracks), anything\nsnapped locally and not exported yet, and the dependencies of all of those. everything it removes\ncan be fetched again from the remote on demand, which bit already does whenever a version it needs\nis not in the local scope.\n\nthe trade-off is that history is no longer local: \"bit log\", \"bit blame\" and diffing against an old\nversion will fetch from the remote instead of answering offline. use --keep-versions to keep the\nlast few versions of each workspace component if that matters to you.\n\nrun with --dry-run first to see how much there is to gain.\n\nin a bare scope (a scope that is not backed by a workspace) this instead runs the collector that\nkeeps all history, since there the scope is the source of truth rather than a cache.",
+    "group": "system",
+    "private": false,
+    "skipWorkspace": true
+  },
+  {
     "name": "rename <current-name> <new-name>",
     "alias": "",
     "options": [
@@ -6438,6 +6489,43 @@
       {
         "name": "component-pattern",
         "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+      }
+    ]
+  },
+  {
+    "name": "clone <component-id> [dir]",
+    "alias": "",
+    "options": [
+      [
+        "l",
+        "lane <lane-id>",
+        "clone the workspace as it is on this lane (\"scope/name\"): it comes out on the lane, with the components at their heads there"
+      ],
+      [
+        "",
+        "remote <url>",
+        "url of the scope hosting the components, when it is neither on bit.cloud nor in the global remotes"
+      ],
+      [
+        "x",
+        "skip-dependency-installation",
+        "do not install the dependencies, and so do not compile, after the clone"
+      ]
+    ],
+    "description": "create a workspace from its workspace-root component, with every component it lists",
+    "extendedDescription": "the workspace-root component is the one tracked at a workspace root (\"bit add .\"). it versions the workspace's own files - workspace.jsonc, .bitmap, lockfile, configs - and this command makes a workspace out of it, the way \"git clone\" makes a working tree out of a repository: the root files land at the root, every component the root lists is imported into the directory it records, then the dependencies are installed.\nthe components come at their heads on main, or on the lane given with --lane. a version on the root id pins the root files only.\nruns outside a workspace. the directory must be empty or not exist, and defaults to the component name.",
+    "group": "workspace-setup",
+    "private": false,
+    "remoteOp": true,
+    "skipWorkspace": true,
+    "arguments": [
+      {
+        "name": "component-id",
+        "description": "the workspace-root component, with its scope. a version pins the root files"
+      },
+      {
+        "name": "dir",
+        "description": "where to create the workspace. defaults to the component name, must be empty or absent"
       }
     ]
   }
