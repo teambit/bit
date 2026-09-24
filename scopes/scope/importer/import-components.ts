@@ -585,7 +585,7 @@ if you just want to get a quick look into this snap, create a new workspace and 
           throwForSeederNotFound: false,
           reason: this.options.fetchDeps
             ? 'for getting all dependencies'
-            : `for getting dependencies of components that don't have dependency-graph`,
+            : 'for getting missing versions and dependencies',
         });
 
     return results;
