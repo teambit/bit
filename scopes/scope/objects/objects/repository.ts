@@ -14,7 +14,13 @@ import { glob } from 'glob';
 import { removeEmptyDir } from '@teambit/toolbox.fs.remove-empty-dir';
 import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
 import type { Types, ScopeJson } from '@teambit/legacy.scope';
-import { HashNotFound, OutdatedIndexJson, UnmergedComponents, RemoteLanes } from '@teambit/legacy.scope';
+import {
+  HashNotFound,
+  OutdatedIndexJson,
+  UnknownObjectType,
+  UnmergedComponents,
+  RemoteLanes,
+} from '@teambit/legacy.scope';
 import type { IndexType, IndexItem } from './scope-index';
 import { ScopeIndex } from './scope-index';
 import BitObject from './object';
@@ -22,13 +28,27 @@ import type { ObjectItem } from './object-list';
 import { ObjectList } from './object-list';
 import BitRawObject from './raw-object';
 import Ref from './ref';
+import { LiveObjects } from './live-objects';
 import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
-import { getMaxSizeForObjects, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import { getCacheOptionsForObjects, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { ScopeMeta, Lane, ModelComponent } from '../models';
 
 type ContentTransformer = (content: Buffer) => Buffer;
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 const TRASH_DIR = 'trash';
+const MAX_COMPRESSED_SIZE_TO_CACHE = 100 * 1024; // don't cache big files (mainly artifacts) to prevent out-of-memory
+/**
+ * how much of an object file to read when all that's needed is its header. the header holds the
+ * type and is a few dozen bytes, which 512 compressed bytes always cover - and every byte past it
+ * is inflated for nothing (4KB inflates ten times as much, across every object in the scope). a
+ * chunk that falls short anyway is read in full.
+ */
+const OBJECT_HEADER_CHUNK_SIZE = 512;
+
+/** `mtimeMs` lets a caller tell an object that has been here a while from one just written */
+export type ObjectWithType = { ref: Ref; type: string; size: number; mtimeMs: number };
+/** `unreadable` holds the objects that couldn't be classified, so a caller can refuse to act on a partial inventory */
+export type ObjectsWithType = { objects: ObjectWithType[]; unreadable: Ref[] };
 
 export default class Repository {
   objects: { [key: string]: BitObject } = {};
@@ -39,6 +59,7 @@ export default class Repository {
   scopePath: string;
   scopeIndex: ScopeIndex;
   protected cache: InMemoryCache<BitObject>;
+  private liveObjects = new LiveObjects();
   remoteLanes!: RemoteLanes;
   unmergedComponents!: UnmergedComponents;
   _persistMutex?: Mutex;
@@ -47,7 +68,7 @@ export default class Repository {
     this.scopeJson = scopeJson;
     this.onRead = (content: Buffer) => Repository.onPostObjectRead?.(content) || content;
     this.onPersist = (content: Buffer) => Repository.onPreObjectPersist?.(content) || content;
-    this.cache = createInMemoryCache({ maxSize: getMaxSizeForObjects() });
+    this.cache = createInMemoryCache(getCacheOptionsForObjects());
   }
 
   get persistMutex() {
@@ -94,14 +115,23 @@ export default class Repository {
    * Note: This function cannot be async because it's used by the synchronous `loadSync` method
    * which needs to maintain sync behavior for compatibility with existing code.
    */
-  static onPreObjectPersist: (content: Buffer) => Buffer;
+  static onPreObjectPersist?: (content: Buffer) => Buffer;
 
   /**
    * Hook for transforming content after objects are read from the filesystem.
    * Note: This function cannot be async because it's used by the synchronous `loadSync` method
    * which needs to maintain sync behavior for compatibility with existing code.
    */
-  static onPostObjectRead: (content: Buffer) => Buffer;
+  static onPostObjectRead?: (content: Buffer) => Buffer;
+
+  /**
+   * whether `onPostObjectRead` actually transforms anything.
+   *
+   * the scope aspect installs the hook above unconditionally - it's a reduce over a slot that is
+   * usually empty - so the hook being set says nothing about whether object content is transformed.
+   * only a caller that can skip reading content altogether needs to tell the two apart.
+   */
+  static hasPostObjectReadTransformer?: () => boolean;
 
   async reLoadScopeIndex() {
     this.scopeIndex = await this.loadOptionallyCreateScopeIndex();
@@ -213,15 +243,15 @@ export default class Repository {
       // @ts-ignore @todo: fix! it should return BitObject | null.
       return null;
     }
-    const size = fileContentsRaw.byteLength;
+    const compressedSize = fileContentsRaw.byteLength;
     const fileContents = this.onRead(fileContentsRaw);
     // uncomment to debug the transformed objects by onRead
     // console.log('transformedContent load', ref.toString(), BitObject.parseSync(fileContents).getType());
-    const parsedObject = await BitObject.parseObject(fileContents, objectPath);
-    const maxSizeToCache = 100 * 1024; // 100KB
-    if (size < maxSizeToCache) {
-      // don't cache big files (mainly artifacts) to prevent out-of-memory
-      this.setCache(parsedObject);
+    const { object: parsedObject, inflatedSize } = await BitObject.parseObjectWithSize(fileContents, objectPath);
+    if (compressedSize < MAX_COMPRESSED_SIZE_TO_CACHE) {
+      this.setCache(parsedObject, inflatedSize);
+    } else {
+      this.liveObjects.set(ref.toString(), parsedObject, inflatedSize, false);
     }
     return parsedObject;
   }
@@ -259,6 +289,79 @@ export default class Repository {
     return objects;
   }
 
+  /**
+   * classify every object in the scope by its type, along with its size on the filesystem.
+   *
+   * needed by the garbage collector, which must know the type of each object but has no use for
+   * its content. inflating every object would mean inflating gigabytes of file-content (`Source`)
+   * objects, so only the first chunk of each file is read - enough to hold the header, which is
+   * where the type is. when a content transformer is registered (`onPostObjectRead`), it applies
+   * to the whole buffer, so in that case the file is read in full.
+   */
+  async listObjectsWithType(): Promise<ObjectsWithType> {
+    const refs = await this.listRefs();
+    const concurrency = concurrentIOLimit();
+    logger.debug(`Repository.listObjectsWithType, classifying ${refs.length} objects`);
+    const results = await pMapPool(refs, (ref) => this.getObjectTypeGracefully(ref), { concurrency });
+    const objects = compact(results.map((result) => result.object));
+    const unreadable = compact(results.map((result) => result.unreadable));
+    if (unreadable.length) {
+      logger.warn(`Repository.listObjectsWithType, unable to classify ${unreadable.length} objects`);
+    }
+    return { objects, unreadable };
+  }
+
+  /**
+   * the objects that couldn't be classified are reported rather than skipped. a caller that acts on
+   * this inventory (the garbage collector) has to know that it's incomplete, because an object it
+   * can't see is one it can't reason about.
+   */
+  private async getObjectTypeGracefully(ref: Ref): Promise<{ object?: ObjectWithType; unreadable?: Ref }> {
+    const objectPath = this.objectPath(ref);
+    try {
+      const stat = await fs.stat(objectPath);
+      const type = await this.readObjectType(objectPath);
+      return { object: { ref, type, size: stat.size, mtimeMs: stat.mtimeMs } };
+    } catch (err: any) {
+      logger.warn(`Repository.listObjectsWithType, failed reading ${objectPath}. Error: ${err.message}`);
+      return { unreadable: ref };
+    }
+  }
+
+  private async readObjectType(objectPath: string): Promise<string> {
+    const readInFull = async () => BitObject.parseObjectType(this.onRead(await fs.readFile(objectPath)), objectPath);
+    if (this.isContentTransformed()) return readInFull();
+    return (await this.readTypeFromHeader(objectPath)) || readInFull();
+  }
+
+  /**
+   * whether object files have to go through `onPostObjectRead` before their header can be read.
+   * when there's no way to tell, assume they do. it's the slow answer, never the wrong one.
+   */
+  private isContentTransformed(): boolean {
+    return Repository.hasPostObjectReadTransformer
+      ? Repository.hasPostObjectReadTransformer()
+      : Boolean(Repository.onPostObjectRead);
+  }
+
+  /**
+   * the type an object file names in its header, read from the first chunk of the file only.
+   * null when that chunk doesn't hold the whole header, in which case the file has to be read in
+   * full. throws `UnknownObjectType` when the header names a type nothing is registered under.
+   */
+  private async readTypeFromHeader(objectPath: string): Promise<string | null> {
+    // `Uint8Array` rather than `Buffer` - see `parseObjectTypeFromChunk`
+    const chunk = new Uint8Array(OBJECT_HEADER_CHUNK_SIZE);
+    const fileDescriptor = await fs.open(objectPath, 'r');
+    let bytesRead: number;
+    try {
+      ({ bytesRead } = await fs.read(fileDescriptor, chunk, 0, chunk.length, 0));
+    } finally {
+      await fs.close(fileDescriptor);
+    }
+    return BitObject.parseObjectTypeFromChunk(chunk.subarray(0, bytesRead));
+  }
+
   async loadRefDeleteIfInvalid(ref: Ref) {
     try {
       return await this.load(ref, true);
@@ -276,11 +379,23 @@ export default class Repository {
 
   async loadRefOnlyIfType(ref: Ref, types: Types): Promise<BitObject | null> {
     const objectPath = this.objectPath(ref);
-    const fileContentsRaw = await fs.readFile(objectPath);
-    const fileContents = this.onRead(fileContentsRaw);
     const typeNames = types.map((type) => type.name);
-    const parsedObject = await BitObject.parseObjectOnlyIfType(fileContents, typeNames, objectPath);
-    return parsedObject;
+    // most of a scope is file contents, which callers of this never ask for. the header says
+    // whether an object is wanted, so the rest of the file is only read and inflated when it is.
+    // transformed content has no header to read on its own, so it keeps to the single full read.
+    if (!this.isContentTransformed()) {
+      let type: string | null;
+      try {
+        type = await this.readTypeFromHeader(objectPath);
+      } catch (err: any) {
+        // an unregistered type is not one of the types asked for - the same answer the full read gives
+        if (err instanceof UnknownObjectType) return null;
+        throw err;
+      }
+      if (type && !typeNames.includes(type)) return null;
+    }
+    const fileContents = this.onRead(await fs.readFile(objectPath));
+    return BitObject.parseObjectOnlyIfType(fileContents, typeNames, objectPath);
   }
 
   async listRefs(cwd = this.getPath()): Promise<Array<Ref>> {
@@ -452,27 +567,43 @@ export default class Repository {
     }
   }
 
-  setCache(object: BitObject) {
-    this.cache.set(object.hash().toString(), object);
+  /**
+   * `size` is the object's inflated content size (see `InMemoryCache.set`).
+   */
+  setCache(object: BitObject, size?: number) {
+    const key = object.hash().toString();
+    this.cache.set(key, object, size);
+    this.liveObjects.set(key, object, size, true);
     return this;
   }
 
+  /**
+   * an object evicted from the cache is still returned as long as it's in use elsewhere (see `LiveObjects`).
+   */
   getCache(ref: Ref): BitObject | undefined {
-    return this.cache.get(ref.toString());
+    const key = ref.toString();
+    const cached = this.cache.get(key);
+    if (cached) return cached;
+    const live = this.liveObjects.get(key);
+    if (!live) return undefined;
+    if (live.cacheable) this.cache.set(key, live.object, live.size); // it's in use again
+    return live.object;
   }
 
   removeFromCache(ref: Ref) {
     this.cache.delete(ref.toString());
+    this.liveObjects.delete(ref.toString());
   }
 
   async clearCache() {
     logger.debug('repository.clearCache');
-    this.cache.deleteAll();
+    this.clearObjectsFromCache();
     await this.init();
   }
   clearObjectsFromCache() {
     logger.debug('repository.clearObjectsFromCache');
     this.cache.deleteAll();
+    this.liveObjects.clear();
   }
 
   backup(dirName?: string) {
@@ -689,18 +820,25 @@ export default class Repository {
    * this method doesn't write to scopeIndex. so using this method for ModelComponent or
    * Symlink makes the index outdated.
    */
-  async _writeOne(object: BitObject): Promise<boolean> {
-    const contents = await object.compress();
+  async _writeOne(object: BitObject): Promise<void> {
+    const { buffer: contents, inflatedSize } = await object.compressWithSize();
     const options: ChownOptions = {};
     if (this.scopeJson.groupName) options.gid = await resolveGroupId(this.scopeJson.groupName);
     const hash = object.hash();
-    if (this.cache.has(hash.toString())) this.cache.set(hash.toString(), object); // update the cache
     const objectPath = this.objectPath(hash);
     logger.trace(`repository._writeOne: ${objectPath}`);
     // Run hook to transform content pre persisting
     const transformedContent = this.onPersist(contents);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return writeFile(objectPath, transformedContent, options);
+    await writeFile(objectPath, transformedContent, options);
+    // once written, the object is the up-to-date one. this also replaces the size-estimate of objects that
+    // were cached by `add()`.
+    if (this.cache.has(hash.toString())) this.cache.set(hash.toString(), object, inflatedSize);
+    this.liveObjects.set(
+      hash.toString(),
+      object,
+      inflatedSize,
+      transformedContent.byteLength < MAX_COMPRESSED_SIZE_TO_CACHE
+    );
   }
 
   async writeObjectsToPendingDir(objectList: ObjectList, pendingDir: PathOsBasedAbsolute) {

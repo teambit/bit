@@ -6011,6 +6011,52 @@
     "skipWorkspace": true
   },
   {
+    "name": "gc",
+    "alias": "",
+    "options": [
+      [
+        "d",
+        "dry-run",
+        "show what would be removed without removing anything"
+      ],
+      [
+        "",
+        "keep-versions <number>",
+        "keep the last N versions of each workspace component, so their recent history stays available offline"
+      ],
+      [
+        "",
+        "backup",
+        "move the objects into a \"deleted-objects\" directory instead of deleting them. frees no disk space"
+      ],
+      [
+        "",
+        "restore",
+        "bring back everything previous runs moved aside with --backup, and empty that directory"
+      ],
+      [
+        "",
+        "restore-overwrite",
+        "same as --restore, but overwrite objects that already exist"
+      ],
+      [
+        "v",
+        "verbose",
+        "log every object being removed"
+      ],
+      [
+        "j",
+        "json",
+        "return the results in json format"
+      ]
+    ],
+    "description": "remove objects from the local scope that are no longer needed",
+    "extendedDescription": "a workspace keeps every version of every component it has ever imported. each new version brings\nthe source files of that version with it, and nothing removes the ones it superseded, so the local\nscope keeps growing - often to several gigabytes.\n\nthis command removes the versions nothing points at anymore. it keeps the version each component is\nchecked out at, every head (of the workspace, of its lanes and of the remotes it tracks), anything\nsnapped locally and not exported yet, and the dependencies of all of those. everything it removes\ncan be fetched again from the remote on demand, which bit already does whenever a version it needs\nis not in the local scope.\n\nthe trade-off is that history is no longer local: \"bit log\", \"bit blame\" and diffing against an old\nversion will fetch from the remote instead of answering offline. use --keep-versions to keep the\nlast few versions of each workspace component if that matters to you.\n\nrun with --dry-run first to see how much there is to gain.\n\nin a bare scope (a scope that is not backed by a workspace) this instead runs the collector that\nkeeps all history, since there the scope is the source of truth rather than a cache.",
+    "group": "system",
+    "private": false,
+    "skipWorkspace": true
+  },
+  {
     "name": "rename <current-name> <new-name>",
     "alias": "",
     "options": [
