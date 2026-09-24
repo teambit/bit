@@ -10,8 +10,8 @@ import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
 import { WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import { Extensions } from '@teambit/legacy.constants';
-import { TrackerAspect } from './tracker.aspect';
-import type { TrackerMain } from './tracker.main.runtime';
+import { TrackerAspect } from '@teambit/tracker';
+import type { TrackerMain } from '@teambit/tracker';
 import {
   applyPnpmImportPlan,
   createPnpmVcsCatalogBindingsOnLoad,
@@ -21,7 +21,7 @@ import {
   resolvePnpmVcsCatalogBindings,
   sanitizePnpmComponentName,
   syncPnpmWorkspace,
-} from './pnpm-vcs-sync.cmd';
+} from './pnpm-workspace-sync';
 
 const DEPENDENCY_RESOLVER = 'teambit.dependencies/dependency-resolver';
 

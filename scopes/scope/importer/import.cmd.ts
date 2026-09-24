@@ -252,13 +252,12 @@ without arguments, fetches all workspace components' latest versions from their 
   }
 
   async json([ids]: [string[]], importFlags: ImportFlags) {
-    const { importDetails, installationError, missingIds, writtenComponents } = await this.getImportResults(
+    const { importDetails, installationError, missingIds, componentsWrittenReport } = await this.getImportResults(
       ids,
       importFlags
     );
-    const pnpmVcs = writtenComponents?.length ? await this.importer.getPnpmVcsImportPlan(writtenComponents) : undefined;
 
-    return { importDetails, installationError, missingIds, pnpmVcs };
+    return { importDetails, installationError, missingIds, ...componentsWrittenReport };
   }
 
   private async getImportResults(

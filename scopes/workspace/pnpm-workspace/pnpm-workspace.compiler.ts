@@ -1,7 +1,10 @@
-const fs = require('fs/promises');
-const path = require('path');
-const { PnpmScriptTask } = require('./pnpm-script.task');
-const { exists, runPnpm } = require('./utils');
+import fs from 'fs/promises';
+import path from 'path';
+import type { BuildContext, BuiltTaskResult } from '@teambit/builder';
+import type { Compiler, TranspileComponentParams } from '@teambit/compiler';
+import type { Logger } from '@teambit/logger';
+import type { PnpmScriptTask } from './pnpm-script.task';
+import { exists, runPnpm } from './pnpm-utils';
 
 const PNPM_WORKSPACE_MANIFEST = 'pnpm-workspace.yaml';
 const DIST_DIR = 'dist';
@@ -15,20 +18,21 @@ const NON_SOURCE_DIRS = new Set(['node_modules', 'dist', 'build', 'lib', 'covera
  * may need its siblings built first. pnpm knows that order, so the whole workspace is built once
  * per state of its sources and each component only collects its own output.
  */
-class PnpmWorkspaceCompiler {
-  constructor(context) {
-    this.context = context;
-    this.logger = context.createLogger('PnpmCompiler');
-    this.id = 'pnpm-workspace-compiler';
-    this.displayName = 'pnpm workspace build script';
-    this.distDir = DIST_DIR;
-    this.distGlobPatterns = [`${DIST_DIR}/**`];
-    this.shouldCopyNonSupportedFiles = false;
-    this.deleteDistDir = false;
-    /** by workspace dir, the state of the sources its last successful build ran on */
-    this.builtSignatures = new Map();
-    this.queue = Promise.resolve();
-  }
+export class PnpmWorkspaceCompiler implements Compiler {
+  id = 'pnpm-workspace-compiler';
+  displayName = 'pnpm workspace build script';
+  distDir = DIST_DIR;
+  distGlobPatterns = [`${DIST_DIR}/**`];
+  shouldCopyNonSupportedFiles = false;
+  deleteDistDir = false;
+  /** by workspace dir, the state of the sources its last successful build ran on */
+  private builtSignatures = new Map<string, string>();
+  private queue: Promise<unknown> = Promise.resolve();
+
+  constructor(
+    private buildTask: PnpmScriptTask,
+    private logger: Logger
+  ) {}
 
   displayConfig() {
     return 'package.json#scripts.build';
@@ -42,7 +46,7 @@ class PnpmWorkspaceCompiler {
     return this.distDir;
   }
 
-  getDistPathBySrcPath(srcPath) {
+  getDistPathBySrcPath(srcPath: string) {
     return path.join(this.distDir, srcPath);
   }
 
@@ -50,7 +54,7 @@ class PnpmWorkspaceCompiler {
     return true;
   }
 
-  async transpileComponent({ componentDir, outputDir }) {
+  async transpileComponent({ componentDir, outputDir }: TranspileComponentParams): Promise<void> {
     const manifest = await fs
       .readFile(path.join(componentDir, 'package.json'), 'utf8')
       .then(JSON.parse)
@@ -67,21 +71,21 @@ class PnpmWorkspaceCompiler {
     await fs.cp(sourceDist, targetDist, { recursive: true, force: true });
   }
 
-  build(buildContext) {
-    return PnpmScriptTask.create('build', this.context).execute(buildContext);
+  build(buildContext: BuildContext): Promise<BuiltTaskResult> {
+    return this.buildTask.execute(buildContext);
   }
 
   /**
    * components are compiled concurrently, so the checks are queued: otherwise each would read the
    * signature before any build was recorded, and start a build of its own.
    */
-  buildOncePerSourceState(workspaceDir) {
+  private buildOncePerSourceState(workspaceDir: string): Promise<void> {
     const run = this.queue.then(() => this.buildIfSourcesChanged(workspaceDir));
     this.queue = run.catch(() => undefined);
     return run;
   }
 
-  async buildIfSourcesChanged(workspaceDir) {
+  private async buildIfSourcesChanged(workspaceDir: string): Promise<void> {
     const signature = await sourceSignature(workspaceDir);
     if (this.builtSignatures.get(workspaceDir) === signature) return;
     // a failed build is not recorded, the next compile retries it
@@ -92,7 +96,7 @@ class PnpmWorkspaceCompiler {
   }
 }
 
-async function findPnpmWorkspaceDir(fromDir) {
+async function findPnpmWorkspaceDir(fromDir: string): Promise<string | undefined> {
   let dir = path.resolve(fromDir);
   for (;;) {
     if (await exists(path.join(dir, PNPM_WORKSPACE_MANIFEST))) return dir;
@@ -102,16 +106,16 @@ async function findPnpmWorkspaceDir(fromDir) {
   }
 }
 
-async function isSameDir(dirA, dirB) {
+async function isSameDir(dirA: string, dirB: string): Promise<boolean> {
   if (!(await exists(dirB))) return false;
   const [realA, realB] = await Promise.all([fs.realpath(dirA), fs.realpath(dirB)]);
   return realA === realB;
 }
 
 /** the path, size and modification time of every source file, in a stable order */
-async function sourceSignature(workspaceDir) {
-  const entries = [];
-  const walk = async (dir) => {
+async function sourceSignature(workspaceDir: string): Promise<string> {
+  const entries: string[] = [];
+  const walk = async (dir: string) => {
     const dirents = await fs.readdir(dir, { withFileTypes: true });
     await Promise.all(
       dirents.map(async (dirent) => {
@@ -129,5 +133,3 @@ async function sourceSignature(workspaceDir) {
   await walk(workspaceDir);
   return entries.sort().join('|');
 }
-
-module.exports = { PnpmWorkspaceCompiler };

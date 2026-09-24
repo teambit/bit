@@ -1,17 +1,17 @@
-const fs = require('fs/promises');
-const path = require('path');
-const { exists, runPnpm } = require('./utils');
-const {
-  loadPnpmWorkspaceTree,
-  readRootId,
-  ScopeTreeSource,
-  treeSignature,
-  WorkspaceTreeSource,
-  writePnpmWorkspaceTree,
-} = require('./pnpm-workspace-tree');
+import fs from 'fs/promises';
+import path from 'path';
+import type { ArtifactDefinition, BuildContext, BuildTask, BuiltTaskResult, ComponentResult } from '@teambit/builder';
+import type { Logger } from '@teambit/logger';
+import type { WorkspaceRootMain } from '@teambit/workspace-root';
+import type { PnpmError } from './pnpm-utils';
+import { exists, runPnpm } from './pnpm-utils';
+import type { PnpmWorkspaceTree, TreeSource } from './pnpm-workspace-tree';
+import { loadPnpmWorkspaceTree, readRootId, treeSignature, writePnpmWorkspaceTree } from './pnpm-workspace-tree';
+
+export type PnpmScript = 'build' | 'test' | 'lint';
 
 /** what each script leaves in a package's directory, saved as the component's artifacts */
-const OUTPUT_DIRS = {
+const OUTPUT_DIRS: Record<PnpmScript, string[]> = {
   build: ['dist', 'build', 'lib'],
   test: ['coverage'],
   lint: [],
@@ -29,58 +29,48 @@ const TREE_MARKER = '.bit-pnpm-workspace';
  * next to the capsules, the way it was snapped (see loadPnpmWorkspaceTree), installs it with pnpm
  * and runs the script across it, then copies each package's output into its capsule.
  */
-class PnpmScriptTask {
-  constructor(aspectId, script, source, workspaceRoot, logger) {
-    this.aspectId = aspectId;
-    this.script = script;
-    this.source = source;
-    this.workspaceRoot = workspaceRoot;
-    this.logger = logger;
+export class PnpmScriptTask implements BuildTask {
+  readonly name: string;
+  readonly description: string;
+
+  constructor(
+    readonly aspectId: string,
+    private script: PnpmScript,
+    private source: TreeSource,
+    private workspaceRoot: WorkspaceRootMain,
+    private logger: Logger
+  ) {
     this.name = taskName(script);
     this.description = `run the "${script}" script of the pnpm workspace packages`;
   }
 
-  /** a task for the env of the context: reads the components through the workspace or the scope */
-  static create(script, context) {
-    const workspace = context.getAspect('teambit.workspace/workspace');
-    const workspaceRoot = context.getAspect('teambit.workspace/workspace-root');
-    const source = workspace
-      ? new WorkspaceTreeSource(workspace, workspaceRoot)
-      : new ScopeTreeSource(context.getAspect('teambit.scope/scope'));
-    return new PnpmScriptTask(
-      context.envId.toString(),
-      script,
-      source,
-      workspaceRoot,
-      context.createLogger(taskName(script))
-    );
-  }
-
-  async execute(context) {
+  async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const components = context.components;
     if (!components.length) return { componentsResults: [] };
     const startTime = Date.now();
-    const failAll = (message) => ({
-      componentsResults: components.map((component) => ({
-        component,
-        errors: [new Error(message)],
-        startTime,
-        endTime: Date.now(),
-      })),
+    const failAll = (message: string): BuiltTaskResult => ({
+      componentsResults: components.map(
+        (component): ComponentResult => ({
+          component,
+          errors: [new Error(message)],
+          startTime,
+          endTime: Date.now(),
+        })
+      ),
     });
 
     // a component never snapped has no root recorded yet, the one of the workspace is taken for it
-    const rootIds = [...new Set(components.map(readRootId).filter(Boolean))];
+    const rootIds = [...new Set(components.map(readRootId).filter((rootId): rootId is string => Boolean(rootId)))];
     if (rootIds.length > 1) {
       return failAll(
         `unable to run the pnpm "${this.script}" script, the components belong to different workspace roots: ${rootIds.join(', ')}`
       );
     }
     const buildComponents = context.capsuleNetwork.graphCapsules.getAllComponents();
-    let tree;
+    let tree: PnpmWorkspaceTree;
     try {
       tree = await loadPnpmWorkspaceTree(rootIds[0], buildComponents, this.source, this.workspaceRoot);
-    } catch (err) {
+    } catch (err: any) {
       return failAll(`unable to rebuild the pnpm workspace: ${err.message}`);
     }
     if (tree.missing.length) {
@@ -92,17 +82,20 @@ class PnpmScriptTask {
       await this.prepareTree(tree, treeDir);
       await this.pnpm(['-r', '--if-present', 'run', this.script], treeDir);
       await copyOutputsToCapsules(context, tree, treeDir, OUTPUT_DIRS[this.script]);
-    } catch (err) {
-      if (err.output?.trim()) this.logger.console(err.output.trim());
+    } catch (err: any) {
+      const output = (err as PnpmError).output?.trim();
+      if (output) this.logger.console(output);
       return failAll(`pnpm "${this.script}" failed: ${err.message}`);
     }
     return {
-      componentsResults: components.map((component) => ({
-        component,
-        metadata: { pnpmScript: this.script },
-        startTime,
-        endTime: Date.now(),
-      })),
+      componentsResults: components.map(
+        (component): ComponentResult => ({
+          component,
+          metadata: { pnpmScript: this.script },
+          startTime,
+          endTime: Date.now(),
+        })
+      ),
       artifacts: artifactDefinitions(this.script),
     };
   }
@@ -112,7 +105,7 @@ class PnpmScriptTask {
    * see the build's output and reuse its install - as they would in the real workspace. a tree
    * written from other files, or never installed, is written again.
    */
-  async prepareTree(tree, treeDir) {
+  private async prepareTree(tree: PnpmWorkspaceTree, treeDir: string): Promise<void> {
     const signature = treeSignature(tree);
     const markerPath = path.join(treeDir, TREE_MARKER);
     const existingSignature = await fs.readFile(markerPath, 'utf8').catch(() => undefined);
@@ -122,18 +115,18 @@ class PnpmScriptTask {
     await fs.writeFile(markerPath, signature);
   }
 
-  async pnpm(args, cwd) {
+  private async pnpm(args: string[], cwd: string): Promise<void> {
     const output = await runPnpm(args, cwd);
     if (output.trim()) this.logger.console(output.trim());
   }
 }
 
 /** the builder takes alphanumeric task names only, e.g. "PnpmBuild" */
-function taskName(script) {
+function taskName(script: PnpmScript): string {
   return `Pnpm${script[0].toUpperCase()}${script.slice(1)}`;
 }
 
-function artifactDefinitions(script) {
+function artifactDefinitions(script: PnpmScript): ArtifactDefinition[] {
   const outputDirs = OUTPUT_DIRS[script];
   if (!outputDirs.length) return [];
   return [
@@ -145,7 +138,12 @@ function artifactDefinitions(script) {
   ];
 }
 
-async function copyOutputsToCapsules(context, tree, treeDir, outputDirs) {
+async function copyOutputsToCapsules(
+  context: BuildContext,
+  tree: PnpmWorkspaceTree,
+  treeDir: string,
+  outputDirs: string[]
+): Promise<void> {
   if (!outputDirs.length) return;
   await Promise.all(
     [...tree.members.entries()].map(async ([rootDir, component]) => {
@@ -164,5 +162,3 @@ async function copyOutputsToCapsules(context, tree, treeDir, outputDirs) {
     })
   );
 }
-
-module.exports = { PnpmScriptTask };

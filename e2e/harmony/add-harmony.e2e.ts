@@ -4,12 +4,6 @@ import path from 'path';
 import { ParentDirTracked, AddingIndividualFiles } from '@teambit/tracker';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
-import { fileURLToPath } from 'url';
-
-// @ts-ignore
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 chai.use(chaiFs);
 const { expect } = chai;
 
@@ -618,14 +612,6 @@ describe('add command on Harmony', function () {
     // as a whole, in pnpm's order, with the packages linked to one another
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      // the env is plain javascript that runs as source, so it is taken from this repo as is,
-      // tagged or not
-      fs.copySync(
-        path.join(__dirname, '../../scopes/envs/pnpm-workspace-env'),
-        path.join(helper.scopes.localPath, 'envs/pnpm-env'),
-        { filter: (src) => path.basename(src) !== 'node_modules' }
-      );
-      helper.command.addComponent('envs/pnpm-env', '-i pnpm-env --env teambit.harmony/empty-env');
       helper.fs.outputFile('package.json', '{ "name": "@acme/repo", "private": true }\n');
       helper.fs.outputFile('pnpm-workspace.yaml', 'packages:\n  - packages/*\n');
       helper.fs.outputFile('.gitignore', 'node_modules\ndist\n');
@@ -657,7 +643,8 @@ describe('add command on Harmony', function () {
           "require('fs').writeFileSync('dist/index.js', `module.exports = ${require('@acme/math')(1, 2)};`);\n"
       );
       helper.command.runCmd('pnpm install');
-      helper.command.runCmd(`bit pnpm sync --env ${helper.scopes.remote}/pnpm-env`);
+      // the default env is the core pnpm-workspace env, which comes with bit and needs no install
+      helper.command.runCmd('bit pnpm sync');
       // the packages are private, with no version, and linked by the names in their package.json
       helper.command.link();
     });

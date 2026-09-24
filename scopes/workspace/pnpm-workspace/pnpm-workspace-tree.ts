@@ -1,18 +1,37 @@
-const { createHash } = require('crypto');
-const fs = require('fs/promises');
-const path = require('path');
+import { createHash } from 'crypto';
+import fs from 'fs/promises';
+import path from 'path';
+import type { Component, ComponentID } from '@teambit/component';
+import type { ScopeMain } from '@teambit/scope';
+import type { Workspace } from '@teambit/workspace';
+import type { WorkspaceRootMain } from '@teambit/workspace-root';
+import { WorkspaceRootAspect } from '@teambit/workspace-root';
 
-const WORKSPACE_ROOT_ASPECT = 'teambit.workspace/workspace-root';
+export type PnpmWorkspaceTree = {
+  root: Component;
+  /** by the directory the root lists each member at */
+  members: Map<string, Component>;
+  /** the members no source has */
+  missing: string[];
+};
+
+/** where the components of the tree come from, when the build does not have them */
+export interface TreeSource {
+  get(ids: string[]): Promise<Array<Component | undefined>>;
+  getWorkspaceRoot(): Promise<Component | undefined>;
+}
+
+type WorkspaceMember = { id: string; rootDir: string };
 
 /**
  * the root of the workspace the component was snapped in, at the version the root had then, e.g.
  * "my-org.my-scope/my-root@0.0.7". a component never snapped has none.
  */
-function readRootId(component) {
-  return component.state.aspects.get(WORKSPACE_ROOT_ASPECT)?.data?.root;
+export function readRootId(component: Component): string | undefined {
+  return component.state.aspects.get(WorkspaceRootAspect.id)?.data?.root;
 }
 
-function withoutVersion(id) {
+function withoutVersion(id: string): string {
   return id.split('@')[0];
 }
 
@@ -20,7 +39,7 @@ function withoutVersion(id) {
  * the members the root lists, each with its directory. the list came from a remote, so a directory
  * that escapes the tree is refused rather than written outside of it.
  */
-function readWorkspaceMembers(root, workspaceRoot) {
+function readWorkspaceMembers(root: Component, workspaceRoot: WorkspaceRootMain): WorkspaceMember[] {
   return workspaceRoot.listMembers(root).map(({ id, rootDir }) => {
     if (!isInsideTree(rootDir)) {
       throw new Error(`the workspace root lists "${id}" at "${rootDir}", which is not a directory inside it`);
@@ -29,7 +48,7 @@ function readWorkspaceMembers(root, workspaceRoot) {
   });
 }
 
-function isInsideTree(rootDir) {
+function isInsideTree(rootDir: unknown): rootDir is string {
   if (typeof rootDir !== 'string' || !rootDir || path.isAbsolute(rootDir)) return false;
   const normalized = path.posix.normalize(rootDir.split(path.sep).join('/'));
   return normalized !== '.' && normalized !== '..' && !normalized.startsWith('../');
@@ -43,23 +62,29 @@ function isInsideTree(rootDir) {
  * components on their own, so the rest - the root, the members of other envs, and in a CI the members
  * the snap did not change - come from the source (see WorkspaceTreeSource and ScopeTreeSource).
  */
-async function loadPnpmWorkspaceTree(rootId, buildComponents, source, workspaceRoot) {
-  const findInBuild = (id) =>
+export async function loadPnpmWorkspaceTree(
+  rootId: string | undefined,
+  buildComponents: Component[],
+  source: TreeSource,
+  workspaceRoot: WorkspaceRootMain
+): Promise<PnpmWorkspaceTree> {
+  const findInBuild = (id: string) =>
     buildComponents.find((component) => component.id.toStringWithoutVersion() === withoutVersion(id));
   const root = rootId ? findInBuild(rootId) || (await source.get([rootId]))[0] : await source.getWorkspaceRoot();
   if (!root) throw new Error(rootId ? `unable to load the workspace root ${rootId}` : 'no workspace root was found');
 
-  const members = new Map();
-  const outsideBuild = [];
+  const members = new Map<string, Component>();
+  const outsideBuild: WorkspaceMember[] = [];
   readWorkspaceMembers(root, workspaceRoot).forEach((member) => {
     const component = findInBuild(member.id);
     if (component) members.set(member.rootDir, component);
     else outsideBuild.push(member);
   });
   const loaded = outsideBuild.length ? await source.get(outsideBuild.map((member) => member.id)) : [];
-  const missing = [];
+  const missing: string[] = [];
   outsideBuild.forEach((member, index) => {
-    if (loaded[index]) members.set(member.rootDir, loaded[index]);
+    const component = loaded[index];
+    if (component) members.set(member.rootDir, component);
     else missing.push(member.id);
   });
   return { root, members, missing: missing.sort() };
@@ -69,13 +94,13 @@ async function loadPnpmWorkspaceTree(rootId, buildComponents, source, workspaceR
  * the components as the workspace has them now, modified or never snapped included - what a
  * "bit build" of the workspace is about.
  */
-class WorkspaceTreeSource {
-  constructor(workspace, workspaceRoot) {
-    this.workspace = workspace;
-    this.workspaceRoot = workspaceRoot;
-  }
+export class WorkspaceTreeSource implements TreeSource {
+  constructor(
+    private workspace: Workspace,
+    private workspaceRoot: WorkspaceRootMain
+  ) {}
 
-  get(ids) {
+  get(ids: string[]): Promise<Array<Component | undefined>> {
     return Promise.all(
       ids.map(async (id) => {
         try {
@@ -87,7 +112,7 @@ class WorkspaceTreeSource {
     );
   }
 
-  async getWorkspaceRoot() {
+  async getWorkspaceRoot(): Promise<Component | undefined> {
     const rootId = this.workspaceRoot.getRootComponentId();
     return rootId ? this.workspace.get(rootId) : undefined;
   }
@@ -97,15 +122,13 @@ class WorkspaceTreeSource {
  * the components as their remotes have them. a component the snap being built did not change comes at
  * its head - the lane's head when a lane is checked out, main's otherwise.
  */
-class ScopeTreeSource {
-  constructor(scope) {
-    this.scope = scope;
-  }
+export class ScopeTreeSource implements TreeSource {
+  constructor(private scope: ScopeMain) {}
 
-  async get(ids) {
+  async get(ids: string[]): Promise<Array<Component | undefined>> {
     const lane = await this.scope.legacyScope.getCurrentLaneObject();
     const componentIds = await Promise.all(
-      ids.map(async (id) => {
+      ids.map(async (id): Promise<ComponentID | undefined> => {
         try {
           const componentId = await this.scope.resolveComponentId(id);
           if (componentId.hasVersion()) return componentId;
@@ -117,10 +140,10 @@ class ScopeTreeSource {
         }
       })
     );
-    const resolved = componentIds.filter(Boolean);
+    const resolved = componentIds.filter((componentId): componentId is ComponentID => Boolean(componentId));
     if (resolved.length) {
       await this.scope.import(resolved, {
-        lane,
+        lane: lane || undefined,
         reason: 'to rebuild the pnpm workspace of the components being built',
       });
     }
@@ -137,12 +160,12 @@ class ScopeTreeSource {
   }
 
   /** in a scope, every member was snapped along with its root, so it has one recorded */
-  async getWorkspaceRoot() {
+  async getWorkspaceRoot(): Promise<Component | undefined> {
     return undefined;
   }
 
   /** a version-less id is taken at main's head, not at whatever lane the local objects saw last */
-  async withHead(componentId) {
+  private async withHead(componentId: ComponentID): Promise<ComponentID> {
     if (componentId.hasVersion()) return componentId;
     const modelComponent = await this.scope.legacyScope.getModelComponentIfExist(componentId);
     const head = modelComponent?.getHeadAsTagIfExist();
@@ -154,7 +177,7 @@ class ScopeTreeSource {
  * the pnpm workspace as it was snapped: the root's files at the top, every member in its directory.
  * the directory is emptied first, so nothing a previous build left behind leaks into this one.
  */
-async function writePnpmWorkspaceTree(tree, targetDir) {
+export async function writePnpmWorkspaceTree(tree: PnpmWorkspaceTree, targetDir: string): Promise<void> {
   await fs.rm(targetDir, { recursive: true, force: true });
   await fs.mkdir(targetDir, { recursive: true });
   await writeComponentFiles(tree.root, targetDir);
@@ -165,7 +188,7 @@ async function writePnpmWorkspaceTree(tree, targetDir) {
   );
 }
 
-async function writeComponentFiles(component, targetDir) {
+async function writeComponentFiles(component: Component, targetDir: string): Promise<void> {
   await Promise.all(
     component.filesystem.files.map(async (file) => {
       const filePath = path.join(targetDir, file.relative);
@@ -180,9 +203,9 @@ async function writeComponentFiles(component, targetDir) {
  * finds the tree written from the same files reuses it, install included. the files rather than the
  * versions, as a workspace build has components modified since their version, or never snapped.
  */
-function treeSignature(tree) {
+export function treeSignature(tree: PnpmWorkspaceTree): string {
   const hash = createHash('sha1');
-  const components = [['.', tree.root], ...tree.members.entries()];
+  const components: Array<[string, Component]> = [['.', tree.root], ...tree.members.entries()];
   components
     .sort(([dirA], [dirB]) => dirA.localeCompare(dirB))
     .forEach(([rootDir, component]) => {
@@ -191,12 +214,3 @@ function treeSignature(tree) {
     });
   return hash.digest('hex');
 }
-
-module.exports = {
-  loadPnpmWorkspaceTree,
-  readRootId,
-  ScopeTreeSource,
-  treeSignature,
-  WorkspaceTreeSource,
-  writePnpmWorkspaceTree,
-};

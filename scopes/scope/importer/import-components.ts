@@ -105,6 +105,8 @@ export type ImportResult = {
   workspaceConfigUpdateResult?: WorkspaceConfigUpdateResult;
   missingIds?: string[]; // in case the import is configured to not throw when missing
   lane?: Lane;
+  /** what the handlers of the written components reported, see ImporterMain.registerOnComponentsWritten */
+  componentsWrittenReport?: Record<string, unknown>;
 };
 
 export default class ImportComponents {

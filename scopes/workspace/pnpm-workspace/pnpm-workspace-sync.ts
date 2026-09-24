@@ -23,16 +23,15 @@ import { OutsideWorkspaceError, WorkspaceAspect } from '@teambit/workspace';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { snapToSemver } from '@teambit/component-package-version';
-import { configForWorkspaceRoot, WORKSPACE_ROOT_ENV } from './add-components';
-import type { TrackerMain } from './tracker.main.runtime';
+import type { TrackerMain } from '@teambit/tracker';
+import { configForWorkspaceRoot, WORKSPACE_ROOT_ENV } from '@teambit/tracker';
+import { PnpmWorkspaceAspect } from './pnpm-workspace.aspect';
 
 export const PNPM_WORKSPACE_MANIFEST = 'pnpm-workspace.yaml';
 const PACKAGE_JSON = 'package.json';
-/** the aspect id, not the aspect: this file is loaded by the aspect's own runtime */
-const TRACKER_ASPECT_ID = 'teambit.component/tracker';
 const DEPENDENCY_FIELDS = ['dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies'];
-/** the env of a project with scripts to run, unless "--env" names another one */
-export const PNPM_WORKSPACE_ENV = 'teambit.envs/pnpm-workspace-env';
+/** the env of a project with scripts to run, unless "--env" names another one. the aspect is the env */
+export const PNPM_WORKSPACE_ENV = PnpmWorkspaceAspect.id;
 /** the scripts the env runs. a project with none of them has nothing to build, so it gets the empty env */
 const ENV_SCRIPTS = ['build', 'test', 'lint'];
 
@@ -90,7 +89,7 @@ safe to re-run: tracked projects keep their ids, new ones are added, and the one
   ] as CommandOptions;
 
   constructor(
-    private workspace: Workspace,
+    private workspace: Workspace | undefined,
     private tracker: TrackerMain
   ) {}
 
@@ -297,7 +296,7 @@ async function trackPnpmProject(
   const syncedEnv = await setProjectEnv(workspace, componentId, project.hasScripts, envResolver);
   setProjectPackageName(workspace, componentId, project.packageName);
   const marker: PnpmProjectMarker = { pnpmProject: syncedEnv ? { env: syncedEnv } : {} };
-  workspace.bitMap.addComponentConfig(componentId, TRACKER_ASPECT_ID, marker);
+  workspace.bitMap.addComponentConfig(componentId, PnpmWorkspaceAspect.id, marker);
   return componentId;
 }
 
@@ -309,7 +308,7 @@ async function trackPnpmProject(
 type PnpmProjectMarker = { pnpmProject: { env?: string } };
 
 function readProjectMarker(componentMap: ComponentMap): PnpmProjectMarker['pnpmProject'] | undefined {
-  const trackerConfig = componentMap.config?.[TRACKER_ASPECT_ID];
+  const trackerConfig = componentMap.config?.[PnpmWorkspaceAspect.id];
   if (!trackerConfig || trackerConfig === '-') return undefined;
   const marker = trackerConfig.pnpmProject;
   return marker && typeof marker === 'object' ? marker : undefined;
@@ -819,7 +818,7 @@ function setCatalogBinding(catalogBindings: Map<string, PlannedCatalogBinding>, 
 
 /** the catalog entries the component referred to when it was snapped, see createPnpmVcsCatalogBindingsOnLoad */
 function readSnappedCatalogBindings(component: ConsumerComponent): PnpmVcsCatalogBinding[] {
-  const data = component.extensions.findCoreExtension(TRACKER_ASPECT_ID)?.data?.pnpmVcsCatalogBindings as
+  const data = component.extensions.findCoreExtension(PnpmWorkspaceAspect.id)?.data?.pnpmVcsCatalogBindings as
     | PnpmVcsCatalogBindingsData
     | undefined;
   return data?.bindings || [];
