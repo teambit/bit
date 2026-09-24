@@ -255,7 +255,7 @@ describe('package and capsule generation identity', () => {
 `
         );
 
-        helper.command.tagAllComponents();
+        helper.command.tagAllWithoutBuild();
         helper.command.export();
         helper.fs.appendFile('comp1/index.js', '\n// modification to comp1');
         helper.fs.appendFile('comp4/index.js', '\n// modification to comp4');
@@ -275,7 +275,7 @@ describe('package and capsule generation identity', () => {
       helper = new Helper();
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(3);
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
       helper.command.export();
 
       // Only modify comp2 to trigger rebuild

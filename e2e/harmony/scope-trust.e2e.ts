@@ -163,7 +163,7 @@ export default new EmptyEnv();
       npmCiRegistry.configureCiInPackageJsonHarmony();
       helper.command.install();
       helper.command.compile();
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
       helper.command.export();
 
       // Victim workspace under a different owner (so neither scope is auto-

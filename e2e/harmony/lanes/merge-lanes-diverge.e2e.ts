@@ -46,7 +46,7 @@ describe('merge lanes - diverge functionality', function () {
     describe('merging the lane', () => {
       let status;
       before(() => {
-        helper.command.mergeLane('main', '--auto-merge-resolve theirs');
+        helper.command.mergeLaneWithoutBuild('main', '--auto-merge-resolve theirs');
         status = helper.command.statusJson();
         afterMergeToMain = helper.scopeHelper.cloneWorkspace();
       });
@@ -61,7 +61,7 @@ describe('merge lanes - diverge functionality', function () {
       describe('switching to main and merging the lane to main without squash', () => {
         before(() => {
           helper.command.switchLocalLane('main');
-          helper.command.mergeLane('dev', '--no-squash');
+          helper.command.mergeLaneWithoutBuild('dev', '--no-squash');
         });
         it('head should have two parents', () => {
           const cat = helper.command.catComponent('comp1@latest');
@@ -79,7 +79,7 @@ describe('merge lanes - diverge functionality', function () {
           helper.scopeHelper.getClonedWorkspace(afterMergeToMain);
           helper.command.switchLocalLane('main');
           beforeMergeHead = helper.command.getHead('comp1');
-          helper.command.mergeLane('dev');
+          helper.command.mergeLaneWithoutBuild('dev');
         });
         it('head should have one parents, which is the previous main head', () => {
           const cat = helper.command.catComponent('comp1@latest');
@@ -91,7 +91,7 @@ describe('merge lanes - diverge functionality', function () {
     describe('merge the lane without snapping', () => {
       before(() => {
         helper.scopeHelper.getClonedWorkspace(beforeMerge);
-        helper.command.mergeLane('main', '--auto-merge-resolve theirs --no-auto-snap -x');
+        helper.command.mergeLaneWithoutBuild('main', '--auto-merge-resolve theirs --no-auto-snap -x');
       });
       it('should show the during-merge as modified', () => {
         const status = helper.command.statusJson();
@@ -123,7 +123,7 @@ describe('merge lanes - diverge functionality', function () {
       helper.command.export();
 
       helper.scopeHelper.getClonedWorkspace(authorScope);
-      helper.command.mergeLane(`${helper.scopes.remote}/dev2`);
+      helper.command.mergeLaneWithoutBuild(`${helper.scopes.remote}/dev2`);
       helper.command.compile();
     });
     it('should save the latest versions from that lane into the local lane', () => {

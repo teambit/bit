@@ -35,7 +35,7 @@ describe('set default owner and scope', function () {
       helper.command.addComponent('utils', { i: 'utils/is-type' });
       const rawLinkOutput = helper.command.link('-j');
       parsedLinkOutput = JSON.parse(rawLinkOutput);
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
     });
     it('should create link with default owner as prefix', () => {
       const linkFolderPath = path.normalize(`node_modules/${componentPackageName}`);

@@ -106,7 +106,7 @@ import { HttpHelper } from '../http-helper';
       await httpHelper.start();
       helper.scopeHelper.addRemoteHttpScope();
       helper.fixtures.populateComponents();
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
       exportOutput = helper.command.export();
       scopeAfterExport = helper.scopeHelper.cloneWorkspace();
     });

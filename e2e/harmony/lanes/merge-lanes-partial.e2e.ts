@@ -32,13 +32,14 @@ describe('merge lanes - partial merge functionality', function () {
       });
       describe('without --include-deps', () => {
         it('should throw an error asking to enter --include-deps flag', () => {
-          const mergeFn = () => helper.command.mergeLane('dev', `--pattern ${helper.scopes.remote}/comp2`);
+          const mergeFn = () =>
+            helper.command.mergeLaneWithoutBuild('dev', `${`--pattern ${helper.scopes.remote}/comp2`}`);
           expect(mergeFn).to.throw('consider adding "--include-deps" flag');
         });
       });
       describe('with --include-deps', () => {
         before(() => {
-          helper.command.mergeLane('dev', `--pattern ${helper.scopes.remote}/comp2 --include-deps`);
+          helper.command.mergeLaneWithoutBuild('dev', `${`--pattern ${helper.scopes.remote}/comp2 --include-deps`}`);
         });
         it('should not merge components that were not part of the patterns nor part of the pattern dependencies', () => {
           const comp1Head = helper.command.getHead(`${helper.scopes.remote}/comp1`);

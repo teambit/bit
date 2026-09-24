@@ -73,7 +73,7 @@ describe('lane export skips main history objects', function () {
       // back to lane, pick up new main, merge main in (no squash; that's the default for lane->merge)
       helper.scopeHelper.getClonedWorkspace(laneWorkspace);
       helper.command.import();
-      helper.command.mergeLane('main', '--auto-merge-resolve theirs');
+      helper.command.mergeLaneWithoutBuild('main', '--auto-merge-resolve theirs');
       mergeSnap = helper.command.getHeadOfLane('dev', 'comp1');
       helper.command.export();
     });
@@ -254,7 +254,7 @@ describe('lane export skips main history objects', function () {
       helper.command.export();
       helper.scopeHelper.getClonedWorkspace(laneWs);
       helper.command.import();
-      helper.command.mergeLane('main', '--auto-merge-resolve theirs');
+      helper.command.mergeLaneWithoutBuild('main', '--auto-merge-resolve theirs');
       helper.command.export();
     });
 
@@ -443,7 +443,7 @@ describe('lane export skips main history objects', function () {
       helper.command.export();
       helper.scopeHelper.getClonedWorkspace(laneWs);
       helper.command.import();
-      helper.command.mergeLane('main', '--auto-merge-resolve theirs');
+      helper.command.mergeLaneWithoutBuild('main', '--auto-merge-resolve theirs');
       firstMergeSnap = helper.command.getHeadOfLane('dev', 'comp1');
       helper.command.export();
 
@@ -456,7 +456,7 @@ describe('lane export skips main history objects', function () {
       helper.command.export();
       helper.scopeHelper.getClonedWorkspace(laneWs2);
       helper.command.import();
-      helper.command.mergeLane('main', '--auto-merge-resolve theirs');
+      helper.command.mergeLaneWithoutBuild('main', '--auto-merge-resolve theirs');
       secondMergeSnap = helper.command.getHeadOfLane('dev', 'comp1');
       helper.command.export();
     });
@@ -562,7 +562,7 @@ describe('lane export skips main history objects', function () {
 
       helper.scopeHelper.getClonedWorkspace(laneWorkspace);
       helper.command.import();
-      helper.command.mergeLane('main', '--auto-merge-resolve theirs');
+      helper.command.mergeLaneWithoutBuild('main', '--auto-merge-resolve theirs');
       mergeSnap = helper.command.getHeadOfLane('dev', 'comp1');
       helper.command.export();
     });
@@ -689,7 +689,7 @@ describe('lane export skips main history objects', function () {
       // observe bit status BEFORE the push.
       helper.scopeHelper.getClonedWorkspace(laneWs);
       helper.command.import();
-      helper.command.mergeLane('main', '--auto-merge-resolve theirs');
+      helper.command.mergeLaneWithoutBuild('main', '--auto-merge-resolve theirs');
       mergeSnap = helper.command.getHeadOfLane('dev', 'comp1');
     });
 

@@ -31,7 +31,7 @@ describe('current lane a comp is removed, merging a lane that has this comp with
     helper.command.export();
     headOnLaneB = helper.command.getHeadOfLane('lane-b', 'comp1');
 
-    helper.command.mergeLane('lane-a', '--resolve-unrelated -x');
+    helper.command.mergeLaneWithoutBuild('lane-a', '--resolve-unrelated -x');
   });
   after(() => {
     helper.scopeHelper.destroy();

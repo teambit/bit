@@ -57,7 +57,7 @@ describe('merge lanes - edge cases and special scenarios (part 2)', function () 
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.export();
       helper.command.switchLocalLane('main', '-x');
-      helper.command.mergeLane('lane-a', '-x');
+      helper.command.mergeLaneWithoutBuild('lane-a', '-x');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       helper.command.switchLocalLane('lane-b', '-x');
@@ -90,7 +90,7 @@ describe('merge lanes - edge cases and special scenarios (part 2)', function () 
         helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.command.importLane('lane-a', '-x');
-        helper.command.mergeLane('lane-b', '-x');
+        helper.command.mergeLaneWithoutBuild('lane-b', '-x');
       });
       it('should get the rename from the other lane', () => {
         const file = path.join(helper.scopes.remote, 'comp1/foo.js');
@@ -129,7 +129,7 @@ describe('merge lanes - edge cases and special scenarios (part 2)', function () 
     describe('merge the lane', () => {
       let mergeOutput: string;
       before(() => {
-        mergeOutput = helper.command.mergeLane('lane-b', '-x');
+        mergeOutput = helper.command.mergeLaneWithoutBuild('lane-b', '-x');
       });
       it('expect to have all files as unchanged, not updated', () => {
         expect(mergeOutput).to.not.have.string('updated');
@@ -147,11 +147,11 @@ describe('merge lanes - edge cases and special scenarios (part 2)', function () 
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.export();
       helper.command.switchLocalLane('main', '-x');
-      helper.command.mergeLane('lane-a', '-x');
+      helper.command.mergeLaneWithoutBuild('lane-a', '-x');
       helper.command.tagAllWithoutBuild('--unmodified');
       helper.command.export();
       helper.command.switchLocalLane('lane-a', '-x');
-      helper.command.mergeLane('main', '-x');
+      helper.command.mergeLaneWithoutBuild('main', '-x');
     });
     it('bit status should not show the component as modified', () => {
       const status = helper.command.statusJson();
@@ -196,7 +196,7 @@ describe('merge lanes - edge cases and special scenarios (part 2)', function () 
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
-      mergeOutput = helper.command.mergeLane('dev', '-x --no-squash --auto-merge-resolve=manual');
+      mergeOutput = helper.command.mergeLaneWithoutBuild('dev', '-x --no-squash --auto-merge-resolve=manual');
     });
     // previously in this case, it was marking it as "overridden" and was leaving the content as it was in the filesystem.
     it('should write the file with the conflicts', () => {
@@ -217,7 +217,7 @@ describe('merge lanes - edge cases and special scenarios (part 2)', function () 
       helper.command.export();
       laneAWs = helper.scopeHelper.cloneWorkspace();
       helper.command.switchLocalLane('main');
-      helper.command.mergeLane('lane-a', '-x');
+      helper.command.mergeLaneWithoutBuild('lane-a', '-x');
       helper.command.export();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
@@ -231,7 +231,7 @@ describe('merge lanes - edge cases and special scenarios (part 2)', function () 
       helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { [comp2PkgName]: '0.0.1' } });
     });
     it('should remove the package from workspace.jsonc', () => {
-      helper.command.mergeLane('lane-b', '-x');
+      helper.command.mergeLaneWithoutBuild('lane-b', '-x');
       const policy = helper.workspaceJsonc.getPolicyFromDependencyResolver();
       expect(policy.dependencies).to.not.have.property(comp2PkgName);
     });
@@ -255,7 +255,7 @@ describe('merge lanes - edge cases and special scenarios (part 2)', function () 
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       helper.command.switchLocalLane('dev', '-x');
-      helper.command.mergeLane('main', '-x --manual');
+      helper.command.mergeLaneWithoutBuild('main', '-x --manual');
       helper.fixtures.populateComponents(3, true, 'fixed-conflicts');
       oldSnapComp1 = helper.command.getHeadOfLane('dev', 'comp1');
       snapComp2 = helper.command.getHeadOfLane('dev', 'comp2');
@@ -312,7 +312,7 @@ describe('merge lanes - edge cases and special scenarios (part 2)', function () 
     });
     describe('with --no-auto-snap', () => {
       before(() => {
-        helper.command.mergeLane('lane-b', '--no-auto-snap -x');
+        helper.command.mergeLaneWithoutBuild('lane-b', '--no-auto-snap -x');
       });
       it('should update current lane according to the merged one', () => {
         const snap = helper.command.getHeadOfLane('lane-a', 'comp1');
@@ -326,7 +326,7 @@ describe('merge lanes - edge cases and special scenarios (part 2)', function () 
     describe('with --no-snap', () => {
       before(() => {
         helper.scopeHelper.getClonedWorkspace(beforeMerge);
-        helper.command.mergeLane('lane-b', '--no-snap -x');
+        helper.command.mergeLaneWithoutBuild('lane-b', '--no-snap -x');
       });
       it('should not update current lane according to the merged one', () => {
         const snap = helper.command.getHeadOfLane('lane-a', 'comp1');
@@ -385,7 +385,7 @@ describe('merge lanes - edge cases and special scenarios (part 2)', function () 
       headOnLane = helper.command.getHeadOfLane('dev', 'comp1');
       helper.command.export();
       helper.command.switchLocalLane('main', '-x');
-      helper.command.mergeLane('dev', '--detach-head -x');
+      helper.command.mergeLaneWithoutBuild('dev', '--detach-head -x');
     });
     after(() => {
       helper.command.resetFeatures();

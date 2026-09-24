@@ -82,14 +82,14 @@ describe('bit lane export operations', function () {
       // this is the file that exists on the first snap but not on the second.
       helper.command.createLane();
       helper.fixtures.populateComponents(1);
-      helper.command.snapAllComponents();
+      helper.command.snapAllComponentsWithoutBuild();
       helper.command.exportLane();
       helper.git.mimicGitCloneLocalProjectHarmony();
       helper.scopeHelper.addRemoteScope();
       helper.command.import();
       helper.fixtures.populateComponents(1, undefined, ' v2');
       helper.workspaceJsonc.disablePreview();
-      helper.command.snapAllComponents();
+      helper.command.snapAllComponentsWithoutBuild();
     });
     it('should export with no errors about missing artifact files from the first snap', () => {
       expect(() => helper.command.export()).to.not.throw();

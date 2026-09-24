@@ -255,12 +255,12 @@ describe('bit recover command', function () {
       helper.command.export();
 
       helper.command.switchLocalLane('lane-b', '-x');
-      helper.command.mergeLane('lane-a', '-x');
+      helper.command.mergeLaneWithoutBuild('lane-a', '-x');
       helper.command.recover(`${helper.scopes.remote}/comp1`);
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
       helper.command.switchLocalLane('lane-a', '-x');
-      helper.command.mergeLane('lane-b');
+      helper.command.mergeLaneWithoutBuild('lane-b');
     });
     it('should bring back the previously removed component', () => {
       const list = helper.command.listParsed();

@@ -84,7 +84,7 @@ describe('custom env', function () {
       describe('tag again', () => {
         before(() => {
           // helper.command.tagWithoutBuild(envName, '-f');
-          helper.command.tagComponent(envName, 'message', '--unmodified');
+          helper.command.tagWithoutBuild(envName, '-m message --unmodified');
         });
         it('should have the correct env in the envs aspect data after additional tag', () => {
           const comp1 = helper.command.catComponent('comp1@latest');
@@ -233,8 +233,8 @@ describe('custom env', function () {
       envName = helper.env.setCustomEnv();
       envId = `${helper.scopes.remote}/${envName}`;
       helper.command.compile();
-      helper.command.tagAllComponents();
-      helper.command.tagAllComponents('--unmodified');
+      helper.command.tagAllWithoutBuild();
+      helper.command.tagAllWithoutBuild('--unmodified');
       helper.command.export();
 
       helper.scopeHelper.reInitWorkspace();

@@ -51,7 +51,7 @@ describe('bit list command', function () {
         helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo@0.0.1');
-        helper.command.tagComponent('bar/foo', 'msg', '--unmodified');
+        helper.command.tagWithoutBuild('bar/foo', '-m msg --unmodified');
         helper.command.export();
 
         helper.scopeHelper.getClonedWorkspace(clonedScopePath);

@@ -115,7 +115,7 @@ describe('bit delete command', function () {
         npmCiRegistry = new NpmCiRegistry(helper);
         npmCiRegistry.configureCiInPackageJsonHarmony();
         await npmCiRegistry.init();
-        helper.command.tagAllComponents();
+        helper.command.tagAllWithoutBuild();
         helper.command.export();
         helper.command.createLane();
         helper.command.snapAllComponentsWithoutBuild('--unmodified');
@@ -420,13 +420,13 @@ describe('bit delete command', function () {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);
       helper.command.createLane();
-      helper.command.snapAllComponents();
+      helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
       helper.command.softRemoveOnLane('comp1');
       const bitmap = helper.bitMap.read();
       bitmapEntryBefore = bitmap.comp1;
-      helper.command.snapAllComponents('--unmodified');
+      helper.command.snapAllComponentsWithoutBuild('--unmodified');
       output = helper.command.resetAll();
     });
     it('should reset the deleted component', () => {

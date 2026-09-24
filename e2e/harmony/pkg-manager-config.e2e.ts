@@ -23,7 +23,7 @@ import { readModulesManifest } from '../modules-manifest';
       envId1 = `${helper.scopes.remote}/${envName1}`;
       helper.command.install('lodash.get lodash.flatten');
       helper.command.compile();
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
       helper.command.export();
 
       helper.scopeHelper.reInitWorkspace();

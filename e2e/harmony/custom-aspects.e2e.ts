@@ -145,7 +145,7 @@ describe('custom aspects', function () {
       helper.fixtures.createAspect('my-aspect');
       helper.command.compile();
       helper.command.install();
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
       helper.command.export();
 
       helper.scopeHelper.reInitWorkspace();

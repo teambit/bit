@@ -63,7 +63,7 @@ describe('updates from main and lane', function () {
     describe('bit lane merge main', () => {
       let mergeOutput: string;
       before(() => {
-        mergeOutput = helper.command.mergeLane(
+        mergeOutput = helper.command.mergeLaneWithoutBuild(
           'main',
           '--skip-dependency-installation --no-auto-snap --include-non-lane-comps'
         );

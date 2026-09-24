@@ -29,7 +29,7 @@ describe('custom env (config and versioning scenarios)', function () {
     // previously, it errored "error: component "n8w0pqms-local/3wc3xd3p-remote/node-env@0.0.1" was not found"
     it('should be able to re-tag with no errors', () => {
       // important! don't skip the build. it's important for the Preview task to run.
-      expect(() => helper.command.tagIncludeUnmodified()).not.to.throw();
+      expect(() => helper.command.tagIncludeUnmodifiedWithoutBuild()).not.to.throw();
     });
   });
   describe('when the env is exported to a remote scope and is not exist locally', () => {

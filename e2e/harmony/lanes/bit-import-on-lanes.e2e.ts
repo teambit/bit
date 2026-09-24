@@ -18,7 +18,7 @@ describe('bit lane command', function () {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
       helper.command.export();
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
@@ -79,7 +79,7 @@ describe('bit lane command', function () {
       helper.fs.outputFile('bar1/foo1.js', 'console.log("v1");');
       helper.command.addComponent('bar1');
       helper.command.compile();
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
       helper.command.export();
 
       helper.fs.outputFile('bar2/foo2.js', 'console.log("v1");');
@@ -140,7 +140,7 @@ describe('bit lane command', function () {
         helper.scopeHelper.setWorkspaceWithRemoteScope();
         helper.command.createLane('dev');
         helper.fixtures.populateComponents();
-        helper.command.snapAllComponents();
+        helper.command.snapAllComponentsWithoutBuild();
         helper.command.exportLane();
 
         helper.scopeHelper.reInitWorkspace();
