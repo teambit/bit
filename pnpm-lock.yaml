@@ -20767,9 +20767,15 @@ importers:
       '@teambit/node.envs.node-babel-mocha':
         specifier: 2.1.1
         version: 2.1.1(@babel/core@7.28.3)(supports-color@9.4.0)
+      '@types/chai':
+        specifier: 4.2.15
+        version: 4.2.15
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
+      chai:
+        specifier: 5.2.1
+        version: 5.2.1
 
   scopes/harmony/modules/load-trace:
     dependencies:
