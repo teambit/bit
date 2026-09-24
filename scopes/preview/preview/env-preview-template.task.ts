@@ -13,6 +13,7 @@ import type { Component } from '@teambit/component';
 import { ComponentMap } from '@teambit/component';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import type { Bundler, BundlerContext, BundlerHtmlConfig, BundlerResult, Target } from '@teambit/bundler';
+import { PHANTOM_HOST_CORE_ASPECTS } from '@teambit/bundler';
 import type { EnvDefinition, Environment, EnvsMain } from '@teambit/envs';
 import { join } from 'path';
 import { compact, flatten, isEmpty } from 'lodash';
@@ -177,7 +178,7 @@ export class EnvPreviewTemplateTask implements BuildTask {
       outputPath,
       /* It's a path to the root of the host component. */
       hostRootDir,
-      hostDependencies: peers,
+      hostDependencies: [...peers, ...PHANTOM_HOST_CORE_ASPECTS],
       aliasHostDependencies: true,
     };
   }

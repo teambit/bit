@@ -5,6 +5,7 @@ import { BitError } from '@teambit/bit-error';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import type { Logger } from '@teambit/logger';
 import type { Bundler, BundlerContext, BundlerHtmlConfig, Target } from '@teambit/bundler';
+import { PHANTOM_HOST_CORE_ASPECTS } from '@teambit/bundler';
 import type { Component, ComponentID } from '@teambit/component';
 import { join, resolve } from 'path';
 import { outputFileSync, pathExists, readJsonSync } from 'fs-extra';
@@ -103,7 +104,7 @@ export class PreviewService implements EnvService<any> {
       entry: [],
       publicPath: '/',
       hostRootDir,
-      hostDependencies: peers,
+      hostDependencies: [...(peers ?? []), ...PHANTOM_HOST_CORE_ASPECTS],
       aliasHostDependencies: true,
       rootPath: url,
       development: true,
@@ -232,7 +233,7 @@ func(composition);
         components,
         outputPath,
         hostRootDir,
-        hostDependencies: peers,
+        hostDependencies: [...(peers ?? []), ...PHANTOM_HOST_CORE_ASPECTS],
         externalizeHostDependencies: false,
         aliasHostDependencies: true,
       },
