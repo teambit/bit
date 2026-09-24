@@ -58,11 +58,11 @@ ids: ${ids.join(', ')}
 needed-for: ${neededFor || '<unknown>'}`);
     const grouped = await this.groupAspectIdsByEnvOfTheList(ids, lane);
     this.logger.info(`${loggerPrefix} getManifestsAndLoadAspects for grouped.envs, total ${grouped.envs?.length || 0}`);
-    const envsManifestsIds = await this.getManifestsAndLoadAspects(grouped.envs, throwOnError, lane, opts);
+    const envsManifestsIds = await this.getManifestsAndLoadAspects(grouped.envs, throwOnError, lane, opts, neededFor);
     this.logger.info(
       `${loggerPrefix} getManifestsAndLoadAspects for grouped.other, total ${grouped.other?.length || 0}`
     );
-    const otherManifestsIds = await this.getManifestsAndLoadAspects(grouped.other, throwOnError, lane, opts);
+    const otherManifestsIds = await this.getManifestsAndLoadAspects(grouped.other, throwOnError, lane, opts, neededFor);
     this.logger.debug(`${loggerPrefix} finish loading aspects`);
     return envsManifestsIds.concat(otherManifestsIds);
   }
@@ -89,7 +89,8 @@ needed-for: ${neededFor || '<unknown>'}`);
     ids: string[] = [],
     throwOnError = false,
     lane?: Lane,
-    opts?: ScopeLoadAspectsOptions
+    opts?: ScopeLoadAspectsOptions,
+    neededFor?: string
   ): Promise<string[]> {
     const { manifests: scopeManifests, potentialPluginsIds } = await this.getManifestsGraphRecursively(
       ids,
@@ -98,7 +99,7 @@ needed-for: ${neededFor || '<unknown>'}`);
       lane,
       opts
     );
-    await this.aspectLoader.loadExtensionsByManifests(scopeManifests);
+    await this.aspectLoader.loadExtensionsByManifests(scopeManifests, { neededFor });
     const { manifests: scopePluginsManifests } = await this.getManifestsGraphRecursively(
       potentialPluginsIds,
       [],
@@ -106,7 +107,7 @@ needed-for: ${neededFor || '<unknown>'}`);
       lane,
       opts
     );
-    await this.aspectLoader.loadExtensionsByManifests(scopePluginsManifests);
+    await this.aspectLoader.loadExtensionsByManifests(scopePluginsManifests, { neededFor });
     const allManifests = scopeManifests.concat(scopePluginsManifests);
     return compact(allManifests.map((manifest) => manifest.id));
   }

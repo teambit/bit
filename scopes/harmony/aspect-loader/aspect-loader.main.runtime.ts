@@ -486,7 +486,8 @@ export class AspectLoaderMain {
   handleExtensionLoadingError(error: Error, idStr: string, throwOnError: boolean) {
     this.envs.addFailedToLoadExt(idStr);
     const errorMsg = error.message.split('\n')[0]; // show only the first line if the error is long (e.g. happens with MODULE_NOT_FOUND errors)
-    const msg = UNABLE_TO_LOAD_EXTENSION(idStr, errorMsg);
+    const fullErrText = `${error.message || ''}\n${error.stack || ''}`;
+    const msg = UNABLE_TO_LOAD_EXTENSION(idStr, errorMsg, fullErrText);
     if (throwOnError) {
       // @ts-ignore
       this.logger.console(error);
@@ -780,7 +781,8 @@ export class AspectLoaderMain {
       if (mergedOptions.ignoreErrorFunc && mergedOptions.ignoreErrorFunc(e)) return;
       // TODO: improve texts
       const errorMsg = e.message.split('\n')[0];
-      const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids, errorMsg, neededFor);
+      const fullErrText = `${e.message || ''}\n${e.stack || ''}`;
+      const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids, errorMsg, neededFor, fullErrText);
       this.logger.error(warning, e);
       if (this.logger.isLoaderStarted) {
         if (mergedOptions.throwOnError) throw new BitError(warning);
