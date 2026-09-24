@@ -105,8 +105,16 @@ path: ${err.path}`);
     return new Ref(BitObject.makeHash(this.id()));
   }
 
-  compress(): Promise<Buffer> {
-    return deflate(this.serialize());
+  async compress(): Promise<Buffer> {
+    return (await this.compressWithSize()).buffer;
+  }
+
+  /**
+   * same as `compress`, but also returns the size of the uncompressed content.
+   */
+  async compressWithSize(): Promise<{ buffer: Buffer; inflatedSize: number }> {
+    const serialized = this.serialize();
+    return { buffer: await deflate(serialized), inflatedSize: serialized.byteLength };
   }
 
   serialize(): Buffer {
@@ -118,8 +126,18 @@ path: ${err.path}`);
    * see `this.parseSync` for the sync version
    */
   static async parseObject(fileContents: Buffer, filePath?: string): Promise<BitObject> {
+    return (await BitObject.parseObjectWithSize(fileContents, filePath)).object;
+  }
+
+  /**
+   * same as `parseObject`, but also returns the size of the inflated content.
+   */
+  static async parseObjectWithSize(
+    fileContents: Buffer,
+    filePath?: string
+  ): Promise<{ object: BitObject; inflatedSize: number }> {
     const buffer = await inflate(fileContents, filePath);
-    return parse(buffer);
+    return { object: parse(buffer), inflatedSize: buffer.byteLength };
   }
 
   /**

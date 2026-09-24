@@ -454,6 +454,7 @@ export const CFG_CONCURRENCY_FETCH = 'concurrency.fetch';
 
 export const CFG_CACHE_MAX_ITEMS_COMPONENTS = 'cache.max.components';
 export const CFG_CACHE_MAX_ITEMS_OBJECTS = 'cache.max.objects';
+export const CFG_CACHE_MAX_OBJECTS_MB = 'cache.max.objects.mb';
 
 /**
  * git hooks

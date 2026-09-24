@@ -28,13 +28,15 @@ import type { ObjectItem } from './object-list';
 import { ObjectList } from './object-list';
 import BitRawObject from './raw-object';
 import Ref from './ref';
+import { LiveObjects } from './live-objects';
 import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
-import { getMaxSizeForObjects, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import { getCacheOptionsForObjects, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { ScopeMeta, Lane, ModelComponent } from '../models';
 
 type ContentTransformer = (content: Buffer) => Buffer;
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 const TRASH_DIR = 'trash';
+const MAX_COMPRESSED_SIZE_TO_CACHE = 100 * 1024; // don't cache big files (mainly artifacts) to prevent out-of-memory
 /**
  * how much of an object file to read when all that's needed is its header. the header holds the
  * type and is a few dozen bytes, which 512 compressed bytes always cover - and every byte past it
@@ -57,6 +59,7 @@ export default class Repository {
   scopePath: string;
   scopeIndex: ScopeIndex;
   protected cache: InMemoryCache<BitObject>;
+  private liveObjects = new LiveObjects();
   remoteLanes!: RemoteLanes;
   unmergedComponents!: UnmergedComponents;
   _persistMutex?: Mutex;
@@ -65,7 +68,7 @@ export default class Repository {
     this.scopeJson = scopeJson;
     this.onRead = (content: Buffer) => Repository.onPostObjectRead?.(content) || content;
     this.onPersist = (content: Buffer) => Repository.onPreObjectPersist?.(content) || content;
-    this.cache = createInMemoryCache({ maxSize: getMaxSizeForObjects() });
+    this.cache = createInMemoryCache(getCacheOptionsForObjects());
   }
 
   get persistMutex() {
@@ -240,15 +243,15 @@ export default class Repository {
       // @ts-ignore @todo: fix! it should return BitObject | null.
       return null;
     }
-    const size = fileContentsRaw.byteLength;
+    const compressedSize = fileContentsRaw.byteLength;
     const fileContents = this.onRead(fileContentsRaw);
     // uncomment to debug the transformed objects by onRead
     // console.log('transformedContent load', ref.toString(), BitObject.parseSync(fileContents).getType());
-    const parsedObject = await BitObject.parseObject(fileContents, objectPath);
-    const maxSizeToCache = 100 * 1024; // 100KB
-    if (size < maxSizeToCache) {
-      // don't cache big files (mainly artifacts) to prevent out-of-memory
-      this.setCache(parsedObject);
+    const { object: parsedObject, inflatedSize } = await BitObject.parseObjectWithSize(fileContents, objectPath);
+    if (compressedSize < MAX_COMPRESSED_SIZE_TO_CACHE) {
+      this.setCache(parsedObject, inflatedSize);
+    } else {
+      this.liveObjects.set(ref.toString(), parsedObject, inflatedSize, false);
     }
     return parsedObject;
   }
@@ -564,27 +567,43 @@ export default class Repository {
     }
   }
 
-  setCache(object: BitObject) {
-    this.cache.set(object.hash().toString(), object);
+  /**
+   * `size` is the object's inflated content size (see `InMemoryCache.set`).
+   */
+  setCache(object: BitObject, size?: number) {
+    const key = object.hash().toString();
+    this.cache.set(key, object, size);
+    this.liveObjects.set(key, object, size, true);
     return this;
   }
 
+  /**
+   * an object evicted from the cache is still returned as long as it's in use elsewhere (see `LiveObjects`).
+   */
   getCache(ref: Ref): BitObject | undefined {
-    return this.cache.get(ref.toString());
+    const key = ref.toString();
+    const cached = this.cache.get(key);
+    if (cached) return cached;
+    const live = this.liveObjects.get(key);
+    if (!live) return undefined;
+    if (live.cacheable) this.cache.set(key, live.object, live.size); // it's in use again
+    return live.object;
   }
 
   removeFromCache(ref: Ref) {
     this.cache.delete(ref.toString());
+    this.liveObjects.delete(ref.toString());
   }
 
   async clearCache() {
     logger.debug('repository.clearCache');
-    this.cache.deleteAll();
+    this.clearObjectsFromCache();
     await this.init();
   }
   clearObjectsFromCache() {
     logger.debug('repository.clearObjectsFromCache');
     this.cache.deleteAll();
+    this.liveObjects.clear();
   }
 
   backup(dirName?: string) {
@@ -801,18 +820,25 @@ export default class Repository {
    * this method doesn't write to scopeIndex. so using this method for ModelComponent or
    * Symlink makes the index outdated.
    */
-  async _writeOne(object: BitObject): Promise<boolean> {
-    const contents = await object.compress();
+  async _writeOne(object: BitObject): Promise<void> {
+    const { buffer: contents, inflatedSize } = await object.compressWithSize();
     const options: ChownOptions = {};
     if (this.scopeJson.groupName) options.gid = await resolveGroupId(this.scopeJson.groupName);
     const hash = object.hash();
-    if (this.cache.has(hash.toString())) this.cache.set(hash.toString(), object); // update the cache
     const objectPath = this.objectPath(hash);
     logger.trace(`repository._writeOne: ${objectPath}`);
     // Run hook to transform content pre persisting
     const transformedContent = this.onPersist(contents);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return writeFile(objectPath, transformedContent, options);
+    await writeFile(objectPath, transformedContent, options);
+    // once written, the object is the up-to-date one. this also replaces the size-estimate of objects that
+    // were cached by `add()`.
+    if (this.cache.has(hash.toString())) this.cache.set(hash.toString(), object, inflatedSize);
+    this.liveObjects.set(
+      hash.toString(),
+      object,
+      inflatedSize,
+      transformedContent.byteLength < MAX_COMPRESSED_SIZE_TO_CACHE
+    );
   }
 
   async writeObjectsToPendingDir(objectList: ObjectList, pendingDir: PathOsBasedAbsolute) {

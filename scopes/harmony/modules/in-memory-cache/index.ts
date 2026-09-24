@@ -1,2 +1,7 @@
-export { getMaxSizeForComponents, InMemoryCache, getMaxSizeForObjects } from './in-memory-cache';
+export {
+  getMaxSizeForComponents,
+  InMemoryCache,
+  getMaxSizeForObjects,
+  getCacheOptionsForObjects,
+} from './in-memory-cache';
 export { createInMemoryCache } from './cache-factory';
