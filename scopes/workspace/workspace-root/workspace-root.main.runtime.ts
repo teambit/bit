@@ -116,10 +116,13 @@ export class WorkspaceRootMain {
 /**
  * the root marks itself as such in its aspect data when loaded. the snap saves the data with the
  * version, and every consumer of the model reads the marker rather than guessing from the files.
+ * any other component gets empty data, which replaces the data it was loaded with: the root it was
+ * snapped in is not necessarily this workspace's, and the snap records this workspace's own (see
+ * writeWorkspaceRoot).
  */
-async function markWorkspaceRoot(component: Component): Promise<WorkspaceRootData | undefined> {
+async function markWorkspaceRoot(component: Component): Promise<WorkspaceRootData> {
   const consumerComponent = component.state._consumer as ConsumerComponent;
-  return consumerComponent.componentMap?.rootDir === WORKSPACE_ROOT_DIR ? { isRoot: true } : undefined;
+  return consumerComponent.componentMap?.rootDir === WORKSPACE_ROOT_DIR ? { isRoot: true } : {};
 }
 
 WorkspaceRootAspect.addRuntime(WorkspaceRootMain);
