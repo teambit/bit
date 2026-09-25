@@ -69,7 +69,7 @@ describe('bit checkout command when on a lane', function () {
       const workspaceBeforeMerge = helper.scopeHelper.cloneWorkspace();
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
-      helper.command.mergeLane('dev', '-x');
+      helper.command.mergeLaneWithoutBuild('dev', '-x');
       helper.command.export();
 
       helper.scopeHelper.getClonedWorkspace(workspaceBeforeMerge);

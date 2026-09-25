@@ -30,7 +30,7 @@ chai.use(chaiString);
     envId2 = `${helper.scopes.remote}/${envName2}`;
     helper.command.install('lodash.get lodash.flatten');
     helper.command.compile();
-    helper.command.tagAllComponents();
+    helper.command.tagAllWithoutBuild();
     helper.command.export();
 
     helper.scopeHelper.reInitWorkspace();

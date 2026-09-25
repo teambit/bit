@@ -72,7 +72,7 @@ describe('export functionality on Harmony', function () {
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.export();
       helper.command.switchLocalLane('lane-a', '-x');
-      helper.command.mergeLane('lane-b', '-x');
+      helper.command.mergeLaneWithoutBuild('lane-b', '-x');
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
     });
     // previously, it was throwing:

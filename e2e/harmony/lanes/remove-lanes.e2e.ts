@@ -78,7 +78,7 @@ describe('remove lanes', function () {
         let output;
         before(() => {
           helper.scopeHelper.getClonedWorkspace(beforeRemove);
-          helper.command.mergeLane('dev');
+          helper.command.mergeLaneWithoutBuild('dev');
           output = helper.command.removeLane('dev');
         });
         it('should remove the lane successfully', () => {

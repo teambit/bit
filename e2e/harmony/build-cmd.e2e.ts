@@ -275,7 +275,7 @@ describe('package and capsule generation identity', () => {
       helper = new Helper();
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(3);
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
       helper.command.export();
 
       // Only modify comp2 to trigger rebuild

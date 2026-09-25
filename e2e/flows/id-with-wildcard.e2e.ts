@@ -218,7 +218,7 @@ describe('component id with wildcard', function () {
       before(() => {
         helper.scopeHelper.getClonedWorkspace(scopeAfterAdd);
         helper.command.tagAllWithoutBuild();
-        helper.command.tagIncludeUnmodified('0.0.5');
+        helper.command.tagIncludeUnmodifiedWithoutBuild('0.0.5');
 
         // as an intermediate step, make sure all components are staged
         const status = helper.command.statusJson();

@@ -106,7 +106,7 @@ describe('component config', function () {
         helper.extensions.addExtensionToVariant(EXTENSION_FOLDER, 'teambit.harmony/aspect');
         helper.command.install();
         helper.command.compile();
-        helper.command.tagAllComponents();
+        helper.command.tagAllWithoutBuild();
         helper.command.ejectConf('bar/foo');
         componentJson = helper.componentJson.read('bar');
       });

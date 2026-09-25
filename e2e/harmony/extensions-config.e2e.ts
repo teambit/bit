@@ -29,7 +29,7 @@ describe('harmony extension config', function () {
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFoo();
         helper.extensions.addExtensionToVariant('*', 'teambit.scope/scope', config);
-        helper.command.tagAllComponents();
+        helper.command.tagAllWithoutBuild();
         componentVersionModel = helper.command.catComponent('bar/foo@0.0.1');
         extensionData = componentVersionModel.extensions;
         devDeps = componentVersionModel.devDependencies;
@@ -99,7 +99,7 @@ describe('harmony extension config', function () {
           before(() => {
             helper.scopeHelper.getClonedWorkspace(localBeforeTag);
             helper.workspaceJsonc.disablePreview();
-            helper.command.tagAllComponents();
+            helper.command.tagAllWithoutBuild();
             const componentModelStr = helper.command.catComponent('bar/foo@0.0.1', undefined, false);
             const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('{'));
             componentModel = JSON.parse(componentModelStrWithoutExtString);
@@ -118,7 +118,7 @@ describe('harmony extension config', function () {
             expect(componentModel.flattenedDependencies[0].name).to.equal('dummy-extension-without-logs');
           });
           it('should auto tag the component when tagging the extension again', () => {
-            output = helper.command.tagComponent('dummy-extension-without-logs', 'message', '--unmodified');
+            output = helper.command.tagWithoutBuild('dummy-extension-without-logs', '--unmodified');
             expect(output).to.have.string('2 component(s) tagged');
             expect(output).to.have.string('auto-tagged dependents');
             const details = helper.command.runCmd('bit details');
@@ -129,8 +129,8 @@ describe('harmony extension config', function () {
           let componentModel;
           before(() => {
             helper.scopeHelper.getClonedWorkspace(localBeforeTag);
-            helper.command.tagComponent('dummy-extension-without-logs');
-            helper.command.tagComponent('bar/foo');
+            helper.command.tagWithoutBuild('dummy-extension-without-logs');
+            helper.command.tagWithoutBuild('bar/foo');
             const componentModelStr = helper.command.catComponent('bar/foo@0.0.1', undefined, false);
             const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('{'));
             componentModel = JSON.parse(componentModelStrWithoutExtString);
@@ -148,7 +148,7 @@ describe('harmony extension config', function () {
           let componentModel;
           before(() => {
             helper.scopeHelper.getClonedWorkspace(localBeforeTag);
-            helper.command.tagAllComponents();
+            helper.command.tagAllWithoutBuild();
             helper.scopeHelper.reInitRemoteScope();
             helper.scopeHelper.addRemoteScope();
             localBeforeExport = helper.scopeHelper.cloneWorkspace();
@@ -195,11 +195,11 @@ describe('harmony extension config', function () {
           helper.scopeHelper.getClonedWorkspace(localBeforeTag);
           helper.scopeHelper.reInitRemoteScope();
           helper.scopeHelper.addRemoteScope();
-          helper.command.tagComponent('dummy-extension-without-logs');
+          helper.command.tagWithoutBuild('dummy-extension-without-logs');
           helper.command.export('dummy-extension-without-logs');
           helper.extensions.addExtensionToVariant('*', `${helper.scopes.remote}/dummy-extension-without-logs`, config);
           helper.workspaceJsonc.disablePreview();
-          helper.command.tagAllComponents();
+          helper.command.tagAllWithoutBuild();
           helper.command.export();
           helper.scopeHelper.reInitWorkspace();
           helper.scopeHelper.addRemoteScope();

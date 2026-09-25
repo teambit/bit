@@ -114,7 +114,7 @@ describe('tag components on Harmony', function () {
     });
     describe('tagging with --persist flag', () => {
       before(() => {
-        helper.command.persistTag();
+        helper.command.persistTagWithoutBuild();
       });
       it('should tag and remove the nextVersion property in .bitmap file', () => {
         const bitMap = helper.bitMap.readComponentsMapOnly();
@@ -770,7 +770,7 @@ ${helper.scopes.remote}/comp3: 1.5.0`;
       headOnMain = helper.command.getHead('comp1');
 
       // Step 4: Merge the lane with --detach-head
-      helper.command.mergeLane('dev', '--detach-head -x');
+      helper.command.mergeLaneWithoutBuild('dev', '--detach-head -x');
       // Step 5: Export - should export 2.0.0 (unexported main head)
       helper.command.export();
     });

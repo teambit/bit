@@ -24,7 +24,7 @@ describe('merge lanes - edge cases and special scenarios', function () {
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.switchLocalLane('main');
       helper.command.tagAllWithoutBuild('--unmodified');
-      helper.command.mergeLane('dev', '--no-squash --tag');
+      helper.command.mergeLaneWithoutBuild('dev', '--no-squash --tag');
     });
     it('should merge-tag instead of merge-snap', () => {
       const cmp = helper.command.catComponent('comp1');
@@ -67,7 +67,7 @@ describe('merge lanes - edge cases and special scenarios', function () {
       helper.command.export();
       helper.command.switchLocalLane('main');
       helper.command.createLane('dev2');
-      helper.command.mergeLane('dev');
+      helper.command.mergeLaneWithoutBuild('dev');
     });
     it('should merge', () => {
       const list = helper.command.listParsed();
@@ -83,11 +83,11 @@ describe('merge lanes - edge cases and special scenarios', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
       helper.command.switchLocalLane('main', '-x');
-      helper.command.mergeLane('dev', '-x');
+      helper.command.mergeLaneWithoutBuild('dev', '-x');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       helper.command.switchLocalLane('dev', '-x');
-      helper.command.mergeLane('main', '-x');
+      helper.command.mergeLaneWithoutBuild('main', '-x');
     });
     // previously, it was throwing an error
     // id o5kaxkjd-remote/comp1@0.0.1 exists in flattenedEdges but not in flattened of o5kaxkjd-remote/comp1@6f820556b472253cd08331b20e704fe74217fd31
@@ -121,7 +121,7 @@ describe('merge lanes - edge cases and special scenarios', function () {
     });
     describe('when the lane is merged to main, so currently on the FS the file exits', () => {
       before(() => {
-        helper.command.mergeLane('dev', '--no-squash --no-auto-snap -x');
+        helper.command.mergeLaneWithoutBuild('dev', '--no-squash --no-auto-snap -x');
       });
       // previously the file was removed
       it('should not remove the file', () => {
@@ -132,7 +132,7 @@ describe('merge lanes - edge cases and special scenarios', function () {
       before(() => {
         helper.scopeHelper.getClonedWorkspace(beforeMerge);
         helper.command.switchLocalLane('dev', '-x');
-        helper.command.mergeLane('main', '--no-auto-snap -x');
+        helper.command.mergeLaneWithoutBuild('main', '--no-auto-snap -x');
       });
       // previously it was in "remain-deleted" state and the file was not created
       it('should add the file', () => {
@@ -164,7 +164,7 @@ describe('merge lanes - edge cases and special scenarios', function () {
 
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
-      helper.command.mergeLane(`${helper.scopes.remote}/dev`, `-x`);
+      helper.command.mergeLaneWithoutBuild(`${helper.scopes.remote}/dev`, '-x');
       const head = helper.command.getHead(`${helper.scopes.remote}/comp1`);
       // because comp3 is missing, this will re-fetch comp1 with all its dependencies, which could potentially override the version objects
       helper.command.import(`${helper.scopes.remote}/comp1@${head} --objects --fetch-deps`);
@@ -208,7 +208,7 @@ describe('merge lanes - edge cases and special scenarios', function () {
     describe('merging the entire lane', () => {
       before(() => {
         helper.scopeHelper.getClonedWorkspace(beforeMerge);
-        helper.command.mergeLane(`${helper.scopes.remote}/dev`, `--no-squash -x`);
+        helper.command.mergeLaneWithoutBuild(`${helper.scopes.remote}/dev`, '--no-squash -x');
       });
       // previously it was throwing VersionNotFound
       it('bit export should not throw', () => {
@@ -229,7 +229,7 @@ describe('merge lanes - edge cases and special scenarios', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
       helper.command.switchLocalLane('lane-a', '-x');
-      helper.command.mergeLane('lane-b', '-x');
+      helper.command.mergeLaneWithoutBuild('lane-b', '-x');
       helper.command.export();
     });
     // previous bug was ignoring the new component on the remote during export because the snap was already on the remote.
@@ -262,7 +262,7 @@ describe('merge lanes - edge cases and special scenarios', function () {
       const laneBWs = helper.scopeHelper.cloneWorkspace();
 
       helper.scopeHelper.getClonedWorkspace(mainWs);
-      helper.command.mergeLane(`${anotherRemote}/lane-a`, '-x');
+      helper.command.mergeLaneWithoutBuild(`${anotherRemote}/lane-a`, '-x');
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.tagAllWithoutBuild('--unmodified');
@@ -270,7 +270,7 @@ describe('merge lanes - edge cases and special scenarios', function () {
 
       helper.scopeHelper.getClonedWorkspace(laneBWs);
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
-      helper.command.mergeLane(`main ${helper.scopes.remote}/comp1`, '-x');
+      helper.command.mergeLaneWithoutBuild(`main ${helper.scopes.remote}/comp1`, '-x');
     });
     it('should not throw ComponentNotFound on export', () => {
       expect(() => helper.command.export()).to.not.throw();
@@ -294,7 +294,7 @@ describe('merge lanes - edge cases and special scenarios', function () {
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.createLane('lane-b');
-      helper.command.mergeLane(`${helper.scopes.remote}/lane-a`, '-x');
+      helper.command.mergeLaneWithoutBuild(`${helper.scopes.remote}/lane-a`, '-x');
 
       // @todo: fix. currently, it throws an error about missing version
       helper.command.importComponent('comp1', '--all-history --objects');
@@ -322,7 +322,7 @@ describe('merge lanes - edge cases and special scenarios', function () {
       headLaneB = helper.command.getHeadOfLane('lane-b', 'comp1');
       helper.command.export();
       helper.command.switchLocalLane('lane-a', '-x');
-      helper.command.mergeLane('lane-b', '--squash -x');
+      helper.command.mergeLaneWithoutBuild('lane-b', '--squash -x');
     });
     it('bit log should not include previous versions from lane-b', () => {
       const log = helper.command.log('comp1');
@@ -357,7 +357,7 @@ describe('merge lanes - edge cases and special scenarios', function () {
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.createLane('lane-b');
-      helper.command.mergeLane(`${helper.scopes.remote}/lane-a`, '--squash -x');
+      helper.command.mergeLaneWithoutBuild(`${helper.scopes.remote}/lane-a`, '--squash -x');
       headLaneB = helper.command.getHeadOfLane('lane-b', 'comp1');
     });
     // previously it was throwing NoCommonSnap error
@@ -396,7 +396,7 @@ describe('merge lanes - edge cases and special scenarios', function () {
     describe('when main is still at the base (fast-forward)', () => {
       let mergeOutput: string;
       before(() => {
-        mergeOutput = helper.command.mergeLane('lane-a', '-x --no-auto-snap');
+        mergeOutput = helper.command.mergeLaneWithoutBuild('lane-a', '-x --no-auto-snap');
       });
       it('should indicate that this file was removed in the output', () => {
         expect(mergeOutput).to.have.string('removed foo.js');
@@ -411,7 +411,7 @@ describe('merge lanes - edge cases and special scenarios', function () {
         helper.scopeHelper.getClonedWorkspace(beforeMerge);
         helper.command.tagAllWithoutBuild('--unmodified');
         helper.command.export();
-        mergeOutput = helper.command.mergeLane('lane-a', '-x --no-auto-snap --no-squash');
+        mergeOutput = helper.command.mergeLaneWithoutBuild('lane-a', '-x --no-auto-snap --no-squash');
       });
       it('should indicate that this file was removed in the output', () => {
         expect(mergeOutput).to.have.string('removed foo.js');

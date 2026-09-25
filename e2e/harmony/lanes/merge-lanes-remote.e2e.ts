@@ -30,7 +30,7 @@ describe('merge lanes - remote lane operations', function () {
       before(() => {
         helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
-        helper.command.mergeLane(`${helper.scopes.remote}/dev`);
+        helper.command.mergeLaneWithoutBuild(`${helper.scopes.remote}/dev`);
       });
       it('should save the files to the filesystem', () => {
         helper.fs.outputFile('app.js', fixtures.appPrintComp1(helper.scopes.remote));
@@ -69,7 +69,7 @@ describe('merge lanes - remote lane operations', function () {
       before(() => {
         helper.scopeHelper.reInitWorkspace();
         helper.scopeHelper.addRemoteScope();
-        mergeOutput = helper.command.mergeLane(`${helper.scopes.remote}/dev`, `--workspace --verbose`);
+        mergeOutput = helper.command.mergeLaneWithoutBuild(`${helper.scopes.remote}/dev`, '--workspace --verbose');
       });
       it('should indicate that the components were not merge because they are not in the workspace', () => {
         expect(mergeOutput).to.have.string('merge skipped');
@@ -104,7 +104,7 @@ describe('merge lanes - remote lane operations', function () {
         importedScope = helper.scopeHelper.cloneWorkspace();
         helper.scopeHelper.getClonedWorkspace(authorScope);
         helper.fixtures.populateComponents(undefined, undefined, ' v2');
-        helper.command.snapAllComponents();
+        helper.command.snapAllComponentsWithoutBuild();
         helper.command.exportLane();
 
         helper.scopeHelper.getClonedWorkspace(importedScope);
