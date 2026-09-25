@@ -468,7 +468,7 @@ describe('bit remove command', function () {
       helper.fixtures.populateComponents(2);
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.deleteComponent('comp1');
-      snapOutput = helper.command.snapAllComponentsWithoutBuild();
+      snapOutput = helper.command.snapAllComponents('--build');
     });
     it('should not build the removed component', () => {
       expect(snapOutput).to.not.have.string('pipeline');

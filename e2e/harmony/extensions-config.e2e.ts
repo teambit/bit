@@ -118,7 +118,7 @@ describe('harmony extension config', function () {
             expect(componentModel.flattenedDependencies[0].name).to.equal('dummy-extension-without-logs');
           });
           it('should auto tag the component when tagging the extension again', () => {
-            output = helper.command.tagWithoutBuild('dummy-extension-without-logs', '-m message --unmodified');
+            output = helper.command.tagWithoutBuild('dummy-extension-without-logs', '--unmodified');
             expect(output).to.have.string('2 component(s) tagged');
             expect(output).to.have.string('auto-tagged dependents');
             const details = helper.command.runCmd('bit details');

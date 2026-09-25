@@ -76,7 +76,7 @@ describe('installing with the global virtual store', function () {
       helper.command.install();
       // throws on a failed build pipeline, which is the assertion: the TSCompiler task is what
       // breaks when the types below cannot be reached
-      output = helper.command.tagAllWithoutBuild();
+      output = helper.command.tagAllComponents();
     });
     // the compiled program reaches `.d.ts` files that sit in store slots, and those reference
     // types they never declare - `@types/*` for a package that ships none, the core aspects. From

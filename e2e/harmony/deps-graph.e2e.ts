@@ -327,7 +327,7 @@ export default new ${className}();
       await addDistTag({ package: '@pnpm.e2e/foo', version: '100.0.0', distTag: 'latest' });
       await addDistTag({ package: '@pnpm.e2e/bar', version: '100.0.0', distTag: 'latest' });
       helper.command.install('--add-missing-deps');
-      helper.command.tagAllWithoutBuild('--skip-tests');
+      helper.command.tagAllComponents('--skip-tests');
       helper.command.export();
 
       helper.scopeHelper.reInitWorkspace();

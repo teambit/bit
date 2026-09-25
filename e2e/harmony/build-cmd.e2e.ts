@@ -255,7 +255,7 @@ describe('package and capsule generation identity', () => {
 `
         );
 
-        helper.command.tagAllWithoutBuild();
+        helper.command.tagAllComponents();
         helper.command.export();
         helper.fs.appendFile('comp1/index.js', '\n// modification to comp1');
         helper.fs.appendFile('comp4/index.js', '\n// modification to comp4');

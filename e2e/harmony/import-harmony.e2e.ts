@@ -107,7 +107,7 @@ describe('import functionality on Harmony', function () {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
-      helper.command.tagAllWithoutBuild();
+      helper.command.tagAllComponents();
       helper.command.export();
       helper.git.mimicGitCloneLocalProjectHarmony();
       helper.scopeHelper.addRemoteScope();

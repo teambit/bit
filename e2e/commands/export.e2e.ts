@@ -36,7 +36,7 @@ describe('bit export command', function () {
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.command.exportIds('bar/foo');
-      helper.command.tagWithoutBuild('bar/foo --unmodified');
+      helper.command.tagWithoutBuild('bar/foo', '--unmodified');
       helper.command.exportIds('bar/foo');
     });
     it('should export it with no errors', () => {
@@ -234,9 +234,9 @@ describe('bit export command', function () {
       helper.fixtures.addComponentBarFoo();
       helper.command.tagAllWithoutBuild();
       helper.command.export();
-      helper.command.tagWithoutBuild('bar/foo --unmodified');
+      helper.command.tagWithoutBuild('bar/foo', '--unmodified');
       helper.command.export();
-      helper.command.tagWithoutBuild('bar/foo --unmodified');
+      helper.command.tagWithoutBuild('bar/foo', '--unmodified');
       output = helper.command.exportIds('bar/foo');
     });
     // this was a bug where on the third export, it parses the id "bar/foo" as: { scope: bar, name: foo }

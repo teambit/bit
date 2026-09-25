@@ -35,7 +35,7 @@ import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/leg
       helper.command.setEnv('comp1', envName);
 
       // tag with build so the env package is compiled and published to the local registry
-      helper.command.tagAllWithoutBuild();
+      helper.command.tagAllComponents();
       helper.command.export();
 
       // snap comp1 on a lane
