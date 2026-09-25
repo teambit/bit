@@ -607,4 +607,61 @@ describe('add command on Harmony', function () {
       });
     });
   });
+  describe('a pnpm workspace built by the package scripts, through the pnpm-workspace env', () => {
+    // app's build requires the output of math's build, so it only passes when the workspace is built
+    // as a whole, in pnpm's order, with the packages linked to one another
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fs.outputFile('package.json', '{ "name": "@acme/repo", "private": true }\n');
+      helper.fs.outputFile('pnpm-workspace.yaml', 'packages:\n  - packages/*\n');
+      helper.fs.outputFile('.gitignore', 'node_modules\ndist\n');
+      helper.fs.outputFile(
+        'packages/math/package.json',
+        JSON.stringify({
+          name: '@acme/math',
+          main: 'dist/index.js',
+          scripts: { build: 'node build.js' },
+        })
+      );
+      helper.fs.outputFile(
+        'packages/math/build.js',
+        "require('fs').mkdirSync('dist', { recursive: true });\n" +
+          "require('fs').writeFileSync('dist/index.js', 'module.exports = (a, b) => a + b;');\n"
+      );
+      helper.fs.outputFile(
+        'packages/app/package.json',
+        JSON.stringify({
+          name: '@acme/app',
+          main: 'dist/index.js',
+          dependencies: { '@acme/math': 'workspace:*' },
+          scripts: { build: 'node build.js', test: "node -e \"require('./dist') === 3 && console.log('app works')\"" },
+        })
+      );
+      helper.fs.outputFile(
+        'packages/app/build.js',
+        "require('fs').mkdirSync('dist', { recursive: true });\n" +
+          "require('fs').writeFileSync('dist/index.js', `module.exports = ${require('@acme/math')(1, 2)};`);\n"
+      );
+      // the default env is the core pnpm-workspace env, which comes with bit and needs no install
+      helper.command.runCmd('bit pnpm sync');
+      // the sync moved app's "workspace:" reference to the catalog, so the lockfile follows it
+      helper.command.runCmd('pnpm install');
+      // the packages are private, with no version, and linked by the names in their package.json
+      helper.command.link();
+    });
+    it('should refer to the sibling by "catalog:", with the catalog binding it to the workspace', () => {
+      const appManifest = helper.fs.readJsonFile('packages/app/package.json');
+      expect(appManifest.dependencies).to.deep.equal({ '@acme/math': 'catalog:' });
+      expect(helper.fs.readFile('pnpm-workspace.yaml')).to.have.string('"@acme/math": workspace:*');
+    });
+    it('should compile through the build scripts, in the workspace', () => {
+      helper.command.compile();
+      expect(path.join(helper.scopes.localPath, 'packages/app/dist/index.js')).to.be.a.file();
+    });
+    it('should build the packages in a pnpm workspace of their own, running the build and the test scripts', () => {
+      const output = helper.command.build();
+      expect(output).to.have.string('app works');
+      expect(output).to.have.string('build succeeded');
+    });
+  });
 });

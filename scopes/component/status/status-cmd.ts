@@ -17,11 +17,13 @@ type StatusFlags = {
 };
 
 type QuickStatusJsonResults = {
+  schemaVersion: 1;
   modified: string[];
   newComponents: string[];
 };
 
 type StatusJsonResults = {
+  schemaVersion: 1;
   newComponents: string[];
   modifiedComponents: string[];
   stagedComponents: Array<{ id: string; versions: string[] }>;
@@ -95,6 +97,7 @@ for maximum speed (skips aspect loading entirely), use "bit mini-status".`;
     if (quick) {
       const { modified, newComps } = await this.status.statusMini();
       return {
+        schemaVersion: 1,
         modified: modified.map((m) => m.toStringWithoutVersion()),
         newComponents: newComps.map((m) => m.toStringWithoutVersion()),
       };
@@ -124,6 +127,7 @@ for maximum speed (skips aspect loading entirely), use "bit mini-status".`;
       pendingUpdateDependents,
     }: StatusResult = await this.status.status({ lanes, ignoreCircularDependencies });
     return {
+      schemaVersion: 1,
       newComponents: newComponents.map((c) => c.toStringWithoutVersion()),
       modifiedComponents: modifiedComponents.map((c) => c.toStringWithoutVersion()),
       stagedComponents: stagedComponents.map((c) => ({ id: c.id.toStringWithoutVersion(), versions: c.versions })),

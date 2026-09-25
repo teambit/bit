@@ -542,7 +542,15 @@ export class PnpmPackageManager implements PackageManager {
               importer.dependencies?.[workspacePkgName] ??
               importer.devDependencies?.[workspacePkgName] ??
               importer.optionalDependencies?.[workspacePkgName];
-            if (ref?.version?.startsWith('file:')) continue;
+            const refVersion = ref?.version;
+            if (
+              refVersion &&
+              (refVersion.startsWith('file:') ||
+                ((refVersion.startsWith('link:') || refVersion.startsWith('workspace:')) &&
+                  opts.componentIdByPkgName.has(workspacePkgName)))
+            ) {
+              continue;
+            }
           }
           for (const depType of ['dependencies', 'devDependencies', 'optionalDependencies', 'dependenciesMeta']) {
             delete importer[depType]?.[workspacePkgName];

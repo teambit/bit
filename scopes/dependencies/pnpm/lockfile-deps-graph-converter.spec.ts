@@ -367,6 +367,31 @@ describe('convertLockfileToGraph with a link: importer dependency', () => {
     expect(rootNeighbourIds).to.not.include(null);
     expect(rootNeighbourIds).to.not.include('null');
   });
+
+  it('should preserve a link dependency when it maps to a workspace component', () => {
+    const lockfile: BitLockfileFile = {
+      importers: {
+        'packages/bar': {
+          dependencies: {
+            '@acme/foo': { version: 'link:../foo', specifier: 'workspace:*' },
+          },
+        },
+      },
+      lockfileVersion: '9.0',
+      snapshots: {},
+      packages: {},
+    } as BitLockfileFile;
+    const graph = convertLockfileToGraph(lockfile, {
+      pkgName: '@acme/bar',
+      componentRelativeDir: 'packages/bar',
+      componentIdByPkgName: new Map([['@acme/foo', ComponentID.fromString('acme.scope/foo@abcdef')]]),
+    });
+
+    const rootNeighbour = graph.findRootEdge()!.neighbours[0];
+    expect(rootNeighbour.name).to.equal('@acme/foo');
+    expect(rootNeighbour.id).to.equal('@acme/foo@0.0.0-abcdef');
+    expect(graph.packages.get(rootNeighbour.id)?.component).to.deep.equal({ scope: 'acme.scope', name: 'foo' });
+  });
 });
 
 describe('convertLockfileToGraph with a circular workspace dependency back to the component being processed', () => {

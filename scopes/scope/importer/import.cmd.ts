@@ -252,9 +252,12 @@ without arguments, fetches all workspace components' latest versions from their 
   }
 
   async json([ids]: [string[]], importFlags: ImportFlags) {
-    const { importDetails, installationError, missingIds } = await this.getImportResults(ids, importFlags);
+    const { importDetails, installationError, missingIds, componentsWrittenReport } = await this.getImportResults(
+      ids,
+      importFlags
+    );
 
-    return { importDetails, installationError, missingIds };
+    return { importDetails, installationError, missingIds, ...componentsWrittenReport };
   }
 
   private async getImportResults(

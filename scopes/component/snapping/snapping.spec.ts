@@ -23,6 +23,7 @@ import { Ref } from '@teambit/objects';
 import { mockComponents } from '@teambit/component.testing.mock-components';
 import type { SnapDataPerCompRaw, SnappingMain } from './snapping.main.runtime';
 import { SnappingAspect } from './snapping.aspect';
+import { emptySnapResultJson, snapResultJson } from './snap-cmd';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
 
@@ -180,6 +181,30 @@ describe('Snapping aspect', function () {
       // all should be the same UUID
       expect(batchIds[0]).to.equal(batchIds[1]);
       expect(batchIds[1]).to.equal(batchIds[2]);
+      expect(results!.batchId).to.equal(batchIds[0]);
+
+      const json = snapResultJson(results!);
+      expect(json).to.include({
+        schemaVersion: 1,
+        snapped: true,
+        batchId: batchIds[0],
+        laneName: null,
+        totalComponentsCount: 3,
+      });
+      expect(json.snappedComponents).to.have.lengthOf(3);
+      expect(json.autoSnappedComponents).to.deep.equal([]);
+      expect(emptySnapResultJson()).to.deep.equal({
+        schemaVersion: 1,
+        snapped: false,
+        batchId: null,
+        laneName: null,
+        snappedComponents: [],
+        autoSnappedComponents: [],
+        newComponents: [],
+        removedComponents: [],
+        warnings: [],
+        totalComponentsCount: 0,
+      });
     });
   });
   describe('local-only', () => {

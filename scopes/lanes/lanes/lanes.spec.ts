@@ -17,7 +17,7 @@ import { mockWorkspace, destroyWorkspace } from '@teambit/workspace.testing.mock
 import { mockComponents, modifyMockedComponents } from '@teambit/component.testing.mock-components';
 import { ChangeType } from '@teambit/lanes.entities.lane-diff';
 import { ComponentID } from '@teambit/component-id';
-import { partitionSwitchIds } from './switch-lanes';
+import { excludeForeignWorkspaceRoots, partitionSwitchIds } from './switch-lanes';
 import { LanesAspect } from './lanes.aspect';
 import type { LanesMain, LaneUpdateDependentsSource } from './lanes.main.runtime';
 import { LaneUpdatesCmd } from './lane.cmd';
@@ -545,6 +545,34 @@ describe('partitionSwitchIds', () => {
   it('a main-only component that the lane never carried is still taken at its main version', () => {
     const { ids } = partitionSwitchIds([ours], [ours, oursOnMainOnly], ['acme.shop']);
     expect(ids.map((i) => i.toString())).to.have.members([oursOnMainOnly.toString(), ours.toString()]);
+  });
+});
+
+describe('excludeForeignWorkspaceRoots', () => {
+  const id = (idStr: string) => ComponentID.fromString(idStr);
+  const comp = id('acme.shop/comp1@aaaa');
+  const ownRoot = id('acme.shop/my-root@bbbb');
+  const otherRoot = id('other.scope/their-root@cccc');
+  const roots = [ownRoot, otherRoot].map((rootId) => rootId.toString());
+  const isWorkspaceRoot = async (componentId: ComponentID) => roots.includes(componentId.toString());
+  const isTracked = (componentId: ComponentID) =>
+    [comp, ownRoot].some((tracked) => tracked.isEqualWithoutVersion(componentId));
+
+  it('should leave out a workspace-root component the workspace does not track', async () => {
+    const { ids, excluded } = await excludeForeignWorkspaceRoots(
+      [comp, ownRoot, otherRoot],
+      isTracked,
+      isWorkspaceRoot
+    );
+    expect(ids.map((i) => i.toString())).to.deep.equal([comp.toString(), ownRoot.toString()]);
+    expect(excluded.map((i) => i.toString())).to.deep.equal([otherRoot.toString()]);
+  });
+
+  it('should keep a component that is not tracked yet when it is not a workspace root', async () => {
+    const newComp = id('acme.shop/comp2@dddd');
+    const { ids, excluded } = await excludeForeignWorkspaceRoots([newComp], isTracked, isWorkspaceRoot);
+    expect(ids.map((i) => i.toString())).to.deep.equal([newComp.toString()]);
+    expect(excluded).to.deep.equal([]);
   });
 });
 

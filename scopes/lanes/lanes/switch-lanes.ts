@@ -9,6 +9,7 @@ import type { Workspace } from '@teambit/workspace';
 import type { Logger } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
 import { throwForStagedComponents } from '@teambit/lanes.modules.create-lane';
+import { isWorkspaceRootComponent } from '@teambit/workspace-root';
 import type { LanesMain } from './lanes.main.runtime';
 
 export type SwitchProps = {
@@ -50,6 +51,24 @@ export function partitionSwitchIds(
   // Compared against the UNRESTRICTED lane ids on purpose - see the doc comment.
   const idsOnMainOnly = mainIds.filter((id) => !isOnLane(id));
   return { ids: [...idsOnMainOnly, ...restricted], laneBitIds: idsOnLaneOnly };
+}
+
+/**
+ * a workspace-root component carries the root files of the workspace it was snapped in. switching writes
+ * every component the lane has, and this one would land in a directory of its own here, as a copy of the
+ * other workspace's config. so a root this workspace does not track is left out - "bit clone" is the way
+ * to get the workspace it belongs to. the workspace's own root is tracked, and switches like any component.
+ */
+export async function excludeForeignWorkspaceRoots(
+  ids: ComponentID[],
+  isTracked: (id: ComponentID) => boolean,
+  isWorkspaceRoot: (id: ComponentID) => Promise<boolean>
+): Promise<{ ids: ComponentID[]; excluded: ComponentID[] }> {
+  const foreignRoots = await Promise.all(ids.map(async (id) => !isTracked(id) && (await isWorkspaceRoot(id))));
+  return {
+    ids: ids.filter((_id, index) => !foreignRoots[index]),
+    excluded: ids.filter((_id, index) => foreignRoots[index]),
+  };
 }
 
 export class LaneSwitcher {
@@ -151,6 +170,30 @@ export class LaneSwitcher {
     }
     await this.populateIdsAccordingToPattern();
     this.filterIdsNotInWorkspaceIfNeeded();
+    await this.filterForeignWorkspaceRoots();
+  }
+
+  private async filterForeignWorkspaceRoots() {
+    const bitMapIds = this.consumer.bitmapIdsFromCurrentLaneIncludeRemoved;
+    const isTracked = (id: ComponentID) => Boolean(bitMapIds.searchWithoutVersion(id));
+    const isWorkspaceRoot = async (id: ComponentID) => {
+      if (!id.hasVersion()) return false;
+      const version = await this.consumer.scope.getVersionInstance(id).catch(() => undefined);
+      return Boolean(version && isWorkspaceRootComponent(version.extensions));
+    };
+    const { ids, excluded } = await excludeForeignWorkspaceRoots(
+      this.switchProps.ids || [],
+      isTracked,
+      isWorkspaceRoot
+    );
+    if (!excluded.length) return;
+    this.switchProps.ids = ids;
+    this.switchProps.laneBitIds = (this.switchProps.laneBitIds || []).filter(
+      (id) => !excluded.some((excludedId) => excludedId.isEqualWithoutVersion(id))
+    );
+    this.logger.consoleWarning(
+      `skipped the workspace-root component(s) of another workspace: ${excluded.map((id) => id.toStringWithoutVersion()).join(', ')}. use "bit clone" to get that workspace`
+    );
   }
 
   /**

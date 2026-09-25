@@ -1,4 +1,4 @@
-import { MainRuntime } from '@teambit/cli';
+import { formatHint, MainRuntime } from '@teambit/cli';
 import type { ComponentID } from '@teambit/component-id';
 import type { CompilerMain } from '@teambit/compiler';
 import { CompilerAspect } from '@teambit/compiler';
@@ -20,7 +20,7 @@ import type { PathLinuxRelative } from '@teambit/legacy.utils';
 import { isDir, isDirEmptySync, pathNormalizeToLinux } from '@teambit/legacy.utils';
 import type { ComponentMap } from '@teambit/legacy.bit-map';
 import { isWorkspaceMapFile, WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
-import { isWorkspaceRootComponent } from '@teambit/workspace-root';
+import { isPnpmWorkspaceRoot, isWorkspaceRootComponent } from '@teambit/workspace-root';
 import { COMPONENT_CONFIG_FILE_NAME, WORKSPACE_JSONC } from '@teambit/legacy.constants';
 import { DataToPersist } from '@teambit/component.sources';
 import type { ConfigMergerMain, WorkspaceConfigUpdateResult } from '@teambit/config-merger';
@@ -115,7 +115,15 @@ export class ComponentWriterMain {
         opts.mergeStrategy
       );
     }
-    if (this.workspace.externalPackageManagerIsUsed()) {
+    if (isPnpmWorkspaceRoot(this.workspace.path, this.consumer.bitMap)) {
+      // pnpm installs a pnpm workspace from the packages' own manifests. bit neither writes the dependencies
+      // into the root package.json, which the root component owns, nor installs and compiles, which would run
+      // the build scripts of the source just written. a caller that skips the installation, e.g. a clone,
+      // tells the user about it on its own
+      if (!opts.skipDependencyInstallation) {
+        this.logger.console(formatHint('run "pnpm install" to install the dependencies of the written components'));
+      }
+    } else if (this.workspace.externalPackageManagerIsUsed()) {
       await this.installer.writeDependenciesToPackageJson();
     } else if (!opts.skipDependencyInstallation) {
       installationError = await this.installPackagesGracefully(

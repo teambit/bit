@@ -1,3 +1,5 @@
+import type { SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
 import type { CLIMain } from '@teambit/cli';
 import { CLIAspect, MainRuntime } from '@teambit/cli';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
@@ -37,6 +39,17 @@ import ImportComponents from './import-components';
 import type { ListerMain } from '@teambit/lister';
 import { ListerAspect } from '@teambit/lister';
 
+/**
+ * runs once an import wrote components to the workspace. a handler that returns "handled" takes over
+ * what the importer does with them in workspace.jsonc - e.g. in a workspace that lists its packages
+ * elsewhere. the report it returns is added to the import's result.
+ */
+export type OnComponentsWritten = (
+  components: ConsumerComponent[]
+) => Promise<{ handled: boolean; report?: Record<string, unknown> } | undefined>;
+
+type OnComponentsWrittenSlot = SlotRegistry<OnComponentsWritten>;
+
 export class ImporterMain {
   constructor(
     private workspace: Workspace,
@@ -46,8 +59,14 @@ export class ImporterMain {
     private componentWriter: ComponentWriterMain,
     private envs: EnvsMain,
     readonly logger: Logger,
-    private lister: ListerMain
+    private lister: ListerMain,
+    private onComponentsWrittenSlot: OnComponentsWrittenSlot
   ) {}
+
+  registerOnComponentsWritten(handler: OnComponentsWritten) {
+    this.onComponentsWrittenSlot.register(handler);
+    return this;
+  }
 
   async import(importOptions: ImportOptions, packageManagerArgs: string[] = []): Promise<ImportResult> {
     if (!this.workspace) throw new OutsideWorkspaceError();
@@ -71,8 +90,16 @@ export class ImporterMain {
     const importComponents = this.createImportComponents(importOptions);
     const results = await importComponents.importComponents();
     Analytics.setExtraData('num_components', results.importedIds.length);
-    if (results.writtenComponents && results.writtenComponents.length) {
-      await this.removeFromWorkspaceConfig(results.writtenComponents);
+    if (results.writtenComponents?.length) {
+      const writtenComponents = results.writtenComponents;
+      const outcomes = await Promise.all(
+        this.onComponentsWrittenSlot.values().map((handler) => handler(writtenComponents))
+      );
+      outcomes.forEach((outcome) => {
+        if (outcome?.report)
+          results.componentsWrittenReport = { ...results.componentsWrittenReport, ...outcome.report };
+      });
+      if (!outcomes.some((outcome) => outcome?.handled)) await this.removeFromWorkspaceConfig(writtenComponents);
     }
     await consumer.onDestroy('import');
     return results;
@@ -402,7 +429,7 @@ export class ImporterMain {
     return components.map((component) => componentIdToPackageName(component));
   }
 
-  static slots = [];
+  static slots = [Slot.withType<OnComponentsWritten>()];
   static dependencies = [
     CLIAspect,
     WorkspaceAspect,
@@ -416,31 +443,34 @@ export class ImporterMain {
     ListerAspect,
   ];
   static runtime = MainRuntime;
-  static async provider([
-    cli,
-    workspace,
-    depResolver,
-    graph,
-    scope,
-    componentWriter,
-    install,
-    envs,
-    loggerMain,
-    lister,
-  ]: [
-    CLIMain,
-    Workspace,
-    DependencyResolverMain,
-    GraphMain,
-    ScopeMain,
-    ComponentWriterMain,
-    InstallMain,
-    EnvsMain,
-    LoggerMain,
-    ListerMain,
-  ]) {
+  static async provider(
+    [cli, workspace, depResolver, graph, scope, componentWriter, install, envs, loggerMain, lister]: [
+      CLIMain,
+      Workspace,
+      DependencyResolverMain,
+      GraphMain,
+      ScopeMain,
+      ComponentWriterMain,
+      InstallMain,
+      EnvsMain,
+      LoggerMain,
+      ListerMain,
+    ],
+    _config: unknown,
+    [onComponentsWrittenSlot]: [OnComponentsWrittenSlot]
+  ) {
     const logger = loggerMain.createLogger(ImporterAspect.id);
-    const importerMain = new ImporterMain(workspace, depResolver, graph, scope, componentWriter, envs, logger, lister);
+    const importerMain = new ImporterMain(
+      workspace,
+      depResolver,
+      graph,
+      scope,
+      componentWriter,
+      envs,
+      logger,
+      lister,
+      onComponentsWrittenSlot
+    );
     install.registerPreInstall(async (opts) => {
       if (!opts?.import) return;
       logger.setStatusLine('importing missing objects');

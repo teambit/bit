@@ -75,26 +75,51 @@ function convertLockfileToGraphFromCapsule(
     if (componentImporter[depType] != null) {
       const lifecycle = depType === 'devDependencies' ? 'dev' : 'runtime';
       const optional = depType === 'optionalDependencies';
-      directDependencies.push(...importerDepsToNeighbours(componentImporter[depType]!, lifecycle, optional));
+      directDependencies.push(
+        ...importerDepsToNeighbours(componentImporter[depType]!, lifecycle, optional, componentIdByPkgName)
+      );
     }
   }
-  return _convertLockfileToGraph(lockfile, { componentIdByPkgName, directDependencies });
+  const graph = _convertLockfileToGraph(lockfile, { componentIdByPkgName, directDependencies });
+  addWorkspaceComponentPackages(graph, componentIdByPkgName);
+  return graph;
 }
 
 function importerDepsToNeighbours(
   importerDependencies: LockfileFileProjectResolvedDependencies,
   lifecycle: 'dev' | 'runtime',
-  optional: boolean
+  optional: boolean,
+  componentIdByPkgName?: ComponentIdByPkgName
 ): DependencyNeighbour[] {
   const neighbours: DependencyNeighbour[] = [];
   for (const [name, { version, specifier }] of Object.entries(importerDependencies) as any) {
     // `refToRelative` yields null for non-registry refs (`link:` and
     // friends) — those are workspace wiring, not graph nodes.
-    const id = dp.refToRelative(version, name);
-    if (id == null) continue;
+    let id: string | null = dp.refToRelative(version, name);
+    if (id == null) {
+      const componentId = componentIdByPkgName?.get(name);
+      if (!componentId?.version || (!version.startsWith('link:') && !version.startsWith('workspace:'))) continue;
+      id = `${name}@${snapToSemver(componentId.version)}`;
+    }
     neighbours.push({ name, specifier, id, lifecycle, optional });
   }
   return neighbours;
+}
+
+function addWorkspaceComponentPackages(graph: DependenciesGraph, componentIdByPkgName: ComponentIdByPkgName): void {
+  const rootEdge = graph.findRootEdge();
+  for (const neighbour of rootEdge?.neighbours || []) {
+    if (!neighbour.name) continue;
+    const componentId = componentIdByPkgName.get(neighbour.name);
+    if (!componentId) continue;
+    graph.packages.set(neighbour.id, {
+      component: { scope: componentId.scope, name: componentId.fullName },
+      version: componentId.version ? snapToSemver(componentId.version) : undefined,
+    } as PackageAttributes);
+    if (!graph.edges.some((edge) => edge.id === neighbour.id)) {
+      graph.edges.push({ id: neighbour.id, neighbours: [] });
+    }
+  }
 }
 
 export function convertLockfileToGraph(
@@ -113,7 +138,9 @@ export function convertLockfileToGraph(
   const componentDevImporter = lockfile.importers![componentRelativeDir];
   const directDependencies: DependencyNeighbour[] = [];
   if (componentDevImporter.devDependencies != null) {
-    directDependencies.push(...importerDepsToNeighbours(componentDevImporter.devDependencies, 'dev', false));
+    directDependencies.push(
+      ...importerDepsToNeighbours(componentDevImporter.devDependencies, 'dev', false, componentIdByPkgName)
+    );
   }
   const lockedPkgDepPath = `${pkgName}@${lockfile.importers![componentRootDir].dependencies![pkgName].version}`;
   const lockedPkg = lockfile.snapshots![lockedPkgDepPath];

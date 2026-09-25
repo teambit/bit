@@ -46,6 +46,11 @@ describe('getFilesByDir', function () {
     it('should skip the files bit generates, and the lockfiles, by default', async () => {
       expect(await filesOf(false)).to.deep.equal(['index.ts']);
     });
+    it('should keep the package.json of a component whose main file it is, and only that one', async () => {
+      const gitIgnore = await getGitIgnoreHarmony(workspacePath);
+      const files = await getFilesByDir('comp', workspacePath, gitIgnore, [], false, 'package.json');
+      expect(files.map((file) => file.relativePath).sort()).to.deep.equal(['index.ts', 'package.json']);
+    });
     it('should track them with the flag on, while still honoring .gitignore and skipping node_modules', async () => {
       expect(await filesOf(true)).to.deep.equal(['index.ts', 'package-lock.json', 'package.json', 'tsconfig.json']);
     });
