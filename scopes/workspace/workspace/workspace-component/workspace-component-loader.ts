@@ -1218,6 +1218,9 @@ export class WorkspaceComponentLoader {
     const entries = this.workspace.onComponentLoadSlot.toArray();
     await mapSeries(entries, async ([extension, onLoad]) => {
       const data = await loadSpan('on-load', { aspect: extension }, () => onLoad(component, loadOpts));
+      // an aspect whose on-load has no data for the component is not added to it. otherwise every component
+      // lists the aspect, and an aspect that is also an env becomes the env of components with no env set.
+      if (!data) return;
       await this.upsertExtensionData(component, extension, data);
       // Update the aspect list to have changes happened during the on load slot (new data added above)
       component.state.aspects.upsertEntry(await this.workspace.resolveComponentId(extension), data);
