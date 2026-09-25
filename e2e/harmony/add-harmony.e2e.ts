@@ -642,11 +642,17 @@ describe('add command on Harmony', function () {
         "require('fs').mkdirSync('dist', { recursive: true });\n" +
           "require('fs').writeFileSync('dist/index.js', `module.exports = ${require('@acme/math')(1, 2)};`);\n"
       );
-      helper.command.runCmd('pnpm install');
       // the default env is the core pnpm-workspace env, which comes with bit and needs no install
       helper.command.runCmd('bit pnpm sync');
+      // the sync moved app's "workspace:" reference to the catalog, so the lockfile follows it
+      helper.command.runCmd('pnpm install');
       // the packages are private, with no version, and linked by the names in their package.json
       helper.command.link();
+    });
+    it('should refer to the sibling by "catalog:", with the catalog binding it to the workspace', () => {
+      const appManifest = helper.fs.readJsonFile('packages/app/package.json');
+      expect(appManifest.dependencies).to.deep.equal({ '@acme/math': 'catalog:' });
+      expect(helper.fs.readFile('pnpm-workspace.yaml')).to.have.string('"@acme/math": workspace:*');
     });
     it('should compile through the build scripts, in the workspace', () => {
       helper.command.compile();

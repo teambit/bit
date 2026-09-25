@@ -223,6 +223,83 @@ describe('bit pnpm sync', function () {
     expect(entryAt('packages/math')!.files.map((file) => file.relativePath)).to.include('package.json');
   });
 
+  describe('"workspace:" references between the projects', () => {
+    const readJson = (filePath: string) => fs.readJsonSync(path.join(workspaceData.workspacePath, filePath));
+    const readWorkspaceManifest = () =>
+      fs.readFileSync(path.join(workspaceData.workspacePath, 'pnpm-workspace.yaml'), 'utf8');
+
+    it('should refer by "catalog:" and move the specifier to the default catalog', async () => {
+      await setupPnpmWorkspace({
+        ...twoPackages,
+        'pnpm-workspace.yaml': '# the projects\npackages:\n  - packages/*\ncatalog:\n  is-odd: ^3.0.1 # pinned\n',
+      });
+      const result = await syncPnpmWorkspace(workspace, tracker);
+
+      expect(result.catalogMigratedPackages).to.deep.equal(['@acme/math']);
+      expect(readJson('packages/app/package.json').dependencies).to.deep.equal({ '@acme/math': 'catalog:' });
+      const workspaceManifest = readWorkspaceManifest();
+      expect(parseYaml(workspaceManifest).catalog).to.deep.equal({ 'is-odd': '^3.0.1', '@acme/math': 'workspace:*' });
+      // the file is the user's, its comments stay
+      expect(workspaceManifest).to.include('# the projects').and.include('# pinned');
+    });
+    it('should have nothing to move on a re-run', async () => {
+      await setupPnpmWorkspace(twoPackages);
+      await syncPnpmWorkspace(workspace, tracker);
+      const workspaceManifest = readWorkspaceManifest();
+      const result = await syncPnpmWorkspace(workspace, tracker);
+      expect(result.catalogMigratedPackages).to.deep.equal([]);
+      expect(readWorkspaceManifest()).to.equal(workspaceManifest);
+    });
+    it('should write to "catalogs.default" when that is where the default catalog is', async () => {
+      await setupPnpmWorkspace({
+        ...twoPackages,
+        'pnpm-workspace.yaml': 'packages:\n  - packages/*\ncatalogs:\n  default:\n    is-odd: ^3.0.1\n',
+      });
+      await syncPnpmWorkspace(workspace, tracker);
+      const workspaceManifest = parseYaml(readWorkspaceManifest());
+      expect(workspaceManifest.catalog).to.be.undefined;
+      expect(workspaceManifest.catalogs.default['@acme/math']).to.equal('workspace:*');
+    });
+    it('should leave a "workspace:" reference to a package of no project alone', async () => {
+      await setupPnpmWorkspace({
+        ...twoPackages,
+        'packages/app/package.json': { name: '@acme/app', dependencies: { '@other/lib': 'workspace:*' } },
+      });
+      const result = await syncPnpmWorkspace(workspace, tracker);
+      expect(result.catalogMigratedPackages).to.deep.equal([]);
+      expect(readJson('packages/app/package.json').dependencies).to.deep.equal({ '@other/lib': 'workspace:*' });
+    });
+
+    async function expectSyncToRefuse(files: Record<string, unknown>, message: string) {
+      await setupPnpmWorkspace({ ...twoPackages, ...files });
+      const workspaceManifest = readWorkspaceManifest();
+      let error: Error | undefined;
+      try {
+        await syncPnpmWorkspace(workspace, tracker);
+      } catch (err: any) {
+        error = err;
+      }
+      expect(error?.message).to.have.string(message);
+      expect(readJson('packages/app/package.json').dependencies['@acme/math']).to.match(/^workspace:/);
+      expect(readWorkspaceManifest()).to.equal(workspaceManifest);
+      expect(workspace.consumer.bitMap.components).to.have.lengthOf(0);
+    }
+    it('should refuse a package referred to by two specifiers, before changing anything', async () => {
+      await expectSyncToRefuse(
+        {
+          'packages/web/package.json': { name: '@acme/web', devDependencies: { '@acme/math': 'workspace:^' } },
+        },
+        'by both "workspace:*" and "workspace:^"'
+      );
+    });
+    it('should refuse a package the catalog binds otherwise, before changing anything', async () => {
+      await expectSyncToRefuse(
+        { 'pnpm-workspace.yaml': "packages:\n  - packages/*\ncatalog:\n  '@acme/math': 1.0.0\n" },
+        'binds it to "1.0.0"'
+      );
+    });
+  });
+
   it('should refuse a project nested in another one before changing anything', async () => {
     await setupPnpmWorkspace({
       ...twoPackages,
