@@ -18,7 +18,8 @@ export type PnpmWorkspaceTree = {
 /** where the components of the tree come from, when the build does not have them */
 export interface TreeSource {
   get(ids: string[]): Promise<Array<Component | undefined>>;
-  getWorkspaceRoot(): Promise<Component | undefined>;
+  /** the id of the root the components are built with. throws when there is no single one */
+  getRootId(components: Component[]): string;
 }
 
 type WorkspaceMember = { id: string; rootDir: string };
@@ -27,7 +28,7 @@ type WorkspaceMember = { id: string; rootDir: string };
  * the root of the workspace the component was snapped in, at the version the root had then, e.g.
  * "my-org.my-scope/my-root@0.0.7". a component never snapped has none.
  */
-export function readRootId(component: Component): string | undefined {
+function readRootId(component: Component): string | undefined {
   return component.state.aspects.get(WorkspaceRootAspect.id)?.data?.root;
 }
 
@@ -55,23 +56,23 @@ function isInsideTree(rootDir: unknown): rootDir is string {
 }
 
 /**
- * the root and every member it lists. the root is the one the members were snapped with or, for
- * members never snapped, the root of the workspace being built.
+ * the root and every member it lists. the source picks the root, see getRootId.
  *
  * a component of the build comes as built, at its exact version. the builder isolates each env's
  * components on their own, so the rest - the root, the members of other envs, and in a CI the members
  * the snap did not change - come from the source (see WorkspaceTreeSource and ScopeTreeSource).
  */
 export async function loadPnpmWorkspaceTree(
-  rootId: string | undefined,
+  components: Component[],
   buildComponents: Component[],
   source: TreeSource,
   workspaceRoot: WorkspaceRootMain
 ): Promise<PnpmWorkspaceTree> {
   const findInBuild = (id: string) =>
     buildComponents.find((component) => component.id.toStringWithoutVersion() === withoutVersion(id));
-  const root = rootId ? findInBuild(rootId) || (await source.get([rootId]))[0] : await source.getWorkspaceRoot();
-  if (!root) throw new Error(rootId ? `unable to load the workspace root ${rootId}` : 'no workspace root was found');
+  const rootId = source.getRootId(components);
+  const root = findInBuild(rootId) || (await source.get([rootId]))[0];
+  if (!root) throw new Error(`unable to load the workspace root ${rootId}`);
 
   const members = new Map<string, Component>();
   const outsideBuild: WorkspaceMember[] = [];
@@ -112,9 +113,14 @@ export class WorkspaceTreeSource implements TreeSource {
     );
   }
 
-  async getWorkspaceRoot(): Promise<Component | undefined> {
+  /**
+   * the root of this workspace, whichever root the members were snapped with: the tree is built from
+   * the manifests and the lockfile as the workspace has them, e.g. after an import rewrote a manifest.
+   */
+  getRootId(): string {
     const rootId = this.workspaceRoot.getRootComponentId();
-    return rootId ? this.workspace.get(rootId) : undefined;
+    if (!rootId) throw new Error('no workspace root was found');
+    return rootId.toString();
   }
 }
 
@@ -159,9 +165,14 @@ export class ScopeTreeSource implements TreeSource {
     );
   }
 
-  /** in a scope, every member was snapped along with its root, so it has one recorded */
-  async getWorkspaceRoot(): Promise<Component | undefined> {
-    return undefined;
+  /** in a scope, every member was snapped along with its root, at the version the root had then */
+  getRootId(components: Component[]): string {
+    const rootIds = [...new Set(components.map(readRootId).filter((rootId): rootId is string => Boolean(rootId)))];
+    if (!rootIds.length) throw new Error('no workspace root was found');
+    if (rootIds.length > 1) {
+      throw new Error(`the components belong to different workspace roots: ${rootIds.join(', ')}`);
+    }
+    return rootIds[0];
   }
 
   /** a version-less id is taken at main's head, not at whatever lane the local objects saw last */

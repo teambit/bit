@@ -6,7 +6,7 @@ import type { WorkspaceRootMain } from '@teambit/workspace-root';
 import type { PnpmError } from './pnpm-utils';
 import { exists, runPnpm } from './pnpm-utils';
 import type { PnpmWorkspaceTree, TreeSource } from './pnpm-workspace-tree';
-import { loadPnpmWorkspaceTree, readRootId, treeSignature, writePnpmWorkspaceTree } from './pnpm-workspace-tree';
+import { loadPnpmWorkspaceTree, treeSignature, writePnpmWorkspaceTree } from './pnpm-workspace-tree';
 
 export type PnpmScript = 'build' | 'test' | 'lint';
 
@@ -59,17 +59,10 @@ export class PnpmScriptTask implements BuildTask {
       ),
     });
 
-    // a component never snapped has no root recorded yet, the one of the workspace is taken for it
-    const rootIds = [...new Set(components.map(readRootId).filter((rootId): rootId is string => Boolean(rootId)))];
-    if (rootIds.length > 1) {
-      return failAll(
-        `unable to run the pnpm "${this.script}" script, the components belong to different workspace roots: ${rootIds.join(', ')}`
-      );
-    }
     const buildComponents = context.capsuleNetwork.graphCapsules.getAllComponents();
     let tree: PnpmWorkspaceTree;
     try {
-      tree = await loadPnpmWorkspaceTree(rootIds[0], buildComponents, this.source, this.workspaceRoot);
+      tree = await loadPnpmWorkspaceTree(components, buildComponents, this.source, this.workspaceRoot);
     } catch (err: any) {
       return failAll(`unable to rebuild the pnpm workspace: ${err.message}`);
     }
