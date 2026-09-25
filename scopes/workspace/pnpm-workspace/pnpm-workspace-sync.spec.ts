@@ -468,13 +468,13 @@ describe('pnpm workspace import plan', () => {
 });
 
 describe('pnpm support of "workspace:" catalog values', () => {
-  it('should accept the releases from the one that added it, on both lines', () => {
-    ['11.26.0', '11.27.1', '12.2.0', '12.6.0', '13.0.0'].forEach(
+  it('should accept the releases that read them and order "pnpm -r" by them, on both lines', () => {
+    ['11.28.0', '12.7.0', '13.0.0'].forEach(
       (version) => expect(pnpmSupportsWorkspaceCatalogs(version), version).to.be.true
     );
   });
-  it('should refuse the releases before it, the 12.0 and 12.1 lines included', () => {
-    ['11.25.0', '12.0.0-rc.0', '12.0.0', '12.1.0', '10.34.5'].forEach(
+  it('should refuse the releases before it, the ones that read them but ignore them in the order included', () => {
+    ['11.25.0', '11.27.1', '12.0.0-rc.0', '12.1.0', '12.6.0', '10.34.5'].forEach(
       (version) => expect(pnpmSupportsWorkspaceCatalogs(version), version).to.be.false
     );
   });

@@ -70,7 +70,7 @@ export class PnpmWorkspaceMain {
     const pnpmVersion = await getUserPnpmVersion(workspacePath);
     if (!pnpmVersion || pnpmSupportsWorkspaceCatalogs(pnpmVersion)) return;
     this.logger.consoleWarning(
-      `the import bound local packages to "workspace:*" in the pnpm catalog, which pnpm ${pnpmVersion} does not read. "pnpm install" needs pnpm 11.26.0 or later on 11, or 12.2.0 or later`
+      `the import bound local packages to "workspace:*" in the pnpm catalog, which pnpm ${pnpmVersion} does not fully support. "pnpm install" and the build order of "pnpm -r" need pnpm 11.28.0 or later on 11, or 12.7.0 or later`
     );
   }
 

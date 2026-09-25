@@ -430,10 +430,12 @@ function syncedComponent(workspace: Workspace, componentId: ComponentID, rootDir
  * clone restores the versioned one as is. the packages' own manifests are the user's, never rewritten.
  */
 /**
- * pnpm reads a "workspace:" value in a catalog since pnpm/pnpm#14332, released in 11.26.0 and 12.2.0.
- * an older pnpm refuses to install the workspace once an import binds a local package that way.
+ * pnpm reads a "workspace:" value in a catalog since pnpm/pnpm#14332 (11.26.0 and 12.2.0), and counts it
+ * as a workspace dependency in the order of "pnpm -r" and in "--filter <pkg>..." since pnpm/pnpm#15591
+ * (11.28.0 and 12.7.0). once an import binds a local package that way, an older pnpm refuses to install
+ * the workspace, or builds the dependent before the package it needs.
  */
-export const PNPM_WORKSPACE_CATALOGS_RANGE = '>=11.26.0 <12.0.0-0 || >=12.2.0';
+export const PNPM_WORKSPACE_CATALOGS_RANGE = '>=11.28.0 <12.0.0-0 || >=12.7.0';
 
 export function pnpmSupportsWorkspaceCatalogs(pnpmVersion: string): boolean {
   return semver.satisfies(pnpmVersion, PNPM_WORKSPACE_CATALOGS_RANGE);
