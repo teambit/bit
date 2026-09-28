@@ -726,7 +726,7 @@ Flags: --json, --env <env-id>
 
 discover pnpm workspace projects and synchronize them with Bit components
 
-tracks every project "pnpm-workspace.yaml" lists as a component, and the workspace root as the workspace-root component. package.json and the lockfile are tracked as source (trackAllFiles). a project that refers to another one by "workspace:" refers to it by "catalog:" after the sync, and the default catalog gets the "workspace:" specifier. an import into another workspace binds it there to the exact version instead. safe to re-run: tracked projects keep their ids, new ones are added, and the ones that left the workspace are removed.
+tracks every project "pnpm-workspace.yaml" lists as a component, and the workspace root as the workspace-root component. package.json and the lockfile are tracked as source (trackAllFiles). a project that refers to another one by "workspace:" refers to it by "catalog:" after the sync, and the default catalog gets the "workspace:" specifier. an import into another workspace binds it there to the exact version instead, and so does a re-run once the project left this workspace. safe to re-run: tracked projects keep their ids, new ones are added, and the ones that left the workspace are removed.
 Flags: --json, --env <env-id>
 
 ## bit recover <component-pattern>
