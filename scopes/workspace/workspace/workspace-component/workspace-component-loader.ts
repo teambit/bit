@@ -138,7 +138,7 @@ export class WorkspaceComponentLoader {
     private envs: EnvsMain,
     private aspectLoader: AspectLoaderMain
   ) {
-    this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
+    this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents(), weak: true });
     this.scopeComponentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
     this.componentsExtensionsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
     this.componentLoadedSelfAsAspects = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
