@@ -39,7 +39,10 @@ export class LRUCacheAdapter<T extends {} = any> implements InMemoryCache<T> {
     // value with a (more accurate) size would keep the old size, so remove it first.
     if (setOptions && this.cache.has(key)) this.cache.delete(key);
     this.cache.set(key, value, setOptions);
-    if (this.weakValues && typeof value === 'object') this.weakValues.set(key, value);
+    if (!this.weakValues) return;
+    // a primitive can't be held weakly. drop the previous value of the key, so it can't come back once this one is evicted
+    if (typeof value === 'object') this.weakValues.set(key, value);
+    else this.weakValues.delete(key);
   }
   get(key: string): T | undefined {
     const value = this.cache.get(key);

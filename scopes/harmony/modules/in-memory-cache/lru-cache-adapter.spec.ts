@@ -112,6 +112,14 @@ describe('LRUCacheAdapter', () => {
       gc();
       expect(cache.get('a')).to.be.undefined;
     });
+    it('should not return a replaced object once the primitive that replaced it is evicted', () => {
+      const cache = new LRUCacheAdapter<Value | string>({ maxSize: 1, weak: true });
+      const a = { name: 'a' };
+      cache.set('a', a);
+      cache.set('a', 'primitive');
+      cache.set('b', 'another'); // evicts "a"
+      expect(cache.get('a')).to.be.undefined;
+    });
     it('should throw when the cache is not bounded by count', () => {
       expect(() => new LRUCacheAdapter<Value>({ maxAge: 1000, weak: true })).to.throw(/weak/);
     });
