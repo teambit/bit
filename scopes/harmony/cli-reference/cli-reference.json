@@ -6580,7 +6580,7 @@
           ]
         ],
         "description": "discover pnpm workspace projects and synchronize them with Bit components",
-        "extendedDescription": "tracks every project \"pnpm-workspace.yaml\" lists as a component, and the workspace root as the\nworkspace-root component. package.json and the lockfile are tracked as source (trackAllFiles).\nsafe to re-run: tracked projects keep their ids, new ones are added, and the ones that left the workspace are removed.",
+        "extendedDescription": "tracks every project \"pnpm-workspace.yaml\" lists as a component, and the workspace root as the\nworkspace-root component. package.json and the lockfile are tracked as source (trackAllFiles).\na project that refers to another one by \"workspace:\" refers to it by \"catalog:\" after the sync, and the default catalog\ngets the \"workspace:\" specifier. an import into another workspace binds it there to the exact version instead.\nsafe to re-run: tracked projects keep their ids, new ones are added, and the ones that left the workspace are removed.",
         "group": "workspace-setup",
         "private": false
       }
