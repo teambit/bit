@@ -54,6 +54,8 @@ import type { EnvsMain } from '@teambit/envs';
 import { EnvsAspect } from '@teambit/envs';
 import type { GeneratorMain } from '@teambit/generator';
 import { GeneratorAspect } from '@teambit/generator';
+import type { WorkspaceRootMain } from '@teambit/workspace-root';
+import { WorkspaceRootAspect } from '@teambit/workspace-root';
 import { HostInitializerMain } from '@teambit/host-initializer';
 
 async function loadLegacyConfig(config: any) {
@@ -301,6 +303,9 @@ export async function loadBit(path = process.cwd(), additionalAspects?: Aspect[]
     restoreGlobalsFromSnapshot,
     isCoreAspect,
   });
+  // `bit clone` loads bit for the workspace it creates. same reason as the generator: this aspect
+  // depends on workspace-root, so workspace-root cannot import it.
+  harmony.get<WorkspaceRootMain>(WorkspaceRootAspect.id).setLoadBit(loadBit);
   return harmony;
 }
 

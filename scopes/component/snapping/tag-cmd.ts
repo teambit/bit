@@ -368,6 +368,12 @@ export function tagResultReport(results: TagResults): string | Report {
   const warningsSection =
     warnings && warnings.length ? warnings.map((w) => `${warnSymbol} ${chalk.yellow(w)}`).join('\n') : '';
 
+  const workspaceRootHint = results.autoAddedWorkspaceRoot
+    ? formatHint(
+        `(${compInBold(results.autoAddedWorkspaceRoot)} is the workspace-root component. it was new or modified, so it was tagged along: the other components record the root version they were tagged with)`
+      )
+    : '';
+
   const summaryMsg = `${totalCount} component(s) ${results.isSoftTag ? 'soft-' : ''}tagged${exportedIds ? ' and exported' : ''}`;
   const summary = formatSuccessSummary(summaryMsg);
 
@@ -408,6 +414,7 @@ export function tagResultReport(results: TagResults): string | Report {
   const data = joinSections([
     newSection,
     changedSection,
+    workspaceRootHint,
     autoTagSection,
     removedSection,
     publishSection,
@@ -426,6 +433,7 @@ export function tagResultReport(results: TagResults): string | Report {
   const details = joinSections([
     newDetailed,
     changedDetailed,
+    workspaceRootHint,
     removedSection,
     publishSection,
     exportedSection,

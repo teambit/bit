@@ -20,9 +20,7 @@ describe('Jest Tester', function () {
       helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(1);
     });
-    it('bit test should not throw any error', () => {
-      expect(() => helper.command.test()).not.to.throw();
-    });
+    // `helper.command.test` throws on a non-zero exit code, so this also covers "should not throw"
     it('bit test should indicate that no tests found', () => {
       const output = helper.command.test();
       expect(stripAnsi(output)).to.have.string('no tests found');
@@ -77,6 +75,7 @@ describe('Jest Tester', function () {
     });
   });
   (IS_WINDOWS ? describe.skip : describe)('test a single spec file', () => {
+    let singleFileOutput: string;
     before(() => {
       helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(2);
@@ -84,16 +83,15 @@ describe('Jest Tester', function () {
       helper.fs.outputFile('comp1/comp1.spec.ts', specFilePassingFixture());
       helper.fs.outputFile('comp1/foo.spec.ts', specFilePassingFixture('foo describe', 'foo it'));
       helper.fs.outputFile('comp2/comp2.spec.ts', specFilePassingFixture('comp2 describe', 'comp2 it'));
+      singleFileOutput = helper.command.test('comp1/foo.spec.ts', true);
     });
     it('should run only the tests of the given file', () => {
-      const output = helper.command.test('comp1/foo.spec.ts', true);
-      expect(stripAnsi(output)).to.have.string('foo it');
-      expect(stripAnsi(output)).to.not.have.string('should pass');
-      expect(stripAnsi(output)).to.not.have.string('comp2 it');
+      expect(stripAnsi(singleFileOutput)).to.have.string('foo it');
+      expect(stripAnsi(singleFileOutput)).to.not.have.string('should pass');
+      expect(stripAnsi(singleFileOutput)).to.not.have.string('comp2 it');
     });
     it('should test only the component that owns the given file', () => {
-      const output = helper.command.test('comp1/foo.spec.ts', true);
-      expect(stripAnsi(output)).to.have.string('testing total of 1 components');
+      expect(stripAnsi(singleFileOutput)).to.have.string('testing total of 1 components');
     });
     it('should support multiple test-file paths', () => {
       const output = helper.command.test('comp1/foo.spec.ts comp1/comp1.spec.ts', true);

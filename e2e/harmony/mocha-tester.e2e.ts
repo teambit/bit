@@ -1,8 +1,5 @@
-import chai, { expect } from 'chai';
+import { expect } from 'chai';
 import { Helper, ENV_POLICY } from '@teambit/legacy.e2e-helper';
-import chaiFs from 'chai-fs';
-
-chai.use(chaiFs);
 
 describe('Mocha Tester', function () {
   this.timeout(0);
@@ -53,10 +50,10 @@ describe('Mocha Tester', function () {
       helper.command.install();
     });
     describe('component without any test file', () => {
-      it('bit test should not throw any error', () => {
-        expect(() => helper.command.test()).not.to.throw();
-      });
-      it('bit test should indicate that no tests found', () => {
+      // this used to be preceded by a "should not throw any error" test that ran the very same
+      // command. helper.command.test() throws on a non-zero exit code, so reaching the assertion
+      // below already proves the command succeeded - no need to pay for a second tester run.
+      it('bit test should not throw and should indicate that no tests found', () => {
         const output = helper.command.test();
         expect(output).to.have.string('no tests found');
       });
@@ -81,11 +78,8 @@ describe('Mocha Tester', function () {
       before(() => {
         helper.fs.outputFile('comp1/comp1.spec.ts', specFileFailingFixture());
       });
-      it('bit test should exit with non-zero code', () => {
-        expect(() => helper.command.test()).to.throw();
-      });
-      it('bit test should show the failing component via Mocha output', () => {
-        const output = helper.general.runWithTryCatch('bit test');
+      it('bit test should exit with non-zero code and show the failing component via Mocha output', () => {
+        const output = runExpectingNonZeroExit(helper, 'bit test');
         expect(output).to.have.string('1 failing');
       });
       it('bit build should show the failing component via Mocha output', () => {
@@ -97,11 +91,8 @@ describe('Mocha Tester', function () {
       before(() => {
         helper.fs.outputFile('comp1/comp1.spec.ts', specFileErroringFixture());
       });
-      it('bit test should exit with non-zero code', () => {
-        expect(() => helper.command.test()).to.throw();
-      });
-      it('bit test should show the error', () => {
-        const output = helper.general.runWithTryCatch('bit test');
+      it('bit test should exit with non-zero code and show the error', () => {
+        const output = runExpectingNonZeroExit(helper, 'bit test');
         expect(output).to.have.string('SomeError');
       });
       it('bit build should show the error', () => {
@@ -109,24 +100,37 @@ describe('Mocha Tester', function () {
         expect(output).to.have.string('SomeError');
       });
     });
-    describe('component with an errored before hook', () => {
-      before(() => {
-        helper.fs.outputFile('comp1/comp1.spec.ts', specFileWithErrorInBeforeHook());
-      });
-      it('bit test should exit with non-zero code', () => {
-        expect(() => helper.command.test()).to.throw();
-      });
-      it('bit test should show the error', () => {
-        const output = helper.general.runWithTryCatch('bit test');
-        expect(output).to.have.string('SomeError');
-      });
-      it('bit build should show the error', () => {
-        const output = helper.general.runWithTryCatch('bit build');
-        expect(output).to.have.string('SomeError');
-      });
-    });
+    // a "component with an errored before hook" describe used to live here, asserting that a throw
+    // inside a `before` hook surfaces via `bit test` and `bit build`. the tester turns a hook failure
+    // into an ordinary failed TestResult (the 'fail' handler in mocha-tester.ts calls handleTest for
+    // test.type !== 'test'), so by the time the CLI and the build task see it, it is shaped exactly
+    // like the "component with a failing test" case above: TestsFiles{failed:1} plus a populated
+    // `errors` array. The hook-specific part - that the failure is captured at all, fix #6753 - lives
+    // in @teambit/defender.mocha-tester and is covered by its own unit spec, which has an
+    // identically named "component with an errored before hook" describe.
   });
 });
+
+/**
+ * runs `cmd`, asserts it exited with a non-zero code, and returns its combined output.
+ *
+ * each failure scenario used to spend two full tester runs on one command: one `it` calling
+ * helper.command.test() only to assert it throws, and a sibling re-running the same command through
+ * runWithTryCatch() only to assert on its output. they could not be collapsed naively because
+ * runWithTryCatch goes through spawnSync, which never throws on a non-zero exit. going through the
+ * execSync path instead gives us both: landing in the catch block IS the non-zero-exit assertion,
+ * and the error carries the piped stdout/stderr.
+ */
+function runExpectingNonZeroExit(helper: Helper, cmd: string): string {
+  let output: string | undefined;
+  try {
+    helper.command.runCmd(cmd);
+  } catch (err: any) {
+    output = `${err.toString()}${err.stdout?.toString() ?? ''}${err.stderr?.toString() ?? ''}`;
+  }
+  expect(output, `"${cmd}" should have exited with a non-zero code`).to.be.a('string');
+  return output as string;
+}
 
 function shouldOutputTestPassed(output: string) {
   expect(output).to.satisfy(
@@ -158,21 +162,6 @@ function specFileErroringFixture() {
   return `import { expect } from 'chai';
 describe('test', () => {
     throw new Error('SomeError');
-  it('should not reach here', () => {
-    expect(true).to.be.true;
-  });
-});
-`;
-}
-
-function specFileWithErrorInBeforeHook() {
-  return `import { expect } from 'chai';
-
-describe('test', () => {
-  // @ts-ignore
-  before(() => {
-    throw new Error('SomeError');
-  });
   it('should not reach here', () => {
     expect(true).to.be.true;
   });

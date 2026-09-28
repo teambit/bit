@@ -46,7 +46,7 @@ describe('merge config scenarios (part 2)', function () {
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importLane('dev', '--skip-dependency-installation');
-      helper.command.mergeLane('main', '--no-auto-snap --skip-dependency-installation');
+      helper.command.mergeLaneWithoutBuild('main', '--no-auto-snap --skip-dependency-installation');
       beforeConfigResolved = helper.scopeHelper.cloneWorkspace();
     });
     it('bit status should show the component with an issue of MergeConfigHasConflict', () => {
@@ -399,7 +399,10 @@ describe('merge config scenarios (part 2)', function () {
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.importLane('dev', '--skip-dependency-installation');
-      helper.command.mergeLane('main', '--no-auto-snap --skip-dependency-installation --ignore-config-changes');
+      helper.command.mergeLaneWithoutBuild(
+        'main',
+        '--no-auto-snap --skip-dependency-installation --ignore-config-changes'
+      );
     });
     it('should not delete the previously deps set', () => {
       const deps = helper.command.getCompDepsIdsFromData('comp1');
@@ -441,7 +444,7 @@ describe('merge config scenarios (part 2)', function () {
       helper.scopeHelper.addRemoteScope();
       helper.command.importLane('dev', '--skip-dependency-installation');
       helper.npm.addFakeNpmPackage('ramda', '0.31.0');
-      helper.command.mergeLane('main', '--no-auto-snap --skip-dependency-installation');
+      helper.command.mergeLaneWithoutBuild('main', '--no-auto-snap --skip-dependency-installation');
     });
     // This is the bug fix: when config is unchanged between current/other/base,
     // but auto deps are being merged, the unchanged force:true deps should be preserved

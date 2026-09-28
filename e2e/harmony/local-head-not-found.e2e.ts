@@ -1,11 +1,8 @@
 import path from 'path';
-import chai, { expect } from 'chai';
+import { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import { DEFAULT_ENV } from '@teambit/envs';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
-import chaiFs from 'chai-fs';
-
-chai.use(chaiFs);
 
 describe('local head Version object is missing from scope', function () {
   this.timeout(0);

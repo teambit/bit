@@ -1,8 +1,14 @@
 import fs from 'fs-extra';
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { Helper } from '@teambit/legacy.e2e-helper';
+import chaiFs from 'chai-fs';
+
+// this file asserts with `to.be.a.path()` but used to rely on some OTHER e2e file having called
+// chai.use(chaiFs) first - chai plugins register globally, so it happened to work in a full-suite
+// run and would break the moment that sibling's import went away (or the file ran on its own).
+chai.use(chaiFs);
 
 /** this file lives at <repo>/e2e/harmony */
 // @ts-ignore
