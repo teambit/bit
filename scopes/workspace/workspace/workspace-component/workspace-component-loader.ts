@@ -291,7 +291,8 @@ export class WorkspaceComponentLoader {
       });
     });
     const allExtCompIds = Array.from(allExtIds.values());
-    await this.populateScopeAndExtensionsCache(allExtCompIds || [], workspaceScopeIdsMap);
+    const extCompsExtensionsData = await this.populateScopeAndExtensionsCache(allExtCompIds, workspaceScopeIdsMap);
+    extCompsExtensionsData.forEach((data, idStr) => extensionsData.set(idStr, data));
 
     // const allExtIdsStr = allExtCompIds.map((id) => id.toString());
 
@@ -339,7 +340,11 @@ export class WorkspaceComponentLoader {
       };
     });
 
-    const layeredEnvsFromTheList = this.regroupEnvsIdsFromTheList(groupedByIsEnvOfWsComps.true, envsIdsOfWsComps);
+    const layeredEnvsFromTheList = this.regroupEnvsIdsFromTheList(
+      groupedByIsEnvOfWsComps.true,
+      envsIdsOfWsComps,
+      extensionsData
+    );
     const layeredEnvsGroups = layeredEnvsFromTheList.map((ids) => {
       return {
         ids,
@@ -408,11 +413,15 @@ export class WorkspaceComponentLoader {
    * @param envsIdsOfWsComps
    * @returns
    */
-  private regroupEnvsIdsFromTheList(envIds: ComponentID[] = [], envsIdsOfWsComps: Set<string>): Array<ComponentID[]> {
+  private regroupEnvsIdsFromTheList(
+    envIds: ComponentID[] = [],
+    envsIdsOfWsComps: Set<string>,
+    extensionsData: Map<string, ComponentExtensionsData>
+  ): Array<ComponentID[]> {
     const envsOfEnvs = new Set<string>();
     envIds.forEach((envId) => {
       const idStr = envId.toString();
-      const fromCache = this.componentsExtensionsCache.get(idStr);
+      const fromCache = extensionsData.get(idStr) || this.componentsExtensionsCache.get(idStr);
       if (!fromCache || !fromCache.extensions) {
         return;
       }
