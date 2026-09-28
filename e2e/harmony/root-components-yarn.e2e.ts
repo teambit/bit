@@ -7,6 +7,10 @@ import chaiFs from 'chai-fs';
 
 chai.use(chaiFs);
 
+// the yarn suites this file was named for are gone - master dropped them in #10651, yarn support
+// being on its way out. the filename stays because scripts/split-e2e-tests.js has no measured
+// timing for either name and falls back to the median, so renaming shuffles which parallel node
+// this suite lands on; the node it moved to ran out of memory under the bundled binary.
 (supportNpmCiRegistryTesting ? describe : describe.skip)('root components for scope aspect capsules', function () {
   this.timeout(0);
   let helper: Helper;
