@@ -390,7 +390,8 @@ describe('add command on Harmony', function () {
       helper.env.setNodeEnv('comp1');
       // that env installs, and an install also compiles. drop comp1's dist again so the
       // MissingDists assertion below has something to contrast the root component against.
-      helper.fs.deletePath(path.join('node_modules', helper.general.getPackageNameByCompName('comp1'), 'dist'));
+      // no owner prefix on the e2e default scope, same as the package name built further down
+      helper.fs.deletePath(path.join('node_modules', helper.general.getPackageNameByCompName('comp1', false), 'dist'));
       helper.fs.outputFile('README.md', '# workspace root\n');
       helper.command.addComponent('.', '-i ws-root --root');
       status = helper.command.statusJson();
