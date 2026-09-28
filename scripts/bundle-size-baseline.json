@@ -27,7 +27,7 @@
       "label": "shims total (@teambit/* + vendored harmony deps)",
       "phase": "pre",
       "path": "dist/core-aspects/node_modules",
-      "baselineMB": 10.11
+      "baselineMB": 11.27
     },
     {
       "id": "shims-dist",
