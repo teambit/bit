@@ -1,7 +1,23 @@
 import { spawn } from 'child_process';
 import fs from 'fs/promises';
+import { getPathBeforeBuildScripts } from '@teambit/pnpm';
 
 export type PnpmError = Error & { output?: string };
+
+/**
+ * the environment to run the user's pnpm with. the workspace is the user's, and so is its pnpm: the
+ * one their shell finds, which wrote the lockfile. bit's installs put the directory of its own node
+ * first on PATH, which can hide that pnpm behind another one, so the PATH goes back to the one before.
+ */
+export function userPnpmEnv(
+  env: NodeJS.ProcessEnv = process.env,
+  userPath = getPathBeforeBuildScripts()
+): NodeJS.ProcessEnv {
+  if (userPath === undefined) return env;
+  // the variable is "Path" on Windows. another key of it would leave two, and which one wins is undefined
+  const pathKey = Object.keys(env).find((key) => key.toUpperCase() === 'PATH') ?? 'PATH';
+  return { ...env, [pathKey]: userPath };
+}
 
 /**
  * runs pnpm with the given arguments. resolves with its output, stdout and stderr interleaved as
@@ -9,7 +25,7 @@ export type PnpmError = Error & { output?: string };
  */
 export function runPnpm(args: string[], cwd: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    const child = spawn('pnpm', args, { cwd, shell: process.platform === 'win32' });
+    const child = spawn('pnpm', args, { cwd, env: userPnpmEnv(), shell: process.platform === 'win32' });
     let output = '';
     child.stdout.on('data', (chunk) => {
       output += chunk;

@@ -26,6 +26,7 @@ import { snapToSemver } from '@teambit/component-package-version';
 import type { TrackerMain } from '@teambit/tracker';
 import { configForWorkspaceRoot, WORKSPACE_ROOT_ENV } from '@teambit/tracker';
 import { PnpmWorkspaceAspect } from './pnpm-workspace.aspect';
+import { userPnpmEnv } from './pnpm-utils';
 
 export const PNPM_WORKSPACE_MANIFEST = 'pnpm-workspace.yaml';
 const PACKAGE_JSON = 'package.json';
@@ -569,7 +570,7 @@ export function pnpmSupportsWorkspaceCatalogs(pnpmVersion: string): boolean {
 /** the version of the pnpm the user runs in the workspace, or undefined when there is none to run */
 export async function getUserPnpmVersion(workspacePath: string): Promise<string | undefined> {
   try {
-    const { stdout } = await execa('pnpm', ['--version'], { cwd: workspacePath });
+    const { stdout } = await execa('pnpm', ['--version'], { cwd: workspacePath, env: userPnpmEnv(), extendEnv: false });
     return semver.valid(stdout.trim()) || undefined;
   } catch {
     return undefined;
