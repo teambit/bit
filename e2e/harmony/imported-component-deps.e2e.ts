@@ -77,8 +77,7 @@ const isPositive = require('is-positive');
   function () {
     this.timeout(0);
     let helper: Helper;
-    let npmCiRegistry: NpmCiRegistry;
-    before(async () => {
+    before(() => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager(`teambit.dependencies/pnpm`);
@@ -87,9 +86,7 @@ const isPositive = require('is-positive');
           'is-positive': '1.0.0',
         },
       });
-      npmCiRegistry = new NpmCiRegistry(helper);
-      await npmCiRegistry.init();
-      npmCiRegistry.configureCiInPackageJsonHarmony();
+      new NpmCiRegistry(helper).configureCiInPackageJsonHarmony();
       helper.fixtures.populateComponents(1);
       helper.fs.outputFile(`comp1/index.js`, `const isPositive = require('is-positive');`);
       helper.command.install();
@@ -106,9 +103,6 @@ const isPositive = require('is-positive');
     it('should not show the imported component as modified', () => {
       const diff = helper.command.diff();
       expect(diff).to.include('there are no modified components to diff');
-    });
-    after(() => {
-      npmCiRegistry.destroy();
     });
   }
 );
