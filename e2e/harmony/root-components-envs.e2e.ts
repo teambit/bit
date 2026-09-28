@@ -233,24 +233,6 @@ describe('env peer dependencies hoisting when the env is in the workspace', func
     });
   });
 
-  // skipped: yarn support is deprecated and planned for removal
-  describe.skip('yarn hoisted linker', function () {
-    before(() => prepare('yarn'));
-    after(() => {
-      helper.scopeHelper.destroy();
-    });
-    it('should install react to the root of the component', () => {
-      expect(
-        fs.readJsonSync(resolveFrom(path.join(helper.fixtures.scopes.localPath, 'comp1'), ['react/package.json']))
-          .version
-      ).to.match(/^16\./);
-      expect(
-        fs.readJsonSync(resolveFrom(path.join(helper.fixtures.scopes.localPath, 'comp2'), ['react/package.json']))
-          .version
-      ).to.match(/^18\./);
-    });
-  });
-
   // a plain .bit-env.js plugin env carrying only the peers policy in its env.jsonc. the
   // react-env-based fixture used before pulled the whole react toolchain from npm, which
   // got the yarn-hoisted install OOM-killed on CI; the peers policy is all this test needs.

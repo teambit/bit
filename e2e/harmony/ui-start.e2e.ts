@@ -79,10 +79,16 @@ function referencedAssets(html: string): string[] {
 
     it('should serve a document for a deep client-side route', async () => {
       // client-side routes have no file behind them; the history-api fallback is what answers, and
-      // it has to name this root's document.
+      // it has to name this root's document. `rendering=client` makes the ssr middleware call
+      // `next()`, which is the only way to reach that fallback on this root.
       const response = await fetch(`http://localhost:${SCOPE_PORT}/some/deep/route?rendering=client`);
       expect(response.status).to.equal(200);
-      expect(await response.text()).to.have.string('<div id="root"');
+      const clientRenderedHtml = await response.text();
+      expect(clientRenderedHtml).to.have.string('<div id="root"');
+      // both UI roots are entries of one bundle, so there is no shared `index.html` and the server
+      // falls back to `<root>.html`. get that name wrong and every client-side route 404s (or boots
+      // the other root) while the ssr-rendered ones keep working - so it must load the scope entry.
+      expect(clientRenderedHtml).to.match(/src="[^"]*\/scope\.[a-f0-9]+\.js"/);
     });
 
     it('should answer graphql queries', async () => {
@@ -95,11 +101,39 @@ function referencedAssets(html: string): string[] {
       expect(await response.json()).to.not.have.property('errors');
     });
 
-    it('should render the exported component into the served markup', () => {
-      // the scope root is the one built with ssr, so its markup is filled in on the server. this is
-      // the only root where the http response proves the app actually rendered.
-      expect(html).to.have.string(helper.scopes.remote);
-      expect(html).to.not.have.string('<div id="root"></div>');
+    // server-side rendering. these used to live in their own ui-ssr.e2e.ts, whose before hook was
+    // identical to this one - including a whole `bit start --rebuild` - so they were merged here.
+    //
+    // the scope UI root is the only one built with `ssr: true`, and its ssr middleware swallows a
+    // render failure by falling through to the client-rendered `index.html`. that fallback looks
+    // identical to a working page in a browser, so a broken ssr bundle is invisible without asserting
+    // on the *served html*. it is how "Invalid tag" (react #65), caused by `.cjs` modules being
+    // emitted as assets in the ssr build, went unnoticed for months.
+    describe('server-side rendering', () => {
+      const renderedRoot = () => {
+        const rendered = html.match(/<div id="root"[^>]*>([\s\S]*)<\/div>/);
+        expect(rendered, 'no #root element in the served html').to.not.equal(null);
+        return (rendered as RegExpMatchArray)[1];
+      };
+
+      it('should render the app on the server, not fall back to an empty client-rendered root', () => {
+        // the client-only fallback is exactly `<div id="root"></div>`; anything ssr rendered puts
+        // markup inside it. a 200 with valid html is returned either way.
+        expect(html).to.not.have.string('<div id="root"></div>');
+        expect(renderedRoot().trim()).to.not.have.lengthOf(0);
+      });
+
+      it('should not emit a module as an asset url where a component is expected', () => {
+        // the "Invalid tag" symptom: an emitted asset path reaching react as a tag name.
+        expect(html).to.not.match(/<\/?"?\/public\/ssr\//);
+      });
+
+      it('should render the scope name into the markup, not just the document title', () => {
+        // deliberately scoped to the contents of `#root`: the static `index.html` already carries
+        // the scope name in its `<title>`, so asserting on the whole document would pass even when
+        // the ssr render failed and the client fallback was served.
+        expect(renderedRoot()).to.have.string(helper.scopes.remote);
+      });
     });
   });
 

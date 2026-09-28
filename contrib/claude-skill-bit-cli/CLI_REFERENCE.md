@@ -5,7 +5,7 @@
 track existing directory contents as new components in the workspace
 
 Registers one or more directories as Bit components without changing your files. Each provided path becomes a component root tracked by Bit.
-Flags: --id <name>, --main <file>, --namespace <namespace>, --override <boolean>, --scope <string>, --env <string>, --json
+Flags: --id <name>, --main <file>, --namespace <namespace>, --override <boolean>, --scope <string>, --env <string>, --root, --json
 
 ## bit app [sub-command]
 
@@ -169,6 +169,13 @@ remove cached data to resolve stale data issues
 
 clears various caches that Bit uses to improve performance. useful when experiencing stale data issues or unexpected behavior. this command removes: 1) components cache on the filesystem (mainly the dependencies graph and docs) 2) scope's index file, which maps the component-id:object-hash note: this cache has minimal impact on disk space. to free significant disk space, use "bit capsule delete --all" to remove build capsules.
 Flags: --remote <remote-name>
+
+## bit clone <component-id> [dir]
+
+create a workspace from its workspace-root component, with every component it lists
+
+the workspace-root component is the one tracked at a workspace root ("bit add ."). it versions the workspace's own files - workspace.jsonc, .bitmap, lockfile, configs - and this command makes a workspace out of it, the way "git clone" makes a working tree out of a repository: the root files land at the root, every component the root lists is imported into the directory it records, then the dependencies are installed. the components come at their heads on main, or on the lane given with --lane. a version on the root id pins the root files only. runs outside a workspace. the directory must be empty or not exist, and defaults to the component name.
+Flags: --lane <lane-id>, --remote <url>, --skip-dependency-installation
 
 ## bit compile [component-names...]
 
@@ -387,6 +394,13 @@ auto-format component source code
 
 formats component files using the formatter configured by each component's environment (Prettier, etc.). by default formats all components. use --changed to format only new and modified components. supports check mode to verify formatting without making changes.
 Flags: --changed, --check, --json
+
+## bit gc
+
+remove objects from the local scope that are no longer needed
+
+a workspace keeps every version of every component it has ever imported. each new version brings the source files of that version with it, and nothing removes the ones it superseded, so the local scope keeps growing - often to several gigabytes. this command removes the versions nothing points at anymore. it keeps the version each component is checked out at, every head (of the workspace, of its lanes and of the remotes it tracks), anything snapped locally and not exported yet, and the dependencies of all of those. everything it removes can be fetched again from the remote on demand, which bit already does whenever a version it needs is not in the local scope. the trade-off is that history is no longer local: "bit log", "bit blame" and diffing against an old version will fetch from the remote instead of answering offline. use --keep-versions to keep the last few versions of each workspace component if that matters to you. run with --dry-run first to see how much there is to gain. in a bare scope (a scope that is not backed by a workspace) this instead runs the collector that keeps all history, since there the scope is the source of truth rather than a cache.
+Flags: --dry-run, --keep-versions <number>, --backup, --restore, --restore-overwrite, --verbose, --json
 
 ## bit git <sub-command>
 

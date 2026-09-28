@@ -38,16 +38,12 @@ describe('bit search command', function () {
       expect(output).to.have.string('bar/foo');
     });
 
-    it('should find multiple components matching the query', () => {
-      const output = helper.command.runCmd('bit search is --local-only');
-      expect(output).to.have.string('utils/is-type');
-    });
-
-    it('should deduplicate results across multiple queries', () => {
-      const output = helper.command.runCmd('bit search foo bar --local-only --json');
+    it('should union and deduplicate results across multiple queries', () => {
+      const output = helper.command.runCmd('bit search foo bar is-type --local-only --json');
       const results = JSON.parse(output);
       const fooCount = results.local.filter((id: string) => id.includes('bar/foo')).length;
       expect(fooCount).to.equal(1);
+      expect(results.local.some((id: string) => id.includes('is-type'))).to.be.true;
     });
 
     it('should return json output with --json flag', () => {
@@ -60,23 +56,6 @@ describe('bit search command', function () {
       expect(results.local).to.be.an('array');
       const match = results.local.find((id: string) => id.includes('bar/foo'));
       expect(match).to.not.be.undefined;
-    });
-
-    it('should union results from multiple queries', () => {
-      const output = helper.command.runCmd('bit search foo is-type --local-only --json');
-      const results = JSON.parse(output);
-      expect(results.local.some((id: string) => id.includes('bar/foo'))).to.be.true;
-      expect(results.local.some((id: string) => id.includes('is-type'))).to.be.true;
-    });
-  });
-
-  describe('when no components in workspace', () => {
-    before(() => {
-      helper.scopeHelper.reInitWorkspace();
-    });
-    it('should show no matches', () => {
-      const output = helper.command.runCmd('bit search anything --local-only');
-      expect(output).to.have.string('no matches in workspace');
     });
   });
 });

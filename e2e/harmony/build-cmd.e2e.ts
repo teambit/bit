@@ -118,11 +118,9 @@ describe('build command', function () {
       fs.removeSync(artifactPath);
       errorOutput = helper.general.runWithTryCatch('bit build comp1');
     });
-    it('the error should mention the remote where the error is coming from', () => {
-      expect(errorOutput).to.have.string(helper.scopes.remote);
-    });
-    it('the error should explain the issue', () => {
+    it('the error should explain the issue and mention the remote where it is coming from', () => {
       expect(errorOutput).to.have.string(`unable to get the following objects`);
+      expect(errorOutput).to.have.string(helper.scopes.remote);
     });
   });
 
@@ -291,7 +289,7 @@ describe('package and capsule generation identity', () => {
       helper = new Helper();
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(3);
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
       helper.command.export();
 
       // Only modify comp2 to trigger rebuild

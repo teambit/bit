@@ -9,6 +9,7 @@ import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import type { DependencyLoaderOpts, ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy.constants';
 import type { Workspace } from '@teambit/workspace';
+import { WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import type { DevFilesMain } from '@teambit/dev-files';
@@ -78,6 +79,15 @@ export class DependenciesLoader {
     dependenciesData: DependenciesData;
     debugDependenciesData?: DebugDependencies;
   }> {
+    // the workspace-root component (rootDir ".") is the workspace itself: its config files, lockfile
+    // and repo scripts. it is never installed, linked or built, so nothing consumes its dependency
+    // list, while its files are free to require anything, relative paths into the components nested
+    // in it included. parsing them would only produce issues that block the snap, and the
+    // missing-packages ones could never be fixed - "bit install" leaves its dir out of the component
+    // manifests. explicit overrides, such as "bit deps set", still apply.
+    if (this.component.componentMap?.rootDir === WORKSPACE_ROOT_DIR) {
+      return { dependenciesData: this.getEmptyDependenciesData() };
+    }
     const depsDataFromCache = await this.getDependenciesDataFromCacheIfPossible(workspace, opts);
     if (depsDataFromCache) {
       return { dependenciesData: depsDataFromCache };
@@ -99,6 +109,15 @@ export class DependenciesLoader {
     }
 
     return results;
+  }
+
+  private getEmptyDependenciesData(): DependenciesData {
+    return new DependenciesData(
+      { dependencies: [], devDependencies: [], peerDependencies: [] },
+      { packageDependencies: {}, devPackageDependencies: {}, peerPackageDependencies: {} },
+      this.component.issues,
+      []
+    );
   }
 
   private async getDependenciesDataFromCacheIfPossible(

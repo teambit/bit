@@ -34,6 +34,7 @@ export async function createConsumer(
           defaultScope: workspaceExtensionProps.defaultScope,
           defaultDirectory: workspaceExtensionProps.defaultDirectory,
           components: workspaceExtensionProps.components,
+          trackAllFiles: workspaceExtensionProps.trackAllFiles,
         }), // remove empty values
         'teambit.dependencies/dependency-resolver': workspaceExtensionProps.externalPackageManager
           ? { externalPackageManager: workspaceExtensionProps.externalPackageManager }

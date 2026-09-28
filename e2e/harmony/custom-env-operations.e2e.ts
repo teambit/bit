@@ -46,7 +46,7 @@ describe('custom env (config and versioning scenarios)', function () {
     });
     // previously, it errored "Cannot read property 'id' of undefined"
     it('bit env-set should not throw any error', () => {
-      expect(() => helper.command.setEnv('comp1', envId));
+      expect(() => helper.command.setEnv('comp1', envId)).to.not.throw();
     });
   });
   describe('custom-env is 0.0.2 on the workspace, but comp1 is using it in the model with 0.0.1', () => {
@@ -60,16 +60,13 @@ describe('custom env (config and versioning scenarios)', function () {
       helper.command.tagAllWithoutBuild();
       helper.command.tagWithoutBuild(envName, '--skip-auto-tag --unmodified'); // 0.0.2
     });
-    // previously, this was failing with ComponentNotFound error.
+    // previously, loading comp1 was failing with ComponentNotFound error.
     // it's happening during the load of comp1, we have the onLoad, where the workspace calculate extensions.
     // Once it has all extensions it's loading them. in this case, comp1 has the custom-env with 0.0.1 in the envs/envs
     // it's unable to find it in the workspace and asks the scope, which can't find it because it's the full-id include
     // scope-name.
     // now, during the extension calculation, it checks whether the component is in the workspace, and if so, it sets
     // the version according to the workspace.
-    it('any bit command should not throw', () => {
-      expect(() => helper.command.status()).to.not.throw();
-    });
     it('bit show should show the correct env', () => {
       const env = helper.env.getComponentEnv('comp1');
       expect(env).to.equal(`${envId}@0.0.2`);
@@ -175,10 +172,6 @@ export default createMounter(MyReactProvider) as any;`
     });
     it('bit status should not enter into an infinite loop', () => {
       expect(() => helper.command.status()).to.not.throw();
-    });
-    it('should complete bit status command successfully', () => {
-      const status = helper.command.status();
-      expect(status).to.be.a('string');
     });
   });
 });

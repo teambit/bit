@@ -34,6 +34,7 @@ Registers one or more directories as Bit components without changing your files.
 | `--override <boolean>`    |       `-o`       | override existing component if exists (default = false)                                         |
 | `--scope <string>`        |       `-s`       | sets the component's scope. if not entered, the default-scope from workspace.jsonc will be used |
 | `--env <string>`          |       `-e`       | set the component's environment. (overrides the env from variants if exists)                    |
+| `--root`                  |                  | track the workspace root itself as a component, which owns every file no other component claims |
 | `--json`                  |       `-j`       | output as json format                                                                           |
 
 ---
@@ -499,6 +500,28 @@ note: this cache has minimal impact on disk space. to free significant disk spac
 | **Option**               | **Option alias** | **Description**                        |
 | ------------------------ | :--------------: | -------------------------------------- |
 | `--remote <remote-name>` |       `-r`       | clear memory cache from a remote scope |
+
+---
+
+## clone
+
+**Description**: create a workspace from its workspace-root component, with every component it lists  
+the workspace-root component is the one tracked at a workspace root ("bit add ."). it versions the workspace's own files - workspace.jsonc, .bitmap, lockfile, configs - and this command makes a workspace out of it, the way "git clone" makes a working tree out of a repository: the root files land at the root, every component the root lists is imported into the directory it records, then the dependencies are installed.  
+the components come at their heads on main, or on the lane given with --lane. a version on the root id pins the root files only.  
+runs outside a workspace. the directory must be empty or not exist, and defaults to the component name.
+
+`bit clone <component-id> [dir]`
+
+| **Arg**        |                                    **Description**                                     |
+| -------------- | :------------------------------------------------------------------------------------: |
+| `component-id` |      the workspace-root component, with its scope. a version pins the root files       |
+| `dir`          | where to create the workspace. defaults to the component name, must be empty or absent |
+
+| **Option**                       | **Option alias** | **Description**                                                                                                              |
+| -------------------------------- | :--------------: | ---------------------------------------------------------------------------------------------------------------------------- |
+| `--lane <lane-id>`               |       `-l`       | clone the workspace as it is on this lane ("scope/name"): it comes out on the lane, with the components at their heads there |
+| `--remote <url>`                 |                  | url of the scope hosting the components, when it is neither on bit.cloud nor in the global remotes                           |
+| `--skip-dependency-installation` |       `-x`       | do not install the dependencies, and so do not compile, after the clone                                                      |
 
 ---
 
@@ -1106,6 +1129,42 @@ supports check mode to verify formatting without making changes.
 | `--changed` |       `-c`       | format only new and modified components                                      |
 | `--check`   |                  | will output a human-friendly message and a list of unformatted files, if any |
 | `--json`    |       `-j`       | return the format results in json format                                     |
+
+---
+
+## gc
+
+**Description**: remove objects from the local scope that are no longer needed  
+a workspace keeps every version of every component it has ever imported. each new version brings  
+the source files of that version with it, and nothing removes the ones it superseded, so the local  
+scope keeps growing - often to several gigabytes.
+
+this command removes the versions nothing points at anymore. it keeps the version each component is  
+checked out at, every head (of the workspace, of its lanes and of the remotes it tracks), anything  
+snapped locally and not exported yet, and the dependencies of all of those. everything it removes  
+can be fetched again from the remote on demand, which bit already does whenever a version it needs  
+is not in the local scope.
+
+the trade-off is that history is no longer local: "bit log", "bit blame" and diffing against an old  
+version will fetch from the remote instead of answering offline. use --keep-versions to keep the  
+last few versions of each workspace component if that matters to you.
+
+run with --dry-run first to see how much there is to gain.
+
+in a bare scope (a scope that is not backed by a workspace) this instead runs the collector that  
+keeps all history, since there the scope is the source of truth rather than a cache.
+
+`bit gc`
+
+| **Option**                 | **Option alias** | **Description**                                                                                       |
+| -------------------------- | :--------------: | ----------------------------------------------------------------------------------------------------- |
+| `--dry-run`                |       `-d`       | show what would be removed without removing anything                                                  |
+| `--keep-versions <number>` |                  | keep the last N versions of each workspace component, so their recent history stays available offline |
+| `--backup`                 |                  | move the objects into a "deleted-objects" directory instead of deleting them. frees no disk space     |
+| `--restore`                |                  | bring back everything previous runs moved aside with --backup, and empty that directory               |
+| `--restore-overwrite`      |                  | same as --restore, but overwrite objects that already exist                                           |
+| `--verbose`                |       `-v`       | log every object being removed                                                                        |
+| `--json`                   |       `-j`       | return the results in json format                                                                     |
 
 ---
 

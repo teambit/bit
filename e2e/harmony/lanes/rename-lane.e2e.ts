@@ -1,9 +1,9 @@
-import chai, { expect } from 'chai';
+import { expect } from 'chai';
 import { LANE_KEY } from '@teambit/legacy.bit-map';
 import { Helper } from '@teambit/legacy.e2e-helper';
-import chaiFs from 'chai-fs';
-chai.use(chaiFs);
 
+// renaming an already-exported lane is covered by "rename an exported lane" in
+// lane-management.e2e.ts, which runs the same flow and asserts more of it
 describe('rename lanes', function () {
   this.timeout(0);
   let helper: Helper;
@@ -12,24 +12,6 @@ describe('rename lanes', function () {
   });
   after(() => {
     helper.scopeHelper.destroy();
-  });
-  describe('rename lane using the alias', () => {
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.command.createLane('dev', '--alias d');
-      helper.fixtures.populateComponents(1, false);
-      helper.command.snapAllComponentsWithoutBuild();
-      helper.command.export();
-
-      helper.command.renameLane('new-dev');
-    });
-    it('should not throw on any command', () => {
-      expect(() => helper.command.status()).to.not.throw();
-    });
-    it('should update .bitmap with the new name', () => {
-      const bitMap = helper.bitMap.read();
-      expect(bitMap[LANE_KEY].id.name).to.equal('new-dev');
-    });
   });
   // previous bug left the "lanes.new" prop in scope.json with the old name causing bit later to assume it's exported.
   describe('rename local lane, switch to main and then switch back to the lane', () => {

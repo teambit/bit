@@ -44,7 +44,7 @@ describe('merge lanes - squash on diverged', function () {
 
       helper.scopeHelper.getClonedWorkspace(laneAWorkspace);
       helper.command.import();
-      helper.command.mergeLane('lane-b', '--squash --auto-merge-resolve theirs');
+      helper.command.mergeLaneWithoutBuild('lane-b', '--squash --auto-merge-resolve theirs');
       mergeSnap = helper.command.getHeadOfLane('lane-a', 'comp1');
     });
 
@@ -69,10 +69,6 @@ describe('merge lanes - squash on diverged', function () {
       expect(hashes).to.include(mergeSnap);
       // lane-b intermediates should not be reachable from lane-a's head chain
       expect(hashes).to.not.include(headOnLaneB);
-    });
-
-    it('bit log should not throw', () => {
-      expect(() => helper.command.logParsed('comp1')).to.not.throw();
     });
   });
 
@@ -114,7 +110,7 @@ describe('merge lanes - squash on diverged', function () {
 
       helper.scopeHelper.getClonedWorkspace(laneAWorkspace);
       helper.command.import();
-      helper.command.mergeLane(`${scopeB}/lane-b`, '--squash --auto-merge-resolve theirs');
+      helper.command.mergeLaneWithoutBuild(`${scopeB}/lane-b`, '--squash --auto-merge-resolve theirs');
       mergeSnap = helper.command.getHeadOfLane('lane-a', 'comp1');
       helper.command.export();
       scopeAAfterExport = helper.scopeHelper.cloneWorkspace();
@@ -155,10 +151,6 @@ describe('merge lanes - squash on diverged', function () {
         helper.command.importLane('lane-a', '-x');
       });
 
-      it('bit log should not throw on the merged component', () => {
-        expect(() => helper.command.logParsed('comp1')).to.not.throw();
-      });
-
       it('bit log should show the merge snap and lane-a chain, not lane-b intermediates', () => {
         const log = helper.command.logParsed('comp1');
         const hashes = log.map((l: any) => l.hash);
@@ -189,7 +181,7 @@ describe('merge lanes - squash on diverged', function () {
         // return to the lane-a workspace and re-merge lane-b
         helper.scopeHelper.getClonedWorkspace(scopeAAfterExport);
         helper.command.import();
-        helper.command.mergeLane(`${scopeB}/lane-b`, '--squash --auto-merge-resolve theirs');
+        helper.command.mergeLaneWithoutBuild(`${scopeB}/lane-b`, '--squash --auto-merge-resolve theirs');
         secondMergeSnap = helper.command.getHeadOfLane('lane-a', 'comp1');
       });
 
@@ -208,10 +200,6 @@ describe('merge lanes - squash on diverged', function () {
         expect(prevParents).to.not.include(headOnLaneB);
       });
 
-      it('bit log after re-merge should not throw', () => {
-        expect(() => helper.command.logParsed('comp1')).to.not.throw();
-      });
-
       it('bit log after re-merge should show two merge snaps in the chain, no lane-b intermediates', () => {
         const log = helper.command.logParsed('comp1');
         const hashes = log.map((l: any) => l.hash);
@@ -227,49 +215,9 @@ describe('merge lanes - squash on diverged', function () {
     });
   });
 
-  describe('sanity: diverged merge without --squash still produces a two-parent merge snap', () => {
-    let headOnLaneA: string;
-    let headOnLaneB: string;
-    let mergeSnap: string;
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.fixtures.populateComponents(1);
-      helper.command.tagAllWithoutBuild();
-      helper.command.export();
-
-      helper.command.createLane('lane-a');
-      helper.command.snapAllComponentsWithoutBuild('--unmodified');
-      helper.command.snapAllComponentsWithoutBuild('--unmodified');
-      headOnLaneA = helper.command.getHeadOfLane('lane-a', 'comp1');
-      helper.command.export();
-      const laneAWorkspace = helper.scopeHelper.cloneWorkspace();
-
-      helper.command.switchLocalLane('main');
-      helper.command.createLane('lane-b');
-      helper.command.snapAllComponentsWithoutBuild('--unmodified');
-      helper.command.snapAllComponentsWithoutBuild('--unmodified');
-      headOnLaneB = helper.command.getHeadOfLane('lane-b', 'comp1');
-      helper.command.export();
-
-      helper.scopeHelper.getClonedWorkspace(laneAWorkspace);
-      helper.command.import();
-      helper.command.mergeLane('lane-b', '--auto-merge-resolve theirs');
-      mergeSnap = helper.command.getHeadOfLane('lane-a', 'comp1');
-    });
-
-    it('merge snap should have two parents (lane-a head and lane-b head)', () => {
-      const snap = helper.command.catComponent(`comp1@${mergeSnap}`);
-      expect(snap.parents).to.have.lengthOf(2);
-      expect(snap.parents).to.include(headOnLaneA);
-      expect(snap.parents).to.include(headOnLaneB);
-    });
-
-    it('merge snap should NOT have squash metadata', () => {
-      const snap = helper.command.catComponent(`comp1@${mergeSnap}`);
-      expect(snap).to.not.have.property('squashed');
-    });
-  });
-
+  // the no-squash control for all of the above (a diverged lane-to-lane merge keeps both parents and
+  // records no squash data) lives in diverged-from-forked.e2e.ts, which builds the same two-diverged-
+  // lanes scenario and additionally pins the parent order
   describe('lane into main, diverged, --squash', () => {
     let commonAncestor: string;
     let headOnMain: string;
@@ -299,7 +247,7 @@ describe('merge lanes - squash on diverged', function () {
       helper.command.export();
 
       // merge dev into main with --squash on a diverged history (pre-PR this threw)
-      helper.command.mergeLane('dev', '--squash --auto-merge-resolve theirs');
+      helper.command.mergeLaneWithoutBuild('dev', '--squash --auto-merge-resolve theirs');
       mergeSnap = helper.command.getHead('comp1');
     });
 
@@ -314,10 +262,6 @@ describe('merge lanes - squash on diverged', function () {
       expect(snap).to.have.property('squashed');
       const prevParents: string[] = snap.squashed.previousParents || snap.squashed.previousParentsRefs || [];
       expect(prevParents).to.include(headOnLane);
-    });
-
-    it('bit log on main should not throw', () => {
-      expect(() => helper.command.logParsed('comp1')).to.not.throw();
     });
 
     it('bit log on main should show the main chain + merge snap, not the lane intermediates', () => {
@@ -379,7 +323,7 @@ describe('merge lanes - squash on diverged', function () {
       helper.command.export();
 
       // diverged squash from main side: dev lives on scope-b, main on scope-a
-      helper.command.mergeLane(`${scopeB}/dev`, '--squash --auto-merge-resolve theirs');
+      helper.command.mergeLaneWithoutBuild(`${scopeB}/dev`, '--squash --auto-merge-resolve theirs');
       mergeSnap = helper.command.getHead('comp1');
       helper.command.export(); // merge snap → scope-a (main's home)
     });
@@ -408,10 +352,6 @@ describe('merge lanes - squash on diverged', function () {
 
       it('bit status should not throw', () => {
         expect(() => helper.command.status()).to.not.throw();
-      });
-
-      it('bit log should not throw', () => {
-        expect(() => helper.command.logParsed(compFullId)).to.not.throw();
       });
 
       it('bit log should show common ancestor + main chain + merge snap', () => {
@@ -454,7 +394,7 @@ describe('merge lanes - squash on diverged', function () {
       helper.command.export();
 
       helper.command.switchLocalLane('lane-a');
-      helper.command.mergeLane('lane-b', '--squash --auto-merge-resolve theirs');
+      helper.command.mergeLaneWithoutBuild('lane-b', '--squash --auto-merge-resolve theirs');
       mergeSnap = helper.command.getHeadOfLane('lane-a', 'comp1');
     });
 

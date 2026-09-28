@@ -73,7 +73,6 @@ describe('custom env (config and versioning scenarios) (part 2)', function () {
     });
   });
   describe('an env with a preview/bundler but without a compiler', () => {
-    let buildOutput: string;
     before(() => {
       // preview is disabled by default in e2e to speed up tagging. enable it so the GeneratePreview
       // task actually runs - this is the path that used to fail for a compiler-less env.
@@ -86,16 +85,14 @@ describe('custom env (config and versioning scenarios) (part 2)', function () {
       helper.command.setEnv('comp1', envId);
       helper.command.install();
     });
-    it('bit build should not fail generating the preview', () => {
+    it('bit build should not fail generating the preview, and the GeneratePreview task should have run', () => {
       // before the fix it used to throw "context.env.getCompiler is not a function" and then
       // ENOENT when writing the preview link into the (never created) dist dir.
       // skip the TSCompiler task: comp1's env has no compiler anyway, and skipping it avoids
       // compiling the env component itself (irrelevant to this scenario - the user's env was a
       // resolved dependency, not built). the global GeneratePreview task still runs.
-      buildOutput = helper.command.build('comp1', '--skip-tasks TSCompiler');
+      const buildOutput = helper.command.build('comp1', '--skip-tasks TSCompiler');
       expect(buildOutput).to.have.string('build succeeded');
-    });
-    it('the GeneratePreview task should have run (preview was needed, not skipped)', () => {
       expect(buildOutput).to.have.string('GeneratePreview');
     });
   });
