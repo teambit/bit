@@ -69,3 +69,20 @@ describe('WorkspaceComponentLoader populateScopeAndExtensionsCache', () => {
     ]);
   });
 });
+
+describe('WorkspaceComponentLoader regroupEnvsIdsFromTheList', () => {
+  it('should put an env that another env uses in the first group, even when the cache evicted it', () => {
+    const loader = new WorkspaceComponentLoader({} as any, {} as any, {} as any, {} as any, {} as any);
+    (loader as any).componentsExtensionsCache = createInMemoryCache({ maxSize: 1 });
+    const envOfEnv = ComponentID.fromString('some-scope/envs/base-env@1.0.0');
+    const env = ComponentID.fromString('some-scope/envs/custom-env@1.0.0');
+    const extensionsData = new Map([
+      [env.toString(), { extensions: new ExtensionDataList(), errors: undefined, envId: envOfEnv.toString() }],
+      [envOfEnv.toString(), { extensions: new ExtensionDataList(), errors: undefined, envId: undefined }],
+    ]);
+
+    const groups = (loader as any).regroupEnvsIdsFromTheList([env, envOfEnv], new Set(), extensionsData);
+
+    expect(groups).to.deep.equal([[envOfEnv], [env]]);
+  });
+});
