@@ -1,6 +1,8 @@
 import { expect } from 'chai';
 import { ComponentID } from '@teambit/component-id';
-import { isRequestedId } from './workspace-component-loader';
+import { createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
+import { ExtensionDataList } from '@teambit/legacy.extension-data';
+import { WorkspaceComponentLoader, isRequestedId } from './workspace-component-loader';
 
 /**
  * the predicate decides whether a component is loaded because the caller asked for it, or only
@@ -32,5 +34,38 @@ describe('isRequestedId', () => {
 
   it('should treat everything as requested when the requested set is unknown', () => {
     expect(isRequestedId(ComponentID.fromString('some-scope/comps/anything@1.0.0'))).to.be.true;
+  });
+});
+
+/**
+ * the load groups decide which envs are loaded before the components that use them. they're built from the extensions
+ * of every component, which must not be read back from the (bounded) extensions cache: in a workspace with more
+ * components than its limit, most of them would be evicted by then, and their envs wouldn't be loaded first.
+ */
+describe('WorkspaceComponentLoader populateScopeAndExtensionsCache', () => {
+  it('should return the extensions of all the given workspace components, even when the cache evicts them', async () => {
+    const workspace = {
+      scope: { get: async () => undefined },
+      componentExtensions: async (id: ComponentID) => ({
+        extensions: new ExtensionDataList(),
+        errors: undefined,
+        envId: `env-of-${id.toStringWithoutVersion()}`,
+      }),
+    };
+    const loader = new WorkspaceComponentLoader(workspace as any, {} as any, {} as any, {} as any, {} as any);
+    (loader as any).componentsExtensionsCache = createInMemoryCache({ maxSize: 1 });
+    const ids = ['some-scope/comp-a', 'some-scope/comp-b', 'some-scope/comp-c'].map((id) => ComponentID.fromString(id));
+    const workspaceIds = new Map(ids.map((id) => [id.toString(), id]));
+
+    const extensionsData = await (loader as any).populateScopeAndExtensionsCache(ids, {
+      workspaceIds,
+      scopeIds: new Map(),
+    });
+
+    expect(Array.from(extensionsData.values()).map((data: any) => data.envId)).to.deep.equal([
+      'env-of-some-scope/comp-a',
+      'env-of-some-scope/comp-b',
+      'env-of-some-scope/comp-c',
+    ]);
   });
 });
