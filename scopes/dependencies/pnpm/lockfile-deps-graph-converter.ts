@@ -93,23 +93,34 @@ function importerDepsToNeighbours(
 ): DependencyNeighbour[] {
   const neighbours: DependencyNeighbour[] = [];
   for (const [name, { version, specifier }] of Object.entries(importerDependencies) as any) {
-    // `refToRelative` yields null for non-registry refs (`link:` and
-    // friends) — those are workspace wiring, not graph nodes.
-    let id: string | null = dp.refToRelative(version, name);
-    if (id == null) {
-      const componentId = componentIdByPkgName?.get(name);
-      if (!componentId?.version || (!version.startsWith('link:') && !version.startsWith('workspace:'))) continue;
-      id = `${name}@${snapToSemver(componentId.version)}`;
-    }
+    const id = refToNeighbourId(version, name, componentIdByPkgName);
+    if (id == null) continue;
     neighbours.push({ name, specifier, id, lifecycle, optional });
   }
   return neighbours;
 }
 
+/**
+ * `refToRelative` yields null for non-registry refs (`link:` and friends) — those are workspace
+ * wiring, not graph nodes. a link to a workspace component is its version though.
+ */
+function refToNeighbourId(ref: string, name: string, componentIdByPkgName?: ComponentIdByPkgName): string | null {
+  const id = dp.refToRelative(ref, name);
+  if (id != null) return id;
+  const componentId = componentIdByPkgName?.get(name);
+  if (!componentId?.version || (!ref.startsWith('link:') && !ref.startsWith('workspace:'))) return null;
+  return `${name}@${snapToSemver(componentId.version)}`;
+}
+
+/**
+ * a neighbour importerDepsToNeighbours made of a link to a workspace component has no package in the
+ * lockfile, so it gets the component's. a package the lockfile resolved, from a registry, keeps the
+ * entry buildPackages made of it, version and resolution included.
+ */
 function addWorkspaceComponentPackages(graph: DependenciesGraph, componentIdByPkgName: ComponentIdByPkgName): void {
   const rootEdge = graph.findRootEdge();
   for (const neighbour of rootEdge?.neighbours || []) {
-    if (!neighbour.name) continue;
+    if (!neighbour.name || graph.packages.has(neighbour.id)) continue;
     const componentId = componentIdByPkgName.get(neighbour.name);
     if (!componentId) continue;
     graph.packages.set(neighbour.id, {
@@ -147,7 +158,7 @@ export function convertLockfileToGraph(
   for (const depType of ['dependencies' as const, 'optionalDependencies' as const]) {
     const optional = depType === 'optionalDependencies';
     for (const [name, version] of Object.entries(lockedPkg[depType] ?? {})) {
-      const id = dp.refToRelative(version, name);
+      const id = refToNeighbourId(version, name, componentIdByPkgName);
       if (id == null) continue;
       directDependencies.push({
         name,
@@ -177,7 +188,9 @@ export function convertLockfileToGraph(
       }
     }
   }
-  return _convertLockfileToGraph(lockfile, { componentIdByPkgName, directDependencies });
+  const graph = _convertLockfileToGraph(lockfile, { componentIdByPkgName, directDependencies });
+  addWorkspaceComponentPackages(graph, componentIdByPkgName);
+  return graph;
 }
 
 function _convertLockfileToGraph(

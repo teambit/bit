@@ -150,6 +150,8 @@ function promoteDependencyResolverData(component: ConsumerComponent, graphDepend
     lifecycle: graphDependency.lifecycle,
     source: existing?.source ?? 'auto',
     hidden: existing?.hidden,
+    // a tag sets the ^/~ range the package.json of the dependent gets
+    versionRange: existing?.versionRange,
     optional: graphDependency.optional,
   };
   entry.data = {
@@ -392,6 +394,9 @@ export class VersionMaker {
     for (const component of this.allComponentsToTag) {
       const graph = component.dependenciesGraph;
       if (!graph) continue;
+      // only the package.json a component carries declares its dependencies, e.g. a pnpm project's.
+      // bit generates the others' from what it detects, which the graph has no more to add to
+      if (!component.files.some((file) => file.relative === 'package.json')) continue;
       const graphDependencies = componentDependenciesFromGraph(graph);
       for (const graphDependency of graphDependencies) {
         if (component.id.isEqualWithoutVersion(graphDependency.id)) continue;

@@ -28,11 +28,11 @@ import {
   applyPnpmImportPlan,
   createPnpmVcsCatalogBindingsOnLoad,
   createPnpmVcsImportPlan,
-  getUserPnpmVersion,
+  findPnpmWithoutWorkspaceCatalogs,
   isPnpmWorkspace,
   PnpmCmd,
+  PNPM_WORKSPACE_CATALOGS_REQUIREMENT,
   PnpmSyncCmd,
-  pnpmSupportsWorkspaceCatalogs,
 } from './pnpm-workspace-sync';
 
 const ENV_SCRIPTS: PnpmScript[] = ['build', 'test', 'lint'];
@@ -67,10 +67,10 @@ export class PnpmWorkspaceMain {
   }
 
   private async warnForPnpmWithoutWorkspaceCatalogs(workspacePath: string) {
-    const pnpmVersion = await getUserPnpmVersion(workspacePath);
-    if (!pnpmVersion || pnpmSupportsWorkspaceCatalogs(pnpmVersion)) return;
+    const pnpmVersion = await findPnpmWithoutWorkspaceCatalogs(workspacePath);
+    if (!pnpmVersion) return;
     this.logger.consoleWarning(
-      `the import bound local packages to "workspace:*" in the pnpm catalog, which pnpm ${pnpmVersion} does not fully support. "pnpm install" and the build order of "pnpm -r" need pnpm 11.28.0 or later on 11, or 12.7.0 or later`
+      `the import bound local packages to "workspace:*" in the pnpm catalog, which pnpm ${pnpmVersion} does not fully support. ${PNPM_WORKSPACE_CATALOGS_REQUIREMENT}`
     );
   }
 

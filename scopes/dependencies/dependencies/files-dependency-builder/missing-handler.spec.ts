@@ -29,8 +29,17 @@ describe('MissingHandler', () => {
     });
     expect(findPackages()).to.deep.equal({ '@acme/math': '1.0.0' });
   });
-  it('should take any version of a found package that has none, e.g. a private package of a pnpm workspace', async () => {
-    await fs.outputJson(path.join(componentDir, 'node_modules/@acme/math/package.json'), { name: '@acme/math' });
+  it('should take any version of a package of a project of the workspace that has none, e.g. a private one', async () => {
+    await fs.outputJson(path.join(workspaceDir, 'packages/math/package.json'), { name: '@acme/math' });
+    await fs.ensureSymlink(
+      path.join(workspaceDir, 'packages/math'),
+      path.join(componentDir, 'node_modules/@acme/math'),
+      'dir'
+    );
     expect(findPackages()).to.deep.equal({ '@acme/math': '*' });
+  });
+  it('should refuse an installed package that has no version', async () => {
+    await fs.outputJson(path.join(componentDir, 'node_modules/@acme/math/package.json'), { name: '@acme/math' });
+    expect(findPackages).to.throw('unable to find the version for a package @acme/math');
   });
 });

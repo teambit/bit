@@ -513,6 +513,10 @@ export class AutoDetectDeps {
     if (this.workspaceComponentIdByPackageName) return this.workspaceComponentIdByPackageName;
     const result = new Map<string, ComponentID>();
     for (const componentMap of this.consumer.bitMap.components) {
+      // the workspace root is never depended on as a package, whatever its package.json says. a
+      // removed component, or one of another lane, is not here to be depended on either.
+      if (componentMap.rootDir === WORKSPACE_ROOT_DIR) continue;
+      if (componentMap.isRemoved() || !componentMap.isAvailableOnCurrentLane) continue;
       const config = componentMap.config?.[DependencyResolverAspect.id];
       const configuredPackageName = config && config !== '-' ? config.packageName : undefined;
       if (typeof configuredPackageName === 'string' && configuredPackageName) {
@@ -520,8 +524,6 @@ export class AutoDetectDeps {
         continue;
       }
       // a component tracks its package.json as source only under trackAllFiles, e.g. a pnpm project.
-      // the workspace root is never depended on as a package, whatever its package.json says.
-      if (componentMap.rootDir === WORKSPACE_ROOT_DIR) continue;
       if (!componentMap.files?.some((file) => file.relativePath === 'package.json')) continue;
       const manifestPath = path.join(this.consumerPath, componentMap.rootDir, 'package.json');
       try {

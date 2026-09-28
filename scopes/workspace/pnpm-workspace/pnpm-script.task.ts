@@ -104,7 +104,9 @@ export class PnpmScriptTask implements BuildTask {
     const existingSignature = await fs.readFile(markerPath, 'utf8').catch(() => undefined);
     if (existingSignature === signature) return;
     await writePnpmWorkspaceTree(tree, treeDir);
-    await this.pnpm(['install', '--frozen-lockfile'], treeDir);
+    // a workspace synced before its first install has no lockfile to keep to
+    const hasLockfile = await exists(path.join(treeDir, 'pnpm-lock.yaml'));
+    await this.pnpm(hasLockfile ? ['install', '--frozen-lockfile'] : ['install'], treeDir);
     await fs.writeFile(markerPath, signature);
   }
 
@@ -138,8 +140,11 @@ async function copyOutputsToCapsules(
   outputDirs: string[]
 ): Promise<void> {
   if (!outputDirs.length) return;
+  // the capsules of the components of other envs keep what their own tasks left
+  const taskComponentIds = new Set(context.components.map((component) => component.id.toStringWithoutVersion()));
   await Promise.all(
     [...tree.members.entries()].map(async ([rootDir, component]) => {
+      if (!taskComponentIds.has(component.id.toStringWithoutVersion())) return;
       const capsule = context.capsuleNetwork.graphCapsules.getCapsule(component.id);
       if (!capsule) return;
       await Promise.all(

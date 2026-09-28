@@ -401,6 +401,18 @@ describe('bit pnpm sync', function () {
         'by both "workspace:*" and "workspace:^"'
       );
     });
+    it('should refuse a package one project refers to by two specifiers, before changing anything', async () => {
+      await expectSyncToRefuse(
+        {
+          'packages/app/package.json': {
+            name: '@acme/app',
+            dependencies: { '@acme/math': 'workspace:*' },
+            devDependencies: { '@acme/math': 'workspace:^' },
+          },
+        },
+        'by both "workspace:*" and "workspace:^"'
+      );
+    });
     it('should refuse a package the catalog binds otherwise, before changing anything', async () => {
       await expectSyncToRefuse(
         { 'pnpm-workspace.yaml': "packages:\n  - packages/*\ncatalog:\n  '@acme/math': 1.0.0\n" },
@@ -446,6 +458,20 @@ describe('pnpm workspace discovery', () => {
     expect(await discoverPnpmProjectManifests(workspaceDir, ['.', 'packages/**', 'apps/*', '!apps/web'])).to.deep.equal(
       ['packages/a/package.json', 'packages/b/package.json']
     );
+  });
+
+  it('should refuse a project outside of the workspace', async () => {
+    const outsideDir = path.join(path.dirname(workspaceDir), `${path.basename(workspaceDir)}-outside`);
+    await fs.outputJson(path.join(outsideDir, 'package.json'), { name: 'outside' });
+    let error: Error | undefined;
+    try {
+      await discoverPnpmProjectManifests(workspaceDir, [`../${path.basename(outsideDir)}`]);
+    } catch (err: any) {
+      error = err;
+    } finally {
+      await fs.remove(outsideDir);
+    }
+    expect(error?.message).to.have.string('outside of the workspace');
   });
 
   it('should derive a component name from a package name', () => {

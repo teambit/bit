@@ -12,6 +12,7 @@ import {
   formatItem,
   formatSection,
   formatSuccessSummary,
+  formatWarningSummary,
   joinSections,
   warnSymbol,
 } from '@teambit/cli';
@@ -39,6 +40,10 @@ const PACKAGE_JSON = 'package.json';
 const DEPENDENCY_FIELDS = ['dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies'];
 /** the env of a project with scripts to run, unless "--env" names another one. the aspect is the env */
 export const PNPM_WORKSPACE_ENV = PnpmWorkspaceAspect.id;
+
+/** see PNPM_WORKSPACE_CATALOGS_RANGE */
+export const PNPM_WORKSPACE_CATALOGS_REQUIREMENT =
+  '"pnpm install" and the build order of "pnpm -r" need pnpm 11.28.0 or later on 11, or 12.7.0 or later';
 /** the scripts the env runs. a project with none of them has nothing to build, so it gets the empty env */
 const ENV_SCRIPTS = ['build', 'test', 'lint'];
 
@@ -135,7 +140,7 @@ safe to re-run: tracked projects keep their ids, new ones are added, and the one
       : '';
     const unbound = result.catalogUnboundPackages.length
       ? formatSection(
-          'left in the catalog',
+          `${warnSymbol} left in the catalog`,
           `these packages left the workspace, and the catalog of ${PNPM_WORKSPACE_MANIFEST} still binds them to "workspace:". set their entries to a version`,
           result.catalogUnboundPackages.map((description) => formatItem(description, warnSymbol))
         )
@@ -145,7 +150,16 @@ safe to re-run: tracked projects keep their ids, new ones are added, and the one
       result.catalogMigratedPackages.length || result.catalogVersionBoundPackages.length
         ? formatHint('run "pnpm install" to update the lockfile before snapping')
         : '';
-    return joinSections([removed, migrated, versionBound, unbound, summary, installHint]);
+    const oldPnpmVersion =
+      result.catalogMigratedPackages.length && this.workspace
+        ? await findPnpmWithoutWorkspaceCatalogs(this.workspace.path)
+        : undefined;
+    const oldPnpm = oldPnpmVersion
+      ? formatWarningSummary(
+          `the catalog binds local packages to "workspace:" now, which pnpm ${oldPnpmVersion} does not fully support. ${PNPM_WORKSPACE_CATALOGS_REQUIREMENT}`
+        )
+      : '';
+    return joinSections([removed, migrated, versionBound, unbound, summary, oldPnpm, installHint]);
   }
 
   async json(_args: string[], { env }: SyncFlags): Promise<PnpmVcsSyncResult> {
@@ -257,13 +271,15 @@ export async function syncPnpmWorkspace(
   );
   const catalogMigration = planCatalogMigration(projects, workspaceManifest);
   const leftPackages = await planLeftPackageBindings(workspace, projects, workspaceManifest);
+  const envResolver = new ProjectEnvResolver(workspace, options.env || PNPM_WORKSPACE_ENV);
+  // an env given that cannot be loaded fails here too, the projects with scripts get it
+  if (options.env && projects.some((project) => project.hasScripts)) await envResolver.getConfigId();
   await applyCatalogMigration(workspace.path, workspaceManifestPath, catalogMigration);
   await editPnpmWorkspaceManifest(workspaceManifestPath, { catalogEntries: leftPackages.bindings });
   await enableTrackAllFiles(workspace);
 
   const removedComponents = removeLeftProjects(workspace, leftProjects);
   const components: PnpmVcsSyncResult['components'] = [];
-  const envResolver = new ProjectEnvResolver(workspace, options.env || PNPM_WORKSPACE_ENV);
   for (const project of projects) {
     const componentId = await trackPnpmProject(workspace, tracker, project, envResolver);
     components.push(syncedComponent(workspace, componentId, project.rootDir));
@@ -389,7 +405,11 @@ function readWorkspaceReferences(manifest: PackageManifest): Map<string, string>
   const references = new Map<string, string>();
   for (const field of DEPENDENCY_FIELDS) {
     Object.entries(asRecord(manifest[field])).forEach(([packageName, specifier]) => {
-      if (typeof specifier === 'string' && specifier.startsWith('workspace:')) references.set(packageName, specifier);
+      if (typeof specifier !== 'string' || !specifier.startsWith('workspace:')) return;
+      const existing = references.get(packageName);
+      // both become "catalog:", one entry binds them
+      if (existing && existing !== specifier) throw conflictingSpecifiersError(packageName, existing, specifier);
+      references.set(packageName, specifier);
     });
   }
   return references;
@@ -421,11 +441,7 @@ function planCatalogMigration(projects: PnpmProject[], workspaceManifest: PnpmWo
       if (!localPackageNames.has(packageName)) return;
       refersToLocal = true;
       const existing = bindings.get(packageName);
-      if (existing && existing !== specifier) {
-        throw new BitError(
-          `unable to sync the pnpm workspace, the projects refer to "${packageName}" by both "${existing}" and "${specifier}". a catalog entry binds a package the same way for the whole workspace, change them to one of the two`
-        );
-      }
+      if (existing && existing !== specifier) throw conflictingSpecifiersError(packageName, existing, specifier);
       bindings.set(packageName, specifier);
     });
     if (refersToLocal) rootDirs.push(project.rootDir);
@@ -439,6 +455,12 @@ function planCatalogMigration(projects: PnpmProject[], workspaceManifest: PnpmWo
     );
   });
   return { bindings, rootDirs };
+}
+
+function conflictingSpecifiersError(packageName: string, specifier: string, otherSpecifier: string) {
+  return new BitError(
+    `unable to sync the pnpm workspace, the projects refer to "${packageName}" by both "${specifier}" and "${otherSpecifier}". a catalog entry binds a package the same way for the whole workspace, change them to one of the two`
+  );
 }
 
 /** pnpm reads "catalog" and "catalogs.default" as one catalog. the top-level one wins when present */
@@ -762,6 +784,12 @@ export function pnpmSupportsWorkspaceCatalogs(pnpmVersion: string): boolean {
   return semver.satisfies(pnpmVersion, PNPM_WORKSPACE_CATALOGS_RANGE);
 }
 
+/** the version of the pnpm the user runs, when it is one too old for "workspace:" in a catalog */
+export async function findPnpmWithoutWorkspaceCatalogs(workspacePath: string): Promise<string | undefined> {
+  const pnpmVersion = await getUserPnpmVersion(workspacePath);
+  return pnpmVersion && !pnpmSupportsWorkspaceCatalogs(pnpmVersion) ? pnpmVersion : undefined;
+}
+
 /** the version of the pnpm the user runs in the workspace, or undefined when there is none to run */
 export async function getUserPnpmVersion(workspacePath: string): Promise<string | undefined> {
   try {
@@ -901,6 +929,13 @@ export async function discoverPnpmProjectManifests(workspacePath: string, patter
       matches.forEach((match) => discovered.add(pathNormalizeToLinux(match)));
     })
   );
+  // a component lives in the workspace, and so does every file a sync may edit
+  const outside = [...discovered].find((manifest) => manifest.startsWith('../') || path.isAbsolute(manifest));
+  if (outside) {
+    throw new BitError(
+      `unable to use the project at "${path.dirname(outside)}", it is outside of the workspace. change the "packages" patterns of ${PNPM_WORKSPACE_MANIFEST} to leave it out`
+    );
+  }
   return [...discovered].filter((manifest) => manifest !== PACKAGE_JSON).sort();
 }
 

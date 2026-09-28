@@ -1,0 +1,35 @@
+---
+description: Versions a pnpm workspace with Bit, every project a component and the root a workspace-root component
+labels: ['core aspect', 'workspace', 'pnpm']
+---
+
+## Overview
+
+A pnpm workspace keeps its projects' dependencies and scripts in their own `package.json` files, and
+pnpm installs it. This aspect lets Bit version such a workspace without changing how it is installed
+or built: each project becomes a component that carries its `package.json` as source, and the
+workspace root becomes the workspace-root component (see `teambit.workspace/workspace-root`).
+
+## Synchronizing the workspace
+
+```sh
+bit pnpm sync
+```
+
+tracks every project that the `packages` patterns of `pnpm-workspace.yaml` match, and the root.
+Run it again whenever projects are added, moved or deleted:
+
+- a tracked project keeps its component id, even after its package is renamed.
+- a project that left the workspace is untracked, or marked removed once snapped.
+- a snapped project moved to another directory is moved along with `bit move <old-dir> <new-dir>`.
+- the projects refer to their siblings by `catalog:`, and the catalog binds them to `workspace:*`,
+  so a component imported into another workspace resolves them there too.
+
+Bit does not install a synced workspace. Run `pnpm install` after the sync and after an import.
+
+## The environment
+
+The projects with a `build`, `test` or `lint` script get the `teambit.workspace/pnpm-workspace` env.
+Its tasks write the workspace next to the capsules the way it was snapped, install it with pnpm,
+run the script across it with `pnpm -r`, and save each package's output as its artifacts. The
+projects with none of those scripts get the empty env.

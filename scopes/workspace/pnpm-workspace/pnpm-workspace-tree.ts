@@ -194,7 +194,7 @@ export async function writePnpmWorkspaceTree(tree: PnpmWorkspaceTree, targetDir:
   await writeComponentFiles(tree.root, targetDir);
   await Promise.all(
     [...tree.members.entries()].map(([rootDir, component]) =>
-      writeComponentFiles(component, path.join(targetDir, rootDir))
+      writeComponentFiles(component, resolveInside(targetDir, rootDir))
     )
   );
 }
@@ -202,11 +202,21 @@ export async function writePnpmWorkspaceTree(tree: PnpmWorkspaceTree, targetDir:
 async function writeComponentFiles(component: Component, targetDir: string): Promise<void> {
   await Promise.all(
     component.filesystem.files.map(async (file) => {
-      const filePath = path.join(targetDir, file.relative);
+      const filePath = resolveInside(targetDir, file.relative);
       await fs.mkdir(path.dirname(filePath), { recursive: true });
       await fs.writeFile(filePath, file.contents);
     })
   );
+}
+
+/** the paths come from the model, a remote's included, so none may lead out of the tree */
+function resolveInside(dir: string, relativePath: string): string {
+  const resolved = path.resolve(dir, relativePath);
+  const relativeToDir = path.relative(dir, resolved);
+  if (relativeToDir === '..' || relativeToDir.startsWith(`..${path.sep}`) || path.isAbsolute(relativeToDir)) {
+    throw new Error(`unable to write "${relativePath}", it is outside of the pnpm workspace tree`);
+  }
+  return resolved;
 }
 
 /**
