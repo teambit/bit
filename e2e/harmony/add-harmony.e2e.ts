@@ -383,6 +383,11 @@ describe('add command on Harmony', function () {
       helper.scopeHelper.reInitWorkspace();
       helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1";\n');
       helper.command.addComponent('comp1', { i: 'comp1' });
+      // the assertions below contrast the root component against a regular one: the root gets the
+      // empty env, a regular component gets an env with a compiler and a dependency policy. the
+      // workspace default here is the empty env too, so set a real env on comp1 explicitly - on
+      // comp1 alone, so the root keeps the env it is tracked with.
+      helper.env.setNodeEnv('comp1');
       helper.fs.outputFile('README.md', '# workspace root\n');
       helper.command.addComponent('.', '-i ws-root --root');
       status = helper.command.statusJson();
