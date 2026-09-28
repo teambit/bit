@@ -23,6 +23,11 @@ export type CacheOptions = {
   maxBytes?: number; // max total size of the entries, as reported by `set`
   defaultEntrySize?: number; // required with `maxBytes`. the size of an entry that was set without a size
   maxAge?: number; // in milliseconds
+  /**
+   * keep returning an evicted value for as long as something else still references it, instead of letting the
+   * caller re-create a duplicate of it. it never keeps a value alive. only with `maxSize`.
+   */
+  weak?: boolean;
 };
 
 const DEFAULT_MAX_OBJECTS_MB = 256;

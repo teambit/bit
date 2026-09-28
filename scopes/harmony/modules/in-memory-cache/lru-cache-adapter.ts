@@ -1,11 +1,20 @@
 import { LRUCache } from 'lru-cache';
 import type { InMemoryCache, CacheOptions } from './in-memory-cache';
+import { WeakValues } from './weak-values';
 
 export class LRUCacheAdapter<T extends {} = any> implements InMemoryCache<T> {
   private cache: LRUCache<string, T>;
+  private weakValues?: WeakValues<object>;
   constructor(options: CacheOptions) {
     const opts = this.getOptions(options);
     this.cache = new LRUCache<string, T>(opts);
+    if (options.weak) {
+      // an expired entry must not come back, so it's supported only when the cache is bounded by count
+      if (!options.maxSize || options.maxBytes || options.maxAge) {
+        throw new Error('LRUCacheAdapter: weak is supported only with maxSize');
+      }
+      this.weakValues = new WeakValues();
+    }
   }
 
   private getOptions(options: CacheOptions): LRUCache.Options<string, T, unknown> {
@@ -30,20 +39,32 @@ export class LRUCacheAdapter<T extends {} = any> implements InMemoryCache<T> {
     // value with a (more accurate) size would keep the old size, so remove it first.
     if (setOptions && this.cache.has(key)) this.cache.delete(key);
     this.cache.set(key, value, setOptions);
+    if (this.weakValues && typeof value === 'object') this.weakValues.set(key, value);
   }
   get(key: string): T | undefined {
-    return this.cache.get(key);
+    const value = this.cache.get(key);
+    if (value !== undefined || !this.weakValues) return value;
+    const evicted = this.weakValues.get(key) as T | undefined;
+    if (evicted !== undefined) this.cache.set(key, evicted); // it's in use again
+    return evicted;
   }
   delete(key: string) {
     this.cache.delete(key);
+    this.weakValues?.delete(key);
   }
   has(key: string): boolean {
-    return this.cache.has(key);
+    return this.cache.has(key) || this.weakValues?.get(key) !== undefined;
   }
   deleteAll() {
     this.cache.clear();
+    this.weakValues?.clear();
   }
+  /**
+   * with `weak`, it includes evicted entries that are still alive, so clearing by key clears them too.
+   */
   keys(): string[] {
-    return Array.from(this.cache.keys());
+    const keys = Array.from(this.cache.keys());
+    if (!this.weakValues) return keys;
+    return Array.from(new Set([...keys, ...this.weakValues.keys()]));
   }
 }

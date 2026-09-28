@@ -70,4 +70,50 @@ describe('LRUCacheAdapter', () => {
       expect(cache.has('a')).to.be.true;
     });
   });
+  describe('weak', () => {
+    type Value = { name: string };
+    it('should return an evicted value that is still referenced elsewhere, and count it as used again', () => {
+      const cache = new LRUCacheAdapter<Value>({ maxSize: 2, weak: true });
+      const a = { name: 'a' };
+      cache.set('a', a);
+      cache.set('b', { name: 'b' });
+      cache.set('c', { name: 'c' }); // evicts "a", which is still referenced by `a`
+      expect(cache.get('a')).to.equal(a);
+      expect(cache.has('a')).to.be.true;
+    });
+    it('should include evicted values that are still alive in keys, so clearing by key clears them too', () => {
+      const cache = new LRUCacheAdapter<Value>({ maxSize: 1, weak: true });
+      const a = { name: 'a' };
+      cache.set('a', a);
+      cache.set('b', { name: 'b' });
+      expect(cache.keys()).to.include('a');
+      cache.keys().forEach((key) => cache.delete(key));
+      expect(cache.get('a')).to.be.undefined;
+    });
+    it('should not return deleted or cleared values', () => {
+      const cache = new LRUCacheAdapter<Value>({ maxSize: 1, weak: true });
+      const a = { name: 'a' };
+      const b = { name: 'b' };
+      cache.set('a', a);
+      cache.set('b', b);
+      cache.delete('a');
+      expect(cache.get('a')).to.be.undefined;
+      cache.deleteAll();
+      expect(cache.get('b')).to.be.undefined;
+    });
+    it('should not keep an evicted value alive once nothing else references it', async function () {
+      const gc = (global as any).gc;
+      if (!gc) this.skip(); // requires running node with --expose-gc
+      const cache = new LRUCacheAdapter<Value>({ maxSize: 1, weak: true });
+      (() => cache.set('a', { name: 'a' }))();
+      cache.set('b', { name: 'b' });
+      // a WeakRef keeps its target alive until the end of the current job, so let it end before collecting
+      await new Promise((resolve) => setImmediate(resolve));
+      gc();
+      expect(cache.get('a')).to.be.undefined;
+    });
+    it('should throw when the cache is not bounded by count', () => {
+      expect(() => new LRUCacheAdapter<Value>({ maxAge: 1000, weak: true })).to.throw(/weak/);
+    });
+  });
 });
