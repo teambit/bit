@@ -4,6 +4,7 @@ import { CLIAspect, MainRuntime } from '@teambit/cli';
 import type { Component, ComponentMain } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
 import { ComponentID } from '@teambit/component-id';
+import type { VersionedBitmapEntry } from '@teambit/legacy.bit-map';
 import { WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import type { Workspace } from '@teambit/workspace';
@@ -14,7 +15,12 @@ import { CloneCmd } from './clone.cmd';
 import { WorkspaceRootAspect } from './workspace-root.aspect';
 import { WorkspaceRootFragment } from './workspace-root.fragment';
 import type { WorkspaceRootData } from './workspace-root-data';
-import { findWorkspaceRootMap, isWorkspaceRootComponent, readWorkspaceRoot } from './workspace-root-data';
+import {
+  findWorkspaceRootMap,
+  isWorkspaceRootComponent,
+  readRootBitmapEntries,
+  readWorkspaceRoot,
+} from './workspace-root-data';
 
 /**
  * the workspace-root component is the one tracked at the workspace root (rootDir "."). it versions
@@ -80,6 +86,16 @@ export class WorkspaceRootMain {
     return readWorkspaceRoot(this.extensionsOf(component));
   }
 
+  /**
+   * the components a workspace-root component lists, each with the directory it records for it - the
+   * root's own entry left out. the ids are "scope/name" with no version, the `.bitmap` it versions has
+   * none (see normalizeBitmapContentForVersioning). a workspace-root component that lists nothing, or a
+   * component that is not one, gives an empty list.
+   */
+  listMembers(root: Component): VersionedBitmapEntry[] {
+    return readRootBitmapEntries(root.filesystem.files).filter((entry) => entry.rootDir !== WORKSPACE_ROOT_DIR);
+  }
+
   private extensionsOf(component: Component) {
     return (component.state._consumer as ConsumerComponent).extensions;
   }
@@ -100,10 +116,13 @@ export class WorkspaceRootMain {
 /**
  * the root marks itself as such in its aspect data when loaded. the snap saves the data with the
  * version, and every consumer of the model reads the marker rather than guessing from the files.
+ * any other component gets empty data, which replaces the data it was loaded with: the root it was
+ * snapped in is not necessarily this workspace's, and the snap records this workspace's own (see
+ * writeWorkspaceRoot).
  */
-async function markWorkspaceRoot(component: Component): Promise<WorkspaceRootData | undefined> {
+async function markWorkspaceRoot(component: Component): Promise<WorkspaceRootData> {
   const consumerComponent = component.state._consumer as ConsumerComponent;
-  return consumerComponent.componentMap?.rootDir === WORKSPACE_ROOT_DIR ? { isRoot: true } : undefined;
+  return consumerComponent.componentMap?.rootDir === WORKSPACE_ROOT_DIR ? { isRoot: true } : {};
 }
 
 WorkspaceRootAspect.addRuntime(WorkspaceRootMain);

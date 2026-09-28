@@ -278,6 +278,8 @@ export class EnvsMain {
       // (core-aspect-env) as not loaded. that is how the load-groups treat every core env here
       // (react/node/aspect report the same) and the component still compiles and builds.
       'teambit.harmony/empty-env',
+      // the env of the projects of a pnpm workspace, registered by the pnpm-workspace aspect
+      'teambit.workspace/pnpm-workspace',
     ];
   }
 

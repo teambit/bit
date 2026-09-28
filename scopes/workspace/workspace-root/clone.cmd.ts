@@ -80,6 +80,9 @@ export function formatCloneResult(result: CloneResult, relativeDir: string): str
         `the dependencies were not installed: ${result.installationError.message}\nrun "bit install" in the workspace to retry`
       )
     : '';
-  const next = relativeDir === '.' ? '' : formatHint(`cd ${relativeDir}`);
+  const nextSteps = [relativeDir === '.' ? '' : `cd ${relativeDir}`, result.installWithPnpm ? 'pnpm install' : '']
+    .filter(Boolean)
+    .join(' && ');
+  const next = nextSteps ? formatHint(nextSteps) : '';
   return joinSections([summary, lane, missing, installation, next]);
 }

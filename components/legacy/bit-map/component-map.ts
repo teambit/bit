@@ -14,6 +14,7 @@ import {
   ALWAYS_IGNORE_LIST,
   IGNORE_LIST,
   GIT_IGNORE,
+  PACKAGE_JSON,
 } from '@teambit/legacy.constants';
 import { ValidationError } from '@teambit/legacy.cli.error';
 import { logger } from '@teambit/legacy.logger';
@@ -569,13 +570,17 @@ if you renamed the mainFile, please re-add the component with the "--main" flag 
  * `excludeDirs` holds the root-dirs of components nested inside `dir`. their files belong to the
  * nested component, not to this one. this is what makes a workspace-root component (rootDir ".")
  * possible: it owns every file that no other component claims.
+ *
+ * a component whose main file is its package.json - a project of a pnpm workspace - carries it as its
+ * source, so the file stays even where bit generates the package.json of the rest (no `trackAllFiles`).
  */
 export async function getFilesByDir(
   dir: string,
   consumerPath: string,
   gitIgnore: any,
   excludeDirs: PathLinux[] = [],
-  trackAllFiles = false
+  trackAllFiles = false,
+  mainFile?: PathLinux
 ): Promise<ComponentMapFile[]> {
   const matches = await globby(pathJoinLinux(dir, '**'), {
     cwd: consumerPath,
@@ -593,6 +598,10 @@ export async function getFilesByDir(
   });
   if (!matches.length) throw new ComponentNotFoundInPath(dir);
   const filteredMatches: string[] = await filterByIgnoreFiles(dir, consumerPath, gitIgnore, matches, trackAllFiles);
+  const ownPackageJson = pathJoinLinux(dir, PACKAGE_JSON);
+  if (mainFile === PACKAGE_JSON && matches.includes(ownPackageJson) && !filteredMatches.includes(ownPackageJson)) {
+    filteredMatches.push(ownPackageJson);
+  }
   // the paths are relative to the workspace. make them relative to the component's root-dir.
   const relativePathsLinux = filteredMatches.map((match) => pathRelativeLinux(dir, match));
   // the config files "bit ws-config write" generates are not source - unless the workspace declares that

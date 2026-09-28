@@ -112,6 +112,8 @@ Workspace & Project Setup
 new <template-name> <workspace-name> - create a new Bit workspace from a template
 init [path] - initialize a Bit workspace in an existing project
 clone <component-id> [dir] - create a workspace from its workspace-root component, with every component it lists
+pnpm [sub-command] - adopt and maintain a raw pnpm workspace with Bit
+Subcommands: sync
 
 Testing & Quality
 artifacts <component-pattern> - view and download build artifacts

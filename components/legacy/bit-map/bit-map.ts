@@ -298,7 +298,8 @@ export class BitMap {
       this.projectRoot,
       gitIgnore || (await this.getGitIgnore()),
       this.getNestedRootDirs(rootDir),
-      this.trackAllFiles
+      this.trackAllFiles,
+      componentMap.mainFile
     );
   }
 

@@ -278,7 +278,7 @@ commands:
           name: Install pnpm
           command: |
             export PNPM_HOME="$HOME/.local/share/pnpm"
-            SHELL=/bin/bash npx --yes get-pnpm@0.0.3 12.0.0-rc.7
+            SHELL=/bin/bash npx --yes get-pnpm@0.0.3 12.7.0
             "$PNPM_HOME/bin/pnpm" --version
             echo "export PNPM_HOME=\"$PNPM_HOME\"" >> $BASH_ENV
             echo 'export PATH="$PNPM_HOME/bin:$PATH"' >> $BASH_ENV
@@ -608,6 +608,8 @@ commands:
       #     name: 'update npm to latest version'
       #     command: 'npm i -g npm@latest'
       - bit_global_for_npm
+      # the pnpm-workspace e2e runs the user's pnpm, and a catalog value of "workspace:*" needs 12.7.0
+      - setup_pnpm
       - bit_config
       - restore_cache:
           key: bitsrc-ssh-key3
