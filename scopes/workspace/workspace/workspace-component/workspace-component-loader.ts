@@ -101,6 +101,12 @@ export type LoadCompAsAspectsOptions = {
   seeders?: boolean;
 };
 
+type ComponentExtensionsData = {
+  extensions: ExtensionDataList;
+  errors: Error[] | undefined;
+  envId: string | undefined;
+};
+
 export class WorkspaceComponentLoader {
   private componentsCache: InMemoryCache<Component>; // cache loaded components
   /**
@@ -111,11 +117,7 @@ export class WorkspaceComponentLoader {
    * Cache extension list for components. used by get many for perf improvements.
    * And to make sure we load extensions first.
    */
-  private componentsExtensionsCache: InMemoryCache<{
-    extensions: ExtensionDataList;
-    errors: Error[] | undefined;
-    envId: string | undefined;
-  }>;
+  private componentsExtensionsCache: InMemoryCache<ComponentExtensionsData>;
 
   private componentLoadedSelfAsAspects: InMemoryCache<boolean>; // cache loaded components
 
@@ -272,11 +274,13 @@ export class WorkspaceComponentLoader {
       return this.envs.isCoreEnv(id.toStringWithoutVersion());
     });
     const nonCoreEnvs = groupedByIsCoreEnvs.false || [];
-    await this.populateScopeAndExtensionsCache(nonCoreEnvs, workspaceScopeIdsMap);
+    // don't read the extensions back from the cache: it's bounded, so in a workspace with more components than its
+    // limit, most of them are evicted by the time they're read, and their envs are not loaded first.
+    const extensionsData = await this.populateScopeAndExtensionsCache(nonCoreEnvs, workspaceScopeIdsMap);
     const allExtIds: Map<string, ComponentID> = new Map();
     nonCoreEnvs.forEach((id) => {
       const idStr = id.toString();
-      const fromCache = this.componentsExtensionsCache.get(idStr);
+      const fromCache = extensionsData.get(idStr);
       if (!fromCache || !fromCache.extensions) {
         return;
       }
@@ -287,14 +291,15 @@ export class WorkspaceComponentLoader {
       });
     });
     const allExtCompIds = Array.from(allExtIds.values());
-    await this.populateScopeAndExtensionsCache(allExtCompIds || [], workspaceScopeIdsMap);
+    const extCompsExtensionsData = await this.populateScopeAndExtensionsCache(allExtCompIds, workspaceScopeIdsMap);
+    extCompsExtensionsData.forEach((data, idStr) => extensionsData.set(idStr, data));
 
     // const allExtIdsStr = allExtCompIds.map((id) => id.toString());
 
     const envsIdsOfWsComps = new Set<string>();
     wsIds.forEach((id) => {
       const idStr = id.toString();
-      const fromCache = this.componentsExtensionsCache.get(idStr);
+      const fromCache = extensionsData.get(idStr) || this.componentsExtensionsCache.get(idStr);
       if (!fromCache || !fromCache.envId) {
         return;
       }
@@ -335,7 +340,11 @@ export class WorkspaceComponentLoader {
       };
     });
 
-    const layeredEnvsFromTheList = this.regroupEnvsIdsFromTheList(groupedByIsEnvOfWsComps.true, envsIdsOfWsComps);
+    const layeredEnvsFromTheList = this.regroupEnvsIdsFromTheList(
+      groupedByIsEnvOfWsComps.true,
+      envsIdsOfWsComps,
+      extensionsData
+    );
     const layeredEnvsGroups = layeredEnvsFromTheList.map((ids) => {
       return {
         ids,
@@ -404,11 +413,15 @@ export class WorkspaceComponentLoader {
    * @param envsIdsOfWsComps
    * @returns
    */
-  private regroupEnvsIdsFromTheList(envIds: ComponentID[] = [], envsIdsOfWsComps: Set<string>): Array<ComponentID[]> {
+  private regroupEnvsIdsFromTheList(
+    envIds: ComponentID[] = [],
+    envsIdsOfWsComps: Set<string>,
+    extensionsData: Map<string, ComponentExtensionsData>
+  ): Array<ComponentID[]> {
     const envsOfEnvs = new Set<string>();
     envIds.forEach((envId) => {
       const idStr = envId.toString();
-      const fromCache = this.componentsExtensionsCache.get(idStr);
+      const fromCache = extensionsData.get(idStr) || this.componentsExtensionsCache.get(idStr);
       if (!fromCache || !fromCache.extensions) {
         return;
       }
@@ -618,7 +631,13 @@ export class WorkspaceComponentLoader {
     });
   }
 
-  private async populateScopeAndExtensionsCache(ids: ComponentID[], workspaceScopeIdsMap: WorkspaceScopeIdsMap) {
+  /**
+   * returns the extensions data of the given workspace ids.
+   */
+  private async populateScopeAndExtensionsCache(
+    ids: ComponentID[],
+    workspaceScopeIdsMap: WorkspaceScopeIdsMap
+  ): Promise<Map<string, ComponentExtensionsData>> {
     return loadSpan('populate-scope-and-extensions-cache', { ids: ids.length }, (span) =>
       this.populateScopeAndExtensionsCacheWithSpan(ids, workspaceScopeIdsMap, span)
     );
@@ -631,7 +650,8 @@ export class WorkspaceComponentLoader {
   ) {
     let scopeCacheHits = 0;
     let extensionsCacheHits = 0;
-    const result = await mapSeries(ids, async (id) => {
+    const extensionsDataById = new Map<string, ComponentExtensionsData>();
+    await mapSeries(ids, async (id) => {
       const idStr = id.toString();
       let componentFromScope;
       if (this.scopeComponentsCache.has(idStr)) scopeCacheHits += 1;
@@ -650,7 +670,9 @@ export class WorkspaceComponentLoader {
           this.logger.warn(`populateScopeAndExtensionsCache - failed loading component ${idStr} from scope`, err);
         }
       }
-      if (!this.componentsExtensionsCache.has(idStr) && workspaceScopeIdsMap.workspaceIds.has(idStr)) {
+      if (!workspaceScopeIdsMap.workspaceIds.has(idStr)) return;
+      let extensionsData = this.componentsExtensionsCache.get(idStr);
+      if (!extensionsData) {
         componentFromScope = componentFromScope || this.scopeComponentsCache.get(idStr);
         const { extensions, errors, envId } = await this.workspace.componentExtensions(
           id,
@@ -660,13 +682,15 @@ export class WorkspaceComponentLoader {
             loadExtensions: false,
           }
         );
-        this.componentsExtensionsCache.set(idStr, { extensions, errors, envId });
+        extensionsData = { extensions, errors, envId };
+        this.componentsExtensionsCache.set(idStr, extensionsData);
       }
+      extensionsDataById.set(idStr, extensionsData);
     });
     span.setAttribute('scopeComponentsCache:hits', scopeCacheHits);
     span.setAttribute('scopeComponentsCache:misses', ids.length - scopeCacheHits);
     span.setAttribute('componentsExtensionsCache:hits', extensionsCacheHits);
-    return result;
+    return extensionsDataById;
   }
 
   private async warnAboutMisconfiguredEnvs(components: Component[]) {
