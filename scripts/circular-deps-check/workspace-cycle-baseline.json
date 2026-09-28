@@ -58,11 +58,12 @@
     "teambit.component/component-tree",
     "teambit.ui-foundation/sidebar",
     "teambit.defender/linter",
-    "teambit.harmony/aspect",
     "teambit.react/react",
-    "teambit.harmony/node",
-    "teambit.api-reference/api-reference"
+    "teambit.api-reference/api-reference",
+    "teambit.workspace/testing/mock-workspace",
+    "teambit.legacy/e2e-helper",
+    "teambit.workspace/workspace-root"
   ],
-  "count": 62,
-  "timestamp": "2025-07-31T20:34:35.914Z"
+  "count": 63,
+  "timestamp": "2026-09-28T14:41:38.443576Z"
 }
