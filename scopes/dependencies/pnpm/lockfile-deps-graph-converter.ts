@@ -120,7 +120,8 @@ function refToNeighbourId(ref: string, name: string, componentIdByPkgName?: Comp
 function addWorkspaceComponentPackages(graph: DependenciesGraph, componentIdByPkgName: ComponentIdByPkgName): void {
   const rootEdge = graph.findRootEdge();
   for (const neighbour of rootEdge?.neighbours || []) {
-    if (!neighbour.name || graph.packages.has(neighbour.id)) continue;
+    // the id of a neighbour carries its peers, e.g. "comp1@0.0.1(react@17.0.0)", the package's does not
+    if (!neighbour.name || graph.packages.has(dp.removeSuffix(neighbour.id))) continue;
     const componentId = componentIdByPkgName.get(neighbour.name);
     if (!componentId) continue;
     graph.packages.set(neighbour.id, {

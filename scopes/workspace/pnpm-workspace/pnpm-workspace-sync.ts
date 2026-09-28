@@ -235,8 +235,9 @@ class ProjectEnvResolver {
  * pnpm manifest sits next to it.
  */
 export function isPnpmWorkspace(workspace: Workspace): boolean {
+  // a root removed, or of another lane, does not make this workspace a pnpm one
   return (
-    Boolean(workspace.consumer.bitMap.getComponentIdByRootPath(WORKSPACE_ROOT_DIR)) &&
+    Boolean(workspace.consumer.bitMap.getWorkspaceRootMap()) &&
     fs.existsSync(path.join(workspace.path, PNPM_WORKSPACE_MANIFEST))
   );
 }
@@ -304,13 +305,24 @@ export async function syncPnpmWorkspace(
  * suffix, so neither depends on which one was found first. a project tracked already keeps its id anyway.
  */
 function suffixCollidingComponentNames(projects: PnpmProject[]) {
-  const counts = new Map<string, number>();
-  projects.forEach(({ componentName }) => counts.set(componentName, (counts.get(componentName) || 0) + 1));
-  projects.forEach((project) => {
-    if (counts.get(project.componentName)! < 2) return;
+  const collidingNames = (candidates: PnpmProject[]) => {
+    const counts = new Map<string, number>();
+    candidates.forEach(({ componentName }) => counts.set(componentName, (counts.get(componentName) || 0) + 1));
+    return candidates.filter(({ componentName }) => counts.get(componentName)! > 1);
+  };
+  collidingNames(projects).forEach((project) => {
     project.componentName = sanitizePnpmComponentName(
       `${project.componentName}-${project.rootDir.replace(/\//g, '-')}`
     );
+  });
+  // directories that sanitize alike, e.g. "a.b" and "a-b", collide still. the order of their
+  // directories numbers them, which does not depend on the order they were found in
+  const stillColliding = collidingNames(projects).sort((left, right) => left.rootDir.localeCompare(right.rootDir));
+  const indexes = new Map<string, number>();
+  stillColliding.forEach((project) => {
+    const index = (indexes.get(project.componentName) || 0) + 1;
+    indexes.set(project.componentName, index);
+    project.componentName = `${project.componentName}-${index}`;
   });
 }
 
@@ -649,7 +661,11 @@ function setProjectPackageName(workspace: Workspace, componentId: ComponentID, p
 
 async function trackPnpmWorkspaceRoot(workspace: Workspace, tracker: TrackerMain): Promise<ComponentID> {
   const existingId = workspace.consumer.bitMap.getComponentIdByRootPath(WORKSPACE_ROOT_DIR);
-  if (existingId) return existingId;
+  if (existingId) {
+    // a root that was removed is the workspace's root again, as a project that came back is
+    workspace.bitMap.removeComponentConfig(existingId, Extensions.remove, false);
+    return existingId;
+  }
   const rootManifestPath = path.join(workspace.path, PACKAGE_JSON);
   const rootManifest = (await fs.pathExists(rootManifestPath))
     ? await readPackageManifest(rootManifestPath)

@@ -111,6 +111,18 @@ describe('bit pnpm sync', function () {
     expect(entryAt('tools/util')!.id.fullName).to.equal('acme/util-tools-util');
   });
 
+  it('should number the projects whose directories sanitize alike', async () => {
+    await setupPnpmWorkspace({
+      'package.json': { name: '@acme/repository' },
+      'pnpm-workspace.yaml': 'packages:\n  - packages/*\n',
+      'packages/a.b/package.json': { name: '@acme/util' },
+      'packages/a-b/package.json': { name: '@acme/util' },
+    });
+    await syncPnpmWorkspace(workspace, tracker);
+    expect(entryAt('packages/a-b')!.id.fullName).to.equal('acme/util-packages-a-b-1');
+    expect(entryAt('packages/a.b')!.id.fullName).to.equal('acme/util-packages-a-b-2');
+  });
+
   describe('the env of a project', () => {
     const PNPM_ENV = 'my-org.envs/pnpm-scripts';
     const withBuildScript = {
@@ -489,7 +501,7 @@ describe('pnpm workspace import plan', () => {
         await fs.writeFile(path.join(workspaceDir, 'pnpm-workspace.yaml'), workspaceManifest);
         const workspaceStub = {
           path: workspaceDir,
-          consumer: { bitMap: { getComponentIdByRootPath: () => ({ toString: () => 'acme.scope/root' }) } },
+          consumer: { bitMap: { getWorkspaceRootMap: () => ({ rootDir: '.' }) } },
         } as any;
         const dependencyResolverStub = {
           getDependenciesFromLegacyComponent: () => ({ findByPkgNameOrCompId: () => undefined }),
@@ -659,7 +671,7 @@ describe('pnpm workspace import plan', () => {
       await fs.outputFile(path.join(workspaceDir, 'components/app/package.json'), appManifestContent);
       const workspaceStub = {
         path: workspaceDir,
-        consumer: { bitMap: { getComponentIdByRootPath: () => ({ toString: () => 'acme.scope/root' }) } },
+        consumer: { bitMap: { getWorkspaceRootMap: () => ({ rootDir: '.' }) } },
       } as any;
       const mathDependency = { type: 'package', version: '0.0.0-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' };
       const stringsDependency = { type: 'package', version: '1.0.0' };

@@ -441,12 +441,12 @@ describe('convertLockfileToGraph with a link: importer dependency', () => {
       importers: {
         'packages/bar': {
           dependencies: {
-            '@acme/foo': { version: '2.0.0', specifier: '^2.0.0' },
+            '@acme/foo': { version: '2.0.0(react@17.0.0)', specifier: '^2.0.0' },
           },
         },
       },
       lockfileVersion: '9.0',
-      snapshots: { '@acme/foo@2.0.0': {} },
+      snapshots: { '@acme/foo@2.0.0(react@17.0.0)': {} },
       packages: { '@acme/foo@2.0.0': { resolution: { integrity: 'sha512-foo' } } },
     } as BitLockfileFile;
     const graph = convertLockfileToGraph(lockfile, {
@@ -455,9 +455,11 @@ describe('convertLockfileToGraph with a link: importer dependency', () => {
       componentIdByPkgName: new Map([['@acme/foo', ComponentID.fromString('acme.scope/foo@abcdef')]]),
     });
 
+    // the neighbour carries its peers, the package it points at does not
     const rootNeighbour = graph.findRootEdge()!.neighbours[0];
-    expect(rootNeighbour.id).to.equal('@acme/foo@2.0.0');
-    expect(graph.packages.get(rootNeighbour.id)?.resolution).to.deep.equal({ integrity: 'sha512-foo' });
+    expect(rootNeighbour.id).to.equal('@acme/foo@2.0.0(react@17.0.0)');
+    expect(graph.packages.get('@acme/foo@2.0.0')?.resolution).to.deep.equal({ integrity: 'sha512-foo' });
+    expect(graph.packages.has(rootNeighbour.id)).to.be.false;
   });
 });
 
