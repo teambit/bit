@@ -608,6 +608,8 @@ commands:
       #     name: 'update npm to latest version'
       #     command: 'npm i -g npm@latest'
       - bit_global_for_npm
+      # the pnpm-workspace e2e runs the user's pnpm, and a catalog value of "workspace:*" needs 12.7.0
+      - setup_pnpm
       - bit_config
       - restore_cache:
           key: bitsrc-ssh-key3
