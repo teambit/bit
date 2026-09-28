@@ -248,6 +248,8 @@ export async function syncPnpmWorkspace(
   const projects = await discoverPnpmProjects(workspace.path, workspaceManifest.packages || []);
   // everything that can fail on the inventory alone fails before anything is written
   throwForNestedProjects(projects);
+  const leftProjects = await findLeftProjects(workspace, projects);
+  throwForMovedProjects(workspace, projects, leftProjects);
   suffixCollidingComponentNames(projects);
   assertUnique(
     projects.map((project) => project.componentName),
@@ -259,7 +261,7 @@ export async function syncPnpmWorkspace(
   await editPnpmWorkspaceManifest(workspaceManifestPath, { catalogEntries: leftPackages.bindings });
   await enableTrackAllFiles(workspace);
 
-  const removedComponents = removeLeftProjects(workspace, new Set(projects.map((project) => project.rootDir)));
+  const removedComponents = removeLeftProjects(workspace, leftProjects);
   const components: PnpmVcsSyncResult['components'] = [];
   const envResolver = new ProjectEnvResolver(workspace, options.env || PNPM_WORKSPACE_ENV);
   for (const project of projects) {
@@ -525,6 +527,27 @@ function throwForNestedProjects(projects: PnpmProject[]) {
 }
 
 /**
+ * a project moved to another directory keeps its component only when the component moves along, which
+ * "bit move" does. otherwise the sync would mark the component removed and fail to track the new
+ * directory under the name the removed one still holds. a snapped project that left, with its package
+ * name now at an untracked directory, is taken for such a move.
+ */
+function throwForMovedProjects(workspace: Workspace, projects: PnpmProject[], leftProjects: LeftProject[]) {
+  const bitMap = workspace.consumer.bitMap;
+  leftProjects.forEach(({ componentMap, packageName }) => {
+    if (!componentMap.id.hasVersion() || !packageName) return;
+    const movedTo = projects.find(
+      (project) => project.packageName === packageName && !bitMap.getComponentIdByRootPath(project.rootDir)
+    );
+    if (!movedTo) return;
+    throw new BitError(
+      `unable to sync the pnpm workspace, the project of ${componentMap.id.toStringWithoutVersion()} (${packageName}) moved from "${componentMap.rootDir}" to "${movedTo.rootDir}".
+move the component along, so it keeps its id and history: bit move ${componentMap.rootDir} ${movedTo.rootDir}, then sync again`
+    );
+  });
+}
+
+/**
  * package.json, the lockfile and the rest of what bit generates in a regular workspace are the
  * user's own in a pnpm workspace, so they are tracked as source. set on the loaded config as well:
  * the components tracked right after scan with it.
@@ -660,27 +683,55 @@ function removeEnvConfig(workspace: Workspace, componentMap: ComponentMap, envId
   workspace.bitMap.removeComponentConfig(componentMap.id, Extensions.envs, false);
 }
 
+type LeftProject = { componentMap: ComponentMap; packageName?: string };
+
 /**
  * the components of the projects that left the pnpm workspace: tracked by an earlier sync, which is
- * what its marker tells, and no longer listed. a component that was never snapped is untracked; a
- * snapped one is marked removed, the way "bit delete" marks it, so the removal is recorded on the
- * next snap.
+ * what its marker tells, and no longer listed. a snap moves the marker and the package name from the
+ * .bitmap into the version, so a snapped component with none in the .bitmap is read from its version.
  */
-function removeLeftProjects(workspace: Workspace, projectRootDirs: Set<string>): string[] {
-  const bitMap = workspace.consumer.bitMap;
-  const leftProjects = bitMap.components.filter((componentMap) => {
-    if (componentMap.rootDir === WORKSPACE_ROOT_DIR || projectRootDirs.has(componentMap.rootDir)) return false;
-    if (componentMap.isRemoved()) return false;
-    return Boolean(readProjectMarker(componentMap));
-  });
-  leftProjects.forEach((componentMap) => {
+async function findLeftProjects(workspace: Workspace, projects: PnpmProject[]): Promise<LeftProject[]> {
+  const projectRootDirs = new Set(projects.map((project) => project.rootDir));
+  const candidates = workspace.consumer.bitMap.components.filter(
+    (componentMap) =>
+      componentMap.rootDir !== WORKSPACE_ROOT_DIR &&
+      !projectRootDirs.has(componentMap.rootDir) &&
+      !componentMap.isRemoved()
+  );
+  const leftProjects = await Promise.all(
+    candidates.map(async (componentMap): Promise<LeftProject | undefined> => {
+      if (readProjectMarker(componentMap))
+        return { componentMap, packageName: readConfiguredPackageName(componentMap) };
+      if (!componentMap.id.hasVersion()) return undefined;
+      const version = await workspace.consumer.scope.getVersionInstance(componentMap.id).catch(() => undefined);
+      if (!version?.extensions.findExtension(PnpmWorkspaceAspect.id, true)?.config?.pnpmProject) return undefined;
+      const packageName = version.extensions.findCoreExtension(DependencyResolverAspect.id)?.config?.packageName;
+      return { componentMap, packageName };
+    })
+  );
+  return leftProjects.filter((leftProject): leftProject is LeftProject => Boolean(leftProject));
+}
+
+function readConfiguredPackageName(componentMap: ComponentMap): string | undefined {
+  const dependencyResolverConfig = componentMap.config?.[DependencyResolverAspect.id];
+  return dependencyResolverConfig && dependencyResolverConfig !== '-'
+    ? dependencyResolverConfig.packageName
+    : undefined;
+}
+
+/**
+ * a left project that was never snapped is untracked; a snapped one is marked removed, the way
+ * "bit delete" marks it, so the removal is recorded on the next snap.
+ */
+function removeLeftProjects(workspace: Workspace, leftProjects: LeftProject[]): string[] {
+  leftProjects.forEach(({ componentMap }) => {
     if (componentMap.id.hasVersion()) {
       workspace.bitMap.addComponentConfig(componentMap.id, Extensions.remove, { removed: true });
     } else {
-      bitMap.removeComponent(componentMap.id);
+      workspace.consumer.bitMap.removeComponent(componentMap.id);
     }
   });
-  return leftProjects.map((componentMap) => componentMap.id.toStringWithoutVersion());
+  return leftProjects.map(({ componentMap }) => componentMap.id.toStringWithoutVersion());
 }
 
 function getComponentMap(workspace: Workspace, componentId: ComponentID): ComponentMap {

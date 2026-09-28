@@ -202,6 +202,61 @@ describe('bit pnpm sync', function () {
     expect(entryAt('packages/app')).to.be.undefined;
   });
 
+  describe('a project moved to another directory', () => {
+    async function syncAndMoveMath() {
+      await setupPnpmWorkspace({ ...twoPackages, 'pnpm-workspace.yaml': 'packages:\n  - packages/*\n  - libs/*\n' });
+      await syncPnpmWorkspace(workspace, tracker);
+      await fs.move(
+        path.join(workspaceData.workspacePath, 'packages/math'),
+        path.join(workspaceData.workspacePath, 'libs/math')
+      );
+    }
+    // a snap moves the config sync wrote from the .bitmap into the version
+    function snapMath() {
+      const math = entryAt('packages/math')!;
+      const { config } = math;
+      math.config = undefined;
+      workspace.consumer.bitMap.updateComponentId(math.id.changeVersion('0.0.1'), false, false, true);
+      workspace.consumer.scope.getVersionInstance = (async () => ({
+        extensions: {
+          findExtension: (id: string) => (id.includes('pnpm-workspace') ? { config: config![id] } : undefined),
+          findCoreExtension: () => ({ config: config![DEPENDENCY_RESOLVER] }),
+        },
+      })) as any;
+    }
+    it('should mark a snapped project that left the pnpm workspace removed', async () => {
+      await setupPnpmWorkspace(twoPackages);
+      await syncPnpmWorkspace(workspace, tracker);
+      snapMath();
+      await fs.remove(path.join(workspaceData.workspacePath, 'packages/math'));
+
+      const result = await syncPnpmWorkspace(workspace, tracker);
+
+      expect(result.removedComponents).to.deep.equal([entryAt('packages/math')!.id.toStringWithoutVersion()]);
+      expect(entryAt('packages/math')!.isRemoved()).to.be.true;
+    });
+    it('should refuse it when snapped, before changing anything, and tell to move the component along', async () => {
+      await syncAndMoveMath();
+      snapMath();
+      let error: Error | undefined;
+      try {
+        await syncPnpmWorkspace(workspace, tracker);
+      } catch (err: any) {
+        error = err;
+      }
+      expect(error?.message).to.have.string('moved from "packages/math" to "libs/math"');
+      expect(error?.message).to.have.string('bit move packages/math libs/math');
+      expect(entryAt('packages/math')!.isRemoved()).to.be.false;
+      expect(entryAt('libs/math')).to.be.undefined;
+    });
+    it('should track it at its new directory when never snapped, there is no history to keep', async () => {
+      await syncAndMoveMath();
+      await syncPnpmWorkspace(workspace, tracker);
+      expect(entryAt('packages/math')).to.be.undefined;
+      expect(entryAt('libs/math')!.id.fullName).to.equal('acme/math');
+    });
+  });
+
   it('should leave alone a component it did not track, even one with a package name of its own', async () => {
     await setupPnpmWorkspace({ ...twoPackages, 'tools/lint/index.js': 'module.exports = 3;\n' });
     const { componentId } = await tracker.track({ rootDir: 'tools/lint', componentName: 'tools/lint' });
