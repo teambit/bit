@@ -21,7 +21,7 @@ describe('merge lanes - main lane operations', function () {
       helper.command.createLane('dev');
       helper.fixtures.populateComponents(1);
       helper.command.snapAllComponentsWithoutBuild();
-      mergeOutput = helper.command.mergeLane('main');
+      mergeOutput = helper.command.mergeLaneWithoutBuild('main');
     });
     it("should not throw an error that main lane doesn't exist", () => {
       expect(mergeOutput).to.not.have.string('unable to switch to "main", the lane was not found');
@@ -36,14 +36,14 @@ describe('merge lanes - main lane operations', function () {
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
       helper.command.switchLocalLane('main', '-x');
-      helper.command.mergeLane('dev');
+      helper.command.mergeLaneWithoutBuild('dev');
       helper.command.tagAllWithoutBuild();
       helper.command.export();
       helper.command.switchLocalLane('dev');
       helper.command.softRemoveOnLane('comp1');
     });
     it('should show a descriptive error explaining why it cannot be merged', () => {
-      const cmd = () => helper.command.mergeLane('main', '-x');
+      const cmd = () => helper.command.mergeLaneWithoutBuild('main', '-x');
       expect(cmd).to.throw('component is locally deleted');
     });
   });
@@ -58,7 +58,7 @@ describe('merge lanes - main lane operations', function () {
       helper.command.createLane('dev');
       helper.fixtures.populateComponents(1, undefined, 'version2');
       helper.command.snapAllComponentsWithoutBuild();
-      mergeOutput = helper.command.mergeLane('main');
+      mergeOutput = helper.command.mergeLaneWithoutBuild('main');
     });
     it("should not throw an error that main lane doesn't exist", () => {
       expect(mergeOutput).to.not.have.string('getDivergeData: unable to find Version 0.0.1 of comp1');
@@ -103,7 +103,7 @@ describe('merge lanes - main lane operations', function () {
     describe('with --exclude-non-lane-comps flag', () => {
       before(() => {
         helper.scopeHelper.getClonedWorkspace(laneWs);
-        helper.command.mergeLane('main', '--exclude-non-lane-comps -x');
+        helper.command.mergeLaneWithoutBuild('main', '--exclude-non-lane-comps -x');
       });
       it('should not add non-lane components into the lane', () => {
         const lane = helper.command.showOneLaneParsed('dev');
@@ -127,7 +127,7 @@ describe('merge lanes - main lane operations', function () {
     describe('without --exclude-non-lane-comps flag', () => {
       before(() => {
         helper.scopeHelper.getClonedWorkspace(laneWs);
-        helper.command.mergeLane('main', '-x');
+        helper.command.mergeLaneWithoutBuild('main', '-x');
       });
       it('should not add non-lane components into the lane', () => {
         const lane = helper.command.showOneLaneParsed('dev');
@@ -174,7 +174,7 @@ describe('merge lanes - main lane operations', function () {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
       helper.command.createLane('dev');
-      mergeOutput = helper.command.mergeLane('main');
+      mergeOutput = helper.command.mergeLaneWithoutBuild('main');
     });
     it('should not throw an error about missing objects', () => {
       expect(mergeOutput).to.not.have.string(
@@ -191,7 +191,7 @@ describe('merge lanes - main lane operations', function () {
       helper.command.createLane('dev');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.switchLocalLane('main');
-      mergeOutput = helper.command.mergeLane('dev');
+      mergeOutput = helper.command.mergeLaneWithoutBuild('dev');
     });
     it('should not throw an error that head is empty', () => {
       expect(mergeOutput).to.have.string('successfully merged');

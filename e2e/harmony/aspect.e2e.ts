@@ -105,7 +105,7 @@ describe('aspect', function () {
     });
     it('bit tag should save only the updated aspect and not the old one', () => {
       helper.command.importComponent('my-aspect'); // otherwise, the tag will try to get it as a package
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
       const cmp = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`, undefined, false);
       expect(cmp).to.have.string(`${helper.scopes.remote}/my-aspect@0.0.2`);
       expect(cmp).not.to.have.string(`${helper.scopes.remote}/my-aspect@0.0.1`);

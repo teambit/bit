@@ -36,7 +36,7 @@ describe('bit export command', function () {
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
       helper.command.exportIds('bar/foo');
-      helper.command.tagComponent('bar/foo --unmodified');
+      helper.command.tagWithoutBuild('bar/foo', '--unmodified');
       helper.command.exportIds('bar/foo');
     });
     it('should export it with no errors', () => {
@@ -84,7 +84,7 @@ describe('bit export command', function () {
       const stats = fs.statSync(destPngFile);
       pngSize = stats.size;
       helper.command.addComponent('bar', { m: 'foo.js', i: 'bar/foo' });
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
       helper.command.export();
     });
     it('should export it with no errors', () => {
@@ -123,10 +123,10 @@ describe('bit export command', function () {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.createComponentBarFoo('// v2');
       helper.fixtures.addComponentBarFoo();
-      helper.command.tagIncludeUnmodified('2.0.0');
+      helper.command.tagIncludeUnmodifiedWithoutBuild('2.0.0');
       helper.command.export();
       helper.fixtures.createComponentBarFoo('// v1');
-      helper.command.tagIncludeUnmodified('1.0.0');
+      helper.command.tagIncludeUnmodifiedWithoutBuild('1.0.0');
       helper.command.export();
     });
     it('.bitmap should keep the current version and do not update to the latest version', () => {
@@ -154,7 +154,7 @@ describe('bit export command', function () {
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.workspaceJsonc.setupDefault();
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
       scopeBeforeExport = helper.scopeHelper.cloneWorkspace();
     });
     describe('when the group name does not exist', () => {
@@ -195,7 +195,7 @@ describe('bit export command', function () {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
       helper.command.export();
       helper.scopeHelper.reInitRemoteScope();
     });
@@ -232,11 +232,11 @@ describe('bit export command', function () {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
       helper.command.export();
-      helper.command.tagComponent('bar/foo --unmodified');
+      helper.command.tagWithoutBuild('bar/foo', '--unmodified');
       helper.command.export();
-      helper.command.tagComponent('bar/foo --unmodified');
+      helper.command.tagWithoutBuild('bar/foo', '--unmodified');
       output = helper.command.exportIds('bar/foo');
     });
     // this was a bug where on the third export, it parses the id "bar/foo" as: { scope: bar, name: foo }

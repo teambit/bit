@@ -220,7 +220,7 @@ describe('bit import', function () {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
       helper.command.exportIds('bar/foo');
       const bitMap = helper.bitMap.read();
       helper.scopeHelper.reInitWorkspace();

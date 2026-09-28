@@ -53,7 +53,7 @@ describe('bit tag command', function () {
         helper.fs.createFile('components/default', 'default.js');
         helper.command.addComponent('components/default', { i: 'components/default' });
         const version = 'invalidVersion';
-        const tag = () => helper.command.tagWithoutMessage('components/default', version);
+        const tag = () => helper.command.tagWithoutBuild('components/default', `--ver ${version}`);
         expect(tag).to.throw(
           `error: version ${version} is not a valid semantic version. learn more: https://semver.org`
         );

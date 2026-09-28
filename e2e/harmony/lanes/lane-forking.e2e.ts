@@ -70,7 +70,7 @@ describe('bit lane forking', function () {
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.export();
       helper.command.switchLocalLane('main', '-x');
-      helper.command.mergeLane('lane-a', '-x');
+      helper.command.mergeLaneWithoutBuild('lane-a', '-x');
       helper.command.export();
       helper.scopeHelper.getClonedWorkspace(laneB);
       helper.command.import();
@@ -101,7 +101,7 @@ describe('bit lane forking', function () {
 
       // locally
       helper.scopeHelper.getClonedWorkspace(laneAFirstSnap);
-      helper.command.mergeLane('lane-a'); // now lane-b has snapA + snapB + snapX1 (from lane-a) + snapX2 (the from lane-a)
+      helper.command.mergeLaneWithoutBuild('lane-a'); // now lane-b has snapA + snapB + snapX1 (from lane-a) + snapX2 (the from lane-a)
       helper.command.import();
       // keep this to fetch from all lanes, because in the future, by default, only the current lane is fetched
       helper.command.fetchAllLanes();
