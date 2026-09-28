@@ -62,7 +62,8 @@ export type PnpmVcsSyncResult = {
 
 export type PnpmVcsImportPlan = {
   schemaVersion: 1;
-  components: Array<{ id: string; rootDir: string; packageName: string }>;
+  /** a project with no name in its package.json has no packageName */
+  components: Array<{ id: string; rootDir: string; packageName?: string }>;
   catalogs: Array<{
     catalogName: string;
     packageName: string;
@@ -834,7 +835,9 @@ export async function applyPnpmImportPlan(workspacePath: string, plan: PnpmVcsIm
 
   const localPackageNames = await readLocalPackageNames(workspacePath, packages);
   await bindWorkspaceReferencesToCatalog(workspacePath, plan, localPackageNames);
-  const importedPackageNames = new Set(plan.components.map(({ packageName }) => packageName));
+  const importedPackageNames = new Set(
+    plan.components.flatMap(({ packageName }) => (packageName ? [packageName] : []))
+  );
   const catalogs: Record<string, Record<string, unknown>> = {
     ...omit(manifest.catalogs || {}, 'default'),
     default: readDefaultCatalog(manifest),
@@ -869,6 +872,10 @@ async function readPnpmWorkspaceManifest(manifestPath: string): Promise<PnpmWork
     const manifest = parseYaml(await fs.readFile(manifestPath, 'utf8'));
     if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) {
       throw new Error('the document root must be a mapping');
+    }
+    const { packages } = manifest as { packages?: unknown };
+    if (packages != null && !(Array.isArray(packages) && packages.every((pattern) => typeof pattern === 'string'))) {
+      throw new Error('"packages" must be a list of patterns');
     }
     return manifest as PnpmWorkspaceManifest;
   } catch (error: any) {
@@ -1116,7 +1123,7 @@ export async function createPnpmVcsImportPlan(
 
   const workspaceManifest = await readPnpmWorkspaceManifest(path.join(workspace.path, PNPM_WORKSPACE_MANIFEST));
   const localPackageNames = await readLocalPackageNames(workspace.path, workspaceManifest.packages || []);
-  plannedComponents.forEach(({ packageName }) => localPackageNames.add(packageName));
+  plannedComponents.forEach(({ packageName }) => packageName && localPackageNames.add(packageName));
 
   for (const component of pnpmComponents) {
     const manifest = parseComponentPackageJson(component);
@@ -1215,12 +1222,10 @@ function parseComponentPackageJson(component: ConsumerComponent): Record<string,
   }
 }
 
-function packageNameFromLegacyComponent(component: ConsumerComponent): string {
+/** a project may have no name, the sync tracks it by its directory (see discoverPnpmProjects) */
+function packageNameFromLegacyComponent(component: ConsumerComponent): string | undefined {
   const { name } = parseComponentPackageJson(component);
-  if (typeof name !== 'string' || !name) {
-    throw new BitError(`pnpm component ${component.id} must declare a package name`);
-  }
-  return name;
+  return typeof name === 'string' && name ? name : undefined;
 }
 
 function assertUnique(values: string[], label: string): void {

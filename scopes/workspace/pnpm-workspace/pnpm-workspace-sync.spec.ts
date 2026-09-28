@@ -433,6 +433,17 @@ describe('bit pnpm sync', function () {
     });
   });
 
+  it('should refuse "packages" that is not a list of patterns', async () => {
+    await setupPnpmWorkspace({ ...twoPackages, 'pnpm-workspace.yaml': 'packages: packages/*\n' });
+    let error: Error | undefined;
+    try {
+      await syncPnpmWorkspace(workspace, tracker);
+    } catch (err: any) {
+      error = err;
+    }
+    expect(error?.message).to.have.string('"packages" must be a list of patterns');
+  });
+
   it('should refuse a project nested in another one before changing anything', async () => {
     await setupPnpmWorkspace({
       ...twoPackages,
@@ -493,6 +504,33 @@ describe('pnpm workspace discovery', () => {
 });
 
 describe('pnpm workspace import plan', () => {
+  it('should plan a project that has no package name, the sync tracks such a one by its directory', async () => {
+    const workspaceDir = await fs.mkdtemp(path.join(os.tmpdir(), 'bit-pnpm-plan-'));
+    try {
+      await fs.writeFile(path.join(workspaceDir, 'pnpm-workspace.yaml'), 'packages: []\n');
+      const workspaceStub = {
+        path: workspaceDir,
+        consumer: { bitMap: { getWorkspaceRootMap: () => ({ rootDir: '.' }) } },
+      };
+      const dependencyResolverStub = {
+        getDependenciesFromLegacyComponent: () => ({ findByPkgNameOrCompId: () => undefined }),
+      };
+      const component = {
+        id: { toString: () => 'acme.scope/tools@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' },
+        componentMap: { rootDir: 'tools' },
+        extensions: { findCoreExtension: () => undefined },
+        files: [{ relative: 'package.json', contents: Buffer.from(JSON.stringify({ private: true })) }],
+      };
+      const plan = await createPnpmVcsImportPlan(workspaceStub as any, dependencyResolverStub as any, [
+        component as any,
+      ]);
+      expect(plan?.components).to.deep.equal([
+        { id: 'acme.scope/tools@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', rootDir: 'tools', packageName: undefined },
+      ]);
+    } finally {
+      await fs.remove(workspaceDir);
+    }
+  });
   describe('a catalog entry of a package the code never imports', () => {
     // bit detects dependencies from the code, so a package only package.json declares has no dependency
     const planImport = async (workspaceManifest: string, snappedSpecifier?: string) => {
