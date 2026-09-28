@@ -85,7 +85,7 @@ describe('local is diverged from the remote and another lane has a more recent s
 
     // locally
     helper.scopeHelper.getClonedWorkspace(laneAFirstSnap);
-    helper.command.mergeLane('lane-a'); // now lane-b has snapA + snapB + snapX1 (from lane-a) + snapX2 (the snap-merge)
+    helper.command.mergeLaneWithoutBuild('lane-a'); // now lane-b has snapA + snapB + snapX1 (from lane-a) + snapX2 (the snap-merge)
     helper.command.import();
     // keep this to fetch from all lanes, because in the future, by default, only the current lane is fetched
     helper.command.fetchAllLanes();

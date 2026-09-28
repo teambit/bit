@@ -24,7 +24,7 @@ describe('extensions config diff', function () {
     helper.extensions.addExtensionToVariant('extensions', 'teambit.harmony/aspect');
     helper.command.install();
     helper.command.compile();
-    helper.command.tagAllComponents();
+    helper.command.tagAllWithoutBuild();
     beforeEject = helper.scopeHelper.cloneWorkspace();
   });
   after(() => {

@@ -239,7 +239,7 @@ describe('bit lane import operations', function () {
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
       helper.command.createLane('lane-b');
-      helper.command.mergeLane(`${helper.scopes.remote}/lane-a`, '-x');
+      helper.command.mergeLaneWithoutBuild(`${helper.scopes.remote}/lane-a`, '-x');
       helper.command.export();
       headOnLaneB = helper.command.getHeadOfLane('lane-b', 'comp1');
       const laneBWs = helper.scopeHelper.cloneWorkspace();

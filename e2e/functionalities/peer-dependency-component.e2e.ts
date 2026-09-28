@@ -104,7 +104,7 @@ describe('set-peer', function () {
     describe('unset-peer', () => {
       before(() => {
         helper.command.unsetPeer('comp2');
-        helper.command.snapAllComponents();
+        helper.command.snapAllComponentsWithoutBuild();
         helper.command.build();
       });
       it('should remove the always peer fields from the scope data', () => {
@@ -219,7 +219,7 @@ describe('set-peer for existing component', function () {
       helper.scopeHelper.reInitWorkspace();
       helper.fixtures.populateComponents(2);
       helper.command.install();
-      helper.command.snapAllComponents();
+      helper.command.snapAllComponentsWithoutBuild();
       helper.command.setPeer('comp2', '0');
       helper.command.install();
       helper.command.build();
@@ -268,7 +268,7 @@ describe('unset-peer for existing component', function () {
       helper.fixtures.populateComponents(2);
       helper.command.setPeer('comp2', '0');
       helper.command.install();
-      helper.command.snapAllComponents(); // caches comp2 as peer dep of comp1
+      helper.command.snapAllComponentsWithoutBuild(); // caches comp2 as peer dep of comp1
       helper.command.unsetPeer('comp2');
       helper.command.install();
     });

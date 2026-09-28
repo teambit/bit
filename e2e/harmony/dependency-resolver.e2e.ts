@@ -167,7 +167,7 @@ describe('dependency-resolver extension', function () {
 
       await npmCiRegistry.init();
 
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
     });
     after(() => {
       npmCiRegistry.destroy();

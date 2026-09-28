@@ -34,7 +34,7 @@ describe('merge lanes - squash functionality', function () {
       before(() => {
         headOnLane = helper.command.getHeadOfLane('dev', 'comp1');
         helper.command.switchLocalLane('main');
-        helper.command.mergeLane('dev');
+        helper.command.mergeLaneWithoutBuild('dev');
       });
       it('should not add the squashed prop into the version object', () => {
         const head = helper.command.catComponent(`comp1@${headOnLane}`);
@@ -50,7 +50,7 @@ describe('merge lanes - squash functionality', function () {
         helper.command.snapAllComponentsWithoutBuild('--unmodified');
         headOnLane = helper.command.getHeadOfLane('dev', 'comp1');
         helper.command.switchLocalLane('main');
-        helper.command.mergeLane('dev');
+        helper.command.mergeLaneWithoutBuild('dev');
       });
       // the history before the merge is the tag + 3 snaps
       it('should squash the snaps and leave only the last one', () => {
@@ -77,7 +77,7 @@ describe('merge lanes - squash functionality', function () {
       helper.scopeHelper.reInitWorkspace();
       helper.scopeHelper.addRemoteScope();
 
-      helper.command.mergeLane(`${helper.scopes.remote}/dev`, '--skip-dependency-installation');
+      helper.command.mergeLaneWithoutBuild(`${helper.scopes.remote}/dev`, '--skip-dependency-installation');
     });
     // previously it was throwing "the component X has no versions and the head is empty"
     it('should be able to run bit-import', () => {

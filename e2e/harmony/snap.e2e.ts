@@ -23,7 +23,7 @@ describe('bit snap command', function () {
       helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
-      output = helper.command.snapComponent('bar/foo');
+      output = helper.command.snapComponentWithoutBuild('bar/foo');
     });
     it('should snap successfully', () => {
       expect(output).to.have.string('1 component(s) snapped');
@@ -47,7 +47,7 @@ describe('bit snap command', function () {
       let tagOutput: string;
       before(() => {
         helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
-        tagOutput = helper.command.tagAllComponents();
+        tagOutput = helper.command.tagAllWithoutBuild();
       });
       it('should tag successfully', () => {
         expect(tagOutput).to.have.string('1 component(s) tagged');
@@ -60,8 +60,8 @@ describe('bit snap command', function () {
       describe('then snap and tag again', () => {
         let secondTagOutput;
         before(() => {
-          helper.command.snapComponent('bar/foo', undefined, '--unmodified');
-          secondTagOutput = helper.command.tagComponent('bar/foo', undefined, '--unmodified');
+          helper.command.snapComponentWithoutBuild('bar/foo', '--unmodified');
+          secondTagOutput = helper.command.tagWithoutBuild('bar/foo', '--unmodified');
         });
         it('should tag the next version', () => {
           expect(secondTagOutput).to.have.string('0.0.2');
@@ -78,7 +78,7 @@ describe('bit snap command', function () {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents();
-      helper.command.snapAllComponents();
+      helper.command.snapAllComponentsWithoutBuild();
     });
     it('should save the dependencies successfully with their snaps as versions', () => {
       const barFoo = helper.command.catComponent('comp1@latest');
@@ -111,10 +111,10 @@ describe('bit snap command', function () {
       helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
-      helper.command.snapComponent('bar/foo', undefined, '--unmodified');
+      helper.command.snapComponentWithoutBuild('bar/foo', '--unmodified');
       const compAfterSnap1 = helper.command.catComponent('bar/foo');
       firstSnap = compAfterSnap1.head;
-      helper.command.snapComponent('bar/foo', undefined, '--unmodified');
+      helper.command.snapComponentWithoutBuild('bar/foo', '--unmodified');
     });
     describe('untag the head snap', () => {
       before(() => {
@@ -138,12 +138,12 @@ describe('bit snap command', function () {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
-      helper.command.snapComponent('bar/foo');
+      helper.command.snapComponentWithoutBuild('bar/foo');
       firstSnap = helper.command.getHead('bar/foo');
       helper.command.export();
       scopeAfterFirstSnap = helper.scopeHelper.cloneWorkspace();
       helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
-      helper.command.snapComponent('bar/foo');
+      helper.command.snapComponentWithoutBuild('bar/foo');
       secondSnap = helper.command.getHead('bar/foo');
       helper.command.export();
     });
@@ -538,10 +538,10 @@ describe('bit snap command', function () {
         helper.scopeHelper.reInitWorkspace();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFoo();
-        helper.command.snapAllComponents();
+        helper.command.snapAllComponentsWithoutBuild();
         firstSnap = helper.command.getHead('bar/foo');
         helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
-        helper.command.snapAllComponents();
+        helper.command.snapAllComponentsWithoutBuild();
         secondSnap = helper.command.getHead('bar/foo');
       });
       it('bit diff should show the differences', () => {
@@ -582,14 +582,14 @@ describe('bit snap command', function () {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents();
-      helper.command.snapAllComponents();
+      helper.command.snapAllComponentsWithoutBuild();
 
       helper.fs.outputFile('comp3/index.js', fixtures.comp3V2);
 
       const statusOutput = helper.command.runCmd('bit status');
       expect(statusOutput).to.have.string('components pending auto-tag');
 
-      snapOutput = helper.command.snapComponent('comp3');
+      snapOutput = helper.command.snapComponentWithoutBuild('comp3');
       isTypeHead = helper.command.getHead('comp3');
     });
     it('should auto snap the dependencies and the nested dependencies', () => {

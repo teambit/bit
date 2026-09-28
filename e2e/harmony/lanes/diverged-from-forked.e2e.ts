@@ -44,7 +44,7 @@ describe('lane-b was forked from lane-a and they are now diverged', function () 
   });
   describe('merging lane-a into lane-b', () => {
     before(() => {
-      helper.command.mergeLane('lane-a');
+      helper.command.mergeLaneWithoutBuild('lane-a');
     });
     // similar to git, if you merge A into B, the first parent is B and the second is A.
     // the absence of squash metadata is asserted here too - it is what makes this the control for

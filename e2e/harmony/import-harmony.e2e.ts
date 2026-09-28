@@ -113,7 +113,7 @@ describe('import functionality on Harmony', function () {
       helper.scopeHelper.addRemoteScope();
       helper.command.importAllComponents();
       helper.fixtures.populateComponents(1, undefined, ' v2');
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
     });
     it('should export with no errors about missing artifacts (pkg file) from the first tag', () => {
       expect(() => helper.command.export()).to.not.throw();

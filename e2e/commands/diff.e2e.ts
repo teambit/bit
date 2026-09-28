@@ -51,7 +51,7 @@ describe('bit diff command', function () {
     });
     describe('after the component was tagged', () => {
       before(() => {
-        helper.command.tagAllComponents('', '0.0.5');
+        helper.command.tagAllWithoutBuild('--ver 0.0.5');
       });
       it('should still indicate that there is no diff for that component', () => {
         const output = helper.command.diff('bar/foo');
@@ -107,7 +107,7 @@ describe('bit diff command', function () {
       helper.fixtures.addComponentUtilsIsType();
       helper.fixtures.createComponentIsString('');
       helper.fixtures.addComponentUtilsIsString();
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
 
       // modify only bar/foo and utils/is-type, not utils/is-string
       helper.fixtures.createComponentBarFoo(barFooV2);
@@ -148,7 +148,7 @@ describe('bit diff command', function () {
       helper.scopeHelper.reInitWorkspace();
       helper.fixtures.createComponentBarFoo(barFooV1);
       helper.fixtures.addComponentBarFoo();
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
       helper.fs.createFile('bar', 'foo2.js', barFooV2);
       fs.removeSync(path.join(helper.scopes.localPath, 'bar/foo.js'));
       helper.command.addComponent('bar', { i: 'bar/foo', m: 'bar/foo2.js' });
@@ -184,7 +184,7 @@ describe('bit diff command', function () {
     });
     describe('running bit diff between the previous version and the last version', () => {
       before(() => {
-        helper.command.tagAllComponents();
+        helper.command.tagAllWithoutBuild();
         output = helper.command.diff('bar/foo 0.0.1 0.0.2');
       });
       it('should indicate the deleted files as deleted', () => {
@@ -272,7 +272,7 @@ describe('bit diff command', function () {
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.createComponentIsType();
       helper.fixtures.addComponentUtilsIsType();
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
       // modify source in bar/foo, and add a file in utils/is-type so both filesDiff and fieldsDiff appear
       helper.fixtures.createComponentBarFoo(barFooV2);
       helper.fs.createFile('is-type', 'extra.js', "module.exports = 'extra';\n");

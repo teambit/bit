@@ -44,7 +44,7 @@ describe('merge lanes - squash on diverged', function () {
 
       helper.scopeHelper.getClonedWorkspace(laneAWorkspace);
       helper.command.import();
-      helper.command.mergeLane('lane-b', '--squash --auto-merge-resolve theirs');
+      helper.command.mergeLaneWithoutBuild('lane-b', '--squash --auto-merge-resolve theirs');
       mergeSnap = helper.command.getHeadOfLane('lane-a', 'comp1');
     });
 
@@ -110,7 +110,7 @@ describe('merge lanes - squash on diverged', function () {
 
       helper.scopeHelper.getClonedWorkspace(laneAWorkspace);
       helper.command.import();
-      helper.command.mergeLane(`${scopeB}/lane-b`, '--squash --auto-merge-resolve theirs');
+      helper.command.mergeLaneWithoutBuild(`${scopeB}/lane-b`, '--squash --auto-merge-resolve theirs');
       mergeSnap = helper.command.getHeadOfLane('lane-a', 'comp1');
       helper.command.export();
       scopeAAfterExport = helper.scopeHelper.cloneWorkspace();
@@ -181,7 +181,7 @@ describe('merge lanes - squash on diverged', function () {
         // return to the lane-a workspace and re-merge lane-b
         helper.scopeHelper.getClonedWorkspace(scopeAAfterExport);
         helper.command.import();
-        helper.command.mergeLane(`${scopeB}/lane-b`, '--squash --auto-merge-resolve theirs');
+        helper.command.mergeLaneWithoutBuild(`${scopeB}/lane-b`, '--squash --auto-merge-resolve theirs');
         secondMergeSnap = helper.command.getHeadOfLane('lane-a', 'comp1');
       });
 
@@ -247,7 +247,7 @@ describe('merge lanes - squash on diverged', function () {
       helper.command.export();
 
       // merge dev into main with --squash on a diverged history (pre-PR this threw)
-      helper.command.mergeLane('dev', '--squash --auto-merge-resolve theirs');
+      helper.command.mergeLaneWithoutBuild('dev', '--squash --auto-merge-resolve theirs');
       mergeSnap = helper.command.getHead('comp1');
     });
 
@@ -323,7 +323,7 @@ describe('merge lanes - squash on diverged', function () {
       helper.command.export();
 
       // diverged squash from main side: dev lives on scope-b, main on scope-a
-      helper.command.mergeLane(`${scopeB}/dev`, '--squash --auto-merge-resolve theirs');
+      helper.command.mergeLaneWithoutBuild(`${scopeB}/dev`, '--squash --auto-merge-resolve theirs');
       mergeSnap = helper.command.getHead('comp1');
       helper.command.export(); // merge snap → scope-a (main's home)
     });
@@ -394,7 +394,7 @@ describe('merge lanes - squash on diverged', function () {
       helper.command.export();
 
       helper.command.switchLocalLane('lane-a');
-      helper.command.mergeLane('lane-b', '--squash --auto-merge-resolve theirs');
+      helper.command.mergeLaneWithoutBuild('lane-b', '--squash --auto-merge-resolve theirs');
       mergeSnap = helper.command.getHeadOfLane('lane-a', 'comp1');
     });
 

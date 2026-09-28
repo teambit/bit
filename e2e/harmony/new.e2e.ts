@@ -39,7 +39,7 @@ describe('new command', function () {
       );
       helper.fs.outputFile(starterPath, updatedIndex);
 
-      helper.command.tagAllComponents();
+      helper.command.tagAllWithoutBuild();
       helper.command.export();
 
       helper.scopeHelper.cleanWorkspace(); // it deletes all content without bit-init
