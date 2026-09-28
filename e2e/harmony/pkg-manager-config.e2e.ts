@@ -11,14 +11,11 @@ import { readModulesManifest } from '../modules-manifest';
     let helper: Helper;
     let envId1;
     let envName1;
-    let npmCiRegistry: NpmCiRegistry;
-    before(async () => {
+    before(() => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
-      npmCiRegistry = new NpmCiRegistry(helper);
-      await npmCiRegistry.init();
-      npmCiRegistry.configureCiInPackageJsonHarmony();
+      new NpmCiRegistry(helper).configureCiInPackageJsonHarmony();
       envName1 = helper.env.setCustomEnv('node-env-1');
       envId1 = `${helper.scopes.remote}/${envName1}`;
       helper.command.install('lodash.get lodash.flatten');
@@ -53,9 +50,6 @@ import { readModulesManifest } from '../modules-manifest';
       it('workspace pnpm config is taken into account when running install in the capsule', () => {
         expect(modulesState?.hoistPattern).to.include('capsule-hoist-pattern');
       });
-    });
-    after(() => {
-      npmCiRegistry.destroy();
     });
   }
 );

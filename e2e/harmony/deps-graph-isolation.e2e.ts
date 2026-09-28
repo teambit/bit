@@ -200,14 +200,11 @@ chai.use(chaiFs);
       let snapWithoutGraph: any;
       let tagWithGraph: any;
       let tagWithoutGraph: any;
-      before(async () => {
+      before(() => {
         const randomStr = generateRandomStr(4);
         const name = `@ci/${randomStr}.{name}`;
         helper.scopeHelper.setWorkspaceWithRemoteScope();
-        npmCiRegistry = new NpmCiRegistry(helper);
-        npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
-        await npmCiRegistry.init();
-        npmCiRegistry.setRegistry();
+        new NpmCiRegistry(helper).configureCustomNameInPackageJsonHarmony(name);
         helper.fixtures.populateComponents(1);
         helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
         helper.command.install();
@@ -221,7 +218,6 @@ chai.use(chaiFs);
         tagWithoutGraph = helper.command.catComponent('comp1@latest');
       });
       after(() => {
-        npmCiRegistry.destroy();
         helper.scopeHelper.destroy();
       });
       it('should attach the dependencies graph to the snap by default', () => {
