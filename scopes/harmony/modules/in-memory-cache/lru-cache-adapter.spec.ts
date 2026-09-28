@@ -112,6 +112,13 @@ describe('LRUCacheAdapter', () => {
       gc();
       expect(cache.get('a')).to.be.undefined;
     });
+    it('should return an evicted function that is still referenced elsewhere', () => {
+      const cache = new LRUCacheAdapter<() => string>({ maxSize: 1, weak: true });
+      const fn = () => 'a';
+      cache.set('a', fn);
+      cache.set('b', () => 'b');
+      expect(cache.get('a')).to.equal(fn);
+    });
     it('should not return a replaced object once the primitive that replaced it is evicted', () => {
       const cache = new LRUCacheAdapter<Value | string>({ maxSize: 1, weak: true });
       const a = { name: 'a' };
