@@ -119,6 +119,12 @@ describe('LRUCacheAdapter', () => {
       cache.set('b', () => 'b');
       expect(cache.get('a')).to.equal(fn);
     });
+    it('should accept a null value, which cannot be held weakly', () => {
+      const cache = new LRUCacheAdapter<Value>({ maxSize: 1, weak: true });
+      expect(() => cache.set('a', null as any)).to.not.throw();
+      cache.set('b', { name: 'b' });
+      expect(cache.get('a')).to.be.undefined;
+    });
     it('should not return a replaced object once the primitive that replaced it is evicted', () => {
       const cache = new LRUCacheAdapter<Value | string>({ maxSize: 1, weak: true });
       const a = { name: 'a' };
