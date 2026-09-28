@@ -388,6 +388,9 @@ describe('add command on Harmony', function () {
       // workspace default here is the empty env too, so set a real env on comp1 explicitly - on
       // comp1 alone, so the root keeps the env it is tracked with.
       helper.env.setNodeEnv('comp1');
+      // that env installs, and an install also compiles. drop comp1's dist again so the
+      // MissingDists assertion below has something to contrast the root component against.
+      helper.fs.deletePath(path.join('node_modules', helper.general.getPackageNameByCompName('comp1'), 'dist'));
       helper.fs.outputFile('README.md', '# workspace root\n');
       helper.command.addComponent('.', '-i ws-root --root');
       status = helper.command.statusJson();
