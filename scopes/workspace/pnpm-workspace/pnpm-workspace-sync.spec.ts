@@ -99,6 +99,18 @@ describe('bit pnpm sync', function () {
     expect(workspace.consumer.bitMap.components).to.have.lengthOf(3);
   });
 
+  it('should suffix the names of the projects that share a package name with their directories', async () => {
+    await setupPnpmWorkspace({
+      'package.json': { name: '@acme/repository' },
+      'pnpm-workspace.yaml': 'packages:\n  - packages/*\n  - tools/*\n',
+      'packages/util/package.json': { name: '@acme/util' },
+      'tools/util/package.json': { name: '@acme/util' },
+    });
+    await syncPnpmWorkspace(workspace, tracker);
+    expect(entryAt('packages/util')!.id.fullName).to.equal('acme/util-packages-util');
+    expect(entryAt('tools/util')!.id.fullName).to.equal('acme/util-tools-util');
+  });
+
   describe('the env of a project', () => {
     const PNPM_ENV = 'my-org.envs/pnpm-scripts';
     const withBuildScript = {
@@ -270,6 +282,48 @@ describe('bit pnpm sync', function () {
       expect(readJson('packages/app/package.json').dependencies).to.deep.equal({ '@other/lib': 'workspace:*' });
     });
 
+    describe('a package that left the workspace', () => {
+      const MATH_SNAP = '173c83ebcf985027aac309e4815a6113099c230d';
+      async function syncAndRemoveMath() {
+        await setupPnpmWorkspace(twoPackages);
+        await syncPnpmWorkspace(workspace, tracker);
+        await fs.remove(path.join(workspaceData.workspacePath, 'packages/math'));
+      }
+      // app as snapped with math, which the remote would be asked for
+      function stubAppSnappedWithMath() {
+        const bitMap = workspace.consumer.bitMap;
+        const getComponentIdByRootPath = bitMap.getComponentIdByRootPath.bind(bitMap);
+        bitMap.getComponentIdByRootPath = (rootDir) =>
+          rootDir === 'packages/app'
+            ? getComponentIdByRootPath(rootDir)?.changeVersion('0.0.1')
+            : getComponentIdByRootPath(rootDir);
+        workspace.consumer.scope.getVersionInstance = (async () => ({
+          extensions: {
+            findCoreExtension: () => ({
+              data: { dependencies: [{ __type: 'component', packageName: '@acme/math', version: MATH_SNAP }] },
+            }),
+          },
+        })) as any;
+      }
+      it('should bind it to the version the projects referring to it were snapped with', async () => {
+        await syncAndRemoveMath();
+        stubAppSnappedWithMath();
+        const result = await syncPnpmWorkspace(workspace, tracker);
+        expect(result.catalogVersionBoundPackages).to.deep.equal(['@acme/math']);
+        expect(parseYaml(readWorkspaceManifest()).catalog).to.deep.equal({ '@acme/math': `0.0.0-${MATH_SNAP}` });
+        expect(readJson('packages/app/package.json').dependencies).to.deep.equal({ '@acme/math': 'catalog:' });
+      });
+      it('should leave it to the user when they were not snapped with it, there is no version to bind', async () => {
+        await syncAndRemoveMath();
+        const result = await syncPnpmWorkspace(workspace, tracker);
+        expect(result.catalogVersionBoundPackages).to.deep.equal([]);
+        expect(result.catalogUnboundPackages).to.deep.equal([
+          '@acme/math (no project referring to it was snapped with it: packages/app)',
+        ]);
+        expect(parseYaml(readWorkspaceManifest()).catalog).to.deep.equal({ '@acme/math': 'workspace:*' });
+      });
+    });
+
     async function expectSyncToRefuse(files: Record<string, unknown>, message: string) {
       await setupPnpmWorkspace({ ...twoPackages, ...files });
       const workspaceManifest = readWorkspaceManifest();
@@ -420,6 +474,36 @@ describe('pnpm workspace import plan', () => {
 
       expect(await fs.readFile(path.join(workspaceDir, 'pnpm-workspace.yaml'), 'utf8')).to.equal(manifestContent);
       expect(await fs.readFile(path.join(workspaceDir, 'packages/app/package.json'), 'utf8')).to.equal(appManifest);
+    } finally {
+      await fs.remove(workspaceDir);
+    }
+  });
+
+  it('should keep the comments and the layout of the pnpm manifest it edits', async () => {
+    const workspaceDir = await fs.mkdtemp(path.join(os.tmpdir(), 'bit-pnpm-import-'));
+    try {
+      const manifestPath = path.join(workspaceDir, 'pnpm-workspace.yaml');
+      await fs.writeFile(
+        manifestPath,
+        '# the projects\npackages:\n  - packages/*\ncatalog:\n  is-odd: ^3.0.1 # pinned\n'
+      );
+      await fs.outputJson(path.join(workspaceDir, 'components/app/package.json'), {
+        name: '@acme/app',
+        dependencies: { '@acme/math': 'catalog:' },
+      });
+
+      await applyPnpmImportPlan(workspaceDir, {
+        schemaVersion: 1,
+        components: [{ id: 'acme.scope/app@aaaa', rootDir: 'components/app', packageName: '@acme/app' }],
+        catalogs: [{ catalogName: 'default', packageName: '@acme/math', specifier: '0.0.0-bbbb' }],
+      });
+
+      const manifestContent = await fs.readFile(manifestPath, 'utf8');
+      expect(manifestContent).to.include('# the projects').and.include('# pinned');
+      expect(parseYaml(manifestContent)).to.deep.equal({
+        packages: ['packages/*', 'components/app'],
+        catalog: { 'is-odd': '^3.0.1', '@acme/math': '0.0.0-bbbb' },
+      });
     } finally {
       await fs.remove(workspaceDir);
     }

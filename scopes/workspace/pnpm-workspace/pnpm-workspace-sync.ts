@@ -3,12 +3,18 @@ import path from 'path';
 import { glob } from 'glob';
 import execa from 'execa';
 import semver from 'semver';
-import cloneDeep from 'lodash/cloneDeep';
-import isEqual from 'lodash/isEqual';
 import omit from 'lodash/omit';
-import { createNode, parse as parseYaml, parseDocument, stringify as stringifyYaml } from 'yaml';
+import { createNode, parse as parseYaml, parseDocument } from 'yaml';
 import type { Command, CommandOptions } from '@teambit/cli';
-import { errorSymbol, formatHint, formatItem, formatSection, formatSuccessSummary, joinSections } from '@teambit/cli';
+import {
+  errorSymbol,
+  formatHint,
+  formatItem,
+  formatSection,
+  formatSuccessSummary,
+  joinSections,
+  warnSymbol,
+} from '@teambit/cli';
 import { BitError } from '@teambit/bit-error';
 import type { AspectData, Component } from '@teambit/component';
 import { ComponentID } from '@teambit/component-id';
@@ -43,6 +49,10 @@ export type PnpmVcsSyncResult = {
   removedComponents: string[];
   /** the local packages the projects now refer to by "catalog:" instead of "workspace:", see planCatalogMigration */
   catalogMigratedPackages: string[];
+  /** the packages that left the workspace, which the catalog binds to a version now, see planLeftPackageBindings */
+  catalogVersionBoundPackages: string[];
+  /** the packages that left the workspace with no one version to bind, which the catalog still binds to "workspace:" */
+  catalogUnboundPackages: string[];
 };
 
 export type PnpmVcsImportPlan = {
@@ -80,7 +90,8 @@ export class PnpmSyncCmd implements Command {
   extendedDescription = `tracks every project "${PNPM_WORKSPACE_MANIFEST}" lists as a component, and the workspace root as the
 workspace-root component. package.json and the lockfile are tracked as source (trackAllFiles).
 a project that refers to another one by "workspace:" refers to it by "catalog:" after the sync, and the default catalog
-gets the "workspace:" specifier. an import into another workspace binds it there to the exact version instead.
+gets the "workspace:" specifier. an import into another workspace binds it there to the exact version instead, and so
+does a re-run once the project left this workspace.
 safe to re-run: tracked projects keep their ids, new ones are added, and the ones that left the workspace are removed.`;
   group = 'workspace-setup';
   loader = true;
@@ -115,11 +126,26 @@ safe to re-run: tracked projects keep their ids, new ones are added, and the one
           result.catalogMigratedPackages.map((packageName) => formatItem(packageName))
         )
       : '';
-    const summary = formatSuccessSummary(`synchronized ${result.components.length} pnpm workspace components`);
-    const installHint = result.catalogMigratedPackages.length
-      ? formatHint('run "pnpm install" to update the lockfile before snapping')
+    const versionBound = result.catalogVersionBoundPackages.length
+      ? formatSection(
+          'bound to a version',
+          'these packages left the workspace, the catalog binds them to the version the projects were snapped with',
+          result.catalogVersionBoundPackages.map((packageName) => formatItem(packageName))
+        )
       : '';
-    return joinSections([removed, migrated, summary, installHint]);
+    const unbound = result.catalogUnboundPackages.length
+      ? formatSection(
+          'left in the catalog',
+          `these packages left the workspace, and the catalog of ${PNPM_WORKSPACE_MANIFEST} still binds them to "workspace:". set their entries to a version`,
+          result.catalogUnboundPackages.map((description) => formatItem(description, warnSymbol))
+        )
+      : '';
+    const summary = formatSuccessSummary(`synchronized ${result.components.length} pnpm workspace components`);
+    const installHint =
+      result.catalogMigratedPackages.length || result.catalogVersionBoundPackages.length
+        ? formatHint('run "pnpm install" to update the lockfile before snapping')
+        : '';
+    return joinSections([removed, migrated, versionBound, unbound, summary, installHint]);
   }
 
   async json(_args: string[], { env }: SyncFlags): Promise<PnpmVcsSyncResult> {
@@ -167,6 +193,8 @@ type PnpmProject = {
   hasScripts: boolean;
   /** its dependencies declared by "workspace:", by package name */
   workspaceReferences: Map<string, string>;
+  /** its dependencies declared by "catalog:" */
+  catalogReferences: Array<{ catalogName: string; packageName: string }>;
 };
 
 /**
@@ -220,12 +248,15 @@ export async function syncPnpmWorkspace(
   const projects = await discoverPnpmProjects(workspace.path, workspaceManifest.packages || []);
   // everything that can fail on the inventory alone fails before anything is written
   throwForNestedProjects(projects);
+  suffixCollidingComponentNames(projects);
   assertUnique(
     projects.map((project) => project.componentName),
     'component name'
   );
   const catalogMigration = planCatalogMigration(projects, workspaceManifest);
+  const leftPackages = await planLeftPackageBindings(workspace, projects, workspaceManifest);
   await applyCatalogMigration(workspace.path, workspaceManifestPath, catalogMigration);
+  await editPnpmWorkspaceManifest(workspaceManifestPath, { catalogEntries: leftPackages.bindings });
   await enableTrackAllFiles(workspace);
 
   const removedComponents = removeLeftProjects(workspace, new Set(projects.map((project) => project.rootDir)));
@@ -244,7 +275,92 @@ export async function syncPnpmWorkspace(
     components,
     removedComponents,
     catalogMigratedPackages: [...catalogMigration.bindings.keys()].sort(),
+    catalogVersionBoundPackages: [...new Set(leftPackages.bindings.map(({ packageName }) => packageName))].sort(),
+    catalogUnboundPackages: leftPackages.unbound,
   };
+}
+
+/**
+ * a package name is the default name of its component, but two projects may share one - private
+ * packages, or unnamed ones whose directories sanitize alike. each of those gets its directory as a
+ * suffix, so neither depends on which one was found first. a project tracked already keeps its id anyway.
+ */
+function suffixCollidingComponentNames(projects: PnpmProject[]) {
+  const counts = new Map<string, number>();
+  projects.forEach(({ componentName }) => counts.set(componentName, (counts.get(componentName) || 0) + 1));
+  projects.forEach((project) => {
+    if (counts.get(project.componentName)! < 2) return;
+    project.componentName = sanitizePnpmComponentName(
+      `${project.componentName}-${project.rootDir.replace(/\//g, '-')}`
+    );
+  });
+}
+
+/**
+ * a project that left the workspace - removed, or not on the lane switched to - leaves its package bound
+ * to "workspace:" in the catalog, which resolves to nothing now. the projects that still refer to it get
+ * it bound to the exact version they were snapped with, as an import binds a package that is absent
+ * (see applyPnpmImportPlan). when they were snapped with different versions of it, or with none - it may
+ * have been renamed - there is no one version to bind, and the entry is left to the user.
+ */
+async function planLeftPackageBindings(
+  workspace: Workspace,
+  projects: PnpmProject[],
+  workspaceManifest: PnpmWorkspaceManifest
+): Promise<{ bindings: CatalogEntry[]; unbound: string[] }> {
+  const localPackageNames = new Set(projects.map((project) => project.packageName).filter(Boolean));
+  const catalogOf = (catalogName: string) =>
+    catalogName === 'default'
+      ? readDefaultCatalog(workspaceManifest)
+      : asRecord(workspaceManifest.catalogs?.[catalogName]);
+  const left = new Map<
+    string,
+    { catalogName: string; packageName: string; versions: Set<string>; referrers: string[] }
+  >();
+  for (const project of projects) {
+    for (const { catalogName, packageName } of project.catalogReferences) {
+      if (localPackageNames.has(packageName)) continue;
+      const specifier = catalogOf(catalogName)[packageName];
+      if (typeof specifier !== 'string' || !specifier.startsWith('workspace:')) continue;
+      const key = `${catalogName}\0${packageName}`;
+      if (!left.has(key)) left.set(key, { catalogName, packageName, versions: new Set(), referrers: [] });
+      const entry = left.get(key)!;
+      entry.referrers.push(project.rootDir);
+      const version = await readSnappedDependencyVersion(workspace, project.rootDir, packageName);
+      if (version) entry.versions.add(version);
+    }
+  }
+  const bindings: CatalogEntry[] = [];
+  const unbound: string[] = [];
+  left.forEach(({ catalogName, packageName, versions, referrers }) => {
+    if (versions.size === 1) {
+      bindings.push({ catalogName, packageName, specifier: [...versions][0] });
+      return;
+    }
+    const reason = versions.size
+      ? `the projects that refer to it were snapped with different versions of it: ${[...versions].join(', ')}`
+      : `no project referring to it was snapped with it: ${referrers.join(', ')}`;
+    unbound.push(`${packageName} (${reason})`);
+  });
+  return { bindings, unbound };
+}
+
+/** the version of a component dependency the project was last snapped with, as a publishable version */
+async function readSnappedDependencyVersion(
+  workspace: Workspace,
+  rootDir: string,
+  packageName: string
+): Promise<string | undefined> {
+  const componentId = workspace.consumer.bitMap.getComponentIdByRootPath(rootDir);
+  if (!componentId?.hasVersion()) return undefined;
+  const version = await workspace.consumer.scope.getVersionInstance(componentId).catch(() => undefined);
+  const dependencies = version?.extensions.findCoreExtension(DependencyResolverAspect.id)?.data?.dependencies;
+  const dependency = Array.isArray(dependencies)
+    ? dependencies.find(
+        (candidate) => candidate.__type === 'component' && candidate.packageName === packageName && candidate.version
+      )
+    : undefined;
+  return dependency ? snapToSemver(dependency.version) : undefined;
 }
 
 async function discoverPnpmProjects(workspacePath: string, patterns: string[]): Promise<PnpmProject[]> {
@@ -261,6 +377,7 @@ async function discoverPnpmProjects(workspacePath: string, patterns: string[]): 
         packageName,
         hasScripts,
         workspaceReferences: readWorkspaceReferences(manifest),
+        catalogReferences: collectCatalogReferences(manifest),
       };
     })
   );
@@ -351,18 +468,45 @@ async function applyCatalogMigration(workspacePath: string, manifestPath: string
       await packageJsonFile.write();
     })
   );
-  // edited as a document, so the comments and the layout of the user's file stay
+  await editPnpmWorkspaceManifest(manifestPath, {
+    catalogEntries: [...migration.bindings].map(([packageName, specifier]) => ({
+      catalogName: 'default',
+      packageName,
+      specifier,
+    })),
+  });
+}
+
+type CatalogEntry = { catalogName: string; packageName: string; specifier: string };
+
+/**
+ * edits pnpm-workspace.yaml as a document, so the comments and the layout of the user's file stay. the
+ * "default" catalog is "catalog", or "catalogs.default" when only that one is there - pnpm reads the two
+ * as one catalog, and the top-level one wins when present.
+ */
+async function editPnpmWorkspaceManifest(
+  manifestPath: string,
+  { packages = [], catalogEntries = [] }: { packages?: string[]; catalogEntries?: CatalogEntry[] }
+) {
+  if (!packages.length && !catalogEntries.length) return;
   const document = parseDocument(await fs.readFile(manifestPath, 'utf8'));
-  const catalogPath =
-    document.get('catalog') !== undefined || document.getIn(['catalogs', 'default']) === undefined
-      ? ['catalog']
-      : ['catalogs', 'default'];
-  const catalogNode = document.getIn(catalogPath);
-  if (catalogNode && typeof catalogNode.setIn === 'function') {
-    migration.bindings.forEach((specifier, packageName) => document.setIn([...catalogPath, packageName], specifier));
-  } else {
-    document.setIn(catalogPath, createNode(Object.fromEntries(migration.bindings)));
+  if (packages.length) {
+    const packagesNode = document.get('packages');
+    if (packagesNode && typeof packagesNode.add === 'function')
+      packages.forEach((pattern) => packagesNode.add(pattern));
+    else document.set('packages', createNode(packages));
   }
+  catalogEntries.forEach(({ catalogName, packageName, specifier }) => {
+    const catalogPath =
+      catalogName !== 'default'
+        ? ['catalogs', catalogName]
+        : document.get('catalog') !== undefined || document.getIn(['catalogs', 'default']) === undefined
+          ? ['catalog']
+          : ['catalogs', 'default'];
+    const catalogNode = document.getIn(catalogPath);
+    if (!catalogNode || typeof catalogNode.setIn !== 'function') document.setIn(catalogPath, createNode({}));
+    document.setIn([...catalogPath, packageName], specifier);
+  });
   await fs.writeFile(manifestPath, document.toString());
 }
 
@@ -584,7 +728,6 @@ export async function getUserPnpmVersion(workspacePath: string): Promise<string 
 export async function applyPnpmImportPlan(workspacePath: string, plan: PnpmVcsImportPlan): Promise<string[]> {
   const manifestPath = path.join(workspacePath, PNPM_WORKSPACE_MANIFEST);
   const manifest = await readPnpmWorkspaceManifest(manifestPath);
-  const originalManifest = cloneDeep(manifest);
 
   const coveredRootDirs = new Set(
     (await discoverPnpmProjectManifests(workspacePath, manifest.packages || [])).map((manifestFile) =>
@@ -592,33 +735,37 @@ export async function applyPnpmImportPlan(workspacePath: string, plan: PnpmVcsIm
     )
   );
   const uncoveredRootDirs = plan.components.map(({ rootDir }) => rootDir).filter((dir) => !coveredRootDirs.has(dir));
-  if (uncoveredRootDirs.length) manifest.packages = [...(manifest.packages || []), ...uncoveredRootDirs];
+  const packages = [...(manifest.packages || []), ...uncoveredRootDirs];
 
-  const localPackageNames = await readLocalPackageNames(workspacePath, manifest.packages || []);
+  const localPackageNames = await readLocalPackageNames(workspacePath, packages);
   await bindWorkspaceReferencesToCatalog(workspacePath, plan, localPackageNames);
   const importedPackageNames = new Set(plan.components.map(({ packageName }) => packageName));
-  const catalogOf = (catalogName: string): Record<string, string> => {
-    if (catalogName === 'default' && (manifest.catalog !== undefined || !manifest.catalogs?.default)) {
-      return (manifest.catalog ||= {});
-    }
-    manifest.catalogs ||= {};
-    return (manifest.catalogs[catalogName] ||= {});
+  const catalogs: Record<string, Record<string, unknown>> = {
+    ...omit(manifest.catalogs || {}, 'default'),
+    default: readDefaultCatalog(manifest),
+  };
+  const catalogEntries: CatalogEntry[] = [];
+  const bind = (catalogName: string, packageName: string, specifier: string) => {
+    catalogs[catalogName] ||= {};
+    if (catalogs[catalogName][packageName] === specifier) return;
+    catalogs[catalogName][packageName] = specifier;
+    catalogEntries.push({ catalogName, packageName, specifier });
   };
   const workspaceBoundPackageNames = new Set<string>();
-  [manifest.catalog, ...Object.values(manifest.catalogs || {})].forEach((catalog) => {
+  Object.entries(catalogs).forEach(([catalogName, catalog]) => {
     importedPackageNames.forEach((packageName) => {
-      if (!catalog?.[packageName]) return;
-      catalog[packageName] = 'workspace:*';
+      if (!catalog[packageName]) return;
+      bind(catalogName, packageName, 'workspace:*');
       workspaceBoundPackageNames.add(packageName);
     });
   });
   plan.catalogs.forEach(({ catalogName, packageName, specifier }) => {
     const isLocal = localPackageNames.has(packageName);
-    catalogOf(catalogName)[packageName] = isLocal ? 'workspace:*' : specifier;
+    bind(catalogName, packageName, isLocal ? 'workspace:*' : specifier);
     if (isLocal) workspaceBoundPackageNames.add(packageName);
   });
 
-  if (!isEqual(manifest, originalManifest)) await fs.writeFile(manifestPath, stringifyYaml(manifest));
+  await editPnpmWorkspaceManifest(manifestPath, { packages: uncoveredRootDirs, catalogEntries });
   return [...workspaceBoundPackageNames].sort();
 }
 
