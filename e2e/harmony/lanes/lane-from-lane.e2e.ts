@@ -115,6 +115,39 @@ describe('bit lane command', function () {
       });
     });
   });
+  // happens when a new lane is created from main, but the .bitmap still has the versions of another lane
+  // (e.g. the .bitmap was checked out from a git branch of lane-a). the dependent is snapped on top of
+  // lane-a's snap, so its dependency (lane-a's snap of the dependency) is "inherited" from the parent.
+  describe('snapping on lane-b when the .bitmap has lane-a versions (lane-b was created from main)', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.command.createLane('lane-a');
+      helper.fixtures.populateComponents(2, undefined, '-v2');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      const bitMapOfLaneA = helper.bitMap.read();
+
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.createLane('lane-b');
+      const bitMap = helper.bitMap.read();
+      bitMap.comp1 = bitMapOfLaneA.comp1;
+      bitMap.comp2 = bitMapOfLaneA.comp2;
+      helper.bitMap.write(bitMap);
+      helper.fs.outputFile('comp2/index.js', "module.exports = () => 'comp2-v2';");
+      helper.fs.outputFile(
+        'comp1/index.js',
+        `const comp2 = require('${helper.general.getPackageNameByCompName('comp2', false)}');\nmodule.exports = () => 'comp1-v3 and ' + comp2();`
+      );
+    });
+    it('bit snap should throw because comp1 depends on comp2 snap from lane-a', () => {
+      const cmd = () => helper.command.snapComponentWithoutBuild('comp1');
+      expect(cmd).to.throw('which is not part of current lane "lane-b" history');
+    });
+  });
   describe('creating lane-b from lane-a when lane-a is out-of-date', () => {
     let outOfDateState: string;
     let firstSnap: string;
