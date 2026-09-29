@@ -956,12 +956,23 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
       : new ComponentIdList();
     const deps = component.getAllDependencies();
     const missingDeps: ComponentID[] = [];
+    // deps that were already in the previous version were validated when that version was snapped, but only in
+    // the context of the lane it was snapped on. when the previous version is from another lane (e.g. the
+    // .bitmap has versions of another lane), its deps must be validated again against the current lane.
+    let isPrevVersionFromCurrentHistoryP: Promise<boolean> | undefined;
+    const isPrevVersionFromCurrentHistory = () => {
+      if (!isPrevVersionFromCurrentHistoryP) {
+        isPrevVersionFromCurrentHistoryP = this.isPartOfCurrentHistory(component.componentFromModel!.id, lane);
+      }
+      return isPrevVersionFromCurrentHistoryP;
+    };
     await Promise.all(
       deps.map(async (dep) => {
         if (!this.scope.isExported(dep.id) || !dep.id.hasVersion()) return;
         if (isTag(dep.id.version)) return;
         if (allIds.hasWithoutVersion(dep.id)) return; // it's tagged/snapped now.
-        if (depsFromModelIds.has(dep.id)) return; // this dep is not new, it was already snapped/tagged with it before.
+        // this dep is not new, it was already snapped/tagged with it before.
+        if (depsFromModelIds.has(dep.id) && (await isPrevVersionFromCurrentHistory())) return;
         let isPartOfHistory: boolean | undefined;
         try {
           isPartOfHistory = lane
@@ -997,6 +1008,19 @@ another option, in case this dependency is not in main yet is to remove all refe
       })
     );
     return missingDeps;
+  }
+
+  private async isPartOfCurrentHistory(id: ComponentID, lane?: Lane): Promise<boolean> {
+    if (!this.scope.isExported(id) || !id.hasVersion() || isTag(id.version)) return true;
+    try {
+      const isPartOfHistory = lane
+        ? await this.scope.legacyScope.isPartOfLaneHistoryOrMain(id, lane)
+        : await this.scope.legacyScope.isPartOfMainHistory(id);
+      return Boolean(isPartOfHistory);
+    } catch {
+      // not enough data to determine. validate the deps as if they were new.
+      return false;
+    }
   }
 
   async _addFlattenedDepsGraphToComponents(components: ConsumerComponent[]) {
