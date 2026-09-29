@@ -4,6 +4,7 @@ import type { BuildContext, BuiltTaskResult } from '@teambit/builder';
 import type { Compiler, TranspileComponentParams } from '@teambit/compiler';
 import type { Logger } from '@teambit/logger';
 import type { PnpmScriptTask } from './pnpm-script.task';
+import { BUILD_OUTPUT_DIRS } from './pnpm-script.task';
 import { exists, runPnpm } from './pnpm-utils';
 
 const PNPM_WORKSPACE_MANIFEST = 'pnpm-workspace.yaml';
@@ -22,7 +23,7 @@ export class PnpmWorkspaceCompiler implements Compiler {
   id = 'pnpm-workspace-compiler';
   displayName = 'pnpm workspace build script';
   distDir = DIST_DIR;
-  distGlobPatterns = [`${DIST_DIR}/**`];
+  distGlobPatterns = BUILD_OUTPUT_DIRS.map((dir) => `${dir}/**`);
   shouldCopyNonSupportedFiles = false;
   deleteDistDir = false;
   /** by workspace dir, the state of the sources its last successful build ran on */
@@ -63,12 +64,17 @@ export class PnpmWorkspaceCompiler implements Compiler {
     const workspaceDir = await findPnpmWorkspaceDir(componentDir);
     if (!workspaceDir) return;
     await this.buildOncePerSourceState(workspaceDir);
-    const sourceDist = path.join(componentDir, this.distDir);
-    if (!(await exists(sourceDist))) return;
-    const targetDist = path.join(outputDir, this.distDir);
-    // pnpm links a workspace package into node_modules, so the output dir may be the package itself
-    if (await isSameDir(sourceDist, targetDist)) return;
-    await fs.cp(sourceDist, targetDist, { recursive: true, force: true });
+    // a build may write to any of them, e.g. "lib" for a package whose main is lib/index.js
+    await Promise.all(
+      BUILD_OUTPUT_DIRS.map(async (dir) => {
+        const source = path.join(componentDir, dir);
+        if (!(await exists(source))) return;
+        const target = path.join(outputDir, dir);
+        // pnpm links a workspace package into node_modules, so the output dir may be the package itself
+        if (await isSameDir(source, target)) return;
+        await fs.cp(source, target, { recursive: true, force: true });
+      })
+    );
   }
 
   build(buildContext: BuildContext): Promise<BuiltTaskResult> {

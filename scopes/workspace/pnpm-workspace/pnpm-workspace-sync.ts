@@ -672,10 +672,14 @@ async function trackPnpmWorkspaceRoot(workspace: Workspace, tracker: TrackerMain
     ? await readPackageManifest(rootManifestPath)
     : undefined;
   const rootName = sanitizePnpmComponentName(rootManifest?.name || path.basename(workspace.path));
+  // the projects are tracked by now, and one may have the name the root would get
+  const takenNames = new Set(workspace.consumer.bitMap.components.map((componentMap) => componentMap.id.fullName));
+  let componentName = `${rootName}-workspace`;
+  for (let index = 2; takenNames.has(componentName); index += 1) componentName = `${rootName}-workspace-${index}`;
   const { componentId } = await tracker.track({
     rootDir: WORKSPACE_ROOT_DIR,
     root: true,
-    componentName: `${rootName}-workspace`,
+    componentName,
     mainFile: path.join(workspace.path, rootManifest ? PACKAGE_JSON : PNPM_WORKSPACE_MANIFEST),
   });
   return componentId;

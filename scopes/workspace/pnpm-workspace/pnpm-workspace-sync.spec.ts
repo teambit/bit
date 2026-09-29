@@ -111,6 +111,17 @@ describe('bit pnpm sync', function () {
     expect(entryAt('tools/util')!.id.fullName).to.equal('acme/util-tools-util');
   });
 
+  it('should name the root so it does not take the name of a project', async () => {
+    await setupPnpmWorkspace({
+      'package.json': { name: '@acme/repo' },
+      'pnpm-workspace.yaml': 'packages:\n  - packages/*\n',
+      'packages/x/package.json': { name: '@acme/repo-workspace' },
+    });
+    await syncPnpmWorkspace(workspace, tracker);
+    expect(entryAt('packages/x')!.id.fullName).to.equal('acme/repo-workspace');
+    expect(entryAt(WORKSPACE_ROOT_DIR)!.id.fullName).to.equal('acme/repo-workspace-2');
+  });
+
   it('should number the projects whose directories sanitize alike', async () => {
     await setupPnpmWorkspace({
       'package.json': { name: '@acme/repository' },

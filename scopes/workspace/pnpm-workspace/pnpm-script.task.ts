@@ -10,9 +10,12 @@ import { loadPnpmWorkspaceTree, treeSignature, writePnpmWorkspaceTree } from './
 
 export type PnpmScript = 'build' | 'test' | 'lint';
 
+/** where a package's build script may write its output */
+export const BUILD_OUTPUT_DIRS = ['dist', 'build', 'lib'];
+
 /** what each script leaves in a package's directory, saved as the component's artifacts */
 const OUTPUT_DIRS: Record<PnpmScript, string[]> = {
-  build: ['dist', 'build', 'lib'],
+  build: BUILD_OUTPUT_DIRS,
   test: ['coverage'],
   lint: [],
 };
