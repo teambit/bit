@@ -40,9 +40,9 @@ import type { ListerMain } from '@teambit/lister';
 import { ListerAspect } from '@teambit/lister';
 
 /**
- * runs once an import wrote components to the workspace. a handler that returns "handled" takes over
- * what the importer does with them in workspace.jsonc - e.g. in a workspace that lists its packages
- * elsewhere. the report it returns is added to the import's result.
+ * runs once an import wrote components to the workspace, before it installs their dependencies. a handler
+ * that returns "handled" takes over what the importer does with them in workspace.jsonc - e.g. in a
+ * workspace that lists its packages elsewhere. the report it returns is added to the import's result.
  */
 export type OnComponentsWritten = (
   components: ConsumerComponent[]
@@ -87,14 +87,15 @@ export class ImporterMain {
         importOptions.lanes = { laneId: currentLaneId };
       }
     }
-    const importComponents = this.createImportComponents(importOptions);
+    // the handlers run before the install, which may need what they write - e.g. the pnpm manifest
+    let outcomes: Array<Awaited<ReturnType<OnComponentsWritten>>> = [];
+    const importComponents = this.createImportComponents(importOptions, async (writtenComponents) => {
+      outcomes = await Promise.all(this.onComponentsWrittenSlot.values().map((handler) => handler(writtenComponents)));
+    });
     const results = await importComponents.importComponents();
     Analytics.setExtraData('num_components', results.importedIds.length);
     if (results.writtenComponents?.length) {
       const writtenComponents = results.writtenComponents;
-      const outcomes = await Promise.all(
-        this.onComponentsWrittenSlot.values().map((handler) => handler(writtenComponents))
-      );
       outcomes.forEach((outcome) => {
         if (outcome?.report)
           results.componentsWrittenReport = { ...results.componentsWrittenReport, ...outcome.report };
@@ -352,7 +353,10 @@ export class ImporterMain {
     return results.map((c) => c.component.id);
   }
 
-  private createImportComponents(importOptions: ImportOptions) {
+  private createImportComponents(
+    importOptions: ImportOptions,
+    onComponentsWritten?: (components: ConsumerComponent[]) => Promise<void>
+  ) {
     return new ImportComponents(
       this.workspace,
       this.graph,
@@ -360,7 +364,8 @@ export class ImporterMain {
       this.envs,
       this.logger,
       this.lister,
-      importOptions
+      importOptions,
+      onComponentsWritten
     );
   }
 

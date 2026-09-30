@@ -5,6 +5,7 @@ import type { Compiler, TranspileComponentParams } from '@teambit/compiler';
 import type { Logger } from '@teambit/logger';
 import type { PnpmScriptTask } from './pnpm-script.task';
 import { BUILD_OUTPUT_DIRS } from './pnpm-script.task';
+import type { PnpmError } from './pnpm-utils';
 import { exists, runPnpm } from './pnpm-utils';
 
 const PNPM_WORKSPACE_MANIFEST = 'pnpm-workspace.yaml';
@@ -64,6 +65,9 @@ export class PnpmWorkspaceCompiler implements Compiler {
     const workspaceDir = await findPnpmWorkspaceDir(componentDir);
     if (!workspaceDir) return;
     await this.buildOncePerSourceState(workspaceDir);
+    // pnpm installs the workspace and links each package to its source, where the build wrote its output. bit
+    // has no copy of the package to fill, unless one is left from an earlier install of bit's - a broken link too
+    if (!(await exists(outputDir))) return;
     // a build may write to any of them, e.g. "lib" for a package whose main is lib/index.js
     await Promise.all(
       BUILD_OUTPUT_DIRS.map(async (dir) => {
@@ -96,9 +100,18 @@ export class PnpmWorkspaceCompiler implements Compiler {
     if (this.builtSignatures.get(workspaceDir) === signature) return;
     // a failed build is not recorded, the next compile retries it
     this.builtSignatures.delete(workspaceDir);
-    const output = await runPnpm(['-r', '--if-present', 'run', 'build'], workspaceDir);
+    let output: string;
+    try {
+      output = await runPnpm(['-r', '--if-present', 'run', 'build'], workspaceDir);
+    } catch (err: any) {
+      // the error says only that the build failed, its output says why
+      const failureOutput = (err as PnpmError).output?.trim();
+      if (failureOutput) this.logger.console(failureOutput);
+      throw err;
+    }
     if (output.trim()) this.logger.console(output.trim());
-    this.builtSignatures.set(workspaceDir, signature);
+    // the state after the build: a build may write next to the sources, e.g. the tsconfig.tsbuildinfo of "tsc --build"
+    this.builtSignatures.set(workspaceDir, await sourceSignature(workspaceDir));
   }
 }
 

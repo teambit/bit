@@ -32,7 +32,7 @@ export const PNPM_WORKSPACE_MANIFEST = 'pnpm-workspace.yaml';
 
 /**
  * a workspace whose root component is a pnpm workspace. pnpm installs it from the packages' own
- * manifests, so bit neither installs it nor writes dependencies into the root package.json.
+ * manifests - bit's install runs pnpm's - so bit does not write dependencies into the root package.json.
  */
 export function isPnpmWorkspaceRoot(workspacePath: string, bitMap: BitMap): boolean {
   return Boolean(findWorkspaceRootMap(bitMap)) && fs.existsSync(path.join(workspacePath, PNPM_WORKSPACE_MANIFEST));

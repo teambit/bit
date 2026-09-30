@@ -35,4 +35,38 @@ describe('InstallMain', function () {
       expect(envPackage).to.be.undefined;
     });
   });
+
+  describe('a workspace an external installer installs', () => {
+    let installsWorkspace = false;
+    let installs = 0;
+    before(() => {
+      install.registerExternalInstaller({
+        name: 'my-pm',
+        installsWorkspace: () => installsWorkspace,
+        install: async () => {
+          installs += 1;
+        },
+      });
+      installsWorkspace = true;
+    });
+    after(() => {
+      installsWorkspace = false;
+    });
+
+    it('should install with it in place of the package manager', async () => {
+      await install.install(undefined, { import: false, compile: false });
+      expect(installs).to.equal(1);
+    });
+
+    it('should refuse to add packages, which it takes from the packages themselves', async () => {
+      let error: Error | undefined;
+      try {
+        await install.install(['my-package']);
+      } catch (err: any) {
+        error = err;
+      }
+      expect(error?.message).to.have.string('unable to add my-package: my-pm installs this workspace');
+      expect(installs).to.equal(1);
+    });
+  });
 });

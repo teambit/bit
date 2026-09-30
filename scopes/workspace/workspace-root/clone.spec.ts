@@ -239,9 +239,10 @@ describe('formatCloneResult', () => {
     expect(output).to.not.have.string('not on their remote');
   });
 
-  it('should leave the install of a pnpm workspace to pnpm, as the next step', () => {
-    const output = formatCloneResult({ ...resultWith([]), installWithPnpm: true }, 'my-root');
-    expect(output).to.have.string('cd my-root && pnpm install');
+  it('should name the workspace directory as the next step, the install being done', () => {
+    const output = formatCloneResult(resultWith([]), 'my-root');
+    expect(output).to.have.string('cd my-root');
+    expect(output).to.not.have.string('pnpm install');
   });
 });
 

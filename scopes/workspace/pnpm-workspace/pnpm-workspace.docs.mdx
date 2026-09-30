@@ -25,7 +25,10 @@ Run it again whenever projects are added, moved or deleted:
 - the projects refer to their siblings by `catalog:`, and the catalog binds them to `workspace:*`,
   so a component imported into another workspace resolves them there too.
 
-Bit does not install a synced workspace. Run `pnpm install` after the sync and after an import.
+The sync does not install. `bit install`, and every command that installs - `bit import`, `bit checkout`,
+`bit clone` and the like - runs `pnpm install`, then compiles: pnpm installs the workspace from the packages'
+own `package.json` files, the same way it does without Bit. So a dependency is added to the `package.json` of
+the package that uses it; `bit install <package>` refuses to add one.
 
 ## The environment
 

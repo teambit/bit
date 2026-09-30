@@ -75,6 +75,7 @@ import { UIAspect } from '@teambit/ui';
 import { EXTERNAL_PM_POSTINSTALL_SCRIPT } from '@teambit/host-initializer';
 import {
   DependencyTypeNotSupportedInPolicy,
+  PackagesAddedToExternalInstall,
   RestoreNotSupportedByPackageManager,
   UnpublishedComponentDependency,
 } from './exceptions';
@@ -129,9 +130,22 @@ type PreLink = (linkOpts?: WorkspaceLinkOptions) => Promise<void>;
 type PreInstall = (installOpts?: WorkspaceInstallOptions) => Promise<void>;
 type PostInstall = () => Promise<void>;
 
+/**
+ * installs a workspace in place of bit's package manager - e.g. a pnpm workspace, which the user's
+ * pnpm installs from the package.json of each package. bit then only compiles the components.
+ */
+export type ExternalInstaller = {
+  /** shown to the user, e.g. "pnpm" */
+  name: string;
+  /** whether it installs this workspace */
+  installsWorkspace(): boolean;
+  install(): Promise<void>;
+};
+
 type PreLinkSlot = SlotRegistry<PreLink>;
 type PreInstallSlot = SlotRegistry<PreInstall>;
 type PostInstallSlot = SlotRegistry<PostInstall>;
+type ExternalInstallerSlot = SlotRegistry<ExternalInstaller>;
 
 type GetComponentsAndManifestsOptions = Omit<
   GetComponentManifestsOptions,
@@ -172,6 +186,8 @@ export class InstallMain {
 
     private postInstallSlot: PostInstallSlot,
 
+    private externalInstallerSlot: ExternalInstallerSlot,
+
     private ipcEvents: IpcEventsMain,
 
     private harmony: Harmony
@@ -183,10 +199,16 @@ export class InstallMain {
    * @memberof Workspace
    */
   async install(packages?: string[], options?: WorkspaceInstallOptions): Promise<ComponentMap<string>> {
+    // the external installer takes the dependencies from the packages' own package.json files, which bit
+    // leaves to the user, the root one included
+    const externalInstaller = this.findExternalInstaller();
+    if (externalInstaller && packages?.length) {
+      throw new PackagesAddedToExternalInstall(packages, externalInstaller.name);
+    }
     // Check if external package manager mode is enabled
     const workspaceConfig = this.workspace.getWorkspaceConfig();
     const depResolverExtConfig = workspaceConfig.extensions.findExtension('teambit.dependencies/dependency-resolver');
-    if (depResolverExtConfig?.config.externalPackageManager) {
+    if (!externalInstaller && depResolverExtConfig?.config.externalPackageManager) {
       if (options?.showExternalPackageManagerPrompt) {
         // For explicit "bit install" commands, show the prompt
         await this.handleExternalPackageManagerPrompt();
@@ -274,6 +296,14 @@ export class InstallMain {
 
   registerPostInstall(fn: PostInstall) {
     this.postInstallSlot.register(fn);
+  }
+
+  registerExternalInstaller(installer: ExternalInstaller) {
+    this.externalInstallerSlot.register(installer);
+  }
+
+  private findExternalInstaller(): ExternalInstaller | undefined {
+    return this.externalInstallerSlot.values().find((installer) => installer.installsWorkspace());
   }
 
   async onComponentCreate(generateResults: GenerateResult[], installOptions?: Partial<WorkspaceInstallOptions>) {
@@ -392,6 +422,8 @@ export class InstallMain {
   }
 
   private async _installModulesProfiled(options?: ModulesInstallOptions): Promise<ComponentMap<string>> {
+    const externalInstaller = this.findExternalInstaller();
+    if (externalInstaller) return this.installExternally(externalInstaller, options);
     if (options?.allowScripts) {
       this.dependencyResolver.updateAllowedScripts(options.allowScripts);
       await this.dependencyResolver.persistConfig('update allowScripts configuration');
@@ -593,6 +625,28 @@ export class InstallMain {
     // await this.workspace.consumer.componentFsCache.deleteAllDependenciesDataCache();
     /* eslint-enable no-await-in-loop */
     return current.componentDirectoryMap;
+  }
+
+  /**
+   * a workspace another package manager installs (see registerExternalInstaller) gets nothing from bit's:
+   * a second install into the same node_modules would lay it out differently, and the next run of the
+   * other one would undo it. so bit leaves the install to it and only compiles.
+   */
+  private async installExternally(
+    installer: ExternalInstaller,
+    options?: ModulesInstallOptions
+  ): Promise<ComponentMap<string>> {
+    this.logger.console(`installing dependencies in workspace using ${installer.name}`);
+    await installer.install();
+    this.workspace.inInstallAfterPmContext = true;
+    if (options?.compile ?? true) {
+      const compileStartTime = process.hrtime();
+      const compileOutputMessage = `compiling components`;
+      this.logger.setStatusLine(compileOutputMessage);
+      await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
+      this.logger.consoleSuccess(compileOutputMessage, compileStartTime);
+    }
+    return this.getComponentsDirectory([]);
   }
 
   private shouldClearCacheOnInstall(): boolean {
@@ -1611,7 +1665,12 @@ export class InstallMain {
     }
   }
 
-  static slots = [Slot.withType<PreLinkSlot>(), Slot.withType<PreInstallSlot>(), Slot.withType<PostInstallSlot>()];
+  static slots = [
+    Slot.withType<PreLinkSlot>(),
+    Slot.withType<PreInstallSlot>(),
+    Slot.withType<PostInstallSlot>(),
+    Slot.withType<ExternalInstallerSlot>(),
+  ];
   static dependencies = [
     DependencyResolverAspect,
     WorkspaceAspect,
@@ -1667,7 +1726,12 @@ export class InstallMain {
       UiMain,
     ],
     _,
-    [preLinkSlot, preInstallSlot, postInstallSlot]: [PreLinkSlot, PreInstallSlot, PostInstallSlot],
+    [preLinkSlot, preInstallSlot, postInstallSlot, externalInstallerSlot]: [
+      PreLinkSlot,
+      PreInstallSlot,
+      PostInstallSlot,
+      ExternalInstallerSlot,
+    ],
     harmony: Harmony
   ) {
     const logger = loggerExt.createLogger(InstallAspect.id);
@@ -1685,6 +1749,7 @@ export class InstallMain {
       preLinkSlot,
       preInstallSlot,
       postInstallSlot,
+      externalInstallerSlot,
       ipcEvents,
       harmony
     );
