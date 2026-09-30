@@ -140,6 +140,8 @@ export type ExternalInstaller = {
   /** whether it installs this workspace */
   installsWorkspace(): boolean;
   install(): Promise<void>;
+  /** how to add the given packages instead of "bit install <packages>", e.g. the command that does */
+  howToAddPackages?(packages: string[]): string;
 };
 
 type PreLinkSlot = SlotRegistry<PreLink>;
@@ -203,7 +205,7 @@ export class InstallMain {
     // leaves to the user, the root one included
     const externalInstaller = this.findExternalInstaller();
     if (externalInstaller && packages?.length) {
-      throw new PackagesAddedToExternalInstall(packages, externalInstaller.name);
+      throw new PackagesAddedToExternalInstall(packages, externalInstaller);
     }
     // Check if external package manager mode is enabled
     const workspaceConfig = this.workspace.getWorkspaceConfig();

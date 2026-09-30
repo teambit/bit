@@ -66,6 +66,8 @@ describe('InstallMain', function () {
         error = err;
       }
       expect(error?.message).to.have.string('unable to add my-package: my-pm installs this workspace');
+      // an installer with no hint of its own
+      expect(error?.message).to.have.string('add it with my-pm');
       expect(installs).to.equal(1);
     });
   });

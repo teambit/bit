@@ -1,9 +1,10 @@
 import { BitError } from '@teambit/bit-error';
+import type { ExternalInstaller } from '../install.main.runtime';
 
 export class PackagesAddedToExternalInstall extends BitError {
-  constructor(packages: string[], installerName: string) {
-    super(
-      `unable to add ${packages.join(', ')}: ${installerName} installs this workspace from the package.json of each package. add the dependency to the package.json of the package that uses it, then run "bit install"`
-    );
+  constructor(packages: string[], installer: ExternalInstaller) {
+    const pronoun = packages.length > 1 ? 'them' : 'it';
+    const howToAdd = installer.howToAddPackages?.(packages) || `add ${pronoun} with ${installer.name}`;
+    super(`unable to add ${packages.join(', ')}: ${installer.name} installs this workspace. ${howToAdd}`);
   }
 }

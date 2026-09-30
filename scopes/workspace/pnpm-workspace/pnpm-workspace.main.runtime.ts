@@ -147,6 +147,11 @@ export class PnpmWorkspaceMain {
         name: 'pnpm',
         installsWorkspace: () => isPnpmWorkspace(workspace),
         install: () => pnpmWorkspace.installWithPnpm(workspace.path),
+        // pnpm takes the dependencies from the package.json of each package, so a package is added to the one using it
+        howToAddPackages: (packages) => {
+          const pronoun = packages.length > 1 ? 'them' : 'it';
+          return `add ${pronoun} to the package that uses ${pronoun} with pnpm, e.g. "pnpm --filter <package> add ${packages.join(' ')}"`;
+        },
       });
     }
     const pnpmSyncCmd = new PnpmSyncCmd(workspace, tracker);
