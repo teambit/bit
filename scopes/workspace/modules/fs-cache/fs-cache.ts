@@ -38,19 +38,12 @@ export class FsCache {
 
   async deleteAllDependenciesDataCache() {
     const cacheDir = this.getCachePath(DEPS);
-    try {
-      await cacache.rm.all(cacheDir);
-    } catch (err: any) {
-      if (err.code === 'ENOTEMPTY') {
-        // it happens when one process is deleting the cache and another one is writing to it.
-        // it rarely happens. if it happens, wait for a second and try again.
-        logger.error(`failed deleting the cache directory ${cacheDir}. retrying...`);
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        await cacache.rm.all(cacheDir);
-      } else {
-        throw err;
-      }
-    }
+    // the deps cache dir holds nothing else, so removing it entirely equals cacache.rm.all.
+    // components keep reading/writing entries while it's deleted (loaded in parallel, or by another
+    // process), which fails the rmdir: ENOTEMPTY on posix, EPERM/EBUSY on Windows (also when an
+    // antivirus/indexer holds a handle). fs.rm retries all of these with a linear backoff.
+    cacache.clearMemoized();
+    await fs.promises.rm(cacheDir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
   }
 
   async deleteDependenciesDataCache(idStr: string) {

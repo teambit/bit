@@ -8,10 +8,14 @@ import { createLinkOrSymlink } from './create-link-or-symlink';
  * Stubs fs.removeSync to skip removal of a specific path, simulating a concurrent process
  * that re-creates the link between removeSync and linkSync/symlinkSync.
  */
-function stubRemoveSyncFor(targetPath: string): () => void {
+function stubRemoveSyncFor(targetPath: string, timesToSkip = Infinity): () => void {
   const originalRemoveSync = fs.removeSync;
+  let skipped = 0;
   fs.removeSync = (p: string) => {
-    if (p === targetPath) return;
+    if (p === targetPath && skipped < timesToSkip) {
+      skipped++;
+      return;
+    }
     originalRemoveSync(p);
   };
   return () => {
@@ -91,6 +95,25 @@ describe('createLinkOrSymlink EEXIST handling', () => {
       } finally {
         restore();
       }
+    });
+  });
+
+  describe('when a different file occupies the destination only temporarily', () => {
+    it('should retry and link the source', () => {
+      const srcFile = path.join(tempDir, 'source-file.txt');
+      const otherFile = path.join(tempDir, 'other-file.txt');
+      const destFile = path.join(tempDir, 'dest-file.txt');
+      fs.writeFileSync(srcFile, 'hello');
+      fs.writeFileSync(otherFile, 'world');
+      fs.linkSync(otherFile, destFile);
+
+      const restore = stubRemoveSyncFor(destFile, 1);
+      try {
+        createLinkOrSymlink(srcFile, destFile);
+      } finally {
+        restore();
+      }
+      expect(fs.readFileSync(destFile, 'utf8')).to.equal('hello');
     });
   });
 });
