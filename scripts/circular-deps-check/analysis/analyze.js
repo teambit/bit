@@ -251,7 +251,13 @@ for (const c of Object.values(comps)) {
         return add(spec, n, 'reexport', names, valueNames);
       }
       if (ts.isCallExpression(n) && n.arguments.length === 1 && ts.isStringLiteral(n.arguments[0])) {
-        const isReq = ts.isIdentifier(n.expression) && n.expression.text === 'require';
+        const isReq =
+          (ts.isIdentifier(n.expression) && n.expression.text === 'require') ||
+          // require.resolve('@teambit/x') references the package without loading it; bit counts it too
+          (ts.isPropertyAccessExpression(n.expression) &&
+            ts.isIdentifier(n.expression.expression) &&
+            n.expression.expression.text === 'require' &&
+            n.expression.name.text === 'resolve');
         const isDyn = n.expression.kind === ts.SyntaxKind.ImportKeyword;
         if (isReq || isDyn) add(n.arguments[0].text, n, isDyn ? 'dynamic-import' : 'require', [], []);
       }
