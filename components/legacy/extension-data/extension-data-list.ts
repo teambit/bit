@@ -121,12 +121,12 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
 
   toConfigArray(): ConfigOnlyEntry[] {
     const arr = this.map((entry) => {
-      // Remove extensions without config
-      const clonedEntry = entry.clone();
-      if (clonedEntry.rawConfig && !isEmpty(clonedEntry.rawConfig)) {
-        removeInternalConfigFieldsWithMutation(clonedEntry.rawConfig);
-        if (isEmpty(clonedEntry.rawConfig)) return undefined;
-        return { id: clonedEntry.stringId, config: clonedEntry.config };
+      // Remove extensions without config. only the config is cloned, the data can be big and is not needed here.
+      const rawConfig = cloneDeep(entry.rawConfig);
+      if (rawConfig && !isEmpty(rawConfig)) {
+        removeInternalConfigFieldsWithMutation(rawConfig);
+        if (isEmpty(rawConfig)) return undefined;
+        return { id: entry.stringId, config: rawConfig === REMOVE_EXTENSION_SPECIAL_SIGN ? {} : rawConfig };
       }
       return undefined;
     });

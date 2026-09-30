@@ -1188,7 +1188,8 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
       mainFile: version.mainFile,
       dependencies: this.addDepsInfoFromDepsResolver(version.dependencies, extensions),
       devDependencies: this.addDepsInfoFromDepsResolver(version.devDependencies, extensions),
-      flattenedDependencies: version.flattenedDependencies.clone(),
+      // a new list, but the ids themselves are immutable, no need to clone them
+      flattenedDependencies: ComponentIdList.fromArray(version.flattenedDependencies),
       packageDependencies: clone(version.packageDependencies),
       devPackageDependencies: clone(version.devPackageDependencies),
       peerPackageDependencies: clone(version.peerPackageDependencies),

@@ -236,7 +236,27 @@ export default class Version extends BitObject {
   }
 
   id() {
-    const obj = this.toObject();
+    // only what the hash needs. `toObject()` serializes the entire version, including a deep clone of all extensions.
+    const obj = {
+      mainFile: this.mainFile,
+      files: this.files?.map((file) => ({
+        file: file.file.toString(),
+        relativePath: file.relativePath,
+        name: file.name,
+        test: file.test,
+      })),
+      log: {
+        message: this.log.message,
+        date: this.log.date,
+        username: this.log.username,
+        email: this.log.email,
+      },
+      packageDependencies: this.packageDependencies,
+      devPackageDependencies: this.devPackageDependencies,
+      peerPackageDependencies: this.peerPackageDependencies,
+      bindingPrefix: this.bindingPrefix,
+      overrides: this.overrides,
+    };
 
     const getDependencies = (deps: Dependencies) => {
       const clonedDependencies = deps.cloneAsString();
