@@ -7,9 +7,11 @@ REPO="$(cd "$HERE/../../.." && pwd)"
 BIT="${1:-bit}"
 export OUT_DIR="${OUT_DIR:-$HERE/out}"
 mkdir -p "$OUT_DIR"
+OUT_DIR="$(cd "$OUT_DIR" && pwd)"
 cd "$REPO"
 echo "> bit deps circular (ground truth)"
-"$BIT" deps circular --json > "$OUT_DIR/bit-circular.json" 2>/dev/null
+"$BIT" deps circular --json > "$OUT_DIR/bit-circular.json" ||
+  { echo "bit deps circular failed (BIT=$BIT)" >&2; exit 1; }
 echo "> core aspects"
 node -e '
 const fs=require("fs"); const t=fs.readFileSync("scopes/harmony/bit/manifests.ts","utf8");
