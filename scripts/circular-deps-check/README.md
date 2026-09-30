@@ -28,15 +28,15 @@ Set `BIT_BIN` to use a different bit binary, or pass `--graph <file>` to read sa
 
 ## Analysis tooling
 
-`analysis/run.sh [bit-binary]` parses every source file and classifies each cross-component import: type-only or runtime, main, UI, test or docs, and whether it follows the Harmony DI direction (`static dependencies`). It writes its results to `analysis/out/`, including a minimal set of import edges whose removal makes the graph acyclic (`cuts.txt`), grouped into phases. `analysis/path.js a/b:c/d` prints the shortest dependency path in each direction between two components.
+`analysis/run.sh [bit-binary]` parses every source file and classifies each cross-component import: type-only or runtime, main, UI, test or docs, and whether it follows the Harmony DI direction (`static dependencies`). It writes its results to `analysis/out/`, including a minimal set of import edges whose removal makes the graph acyclic (`cuts.txt`), grouped into phases. `analysis/path.js a/b:c/d` prints the shortest dependency path in each direction between two components (`APPLY_CUTS=1` removes the cut list first).
 
 ## Findings (September 2026)
 
 80 components are in 4 cycle groups: 60 aspects, 16 legacy components, `cli ↔ logger` and `lanes ↔ merge-lanes`.
 
-- Type-only imports aren't the main cause. Ignoring all of them shrinks the aspect group from 60 to 50. Type and runtime imports each close the loop for the other.
+- Type-only imports aren't the main cause. Ignoring all of them shrinks the aspect group from 60 to 51. Type and runtime imports each close the loop for the other.
 - DI is acyclic for each runtime (main, UI, preview), but a component ships all of its runtimes in one package, and the union has cycles. For example, `component-compare`'s main runtime depends on `tester` while `tester`'s UI runtime registers into `component-compare`.
-- Removing 74 import edges makes the graph acyclic. The main patterns:
+- Removing 73 import edges makes the graph acyclic. The main patterns:
   - `envs/environment.ts` imports types from 13 aspects that depend on `envs` (`Compiler`, `Tester`, `Bundler`, …).
   - `UIRuntime`, `PreviewRuntime` and `MainRuntime` live in the heavy `ui`, `preview` and `cli` aspects. The whole `cli ↔ logger` cycle is `logger` importing `MainRuntime`.
   - `component` imports types and UI values from aspects above it.

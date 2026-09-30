@@ -21,7 +21,7 @@ fs.writeFileSync(process.env.OUT_DIR+"/core-pkgs.json", JSON.stringify([...new S
 node "$HERE/analyze.js" "$REPO" "$OUT_DIR/edges.json"
 node "$HERE/di.js" "$REPO"
 node "$HERE/views.js"
-node "$HERE/iter.js" full > "$OUT_DIR/cuts.txt"
+node "$HERE/iter.js" > "$OUT_DIR/cuts.txt"
 head -1 "$OUT_DIR/cuts.txt"
 node "$HERE/phases.js" | sed -n '1,5p'
 echo "full cut list: $OUT_DIR/cuts.txt"

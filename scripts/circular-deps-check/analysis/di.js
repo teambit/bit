@@ -1,10 +1,10 @@
 // Extract Harmony DI graph: for each *.main.runtime.ts, `static dependencies = [...]`
 const fs = require('fs');
 const path = require('path');
-const T = (process.env.OUT_DIR || require('path').join(__dirname, 'out')) + '/';
+const { outFile } = require('./scc.js');
 const repo = process.argv[2];
 const ts = require(path.join(repo, 'node_modules/typescript'));
-const { comps } = require(T + 'edges.json');
+const { comps } = require(outFile('edges.json'));
 const pkgToId = {};
 Object.values(comps).forEach((c) => c.pkg && (pkgToId[c.pkg] = c.id));
 const di = {}; // id -> {main:[], ui:[], preview:[]}
@@ -60,7 +60,7 @@ for (const c of Object.values(comps)) {
     visit(sf);
   }
 }
-fs.writeFileSync(T + 'di.json', JSON.stringify(di, null, 1));
+fs.writeFileSync(outFile('di.json'), JSON.stringify(di, null, 1));
 const unresolved = Object.entries(di).flatMap(([k, v]) =>
   Object.values(v)
     .flat()

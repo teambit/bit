@@ -7,8 +7,9 @@ const out = process.argv[3];
 const ts = require(path.join(repo, 'node_modules/typescript'));
 
 // --- component map
-const bitmapRaw = fs.readFileSync(path.join(repo, '.bitmap'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
-const bitmap = JSON.parse(bitmapRaw);
+const bitmap = require(path.join(repo, 'node_modules/comment-json')).parse(
+  fs.readFileSync(path.join(repo, '.bitmap'), 'utf8')
+);
 const comps = {}; // id -> {id, rootDir, pkg}
 const pkgToId = {};
 for (const [key, val] of Object.entries(bitmap)) {
@@ -40,7 +41,7 @@ function walk(dir, acc = []) {
     if (e.name === 'node_modules' || e.name === 'dist' || e.name.startsWith('.')) continue;
     const p = path.join(dir, e.name);
     if (e.isDirectory()) walk(p, acc);
-    else if (/\.(tsx?|jsx?|mdx)$/.test(e.name) && !e.name.endsWith('.d.ts')) acc.push(p);
+    else if (/\.(tsx?|jsx?)$/.test(e.name) && !e.name.endsWith('.d.ts')) acc.push(p);
   }
   return acc;
 }
@@ -48,13 +49,7 @@ function walk(dir, acc = []) {
 function fileKind(rel) {
   if (/\.(spec|test|e2e)\.[tj]sx?$/.test(rel) || /(^|\/)(__tests__|__fixtures__|fixtures|mocks?|testing)\//.test(rel))
     return 'test';
-  if (
-    /\.composition\.tsx?$/.test(rel) ||
-    /\.compositions\.tsx?$/.test(rel) ||
-    /\.mdx$/.test(rel) ||
-    /\.docs\.tsx?$/.test(rel)
-  )
-    return 'docs';
+  if (/\.composition\.tsx?$/.test(rel) || /\.compositions\.tsx?$/.test(rel) || /\.docs\.tsx?$/.test(rel)) return 'docs';
   // backend files that happen to use JSX (commands, env services, dev-server plugins) run in the main runtime
   if (/([.-](cmd|service|task|start-plugin)|\.main\.runtime)\.tsx$/.test(rel)) return 'main';
   if (
@@ -151,24 +146,6 @@ for (const c of Object.values(comps)) {
     const rel = path.relative(root, f);
     const fk = fileKind(rel);
     const text = fs.readFileSync(f, 'utf8');
-    if (f.endsWith('.mdx')) {
-      const re = /^\s*import\s+[\s\S]*?from\s+['"]([^'"]+)['"]/gm;
-      let m;
-      while ((m = re.exec(text))) {
-        const pkg = specToPkg(m[1]);
-        if (pkg && pkgToId[pkg] && pkgToId[pkg] !== c.id)
-          edges.push({
-            from: c.id,
-            to: pkgToId[pkg],
-            file: `${c.rootDir}/${rel}`,
-            line: 0,
-            fileKind: fk,
-            kind: 'value',
-            names: [],
-          });
-      }
-      continue;
-    }
     const sf = ts.createSourceFile(
       f,
       text,

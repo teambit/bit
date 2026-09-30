@@ -1,10 +1,7 @@
-const T = (process.env.OUT_DIR || require('path').join(__dirname, 'out')) + '/';
-const { comps, edges: rawEdges } = require(T + 'edges.json');
-const { tarjan, TYPE } = require('./scc.js');
-const { core } = require(T + 'views.json');
-const cuts = require(T + 'iter-full.json');
-const coreSet = new Set(core);
-const edges = rawEdges.filter((e) => !e.file.endsWith('.mdx') && (coreSet.has(e.from) || !coreSet.has(e.to)));
+const { outFile, bitViewEdges, cycleGroups } = require('./scc.js');
+const { comps, edges: rawEdges } = require(outFile('edges.json'));
+const cuts = require(outFile('iter.json'));
+const edges = bitViewEdges(rawEdges, new Set(require(outFile('views.json')).core));
 const RT = ['UIRuntime', 'PreviewRuntime', 'MainRuntime', 'SSR'];
 const LEG = /legacy\/|scope\/(network|remotes|remote-actions)|component\/(sources|snap-distance)/;
 const phaseOf = (c) => {
@@ -27,17 +24,14 @@ const phaseOf = (c) => {
   return '3-structural';
 };
 const groups = {};
-cuts.forEach((c) => (groups[phaseOf(c)] = groups[phaseOf(c)] || []).push(c));
+cuts.forEach((c) => (groups[phaseOf(c)] ||= []).push(c));
 const order = Object.keys(groups).sort();
 const removed = new Set();
 const sizes = () => {
-  const a = new Map();
-  edges.forEach((e) => {
-    if (removed.has(e.from + '|' + e.to)) return;
-    if (!a.has(e.from)) a.set(e.from, new Set());
-    a.get(e.from).add(e.to);
-  });
-  const s = tarjan(Object.keys(comps), a);
+  const s = cycleGroups(
+    Object.keys(comps),
+    edges.filter((e) => !removed.has(e.from + '|' + e.to))
+  );
   return s.length ? `${s.length} SCCs [${s.map((x) => x.length).join(',')}], ${s.flat().length} comps` : 'ACYCLIC';
 };
 console.log('baseline:', sizes());
@@ -51,7 +45,6 @@ for (const p of order) {
   groups[p].forEach((c) => removed.add(c.from + '|' + c.to));
   console.log(`  ${p} alone:`, sizes());
 }
-require('fs').writeFileSync(T + 'phases.json', JSON.stringify(groups, null, 1));
 for (const p of order) {
   console.log('\n#', p);
   groups[p].forEach((c) =>

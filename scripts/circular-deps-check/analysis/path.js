@@ -1,16 +1,13 @@
-const T = (process.env.OUT_DIR || require('path').join(__dirname, 'out')) + '/';
-const { edges: rawEdges } = require(T + 'edges.json');
-const { TYPE } = require('./scc.js');
-const { core } = require(T + 'views.json');
-const cut = { against: require(T + 'iter-full.json') };
-const coreSet = new Set(core);
+// Usage: node path.js a/b:c/d ...   (APPLY_CUTS=1 removes the cut list first; EXTRA=from|to,... removes more edges)
+const { outFile, TYPE, bitViewEdges } = require('./scc.js');
+const { edges: rawEdges } = require(outFile('edges.json'));
 const removed = new Set(
-  (process.env.APPLY_CUTS ? cut.against : [])
+  (process.env.APPLY_CUTS ? require(outFile('iter.json')) : [])
     .map((p) => p.from + '|' + p.to)
     .concat((process.env.EXTRA || '').split(',').filter(Boolean))
 );
-const edges = rawEdges.filter(
-  (e) => !e.file.endsWith('.mdx') && (coreSet.has(e.from) || !coreSet.has(e.to)) && !removed.has(e.from + '|' + e.to)
+const edges = bitViewEdges(rawEdges, new Set(require(outFile('views.json')).core)).filter(
+  (e) => !removed.has(e.from + '|' + e.to)
 );
 const adj = new Map(),
   info = new Map();

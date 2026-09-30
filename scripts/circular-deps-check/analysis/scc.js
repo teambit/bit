@@ -1,38 +1,21 @@
-// Tarjan SCC + edge-kind constants shared by the analysis scripts.
-function tarjan(nodes, adj) {
-  let index = 0;
-  const idx = new Map(),
-    low = new Map(),
-    on = new Set(),
-    stack = [],
-    sccs = [];
-  function strong(v) {
-    idx.set(v, index);
-    low.set(v, index);
-    index++;
-    stack.push(v);
-    on.add(v);
-    for (const w of adj.get(v) || []) {
-      if (!idx.has(w)) {
-        strong(w);
-        low.set(v, Math.min(low.get(v), low.get(w)));
-      } else if (on.has(w)) low.set(v, Math.min(low.get(v), idx.get(w)));
-    }
-    if (low.get(v) === idx.get(v)) {
-      const s = [];
-      let w;
-      do {
-        w = stack.pop();
-        on.delete(w);
-        s.push(w);
-      } while (w !== v);
-      if (s.length > 1) sccs.push(s);
-    }
-  }
-  for (const n of nodes) if (!idx.has(n)) strong(n);
-  return sccs.sort((a, b) => b.length - a.length);
-}
+// Helpers shared by the analysis scripts.
+const path = require('path');
+const { findCycleGroups } = require('../check-cycles.js');
+
+const OUT_DIR = process.env.OUT_DIR || path.join(__dirname, 'out');
+const outFile = (name) => path.join(OUT_DIR, name);
 
 const TYPE = new Set(['type-explicit', 'type-elided']);
 const LAZY = new Set(['dynamic-import', 'require']);
-module.exports = { tarjan, TYPE, LAZY };
+
+/** the edges bit sees: non-core components' imports of core aspects are dropped (processCoreAspects) */
+const bitViewEdges = (edges, core) => edges.filter((e) => core.has(e.from) || !core.has(e.to));
+
+/** cycle groups (size > 1), largest first */
+const cycleGroups = (nodes, edges) =>
+  findCycleGroups(
+    nodes,
+    edges.map((e) => [e.from, e.to])
+  );
+
+module.exports = { OUT_DIR, outFile, TYPE, LAZY, bitViewEdges, cycleGroups };
