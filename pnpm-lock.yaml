@@ -539,7 +539,7 @@ importers:
         version: 0.0.509(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/compositions.ui.composition-live-controls':
         specifier: ~0.0.6
-        version: 0.0.6(react@19.2.7)
+        version: 0.0.7(react@19.2.7)
       '@teambit/compositions.ui.compositions-menu-bar':
         specifier: ~0.0.177
         version: 0.0.177(react-dom@19.2.7)(react@19.2.7)
@@ -17203,7 +17203,7 @@ importers:
         version: 1.2.4
       '@teambit/compositions.ui.composition-live-controls':
         specifier: ~0.0.6
-        version: 0.0.6(react@19.2.7)
+        version: 0.0.7(react@19.2.7)
       '@teambit/compositions.ui.compositions-menu-bar':
         specifier: ~0.0.177
         version: 0.0.177(react-dom@19.2.7)(react@19.2.7)
@@ -31883,11 +31883,6 @@ packages:
       '@teambit/base-react.navigation.link': 2.0.33
       react: 19.2.7
 
-  '@teambit/compositions.ui.composition-live-controls@0.0.6':
-    resolution: {integrity: sha512-95wlD1LEgJvX61VDOBzK35RaQekoU5gVxfsEcuRTYyYsfAY2vbJlf9nMy2URoLuYmuAYm5jWTSsuItq0wGMkew==}
-    peerDependencies:
-      react: 19.1.0
-
   '@teambit/compositions.ui.composition-live-controls@0.0.7':
     resolution: {integrity: sha512-qDJ0Qug55FFweVG+s4iO+wEZay1FuXatCxKcKyGCr29HKFFR0OhZpRT+e1yry1fei8iYvEtaOM7u+Co34Kbu9w==}
     peerDependencies:
@@ -38107,6 +38102,7 @@ packages:
   clone-buffer@1.0.0:
     resolution: {integrity: sha512-KLLTJWrvwIP+OPfMn0x2PheDEP20RPUcGXj/ERegTgdmPEZylALQldygiqrPPu8P45uNuPs7ckmReLY6v/iA5g==}
     engines: {node: '>= 0.10'}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   clone-deep@4.0.1:
     resolution: {integrity: sha512-neHB9xuzh/wk0dIHweyAXv2aPGZIVk3pLMe+/RNzINf17fe0OG96QroktYAUm7SM1PBnzTabaLboqqxDyMU+SQ==}
@@ -62171,10 +62167,6 @@ snapshots:
       - '@apollo/client'
       - '@testing-library/dom'
       - graphql
-
-  '@teambit/compositions.ui.composition-live-controls@0.0.6(react@19.2.7)':
-    dependencies:
-      react: 19.2.7
 
   '@teambit/compositions.ui.composition-live-controls@0.0.7(react@18.3.1)':
     dependencies:
