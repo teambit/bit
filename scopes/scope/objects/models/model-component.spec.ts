@@ -2,6 +2,7 @@ import { expect } from 'chai';
 
 import ModelComponent from './model-component';
 import { clone } from 'lodash';
+import { Ref } from '../objects';
 
 const modelComponentFixture = {
   name: 'bar/foo',
@@ -50,6 +51,26 @@ describe('ModelComponent', () => {
       it('should throw an error', () => {
         expect(validateFunc).to.throw('the following hash(es) are duplicated');
       });
+    });
+  });
+  describe('versions lookup', () => {
+    const tagHash = '125a37bdb17220bdc1406a9a28a3dde4eec91225';
+    const orphanedHash = '225a37bdb17220bdc1406a9a28a3dde4eec91225';
+    let modelComponent: ModelComponent;
+    before(() => {
+      modelComponent = getModelComponent(getModelComponentFixture());
+      modelComponent.setOrphanedVersion('0.0.3', Ref.from(orphanedHash));
+    });
+    it('should find the ref of a tag and of an orphaned tag', () => {
+      expect(modelComponent.getRef('0.0.1')?.toString()).to.equal(tagHash);
+      expect(modelComponent.getRef('0.0.3')?.toString()).to.equal(orphanedHash);
+    });
+    it('should find the tag of a ref and of an orphaned ref', () => {
+      expect(modelComponent.getTagOfRefIfExists(Ref.from(tagHash))).to.equal('0.0.1');
+      expect(modelComponent.getTagOfRefIfExists(Ref.from(orphanedHash))).to.equal('0.0.3');
+      expect(
+        modelComponent.switchHashesWithTagsIfExist([Ref.from(orphanedHash), Ref.from('a'.repeat(40))])
+      ).to.deep.equal(['0.0.3', 'a'.repeat(40)]);
     });
   });
 });
