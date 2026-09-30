@@ -72,6 +72,7 @@ Original error: ${err}`);
         }
         logger.trace(`createLinkOrSymlink, EEXIST on ${destPath}, retrying (attempt ${attempt})`);
         sleepSync(EEXIST_RETRY_DELAY_MS * attempt);
+        if (isDestLinkedCorrectly(srcPath, destPath)) return; // another process linked it meanwhile
         try {
           fs.removeSync(destPath);
         } catch (removeErr: any) {
