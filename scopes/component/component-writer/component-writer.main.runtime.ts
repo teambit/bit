@@ -1,4 +1,4 @@
-import { MainRuntime } from '@teambit/cli';
+import { formatHint, MainRuntime } from '@teambit/cli';
 import type { ComponentID } from '@teambit/component-id';
 import type { CompilerMain } from '@teambit/compiler';
 import { CompilerAspect } from '@teambit/compiler';
@@ -115,10 +115,15 @@ export class ComponentWriterMain {
         opts.mergeStrategy
       );
     }
-    // pnpm installs a pnpm workspace from the packages' own manifests, when bit's install runs (see
-    // PnpmWorkspaceMain). the root package.json is the root component's, so the dependencies are not written to it
-    const installedByPnpm = isPnpmWorkspaceRoot(this.workspace.path, this.consumer.bitMap);
-    if (this.workspace.externalPackageManagerIsUsed() && !installedByPnpm) {
+    if (isPnpmWorkspaceRoot(this.workspace.path, this.consumer.bitMap)) {
+      // pnpm installs a pnpm workspace from the packages' own manifests. bit neither writes the dependencies
+      // into the root package.json, which the root component owns, nor installs and compiles, which would run
+      // the build scripts of the source just written. a caller that skips the installation, e.g. a clone,
+      // tells the user about it on its own
+      if (!opts.skipDependencyInstallation) {
+        this.logger.console(formatHint('run "pnpm install" to install the dependencies of the written components'));
+      }
+    } else if (this.workspace.externalPackageManagerIsUsed()) {
       await this.installer.writeDependenciesToPackageJson();
     } else if (!opts.skipDependencyInstallation) {
       installationError = await this.installPackagesGracefully(

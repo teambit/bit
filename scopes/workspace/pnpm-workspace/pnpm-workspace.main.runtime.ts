@@ -6,8 +6,6 @@ import type { EnvsMain } from '@teambit/envs';
 import { EnvsAspect } from '@teambit/envs';
 import type { ImporterMain } from '@teambit/importer';
 import { ImporterAspect } from '@teambit/importer';
-import type { InstallMain } from '@teambit/install';
-import { InstallAspect } from '@teambit/install';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
@@ -19,8 +17,6 @@ import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
 import type { WorkspaceRootMain } from '@teambit/workspace-root';
 import { WorkspaceRootAspect } from '@teambit/workspace-root';
-import type { PnpmError } from './pnpm-utils';
-import { runPnpm } from './pnpm-utils';
 import type { PnpmScript } from './pnpm-script.task';
 import { PnpmScriptTask } from './pnpm-script.task';
 import { PnpmWorkspaceAspect } from './pnpm-workspace.aspect';
@@ -70,21 +66,6 @@ export class PnpmWorkspaceMain {
     return { handled: true, report: { pnpmVcs: plan } };
   }
 
-  /**
-   * the user's pnpm installs the workspace, as it does without bit: the packages' own package.json files
-   * and the lockfile say what to install, and pnpm lays out node_modules its own way.
-   */
-  private async installWithPnpm(workspacePath: string): Promise<void> {
-    try {
-      const output = await runPnpm(['install'], workspacePath);
-      if (output.trim()) this.logger.console(output.trim());
-    } catch (err: any) {
-      const output = (err as PnpmError).output?.trim();
-      if (output) this.logger.console(output);
-      throw err;
-    }
-  }
-
   private async warnForPnpmWithoutWorkspaceCatalogs(workspacePath: string) {
     const pnpmVersion = await findPnpmWithoutWorkspaceCatalogs(workspacePath);
     if (!pnpmVersion) return;
@@ -104,7 +85,6 @@ export class PnpmWorkspaceMain {
     WorkspaceRootAspect,
     ScopeAspect,
     LoggerAspect,
-    InstallAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -117,7 +97,6 @@ export class PnpmWorkspaceMain {
     workspaceRoot,
     scope,
     loggerMain,
-    install,
   ]: [
     CLIMain,
     Workspace | undefined,
@@ -128,7 +107,6 @@ export class PnpmWorkspaceMain {
     WorkspaceRootMain,
     ScopeMain,
     LoggerMain,
-    InstallMain,
   ]) {
     const logger = loggerMain.createLogger(PnpmWorkspaceAspect.id);
     const pnpmWorkspace = new PnpmWorkspaceMain(workspace, dependencyResolver, logger);
@@ -143,16 +121,6 @@ export class PnpmWorkspaceMain {
     if (workspace) {
       workspace.registerOnComponentLoad(createPnpmVcsCatalogBindingsOnLoad(workspace));
       importer.registerOnComponentsWritten((components) => pnpmWorkspace.onComponentsWritten(components));
-      install.registerExternalInstaller({
-        name: 'pnpm',
-        installsWorkspace: () => isPnpmWorkspace(workspace),
-        install: () => pnpmWorkspace.installWithPnpm(workspace.path),
-        // pnpm takes the dependencies from the package.json of each package, so a package is added to the one using it
-        howToAddPackages: (packages) => {
-          const pronoun = packages.length > 1 ? 'them' : 'it';
-          return `add ${pronoun} to the package that uses ${pronoun} with pnpm, e.g. "pnpm --filter <package> add ${packages.join(' ')}"`;
-        },
-      });
     }
     const pnpmSyncCmd = new PnpmSyncCmd(workspace, tracker);
     const pnpmCmd = new PnpmCmd(pnpmSyncCmd);

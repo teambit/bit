@@ -130,9 +130,7 @@ export default class ImportComponents {
     private envs: EnvsMain,
     private logger: Logger,
     private lister: ListerMain,
-    public options: ImportOptions,
-    /** runs once the components are written, before the install, see ImporterMain.registerOnComponentsWritten */
-    private onComponentsWritten?: (components: Component[]) => Promise<void>
+    public options: ImportOptions
   ) {
     this.consumer = this.workspace.consumer;
     this.scope = this.consumer.scope;
@@ -371,7 +369,6 @@ export default class ImportComponents {
 
     let componentWriterResults: ComponentWriterResults | undefined;
     if (!this.options.objectsOnly && accWritten.length) {
-      await this.onComponentsWritten?.(accWritten);
       componentWriterResults = await this.componentWriter.finalizeWrite(
         this._buildScopeWriteOpts(accWritten, { shouldUpdateWorkspaceConfig: true })
       );
@@ -1120,9 +1117,6 @@ otherwise, if tagged/snapped, "bit reset" it, then bit rename it.`);
       reasonForBitmapChange: 'import',
       writeDeps: this.options.writeDeps,
     };
-    if (!componentsToWrite.length) return {};
-    await this.componentWriter.writeComponentsFiles(manyComponentsWriterOpts);
-    await this.onComponentsWritten?.(componentsToWrite);
-    return this.componentWriter.finalizeWrite(manyComponentsWriterOpts);
+    return this.componentWriter.writeMany(manyComponentsWriterOpts);
   }
 }

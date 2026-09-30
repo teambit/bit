@@ -610,7 +610,6 @@ describe('add command on Harmony', function () {
   describe('a pnpm workspace built by the package scripts, through the pnpm-workspace env', () => {
     // app's build requires the output of math's build, so it only passes when the workspace is built
     // as a whole, in pnpm's order, with the packages linked to one another
-    let installOutput: string;
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fs.outputFile('package.json', '{ "name": "@acme/repo", "private": true }\n');
@@ -645,15 +644,10 @@ describe('add command on Harmony', function () {
       );
       // the default env is the core pnpm-workspace env, which comes with bit and needs no install
       helper.command.runCmd('bit pnpm sync');
-      // the sync moved app's "workspace:" reference to the catalog, so the lockfile follows it. bit's install
-      // runs pnpm's, which installs the workspace from the packages' own manifests
-      installOutput = helper.command.install();
+      // the sync moved app's "workspace:" reference to the catalog, so the lockfile follows it
+      helper.command.runCmd('pnpm install');
       // the packages are private, with no version, and linked by the names in their package.json
       helper.command.link();
-    });
-    it('should install the workspace with pnpm, and compile it through the build scripts', () => {
-      expect(installOutput).to.have.string('installing dependencies in workspace using pnpm');
-      expect(path.join(helper.scopes.localPath, 'packages/app/dist/index.js')).to.be.a.file();
     });
     it('should refer to the sibling by "catalog:", with the catalog binding it to the workspace', () => {
       const appManifest = helper.fs.readJsonFile('packages/app/package.json');

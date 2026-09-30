@@ -19,7 +19,7 @@ import { Remote } from '@teambit/scope.remotes';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
 import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
-import { isWorkspaceRootComponent, readRootBitmapEntries } from './workspace-root-data';
+import { isPnpmWorkspaceRoot, isWorkspaceRootComponent, readRootBitmapEntries } from './workspace-root-data';
 
 export type LoadBit = (workspacePath?: string) => Promise<Harmony>;
 
@@ -51,6 +51,11 @@ export type CloneResult = {
   laneId?: LaneId;
   /** the clone is complete without the install; the user re-runs it in the workspace */
   installationError?: Error;
+  /**
+   * the root is a pnpm workspace, which pnpm installs from the packages' own manifests. bit does not
+   * install it, and so does not compile, which would run the build scripts of the cloned source.
+   */
+  installWithPnpm?: boolean;
 };
 
 /**
@@ -79,7 +84,9 @@ class WorkspaceCloner {
     const { versionedRootId, entries } = await this.fetchRoot(rootId);
     await this.writeRoot(versionedRootId);
     const { components, missing } = await this.writeMembers(entries, versionedRootId);
-    const installationError = options.skipDependencyInstallation ? undefined : await this.installGracefully();
+    const installWithPnpm = isPnpmWorkspaceRoot(this.workspacePath, this.workspace.consumer.bitMap);
+    const skipInstall = options.skipDependencyInstallation || installWithPnpm;
+    const installationError = skipInstall ? undefined : await this.installGracefully();
     return {
       rootId: versionedRootId,
       workspacePath: this.workspacePath,
@@ -87,6 +94,7 @@ class WorkspaceCloner {
       missing,
       laneId,
       installationError,
+      installWithPnpm,
     };
   }
 
