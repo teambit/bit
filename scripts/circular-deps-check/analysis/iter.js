@@ -9,17 +9,23 @@ const mode = process.argv[2] || 'full';
 let edges = rawEdges.filter((e) => !e.file.endsWith('.mdx') && (coreSet.has(e.from) || !coreSet.has(e.to)));
 if (mode === 'runtime')
   edges = edges.filter((e) => !TYPE.has(e.kind) && e.fileKind !== 'test' && e.fileKind !== 'docs');
-// DI closure per runtime-agnostic union, excluding the 4 UI-side inversions
+// transitive DI dependencies over the union of all runtimes. that union can contain cycles, so each
+// closure is a full BFS (a memoized recursion would cache partial sets for cycle members).
 const memo = new Map();
 const clo = (id) => {
   if (memo.has(id)) return memo.get(id);
-  const s = new Set();
-  memo.set(id, s);
-  for (const d of Object.values(di[id] || {}).flat()) {
-    s.add(d);
-    clo(d).forEach((x) => s.add(x));
+  const reached = new Set();
+  const queue = [id];
+  while (queue.length) {
+    for (const dep of Object.values(di[queue.shift()] || {}).flat()) {
+      if (!reached.has(dep)) {
+        reached.add(dep);
+        queue.push(dep);
+      }
+    }
   }
-  return s;
+  memo.set(id, reached);
+  return reached;
 };
 const diDirect = (a, b) =>
   Object.entries(di[a] || {})
