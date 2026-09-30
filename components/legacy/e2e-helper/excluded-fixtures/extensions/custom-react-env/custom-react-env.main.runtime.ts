@@ -1,4 +1,4 @@
-import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { MainRuntime } from '@teambit/cli';
 import { ReactAspect, ReactMain } from '@teambit/react';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { CustomReactEnvAspect } from './custom-react-env.aspect';
