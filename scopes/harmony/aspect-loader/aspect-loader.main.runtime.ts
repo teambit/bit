@@ -7,7 +7,7 @@ import { reportLoadFailure } from '@teambit/harmony.modules.load-trace';
 import { recordLoadedEsmFile } from './record-loaded-esm-file';
 import { ComponentID } from '@teambit/component-id';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy.constants';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { ExtensionManifest, Harmony, SlotRegistry } from '@teambit/harmony';
 import { Aspect, Slot } from '@teambit/harmony';
 import { BitError } from '@teambit/bit-error';

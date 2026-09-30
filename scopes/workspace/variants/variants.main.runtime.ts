@@ -1,4 +1,4 @@
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import { ConfigAspect } from '@teambit/config';
 import type { ConfigMain } from '@teambit/config';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';

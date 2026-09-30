@@ -3,7 +3,8 @@ import flatten from 'lodash.flatten';
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { PreviewPreview, RenderingContextProvider } from '@teambit/preview';
-import { PreviewAspect, PreviewRuntime } from '@teambit/preview';
+import { PreviewRuntime } from '@teambit/harmony.modules.runtimes';
+import { PreviewAspect } from '@teambit/preview';
 import { HighlighterProvider } from '@teambit/react.ui.highlighter-provider';
 import { ReactAspect } from './react.aspect';
 

@@ -1,5 +1,6 @@
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect } from '@teambit/cli';
 import moment from 'moment';
 import type { ComponentID } from '@teambit/component-id';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';

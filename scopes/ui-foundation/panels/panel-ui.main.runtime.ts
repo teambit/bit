@@ -1,4 +1,4 @@
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 
 import { PanelUiAspect } from './panel-ui.aspect';
 

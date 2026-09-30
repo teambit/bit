@@ -1,5 +1,6 @@
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime, formatItem } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect, formatItem } from '@teambit/cli';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentFetchLimit } from '@teambit/harmony.modules.concurrency';
 import path from 'path';

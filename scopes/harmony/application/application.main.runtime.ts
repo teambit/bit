@@ -1,5 +1,6 @@
 import type { CLIMain } from '@teambit/cli';
-import { MainRuntime, CLIAspect } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect } from '@teambit/cli';
 import { compact, flatten, head } from 'lodash';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { AspectLoaderAspect } from '@teambit/aspect-loader';

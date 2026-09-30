@@ -4,7 +4,7 @@ import { isSnap } from '@teambit/component-version';
 import { BitError } from '@teambit/bit-error';
 import mapSeries from 'p-map-series';
 import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import { getRootComponentDir } from '@teambit/workspace.root-components';
 import type { Component, ComponentMap, ComponentMain, IComponent } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
