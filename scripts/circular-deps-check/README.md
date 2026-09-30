@@ -1,134 +1,46 @@
-# Circular Dependencies Checker
+# Circular dependencies check
 
-This directory contains scripts to measure and monitor circular dependencies in the Bit repository.
+`workspace.jsonc` ignores the `CircularDependencies` issue because many aspects are still in cycles. Until those are removed, this check makes sure no new ones are added.
 
-## Quick Start
+## The CI check
 
-1. **Set baseline** (run once to establish current state):
+`ci-check.sh` runs `check-cycles.js` on every PR (CircleCI job `check_circular_dependencies`). It builds the component graph with `bit graph --json`, which is the same graph `bit deps circular` uses, finds every group of components that depend on each other in a cycle, and compares the result with `cycles-baseline.json`.
 
-   ```bash
-   cd scripts/circular-deps-check
-   node check-circular-deps.js --baseline --verbose
-   ```
+| Change                                          | Result                              |
+| ----------------------------------------------- | ----------------------------------- |
+| A component joins any cycle                     | fails                               |
+| A new dependency between two members of a cycle | fails                               |
+| A component leaves every cycle                  | fails until the baseline is lowered |
+| A dependency inside a cycle is removed          | reported only                       |
 
-2. **Check for regressions** (run in CI/PR):
-   ```bash
-   node check-circular-deps.js
-   ```
-
-## Script: `check-circular-deps.js`
-
-### Usage
+When it fails, the output lists the offending components and dependencies. Usually the fix is to drop the new import or move the imported code into a component both sides can depend on. If a new edge is intentional, or you removed cycles, update the baseline and commit it with your change:
 
 ```bash
-node check-circular-deps.js [OPTIONS]
+node scripts/circular-deps-check/check-cycles.js --update
 ```
 
-### Options
+Set `BIT_BIN` to use a different bit binary, or pass `--graph <file>` to read saved `bit graph --json` output.
 
-- `--baseline` - Save current cycle count as the baseline
-- `--max-cycles=N` - Set maximum allowed cycles (overrides baseline)
-- `--verbose` - Show detailed output including sample cycles
-- `--help, -h` - Show help message
+## How the graph is built
 
-### Examples
+- Bit records every import as a dependency, including `import type`, test files and UI files.
+- For components that aren't core aspects, imports of core-aspect packages are dropped (`processCoreAspects` in `auto-detect-deps.ts`), because the bit binary provides them. Core aspects keep all of their dependencies.
 
-**Establish baseline:**
+## Analysis tooling
 
-```bash
-node check-circular-deps.js --baseline --verbose
-```
+`analysis/run.sh [bit-binary]` parses every source file and classifies each cross-component import: type-only or runtime, main, UI, test or docs, and whether it follows the Harmony DI direction (`static dependencies`). It writes its results to `analysis/out/`, including a minimal set of import edges whose removal makes the graph acyclic (`cuts.txt`), grouped into phases. `analysis/path.js a/b:c/d` prints the shortest dependency path in each direction between two components.
 
-**Check against baseline:**
+## Findings (September 2026)
 
-```bash
-node check-circular-deps.js --verbose
-```
+79 components are in 4 cycle groups: 59 aspects, 16 legacy components, `cli ↔ logger` and `lanes ↔ merge-lanes`.
 
-**Set specific limit:**
-
-```bash
-node check-circular-deps.js --max-cycles=500
-```
-
-## CI Integration
-
-The circular dependencies check is integrated into the CircleCI `build_and_test` workflow as the `check_circular_dependencies` job.
-
-**Manual CI check:**
-
-```bash
-cd scripts/circular-deps-check
-./ci-check.sh
-```
-
-**CircleCI Integration**:
-The check runs automatically on every PR and push to master as part of the build pipeline.
-
-## Files
-
-- `check-circular-deps.js` - Main checker script
-- `diff-cycles.js` - Utility to diff two cycle files and show new/removed cycles
-- `create-baseline.js` - Helper to create baseline from current state
-- `baseline-cycles.json` - Summary baseline (cycles count, components count, timestamp)
-- `baseline-cycles-full.json` - Full baseline with complete graph data for diffs
-- `ANALYSIS.md` - Detailed analysis and strategy document
-- `README.md` - This file
-
-## How It Works
-
-1. Runs `bit graph --json --cycles` to get circular dependency data
-2. Counts total circular dependency edges and unique components involved
-3. Compares against stored baseline or specified limit
-4. **NEW**: If cycles increased, automatically shows which specific circular dependencies were added
-5. Returns exit code 0 (success) or 1 (failure) for CI
-
-## New Circular Dependencies Detection
-
-When the check fails (cycles increased), the script will automatically:
-
-1. Compare current graph with `baseline-cycles-full.json`
-2. Show exactly which new circular dependencies were introduced
-3. Ignore version number changes to focus on structural changes
-
-Example output when new cycles are detected:
-
-```
-❌ FAIL: 2070 cycles > 2066 allowed
-
-=== IDENTIFYING NEW CIRCULAR DEPENDENCIES ===
-=== NEW Circular Dependencies (4) ===
-1. teambit.workspace/install->teambit.new-component/helper
-2. teambit.new-component/helper->teambit.workspace/workspace
-3. teambit.scope/export->teambit.dependencies/analyzer
-4. teambit.dependencies/analyzer->teambit.scope/objects
-```
-
-## Baseline File Format
-
-The `baseline-cycles.json` file stores:
-
-```json
-{
-  "totalCycles": 2056,
-  "uniqueComponents": 324,
-  "timestamp": "2025-07-25T19:27:53.631Z"
-}
-```
-
-## Monitoring Progress
-
-Track improvements over time:
-
-```bash
-# Check current state
-node check-circular-deps.js --verbose
-
-# After making improvements, update baseline
-node check-circular-deps.js --baseline --verbose
-```
-
-## Exit Codes
-
-- `0` - Success (cycles within limit)
-- `1` - Failure (cycles exceed limit or error occurred)
+- Type-only imports aren't the main cause. Ignoring all of them shrinks the 59-group to 49. Type and runtime imports each close the loop for the other.
+- DI is acyclic for each runtime (main, UI, preview), but a component ships all of its runtimes in one package, and the union has cycles. For example, `component-compare`'s main runtime depends on `tester` while `tester`'s UI runtime registers into `component-compare`.
+- Removing 72 import edges makes the graph acyclic. The main patterns:
+  - `envs/environment.ts` imports types from 13 aspects that depend on `envs` (`Compiler`, `Tester`, `Bundler`, …).
+  - `UIRuntime`, `PreviewRuntime` and `MainRuntime` live in the heavy `ui`, `preview` and `cli` aspects. The whole `cli ↔ logger` cycle is `logger` importing `MainRuntime`.
+  - `component` imports types and UI values from aspects above it.
+  - `generator` fetches aspects with `harmony.get()` instead of declaring them as DI dependencies.
+  - Utilities live in the wrong place (webpack `fallbacks`, `getAspectDirFromBvm`, `incrementPathRecursively`).
+  - The legacy group is held together mostly by shared error classes.
+- Prefer moving shared types and utilities to a lower component, with re-exports at the old location, over replacing types with `any`.
