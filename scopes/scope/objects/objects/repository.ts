@@ -5,11 +5,13 @@ import { BitError } from '@teambit/bit-error';
 import type { ComponentID } from '@teambit/component-id';
 import { HASH_SIZE, isSnap } from '@teambit/component-version';
 import * as path from 'path';
+import crypto from 'crypto';
+import { userInfo } from 'os';
+import { pipeline as pipelinePromise } from 'stream/promises';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { OBJECTS_DIR } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
 import type { ChownOptions, PathOsBasedAbsolute } from '@teambit/legacy.utils';
-import { writeFile } from '@teambit/legacy.utils';
 import { glob } from 'glob';
 import { removeEmptyDir } from '@teambit/toolbox.fs.remove-empty-dir';
 import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
@@ -24,7 +26,7 @@ import {
 import type { IndexType, IndexItem } from './scope-index';
 import { ScopeIndex } from './scope-index';
 import BitObject from './object';
-import type { ObjectItem } from './object-list';
+import type { ObjectItem, RawObjectsMap } from './object-list';
 import { ObjectList } from './object-list';
 import BitRawObject from './raw-object';
 import Ref from './ref';
@@ -37,6 +39,7 @@ type ContentTransformer = (content: Buffer) => Buffer;
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 const TRASH_DIR = 'trash';
 const MAX_COMPRESSED_SIZE_TO_CACHE = 100 * 1024; // don't cache big files (mainly artifacts) to prevent out-of-memory
+const PENDING_OBJECTS_PACK_FILE = 'objects.tar';
 /**
  * how much of an object file to read when all that's needed is its header. the header holds the
  * type and is a few dozen bytes, which 512 compressed bytes always cover - and every byte past it
@@ -53,6 +56,10 @@ export type ObjectsWithType = { objects: ObjectWithType[]; unreadable: Ref[] };
 export default class Repository {
   objects: { [key: string]: BitObject } = {};
   objectsToRemove: Ref[] = [];
+  /**
+   * object dirs (the first two chars of the hash) known to exist, to not create them for every object written.
+   */
+  private existingObjectDirs = new Set<string>();
   scopeJson: ScopeJson;
   onRead: ContentTransformer;
   onPersist: ContentTransformer;
@@ -790,12 +797,13 @@ export default class Repository {
   /**
    * write all objects to the FS and index the components/lanes/symlink objects
    */
-  async writeObjectsToTheFS(objects: BitObject[]): Promise<void> {
+  async writeObjectsToTheFS(objects: BitObject[], rawObjects?: RawObjectsMap): Promise<void> {
     const count = objects.length;
     if (!count) return;
     logger.trace(`Repository.writeObjectsToTheFS: started writing ${count} objects`);
     const concurrency = concurrentIOLimit();
-    await pMapPool(objects, (obj) => this._writeOne(obj), {
+    const chownOptions = await this.getChownOptions();
+    await pMapPool(objects, (obj) => this._writeOne(obj, rawObjects?.get(obj.hash().toString()), chownOptions), {
       concurrency,
     });
     logger.trace(`Repository.writeObjectsToTheFS: completed writing ${count} objects`);
@@ -820,16 +828,20 @@ export default class Repository {
    * this method doesn't write to scopeIndex. so using this method for ModelComponent or
    * Symlink makes the index outdated.
    */
-  async _writeOne(object: BitObject): Promise<void> {
-    const { buffer: contents, inflatedSize } = await object.compressWithSize();
-    const options: ChownOptions = {};
-    if (this.scopeJson.groupName) options.gid = await resolveGroupId(this.scopeJson.groupName);
+  async _writeOne(
+    object: BitObject,
+    raw?: { buffer: Buffer; inflatedSize: number },
+    chownOptions?: ChownOptions
+  ): Promise<void> {
+    // when the already-compressed buffer of an unchanged object is available, skip the costly re-compression.
+    const { buffer: contents, inflatedSize } = raw || (await object.compressWithSize());
+    const options = chownOptions || (await this.getChownOptions());
     const hash = object.hash();
     const objectPath = this.objectPath(hash);
     logger.trace(`repository._writeOne: ${objectPath}`);
     // Run hook to transform content pre persisting
     const transformedContent = this.onPersist(contents);
-    await writeFile(objectPath, transformedContent, options);
+    await this.writeObjectFile(objectPath, transformedContent, options);
     // once written, the object is the up-to-date one. this also replaces the size-estimate of objects that
     // were cached by `add()`.
     if (this.cache.has(hash.toString())) this.cache.set(hash.toString(), object, inflatedSize);
@@ -850,25 +862,75 @@ export default class Repository {
       const ref = object.ref.toString();
       if (!isSnap(ref)) throw new BitError(`invalid object ref: ${JSON.stringify(ref)}`);
     }
-    const options: ChownOptions = {};
-    if (this.scopeJson.groupName) options.gid = await resolveGroupId(this.scopeJson.groupName);
-    await Promise.all(
-      objectList.objects.map(async (object) => {
-        const objPath = path.join(pendingDir, this.hashPath(object.ref));
-        await writeFile(objPath, object.buffer, options);
-      })
-    );
+    // all objects are written into one pack file rather than a file per object. an export can have tens of thousands
+    // of objects, and writing, reading and deleting them one by one is by far the most expensive part of the export.
+    await fs.ensureDir(pendingDir);
+    const packPath = path.join(pendingDir, PENDING_OBJECTS_PACK_FILE);
+    await pipelinePromise(objectList.toTar(), fs.createWriteStream(packPath));
+    const { gid } = await this.getChownOptions();
+    if (gid) await fs.chown(packPath, userInfo().uid, gid);
   }
 
   async readObjectsFromPendingDir(pendingDir: PathOsBasedAbsolute) {
+    const packPath = path.join(pendingDir, PENDING_OBJECTS_PACK_FILE);
+    if (await fs.pathExists(packPath)) {
+      return ObjectList.fromTar(fs.createReadStream(packPath));
+    }
+    // pending-dir written by an older version, a file per object.
     const refs = await this.listRefs(pendingDir);
-    const objects = await Promise.all(
-      refs.map(async (ref) => {
+    const objects = await pMapPool(
+      refs,
+      async (ref) => {
         const buffer = await fs.readFile(path.join(pendingDir, this.hashPath(ref)));
         return { ref, buffer };
-      })
+      },
+      { concurrency: concurrentIOLimit() }
     );
     return new ObjectList(objects);
+  }
+
+  private async getChownOptions(): Promise<ChownOptions> {
+    if (!this.scopeJson.groupName) return {};
+    return { gid: await resolveGroupId(this.scopeJson.groupName) };
+  }
+
+  /**
+   * a lean version of `writeFile` from legacy.utils (which uses write-file-atomic) for object files. it's called for
+   * every object, so the number of fs calls matters: the parent dir is created only once and the content is written
+   * to a tmp file and renamed, so a reader never sees a partially written object.
+   * the tmp file is a dotfile, which is ignored by `listRefs()` in case it's left behind.
+   */
+  private async writeObjectFile(filePath: string, contents: Buffer, options: ChownOptions) {
+    const dir = path.dirname(filePath);
+    const tmpPath = path.join(
+      dir,
+      `.${path.basename(filePath)}.${process.pid}.${crypto.randomBytes(4).toString('hex')}`
+    );
+    const write = async () => {
+      if (!this.existingObjectDirs.has(dir)) {
+        await fs.mkdir(dir, { recursive: true });
+        this.existingObjectDirs.add(dir);
+      }
+      await fs.writeFile(tmpPath, contents);
+    };
+    try {
+      await write();
+    } catch (err: any) {
+      // the dir might have been deleted since it was cached (e.g. removeFile() deletes empty dirs).
+      if (err.code !== 'ENOENT') throw err;
+      this.existingObjectDirs.delete(dir);
+      await write();
+    }
+    try {
+      if (options.gid || options.uid) {
+        const user = userInfo();
+        await fs.chown(tmpPath, options.uid || user.uid, options.gid || user.gid);
+      }
+      await fs.rename(tmpPath, filePath);
+    } catch (err) {
+      await fs.remove(tmpPath).catch(() => {});
+      throw err;
+    }
   }
 
   private hashPath(ref: Ref) {

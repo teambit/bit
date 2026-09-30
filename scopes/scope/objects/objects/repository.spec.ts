@@ -5,6 +5,7 @@ import path from 'path';
 import zlib from 'zlib';
 import { ScopeJson } from '@teambit/legacy.scope';
 import { ModelComponent, Source } from '../models';
+import { ObjectList } from './object-list';
 import Ref from './ref';
 import Repository from './repository';
 import { IndexType } from './scope-index';
@@ -88,5 +89,101 @@ describe('Repository.list', () => {
     const objects = await repository.list([ModelComponent]);
     expect(objects).to.have.lengthOf(1);
     expect(objects[0]).to.be.instanceOf(ModelComponent);
+  });
+});
+
+/**
+ * the export flow moves every object through these methods, so for components with thousands of files, the number of
+ * fs operations and compressions per object is what makes an export fast or slow.
+ */
+describe('Repository writing objects for export', () => {
+  let scopePath: string;
+  let repository: Repository;
+
+  beforeEach(async () => {
+    scopePath = await fs.mkdtemp(path.join(os.tmpdir(), 'bit-repository-spec-'));
+    const scopeJson = new ScopeJson(
+      { name: SCOPE_NAME, version: '1.0.0', groupName: null },
+      path.join(scopePath, 'scope.json')
+    );
+    repository = await Repository.create({ scopePath, scopeJson });
+  });
+
+  afterEach(async () => {
+    await fs.remove(scopePath);
+  });
+
+  const createObjectList = async (count: number) => {
+    const sources = Array.from({ length: count }, (_, i) => Source.from(Buffer.from(`file ${i}`)));
+    return ObjectList.fromBitObjects(sources);
+  };
+
+  it('should write the pending objects into one file and read them back as is', async () => {
+    const objectList = await createObjectList(SOURCES_COUNT);
+    const pendingDir = path.join(scopePath, 'pending-objects', 'client-1');
+    await repository.writeObjectsToPendingDir(objectList, pendingDir);
+    expect(await fs.readdir(pendingDir)).to.deep.equal(['objects.tar']);
+
+    const loaded = await repository.readObjectsFromPendingDir(pendingDir);
+    const toComparable = (list: ObjectList) =>
+      list.objects
+        .map((o) => ({ hash: o.ref.toString(), buffer: o.buffer.toString('hex') }))
+        .sort((a, b) => (a.hash < b.hash ? -1 : 1));
+    expect(toComparable(loaded)).to.deep.equal(toComparable(objectList));
+  });
+
+  it('should read a pending-dir written by an older version, a file per object', async () => {
+    const objectList = await createObjectList(SOURCES_COUNT);
+    const pendingDir = path.join(scopePath, 'pending-objects', 'client-1');
+    await Promise.all(
+      objectList.objects.map((o) => {
+        const hash = o.ref.toString();
+        return fs.outputFile(path.join(pendingDir, hash.slice(0, 2), hash.slice(2)), o.buffer);
+      })
+    );
+    const loaded = await repository.readObjectsFromPendingDir(pendingDir);
+    expect(loaded.objects.map((o) => o.ref.toString()).sort()).to.deep.equal(
+      objectList.objects.map((o) => o.ref.toString()).sort()
+    );
+  });
+
+  it('should write the given raw buffers of sources without re-compressing them, and leave no tmp files', async () => {
+    const objectList = await createObjectList(SOURCES_COUNT);
+    const { bitObjectList, rawSources } = await objectList.toBitObjectsWithRawSources();
+    expect(rawSources.size).to.equal(SOURCES_COUNT);
+    let compressions = 0;
+    bitObjectList.getAll().forEach((obj) => {
+      obj.compressWithSize = async () => {
+        compressions += 1;
+        throw new Error('should not re-compress');
+      };
+    });
+    await repository.writeObjectsToTheFS(bitObjectList.getAll(), rawSources);
+    expect(compressions).to.equal(0);
+    for (const objectItem of objectList.objects) {
+      const written = await fs.readFile(repository.objectPath(objectItem.ref));
+      expect(written.equals(objectItem.buffer)).to.be.true;
+    }
+    const objectDirs = await fs.readdir(repository.getPath());
+    const allFiles = (
+      await Promise.all(objectDirs.map((dir) => fs.readdir(path.join(repository.getPath(), dir))))
+    ).flat();
+    expect(allFiles).to.have.lengthOf(SOURCES_COUNT);
+    expect(allFiles.filter((fileName) => fileName.startsWith('.'))).to.have.lengthOf(0);
+  });
+
+  it('should not use a raw buffer of a source whose content does not match its ref', async () => {
+    const [first, second] = (await createObjectList(2)).objects;
+    const tampered = new ObjectList([{ ref: first.ref, buffer: second.buffer }]);
+    const { rawSources } = await tampered.toBitObjectsWithRawSources();
+    expect(rawSources.size).to.equal(0);
+  });
+
+  it('should re-create an object dir that was removed after it was written to', async () => {
+    const source = Source.from(Buffer.from('some content'));
+    await repository.writeObjectsToTheFS([source]);
+    await fs.remove(path.dirname(repository.objectPath(source.hash())));
+    await repository.writeObjectsToTheFS([source]);
+    expect(await fs.pathExists(repository.objectPath(source.hash()))).to.be.true;
   });
 });

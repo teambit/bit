@@ -89,9 +89,7 @@ export function validateVersionInstance(version: Version): void {
     artifactsFiles.forEach((artifacts) => {
       artifacts.refs.map((artifact) => validateFile(artifact, 'artifact'));
       const filesPaths = artifacts.refs.map((artifact) => artifact.relativePath);
-      const duplicateArtifacts = filesPaths.filter(
-        (file) => filesPaths.filter((f) => file.toLowerCase() === f.toLowerCase()).length > 1
-      );
+      const duplicateArtifacts = findCaseInsensitiveDuplicates(filesPaths);
       if (duplicateArtifacts.length) {
         throw new VersionInvalid(
           `${message} the following artifact files are duplicated ${duplicateArtifacts.join(', ')}`
@@ -159,9 +157,7 @@ export function validateVersionInstance(version: Version): void {
       )}`
     );
   }
-  const duplicateFiles = filesPaths.filter(
-    (file) => filesPaths.filter((f) => file.toLowerCase() === f.toLowerCase()).length > 1
-  );
+  const duplicateFiles = findCaseInsensitiveDuplicates(filesPaths);
   if (duplicateFiles.length) {
     throw new VersionInvalid(`${message} the following files are duplicated ${duplicateFiles.join(', ')}`);
   }
@@ -339,4 +335,16 @@ ${duplicationStr}`);
       );
     }
   }
+}
+
+/**
+ * returns all paths that collide with another path when compared case-insensitively.
+ * linear on purpose: components with tens of thousands of files (e.g. bundled docs sites) made the
+ * previous nested-filter implementation take seconds on every Version serialization.
+ */
+function findCaseInsensitiveDuplicates(paths: string[]): string[] {
+  const counts = new Map<string, number>();
+  const lowerPaths = paths.map((filePath) => filePath.toLowerCase());
+  lowerPaths.forEach((lowerPath) => counts.set(lowerPath, (counts.get(lowerPath) || 0) + 1));
+  return paths.filter((_, index) => (counts.get(lowerPaths[index]) as number) > 1);
 }

@@ -46,6 +46,11 @@ export const FETCH_FORMAT_OBJECT_LIST = 'ObjectList';
  */
 export type ObjectItemsStream = Readable;
 
+/**
+ * hash => compressed buffer (as stored on the filesystem) and the size of its inflated content.
+ */
+export type RawObjectsMap = Map<string, { buffer: Buffer; inflatedSize: number }>;
+
 export class ObjectList {
   constructor(public objects: ObjectItem[] = []) {}
 
@@ -248,23 +253,45 @@ export class ObjectList {
   }
 
   addIfNotExist(objectItems: ObjectItem[]) {
+    const existing = new Set(this.objects.map((object) => ObjectList.combineScopeAndHash(object)));
     objectItems.forEach((objectItem) => {
-      const exists = this.objects.find(
-        (object) => object.ref.isEqual(objectItem.ref) && object.scope === objectItem.scope
-      );
-      if (!exists) {
-        this.objects.push(objectItem);
-      }
+      const key = ObjectList.combineScopeAndHash(objectItem);
+      if (existing.has(key)) return;
+      existing.add(key);
+      this.objects.push(objectItem);
     });
   }
 
   async toBitObjects(throwForUnknownTypes = false): Promise<BitObjectList> {
+    const { bitObjectList } = await this.parseObjects(throwForUnknownTypes);
+    return bitObjectList;
+  }
+
+  /**
+   * same as `toBitObjects`, but also returns the original compressed buffers of the Source objects (files/artifacts)
+   * whose content matches their ref. Sources are immutable, so these buffers can be written to the filesystem as is,
+   * saving the costly re-compression. (significant for components with thousands of files).
+   */
+  async toBitObjectsWithRawSources(): Promise<{ bitObjectList: BitObjectList; rawSources: RawObjectsMap }> {
+    return this.parseObjects(false, true);
+  }
+
+  private async parseObjects(
+    throwForUnknownTypes: boolean,
+    collectRawSources = false
+  ): Promise<{ bitObjectList: BitObjectList; rawSources: RawObjectsMap }> {
     const concurrency = concurrentIOLimit();
+    const rawSources: RawObjectsMap = new Map();
     const bitObjects = await pMapPool(
       this.objects,
       async (object) => {
         try {
-          return await BitObject.parseObject(object.buffer);
+          const { object: bitObject, inflatedSize } = await BitObject.parseObjectWithSize(object.buffer);
+          if (collectRawSources && bitObject.getType() === 'Source') {
+            const hash = bitObject.hash().toString();
+            if (hash === object.ref.toString()) rawSources.set(hash, { buffer: object.buffer, inflatedSize });
+          }
+          return bitObject;
         } catch (err) {
           if (throwForUnknownTypes || !(err instanceof UnknownObjectType)) {
             throw err;
@@ -277,7 +304,7 @@ export class ObjectList {
       },
       { concurrency }
     );
-    return new BitObjectList(compact(bitObjects));
+    return { bitObjectList: new BitObjectList(compact(bitObjects)), rawSources };
   }
 
   static async fromBitObjects(bitObjects: BitObject[]): Promise<ObjectList> {
@@ -302,6 +329,7 @@ export class ObjectList {
 
   splitByScopeName(): { [scopeName: string]: ObjectList } {
     const objectListPerScope: { [scopeName: string]: ObjectList } = {};
+    const added = new Set<string>();
     this.objects.forEach((obj) => {
       if (obj.type === ExportMetadata.name) {
         return; // no scope for this type. it's general for all export data from all scopes
@@ -309,11 +337,11 @@ export class ObjectList {
       if (!obj.scope) {
         throw new Error(`ObjectList: unable to split by scopeName, the scopeName is missing for ${obj.ref.hash}`);
       }
-      if (objectListPerScope[obj.scope]) {
-        objectListPerScope[obj.scope].addIfNotExist([obj]);
-      } else {
-        objectListPerScope[obj.scope] = new ObjectList([obj]);
-      }
+      const key = ObjectList.combineScopeAndHash(obj);
+      if (added.has(key)) return;
+      added.add(key);
+      if (!objectListPerScope[obj.scope]) objectListPerScope[obj.scope] = new ObjectList();
+      objectListPerScope[obj.scope].objects.push(obj);
     });
     return objectListPerScope;
   }
