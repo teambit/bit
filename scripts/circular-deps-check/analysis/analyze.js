@@ -35,6 +35,12 @@ for (const d of fs.readdirSync(path.join(repo, 'node_modules/@teambit'))) {
     pkgToId[j.name] = id;
   }
 }
+const noPkg = Object.values(comps).filter((c) => !c.pkg);
+if (noPkg.length)
+  console.warn(
+    `WARN: no package name for ${noPkg.length} components, imports of them are missed:`,
+    noPkg.map((c) => c.id)
+  );
 
 function walk(dir, acc = []) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
