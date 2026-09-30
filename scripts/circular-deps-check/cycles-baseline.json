@@ -1,13 +1,13 @@
 {
   "summary": {
     "groups": [
-      59,
+      60,
       16,
       2,
       2
     ],
-    "components": 79,
-    "edges": 483
+    "components": 80,
+    "edges": 491
   },
   "groups": [
     [
@@ -69,7 +69,8 @@
       "teambit.workspace/install",
       "teambit.workspace/watcher",
       "teambit.workspace/workspace",
-      "teambit.workspace/workspace-config-files"
+      "teambit.workspace/workspace-config-files",
+      "teambit.workspace/workspace-root"
     ],
     [
       "teambit.component/snap-distance",
@@ -162,6 +163,7 @@
     "teambit.component/component-writer -> teambit.workspace/config-merger",
     "teambit.component/component-writer -> teambit.workspace/install",
     "teambit.component/component-writer -> teambit.workspace/workspace",
+    "teambit.component/component-writer -> teambit.workspace/workspace-root",
     "teambit.component/deprecation -> teambit.component/component",
     "teambit.component/deprecation -> teambit.component/issues",
     "teambit.component/deprecation -> teambit.dependencies/dependency-resolver",
@@ -230,6 +232,7 @@
     "teambit.component/snapping -> teambit.scope/objects",
     "teambit.component/snapping -> teambit.scope/scope",
     "teambit.component/snapping -> teambit.workspace/workspace",
+    "teambit.component/snapping -> teambit.workspace/workspace-root",
     "teambit.component/sources -> teambit.legacy/consumer-component",
     "teambit.component/sources -> teambit.legacy/extension-data",
     "teambit.component/sources -> teambit.legacy/scope",
@@ -581,6 +584,12 @@
     "teambit.workspace/workspace -> teambit.ui-foundation/ui",
     "teambit.workspace/workspace -> teambit.workspace/watcher",
     "teambit.workspace/workspace-config-files -> teambit.envs/envs",
-    "teambit.workspace/workspace-config-files -> teambit.workspace/workspace"
+    "teambit.workspace/workspace-config-files -> teambit.workspace/workspace",
+    "teambit.workspace/workspace-root -> teambit.component/component",
+    "teambit.workspace/workspace-root -> teambit.harmony/host-initializer",
+    "teambit.workspace/workspace-root -> teambit.scope/importer",
+    "teambit.workspace/workspace-root -> teambit.scope/scope",
+    "teambit.workspace/workspace-root -> teambit.workspace/install",
+    "teambit.workspace/workspace-root -> teambit.workspace/workspace"
   ]
 }

@@ -32,9 +32,9 @@ Set `BIT_BIN` to use a different bit binary, or pass `--graph <file>` to read sa
 
 ## Findings (September 2026)
 
-79 components are in 4 cycle groups: 59 aspects, 16 legacy components, `cli ↔ logger` and `lanes ↔ merge-lanes`.
+80 components are in 4 cycle groups: 60 aspects, 16 legacy components, `cli ↔ logger` and `lanes ↔ merge-lanes`.
 
-- Type-only imports aren't the main cause. Ignoring all of them shrinks the 59-group to 49. Type and runtime imports each close the loop for the other.
+- Type-only imports aren't the main cause. Ignoring all of them shrinks the aspect group from 60 to 50. Type and runtime imports each close the loop for the other.
 - DI is acyclic for each runtime (main, UI, preview), but a component ships all of its runtimes in one package, and the union has cycles. For example, `component-compare`'s main runtime depends on `tester` while `tester`'s UI runtime registers into `component-compare`.
 - Removing 72 import edges makes the graph acyclic. The main patterns:
   - `envs/environment.ts` imports types from 13 aspects that depend on `envs` (`Compiler`, `Tester`, `Bundler`, …).
