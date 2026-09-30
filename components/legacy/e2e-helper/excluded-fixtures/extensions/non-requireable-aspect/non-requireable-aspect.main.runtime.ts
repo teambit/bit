@@ -1,5 +1,5 @@
 throw new Error('error by purpose');
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import { NonRequireableAspect } from './non-requireable-aspect.aspect';
 
 export class NonRequireableMain {

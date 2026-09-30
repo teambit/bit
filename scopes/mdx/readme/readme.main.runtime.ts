@@ -1,6 +1,6 @@
 import type { EnvsMain } from '@teambit/envs';
 import { EnvsAspect } from '@teambit/envs';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { MdxEnv, MDXMain } from '@teambit/mdx';
 import { MDXAspect } from '@teambit/mdx';
 import type { DocsMain } from '@teambit/docs';

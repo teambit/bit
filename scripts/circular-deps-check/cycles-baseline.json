@@ -3,11 +3,10 @@
     "groups": [
       60,
       16,
-      2,
       2
     ],
-    "components": 80,
-    "edges": 491
+    "components": 78,
+    "edges": 475
   },
   "groups": [
     [
@@ -91,10 +90,6 @@
       "teambit.semantics/doc-parser"
     ],
     [
-      "teambit.harmony/cli",
-      "teambit.harmony/logger"
-    ],
-    [
       "teambit.lanes/lanes",
       "teambit.lanes/merge-lanes"
     ]
@@ -103,7 +98,6 @@
     "teambit.api-reference/api-reference -> teambit.component/code",
     "teambit.api-reference/api-reference -> teambit.component/component",
     "teambit.api-reference/api-reference -> teambit.component/component-compare",
-    "teambit.api-reference/api-reference -> teambit.ui-foundation/ui",
     "teambit.api-reference/api-reference -> teambit.workspace/workspace",
     "teambit.compilation/bundler -> teambit.component/component",
     "teambit.compilation/bundler -> teambit.dependencies/dependency-resolver",
@@ -131,7 +125,6 @@
     "teambit.compilation/multi-compiler -> teambit.pipelines/builder",
     "teambit.component/code -> teambit.component/component",
     "teambit.component/code -> teambit.component/component-compare",
-    "teambit.component/code -> teambit.ui-foundation/ui",
     "teambit.component/component -> teambit.component/deprecation",
     "teambit.component/component -> teambit.compositions/compositions",
     "teambit.component/component -> teambit.dependencies/dependency-resolver",
@@ -143,7 +136,6 @@
     "teambit.component/component -> teambit.preview/preview",
     "teambit.component/component -> teambit.scope/objects",
     "teambit.component/component -> teambit.ui-foundation/react-router",
-    "teambit.component/component -> teambit.ui-foundation/ui",
     "teambit.component/component-compare -> teambit.component/component",
     "teambit.component/component-compare -> teambit.defender/tester",
     "teambit.component/component-compare -> teambit.dependencies/dependency-resolver",
@@ -153,10 +145,8 @@
     "teambit.component/component-compare -> teambit.scope/objects",
     "teambit.component/component-compare -> teambit.scope/scope",
     "teambit.component/component-compare -> teambit.semantics/schema",
-    "teambit.component/component-compare -> teambit.ui-foundation/ui",
     "teambit.component/component-compare -> teambit.workspace/workspace",
     "teambit.component/component-tree -> teambit.component/component",
-    "teambit.component/component-tree -> teambit.ui-foundation/ui",
     "teambit.component/component-writer -> teambit.compilation/compiler",
     "teambit.component/component-writer -> teambit.component/mover",
     "teambit.component/component-writer -> teambit.scope/objects",
@@ -170,7 +160,6 @@
     "teambit.component/deprecation -> teambit.docs/docs",
     "teambit.component/deprecation -> teambit.harmony/graphql",
     "teambit.component/deprecation -> teambit.scope/scope",
-    "teambit.component/deprecation -> teambit.ui-foundation/ui",
     "teambit.component/deprecation -> teambit.workspace/workspace",
     "teambit.component/dev-files -> teambit.component/component",
     "teambit.component/dev-files -> teambit.envs/envs",
@@ -191,7 +180,6 @@
     "teambit.component/graph -> teambit.component/component",
     "teambit.component/graph -> teambit.component/component-compare",
     "teambit.component/graph -> teambit.harmony/graphql",
-    "teambit.component/graph -> teambit.ui-foundation/ui",
     "teambit.component/isolator -> teambit.component/component",
     "teambit.component/isolator -> teambit.component/graph",
     "teambit.component/isolator -> teambit.dependencies/dependency-resolver",
@@ -247,7 +235,6 @@
     "teambit.compositions/compositions -> teambit.preview/preview",
     "teambit.compositions/compositions -> teambit.scope/scope",
     "teambit.compositions/compositions -> teambit.semantics/schema",
-    "teambit.compositions/compositions -> teambit.ui-foundation/ui",
     "teambit.compositions/compositions -> teambit.workspace/workspace",
     "teambit.defender/formatter -> teambit.component/component",
     "teambit.defender/formatter -> teambit.component/snapping",
@@ -292,7 +279,6 @@
     "teambit.docs/docs -> teambit.pkg/pkg",
     "teambit.docs/docs -> teambit.preview/preview",
     "teambit.docs/docs -> teambit.scope/scope",
-    "teambit.docs/docs -> teambit.ui-foundation/ui",
     "teambit.docs/docs -> teambit.workspace/workspace",
     "teambit.envs/envs -> teambit.compilation/bundler",
     "teambit.envs/envs -> teambit.compilation/compiler",
@@ -313,7 +299,6 @@
     "teambit.envs/envs -> teambit.typescript/typescript",
     "teambit.envs/envs -> teambit.webpack/webpack",
     "teambit.explorer/command-bar -> teambit.harmony/pubsub",
-    "teambit.explorer/command-bar -> teambit.preview/preview",
     "teambit.explorer/command-bar -> teambit.ui-foundation/react-router",
     "teambit.explorer/command-bar -> teambit.ui-foundation/ui",
     "teambit.generator/generator -> teambit.compilation/compiler",
@@ -345,12 +330,9 @@
     "teambit.harmony/aspect-loader -> teambit.component/component",
     "teambit.harmony/aspect-loader -> teambit.envs/envs",
     "teambit.harmony/aspect-loader -> teambit.harmony/graphql",
-    "teambit.harmony/cli -> teambit.harmony/logger",
     "teambit.harmony/graphql -> teambit.ui-foundation/ui",
     "teambit.harmony/host-initializer -> teambit.scope/objects",
     "teambit.harmony/ipc-events -> teambit.scope/scope",
-    "teambit.harmony/logger -> teambit.harmony/cli",
-    "teambit.harmony/pubsub -> teambit.preview/preview",
     "teambit.harmony/pubsub -> teambit.ui-foundation/ui",
     "teambit.lanes/lanes -> teambit.lanes/merge-lanes",
     "teambit.lanes/merge-lanes -> teambit.lanes/lanes",
@@ -415,7 +397,6 @@
     "teambit.pkg/pkg -> teambit.harmony/graphql",
     "teambit.pkg/pkg -> teambit.pipelines/builder",
     "teambit.pkg/pkg -> teambit.scope/scope",
-    "teambit.pkg/pkg -> teambit.ui-foundation/ui",
     "teambit.pkg/pkg -> teambit.workspace/workspace",
     "teambit.preview/preview -> teambit.compilation/bundler",
     "teambit.preview/preview -> teambit.compilation/compiler",
@@ -454,7 +435,6 @@
     "teambit.react/react -> teambit.preview/preview",
     "teambit.react/react -> teambit.semantics/schema",
     "teambit.react/react -> teambit.typescript/typescript",
-    "teambit.react/react -> teambit.ui-foundation/ui",
     "teambit.react/react -> teambit.workspace/workspace",
     "teambit.react/react -> teambit.workspace/workspace-config-files",
     "teambit.scope/export -> teambit.component/remove",
@@ -526,7 +506,6 @@
     "teambit.typescript/typescript -> teambit.workspace/workspace",
     "teambit.ui-foundation/react-router -> teambit.ui-foundation/ui",
     "teambit.ui-foundation/sidebar -> teambit.component/component",
-    "teambit.ui-foundation/sidebar -> teambit.ui-foundation/ui",
     "teambit.ui-foundation/ui -> teambit.compilation/bundler",
     "teambit.ui-foundation/ui -> teambit.component/component",
     "teambit.ui-foundation/ui -> teambit.component/isolator",

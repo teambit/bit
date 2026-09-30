@@ -5,7 +5,8 @@ import { getRootComponentDir, linkPkgsToRootComponents } from '@teambit/workspac
 import type { CompilerMain } from '@teambit/compiler';
 import { CompilerAspect, CompilationInitiator } from '@teambit/compiler';
 import type { CLIMain, CommandList } from '@teambit/cli';
-import { CLIAspect, MainRuntime, formatWarningSummary } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect, formatWarningSummary } from '@teambit/cli';
 import chalk from 'chalk';
 import yesno from 'yesno';
 import type { Workspace } from '@teambit/workspace';

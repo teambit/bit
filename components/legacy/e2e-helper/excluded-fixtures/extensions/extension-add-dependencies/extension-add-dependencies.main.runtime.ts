@@ -1,4 +1,4 @@
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { ExtensionAddDependenciesAspect } from './extension-add-dependencies.aspect';
 

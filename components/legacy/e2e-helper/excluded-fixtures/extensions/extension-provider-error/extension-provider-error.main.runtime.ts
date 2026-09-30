@@ -1,4 +1,4 @@
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import { ExtensionProviderErrorAspect } from './extension-provider-error.aspect';
 
 export class ExtensionProviderErrorMain {
