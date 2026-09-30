@@ -123,6 +123,10 @@ function computeState({ nodes, edges }) {
   };
 }
 
+function formatSummary({ components, groups, edges }) {
+  return `${components} components in ${groups.length} cycle groups [${groups.join(', ')}], ${edges} edges inside cycles`;
+}
+
 function printList(title, items) {
   if (!items.length) return;
   console.log(`\n${title} (${items.length}):`);
@@ -134,10 +138,7 @@ function main() {
   const graphFileIdx = args.indexOf('--graph');
   const graphFile = graphFileIdx !== -1 ? args[graphFileIdx + 1] : undefined;
   const current = computeState(loadGraph(graphFile));
-  const { summary } = current;
-  console.log(
-    `current: ${summary.components} components in ${summary.groups.length} cycle groups [${summary.groups.join(', ')}], ${summary.edges} edges inside cycles`
-  );
+  console.log(`current: ${formatSummary(current.summary)}`);
 
   if (args.includes('--update')) {
     fs.writeFileSync(BASELINE_FILE, `${JSON.stringify(current, null, 2)}\n`);
@@ -149,10 +150,7 @@ function main() {
     process.exit(1);
   }
   const baseline = JSON.parse(fs.readFileSync(BASELINE_FILE, 'utf8'));
-  const b = baseline.summary;
-  console.log(
-    `baseline: ${b.components} components in ${b.groups.length} cycle groups [${b.groups.join(', ')}], ${b.edges} edges inside cycles`
-  );
+  console.log(`baseline: ${formatSummary(baseline.summary)}`);
 
   const baselineMembers = new Set(baseline.groups.flat());
   const currentMembers = new Set(current.groups.flat());

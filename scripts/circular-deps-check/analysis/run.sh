@@ -7,9 +7,11 @@ REPO="$(cd "$HERE/../../.." && pwd)"
 BIT="${1:-bit}"
 export OUT_DIR="${OUT_DIR:-$HERE/out}"
 mkdir -p "$OUT_DIR"
+OUT_DIR="$(cd "$OUT_DIR" && pwd)"
 cd "$REPO"
 echo "> bit deps circular (ground truth)"
-"$BIT" deps circular --json > "$OUT_DIR/bit-circular.json" 2>/dev/null
+"$BIT" deps circular --json > "$OUT_DIR/bit-circular.json" ||
+  { echo "bit deps circular failed (BIT=$BIT)" >&2; exit 1; }
 echo "> core aspects"
 node -e '
 const fs=require("fs"); const t=fs.readFileSync("scopes/harmony/bit/manifests.ts","utf8");
@@ -19,7 +21,7 @@ fs.writeFileSync(process.env.OUT_DIR+"/core-pkgs.json", JSON.stringify([...new S
 node "$HERE/analyze.js" "$REPO" "$OUT_DIR/edges.json"
 node "$HERE/di.js" "$REPO"
 node "$HERE/views.js"
-node "$HERE/iter.js" full > "$OUT_DIR/cuts.txt"
+node "$HERE/iter.js" > "$OUT_DIR/cuts.txt"
 head -1 "$OUT_DIR/cuts.txt"
 node "$HERE/phases.js" | sed -n '1,5p'
 echo "full cut list: $OUT_DIR/cuts.txt"
