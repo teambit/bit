@@ -72,7 +72,12 @@ Original error: ${err}`);
         }
         logger.trace(`createLinkOrSymlink, EEXIST on ${destPath}, retrying (attempt ${attempt})`);
         sleepSync(EEXIST_RETRY_DELAY_MS * attempt);
-        fs.removeSync(destPath);
+        try {
+          fs.removeSync(destPath);
+        } catch (removeErr: any) {
+          // still locked by the other process. the next attempt retries the removal as well.
+          if (removeErr.code !== 'EPERM' && removeErr.code !== 'EBUSY') throw removeErr;
+        }
       }
     }
   }

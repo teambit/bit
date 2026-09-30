@@ -116,4 +116,34 @@ describe('createLinkOrSymlink EEXIST handling', () => {
       expect(fs.readFileSync(destFile, 'utf8')).to.equal('hello');
     });
   });
+
+  describe('when the retry cleanup of a locked destination fails temporarily', () => {
+    it('should keep retrying and link the source', () => {
+      const srcFile = path.join(tempDir, 'source-file.txt');
+      const otherFile = path.join(tempDir, 'other-file.txt');
+      const destFile = path.join(tempDir, 'dest-file.txt');
+      fs.writeFileSync(srcFile, 'hello');
+      fs.writeFileSync(otherFile, 'world');
+      fs.linkSync(otherFile, destFile);
+
+      // 1st call (before the first attempt): skipped, so the link fails with EEXIST.
+      // 2nd call (the first retry cleanup): throws EPERM, as a locked file does on Windows.
+      const originalRemoveSync = fs.removeSync;
+      let calls = 0;
+      fs.removeSync = (p: string) => {
+        if (p === destFile) {
+          calls++;
+          if (calls === 1) return;
+          if (calls === 2) throw Object.assign(new Error('EPERM: operation not permitted'), { code: 'EPERM' });
+        }
+        originalRemoveSync(p);
+      };
+      try {
+        createLinkOrSymlink(srcFile, destFile);
+      } finally {
+        fs.removeSync = originalRemoveSync;
+      }
+      expect(fs.readFileSync(destFile, 'utf8')).to.equal('hello');
+    });
+  });
 });
