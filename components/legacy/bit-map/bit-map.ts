@@ -65,6 +65,7 @@ export class BitMap {
   rootDirs: { [rootDir: string]: ComponentID }; // rootDir => componentId
   markAsChangedBinded: Function;
   _cacheIdsAll: ComponentIdList | undefined;
+  private _cacheIdsByName?: { allIds: ComponentIdList; byName: Map<string, ComponentIdList> };
   _cacheIdsLane: ComponentIdList | undefined;
   _cacheIdsLaneIncludeRemoved: ComponentIdList | undefined;
   _cacheIdsAllStr: { [idStr: string]: ComponentID } | undefined;
@@ -568,22 +569,43 @@ export class BitMap {
    * @see also getComponentIdIfExist
    */
   getComponentId(componentId: ComponentID, { ignoreVersion = false }: GetBitMapComponentOptions = {}): ComponentID {
+    const existingId = this.findComponentId(componentId, ignoreVersion);
+    if (!existingId) throw new MissingBitMapComponent(componentId.toString());
+    return existingId;
+  }
+
+  private findComponentId(componentId: ComponentID, ignoreVersion: boolean): ComponentID | undefined {
     if (componentId.constructor.name !== ComponentID.name) {
       throw new TypeError(
         `BitMap.getComponentId expects componentId to be an instance of ComponentID, instead, got ${componentId}`
       );
     }
-    const allIds = this.getAllBitIdsFromAllLanes();
-    const exactMatch = allIds.search(componentId);
+    const idsWithSameName = this.getIdsWithSameName(componentId);
+    const exactMatch = idsWithSameName.search(componentId);
     if (exactMatch) return exactMatch;
     if (ignoreVersion) {
-      const matchWithoutVersion = allIds.searchWithoutVersion(componentId);
+      const matchWithoutVersion = idsWithSameName.searchWithoutVersion(componentId);
       if (matchWithoutVersion) return matchWithoutVersion;
     }
-    if (this.updatedIds[componentId.toString()]) {
-      return this.updatedIds[componentId.toString()].id;
+    return this.updatedIds[componentId.toString()]?.id;
+  }
+
+  /**
+   * this runs for every dependency of every component (e.g. to check whether it's deprecated or removed), and most of
+   * them are not in the .bitmap. index the ids by name instead of scanning all of them each time.
+   */
+  private getIdsWithSameName(componentId: ComponentID): ComponentIdList {
+    const allIds = this.getAllBitIdsFromAllLanes();
+    if (this._cacheIdsByName?.allIds !== allIds) {
+      const byName = new Map<string, ComponentIdList>();
+      allIds.forEach((id) => {
+        const ids = byName.get(id.fullName) || new ComponentIdList();
+        ids.push(id);
+        byName.set(id.fullName, ids);
+      });
+      this._cacheIdsByName = { allIds, byName };
     }
-    throw new MissingBitMapComponent(componentId.toString());
+    return this._cacheIdsByName.byName.get(componentId.fullName) || new ComponentIdList();
   }
 
   /**
@@ -599,13 +621,7 @@ export class BitMap {
       ignoreVersion?: boolean;
     } = {}
   ): ComponentID | undefined {
-    try {
-      const existingBitId = this.getComponentId(componentId, { ignoreVersion });
-      return existingBitId;
-    } catch (err: any) {
-      if (err instanceof MissingBitMapComponent) return undefined;
-      throw err;
-    }
+    return this.findComponentId(componentId, ignoreVersion);
   }
 
   /**
@@ -617,7 +633,14 @@ export class BitMap {
     const existingBitId = this.getComponentId(componentId, {
       ignoreVersion,
     });
-    return this.components.find((c) => c.id.isEqual(existingBitId)) as ComponentMap;
+    return this.findComponentMap(existingBitId) as ComponentMap;
+  }
+
+  private findComponentMap(existingBitId: ComponentID): ComponentMap | undefined {
+    // the id normally comes from the component-map itself, comparing the reference is much cheaper than `isEqual`
+    return (
+      this.components.find((c) => c.id === existingBitId) || this.components.find((c) => c.id.isEqual(existingBitId))
+    );
   }
 
   /**
@@ -629,13 +652,8 @@ export class BitMap {
     componentId: ComponentID,
     { ignoreVersion = false }: GetBitMapComponentOptions = {}
   ): ComponentMap | undefined {
-    try {
-      const componentMap = this.getComponent(componentId, { ignoreVersion });
-      return componentMap;
-    } catch (err: any) {
-      if (err instanceof MissingBitMapComponent) return undefined;
-      throw err;
-    }
+    const existingBitId = this.findComponentId(componentId, ignoreVersion);
+    return existingBitId ? this.findComponentMap(existingBitId) : undefined;
   }
 
   getAllBitIds(): ComponentIdList {
