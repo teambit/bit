@@ -1227,6 +1227,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/modules/resolved-component"
     },
+    "modules/runtimes": {
+        "name": "modules/runtimes",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.harmony",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/modules/runtimes"
+    },
     "modules/semver-helper": {
         "name": "modules/semver-helper",
         "scope": "teambit.pkg",

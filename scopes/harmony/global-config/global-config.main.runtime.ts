@@ -1,5 +1,6 @@
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect } from '@teambit/cli';
 import {
   CACHE_ROOT,
   DEBUG_LOG,

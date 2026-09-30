@@ -8,7 +8,7 @@ import { ApplicationAspect } from '@teambit/application';
 import { merge } from 'lodash';
 import type { LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { GeneratorMain } from '@teambit/generator';
 import { GeneratorAspect } from '@teambit/generator';
 import type { BuildTask } from '@teambit/builder';

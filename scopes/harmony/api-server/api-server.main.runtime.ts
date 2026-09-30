@@ -1,5 +1,6 @@
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect } from '@teambit/cli';
 import { Port } from '@teambit/toolbox.network.get-port';
 import fs from 'fs-extra';
 import crypto from 'crypto';

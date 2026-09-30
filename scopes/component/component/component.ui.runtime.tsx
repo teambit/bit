@@ -13,7 +13,7 @@ import type { BitBaseEvent, PubsubUI } from '@teambit/pubsub';
 import { PubsubAspect } from '@teambit/pubsub';
 import type { ReactRouterUI } from '@teambit/react-router';
 import { ReactRouterAspect } from '@teambit/react-router';
-import { UIRuntime } from '@teambit/ui';
+import { UIRuntime } from '@teambit/harmony.modules.runtimes';
 import { groupBy } from 'lodash';
 import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
 import type { MenuItem, MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';

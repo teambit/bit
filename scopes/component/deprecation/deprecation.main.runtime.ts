@@ -1,5 +1,6 @@
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect } from '@teambit/cli';
 import semver from 'semver';
 import { BitError } from '@teambit/bit-error';
 import type { ComponentMain, Component } from '@teambit/component';
