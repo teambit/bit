@@ -192,7 +192,7 @@ export default class Component extends BitObject {
 
   getRef(version: string): Ref | null {
     if (isTag(version)) {
-      return this.versionsIncludeOrphaned[version];
+      return this.orphanedVersions[version] || this.versions[version];
     }
     if (isHash(version)) {
       return new Ref(version);
@@ -266,9 +266,12 @@ export default class Component extends BitObject {
     return Boolean(this.versions[version]);
   }
 
+  /**
+   * a new object on every access, which is expensive for a component with many versions. to look up a single tag,
+   * use `getRef` / `getTagOfRefIfExists` instead.
+   */
   get versionsIncludeOrphaned(): Versions {
-    // for bit-bin with 266 components, it takes about 1,700ms. don't use lodash.merge, it's much faster
-    // but mutates `this.versions`.
+    // don't use lodash.merge, it's much faster but mutates `this.versions`.
     return { ...this.versions, ...this.orphanedVersions };
   }
 
@@ -649,8 +652,9 @@ export default class Component extends BitObject {
     );
   }
 
-  getTagOfRefIfExists(ref: Ref, allTags = this.versionsIncludeOrphaned): string | undefined {
-    return Object.keys(allTags).find((versionRef) => allTags[versionRef].isEqual(ref));
+  getTagOfRefIfExists(ref: Ref): string | undefined {
+    const findIn = (versions: Versions) => Object.keys(versions).find((tag) => versions[tag].isEqual(ref));
+    return findIn(this.versions) || findIn(this.orphanedVersions);
   }
 
   getTag(version: string): string | undefined {
@@ -660,10 +664,7 @@ export default class Component extends BitObject {
   }
 
   switchHashesWithTagsIfExist(refs: Ref[]): string[] {
-    // cache the this.versionsIncludeOrphaned results into "allTags", looks strange but it improved
-    // the performance on bit-bin with 188 components during source.merge in 4 seconds.
-    const allTags = this.versionsIncludeOrphaned;
-    return refs.map((ref) => this.getTagOfRefIfExists(ref, allTags) || ref.toString());
+    return refs.map((ref) => this.getTagOfRefIfExists(ref) || ref.toString());
   }
 
   /**
@@ -930,9 +931,7 @@ Error from "semver": ${err.message}`);
     const artifactsRefs: Ref[] = [];
     const artifactsRefsFromExportedVersions: Ref[] = [];
     const locallyChangedVersions = await this.getLocalTagsOrHashes(repo, workspaceId);
-    const locallyChangedHashes = locallyChangedVersions.map((v) =>
-      isTag(v) ? this.versionsIncludeOrphaned[v].hash : v
-    );
+    const locallyChangedHashes = locallyChangedVersions.map((v) => (isTag(v) ? (this.getRef(v) as Ref).hash : v));
     const versionsRefs = versions.map((version) => this.getRef(version) as Ref);
     refsWithoutArtifacts.push(...versionsRefs);
 

@@ -2,7 +2,7 @@
  * Please Notice: This file will run in the preview iframe.
  */
 
-import { PreviewRuntime } from '@teambit/preview';
+import { PreviewRuntime } from '@teambit/harmony.modules.runtimes';
 import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
 
 import { EventEmitter2 } from 'eventemitter2';

@@ -1,4 +1,4 @@
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { Component } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
 import type { GraphqlMain } from '@teambit/graphql';
