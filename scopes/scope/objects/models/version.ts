@@ -236,28 +236,6 @@ export default class Version extends BitObject {
   }
 
   id() {
-    // only what the hash needs. `toObject()` serializes the entire version, including a deep clone of all extensions.
-    const obj = {
-      mainFile: this.mainFile,
-      files: this.files?.map((file) => ({
-        file: file.file.toString(),
-        relativePath: file.relativePath,
-        name: file.name,
-        test: file.test,
-      })),
-      log: {
-        message: this.log.message,
-        date: this.log.date,
-        username: this.log.username,
-        email: this.log.email,
-      },
-      packageDependencies: this.packageDependencies,
-      devPackageDependencies: this.devPackageDependencies,
-      peerPackageDependencies: this.peerPackageDependencies,
-      bindingPrefix: this.bindingPrefix,
-      overrides: this.overrides,
-    };
-
     const getDependencies = (deps: Dependencies) => {
       const clonedDependencies = deps.cloneAsString();
       return clonedDependencies.map((dependency) => {
@@ -289,17 +267,18 @@ export default class Version extends BitObject {
     return JSON.stringify(
       pickBy(
         {
-          mainFile: obj.mainFile,
-          files: obj.files,
-          log: obj.log,
+          // only what the hash needs, not `toObject()`, which serializes the whole version (e.g. a deep clone of all extensions)
+          mainFile: this.mainFile,
+          files: this.filesToObject(),
+          log: this.logToObject(),
           dependencies: getDependencies(this.dependencies),
           devDependencies: getDependencies(this.devDependencies),
           extensionDependencies: getDependencies(this.extensionDependencies),
-          packageDependencies: obj.packageDependencies,
-          devPackageDependencies: obj.devPackageDependencies,
-          peerPackageDependencies: obj.peerPackageDependencies,
-          bindingPrefix: obj.bindingPrefix,
-          overrides: obj.overrides,
+          packageDependencies: this.packageDependencies,
+          devPackageDependencies: this.devPackageDependencies,
+          peerPackageDependencies: this.peerPackageDependencies,
+          bindingPrefix: this.bindingPrefix,
+          overrides: this.overrides,
           extensions: getExtensions(this.extensions),
         },
         filterFunction
@@ -459,28 +438,32 @@ export default class Version extends BitObject {
     return Source.from(dependenciesGraphBuffer);
   }
 
-  toObject() {
-    const _convertFileToObject = (file) => {
-      return {
-        file: file.file.toString(),
-        relativePath: file.relativePath,
-        name: file.name,
-        test: file.test,
-      };
-    };
+  private filesToObject() {
+    return this.files?.map((file) => ({
+      file: file.file.toString(),
+      relativePath: file.relativePath,
+      name: file.name,
+      test: file.test,
+    }));
+  }
 
+  private logToObject() {
+    return {
+      message: this.log.message,
+      date: this.log.date,
+      username: this.log.username,
+      email: this.log.email,
+    };
+  }
+
+  toObject() {
     return pickBy(
       {
-        files: this.files ? this.files.map(_convertFileToObject) : null,
+        files: this.filesToObject(),
         mainFile: this.mainFile,
         bindingPrefix: this.bindingPrefix,
         schema: this.schema,
-        log: {
-          message: this.log.message,
-          date: this.log.date,
-          username: this.log.username,
-          email: this.log.email,
-        },
+        log: this.logToObject(),
         docs: this.docs,
         dependencies: this.dependencies.cloneAsObject(),
         devDependencies: this.devDependencies.cloneAsObject(),

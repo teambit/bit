@@ -991,7 +991,7 @@ export class BitMap {
   }
 
   _populateRootDirs() {
-    // not `isEmpty(this.rootDirs)`, it walks all the keys, and this runs on every lookup
+    // not `isEmpty(this.rootDirs)`: a for-in on a big object collects all its keys first, and this runs on every lookup
     if (this.rootDirsPopulated) return;
     this.components.forEach((component) => {
       this.rootDirs[component.rootDir] = component.id;
