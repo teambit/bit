@@ -11,7 +11,7 @@
 | A component joins any cycle                     | fails                               |
 | A new dependency between two members of a cycle | fails                               |
 | A component leaves every cycle                  | fails until the baseline is lowered |
-| A dependency inside a cycle is removed          | reported only                       |
+| A dependency inside a cycle is removed          | fails until the baseline is lowered |
 
 When it fails, the output lists the offending components and dependencies. Usually the fix is to drop the new import or move the imported code into a component both sides can depend on. If a new edge is intentional, or you removed cycles, update the baseline and commit it with your change:
 

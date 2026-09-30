@@ -7,8 +7,8 @@
  * cycles-baseline.json:
  *   - a component that joins any cycle -> fail
  *   - a new edge between two members of the same cycle -> fail
- *   - a baseline component that is no longer in any cycle -> fail (the baseline must be lowered)
- *   - removed edges are reported only.
+ *   - a baseline component or edge that is no longer in a cycle -> fail, so the baseline gets lowered and a
+ *     later PR can't re-add it unnoticed.
  *
  * Usage:
  *   node check-cycles.js            check against the baseline
@@ -176,7 +176,7 @@ function main() {
     );
     process.exit(1);
   }
-  if (left.length) {
+  if (left.length || removedEdges.length) {
     console.log(`\nFAIL: circular dependencies were reduced, so lower the baseline to lock it in: ${UPDATE_CMD}`);
     process.exit(1);
   }

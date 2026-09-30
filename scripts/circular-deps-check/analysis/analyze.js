@@ -55,6 +55,8 @@ function fileKind(rel) {
     /\.docs\.tsx?$/.test(rel)
   )
     return 'docs';
+  // backend files that happen to use JSX (commands, env services, dev-server plugins) run in the main runtime
+  if (/([.-](cmd|service|task|start-plugin)|\.main\.runtime)\.tsx$/.test(rel)) return 'main';
   if (
     /\.preview\.runtime\.tsx?$/.test(rel) ||
     /\.ui\.runtime\.tsx?$/.test(rel) ||
