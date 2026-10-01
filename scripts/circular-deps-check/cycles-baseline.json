@@ -2,11 +2,10 @@
   "summary": {
     "groups": [
       60,
-      16,
-      2
+      16
     ],
-    "components": 78,
-    "edges": 475
+    "components": 76,
+    "edges": 473
   },
   "groups": [
     [
@@ -88,10 +87,6 @@
       "teambit.scope/remote-actions",
       "teambit.scope/remotes",
       "teambit.semantics/doc-parser"
-    ],
-    [
-      "teambit.lanes/lanes",
-      "teambit.lanes/merge-lanes"
     ]
   ],
   "edges": [
@@ -334,8 +329,6 @@
     "teambit.harmony/host-initializer -> teambit.scope/objects",
     "teambit.harmony/ipc-events -> teambit.scope/scope",
     "teambit.harmony/pubsub -> teambit.ui-foundation/ui",
-    "teambit.lanes/lanes -> teambit.lanes/merge-lanes",
-    "teambit.lanes/merge-lanes -> teambit.lanes/lanes",
     "teambit.legacy/bit-map -> teambit.legacy/consumer-component",
     "teambit.legacy/bit-map -> teambit.legacy/extension-data",
     "teambit.legacy/component-list -> teambit.legacy/bit-map",
