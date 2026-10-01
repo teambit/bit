@@ -8,6 +8,9 @@ export type DiffLineItem = {
   oldLn?: number;
   newLn?: number;
   text: string;
+  /** Side-specific source text for context lines matched with comparison-only normalization. */
+  oldText?: string;
+  newText?: string;
   /** half-open `[start, end)` character ranges that actually changed (paired add/del lines only). */
   intra?: Array<[number, number]>;
 };
@@ -27,8 +30,20 @@ const DEFAULT_CONTEXT = 3;
  * lines. Keeping the complete line list (rather than only hunks) lets collapsed gaps be expanded
  * later without recomputing.
  */
-export function computeDiffLines(oldContent: string, newContent: string): DiffLineItem[] {
-  const parts = diffLines(oldContent ?? '', newContent ?? '');
+export type ComputeDiffOptions = { ignoreTrimWhitespace?: boolean };
+
+export function computeDiffLines(
+  oldContent: string,
+  newContent: string,
+  options: ComputeDiffOptions = {}
+): DiffLineItem[] {
+  const oldSource = normalizeLineEndings(oldContent ?? '');
+  const newSource = normalizeLineEndings(newContent ?? '');
+  const oldSourceLines = splitSourceLines(oldSource);
+  const newSourceLines = splitSourceLines(newSource);
+  const parts = diffLines(oldSource, newSource, {
+    ignoreWhitespace: options.ignoreTrimWhitespace,
+  });
   const items: DiffLineItem[] = [];
   let oldLn = 1;
   let newLn = 1;
@@ -38,14 +53,32 @@ export function computeDiffLines(oldContent: string, newContent: string): DiffLi
     // a trailing newline produces a spurious empty final element — drop it.
     if (lines.length > 0 && lines[lines.length - 1] === '') lines.pop();
     for (const text of lines) {
-      if (part.added) items.push({ type: 'add', newLn: newLn++, text });
-      else if (part.removed) items.push({ type: 'del', oldLn: oldLn++, text });
-      else items.push({ type: 'context', oldLn: oldLn++, newLn: newLn++, text });
+      if (part.added) {
+        items.push({ type: 'add', newLn, text: newSourceLines[newLn - 1] ?? text });
+        newLn++;
+      } else if (part.removed) {
+        items.push({ type: 'del', oldLn, text: oldSourceLines[oldLn - 1] ?? text });
+        oldLn++;
+      } else {
+        const oldText = oldSourceLines[oldLn - 1] ?? text;
+        const newText = newSourceLines[newLn - 1] ?? text;
+        items.push({ type: 'context', oldLn: oldLn++, newLn: newLn++, text: newText, oldText, newText });
+      }
     }
   }
 
   fillIntraLineRanges(items);
   return items;
+}
+
+function normalizeLineEndings(content: string): string {
+  return content.replace(/\r\n/g, '\n');
+}
+
+function splitSourceLines(content: string): string[] {
+  const lines = content.split(/\r?\n/);
+  if (lines.length > 0 && lines[lines.length - 1] === '') lines.pop();
+  return lines;
 }
 
 export function statsFromItems(items: DiffLineItem[]): DiffStats {
@@ -183,6 +216,7 @@ export function buildSections(items: DiffLineItem[], context: number = DEFAULT_C
     if (items[i].type !== 'context') changedIdx.push(i);
   }
   if (changedIdx.length === 0) {
+    if (context >= items.length) return items.length ? [{ kind: 'lines', items }] : [];
     // an unchanged file: collapse everything into one expandable gap.
     return items.length ? [{ kind: 'gap', id: 'gap-all', hidden: items }] : [];
   }

@@ -169,8 +169,15 @@ describe('updateDependents cascade - reset, history and checkout', function () {
   // snap's cascade — the first snap's cascade must stay intact. This exercises the per-batch
   // history on the lane: the first snap's cascade entry must survive while the second snap's
   // cascade is rolled back.
+  //
+  // The same post-reset state must also leave `bit status` clean (this was scenario 12): the
+  // regression was that resetting a head'd cascade left the workspace's bitmap entry pointing at
+  // the pre-snap version (the imported tag) while the modelComponent's local view of that version
+  // had been dropped, so `bit status` threw `ComponentsPendingImport (comp3@<old-tag>)`. Hidden
+  // entries must also stay out of `stagedComponents` and instead surface under
+  // `pendingUpdateDependents` — the same set `bit export` prints as "exported updates".
   // ---------------------------------------------------------------------------------------------
-  describe('scenario 9: bit reset --head rewinds only the last snap, not both cascades', () => {
+  describe('scenario 9: bit reset --head rewinds only the last snap, and leaves status clean', () => {
     let comp2InUpdDepInitial: string;
     let comp2AfterFirstSnap: string;
     let laneAfterResetHead: Record<string, any>;
@@ -205,31 +212,6 @@ describe('updateDependents cascade - reset, history and checkout', function () {
       const comp2After = laneAfterResetHead.updateDependents[0].split('@')[1];
       expect(comp2After).to.equal(comp2AfterFirstSnap);
       expect(comp2After).to.not.equal(comp2InUpdDepInitial);
-    });
-  });
-  // ---------------------------------------------------------------------------------------------
-  // Scenario 12: `bit status` must run cleanly after `bit reset --head` on a lane that has
-  // workspace-direct snaps + hidden updateDependent cascades. Locks down the regression where
-  // resetting a head'd cascade left the workspace's bitmap entry pointing at the pre-snap version
-  // (the imported tag), but the modelComponent's local view of that version had been dropped — so
-  // a subsequent `bit status` threw `ComponentsPendingImport (comp3@<old-tag>)`.
-  // ---------------------------------------------------------------------------------------------
-  describe('scenario 12: bit status is clean after reset --head on lane with cascades', () => {
-    before(async () => {
-      await buildBaseRemoteState();
-
-      helper.scopeHelper.reInitWorkspace();
-      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath);
-      helper.command.importLane('dev', '-x');
-      helper.command.importComponent('comp3');
-
-      // TWO consecutive workspace snaps — each cascades comp2.
-      helper.fs.outputFile(`${helper.scopes.remote}/comp3/index.js`, "module.exports = () => 'comp3-v2';");
-      helper.command.snapAllComponentsWithoutBuild();
-      helper.fs.outputFile(`${helper.scopes.remote}/comp3/index.js`, "module.exports = () => 'comp3-v3';");
-      helper.command.snapAllComponentsWithoutBuild();
-
-      helper.command.resetAll('--head');
     });
 
     it('bit status should not throw ComponentsPendingImport for the visible component', () => {

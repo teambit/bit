@@ -137,7 +137,11 @@ export default class Version extends BitObject {
   componentId?: ComponentID; // can help debugging errors when validating Version object
   bitVersion?: string;
   modified: Log[] = []; // currently mutation could happen as a result of either "squash" or "sign".
-  origin?: VersionOrigin; // for debugging purposes
+  // where this version was made: the component id it was snapped as, and the lane it was snapped on
+  // (absent on main). set on every snap and tag, see SnappingMain.addSource. it is read as data, not
+  // only as a debugging aid: Scope.isPartOfLaneHistoryOrMain tells a snap of a given lane from one of
+  // main by it, and ModelComponent.filterLeanLaneRefs keeps the refs a lean lane scope owns by it.
+  origin?: VersionOrigin;
   hidden?: boolean; // whether the version is hidden from commands such as "bit log", "bit blame". (needed for un-meaningful snaps, such as merged-lane snap prior to the tag)
   batchId?: string; // a shared UUID for all versions created in the same snap/tag operation
 
@@ -232,8 +236,6 @@ export default class Version extends BitObject {
   }
 
   id() {
-    const obj = this.toObject();
-
     const getDependencies = (deps: Dependencies) => {
       const clonedDependencies = deps.cloneAsString();
       return clonedDependencies.map((dependency) => {
@@ -265,17 +267,18 @@ export default class Version extends BitObject {
     return JSON.stringify(
       pickBy(
         {
-          mainFile: obj.mainFile,
-          files: obj.files,
-          log: obj.log,
+          // only what the hash needs, not `toObject()`, which serializes the whole version (e.g. a deep clone of all extensions)
+          mainFile: this.mainFile,
+          files: this.filesToObject(),
+          log: this.logToObject(),
           dependencies: getDependencies(this.dependencies),
           devDependencies: getDependencies(this.devDependencies),
           extensionDependencies: getDependencies(this.extensionDependencies),
-          packageDependencies: obj.packageDependencies,
-          devPackageDependencies: obj.devPackageDependencies,
-          peerPackageDependencies: obj.peerPackageDependencies,
-          bindingPrefix: obj.bindingPrefix,
-          overrides: obj.overrides,
+          packageDependencies: this.packageDependencies,
+          devPackageDependencies: this.devPackageDependencies,
+          peerPackageDependencies: this.peerPackageDependencies,
+          bindingPrefix: this.bindingPrefix,
+          overrides: this.overrides,
           extensions: getExtensions(this.extensions),
         },
         filterFunction
@@ -435,28 +438,32 @@ export default class Version extends BitObject {
     return Source.from(dependenciesGraphBuffer);
   }
 
-  toObject() {
-    const _convertFileToObject = (file) => {
-      return {
-        file: file.file.toString(),
-        relativePath: file.relativePath,
-        name: file.name,
-        test: file.test,
-      };
-    };
+  private filesToObject() {
+    return this.files?.map((file) => ({
+      file: file.file.toString(),
+      relativePath: file.relativePath,
+      name: file.name,
+      test: file.test,
+    }));
+  }
 
+  private logToObject() {
+    return {
+      message: this.log.message,
+      date: this.log.date,
+      username: this.log.username,
+      email: this.log.email,
+    };
+  }
+
+  toObject() {
     return pickBy(
       {
-        files: this.files ? this.files.map(_convertFileToObject) : null,
+        files: this.filesToObject(),
         mainFile: this.mainFile,
         bindingPrefix: this.bindingPrefix,
         schema: this.schema,
-        log: {
-          message: this.log.message,
-          date: this.log.date,
-          username: this.log.username,
-          email: this.log.email,
-        },
+        log: this.logToObject(),
         docs: this.docs,
         dependencies: this.dependencies.cloneAsObject(),
         devDependencies: this.devDependencies.cloneAsObject(),

@@ -1,11 +1,7 @@
-import chai, { expect } from 'chai';
+import { expect } from 'chai';
 import { IssuesClasses } from '@teambit/component-issues';
-import chaiString from 'chai-string';
 
 import { Helper, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
-import chaiFs from 'chai-fs';
-chai.use(chaiFs);
-chai.use(chaiString);
 
 describe('multiple envs', function () {
   this.timeout(0);

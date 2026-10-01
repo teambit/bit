@@ -4,7 +4,7 @@ import { isSnap } from '@teambit/component-version';
 import { BitError } from '@teambit/bit-error';
 import mapSeries from 'p-map-series';
 import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import { getRootComponentDir } from '@teambit/workspace.root-components';
 import type { Component, ComponentMap, ComponentMain, IComponent } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
@@ -446,6 +446,16 @@ export class DependencyResolverMain {
     const depList = this.getDependenciesFromSerializedDependencies(serializedDependencies);
     if (includeHidden) return depList;
     return depList.filterHidden();
+  }
+
+  getHiddenPeerDependencies(component: IComponent): DependencyList {
+    const entry = component.get(DependencyResolverAspect.id);
+    if (!entry) {
+      return DependencyList.fromArray([]);
+    }
+    const serializedDependencies: SerializedDependency[] = entry?.data?.dependencies || [];
+    const depList = this.getDependenciesFromSerializedDependencies(serializedDependencies);
+    return depList.getHiddenPeers();
   }
 
   getDependenciesFromLegacyComponent(

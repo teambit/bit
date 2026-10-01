@@ -42,7 +42,7 @@ import type { LaneId } from '@teambit/lane-id';
 import type { Consumer } from '@teambit/legacy.consumer';
 import { loadConsumer } from '@teambit/legacy.consumer';
 import type { GetBitMapComponentOptions } from '@teambit/legacy.bit-map';
-import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
+import { fileContentsForVersioning, MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { getMaxSizeForComponents, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import type { LoadFailure } from '@teambit/harmony.modules.load-trace';
@@ -771,7 +771,9 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     const compDirAbs = path.join(this.path, compDir);
     const sourceFilesVinyls = bitMapEntry.files.map((file) => {
       const filePath = path.join(compDirAbs, file.relativePath);
-      return SourceFile.load(filePath, compDirAbs, this.path, {});
+      const sourceFile = SourceFile.load(filePath, compDirAbs, this.path, {});
+      sourceFile.contents = fileContentsForVersioning(bitMapEntry, file.relativePath, sourceFile.contents);
+      return sourceFile;
     });
     const repo = this.scope.legacyScope.objects;
     const getModelFiles = async () => {

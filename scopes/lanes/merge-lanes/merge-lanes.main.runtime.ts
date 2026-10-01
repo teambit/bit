@@ -1,7 +1,8 @@
 import { BitError } from '@teambit/bit-error';
 import path from 'path';
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect } from '@teambit/cli';
 import type { ImporterMain } from '@teambit/importer';
 import { ImporterAspect } from '@teambit/importer';
 import type { LanesMain } from '@teambit/lanes';

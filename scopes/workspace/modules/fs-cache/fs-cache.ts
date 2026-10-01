@@ -10,6 +10,9 @@ const WORKSPACE_CACHE = 'cache';
 const COMPONENTS_CACHE = 'components';
 const DOCS = 'docs';
 const DEPS = 'deps';
+const RETRYABLE_REMOVE_ERRORS = ['ENOTEMPTY', 'EPERM', 'EBUSY'];
+const REMOVE_MAX_ATTEMPTS = 10;
+const REMOVE_RETRY_DELAY_MS = 100;
 
 export class FsCache {
   readonly basePath: PathOsBasedAbsolute;
@@ -38,17 +41,19 @@ export class FsCache {
 
   async deleteAllDependenciesDataCache() {
     const cacheDir = this.getCachePath(DEPS);
-    try {
-      await cacache.rm.all(cacheDir);
-    } catch (err: any) {
-      if (err.code === 'ENOTEMPTY') {
-        // it happens when one process is deleting the cache and another one is writing to it.
-        // it rarely happens. if it happens, wait for a second and try again.
-        logger.error(`failed deleting the cache directory ${cacheDir}. retrying...`);
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        await cacache.rm.all(cacheDir);
-      } else {
-        throw err;
+    // the deps cache dir holds nothing else, so removing it entirely equals cacache.rm.all.
+    // components keep reading/writing entries while it's deleted (loaded in parallel, or by another
+    // process), which fails the rmdir: ENOTEMPTY on posix, EPERM/EBUSY on Windows (also when an
+    // antivirus/indexer holds a handle). all of these are transient, so retry with a linear backoff.
+    cacache.clearMemoized();
+    for (let attempt = 1; ; attempt++) {
+      try {
+        await fs.remove(cacheDir);
+        return;
+      } catch (err: any) {
+        if (!RETRYABLE_REMOVE_ERRORS.includes(err.code) || attempt >= REMOVE_MAX_ATTEMPTS) throw err;
+        logger.debug(`failed deleting the cache directory ${cacheDir} (${err.code}), retrying (attempt ${attempt})`);
+        await new Promise((resolve) => setTimeout(resolve, REMOVE_RETRY_DELAY_MS * attempt));
       }
     }
   }

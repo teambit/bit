@@ -30,7 +30,7 @@ import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-pat
 import { isEqual } from 'lodash';
 import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
-import { addNodeGypToPath } from './node-gyp-bin';
+import { prepareBuildScriptsPath } from './build-scripts-path';
 
 /**
  * Packages that are known to have risky or unnecessary build scripts.
@@ -418,7 +418,7 @@ export async function install(
   if (!options.dryRun) {
     // Dependency build scripts inherit this process's PATH. Set up inside the
     // guard, so a dry run neither writes the wrapper nor touches the env.
-    addNodeGypToPath(logger);
+    prepareBuildScriptsPath(logger);
     let installPromise: Promise<nodeApi.InstallResult> | undefined;
     let restoreWantedLockfile: (() => Promise<void>) | undefined;
     const onOutput = options.hidePackageManagerOutput ? undefined : reporterOutput(options.reportOptions);
@@ -461,7 +461,7 @@ export async function install(
     // support the pending / skipIfHasSideEffectsCache selectors of the old engine.
     rebuild: async () => {
       // Reached without an install of its own after a dry run.
-      addNodeGypToPath(logger);
+      prepareBuildScriptsPath(logger);
       // Same output routing as the install: the CLI server's stream has to
       // carry the rebuild's output too, not just the install's.
       const rebuildReportOptions: ReportOptions = {

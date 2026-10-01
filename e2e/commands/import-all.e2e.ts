@@ -83,7 +83,7 @@ describe('bit import command with no ids', function () {
       let output;
       before(() => {
         helper.scopeHelper.getClonedWorkspace(localScope);
-        helper.command.tagAllComponents();
+        helper.command.tagAllWithoutBuild();
         output = helper.command.runCmd(`bit import ${helper.scopes.remote}/bar/foo --merge=manual`);
       });
       it('should display a successful message', () => {

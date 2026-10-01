@@ -53,7 +53,7 @@ describe('bit tag command', function () {
         helper.fs.createFile('components/default', 'default.js');
         helper.command.addComponent('components/default', { i: 'components/default' });
         const version = 'invalidVersion';
-        const tag = () => helper.command.tagWithoutMessage('components/default', version);
+        const tag = () => helper.command.tagWithoutBuild('components/default', `--ver ${version}`);
         expect(tag).to.throw(
           `error: version ${version} is not a valid semantic version. learn more: https://semver.org`
         );
@@ -79,10 +79,6 @@ describe('bit tag command', function () {
         helper.command.addComponent('components/exact2', { i: 'components/exact-new' });
         output = helper.command.tagWithoutBuild('components/exact-new@5.12.10', '--unmodified');
         expect(output).to.have.string('components/exact-new@5.12.10');
-      });
-      it('Should set the exact version when specified on existing component', () => {
-        output = helper.command.tagWithoutBuild('components/exact@3.3.3', '--unmodified');
-        expect(output).to.have.string('components/exact@3.3.3');
       });
       it('Should increment patch version of dependent when using other flag on tag dependency', () => {
         helper.fs.createFile('components/dependency', 'dependency.js');

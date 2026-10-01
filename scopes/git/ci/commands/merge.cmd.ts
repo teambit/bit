@@ -19,6 +19,7 @@ type Options = {
   preRelease?: string;
   prereleaseId?: string;
   incrementBy?: number;
+  noSkipPublishedVersions?: boolean;
   verbose?: boolean;
   versionsFile?: string;
   autoMergeResolve?: MergeStrategy;
@@ -59,6 +60,13 @@ note that dependents are auto-tagged transitively, so the entire dependents grap
       '',
       'increment-by <number>',
       '(default to 1) increment semver flag (patch/minor/major) by. e.g. incrementing patch by 2: 0.0.1 -> 0.0.3.',
+    ],
+    [
+      '',
+      'no-skip-published-versions',
+      `tag the computed version even when the registry already has it.
+by default, a version that is already published is skipped in favor of the next one, so that a run following a
+publish-succeeded-but-export-failed run is not rejected by the registry`,
     ],
     ['', 'versions-file <path>', 'path to a file containing component versions. format: "component-id: version"'],
     ['', 'verbose', 'show verbose output'],
@@ -115,6 +123,7 @@ note that dependents are auto-tagged transitively, so the entire dependents grap
       autoTagReleaseType,
       preReleaseId,
       incrementBy: options.incrementBy,
+      skipPublishedVersions: !options.noSkipPublishedVersions,
       explicitVersionBump,
       verbose: options.verbose,
       versionsFile: options.versionsFile,

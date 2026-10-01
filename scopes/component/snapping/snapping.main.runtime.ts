@@ -1,5 +1,6 @@
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect } from '@teambit/cli';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import fs from 'fs-extra';
 import {
@@ -16,6 +17,7 @@ import type { ReleaseType } from 'semver';
 import semver from 'semver';
 import { compact, difference, uniq } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import { findWorkspaceRootMap } from '@teambit/workspace-root';
 import type { BuildStatus } from '@teambit/legacy.constants';
 import { Extensions, LATEST } from '@teambit/legacy.constants';
 import type { Consumer } from '@teambit/legacy.consumer';
@@ -136,6 +138,11 @@ export type BasicTagResults = {
   newComponents: ComponentIdList;
   removedComponents?: ComponentIdList;
   totalComponentsCount?: number; // total count of all components tagged/snapped (including auto-tagged)
+  /**
+   * the workspace-root component that joined the batch because it was new or modified, at its new
+   * version. see getWorkspaceRootToTagAlong.
+   */
+  autoAddedWorkspaceRoot?: ComponentID;
 };
 
 export type FileData = { path: string; content: string; delete?: boolean };
@@ -215,6 +222,7 @@ export class SnappingMain {
     rebuildDepsGraph,
     noLockDeps = false,
     incrementBy = 1,
+    skipPublishedVersions = false,
     disableTagAndSnapPipelines = false,
     failFast = false,
     detachHead,
@@ -260,9 +268,12 @@ export class SnappingMain {
     if (!bitIds.length) return null;
 
     const compIds = ComponentIdList.fromArray(bitIds);
+    // --persist tags what the soft-tag recorded, and the soft-tag has already brought the root along
+    const autoAddedWorkspaceRoot = persist ? undefined : await this.getWorkspaceRootToTagAlong(compIds);
+    const idsToTag = autoAddedWorkspaceRoot ? ComponentIdList.fromArray([...compIds, autoAddedWorkspaceRoot]) : compIds;
 
-    this.logger.debug(`tagging the following components: ${compIds.toString()}`);
-    const components = await this.loadComponentsForTagOrSnap(compIds, !soft);
+    this.logger.debug(`tagging the following components: ${idsToTag.toString()}`);
+    const components = await this.loadComponentsForTagOrSnap(idsToTag, !soft);
     await this.throwForVariousIssues(components, ignoreIssues);
 
     const params = {
@@ -285,12 +296,14 @@ export class SnappingMain {
       rebuildDepsGraph,
       noLockDeps,
       incrementBy,
+      skipPublishedVersions,
       packageManagerConfigRootDir: this.workspace.path,
       exitOnFirstFailedTask: failFast,
       detachHead,
       overrideHead,
       loose,
       ignoreIssues,
+      autoAddedWorkspaceRoot,
     };
     const {
       taggedComponents,
@@ -299,7 +312,7 @@ export class SnappingMain {
       stagedConfig,
       removedComponents,
       totalComponentsCount,
-    } = await this.makeVersion(compIds, components, params);
+    } = await this.makeVersion(idsToTag, components, params);
 
     const tagResults = {
       taggedComponents,
@@ -310,6 +323,7 @@ export class SnappingMain {
       newComponents,
       removedComponents,
       totalComponentsCount,
+      autoAddedWorkspaceRoot: findVersioned(taggedComponents, autoAddedWorkspaceRoot),
     };
 
     await consumer.onDestroy(`tag (message: ${message || 'N/A'})`);
@@ -615,8 +629,10 @@ export class SnappingMain {
     const self = this;
     const ids = legacyBitIds || (await getIdsToSnap());
     if (!ids) return null;
-    this.logger.debug(`snapping the following components: ${ids.toString()}`);
-    const components = await this.loadComponentsForTagOrSnap(ids);
+    const autoAddedWorkspaceRoot = await this.getWorkspaceRootToTagAlong(ids);
+    const idsToSnap = autoAddedWorkspaceRoot ? ComponentIdList.fromArray([...ids, autoAddedWorkspaceRoot]) : ids;
+    this.logger.debug(`snapping the following components: ${idsToSnap.toString()}`);
+    const components = await this.loadComponentsForTagOrSnap(idsToSnap);
     await this.throwForVariousIssues(components, ignoreIssues);
     const makeVersionParams = {
       editor,
@@ -638,9 +654,10 @@ export class SnappingMain {
       detachHead,
       loose,
       ignoreIssues,
+      autoAddedWorkspaceRoot,
     };
     const { taggedComponents, autoTaggedResults, stagedConfig, removedComponents, totalComponentsCount } =
-      await this.makeVersion(ids, components, makeVersionParams);
+      await this.makeVersion(idsToSnap, components, makeVersionParams);
 
     const snapResults: Partial<SnapResults> = {
       snappedComponents: taggedComponents,
@@ -648,6 +665,7 @@ export class SnappingMain {
       newComponents,
       removedComponents,
       totalComponentsCount,
+      autoAddedWorkspaceRoot: findVersioned(taggedComponents, autoAddedWorkspaceRoot),
     };
 
     const currentLane = consumer.getCurrentLaneId();
@@ -725,13 +743,23 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     if (!visibleIds.length && !hiddenLegacyComponents.length) return null;
 
     this.logger.debug(`snapForMerge, visible: ${visibleIds.length}, hidden: ${hiddenLegacyComponents.length}`);
-    const visibleHarmony = visibleIds.length ? await this.loadComponentsForTagOrSnap(visibleIds) : [];
+    // a merge snap is a snap: a new or modified root joins it the way it joins tag and snap, so the
+    // members snapped here record the root version their files were merged with, rather than the one
+    // the root was last snapped at (see getWorkspaceRootToTagAlong). only the visible ids can take
+    // it - a hidden entry is scope-only, with no workspace state to snap the root against and no
+    // record of it to make right, so a merge of nothing else leaves the root where it is. the root
+    // was snapped as a result of the merge, so it is reported in that section like the rest.
+    const autoAddedWorkspaceRoot = visibleIds.length ? await this.getWorkspaceRootToTagAlong(visibleIds) : undefined;
+    const visibleIdsToSnap = autoAddedWorkspaceRoot
+      ? ComponentIdList.fromArray([...visibleIds, autoAddedWorkspaceRoot])
+      : visibleIds;
+    const visibleHarmony = visibleIdsToSnap.length ? await this.loadComponentsForTagOrSnap(visibleIdsToSnap) : [];
     const hiddenHarmony = hiddenLegacyComponents.length ? await this.scope.getManyByLegacy(hiddenLegacyComponents) : [];
     // issue checks are workspace-source-tree concerns — hidden entries are scope-only
     if (visibleHarmony.length) await this.throwForVariousIssues(visibleHarmony);
 
     const hiddenIds = ComponentIdList.fromArray(hiddenLegacyComponents.map((c) => c.componentId));
-    const allIds = ComponentIdList.uniqFromArray([...visibleIds, ...hiddenIds]);
+    const allIds = ComponentIdList.uniqFromArray([...visibleIdsToSnap, ...hiddenIds]);
     const allComponents = [...visibleHarmony, ...hiddenHarmony];
 
     const makeVersionParams = {
@@ -745,6 +773,7 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
       isSnap: true,
       packageManagerConfigRootDir: this.workspace.path,
       loose,
+      autoAddedWorkspaceRoot,
     };
 
     const { taggedComponents, autoTaggedResults, stagedConfig, removedComponents } = await this.makeVersion(
@@ -928,12 +957,23 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
       : new ComponentIdList();
     const deps = component.getAllDependencies();
     const missingDeps: ComponentID[] = [];
+    // deps that were already in the previous version were validated when that version was snapped, but only in
+    // the context of the lane it was snapped on. when the previous version is from another lane (e.g. the
+    // .bitmap has versions of another lane), its deps must be validated again against the current lane.
+    let isPrevVersionFromCurrentHistoryP: Promise<boolean> | undefined;
+    const isPrevVersionFromCurrentHistory = () => {
+      if (!isPrevVersionFromCurrentHistoryP) {
+        isPrevVersionFromCurrentHistoryP = this.isPartOfCurrentHistory(component.componentFromModel!.id, lane);
+      }
+      return isPrevVersionFromCurrentHistoryP;
+    };
     await Promise.all(
       deps.map(async (dep) => {
         if (!this.scope.isExported(dep.id) || !dep.id.hasVersion()) return;
         if (isTag(dep.id.version)) return;
         if (allIds.hasWithoutVersion(dep.id)) return; // it's tagged/snapped now.
-        if (depsFromModelIds.has(dep.id)) return; // this dep is not new, it was already snapped/tagged with it before.
+        // this dep is not new, it was already snapped/tagged with it before.
+        if (depsFromModelIds.has(dep.id) && (await isPrevVersionFromCurrentHistory())) return;
         let isPartOfHistory: boolean | undefined;
         try {
           isPartOfHistory = lane
@@ -969,6 +1009,19 @@ another option, in case this dependency is not in main yet is to remove all refe
       })
     );
     return missingDeps;
+  }
+
+  private async isPartOfCurrentHistory(id: ComponentID, lane?: Lane): Promise<boolean> {
+    if (!this.scope.isExported(id) || !id.hasVersion() || isTag(id.version)) return true;
+    try {
+      const isPartOfHistory = lane
+        ? await this.scope.legacyScope.isPartOfLaneHistoryOrMain(id, lane)
+        : await this.scope.legacyScope.isPartOfMainHistory(id);
+      return Boolean(isPartOfHistory);
+    } catch {
+      // not enough data to determine. validate the deps as if they were new.
+      return false;
+    }
   }
 
   async _addFlattenedDepsGraphToComponents(components: ConsumerComponent[]) {
@@ -1396,6 +1449,19 @@ another option, in case this dependency is not in main yet is to remove all refe
     component.config.extensions.push(extension);
   }
 
+  /**
+   * a new or modified workspace-root component joins every tag and snap of its members. they record
+   * the root at the version that has their files (see VersionMaker.recordWorkspaceRoot), and a build
+   * of a member elsewhere needs the workspace.jsonc, lockfile and configs it was made with. a root
+   * that is up to date is recorded at its current version and stays out of the batch.
+   */
+  private async getWorkspaceRootToTagAlong(ids: ComponentIdList): Promise<ComponentID | undefined> {
+    const rootId = findWorkspaceRootMap(this.workspace.consumer.bitMap)?.id;
+    if (!rootId || ids.hasWithoutVersion(rootId)) return undefined;
+    const status = await this.workspace.getComponentStatusById(rootId);
+    return status.newlyCreated || status.modified ? rootId.changeVersion(undefined) : undefined;
+  }
+
   private async getTagPendingComponentsIds(includeUnmodified = false) {
     const ids = includeUnmodified
       ? await this.workspace.listPotentialTagIds()
@@ -1557,6 +1623,13 @@ another option, in case this dependency is not in main yet is to remove all refe
     cli.register(tagCmd, snapCmd, resetCmd, snapDistanceCmd);
     return snapping;
   }
+}
+
+/**
+ * the id of the given component as it was just versioned, for the results.
+ */
+function findVersioned(components: ConsumerComponent[], id?: ComponentID): ComponentID | undefined {
+  return id && components.find((component) => component.id.isEqualWithoutVersion(id))?.id;
 }
 
 SnappingAspect.addRuntime(SnappingMain);

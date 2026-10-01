@@ -1,7 +1,8 @@
 import rimraf from 'rimraf';
 import { v4 } from 'uuid';
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect } from '@teambit/cli';
 import semver from 'semver';
 import chalk from 'chalk';
 import { compact, flatten, isEqual, pick, uniqBy } from 'lodash';
@@ -73,6 +74,7 @@ import type { CapsuleKind, PruneCapsulesOptions, PruneCapsulesReport } from './c
 import { IsolatorAspect } from './isolator.aspect';
 import { symlinkOnCapsuleRoot, symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
 import { Network } from './network';
+import { removeHiddenPeerDependencies } from './remove-hidden-peer-dependencies';
 import type { ConfigStoreMain } from '@teambit/config-store';
 import { ConfigStoreAspect } from '@teambit/config-store';
 
@@ -1552,6 +1554,10 @@ export class IsolatorMain {
       const compParent = this.getCompForArtifacts(component, populateArtifactsFromComps);
       this.mergePkgJsonFromLastBuild(compParent, packageJson);
     }
+    removeHiddenPeerDependencies(
+      packageJson.packageJsonObject,
+      this.dependencyResolver.getHiddenPeerDependencies(component)
+    );
     dataToPersist.addFile(packageJson.toVinylFile());
     const artifacts = await this.getArtifacts(component, legacyScope, populateArtifactsFromComps);
     dataToPersist.addManyFiles(artifacts);

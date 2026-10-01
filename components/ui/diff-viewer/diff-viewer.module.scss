@@ -247,6 +247,12 @@ $del-tint: var(--negative-surface-color, #fdf2f5);
 .unifiedRow {
   display: grid;
   grid-template-columns: 50px 50px 22px minmax(var(--diff-code-width, 60ch), 1fr);
+
+  // Let unusually wide glyphs extend the shared `ch`-based estimate. The body owns horizontal
+  // scrolling, so visible overflow remains reachable without widening the page.
+  .code {
+    overflow: visible;
+  }
 }
 
 // Split view: each side is a strict 50% so BOTH are always visible and the row never exceeds the

@@ -3,7 +3,8 @@ import classNames from 'classnames';
 import type { DiffLineItem, DiffSection } from './diff-model';
 import { computeDiffLines, buildSections, statsFromItems, pairForSplit } from './diff-model';
 import type { HlLines, HlToken } from './highlighter';
-import { useHighlightedLines, langFromFileName } from './highlighter';
+import { useHighlightedLines } from './highlighter';
+import { langFromFileName, normalizeLanguage } from './language';
 import { resolveTokenColor } from './shiki-bit-theme';
 import styles from './diff-viewer.module.scss';
 
@@ -19,6 +20,8 @@ export type DiffViewerProps = {
   newContent: string;
   /** language id override (otherwise inferred from the file extension). */
   language?: string;
+  /** ignore leading/trailing whitespace while matching lines without altering rendered source. */
+  ignoreTrimWhitespace?: boolean;
   /** controlled view mode. */
   view?: DiffViewMode;
   /** initial view mode when uncontrolled. */
@@ -52,6 +55,7 @@ const OVERSCAN = 14;
 const EXPAND_CHUNK = 20;
 
 type GapState = { top: number; bottom: number };
+const EMPTY_GAP_STATES: Record<string, GapState> = {};
 
 /** a single rendered row: a code line (or a left/right pair) or a collapsed-gap expander. */
 type RenderRow =
@@ -64,6 +68,7 @@ export function DiffViewer({
   oldContent,
   newContent,
   language,
+  ignoreTrimWhitespace = false,
   view: controlledView,
   defaultView = 'split',
   onViewChange,
@@ -89,13 +94,21 @@ export function DiffViewer({
   );
 
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
-  const [gapStates, setGapStates] = useState<Record<string, GapState>>({});
 
-  const lang = language ?? langFromFileName(fileName);
+  const lang = normalizeLanguage(language) ?? langFromFileName(fileName);
 
-  const items = useMemo(() => computeDiffLines(oldContent, newContent), [oldContent, newContent]);
+  const items = useMemo(
+    () => computeDiffLines(oldContent, newContent, { ignoreTrimWhitespace }),
+    [oldContent, newContent, ignoreTrimWhitespace]
+  );
   const stats = useMemo(() => statsFromItems(items), [items]);
   const sections = useMemo(() => buildSections(items, contextLines), [items, contextLines]);
+  const [gapStateStore, setGapStateStore] = useState<{
+    sections?: DiffSection[];
+    states: Record<string, GapState>;
+  }>({ states: {} });
+  // A rebuilt section model gets an empty expansion state immediately, before effects run.
+  const gapStates = gapStateStore.sections === sections ? gapStateStore.states : EMPTY_GAP_STATES;
 
   // tokenize each whole file once; multi-line constructs stay correct and lines are looked up by number.
   const oldHl = useHighlightedLines(oldContent, lang);
@@ -105,20 +118,26 @@ export function DiffViewer({
   const codeWidthCh = useMemo(() => {
     let max = 0;
     for (const it of items) if (it.text.length > max) max = it.text.length;
-    return Math.min(Math.max(max, 40), 400);
+    return Math.max(max, 40);
   }, [items]);
 
-  const expandGap = useCallback((id: string, hiddenLen: number, dir: 'top' | 'bottom' | 'all') => {
-    setGapStates((prev) => {
-      const cur = prev[id] ?? { top: 0, bottom: 0 };
-      const remaining = hiddenLen - cur.top - cur.bottom;
-      if (remaining <= 0) return prev;
-      if (dir === 'all') return { ...prev, [id]: { top: cur.top + remaining, bottom: cur.bottom } };
-      const add = Math.min(EXPAND_CHUNK, remaining);
-      if (dir === 'top') return { ...prev, [id]: { ...cur, top: cur.top + add } };
-      return { ...prev, [id]: { ...cur, bottom: cur.bottom + add } };
-    });
-  }, []);
+  const expandGap = useCallback(
+    (id: string, hiddenLen: number, dir: 'top' | 'bottom' | 'all') => {
+      setGapStateStore((prev) => {
+        const states = prev.sections === sections ? prev.states : {};
+        const cur = states[id] ?? { top: 0, bottom: 0 };
+        const remaining = hiddenLen - cur.top - cur.bottom;
+        if (remaining <= 0) return prev;
+        if (dir === 'all') {
+          return { sections, states: { ...states, [id]: { top: cur.top + remaining, bottom: cur.bottom } } };
+        }
+        const add = Math.min(EXPAND_CHUNK, remaining);
+        if (dir === 'top') return { sections, states: { ...states, [id]: { ...cur, top: cur.top + add } } };
+        return { sections, states: { ...states, [id]: { ...cur, bottom: cur.bottom + add } } };
+      });
+    },
+    [sections]
+  );
 
   const rows = useMemo(() => buildRenderRows(sections, gapStates, view), [sections, gapStates, view]);
 
@@ -146,9 +165,10 @@ export function DiffViewer({
           newHl={newHl}
           codeWidthCh={codeWidthCh}
           maxHeight={maxHeight}
-          // wrap makes rows variable-height (height: auto), which invalidates the fixed-ROW_H
-          // windowing math; force full, non-windowed rendering (page scrolls) whenever wrap is on.
+          // Wrap makes rows variable-height, which invalidates fixed-row windowing. Render all rows
+          // but retain the requested scroll cap through constrainHeight.
           virtualize={virtualize && !wrap}
+          constrainHeight={virtualize}
           onExpand={expandGap}
         />
       )}
@@ -255,6 +275,7 @@ function DiffBody({
   codeWidthCh,
   maxHeight,
   virtualize,
+  constrainHeight,
   onExpand,
 }: {
   rows: RenderRow[];
@@ -265,16 +286,33 @@ function DiffBody({
   maxHeight: number;
   /** when false, the file renders fully expanded with no inner scroll/windowing (page scrolls). */
   virtualize: boolean;
+  /** keep the body bounded even when wrapping disables fixed-row virtualization. */
+  constrainHeight: boolean;
   onExpand: (id: string, hiddenLen: number, dir: 'top' | 'bottom' | 'all') => void;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const rafRef = useRef<number | null>(null);
+  const previousViewRef = useRef(view);
 
   const total = rows.length;
   const totalHeight = total * ROW_H;
   // only window when virtualization is enabled AND the file is large enough to warrant it.
   const windowing = virtualize && total > VIRTUALIZE_THRESHOLD;
+  const maxScrollTop = windowing ? Math.max(0, totalHeight - maxHeight) : 0;
+  // Clamp during render as well as synchronizing state below. This prevents even one paint from
+  // slicing beyond the new row model when a split/unified switch reduces the number of rows.
+  const effectiveScrollTop = Math.min(scrollTop, maxScrollTop);
+
+  useEffect(() => {
+    const viewChanged = previousViewRef.current !== view;
+    previousViewRef.current = view;
+    setScrollTop((current) => {
+      const next = viewChanged ? 0 : Math.min(current, maxScrollTop);
+      if (scrollRef.current && scrollRef.current.scrollTop !== next) scrollRef.current.scrollTop = next;
+      return current === next ? current : next;
+    });
+  }, [view, maxScrollTop]);
 
   // cancel a pending scroll RAF on unmount — DiffBody is conditionally mounted (collapse hides it),
   // so a queued frame could otherwise fire setScrollTop() after unmount.
@@ -297,22 +335,22 @@ function DiffBody({
   let end = total;
   if (windowing) {
     const viewport = maxHeight;
-    start = Math.max(0, Math.floor(scrollTop / ROW_H) - OVERSCAN);
-    end = Math.min(total, Math.ceil((scrollTop + viewport) / ROW_H) + OVERSCAN);
+    start = Math.max(0, Math.floor(effectiveScrollTop / ROW_H) - OVERSCAN);
+    end = Math.min(total, Math.ceil((effectiveScrollTop + viewport) / ROW_H) + OVERSCAN);
   }
   const visible = windowing ? rows.slice(start, end) : rows;
   const offsetY = start * ROW_H;
 
   const bodyStyle: React.CSSProperties = {
-    // no cap when virtualization is off — the file expands and the host page scrolls.
-    maxHeight: virtualize ? maxHeight : undefined,
+    // Wrapped rows cannot use fixed-height virtualization, but still need the caller's scroll cap.
+    maxHeight: constrainHeight ? maxHeight : undefined,
     // a stable horizontal track so every (virtualized) row aligns; gutters stay sticky over it.
     ['--diff-code-width' as any]: `${codeWidthCh}ch`,
     ['--diff-row-h' as any]: `${ROW_H}px`,
   };
 
   return (
-    <div ref={scrollRef} className={styles.body} style={bodyStyle} onScroll={windowing ? onScroll : undefined}>
+    <div ref={scrollRef} className={styles.body} style={bodyStyle} onScroll={constrainHeight ? onScroll : undefined}>
       <div
         className={classNames(styles.track, view === 'split' && styles.trackSplit)}
         style={windowing ? { height: totalHeight, position: 'relative' } : undefined}
@@ -340,7 +378,9 @@ function UnifiedRow({ item, oldHl, newHl }: { item: DiffLineItem; oldHl: HlLines
       <span className={classNames(styles.gutter, styles.gutterNum)}>{item.oldLn ?? ''}</span>
       <span className={classNames(styles.gutter, styles.gutterNum)}>{item.newLn ?? ''}</span>
       <span className={classNames(styles.gutter, styles.sign)}>{sign}</span>
-      <code className={styles.code}>{renderLineContent(hlForLine(item, oldHl, newHl), item.text, item.intra)}</code>
+      <code className={styles.code}>
+        {renderLineContent(hlForLine(item, oldHl, newHl), item.newText ?? item.text, item.intra)}
+      </code>
     </div>
   );
 }
@@ -385,10 +425,19 @@ function SplitCell({
   }
   const tone = item.type === 'add' ? styles.addLine : item.type === 'del' ? styles.delLine : undefined;
   const num = side === 'left' ? item.oldLn : item.newLn;
+  const text = side === 'left' ? (item.oldText ?? item.text) : (item.newText ?? item.text);
+  const highlighted =
+    side === 'left'
+      ? item.oldLn
+        ? (oldHl?.[item.oldLn - 1] ?? null)
+        : null
+      : item.newLn
+        ? (newHl?.[item.newLn - 1] ?? null)
+        : null;
   return (
     <div className={classNames(styles.splitCell, tone)}>
       <span className={classNames(styles.gutter, styles.gutterNum)}>{num ?? ''}</span>
-      <code className={styles.code}>{renderLineContent(hlForLine(item, oldHl, newHl), item.text, item.intra)}</code>
+      <code className={styles.code}>{renderLineContent(highlighted, text, item.intra)}</code>
     </div>
   );
 }

@@ -516,9 +516,21 @@ export class AutoDetectDeps {
     };
     const processMissingPackages = () => {
       if (isEmpty(missing.packages)) return;
-      const missingPackages = missing.packages;
-      if (!isEmpty(missingPackages)) {
-        this._pushToMissingPackagesDependenciesIssues(originFile, missingPackages, fileType);
+      // A newly imported component may import packages whose folders aren't in node_modules yet.
+      // If the model already records them as packageDependencies, treat them as resolved using the
+      // model's version so they end up in the workspace manifest and get installed — rather than
+      // surfacing as MissingPackagesDependenciesOnFs issues.
+      if (this.componentFromModel) {
+        const modelDeps = this.componentFromModel.getAllPackageDependencies();
+        const treePackages = this.tree[originFile].packages;
+        missing.packages = missing.packages.filter((pkgName) => {
+          if (!modelDeps[pkgName]) return true;
+          treePackages[pkgName] = modelDeps[pkgName];
+          return false;
+        });
+      }
+      if (!isEmpty(missing.packages)) {
+        this._pushToMissingPackagesDependenciesIssues(originFile, missing.packages, fileType);
       }
     };
     processMissingFiles();

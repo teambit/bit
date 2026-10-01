@@ -2,7 +2,7 @@ import React from 'react';
 import { flatten } from 'lodash';
 import type { ComponentUI } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
-import { UIRuntime } from '@teambit/ui';
+import { UIRuntime } from '@teambit/harmony.modules.runtimes';
 import { APIRefPage } from '@teambit/api-reference.sections.api-reference-page';
 import { APIRefSection } from '@teambit/api-reference.sections.api-reference-section';
 import type { Harmony, SlotRegistry } from '@teambit/harmony';

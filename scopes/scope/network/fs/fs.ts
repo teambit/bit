@@ -1,4 +1,5 @@
-import type { ComponentID } from '@teambit/component-id';
+import { ComponentID } from '@teambit/component-id';
+import { LaneId } from '@teambit/lane-id';
 import type { FETCH_OPTIONS, PushOptions } from '@teambit/legacy.scope-api';
 import { fetch, put, remove, action } from '@teambit/legacy.scope-api';
 import type { ListScopeResult } from '@teambit/legacy.component-list';
@@ -78,6 +79,13 @@ export default class Fs implements Network {
 
   listLanes(name?: string, mergeData?: boolean): Promise<LaneData[]> {
     return this.getScope().lanes.getLanesData(this.getScope(), name, mergeData);
+  }
+
+  removeLaneUpdateDependents(laneId: string, ids?: string[]): Promise<boolean> {
+    return this.getScope().lanes.removeUpdateDependents(
+      LaneId.parse(laneId),
+      ids?.map((id) => ComponentID.fromString(id))
+    );
   }
 
   async graph(bitId?: ComponentID): Promise<DependencyGraph> {

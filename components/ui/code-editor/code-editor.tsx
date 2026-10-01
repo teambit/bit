@@ -1,11 +1,19 @@
 import React from 'react';
 import classnames from 'classnames';
-import type { OnMount, BeforeMount, OnChange, EditorProps } from '@monaco-editor/react';
-import { loader } from '@monaco-editor/react';
-import type * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
-import { darkMode } from '@teambit/base-ui.theme.dark-theme';
+import {
+  langFromFileName,
+  normalizeLanguage,
+  resolveTokenColor,
+  useHighlightedLines,
+} from '@teambit/code.ui.diff-viewer';
+import styles from './code-editor.module.scss';
 
-loader.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.48.0/min/vs' } });
+/**
+ * Kept deliberately broad for backwards compatibility with consumers that still pass the old
+ * Monaco callbacks and options. The static renderer does not execute them.
+ */
+type LegacyEditorCallback = (...args: any[]) => void;
+type LegacyEditorComponent = React.ComponentType<any>;
 
 export type CodeEditorProps = {
   filePath?: string;
@@ -13,80 +21,69 @@ export type CodeEditorProps = {
   language?: string;
   height?: string;
   className?: string;
-  options?: monaco.editor.IStandaloneEditorConstructionOptions;
-  beforeMount?: BeforeMount;
-  onMount?: OnMount;
-  onChange?: OnChange;
+  options?: Record<string, any>;
+  beforeMount?: LegacyEditorCallback;
+  onMount?: LegacyEditorCallback;
+  onChange?: LegacyEditorCallback;
   Loader?: React.ReactNode;
-  Editor?: React.FC<EditorProps> | null;
+  Editor?: LegacyEditorComponent | null;
 };
 
-export const DEFAULT_EDITOR_OPTIONS: monaco.editor.IStandaloneEditorConstructionOptions = {
+/**
+ * @deprecated Monaco-specific options are ignored by the static code renderer.
+ */
+export const DEFAULT_EDITOR_OPTIONS: Record<string, any> = {
   readOnly: true,
   minimap: { enabled: false },
-  scrollbar: { alwaysConsumeMouseWheel: true, vertical: 'auto' },
   scrollBeyondLastLine: false,
-  folding: false,
-  overviewRulerLanes: 0,
-  overviewRulerBorder: false,
   wordWrap: 'off',
-  wrappingStrategy: undefined,
-  fixedOverflowWidgets: true,
-  renderLineHighlight: 'none',
-  lineHeight: 20,
-  padding: { top: 8, bottom: 8 },
-  hover: { enabled: false },
-  cursorBlinking: 'smooth',
 };
 
-// a translation list of specific monaco languages that are not the same as their file ending.
-const languageOverrides = {
-  ts: 'typescript',
-  tsx: 'typescript',
-  js: 'javascript',
-  jsx: 'javascript',
-  mdx: 'markdown',
-  md: 'markdown',
-};
+function HighlightedCode({ content, language }: { content: string; language?: string }) {
+  const lines = useHighlightedLines(content, language);
 
-export function CodeEditor({
-  fileContent,
-  filePath,
-  language,
-  beforeMount,
-  onMount,
-  onChange,
-  Loader,
-  options,
-  className,
-  height,
-  Editor,
-}: CodeEditorProps) {
-  const defaultLang = React.useMemo(() => {
-    if (!filePath) return languageOverrides.ts;
-    const fileEnding = filePath?.split('.').pop();
-    return languageOverrides[fileEnding || ''] || fileEnding;
-  }, [filePath]);
-
-  if (!Editor) {
-    return <>{Loader ?? null}</>;
-  }
+  if (!lines) return <>{content}</>;
 
   return (
-    <React.Suspense fallback={Loader ?? <></>}>
-      <Editor
-        path={filePath}
-        value={fileContent || undefined}
-        language={language || defaultLang}
-        height={height || '100%'}
-        onMount={onMount}
-        beforeMount={beforeMount}
-        onChange={onChange}
-        className={classnames(darkMode, className)}
-        theme={'vs-dark'}
-        options={options || DEFAULT_EDITOR_OPTIONS}
-        loading={Loader}
-      />
-    </React.Suspense>
+    <>
+      {lines.map((tokens, lineIndex) => (
+        <React.Fragment key={lineIndex}>
+          {lineIndex > 0 ? '\n' : null}
+          {tokens.map((token, tokenIndex) => {
+            const color = resolveTokenColor(token.color);
+            return (
+              <span key={tokenIndex} style={color ? { color } : undefined}>
+                {token.content}
+              </span>
+            );
+          })}
+        </React.Fragment>
+      ))}
+    </>
+  );
+}
+
+/**
+ * Read-only code renderer used by API Reference.
+ *
+ * This component intentionally retains the former Monaco-shaped props so independently-versioned
+ * API renderer components can migrate without a coordinated release. Rendering is now handled by
+ * the shared Shiki highlighter and does not load executable editor code from a CDN.
+ */
+export function CodeEditor({ fileContent = '', filePath, language, className, height }: CodeEditorProps) {
+  const resolvedLanguage = normalizeLanguage(language) || langFromFileName(filePath) || 'typescript';
+
+  return (
+    <section
+      className={classnames(styles.codeEditor, className)}
+      style={height ? { height } : undefined}
+      data-code-renderer="shiki"
+    >
+      <pre className={styles.pre}>
+        <code>
+          <HighlightedCode content={fileContent} language={resolvedLanguage} />
+        </code>
+      </pre>
+    </section>
   );
 }

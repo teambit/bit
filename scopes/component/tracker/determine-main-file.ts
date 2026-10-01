@@ -5,11 +5,12 @@ import {
   DEFAULT_INDEX_EXTS,
   DEFAULT_INDEX_NAME,
   DEFAULT_SEPARATOR,
+  WORKSPACE_JSONC,
 } from '@teambit/legacy.constants';
 import type { PathLinux } from '@teambit/legacy.utils';
 import { pathJoinLinux, pathNormalizeToLinux } from '@teambit/legacy.utils';
 import type { ComponentMap } from '@teambit/legacy.bit-map';
-import { MissingMainFile } from '@teambit/legacy.bit-map';
+import { MissingMainFile, WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import type { AddedComponent } from './add-components';
 
 export default function determineMainFile(
@@ -23,6 +24,7 @@ export default function determineMainFile(
   const strategies: Function[] = [
     getExistingIfNotChanged,
     getUserSpecifiedMainFile,
+    workspaceRootDefault,
     onlyOneFileEnteredUseIt,
     searchForFileNameIndex,
     searchForSameFileNameAsImmediateDir,
@@ -65,6 +67,15 @@ export default function determineMainFile(
       );
     }
     return null;
+  }
+  /**
+   * the workspace-root component has no entry point of its own. workspace.jsonc, the file that makes
+   * the directory a workspace, stands in for it. it comes before the index search on purpose: an
+   * index file somewhere in the root's file-set is not the entry point of the workspace.
+   */
+  function workspaceRootDefault(): PathLinux | null | undefined {
+    if (pathNormalizeToLinux(addedComponent.trackDir) !== WORKSPACE_ROOT_DIR) return null;
+    return files.find((file) => file.relativePath === WORKSPACE_JSONC)?.relativePath;
   }
   /**
    * user didn't enter mainFile and the component has only one file, use that file as the main file

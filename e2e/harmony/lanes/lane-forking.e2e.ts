@@ -70,19 +70,13 @@ describe('bit lane forking', function () {
       helper.command.snapAllComponentsWithoutBuild('--unmodified');
       helper.command.export();
       helper.command.switchLocalLane('main', '-x');
-      helper.command.mergeLane('lane-a', '-x');
+      helper.command.mergeLaneWithoutBuild('lane-a', '-x');
       helper.command.export();
       helper.scopeHelper.getClonedWorkspace(laneB);
       helper.command.import();
     });
     it('should not throw NoCommonSnap on bit status', () => {
       expect(() => helper.command.status()).not.to.throw();
-    });
-    // see the update in the `describe` section.
-    it.skip('should show the component in the invalid component section', () => {
-      const status = helper.command.statusJson();
-      expect(status.invalidComponents).lengthOf(2);
-      expect(status.invalidComponents[0].error.name).to.equal('NoCommonSnap');
     });
     it('should be able to export with no error', () => {
       expect(() => helper.command.export('--fork-lane-new-scope --all')).to.not.throw();
@@ -107,7 +101,7 @@ describe('bit lane forking', function () {
 
       // locally
       helper.scopeHelper.getClonedWorkspace(laneAFirstSnap);
-      helper.command.mergeLane('lane-a'); // now lane-b has snapA + snapB + snapX1 (from lane-a) + snapX2 (the from lane-a)
+      helper.command.mergeLaneWithoutBuild('lane-a'); // now lane-b has snapA + snapB + snapX1 (from lane-a) + snapX2 (the from lane-a)
       helper.command.import();
       // keep this to fetch from all lanes, because in the future, by default, only the current lane is fetched
       helper.command.fetchAllLanes();

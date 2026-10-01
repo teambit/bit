@@ -2,6 +2,10 @@ import path from 'path';
 import fs from 'fs-extra';
 import symlinkDir from 'symlink-dir';
 import resolveLinkTarget from 'resolve-link-target';
+import { formatWarningSummary } from '@teambit/cli';
+import { getConfig } from '@teambit/config-store';
+import { CFG_NO_WARNINGS } from '@teambit/legacy.constants';
+import { logger } from '@teambit/legacy.logger';
 
 /**
  * Hard link all files from a directory to several target directories.
@@ -20,11 +24,7 @@ export async function hardLinkDirectory(src: string, destDirs: string[]) {
         const destSubdirs = await Promise.all(
           destDirs.map(async (destDir) => {
             const destSubdir = path.join(destDir, file.name);
-            try {
-              await fs.mkdir(destSubdir, { recursive: true });
-            } catch (err: any) {
-              if (err.code !== 'EEXIST') throw err;
-            }
+            await ensureDir(destSubdir);
             return destSubdir;
           })
         );
@@ -36,9 +36,9 @@ export async function hardLinkDirectory(src: string, destDirs: string[]) {
         let srcStats: fs.Stats;
         try {
           srcStats = await fs.stat(srcFile);
-        } catch (err: any) {
+        } catch (err) {
           // if the link is broken, ignore it
-          if (err.code === 'ENOENT') return;
+          if (errnoCode(err) === 'ENOENT') return;
           throw err;
         }
         if (srcStats.isDirectory()) {
@@ -56,8 +56,8 @@ export async function hardLinkDirectory(src: string, destDirs: string[]) {
           const destFile = path.join(destDir, file.name);
           try {
             await linkFile(srcFile, destFile);
-          } catch (err: any) {
-            if (err.code === 'ENOENT') {
+          } catch (err) {
+            if (errnoCode(err) === 'ENOENT') {
               // broken symlinks are skipped
               return;
             }
@@ -72,18 +72,19 @@ export async function hardLinkDirectory(src: string, destDirs: string[]) {
 async function linkFile(srcFile: string, destFile: string) {
   try {
     await fs.link(srcFile, destFile);
-  } catch (err: any) {
-    if (err.code === 'ENOENT') {
-      await fs.mkdir(path.dirname(destFile), { recursive: true });
+  } catch (err) {
+    const code = errnoCode(err);
+    if (code === 'ENOENT' || code === 'ENOTDIR') {
+      await ensureDir(path.dirname(destFile));
       await linkFileIfNotExists(srcFile, destFile);
       return;
     }
-    if (err.code === 'EXDEV') {
+    if (code === 'EXDEV') {
       // hard links can't cross devices (e.g. bind mounts or overlayfs on CI), fall back to copying
       await fs.copyFile(srcFile, destFile);
       return;
     }
-    if (err.code !== 'EEXIST') {
+    if (code !== 'EEXIST') {
       throw err;
     }
   }
@@ -92,13 +93,121 @@ async function linkFile(srcFile: string, destFile: string) {
 async function linkFileIfNotExists(srcFile: string, destFile: string) {
   try {
     await fs.link(srcFile, destFile);
-  } catch (err: any) {
-    if (err.code === 'EXDEV') {
+  } catch (err) {
+    const code = errnoCode(err);
+    if (code === 'EXDEV') {
       await fs.copyFile(srcFile, destFile);
       return;
     }
-    if (err.code !== 'EEXIST') {
+    if (code !== 'EEXIST') {
       throw err;
     }
   }
+}
+
+/**
+ * Like `fs.mkdir(dir, { recursive: true })`, but recovers from a corrupted node_modules
+ * tree where some ancestor of `dir` exists as a regular file or a non-directory symlink
+ * (which causes `mkdir` to throw `ENOTDIR` or `ENOENT` through a broken symlink). The
+ * blocking entry is moved aside (not deleted — the offender could be high up the tree
+ * and we don't want to discard the user's data) and `mkdir` is retried.
+ */
+async function ensureDir(dir: string) {
+  let mkdirError: unknown;
+  for (let attempt = 0; attempt < 10; attempt++) {
+    try {
+      await fs.mkdir(dir, { recursive: true });
+      return;
+    } catch (err) {
+      mkdirError = err;
+    }
+
+    // ENOTDIR: a regular file blocks the path. EEXIST: leaf already exists as a non-directory
+    // (rare with recursive: true). ENOENT: a dangling symlink in the path can't be traversed.
+    const code = errnoCode(mkdirError);
+    if (code !== 'ENOTDIR' && code !== 'EEXIST' && code !== 'ENOENT') throw mkdirError;
+    const offender = await findNonDirectoryAncestor(dir);
+    if (offender == null) {
+      // EEXIST with a directory already at `dir` is benign — recursive mkdir normally
+      // swallows it, but be defensive against races.
+      if (code === 'EEXIST') return;
+      // Another worker may have already moved the offender. Retry mkdir against the new state.
+      continue;
+    }
+    const quarantined = await quarantineStrayEntry(offender);
+    // Another worker already quarantined this entry. Retry mkdir against the new state.
+    if (quarantined == null) continue;
+    const msg =
+      `non-directory entry at ${offender} blocked link target ${dir}; ` +
+      `moved aside to ${quarantined} so the install could continue. inspect or delete it manually if it isn't expected.`;
+    logger.warn(msg);
+    printRecoveryWarning(msg);
+  }
+  throw mkdirError;
+}
+
+/**
+ * Reserve a unique sibling directory, then atomically move `offender` into it. The empty,
+ * exclusively created directory makes the rename no-clobber without recreating files or
+ * symlinks, so Windows junction types and all other entry metadata remain intact.
+ * On the rare chance the directory name already exists (e.g. a previous recovery in the
+ * same millisecond, or a leftover from a prior failed run), keep bumping a counter.
+ * Returns undefined when another worker already moved the offender.
+ */
+async function quarantineStrayEntry(offender: string): Promise<string | undefined> {
+  const base = `${offender}.bit-stray-${Date.now()}`;
+  let quarantineDir = base;
+  for (let i = 1; ; i++) {
+    try {
+      await fs.mkdir(quarantineDir, { mode: 0o700 });
+    } catch (err) {
+      if (errnoCode(err) !== 'EEXIST') throw err;
+      quarantineDir = `${base}-${i}`;
+      continue;
+    }
+
+    const quarantined = path.join(quarantineDir, path.basename(offender));
+    try {
+      await fs.rename(offender, quarantined);
+      return quarantined;
+    } catch (err) {
+      // Only remove the directory if it is still empty. Never recursively remove it: after a
+      // successful rename it contains user data, even if an unusual filesystem reports an error.
+      await fs.rmdir(quarantineDir).catch(() => undefined);
+      if (errnoCode(err) === 'ENOENT') return undefined;
+      throw err;
+    }
+  }
+}
+
+function printRecoveryWarning(msg: string) {
+  if (getConfig(CFG_NO_WARNINGS) === 'true' || !logger.shouldWriteToConsole) return;
+  logger.console(formatWarningSummary(msg), 'warn');
+}
+
+/**
+ * Walk up from `dir` until we find an existing path component. If that component is not
+ * a directory, return it (it's the entry blocking `mkdir`). Otherwise return null.
+ */
+async function findNonDirectoryAncestor(dir: string): Promise<string | null> {
+  let current = dir;
+  while (current && path.dirname(current) !== current) {
+    let stat: fs.Stats;
+    try {
+      stat = await fs.lstat(current);
+    } catch (err) {
+      const code = errnoCode(err);
+      if (code === 'ENOENT' || code === 'ENOTDIR') {
+        current = path.dirname(current);
+        continue;
+      }
+      throw err;
+    }
+    return stat.isDirectory() ? null : current;
+  }
+  return null;
+}
+
+function errnoCode(err: unknown): string | undefined {
+  return (err as NodeJS.ErrnoException | undefined)?.code;
 }

@@ -176,15 +176,6 @@ describe('bit ci sync: main-scope reconciliation', function () {
     });
   });
 
-  // The load-bearing half is the negative: `bit-sync/main` is never created or touched, checked both
-  // on the run that pushes and on the converged rerun.
-  // A component's main file can legitimately move (an env stops emitting `dist/`, so main goes back
-  // to source) and the old path is deleted in git. The repository's `.bitmap` still names the old
-  // path, so the component cannot be loaded at all - and one such entry used to fail the whole
-  // main-scope checkout, turning every scheduled run red. Healed inside the reconciler.
-
-  // The load-bearing half is the negative: `bit-sync/main` is never created or touched, checked both
-  // on the run that pushes and on the converged rerun.
   // A component's main file can legitimately move (an env stops emitting `dist/`, so main goes back
   // to source) and the old path is deleted in git. The repository's `.bitmap` still names the old
   // path, so the component cannot be loaded at all - and one such entry used to fail the whole
@@ -250,6 +241,8 @@ describe('bit ci sync: main-scope reconciliation', function () {
     });
   });
 
+  // The load-bearing half is the negative: `bit-sync/main` is never created or touched, checked both
+  // on the run that pushes and on the converged rerun.
   describe('main-scope direct push (mainSync: direct-push)', () => {
     const SYNC_BRANCH = 'bit-sync/main';
     let defaultBranch: string;
@@ -288,10 +281,6 @@ describe('bit ci sync: main-scope reconciliation', function () {
       expect(remoteBranchExists(SYNC_BRANCH)).to.be.false;
     });
   });
-
-  // Properties that live only at the loop level: a deleted lane is still visited (via the branch half
-  // of the enumeration), one halted lane must not abort the rest, lanes must not contaminate each
-  // other (comp3 exists on lane A only), and an ordinary branch must survive the run.
 
   describe('a stale bit-sync/main that conflicts with the default branch', () => {
     const SYNC_BRANCH = 'bit-sync/main';
@@ -450,7 +439,4 @@ describe('bit ci sync: main-scope reconciliation', function () {
       expect(output).to.not.match(/wrote \.github[/\\]workflows[/\\]bit-sync\.yml/);
     });
   });
-
-  // `bit add` + a committed versionless `.bitmap` entry + the component's first export on a lane —
-  // the onboarding quickstart's state, and the one the adoption retry exists for.
 });

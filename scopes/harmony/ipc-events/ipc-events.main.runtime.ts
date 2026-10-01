@@ -5,7 +5,7 @@ import { Slot } from '@teambit/harmony';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
 import pMapSeries from 'p-map-series';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import path from 'path';
 import fs from 'fs-extra';
 import { IpcEventsAspect } from './ipc-events.aspect';
