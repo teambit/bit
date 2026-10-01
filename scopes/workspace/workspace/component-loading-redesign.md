@@ -272,6 +272,7 @@ graph 2013MB.
 | ------------------------ | ------------ | ---------- | ----------------- | ------------------ | -------- |
 | Baseline (pre-Phase 2)   | 11.24s       | 1.59s      | 1.73s             | 20.49s             | 2013MB   |
 | Re-baseline (2026-09-22) | 9.43s        | 1.72s      | 1.23s             | 18.59s             | 2352MB   |
+| 2026-10-01 (§4.5-4.7)    | 6.80s        | 1.57s      | 1.19s             | 19.63s             | 2495MB   |
 | After Phase 2            | —            | —          | —                 | —                  | —        |
 | After Phase 3            | —            | —          | —                 | —                  | —        |
 | After Phase 4            | —            | —          | —                 | —                  | —        |
@@ -303,6 +304,15 @@ Two things to read from this:
 - **Memory is trending the wrong way.** `graph` peak RSS is up 339MB and `list` up 124MB, beyond
   what the +5.8% component growth explains. No phase currently targets memory; §2.1 lazy file
   contents is the closest lever.
+
+**2026-10-01**, after #10723 and §4.6-4.7, same machine/method, ~333 components. Per-command peak
+RSS: status 927MB, list 546MB, show 249MB, graph 2495MB. Against the September re-baseline:
+
+- `status` 9.43s → 6.80s (**−28%**) and 1239MB → 927MB (**−25%**).
+- `list` −9%, `show` −3%.
+- `graph` is **+6% wall and +6% RSS** (18.59s → 19.63s, 2352MB → 2495MB). The machine's load rose
+  during its runs (it went last), so some of this may be noise, but nothing here targeted it. `graph`
+  is now the outlier on both axes; its dominant cost is still file-content reads (§4.1).
 
 ### 4.1 Profiling findings (where the warm load time actually goes)
 
@@ -504,31 +514,99 @@ Correctness notes for anyone touching it: a `ModelComponent`'s hash is name-base
 to different content over time — every path that writes, removes, or clears the LRU must update the
 weak map too (`_writeOne` only after the write succeeds; `removeFromCache`; `clearObjectsFromCache`).
 
-Other hotspots from the same profile, not yet acted on (each needs its own A/B):
+Other hotspots from the same profile, since acted on (§4.6, §4.7):
 
-- `ModelComponent.versionsIncludeOrphaned` — a getter that spreads `{...versions,
-...orphanedVersions}` on **every access** (~375ms). Components in this repo have thousands of
-  tags; `sources.get` calls it to read a single key.
-- `getTagOfRefIfExists` — linear scan over all tags (~150ms self).
-- `Version.calculateHash` from `isComponentModified` (~285ms).
-- `status` parses ~3,300 `Source` objects (file contents from the model): the "lazy file contents"
-  item of Phase 2 would remove these parses entirely, not just the repeats.
-- The **component** caches are capped at **500**. This workspace has 339, so it never thrashes —
-  but a >500-component workspace would re-load whole components, a far steeper cliff than this one.
-  Worth measuring on a large workspace before anything else in Phase 3.
+- `ModelComponent.versionsIncludeOrphaned`, a getter that spreads `{...versions, ...orphanedVersions}`
+  on **every access** (~375ms) → single-tag lookups no longer use it ([#10739](https://github.com/teambit/bit/pull/10739)).
+- `getTagOfRefIfExists`, a linear scan over all tags (~150ms self) → no longer copies; still linear (§4.7).
+- `Version.calculateHash` from `isComponentModified` (~285ms) → [#10741](https://github.com/teambit/bit/pull/10741).
+- `status` parses ~3,300 `Source` objects (file contents from the model). The "lazy file contents"
+  item of Phase 2 would remove these parses entirely. Still open.
+- The **component** caches are capped at **500**, and this workspace has 339 → measured in §4.6: the
+  cliff was real, and steep.
+
+### 4.6 The component-cache cliff: eviction freed nothing and forced rebuilds
+
+A larger workspace was simulated by shrinking the component caches' limit
+(`BIT_CONFIG_CACHE_MAX_COMPONENTS=N`, which bounds the 8 caches sized by `cache.max.components`).
+On master, warm `bit status`:
+
+| limit         | wall       | peak RSS |
+| ------------- | ---------- | -------- |
+| default (500) | ~8.7s      | ~1.1GB   |
+| 200           | 16.1-17.0s | 1.47GB   |
+| 50            | 29-30.8s   | 1.65GB   |
+
+So a workspace a few times this size would take 2-3× longer. Isolating each cache (all but one
+unbounded) put the cliff on the three **component** caches: the workspace loader's, the scope
+loader's, and the legacy `ComponentLoader`'s.
+
+The cause is a scan pattern that an LRU can't serve. `status` requests every component several times
+over, and between passes it keeps all of them alive in its own list. Evicting a component therefore
+frees no memory (the status list still holds it); it only makes the next request rebuild it from
+scratch. Hence higher RSS at lower limits, not lower.
+
+Fixed with the same idea as §4.5, applied to the component caches:
+[#10736](https://github.com/teambit/bit/pull/10736) adds a `weak: true` option to `createInMemoryCache`
+(`WeakValues`: a `WeakRef` map beside the LRU, cleaned by a `FinalizationRegistry`). On a miss it
+returns the evicted value if it is still alive and puts it back in the LRU. `keys()`, `delete` and
+`deleteAll` include the weak entries, so key-based invalidation (`clearComponentsCache` iterates
+`keys()`) still clears them. It never keeps anything alive on its own.
+
+| limit | master              | with #10735 + #10736 |
+| ----- | ------------------- | -------------------- |
+| 200   | 16.1-17.0s / 1.47GB | 8.7s / 1.1GB         |
+| 50    | 29-30.8s / 1.65GB   | 8.9s / 1.1GB         |
+
+At limit 50 the output is identical to the default.
+
+**The weak layer exposed a latent bug, fixed separately in [#10735](https://github.com/teambit/bit/pull/10735).**
+With it on the legacy cache, `status` reported 23 "failed loading env" issues. `buildLoadGroups`
+passed each component's extension data to the next step **through** the bounded
+`componentsExtensionsCache`. Entries evicted in between were missing, so their envs were left out of
+the env-first load group, and components were loaded before their env was registered. On master this
+was hidden by accidental reloads later in the command, the same rebuilds that made it slow.
+`populateScopeAndExtensionsCache` now returns the data as a map, and the cache is only a cache again.
+Performance-neutral on its own.
+
+### 4.7 Follow-ups from the CPU profile: copies nobody reads
+
+With the caches fixed, the profile was flat enough that the next items were plain wasted work:
+
+| PR                                                  | change                                                                                                                                                       | measured                                                |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------- |
+| [#10739](https://github.com/teambit/bit/pull/10739) | single-tag lookups (`getRef`, `getTagOfRefIfExists`, `sources.get/exists`) read `versions`/`orphanedVersions` instead of copying both                        | `status` 7.6 → 6.8s (5 interleaved rounds)              |
+| [#10741](https://github.com/teambit/bit/pull/10741) | `Version.id()` (the hash) builds only its 8 fields, not all of `toObject()`; `toConfigArray` clones only the config; ids not cloned in `toConsumerComponent` | `status` 8.5 → 7.65s, peak RSS 1.1GB → 985MB (5 rounds) |
+| [#10742](https://github.com/teambit/bit/pull/10742) | `.bitmap` lookups index ids by name; the `IfExist` variants no longer throw and catch                                                                        | time in those lookups ~140ms → ~10ms (CPU profile)      |
+
+`Version.id()` is a content hash, so its output must not change: the old and new implementations were
+compared on all 15,398 version objects in this repo's scope, with identical results. Output of
+`bit status` was identical in every A/B.
+
+Checked and not worth acting on:
+
+- **Object parsing (~590ms).** After #10723, each of the ~4,700 objects `status` touches is parsed
+  once (15 repeats, all `Source`). Real work, no longer churn.
+- **Module loading.** `bin/bit.js` already enables Node's compile cache; the cost only shows up
+  right after a recompile.
+
+Still open: `getHeadRegardlessOfLaneAsTagOrHash` scans all tags to find the head's tag (~145ms,
+several callers per component). The head is usually the newest tag, so searching from the end would
+find it at once. `extensions.clone()` in `toConsumerComponent` (~175ms) is needed, since it keeps a
+loaded component from mutating the cached `Version`.
 
 ---
 
 ## Status
 
-| Phase                   | State                                           | OpenSpec change                | PRs                                                                                                                           |
-| ----------------------- | ----------------------------------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| 1 — Observability       | done                                            | `component-load-observability` | [#10418](https://github.com/teambit/bit/pull/10418)                                                                           |
-| 2 — Quick perf wins     | re-scoped, 1/7 done; object-cache fix merged    | —                              | [#10445](https://github.com/teambit/bit/pull/10445) (closed, not merged), [#10723](https://github.com/teambit/bit/pull/10723) |
-| 3 — Cache consolidation | not started — premise disproved, demoted (§4.5) | —                              | —                                                                                                                             |
-| 4 — Staged pipeline     | not started                                     | —                              | —                                                                                                                             |
-| 5 — Env planner         | not started                                     | —                              | —                                                                                                                             |
-| 6 — Legacy inversion    | not started                                     | —                              | —                                                                                                                             |
+| Phase                   | State                                                       | OpenSpec change                | PRs                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ----------------------- | ----------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1 — Observability       | done                                                        | `component-load-observability` | [#10418](https://github.com/teambit/bit/pull/10418)                                                                                                                                                                                                                                                                                                                                                    |
+| 2 — Quick perf wins     | re-scoped, 1/7 done; profile-driven fixes merged (§4.5-4.7) | —                              | [#10445](https://github.com/teambit/bit/pull/10445) (closed, not merged), [#10723](https://github.com/teambit/bit/pull/10723), [#10735](https://github.com/teambit/bit/pull/10735), [#10736](https://github.com/teambit/bit/pull/10736), [#10739](https://github.com/teambit/bit/pull/10739), [#10741](https://github.com/teambit/bit/pull/10741), [#10742](https://github.com/teambit/bit/pull/10742) |
+| 3 — Cache consolidation | not started — premise disproved, demoted (§4.5)             | —                              | —                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 4 — Staged pipeline     | not started                                                 | —                              | —                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 5 — Env planner         | not started                                                 | —                              | —                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 6 — Legacy inversion    | not started                                                 | —                              | —                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 **Log:**
 
@@ -597,3 +675,15 @@ Other hotspots from the same profile, not yet acted on (each needs its own A/B):
   once a workspace outgrows it; with the weak layer, 3×/5× stay 17-24% faster and 26-33% leaner
   than master (§4.5). Also recorded why RSS dropped: fewer throwaway copies from re-parsing
   (8,702 → 4,715 parses), not retained duplicates.
+- 2026-09-28 — **Component-cache cliff measured and removed** (§4.6). Simulating a larger workspace
+  (`BIT_CONFIG_CACHE_MAX_COMPONENTS`) took warm `status` from ~8.7s to 16-17s at a limit of 200 and
+  29-31s at 50. The three component caches thrash because `status` re-requests every component while
+  holding them all. [#10736](https://github.com/teambit/bit/pull/10736) adds a weak layer to them
+  (8.7s / 8.9s at 200 / 50, identical output). It exposed an env-ordering bug that eviction caused
+  and accidental reloads hid, fixed first in [#10735](https://github.com/teambit/bit/pull/10735).
+- 2026-09-30 — **Profile follow-ups** (§4.7): [#10739](https://github.com/teambit/bit/pull/10739)
+  (−0.85s), [#10741](https://github.com/teambit/bit/pull/10741) (−0.85s, −115MB RSS),
+  [#10742](https://github.com/teambit/bit/pull/10742) (lookups 140 → 10ms). All merged. Next: the
+  head-to-tag scan (§4.7).
+- 2026-10-01 — Benchmarked current master (§4): `status` 6.80s / 927MB, **−28% wall and −25% RSS**
+  since the September re-baseline. `graph` did not improve (19.63s, 2495MB) and is now the outlier.
