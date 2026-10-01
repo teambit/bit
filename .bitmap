@@ -1232,7 +1232,13 @@
         "scope": "teambit.harmony",
         "version": "0.0.1",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/modules/runtimes"
+        "rootDir": "scopes/harmony/modules/runtimes",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@2.1.1": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-babel-mocha"
+            }
+        }
     },
     "modules/semver-helper": {
         "name": "modules/semver-helper",
@@ -1352,7 +1358,13 @@
         "version": "",
         "defaultScope": "teambit.toolbox",
         "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/path/increment-path"
+        "rootDir": "scopes/toolbox/path/increment-path",
+        "config": {
+            "teambit.node/envs/node-typescript-mocha@2.1.1": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-typescript-mocha"
+            }
+        }
     },
     "path/is-path-inside": {
         "name": "path/is-path-inside",
