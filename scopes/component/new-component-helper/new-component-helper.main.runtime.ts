@@ -17,7 +17,7 @@ import { WorkspaceAspect } from '@teambit/workspace';
 import { AbstractVinyl, DataToPersist } from '@teambit/component.sources';
 import { EnvsAspect } from '@teambit/envs';
 import { NewComponentHelperAspect } from './new-component-helper.aspect';
-import { incrementPathRecursively } from '@teambit/component-writer';
+import { incrementPathRecursively } from '@teambit/toolbox.path.increment-path';
 import { Extensions } from '@teambit/legacy.constants';
 
 const aspectsConfigToIgnore: string[] = [Extensions.pkg, Extensions.renaming];

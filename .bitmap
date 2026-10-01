@@ -1346,6 +1346,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/panels/composition-gallery"
     },
+    "path/increment-path": {
+        "name": "path/increment-path",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.toolbox",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/toolbox/path/increment-path"
+    },
     "path/is-path-inside": {
         "name": "path/is-path-inside",
         "scope": "teambit.toolbox",
