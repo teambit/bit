@@ -866,10 +866,20 @@ export default class Repository {
     if (usePackFile) {
       // all objects are written into one pack file rather than a file per object. an export can have tens of thousands
       // of objects, and writing, reading and deleting them one by one is by far the most expensive part of the export.
+      // it's written to a tmp file and renamed, so a reader never sees a partially written pack.
       await fs.ensureDir(pendingDir);
       const packPath = path.join(pendingDir, PENDING_OBJECTS_PACK_FILE);
-      await pipelinePromise(objectList.toTar(), fs.createWriteStream(packPath));
-      if (chownOptions.gid) await fs.chown(packPath, chownOptions.uid as number, chownOptions.gid);
+      const tmpPackPath = path.join(pendingDir, `.${PENDING_OBJECTS_PACK_FILE}.${process.pid}`);
+      try {
+        await pipelinePromise(objectList.toTar(), fs.createWriteStream(tmpPackPath));
+        if (chownOptions.gid) {
+          await fs.chown(tmpPackPath, chownOptions.uid as number, chownOptions.gid).catch(throwUnlessChownErrOk);
+        }
+        await fs.rename(tmpPackPath, packPath);
+      } catch (err) {
+        await fs.remove(tmpPackPath).catch(() => {});
+        throw err;
+      }
       return;
     }
     await pMapPool(
@@ -923,13 +933,13 @@ export default class Repository {
       `.${path.basename(filePath)}.${process.pid}.${objectFileWriteCounter}`
     );
     try {
-      await fs.writeFile(tmpPath, contents, { mode });
-    } catch (err: any) {
-      if (err.code !== 'ENOENT') throw err;
-      await fs.mkdir(path.dirname(filePath), { recursive: true });
-      await fs.writeFile(tmpPath, contents, { mode });
-    }
-    try {
+      try {
+        await fs.writeFile(tmpPath, contents, { mode });
+      } catch (err: any) {
+        if (err.code !== 'ENOENT') throw err;
+        await fs.mkdir(path.dirname(filePath), { recursive: true });
+        await fs.writeFile(tmpPath, contents, { mode });
+      }
       if (chown) await fs.chown(tmpPath, chown.uid, chown.gid).catch(throwUnlessChownErrOk);
       if (mode) await fs.chmod(tmpPath, mode).catch(throwUnlessChownErrOk);
       await fs.rename(tmpPath, filePath);

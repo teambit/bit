@@ -134,7 +134,10 @@ export class ObjectList {
         resolve(objects);
       });
 
-      packStream.pipe(extract);
+      // unlike `pipe`, it rejects when the input stream fails or the extractor fails (e.g. a truncated tar).
+      pipeline(packStream, extract, (err) => {
+        if (err) reject(err);
+      });
     });
     return new ObjectList(objectItems);
   }

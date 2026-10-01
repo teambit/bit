@@ -192,4 +192,19 @@ describe('Repository writing objects for export', () => {
     await repository.writeObjectsToTheFS([source]);
     expect((await fs.stat(objectPath)).mode & 0o777).to.equal(0o640);
   });
+
+  it('should fail reading a truncated pack file rather than hang', async () => {
+    const objectList = await createObjectList(SOURCES_COUNT);
+    const pendingDir = path.join(scopePath, 'pending-objects', 'client-1');
+    await repository.writeObjectsToPendingDir(objectList, pendingDir, true);
+    expect(await fs.readdir(pendingDir)).to.deep.equal(['objects.tar']);
+    const packPath = path.join(pendingDir, 'objects.tar');
+    const pack = await fs.readFile(packPath);
+    await fs.writeFile(packPath, pack.subarray(0, 700));
+    let error: Error | undefined;
+    await repository.readObjectsFromPendingDir(pendingDir).catch((err) => {
+      error = err;
+    });
+    expect(error).to.be.instanceOf(Error);
+  });
 });
