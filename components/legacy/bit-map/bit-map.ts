@@ -63,6 +63,7 @@ export class BitMap {
   paths: { [path: string]: ComponentID }; // path => componentId
   pathsLowerCase: { [path: string]: ComponentID }; // path => componentId
   rootDirs: { [rootDir: string]: ComponentID }; // rootDir => componentId
+  private rootDirsPopulated = false;
   markAsChangedBinded: Function;
   _cacheIdsAll: ComponentIdList | undefined;
   private _cacheIdsByName?: { allIds: ComponentIdList; byName: Map<string, ComponentIdList> };
@@ -862,6 +863,7 @@ export class BitMap {
     this.paths = {};
     this.pathsLowerCase = {};
     this.rootDirs = {};
+    this.rootDirsPopulated = false;
     this._cacheIdsAll = undefined;
     this._cacheIdsLane = undefined;
     this._cacheIdsLaneIncludeRemoved = undefined;
@@ -1007,11 +1009,12 @@ export class BitMap {
   }
 
   _populateRootDirs() {
-    if (isEmpty(this.rootDirs)) {
-      this.components.forEach((component) => {
-        this.rootDirs[component.rootDir] = component.id;
-      });
-    }
+    // not `isEmpty(this.rootDirs)`: a for-in on a big object collects all its keys first, and this runs on every lookup
+    if (this.rootDirsPopulated) return;
+    this.components.forEach((component) => {
+      this.rootDirs[component.rootDir] = component.id;
+    });
+    this.rootDirsPopulated = this.components.length > 0;
   }
 
   /**
