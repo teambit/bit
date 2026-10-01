@@ -2333,6 +2333,14 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/workspace-root"
     },
+    "workspace-starter": {
+        "name": "workspace-starter",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.generator",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/generator/workspace-starter"
+    },
     "yarn": {
         "name": "yarn",
         "scope": "teambit.dependencies",
