@@ -516,6 +516,7 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
       const idsToChangeLocally = ComponentIdList.fromArray(bitIds.filter((id) => !scope.isExported(id)));
       const exportedModelComponents: ModelComponent[] = [];
       const objectList = new ObjectList();
+      const allObjectItems: ObjectItem[] = [];
       const objectListPerName: ObjectListPerName = {};
 
       const modelComponents = await mapSeries(bitIds, (id) => scope.getModelComponent(id));
@@ -582,18 +583,17 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
           throwForMissingArtifacts,
           idFromWorkspace
         );
-        await this.convertToCorrectScope(modelComponent, remoteNameStr, ids);
+        this.convertToCorrectScope(modelComponent, remoteNameStr, ids);
         const remoteObj = { url: remote.host, name: remote.name, date: Date.now().toString() };
         modelComponent.addScopeListItem(remoteObj);
         exportedModelComponents.push(modelComponent);
-        const componentBuffer = await modelComponent.compress();
-        const componentData = { ref: modelComponent.hash(), buffer: componentBuffer, type: modelComponent.getType() };
+        const componentData = await bitObjectToObjectItem(modelComponent);
         // the version objects and their files/artifacts are not modified during export, so their raw (already
         // compressed) buffers are sent as is. parsing and re-compressing them is very costly for components with
         // many files (e.g. tens of thousands of bundled pages).
         const allObjectsData = [componentData, ...objectItems];
         objectListPerName[modelComponent.name] = new ObjectList(allObjectsData);
-        objectList.addIfNotExist(allObjectsData);
+        allObjectItems.push(...allObjectsData);
       };
 
       // The lean-lane filter (drop main-origin refs belonging to foreign components) is now
@@ -602,6 +602,7 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
       const refsToExportPerComponent = (await getRefsToExportPerComp()).filter(({ refs }) => refs.length > 0);
       // don't use Promise.all, otherwise, it'll throw "JavaScript heap out of memory" on a large set of data
       await mapSeries(refsToExportPerComponent, processModelComponent);
+      objectList.addIfNotExist(allObjectItems);
       if (lane) {
         const laneHistory = await scope.lanes.getOrCreateLaneHistory(lane);
         const laneHistoryData = await bitObjectToObjectItem(laneHistory);
@@ -829,18 +830,10 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
    *
    * This is the Harmony version of "convertToCorrectScope". No more codemod and no more hash changes.
    */
-  private async convertToCorrectScope(
-    modelComponent: ModelComponent,
-    remoteScope: string,
-    ids: ComponentIdList,
-    shouldFork = false // not in used currently, but might be needed soon
-  ): Promise<boolean> {
-    const shouldChangeScope = shouldFork ? remoteScope !== modelComponent.scope : !modelComponent.scope;
-    if (shouldChangeScope) {
-      const idWithFutureScope = ids.searchWithoutScopeAndVersion(modelComponent.toComponentId());
-      modelComponent.scope = idWithFutureScope?.scope || remoteScope;
-    }
-    return shouldChangeScope;
+  private convertToCorrectScope(modelComponent: ModelComponent, remoteScope: string, ids: ComponentIdList): void {
+    if (modelComponent.scope) return;
+    const idWithFutureScope = ids.searchWithoutScopeAndVersion(modelComponent.toComponentId());
+    modelComponent.scope = idWithFutureScope?.scope || remoteScope;
   }
 
   private async getComponentsToExport(

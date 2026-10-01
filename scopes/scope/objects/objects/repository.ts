@@ -5,7 +5,6 @@ import { BitError } from '@teambit/bit-error';
 import type { ComponentID } from '@teambit/component-id';
 import { HASH_SIZE, isSnap } from '@teambit/component-version';
 import * as path from 'path';
-import crypto from 'crypto';
 import { userInfo } from 'os';
 import { pipeline as pipelinePromise } from 'stream/promises';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
@@ -26,7 +25,7 @@ import {
 import type { IndexType, IndexItem } from './scope-index';
 import { ScopeIndex } from './scope-index';
 import BitObject from './object';
-import type { ObjectItem, RawObjectsMap } from './object-list';
+import type { ObjectItem, RawObjectsMap, CompressedObject } from './object-list';
 import { ObjectList } from './object-list';
 import BitRawObject from './raw-object';
 import Ref from './ref';
@@ -40,6 +39,7 @@ const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 const TRASH_DIR = 'trash';
 const MAX_COMPRESSED_SIZE_TO_CACHE = 100 * 1024; // don't cache big files (mainly artifacts) to prevent out-of-memory
 const PENDING_OBJECTS_PACK_FILE = 'objects.tar';
+let objectFileWriteCounter = 0;
 /**
  * how much of an object file to read when all that's needed is its header. the header holds the
  * type and is a few dozen bytes, which 512 compressed bytes always cover - and every byte past it
@@ -56,10 +56,6 @@ export type ObjectsWithType = { objects: ObjectWithType[]; unreadable: Ref[] };
 export default class Repository {
   objects: { [key: string]: BitObject } = {};
   objectsToRemove: Ref[] = [];
-  /**
-   * object dirs (the first two chars of the hash) known to exist, to not create them for every object written.
-   */
-  private existingObjectDirs = new Set<string>();
   scopeJson: ScopeJson;
   onRead: ContentTransformer;
   onPersist: ContentTransformer;
@@ -803,9 +799,12 @@ export default class Repository {
     logger.trace(`Repository.writeObjectsToTheFS: started writing ${count} objects`);
     const concurrency = concurrentIOLimit();
     const chownOptions = await this.getChownOptions();
-    await pMapPool(objects, (obj) => this._writeOne(obj, rawObjects?.get(obj.hash().toString()), chownOptions), {
-      concurrency,
-    });
+    await pMapPool(
+      objects,
+      // hashing a Source is sha1 of its content, so only do it when there are raw objects to look up
+      (obj) => this._writeOne(obj, rawObjects ? rawObjects.get(obj.hash().toString()) : undefined, chownOptions),
+      { concurrency }
+    );
     logger.trace(`Repository.writeObjectsToTheFS: completed writing ${count} objects`);
 
     const added = this.scopeIndex.addMany(objects);
@@ -828,11 +827,7 @@ export default class Repository {
    * this method doesn't write to scopeIndex. so using this method for ModelComponent or
    * Symlink makes the index outdated.
    */
-  async _writeOne(
-    object: BitObject,
-    raw?: { buffer: Buffer; inflatedSize: number },
-    chownOptions?: ChownOptions
-  ): Promise<void> {
+  async _writeOne(object: BitObject, raw?: CompressedObject, chownOptions?: ChownOptions): Promise<void> {
     // when the already-compressed buffer of an unchanged object is available, skip the costly re-compression.
     const { buffer: contents, inflatedSize } = raw || (await object.compressWithSize());
     const options = chownOptions || (await this.getChownOptions());
@@ -853,7 +848,12 @@ export default class Repository {
     );
   }
 
-  async writeObjectsToPendingDir(objectList: ObjectList, pendingDir: PathOsBasedAbsolute) {
+  /**
+   * `usePackFile` writes all objects into one file. it's much faster for large exports, but versions that don't know
+   * this format read it as an empty pending-dir, so only use it when every bit version that might read this pending-dir
+   * (e.g. other server instances, `bit export --resume`) supports it. `readObjectsFromPendingDir` supports both.
+   */
+  async writeObjectsToPendingDir(objectList: ObjectList, pendingDir: PathOsBasedAbsolute, usePackFile = false) {
     // Refs come from client-supplied tar entry names. Validate the whole batch
     // before any writes so a crafted ref can't escape pendingDir AND so we
     // don't leave orphan files in pendingDir when one entry is rejected mid-batch.
@@ -862,13 +862,21 @@ export default class Repository {
       const ref = object.ref.toString();
       if (!isSnap(ref)) throw new BitError(`invalid object ref: ${JSON.stringify(ref)}`);
     }
-    // all objects are written into one pack file rather than a file per object. an export can have tens of thousands
-    // of objects, and writing, reading and deleting them one by one is by far the most expensive part of the export.
-    await fs.ensureDir(pendingDir);
-    const packPath = path.join(pendingDir, PENDING_OBJECTS_PACK_FILE);
-    await pipelinePromise(objectList.toTar(), fs.createWriteStream(packPath));
-    const { gid } = await this.getChownOptions();
-    if (gid) await fs.chown(packPath, userInfo().uid, gid);
+    const chownOptions = await this.getChownOptions();
+    if (usePackFile) {
+      // all objects are written into one pack file rather than a file per object. an export can have tens of thousands
+      // of objects, and writing, reading and deleting them one by one is by far the most expensive part of the export.
+      await fs.ensureDir(pendingDir);
+      const packPath = path.join(pendingDir, PENDING_OBJECTS_PACK_FILE);
+      await pipelinePromise(objectList.toTar(), fs.createWriteStream(packPath));
+      if (chownOptions.gid) await fs.chown(packPath, chownOptions.uid as number, chownOptions.gid);
+      return;
+    }
+    await pMapPool(
+      objectList.objects,
+      (object) => this.writeObjectFile(path.join(pendingDir, this.hashPath(object.ref)), object.buffer, chownOptions),
+      { concurrency: concurrentIOLimit() }
+    );
   }
 
   async readObjectsFromPendingDir(pendingDir: PathOsBasedAbsolute) {
@@ -876,7 +884,7 @@ export default class Repository {
     if (await fs.pathExists(packPath)) {
       return ObjectList.fromTar(fs.createReadStream(packPath));
     }
-    // pending-dir written by an older version, a file per object.
+    // a file per object. (written when the pack-file is disabled, or by an older version)
     const refs = await this.listRefs(pendingDir);
     const objects = await pMapPool(
       refs,
@@ -891,41 +899,39 @@ export default class Repository {
 
   private async getChownOptions(): Promise<ChownOptions> {
     if (!this.scopeJson.groupName) return {};
-    return { gid: await resolveGroupId(this.scopeJson.groupName) };
+    return { uid: userInfo().uid, gid: await resolveGroupId(this.scopeJson.groupName) };
   }
 
   /**
-   * a lean version of `writeFile` from legacy.utils (which uses write-file-atomic) for object files. it's called for
-   * every object, so the number of fs calls matters: the parent dir is created only once and the content is written
-   * to a tmp file and renamed, so a reader never sees a partially written object.
-   * the tmp file is a dotfile, which is ignored by `listRefs()` in case it's left behind.
+   * writes the file atomically (tmp file + rename), the same way `writeFile` of legacy.utils does with write-file-atomic,
+   * including keeping the mode (and owner, when no chown is given) of an existing file and ignoring the same chown/chmod
+   * errors. it's called for every object, so it saves the fs calls write-file-atomic and `ensureDir` do on every write
+   * (realpath, stat of the dir, exit handlers). the parent dir is created only when the first write fails with ENOENT.
+   * the tmp file is a dotfile, which `listRefs()` ignores in case it's left behind.
    */
-  private async writeObjectFile(filePath: string, contents: Buffer, options: ChownOptions) {
-    const dir = path.dirname(filePath);
+  private async writeObjectFile(filePath: string, contents: Buffer, chownOptions: ChownOptions) {
+    const existing = await fs.stat(filePath).catch(() => undefined);
+    const mode = existing?.mode;
+    const chown = chownOptions.gid
+      ? { uid: chownOptions.uid as number, gid: chownOptions.gid }
+      : existing && process.getuid
+        ? { uid: existing.uid, gid: existing.gid }
+        : undefined;
+    objectFileWriteCounter += 1;
     const tmpPath = path.join(
-      dir,
-      `.${path.basename(filePath)}.${process.pid}.${crypto.randomBytes(4).toString('hex')}`
+      path.dirname(filePath),
+      `.${path.basename(filePath)}.${process.pid}.${objectFileWriteCounter}`
     );
-    const write = async () => {
-      if (!this.existingObjectDirs.has(dir)) {
-        await fs.mkdir(dir, { recursive: true });
-        this.existingObjectDirs.add(dir);
-      }
-      await fs.writeFile(tmpPath, contents);
-    };
     try {
-      await write();
+      await fs.writeFile(tmpPath, contents, { mode });
     } catch (err: any) {
-      // the dir might have been deleted since it was cached (e.g. removeFile() deletes empty dirs).
       if (err.code !== 'ENOENT') throw err;
-      this.existingObjectDirs.delete(dir);
-      await write();
+      await fs.mkdir(path.dirname(filePath), { recursive: true });
+      await fs.writeFile(tmpPath, contents, { mode });
     }
     try {
-      if (options.gid || options.uid) {
-        const user = userInfo();
-        await fs.chown(tmpPath, options.uid || user.uid, options.gid || user.gid);
-      }
+      if (chown) await fs.chown(tmpPath, chown.uid, chown.gid).catch(throwUnlessChownErrOk);
+      if (mode) await fs.chmod(tmpPath, mode).catch(throwUnlessChownErrOk);
       await fs.rename(tmpPath, filePath);
     } catch (err) {
       await fs.remove(tmpPath).catch(() => {});
@@ -953,6 +959,16 @@ async function removeFile(filePath: string, propagateDirs = false): Promise<bool
   const { dir } = path.parse(filePath);
   await removeEmptyDir(dir);
   return true;
+}
+
+/**
+ * same as write-file-atomic: a non-root user can't always chown/chmod, and it's not an error.
+ */
+function throwUnlessChownErrOk(err: any) {
+  if (err.code === 'ENOSYS') return;
+  const nonRoot = !process.getuid || process.getuid() !== 0;
+  if (nonRoot && (err.code === 'EINVAL' || err.code === 'EPERM')) return;
+  throw err;
 }
 
 async function resolveGroupId(groupName: string): Promise<number | null | undefined> {

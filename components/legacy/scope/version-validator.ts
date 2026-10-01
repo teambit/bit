@@ -1,6 +1,6 @@
 /* eslint-disable complexity */
 import { PackageJsonValidator as PJV } from '@teambit/pkg.package-json.validator';
-import { forEach, isEmpty } from 'lodash';
+import { countBy, forEach, isEmpty } from 'lodash';
 import { lt, gt } from 'semver';
 import packageNameValidate from 'validate-npm-package-name';
 import type { ComponentIdList } from '@teambit/component-id';
@@ -343,8 +343,6 @@ ${duplicationStr}`);
  * previous nested-filter implementation take seconds on every Version serialization.
  */
 function findCaseInsensitiveDuplicates(paths: string[]): string[] {
-  const counts = new Map<string, number>();
-  const lowerPaths = paths.map((filePath) => filePath.toLowerCase());
-  lowerPaths.forEach((lowerPath) => counts.set(lowerPath, (counts.get(lowerPath) || 0) + 1));
-  return paths.filter((_, index) => (counts.get(lowerPaths[index]) as number) > 1);
+  const counts = countBy(paths, (filePath) => filePath.toLowerCase());
+  return paths.filter((filePath) => counts[filePath.toLowerCase()] > 1);
 }

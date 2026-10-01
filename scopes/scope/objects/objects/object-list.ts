@@ -47,9 +47,14 @@ export const FETCH_FORMAT_OBJECT_LIST = 'ObjectList';
 export type ObjectItemsStream = Readable;
 
 /**
- * hash => compressed buffer (as stored on the filesystem) and the size of its inflated content.
+ * compressed buffer of an object (as stored on the filesystem) and the size of its inflated content.
  */
-export type RawObjectsMap = Map<string, { buffer: Buffer; inflatedSize: number }>;
+export type CompressedObject = { buffer: Buffer; inflatedSize: number };
+
+/**
+ * hash => compressed object
+ */
+export type RawObjectsMap = Map<string, CompressedObject>;
 
 export class ObjectList {
   constructor(public objects: ObjectItem[] = []) {}

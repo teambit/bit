@@ -118,10 +118,10 @@ describe('Repository writing objects for export', () => {
     return ObjectList.fromBitObjects(sources);
   };
 
-  it('should write the pending objects into one file and read them back as is', async () => {
+  it('should write the pending objects into one file when asked to and read them back as is', async () => {
     const objectList = await createObjectList(SOURCES_COUNT);
     const pendingDir = path.join(scopePath, 'pending-objects', 'client-1');
-    await repository.writeObjectsToPendingDir(objectList, pendingDir);
+    await repository.writeObjectsToPendingDir(objectList, pendingDir, true);
     expect(await fs.readdir(pendingDir)).to.deep.equal(['objects.tar']);
 
     const loaded = await repository.readObjectsFromPendingDir(pendingDir);
@@ -132,15 +132,15 @@ describe('Repository writing objects for export', () => {
     expect(toComparable(loaded)).to.deep.equal(toComparable(objectList));
   });
 
-  it('should read a pending-dir written by an older version, a file per object', async () => {
+  it('should write a file per pending object by default, the format older versions read', async () => {
     const objectList = await createObjectList(SOURCES_COUNT);
     const pendingDir = path.join(scopePath, 'pending-objects', 'client-1');
-    await Promise.all(
-      objectList.objects.map((o) => {
-        const hash = o.ref.toString();
-        return fs.outputFile(path.join(pendingDir, hash.slice(0, 2), hash.slice(2)), o.buffer);
-      })
-    );
+    await repository.writeObjectsToPendingDir(objectList, pendingDir);
+    for (const objectItem of objectList.objects) {
+      const hash = objectItem.ref.toString();
+      const written = await fs.readFile(path.join(pendingDir, hash.slice(0, 2), hash.slice(2)));
+      expect(written.equals(objectItem.buffer)).to.be.true;
+    }
     const loaded = await repository.readObjectsFromPendingDir(pendingDir);
     expect(loaded.objects.map((o) => o.ref.toString()).sort()).to.deep.equal(
       objectList.objects.map((o) => o.ref.toString()).sort()
@@ -151,15 +151,12 @@ describe('Repository writing objects for export', () => {
     const objectList = await createObjectList(SOURCES_COUNT);
     const { bitObjectList, rawSources } = await objectList.toBitObjectsWithRawSources();
     expect(rawSources.size).to.equal(SOURCES_COUNT);
-    let compressions = 0;
     bitObjectList.getAll().forEach((obj) => {
       obj.compressWithSize = async () => {
-        compressions += 1;
         throw new Error('should not re-compress');
       };
     });
     await repository.writeObjectsToTheFS(bitObjectList.getAll(), rawSources);
-    expect(compressions).to.equal(0);
     for (const objectItem of objectList.objects) {
       const written = await fs.readFile(repository.objectPath(objectItem.ref));
       expect(written.equals(objectItem.buffer)).to.be.true;
@@ -185,5 +182,14 @@ describe('Repository writing objects for export', () => {
     await fs.remove(path.dirname(repository.objectPath(source.hash())));
     await repository.writeObjectsToTheFS([source]);
     expect(await fs.pathExists(repository.objectPath(source.hash()))).to.be.true;
+  });
+
+  it('should keep the mode of an existing object file it overwrites, as write-file-atomic does', async () => {
+    const source = Source.from(Buffer.from('some content'));
+    await repository.writeObjectsToTheFS([source]);
+    const objectPath = repository.objectPath(source.hash());
+    await fs.chmod(objectPath, 0o640);
+    await repository.writeObjectsToTheFS([source]);
+    expect((await fs.stat(objectPath)).mode & 0o777).to.equal(0o640);
   });
 });
