@@ -12,6 +12,7 @@ import { html } from './html';
 import {
   moduleFileExtensions,
   resolveAlias,
+  resolveModules,
   resolveFallbackDev,
   cssParser,
   mjsRule,
@@ -152,6 +153,7 @@ export function devConfig(workspaceDir, entryFiles, title): RspackConfigWithDevS
       extensions: moduleFileExtensions.map((ext) => `.${ext}`),
       alias: resolveAlias(),
       fallback: resolveFallbackDev,
+      modules: resolveModules,
     },
 
     watchOptions: {

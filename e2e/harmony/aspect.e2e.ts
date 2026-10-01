@@ -1,3 +1,4 @@
+import path from 'path';
 import { UNABLE_TO_LOAD_EXTENSION } from '@teambit/aspect-loader';
 import chai, { expect } from 'chai';
 import { Extensions } from '@teambit/legacy.constants';
@@ -40,15 +41,22 @@ describe('aspect', function () {
     });
   });
   describe('aspect loading failures', () => {
+    // the aspect is made unloadable by an import of a package that exists nowhere, rather than by
+    // leaving its @teambit/* imports uninstalled. under the global virtual store bit puts its own
+    // installation on NODE_PATH so every phantom @teambit/* import resolves to the host's copy by
+    // design (see hoisted-resolution-bridge), which would make such an aspect load fine and leave
+    // this suite testing nothing.
+    const missingPkg = '@my-scope/no-such-package';
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope({ addRemoteScopeAsDefaultScope: false });
       helper.fixtures.createAspect('my-aspect');
+      helper.fs.appendFile(path.join('my-scope', 'my-aspect', 'my-aspect.aspect.ts'), `\nimport '${missingPkg}';\n`);
       helper.workspaceJsonc.addKeyVal('my-scope/my-aspect', {});
     });
     it('commands with loaders should show a descriptive error', () => {
       const output = helper.command.status();
       expect(output).to.have.string(
-        UNABLE_TO_LOAD_EXTENSION('my-scope/my-aspect', "Cannot find module '@teambit/harmony'")
+        UNABLE_TO_LOAD_EXTENSION('my-scope/my-aspect', `Cannot find module '${missingPkg}'`)
       );
     });
     it('commands without loaders should not show the entire stacktrace', () => {

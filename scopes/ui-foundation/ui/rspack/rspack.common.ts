@@ -1,3 +1,5 @@
+import { existsSync } from 'fs';
+import path from 'path';
 import type { RuleSetRule } from '@rspack/core';
 import { fallbacks } from '@teambit/webpack';
 import { excludeNodeModulesJs } from '@teambit/webpack.modules.exclude-node-modules-js';
@@ -22,6 +24,33 @@ export const moduleFileExtensions = [
 
 export const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP === 'true';
 export const imageInlineSizeLimit = parseInt(process.env.IMAGE_INLINE_SIZE_LIMIT || '10000');
+
+/**
+ * the node_modules directories of the bit installation this config runs from, searched after the
+ * importing module's own chain.
+ *
+ * a phantom import - a package requiring something it never declared - resolves under the
+ * project-local layout because every package's real directory sits inside the workspace, so node's
+ * walk up from it reaches the workspace root's node_modules. with a global virtual store a package's
+ * realpath is inside the pnpm store and that walk leaves for the store, taking `@teambit/component`,
+ * `@teambit/docs` and the node polyfills memfs and isbinaryfile import (assert, buffer, events, url,
+ * util) out of reach. listing the host's own node_modules restores that lookup, and resolves a core
+ * aspect to the copy the rest of the bundle already uses rather than to a second one.
+ *
+ * 'node_modules' stays first so a package that does declare its dependency still gets its own copy.
+ */
+export const resolveModules: string[] = (() => {
+  const hostModulesDirs: string[] = [];
+  let dir = __dirname;
+  for (;;) {
+    const candidate = path.join(dir, 'node_modules');
+    if (existsSync(candidate)) hostModulesDirs.push(candidate);
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return ['node_modules', ...hostModulesDirs];
+})();
 
 export function resolveAlias(opts?: { profile?: boolean }): Record<string, string | false> {
   return {

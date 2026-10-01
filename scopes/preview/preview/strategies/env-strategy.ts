@@ -7,6 +7,7 @@ import type { AbstractVinyl } from '@teambit/component.sources';
 import type { Capsule } from '@teambit/isolator';
 import type { ArtifactDefinition, ComponentResult } from '@teambit/builder';
 import type { BundlerContext, BundlerHtmlConfig, BundlerResult } from '@teambit/bundler';
+import { PHANTOM_HOST_CORE_ASPECTS } from '@teambit/bundler';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import type { PkgMain } from '@teambit/pkg';
 import type { BundlingStrategy, ComputeTargetsContext } from '../bundling-strategy';
@@ -48,8 +49,11 @@ export class EnvBundlingStrategy implements BundlingStrategy {
         components: context.components,
         outputPath,
         /* It's a path to the root of the host component. */
-        // hostRootDir, handle this
-        hostDependencies: peers,
+        // the alias transformer resolves each host dependency from [hostRootDir, cwd, __dirname].
+        // without this it had only cwd to go on, which happens to hold bit's linked core aspects but
+        // is the directory the command was run from, not the env this bundle belongs to.
+        hostRootDir: context.envRuntime.envAspectDefinition?.aspectPath,
+        hostDependencies: [...peers, ...PHANTOM_HOST_CORE_ASPECTS],
         aliasHostDependencies: true,
       },
     ];

@@ -14,6 +14,7 @@ import highlight from 'cli-highlight';
 import { sep } from 'path';
 import pMapSeries from 'p-map-series';
 import type { BrowserRuntimeSlot, DevServerTransformerSlot } from './bundler.main.runtime';
+import { PHANTOM_HOST_CORE_ASPECTS } from './bundler-context';
 import { ComponentServer } from './component-server';
 import { dedupEnvs } from './dedup-envs';
 import type { DevServer } from './dev-server';
@@ -185,7 +186,7 @@ export class DevServerService implements EnvService<ComponentServer, DevServerDe
       rootPath: `preview/${context.envRuntime.id}`,
       publicPath: `${sep}public`,
       hostRootDir,
-      hostDependencies: peers,
+      hostDependencies: [...peers, ...PHANTOM_HOST_CORE_ASPECTS],
       aliasHostDependencies: true,
     });
   }

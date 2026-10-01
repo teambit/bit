@@ -1,5 +1,5 @@
 {
-    "reporterEnabled": "spec, mocha-junit-reporter",
+    "reporterEnabled": "spec, ./node_modules/mocha-junit-reporter",
     "mochaJunitReporterReporterOptions": {
         "mochaFile": "${MOCHA_FILE}",
         "outputs": "true"

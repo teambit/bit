@@ -33,6 +33,7 @@ describe('custom env', function () {
     });
   });
   describe('non loaded env', () => {
+    const missingPkg = '@my-scope/no-such-package';
     let envId;
     let envName;
     before(async () => {
@@ -40,6 +41,12 @@ describe('custom env', function () {
       helper.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
       envName = helper.env.setCustomEnv(undefined, { skipCompile: true, skipInstall: true });
       envId = `${helper.scopes.remote}/${envName}`;
+      // the env is kept unloadable by an import of a package that exists nowhere, on top of the
+      // empty node_modules below. an empty node_modules alone no longer does it: under the global
+      // virtual store bit puts its own installation on NODE_PATH, so the env's @teambit/envs and
+      // @teambit/node imports resolve to the host's copies by design (hoisted-resolution-bridge)
+      // and the env loads.
+      helper.fs.appendFile(path.join(envName, 'node-env.extension.ts'), `\nimport '${missingPkg}';\n`);
       helper.fixtures.populateComponents(1, undefined, undefined, false);
       helper.extensions.addExtensionToVariant('*', envId);
       // Clean the node_modules as we want to run tests when node_modules is empty

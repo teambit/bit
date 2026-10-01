@@ -2,6 +2,7 @@ import { BundlerAspect } from './bundler.aspect';
 
 export type { DevServer } from './dev-server';
 export type { DevServerContext } from './dev-server-context';
+export { PHANTOM_HOST_CORE_ASPECTS } from './bundler-context';
 export type {
   BundlerContext,
   Target,
