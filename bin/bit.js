@@ -5,10 +5,12 @@
 // one-component workspace). Location follows NODE_COMPILE_CACHE, else a dir under os.tmpdir().
 // This is node's own mechanism (>= 22.1), not the `v8-compile-cache` package dropped in 2024
 // (7a159b374) which patched Module._compile and broke on ESM. BIT_NO_COMPILE_CACHE=1 opts out.
-// libuv runs async fs calls on a thread-pool of 4 threads by default. bit reads and writes thousands of object files
-// concurrently (import/export/tag), and with 4 threads they're effectively serialized: exporting ~12k objects took
-// ~20s with 4 threads and ~7.5s with 16. it must be set before the pool is first used. a user-provided value wins.
-if (!process.env.UV_THREADPOOL_SIZE) process.env.UV_THREADPOOL_SIZE = '16';
+// libuv runs async fs calls on a thread-pool of 4 threads by default. on macOS (APFS), file create/rename calls are
+// slow, and with 4 threads bit's concurrent object writes (import/export/tag) are effectively serialized: writing 12k
+// object files took ~14s with 4 threads and ~2s with 16. on Linux (ext4), more threads made it slower (same-directory
+// creates/renames serialize on the dir lock), so the libuv default is kept there. it must be set before the pool is
+// first used. a user-provided value wins.
+if (process.platform === 'darwin' && !process.env.UV_THREADPOOL_SIZE) process.env.UV_THREADPOOL_SIZE = '16';
 
 if (!process.env.BIT_NO_COMPILE_CACHE) {
   try {
