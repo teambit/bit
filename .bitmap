@@ -2339,7 +2339,13 @@
         "version": "",
         "defaultScope": "teambit.generator",
         "mainFile": "index.ts",
-        "rootDir": "scopes/generator/workspace-starter"
+        "rootDir": "scopes/generator/workspace-starter",
+        "config": {
+            "teambit.harmony/envs/core-aspect-env@2.1.1": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-aspect-env"
+            }
+        }
     },
     "yarn": {
         "name": "yarn",

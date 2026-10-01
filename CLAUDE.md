@@ -112,6 +112,8 @@ Each aspect follows a standard structure:
 - `.docs.mdx` - Documentation
 - `.composition.tsx` - Component compositions for testing
 
+**New aspects must use the core-aspect env** (`teambit.harmony/envs/core-aspect-env`), like every other aspect here. No variant sets it, so a new component otherwise falls back to `teambit.harmony/node`. Pass it when creating the aspect: `bit create bit-aspect <name> --scope <scope> --env teambit.harmony/envs/core-aspect-env`. If the component was added with `bit add` (which has no env flag), run `bit envs set <component-id> teambit.harmony/envs/core-aspect-env` right after. Verify with `bit envs get <component-id>`.
+
 ### Configuration
 
 - `workspace.jsonc` - Main workspace configuration
