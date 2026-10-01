@@ -1,5 +1,5 @@
 import type { PluginDefinition } from '@teambit/aspect-loader';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { ApplicationSlot } from './application.main.runtime';
 
 export const BIT_APP_PATTERN = '*.bit-app.*';

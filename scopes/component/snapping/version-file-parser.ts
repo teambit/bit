@@ -4,7 +4,15 @@ import { BitError } from '@teambit/bit-error';
 import type { TagDataPerComp } from './snapping.main.runtime';
 
 export class VersionFileParser {
-  constructor(private componentsToTag: ComponentIdList) {}
+  constructor(
+    private componentsToTag: ComponentIdList,
+    /**
+     * a component that joined the batch on its own - the workspace root - rather than being tagged.
+     * the file is written for the components being tagged, so DEFAULT does not reach it. naming it
+     * on a line of its own still does.
+     */
+    private excludedFromDefault?: ComponentID
+  ) {}
 
   async parseVersionsFile(filePath: string): Promise<TagDataPerComp[]> {
     if (!(await fs.pathExists(filePath))) {
@@ -84,6 +92,7 @@ export class VersionFileParser {
       const specifiedIds = new Set(results.map((r) => r.componentId.toStringWithoutVersion()));
 
       for (const componentId of this.componentsToTag) {
+        if (this.excludedFromDefault?.isEqualWithoutVersion(componentId)) continue;
         if (!specifiedIds.has(componentId.toStringWithoutVersion())) {
           let prereleaseId: string | undefined;
           if (defaultVersion.includes('-')) {

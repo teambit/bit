@@ -93,6 +93,14 @@ export interface WorkspaceExtConfig {
   ignoredFiles?: string[];
 
   /**
+   * If set to `true`, bit tracks every file in a component directory that git would track, including
+   * the files it normally treats as bit-generated: `package.json`, a `tsconfig.json` and lint configs
+   * at the component root, and npm/yarn lockfiles. For workspaces adopted from an existing monorepo,
+   * where those files are the source of truth and bit does not generate them.
+   */
+  trackAllFiles?: boolean;
+
+  /**
    * Scope-name patterns that the workspace trusts when loading aspects (envs,
    * generators, etc.) imported from those scopes. The effective trust set is:
    * a builtin set (e.g. `teambit.*`, `bitdev.*`) + the owner of `defaultScope`

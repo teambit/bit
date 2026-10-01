@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import { dirname, basename, join, relative } from 'path';
 import { compact, difference, partition } from 'lodash';
 import type { ComponentID, ComponentIdList } from '@teambit/component-id';
-import { BIT_MAP, WORKSPACE_JSONC } from '@teambit/legacy.constants';
+import { BIT_GENERATED_IGNORE_LIST, BIT_MAP, IGNORE_ROOT_ONLY_LIST, WORKSPACE_JSONC } from '@teambit/legacy.constants';
 import type { Consumer } from '@teambit/legacy.consumer';
 import { logger } from '@teambit/legacy.logger';
 import type { PathOsBasedAbsolute } from '@teambit/legacy.utils';
@@ -168,9 +168,10 @@ export class Watcher {
     return this.workspace.consumer;
   }
 
-  private getParcelIgnorePatterns(): string[] {
+  /** the paths the watcher never reports, for either backend. see watchIgnorePatterns */
+  private getIgnorePatterns(): string[] {
     const relScopePath = pathNormalizeToLinux(relative(this.workspace.path, this.workspace.scope.path));
-    return ['**/node_modules/**', '**/package.json', `**/${relScopePath}/**`];
+    return watchIgnorePatterns(relScopePath, this.consumer.config.trackAllFiles);
   }
 
   /**
@@ -180,7 +181,7 @@ export class Watcher {
    */
   private getParcelWatcherOptions(): ParcelWatcherOptions {
     const options: ParcelWatcherOptions = {
-      ignore: this.getParcelIgnorePatterns(),
+      ignore: this.getIgnorePatterns(),
     };
 
     // On macOS, prefer Watchman if available to avoid FSEvents stream limit
@@ -920,8 +921,7 @@ export class Watcher {
     const chokidarOpts = await this.watcherMain.getChokidarWatchOptions();
     // `chokidar` matchers have Bash-parity, so Windows-style backslashes are not supported as separators.
     // (windows-style backslashes are converted to forward slashes)
-    const relScopePath = pathNormalizeToLinux(relative(this.workspace.path, this.workspace.scope.path));
-    chokidarOpts.ignored = ['**/node_modules/**', '**/package.json', `**/${relScopePath}/**`];
+    chokidarOpts.ignored = this.getIgnorePatterns();
     this.chokidarWatcher = chokidar.watch(this.workspace.path, chokidarOpts);
     if (this.verbose) {
       logger.console(
@@ -1138,4 +1138,26 @@ export class Watcher {
       this.isRecoveringFromSnapshot = false;
     }
   }
+}
+
+/**
+ * the paths the watcher never reports, for either backend. the files bit generates are its own output
+ * rather than component source, unless the workspace tracks every file (trackAllFiles), and a
+ * component never lists them - so reporting an edit of one only produces "inside the component but
+ * configured to be ignored". a workspace-root component owns the whole tree, which makes the
+ * manifests and configs at the workspace root the common case. the root-only names stay unprefixed on
+ * purpose: a rescan drops them at a component's rootDir, and prefixing them with `**\/` would hide a
+ * config file deeper inside a component, which is source. so only the workspace root is covered here
+ * - editing e.g. `packages/comp/tsconfig.json` still reaches the watcher and is then found to be
+ * outside the component's file-set. covering every component root needs these patterns rebuilt
+ * whenever a component is added or moved, which the watcher does not do today.
+ */
+export function watchIgnorePatterns(relScopePath: string, trackAllFiles?: boolean): string[] {
+  const generated = trackAllFiles
+    ? []
+    : [
+        ...BIT_GENERATED_IGNORE_LIST.map((pattern) => (pattern.includes('/') ? pattern : `**/${pattern}`)),
+        ...IGNORE_ROOT_ONLY_LIST,
+      ];
+  return ['**/node_modules/**', ...generated, `**/${relScopePath}/**`];
 }

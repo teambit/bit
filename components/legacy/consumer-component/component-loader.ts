@@ -61,7 +61,7 @@ export class ComponentLoader {
     this.consumer = consumer;
     this.cacheResolvedDependencies = {};
     this.componentFsCache = new FsCache(consumer.scope.getPath());
-    this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
+    this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents(), weak: true });
   }
 
   static onComponentLoadSubscribers: OnComponentLoadSubscriber[] = [];

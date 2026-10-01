@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect } from '@teambit/cli';
 import pMap from 'p-map';
 import pLimit from 'p-limit';
 import type { ScopeMain } from '@teambit/scope';

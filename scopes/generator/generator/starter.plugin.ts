@@ -1,5 +1,5 @@
 import type { PluginDefinition } from '@teambit/aspect-loader';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { GeneratorMain } from './generator.main.runtime';
 
 export class StarterPlugin implements PluginDefinition {

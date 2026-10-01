@@ -10,7 +10,7 @@ import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import chalk from 'chalk';
 import { VersionNotFound } from './exceptions';
 
-const DELETED_OBJECTS_DIR = 'deleted-objects';
+export const DELETED_OBJECTS_DIR = 'deleted-objects';
 
 export async function collectGarbage(thisScope: Scope, opts: GarbageCollectorOpts = {}) {
   const repo = thisScope.objects;

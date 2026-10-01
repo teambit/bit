@@ -6,7 +6,8 @@ import multimatch from 'multimatch';
 import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
 import { AspectLoaderAspect } from '@teambit/aspect-loader';
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect } from '@teambit/cli';
 import type {
   AspectData,
   ComponentMain,
@@ -1515,6 +1516,10 @@ export class ScopeMain implements ComponentFactory {
     Repository.onPostObjectsPersist = onPostObjectsPersistHook;
     Repository.onPreObjectPersist = onPreObjectPersistHook;
     Repository.onPostObjectRead = onPostObjectReadHook;
+    // the hook above is installed whether or not anything registered a transformer, so it can't be
+    // used to answer "is content transformed?". the slot is filled by other aspects' providers, so
+    // this is a live check rather than a snapshot taken here.
+    Repository.hasPostObjectReadTransformer = () => postObjectReadSlot.values().length > 0;
     ExternalActions.externalActions.push(new ClearCacheAction(scope));
 
     express.register([

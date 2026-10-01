@@ -1,7 +1,7 @@
 import React from 'react';
 import type { ComponentUI } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
-import { UIRuntime } from '@teambit/ui';
+import { UIRuntime } from '@teambit/harmony.modules.runtimes';
 import { CodeCompare, CodeCompareEditorProvider, type CodeCompareProps } from '@teambit/code.ui.code-compare';
 import type { Harmony, SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';

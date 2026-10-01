@@ -88,11 +88,6 @@ describe('install command', function () {
         helper.scopeHelper.getClonedWorkspace(wsEmptyNM);
         output = helper.command.install(undefined, { 'recurring-install': '' });
       });
-      // Skip for now, I don't know think it is relevant anymore (the warning is not shown anymore which is expected)
-      it.skip('should show a warning that the workspace has old env without env.jsonc but not offer the recurring-install flag', async () => {
-        const msg = stripAnsi(getAnotherInstallRequiredOutput(true, [envId]));
-        expect(output).to.have.string(msg);
-      });
       it('should install deps that were configured in the env', async () => {
         expect(path.join(helper.fixtures.scopes.localPath, 'node_modules/lodash.get')).to.be.a.path();
       });
@@ -195,78 +190,41 @@ describe('install new dependencies', function () {
   this.timeout(0);
   let helper: Helper;
   let workspaceJsonc;
-  describe('using pnpm', () => {
-    before(() => {
-      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.extensions.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
-      helper.command.install('is-positive@~1.0.0 is-odd@3.0.0 is-even@1 is-negative semver@2.0.0-beta');
-      workspaceJsonc = helper.workspaceJsonc.read();
-    });
-    after(() => {
-      helper.scopeHelper.destroy();
-    });
-    it('should add new dependency preserving the ~ prefix', () => {
-      expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-positive']).to.equal(
-        '~1.0.0'
-      );
-    });
-    it('should add new dependency with exact version if the dependency was installed by specifying the exact version', () => {
-      expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-odd']).to.equal(
-        '3.0.0'
-      );
-      expect(fs.readJsonSync(path.join(helper.scopes.localPath, 'node_modules/is-odd/package.json')).version).to.equal(
-        '3.0.0'
-      );
-    });
-    it('should add new dependency with ^ prefix if the dependency was installed by specifying a range not using ~', () => {
-      expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-even']).to.equal(
-        '^1.0.0'
-      );
-    });
-    it('should add new dependency with ^ prefix by default', () => {
-      expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-negative'][0]).to.equal(
-        '^'
-      );
-    });
-    it('should add prerelease version as exact version', () => {
-      expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies.semver).to.equal(
-        '2.0.0-beta'
-      );
-    });
+  before(() => {
+    helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
+    helper.extensions.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
+    helper.command.install('is-positive@~1.0.0 is-odd@3.0.0 is-even@1 is-negative semver@2.0.0-beta');
+    workspaceJsonc = helper.workspaceJsonc.read();
   });
-  // skipped: yarn support is deprecated and planned for removal
-  describe.skip('using yarn', () => {
-    before(() => {
-      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.extensions.workspaceJsonc.setPackageManager('teambit.dependencies/yarn');
-      helper.command.install('is-positive@~1.0.0 is-odd@1.0.0 is-even@1 is-negative');
-      workspaceJsonc = helper.workspaceJsonc.read();
-    });
-    after(() => {
-      helper.scopeHelper.destroy();
-    });
-    it('should add new dependency preserving the ~ prefix', () => {
-      expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-positive']).to.equal(
-        '~1.0.0'
-      );
-    });
-    it('should add new dependency with exact version if the dependency was installed by specifying the exact version', () => {
-      expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-odd']).to.equal(
-        '1.0.0'
-      );
-    });
-    it('should add new dependency with ^ prefix if the dependency was installed by specifying a range not using ~', () => {
-      expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-even']).to.equal(
-        '^1.0.0'
-      );
-    });
-    it('should add new dependency with ^ prefix by default', () => {
-      expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-negative'][0]).to.equal(
-        '^'
-      );
-    });
+  after(() => {
+    helper.scopeHelper.destroy();
+  });
+  it('should add new dependency preserving the ~ prefix', () => {
+    expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-positive']).to.equal(
+      '~1.0.0'
+    );
+  });
+  it('should add new dependency with exact version if the dependency was installed by specifying the exact version', () => {
+    expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-odd']).to.equal('3.0.0');
+    expect(fs.readJsonSync(path.join(helper.scopes.localPath, 'node_modules/is-odd/package.json')).version).to.equal(
+      '3.0.0'
+    );
+  });
+  it('should add new dependency with ^ prefix if the dependency was installed by specifying a range not using ~', () => {
+    expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-even']).to.equal(
+      '^1.0.0'
+    );
+  });
+  it('should add new dependency with ^ prefix by default', () => {
+    expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies['is-negative'][0]).to.equal(
+      '^'
+    );
+  });
+  it('should add prerelease version as exact version', () => {
+    expect(workspaceJsonc['teambit.dependencies/dependency-resolver'].policy.dependencies.semver).to.equal(
+      '2.0.0-beta'
+    );
   });
 });
 

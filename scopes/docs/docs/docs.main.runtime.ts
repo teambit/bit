@@ -1,6 +1,6 @@
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { LoggerMain, Logger } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
 import type { CompilerMain } from '@teambit/compiler';
