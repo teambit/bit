@@ -6,6 +6,9 @@
  * This loader is inlined to avoid an external dependency and to ensure compatibility across environments
  * where the original package may not be available or may introduce unnecessary overhead.
  *
+ * A copy of scopes/react/react/webpack/mdx-pre-loader.cjs, so preview doesn't depend on @teambit/react
+ * (that dependency closes a circular dependency). Keep the two copies in sync.
+ *
  * Loader purpose: Transforms MDX admonition syntax from ':::type content' to ':::type[content]'
  * for MDX v3 compatibility.
  */
