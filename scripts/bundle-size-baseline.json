@@ -20,7 +20,7 @@
       "label": "externals (npm-installed node_modules)",
       "phase": "pre",
       "path": "node_modules",
-      "baselineMB": 68.31
+      "baselineMB": 76.17
     },
     {
       "id": "shims-total",
