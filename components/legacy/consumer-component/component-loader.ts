@@ -53,6 +53,7 @@ type LoadDepsFunc = (component: Component, opts: DependencyLoaderOpts) => Promis
 export class ComponentLoader {
   private componentsCache: InMemoryCache<Component>; // cache loaded components
   _shouldCheckForClearingDependenciesCache = true;
+  private invalidateDepsCachePromise?: Promise<void>;
   consumer: Consumer;
   cacheResolvedDependencies: Record<string, any>;
   cacheProjectAst: Record<string, any> | undefined; // specific platforms may need to parse the entire project. (was used for Angular, currently not in use)
@@ -89,32 +90,42 @@ export class ComponentLoader {
   }
 
   async invalidateDependenciesCacheIfNeeded(): Promise<void> {
+    // components are loaded in parallel and each one calls this. the flag must be turned off synchronously and the
+    // in-flight check shared, otherwise all of them run it at once and delete the cache while others list it.
     if (this._shouldCheckForClearingDependenciesCache) {
-      const pathsToCheck = [
-        path.join(this.consumer.getPath(), 'node_modules'),
-        path.join(this.consumer.getPath(), 'package.json'),
-        path.join(this.consumer.getPath(), 'pnpm-lock.yaml'),
-        path.join(this.consumer.getPath(), 'yarn.lock'),
-        path.join(this.consumer.getPath(), BIT_MAP),
-        this.consumer.config.path,
-      ];
-      const lastModified = await getLastModifiedPathsTimestampMs(pathsToCheck);
-      const dependenciesCacheList = await this.componentFsCache.listDependenciesDataCache();
-      const lastUpdateAllComps = Object.keys(dependenciesCacheList).map((key) => dependenciesCacheList[key].time);
-      const firstCacheEntered = Math.min(...lastUpdateAllComps);
-      // if lastUpdateAllComps is empty, firstCacheEntered is Infinity so shouldInvalidate is
-      // always false, which is good. no need to invalidate the cache if nothing there.
-      const shouldInvalidate = lastModified > firstCacheEntered;
-      if (shouldInvalidate) {
-        // at least one component inserted to the cache before workspace-config/node-modules
-        // modification, invalidate the entire deps-cache.
-        logger.debug(
-          'component-loader, invalidating dependencies cache because either node-modules or workspace config had been changed'
-        );
-        await this.componentFsCache.deleteAllDependenciesDataCache();
-      }
+      this._shouldCheckForClearingDependenciesCache = false;
+      this.invalidateDepsCachePromise = this.invalidateDependenciesCache().catch((err) => {
+        this._shouldCheckForClearingDependenciesCache = true;
+        throw err;
+      });
     }
-    this._shouldCheckForClearingDependenciesCache = false;
+    await this.invalidateDepsCachePromise;
+  }
+
+  private async invalidateDependenciesCache(): Promise<void> {
+    const pathsToCheck = [
+      path.join(this.consumer.getPath(), 'node_modules'),
+      path.join(this.consumer.getPath(), 'package.json'),
+      path.join(this.consumer.getPath(), 'pnpm-lock.yaml'),
+      path.join(this.consumer.getPath(), 'yarn.lock'),
+      path.join(this.consumer.getPath(), BIT_MAP),
+      this.consumer.config.path,
+    ];
+    const lastModified = await getLastModifiedPathsTimestampMs(pathsToCheck);
+    const dependenciesCacheList = await this.componentFsCache.listDependenciesDataCache();
+    const lastUpdateAllComps = Object.keys(dependenciesCacheList).map((key) => dependenciesCacheList[key].time);
+    const firstCacheEntered = Math.min(...lastUpdateAllComps);
+    // if lastUpdateAllComps is empty, firstCacheEntered is Infinity so shouldInvalidate is
+    // always false, which is good. no need to invalidate the cache if nothing there.
+    const shouldInvalidate = lastModified > firstCacheEntered;
+    if (shouldInvalidate) {
+      // at least one component inserted to the cache before workspace-config/node-modules
+      // modification, invalidate the entire deps-cache.
+      logger.debug(
+        'component-loader, invalidating dependencies cache because either node-modules or workspace config had been changed'
+      );
+      await this.componentFsCache.deleteAllDependenciesDataCache();
+    }
   }
 
   async loadMany(
