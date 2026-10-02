@@ -9,7 +9,7 @@ import { userInfo } from 'os';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { OBJECTS_DIR } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
-import type { ChownOptions, PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import type { PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { glob } from 'glob';
 import { removeEmptyDir } from '@teambit/toolbox.fs.remove-empty-dir';
 import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
@@ -38,6 +38,7 @@ const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 const TRASH_DIR = 'trash';
 const MAX_COMPRESSED_SIZE_TO_CACHE = 100 * 1024; // don't cache big files (mainly artifacts) to prevent out-of-memory
 let objectFileWriteCounter = 0;
+type ObjectChownOptions = { uid: number; gid: number } | null;
 /**
  * how much of an object file to read when all that's needed is its header. the header holds the
  * type and is a few dozen bytes, which 512 compressed bytes always cover - and every byte past it
@@ -797,12 +798,7 @@ export default class Repository {
     logger.trace(`Repository.writeObjectsToTheFS: started writing ${count} objects`);
     const concurrency = concurrentIOLimit();
     const chownOptions = await this.getChownOptions();
-    await pMapPool(
-      objects,
-      // hashing a Source is sha1 of its content, so only do it when there are raw objects to look up
-      (obj) => this._writeOne(obj, rawObjects ? rawObjects.get(obj.hash().toString()) : undefined, chownOptions),
-      { concurrency }
-    );
+    await pMapPool(objects, (obj) => this._writeOne(obj, rawObjects?.get(obj), chownOptions), { concurrency });
     logger.trace(`Repository.writeObjectsToTheFS: completed writing ${count} objects`);
 
     const added = this.scopeIndex.addMany(objects);
@@ -825,11 +821,16 @@ export default class Repository {
    * this method doesn't write to scopeIndex. so using this method for ModelComponent or
    * Symlink makes the index outdated.
    */
-  async _writeOne(object: BitObject, raw?: CompressedObject, chownOptions?: ChownOptions): Promise<void> {
+  async _writeOne(
+    object: BitObject,
+    raw?: CompressedObject & { ref: Ref },
+    chownOptions?: ObjectChownOptions
+  ): Promise<void> {
     // when the already-compressed buffer of an unchanged object is available, skip the costly re-compression.
     const { buffer: contents, inflatedSize } = raw || (await object.compressWithSize());
-    const options = chownOptions || (await this.getChownOptions());
-    const hash = object.hash();
+    const options = chownOptions === undefined ? await this.getChownOptions() : chownOptions;
+    // hashing a Source is sha1 of its content. the raw buffer's ref was already checked against it.
+    const hash = raw?.ref || object.hash();
     const objectPath = this.objectPath(hash);
     logger.trace(`repository._writeOne: ${objectPath}`);
     // Run hook to transform content pre persisting
@@ -876,9 +877,14 @@ export default class Repository {
     return new ObjectList(objects);
   }
 
-  private async getChownOptions(): Promise<ChownOptions> {
-    if (!this.scopeJson.groupName) return {};
-    return { uid: userInfo().uid, gid: await resolveGroupId(this.scopeJson.groupName) };
+  /**
+   * the owner to set on written object files. `null` when the scope has no group (or it can't be resolved), in which
+   * case the owner of an existing file is kept.
+   */
+  private async getChownOptions(): Promise<ObjectChownOptions> {
+    if (!this.scopeJson.groupName) return null;
+    const gid = await resolveGroupId(this.scopeJson.groupName);
+    return gid ? { uid: userInfo().uid, gid } : null;
   }
 
   /**
@@ -888,14 +894,11 @@ export default class Repository {
    * (realpath, stat of the dir, exit handlers). the parent dir is created only when the first write fails with ENOENT.
    * the tmp file is a dotfile, which `listRefs()` ignores in case it's left behind.
    */
-  private async writeObjectFile(filePath: string, contents: Buffer, chownOptions: ChownOptions) {
+  private async writeObjectFile(filePath: string, contents: Buffer, chownOptions: ObjectChownOptions) {
     const existing = await fs.stat(filePath).catch(() => undefined);
     const mode = existing?.mode;
-    const chown = chownOptions.gid
-      ? { uid: chownOptions.uid as number, gid: chownOptions.gid }
-      : existing && process.getuid
-        ? { uid: existing.uid, gid: existing.gid }
-        : undefined;
+    const keepOwner = existing && process.getuid ? { uid: existing.uid, gid: existing.gid } : null;
+    const chown = chownOptions || keepOwner;
     objectFileWriteCounter += 1;
     const tmpPath = path.join(
       path.dirname(filePath),

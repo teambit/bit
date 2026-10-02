@@ -54,7 +54,7 @@ export type CompressedObject = { buffer: Buffer; inflatedSize: number };
 /**
  * hash => compressed object
  */
-export type RawObjectsMap = Map<string, CompressedObject>;
+export type RawObjectsMap = Map<BitObject, CompressedObject & { ref: Ref }>;
 
 export class ObjectList {
   constructor(public objects: ObjectItem[] = []) {}
@@ -296,8 +296,9 @@ export class ObjectList {
         try {
           const { object: bitObject, inflatedSize } = await BitObject.parseObjectWithSize(object.buffer);
           if (collectRawSources && bitObject.getType() === 'Source') {
-            const hash = bitObject.hash().toString();
-            if (hash === object.ref.toString()) rawSources.set(hash, { buffer: object.buffer, inflatedSize });
+            if (bitObject.hash().isEqual(object.ref)) {
+              rawSources.set(bitObject, { buffer: object.buffer, inflatedSize, ref: object.ref });
+            }
           }
           return bitObject;
         } catch (err) {
