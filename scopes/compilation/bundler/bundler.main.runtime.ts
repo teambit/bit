@@ -1,6 +1,6 @@
 import type { PubsubMain } from '@teambit/pubsub';
 import { PubsubAspect } from '@teambit/pubsub';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { Component } from '@teambit/component';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';

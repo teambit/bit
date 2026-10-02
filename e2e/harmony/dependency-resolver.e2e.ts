@@ -156,23 +156,16 @@ describe('dependency-resolver extension', function () {
     });
   });
   (supportNpmCiRegistryTesting ? describe : describe.skip)('saving dependencies package names', function () {
-    let npmCiRegistry: NpmCiRegistry;
     let randomStr;
-    before(async () => {
+    before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
 
-      npmCiRegistry = new NpmCiRegistry(helper);
+      const npmCiRegistry = new NpmCiRegistry(helper);
       randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running
       const name = `react.${randomStr}.{name}`;
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       helper.fixtures.populateComponents(4);
-
-      await npmCiRegistry.init();
-
       helper.command.tagAllWithoutBuild();
-    });
-    after(() => {
-      npmCiRegistry.destroy();
     });
     it('should save the packageName data into the dependencyResolver extension in the model', () => {
       const comp2 = helper.command.catComponent('comp2@latest');
@@ -358,7 +351,7 @@ describe('dependency-resolver extension', function () {
     });
   });
   describe('env.jsonc with policy.peer version="+" and a dependent', () => {
-    before(async () => {
+    before(() => {
       helper = new Helper();
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);

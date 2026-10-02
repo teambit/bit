@@ -1,6 +1,6 @@
 import type { PluginDefinition } from '@teambit/aspect-loader';
 import { BitError } from '@teambit/bit-error';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { Application } from './application';
 import type { ApplicationType } from './application-type';
 import type { ApplicationSlot } from './application.main.runtime';

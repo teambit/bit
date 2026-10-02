@@ -1,4 +1,4 @@
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { ComponentID } from '@teambit/component-id';
 import type { CompilerMain } from '@teambit/compiler';
 import { CompilerAspect } from '@teambit/compiler';

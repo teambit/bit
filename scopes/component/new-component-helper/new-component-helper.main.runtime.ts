@@ -3,7 +3,7 @@ import path from 'path';
 import Vinyl from 'vinyl';
 import { BitError } from '@teambit/bit-error';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { Component } from '@teambit/component';
 import type { TrackerMain } from '@teambit/tracker';
 import { TrackerAspect } from '@teambit/tracker';

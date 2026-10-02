@@ -16,19 +16,14 @@ chai.use(chaiString);
   let envName1;
   let envId2;
   let envName2;
-  let npmCiRegistry: NpmCiRegistry;
-  before(async () => {
+  before(() => {
     helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
     helper.scopeHelper.setWorkspaceWithRemoteScope();
     helper.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
-    npmCiRegistry = new NpmCiRegistry(helper);
-    await npmCiRegistry.init();
-    npmCiRegistry.configureCiInPackageJsonHarmony();
     // the node-env-1/node-env-2 fixtures are minimal old-style envs, deliberately not based on
     // any non-core env (see the fixtures) - basing them on a real env would pull the entire env
-    // chain into the scope-aspects capsules, which gets OOM-killed under yarn on CI (materialized
-    // as full copies, no store/hardlinks). the seed workspace uses the default pnpm - the yarn
-    // coverage is in the describe blocks below, where the scope-aspects capsules are installed.
+    // chain into the scope-aspects capsules, which is heavy enough to have OOM-killed this suite.
+    new NpmCiRegistry(helper).configureCiInPackageJsonHarmony();
     envName1 = helper.env.setCustomEnv('node-env-1');
     envId1 = `${helper.scopes.remote}/${envName1}`;
     envName2 = helper.env.setCustomEnv('node-env-2');
@@ -79,8 +74,5 @@ chai.use(chaiString);
       const comp2PkgJson = fs.readJsonSync(path.join(nodeEnv2CapsuleDir, 'package.json'));
       expect(path.join(nodeEnv2CapsuleDir, 'node_modules', comp2PkgJson.name)).to.be.a.path();
     });
-  });
-  after(() => {
-    npmCiRegistry.destroy();
   });
 });

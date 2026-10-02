@@ -1,5 +1,5 @@
 import type { SourceFile } from '@teambit/component.sources';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { ScopeMain } from '@teambit/scope';
 import { ScopeAspect } from '@teambit/scope';
 import { flatten, isFunction } from 'lodash';

@@ -5,7 +5,7 @@ import type { Harmony, SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { ComponentUI } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
-import { UIRuntime } from '@teambit/ui';
+import { UIRuntime } from '@teambit/harmony.modules.runtimes';
 import type { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import type {
   ComponentCompareProps,

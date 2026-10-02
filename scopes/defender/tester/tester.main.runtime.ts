@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect } from '@teambit/cli';
 import type { Component, IComponent } from '@teambit/component';
 import compact from 'lodash.compact';
 import type { EnvsExecutionResult, EnvsMain } from '@teambit/envs';

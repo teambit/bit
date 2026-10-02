@@ -1,6 +1,7 @@
-import { Aspect, RuntimeDefinition } from '@teambit/harmony';
+import { Aspect } from '@teambit/harmony';
+import { PreviewRuntime } from '@teambit/harmony.modules.runtimes';
 
-export const PreviewRuntime = new RuntimeDefinition('preview');
+export { PreviewRuntime };
 
 export const PreviewAspect = Aspect.create({
   id: 'teambit.preview/preview',
