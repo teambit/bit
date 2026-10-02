@@ -94,10 +94,12 @@ export class ComponentLoader {
     // in-flight check shared, otherwise all of them run it at once and delete the cache while others list it.
     if (this._shouldCheckForClearingDependenciesCache) {
       this._shouldCheckForClearingDependenciesCache = false;
-      this.invalidateDepsCachePromise = this.invalidateDependenciesCache().catch((err) => {
-        this._shouldCheckForClearingDependenciesCache = true;
+      const checkPromise = this.invalidateDependenciesCache().catch((err) => {
+        // a newer check may have replaced this one (after clearComponentsCache), don't let a stale failure reset it.
+        if (this.invalidateDepsCachePromise === checkPromise) this._shouldCheckForClearingDependenciesCache = true;
         throw err;
       });
+      this.invalidateDepsCachePromise = checkPromise;
     }
     await this.invalidateDepsCachePromise;
   }

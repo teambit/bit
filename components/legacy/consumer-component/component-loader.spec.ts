@@ -56,5 +56,19 @@ describe('ComponentLoader', function () {
       await componentLoader.invalidateDependenciesCacheIfNeeded();
       expect(list.callCount).to.equal(2);
     });
+    it('should not let a stale failure reset the flag after a newer check succeeded', async () => {
+      let rejectFirst: (err: Error) => void = () => {};
+      const list = sinon.stub(componentLoader.componentFsCache, 'listDependenciesDataCache');
+      list.onFirstCall().returns(new Promise((_resolve, reject) => (rejectFirst = reject)) as any);
+      list.resolves({});
+      const first = componentLoader.invalidateDependenciesCacheIfNeeded();
+      await new Promise((resolve) => setTimeout(resolve, 50)); // let the first check reach listDependenciesDataCache
+      componentLoader.clearComponentsCache();
+      await componentLoader.invalidateDependenciesCacheIfNeeded();
+      rejectFirst(new Error('failed'));
+      await first.catch(() => {});
+      await componentLoader.invalidateDependenciesCacheIfNeeded();
+      expect(list.callCount).to.equal(2);
+    });
   });
 });
