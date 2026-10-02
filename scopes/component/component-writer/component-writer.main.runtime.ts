@@ -29,7 +29,7 @@ import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import type { Consumer } from '@teambit/legacy.consumer';
 import type { ComponentWriterProps } from './component-writer';
 import ComponentWriter, { isOwnedByNestedComponent } from './component-writer';
-import { incrementPathRecursively } from '@teambit/toolbox.path.increment-path';
+import { incrementPathRecursively } from '@teambit/toolbox.path.path';
 import { ComponentWriterAspect } from './component-writer.aspect';
 
 export interface ManyComponentsWriterParams {

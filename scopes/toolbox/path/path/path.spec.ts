@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { incrementPathRecursively } from './increment-path';
+import { incrementPathRecursively } from './path';
 
 describe('incrementPathRecursively', () => {
   it('should append _1 when the path is free', () => {

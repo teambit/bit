@@ -1352,20 +1352,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/panels/composition-gallery"
     },
-    "path/increment-path": {
-        "name": "path/increment-path",
-        "scope": "",
-        "version": "",
-        "defaultScope": "teambit.toolbox",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/toolbox/path/increment-path",
-        "config": {
-            "teambit.node/envs/node-typescript-mocha@2.1.1": {},
-            "teambit.envs/envs": {
-                "env": "teambit.node/envs/node-typescript-mocha"
-            }
-        }
-    },
     "path/is-path-inside": {
         "name": "path/is-path-inside",
         "scope": "teambit.toolbox",
