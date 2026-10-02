@@ -52,7 +52,6 @@ type LoadDepsFunc = (component: Component, opts: DependencyLoaderOpts) => Promis
 
 export class ComponentLoader {
   private componentsCache: InMemoryCache<Component>; // cache loaded components
-  _shouldCheckForClearingDependenciesCache = true;
   private invalidateDepsCachePromise?: Promise<void>;
   consumer: Consumer;
   cacheResolvedDependencies: Record<string, any>;
@@ -80,7 +79,7 @@ export class ComponentLoader {
   clearComponentsCache() {
     this.componentsCache.deleteAll();
     this.cacheResolvedDependencies = {};
-    this._shouldCheckForClearingDependenciesCache = true;
+    this.invalidateDepsCachePromise = undefined;
   }
 
   clearOneComponentCache(id: ComponentID) {
@@ -90,13 +89,12 @@ export class ComponentLoader {
   }
 
   async invalidateDependenciesCacheIfNeeded(): Promise<void> {
-    // components are loaded in parallel and each one calls this. the flag must be turned off synchronously and the
-    // in-flight check shared, otherwise all of them run it at once and delete the cache while others list it.
-    if (this._shouldCheckForClearingDependenciesCache) {
-      this._shouldCheckForClearingDependenciesCache = false;
+    // components are loaded in parallel and each one calls this. the in-flight check must be shared, otherwise all of
+    // them run it at once and delete the cache while others list it.
+    if (!this.invalidateDepsCachePromise) {
       const checkPromise = this.invalidateDependenciesCache().catch((err) => {
-        // a newer check may have replaced this one (after clearComponentsCache), don't let a stale failure reset it.
-        if (this.invalidateDepsCachePromise === checkPromise) this._shouldCheckForClearingDependenciesCache = true;
+        // let a later call retry. unless a newer check (after clearComponentsCache) already replaced this one.
+        if (this.invalidateDepsCachePromise === checkPromise) this.invalidateDepsCachePromise = undefined;
         throw err;
       });
       this.invalidateDepsCachePromise = checkPromise;
@@ -113,8 +111,10 @@ export class ComponentLoader {
       path.join(this.consumer.getPath(), BIT_MAP),
       this.consumer.config.path,
     ];
-    const lastModified = await getLastModifiedPathsTimestampMs(pathsToCheck);
-    const dependenciesCacheList = await this.componentFsCache.listDependenciesDataCache();
+    const [lastModified, dependenciesCacheList] = await Promise.all([
+      getLastModifiedPathsTimestampMs(pathsToCheck),
+      this.componentFsCache.listDependenciesDataCache(),
+    ]);
     const lastUpdateAllComps = Object.keys(dependenciesCacheList).map((key) => dependenciesCacheList[key].time);
     const firstCacheEntered = Math.min(...lastUpdateAllComps);
     // if lastUpdateAllComps is empty, firstCacheEntered is Infinity so shouldInvalidate is
