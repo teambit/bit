@@ -101,6 +101,21 @@ describe('BitMap', function () {
       );
     });
   });
+  describe('getComponentIdByRootPath', () => {
+    it('should find a component that was added after a lookup', async () => {
+      const bitMap = await getBitmapInstance();
+      bitMap.loadComponents(
+        { comp1: { mainFile: 'index.js', rootDir: 'comp1', scope: '', defaultScope: 'my-scope' } },
+        'my-scope'
+      );
+      expect(bitMap.getComponentIdByRootPath('comp1')?.fullName).to.equal('comp1');
+      bitMap.addFromComponentJson(ComponentID.fromObject({ name: 'comp2' }, 'my-scope'), {
+        mainFile: 'index.js',
+        rootDir: 'comp2',
+      });
+      expect(bitMap.getComponentIdByRootPath('comp2')?.fullName).to.equal('comp2');
+    });
+  });
   describe('getComponentIfExist', () => {
     let bitMap: BitMap;
     before(async () => {
