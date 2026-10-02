@@ -162,7 +162,11 @@ export class WorkspaceComponentLoader {
   ): Promise<GetManyRes> {
     const callId = Math.floor(Math.random() * 1000); // generate a random callId to be able to identify the call from the logs
     this.logger.profileTrace(`getMany-${callId}`);
-    this.logger.setStatusLine(`loading ${idsWithoutEmpty.length} component(s)`);
+    // a single `get` delegated to getMany (see loadOneThroughGetMany) must not touch the status
+    // line. otherwise, a command that loads components one by one (e.g. lane merge) restarts and
+    // clears the spinner per component, which makes it flicker.
+    const showStatusLine = !this.singleLoadChainContext.getStore();
+    if (showStatusLine) this.logger.setStatusLine(`loading ${idsWithoutEmpty.length} component(s)`);
     const loadOptsWithDefaults: ComponentLoadOptions = Object.assign(
       // We don't want to load extension or execute the load slot at this step
       // we will do it later
@@ -210,7 +214,7 @@ export class WorkspaceComponentLoader {
         idsWithEmptyStrs.includes(comp.id.toString()) || idsWithEmptyStrs.includes(comp.id.toStringWithoutVersion())
     );
     this.logger.profileTrace(`getMany-${callId}`);
-    this.logger.clearStatusLine();
+    if (showStatusLine) this.logger.clearStatusLine();
     return { components: requestedComponents, invalidComponents };
   }
 
