@@ -1,4 +1,4 @@
-import { forEach, isEmpty, pickBy, mapValues, isEqual, clone } from 'lodash';
+import { forEach, isEmpty, pickBy, mapValues, isEqual, clone, findLastKey } from 'lodash';
 import { Mutex } from 'async-mutex';
 import * as semver from 'semver';
 import { versionParser, isHash, isTag, isSnap, LATEST_VERSION } from '@teambit/component-version';
@@ -145,6 +145,7 @@ export default class Component extends BitObject {
   detachedHeads: DetachedHeads;
   private divergeData?: SnapsDistance;
   private _populateVersionHistoryMutex?: Mutex;
+  private lastFoundTag?: string;
   constructor(props: ComponentProps) {
     super();
     if (!props.name) throw new TypeError('Model Component constructor expects to get a name parameter');
@@ -653,8 +654,18 @@ export default class Component extends BitObject {
   }
 
   getTagOfRefIfExists(ref: Ref): string | undefined {
-    const findIn = (versions: Versions) => Object.keys(versions).find((tag) => versions[tag].isEqual(ref));
-    return findIn(this.versions) || findIn(this.orphanedVersions);
+    // the same ref (usually the head) is looked up many times per command, and each scan has to list all the tags.
+    // the last hit is re-checked against the current versions, so it can't go stale when versions change. only hits
+    // in `versions` are remembered, so they keep their precedence over orphaned versions.
+    if (this.lastFoundTag && this.versions[this.lastFoundTag]?.isEqual(ref)) return this.lastFoundTag;
+    // search from the newest tag. tags are kept in insertion order and the head is usually the latest one.
+    const findIn = (versions: Versions) => findLastKey(versions, (versionRef) => versionRef.isEqual(ref));
+    const tag = findIn(this.versions);
+    if (tag) {
+      this.lastFoundTag = tag;
+      return tag;
+    }
+    return findIn(this.orphanedVersions);
   }
 
   getTag(version: string): string | undefined {
@@ -1187,7 +1198,8 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
       mainFile: version.mainFile,
       dependencies: this.addDepsInfoFromDepsResolver(version.dependencies, extensions),
       devDependencies: this.addDepsInfoFromDepsResolver(version.devDependencies, extensions),
-      flattenedDependencies: version.flattenedDependencies.clone(),
+      // a new list, but the ids themselves are immutable, no need to clone them
+      flattenedDependencies: ComponentIdList.fromArray(version.flattenedDependencies),
       packageDependencies: clone(version.packageDependencies),
       devPackageDependencies: clone(version.devPackageDependencies),
       peerPackageDependencies: clone(version.peerPackageDependencies),

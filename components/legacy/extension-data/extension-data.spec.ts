@@ -187,4 +187,23 @@ describe('ExtensionDataList', () => {
       expect(configArr[1].data).to.be.undefined;
     });
   });
+  describe('to config array, internal fields and removed extensions', () => {
+    let entry: ExtensionDataEntry;
+    let configArr;
+    before(() => {
+      entry = new ExtensionDataEntry(undefined, ComponentID.fromString('my-scope/ext1'), undefined, {
+        conf1: 'val1',
+        __specific: true,
+      });
+      const removedEntry = new ExtensionDataEntry(undefined, ComponentID.fromString('my-scope/ext2'), undefined, '-');
+      configArr = ExtensionDataList.fromArray([entry, removedEntry]).toConfigArray();
+    });
+    it('should leave out the internal fields without changing the original config', () => {
+      expect(configArr[0].config).to.deep.equal({ conf1: 'val1' });
+      expect(entry.rawConfig).to.deep.equal({ conf1: 'val1', __specific: true });
+    });
+    it('should return an empty config for a removed extension', () => {
+      expect(configArr[1]).to.deep.equal({ id: 'my-scope/ext2', config: {} });
+    });
+  });
 });
