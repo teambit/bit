@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 
 import ModelComponent from './model-component';
-import { clone } from 'lodash';
+import { cloneDeep } from 'lodash';
 import { Ref } from '../objects';
 
 const modelComponentFixture = {
@@ -30,7 +30,7 @@ const modelComponentFixture = {
 };
 
 const getModelComponentFixture = (): typeof modelComponentFixture => {
-  return clone(modelComponentFixture);
+  return cloneDeep(modelComponentFixture);
 };
 
 const getModelComponent = (obj: object): ModelComponent => {
@@ -71,6 +71,16 @@ describe('ModelComponent', () => {
       expect(
         modelComponent.switchHashesWithTagsIfExist([Ref.from(orphanedHash), Ref.from('a'.repeat(40))])
       ).to.deep.equal(['0.0.3', 'a'.repeat(40)]);
+    });
+    it('should find the newest tag of a ref and not return a remembered tag after the versions changed', () => {
+      const component = getModelComponent(getModelComponentFixture());
+      const ref = Ref.from(tagHash);
+      component.setVersion('0.0.2', Ref.from('b'.repeat(40)));
+      expect(component.getTagOfRefIfExists(ref)).to.equal('0.0.1');
+      delete component.versions['0.0.1'];
+      expect(component.getTagOfRefIfExists(ref)).to.be.undefined;
+      component.setVersion('0.0.5', ref);
+      expect(component.getTagOfRefIfExists(ref)).to.equal('0.0.5');
     });
   });
 });

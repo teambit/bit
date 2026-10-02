@@ -145,6 +145,7 @@ export default class Component extends BitObject {
   detachedHeads: DetachedHeads;
   private divergeData?: SnapsDistance;
   private _populateVersionHistoryMutex?: Mutex;
+  private lastTagLookup?: { hash: string; tag: string };
   constructor(props: ComponentProps) {
     super();
     if (!props.name) throw new TypeError('Model Component constructor expects to get a name parameter');
@@ -653,8 +654,26 @@ export default class Component extends BitObject {
   }
 
   getTagOfRefIfExists(ref: Ref): string | undefined {
-    const findIn = (versions: Versions) => Object.keys(versions).find((tag) => versions[tag].isEqual(ref));
-    return findIn(this.versions) || findIn(this.orphanedVersions);
+    // the same ref (usually the head) is looked up many times per command, and each scan has to list all the tags.
+    // the last hit is re-checked against the current versions, so it can't go stale when versions change.
+    const cached = this.lastTagLookup;
+    if (
+      cached?.hash === ref.hash &&
+      (this.versions[cached.tag]?.isEqual(ref) || this.orphanedVersions[cached.tag]?.isEqual(ref))
+    ) {
+      return cached.tag;
+    }
+    // search from the newest tag. tags are kept in insertion order and the head is usually the latest one.
+    const findIn = (versions: Versions) => {
+      const tags = Object.keys(versions);
+      for (let i = tags.length - 1; i >= 0; i--) {
+        if (versions[tags[i]].isEqual(ref)) return tags[i];
+      }
+      return undefined;
+    };
+    const tag = findIn(this.versions) || findIn(this.orphanedVersions);
+    if (tag) this.lastTagLookup = { hash: ref.hash, tag };
+    return tag;
   }
 
   getTag(version: string): string | undefined {
