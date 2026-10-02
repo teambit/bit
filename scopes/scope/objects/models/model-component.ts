@@ -1,4 +1,4 @@
-import { forEach, isEmpty, pickBy, mapValues, isEqual, clone } from 'lodash';
+import { forEach, isEmpty, pickBy, mapValues, isEqual, clone, findLastKey } from 'lodash';
 import { Mutex } from 'async-mutex';
 import * as semver from 'semver';
 import { versionParser, isHash, isTag, isSnap, LATEST_VERSION } from '@teambit/component-version';
@@ -145,7 +145,7 @@ export default class Component extends BitObject {
   detachedHeads: DetachedHeads;
   private divergeData?: SnapsDistance;
   private _populateVersionHistoryMutex?: Mutex;
-  private lastTagLookup?: { hash: string; tag: string };
+  private lastFoundTag?: string;
   constructor(props: ComponentProps) {
     super();
     if (!props.name) throw new TypeError('Model Component constructor expects to get a name parameter');
@@ -656,23 +656,11 @@ export default class Component extends BitObject {
   getTagOfRefIfExists(ref: Ref): string | undefined {
     // the same ref (usually the head) is looked up many times per command, and each scan has to list all the tags.
     // the last hit is re-checked against the current versions, so it can't go stale when versions change.
-    const cached = this.lastTagLookup;
-    if (
-      cached?.hash === ref.hash &&
-      (this.versions[cached.tag]?.isEqual(ref) || this.orphanedVersions[cached.tag]?.isEqual(ref))
-    ) {
-      return cached.tag;
-    }
+    if (this.lastFoundTag && this.getRef(this.lastFoundTag)?.isEqual(ref)) return this.lastFoundTag;
     // search from the newest tag. tags are kept in insertion order and the head is usually the latest one.
-    const findIn = (versions: Versions) => {
-      const tags = Object.keys(versions);
-      for (let i = tags.length - 1; i >= 0; i--) {
-        if (versions[tags[i]].isEqual(ref)) return tags[i];
-      }
-      return undefined;
-    };
+    const findIn = (versions: Versions) => findLastKey(versions, (versionRef) => versionRef.isEqual(ref));
     const tag = findIn(this.versions) || findIn(this.orphanedVersions);
-    if (tag) this.lastTagLookup = { hash: ref.hash, tag };
+    if (tag) this.lastFoundTag = tag;
     return tag;
   }
 
