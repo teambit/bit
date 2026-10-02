@@ -312,10 +312,7 @@ export class DependencyInstaller {
     // guard here rather than in `install()`: workspace installs enter through this method
     // directly (InstallMain._installModules), so `install()` is not a choke point.
     if (!this.installingContext?.inCapsule) {
-      await this.assertSafeVirtualStoreTransition(
-        finalRootDir,
-        this.dependencyResolver.enableGlobalVirtualStore()
-      );
+      await this.assertSafeVirtualStoreTransition(finalRootDir, this.dependencyResolver.enableGlobalVirtualStore());
     }
     if (options.linkedDependencies) {
       manifests = JSON.parse(JSON.stringify(manifests));

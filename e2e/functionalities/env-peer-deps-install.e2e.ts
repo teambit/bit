@@ -33,7 +33,11 @@ describe('env peer dependencies should be installed for created components', fun
   describe('bit create react and then check-types', () => {
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.command.create('react', 'button');
+      // the react env is not a core aspect anymore, its template is loaded on demand via --env
+      helper.command.create('react', 'button', '--env teambit.react/react');
+      // the env is loaded only at the end of the install that installed it. run another install
+      // so its dependency policies (e.g. @types/react) are applied to the components.
+      helper.command.install();
     });
 
     it('should install env peer deps like @types/react in node_modules', () => {

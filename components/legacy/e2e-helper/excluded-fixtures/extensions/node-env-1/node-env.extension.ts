@@ -1,19 +1,22 @@
 // @bit-no-check
 // @ts-nocheck
 import { EnvsMain, EnvsAspect } from '@teambit/envs';
-import { NodeMain, NodeAspect } from '@teambit/node';
-import get from 'lodash.get'
+import get from 'lodash.get';
 
 export class NodeEnv {
-  constructor(private node: NodeMain) {}
+  static dependencies: any = [EnvsAspect];
 
-  static dependencies: any = [EnvsAspect, NodeAspect];
-
-  static async provider([envs, node]: [EnvsMain, NodeMain]) {
-
-    const nodeEnv = node.compose([]);
-
+  static async provider([envs]: [EnvsMain]) {
+    // a minimal old-style (aspect based) env. deliberately not based on any non-core env, so
+    // loading it from the scope installs only its own deps (lodash.get) into the scope-aspects
+    // capsule. basing it on a real env would pull the entire env chain into the capsule, which
+    // gets OOM-killed under yarn on CI (materialized as full copies, no store/hardlinks).
+    // __getDescriptor is required for the env data of consuming components to be calculated
+    const nodeEnv = {
+      name: get({ envName: 'node-env-1' }, 'envName'),
+      __getDescriptor: async () => ({ type: 'node-env-1' }),
+    };
     envs.registerEnv(nodeEnv);
-    return new NodeEnv(node);
+    return new NodeEnv();
   }
 }

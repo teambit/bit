@@ -117,7 +117,7 @@ type WatcherType = 'chokidar' | 'parcel';
 
 const DEBOUNCE_WAIT_MS = 100;
 const DROP_ERROR_DEBOUNCE_MS = 300; // Wait 300ms after last drop error before recovering
-type PathLinux = string; // ts fails when importing it from @teambit/legacy/dist/utils/path.
+type PathLinux = string;
 
 export class Watcher {
   private watcherType: WatcherType = 'parcel';
