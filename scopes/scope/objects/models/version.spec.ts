@@ -5,6 +5,7 @@ import versionFixture from '../fixtures/version-model-object.json';
 import { SchemaName } from '@teambit/legacy.consumer-component';
 import Version from './version';
 import { clone } from 'lodash';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 
 const getVersionWithDepsFixture = () => {
   return Version.parse(JSON.stringify(clone(versionWithDepsFixture)), '12c830ed25854dc731b58e014c6b4960ccb59092');
@@ -91,6 +92,36 @@ describe('Version', () => {
     it('should have a the same hash string also when loading the version from contents', () => {
       const versionFromContent = Version.parse(JSON.stringify(versionFixture), hash.toString());
       expect(versionFromContent.hash().toString()).to.equal(versionFixtureHash);
+    });
+  });
+  describe('flattenedDependencies', () => {
+    const parseWithFlattened = (flattened: Record<string, any>) =>
+      Version.parse(
+        JSON.stringify({ ...versionWithDepsFixture, ...flattened }),
+        '12c830ed25854dc731b58e014c6b4960ccb59092'
+      );
+    it('should parse id objects, id strings and the old flattenedDevDependencies', () => {
+      const version = parseWithFlattened({
+        flattenedDependencies: ['my-scope/is-type@0.0.1'],
+        flattenedDevDependencies: [{ scope: 'my-scope', name: 'utils/is-string', version: '0.0.2' }],
+      });
+      expect(version.flattenedDependencies.map((id) => id.toString())).to.deep.equal([
+        'my-scope/is-type@0.0.1',
+        'my-scope/utils/is-string@0.0.2',
+      ]);
+    });
+    it('should share the same id instance between versions', () => {
+      const first = getVersionWithDepsFixture();
+      const second = getVersionWithDepsFixture();
+      expect(first.flattenedDependencies).to.not.equal(second.flattenedDependencies);
+      expect(first.flattenedDependencies[0]).to.equal(second.flattenedDependencies[0]);
+    });
+    it('should keep a list that was set, and serialize it', () => {
+      const version = getVersionWithDepsFixture();
+      version.flattenedDependencies = new ComponentIdList(ComponentID.fromString('my-scope/is-type@0.0.3'));
+      expect(version.toObject().flattenedDependencies).to.deep.equal([
+        { scope: 'my-scope', name: 'is-type', version: '0.0.3' },
+      ]);
     });
   });
   describe('validate()', () => {
