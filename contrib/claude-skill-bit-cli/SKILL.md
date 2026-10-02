@@ -54,8 +54,6 @@ remote - manage remote scopes for self-hosted environments
 Subcommands: add, del, list
 ripple <sub-command> - manage Ripple CI jobs on bit.cloud
 Subcommands: list, log, errors, retry, stop, simulate
-deprecate <component-pattern> - mark components as deprecated to discourage their use
-undeprecate <component-pattern> - remove the deprecation status from components
 import [component-patterns...] - bring components from remote scopes into your workspace
 delete <component-pattern> - soft-delete components from remote scopes
 recover <component-pattern> - restore soft-deleted components
@@ -64,6 +62,8 @@ lane [sub-command] - manage lanes for parallel development
 Subcommands: list, show, create, remove, change-scope, alias, rename, remove-readme, import, remove-comp, fetch, eject, current, history, history-diff, checkout, revert, updates, merge-move
 ci <sub-command> - continuous integration commands for automated workflows
 Subcommands: verify, pr, merge, sync
+deprecate <component-pattern> - mark components as deprecated to discourage their use
+undeprecate <component-pattern> - remove the deprecation status from components
 fork <pattern> [target-component-name] - create a new component by copying from an existing one
 internalize [component-pattern] - mark components as internal to hide them by default in the UI
 
@@ -108,11 +108,6 @@ move <current-component-dir> <new-component-dir> - relocate a component to a dif
 remove <component-pattern> - untrack components from the workspace
 rename <current-name> <new-name> - change a component name
 
-Workspace & Project Setup
-new <template-name> <workspace-name> - create a new Bit workspace from a template
-init [path] - initialize a Bit workspace in an existing project
-clone <component-id> [dir] - create a workspace from its workspace-root component, with every component it lists
-
 Testing & Quality
 artifacts <component-pattern> - view and download build artifacts
 test [pattern-or-test-file...] - run component tests
@@ -146,5 +141,10 @@ Subcommands: save, load, list
 log <id> - display component version history
 log-file <filepath> - EXPERIMENTAL. display history of changes to a specific file
 blame <filepath> - EXPERIMENTAL. show line-by-line authorship and modification history
+
+Workspace & Project Setup
+init [path] - initialize a Bit workspace in an existing project
+new <template-name> <workspace-name> - create a new Bit workspace from a template
+clone <component-id> [dir] - create a workspace from its workspace-root component, with every component it lists
 
 IMPORTANT: When you need flags, arguments, or subcommand details, READ the file CLI_REFERENCE.md in this same directory using the Read tool. Only fall back to 'bit <command> --help' if the reference file doesn't cover what you need.
