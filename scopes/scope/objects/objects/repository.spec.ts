@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
+import { Readable } from 'stream';
 import zlib from 'zlib';
 import { ScopeJson } from '@teambit/legacy.scope';
 import { ModelComponent, Source } from '../models';
@@ -118,21 +119,7 @@ describe('Repository writing objects for export', () => {
     return ObjectList.fromBitObjects(sources);
   };
 
-  it('should write the pending objects into one file when asked to and read them back as is', async () => {
-    const objectList = await createObjectList(SOURCES_COUNT);
-    const pendingDir = path.join(scopePath, 'pending-objects', 'client-1');
-    await repository.writeObjectsToPendingDir(objectList, pendingDir, true);
-    expect(await fs.readdir(pendingDir)).to.deep.equal(['objects.tar']);
-
-    const loaded = await repository.readObjectsFromPendingDir(pendingDir);
-    const toComparable = (list: ObjectList) =>
-      list.objects
-        .map((o) => ({ hash: o.ref.toString(), buffer: o.buffer.toString('hex') }))
-        .sort((a, b) => (a.hash < b.hash ? -1 : 1));
-    expect(toComparable(loaded)).to.deep.equal(toComparable(objectList));
-  });
-
-  it('should write a file per pending object by default, the format older versions read', async () => {
+  it('should write a file per pending object and read them back', async () => {
     const objectList = await createObjectList(SOURCES_COUNT);
     const pendingDir = path.join(scopePath, 'pending-objects', 'client-1');
     await repository.writeObjectsToPendingDir(objectList, pendingDir);
@@ -193,16 +180,13 @@ describe('Repository writing objects for export', () => {
     expect((await fs.stat(objectPath)).mode & 0o777).to.equal(0o640);
   });
 
-  it('should fail reading a truncated pack file rather than hang', async () => {
+  it('should reject reading a truncated tar of objects rather than hang', async () => {
     const objectList = await createObjectList(SOURCES_COUNT);
-    const pendingDir = path.join(scopePath, 'pending-objects', 'client-1');
-    await repository.writeObjectsToPendingDir(objectList, pendingDir, true);
-    expect(await fs.readdir(pendingDir)).to.deep.equal(['objects.tar']);
-    const packPath = path.join(pendingDir, 'objects.tar');
-    const pack = await fs.readFile(packPath);
-    await fs.writeFile(packPath, pack.subarray(0, 700));
+    const chunks: Buffer[] = [];
+    for await (const chunk of objectList.toTar() as AsyncIterable<Buffer>) chunks.push(chunk);
+    const truncated = Buffer.concat(chunks).subarray(0, 700);
     let error: Error | undefined;
-    await repository.readObjectsFromPendingDir(pendingDir).catch((err) => {
+    await ObjectList.fromTar(Readable.from([truncated])).catch((err) => {
       error = err;
     });
     expect(error).to.be.instanceOf(Error);

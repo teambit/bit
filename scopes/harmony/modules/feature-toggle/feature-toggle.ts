@@ -91,11 +91,3 @@ export const HARD_DELETE_FEATURE = 'hard-delete';
  * `bit config set features=capsule-auto-prune`.
  */
 export const CAPSULE_AUTO_PRUNE = 'capsule-auto-prune';
-
-/**
- * write the objects of an export into one pack-file in the pending-dir, instead of a file per object. much faster for
- * large exports. bit versions that don't support this format see such a pending-dir as empty, so enable it on a remote
- * scope only when every bit version that might read its pending-dirs (other server instances, `bit export --resume`)
- * supports it. enable with `BIT_FEATURES=pending-objects-pack-file`.
- */
-export const PENDING_OBJECTS_PACK_FILE_FEATURE = 'pending-objects-pack-file';

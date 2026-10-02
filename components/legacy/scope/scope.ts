@@ -1,11 +1,7 @@
 import fs from 'fs-extra';
 import * as pathLib from 'path';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import {
-  DEPS_GRAPH,
-  PENDING_OBJECTS_PACK_FILE_FEATURE,
-  isFeatureEnabled,
-} from '@teambit/harmony.modules.feature-toggle';
+import { DEPS_GRAPH, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { reject, isNil } from 'lodash';
@@ -665,11 +661,7 @@ once done, to continue working, please run "bit cc"`
     if (fs.pathExistsSync(pendingDir)) {
       throw new ClientIdInUse(clientId);
     }
-    await this.objects.writeObjectsToPendingDir(
-      objectList,
-      pendingDir,
-      isFeatureEnabled(PENDING_OBJECTS_PACK_FILE_FEATURE)
-    );
+    await this.objects.writeObjectsToPendingDir(objectList, pendingDir);
   }
 
   async readObjectsFromPendingDir(clientId: string): Promise<ObjectList> {

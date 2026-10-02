@@ -6,7 +6,6 @@ import type { ComponentID } from '@teambit/component-id';
 import { HASH_SIZE, isSnap } from '@teambit/component-version';
 import * as path from 'path';
 import { userInfo } from 'os';
-import { pipeline as pipelinePromise } from 'stream/promises';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { OBJECTS_DIR } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
@@ -38,7 +37,6 @@ type ContentTransformer = (content: Buffer) => Buffer;
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 const TRASH_DIR = 'trash';
 const MAX_COMPRESSED_SIZE_TO_CACHE = 100 * 1024; // don't cache big files (mainly artifacts) to prevent out-of-memory
-const PENDING_OBJECTS_PACK_FILE = 'objects.tar';
 let objectFileWriteCounter = 0;
 /**
  * how much of an object file to read when all that's needed is its header. the header holds the
@@ -848,12 +846,7 @@ export default class Repository {
     );
   }
 
-  /**
-   * `usePackFile` writes all objects into one file. it's much faster for large exports, but versions that don't know
-   * this format read it as an empty pending-dir, so only use it when every bit version that might read this pending-dir
-   * (e.g. other server instances, `bit export --resume`) supports it. `readObjectsFromPendingDir` supports both.
-   */
-  async writeObjectsToPendingDir(objectList: ObjectList, pendingDir: PathOsBasedAbsolute, usePackFile = false) {
+  async writeObjectsToPendingDir(objectList: ObjectList, pendingDir: PathOsBasedAbsolute) {
     // Refs come from client-supplied tar entry names. Validate the whole batch
     // before any writes so a crafted ref can't escape pendingDir AND so we
     // don't leave orphan files in pendingDir when one entry is rejected mid-batch.
@@ -863,25 +856,6 @@ export default class Repository {
       if (!isSnap(ref)) throw new BitError(`invalid object ref: ${JSON.stringify(ref)}`);
     }
     const chownOptions = await this.getChownOptions();
-    if (usePackFile) {
-      // all objects are written into one pack file rather than a file per object. an export can have tens of thousands
-      // of objects, and writing, reading and deleting them one by one is by far the most expensive part of the export.
-      // it's written to a tmp file and renamed, so a reader never sees a partially written pack.
-      await fs.ensureDir(pendingDir);
-      const packPath = path.join(pendingDir, PENDING_OBJECTS_PACK_FILE);
-      const tmpPackPath = path.join(pendingDir, `.${PENDING_OBJECTS_PACK_FILE}.${process.pid}`);
-      try {
-        await pipelinePromise(objectList.toTar(), fs.createWriteStream(tmpPackPath));
-        if (chownOptions.gid) {
-          await fs.chown(tmpPackPath, chownOptions.uid as number, chownOptions.gid).catch(throwUnlessChownErrOk);
-        }
-        await fs.rename(tmpPackPath, packPath);
-      } catch (err) {
-        await fs.remove(tmpPackPath).catch(() => {});
-        throw err;
-      }
-      return;
-    }
     await pMapPool(
       objectList.objects,
       (object) => this.writeObjectFile(path.join(pendingDir, this.hashPath(object.ref)), object.buffer, chownOptions),
@@ -890,11 +864,6 @@ export default class Repository {
   }
 
   async readObjectsFromPendingDir(pendingDir: PathOsBasedAbsolute) {
-    const packPath = path.join(pendingDir, PENDING_OBJECTS_PACK_FILE);
-    if (await fs.pathExists(packPath)) {
-      return ObjectList.fromTar(fs.createReadStream(packPath));
-    }
-    // a file per object. (written when the pack-file is disabled, or by an older version)
     const refs = await this.listRefs(pendingDir);
     const objects = await pMapPool(
       refs,
