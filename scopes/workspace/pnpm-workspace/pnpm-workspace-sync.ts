@@ -117,50 +117,7 @@ safe to re-run: tracked projects keep their ids, new ones are added, and the one
 
   async report(args: string[], flags: SyncFlags): Promise<string> {
     const result = await this.json(args, flags);
-    // the synchronized components are listed by --json only, a large workspace would flood the terminal
-    const removed = result.removedComponents.length
-      ? formatSection(
-          'removed components',
-          'their projects left the pnpm workspace',
-          result.removedComponents.map((id) => formatItem(id, errorSymbol))
-        )
-      : '';
-    const migrated = result.catalogMigratedPackages.length
-      ? formatSection(
-          'moved to the catalog',
-          `the projects refer to these packages by "catalog:" now, the catalog of ${PNPM_WORKSPACE_MANIFEST} binds them`,
-          result.catalogMigratedPackages.map((packageName) => formatItem(packageName))
-        )
-      : '';
-    const versionBound = result.catalogVersionBoundPackages.length
-      ? formatSection(
-          'bound to a version',
-          'these packages left the workspace, the catalog binds them to the version the projects were snapped with',
-          result.catalogVersionBoundPackages.map((packageName) => formatItem(packageName))
-        )
-      : '';
-    const unbound = result.catalogUnboundPackages.length
-      ? formatSection(
-          `${warnSymbol} left in the catalog`,
-          `these packages left the workspace, and the catalog of ${PNPM_WORKSPACE_MANIFEST} still binds them to "workspace:". set their entries to a version`,
-          result.catalogUnboundPackages.map((description) => formatItem(description, warnSymbol))
-        )
-      : '';
-    const summary = formatSuccessSummary(`synchronized ${result.components.length} pnpm workspace components`);
-    const installHint =
-      result.catalogMigratedPackages.length || result.catalogVersionBoundPackages.length
-        ? formatHint('run "pnpm install" to update the lockfile before snapping')
-        : '';
-    const oldPnpmVersion =
-      result.catalogMigratedPackages.length && this.workspace
-        ? await findPnpmWithoutWorkspaceCatalogs(this.workspace.path)
-        : undefined;
-    const oldPnpm = oldPnpmVersion
-      ? formatWarningSummary(
-          `the catalog binds local packages to "workspace:" now, which pnpm ${oldPnpmVersion} does not fully support. ${PNPM_WORKSPACE_CATALOGS_REQUIREMENT}`
-        )
-      : '';
-    return joinSections([removed, migrated, versionBound, unbound, summary, oldPnpm, installHint]);
+    return formatSyncReport(result, this.workspace!.path);
   }
 
   async json(_args: string[], { env }: SyncFlags): Promise<PnpmVcsSyncResult> {
@@ -169,6 +126,53 @@ safe to re-run: tracked projects keep their ids, new ones are added, and the one
     await this.workspace.consumer.onDestroy('pnpm-sync');
     return result;
   }
+}
+
+/** the output of a sync, see PnpmSyncCmd */
+export async function formatSyncReport(result: PnpmVcsSyncResult, workspacePath: string): Promise<string> {
+  // the synchronized components are listed by --json only, a large workspace would flood the terminal
+  const removed = result.removedComponents.length
+    ? formatSection(
+        'removed components',
+        'their projects left the pnpm workspace',
+        result.removedComponents.map((id) => formatItem(id, errorSymbol))
+      )
+    : '';
+  const migrated = result.catalogMigratedPackages.length
+    ? formatSection(
+        'moved to the catalog',
+        `the projects refer to these packages by "catalog:" now, the catalog of ${PNPM_WORKSPACE_MANIFEST} binds them`,
+        result.catalogMigratedPackages.map((packageName) => formatItem(packageName))
+      )
+    : '';
+  const versionBound = result.catalogVersionBoundPackages.length
+    ? formatSection(
+        'bound to a version',
+        'these packages left the workspace, the catalog binds them to the version the projects were snapped with',
+        result.catalogVersionBoundPackages.map((packageName) => formatItem(packageName))
+      )
+    : '';
+  const unbound = result.catalogUnboundPackages.length
+    ? formatSection(
+        `${warnSymbol} left in the catalog`,
+        `these packages left the workspace, and the catalog of ${PNPM_WORKSPACE_MANIFEST} still binds them to "workspace:". set their entries to a version`,
+        result.catalogUnboundPackages.map((description) => formatItem(description, warnSymbol))
+      )
+    : '';
+  const summary = formatSuccessSummary(`synchronized ${result.components.length} pnpm workspace components`);
+  const installHint =
+    result.catalogMigratedPackages.length || result.catalogVersionBoundPackages.length
+      ? formatHint('run "pnpm install" to update the lockfile before snapping')
+      : '';
+  const oldPnpmVersion = result.catalogMigratedPackages.length
+    ? await findPnpmWithoutWorkspaceCatalogs(workspacePath)
+    : undefined;
+  const oldPnpm = oldPnpmVersion
+    ? formatWarningSummary(
+        `the catalog binds local packages to "workspace:" now, which pnpm ${oldPnpmVersion} does not fully support. ${PNPM_WORKSPACE_CATALOGS_REQUIREMENT}`
+      )
+    : '';
+  return joinSections([removed, migrated, versionBound, unbound, summary, oldPnpm, installHint]);
 }
 
 export class PnpmCmd implements Command {
@@ -229,18 +233,6 @@ class ProjectEnvResolver {
     this.configId ||= this.workspace.resolveEnvIdWithPotentialVersionForConfig(ComponentID.fromString(this.envId));
     return this.configId;
   }
-}
-
-/**
- * a pnpm workspace adopted by "bit pnpm sync": the workspace root is tracked as a component, and the
- * pnpm manifest sits next to it.
- */
-export function isPnpmWorkspace(workspace: Workspace): boolean {
-  // a root removed, or of another lane, does not make this workspace a pnpm one
-  return (
-    Boolean(workspace.consumer.bitMap.getWorkspaceRootMap()) &&
-    fs.existsSync(path.join(workspace.path, PNPM_WORKSPACE_MANIFEST))
-  );
 }
 
 /**
@@ -1103,7 +1095,7 @@ export async function createPnpmVcsImportPlan(
   dependencyResolver: DependencyResolverMain,
   components: ConsumerComponent[]
 ): Promise<PnpmVcsImportPlan | undefined> {
-  if (!isPnpmWorkspace(workspace)) return undefined;
+  if (!workspace.isPnpmWorkspaceRoot()) return undefined;
   // the root carries the workspace's own package.json, but it is not a package of the workspace
   const pnpmComponents = components.filter(
     (component) => findPackageJsonFile(component) && component.componentMap?.rootDir !== WORKSPACE_ROOT_DIR

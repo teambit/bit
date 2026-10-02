@@ -6565,6 +6565,32 @@
     "private": false,
     "commands": [
       {
+        "name": "init",
+        "alias": "",
+        "options": [
+          [
+            "",
+            "default-scope <default-scope>",
+            "set the default scope for components in the workspace"
+          ],
+          [
+            "",
+            "env <env-id>",
+            "the env of the projects with a build, test or lint script (default: teambit.workspace/pnpm-workspace). the others get the empty env"
+          ],
+          [
+            "j",
+            "json",
+            "return the synchronization result in JSON format"
+          ]
+        ],
+        "description": "make a Bit workspace out of a pnpm workspace, and synchronize its projects",
+        "extendedDescription": "runs at the root of a pnpm workspace, the directory of \"pnpm-workspace.yaml\". the workspace is standalone, its scope is kept in \".bit\", and pnpm keeps installing it: bit writes workspace.jsonc and .bitmap only, and leaves package.json alone.\nthen synchronizes the projects the way \"bit pnpm sync\" does. run that one whenever projects are added, moved or deleted.",
+        "group": "workspace-setup",
+        "private": false,
+        "skipWorkspace": true
+      },
+      {
         "name": "sync",
         "alias": "",
         "options": [

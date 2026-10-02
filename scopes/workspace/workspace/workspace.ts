@@ -1022,6 +1022,18 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
   }
 
   /**
+   * a pnpm workspace adopted by "bit pnpm sync": the workspace root is tracked as a component, and the
+   * pnpm manifest sits next to it. pnpm installs it from the packages' own manifests, so bit neither
+   * installs it nor writes dependencies into the root package.json.
+   */
+  isPnpmWorkspaceRoot(): boolean {
+    // a root removed, or of another lane, does not make this workspace a pnpm one
+    return (
+      Boolean(this.consumer.bitMap.getWorkspaceRootMap()) && fs.existsSync(path.join(this.path, 'pnpm-workspace.yaml'))
+    );
+  }
+
+  /**
    * if checked out to a lane and the lane exists in the remote,
    * return the remote lane. otherwise, return null.
    */

@@ -19,7 +19,7 @@ import { Remote } from '@teambit/scope.remotes';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
 import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
-import { isPnpmWorkspaceRoot, isWorkspaceRootComponent, readRootBitmapEntries } from './workspace-root-data';
+import { isWorkspaceRootComponent, readRootBitmapEntries } from './workspace-root-data';
 
 export type LoadBit = (workspacePath?: string) => Promise<Harmony>;
 
@@ -84,7 +84,7 @@ class WorkspaceCloner {
     const { versionedRootId, entries } = await this.fetchRoot(rootId);
     await this.writeRoot(versionedRootId);
     const { components, missing } = await this.writeMembers(entries, versionedRootId);
-    const installWithPnpm = isPnpmWorkspaceRoot(this.workspacePath, this.workspace.consumer.bitMap);
+    const installWithPnpm = this.workspace.isPnpmWorkspaceRoot();
     const skipInstall = options.skipDependencyInstallation || installWithPnpm;
     const installationError = skipInstall ? undefined : await this.installGracefully();
     return {

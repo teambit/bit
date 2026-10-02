@@ -722,6 +722,13 @@ Flags: --json, --remote
 adopt and maintain a raw pnpm workspace with Bit
 Flags: --json, --env <env-id>
 
+## bit pnpm init
+
+make a Bit workspace out of a pnpm workspace, and synchronize its projects
+
+runs at the root of a pnpm workspace, the directory of "pnpm-workspace.yaml". the workspace is standalone, its scope is kept in ".bit", and pnpm keeps installing it: bit writes workspace.jsonc and .bitmap only, and leaves package.json alone. then synchronizes the projects the way "bit pnpm sync" does. run that one whenever projects are added, moved or deleted.
+Flags: --default-scope <default-scope>, --env <env-id>, --json
+
 ## bit pnpm sync
 
 discover pnpm workspace projects and synchronize them with Bit components

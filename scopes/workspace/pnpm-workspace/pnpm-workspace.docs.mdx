@@ -10,6 +10,17 @@ pnpm installs it. This aspect lets Bit version such a workspace without changing
 or built: each project becomes a component that carries its `package.json` as source, and the
 workspace root becomes the workspace-root component (see `teambit.workspace/workspace-root`).
 
+## Adopting the workspace
+
+```sh
+bit pnpm init
+```
+
+runs at the root of the pnpm workspace. It creates a standalone Bit workspace, with its scope in
+`.bit`, and runs the first sync. It writes `workspace.jsonc` and `.bitmap` only: `package.json` is left
+alone, and no AI agent files are added, since every file at the root belongs to the workspace-root
+component.
+
 ## Synchronizing the workspace
 
 ```sh
@@ -25,7 +36,9 @@ Run it again whenever projects are added, moved or deleted:
 - the projects refer to their siblings by `catalog:`, and the catalog binds them to `workspace:*`,
   so a component imported into another workspace resolves them there too.
 
-Bit does not install a synced workspace. Run `pnpm install` after the sync and after an import.
+Bit does not install a synced workspace, pnpm does. Run `pnpm install` after the sync and after an
+import, and `pnpm add <pkg> --filter <project>` to add a dependency. `bit install` points there, and
+the commands that install as a step of their own (merge, a lane switch) leave it to pnpm too.
 
 ## The environment
 

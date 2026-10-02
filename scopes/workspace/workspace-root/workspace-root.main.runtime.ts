@@ -4,6 +4,7 @@ import { CLIAspect, MainRuntime } from '@teambit/cli';
 import type { Component, ComponentMain } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
 import { ComponentID } from '@teambit/component-id';
+import type { Harmony } from '@teambit/harmony';
 import type { VersionedBitmapEntry } from '@teambit/legacy.bit-map';
 import { WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
@@ -58,6 +59,15 @@ export class WorkspaceRootMain {
     }
     if (!this.loadBit) throw new Error('WorkspaceRootMain.clone: loadBit was not set, see load-bit.ts');
     return cloneWorkspace(ComponentID.fromString(idStr), dir, options, this.loadBit);
+  }
+
+  /**
+   * loads bit for a workspace this process made, e.g. "bit pnpm init". the process started outside of
+   * it, so the aspects it was loaded with have no workspace.
+   */
+  loadWorkspace(workspacePath: string): Promise<Harmony> {
+    if (!this.loadBit) throw new Error('WorkspaceRootMain: loadBit was not set, see load-bit.ts');
+    return this.loadBit(workspacePath);
   }
 
   /**

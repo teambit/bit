@@ -522,6 +522,7 @@ describe('pnpm workspace import plan', () => {
       const workspaceStub = {
         path: workspaceDir,
         consumer: { bitMap: { getWorkspaceRootMap: () => ({ rootDir: '.' }) } },
+        isPnpmWorkspaceRoot: () => true,
       };
       const dependencyResolverStub = {
         getDependenciesFromLegacyComponent: () => ({ findByPkgNameOrCompId: () => undefined }),
@@ -551,6 +552,7 @@ describe('pnpm workspace import plan', () => {
         const workspaceStub = {
           path: workspaceDir,
           consumer: { bitMap: { getWorkspaceRootMap: () => ({ rootDir: '.' }) } },
+          isPnpmWorkspaceRoot: () => true,
         } as any;
         const dependencyResolverStub = {
           getDependenciesFromLegacyComponent: () => ({ findByPkgNameOrCompId: () => undefined }),
@@ -721,6 +723,7 @@ describe('pnpm workspace import plan', () => {
       const workspaceStub = {
         path: workspaceDir,
         consumer: { bitMap: { getWorkspaceRootMap: () => ({ rootDir: '.' }) } },
+        isPnpmWorkspaceRoot: () => true,
       } as any;
       const mathDependency = { type: 'package', version: '0.0.0-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' };
       const stringsDependency = { type: 'package', version: '1.0.0' };

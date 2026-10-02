@@ -610,9 +610,12 @@ describe('add command on Harmony', function () {
   describe('a pnpm workspace built by the package scripts, through the pnpm-workspace env', () => {
     // app's build requires the output of math's build, so it only passes when the workspace is built
     // as a whole, in pnpm's order, with the packages linked to one another
+    const rootManifest = '{ "name": "@acme/repo", "private": true }\n';
     before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.fs.outputFile('package.json', '{ "name": "@acme/repo", "private": true }\n');
+      // a pnpm workspace before any bit command
+      helper.scopeHelper.cleanWorkspace();
+      helper.scopeHelper.reInitRemoteScope();
+      helper.fs.outputFile('package.json', rootManifest);
       helper.fs.outputFile('pnpm-workspace.yaml', 'packages:\n  - packages/*\n');
       helper.fs.outputFile('.gitignore', 'node_modules\ndist\n');
       helper.fs.outputFile(
@@ -642,12 +645,18 @@ describe('add command on Harmony', function () {
         "require('fs').mkdirSync('dist', { recursive: true });\n" +
           "require('fs').writeFileSync('dist/index.js', `module.exports = ${require('@acme/math')(1, 2)};`);\n"
       );
-      // the default env is the core pnpm-workspace env, which comes with bit and needs no install
-      helper.command.runCmd('bit pnpm sync');
+      // makes the bit workspace and runs the first sync. the default env is the core pnpm-workspace env,
+      // which comes with bit and needs no install
+      helper.command.runCmd(`bit pnpm init --default-scope ${helper.scopes.remote}`);
+      helper.scopeHelper.addRemoteScope();
+      helper.workspaceJsonc.disablePreview();
       // the sync moved app's "workspace:" reference to the catalog, so the lockfile follows it
       helper.command.runCmd('pnpm install');
       // the packages are private, with no version, and linked by the names in their package.json
       helper.command.link();
+    });
+    it('should leave the root package.json to pnpm, with no postinstall script of bit', () => {
+      expect(JSON.parse(helper.fs.readFile('package.json'))).to.deep.equal(JSON.parse(rootManifest));
     });
     it('should refer to the sibling by "catalog:", with the catalog binding it to the workspace', () => {
       const appManifest = helper.fs.readJsonFile('packages/app/package.json');

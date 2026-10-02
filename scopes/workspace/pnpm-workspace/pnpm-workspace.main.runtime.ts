@@ -1,11 +1,18 @@
+import fs from 'fs-extra';
+import path from 'path';
+import { BitError } from '@teambit/bit-error';
 import type { CLIMain } from '@teambit/cli';
 import { CLIAspect, MainRuntime } from '@teambit/cli';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import { getConfig } from '@teambit/config-store';
 import type { EnvsMain } from '@teambit/envs';
+import { HostInitializerMain } from '@teambit/host-initializer';
 import { EnvsAspect } from '@teambit/envs';
 import type { ImporterMain } from '@teambit/importer';
 import { ImporterAspect } from '@teambit/importer';
+import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
+import { CFG_INIT_DEFAULT_SCOPE } from '@teambit/legacy.constants';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
@@ -17,22 +24,24 @@ import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
 import type { WorkspaceRootMain } from '@teambit/workspace-root';
 import { WorkspaceRootAspect } from '@teambit/workspace-root';
+import { PnpmInitCmd } from './pnpm-init.cmd';
 import type { PnpmScript } from './pnpm-script.task';
 import { PnpmScriptTask } from './pnpm-script.task';
 import { PnpmWorkspaceAspect } from './pnpm-workspace.aspect';
 import { PnpmWorkspaceCompiler } from './pnpm-workspace.compiler';
 import { PnpmWorkspaceEnv } from './pnpm-workspace.env';
 import { ScopeTreeSource, WorkspaceTreeSource } from './pnpm-workspace-tree';
-import type { PnpmVcsImportPlan } from './pnpm-workspace-sync';
+import type { PnpmSyncOptions, PnpmVcsImportPlan, PnpmVcsSyncResult } from './pnpm-workspace-sync';
 import {
   applyPnpmImportPlan,
   createPnpmVcsCatalogBindingsOnLoad,
   createPnpmVcsImportPlan,
   findPnpmWithoutWorkspaceCatalogs,
-  isPnpmWorkspace,
   PnpmCmd,
   PNPM_WORKSPACE_CATALOGS_REQUIREMENT,
+  PNPM_WORKSPACE_MANIFEST,
   PnpmSyncCmd,
+  syncPnpmWorkspace,
 } from './pnpm-workspace-sync';
 
 const ENV_SCRIPTS: PnpmScript[] = ['build', 'test', 'lint'];
@@ -47,8 +56,59 @@ export class PnpmWorkspaceMain {
   constructor(
     private workspace: Workspace | undefined,
     private dependencyResolver: DependencyResolverMain,
+    private workspaceRoot: WorkspaceRootMain,
     private logger: Logger
   ) {}
+
+  /**
+   * makes a bit workspace out of the pnpm workspace at this path, and runs its first sync. pnpm keeps
+   * installing it, so the init leaves package.json alone - an external package manager would get a
+   * postinstall script there, which runs bit on every "pnpm install". it writes no AI agent files
+   * either: whatever lands at the root is a file of the workspace-root component.
+   */
+  async init(
+    workspacePath: string,
+    { defaultScope, env }: PnpmSyncOptions & { defaultScope?: string } = {}
+  ): Promise<PnpmVcsSyncResult> {
+    if (this.workspace) {
+      throw new BitError(
+        `a Bit workspace exists at "${this.workspace.path}" already, run "bit pnpm sync" to synchronize its projects`
+      );
+    }
+    if (!(await fs.pathExists(path.join(workspacePath, PNPM_WORKSPACE_MANIFEST)))) {
+      throw new BitError(
+        `unable to find ${PNPM_WORKSPACE_MANIFEST} in ${workspacePath}, run "bit pnpm init" at the root of the pnpm workspace`
+      );
+    }
+    const defaultScopeToUse = defaultScope || getConfig(CFG_INIT_DEFAULT_SCOPE);
+    if (defaultScopeToUse && !isValidScopeName(defaultScopeToUse)) throw new InvalidScopeName(defaultScopeToUse);
+    await HostInitializerMain.init(
+      workspacePath,
+      true, // standalone, the scope is in ".bit"
+      true, // no package.json
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      { defaultScope: defaultScopeToUse },
+      undefined,
+      undefined,
+      { skipDefaultMcp: true, skipAgentInstructions: true }
+    );
+    const harmony = await this.workspaceRoot.loadWorkspace(workspacePath);
+    const workspace = harmony.get<Workspace>(WorkspaceAspect.id);
+    try {
+      const result = await syncPnpmWorkspace(workspace, harmony.get<TrackerMain>(TrackerAspect.id), { env });
+      await workspace.consumer.onDestroy('pnpm-init');
+      return result;
+    } catch (err: any) {
+      throw new BitError(
+        `the Bit workspace was initialized, but its projects failed to synchronize: ${err.message}\nonce fixed, run "bit pnpm sync"`
+      );
+    }
+  }
 
   /** what an import of these components changes in the pnpm manifest, see applyPnpmImportPlan */
   getImportPlan(components: ConsumerComponent[]): Promise<PnpmVcsImportPlan | undefined> {
@@ -58,7 +118,7 @@ export class PnpmWorkspaceMain {
 
   /** a pnpm workspace lists its packages in its own manifest, not in workspace.jsonc */
   private async onComponentsWritten(components: ConsumerComponent[]) {
-    if (!this.workspace || !isPnpmWorkspace(this.workspace)) return undefined;
+    if (!this.workspace || !this.workspace.isPnpmWorkspaceRoot()) return undefined;
     const plan = await this.getImportPlan(components);
     if (!plan) return { handled: true };
     const workspaceBoundPackageNames = await applyPnpmImportPlan(this.workspace.path, plan);
@@ -109,7 +169,7 @@ export class PnpmWorkspaceMain {
     LoggerMain,
   ]) {
     const logger = loggerMain.createLogger(PnpmWorkspaceAspect.id);
-    const pnpmWorkspace = new PnpmWorkspaceMain(workspace, dependencyResolver, logger);
+    const pnpmWorkspace = new PnpmWorkspaceMain(workspace, dependencyResolver, workspaceRoot, logger);
 
     // a workspace build reads the members as the workspace has them, a build in a scope as their remotes do
     const treeSource = workspace ? new WorkspaceTreeSource(workspace, workspaceRoot) : new ScopeTreeSource(scope);
@@ -124,7 +184,7 @@ export class PnpmWorkspaceMain {
     }
     const pnpmSyncCmd = new PnpmSyncCmd(workspace, tracker);
     const pnpmCmd = new PnpmCmd(pnpmSyncCmd);
-    pnpmCmd.commands = [pnpmSyncCmd];
+    pnpmCmd.commands = [new PnpmInitCmd(pnpmWorkspace), pnpmSyncCmd];
     cli.register(pnpmCmd);
     return pnpmWorkspace;
   }
