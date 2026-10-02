@@ -3060,6 +3060,9 @@ importers:
       chai:
         specifier: 5.2.1
         version: 5.2.1
+      sinon:
+        specifier: 17.0.1
+        version: 17.0.1
 
   components/legacy/consumer-config:
     dependencies:
@@ -27222,12 +27225,21 @@ importers:
       '@types/cacache':
         specifier: 19.0.0
         version: 19.0.0
+      '@types/chai':
+        specifier: 4.2.15
+        version: 4.2.15
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
+      chai:
+        specifier: 5.2.1
+        version: 5.2.1
+      sinon:
+        specifier: 17.0.1
+        version: 17.0.1
 
   scopes/workspace/modules/match-pattern:
     dependencies:
