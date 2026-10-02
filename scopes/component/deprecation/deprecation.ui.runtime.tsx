@@ -1,5 +1,5 @@
 import React from 'react';
-import { UIRuntime } from '@teambit/ui';
+import { UIRuntime } from '@teambit/harmony.modules.runtimes';
 import type { ComponentModel } from '@teambit/component';
 import type { DocsUI } from '@teambit/docs';
 import { DocsAspect } from '@teambit/docs';

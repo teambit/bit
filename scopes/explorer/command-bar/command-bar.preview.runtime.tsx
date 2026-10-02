@@ -1,4 +1,4 @@
-import { PreviewRuntime } from '@teambit/preview';
+import { PreviewRuntime } from '@teambit/harmony.modules.runtimes';
 import type { PubsubPreview } from '@teambit/pubsub';
 import { PubsubAspect } from '@teambit/pubsub';
 import { isOpenCommandBarKeybinding } from './keybinding';

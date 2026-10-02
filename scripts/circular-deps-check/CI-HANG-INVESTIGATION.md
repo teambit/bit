@@ -1,5 +1,10 @@
 # check_circular_dependencies CI hang/perf regression
 
+> Note: the scripts named below (`monitor-workspace-cycle.js`, `check-circular-deps.js` and the
+> `workspace-cycle-baseline.json` they compared against) were replaced by `check-cycles.js` and
+> `cycles-baseline.json` in #10740. The root-cause analysis still applies — the cascade it
+> describes is a property of how the repo binary loads envs, not of the check that triggered it.
+
 Status: **RESOLVED (2026-08-17).** The root cause turned out to be different from the §5-6 lead
 (the recursion shape observed there was a symptom, not the driver):
 

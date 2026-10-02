@@ -107,23 +107,18 @@ describe('bit delete command', function () {
     'deleting a component on a lane that has no dependents in the workspace',
     () => {
       let comp1PkgName: string;
-      before(async () => {
+      before(() => {
         helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
         helper.scopeHelper.setWorkspaceWithRemoteScope();
         helper.fixtures.populateComponents(2); // comp1 -> comp2, nothing depends on comp1
         comp1PkgName = helper.general.getPackageNameByCompName('comp1');
-        npmCiRegistry = new NpmCiRegistry(helper);
-        npmCiRegistry.configureCiInPackageJsonHarmony();
-        await npmCiRegistry.init();
+        new NpmCiRegistry(helper).configureCiInPackageJsonHarmony();
         helper.command.tagAllWithoutBuild();
         helper.command.export();
         helper.command.createLane();
         helper.command.snapAllComponentsWithoutBuild('--unmodified');
         helper.command.export();
         helper.command.softRemoveOnLane('comp1');
-      });
-      after(() => {
-        npmCiRegistry.destroy();
       });
       it('should not add the deleted component to the workspace policy (no dependents to fix)', () => {
         const policy = helper.workspaceJsonc.getPolicyFromDependencyResolver();

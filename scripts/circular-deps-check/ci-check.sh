@@ -1,46 +1,16 @@
 #!/bin/bash
-
-# CI script for checking circular dependencies
-# This script is designed to be run in CI environments
-
+# CI entry point: fails when a change adds a circular dependency between workspace components.
 set -e
-
-echo "=== Workspace Cycle Monitoring CI Check ==="
-echo "Repository: $(pwd)"
-echo "Commit: ${GITHUB_SHA:-${CIRCLE_SHA1:-$(git rev-parse HEAD)}}"
-echo "Branch: ${GITHUB_REF_NAME:-${CIRCLE_BRANCH:-$(git branch --show-current)}}"
-echo ""
-
-# Change to script directory
 cd "$(dirname "$0")"
-
-# Check if workspace cycle baseline exists
-if [ ! -f "workspace-cycle-baseline.json" ]; then
-    echo "❌ Error: No workspace cycle baseline found!"
-    echo "Run 'node monitor-workspace-cycle.js --baseline' to establish a baseline"
-    exit 1
-fi
-
-# Show baseline info
-echo "Current workspace cycle baseline:"
-node -e "
-const baseline = require('./workspace-cycle-baseline.json');
-console.log(\`  Components: \${baseline.count}\`);
-console.log(\`  Created: \${baseline.timestamp}\`);
-"
-echo ""
+echo "Commit: ${CIRCLE_SHA1:-$(git rev-parse HEAD)}"
 
 # Diagnostics: confirm which bit binary/version actually runs the check below, and where it's
-# pointed. BIT_BIN overrides the binary the node scripts invoke (mirrors e2e's --bit_bin) - set it
-# to compare the repo's own binary against a bvm-linked release when narrowing a perf difference.
+# pointed. BIT_BIN overrides the binary check-cycles.js invokes (mirrors e2e's --bit_bin) - set it
+# to compare the repo's own binary against a bvm-linked release when narrowing a difference.
 RESOLVED_BIT_BIN="${BIT_BIN:-bit}"
 echo "bit binary: $(command -v "$RESOLVED_BIT_BIN")"
 "$RESOLVED_BIT_BIN" --version
 echo "hub_domain: $("$RESOLVED_BIT_BIN" config get hub_domain)"
 echo ""
 
-# Run the workspace cycle check
-echo "Running workspace cycle monitoring..."
-node monitor-workspace-cycle.js
-
-echo "✅ Workspace cycle monitoring check passed!"
+node check-cycles.js

@@ -1,4 +1,4 @@
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { Options as PrettierModuleOptions } from 'prettier';
 import type { Formatter, FormatterMain, FormatterOptions } from '@teambit/formatter';
 import type { Logger, LoggerMain } from '@teambit/logger';

@@ -13,7 +13,7 @@ import type { Compiler, TranspileFileOutputOneFile } from '@teambit/compiler';
 import type { Capsule, IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
 import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
 import { compact, uniq, groupBy, defaultsDeep, partition } from 'lodash';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import type { ExtensionManifest, Aspect } from '@teambit/harmony';
 import type { Component, ComponentID, LoadAspectsOptions, ResolveAspectsOptions } from '@teambit/component';

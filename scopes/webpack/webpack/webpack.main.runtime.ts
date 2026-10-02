@@ -4,7 +4,7 @@ import type { WebpackConfigMutator } from '@teambit/webpack.modules.config-mutat
 import type { PubsubMain } from '@teambit/pubsub';
 import { PubsubAspect } from '@teambit/pubsub';
 import type { BundlerMode, Target, DevServerContext } from '@teambit/bundler';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
 import type { Workspace } from '@teambit/workspace';

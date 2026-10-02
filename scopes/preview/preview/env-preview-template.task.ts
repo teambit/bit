@@ -7,7 +7,7 @@ import type {
   ArtifactDefinition,
 } from '@teambit/builder';
 import { CAPSULE_ARTIFACTS_DIR } from '@teambit/builder';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import mapSeries from 'p-map-series';
 import type { Component } from '@teambit/component';
 import { ComponentMap } from '@teambit/component';

@@ -1,4 +1,4 @@
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { CloudMain } from '@teambit/cloud';
 import { CloudAspect } from '@teambit/cloud';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';

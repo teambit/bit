@@ -101,6 +101,56 @@ describe('BitMap', function () {
       );
     });
   });
+  describe('getComponentIdByRootPath', () => {
+    it('should find a component that was added after a lookup', async () => {
+      const bitMap = await getBitmapInstance();
+      bitMap.loadComponents(
+        { comp1: { mainFile: 'index.js', rootDir: 'comp1', scope: '', defaultScope: 'my-scope' } },
+        'my-scope'
+      );
+      expect(bitMap.getComponentIdByRootPath('comp1')?.fullName).to.equal('comp1');
+      bitMap.addFromComponentJson(ComponentID.fromObject({ name: 'comp2' }, 'my-scope'), {
+        mainFile: 'index.js',
+        rootDir: 'comp2',
+      });
+      expect(bitMap.getComponentIdByRootPath('comp2')?.fullName).to.equal('comp2');
+    });
+  });
+  describe('getComponentIfExist', () => {
+    let bitMap: BitMap;
+    before(async () => {
+      bitMap = await getBitmapInstance();
+      bitMap.loadComponents(
+        {
+          comp1: { name: 'comp1', scope: 'scope1', version: '1.0.0', mainFile: 'index.js', rootDir: 'comp1' },
+          comp2: { name: 'comp1', scope: 'scope2', version: '1.0.0', mainFile: 'index.js', rootDir: 'comp2' },
+        },
+        'my-scope'
+      );
+    });
+    it('should find a component by its exact id', () => {
+      expect(bitMap.getComponentIfExist(ComponentID.fromString('scope2/comp1@1.0.0'))?.rootDir).to.equal('comp2');
+    });
+    it('should not match another version, unless asked to ignore the version', () => {
+      const id = ComponentID.fromString('scope2/comp1@2.0.0');
+      expect(bitMap.getComponentIfExist(id)).to.be.undefined;
+      expect(bitMap.getComponentIfExist(id, { ignoreVersion: true })?.rootDir).to.equal('comp2');
+    });
+    it('should return undefined for an id that is not in the .bitmap', () => {
+      expect(bitMap.getComponentIfExist(ComponentID.fromString('scope1/comp3@1.0.0'))).to.be.undefined;
+      expect(() => bitMap.getComponent(ComponentID.fromString('scope1/comp3@1.0.0'))).to.throw();
+    });
+    it('should find a component that was added after a lookup', () => {
+      bitMap.addFromComponentJson(ComponentID.fromString('scope1/comp3@1.0.0'), {
+        name: 'comp3',
+        scope: 'scope1',
+        version: '1.0.0',
+        mainFile: 'index.js',
+        rootDir: 'comp3',
+      });
+      expect(bitMap.getComponentIfExist(ComponentID.fromString('scope1/comp3@1.0.0'))?.rootDir).to.equal('comp3');
+    });
+  });
   describe('workspace-root component', () => {
     const rootComponentParams = {
       componentId: ComponentID.fromObject({ name: 'ws-root' }, 'my-scope'),

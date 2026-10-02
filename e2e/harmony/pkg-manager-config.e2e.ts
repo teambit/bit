@@ -11,19 +11,14 @@ import { readModulesManifest } from '../modules-manifest';
     let helper: Helper;
     let envId1;
     let envName1;
-    let npmCiRegistry: NpmCiRegistry;
-    before(async () => {
+    before(() => {
       helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
-      npmCiRegistry = new NpmCiRegistry(helper);
-      await npmCiRegistry.init();
-      npmCiRegistry.configureCiInPackageJsonHarmony();
       // the node-env-1 fixture is a minimal old-style env, deliberately not based on any
       // non-core env (see the fixture) - basing it on a real env would pull the entire env chain
-      // into the scope-aspects capsules, which gets OOM-killed under yarn on CI (materialized as
-      // full copies, no store/hardlinks). the seed workspace uses the default pnpm - the yarn
-      // coverage is in the describe block below, where the scope-aspects capsules are installed.
+      // into the scope-aspects capsules, which is heavy enough to have OOM-killed this suite.
+      new NpmCiRegistry(helper).configureCiInPackageJsonHarmony();
       envName1 = helper.env.setCustomEnv('node-env-1');
       envId1 = `${helper.scopes.remote}/${envName1}`;
       helper.command.install('lodash.get lodash.flatten');
@@ -58,9 +53,6 @@ import { readModulesManifest } from '../modules-manifest';
       it('workspace pnpm config is taken into account when running install in the capsule', () => {
         expect(modulesState?.hoistPattern).to.include('capsule-hoist-pattern');
       });
-    });
-    after(() => {
-      npmCiRegistry.destroy();
     });
   }
 );

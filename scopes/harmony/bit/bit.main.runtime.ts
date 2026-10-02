@@ -1,4 +1,4 @@
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import { getLegacyCoreEnvsIds } from '@teambit/envs';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 

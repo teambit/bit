@@ -5,7 +5,8 @@ import { getAspectArtifactDir, filterCoreAspectDefs } from '@teambit/aspect-load
 import type { CacheMain } from '@teambit/cache';
 import { CacheAspect } from '@teambit/cache';
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect } from '@teambit/cli';
 import type { ComponentMain } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
 import type { ExpressMain } from '@teambit/express';
