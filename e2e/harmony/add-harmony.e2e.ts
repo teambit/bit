@@ -388,10 +388,13 @@ describe('add command on Harmony', function () {
       // workspace default here is the empty env too, so set a real env on comp1 explicitly - on
       // comp1 alone, so the root keeps the env it is tracked with.
       helper.env.setNodeEnv('comp1');
-      // that env installs, and an install also compiles. drop comp1's dist again so the
-      // MissingDists assertion below has something to contrast the root component against.
+      // that env installs, and an install also compiles. drop comp1's dists again so the
+      // MissingDists assertion below has something to contrast the root component against. the
+      // env also materializes comp1 under its own root-component dir, and a dist surviving there
+      // is enough for the issue not to be reported - so clear both, as status-harmony does.
       // no owner prefix on the e2e default scope, same as the package name built further down
       helper.fs.deletePath(path.join('node_modules', helper.general.getPackageNameByCompName('comp1', false), 'dist'));
+      fs.removeSync(path.join(helper.env.rootCompDirDep('teambit.harmony/node', 'comp1'), 'dist'));
       helper.fs.outputFile('README.md', '# workspace root\n');
       helper.command.addComponent('.', '-i ws-root --root');
       status = helper.command.statusJson();
