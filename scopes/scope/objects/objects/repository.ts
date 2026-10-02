@@ -897,7 +897,9 @@ export default class Repository {
   private async writeObjectFile(filePath: string, contents: Buffer, chownOptions: ObjectChownOptions) {
     const existing = await fs.stat(filePath).catch(() => undefined);
     const mode = existing?.mode;
-    const keepOwner = existing && process.getuid ? { uid: existing.uid, gid: existing.gid } : null;
+    // process.getuid is undefined on Windows, where there's no owner to keep.
+    const keepOwner =
+      existing && typeof process.getuid === 'function' ? { uid: existing.uid, gid: existing.gid } : null;
     const chown = chownOptions || keepOwner;
     objectFileWriteCounter += 1;
     const tmpPath = path.join(
