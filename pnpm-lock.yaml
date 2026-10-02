@@ -7696,6 +7696,9 @@ importers:
       '@teambit/workspace-root':
         specifier: workspace:*
         version: file:scopes/workspace/workspace-root(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/workspace-starter':
+        specifier: workspace:*
+        version: file:scopes/generator/workspace-starter
       '@teambit/workspace.aspect-docs.variants':
         specifier: workspace:*
         version: file:scopes/workspace/aspect-docs/variants(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
@@ -8770,6 +8773,9 @@ importers:
       '@teambit/workspace-root':
         specifier: workspace:*
         version: file:scopes/workspace/workspace-root(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/workspace-starter':
+        specifier: workspace:*
+        version: file:scopes/generator/workspace-starter
       '@teambit/workspace.aspect-docs.variants':
         specifier: workspace:*
         version: file:scopes/workspace/aspect-docs/variants(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
@@ -9817,6 +9823,9 @@ importers:
       '@teambit/workspace-root':
         specifier: workspace:*
         version: file:scopes/workspace/workspace-root(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/workspace-starter':
+        specifier: workspace:*
+        version: file:scopes/generator/workspace-starter
       '@teambit/workspace.aspect-docs.variants':
         specifier: workspace:*
         version: file:scopes/workspace/aspect-docs/variants(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
@@ -10840,6 +10849,9 @@ importers:
       '@teambit/workspace-root':
         specifier: workspace:*
         version: file:scopes/workspace/workspace-root(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/workspace-starter':
+        specifier: workspace:*
+        version: file:scopes/generator/workspace-starter
       '@teambit/workspace.aspect-docs.variants':
         specifier: workspace:*
         version: file:scopes/workspace/aspect-docs/variants(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@18.3.1)
@@ -11902,6 +11914,9 @@ importers:
       '@teambit/workspace-root':
         specifier: workspace:*
         version: file:scopes/workspace/workspace-root(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/workspace-starter':
+        specifier: workspace:*
+        version: file:scopes/generator/workspace-starter
       '@teambit/workspace.aspect-docs.variants':
         specifier: workspace:*
         version: file:scopes/workspace/aspect-docs/variants(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
@@ -12946,6 +12961,9 @@ importers:
       '@teambit/workspace-root':
         specifier: workspace:*
         version: file:scopes/workspace/workspace-root(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/workspace-starter':
+        specifier: workspace:*
+        version: file:scopes/generator/workspace-starter
       '@teambit/workspace.aspect-docs.variants':
         specifier: workspace:*
         version: file:scopes/workspace/aspect-docs/variants(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
@@ -13990,6 +14008,9 @@ importers:
       '@teambit/workspace-root':
         specifier: workspace:*
         version: file:scopes/workspace/workspace-root(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/workspace-starter':
+        specifier: workspace:*
+        version: file:scopes/generator/workspace-starter
       '@teambit/workspace.aspect-docs.variants':
         specifier: workspace:*
         version: file:scopes/workspace/aspect-docs/variants(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
@@ -15040,6 +15061,9 @@ importers:
       '@teambit/workspace-root':
         specifier: workspace:*
         version: file:scopes/workspace/workspace-root(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/workspace-starter':
+        specifier: workspace:*
+        version: file:scopes/generator/workspace-starter
       '@teambit/workspace.aspect-docs.variants':
         specifier: workspace:*
         version: file:scopes/workspace/aspect-docs/variants(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
@@ -20170,9 +20194,6 @@ importers:
       enquirer:
         specifier: 2.4.1
         version: 2.4.1
-      execa:
-        specifier: 2.1.0
-        version: 2.1.0
       fs-extra:
         specifier: 10.0.0
         version: 10.0.0
@@ -20207,6 +20228,64 @@ importers:
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
+
+  scopes/generator/workspace-starter:
+    dependencies:
+      '@teambit/bit-error':
+        specifier: ~0.0.404
+        version: 0.0.404
+      '@teambit/component-id':
+        specifier: ^1.2.4
+        version: 1.2.4
+      '@teambit/harmony':
+        specifier: 0.4.12
+        version: 0.4.12
+      '@testing-library/react':
+        specifier: ^14.3.1
+        version: 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@types/node':
+        specifier: 22.10.5
+        version: 22.10.5
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.18
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.4(@types/react@19.2.18)
+      chalk:
+        specifier: 4.1.2
+        version: 4.1.2
+      execa:
+        specifier: 2.1.0
+        version: 2.1.0
+      fs-extra:
+        specifier: 10.0.0
+        version: 10.0.0
+      lodash:
+        specifier: 4.17.21
+        version: 4.17.21
+      p-map-series:
+        specifier: 2.1.0
+        version: 2.1.0
+      react:
+        specifier: 19.2.7
+        version: 19.2.7
+      react-dom:
+        specifier: 19.2.7
+        version: 19.2.7(react@19.2.7)
+      react-router-dom:
+        specifier: ^6.30.1
+        version: 6.30.4(react-dom@19.2.7)(react@19.2.7)
+    devDependencies:
+      '@teambit/harmony.envs.core-aspect-env':
+        specifier: 2.1.1
+        version: 2.1.1(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
+      '@types/fs-extra':
+        specifier: 9.0.7
+        version: 9.0.7
+      '@types/lodash':
+        specifier: 4.14.165
+        version: 4.14.165
 
   scopes/git/ci:
     dependencies:
@@ -36588,6 +36667,9 @@ packages:
     resolution: {directory: scopes/workspace/workspace-root, type: directory}
     peerDependencies:
       chai: 5.2.1
+
+  '@teambit/workspace-starter@file:scopes/generator/workspace-starter':
+    resolution: {directory: scopes/generator/workspace-starter, type: directory}
 
   '@teambit/workspace.aspect-docs.variants@file:scopes/workspace/aspect-docs/variants':
     resolution: {directory: scopes/workspace/aspect-docs/variants, type: directory}
@@ -57106,6 +57188,7 @@ snapshots:
       '@teambit/legacy.scope-api': file:components/legacy/scope-api(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/scope.modules.find-scope-path': file:components/modules/find-scope-path
       '@teambit/ui-foundation.ui.navigation.react-router-adapter': 6.1.3(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
+      '@teambit/workspace-starter': file:scopes/generator/workspace-starter
       '@teambit/workspace.modules.node-modules-linker': file:scopes/workspace/modules/node-modules-linker(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/workspace.modules.workspace-locator': file:scopes/workspace/modules/workspace-locator
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -57174,6 +57257,7 @@ snapshots:
       '@teambit/legacy.scope-api': file:components/legacy/scope-api(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/scope.modules.find-scope-path': file:components/modules/find-scope-path
       '@teambit/ui-foundation.ui.navigation.react-router-adapter': 6.1.3(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
+      '@teambit/workspace-starter': file:scopes/generator/workspace-starter
       '@teambit/workspace.modules.node-modules-linker': file:scopes/workspace/modules/node-modules-linker(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/workspace.modules.workspace-locator': file:scopes/workspace/modules/workspace-locator
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -70699,7 +70783,6 @@ snapshots:
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.4
       '@teambit/generator.aspect-docs.generator': file:scopes/generator/aspect-docs/generator(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@18.3.1)
-      '@teambit/git.modules.git-executable': file:scopes/git/modules/git-executable
       '@teambit/git.modules.git-ignore': 1.0.2
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
@@ -70716,7 +70799,6 @@ snapshots:
       camelcase: 6.2.0
       chalk: 4.1.2
       enquirer: 2.4.1
-      execa: 2.1.0
       fs-extra: 10.0.0
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
@@ -70736,7 +70818,6 @@ snapshots:
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.4
       '@teambit/generator.aspect-docs.generator': file:scopes/generator/aspect-docs/generator(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
-      '@teambit/git.modules.git-executable': file:scopes/git/modules/git-executable
       '@teambit/git.modules.git-ignore': 1.0.2
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
@@ -70753,7 +70834,6 @@ snapshots:
       camelcase: 6.2.0
       chalk: 4.1.2
       enquirer: 2.4.1
-      execa: 2.1.0
       fs-extra: 10.0.0
       graphql-tag: 2.12.1(graphql@15.8.0)
       lodash: 4.17.21
@@ -87476,6 +87556,26 @@ snapshots:
       - domexception
       - graphql
       - supports-color
+
+  '@teambit/workspace-starter@file:scopes/generator/workspace-starter':
+    dependencies:
+      '@teambit/bit-error': 0.0.404
+      '@teambit/component-id': 1.2.4
+      '@teambit/git.modules.git-executable': file:scopes/git/modules/git-executable
+      '@teambit/harmony': 0.4.12
+      '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
+      '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@types/node': 22.10.5
+      '@types/react': 19.2.18
+      '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chalk: 4.1.2
+      execa: 2.1.0
+      fs-extra: 10.0.0
+      lodash: 4.17.21
+      p-map-series: 2.1.0
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+      react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
 
   '@teambit/workspace.aspect-docs.variants@file:scopes/workspace/aspect-docs/variants(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@18.3.1)':
     dependencies:
