@@ -54,7 +54,7 @@ export type CompileOptions = {
    * start` to avoid webpack "EINTR" error.
    */
   deleteDistDir?: boolean;
-  initiator: CompilationInitiator; // describes where the compilation is coming from
+  initiator?: CompilationInitiator; // describes where the compilation is coming from
   // should we create links in node_modules for the compiled components (default = true)
   // this will link the source files, and create the package.json
   linkComponents?: boolean;
@@ -266,7 +266,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
 
   private async compileOneFile(
     file: AbstractVinyl,
-    initiator: CompilationInitiator,
+    initiator: CompilationInitiator | undefined,
     distDirs: string[]
   ): Promise<void> {
     const options = { componentDir: this.componentDir, filePath: file.relative, initiator };
@@ -299,7 +299,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     }
   }
 
-  private async compileAllFiles(initiator: CompilationInitiator, distDirs: string[]): Promise<void> {
+  private async compileAllFiles(initiator: CompilationInitiator | undefined, distDirs: string[]): Promise<void> {
     const filesToCompile: AbstractVinyl[] = [];
     for (const base of distDirs) {
       this.component.filesystem.files.forEach((file: AbstractVinyl) => {
@@ -511,8 +511,13 @@ export class WorkspaceCompiler {
   ): Promise<BuildResult[]> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const componentIds = await this.getIdsToCompile(componentsIds, options.changed);
-    // In case the aspect failed to load, we want to compile it without try to re-load it again
-    if (options.initiator === CompilationInitiator.AspectLoadFail) {
+    // In case the aspect failed to load, we want to compile it without try to re-load it again.
+    // `options.initiator &&` short-circuits the CompilationInitiator.AspectLoadFail read: `===`
+    // evaluates both operands regardless of the LHS, so an unguarded comparison here reaches the
+    // same unsafe lazy getter as the direct reads already guarded elsewhere - this line is exactly
+    // where the "second" bit_pr install-crash fix (bundle-plan.md §14, 2026-08-12) turned out to
+    // still be reachable from, disproving that a mere `undefined` initiator was enough on its own.
+    if (options.initiator !== undefined && options.initiator === CompilationInitiator.AspectLoadFail) {
       componentLoadOptions.loadSeedersAsAspects = false;
     }
     let components = await this.workspace.getMany(componentIds, componentLoadOptions);

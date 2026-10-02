@@ -1,3 +1,4 @@
+import path from 'path';
 import type { RuleSetRule } from '@rspack/core';
 import { fallbacks } from '@teambit/webpack';
 import { excludeNodeModulesJs } from '@teambit/webpack.modules.exclude-node-modules-js';
@@ -23,6 +24,27 @@ export const moduleFileExtensions = [
 export const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP === 'true';
 export const imageInlineSizeLimit = parseInt(process.env.IMAGE_INLINE_SIZE_LIMIT || '10000');
 
+/**
+ * `react-router`/`@remix-run/router` are `react-router-dom`'s own dependencies, not this repo's
+ * direct/hoisted ones (unlike `react-router-dom` itself, neither has a flat top-level
+ * `node_modules/` entry) - a plain `require.resolve('react-router/package.json')` from this file
+ * throws `Cannot find module`. Resolving them with `paths: [reactRouterDomDir]` walks node's lookup
+ * from react-router-dom's own directory instead, where they genuinely are (its own nested
+ * `node_modules`) - the same copy react-router-dom's own internal `require()`s would already find
+ * unaliased, made explicit here so anything importing them bare (confirmed real - the vendor dll's
+ * own manifest has a standalone `./react-router/dist/index.js` entry, not only nested under
+ * react-router-dom) lands on that identical copy too, not a different peer-resolved one.
+ */
+function reactRouterAliases(): Record<string, string> {
+  const reactRouterDomDir = path.dirname(require.resolve('react-router-dom/package.json'));
+  const resolveFromReactRouterDom = (specifier: string) => require.resolve(specifier, { paths: [reactRouterDomDir] });
+  return {
+    'react-router-dom': reactRouterDomDir,
+    'react-router': path.dirname(resolveFromReactRouterDom('react-router/package.json')),
+    '@remix-run/router': resolveFromReactRouterDom('@remix-run/router'),
+  };
+}
+
 export function resolveAlias(opts?: { profile?: boolean }): Record<string, string | false> {
   return {
     // every react/react-dom entry point used at runtime must be listed here, or it escapes
@@ -38,6 +60,24 @@ export function resolveAlias(opts?: { profile?: boolean }): Record<string, strin
       'react-dom$': 'react-dom/profiling',
       'scheduler/tracing': 'scheduler/tracing-profiling',
     }),
+    // aliased as a *directory* so the subpath entries (`/utilities`, `/link/ws`, `/react/ssr`, …)
+    // land in the same copy. apollo carries React context, so a second copy in the bundle silently
+    // breaks every `useQuery` - the same reason react is pinned above. It also has to be aliased to
+    // resolve at all: it is a peer dependency of `@teambit/component`, so an aspect resolved out of a
+    // capsule's pnpm store has no `@apollo/client` anywhere above it.
+    '@apollo/client': path.dirname(require.resolve('@apollo/client/package.json')),
+    // same reasoning, same fix, confirmed the hard way (2026-09-07, `bundle-plan/18-findings-log.md`):
+    // bit's own monorepo carries 4 separately peer-resolved `react-router-dom` copies (paired with
+    // every react@18/19 x react-dom@18/19 combination some aspect declares) - an unaliased build that
+    // reaches more than one of them (the vendor dll's own compilation does, since different covered
+    // aspects each resolve their own peer-matched copy) bakes in two different `useLocation`
+    // implementations tied to two different `@remix-run/router` context instances. A component
+    // rendered under one copy's `<Router>` while calling the other copy's `useLocation()` throws -
+    // not a warning, an uncaught crash, the exact failure mode this alias already prevents for
+    // `@apollo/client`. Aliased as a directory (matching the apollo entry above): react-router-dom's
+    // own multiple root-level entry points (`main.js`, `index.js`, `server.mjs`) all need to land in
+    // the same resolved copy, not just the bare specifier.
+    ...reactRouterAliases(),
     '@teambit/component.ui.component-compare.context': require.resolve(
       '@teambit/component.ui.component-compare.context'
     ),

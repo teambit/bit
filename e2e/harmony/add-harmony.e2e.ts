@@ -383,6 +383,15 @@ describe('add command on Harmony', function () {
       helper.scopeHelper.reInitWorkspace();
       helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1";\n');
       helper.command.addComponent('comp1', { i: 'comp1' });
+      // the assertions below contrast the root component against a regular one: the root gets the
+      // empty env, a regular component gets an env with a compiler and a dependency policy. the
+      // workspace default here is the empty env too, so set a real env on comp1 explicitly - on
+      // comp1 alone, so the root keeps the env it is tracked with.
+      helper.env.setNodeEnv('comp1');
+      // that env installs, and an install also compiles. drop comp1's dist again so the
+      // MissingDists assertion below has something to contrast the root component against.
+      // no owner prefix on the e2e default scope, same as the package name built further down
+      helper.fs.deletePath(path.join('node_modules', helper.general.getPackageNameByCompName('comp1', false), 'dist'));
       helper.fs.outputFile('README.md', '# workspace root\n');
       helper.command.addComponent('.', '-i ws-root --root');
       status = helper.command.statusJson();
