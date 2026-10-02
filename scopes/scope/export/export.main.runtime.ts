@@ -593,7 +593,8 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
         // many files (e.g. tens of thousands of bundled pages).
         const allObjectsData = [componentData, ...objectItems];
         objectListPerName[modelComponent.name] = new ObjectList(allObjectsData);
-        allObjectItems.push(...allObjectsData);
+        // not `push(...allObjectsData)`, a component can have more objects than the max number of function arguments.
+        allObjectsData.forEach((objectItem) => allObjectItems.push(objectItem));
       };
 
       // The lean-lane filter (drop main-origin refs belonging to foreign components) is now

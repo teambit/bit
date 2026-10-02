@@ -9,7 +9,7 @@
 // slow, and with 4 threads bit's concurrent object writes (import/export/tag) are effectively serialized: writing 12k
 // object files took ~14s with 4 threads and ~2s with 16. on Linux (ext4), more threads made it slower (same-directory
 // creates/renames serialize on the dir lock), so the libuv default is kept there. it must be set before the pool is
-// first used. a user-provided value wins.
+// first used. a user-provided value wins. child processes inherit it, which is intended (they hit the same APFS cost).
 if (process.platform === 'darwin' && !process.env.UV_THREADPOOL_SIZE) process.env.UV_THREADPOOL_SIZE = '16';
 
 if (!process.env.BIT_NO_COMPILE_CACHE) {
