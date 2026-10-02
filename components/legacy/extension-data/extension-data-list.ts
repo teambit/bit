@@ -121,14 +121,11 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
 
   toConfigArray(): ConfigOnlyEntry[] {
     const arr = this.map((entry) => {
-      // Remove extensions without config
-      const clonedEntry = entry.clone();
-      if (clonedEntry.rawConfig && !isEmpty(clonedEntry.rawConfig)) {
-        removeInternalConfigFieldsWithMutation(clonedEntry.rawConfig);
-        if (isEmpty(clonedEntry.rawConfig)) return undefined;
-        return { id: clonedEntry.stringId, config: clonedEntry.config };
-      }
-      return undefined;
+      if (entry.isRemoved) return { id: entry.stringId, config: {} };
+      // Remove extensions without config. only the config is cloned, the data can be big and is not needed here.
+      const config = removeInternalConfigFields(entry.rawConfig);
+      if (!config || isEmpty(config)) return undefined;
+      return { id: entry.stringId, config };
     });
     return compact(arr);
   }
