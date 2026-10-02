@@ -1,11 +1,11 @@
 {
   "summary": {
     "groups": [
-      60,
+      59,
       16
     ],
-    "components": 76,
-    "edges": 473
+    "components": 75,
+    "edges": 450
   },
   "groups": [
     [
@@ -51,7 +51,6 @@
       "teambit.pipelines/builder",
       "teambit.pkg/pkg",
       "teambit.preview/preview",
-      "teambit.react/react",
       "teambit.scope/export",
       "teambit.scope/importer",
       "teambit.scope/objects",
@@ -402,34 +401,11 @@
     "teambit.preview/preview -> teambit.harmony/pubsub",
     "teambit.preview/preview -> teambit.pipelines/builder",
     "teambit.preview/preview -> teambit.pkg/pkg",
-    "teambit.preview/preview -> teambit.react/react",
     "teambit.preview/preview -> teambit.scope/scope",
     "teambit.preview/preview -> teambit.ui-foundation/ui",
     "teambit.preview/preview -> teambit.webpack/webpack",
     "teambit.preview/preview -> teambit.workspace/watcher",
     "teambit.preview/preview -> teambit.workspace/workspace",
-    "teambit.react/react -> teambit.api-reference/api-reference",
-    "teambit.react/react -> teambit.compilation/bundler",
-    "teambit.react/react -> teambit.compilation/compiler",
-    "teambit.react/react -> teambit.component/component",
-    "teambit.react/react -> teambit.component/dev-files",
-    "teambit.react/react -> teambit.compositions/compositions",
-    "teambit.react/react -> teambit.defender/formatter",
-    "teambit.react/react -> teambit.defender/linter",
-    "teambit.react/react -> teambit.defender/tester",
-    "teambit.react/react -> teambit.dependencies/dependency-resolver",
-    "teambit.react/react -> teambit.envs/envs",
-    "teambit.react/react -> teambit.generator/generator",
-    "teambit.react/react -> teambit.harmony/application",
-    "teambit.react/react -> teambit.harmony/graphql",
-    "teambit.react/react -> teambit.harmony/pubsub",
-    "teambit.react/react -> teambit.pipelines/builder",
-    "teambit.react/react -> teambit.pkg/pkg",
-    "teambit.react/react -> teambit.preview/preview",
-    "teambit.react/react -> teambit.semantics/schema",
-    "teambit.react/react -> teambit.typescript/typescript",
-    "teambit.react/react -> teambit.workspace/workspace",
-    "teambit.react/react -> teambit.workspace/workspace-config-files",
     "teambit.scope/export -> teambit.component/remove",
     "teambit.scope/export -> teambit.dependencies/dependency-resolver",
     "teambit.scope/export -> teambit.scope/objects",
