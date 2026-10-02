@@ -39,7 +39,7 @@ export { componentFields, componentIdFields, componentOverviewFields } from './u
 export type { NavPlugin, ConsumePlugin, MenuNavProps } from './ui/menu';
 export { CollapsibleMenuNav, ComponentMenu, VersionRelatedDropdowns } from './ui/menu';
 export type { RegisteredComponentRoute, ComponentUrlParams } from './component.route';
-export type { ComponentModelProps } from './ui/component-model';
+export type { ComponentModelProps, DeprecationInfo } from './ui/component-model';
 export { ComponentModel } from './ui/component-model';
 export { TopBarNav } from './ui/top-bar-nav';
 export type { ShowFragment, ShowRow, ShowJSONRow } from './show';

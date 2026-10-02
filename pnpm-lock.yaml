@@ -3060,6 +3060,9 @@ importers:
       chai:
         specifier: 5.2.1
         version: 5.2.1
+      sinon:
+        specifier: 17.0.1
+        version: 17.0.1
 
   components/legacy/consumer-config:
     dependencies:
@@ -17363,6 +17366,9 @@ importers:
       execa:
         specifier: 2.1.0
         version: 2.1.0
+      is-binary-path:
+        specifier: 2.1.0
+        version: 2.1.0
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -17379,12 +17385,18 @@ importers:
       '@teambit/node.envs.node-babel-mocha':
         specifier: 2.1.1
         version: 2.1.1(@babel/core@7.28.3)(supports-color@9.4.0)
+      '@types/chai':
+        specifier: 4.2.15
+        version: 4.2.15
       '@types/lodash':
         specifier: 4.14.165
         version: 4.14.165
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
+      chai:
+        specifier: 5.2.1
+        version: 5.2.1
 
   scopes/component/mover:
     dependencies:
@@ -27213,12 +27225,21 @@ importers:
       '@types/cacache':
         specifier: 19.0.0
         version: 19.0.0
+      '@types/chai':
+        specifier: 4.2.15
+        version: 4.2.15
       '@types/fs-extra':
         specifier: 9.0.7
         version: 9.0.7
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
+      chai:
+        specifier: 5.2.1
+        version: 5.2.1
+      sinon:
+        specifier: 17.0.1
+        version: 17.0.1
 
   scopes/workspace/modules/match-pattern:
     dependencies:
@@ -60642,6 +60663,7 @@ snapshots:
       chalk: 4.1.2
       enquirer: 2.4.1
       execa: 2.1.0
+      is-binary-path: 2.1.0
       lodash: 4.17.21
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
