@@ -5,11 +5,11 @@ import { BitError } from '@teambit/bit-error';
 import type { ComponentID } from '@teambit/component-id';
 import { HASH_SIZE, isSnap } from '@teambit/component-version';
 import * as path from 'path';
+import { userInfo } from 'os';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { OBJECTS_DIR } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
-import type { ChownOptions, PathOsBasedAbsolute } from '@teambit/legacy.utils';
-import { writeFile } from '@teambit/legacy.utils';
+import type { PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { glob } from 'glob';
 import { removeEmptyDir } from '@teambit/toolbox.fs.remove-empty-dir';
 import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
@@ -24,7 +24,7 @@ import {
 import type { IndexType, IndexItem } from './scope-index';
 import { ScopeIndex } from './scope-index';
 import BitObject from './object';
-import type { ObjectItem } from './object-list';
+import type { ObjectItem, RawObjectsMap, CompressedObject } from './object-list';
 import { ObjectList } from './object-list';
 import BitRawObject from './raw-object';
 import Ref from './ref';
@@ -37,6 +37,8 @@ type ContentTransformer = (content: Buffer) => Buffer;
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 const TRASH_DIR = 'trash';
 const MAX_COMPRESSED_SIZE_TO_CACHE = 100 * 1024; // don't cache big files (mainly artifacts) to prevent out-of-memory
+let objectFileWriteCounter = 0;
+type ObjectChownOptions = { uid: number; gid: number } | null;
 /**
  * how much of an object file to read when all that's needed is its header. the header holds the
  * type and is a few dozen bytes, which 512 compressed bytes always cover - and every byte past it
@@ -790,14 +792,13 @@ export default class Repository {
   /**
    * write all objects to the FS and index the components/lanes/symlink objects
    */
-  async writeObjectsToTheFS(objects: BitObject[]): Promise<void> {
+  async writeObjectsToTheFS(objects: BitObject[], rawObjects?: RawObjectsMap): Promise<void> {
     const count = objects.length;
     if (!count) return;
     logger.trace(`Repository.writeObjectsToTheFS: started writing ${count} objects`);
     const concurrency = concurrentIOLimit();
-    await pMapPool(objects, (obj) => this._writeOne(obj), {
-      concurrency,
-    });
+    const chownOptions = await this.getChownOptions();
+    await pMapPool(objects, (obj) => this._writeOne(obj, rawObjects?.get(obj), chownOptions), { concurrency });
     logger.trace(`Repository.writeObjectsToTheFS: completed writing ${count} objects`);
 
     const added = this.scopeIndex.addMany(objects);
@@ -820,16 +821,21 @@ export default class Repository {
    * this method doesn't write to scopeIndex. so using this method for ModelComponent or
    * Symlink makes the index outdated.
    */
-  async _writeOne(object: BitObject): Promise<void> {
-    const { buffer: contents, inflatedSize } = await object.compressWithSize();
-    const options: ChownOptions = {};
-    if (this.scopeJson.groupName) options.gid = await resolveGroupId(this.scopeJson.groupName);
-    const hash = object.hash();
+  async _writeOne(
+    object: BitObject,
+    raw?: CompressedObject & { ref: Ref },
+    chownOptions?: ObjectChownOptions
+  ): Promise<void> {
+    // when the already-compressed buffer of an unchanged object is available, skip the costly re-compression.
+    const { buffer: contents, inflatedSize } = raw || (await object.compressWithSize());
+    const options = chownOptions === undefined ? await this.getChownOptions() : chownOptions;
+    // hashing a Source is sha1 of its content. the raw buffer's ref was already checked against it.
+    const hash = raw?.ref || object.hash();
     const objectPath = this.objectPath(hash);
     logger.trace(`repository._writeOne: ${objectPath}`);
     // Run hook to transform content pre persisting
     const transformedContent = this.onPersist(contents);
-    await writeFile(objectPath, transformedContent, options);
+    await this.writeObjectFile(objectPath, transformedContent, options);
     // once written, the object is the up-to-date one. this also replaces the size-estimate of objects that
     // were cached by `add()`.
     if (this.cache.has(hash.toString())) this.cache.set(hash.toString(), object, inflatedSize);
@@ -850,25 +856,71 @@ export default class Repository {
       const ref = object.ref.toString();
       if (!isSnap(ref)) throw new BitError(`invalid object ref: ${JSON.stringify(ref)}`);
     }
-    const options: ChownOptions = {};
-    if (this.scopeJson.groupName) options.gid = await resolveGroupId(this.scopeJson.groupName);
-    await Promise.all(
-      objectList.objects.map(async (object) => {
-        const objPath = path.join(pendingDir, this.hashPath(object.ref));
-        await writeFile(objPath, object.buffer, options);
-      })
+    const chownOptions = await this.getChownOptions();
+    await pMapPool(
+      objectList.objects,
+      (object) => this.writeObjectFile(path.join(pendingDir, this.hashPath(object.ref)), object.buffer, chownOptions),
+      { concurrency: concurrentIOLimit() }
     );
   }
 
   async readObjectsFromPendingDir(pendingDir: PathOsBasedAbsolute) {
     const refs = await this.listRefs(pendingDir);
-    const objects = await Promise.all(
-      refs.map(async (ref) => {
+    const objects = await pMapPool(
+      refs,
+      async (ref) => {
         const buffer = await fs.readFile(path.join(pendingDir, this.hashPath(ref)));
         return { ref, buffer };
-      })
+      },
+      { concurrency: concurrentIOLimit() }
     );
     return new ObjectList(objects);
+  }
+
+  /**
+   * the owner to set on written object files. `null` when the scope has no group (or it can't be resolved), in which
+   * case the owner of an existing file is kept.
+   */
+  private async getChownOptions(): Promise<ObjectChownOptions> {
+    if (!this.scopeJson.groupName) return null;
+    const gid = await resolveGroupId(this.scopeJson.groupName);
+    return gid ? { uid: userInfo().uid, gid } : null;
+  }
+
+  /**
+   * writes the file atomically (tmp file + rename), the same way `writeFile` of legacy.utils does with write-file-atomic,
+   * including keeping the mode (and owner, when no chown is given) of an existing file and ignoring the same chown/chmod
+   * errors. it's called for every object, so it saves the fs calls write-file-atomic and `ensureDir` do on every write
+   * (realpath, stat of the dir, exit handlers). the parent dir is created only when the first write fails with ENOENT.
+   * the tmp file is a dotfile, which `listRefs()` ignores in case it's left behind.
+   */
+  private async writeObjectFile(filePath: string, contents: Buffer, chownOptions: ObjectChownOptions) {
+    const existing = await fs.stat(filePath).catch(() => undefined);
+    const mode = existing?.mode;
+    // process.getuid is undefined on Windows, where there's no owner to keep.
+    const keepOwner =
+      existing && typeof process.getuid === 'function' ? { uid: existing.uid, gid: existing.gid } : null;
+    const chown = chownOptions || keepOwner;
+    objectFileWriteCounter += 1;
+    const tmpPath = path.join(
+      path.dirname(filePath),
+      `.${path.basename(filePath)}.${process.pid}.${objectFileWriteCounter}`
+    );
+    try {
+      try {
+        await fs.writeFile(tmpPath, contents, { mode });
+      } catch (err: any) {
+        if (err.code !== 'ENOENT') throw err;
+        await fs.mkdir(path.dirname(filePath), { recursive: true });
+        await fs.writeFile(tmpPath, contents, { mode });
+      }
+      if (chown) await fs.chown(tmpPath, chown.uid, chown.gid).catch(throwUnlessChownErrOk);
+      if (mode) await fs.chmod(tmpPath, mode).catch(throwUnlessChownErrOk);
+      await fs.rename(tmpPath, filePath);
+    } catch (err) {
+      await fs.remove(tmpPath).catch(() => {});
+      throw err;
+    }
   }
 
   private hashPath(ref: Ref) {
@@ -891,6 +943,16 @@ async function removeFile(filePath: string, propagateDirs = false): Promise<bool
   const { dir } = path.parse(filePath);
   await removeEmptyDir(dir);
   return true;
+}
+
+/**
+ * same as write-file-atomic: a non-root user can't always chown/chmod, and it's not an error.
+ */
+function throwUnlessChownErrOk(err: any) {
+  if (err.code === 'ENOSYS') return;
+  const nonRoot = !process.getuid || process.getuid() !== 0;
+  if (nonRoot && (err.code === 'EINVAL' || err.code === 'EPERM')) return;
+  throw err;
 }
 
 async function resolveGroupId(groupName: string): Promise<number | null | undefined> {

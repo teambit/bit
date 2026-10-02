@@ -50,7 +50,7 @@ type RemotesForPersist = {
  * save objects into the scope.
  */
 export async function saveObjects(scope: Scope, objectList: ObjectList): Promise<ComponentIdList> {
-  const bitObjectList = await objectList.toBitObjects();
+  const { bitObjectList, rawSources } = await objectList.toBitObjectsWithRawSources();
   const objectsNotRequireMerge = bitObjectList.getObjectsNotRequireMerge();
   // components and lanes can't be just added, they need to be carefully merged.
   const { mergedIds, mergedComponentsResults, mergedLanes, mergedLaneHistories } = await mergeObjects(
@@ -68,7 +68,7 @@ export async function saveObjects(scope: Scope, objectList: ObjectList): Promise
     ...mergedLaneHistories,
   ];
   scope.objects.validateObjects(true, allObjects);
-  await scope.objects.writeObjectsToTheFS(allObjects);
+  await scope.objects.writeObjectsToTheFS(allObjects, rawSources);
   logger.debug(
     `export-scope-components.saveObjects, ${allObjects.length} objects were written successfully to the filesystem`
   );
