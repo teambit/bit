@@ -1231,7 +1231,13 @@
         "scope": "teambit.harmony",
         "version": "0.0.1",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/modules/runtimes"
+        "rootDir": "scopes/harmony/modules/runtimes",
+        "config": {
+            "teambit.harmony/envs/core-aspect-env@2.1.1": {},
+            "teambit.envs/envs": {
+                "env": "teambit.harmony/envs/core-aspect-env"
+            }
+        }
     },
     "modules/semver-helper": {
         "name": "modules/semver-helper",
