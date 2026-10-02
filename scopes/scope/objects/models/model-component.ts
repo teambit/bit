@@ -655,13 +655,17 @@ export default class Component extends BitObject {
 
   getTagOfRefIfExists(ref: Ref): string | undefined {
     // the same ref (usually the head) is looked up many times per command, and each scan has to list all the tags.
-    // the last hit is re-checked against the current versions, so it can't go stale when versions change.
-    if (this.lastFoundTag && this.getRef(this.lastFoundTag)?.isEqual(ref)) return this.lastFoundTag;
+    // the last hit is re-checked against the current versions, so it can't go stale when versions change. only hits
+    // in `versions` are remembered, so they keep their precedence over orphaned versions.
+    if (this.lastFoundTag && this.versions[this.lastFoundTag]?.isEqual(ref)) return this.lastFoundTag;
     // search from the newest tag. tags are kept in insertion order and the head is usually the latest one.
     const findIn = (versions: Versions) => findLastKey(versions, (versionRef) => versionRef.isEqual(ref));
-    const tag = findIn(this.versions) || findIn(this.orphanedVersions);
-    if (tag) this.lastFoundTag = tag;
-    return tag;
+    const tag = findIn(this.versions);
+    if (tag) {
+      this.lastFoundTag = tag;
+      return tag;
+    }
+    return findIn(this.orphanedVersions);
   }
 
   getTag(version: string): string | undefined {

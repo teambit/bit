@@ -82,5 +82,13 @@ describe('ModelComponent', () => {
       component.setVersion('0.0.5', ref);
       expect(component.getTagOfRefIfExists(ref)).to.equal('0.0.5');
     });
+    it('should prefer a tag over an orphaned tag of the same ref, even after the orphaned one was found', () => {
+      const component = getModelComponent(getModelComponentFixture());
+      const ref = Ref.from('c'.repeat(40));
+      component.setOrphanedVersion('0.0.7', ref);
+      expect(component.getTagOfRefIfExists(ref)).to.equal('0.0.7');
+      component.setVersion('0.0.8', ref);
+      expect(component.getTagOfRefIfExists(ref)).to.equal('0.0.8');
+    });
   });
 });
