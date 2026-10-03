@@ -57188,7 +57188,6 @@ snapshots:
       '@teambit/legacy.scope-api': file:components/legacy/scope-api(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/scope.modules.find-scope-path': file:components/modules/find-scope-path
       '@teambit/ui-foundation.ui.navigation.react-router-adapter': 6.1.3(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
-      '@teambit/workspace-starter': file:scopes/generator/workspace-starter
       '@teambit/workspace.modules.node-modules-linker': file:scopes/workspace/modules/node-modules-linker(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/workspace.modules.workspace-locator': file:scopes/workspace/modules/workspace-locator
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -57257,7 +57256,6 @@ snapshots:
       '@teambit/legacy.scope-api': file:components/legacy/scope-api(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/scope.modules.find-scope-path': file:components/modules/find-scope-path
       '@teambit/ui-foundation.ui.navigation.react-router-adapter': 6.1.3(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
-      '@teambit/workspace-starter': file:scopes/generator/workspace-starter
       '@teambit/workspace.modules.node-modules-linker': file:scopes/workspace/modules/node-modules-linker(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/workspace.modules.workspace-locator': file:scopes/workspace/modules/workspace-locator
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
