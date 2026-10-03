@@ -27,7 +27,10 @@ component.
 bit pnpm sync
 ```
 
-tracks every project that the `packages` patterns of `pnpm-workspace.yaml` match, and the root.
+tracks every project that the `packages` patterns of `pnpm-workspace.yaml` match, and the root, and
+adds the `teambit.workspace/pnpm-workspace` entry to `workspace.jsonc`, which tells Bit that pnpm
+installs this workspace. `bit status` lists what a sync would change: projects that are not tracked,
+or that left or moved, and `workspace:` references to move to the catalog.
 Run it again whenever projects are added, moved or deleted:
 
 - a tracked project keeps its component id, even after its package is renamed.

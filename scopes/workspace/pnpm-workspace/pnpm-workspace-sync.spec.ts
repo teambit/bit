@@ -17,6 +17,7 @@ import {
   createPnpmVcsCatalogBindingsOnLoad,
   createPnpmVcsImportPlan,
   discoverPnpmProjectManifests,
+  findPnpmWorkspaceDrift,
   pnpmSupportsWorkspaceCatalogs,
   resolvePnpmVcsCatalogBindings,
   sanitizePnpmComponentName,
@@ -80,6 +81,28 @@ describe('bit pnpm sync', function () {
     expect(root.files.map((file) => file.relativePath)).to.not.include('packages/math/index.js');
     const workspaceJsonc = await fs.readFile(path.join(workspaceData.workspacePath, 'workspace.jsonc'), 'utf8');
     expect(workspaceJsonc).to.include('"trackAllFiles": true');
+    // the entry that leaves the install to pnpm
+    expect(workspaceJsonc).to.include('"teambit.workspace/pnpm-workspace": {}');
+    expect(workspace.isPnpmWorkspace()).to.be.true;
+  });
+
+  it('should list what a re-run would change, for "bit status"', async () => {
+    await setupPnpmWorkspace(twoPackages);
+    await syncPnpmWorkspace(workspace, tracker);
+    expect(await findPnpmWorkspaceDrift(workspace)).to.deep.equal([]);
+
+    await fs.remove(path.join(workspaceData.workspacePath, 'packages/app'));
+    await fs.outputJson(path.join(workspaceData.workspacePath, 'packages/extra/package.json'), {
+      name: '@acme/extra',
+      dependencies: { '@acme/math': 'workspace:*' },
+    });
+
+    const appId = entryAt('packages/app')!.id.toStringWithoutVersion();
+    expect(await findPnpmWorkspaceDrift(workspace)).to.deep.equal([
+      `the project of ${appId} at "packages/app" left the pnpm workspace, run "bit pnpm sync" to remove it`,
+      'the pnpm project at "packages/extra" is not tracked, run "bit pnpm sync" to add it',
+      'a project refers to @acme/math by "workspace:", run "bit pnpm sync" to refer to it by "catalog:"',
+    ]);
   });
 
   it('should keep the ids of tracked projects on a re-run, even after a package was renamed', async () => {
@@ -522,7 +545,7 @@ describe('pnpm workspace import plan', () => {
       const workspaceStub = {
         path: workspaceDir,
         consumer: { bitMap: { getWorkspaceRootMap: () => ({ rootDir: '.' }) } },
-        isPnpmWorkspaceRoot: () => true,
+        isPnpmWorkspace: () => true,
       };
       const dependencyResolverStub = {
         getDependenciesFromLegacyComponent: () => ({ findByPkgNameOrCompId: () => undefined }),
@@ -552,7 +575,7 @@ describe('pnpm workspace import plan', () => {
         const workspaceStub = {
           path: workspaceDir,
           consumer: { bitMap: { getWorkspaceRootMap: () => ({ rootDir: '.' }) } },
-          isPnpmWorkspaceRoot: () => true,
+          isPnpmWorkspace: () => true,
         } as any;
         const dependencyResolverStub = {
           getDependenciesFromLegacyComponent: () => ({ findByPkgNameOrCompId: () => undefined }),
@@ -723,7 +746,7 @@ describe('pnpm workspace import plan', () => {
       const workspaceStub = {
         path: workspaceDir,
         consumer: { bitMap: { getWorkspaceRootMap: () => ({ rootDir: '.' }) } },
-        isPnpmWorkspaceRoot: () => true,
+        isPnpmWorkspace: () => true,
       } as any;
       const mathDependency = { type: 'package', version: '0.0.0-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' };
       const stringsDependency = { type: 'package', version: '1.0.0' };

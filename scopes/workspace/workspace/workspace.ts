@@ -1022,15 +1022,15 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
   }
 
   /**
-   * a pnpm workspace adopted by "bit pnpm sync": the workspace root is tracked as a component, and the
-   * pnpm manifest sits next to it. pnpm installs it from the packages' own manifests, so bit neither
-   * installs it nor writes dependencies into the root package.json.
+   * a pnpm workspace adopted by "bit pnpm init" or "bit pnpm sync", which configure the pnpm-workspace aspect
+   * in workspace.jsonc. pnpm installs it from the packages' own manifests, so bit neither installs it nor
+   * writes dependencies into the root package.json. the config says so rather than the files there: a
+   * pnpm-workspace.yaml kept for something else does not stop bit's install, and one removed by mistake does
+   * not bring it back.
    */
-  isPnpmWorkspaceRoot(): boolean {
-    // a root removed, or of another lane, does not make this workspace a pnpm one
-    return (
-      Boolean(this.consumer.bitMap.getWorkspaceRootMap()) && fs.existsSync(path.join(this.path, 'pnpm-workspace.yaml'))
-    );
+  isPnpmWorkspace(): boolean {
+    // by its id, the aspect depends on this one
+    return Boolean(this.getWorkspaceConfig().extensions.findExtension('teambit.workspace/pnpm-workspace'));
   }
 
   /**

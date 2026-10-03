@@ -1,6 +1,8 @@
 import type { CLIMain } from '@teambit/cli';
 import { CLIAspect, MainRuntime } from '@teambit/cli';
 import pMapSeries from 'p-map-series';
+import type { SlotRegistry } from '@teambit/harmony';
+import { Slot } from '@teambit/harmony';
 import type { LaneId } from '@teambit/lane-id';
 import type { IssuesList } from '@teambit/component-issues';
 import { IssuesClasses } from '@teambit/component-issues';
@@ -33,6 +35,12 @@ import type { StatusFormatterOptions } from './status-formatter';
 import { formatStatusOutput } from './status-formatter';
 
 type DivergeDataPerId = { id: ComponentID; divergeData: SnapsDistance };
+/**
+ * issues of the workspace an aspect knows of, shown by "bit status" only. a snap does not check them, see
+ * Workspace.getWorkspaceIssues for the ones that block it.
+ */
+export type WorkspaceIssuesProvider = () => Promise<string[]>;
+type WorkspaceIssuesSlot = SlotRegistry<WorkspaceIssuesProvider>;
 const BEFORE_STATUS = 'fetching status';
 
 export type StatusResult = {
@@ -75,8 +83,13 @@ export class StatusMain {
     private remove: RemoveMain,
     private lanes: LanesMain,
     private logger: Logger,
-    private merging: MergingMain
+    private merging: MergingMain,
+    private workspaceIssuesSlot: WorkspaceIssuesSlot
   ) {}
+
+  registerWorkspaceIssues(provider: WorkspaceIssuesProvider) {
+    this.workspaceIssuesSlot.register(provider);
+  }
 
   async status({
     lanes,
@@ -156,7 +169,9 @@ export class StatusMain {
     const currentLaneId = consumer.getCurrentLaneId();
     const currentLane = await consumer.getCurrentLaneObject();
     const forkedLaneId = currentLane?.forkedFrom;
-    const workspaceIssues = this.workspace.getWorkspaceIssues();
+    const workspaceIssues = this.workspace.getWorkspaceIssues().map((err) => err.message);
+    const aspectsIssues = await pMapSeries(this.workspaceIssuesSlot.values(), (provider) => provider());
+    workspaceIssues.push(...aspectsIssues.flat());
     const localOnly = this.workspace.listLocalOnly();
 
     const sortObjectsWithId = <T>(objectsWithId: Array<T & { id: ComponentID }>): Array<T & { id: ComponentID }> => {
@@ -192,7 +207,7 @@ export class StatusMain {
       unavailableOnMain,
       currentLaneId,
       forkedLaneId,
-      workspaceIssues: workspaceIssues.map((err) => err.message),
+      workspaceIssues,
       localOnly,
       pendingUpdateDependents: ComponentID.sortIds(pendingUpdateDependents),
     };
@@ -259,7 +274,7 @@ export class StatusMain {
     return invalidComponents;
   }
 
-  static slots = [];
+  static slots = [Slot.withType<WorkspaceIssuesProvider>()];
   static dependencies = [
     CLIAspect,
     WorkspaceAspect,
@@ -271,18 +286,22 @@ export class StatusMain {
     MergingAspect,
   ];
   static runtime = MainRuntime;
-  static async provider([cli, workspace, insights, issues, remove, lanes, loggerMain, merging]: [
-    CLIMain,
-    Workspace,
-    InsightsMain,
-    IssuesMain,
-    RemoveMain,
-    LanesMain,
-    LoggerMain,
-    MergingMain,
-  ]) {
+  static async provider(
+    [cli, workspace, insights, issues, remove, lanes, loggerMain, merging]: [
+      CLIMain,
+      Workspace,
+      InsightsMain,
+      IssuesMain,
+      RemoveMain,
+      LanesMain,
+      LoggerMain,
+      MergingMain,
+    ],
+    _config: unknown,
+    [workspaceIssuesSlot]: [WorkspaceIssuesSlot]
+  ) {
     const logger = loggerMain.createLogger(StatusAspect.id);
-    const statusMain = new StatusMain(workspace, issues, insights, remove, lanes, logger, merging);
+    const statusMain = new StatusMain(workspace, issues, insights, remove, lanes, logger, merging, workspaceIssuesSlot);
     cli.register(new StatusCmd(statusMain), new MiniStatusCmd(statusMain));
     return statusMain;
   }

@@ -9,7 +9,7 @@ import type { InstallMain } from './install.main.runtime';
 import { InstallAspect } from './install.aspect';
 
 type InstallWithWorkspace = {
-  workspace: { isPnpmWorkspaceRoot(): boolean };
+  workspace: { isPnpmWorkspace(): boolean };
 };
 
 type InstallWithEnvPackage = {
@@ -50,14 +50,14 @@ describe('InstallMain', function () {
     let originalPackageJson: string;
     before(async () => {
       workspace = (install as unknown as InstallWithWorkspace).workspace;
-      originalCheck = workspace.isPnpmWorkspaceRoot;
-      workspace.isPnpmWorkspaceRoot = () => true;
+      originalCheck = workspace.isPnpmWorkspace;
+      workspace.isPnpmWorkspace = () => true;
       packageJsonPath = path.join(workspaceData.workspacePath, 'package.json');
       originalPackageJson = '{ "name": "my-root", "private": true }';
       await fs.writeFile(packageJsonPath, originalPackageJson);
     });
     after(() => {
-      workspace.isPnpmWorkspaceRoot = originalCheck;
+      workspace.isPnpmWorkspace = originalCheck;
     });
     it('should leave the install of a command that installs as a step of its own to pnpm', async () => {
       const installed = await install.install();

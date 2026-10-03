@@ -84,7 +84,9 @@ class WorkspaceCloner {
     const { versionedRootId, entries } = await this.fetchRoot(rootId);
     await this.writeRoot(versionedRootId);
     const { components, missing } = await this.writeMembers(entries, versionedRootId);
-    const installWithPnpm = this.workspace.isPnpmWorkspaceRoot();
+    // the root brought its workspace.jsonc, which says whether pnpm installs this workspace
+    await this.workspace.triggerOnWorkspaceConfigChange();
+    const installWithPnpm = this.workspace.isPnpmWorkspace();
     const skipInstall = options.skipDependencyInstallation || installWithPnpm;
     const installationError = skipInstall ? undefined : await this.installGracefully();
     return {

@@ -184,7 +184,7 @@ export class InstallMain {
    * @memberof Workspace
    */
   async install(packages?: string[], options?: WorkspaceInstallOptions): Promise<ComponentMap<string>> {
-    if (this.workspace.isPnpmWorkspaceRoot()) return this.leaveInstallToPnpm(packages, options);
+    if (this.workspace.isPnpmWorkspace()) return this.leaveInstallToPnpm(packages, options);
     // Check if external package manager mode is enabled
     const workspaceConfig = this.workspace.getWorkspaceConfig();
     const depResolverExtConfig = workspaceConfig.extensions.findExtension('teambit.dependencies/dependency-resolver');

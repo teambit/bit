@@ -18,6 +18,8 @@ import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
 import type { ScopeMain } from '@teambit/scope';
 import { ScopeAspect } from '@teambit/scope';
+import type { StatusMain } from '@teambit/status';
+import { StatusAspect } from '@teambit/status';
 import type { TrackerMain } from '@teambit/tracker';
 import { TrackerAspect } from '@teambit/tracker';
 import type { Workspace } from '@teambit/workspace';
@@ -37,6 +39,7 @@ import {
   createPnpmVcsCatalogBindingsOnLoad,
   createPnpmVcsImportPlan,
   findPnpmWithoutWorkspaceCatalogs,
+  findPnpmWorkspaceDrift,
   PnpmCmd,
   PNPM_WORKSPACE_CATALOGS_REQUIREMENT,
   PNPM_WORKSPACE_MANIFEST,
@@ -118,7 +121,7 @@ export class PnpmWorkspaceMain {
 
   /** a pnpm workspace lists its packages in its own manifest, not in workspace.jsonc */
   private async onComponentsWritten(components: ConsumerComponent[]) {
-    if (!this.workspace || !this.workspace.isPnpmWorkspaceRoot()) return undefined;
+    if (!this.workspace || !this.workspace.isPnpmWorkspace()) return undefined;
     const plan = await this.getImportPlan(components);
     if (!plan) return { handled: true };
     const workspaceBoundPackageNames = await applyPnpmImportPlan(this.workspace.path, plan);
@@ -145,6 +148,7 @@ export class PnpmWorkspaceMain {
     WorkspaceRootAspect,
     ScopeAspect,
     LoggerAspect,
+    StatusAspect,
   ];
   static runtime = MainRuntime;
   static async provider([
@@ -157,6 +161,7 @@ export class PnpmWorkspaceMain {
     workspaceRoot,
     scope,
     loggerMain,
+    status,
   ]: [
     CLIMain,
     Workspace | undefined,
@@ -167,6 +172,7 @@ export class PnpmWorkspaceMain {
     WorkspaceRootMain,
     ScopeMain,
     LoggerMain,
+    StatusMain,
   ]) {
     const logger = loggerMain.createLogger(PnpmWorkspaceAspect.id);
     const pnpmWorkspace = new PnpmWorkspaceMain(workspace, dependencyResolver, workspaceRoot, logger);
@@ -181,6 +187,9 @@ export class PnpmWorkspaceMain {
     if (workspace) {
       workspace.registerOnComponentLoad(createPnpmVcsCatalogBindingsOnLoad(workspace));
       importer.registerOnComponentsWritten((components) => pnpmWorkspace.onComponentsWritten(components));
+      status.registerWorkspaceIssues(async () =>
+        workspace.isPnpmWorkspace() ? findPnpmWorkspaceDrift(workspace) : []
+      );
     }
     const pnpmSyncCmd = new PnpmSyncCmd(workspace, tracker);
     const pnpmCmd = new PnpmCmd(pnpmSyncCmd);

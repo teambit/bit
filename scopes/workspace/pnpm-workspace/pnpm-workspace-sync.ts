@@ -270,7 +270,7 @@ export async function syncPnpmWorkspace(
   if (options.env && projects.some((project) => project.hasScripts)) await envResolver.getConfigId();
   await applyCatalogMigration(workspace.path, workspaceManifestPath, catalogMigration);
   await editPnpmWorkspaceManifest(workspaceManifestPath, { catalogEntries: leftPackages.bindings });
-  await enableTrackAllFiles(workspace);
+  await configurePnpmWorkspace(workspace);
 
   const removedComponents = removeLeftProjects(workspace, leftProjects);
   const components: PnpmVcsSyncResult['components'] = [];
@@ -560,12 +560,8 @@ function throwForNestedProjects(projects: PnpmProject[]) {
  * name now at an untracked directory, is taken for such a move.
  */
 function throwForMovedProjects(workspace: Workspace, projects: PnpmProject[], leftProjects: LeftProject[]) {
-  const bitMap = workspace.consumer.bitMap;
   leftProjects.forEach(({ componentMap, packageName }) => {
-    if (!componentMap.id.hasVersion() || !packageName) return;
-    const movedTo = projects.find(
-      (project) => project.packageName === packageName && !bitMap.getComponentIdByRootPath(project.rootDir)
-    );
+    const movedTo = findMovedTo(workspace, projects, { componentMap, packageName });
     if (!movedTo) return;
     throw new BitError(
       `unable to sync the pnpm workspace, the project of ${componentMap.id.toStringWithoutVersion()} (${packageName}) moved from "${componentMap.rootDir}" to "${movedTo.rootDir}".
@@ -574,20 +570,87 @@ move the component along, so it keeps its id and history: bit move ${componentMa
   });
 }
 
+/** the untracked project a snapped project that left took its package name to, see throwForMovedProjects */
+function findMovedTo(
+  workspace: Workspace,
+  projects: PnpmProject[],
+  { componentMap, packageName }: LeftProject
+): PnpmProject | undefined {
+  if (!componentMap.id.hasVersion() || !packageName) return undefined;
+  const bitMap = workspace.consumer.bitMap;
+  return projects.find(
+    (project) => project.packageName === packageName && !bitMap.getComponentIdByRootPath(project.rootDir)
+  );
+}
+
+/**
+ * what "bit pnpm sync" would change, for "bit status" to report: projects it would track, components it would
+ * remove, moves it would refuse, and references it would move to the catalog. nothing is written - the sync
+ * rewrites package.json files of the user's and then needs a "pnpm install", so it is the user's to run.
+ */
+export async function findPnpmWorkspaceDrift(workspace: Workspace): Promise<string[]> {
+  const runSync = 'run "bit pnpm sync"';
+  const workspaceManifestPath = path.join(workspace.path, PNPM_WORKSPACE_MANIFEST);
+  try {
+    if (!(await fs.pathExists(workspaceManifestPath))) {
+      return [`${PNPM_WORKSPACE_MANIFEST} is missing, pnpm cannot install the workspace`];
+    }
+    const workspaceManifest = await readPnpmWorkspaceManifest(workspaceManifestPath);
+    const projects = await discoverPnpmProjects(workspace.path, workspaceManifest.packages || []);
+    const bitMap = workspace.consumer.bitMap;
+    const issues: string[] = [];
+    const movedToDirs = new Set<string>();
+    (await findLeftProjects(workspace, projects)).forEach((leftProject) => {
+      const { componentMap } = leftProject;
+      const id = componentMap.id.toStringWithoutVersion();
+      const movedTo = findMovedTo(workspace, projects, leftProject);
+      if (movedTo) {
+        movedToDirs.add(movedTo.rootDir);
+        issues.push(
+          `the project of ${id} moved from "${componentMap.rootDir}" to "${movedTo.rootDir}", run "bit move ${componentMap.rootDir} ${movedTo.rootDir}", then "bit pnpm sync"`
+        );
+        return;
+      }
+      issues.push(`the project of ${id} at "${componentMap.rootDir}" left the pnpm workspace, ${runSync} to remove it`);
+    });
+    projects
+      .filter((project) => !bitMap.getComponentIdByRootPath(project.rootDir) && !movedToDirs.has(project.rootDir))
+      .forEach((project) =>
+        issues.push(`the pnpm project at "${project.rootDir}" is not tracked, ${runSync} to add it`)
+      );
+    try {
+      [...planCatalogMigration(projects, workspaceManifest).bindings.keys()].sort().forEach((packageName) => {
+        issues.push(`a project refers to ${packageName} by "workspace:", ${runSync} to refer to it by "catalog:"`);
+      });
+    } catch (err: any) {
+      // a conflict the sync stops at, the other issues are still worth listing
+      issues.push(`"bit pnpm sync" would fail: ${err.message}`);
+    }
+    return issues;
+  } catch (err: any) {
+    // the sync would fail the same way, e.g. on a nested project, and says why
+    return [`"bit pnpm sync" would fail: ${err.message}`];
+  }
+}
+
 /**
  * package.json, the lockfile and the rest of what bit generates in a regular workspace are the
  * user's own in a pnpm workspace, so they are tracked as source. set on the loaded config as well:
  * the components tracked right after scan with it.
+ *
+ * the aspect's entry marks the workspace a pnpm one, which pnpm installs (see Workspace.isPnpmWorkspace).
+ * workspace.jsonc is a file of the root component, so a clone or an import of the root brings it along.
  */
-async function enableTrackAllFiles(workspace: Workspace) {
+async function configurePnpmWorkspace(workspace: Workspace) {
   const consumer = workspace.consumer;
-  if (consumer.config.trackAllFiles) return;
+  if (consumer.config.trackAllFiles && workspace.isPnpmWorkspace()) return;
   const workspaceConfig = workspace.getWorkspaceConfig();
   workspaceConfig.setExtension(
     WorkspaceAspect.id,
     { trackAllFiles: true },
     { mergeIntoExisting: true, ignoreVersion: true }
   );
+  workspaceConfig.setExtension(PnpmWorkspaceAspect.id, {}, { mergeIntoExisting: true, ignoreVersion: true });
   await workspaceConfig.write({ reasonForChange: 'pnpm sync' });
   consumer.config.trackAllFiles = true;
   consumer.bitMap.trackAllFiles = true;
@@ -1095,7 +1158,7 @@ export async function createPnpmVcsImportPlan(
   dependencyResolver: DependencyResolverMain,
   components: ConsumerComponent[]
 ): Promise<PnpmVcsImportPlan | undefined> {
-  if (!workspace.isPnpmWorkspaceRoot()) return undefined;
+  if (!workspace.isPnpmWorkspace()) return undefined;
   // the root carries the workspace's own package.json, but it is not a package of the workspace
   const pnpmComponents = components.filter(
     (component) => findPackageJsonFile(component) && component.componentMap?.rootDir !== WORKSPACE_ROOT_DIR
