@@ -29,6 +29,22 @@ import Source from './source';
 import { DependenciesGraph } from './dependencies-graph';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
 
+// the same flattened dependencies repeat across versions. in a typical scope, hundreds of thousands of entries are a
+// few thousand unique ids. ids are immutable, so the versions share them instead of each holding its own copies.
+const flattenedIdsCache = new Map<string, ComponentID>();
+const MAX_CACHED_FLATTENED_IDS = 100_000;
+
+function getFlattenedId(dep: string | Record<string, any>): ComponentID {
+  const key = typeof dep === 'string' ? dep : `${dep.scope}/${dep.box}/${dep.name}@${dep.version}`;
+  let id = flattenedIdsCache.get(key);
+  if (!id) {
+    id = typeof dep === 'string' ? ComponentID.fromString(dep) : ComponentID.fromObject(dep as any);
+    if (flattenedIdsCache.size >= MAX_CACHED_FLATTENED_IDS) flattenedIdsCache.clear();
+    flattenedIdsCache.set(key, id);
+  }
+  return id;
+}
+
 export type SourceFileModel = {
   name: string;
   relativePath: PathLinux;
@@ -102,7 +118,9 @@ export default class Version extends BitObject {
   dependencies: Dependencies;
   devDependencies: Dependencies;
   peerDependencies: Dependencies;
-  flattenedDependencies: ComponentIdList;
+  private _flattenedDependencies?: ComponentIdList;
+  // the flattened dependencies of a parsed Version. the list is built on first access, most commands never read it.
+  private flattenedDependencyIds?: ComponentID[];
   dependenciesGraphRef?: Ref;
   _dependenciesGraph?: DependenciesGraph; // caching for the dependencies graph
   flattenedEdgesRef?: Ref; // ref to a BitObject Source file, which is a JSON object containing the flattened edge
@@ -154,7 +172,7 @@ export default class Version extends BitObject {
     this.devDependencies = new Dependencies(props.devDependencies);
     this.peerDependencies = new Dependencies(props.peerDependencies);
     this.docs = props.docs;
-    this.flattenedDependencies = props.flattenedDependencies || new ComponentIdList();
+    if (props.flattenedDependencies) this.flattenedDependencies = props.flattenedDependencies;
     this.flattenedEdges = props.flattenedEdges || [];
     this.flattenedEdgesRef = props.flattenedEdgesRef;
     this.dependenciesGraphRef = props.dependenciesGraphRef;
@@ -304,6 +322,19 @@ export default class Version extends BitObject {
   lastModified(): string {
     if (!this.modified || !this.modified.length) return this.log.date;
     return this.modified[this.modified.length - 1].date;
+  }
+
+  get flattenedDependencies(): ComponentIdList {
+    if (!this._flattenedDependencies) {
+      this._flattenedDependencies = ComponentIdList.fromArray(this.flattenedDependencyIds || []);
+      this.flattenedDependencyIds = undefined;
+    }
+    return this._flattenedDependencies;
+  }
+
+  set flattenedDependencies(flattenedDependencies: ComponentIdList) {
+    this._flattenedDependencies = flattenedDependencies;
+    this.flattenedDependencyIds = undefined;
   }
 
   getAllFlattenedDependencies(): ComponentIdList {
@@ -577,21 +608,6 @@ export default class Version extends BitObject {
       });
     };
 
-    // Accept both string[] and object[] for backward compatibility
-    const parseFlattenedDeps = (deps = []): ComponentID[] => {
-      if (!deps.length) return [];
-      if (typeof deps[0] === 'string') return deps.map((dep) => ComponentID.fromString(dep));
-      return deps.map((dep) => ComponentID.fromObject(dep));
-    };
-
-    const _groupFlattenedDependencies = () => {
-      // support backward compatibility. until v15, there was both flattenedDependencies and
-      // flattenedDevDependencies. since then, these both were grouped to one flattenedDependencies
-      const flattenedDeps = parseFlattenedDeps(flattenedDependencies);
-      const flattenedDevDeps = parseFlattenedDeps(flattenedDevDependencies);
-      return ComponentIdList.fromArray([...flattenedDeps, ...flattenedDevDeps]);
-    };
-
     const parseFile = (file) => {
       return {
         file: Ref.from(file.file),
@@ -622,7 +638,7 @@ export default class Version extends BitObject {
       return new ExtensionDataList();
     };
 
-    return new Version({
+    const version = new Version({
       mainFile,
       files: files.map(parseFile),
       bindingPrefix,
@@ -638,7 +654,6 @@ export default class Version extends BitObject {
       docs,
       dependencies: _getDependencies(dependencies),
       devDependencies: _getDependencies(devDependencies),
-      flattenedDependencies: _groupFlattenedDependencies(),
       // backward compatibility. before introducing `flattenedEdgesRef`, we only had `flattenedEdges`. see getFlattenedEdges() for more info.
       flattenedEdges: flattenedEdgesRef ? [] : flattenedEdges?.map((f) => Version.depEdgeFromObject(f)) || [],
       flattenedEdgesRef: flattenedEdgesRef ? Ref.from(flattenedEdgesRef) : undefined,
@@ -662,6 +677,12 @@ export default class Version extends BitObject {
       hidden,
       batchId,
     });
+    // until v15, there were both flattenedDependencies and flattenedDevDependencies. since then, they're grouped into
+    // flattenedDependencies. an entry is either an id string or an id object.
+    version.flattenedDependencyIds = [...(flattenedDependencies || []), ...(flattenedDevDependencies || [])].map(
+      getFlattenedId
+    );
+    return version;
   }
 
   /**

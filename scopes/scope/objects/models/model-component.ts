@@ -1,4 +1,4 @@
-import { forEach, isEmpty, pickBy, mapValues, isEqual, clone, findLastKey } from 'lodash';
+import { forEach, isEmpty, pickBy, mapValues, isEqual, clone, findLastKey, once } from 'lodash';
 import { Mutex } from 'async-mutex';
 import * as semver from 'semver';
 import { versionParser, isHash, isTag, isSnap, LATEST_VERSION } from '@teambit/component-version';
@@ -1198,8 +1198,9 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
       mainFile: version.mainFile,
       dependencies: this.addDepsInfoFromDepsResolver(version.dependencies, extensions),
       devDependencies: this.addDepsInfoFromDepsResolver(version.devDependencies, extensions),
-      // a new list, but the ids themselves are immutable, no need to clone them
-      flattenedDependencies: ComponentIdList.fromArray(version.flattenedDependencies),
+      // a new list, but the ids themselves are immutable, no need to clone them. built only once read, which most
+      // commands never do. `once` keeps a single list for this component and its clones, as before.
+      loadFlattenedDependencies: once(() => ComponentIdList.fromArray(version.flattenedDependencies)),
       packageDependencies: clone(version.packageDependencies),
       devPackageDependencies: clone(version.devPackageDependencies),
       peerPackageDependencies: clone(version.peerPackageDependencies),
