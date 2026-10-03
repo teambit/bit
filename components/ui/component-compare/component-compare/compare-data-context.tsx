@@ -64,6 +64,41 @@ export const QUERY_COMPARE_COMPONENTS = gql`
   }
 `;
 
+/**
+ * Single-pair fallback for hosts whose schema predates the bulk field — see `fallbackQuery` on
+ * `useBulkPagedQuery`. Same selection set, so the data reaching consumers is identical either way.
+ */
+export const QUERY_COMPARE_COMPONENT = gql`
+  query CompareComponent($baseId: String!, $compareId: String!, $host: String) {
+    getHost(id: $host) {
+      id
+      compareComponent(baseId: $baseId, compareId: $compareId) {
+        id
+        baseId
+        compareId
+        code {
+          status
+          fileName
+          diffOutput
+          baseContent
+          compareContent
+        }
+        aspects {
+          fieldName
+          diffOutput
+        }
+        tests {
+          status
+          fileName
+          diffOutput
+          baseContent
+          compareContent
+        }
+      }
+    }
+  }
+`;
+
 export type CompareDataContextModel = {
   /**
    * look up bulk compare data for a component by its `compareId`.
@@ -105,6 +140,8 @@ export function CompareDataProvider({
     pairs,
     pageSize: COMPARE_PAGE_SIZE,
     host,
+    fallbackQuery: QUERY_COMPARE_COMPONENT,
+    fallbackResultField: 'compareComponent',
   });
 
   const value = useMemo<CompareDataContextModel>(

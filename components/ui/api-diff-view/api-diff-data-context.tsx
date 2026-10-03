@@ -24,6 +24,21 @@ export const QUERY_API_DIFFS = gql`
   }
 `;
 
+/**
+ * Single-pair fallback for hosts whose schema predates the bulk field — see `fallbackQuery` on
+ * `useBulkPagedQuery`. Same selection set, so consumers cannot tell the two paths apart.
+ */
+export const QUERY_API_DIFF = gql`
+  query ApiDiff($baseId: String!, $compareId: String!, $host: String) {
+    getHost(id: $host) {
+      id
+      apiDiff(baseId: $baseId, compareId: $compareId) {
+        ${API_DIFF_RESULT_FIELDS}
+      }
+    }
+  }
+`;
+
 export type ApiDiffDataContextModel = {
   /**
    * look up bulk api-diff data for a component pair by its `compareId`.
@@ -71,6 +86,8 @@ export function ApiDiffDataProvider({
     pairs,
     pageSize: API_DIFF_PAGE_SIZE,
     host,
+    fallbackQuery: QUERY_API_DIFF,
+    fallbackResultField: 'apiDiff',
     // only fetch when the API view is active — otherwise the mounted-but-hidden pane fires the query on load.
     skip: !active,
   });
