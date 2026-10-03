@@ -16,6 +16,7 @@ import { ApplicationAspect } from './application.aspect';
 import type { ApplicationMain } from './application.main.runtime';
 import type { BuildDeployContexts } from './build-application.task';
 import { ARTIFACTS_DIR_NAME, BUILD_TASK } from './build-application.task';
+import { BUILD_PLATFORM_TASK } from './build-platform-application.task';
 import { AppDeployContext } from './app-deploy-context';
 import type { Application } from './application';
 import type { ApplicationDeployment } from './app-instance';
@@ -87,7 +88,7 @@ export class DeployTask implements BuildTask {
 
     if (!capsule || !capsule?.component) return undefined;
 
-    const buildTask = this.getBuildTask(context.previousTasksResults, context.envRuntime.id);
+    const buildTask = this.getBuildTask(context.previousTasksResults, context.envRuntime.id, app);
 
     const metadata = this.getBuildMetadata(buildTask, capsule.component);
     if (!metadata) return undefined;
@@ -139,9 +140,10 @@ export class DeployTask implements BuildTask {
     return componentResults?.metadata?.buildDeployContexts;
   }
 
-  private getBuildTask(taskResults: TaskResults[], runtime: string) {
+  private getBuildTask(taskResults: TaskResults[], runtime: string, app: Application) {
+    const buildTaskName = app.platform === true ? BUILD_PLATFORM_TASK : BUILD_TASK;
     return taskResults.find(
-      ({ task, env }) => task.aspectId === ApplicationAspect.id && task.name === BUILD_TASK && env.id === runtime
+      ({ task, env }) => task.aspectId === ApplicationAspect.id && task.name === buildTaskName && env.id === runtime
     );
   }
 }

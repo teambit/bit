@@ -38,4 +38,13 @@ export interface Application {
    * Type of the application
    */
   applicationType?: string;
+
+  /**
+   * mark this app as a "platform" — an app that bundles other apps' build artifacts (e.g. embeds a
+   * frontend app and one or more backend apps). when true, the default `build_application` task
+   * skips this app and a dedicated `build_platform_application` task runs it instead, after every
+   * env has finished its `build_application`. this ensures the dependency apps' artifacts are on
+   * disk by the time the platform's bundler reads them, regardless of cross-env ordering.
+   */
+  platform?: boolean;
 }
