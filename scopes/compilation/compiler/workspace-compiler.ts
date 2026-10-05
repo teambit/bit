@@ -27,7 +27,6 @@ import { componentIdToPackageName } from '@teambit/pkg.modules.component-package
 import type { UiMain, PreStartOpts } from '@teambit/ui';
 import { readRootComponentsDir } from '@teambit/workspace.root-components';
 import { compact, groupBy, uniq } from 'lodash';
-import type { MultiCompiler } from '@teambit/multi-compiler';
 import type { CompIdGraph } from '@teambit/graph';
 import { CompilerAspect } from './compiler.aspect';
 import { CompilerErrorEvent } from './events';
@@ -99,9 +98,9 @@ export class ComponentCompiler {
       await Promise.all(absoluteDistDirs.map((distDir) => fs.remove(distDir)));
     }
 
-    const compilers: Compiler[] = (this.compilerInstance as MultiCompiler).compilers
-      ? (this.compilerInstance as MultiCompiler).compilers
-      : [this.compilerInstance];
+    // a multi-compiler exposes its inner compilers.
+    const innerCompilers: Compiler[] | undefined = (this.compilerInstance as { compilers?: Compiler[] }).compilers;
+    const compilers: Compiler[] = innerCompilers || [this.compilerInstance];
     const canTranspileFile = compilers.find((c) => c.transpileFile);
     const canTranspileComponent = compilers.find((c) => c.transpileComponent);
 
