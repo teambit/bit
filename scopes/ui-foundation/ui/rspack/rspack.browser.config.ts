@@ -1,6 +1,5 @@
 import { rspack, type Configuration } from '@rspack/core';
 import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
-import { fallbacksProvidePluginConfig } from '@teambit/webpack';
 import path from 'path';
 import { postCssConfig } from './postcss.config';
 import { html } from './html';
@@ -18,6 +17,7 @@ import {
   sourceMapRule,
   fontRule,
   styleRules,
+  processFallback,
 } from './rspack.common';
 
 /*
@@ -164,7 +164,7 @@ export default function createRspackBrowserConfig(
           })
       ),
 
-      new rspack.ProvidePlugin({ process: fallbacksProvidePluginConfig.process }),
+      new rspack.ProvidePlugin({ process: processFallback }),
 
       new rspack.IgnorePlugin({
         resourceRegExp: /^\.\/locale$/,

@@ -8,7 +8,7 @@ import type { Component } from '@teambit/component';
 import type { TrackerMain } from '@teambit/tracker';
 import { TrackerAspect } from '@teambit/tracker';
 import type { PathLinuxRelative, PathOsBasedRelative } from '@teambit/toolbox.path.path';
-import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
+import { pathNormalizeToLinux, incrementPathRecursively } from '@teambit/toolbox.path.path';
 import { isDirEmpty } from '@teambit/toolbox.fs.is-dir-empty';
 import { ComponentID } from '@teambit/component-id';
 import type { Harmony } from '@teambit/harmony';
@@ -17,7 +17,6 @@ import { WorkspaceAspect } from '@teambit/workspace';
 import { AbstractVinyl, DataToPersist } from '@teambit/component.sources';
 import { EnvsAspect } from '@teambit/envs';
 import { NewComponentHelperAspect } from './new-component-helper.aspect';
-import { incrementPathRecursively } from '@teambit/component-writer';
 import { Extensions } from '@teambit/legacy.constants';
 
 const aspectsConfigToIgnore: string[] = [Extensions.pkg, Extensions.renaming];

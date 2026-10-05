@@ -1,6 +1,5 @@
 import type { CompositionProps } from '@teambit/compositions';
 import { Composition } from '@teambit/compositions';
-import type { DeprecationInfo } from '@teambit/deprecation';
 import type { Descriptor } from '@teambit/envs';
 import type { ComponentIdObj } from '@teambit/component-id';
 import { ComponentID } from '@teambit/component-id';
@@ -11,9 +10,20 @@ import { TagMap } from '../../tag-map';
 import type { TagProps } from '../../tag/tag';
 // import { Snap } from '../../snap';
 
+/**
+ * the deprecation data of a component. it lives here and not in the deprecation aspect, so the
+ * component model doesn't depend on that aspect (it depends on component).
+ */
+export type DeprecationInfo = {
+  isDeprecate: boolean;
+  newId?: string;
+  range?: string;
+};
+
 // ADDING MORE PROPERTIES HERE IS NOT ALLOWED!!! IF YOU NEED DATA PLEASE ADD A NEW
 // HOOK FROM YOUR ASPECT!!!
 // TODO: remove all properties from here to their rightful place in their aspects.
+
 export type ComponentModelProps = {
   id: ComponentIdObj;
   description: string;

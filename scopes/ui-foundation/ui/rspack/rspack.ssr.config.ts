@@ -1,5 +1,4 @@
 import { rspack, type Configuration } from '@rspack/core';
-import { fallbacksProvidePluginConfig } from '@teambit/webpack';
 import path from 'path';
 import {
   moduleFileExtensions,
@@ -12,6 +11,7 @@ import {
   sourceMapRule,
   fontRule,
   styleRules,
+  processFallback,
 } from './rspack.common';
 
 export default function createRspackSsrConfig(
@@ -116,7 +116,7 @@ export default function createRspackSsrConfig(
     },
 
     plugins: [
-      new rspack.ProvidePlugin({ process: fallbacksProvidePluginConfig.process }),
+      new rspack.ProvidePlugin({ process: processFallback }),
       new rspack.IgnorePlugin({
         resourceRegExp: /^\.\/locale$/,
         contextRegExp: /moment$/,
