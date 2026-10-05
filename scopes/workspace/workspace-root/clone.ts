@@ -53,7 +53,8 @@ export type CloneResult = {
   installationError?: Error;
   /**
    * the root is a pnpm workspace, which pnpm installs from the packages' own manifests. bit does not
-   * install it, and so does not compile, which would run the build scripts of the cloned source.
+   * install it, and so does not compile, which would run the build scripts of the cloned source. false
+   * when the clone was asked to skip installing, so the user is not told to install.
    */
   installWithPnpm?: boolean;
 };
@@ -96,7 +97,7 @@ class WorkspaceCloner {
       missing,
       laneId,
       installationError,
-      installWithPnpm,
+      installWithPnpm: installWithPnpm && !options.skipDependencyInstallation,
     };
   }
 

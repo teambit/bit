@@ -123,10 +123,10 @@ export class PnpmWorkspaceMain {
   private async onComponentsWritten(components: ConsumerComponent[]) {
     if (!this.workspace || !this.workspace.isPnpmWorkspace()) return undefined;
     const plan = await this.getImportPlan(components);
-    if (!plan) return { handled: true };
+    if (!plan) return undefined;
     const workspaceBoundPackageNames = await applyPnpmImportPlan(this.workspace.path, plan);
     if (workspaceBoundPackageNames.length) await this.warnForPnpmWithoutWorkspaceCatalogs(this.workspace.path);
-    return { handled: true, report: { pnpmVcs: plan } };
+    return { report: { pnpmVcs: plan } };
   }
 
   private async warnForPnpmWithoutWorkspaceCatalogs(workspacePath: string) {

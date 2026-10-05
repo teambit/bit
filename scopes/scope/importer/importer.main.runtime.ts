@@ -41,13 +41,12 @@ import type { ListerMain } from '@teambit/lister';
 import { ListerAspect } from '@teambit/lister';
 
 /**
- * runs once an import wrote components to the workspace. a handler that returns "handled" takes over
- * what the importer does with them in workspace.jsonc - e.g. in a workspace that lists its packages
- * elsewhere. the report it returns is added to the import's result.
+ * runs once an import wrote components to the workspace, e.g. to list their packages in a manifest other
+ * than workspace.jsonc. the report it returns is added to the import's result.
  */
 export type OnComponentsWritten = (
   components: ConsumerComponent[]
-) => Promise<{ handled: boolean; report?: Record<string, unknown> } | undefined>;
+) => Promise<{ report?: Record<string, unknown> } | undefined>;
 
 type OnComponentsWrittenSlot = SlotRegistry<OnComponentsWritten>;
 
@@ -100,7 +99,7 @@ export class ImporterMain {
         if (outcome?.report)
           results.componentsWrittenReport = { ...results.componentsWrittenReport, ...outcome.report };
       });
-      if (!outcomes.some((outcome) => outcome?.handled)) await this.removeFromWorkspaceConfig(writtenComponents);
+      await this.removeFromWorkspaceConfig(writtenComponents);
     }
     await consumer.onDestroy('import');
     return results;
