@@ -21,7 +21,8 @@ import {
 import json from 'comment-json';
 import userHome from 'user-home';
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect } from '@teambit/cli';
 import { ConfigAspect, ConfigRuntime } from '@teambit/config';
 import type { RuntimeDefinition, Extension, Aspect } from '@teambit/harmony';
 import { Harmony } from '@teambit/harmony';

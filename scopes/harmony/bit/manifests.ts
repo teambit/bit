@@ -18,6 +18,7 @@ import { EmptyEnvAspect } from '@teambit/empty-env';
 import { ExpressAspect } from '@teambit/express';
 import { YarnAspect } from '@teambit/yarn';
 import { GeneratorAspect } from '@teambit/generator';
+import { WorkspaceStarterAspect } from '@teambit/workspace-starter';
 import { HarmonyUiAppAspect } from '@teambit/harmony-ui-app';
 import { GraphAspect } from '@teambit/graph';
 import { GraphqlAspect } from '@teambit/graphql';
@@ -149,6 +150,7 @@ export const manifestsMap = {
   [MultiCompilerAspect.id]: MultiCompilerAspect,
   [UIAspect.id]: UIAspect,
   [GeneratorAspect.id]: GeneratorAspect,
+  [WorkspaceStarterAspect.id]: WorkspaceStarterAspect,
   [EnvsAspect.id]: EnvsAspect,
   [EnvAspect.id]: EnvAspect,
   [EmptyEnvAspect.id]: EmptyEnvAspect,

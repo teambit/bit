@@ -1,5 +1,6 @@
 import type { RuntimeDefinition } from '@teambit/harmony';
-import { CLIAspect, type CLIMain, MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect, type CLIMain } from '@teambit/cli';
 import { LoggerAspect, type LoggerMain, type Logger } from '@teambit/logger';
 import { CloudAspect, type CloudMain } from '@teambit/cloud';
 import type { Workspace } from '@teambit/workspace';

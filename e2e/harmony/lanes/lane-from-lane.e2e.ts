@@ -115,6 +115,60 @@ describe('bit lane command', function () {
       });
     });
   });
+  // lane-a is merged into main locally (not exported), then lane-b is created from main. the merged snaps must be
+  // part of lane-b. otherwise, lane-b snaps use lane-a snaps as parents while they are not part of lane-b history.
+  describe('creating a lane from main after merging another lane into main locally', () => {
+    let comp1LaneASnap: string;
+    let comp2LaneASnap: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.command.createLane('lane-a');
+      helper.fixtures.populateComponents(2, undefined, '-v2');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      comp1LaneASnap = helper.command.getHeadOfLane('lane-a', 'comp1');
+      comp2LaneASnap = helper.command.getHeadOfLane('lane-a', 'comp2');
+
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.mergeLane('lane-a', '-x');
+      helper.command.createLane('lane-b');
+    });
+    it('the new lane should include the merged snaps', () => {
+      expect(helper.command.getHeadOfLane('lane-b', 'comp1')).to.equal(comp1LaneASnap);
+      expect(helper.command.getHeadOfLane('lane-b', 'comp2')).to.equal(comp2LaneASnap);
+    });
+  });
+  // the workspace is on lane-b (created from main), but the components are checked out to lane-a snaps.
+  // the deps of comp1 are "inherited" from its lane-a parent, so they must be validated against lane-b.
+  describe('snapping on lane-b when the components are checked out to lane-a snaps', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.command.createLane('lane-a');
+      helper.fixtures.populateComponents(2, undefined, '-v2');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      const comp1LaneASnap = helper.command.getHeadOfLane('lane-a', 'comp1');
+      const comp2LaneASnap = helper.command.getHeadOfLane('lane-a', 'comp2');
+
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.createLane('lane-b');
+      helper.command.checkoutVersion(comp1LaneASnap, 'comp1', '-x');
+      helper.command.checkoutVersion(comp2LaneASnap, 'comp2', '-x');
+      helper.fs.appendFile('comp1/index.js', '\n// modified on lane-b');
+    });
+    it('bit snap should throw because comp1 depends on comp2 snap from lane-a', () => {
+      const cmd = () => helper.command.snapComponentWithoutBuild('comp1');
+      expect(cmd).to.throw('which is not part of current lane "lane-b" history');
+    });
+  });
   describe('creating lane-b from lane-a when lane-a is out-of-date', () => {
     let outOfDateState: string;
     let firstSnap: string;

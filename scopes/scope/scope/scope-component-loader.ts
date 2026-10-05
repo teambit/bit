@@ -20,7 +20,7 @@ export class ScopeComponentLoader {
     private scope: ScopeMain,
     private logger: Logger
   ) {
-    this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
+    this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents(), weak: true });
     this.importedComponentsCache = createInMemoryCache({ maxAge: 1000 * 60 * 30 }); // 30 min
   }
 

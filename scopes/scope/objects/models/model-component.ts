@@ -1,4 +1,4 @@
-import { forEach, isEmpty, pickBy, mapValues, isEqual, clone } from 'lodash';
+import { forEach, isEmpty, pickBy, mapValues, isEqual, clone, findLastKey } from 'lodash';
 import { Mutex } from 'async-mutex';
 import * as semver from 'semver';
 import { versionParser, isHash, isTag, isSnap, LATEST_VERSION } from '@teambit/component-version';
@@ -145,6 +145,7 @@ export default class Component extends BitObject {
   detachedHeads: DetachedHeads;
   private divergeData?: SnapsDistance;
   private _populateVersionHistoryMutex?: Mutex;
+  private lastFoundTag?: string;
   constructor(props: ComponentProps) {
     super();
     if (!props.name) throw new TypeError('Model Component constructor expects to get a name parameter');
@@ -192,7 +193,7 @@ export default class Component extends BitObject {
 
   getRef(version: string): Ref | null {
     if (isTag(version)) {
-      return this.versionsIncludeOrphaned[version];
+      return this.orphanedVersions[version] || this.versions[version];
     }
     if (isHash(version)) {
       return new Ref(version);
@@ -266,9 +267,12 @@ export default class Component extends BitObject {
     return Boolean(this.versions[version]);
   }
 
+  /**
+   * a new object on every access, which is expensive for a component with many versions. to look up a single tag,
+   * use `getRef` / `getTagOfRefIfExists` instead.
+   */
   get versionsIncludeOrphaned(): Versions {
-    // for bit-bin with 266 components, it takes about 1,700ms. don't use lodash.merge, it's much faster
-    // but mutates `this.versions`.
+    // don't use lodash.merge, it's much faster but mutates `this.versions`.
     return { ...this.versions, ...this.orphanedVersions };
   }
 
@@ -649,8 +653,19 @@ export default class Component extends BitObject {
     );
   }
 
-  getTagOfRefIfExists(ref: Ref, allTags = this.versionsIncludeOrphaned): string | undefined {
-    return Object.keys(allTags).find((versionRef) => allTags[versionRef].isEqual(ref));
+  getTagOfRefIfExists(ref: Ref): string | undefined {
+    // the same ref (usually the head) is looked up many times per command, and each scan has to list all the tags.
+    // the last hit is re-checked against the current versions, so it can't go stale when versions change. only hits
+    // in `versions` are remembered, so they keep their precedence over orphaned versions.
+    if (this.lastFoundTag && this.versions[this.lastFoundTag]?.isEqual(ref)) return this.lastFoundTag;
+    // search from the newest tag. tags are kept in insertion order and the head is usually the latest one.
+    const findIn = (versions: Versions) => findLastKey(versions, (versionRef) => versionRef.isEqual(ref));
+    const tag = findIn(this.versions);
+    if (tag) {
+      this.lastFoundTag = tag;
+      return tag;
+    }
+    return findIn(this.orphanedVersions);
   }
 
   getTag(version: string): string | undefined {
@@ -660,10 +675,7 @@ export default class Component extends BitObject {
   }
 
   switchHashesWithTagsIfExist(refs: Ref[]): string[] {
-    // cache the this.versionsIncludeOrphaned results into "allTags", looks strange but it improved
-    // the performance on bit-bin with 188 components during source.merge in 4 seconds.
-    const allTags = this.versionsIncludeOrphaned;
-    return refs.map((ref) => this.getTagOfRefIfExists(ref, allTags) || ref.toString());
+    return refs.map((ref) => this.getTagOfRefIfExists(ref) || ref.toString());
   }
 
   /**
@@ -930,9 +942,7 @@ Error from "semver": ${err.message}`);
     const artifactsRefs: Ref[] = [];
     const artifactsRefsFromExportedVersions: Ref[] = [];
     const locallyChangedVersions = await this.getLocalTagsOrHashes(repo, workspaceId);
-    const locallyChangedHashes = locallyChangedVersions.map((v) =>
-      isTag(v) ? this.versionsIncludeOrphaned[v].hash : v
-    );
+    const locallyChangedHashes = locallyChangedVersions.map((v) => (isTag(v) ? (this.getRef(v) as Ref).hash : v));
     const versionsRefs = versions.map((version) => this.getRef(version) as Ref);
     refsWithoutArtifacts.push(...versionsRefs);
 
@@ -1188,7 +1198,8 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
       mainFile: version.mainFile,
       dependencies: this.addDepsInfoFromDepsResolver(version.dependencies, extensions),
       devDependencies: this.addDepsInfoFromDepsResolver(version.devDependencies, extensions),
-      flattenedDependencies: version.flattenedDependencies.clone(),
+      // a new list, but the ids themselves are immutable, no need to clone them
+      flattenedDependencies: ComponentIdList.fromArray(version.flattenedDependencies),
       packageDependencies: clone(version.packageDependencies),
       devPackageDependencies: clone(version.devPackageDependencies),
       peerPackageDependencies: clone(version.peerPackageDependencies),

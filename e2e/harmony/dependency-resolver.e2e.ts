@@ -154,23 +154,16 @@ describe('dependency-resolver extension', function () {
     });
   });
   (supportNpmCiRegistryTesting ? describe : describe.skip)('saving dependencies package names', function () {
-    let npmCiRegistry: NpmCiRegistry;
     let randomStr;
-    before(async () => {
+    before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
 
-      npmCiRegistry = new NpmCiRegistry(helper);
+      const npmCiRegistry = new NpmCiRegistry(helper);
       randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running
       const name = `react.${randomStr}.{name}`;
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
       helper.fixtures.populateComponents(4);
-
-      await npmCiRegistry.init();
-
       helper.command.tagAllWithoutBuild();
-    });
-    after(() => {
-      npmCiRegistry.destroy();
     });
     it('should save the packageName data into the dependencyResolver extension in the model', () => {
       const comp2 = helper.command.catComponent('comp2@latest');
@@ -273,6 +266,27 @@ describe('dependency-resolver extension', function () {
       });
     });
   });
+  describe('readPackage hooks checksum', function () {
+    let lockfile: any;
+    before(() => {
+      helper = new Helper();
+      helper.scopeHelper.reInitWorkspace();
+      helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('packageManager', 'teambit.dependencies/pnpm');
+      helper.command.install('is-positive@1.0.0');
+      lockfile = yaml.load(fs.readFileSync(path.join(helper.scopes.localPath, 'pnpm-lock.yaml'), 'utf8')) as any;
+    });
+    after(() => {
+      helper.scopeHelper.destroy();
+    });
+    // Without a checksum, pnpm treats the hooks as untracked and resolves every dependency again
+    // on each install that changes anything.
+    it('should record a pnpmfileChecksum for the hooks', () => {
+      expect(lockfile.pnpmfileChecksum).to.be.a('string').and.have.length.above(0);
+    });
+    it('should not mark the hooks as untracked', () => {
+      expect(lockfile).to.not.have.property('untrackedPnpmfileReadPackageHook');
+    });
+  });
   (supportNpmCiRegistryTesting ? describe : describe.skip)('env.jsonc with policy.peer version="+"', () => {
     let npmCiRegistry: NpmCiRegistry;
     before(async () => {
@@ -351,7 +365,7 @@ describe('dependency-resolver extension', function () {
     });
   });
   describe('env.jsonc with policy.peer version="+" and a dependent', () => {
-    before(async () => {
+    before(() => {
       helper = new Helper();
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(2);

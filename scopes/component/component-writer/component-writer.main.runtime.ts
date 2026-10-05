@@ -1,4 +1,5 @@
-import { formatHint, MainRuntime } from '@teambit/cli';
+import { formatHint } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { ComponentID } from '@teambit/component-id';
 import type { CompilerMain } from '@teambit/compiler';
 import { CompilerAspect } from '@teambit/compiler';
@@ -29,6 +30,7 @@ import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import type { Consumer } from '@teambit/legacy.consumer';
 import type { ComponentWriterProps } from './component-writer';
 import ComponentWriter, { isOwnedByNestedComponent } from './component-writer';
+import { incrementPathRecursively } from '@teambit/toolbox.path.path';
 import { ComponentWriterAspect } from './component-writer.aspect';
 
 export interface ManyComponentsWriterParams {
@@ -597,16 +599,6 @@ either use --path to specify a different directory or modify "defaultDirectory" 
 ComponentWriterAspect.addRuntime(ComponentWriterMain);
 
 export default ComponentWriterMain;
-
-export function incrementPathRecursively(p: string, allPaths: string[]) {
-  const incrementPath = (str: string, number: number) => `${str}_${number}`;
-  let num = 1;
-  let newPath = incrementPath(p, num);
-  while (allPaths.includes(newPath)) {
-    newPath = incrementPath(p, (num += 1));
-  }
-  return newPath;
-}
 
 function lstatIfExists(absolutePath: string): fs.Stats | undefined {
   try {

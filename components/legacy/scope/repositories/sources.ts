@@ -164,8 +164,7 @@ export default class SourceRepository {
       logger.debugAndAddBreadCrumb('sources.get', `${msg} is not in the component versions array`);
       return undefined;
     }
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const versionHash = component.versionsIncludeOrphaned[bitId.version];
+    const versionHash = component.getRef(bitId.version as string) as Ref;
     const version = (await this.objects().load(versionHash)) as Version;
     if (!version) {
       logger.trace(`sources.get, ${msg} object was not found on the filesystem`);
@@ -191,7 +190,7 @@ export default class SourceRepository {
       if (isSnap) {
         return this.objects().has(new Ref(ver));
       }
-      const versionHash = component.versionsIncludeOrphaned[ver];
+      const versionHash = component.getRef(ver);
       if (!versionHash) {
         return false;
       }
