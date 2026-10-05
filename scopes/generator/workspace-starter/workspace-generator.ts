@@ -27,10 +27,10 @@ import { HostInitializerMain } from '@teambit/host-initializer';
 import type { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 import { WorkspaceConfigFilesAspect } from '@teambit/workspace-config-files';
 // import { ComponentGenerator } from './component-generator';
-import type { WorkspaceTemplate, WorkspaceContext } from './workspace-template';
+import type { WorkspaceTemplate, WorkspaceContext, BitApi, GeneratorMain } from '@teambit/generator';
+import { GeneratorAspect } from '@teambit/generator';
 import type { NewOptions } from './new.cmd';
-import { GeneratorAspect } from './generator.aspect';
-import type { BitApi, GeneratorMain } from './generator.main.runtime';
+import { WorkspaceStarterAspect } from './workspace-starter.aspect';
 
 export type GenerateResult = { id: ComponentID; dir: string; files: string[]; envId: string };
 
@@ -172,7 +172,7 @@ export class WorkspaceGenerator {
     this.workspace = this.harmony.get<Workspace>(WorkspaceAspect.id);
     this.install = this.harmony.get<InstallMain>(InstallAspect.id);
     const loggerMain = this.harmony.get<LoggerMain>(LoggerAspect.id);
-    this.logger = loggerMain.createLogger(GeneratorAspect.id);
+    this.logger = loggerMain.createLogger(WorkspaceStarterAspect.id);
     this.importer = this.harmony.get<ImporterMain>(ImporterAspect.id);
     this.forking = this.harmony.get<ForkingMain>(ForkingAspect.id);
     this.git = this.harmony.get<GitMain>(GitAspect.id);

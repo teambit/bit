@@ -1886,63 +1886,6 @@
     ]
   },
   {
-    "name": "deprecate <component-pattern>",
-    "alias": "d",
-    "options": [
-      [
-        "",
-        "new-id <string>",
-        "if replaced by another component, enter the new component id. alternatively use \"bit rename --deprecate\" to do this automatically. only valid when the pattern matches a single component"
-      ],
-      [
-        "",
-        "range <string>",
-        "enter a Semver range to deprecate specific versions. see https://www.npmjs.com/package/semver#ranges for the range syntax"
-      ]
-    ],
-    "description": "mark components as deprecated to discourage their use",
-    "extendedDescription": "marks components as deprecated locally, then after snap/tag and export they become deprecated in the remote scope.\nthe pattern can match multiple components, so several can be deprecated at once.\noptionally specify a replacement component (single component only) or deprecate only specific version ranges.\ndeprecated components remain available but display warnings when installed or imported.",
-    "group": "collaborate",
-    "private": false,
-    "remoteOp": true,
-    "skipWorkspace": true,
-    "arguments": [
-      {
-        "name": "component-pattern",
-        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
-      }
-    ],
-    "examples": [
-      {
-        "cmd": "deprecate \"ui/**\"",
-        "description": "deprecate all components whose id starts with \"ui/\""
-      }
-    ]
-  },
-  {
-    "name": "undeprecate <component-pattern>",
-    "alias": "",
-    "options": [],
-    "description": "remove the deprecation status from components",
-    "extendedDescription": "reverses the deprecation of components, removing warnings and allowing normal use again.\nthe pattern can match multiple components, so several can be undeprecated at once.",
-    "group": "collaborate",
-    "private": false,
-    "remoteOp": true,
-    "skipWorkspace": true,
-    "arguments": [
-      {
-        "name": "component-pattern",
-        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
-      }
-    ],
-    "examples": [
-      {
-        "cmd": "undeprecate '$deprecated'",
-        "description": "undeprecate all currently-deprecated components"
-      }
-    ]
-  },
-  {
     "name": "git <sub-command>",
     "alias": "",
     "options": [],
@@ -2128,76 +2071,6 @@
     "extendedDescription": "Lists available templates. Inside a workspace it shows component templates for 'bit create'; outside a workspace it shows workspace templates for 'bit new'.",
     "group": "component-development",
     "private": false
-  },
-  {
-    "name": "new <template-name> <workspace-name>",
-    "alias": "",
-    "options": [
-      [
-        "a",
-        "aspect <aspect-id>",
-        "id of the aspect that registered the template, mandatory for non-core aspects. helpful for core aspects in case of a name collision"
-      ],
-      [
-        "t",
-        "template <env-id>",
-        "id of the dev environment to use for the template. Alias for --env."
-      ],
-      [
-        "",
-        "env <env-id>",
-        "id of the dev environment to use for the template. Alias -t"
-      ],
-      [
-        "d",
-        "default-scope <scope-name>",
-        "set the default scope for the workspace. used in the generated workspace.jsonc"
-      ],
-      [
-        "",
-        "standalone",
-        "DEPRECATED. use --skip-git instead"
-      ],
-      [
-        "s",
-        "skip-git",
-        "skip generation of Git repository in the new workspace"
-      ],
-      [
-        "e",
-        "empty",
-        "skip template's default component creation (relevant for templates that add components by default)"
-      ],
-      [
-        "",
-        "load-from <path-to-template>",
-        "local path to the workspace containing the template. Helpful during the development of a workspace-template"
-      ],
-      [
-        "c",
-        "current-dir",
-        "create the new workspace in current directory (default is to create a new directory, inside the current dir)"
-      ],
-      [
-        "",
-        "agent [type]",
-        "create an AI agent instructions file. options: claude, cursor, copilot (default: AGENTS.md)"
-      ]
-    ],
-    "description": "create a new Bit workspace from a template",
-    "extendedDescription": "initializes a new Bit workspace with pre-configured settings, environments, and optionally starter components.\ntemplates provide different setups for React, Angular, Node.js, or custom development workflows.\ninstalls dependencies and configures the workspace for immediate development.",
-    "group": "workspace-setup",
-    "private": false,
-    "arguments": [
-      {
-        "name": "template-name",
-        "description": "the name of the workspace template (run 'bit templates' outside of a workspace to get a list of available workspace templates)"
-      },
-      {
-        "name": "workspace-name",
-        "description": "the name for the new workspace and workspace directory that will be created"
-      }
-    ]
   },
   {
     "name": "watch",
@@ -5893,6 +5766,63 @@
     ]
   },
   {
+    "name": "deprecate <component-pattern>",
+    "alias": "d",
+    "options": [
+      [
+        "",
+        "new-id <string>",
+        "if replaced by another component, enter the new component id. alternatively use \"bit rename --deprecate\" to do this automatically. only valid when the pattern matches a single component"
+      ],
+      [
+        "",
+        "range <string>",
+        "enter a Semver range to deprecate specific versions. see https://www.npmjs.com/package/semver#ranges for the range syntax"
+      ]
+    ],
+    "description": "mark components as deprecated to discourage their use",
+    "extendedDescription": "marks components as deprecated locally, then after snap/tag and export they become deprecated in the remote scope.\nthe pattern can match multiple components, so several can be deprecated at once.\noptionally specify a replacement component (single component only) or deprecate only specific version ranges.\ndeprecated components remain available but display warnings when installed or imported.",
+    "group": "collaborate",
+    "private": false,
+    "remoteOp": true,
+    "skipWorkspace": true,
+    "arguments": [
+      {
+        "name": "component-pattern",
+        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+      }
+    ],
+    "examples": [
+      {
+        "cmd": "deprecate \"ui/**\"",
+        "description": "deprecate all components whose id starts with \"ui/\""
+      }
+    ]
+  },
+  {
+    "name": "undeprecate <component-pattern>",
+    "alias": "",
+    "options": [],
+    "description": "remove the deprecation status from components",
+    "extendedDescription": "reverses the deprecation of components, removing warnings and allowing normal use again.\nthe pattern can match multiple components, so several can be undeprecated at once.",
+    "group": "collaborate",
+    "private": false,
+    "remoteOp": true,
+    "skipWorkspace": true,
+    "arguments": [
+      {
+        "name": "component-pattern",
+        "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+      }
+    ],
+    "examples": [
+      {
+        "cmd": "undeprecate '$deprecated'",
+        "description": "undeprecate all currently-deprecated components"
+      }
+    ]
+  },
+  {
     "name": "log <id>",
     "alias": "",
     "options": [
@@ -6345,6 +6275,76 @@
       {
         "name": "component-pattern",
         "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+      }
+    ]
+  },
+  {
+    "name": "new <template-name> <workspace-name>",
+    "alias": "",
+    "options": [
+      [
+        "a",
+        "aspect <aspect-id>",
+        "id of the aspect that registered the template, mandatory for non-core aspects. helpful for core aspects in case of a name collision"
+      ],
+      [
+        "t",
+        "template <env-id>",
+        "id of the dev environment to use for the template. Alias for --env."
+      ],
+      [
+        "",
+        "env <env-id>",
+        "id of the dev environment to use for the template. Alias -t"
+      ],
+      [
+        "d",
+        "default-scope <scope-name>",
+        "set the default scope for the workspace. used in the generated workspace.jsonc"
+      ],
+      [
+        "",
+        "standalone",
+        "DEPRECATED. use --skip-git instead"
+      ],
+      [
+        "s",
+        "skip-git",
+        "skip generation of Git repository in the new workspace"
+      ],
+      [
+        "e",
+        "empty",
+        "skip template's default component creation (relevant for templates that add components by default)"
+      ],
+      [
+        "",
+        "load-from <path-to-template>",
+        "local path to the workspace containing the template. Helpful during the development of a workspace-template"
+      ],
+      [
+        "c",
+        "current-dir",
+        "create the new workspace in current directory (default is to create a new directory, inside the current dir)"
+      ],
+      [
+        "",
+        "agent [type]",
+        "create an AI agent instructions file. options: claude, cursor, copilot (default: AGENTS.md)"
+      ]
+    ],
+    "description": "create a new Bit workspace from a template",
+    "extendedDescription": "initializes a new Bit workspace with pre-configured settings, environments, and optionally starter components.\ntemplates provide different setups for React, Angular, Node.js, or custom development workflows.\ninstalls dependencies and configures the workspace for immediate development.",
+    "group": "workspace-setup",
+    "private": false,
+    "arguments": [
+      {
+        "name": "template-name",
+        "description": "the name of the workspace template (run 'bit templates' outside of a workspace to get a list of available workspace templates)"
+      },
+      {
+        "name": "workspace-name",
+        "description": "the name for the new workspace and workspace directory that will be created"
       }
     ]
   },

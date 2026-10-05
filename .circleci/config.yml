@@ -463,7 +463,9 @@ commands:
     steps:
       - restore_cache:
           key: bitsrc-registry10
-      - run: npm view @teambit/bit version > ./version.txt
+      # reuse the version setup_harmony saved the bvm cache under. computing it again here misses the
+      # cache whenever a new bit was published in between, and then the links into ~/.bvm dangle.
+      - run: '[ -f version.txt ] || npm view @teambit/bit version > ./version.txt'
       - restore_cache:
           key: v4-linux-bvm-folder-{{ checksum "version.txt" }}
 
@@ -613,7 +615,9 @@ commands:
           key: bitsrc-ssh-key3
       - restore_cache:
           key: bitsrc-registry10
-      - run: npm view @teambit/bit version > ./version.txt
+      # reuse the version setup_harmony saved the bvm cache under. computing it again here misses the
+      # cache whenever a new bit was published in between, and then the links into ~/.bvm dangle.
+      - run: '[ -f version.txt ] || npm view @teambit/bit version > ./version.txt'
       - restore_cache:
           key: v4-linux-bvm-folder-{{ checksum "version.txt" }}
       # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
@@ -773,6 +777,7 @@ jobs:
             - bit
             - .pnpm-store
             - .bit-cache
+            - version.txt
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
       - store_artifacts:

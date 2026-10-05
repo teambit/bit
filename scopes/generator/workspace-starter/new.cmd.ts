@@ -1,8 +1,8 @@
 import type { Command, CommandOptions } from '@teambit/cli';
 import { formatSuccessSummary } from '@teambit/cli';
 import chalk from 'chalk';
-import type { GeneratorMain } from './generator.main.runtime';
-import type { BaseWorkspaceOptions } from './workspace-template';
+import type { BaseWorkspaceOptions } from '@teambit/generator';
+import type { WorkspaceStarterMain } from './workspace-starter.main.runtime';
 
 /**
  * NewOptions combines foundational properties with additional options for creating a workspace.
@@ -62,7 +62,7 @@ installs dependencies and configures the workspace for immediate development.`;
     ['', 'agent [type]', 'create an AI agent instructions file. options: claude, cursor, copilot (default: AGENTS.md)'],
   ] as CommandOptions;
 
-  constructor(private generator: GeneratorMain) {}
+  constructor(private workspaceStarter: WorkspaceStarterMain) {}
 
   async report(
     [templateName, workspaceName]: [string, string],
@@ -76,7 +76,7 @@ installs dependencies and configures the workspace for immediate development.`;
   ) {
     options.skipGit = options.skipGit ?? options.standalone;
     options.aspect = options.aspect ?? options.env ?? options.template;
-    const { workspacePath, appName } = await this.generator.generateWorkspaceTemplate(
+    const { workspacePath, appName } = await this.workspaceStarter.generateWorkspaceTemplate(
       workspaceName,
       templateName,
       options

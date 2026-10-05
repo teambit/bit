@@ -24,6 +24,7 @@
   "teambit.compilation/multi-compiler",
   "teambit.ui-foundation/ui",
   "teambit.generator/generator",
+  "teambit.generator/workspace-starter",
   "teambit.envs/envs",
   "teambit.harmony/empty-env",
   "teambit.component/graph",

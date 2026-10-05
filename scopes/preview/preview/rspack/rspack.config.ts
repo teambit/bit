@@ -249,7 +249,7 @@ export function createRspackConfig(outputDir: string, entryFile: string, mdxOpti
             },
             {
               // transforms admonition syntax (:::type content → :::type[content]) for mdx v3
-              loader: require.resolve('@teambit/react/dist/webpack/mdx-pre-loader.cjs'),
+              loader: require.resolve('./mdx-pre-loader.cjs'),
             },
           ],
           type: 'javascript/auto',

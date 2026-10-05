@@ -4,12 +4,12 @@ import type { ComponentID } from '@teambit/component-id';
 import type { ObjectList } from './object-list';
 import type { BitObjectList } from './bit-object-list';
 import { getAllVersionsInfo } from '@teambit/component.snap-distance';
-import { Dependency } from '@teambit/graph';
 
 type BitIdNode = Node<ComponentID>;
-type DependencyEdge = Edge<Dependency>;
+type DependencyType = 'runtime' | 'dev' | 'peer';
+type DependencyEdge = Edge<DependencyType>;
 
-export class IdGraph extends Graph<ComponentID, Dependency> {
+export class IdGraph extends Graph<ComponentID, DependencyType> {
   constructor(nodes: BitIdNode[] = [], edges: DependencyEdge[] = []) {
     super(nodes, edges);
   }
@@ -48,17 +48,14 @@ export async function bitObjectListToGraph(bitObjectsList: BitObjectList): Promi
         }
         const { dependencies, devDependencies, peerDependencies, extensionDependencies } =
           versionInfo.version.depsIdsGroupedByType;
-        const addDep = (depId: ComponentID, edge: Dependency) => {
+        const addDep = (depId: ComponentID, edge: DependencyType) => {
           const depIdStr = depId.toString();
           nodes.push(new Node(depIdStr, depId));
           edges.push(new Edge(idStr, depIdStr, edge));
         };
-        const runTime = new Dependency('runtime');
-        const dev = new Dependency('dev');
-        const peer = new Dependency('peer');
-        dependencies.forEach((depId) => addDep(depId, runTime));
-        [...devDependencies, ...extensionDependencies].forEach((depId) => addDep(depId, dev));
-        peerDependencies.forEach((depId) => addDep(depId, peer));
+        dependencies.forEach((depId) => addDep(depId, 'runtime'));
+        [...devDependencies, ...extensionDependencies].forEach((depId) => addDep(depId, 'dev'));
+        peerDependencies.forEach((depId) => addDep(depId, 'peer'));
       });
     })
   );
