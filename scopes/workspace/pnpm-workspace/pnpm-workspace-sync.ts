@@ -681,6 +681,14 @@ async function trackPnpmProject(
         mainFile: path.join(workspace.path, project.rootDir, PACKAGE_JSON),
       })
     ).componentId;
+  if (existingId) {
+    // a project tracked before the sync is described by its package.json as well, see readOwnPackageJsonFields
+    const componentMap = getComponentMap(workspace, existingId);
+    if (componentMap.mainFile !== PACKAGE_JSON) {
+      componentMap.mainFile = PACKAGE_JSON;
+      workspace.consumer.bitMap.markAsChanged();
+    }
+  }
   // a project that left the workspace and came back is no longer removed
   workspace.bitMap.removeComponentConfig(componentId, Extensions.remove, false);
   const syncedEnv = await setProjectEnv(workspace, componentId, project.hasScripts, envResolver);

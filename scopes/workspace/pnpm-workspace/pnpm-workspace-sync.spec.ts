@@ -342,6 +342,7 @@ describe('bit pnpm sync', function () {
     await workspace.consumer.bitMap.loadFilesOf(entryAt('packages/math')!);
 
     expect(entryAt('packages/math')!.files.map((file) => file.relativePath)).to.include('package.json');
+    expect(entryAt('packages/math')!.mainFile).to.equal('package.json');
   });
 
   describe('"workspace:" references between the projects', () => {
