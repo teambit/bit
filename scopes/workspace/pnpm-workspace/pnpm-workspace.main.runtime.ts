@@ -177,12 +177,16 @@ export class PnpmWorkspaceMain {
     const logger = loggerMain.createLogger(PnpmWorkspaceAspect.id);
     const pnpmWorkspace = new PnpmWorkspaceMain(workspace, dependencyResolver, workspaceRoot, logger);
 
-    // a workspace build reads the members as the workspace has them, a build in a scope as their remotes do
-    const treeSource = workspace ? new WorkspaceTreeSource(workspace, workspaceRoot) : new ScopeTreeSource(scope);
-    const tasks = ENV_SCRIPTS.map(
-      (script) => new PnpmScriptTask(PnpmWorkspaceAspect.id, script, treeSource, workspaceRoot, logger)
+    envs.registerEnv(
+      new PnpmWorkspaceEnv(() => {
+        // a workspace build reads the members as the workspace has them, a build in a scope as their remotes do
+        const treeSource = workspace ? new WorkspaceTreeSource(workspace, workspaceRoot) : new ScopeTreeSource(scope);
+        const buildTasks = ENV_SCRIPTS.map(
+          (script) => new PnpmScriptTask(PnpmWorkspaceAspect.id, script, treeSource, workspaceRoot, logger)
+        );
+        return { compiler: new PnpmWorkspaceCompiler(buildTasks[0], logger), buildTasks };
+      })
     );
-    envs.registerEnv(new PnpmWorkspaceEnv(new PnpmWorkspaceCompiler(tasks[0], logger), tasks));
 
     if (workspace) {
       workspace.registerOnComponentLoad(createPnpmVcsCatalogBindingsOnLoad(workspace));
