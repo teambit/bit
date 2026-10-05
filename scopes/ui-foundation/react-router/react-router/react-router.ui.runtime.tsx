@@ -4,7 +4,7 @@ import type { NavigateFunction, Location, NavigationType, RouteProps } from 'rea
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import { UIRuntime } from '@teambit/harmony.modules.runtimes';
-import type { SSR } from '@teambit/ui';
+import type * as SSR from '@teambit/react.rendering.ssr';
 import type { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 
 import { ReactRouterAspect } from './react-router.aspect';
