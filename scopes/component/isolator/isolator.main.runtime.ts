@@ -1543,12 +1543,13 @@ export class IsolatorMain {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       packageJson.addOrUpdateProperty('version', semver.inc(legacyComp.version!, 'prerelease') || '0.0.1-0');
     }
-    const ownPackageJsonFields = readOwnPackageJsonFields(legacyComp);
+    // only a component whose main file is its package.json, as a pnpm project's is, is described by it. a component
+    // of another env that happens to track a package.json keeps the main bit generates for its dist
+    const ownPackageJsonFields =
+      legacyComp.mainFile === 'package.json' ? readOwnPackageJsonFields(legacyComp) : undefined;
     packageJson.mergePackageJsonObject(ownPackageJsonFields);
-    // bit's main is the component's main file. when that is the package.json itself, as a pnpm project's is, and the
-    // package.json names no main of its own, node's default applies
-    const mainIsOwnPackageJson = legacyComp.mainFile === 'package.json';
-    if (mainIsOwnPackageJson && ownPackageJsonFields && !ownPackageJsonFields.main && !ownPackageJsonFields.exports) {
+    // bit's main is the package.json itself then. when the package.json names no main of its own, node's default applies
+    if (ownPackageJsonFields && !ownPackageJsonFields.main && !ownPackageJsonFields.exports) {
       packageJson.removeProperty('main');
     }
     // "as any" is needed when compiling in a capsule: this file gets PackageJsonFile from the

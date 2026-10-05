@@ -809,7 +809,9 @@ async function findLeftProjects(workspace: Workspace, projects: PnpmProject[]): 
     (componentMap) =>
       componentMap.rootDir !== WORKSPACE_ROOT_DIR &&
       !projectRootDirs.has(componentMap.rootDir) &&
-      !componentMap.isRemoved()
+      !componentMap.isRemoved() &&
+      // a component of another lane is not here because of the lane, it did not leave the pnpm workspace
+      componentMap.isAvailableOnCurrentLane
   );
   const leftProjects = await Promise.all(
     candidates.map(async (componentMap): Promise<LeftProject | undefined> => {

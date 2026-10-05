@@ -171,7 +171,13 @@ export class StatusMain {
     const currentLane = await consumer.getCurrentLaneObject();
     const forkedLaneId = currentLane?.forkedFrom;
     const workspaceIssues = this.workspace.getWorkspaceIssues().map((err) => err.message);
-    const aspectsIssues = await pMapSeries(this.workspaceIssuesSlot.values(), (provider) => provider());
+    // an issue source that fails is reported as an issue, the rest of the status is still shown
+    const aspectsIssues = await pMapSeries(this.workspaceIssuesSlot.values(), (provider) =>
+      provider().catch((err: Error) => {
+        this.logger.error('a workspace issues provider failed', err);
+        return [`unable to check the workspace for issues: ${err.message}`];
+      })
+    );
     workspaceIssues.push(...aspectsIssues.flat());
     const localOnly = this.workspace.listLocalOnly();
 
