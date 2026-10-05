@@ -189,7 +189,11 @@ export class PnpmWorkspaceMain {
     );
 
     if (workspace) {
-      workspace.registerOnComponentLoad(createPnpmVcsCatalogBindingsOnLoad(workspace));
+      const catalogBindingsOnLoad = createPnpmVcsCatalogBindingsOnLoad(workspace);
+      // a workspace that keeps a pnpm-workspace.yaml without being a pnpm workspace of bit's does not read it
+      workspace.registerOnComponentLoad(async (component) =>
+        workspace.isPnpmWorkspace() ? catalogBindingsOnLoad(component) : undefined
+      );
       importer.registerOnComponentsWritten((components) => pnpmWorkspace.onComponentsWritten(components));
       status.registerWorkspaceIssues(async () =>
         workspace.isPnpmWorkspace() ? findPnpmWorkspaceDrift(workspace) : []
