@@ -338,7 +338,7 @@ async function planLeftPackageBindings(
       : asRecord(workspaceManifest.catalogs?.[catalogName]);
   const left = new Map<
     string,
-    { catalogName: string; packageName: string; versions: Set<string>; referrers: string[] }
+    { catalogName: string; packageName: string; versions: Set<string>; referrers: string[]; unversioned: string[] }
   >();
   for (const project of projects) {
     for (const { catalogName, packageName } of project.catalogReferences) {
@@ -346,23 +346,30 @@ async function planLeftPackageBindings(
       const specifier = catalogOf(catalogName)[packageName];
       if (typeof specifier !== 'string' || !specifier.startsWith('workspace:')) continue;
       const key = `${catalogName}\0${packageName}`;
-      if (!left.has(key)) left.set(key, { catalogName, packageName, versions: new Set(), referrers: [] });
+      if (!left.has(key)) {
+        left.set(key, { catalogName, packageName, versions: new Set(), referrers: [], unversioned: [] });
+      }
       const entry = left.get(key)!;
       entry.referrers.push(project.rootDir);
       const version = await readSnappedDependencyVersion(workspace, project.rootDir, packageName);
       if (version) entry.versions.add(version);
+      else entry.unversioned.push(project.rootDir);
     }
   }
   const bindings: CatalogEntry[] = [];
   const unbound: string[] = [];
-  left.forEach(({ catalogName, packageName, versions, referrers }) => {
-    if (versions.size === 1) {
+  left.forEach(({ catalogName, packageName, versions, referrers, unversioned }) => {
+    // the catalog entry is shared, so a version binds it only when every project that refers to it has that one
+    if (versions.size === 1 && !unversioned.length) {
       bindings.push({ catalogName, packageName, specifier: [...versions][0] });
       return;
     }
-    const reason = versions.size
-      ? `the projects that refer to it were snapped with different versions of it: ${[...versions].join(', ')}`
-      : `no project referring to it was snapped with it: ${referrers.join(', ')}`;
+    const reason =
+      versions.size > 1
+        ? `the projects that refer to it were snapped with different versions of it: ${[...versions].join(', ')}`
+        : unversioned.length === referrers.length
+          ? `no project referring to it was snapped with it: ${referrers.join(', ')}`
+          : `some projects referring to it were not snapped with it: ${unversioned.join(', ')}`;
     unbound.push(`${packageName} (${reason})`);
   });
   return { bindings, unbound };
@@ -688,7 +695,9 @@ async function trackPnpmProject(
  * move to another env - from the rest of the workspace. "env" is the env sync assigned the project, which a
  * later sync may replace, unlike an env the user configured.
  */
-type PnpmProjectMarker = { pnpmProject: { env?: string } };
+interface PnpmProjectMarker {
+  pnpmProject: { env?: string };
+}
 
 function readProjectMarker(componentMap: ComponentMap): PnpmProjectMarker['pnpmProject'] | undefined {
   const trackerConfig = componentMap.config?.[PnpmWorkspaceAspect.id];
@@ -716,16 +725,22 @@ function setProjectPackageName(workspace: Workspace, componentId: ComponentID, p
 }
 
 async function trackPnpmWorkspaceRoot(workspace: Workspace, tracker: TrackerMain): Promise<ComponentID> {
+  const rootManifestPath = path.join(workspace.path, PACKAGE_JSON);
+  const hasRootManifest = await fs.pathExists(rootManifestPath);
+  const mainFile = hasRootManifest ? PACKAGE_JSON : PNPM_WORKSPACE_MANIFEST;
   const existingId = workspace.consumer.bitMap.getComponentIdByRootPath(WORKSPACE_ROOT_DIR);
   if (existingId) {
     // a root that was removed is the workspace's root again, as a project that came back is
     workspace.bitMap.removeComponentConfig(existingId, Extensions.remove, false);
+    // the root package.json may have been added or deleted since the root was tracked
+    const componentMap = getComponentMap(workspace, existingId);
+    if (componentMap.mainFile !== mainFile) {
+      componentMap.mainFile = mainFile;
+      workspace.consumer.bitMap.markAsChanged();
+    }
     return existingId;
   }
-  const rootManifestPath = path.join(workspace.path, PACKAGE_JSON);
-  const rootManifest = (await fs.pathExists(rootManifestPath))
-    ? await readPackageManifest(rootManifestPath)
-    : undefined;
+  const rootManifest = hasRootManifest ? await readPackageManifest(rootManifestPath) : undefined;
   const rootName = sanitizePnpmComponentName(rootManifest?.name || path.basename(workspace.path));
   // the projects are tracked by now, and one may have the name the root would get
   const takenNames = new Set(workspace.consumer.bitMap.components.map((componentMap) => componentMap.id.fullName));
@@ -735,7 +750,7 @@ async function trackPnpmWorkspaceRoot(workspace: Workspace, tracker: TrackerMain
     rootDir: WORKSPACE_ROOT_DIR,
     root: true,
     componentName,
-    mainFile: path.join(workspace.path, rootManifest ? PACKAGE_JSON : PNPM_WORKSPACE_MANIFEST),
+    mainFile: path.join(workspace.path, mainFile),
   });
   return componentId;
 }

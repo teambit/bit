@@ -486,10 +486,11 @@ export class AutoDetectDeps {
         }
       }
     }
-    for (const [packageName, versionRange] of Object.entries(packages)) {
+    for (const packageName of Object.keys(packages)) {
       const componentId = this.getWorkspaceComponentIdsByPackageName().get(packageName);
       if (!componentId || componentId.isEqualWithoutVersion(this.componentId)) continue;
-      this._pushToDependenciesIfNotExist(new Dependency(componentId, [], packageName, versionRange), {
+      // no range: the detected value is the version in the dependency's own package.json, not the one it is snapped with
+      this._pushToDependenciesIfNotExist(new Dependency(componentId, [], packageName), {
         fileType,
         depDebug: {
           id: componentId,

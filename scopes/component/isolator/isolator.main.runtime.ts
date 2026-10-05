@@ -1543,7 +1543,14 @@ export class IsolatorMain {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       packageJson.addOrUpdateProperty('version', semver.inc(legacyComp.version!, 'prerelease') || '0.0.1-0');
     }
-    packageJson.mergePackageJsonObject(readOwnPackageJsonFields(legacyComp));
+    const ownPackageJsonFields = readOwnPackageJsonFields(legacyComp);
+    packageJson.mergePackageJsonObject(ownPackageJsonFields);
+    // bit's main is the component's main file. when that is the package.json itself, as a pnpm project's is, and the
+    // package.json names no main of its own, node's default applies
+    const mainIsOwnPackageJson = legacyComp.mainFile === 'package.json';
+    if (mainIsOwnPackageJson && ownPackageJsonFields && !ownPackageJsonFields.main && !ownPackageJsonFields.exports) {
+      packageJson.removeProperty('main');
+    }
     // "as any" is needed when compiling in a capsule: this file gets PackageJsonFile from the
     // capsule-source of component.sources, while node-modules-linker's d.ts references the
     // installed dist copy. they're identical, but protected members make TS treat them as

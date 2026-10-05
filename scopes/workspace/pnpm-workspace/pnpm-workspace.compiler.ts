@@ -11,7 +11,9 @@ import { exists, runPnpm } from './pnpm-utils';
 const PNPM_WORKSPACE_MANIFEST = 'pnpm-workspace.yaml';
 const DIST_DIR = 'dist';
 /** the output of the build and the installed packages - not what the build reads from */
-const NON_SOURCE_DIRS = new Set(['node_modules', 'dist', 'build', 'lib', 'coverage', '.bit', '.git']);
+const NON_SOURCE_DIRS = new Set(['node_modules', '.bit', '.git']);
+/** where a package's scripts write, next to its package.json. elsewhere, e.g. src/lib, such a dir is a source */
+const PACKAGE_OUTPUT_DIRS = new Set([...BUILD_OUTPUT_DIRS, 'coverage']);
 
 /**
  * compiles through the packages' own "build" scripts, in the workspace itself.
@@ -30,6 +32,8 @@ export class PnpmWorkspaceCompiler implements Compiler {
   /** by workspace dir, the state of the sources its last successful build ran on */
   private builtSignatures = new Map<string, string>();
   private queue: Promise<unknown> = Promise.resolve();
+  /** by workspace dir, the check queued and not started yet, which a component that asks now can join */
+  private pendingChecks = new Map<string, Promise<void>>();
 
   constructor(
     private buildTask: PnpmScriptTask,
@@ -87,10 +91,17 @@ export class PnpmWorkspaceCompiler implements Compiler {
 
   /**
    * components are compiled concurrently, so the checks are queued: otherwise each would read the
-   * signature before any build was recorded, and start a build of its own.
+   * signature before any build was recorded, and start a build of its own. the components that ask
+   * while a check waits share it, so the sources are not read again for each of them.
    */
   private buildOncePerSourceState(workspaceDir: string): Promise<void> {
-    const run = this.queue.then(() => this.buildIfSourcesChanged(workspaceDir));
+    const pending = this.pendingChecks.get(workspaceDir);
+    if (pending) return pending;
+    const run = this.queue.then(() => {
+      this.pendingChecks.delete(workspaceDir);
+      return this.buildIfSourcesChanged(workspaceDir);
+    });
+    this.pendingChecks.set(workspaceDir, run);
     this.queue = run.catch(() => undefined);
     return run;
   }
@@ -132,15 +143,17 @@ async function isSameDir(dirA: string, dirB: string): Promise<boolean> {
 }
 
 /** the path, size and modification time of every source file, in a stable order */
-async function sourceSignature(workspaceDir: string): Promise<string> {
+export async function sourceSignature(workspaceDir: string): Promise<string> {
   const entries: string[] = [];
   const walk = async (dir: string) => {
     const dirents = await fs.readdir(dir, { withFileTypes: true });
+    const isPackageDir = dirents.some((dirent) => dirent.isFile() && dirent.name === 'package.json');
     await Promise.all(
       dirents.map(async (dirent) => {
         const fullPath = path.join(dir, dirent.name);
         if (dirent.isDirectory()) {
-          if (!NON_SOURCE_DIRS.has(dirent.name)) await walk(fullPath);
+          const isOutputDir = isPackageDir && PACKAGE_OUTPUT_DIRS.has(dirent.name);
+          if (!NON_SOURCE_DIRS.has(dirent.name) && !isOutputDir) await walk(fullPath);
           return;
         }
         if (!dirent.isFile()) return;

@@ -108,7 +108,8 @@ export function componentDependenciesFromGraph(graph: DependenciesGraph): GraphC
   return compact(
     rootEdge.neighbours.map((neighbour): GraphComponentDependency | undefined => {
       if (!neighbour.name) return undefined;
-      const packageAttributes = graph.packages.get(neighbour.id);
+      // the id of a neighbour carries its peers, e.g. "comp1@0.0.1(react@17.0.0)", the package's does not
+      const packageAttributes = graph.packages.get(neighbour.id) ?? graph.packages.get(withoutPeers(neighbour.id));
       const component = packageAttributes?.component;
       const packageVersion = packageAttributes?.version;
       if (!component?.scope || !component.name || !packageVersion) return undefined;
@@ -124,6 +125,18 @@ export function componentDependenciesFromGraph(graph: DependenciesGraph): GraphC
       };
     })
   );
+}
+
+function isPeerDependency(component: ConsumerComponent, packageName: string): boolean {
+  return (
+    packageName in component.peerPackageDependencies ||
+    Boolean(component.peerDependencies.getByPackageName(packageName))
+  );
+}
+
+function withoutPeers(depPath: string): string {
+  const peersIndex = depPath.indexOf('(');
+  return peersIndex === -1 ? depPath : depPath.slice(0, peersIndex);
 }
 
 function removeDependencyByPackageName(dependencies: Dependency[], packageName: string): void {
@@ -400,6 +413,8 @@ export class VersionMaker {
       const graphDependencies = componentDependenciesFromGraph(graph);
       for (const graphDependency of graphDependencies) {
         if (component.id.isEqualWithoutVersion(graphDependency.id)) continue;
+        // the lockfile has no peer lifecycle, a peer stays as detected
+        if (isPeerDependency(component, graphDependency.packageName)) continue;
         const target = graphDependency.lifecycle === 'dev' ? component.devDependencies : component.dependencies;
         const other = graphDependency.lifecycle === 'dev' ? component.dependencies : component.devDependencies;
         removeDependencyByPackageName(other.get(), graphDependency.packageName);

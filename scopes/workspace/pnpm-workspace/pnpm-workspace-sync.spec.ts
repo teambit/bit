@@ -86,6 +86,14 @@ describe('bit pnpm sync', function () {
     expect(workspace.isPnpmWorkspace()).to.be.true;
   });
 
+  it('should move the main file of the root to pnpm-workspace.yaml once the root package.json is deleted', async () => {
+    await setupPnpmWorkspace(twoPackages);
+    await syncPnpmWorkspace(workspace, tracker);
+    await fs.remove(path.join(workspaceData.workspacePath, 'package.json'));
+    await syncPnpmWorkspace(workspace, tracker);
+    expect(entryAt(WORKSPACE_ROOT_DIR)!.mainFile).to.equal('pnpm-workspace.yaml');
+  });
+
   it('should list what a re-run would change, for "bit status"', async () => {
     await setupPnpmWorkspace(twoPackages);
     await syncPnpmWorkspace(workspace, tracker);
@@ -385,8 +393,8 @@ describe('bit pnpm sync', function () {
 
     describe('a package that left the workspace', () => {
       const MATH_SNAP = '173c83ebcf985027aac309e4815a6113099c230d';
-      async function syncAndRemoveMath() {
-        await setupPnpmWorkspace(twoPackages);
+      async function syncAndRemoveMath(extraFiles: Record<string, unknown> = {}) {
+        await setupPnpmWorkspace({ ...twoPackages, ...extraFiles });
         await syncPnpmWorkspace(workspace, tracker);
         await fs.remove(path.join(workspaceData.workspacePath, 'packages/math'));
       }
@@ -420,6 +428,19 @@ describe('bit pnpm sync', function () {
         expect(result.catalogVersionBoundPackages).to.deep.equal([]);
         expect(result.catalogUnboundPackages).to.deep.equal([
           '@acme/math (no project referring to it was snapped with it: packages/app)',
+        ]);
+        expect(parseYaml(readWorkspaceManifest()).catalog).to.deep.equal({ '@acme/math': 'workspace:*' });
+      });
+      it('should leave it to the user when another project referring to it was not snapped with it', async () => {
+        await syncAndRemoveMath({
+          'packages/web/package.json': { name: '@acme/web', dependencies: { '@acme/math': 'workspace:*' } },
+          'packages/web/index.js': 'module.exports = 3;\n',
+        });
+        stubAppSnappedWithMath();
+        const result = await syncPnpmWorkspace(workspace, tracker);
+        expect(result.catalogVersionBoundPackages).to.deep.equal([]);
+        expect(result.catalogUnboundPackages).to.deep.equal([
+          '@acme/math (some projects referring to it were not snapped with it: packages/web)',
         ]);
         expect(parseYaml(readWorkspaceManifest()).catalog).to.deep.equal({ '@acme/math': 'workspace:*' });
       });

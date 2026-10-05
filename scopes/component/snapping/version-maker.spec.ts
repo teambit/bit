@@ -56,6 +56,32 @@ describe('component dependencies from package-manager graph', () => {
     );
   });
 
+  it('finds the package of a dependency that has peers, whose id carries them', () => {
+    const graph = new DependenciesGraph({
+      packages: new Map([
+        ['@acme/button@1.0.0', { component: { scope: 'acme.design', name: 'button' }, version: '1.0.0' } as any],
+      ]),
+      edges: [
+        {
+          id: DependenciesGraph.ROOT_EDGE_ID,
+          neighbours: [
+            {
+              name: '@acme/button',
+              specifier: '^1.0.0',
+              id: '@acme/button@1.0.0(react@18.2.0)',
+              lifecycle: 'runtime',
+            },
+          ],
+        },
+      ],
+    });
+
+    const dependencies = componentDependenciesFromGraph(graph);
+
+    assert.equal(dependencies.length, 1);
+    assert.equal(dependencies[0].id.toString(), 'acme.design/button@1.0.0');
+  });
+
   it('preserves dev and optional metadata', () => {
     const componentPackageId = '@acme/test-utils@1.2.3';
     const graph = new DependenciesGraph({
