@@ -1,10 +1,9 @@
-import fs from 'fs-extra';
 import camelCase from 'camelcase';
-import { resolve } from 'path';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect } from '@teambit/cli';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
 import type { EnvDefinition, EnvsMain } from '@teambit/envs';
@@ -32,8 +31,6 @@ import { compact, uniq } from 'lodash';
 import { isValidScopeName } from '@teambit/legacy-bit-id';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
-import type { DeprecationMain } from '@teambit/deprecation';
-import { DeprecationAspect } from '@teambit/deprecation';
 import type { ComponentTemplate, GetComponentTemplates, PromptResults } from './component-template';
 import { GeneratorAspect } from './generator.aspect';
 import type { CreateOptions } from './create.cmd';
@@ -42,10 +39,7 @@ import { TemplatesCmd } from './templates.cmd';
 import { generatorSchema } from './generator.graphql';
 import type { GenerateResult, InstallOptions, OnComponentCreateFn } from './component-generator';
 import { ComponentGenerator } from './component-generator';
-import { WorkspaceGenerator } from './workspace-generator';
 import type { GetWorkspaceTemplates, WorkspaceTemplate } from './workspace-template';
-import type { NewOptions } from './new.cmd';
-import { NewCmd } from './new.cmd';
 import {
   componentGeneratorTemplate,
   componentGeneratorTemplateStandalone,
@@ -55,7 +49,6 @@ import {
 import { BasicWorkspaceStarter } from './templates/basic';
 import { StarterPlugin } from './starter.plugin';
 import { GeneratorService } from './generator.service';
-import { WorkspacePathExists } from './exceptions/workspace-path-exists';
 import { GLOBAL_SCOPE } from '@teambit/legacy.constants';
 
 export type ComponentTemplateSlot = SlotRegistry<ComponentTemplate[] | GetComponentTemplates>;
@@ -88,8 +81,6 @@ export type BitApi = {
   restoreGlobalsFromSnapshot: (globals: LegacyGlobal[]) => void;
   takeLegacyGlobalsSnapshot: () => LegacyGlobal[];
 };
-
-export type GenerateWorkspaceTemplateResult = { workspacePath: string; appName?: string };
 
 export type GeneratorConfig = {
   /**
@@ -125,12 +116,15 @@ export class GeneratorMain {
     private tracker: TrackerMain,
     private logger: Logger,
     private git: GitMain,
-    private wsConfigFiles: WorkspaceConfigFilesMain,
-    private deprecation: DeprecationMain
+    private wsConfigFiles: WorkspaceConfigFilesMain
   ) {}
 
   setBitApi(bitApi: BitApi) {
     this.bitApi = bitApi;
+  }
+
+  getBitApi(): BitApi {
+    return this.bitApi;
   }
 
   /**
@@ -485,46 +479,6 @@ the reason is that after refactoring, the code will have this invalid class: "cl
     return Promise.resolve(undefined);
   }
 
-  async generateWorkspaceTemplate(
-    workspaceName: string,
-    templateName: string,
-    options: NewOptions & { aspect?: string; currentDir?: boolean }
-  ): Promise<GenerateWorkspaceTemplateResult> {
-    if (this.workspace) {
-      throw new BitError('Error: unable to generate a new workspace inside of an existing workspace');
-    }
-    const workspacePath = options.currentDir ? process.cwd() : resolve(workspaceName);
-    if (!options.currentDir && fs.existsSync(workspacePath)) {
-      throw new WorkspacePathExists(workspacePath);
-    }
-    const { aspect: aspectId, loadFrom } = options;
-    const { workspaceTemplate, aspect } = loadFrom
-      ? await this.findTemplateInOtherWorkspace(loadFrom, templateName, aspectId)
-      : await this.getWorkspaceTemplate(templateName, aspectId);
-
-    if (!workspaceTemplate) throw new BitError(`template "${templateName}" was not found`);
-    const workspaceGenerator = new WorkspaceGenerator(
-      workspaceName,
-      workspacePath,
-      options,
-      workspaceTemplate,
-      this.bitApi,
-      aspect
-    );
-    await this.warnAboutDeprecation(aspect);
-    await workspaceGenerator.generate();
-    return { workspacePath, appName: workspaceTemplate.appName };
-  }
-
-  private async warnAboutDeprecation(aspect?: Component) {
-    if (!aspect) return;
-    const deprecationInfo = await this.deprecation.getDeprecationInfo(aspect);
-    if (deprecationInfo.isDeprecate) {
-      const newStarterMsg = deprecationInfo.newId ? `, use "${deprecationInfo.newId.toString()}" instead` : '';
-      this.logger.consoleWarning(`the starter "${aspect?.id.toString()}" is deprecated${newStarterMsg}`);
-    }
-  }
-
   private async getAllComponentTemplatesDescriptorsFlattened(aspectId?: string): Promise<Array<TemplateDescriptor>> {
     const envTemplates = await this.listEnvComponentTemplateDescriptors([], aspectId);
     if (envTemplates && envTemplates.length) {
@@ -703,7 +657,6 @@ the reason is that after refactoring, the code will have this invalid class: "cl
     LoggerAspect,
     GitAspect,
     WorkspaceConfigFilesAspect,
-    DeprecationAspect,
   ];
 
   static runtime = MainRuntime;
@@ -721,7 +674,6 @@ the reason is that after refactoring, the code will have this invalid class: "cl
       loggerMain,
       git,
       wsConfigFiles,
-      deprecation,
     ]: [
       Workspace,
       CLIMain,
@@ -734,7 +686,6 @@ the reason is that after refactoring, the code will have this invalid class: "cl
       LoggerMain,
       GitMain,
       WorkspaceConfigFilesMain,
-      DeprecationMain,
     ],
     config: GeneratorConfig,
     [componentTemplateSlot, workspaceTemplateSlot, onComponentCreateSlot]: [
@@ -757,8 +708,7 @@ the reason is that after refactoring, the code will have this invalid class: "cl
       tracker,
       logger,
       git,
-      wsConfigFiles,
-      deprecation
+      wsConfigFiles
     );
 
     // Register for workspace config changes to reload generator config
@@ -766,7 +716,7 @@ the reason is that after refactoring, the code will have this invalid class: "cl
       workspace.registerOnWorkspaceConfigChange(generator.onWorkspaceConfigChange.bind(generator));
     }
 
-    const commands = [new CreateCmd(generator), new TemplatesCmd(generator), new NewCmd(generator)];
+    const commands = [new CreateCmd(generator), new TemplatesCmd(generator)];
     cli.register(...commands);
     graphql.register(() => generatorSchema(generator));
     aspectLoader.registerPlugins([new StarterPlugin(generator)]);

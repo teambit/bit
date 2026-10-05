@@ -119,7 +119,7 @@ export class ComponentGenerator {
     const shouldWrite = this.wsConfigFiles.isWorkspaceConfigWriteEnabled();
     if (!shouldWrite) return;
     ids.map((id) => this.workspace.clearComponentCache(id));
-    const { err } = await this.wsConfigFiles.writeConfigFiles({
+    const { err, writeResults } = await this.wsConfigFiles.writeConfigFiles({
       clean: true,
       silent: true,
       dedupe: true,
@@ -129,7 +129,11 @@ export class ComponentGenerator {
       this.logger.consoleFailure(
         `failed generating workspace config files, please run "bit ws-config write" manually. error: ${err.message}`
       );
+      return;
     }
+    const skippedWarning = this.wsConfigFiles.formatSkippedFilesWarning(writeResults?.skippedPaths);
+    // the formatted section already starts with the shared warning symbol, so no need for consoleWarning here.
+    if (skippedWarning) this.logger.console(`\n${skippedWarning}`);
   }
 
   private async deleteGeneratedComponents(dirs: string[]) {

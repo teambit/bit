@@ -1,5 +1,5 @@
 import { BuilderAspect } from '@teambit/builder';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import { WebpackAspect } from '@teambit/webpack';
 import { ScopeAspect } from '@teambit/scope';
 import { ExpressAspect } from '@teambit/express';

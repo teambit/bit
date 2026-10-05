@@ -6,7 +6,7 @@ import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { ExtensionManifest, Harmony, Aspect } from '@teambit/harmony';
 import type { AspectDefinition, AspectLoaderMain, AspectResolver, ResolvedAspect } from '@teambit/aspect-loader';
 import { getAspectDef } from '@teambit/aspect-loader';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import fs from 'fs-extra';
 import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import type { LoadSpan } from '@teambit/harmony.modules.load-trace';

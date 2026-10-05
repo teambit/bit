@@ -2,7 +2,8 @@ import { compact, omit } from 'lodash';
 import { join } from 'path';
 import fs from 'fs-extra';
 import type { CLIMain } from '@teambit/cli';
-import { CLIAspect, MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect } from '@teambit/cli';
 import type { Component, ComponentMain, IComponent, Snap } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
 import type { EnvsMain } from '@teambit/envs';
@@ -18,6 +19,7 @@ import { ScopeAspect } from '@teambit/scope';
 import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
+import { WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import type { BuilderMain } from '@teambit/builder';
 import { BuilderAspect } from '@teambit/builder';
 import { BitError } from '@teambit/bit-error';
@@ -253,6 +255,10 @@ export class PkgMain {
   }
 
   async addMissingLinksFromNodeModulesIssue(component: Component) {
+    // the workspace-root component is the workspace itself, not a package. it is never linked into
+    // node_modules (see NodeModuleLinker.link), so a missing link is not something to fix for it.
+    const componentMap = this.workspace.bitMap.getBitmapEntryIfExist(component.id, { ignoreVersion: true });
+    if (componentMap?.rootDir === WORKSPACE_ROOT_DIR) return undefined;
     const exist = this.isModulePathExists(component);
     if (!exist) {
       component.state.issues.getOrCreate(IssuesClasses.MissingLinksFromNodeModulesToSrc).data = true;

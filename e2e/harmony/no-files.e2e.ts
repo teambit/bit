@@ -1,11 +1,6 @@
-import chai, { expect } from 'chai';
-import chaiFs from 'chai-fs';
-import chaiString from 'chai-string';
+import { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import { IgnoredDirectory, ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';
-
-chai.use(chaiFs);
-chai.use(chaiString);
 
 describe('component files are missing', function () {
   this.timeout(0);
@@ -51,11 +46,9 @@ describe('component files are missing', function () {
       const status = helper.command.statusJson();
       expect(status.invalidComponents).to.have.lengthOf(1);
       expect(status.invalidComponents[0].error.name).to.equal(ComponentNotFoundInPath.name);
-
-      // run the same thing again, to make sure the cache doesn't change the error message
-      const status2 = helper.command.statusJson();
-      expect(status2.invalidComponents).to.have.lengthOf(1);
-      expect(status2.invalidComponents[0].error.name).to.equal(ComponentNotFoundInPath.name);
+      // the "run status twice to prove the cache doesn't change the error" check lives in the
+      // describes above and below. this one reports the same ComponentNotFoundInPath as the first
+      // describe, so repeating the cache check here only buys another "bit status" run.
     });
   });
   describe('component directory is ignored by .gitignore', () => {

@@ -22,6 +22,7 @@ type InstallCmdOptions = {
   noOptional: boolean;
   recurringInstall: boolean;
   lockfileOnly: boolean;
+  restore: boolean;
   allowScripts?: string;
   disallowScripts?: string;
 };
@@ -69,6 +70,11 @@ automatically imports components, compiles components, links to node_modules, an
     ],
     ['', 'no-optional [noOptional]', 'do not install optional dependencies (works with pnpm only)'],
     ['', 'lockfile-only', 'dependencies are not written to node_modules. Only the lockfile is updated'],
+    [
+      '',
+      'restore',
+      "reconstruct the lockfile from each workspace component's stored dependency graph before installing",
+    ],
     [
       '',
       'allow-scripts [pkgNames]',
@@ -142,6 +148,7 @@ automatically imports components, compiles components, links to node_modules, an
       updateAll: options.update,
       recurringInstall: options.recurringInstall,
       lockfileOnly: options.lockfileOnly,
+      restoreFromDependenciesGraph: options.restore,
       showExternalPackageManagerPrompt: true,
       allowScripts: this._parseAllowScriptsFlags(options.allowScripts, options.disallowScripts),
     };

@@ -21,6 +21,7 @@ system <sub-command> - access system-level operations and debugging tools
 Subcommands: log, tail-log
 doctor [diagnosis-name] - diagnose and troubleshoot workspace issues
 clear-cache - remove cached data to resolve stale data issues
+gc - remove objects from the local scope that are no longer needed
 
 Workspace commands
 details - show expanded details from the last command that provided them (e.g. tag, snap)
@@ -52,17 +53,17 @@ Collaboration & Remote
 remote - manage remote scopes for self-hosted environments
 Subcommands: add, del, list
 ripple <sub-command> - manage Ripple CI jobs on bit.cloud
-Subcommands: list, log, errors, retry, stop
-deprecate <component-pattern> - mark components as deprecated to discourage their use
-undeprecate <component-pattern> - remove the deprecation status from components
+Subcommands: list, log, errors, retry, stop, simulate
 import [component-patterns...] - bring components from remote scopes into your workspace
 delete <component-pattern> - soft-delete components from remote scopes
 recover <component-pattern> - restore soft-deleted components
 export [component-patterns...] - upload components to remote scopes
 lane [sub-command] - manage lanes for parallel development
-Subcommands: list, show, create, remove, change-scope, alias, rename, remove-readme, import, remove-comp, fetch, eject, current, history, history-diff, checkout, revert, merge-move
+Subcommands: list, show, create, remove, change-scope, alias, rename, remove-readme, import, remove-comp, fetch, eject, current, history, history-diff, checkout, revert, updates, merge-move
 ci <sub-command> - continuous integration commands for automated workflows
 Subcommands: verify, pr, merge, sync
+deprecate <component-pattern> - mark components as deprecated to discourage their use
+undeprecate <component-pattern> - remove the deprecation status from components
 fork <pattern> [target-component-name] - create a new component by copying from an existing one
 internalize [component-pattern] - mark components as internal to hide them by default in the UI
 
@@ -107,10 +108,6 @@ move <current-component-dir> <new-component-dir> - relocate a component to a dif
 remove <component-pattern> - untrack components from the workspace
 rename <current-name> <new-name> - change a component name
 
-Workspace & Project Setup
-new <template-name> <workspace-name> - create a new Bit workspace from a template
-init [path] - initialize a Bit workspace in an existing project
-
 Testing & Quality
 artifacts <component-pattern> - view and download build artifacts
 test [pattern-or-test-file...] - run component tests
@@ -144,5 +141,10 @@ Subcommands: save, load, list
 log <id> - display component version history
 log-file <filepath> - EXPERIMENTAL. display history of changes to a specific file
 blame <filepath> - EXPERIMENTAL. show line-by-line authorship and modification history
+
+Workspace & Project Setup
+init [path] - initialize a Bit workspace in an existing project
+new <template-name> <workspace-name> - create a new Bit workspace from a template
+clone <component-id> [dir] - create a workspace from its workspace-root component, with every component it lists
 
 IMPORTANT: When you need flags, arguments, or subcommand details, READ the file CLI_REFERENCE.md in this same directory using the Read tool. Only fall back to 'bit <command> --help' if the reference file doesn't cover what you need.

@@ -52,9 +52,6 @@ describe('babel compiler', function () {
         expect(distDir).to.be.a.directory();
         expect(path.join(distDir, 'foo.js')).to.be.a.file();
       });
-      it('should generate source maps on the workspace', () => {
-        expect(path.join(distDir, 'foo.js.map')).to.be.a.file();
-      });
       it('should generate source maps correctly with the paths to the sources', () => {
         const mapFile = path.join(distDir, 'foo.js.map');
         const mapFileParsed = fs.readJSONSync(mapFile);

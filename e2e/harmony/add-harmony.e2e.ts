@@ -1,9 +1,11 @@
 import chai from 'chai';
+import fs from 'fs-extra';
 import path from 'path';
 import { ParentDirTracked, AddingIndividualFiles } from '@teambit/tracker';
 import { Helper } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
 chai.use(chaiFs);
+const { expect } = chai;
 
 describe('add command on Harmony', function () {
   this.timeout(0);
@@ -35,6 +37,574 @@ describe('add command on Harmony', function () {
       const cmd = () => helper.command.addComponent('comp1/foo');
       const error = new ParentDirTracked('comp1', `${helper.scopes.remote}/comp1`, path.normalize('comp1/foo'));
       helper.general.expectToThrow(cmd, error);
+    });
+  });
+  describe('adding the workspace root as a component', () => {
+    let rootFiles: string[];
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.fixtures.populateComponents(1);
+      helper.fs.outputFile('README.md', '# workspace root\n');
+      helper.command.addComponent('.', '-i ws-root --root');
+      // written after tracking. the root file-set is re-scanned, not frozen at add-time.
+      helper.fs.outputFile('LICENSE', 'MIT\n');
+      rootFiles = helper.command.getComponentFiles('ws-root');
+    });
+    it('should save "." as the rootDir', () => {
+      expect(helper.bitMap.read()['ws-root'].rootDir).to.equal('.');
+    });
+    it('should own the root files, including files added after it was tracked', () => {
+      expect(rootFiles).to.include('README.md');
+      expect(rootFiles).to.include('LICENSE');
+    });
+    it('should not claim the files of the component nested inside it', () => {
+      expect(rootFiles.some((file) => file.startsWith('comp1/'))).to.be.false;
+    });
+    it('should track .bitmap, so a git-free workspace can be restored from the scope', () => {
+      expect(rootFiles).to.include('.bitmap');
+    });
+    it('should not claim the local scope directory', () => {
+      expect(rootFiles.some((file) => file.startsWith('.bit/'))).to.be.false;
+    });
+    it('should not be linked into node_modules, unlike a regular component', () => {
+      // it is the workspace itself, not a package. linking it would symlink the workspace into its
+      // own node_modules, .bitmap included.
+      const nodeModules = path.join(helper.scopes.localPath, 'node_modules');
+      expect(path.join(nodeModules, helper.general.getPackageNameByCompName('comp1', false))).to.be.a.path();
+      expect(path.join(nodeModules, helper.general.getPackageNameByCompName('ws-root', false))).to.not.be.a.path();
+    });
+  });
+  describe('workspace-root component and .bitmap', () => {
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+      // deliberately not using populateComponents - it writes an app.js at the workspace root that
+      // requires './comp1'. the root component would then own a file with a relative dependency on
+      // another component, which bit rejects regardless of this feature.
+      helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1";\n');
+      helper.command.addComponent('comp1', { i: 'comp1' });
+      helper.fs.outputFile('README.md', '# workspace root\n');
+      helper.command.addComponent('.', '-i ws-root --root');
+      helper.command.snapAllComponentsWithoutBuild('--ignore-issues "*"');
+    });
+    it('should not be modified right after snapping, despite tracking .bitmap', () => {
+      // .bitmap is rewritten with the new versions on every snap - including the root component's
+      // own entry. without normalizing those fields out, the component would never converge.
+      expect(helper.command.statusJson().modifiedComponents).to.have.lengthOf(0);
+    });
+    it('should not be modified on the quick-status path either, which hashes the files on disk', () => {
+      const quickStatus = JSON.parse(helper.command.runCmd('bit status --quick --json'));
+      expect(quickStatus.modified).to.have.lengthOf(0);
+    });
+    it('should record on the nested component the root it was snapped in, at the version the root got in that snap', () => {
+      // aspect data written by the snap, so it travels with the component to any scope. a ci or a
+      // clone uses it to fetch the root files (lockfile, tsconfig, scripts) this version was made with.
+      const rootHead = helper.command.getHead('ws-root');
+      const rootData = helper.command
+        .catComponent('comp1@latest')
+        .extensions.find((ext) => ext.name === 'teambit.workspace/workspace-root')?.data;
+      expect(rootData).to.deep.equal({ root: `${helper.scopes.remote}/ws-root@${rootHead}` });
+    });
+    it('should mark the root component itself as such in its aspect data', () => {
+      // the marker is what tells a root from the model alone. an import onto "." relies on it.
+      const rootData = helper.command
+        .catComponent('ws-root@latest')
+        .extensions.find((ext) => ext.name === 'teambit.workspace/workspace-root')?.data;
+      expect(rootData).to.deep.equal({ isRoot: true });
+    });
+    describe('adding a new component inside the workspace root', () => {
+      let rootHeadBefore: string;
+      before(() => {
+        rootHeadBefore = helper.command.getHead('ws-root');
+        helper.fs.outputFile('comp2/index.js', 'module.exports = () => "comp2";\n');
+        helper.command.addComponent('comp2', { i: 'comp2' });
+      });
+      it('should let the new component take the files from the root component', () => {
+        const rootFiles = helper.command.getComponentFiles('ws-root');
+        expect(rootFiles.some((file) => file.startsWith('comp2/'))).to.be.false;
+      });
+      it('should mark the root component as modified, because the map changed', () => {
+        expect(helper.command.statusJson().modifiedComponents).to.have.lengthOf(1);
+      });
+      describe('snapping only the new component', () => {
+        let output: string;
+        before(() => {
+          output = helper.command.snapComponentWithoutBuild('comp2', '--ignore-issues "*"');
+        });
+        it('should snap the modified root along, and say so', () => {
+          // otherwise the new component would point at a root version whose map does not list it
+          expect(helper.command.getHead('ws-root')).to.not.equal(rootHeadBefore);
+          expect(output).to.have.string('is the workspace-root component');
+        });
+        it('should record the root on the new component at the version it got in that snap', () => {
+          const rootData = helper.command
+            .catComponent('comp2@latest')
+            .extensions.find((ext) => ext.name === 'teambit.workspace/workspace-root')?.data;
+          const rootHead = helper.command.getHead('ws-root');
+          expect(rootData).to.deep.equal({ root: `${helper.scopes.remote}/ws-root@${rootHead}` });
+        });
+        it('should converge again', () => {
+          expect(helper.command.statusJson().modifiedComponents).to.have.lengthOf(0);
+        });
+      });
+    });
+    describe('tagging a member with an explicit version while the root is modified', () => {
+      before(() => {
+        helper.fs.outputFile('README.md', '# workspace root, edited\n');
+        helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1 v2";\n');
+        helper.command.tagWithoutBuild('comp1', '--ver 1.0.0 --ignore-issues "*"');
+      });
+      it('should give the root a patch bump of its own rather than the version meant for the member', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap.comp1.version).to.equal('1.0.0');
+        expect(bitMap['ws-root'].version).to.equal('0.0.1');
+      });
+    });
+  });
+  describe('removing the workspace-root component', () => {
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1";\n');
+      helper.command.addComponent('comp1', { i: 'comp1' });
+      helper.fs.outputFile('README.md', '# workspace root\n');
+      helper.fs.outputFile('untracked-by-bit.txt', 'not a component file\n');
+      helper.command.addComponent('.', '-i ws-root --root');
+      // a dependency that happens to share the package name the root's id derives
+      const packageName = helper.general.getPackageNameByCompName('ws-root', false);
+      helper.fs.outputFile(path.join('node_modules', packageName, 'index.js'), '');
+      helper.fs.outputFile('package.json', JSON.stringify({ dependencies: { [packageName]: '1.0.0' } }));
+      helper.command.removeComponent('ws-root --silent');
+    });
+    it('should not drop a package.json dependency that shares its derived package name', () => {
+      // the root was never a package, so its removal has nothing to clean from the manifest
+      const packageName = helper.general.getPackageNameByCompName('ws-root', false);
+      const packageJson = fs.readJsonSync(path.join(helper.scopes.localPath, 'package.json'));
+      expect(packageJson.dependencies).to.have.property(packageName);
+    });
+    it('should not delete the workspace', () => {
+      // its rootDir is the workspace itself, so deleting it takes .bitmap, .bit, every nested
+      // component and every unrelated file with it.
+      expect(path.join(helper.scopes.localPath, '.bitmap')).to.be.a.path();
+      expect(path.join(helper.scopes.localPath, 'comp1/index.js')).to.be.a.path();
+      expect(path.join(helper.scopes.localPath, 'untracked-by-bit.txt')).to.be.a.path();
+      expect(path.join(helper.scopes.localPath, 'README.md')).to.be.a.path();
+    });
+    it('should keep the other component tracked', () => {
+      expect(helper.bitMap.read()).to.have.property('comp1');
+    });
+    it('should not delete a dependency that shares its derived package name', () => {
+      // it was never linked, so the node_modules cleanup has nothing of it to remove
+      const packageDir = path.join('node_modules', helper.general.getPackageNameByCompName('ws-root', false));
+      expect(path.join(helper.scopes.localPath, packageDir, 'index.js')).to.be.a.path();
+    });
+  });
+  describe('writing the workspace-root component to the filesystem', () => {
+    let firstSnap: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1";\n');
+      helper.command.addComponent('comp1', { i: 'comp1' });
+      helper.fs.outputFile('README.md', '# workspace root\n');
+      helper.fs.outputFile('docs/guide.md', '# guide\n');
+      helper.command.addComponent('.', '-i ws-root --root');
+      helper.command.snapAllComponentsWithoutBuild('--ignore-issues "*"');
+      firstSnap = helper.command.getHead('ws-root');
+      helper.fs.outputFile('README.md', '# workspace root v2\n');
+      helper.command.snapAllComponentsWithoutBuild('--ignore-issues "*"');
+    });
+    it('should check out an earlier version of it without throwing', () => {
+      // the writer used to hard-fail on a rootDir of "." with a non-BitError.
+      expect(() => helper.command.checkoutVersion(firstSnap, 'ws-root', '-x')).to.not.throw();
+    });
+    describe('importing it into another workspace', () => {
+      before(() => {
+        helper.command.export();
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importComponentWithoutInstall('ws-root');
+      });
+      it('should not write a .bitmap outside the workspace root', () => {
+        // a .bitmap inside a component dir turns that dir into a broken nested workspace - every
+        // bit command run from there operates on it instead of on the real workspace.
+        const bitmaps = helper.fs.getConsumerFiles('.bitmap', true, false);
+        expect(bitmaps).to.deep.equal([path.normalize('.bitmap')]);
+      });
+      it('should not be modified by the map it left behind', () => {
+        expect(helper.command.statusJson().modifiedComponents).to.deep.equal([]);
+      });
+    });
+    describe('importing it onto the root of an empty workspace', () => {
+      // this is how a git-free workspace is restored from its scope: the root component's files
+      // land on top of the freshly initialized workspace, at the root.
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.command.importComponentWithoutInstall('ws-root', '--path .');
+      });
+      it('should write its files at the workspace root', () => {
+        expect(path.join(helper.scopes.localPath, 'README.md')).to.be.a.file().with.content('# workspace root v2\n');
+      });
+      it('should record "." as its rootDir', () => {
+        expect(helper.bitMap.read()['ws-root'].rootDir).to.equal('.');
+      });
+      it('should keep the empty env, which its version carries', () => {
+        expect(helper.env.getComponentEnv('ws-root')).to.equal('teambit.harmony/empty-env');
+      });
+      it('should leave the live .bitmap alone rather than overwrite it with the exported one', () => {
+        // the exported .bitmap lists comp1. the restored workspace must not inherit that entry.
+        expect(helper.bitMap.read()).to.not.have.property('comp1');
+      });
+      it('should refuse to move it out of the workspace root, which would take the workspace with it', () => {
+        // the mover schedules the removal of the directory the component is leaving, and here that
+        // directory is the workspace tree. --override, which waives the other guards, gets this far
+        const cmd = () => helper.command.importComponentWithoutInstall('ws-root', '--path some-dir --override');
+        expect(cmd).to.throw('tracked at the workspace root');
+        expect(path.join(helper.scopes.localPath, 'workspace.jsonc')).to.be.a.file();
+        expect(path.join(helper.scopes.localPath, '.bitmap')).to.be.a.file();
+      });
+      it('should refuse a second import without --override once the user changed a root file, not overwrite it', () => {
+        // a changed root file makes the root a modified component, and the importer refuses modified
+        // components before anything is written. the writer's same-directory shortcut never sees it.
+        helper.workspaceJsonc.addKeyValToWorkspace('name', 'renamed');
+        const cmd = () => helper.command.importComponentWithoutInstall('ws-root', '--path .');
+        expect(cmd).to.throw('due to local changes');
+        expect(helper.workspaceJsonc.read()['teambit.workspace/workspace'].name).to.equal('renamed');
+      });
+      it('should refuse to write through a symlink in the way of a root file even with --override, as it does for --path .', () => {
+        // the destination is "." by the existing .bitmap entry here, not by an explicit --path. a checkout
+        // takes the same route.
+        const outside = path.join(helper.scopes.localPath, '..', `outside-${path.basename(helper.scopes.localPath)}`);
+        fs.mkdirSync(outside);
+        fs.removeSync(path.join(helper.scopes.localPath, 'docs'));
+        fs.symlinkSync(outside, path.join(helper.scopes.localPath, 'docs'));
+        const cmd = () => helper.command.importComponentWithoutInstall('ws-root', '--override');
+        expect(cmd).to.throw('symbolic link');
+        expect(path.join(outside, 'guide.md')).to.not.be.a.path();
+        fs.removeSync(outside);
+      });
+    });
+    describe('importing it onto the root of a fresh workspace that has its own files', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.fs.outputFile('README.md', '# my own readme\n');
+      });
+      it('should refuse to overwrite them without --override, even though nothing is tracked yet', () => {
+        // only the files "bit init" generated are meant to be landed on. the rest of the root is the user's.
+        const cmd = () => helper.command.importComponentWithoutInstall('ws-root', '--path .');
+        expect(cmd).to.throw('use --override');
+        expect(path.join(helper.scopes.localPath, 'README.md')).to.be.a.file().with.content('# my own readme\n');
+      });
+    });
+    describe('importing it onto the root with a directory in the way', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+      });
+      // this is also what proves "--path ." reaches the preflight at all. the symlink rule it enforces
+      // is covered above, where --override fails to waive it, and its variants - a dangling link, a
+      // link at the destination rather than above it - are in component-writer.spec.ts against the
+      // preflight directly. a second command-level symlink case would only repeat that pair.
+      it('should report a directory at a file path as a conflict rather than fail reading it', () => {
+        helper.fs.createNewDirectoryInLocalWorkspace('README.md');
+        const cmd = () => helper.command.importComponentWithoutInstall('ws-root', '--path .');
+        expect(cmd).to.throw('use --override');
+      });
+    });
+    describe('importing it onto the root of a workspace that already tracks components', () => {
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.scopeHelper.addRemoteScope();
+        helper.fs.outputFile('comp2/index.js', 'module.exports = () => "comp2";\n');
+        helper.command.addComponent('comp2', { i: 'comp2' });
+        helper.fs.outputFile('README.md', '# my own readme\n');
+      });
+      it('should refuse to overwrite the root files without --override', () => {
+        // this workspace is not being restored - its root files are the user's own.
+        const cmd = () => helper.command.importComponentWithoutInstall('ws-root', '--path .');
+        expect(cmd).to.throw('use --override');
+        expect(path.join(helper.scopes.localPath, 'README.md')).to.be.a.file().with.content('# my own readme\n');
+      });
+      it('should overwrite them with --override', () => {
+        helper.command.importComponentWithoutInstall('ws-root', '--path . --override');
+        expect(path.join(helper.scopes.localPath, 'README.md')).to.be.a.file().with.content('# workspace root v2\n');
+      });
+    });
+  });
+  describe('a member imported on its own into a workspace that has no root', () => {
+    let rootIdWithVersion: string;
+    let bitMapAfterImport: Record<string, any>;
+    const rootDataOf = (id: string) =>
+      helper.command.catComponent(id).extensions.find((ext) => ext.name === 'teambit.workspace/workspace-root')?.data;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1";\n');
+      helper.command.addComponent('comp1', { i: 'comp1' });
+      helper.fs.outputFile('README.md', '# workspace root\n');
+      helper.command.addComponent('.', '-i ws-root --root');
+      helper.command.tagAllWithoutBuild('--ignore-issues "*"');
+      helper.command.export();
+      rootIdWithVersion = `${helper.scopes.remote}/ws-root@0.0.1`;
+
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponentWithoutInstall('comp1');
+      bitMapAfterImport = helper.bitMap.read();
+    });
+    it('should carry the root it was tagged in as aspect data on the version it imported', () => {
+      expect(rootDataOf('comp1@0.0.1')).to.deep.equal({ root: rootIdWithVersion });
+    });
+    it('should not bring the root component along, the pointer is provenance and not a dependency', () => {
+      expect(bitMapAfterImport).to.not.have.property('ws-root');
+      expect(helper.command.listParsed().map((comp) => comp.id)).to.deep.equal([`${helper.scopes.remote}/comp1`]);
+    });
+    describe('tagging it here, where there is no root to record', () => {
+      before(() => {
+        helper.command.tagAllWithoutBuild('--unmodified');
+      });
+      it('should drop the root of the workspace it came from, not carry it into the new version', () => {
+        // a version naming a root it was never made in would send a consumer after the wrong root
+        // files. aspect data is recomputed per tag rather than inherited from the model, so the
+        // pointer does not survive - the entry itself does, carried by its (empty) config.
+        expect(rootDataOf('comp1@0.0.2')?.root).to.be.undefined;
+      });
+      it('should leave the version it was imported at untouched', () => {
+        expect(rootDataOf('comp1@0.0.1')).to.deep.equal({ root: rootIdWithVersion });
+      });
+    });
+  });
+  describe('env of the workspace-root component', () => {
+    // one status per workspace state, the assertions read from it
+    let status: Record<string, any>;
+    const issuesOf = (name: string): string[] => {
+      const comp = status.componentsWithIssues.find((c) => c.id.includes(name));
+      return comp ? comp.issues.map((issue) => issue.type) : [];
+    };
+    before(() => {
+      helper.scopeHelper.reInitWorkspace();
+      helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1";\n');
+      helper.command.addComponent('comp1', { i: 'comp1' });
+      helper.fs.outputFile('README.md', '# workspace root\n');
+      helper.command.addComponent('.', '-i ws-root --root');
+      status = helper.command.statusJson();
+    });
+    it('should be tracked with the empty env, not the regular default env', () => {
+      // it is a bag of the workspace's own config files - nothing compiles it, tests it, or
+      // imports it as a package. the regular default env would give it a toolchain it can't use.
+      expect(helper.env.getComponentEnv('ws-root')).to.equal('teambit.harmony/empty-env');
+    });
+    it('should record that env in .bitmap as explicit config', () => {
+      // explicit, so every path that resolves an env or a dependency policy sees the same answer
+      expect(helper.bitMap.read()['ws-root'].config['teambit.envs/envs'].env).to.equal('teambit.harmony/empty-env');
+    });
+    it('should get no dependency policy from an env, unlike a regular component', () => {
+      const envPolicyOf = (name: string): string[] =>
+        helper.command
+          .showAspectConfig(name, 'teambit.dependencies/dependency-resolver')
+          .data.policy.filter((entry) => entry.source === 'env')
+          .map((entry) => entry.dependencyId);
+      expect(envPolicyOf('comp1')).to.include('@types/node');
+      expect(envPolicyOf('ws-root')).to.deep.equal([]);
+    });
+    it('should leave the env of a regular component alone', () => {
+      expect(helper.env.getComponentEnv('comp1')).to.equal('teambit.harmony/node');
+    });
+    it('should not report compiler-derived issues, while a regular component still does', () => {
+      // the empty env has no compiler, so "missing dists" can never apply to the root component.
+      expect(issuesOf('ws-root')).to.not.include('MissingDists');
+      expect(issuesOf('comp1')).to.include('MissingDists');
+    });
+    it('should not report missing links from node_modules, it is never linked there', () => {
+      // "run bit link" is the suggested fix for that issue, and it would not link the root either
+      expect(issuesOf('ws-root')).to.not.include('MissingLinksFromNodeModulesToSrc');
+    });
+    it('should not report a duplicate component-and-package issue for the root, it is not a package', () => {
+      // the default remote scope of the e2e has no owner prefix, so the package name has none either
+      const wouldBePackageName = helper.general.getPackageNameByCompName('ws-root', false);
+      helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { [wouldBePackageName]: '1.0.0' } });
+      status = helper.command.statusJson();
+      expect(issuesOf('ws-root')).to.not.include('DuplicateComponentAndPackage');
+    });
+    describe('when a root file has a relative import into a component and requires a missing package', () => {
+      before(() => {
+        helper.fs.outputFile('app.js', "require('./comp1');\nrequire('some-package-that-is-not-installed');\n");
+        status = helper.command.statusJson();
+      });
+      it('should report no issue, the root files are not parsed for dependencies', () => {
+        // the root is the workspace itself: config files and repo scripts that may require anything.
+        // nothing installs, links or builds it, so nothing would consume its dependency list either.
+        expect(issuesOf('ws-root')).to.deep.equal([]);
+      });
+      it('should snap with no dependencies', () => {
+        helper.command.snapComponentWithoutBuild('ws-root');
+        const versionObject = helper.command.catComponent('ws-root@latest');
+        expect(versionObject.dependencies).to.deep.equal([]);
+        expect(versionObject.packageDependencies).to.deep.equal({});
+      });
+    });
+  });
+  describe('trackAllFiles: tracking the files bit treats as generated', () => {
+    // a workspace adopted from an existing monorepo owns its package.json and tsconfig.json files. bit
+    // normally drops them as generated, and a workspace restored from the scope can then be neither
+    // installed nor built.
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.workspaceJsonc.addKeyValToWorkspace('trackAllFiles', true);
+      helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1";\n');
+      helper.fs.outputFile('comp1/package.json', '{ "name": "comp1", "version": "0.0.1" }\n');
+      helper.fs.outputFile('comp1/tsconfig.json', '{}\n');
+      helper.command.addComponent('comp1', { i: 'comp1' });
+      helper.fs.outputFile('package.json', '{ "name": "monorepo", "private": true }\n');
+      helper.fs.outputFile('README.md', '# workspace root\n');
+      helper.command.addComponent('.', '-i ws-root --root');
+    });
+    describe('cloning the workspace from its root component', () => {
+      // bit clone runs outside a workspace and needs no bit init. the remote is registered globally, as
+      // there is no workspace to register it in yet, and the clone lands in the emptied dir.
+      let output: string;
+      before(() => {
+        helper.command.snapAllComponentsWithoutBuild('--ignore-issues "*"');
+        helper.command.export();
+        helper.scopeHelper.cleanWorkspace();
+        helper.scopeHelper.addRemoteScope(undefined, undefined, true);
+        output = helper.command.runCmd(`bit clone ${helper.scopes.remote}/ws-root . -x`);
+      });
+      after(() => {
+        helper.scopeHelper.removeRemoteScope(undefined, true);
+      });
+      it('should report the root version and the number of components', () => {
+        expect(output).to.have.string(`cloned ${helper.scopes.remote}/ws-root@`);
+        expect(output).to.have.string('with 1 component');
+      });
+      it('should write the root files, the manifests included, so the workspace can be installed and built', () => {
+        expect(path.join(helper.scopes.localPath, 'package.json'))
+          .to.be.a.file()
+          .with.content('{ "name": "monorepo", "private": true }\n');
+        expect(path.join(helper.scopes.localPath, 'README.md')).to.be.a.file().with.content('# workspace root\n');
+      });
+      it('should take the workspace.jsonc of the root over the one the init generates', () => {
+        expect(helper.workspaceJsonc.read()['teambit.workspace/workspace'].trackAllFiles).to.be.true;
+      });
+      it('should write every component the root lists into the directory it records', () => {
+        expect(helper.bitMap.read().comp1.rootDir).to.equal('comp1');
+        expect(path.join(helper.scopes.localPath, 'comp1/package.json')).to.be.a.file();
+        expect(path.join(helper.scopes.localPath, 'comp1/tsconfig.json')).to.be.a.file();
+      });
+      it('should come out clean, the workspace it reproduces is the one the root was versioned from', () => {
+        // the versioned map lists the members by their default scope, the export having set the scopes
+        // in .bitmap only after the root was snapped, and the clone writes them by their scope. one is
+        // the other before the export and after it, which is what the versioned map is normalized on.
+        const status = helper.command.statusJson();
+        expect(status.modifiedComponents).to.have.lengthOf(0);
+        expect(status.newComponents).to.have.lengthOf(0);
+      });
+      it('should refuse a component that is not a workspace-root component, leaving no directory behind', () => {
+        const clonePath = path.join(helper.scopes.e2eDir, 'not-a-root');
+        const cmd = () =>
+          helper.command.runCmd(`bit clone ${helper.scopes.remote}/comp1 ${clonePath} -x`, helper.scopes.e2eDir);
+        expect(cmd).to.throw('not a workspace-root component');
+        expect(clonePath).to.not.be.a.path();
+      });
+      it('should refuse a component the remote does not have, pointing at the export', () => {
+        // the importer reports it as missing rather than throwing, e.g. a root tagged but never exported
+        const clonePath = path.join(helper.scopes.e2eDir, 'never-exported');
+        const cmd = () =>
+          helper.command.runCmd(
+            `bit clone ${helper.scopes.remote}/never-exported ${clonePath} -x`,
+            helper.scopes.e2eDir
+          );
+        expect(cmd).to.throw(`the remote scope "${helper.scopes.remote}" does not have`);
+        expect(clonePath).to.not.be.a.path();
+      });
+    });
+  });
+  describe('cloning a workspace as it is on a lane', () => {
+    let comp1MainHead: string;
+    let comp2MainHead: string;
+    let comp1LaneHead: string;
+    let rootLaneHead: string;
+    let rootMainHead: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1";\n');
+      helper.fs.outputFile('comp2/index.js', 'module.exports = () => "comp2";\n');
+      helper.fs.outputFile('README.md', '# on main\n');
+      helper.command.addComponent('comp1', { i: 'comp1' });
+      helper.command.addComponent('comp2', { i: 'comp2' });
+      helper.command.addComponent('.', '-i ws-root --root');
+      helper.command.snapAllComponentsWithoutBuild('--ignore-issues "*"');
+      helper.command.export();
+      comp1MainHead = helper.command.getHead('comp1');
+      comp2MainHead = helper.command.getHead('comp2');
+      helper.command.createLane('dev');
+      // comp1 and a file of the root itself change on the lane, so both get a head there. comp2 stays
+      // as it is on main.
+      helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1 v2";\n');
+      helper.fs.outputFile('README.md', '# on the lane\n');
+      helper.command.snapAllComponentsWithoutBuild('--ignore-issues "*"');
+      helper.command.export();
+      comp1LaneHead = helper.command.getHeadOfLane('dev', 'comp1');
+      rootLaneHead = helper.command.getHeadOfLane('dev', 'ws-root');
+      // main moves on after the lane branched off it, so the root version pinned further down is not
+      // an ancestor of the lane head - it is on main and nowhere in the lane's history.
+      helper.command.switchLocalLane('main');
+      helper.fs.outputFile('README.md', '# on main again\n');
+      helper.command.snapAllComponentsWithoutBuild('--ignore-issues "*"');
+      helper.command.export();
+      rootMainHead = helper.command.getHead('ws-root');
+      helper.scopeHelper.cleanWorkspace();
+      helper.scopeHelper.addRemoteScope(undefined, undefined, true);
+      helper.command.runCmd(`bit clone ${helper.scopes.remote}/ws-root . --lane ${helper.scopes.remote}/dev -x`);
+    });
+    after(() => {
+      helper.scopeHelper.removeRemoteScope(undefined, true);
+    });
+    it('should come out on the lane', () => {
+      expect(helper.bitMap.read()._bit_lane.id).to.deep.equal({ name: 'dev', scope: helper.scopes.remote });
+    });
+    it('should write the components the lane has at their heads on the lane, the root included', () => {
+      expect(comp1LaneHead).to.not.equal(comp1MainHead);
+      expect(helper.bitMap.read().comp1.version).to.equal(comp1LaneHead);
+      expect(helper.bitMap.read()['ws-root'].version).to.equal(rootLaneHead);
+    });
+    it('should write a component the lane does not have at its head on main', () => {
+      expect(helper.bitMap.read().comp2.version).to.equal(comp2MainHead);
+    });
+    it('should come out clean, the root converging on the .bitmap the clone built', () => {
+      helper.command.expectStatusToBeClean();
+    });
+    describe('with a version on the root id, which pins the root files only', () => {
+      // the two options mean different things: the version says which root files to write, the lane
+      // says where the members come from. the version pinned here is main's head, which the lane
+      // branched away from before it was made - so it is reachable from main and from nowhere on the
+      // lane, and a clone that let the lane decide the root too would not find it.
+      let clonePath: string;
+      before(() => {
+        // a workspace of its own, so it is taken from the helper: the directory is empty and named
+        // afresh, which a clone needs, and it goes in what the helper clears - a run interrupted
+        // around the clone leaves nothing behind, and "--debug" keeps it like every other workspace
+        clonePath = helper.fs.createNewDirectory();
+        helper.command.runCmd(
+          `bit clone ${helper.scopes.remote}/ws-root@${rootMainHead} ${clonePath} --lane ${helper.scopes.remote}/dev -x`,
+          helper.scopes.e2eDir
+        );
+      });
+      it('should write the root files of the version asked for, not of its head on the lane', () => {
+        expect(rootMainHead).to.not.equal(rootLaneHead);
+        expect(helper.bitMap.read(path.join(clonePath, '.bitmap'))['ws-root'].version).to.equal(rootMainHead);
+        // the three snaps gave this file three different contents, so it says which one was written
+        expect(path.join(clonePath, 'README.md')).to.be.a.file().with.content('# on main again\n');
+      });
+      it('should still take the members at their heads on the lane', () => {
+        const bitMap = helper.bitMap.read(path.join(clonePath, '.bitmap'));
+        expect(bitMap.comp1.version).to.equal(comp1LaneHead);
+        expect(bitMap.comp2.version).to.equal(comp2MainHead);
+      });
+      it('should still come out on the lane', () => {
+        expect(helper.bitMap.read(path.join(clonePath, '.bitmap'))._bit_lane.id).to.deep.equal({
+          name: 'dev',
+          scope: helper.scopes.remote,
+        });
+      });
     });
   });
 });

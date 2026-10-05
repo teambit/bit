@@ -4,7 +4,7 @@ import type { PubsubMain } from '@teambit/pubsub';
 import { PubsubAspect } from '@teambit/pubsub';
 import type { BundlerContext, BundlerMain, DevServer, DevServerContext, BundlerMode, Target } from '@teambit/bundler';
 import { BundlerAspect } from '@teambit/bundler';
-import { MainRuntime } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
 import type { Workspace } from '@teambit/workspace';

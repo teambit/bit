@@ -109,19 +109,6 @@ describe('components that are not synced between the scope and the consumer', fu
       helper.command.init('--force');
       scopeOutOfSync = helper.scopeHelper.cloneWorkspace();
     });
-    // @todo: decide what needs to be done. currently, bit-status shows it as staged.
-    // the reason we don't blindly filter out components that are not in the bitmap is because the "delete"
-    // (soft-remove) feature, which snaps/tags after the component is deleted from the file-system.
-    describe.skip('bit status', () => {
-      let output;
-      before(() => {
-        helper.scopeHelper.getClonedWorkspace(scopeOutOfSync);
-        output = helper.command.status();
-      });
-      it('should not show the component as staged', () => {
-        expect(output).to.not.have.string('staged components');
-      });
-    });
     describe('bit show', () => {
       it('should not throw because "bit show" supports showing components from the scope', () => {
         helper.scopeHelper.getClonedWorkspace(scopeOutOfSync);
@@ -215,7 +202,7 @@ describe('components that are not synced between the scope and the consumer', fu
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.tagComponentBarFoo();
-      helper.command.tagIncludeUnmodified('2.0.0');
+      helper.command.tagIncludeUnmodifiedWithoutBuild('2.0.0');
       const bitMap = helper.bitMap.read();
       helper.command.reset('bar/foo', true);
       helper.bitMap.write(bitMap);
@@ -250,7 +237,7 @@ describe('components that are not synced between the scope and the consumer', fu
         helper.fixtures.tagComponentBarFoo();
         helper.command.export();
         scopeAfterV1 = helper.scopeHelper.cloneWorkspace();
-        helper.command.tagIncludeUnmodified('2.0.0');
+        helper.command.tagIncludeUnmodifiedWithoutBuild('2.0.0');
         helper.command.export();
         const bitMap = helper.bitMap.read();
         helper.scopeHelper.getClonedWorkspace(scopeAfterV1);
@@ -285,7 +272,7 @@ describe('components that are not synced between the scope and the consumer', fu
         helper.fixtures.tagComponentBarFoo();
         helper.command.export();
         scopeAfterV1 = helper.scopeHelper.cloneWorkspace();
-        helper.command.tagIncludeUnmodified('2.0.0');
+        helper.command.tagIncludeUnmodifiedWithoutBuild('2.0.0');
         helper.command.export();
         const bitMap = helper.bitMap.read();
         helper.scopeHelper.getClonedWorkspace(scopeAfterV1);

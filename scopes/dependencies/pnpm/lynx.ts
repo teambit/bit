@@ -30,7 +30,7 @@ import { VIRTUAL_STORE_DIR_MAX_LENGTH } from '@teambit/dependencies.pnpm.dep-pat
 import { isEqual } from 'lodash';
 import { pnpmErrorToBitError } from './pnpm-error-to-bit-error';
 import { readConfig } from './read-config';
-import { addNodeGypToPath } from './node-gyp-bin';
+import { prepareBuildScriptsPath } from './build-scripts-path';
 
 /**
  * Packages that are known to have risky or unnecessary build scripts.
@@ -209,6 +209,14 @@ export interface ReportOptions {
   outputStream?: OutputStream;
 }
 
+/**
+ * Recorded as the lockfile's `pnpmfileChecksum`, so pnpm reuses the resolved
+ * dependencies across installs instead of treating the readPackage hooks as
+ * untracked and resolving everything again. Bump it when the hooks change what
+ * they do to dependency manifests, so existing lockfiles are resolved again.
+ */
+const READ_PACKAGE_HOOKS_CHECKSUM = 'bit-1';
+
 export async function install(
   rootDir: string,
   manifestsByPaths: Record<string, ProjectManifest>,
@@ -338,6 +346,7 @@ export async function install(
     proxyConfig: toNodeApiProxyConfig(proxyConfig),
     networkConfig: toNodeApiNetworkConfig(networkConfig),
     overrides,
+    readPackageHookChecksum: READ_PACKAGE_HOOKS_CHECKSUM,
     nodeLinker: options.nodeLinker,
     // Resolve bare-semver deps on workspace components (incl. auto-installed
     // peers naming a sibling component) from the workspace instead of the
@@ -418,7 +427,7 @@ export async function install(
   if (!options.dryRun) {
     // Dependency build scripts inherit this process's PATH. Set up inside the
     // guard, so a dry run neither writes the wrapper nor touches the env.
-    addNodeGypToPath(logger);
+    prepareBuildScriptsPath(logger);
     let installPromise: Promise<nodeApi.InstallResult> | undefined;
     let restoreWantedLockfile: (() => Promise<void>) | undefined;
     const onOutput = options.hidePackageManagerOutput ? undefined : reporterOutput(options.reportOptions);
@@ -461,7 +470,7 @@ export async function install(
     // support the pending / skipIfHasSideEffectsCache selectors of the old engine.
     rebuild: async () => {
       // Reached without an install of its own after a dry run.
-      addNodeGypToPath(logger);
+      prepareBuildScriptsPath(logger);
       // Same output routing as the install: the CLI server's stream has to
       // carry the rebuild's output too, not just the install's.
       const rebuildReportOptions: ReportOptions = {

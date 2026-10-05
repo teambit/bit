@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { UIRuntime } from '@teambit/ui';
+import { UIRuntime } from '@teambit/harmony.modules.runtimes';
 import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import type { ComponentModel } from '@teambit/component';
 import type { DocsUI } from '@teambit/docs';

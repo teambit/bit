@@ -1,6 +1,7 @@
 import type { RuntimeDefinition, SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
-import { CLIAspect, type CLIMain, MainRuntime, formatWarningSummary } from '@teambit/cli';
+import { MainRuntime } from '@teambit/harmony.modules.runtimes';
+import { CLIAspect, type CLIMain, formatWarningSummary } from '@teambit/cli';
 import { LoggerAspect, type LoggerMain, type Logger } from '@teambit/logger';
 import { WorkspaceAspect, type Workspace } from '@teambit/workspace';
 import { BuilderAspect, type BuilderMain } from '@teambit/builder';
@@ -1530,6 +1531,7 @@ export class CiMain {
     autoTagReleaseType,
     preReleaseId,
     incrementBy,
+    skipPublishedVersions,
     explicitVersionBump,
     verbose,
     versionsFile,
@@ -1546,6 +1548,7 @@ export class CiMain {
     autoTagReleaseType?: ReleaseType;
     preReleaseId?: string;
     incrementBy?: number;
+    skipPublishedVersions?: boolean;
     explicitVersionBump?: boolean;
     verbose?: boolean;
     versionsFile?: string;
@@ -1682,6 +1685,7 @@ export class CiMain {
       autoTagReleaseType,
       preReleaseId,
       incrementBy,
+      skipPublishedVersions,
       versionsFile,
     });
 

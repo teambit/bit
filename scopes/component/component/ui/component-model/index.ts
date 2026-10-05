@@ -1,1 +1,1 @@
-export { ComponentModel, ComponentModelProps } from './component-model';
+export { ComponentModel, ComponentModelProps, DeprecationInfo, RegularCompDescriptor } from './component-model';

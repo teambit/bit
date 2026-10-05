@@ -1,0 +1,195 @@
+import chalk from 'chalk';
+import type { Command, CommandOptions } from '@teambit/cli';
+import {
+  arrowSymbol,
+  formatBytes,
+  formatHint,
+  formatItem,
+  formatSuccessSummary,
+  formatTitle,
+  joinSections,
+} from '@teambit/cli';
+import { BitError } from '@teambit/bit-error';
+import type { ClearCacheMain } from './clear-cache.main.runtime';
+import type { GcResult } from './workspace-garbage-collector';
+
+export type GcCmdOpts = {
+  dryRun?: boolean;
+  keepVersions?: string;
+  backup?: boolean;
+  restore?: boolean;
+  restoreOverwrite?: boolean;
+  verbose?: boolean;
+  json?: boolean;
+};
+
+export class GcCmd implements Command {
+  name = 'gc';
+  description = 'remove objects from the local scope that are no longer needed';
+  extendedDescription: string;
+  group = 'system';
+  alias = '';
+  options = [
+    ['d', 'dry-run', 'show what would be removed without removing anything'],
+    [
+      '',
+      'keep-versions <number>',
+      // no angle brackets in the description - it lands unescaped in the generated mdx, where it
+      // would be parsed as an unclosed jsx tag
+      'keep the last N versions of each workspace component, so their recent history stays available offline',
+    ],
+    ['', 'backup', 'move the objects into a "deleted-objects" directory instead of deleting them. frees no disk space'],
+    ['', 'restore', 'bring back everything previous runs moved aside with --backup, and empty that directory'],
+    ['', 'restore-overwrite', 'same as --restore, but overwrite objects that already exist'],
+    ['v', 'verbose', 'log every object being removed'],
+    ['j', 'json', 'return the results in json format'],
+  ] as CommandOptions;
+  loader = true;
+  skipWorkspace = true;
+
+  constructor(private clearCache: ClearCacheMain) {
+    this.extendedDescription = `a workspace keeps every version of every component it has ever imported. each new version brings
+the source files of that version with it, and nothing removes the ones it superseded, so the local
+scope keeps growing - often to several gigabytes.
+
+this command removes the versions nothing points at anymore. it keeps the version each component is
+checked out at, every head (of the workspace, of its lanes and of the remotes it tracks), anything
+snapped locally and not exported yet, and the dependencies of all of those. everything it removes
+can be fetched again from the remote on demand, which bit already does whenever a version it needs
+is not in the local scope.
+
+the trade-off is that history is no longer local: "bit log", "bit blame" and diffing against an old
+version will fetch from the remote instead of answering offline. use --keep-versions to keep the
+last few versions of each workspace component if that matters to you.
+
+run with --dry-run first to see how much there is to gain.
+
+in a bare scope (a scope that is not backed by a workspace) this instead runs the collector that
+keeps all history, since there the scope is the source of truth rather than a cache.`;
+  }
+
+  async report(args: [], opts: GcCmdOpts) {
+    if (isRestore(opts)) {
+      await this.runRestore(opts);
+      return formatSuccessSummary('restored the objects from the backup directory');
+    }
+    const result = await this.runGc(opts);
+    if (!result) return formatSuccessSummary('garbage collection completed');
+    return this.formatResult(result);
+  }
+
+  async json(args: [], opts: GcCmdOpts) {
+    if (isRestore(opts)) {
+      await this.runRestore(opts);
+      return { restored: true };
+    }
+    return (await this.runGc(opts)) || { completed: true };
+  }
+
+  private async runRestore(opts: GcCmdOpts) {
+    // restore writes objects back and then empties the backup directory, so there is nothing for
+    // --dry-run to show. rather than quietly doing it anyway, say the combination means nothing.
+    if (opts.dryRun) {
+      throw new BitError('--dry-run cannot be combined with --restore or --restore-overwrite');
+    }
+    return this.clearCache.restoreGarbageCollected(Boolean(opts.restoreOverwrite));
+  }
+
+  private async runGc(opts: GcCmdOpts) {
+    return this.clearCache.garbageCollect({
+      dryRun: opts.dryRun,
+      verbose: opts.verbose,
+      backup: opts.backup,
+      keepVersions: parseKeepVersions(opts.keepVersions),
+    });
+  }
+
+  private formatResult(result: GcResult): string {
+    // with --backup the objects are only moved aside, so nothing is freed until the backup
+    // directory is removed. the stray temp files are deleted either way. what was requested is
+    // asked rather than `backupDir`, which a dry run never has.
+    const backedUp = result.backup;
+    const freedSize = (backedUp ? 0 : result.deletedSize) + result.strayFilesSize;
+    const sizeAfter = result.totalSize - freedSize;
+    const header = (() => {
+      if (result.dryRun) {
+        const fate = backedUp ? 'can be moved to the backup directory' : 'can be removed';
+        return formatTitle(`[dry-run] ${result.deletedObjects} of ${result.totalObjects} objects ${fate}`);
+      }
+      if (backedUp)
+        return formatSuccessSummary(
+          `moved ${result.deletedObjects} objects (${formatBytes(result.deletedSize)}) to the backup directory`
+        );
+      return formatSuccessSummary(`removed ${result.deletedObjects} objects, freed ${formatBytes(freedSize)}`);
+    })();
+
+    // what will be sitting in the backup directory once this run is done. it is inside the scope,
+    // so it is part of the size reported above and worth naming rather than leaving unexplained.
+    const inBackup = result.backupDirSize + (backedUp && !result.dryRun ? result.deletedSize : 0);
+    const sizeLine = formatItem(
+      backedUp
+        ? `scope: ${chalk.bold(formatBytes(sizeAfter))} ` +
+            chalk.dim(
+              result.dryRun
+                ? `(${formatBytes(result.deletedSize)} of it would move to the backup directory)`
+                : `(${formatBytes(inBackup)} of it is in the backup directory)`
+            )
+        : `scope: ${formatBytes(result.totalSize)} ${arrowSymbol} ${chalk.bold(formatBytes(sizeAfter))}` +
+            (result.dryRun ? ` ${chalk.dim(`(would free ${formatBytes(freedSize)})`)}` : '')
+    );
+    // on a backup run the size line already says so
+    const backupLine =
+      !backedUp && result.backupDirSize
+        ? formatItem(`${formatBytes(result.backupDirSize)} of it is a backup directory from an earlier run`)
+        : '';
+    // named rather than silently swelling the total: gc frees neither, so a reader who sees the
+    // scope hold steady deserves to know which part of it was never a candidate.
+    const retainedLine = result.retainedDirsSize
+      ? formatItem(`${formatBytes(result.retainedDirsSize)} of it is the trash and the stash, which gc never touches`)
+      : '';
+    const byType = Object.entries(result.deletedByType).map(([type, stats]) =>
+      formatItem(`${type}: ${stats.count} objects ${chalk.dim(`(${formatBytes(stats.size)})`)}`)
+    );
+    const keptLine = formatItem(`keeping ${result.keptVersions} versions and everything they point at`);
+    const strayLine = result.strayFiles
+      ? formatItem(
+          `${result.strayFiles} leftover temp ${result.strayFiles === 1 ? 'file' : 'files'} of interrupted writes ` +
+            chalk.dim(`(${formatBytes(result.strayFilesSize)})`)
+        )
+      : '';
+
+    const hints: string[] = [];
+    if (result.dryRun && result.deletedObjects) {
+      hints.push(formatHint(`re-run without --dry-run to ${backedUp ? 'move' : 'remove'} them`));
+    }
+    if (result.backupDir) {
+      hints.push(
+        formatHint(`objects were moved to ${result.backupDir}. no disk space was freed until it is removed.`),
+        formatHint('run "bit gc --restore" to bring them back')
+      );
+    } else if (result.backupDirSize) {
+      hints.push(
+        formatHint('run "bit gc --restore" to bring the backed-up objects back, or remove that directory to free it')
+      );
+    }
+    if (!result.dryRun && result.deletedObjects) {
+      hints.push(formatHint('anything removed will be fetched from the remote again when it is needed'));
+    }
+
+    const summary = [sizeLine, backupLine, retainedLine, ...byType, keptLine, strayLine].filter(Boolean).join('\n');
+    return joinSections([`${header}\n${summary}`, hints.join('\n')]);
+  }
+}
+
+function isRestore(opts: GcCmdOpts): boolean {
+  return Boolean(opts.restore || opts.restoreOverwrite);
+}
+
+function parseKeepVersions(value?: string): number | undefined {
+  if (value === undefined) return undefined;
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    throw new BitError(`--keep-versions expects a non-negative integer, got "${value}"`);
+  }
+  return parsed;
+}

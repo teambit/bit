@@ -1,8 +1,5 @@
-import chai, { expect } from 'chai';
-import path from 'path';
+import { expect } from 'chai';
 import { Helper, fixtures } from '@teambit/legacy.e2e-helper';
-import chaiFs from 'chai-fs';
-chai.use(chaiFs);
 
 describe('merge lanes - diverge functionality', function () {
   this.timeout(0);
@@ -49,7 +46,7 @@ describe('merge lanes - diverge functionality', function () {
     describe('merging the lane', () => {
       let status;
       before(() => {
-        helper.command.mergeLane('main', '--auto-merge-resolve theirs');
+        helper.command.mergeLaneWithoutBuild('main', '--auto-merge-resolve theirs');
         status = helper.command.statusJson();
         afterMergeToMain = helper.scopeHelper.cloneWorkspace();
       });
@@ -64,7 +61,7 @@ describe('merge lanes - diverge functionality', function () {
       describe('switching to main and merging the lane to main without squash', () => {
         before(() => {
           helper.command.switchLocalLane('main');
-          helper.command.mergeLane('dev', '--no-squash');
+          helper.command.mergeLaneWithoutBuild('dev', '--no-squash');
         });
         it('head should have two parents', () => {
           const cat = helper.command.catComponent('comp1@latest');
@@ -82,7 +79,7 @@ describe('merge lanes - diverge functionality', function () {
           helper.scopeHelper.getClonedWorkspace(afterMergeToMain);
           helper.command.switchLocalLane('main');
           beforeMergeHead = helper.command.getHead('comp1');
-          helper.command.mergeLane('dev');
+          helper.command.mergeLaneWithoutBuild('dev');
         });
         it('head should have one parents, which is the previous main head', () => {
           const cat = helper.command.catComponent('comp1@latest');
@@ -94,7 +91,7 @@ describe('merge lanes - diverge functionality', function () {
     describe('merge the lane without snapping', () => {
       before(() => {
         helper.scopeHelper.getClonedWorkspace(beforeMerge);
-        helper.command.mergeLane('main', '--auto-merge-resolve theirs --no-auto-snap -x');
+        helper.command.mergeLaneWithoutBuild('main', '--auto-merge-resolve theirs --no-auto-snap -x');
       });
       it('should show the during-merge as modified', () => {
         const status = helper.command.statusJson();
@@ -105,35 +102,6 @@ describe('merge lanes - diverge functionality', function () {
         expect(diff).to.have.string('-module.exports = () => `comp1version2 and ${comp2()}`;'); // eslint-disable-line no-template-curly-in-string
         expect(diff).to.have.string('+module.exports = () => `comp1version3 and ${comp2()}`;'); // eslint-disable-line no-template-curly-in-string
       });
-    });
-  });
-
-  describe('getting new files when lane is diverge from another lane', () => {
-    before(() => {
-      helper.scopeHelper.setWorkspaceWithRemoteScope();
-      helper.fixtures.populateComponents(1);
-      helper.command.tagAllWithoutBuild();
-      helper.command.export();
-      helper.command.createLane('lane-a');
-      helper.fixtures.populateComponents(1, false, 'version2');
-      helper.command.snapComponentWithoutBuild('comp1');
-      helper.command.export();
-      helper.command.createLane('lane-b');
-      helper.fixtures.populateComponents(1, false, 'version3');
-      helper.command.snapComponentWithoutBuild('comp1');
-      helper.command.export();
-      helper.command.switchLocalLane('lane-a');
-      helper.fs.outputFile('comp1/new-file.ts');
-      helper.command.snapComponentWithoutBuild('comp1');
-      helper.command.export();
-
-      helper.scopeHelper.reInitWorkspace();
-      helper.scopeHelper.addRemoteScope();
-      helper.command.importLane('lane-b');
-      helper.command.mergeLane(`${helper.scopes.remote}/lane-a`);
-    });
-    it('should add the newly added file', () => {
-      expect(path.join(helper.scopes.localPath, helper.scopes.remote, 'comp1/new-file.ts')).to.be.a.file();
     });
   });
 
@@ -149,17 +117,22 @@ describe('merge lanes - diverge functionality', function () {
       authorScope = helper.scopeHelper.cloneWorkspace();
       helper.command.createLane('dev2');
       appOutputV2 = helper.fixtures.populateComponents(undefined, undefined, ' v2');
+      // a file that exists only on dev2, so the merge has to fetch its object from the remote lane
+      helper.fs.outputFile('comp1/new-file.ts');
       helper.command.snapAllComponentsWithoutBuild();
       helper.command.export();
 
       helper.scopeHelper.getClonedWorkspace(authorScope);
-      helper.command.mergeLane(`${helper.scopes.remote}/dev2`);
+      helper.command.mergeLaneWithoutBuild(`${helper.scopes.remote}/dev2`);
       helper.command.compile();
     });
     it('should save the latest versions from that lane into the local lane', () => {
       helper.fs.outputFile('app.js', fixtures.appPrintComp1(helper.scopes.remote));
       const result = helper.command.runCmd('node app.js');
       expect(result.trim()).to.equal(appOutputV2);
+    });
+    it('should write a file that was added only on the merged remote lane', () => {
+      helper.fs.expectFileToExist('comp1/new-file.ts');
     });
   });
 });

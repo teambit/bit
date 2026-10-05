@@ -122,6 +122,10 @@ export class DependencyList {
     return this.filter((dep) => !dep.hidden);
   }
 
+  getHiddenPeers(): DependencyList {
+    return this.filter((dep) => dep.hidden === true && dep.lifecycle === 'peer');
+  }
+
   toTypeArray<T extends Dependency>(typeName: string): T[] {
     const list: T[] = this.dependencies.filter((dep) => dep.type === typeName) as any as T[];
     return list;

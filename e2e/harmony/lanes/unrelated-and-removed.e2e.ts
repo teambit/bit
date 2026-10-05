@@ -1,8 +1,10 @@
-import chai, { expect } from 'chai';
+import { expect } from 'chai';
 import { Helper } from '@teambit/legacy.e2e-helper';
-import chaiFs from 'chai-fs';
-chai.use(chaiFs);
 
+// the mirror image of "merge unrelated between two lanes with --resolve-unrelated" in
+// merge-lanes-unrelated.e2e.ts: because the component is soft-removed on the current lane, the
+// defaults flip - the strategy becomes "theirs" instead of "ours", and the parents are taken from
+// the other lane instead of the current one.
 describe('current lane a comp is removed, merging a lane that has this comp with different history', function () {
   this.timeout(0);
   let helper: Helper;
@@ -29,7 +31,7 @@ describe('current lane a comp is removed, merging a lane that has this comp with
     helper.command.export();
     headOnLaneB = helper.command.getHeadOfLane('lane-b', 'comp1');
 
-    helper.command.mergeLane('lane-a', '--resolve-unrelated -x');
+    helper.command.mergeLaneWithoutBuild('lane-a', '--resolve-unrelated -x');
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -40,13 +42,12 @@ describe('current lane a comp is removed, merging a lane that has this comp with
     expect(fileContent).to.have.string('lane-a');
     expect(fileContent).to.not.have.string('lane-b');
   });
-  it('should populate the unrelated property according to the current head', () => {
+  // both the unrelated ref and the parents come off the same Version object, so they are asserted
+  // together rather than paying for a second cat-component
+  it('should populate the unrelated property from the current head and the parents from the other lane', () => {
     const ver = helper.command.catComponent('comp1@latest');
     expect(ver.unrelated.head).to.equal(headOnLaneB);
     expect(ver.unrelated.laneId.name).to.equal('lane-b');
-  });
-  it('should populate the parents according to the other lane', () => {
-    const ver = helper.command.catComponent('comp1@latest');
     expect(ver.parents[0]).to.equal(headOnLaneA);
   });
 });
