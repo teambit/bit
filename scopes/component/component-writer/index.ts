@@ -5,6 +5,6 @@ export type {
   ComponentWriterResults,
   ManyComponentsWriterParams,
 } from './component-writer.main.runtime';
-export { incrementPathRecursively } from './component-writer.main.runtime';
+export { incrementPathRecursively } from '@teambit/toolbox.path.path';
 export default ComponentWriterAspect;
 export { ComponentWriterAspect };
