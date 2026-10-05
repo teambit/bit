@@ -110,11 +110,11 @@ rename <current-name> <new-name> - change a component name
 
 Testing & Quality
 artifacts <component-pattern> - view and download build artifacts
+format [component-pattern] - auto-format component source code
 test [pattern-or-test-file...] - run component tests
 check-types [component-pattern] - validate TypeScript type correctness
 lint [component-pattern] - analyze component code for issues and style violations
 validate [component-pattern] - run type-checking, linting, and testing in sequence
-format [component-pattern] - auto-format component source code
 
 Dependencies & Packages
 install [packages...] - install workspace dependencies
