@@ -9,8 +9,6 @@ import { CompareTests } from '@teambit/defender.ui.test-compare';
 import type { ComponentCompareUI } from '@teambit/component-compare';
 import { ComponentCompareAspect } from '@teambit/component-compare';
 import { TestCompareSection } from '@teambit/defender.ui.test-compare-section';
-import type { DocsUI } from '@teambit/docs';
-import { DocsAspect } from '@teambit/docs';
 import { gql, useQuery } from '@apollo/client';
 import { PillLabel } from '@teambit/design.ui.pill-label';
 import { Tooltip } from '@teambit/design.ui.tooltip';
@@ -43,8 +41,47 @@ const GET_COMPONENT = gql`
 `;
 
 export type EmptyStateSlot = SlotRegistry<ComponentType>;
+
+function CoverageBadge({ legacyComponentModel }: { legacyComponentModel: ComponentModel }) {
+  const location = useLocation();
+  const search = location?.search ?? '';
+
+  const { data } = useQuery(GET_COMPONENT, {
+    variables: { id: legacyComponentModel.id.toString() },
+  });
+
+  if (!data || !data.getHost || !data.getHost.getTests) return null;
+
+  const total = data.getHost.getTests.testsResults?.coverage?.total as
+    | {
+        lines?: {
+          covered: number;
+          total: number;
+          pct: number;
+        };
+      }
+    | undefined;
+
+  if (!total || !total.lines) return null;
+
+  return (
+    <Tooltip
+      className={styles.coverageTooltip}
+      placement="top"
+      content={<div className={styles.coverageTooltipContent}>Test coverage</div>}
+    >
+      <Link href={`~tests${search}`} className={styles.link}>
+        <PillLabel className={styles.label}>
+          <Icon of="scan-component" />
+          <span>{total.lines.pct}%</span>
+        </PillLabel>
+      </Link>
+    </Tooltip>
+  );
+}
+
 export class TesterUI {
-  static dependencies = [ComponentAspect, ComponentCompareAspect, DocsAspect];
+  static dependencies = [ComponentAspect, ComponentCompareAspect];
 
   static runtime = UIRuntime;
 
@@ -63,6 +100,12 @@ export class TesterUI {
     return this;
   }
 
+  /**
+   * the test coverage badge of the component overview's title. the docs aspect registers it, so the
+   * tester doesn't depend on docs (that dependency closes a circular dependency).
+   */
+  readonly coverageBadge = { component: CoverageBadge, weight: 30 };
+
   getTesterCompare() {
     return <CompareTests emptyState={this.emptyStateSlot} />;
   }
@@ -70,7 +113,7 @@ export class TesterUI {
   static slots = [Slot.withType<ComponentType>()];
 
   static async provider(
-    [component, componentCompare, docs]: [ComponentUI, ComponentCompareUI, DocsUI],
+    [component, componentCompare]: [ComponentUI, ComponentCompareUI],
     config,
     [emptyStateSlot]: [EmptyStateSlot]
   ) {
@@ -81,46 +124,6 @@ export class TesterUI {
     component.registerNavigation(section.navigationLink, section.order);
     componentCompare.registerNavigation(testerCompareSection);
     componentCompare.registerRoutes([testerCompareSection.route]);
-    docs.registerTitleBadge({
-      component: function badge({ legacyComponentModel }: { legacyComponentModel: ComponentModel }) {
-        const location = useLocation();
-        const search = location?.search ?? '';
-
-        const { data } = useQuery(GET_COMPONENT, {
-          variables: { id: legacyComponentModel.id.toString() },
-        });
-
-        if (!data || !data.getHost || !data.getHost.getTests) return null;
-
-        const total = data.getHost.getTests.testsResults?.coverage?.total as
-          | {
-              lines?: {
-                covered: number;
-                total: number;
-                pct: number;
-              };
-            }
-          | undefined;
-
-        if (!total || !total.lines) return null;
-
-        return (
-          <Tooltip
-            className={styles.coverageTooltip}
-            placement="top"
-            content={<div className={styles.coverageTooltipContent}>Test coverage</div>}
-          >
-            <Link href={`~tests${search}`} className={styles.link}>
-              <PillLabel className={styles.label}>
-                <Icon of="scan-component" />
-                <span>{total.lines.pct}%</span>
-              </PillLabel>
-            </Link>
-          </Tooltip>
-        );
-      },
-      weight: 30,
-    });
     return testerUi;
   }
 }

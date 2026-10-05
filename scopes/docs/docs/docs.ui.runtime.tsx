@@ -13,6 +13,8 @@ import { OverviewCompareSection } from '@teambit/docs.ui.overview-compare-sectio
 import type { UsePreviewProps, UseSandboxPermission } from '@teambit/preview.ui.component-preview';
 import type { APIReferenceUI } from '@teambit/api-reference';
 import { APIReferenceAspect } from '@teambit/api-reference';
+import type { TesterUI } from '@teambit/tester';
+import { TesterAspect } from '@teambit/tester';
 import { DocsAspect } from './docs.aspect';
 import docsCompareContainStyles from './docs-compare-contain.module.scss';
 import { OverviewSection } from './overview.section';
@@ -76,7 +78,7 @@ export class DocsUI {
     this.overviewOptionsSlot.register(options);
   }
 
-  static dependencies = [ComponentAspect, ComponentCompareAspect, APIReferenceAspect];
+  static dependencies = [ComponentAspect, ComponentCompareAspect, APIReferenceAspect, TesterAspect];
 
   static runtime = UIRuntime;
 
@@ -88,7 +90,7 @@ export class DocsUI {
   ];
 
   static async provider(
-    [component, componentCompare, apiRef]: [ComponentUI, ComponentCompareUI, APIReferenceUI],
+    [component, componentCompare, apiRef, tester]: [ComponentUI, ComponentCompareUI, APIReferenceUI, TesterUI],
     config: {},
     [titleBadgeSlot, overviewOptionsSlot, usePreviewSandboxSlot, usePreviewPropsSlot]: [
       TitleBadgeSlot,
@@ -98,6 +100,9 @@ export class DocsUI {
     ]
   ) {
     const docs = new DocsUI(titleBadgeSlot, overviewOptionsSlot, usePreviewSandboxSlot, usePreviewPropsSlot);
+    // registered here rather than by the tester, so the tester doesn't depend on docs (that dependency
+    // closes a circular dependency).
+    docs.registerTitleBadge(tester.coverageBadge);
     const section = new OverviewSection(
       titleBadgeSlot,
       overviewOptionsSlot,

@@ -46,6 +46,8 @@ import { BuilderAspect } from '@teambit/builder';
 import { LaneId } from '@teambit/lane-id';
 import type { ImporterMain } from '@teambit/importer';
 import { ImporterAspect } from '@teambit/importer';
+import type { FormatterMain } from '@teambit/formatter';
+import { FormatterAspect } from '@teambit/formatter';
 import type { ExportMain } from '@teambit/export';
 import { ExportAspect } from '@teambit/export';
 import { isHash, isTag } from '@teambit/component-version';
@@ -1569,6 +1571,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     DependenciesAspect,
     ApplicationAspect,
     RemoveAspect,
+    FormatterAspect,
   ];
   static runtime = MainRuntime;
   static async provider(
@@ -1585,6 +1588,7 @@ another option, in case this dependency is not in main yet is to remove all refe
       deps,
       application,
       remove,
+      formatter,
     ]: [
       Workspace,
       CLIMain,
@@ -1598,6 +1602,7 @@ another option, in case this dependency is not in main yet is to remove all refe
       DependenciesMain,
       ApplicationMain,
       RemoveMain,
+      FormatterMain,
     ],
     config,
     [onPreSnapSlot]: [OnPreSnapSlot]
@@ -1616,6 +1621,9 @@ another option, in case this dependency is not in main yet is to remove all refe
       remove,
       onPreSnapSlot
     );
+    // registered here rather than by the formatter, so the formatter doesn't depend on snapping (that
+    // dependency closes a circular dependency).
+    snapping.registerOnPreSnap((components) => formatter.formatOnPreSnap(components));
     const snapCmd = new SnapCmd(snapping, logger, configStore);
     const tagCmd = new TagCmd(snapping, logger, configStore);
     const resetCmd = new ResetCmd(snapping);
