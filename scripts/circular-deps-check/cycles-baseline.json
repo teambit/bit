@@ -1,11 +1,11 @@
 {
   "summary": {
     "groups": [
-      51,
+      50,
       16
     ],
-    "components": 67,
-    "edges": 370
+    "components": 66,
+    "edges": 353
   },
   "groups": [
     [
@@ -29,7 +29,6 @@
       "teambit.component/tracker",
       "teambit.compositions/compositions",
       "teambit.defender/formatter",
-      "teambit.defender/linter",
       "teambit.defender/tester",
       "teambit.dependencies/dependencies",
       "teambit.dependencies/dependency-resolver",
@@ -186,11 +185,6 @@
     "teambit.defender/formatter -> teambit.envs/envs",
     "teambit.defender/formatter -> teambit.pipelines/builder",
     "teambit.defender/formatter -> teambit.workspace/workspace",
-    "teambit.defender/linter -> teambit.component/component",
-    "teambit.defender/linter -> teambit.component/isolator",
-    "teambit.defender/linter -> teambit.envs/envs",
-    "teambit.defender/linter -> teambit.pipelines/builder",
-    "teambit.defender/linter -> teambit.workspace/workspace",
     "teambit.defender/tester -> teambit.compilation/compiler",
     "teambit.defender/tester -> teambit.component/component",
     "teambit.defender/tester -> teambit.component/component-compare",
@@ -221,22 +215,10 @@
     "teambit.docs/docs -> teambit.preview/preview",
     "teambit.docs/docs -> teambit.scope/scope",
     "teambit.docs/docs -> teambit.workspace/workspace",
-    "teambit.envs/envs -> teambit.compilation/bundler",
-    "teambit.envs/envs -> teambit.compilation/compiler",
     "teambit.envs/envs -> teambit.component/component",
-    "teambit.envs/envs -> teambit.component/isolator",
     "teambit.envs/envs -> teambit.component/issues",
-    "teambit.envs/envs -> teambit.defender/formatter",
-    "teambit.envs/envs -> teambit.defender/linter",
-    "teambit.envs/envs -> teambit.defender/tester",
     "teambit.envs/envs -> teambit.dependencies/dependency-resolver",
     "teambit.envs/envs -> teambit.harmony/aspect-loader",
-    "teambit.envs/envs -> teambit.pipelines/builder",
-    "teambit.envs/envs -> teambit.pkg/pkg",
-    "teambit.envs/envs -> teambit.preview/preview",
-    "teambit.envs/envs -> teambit.semantics/schema",
-    "teambit.envs/envs -> teambit.typescript/typescript",
-    "teambit.envs/envs -> teambit.webpack/webpack",
     "teambit.explorer/command-bar -> teambit.harmony/pubsub",
     "teambit.explorer/command-bar -> teambit.ui-foundation/ui",
     "teambit.generator/generator -> teambit.component/component",
