@@ -458,7 +458,6 @@ the reason is that the refactor changes the components using ${sourceId.toString
 
   private extractDeps(component: Component) {
     const deps = this.dependencyResolver.getDependencies(component);
-    const excludePackages = ['@teambit/legacy'];
     const excludeCompIds = this.dependencyResolver.getCompIdsThatShouldNotBeInPolicy();
     return deps
       .filter((dep) => dep.source === 'auto')
@@ -467,7 +466,7 @@ the reason is that the refactor changes the components using ${sourceId.toString
           const compIdStr = dep.componentId.toStringWithoutVersion();
           return !excludeCompIds.includes(compIdStr);
         }
-        return !excludePackages.includes(dep.id);
+        return true;
       })
       .map((dep) => {
         const parsedVersion = parse(dep.version);

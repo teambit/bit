@@ -12,6 +12,15 @@ export type { SSR };
 export type { UIRootUI, UIRootFactory } from './ui-root.ui';
 export type { UIServer } from './ui-server';
 export { BUNDLE_UI_DIR, BundleUiTask } from './bundle-ui.task';
+export {
+  createUiVendorDllReference,
+  UI_VENDOR_DLL_DIR,
+  UI_VENDOR_DLL_MANIFEST_FILENAME,
+  UI_VENDOR_DLL_CHUNK_FILENAME,
+  UI_VENDOR_DLL_CSS_FILENAME,
+  UI_VENDOR_DLL_GLOBAL_NAME,
+} from './ui-vendor-dll';
+export type { UiVendorDllReference, UiVendorDllManifest, UiVendorDllManifestEntry } from './ui-vendor-dll';
 // using `useDataQuery` from this package is deprecated, use `@teambit/ui-foundation.ui.hooks.use-data-query` directly
 export type { DataQueryResult } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 export { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';

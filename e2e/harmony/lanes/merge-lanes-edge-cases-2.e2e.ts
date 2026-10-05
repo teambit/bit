@@ -1,4 +1,5 @@
 import chai, { expect } from 'chai';
+import stripAnsi from 'strip-ansi';
 import path from 'path';
 import { Extensions } from '@teambit/legacy.constants';
 import { Helper } from '@teambit/legacy.e2e-helper';
@@ -411,7 +412,7 @@ describe('merge lanes - edge cases and special scenarios (part 2)', function () 
     });
   });
 
-  // only the --loose run is kept: a full `--build` merge runs the whole jest pipeline, and asserting
+  // only the --loose run is kept: a full `--build` merge runs the whole build pipeline, and asserting
   // both "the test failed" and "the snap still happened" on the same run already proves the flag
   // tolerates a real failure. the non-loose baseline (a failing build during merge produces no snap)
   // is covered by "auto-snap during merge when the snap is failing" in merge-lanes-edge-cases.e2e.ts.
@@ -420,6 +421,9 @@ describe('merge lanes - edge cases and special scenarios (part 2)', function () 
     before(() => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponents(1);
+      // the merge below runs --build and expects the test to fail. the default env has no
+      // tester, so configure a node env (vitest tester) and install it
+      helper.env.setBitdevNodeEnv();
       helper.command.tagAllWithoutBuild();
       helper.command.export();
 
@@ -437,10 +441,10 @@ describe('merge lanes - edge cases and special scenarios (part 2)', function () 
       mergeOutput = helper.command.mergeLane('dev', '--build --loose --no-squash');
     });
     it('should succeed despite test failures', () => {
-      expect(mergeOutput).to.have.string('Total Snapped: 1');
+      expect(stripAnsi(mergeOutput)).to.have.string('Total Snapped: 1');
     });
     it('should indicate that the test failed', () => {
-      expect(mergeOutput).to.include('task "teambit.defender/tester:JestTest" has failed');
+      expect(mergeOutput).to.include('task "teambit.defender/tester:VitestTest" has failed');
     });
   });
 });

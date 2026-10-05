@@ -3,6 +3,21 @@ import path from 'path';
 import { homedir } from 'os';
 
 /**
+ * Filenames of the default rules templates shipped next to this component's compiled output.
+ * Single source of truth: the CLI esbuild bundler's `ignore-assets-plugin.ts` imports this list to
+ * know which `.md` files must be inlined as real text instead of stripped like incidental doc files
+ * pulled in transitively elsewhere - so adding a template here doesn't also need a matching edit in
+ * the bundler to avoid silently shipping an empty file.
+ */
+export const MCP_RULES_TEMPLATE_FILENAMES = [
+  'bit-rules-template.md',
+  'bit-git-rules-template.md',
+  'bit-rules-consumer-template.md',
+] as const;
+
+type McpRulesTemplateFilename = (typeof MCP_RULES_TEMPLATE_FILENAMES)[number];
+
+/**
  * Options for setting up MCP server configuration
  */
 export interface SetupOptions {
@@ -513,13 +528,34 @@ export class McpConfigWriter {
     const hasGit = !forceStandard && (await fs.pathExists(gitPath));
 
     // Choose template based on consumer project status and Git presence
-    let templateName: string;
+    let templateName: McpRulesTemplateFilename;
     if (consumerProject) {
       templateName = 'bit-rules-consumer-template.md';
     } else if (hasGit) {
       templateName = 'bit-git-rules-template.md';
     } else {
       templateName = 'bit-rules-template.md';
+    }
+
+    // Inside the esbuild CLI bundle, `__dirname` no longer points at this package's own directory
+    // (everything is flattened into one file), so a disk read below would fail. `BIT_IS_BUNDLE` is
+    // a compile-time constant esbuild substitutes to `true`; that turns each `require` below into a
+    // literal-specifier call esbuild resolves and inlines as a string via its `.md` text loader, so
+    // the three templates ship as part of the bundle itself instead of needing a separate copy step.
+    // Outside the bundle this branch is unreachable at runtime (the env var is never actually set)
+    // and the plain disk read below runs instead - both must keep returning identical content.
+    //
+    // `Record<McpRulesTemplateFilename, string>` (keyed off `MCP_RULES_TEMPLATE_FILENAMES` above)
+    // means a new template added to that list without a matching `require` line here is a compile
+    // error, not a silent `undefined` at runtime - esbuild still needs each `require` written out
+    // literally, one per file, since it resolves the text loader per static specifier.
+    if (process.env.BIT_IS_BUNDLE) {
+      const bundledTemplates: Record<McpRulesTemplateFilename, string> = {
+        'bit-rules-template.md': require('./bit-rules-template.md'),
+        'bit-git-rules-template.md': require('./bit-git-rules-template.md'),
+        'bit-rules-consumer-template.md': require('./bit-rules-consumer-template.md'),
+      };
+      return bundledTemplates[templateName];
     }
 
     const templatePath = path.join(__dirname, templateName);
