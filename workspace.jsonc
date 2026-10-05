@@ -28,11 +28,6 @@
         "@teambit/env": "1.0.1107",
         "@teambit/mdx": "1.0.1108",
         "@teambit/readme": "1.0.1108",
-        // react-env reads "@teambit/react/typescript/tsconfig.json" when it builds its compiler, and
-        // react is no longer a workspace component here, so the package has to come from the
-        // registry like the former core envs above. It used to arrive as a transitive dependency of
-        // another env's root component, which made the omission invisible.
-        "@teambit/react": "1.0.1201",
         "@babel/core": "7.28.3",
         "@babel/plugin-proposal-decorators": "7.28.0",
         "@babel/plugin-transform-class-properties": "7.27.1",
