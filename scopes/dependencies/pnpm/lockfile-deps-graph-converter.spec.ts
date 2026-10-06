@@ -220,8 +220,13 @@ describe('convertLockfileToGraph simple case', () => {
     },
   };
   it('should convert the lockfile object to the graph object', () => {
+    // The lockfile records no pnpmfileChecksum. Whether the graph then has the
+    // property set to undefined or not at all depends on how the class is
+    // compiled, so it is checked on its own.
+    const { pnpmfileChecksum, ...graphFields } = graph;
+    expect(pnpmfileChecksum).to.equal(undefined);
     expect({
-      ...graph,
+      ...graphFields,
       packages: Object.fromEntries(graph.packages.entries()),
     }).to.eql(expected);
   });

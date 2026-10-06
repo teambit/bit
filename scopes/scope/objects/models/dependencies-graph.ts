@@ -62,9 +62,7 @@ export class DependenciesGraph {
     this.packages = packages;
     this.edges = edges;
     this.schemaVersion = schemaVersion ?? DEPENDENCIES_GRAPH_SCHEMA_VERSION;
-    // Left unset rather than `undefined`, so a graph without one keeps the shape
-    // graphs had before the field existed.
-    if (pnpmfileChecksum != null) this.pnpmfileChecksum = pnpmfileChecksum;
+    this.pnpmfileChecksum = pnpmfileChecksum;
   }
 
   serialize(): string {
