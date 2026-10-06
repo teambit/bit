@@ -391,6 +391,14 @@ export default class Version extends BitObject {
   }
 
   /**
+   * the flattened dependencies, if they're available without loading a separate object. otherwise, undefined.
+   */
+  getFlattenedDependenciesIfLoaded(): ComponentIdList | undefined {
+    if (this.flattenedDependenciesRef && !this._flattenedDependencies) return undefined;
+    return this.flattenedDependencies;
+  }
+
+  /**
    * use this to get the flattened dependencies. it supports both formats: stored in the Version itself, or stored in
    * a separate Source object (`flattenedDependenciesRef`). `objects` is usually the scope repository, but can be any
    * container of the objects, such as the objects received from a remote.

@@ -180,6 +180,12 @@ describe('Version', () => {
         const loaded = await oldFormat.loadFlattenedDependencies(loaderOf([]));
         expect(loaded.map((id) => id.toString())).to.deep.equal(flattenedStr);
       });
+      it('should validate the list when it was moved but is still loaded', () => {
+        const moved = getVersionWithDepsFixture();
+        moved.flattenedDependencies = new ComponentIdList(ComponentID.fromString('my-scope/is-type'));
+        moved.moveFlattenedDependenciesToSource();
+        expect(() => moved.validate()).to.throw('does not have a version');
+      });
       it('should pass the validation although the list is not in the Version', () => {
         expect(version.dependencies.isEmpty()).to.be.false;
         expect(() => version.validate()).to.not.throw();

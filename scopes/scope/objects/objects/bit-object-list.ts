@@ -3,6 +3,7 @@ import type Ref from './ref';
 import { ExportMetadata, Lane, LaneHistory, ModelComponent, Version, VersionHistory } from '../models';
 
 export class BitObjectList {
+  private objectsByHash?: Map<string, BitObject>;
   constructor(private objects: BitObject[]) {}
 
   getComponents(): ModelComponent[] {
@@ -34,7 +35,9 @@ export class BitObjectList {
    * used where a repository is expected, e.g. `Version.loadFlattenedDependencies()`.
    */
   async load(ref: Ref): Promise<BitObject | undefined> {
-    return this.objects.find((object) => object.hash().isEqual(ref));
+    // built once. hash() of some objects (e.g. Source) is calculated from their contents.
+    this.objectsByHash ??= new Map(this.objects.map((object) => [object.hash().toString(), object]));
+    return this.objectsByHash.get(ref.toString());
   }
 
   excludeTypes(types: string[]): BitObject[] {

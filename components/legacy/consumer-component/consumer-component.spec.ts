@@ -45,6 +45,15 @@ describe('ConsumerComponent', function () {
       expect(component.flattenedDependencies.toString()).to.equal('my-scope/is-type@0.0.1');
       expect(loaded).to.equal(1);
     });
+    it('should throw on every read when the loading fails, not fall back to an empty list', () => {
+      const load = () => {
+        throw new Error('unable to find the object');
+      };
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      const component = new Component({ ...componentProps, loadFlattenedDependencies: load });
+      expect(() => component.flattenedDependencies).to.throw('unable to find the object');
+      expect(() => component.flattenedDependencies).to.throw('unable to find the object');
+    });
     it('should default to an empty list and keep a list that was set', () => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const component = new Component(componentProps);

@@ -243,7 +243,9 @@ export class Component {
 
   get flattenedDependencies(): ComponentIdList {
     if (!this._flattenedDependencies) {
-      this._flattenedDependencies = this.loadFlattenedDependencies?.() || new ComponentIdList();
+      this._flattenedDependencies = this.loadFlattenedDependencies
+        ? this.loadFlattenedDependencies()
+        : new ComponentIdList();
       this.loadFlattenedDependencies = undefined;
     }
     return this._flattenedDependencies;
