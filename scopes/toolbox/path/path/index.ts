@@ -13,4 +13,5 @@ export {
   pathRelativeLinux,
   pathResolveToLinux,
   normalizeWindowsImportPath,
+  incrementPathRecursively,
 } from './path';
