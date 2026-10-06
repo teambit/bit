@@ -23,7 +23,7 @@ chai.use(chaiFs);
       helper.fixtures.populateComponentsTS();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFoo();
-      helper.extensions.addExtensionToVariant('*', 'teambit.harmony/node', {});
+      helper.env.setTsEnv();
     });
     describe('run bit watch', () => {
       let watchRunner: WatchRunner;
@@ -109,7 +109,7 @@ chai.use(chaiFs);
     before(async () => {
       helper.scopeHelper.setWorkspaceWithRemoteScope();
       helper.fixtures.populateComponentsTS();
-      helper.extensions.addExtensionToVariant('*', 'teambit.harmony/node', {});
+      helper.env.setTsEnv();
       // Simulate a missing parcel prebuild so the watcher must fall back to the
       // chokidar backend (the real prebuild is present locally/CI). The watch
       // process inherits this env via child_process.spawn.
@@ -143,7 +143,8 @@ chai.use(chaiFs);
       before(async () => {
         helper.scopeHelper.setWorkspaceWithRemoteScope({ initGit });
         helper.fixtures.populateComponentsTS();
-        helper.extensions.addExtensionToVariant('*', 'teambit.harmony/node', {});
+        // no env needed: these tests assert watcher-level messages only (changed paths, IPC
+        // events), which are printed regardless of any compiler
         watchRunner = new WatchRunner(helper, true);
         await watchRunner.watch();
         allOutput = '';
