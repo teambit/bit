@@ -9,7 +9,6 @@ import {
   CFG_USE_DATED_CAPSULES,
   CFG_CACHE_LOCK_ONLY_CAPSULES,
 } from '@teambit/legacy.constants';
-import type { Compiler, TranspileFileOutputOneFile } from '@teambit/compiler';
 import type { Capsule, IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
 import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
 import { compact, uniq, difference, groupBy, defaultsDeep } from 'lodash';
@@ -29,6 +28,22 @@ export type ScopeLoadAspectsOptions = LoadAspectsOptions & {
   useScopeAspectsCapsule?: boolean;
   packageManagerConfigRootDir?: string;
   workspaceName?: string;
+};
+
+type TranspileFileOutputOneFile = { outputText: string; outputPath: string };
+
+/**
+ * the part of the compiler (`Compiler` of @teambit/compiler) needed to compile aspects that have no dists.
+ * it's defined here, because the compiler aspect depends on the scope aspect.
+ */
+type AspectCompiler = {
+  distDir: string;
+  isFileSupported(filePath: string): boolean;
+  transpileFile?: (
+    fileContent: string,
+    params: { componentDir: string; filePath: string }
+  ) => TranspileFileOutputOneFile[] | null | Promise<TranspileFileOutputOneFile[] | null>;
+  getDistPathBySrcPath(srcPath: string): string;
 };
 
 export class ScopeAspectsLoader {
@@ -238,7 +253,7 @@ needed-for: ${neededFor || '<unknown>'}`);
   }
 
   private async compileIfNoDist(capsule: Capsule, component: Component) {
-    let compiler: Compiler | undefined;
+    let compiler: AspectCompiler | undefined;
     try {
       const env = this.envs.getEnv(component);
       compiler = env.env.getCompiler();

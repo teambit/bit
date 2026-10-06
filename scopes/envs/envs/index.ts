@@ -23,6 +23,11 @@ export type {
   EnvCompDescriptor,
   EnvJsonc,
   EnvJsoncPatterns,
+  EnvJsoncPolicyEntry,
+  EnvJsoncPolicyPeerEntry,
+  EnvPolicyEnvJsoncConfigObject,
+  VersionKeyName,
+  EnvJsoncPolicyConfigKey,
 } from './environments.main.runtime';
 export { EnvsAspect };
 export { EnvsExecutionResult } from './runtime/envs-execution-result';

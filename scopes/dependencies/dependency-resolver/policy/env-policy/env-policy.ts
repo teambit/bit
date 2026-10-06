@@ -6,46 +6,20 @@ import type {
 } from '../variant-policy';
 import { createVariantPolicyEntry, VariantPolicy } from '../variant-policy';
 import type { DependencyLifecycleType } from '../../dependencies';
+import type {
+  EnvJsoncPolicyEntry,
+  EnvJsoncPolicyPeerEntry,
+  EnvPolicyEnvJsoncConfigObject,
+  VersionKeyName,
+  EnvJsoncPolicyConfigKey,
+} from '@teambit/envs';
 
-export type EnvJsoncPolicyEntry = {
-  name: string;
-  version: string;
-  /**
-   * hide the dependency from the component's package.json / dependencies list
-   */
-  hidden?: boolean;
-  /**
-   * force add to component dependencies even if it's not used by the component.
-   */
-  force?: boolean;
-  optional?: boolean;
-};
-
-export type EnvJsoncPolicyPeerEntry = EnvJsoncPolicyEntry & {
-  supportedRange: string;
-  /**
-   * When true, this peer dependency will be resolved as a single version at the workspace root,
-   * even if different envs specify different versions. Useful for @types packages and workspace-level
-   * tools (eslint, prettier) that must resolve from the workspace root.
-   * When false (default), conflicts are resolved per-component via env roots.
-   */
-  workspaceSingleton?: boolean;
-  /**
-   * When true, generates a pnpm override for this peer using its version,
-   * forcing all transitive dependencies to use the same version.
-   * Useful to prevent old versions from being pulled by published packages.
-   */
-  override?: boolean;
-};
-
-export type VersionKeyName = 'version' | 'supportedRange';
-
-export type EnvJsoncPolicyConfigKey = 'peers' | 'dev' | 'runtime';
-
-export type EnvPolicyEnvJsoncConfigObject = {
-  peers?: EnvJsoncPolicyPeerEntry[];
-  dev?: EnvJsoncPolicyEntry[];
-  runtime?: EnvJsoncPolicyEntry[];
+export type {
+  EnvJsoncPolicyEntry,
+  EnvJsoncPolicyPeerEntry,
+  EnvPolicyEnvJsoncConfigObject,
+  VersionKeyName,
+  EnvJsoncPolicyConfigKey,
 };
 
 /**

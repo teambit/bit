@@ -33,7 +33,7 @@ import { Slot } from '@teambit/harmony';
 import { type DependenciesGraph } from '@teambit/objects';
 import type { CodemodResult, NodeModulesLinksResult } from '@teambit/workspace.modules.node-modules-linker';
 import { linkToNodeModulesWithCodemod } from '@teambit/workspace.modules.node-modules-linker';
-import type { EnvJsonc, EnvsMain } from '@teambit/envs';
+import type { EnvJsonc, EnvJsoncPolicyPeerEntry, EnvsMain } from '@teambit/envs';
 import { EnvsAspect } from '@teambit/envs';
 import type { IpcEventsMain } from '@teambit/ipc-events';
 import { IpcEventsAspect } from '@teambit/ipc-events';
@@ -1292,9 +1292,10 @@ export class InstallMain {
             const depEntry = deps.find(({ name }) => name === pkg.name);
             if (depEntry) {
               depEntry.version = pkg.latestRange;
-              if (field === 'peers' && depEntry.supportedRange) {
-                if (!semver.intersects(pkg.latestRange, depEntry.supportedRange)) {
-                  depEntry.supportedRange = `${depEntry.supportedRange} || ${pkg.latestRange}`;
+              const peerEntry = field === 'peers' ? (depEntry as EnvJsoncPolicyPeerEntry) : undefined;
+              if (peerEntry?.supportedRange) {
+                if (!semver.intersects(pkg.latestRange, peerEntry.supportedRange)) {
+                  peerEntry.supportedRange = `${peerEntry.supportedRange} || ${pkg.latestRange}`;
                 }
               }
             }

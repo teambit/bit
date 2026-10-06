@@ -11,7 +11,7 @@ import type { ComponentID } from '@teambit/component-id';
 import { flatten, orderBy } from 'lodash';
 import type { LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
-import type { DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { resolveComponentIdFromPackageName } from '@teambit/pkg.modules.component-package-name';
 import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { ComponentFactory } from './component-factory';
 import { ComponentAspect } from './component.aspect';
@@ -38,7 +38,11 @@ export type ComponentHostSlot = SlotRegistry<ComponentFactory>;
 export type ShowFragmentSlot = SlotRegistry<ShowFragment[]>;
 
 export class ComponentMain {
-  dependencyResolver: DependencyResolverMain;
+  /**
+   * set by the dependency-resolver aspect, which depends on this aspect. typed by the part it's used for (resolving
+   * component-ids from package names), so this aspect doesn't import the dependency-resolver aspect.
+   */
+  dependencyResolver: Parameters<typeof resolveComponentIdFromPackageName>[1];
   constructor(
     /**
      * slot for component hosts to register.

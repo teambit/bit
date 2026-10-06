@@ -5,7 +5,7 @@
       16
     ],
     "components": 66,
-    "edges": 353
+    "edges": 347
   },
   "groups": [
     [
@@ -108,7 +108,6 @@
     "teambit.component/component -> teambit.compositions/compositions",
     "teambit.component/component -> teambit.dependencies/dependency-resolver",
     "teambit.component/component -> teambit.explorer/command-bar",
-    "teambit.component/component -> teambit.harmony/aspect-loader",
     "teambit.component/component -> teambit.harmony/pubsub",
     "teambit.component/component -> teambit.preview/preview",
     "teambit.component/component-compare -> teambit.component/component",
@@ -217,8 +216,6 @@
     "teambit.docs/docs -> teambit.workspace/workspace",
     "teambit.envs/envs -> teambit.component/component",
     "teambit.envs/envs -> teambit.component/issues",
-    "teambit.envs/envs -> teambit.dependencies/dependency-resolver",
-    "teambit.envs/envs -> teambit.harmony/aspect-loader",
     "teambit.explorer/command-bar -> teambit.harmony/pubsub",
     "teambit.explorer/command-bar -> teambit.ui-foundation/ui",
     "teambit.generator/generator -> teambit.component/component",
@@ -347,7 +344,6 @@
     "teambit.scope/remotes -> teambit.legacy/scope",
     "teambit.scope/remotes -> teambit.legacy/scope-api",
     "teambit.scope/remotes -> teambit.scope/network",
-    "teambit.scope/scope -> teambit.compilation/compiler",
     "teambit.scope/scope -> teambit.component/component",
     "teambit.scope/scope -> teambit.component/component-tree",
     "teambit.scope/scope -> teambit.component/graph",
@@ -382,10 +378,8 @@
     "teambit.ui-foundation/sidebar -> teambit.component/component",
     "teambit.ui-foundation/ui -> teambit.compilation/bundler",
     "teambit.ui-foundation/ui -> teambit.component/component",
-    "teambit.ui-foundation/ui -> teambit.component/isolator",
     "teambit.ui-foundation/ui -> teambit.harmony/aspect-loader",
     "teambit.ui-foundation/ui -> teambit.harmony/pubsub",
-    "teambit.ui-foundation/ui -> teambit.pipelines/builder",
     "teambit.webpack/webpack -> teambit.compilation/bundler",
     "teambit.webpack/webpack -> teambit.harmony/pubsub",
     "teambit.webpack/webpack -> teambit.workspace/workspace",

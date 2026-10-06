@@ -1,41 +1,20 @@
 import { join } from 'path';
 import pMapSeries from 'p-map-series';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
-import type { BuildContext, BuildTask, BuiltTaskResult, TaskLocation } from '@teambit/builder';
 import type { Capsule } from '@teambit/isolator';
 import type { Logger } from '@teambit/logger';
-import { UIAspect } from './ui.aspect';
-import type { UiMain } from './ui.main.runtime';
+import type { UiMain } from '@teambit/ui';
+import {
+  UIAspect,
+  BUNDLE_UI_DIR,
+  BUNDLE_UI_TASK_NAME,
+  BUNDLE_UI_HASH_FILENAME,
+  KNOWN_UIROOT_ASPECT_IDS,
+  getBundleUiArtifactDirectory,
+} from '@teambit/ui';
+import type { BuildContext, BuildTask, BuiltTaskResult, TaskLocation } from './build-task';
 
-export const BUNDLE_UI_TASK_NAME = 'BundleUI';
-export const BUNDLE_UI_DIR = 'ui-bundle';
-export const UIROOT_ASPECT_IDS = {
-  SCOPE: 'teambit.scope/scope',
-  WORKSPACE: 'teambit.workspace/workspace',
-};
-export const BUNDLE_UIROOT_DIR = {
-  [UIROOT_ASPECT_IDS.SCOPE]: 'scope',
-  [UIROOT_ASPECT_IDS.WORKSPACE]: 'workspace',
-};
-export const BUNDLE_UI_HASH_FILENAME = '.hash';
-
-/** the roots bit itself ships; anything else registered is not part of the shipped artifact. */
-export const KNOWN_UIROOT_ASPECT_IDS = new Set<string>(Object.values(UIROOT_ASPECT_IDS));
-
-/**
- * Both UI roots are bundled by a single rspack compilation, one entry each, so the roots share
- * every chunk they have in common instead of each shipping a full copy of the app. The entry name
- * is the root's short name, and each entry gets its own html naming the chunks only it needs.
- */
-export function getUiRootEntryName(uiRootAspectId: string): string {
-  // a root outside the two bit ships still gets a usable entry name rather than failing the build.
-  return BUNDLE_UIROOT_DIR[uiRootAspectId] || uiRootAspectId.replace(/[^a-zA-Z0-9-]+/g, '-');
-}
-
-export function getUiRootHtmlFilename(uiRootAspectId: string): string {
-  return `${getUiRootEntryName(uiRootAspectId)}.html`;
-}
-
+// the task lives here and not in the ui aspect, because the builder aspect registers it and depends on the ui aspect.
 export class BundleUiTask implements BuildTask {
   aspectId = 'teambit.ui-foundation/ui';
   name = BUNDLE_UI_TASK_NAME;
@@ -89,7 +68,7 @@ export class BundleUiTask implements BuildTask {
   }
 
   static getArtifactDirectory() {
-    return join('artifacts', BUNDLE_UI_DIR);
+    return getBundleUiArtifactDirectory();
   }
 
   static getArtifactDef() {

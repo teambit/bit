@@ -5,9 +5,8 @@ import type { SourceFile } from '@teambit/component.sources';
 import type { CLIMain } from '@teambit/cli';
 import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import { CLIAspect } from '@teambit/cli';
-import type { Component, ComponentMain, RegularCompDescriptor } from '@teambit/component';
+import type { AspectDefinition, Component, ComponentMain, RegularCompDescriptor } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
-import type { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import type { IssuesMain } from '@teambit/issues';
@@ -18,7 +17,6 @@ import type { Harmony, SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
-import type { AspectDefinition } from '@teambit/aspect-loader';
 import type { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import { BitError } from '@teambit/bit-error';
 import { findDuplications } from '@teambit/toolbox.array.duplications-finder';
@@ -38,7 +36,49 @@ import { EnvsCmd, GetEnvCmd, ListEnvsCmd } from './envs.cmd';
 import { EnvFragment } from './env.fragment';
 import { EnvNotFound, EnvNotConfiguredForComponent } from './exceptions';
 import { EnvPlugin, BIT_ENV_PATTERN } from './env.plugin';
-import { EnvJsoncDetector } from './env-jsonc.detector';
+
+// the env.jsonc policy types live here and not in the dependency-resolver aspect, because envs owns the env.jsonc
+// format, and the dependency-resolver aspect depends on envs.
+export type EnvJsoncPolicyEntry = {
+  name: string;
+  version: string;
+  /**
+   * hide the dependency from the component's package.json / dependencies list
+   */
+  hidden?: boolean;
+  /**
+   * force add to component dependencies even if it's not used by the component.
+   */
+  force?: boolean;
+  optional?: boolean;
+};
+
+export type EnvJsoncPolicyPeerEntry = EnvJsoncPolicyEntry & {
+  supportedRange: string;
+  /**
+   * When true, this peer dependency will be resolved as a single version at the workspace root,
+   * even if different envs specify different versions. Useful for @types packages and workspace-level
+   * tools (eslint, prettier) that must resolve from the workspace root.
+   * When false (default), conflicts are resolved per-component via env roots.
+   */
+  workspaceSingleton?: boolean;
+  /**
+   * When true, generates a pnpm override for this peer using its version,
+   * forcing all transitive dependencies to use the same version.
+   * Useful to prevent old versions from being pulled by published packages.
+   */
+  override?: boolean;
+};
+
+export type VersionKeyName = 'version' | 'supportedRange';
+
+export type EnvJsoncPolicyConfigKey = 'peers' | 'dev' | 'runtime';
+
+export type EnvPolicyEnvJsoncConfigObject = {
+  peers?: EnvJsoncPolicyPeerEntry[];
+  dev?: EnvJsoncPolicyEntry[];
+  runtime?: EnvJsoncPolicyEntry[];
+};
 
 export type EnvJsoncPatterns = {
   compositions?: string[];
@@ -49,7 +89,7 @@ export type EnvJsoncPatterns = {
 
 export type EnvJsonc = {
   extends?: string;
-  policy?: EnvPolicyConfigObject;
+  policy?: EnvPolicyEnvJsoncConfigObject;
   patterns?: EnvJsoncPatterns;
 };
 
@@ -1182,10 +1222,6 @@ if needed, use "bit env set" command to align the env id`;
 
   registerEnvJsoncResolver(resolver: EnvJsoncResolver) {
     return this.envJsoncResolverSlot.register(resolver);
-  }
-
-  getEnvJsoncDetector() {
-    return new EnvJsoncDetector();
   }
 
   async addNonLoadedEnvAsComponentIssues(components: Component[]) {

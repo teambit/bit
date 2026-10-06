@@ -38,7 +38,12 @@ import createRspackBrowserConfig from './rspack/rspack.browser.config';
 import createRspackSsrConfig from './rspack/rspack.ssr.config';
 import { writeBundleStats } from './rspack/bundle-stats';
 import type { StartPlugin, StartPluginOptions } from './start-plugin';
-import { BundleUiTask, BUNDLE_UI_HASH_FILENAME, getUiRootEntryName, getUiRootHtmlFilename } from './bundle-ui.task';
+import {
+  BUNDLE_UI_HASH_FILENAME,
+  getBundleUiArtifactDirectory,
+  getUiRootEntryName,
+  getUiRootHtmlFilename,
+} from './bundle-ui';
 
 export type UIDeps = [PubsubMain, CLIMain, GraphqlMain, ExpressMain, ComponentMain, CacheMain, LoggerMain];
 
@@ -714,7 +719,7 @@ export class UiMain {
   private getBundleUiPath(): string | undefined {
     try {
       const uiPathFromBvm = getAspectDirFromBvm(UIAspect.id);
-      return join(uiPathFromBvm, BundleUiTask.getArtifactDirectory());
+      return join(uiPathFromBvm, getBundleUiArtifactDirectory());
     } catch (err) {
       this.logger.error(`getBundleUiPath, getAspectDirFromBvm failed with err: ${err}`);
       return undefined;

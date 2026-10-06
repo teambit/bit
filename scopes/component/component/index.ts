@@ -48,5 +48,7 @@ export { useComponent, useIdFromLocation, useComponentLogs, ComponentLogsResult,
 
 // export { AspectList } from './aspect-list';
 // export { AspectEntry } from './aspect-entry';
+export { AspectDefinition } from './aspect-definition';
+export type { AspectDefinitionProps } from './aspect-definition';
 export { ComponentAspect };
 export default ComponentAspect;

@@ -14,7 +14,7 @@ import type { Configuration as WdsConfiguration } from '@rspack/dev-server';
 import { RspackDevServer } from '@rspack/dev-server';
 import type { ComponentServer } from '@teambit/bundler';
 import { createSsrMiddleware } from './ssr-middleware';
-import { getUiRootEntryName, getUiRootHtmlFilename } from './bundle-ui.task';
+import { getUiRootEntryName, getUiRootHtmlFilename } from './bundle-ui';
 import type { StartPlugin } from './start-plugin';
 import type { ProxyEntry, UIRoot } from './ui-root';
 import { UIRuntime } from './ui.aspect';

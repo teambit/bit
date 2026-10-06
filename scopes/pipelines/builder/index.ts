@@ -5,6 +5,7 @@ export { BuildPipe } from './build-pipe';
 export type { TaskResults } from './build-pipe';
 export type { ComponentResult, TaskMetadata } from './types';
 export type { BuildContext, BuildTask, BuiltTaskResult, TaskLocation } from './build-task';
+export { BundleUiTask } from './bundle-ui.task';
 export { CAPSULE_ARTIFACTS_DIR } from './build-task';
 export type { PipeName } from './builder.service';
 export type { BuilderMain, RawBuilderData, BuilderData, OnTagOpts, LegacyOnTagResult } from './builder.main.runtime';

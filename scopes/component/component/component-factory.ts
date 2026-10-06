@@ -3,9 +3,9 @@ import type { BitId } from '@teambit/legacy-bit-id';
 import type { ComponentID } from '@teambit/component-id';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import type { ComponentLog } from '@teambit/objects';
-import type { AspectDefinition } from '@teambit/aspect-loader';
 import type { DependencyList } from '@teambit/dependency-resolver';
 import type { Component, InvalidComponent } from './component';
+import type { AspectDefinition } from './aspect-definition';
 import type { State } from './state';
 import type { Snap } from './snap';
 

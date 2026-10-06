@@ -1,4 +1,3 @@
-import type { PluginDefinition } from '@teambit/aspect-loader';
 import type { Harmony } from '@teambit/harmony';
 import { ComponentID } from '@teambit/component';
 import type { WorkerMain } from '@teambit/worker';
@@ -15,7 +14,9 @@ import type { EnvsRegistry, ServicesRegistry } from './environments.main.runtime
  */
 export const BIT_ENV_PATTERN = '*.bit-env.*';
 
-export class EnvPlugin implements PluginDefinition {
+// implements PluginDefinition of @teambit/aspect-loader. it's not declared here, because aspect-loader depends on envs.
+// the shape is type-checked where aspect-loader registers this plugin.
+export class EnvPlugin {
   constructor(
     private envSlot: EnvsRegistry,
     private servicesRegistry: ServicesRegistry,
