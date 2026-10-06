@@ -607,7 +607,7 @@ function applyComponentIdNames(trees: DependentsTree[]): void {
 // Packages and snapshots are deep-merged per key so that pnpm-managed metadata the graph
 // doesn't round-trip (e.g. `optional`, `transitivePeerDependencies`, `dev`) survives on
 // entries the graph also knows about.
-function mergeGraphLockfileIntoExisting(existing: LockfileFile, graph: LockfileFile): LockfileFile {
+export function mergeGraphLockfileIntoExisting(existing: LockfileFile, graph: LockfileFile): LockfileFile {
   const importers: NonNullable<LockfileFile['importers']> = { ...existing.importers };
   for (const [importerId, graphImporter] of Object.entries(graph.importers ?? {})) {
     const existingImporter = importers[importerId];
@@ -641,6 +641,12 @@ function mergeGraphLockfileIntoExisting(existing: LockfileFile, graph: LockfileF
     packages: mergeEntryRecords(existing.packages, graph.packages),
     snapshots: mergeEntryRecords(existing.snapshots, graph.snapshots),
   };
+  // The merged lockfile mixes resolutions from both sides, so it can only
+  // claim the readPackage hooks checksum both were resolved with. Otherwise
+  // drop it, and pnpm resolves again instead of trusting the mix.
+  if (existing.pnpmfileChecksum !== graph.pnpmfileChecksum) {
+    delete merged.pnpmfileChecksum;
+  }
   if (existingBit || graphBit) {
     (merged as LockfileFile & { bit?: Record<string, unknown> }).bit = {
       ...existingBit,
