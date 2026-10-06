@@ -30,7 +30,7 @@ overrides:
   '@pnpm/util.lex-comparator': 3.0.2
   '@pnpm/config.nerf-dart': 1.0.1
 
-untrackedPnpmfileReadPackageHook: true
+pnpmfileChecksum: bit-1
 
 importers:
 
@@ -17636,7 +17636,7 @@ importers:
     devDependencies:
       '@teambit/defender.content.formatter-overview':
         specifier: 1.96.11
-        version: 1.96.11(@teambit/community.ui.bit-cli.commands-provider@0.0.52)(@teambit/community.ui.community-highlighter@1.96.7)(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
+        version: 1.96.11(@teambit/community.ui.bit-cli.commands-provider@0.0.51)(@teambit/community.ui.community-highlighter@1.96.7)(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
@@ -31463,12 +31463,6 @@ packages:
   '@teambit/community.ui.bit-cli.commands-provider@0.0.51':
     resolution: {integrity: sha512-m+/+cilIUR5eXA7wykHok75ATds5S5SEtWbrKzB1E00efiNJTJQ2rdwGxNcNqARUMQoLbHCqZl01l9WA2L6SUA==}
     peerDependencies:
-      react: 19.1.0
-
-  '@teambit/community.ui.bit-cli.commands-provider@0.0.52':
-    resolution: {integrity: sha512-ONZ1/SdETxNEq54Gd7pi0lyPD0C+2p+C6uz3U8weIgDouLPlw4qiBqnNzg8wxEo0+u84elVyGBNOXi89oByAkg==}
-    peerDependencies:
-      '@types/react': ^19.0.0
       react: 19.1.0
 
   '@teambit/community.ui.bit-cli.terminal@0.0.28':
@@ -58981,25 +58975,8 @@ snapshots:
     transitivePeerDependencies:
       - '@teambit/community.ui.community-highlighter'
 
-  '@teambit/community.ui.bit-cli.commands-explorer@0.0.45(@teambit/community.ui.bit-cli.commands-provider@0.0.52)(@teambit/community.ui.community-highlighter@1.96.7)(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)':
-    dependencies:
-      '@teambit/community.ui.bit-cli.commands-provider': 0.0.52(@types/react@19.2.18)(react@19.2.7)
-      '@teambit/community.ui.bit-cli.terminal': 0.0.28(@teambit/community.ui.community-highlighter@1.96.7)(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/design.ui.tooltip': 0.0.361(react-dom@19.2.7)(react@19.2.7)
-      '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
-      classnames: 2.3.2
-      react: 19.2.7
-      react-dom: 19.2.7(react@19.2.7)
-    transitivePeerDependencies:
-      - '@teambit/community.ui.community-highlighter'
-
   '@teambit/community.ui.bit-cli.commands-provider@0.0.51(react@19.2.7)':
     dependencies:
-      react: 19.2.7
-
-  '@teambit/community.ui.bit-cli.commands-provider@0.0.52(@types/react@19.2.18)(react@19.2.7)':
-    dependencies:
-      '@types/react': 19.2.18
       react: 19.2.7
 
   '@teambit/community.ui.bit-cli.terminal@0.0.28(@teambit/community.ui.community-highlighter@1.96.7)(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)':
@@ -63050,16 +63027,6 @@ snapshots:
       - '@testing-library/react'
       - react-dom
 
-  '@teambit/defender.content.formatter-overview@1.96.11(@teambit/community.ui.bit-cli.commands-provider@0.0.52)(@teambit/community.ui.community-highlighter@1.96.7)(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)':
-    dependencies:
-      '@teambit/defender.docs.using-formatters': 0.0.3(@teambit/community.ui.bit-cli.commands-provider@0.0.52)(@teambit/community.ui.community-highlighter@1.96.7)(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
-      react: 19.2.7
-    transitivePeerDependencies:
-      - '@teambit/community.ui.bit-cli.commands-provider'
-      - '@teambit/community.ui.community-highlighter'
-      - '@testing-library/react'
-      - react-dom
-
   '@teambit/defender.content.linter-overview@1.96.12(@teambit/community.ui.bit-cli.commands-provider@0.0.51)(@teambit/community.ui.community-highlighter@1.96.7)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)':
     dependencies:
       '@teambit/defender.docs.using-linters': 0.0.4(@teambit/community.ui.bit-cli.commands-provider@0.0.51)(@teambit/community.ui.community-highlighter@1.96.7)(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -63089,17 +63056,6 @@ snapshots:
   '@teambit/defender.docs.using-formatters@0.0.3(@teambit/community.ui.bit-cli.commands-provider@0.0.51)(@teambit/community.ui.community-highlighter@1.96.7)(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)':
     dependencies:
       '@teambit/community.ui.bit-cli.commands-explorer': 0.0.45(@teambit/community.ui.bit-cli.commands-provider@0.0.51)(@teambit/community.ui.community-highlighter@1.96.7)(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/community.ui.bit-cli.terminal': 0.0.30(@teambit/community.ui.community-highlighter@1.96.7)(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
-      react: 19.2.7
-    transitivePeerDependencies:
-      - '@teambit/community.ui.bit-cli.commands-provider'
-      - '@teambit/community.ui.community-highlighter'
-      - '@testing-library/react'
-      - react-dom
-
-  '@teambit/defender.docs.using-formatters@0.0.3(@teambit/community.ui.bit-cli.commands-provider@0.0.52)(@teambit/community.ui.community-highlighter@1.96.7)(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)':
-    dependencies:
-      '@teambit/community.ui.bit-cli.commands-explorer': 0.0.45(@teambit/community.ui.bit-cli.commands-provider@0.0.52)(@teambit/community.ui.community-highlighter@1.96.7)(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/community.ui.bit-cli.terminal': 0.0.30(@teambit/community.ui.community-highlighter@1.96.7)(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       react: 19.2.7
     transitivePeerDependencies:
