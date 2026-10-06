@@ -385,9 +385,13 @@ export default class Version extends BitObject {
     return this._flattenedDependencies;
   }
 
+  /**
+   * a new list is saved in the Version itself, so a ref to a separate object, if there was one, is dropped.
+   */
   set flattenedDependencies(flattenedDependencies: ComponentIdList) {
     this._flattenedDependencies = flattenedDependencies;
     this.flattenedDependencyIds = undefined;
+    this.flattenedDependenciesRef = undefined;
   }
 
   /**
@@ -414,7 +418,9 @@ export default class Version extends BitObject {
    */
   loadFlattenedDependenciesSync(repo: Repository): ComponentIdList {
     if (this._flattenedDependencies || !this.flattenedDependenciesRef) return this.flattenedDependencies;
-    const source = repo.loadSync(this.flattenedDependenciesRef, false) as Source | undefined;
+    // objects fetched from a remote without being imported are only in the cache, not on the disk.
+    const source = (repo.getCache(this.flattenedDependenciesRef) ||
+      repo.loadSync(this.flattenedDependenciesRef, false)) as Source | undefined;
     return this.setFlattenedDependenciesFromSource(source);
   }
 
@@ -426,8 +432,10 @@ export default class Version extends BitObject {
       );
     }
     const ids: string[] = JSON.parse(source.contents.toString());
-    this.flattenedDependencies = ComponentIdList.fromArray(ids.map(getFlattenedId));
-    return this.flattenedDependencies;
+    // not by the setter, which would drop the ref.
+    this._flattenedDependencies = ComponentIdList.fromArray(ids.map(getFlattenedId));
+    this.flattenedDependencyIds = undefined;
+    return this._flattenedDependencies;
   }
 
   /**

@@ -160,10 +160,25 @@ describe('Version', () => {
         expect(parsed.flattenedDependencies).to.equal(loaded);
         expect(parsed.toObject()).to.not.have.property('flattenedDependencies');
       });
-      it('should load the list synchronously', () => {
+      it('should load the list synchronously, from the cache or from the disk', () => {
+        const fromDisk = Version.parse(version.toBuffer(false).toString(), hash);
+        const diskRepo = { getCache: () => undefined, loadSync: () => source } as any;
+        expect(fromDisk.loadFlattenedDependenciesSync(diskRepo).map((id) => id.toString())).to.deep.equal(flattenedStr);
+        const fromCache = Version.parse(version.toBuffer(false).toString(), hash);
+        const cacheRepo = { getCache: () => source, loadSync: () => undefined } as any;
+        expect(fromCache.loadFlattenedDependenciesSync(cacheRepo).map((id) => id.toString())).to.deep.equal(
+          flattenedStr
+        );
+        expect(fromCache.flattenedDependenciesRef?.toString()).to.equal(source.hash().toString());
+      });
+      it('should save a newly set list in the Version, instead of the ref', () => {
         const parsed = Version.parse(version.toBuffer(false).toString(), hash);
-        const repo = { loadSync: () => source } as any;
-        expect(parsed.loadFlattenedDependenciesSync(repo).map((id) => id.toString())).to.deep.equal(flattenedStr);
+        parsed.flattenedDependencies = new ComponentIdList(ComponentID.fromString('my-scope/is-type@0.0.3'));
+        const versionObj = parsed.toObject();
+        expect(versionObj).to.not.have.property('flattenedDependenciesRef');
+        expect(versionObj.flattenedDependencies).to.deep.equal([
+          { scope: 'my-scope', name: 'is-type', version: '0.0.3' },
+        ]);
       });
       it('should throw, not return an empty list, when the Source is missing', async () => {
         const parsed = Version.parse(version.toBuffer(false).toString(), hash);

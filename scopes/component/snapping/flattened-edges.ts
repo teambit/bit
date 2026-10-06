@@ -117,8 +117,10 @@ export class FlattenedEdgesGetter {
     await Promise.all(
       componentsAndVersions.map(async ({ component, version, versionStr }) => {
         const flattenedEdges = await version.getFlattenedEdges(this.scope.legacyScope.objects);
-        const flattenedDependencies = await version.loadFlattenedDependencies(this.scope.legacyScope.objects);
-        if (!flattenedEdges.length && flattenedDependencies.length) {
+        if (
+          !flattenedEdges.length &&
+          (await version.loadFlattenedDependencies(this.scope.legacyScope.objects)).length
+        ) {
           missingEdges.push(component.toComponentId().changeVersion(versionStr));
         }
         this.addFlattenedEdgesToGraph(flattenedEdges);
