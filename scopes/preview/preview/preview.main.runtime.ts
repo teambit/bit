@@ -7,7 +7,14 @@ import { PubsubAspect } from '@teambit/pubsub';
 import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import { CLIAspect } from '@teambit/cli';
 import type { CLIMain } from '@teambit/cli';
-import type { Component, ComponentMain, ComponentMap, ComponentID, ResolveAspectsOptions } from '@teambit/component';
+import type {
+  Component,
+  ComponentMain,
+  ComponentMap,
+  ComponentID,
+  ComponentPreviewSize,
+  ResolveAspectsOptions,
+} from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
 import { EnvsAspect } from '@teambit/envs';
 import type { EnvsExecutionResult, EnvsMain, ExecutionContext, PreviewEnv } from '@teambit/envs';
@@ -99,16 +106,7 @@ export type PreviewFiles = {
 
 export type ComponentPreviewSizedFile = Asset;
 
-export type ComponentPreviewSize = {
-  files: ComponentPreviewSizedFile[];
-  assets: ComponentPreviewSizedFile[];
-  totalFiles: number;
-  compressedTotalFiles?: number;
-  totalAssets: number;
-  compressedTotalAssets?: number;
-  total: number;
-  compressedTotal?: number;
-};
+export type { ComponentPreviewSize };
 
 export type ComponentPreviewMetaData = {
   size?: ComponentPreviewSize;

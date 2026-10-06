@@ -3,19 +3,13 @@ import flatten from 'lodash.flatten';
 import copy from 'copy-to-clipboard';
 import type { RouteProps } from 'react-router-dom';
 import type { LinkProps } from '@teambit/base-react.navigation.link';
-import type { CommandBarUI, CommandEntry } from '@teambit/command-bar';
-import { CommandBarAspect } from '@teambit/command-bar';
 import { DeprecationIcon } from '@teambit/component.ui.deprecation-icon';
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
-import { PreviewAspect, ClickInsideAnIframeEvent } from '@teambit/preview';
-import type { BitBaseEvent, PubsubUI } from '@teambit/pubsub';
-import { PubsubAspect } from '@teambit/pubsub';
 import type { ReactRouterUI } from '@teambit/react-router';
 import { ReactRouterAspect } from '@teambit/react-router';
 import { UIRuntime } from '@teambit/harmony.modules.runtimes';
 import { groupBy } from 'lodash';
-import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
 import type { MenuItem, MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
 import type { NavigationSlot, RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { Import } from '@teambit/ui-foundation.ui.use-box.menu';
@@ -44,6 +38,18 @@ export type ComponentUIConfig = {
   commandBar: boolean;
 };
 
+/**
+ * a command the component page offers to the command bar (the shape of the command-bar's `CommandEntry`).
+ */
+export type ComponentCommand = {
+  id: string;
+  action: () => void;
+  keybinding?: string | string[];
+  displayName: string;
+};
+
+export type CommandRunner = (commandId: string) => unknown;
+
 export type Server = {
   env: string;
   url: string;
@@ -55,14 +61,9 @@ export type ComponentMeta = {
 
 export class ComponentUI {
   readonly routePath = `/*`;
-  private componentSearcher: ComponentSearcher;
+  readonly componentSearcher: ComponentSearcher;
 
   constructor(
-    /**
-     * Pubsub aspects
-     */
-    private pubsub: PubsubUI,
-
     private routeSlot: RouteSlot,
 
     private navSlot: OrderedNavigationSlot,
@@ -87,12 +88,14 @@ export class ComponentUI {
 
     private componentSearchResultSlot: ComponentSearchResultSlot,
 
-    private commandBarUI: CommandBarUI,
+    reactRouterUi: ReactRouterUI,
 
-    reactRouterUi: ReactRouterUI
+    /**
+     * whether the component page offers its commands and component search to the command bar
+     */
+    readonly isCommandBarEnabled = true
   ) {
     this.componentSearcher = new ComponentSearcher({ navigate: reactRouterUi.navigateTo });
-    if (isBrowser) this.registerPubSub();
   }
 
   get routes() {
@@ -119,10 +122,23 @@ export class ComponentUI {
     }
   };
 
+  private commandRunner?: CommandRunner;
+
+  /**
+   * set by the command bar, so the menu items can run its commands.
+   */
+  registerCommandRunner(commandRunner: CommandRunner) {
+    this.commandRunner = commandRunner;
+  }
+
+  private runCommand(commandId: string) {
+    return this.commandRunner?.(commandId);
+  }
+
   /**
    * key bindings used by component aspect
    */
-  private keyBindings: CommandEntry[] = [
+  readonly keyBindings: ComponentCommand[] = [
     {
       id: 'component.copyBitId', // TODO - extract to a component!
       action: () => {
@@ -144,25 +160,25 @@ export class ComponentUI {
       category: 'general',
       title: 'Open command bar',
       keyChar: 'mod+k',
-      handler: () => this.commandBarUI?.run('command-bar.open'),
+      handler: () => this.runCommand('command-bar.open'),
     },
     {
       category: 'general',
       title: 'Toggle component list',
       keyChar: 'alt+s',
-      handler: () => this.commandBarUI?.run('sidebar.toggle'),
+      handler: () => this.runCommand('sidebar.toggle'),
     },
     {
       category: 'workflow',
       title: 'Copy component ID',
       keyChar: '.',
-      handler: () => this.commandBarUI?.run('component.copyBitId'),
+      handler: () => this.runCommand('component.copyBitId'),
     },
     {
       category: 'workflow',
       title: 'Copy component package name',
       keyChar: ',',
-      handler: () => this.commandBarUI?.run('component.copyNpmId'),
+      handler: () => this.runCommand('component.copyNpmId'),
     },
   ];
 
@@ -193,21 +209,6 @@ export class ComponentUI {
       order: 0,
     };
   };
-
-  registerPubSub() {
-    this.pubsub.sub(PreviewAspect.id, (be: BitBaseEvent<any>) => {
-      if (be.type === ClickInsideAnIframeEvent.TYPE) {
-        const event = new MouseEvent('mousedown', {
-          view: window,
-          bubbles: true,
-          cancelable: true,
-        });
-
-        const body = document.body;
-        body?.dispatchEvent(event);
-      }
-    });
-  }
 
   handleComponentChange = (activeComponent?: ComponentModel) => {
     this.activeComponent = activeComponent;
@@ -304,7 +305,7 @@ export class ComponentUI {
     this.componentSearcher.update(components || []);
   };
 
-  static dependencies = [PubsubAspect, CommandBarAspect, ReactRouterAspect];
+  static dependencies = [ReactRouterAspect];
 
   static runtime = UIRuntime;
 
@@ -324,7 +325,7 @@ export class ComponentUI {
   };
 
   static async provider(
-    [pubsub, commandBarUI, reactRouterUI]: [PubsubUI, CommandBarUI, ReactRouterUI],
+    [reactRouterUI]: [ReactRouterUI],
     config: ComponentUIConfig,
     [
       routeSlot,
@@ -351,7 +352,6 @@ export class ComponentUI {
     // TODO: refactor ComponentHost to a separate extension (including sidebar, host, graphql, etc.)
     // TODO: add contextual hook for ComponentHost @uri/@oded
     const componentUI = new ComponentUI(
-      pubsub,
       routeSlot,
       navSlot,
       consumeMethodSlot,
@@ -361,26 +361,17 @@ export class ComponentUI {
       menuItemSlot,
       pageSlot,
       componentSearchResultSlot,
-      commandBarUI,
-      reactRouterUI
+      reactRouterUI,
+      config.commandBar
     );
     const aspectSection = new AspectSection();
     // @ts-ignore
     componentUI.registerSearchResultWidget({ key: 'deprecation', end: DeprecationIcon });
 
-    if (componentUI.commandBarUI && config.commandBar) {
-      componentUI.commandBarUI.addCommand(...componentUI.keyBindings);
-      commandBarUI.addSearcher(componentUI.componentSearcher);
-    }
-
     componentUI.registerMenuItem(componentUI.menuItems);
     componentUI.registerRoute(aspectSection.route);
     componentUI.registerWidget(aspectSection.navigationLink, aspectSection.order);
     componentUI.registerConsumeMethod(componentUI.bitMethod);
-    componentUI.registerRightSideMenuItem({
-      item: <commandBarUI.CommandBarButton />,
-      order: 90,
-    });
     return componentUI;
   }
 }

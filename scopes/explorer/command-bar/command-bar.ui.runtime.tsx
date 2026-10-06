@@ -7,6 +7,8 @@ import { Slot } from '@teambit/harmony';
 import type { UiUI } from '@teambit/ui';
 import { UIRuntime } from '@teambit/harmony.modules.runtimes';
 import { UIAspect } from '@teambit/ui';
+import type { ComponentUI } from '@teambit/component';
+import { ComponentAspect } from '@teambit/component';
 import type { PubsubUI } from '@teambit/pubsub';
 import { PubsubAspect } from '@teambit/pubsub';
 import { ReactRouterAspect } from '@teambit/react-router';
@@ -182,7 +184,7 @@ export class CommandBarUI {
     private config: CommandBarConfig
   ) {}
 
-  static dependencies = [UIAspect, PubsubAspect, ReactRouterAspect];
+  static dependencies = [UIAspect, PubsubAspect, ComponentAspect, ReactRouterAspect];
   static slots = [Slot.withType<SearchProvider>(), Slot.withType<CommandEntry[]>()];
   static defaultConfig: CommandBarConfig = {
     debounce: undefined,
@@ -191,7 +193,7 @@ export class CommandBarUI {
   static runtime = UIRuntime;
 
   static async provider(
-    [uiUi, pubsubUI]: [UiUI | undefined, PubsubUI | undefined],
+    [uiUi, pubsubUI, componentUI]: [UiUI | undefined, PubsubUI | undefined, ComponentUI | undefined],
     config: CommandBarConfig,
     [searcherSlot, commandSlots]: [SearcherSlot, CommandSlot]
   ) {
@@ -214,6 +216,18 @@ export class CommandBarUI {
 
     if (uiUi) {
       uiUi.registerHudItem(<commandBar.CommandBar key="commandBar" />);
+    }
+
+    if (componentUI) {
+      componentUI.registerCommandRunner((commandId) => commandBar.run(commandId));
+      if (componentUI.isCommandBarEnabled) {
+        commandBar.addCommand(...componentUI.keyBindings);
+        commandBar.addSearcher(componentUI.componentSearcher);
+      }
+      componentUI.registerRightSideMenuItem({
+        item: <commandBar.CommandBarButton />,
+        order: 90,
+      });
     }
 
     return commandBar;

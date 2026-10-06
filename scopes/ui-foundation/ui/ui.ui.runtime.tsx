@@ -1,5 +1,7 @@
 import type { GraphqlUI } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
+import type { PubsubUI } from '@teambit/pubsub';
+import { PubsubAspect } from '@teambit/pubsub';
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { ReactRouterUI } from '@teambit/react-router';
@@ -129,18 +131,19 @@ export class UiUI {
 
   static slots = [Slot.withType<UIRootFactory>(), Slot.withType<ReactNode>(), Slot.withType<RenderPlugin>()];
 
-  static dependencies = [GraphqlAspect, ReactRouterAspect];
+  static dependencies = [GraphqlAspect, ReactRouterAspect, PubsubAspect];
 
   static runtime = UIRuntime;
 
   static async provider(
-    [GraphqlUi, router]: [GraphqlUI, ReactRouterUI],
+    [GraphqlUi, router, pubsubUI]: [GraphqlUI, ReactRouterUI, PubsubUI],
     config,
     [uiRootSlot, hudSlot, renderLifecycleSlot]: [UIRootRegistry, HudSlot, RenderPluginsSlot]
   ) {
     const uiUi = new UiUI(router, uiRootSlot, hudSlot, renderLifecycleSlot);
 
     if (GraphqlUi) uiUi.registerRenderHooks(GraphqlUi.renderPlugins);
+    if (pubsubUI) uiUi.registerRenderHooks({ reactContext: pubsubUI.getPubSubContext() });
 
     return uiUi;
   }
