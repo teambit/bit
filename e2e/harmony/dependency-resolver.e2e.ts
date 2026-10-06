@@ -1,6 +1,7 @@
 import chai, { expect } from 'chai';
 import path from 'path';
 import fs from 'fs-extra';
+import yaml from 'js-yaml';
 import { generateRandomStr } from '@teambit/toolbox.string.random';
 import rimraf from 'rimraf';
 import { Extensions } from '@teambit/legacy.constants';
