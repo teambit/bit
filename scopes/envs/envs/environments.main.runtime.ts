@@ -6,14 +6,13 @@ import type { SourceFile } from '@teambit/component.sources';
 import type { CLIMain } from '@teambit/cli';
 import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import { CLIAspect } from '@teambit/cli';
-import type { Component, ComponentMain } from '@teambit/component';
+import type { Component, ComponentMain, RegularCompDescriptor } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
 import type { EnvPolicyConfigObject } from '@teambit/dependency-resolver';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import type { IssuesMain } from '@teambit/issues';
 import { IssuesAspect } from '@teambit/issues';
-import type { EnvJsoncPatterns } from '@teambit/dev-files';
 import pMapSeries from 'p-map-series';
 import { IssuesClasses } from '@teambit/component-issues';
 import type { Harmony, SlotRegistry } from '@teambit/harmony';
@@ -49,6 +48,13 @@ import {
 } from './legacy-core-envs';
 import { getFallbackTypescriptCompiler } from './fallback-typescript-compiler';
 
+export type EnvJsoncPatterns = {
+  compositions?: string[];
+  docs?: string[];
+  tests?: string[];
+  [key: string]: string[] | undefined;
+};
+
 export type EnvJsonc = {
   extends?: string;
   policy?: EnvPolicyConfigObject;
@@ -82,13 +88,7 @@ export type EnvTransformer = (env: Environment) => Environment;
 
 export type ServicesRegistry = SlotRegistry<Array<EnvService<any>>>;
 
-export type RegularCompDescriptor = {
-  id: string;
-  icon?: string;
-  type?: string;
-  name?: string;
-  description?: string;
-};
+export type { RegularCompDescriptor };
 export type EnvCompDescriptorProps = RegularCompDescriptor & {
   resolvedEnvJsonc?: ResolvedEnvJsonc;
   services?: {

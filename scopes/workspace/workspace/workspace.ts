@@ -64,7 +64,7 @@ import {
 import path from 'path';
 import type { Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import type { WatchOptions } from '@teambit/watcher';
+import type { WatchOptions } from './watch-options';
 import type { ComponentLog, Lane } from '@teambit/objects';
 import type { JsonVinyl } from '@teambit/component.sources';
 import { SourceFile, DataToPersist, PackageJsonFile } from '@teambit/component.sources';

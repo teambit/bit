@@ -209,6 +209,14 @@ export interface ReportOptions {
   outputStream?: OutputStream;
 }
 
+/**
+ * Recorded as the lockfile's `pnpmfileChecksum`, so pnpm reuses the resolved
+ * dependencies across installs instead of treating the readPackage hooks as
+ * untracked and resolving everything again. Bump it when the hooks change what
+ * they do to dependency manifests, so existing lockfiles are resolved again.
+ */
+const READ_PACKAGE_HOOKS_CHECKSUM = 'bit-1';
+
 export async function install(
   rootDir: string,
   manifestsByPaths: Record<string, ProjectManifest>,
@@ -338,6 +346,7 @@ export async function install(
     proxyConfig: toNodeApiProxyConfig(proxyConfig),
     networkConfig: toNodeApiNetworkConfig(networkConfig),
     overrides,
+    readPackageHookChecksum: READ_PACKAGE_HOOKS_CHECKSUM,
     nodeLinker: options.nodeLinker,
     // Resolve bare-semver deps on workspace components (incl. auto-installed
     // peers naming a sibling component) from the workspace instead of the
