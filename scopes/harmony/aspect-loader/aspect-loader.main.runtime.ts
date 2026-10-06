@@ -863,7 +863,7 @@ export class AspectLoaderMain {
       const runtimeManifest = srcRuntimeManifest ? join(dir, 'dist', srcRuntimeManifest) : null;
       const aspectId = aspectFilePath ? this.getAspectIdFromAspectFile(aspectFilePath) : undefined;
 
-      return new AspectDefinition(dir, aspectFilePath, runtimeManifest, undefined, aspectId, true);
+      return new AspectDefinition<Component>(dir, aspectFilePath, runtimeManifest, undefined, aspectId, true);
     });
   }
 

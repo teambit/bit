@@ -1,4 +1,4 @@
-import type { PluginDefinition } from '@teambit/aspect-loader';
+import type { PluginDefinition } from '@teambit/harmony.modules.aspect-loader-contracts';
 import type { Harmony } from '@teambit/harmony';
 import { ComponentID } from '@teambit/component';
 import type { WorkerMain } from '@teambit/worker';

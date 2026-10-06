@@ -1017,6 +1017,20 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/models/scope-model"
     },
+    "modules/aspect-loader-contracts": {
+        "name": "modules/aspect-loader-contracts",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.harmony",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/modules/aspect-loader-contracts",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@2.1.3": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-babel-mocha"
+            }
+        }
+    },
     "modules/babel-compiler": {
         "name": "modules/babel-compiler",
         "scope": "teambit.compilation",
@@ -1065,6 +1079,20 @@
         "version": "0.0.217",
         "mainFile": "index.ts",
         "rootDir": "scopes/lanes/modules/create-lane"
+    },
+    "modules/dependency-resolver-contracts": {
+        "name": "modules/dependency-resolver-contracts",
+        "scope": "",
+        "version": "",
+        "defaultScope": "teambit.dependencies",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/dependencies/modules/dependency-resolver-contracts",
+        "config": {
+            "teambit.node/envs/node-babel-mocha@2.1.3": {},
+            "teambit.envs/envs": {
+                "env": "teambit.node/envs/node-babel-mocha"
+            }
+        }
     },
     "modules/diff": {
         "name": "modules/diff",

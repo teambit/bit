@@ -1,5 +1,5 @@
 import { parse } from 'comment-json';
-import type { DependencyDetector, FileContext } from '@teambit/dependency-resolver';
+import type { DependencyDetector, FileContext } from '@teambit/dependencies.modules.dependency-resolver-contracts';
 
 export class EnvJsoncDetector implements DependencyDetector {
   isSupported(context: FileContext): boolean {

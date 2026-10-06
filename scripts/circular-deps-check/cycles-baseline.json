@@ -2,11 +2,10 @@
   "summary": {
     "groups": [
       27,
-      16,
-      5
+      16
     ],
-    "components": 48,
-    "edges": 168
+    "components": 43,
+    "edges": 156
   },
   "groups": [
     [
@@ -55,13 +54,6 @@
       "teambit.scope/remote-actions",
       "teambit.scope/remotes",
       "teambit.semantics/doc-parser"
-    ],
-    [
-      "teambit.component/component",
-      "teambit.component/issues",
-      "teambit.dependencies/dependency-resolver",
-      "teambit.envs/envs",
-      "teambit.harmony/aspect-loader"
     ]
   ],
   "edges": [
@@ -74,8 +66,6 @@
     "teambit.compilation/compiler -> teambit.ui-foundation/ui",
     "teambit.compilation/compiler -> teambit.workspace/watcher",
     "teambit.compilation/compiler -> teambit.workspace/workspace",
-    "teambit.component/component -> teambit.dependencies/dependency-resolver",
-    "teambit.component/component -> teambit.harmony/aspect-loader",
     "teambit.component/component-compare -> teambit.component/dev-files",
     "teambit.component/component-compare -> teambit.pipelines/builder",
     "teambit.component/component-compare -> teambit.scope/importer",
@@ -92,7 +82,6 @@
     "teambit.component/dev-files -> teambit.workspace/workspace",
     "teambit.component/graph -> teambit.component/component-compare",
     "teambit.component/isolator -> teambit.component/graph",
-    "teambit.component/issues -> teambit.component/component",
     "teambit.component/lister -> teambit.workspace/workspace",
     "teambit.component/mover -> teambit.workspace/workspace",
     "teambit.component/new-component-helper -> teambit.component/tracker",
@@ -103,13 +92,6 @@
     "teambit.component/sources -> teambit.legacy/scope",
     "teambit.component/sources -> teambit.pkg/modules/component-package-name",
     "teambit.component/tracker -> teambit.workspace/workspace",
-    "teambit.dependencies/dependency-resolver -> teambit.component/component",
-    "teambit.dependencies/dependency-resolver -> teambit.envs/envs",
-    "teambit.dependencies/dependency-resolver -> teambit.harmony/aspect-loader",
-    "teambit.envs/envs -> teambit.component/component",
-    "teambit.envs/envs -> teambit.component/issues",
-    "teambit.envs/envs -> teambit.dependencies/dependency-resolver",
-    "teambit.envs/envs -> teambit.harmony/aspect-loader",
     "teambit.explorer/command-bar -> teambit.ui-foundation/ui",
     "teambit.generator/generator -> teambit.component/new-component-helper",
     "teambit.generator/generator -> teambit.component/tracker",
@@ -123,8 +105,6 @@
     "teambit.harmony/application -> teambit.scope/scope",
     "teambit.harmony/application -> teambit.workspace/watcher",
     "teambit.harmony/application -> teambit.workspace/workspace",
-    "teambit.harmony/aspect-loader -> teambit.component/component",
-    "teambit.harmony/aspect-loader -> teambit.envs/envs",
     "teambit.harmony/ipc-events -> teambit.scope/scope",
     "teambit.legacy/bit-map -> teambit.legacy/consumer-component",
     "teambit.legacy/bit-map -> teambit.legacy/extension-data",

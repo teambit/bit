@@ -11,7 +11,6 @@ import type { ComponentID } from '@teambit/component-id';
 import { flatten, orderBy } from 'lodash';
 import type { LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
-import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { ComponentFactory } from './component-factory';
 import { ComponentAspect } from './component.aspect';
@@ -37,8 +36,13 @@ export type ComponentHostSlot = SlotRegistry<ComponentFactory>;
 
 export type ShowFragmentSlot = SlotRegistry<ShowFragment[]>;
 
+/**
+ * fetches the manifest of a package from the registry (implemented by the dependency-resolver).
+ */
+export type PackageManifestFetcher = { fetchFullPackageManifest: (packageName: string) => Promise<any> };
+
 export class ComponentMain {
-  dependencyResolver: DependencyResolverMain;
+  private packageManifestFetcher?: PackageManifestFetcher;
   constructor(
     /**
      * slot for component hosts to register.
@@ -152,6 +156,18 @@ export class ComponentMain {
   /**
    * register a show fragment to display further information in the `bit show` command.
    */
+  /**
+   * lets the commands of this aspect fetch package manifests, e.g. `bit show <package-name>`.
+   */
+  registerPackageManifestFetcher(packageManifestFetcher: PackageManifestFetcher) {
+    this.packageManifestFetcher = packageManifestFetcher;
+  }
+
+  getPackageManifestFetcher(): PackageManifestFetcher {
+    if (!this.packageManifestFetcher) throw new Error('no package-manifest fetcher was registered');
+    return this.packageManifestFetcher;
+  }
+
   registerShowFragments(showFragments: ShowFragment[]) {
     this.showFragmentSlot.register(showFragments);
     return this;

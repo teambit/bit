@@ -30,7 +30,12 @@ export { State } from './state';
 export type { Hash } from './hash';
 export { TagMap } from './tag-map';
 export { ComponentMap } from './component-map';
-export type { ComponentMain } from './component.main.runtime';
+export type { ComponentMain, PackageManifestFetcher } from './component.main.runtime';
+export type {
+  ComponentDependencyList,
+  ComponentDependencyEntry,
+  ComponentDependenciesManifest,
+} from './component-dependencies';
 export type { ComponentUI } from './component.ui.runtime';
 export type { Section } from './section';
 export { ComponentContext, ComponentDescriptorContext, useComponentDescriptor } from './ui/context/component-context';

@@ -750,7 +750,7 @@ export class APIForIDE {
       })
     );
 
-    const deps = comp.getDependencies();
+    const deps = this.snapping.dependencyResolver.getDependencies(comp);
     showResults.dependencies = deps.map((dep) => {
       const pkg = dep.getPackageName?.() || dep.id;
       const pkgWithVer = `${pkg}@${dep.version}`;
