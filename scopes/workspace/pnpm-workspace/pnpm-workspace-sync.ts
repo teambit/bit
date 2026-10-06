@@ -90,7 +90,7 @@ export type PnpmSyncOptions = {
 export const ENV_OPTION = [
   '',
   'env <env-id>',
-  `the env of the projects with a build, test or lint script (default: ${PNPM_WORKSPACE_ENV}). the others get the empty env`,
+  `the env of the projects with a build, test or lint script (default: ${PNPM_WORKSPACE_ENV}). the others get the empty env. saved in workspace.jsonc, a later sync without it keeps the env`,
 ];
 
 export class PnpmSyncCmd implements Command {
@@ -261,14 +261,16 @@ export async function syncPnpmWorkspace(
   );
   const catalogMigration = planCatalogMigration(projects, workspaceManifest);
   const leftPackages = await planLeftPackageBindings(workspace, projects, workspaceManifest);
-  const envResolver = new ProjectEnvResolver(workspace, options.env || PNPM_WORKSPACE_ENV);
-  // an env given that cannot be loaded fails here too, the projects with scripts get it
-  if (options.env && projects.some((project) => project.hasScripts)) await envResolver.getConfigId();
+  // an env given once stays the env of the projects, a re-run without --env does not move them back
+  const envId = options.env || readConfiguredEnv(workspace) || PNPM_WORKSPACE_ENV;
+  const envResolver = new ProjectEnvResolver(workspace, envId);
+  // an env that cannot be loaded fails here too, the projects with scripts get it
+  if (envId !== PNPM_WORKSPACE_ENV && projects.some((project) => project.hasScripts)) await envResolver.getConfigId();
   const migrationEntries = await applyCatalogMigration(workspace.path, catalogMigration);
   await editPnpmWorkspaceManifest(workspaceManifestPath, {
     catalogEntries: [...migrationEntries, ...leftPackages.bindings],
   });
-  await configurePnpmWorkspace(workspace);
+  await configurePnpmWorkspace(workspace, options.env);
 
   const removedComponents = removeLeftProjects(workspace, leftProjects);
   const components: PnpmVcsSyncResult['components'] = [];
@@ -663,16 +665,26 @@ export async function findPnpmWorkspaceDrift(workspace: Workspace): Promise<stri
  * the aspect's entry marks the workspace a pnpm one, which pnpm installs (see Workspace.isPnpmWorkspace).
  * workspace.jsonc is a file of the root component, so a clone or an import of the root brings it along.
  */
-async function configurePnpmWorkspace(workspace: Workspace) {
+/** the env given by --env to an earlier sync, saved in the workspace config of this aspect */
+function readConfiguredEnv(workspace: Workspace): string | undefined {
+  const config = workspace.getWorkspaceConfig().extensions.findExtension(PnpmWorkspaceAspect.id)?.config;
+  return typeof config?.env === 'string' && config.env ? config.env : undefined;
+}
+
+async function configurePnpmWorkspace(workspace: Workspace, env?: string) {
   const consumer = workspace.consumer;
-  if (consumer.config.trackAllFiles && workspace.isPnpmWorkspace()) return;
+  const envChanged = Boolean(env) && env !== readConfiguredEnv(workspace);
+  if (consumer.config.trackAllFiles && workspace.isPnpmWorkspace() && !envChanged) return;
   const workspaceConfig = workspace.getWorkspaceConfig();
   workspaceConfig.setExtension(
     WorkspaceAspect.id,
     { trackAllFiles: true },
     { mergeIntoExisting: true, ignoreVersion: true }
   );
-  workspaceConfig.setExtension(PnpmWorkspaceAspect.id, {}, { mergeIntoExisting: true, ignoreVersion: true });
+  workspaceConfig.setExtension(PnpmWorkspaceAspect.id, env ? { env } : {}, {
+    mergeIntoExisting: true,
+    ignoreVersion: true,
+  });
   await workspaceConfig.write({ reasonForChange: 'pnpm sync' });
   consumer.config.trackAllFiles = true;
   consumer.bitMap.trackAllFiles = true;

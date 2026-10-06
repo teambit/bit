@@ -6556,7 +6556,7 @@
       [
         "",
         "env <env-id>",
-        "the env of the projects with a build, test or lint script (default: teambit.workspace/pnpm-workspace). the others get the empty env"
+        "the env of the projects with a build, test or lint script (default: teambit.workspace/pnpm-workspace). the others get the empty env. saved in workspace.jsonc, a later sync without it keeps the env"
       ]
     ],
     "description": "adopt and maintain a raw pnpm workspace with Bit",
@@ -6576,7 +6576,7 @@
           [
             "",
             "env <env-id>",
-            "the env of the projects with a build, test or lint script (default: teambit.workspace/pnpm-workspace). the others get the empty env"
+            "the env of the projects with a build, test or lint script (default: teambit.workspace/pnpm-workspace). the others get the empty env. saved in workspace.jsonc, a later sync without it keeps the env"
           ],
           [
             "j",
@@ -6602,7 +6602,7 @@
           [
             "",
             "env <env-id>",
-            "the env of the projects with a build, test or lint script (default: teambit.workspace/pnpm-workspace). the others get the empty env"
+            "the env of the projects with a build, test or lint script (default: teambit.workspace/pnpm-workspace). the others get the empty env. saved in workspace.jsonc, a later sync without it keeps the env"
           ]
         ],
         "description": "discover pnpm workspace projects and synchronize them with Bit components",

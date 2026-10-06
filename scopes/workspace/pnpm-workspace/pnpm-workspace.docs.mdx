@@ -49,3 +49,6 @@ The projects with a `build`, `test` or `lint` script get the `teambit.workspace/
 Its tasks write the workspace next to the capsules the way it was snapped, install it with pnpm,
 run the script across it with `pnpm -r`, and save each package's output as its artifacts. The
 projects with none of those scripts get the empty env.
+
+`bit pnpm sync --env <env-id>` gives those projects another env. The env is saved in `workspace.jsonc`,
+so a later `bit pnpm sync` without `--env` keeps it.

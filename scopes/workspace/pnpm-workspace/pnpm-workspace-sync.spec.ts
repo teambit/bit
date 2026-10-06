@@ -213,6 +213,18 @@ describe('bit pnpm sync', function () {
       expect(math.config?.[Extensions.envs]).to.deep.equal({ env: 'my-org.envs/other-scripts' });
     });
 
+    it('should keep the env given to an earlier sync on a re-run without --env', async () => {
+      await setupPnpmWorkspace(withBuildScript);
+      stubEnvVersion();
+      await syncPnpmWorkspace(workspace, tracker, { env: PNPM_ENV });
+
+      await syncPnpmWorkspace(workspace, tracker);
+
+      const math = entryAt('packages/math')!;
+      expect(math.config?.[`${PNPM_ENV}@1.0.0`]).to.deep.equal({});
+      expect(math.config?.[Extensions.envs]).to.deep.equal({ env: PNPM_ENV });
+    });
+
     it('should keep an env the user configured', async () => {
       await setupPnpmWorkspace(withBuildScript);
       stubEnvVersion();

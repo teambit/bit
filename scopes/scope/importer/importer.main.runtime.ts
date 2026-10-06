@@ -90,18 +90,25 @@ export class ImporterMain {
     const importComponents = this.createImportComponents(importOptions);
     const results = await importComponents.importComponents();
     Analytics.setExtraData('num_components', results.importedIds.length);
-    if (results.writtenComponents?.length) {
-      const writtenComponents = results.writtenComponents;
-      const outcomes = await Promise.all(
-        this.onComponentsWrittenSlot.values().map((handler) => handler(writtenComponents))
-      );
-      outcomes.forEach((outcome) => {
-        if (outcome?.report)
-          results.componentsWrittenReport = { ...results.componentsWrittenReport, ...outcome.report };
-      });
-      await this.removeFromWorkspaceConfig(writtenComponents);
+    try {
+      if (results.writtenComponents?.length) {
+        const writtenComponents = results.writtenComponents;
+        try {
+          const outcomes = await Promise.all(
+            this.onComponentsWrittenSlot.values().map((handler) => handler(writtenComponents))
+          );
+          outcomes.forEach((outcome) => {
+            if (outcome?.report)
+              results.componentsWrittenReport = { ...results.componentsWrittenReport, ...outcome.report };
+          });
+        } finally {
+          // the components are written already, whatever a handler did
+          await this.removeFromWorkspaceConfig(writtenComponents);
+        }
+      }
+    } finally {
+      await consumer.onDestroy('import');
     }
-    await consumer.onDestroy('import');
     return results;
   }
 

@@ -2161,11 +2161,11 @@ to match a state and another criteria, use " AND " keyword. e.g. '$modified AND 
 runs at the root of a pnpm workspace, the directory of "pnpm-workspace.yaml". the workspace is standalone, its scope is kept in ".bit", and pnpm keeps installing it: bit writes workspace.jsonc and .bitmap only, and leaves package.json alone.  
 then synchronizes the projects the way "bit pnpm sync" does. run that one whenever projects are added, moved or deleted.
 
-| **Option**                        | **Option alias** | **Description**                                                                                                                     |
-| --------------------------------- | :--------------: | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `--default-scope <default-scope>` |                  | set the default scope for components in the workspace                                                                               |
-| `--env <env-id>`                  |                  | the env of the projects with a build, test or lint script (default: teambit.workspace/pnpm-workspace). the others get the empty env |
-| `--json`                          |       `-j`       | return the synchronization result in JSON format                                                                                    |
+| **Option**                        | **Option alias** | **Description**                                                                                                                                                                                      |
+| --------------------------------- | :--------------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--default-scope <default-scope>` |                  | set the default scope for components in the workspace                                                                                                                                                |
+| `--env <env-id>`                  |                  | the env of the projects with a build, test or lint script (default: teambit.workspace/pnpm-workspace). the others get the empty env. saved in workspace.jsonc, a later sync without it keeps the env |
+| `--json`                          |       `-j`       | return the synchronization result in JSON format                                                                                                                                                     |
 
 ### pnpm sync
 
@@ -2179,15 +2179,15 @@ gets the "workspace:" specifier. an import into another workspace binds it there
 does a re-run once the project left this workspace.  
 safe to re-run: tracked projects keep their ids, new ones are added, and the ones that left the workspace are removed.
 
-| **Option**       | **Option alias** | **Description**                                                                                                                     |
-| ---------------- | :--------------: | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `--json`         |       `-j`       | return the synchronization result in JSON format                                                                                    |
-| `--env <env-id>` |                  | the env of the projects with a build, test or lint script (default: teambit.workspace/pnpm-workspace). the others get the empty env |
+| **Option**       | **Option alias** | **Description**                                                                                                                                                                                      |
+| ---------------- | :--------------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--json`         |       `-j`       | return the synchronization result in JSON format                                                                                                                                                     |
+| `--env <env-id>` |                  | the env of the projects with a build, test or lint script (default: teambit.workspace/pnpm-workspace). the others get the empty env. saved in workspace.jsonc, a later sync without it keeps the env |
 
-| **Option**       | **Option alias** | **Description**                                                                                                                     |
-| ---------------- | :--------------: | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `--json`         |       `-j`       | return the synchronization result in JSON format                                                                                    |
-| `--env <env-id>` |                  | the env of the projects with a build, test or lint script (default: teambit.workspace/pnpm-workspace). the others get the empty env |
+| **Option**       | **Option alias** | **Description**                                                                                                                                                                                      |
+| ---------------- | :--------------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--json`         |       `-j`       | return the synchronization result in JSON format                                                                                                                                                     |
+| `--env <env-id>` |                  | the env of the projects with a build, test or lint script (default: teambit.workspace/pnpm-workspace). the others get the empty env. saved in workspace.jsonc, a later sync without it keeps the env |
 
 ---
 
