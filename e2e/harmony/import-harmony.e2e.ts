@@ -2,6 +2,7 @@ import chai, { expect } from 'chai';
 import path from 'path';
 import { Helper, DEFAULT_OWNER, NpmCiRegistry, supportNpmCiRegistryTesting } from '@teambit/legacy.e2e-helper';
 import chaiFs from 'chai-fs';
+import { FLATTENED_DEPS_IN_SOURCE } from '@teambit/harmony.modules.feature-toggle';
 chai.use(chaiFs);
 
 describe('import functionality on Harmony', function () {
@@ -493,6 +494,33 @@ describe('import functionality on Harmony', function () {
       const componentJson = helper.componentJson.read('comp1');
       expect(componentJson.extensions).to.have.property(fullEnvId);
       expect(componentJson.extensions).to.not.have.property(`${fullEnvId}@0.0.1`);
+    });
+  });
+  describe('flattened dependencies saved in a separate object', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(3);
+      helper.command.setFeatures(FLATTENED_DEPS_IN_SOURCE);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.command.resetFeatures();
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponent('comp1', '-x --fetch-deps');
+    });
+    it('the remote should have only the ref to the flattened dependencies in the Version', () => {
+      const version = helper.command.catComponent(`${helper.scopes.remote}/comp1@0.0.1`, helper.scopes.remotePath);
+      expect(version).to.have.property('flattenedDependenciesRef');
+      expect(version).to.not.have.property('flattenedDependencies');
+    });
+    it('should import the object with the flattened dependencies', () => {
+      const version = helper.command.catComponent(`${helper.scopes.remote}/comp1@0.0.1`);
+      const flattened = helper.command.catObject(version.flattenedDependenciesRef, true);
+      expect(flattened).to.have.members([`${helper.scopes.remote}/comp2@0.0.1`, `${helper.scopes.remote}/comp3@0.0.1`]);
+    });
+    it('should import the flattened dependencies into the scope', () => {
+      expect(() => helper.command.catComponent(`${helper.scopes.remote}/comp2@0.0.1`)).to.not.throw();
+      expect(() => helper.command.catComponent(`${helper.scopes.remote}/comp3@0.0.1`)).to.not.throw();
     });
   });
 });

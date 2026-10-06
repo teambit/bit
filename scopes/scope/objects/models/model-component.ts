@@ -1200,7 +1200,9 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
       devDependencies: this.addDepsInfoFromDepsResolver(version.devDependencies, extensions),
       // a new list, but the ids themselves are immutable, no need to clone them. built only once read, which most
       // commands never do. `once` keeps a single list for this component and its clones, as before.
-      loadFlattenedDependencies: once(() => ComponentIdList.fromArray(version.flattenedDependencies)),
+      loadFlattenedDependencies: once(() =>
+        ComponentIdList.fromArray(version.loadFlattenedDependenciesSync(repository))
+      ),
       packageDependencies: clone(version.packageDependencies),
       devPackageDependencies: clone(version.devPackageDependencies),
       peerPackageDependencies: clone(version.peerPackageDependencies),

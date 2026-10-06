@@ -66,6 +66,9 @@ export type Log = {
   email: string | undefined;
 };
 
+// anything objects can be loaded from by their ref: the scope repository, or the objects received from a remote.
+export type ObjectsLoader = { load(ref: Ref, throws?: boolean): Promise<BitObject | undefined> };
+
 export type DepEdgeType = 'prod' | 'dev' | 'peer' | 'ext';
 export type DepEdge = { source: ComponentID; target: ComponentID; type: DepEdgeType };
 
@@ -82,6 +85,7 @@ export type VersionProps = {
   devDependencies?: Dependency[];
   peerDependencies?: Dependency[];
   flattenedDependencies?: ComponentIdList;
+  flattenedDependenciesRef?: Ref;
   _flattenedEdges?: DepEdge[];
   flattenedEdges?: DepEdge[];
   flattenedEdgesRef?: Ref;
@@ -121,6 +125,14 @@ export default class Version extends BitObject {
   private _flattenedDependencies?: ComponentIdList;
   // the flattened dependencies of a parsed Version. the list is built on first access, most commands never read it.
   private flattenedDependencyIds?: ComponentID[];
+  /**
+   * ref to a Source object with the flattened dependencies, as a JSON array of id strings. when it's set, the Version
+   * itself has no flattened dependencies, and they have to be loaded with `loadFlattenedDependencies()`.
+   * bit reads this format, but doesn't write it yet (only behind the "flattened-deps-in-source" feature). older bit
+   * versions don't know this field: they would see no flattened dependencies. the writing can be switched on once
+   * all remote scopes and most clients support the reading.
+   */
+  flattenedDependenciesRef?: Ref;
   dependenciesGraphRef?: Ref;
   _dependenciesGraph?: DependenciesGraph; // caching for the dependencies graph
   flattenedEdgesRef?: Ref; // ref to a BitObject Source file, which is a JSON object containing the flattened edge
@@ -173,6 +185,7 @@ export default class Version extends BitObject {
     this.peerDependencies = new Dependencies(props.peerDependencies);
     this.docs = props.docs;
     if (props.flattenedDependencies) this.flattenedDependencies = props.flattenedDependencies;
+    this.flattenedDependenciesRef = props.flattenedDependenciesRef;
     this.flattenedEdges = props.flattenedEdges || [];
     this.flattenedEdgesRef = props.flattenedEdgesRef;
     this.dependenciesGraphRef = props.dependenciesGraphRef;
@@ -324,8 +337,17 @@ export default class Version extends BitObject {
     return this.modified[this.modified.length - 1].date;
   }
 
+  /**
+   * the flattened dependencies, when they're stored in the Version itself or were loaded already.
+   * when they're stored in a separate object (`flattenedDependenciesRef`), use `loadFlattenedDependencies()`.
+   */
   get flattenedDependencies(): ComponentIdList {
     if (!this._flattenedDependencies) {
+      if (this.flattenedDependenciesRef) {
+        throw new Error(
+          `the flattened dependencies of version ${this._hash} are stored in the object ${this.flattenedDependenciesRef.toString()}, load them with loadFlattenedDependencies()`
+        );
+      }
       this._flattenedDependencies = ComponentIdList.fromArray(this.flattenedDependencyIds || []);
       this.flattenedDependencyIds = undefined;
     }
@@ -337,8 +359,48 @@ export default class Version extends BitObject {
     this.flattenedDependencyIds = undefined;
   }
 
-  getAllFlattenedDependencies(): ComponentIdList {
-    return ComponentIdList.fromArray([...this.flattenedDependencies]);
+  /**
+   * use this to get the flattened dependencies. it supports both formats: stored in the Version itself, or stored in
+   * a separate Source object (`flattenedDependenciesRef`). `objects` is usually the scope repository, but can be any
+   * container of the objects, such as the objects received from a remote.
+   */
+  async loadFlattenedDependencies(objects: ObjectsLoader): Promise<ComponentIdList> {
+    if (this._flattenedDependencies || !this.flattenedDependenciesRef) return this.flattenedDependencies;
+    const source = (await objects.load(this.flattenedDependenciesRef, false)) as Source | undefined;
+    return this.setFlattenedDependenciesFromSource(source);
+  }
+
+  /**
+   * same as `loadFlattenedDependencies()`, for code that can't be async.
+   */
+  loadFlattenedDependenciesSync(repo: Repository): ComponentIdList {
+    if (this._flattenedDependencies || !this.flattenedDependenciesRef) return this.flattenedDependencies;
+    const source = repo.loadSync(this.flattenedDependenciesRef, false) as Source | undefined;
+    return this.setFlattenedDependenciesFromSource(source);
+  }
+
+  private setFlattenedDependenciesFromSource(source?: Source): ComponentIdList {
+    if (!source) {
+      // unlike the flattened edges, there is no fallback here. an empty list would be wrong, not just less efficient.
+      throw new Error(
+        `unable to find the object ${this.flattenedDependenciesRef?.toString()} with the flattened dependencies of version ${this._hash}`
+      );
+    }
+    const ids: string[] = JSON.parse(source.contents.toString());
+    this.flattenedDependencies = ComponentIdList.fromArray(ids.map(getFlattenedId));
+    return this.flattenedDependencies;
+  }
+
+  /**
+   * moves the flattened dependencies out of this Version into a new Source object, which the caller has to persist.
+   * for now, it's used only when the "flattened-deps-in-source" feature is enabled.
+   */
+  moveFlattenedDependenciesToSource(): Source | undefined {
+    const flattenedDependencies = this.flattenedDependencies;
+    if (!flattenedDependencies.length) return undefined;
+    const source = Source.from(Buffer.from(JSON.stringify(flattenedDependencies.map((id) => id.toString()))));
+    this.flattenedDependenciesRef = source.hash();
+    return source;
   }
 
   getAllDependencies(): Dependency[] {
@@ -377,17 +439,6 @@ export default class Version extends BitObject {
     return ComponentIdList.fromArray([...this.dependencies.getAllIds(), ...this.devDependencies.getAllIds()]);
   }
 
-  updateFlattenedDependency(currentId: ComponentID, newId: ComponentID) {
-    const getUpdated = (flattenedDependencies: ComponentIdList): ComponentIdList => {
-      const updatedIds = flattenedDependencies.map((depId) => {
-        if (depId.isEqual(currentId)) return newId;
-        return depId;
-      });
-      return ComponentIdList.fromArray(updatedIds);
-    };
-    this.flattenedDependencies = getUpdated(this.flattenedDependencies);
-  }
-
   refs(): Ref[] {
     return this.refsWithOptions();
   }
@@ -409,6 +460,7 @@ export default class Version extends BitObject {
     }
     if (this.flattenedEdgesRef) allRefs.push(this.flattenedEdgesRef);
     if (this.dependenciesGraphRef) allRefs.push(this.dependenciesGraphRef);
+    if (this.flattenedDependenciesRef) allRefs.push(this.flattenedDependenciesRef);
     return allRefs;
   }
 
@@ -498,9 +550,10 @@ export default class Version extends BitObject {
         docs: this.docs,
         dependencies: this.dependencies.cloneAsObject(),
         devDependencies: this.devDependencies.cloneAsObject(),
-        flattenedDependencies: this.flattenedDependencies.map((dep) => dep.toObject()),
-        // @todo: uncomment this in the future, once all remotes are updated to support the backward compatibility.
-        // flattenedDependencies: this.flattenedDependencies.map((dep) => dep.toString()),
+        flattenedDependencies: this.flattenedDependenciesRef
+          ? undefined
+          : this.flattenedDependencies.map((dep) => dep.toObject()),
+        flattenedDependenciesRef: this.flattenedDependenciesRef?.toString(),
         flattenedEdges: this.flattenedEdgesRef ? undefined : this.flattenedEdges.map((f) => Version.depEdgeToObject(f)),
         flattenedEdgesRef: this.flattenedEdgesRef?.toString(),
         dependenciesGraphRef: this.dependenciesGraphRef?.toString(),
@@ -560,6 +613,7 @@ export default class Version extends BitObject {
       devDependencies,
       flattenedDependencies,
       flattenedDevDependencies,
+      flattenedDependenciesRef,
       flattenedEdges,
       flattenedEdgesRef,
       dependenciesGraphRef,
@@ -658,6 +712,7 @@ export default class Version extends BitObject {
       flattenedEdges: flattenedEdgesRef ? [] : flattenedEdges?.map((f) => Version.depEdgeFromObject(f)) || [],
       flattenedEdgesRef: flattenedEdgesRef ? Ref.from(flattenedEdgesRef) : undefined,
       dependenciesGraphRef: dependenciesGraphRef ? Ref.from(dependenciesGraphRef) : undefined,
+      flattenedDependenciesRef: flattenedDependenciesRef ? Ref.from(flattenedDependenciesRef) : undefined,
       devPackageDependencies,
       peerPackageDependencies,
       packageDependencies,

@@ -845,15 +845,17 @@ export class ScopeComponentsImporter {
     const flattenedDepsToFetch = new ComponentIdList();
     await Promise.all(
       componentsWithVersion.map(async (compWithVer) => {
+        // loaded here also for the VersionDependencies created below, which read them synchronously.
+        const flattenedDependencies = await compWithVer.versionObj.loadFlattenedDependencies(this.repo);
         const flattenedEdges = await compWithVer.versionObj.getFlattenedEdges(this.repo);
         if (skipComponentsWithDepsGraph) {
           if (flattenedEdges.length) return;
-          if (!compWithVer.versionObj.flattenedDependencies.length) return;
+          if (!flattenedDependencies.length) return;
           logger.debug(
             `scopeComponentImporter, unable to get dependencies graph from ${compWithVer.componentVersion.id.toString()}, will import all its deps`
           );
         }
-        flattenedDepsToFetch.add(compWithVer.versionObj.flattenedDependencies);
+        flattenedDepsToFetch.add(flattenedDependencies);
       })
     );
 
@@ -1098,7 +1100,8 @@ export class ScopeComponentsImporter {
       if (preferDependencyGraph && flattenedEdges.length) {
         return;
       }
-      const flattenedDepsToLocate = version.flattenedDependencies.filter((dep) => !existingCache.has(dep));
+      const flattenedDependencies = await version.loadFlattenedDependencies(this.repo);
+      const flattenedDepsToLocate = flattenedDependencies.filter((dep) => !existingCache.has(dep));
       const flattenedDepsDefs = await this.sources.getMany(flattenedDepsToLocate, reFetchUnBuiltVersion);
       const allFlattenedExist = flattenedDepsDefs.every((def) => {
         if (!def.component) return false;
@@ -1163,9 +1166,11 @@ export class ScopeComponentsImporter {
     const versionDeps = compact(versionDepsWithNulls);
     const allFlattened = await Promise.all(
       versionDeps.map(async (v) => {
+        // loaded here also for the dependencies set below, which read them synchronously.
+        const flattenedDependencies = await v.version.loadFlattenedDependencies(this.repo);
         const flattenedEdges = await v.version.getFlattenedEdges(this.repo);
         if (preferDependencyGraph && flattenedEdges.length) return [];
-        return v.version.getAllFlattenedDependencies();
+        return [...flattenedDependencies];
       })
     );
     const allFlattenedUniq = ComponentIdList.uniqFromArray(flatten(allFlattened));

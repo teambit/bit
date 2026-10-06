@@ -1,4 +1,5 @@
 import type BitObject from './object';
+import type Ref from './ref';
 import { ExportMetadata, Lane, LaneHistory, ModelComponent, Version, VersionHistory } from '../models';
 
 export class BitObjectList {
@@ -26,6 +27,14 @@ export class BitObjectList {
 
   getAll(): BitObject[] {
     return this.objects;
+  }
+
+  /**
+   * finds an object of this list by its ref. it has the same signature as `Repository.load()`, so these objects can be
+   * used where a repository is expected, e.g. `Version.loadFlattenedDependencies()`.
+   */
+  async load(ref: Ref): Promise<BitObject | undefined> {
+    return this.objects.find((object) => object.hash().isEqual(ref));
   }
 
   excludeTypes(types: string[]): BitObject[] {

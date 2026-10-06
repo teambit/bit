@@ -4,6 +4,9 @@ import versionWithDepsFixture from '../fixtures/version-model-extended.json';
 import versionFixture from '../fixtures/version-model-object.json';
 import { SchemaName } from '@teambit/legacy.consumer-component';
 import Version from './version';
+import type { ObjectsLoader } from './version';
+import type Source from './source';
+import type { Ref } from '../objects';
 import { clone } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 
@@ -122,6 +125,65 @@ describe('Version', () => {
       expect(version.toObject().flattenedDependencies).to.deep.equal([
         { scope: 'my-scope', name: 'is-type', version: '0.0.3' },
       ]);
+    });
+    describe('stored in a separate object', () => {
+      const hash = '12c830ed25854dc731b58e014c6b4960ccb59092';
+      let source: Source;
+      let version: Version;
+      let flattenedStr: string[];
+      const loaderOf = (objects: Source[]): ObjectsLoader => ({
+        load: async (ref: Ref) => objects.find((obj) => obj.hash().isEqual(ref)),
+      });
+      before(() => {
+        const original = getVersionWithDepsFixture();
+        flattenedStr = original.flattenedDependencies.map((id) => id.toString());
+        source = original.moveFlattenedDependenciesToSource() as Source;
+        version = Version.parse(original.toBuffer(false).toString(), hash);
+      });
+      it('should save the ids as strings in the Source, and only the ref in the Version', () => {
+        expect(JSON.parse(source.contents.toString())).to.deep.equal(flattenedStr);
+        const versionObj = version.toObject();
+        expect(versionObj).to.not.have.property('flattenedDependencies');
+        expect(versionObj.flattenedDependenciesRef).to.equal(source.hash().toString());
+      });
+      it('should return the Source ref as one of the version refs, so it is fetched, exported and kept by GC', () => {
+        const refs = version.refsWithOptions(false, false).map((ref) => ref.toString());
+        expect(refs).to.include(source.hash().toString());
+      });
+      it('should throw when the list is read before it was loaded', () => {
+        expect(() => version.flattenedDependencies).to.throw('load them with loadFlattenedDependencies()');
+      });
+      it('should load the list from the Source, and keep only the ref when saved again', async () => {
+        const parsed = Version.parse(version.toBuffer(false).toString(), hash);
+        const loaded = await parsed.loadFlattenedDependencies(loaderOf([source]));
+        expect(loaded.map((id) => id.toString())).to.deep.equal(flattenedStr);
+        expect(parsed.flattenedDependencies).to.equal(loaded);
+        expect(parsed.toObject()).to.not.have.property('flattenedDependencies');
+      });
+      it('should load the list synchronously', () => {
+        const parsed = Version.parse(version.toBuffer(false).toString(), hash);
+        const repo = { loadSync: () => source } as any;
+        expect(parsed.loadFlattenedDependenciesSync(repo).map((id) => id.toString())).to.deep.equal(flattenedStr);
+      });
+      it('should throw, not return an empty list, when the Source is missing', async () => {
+        const parsed = Version.parse(version.toBuffer(false).toString(), hash);
+        let error: Error | undefined;
+        try {
+          await parsed.loadFlattenedDependencies(loaderOf([]));
+        } catch (err: any) {
+          error = err;
+        }
+        expect(error?.message).to.include(`unable to find the object ${source.hash().toString()}`);
+      });
+      it('should load the list of the old format without the loader', async () => {
+        const oldFormat = getVersionWithDepsFixture();
+        const loaded = await oldFormat.loadFlattenedDependencies(loaderOf([]));
+        expect(loaded.map((id) => id.toString())).to.deep.equal(flattenedStr);
+      });
+      it('should pass the validation although the list is not in the Version', () => {
+        expect(version.dependencies.isEmpty()).to.be.false;
+        expect(() => version.validate()).to.not.throw();
+      });
     });
   });
   describe('validate()', () => {

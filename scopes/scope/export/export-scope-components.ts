@@ -14,7 +14,15 @@ import {
   MergeConflictOnRemote,
   ActionNotFound,
 } from '@teambit/legacy.scope';
-import type { Lane, ModelComponent, VersionHistory, LaneHistory, BitObjectList, ObjectList } from '@teambit/objects';
+import type {
+  Lane,
+  ModelComponent,
+  VersionHistory,
+  LaneHistory,
+  BitObjectList,
+  ObjectList,
+  ObjectsLoader,
+} from '@teambit/objects';
 import { Version, Ref } from '@teambit/objects';
 import type { PendingDirStatusResult, RemovePendingDirResult } from '@teambit/scope.remote-actions';
 import { ExportPersist, ExportValidate, RemovePendingDir, PendingDirStatus } from '@teambit/scope.remote-actions';
@@ -233,7 +241,9 @@ export async function mergeObjects(
     scope.objects.clearObjectsFromCache(); // just in case this error is caught. we don't want to persist anything by mistake.
     throw new MergeConflictOnRemote(idsAndVersionsWithConflicts, idsOfNeedUpdateComps);
   }
-  if (throwForMissingDeps) await throwForMissingLocalDependencies(scope, versions, components, lanesObjects);
+  if (throwForMissingDeps) {
+    await throwForMissingLocalDependencies(scope, versions, components, lanesObjects, bitObjectList);
+  }
   const mergedComponents = mergeResults.filter(({ mergedVersions }) => mergedVersions.length);
   const mergedLanesComponents = mergeAllLanesResults
     .map((r) => r.mergeResults)
@@ -268,8 +278,13 @@ async function throwForMissingLocalDependencies(
   scope: Scope,
   versions: Version[],
   components: ModelComponent[],
-  lanes: Lane[]
+  lanes: Lane[],
+  receivedObjects: BitObjectList
 ) {
+  // the objects of this export aren't written yet, the rest are in the scope.
+  const objectsLoader: ObjectsLoader = {
+    load: async (ref: Ref) => (await receivedObjects.load(ref)) || scope.objects.load(ref, false),
+  };
   const compsWithHeads = lanes.length
     ? lanes.map((lane) => lane.toBitIds()).flat()
     : components.map((c) => c.toComponentIdWithHead());
@@ -289,7 +304,7 @@ async function throwForMissingLocalDependencies(
         if (tag) return originComp.changeVersion(tag);
         return originComp;
       };
-      const depsIds = version.getAllFlattenedDependencies();
+      const depsIds = await version.loadFlattenedDependencies(objectsLoader);
       await Promise.all(
         depsIds.map(async (depId) => {
           if (depId.scope !== scope.name) return;

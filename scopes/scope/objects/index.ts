@@ -23,7 +23,7 @@ export {
   type DependencyEdge,
   type DependencyNeighbour,
 } from './models/dependencies-graph';
-export { DepEdge, DepEdgeType, SourceFileModel, Log } from './models/version';
+export { DepEdge, DepEdgeType, SourceFileModel, Log, ObjectsLoader } from './models/version';
 export { ComponentWithCollectOptions, ObjectsReadableGenerator } from './objects/objects-readable-generator';
 export { ScopeIndex } from './objects/scope-index';
 export { VersionHistoryGraph } from './models/version-history';

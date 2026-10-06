@@ -676,7 +676,8 @@ export class Workspace implements ComponentFactory {
     const flattenedEdges = await this.scope.getFlattenedEdges(component.id);
     const versionObj = await this.scope.getBitObjectVersionById(component.id);
     if (!flattenedEdges || !versionObj) return null;
-    if (!flattenedEdges.length && versionObj.flattenedDependencies.length) {
+    const flattenedDependencies = await versionObj.loadFlattenedDependencies(this.scope.legacyScope.objects);
+    if (!flattenedEdges.length && flattenedDependencies.length) {
       // there are flattenedDependencies, so must be edges, if they're empty, it's because the component was tagged
       // with a version < ~0.0.901, so this flattenedEdges wasn't exist.
       return null;
@@ -693,7 +694,7 @@ export class Workspace implements ComponentFactory {
     const currentVersion = getCurrentVersionAsTagIfPossible();
 
     flattenedBitIdCompIdMap[component.id.changeVersion(currentVersion).toString()] = component.id;
-    versionObj.flattenedDependencies.forEach((bitId) => {
+    flattenedDependencies.forEach((bitId) => {
       flattenedBitIdCompIdMap[bitId.toString()] = bitId;
     });
     const getCompIdByIdStr = (idStr: string): ComponentID => {
