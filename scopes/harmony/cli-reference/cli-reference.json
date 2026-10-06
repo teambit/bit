@@ -3735,82 +3735,6 @@
     ]
   },
   {
-    "name": "test [pattern-or-test-file...]",
-    "alias": "at",
-    "options": [
-      [
-        "w",
-        "watch",
-        "start the tester in watch mode."
-      ],
-      [
-        "d",
-        "debug",
-        "start the tester in debug mode."
-      ],
-      [
-        "a",
-        "all",
-        "DEPRECATED. (use --unmodified)"
-      ],
-      [
-        "u",
-        "unmodified",
-        "test all components, not only new and modified"
-      ],
-      [
-        "",
-        "junit <filepath>",
-        "write tests results as JUnit XML format into the specified file path"
-      ],
-      [
-        "",
-        "coverage",
-        "show code coverage data"
-      ],
-      [
-        "e",
-        "env <id>",
-        "test only components assigned the given env"
-      ],
-      [
-        "",
-        "update-snapshot",
-        "if supported by the tester, re-record every snapshot that fails during the test run"
-      ],
-      [
-        "s",
-        "scope <scope-name>",
-        "DEPRECATED. (use the pattern instead, e.g. \"scopeName/**\"). name of the scope to test"
-      ],
-      [
-        "j",
-        "json",
-        "return the results in json format"
-      ],
-      [
-        "",
-        "verbose",
-        "list the component ids that have no tests (default collapses them into a count)"
-      ],
-      [
-        "",
-        "summary",
-        "suppress tester output, print only the final pass/fail headline (or summary object with --json)"
-      ]
-    ],
-    "description": "run component tests",
-    "extendedDescription": "executes tests using the testing framework configured by each component's environment (Jest, Mocha, etc.).\nby default only runs tests for new and modified components. use --unmodified to test all components.\nto run specific test files only, pass their paths instead of a component pattern, e.g. \"bit test path/to/comp/my-comp.spec.ts\".\nsupports watch mode, coverage reporting, and debug mode for development workflows.",
-    "group": "testing",
-    "private": false,
-    "arguments": [
-      {
-        "name": "pattern-or-test-file...",
-        "description": "one of two modes (multiple values are supported, separated by spaces):\n1) component pattern: component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.\n2) test-file path: a path to a test file, to run only this file, e.g. \"bit test path/to/comp/my-comp.spec.ts\".\nnote that a directory path selects the component in that directory and runs all its tests, while a test-file path runs only that file"
-      }
-    ]
-  },
-  {
     "name": "diff [component-pattern] [version] [to-version]",
     "alias": "",
     "options": [
@@ -6086,6 +6010,82 @@
       {
         "name": "component-pattern",
         "description": "component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern."
+      }
+    ]
+  },
+  {
+    "name": "test [pattern-or-test-file...]",
+    "alias": "at",
+    "options": [
+      [
+        "w",
+        "watch",
+        "start the tester in watch mode."
+      ],
+      [
+        "d",
+        "debug",
+        "start the tester in debug mode."
+      ],
+      [
+        "a",
+        "all",
+        "DEPRECATED. (use --unmodified)"
+      ],
+      [
+        "u",
+        "unmodified",
+        "test all components, not only new and modified"
+      ],
+      [
+        "",
+        "junit <filepath>",
+        "write tests results as JUnit XML format into the specified file path"
+      ],
+      [
+        "",
+        "coverage",
+        "show code coverage data"
+      ],
+      [
+        "e",
+        "env <id>",
+        "test only components assigned the given env"
+      ],
+      [
+        "",
+        "update-snapshot",
+        "if supported by the tester, re-record every snapshot that fails during the test run"
+      ],
+      [
+        "s",
+        "scope <scope-name>",
+        "DEPRECATED. (use the pattern instead, e.g. \"scopeName/**\"). name of the scope to test"
+      ],
+      [
+        "j",
+        "json",
+        "return the results in json format"
+      ],
+      [
+        "",
+        "verbose",
+        "list the component ids that have no tests (default collapses them into a count)"
+      ],
+      [
+        "",
+        "summary",
+        "suppress tester output, print only the final pass/fail headline (or summary object with --json)"
+      ]
+    ],
+    "description": "run component tests",
+    "extendedDescription": "executes tests using the testing framework configured by each component's environment (Jest, Mocha, etc.).\nby default only runs tests for new and modified components. use --unmodified to test all components.\nto run specific test files only, pass their paths instead of a component pattern, e.g. \"bit test path/to/comp/my-comp.spec.ts\".\nsupports watch mode, coverage reporting, and debug mode for development workflows.",
+    "group": "testing",
+    "private": false,
+    "arguments": [
+      {
+        "name": "pattern-or-test-file...",
+        "description": "one of two modes (multiple values are supported, separated by spaces):\n1) component pattern: component name, component id, component pattern, or relative directory path. use component pattern to select multiple components.\nwrap the pattern with quotes. use comma to separate patterns and \"!\" to exclude. e.g. \"ui/**, !ui/button\".\nuse '$' prefix to filter by states/attributes, e.g. '$deprecated', '$modified' or '$env:teambit.react/react'.\nuse `bit pattern --help` to understand patterns better and `bit pattern <pattern>` to validate the pattern.\n2) test-file path: a path to a test file, to run only this file, e.g. \"bit test path/to/comp/my-comp.spec.ts\".\nnote that a directory path selects the component in that directory and runs all its tests, while a test-file path runs only that file"
       }
     ]
   },
