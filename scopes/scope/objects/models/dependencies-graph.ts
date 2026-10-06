@@ -39,19 +39,30 @@ export class DependenciesGraph {
   schemaVersion: string;
   packages: PackagesMap;
   edges: DependencyEdge[];
+  /**
+   * The `pnpmfileChecksum` of the lockfile the graph was created from: an id of
+   * the readPackage hooks the dependencies were resolved with. A lockfile
+   * restored from the graph carries it, so pnpm trusts the restored resolution
+   * only while Bit's hooks are still the same. Graphs created before this field
+   * existed don't have it.
+   */
+  pnpmfileChecksum?: string;
 
   constructor({
     packages,
     edges,
     schemaVersion,
+    pnpmfileChecksum,
   }: {
     packages: PackagesMap;
     edges: DependencyEdge[];
     schemaVersion?: string;
+    pnpmfileChecksum?: string;
   }) {
     this.packages = packages;
     this.edges = edges;
     this.schemaVersion = schemaVersion ?? DEPENDENCIES_GRAPH_SCHEMA_VERSION;
+    this.pnpmfileChecksum = pnpmfileChecksum;
   }
 
   serialize(): string {
@@ -59,6 +70,8 @@ export class DependenciesGraph {
       schemaVersion: this.schemaVersion,
       packages: Object.fromEntries(this.packages.entries()),
       edges: this.edges,
+      // JSON.stringify omits it when undefined.
+      pnpmfileChecksum: this.pnpmfileChecksum,
     });
   }
 
@@ -72,10 +85,17 @@ export class DependenciesGraph {
       schemaVersion: parsed.schemaVersion,
       edges: parsed.edges,
       packages: new Map(Object.entries(parsed.packages)),
+      pnpmfileChecksum: parsed.pnpmfileChecksum,
     });
   }
 
   merge(graph: DependenciesGraph): void {
+    // The merged graph mixes resolutions from both graphs. It can only claim a
+    // set of readPackage hooks when both were resolved with the same ones;
+    // otherwise leave it unset, so pnpm resolves again instead of trusting it.
+    if (this.pnpmfileChecksum !== graph.pnpmfileChecksum) {
+      this.pnpmfileChecksum = undefined;
+    }
     const rootEdge = this.findRootEdge();
     const incomingRootEdge = graph.findRootEdge();
     const directDependencies = incomingRootEdge?.neighbours;

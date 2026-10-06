@@ -96,6 +96,64 @@ describe('DependenciesGraph.merge', () => {
   });
 });
 
+describe('DependenciesGraph pnpmfileChecksum', () => {
+  it('survives serialize and deserialize', () => {
+    const graph = createGraph([rootEdge([])], []);
+    graph.pnpmfileChecksum = 'bit-1';
+
+    const restored = DependenciesGraph.deserialize(graph.serialize());
+
+    expect(restored?.pnpmfileChecksum).to.equal('bit-1');
+  });
+
+  it('is omitted from the serialized graph when unset', () => {
+    const graph = createGraph([rootEdge([])], []);
+
+    expect(JSON.parse(graph.serialize())).not.to.have.property('pnpmfileChecksum');
+  });
+
+  it('deserializes a graph serialized before the field existed', () => {
+    const restored = DependenciesGraph.deserialize(
+      JSON.stringify({ schemaVersion: '2.0', packages: { 'foo@1.0.0': {} }, edges: [rootEdge([])] })
+    );
+
+    expect(restored).not.to.equal(undefined);
+    expect(restored?.packages.has('foo@1.0.0')).to.equal(true);
+    expect(restored?.pnpmfileChecksum).to.equal(undefined);
+  });
+
+  it('is kept by merge when both graphs have the same value', () => {
+    const base = createGraph([rootEdge([])], []);
+    base.pnpmfileChecksum = 'bit-1';
+    const incoming = createGraph([rootEdge([])], []);
+    incoming.pnpmfileChecksum = 'bit-1';
+
+    base.merge(incoming);
+
+    expect(base.pnpmfileChecksum).to.equal('bit-1');
+  });
+
+  it('is dropped by merge when the graphs have different values', () => {
+    const base = createGraph([rootEdge([])], []);
+    base.pnpmfileChecksum = 'bit-1';
+    const incoming = createGraph([rootEdge([])], []);
+    incoming.pnpmfileChecksum = 'bit-2';
+
+    base.merge(incoming);
+
+    expect(base.pnpmfileChecksum).to.equal(undefined);
+  });
+
+  it('is dropped by merge when only one graph has it', () => {
+    const base = createGraph([rootEdge([])], []);
+    base.pnpmfileChecksum = 'bit-1';
+
+    base.merge(createGraph([rootEdge([])], []));
+
+    expect(base.pnpmfileChecksum).to.equal(undefined);
+  });
+});
+
 function createGraph(edges: DependencyEdge[], packageIds: string[]): DependenciesGraph {
   const packages: PackagesMap = new Map(packageIds.map((id) => [id, {} as any]));
   return new DependenciesGraph({ packages, edges });
