@@ -1199,9 +1199,7 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
       mainFile: version.mainFile,
       dependencies: this.addDepsInfoFromDepsResolver(version.dependencies, extensions),
       devDependencies: this.addDepsInfoFromDepsResolver(version.devDependencies, extensions),
-      // a new list, but the ids themselves are immutable, no need to clone them. built only once read, which most
-      // commands never do. it's kept for this component and its clones, as before. a failed load is not kept, so a
-      // later read throws again instead of getting an empty list.
+      // built on first read and shared with clones (which copy this loader). a failed load is not kept, so it throws again.
       loadFlattenedDependencies: () =>
         (flattenedDependencies ??= ComponentIdList.fromArray(version.loadFlattenedDependenciesSync(repository))),
       packageDependencies: clone(version.packageDependencies),

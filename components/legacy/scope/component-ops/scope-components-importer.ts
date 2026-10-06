@@ -846,8 +846,10 @@ export class ScopeComponentsImporter {
     await Promise.all(
       componentsWithVersion.map(async (compWithVer) => {
         // loaded here also for the VersionDependencies created below, which read them synchronously.
-        const flattenedDependencies = await compWithVer.versionObj.loadFlattenedDependencies(this.repo);
-        const flattenedEdges = await compWithVer.versionObj.getFlattenedEdges(this.repo);
+        const [flattenedDependencies, flattenedEdges] = await Promise.all([
+          compWithVer.versionObj.loadFlattenedDependencies(this.repo),
+          compWithVer.versionObj.getFlattenedEdges(this.repo),
+        ]);
         if (skipComponentsWithDepsGraph) {
           if (flattenedEdges.length) return;
           if (!flattenedDependencies.length) return;
@@ -1167,10 +1169,12 @@ export class ScopeComponentsImporter {
     const allFlattened = await Promise.all(
       versionDeps.map(async (v) => {
         // loaded here also for the dependencies set below, which read them synchronously.
-        const flattenedDependencies = await v.version.loadFlattenedDependencies(this.repo);
-        const flattenedEdges = await v.version.getFlattenedEdges(this.repo);
+        const [flattenedDependencies, flattenedEdges] = await Promise.all([
+          v.version.loadFlattenedDependencies(this.repo),
+          v.version.getFlattenedEdges(this.repo),
+        ]);
         if (preferDependencyGraph && flattenedEdges.length) return [];
-        return [...flattenedDependencies];
+        return flattenedDependencies;
       })
     );
     const allFlattenedUniq = ComponentIdList.uniqFromArray(flatten(allFlattened));

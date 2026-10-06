@@ -38,21 +38,21 @@ const flattenedIdStrsCache = new Map<string, ComponentID>();
 const MAX_CACHED_FLATTENED_IDS = 100_000;
 let cachedFlattenedIds = 0;
 
-function cacheFlattenedId(createId: () => ComponentID): ComponentID {
+function countCachedFlattenedId() {
   if (cachedFlattenedIds >= MAX_CACHED_FLATTENED_IDS) {
     flattenedIdsCache.clear();
     flattenedIdStrsCache.clear();
     cachedFlattenedIds = 0;
   }
   cachedFlattenedIds += 1;
-  return createId();
 }
 
 function getFlattenedId(dep: string | Record<string, any>): ComponentID {
   if (typeof dep === 'string') {
     let id = flattenedIdStrsCache.get(dep);
     if (!id) {
-      id = cacheFlattenedId(() => ComponentID.fromString(dep));
+      countCachedFlattenedId();
+      id = ComponentID.fromString(dep);
       flattenedIdStrsCache.set(dep, id);
     }
     return id;
@@ -70,7 +70,8 @@ function getFlattenedId(dep: string | Record<string, any>): ComponentID {
   }
   let id = byVersion.get(dep.version);
   if (!id) {
-    id = cacheFlattenedId(() => ComponentID.fromObject(dep as any));
+    countCachedFlattenedId();
+    id = ComponentID.fromObject(dep as any);
     byVersion.set(dep.version, id);
   }
   return id;
@@ -159,9 +160,6 @@ export default class Version extends BitObject {
   /**
    * ref to a Source object with the flattened dependencies, as a JSON array of id strings. when it's set, the Version
    * itself has no flattened dependencies, and they have to be loaded with `loadFlattenedDependencies()`.
-   * bit reads this format, but doesn't write it yet (only behind the "flattened-deps-in-source" feature). older bit
-   * versions don't know this field: they would see no flattened dependencies. the writing can be switched on once
-   * all remote scopes and most clients support the reading.
    */
   flattenedDependenciesRef?: Ref;
   dependenciesGraphRef?: Ref;
@@ -418,8 +416,8 @@ export default class Version extends BitObject {
    */
   loadFlattenedDependenciesSync(repo: Repository): ComponentIdList {
     if (this._flattenedDependencies || !this.flattenedDependenciesRef) return this.flattenedDependencies;
-    // objects fetched from a remote without being imported are only in the cache, not on the disk.
-    const source = (repo.getCache(this.flattenedDependenciesRef) ||
+    // objects added during tag, or fetched from a remote without being imported, are only in memory, not on the disk.
+    const source = (repo.getFromMemory(this.flattenedDependenciesRef) ||
       repo.loadSync(this.flattenedDependenciesRef, false)) as Source | undefined;
     return this.setFlattenedDependenciesFromSource(source);
   }
@@ -440,7 +438,6 @@ export default class Version extends BitObject {
 
   /**
    * moves the flattened dependencies out of this Version into a new Source object, which the caller has to persist.
-   * for now, it's used only when the "flattened-deps-in-source" feature is enabled.
    */
   moveFlattenedDependenciesToSource(): Source | undefined {
     const flattenedDependencies = this.flattenedDependencies;

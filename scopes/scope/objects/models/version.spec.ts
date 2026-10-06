@@ -162,10 +162,10 @@ describe('Version', () => {
       });
       it('should load the list synchronously, from the cache or from the disk', () => {
         const fromDisk = Version.parse(version.toBuffer(false).toString(), hash);
-        const diskRepo = { getCache: () => undefined, loadSync: () => source } as any;
+        const diskRepo = { getFromMemory: () => undefined, loadSync: () => source } as any;
         expect(fromDisk.loadFlattenedDependenciesSync(diskRepo).map((id) => id.toString())).to.deep.equal(flattenedStr);
         const fromCache = Version.parse(version.toBuffer(false).toString(), hash);
-        const cacheRepo = { getCache: () => source, loadSync: () => undefined } as any;
+        const cacheRepo = { getFromMemory: () => source, loadSync: () => undefined } as any;
         expect(fromCache.loadFlattenedDependenciesSync(cacheRepo).map((id) => id.toString())).to.deep.equal(
           flattenedStr
         );
