@@ -134,9 +134,9 @@ describe('DependenciesGraph pnpmfileChecksum', () => {
   });
 
   it('is dropped by merge when the graphs have different values', () => {
-    const base = createGraph([rootEdge([])], []);
+    const base = createGraph([rootEdge([{ id: 'foo@1.0.0', name: 'foo', specifier: '1.0.0' }])], ['foo@1.0.0']);
     base.pnpmfileChecksum = 'bit-1';
-    const incoming = createGraph([rootEdge([])], []);
+    const incoming = createGraph([rootEdge([{ id: 'bar@1.0.0', name: 'bar', specifier: '1.0.0' }])], ['bar@1.0.0']);
     incoming.pnpmfileChecksum = 'bit-2';
 
     base.merge(incoming);
@@ -145,12 +145,31 @@ describe('DependenciesGraph pnpmfileChecksum', () => {
   });
 
   it('is dropped by merge when only one graph has it', () => {
-    const base = createGraph([rootEdge([])], []);
+    const base = createGraph([rootEdge([{ id: 'foo@1.0.0', name: 'foo', specifier: '1.0.0' }])], ['foo@1.0.0']);
+    base.pnpmfileChecksum = 'bit-1';
+
+    base.merge(createGraph([rootEdge([{ id: 'bar@1.0.0', name: 'bar', specifier: '1.0.0' }])], ['bar@1.0.0']));
+
+    expect(base.pnpmfileChecksum).to.equal(undefined);
+  });
+
+  it('is not affected by merging a graph without dependencies', () => {
+    const base = createGraph([rootEdge([{ id: 'foo@1.0.0', name: 'foo', specifier: '1.0.0' }])], ['foo@1.0.0']);
     base.pnpmfileChecksum = 'bit-1';
 
     base.merge(createGraph([rootEdge([])], []));
 
-    expect(base.pnpmfileChecksum).to.equal(undefined);
+    expect(base.pnpmfileChecksum).to.equal('bit-1');
+  });
+
+  it('is taken from the incoming graph when the base has no dependencies', () => {
+    const base = createGraph([rootEdge([])], []);
+    const incoming = createGraph([rootEdge([{ id: 'foo@1.0.0', name: 'foo', specifier: '1.0.0' }])], ['foo@1.0.0']);
+    incoming.pnpmfileChecksum = 'bit-1';
+
+    base.merge(incoming);
+
+    expect(base.pnpmfileChecksum).to.equal('bit-1');
   });
 });
 
