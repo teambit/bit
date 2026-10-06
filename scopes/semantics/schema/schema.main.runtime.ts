@@ -20,8 +20,6 @@ import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect } from '@teambit/workspace';
 import type { ScopeMain } from '@teambit/scope';
 import { ScopeAspect } from '@teambit/scope';
-import type { Formatter } from '@teambit/formatter';
-import type { SchemaNodeTransformer, SchemaTransformer } from '@teambit/typescript';
 import { BuildStatus, CENTRAL_BIT_HUB_NAME, SYMPHONY_GRAPHQL } from '@teambit/legacy.constants';
 import { Http } from '@teambit/scope.network';
 import type {
@@ -33,7 +31,7 @@ import type {
 import { ImpactAssessor, DEFAULT_IMPACT_RULES, computeAPIDiff } from '@teambit/semantics.entities.semantic-schema-diff';
 import type { Parser } from './parser';
 import { SchemaAspect } from './schema.aspect';
-import type { SchemaExtractor } from './schema-extractor';
+import type { SchemaExtractor, SnippetFormatter } from './schema-extractor';
 import { SchemaCommand } from './schema.cmd';
 import { SchemaDiffCommand } from './schema-diff.cmd';
 import { schemaSchema } from './schema.graphql';
@@ -143,8 +141,10 @@ export class SchemaMain {
     tsserverPath?: string,
     contextPath?: string,
     skipInternals?: boolean,
-    schemaTransformers?: SchemaTransformer[],
-    apiTransformers?: SchemaNodeTransformer[],
+    /** @deprecated not used by the core envs. forwarded as is to the env's legacy `getSchemaExtractor()`. */
+    schemaTransformers?: unknown[],
+    /** @deprecated not used by the core envs. forwarded as is to the env's legacy `getSchemaExtractor()`. */
+    apiTransformers?: unknown[],
     includeFiles?: string[]
   ): Promise<APISchema> {
     const { schema } = await this.getSchemaWithAvailability(
@@ -173,8 +173,10 @@ export class SchemaMain {
     tsserverPath?: string,
     contextPath?: string,
     skipInternals?: boolean,
-    schemaTransformers?: SchemaTransformer[],
-    apiTransformers?: SchemaNodeTransformer[],
+    /** @deprecated not used by the core envs. forwarded as is to the env's legacy `getSchemaExtractor()`. */
+    schemaTransformers?: unknown[],
+    /** @deprecated not used by the core envs. forwarded as is to the env's legacy `getSchemaExtractor()`. */
+    apiTransformers?: unknown[],
     includeFiles?: string[]
   ): Promise<{ schema: APISchema; availability: SchemaAvailability }> {
     if (this.config.disabled) {
@@ -189,7 +191,7 @@ export class SchemaMain {
       try {
         const env = this.envs.getEnv(component).env;
         // types need to be fixed
-        const formatter: Formatter | undefined = env.getFormatter?.(null, [
+        const formatter: SnippetFormatter | undefined = env.getFormatter?.(null, [
           (config: PrettierConfigMutator) => {
             config.setKey('parser', 'typescript');
             return config;

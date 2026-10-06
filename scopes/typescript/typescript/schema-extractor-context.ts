@@ -22,7 +22,7 @@ import {
   FunctionLikeSchema,
 } from '@teambit/semantics.entities.semantic-schema';
 import type { ComponentDependency } from '@teambit/dependency-resolver';
-import type { Formatter } from '@teambit/formatter';
+import type { SnippetFormatter } from '@teambit/schema';
 import pMapSeries from 'p-map-series';
 import type { TypeScriptExtractor } from './typescript.extractor';
 import { IdentifierList } from './identifier-list';
@@ -92,7 +92,7 @@ export class SchemaExtractorContext {
     readonly componentDeps: ComponentDependency[],
     readonly componentRootPath: string,
     readonly hostRootPath: string,
-    readonly formatter?: Formatter
+    readonly formatter?: SnippetFormatter
   ) {
     this.componentRootPath = pathNormalizeToLinux(componentRootPath);
     this.hostRootPath = pathNormalizeToLinux(hostRootPath);
