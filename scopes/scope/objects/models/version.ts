@@ -31,16 +31,47 @@ import { getBitVersion } from '@teambit/bit.get-bit-version';
 
 // the same flattened dependencies repeat across versions. in a typical scope, hundreds of thousands of entries are a
 // few thousand unique ids. ids are immutable, so the versions share them instead of each holding its own copies.
-const flattenedIdsCache = new Map<string, ComponentID>();
+// an id object is looked up by its parts (scope, then name, then version). building a key string for each entry instead
+// is slower than creating a new id.
+const flattenedIdsCache = new Map<string, Map<string, Map<string, ComponentID>>>();
+const flattenedIdStrsCache = new Map<string, ComponentID>();
 const MAX_CACHED_FLATTENED_IDS = 100_000;
+let cachedFlattenedIds = 0;
+
+function cacheFlattenedId(createId: () => ComponentID): ComponentID {
+  if (cachedFlattenedIds >= MAX_CACHED_FLATTENED_IDS) {
+    flattenedIdsCache.clear();
+    flattenedIdStrsCache.clear();
+    cachedFlattenedIds = 0;
+  }
+  cachedFlattenedIds += 1;
+  return createId();
+}
 
 function getFlattenedId(dep: string | Record<string, any>): ComponentID {
-  const key = typeof dep === 'string' ? dep : `${dep.scope}/${dep.box}/${dep.name}@${dep.version}`;
-  let id = flattenedIdsCache.get(key);
+  if (typeof dep === 'string') {
+    let id = flattenedIdStrsCache.get(dep);
+    if (!id) {
+      id = cacheFlattenedId(() => ComponentID.fromString(dep));
+      flattenedIdStrsCache.set(dep, id);
+    }
+    return id;
+  }
+  if (dep.box) return ComponentID.fromObject(dep as any); // legacy ids, rare. not worth another level.
+  let byName = flattenedIdsCache.get(dep.scope);
+  if (!byName) {
+    byName = new Map();
+    flattenedIdsCache.set(dep.scope, byName);
+  }
+  let byVersion = byName.get(dep.name);
+  if (!byVersion) {
+    byVersion = new Map();
+    byName.set(dep.name, byVersion);
+  }
+  let id = byVersion.get(dep.version);
   if (!id) {
-    id = typeof dep === 'string' ? ComponentID.fromString(dep) : ComponentID.fromObject(dep as any);
-    if (flattenedIdsCache.size >= MAX_CACHED_FLATTENED_IDS) flattenedIdsCache.clear();
-    flattenedIdsCache.set(key, id);
+    id = cacheFlattenedId(() => ComponentID.fromObject(dep as any));
+    byVersion.set(dep.version, id);
   }
   return id;
 }
