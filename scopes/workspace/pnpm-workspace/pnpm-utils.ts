@@ -4,6 +4,10 @@ import { getPathBeforeBuildScripts } from '@teambit/pnpm';
 
 export type PnpmError = Error & { output?: string };
 
+/** the package scripts the env runs. a project with none of them has nothing to build, so it gets the empty env */
+export const PNPM_SCRIPTS = ['build', 'test', 'lint'] as const;
+export type PnpmScript = (typeof PNPM_SCRIPTS)[number];
+
 /**
  * the environment to run the user's pnpm with. the workspace is the user's, and so is its pnpm: the
  * one their shell finds, which wrote the lockfile. bit's installs put the directory of its own node

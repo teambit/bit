@@ -2,7 +2,7 @@ import type { Command, CommandOptions } from '@teambit/cli';
 import { formatSuccessSummary, joinSections } from '@teambit/cli';
 import type { PnpmWorkspaceMain } from './pnpm-workspace.main.runtime';
 import type { PnpmVcsSyncResult } from './pnpm-workspace-sync';
-import { formatSyncReport, PNPM_WORKSPACE_ENV, PNPM_WORKSPACE_MANIFEST } from './pnpm-workspace-sync';
+import { ENV_OPTION, formatSyncReport, PNPM_WORKSPACE_MANIFEST } from './pnpm-workspace-sync';
 
 type InitFlags = { defaultScope?: string; env?: string };
 
@@ -16,11 +16,7 @@ then synchronizes the projects the way "bit pnpm sync" does. run that one whenev
   loader = true;
   options = [
     ['', 'default-scope <default-scope>', 'set the default scope for components in the workspace'],
-    [
-      '',
-      'env <env-id>',
-      `the env of the projects with a build, test or lint script (default: ${PNPM_WORKSPACE_ENV}). the others get the empty env`,
-    ],
+    ENV_OPTION,
     ['j', 'json', 'return the synchronization result in JSON format'],
   ] as CommandOptions;
 

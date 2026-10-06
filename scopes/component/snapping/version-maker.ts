@@ -149,10 +149,9 @@ function promoteDependencyResolverData(component: ConsumerComponent, graphDepend
   const entry = component.extensions.findCoreExtension(DependencyResolverAspect.id);
   if (!entry) return;
   const dependencies = Array.isArray(entry.data?.dependencies) ? entry.data.dependencies : [];
-  const existing = dependencies.find(
-    (dependency) =>
-      dependency.packageName === graphDependency.packageName || dependency.id === graphDependency.packageName
-  );
+  const isSamePackage = (dependency) =>
+    dependency.packageName === graphDependency.packageName || dependency.id === graphDependency.packageName;
+  const existing = dependencies.find(isSamePackage);
   const promoted = {
     id: graphDependency.id.toString(),
     componentId: graphDependency.id.serialize(),
@@ -169,13 +168,7 @@ function promoteDependencyResolverData(component: ConsumerComponent, graphDepend
   };
   entry.data = {
     ...entry.data,
-    dependencies: [
-      ...dependencies.filter(
-        (dependency) =>
-          dependency.packageName !== graphDependency.packageName && dependency.id !== graphDependency.packageName
-      ),
-      promoted,
-    ],
+    dependencies: [...dependencies.filter((dependency) => !isSamePackage(dependency)), promoted],
   };
 }
 type ComputedVersion = { componentToTag: ConsumerComponent; version: string };
@@ -381,10 +374,11 @@ export class VersionMaker {
       componentIdByPkgName,
     };
     const components: Array<{ component: Component; componentRelativeDir: string; packageName?: string }> = [];
+    const workspaceComponents = new Map<ConsumerComponent, Component>();
     for (const consumerComponent of this.allComponentsToTag) {
       const component = this._findWorkspaceCompByConsumerComp(consumerComponent);
-      const componentMap = consumerComponent.componentMap;
-      const componentRelativeDir = componentMap?.rootDir;
+      if (component) workspaceComponents.set(consumerComponent, component);
+      const componentRelativeDir = consumerComponent.componentMap?.rootDir;
       if (componentRelativeDir && component) {
         components.push({
           component,
@@ -394,11 +388,10 @@ export class VersionMaker {
       }
     }
     await this.dependencyResolver.addDependenciesGraph(components, options);
-    for (const consumerComponent of this.allComponentsToTag) {
-      const workspaceComponent = this._findWorkspaceCompByConsumerComp(consumerComponent);
-      const graph = workspaceComponent?.state._consumer.dependenciesGraph;
+    workspaceComponents.forEach((workspaceComponent, consumerComponent) => {
+      const graph = workspaceComponent.state._consumer.dependenciesGraph;
       if (graph) consumerComponent.dependenciesGraph = graph;
-    }
+    });
     this.snapping.logger.clearStatusLine();
     this.snapping.logger.profile('snap._addDependenciesGraphToComponents');
   }
@@ -421,7 +414,6 @@ export class VersionMaker {
         const existing = target.getByPackageName(graphDependency.packageName);
         if (existing) {
           existing.id = graphDependency.id;
-          existing.packageName = graphDependency.packageName;
         } else {
           target.add(new Dependency(graphDependency.id, [], graphDependency.packageName));
         }
@@ -463,7 +455,17 @@ export class VersionMaker {
     return componentIdByPkgName;
   }
 
+  private declaredPackageNames = new Map<Component, string | undefined>();
+
+  /** the name the package.json a component carries declares, e.g. a pnpm project's */
   private _getDeclaredPackageName(component: Component): string | undefined {
+    if (!this.declaredPackageNames.has(component)) {
+      this.declaredPackageNames.set(component, this._readDeclaredPackageName(component));
+    }
+    return this.declaredPackageNames.get(component);
+  }
+
+  private _readDeclaredPackageName(component: Component): string | undefined {
     const packageJsonFile = component.state._consumer.files.find((file) => file.relative === 'package.json');
     if (!packageJsonFile) return undefined;
     try {

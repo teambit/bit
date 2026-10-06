@@ -27,8 +27,8 @@ import { WorkspaceAspect } from '@teambit/workspace';
 import type { WorkspaceRootMain } from '@teambit/workspace-root';
 import { WorkspaceRootAspect } from '@teambit/workspace-root';
 import { PnpmInitCmd } from './pnpm-init.cmd';
-import type { PnpmScript } from './pnpm-script.task';
 import { PnpmScriptTask } from './pnpm-script.task';
+import { PNPM_SCRIPTS } from './pnpm-utils';
 import { PnpmWorkspaceAspect } from './pnpm-workspace.aspect';
 import { PnpmWorkspaceCompiler } from './pnpm-workspace.compiler';
 import { PnpmWorkspaceEnv } from './pnpm-workspace.env';
@@ -46,8 +46,6 @@ import {
   PnpmSyncCmd,
   syncPnpmWorkspace,
 } from './pnpm-workspace-sync';
-
-const ENV_SCRIPTS: PnpmScript[] = ['build', 'test', 'lint'];
 
 /**
  * a pnpm workspace managed by bit: every pnpm project is a component and the workspace root is the
@@ -181,7 +179,7 @@ export class PnpmWorkspaceMain {
       new PnpmWorkspaceEnv(() => {
         // a workspace build reads the members as the workspace has them, a build in a scope as their remotes do
         const treeSource = workspace ? new WorkspaceTreeSource(workspace, workspaceRoot) : new ScopeTreeSource(scope);
-        const buildTasks = ENV_SCRIPTS.map(
+        const buildTasks = PNPM_SCRIPTS.map(
           (script) => new PnpmScriptTask(PnpmWorkspaceAspect.id, script, treeSource, workspaceRoot, logger)
         );
         return { compiler: new PnpmWorkspaceCompiler(buildTasks[0], logger), buildTasks };

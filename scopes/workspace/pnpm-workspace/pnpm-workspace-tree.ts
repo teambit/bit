@@ -1,7 +1,8 @@
 import { createHash } from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
-import type { Component, ComponentID } from '@teambit/component';
+import type { Component } from '@teambit/component';
+import { ComponentID } from '@teambit/component-id';
 import type { ScopeMain } from '@teambit/scope';
 import type { Workspace } from '@teambit/workspace';
 import type { WorkspaceRootMain } from '@teambit/workspace-root';
@@ -30,10 +31,6 @@ type WorkspaceMember = { id: string; rootDir: string };
  */
 function readRootId(component: Component): string | undefined {
   return component.state.aspects.get(WorkspaceRootAspect.id)?.data?.root;
-}
-
-function withoutVersion(id: string): string {
-  return id.split('@')[0];
 }
 
 /**
@@ -69,7 +66,9 @@ export async function loadPnpmWorkspaceTree(
   workspaceRoot: WorkspaceRootMain
 ): Promise<PnpmWorkspaceTree> {
   const findInBuild = (id: string) =>
-    buildComponents.find((component) => component.id.toStringWithoutVersion() === withoutVersion(id));
+    buildComponents.find(
+      (component) => component.id.toStringWithoutVersion() === ComponentID.getStringWithoutVersion(id)
+    );
   const rootId = source.getRootId(components);
   const root = findInBuild(rootId) || (await source.get([rootId]))[0];
   if (!root) throw new Error(`unable to load the workspace root ${rootId}`);
@@ -105,7 +104,9 @@ export class WorkspaceTreeSource implements TreeSource {
     return Promise.all(
       ids.map(async (id) => {
         try {
-          return await this.workspace.get(await this.workspace.resolveComponentId(withoutVersion(id)));
+          return await this.workspace.get(
+            await this.workspace.resolveComponentId(ComponentID.getStringWithoutVersion(id))
+          );
         } catch {
           return undefined;
         }

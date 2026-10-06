@@ -3,12 +3,10 @@ import path from 'path';
 import type { ArtifactDefinition, BuildContext, BuildTask, BuiltTaskResult, ComponentResult } from '@teambit/builder';
 import type { Logger } from '@teambit/logger';
 import type { WorkspaceRootMain } from '@teambit/workspace-root';
-import type { PnpmError } from './pnpm-utils';
+import type { PnpmError, PnpmScript } from './pnpm-utils';
 import { exists, runPnpm } from './pnpm-utils';
 import type { PnpmWorkspaceTree, TreeSource } from './pnpm-workspace-tree';
 import { loadPnpmWorkspaceTree, treeSignature, writePnpmWorkspaceTree } from './pnpm-workspace-tree';
-
-export type PnpmScript = 'build' | 'test' | 'lint';
 
 /** where a package's build script may write its output */
 export const BUILD_OUTPUT_DIRS = ['dist', 'build', 'lib'];

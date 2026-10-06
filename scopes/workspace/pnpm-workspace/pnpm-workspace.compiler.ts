@@ -7,8 +7,7 @@ import type { PnpmScriptTask } from './pnpm-script.task';
 import { BUILD_OUTPUT_DIRS } from './pnpm-script.task';
 import type { PnpmError } from './pnpm-utils';
 import { exists, runPnpm } from './pnpm-utils';
-
-const PNPM_WORKSPACE_MANIFEST = 'pnpm-workspace.yaml';
+import { PNPM_WORKSPACE_MANIFEST } from './pnpm-workspace-sync';
 const DIST_DIR = 'dist';
 /** the output of the build and the installed packages - not what the build reads from */
 const NON_SOURCE_DIRS = new Set(['node_modules', '.bit', '.git']);
