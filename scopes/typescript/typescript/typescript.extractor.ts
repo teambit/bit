@@ -1,7 +1,7 @@
 import type { Node, SourceFile } from 'typescript';
 import ts, { SyntaxKind } from 'typescript';
 import { getTsconfig } from 'get-tsconfig';
-import type { SchemaExtractor, SchemaExtractorOptions } from '@teambit/schema';
+import type { SchemaExtractor, SchemaExtractorOptions, SnippetFormatter } from '@teambit/schema';
 import type { TsserverClient } from '@teambit/ts-server';
 import type { Workspace } from '@teambit/workspace';
 import type { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
@@ -15,7 +15,6 @@ import {
 import type { Component } from '@teambit/component';
 import type { AbstractVinyl } from '@teambit/component.sources';
 import type { EnvContext } from '@teambit/envs';
-import type { Formatter } from '@teambit/formatter';
 import type { Logger } from '@teambit/logger';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { AspectLoaderAspect, getCoreAspectPackageName } from '@teambit/aspect-loader';
@@ -213,7 +212,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
   private async createContext(
     tsserver: TsserverClient,
     component: Component,
-    formatter?: Formatter
+    formatter?: SnippetFormatter
   ): Promise<SchemaExtractorContext> {
     const componentDeps = await this.getComponentDeps(component);
     return new SchemaExtractorContext(

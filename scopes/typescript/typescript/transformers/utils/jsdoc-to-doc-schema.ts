@@ -8,13 +8,13 @@ import {
   TagName,
   TagSchema,
 } from '@teambit/semantics.entities.semantic-schema';
-import type { Formatter } from '@teambit/formatter';
+import type { SnippetFormatter } from '@teambit/schema';
 import type { SchemaExtractorContext } from '../../schema-extractor-context';
 
 export async function tagParser(
   tag: JSDocTag,
   context: SchemaExtractorContext,
-  formatter?: Formatter
+  formatter?: SnippetFormatter
 ): Promise<TagSchema> {
   // for some reason, in some cases, if `tag.getSourceFile()` is not provided to the `getText()`, it throws "Cannot read property 'text' of undefined"
   switch (tag.kind) {
