@@ -703,8 +703,6 @@
       "@types/react-dom": "^19.0.0",
       // Older versions of cross-spawn have a reported security vulnerability.
       "cross-spawn@7": "^7.0.5",
-      // proxy-addr 2.0.7 has a reported security vulnerability (GHSA-jqcg-44mw-7w3h).
-      "proxy-addr@2": "^2.0.8",
       // react-animate-height < 2.1.2 reads this.state.animating after unmount,
       // which throws under React 19 because React 19 nullifies state on unmount.
       "react-animate-height@2": "^3.2.3",

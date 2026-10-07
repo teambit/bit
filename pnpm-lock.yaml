@@ -21,7 +21,6 @@ overrides:
   '@types/react': ^19.0.0
   '@types/react-dom': ^19.0.0
   cross-spawn@7: ^7.0.5
-  proxy-addr@2: ^2.0.8
   react-animate-height@2: ^3.2.3
   react@17: 19.1.0
   react-dom@17: 19.1.0
