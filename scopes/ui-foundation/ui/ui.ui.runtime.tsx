@@ -38,8 +38,8 @@ export class UiUI {
     private hudSlot: HudSlot,
     /** hooks into the ssr render process */
     private renderPluginsSlot: RenderPluginsSlot,
-    /** pubsub's render hooks. kept apart, since a slot entry is keyed by the registering aspect (ui's own is graphql's) */
-    private pubsubRenderPlugin?: RenderPlugin<any, any>
+    /** render hooks of ui's own dependencies (graphql, pubsub), rendered before the registered ones */
+    private dependenciesRenderPlugins: RenderPlugin<any, any>[]
   ) {}
 
   /** render and rehydrate client-side */
@@ -114,24 +114,14 @@ export class UiUI {
   }
 
   private getLifecyclePlugins() {
-    const pluginEntries = this.renderPluginsSlot.toArray();
-    const lifecyclePlugins = pluginEntries.map(([key, plugin]) => {
+    const registeredPlugins = this.renderPluginsSlot.toArray().map(([key, plugin]) => {
       if (plugin.key) return plugin;
 
       // for backward compatibility
       return { ...plugin, key };
     });
 
-    // pubsub's render hooks go right after ui's own (graphql's), where pubsub used to register them.
-    if (this.pubsubRenderPlugin) {
-      const uiPluginIndex = pluginEntries.findIndex(([key]) => key === UIAspect.id);
-      lifecyclePlugins.splice(uiPluginIndex + 1, 0, this.pubsubRenderPlugin);
-    }
-
-    // react-router should register its plugin, when we can reverse it's dependency to depend on Ui
-    lifecyclePlugins.unshift(this.router.renderPlugin);
-
-    return lifecyclePlugins;
+    return [this.router.renderPlugin, ...this.dependenciesRenderPlugins, ...registeredPlugins];
   }
 
   private getRoot(rootExtension: string) {
@@ -149,14 +139,11 @@ export class UiUI {
     config,
     [uiRootSlot, hudSlot, renderLifecycleSlot]: [UIRootRegistry, HudSlot, RenderPluginsSlot]
   ) {
-    const pubsubRenderPlugin = pubsubUI
-      ? { key: PubsubAspect.id, reactContext: pubsubUI.getPubSubContext() }
-      : undefined;
-    const uiUi = new UiUI(router, uiRootSlot, hudSlot, renderLifecycleSlot, pubsubRenderPlugin);
-
-    if (GraphqlUi) uiUi.registerRenderHooks(GraphqlUi.renderPlugins);
-
-    return uiUi;
+    const dependenciesRenderPlugins = [
+      GraphqlUi.renderPlugins,
+      { key: PubsubAspect.id, reactContext: pubsubUI.getPubSubContext() },
+    ];
+    return new UiUI(router, uiRootSlot, hudSlot, renderLifecycleSlot, dependenciesRenderPlugins);
   }
 }
 

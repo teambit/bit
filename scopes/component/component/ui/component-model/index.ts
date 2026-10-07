@@ -4,4 +4,5 @@ export {
   DeprecationInfo,
   RegularCompDescriptor,
   ComponentPreviewSize,
+  ComponentPreviewSizedFile,
 } from './component-model';

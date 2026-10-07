@@ -93,7 +93,7 @@ export class ComponentUI {
     /**
      * whether the component page offers its commands and component search to the command bar
      */
-    readonly isCommandBarEnabled = true
+    readonly isCommandBarEnabled: boolean
   ) {
     this.componentSearcher = new ComponentSearcher({ navigate: reactRouterUi.navigateTo });
   }
@@ -112,6 +112,10 @@ export class ComponentUI {
   formatToInstallableVersion(version: string) {
     return snapToSemver(version);
   }
+
+  private copyBitId = () => {
+    copy(this.activeComponent?.id.toString() || '');
+  };
 
   private copyNpmId = () => {
     const packageName = this.activeComponent?.packageName;
@@ -141,9 +145,7 @@ export class ComponentUI {
   readonly keyBindings: ComponentCommand[] = [
     {
       id: 'component.copyBitId', // TODO - extract to a component!
-      action: () => {
-        copy(this.activeComponent?.id.toString() || '');
-      },
+      action: this.copyBitId,
       displayName: 'Copy component ID',
       keybinding: '.',
     },
@@ -172,13 +174,13 @@ export class ComponentUI {
       category: 'workflow',
       title: 'Copy component ID',
       keyChar: '.',
-      handler: () => this.runCommand('component.copyBitId'),
+      handler: this.copyBitId,
     },
     {
       category: 'workflow',
       title: 'Copy component package name',
       keyChar: ',',
-      handler: () => this.runCommand('component.copyNpmId'),
+      handler: this.copyNpmId,
     },
   ];
 

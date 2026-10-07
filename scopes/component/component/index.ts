@@ -44,6 +44,7 @@ export type {
   DeprecationInfo,
   RegularCompDescriptor,
   ComponentPreviewSize,
+  ComponentPreviewSizedFile,
 } from './ui/component-model';
 export { ComponentModel } from './ui/component-model';
 export { TopBarNav } from './ui/top-bar-nav';

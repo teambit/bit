@@ -1,6 +1,6 @@
 import { ArtifactFactory, BuilderAspect } from '@teambit/builder';
 import type { BuilderMain } from '@teambit/builder';
-import type { Asset, BundlerMain } from '@teambit/bundler';
+import type { BundlerMain } from '@teambit/bundler';
 import { BundlerAspect } from '@teambit/bundler';
 import type { PubsubMain } from '@teambit/pubsub';
 import { PubsubAspect } from '@teambit/pubsub';
@@ -13,6 +13,7 @@ import type {
   ComponentMap,
   ComponentID,
   ComponentPreviewSize,
+  ComponentPreviewSizedFile,
   ResolveAspectsOptions,
 } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
@@ -104,9 +105,7 @@ export type PreviewFiles = {
   isBundledWithEnv: boolean;
 };
 
-export type ComponentPreviewSizedFile = Asset;
-
-export type { ComponentPreviewSize };
+export type { ComponentPreviewSize, ComponentPreviewSizedFile };
 
 export type ComponentPreviewMetaData = {
   size?: ComponentPreviewSize;
