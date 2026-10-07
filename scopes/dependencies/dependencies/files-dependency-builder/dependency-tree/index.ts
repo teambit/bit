@@ -4,7 +4,7 @@
 import fs from 'fs';
 import debugFactory from 'debug';
 import cabinet from '../filing-cabinet';
-import precinct from '../precinct';
+import precinct, { isRustEligible } from '../precinct';
 import Config from './Config';
 
 const debug = debugFactory('tree');
@@ -64,11 +64,15 @@ module.exports._getDependencies = async function (config) {
   const precinctOptions = config.detectiveConfig;
   precinctOptions.includeCore = false;
   precinctOptions.envDetectors = config.envDetectors;
+  // Keep session state out of shared detector options and legacy detective calls.
+  const extractionOptions = config.rustScannerSession
+    ? { ...precinctOptions, rustScannerSession: config.rustScannerSession }
+    : precinctOptions;
   // @ts-ignore
   delete precinct.ast;
 
   try {
-    dependenciesRaw = await precinct.paperwork(config.filename, precinctOptions);
+    dependenciesRaw = await precinct.paperwork(config.filename, extractionOptions);
   } catch (e: any) {
     debug(`error getting dependencies: ${e.message}`);
     debug(e.stack);
@@ -202,6 +206,18 @@ async function traverse(config) {
       missing: config.nonExistent[dependency],
       error: config.errors[dependency],
     };
+    if (config.rustScannerSession) {
+      // Resolution and filters have already run in legacy order. Only stage accepted edges.
+      const nextFiles = dependencies.filter(
+        (filename) =>
+          !config.visited[filename] &&
+          isRustEligible(filename, {
+            ...localConfig.detectiveConfig,
+            envDetectors: localConfig.envDetectors,
+          })
+      );
+      await config.rustScannerSession.prefetch(nextFiles);
+    }
     stack.push(...dependencies);
   }
 

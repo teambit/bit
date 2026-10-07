@@ -5,6 +5,8 @@ import os from 'os';
 import path from 'path';
 
 import dependencyTree from './dependency-tree';
+import { isRustEligible } from './precinct';
+import { RustDependencyScannerSession } from './rust-scanner/session';
 import type { PathLinuxRelative } from '@teambit/toolbox.path.path';
 
 /**
@@ -126,45 +128,70 @@ export default async function generateTree(files: string[] = [], config): Promis
   const pathMap = [];
   const errors = {};
 
-  for await (const file of files) {
-    if (depTree[file]) {
-      continue;
+  const executable = process.env.BIT_RUST_DEPENDENCY_SCANNER;
+  const rustScannerSession =
+    executable && path.isAbsolute(executable)
+      ? new RustDependencyScannerSession({ executable, cwd: process.cwd() })
+      : undefined;
+  if (executable && !rustScannerSession) {
+    require('debug')('precinct')('Rust extraction fallback: BIT_RUST_DEPENDENCY_SCANNER must be absolute');
+  }
+  try {
+    if (rustScannerSession) {
+      await rustScannerSession.prefetch(
+        files.filter(
+          (filename) =>
+            !config.visited?.[path.resolve(filename)] &&
+            isRustEligible(filename, {
+              ...config.detectiveOptions,
+              envDetectors: config.envDetectors,
+            })
+        )
+      );
     }
+    for await (const file of files) {
+      if (depTree[file]) {
+        continue;
+      }
 
-    const detective = config.detectiveOptions;
-    try {
-      const dependencyTreeResult = await dependencyTree({
-        filename: file,
-        directory: config.baseDir,
-        requireConfig: config.requireConfig,
-        webpackConfig: config.webpackConfig,
-        resolveConfig: config.resolveConfig,
-        visited: config.visited,
-        errors,
-        filter: (dependencyFilePath, traversedFilePath) => {
-          let dependencyFilterRes = true;
-          const isNpmPath = isNpmPathFunc(dependencyFilePath);
+      const detective = config.detectiveOptions;
+      try {
+        const dependencyTreeResult = await dependencyTree({
+          filename: file,
+          directory: config.baseDir,
+          requireConfig: config.requireConfig,
+          webpackConfig: config.webpackConfig,
+          resolveConfig: config.resolveConfig,
+          visited: config.visited,
+          rustScannerSession,
+          errors,
+          filter: (dependencyFilePath, traversedFilePath) => {
+            let dependencyFilterRes = true;
+            const isNpmPath = isNpmPathFunc(dependencyFilePath);
 
-          if (config.dependencyFilter) {
-            dependencyFilterRes = config.dependencyFilter(dependencyFilePath, traversedFilePath, config.baseDir);
-          }
+            if (config.dependencyFilter) {
+              dependencyFilterRes = config.dependencyFilter(dependencyFilePath, traversedFilePath, config.baseDir);
+            }
 
-          if (config.includeNpm && isNpmPath) {
-            (npmPaths[traversedFilePath] = npmPaths[traversedFilePath] || []).push(dependencyFilePath);
-          }
+            if (config.includeNpm && isNpmPath) {
+              (npmPaths[traversedFilePath] = npmPaths[traversedFilePath] || []).push(dependencyFilePath);
+            }
 
-          return !isNpmPath && (dependencyFilterRes || dependencyFilterRes === undefined);
-        },
-        detective,
-        nonExistent,
-        pathMap,
-        cacheProjectAst: config.cacheProjectAst,
-        envDetectors: config.envDetectors,
-      });
-      Object.assign(depTree, dependencyTreeResult);
-    } catch (err: any) {
-      errors[file] = err;
+            return !isNpmPath && (dependencyFilterRes || dependencyFilterRes === undefined);
+          },
+          detective,
+          nonExistent,
+          pathMap,
+          cacheProjectAst: config.cacheProjectAst,
+          envDetectors: config.envDetectors,
+        });
+        Object.assign(depTree, dependencyTreeResult);
+      } catch (err: any) {
+        errors[file] = err;
+      }
     }
+  } finally {
+    rustScannerSession?.dispose();
   }
 
   let tree = convertTreePaths(depTree, pathCache, config.baseDir);

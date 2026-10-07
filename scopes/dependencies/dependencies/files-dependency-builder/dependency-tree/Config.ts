@@ -32,6 +32,8 @@ export default function Config(options) {
   this.cacheProjectAst = options.cacheProjectAst;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   this.envDetectors = options.envDetectors;
+  // @ts-ignore this function models its mutable config fields through existing call sites.
+  this.rustScannerSession = options.rustScannerSession;
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   this.filter = options.filter;
