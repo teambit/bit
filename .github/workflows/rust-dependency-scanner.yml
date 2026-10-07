@@ -1,0 +1,105 @@
+name: Rust dependency scanner
+
+on:
+  push:
+    branches: [rust]
+    paths: ['native/**', 'scripts/rust/**', '.github/workflows/rust-dependency-scanner.yml']
+  pull_request:
+    branches: [rust]
+    paths: ['native/**', 'scripts/rust/**', '.github/workflows/rust-dependency-scanner.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rust-scanner-${{ github.event.pull_request.number || github.ref }}
+  # Superseded PR pushes are cancelled; every commit on `rust` keeps its result.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  lint:
+    name: pnpm Rust formatting and lints
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: native
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+      - name: Cache Cargo and formatter artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin/cargo-dylint
+            ~/.cargo/bin/dylint-link
+            ~/.dylint_drivers
+            ~/.cache/pnpm/rustfmt
+            native/target/debug
+          key: rust-scanner-lint-${{ runner.os }}-${{ hashFiles('native/rust-toolchain.toml', 'native/Cargo.lock', 'native/Cargo.toml', 'scripts/rust/rustfmt.json') }}-dylint-6.0.4
+          # Keeps the installed Dylint binaries and registry when only the lockfile changes.
+          restore-keys: rust-scanner-lint-${{ runner.os }}-
+      - name: Cache pinned perfectionist library
+        uses: actions/cache@v4
+        with:
+          path: native/target/dylint
+          key: rust-scanner-perfectionist-${{ runner.os }}-${{ hashFiles('native/rust-toolchain.toml', 'native/dylint.toml') }}-dylint-6.0.4
+      - name: Install pinned Rust and Clippy
+        run: |
+          rustup show
+          rustup component add clippy
+      - name: Check pnpm's pinned formatter
+        run: node ../scripts/rust/rustfmt.mjs --all -- --check
+      - name: Check Clippy
+        run: cargo clippy --locked --workspace --all-targets -- -D warnings
+      - name: Install pnpm's Dylint version
+        run: |
+          if ! cargo dylint --version 2>/dev/null | grep -Fxq 'cargo-dylint 6.0.4' || ! command -v dylint-link >/dev/null; then
+            cargo install --locked --force --version 6.0.4 cargo-dylint dylint-link
+          fi
+      - name: Check perfectionist
+        env:
+          RUSTFLAGS: '-D warnings'
+        run: cargo dylint --all -- --all-targets --workspace
+      - name: Check Rust documentation
+        env:
+          RUSTDOCFLAGS: '-D warnings'
+        run: cargo doc --locked --workspace --no-deps
+
+  test:
+    name: Rust tests (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: native
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Cache dependencies and build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            native/target/debug
+          key: rust-scanner-test-${{ runner.os }}-${{ hashFiles('native/rust-toolchain.toml', 'native/Cargo.lock') }}
+          restore-keys: rust-scanner-test-${{ runner.os }}-
+      - name: Install pinned Rust
+        run: rustup show
+      - name: Test scanner
+        run: cargo test --locked --workspace
+      - name: Build release scanner
+        run: cargo build --locked --release --workspace
