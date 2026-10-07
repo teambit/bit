@@ -171,16 +171,9 @@ export default class Version extends BitObject {
   _flattenedEdges?: DepEdge[]; // caching for the flattenedEdges
   /**
    * @deprecated
-   * to get the flattenedEdges, please use `this.getFlattenedEdges()`.
-   * this function handles the backward compatibility and provides the flattened edges regardless whether it was saved
-   * the `flattenedEdgesRef` introduced or after.
-   *
-   * the reason this is left here is not for backward compatibility, but for forward compatibility. meaning, if a
-   * Version object created by the new version is parsed by an old version that doesn't support the flattenedEdgesRef,
-   * then, it'll be able to still get the flattenedEdges by this prop.
-   * this is causing duplication currently. the data is kept in both, `this.flattenedEdges` and the file stored in `flattenedEdgesRef`.
-   * so it'll be best to delete this prop as soon as all scopes are deployed with the new version.
-   * (around August 2023 should be safe)
+   * to get the flattenedEdges, please use `this.getFlattenedEdges()`, which supports both formats.
+   * this holds the edges of old Versions, which were saved inside the Version, before `flattenedEdgesRef` was
+   * introduced. Versions that have `flattenedEdgesRef` don't save the edges here (see `toObject()`).
    */
   private flattenedEdges: DepEdge[];
   packageDependencies: { [key: string]: string };
@@ -848,7 +841,7 @@ export default class Version extends BitObject {
       peerPackageDependencies: component.peerPackageDependencies,
       dependenciesGraphRef: dependenciesGraph?.hash(),
       flattenedDependencies: component.flattenedDependencies,
-      // it's safe to remove this line once the version.flattenedEdges prop is deleted
+      // not saved in the Version when `flattenedEdgesRef` is set, see `toObject()`.
       flattenedEdges: component.flattenedEdges,
       flattenedEdgesRef: flattenedEdges?.hash(),
       schema: component.schema,
