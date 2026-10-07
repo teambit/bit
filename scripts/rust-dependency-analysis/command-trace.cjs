@@ -2,6 +2,12 @@
 const fs = require('node:fs');
 const cp = require('node:child_process');
 const target = process.env.BIT_RUST_DEPENDENCY_SCANNER;
+// fork() passes --require preloads to children (e.g. Bit's detached analytics sender after a
+// failed command). Only the process that started tracing may write traces, or a child exiting
+// later overwrites the command's counts with its own zeros.
+process.env.BIT_COMMAND_BENCH_TRACE_OWNER ??= String(process.pid);
+const isTraceOwner = process.env.BIT_COMMAND_BENCH_TRACE_OWNER === String(process.pid);
+exports.isTraceOwner = isTraceOwner;
 const trace = {
   helperStarts: 0,
   maxConcurrentHelpers: 0,
@@ -72,6 +78,6 @@ cp.spawn = function (command, args, options) {
 };
 process.on('exit', () => {
   const destination = process.env.BIT_COMMAND_BENCH_TRACE;
-  if (destination)
+  if (destination && isTraceOwner)
     fs.writeFileSync(destination, JSON.stringify({ ...trace, nodePeakRssKiB: process.resourceUsage().maxRSS }));
 });

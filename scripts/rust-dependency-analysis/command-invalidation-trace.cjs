@@ -1,5 +1,5 @@
 // Benchmark-only graph-entry instrumentation, shared by legacy/native commands.
-require('./command-trace.cjs');
+const { isTraceOwner } = require('./command-trace.cjs');
 const fs = require('node:fs');
 const Module = require('node:module');
 const load = Module._load;
@@ -24,7 +24,7 @@ Module._load = function (request, parent, isMain) {
 };
 process.on('exit', () => {
   const filename = process.env.BIT_COMMAND_BENCH_TRACE;
-  if (filename && fs.existsSync(filename)) {
+  if (filename && isTraceOwner && fs.existsSync(filename)) {
     const trace = JSON.parse(fs.readFileSync(filename));
     fs.writeFileSync(filename, JSON.stringify({ ...trace, dependencyTreeOperations }));
   }
