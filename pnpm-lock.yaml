@@ -31,7 +31,7 @@ overrides:
   '@pnpm/util.lex-comparator': 3.0.2
   '@pnpm/config.nerf-dart': 1.0.1
 
-pnpmfileChecksum: bit-1
+untrackedPnpmfileReadPackageHook: true
 
 importers:
 
@@ -19901,6 +19901,9 @@ importers:
       '@teambit/component-id':
         specifier: ^1.2.4
         version: 1.2.4
+      '@teambit/design.ui.brand.logo':
+        specifier: 1.96.19
+        version: 1.96.19(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony':
         specifier: 0.4.12
         version: 0.4.12
@@ -20004,9 +20007,6 @@ importers:
       '@teambit/bit.content.what-is-bit':
         specifier: 1.96.13
         version: 1.96.13(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/design.ui.brand.logo':
-        specifier: 1.96.19
-        version: 1.96.19(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
@@ -56501,6 +56501,7 @@ snapshots:
       '@teambit/bit.get-bit-version': file:components/bit/get-bit-version
       '@teambit/clear-cache': file:scopes/workspace/clear-cache(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component-id': 1.2.4
+      '@teambit/design.ui.brand.logo': 1.96.19(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.content.cli-reference': file:scopes/harmony/cli-reference(react@19.2.7)
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
@@ -56568,6 +56569,7 @@ snapshots:
       '@teambit/bit.get-bit-version': file:components/bit/get-bit-version
       '@teambit/clear-cache': file:scopes/workspace/clear-cache(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component-id': 1.2.4
+      '@teambit/design.ui.brand.logo': 1.96.19(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.content.cli-reference': file:scopes/harmony/cli-reference(react@19.2.7)
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
