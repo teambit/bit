@@ -12,6 +12,7 @@ export type RustScannerOutcome = {
 
 export type RustDependencyScannerSessionOptions = {
   executable: string;
+  args?: readonly string[];
   cwd?: string;
   threads?: number;
   timeoutMs?: number;

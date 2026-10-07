@@ -53,7 +53,13 @@ export class RustDependencyScannerSession {
     if (!options.executable || typeof options.executable !== 'string')
       throw new Error('Rust scanner executable is required');
     if (options.threads !== undefined) limit(options.threads, 8, 64, 'threads');
-    this.options = { ...options };
+    if (
+      options.args !== undefined &&
+      (!Array.isArray(options.args) || Array.from(options.args).some((arg) => typeof arg !== 'string'))
+    ) {
+      throw new Error('Rust scanner args must be an array of strings');
+    }
+    this.options = { ...options, args: options.args ? [...options.args] : undefined };
     this.cwd = path.resolve(options.cwd ?? process.cwd());
     this.limits = {
       batchFiles: limit(options.maxBatchFiles, 256, 4096, 'batch size'),
@@ -163,7 +169,8 @@ export class RustDependencyScannerSession {
 
   private start(): void {
     if (this.child || this.failure) return;
-    const args = this.options.threads === undefined ? [] : ['--threads', String(this.options.threads)];
+    const args = [...(this.options.args || [])];
+    if (this.options.threads !== undefined) args.push('--threads', String(this.options.threads));
     this.child = spawn(this.options.executable, args, { cwd: this.cwd, stdio: 'pipe', shell: false });
     this.child.on('error', (error) => this.fail(`Rust scanner spawn error: ${error.message}`));
     this.child.on('exit', () => {

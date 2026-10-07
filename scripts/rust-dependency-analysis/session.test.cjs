@@ -40,27 +40,28 @@ compiled._compile(
 const { RustDependencyScannerSession } = compiled.exports;
 
 function fixture(context, mode = 'ok', options = {}) {
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'bit-rust-session-test-'));
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'bit rust session тест '));
   const logPath = path.join(directory, 'requests.jsonl');
-  const executable = path.join(directory, 'scanner');
   const implementation = path.join(__dirname, 'session-fixtures/fake-scanner.cjs');
-  fs.writeFileSync(
-    executable,
-    `#!/usr/bin/env node\nrequire(${JSON.stringify(implementation)}).run(${JSON.stringify(mode)}, ${JSON.stringify(logPath)});\n`,
-    { mode: 0o755 }
-  );
-  const session = new RustDependencyScannerSession({ executable, cwd: directory, timeoutMs: 3000, ...options });
-  context.after(() => {
+  const args = [implementation, mode, logPath];
+  const session = new RustDependencyScannerSession({
+    executable: process.execPath,
+    args,
+    cwd: directory,
+    timeoutMs: 3000,
+    ...options,
+  });
+  context.after(async () => {
     session.dispose();
-    fs.rmSync(directory, { recursive: true, force: true });
+    await fs.promises.rm(directory, { recursive: true, force: true, maxRetries: 10, retryDelay: 25 });
   });
   const logs = () =>
     fs.existsSync(logPath) ? fs.readFileSync(logPath, 'utf8').trim().split('\n').filter(Boolean).map(JSON.parse) : [];
-  return { directory, session, logs };
+  return { directory, session, logs, args };
 }
 
 async function requested(logs) {
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < 1000; i++) {
     if (logs().some(({ event }) => event === 'request')) return;
     await delay(10);
   }
@@ -175,7 +176,7 @@ for (const mode of [
 }
 
 test('a later timeout clears previously cached success', async (context) => {
-  const { session } = fixture(context, 'fail-after-first', { timeoutMs: 150 });
+  const { session } = fixture(context, 'fail-after-first', { timeoutMs: 1500 });
   await session.prefetch(['cached.ts']);
   assert.equal(session.get('cached.ts').status, 'ok');
   await session.prefetch(['timeout.ts']);
@@ -265,7 +266,7 @@ test('missing executable becomes unavailable without rejecting caller work', asy
   unavailable(session, ['missing.ts']);
 });
 
-test('dispose eventually kills a helper that ignores SIGTERM', async (context) => {
+test('dispose eventually terminates a helper with a SIGTERM handler', async (context) => {
   const { session, logs } = fixture(context, 'ignore-term');
   const pending = session.prefetch(['stubborn.ts']);
   await requested(logs);
@@ -379,8 +380,7 @@ test('inline cache copies preserve parse and fallback semantics after caller mut
 });
 
 test('an undisposed idle session does not keep the parent process alive', (context) => {
-  const { directory } = fixture(context);
-  const executable = path.join(directory, 'scanner');
+  const { directory, args } = fixture(context);
   // A separate Node process loads the session exactly as this harness does, then returns without dispose.
   const script = `
     const Module = require('node:module');
@@ -390,7 +390,7 @@ test('an undisposed idle session does not keep the parent process alive', (conte
       compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, esModuleInterop: true },
     }).outputText, filename);
     const { RustDependencyScannerSession } = require(${JSON.stringify(source)});
-    const session = new RustDependencyScannerSession({ executable: ${JSON.stringify(executable)}, cwd: ${JSON.stringify(directory)} });
+    const session = new RustDependencyScannerSession({ executable: ${JSON.stringify(process.execPath)}, args: ${JSON.stringify(args)}, cwd: ${JSON.stringify(directory)} });
     session.prefetch(['a.ts']).then(() => console.log(session.get('a.ts').status));
   `;
   const run = spawnSync(process.execPath, ['-e', script], { encoding: 'utf8', timeout: 10_000 });
@@ -398,3 +398,94 @@ test('an undisposed idle session does not keep the parent process alive', (conte
   assert.equal(run.status, 0, run.stderr);
   assert.equal(run.stdout.trim(), 'ok');
 });
+
+test('explicit argument vectors are copied and thread flags follow launcher arguments', async (context) => {
+  const { session, logs, args } = fixture(context, 'ok', { threads: 3 });
+  args[1] = 'wrong-id';
+  await session.prefetch(['arguments.ts']);
+  assert.equal(session.get('arguments.ts').status, 'ok');
+  assert.deepEqual(
+    logs()
+      .find(({ event }) => event === 'start')
+      .args.slice(-2),
+    ['--threads', '3']
+  );
+  assert.equal(logs().find(({ event }) => event === 'start').args[0], 'ok');
+});
+
+test('invalid argument vector configuration is rejected before spawning', () => {
+  for (const args of ['script.js', [42], [null], new Array(1)]) {
+    assert.throws(() => new RustDependencyScannerSession({ executable: process.execPath, args }), /args/);
+  }
+});
+
+const nativeExecutable = path.resolve(
+  process.env.BIT_NATIVE_SCANNER ||
+    path.join(
+      __dirname,
+      '../../native/target/debug',
+      process.platform === 'win32' ? 'bit-dependency-scanner.exe' : 'bit-dependency-scanner'
+    )
+);
+const nativeRequired = process.env.BIT_NATIVE_SCANNER_REQUIRED === '1';
+const nativeAvailable = fs.existsSync(nativeExecutable);
+
+test(
+  'real Rust scanner handles disk and inline sources, cache, errors, and cleanup',
+  {
+    skip:
+      !nativeAvailable && !nativeRequired
+        ? 'build native scanner or set BIT_NATIVE_SCANNER to enable this check'
+        : false,
+  },
+  async (context) => {
+    assert.ok(nativeAvailable, `required Rust scanner binary is missing: ${nativeExecutable}`);
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'bit real scanner '));
+    const controller = new AbortController();
+    const session = new RustDependencyScannerSession({
+      executable: nativeExecutable,
+      cwd: directory,
+      threads: 2,
+      signal: controller.signal,
+    });
+    context.after(async () => {
+      session.dispose();
+      await fs.promises.rm(directory, { recursive: true, force: true, maxRetries: 10, retryDelay: 25 });
+    });
+    fs.writeFileSync(path.join(directory, 'disk.ts'), "import type { Thing } from 'package';");
+    fs.writeFileSync(path.join(directory, 'invalid.ts'), 'const value: = 1;');
+    fs.writeFileSync(path.join(directory, 'unsupported.css'), 'body {}');
+    await session.prefetch(['disk.ts', './disk.ts', 'invalid.ts', 'unsupported.css', 'missing.ts']);
+    assert.equal(session.unavailableReason, undefined);
+    assert.equal(session.get('disk.ts').dependencies.package.isTypeImport, true);
+    assert.equal(session.get('./disk.ts').path, './disk.ts');
+    assert.equal(session.get('invalid.ts').status, 'parse_error');
+    assert.equal(session.get('unsupported.css').status, 'unsupported');
+    assert.equal(session.get('missing.ts').status, 'read_error');
+    const inline = await session.scanSource('disk.ts', "import value from './inline';");
+    assert.equal(inline.status, 'ok');
+    assert.deepEqual(Object.keys(inline.dependencies), ['./inline']);
+    assert.deepEqual(Object.keys(session.get('disk.ts').dependencies), ['package']);
+    inline.dependencies['./inline'].importSpecifiers[0].name = 'mutated';
+    assert.equal(
+      (await session.scanSource('disk.ts', "import value from './inline';")).dependencies['./inline']
+        .importSpecifiers[0].name,
+      'value'
+    );
+    const pid = session.child.pid;
+    controller.abort();
+    assert.equal(await session.scanSource('cancelled.ts', "import 'cancelled';"), undefined);
+    assert.equal(session.get('disk.ts'), undefined);
+    session.dispose();
+    for (let attempt = 0; attempt < 250; attempt++) {
+      try {
+        process.kill(pid, 0);
+      } catch (error) {
+        if (error.code === 'ESRCH') return;
+        throw error;
+      }
+      await delay(10);
+    }
+    assert.fail('cancelled real Rust scanner process survived cleanup');
+  }
+);

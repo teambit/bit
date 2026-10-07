@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const readline = require('node:readline');
 
 // A real subprocess with controllable protocol failures. Each test gets its own
-// wrapper executable and log, avoiding process-wide environment state.
+// explicit argument vector and log, avoiding process-wide environment state.
 exports.run = function run(mode, logPath) {
   const log = (entry) => fs.appendFileSync(logPath, JSON.stringify(entry) + '\n');
   log({ event: 'start', pid: process.pid, args: process.argv.slice(2) });
@@ -67,3 +67,9 @@ exports.run = function run(mode, logPath) {
     process.stdout.write(output);
   });
 };
+
+if (require.main === module) {
+  const [, , mode, logPath] = process.argv;
+  if (!mode || !logPath) throw new Error('usage: fake-scanner.cjs MODE LOG_PATH');
+  exports.run(mode, logPath);
+}

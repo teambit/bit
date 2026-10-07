@@ -31,9 +31,13 @@ concurrency:
 
 jobs:
   session:
-    name: Scanner session lifecycle tests (Linux)
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+    name: Scanner session lifecycle tests (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
@@ -42,13 +46,18 @@ jobs:
         with:
           node-version: 22.22.0
       - name: Install isolated TypeScript test compiler
+        shell: bash
         run: |
           mkdir -p "$RUNNER_TEMP/rust-scanner-test-tools"
           echo '{"private":true}' > "$RUNNER_TEMP/rust-scanner-test-tools/package.json"
           npm install --prefix "$RUNNER_TEMP/rust-scanner-test-tools" --no-save --package-lock=false --ignore-scripts typescript@5.9.2
-      - name: Test helper protocol and lifecycle
+      - name: Build real scanner for transport tests
+        working-directory: native
+        run: cargo build --locked --workspace
+      - name: Test helper protocol and lifecycle with real scanner
         env:
           BIT_LEGACY_ROOT: ${{ runner.temp }}/rust-scanner-test-tools
+          BIT_NATIVE_SCANNER_REQUIRED: '1'
         run: node --test scripts/rust-dependency-analysis/session.test.cjs
 
   lint:
