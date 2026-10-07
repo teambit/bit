@@ -1,6 +1,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { compare, legacy } = require('./compare.cjs');
+const { compare, legacy, selectCorpus } = require('./compare.cjs');
+const path = require('node:path');
 
 test('legacy reference preserves imported name and TypeScript type metadata', () => {
   assert.deepEqual(legacy({ path: 'x.ts', source: `import type { A as B } from 'pkg';` }), {
@@ -21,6 +22,29 @@ test('comparator rejects parse success and dependency order drift', () => {
 test('precinct no-check and core filtering apply before comparison', () => {
   assert.deepEqual(legacy({ path: 'x.js', source: '// @bit-no-check\nthis is invalid syntax' }).dependencies, {});
   assert.deepEqual(legacy({ path: 'x.js', source: `require('node:fs'); require('pkg');`, options: { includeCore: false } }).dependencies, { pkg: {} });
+});
+
+test('wire comparison preserves omitted undefined legacy metadata', () => {
+  const reference = legacy({ path: 'strings.js', source: `import { 'some-name' as local } from 'pkg';` });
+  compare(reference, { status: 'ok', dependencies: { pkg: { importSpecifiers: [{ isDefault: false }] } } });
+  assert.throws(() => compare(reference, {
+    status: 'ok', dependencies: { pkg: { importSpecifiers: [{ isDefault: false, name: 'some-name' }] } },
+  }), /raw detector metadata/);
+});
+
+test('legacy optional calls differ between Babel JS and ESTree TS', () => {
+  const source = `import './base'; require?.('./optional');`;
+  assert.deepEqual(Object.keys(legacy({ path: 'optional.js', source }).dependencies), ['./base']);
+  assert.deepEqual(Object.keys(legacy({ path: 'optional.ts', source }).dependencies), ['./base', './optional']);
+});
+
+test('tracked corpus selection is sorted, reproducible, and restricted to supported extensions', () => {
+  const root = path.resolve(__dirname, '../..');
+  const files = selectCorpus(root);
+  assert.ok(files.length > 100);
+  assert.deepEqual(files, [...files].sort());
+  assert.ok(files.every((file) => /\.(js|jsx|cjs|mjs|ts|tsx|mts|cts)$/.test(file)));
+  assert.deepEqual(selectCorpus(root, ['scripts/example.js']), [path.join(root, 'scripts/example.js')]);
 });
 test('JS reference follows precinct module classification', () => {
   assert.deepEqual(legacy({ path: 'x.js', source: `require.resolve('./x');` }), { status: 'ok', dependencies: {} });

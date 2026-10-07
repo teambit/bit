@@ -3,6 +3,8 @@ const assert = require('node:assert/strict');
 const { spawnSync } = require('node:child_process');
 const { isBuiltin, createRequire } = require('node:module');
 const path = require('node:path');
+const fs = require('node:fs');
+const os = require('node:os');
 const fixtures = require('./fixtures.cjs');
 // Resolve using this checkout, or an explicitly supplied installed Bit checkout.
 const load = createRequire(path.resolve(process.env.BIT_LEGACY_ROOT || path.join(__dirname, '../..'), 'package.json'));
@@ -58,10 +60,128 @@ function compare(reference, actual) {
   const dependencies = dependencyRecord(actual.dependencies);
   // Bit's precinct consumes keys; compare order separately from raw metadata.
   assert.deepEqual(Object.keys(dependencies), Object.keys(reference.dependencies), 'precinct dependency names and order');
-  assert.deepEqual(dependencies, reference.dependencies, 'raw detector metadata');
+  // Undefined fields from Babel (e.g. string-named imports) cannot cross JSON.
+  assert.deepEqual(dependencies, JSON.parse(JSON.stringify(reference.dependencies)), 'raw detector metadata');
+}
+
+function invoke(executable, requests, args = []) {
+  const run = spawnSync(executable, args, {
+    input: requests.map((request) => typeof request === 'string' ? request : JSON.stringify(request)).join('\n') + '\n',
+    encoding: 'utf8', maxBuffer: 64 * 1024 * 1024,
+  });
+  if (run.error) throw run.error;
+  assert.equal(run.status, 0, run.stderr || `engine exited with ${run.status}`);
+  const lines = run.stdout.trim().split('\n').filter(Boolean);
+  assert.equal(lines.length, requests.length, 'one response per request');
+  return lines.map((line) => JSON.parse(line));
+}
+
+function selectCorpus(repoRoot, paths = []) {
+  if (paths.length) return paths.map((file) => path.resolve(repoRoot, file));
+  const git = spawnSync('git', ['ls-files', '-z'], { cwd: repoRoot, encoding: 'utf8' });
+  if (git.error) throw git.error;
+  assert.equal(git.status, 0, git.stderr);
+  return git.stdout.split('\0').filter((file) => /\.(js|jsx|cjs|mjs|ts|tsx|mts|cts)$/.test(file)).sort().map((file) => path.resolve(repoRoot, file));
+}
+
+function corpus(executable, paths, snapshot = false) {
+  const root = path.resolve(__dirname, '../..');
+  const files = selectCorpus(root, paths);
+  const counts = { selected: files.length, compared: 0, unsupported: 0, failed: 0, referenceParseErrors: 0 };
+  const fallbackReasons = {};
+  const examples = [];
+  // Bound both request size and output memory independently of repository size.
+  for (let start = 0; start < files.length; start += 32) {
+    const batch = files.slice(start, start + 32).map((file) => ({ path: file }));
+    const response = snapshot ? undefined : invoke(executable, [{ version: 1, id: start, files: batch }])[0];
+    if (response) {
+      assert.equal(response.version, 1);
+      assert.equal(response.id, start);
+      assert.equal(response.files.length, batch.length);
+    }
+    batch.forEach((file, index) => {
+      const name = path.relative(root, file.path);
+      let reference;
+      try {
+        reference = legacy({ ...file, source: fs.readFileSync(file.path, 'utf8') });
+      } catch (error) {
+        reference = { status: 'read_error', diagnostic: error.message };
+      }
+      if (reference.status === 'parse_error') counts.referenceParseErrors++;
+      if (snapshot) {
+        console.log(JSON.stringify({ path: name, ...reference }));
+        return;
+      }
+      const actual = response.files[index];
+      try {
+        assert.equal(actual.path, file.path);
+        if (actual.status === 'unsupported') {
+          assert.deepEqual(actual.dependencies, {}, 'fallback must discard partial dependencies');
+          assert.ok(actual.diagnostics?.length, 'fallback must explain its reason');
+          counts.unsupported++;
+          const reason = actual.diagnostics[0];
+          fallbackReasons[reason] = (fallbackReasons[reason] || 0) + 1;
+          if (examples.length < 12) examples.push({ path: name, reason, referenceStatus: reference.status });
+        } else {
+          compare(reference, actual);
+          counts.compared++;
+        }
+      } catch (error) {
+        counts.failed++;
+        console.error(`FAIL ${name}: ${error.message}`);
+      }
+    });
+  }
+  if (!snapshot) console.log(JSON.stringify({ counts, fallbackReasons, fallbackExamples: examples }, null, 2));
+  process.exitCode = counts.failed ? 1 : 0;
+}
+
+function protocol(executable) {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'bit-rust-dependency-protocol-'));
+  try {
+    const valid = path.join(directory, 'valid.ts');
+    const missing = path.join(directory, 'missing.ts');
+    const subdirectory = path.join(directory, 'directory.ts');
+    fs.writeFileSync(valid, `import type { Value } from './types';`);
+    fs.mkdirSync(subdirectory);
+    const requests = [
+      { version: 1, id: 'disk', files: [{ path: valid }, { path: missing }, { path: subdirectory }, { path: missing, source: `import './inline';` }] },
+      '{malformed',
+      { version: 99, files: [] },
+      { version: 1, files: [{ path: valid, unexpected: true }] },
+      { version: 1, id: 'after-errors', files: [] },
+    ];
+    const responses = invoke(executable, requests);
+    assert.equal(responses[0].id, 'disk');
+    const files = responses[0].files;
+    assert.equal(files.length, 4);
+    assert.deepEqual(files.map((file) => file.path), [valid, missing, subdirectory, missing]);
+    compare(legacy({ path: valid, source: fs.readFileSync(valid, 'utf8') }), files[0]);
+    for (const file of files.slice(1, 3)) {
+      assert.equal(file.status, 'read_error');
+      assert.deepEqual(file.dependencies, {});
+      assert.ok(file.diagnostics.length);
+    }
+    compare(legacy({ path: missing, source: `import './inline';` }), files[3]);
+    for (const response of responses.slice(1, 4)) {
+      assert.equal(response.version, 1);
+      assert.equal(response.status, 'invalid_request');
+      assert.ok(response.diagnostics.length);
+    }
+    assert.equal(responses[4].id, 'after-errors');
+    assert.deepEqual(responses[4].files, []);
+    console.log('PASS disk reads, missing/directory errors, inline-source precedence, invalid-request recovery');
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
 }
 
 function main() {
+  if (process.argv[2] === '--protocol') return protocol(process.argv[3]);
+  if (process.argv[2] === '--corpus' || process.argv[2] === '--corpus-reference') {
+    const snapshot = process.argv[2] === '--corpus-reference';
+    return corpus(snapshot ? undefined : process.argv[3], process.argv.slice(snapshot ? 3 : 4), snapshot);
+  }
   const executable = process.argv[2];
   if (!executable) {
     const snapshot = fixtures.map((fixture) => ({ name: fixture.name, ...legacy(fixture) }));
@@ -107,4 +227,4 @@ function main() {
   process.exitCode = failures ? 1 : 0;
 }
 if (require.main === module) main();
-module.exports = { legacy, compare, dependencyRecord };
+module.exports = { legacy, compare, dependencyRecord, invoke, selectCorpus };
