@@ -1,0 +1,110 @@
+#!/usr/bin/env node
+const assert = require('node:assert/strict');
+const { spawnSync } = require('node:child_process');
+const { isBuiltin, createRequire } = require('node:module');
+const path = require('node:path');
+const fixtures = require('./fixtures.cjs');
+// Resolve using this checkout, or an explicitly supplied installed Bit checkout.
+const load = createRequire(path.resolve(process.env.BIT_LEGACY_ROOT || path.join(__dirname, '../..'), 'package.json'));
+const js = load('@teambit/node.deps-detectors.detective-es6').default;
+const ts = load('@teambit/typescript.deps-detectors.detective-typescript').default;
+const getModuleType = load('module-definition');
+const Walker = load('node-source-walk');
+
+function legacy(fixture) {
+  if (fixture.fallback) return { status: 'unsupported' };
+  if (fixture.source.startsWith('// @bit-no-check') || fixture.source.startsWith('/* @bit-no-check')) {
+    return { status: 'ok', dependencies: {} };
+  }
+  const isTs = /\.(ts|tsx|mts|cts)$/.test(fixture.path);
+  if (!isTs && !/\.(js|jsx|cjs|mjs)$/.test(fixture.path)) return { status: 'unsupported' };
+  try {
+    let dependencies;
+    if (isTs) {
+      // Precinct passes only options.ts to the detective, adding jsx for TSX.
+      const tsOptions = { ...fixture.options?.ts };
+      if (fixture.path.endsWith('.tsx')) tsOptions.jsx = true;
+      dependencies = ts(fixture.source, tsOptions);
+    } else {
+      // Precinct classifies JS before dispatch: AMD uses another detective and unclassified modules have no deps.
+      const ast = new Walker().parse(fixture.source);
+      const type = getModuleType.fromSource(ast);
+      if (type === 'amd') return { status: 'unsupported' };
+      dependencies = type === 'es6' || type === 'commonjs' ? js(ast, fixture.options?.[type]) : {};
+    }
+    if (fixture.options?.includeCore === false) {
+      for (const name of Object.keys(dependencies)) if (isBuiltin(name)) delete dependencies[name];
+    }
+    return { status: 'ok', dependencies };
+  } catch (error) {
+    return { status: 'parse_error', diagnostic: error.message };
+  }
+}
+
+function dependencyRecord(dependencies) {
+  if (!Array.isArray(dependencies)) return dependencies;
+  const record = {};
+  for (const { specifier, kind, ...metadata } of dependencies) {
+    assert.equal(typeof specifier, 'string', 'dependency must have a string specifier');
+    assert.ok(!Object.hasOwn(record, specifier), `duplicate dependency record: ${specifier}`);
+    record[specifier] = metadata;
+  }
+  return record;
+}
+
+function compare(reference, actual) {
+  assert.equal(actual.status, reference.status, 'result status');
+  if (reference.status !== 'ok') return;
+  const dependencies = dependencyRecord(actual.dependencies);
+  // Bit's precinct consumes keys; compare order separately from raw metadata.
+  assert.deepEqual(Object.keys(dependencies), Object.keys(reference.dependencies), 'precinct dependency names and order');
+  assert.deepEqual(dependencies, reference.dependencies, 'raw detector metadata');
+}
+
+function main() {
+  const executable = process.argv[2];
+  if (!executable) {
+    const snapshot = fixtures.map((fixture) => ({ name: fixture.name, ...legacy(fixture) }));
+    console.log(JSON.stringify(snapshot, null, 2));
+    return;
+  }
+  // One line per option group verifies multiple requests on the same process.
+  const groups = [...fixtures.map((fixture) => [fixture]), fixtures.filter((fixture) => !fixture.options)];
+  const requests = groups.map((group, id) => ({ version: 1, id, files: group.map(({ path, source }) => ({ path, source })), options: group[0].options || {} }));
+  const run = spawnSync(executable, process.argv.slice(3), {
+    input: requests.map((request) => JSON.stringify(request)).join('\n') + '\n', encoding: 'utf8', maxBuffer: 16 * 1024 * 1024,
+  });
+  if (run.error) throw run.error;
+  assert.equal(run.status, 0, run.stderr || `engine exited with ${run.status}`);
+  const lines = run.stdout.trim().split('\n').filter(Boolean);
+  assert.equal(lines.length, requests.length, 'one response per request');
+  let failures = 0;
+  let checks = 0;
+  for (let i = 0; i < groups.length; i++) {
+    try {
+      const response = JSON.parse(lines[i]);
+      assert.equal(response.version, 1);
+      assert.equal(response.id, i, 'request id echo');
+      assert.equal(response.files.length, groups[i].length);
+      for (let j = 0; j < groups[i].length; j++) {
+        const fixture = groups[i][j];
+        checks++;
+        try {
+          assert.equal(response.files[j].path, fixture.path);
+          compare(fixture.expectFallback ? { status: 'unsupported' } : legacy(fixture), response.files[j]);
+          console.log(`PASS ${fixture.name}${groups[i].length > 1 ? ' (batch)' : ''}${fixture.fallback || fixture.expectFallback ? ' (legacy fallback)' : ''}`);
+        } catch (error) {
+          failures++;
+          console.error(`FAIL ${fixture.name}: ${error.message}`);
+        }
+      }
+    } catch (error) {
+      failures++;
+      console.error(`FAIL response ${i}: ${error.message}`);
+    }
+  }
+  console.log(`${checks} fixture comparisons; ${failures} failures`);
+  process.exitCode = failures ? 1 : 0;
+}
+if (require.main === module) main();
+module.exports = { legacy, compare, dependencyRecord };
