@@ -70,8 +70,8 @@ function main() {
       assert.equal(response.version, 1);
       assert.equal(response.files.length, 1);
       assert.equal(response.files[0].path, fixture.path);
-      compare(legacy(fixture), response.files[0]);
-      console.log(`PASS ${fixture.name}${fixture.fallback ? ' (legacy fallback)' : ''}`);
+      compare(fixture.expectFallback ? { status: 'unsupported' } : legacy(fixture), response.files[0]);
+      console.log(`PASS ${fixture.name}${fixture.fallback || fixture.expectFallback ? ' (legacy fallback)' : ''}`);
     } catch (error) {
       failures++;
       console.error(`FAIL ${fixture.name}: ${error.message}`);
