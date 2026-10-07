@@ -7,6 +7,8 @@ on:
       - 'native/**'
       - 'scripts/rust/**'
       - 'scripts/rust-dependency-analysis/session*'
+      - 'scripts/rust-dependency-analysis/artifacts/**'
+      - 'docs/rust/standalone-artifacts.md'
       - 'scripts/rust-dependency-analysis/session-fixtures/**'
       - 'scripts/rust-dependency-analysis/ci/**'
       - 'scripts/rust-dependency-analysis/*scope*'
@@ -23,6 +25,8 @@ on:
       - 'native/**'
       - 'scripts/rust/**'
       - 'scripts/rust-dependency-analysis/session*'
+      - 'scripts/rust-dependency-analysis/artifacts/**'
+      - 'docs/rust/standalone-artifacts.md'
       - 'scripts/rust-dependency-analysis/session-fixtures/**'
       - 'scripts/rust-dependency-analysis/ci/**'
       - 'scripts/rust-dependency-analysis/*scope*'
@@ -184,6 +188,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
       - name: Cache dependencies and build artifacts
         uses: actions/cache@v4
         with:
@@ -199,3 +206,16 @@ jobs:
         run: cargo test --locked --workspace
       - name: Build release scanner
         run: cargo build --locked --release --workspace
+      - name: Validate deterministic packaging and archive safety
+        run: python ../scripts/rust-dependency-analysis/artifacts/test_artifacts.py
+      - name: Package standalone scanner
+        run: python ../scripts/rust-dependency-analysis/artifacts/package-helper.py package
+      - name: Extract and smoke-test standalone artifact
+        run: python ../scripts/rust-dependency-analysis/artifacts/package-helper.py smoke
+      - name: Upload validated experimental scanner artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-scanner-${{ runner.os }}-${{ runner.arch }}-${{ github.sha }}
+          path: native/dist/*
+          if-no-files-found: error
+          retention-days: 14
