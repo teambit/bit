@@ -140,6 +140,14 @@ export class RustDependencyScannerSession {
     return file ? { ...JSON.parse(JSON.stringify(file)), path: logicalPath } : undefined;
   }
 
+  /** Clear a completed graph's snapshots before its exclusively leased helper is reused. */
+  clearCache(): boolean {
+    if (this.failure || this.pending || this.queuedRequests) return false;
+    this.cache.clear();
+    this.cacheBytes = 0;
+    return true;
+  }
+
   dispose(): void {
     this.fail('Rust scanner session disposed');
   }

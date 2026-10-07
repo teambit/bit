@@ -26,6 +26,7 @@ import { snapToSemver } from '@teambit/component-package-version';
 import type { ScopeMain } from '@teambit/scope';
 import { ScopeAspect } from '@teambit/scope';
 import { DependenciesLoader } from './dependencies-loader/dependencies-loader';
+import { withRustDependencyScannerScope } from './files-dependency-builder/rust-scanner/scope';
 import type { DependenciesData, OverridesDependenciesData } from './dependencies-loader/dependencies-data';
 import type { RemoveDependenciesFlags, SetDependenciesFlags } from './dependencies-cmd';
 import {
@@ -739,6 +740,7 @@ export class DependenciesMain {
     );
 
     ComponentLoader.loadDeps = depsMain.loadDependencies.bind(depsMain);
+    ComponentLoader.runDependencyLoadScope = withRustDependencyScannerScope;
 
     return depsMain;
   }

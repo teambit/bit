@@ -6,7 +6,7 @@ import path from 'path';
 
 import dependencyTree from './dependency-tree';
 import { isRustEligible } from './precinct';
-import { RustDependencyScannerSession } from './rust-scanner/session';
+import { acquireRustDependencyScannerSession } from './rust-scanner/scope';
 import type { PathLinuxRelative } from '@teambit/toolbox.path.path';
 
 /**
@@ -129,11 +129,9 @@ export default async function generateTree(files: string[] = [], config): Promis
   const errors = {};
 
   const executable = process.env.BIT_RUST_DEPENDENCY_SCANNER;
-  const rustScannerSession =
-    executable && path.isAbsolute(executable)
-      ? new RustDependencyScannerSession({ executable, cwd: process.cwd() })
-      : undefined;
-  if (executable && !rustScannerSession) {
+  const lease = executable && path.isAbsolute(executable) ? acquireRustDependencyScannerSession(executable) : undefined;
+  const rustScannerSession = lease?.session;
+  if (executable && !path.isAbsolute(executable)) {
     require('debug')('precinct')('Rust extraction fallback: BIT_RUST_DEPENDENCY_SCANNER must be absolute');
   }
   try {
@@ -191,7 +189,7 @@ export default async function generateTree(files: string[] = [], config): Promis
       }
     }
   } finally {
-    rustScannerSession?.dispose();
+    lease?.release();
   }
 
   let tree = convertTreePaths(depTree, pathCache, config.baseDir);
