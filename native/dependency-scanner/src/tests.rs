@@ -130,3 +130,94 @@ fn bit_ignore_uses_the_line_of_the_dependency_node() {
         vec!["kept"],
     );
 }
+
+#[test]
+fn source_limit_requests_fallback_without_partial_dependencies() {
+    let source = " ".repeat(crate::limits::SOURCE_BYTES + 1);
+    assert_eq!(scan(&fixture("ts", &source), false).status, "unsupported");
+    let source = " ".repeat(crate::limits::SOURCE_BYTES);
+    assert_eq!(scan(&fixture("ts", &source), false).status, "ok");
+    assert_eq!(scan(&fixture("ts", "require(123); require(true);"), false).status, "unsupported");
+}
+
+#[test]
+fn wire_metadata_preserves_legacy_string_names_and_optional_calls() {
+    let result = scan(
+        &fixture(
+            "js",
+            "import { 'some-name' as named } from 'pkg'; export { named as 'export-name' } from 'other'; require?.('./optional'); import.meta[resolve]('./computed');",
+        ),
+        false,
+    );
+    assert_eq!(
+        serde_json::to_value(result.dependencies).unwrap(),
+        json!({"pkg":{"importSpecifiers":[{"isDefault":false}]},"other":{"importSpecifiers":[{"isDefault":false,"exported":true}]},"./computed":{}}),
+    );
+}
+
+#[test]
+fn oversized_batch_preserves_session_protocol_error() {
+    let files: Vec<_> = (0..=crate::limits::BATCH_FILES)
+        .map(|_| json!({"path":"empty.ts","source":""}))
+        .collect();
+    let request = json!({"version":1,"files":files}).to_string();
+    let pool = rayon::ThreadPoolBuilder::new()
+        .num_threads(1)
+        .build()
+        .unwrap();
+    let response = crate::protocol::process_request(&request, &pool).unwrap();
+    assert_eq!(response["status"], "invalid_request");
+    let response =
+        crate::protocol::process_request(r#"{"version":1,"files":[],"id":"next"}"#, &pool).unwrap();
+    assert_eq!(response["id"], "next");
+}
+
+#[test]
+fn disk_source_limit_and_invalid_encoding_have_distinct_outcomes() {
+    let path = std::env::temp_dir().join(format!("bit-source-limit-{}", std::process::id()));
+    let disk = std::fs::File::create(&path).unwrap();
+    disk.set_len((crate::limits::SOURCE_BYTES + 1) as u64)
+        .unwrap();
+    let file = File { path: path.to_str().unwrap().into(), source: None, kind: Some("ts".into()) };
+    assert_eq!(scan(&file, false).status, "unsupported");
+    std::fs::write(&path, b"import './valid'; // invalid encoding: \xff").unwrap();
+    let result = scan(&file, false);
+    assert_eq!(result.status, "unsupported");
+    assert_eq!(result.dependencies.len(), 0);
+    std::fs::remove_file(&path).unwrap();
+    assert_eq!(scan(&file, false).status, "read_error");
+}
+
+fn keys(kind: &str, source: &str) -> (&'static str, Vec<String>) {
+    let result = scan(&fixture(kind, source), false);
+    (result.status, result.dependencies.into_keys().collect())
+}
+
+#[test]
+fn parentheses_and_optional_chains_follow_legacy_ast_shapes() {
+    assert_eq!(keys("js", "import 'm'; (require)('./p');"), ("ok", vec!["m".into(), "./p".into()]));
+    assert_eq!(keys("ts", "(require.resolve)(('./p'));"), ("ok", vec!["./p".into()]));
+    // Babel's OptionalCallExpression covers every call after the first `?.`.
+    assert_eq!(keys("js", "import 'm'; require?.resolve('./x');"), ("ok", vec!["m".into()]));
+    assert_eq!(keys("ts", "require?.resolve('./x');"), ("ok", vec!["./x".into()]));
+    assert_eq!(
+        keys("js", "require('x')?.foo; require.resolve('./r');"),
+        ("ok", vec!["x".into(), "./r".into()]),
+    );
+    // An optional require does not classify the file as CommonJS.
+    assert_eq!(keys("js", "require?.('x'); require.resolve('./y');"), ("ok", vec![]));
+}
+
+#[test]
+fn coerced_and_integer_like_specifiers_fall_back() {
+    for (kind, source) in [
+        ("ts", "import(5);"),
+        ("js", "import 'm'; import(true);"),
+        ("ts", "require(/re/);"),
+        ("ts", "require(1n);"),
+        ("js", "import 'm'; require('123');"),
+    ] {
+        assert_eq!(keys(kind, source), ("unsupported", vec![]), "{source}");
+    }
+    assert_eq!(keys("js", "import 'm'; require('01');").0, "ok");
+}
