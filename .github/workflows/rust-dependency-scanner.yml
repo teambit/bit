@@ -15,6 +15,7 @@ on:
       - 'scripts/rust-dependency-analysis/integration*'
       - 'scripts/rust-dependency-analysis/compare*'
       - 'scripts/rust-dependency-analysis/fixtures.cjs'
+      - 'scripts/rust-dependency-analysis/*memory*'
       - 'scopes/dependencies/dependencies/files-dependency-builder/rust-scanner/**'
       - 'scopes/dependencies/dependencies/files-dependency-builder/**'
       - 'scopes/dependencies/dependency-resolver/detector-hook.ts'
@@ -33,6 +34,7 @@ on:
       - 'scripts/rust-dependency-analysis/integration*'
       - 'scripts/rust-dependency-analysis/compare*'
       - 'scripts/rust-dependency-analysis/fixtures.cjs'
+      - 'scripts/rust-dependency-analysis/*memory*'
       - 'scopes/dependencies/dependencies/files-dependency-builder/rust-scanner/**'
       - 'scopes/dependencies/dependencies/files-dependency-builder/**'
       - 'scopes/dependencies/dependency-resolver/detector-hook.ts'
@@ -87,6 +89,8 @@ jobs:
         run: |
           node --test scripts/rust-dependency-analysis/compare.test.cjs scripts/rust-dependency-analysis/integration.test.cjs scripts/rust-dependency-analysis/command-scope.test.cjs
           node scripts/rust-dependency-analysis/compare.cjs "$BIT_TEST_NATIVE_SCANNER"
+      - name: Validate Linux simultaneous process memory sampler
+        run: node --test scripts/rust-dependency-analysis/process-tree-memory.test.cjs
 
   session:
     name: Scanner session lifecycle tests (${{ matrix.os }})
