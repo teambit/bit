@@ -625,6 +625,12 @@ commands:
       # - run: 'ssh-add ~/.ssh/id_rsa'
       - run: 'cd bit && mkdir junit'
       - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
+      # Memory, not politeness. This flows through to pnpm's networkConcurrency, which defaults to
+      # 16 - so an env-closure install (thousands of packages) keeps 16 tarballs in flight, and
+      # their buffers on the heap, on top of the extraction pools RAYON_NUM_THREADS caps below.
+      # That is what pushes the before-hooks that install an env over medium's 4GB and gets them
+      # OOM-killed (a bare `Killed`). Lower it rather than buying a bigger container for all 40.
+      - run: 'bit config set network.concurrency 6'
       - run:
           name: set user agent for Bit processes in e2e tests
           command: echo "user-agent=bit-e2e-circleci" >> ~/.npmrc
