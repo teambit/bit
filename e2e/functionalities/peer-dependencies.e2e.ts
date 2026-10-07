@@ -16,70 +16,9 @@ describe('peer-dependencies functionality', function () {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe('when a package is a regular dependency and a peer dependency', () => {
-    let catComponent;
-    before(() => {
-      helper.scopeHelper.reInitWorkspace();
-      helper.workspaceJsonc.addPolicyToDependencyResolver({ peerDependencies: { chai: '>= 2.1.2 < 5' } });
-      helper.npm.addFakeNpmPackage('chai', '2.4');
-      helper.fixtures.createComponentBarFoo("import chai from 'chai';");
-      helper.fixtures.addComponentBarFoo();
-      helper.fixtures.tagComponentBarFoo();
-      catComponent = helper.command.catComponent('bar/foo@latest');
-    });
-    it('should save the peer dependencies in the model', () => {
-      expect(catComponent).to.have.property('peerPackageDependencies');
-      expect(catComponent.peerPackageDependencies).to.have.property('chai');
-      expect(catComponent.peerPackageDependencies.chai).to.equal('>= 2.1.2 < 5');
-    });
-    it('should not save the peer-dependency as a package-dependency nor as a dev-package-dependency', () => {
-      expect(catComponent.packageDependencies).to.not.have.property('chai');
-      expect(catComponent.devPackageDependencies).to.not.have.property('chai');
-    });
-    it('bit show should display the peer dependencies', () => {
-      const output = helper.command.showComponentParsed('bar/foo');
-      expect(output).to.have.property('peerPackageDependencies');
-      expect(output.peerPackageDependencies).to.have.property('chai');
-      expect(output.peerPackageDependencies.chai).to.equal('>= 2.1.2 < 5');
-    });
-    describe('when the component is imported', () => {
-      before(() => {
-        helper.scopeHelper.reInitRemoteScope();
-        helper.scopeHelper.addRemoteScope();
-        helper.workspaceJsonc.setupDefault();
-        helper.command.export();
-
-        helper.scopeHelper.reInitWorkspace();
-        helper.scopeHelper.addRemoteScope();
-        helper.command.importComponent('bar/foo');
-        // const output = helper.command.importComponent('bar/foo');
-        // expect(output).to.have.string('requires a peer'); // this was probably changed in Harmony
-        // helper.npm.addFakeNpmPackage('chai', '2.4'); // it's not automatically installed because it's a peer-dependency
-      });
-      it('should not be shown as modified', () => {
-        helper.command.expectStatusToBeClean();
-      });
-    });
-  });
-
-  describe('when a package is only a peer dependency but not required in the code', () => {
-    before(() => {
-      helper.scopeHelper.reInitWorkspace();
-      helper.workspaceJsonc.addPolicyToDependencyResolver({ peerDependencies: { chai: '>= 2.1.2 < 5' } });
-      helper.npm.addFakeNpmPackage('chai', '2.4');
-      helper.fixtures.createComponentBarFoo();
-      helper.fixtures.addComponentBarFoo();
-      helper.fixtures.tagComponentBarFoo();
-    });
-    it('should not save the peer dependencies in the model', () => {
-      const output = helper.command.catComponent('bar/foo@latest');
-      expect(output).to.have.property('peerPackageDependencies');
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      expect(output.peerPackageDependencies).to.not.have.property('chai');
-    });
-  });
-
-  describe('a component is a peer dependency', () => {
+  // the rest of the peer-dependencies flows are unit tests: scopes/component/status/peer-dependencies.spec.ts and
+  // scopes/component/snapping/peer-component-dependency.spec.ts. this one needs a real env component and a real install.
+  describe('a component is a peer dependency with a hidden peer in its env', () => {
     let workspaceCapsulesRootDir: string;
     const hiddenPeerPackageName = 'is-odd';
     before(() => {
@@ -115,31 +54,6 @@ describe('peer-dependencies functionality', function () {
       helper.command.build(undefined, '--ignore-issues="DuplicateComponentAndPackage"');
       workspaceCapsulesRootDir = helper.command.capsuleListParsed().workspaceCapsulesRootDir;
     });
-    it('should save the peer dependency in the model', () => {
-      const output = helper.command.showComponentParsed(`${helper.scopes.remote}/comp1`);
-      expect(output.peerDependencies[0]).to.deep.equal({
-        id: `${helper.scopes.remote}/comp2`,
-        relativePaths: [],
-        packageName: `@${helper.scopes.remote}/comp2`,
-        versionRange: '*',
-      });
-      const depResolver = output.extensions.find(({ name }) => name === 'teambit.dependencies/dependency-resolver');
-      const peerDep = depResolver.data.dependencies.find(
-        (dependency) => dependency.packageName === `@${helper.scopes.remote}/comp2`
-      );
-      expect(peerDep.packageName).to.eq(`@${helper.scopes.remote}/comp2`);
-      expect(peerDep.lifecycle).to.eq('peer');
-      expect(peerDep.version).to.eq('latest');
-      expect(peerDep.versionRange).to.eq('*');
-    });
-    it('adds peer dependency to the generated package.json', () => {
-      const pkgJson = fs.readJsonSync(
-        path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp1/package.json`)
-      );
-      expect(pkgJson.peerDependencies).to.deep.equal({
-        [`@${helper.scopes.remote}/comp2`]: '*',
-      });
-    });
     it('installs a hidden peer in the workspace but excludes it from the capsule manifest', () => {
       const hiddenPeerPackageJson = resolveFrom(helper.fixtures.scopes.localPath, [
         `${hiddenPeerPackageName}/package.json`,
@@ -149,49 +63,6 @@ describe('peer-dependencies functionality', function () {
         path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp1/package.json`)
       );
       expect(capsulePackageJson.peerDependencies).to.not.have.property(hiddenPeerPackageName);
-    });
-  });
-
-  describe('peer dependency is not broken after snap', () => {
-    let workspaceCapsulesRootDir: string;
-    before(() => {
-      helper = new Helper();
-      helper.scopeHelper.reInitWorkspace();
-      helper.fixtures.populateComponents(2);
-      helper.command.dependenciesSet('comp1', `@${helper.scopes.remote}/comp2@+`, '--peer');
-      helper.command.snapAllComponents();
-      helper.command.build();
-      workspaceCapsulesRootDir = helper.command.capsuleListParsed().workspaceCapsulesRootDir;
-    });
-    it('should save the peer dependency in the model', () => {
-      const output = helper.command.showComponentParsed(`${helper.scopes.remote}/comp1`);
-      const peerDepData = output.peerDependencies[0];
-      expect(peerDepData.id).to.startWith(`${helper.scopes.remote}/comp2`);
-      expect(peerDepData.packageName).to.startWith(`@${helper.scopes.remote}/comp2`);
-      expect(peerDepData.versionRange).to.startWith('+');
-      const depResolver = output.extensions.find(({ name }) => name === 'teambit.dependencies/dependency-resolver');
-      const peerDep = depResolver.data.dependencies[0];
-      expect(peerDep.packageName).to.eq(`@${helper.scopes.remote}/comp2`);
-      expect(peerDep.lifecycle).to.eq('peer');
-      expect(peerDep.versionRange).to.eq('+');
-    });
-    it('should save the peer dependency in the scope data', () => {
-      const comp = helper.command.catComponent(`comp1@latest`);
-      const depResolver = comp.extensions.find(({ name }) => name === 'teambit.dependencies/dependency-resolver');
-      const peerDep = depResolver.data.dependencies[0];
-      expect(peerDep.packageName).to.eq(`@${helper.scopes.remote}/comp2`);
-      expect(peerDep.lifecycle).to.eq('peer');
-      expect(peerDep.versionRange).to.eq('+');
-    });
-    it('adds peer dependency to the generated package.json', () => {
-      const { head } = helper.command.catComponent('comp1');
-      const pkgJson = fs.readJsonSync(
-        path.join(workspaceCapsulesRootDir, `${helper.scopes.remote}_comp1@${head}/package.json`)
-      );
-      const comp2Head = helper.command.getHead('comp2');
-      expect(pkgJson.peerDependencies).to.deep.equal({
-        [`@${helper.scopes.remote}/comp2`]: `0.0.0-${comp2Head}`, // it can't be `+` as it's invalid in package.json.
-      });
     });
   });
 });
