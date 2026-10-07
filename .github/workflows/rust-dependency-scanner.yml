@@ -3,10 +3,22 @@ name: Rust dependency scanner
 on:
   push:
     branches: [rust]
-    paths: ['native/**', 'scripts/rust/**', '.github/workflows/rust-dependency-scanner.yml']
+    paths:
+      - 'native/**'
+      - 'scripts/rust/**'
+      - 'scripts/rust-dependency-analysis/session*'
+      - 'scripts/rust-dependency-analysis/session-fixtures/**'
+      - 'scopes/dependencies/dependencies/files-dependency-builder/rust-scanner/**'
+      - '.github/workflows/rust-dependency-scanner.yml'
   pull_request:
     branches: [rust]
-    paths: ['native/**', 'scripts/rust/**', '.github/workflows/rust-dependency-scanner.yml']
+    paths:
+      - 'native/**'
+      - 'scripts/rust/**'
+      - 'scripts/rust-dependency-analysis/session*'
+      - 'scripts/rust-dependency-analysis/session-fixtures/**'
+      - 'scopes/dependencies/dependencies/files-dependency-builder/rust-scanner/**'
+      - '.github/workflows/rust-dependency-scanner.yml'
   workflow_dispatch:
 
 permissions:
@@ -18,6 +30,27 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  session:
+    name: Scanner session lifecycle tests (Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+      - name: Install isolated TypeScript test compiler
+        run: |
+          mkdir -p "$RUNNER_TEMP/rust-scanner-test-tools"
+          echo '{"private":true}' > "$RUNNER_TEMP/rust-scanner-test-tools/package.json"
+          npm install --prefix "$RUNNER_TEMP/rust-scanner-test-tools" --no-save --package-lock=false --ignore-scripts typescript@5.9.2
+      - name: Test helper protocol and lifecycle
+        env:
+          BIT_LEGACY_ROOT: ${{ runner.temp }}/rust-scanner-test-tools
+        run: node --test scripts/rust-dependency-analysis/session.test.cjs
+
   lint:
     name: pnpm Rust formatting and lints
     runs-on: ubuntu-latest
