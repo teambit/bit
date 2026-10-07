@@ -54,7 +54,8 @@ function main() {
     return;
   }
   // One line per option group verifies multiple requests on the same process.
-  const requests = fixtures.map(({ path, source, options }) => ({ version: 1, files: [{ path, source }], options: options || {} }));
+  const groups = [...fixtures.map((fixture) => [fixture]), fixtures.filter((fixture) => !fixture.options)];
+  const requests = groups.map((group, id) => ({ version: 1, id, files: group.map(({ path, source }) => ({ path, source })), options: group[0].options || {} }));
   const run = spawnSync(executable, process.argv.slice(3), {
     input: requests.map((request) => JSON.stringify(request)).join('\n') + '\n', encoding: 'utf8', maxBuffer: 16 * 1024 * 1024,
   });
@@ -63,21 +64,31 @@ function main() {
   const lines = run.stdout.trim().split('\n').filter(Boolean);
   assert.equal(lines.length, requests.length, 'one response per request');
   let failures = 0;
-  for (let i = 0; i < fixtures.length; i++) {
-    const fixture = fixtures[i];
+  let checks = 0;
+  for (let i = 0; i < groups.length; i++) {
     try {
       const response = JSON.parse(lines[i]);
       assert.equal(response.version, 1);
-      assert.equal(response.files.length, 1);
-      assert.equal(response.files[0].path, fixture.path);
-      compare(fixture.expectFallback ? { status: 'unsupported' } : legacy(fixture), response.files[0]);
-      console.log(`PASS ${fixture.name}${fixture.fallback || fixture.expectFallback ? ' (legacy fallback)' : ''}`);
+      assert.equal(response.id, i, 'request id echo');
+      assert.equal(response.files.length, groups[i].length);
+      for (let j = 0; j < groups[i].length; j++) {
+        const fixture = groups[i][j];
+        checks++;
+        try {
+          assert.equal(response.files[j].path, fixture.path);
+          compare(fixture.expectFallback ? { status: 'unsupported' } : legacy(fixture), response.files[j]);
+          console.log(`PASS ${fixture.name}${groups[i].length > 1 ? ' (batch)' : ''}${fixture.fallback || fixture.expectFallback ? ' (legacy fallback)' : ''}`);
+        } catch (error) {
+          failures++;
+          console.error(`FAIL ${fixture.name}: ${error.message}`);
+        }
+      }
     } catch (error) {
       failures++;
-      console.error(`FAIL ${fixture.name}: ${error.message}`);
+      console.error(`FAIL response ${i}: ${error.message}`);
     }
   }
-  console.log(`${fixtures.length - failures}/${fixtures.length} fixtures passed`);
+  console.log(`${checks} fixture comparisons; ${failures} failures`);
   process.exitCode = failures ? 1 : 0;
 }
 if (require.main === module) main();
