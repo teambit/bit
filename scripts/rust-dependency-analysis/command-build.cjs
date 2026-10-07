@@ -51,6 +51,7 @@ try {
   // cp preserves links within the private copy but never hardlinks into installed outputs.
   cp.execFileSync('cp', ['-a', path.join(installed, 'node_modules'), path.join(target, 'node_modules')]);
   let rerouted = 0;
+  let copiedExternal = 0;
   const visit = (directory) => {
     for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
       const filename = path.join(directory, entry.name);
@@ -60,6 +61,19 @@ try {
           fs.unlinkSync(filename);
           fs.symlinkSync(target + link.slice(installed.length), filename);
           rerouted++;
+        } else if (!path.resolve(path.dirname(filename), link).startsWith(target + path.sep)) {
+          // Links leaving the checkout (e.g. a relative link into a global Bit install) would
+          // make the private build read shared state; snapshot their current contents instead.
+          let external;
+          try {
+            external = fs.realpathSync(path.join(installed, path.relative(target, filename)));
+          } catch (error) {
+            if (error.code !== 'ENOENT') throw error;
+            continue; // Dangling in the installed checkout too; checkLinks reports it if it escapes.
+          }
+          fs.unlinkSync(filename);
+          fs.cpSync(external, filename, { recursive: true, dereference: true });
+          copiedExternal++;
         }
       } else if (entry.isDirectory()) visit(filename);
     }
@@ -140,6 +154,7 @@ try {
     componentCount: compiled.length,
     outputCount: compiled.reduce((n, component) => n + component.buildResults.length, 0),
     reroutedLinks: rerouted,
+    copiedExternalLinks: copiedExternal,
     compileResultSha256: hash(path.join(target, '.bit-rust-compile-all.json')),
     compiledModules: modules.map((file) => ({
       path: file,
