@@ -1123,14 +1123,6 @@ jobs:
   # ========== Testing Jobs ==========
   e2e_test:
     <<: *defaults
-    # medium+ is for MEMORY, not speed. Tests that install an env package pull the env's full
-    # dependency closure - thousands of packages - and the install peaks over 3GB, which does not
-    # fit in medium's 4GB alongside node. On master this is survivable; here it is not, because
-    # this branch takes the core envs out of the manifest, so those closures come from the
-    # registry instead of being already present. On medium the suite comes back with bare
-    # `Killed` failures in before-hooks, each one an env install: `bit install`, `bit create
-    # <component> --env <env>`, `bit tag --build`.
-    resource_class: medium+
     environment:
       BITSRC_ENV: stg
       BIT_FEATURES: cloud-importer-v2
