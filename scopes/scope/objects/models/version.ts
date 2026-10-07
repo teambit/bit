@@ -77,6 +77,9 @@ function getFlattenedId(dep: string | Record<string, any>): ComponentID {
   return id;
 }
 
+// the deprecated `Version.flattenedDependencies` getter warns only once per process.
+let warnedFlattenedDependenciesGetter = false;
+
 export type SourceFileModel = {
   name: string;
   relativePath: PathLinux;
@@ -367,10 +370,26 @@ export default class Version extends BitObject {
   }
 
   /**
-   * the flattened dependencies, when they're stored in the Version itself or were loaded already.
-   * when they're stored in a separate object (`flattenedDependenciesRef`), use `loadFlattenedDependencies()`.
+   * @deprecated use `await version.loadFlattenedDependencies(repo)`, which supports both formats. this getter throws
+   * when the flattened dependencies are stored in a separate object (`flattenedDependenciesRef`) and weren't loaded.
+   * bit doesn't write this format yet, so until it does (around Oct 2027), the getter keeps working.
    */
   get flattenedDependencies(): ComponentIdList {
+    if (!warnedFlattenedDependenciesGetter) {
+      warnedFlattenedDependenciesGetter = true;
+      logger.warn(
+        `Version.flattenedDependencies is deprecated and will throw for newer versions, use "await version.loadFlattenedDependencies(repo)" instead`,
+        new Error().stack
+      );
+    }
+    return this.getLoadedFlattenedDependencies();
+  }
+
+  /**
+   * the flattened dependencies, when they're stored in the Version itself or were loaded already. throws otherwise,
+   * when they're stored in a separate object (`flattenedDependenciesRef`), use `loadFlattenedDependencies()`.
+   */
+  getLoadedFlattenedDependencies(): ComponentIdList {
     if (!this._flattenedDependencies) {
       if (this.flattenedDependenciesRef) {
         throw new Error(
@@ -397,7 +416,7 @@ export default class Version extends BitObject {
    */
   getFlattenedDependenciesIfLoaded(): ComponentIdList | undefined {
     if (this.flattenedDependenciesRef && !this._flattenedDependencies) return undefined;
-    return this.flattenedDependencies;
+    return this.getLoadedFlattenedDependencies();
   }
 
   /**
@@ -406,7 +425,7 @@ export default class Version extends BitObject {
    * container of the objects, such as the objects received from a remote.
    */
   async loadFlattenedDependencies(objects: ObjectsLoader): Promise<ComponentIdList> {
-    if (this._flattenedDependencies || !this.flattenedDependenciesRef) return this.flattenedDependencies;
+    if (this._flattenedDependencies || !this.flattenedDependenciesRef) return this.getLoadedFlattenedDependencies();
     const source = (await objects.load(this.flattenedDependenciesRef, false)) as Source | undefined;
     return this.setFlattenedDependenciesFromSource(source);
   }
@@ -415,7 +434,7 @@ export default class Version extends BitObject {
    * same as `loadFlattenedDependencies()`, for code that can't be async.
    */
   loadFlattenedDependenciesSync(repo: Repository): ComponentIdList {
-    if (this._flattenedDependencies || !this.flattenedDependenciesRef) return this.flattenedDependencies;
+    if (this._flattenedDependencies || !this.flattenedDependenciesRef) return this.getLoadedFlattenedDependencies();
     // objects added during tag, or fetched from a remote without being imported, are only in memory, not on the disk.
     const source = (repo.getFromMemory(this.flattenedDependenciesRef) ||
       repo.loadSync(this.flattenedDependenciesRef, false)) as Source | undefined;
@@ -440,7 +459,7 @@ export default class Version extends BitObject {
    * moves the flattened dependencies out of this Version into a new Source object, which the caller has to persist.
    */
   moveFlattenedDependenciesToSource(): Source | undefined {
-    const flattenedDependencies = this.flattenedDependencies;
+    const flattenedDependencies = this.getLoadedFlattenedDependencies();
     if (!flattenedDependencies.length) return undefined;
     const source = Source.from(Buffer.from(JSON.stringify(flattenedDependencies.map((id) => id.toString()))));
     this.flattenedDependenciesRef = source.hash();
@@ -596,7 +615,7 @@ export default class Version extends BitObject {
         devDependencies: this.devDependencies.cloneAsObject(),
         flattenedDependencies: this.flattenedDependenciesRef
           ? undefined
-          : this.flattenedDependencies.map((dep) => dep.toObject()),
+          : this.getLoadedFlattenedDependencies().map((dep) => dep.toObject()),
         flattenedDependenciesRef: this.flattenedDependenciesRef?.toString(),
         flattenedEdges: this.flattenedEdgesRef ? undefined : this.flattenedEdges.map((f) => Version.depEdgeToObject(f)),
         flattenedEdgesRef: this.flattenedEdgesRef?.toString(),

@@ -866,9 +866,9 @@ export class ScopeComponentsImporter {
     const compVersionsOfDeps = this.componentsDefToComponentsVersion(compDefsOfDeps, false, true);
 
     const versionDeps = componentsWithVersion.map(({ componentVersion, versionObj }) => {
-      const dependencies = versionObj.flattenedDependencies.map((dep) =>
-        compVersionsOfDeps.find((c) => c.toComponentId().isEqual(dep))
-      );
+      const dependencies = versionObj
+        .getLoadedFlattenedDependencies()
+        .map((dep) => compVersionsOfDeps.find((c) => c.toComponentId().isEqual(dep)));
       return new VersionDependencies(componentVersion, compact(dependencies), versionObj);
     });
     return versionDeps;
@@ -1189,9 +1189,9 @@ export class ScopeComponentsImporter {
       })
     );
     versionDeps.forEach((versionDep) => {
-      const deps = versionDep.version.flattenedDependencies.map((dep) =>
-        flattenedComponentVersions.find((c) => c.toComponentId().isEqual(dep))
-      );
+      const deps = versionDep.version
+        .getLoadedFlattenedDependencies()
+        .map((dep) => flattenedComponentVersions.find((c) => c.toComponentId().isEqual(dep)));
       versionDep.dependencies = compact(deps);
     });
 

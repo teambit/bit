@@ -108,7 +108,7 @@ describe('Version', () => {
         flattenedDependencies: ['my-scope/is-type@0.0.1'],
         flattenedDevDependencies: [{ scope: 'my-scope', name: 'utils/is-string', version: '0.0.2' }],
       });
-      expect(version.flattenedDependencies.map((id) => id.toString())).to.deep.equal([
+      expect(version.getLoadedFlattenedDependencies().map((id) => id.toString())).to.deep.equal([
         'my-scope/is-type@0.0.1',
         'my-scope/utils/is-string@0.0.2',
       ]);
@@ -116,8 +116,8 @@ describe('Version', () => {
     it('should share the same id instance between versions', () => {
       const first = getVersionWithDepsFixture();
       const second = getVersionWithDepsFixture();
-      expect(first.flattenedDependencies).to.not.equal(second.flattenedDependencies);
-      expect(first.flattenedDependencies[0]).to.equal(second.flattenedDependencies[0]);
+      expect(first.getLoadedFlattenedDependencies()).to.not.equal(second.getLoadedFlattenedDependencies());
+      expect(first.getLoadedFlattenedDependencies()[0]).to.equal(second.getLoadedFlattenedDependencies()[0]);
     });
     it('should keep a list that was set, and serialize it', () => {
       const version = getVersionWithDepsFixture();
@@ -136,7 +136,7 @@ describe('Version', () => {
       });
       before(() => {
         const original = getVersionWithDepsFixture();
-        flattenedStr = original.flattenedDependencies.map((id) => id.toString());
+        flattenedStr = original.getLoadedFlattenedDependencies().map((id) => id.toString());
         source = original.moveFlattenedDependenciesToSource() as Source;
         version = Version.parse(original.toBuffer(false).toString(), hash);
       });
@@ -151,13 +151,14 @@ describe('Version', () => {
         expect(refs).to.include(source.hash().toString());
       });
       it('should throw when the list is read before it was loaded', () => {
+        expect(() => version.getLoadedFlattenedDependencies()).to.throw('load them with loadFlattenedDependencies()');
         expect(() => version.flattenedDependencies).to.throw('load them with loadFlattenedDependencies()');
       });
       it('should load the list from the Source, and keep only the ref when saved again', async () => {
         const parsed = Version.parse(version.toBuffer(false).toString(), hash);
         const loaded = await parsed.loadFlattenedDependencies(loaderOf([source]));
         expect(loaded.map((id) => id.toString())).to.deep.equal(flattenedStr);
-        expect(parsed.flattenedDependencies).to.equal(loaded);
+        expect(parsed.getLoadedFlattenedDependencies()).to.equal(loaded);
         expect(parsed.toObject()).to.not.have.property('flattenedDependencies');
       });
       it('should load the list synchronously, from the cache or from the disk', () => {
