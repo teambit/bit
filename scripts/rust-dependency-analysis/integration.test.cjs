@@ -26,6 +26,9 @@ const generateTree = require(path.join(builder, 'generate-tree-madge.ts')).defau
 const { RustDependencyScannerSession } = require(path.join(builder, 'rust-scanner/session.ts'));
 const { DetectorHook } = installed('@teambit/dependency-resolver');
 const native = process.env.BIT_TEST_NATIVE_SCANNER;
+if (process.env.CI && !native) {
+  throw new Error('integration validation in CI requires BIT_TEST_NATIVE_SCANNER; native parity must not be skipped');
+}
 
 function workspace(context, sources) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'bit-rust-integration-test-'));

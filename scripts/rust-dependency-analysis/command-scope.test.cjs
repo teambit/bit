@@ -1,114 +1,22 @@
-const { test } = require('node:test');
-const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const os = require('node:os');
-const path = require('node:path');
-const Module = require('node:module');
-const childProcess = require('node:child_process');
-const { setTimeout: delay } = require('node:timers/promises');
-const installedRoot = process.env.BIT_LEGACY_ROOT || path.resolve(__dirname, '../..');
-const installed = Module.createRequire(path.join(installedRoot, 'package.json'));
-const ts = installed('typescript');
-const root = process.env.BIT_SCANNER_INTEGRATION_ROOT || path.resolve(__dirname, '../..');
-require.extensions['.ts'] = (target, filename) => {
-  target.paths = [...Module._nodeModulePaths(installedRoot), ...target.paths];
-  target._compile(
-    ts.transpileModule(fs.readFileSync(filename, 'utf8'), {
-      compilerOptions: {
-        target: ts.ScriptTarget.ES2022,
-        module: ts.ModuleKind.CommonJS,
-        esModuleInterop: true,
-        experimentalDecorators: true,
-      },
-      fileName: filename,
-    }).outputText,
-    filename
-  );
-};
-const builder = path.join(root, 'scopes/dependencies/dependencies/files-dependency-builder');
-const { RustDependencyScannerSession } = require(path.join(builder, 'rust-scanner/session.ts'));
-const { withRustDependencyScannerScope, acquireRustDependencyScannerSession } = require(
-  path.join(builder, 'rust-scanner/scope.ts')
-);
-const generateTree = require(path.join(builder, 'generate-tree-madge.ts')).default;
-const { ComponentLoader } = require(path.join(root, 'components/legacy/consumer-component/component-loader.ts'));
-const { ComponentID, ComponentIdList } = installed('@teambit/component-id');
-const { DetectorHook } = installed('@teambit/dependency-resolver');
-const native = process.env.BIT_TEST_NATIVE_SCANNER;
-if (process.env.CI && !native) {
-  throw new Error('command-scope validation in CI requires BIT_TEST_NATIVE_SCANNER; native parity must not be skipped');
-}
-
-function workspace(context, files = {}) {
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'bit-rust-command-scope-'));
-  for (const [name, source] of Object.entries(files)) fs.writeFileSync(path.join(directory, name), source);
-  context.after(() => fs.rmSync(directory, { recursive: true, force: true }));
-  return { directory, file: (name) => path.join(directory, name) };
-}
-
-async function enabled(executable, operation) {
-  const old = process.env.BIT_RUST_DEPENDENCY_SCANNER;
-  if (executable === undefined) delete process.env.BIT_RUST_DEPENDENCY_SCANNER;
-  else process.env.BIT_RUST_DEPENDENCY_SCANNER = executable;
-  try {
-    return await operation();
-  } finally {
-    if (old === undefined) delete process.env.BIT_RUST_DEPENDENCY_SCANNER;
-    else process.env.BIT_RUST_DEPENDENCY_SCANNER = old;
-  }
-}
-
-function observe(context) {
-  const children = [];
-  const disposed = [];
-  const spawn = childProcess.spawn;
-  childProcess.spawn = (...args) => {
-    const child = spawn(...args);
-    const requests = [];
-    const write = child.stdin.write;
-    child.stdin.write = function (data, ...rest) {
-      requests.push(JSON.parse(data.toString().trim()));
-      return write.call(this, data, ...rest);
-    };
-    children.push({ executable: args[0], child, requests });
-    return child;
-  };
-  const dispose = RustDependencyScannerSession.prototype.dispose;
-  RustDependencyScannerSession.prototype.dispose = function () {
-    disposed.push(this);
-    return dispose.call(this);
-  };
-  context.after(() => {
-    childProcess.spawn = spawn;
-    RustDependencyScannerSession.prototype.dispose = dispose;
-    for (const { child } of children) {
-      try {
-        child.kill('SIGKILL');
-      } catch {}
-    }
-  });
-  return { children, disposed };
-}
-
-function noHooks(context) {
-  const old = DetectorHook.hooks;
-  DetectorHook.hooks = [];
-  context.after(() => {
-    DetectorHook.hooks = old;
-  });
-}
-
-function treeConfig(directory) {
-  return { baseDir: directory, envDetectors: [], detectiveOptions: {} };
-}
-
-async function exited(child) {
-  for (let i = 0; i < 200; i++) {
-    if (child.exitCode !== null || child.signalCode !== null) return;
-    await delay(10);
-  }
-  assert.fail('operation helper did not exit after owner cleanup');
-}
+const {
+  test,
+  assert,
+  fs,
+  os,
+  path,
+  RustDependencyScannerSession,
+  withRustDependencyScannerScope,
+  acquireRustDependencyScannerSession,
+  generateTree,
+  DetectorHook,
+  native,
+  workspace,
+  enabled,
+  observe,
+  noHooks,
+  treeConfig,
+  exited,
+} = require('./scope-test-support.cjs');
 
 test('disabled scope leaves callbacks unchanged and does not create helpers', async (context) => {
   const events = observe(context);
@@ -179,32 +87,6 @@ test('detached asynchronous work cannot reopen its closed owner context but owns
   // The original owner disposed its helper; the later operation disposed its own on exit.
   assert.equal(disposedAfterFreshOperation, 2);
   assert.ok(events.disposed.includes(fresh.session));
-});
-
-test('dependency aspect explicitly registers the component-load scope adapter', async (context) => {
-  const published = installed('@teambit/legacy.consumer-component').ComponentLoader;
-  const oldScope = published.runDependencyLoadScope;
-  const oldLoadDeps = published.loadDeps;
-  context.after(() => {
-    published.runDependencyLoadScope = oldScope;
-    published.loadDeps = oldLoadDeps;
-  });
-  const { DependenciesMain } = require(
-    path.join(root, 'scopes/dependencies/dependencies/dependencies.main.runtime.ts')
-  );
-  const main = await DependenciesMain.provider([
-    { register() {} },
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    { createLogger: () => ({}) },
-  ]);
-  assert.equal(published.runDependencyLoadScope, withRustDependencyScannerScope);
-  assert.equal(typeof published.loadDeps, 'function');
-  assert.ok(main instanceof DependenciesMain);
 });
 
 test(
@@ -423,90 +305,5 @@ test(
     });
     assert.equal(events.children.length, 2);
     assert.equal(events.disposed.length, 2);
-  }
-);
-
-test(
-  'component loadMany shares scope across cold sequential components and leaves warm cache untouched',
-  { skip: !native },
-  async (context) => {
-    noHooks(context);
-    const { directory, file } = workspace(context, { 'a.ts': 'export const a = 1;', 'b.ts': 'export const b = 2;' });
-    const events = observe(context);
-    const ids = ComponentIdList.fromArray(
-      ['a', 'b'].map((name) => ComponentID.fromObject({ scope: 'test', name, version: '0.0.1' }))
-    );
-    const consumer = {
-      getPath: () => directory,
-      scope: { getPath: () => path.join(directory, '.bit') },
-      config: { path: path.join(directory, 'workspace.jsonc') },
-      bitmapIdsFromCurrentLaneIncludeRemoved: ids,
-    };
-    const loader = new ComponentLoader(consumer);
-    // Preserve the actual shouldRunInParallel decision: an empty dependency cache
-    // must keep cold components sequential. Component loading itself is isolated.
-    loader.invalidateDependenciesCacheIfNeeded = async () => {};
-    loader.componentFsCache.listDependenciesDataCache = async () => ({});
-    let active = 0;
-    let maximum = 0;
-    loader.loadOne = async (id) => {
-      active++;
-      maximum = Math.max(maximum, active);
-      await generateTree([file(id.name + '.ts')], treeConfig(directory));
-      active--;
-      return { id };
-    };
-    const oldScope = ComponentLoader.runDependencyLoadScope;
-    ComponentLoader.runDependencyLoadScope = withRustDependencyScannerScope;
-    context.after(() => {
-      ComponentLoader.runDependencyLoadScope = oldScope;
-    });
-    await enabled(native, async () => {
-      const first = await loader.loadMany(ids);
-      assert.equal(first.components.length, 2);
-      assert.equal(maximum, 1);
-      assert.equal(events.children.length, 1);
-      assert.equal(events.disposed.length, 1);
-      const second = await loader.loadMany(ids);
-      assert.equal(second.components.length, 2);
-      assert.equal(events.children.length, 1);
-      assert.equal(events.disposed.length, 1);
-    });
-  }
-);
-
-test(
-  'nested component loadMany retains the outer helper until parent loading completes',
-  { skip: !native },
-  async (context) => {
-    noHooks(context);
-    const { directory, file } = workspace(context, { 'a.ts': 'export const a = 1;', 'b.ts': 'export const b = 2;' });
-    const events = observe(context);
-    const ids = ['a', 'b'].map((name) => ComponentID.fromObject({ scope: 'test', name, version: '0.0.1' }));
-    const consumer = {
-      getPath: () => directory,
-      scope: { getPath: () => path.join(directory, '.bit') },
-      config: { path: path.join(directory, 'workspace.jsonc') },
-      bitmapIdsFromCurrentLaneIncludeRemoved: ComponentIdList.fromArray(ids),
-    };
-    const loader = new ComponentLoader(consumer);
-    loader.invalidateDependenciesCacheIfNeeded = async () => {};
-    loader.componentFsCache.listDependenciesDataCache = async () => ({});
-    loader.loadOne = async (id) => {
-      await generateTree([file(id.name + '.ts')], treeConfig(directory));
-      if (id.name === 'a') {
-        await loader.loadMany(ComponentIdList.fromArray([ids[1]]));
-        assert.equal(events.disposed.length, 0);
-      }
-      return { id };
-    };
-    const oldScope = ComponentLoader.runDependencyLoadScope;
-    ComponentLoader.runDependencyLoadScope = withRustDependencyScannerScope;
-    context.after(() => {
-      ComponentLoader.runDependencyLoadScope = oldScope;
-    });
-    await enabled(native, () => loader.loadMany(ComponentIdList.fromArray([ids[0]])));
-    assert.equal(events.children.length, 1);
-    assert.equal(events.disposed.length, 1);
   }
 );

@@ -19,12 +19,12 @@ Run focused validation with an installed checkout supplying TypeScript and detec
 ```sh
 BIT_LEGACY_ROOT=/path/to/installed/bit \
 BIT_TEST_NATIVE_SCANNER=/absolute/path/to/bit-dependency-scanner \
-node --test scripts/rust-dependency-analysis/command-scope.test.cjs
+node --test scripts/rust-dependency-analysis/command-scope.test.cjs scripts/rust-dependency-analysis/component-load-scope.test.cjs
 ```
 
 The fifteen tests use actual source modules and real native requests where appropriate. They cover helper reuse, disk and inline-cache reset, pending-reset refusal, nested loader/provider wiring, the cold component sequential guard, warm component-cache bypass, concurrent/independent ownership, configuration isolation, bounded leases, failed-helper retry policy, changed files, changed detector registration, owner exceptions, and closed-context behavior. The loader-focused cases isolate component construction while retaining the actual `loadMany()` pool and concurrency decision. Native-dependent cases explicitly skip when the helper path is absent.
 
-These checks were run locally. The existing scanner CI installs an isolated TypeScript compiler for transport tests; it does not install the full detector/resolver/legacy-loader graph required here. This change does not add a monorepo installation to that job or alter the session portability matrix. If this suite is invoked in CI, an absent `BIT_TEST_NATIVE_SCANNER` fails immediately rather than silently skipping native validation.
+The twelve helper/pipeline ownership cases now run in the Linux integration CI job with a locked, isolated detector/resolver installation and the actual scanner. The three provider/component-loader wiring cases remain a separate full-dependency suite, validated locally; the isolated tool installation does not recreate the legacy aspect graph. See [isolated CI setup](../../scripts/rust-dependency-analysis/ci/README.md) for the exact boundary and reproduction steps. This does not alter the session portability matrix. If scope or integration tests are invoked in CI, an absent `BIT_TEST_NATIVE_SCANNER` fails immediately rather than silently skipping native validation.
 
 ## Measured effect
 

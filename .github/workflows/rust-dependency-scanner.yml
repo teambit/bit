@@ -8,7 +8,14 @@ on:
       - 'scripts/rust/**'
       - 'scripts/rust-dependency-analysis/session*'
       - 'scripts/rust-dependency-analysis/session-fixtures/**'
+      - 'scripts/rust-dependency-analysis/ci/**'
+      - 'scripts/rust-dependency-analysis/*scope*'
+      - 'scripts/rust-dependency-analysis/integration*'
+      - 'scripts/rust-dependency-analysis/compare*'
+      - 'scripts/rust-dependency-analysis/fixtures.cjs'
       - 'scopes/dependencies/dependencies/files-dependency-builder/rust-scanner/**'
+      - 'scopes/dependencies/dependencies/files-dependency-builder/**'
+      - 'scopes/dependencies/dependency-resolver/detector-hook.ts'
       - '.github/workflows/rust-dependency-scanner.yml'
   pull_request:
     branches: [rust]
@@ -17,7 +24,14 @@ on:
       - 'scripts/rust/**'
       - 'scripts/rust-dependency-analysis/session*'
       - 'scripts/rust-dependency-analysis/session-fixtures/**'
+      - 'scripts/rust-dependency-analysis/ci/**'
+      - 'scripts/rust-dependency-analysis/*scope*'
+      - 'scripts/rust-dependency-analysis/integration*'
+      - 'scripts/rust-dependency-analysis/compare*'
+      - 'scripts/rust-dependency-analysis/fixtures.cjs'
       - 'scopes/dependencies/dependencies/files-dependency-builder/rust-scanner/**'
+      - 'scopes/dependencies/dependencies/files-dependency-builder/**'
+      - 'scopes/dependencies/dependency-resolver/detector-hook.ts'
       - '.github/workflows/rust-dependency-scanner.yml'
   workflow_dispatch:
 
@@ -30,6 +44,46 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  integration:
+    name: Real dependency pipeline and scoped helpers (Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+      - name: Install locked isolated detector and resolver dependencies
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/rust-scanner-integration-tools"
+          cp scripts/rust-dependency-analysis/ci/package.json scripts/rust-dependency-analysis/ci/package-lock.json "$RUNNER_TEMP/rust-scanner-integration-tools/"
+          npm ci --prefix "$RUNNER_TEMP/rust-scanner-integration-tools" --ignore-scripts --legacy-peer-deps --no-audit --no-fund
+          node scripts/rust-dependency-analysis/ci/prepare.cjs "$RUNNER_TEMP/rust-scanner-integration-tools"
+      # Restore only: this job builds just the binary and finishes first, so saving under the
+      # shared key would leave the Rust test job a cache without its test artifacts.
+      - name: Restore Rust build cache from the Rust test job
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            native/target/debug
+          key: rust-scanner-test-${{ runner.os }}-${{ hashFiles('native/rust-toolchain.toml', 'native/Cargo.lock') }}
+          restore-keys: rust-scanner-test-${{ runner.os }}-
+      - name: Build real scanner for pipeline validation
+        working-directory: native
+        run: cargo build --locked --workspace
+      - name: Validate actual dependency trees and scoped helper lifetimes
+        env:
+          BIT_LEGACY_ROOT: ${{ runner.temp }}/rust-scanner-integration-tools
+          BIT_TEST_NATIVE_SCANNER: ${{ github.workspace }}/native/target/debug/bit-dependency-scanner
+        run: |
+          node --test scripts/rust-dependency-analysis/compare.test.cjs scripts/rust-dependency-analysis/integration.test.cjs scripts/rust-dependency-analysis/command-scope.test.cjs
+          node scripts/rust-dependency-analysis/compare.cjs "$BIT_TEST_NATIVE_SCANNER"
+
   session:
     name: Scanner session lifecycle tests (${{ matrix.os }})
     strategy:
