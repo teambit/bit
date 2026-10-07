@@ -12,7 +12,7 @@ overrides:
   react-router-dom@6: ^6.30.1
   subscriptions-transport-ws@0.9: ^0.9.19
   '@teambit/base-react.navigation.link@2': 2.0.33
-  lodash@4: 4.17.21
+  lodash@4: 4.18.1
   trim@0: 0.0.3
   '@teambit/harmony': 0.4.12
   '@types/fs-capacitor': 2.0.0
@@ -21,6 +21,7 @@ overrides:
   '@types/react': ^19.0.0
   '@types/react-dom': ^19.0.0
   cross-spawn@7: ^7.0.5
+  proxy-addr@2: ^2.0.8
   react-animate-height@2: ^3.2.3
   react@17: 19.1.0
   react-dom@17: 19.1.0
@@ -1702,8 +1703,8 @@ importers:
         specifier: ^12.5.0
         version: 12.5.0(enquirer@2.4.1)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       lodash.compact:
         specifier: 3.0.1
         version: 3.0.1
@@ -2281,8 +2282,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       pad-right:
         specifier: 0.2.2
         version: 0.2.2
@@ -2352,8 +2353,8 @@ importers:
         specifier: 4.1.2
         version: 4.1.2
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       pluralize:
         specifier: 8.0.0
         version: 8.0.0
@@ -2429,8 +2430,8 @@ importers:
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -2475,8 +2476,8 @@ importers:
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -2630,8 +2631,8 @@ importers:
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       node-fetch:
         specifier: 2.6.7
         version: 2.6.7
@@ -2715,8 +2716,8 @@ importers:
         specifier: 3.3.10
         version: 3.3.10
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       object-hash:
         specifier: 2.1.1
         version: 2.1.1
@@ -2764,8 +2765,8 @@ importers:
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       object-hash:
         specifier: 2.1.1
         version: 2.1.1
@@ -2822,8 +2823,8 @@ importers:
         specifier: 2.1.0
         version: 2.1.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       normalize-path:
         specifier: 3.0.0
         version: 3.0.0
@@ -2877,8 +2878,8 @@ importers:
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       p-filter:
         specifier: 2.1.0
         version: 2.1.0
@@ -2963,8 +2964,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -3024,8 +3025,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -3091,8 +3092,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -3243,8 +3244,8 @@ importers:
         specifier: 2.0.0
         version: 2.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       lodash.flatten:
         specifier: 4.4.0
         version: 4.4.0
@@ -3310,8 +3311,8 @@ importers:
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -3475,8 +3476,8 @@ importers:
         specifier: 1.0.0
         version: 1.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       p-map:
         specifier: 4.0.0
         version: 4.0.0
@@ -3551,8 +3552,8 @@ importers:
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       p-queue:
         specifier: 6.6.2
         version: 6.6.2
@@ -3606,8 +3607,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -3797,8 +3798,8 @@ importers:
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -3880,8 +3881,8 @@ importers:
         specifier: 6.1.0
         version: 6.1.0(graphql@15.8.0)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       p-map:
         specifier: 4.0.0
         version: 4.0.0
@@ -4204,8 +4205,8 @@ importers:
         specifier: ^2.5.1
         version: 2.5.1
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       lodash.flatten:
         specifier: 4.4.0
         version: 4.4.0
@@ -4329,8 +4330,8 @@ importers:
         specifier: 2.1.0
         version: 2.1.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       path-browserify:
         specifier: ^1.0.1
         version: 1.0.1
@@ -4681,8 +4682,8 @@ importers:
         specifier: ^3.0.0
         version: 3.13.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -4898,8 +4899,8 @@ importers:
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -5039,8 +5040,8 @@ importers:
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -5375,8 +5376,8 @@ importers:
         specifier: ^2.5.1
         version: 2.5.1
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       query-string:
         specifier: 7.0.0
         version: 7.0.0
@@ -5872,8 +5873,8 @@ importers:
         specifier: 6.6.2
         version: 6.6.2
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -5970,8 +5971,8 @@ importers:
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       path-to-regexp:
         specifier: 6.3.0
         version: 6.3.0
@@ -6171,8 +6172,8 @@ importers:
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -14132,8 +14133,8 @@ importers:
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -14196,8 +14197,8 @@ importers:
         specifier: 2.12.1
         version: 2.12.1(graphql@15.8.0)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       open:
         specifier: 8.4.2
         version: 8.4.2
@@ -14791,8 +14792,8 @@ importers:
         specifier: 2.1.9
         version: 2.1.9
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -14858,8 +14859,8 @@ importers:
         specifier: 11.0.1
         version: 11.0.1
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -15097,8 +15098,8 @@ importers:
         specifier: 4.1.2
         version: 4.1.2
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -15285,8 +15286,8 @@ importers:
         specifier: 0.3.2
         version: 0.3.2(graphql@15.8.0)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       lodash.compact:
         specifier: 3.0.1
         version: 3.0.1
@@ -15397,8 +15398,8 @@ importers:
         specifier: 2.12.1
         version: 2.12.1(graphql@15.8.0)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       lodash.flatten:
         specifier: 4.4.0
         version: 4.4.0
@@ -15504,8 +15505,8 @@ importers:
         specifier: ^7.0.0
         version: 7.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       moment:
         specifier: 2.29.4
         version: 2.29.4
@@ -15728,8 +15729,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -15786,8 +15787,8 @@ importers:
         specifier: 2.12.1
         version: 2.12.1(graphql@15.8.0)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -15841,8 +15842,8 @@ importers:
         specifier: 2.12.1
         version: 2.12.1(graphql@15.8.0)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -15899,8 +15900,8 @@ importers:
         specifier: 2.12.1
         version: 2.12.1(graphql@15.8.0)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -16008,8 +16009,8 @@ importers:
         specifier: 2.12.1
         version: 2.12.1(graphql@15.8.0)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -16072,8 +16073,8 @@ importers:
         specifier: 2.12.1
         version: 2.12.1(graphql@15.8.0)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -16145,8 +16146,8 @@ importers:
         specifier: 13.0.0
         version: 13.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       object-hash:
         specifier: 2.1.1
         version: 2.1.1
@@ -16267,8 +16268,8 @@ importers:
         specifier: 0.3.6
         version: 0.3.6
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -16328,8 +16329,8 @@ importers:
         specifier: 4.1.2
         version: 4.1.2
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -16383,8 +16384,8 @@ importers:
         specifier: 2.1.0
         version: 2.1.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -16438,8 +16439,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -16545,8 +16546,8 @@ importers:
         specifier: 4.0.6
         version: 4.0.6
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -16600,8 +16601,8 @@ importers:
         specifier: 1.0.0
         version: 1.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       lodash.partition:
         specifier: 4.6.0
         version: 4.6.0
@@ -16679,8 +16680,8 @@ importers:
         specifier: 2.12.1
         version: 2.12.1(graphql@15.8.0)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -16725,8 +16726,8 @@ importers:
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -16804,8 +16805,8 @@ importers:
         specifier: 2.1.8
         version: 2.1.8
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       open-editor:
         specifier: 3.0.0
         version: 3.0.0
@@ -16883,8 +16884,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       p-map:
         specifier: 4.0.0
         version: 4.0.0
@@ -16959,8 +16960,8 @@ importers:
         specifier: 11.0.1
         version: 11.0.1
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -17014,8 +17015,8 @@ importers:
         specifier: 4.1.2
         version: 4.1.2
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -17127,8 +17128,8 @@ importers:
         specifier: 3.3.10
         version: 3.3.10
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -17346,8 +17347,8 @@ importers:
         specifier: 2.12.1
         version: 2.12.1(graphql@15.8.0)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       lodash.head:
         specifier: 4.0.1
         version: 4.0.1
@@ -17518,8 +17519,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       object-hash:
         specifier: 2.1.1
         version: 2.1.1
@@ -17570,8 +17571,8 @@ importers:
         specifier: 8.56.0
         version: 8.56.0(supports-color@9.4.0)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -17622,8 +17623,8 @@ importers:
         specifier: 2.12.1
         version: 2.12.1(graphql@15.8.0)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -17689,8 +17690,8 @@ importers:
         specifier: 29.7.0
         version: 29.7.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       minimatch:
         specifier: 3.0.5
         version: 3.0.5
@@ -17753,8 +17754,8 @@ importers:
         specifier: 2.12.1
         version: 2.12.1(graphql@15.8.0)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -17842,8 +17843,8 @@ importers:
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -17925,8 +17926,8 @@ importers:
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       prettier:
         specifier: 3.3.3
         version: 3.3.3
@@ -18016,8 +18017,8 @@ importers:
         specifier: 3.0.1
         version: 3.0.1
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       lodash.compact:
         specifier: 3.0.1
         version: 3.0.1
@@ -18276,8 +18277,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       module-definition:
         specifier: 3.3.1
         version: 3.3.1
@@ -18418,8 +18419,8 @@ importers:
         specifier: 3.1.0
         version: 3.1.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       multimatch:
         specifier: 5.0.0
         version: 5.0.0
@@ -18552,8 +18553,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       nerf-dart:
         specifier: 1.0.0
         version: 1.0.0
@@ -18649,8 +18650,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       parse-package-name:
         specifier: 0.1.0
         version: 0.1.0
@@ -18728,8 +18729,8 @@ importers:
         specifier: 2.12.1
         version: 2.12.1(graphql@15.8.0)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -18918,8 +18919,8 @@ importers:
         specifier: 2.12.1
         version: 2.12.1(graphql@15.8.0)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       p-locate:
         specifier: 5.0.0
         version: 5.0.0
@@ -19077,8 +19078,8 @@ importers:
         specifier: 4.1.2
         version: 4.1.2
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -19190,8 +19191,8 @@ importers:
         specifier: 2.12.1
         version: 2.12.1(graphql@15.8.0)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -19251,8 +19252,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -19315,8 +19316,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -19505,8 +19506,8 @@ importers:
         specifier: ^3.0.3
         version: 3.0.7(supports-color@9.4.0)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       node-fetch:
         specifier: 2.6.7
         version: 2.6.7
@@ -19581,8 +19582,8 @@ importers:
         specifier: 4.1.2
         version: 4.1.2
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       open:
         specifier: 8.4.2
         version: 8.4.2
@@ -19696,8 +19697,8 @@ importers:
         specifier: 29.3.1
         version: 29.3.1(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(supports-color@9.4.0)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -19846,8 +19847,8 @@ importers:
         specifier: 2.12.1
         version: 2.12.1(graphql@15.8.0)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -19900,9 +19901,6 @@ importers:
       '@teambit/component-id':
         specifier: ^1.2.4
         version: 1.2.4
-      '@teambit/design.ui.brand.logo':
-        specifier: 1.96.19
-        version: 1.96.19(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony':
         specifier: 0.4.12
         version: 0.4.12
@@ -20006,6 +20004,9 @@ importers:
       '@teambit/bit.content.what-is-bit':
         specifier: 1.96.13
         version: 1.96.13(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/design.ui.brand.logo':
+        specifier: 1.96.19
+        version: 1.96.19(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony.envs.core-aspect-env':
         specifier: 2.1.2
         version: 2.1.2(@babel/core@7.28.3)(@babel/traverse@7.29.8)(eslint@8.56.0)(react-refresh@0.10.0)(react-test-renderer@19.2.7)(rollup@2.80.0)(sass-embedded@1.102.0)(supports-color@9.4.0)(webpack@5.109.2)
@@ -20107,8 +20108,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -20211,8 +20212,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -20315,8 +20316,8 @@ importers:
         specifier: 2.12.1
         version: 2.12.1(graphql@15.8.0)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -20407,8 +20408,8 @@ importers:
         specifier: ^4.21.2
         version: 4.22.2(supports-color@9.4.0)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -20462,8 +20463,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       pad-right:
         specifier: 0.2.2
         version: 0.2.2
@@ -20571,8 +20572,8 @@ importers:
         specifier: 1.18.1
         version: 1.18.1(debug@4.3.4)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       node-fetch:
         specifier: 2.6.7
         version: 2.6.7
@@ -20650,8 +20651,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -21097,8 +21098,8 @@ importers:
         specifier: 4.6.0
         version: 4.6.0(eslint@8.56.0)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -21223,8 +21224,8 @@ importers:
         specifier: 2.3.4
         version: 2.3.4
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -21402,8 +21403,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       p-map:
         specifier: 4.0.0
         version: 4.0.0
@@ -21542,8 +21543,8 @@ importers:
         specifier: 1.0.0
         version: 1.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       p-limit:
         specifier: 3.1.0
         version: 3.1.0
@@ -21615,8 +21616,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -21673,8 +21674,8 @@ importers:
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -21731,8 +21732,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       node-fetch:
         specifier: 2.6.7
         version: 2.6.7
@@ -21783,8 +21784,8 @@ importers:
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: ^18.0.0
         version: 18.3.1
@@ -21881,8 +21882,8 @@ importers:
         specifier: 5.2.1
         version: 5.2.1
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -22025,8 +22026,8 @@ importers:
         specifier: 2.1.0
         version: 2.1.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       mime:
         specifier: 2.5.2
         version: 2.5.2
@@ -22120,8 +22121,8 @@ importers:
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -22276,8 +22277,8 @@ importers:
         specifier: 2.0.0
         version: 2.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       mime:
         specifier: 2.5.2
         version: 2.5.2
@@ -22450,8 +22451,8 @@ importers:
         specifier: 2.12.1
         version: 2.12.1(graphql@15.8.0)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       lodash.compact:
         specifier: 3.0.1
         version: 3.0.1
@@ -22541,8 +22542,8 @@ importers:
         specifier: ^2.5.1
         version: 2.5.1
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       penpal:
         specifier: 6.2.2
         version: 6.2.2
@@ -22664,8 +22665,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -22918,8 +22919,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0(less@4.9.0)(webpack@5.109.2)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       lodash.compact:
         specifier: 3.0.1
         version: 3.0.1
@@ -23211,8 +23212,8 @@ importers:
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -23426,8 +23427,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       open:
         specifier: 8.4.2
         version: 8.4.2
@@ -23499,8 +23500,8 @@ importers:
         specifier: 2.4.1
         version: 2.4.1
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -23603,8 +23604,8 @@ importers:
         specifier: 5.0.0
         version: 5.0.0(supports-color@9.4.0)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -23685,8 +23686,8 @@ importers:
         specifier: 13.0.0
         version: 13.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -23873,8 +23874,8 @@ importers:
         specifier: 2.12.1
         version: 2.12.1(graphql@15.8.0)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       multimatch:
         specifier: 5.0.0
         version: 5.0.0
@@ -23949,8 +23950,8 @@ importers:
         specifier: 4.1.2
         version: 4.1.2
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -24047,8 +24048,8 @@ importers:
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -24198,8 +24199,8 @@ importers:
         specifier: 11.0.1
         version: 11.0.1
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -24550,8 +24551,8 @@ importers:
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -24959,8 +24960,8 @@ importers:
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -25069,8 +25070,8 @@ importers:
         specifier: 4.2.0
         version: 4.2.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       minimatch:
         specifier: 3.0.5
         version: 3.0.5
@@ -25308,8 +25309,8 @@ importers:
         specifier: ^2.5.1
         version: 2.5.1
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -25624,8 +25625,8 @@ importers:
         specifier: 5.3.2
         version: 5.3.2(webpack@5.109.2)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -25885,8 +25886,8 @@ importers:
         specifier: 1.3.0
         version: 1.3.0(html-webpack-plugin@5.3.2)(supports-color@9.4.0)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       os-browserify:
         specifier: 0.3.0
         version: 0.3.0
@@ -26043,8 +26044,8 @@ importers:
         specifier: 13.0.0
         version: 13.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -26104,8 +26105,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -26226,8 +26227,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       object-hash:
         specifier: 2.1.1
         version: 2.1.1
@@ -26348,8 +26349,8 @@ importers:
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       minimatch:
         specifier: 3.0.5
         version: 3.0.5
@@ -26403,8 +26404,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       p-map-series:
         specifier: 2.1.0
         version: 2.1.0
@@ -26489,8 +26490,8 @@ importers:
         specifier: 4.1.2
         version: 4.1.2
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -26569,8 +26570,8 @@ importers:
         specifier: 4.2.5
         version: 4.2.5
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       react:
         specifier: 19.2.7
         version: 19.2.7
@@ -26630,8 +26631,8 @@ importers:
         specifier: 10.0.0
         version: 10.0.0
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       moment:
         specifier: 2.29.4
         version: 2.29.4
@@ -26790,8 +26791,8 @@ importers:
         specifier: 2.12.1
         version: 2.12.1(graphql@15.8.0)
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       lodash.compact:
         specifier: 3.0.1
         version: 3.0.1
@@ -26887,8 +26888,8 @@ importers:
         specifier: 11.0.1
         version: 11.0.1
       lodash:
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 4.18.1
+        version: 4.18.1
       normalize-path:
         specifier: 3.0.0
         version: 3.0.0
@@ -42062,8 +42063,8 @@ packages:
   lodash.uniq@4.5.0:
     resolution: {integrity: sha512-xfBaXQd9ryd9dlSDvnvI0lvxfLJlYAZzXomUYzLKtUeOQvOP5piqAWuGtrhWeqaXK9hhoM/iyJc5AV+XfsX3HQ==}
 
-  lodash@4.17.21:
-    resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
+  lodash@4.18.1:
+    resolution: {integrity: sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==}
 
   log-symbols@4.1.0:
     resolution: {integrity: sha512-8XPvpAA8uyhfteu8pIvQxpJZ7SYYdpUivZpGy6sFsBuKRY/7rQGavedeB8aK+Zkyq6upMFVL/9AW6vOYzfRyLg==}
@@ -44011,8 +44012,8 @@ packages:
   protocols@2.0.2:
     resolution: {integrity: sha512-hHVTzba3wboROl0/aWRRG9dMytgH6ow//STBZh43l/wQgmMhYhOFi0EHWAPtoCz9IAUymsyP0TSBHkhgMEGNnQ==}
 
-  proxy-addr@2.0.7:
-    resolution: {integrity: sha512-llQsMLSUDUPT44jdrU/O37qlnifitDP+ZwrmmZcoSKyLKvtZxpyV0n2/bD/N4tBAAZ/gJEdZU7KMraoK1+XYAg==}
+  proxy-addr@2.0.8:
+    resolution: {integrity: sha512-5nnx0yGyVUcY6t9RnWcARWtwT9F1D8O9rt08htPvnd49W1IgZtmLkhu9WfMzQj1cFxjHIO6connUNVW5k7AVyQ==}
     engines: {node: '>= 0.10'}
 
   prr@1.0.1:
@@ -47139,7 +47140,7 @@ snapshots:
       debug: 4.3.4(supports-color@9.4.0)
       gensync: 1.0.0-beta.2
       json5: 2.2.3
-      lodash: 4.17.21
+      lodash: 4.18.1
       resolve: 1.20.0
       semver: 5.7.2
       source-map: 0.5.7
@@ -50015,7 +50016,7 @@ snapshots:
       '@teambit/component-id': 1.2.4
       '@types/jest': 30.0.0
       '@types/node': 22.10.5
-      lodash: 4.17.21
+      lodash: 4.18.1
       prompts: 2.4.2
 
   '@bitdev/node.generators.node-starters@1.0.2':
@@ -50030,7 +50031,7 @@ snapshots:
     dependencies:
       '@types/jest': 30.0.0
       '@types/node': 22.10.5
-      lodash: 4.17.21
+      lodash: 4.18.1
 
   '@bitdev/react.generators.react-starters@2.0.2':
     dependencies:
@@ -50602,7 +50603,7 @@ snapshots:
       camel-case: 4.1.1
       graphql: 15.8.0
       graphql-tools: 5.0.0(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
 
   '@graphql-toolkit/schema-merging@0.10.6(graphql@15.8.0)':
     dependencies:
@@ -54195,7 +54196,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@18.3.1)
@@ -54226,7 +54227,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -54266,7 +54267,7 @@ snapshots:
       filenamify: 4.2.0
       fs-extra: 10.0.0
       http-proxy-middleware: 3.0.7(supports-color@9.4.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       node-fetch: 2.6.7
       p-map: 4.0.0
       pretty-time: 1.1.0
@@ -54291,7 +54292,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chai: 4.3.0
       chalk: 4.1.2
-      lodash: 4.17.21
+      lodash: 4.18.1
       open: 8.4.2
       p-map-series: 2.1.0
       react: 18.3.1
@@ -54311,7 +54312,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chai: 4.3.0
       chalk: 4.1.2
-      lodash: 4.17.21
+      lodash: 4.18.1
       open: 8.4.2
       p-map-series: 2.1.0
       react: 19.2.7
@@ -54331,7 +54332,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chai: 5.2.1
       chalk: 4.1.2
-      lodash: 4.17.21
+      lodash: 4.18.1
       open: 8.4.2
       p-map-series: 2.1.0
       react: 19.2.7
@@ -54361,7 +54362,7 @@ snapshots:
       find-root: 1.1.0
       fs-extra: 10.0.0
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
@@ -54393,7 +54394,7 @@ snapshots:
       find-root: 1.1.0
       fs-extra: 10.0.0
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -54425,7 +54426,7 @@ snapshots:
       find-root: 1.1.0
       fs-extra: 10.0.0
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -54470,7 +54471,7 @@ snapshots:
       chalk: 4.1.2
       fs-extra: 10.0.0
       jest: 29.3.1(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(supports-color@9.4.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -54535,7 +54536,7 @@ snapshots:
       chalk: 4.1.2
       fs-extra: 10.0.0
       jest: 29.3.1(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(supports-color@9.4.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -54600,7 +54601,7 @@ snapshots:
       chalk: 4.1.2
       fs-extra: 10.0.0
       jest: 29.3.1(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(supports-color@9.4.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -56500,7 +56501,6 @@ snapshots:
       '@teambit/bit.get-bit-version': file:components/bit/get-bit-version
       '@teambit/clear-cache': file:scopes/workspace/clear-cache(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component-id': 1.2.4
-      '@teambit/design.ui.brand.logo': 1.96.19(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.content.cli-reference': file:scopes/harmony/cli-reference(react@19.2.7)
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
@@ -56568,7 +56568,6 @@ snapshots:
       '@teambit/bit.get-bit-version': file:components/bit/get-bit-version
       '@teambit/clear-cache': file:scopes/workspace/clear-cache(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/component-id': 1.2.4
-      '@teambit/design.ui.brand.logo': 1.96.19(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.content.cli-reference': file:scopes/harmony/cli-reference(react@19.2.7)
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
@@ -56665,7 +56664,7 @@ snapshots:
       globby: 11.0.1
       graphql-tag: 2.12.1(graphql@15.8.0)
       is-binary-path: 2.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       mime: 2.5.2
       minimatch: 3.0.5
       p-map-series: 2.1.0
@@ -56711,7 +56710,7 @@ snapshots:
       globby: 11.0.1
       graphql-tag: 2.12.1(graphql@15.8.0)
       is-binary-path: 2.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       mime: 2.5.2
       minimatch: 3.0.5
       p-map-series: 2.1.0
@@ -56757,7 +56756,7 @@ snapshots:
       globby: 11.0.1
       graphql-tag: 2.12.1(graphql@15.8.0)
       is-binary-path: 2.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       mime: 2.5.2
       minimatch: 3.0.5
       p-map-series: 2.1.0
@@ -56786,7 +56785,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chalk: 4.1.2
       cli-highlight: 2.1.9
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
@@ -56810,7 +56809,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chalk: 4.1.2
       cli-highlight: 2.1.9
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -56888,7 +56887,7 @@ snapshots:
   '@teambit/capsule@0.0.12':
     dependencies:
       '@teambit/any-fs': 0.0.5
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-limit: 2.3.0
 
   '@teambit/changelog@file:scopes/component/changelog(@apollo/client@3.12.11)(@mdx-js/react@3.1.1)(@teambit/base-react.navigation.link@2.0.33)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/dom@10.4.1)(@types/react-syntax-highlighter@15.5.13)(react@18.3.1)(supports-color@9.4.0)(typescript@6.0.3)':
@@ -56973,7 +56972,7 @@ snapshots:
       chai: 4.3.0
       chai-fs: 1.0.0(chai@4.3.0)
       chalk: 4.1.2
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -57054,7 +57053,7 @@ snapshots:
       chai: 4.3.0
       chai-fs: 1.0.0(chai@4.3.0)
       chalk: 4.1.2
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -57135,7 +57134,7 @@ snapshots:
       chai: 5.2.1
       chai-fs: 1.0.0(chai@5.2.1)
       chalk: 4.1.2
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -57218,7 +57217,7 @@ snapshots:
       chalk: 4.1.2
       execa: 2.1.0
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -57255,7 +57254,7 @@ snapshots:
       chalk: 4.1.2
       execa: 2.1.0
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -57290,7 +57289,7 @@ snapshots:
       chalk: 4.1.2
       fs-extra: 10.0.0
       glob: 13.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@18.3.1)
@@ -57323,7 +57322,7 @@ snapshots:
       chalk: 4.1.2
       fs-extra: 10.0.0
       glob: 13.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -57356,7 +57355,7 @@ snapshots:
       chalk: 4.1.2
       fs-extra: 10.0.0
       glob: 13.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -57390,7 +57389,7 @@ snapshots:
       chalk: 4.1.2
       comment-json: 4.2.5
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       node-fetch: 2.6.7
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -57475,7 +57474,7 @@ snapshots:
       chalk: 4.1.2
       comment-json: 4.2.5
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       node-fetch: 2.6.7
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -57560,7 +57559,7 @@ snapshots:
       chalk: 4.1.2
       comment-json: 4.2.5
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       node-fetch: 2.6.7
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -57652,7 +57651,7 @@ snapshots:
       chalk: 4.1.2
       didyoumean: 1.2.1
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       pad-right: 0.2.2
       react: 18.3.1
@@ -57685,7 +57684,7 @@ snapshots:
       chalk: 4.1.2
       didyoumean: 1.2.1
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       pad-right: 0.2.2
       react: 19.2.7
@@ -57718,7 +57717,7 @@ snapshots:
       chalk: 4.1.2
       didyoumean: 1.2.1
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       pad-right: 0.2.2
       react: 19.2.7
@@ -57947,7 +57946,7 @@ snapshots:
       chalk: 4.1.2
       express: 4.22.2(supports-color@9.4.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       open: 8.4.2
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
@@ -57982,7 +57981,7 @@ snapshots:
       chalk: 4.1.2
       express: 4.22.2(supports-color@9.4.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       open: 8.4.2
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -58053,7 +58052,7 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       classnames: 2.5.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash.flatten: 4.4.0
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
@@ -58094,7 +58093,7 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       classnames: 2.5.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash.flatten: 4.4.0
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
@@ -58135,7 +58134,7 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       classnames: 2.5.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash.flatten: 4.4.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -58229,7 +58228,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       classnames: 2.5.1
       is-binary-path: 2.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       path-browserify: 1.0.1
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
@@ -58266,7 +58265,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       classnames: 2.5.1
       is-binary-path: 2.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       path-browserify: 1.0.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -59120,7 +59119,7 @@ snapshots:
       '@teambit/compilation.compiler-task': 1.0.12
       '@teambit/compilation.modules.babel-file-transpiler': 1.1.3(supports-color@9.4.0)
       fs-extra: 10.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       multimatch: 5.0.0
       normalize-path: 3.0.0
       p-map-series: 2.1.0
@@ -59135,7 +59134,7 @@ snapshots:
       '@teambit/compilation.compiler-task': 1.0.12
       '@teambit/compilation.modules.babel-file-transpiler': 1.1.3(supports-color@9.4.0)
       fs-extra: 10.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       multimatch: 5.0.0
       normalize-path: 3.0.0
       p-map-series: 2.1.0
@@ -59153,7 +59152,7 @@ snapshots:
       '@teambit/compilation.compiler-task': 1.0.12
       '@teambit/pipelines.modules.merge-component-results': 0.0.502
       fs-extra: 11.3.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 18.3.1
 
@@ -59162,7 +59161,7 @@ snapshots:
       '@teambit/compilation.compiler-task': 1.0.12
       '@teambit/pipelines.modules.merge-component-results': 0.0.502
       fs-extra: 11.3.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 19.2.7
 
@@ -59241,7 +59240,7 @@ snapshots:
       cli-highlight: 2.1.9
       fs-extra: 10.0.0
       globby: 11.0.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       pretty-time: 1.1.0
       react: 18.3.1
@@ -59275,7 +59274,7 @@ snapshots:
       cli-highlight: 2.1.9
       fs-extra: 10.0.0
       globby: 11.0.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       pretty-time: 1.1.0
       react: 19.2.7
@@ -59309,7 +59308,7 @@ snapshots:
       cli-highlight: 2.1.9
       fs-extra: 10.0.0
       globby: 11.0.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       pretty-time: 1.1.0
       react: 19.2.7
@@ -59353,7 +59352,7 @@ snapshots:
       chalk: 4.1.2
       classnames: 2.5.1
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash.flatten: 4.4.0
       p-map: 4.0.0
       react: 18.3.1
@@ -59400,7 +59399,7 @@ snapshots:
       chalk: 4.1.2
       classnames: 2.5.1
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash.flatten: 4.4.0
       p-map: 4.0.0
       react: 19.2.7
@@ -59447,7 +59446,7 @@ snapshots:
       chalk: 4.1.2
       classnames: 2.5.1
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash.flatten: 4.4.0
       p-map: 4.0.0
       react: 19.2.7
@@ -59570,19 +59569,19 @@ snapshots:
     dependencies:
       '@teambit/component-version': 1.0.3
       '@teambit/legacy-bit-id': 1.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
 
   '@teambit/component-id@1.2.2':
     dependencies:
       '@teambit/component-version': 1.0.3
       '@teambit/legacy-bit-id': 1.1.1
-      lodash: 4.17.21
+      lodash: 4.18.1
 
   '@teambit/component-id@1.2.4':
     dependencies:
       '@teambit/component-version': 1.0.4
       '@teambit/legacy-bit-id': 1.1.3
-      lodash: 4.17.21
+      lodash: 4.18.1
 
   '@teambit/component-issues@0.0.159':
     dependencies:
@@ -59618,7 +59617,7 @@ snapshots:
       chalk: 4.1.2
       cli-table: 0.3.6
       diff: 7.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       moment: 2.29.4
       p-map: 4.0.0
       p-map-series: 2.1.0
@@ -59647,7 +59646,7 @@ snapshots:
       chalk: 4.1.2
       cli-table: 0.3.6
       diff: 7.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       moment: 2.29.4
       p-map: 4.0.0
       p-map-series: 2.1.0
@@ -59780,7 +59779,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chai: 4.3.0
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -59813,7 +59812,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chai: 5.2.1
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -60060,7 +60059,7 @@ snapshots:
       enquirer: 2.4.1
       execa: 2.1.0
       is-binary-path: 2.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -60073,7 +60072,7 @@ snapshots:
     dependencies:
       '@teambit/graph.cleargraph': 0.0.11
       '@teambit/legacy.scope': 0.0.49(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       memoizee: 0.4.15
       p-map-series: 2.1.0
     transitivePeerDependencies:
@@ -60089,7 +60088,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -60119,7 +60118,7 @@ snapshots:
       detect-indent: 5.0.0
       detect-newline: 3.1.0
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map: 4.0.0
       p-map-series: 2.1.0
       stringify-package: 1.0.1
@@ -60154,7 +60153,7 @@ snapshots:
       detect-indent: 5.0.0
       detect-newline: 3.1.0
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map: 4.0.0
       p-map-series: 2.1.0
       react: 19.2.7
@@ -60444,7 +60443,7 @@ snapshots:
       '@teambit/ui-foundation.ui.tree.tree-node': 0.0.517(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)(supports-color@9.4.0)
       classnames: 2.5.1
       core-js: 3.13.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
     transitivePeerDependencies:
@@ -60476,7 +60475,7 @@ snapshots:
       '@teambit/ui-foundation.ui.tree.tree-node': 0.0.517(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@18.3.1)(supports-color@9.4.0)
       classnames: 2.5.1
       core-js: 3.13.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
     transitivePeerDependencies:
@@ -60508,7 +60507,7 @@ snapshots:
       '@teambit/ui-foundation.ui.tree.tree-node': 0.0.517(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       classnames: 2.5.1
       core-js: 3.13.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
     transitivePeerDependencies:
@@ -60540,7 +60539,7 @@ snapshots:
       '@teambit/ui-foundation.ui.tree.tree-node': 0.0.517(@testing-library/react@16.3.2)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       classnames: 2.5.1
       core-js: 3.13.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
     transitivePeerDependencies:
@@ -61304,21 +61303,21 @@ snapshots:
   '@teambit/component.ui.component-compare.utils.lazy-loading@0.0.7(react-dom@18.3.1)(react@18.3.1)':
     dependencies:
       core-js: 3.13.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
   '@teambit/component.ui.component-compare.utils.lazy-loading@0.0.7(react-dom@19.2.7)(react@18.3.1)':
     dependencies:
       core-js: 3.13.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
 
   '@teambit/component.ui.component-compare.utils.lazy-loading@0.0.7(react-dom@19.2.7)(react@19.2.7)':
     dependencies:
       core-js: 3.13.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
 
@@ -61328,7 +61327,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
     transitivePeerDependencies:
@@ -61553,7 +61552,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
     transitivePeerDependencies:
@@ -61566,7 +61565,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
     transitivePeerDependencies:
@@ -62168,7 +62167,7 @@ snapshots:
       copy-to-clipboard: 3.3.1
       graphql-tag: 2.12.1(graphql@15.8.0)
       graphql-type-json: 0.3.2(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash.compact: 3.0.1
       lodash.flatten: 4.4.0
       open: 8.4.2
@@ -62257,7 +62256,7 @@ snapshots:
       copy-to-clipboard: 3.3.1
       graphql-tag: 2.12.1(graphql@15.8.0)
       graphql-type-json: 0.3.2(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash.compact: 3.0.1
       lodash.flatten: 4.4.0
       open: 8.4.2
@@ -62346,7 +62345,7 @@ snapshots:
       copy-to-clipboard: 3.3.1
       graphql-tag: 2.12.1(graphql@15.8.0)
       graphql-type-json: 0.3.2(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash.compact: 3.0.1
       lodash.flatten: 4.4.0
       open: 8.4.2
@@ -62670,7 +62669,7 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       classnames: 2.5.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       query-string: 7.0.0
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
@@ -62699,7 +62698,7 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       classnames: 2.5.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       query-string: 7.0.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -62819,7 +62818,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       classnames: 2.5.1
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash.head: 4.0.1
       query-string: 7.0.0
       react: 18.3.1
@@ -62889,7 +62888,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       classnames: 2.5.1
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash.head: 4.0.1
       query-string: 7.0.0
       react: 19.2.7
@@ -62926,7 +62925,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chai: 4.3.0
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -62956,7 +62955,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chai: 5.2.1
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -62979,7 +62978,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chalk: 4.1.2
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       pad-right: 0.2.2
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -63008,7 +63007,7 @@ snapshots:
       chalk: 4.1.2
       comment-json: 4.2.5
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -63097,7 +63096,7 @@ snapshots:
       comment-json: 4.2.3
       eslint: 8.56.0(supports-color@9.4.0)
       fs-extra: 10.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       object-hash: 3.0.0
       p-map-series: 2.1.0
     transitivePeerDependencies:
@@ -63111,7 +63110,7 @@ snapshots:
       comment-json: 4.2.3
       eslint: 8.56.0(supports-color@9.4.0)
       fs-extra: 10.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       object-hash: 3.0.0
       p-map-series: 2.1.0
     transitivePeerDependencies:
@@ -63127,7 +63126,7 @@ snapshots:
       comment-json: 4.6.2
       eslint: 8.56.0(supports-color@9.4.0)
       fs-extra: 11.3.4
-      lodash: 4.17.21
+      lodash: 4.18.1
       object-hash: 3.0.0
       p-map-series: 3.0.0
     transitivePeerDependencies:
@@ -63140,7 +63139,7 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       eslint: 8.56.0(supports-color@9.4.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -63171,7 +63170,7 @@ snapshots:
       identity-obj-proxy: 3.0.0
       jest: 29.3.1(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(supports-color@9.4.0)
       jest-message-util: 29.3.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       minimatch: 5.1.0
       normalize-path: 3.0.0
       uuid: 10.0.0
@@ -63190,7 +63189,7 @@ snapshots:
       '@teambit/defender.tester-task': 1.0.14
       '@teambit/tests-results': 1.0.5
       fs-extra: 10.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       mocha: 11.7.1
       p-map-series: 2.1.0
       react: 19.2.7
@@ -63206,7 +63205,7 @@ snapshots:
       '@teambit/defender.tester-task': 1.0.14
       '@teambit/tests-results': 1.0.5
       fs-extra: 10.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       mocha: 11.7.1
       p-map-series: 2.1.0
       react: 19.2.7
@@ -63222,7 +63221,7 @@ snapshots:
       '@teambit/defender.tester-task': 1.0.14
       '@teambit/tests-results': 1.0.5
       fs-extra: 10.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       mocha: 11.7.1
       p-map-series: 2.1.0
       react: 18.3.1
@@ -63238,7 +63237,7 @@ snapshots:
       '@teambit/defender.tester-task': 1.0.14
       '@teambit/tests-results': 1.0.5
       fs-extra: 10.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       mocha: 11.7.1
       p-map-series: 2.1.0
       react: 19.2.7
@@ -63249,7 +63248,7 @@ snapshots:
     dependencies:
       '@teambit/bit-error': 0.0.404
       fs-extra: 10.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       prettier: 3.3.3
 
@@ -63258,7 +63257,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       prettier: 3.3.3
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -63627,7 +63626,7 @@ snapshots:
       detective-amd: 3.0.1
       detective-stylus: 1.0.0
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       module-definition: 3.3.1
       moment: 2.29.4
       node-source-walk: 4.2.0
@@ -63740,7 +63739,7 @@ snapshots:
       detective-amd: 3.0.1
       detective-stylus: 1.0.0
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       module-definition: 3.3.1
       moment: 2.29.4
       node-source-walk: 4.2.0
@@ -63853,7 +63852,7 @@ snapshots:
       detective-amd: 3.0.1
       detective-stylus: 1.0.0
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       module-definition: 3.3.1
       moment: 2.29.4
       node-source-walk: 4.2.0
@@ -63966,7 +63965,7 @@ snapshots:
       detective-amd: 3.0.1
       detective-stylus: 1.0.0
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       module-definition: 3.3.1
       moment: 2.29.4
       node-source-walk: 4.2.0
@@ -64076,7 +64075,7 @@ snapshots:
       fs-extra: 10.0.0
       graphql-tag: 2.12.1(graphql@15.8.0)
       is-builtin-module: 3.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       multimatch: 5.0.0
       p-limit: 3.1.0
       p-map-series: 2.1.0
@@ -64138,7 +64137,7 @@ snapshots:
       fs-extra: 10.0.0
       graphql-tag: 2.12.1(graphql@15.8.0)
       is-builtin-module: 3.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       multimatch: 5.0.0
       p-limit: 3.1.0
       p-map-series: 2.1.0
@@ -64200,7 +64199,7 @@ snapshots:
       fs-extra: 10.0.0
       graphql-tag: 2.12.1(graphql@15.8.0)
       is-builtin-module: 3.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       multimatch: 5.0.0
       p-limit: 3.1.0
       p-map-series: 2.1.0
@@ -64232,7 +64231,7 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
@@ -64255,7 +64254,7 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -67146,7 +67145,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chai: 4.3.0
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@18.3.1)
@@ -67167,7 +67166,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chai: 4.3.0
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -67188,7 +67187,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chai: 5.2.1
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -67352,7 +67351,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       classnames: 2.5.1
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       react-router-dom: 6.30.4(react-dom@18.3.1)(react@18.3.1)
@@ -67386,7 +67385,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       classnames: 2.5.1
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -67420,7 +67419,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       classnames: 2.5.1
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -67462,7 +67461,7 @@ snapshots:
       fs-extra: 10.0.0
       glob: 13.0.0
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -68843,7 +68842,7 @@ snapshots:
       chalk: 4.1.2
       comment-json: 4.2.5
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-locate: 5.0.0
       p-map-series: 2.1.0
       react: 19.2.7
@@ -68926,7 +68925,7 @@ snapshots:
       chalk: 4.1.2
       comment-json: 4.2.5
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-locate: 5.0.0
       p-map-series: 2.1.0
       react: 18.3.1
@@ -69009,7 +69008,7 @@ snapshots:
       chalk: 4.1.2
       comment-json: 4.2.5
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-locate: 5.0.0
       p-map-series: 2.1.0
       react: 19.2.7
@@ -69092,7 +69091,7 @@ snapshots:
       chalk: 4.1.2
       comment-json: 4.2.5
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-locate: 5.0.0
       p-map-series: 2.1.0
       react: 19.2.7
@@ -69165,7 +69164,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       eslint: 8.56.0(supports-color@9.4.0)
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       object-hash: 2.1.1
       p-map-series: 2.1.0
       react: 18.3.1
@@ -69187,7 +69186,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       eslint: 8.56.0(supports-color@9.4.0)
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       object-hash: 2.1.1
       p-map-series: 2.1.0
       react: 19.2.7
@@ -69859,7 +69858,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chalk: 4.1.2
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       open: 8.4.2
       p-map-series: 2.1.0
       react: 18.3.1
@@ -69903,7 +69902,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chalk: 4.1.2
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       open: 8.4.2
       p-map-series: 2.1.0
       react: 19.2.7
@@ -69926,7 +69925,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       body-parser: 1.20.3(supports-color@9.4.0)
       express: 4.22.2(supports-color@9.4.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@18.3.1)
@@ -69944,7 +69943,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       body-parser: 1.20.3(supports-color@9.4.0)
       express: 4.22.2(supports-color@9.4.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -69967,7 +69966,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chalk: 4.1.2
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
@@ -69992,7 +69991,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chalk: 4.1.2
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -70014,7 +70013,7 @@ snapshots:
       chalk: 4.1.2
       cli-highlight: 2.1.9
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@18.3.1)
@@ -70034,7 +70033,7 @@ snapshots:
       chalk: 4.1.2
       cli-highlight: 2.1.9
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -70092,7 +70091,7 @@ snapshots:
       enquirer: 2.4.1
       fs-extra: 10.0.0
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
@@ -70127,7 +70126,7 @@ snapshots:
       enquirer: 2.4.1
       fs-extra: 10.0.0
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -70211,7 +70210,7 @@ snapshots:
       chalk: 4.1.2
       cli-table: 0.3.6
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       pad-right: 0.2.2
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
@@ -70236,7 +70235,7 @@ snapshots:
       chalk: 4.1.2
       cli-table: 0.3.6
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       pad-right: 0.2.2
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -70248,12 +70247,12 @@ snapshots:
 
   '@teambit/graph.algorithms.tarjan@0.0.3':
     dependencies:
-      lodash: 4.17.21
+      lodash: 4.18.1
 
   '@teambit/graph.cleargraph@0.0.11':
     dependencies:
       '@teambit/graph.algorithms.tarjan': 0.0.3
-      lodash: 4.17.21
+      lodash: 4.18.1
 
   '@teambit/graph@file:scopes/component/graph(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(domexception@4.0.0)(graphql@15.8.0)(immer@9.0.21)(react@18.3.1)(supports-color@9.4.0)':
     dependencies:
@@ -70289,7 +70288,7 @@ snapshots:
       classnames: 2.5.1
       graphlib: 2.1.8
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@18.3.1)
@@ -70336,7 +70335,7 @@ snapshots:
       classnames: 2.5.1
       graphlib: 2.1.8
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -70412,7 +70411,7 @@ snapshots:
       graphql-disable-introspection: 1.2.0(graphql@15.8.0)
       graphql-subscriptions: 1.2.0(graphql@15.8.0)
       http-proxy: 1.18.1(debug@4.3.4)
-      lodash: 4.17.21
+      lodash: 4.18.1
       node-fetch: 2.6.7
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
@@ -70454,7 +70453,7 @@ snapshots:
       graphql-disable-introspection: 1.2.0(graphql@15.8.0)
       graphql-subscriptions: 1.2.0(graphql@15.8.0)
       http-proxy: 1.18.1(debug@4.3.4)
-      lodash: 4.17.21
+      lodash: 4.18.1
       node-fetch: 2.6.7
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -70731,7 +70730,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -70832,7 +70831,7 @@ snapshots:
       classnames: 2.5.1
       copy-to-clipboard: 3.3.1
       json-formatter-js: 2.3.4
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
     transitivePeerDependencies:
@@ -70849,7 +70848,7 @@ snapshots:
       classnames: 2.5.1
       copy-to-clipboard: 3.3.1
       json-formatter-js: 2.3.4
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
     transitivePeerDependencies:
@@ -70900,7 +70899,7 @@ snapshots:
       chalk: 4.1.2
       enquirer: 2.4.1
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -70989,7 +70988,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chalk: 4.1.2
       enquirer: 2.4.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
@@ -71027,7 +71026,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chalk: 4.1.2
       enquirer: 2.4.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -71050,7 +71049,7 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chalk: 4.1.2
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
@@ -71069,7 +71068,7 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chalk: 4.1.2
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -71104,7 +71103,7 @@ snapshots:
       chalk: 4.1.2
       enquirer: 2.4.1
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       object-hash: 2.1.1
       p-filter: 2.1.0
       p-map-series: 2.1.0
@@ -71195,7 +71194,7 @@ snapshots:
       chalk: 4.1.2
       enquirer: 2.4.1
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       object-hash: 2.1.1
       p-filter: 2.1.0
       p-map-series: 2.1.0
@@ -71286,7 +71285,7 @@ snapshots:
       chalk: 4.1.2
       enquirer: 2.4.1
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       object-hash: 2.1.1
       p-filter: 2.1.0
       p-map-series: 2.1.0
@@ -71361,7 +71360,7 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -71413,7 +71412,7 @@ snapshots:
       filenamify: 4.2.0
       fs-extra: 10.0.0
       glob: 13.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       object-hash: 2.1.1
       p-map: 4.0.0
       react: 18.3.1
@@ -71458,7 +71457,7 @@ snapshots:
       filenamify: 4.2.0
       fs-extra: 10.0.0
       glob: 13.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       object-hash: 2.1.1
       p-map: 4.0.0
       react: 19.2.7
@@ -71503,7 +71502,7 @@ snapshots:
       filenamify: 4.2.0
       fs-extra: 10.0.0
       glob: 13.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       object-hash: 2.1.1
       p-map: 4.0.0
       react: 19.2.7
@@ -71550,7 +71549,7 @@ snapshots:
       jest: 29.3.1(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(supports-color@9.4.0)
       jest-message-util: 29.3.1
       jest-watcher: 29.7.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       minimatch: 3.0.5
       normalize-path: 3.0.0
       react: 18.3.1
@@ -71579,7 +71578,7 @@ snapshots:
       jest: 29.3.1(@types/node@22.10.5)(babel-plugin-macros@3.1.0)(supports-color@9.4.0)
       jest-message-util: 29.3.1
       jest-watcher: 29.7.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       minimatch: 3.0.5
       normalize-path: 3.0.0
       react: 19.2.7
@@ -71624,7 +71623,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
     transitivePeerDependencies:
@@ -71641,7 +71640,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
     transitivePeerDependencies:
@@ -71657,7 +71656,7 @@ snapshots:
       '@teambit/ui-foundation.ui.hooks.use-data-query': 0.0.506(@apollo/client@3.12.11)(react-dom@19.2.7)(react@18.3.1)
       '@teambit/ui-foundation.ui.react-router.use-query': 0.0.505(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@18.3.1)
       core-js: 3.13.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
     transitivePeerDependencies:
@@ -71673,7 +71672,7 @@ snapshots:
       '@teambit/ui-foundation.ui.hooks.use-data-query': 0.0.506(@apollo/client@3.12.11)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.react-router.use-query': 0.0.505(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       core-js: 3.13.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
     transitivePeerDependencies:
@@ -71689,7 +71688,7 @@ snapshots:
       '@teambit/ui-foundation.ui.hooks.use-data-query': 0.0.506(@apollo/client@3.12.11)(react-dom@19.2.7)(react@18.3.1)
       '@teambit/ui-foundation.ui.react-router.use-query': 0.0.505(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@18.3.1)
       core-js: 3.13.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
     transitivePeerDependencies:
@@ -71705,7 +71704,7 @@ snapshots:
       '@teambit/ui-foundation.ui.hooks.use-data-query': 0.0.506(@apollo/client@3.12.11)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.react-router.use-query': 0.0.505(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       core-js: 3.13.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
     transitivePeerDependencies:
@@ -71724,7 +71723,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
     transitivePeerDependencies:
@@ -71742,7 +71741,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
     transitivePeerDependencies:
@@ -71792,7 +71791,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -71818,7 +71817,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chalk: 4.1.2
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map: 4.0.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -72030,7 +72029,7 @@ snapshots:
       classnames: 2.5.1
       core-js: 3.13.0
       fuse.js: 6.6.2
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
       react-router-dom: 6.30.4(react-dom@18.3.1)(react@18.3.1)
@@ -72059,7 +72058,7 @@ snapshots:
       classnames: 2.5.1
       core-js: 3.13.0
       fuse.js: 6.6.2
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -72091,7 +72090,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       classnames: 2.5.1
       fuse.js: 6.6.2
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
       react-router-dom: 6.30.4(react-dom@18.3.1)(react@18.3.1)
@@ -72122,7 +72121,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       classnames: 2.5.1
       fuse.js: 6.6.2
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -72294,7 +72293,7 @@ snapshots:
       '@teambit/component-id': 1.2.4
       '@teambit/lane-id': 0.0.312
       core-js: 3.13.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       path-to-regexp: 6.3.0
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
@@ -72304,7 +72303,7 @@ snapshots:
       '@teambit/component-id': 1.2.4
       '@teambit/lane-id': 0.0.312
       core-js: 3.13.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       path-to-regexp: 6.3.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -72314,7 +72313,7 @@ snapshots:
       '@teambit/component-id': 1.2.4
       '@teambit/lane-id': 0.0.312
       core-js: 3.13.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       path-to-regexp: 6.3.0
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
@@ -72324,7 +72323,7 @@ snapshots:
       '@teambit/component-id': 1.2.4
       '@teambit/lane-id': 0.0.312
       core-js: 3.13.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       path-to-regexp: 6.3.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -72337,7 +72336,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       path-to-regexp: 6.3.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -72436,7 +72435,7 @@ snapshots:
       fuse.js: 6.6.2
       graphql-tag: 2.12.1(graphql@15.8.0)
       group-array: 1.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-limit: 3.1.0
       p-map: 4.0.0
       react: 19.2.7
@@ -72550,7 +72549,7 @@ snapshots:
       fuse.js: 6.6.2
       graphql-tag: 2.12.1(graphql@15.8.0)
       group-array: 1.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-limit: 3.1.0
       p-map: 4.0.0
       react: 18.3.1
@@ -72664,7 +72663,7 @@ snapshots:
       fuse.js: 6.6.2
       graphql-tag: 2.12.1(graphql@15.8.0)
       group-array: 1.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-limit: 3.1.0
       p-map: 4.0.0
       react: 19.2.7
@@ -72778,7 +72777,7 @@ snapshots:
       fuse.js: 6.6.2
       graphql-tag: 2.12.1(graphql@15.8.0)
       group-array: 1.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-limit: 3.1.0
       p-map: 4.0.0
       react: 19.2.7
@@ -72845,7 +72844,7 @@ snapshots:
       '@teambit/bit-error': 0.0.394
       '@teambit/component-version': 0.0.395
       decamelize: 1.2.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       semver: 7.3.4
 
   '@teambit/legacy-bit-id@0.0.399':
@@ -72853,7 +72852,7 @@ snapshots:
       '@teambit/bit-error': 0.0.394
       '@teambit/component-version': 0.0.395
       decamelize: 1.2.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       semver: 7.3.4
 
   '@teambit/legacy-bit-id@1.0.1':
@@ -72861,7 +72860,7 @@ snapshots:
       '@teambit/bit-error': 0.0.402
       '@teambit/component-version': 1.0.0
       decamelize: 1.2.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       semver: 7.3.4
 
   '@teambit/legacy-bit-id@1.1.0':
@@ -72869,7 +72868,7 @@ snapshots:
       '@teambit/bit-error': 0.0.404
       '@teambit/component-version': 1.0.3
       decamelize: 1.2.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       semver: 7.5.2
 
   '@teambit/legacy-bit-id@1.1.1':
@@ -72877,7 +72876,7 @@ snapshots:
       '@teambit/bit-error': 0.0.404
       '@teambit/component-version': 1.0.3
       decamelize: 1.2.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       semver: 7.5.2
 
   '@teambit/legacy-bit-id@1.1.3':
@@ -72885,7 +72884,7 @@ snapshots:
       '@teambit/bit-error': 0.0.404
       '@teambit/component-version': 1.0.4
       decamelize: 1.2.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       semver: 7.7.1
 
   '@teambit/legacy-component-log@0.0.402': {}
@@ -72904,7 +72903,7 @@ snapshots:
       '@teambit/bit.get-bit-version': 0.0.5
       '@teambit/legacy.cli.prompts': 0.0.17
       '@teambit/legacy.constants': 0.0.11
-      lodash: 4.17.21
+      lodash: 4.18.1
       node-fetch: 2.6.7
       object-hash: 2.1.1
       serialize-error: 5.0.0
@@ -72918,7 +72917,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       node-fetch: 2.6.7
       object-hash: 2.1.1
       react: 19.2.7
@@ -72949,7 +72948,7 @@ snapshots:
       fs-extra: 10.0.0
       globby: 11.0.1
       ignore: 3.3.10
-      lodash: 4.17.21
+      lodash: 4.18.1
       object-hash: 2.1.1
     transitivePeerDependencies:
       - domexception
@@ -72979,7 +72978,7 @@ snapshots:
       fs-extra: 10.0.0
       globby: 11.0.1
       ignore: 3.3.10
-      lodash: 4.17.21
+      lodash: 4.18.1
       object-hash: 2.1.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -72994,7 +72993,7 @@ snapshots:
       '@teambit/bit-error': 0.0.404
       '@teambit/legacy.constants': 0.0.11
       '@teambit/legacy.logger': 0.0.19
-      lodash: 4.17.21
+      lodash: 4.18.1
       object-hash: 2.1.1
       yn: 2.0.0
 
@@ -73006,7 +73005,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       object-hash: 2.1.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -73038,7 +73037,7 @@ snapshots:
       chalk: 4.1.2
       cli-table: 0.3.6
       execa: 2.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       normalize-path: 3.0.0
       object-diff: 0.0.4
       react: 19.2.7
@@ -73061,7 +73060,7 @@ snapshots:
       '@teambit/legacy.scope': 0.0.49(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/legacy.utils': 0.0.21
       '@teambit/scope.remotes': 0.0.49(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-filter: 2.1.0
     transitivePeerDependencies:
       - domexception
@@ -73081,7 +73080,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-filter: 2.1.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -73133,7 +73132,7 @@ snapshots:
       '@teambit/workspace.modules.fs-cache': 0.0.26
       chalk: 4.1.2
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       uuid: 8.3.2
     transitivePeerDependencies:
@@ -73173,7 +73172,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chalk: 4.1.2
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -73198,7 +73197,7 @@ snapshots:
       '@teambit/toolbox.path.path': 0.0.8
       chalk: 4.1.2
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
 
   '@teambit/legacy.consumer-config@file:components/legacy/consumer-config':
@@ -73218,7 +73217,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chalk: 4.1.2
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -73244,7 +73243,7 @@ snapshots:
       '@teambit/workspace.modules.workspace-locator': 0.0.12
       chalk: 4.1.2
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       string-format: 0.5.0
     transitivePeerDependencies:
       - domexception
@@ -73274,7 +73273,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chalk: 4.1.2
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -73368,7 +73367,7 @@ snapshots:
       fs-extra: 10.0.0
       glob: 13.0.0
       ini: 2.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash.flatten: 4.4.0
       pad-right: 0.2.2
       react: 19.2.7
@@ -73460,7 +73459,7 @@ snapshots:
       fs-extra: 10.0.0
       glob: 13.0.0
       ini: 2.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash.flatten: 4.4.0
       pad-right: 0.2.2
       react: 18.3.1
@@ -73552,7 +73551,7 @@ snapshots:
       fs-extra: 10.0.0
       glob: 13.0.0
       ini: 2.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash.flatten: 4.4.0
       pad-right: 0.2.2
       react: 19.2.7
@@ -73644,7 +73643,7 @@ snapshots:
       fs-extra: 10.0.0
       glob: 13.0.0
       ini: 2.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash.flatten: 4.4.0
       pad-right: 0.2.2
       react: 19.2.7
@@ -73711,7 +73710,7 @@ snapshots:
       '@teambit/component-id': 1.2.4
       '@teambit/component.sources': 0.0.101(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/toolbox.object.sorter': 0.0.2
-      lodash: 4.17.21
+      lodash: 4.18.1
 
   '@teambit/legacy.extension-data@file:components/legacy/extension-data':
     dependencies:
@@ -73721,7 +73720,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -73814,7 +73813,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-queue: 6.6.2
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -73860,7 +73859,7 @@ snapshots:
       chalk: 4.1.2
       fs-extra: 10.0.0
       group-array: 1.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map: 4.0.0
       p-map-series: 2.1.0
       p-queue: 6.6.2
@@ -73911,7 +73910,7 @@ snapshots:
       fs-extra: 10.0.0
       glob: 13.0.0
       group-array: 1.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map: 4.0.0
       p-map-series: 2.1.0
       p-queue: 6.6.2
@@ -73935,7 +73934,7 @@ snapshots:
       checksum: 0.1.1
       fs-extra: 10.0.0
       glob: 7.1.6
-      lodash: 4.17.21
+      lodash: 4.18.1
       semver: 7.7.1
       string-format: 0.5.0
       write-file-atomic: 5.0.0
@@ -73951,7 +73950,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       checksum: 0.1.1
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -73972,7 +73971,7 @@ snapshots:
       chalk: 4.1.2
       cli-highlight: 2.1.9
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@18.3.1)
@@ -73992,7 +73991,7 @@ snapshots:
       chalk: 4.1.2
       cli-highlight: 2.1.9
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -74018,7 +74017,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chalk: 4.1.2
       cli-table: 0.3.6
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -74087,7 +74086,7 @@ snapshots:
       '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)(typescript@6.0.3)
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       react-router-dom: 6.30.4(react-dom@18.3.1)(react@18.3.1)
@@ -74099,7 +74098,7 @@ snapshots:
       '@teambit/mdx.ui.mdx-layout': 1.0.14(@mdx-js/react@3.1.1)(@teambit/mdx.ui.mdx-scope-context@1.1.1)(@testing-library/react@14.3.1)(@types/react-dom@19.2.4)(@types/react-syntax-highlighter@15.5.13)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(typescript@5.9.2)
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 18.3.1(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@18.3.1)(react@19.2.7)
@@ -74647,7 +74646,7 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chai: 4.3.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -74676,7 +74675,7 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chai: 4.3.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -74705,7 +74704,7 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chai: 5.2.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -74741,7 +74740,7 @@ snapshots:
       chai: 4.3.0
       chalk: 4.1.2
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -74825,7 +74824,7 @@ snapshots:
       chai: 4.3.0
       chalk: 4.1.2
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -74909,7 +74908,7 @@ snapshots:
       chai: 5.2.1
       chalk: 4.1.2
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -74990,7 +74989,7 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chalk: 4.1.2
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -75067,7 +75066,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chalk: 4.1.2
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -75122,7 +75121,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
@@ -75138,7 +75137,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -75303,7 +75302,7 @@ snapshots:
 
   '@teambit/node.generator.node-templates@1.0.22':
     dependencies:
-      lodash: 4.17.21
+      lodash: 4.18.1
 
   '@teambit/node.node@4.1.2(@babel/traverse@7.29.8)(@parcel/css@1.14.0)(@rspack/core@1.7.12)(@swc/css@0.0.20)(@types/webpack@5.28.5)(babel-plugin-macros@3.1.0)(browserslist@4.23.3)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(html-webpack-plugin@5.3.2)(less@4.9.0)(lightningcss@1.33.0)(postcss@8.4.45)(react-refresh@0.10.0)(rollup@2.80.0)(sass-embedded@1.102.0)(sass@1.63.6)(supports-color@9.4.0)(type-fest@0.21.3)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack-dev-server@4.15.2)(webpack-hot-middleware@2.26.1)(webpack@5.109.2)':
     dependencies:
@@ -75513,7 +75512,7 @@ snapshots:
       eslint-plugin-mdx: 1.17.1(eslint@8.56.0)(supports-color@9.4.0)
       eslint-plugin-react: 7.33.2(eslint@8.56.0)
       eslint-plugin-react-hooks: 4.6.0(eslint@8.56.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -75599,7 +75598,7 @@ snapshots:
       chai: 4.3.0
       fs-extra: 10.0.0
       glob: 13.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -75652,7 +75651,7 @@ snapshots:
       chai: 5.2.1
       fs-extra: 10.0.0
       glob: 13.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -75669,7 +75668,7 @@ snapshots:
     dependencies:
       '@teambit/defender.linter-task': 1.0.8
       '@teambit/oxc.linter.oxlint-node': 2.0.2
-      lodash: 4.17.21
+      lodash: 4.18.1
       oxlint: 1.55.0(oxlint-tsgolint@0.17.0)
       oxlint-tsgolint: 0.17.0
 
@@ -75758,14 +75757,14 @@ snapshots:
 
   '@teambit/pipelines.modules.merge-component-results@0.0.502':
     dependencies:
-      lodash: 4.17.21
+      lodash: 4.18.1
 
   '@teambit/pipelines.modules.merge-component-results@file:scopes/pipelines/modules/merge-component-results':
     dependencies:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -75891,7 +75890,7 @@ snapshots:
       fs-extra: 10.0.0
       graphql-tag: 2.12.1(graphql@15.8.0)
       is-relative-path: 2.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       mime: 2.5.2
       p-map: 4.0.0
       react: 18.3.1
@@ -75934,7 +75933,7 @@ snapshots:
       fs-extra: 10.0.0
       graphql-tag: 2.12.1(graphql@15.8.0)
       is-relative-path: 2.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       mime: 2.5.2
       p-map: 4.0.0
       react: 19.2.7
@@ -75977,7 +75976,7 @@ snapshots:
       fs-extra: 10.0.0
       graphql-tag: 2.12.1(graphql@15.8.0)
       is-relative-path: 2.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       mime: 2.5.2
       p-map: 4.0.0
       react: 19.2.7
@@ -76013,7 +76012,7 @@ snapshots:
       chai: 4.3.0
       chalk: 4.1.2
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       nerf-dart: 1.0.0
       node-gyp: 11.5.0(supports-color@9.4.0)
       normalize-path: 3.0.0
@@ -76051,7 +76050,7 @@ snapshots:
       chai: 4.3.0
       chalk: 4.1.2
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       nerf-dart: 1.0.0
       node-gyp: 11.5.0(supports-color@9.4.0)
       normalize-path: 3.0.0
@@ -76089,7 +76088,7 @@ snapshots:
       chai: 5.2.1
       chalk: 4.1.2
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       nerf-dart: 1.0.0
       node-gyp: 11.5.0(supports-color@9.4.0)
       normalize-path: 3.0.0
@@ -76391,7 +76390,7 @@ snapshots:
       '@teambit/base-ui.utils.string.affix': 1.0.0(react-dom@18.3.1)(react@18.3.1)
       classnames: 2.2.6
       core-js: 3.13.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       penpal: 6.2.2
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
@@ -76401,7 +76400,7 @@ snapshots:
       '@teambit/base-ui.utils.string.affix': 1.0.0(react-dom@19.2.7)(react@19.2.7)
       classnames: 2.2.6
       core-js: 3.13.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       penpal: 6.2.2
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -76416,7 +76415,7 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       classnames: 2.5.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       penpal: 6.2.2
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
@@ -76433,7 +76432,7 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       classnames: 2.5.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       penpal: 6.2.2
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -76450,7 +76449,7 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       classnames: 2.5.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       penpal: 6.2.2
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -76596,7 +76595,7 @@ snapshots:
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash.compact: 3.0.1
       lru-cache: 10.4.3
       mime: 2.5.2
@@ -76663,7 +76662,7 @@ snapshots:
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash.compact: 3.0.1
       lru-cache: 10.4.3
       mime: 2.5.2
@@ -76730,7 +76729,7 @@ snapshots:
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash.compact: 3.0.1
       lru-cache: 10.4.3
       mime: 2.5.2
@@ -76797,7 +76796,7 @@ snapshots:
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash.compact: 3.0.1
       lru-cache: 10.4.3
       mime: 2.5.2
@@ -76906,7 +76905,7 @@ snapshots:
       '@teambit/webpack.webpack-dev-server': 1.0.24(@parcel/css@1.14.0)(@rspack/core@2.1.10)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)
       express: 4.22.2(supports-color@9.4.0)
       fs-extra: 10.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(uglify-js@3.19.3)(webpack@5.109.2)
       url-join: 4.0.0
       webpack: 5.109.2(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(uglify-js@3.19.3)
@@ -76964,7 +76963,7 @@ snapshots:
       '@teambit/webpack.webpack-dev-server': 1.0.24(@parcel/css@1.14.0)(@rspack/core@2.1.10)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)
       express: 4.22.2(supports-color@9.4.0)
       fs-extra: 10.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(uglify-js@3.19.3)(webpack@5.109.2)
       url-join: 4.0.0
       webpack: 5.109.2(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(uglify-js@3.19.3)
@@ -77022,7 +77021,7 @@ snapshots:
       '@teambit/webpack.webpack-dev-server': 1.0.24(@parcel/css@1.14.0)(@rspack/core@2.1.10)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)
       express: 4.22.2(supports-color@9.4.0)
       fs-extra: 10.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(uglify-js@3.19.3)(webpack@5.109.2)
       url-join: 4.0.0
       webpack: 5.109.2(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(uglify-js@3.19.3)
@@ -77080,7 +77079,7 @@ snapshots:
       '@teambit/webpack.webpack-dev-server': 1.0.24(@parcel/css@1.14.0)(@rspack/core@2.1.10)(@swc/css@0.0.20)(bufferutil@4.0.3)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(debug@4.3.4)(esbuild@0.14.29)(eslint@8.56.0)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(react@19.2.7)(supports-color@9.4.0)(typescript@5.9.2)(uglify-js@3.19.3)(utf-8-validate@5.0.5)(webpack@5.109.2)
       express: 4.22.2(supports-color@9.4.0)
       fs-extra: 10.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       terser-webpack-plugin: 5.2.0(esbuild@0.14.29)(uglify-js@3.19.3)(webpack@5.109.2)
       url-join: 4.0.0
       webpack: 5.109.2(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(uglify-js@3.19.3)
@@ -77163,7 +77162,7 @@ snapshots:
       '@teambit/react.ui.highlighter.component-metadata.bit-component-meta': 0.0.45(react-dom@19.2.7)(react@19.2.7)
       find-root: 1.1.0
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
     transitivePeerDependencies:
       - react
       - react-dom
@@ -77174,7 +77173,7 @@ snapshots:
       '@teambit/react.ui.highlighter.component-metadata.bit-component-meta': 0.0.45(react-dom@18.3.1)(react@18.3.1)
       find-root: 1.1.0
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
     transitivePeerDependencies:
       - react
       - react-dom
@@ -77185,7 +77184,7 @@ snapshots:
       '@teambit/react.ui.highlighter.component-metadata.bit-component-meta': 0.0.45(react-dom@19.2.7)(react@19.2.7)
       find-root: 1.1.0
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
     transitivePeerDependencies:
       - react
       - react-dom
@@ -77199,7 +77198,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       find-root: 1.1.0
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -78301,7 +78300,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
       react-error-boundary: 3.1.4(react@18.3.1)
@@ -78321,7 +78320,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-error-boundary: 3.1.4(react@19.2.7)
@@ -78341,7 +78340,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
       react-error-boundary: 3.1.4(react@18.3.1)
@@ -78361,7 +78360,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-error-boundary: 3.1.4(react@19.2.7)
@@ -78639,7 +78638,7 @@ snapshots:
       esbuild: 0.14.29
       less-loader: 11.1.0(less@4.9.0)(webpack@5.109.2)
       lightningcss: 1.33.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       mini-css-extract-plugin: 2.10.2(webpack@5.109.2)
       new-url-loader: 0.1.1(webpack@5.109.2)
       postcss: 8.4.19
@@ -78713,7 +78712,7 @@ snapshots:
       esbuild: 0.14.29
       less-loader: 11.1.0(less@4.9.0)(webpack@5.109.2)
       lightningcss: 1.33.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       mini-css-extract-plugin: 2.10.2(webpack@5.109.2)
       new-url-loader: 0.1.1(webpack@5.109.2)
       postcss: 8.4.19
@@ -78787,7 +78786,7 @@ snapshots:
       esbuild: 0.14.29
       less-loader: 11.1.0(less@4.9.0)(webpack@5.109.2)
       lightningcss: 1.33.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       mini-css-extract-plugin: 2.10.2(webpack@5.109.2)
       new-url-loader: 0.1.1(webpack@5.109.2)
       postcss: 8.4.19
@@ -78861,7 +78860,7 @@ snapshots:
       esbuild: 0.14.29
       less-loader: 11.1.0(less@4.9.0)(webpack@5.109.2)
       lightningcss: 1.33.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       mini-css-extract-plugin: 2.10.2(webpack@5.109.2)
       new-url-loader: 0.1.1(webpack@5.109.2)
       postcss: 8.4.19
@@ -78936,7 +78935,7 @@ snapshots:
       esbuild: 0.14.29
       less-loader: 11.1.0(less@4.9.0)(webpack@5.109.2)
       lightningcss: 1.33.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       mini-css-extract-plugin: 2.10.2(webpack@5.109.2)
       new-url-loader: 0.1.1(webpack@5.109.2)
       postcss: 8.4.19
@@ -79011,7 +79010,7 @@ snapshots:
       esbuild: 0.14.29
       less-loader: 11.1.0(less@4.9.0)(webpack@5.109.2)
       lightningcss: 1.33.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       mini-css-extract-plugin: 2.10.2(webpack@5.109.2)
       new-url-loader: 0.1.1(webpack@5.109.2)
       postcss: 8.4.19
@@ -79086,7 +79085,7 @@ snapshots:
       esbuild: 0.14.29
       less-loader: 11.1.0(less@4.9.0)(webpack@5.109.2)
       lightningcss: 1.33.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       mini-css-extract-plugin: 2.10.2(webpack@5.109.2)
       new-url-loader: 0.1.1(webpack@5.109.2)
       postcss: 8.4.19
@@ -79161,7 +79160,7 @@ snapshots:
       esbuild: 0.14.29
       less-loader: 11.1.0(less@4.9.0)(webpack@5.109.2)
       lightningcss: 1.33.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       mini-css-extract-plugin: 2.10.2(webpack@5.109.2)
       new-url-loader: 0.1.1(webpack@5.109.2)
       postcss: 8.4.19
@@ -79236,7 +79235,7 @@ snapshots:
       esbuild: 0.14.29
       less-loader: 11.1.0(less@4.9.0)(webpack@5.109.2)
       lightningcss: 1.33.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       mini-css-extract-plugin: 2.10.2(webpack@5.109.2)
       new-url-loader: 0.1.1(webpack@5.109.2)
       postcss: 8.4.19
@@ -79364,7 +79363,7 @@ snapshots:
       jest-environment-jsdom: 27.5.1(bufferutil@4.0.3)(supports-color@9.4.0)(utf-8-validate@5.0.5)
       less: 4.9.0(supports-color@9.4.0)
       less-loader: 10.0.0(less@4.9.0)(webpack@5.109.2)
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash.compact: 3.0.1
       lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.109.2)
@@ -79513,7 +79512,7 @@ snapshots:
       jest-environment-jsdom: 27.5.1(bufferutil@4.0.3)(supports-color@9.4.0)(utf-8-validate@5.0.5)
       less: 4.9.0(supports-color@9.4.0)
       less-loader: 10.0.0(less@4.9.0)(webpack@5.109.2)
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash.compact: 3.0.1
       lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.109.2)
@@ -79662,7 +79661,7 @@ snapshots:
       jest-environment-jsdom: 27.5.1(bufferutil@4.0.3)(supports-color@9.4.0)(utf-8-validate@5.0.5)
       less: 4.9.0(supports-color@9.4.0)
       less-loader: 10.0.0(less@4.9.0)(webpack@5.109.2)
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash.compact: 3.0.1
       lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.109.2)
@@ -79811,7 +79810,7 @@ snapshots:
       jest-environment-jsdom: 27.5.1(bufferutil@4.0.3)(supports-color@9.4.0)(utf-8-validate@5.0.5)
       less: 4.9.0(supports-color@9.4.0)
       less-loader: 10.0.0(less@4.9.0)(webpack@5.109.2)
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash.compact: 3.0.1
       lodash.flatten: 4.4.0
       mini-css-extract-plugin: 2.2.2(webpack@5.109.2)
@@ -79909,7 +79908,7 @@ snapshots:
       camelcase: 6.2.0
       chalk: 4.1.2
       isbinaryfile: 4.0.6
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -79945,7 +79944,7 @@ snapshots:
       chalk: 4.1.2
       fs-extra: 10.0.0
       group-array: 1.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash.partition: 4.6.0
       p-map-series: 2.1.0
       react: 19.2.7
@@ -79977,7 +79976,7 @@ snapshots:
       chalk: 4.1.2
       fs-extra: 10.0.0
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -80053,7 +80052,7 @@ snapshots:
       chalk: 4.1.2
       fs-extra: 10.0.0
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
@@ -80129,7 +80128,7 @@ snapshots:
       chalk: 4.1.2
       fs-extra: 10.0.0
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -80205,7 +80204,7 @@ snapshots:
       chalk: 4.1.2
       fs-extra: 10.0.0
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -80486,7 +80485,7 @@ snapshots:
       '@teambit/rspack.modules.rspack-config-mutator': 1.0.23(react-refresh@0.10.0)(react@19.2.7)(webpack@5.109.2)
       babel-loader: 9.1.3(@babel/core@7.28.3)(webpack@5.109.2)
       compression-webpack-plugin: 11.1.0(webpack@5.109.2)
-      lodash: 4.17.21
+      lodash: 4.18.1
       node-polyfill-webpack-plugin: 4.1.0(webpack@5.109.2)
       p-map-series: 2.1.0
       process: 0.11.10
@@ -80524,7 +80523,7 @@ snapshots:
       '@teambit/rspack.modules.rspack-config-mutator': 1.0.23(react-refresh@0.14.2)(react@19.2.7)(webpack@5.109.2)
       babel-loader: 9.1.3(@babel/core@7.28.3)(webpack@5.109.2)
       compression-webpack-plugin: 11.1.0(webpack@5.109.2)
-      lodash: 4.17.21
+      lodash: 4.18.1
       node-polyfill-webpack-plugin: 4.1.0(webpack@5.109.2)
       p-map-series: 2.1.0
       process: 0.11.10
@@ -80562,7 +80561,7 @@ snapshots:
       '@teambit/rspack.modules.rspack-config-mutator': 1.0.23(react-refresh@0.10.0)(react@19.2.7)(webpack@5.109.2)
       babel-loader: 9.1.3(@babel/core@7.26.9)(webpack@5.109.2)
       compression-webpack-plugin: 11.1.0(webpack@5.109.2)
-      lodash: 4.17.21
+      lodash: 4.18.1
       node-polyfill-webpack-plugin: 4.1.0(webpack@5.109.2)
       p-map-series: 2.1.0
       process: 0.11.10
@@ -80600,7 +80599,7 @@ snapshots:
       '@teambit/rspack.modules.rspack-config-mutator': 1.0.23(react-refresh@0.14.2)(react@19.2.7)(webpack@5.109.2)
       babel-loader: 9.1.3(@babel/core@7.26.9)(webpack@5.109.2)
       compression-webpack-plugin: 11.1.0(webpack@5.109.2)
-      lodash: 4.17.21
+      lodash: 4.18.1
       node-polyfill-webpack-plugin: 4.1.0(webpack@5.109.2)
       p-map-series: 2.1.0
       process: 0.11.10
@@ -80638,7 +80637,7 @@ snapshots:
       '@teambit/rspack.modules.rspack-config-mutator': 1.0.23(react-refresh@0.10.0)(react@19.2.7)(webpack@5.109.2)
       babel-loader: 9.1.3(@babel/core@7.28.3)(webpack@5.109.2)
       compression-webpack-plugin: 11.1.0(webpack@5.109.2)
-      lodash: 4.17.21
+      lodash: 4.18.1
       node-polyfill-webpack-plugin: 4.1.0(webpack@5.109.2)
       p-map-series: 2.1.0
       process: 0.11.10
@@ -80676,7 +80675,7 @@ snapshots:
       '@teambit/rspack.modules.rspack-config-mutator': 1.0.23(react-refresh@0.14.2)(react@19.2.7)(webpack@5.109.2)
       babel-loader: 9.1.3(@babel/core@7.28.3)(webpack@5.109.2)
       compression-webpack-plugin: 11.1.0(webpack@5.109.2)
-      lodash: 4.17.21
+      lodash: 4.18.1
       node-polyfill-webpack-plugin: 4.1.0(webpack@5.109.2)
       p-map-series: 2.1.0
       process: 0.11.10
@@ -81218,7 +81217,7 @@ snapshots:
       graphql-request: 6.1.0(graphql@15.8.0)
       http-proxy-agent: 4.0.1(supports-color@9.4.0)
       https-proxy-agent: 5.0.0(supports-color@9.4.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       socks-proxy-agent: 5.0.0(supports-color@9.4.0)
     transitivePeerDependencies:
       - domexception
@@ -81252,7 +81251,7 @@ snapshots:
       graphql-request: 6.1.0(graphql@15.8.0)
       http-proxy-agent: 4.0.1(supports-color@9.4.0)
       https-proxy-agent: 5.0.0(supports-color@9.4.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -81312,7 +81311,7 @@ snapshots:
       chalk: 4.1.2
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map: 4.0.0
     transitivePeerDependencies:
       - graphql
@@ -81340,7 +81339,7 @@ snapshots:
       chalk: 4.1.2
       fs-extra: 10.0.0
       graphql-request: 6.1.0(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map: 4.0.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -81450,7 +81449,7 @@ snapshots:
       '@teambit/scope.ui.scope-title': 0.0.515(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@18.3.1)
       classnames: 2.2.6
       core-js: 3.13.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
     transitivePeerDependencies:
@@ -81464,7 +81463,7 @@ snapshots:
       '@teambit/scope.ui.scope-title': 0.0.515(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       classnames: 2.2.6
       core-js: 3.13.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
     transitivePeerDependencies:
@@ -81567,7 +81566,7 @@ snapshots:
       '@teambit/component.ui.badges.component-count': 0.0.15(react-dom@19.2.7)(react@18.3.1)
       classnames: 2.2.6
       core-js: 3.13.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
 
@@ -81576,7 +81575,7 @@ snapshots:
       '@teambit/component.ui.badges.component-count': 0.0.15(react-dom@19.2.7)(react@19.2.7)
       classnames: 2.2.6
       core-js: 3.13.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
 
@@ -81677,7 +81676,7 @@ snapshots:
       cli-table: 0.3.6
       fs-extra: 10.0.0
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       multimatch: 5.0.0
       p-map-series: 2.1.0
       react: 18.3.1
@@ -81768,7 +81767,7 @@ snapshots:
       cli-table: 0.3.6
       fs-extra: 10.0.0
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       multimatch: 5.0.0
       p-map-series: 2.1.0
       react: 19.2.7
@@ -81859,7 +81858,7 @@ snapshots:
       cli-table: 0.3.6
       fs-extra: 10.0.0
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       multimatch: 5.0.0
       p-map-series: 2.1.0
       react: 19.2.7
@@ -81942,7 +81941,7 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chalk: 4.1.2
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -81995,28 +81994,28 @@ snapshots:
     dependencies:
       '@teambit/component-id': 1.2.4
       chalk: 4.1.2
-      lodash: 4.17.21
+      lodash: 4.18.1
       pluralize: 8.0.0
 
   '@teambit/semantics.entities.semantic-schema@0.0.113':
     dependencies:
       '@teambit/component-id': 1.2.4
       chalk: 4.1.2
-      lodash: 4.17.21
+      lodash: 4.18.1
       pluralize: 8.0.0
 
   '@teambit/semantics.entities.semantic-schema@0.0.92':
     dependencies:
       '@teambit/component-id': 1.2.4
       chalk: 4.1.2
-      lodash: 4.17.21
+      lodash: 4.18.1
       pluralize: 8.0.0
 
   '@teambit/semantics.entities.semantic-schema@0.0.95':
     dependencies:
       '@teambit/component-id': 1.2.4
       chalk: 4.1.2
-      lodash: 4.17.21
+      lodash: 4.18.1
       pluralize: 8.0.0
 
   '@teambit/semantics.entities.semantic-schema@file:components/entities/semantic-schema':
@@ -82026,7 +82025,7 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chalk: 4.1.2
-      lodash: 4.17.21
+      lodash: 4.18.1
       pluralize: 8.0.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -82079,7 +82078,7 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       classnames: 2.5.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@18.3.1)
@@ -82095,7 +82094,7 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       classnames: 2.5.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -82144,7 +82143,7 @@ snapshots:
       chalk: 4.1.2
       fs-extra: 10.0.0
       graphlib: 2.1.8
-      lodash: 4.17.21
+      lodash: 4.18.1
       open-editor: 3.0.0
       p-map: 4.0.0
       p-map-series: 2.1.0
@@ -82250,7 +82249,7 @@ snapshots:
       chalk: 4.1.2
       fs-extra: 10.0.0
       graphlib: 2.1.8
-      lodash: 4.17.21
+      lodash: 4.18.1
       open-editor: 3.0.0
       p-map: 4.0.0
       p-map-series: 2.1.0
@@ -82356,7 +82355,7 @@ snapshots:
       chalk: 4.1.2
       fs-extra: 10.0.0
       graphlib: 2.1.8
-      lodash: 4.17.21
+      lodash: 4.18.1
       open-editor: 3.0.0
       p-map: 4.0.0
       p-map-series: 2.1.0
@@ -82434,7 +82433,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       fs-extra: 10.0.0
       globby: 11.0.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -82461,7 +82460,7 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chalk: 4.1.2
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -82586,7 +82585,7 @@ snapshots:
       graphql-subscriptions: 1.2.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       junit-report-builder: 3.0.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash.compact: 3.0.1
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
@@ -82632,7 +82631,7 @@ snapshots:
       graphql-subscriptions: 1.2.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       junit-report-builder: 3.0.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash.compact: 3.0.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -82678,7 +82677,7 @@ snapshots:
       graphql-subscriptions: 1.2.0(graphql@15.8.0)
       graphql-tag: 2.12.1(graphql@15.8.0)
       junit-report-builder: 3.0.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash.compact: 3.0.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -82701,7 +82700,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -82767,7 +82766,7 @@ snapshots:
     dependencies:
       fs-extra: 10.0.0
       globby: 11.0.1
-      lodash: 4.17.21
+      lodash: 4.18.1
 
   '@teambit/toolbox.fs.last-modified@file:scopes/toolbox/fs/last-modified':
     dependencies:
@@ -82775,7 +82774,7 @@ snapshots:
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       fs-extra: 10.0.0
       globby: 11.0.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -82907,13 +82906,13 @@ snapshots:
 
   '@teambit/toolbox.promise.map-pool@0.0.6':
     dependencies:
-      lodash: 4.17.21
+      lodash: 4.18.1
 
   '@teambit/toolbox.promise.map-pool@file:scopes/toolbox/promise/map-pool':
     dependencies:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -83064,7 +83063,7 @@ snapshots:
       fs-extra: 10.0.0
       glob: 13.0.0
       ignore: 3.3.10
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -83150,7 +83149,7 @@ snapshots:
       fs-extra: 10.0.0
       glob: 13.0.0
       ignore: 3.3.10
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -83236,7 +83235,7 @@ snapshots:
       fs-extra: 10.0.0
       glob: 13.0.0
       ignore: 3.3.10
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -83361,7 +83360,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -83376,7 +83375,7 @@ snapshots:
       get-tsconfig: 4.2.0
       glob: 10.5.0
       globby: 11.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       normalize-path: 3.0.0
       react: 18.3.1
       typescript: 5.5.3
@@ -83390,7 +83389,7 @@ snapshots:
       get-tsconfig: 4.2.0
       glob: 10.5.0
       globby: 11.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       normalize-path: 3.0.0
       react: 19.2.7
       typescript: 5.5.3
@@ -83404,7 +83403,7 @@ snapshots:
       get-tsconfig: 4.2.0
       glob: 10.5.0
       globby: 11.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       normalize-path: 3.0.0
       react: 18.3.1
       typescript: 5.9.2
@@ -83418,7 +83417,7 @@ snapshots:
       get-tsconfig: 4.2.0
       glob: 10.5.0
       globby: 11.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       normalize-path: 3.0.0
       react: 19.2.7
       typescript: 5.9.2
@@ -83432,7 +83431,7 @@ snapshots:
       get-tsconfig: 4.2.0
       glob: 10.5.0
       globby: 11.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       normalize-path: 3.0.0
       react: 19.2.7
       typescript: 5.9.2
@@ -83446,7 +83445,7 @@ snapshots:
       get-tsconfig: 4.2.0
       glob: 10.5.0
       globby: 11.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       normalize-path: 3.0.0
       react: 18.3.1
       typescript: 6.0.3
@@ -83460,7 +83459,7 @@ snapshots:
       get-tsconfig: 4.2.0
       glob: 10.5.0
       globby: 11.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       normalize-path: 3.0.0
       react: 18.3.1
       typescript: 6.0.3
@@ -83474,7 +83473,7 @@ snapshots:
       get-tsconfig: 4.2.0
       glob: 10.5.0
       globby: 11.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       normalize-path: 3.0.0
       react: 19.2.7
       typescript: 6.0.3
@@ -83498,7 +83497,7 @@ snapshots:
       chai: 4.3.0
       fs-extra: 10.0.0
       get-tsconfig: 4.2.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       minimatch: 3.0.5
       p-map-series: 2.1.0
       react: 18.3.1
@@ -83532,7 +83531,7 @@ snapshots:
       chai: 4.3.0
       fs-extra: 10.0.0
       get-tsconfig: 4.2.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       minimatch: 3.0.5
       p-map-series: 2.1.0
       react: 19.2.7
@@ -83566,7 +83565,7 @@ snapshots:
       chai: 5.2.1
       fs-extra: 10.0.0
       get-tsconfig: 4.2.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       minimatch: 3.0.5
       p-map-series: 2.1.0
       react: 19.2.7
@@ -84156,7 +84155,7 @@ snapshots:
       '@teambit/ui-foundation.ui.keycap': 0.0.500(react-dom@19.2.7)(react@18.3.1)
       classnames: 2.2.6
       core-js: 3.13.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
 
@@ -84168,7 +84167,7 @@ snapshots:
       '@teambit/ui-foundation.ui.keycap': 0.0.500(react-dom@19.2.7)(react@19.2.7)
       classnames: 2.2.6
       core-js: 3.13.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
 
@@ -84180,7 +84179,7 @@ snapshots:
       '@teambit/ui-foundation.ui.keycap': 0.0.500(react-dom@19.2.7)(react@18.3.1)
       classnames: 2.2.6
       core-js: 3.13.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
 
@@ -84192,7 +84191,7 @@ snapshots:
       '@teambit/ui-foundation.ui.keycap': 0.0.500(react-dom@19.2.7)(react@19.2.7)
       classnames: 2.2.6
       core-js: 3.13.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
 
@@ -84229,7 +84228,7 @@ snapshots:
       '@teambit/ui-foundation.ui.main-dropdown': 0.0.502(react-dom@19.2.7)(react@18.3.1)
       classnames: 2.2.6
       core-js: 3.13.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
 
@@ -84239,7 +84238,7 @@ snapshots:
       '@teambit/ui-foundation.ui.main-dropdown': 0.0.502(react-dom@19.2.7)(react@19.2.7)
       classnames: 2.2.6
       core-js: 3.13.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
 
@@ -84249,7 +84248,7 @@ snapshots:
       '@teambit/ui-foundation.ui.main-dropdown': 0.0.505(react-dom@19.2.7)(react@18.3.1)
       classnames: 2.2.6
       core-js: 3.13.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
 
@@ -84259,7 +84258,7 @@ snapshots:
       '@teambit/ui-foundation.ui.main-dropdown': 0.0.505(react-dom@19.2.7)(react@19.2.7)
       classnames: 2.2.6
       core-js: 3.13.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
 
@@ -84509,7 +84508,7 @@ snapshots:
     dependencies:
       '@teambit/base-react.navigation.link': 2.0.33(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@18.3.1)
       '@teambit/harmony': 0.4.12
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-router-dom: 6.30.4(react-dom@18.3.1)(react@18.3.1)
     transitivePeerDependencies:
@@ -84521,7 +84520,7 @@ snapshots:
     dependencies:
       '@teambit/base-react.navigation.link': 2.0.33(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/harmony': 0.4.12
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
     transitivePeerDependencies:
@@ -84537,7 +84536,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@18.3.1)
@@ -84552,7 +84551,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -85516,7 +85515,7 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       comment-json: 4.2.5
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@18.3.1)
@@ -85534,7 +85533,7 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       comment-json: 4.2.5
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -85556,7 +85555,7 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       chalk: 4.1.2
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
@@ -85628,7 +85627,7 @@ snapshots:
       chalk: 4.1.2
       chokidar: 3.6.0
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       moment: 2.29.4
       p-map-series: 2.1.0
       p-queue: 6.6.2
@@ -85661,7 +85660,7 @@ snapshots:
       chalk: 4.1.2
       chokidar: 3.6.0
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       moment: 2.29.4
       p-map-series: 2.1.0
       p-queue: 6.6.2
@@ -85677,7 +85676,7 @@ snapshots:
     dependencies:
       '@teambit/html.modules.inject-html-element': 0.0.5(react@19.2.7)
       html-webpack-plugin: 5.3.2(webpack@5.97.1)
-      lodash: 4.17.21
+      lodash: 4.18.1
       webpack: 5.97.1(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.19)(uglify-js@3.19.3)
       webpack-merge: 5.8.0
     transitivePeerDependencies:
@@ -85700,7 +85699,7 @@ snapshots:
     dependencies:
       '@teambit/html.modules.inject-html-element': 0.0.5(react@19.2.7)
       html-webpack-plugin: 5.3.2(webpack@5.97.1)
-      lodash: 4.17.21
+      lodash: 4.18.1
       webpack: 5.97.1(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(uglify-js@3.19.3)
       webpack-merge: 5.8.0
     transitivePeerDependencies:
@@ -85723,7 +85722,7 @@ snapshots:
     dependencies:
       '@teambit/html.modules.inject-html-element': 0.0.6(react@18.3.1)
       html-webpack-plugin: 5.3.2(webpack@5.97.1)
-      lodash: 4.17.21
+      lodash: 4.18.1
       webpack: 5.97.1(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.19)(uglify-js@3.19.3)
       webpack-merge: 5.8.0
     transitivePeerDependencies:
@@ -85746,7 +85745,7 @@ snapshots:
     dependencies:
       '@teambit/html.modules.inject-html-element': 0.0.6(react@19.2.7)
       html-webpack-plugin: 5.3.2(webpack@5.97.1)
-      lodash: 4.17.21
+      lodash: 4.18.1
       webpack: 5.97.1(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.19)(uglify-js@3.19.3)
       webpack-merge: 5.8.0
     transitivePeerDependencies:
@@ -85769,7 +85768,7 @@ snapshots:
     dependencies:
       '@teambit/html.modules.inject-html-element': 0.0.6(react@18.3.1)
       html-webpack-plugin: 5.3.2(webpack@5.97.1)
-      lodash: 4.17.21
+      lodash: 4.18.1
       webpack: 5.97.1(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(uglify-js@3.19.3)
       webpack-merge: 5.8.0
     transitivePeerDependencies:
@@ -85792,7 +85791,7 @@ snapshots:
     dependencies:
       '@teambit/html.modules.inject-html-element': 0.0.6(react@19.2.7)
       html-webpack-plugin: 5.3.2(webpack@5.97.1)
-      lodash: 4.17.21
+      lodash: 4.18.1
       webpack: 5.97.1(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(uglify-js@3.19.3)
       webpack-merge: 5.8.0
     transitivePeerDependencies:
@@ -85818,7 +85817,7 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       html-webpack-plugin: 5.3.2(webpack@5.109.2)
-      lodash: 4.17.21
+      lodash: 4.18.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       webpack: 5.109.2(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(uglify-js@3.19.3)
@@ -86022,7 +86021,7 @@ snapshots:
       events: 3.3.0
       html-webpack-plugin: 5.6.8(@rspack/core@2.1.10)(webpack@5.109.2)
       https-browserify: 1.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       os-browserify: 0.3.0
       p-map-series: 2.1.0
       path-browserify: 1.0.1
@@ -86072,7 +86071,7 @@ snapshots:
       events: 3.3.0
       html-webpack-plugin: 5.6.8(@rspack/core@2.1.10)(webpack@5.109.2)
       https-browserify: 1.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       os-browserify: 0.3.0
       p-map-series: 2.1.0
       path-browserify: 1.0.1
@@ -86122,7 +86121,7 @@ snapshots:
       events: 3.3.0
       html-webpack-plugin: 5.6.8(@rspack/core@1.7.12)(webpack@5.109.2)
       https-browserify: 1.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       os-browserify: 0.3.0
       p-map-series: 2.1.0
       path-browserify: 1.0.1
@@ -86172,7 +86171,7 @@ snapshots:
       events: 3.3.0
       html-webpack-plugin: 5.6.8(@rspack/core@1.7.12)(webpack@5.109.2)
       https-browserify: 1.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       os-browserify: 0.3.0
       p-map-series: 2.1.0
       path-browserify: 1.0.1
@@ -86222,7 +86221,7 @@ snapshots:
       events: 3.3.0
       html-webpack-plugin: 5.6.8(@rspack/core@1.7.12)(webpack@5.109.2)
       https-browserify: 1.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       os-browserify: 0.3.0
       p-map-series: 2.1.0
       path-browserify: 1.0.1
@@ -86274,7 +86273,7 @@ snapshots:
       events: 3.3.0
       html-webpack-plugin: 5.6.8(@rspack/core@1.7.12)(webpack@5.109.2)
       https-browserify: 1.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       os-browserify: 0.3.0
       p-map-series: 2.1.0
       path-browserify: 1.0.1
@@ -86326,7 +86325,7 @@ snapshots:
       events: 3.3.0
       html-webpack-plugin: 5.6.8(@rspack/core@1.7.12)(webpack@5.109.2)
       https-browserify: 1.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       os-browserify: 0.3.0
       p-map-series: 2.1.0
       path-browserify: 1.0.1
@@ -86378,7 +86377,7 @@ snapshots:
       events: 3.3.0
       html-webpack-plugin: 5.6.8(@rspack/core@2.1.10)(webpack@5.109.2)
       https-browserify: 1.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       os-browserify: 0.3.0
       p-map-series: 2.1.0
       path-browserify: 1.0.1
@@ -86807,7 +86806,7 @@ snapshots:
       html-webpack-plugin: 5.3.2(webpack@5.109.2)
       https-browserify: 1.0.0
       inject-body-webpack-plugin: 1.3.0(html-webpack-plugin@5.3.2)(supports-color@9.4.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       os-browserify: 0.3.0
       p-map-series: 2.1.0
       path-browserify: 1.0.1
@@ -86883,7 +86882,7 @@ snapshots:
       html-webpack-plugin: 5.3.2(webpack@5.109.2)
       https-browserify: 1.0.0
       inject-body-webpack-plugin: 1.3.0(html-webpack-plugin@5.3.2)(supports-color@9.4.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       os-browserify: 0.3.0
       p-map-series: 2.1.0
       path-browserify: 1.0.1
@@ -86970,7 +86969,7 @@ snapshots:
       chalk: 4.1.2
       fs-extra: 10.0.0
       globby: 11.0.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       normalize-path: 3.0.0
       p-map-series: 2.1.0
       react: 19.2.7
@@ -86999,7 +86998,7 @@ snapshots:
       chalk: 4.1.2
       fs-extra: 10.0.0
       globby: 11.0.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       normalize-path: 3.0.0
       p-map-series: 2.1.0
       react: 19.2.7
@@ -87082,7 +87081,7 @@ snapshots:
       chalk: 4.1.2
       execa: 2.1.0
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -87201,7 +87200,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
-      lodash: 4.17.21
+      lodash: 4.18.1
       minimatch: 3.0.5
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -87226,7 +87225,7 @@ snapshots:
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       p-map-series: 2.1.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -87678,7 +87677,7 @@ snapshots:
       fs-extra: 10.0.0
       graphlib: 2.1.8
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash.compact: 3.0.1
       p-map: 4.0.0
       p-map-series: 2.1.0
@@ -87783,7 +87782,7 @@ snapshots:
       fs-extra: 10.0.0
       graphlib: 2.1.8
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash.compact: 3.0.1
       p-map: 4.0.0
       p-map-series: 2.1.0
@@ -87888,7 +87887,7 @@ snapshots:
       fs-extra: 10.0.0
       graphlib: 2.1.8
       graphql-tag: 2.12.1(graphql@15.8.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash.compact: 3.0.1
       p-map: 4.0.0
       p-map-series: 2.1.0
@@ -87926,7 +87925,7 @@ snapshots:
       '@yarnpkg/parsers': 2.5.1
       '@yarnpkg/plugin-npm': 2.7.4(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-pack@3.2.0)
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       parse-package-name: 0.1.0
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
@@ -87962,7 +87961,7 @@ snapshots:
       '@yarnpkg/parsers': 2.5.1
       '@yarnpkg/plugin-npm': 2.7.4(@yarnpkg/core@3.5.2)(@yarnpkg/plugin-pack@3.2.0)
       fs-extra: 10.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       parse-package-name: 0.1.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -88008,7 +88007,7 @@ snapshots:
       chalk: 3.0.0
       css.escape: 1.5.1
       dom-accessibility-api: 0.5.16
-      lodash: 4.17.21
+      lodash: 4.18.1
       redent: 3.0.0
 
   '@testing-library/jest-dom@6.5.0':
@@ -88018,7 +88017,7 @@ snapshots:
       chalk: 3.0.0
       css.escape: 1.5.1
       dom-accessibility-api: 0.6.3
-      lodash: 4.17.21
+      lodash: 4.18.1
       redent: 3.0.0
 
   '@testing-library/react-hooks@8.0.1(@types/react@19.2.18)(react-dom@18.3.1)(react-test-renderer@19.2.7)(react@18.3.1)':
@@ -89584,7 +89583,7 @@ snapshots:
       '@verdaccio/signature': 8.0.0-next-8.0(supports-color@9.4.0)
       '@verdaccio/utils': 7.0.1-next-8.1
       debug: 4.3.7(supports-color@9.4.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       verdaccio-htpasswd: 13.0.0-next-8.1(supports-color@9.4.0)
     transitivePeerDependencies:
       - supports-color
@@ -89600,7 +89599,7 @@ snapshots:
       '@verdaccio/utils': 7.0.1-next-8.1
       debug: 4.3.7(supports-color@9.4.0)
       js-yaml: 4.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       minimatch: 7.4.6
     transitivePeerDependencies:
       - supports-color
@@ -89626,7 +89625,7 @@ snapshots:
     dependencies:
       '@verdaccio/logger': 8.0.0-next-8.1(supports-color@9.4.0)
       debug: 4.3.7(supports-color@9.4.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
     transitivePeerDependencies:
       - supports-color
 
@@ -89637,7 +89636,7 @@ snapshots:
       '@verdaccio/streams': 10.2.1
       async: 3.2.4
       debug: 4.3.4(supports-color@9.4.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       lowdb: 1.0.0
       mkdirp: 1.0.4
     transitivePeerDependencies:
@@ -89663,7 +89662,7 @@ snapshots:
     dependencies:
       colorette: 2.0.20
       dayjs: 1.11.13
-      lodash: 4.17.21
+      lodash: 4.18.1
       pino-abstract-transport: 1.1.0
       sonic-boom: 3.8.0
 
@@ -89683,7 +89682,7 @@ snapshots:
       debug: 4.3.7(supports-color@9.4.0)
       express: 4.21.0(supports-color@9.4.0)
       express-rate-limit: 5.5.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       lru-cache: 7.18.3
       mime: 2.6.0
     transitivePeerDependencies:
@@ -89707,7 +89706,7 @@ snapshots:
       '@verdaccio/utils': 7.0.1-next-8.1
       debug: 4.3.7(supports-color@9.4.0)
       gunzip-maybe: 1.4.2
-      lodash: 4.17.21
+      lodash: 4.18.1
       tar-stream: 3.2.0
     transitivePeerDependencies:
       - bare-abort-controller
@@ -89721,7 +89720,7 @@ snapshots:
     dependencies:
       '@verdaccio/core': 8.0.0-next-8.1
       debug: 4.3.7(supports-color@9.4.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       validator: 13.12.0
     transitivePeerDependencies:
       - supports-color
@@ -89729,7 +89728,7 @@ snapshots:
   '@verdaccio/utils@7.0.1-next-8.1':
     dependencies:
       '@verdaccio/core': 8.0.0-next-8.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       minimatch: 7.4.6
       semver: 7.6.3
 
@@ -89968,7 +89967,7 @@ snapshots:
       globby: 11.0.1
       got: 11.8.6
       json-file-plus: 3.3.2
-      lodash: 4.17.21
+      lodash: 4.18.1
       micromatch: 4.0.8
       mkdirp: 0.5.6
       p-limit: 2.3.0
@@ -90002,7 +90001,7 @@ snapshots:
       diff: 5.2.2
       globby: 11.0.1
       got: 11.8.6
-      lodash: 4.17.21
+      lodash: 4.18.1
       micromatch: 4.0.8
       p-limit: 2.3.0
       semver: 7.7.1
@@ -90083,7 +90082,7 @@ snapshots:
       ci-info: 3.9.0
       clipanion: 3.2.0-rc.4(typanion@3.14.0)
       enquirer: 2.4.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       micromatch: 4.0.8
       semver: 7.7.1
       tslib: 1.14.1
@@ -90102,7 +90101,7 @@ snapshots:
       '@yarnpkg/fslib': 2.10.4
       clipanion: 3.2.0-rc.4(typanion@3.14.0)
       git-url-parse: 13.1.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       semver: 7.7.1
       tslib: 1.14.1
     transitivePeerDependencies:
@@ -90126,7 +90125,7 @@ snapshots:
       '@yarnpkg/core': 3.5.2(typanion@3.14.0)
       '@yarnpkg/fslib': 2.10.3
       clipanion: 3.2.0-rc.4(typanion@3.14.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       tslib: 1.14.1
     transitivePeerDependencies:
       - typanion
@@ -90868,7 +90867,7 @@ snapshots:
 
   async@2.6.4:
     dependencies:
-      lodash: 4.17.21
+      lodash: 4.18.1
 
   async@3.2.3: {}
 
@@ -91685,7 +91684,7 @@ snapshots:
   cleargraph@5.8.0:
     dependencies:
       graphlib: 2.1.8
-      lodash: 4.17.21
+      lodash: 4.18.1
 
   cli-color@1.4.0:
     dependencies:
@@ -93727,7 +93726,7 @@ snapshots:
       on-finished: 2.4.1
       parseurl: 1.3.3
       path-to-regexp: 0.1.10
-      proxy-addr: 2.0.7
+      proxy-addr: 2.0.8
       qs: 6.13.0
       range-parser: 1.2.1
       safe-buffer: 5.2.1
@@ -93763,7 +93762,7 @@ snapshots:
       on-finished: 2.4.1
       parseurl: 1.3.3
       path-to-regexp: 0.1.10
-      proxy-addr: 2.0.7
+      proxy-addr: 2.0.8
       qs: 6.13.0
       range-parser: 1.2.1
       safe-buffer: 5.2.1
@@ -93799,7 +93798,7 @@ snapshots:
       on-finished: 2.4.1
       parseurl: 1.3.3
       path-to-regexp: 0.1.13
-      proxy-addr: 2.0.7
+      proxy-addr: 2.0.8
       qs: 6.15.3
       range-parser: 1.2.1
       safe-buffer: 5.2.1
@@ -93834,7 +93833,7 @@ snapshots:
       on-finished: 2.4.1
       once: 1.4.0
       parseurl: 1.3.3
-      proxy-addr: 2.0.7
+      proxy-addr: 2.0.8
       qs: 6.15.3
       range-parser: 1.3.0
       router: 2.2.0(supports-color@9.4.0)
@@ -94468,7 +94467,7 @@ snapshots:
 
   graphlib@2.1.8:
     dependencies:
-      lodash: 4.17.21
+      lodash: 4.18.1
 
   graphql-disable-introspection@1.2.0(graphql@15.8.0):
     dependencies:
@@ -94791,7 +94790,7 @@ snapshots:
     dependencies:
       '@types/html-minifier-terser': 5.1.2
       html-minifier-terser: 5.1.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       pretty-error: 3.0.4
       tapable: 2.3.3
       webpack: 5.109.2(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.45)(uglify-js@3.19.3)
@@ -94800,7 +94799,7 @@ snapshots:
     dependencies:
       '@types/html-minifier-terser': 5.1.2
       html-minifier-terser: 5.1.1
-      lodash: 4.17.21
+      lodash: 4.18.1
       pretty-error: 3.0.4
       tapable: 2.3.3
       webpack: 5.97.1(@swc/css@0.0.20)(clean-css@5.3.3)(cssnano@6.1.2)(csso@5.0.5)(esbuild@0.14.29)(html-minifier-terser@6.1.0)(lightningcss@1.33.0)(postcss@8.4.19)(uglify-js@3.19.3)
@@ -94809,7 +94808,7 @@ snapshots:
     dependencies:
       '@types/html-minifier-terser': 6.1.0
       html-minifier-terser: 6.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       pretty-error: 4.0.0
       tapable: 2.3.3
     optionalDependencies:
@@ -94820,7 +94819,7 @@ snapshots:
     dependencies:
       '@types/html-minifier-terser': 6.1.0
       html-minifier-terser: 6.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       pretty-error: 4.0.0
       tapable: 2.3.3
     optionalDependencies:
@@ -96057,7 +96056,7 @@ snapshots:
   junit-report-builder@3.0.1:
     dependencies:
       date-format: 4.0.3
-      lodash: 4.17.21
+      lodash: 4.18.1
       make-dir: 3.1.0
       xmlbuilder: 15.1.1
 
@@ -96312,7 +96311,7 @@ snapshots:
 
   lodash.uniq@4.5.0: {}
 
-  lodash@4.17.21: {}
+  lodash@4.18.1: {}
 
   log-symbols@4.1.0:
     dependencies:
@@ -96349,7 +96348,7 @@ snapshots:
     dependencies:
       graceful-fs: 4.2.10
       is-promise: 2.2.2
-      lodash: 4.17.21
+      lodash: 4.18.1
       pify: 3.0.0
       steno: 0.4.4
 
@@ -97156,7 +97155,7 @@ snapshots:
       fast-xml-parser: 4.5.7
       ipaddr.js: 2.5.0
       json-stream: 1.0.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       mime-types: 2.1.35
       query-string: 7.1.3
       through2: 4.0.2
@@ -97229,7 +97228,7 @@ snapshots:
   mocha-multi-reporters@1.5.1(mocha@11.1.0)(supports-color@9.4.0):
     dependencies:
       debug: 4.3.4(supports-color@9.4.0)
-      lodash: 4.17.21
+      lodash: 4.18.1
       mocha: 11.1.0
     transitivePeerDependencies:
       - supports-color
@@ -99077,12 +99076,12 @@ snapshots:
 
   pretty-error@3.0.4:
     dependencies:
-      lodash: 4.17.21
+      lodash: 4.18.1
       renderkid: 2.0.7
 
   pretty-error@4.0.0:
     dependencies:
-      lodash: 4.17.21
+      lodash: 4.18.1
       renderkid: 3.0.0
 
   pretty-format@26.6.2:
@@ -99211,7 +99210,7 @@ snapshots:
 
   protocols@2.0.2: {}
 
-  proxy-addr@2.0.7:
+  proxy-addr@2.0.8:
     dependencies:
       forwarded: 0.2.0
       ipaddr.js: 1.9.1
@@ -99760,7 +99759,7 @@ snapshots:
   react-xarrows@2.0.2(react@19.2.7):
     dependencies:
       '@types/prop-types': 15.7.15
-      lodash: 4.17.21
+      lodash: 4.18.1
       prop-types: 15.8.1
       react: 19.2.7
 
@@ -100146,7 +100145,7 @@ snapshots:
       css-select: 4.3.0
       dom-converter: 0.2.0
       htmlparser2: 6.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       strip-ansi: 3.0.1
 
   renderkid@3.0.0:
@@ -100154,7 +100153,7 @@ snapshots:
       css-select: 4.3.0
       dom-converter: 0.2.0
       htmlparser2: 6.1.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       strip-ansi: 6.0.1
 
   repeat-string@1.6.1: {}
@@ -102302,7 +102301,7 @@ snapshots:
       js-yaml: 4.1.0
       jsonwebtoken: 9.0.2
       kleur: 4.1.5
-      lodash: 4.17.21
+      lodash: 4.18.1
       lru-cache: 7.18.3
       mime: 3.0.0
       mkdirp: 1.0.4
@@ -102422,7 +102421,7 @@ snapshots:
       eslint-visitor-keys: 3.4.3
       espree: 9.6.1
       esquery: 1.7.0
-      lodash: 4.17.21
+      lodash: 4.18.1
       semver: 7.7.1
     transitivePeerDependencies:
       - supports-color
@@ -102830,7 +102829,7 @@ snapshots:
 
   whatwg-url@8.7.0:
     dependencies:
-      lodash: 4.17.21
+      lodash: 4.18.1
       tr46: 2.1.0
       webidl-conversions: 6.1.0
 
@@ -102943,7 +102942,7 @@ snapshots:
       fast-json-stable-stringify: 2.1.0
       fs-extra: 9.1.0
       glob: 7.2.3
-      lodash: 4.17.21
+      lodash: 4.18.1
       pretty-bytes: 5.6.0
       rollup: 2.80.0
       source-map: 0.8.0
@@ -103217,7 +103216,7 @@ snapshots:
     dependencies:
       '@babel/runtime': 7.28.3
       '@types/lodash': 4.17.24
-      lodash: 4.17.21
+      lodash: 4.18.1
       lodash-es: 4.18.1
       nanoclone: 0.2.1
       property-expr: 2.0.6
