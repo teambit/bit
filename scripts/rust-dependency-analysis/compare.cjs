@@ -8,15 +8,30 @@ const fixtures = require('./fixtures.cjs');
 const load = createRequire(path.resolve(process.env.BIT_LEGACY_ROOT || path.join(__dirname, '../..'), 'package.json'));
 const js = load('@teambit/node.deps-detectors.detective-es6').default;
 const ts = load('@teambit/typescript.deps-detectors.detective-typescript').default;
+const getModuleType = load('module-definition');
+const Walker = load('node-source-walk');
 
 function legacy(fixture) {
   if (fixture.fallback) return { status: 'unsupported' };
   if (fixture.source.startsWith('// @bit-no-check') || fixture.source.startsWith('/* @bit-no-check')) {
     return { status: 'ok', dependencies: {} };
   }
+  const isTs = /\.(ts|tsx|mts|cts)$/.test(fixture.path);
+  if (!isTs && !/\.(js|jsx|cjs|mjs)$/.test(fixture.path)) return { status: 'unsupported' };
   try {
-    const isTs = /\.(ts|tsx|mts|cts)$/.test(fixture.path);
-    const dependencies = (isTs ? ts : js)(fixture.source, { ...(fixture.options || {}), jsx: fixture.path.endsWith('.tsx') });
+    let dependencies;
+    if (isTs) {
+      // Precinct passes only options.ts to the detective, adding jsx for TSX.
+      const tsOptions = { ...fixture.options?.ts };
+      if (fixture.path.endsWith('.tsx')) tsOptions.jsx = true;
+      dependencies = ts(fixture.source, tsOptions);
+    } else {
+      // Precinct classifies JS before dispatch: AMD uses another detective and unclassified modules have no deps.
+      const ast = new Walker().parse(fixture.source);
+      const type = getModuleType.fromSource(ast);
+      if (type === 'amd') return { status: 'unsupported' };
+      dependencies = type === 'es6' || type === 'commonjs' ? js(ast, fixture.options?.[type]) : {};
+    }
     if (fixture.options?.includeCore === false) {
       for (const name of Object.keys(dependencies)) if (isBuiltin(name)) delete dependencies[name];
     }

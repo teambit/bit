@@ -22,3 +22,8 @@ test('precinct no-check and core filtering apply before comparison', () => {
   assert.deepEqual(legacy({ path: 'x.js', source: '// @bit-no-check\nthis is invalid syntax' }).dependencies, {});
   assert.deepEqual(legacy({ path: 'x.js', source: `require('node:fs'); require('pkg');`, options: { includeCore: false } }).dependencies, { pkg: {} });
 });
+test('JS reference follows precinct module classification', () => {
+  assert.deepEqual(legacy({ path: 'x.js', source: `require.resolve('./x');` }), { status: 'ok', dependencies: {} });
+  assert.deepEqual(legacy({ path: 'x.js', source: `define(['pkg'], function(pkg) {});` }), { status: 'unsupported' });
+  assert.deepEqual(legacy({ path: 'x.css', source: `@import './y.css';` }), { status: 'unsupported' });
+});

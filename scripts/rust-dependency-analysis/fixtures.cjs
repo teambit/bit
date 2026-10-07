@@ -4,6 +4,7 @@ module.exports = [
   { name: 'imports', path: 'imports.js', source: `import main, { original as local } from 'pkg'; import * as ns from './ns'; import './side'; export { local }; export default main;` },
   { name: 'reexports-js', path: 'exports.mjs', source: `export { default as renamed, value as alias } from './one'; export * from './two';` },
   { name: 'calls', path: 'calls.cjs', source: `const a = require('pkg'); require.resolve('./resolved'); import('./dynamic'); require(variable); import(variable);` },
+  { name: 'unclassified-js', path: 'resolve-only.js', source: `const target = require.resolve('./resolved');` },
   { name: 'duplicates', path: 'duplicates.js', source: `import { a } from 'pkg'; import { b } from 'pkg'; require('pkg');` },
   { name: 'comments-strings', path: 'comments.js', source: `// require('fake')\nconst text = "import x from 'fake'"; import './real';` },
   { name: 'jsx', path: 'view.jsx', source: `import React from 'react'; import View from './view'; const x = <View />;` },
