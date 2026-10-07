@@ -110,6 +110,10 @@ impl Scanner {
         if name.is_empty() || (self.ts && self.ignored(span)) {
             return None;
         }
+        if classification::legacy_object_key(name) {
+            self.unsupported = true;
+            return None;
+        }
         Some(self.deps.entry(name.to_owned()).or_default())
     }
     fn exported(&mut self, name: &str) {
@@ -334,7 +338,7 @@ fn parse_source(file: &File, source: &str, source_type: SourceType, ts: bool) ->
         return outcome(
             file,
             "unsupported",
-            "decorators, import attributes/phases, namespace reexports, coerced or integer-like specifiers require legacy fallback"
+            "decorators, import attributes/phases, namespace reexports, coerced, prototype-key or integer-like specifiers require legacy fallback"
                 .into(),
         );
     }
@@ -382,24 +386,7 @@ fn scanner_for_source(
     }
 }
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let args: Vec<_> = std::env::args().skip(1).collect();
-    let threads = if args.is_empty() {
-        std::thread::available_parallelism()?.get().min(8)
-    } else if args.len() == 2 && args[0] == "--threads" {
-        args[1].parse::<usize>()?
-    } else {
-        return Err("usage: bit-dependency-scanner [--threads 1..64]".into());
-    };
-    if !(1..=64).contains(&threads) {
-        return Err("threads must be in 1..64".into());
-    }
-    let pool = rayon::ThreadPoolBuilder::new().num_threads(threads).build()?;
-    let stdin = io::stdin();
-    let mut stdout = io::BufWriter::new(io::stdout().lock());
-    transport::serve(&mut stdin.lock(), &mut stdout, |input| {
-        protocol::process_request(input, &pool)
-    })?;
-    Ok(())
+    transport::run()
 }
 
 #[cfg(test)]

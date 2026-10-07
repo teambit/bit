@@ -221,3 +221,26 @@ fn coerced_and_integer_like_specifiers_fall_back() {
     }
     assert_eq!(keys("js", "import 'm'; require('01');").0, "ok");
 }
+
+#[test]
+fn prototype_key_dependencies_keep_legacy_fallback() {
+    for kind in ["js", "ts"] {
+        for name in ["__proto__", "constructor", "toString"] {
+            let source = format!("import {{ value }} from '{name}'; export {{ value }};");
+            let result = scan(&fixture(kind, &source), false);
+            assert_eq!(result.status, "unsupported");
+            assert!(result.dependencies.is_empty());
+            assert!(result.diagnostics[0].contains("prototype-key"));
+        }
+    }
+}
+
+#[test]
+fn relative_prototype_names_and_ignored_nodes_remain_supported() {
+    let result = scan(&fixture("ts", "import './toString';"), false);
+    assert_eq!(result.status, "ok");
+    assert!(result.dependencies.contains_key("./toString"));
+    let ignored = scan(&fixture("ts", "// @bit-ignore\nimport 'constructor';"), false);
+    assert_eq!(ignored.status, "ok");
+    assert!(ignored.dependencies.is_empty());
+}

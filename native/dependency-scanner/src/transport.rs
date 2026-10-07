@@ -70,3 +70,22 @@ pub(crate) fn serve(
 
 #[cfg(test)]
 mod tests;
+
+pub(crate) fn run() -> Result<(), Box<dyn std::error::Error>> {
+    let args: Vec<_> = std::env::args().skip(1).collect();
+    let threads = if args.is_empty() {
+        std::thread::available_parallelism()?.get().min(8)
+    } else if args.len() == 2 && args[0] == "--threads" {
+        args[1].parse::<usize>()?
+    } else {
+        return Err("usage: bit-dependency-scanner [--threads 1..64]".into());
+    };
+    if !(1..=64).contains(&threads) {
+        return Err("threads must be in 1..64".into());
+    }
+    let pool = rayon::ThreadPoolBuilder::new().num_threads(threads).build()?;
+    let stdin = io::stdin();
+    let mut stdout = io::BufWriter::new(io::stdout().lock());
+    serve(&mut stdin.lock(), &mut stdout, |input| crate::protocol::process_request(input, &pool))?;
+    Ok(())
+}

@@ -82,3 +82,21 @@ pub(crate) fn classification_outcome(
         Classification::Supported => None,
     }
 }
+
+pub(crate) fn legacy_object_key(name: &str) -> bool {
+    matches!(
+        name,
+        "constructor"
+            | "__defineGetter__"
+            | "__defineSetter__"
+            | "hasOwnProperty"
+            | "__lookupGetter__"
+            | "__lookupSetter__"
+            | "isPrototypeOf"
+            | "propertyIsEnumerable"
+            | "toString"
+            | "valueOf"
+            | "__proto__"
+            | "toLocaleString",
+    )
+}
