@@ -15,6 +15,16 @@ import { LegacyWorkspaceConfig, ComponentOverrides, ComponentConfig } from '@tea
 import { PackageJsonTransformer } from '@teambit/workspace.modules.node-modules-linker';
 import { DependenciesAspect } from '@teambit/dependencies';
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
+import { ExternalActions } from '@teambit/legacy.scope-api';
+import { SchemaRegistry } from '@teambit/semantics.entities.semantic-schema';
+import { logger as legacyLogger } from '@teambit/legacy.logger';
+
+/**
+ * specs run inside the "bit test" process, which shares the logger. keep the exit callbacks that process registered
+ * before any spec loaded harmony, and drop only the ones the specs add.
+ */
+// @ts-ignore it's private
+const onBeforeExitFnsBeforeSpecs: Function[] = [...legacyLogger.onBeforeExitFns];
 
 function getPackageName(aspect: any, id: ComponentID) {
   return `@teambit/${id.name}`;
@@ -160,4 +170,15 @@ function clearGlobalsIfNeeded() {
   ExtensionDataList.coreExtensionsNames = new Map();
   // @ts-ignore
   LegacyWorkspaceConfig.workspaceConfigLoadingRegistry = undefined;
+  // each of the following gets a callback per harmony load. a callback holds its aspect, and through it the
+  // whole harmony instance, so without these resets every spec keeps every workspace it loaded in memory.
+  ComponentLoader.onComponentIssuesCalcSubscribers = [];
+  ExtensionDataList.toModelObjectsHook = [];
+  ExtensionDataList.validateBeforePersistHook = undefined;
+  ExternalActions.externalActions = [];
+  // resolving the schemas empties the queue of registration callbacks
+  SchemaRegistry.schemas();
+  // the exit callbacks only run when the process exits, which a spec run doesn't do between loads
+  // @ts-ignore it's private
+  legacyLogger.onBeforeExitFns = [...onBeforeExitFnsBeforeSpecs];
 }
