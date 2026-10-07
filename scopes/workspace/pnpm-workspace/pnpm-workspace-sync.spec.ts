@@ -239,6 +239,17 @@ describe('bit pnpm sync', function () {
     });
   });
 
+  it('should make a project its own package, which bit links nothing to node_modules for', async () => {
+    await setupPnpmWorkspace(twoPackages);
+    await syncPnpmWorkspace(workspace, tracker);
+    const asComponent = (rootDir: string) => ({ id: entryAt(rootDir)!.id }) as any;
+
+    expect(workspace.getPnpmProjectDir(asComponent('packages/math'))).to.equal(
+      path.join(workspaceData.workspacePath, 'packages/math')
+    );
+    expect(workspace.getPnpmProjectDir(asComponent(WORKSPACE_ROOT_DIR))).to.be.undefined;
+  });
+
   it('should untrack a never-snapped project that left the pnpm workspace', async () => {
     await setupPnpmWorkspace(twoPackages);
     await syncPnpmWorkspace(workspace, tracker);

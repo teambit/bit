@@ -42,7 +42,7 @@ import type { LaneId } from '@teambit/lane-id';
 import type { Consumer } from '@teambit/legacy.consumer';
 import { loadConsumer } from '@teambit/legacy.consumer';
 import type { GetBitMapComponentOptions } from '@teambit/legacy.bit-map';
-import { fileContentsForVersioning, MissingBitMapComponent } from '@teambit/legacy.bit-map';
+import { fileContentsForVersioning, MissingBitMapComponent, WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { getMaxSizeForComponents, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import type { LoadFailure } from '@teambit/harmony.modules.load-trace';
@@ -1031,6 +1031,20 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
   isPnpmWorkspace(): boolean {
     // by its id, the aspect depends on this one
     return Boolean(this.getWorkspaceConfig().extensions.findExtension('teambit.workspace/pnpm-workspace'));
+  }
+
+  /**
+   * the absolute directory of a pnpm project, which is its package: pnpm links the projects that depend on it
+   * to this directory, and its build writes its output there. bit links nothing to node_modules for it.
+   * undefined for any other component, the workspace root included.
+   */
+  getPnpmProjectDir(component: Component): string | undefined {
+    if (!this.isPnpmWorkspace()) return undefined;
+    const componentMap = this.bitMap.getBitmapEntryIfExist(component.id, { ignoreVersion: true });
+    if (!componentMap || componentMap.rootDir === WORKSPACE_ROOT_DIR) return undefined;
+    // a project carries its package.json as its main file, see trackPnpmProject
+    if (componentMap.mainFile !== 'package.json') return undefined;
+    return path.join(this.path, componentMap.rootDir);
   }
 
   /**
@@ -2157,6 +2171,8 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
   }
 
   getComponentPackagePath(component: Component) {
+    const pnpmProjectDir = this.getPnpmProjectDir(component);
+    if (pnpmProjectDir) return pnpmProjectDir;
     const relativePath = this.dependencyResolver.getRuntimeModulePath(component, {
       workspacePath: this.path,
       rootComponentsPath: this.rootComponentsPath,
