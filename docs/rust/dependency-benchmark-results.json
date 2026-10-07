@@ -1,0 +1,2169 @@
+{
+  "fallbackPaths": [
+    "scopes/dependencies/dependencies/files-dependency-builder/fixtures/filing-cabinet/ast.js",
+    "scopes/dependencies/dependencies/files-dependency-builder/fixtures/filing-cabinet/mockedJSFiles.js",
+    "scopes/dependencies/dependencies/files-dependency-builder/fixtures/filing-cabinet/root1/mod1.js",
+    "scopes/dependencies/dependencies/files-dependency-builder/fixtures/filing-cabinet/webpack.config.js",
+    "scopes/dependencies/dependencies/files-dependency-builder/fixtures/precinct/exampleAST.js"
+  ],
+  "packageVersions": {
+    "@teambit/node.deps-detectors.detective-es6": "0.0.6",
+    "@teambit/typescript.deps-detectors.detective-typescript": "0.0.10",
+    "module-definition": "3.3.1",
+    "node-source-walk": "4.2.0",
+    "@typescript-eslint/typescript-estree": "8.39.0"
+  },
+  "executableSha256": "826aed8a07c3f3cc055146ea7d6a757032c25361b6a1aa213df4d8e1833b14c6",
+  "revision": "b1db9612d40874f12bf73422ca4d462d0062e661",
+  "node": "v24.21.0",
+  "rust": "rustc 1.97.0 (2d8144b78 2026-07-07)",
+  "platform": "linux/x64",
+  "cpu": "AMD Ryzen 9 9950X3D2 16-Core Processor",
+  "logicalCpus": 32,
+  "threads": 4,
+  "executable": "native/target/release/bit-dependency-scanner",
+  "externalLegacyRoot": true,
+  "files": [
+    {
+      "relative": "components/legacy/consumer-component/component-loader.spec.ts",
+      "bytes": 3492,
+      "sha256": "132d2b619b972884d78478ce96fc7ca715d3e76c4eb1b4cfc714cbe971c81cbc"
+    },
+    {
+      "relative": "components/legacy/consumer-component/component-loader.ts",
+      "bytes": 17311,
+      "sha256": "f8c54eee17c5f19b13c3a7fdc5530ce59cbe26624a75ef9b083e60667b92478f"
+    },
+    {
+      "relative": "components/legacy/consumer-component/consumer-component.spec.ts",
+      "bytes": 1060,
+      "sha256": "8a8d382b61ba4cb2322ffc16b04be0bfebb484e2da50baf0f0ac53de97c932bb"
+    },
+    {
+      "relative": "components/legacy/consumer-component/dependencies/dependencies.spec.ts",
+      "bytes": 2231,
+      "sha256": "2e04e9525a71ec7a1129a43d6cb20cedc42bad1d4415b44c570e146e08c5f742"
+    },
+    {
+      "relative": "components/legacy/consumer-component/dependencies/dependencies.ts",
+      "bytes": 6312,
+      "sha256": "e7e55b1b226e6bd297bb73a9521555444a7575574320e9ada1a0d2f18e957689"
+    },
+    {
+      "relative": "components/legacy/consumer-component/dependencies/index.ts",
+      "bytes": 180,
+      "sha256": "bfdfc89425f6873bbbbe36f3d1f698e13246cd5591df57e71d4d391b7f79d38e"
+    },
+    {
+      "relative": "components/legacy/consumer-component/exceptions/ignored-directory.ts",
+      "bytes": 235,
+      "sha256": "eb3b3194bb0bf4da962f576846f963d572f7c18ba9d90e3e2acd544d8b486bd8"
+    },
+    {
+      "relative": "components/legacy/consumer-component/exceptions/main-file-removed.ts",
+      "bytes": 470,
+      "sha256": "358a8f9d0d404154a78117277be621ac560d16687bb0322e700114df34d4be96"
+    },
+    {
+      "relative": "scopes/dependencies/aspect-docs/dependency-resolver/dependency-resolver.composition.tsx",
+      "bytes": 368,
+      "sha256": "e8342381cf22ffdcaa1b55dc373316ff52f7c480a44b814b580ac4970cf64e19"
+    },
+    {
+      "relative": "scopes/dependencies/aspect-docs/pnpm/index.ts",
+      "bytes": 46,
+      "sha256": "34baf8d7973a622f045ed8e575219f459eda25b43ed62ba115d31eda18602b78"
+    },
+    {
+      "relative": "scopes/dependencies/aspect-docs/pnpm/pnpm.composition.tsx",
+      "bytes": 326,
+      "sha256": "62e18a651d24cd1f4022076fe4818f3bde887a9e2622adb7514b0559d9d1b57f"
+    },
+    {
+      "relative": "scopes/dependencies/aspect-docs/yarn/yarn.composition.tsx",
+      "bytes": 326,
+      "sha256": "b33d3e4cd8109143e08b5daa1b6f63689be1072797944e938747d635810d3a21"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/dependencies-loader/apply-overrides.ts",
+      "bytes": 37218,
+      "sha256": "455d068dfd30b219a4563fb4a1d5cc41e7d9d9f111837f9937695cf39c1d816d"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/dependencies-loader/auto-detect-deps.ts",
+      "bytes": 36460,
+      "sha256": "9fb22c2a2774ca9571b81829c1ccb910fef0ea0b521ef700d7082f4933d572ec"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/dependencies-loader/dependencies-loader.ts",
+      "bytes": 10518,
+      "sha256": "f76c234e1058f6beaafb58698fb598b7b2c996bb06b7a4536715902ef55d7cc4"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/dependencies-loader/index.ts",
+      "bytes": 112,
+      "sha256": "905206777165f215f4f5d9472d7c9cdc500c9e60962fb23615d3d665140d4240"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/dependencies-loader/package-to-definetly-typed.spec.ts",
+      "bytes": 1802,
+      "sha256": "395f804cb73c49193163f78e8b3e80729beba3e50d51ddf04dadd4fa5de1a25a"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/dependencies-loader/package-to-definetly-typed.ts",
+      "bytes": 369,
+      "sha256": "123e869d5b4dad40bec6859c16b63e5592a76fb8206789e244db74641019e847"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/dependencies.main.runtime.ts",
+      "bytes": 30810,
+      "sha256": "2dfde6e53b745323e666e43218cbdbfa2f16e9eece7160008ab80d7e839d9082"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/dependents-cmd.ts",
+      "bytes": 2336,
+      "sha256": "768b3a0697c652a71f8ce4cc4e9be3f399c278be24961dda0c6bebc57e527317"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/dependents.ts",
+      "bytes": 1389,
+      "sha256": "ed6d73b8daaf28d20fe3f7bea8e6addbf8253acaea0fd2570c0675581f83c162"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/build-tree.spec.ts",
+      "bytes": 7207,
+      "sha256": "3ae9cf7dfb8a28caf401080f6beeebdee6898d36db23741c0923640685bda1db"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/dependency-tree/Config.ts",
+      "bytes": 2541,
+      "sha256": "8526867bff14d17db42c03bc6b065bc6dd84479e0b379ae1f8c13dc31b37c31d"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/dependency-tree/index.spec.ts",
+      "bytes": 26661,
+      "sha256": "e3bf0a9b19f06ed8f72687a4de4f4ba45791f29430b27731832b04e8ae4c38a8"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/detectives/detective-css/index.ts",
+      "bytes": 63,
+      "sha256": "1661f4de817324ea4f0f2dd9cc25991b60c3413c6b07a13a3774ad9526294172"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/detectives/detective-less/index.ts",
+      "bytes": 64,
+      "sha256": "31fa71bfb9830c8917663933141809086f957da4b44b550d4c5126ac77eb8283"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/detectives/detective-sass/index.ts",
+      "bytes": 64,
+      "sha256": "33d8aa314c8c99acee0eb66434fc9a84d3e2cbdb585c669a64a74573631e6f36"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/detectives/detective-typescript/index.ts",
+      "bytes": 73,
+      "sha256": "5b9f8e80bbd740f9efabba7a028ce77a8bbd0ba2b0300a3f13c2b27896d7da0b"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/filing-cabinet/index.ts",
+      "bytes": 4076,
+      "sha256": "d94f215069733f70606268b45c31cdee33e20811200e97cf426d1be42a4f7a89"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/fixtures/build-tree/a.js",
+      "bytes": 98,
+      "sha256": "7a5585999682935fbeddfc06ade19c103f64d5e11ac4476d821c90ee0662aa14"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/fixtures/build-tree/not-link-file/file-a.js",
+      "bytes": 139,
+      "sha256": "e3c8656acb9a31d283ddc3d90bf926534b5c66a1313a5e7030da2310ec0c898b"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/fixtures/build-tree/not-link-file/file-c.js",
+      "bytes": 50,
+      "sha256": "288179e6f3caad0631bb3046670f3f6fa8276d7cc92023e7e8aed1bebf358319"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/fixtures/build-tree/tree-shaking-cycle/index.js",
+      "bytes": 68,
+      "sha256": "5335f0c716c1a15e818ed7855cbfadafac9488dd734782700f522ddb18c869e4"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/fixtures/build-tree/tree-shaking-cycle/is-string.js",
+      "bytes": 97,
+      "sha256": "72320089d1c8fe135e38ac55be2f0e982ae849c21d9e6480a45750f755fa60c6"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/fixtures/build-tree/unparsed.js",
+      "bytes": 75,
+      "sha256": "bbda3b98fa392c2e317d72a7ff1422294052d525f7a942716ae9c2af5943f71b"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/fixtures/dependency-tree/amd/b.js",
+      "bytes": 80,
+      "sha256": "50647f4356661c092344018b76200415496360f78ef28f458e5f6f2a5b06920f"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/fixtures/dependency-tree/amd/c.js",
+      "bytes": 29,
+      "sha256": "9ccbb31f5f91a10f69da13cd35f52dffa7964e98b3f979c833d23d2bb1cd058e"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/fixtures/dependency-tree/commonjs/b.js",
+      "bytes": 112,
+      "sha256": "5af1eb03becc1fa36a263184aa9cb010d11fb2123b89f7675694b8815390c7dc"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/fixtures/dependency-tree/onlyRealDeps/a.js",
+      "bytes": 165,
+      "sha256": "bdb8109cab485dfcb5728a1b363f932827d6069d2907c42f86cc4af6ede8ee6e"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/fixtures/dependency-tree/webpack/aliased.js",
+      "bytes": 96,
+      "sha256": "2dce8f6800926ac65326c24bcadf0aa3988d6403cffcfaedf7ea5f7f3d9660dc"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/fixtures/filing-cabinet/ast.js",
+      "bytes": 4842,
+      "sha256": "a98539721ec8ccc8100416c8da4240cef016f5c733eb5fed6052e4f1ad3d7471"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/fixtures/filing-cabinet/mockedJSFiles.js",
+      "bytes": 1781,
+      "sha256": "c24b867c7fc147ac9ae1ef92d0e1035df9ecfec316903ffddc38ff451c877427"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/fixtures/filing-cabinet/root1/mod1.js",
+      "bytes": 21,
+      "sha256": "8222b8169ee86f25cdccd84d340340060ae3f0cff55e2ea9d344d7c332733b71"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/fixtures/filing-cabinet/webpack.config.js",
+      "bytes": 115,
+      "sha256": "7227d9dd18d3d1b5f3e75b1d5ea6635c693a50c3a4e96b921afbafacec1b11be"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/fixtures/precinct/Gruntfile.js",
+      "bytes": 461,
+      "sha256": "f71358ba545366b9bff1bfd44e19affdbfde439606ec4a48c5afea6f2c309093"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/fixtures/precinct/amd.js",
+      "bytes": 115,
+      "sha256": "17cf46597b04edbc4ea0d93c3995f8edffc77546a86867fcf90ca0679ed037b9"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/fixtures/precinct/commonjs.js",
+      "bytes": 157,
+      "sha256": "e5a30995d80715031309319f18c4ccac73865d96ce080b24b7551bcbb934e3cf"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/fixtures/precinct/es6.js",
+      "bytes": 115,
+      "sha256": "5d50a1fd484dfbdd450a1bc67f3aba22d007748ece864a8b28552ea1577abf4f"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/fixtures/precinct/es7.js",
+      "bytes": 232,
+      "sha256": "b9ddbc7e04f80c02cc7940ed0d0f5e9b099c26d4a21a2c95227771d34f5062ae"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/fixtures/precinct/exampleAST.js",
+      "bytes": 620,
+      "sha256": "b314594f35e81b063aa428250c7084470856047f667c6acd3e84a5121043c8d8"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/generate-tree-madge.ts",
+      "bytes": 5307,
+      "sha256": "3cb6dc199bf50169cd0c2d48d50d83c6c794be5b38d005f711aa3ff3915fa1e8"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/missing-handler.ts",
+      "bytes": 3337,
+      "sha256": "d147819df7cbb276b1b8f7e3cbbafe2d6d15ce7dab8670f2a8f0aab68739ec74"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/path-map.ts",
+      "bytes": 1498,
+      "sha256": "80d68c893c43b0262b447bbb61fbfc8cde9bad66f469770b86ed93e29fa38ec1"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/precinct/index.ts",
+      "bytes": 6582,
+      "sha256": "a8c4696aa6219cd536281d1ec9883a96870c79cd48f294731cfc2e1006473f05"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/files-dependency-builder/types/index.ts",
+      "bytes": 126,
+      "sha256": "47b1244e913ff05a089d640439d908ad7ea2fd284f02d7313061e4777809da9c"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/index.ts",
+      "bytes": 196,
+      "sha256": "db96097429d25d07e497b9bdab40b051a7477ee10e8a64f2caa29ea91c82f634"
+    },
+    {
+      "relative": "scopes/dependencies/dependencies/template.ts",
+      "bytes": 1776,
+      "sha256": "2641a02e5a382a8422d55c6b9d3ae7f311e90cb14f75a0893004f8994e569394"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/apply-updates.ts",
+      "bytes": 3149,
+      "sha256": "ef8c3e25fa2e7f6321ce5d875bd5d6925c88d8008df0fc79b5fa6709d19e3a3e"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/dependencies.service.ts",
+      "bytes": 1488,
+      "sha256": "ba99afb11d8f8d1764a09b6a6fd7af5fde71f2c5d1389e40a6e833c6d2ff133c"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/dependencies/component-dependency/component-dependency-factory.ts",
+      "bytes": 4748,
+      "sha256": "1f5e3f71e2d3eead0df780796b97b8410a453bcb3a858c5192e8cce5bfa881ec"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/dependencies/component-dependency/index.ts",
+      "bytes": 198,
+      "sha256": "1034fee8fa25f37408f5f430286a8e7e3a2db049f48f53c14cf5851f4670bc7a"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/dependencies/constants.ts",
+      "bytes": 783,
+      "sha256": "d53fdfd736b3b5d2e62de559d1fc3213dff9fe01d6b2e59ca183340dbd983136"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/dependencies/dependency-list-factory.ts",
+      "bytes": 4209,
+      "sha256": "fb3c5a19fefa6028ab100ac933a1a52e3abbc01441c7411e14bbfcff53b781c7"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/dependencies/dependency-list.ts",
+      "bytes": 6493,
+      "sha256": "8eda9ffba6251cc9ecc713294f4dd76f3365eefc198a57b59c466a7f54676847"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/dependencies/exceptions/index.ts",
+      "bytes": 53,
+      "sha256": "5a2411fa62ea8cdada95b691cdf28aafd89e4dfd51e8b4a55b9893120e93bc48"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/dependencies/exceptions/unknown-dep-type.ts",
+      "bytes": 235,
+      "sha256": "ccb535dff75a2ad868b6ab92af4e44d0c7e18da1e6abb727bad5078f52e6a877"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/dependency-env.ts",
+      "bytes": 201,
+      "sha256": "ea3e89b8601a8f78c6030610d200da727fb5ca5fbbabb80efbf4e79a990706af"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/dependency-linker.ts",
+      "bytes": 39412,
+      "sha256": "27d404639d48af0a86ba31cef167c2e8bd47e80cef2f4c6a94965aa8f346c167"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/dependency-resolver-workspace-config.ts",
+      "bytes": 11037,
+      "sha256": "51e50b479179ea77f3674f74ec7660c6d6eb00d0514e8a74a778667a71c06d14"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/dependency-resolver.composition.tsx",
+      "bytes": 243,
+      "sha256": "f65a70772b513b7dbc8d13dbee66033f074a8cdea20c2d1ed59a33c0270ddcf0"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/dependency-resolver.main.runtime.spec.ts",
+      "bytes": 16498,
+      "sha256": "2868d22fedddcbef50784ad0a5680caf177bc2950ac3e3a931a54c529fabbf02"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/dependency-resolver.main.runtime.ts",
+      "bytes": 85908,
+      "sha256": "24880278cd58b4ab7a9a5393adf56140784befa0516fd76581a291fb6c7ef95e"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/detector-hook.ts",
+      "bytes": 1471,
+      "sha256": "417d1dfea4652485b74c06b59788516f10e5bc994fbb1e3e46c16e6998730687"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/exceptions/core-aspect-link-error.ts",
+      "bytes": 216,
+      "sha256": "f688a3b330aabf26c43c5de8c3a78235b23f721860f42594a914738d8a564c78"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/exceptions/index.ts",
+      "bytes": 587,
+      "sha256": "2ff7789d5e64ebde74f3fde0d423b905820a626a97816b9e16bb292cf416252d"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/exceptions/main-aspect-not-installable.ts",
+      "bytes": 212,
+      "sha256": "d5a454183b41bfbf0e83260b59dbb7e319e34516095d88aa78e9ffb68b5ac4f8"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/exceptions/non-aspect-core-package-link-error.ts",
+      "bytes": 248,
+      "sha256": "81ee27dd34303e0cf97f4c5d54df96604025a9f806b56150249172355fd8e655"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/exceptions/package-manager-not-found.ts",
+      "bytes": 220,
+      "sha256": "5b16f2b69e3ab6a8cabc4fbc09a8284b7b2244449a3b01a8358f60f3851386b3"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/exceptions/self-hosted-virtual-store-transition.ts",
+      "bytes": 1677,
+      "sha256": "6d274663054a750af03dc5c61ff961eb83e9ec7804d5dbfdea56fea0d8551ab7"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/get-all-policy-pkgs.spec.ts",
+      "bytes": 2165,
+      "sha256": "e2d0854f640a850af794b13f920a7d5f77c257c8c539487daf916a854cc39cdb"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/hoisted-resolution-bridge.spec.ts",
+      "bytes": 9204,
+      "sha256": "8ea65b70b56f5545812a39dc665538a2da3566b82674dc83dd71270ef6e14249"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/hoisted-resolution-bridge.ts",
+      "bytes": 17517,
+      "sha256": "2bc164d286f0cc38cf64a895285830a52c07fb8a0370d9802d764b691377809d"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/manifest/component-manifest.ts",
+      "bytes": 610,
+      "sha256": "5d17d50115a011c1934afe4a1ee1cdba247fc7ea6a653ee004dd96e87db5eaa8"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/manifest/deduping/hoist-dependencies.spec.ts",
+      "bytes": 21545,
+      "sha256": "d7d94f48049781ec6f5efd36a58bcbde0c0ccf5aad6d35abe7c1c4356234b1df"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/manifest/deduping/hoist-dependencies.ts",
+      "bytes": 18377,
+      "sha256": "e9aa4f21338bb9b1bd9ccbabdcd647b5f76da50beec56df79013c4bd6844aa96"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/manifest/deduping/index.ts",
+      "bytes": 110,
+      "sha256": "9919a1beeca35550c46c2f79633eee28f1e01e524ed79199cb8a10744e195431"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/manifest/index.ts",
+      "bytes": 346,
+      "sha256": "947b9c4ad3571cf173cc1d4c1f9601aea316d65e9246f160160f438bc10f72aa"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/manifest/manifest.ts",
+      "bytes": 2033,
+      "sha256": "94096e496fe23de98df954b42e082173f489f5b4b9aab63a45eb488c29fc87b3"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/manifest/update-dependency-version.ts",
+      "bytes": 2458,
+      "sha256": "8c6999ad19aecc1fa44db92e216e5fcec47da6e118eb37dc6b4724e4a7968353"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/manifest/workspace-manifest.ts",
+      "bytes": 3035,
+      "sha256": "2150b2f056282f1639a5d43f81433803739278db625acf22b11664a7dad84457"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/package-manager.ts",
+      "bytes": 8998,
+      "sha256": "9e67e171872ceca4b3783c518d1b7cbfac81cd63555c268ce1f7a2b07439193b"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/policy/env-policy/index.ts",
+      "bytes": 117,
+      "sha256": "ac5c186d5398295bb448f0da08c6d62a5c3b41cd172f8949c114195e6c882f52"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/policy/env-policy/validate-env-policy.ts",
+      "bytes": 1749,
+      "sha256": "f1ff9e3cba6ed793d2aca688ff54632fe6471035ca2434a06223a08dbbe465fa"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/policy/index.ts",
+      "bytes": 620,
+      "sha256": "83c2062451e222b5439b220161876d7fd2a1b1325fb5266dcd098639e01cf64b"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/policy/variant-policy/index.ts",
+      "bytes": 305,
+      "sha256": "60576a0477197d948cca40b4f855acd1d5ce70246f036f5b9a58fd5138594af8"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/policy/workspace-policy/exceptions/entry-already-exist.ts",
+      "bytes": 351,
+      "sha256": "075e064b26b5af0227bcc3b30a1ee0c67d93d5e881a071e2e688f6f8fb9a69e4"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/policy/workspace-policy/index.ts",
+      "bytes": 234,
+      "sha256": "3a148200583e21cc1ff83dfec5b622c8b8a067f749d09e454895736182cda404"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/policy/workspace-policy/workspace-policy-factory.ts",
+      "bytes": 2109,
+      "sha256": "cba2ed8e03f74b99073969c78fd0dac125a8ce6fd34167e9ac9221ef2ba93d0d"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/show-fragments/dependencies.fragment.ts",
+      "bytes": 844,
+      "sha256": "88abc2a4f0a6a78d858cdbff61e68adc1b74472c4de8b947357a6e67755fbf1d"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/show-fragments/index.ts",
+      "bytes": 208,
+      "sha256": "5ff4f6422559d576e22f177f08277403baffccc845723a257185f31f084b687b"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/show-fragments/peer-dependencies.fragment.ts",
+      "bytes": 675,
+      "sha256": "da19b602eb5dde34d8832d17b7d1726fadf6b976a0d335fc83c6076cf5b63b4c"
+    },
+    {
+      "relative": "scopes/dependencies/dependency-resolver/types.ts",
+      "bytes": 2787,
+      "sha256": "d67a335481ad3fe9ced2dbeb5f930781184111c0a4537bb20d68b2fce09a147e"
+    },
+    {
+      "relative": "scopes/dependencies/fs/linked-dependencies/linked-dependencies.ts",
+      "bytes": 681,
+      "sha256": "cba15d6abf5c747fdf13e50408b4c1f2e49bc2d3443a4429f45a35ada7e8944f"
+    },
+    {
+      "relative": "scopes/dependencies/pnpm/build-scripts-path.spec.ts",
+      "bytes": 2690,
+      "sha256": "f1c3409d7452305d0136ecd1da3e137f44398e49f5b9b839e2ac6441a6a44887"
+    },
+    {
+      "relative": "scopes/dependencies/pnpm/esm.mjs",
+      "bytes": 162,
+      "sha256": "58b10aae4a93dcf0e3ca1b7557060ea5735f5459e43224f038db9cee866bd6db"
+    },
+    {
+      "relative": "scopes/dependencies/pnpm/get-registries.ts",
+      "bytes": 1208,
+      "sha256": "75c097ec595cf1febf32339bf097f04b47b7b46c80ab509136614482880c357a"
+    },
+    {
+      "relative": "scopes/dependencies/pnpm/index.ts",
+      "bytes": 332,
+      "sha256": "17c83fa2b227c52737c718f4c536bc8af9bda20476c83757c0eb07e80783e6f7"
+    },
+    {
+      "relative": "scopes/dependencies/pnpm/lockfile-deps-graph-converter.spec.ts",
+      "bytes": 43457,
+      "sha256": "c4fa6326f023fde13f3eebe779e0649b9c671e403623854e5312691c2907d6ec"
+    },
+    {
+      "relative": "scopes/dependencies/pnpm/lynx.spec.ts",
+      "bytes": 3269,
+      "sha256": "5b4ecf9e56970d611094079b9f8986d910f3dcc2f9d335818aaa814d00c34c6c"
+    },
+    {
+      "relative": "scopes/dependencies/pnpm/lynx.ts",
+      "bytes": 34324,
+      "sha256": "ba4c7cf3919dc523c02f2499de0484c43a93cbf96dc7e443840239e71b3cf013"
+    },
+    {
+      "relative": "scopes/dependencies/pnpm/pnpm-error-to-bit-error.ts",
+      "bytes": 1711,
+      "sha256": "90a6934b08ccac3b707f336591eaee6c249df0236de7699435351007fb9fe04c"
+    },
+    {
+      "relative": "scopes/dependencies/pnpm/pnpm.aspect.ts",
+      "bytes": 194,
+      "sha256": "a47af8c22f505fa34607e579bd1883d8e767eb87fab1fe44fc042715d376f433"
+    },
+    {
+      "relative": "scopes/dependencies/pnpm/pnpm.main.runtime.ts",
+      "bytes": 1176,
+      "sha256": "b7dbbd1d90f15cef6baba3107ae6f107f6ef057569e5f3f0b8f307d3a8fa5f04"
+    },
+    {
+      "relative": "scopes/dependencies/pnpm/pnpm.package-manager.spec.ts",
+      "bytes": 3071,
+      "sha256": "c0751ef6c57f102fc92a4fbcbf9ba310825ecdc92480cb37604bd02761c23eea"
+    },
+    {
+      "relative": "scopes/dependencies/pnpm/pnpm.ui.runtime.tsx",
+      "bytes": 2147,
+      "sha256": "9f5af47d2a50b1771df5dc9339704891516af7478ea9d85a6876dd988258f67d"
+    },
+    {
+      "relative": "scopes/dependencies/pnpm/preserve-loaded-virtual-store-dirs.ts",
+      "bytes": 14162,
+      "sha256": "6593cdea734a1619f68d9af50a9fda6649c2f004aed8dbaea95d97537a7955da"
+    },
+    {
+      "relative": "scopes/dependencies/pnpm/read-config.ts",
+      "bytes": 921,
+      "sha256": "2d2b48e39fa0c1049bd15f1b9aa763fd8dad3ccac5f3d12e90cbe2a9ad134d76"
+    },
+    {
+      "relative": "scopes/dependencies/yarn/esm.mjs",
+      "bytes": 161,
+      "sha256": "1c1869e07ab44d4223ce4f8e9d8dcc5d1bf5396cd7d04f85e15ce71be8c690a3"
+    },
+    {
+      "relative": "scopes/dependencies/yarn/yarn.aspect.ts",
+      "bytes": 153,
+      "sha256": "9fb5e5e3bc40097bedd3d34f44e5a7cb7c82741cab92b7bcf15b32fb03dc9a68"
+    },
+    {
+      "relative": "scopes/dependencies/yarn/yarn.composition.tsx",
+      "bytes": 230,
+      "sha256": "27d5d00f588e5d0a8c2e91fc0e5f4db0194d3c93c2c0847273826ea8d2121ed2"
+    },
+    {
+      "relative": "scopes/dependencies/yarn/yarn.package-manager.ts",
+      "bytes": 23376,
+      "sha256": "504236dba16ea65d2c901110cc7c25a5fe0bdcb8f8a3830bec62371f9a2e4214"
+    },
+    {
+      "relative": "scopes/workspace/aspect-docs/variants/index.ts",
+      "bytes": 54,
+      "sha256": "acb2eb3e096956c08c0714ba7f59525b3bea36a41015f5b90937688eecb1aee7"
+    },
+    {
+      "relative": "scopes/workspace/aspect-docs/variants/variants.composition.tsx",
+      "bytes": 339,
+      "sha256": "f22f1e0a8c333d0156dea78c6ddb47149ca9feda373df186f0290b462bdc7cad"
+    },
+    {
+      "relative": "scopes/workspace/clear-cache/clear-cache.aspect.ts",
+      "bytes": 129,
+      "sha256": "c4ee48a1d8a8533c000efba1a7398baa7bd7decb97a3b2dda16aaed8abeb840a"
+    },
+    {
+      "relative": "scopes/workspace/clear-cache/clear-cache.main.runtime.ts",
+      "bytes": 3879,
+      "sha256": "7d1ea89247c377914b805f7abb16f3d0dc382d0647c761cd94f644ab68d8cc24"
+    },
+    {
+      "relative": "scopes/workspace/clear-cache/clear-cache.ts",
+      "bytes": 2154,
+      "sha256": "93992b62b2108a5bf0216852194cb5c8b43ce9aae3edec9ec8476c5871a7207f"
+    },
+    {
+      "relative": "scopes/workspace/clear-cache/gc-cmd.ts",
+      "bytes": 8661,
+      "sha256": "d1acddc23369d8a1b51b5c875746f32939569fc1ed0ac236f278607ceaba1733"
+    },
+    {
+      "relative": "scopes/workspace/clear-cache/workspace-garbage-collector.spec.ts",
+      "bytes": 45415,
+      "sha256": "1dd69f387e1ec6a0e0212e0a656060b40fa5e6e12d30481147957013e8eae7c6"
+    },
+    {
+      "relative": "scopes/workspace/config-merger/aggregated-deps.ts",
+      "bytes": 2194,
+      "sha256": "b08a6caed3bbb97c2b39f3e0dfae6dac4425daca4521a6e299490b6c1651ccf0"
+    },
+    {
+      "relative": "scopes/workspace/config-merger/component-config-merger.spec.ts",
+      "bytes": 10968,
+      "sha256": "a538d9c2ced03e284c3e6f32957858043ba13d1a3516b9e1a4c0181caeae7dab"
+    },
+    {
+      "relative": "scopes/workspace/config-merger/config-merge-result.ts",
+      "bytes": 5404,
+      "sha256": "093af208ee1e98d3db19c45bfc4e4257b95f4876b396aa3bf0a9586f284b13c6"
+    },
+    {
+      "relative": "scopes/workspace/config-merger/config-merger.main.runtime.ts",
+      "bytes": 21315,
+      "sha256": "1191f46eedc6ca2a607e5123993923fe3c0d4b10e54ce94663c750da0a393ea4"
+    },
+    {
+      "relative": "scopes/workspace/config-merger/esm.mjs",
+      "bytes": 247,
+      "sha256": "18074bf26a01de82234cf93915f31329eadbecf108a8cd517b68c712e532f485"
+    },
+    {
+      "relative": "scopes/workspace/eject/components-ejector.ts",
+      "bytes": 8510,
+      "sha256": "cbf0053a95e67f08e484fec3209f064ee8d0205f0d0c9d24db3027a7a07e9bcf"
+    },
+    {
+      "relative": "scopes/workspace/eject/eject-template.ts",
+      "bytes": 1970,
+      "sha256": "77de69e794d2e618693e9c8e81305036affdf9520edfe90cc0edfb312c3514a1"
+    },
+    {
+      "relative": "scopes/workspace/eject/eject.aspect.ts",
+      "bytes": 124,
+      "sha256": "178a95096a18c4f1979c11f90e3037bcba3cb0eaa046403e2e6c5197fa303ccd"
+    },
+    {
+      "relative": "scopes/workspace/eject/eject.main.runtime.ts",
+      "bytes": 1973,
+      "sha256": "5042a9f04cc8c58301ed1984dc9c0ff93552ee2086e5b21bfc08c38665575e9c"
+    },
+    {
+      "relative": "scopes/workspace/eject/index.ts",
+      "bytes": 230,
+      "sha256": "eebd275c32238c983d565d725a9bd5792885edbcdacb62ebf0068c73e3a4547c"
+    },
+    {
+      "relative": "scopes/workspace/install/esm.mjs",
+      "bytes": 257,
+      "sha256": "f0ef3f949ed67d5b7217b91fa3228c11c7232520c857744858101d2a76c77acb"
+    },
+    {
+      "relative": "scopes/workspace/install/exceptions/index.ts",
+      "bytes": 364,
+      "sha256": "06c19e980bcfe05ec307bf1f31696f7eb6f55218ab4e6147ce740e087e496164"
+    },
+    {
+      "relative": "scopes/workspace/install/exceptions/unpublished-component-dependency.ts",
+      "bytes": 2010,
+      "sha256": "0ff93448f25ad9c1bf990ff94451ae9e27000f4423ae02950cef0f55bd652e8d"
+    },
+    {
+      "relative": "scopes/workspace/install/index.ts",
+      "bytes": 231,
+      "sha256": "e1464082b9570ee763427138c531c17e248b796d0345cef7e8f7130b813f5448"
+    },
+    {
+      "relative": "scopes/workspace/install/install.cmd.tsx",
+      "bytes": 9213,
+      "sha256": "25da6f9d04d1673807dc157cf51d66a48f60cf70e2f296b6c3dbc6e916201095"
+    },
+    {
+      "relative": "scopes/workspace/install/install.main.runtime.ts",
+      "bytes": 76511,
+      "sha256": "af214e14840d5931e4e046073fb829de5f59f361bcfde062069738bf375a1d56"
+    },
+    {
+      "relative": "scopes/workspace/install/link/core-aspects-links.ts",
+      "bytes": 1948,
+      "sha256": "f23c76e422b70705ed6fde69e2f3578410de2273c1ce467153411f160b2145a2"
+    },
+    {
+      "relative": "scopes/workspace/install/link/get-package-name-from-target.ts",
+      "bytes": 246,
+      "sha256": "e1ea5a870b30583eb6f30437fc9d2b85a677b47c38eb4b8394e12be8b74996b5"
+    },
+    {
+      "relative": "scopes/workspace/install/link/link-row.ts",
+      "bytes": 453,
+      "sha256": "4db1f4550f1832e3b64bb5ad613e239d17a24c72a29245d75a2ba2fb81826cf4"
+    },
+    {
+      "relative": "scopes/workspace/install/link/link.cmd.ts",
+      "bytes": 4860,
+      "sha256": "d9dfbd0987a7370c2a32ed692db9056108cb163493ecd7e8660a917fe62c77ef"
+    },
+    {
+      "relative": "scopes/workspace/install/link/nested-deps-in-nm-links.ts",
+      "bytes": 1624,
+      "sha256": "7687c90f5930e990b4d8310cf7585bd397b7db7e6db31047c027b726b3043c59"
+    },
+    {
+      "relative": "scopes/workspace/install/package-name-utils.spec.ts",
+      "bytes": 1949,
+      "sha256": "99eeee38b20e0c38ed458eab661dace2f7279a37328e3f448305f14030d072b5"
+    },
+    {
+      "relative": "scopes/workspace/install/pick-outdated-pkgs.spec.ts",
+      "bytes": 6193,
+      "sha256": "ab9c5b4ef7aa8a9e708eada604678f68783d5c2661715bcec2887e3980d03851"
+    },
+    {
+      "relative": "scopes/workspace/install/pick-outdated-pkgs.ts",
+      "bytes": 5403,
+      "sha256": "43a99ede7f463106220aee30d2f71c7fe9d3c8df717bb7b112a7718190a2153d"
+    },
+    {
+      "relative": "scopes/workspace/install/update.cmd.tsx",
+      "bytes": 2627,
+      "sha256": "c8160c0b86e97ccabba4840cecd1b6351056a303b5d4f5ebbcf6710135593129"
+    },
+    {
+      "relative": "scopes/workspace/modules/fs-cache/fs-cache.ts",
+      "bytes": 4907,
+      "sha256": "5764ae833d6dbab469069af5f89896d08703dcbfd7a44ffdf69f290e6ac65d9b"
+    },
+    {
+      "relative": "scopes/workspace/modules/fs-cache/index.ts",
+      "bytes": 38,
+      "sha256": "2db4fdbfcde98536d6634d1bfdf05d97541ce94881f1b92eba9c6c4dc3dbc46b"
+    },
+    {
+      "relative": "scopes/workspace/modules/match-pattern/exceptions/index.ts",
+      "bytes": 62,
+      "sha256": "4284fc77adc1c9c8da39d91bcd78567ec54fca40af0c4000b2ee242a23d86bc0"
+    },
+    {
+      "relative": "scopes/workspace/modules/match-pattern/match-pattern.spec.ts",
+      "bytes": 10183,
+      "sha256": "eff6976963d83eb9fd9e00ed7701b7a093ea68373ca906347c6c814cee976b56"
+    },
+    {
+      "relative": "scopes/workspace/modules/match-pattern/match-pattern.ts",
+      "bytes": 5229,
+      "sha256": "4817ebd6601f9c7b9e49ebd00431d9219dbfa25caf479583a17d0763f69ef7aa"
+    },
+    {
+      "relative": "scopes/workspace/modules/node-modules-linker/index.ts",
+      "bytes": 318,
+      "sha256": "c638bc7d63efc73a4188081fd8730594a5a716975e4fba181bdca3a11fdc83da"
+    },
+    {
+      "relative": "scopes/workspace/modules/node-modules-linker/package-json-transformer.ts",
+      "bytes": 2417,
+      "sha256": "2030f537077697e1115b7bb44562bc838722eb22f214e68031519bd57eb64541"
+    },
+    {
+      "relative": "scopes/workspace/modules/workspace-locator/workspace-locator.ts",
+      "bytes": 2407,
+      "sha256": "9df0029d92ec974b56a6258911e609c540fd33ee69dfe3935559cffe72371201"
+    },
+    {
+      "relative": "scopes/workspace/scripts/exceptions/index.ts",
+      "bytes": 53,
+      "sha256": "40d54dc6b1e9f69d9807c4c57429f1e181a17bf99aeafb7d9f2268100269d7f3"
+    },
+    {
+      "relative": "scopes/workspace/scripts/index.ts",
+      "bytes": 338,
+      "sha256": "93e8da595b508822d29c76349622e883682a3bb966428a989c7fbd8ee65b00c5"
+    },
+    {
+      "relative": "scopes/workspace/scripts/script.cmd.ts",
+      "bytes": 1268,
+      "sha256": "6f84345374487719aea8db0b20362e06b9f8fb91d8eb8765cdba802bca2b0b42"
+    },
+    {
+      "relative": "scopes/workspace/scripts/scripts.aspect.ts",
+      "bytes": 128,
+      "sha256": "c0eba306905457767475cb7b2af7b317dde4d88cd5e542146d810d08a1aced10"
+    },
+    {
+      "relative": "scopes/workspace/scripts/scripts.service.ts",
+      "bytes": 1604,
+      "sha256": "ff3a1637b59517d17bc2c219ec2aa91f091ffbdb75c0c150508c4ec9a8e2e62d"
+    },
+    {
+      "relative": "scopes/workspace/testing/mock-workspace/index.ts",
+      "bytes": 118,
+      "sha256": "467053ef76b56c21ecbfed770f6a6e5d925a63168c5e1286d32852218c692b77"
+    },
+    {
+      "relative": "scopes/workspace/testing/mock-workspace/mock-workspace.ts",
+      "bytes": 2733,
+      "sha256": "80e508343f53cb41598479d33731bec5d858f5e317a007c0036aedb009f8a43a"
+    },
+    {
+      "relative": "scopes/workspace/variants/esm.mjs",
+      "bytes": 170,
+      "sha256": "fe1a4fb85ec1abfcba7e18097e0225813403149d3fbe1088ae7a530990683500"
+    },
+    {
+      "relative": "scopes/workspace/variants/variants.aspect.ts",
+      "bytes": 130,
+      "sha256": "ce40ab7344076297bc46cf080256d7e37d74d430888c26f9099b4c9031895565"
+    },
+    {
+      "relative": "scopes/workspace/variants/variants.composition.tsx",
+      "bytes": 239,
+      "sha256": "f61c79db6f1bc322b9047b27929cad3cdb4605b3daae38876cfba231187a0628"
+    },
+    {
+      "relative": "scopes/workspace/watcher/check-types.ts",
+      "bytes": 49,
+      "sha256": "b01acd4f312935510f1d7b5923f7ae08fd4733e6c2a7dd03e560134faf6a9bd0"
+    },
+    {
+      "relative": "scopes/workspace/watcher/fsevents-error.ts",
+      "bytes": 4759,
+      "sha256": "023c70f364fc6cb81cc367124bbe789c171f21d47d1286ae04563ce5b119bbcc"
+    },
+    {
+      "relative": "scopes/workspace/watcher/index.ts",
+      "bytes": 468,
+      "sha256": "cf7e6a64a3ab02d07833e51e08abef360dd7770fbba39d296f80a108b398d1c8"
+    },
+    {
+      "relative": "scopes/workspace/watcher/watch-queue.ts",
+      "bytes": 402,
+      "sha256": "c979a898c925333518b7168aa96c7dd423605b06b79daf86e9f7afb58f43dc93"
+    },
+    {
+      "relative": "scopes/workspace/watcher/watcher-daemon.ts",
+      "bytes": 13424,
+      "sha256": "2214ec5076031aa104de1f39c37450f7e2596a9d25ddab0a7429fda7f3e0251a"
+    },
+    {
+      "relative": "scopes/workspace/watcher/watcher.main.runtime.ts",
+      "bytes": 3993,
+      "sha256": "d0d5ba3261a4d4ce141177b80849bc3706ce64e0374d38cc38ebfd8e9ca9e955"
+    },
+    {
+      "relative": "scopes/workspace/watcher/watcher.spec.ts",
+      "bytes": 1075,
+      "sha256": "8f7d46c07c439b0a55e6654c045c22f47a5d568ac0931b5188afe6b3ebef4eb3"
+    },
+    {
+      "relative": "scopes/workspace/workspace-config-files/config-writer-entry.ts",
+      "bytes": 5461,
+      "sha256": "9ef4b8766b10be7580dbe86858eebc9553e19c830abf670aca2d932bcd259121"
+    },
+    {
+      "relative": "scopes/workspace/workspace-config-files/dedup-paths.spec.ts",
+      "bytes": 13456,
+      "sha256": "d440a22c83112489626bee37fe70cf10f53c2bc6715817570ccc269ae6e396de"
+    },
+    {
+      "relative": "scopes/workspace/workspace-config-files/dedup-paths.ts",
+      "bytes": 4954,
+      "sha256": "156a0c88af8b38a971fd89686570755f680aff1eeeb7173d1589a0b624b84a83"
+    },
+    {
+      "relative": "scopes/workspace/workspace-config-files/exceptions/write-failed.ts",
+      "bytes": 227,
+      "sha256": "d62e7fe7584168f906781be86ba7c61fa5767bcc96f6f74b26809e2fd384d8ef"
+    },
+    {
+      "relative": "scopes/workspace/workspace-config-files/outputs/format-clean-output.ts",
+      "bytes": 663,
+      "sha256": "b928c0457a0a3c93aea4ba42bf99c8a6e402828178fbbf740530b3fa6b7a0ded"
+    },
+    {
+      "relative": "scopes/workspace/workspace-config-files/outputs/format-list-output.ts",
+      "bytes": 802,
+      "sha256": "e72904a31e7e35b057662554b9e82426764437e7018df0c8bf1462bfc028c922"
+    },
+    {
+      "relative": "scopes/workspace/workspace-config-files/outputs/format-skipped-output.ts",
+      "bytes": 697,
+      "sha256": "b92f3cab5dc062d2fd2a2cb1d2c8a311148434cc6168897e43bb436b9461ce6d"
+    },
+    {
+      "relative": "scopes/workspace/workspace-config-files/outputs/index.ts",
+      "bytes": 312,
+      "sha256": "d19cf8f72202d18ca72abfa41a29d5ea5c0b7923099cf5b7c65a154d3e63f339"
+    },
+    {
+      "relative": "scopes/workspace/workspace-config-files/outputs/verbose-format-write-output.ts",
+      "bytes": 4083,
+      "sha256": "c8ebc8cfbbfef691c55353f62668979c2445ae2ab981e83cf8acac9eefabbb88"
+    },
+    {
+      "relative": "scopes/workspace/workspace-config-files/workspace-config-env-type.ts",
+      "bytes": 196,
+      "sha256": "0f385ce892568ddd41c5aecd7e0eb8c17a424e92cb04cfe81a9b55a484b20865"
+    },
+    {
+      "relative": "scopes/workspace/workspace-config-files/workspace-config-files.main.runtime.ts",
+      "bytes": 18932,
+      "sha256": "c6b76c42a1dbbf223dbf19d7ae3b8616fc96aba4cb076cf4c92076d57f7ac22d"
+    },
+    {
+      "relative": "scopes/workspace/workspace-config-files/workspace-config-files.service.tsx",
+      "bytes": 1442,
+      "sha256": "8c613f95ca5e8d729c67df2f31e8e2c6ff76e9c5c625a0f03208d5fe88a8d519"
+    },
+    {
+      "relative": "scopes/workspace/workspace-config-files/writers/extending-config-files.ts",
+      "bytes": 10678,
+      "sha256": "69423c80222f51606c29902d24898033392e31f10f5f43122377b3cb56318299"
+    },
+    {
+      "relative": "scopes/workspace/workspace-config-files/writers/real-config-files.ts",
+      "bytes": 4867,
+      "sha256": "eb4031502b804dd8c96188a174517cfaa65643c08ae193e3761acca6e0e535a8"
+    },
+    {
+      "relative": "scopes/workspace/workspace-root/clone.cmd.ts",
+      "bytes": 3877,
+      "sha256": "63b4a09f406cc68033d6200d287f55708ec793a218cba91e64854377a931cb9d"
+    },
+    {
+      "relative": "scopes/workspace/workspace-root/clone.spec.ts",
+      "bytes": 15343,
+      "sha256": "1f69adb8bde9a75a57c258cbed925e7680bd5e9fb2c5e526d3e3898f34b2fef9"
+    },
+    {
+      "relative": "scopes/workspace/workspace-root/index.ts",
+      "bytes": 402,
+      "sha256": "99961eee64d82c91b0ae5014a8403af324113cffaa6a6dfd60c2f7bd4d8b4c1d"
+    },
+    {
+      "relative": "scopes/workspace/workspace-root/workspace-root-data.ts",
+      "bytes": 3287,
+      "sha256": "800221fbdd9c9edd55960a8d63584346619d736994df25f20c228cd897a157a6"
+    },
+    {
+      "relative": "scopes/workspace/workspace-root/workspace-root.aspect.ts",
+      "bytes": 178,
+      "sha256": "629bca9691f7cef624701cb92890372d573c706891cb421185448e321802c971"
+    },
+    {
+      "relative": "scopes/workspace/workspace-root/workspace-root.main.runtime.ts",
+      "bytes": 5048,
+      "sha256": "ca8350ed0150e57802ffaaf7b14b8fed754162b6483c7be6ee20fff484da8c0c"
+    },
+    {
+      "relative": "scopes/workspace/workspace/auto-tag.ts",
+      "bytes": 4960,
+      "sha256": "26085fb14002ad64f5fb9f57907a3051cb11391e25e9e15aa7a2704e817310d2"
+    },
+    {
+      "relative": "scopes/workspace/workspace/bit-map.spec.ts",
+      "bytes": 3981,
+      "sha256": "43fabd9dede2b7e27f4aa17f412a4aa6266bc542d95825af561f4dbb6ad0868a"
+    },
+    {
+      "relative": "scopes/workspace/workspace/build-graph-from-fs.ts",
+      "bytes": 12121,
+      "sha256": "122bce538ab3b42417b7d4eaa647d4d12ae71b25841720de4b5e256ce551aad1"
+    },
+    {
+      "relative": "scopes/workspace/workspace/capsule.cmd.ts",
+      "bytes": 16313,
+      "sha256": "5b4171f90711e1d6b5782a207b96481397b9fb1a67cbb9bff3e0be616551d620"
+    },
+    {
+      "relative": "scopes/workspace/workspace/commands/local-only-cmd.ts",
+      "bytes": 3001,
+      "sha256": "a0aedfde8085c8567e0abaef918437c5c8acedaf58c8221370d569817db01e51"
+    },
+    {
+      "relative": "scopes/workspace/workspace/component-config-file/exceptions/already-exists.ts",
+      "bytes": 241,
+      "sha256": "c4a7def633fab3a143cbc1d1a788c174833b8c2da92570ebdd17542365d454b9"
+    },
+    {
+      "relative": "scopes/workspace/workspace/component-config-file/index.ts",
+      "bytes": 114,
+      "sha256": "32b4f967e65903b7cf250c78f7f85b0be65e314d4b1f9a395c93c1ad94055213"
+    },
+    {
+      "relative": "scopes/workspace/workspace/component-tree.widget.tsx",
+      "bytes": 438,
+      "sha256": "ede72fe37f174f27d368d57165e6b57dc84a4df810b06a14a5cc4e934855e09f"
+    },
+    {
+      "relative": "scopes/workspace/workspace/debug-load.cmd.ts",
+      "bytes": 7744,
+      "sha256": "8fc773f9c4b100557ee4f80a0517cdeac2b54c7c67f4035a3939f8cba7bde400"
+    },
+    {
+      "relative": "scopes/workspace/workspace/envs-subcommands/envs-replace.cmd.ts",
+      "bytes": 1377,
+      "sha256": "e3a62b102c2883f292c3a873298b537cb3b2b221dd15388b9b356262edf8715a"
+    },
+    {
+      "relative": "scopes/workspace/workspace/envs-subcommands/envs-unset.cmd.ts",
+      "bytes": 1702,
+      "sha256": "a6e2cc11305a262bf328223376aaab9ee22443dd24b54ab817399131b86fff84"
+    },
+    {
+      "relative": "scopes/workspace/workspace/envs-subcommands/envs-update.cmd.ts",
+      "bytes": 2372,
+      "sha256": "b2196605eef8cbb532de0cb775c5cba32fe513a58a8c78f4e65a7939f9ddb62d"
+    },
+    {
+      "relative": "scopes/workspace/workspace/events/index.ts",
+      "bytes": 133,
+      "sha256": "139cd551ef1370a6326557aa7175caf5306458259ba5ad37c6583218a3576dfd"
+    },
+    {
+      "relative": "scopes/workspace/workspace/events/on-component-change-event.ts",
+      "bytes": 519,
+      "sha256": "ef633c50c3ad4ae8e9a2874a1ea54735b5755b11ff4098c6832e8eea2f669e42"
+    },
+    {
+      "relative": "scopes/workspace/workspace/events/on-component-removed-event.ts",
+      "bytes": 473,
+      "sha256": "7c337397e2db6725a9f77a54008bb981139f2d5ca91f6c91bf49a16db158e84d"
+    },
+    {
+      "relative": "scopes/workspace/workspace/exceptions/merge-config-conflict.ts",
+      "bytes": 237,
+      "sha256": "4568e357ba3043727358eae51ce051cc1acf353a1ac06946a2bbd0431a7beab4"
+    },
+    {
+      "relative": "scopes/workspace/workspace/filter.ts",
+      "bytes": 6932,
+      "sha256": "3e718d48f35f9555e345b2510a9c81f8da30a405bec098666f1bed693ff9407d"
+    },
+    {
+      "relative": "scopes/workspace/workspace/index.ts",
+      "bytes": 1645,
+      "sha256": "c6b5b8b754783447006f0d53a987245c61cf1b4a242a3d81ca4a10e268eae01e"
+    },
+    {
+      "relative": "scopes/workspace/workspace/on-component-events.ts",
+      "bytes": 1006,
+      "sha256": "62881f49f4af047643ac3b60202cf917c28e4941a7508bf7d4f579bb6cbe6436"
+    },
+    {
+      "relative": "scopes/workspace/workspace/scope-subcommands/scope-set.cmd.ts",
+      "bytes": 1777,
+      "sha256": "f7b720e3754c49af248d716cbaab3525288b2a002235126f5de36d8308347a76"
+    },
+    {
+      "relative": "scopes/workspace/workspace/scope-trust/index.ts",
+      "bytes": 95,
+      "sha256": "585dd8061853ad466ecd21d8d0b7e88dadede8825ee2b015b5b0913916083171"
+    },
+    {
+      "relative": "scopes/workspace/workspace/scope-trust/scope-trust.ts",
+      "bytes": 10046,
+      "sha256": "9af89f1a75e60c1622ff07c1058e922e395fe0c76633dcf2fc57e2e6bfff61a0"
+    },
+    {
+      "relative": "scopes/workspace/workspace/ui/index.ts",
+      "bytes": 101,
+      "sha256": "3d4f70ff40d4310660efa3f0bfbd2e3567e6de7f54c75ab6fd330536465aee13"
+    },
+    {
+      "relative": "scopes/workspace/workspace/ui/workspace/default-component.ts",
+      "bytes": 90,
+      "sha256": "3c5d9219f20e7cc87b228b9f5d65b533f71bcf55291865dffc0e7bbee678abbf"
+    },
+    {
+      "relative": "scopes/workspace/workspace/ui/workspace/theme-from-url.tsx",
+      "bytes": 2531,
+      "sha256": "06be51d4177b2a406133001b60885ddc31e879b9a627952e3a041409ec0c2ec9"
+    },
+    {
+      "relative": "scopes/workspace/workspace/ui/workspace/workspace-context.tsx",
+      "bytes": 224,
+      "sha256": "66647eb409d128339973dfb0cd18730823829672deaa4dd7ddfa6422883ed18b"
+    },
+    {
+      "relative": "scopes/workspace/workspace/ui/workspace/workspace-model.ts",
+      "bytes": 2178,
+      "sha256": "013bf324f77e60f7764de962f5371364a175cb86c4dd6749bb09603b038d71c3"
+    },
+    {
+      "relative": "scopes/workspace/workspace/ui/workspace/workspace-overview/hope-ai-icon.tsx",
+      "bytes": 3680,
+      "sha256": "64def63e88358281d211f9d5ca553702ae04cc26328b324b32886f6ec066724b"
+    },
+    {
+      "relative": "scopes/workspace/workspace/ui/workspace/workspace-overview/workspace-blank-state.tsx",
+      "bytes": 4386,
+      "sha256": "1e5e894f24185df03d9d2b705c421bf4205d1df2fa9d86f6c4be54f856daf017"
+    },
+    {
+      "relative": "scopes/workspace/workspace/ui/workspace/workspace-provider.tsx",
+      "bytes": 561,
+      "sha256": "dc0cc3ba78d4e32f1b061f45f60075a686390c1f2392292d46a4ff545d9b90de"
+    },
+    {
+      "relative": "scopes/workspace/workspace/ui/workspace/workspace-skeleton.tsx",
+      "bytes": 1399,
+      "sha256": "00bfc0499548961be3c9f47e731277f986a9afce04e01a76c480263f3b9c3bd7"
+    },
+    {
+      "relative": "scopes/workspace/workspace/unuse.cmd.ts",
+      "bytes": 895,
+      "sha256": "2d8102268317fdd3a078742f0b4bfc4dcc14c9aa34c2c85858491689c1fc287e"
+    },
+    {
+      "relative": "scopes/workspace/workspace/watch-options.ts",
+      "bytes": 1496,
+      "sha256": "57054b7ea1e0efdeef0793fab5f2a83ee074cfb510f2e7cc98a43a03719136ab"
+    },
+    {
+      "relative": "scopes/workspace/workspace/workspace-aspects-loader.ts",
+      "bytes": 39074,
+      "sha256": "1eb72251afff3d0279f0bb58efa9b29b1172483fa7a8fe88ed8b51a9553c56fe"
+    },
+    {
+      "relative": "scopes/workspace/workspace/workspace-component/component-status-loader.ts",
+      "bytes": 6046,
+      "sha256": "6509ec2b1107a3fc27fb7038ec126fb9aacaadebf6575cf79f151a5fc6a91dbb"
+    },
+    {
+      "relative": "scopes/workspace/workspace/workspace-component/index.ts",
+      "bytes": 188,
+      "sha256": "ed46fa030e1f3a8bbdef66c429e5b02a025c544d226cd507535b0e358f2e2b8c"
+    },
+    {
+      "relative": "scopes/workspace/workspace/workspace-component/workspace-component-loader.spec.ts",
+      "bytes": 4628,
+      "sha256": "b6849d4c3962ee3b62b454038c73473a8a188031b32eb9e04294df98cbdc4bd4"
+    },
+    {
+      "relative": "scopes/workspace/workspace/workspace-component/workspace-component.ts",
+      "bytes": 1411,
+      "sha256": "2b2be1267dabddc4a3d0fd85d09336654445294870acab72ec69880c168fee1e"
+    },
+    {
+      "relative": "scopes/workspace/workspace/workspace.composition.tsx",
+      "bytes": 240,
+      "sha256": "f73d6f460b3d980dd7e28f90725ef55da0837bbf5a5310119ec4dc57f91d25db"
+    },
+    {
+      "relative": "scopes/workspace/workspace/workspace.graphql.ts",
+      "bytes": 3763,
+      "sha256": "97ba5430ab58df0f09a0262052fceca18c925832ad0e970c3870d535c0064669"
+    },
+    {
+      "relative": "scopes/workspace/workspace/workspace.ts",
+      "bytes": 116937,
+      "sha256": "09c6479653f93fa8f1513c0949e753b52831df322adacce346366d1e65d6921b"
+    },
+    {
+      "relative": "scopes/workspace/workspace/workspace.ui.drawer.tsx",
+      "bytes": 4121,
+      "sha256": "d819bc4b6aa009184f7f90ad170689b2088fdef951be232847ef5464d1401214"
+    }
+  ],
+  "uniqueSourceBytes": 1281566,
+  "workloads": {
+    "unique": {
+      "requests": 240,
+      "summaries": {
+        "legacy": {
+          "medianExtractionMs": 499.97005099999996,
+          "medianEndToEndMs": 654.6157709999998,
+          "minEndToEndMs": 645.9958609999994,
+          "maxEndToEndMs": 682.6652629999999,
+          "medianTotalTreeCpuMs": 1300,
+          "maxSummedPeakRssUpperBoundKiB": 447052,
+          "fallbackFiles": 0,
+          "nativeSuccessFiles": 0
+        },
+        "control": {
+          "medianExtractionMs": 506.422729,
+          "medianEndToEndMs": 660.7956119999999,
+          "minEndToEndMs": 641.126933,
+          "maxEndToEndMs": 679.5889630000001,
+          "medianTotalTreeCpuMs": 1290,
+          "maxSummedPeakRssUpperBoundKiB": 448620,
+          "fallbackFiles": 0,
+          "nativeSuccessFiles": 0
+        },
+        "rust": {
+          "medianExtractionMs": 17.889342,
+          "medianEndToEndMs": 162.59078899999986,
+          "minEndToEndMs": 158.88280599999962,
+          "maxEndToEndMs": 165.67741000000024,
+          "medianTotalTreeCpuMs": 220,
+          "maxSummedPeakRssUpperBoundKiB": 138124,
+          "fallbackFiles": 5,
+          "nativeSuccessFiles": 235
+        }
+      },
+      "runs": [
+        {
+          "iteration": 0,
+          "variant": "legacy",
+          "extractionElapsedMs": 499.97005099999996,
+          "nodeCpuMs": 1106.828,
+          "nodePeakRssKiB": 432600,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 240,
+          "endToEndElapsedMs": 651.850586,
+          "totalTreeCpuMs": 1300,
+          "maxSingleProcessRssKiB": 432600,
+          "summedPeakRssUpperBoundKiB": 432600
+        },
+        {
+          "iteration": 0,
+          "variant": "control",
+          "extractionElapsedMs": 491.54672800000003,
+          "nodeCpuMs": 1064.352,
+          "nodePeakRssKiB": 424152,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 240,
+          "endToEndElapsedMs": 641.126933,
+          "totalTreeCpuMs": 1250,
+          "maxSingleProcessRssKiB": 424152,
+          "summedPeakRssUpperBoundKiB": 424152
+        },
+        {
+          "iteration": 0,
+          "variant": "rust",
+          "extractionElapsedMs": 17.668633999999997,
+          "nodeCpuMs": 22.874,
+          "nodePeakRssKiB": 130012,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 6884,
+          "fallbacks": 5,
+          "nativeSuccess": 235,
+          "readsAndParses": 245,
+          "endToEndElapsedMs": 163.40993900000012,
+          "totalTreeCpuMs": 230,
+          "maxSingleProcessRssKiB": 130780,
+          "summedPeakRssUpperBoundKiB": 136896
+        },
+        {
+          "iteration": 1,
+          "variant": "control",
+          "extractionElapsedMs": 506.422729,
+          "nodeCpuMs": 1102.984,
+          "nodePeakRssKiB": 448620,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 240,
+          "endToEndElapsedMs": 659.6460469999997,
+          "totalTreeCpuMs": 1290,
+          "maxSingleProcessRssKiB": 448620,
+          "summedPeakRssUpperBoundKiB": 448620
+        },
+        {
+          "iteration": 1,
+          "variant": "rust",
+          "extractionElapsedMs": 19.188675999999987,
+          "nodeCpuMs": 31.606,
+          "nodePeakRssKiB": 129268,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 7732,
+          "fallbacks": 5,
+          "nativeSuccess": 235,
+          "readsAndParses": 245,
+          "endToEndElapsedMs": 158.88280599999962,
+          "totalTreeCpuMs": 220,
+          "maxSingleProcessRssKiB": 129532,
+          "summedPeakRssUpperBoundKiB": 137000
+        },
+        {
+          "iteration": 1,
+          "variant": "legacy",
+          "extractionElapsedMs": 502.487389,
+          "nodeCpuMs": 1098.775,
+          "nodePeakRssKiB": 444800,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 240,
+          "endToEndElapsedMs": 656.4834570000003,
+          "totalTreeCpuMs": 1290,
+          "maxSingleProcessRssKiB": 445056,
+          "summedPeakRssUpperBoundKiB": 444800
+        },
+        {
+          "iteration": 2,
+          "variant": "rust",
+          "extractionElapsedMs": 17.791174000000012,
+          "nodeCpuMs": 24.117,
+          "nodePeakRssKiB": 129996,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 7600,
+          "fallbacks": 5,
+          "nativeSuccess": 235,
+          "readsAndParses": 245,
+          "endToEndElapsedMs": 162.59078899999986,
+          "totalTreeCpuMs": 220,
+          "maxSingleProcessRssKiB": 131276,
+          "summedPeakRssUpperBoundKiB": 137596
+        },
+        {
+          "iteration": 2,
+          "variant": "legacy",
+          "extractionElapsedMs": 526.285846,
+          "nodeCpuMs": 1150.025,
+          "nodePeakRssKiB": 443576,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 240,
+          "endToEndElapsedMs": 682.6652629999999,
+          "totalTreeCpuMs": 1340,
+          "maxSingleProcessRssKiB": 443576,
+          "summedPeakRssUpperBoundKiB": 443576
+        },
+        {
+          "iteration": 2,
+          "variant": "control",
+          "extractionElapsedMs": 501.37740299999996,
+          "nodeCpuMs": 1095.297,
+          "nodePeakRssKiB": 431056,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 240,
+          "endToEndElapsedMs": 657.2363370000003,
+          "totalTreeCpuMs": 1270,
+          "maxSingleProcessRssKiB": 431056,
+          "summedPeakRssUpperBoundKiB": 431056
+        },
+        {
+          "iteration": 3,
+          "variant": "legacy",
+          "extractionElapsedMs": 500.299436,
+          "nodeCpuMs": 1111.328,
+          "nodePeakRssKiB": 447052,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 240,
+          "endToEndElapsedMs": 654.6157709999998,
+          "totalTreeCpuMs": 1300,
+          "maxSingleProcessRssKiB": 447052,
+          "summedPeakRssUpperBoundKiB": 447052
+        },
+        {
+          "iteration": 3,
+          "variant": "control",
+          "extractionElapsedMs": 499.41554800000006,
+          "nodeCpuMs": 1102.963,
+          "nodePeakRssKiB": 446600,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 240,
+          "endToEndElapsedMs": 656.3873779999994,
+          "totalTreeCpuMs": 1300,
+          "maxSingleProcessRssKiB": 446600,
+          "summedPeakRssUpperBoundKiB": 446600
+        },
+        {
+          "iteration": 3,
+          "variant": "rust",
+          "extractionElapsedMs": 16.75295700000001,
+          "nodeCpuMs": 21.067,
+          "nodePeakRssKiB": 129240,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 7704,
+          "fallbacks": 5,
+          "nativeSuccess": 235,
+          "readsAndParses": 245,
+          "endToEndElapsedMs": 165.35473300000012,
+          "totalTreeCpuMs": 220,
+          "maxSingleProcessRssKiB": 130264,
+          "summedPeakRssUpperBoundKiB": 136944
+        },
+        {
+          "iteration": 4,
+          "variant": "control",
+          "extractionElapsedMs": 507.14020000000005,
+          "nodeCpuMs": 1097.755,
+          "nodePeakRssKiB": 447440,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 240,
+          "endToEndElapsedMs": 660.9262900000003,
+          "totalTreeCpuMs": 1290,
+          "maxSingleProcessRssKiB": 447440,
+          "summedPeakRssUpperBoundKiB": 447440
+        },
+        {
+          "iteration": 4,
+          "variant": "rust",
+          "extractionElapsedMs": 17.889342,
+          "nodeCpuMs": 23.881,
+          "nodePeakRssKiB": 129068,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 7716,
+          "fallbacks": 5,
+          "nativeSuccess": 235,
+          "readsAndParses": 245,
+          "endToEndElapsedMs": 163.23986100000002,
+          "totalTreeCpuMs": 210,
+          "maxSingleProcessRssKiB": 129580,
+          "summedPeakRssUpperBoundKiB": 136784
+        },
+        {
+          "iteration": 4,
+          "variant": "legacy",
+          "extractionElapsedMs": 494.50655,
+          "nodeCpuMs": 1065.034,
+          "nodePeakRssKiB": 437668,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 240,
+          "endToEndElapsedMs": 645.9958609999994,
+          "totalTreeCpuMs": 1250,
+          "maxSingleProcessRssKiB": 437668,
+          "summedPeakRssUpperBoundKiB": 437668
+        },
+        {
+          "iteration": 5,
+          "variant": "rust",
+          "extractionElapsedMs": 19.097005999999993,
+          "nodeCpuMs": 34.735,
+          "nodePeakRssKiB": 129856,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 7352,
+          "fallbacks": 5,
+          "nativeSuccess": 235,
+          "readsAndParses": 245,
+          "endToEndElapsedMs": 160.314448000001,
+          "totalTreeCpuMs": 210,
+          "maxSingleProcessRssKiB": 129856,
+          "summedPeakRssUpperBoundKiB": 137208
+        },
+        {
+          "iteration": 5,
+          "variant": "legacy",
+          "extractionElapsedMs": 498.98874400000005,
+          "nodeCpuMs": 1120.094,
+          "nodePeakRssKiB": 435568,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 240,
+          "endToEndElapsedMs": 647.9158159999988,
+          "totalTreeCpuMs": 1300,
+          "maxSingleProcessRssKiB": 435568,
+          "summedPeakRssUpperBoundKiB": 435568
+        },
+        {
+          "iteration": 5,
+          "variant": "control",
+          "extractionElapsedMs": 510.05986199999995,
+          "nodeCpuMs": 1111.908,
+          "nodePeakRssKiB": 447516,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 240,
+          "endToEndElapsedMs": 664.8299210000005,
+          "totalTreeCpuMs": 1300,
+          "maxSingleProcessRssKiB": 447772,
+          "summedPeakRssUpperBoundKiB": 447516
+        },
+        {
+          "iteration": 6,
+          "variant": "legacy",
+          "extractionElapsedMs": 499.26501999999994,
+          "nodeCpuMs": 1101.694,
+          "nodePeakRssKiB": 446328,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 240,
+          "endToEndElapsedMs": 655.9625530000012,
+          "totalTreeCpuMs": 1290,
+          "maxSingleProcessRssKiB": 446328,
+          "summedPeakRssUpperBoundKiB": 446328
+        },
+        {
+          "iteration": 6,
+          "variant": "control",
+          "extractionElapsedMs": 525.658084,
+          "nodeCpuMs": 1126.526,
+          "nodePeakRssKiB": 429052,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 240,
+          "endToEndElapsedMs": 679.5889630000001,
+          "totalTreeCpuMs": 1300,
+          "maxSingleProcessRssKiB": 429308,
+          "summedPeakRssUpperBoundKiB": 429052
+        },
+        {
+          "iteration": 6,
+          "variant": "rust",
+          "extractionElapsedMs": 15.112577000000016,
+          "nodeCpuMs": 14.509,
+          "nodePeakRssKiB": 129956,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 7356,
+          "fallbacks": 5,
+          "nativeSuccess": 235,
+          "readsAndParses": 245,
+          "endToEndElapsedMs": 165.67741000000024,
+          "totalTreeCpuMs": 220,
+          "maxSingleProcessRssKiB": 130468,
+          "summedPeakRssUpperBoundKiB": 137312
+        },
+        {
+          "iteration": 7,
+          "variant": "control",
+          "extractionElapsedMs": 508.70230000000004,
+          "nodeCpuMs": 1111.505,
+          "nodePeakRssKiB": 430488,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 240,
+          "endToEndElapsedMs": 661.0240990000002,
+          "totalTreeCpuMs": 1300,
+          "maxSingleProcessRssKiB": 431000,
+          "summedPeakRssUpperBoundKiB": 430488
+        },
+        {
+          "iteration": 7,
+          "variant": "rust",
+          "extractionElapsedMs": 19.459431999999993,
+          "nodeCpuMs": 17.989,
+          "nodePeakRssKiB": 130544,
+          "helperCpuMs": 10,
+          "helperPeakRssKiB": 7580,
+          "fallbacks": 5,
+          "nativeSuccess": 235,
+          "readsAndParses": 245,
+          "endToEndElapsedMs": 159.05721300000005,
+          "totalTreeCpuMs": 210,
+          "maxSingleProcessRssKiB": 130544,
+          "summedPeakRssUpperBoundKiB": 138124
+        },
+        {
+          "iteration": 7,
+          "variant": "legacy",
+          "extractionElapsedMs": 501.840747,
+          "nodeCpuMs": 1107.567,
+          "nodePeakRssKiB": 446240,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 240,
+          "endToEndElapsedMs": 656.2791099999995,
+          "totalTreeCpuMs": 1300,
+          "maxSingleProcessRssKiB": 446240,
+          "summedPeakRssUpperBoundKiB": 446240
+        },
+        {
+          "iteration": 8,
+          "variant": "rust",
+          "extractionElapsedMs": 19.041997999999992,
+          "nodeCpuMs": 19.019,
+          "nodePeakRssKiB": 130168,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 7856,
+          "fallbacks": 5,
+          "nativeSuccess": 235,
+          "readsAndParses": 245,
+          "endToEndElapsedMs": 159.66071600000032,
+          "totalTreeCpuMs": 220,
+          "maxSingleProcessRssKiB": 131448,
+          "summedPeakRssUpperBoundKiB": 138024
+        },
+        {
+          "iteration": 8,
+          "variant": "legacy",
+          "extractionElapsedMs": 493.17689800000005,
+          "nodeCpuMs": 1101.937,
+          "nodePeakRssKiB": 432772,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 240,
+          "endToEndElapsedMs": 647.3550029999988,
+          "totalTreeCpuMs": 1280,
+          "maxSingleProcessRssKiB": 433028,
+          "summedPeakRssUpperBoundKiB": 432772
+        },
+        {
+          "iteration": 8,
+          "variant": "control",
+          "extractionElapsedMs": 504.53143300000005,
+          "nodeCpuMs": 1096.718,
+          "nodePeakRssKiB": 446592,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 240,
+          "endToEndElapsedMs": 660.7956119999999,
+          "totalTreeCpuMs": 1290,
+          "maxSingleProcessRssKiB": 446592,
+          "summedPeakRssUpperBoundKiB": 446592
+        }
+      ]
+    },
+    "duplicate-3x": {
+      "requests": 720,
+      "summaries": {
+        "legacy": {
+          "medianExtractionMs": 1263.254387,
+          "medianEndToEndMs": 1431.883378999999,
+          "minEndToEndMs": 1401.7390730000006,
+          "maxEndToEndMs": 1458.6618070000004,
+          "medianTotalTreeCpuMs": 2699.9999999999995,
+          "maxSummedPeakRssUpperBoundKiB": 576984,
+          "fallbackFiles": 0,
+          "nativeSuccessFiles": 0
+        },
+        "control": {
+          "medianExtractionMs": 500.257117,
+          "medianEndToEndMs": 661.1836369999983,
+          "minEndToEndMs": 650.1304180000006,
+          "maxEndToEndMs": 666.0524650000007,
+          "medianTotalTreeCpuMs": 1310,
+          "maxSummedPeakRssUpperBoundKiB": 448140,
+          "fallbackFiles": 0,
+          "nativeSuccessFiles": 0
+        },
+        "rust": {
+          "medianExtractionMs": 16.424521,
+          "medianEndToEndMs": 162.53608000000168,
+          "minEndToEndMs": 156.25149899999815,
+          "maxEndToEndMs": 163.69525399999839,
+          "medianTotalTreeCpuMs": 220,
+          "maxSummedPeakRssUpperBoundKiB": 138468,
+          "fallbackFiles": 5,
+          "nativeSuccessFiles": 235
+        }
+      },
+      "runs": [
+        {
+          "iteration": 0,
+          "variant": "legacy",
+          "extractionElapsedMs": 1263.254387,
+          "nodeCpuMs": 2473.51,
+          "nodePeakRssKiB": 554224,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 720,
+          "endToEndElapsedMs": 1431.883378999999,
+          "totalTreeCpuMs": 2699.9999999999995,
+          "maxSingleProcessRssKiB": 554224,
+          "summedPeakRssUpperBoundKiB": 554224
+        },
+        {
+          "iteration": 0,
+          "variant": "control",
+          "extractionElapsedMs": 501.2406639999999,
+          "nodeCpuMs": 1124.468,
+          "nodePeakRssKiB": 420976,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 240,
+          "endToEndElapsedMs": 656.4349269999984,
+          "totalTreeCpuMs": 1310,
+          "maxSingleProcessRssKiB": 421232,
+          "summedPeakRssUpperBoundKiB": 420976
+        },
+        {
+          "iteration": 0,
+          "variant": "rust",
+          "extractionElapsedMs": 19.935925999999995,
+          "nodeCpuMs": 23.939,
+          "nodePeakRssKiB": 129492,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 7328,
+          "fallbacks": 5,
+          "nativeSuccess": 235,
+          "readsAndParses": 245,
+          "endToEndElapsedMs": 163.08605299999908,
+          "totalTreeCpuMs": 220,
+          "maxSingleProcessRssKiB": 129492,
+          "summedPeakRssUpperBoundKiB": 136820
+        },
+        {
+          "iteration": 1,
+          "variant": "control",
+          "extractionElapsedMs": 503.40890700000006,
+          "nodeCpuMs": 1120.477,
+          "nodePeakRssKiB": 447532,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 240,
+          "endToEndElapsedMs": 664.7862510000014,
+          "totalTreeCpuMs": 1310,
+          "maxSingleProcessRssKiB": 447532,
+          "summedPeakRssUpperBoundKiB": 447532
+        },
+        {
+          "iteration": 1,
+          "variant": "rust",
+          "extractionElapsedMs": 16.29253299999999,
+          "nodeCpuMs": 22.526,
+          "nodePeakRssKiB": 130488,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 7348,
+          "fallbacks": 5,
+          "nativeSuccess": 235,
+          "readsAndParses": 245,
+          "endToEndElapsedMs": 161.1192680000022,
+          "totalTreeCpuMs": 220,
+          "maxSingleProcessRssKiB": 130744,
+          "summedPeakRssUpperBoundKiB": 137836
+        },
+        {
+          "iteration": 1,
+          "variant": "legacy",
+          "extractionElapsedMs": 1238.5950710000002,
+          "nodeCpuMs": 2394.077,
+          "nodePeakRssKiB": 557080,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 720,
+          "endToEndElapsedMs": 1401.7390730000006,
+          "totalTreeCpuMs": 2610,
+          "maxSingleProcessRssKiB": 557080,
+          "summedPeakRssUpperBoundKiB": 557080
+        },
+        {
+          "iteration": 2,
+          "variant": "rust",
+          "extractionElapsedMs": 15.121217000000001,
+          "nodeCpuMs": 18.462,
+          "nodePeakRssKiB": 130680,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 7092,
+          "fallbacks": 5,
+          "nativeSuccess": 235,
+          "readsAndParses": 245,
+          "endToEndElapsedMs": 162.9386349999986,
+          "totalTreeCpuMs": 220,
+          "maxSingleProcessRssKiB": 130680,
+          "summedPeakRssUpperBoundKiB": 137772
+        },
+        {
+          "iteration": 2,
+          "variant": "legacy",
+          "extractionElapsedMs": 1285.4240650000002,
+          "nodeCpuMs": 2491.369,
+          "nodePeakRssKiB": 576952,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 720,
+          "endToEndElapsedMs": 1458.6618070000004,
+          "totalTreeCpuMs": 2719.9999999999995,
+          "maxSingleProcessRssKiB": 576952,
+          "summedPeakRssUpperBoundKiB": 576952
+        },
+        {
+          "iteration": 2,
+          "variant": "control",
+          "extractionElapsedMs": 505.455321,
+          "nodeCpuMs": 1119.944,
+          "nodePeakRssKiB": 448140,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 240,
+          "endToEndElapsedMs": 666.0524650000007,
+          "totalTreeCpuMs": 1320,
+          "maxSingleProcessRssKiB": 448396,
+          "summedPeakRssUpperBoundKiB": 448140
+        },
+        {
+          "iteration": 3,
+          "variant": "legacy",
+          "extractionElapsedMs": 1250.54882,
+          "nodeCpuMs": 2482.898,
+          "nodePeakRssKiB": 550080,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 720,
+          "endToEndElapsedMs": 1416.922499999997,
+          "totalTreeCpuMs": 2690,
+          "maxSingleProcessRssKiB": 550080,
+          "summedPeakRssUpperBoundKiB": 550080
+        },
+        {
+          "iteration": 3,
+          "variant": "control",
+          "extractionElapsedMs": 502.869594,
+          "nodeCpuMs": 1120.954,
+          "nodePeakRssKiB": 430364,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 240,
+          "endToEndElapsedMs": 660.1427900000017,
+          "totalTreeCpuMs": 1310,
+          "maxSingleProcessRssKiB": 430620,
+          "summedPeakRssUpperBoundKiB": 430364
+        },
+        {
+          "iteration": 3,
+          "variant": "rust",
+          "extractionElapsedMs": 19.363653000000014,
+          "nodeCpuMs": 35.181,
+          "nodePeakRssKiB": 128692,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 7132,
+          "fallbacks": 5,
+          "nativeSuccess": 235,
+          "readsAndParses": 245,
+          "endToEndElapsedMs": 156.25149899999815,
+          "totalTreeCpuMs": 210,
+          "maxSingleProcessRssKiB": 129156,
+          "summedPeakRssUpperBoundKiB": 135824
+        },
+        {
+          "iteration": 4,
+          "variant": "control",
+          "extractionElapsedMs": 500.06931899999995,
+          "nodeCpuMs": 1098.776,
+          "nodePeakRssKiB": 435592,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 240,
+          "endToEndElapsedMs": 661.1836369999983,
+          "totalTreeCpuMs": 1300,
+          "maxSingleProcessRssKiB": 435592,
+          "summedPeakRssUpperBoundKiB": 435592
+        },
+        {
+          "iteration": 4,
+          "variant": "rust",
+          "extractionElapsedMs": 15.49390200000002,
+          "nodeCpuMs": 19.185,
+          "nodePeakRssKiB": 129320,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 7604,
+          "fallbacks": 5,
+          "nativeSuccess": 235,
+          "readsAndParses": 245,
+          "endToEndElapsedMs": 162.36392200000046,
+          "totalTreeCpuMs": 220,
+          "maxSingleProcessRssKiB": 129320,
+          "summedPeakRssUpperBoundKiB": 136924
+        },
+        {
+          "iteration": 4,
+          "variant": "legacy",
+          "extractionElapsedMs": 1287.417359,
+          "nodeCpuMs": 2496.255,
+          "nodePeakRssKiB": 562668,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 720,
+          "endToEndElapsedMs": 1454.9797040000012,
+          "totalTreeCpuMs": 2700,
+          "maxSingleProcessRssKiB": 562668,
+          "summedPeakRssUpperBoundKiB": 562668
+        },
+        {
+          "iteration": 5,
+          "variant": "rust",
+          "extractionElapsedMs": 17.20022999999999,
+          "nodeCpuMs": 22.816,
+          "nodePeakRssKiB": 130896,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 7420,
+          "fallbacks": 5,
+          "nativeSuccess": 235,
+          "readsAndParses": 245,
+          "endToEndElapsedMs": 162.53608000000168,
+          "totalTreeCpuMs": 229.99999999999997,
+          "maxSingleProcessRssKiB": 130896,
+          "summedPeakRssUpperBoundKiB": 138316
+        },
+        {
+          "iteration": 5,
+          "variant": "legacy",
+          "extractionElapsedMs": 1281.88933,
+          "nodeCpuMs": 2573.862,
+          "nodePeakRssKiB": 572452,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 720,
+          "endToEndElapsedMs": 1449.3066770000005,
+          "totalTreeCpuMs": 2790,
+          "maxSingleProcessRssKiB": 572452,
+          "summedPeakRssUpperBoundKiB": 572452
+        },
+        {
+          "iteration": 5,
+          "variant": "control",
+          "extractionElapsedMs": 500.257117,
+          "nodeCpuMs": 1080.789,
+          "nodePeakRssKiB": 437176,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 240,
+          "endToEndElapsedMs": 662.3833720000002,
+          "totalTreeCpuMs": 1280,
+          "maxSingleProcessRssKiB": 437176,
+          "summedPeakRssUpperBoundKiB": 437176
+        },
+        {
+          "iteration": 6,
+          "variant": "legacy",
+          "extractionElapsedMs": 1249.387504,
+          "nodeCpuMs": 2420.225,
+          "nodePeakRssKiB": 576984,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 720,
+          "endToEndElapsedMs": 1420.8509000000013,
+          "totalTreeCpuMs": 2640,
+          "maxSingleProcessRssKiB": 576984,
+          "summedPeakRssUpperBoundKiB": 576984
+        },
+        {
+          "iteration": 6,
+          "variant": "control",
+          "extractionElapsedMs": 497.14310700000004,
+          "nodeCpuMs": 1091.355,
+          "nodePeakRssKiB": 447368,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 240,
+          "endToEndElapsedMs": 657.4808950000006,
+          "totalTreeCpuMs": 1290,
+          "maxSingleProcessRssKiB": 447368,
+          "summedPeakRssUpperBoundKiB": 447368
+        },
+        {
+          "iteration": 6,
+          "variant": "rust",
+          "extractionElapsedMs": 14.656702999999993,
+          "nodeCpuMs": 16.672,
+          "nodePeakRssKiB": 130868,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 7600,
+          "fallbacks": 5,
+          "nativeSuccess": 235,
+          "readsAndParses": 245,
+          "endToEndElapsedMs": 156.65634400000272,
+          "totalTreeCpuMs": 210,
+          "maxSingleProcessRssKiB": 131068,
+          "summedPeakRssUpperBoundKiB": 138468
+        },
+        {
+          "iteration": 7,
+          "variant": "control",
+          "extractionElapsedMs": 496.77438199999995,
+          "nodeCpuMs": 1086.498,
+          "nodePeakRssKiB": 446768,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 240,
+          "endToEndElapsedMs": 650.1304180000006,
+          "totalTreeCpuMs": 1280,
+          "maxSingleProcessRssKiB": 447280,
+          "summedPeakRssUpperBoundKiB": 446768
+        },
+        {
+          "iteration": 7,
+          "variant": "rust",
+          "extractionElapsedMs": 16.424521,
+          "nodeCpuMs": 20.347,
+          "nodePeakRssKiB": 130844,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 7424,
+          "fallbacks": 5,
+          "nativeSuccess": 235,
+          "readsAndParses": 245,
+          "endToEndElapsedMs": 163.69525399999839,
+          "totalTreeCpuMs": 220,
+          "maxSingleProcessRssKiB": 131084,
+          "summedPeakRssUpperBoundKiB": 138268
+        },
+        {
+          "iteration": 7,
+          "variant": "legacy",
+          "extractionElapsedMs": 1280.149272,
+          "nodeCpuMs": 2489.737,
+          "nodePeakRssKiB": 557396,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 720,
+          "endToEndElapsedMs": 1443.5958800000008,
+          "totalTreeCpuMs": 2710,
+          "maxSingleProcessRssKiB": 557396,
+          "summedPeakRssUpperBoundKiB": 557396
+        },
+        {
+          "iteration": 8,
+          "variant": "rust",
+          "extractionElapsedMs": 22.02332,
+          "nodeCpuMs": 38.518,
+          "nodePeakRssKiB": 129360,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 7068,
+          "fallbacks": 5,
+          "nativeSuccess": 235,
+          "readsAndParses": 245,
+          "endToEndElapsedMs": 162.70702699999674,
+          "totalTreeCpuMs": 220,
+          "maxSingleProcessRssKiB": 129616,
+          "summedPeakRssUpperBoundKiB": 136428
+        },
+        {
+          "iteration": 8,
+          "variant": "legacy",
+          "extractionElapsedMs": 1257.853026,
+          "nodeCpuMs": 2444.51,
+          "nodePeakRssKiB": 576412,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 720,
+          "endToEndElapsedMs": 1422.7721949999977,
+          "totalTreeCpuMs": 2670,
+          "maxSingleProcessRssKiB": 576412,
+          "summedPeakRssUpperBoundKiB": 576412
+        },
+        {
+          "iteration": 8,
+          "variant": "control",
+          "extractionElapsedMs": 498.2305120000001,
+          "nodeCpuMs": 1125.875,
+          "nodePeakRssKiB": 436084,
+          "helperCpuMs": 0,
+          "helperPeakRssKiB": 0,
+          "fallbacks": 0,
+          "nativeSuccess": 0,
+          "readsAndParses": 240,
+          "endToEndElapsedMs": 661.6431710000033,
+          "totalTreeCpuMs": 1330,
+          "maxSingleProcessRssKiB": 436084,
+          "summedPeakRssUpperBoundKiB": 436084
+        }
+      ]
+    }
+  }
+}
