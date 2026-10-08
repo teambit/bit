@@ -339,6 +339,7 @@ type TypeGeneratorParamsPerEnv = { envId: string; compParams: TypeGeneratorCompP
 
 export class WorkspaceCompiler {
   private componentsBeingProcessedInOnAspectLoadFail = new Set<string>();
+  private envsBeingRestored = new Set<string>();
 
   constructor(
     private workspace: Workspace,
@@ -571,6 +572,38 @@ export class WorkspaceCompiler {
     this.workspace.clearComponentsCache(idsToClearCache.map((id) => ComponentID.fromString(id)));
   }
 
+  /**
+   * an env instance keeps absolute paths into the package dir it was loaded from, such as its tsconfig, which is
+   * usually resolved relative to its "dist". when the package manager re-creates that dir mid-install (sources
+   * only, no "dist"), a compiler created from that instance points to missing files. get-tsconfig, for example,
+   * then searches up the tree and picks whatever tsconfig.json it finds, and fails when that one is invalid from
+   * inside node_modules. compiling such a workspace env writes its "dist" back into its package dirs, so the
+   * paths the instance holds exist again. its own env is checked the same way (recursively) when it's compiled.
+   */
+  private async restoreEnvsWithMissingFiles(components: Component[], options: CompileOptions) {
+    const envIds = uniq(
+      components
+        .map((component) => this.envs.getOrCalculateEnv(component))
+        .filter((envDef) => {
+          const pluginPath = envDef.env?.__resolvedPath;
+          return pluginPath && !fs.existsSync(pluginPath);
+        })
+        .map((envDef) => envDef.id)
+    ).filter(
+      (envId) =>
+        !this.envsBeingRestored.has(envId) &&
+        this.workspace.hasId(ComponentID.fromString(envId), { ignoreVersion: true })
+    );
+    if (!envIds.length) return;
+    this.logger.debug(`restoreEnvsWithMissingFiles: compiling ${envIds.join(', ')} before using them`);
+    envIds.forEach((envId) => this.envsBeingRestored.add(envId));
+    try {
+      await this.compileComponents(envIds, { initiator: options.initiator }, true, { loadSeedersAsAspects: false });
+    } finally {
+      envIds.forEach((envId) => this.envsBeingRestored.delete(envId));
+    }
+  }
+
   private async runCompileComponents(
     components: Component[],
     options: CompileOptions,
@@ -578,6 +611,8 @@ export class WorkspaceCompiler {
   ): Promise<BuildResult[]> {
     const componentsCompilers: ComponentCompiler[] = [];
     const skipped: BuildResult[] = [];
+
+    await this.restoreEnvsWithMissingFiles(components, options);
 
     components.forEach((c) => {
       const env = this.envs.getOrCalculateEnv(c);
