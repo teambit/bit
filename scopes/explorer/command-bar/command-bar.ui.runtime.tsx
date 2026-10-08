@@ -199,13 +199,22 @@ export class CommandBarUI {
   ) {
     const commandBar = new CommandBarUI(searcherSlot, commandSlots, config);
 
-    commandBar.addSearcher(commandBar.commandSearcher);
-    commandBar.addCommand({
-      id: commandBarCommands.open,
-      action: commandBar.open,
-      displayName: 'Open command bar',
-      keybinding: openCommandBarKeybinding,
-    });
+    // slots keep one entry per registering aspect, so register all of command-bar's searchers and commands at once
+    const searchers: SearchProvider[] = [commandBar.commandSearcher];
+    const commands: CommandEntry[] = [
+      {
+        id: commandBarCommands.open,
+        action: commandBar.open,
+        displayName: 'Open command bar',
+        keybinding: openCommandBarKeybinding,
+      },
+    ];
+    if (componentUI?.isCommandBarEnabled) {
+      searchers.push(componentUI.componentSearcher);
+      commands.push(...componentUI.keyBindings);
+    }
+    commandBar.addSearcher(...searchers);
+    commandBar.addCommand(...commands);
 
     if (pubsubUI) {
       pubsubUI.sub(CommandBarAspect.id, (e: KeyEvent) => {
@@ -220,10 +229,6 @@ export class CommandBarUI {
 
     if (componentUI) {
       componentUI.registerCommandRunner((commandId) => commandBar.run(commandId));
-      if (componentUI.isCommandBarEnabled) {
-        commandBar.addCommand(...componentUI.keyBindings);
-        commandBar.addSearcher(componentUI.componentSearcher);
-      }
       componentUI.registerRightSideMenuItem({
         item: <commandBar.CommandBarButton />,
         order: 90,

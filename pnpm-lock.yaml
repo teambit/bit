@@ -6980,7 +6980,7 @@ importers:
         version: file:scopes/compositions/model/composition-id(@testing-library/dom@10.4.1)
       '@teambit/compositions.model.composition-type':
         specifier: workspace:*
-        version: file:scopes/compositions/model/composition-type(react@19.2.7)
+        version: file:scopes/compositions/model/composition-type(@testing-library/dom@10.4.1)(react@19.2.7)
       '@teambit/compositions.panels.composition-gallery':
         specifier: workspace:*
         version: file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(react@19.2.7)
@@ -8057,7 +8057,7 @@ importers:
         version: file:scopes/compositions/model/composition-id(@testing-library/dom@10.4.1)
       '@teambit/compositions.model.composition-type':
         specifier: workspace:*
-        version: file:scopes/compositions/model/composition-type(react@19.2.7)
+        version: file:scopes/compositions/model/composition-type(@testing-library/dom@10.4.1)(react@19.2.7)
       '@teambit/compositions.panels.composition-gallery':
         specifier: workspace:*
         version: file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(react@19.2.7)
@@ -9116,7 +9116,7 @@ importers:
         version: file:scopes/compositions/model/composition-id(@testing-library/dom@10.4.1)
       '@teambit/compositions.model.composition-type':
         specifier: workspace:*
-        version: file:scopes/compositions/model/composition-type(react@18.3.1)
+        version: file:scopes/compositions/model/composition-type(@testing-library/dom@10.4.1)(react@18.3.1)
       '@teambit/compositions.panels.composition-gallery':
         specifier: workspace:*
         version: file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(react@18.3.1)
@@ -10187,7 +10187,7 @@ importers:
         version: file:scopes/compositions/model/composition-id(@testing-library/dom@10.4.1)
       '@teambit/compositions.model.composition-type':
         specifier: workspace:*
-        version: file:scopes/compositions/model/composition-type(react@19.2.7)
+        version: file:scopes/compositions/model/composition-type(@testing-library/dom@10.4.1)(react@19.2.7)
       '@teambit/compositions.panels.composition-gallery':
         specifier: workspace:*
         version: file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(react@19.2.7)
@@ -11234,7 +11234,7 @@ importers:
         version: file:scopes/compositions/model/composition-id(@testing-library/dom@10.4.1)
       '@teambit/compositions.model.composition-type':
         specifier: workspace:*
-        version: file:scopes/compositions/model/composition-type(react@19.2.7)
+        version: file:scopes/compositions/model/composition-type(@testing-library/dom@10.4.1)(react@19.2.7)
       '@teambit/compositions.panels.composition-gallery':
         specifier: workspace:*
         version: file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(react@19.2.7)
@@ -12281,7 +12281,7 @@ importers:
         version: file:scopes/compositions/model/composition-id(@testing-library/dom@10.4.1)
       '@teambit/compositions.model.composition-type':
         specifier: workspace:*
-        version: file:scopes/compositions/model/composition-type(react@19.2.7)
+        version: file:scopes/compositions/model/composition-type(@testing-library/dom@10.4.1)(react@19.2.7)
       '@teambit/compositions.panels.composition-gallery':
         specifier: workspace:*
         version: file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(react@19.2.7)
@@ -13340,7 +13340,7 @@ importers:
         version: file:scopes/compositions/model/composition-id(@testing-library/dom@10.4.1)
       '@teambit/compositions.model.composition-type':
         specifier: workspace:*
-        version: file:scopes/compositions/model/composition-type(react@19.2.7)
+        version: file:scopes/compositions/model/composition-type(@testing-library/dom@10.4.1)(react@19.2.7)
       '@teambit/compositions.panels.composition-gallery':
         specifier: workspace:*
         version: file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(react@19.2.7)
@@ -15238,9 +15238,6 @@ importers:
       '@teambit/legacy-bit-id':
         specifier: 1.1.4
         version: 1.1.4
-      '@teambit/ui-foundation.ui.is-browser':
-        specifier: ~0.0.500
-        version: 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.main-dropdown':
         specifier: ~0.0.505
         version: 0.0.505(react-dom@19.2.7)(react@19.2.7)
@@ -62056,6 +62053,7 @@ snapshots:
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/component.ui.deprecation-icon': 0.0.509(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@18.3.1)
       '@teambit/component.ui.version-dropdown': file:components/ui/version-dropdown(@testing-library/dom@10.4.1)(@testing-library/react@14.3.1)(react-router-dom@6.30.4)(react@18.3.1)(supports-color@9.4.0)
+      '@teambit/compositions.model.composition-type': file:scopes/compositions/model/composition-type(@testing-library/dom@10.4.1)(react@18.3.1)
       '@teambit/design.inputs.dropdown': 1.3.3(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@18.3.1)
       '@teambit/design.inputs.selectors.menu-item': 1.1.0(react@18.3.1)
       '@teambit/design.navigation.responsive-navbar': 0.0.8(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@18.3.1)
@@ -62094,7 +62092,6 @@ snapshots:
       '@teambit/toolbox.string.capitalize': file:scopes/toolbox/string/capitalize
       '@teambit/toolbox.string.eol': file:scopes/toolbox/string/eol
       '@teambit/ui-foundation.ui.hooks.use-data-query': file:components/ui/hooks/use-data-query(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(react@18.3.1)
-      '@teambit/ui-foundation.ui.is-browser': 0.0.500(react-dom@19.2.7)(react@18.3.1)
       '@teambit/ui-foundation.ui.main-dropdown': 0.0.505(react-dom@19.2.7)(react@18.3.1)
       '@teambit/ui-foundation.ui.menu-widget-icon': 0.0.502(react-dom@19.2.7)(react@18.3.1)
       '@teambit/ui-foundation.ui.react-router.slot-router': file:components/ui/react-router/slot-router(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(react-router-dom@6.30.4)(react@18.3.1)
@@ -62145,6 +62142,7 @@ snapshots:
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/component.ui.deprecation-icon': 0.0.509(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.version-dropdown': file:components/ui/version-dropdown(@testing-library/dom@10.4.1)(@testing-library/react@14.3.1)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
+      '@teambit/compositions.model.composition-type': file:scopes/compositions/model/composition-type(@testing-library/dom@10.4.1)(react@19.2.7)
       '@teambit/design.inputs.dropdown': 1.3.3(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.inputs.selectors.menu-item': 1.1.0(react@19.2.7)
       '@teambit/design.navigation.responsive-navbar': 0.0.8(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -62183,7 +62181,6 @@ snapshots:
       '@teambit/toolbox.string.capitalize': file:scopes/toolbox/string/capitalize
       '@teambit/toolbox.string.eol': file:scopes/toolbox/string/eol
       '@teambit/ui-foundation.ui.hooks.use-data-query': file:components/ui/hooks/use-data-query(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(react@19.2.7)
-      '@teambit/ui-foundation.ui.is-browser': 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.main-dropdown': 0.0.505(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.menu-widget-icon': 0.0.502(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.react-router.slot-router': file:components/ui/react-router/slot-router(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(react-router-dom@6.30.4)(react@19.2.7)
@@ -62234,6 +62231,7 @@ snapshots:
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/component.ui.deprecation-icon': 0.0.509(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.version-dropdown': file:components/ui/version-dropdown(@testing-library/dom@10.4.1)(@testing-library/react@14.3.1)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
+      '@teambit/compositions.model.composition-type': file:scopes/compositions/model/composition-type(@testing-library/dom@10.4.1)(react@19.2.7)
       '@teambit/design.inputs.dropdown': 1.3.3(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.inputs.selectors.menu-item': 1.1.0(react@19.2.7)
       '@teambit/design.navigation.responsive-navbar': 0.0.8(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -62272,7 +62270,6 @@ snapshots:
       '@teambit/toolbox.string.capitalize': file:scopes/toolbox/string/capitalize
       '@teambit/toolbox.string.eol': file:scopes/toolbox/string/eol
       '@teambit/ui-foundation.ui.hooks.use-data-query': file:components/ui/hooks/use-data-query(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(react@19.2.7)
-      '@teambit/ui-foundation.ui.is-browser': 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.main-dropdown': 0.0.505(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.menu-widget-icon': 0.0.502(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.react-router.slot-router': file:components/ui/react-router/slot-router(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(react-router-dom@6.30.4)(react@19.2.7)
@@ -62498,23 +62495,29 @@ snapshots:
     dependencies:
       react: 19.2.7
 
-  '@teambit/compositions.model.composition-type@file:scopes/compositions/model/composition-type(react@18.3.1)':
+  '@teambit/compositions.model.composition-type@file:scopes/compositions/model/composition-type(@testing-library/dom@10.4.1)(react@18.3.1)':
     dependencies:
+      '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(@testing-library/dom@10.4.1)
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@18.3.1)
+    transitivePeerDependencies:
+      - '@testing-library/dom'
 
-  '@teambit/compositions.model.composition-type@file:scopes/compositions/model/composition-type(react@19.2.7)':
+  '@teambit/compositions.model.composition-type@file:scopes/compositions/model/composition-type(@testing-library/dom@10.4.1)(react@19.2.7)':
     dependencies:
+      '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(@testing-library/dom@10.4.1)
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
+    transitivePeerDependencies:
+      - '@testing-library/dom'
 
   '@teambit/compositions.panels.composition-gallery@file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(react@18.3.1)':
     dependencies:
@@ -62721,7 +62724,7 @@ snapshots:
       '@teambit/component-id': 1.2.5
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/compositions.aspect-docs.compositions': file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@18.3.1)
-      '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(@testing-library/dom@10.4.1)
+      '@teambit/compositions.model.composition-type': file:scopes/compositions/model/composition-type(@testing-library/dom@10.4.1)(react@18.3.1)
       '@teambit/compositions.ui.composition-compare': file:components/ui/composition-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react@18.3.1)
       '@teambit/compositions.ui.composition-compare-section': file:components/ui/composition-compare-section(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)
       '@teambit/compositions.ui.composition-live-controls': 0.0.7(react@18.3.1)
@@ -62791,7 +62794,7 @@ snapshots:
       '@teambit/component-id': 1.2.5
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/compositions.aspect-docs.compositions': file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
-      '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(@testing-library/dom@10.4.1)
+      '@teambit/compositions.model.composition-type': file:scopes/compositions/model/composition-type(@testing-library/dom@10.4.1)(react@19.2.7)
       '@teambit/compositions.ui.composition-compare': file:components/ui/composition-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react@19.2.7)
       '@teambit/compositions.ui.composition-compare-section': file:components/ui/composition-compare-section(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)
       '@teambit/compositions.ui.composition-live-controls': 0.0.7(react@19.2.7)
