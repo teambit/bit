@@ -1,5 +1,5 @@
 import { AsyncLocalStorage } from 'async_hooks';
-import path from 'path';
+import { resolveRustDependencyScannerExecutable } from './discovery';
 import { RustDependencyScannerSession } from './session';
 
 type Slot = { session: RustDependencyScannerSession; busy: boolean };
@@ -70,8 +70,8 @@ export async function withRustDependencyScannerScope<T>(operation: () => Promise
   // (e.g. a callback scheduled during loading), so a closed store does not count:
   // the new operation owns a fresh scope and disposes it in its own finally.
   if (scopes.getStore()?.closed === false) return operation();
-  const executable = process.env.BIT_RUST_DEPENDENCY_SCANNER;
-  if (!executable || !path.isAbsolute(executable)) return operation();
+  const executable = resolveRustDependencyScannerExecutable();
+  if (!executable) return operation();
   const scope = new ScannerScope();
   try {
     return await scopes.run(scope, operation);

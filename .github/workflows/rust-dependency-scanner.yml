@@ -6,6 +6,8 @@ on:
     paths:
       - 'native/**'
       - 'scripts/rust/**'
+      - 'scripts/rust-dependency-analysis/discovery*'
+      - '.circleci/config.yml'
       - 'scripts/rust-dependency-analysis/session*'
       - 'scripts/rust-dependency-analysis/artifacts/**'
       - 'docs/rust/standalone-artifacts.md'
@@ -25,6 +27,8 @@ on:
     paths:
       - 'native/**'
       - 'scripts/rust/**'
+      - 'scripts/rust-dependency-analysis/discovery*'
+      - '.circleci/config.yml'
       - 'scripts/rust-dependency-analysis/session*'
       - 'scripts/rust-dependency-analysis/artifacts/**'
       - 'docs/rust/standalone-artifacts.md'
@@ -77,8 +81,8 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             native/target/debug
-          key: rust-scanner-test-${{ runner.os }}-${{ hashFiles('native/rust-toolchain.toml', 'native/Cargo.lock') }}
-          restore-keys: rust-scanner-test-${{ runner.os }}-
+          key: rust-scanner-test-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('native/rust-toolchain.toml', 'native/Cargo.lock') }}
+          restore-keys: rust-scanner-test-${{ runner.os }}-${{ runner.arch }}-
       - name: Build real scanner for pipeline validation
         working-directory: native
         run: cargo build --locked --workspace
@@ -147,14 +151,14 @@ jobs:
             ~/.dylint_drivers
             ~/.cache/pnpm/rustfmt
             native/target/debug
-          key: rust-scanner-lint-${{ runner.os }}-${{ hashFiles('native/rust-toolchain.toml', 'native/Cargo.lock', 'native/Cargo.toml', 'scripts/rust/rustfmt.json') }}-dylint-6.0.4
+          key: rust-scanner-lint-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('native/rust-toolchain.toml', 'native/Cargo.lock', 'native/Cargo.toml', 'scripts/rust/rustfmt.json') }}-dylint-6.0.4
           # Keeps the installed Dylint binaries and registry when only the lockfile changes.
           restore-keys: rust-scanner-lint-${{ runner.os }}-
       - name: Cache pinned perfectionist library
         uses: actions/cache@v4
         with:
           path: native/target/dylint
-          key: rust-scanner-perfectionist-${{ runner.os }}-${{ hashFiles('native/rust-toolchain.toml', 'native/dylint.toml') }}-dylint-6.0.4
+          key: rust-scanner-perfectionist-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('native/rust-toolchain.toml', 'native/dylint.toml') }}-dylint-6.0.4
       - name: Install pinned Rust and Clippy
         run: |
           rustup show
@@ -182,7 +186,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-15-intel, macos-15, windows-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     defaults:
@@ -202,20 +206,57 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             native/target/debug
-          key: rust-scanner-test-${{ runner.os }}-${{ hashFiles('native/rust-toolchain.toml', 'native/Cargo.lock') }}
-          restore-keys: rust-scanner-test-${{ runner.os }}-
+          key: rust-scanner-test-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('native/rust-toolchain.toml', 'native/Cargo.lock') }}
+          restore-keys: rust-scanner-test-${{ runner.os }}-${{ runner.arch }}-
       - name: Install pinned Rust
         run: rustup show
       - name: Test scanner
         run: cargo test --locked --workspace
-      - name: Build release scanner
-        run: cargo build --locked --release --workspace
       - name: Validate deterministic packaging and archive safety
         run: python ../scripts/rust-dependency-analysis/artifacts/test_artifacts.py
       - name: Package standalone scanner
         run: python ../scripts/rust-dependency-analysis/artifacts/package-helper.py package
       - name: Extract and smoke-test standalone artifact
         run: python ../scripts/rust-dependency-analysis/artifacts/package-helper.py smoke
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.0
+      - name: Install isolated packaged-discovery test compiler
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/rust-scanner-package-tools"
+          npm install --prefix "$RUNNER_TEMP/rust-scanner-package-tools" --no-save --package-lock=false --ignore-scripts typescript@5.9.2 debug@4.4.0
+      - name: Validate real packaged installation on minimum Node
+        shell: bash
+        env:
+          PYTHON: python
+          BIT_LEGACY_ROOT: ${{ runner.temp }}/rust-scanner-package-tools
+        run: |
+          export BIT_TEST_PACKAGED_ARCHIVE="$(find dist -maxdepth 1 -name '*.tar.gz' | head -1)"
+          node --test ../scripts/rust-dependency-analysis/discovery.test.cjs
+          python ../scripts/rust-dependency-analysis/artifacts/test_install.py
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+      - name: Validate real packaged installation on repository CI Node
+        shell: bash
+        env:
+          PYTHON: python
+          BIT_LEGACY_ROOT: ${{ runner.temp }}/rust-scanner-package-tools
+        run: |
+          export BIT_TEST_PACKAGED_ARCHIVE="$(find dist -maxdepth 1 -name '*.tar.gz' | head -1)"
+          node --test ../scripts/rust-dependency-analysis/discovery.test.cjs
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Validate real packaged installation on Node 24
+        shell: bash
+        env:
+          PYTHON: python
+          BIT_LEGACY_ROOT: ${{ runner.temp }}/rust-scanner-package-tools
+        run: |
+          export BIT_TEST_PACKAGED_ARCHIVE="$(find dist -maxdepth 1 -name '*.tar.gz' | head -1)"
+          node --test ../scripts/rust-dependency-analysis/discovery.test.cjs
       - name: Upload validated experimental scanner artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -223,3 +264,38 @@ jobs:
           path: native/dist/*
           if-no-files-found: error
           retention-days: 14
+
+  musl:
+    name: Packaged scanner on Alpine (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['22.13.0', '22.22.0', '24']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install musl linker and pinned target
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+          cd native
+          rustup target add x86_64-unknown-linux-musl
+          cargo fetch --locked
+      - name: Build and package actual musl release scanner
+        working-directory: native
+        run: |
+          python3 ../scripts/rust-dependency-analysis/artifacts/package-helper.py package --target x86_64-unknown-linux-musl
+      - name: Install, discover and execute packaged helper in actual Alpine
+        run: |
+          docker run --rm -v "$GITHUB_WORKSPACE:/repository:ro" -w /repository -e CI=1 "node:${{ matrix.node }}-alpine" sh -ec '
+            apk add --no-cache python3
+            mkdir /tmp/package-tools
+            npm install --prefix /tmp/package-tools --no-save --package-lock=false --ignore-scripts typescript@5.9.2 debug@4.4.0
+            export BIT_LEGACY_ROOT=/tmp/package-tools
+            export BIT_TEST_PACKAGED_ARCHIVE="$(find /repository/native/dist -name "*.tar.gz" | head -1)"
+            node --test scripts/rust-dependency-analysis/discovery.test.cjs
+            python3 scripts/rust-dependency-analysis/artifacts/test_install.py
+          '

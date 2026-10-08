@@ -1,0 +1,2 @@
+# Preserve the exact upstream bytes verified by sources.json on every host.
+* -text

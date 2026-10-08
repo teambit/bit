@@ -368,7 +368,19 @@ commands:
           command: mkdir bit-${BIT_VERSION}
 
   compress_bit:
+    parameters:
+      scanner_target:
+        type: string
     steps:
+      - run:
+          name: Assemble explicitly supplied experimental Rust scanner
+          command: |
+            if [ -n "${BIT_RUST_SCANNER_ARTIFACT_DIRECTORY:-}" ]; then
+              scanner_target="<<parameters.scanner_target>>"
+              mapfile -t scanner_archives < <(find "$BIT_RUST_SCANNER_ARTIFACT_DIRECTORY" -maxdepth 1 -name "bit-dependency-scanner-0.1.0-${scanner_target}-*.tar.gz")
+              [ "${#scanner_archives[@]}" -eq 1 ] || { echo "exactly one scanner archive required for ${scanner_target}"; exit 1; }
+              python3 bit/scripts/rust-dependency-analysis/artifacts/install-helper.py assemble --distribution "bit-${BIT_VERSION}" --archive "${scanner_archives[0]}" --target "$scanner_target"
+            fi
       - run:
           name: Compress Bit
           command: >
@@ -1181,7 +1193,8 @@ jobs:
       - run:
           name: copy lockfile
           command: mkdir lockfile && cp bit-${BIT_VERSION}/pnpm-lock.yaml lockfile
-      - compress_bit
+      - compress_bit:
+          scanner_target: x86_64-unknown-linux-gnu
       - run:
           name: move to linux folder
           command: mkdir linux && mv bit-${BIT_VERSION}.tar.gz linux/bit-${BIT_VERSION}.tar.gz
@@ -1194,7 +1207,8 @@ jobs:
           package: "napi.linux-arm64"
       - optimize_node_modules:
           platform: arm64
-      - compress_bit
+      - compress_bit:
+          scanner_target: aarch64-unknown-linux-gnu
       - run:
           name: move to linux-arm64 folder
           command: mkdir linux-arm64 && mv bit-${BIT_VERSION}.tar.gz linux-arm64/bit-${BIT_VERSION}.tar.gz
@@ -1227,7 +1241,8 @@ jobs:
       - verify_pnpm_napi_bundle:
           package: "napi.darwin-x64"
       - optimize_node_modules
-      - compress_bit
+      - compress_bit:
+          scanner_target: x86_64-apple-darwin
       - run:
           name: move to macos folder
           command: mkdir macos && mv bit-${BIT_VERSION}.tar.gz macos/bit-${BIT_VERSION}.tar.gz
@@ -1241,7 +1256,8 @@ jobs:
           package: "napi.darwin-arm64"
       - optimize_node_modules:
           platform: arm64
-      - compress_bit
+      - compress_bit:
+          scanner_target: aarch64-apple-darwin
       - run:
           name: move to macos-arm64 folder
           command: mkdir macos-arm64 && mv bit-${BIT_VERSION}.tar.gz macos-arm64/bit-${BIT_VERSION}.tar.gz
@@ -1272,7 +1288,8 @@ jobs:
       - verify_pnpm_napi_bundle:
           package: "napi.win32-x64"
       - optimize_node_modules
-      - compress_bit
+      - compress_bit:
+          scanner_target: x86_64-pc-windows-msvc
       - run:
           name: move to windows folder
           command: mkdir windows && mv bit-${BIT_VERSION}.tar.gz windows/bit-${BIT_VERSION}.tar.gz

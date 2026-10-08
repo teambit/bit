@@ -18,12 +18,13 @@ class ArtifactTests(unittest.TestCase):
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory(prefix="bit artifact tests ")
         self.addCleanup(self.directory.cleanup)
-        self.binary = b"deterministic binary contents"
+        self.binary = b"\x7fELF\x02\x01" + b"\x00" * 12 + b"\x3e\x00" + b"deterministic binary contents"
         self.license = b"repository license"
         self.manifest = {
-            "artifactFormat": 1, "protocolVersion": 1, "name": "bit-dependency-scanner",
+            "scannerSourceSha256": artifact.scanner_source_identity(), "minimumGlibc": "2.0", "artifactFormat": 2, "protocolVersion": 1, "name": "bit-dependency-scanner",
             "target": "x86_64-unknown-linux-gnu", "platform": artifact.TARGETS["x86_64-unknown-linux-gnu"],
             "binary": {"name": "bit-dependency-scanner", "sha256": artifact.sha256(self.binary), "bytes": len(self.binary)},
+            "notices": {"name": "THIRD-PARTY-NOTICES.txt", "sha256": artifact.sha256(b"")},
             "license": {"name": "LICENSE", "sha256": artifact.sha256(self.license)},
         }
         self.path = Path(self.directory.name) / "test.tar.gz"
@@ -46,6 +47,37 @@ class ArtifactTests(unittest.TestCase):
             for member in archive.getmembers():
                 self.assertEqual((member.uid, member.gid, member.mtime), (0, 0, 0))
                 self.assertEqual(member.mode, 0o755 if member.name == "bit-dependency-scanner" else 0o644)
+
+    def test_default_packaging_rebuilds_exact_target_instead_of_attesting_stale_output(self):
+        for target_override in (None, "aarch64-unknown-linux-gnu"):
+            with self.subTest(target=target_override):
+                root = Path(self.directory.name) / (target_override or "host")
+                (root / "native" / "dependency-scanner").mkdir(parents=True)
+                (root / "native" / "dependency-scanner" / "Cargo.toml").write_text('[package]\nversion = "0.1.0"\n')
+                (root / "native" / "Cargo.lock").write_text("fixture lockfile")
+                (root / "LICENSE").write_bytes(self.license)
+                target = target_override or "x86_64-unknown-linux-gnu"
+                binary = root / "native" / "target" / target / "release" / "bit-dependency-scanner"
+                binary.parent.mkdir(parents=True)
+                binary.write_bytes(self.binary + b"stale")
+                fresh = self.binary if target_override is None else self.binary[:18] + b"\xb7\x00" + self.binary[20:]
+                def build(args, cwd, env, stdout):
+                    self.assertEqual(args, artifact.release_command(target))
+                    self.assertEqual(cwd, root / "native")
+                    self.assertEqual(env["CARGO_TARGET_DIR"], str(root / "native" / "target"))
+                    binary.write_bytes(fresh)
+                def command(*args):
+                    if args[0] == "rustc":
+                        return "host: x86_64-unknown-linux-gnu"
+                    if args[1] == "rev-parse":
+                        return "a" * 40
+                    return "tree " + "b" * 40
+                with patch.object(artifact, "ROOT", root), patch.object(artifact, "command", command), patch.object(artifact, "notices", return_value=b"notices"), patch.object(artifact, "scanner_source_identity", return_value="f" * 64), patch.object(artifact.subprocess, "check_call", side_effect=build), patch.object(artifact.subprocess, "check_output", return_value="GLIBC_2.0"):
+                    archive = artifact.package(root / "dist", target_override=target_override)
+                manifest, members = artifact.verified_members(archive)
+                self.assertEqual(members["bit-dependency-scanner"], fresh)
+                self.assertEqual(manifest["provenance"]["buildCommand"], artifact.release_command(target))
+                self.assertEqual(manifest["target"], target)
 
     def test_changed_archive_fails_external_checksum(self):
         self.write(artifact.archive_bytes(self.binary, self.manifest, self.license))
