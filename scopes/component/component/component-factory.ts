@@ -73,10 +73,9 @@ export type FilterAspectsOptions = {
 
 export type GetGraphIdsOpts = {
   /**
-   * a modified workspace component keeps its last snap/tag version as its graph node, so published components that
-   * depend on that exact version get linked to the modified copy. when true, edges that won't exist once the modified
-   * components are snapped are removed: incoming edges from components outside the workspace (they point to the old
-   * version) and outgoing edges that are not current dependencies. useful for detecting cycles the next snap creates.
+   * remove edges of modified workspace components (and their dependents) that won't exist once they're snapped.
+   * useful for detecting cycles the next snap creates. relevant for the workspace only.
+   * see GraphIdsFromFsBuilder.removeOutdatedEdgesOfModified() for more details.
    */
   excludeOutdatedEdgesOfModified?: boolean;
 };

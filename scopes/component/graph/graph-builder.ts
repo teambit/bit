@@ -27,9 +27,7 @@ export class GraphBuilder {
   async getGraphIds(ids?: ComponentID[], opts: GetGraphOpts = {}): Promise<ComponentIdGraph> {
     const componentHost = opts.host || this.componentAspect.getHost();
 
-    const graph = await componentHost.getGraphIds(ids, false, {
-      excludeOutdatedEdgesOfModified: opts.excludeOutdatedEdgesOfModified,
-    });
+    const graph = await componentHost.getGraphIds(ids, false, opts);
     const componentIdGraph = new ComponentIdGraph(graph.nodes, graph.edges);
     componentIdGraph.seederIds = ids || (await componentHost.listIds());
     return componentIdGraph;

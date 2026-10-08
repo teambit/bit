@@ -45,7 +45,7 @@ export class GraphIdsFromFsBuilder {
   private loadedComponents: { [idStr: string]: Component } = {};
   private importedIds: string[] = [];
   // the dependencies each processed component has right now (not from its saved graph), keyed by the component id-str
-  private currentDepsIds: { [idStr: string]: string[] } = {};
+  private currentDepsIds: { [idStr: string]: Set<string> } = {};
   private shouldThrowOnInvalidDeps = true; // for now it has the same value as shouldThrowOnMissingDep. change if needed
   constructor(
     private workspace: Workspace,
@@ -128,7 +128,7 @@ export class GraphIdsFromFsBuilder {
     const allDependenciesComps = await this.loadManyComponents(allDepsIds, idStr);
 
     deps.forEach((dep) => this.addDepEdge(idStr, dep));
-    this.currentDepsIds[idStr] = allDepsIds.map((id) => id.toString());
+    this.setCurrentDeps(idStr, deps);
     this.completed.push(idStr);
 
     return allDependenciesComps;
@@ -174,7 +174,7 @@ export class GraphIdsFromFsBuilder {
     const idStr = component.id.toString();
     const allDependenciesComps = await this.loadManyComponents(allDepsIds, idStr);
     deps.forEach((dep) => this.addDepEdge(idStr, dep));
-    this.currentDepsIds[idStr] = deps.map((dep) => dep.componentId.toString());
+    this.setCurrentDeps(idStr, deps);
     return allDependenciesComps;
   }
 
@@ -194,8 +194,14 @@ export class GraphIdsFromFsBuilder {
       this.workspace
         .listIds()
         .map((id) => id.toString())
-        .filter((idStr) => this.loadedComponents[idStr] && this.currentDepsIds[idStr])
+        .filter((idStr) => this.currentDepsIds[idStr])
     );
+    const getOutdatedEdges = (idStr: string) => [
+      ...this.graph.inEdges(idStr).filter((edge) => !processedIdsStr.has(edge.sourceId)),
+      ...this.graph.outEdges(idStr).filter((edge) => !this.currentDepsIds[idStr].has(edge.targetId)),
+    ];
+    // checking whether a component is modified is expensive. skip it when no edge would be removed anyway.
+    if (!Array.from(processedIdsStr).some((idStr) => getOutdatedEdges(idStr).length)) return;
     // when some dependencies can't be resolved, the current deps are incomplete, so keep the edges as is.
     const hasUnresolvedDeps = (idStr: string) =>
       DEPS_NOT_RESOLVED_ISSUES.some((issue) => this.loadedComponents[idStr].state.issues.getIssue(issue));
@@ -204,28 +210,18 @@ export class GraphIdsFromFsBuilder {
       if (hasUnresolvedDeps(idStr)) return;
       if (await this.workspace.isModified(this.loadedComponents[idStr])) changingIdsStr.add(idStr);
     });
-    if (!changingIdsStr.size) return;
     // workspace dependents of modified components get auto-snapped, so they get a new version as well.
-    const processedDependents: { [idStr: string]: string[] } = {};
-    this.graph.edges.forEach((edge) => {
-      if (!processedIdsStr.has(edge.sourceId)) return;
-      (processedDependents[edge.targetId] ||= []).push(edge.sourceId);
-    });
-    const queue = Array.from(changingIdsStr);
-    while (queue.length) {
-      const idStr = queue.pop() as string;
-      (processedDependents[idStr] || []).forEach((dependent) => {
-        if (changingIdsStr.has(dependent) || hasUnresolvedDeps(dependent)) return;
-        changingIdsStr.add(dependent);
-        queue.push(dependent);
-      });
-    }
-    this.graph.edges.forEach((edge) => {
-      const isIncomingNotCurrent = changingIdsStr.has(edge.targetId) && !processedIdsStr.has(edge.sourceId);
-      const isOutgoingNotCurrent =
-        changingIdsStr.has(edge.sourceId) && !this.currentDepsIds[edge.sourceId].includes(edge.targetId);
-      if (isIncomingNotCurrent || isOutgoingNotCurrent) this.graph.deleteEdge(edge.sourceId, edge.targetId);
-    });
+    const isAutoSnapped = (node: Node<ComponentID>) => processedIdsStr.has(node.id) && !hasUnresolvedDeps(node.id);
+    Array.from(changingIdsStr).forEach((idStr) =>
+      this.graph.predecessors(idStr, { nodeFilter: isAutoSnapped }).forEach((node) => changingIdsStr.add(node.id))
+    );
+    changingIdsStr.forEach((idStr) =>
+      getOutdatedEdges(idStr).forEach((edge) => this.graph.deleteEdge(edge.sourceId, edge.targetId))
+    );
+  }
+
+  private setCurrentDeps(idStr: string, deps: ComponentDependency[]) {
+    this.currentDepsIds[idStr] = new Set(deps.map((dep) => dep.componentId.toString()));
   }
 
   private addDepEdge(idStr: string, dep: ComponentDependency) {
