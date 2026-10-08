@@ -18,6 +18,10 @@ on:
       - 'scripts/rust-dependency-analysis/compare*'
       - 'scripts/rust-dependency-analysis/fixtures.cjs'
       - 'scripts/rust-dependency-analysis/*memory*'
+      - 'scripts/rust-dependency-analysis/legacy-session-control*'
+      - 'scripts/rust-dependency-analysis/command-workspace*'
+      - 'scripts/rust-dependency-analysis/command-control-trace.cjs'
+      - 'scripts/rust-dependency-analysis/command-profile*'
       - 'scopes/dependencies/dependencies/files-dependency-builder/rust-scanner/**'
       - 'scopes/dependencies/dependencies/files-dependency-builder/**'
       - 'scopes/dependencies/dependency-resolver/detector-hook.ts'
@@ -39,6 +43,10 @@ on:
       - 'scripts/rust-dependency-analysis/compare*'
       - 'scripts/rust-dependency-analysis/fixtures.cjs'
       - 'scripts/rust-dependency-analysis/*memory*'
+      - 'scripts/rust-dependency-analysis/legacy-session-control*'
+      - 'scripts/rust-dependency-analysis/command-workspace*'
+      - 'scripts/rust-dependency-analysis/command-control-trace.cjs'
+      - 'scripts/rust-dependency-analysis/command-profile*'
       - 'scopes/dependencies/dependencies/files-dependency-builder/rust-scanner/**'
       - 'scopes/dependencies/dependencies/files-dependency-builder/**'
       - 'scopes/dependencies/dependency-resolver/detector-hook.ts'
@@ -72,6 +80,10 @@ jobs:
           cp scripts/rust-dependency-analysis/ci/package.json scripts/rust-dependency-analysis/ci/package-lock.json "$RUNNER_TEMP/rust-scanner-integration-tools/"
           npm ci --prefix "$RUNNER_TEMP/rust-scanner-integration-tools" --ignore-scripts --legacy-peer-deps --no-audit --no-fund
           node scripts/rust-dependency-analysis/ci/prepare.cjs "$RUNNER_TEMP/rust-scanner-integration-tools"
+      - name: Validate batching-only control and isolated workspace guards
+        env:
+          BIT_LEGACY_ROOT: ${{ runner.temp }}/rust-scanner-integration-tools
+        run: node --test scripts/rust-dependency-analysis/legacy-session-control.test.cjs scripts/rust-dependency-analysis/command-workspace.test.cjs scripts/rust-dependency-analysis/command-profile-trace.test.cjs
       # Restore only: this job builds just the binary and finishes first, so saving under the
       # shared key would leave the Rust test job a cache without its test artifacts.
       - name: Restore Rust build cache from the Rust test job

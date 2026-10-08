@@ -24,6 +24,7 @@ function createProcessTreeMemorySampler(rootPid, options = {}) {
     uniqueProcesses: 0,
     missingProcessReads: 0,
     failedProcReads: 0,
+    releasedMemoryReads: 0,
     racedProcessReads: 0,
     observedRootExit: false,
     measurementSpanMs: 0,
@@ -54,6 +55,15 @@ function createProcessTreeMemorySampler(rootPid, options = {}) {
       report.failedProcReads++;
       return undefined;
     }
+    const rss = status.match(/^VmRSS:\s+(\d+)\s+kB$/m);
+    if (!rss && /^VmRSS:/m.test(status)) {
+      report.failedProcReads++;
+      return undefined;
+    }
+    // exit_mm releases address-space accounting before task state becomes Z.
+    // Require a valid zero-resident statm snapshot, then recheck PID identity.
+    const statm = rss ? undefined : read(path.join(procRoot, String(pid), 'statm'));
+    if (!rss && statm === undefined) return undefined;
     const verifiedStat = read(path.join(procRoot, String(pid), 'stat'));
     if (!verifiedStat) return undefined;
     const verifiedFields = verifiedStat
@@ -73,10 +83,13 @@ function createProcessTreeMemorySampler(rootPid, options = {}) {
       report.racedProcessReads++;
       return undefined;
     }
-    const rss = status.match(/^VmRSS:\s+(\d+)\s+kB$/m);
-    if (!rss && fields[0] !== 'Z' && !/^State:\s+Z\b/m.test(status)) {
-      report.failedProcReads++;
-      return undefined;
+    if (!rss) {
+      const fields = statm.trim().split(/\s+/);
+      if (fields.length !== 7 || !fields.every((value) => /^\d+$/.test(value)) || !/^0+$/.test(fields[1])) {
+        report.failedProcReads++;
+        return undefined;
+      }
+      report.releasedMemoryReads++;
     }
     return {
       pid,

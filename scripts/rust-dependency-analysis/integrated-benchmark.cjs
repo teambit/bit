@@ -66,7 +66,18 @@ async function worker(variant, manifestPath, workload, executable) {
     nativeUnavailable: 0,
     fallbackPaths: [],
     sessions: 0,
+    controlReads: 0,
+    controlParses: 0,
+    controlCacheHits: 0,
   };
+  if (variant === 'control') {
+    const { LegacySessionControl } = require('./legacy-session-control.cjs');
+    const scope = require(path.join(builder, 'rust-scanner/scope.ts'));
+    scope.acquireRustDependencyScannerSession = () => {
+      const session = new LegacySessionControl(stats);
+      return { session, release: () => session.dispose() };
+    };
+  }
   const helpers = [],
     closures = [];
   const oldSpawn = cp.spawn;
@@ -147,6 +158,9 @@ async function worker(variant, manifestPath, workload, executable) {
     stats.inlineOutcomes = {};
     stats.nativeUnavailable = 0;
     stats.fallbackPaths = [];
+    stats.controlReads = 0;
+    stats.controlParses = 0;
+    stats.controlCacheHits = 0;
     helpers.length = 0;
   }
   if (workload.startsWith('edit')) {
@@ -363,6 +377,9 @@ async function main() {
               inlineOutcomes: list[0].inlineOutcomes,
               nativeUnavailable: list[0].nativeUnavailable,
               fallbackPaths: list[0].fallbackPaths,
+              controlReads: list[0].controlReads,
+              controlParses: list[0].controlParses,
+              controlCacheHits: list[0].controlCacheHits,
               maxNodePlusLargestHelperPeakRssUpperBoundKiB: Math.max(
                 ...list.map((run) => run.nodePlusLargestHelperPeakRssUpperBoundKiB)
               ),

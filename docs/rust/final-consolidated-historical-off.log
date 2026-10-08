@@ -1,0 +1,179 @@
+
+
+  node-precinct
+    paperwork
+      - returns the dependencies for the given filepath
+      ✔ throws if the file cannot be found
+      ✔ filters out core modules if options.includeCore is false
+      - does not filter out core modules by default
+      - supports passing detective configuration
+      ✔ supports passing env detectors
+      when given detective configuration
+        - still does not filter out core module by default
+
+  dependencyTree
+    ✔ returns an empty object for a non-existent filename
+    ✔ handles nested tree structures
+    ✔ does not include files that are not real (#13)
+    ✔ does not choke on cyclic dependencies
+    ✔ excludes Nodejs core modules by default
+    ✔ returns a list of absolutely pathed files
+    when given a detective configuration
+      ✔ passes it through to precinct
+    when given a list to store non existent partials
+      and the file contains no valid partials
+        ✔ stores the invalid partials
+      and the file contains all valid partials
+        ✔ does not store anything
+      and the file contains a mix of invalid and valid partials
+        ✔ stores the invalid ones
+      and there is more than one reference to the invalid partial
+        ✔ should include the non-existent partial per file
+    throws
+      ✔ throws if the filename is missing
+      ✔ throws if the root is missing
+      ✔ throws if a supplied filter is not a function
+      ✔ does not throw on the legacy `root` option
+    on file error
+      ✔ does not throw
+      ✔ returns no dependencies
+    memoization (#2)
+      ✔ returns the precomputed list of a cached entry point
+    module formats
+      commonjs
+        ✔ returns an object form of the dependency tree for a file
+      es6
+        ✔ returns an object form of the dependency tree for a file
+        ✔ resolves files that have jsx
+        ✔ resolves files with a jsx extension
+        ✔ resolves files that have es7
+      sass
+        ✔ returns an object form of the dependency tree for a file
+      stylus
+        ✔ returns an object form of the dependency tree for a file
+      less
+        ✔ returns an object form of the dependency tree for a file
+      typescript
+        ✔ returns an object form of the dependency tree for a file
+    webpack
+      - resolves unaliased modules
+    when a filter function is supplied
+      ✔ uses the filter to determine if a file should be included in the results
+    when given a CJS file with lazy requires
+      ✔ includes the lazy dependency
+    when given an es6 file using CJS lazy requires
+      and mixedImport mode is turned on
+        ✔ includes the lazy dependency
+    when given an es6 file using dynamic imports
+      ✔ includes the dynamic import
+    when a dependency of the main file is not supported
+      ✔ should include it as a dependency and not throw an error
+    when given a CJS file with module property in package.json
+      - it includes the module entry as dependency
+    Config
+      when cloning
+        and a detective config was set
+          ✔ retains the detective config in the clone
+    when a dependency has missing packages and is retrieved from the cache (visited)
+      ✔ should not override the cache with wrong packages
+    passing css files and then javascript files
+      ✔ should not crash with "RangeError: Maximum call stack size exceeded" error
+    files with dynamic import
+      ✔ should not show missing dependencies
+    files with import from cdn (http, https)
+      ✔ should not show missing dependencies when importing from https
+      ✔ should not show missing dependencies when importing from http
+
+  filing-cabinet
+    JavaScript
+      ✔ uses a generic resolve for unsupported file extensions
+      when given an ast for a JS file
+        ✔ reuses the ast when trying to determine the module type
+        ✔ resolves the dependency successfully
+      when not given an ast
+        ✔ uses the filename to look for the module type
+      es6
+        - assumes commonjs for es6 modules with no requirejs/webpack config
+      jsx
+        ✔ resolves files with the .jsx extension
+      commonjs
+        - uses require's resolver
+        ✔ returns an empty string for an unresolved module
+        ✔ adds the directory to the require resolution paths
+        ✔ resolves a relative dependency about the filename
+        ✔ resolves a .. dependency to its parent directory's index.js file
+        - resolves a dependency within a directory outside of the given file
+        - resolves a node module with module entry in package.json
+        ✔ resolves a nested module
+        ✔ resolves to the index.js file of a directory
+        ✔ resolves implicit .jsx requires
+        ✔ resolves implicit .scss requires
+        ✔ resolves implicit .json requires
+      typescript
+        ✔ resolves an import
+        when a dependency does not exist
+          ✔ returns an empty result
+    CSS
+      sass
+        ✔ uses the sass resolver for .scss files
+        ✔ uses the sass resolver for .sass files
+      stylus
+        ✔ uses the stylus resolver
+      less
+        ✔ resolves extensionless dependencies
+        ✔ resolves dependencies with a less extension
+        ✔ resolves dependencies with a css extension
+    unrecognized extension
+      ✔ uses a generic resolve for unsupported file extensions
+    custom env lookups
+      ✔ supports passing env detectors
+    .register
+      ✔ registers a custom resolver for a given extension
+      ✔ allows does not break default resolvers
+      ✔ can be called multiple times
+      ✔ does not add redundant extensions to supportedFileExtensions
+    webpack
+      - resolves an aliased path
+      - resolves a non-aliased path
+      - resolves a relative path
+      - resolves an absolute path from a file within a subdirectory
+      - resolves a path using resolve.root
+      - resolves NPM module when using resolve.root
+      - resolves NPM module when using resolve.modulesDirectories
+      - resolves a path using resolve.modulesDirectories
+      - resolves a path using webpack config that exports a function
+      - resolves files with a .jsx extension
+      when the dependency contains a loader
+        - still works
+
+  buildTree
+    getDependencyTree
+      ✔ when no files are passed should return an empty tree
+      ✔ when unsupported files are passed should return them with no dependencies
+      ✔ when supported and unsupported files are passed should return them all
+      - when a js file has parsing error it should add the file to the tree with the error instance
+      - when a js file has parsing error and it retrieved from the cache it should add the file to the tree with the error instance
+      when a dependency of dependency has parsing error
+        - should add all the files to the tree
+        - should not add the error to the files without parsing error
+        - should add the parsing error to the un-parsed file
+      missing dependencies
+        - it should add the missing dependency to the missing section in the tree
+        - it should add the missing package to the missing section in the tree
+      tree shaking with cycle
+        when a file imports from itself
+          ✔ should not throw an error and should remove itself from the dependencies files
+        cycle with multiple files
+          - should not recognize the cycle dependencies as link files
+
+  ComponentLoader
+    invalidateDependenciesCacheIfNeeded()
+      ✔ should run the check once when called concurrently
+      ✔ should check again after the components cache is cleared
+      ✔ should let a later call retry when the check fails
+      ✔ should not let a stale failure discard a newer successful check
+
+
+  77 passing (105ms)
+  29 pending
+

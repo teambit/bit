@@ -1,5 +1,7 @@
 # Isolated install acceptance gate
 
+Updated completion: [final work-package checklist](completion-checklist.md) and [final command acceptance](final-command-acceptance.md). This report retains its historical inputs and results; later evidence supersedes its open follow-ups.
+
 `install-validation.cjs` runs the real Bit CLI in a Linux network namespace. Its package-manager observer delegates to the original `@pnpm/napi` installer; it does not implement a fake successful install. The helper remains explicitly opt-in. Correctness and native participation must pass before this lane can support install timing claims.
 
 ```sh

@@ -1,5 +1,7 @@
 # Opt-in dependency extraction integration
 
+Updated completion: [final work-package checklist](completion-checklist.md) and [final command acceptance](final-command-acceptance.md). This report retains its historical inputs and results; later evidence supersedes its open follow-ups.
+
 This experiment connects the standalone scanner to Bit's existing dependency-tree pipeline. Legacy extraction remains the default. Resolution, traversal filters, pathMap shape, missing/error data, persistent cache storage/invalidation and the component loading concurrency guard remain in the existing TypeScript pipeline.
 
 ## Select and observe the backend

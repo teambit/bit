@@ -1,19 +1,21 @@
 # Release extraction comparison: actual tracked source files
 
+Updated completion: [final work-package checklist](completion-checklist.md) and [final command acceptance](final-command-acceptance.md). This report retains its historical inputs and results; later evidence supersedes its open follow-ups.
+
 Recorded 2026-10-07 against the revision and executable SHA-256 in [raw results](dependency-benchmark-results.json). Build: `cargo build --locked --release` in `native/`. Run on Linux x86_64 with Node v24.21.0; the JSON records CPU model, Rust version, parser versions, worker count and the exact corpus with SHA-256 hashes.
 
 ## Result and decision
 
 The standalone Rust prototype passes exact legacy metadata and ordered source-key comparison on this 240-file sample, with **235 native successes and five explicit legacy fallbacks** per unique batch. Those fallback parses and additional reads are included in timing. The result justifies continuing to session batching and opt-in integration; it does not establish any improvement in `bit status`, `bit graph` or install.
 
-| Workload and variant | Median extraction, ms | Median including startup and validation, ms | Range including startup, ms | Median process-tree CPU, ms | Peak summed RSS upper bound, MiB |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| Unique: current legacy semantics | 500.0 | 654.6 | 646.0–682.7 | 1300 | 436.6 |
-| Unique: TS batch/dedup control | 506.4 | 660.8 | 641.1–679.6 | 1290 | 438.1 |
-| Unique: Rust + legacy fallback | 17.9 | 162.6 | 158.9–165.7 | 220 | 134.9 |
-| Duplicate 3x: current legacy semantics | 1263.3 | 1431.9 | 1401.7–1458.7 | 2700 | 563.5 |
-| Duplicate 3x: TS batch/dedup control | 500.3 | 661.2 | 650.1–666.1 | 1310 | 437.6 |
-| Duplicate 3x: Rust + legacy fallback | 16.4 | 162.5 | 156.3–163.7 | 220 | 135.2 |
+| Workload and variant                   | Median extraction, ms | Median including startup and validation, ms | Range including startup, ms | Median process-tree CPU, ms | Peak summed RSS upper bound, MiB |
+| -------------------------------------- | --------------------: | ------------------------------------------: | --------------------------: | --------------------------: | -------------------------------: |
+| Unique: current legacy semantics       |                 500.0 |                                       654.6 |                 646.0–682.7 |                        1300 |                            436.6 |
+| Unique: TS batch/dedup control         |                 506.4 |                                       660.8 |                 641.1–679.6 |                        1290 |                            438.1 |
+| Unique: Rust + legacy fallback         |                  17.9 |                                       162.6 |                 158.9–165.7 |                         220 |                            134.9 |
+| Duplicate 3x: current legacy semantics |                1263.3 |                                      1431.9 |               1401.7–1458.7 |                        2700 |                            563.5 |
+| Duplicate 3x: TS batch/dedup control   |                 500.3 |                                       661.2 |                 650.1–666.1 |                        1310 |                            437.6 |
+| Duplicate 3x: Rust + legacy fallback   |                  16.4 |                                       162.5 |                 156.3–163.7 |                         220 |                            135.2 |
 
 On unique inputs Rust takes about 4x less startup-inclusive elapsed time than the control, and about 28x less time inside the extraction interval. Use the **4x** figure when discussing this cold-helper transport experiment: the internal number excludes Node startup, detector loading and result validation. All variants pay Node startup and detector loading; Rust additionally pays helper startup, request JSON serialization, source reads, response transfer/deserialization and fallback. A persistent helper or lazy legacy loading may change those costs and needs separate evidence.
 

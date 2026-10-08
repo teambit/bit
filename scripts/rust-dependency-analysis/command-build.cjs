@@ -155,6 +155,8 @@ try {
     'dependencies/dist/files-dependency-builder/generate-tree-madge.js',
     'dependencies/dist/files-dependency-builder/rust-scanner/scope.js',
     'legacy.consumer-component/dist/component-loader.js',
+    'workspace/dist/build-graph-ids-from-fs.js',
+    'graph/dist/graph-cmd.js',
   ];
   const provenance = {
     revision,

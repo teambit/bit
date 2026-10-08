@@ -1,0 +1,235 @@
+{
+  "schemaVersion": 1,
+  "testedCombinedTree": "a2782776345d199499cfa2031ddd4a122598b085",
+  "focusedFixtureCorpusHistoricalRunTree": "4fb0af706338af3b5d8de2fc44cc48dd33812615",
+  "latestDelta": "Documentation/raw measurements and Windows synthetic manifest LF fixture only; no native or production TypeScript/JavaScript differences. Latest Python fixture and actual attested package/discovery tests rerun.",
+  "inputs": {
+    "mergedRust": "3029445e8",
+    "nativeStagesAndPaths": "9165050fb",
+    "packaging": "017aba217",
+    "compatibility": "0ba8acc1c",
+    "profilingFinalEvidence": "88ddbcc05",
+    "install": "bb1e35e5c",
+    "samplerExitFix": "0d4c1d437"
+  },
+  "environment": {
+    "platform": "linux/x64",
+    "node": "24.21.0",
+    "rust": "1.97.0",
+    "legacyInstalledRoot": "/tmp/bit-rust-final-cli",
+    "cliBuildRevision": "a72e7cb66dd52be1c86aacb8745296fa5147b461"
+  },
+  "helper": {
+    "sourceEquivalentStageHelperSha256": "ab4aeb1eb389b443136f772a23f7b4d3e495638ddd4abfd07acf1091063ee14c",
+    "freshExactTargetHelperSha256": "27b8ca9d27ea063300f903a46c271616d70761fb7034df7f5a7f0558c0277138",
+    "attestedPackageManifest": {
+      "artifactFormat": 2,
+      "protocolVersion": 1,
+      "name": "bit-dependency-scanner",
+      "version": "0.1.0",
+      "gitRevision": "a2782776345d199499cfa2031ddd4a122598b085",
+      "scannerSourceSha256": "035d2d4b9c674fddbaa33c65b0699b62e1d45801cb199a73df4315efc5801873",
+      "gitParents": ["508dca8517db034b2f318dcc8143be6c1af4c579", "017aba217ad0591ea59824a9d3892e83c982824a"],
+      "provenance": {
+        "revisionScope": "source checkout HEAD",
+        "rustcScope": "packaging environment",
+        "binaryInput": "checkout release output",
+        "buildCommand": [
+          "cargo",
+          "build",
+          "--locked",
+          "--offline",
+          "--release",
+          "--workspace",
+          "--target",
+          "x86_64-unknown-linux-gnu"
+        ]
+      },
+      "target": "x86_64-unknown-linux-gnu",
+      "platform": {
+        "os": "linux",
+        "arch": "x64",
+        "abi": "gnu"
+      },
+      "rustc": "rustc 1.97.0 (2d8144b78 2026-07-07)\nbinary: rustc\ncommit-hash: 2d8144b7880597b6e6d3dfd63a9a9efae3f533d3\ncommit-date: 2026-07-07\nhost: x86_64-unknown-linux-gnu\nrelease: 1.97.0\nLLVM version: 22.1.6",
+      "cargoLockSha256": "b3ada03cd36e7ff2183eba18561cb0c1c52dca710f1ec4a29edc015416de4274",
+      "buildPlatform": {
+        "system": "Linux",
+        "machine": "x86_64",
+        "osVersion": "7.1.10-200.fc44.x86_64",
+        "libc": ["glibc", "2.43"]
+      },
+      "notices": {
+        "name": "THIRD-PARTY-NOTICES.txt",
+        "sha256": "f75b078d76c8fbac4743730d504d9a1515ecf6896622b77e049e2239bd0be4b8"
+      },
+      "license": {
+        "name": "LICENSE",
+        "sha256": "0ae26b3d5b3cbc126575e71a8e552f8896619c1ba7089ce2025f70bc2e44d3b3"
+      },
+      "binary": {
+        "name": "bit-dependency-scanner",
+        "sha256": "27b8ca9d27ea063300f903a46c271616d70761fb7034df7f5a7f0558c0277138",
+        "bytes": 2081496
+      },
+      "minimumGlibc": "2.39"
+    }
+  },
+  "native": {
+    "unitTestsPassed": 24,
+    "pinnedFormatterPassed": true,
+    "clippyAndDylint": "Identical native source/Cargo/toolchain to PR31 green exact pnpm CI; no source changes or suppressions."
+  },
+  "focusedNode": {
+    "passed": 112,
+    "failed": 0,
+    "skipped": 0
+  },
+  "fixtureComparisons": {
+    "comparisons": 324,
+    "failures": 0,
+    "freshExactTargetRerun": true
+  },
+  "trackedCorpus": {
+    "counts": {
+      "selected": 3372,
+      "compared": 3344,
+      "unsupported": 28,
+      "failed": 0,
+      "referenceParseErrors": 1
+    },
+    "fallbackReasons": {
+      "module classification requires legacy fallback": 24,
+      "decorators, import attributes/phases, namespace reexports, coerced, prototype-key or integer-like specifiers require legacy fallback": 3,
+      "A 'return' statement can only be used within a function body.": 1
+    },
+    "fallbackExamples": [
+      {
+        "path": ".github/scripts/merge-queue.js",
+        "reason": "module classification requires legacy fallback",
+        "referenceStatus": "ok"
+      },
+      {
+        "path": "babel.e2e.config.js",
+        "reason": "module classification requires legacy fallback",
+        "referenceStatus": "ok"
+      },
+      {
+        "path": "bin/bit.js",
+        "reason": "module classification requires legacy fallback",
+        "referenceStatus": "ok"
+      },
+      {
+        "path": "components/semantics/doc-parser/fixtures/jsdoc/variousParamTypes.js",
+        "reason": "module classification requires legacy fallback",
+        "referenceStatus": "ok"
+      },
+      {
+        "path": "e2e/fixtures/compilers/webpack-relative/compiler.js",
+        "reason": "module classification requires legacy fallback",
+        "referenceStatus": "ok"
+      },
+      {
+        "path": "e2e/fixtures/compilers/webpack/compiler.js",
+        "reason": "module classification requires legacy fallback",
+        "referenceStatus": "ok"
+      },
+      {
+        "path": "fixtures/invalid-tester.js",
+        "reason": "module classification requires legacy fallback",
+        "referenceStatus": "ok"
+      },
+      {
+        "path": "scopes/dependencies/dependencies/files-dependency-builder/fixtures/filing-cabinet/ast.js",
+        "reason": "module classification requires legacy fallback",
+        "referenceStatus": "ok"
+      },
+      {
+        "path": "scopes/dependencies/dependencies/files-dependency-builder/fixtures/filing-cabinet/mockedJSFiles.js",
+        "reason": "module classification requires legacy fallback",
+        "referenceStatus": "ok"
+      },
+      {
+        "path": "scopes/dependencies/dependencies/files-dependency-builder/fixtures/filing-cabinet/root1/mod1.js",
+        "reason": "module classification requires legacy fallback",
+        "referenceStatus": "ok"
+      },
+      {
+        "path": "scopes/dependencies/dependencies/files-dependency-builder/fixtures/filing-cabinet/root2/mod2.js",
+        "reason": "module classification requires legacy fallback",
+        "referenceStatus": "ok"
+      },
+      {
+        "path": "scopes/dependencies/dependencies/files-dependency-builder/fixtures/filing-cabinet/webpack.config.js",
+        "reason": "module classification requires legacy fallback",
+        "referenceStatus": "ok"
+      }
+    ]
+  },
+  "historicalSuites": {
+    "backendOff": {
+      "passed": 77,
+      "pending": 29
+    },
+    "backendOn": {
+      "passed": 77,
+      "pending": 29
+    },
+    "files": [
+      "scopes/dependencies/dependencies/files-dependency-builder/precinct/index.spec.ts",
+      "scopes/dependencies/dependencies/files-dependency-builder/dependency-tree/index.spec.ts",
+      "scopes/dependencies/dependencies/files-dependency-builder/filing-cabinet/index.spec.ts",
+      "scopes/dependencies/dependencies/files-dependency-builder/build-tree.spec.ts",
+      "components/legacy/consumer-component/component-loader.spec.ts"
+    ],
+    "pendingCaseTitles": [
+      "returns the dependencies for the given filepath",
+      "does not filter out core modules by default",
+      "supports passing detective configuration",
+      "still does not filter out core module by default",
+      "resolves unaliased modules",
+      "it includes the module entry as dependency",
+      "assumes commonjs for es6 modules with no requirejs/webpack config",
+      "uses require's resolver",
+      "resolves a dependency within a directory outside of the given file",
+      "resolves a node module with module entry in package.json",
+      "resolves an aliased path",
+      "resolves a non-aliased path",
+      "resolves a relative path",
+      "resolves an absolute path from a file within a subdirectory",
+      "resolves a path using resolve.root",
+      "resolves NPM module when using resolve.root",
+      "resolves NPM module when using resolve.modulesDirectories",
+      "resolves a path using resolve.modulesDirectories",
+      "resolves a path using webpack config that exports a function",
+      "resolves files with a .jsx extension",
+      "still works",
+      "when a js file has parsing error it should add the file to the tree with the error instance",
+      "when a js file has parsing error and it retrieved from the cache it should add the file to the tree with the error instance",
+      "should add all the files to the tree",
+      "should not add the error to the files without parsing error",
+      "should add the parsing error to the un-parsed file",
+      "it should add the missing dependency to the missing section in the tree",
+      "it should add the missing package to the missing section in the tree",
+      "should not recognize the cycle dependencies as link files"
+    ]
+  },
+  "packaging": {
+    "pythonArchiveTests": 8,
+    "pythonInstallTests": 7,
+    "actualNodeDiscoveryTests": 16,
+    "failed": 0,
+    "skipped": 0,
+    "extractedProtocolSmokePassed": true,
+    "explicitBinaryInstallationRejected": "Initial --binary package correctly rejected as untrusted; rebuilt via attested exact-target command before successful discovery validation.",
+    "smokeCommand": "package-helper.py smoke --archive <exact latest archive>; default smoke refuses a directory containing multiple archives."
+  },
+  "platformCI": {
+    "run": 37702246777,
+    "dedicatedJobs": "all green",
+    "windowsSessionJob": 113068210148,
+    "windowsSessionPassed": 41,
+    "windowsSessionSkipped": 0,
+    "windowsActualCaseAndSymlinkTestsPassed": true
+  }
+}

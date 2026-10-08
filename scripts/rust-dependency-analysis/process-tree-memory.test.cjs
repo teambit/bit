@@ -225,3 +225,85 @@ test(
     assert.deepEqual(sampler.stop(), report);
   }
 );
+
+test('exit-time missing VmRSS is zero only with valid zero-resident statm and stable identity', (context) => {
+  const fixture = proc(context);
+  fixture.process(10, 1, 100, '10', { 10: [20] });
+  fixture.process(20, 10, 200, '20');
+  fs.writeFileSync(path.join(fixture.root, '20/status'), 'Name: command\nState:\tR (running)\n');
+  fs.writeFileSync(path.join(fixture.root, '20/statm'), '0 0 0 0 0 0 0\n');
+  const report = createProcessTreeMemorySampler(10, { procRoot: fixture.root }).stop();
+  assert.equal(report.peakSampledRssKiB, 100);
+  assert.equal(report.uniqueProcesses, 2);
+  assert.equal(report.peakProcesses.find((value) => value.pid === 20).rssKiB, 0);
+  assert.ok(report.releasedMemoryReads > 0);
+  assert.equal(report.failedProcReads, 0);
+  assert.equal(report.racedProcessReads, 0);
+});
+
+test('missing VmRSS with positive resident pages or malformed statm remains a failure', (context) => {
+  for (const statm of ['100 1 0 0 0 0 0', '0 0', '0 nope 0 0 0 0 0', '0 -1 0 0 0 0 0']) {
+    const fixture = proc(context);
+    fixture.process(10, 1, 100, '10', { 10: [20] });
+    fixture.process(20, 10, 200);
+    fs.writeFileSync(path.join(fixture.root, '20/status'), 'State:\tR (running)\n');
+    fs.writeFileSync(path.join(fixture.root, '20/statm'), statm);
+    const report = createProcessTreeMemorySampler(10, { procRoot: fixture.root }).stop();
+    assert.ok(report.failedProcReads > 0, statm);
+    assert.equal(report.releasedMemoryReads, 0, statm);
+    assert.equal(report.uniqueProcesses, 1, statm);
+  }
+});
+
+test('zero-resident fallback rechecks identity after statm instead of attributing a reused PID', (context) => {
+  const fixture = proc(context);
+  fixture.process(10, 1, 100, '10', { 10: [20] });
+  fixture.process(20, 10, 200, '20');
+  fs.writeFileSync(path.join(fixture.root, '20/status'), 'State:\tR (running)\n');
+  fs.writeFileSync(path.join(fixture.root, '20/statm'), '0 0 0 0 0 0 0\n');
+  let reused = false;
+  const report = createProcessTreeMemorySampler(10, {
+    procRoot: fixture.root,
+    readFileSync(filename, encoding) {
+      const value = fs.readFileSync(filename, encoding);
+      if (filename === path.join(fixture.root, '20/statm') && !reused) {
+        reused = true;
+        fixture.process(20, 99, 10000, '999');
+      }
+      return value;
+    },
+  }).stop();
+  assert.equal(report.racedProcessReads, 1);
+  assert.equal(report.releasedMemoryReads, 0);
+  assert.equal(report.peakSampledRssKiB, 100);
+});
+
+test('zero-resident fallback distinguishes disappeared tasks from unreadable memory', (context) => {
+  for (const code of ['ENOENT', 'EACCES']) {
+    const fixture = proc(context);
+    fixture.process(10, 1, 100, '10', { 10: [20] });
+    fixture.process(20, 10, 200);
+    fs.writeFileSync(path.join(fixture.root, '20/status'), 'State:\tR (running)\n');
+    const report = createProcessTreeMemorySampler(10, {
+      procRoot: fixture.root,
+      readFileSync(filename, encoding) {
+        if (filename === path.join(fixture.root, '20/statm')) throw Object.assign(new Error(code), { code });
+        return fs.readFileSync(filename, encoding);
+      },
+    }).stop();
+    assert.equal(report.releasedMemoryReads, 0);
+    assert.equal(report.failedProcReads > 0, code === 'EACCES');
+    assert.equal(report.missingProcessReads > 0, code === 'ENOENT');
+  }
+});
+
+test('malformed VmRSS cannot use valid zero-resident statm to hide a read failure', (context) => {
+  const fixture = proc(context);
+  fixture.process(10, 1, 100, '10', { 10: [20] });
+  fixture.process(20, 10, 200);
+  fs.writeFileSync(path.join(fixture.root, '20/status'), 'State:\tR (running)\nVmRSS: invalid\n');
+  fs.writeFileSync(path.join(fixture.root, '20/statm'), '0 0 0 0 0 0 0\n');
+  const report = createProcessTreeMemorySampler(10, { procRoot: fixture.root }).stop();
+  assert.ok(report.failedProcReads > 0);
+  assert.equal(report.releasedMemoryReads, 0);
+});

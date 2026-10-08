@@ -35,7 +35,8 @@ assert.equal(
   cp.execFileSync(process.execPath, [cli, '--version'], { cwd: cliRoot, encoding: 'utf8' }).trim(),
   provenance.version
 );
-const cache = path.join(cliRoot, '.git/bit/cache/components/deps');
+const workspace = require('./command-workspace.cjs').commandWorkspace(cliRoot, provenance);
+const cache = workspace.cache;
 assert.equal(fs.realpathSync(path.dirname(cache)), path.dirname(cache), 'owned cache parent cannot contain symlinks');
 const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'bit-command-benchmark-'));
 const compileCache = path.join(temporary, 'node-compile-cache');
@@ -47,6 +48,7 @@ const commands = (process.env.BIT_COMMAND_BENCH_COMMANDS || 'status,graph').spli
 assert.ok(commands.every((command) => ['status', 'graph', 'list'].includes(command)));
 const report = {
   provenance,
+  fixture: workspace.fixture,
   node: process.version,
   platform: `${process.platform}/${process.arch}`,
   cpu: os.cpus()[0].model,
@@ -70,15 +72,21 @@ function execute(command, variant) {
   const cacheEntriesBefore = cacheEntries();
   const traceFile = path.join(temporary, 'trace.json');
   fs.rmSync(traceFile, { force: true });
-  const env = { ...process.env, NODE_COMPILE_CACHE: compileCache, BIT_COMMAND_BENCH_TRACE: traceFile };
+  const env = {
+    ...process.env,
+    BIT_GLOBALS_DIR: require('./command-workspace.cjs').benchmarkGlobals(temporary),
+    NODE_COMPILE_CACHE: compileCache,
+    BIT_COMMAND_BENCH_TRACE: traceFile,
+  };
   delete env.BIT_NO_COMPILE_CACHE;
+  delete env.BIT_COMMAND_BENCH_TRACE_OWNER;
   if (variant === 'native') env.BIT_RUST_DEPENDENCY_SCANNER = native;
   else delete env.BIT_RUST_DEPENDENCY_SCANNER;
   const start = performance.now();
   const run = cp.spawnSync(
     '/usr/bin/time',
     ['-f', '\nBIT_COMMAND_RESOURCE %U %S %M', process.execPath, '--require', tracer, cli, command, '--json'],
-    { cwd: cliRoot, env, encoding: 'utf8', maxBuffer: 128 * 1024 * 1024 }
+    { cwd: workspace.root, env, encoding: 'utf8', maxBuffer: 128 * 1024 * 1024 }
   );
   const elapsedMs = performance.now() - start;
   if (run.error) throw run.error;

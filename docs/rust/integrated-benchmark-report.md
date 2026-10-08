@@ -1,22 +1,24 @@
 # Actual dependency-tree pipeline benchmarks
 
+Updated completion: [final work-package checklist](completion-checklist.md) and [final command acceptance](final-command-acceptance.md). This report retains its historical inputs and results; later evidence supersedes its open follow-ups.
+
 These measurements run the new `generateTree` source, real installed detectives, the real filing-cabinet resolver and a release Rust helper. Each measured run must match the legacy final dependency graph, ordered path maps, missing dependencies and error codes. Parser-specific diagnostic text/stack traces are excluded from equality, as in the integration suite. No Bit command performance claim follows from these pipeline results.
 
 ## Results and next decision
 
 The large graph has 96 systematically sampled tracked-source entries and 287 graph files (283 native-eligible extractions). The small sequence has eleven actual component roots, with 29 graph files (25 native successes) across their component-shaped operations. Global-hook cases register a nonmatching detector, forcing authoritative per-file inline requests instead of speculative prefetch. All modes resolve the same dependencies.
 
-| Pipeline workload | Legacy median, ms | Native per operation, ms | Pooled native, ms | Native helper starts |
-| --- | ---: | ---: | ---: | ---: |
-| Large graph, pure built-ins | 724.1 | 126.4 | — | 1 |
-| Large graph, nonmatching global hook | 725.6 | 151.7 | — | 1 |
-| Eleven small graphs, pure built-ins | 48.1 | 35.7 | 18.9 | 11 → 1 |
-| Eleven small graphs, global hook | 47.8 | 38.3 | 20.6 | 11 → 1 |
-| Warm visited graph, pure built-ins | 2.18 | 2.02 | 2.13 | 0 |
-| Warm visited graph, global hook | 2.19 | 2.25 | 2.32 | 0 |
-| Single edit, fresh visited state, pure | 597.0 | 93.9 | 92.9 | 1 |
-| Single edit, fresh visited state, hook | 598.1 | 116.1 | 116.8 | 1 |
-| Unsupported parser-option routing | 723.8 | 717.9 | — | 0 |
+| Pipeline workload                      | Legacy median, ms | Native per operation, ms | Pooled native, ms | Native helper starts |
+| -------------------------------------- | ----------------: | -----------------------: | ----------------: | -------------------: |
+| Large graph, pure built-ins            |             724.1 |                    126.4 |                 — |                    1 |
+| Large graph, nonmatching global hook   |             725.6 |                    151.7 |                 — |                    1 |
+| Eleven small graphs, pure built-ins    |              48.1 |                     35.7 |              18.9 |               11 → 1 |
+| Eleven small graphs, global hook       |              47.8 |                     38.3 |              20.6 |               11 → 1 |
+| Warm visited graph, pure built-ins     |              2.18 |                     2.02 |              2.13 |                    0 |
+| Warm visited graph, global hook        |              2.19 |                     2.25 |              2.32 |                    0 |
+| Single edit, fresh visited state, pure |             597.0 |                     93.9 |              92.9 |                    1 |
+| Single edit, fresh visited state, hook |             598.1 |                    116.1 |             116.8 |                    1 |
+| Unsupported parser-option routing      |             723.8 |                    717.9 |                 — |                    0 |
 
 The two small-graph rows compare all three variants in the same interleaved experiment; large and option rows come from the original per-operation integration experiment. Each variant has nine measured runs after a discarded warmup. Large graphs return 282 successful native outcomes and one explicit legacy fallback (`scopes/dependencies/pnpm/load-pnpm-esm.cjs`), whose read/parse/resolution work is included. Small graphs return 25 native successes and no fallback. Warm visited cases invoke no helper or extraction.
 

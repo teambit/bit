@@ -1,5 +1,7 @@
 # Revision-matched Bit command benchmark
 
+Updated completion: [final work-package checklist](completion-checklist.md) and [final command acceptance](final-command-acceptance.md). This report retains its historical inputs and results; later evidence supersedes its open follow-ups.
+
 The current Rust branch can be built and measured as a complete CLI. On this Linux host, `bit status --json` with an empty dependency cache took a median **10,441 ms with legacy extraction and 7,261 ms with Rust** (30.5% reduction). With all 334 dependency-cache entries present, medians were **3,349 ms and 3,367 ms**; there is no demonstrated warm-cache improvement. Rust remains opt-in.
 
 ## Build and reproduction

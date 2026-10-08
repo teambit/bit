@@ -1,5 +1,7 @@
 # Rust dependency analysis workstream
 
+Current completion and evidence: [work-package checklist](completion-checklist.md), [combined validation](final-consolidated-validation.md), [final command acceptance](final-command-acceptance.md), [extraction/control results](final-control-and-workspace-results.md), [CPU profiles](command-cpu-profile.md), and [parser/transport decision](parser-and-transport-decision.md). These supersede the initial sequence below; historical raw reports keep their original revisions.
+
 The integration branch for this work is `rust` in [zkochan/bit](https://github.com/zkochan/bit).
 Implementation PRs target that branch so the existing default branch keeps its current dependency-analysis backend.
 

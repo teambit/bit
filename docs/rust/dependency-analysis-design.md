@@ -1,5 +1,7 @@
 # Dependency extraction: audited baseline and integration design
 
+Updated completion: [final work-package checklist](completion-checklist.md) and [final command acceptance](final-command-acceptance.md). This report retains its historical inputs and results; later evidence supersedes its open follow-ups.
+
 Audit revision: `363a3570b894c381d1816e3c87a1af30f6c3ffcf` (2026-10-07).
 This inventories current behavior; it does not authorize default enablement or claim command speedup.
 
@@ -13,12 +15,12 @@ Precinct synchronously reads UTF-8 source before selecting a detector. Environme
 
 ## Dispatch and options
 
-| File family | Current selection | Initial Rust treatment |
-| --- | --- | --- |
-| `.ts`, `.tsx`, `.mts`, `.cts` | TypeScript detective; `.tsx` mutates `options.ts.jsx = true` | Explicit language mode; support only audited options |
-| `.js`, `.jsx`, `.cjs`, `.mjs` | `node-source-walk` parse followed by `module-definition.fromSource` AST classification | Preserve module classification; AMD stays legacy |
-| `.css`, `.sass`, `.less`, `.scss`, `.styl`, `.md`, `.mdx` | Respective built-ins unless overridden | Legacy |
-| Other extensions | Hooks or empty dependency result | Legacy |
+| File family                                               | Current selection                                                                      | Initial Rust treatment                               |
+| --------------------------------------------------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `.ts`, `.tsx`, `.mts`, `.cts`                             | TypeScript detective; `.tsx` mutates `options.ts.jsx = true`                           | Explicit language mode; support only audited options |
+| `.js`, `.jsx`, `.cjs`, `.mjs`                             | `node-source-walk` parse followed by `module-definition.fromSource` AST classification | Preserve module classification; AMD stays legacy     |
+| `.css`, `.sass`, `.less`, `.scss`, `.styl`, `.md`, `.mdx` | Respective built-ins unless overridden                                                 | Legacy                                               |
+| Other extensions                                          | Hooks or empty dependency result                                                       | Legacy                                               |
 
 `includeCore` defaults true in paperwork; dependency-tree forces false and uses Node `module.isBuiltin` to filter sources. Keep built-in filtering in TypeScript for exact Node-version semantics. `useContent` switches JS classification from AST to source but does not eliminate the preceding parse. `options.type` exists in the type declaration, but paperwork initializes `fileInfo.type` to empty and never copies that option: do not infer an implemented forced-language feature. Detectives receive `options[fileInfo.type]`; TS mutates that object with `parser`, `comment=true`, `loc=true`. Do not pass custom parser/options silently to Rust; unknown or unsupported options need an explicit fallback.
 
