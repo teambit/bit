@@ -580,6 +580,13 @@ export default class Repository {
   }
 
   /**
+   * the object, if it's in memory: added during tag but not persisted yet, or cached. same lookup as `load()`.
+   */
+  getFromMemory(ref: Ref): BitObject | undefined {
+    return this.objects[ref.hash.toString()] || this.getCache(ref);
+  }
+
+  /**
    * an object evicted from the cache is still returned as long as it's in use elsewhere (see `LiveObjects`).
    */
   getCache(ref: Ref): BitObject | undefined {

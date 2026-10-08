@@ -489,7 +489,8 @@ ${list}`);
           if (!version) return;
           kept.add(hash);
           version.refsWithOptions(false, true).forEach((ref) => kept.add(ref.toString()));
-          version.flattenedDependencies.forEach((dependency) => dependencies.add(dependency.toString()));
+          const flattenedDependencies = await version.loadFlattenedDependencies(repo);
+          flattenedDependencies.forEach((dependency) => dependencies.add(dependency.toString()));
           // an env or aspect the version was built with. versions written by older bits record
           // these only here, so taking `flattenedDependencies` at its word would miss them.
           version.extensions.extensionsBitIds.forEach((extension) => dependencies.add(extension.toString()));

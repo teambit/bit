@@ -117,7 +117,10 @@ export class FlattenedEdgesGetter {
     await Promise.all(
       componentsAndVersions.map(async ({ component, version, versionStr }) => {
         const flattenedEdges = await version.getFlattenedEdges(this.scope.legacyScope.objects);
-        if (!flattenedEdges.length && version.flattenedDependencies.length) {
+        if (
+          !flattenedEdges.length &&
+          (await version.loadFlattenedDependencies(this.scope.legacyScope.objects)).length
+        ) {
           missingEdges.push(component.toComponentId().changeVersion(versionStr));
         }
         this.addFlattenedEdgesToGraph(flattenedEdges);
@@ -137,7 +140,9 @@ export class FlattenedEdgesGetter {
           comp.modelComponent || (await this.scope.legacyScope.getModelComponent(comp.id.changeVersion(undefined)));
         const version = await modelComponent.loadVersion(previousVersion, this.scope.legacyScope.objects, true);
         const flattenedEdges = await version.getFlattenedEdges(this.scope.legacyScope.objects);
-        if (flattenedEdges.length) flattenedDeps.push(version.flattenedDependencies);
+        if (flattenedEdges.length) {
+          flattenedDeps.push(await version.loadFlattenedDependencies(this.scope.legacyScope.objects));
+        }
         this.addFlattenedEdgesToGraph(flattenedEdges);
       },
       { concurrency: 50 }
@@ -158,7 +163,9 @@ ${missingEdges.map((e) => e.toString()).join('\n')}`);
       lane: this.lane,
       preferDependencyGraph: false, // we know it does not have a dependency graph
     });
-    const allFlattened = results.map((result) => result.version.flattenedDependencies);
+    const allFlattened = await Promise.all(
+      results.map((result) => result.version.loadFlattenedDependencies(this.scope.legacyScope.objects))
+    );
     allFlattened.push(missingEdgesList);
     const allFlattenedUniq = ComponentIdList.uniqFromArray(allFlattened.flat());
     const componentsAndVersions = await this.scope.legacyScope.getComponentsAndVersions(

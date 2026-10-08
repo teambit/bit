@@ -333,7 +333,8 @@ export class MergeLanesMain {
       // flattened (not only direct) to mirror the remote-side check, which validates the flattened
       // dependencies of every exported head (see throwForMissingLocalDependencies). cheap: only the
       // heads are loaded and each unique hash is stat-ed once.
-      headVersion.getAllFlattenedDependencies().forEach((depId) => {
+      const flattenedDependencies = await headVersion.loadFlattenedDependencies(legacyScope.objects);
+      flattenedDependencies.forEach((depId) => {
         // the remote check validates only same-scope deps (it skips `depId.scope !== scope.name`,
         // cross-scope deps are fetched later by the remote itself), so same-scope is all the export
         // needs to ship. this also filters out the vast majority of the flattened list.
@@ -725,7 +726,7 @@ async function filterComponentsStatus(
   await pMapSeries(compact(versionsToCheckPerId), async ({ compId, targetVersions, modelComponent }) => {
     await pMapSeries(targetVersions, async (remoteVersion) => {
       const versionObj = await modelComponent.loadVersion(remoteVersion.toString(), legacyScope.objects);
-      const flattenedDeps = versionObj.getAllFlattenedDependencies();
+      const flattenedDeps = await versionObj.loadFlattenedDependencies(legacyScope.objects);
       const depsNotIncludeInPattern = flattenedDeps.filter((id) =>
         bitIdsNotFromPattern.find((bitId) => bitId.isEqualWithoutVersion(id))
       );

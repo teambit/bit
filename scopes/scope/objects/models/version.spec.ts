@@ -4,7 +4,11 @@ import versionWithDepsFixture from '../fixtures/version-model-extended.json';
 import versionFixture from '../fixtures/version-model-object.json';
 import { SchemaName } from '@teambit/legacy.consumer-component';
 import Version from './version';
+import type { ObjectsLoader } from './version';
+import type Source from './source';
+import type { Ref } from '../objects';
 import { clone } from 'lodash';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 
 const getVersionWithDepsFixture = () => {
   return Version.parse(JSON.stringify(clone(versionWithDepsFixture)), '12c830ed25854dc731b58e014c6b4960ccb59092');
@@ -91,6 +95,117 @@ describe('Version', () => {
     it('should have a the same hash string also when loading the version from contents', () => {
       const versionFromContent = Version.parse(JSON.stringify(versionFixture), hash.toString());
       expect(versionFromContent.hash().toString()).to.equal(versionFixtureHash);
+    });
+  });
+  describe('flattenedDependencies', () => {
+    const parseWithFlattened = (flattened: Record<string, any>) =>
+      Version.parse(
+        JSON.stringify({ ...versionWithDepsFixture, ...flattened }),
+        '12c830ed25854dc731b58e014c6b4960ccb59092'
+      );
+    it('should parse id objects, id strings and the old flattenedDevDependencies', () => {
+      const version = parseWithFlattened({
+        flattenedDependencies: ['my-scope/is-type@0.0.1'],
+        flattenedDevDependencies: [{ scope: 'my-scope', name: 'utils/is-string', version: '0.0.2' }],
+      });
+      expect(version.getLoadedFlattenedDependencies().map((id) => id.toString())).to.deep.equal([
+        'my-scope/is-type@0.0.1',
+        'my-scope/utils/is-string@0.0.2',
+      ]);
+    });
+    it('should share the same id instance between versions', () => {
+      const first = getVersionWithDepsFixture();
+      const second = getVersionWithDepsFixture();
+      expect(first.getLoadedFlattenedDependencies()).to.not.equal(second.getLoadedFlattenedDependencies());
+      expect(first.getLoadedFlattenedDependencies()[0]).to.equal(second.getLoadedFlattenedDependencies()[0]);
+    });
+    it('should keep a list that was set, and serialize it', () => {
+      const version = getVersionWithDepsFixture();
+      version.flattenedDependencies = new ComponentIdList(ComponentID.fromString('my-scope/is-type@0.0.3'));
+      expect(version.toObject().flattenedDependencies).to.deep.equal([
+        { scope: 'my-scope', name: 'is-type', version: '0.0.3' },
+      ]);
+    });
+    describe('stored in a separate object', () => {
+      const hash = '12c830ed25854dc731b58e014c6b4960ccb59092';
+      let source: Source;
+      let version: Version;
+      let flattenedStr: string[];
+      const loaderOf = (objects: Source[]): ObjectsLoader => ({
+        load: async (ref: Ref) => objects.find((obj) => obj.hash().isEqual(ref)),
+      });
+      before(() => {
+        const original = getVersionWithDepsFixture();
+        flattenedStr = original.getLoadedFlattenedDependencies().map((id) => id.toString());
+        source = original.moveFlattenedDependenciesToSource() as Source;
+        version = Version.parse(original.toBuffer(false).toString(), hash);
+      });
+      it('should save the ids as strings in the Source, and only the ref in the Version', () => {
+        expect(JSON.parse(source.contents.toString())).to.deep.equal(flattenedStr);
+        const versionObj = version.toObject();
+        expect(versionObj).to.not.have.property('flattenedDependencies');
+        expect(versionObj.flattenedDependenciesRef).to.equal(source.hash().toString());
+      });
+      it('should return the Source ref as one of the version refs, so it is fetched, exported and kept by GC', () => {
+        const refs = version.refsWithOptions(false, false).map((ref) => ref.toString());
+        expect(refs).to.include(source.hash().toString());
+      });
+      it('should throw when the list is read before it was loaded', () => {
+        expect(() => version.getLoadedFlattenedDependencies()).to.throw('load them with loadFlattenedDependencies()');
+        expect(() => version.flattenedDependencies).to.throw('load them with loadFlattenedDependencies()');
+      });
+      it('should load the list from the Source, and keep only the ref when saved again', async () => {
+        const parsed = Version.parse(version.toBuffer(false).toString(), hash);
+        const loaded = await parsed.loadFlattenedDependencies(loaderOf([source]));
+        expect(loaded.map((id) => id.toString())).to.deep.equal(flattenedStr);
+        expect(parsed.getLoadedFlattenedDependencies()).to.equal(loaded);
+        expect(parsed.toObject()).to.not.have.property('flattenedDependencies');
+      });
+      it('should load the list synchronously, from the cache or from the disk', () => {
+        const fromDisk = Version.parse(version.toBuffer(false).toString(), hash);
+        const diskRepo = { getFromMemory: () => undefined, loadSync: () => source } as any;
+        expect(fromDisk.loadFlattenedDependenciesSync(diskRepo).map((id) => id.toString())).to.deep.equal(flattenedStr);
+        const fromCache = Version.parse(version.toBuffer(false).toString(), hash);
+        const cacheRepo = { getFromMemory: () => source, loadSync: () => undefined } as any;
+        expect(fromCache.loadFlattenedDependenciesSync(cacheRepo).map((id) => id.toString())).to.deep.equal(
+          flattenedStr
+        );
+        expect(fromCache.flattenedDependenciesRef?.toString()).to.equal(source.hash().toString());
+      });
+      it('should save a newly set list in the Version, instead of the ref', () => {
+        const parsed = Version.parse(version.toBuffer(false).toString(), hash);
+        parsed.flattenedDependencies = new ComponentIdList(ComponentID.fromString('my-scope/is-type@0.0.3'));
+        const versionObj = parsed.toObject();
+        expect(versionObj).to.not.have.property('flattenedDependenciesRef');
+        expect(versionObj.flattenedDependencies).to.deep.equal([
+          { scope: 'my-scope', name: 'is-type', version: '0.0.3' },
+        ]);
+      });
+      it('should throw, not return an empty list, when the Source is missing', async () => {
+        const parsed = Version.parse(version.toBuffer(false).toString(), hash);
+        let error: Error | undefined;
+        try {
+          await parsed.loadFlattenedDependencies(loaderOf([]));
+        } catch (err: any) {
+          error = err;
+        }
+        expect(error?.message).to.include(`unable to find the object ${source.hash().toString()}`);
+      });
+      it('should load the list of the old format without the loader', async () => {
+        const oldFormat = getVersionWithDepsFixture();
+        const loaded = await oldFormat.loadFlattenedDependencies(loaderOf([]));
+        expect(loaded.map((id) => id.toString())).to.deep.equal(flattenedStr);
+      });
+      it('should validate the list when it was moved but is still loaded', () => {
+        const moved = getVersionWithDepsFixture();
+        moved.flattenedDependencies = new ComponentIdList(ComponentID.fromString('my-scope/is-type'));
+        moved.moveFlattenedDependenciesToSource();
+        expect(() => moved.validate()).to.throw('does not have a version');
+      });
+      it('should pass the validation although the list is not in the Version', () => {
+        expect(version.dependencies.isEmpty()).to.be.false;
+        expect(() => version.validate()).to.not.throw();
+      });
     });
   });
   describe('validate()', () => {
