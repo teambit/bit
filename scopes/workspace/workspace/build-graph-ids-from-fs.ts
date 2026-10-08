@@ -21,6 +21,8 @@ const DEPS_NOT_RESOLVED_ISSUES: Array<new () => ComponentIssue> = [
   IssuesClasses.MissingDependenciesOnFs,
   IssuesClasses.MissingLinksFromNodeModulesToSrc,
   IssuesClasses.UntrackedDependencies,
+  IssuesClasses.ParseErrors,
+  IssuesClasses.ResolveErrors,
 ];
 
 export function lifecycleToDepType(compDep: ComponentDependency): DepEdgeType {
