@@ -31,7 +31,7 @@ fn invalid_encoding_does_not_end_session() {
     assert_eq!(responses[1], json!({"ok":true}));
 }
 
-struct BrokenWriter;
+pub(super) struct BrokenWriter;
 impl Write for BrokenWriter {
     fn write(&mut self, _: &[u8]) -> io::Result<usize> {
         Err(io::ErrorKind::BrokenPipe.into())

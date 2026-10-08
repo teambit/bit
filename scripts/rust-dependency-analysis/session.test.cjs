@@ -489,3 +489,81 @@ test(
     assert.fail('cancelled real Rust scanner process survived cleanup');
   }
 );
+
+function realPathFixture(context) {
+  assert.ok(nativeAvailable, `required Rust scanner binary is missing: ${nativeExecutable}`);
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'bit scanner пути with spaces '));
+  const session = new RustDependencyScannerSession({ executable: nativeExecutable, cwd: directory, threads: 2 });
+  context.after(async () => {
+    session.dispose();
+    await fs.promises.rm(directory, { recursive: true, force: true, maxRetries: 10, retryDelay: 25 });
+  });
+  return { directory, session };
+}
+const realPathOptions = {
+  skip: !nativeAvailable && !nativeRequired ? 'build native scanner or set BIT_NATIVE_SCANNER' : false,
+};
+test('real helper preserves Unicode and platform separator logical spellings', realPathOptions, async (context) => {
+  const { directory, session } = realPathFixture(context);
+  fs.mkdirSync(path.join(directory, '目录 space'));
+  const filename = '目录 space/файл.ts';
+  fs.writeFileSync(path.join(directory, filename), "import './依赖';");
+  const alternate = process.platform === 'win32' ? '目录 space\\файл.ts' : './' + filename;
+  await session.prefetch([filename, alternate]);
+  for (const logical of [filename, alternate]) {
+    assert.equal(session.get(logical).path, logical);
+    assert.deepEqual(Object.keys(session.get(logical).dependencies), ['./依赖']);
+  }
+  assert.equal(session.unavailableReason, undefined);
+});
+test(
+  'real helper respects filesystem case behavior without collapsing logical case identities',
+  realPathOptions,
+  async (context) => {
+    const { directory, session } = realPathFixture(context);
+    fs.writeFileSync(path.join(directory, 'MixedCase.ts'), "import './upper';");
+    const aliasesSameFile = fs.existsSync(path.join(directory, 'mixedcase.ts'));
+    if (!aliasesSameFile) fs.writeFileSync(path.join(directory, 'mixedcase.ts'), "import './lower';");
+    context.diagnostic(
+      aliasesSameFile
+        ? 'filesystem is case-insensitive for these spellings'
+        : 'filesystem is case-sensitive for these spellings'
+    );
+    await session.prefetch(['MixedCase.ts', 'mixedcase.ts']);
+    assert.deepEqual(Object.keys(session.get('MixedCase.ts').dependencies), ['./upper']);
+    assert.deepEqual(Object.keys(session.get('mixedcase.ts').dependencies), [aliasesSameFile ? './upper' : './lower']);
+    assert.equal(session.get('MixedCase.ts').path, 'MixedCase.ts');
+    assert.equal(session.get('mixedcase.ts').path, 'mixedcase.ts');
+    const upper = await session.scanSource('MixedCase.ts', "import './inline-upper';");
+    const lower = await session.scanSource('mixedcase.ts', "import './inline-lower';");
+    assert.deepEqual(Object.keys(upper.dependencies), ['./inline-upper']);
+    assert.deepEqual(Object.keys(lower.dependencies), ['./inline-lower']);
+    assert.deepEqual(Object.keys((await session.scanSource('MixedCase.ts', "import './inline-upper';")).dependencies), [
+      './inline-upper',
+    ]);
+  }
+);
+test('real helper keeps symlink logical identities separate from read targets', realPathOptions, async (context) => {
+  const { directory, session } = realPathFixture(context);
+  fs.writeFileSync(path.join(directory, 'target.ts'), "import './disk';");
+  try {
+    fs.symlinkSync(path.join(directory, 'target.ts'), path.join(directory, 'alias.ts'), 'file');
+  } catch (error) {
+    if (process.platform === 'win32' && ['EPERM', 'EACCES'].includes(error.code)) {
+      context.skip(`Windows runner cannot create file symlinks: ${error.code}`);
+      return;
+    }
+    throw error;
+  }
+  await session.prefetch(['target.ts', 'alias.ts']);
+  assert.equal(session.get('target.ts').path, 'target.ts');
+  assert.equal(session.get('alias.ts').path, 'alias.ts');
+  assert.deepEqual(Object.keys(session.get('alias.ts').dependencies), ['./disk']);
+  assert.deepEqual(Object.keys((await session.scanSource('target.ts', "import './target-source';")).dependencies), [
+    './target-source',
+  ]);
+  assert.deepEqual(Object.keys((await session.scanSource('alias.ts', "import './alias-source';")).dependencies), [
+    './alias-source',
+  ]);
+  assert.deepEqual(Object.keys(session.get('target.ts').dependencies), ['./disk']);
+});

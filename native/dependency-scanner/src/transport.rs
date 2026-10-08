@@ -1,4 +1,7 @@
-use crate::limits::REQUEST_BYTES;
+use crate::{
+    limits::REQUEST_BYTES,
+    timings::{Metrics, Profile, Stage, measure},
+};
 use serde_json::Value;
 use std::io::{self, BufRead, Write};
 
@@ -53,39 +56,95 @@ pub(crate) fn serve(
     writer: &mut impl Write,
     mut process: impl FnMut(&str) -> Result<Value, serde_json::Error>,
 ) -> io::Result<()> {
+    serve_profiled(reader, writer, &mut io::sink(), false, |input, _| process(input))
+}
+fn response_for_input(
+    input: Input,
+    metrics: Option<&Metrics>,
+    process: &mut impl FnMut(&str, Option<&Metrics>) -> Result<Value, serde_json::Error>,
+) -> io::Result<Value> {
+    match input {
+        Input::Oversized => Ok(invalid_request("request exceeds 8 MiB limit")),
+        Input::Line(bytes) => match measure(metrics, Stage::Decode, || std::str::from_utf8(&bytes))
+        {
+            Ok(line) => process(line, metrics).map_err(io::Error::other),
+            Err(_) => Ok(invalid_request("request is not UTF-8")),
+        },
+    }
+}
+pub(crate) fn serve_profiled(
+    reader: &mut impl BufRead,
+    writer: &mut impl Write,
+    diagnostics: &mut impl Write,
+    enabled: bool,
+    mut process: impl FnMut(&str, Option<&Metrics>) -> Result<Value, serde_json::Error>,
+) -> io::Result<()> {
+    let mut request_index = 0_u64;
     while let Some(input) = read_input(reader, REQUEST_BYTES)? {
-        let response = match input {
-            Input::Oversized => invalid_request("request exceeds 8 MiB limit"),
-            Input::Line(bytes) => match std::str::from_utf8(&bytes) {
-                Ok(line) => process(line).map_err(io::Error::other)?,
-                Err(_) => invalid_request("request is not UTF-8"),
-            },
-        };
-        serde_json::to_writer(&mut *writer, &response)?;
+        let profile = enabled.then(Profile::new);
+        let metrics = profile.as_ref().map(Profile::metrics);
+        let response = response_for_input(input, metrics, &mut process)?;
+        measure(metrics, Stage::Serialize, || serde_json::to_writer(&mut *writer, &response))?;
         writeln!(writer)?;
         writer.flush()?;
+        if let Some(profile) = profile {
+            request_index = request_index.saturating_add(1);
+            profile.emit(diagnostics, &response, request_index)?;
+        }
     }
     Ok(())
 }
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod timings_tests;
 
-pub(crate) fn run() -> Result<(), Box<dyn std::error::Error>> {
-    let args: Vec<_> = std::env::args().skip(1).collect();
-    let threads = if args.is_empty() {
-        std::thread::available_parallelism()?.get().min(8)
-    } else if args.len() == 2 && args[0] == "--threads" {
-        args[1].parse::<usize>()?
-    } else {
-        return Err("usage: bit-dependency-scanner [--threads 1..64]".into());
+struct Options {
+    threads: usize,
+    timings: bool,
+}
+fn options(args: &[String]) -> Result<Options, Box<dyn std::error::Error>> {
+    let mut arguments = args.iter();
+    let mut threads = None;
+    let mut timings = false;
+    while let Some(argument) = arguments.next() {
+        match argument.as_str() {
+            "--threads" if threads.is_none() => {
+                let value = arguments.next().ok_or("--threads requires a value")?;
+                threads = Some(value.parse::<usize>()?);
+            }
+            "--timings" if !timings => timings = true,
+            _ => return Err("usage: bit-dependency-scanner [--threads 1..64] [--timings]".into()),
+        }
+    }
+    let threads = match threads {
+        Some(threads) => threads,
+        None => std::thread::available_parallelism()?.get().min(8),
     };
     if !(1..=64).contains(&threads) {
         return Err("threads must be in 1..64".into());
     }
-    let pool = rayon::ThreadPoolBuilder::new().num_threads(threads).build()?;
+    Ok(Options { threads, timings })
+}
+pub(crate) fn run() -> Result<(), Box<dyn std::error::Error>> {
+    let args: Vec<_> = std::env::args().skip(1).collect();
+    let options = options(&args)?;
+    let pool = rayon::ThreadPoolBuilder::new().num_threads(options.threads).build()?;
     let stdin = io::stdin();
     let mut stdout = io::BufWriter::new(io::stdout().lock());
-    serve(&mut stdin.lock(), &mut stdout, |input| crate::protocol::process_request(input, &pool))?;
+    if options.timings {
+        serve_profiled(
+            &mut stdin.lock(),
+            &mut stdout,
+            &mut io::stderr().lock(),
+            true,
+            |input, metrics| crate::protocol::process_with_metrics(input, &pool, metrics),
+        )?;
+    } else {
+        serve(&mut stdin.lock(), &mut stdout, |input| {
+            crate::protocol::process_request(input, &pool)
+        })?;
+    }
     Ok(())
 }

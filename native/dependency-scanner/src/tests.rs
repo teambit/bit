@@ -1,4 +1,7 @@
-use super::{File, scan};
+use super::{File, Outcome, scan_with_metrics};
+fn scan(file: &File, unsupported_options: bool) -> Outcome {
+    scan_with_metrics(file, unsupported_options, None)
+}
 use serde_json::json;
 
 fn fixture(kind: &str, source: &str) -> File {
