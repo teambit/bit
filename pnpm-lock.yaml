@@ -82051,6 +82051,7 @@ snapshots:
       '@teambit/graph.cleargraph': 0.0.11
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.concurrency': file:scopes/harmony/modules/concurrency
+      '@teambit/harmony.modules.feature-toggle': file:scopes/harmony/modules/feature-toggle
       '@teambit/harmony.modules.get-basic-log': file:scopes/harmony/modules/get-basic-log(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/harmony.testing.load-aspect': file:scopes/harmony/testing/load-aspect(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
@@ -82157,6 +82158,7 @@ snapshots:
       '@teambit/graph.cleargraph': 0.0.11
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.concurrency': file:scopes/harmony/modules/concurrency
+      '@teambit/harmony.modules.feature-toggle': file:scopes/harmony/modules/feature-toggle
       '@teambit/harmony.modules.get-basic-log': file:scopes/harmony/modules/get-basic-log(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/harmony.testing.load-aspect': file:scopes/harmony/testing/load-aspect(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
@@ -82263,6 +82265,7 @@ snapshots:
       '@teambit/graph.cleargraph': 0.0.11
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.concurrency': file:scopes/harmony/modules/concurrency
+      '@teambit/harmony.modules.feature-toggle': file:scopes/harmony/modules/feature-toggle
       '@teambit/harmony.modules.get-basic-log': file:scopes/harmony/modules/get-basic-log(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/harmony.testing.load-aspect': file:scopes/harmony/testing/load-aspect(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
