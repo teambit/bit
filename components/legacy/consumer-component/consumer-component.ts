@@ -54,6 +54,10 @@ export type ComponentProps = {
   devDependencies?: Dependency[];
   peerDependencies?: Dependency[];
   flattenedDependencies?: ComponentIdList;
+  /**
+   * used instead of `flattenedDependencies` to have them computed only once they're read
+   */
+  loadFlattenedDependencies?: () => ComponentIdList;
   flattenedEdges?: DepEdge[];
   packageDependencies?: Record<string, string>;
   devPackageDependencies?: Record<string, string>;
@@ -101,7 +105,8 @@ export class Component {
   devDependencies: Dependencies;
   peerDependencies: Dependencies;
   dependenciesGraph?: DependenciesGraph;
-  flattenedDependencies: ComponentIdList;
+  private _flattenedDependencies?: ComponentIdList;
+  private loadFlattenedDependencies?: () => ComponentIdList;
   flattenedEdges: DepEdge[];
   packageDependencies: Record<string, string>;
   devPackageDependencies: Record<string, string>;
@@ -171,6 +176,7 @@ export class Component {
     devDependencies,
     peerDependencies,
     flattenedDependencies,
+    loadFlattenedDependencies,
     flattenedEdges,
     packageDependencies,
     devPackageDependencies,
@@ -202,7 +208,8 @@ export class Component {
     this.setDependencies(dependencies);
     this.setDevDependencies(devDependencies);
     this.setPeerDependencies(peerDependencies);
-    this.flattenedDependencies = flattenedDependencies || new ComponentIdList();
+    if (flattenedDependencies) this.flattenedDependencies = flattenedDependencies;
+    else this.loadFlattenedDependencies = loadFlattenedDependencies;
     this.flattenedEdges = flattenedEdges || [];
     this.packageDependencies = packageDependencies || {};
     this.devPackageDependencies = devPackageDependencies || {};
@@ -232,6 +239,21 @@ export class Component {
         throw new BitError(`failed loading a component ${this.id}, the field "${field}" can't be empty`);
       }
     });
+  }
+
+  get flattenedDependencies(): ComponentIdList {
+    if (!this._flattenedDependencies) {
+      this._flattenedDependencies = this.loadFlattenedDependencies
+        ? this.loadFlattenedDependencies()
+        : new ComponentIdList();
+      this.loadFlattenedDependencies = undefined;
+    }
+    return this._flattenedDependencies;
+  }
+
+  set flattenedDependencies(flattenedDependencies: ComponentIdList) {
+    this._flattenedDependencies = flattenedDependencies;
+    this.loadFlattenedDependencies = undefined;
   }
 
   /**

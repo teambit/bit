@@ -21,7 +21,8 @@ export class ComponentVersion {
   }
 
   async flattenedDependencies(repository: Repository): Promise<ComponentIdList> {
-    return this.getVersion(repository).then((version) => version.flattenedDependencies);
+    const version = await this.getVersion(repository);
+    return version.loadFlattenedDependencies(repository);
   }
 
   toComponentId(): ComponentID {

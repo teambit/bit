@@ -174,7 +174,10 @@ export function validateVersionInstance(version: Version): void {
   });
   version.dependencies.validate(version.componentId);
   version.devDependencies.validate(version.componentId);
-  if (!version.dependencies.isEmpty() && !version.flattenedDependencies.length) {
+  // when the flattened dependencies are stored in a separate object that wasn't loaded, the validation has no access
+  // to them, so the list is not validated here.
+  const flattenedDependencies = version.getFlattenedDependenciesIfLoaded();
+  if (flattenedDependencies && !version.dependencies.isEmpty() && !flattenedDependencies.length) {
     throw new VersionInvalid(`${message}, it has dependencies but its flattenedDependencies is empty`);
   }
   const validateFlattenedDependencies = (dependencies: ComponentIdList) => {
@@ -202,7 +205,7 @@ export function validateVersionInstance(version: Version): void {
       });
     }
   };
-  validateFlattenedDependencies(version.flattenedDependencies);
+  if (flattenedDependencies) validateFlattenedDependencies(flattenedDependencies);
   // extensions can be duplicate with other dependencies type. e.g. "test" can have "compile" as a
   // dependency and extensionDependency. we can't remove it from extDep, otherwise, the ext won't
   // be running

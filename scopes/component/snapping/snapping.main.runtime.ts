@@ -31,6 +31,7 @@ import pMap from 'p-map';
 import { validateVersion } from '@teambit/pkg.modules.semver-helper';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { getLogForSquash } from '@teambit/harmony.modules.get-basic-log';
+import { FLATTENED_DEPS_IN_SOURCE, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import type { ConfigStoreMain } from '@teambit/config-store';
 import { ConfigStoreAspect } from '@teambit/config-store';
 import type { ScopeMain } from '@teambit/scope';
@@ -1216,6 +1217,10 @@ another option, in case this dependency is not in main yet is to remove all refe
       id: { scope: source.scope || (source.defaultScope as string), name: source.name },
       lane: lane ? { scope: lane.scope, name: lane.name, hash: lane.hash().toString() } : undefined,
     };
+    if (isFeatureEnabled(FLATTENED_DEPS_IN_SOURCE)) {
+      const flattenedDependencies = version.moveFlattenedDependenciesToSource();
+      if (flattenedDependencies) objectRepo.add(flattenedDependencies);
+    }
     objectRepo.add(version);
     if (flattenedEdges) this.objectsRepo.add(flattenedEdges);
     if (dependenciesGraph) this.objectsRepo.add(dependenciesGraph);

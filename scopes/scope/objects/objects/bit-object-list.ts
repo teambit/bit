@@ -1,8 +1,15 @@
 import type BitObject from './object';
+import type Ref from './ref';
 import { ExportMetadata, Lane, LaneHistory, ModelComponent, Version, VersionHistory } from '../models';
 
 export class BitObjectList {
-  constructor(private objects: BitObject[]) {}
+  /**
+   * `objectsByRef` maps the refs the objects were received with, so finding an object doesn't need hashing them all.
+   */
+  constructor(
+    private objects: BitObject[],
+    private objectsByRef = new Map<string, BitObject>()
+  ) {}
 
   getComponents(): ModelComponent[] {
     return this.objects.filter((object) => object instanceof ModelComponent) as ModelComponent[];
@@ -26,6 +33,16 @@ export class BitObjectList {
 
   getAll(): BitObject[] {
     return this.objects;
+  }
+
+  /**
+   * finds an object of this list by its ref. it has the same signature as `Repository.load()`, so these objects can be
+   * used where a repository is expected, e.g. `Version.loadFlattenedDependencies()`.
+   */
+  async load(ref: Ref): Promise<BitObject | undefined> {
+    const object = this.objectsByRef.get(ref.toString());
+    // a received ref is not trusted, the found object is hashed to verify it.
+    return object?.hash().isEqual(ref) ? object : undefined;
   }
 
   excludeTypes(types: string[]): BitObject[] {

@@ -166,6 +166,7 @@ function _convertLockfileToGraph(
   const graph = new DependenciesGraph({
     edges: buildEdges(lockfile, { directDependencies, componentIdByPkgName }),
     packages: buildPackages(lockfile, { componentIdByPkgName }),
+    pnpmfileChecksum: lockfile.pnpmfileChecksum,
   });
   dropOrphanFilePkgs(graph);
   return graph;
@@ -353,6 +354,19 @@ export async function convertGraphToLockfile(
     importers: {},
     bit: { depsRequiringBuild },
   };
+  // Carry the readPackage hooks checksum the graph was resolved with, so pnpm
+  // accepts the restored resolution while Bit's hooks are still the same.
+  //
+  // A graph saved before the graph recorded the checksum has none, and gets
+  // none here: pnpm then resolves its dependencies again. Stamping the current
+  // checksum on it would be wrong, because the hooks changed what they do to
+  // dependency manifests while such graphs were being saved (e.g. stripping
+  // `@teambit/harmony` from every dependency was added after graphs started
+  // being stored), so an old graph may hold resolutions the current hooks
+  // would not produce.
+  if (graph.pnpmfileChecksum != null) {
+    lockfile.pnpmfileChecksum = graph.pnpmfileChecksum;
+  }
   const rootEdge = graph.findRootEdge();
   if (rootEdge) {
     for (const [projectDir, manifest] of Object.entries(manifests)) {

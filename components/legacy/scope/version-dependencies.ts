@@ -25,7 +25,7 @@ export class VersionDependencies {
 
   getMissingDependencies(): ComponentID[] {
     const allDepsIds = this.allDependenciesIds;
-    return this.version.flattenedDependencies.filter((id) => !allDepsIds.has(id));
+    return this.version.getLoadedFlattenedDependencies().filter((id) => !allDepsIds.has(id));
   }
 
   throwForMissingDependencies() {

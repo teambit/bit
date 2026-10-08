@@ -845,15 +845,19 @@ export class ScopeComponentsImporter {
     const flattenedDepsToFetch = new ComponentIdList();
     await Promise.all(
       componentsWithVersion.map(async (compWithVer) => {
-        const flattenedEdges = await compWithVer.versionObj.getFlattenedEdges(this.repo);
+        // loaded here also for the VersionDependencies created below, which read them synchronously.
+        const [flattenedDependencies, flattenedEdges] = await Promise.all([
+          compWithVer.versionObj.loadFlattenedDependencies(this.repo),
+          compWithVer.versionObj.getFlattenedEdges(this.repo),
+        ]);
         if (skipComponentsWithDepsGraph) {
           if (flattenedEdges.length) return;
-          if (!compWithVer.versionObj.flattenedDependencies.length) return;
+          if (!flattenedDependencies.length) return;
           logger.debug(
             `scopeComponentImporter, unable to get dependencies graph from ${compWithVer.componentVersion.id.toString()}, will import all its deps`
           );
         }
-        flattenedDepsToFetch.add(compWithVer.versionObj.flattenedDependencies);
+        flattenedDepsToFetch.add(flattenedDependencies);
       })
     );
 
@@ -862,9 +866,9 @@ export class ScopeComponentsImporter {
     const compVersionsOfDeps = this.componentsDefToComponentsVersion(compDefsOfDeps, false, true);
 
     const versionDeps = componentsWithVersion.map(({ componentVersion, versionObj }) => {
-      const dependencies = versionObj.flattenedDependencies.map((dep) =>
-        compVersionsOfDeps.find((c) => c.toComponentId().isEqual(dep))
-      );
+      const dependencies = versionObj
+        .getLoadedFlattenedDependencies()
+        .map((dep) => compVersionsOfDeps.find((c) => c.toComponentId().isEqual(dep)));
       return new VersionDependencies(componentVersion, compact(dependencies), versionObj);
     });
     return versionDeps;
@@ -1098,7 +1102,8 @@ export class ScopeComponentsImporter {
       if (preferDependencyGraph && flattenedEdges.length) {
         return;
       }
-      const flattenedDepsToLocate = version.flattenedDependencies.filter((dep) => !existingCache.has(dep));
+      const flattenedDependencies = await version.loadFlattenedDependencies(this.repo);
+      const flattenedDepsToLocate = flattenedDependencies.filter((dep) => !existingCache.has(dep));
       const flattenedDepsDefs = await this.sources.getMany(flattenedDepsToLocate, reFetchUnBuiltVersion);
       const allFlattenedExist = flattenedDepsDefs.every((def) => {
         if (!def.component) return false;
@@ -1163,9 +1168,13 @@ export class ScopeComponentsImporter {
     const versionDeps = compact(versionDepsWithNulls);
     const allFlattened = await Promise.all(
       versionDeps.map(async (v) => {
-        const flattenedEdges = await v.version.getFlattenedEdges(this.repo);
+        // loaded here also for the dependencies set below, which read them synchronously.
+        const [flattenedDependencies, flattenedEdges] = await Promise.all([
+          v.version.loadFlattenedDependencies(this.repo),
+          v.version.getFlattenedEdges(this.repo),
+        ]);
         if (preferDependencyGraph && flattenedEdges.length) return [];
-        return v.version.getAllFlattenedDependencies();
+        return flattenedDependencies;
       })
     );
     const allFlattenedUniq = ComponentIdList.uniqFromArray(flatten(allFlattened));
@@ -1180,9 +1189,9 @@ export class ScopeComponentsImporter {
       })
     );
     versionDeps.forEach((versionDep) => {
-      const deps = versionDep.version.flattenedDependencies.map((dep) =>
-        flattenedComponentVersions.find((c) => c.toComponentId().isEqual(dep))
-      );
+      const deps = versionDep.version
+        .getLoadedFlattenedDependencies()
+        .map((dep) => flattenedComponentVersions.find((c) => c.toComponentId().isEqual(dep)));
       versionDep.dependencies = compact(deps);
     });
 

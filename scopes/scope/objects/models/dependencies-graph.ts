@@ -39,19 +39,30 @@ export class DependenciesGraph {
   schemaVersion: string;
   packages: PackagesMap;
   edges: DependencyEdge[];
+  /**
+   * The `pnpmfileChecksum` of the lockfile the graph was created from: an id of
+   * the readPackage hooks the dependencies were resolved with. A lockfile
+   * restored from the graph carries it, so pnpm trusts the restored resolution
+   * only while Bit's hooks are still the same. Graphs created before this field
+   * existed don't have it.
+   */
+  pnpmfileChecksum?: string;
 
   constructor({
     packages,
     edges,
     schemaVersion,
+    pnpmfileChecksum,
   }: {
     packages: PackagesMap;
     edges: DependencyEdge[];
     schemaVersion?: string;
+    pnpmfileChecksum?: string;
   }) {
     this.packages = packages;
     this.edges = edges;
     this.schemaVersion = schemaVersion ?? DEPENDENCIES_GRAPH_SCHEMA_VERSION;
+    this.pnpmfileChecksum = pnpmfileChecksum;
   }
 
   serialize(): string {
@@ -59,6 +70,8 @@ export class DependenciesGraph {
       schemaVersion: this.schemaVersion,
       packages: Object.fromEntries(this.packages.entries()),
       edges: this.edges,
+      // JSON.stringify omits it when undefined.
+      pnpmfileChecksum: this.pnpmfileChecksum,
     });
   }
 
@@ -72,10 +85,12 @@ export class DependenciesGraph {
       schemaVersion: parsed.schemaVersion,
       edges: parsed.edges,
       packages: new Map(Object.entries(parsed.packages)),
+      pnpmfileChecksum: parsed.pnpmfileChecksum,
     });
   }
 
   merge(graph: DependenciesGraph): void {
+    this.pnpmfileChecksum = mergePnpmfileChecksums(this, graph);
     const rootEdge = this.findRootEdge();
     const incomingRootEdge = graph.findRootEdge();
     const directDependencies = incomingRootEdge?.neighbours;
@@ -108,6 +123,17 @@ export class DependenciesGraph {
 
   isEmpty(): boolean {
     return this.packages.size === 0 && this.edges.length === 0;
+  }
+
+  /**
+   * Whether the graph holds any resolved dependency. A component without
+   * dependencies has only an empty root edge.
+   */
+  hasResolutions(): boolean {
+    return (
+      this.packages.size > 0 ||
+      this.edges.some(({ id, neighbours }) => id !== DependenciesGraph.ROOT_EDGE_ID || neighbours.length > 0)
+    );
   }
 
   /**
@@ -270,6 +296,18 @@ export class DependenciesGraph {
     }
     return versionsByPackageName;
   }
+}
+
+/**
+ * The merged graph mixes resolutions from both graphs. It can only claim a set
+ * of readPackage hooks when both were resolved with the same ones; otherwise
+ * it is left unset, so pnpm resolves again instead of trusting it. A graph
+ * without resolutions has nothing to vouch for, so it doesn't count.
+ */
+function mergePnpmfileChecksums(graph1: DependenciesGraph, graph2: DependenciesGraph): string | undefined {
+  if (!graph2.hasResolutions()) return graph1.pnpmfileChecksum;
+  if (!graph1.hasResolutions()) return graph2.pnpmfileChecksum;
+  return graph1.pnpmfileChecksum === graph2.pnpmfileChecksum ? graph1.pnpmfileChecksum : undefined;
 }
 
 function isSameDirectDependency(dep1: DependencyNeighbour, dep2: DependencyNeighbour): boolean {
