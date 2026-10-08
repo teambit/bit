@@ -71,6 +71,16 @@ export type FilterAspectsOptions = {
   filterByRuntime?: boolean;
 };
 
+export type GetGraphIdsOpts = {
+  /**
+   * a modified workspace component keeps its last snap/tag version as its graph node, so published components that
+   * depend on that exact version get linked to the modified copy. when true, edges that won't exist once the modified
+   * components are snapped are removed: incoming edges from components outside the workspace (they point to the old
+   * version) and outgoing edges that are not current dependencies. useful for detecting cycles the next snap creates.
+   */
+  excludeOutdatedEdgesOfModified?: boolean;
+};
+
 export interface ComponentFactory {
   /**
    * name of the component host.
@@ -132,7 +142,7 @@ export interface ComponentFactory {
    * get graph of the given component-ids and all their dependencies (recursively/flattened).
    * the nodes are ComponentIds and is much faster than `this.getGraph()`.
    */
-  getGraphIds(ids?: ComponentID[], shouldThrowOnMissingDep?: boolean): Promise<CompIdGraph>;
+  getGraphIds(ids?: ComponentID[], shouldThrowOnMissingDep?: boolean, opts?: GetGraphIdsOpts): Promise<CompIdGraph>;
 
   getLogs(id: ComponentID, shortHash?: boolean, startsFrom?: string): Promise<ComponentLog[]>;
 

@@ -2,7 +2,7 @@ import mapSeries from 'p-map-series';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { flatten, partition } from 'lodash';
 import type { Consumer } from '@teambit/legacy.consumer';
-import type { Component, ComponentID } from '@teambit/component';
+import type { Component, ComponentID, GetGraphIdsOpts } from '@teambit/component';
 import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { ComponentIdList } from '@teambit/component-id';
 import type { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
@@ -12,7 +12,16 @@ import { ComponentNotFound as ComponentNotFoundInScope } from '@teambit/scope';
 import compact from 'lodash.compact';
 import type { Logger } from '@teambit/logger';
 import { BitError } from '@teambit/bit-error';
+import { IssuesClasses } from '@teambit/component-issues';
+import type { ComponentIssue } from '@teambit/component-issues';
 import type { Workspace } from './workspace';
+
+const DEPS_NOT_RESOLVED_ISSUES: Array<new () => ComponentIssue> = [
+  IssuesClasses.MissingPackagesDependenciesOnFs,
+  IssuesClasses.MissingDependenciesOnFs,
+  IssuesClasses.MissingLinksFromNodeModulesToSrc,
+  IssuesClasses.UntrackedDependencies,
+];
 
 export function lifecycleToDepType(compDep: ComponentDependency): DepEdgeType {
   if (compDep.isExtension) return 'ext';
@@ -35,6 +44,8 @@ export class GraphIdsFromFsBuilder {
   private consumer: Consumer;
   private loadedComponents: { [idStr: string]: Component } = {};
   private importedIds: string[] = [];
+  // the dependencies each processed component has right now (not from its saved graph), keyed by the component id-str
+  private currentDepsIds: { [idStr: string]: string[] } = {};
   private shouldThrowOnInvalidDeps = true; // for now it has the same value as shouldThrowOnMissingDep. change if needed
   constructor(
     private workspace: Workspace,
@@ -51,11 +62,12 @@ export class GraphIdsFromFsBuilder {
    * the nodes are component-ids and the edges has a label of the dependency type.
    * to get some info about this the graph build take a look into build-graph-from-fs.buildGraph() docs.
    */
-  async buildGraph(ids: ComponentID[]): Promise<Graph<ComponentID, DepEdgeType>> {
+  async buildGraph(ids: ComponentID[], opts: GetGraphIdsOpts = {}): Promise<Graph<ComponentID, DepEdgeType>> {
     this.logger.debug(`GraphIdsFromFsBuilder, buildGraph with ${ids.length} seeders`);
     const start = Date.now();
     const components = await this.loadManyComponents(ids);
     await this.processManyComponents(components);
+    if (opts.excludeOutdatedEdgesOfModified) await this.removeOutdatedEdgesOfModified();
     this.logger.debug(
       `GraphIdsFromFsBuilder, buildGraph with ${ids.length} seeders completed (${(Date.now() - start) / 1000} sec)`
     );
@@ -116,6 +128,7 @@ export class GraphIdsFromFsBuilder {
     const allDependenciesComps = await this.loadManyComponents(allDepsIds, idStr);
 
     deps.forEach((dep) => this.addDepEdge(idStr, dep));
+    this.currentDepsIds[idStr] = allDepsIds.map((id) => id.toString());
     this.completed.push(idStr);
 
     return allDependenciesComps;
@@ -161,7 +174,58 @@ export class GraphIdsFromFsBuilder {
     const idStr = component.id.toString();
     const allDependenciesComps = await this.loadManyComponents(allDepsIds, idStr);
     deps.forEach((dep) => this.addDepEdge(idStr, dep));
+    this.currentDepsIds[idStr] = deps.map((dep) => dep.componentId.toString());
     return allDependenciesComps;
+  }
+
+  /**
+   * a modified workspace component is represented by its last snap/tag version (e.g. "scope/comp@1.0.0"). published
+   * components that depend on exactly this version point to the same node, although they depend on the old version,
+   * not on the modified one. also, the saved graphs merged from the scope may carry the old outgoing edges of it.
+   * once the modified component is snapped, it gets a new version and these edges don't apply to it anymore, so they
+   * can create cycles that don't really exist. the same goes for its workspace dependents, which get auto-snapped.
+   * for these components, keep only the incoming edges from components processed from the workspace (their edges are
+   * the current ones) and only the outgoing edges that are current deps.
+   */
+  private async removeOutdatedEdgesOfModified() {
+    // components processed from the workspace. the edges of other nodes came from saved graphs, so they are the
+    // published ones, even when the id is in the workspace.
+    const processedIdsStr = new Set(
+      this.workspace
+        .listIds()
+        .map((id) => id.toString())
+        .filter((idStr) => this.loadedComponents[idStr] && this.currentDepsIds[idStr])
+    );
+    // when some dependencies can't be resolved, the current deps are incomplete, so keep the edges as is.
+    const hasUnresolvedDeps = (idStr: string) =>
+      DEPS_NOT_RESOLVED_ISSUES.some((issue) => this.loadedComponents[idStr].state.issues.getIssue(issue));
+    const changingIdsStr = new Set<string>();
+    await mapSeries(Array.from(processedIdsStr), async (idStr) => {
+      if (hasUnresolvedDeps(idStr)) return;
+      if (await this.workspace.isModified(this.loadedComponents[idStr])) changingIdsStr.add(idStr);
+    });
+    if (!changingIdsStr.size) return;
+    // workspace dependents of modified components get auto-snapped, so they get a new version as well.
+    const processedDependents: { [idStr: string]: string[] } = {};
+    this.graph.edges.forEach((edge) => {
+      if (!processedIdsStr.has(edge.sourceId)) return;
+      (processedDependents[edge.targetId] ||= []).push(edge.sourceId);
+    });
+    const queue = Array.from(changingIdsStr);
+    while (queue.length) {
+      const idStr = queue.pop() as string;
+      (processedDependents[idStr] || []).forEach((dependent) => {
+        if (changingIdsStr.has(dependent) || hasUnresolvedDeps(dependent)) return;
+        changingIdsStr.add(dependent);
+        queue.push(dependent);
+      });
+    }
+    this.graph.edges.forEach((edge) => {
+      const isIncomingNotCurrent = changingIdsStr.has(edge.targetId) && !processedIdsStr.has(edge.sourceId);
+      const isOutgoingNotCurrent =
+        changingIdsStr.has(edge.sourceId) && !this.currentDepsIds[edge.sourceId].includes(edge.targetId);
+      if (isIncomingNotCurrent || isOutgoingNotCurrent) this.graph.deleteEdge(edge.sourceId, edge.targetId);
+    });
   }
 
   private addDepEdge(idStr: string, dep: ComponentDependency) {
