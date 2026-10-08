@@ -9,7 +9,7 @@ const { createHash } = require('node:crypto');
 assert.equal(
   process.argv.length,
   5,
-  'usage: command-invalidation-benchmark.cjs <private-cli-root> <native-executable> <output.json>'
+  'usage: command-configuration-benchmark.cjs <private-cli-root> <native-executable> <output.json>'
 );
 const cliRoot = path.resolve(process.argv[2] || '');
 const native = path.resolve(process.argv[3] || '');
@@ -37,20 +37,15 @@ assert.equal(
 );
 const cache = path.join(cliRoot, '.git/bit/cache/components/deps');
 assert.equal(fs.realpathSync(path.dirname(cache)), path.dirname(cache), 'owned cache parent cannot contain symlinks');
+if (fs.existsSync(cache)) assert.equal(fs.realpathSync(cache), cache, 'cache leaf cannot alias another workspace');
 const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'bit-command-benchmark-'));
 const compileCache = path.join(temporary, 'node-compile-cache');
 const warmSnapshot = path.join(temporary, 'warm-deps');
 const tracer = path.join(__dirname, 'command-invalidation-trace.cjs');
 const originalCache = path.join(temporary, 'original-deps');
 if (fs.existsSync(cache)) fs.cpSync(cache, originalCache, { recursive: true, preserveTimestamps: true });
-const commands = (
-  process.env.BIT_COMMAND_BENCH_MUTATIONS || 'one-source,multiple-sources,large-source,workspace-package'
-).split(',');
-assert.ok(
-  commands.every((command) =>
-    ['one-source', 'multiple-sources', 'many-sources', 'large-source', 'workspace-package'].includes(command)
-  )
-);
+const commands = (process.env.BIT_COMMAND_BENCH_MUTATIONS || 'resolved-import,component-policy,tsconfig').split(',');
+assert.ok(commands.every((command) => ['resolved-import', 'component-policy', 'tsconfig'].includes(command)));
 const report = {
   provenance,
   node: process.version,
@@ -59,6 +54,7 @@ const report = {
   nativeSha256: createHash('sha256').update(fs.readFileSync(native)).digest('hex'),
   workloads: {},
   parity: 'whole command JSON without normalization',
+  memory: 'independent Node/helper peak samples are diagnostic only, not simultaneous process-tree RSS',
 };
 const median = (values) => [...values].sort((a, b) => a - b)[Math.floor(values.length / 2)];
 function cacheEntries() {
@@ -97,7 +93,16 @@ function execute(command, variant) {
   const start = performance.now();
   const run = cp.spawnSync(
     '/usr/bin/time',
-    ['-f', '\nBIT_COMMAND_RESOURCE %U %S %M', process.execPath, '--require', tracer, cli, command, '--json'],
+    [
+      '-f',
+      '\nBIT_COMMAND_RESOURCE %U %S %M',
+      process.execPath,
+      '--require',
+      tracer,
+      cli,
+      ...(Array.isArray(command) ? command : [command]),
+      '--json',
+    ],
     { cwd: cliRoot, env, encoding: 'utf8', maxBuffer: 128 * 1024 * 1024 }
   );
   const elapsedMs = performance.now() - start;
@@ -176,96 +181,104 @@ function restore(state) {
   fs.rmSync(cache, { recursive: true, force: true });
   if (state === 'warm') fs.cpSync(warmSnapshot, cache, { recursive: true, preserveTimestamps: true });
 }
-const sourceFiles = ['scopes/toolbox/string/capitalize/index.ts', 'scopes/toolbox/string/ellipsis/index.ts'].map(
-  (file) => path.join(cliRoot, file)
-);
-const manySourceFiles = commands.includes('many-sources')
-  ? (() => {
-      const { createRequire } = require('node:module');
-      const ts = createRequire(path.join(cliRoot, 'package.json'))('typescript');
-      const bitmap = ts.parseConfigFileTextToJson('.bitmap', fs.readFileSync(path.join(cliRoot, '.bitmap'), 'utf8'));
-      assert.ok(!bitmap.error, 'bitmap must be valid JSONC');
-      const selection = Object.values(bitmap.config)
-        .filter((entry) => entry && typeof entry === 'object' && entry.rootDir?.startsWith('scopes/toolbox/'))
-        .map((entry) => path.join(cliRoot, entry.rootDir, 'index.ts'))
-        .filter((file) => fs.existsSync(file))
-        .sort()
-        .slice(0, 16);
-      assert.equal(selection.length, 16, 'many-edit case requires sixteen distinct components');
-      assert.equal(new Set(selection.map((file) => path.dirname(file))).size, 16);
-      return selection;
-    })()
-  : [];
-const missingMarker = (file) =>
-  `bit-rust-benchmark-missing-${createHash('sha256').update(path.relative(cliRoot, file)).digest('hex').slice(0, 12)}`;
-// The small components above have a single source file; this one has ~70, so its edit
-// shows how a typical aspect-sized component behaves after a source change.
-const largeSourceFile = path.join(cliRoot, 'scopes/workspace/workspace/workspace.ts');
-const packageFile = path.join(cliRoot, 'package.json');
-const originals = [...new Set([...sourceFiles, ...manySourceFiles, largeSourceFile, packageFile])].map((file) => ({
+const componentDir = path.join(cliRoot, 'scopes/toolbox/string/capitalize');
+const sourceFile = path.join(componentDir, 'index.ts');
+const policyFile = path.join(componentDir, 'component.json');
+const tsconfigFile = path.join(componentDir, 'tsconfig.json');
+const componentPolicy = (policy) => ({
+  componentId: { scope: 'teambit.toolbox', name: 'string/capitalize', version: '0.0.518' },
+  propagate: true,
+  extensions: { 'teambit.dependencies/dependency-resolver': { policy } },
+});
+const files = [sourceFile, policyFile, tsconfigFile];
+const originals = files.map((file) => ({
   file,
-  data: fs.readFileSync(file),
-  stat: fs.statSync(file),
+  exists: fs.existsSync(file),
+  data: fs.existsSync(file) ? fs.readFileSync(file) : undefined,
+  stat: fs.existsSync(file) ? fs.statSync(file) : undefined,
 }));
-function resetFiles() {
-  for (const { file, data, stat } of originals) {
-    fs.writeFileSync(file, data);
-    fs.utimesSync(file, stat.atime, stat.mtime);
+const originalDirectoryTimes = fs.statSync(componentDir);
+function resetFiles(final = false) {
+  for (const { file, exists, data, stat } of originals) {
+    if (exists) {
+      fs.writeFileSync(file, data);
+      fs.utimesSync(file, stat.atime, stat.mtime);
+    } else if (final) fs.rmSync(file, { force: true });
   }
+  if (!final) {
+    fs.writeFileSync(policyFile, JSON.stringify(componentPolicy({})));
+    fs.writeFileSync(
+      tsconfigFile,
+      JSON.stringify({ compilerOptions: { strict: false, baseUrl: '.', paths: { '@alias': ['./capitalize'] } } })
+    );
+    const old = new Date(originalDirectoryTimes.mtimeMs - 10000);
+    fs.utimesSync(policyFile, old, old);
+    fs.utimesSync(tsconfigFile, old, old);
+  }
+  fs.utimesSync(componentDir, originalDirectoryTimes.atime, originalDirectoryTimes.mtime);
 }
 try {
   // Common initial cache and bytecode priming; these commands are excluded from measurements.
+  resetFiles();
   restore('cold');
-  const baseline = execute('status', 'legacy').value;
+  execute('status', 'legacy');
   fs.cpSync(cache, warmSnapshot, { recursive: true, preserveTimestamps: true });
   for (const mutation of commands) {
     resetFiles();
-    const editedFiles =
-      mutation === 'many-sources'
-        ? manySourceFiles
-        : mutation === 'large-source'
-          ? [largeSourceFile]
-          : sourceFiles.slice(0, mutation === 'one-source' ? 1 : mutation === 'multiple-sources' ? 2 : 0);
-    const sourceCount = editedFiles.length;
-    for (const file of editedFiles) fs.appendFileSync(file, `\nimport '${missingMarker(file)}';\n`);
-    if (mutation === 'workspace-package') {
-      const value = JSON.parse(fs.readFileSync(packageFile));
-      value.dependencies = { ...value.dependencies, 'bit-rust-benchmark-config-marker': '1.0.0' };
-      fs.writeFileSync(packageFile, JSON.stringify(value, null, 2) + '\n');
+    const command = mutation === 'component-policy' ? ['show', 'teambit.toolbox/string/capitalize'] : 'status';
+    restore('warm');
+    const baseline = execute(command, 'legacy').value;
+    const editedFile =
+      mutation === 'resolved-import' ? sourceFile : mutation === 'component-policy' ? policyFile : tsconfigFile;
+    if (mutation === 'resolved-import') {
+      fs.writeFileSync(sourceFile, "export { ellipsis } from '../ellipsis/ellipsis';\n");
+      assert.ok(
+        fs.existsSync(path.join(componentDir, '../ellipsis/ellipsis.ts')),
+        'replacement import must resolve to a real existing file'
+      );
+    } else if (mutation === 'component-policy') {
+      fs.writeFileSync(policyFile, JSON.stringify(componentPolicy({ dependencies: { lodash: '4.17.21' } })));
+    } else {
+      fs.writeFileSync(
+        tsconfigFile,
+        JSON.stringify({
+          compilerOptions: { strict: true, baseUrl: '.', paths: { '@alias': ['../ellipsis/ellipsis'] } },
+        })
+      );
     }
-    const command = 'status';
     for (const state of ['warm']) {
       restore(state);
       const referenceRun = execute(command, 'legacy');
       assert.ok(
-        sourceCount ? referenceRun.dependencyTreeOperations >= sourceCount : referenceRun.changedCacheEntries >= 334,
+        mutation === 'tsconfig'
+          ? referenceRun.dependencyTreeOperations === 0 && referenceRun.changedCacheEntries === 0
+          : referenceRun.dependencyTreeOperations >= 1 && referenceRun.changedCacheEntries >= 1,
         'legacy must invalidate expected cached component entries'
       );
-      if (sourceCount >= 16)
-        for (const file of editedFiles)
-          assert.ok(
-            referenceRun.dependencyTreeEntryFiles.includes(path.relative(cliRoot, file)),
-            'every edited component must actually enter analysis'
-          );
       const reference = referenceRun.value;
       restore('cold');
       verify(execute(command, 'legacy').value, reference, `${mutation}/legacy warm vs uncached`);
-      if (sourceCount) {
-        assert.notDeepEqual(reference, baseline, 'source dependency mutation must change status JSON');
-        for (const file of editedFiles)
-          assert.ok(
-            JSON.stringify(reference).includes(`${missingMarker(file)}`),
-            'changed missing dependency must appear in status'
-          );
+      if (mutation === 'tsconfig')
+        assert.deepEqual(reference, baseline, 'ignored TSconfig does not alter dependency output');
+      else assert.notDeepEqual(reference, baseline, 'changed dependency input must change command JSON');
+      if (mutation === 'component-policy') {
+        const dependencies = reference.find((fragment) => fragment.title === 'dependencies')?.json;
+        assert.ok(
+          dependencies?.some((dep) => dep.id === 'lodash' && dep.version === '4.17.21'),
+          'show must include the new package policy'
+        );
       }
       report.proofs ||= {};
       report.proofs[mutation] = {
         warmMatchesUncachedLegacy: true,
         changedBaselineJson: JSON.stringify(reference) !== JSON.stringify(baseline),
-        sourceCount,
-        sourcePaths: editedFiles.map((file) => path.relative(cliRoot, file)),
-        cacheSemantics:
-          'missing-dependency results remain unsafe for persistent storage; old records/timestamps may remain and must be rejected on subsequent analysis',
+        command,
+        editedFile: path.relative(cliRoot, editedFile),
+        editedSha256: createHash('sha256').update(fs.readFileSync(editedFile)).digest('hex'),
+        classification:
+          mutation === 'tsconfig'
+            ? 'ignored untracked TSconfig; built-in resolver does not consume TS paths'
+            : 'component dependency freshness',
         legacyChangedCacheEntries: referenceRun.changedCacheEntries,
         legacyDependencyTreeOperations: referenceRun.dependencyTreeOperations,
       };
@@ -281,17 +294,18 @@ try {
           restore(state);
           const result = execute(command, variant);
           assert.ok(
-            sourceCount ? result.dependencyTreeOperations >= sourceCount : result.changedCacheEntries >= 334,
+            mutation === 'tsconfig'
+              ? result.dependencyTreeOperations === 0 && result.changedCacheEntries === 0
+              : result.dependencyTreeOperations >= 1 && result.changedCacheEntries >= 1,
             'each measured run must invalidate expected entries'
           );
-          if (sourceCount >= 16)
-            for (const file of editedFiles)
-              assert.ok(
-                result.dependencyTreeEntryFiles.includes(path.relative(cliRoot, file)),
-                'every edited component must enter every measured analysis'
-              );
-          if (variant === 'native')
-            assert.ok(result.requests > 0 && result.helperStarts > 0, 'native must actually extract after mutation');
+          if (variant === 'native') {
+            if (mutation === 'tsconfig') {
+              assert.equal(result.requests, 0);
+              assert.equal(result.helperStarts, 0);
+            } else
+              assert.ok(result.requests > 0 && result.helperStarts > 0, 'native must actually extract after mutation');
+          }
           verify(result.value, reference, `${mutation}/${state}/${variant} parity`);
           const { value, ...metrics } = result;
           runs.push({ iteration, variant, ...metrics });
@@ -328,7 +342,7 @@ try {
     }
   }
 } finally {
-  resetFiles();
+  resetFiles(true);
   fs.rmSync(cache, { recursive: true, force: true });
   if (fs.existsSync(originalCache)) fs.cpSync(originalCache, cache, { recursive: true, preserveTimestamps: true });
   fs.rmSync(temporary, { recursive: true, force: true });

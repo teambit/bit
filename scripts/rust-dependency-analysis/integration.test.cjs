@@ -199,18 +199,17 @@ test('nonmatching predicates execute once and lazy native receives the exact sou
   assert.equal(fs.readFileSync(file('entry.js'), 'utf8'), changed);
 });
 
-test('unsupported and unavailable native outcomes execute legacy extraction; parse_error stays an error', async (context) => {
+test('unsupported, unavailable and legacy-accepted parse_error outcomes return legacy extraction', async (context) => {
   hooks(context, []);
   const { file } = workspace(context, { 'entry.ts': `import './legacy';` });
   for (const status of ['unsupported', 'read_error', undefined]) {
     const session = controlledSession(status ? outcome(status, {}, ['fallback reason']) : undefined);
     assert.deepEqual(await precinct.paperwork(file('entry.ts'), { rustScannerSession: session }), ['./legacy']);
   }
+  // Oxc is stricter than the legacy parsers: a native parse_error on source legacy accepts must not
+  // surface as a parsing issue Bit never reported before.
   const session = controlledSession(outcome('parse_error', {}, ['native syntax diagnostic']));
-  await assert.rejects(
-    precinct.paperwork(file('entry.ts'), { rustScannerSession: session }),
-    /native syntax diagnostic/
-  );
+  assert.deepEqual(await precinct.paperwork(file('entry.ts'), { rustScannerSession: session }), ['./legacy']);
 });
 
 test('core filtering stays in precinct and unsupported parser options retain legacy behavior', async (context) => {
@@ -298,14 +297,34 @@ test('visited graph cache skips native extraction completely', { skip: !native }
   assert.equal(trace.disposed.length, 1);
 });
 
-test('native TS parse errors preserve PARSING_ERROR issues and final disposal', { skip: !native }, async (context) => {
+test('native TS parse errors preserve canonical diagnostics and final disposal', { skip: !native }, async (context) => {
   hooks(context, []);
-  const { directory, file } = workspace(context, { 'invalid.ts': 'const value: = invalid;' });
-  const baseline = await enabled(undefined, () => generateTree([file('invalid.ts')], config(directory)));
+  const { directory, file } = workspace(context, {
+    'invalid.ts': 'const value: = invalid;',
+    'unicode.ts': 'const café = "😀";\nconst value: = invalid;',
+  });
+  const files = [file('invalid.ts'), file('unicode.ts')];
+  const baseline = await enabled(undefined, () => generateTree(files, config(directory)));
   const trace = traceSessions(context);
-  const accelerated = await enabled(native, () => generateTree([file('invalid.ts')], config(directory)));
+  const accelerated = await enabled(native, () => generateTree(files, config(directory)));
   assert.deepEqual(comparison(accelerated), comparison(baseline));
-  assert.equal(accelerated.errors['invalid.ts'].code, 'PARSING_ERROR');
+  const fields = (error) =>
+    Object.fromEntries(
+      Object.getOwnPropertyNames(error)
+        .filter((key) => key !== 'stack')
+        .map((key) => [key, error[key]])
+    );
+  for (const name of ['invalid.ts', 'unicode.ts']) {
+    const actual = accelerated.errors[name];
+    const reference = baseline.errors[name];
+    assert.deepEqual(fields(actual), fields(reference));
+    assert.equal(Object.getPrototypeOf(actual), Object.getPrototypeOf(reference));
+    for (const key of ['name', 'lineNumber', 'column']) assert.equal(actual[key], reference[key]);
+    assert.equal(actual.name, 'TSError');
+    assert.equal(actual.code, 'PARSING_ERROR');
+    assert.equal(actual.lineNumber, name === 'unicode.ts' ? 2 : 1);
+    assert.equal(actual.column, 13);
+  }
   assert.equal(trace.disposed.length, 1);
 });
 
@@ -420,3 +439,161 @@ test(
     assert.equal(trace.disposed[0].session.get(file('entry.ts')), undefined);
   }
 );
+
+test(
+  'resolved import replacement stays fresh across pooled analyses with exact result parity',
+  { skip: !native },
+  async (context) => {
+    hooks(context, []);
+    const { withRustDependencyScannerScope } = require(path.join(builder, 'rust-scanner/scope.ts'));
+    const { directory, file } = workspace(context, {
+      'entry.ts': "import './old';",
+      'old.ts': 'export const old = 1;',
+      'new.ts': 'export const replacement = 2;',
+    });
+    const run = (executable) =>
+      enabled(executable, () =>
+        withRustDependencyScannerScope(async () => {
+          fs.writeFileSync(file('entry.ts'), "import './old';");
+          const before = await generateTree([file('entry.ts')], config(directory));
+          fs.writeFileSync(file('entry.ts'), "import './new';");
+          const after = await generateTree([file('entry.ts')], config(directory));
+          assert.deepEqual(before.madgeTree['entry.ts'], ['old.ts']);
+          assert.deepEqual(after.madgeTree['entry.ts'], ['new.ts']);
+          assert.ok(!Object.hasOwn(after.madgeTree, 'old.ts'));
+          return { before, after };
+        })
+      );
+    const legacy = await run(undefined);
+    const trace = traceSessions(context);
+    assert.deepEqual(await run(native), legacy);
+    assert.equal(new Set(trace.prefetch.map(({ session }) => session)).size, 1);
+    assert.equal(trace.disposed.length, 1);
+  }
+);
+
+test(
+  'package main replacement changes resolution without changing source or retaining pooled results',
+  { skip: !native },
+  async (context) => {
+    hooks(context, []);
+    const { withRustDependencyScannerScope } = require(path.join(builder, 'rust-scanner/scope.ts'));
+    const { directory, file } = workspace(context, {
+      'entry.ts': "import 'pkg';",
+      'node_modules/pkg/package.json': '{"name":"pkg","main":"old.js"}',
+      'node_modules/pkg/old.js': 'module.exports = 1;',
+      'node_modules/pkg/new.js': 'module.exports = 2;',
+    });
+    const run = (executable) =>
+      enabled(executable, () =>
+        withRustDependencyScannerScope(async () => {
+          const results = [];
+          for (const main of ['old.js', 'new.js']) {
+            fs.writeFileSync(file('node_modules/pkg/package.json'), JSON.stringify({ name: 'pkg', main }));
+            const result = await generateTree([file('entry.ts')], config(directory, { includeNpm: true }));
+            assert.deepEqual(result.madgeTree['entry.ts'], [`node_modules/pkg/${main}`]);
+            results.push(result);
+          }
+          return results;
+        })
+      );
+    assert.deepEqual(await run(native), await run(undefined));
+  }
+);
+
+test(
+  'changing TSconfig preserves legacy built-in behavior: TS path aliases are not consumed',
+  { skip: !native },
+  async (context) => {
+    hooks(context, []);
+    const { directory, file } = workspace(context, {
+      'entry.ts': "import './relative'; import '@alias';",
+      'relative.ts': 'export const relative = 1;',
+      'old.ts': 'export const old = 1;',
+      'new.ts': 'export const replacement = 2;',
+      'tsconfig.json': '{}',
+    });
+    const run = async (executable) => {
+      const results = [];
+      for (const target of ['old.ts', 'new.ts']) {
+        fs.writeFileSync(
+          file('tsconfig.json'),
+          JSON.stringify({ compilerOptions: { baseUrl: '.', paths: { '@alias': [target] } } })
+        );
+        const result = await enabled(executable, () => generateTree([file('entry.ts')], config(directory)));
+        assert.deepEqual(result.madgeTree['entry.ts'], ['relative.ts']);
+        assert.deepEqual(result.skipped, { [file('entry.ts')]: ['@alias'] });
+        results.push(result);
+      }
+      assert.deepEqual(results[0], results[1]);
+      return results;
+    };
+    assert.deepEqual(await run(native), await run(undefined));
+  }
+);
+
+test(
+  'prototype-key fallback preserves actual legacy omissions and metadata error classification',
+  { skip: !native },
+  async (context) => {
+    hooks(context, []);
+    const { directory, file } = workspace(context, {
+      'omitted.ts': "import { x } from '__proto__'; export { x };",
+      'omitted.js': "import { x } from '__proto__'; export { x };",
+      'error.js': "import { x } from 'constructor'; export { x };",
+    });
+    const paths = ['omitted.ts', 'omitted.js', 'error.js'].map(file);
+    const legacy = await enabled(undefined, () => generateTree(paths, config(directory)));
+    const actual = await enabled(native, () => generateTree(paths, config(directory)));
+    assert.deepEqual(actual, legacy);
+    assert.deepEqual(actual.madgeTree, { 'omitted.ts': [], 'omitted.js': [], 'error.js': [] });
+    assert.deepEqual(actual.skipped, {});
+    assert.equal(actual.errors['error.js'].name, 'RangeError');
+    assert.match(actual.errors['error.js'].message, /Maximum call stack size exceeded/);
+    assert.equal(actual.errors['error.js'].code, 'PARSING_ERROR');
+    for (const error of Object.values(actual.errors)) assert.equal(error.code, 'PARSING_ERROR');
+  }
+);
+
+test('inline parse diagnostics use the original snapshot without repeating custom predicates', async (context) => {
+  hooks(context, []);
+  const { file } = workspace(context, { 'invalid.ts': 'const value: = invalid;' });
+  let predicates = 0;
+  const session = controlledSession(outcome('parse_error', {}, ['native failure']));
+  session.scanSource = async (filename, source) => {
+    session.calls.source.push({ filename, source });
+    fs.writeFileSync(filename, 'export const valid = 1;');
+    return outcome('parse_error', {}, ['native failure']);
+  };
+  await assert.rejects(
+    precinct.paperwork(file('invalid.ts'), {
+      rustScannerSession: session,
+      envDetectors: [
+        {
+          isSupported() {
+            predicates++;
+            return false;
+          },
+          detect() {
+            throw Error('custom must not run');
+          },
+        },
+      ],
+    }),
+    (error) =>
+      error.name === 'TSError' && error.message === 'Type expected.' && error.lineNumber === 1 && error.column === 13
+  );
+  assert.equal(predicates, 1);
+  assert.equal(session.calls.source[0].source, 'const value: = invalid;');
+});
+
+test('disappearing prefetched source retains its established native parse failure', async (context) => {
+  hooks(context, []);
+  const { file } = workspace(context, { 'entry.ts': 'const value: = invalid;' });
+  const session = controlledSession(outcome('parse_error', {}, ['original native parse failure']));
+  session.prefetch = async () => fs.unlinkSync(file('entry.ts'));
+  await assert.rejects(
+    precinct.paperwork(file('entry.ts'), { rustScannerSession: session }),
+    (error) => error.message === 'original native parse failure' && error.code !== 'ENOENT'
+  );
+});

@@ -1,0 +1,2909 @@
+{
+  "comparison": "complete CLI JSON, no normalization",
+  "diagnosticOverlay": {
+    "sourceSha256": "7b187e4f78ee8920992b55784e7a42a7c43dcace6b7e66fab415f23e90bce2bc",
+    "compiledSha256": "5768a22b7433feaf12c5a659b31c621710ea43cc0d34dda5d46777aa77e2553c",
+    "sourceCommit": "bccdbd770",
+    "baseRevision": "a72e7cb66",
+    "compiledComponent": "teambit.dependencies/dependencies@1.0.1208",
+    "compileErrors": 0
+  },
+  "nativeSha256": "a5b4e2f5a77447e26d30c616850db456bfd918040a2ffce5dad60a4a74edd455",
+  "syntax": "const value: = invalid;",
+  "source": "scopes/toolbox/string/capitalize/index.ts",
+  "completeJsonSha256": "9d9a75db80d94c75d31fafa7ab13431cf05ccb34c3df9035f80a2f59f84c3e30",
+  "legacy": {
+    "newComponents": [],
+    "modifiedComponents": [
+      "teambit.component/graph",
+      "teambit.dependencies/dependencies",
+      "teambit.legacy/consumer-component",
+      "teambit.toolbox/string/capitalize",
+      "teambit.workspace/workspace"
+    ],
+    "stagedComponents": [],
+    "unavailableOnMain": [],
+    "componentsWithIssues": [
+      {
+        "id": "teambit.component/ui/component-meta",
+        "issues": [
+          {
+            "type": "DeprecatedDependencies",
+            "description": "dependencies used in the code were deprecated",
+            "solution": "replace them with alternative dependencies. or remove them if not needed anymore",
+            "isTagBlocker": false,
+            "data": [
+              "teambit.evangelist/elements/icon@1.0.5"
+            ],
+            "dataAsString": "          teambit.evangelist/elements/icon@1.0.5"
+          }
+        ]
+      },
+      {
+        "id": "teambit.component/ui/version-block",
+        "issues": [
+          {
+            "type": "DeprecatedDependencies",
+            "description": "dependencies used in the code were deprecated",
+            "solution": "replace them with alternative dependencies. or remove them if not needed anymore",
+            "isTagBlocker": false,
+            "data": [
+              "teambit.evangelist/elements/icon@1.0.5"
+            ],
+            "dataAsString": "          teambit.evangelist/elements/icon@1.0.5"
+          }
+        ]
+      },
+      {
+        "id": "teambit.component/ui/version-dropdown",
+        "issues": [
+          {
+            "type": "DeprecatedDependencies",
+            "description": "dependencies used in the code were deprecated",
+            "solution": "replace them with alternative dependencies. or remove them if not needed anymore",
+            "isTagBlocker": false,
+            "data": [
+              "teambit.evangelist/elements/icon@1.0.5"
+            ],
+            "dataAsString": "          teambit.evangelist/elements/icon@1.0.5"
+          }
+        ]
+      },
+      {
+        "id": "teambit.compositions/composition-card",
+        "issues": [
+          {
+            "type": "DeprecatedDependencies",
+            "description": "dependencies used in the code were deprecated",
+            "solution": "replace them with alternative dependencies. or remove them if not needed anymore",
+            "isTagBlocker": false,
+            "data": [
+              "teambit.evangelist/elements/icon@1.0.5"
+            ],
+            "dataAsString": "          teambit.evangelist/elements/icon@1.0.5"
+          }
+        ]
+      },
+      {
+        "id": "teambit.compositions/compositions",
+        "issues": [
+          {
+            "type": "DeprecatedDependencies",
+            "description": "dependencies used in the code were deprecated",
+            "solution": "replace them with alternative dependencies. or remove them if not needed anymore",
+            "isTagBlocker": false,
+            "data": [
+              "teambit.evangelist/elements/icon@1.0.5"
+            ],
+            "dataAsString": "          teambit.evangelist/elements/icon@1.0.5"
+          }
+        ]
+      },
+      {
+        "id": "teambit.compositions/ui/composition-compare",
+        "issues": [
+          {
+            "type": "DeprecatedDependencies",
+            "description": "dependencies used in the code were deprecated",
+            "solution": "replace them with alternative dependencies. or remove them if not needed anymore",
+            "isTagBlocker": false,
+            "data": [
+              "teambit.evangelist/elements/icon@1.0.5"
+            ],
+            "dataAsString": "          teambit.evangelist/elements/icon@1.0.5"
+          }
+        ]
+      },
+      {
+        "id": "teambit.defender/tester",
+        "issues": [
+          {
+            "type": "DeprecatedDependencies",
+            "description": "dependencies used in the code were deprecated",
+            "solution": "replace them with alternative dependencies. or remove them if not needed anymore",
+            "isTagBlocker": false,
+            "data": [
+              "teambit.evangelist/elements/icon@1.0.5"
+            ],
+            "dataAsString": "          teambit.evangelist/elements/icon@1.0.5"
+          }
+        ]
+      },
+      {
+        "id": "teambit.harmony/aspect-loader",
+        "issues": [
+          {
+            "type": "DeprecatedDependencies",
+            "description": "dependencies used in the code were deprecated",
+            "solution": "replace them with alternative dependencies. or remove them if not needed anymore",
+            "isTagBlocker": false,
+            "data": [
+              "teambit.compilation/modules/babel-compiler@0.0.158"
+            ],
+            "dataAsString": "          teambit.compilation/modules/babel-compiler@0.0.158"
+          }
+        ]
+      },
+      {
+        "id": "teambit.harmony/ui/aspect-box",
+        "issues": [
+          {
+            "type": "DeprecatedDependencies",
+            "description": "dependencies used in the code were deprecated",
+            "solution": "replace them with alternative dependencies. or remove them if not needed anymore",
+            "isTagBlocker": false,
+            "data": [
+              "teambit.evangelist/elements/icon@1.0.5"
+            ],
+            "dataAsString": "          teambit.evangelist/elements/icon@1.0.5"
+          }
+        ]
+      },
+      {
+        "id": "teambit.lanes/ui/inputs/lane-selector",
+        "issues": [
+          {
+            "type": "DeprecatedDependencies",
+            "description": "dependencies used in the code were deprecated",
+            "solution": "replace them with alternative dependencies. or remove them if not needed anymore",
+            "isTagBlocker": false,
+            "data": [
+              "teambit.evangelist/elements/icon@1.0.5"
+            ],
+            "dataAsString": "          teambit.evangelist/elements/icon@1.0.5"
+          }
+        ]
+      },
+      {
+        "id": "teambit.toolbox/string/capitalize",
+        "issues": [
+          {
+            "type": "ParseErrors",
+            "description": "error found while parsing the file",
+            "solution": "edit the file and fix the parsing error",
+            "isTagBlocker": true,
+            "data": {
+              "index.ts": "Type expected. (line: 1, column: 13)"
+            },
+            "dataAsString": "          index.ts -> Type expected. (line: 1, column: 13)"
+          }
+        ]
+      },
+      {
+        "id": "teambit.ui-foundation/ui/buttons/collapser",
+        "issues": [
+          {
+            "type": "DeprecatedDependencies",
+            "description": "dependencies used in the code were deprecated",
+            "solution": "replace them with alternative dependencies. or remove them if not needed anymore",
+            "isTagBlocker": false,
+            "data": [
+              "teambit.evangelist/elements/icon@1.0.5"
+            ],
+            "dataAsString": "          teambit.evangelist/elements/icon@1.0.5"
+          }
+        ]
+      },
+      {
+        "id": "teambit.ui-foundation/ui/side-bar",
+        "issues": [
+          {
+            "type": "DeprecatedDependencies",
+            "description": "dependencies used in the code were deprecated",
+            "solution": "replace them with alternative dependencies. or remove them if not needed anymore",
+            "isTagBlocker": false,
+            "data": [
+              "teambit.evangelist/elements/icon@1.0.5"
+            ],
+            "dataAsString": "          teambit.evangelist/elements/icon@1.0.5"
+          }
+        ]
+      },
+      {
+        "id": "teambit.workspace/workspace",
+        "issues": [
+          {
+            "type": "DeprecatedDependencies",
+            "description": "dependencies used in the code were deprecated",
+            "solution": "replace them with alternative dependencies. or remove them if not needed anymore",
+            "isTagBlocker": false,
+            "data": [
+              "teambit.evangelist/elements/icon@1.0.5"
+            ],
+            "dataAsString": "          teambit.evangelist/elements/icon@1.0.5"
+          }
+        ]
+      }
+    ],
+    "importPendingComponents": [],
+    "autoTagPendingComponents": [
+      "teambit.api-reference/api-reference",
+      "teambit.cloud/cloud",
+      "teambit.cloud/modules/get-cloud-user",
+      "teambit.cloud/ripple",
+      "teambit.compilation/babel",
+      "teambit.compilation/bundler",
+      "teambit.compilation/compiler",
+      "teambit.compilation/multi-compiler",
+      "teambit.component/changelog",
+      "teambit.component/checkout",
+      "teambit.component/code",
+      "teambit.component/component-compare",
+      "teambit.component/component-log",
+      "teambit.component/component-sizer",
+      "teambit.component/component-tree",
+      "teambit.component/component-writer",
+      "teambit.component/component",
+      "teambit.component/deprecation",
+      "teambit.component/dev-files",
+      "teambit.component/forking",
+      "teambit.component/internalize",
+      "teambit.component/isolator",
+      "teambit.component/issues",
+      "teambit.component/lister",
+      "teambit.component/merging",
+      "teambit.component/modules/merge-helper",
+      "teambit.component/mover",
+      "teambit.component/new-component-helper",
+      "teambit.component/refactoring",
+      "teambit.component/remove",
+      "teambit.component/renaming",
+      "teambit.component/snap-distance",
+      "teambit.component/snapping",
+      "teambit.component/sources",
+      "teambit.component/stash",
+      "teambit.component/status",
+      "teambit.component/testing/mock-components",
+      "teambit.component/tracker",
+      "teambit.compositions/compositions",
+      "teambit.defender/eslint",
+      "teambit.defender/formatter",
+      "teambit.defender/jest",
+      "teambit.defender/linter",
+      "teambit.defender/multi-tester",
+      "teambit.defender/prettier",
+      "teambit.defender/tester",
+      "teambit.defender/validator",
+      "teambit.dependencies/dependency-resolver",
+      "teambit.dependencies/pnpm",
+      "teambit.dependencies/yarn",
+      "teambit.docs/docs",
+      "teambit.envs/env",
+      "teambit.envs/envs",
+      "teambit.explorer/command-bar",
+      "teambit.explorer/insights",
+      "teambit.explorer/ui/components-overview",
+      "teambit.generator/generator",
+      "teambit.generator/workspace-starter",
+      "teambit.git/ci",
+      "teambit.git/git",
+      "teambit.harmony/api-server",
+      "teambit.harmony/application",
+      "teambit.harmony/aspect-loader",
+      "teambit.harmony/aspect",
+      "teambit.harmony/bit",
+      "teambit.harmony/cli",
+      "teambit.harmony/config-store",
+      "teambit.harmony/config",
+      "teambit.harmony/doctor",
+      "teambit.harmony/empty-env",
+      "teambit.harmony/global-config",
+      "teambit.harmony/host-initializer",
+      "teambit.harmony/ipc-events",
+      "teambit.harmony/modules/get-basic-log",
+      "teambit.harmony/node",
+      "teambit.harmony/pubsub",
+      "teambit.harmony/testing/load-aspect",
+      "teambit.lanes/lanes",
+      "teambit.lanes/merge-lanes",
+      "teambit.lanes/modules/create-lane",
+      "teambit.lanes/modules/diff",
+      "teambit.lanes/ui/lane-overview",
+      "teambit.legacy/bit-map",
+      "teambit.legacy/component-diff",
+      "teambit.legacy/component-list",
+      "teambit.legacy/consumer-config",
+      "teambit.legacy/consumer",
+      "teambit.legacy/dependency-graph",
+      "teambit.legacy/e2e-helper",
+      "teambit.legacy/extension-data",
+      "teambit.legacy/scope-api",
+      "teambit.legacy/scope",
+      "teambit.mcp/cli-mcp-server",
+      "teambit.mdx/mdx",
+      "teambit.mdx/readme",
+      "teambit.pipelines/builder",
+      "teambit.pkg/modules/component-package-name",
+      "teambit.pkg/pkg",
+      "teambit.preview/preview",
+      "teambit.preview/ui/preview-placeholder",
+      "teambit.react/react",
+      "teambit.scope/export",
+      "teambit.scope/importer",
+      "teambit.scope/network",
+      "teambit.scope/objects",
+      "teambit.scope/remote-actions",
+      "teambit.scope/remotes",
+      "teambit.scope/scope",
+      "teambit.scope/version-history",
+      "teambit.semantics/doc-parser",
+      "teambit.semantics/schema",
+      "teambit.typescript/typescript",
+      "teambit.ui-foundation/harmony-ui-app",
+      "teambit.ui-foundation/notifications",
+      "teambit.ui-foundation/sidebar",
+      "teambit.ui-foundation/ui",
+      "teambit.ui-foundation/user-agent",
+      "teambit.vue/vue-aspect",
+      "teambit.webpack/webpack",
+      "teambit.workspace/clear-cache",
+      "teambit.workspace/config-merger",
+      "teambit.workspace/eject",
+      "teambit.workspace/install",
+      "teambit.workspace/modules/node-modules-linker",
+      "teambit.workspace/scripts",
+      "teambit.workspace/testing/mock-workspace",
+      "teambit.workspace/variants",
+      "teambit.workspace/watcher",
+      "teambit.workspace/workspace-config-files",
+      "teambit.workspace/workspace-root"
+    ],
+    "invalidComponents": [],
+    "locallySoftRemoved": [],
+    "remotelySoftRemoved": [],
+    "outdatedComponents": [
+      {
+        "id": "teambit.api-reference/api-reference",
+        "headVersion": "1.0.1210",
+        "latestVersion": "1.0.1210"
+      },
+      {
+        "id": "teambit.cloud/cloud",
+        "headVersion": "0.0.1511",
+        "latestVersion": "0.0.1511"
+      },
+      {
+        "id": "teambit.cloud/modules/get-cloud-user",
+        "headVersion": "0.0.180",
+        "latestVersion": "0.0.180"
+      },
+      {
+        "id": "teambit.cloud/ripple",
+        "headVersion": "0.0.298",
+        "latestVersion": "0.0.298"
+      },
+      {
+        "id": "teambit.code/ui/code-compare",
+        "headVersion": "0.0.365",
+        "latestVersion": "0.0.365"
+      },
+      {
+        "id": "teambit.code/ui/code-tab-page",
+        "headVersion": "0.0.728",
+        "latestVersion": "0.0.728"
+      },
+      {
+        "id": "teambit.code/ui/code-view",
+        "headVersion": "0.0.589",
+        "latestVersion": "0.0.589"
+      },
+      {
+        "id": "teambit.code/ui/inline-code-compare",
+        "headVersion": "0.0.20",
+        "latestVersion": "0.0.20"
+      },
+      {
+        "id": "teambit.code/ui/inline-config-compare",
+        "headVersion": "0.0.18",
+        "latestVersion": "0.0.18"
+      },
+      {
+        "id": "teambit.code/ui/inline-deps-compare",
+        "headVersion": "0.0.18",
+        "latestVersion": "0.0.18"
+      },
+      {
+        "id": "teambit.code/ui/inline-tests-compare",
+        "headVersion": "0.0.18",
+        "latestVersion": "0.0.18"
+      },
+      {
+        "id": "teambit.code/ui/queries/get-file-content",
+        "headVersion": "0.0.514",
+        "latestVersion": "0.0.514"
+      },
+      {
+        "id": "teambit.compilation/babel",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.compilation/bundler",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.compilation/compiler",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.compilation/multi-compiler",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/changelog",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/checkout",
+        "headVersion": "1.0.1211",
+        "latestVersion": "1.0.1211"
+      },
+      {
+        "id": "teambit.component/code",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/component-compare",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/component-descriptor",
+        "headVersion": "0.0.469",
+        "latestVersion": "0.0.469"
+      },
+      {
+        "id": "teambit.component/component-issues",
+        "headVersion": "0.0.191",
+        "latestVersion": "0.0.191"
+      },
+      {
+        "id": "teambit.component/component-log",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/component-sizer",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/component-tree",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/component-writer",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/component",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/deprecation",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/dev-files",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/forking",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/graph",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/internalize",
+        "headVersion": "0.0.208",
+        "latestVersion": "0.0.208"
+      },
+      {
+        "id": "teambit.component/isolator",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/issues",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/lister",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/merging",
+        "headVersion": "1.0.1213",
+        "latestVersion": "1.0.1213"
+      },
+      {
+        "id": "teambit.component/modules/component-url",
+        "headVersion": "0.0.207",
+        "latestVersion": "0.0.207"
+      },
+      {
+        "id": "teambit.component/modules/merge-helper",
+        "headVersion": "0.0.123",
+        "latestVersion": "0.0.123"
+      },
+      {
+        "id": "teambit.component/mover",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/new-component-helper",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/refactoring",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/remove",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/renaming",
+        "headVersion": "1.0.1210",
+        "latestVersion": "1.0.1210"
+      },
+      {
+        "id": "teambit.component/snap-distance",
+        "headVersion": "0.0.180",
+        "latestVersion": "0.0.180"
+      },
+      {
+        "id": "teambit.component/snapping",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/sources",
+        "headVersion": "0.0.231",
+        "latestVersion": "0.0.231"
+      },
+      {
+        "id": "teambit.component/stash",
+        "headVersion": "1.0.1211",
+        "latestVersion": "1.0.1211"
+      },
+      {
+        "id": "teambit.component/status",
+        "headVersion": "1.0.1236",
+        "latestVersion": "1.0.1236"
+      },
+      {
+        "id": "teambit.component/testing/mock-components",
+        "headVersion": "0.0.455",
+        "latestVersion": "0.0.455"
+      },
+      {
+        "id": "teambit.component/tracker",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/ui/component-compare/changelog",
+        "headVersion": "0.0.262",
+        "latestVersion": "0.0.262"
+      },
+      {
+        "id": "teambit.component/ui/component-compare/compare-aspects/compare-aspects",
+        "headVersion": "0.0.160",
+        "latestVersion": "0.0.160"
+      },
+      {
+        "id": "teambit.component/ui/component-compare/component-compare",
+        "headVersion": "0.0.287",
+        "latestVersion": "0.0.287"
+      },
+      {
+        "id": "teambit.component/ui/component-compare/context",
+        "headVersion": "0.0.140",
+        "latestVersion": "0.0.140"
+      },
+      {
+        "id": "teambit.component/ui/component-compare/models/component-compare-props",
+        "headVersion": "0.0.145",
+        "latestVersion": "0.0.145"
+      },
+      {
+        "id": "teambit.component/ui/component-compare/utils/lazy-loading",
+        "headVersion": "0.0.14",
+        "latestVersion": "0.0.14"
+      },
+      {
+        "id": "teambit.component/ui/component-compare/version-picker",
+        "headVersion": "0.0.268",
+        "latestVersion": "0.0.268"
+      },
+      {
+        "id": "teambit.component/ui/component-drawer",
+        "headVersion": "0.0.513",
+        "latestVersion": "0.0.513"
+      },
+      {
+        "id": "teambit.component/ui/component-filters/component-filter-context",
+        "headVersion": "0.0.248",
+        "latestVersion": "0.0.248"
+      },
+      {
+        "id": "teambit.component/ui/component-filters/deprecate-filter",
+        "headVersion": "0.0.250",
+        "latestVersion": "0.0.250"
+      },
+      {
+        "id": "teambit.component/ui/component-filters/env-filter",
+        "headVersion": "0.0.296",
+        "latestVersion": "0.0.296"
+      },
+      {
+        "id": "teambit.component/ui/component-filters/show-main-filter",
+        "headVersion": "0.0.243",
+        "latestVersion": "0.0.243"
+      },
+      {
+        "id": "teambit.component/ui/component-meta",
+        "headVersion": "0.0.386",
+        "latestVersion": "0.0.386"
+      },
+      {
+        "id": "teambit.component/ui/version-block",
+        "headVersion": "0.0.965",
+        "latestVersion": "0.0.965"
+      },
+      {
+        "id": "teambit.component/ui/version-dropdown",
+        "headVersion": "0.0.946",
+        "latestVersion": "0.0.946"
+      },
+      {
+        "id": "teambit.compositions/compositions",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.compositions/ui/composition-compare-section",
+        "headVersion": "0.0.122",
+        "latestVersion": "0.0.122"
+      },
+      {
+        "id": "teambit.compositions/ui/composition-compare",
+        "headVersion": "0.0.280",
+        "latestVersion": "0.0.280"
+      },
+      {
+        "id": "teambit.defender/eslint",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.defender/eslint/config-mutator",
+        "headVersion": "0.0.141",
+        "latestVersion": "0.0.141"
+      },
+      {
+        "id": "teambit.defender/formatter",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.defender/jest",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.defender/linter",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.defender/mocha",
+        "headVersion": "1.0.923",
+        "latestVersion": "1.0.923"
+      },
+      {
+        "id": "teambit.defender/multi-tester",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.defender/prettier",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.defender/prettier/config-mutator",
+        "headVersion": "0.0.134",
+        "latestVersion": "0.0.134"
+      },
+      {
+        "id": "teambit.defender/tester",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.defender/ui/test-compare",
+        "headVersion": "0.0.329",
+        "latestVersion": "0.0.329"
+      },
+      {
+        "id": "teambit.defender/ui/test-page",
+        "headVersion": "0.0.105",
+        "latestVersion": "0.0.105"
+      },
+      {
+        "id": "teambit.defender/validator",
+        "headVersion": "0.0.446",
+        "latestVersion": "0.0.446"
+      },
+      {
+        "id": "teambit.dependencies/dependencies",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.dependencies/dependency-resolver",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.dependencies/fs/linked-dependencies",
+        "headVersion": "0.0.84",
+        "latestVersion": "0.0.84"
+      },
+      {
+        "id": "teambit.dependencies/pnpm",
+        "headVersion": "1.0.1253",
+        "latestVersion": "1.0.1253"
+      },
+      {
+        "id": "teambit.dependencies/yarn",
+        "headVersion": "1.0.1210",
+        "latestVersion": "1.0.1210"
+      },
+      {
+        "id": "teambit.docs/docs",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.envs/env",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.envs/envs",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.explorer/command-bar",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.explorer/insights",
+        "headVersion": "1.0.1210",
+        "latestVersion": "1.0.1210"
+      },
+      {
+        "id": "teambit.explorer/ui/components-overview",
+        "headVersion": "0.0.16",
+        "latestVersion": "0.0.16"
+      },
+      {
+        "id": "teambit.generator/generator",
+        "headVersion": "1.0.1210",
+        "latestVersion": "1.0.1210"
+      },
+      {
+        "id": "teambit.generator/workspace-starter",
+        "headVersion": "0.0.11",
+        "latestVersion": "0.0.11"
+      },
+      {
+        "id": "teambit.git/ci",
+        "headVersion": "1.0.608",
+        "latestVersion": "1.0.608"
+      },
+      {
+        "id": "teambit.git/git",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.harmony/api-server",
+        "headVersion": "1.0.1243",
+        "latestVersion": "1.0.1243"
+      },
+      {
+        "id": "teambit.harmony/application",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.harmony/aspect-loader",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.harmony/aspect",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.harmony/bit",
+        "headVersion": "2.2.94",
+        "latestVersion": "2.2.94"
+      },
+      {
+        "id": "teambit.harmony/cache",
+        "headVersion": "0.0.1498",
+        "latestVersion": "0.0.1498"
+      },
+      {
+        "id": "teambit.harmony/cli",
+        "headVersion": "0.0.1410",
+        "latestVersion": "0.0.1410"
+      },
+      {
+        "id": "teambit.harmony/config-store",
+        "headVersion": "0.0.291",
+        "latestVersion": "0.0.291"
+      },
+      {
+        "id": "teambit.harmony/config",
+        "headVersion": "0.0.1585",
+        "latestVersion": "0.0.1585"
+      },
+      {
+        "id": "teambit.harmony/content/cli-reference",
+        "headVersion": "2.0.1303",
+        "latestVersion": "2.0.1303"
+      },
+      {
+        "id": "teambit.harmony/diagnostic",
+        "headVersion": "1.0.1205",
+        "latestVersion": "1.0.1205"
+      },
+      {
+        "id": "teambit.harmony/doctor",
+        "headVersion": "0.0.894",
+        "latestVersion": "0.0.894"
+      },
+      {
+        "id": "teambit.harmony/empty-env",
+        "headVersion": "0.0.124",
+        "latestVersion": "0.0.124"
+      },
+      {
+        "id": "teambit.harmony/express",
+        "headVersion": "0.0.1504",
+        "latestVersion": "0.0.1504"
+      },
+      {
+        "id": "teambit.harmony/global-config",
+        "headVersion": "0.0.1414",
+        "latestVersion": "0.0.1414"
+      },
+      {
+        "id": "teambit.harmony/graphql",
+        "headVersion": "1.0.1205",
+        "latestVersion": "1.0.1205"
+      },
+      {
+        "id": "teambit.harmony/host-initializer",
+        "headVersion": "0.0.916",
+        "latestVersion": "0.0.916"
+      },
+      {
+        "id": "teambit.harmony/ipc-events",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.harmony/logger",
+        "headVersion": "0.0.1498",
+        "latestVersion": "0.0.1498"
+      },
+      {
+        "id": "teambit.harmony/modules/get-basic-log",
+        "headVersion": "0.0.180",
+        "latestVersion": "0.0.180"
+      },
+      {
+        "id": "teambit.harmony/modules/harmony-root-generator",
+        "headVersion": "0.0.49",
+        "latestVersion": "0.0.49"
+      },
+      {
+        "id": "teambit.harmony/node",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.harmony/pubsub",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.harmony/testing/load-aspect",
+        "headVersion": "0.0.449",
+        "latestVersion": "0.0.449"
+      },
+      {
+        "id": "teambit.harmony/ui/aspect-box",
+        "headVersion": "0.0.517",
+        "latestVersion": "0.0.517"
+      },
+      {
+        "id": "teambit.lanes/entities/lane-diff",
+        "headVersion": "0.0.206",
+        "latestVersion": "0.0.206"
+      },
+      {
+        "id": "teambit.lanes/hooks/use-lane-components",
+        "headVersion": "0.0.323",
+        "latestVersion": "0.0.323"
+      },
+      {
+        "id": "teambit.lanes/hooks/use-lanes",
+        "headVersion": "0.0.300",
+        "latestVersion": "0.0.300"
+      },
+      {
+        "id": "teambit.lanes/hooks/use-viewed-lane-from-url",
+        "headVersion": "0.0.276",
+        "latestVersion": "0.0.276"
+      },
+      {
+        "id": "teambit.lanes/lanes",
+        "headVersion": "1.0.1232",
+        "latestVersion": "1.0.1232"
+      },
+      {
+        "id": "teambit.lanes/merge-lanes",
+        "headVersion": "1.0.1232",
+        "latestVersion": "1.0.1232"
+      },
+      {
+        "id": "teambit.lanes/modules/create-lane",
+        "headVersion": "0.0.215",
+        "latestVersion": "0.0.215"
+      },
+      {
+        "id": "teambit.lanes/modules/diff",
+        "headVersion": "0.0.686",
+        "latestVersion": "0.0.686"
+      },
+      {
+        "id": "teambit.lanes/ui/compare/lane-compare-hooks/use-lane-diff-status",
+        "headVersion": "0.0.157",
+        "latestVersion": "0.0.157"
+      },
+      {
+        "id": "teambit.lanes/ui/compare/lane-compare-page",
+        "headVersion": "0.0.187",
+        "latestVersion": "0.0.187"
+      },
+      {
+        "id": "teambit.lanes/ui/compare/lane-compare",
+        "headVersion": "0.0.226",
+        "latestVersion": "0.0.226"
+      },
+      {
+        "id": "teambit.lanes/ui/inputs/lane-selector",
+        "headVersion": "0.0.312",
+        "latestVersion": "0.0.312"
+      },
+      {
+        "id": "teambit.lanes/ui/lane-overview",
+        "headVersion": "0.0.337",
+        "latestVersion": "0.0.337"
+      },
+      {
+        "id": "teambit.lanes/ui/models/lanes-model",
+        "headVersion": "0.0.239",
+        "latestVersion": "0.0.239"
+      },
+      {
+        "id": "teambit.legacy/analytics",
+        "headVersion": "0.0.114",
+        "latestVersion": "0.0.114"
+      },
+      {
+        "id": "teambit.legacy/bit-map",
+        "headVersion": "0.0.236",
+        "latestVersion": "0.0.236"
+      },
+      {
+        "id": "teambit.legacy/cli/error",
+        "headVersion": "0.0.67",
+        "latestVersion": "0.0.67"
+      },
+      {
+        "id": "teambit.legacy/component-diff",
+        "headVersion": "0.0.235",
+        "latestVersion": "0.0.235"
+      },
+      {
+        "id": "teambit.legacy/component-list",
+        "headVersion": "0.0.233",
+        "latestVersion": "0.0.233"
+      },
+      {
+        "id": "teambit.legacy/consumer-component",
+        "headVersion": "0.0.180",
+        "latestVersion": "0.0.180"
+      },
+      {
+        "id": "teambit.legacy/consumer-config",
+        "headVersion": "0.0.179",
+        "latestVersion": "0.0.179"
+      },
+      {
+        "id": "teambit.legacy/consumer",
+        "headVersion": "0.0.179",
+        "latestVersion": "0.0.179"
+      },
+      {
+        "id": "teambit.legacy/dependency-graph",
+        "headVersion": "0.0.182",
+        "latestVersion": "0.0.182"
+      },
+      {
+        "id": "teambit.legacy/e2e-helper",
+        "headVersion": "0.0.234",
+        "latestVersion": "0.0.234"
+      },
+      {
+        "id": "teambit.legacy/extension-data",
+        "headVersion": "0.0.181",
+        "latestVersion": "0.0.181"
+      },
+      {
+        "id": "teambit.legacy/logger",
+        "headVersion": "0.0.67",
+        "latestVersion": "0.0.67"
+      },
+      {
+        "id": "teambit.legacy/scope-api",
+        "headVersion": "0.0.234",
+        "latestVersion": "0.0.234"
+      },
+      {
+        "id": "teambit.legacy/scope",
+        "headVersion": "0.0.179",
+        "latestVersion": "0.0.179"
+      },
+      {
+        "id": "teambit.legacy/utils",
+        "headVersion": "0.0.56",
+        "latestVersion": "0.0.56"
+      },
+      {
+        "id": "teambit.mcp/cli-mcp-server",
+        "headVersion": "0.0.279",
+        "latestVersion": "0.0.279"
+      },
+      {
+        "id": "teambit.mdx/aspect-docs/mdx",
+        "headVersion": "0.1.4",
+        "latestVersion": "0.1.4"
+      },
+      {
+        "id": "teambit.mdx/mdx",
+        "headVersion": "1.0.1210",
+        "latestVersion": "1.0.1210"
+      },
+      {
+        "id": "teambit.mdx/readme",
+        "headVersion": "1.0.1210",
+        "latestVersion": "1.0.1210"
+      },
+      {
+        "id": "teambit.pipelines/builder",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.pipelines/modules/merge-component-results",
+        "headVersion": "0.0.530",
+        "latestVersion": "0.0.530"
+      },
+      {
+        "id": "teambit.pkg/modules/component-package-name",
+        "headVersion": "0.0.186",
+        "latestVersion": "0.0.186"
+      },
+      {
+        "id": "teambit.pkg/pkg",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.preview/preview",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.preview/ui/component-preview",
+        "headVersion": "1.0.43",
+        "latestVersion": "1.0.43"
+      },
+      {
+        "id": "teambit.preview/ui/inline-preview-compare",
+        "headVersion": "0.0.14",
+        "latestVersion": "0.0.14"
+      },
+      {
+        "id": "teambit.preview/ui/preview-placeholder",
+        "headVersion": "0.0.590",
+        "latestVersion": "0.0.590"
+      },
+      {
+        "id": "teambit.react/babel/bit-react-transformer",
+        "headVersion": "1.0.69",
+        "latestVersion": "1.0.69"
+      },
+      {
+        "id": "teambit.react/react",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.react/ui/docs-app",
+        "headVersion": "1.0.54",
+        "latestVersion": "1.0.54"
+      },
+      {
+        "id": "teambit.react/ui/docs/docs-content",
+        "headVersion": "0.0.48",
+        "latestVersion": "0.0.48"
+      },
+      {
+        "id": "teambit.react/ui/highlighter-provider",
+        "headVersion": "0.0.233",
+        "latestVersion": "0.0.233"
+      },
+      {
+        "id": "teambit.scope/export",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.scope/importer",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.scope/models/scope-model",
+        "headVersion": "0.0.572",
+        "latestVersion": "0.0.572"
+      },
+      {
+        "id": "teambit.scope/network",
+        "headVersion": "0.0.179",
+        "latestVersion": "0.0.179"
+      },
+      {
+        "id": "teambit.scope/objects",
+        "headVersion": "0.0.710",
+        "latestVersion": "0.0.710"
+      },
+      {
+        "id": "teambit.scope/remote-actions",
+        "headVersion": "0.0.179",
+        "latestVersion": "0.0.179"
+      },
+      {
+        "id": "teambit.scope/remotes",
+        "headVersion": "0.0.179",
+        "latestVersion": "0.0.179"
+      },
+      {
+        "id": "teambit.scope/scope",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.scope/ui/hooks/scope-context",
+        "headVersion": "0.0.571",
+        "latestVersion": "0.0.571"
+      },
+      {
+        "id": "teambit.scope/version-history",
+        "headVersion": "0.0.1001",
+        "latestVersion": "0.0.1001"
+      },
+      {
+        "id": "teambit.semantics/doc-parser",
+        "headVersion": "0.0.187",
+        "latestVersion": "0.0.187"
+      },
+      {
+        "id": "teambit.semantics/entities/semantic-schema-diff",
+        "headVersion": "0.0.19",
+        "latestVersion": "0.0.19"
+      },
+      {
+        "id": "teambit.semantics/entities/semantic-schema",
+        "headVersion": "0.0.120",
+        "latestVersion": "0.0.120"
+      },
+      {
+        "id": "teambit.semantics/schema",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.semantics/ui/api-diff-view",
+        "headVersion": "0.0.14",
+        "latestVersion": "0.0.14"
+      },
+      {
+        "id": "teambit.toolbox/array/duplications-finder",
+        "headVersion": "0.0.19",
+        "latestVersion": "0.0.19"
+      },
+      {
+        "id": "teambit.toolbox/fs/hard-link-directory",
+        "headVersion": "0.0.47",
+        "latestVersion": "0.0.47"
+      },
+      {
+        "id": "teambit.toolbox/fs/last-modified",
+        "headVersion": "0.0.24",
+        "latestVersion": "0.0.24"
+      },
+      {
+        "id": "teambit.toolbox/fs/link-or-symlink",
+        "headVersion": "0.0.75",
+        "latestVersion": "0.0.75"
+      },
+      {
+        "id": "teambit.toolbox/promise/map-pool",
+        "headVersion": "0.0.24",
+        "latestVersion": "0.0.24"
+      },
+      {
+        "id": "teambit.typescript/modules/ts-config-mutator",
+        "headVersion": "0.0.104",
+        "latestVersion": "0.0.104"
+      },
+      {
+        "id": "teambit.typescript/typescript",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.ui-foundation/harmony-ui-app",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.ui-foundation/notifications",
+        "headVersion": "1.0.1210",
+        "latestVersion": "1.0.1210"
+      },
+      {
+        "id": "teambit.ui-foundation/react-router",
+        "headVersion": "1.0.1205",
+        "latestVersion": "1.0.1205"
+      },
+      {
+        "id": "teambit.ui-foundation/sidebar",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.ui-foundation/ui",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.ui-foundation/ui/react-router/slot-router",
+        "headVersion": "0.0.533",
+        "latestVersion": "0.0.533"
+      },
+      {
+        "id": "teambit.ui-foundation/ui/side-bar",
+        "headVersion": "0.0.959",
+        "latestVersion": "0.0.959"
+      },
+      {
+        "id": "teambit.ui-foundation/user-agent",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.vue/vue-aspect",
+        "headVersion": "0.0.575",
+        "latestVersion": "0.0.575"
+      },
+      {
+        "id": "teambit.webpack/modules/config-mutator",
+        "headVersion": "0.0.195",
+        "latestVersion": "0.0.195"
+      },
+      {
+        "id": "teambit.webpack/webpack",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.workspace/clear-cache",
+        "headVersion": "0.0.619",
+        "latestVersion": "0.0.619"
+      },
+      {
+        "id": "teambit.workspace/config-merger",
+        "headVersion": "0.0.1076",
+        "latestVersion": "0.0.1076"
+      },
+      {
+        "id": "teambit.workspace/eject",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.workspace/install",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.workspace/modules/fs-cache",
+        "headVersion": "0.0.86",
+        "latestVersion": "0.0.86"
+      },
+      {
+        "id": "teambit.workspace/modules/match-pattern",
+        "headVersion": "0.0.539",
+        "latestVersion": "0.0.539"
+      },
+      {
+        "id": "teambit.workspace/modules/node-modules-linker",
+        "headVersion": "0.0.412",
+        "latestVersion": "0.0.412"
+      },
+      {
+        "id": "teambit.workspace/scripts",
+        "headVersion": "0.0.428",
+        "latestVersion": "0.0.428"
+      },
+      {
+        "id": "teambit.workspace/testing/mock-workspace",
+        "headVersion": "0.0.263",
+        "latestVersion": "0.0.263"
+      },
+      {
+        "id": "teambit.workspace/ui/workspace-component-card",
+        "headVersion": "0.0.592",
+        "latestVersion": "0.0.592"
+      },
+      {
+        "id": "teambit.workspace/variants",
+        "headVersion": "0.0.1678",
+        "latestVersion": "0.0.1678"
+      },
+      {
+        "id": "teambit.workspace/watcher",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.workspace/workspace-config-files",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.workspace/workspace-root",
+        "headVersion": "0.0.35",
+        "latestVersion": "0.0.35"
+      },
+      {
+        "id": "teambit.workspace/workspace",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      }
+    ],
+    "mergePendingComponents": [],
+    "componentsDuringMergeState": [],
+    "softTaggedComponents": [],
+    "snappedComponents": [],
+    "localOnly": [],
+    "pendingUpdatesFromMain": [],
+    "updatesFromForked": [],
+    "currentLaneId": "bit-local-a40b3cd2/main",
+    "workspaceIssues": [],
+    "pendingUpdateDependents": []
+  },
+  "native": {
+    "newComponents": [],
+    "modifiedComponents": [
+      "teambit.component/graph",
+      "teambit.dependencies/dependencies",
+      "teambit.legacy/consumer-component",
+      "teambit.toolbox/string/capitalize",
+      "teambit.workspace/workspace"
+    ],
+    "stagedComponents": [],
+    "unavailableOnMain": [],
+    "componentsWithIssues": [
+      {
+        "id": "teambit.component/ui/component-meta",
+        "issues": [
+          {
+            "type": "DeprecatedDependencies",
+            "description": "dependencies used in the code were deprecated",
+            "solution": "replace them with alternative dependencies. or remove them if not needed anymore",
+            "isTagBlocker": false,
+            "data": [
+              "teambit.evangelist/elements/icon@1.0.5"
+            ],
+            "dataAsString": "          teambit.evangelist/elements/icon@1.0.5"
+          }
+        ]
+      },
+      {
+        "id": "teambit.component/ui/version-block",
+        "issues": [
+          {
+            "type": "DeprecatedDependencies",
+            "description": "dependencies used in the code were deprecated",
+            "solution": "replace them with alternative dependencies. or remove them if not needed anymore",
+            "isTagBlocker": false,
+            "data": [
+              "teambit.evangelist/elements/icon@1.0.5"
+            ],
+            "dataAsString": "          teambit.evangelist/elements/icon@1.0.5"
+          }
+        ]
+      },
+      {
+        "id": "teambit.component/ui/version-dropdown",
+        "issues": [
+          {
+            "type": "DeprecatedDependencies",
+            "description": "dependencies used in the code were deprecated",
+            "solution": "replace them with alternative dependencies. or remove them if not needed anymore",
+            "isTagBlocker": false,
+            "data": [
+              "teambit.evangelist/elements/icon@1.0.5"
+            ],
+            "dataAsString": "          teambit.evangelist/elements/icon@1.0.5"
+          }
+        ]
+      },
+      {
+        "id": "teambit.compositions/composition-card",
+        "issues": [
+          {
+            "type": "DeprecatedDependencies",
+            "description": "dependencies used in the code were deprecated",
+            "solution": "replace them with alternative dependencies. or remove them if not needed anymore",
+            "isTagBlocker": false,
+            "data": [
+              "teambit.evangelist/elements/icon@1.0.5"
+            ],
+            "dataAsString": "          teambit.evangelist/elements/icon@1.0.5"
+          }
+        ]
+      },
+      {
+        "id": "teambit.compositions/compositions",
+        "issues": [
+          {
+            "type": "DeprecatedDependencies",
+            "description": "dependencies used in the code were deprecated",
+            "solution": "replace them with alternative dependencies. or remove them if not needed anymore",
+            "isTagBlocker": false,
+            "data": [
+              "teambit.evangelist/elements/icon@1.0.5"
+            ],
+            "dataAsString": "          teambit.evangelist/elements/icon@1.0.5"
+          }
+        ]
+      },
+      {
+        "id": "teambit.compositions/ui/composition-compare",
+        "issues": [
+          {
+            "type": "DeprecatedDependencies",
+            "description": "dependencies used in the code were deprecated",
+            "solution": "replace them with alternative dependencies. or remove them if not needed anymore",
+            "isTagBlocker": false,
+            "data": [
+              "teambit.evangelist/elements/icon@1.0.5"
+            ],
+            "dataAsString": "          teambit.evangelist/elements/icon@1.0.5"
+          }
+        ]
+      },
+      {
+        "id": "teambit.defender/tester",
+        "issues": [
+          {
+            "type": "DeprecatedDependencies",
+            "description": "dependencies used in the code were deprecated",
+            "solution": "replace them with alternative dependencies. or remove them if not needed anymore",
+            "isTagBlocker": false,
+            "data": [
+              "teambit.evangelist/elements/icon@1.0.5"
+            ],
+            "dataAsString": "          teambit.evangelist/elements/icon@1.0.5"
+          }
+        ]
+      },
+      {
+        "id": "teambit.harmony/aspect-loader",
+        "issues": [
+          {
+            "type": "DeprecatedDependencies",
+            "description": "dependencies used in the code were deprecated",
+            "solution": "replace them with alternative dependencies. or remove them if not needed anymore",
+            "isTagBlocker": false,
+            "data": [
+              "teambit.compilation/modules/babel-compiler@0.0.158"
+            ],
+            "dataAsString": "          teambit.compilation/modules/babel-compiler@0.0.158"
+          }
+        ]
+      },
+      {
+        "id": "teambit.harmony/ui/aspect-box",
+        "issues": [
+          {
+            "type": "DeprecatedDependencies",
+            "description": "dependencies used in the code were deprecated",
+            "solution": "replace them with alternative dependencies. or remove them if not needed anymore",
+            "isTagBlocker": false,
+            "data": [
+              "teambit.evangelist/elements/icon@1.0.5"
+            ],
+            "dataAsString": "          teambit.evangelist/elements/icon@1.0.5"
+          }
+        ]
+      },
+      {
+        "id": "teambit.lanes/ui/inputs/lane-selector",
+        "issues": [
+          {
+            "type": "DeprecatedDependencies",
+            "description": "dependencies used in the code were deprecated",
+            "solution": "replace them with alternative dependencies. or remove them if not needed anymore",
+            "isTagBlocker": false,
+            "data": [
+              "teambit.evangelist/elements/icon@1.0.5"
+            ],
+            "dataAsString": "          teambit.evangelist/elements/icon@1.0.5"
+          }
+        ]
+      },
+      {
+        "id": "teambit.toolbox/string/capitalize",
+        "issues": [
+          {
+            "type": "ParseErrors",
+            "description": "error found while parsing the file",
+            "solution": "edit the file and fix the parsing error",
+            "isTagBlocker": true,
+            "data": {
+              "index.ts": "Type expected. (line: 1, column: 13)"
+            },
+            "dataAsString": "          index.ts -> Type expected. (line: 1, column: 13)"
+          }
+        ]
+      },
+      {
+        "id": "teambit.ui-foundation/ui/buttons/collapser",
+        "issues": [
+          {
+            "type": "DeprecatedDependencies",
+            "description": "dependencies used in the code were deprecated",
+            "solution": "replace them with alternative dependencies. or remove them if not needed anymore",
+            "isTagBlocker": false,
+            "data": [
+              "teambit.evangelist/elements/icon@1.0.5"
+            ],
+            "dataAsString": "          teambit.evangelist/elements/icon@1.0.5"
+          }
+        ]
+      },
+      {
+        "id": "teambit.ui-foundation/ui/side-bar",
+        "issues": [
+          {
+            "type": "DeprecatedDependencies",
+            "description": "dependencies used in the code were deprecated",
+            "solution": "replace them with alternative dependencies. or remove them if not needed anymore",
+            "isTagBlocker": false,
+            "data": [
+              "teambit.evangelist/elements/icon@1.0.5"
+            ],
+            "dataAsString": "          teambit.evangelist/elements/icon@1.0.5"
+          }
+        ]
+      },
+      {
+        "id": "teambit.workspace/workspace",
+        "issues": [
+          {
+            "type": "DeprecatedDependencies",
+            "description": "dependencies used in the code were deprecated",
+            "solution": "replace them with alternative dependencies. or remove them if not needed anymore",
+            "isTagBlocker": false,
+            "data": [
+              "teambit.evangelist/elements/icon@1.0.5"
+            ],
+            "dataAsString": "          teambit.evangelist/elements/icon@1.0.5"
+          }
+        ]
+      }
+    ],
+    "importPendingComponents": [],
+    "autoTagPendingComponents": [
+      "teambit.api-reference/api-reference",
+      "teambit.cloud/cloud",
+      "teambit.cloud/modules/get-cloud-user",
+      "teambit.cloud/ripple",
+      "teambit.compilation/babel",
+      "teambit.compilation/bundler",
+      "teambit.compilation/compiler",
+      "teambit.compilation/multi-compiler",
+      "teambit.component/changelog",
+      "teambit.component/checkout",
+      "teambit.component/code",
+      "teambit.component/component-compare",
+      "teambit.component/component-log",
+      "teambit.component/component-sizer",
+      "teambit.component/component-tree",
+      "teambit.component/component-writer",
+      "teambit.component/component",
+      "teambit.component/deprecation",
+      "teambit.component/dev-files",
+      "teambit.component/forking",
+      "teambit.component/internalize",
+      "teambit.component/isolator",
+      "teambit.component/issues",
+      "teambit.component/lister",
+      "teambit.component/merging",
+      "teambit.component/modules/merge-helper",
+      "teambit.component/mover",
+      "teambit.component/new-component-helper",
+      "teambit.component/refactoring",
+      "teambit.component/remove",
+      "teambit.component/renaming",
+      "teambit.component/snap-distance",
+      "teambit.component/snapping",
+      "teambit.component/sources",
+      "teambit.component/stash",
+      "teambit.component/status",
+      "teambit.component/testing/mock-components",
+      "teambit.component/tracker",
+      "teambit.compositions/compositions",
+      "teambit.defender/eslint",
+      "teambit.defender/formatter",
+      "teambit.defender/jest",
+      "teambit.defender/linter",
+      "teambit.defender/multi-tester",
+      "teambit.defender/prettier",
+      "teambit.defender/tester",
+      "teambit.defender/validator",
+      "teambit.dependencies/dependency-resolver",
+      "teambit.dependencies/pnpm",
+      "teambit.dependencies/yarn",
+      "teambit.docs/docs",
+      "teambit.envs/env",
+      "teambit.envs/envs",
+      "teambit.explorer/command-bar",
+      "teambit.explorer/insights",
+      "teambit.explorer/ui/components-overview",
+      "teambit.generator/generator",
+      "teambit.generator/workspace-starter",
+      "teambit.git/ci",
+      "teambit.git/git",
+      "teambit.harmony/api-server",
+      "teambit.harmony/application",
+      "teambit.harmony/aspect-loader",
+      "teambit.harmony/aspect",
+      "teambit.harmony/bit",
+      "teambit.harmony/cli",
+      "teambit.harmony/config-store",
+      "teambit.harmony/config",
+      "teambit.harmony/doctor",
+      "teambit.harmony/empty-env",
+      "teambit.harmony/global-config",
+      "teambit.harmony/host-initializer",
+      "teambit.harmony/ipc-events",
+      "teambit.harmony/modules/get-basic-log",
+      "teambit.harmony/node",
+      "teambit.harmony/pubsub",
+      "teambit.harmony/testing/load-aspect",
+      "teambit.lanes/lanes",
+      "teambit.lanes/merge-lanes",
+      "teambit.lanes/modules/create-lane",
+      "teambit.lanes/modules/diff",
+      "teambit.lanes/ui/lane-overview",
+      "teambit.legacy/bit-map",
+      "teambit.legacy/component-diff",
+      "teambit.legacy/component-list",
+      "teambit.legacy/consumer-config",
+      "teambit.legacy/consumer",
+      "teambit.legacy/dependency-graph",
+      "teambit.legacy/e2e-helper",
+      "teambit.legacy/extension-data",
+      "teambit.legacy/scope-api",
+      "teambit.legacy/scope",
+      "teambit.mcp/cli-mcp-server",
+      "teambit.mdx/mdx",
+      "teambit.mdx/readme",
+      "teambit.pipelines/builder",
+      "teambit.pkg/modules/component-package-name",
+      "teambit.pkg/pkg",
+      "teambit.preview/preview",
+      "teambit.preview/ui/preview-placeholder",
+      "teambit.react/react",
+      "teambit.scope/export",
+      "teambit.scope/importer",
+      "teambit.scope/network",
+      "teambit.scope/objects",
+      "teambit.scope/remote-actions",
+      "teambit.scope/remotes",
+      "teambit.scope/scope",
+      "teambit.scope/version-history",
+      "teambit.semantics/doc-parser",
+      "teambit.semantics/schema",
+      "teambit.typescript/typescript",
+      "teambit.ui-foundation/harmony-ui-app",
+      "teambit.ui-foundation/notifications",
+      "teambit.ui-foundation/sidebar",
+      "teambit.ui-foundation/ui",
+      "teambit.ui-foundation/user-agent",
+      "teambit.vue/vue-aspect",
+      "teambit.webpack/webpack",
+      "teambit.workspace/clear-cache",
+      "teambit.workspace/config-merger",
+      "teambit.workspace/eject",
+      "teambit.workspace/install",
+      "teambit.workspace/modules/node-modules-linker",
+      "teambit.workspace/scripts",
+      "teambit.workspace/testing/mock-workspace",
+      "teambit.workspace/variants",
+      "teambit.workspace/watcher",
+      "teambit.workspace/workspace-config-files",
+      "teambit.workspace/workspace-root"
+    ],
+    "invalidComponents": [],
+    "locallySoftRemoved": [],
+    "remotelySoftRemoved": [],
+    "outdatedComponents": [
+      {
+        "id": "teambit.api-reference/api-reference",
+        "headVersion": "1.0.1210",
+        "latestVersion": "1.0.1210"
+      },
+      {
+        "id": "teambit.cloud/cloud",
+        "headVersion": "0.0.1511",
+        "latestVersion": "0.0.1511"
+      },
+      {
+        "id": "teambit.cloud/modules/get-cloud-user",
+        "headVersion": "0.0.180",
+        "latestVersion": "0.0.180"
+      },
+      {
+        "id": "teambit.cloud/ripple",
+        "headVersion": "0.0.298",
+        "latestVersion": "0.0.298"
+      },
+      {
+        "id": "teambit.code/ui/code-compare",
+        "headVersion": "0.0.365",
+        "latestVersion": "0.0.365"
+      },
+      {
+        "id": "teambit.code/ui/code-tab-page",
+        "headVersion": "0.0.728",
+        "latestVersion": "0.0.728"
+      },
+      {
+        "id": "teambit.code/ui/code-view",
+        "headVersion": "0.0.589",
+        "latestVersion": "0.0.589"
+      },
+      {
+        "id": "teambit.code/ui/inline-code-compare",
+        "headVersion": "0.0.20",
+        "latestVersion": "0.0.20"
+      },
+      {
+        "id": "teambit.code/ui/inline-config-compare",
+        "headVersion": "0.0.18",
+        "latestVersion": "0.0.18"
+      },
+      {
+        "id": "teambit.code/ui/inline-deps-compare",
+        "headVersion": "0.0.18",
+        "latestVersion": "0.0.18"
+      },
+      {
+        "id": "teambit.code/ui/inline-tests-compare",
+        "headVersion": "0.0.18",
+        "latestVersion": "0.0.18"
+      },
+      {
+        "id": "teambit.code/ui/queries/get-file-content",
+        "headVersion": "0.0.514",
+        "latestVersion": "0.0.514"
+      },
+      {
+        "id": "teambit.compilation/babel",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.compilation/bundler",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.compilation/compiler",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.compilation/multi-compiler",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/changelog",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/checkout",
+        "headVersion": "1.0.1211",
+        "latestVersion": "1.0.1211"
+      },
+      {
+        "id": "teambit.component/code",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/component-compare",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/component-descriptor",
+        "headVersion": "0.0.469",
+        "latestVersion": "0.0.469"
+      },
+      {
+        "id": "teambit.component/component-issues",
+        "headVersion": "0.0.191",
+        "latestVersion": "0.0.191"
+      },
+      {
+        "id": "teambit.component/component-log",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/component-sizer",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/component-tree",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/component-writer",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/component",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/deprecation",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/dev-files",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/forking",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/graph",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/internalize",
+        "headVersion": "0.0.208",
+        "latestVersion": "0.0.208"
+      },
+      {
+        "id": "teambit.component/isolator",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/issues",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/lister",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/merging",
+        "headVersion": "1.0.1213",
+        "latestVersion": "1.0.1213"
+      },
+      {
+        "id": "teambit.component/modules/component-url",
+        "headVersion": "0.0.207",
+        "latestVersion": "0.0.207"
+      },
+      {
+        "id": "teambit.component/modules/merge-helper",
+        "headVersion": "0.0.123",
+        "latestVersion": "0.0.123"
+      },
+      {
+        "id": "teambit.component/mover",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/new-component-helper",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/refactoring",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/remove",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/renaming",
+        "headVersion": "1.0.1210",
+        "latestVersion": "1.0.1210"
+      },
+      {
+        "id": "teambit.component/snap-distance",
+        "headVersion": "0.0.180",
+        "latestVersion": "0.0.180"
+      },
+      {
+        "id": "teambit.component/snapping",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/sources",
+        "headVersion": "0.0.231",
+        "latestVersion": "0.0.231"
+      },
+      {
+        "id": "teambit.component/stash",
+        "headVersion": "1.0.1211",
+        "latestVersion": "1.0.1211"
+      },
+      {
+        "id": "teambit.component/status",
+        "headVersion": "1.0.1236",
+        "latestVersion": "1.0.1236"
+      },
+      {
+        "id": "teambit.component/testing/mock-components",
+        "headVersion": "0.0.455",
+        "latestVersion": "0.0.455"
+      },
+      {
+        "id": "teambit.component/tracker",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.component/ui/component-compare/changelog",
+        "headVersion": "0.0.262",
+        "latestVersion": "0.0.262"
+      },
+      {
+        "id": "teambit.component/ui/component-compare/compare-aspects/compare-aspects",
+        "headVersion": "0.0.160",
+        "latestVersion": "0.0.160"
+      },
+      {
+        "id": "teambit.component/ui/component-compare/component-compare",
+        "headVersion": "0.0.287",
+        "latestVersion": "0.0.287"
+      },
+      {
+        "id": "teambit.component/ui/component-compare/context",
+        "headVersion": "0.0.140",
+        "latestVersion": "0.0.140"
+      },
+      {
+        "id": "teambit.component/ui/component-compare/models/component-compare-props",
+        "headVersion": "0.0.145",
+        "latestVersion": "0.0.145"
+      },
+      {
+        "id": "teambit.component/ui/component-compare/utils/lazy-loading",
+        "headVersion": "0.0.14",
+        "latestVersion": "0.0.14"
+      },
+      {
+        "id": "teambit.component/ui/component-compare/version-picker",
+        "headVersion": "0.0.268",
+        "latestVersion": "0.0.268"
+      },
+      {
+        "id": "teambit.component/ui/component-drawer",
+        "headVersion": "0.0.513",
+        "latestVersion": "0.0.513"
+      },
+      {
+        "id": "teambit.component/ui/component-filters/component-filter-context",
+        "headVersion": "0.0.248",
+        "latestVersion": "0.0.248"
+      },
+      {
+        "id": "teambit.component/ui/component-filters/deprecate-filter",
+        "headVersion": "0.0.250",
+        "latestVersion": "0.0.250"
+      },
+      {
+        "id": "teambit.component/ui/component-filters/env-filter",
+        "headVersion": "0.0.296",
+        "latestVersion": "0.0.296"
+      },
+      {
+        "id": "teambit.component/ui/component-filters/show-main-filter",
+        "headVersion": "0.0.243",
+        "latestVersion": "0.0.243"
+      },
+      {
+        "id": "teambit.component/ui/component-meta",
+        "headVersion": "0.0.386",
+        "latestVersion": "0.0.386"
+      },
+      {
+        "id": "teambit.component/ui/version-block",
+        "headVersion": "0.0.965",
+        "latestVersion": "0.0.965"
+      },
+      {
+        "id": "teambit.component/ui/version-dropdown",
+        "headVersion": "0.0.946",
+        "latestVersion": "0.0.946"
+      },
+      {
+        "id": "teambit.compositions/compositions",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.compositions/ui/composition-compare-section",
+        "headVersion": "0.0.122",
+        "latestVersion": "0.0.122"
+      },
+      {
+        "id": "teambit.compositions/ui/composition-compare",
+        "headVersion": "0.0.280",
+        "latestVersion": "0.0.280"
+      },
+      {
+        "id": "teambit.defender/eslint",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.defender/eslint/config-mutator",
+        "headVersion": "0.0.141",
+        "latestVersion": "0.0.141"
+      },
+      {
+        "id": "teambit.defender/formatter",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.defender/jest",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.defender/linter",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.defender/mocha",
+        "headVersion": "1.0.923",
+        "latestVersion": "1.0.923"
+      },
+      {
+        "id": "teambit.defender/multi-tester",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.defender/prettier",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.defender/prettier/config-mutator",
+        "headVersion": "0.0.134",
+        "latestVersion": "0.0.134"
+      },
+      {
+        "id": "teambit.defender/tester",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.defender/ui/test-compare",
+        "headVersion": "0.0.329",
+        "latestVersion": "0.0.329"
+      },
+      {
+        "id": "teambit.defender/ui/test-page",
+        "headVersion": "0.0.105",
+        "latestVersion": "0.0.105"
+      },
+      {
+        "id": "teambit.defender/validator",
+        "headVersion": "0.0.446",
+        "latestVersion": "0.0.446"
+      },
+      {
+        "id": "teambit.dependencies/dependencies",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.dependencies/dependency-resolver",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.dependencies/fs/linked-dependencies",
+        "headVersion": "0.0.84",
+        "latestVersion": "0.0.84"
+      },
+      {
+        "id": "teambit.dependencies/pnpm",
+        "headVersion": "1.0.1253",
+        "latestVersion": "1.0.1253"
+      },
+      {
+        "id": "teambit.dependencies/yarn",
+        "headVersion": "1.0.1210",
+        "latestVersion": "1.0.1210"
+      },
+      {
+        "id": "teambit.docs/docs",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.envs/env",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.envs/envs",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.explorer/command-bar",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.explorer/insights",
+        "headVersion": "1.0.1210",
+        "latestVersion": "1.0.1210"
+      },
+      {
+        "id": "teambit.explorer/ui/components-overview",
+        "headVersion": "0.0.16",
+        "latestVersion": "0.0.16"
+      },
+      {
+        "id": "teambit.generator/generator",
+        "headVersion": "1.0.1210",
+        "latestVersion": "1.0.1210"
+      },
+      {
+        "id": "teambit.generator/workspace-starter",
+        "headVersion": "0.0.11",
+        "latestVersion": "0.0.11"
+      },
+      {
+        "id": "teambit.git/ci",
+        "headVersion": "1.0.608",
+        "latestVersion": "1.0.608"
+      },
+      {
+        "id": "teambit.git/git",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.harmony/api-server",
+        "headVersion": "1.0.1243",
+        "latestVersion": "1.0.1243"
+      },
+      {
+        "id": "teambit.harmony/application",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.harmony/aspect-loader",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.harmony/aspect",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.harmony/bit",
+        "headVersion": "2.2.94",
+        "latestVersion": "2.2.94"
+      },
+      {
+        "id": "teambit.harmony/cache",
+        "headVersion": "0.0.1498",
+        "latestVersion": "0.0.1498"
+      },
+      {
+        "id": "teambit.harmony/cli",
+        "headVersion": "0.0.1410",
+        "latestVersion": "0.0.1410"
+      },
+      {
+        "id": "teambit.harmony/config-store",
+        "headVersion": "0.0.291",
+        "latestVersion": "0.0.291"
+      },
+      {
+        "id": "teambit.harmony/config",
+        "headVersion": "0.0.1585",
+        "latestVersion": "0.0.1585"
+      },
+      {
+        "id": "teambit.harmony/content/cli-reference",
+        "headVersion": "2.0.1303",
+        "latestVersion": "2.0.1303"
+      },
+      {
+        "id": "teambit.harmony/diagnostic",
+        "headVersion": "1.0.1205",
+        "latestVersion": "1.0.1205"
+      },
+      {
+        "id": "teambit.harmony/doctor",
+        "headVersion": "0.0.894",
+        "latestVersion": "0.0.894"
+      },
+      {
+        "id": "teambit.harmony/empty-env",
+        "headVersion": "0.0.124",
+        "latestVersion": "0.0.124"
+      },
+      {
+        "id": "teambit.harmony/express",
+        "headVersion": "0.0.1504",
+        "latestVersion": "0.0.1504"
+      },
+      {
+        "id": "teambit.harmony/global-config",
+        "headVersion": "0.0.1414",
+        "latestVersion": "0.0.1414"
+      },
+      {
+        "id": "teambit.harmony/graphql",
+        "headVersion": "1.0.1205",
+        "latestVersion": "1.0.1205"
+      },
+      {
+        "id": "teambit.harmony/host-initializer",
+        "headVersion": "0.0.916",
+        "latestVersion": "0.0.916"
+      },
+      {
+        "id": "teambit.harmony/ipc-events",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.harmony/logger",
+        "headVersion": "0.0.1498",
+        "latestVersion": "0.0.1498"
+      },
+      {
+        "id": "teambit.harmony/modules/get-basic-log",
+        "headVersion": "0.0.180",
+        "latestVersion": "0.0.180"
+      },
+      {
+        "id": "teambit.harmony/modules/harmony-root-generator",
+        "headVersion": "0.0.49",
+        "latestVersion": "0.0.49"
+      },
+      {
+        "id": "teambit.harmony/node",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.harmony/pubsub",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.harmony/testing/load-aspect",
+        "headVersion": "0.0.449",
+        "latestVersion": "0.0.449"
+      },
+      {
+        "id": "teambit.harmony/ui/aspect-box",
+        "headVersion": "0.0.517",
+        "latestVersion": "0.0.517"
+      },
+      {
+        "id": "teambit.lanes/entities/lane-diff",
+        "headVersion": "0.0.206",
+        "latestVersion": "0.0.206"
+      },
+      {
+        "id": "teambit.lanes/hooks/use-lane-components",
+        "headVersion": "0.0.323",
+        "latestVersion": "0.0.323"
+      },
+      {
+        "id": "teambit.lanes/hooks/use-lanes",
+        "headVersion": "0.0.300",
+        "latestVersion": "0.0.300"
+      },
+      {
+        "id": "teambit.lanes/hooks/use-viewed-lane-from-url",
+        "headVersion": "0.0.276",
+        "latestVersion": "0.0.276"
+      },
+      {
+        "id": "teambit.lanes/lanes",
+        "headVersion": "1.0.1232",
+        "latestVersion": "1.0.1232"
+      },
+      {
+        "id": "teambit.lanes/merge-lanes",
+        "headVersion": "1.0.1232",
+        "latestVersion": "1.0.1232"
+      },
+      {
+        "id": "teambit.lanes/modules/create-lane",
+        "headVersion": "0.0.215",
+        "latestVersion": "0.0.215"
+      },
+      {
+        "id": "teambit.lanes/modules/diff",
+        "headVersion": "0.0.686",
+        "latestVersion": "0.0.686"
+      },
+      {
+        "id": "teambit.lanes/ui/compare/lane-compare-hooks/use-lane-diff-status",
+        "headVersion": "0.0.157",
+        "latestVersion": "0.0.157"
+      },
+      {
+        "id": "teambit.lanes/ui/compare/lane-compare-page",
+        "headVersion": "0.0.187",
+        "latestVersion": "0.0.187"
+      },
+      {
+        "id": "teambit.lanes/ui/compare/lane-compare",
+        "headVersion": "0.0.226",
+        "latestVersion": "0.0.226"
+      },
+      {
+        "id": "teambit.lanes/ui/inputs/lane-selector",
+        "headVersion": "0.0.312",
+        "latestVersion": "0.0.312"
+      },
+      {
+        "id": "teambit.lanes/ui/lane-overview",
+        "headVersion": "0.0.337",
+        "latestVersion": "0.0.337"
+      },
+      {
+        "id": "teambit.lanes/ui/models/lanes-model",
+        "headVersion": "0.0.239",
+        "latestVersion": "0.0.239"
+      },
+      {
+        "id": "teambit.legacy/analytics",
+        "headVersion": "0.0.114",
+        "latestVersion": "0.0.114"
+      },
+      {
+        "id": "teambit.legacy/bit-map",
+        "headVersion": "0.0.236",
+        "latestVersion": "0.0.236"
+      },
+      {
+        "id": "teambit.legacy/cli/error",
+        "headVersion": "0.0.67",
+        "latestVersion": "0.0.67"
+      },
+      {
+        "id": "teambit.legacy/component-diff",
+        "headVersion": "0.0.235",
+        "latestVersion": "0.0.235"
+      },
+      {
+        "id": "teambit.legacy/component-list",
+        "headVersion": "0.0.233",
+        "latestVersion": "0.0.233"
+      },
+      {
+        "id": "teambit.legacy/consumer-component",
+        "headVersion": "0.0.180",
+        "latestVersion": "0.0.180"
+      },
+      {
+        "id": "teambit.legacy/consumer-config",
+        "headVersion": "0.0.179",
+        "latestVersion": "0.0.179"
+      },
+      {
+        "id": "teambit.legacy/consumer",
+        "headVersion": "0.0.179",
+        "latestVersion": "0.0.179"
+      },
+      {
+        "id": "teambit.legacy/dependency-graph",
+        "headVersion": "0.0.182",
+        "latestVersion": "0.0.182"
+      },
+      {
+        "id": "teambit.legacy/e2e-helper",
+        "headVersion": "0.0.234",
+        "latestVersion": "0.0.234"
+      },
+      {
+        "id": "teambit.legacy/extension-data",
+        "headVersion": "0.0.181",
+        "latestVersion": "0.0.181"
+      },
+      {
+        "id": "teambit.legacy/logger",
+        "headVersion": "0.0.67",
+        "latestVersion": "0.0.67"
+      },
+      {
+        "id": "teambit.legacy/scope-api",
+        "headVersion": "0.0.234",
+        "latestVersion": "0.0.234"
+      },
+      {
+        "id": "teambit.legacy/scope",
+        "headVersion": "0.0.179",
+        "latestVersion": "0.0.179"
+      },
+      {
+        "id": "teambit.legacy/utils",
+        "headVersion": "0.0.56",
+        "latestVersion": "0.0.56"
+      },
+      {
+        "id": "teambit.mcp/cli-mcp-server",
+        "headVersion": "0.0.279",
+        "latestVersion": "0.0.279"
+      },
+      {
+        "id": "teambit.mdx/aspect-docs/mdx",
+        "headVersion": "0.1.4",
+        "latestVersion": "0.1.4"
+      },
+      {
+        "id": "teambit.mdx/mdx",
+        "headVersion": "1.0.1210",
+        "latestVersion": "1.0.1210"
+      },
+      {
+        "id": "teambit.mdx/readme",
+        "headVersion": "1.0.1210",
+        "latestVersion": "1.0.1210"
+      },
+      {
+        "id": "teambit.pipelines/builder",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.pipelines/modules/merge-component-results",
+        "headVersion": "0.0.530",
+        "latestVersion": "0.0.530"
+      },
+      {
+        "id": "teambit.pkg/modules/component-package-name",
+        "headVersion": "0.0.186",
+        "latestVersion": "0.0.186"
+      },
+      {
+        "id": "teambit.pkg/pkg",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.preview/preview",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.preview/ui/component-preview",
+        "headVersion": "1.0.43",
+        "latestVersion": "1.0.43"
+      },
+      {
+        "id": "teambit.preview/ui/inline-preview-compare",
+        "headVersion": "0.0.14",
+        "latestVersion": "0.0.14"
+      },
+      {
+        "id": "teambit.preview/ui/preview-placeholder",
+        "headVersion": "0.0.590",
+        "latestVersion": "0.0.590"
+      },
+      {
+        "id": "teambit.react/babel/bit-react-transformer",
+        "headVersion": "1.0.69",
+        "latestVersion": "1.0.69"
+      },
+      {
+        "id": "teambit.react/react",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.react/ui/docs-app",
+        "headVersion": "1.0.54",
+        "latestVersion": "1.0.54"
+      },
+      {
+        "id": "teambit.react/ui/docs/docs-content",
+        "headVersion": "0.0.48",
+        "latestVersion": "0.0.48"
+      },
+      {
+        "id": "teambit.react/ui/highlighter-provider",
+        "headVersion": "0.0.233",
+        "latestVersion": "0.0.233"
+      },
+      {
+        "id": "teambit.scope/export",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.scope/importer",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.scope/models/scope-model",
+        "headVersion": "0.0.572",
+        "latestVersion": "0.0.572"
+      },
+      {
+        "id": "teambit.scope/network",
+        "headVersion": "0.0.179",
+        "latestVersion": "0.0.179"
+      },
+      {
+        "id": "teambit.scope/objects",
+        "headVersion": "0.0.710",
+        "latestVersion": "0.0.710"
+      },
+      {
+        "id": "teambit.scope/remote-actions",
+        "headVersion": "0.0.179",
+        "latestVersion": "0.0.179"
+      },
+      {
+        "id": "teambit.scope/remotes",
+        "headVersion": "0.0.179",
+        "latestVersion": "0.0.179"
+      },
+      {
+        "id": "teambit.scope/scope",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.scope/ui/hooks/scope-context",
+        "headVersion": "0.0.571",
+        "latestVersion": "0.0.571"
+      },
+      {
+        "id": "teambit.scope/version-history",
+        "headVersion": "0.0.1001",
+        "latestVersion": "0.0.1001"
+      },
+      {
+        "id": "teambit.semantics/doc-parser",
+        "headVersion": "0.0.187",
+        "latestVersion": "0.0.187"
+      },
+      {
+        "id": "teambit.semantics/entities/semantic-schema-diff",
+        "headVersion": "0.0.19",
+        "latestVersion": "0.0.19"
+      },
+      {
+        "id": "teambit.semantics/entities/semantic-schema",
+        "headVersion": "0.0.120",
+        "latestVersion": "0.0.120"
+      },
+      {
+        "id": "teambit.semantics/schema",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.semantics/ui/api-diff-view",
+        "headVersion": "0.0.14",
+        "latestVersion": "0.0.14"
+      },
+      {
+        "id": "teambit.toolbox/array/duplications-finder",
+        "headVersion": "0.0.19",
+        "latestVersion": "0.0.19"
+      },
+      {
+        "id": "teambit.toolbox/fs/hard-link-directory",
+        "headVersion": "0.0.47",
+        "latestVersion": "0.0.47"
+      },
+      {
+        "id": "teambit.toolbox/fs/last-modified",
+        "headVersion": "0.0.24",
+        "latestVersion": "0.0.24"
+      },
+      {
+        "id": "teambit.toolbox/fs/link-or-symlink",
+        "headVersion": "0.0.75",
+        "latestVersion": "0.0.75"
+      },
+      {
+        "id": "teambit.toolbox/promise/map-pool",
+        "headVersion": "0.0.24",
+        "latestVersion": "0.0.24"
+      },
+      {
+        "id": "teambit.typescript/modules/ts-config-mutator",
+        "headVersion": "0.0.104",
+        "latestVersion": "0.0.104"
+      },
+      {
+        "id": "teambit.typescript/typescript",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.ui-foundation/harmony-ui-app",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.ui-foundation/notifications",
+        "headVersion": "1.0.1210",
+        "latestVersion": "1.0.1210"
+      },
+      {
+        "id": "teambit.ui-foundation/react-router",
+        "headVersion": "1.0.1205",
+        "latestVersion": "1.0.1205"
+      },
+      {
+        "id": "teambit.ui-foundation/sidebar",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.ui-foundation/ui",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.ui-foundation/ui/react-router/slot-router",
+        "headVersion": "0.0.533",
+        "latestVersion": "0.0.533"
+      },
+      {
+        "id": "teambit.ui-foundation/ui/side-bar",
+        "headVersion": "0.0.959",
+        "latestVersion": "0.0.959"
+      },
+      {
+        "id": "teambit.ui-foundation/user-agent",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.vue/vue-aspect",
+        "headVersion": "0.0.575",
+        "latestVersion": "0.0.575"
+      },
+      {
+        "id": "teambit.webpack/modules/config-mutator",
+        "headVersion": "0.0.195",
+        "latestVersion": "0.0.195"
+      },
+      {
+        "id": "teambit.webpack/webpack",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.workspace/clear-cache",
+        "headVersion": "0.0.619",
+        "latestVersion": "0.0.619"
+      },
+      {
+        "id": "teambit.workspace/config-merger",
+        "headVersion": "0.0.1076",
+        "latestVersion": "0.0.1076"
+      },
+      {
+        "id": "teambit.workspace/eject",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.workspace/install",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.workspace/modules/fs-cache",
+        "headVersion": "0.0.86",
+        "latestVersion": "0.0.86"
+      },
+      {
+        "id": "teambit.workspace/modules/match-pattern",
+        "headVersion": "0.0.539",
+        "latestVersion": "0.0.539"
+      },
+      {
+        "id": "teambit.workspace/modules/node-modules-linker",
+        "headVersion": "0.0.412",
+        "latestVersion": "0.0.412"
+      },
+      {
+        "id": "teambit.workspace/scripts",
+        "headVersion": "0.0.428",
+        "latestVersion": "0.0.428"
+      },
+      {
+        "id": "teambit.workspace/testing/mock-workspace",
+        "headVersion": "0.0.263",
+        "latestVersion": "0.0.263"
+      },
+      {
+        "id": "teambit.workspace/ui/workspace-component-card",
+        "headVersion": "0.0.592",
+        "latestVersion": "0.0.592"
+      },
+      {
+        "id": "teambit.workspace/variants",
+        "headVersion": "0.0.1678",
+        "latestVersion": "0.0.1678"
+      },
+      {
+        "id": "teambit.workspace/watcher",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.workspace/workspace-config-files",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      },
+      {
+        "id": "teambit.workspace/workspace-root",
+        "headVersion": "0.0.35",
+        "latestVersion": "0.0.35"
+      },
+      {
+        "id": "teambit.workspace/workspace",
+        "headVersion": "1.0.1209",
+        "latestVersion": "1.0.1209"
+      }
+    ],
+    "mergePendingComponents": [],
+    "componentsDuringMergeState": [],
+    "softTaggedComponents": [],
+    "snappedComponents": [],
+    "localOnly": [],
+    "pendingUpdatesFromMain": [],
+    "updatesFromForked": [],
+    "currentLaneId": "bit-local-a40b3cd2/main",
+    "workspaceIssues": [],
+    "pendingUpdateDependents": []
+  }
+}

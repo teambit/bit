@@ -65,3 +65,33 @@ for (const filename of fs.readdirSync(precinctDirectory).filter((filename) => fi
     });
   }
 }
+
+// These names interact with the detectives' ordinary-object maps. Preserve the
+// legacy omissions/errors through explicit fallback rather than fixing them in
+// only one backend. Include every inherited Object.prototype property.
+for (const specifier of Object.getOwnPropertyNames(Object.prototype)) {
+  for (const ext of ['js', 'ts']) {
+    for (const [mode, source] of [
+      ['import', `import { value } from '${specifier}'; export { value };`],
+      ['require', `require('${specifier}');`],
+      ['dynamic', `import('${specifier}');`],
+      ['reexport', `export { value } from '${specifier}';`],
+    ]) {
+      module.exports.push({
+        name: `prototype-${specifier}-${mode}-${ext}`,
+        path: `prototype-${mode}.${ext}`,
+        source,
+        expectFallback: 'Legacy ordinary-object dependency maps have prototype-sensitive omissions/errors',
+      });
+    }
+  }
+}
+for (const name of ['constructor', '__proto__', 'toString']) {
+  for (const ext of ['js', 'ts']) {
+    module.exports.push({
+      name: `prototype-binding-${name}-${ext}`,
+      path: `prototype-binding.${ext}`,
+      source: `import { ${name} } from 'pkg'; export { ${name} };`,
+    });
+  }
+}

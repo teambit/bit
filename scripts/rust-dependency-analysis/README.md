@@ -25,3 +25,14 @@ Fixtures cover import/export aliases, type metadata, duplicates, dynamic imports
 Validation against the hardened prototype: eight harness/reference tests and all 120 fixture comparisons pass. The tracked corpus at this revision contains 3,327 files: 3,298 exact comparisons, 29 explicit fallbacks, and zero discrepancies. Fallbacks comprise 25 classification cases, three decorators/namespace/attributes cases, and one JS syntax case. This measures extraction compatibility and fallback coverage, not command speed.
 
 This does not replace precinct integration tests. Environment/global detector registration, resolution, source locations, arbitrary parser options, invalid UTF-8 file behavior, and workspace command timing need further coverage. Expand fixtures as gaps are found; do not silently bless mismatches as new expected output.
+
+For current expanded validation, see [the compatibility checklist](../../docs/rust/compatibility-checklist.md). The prototype-key cases execute the actual detective before checking conservative native fallback, including legacy empty outputs and metadata RangeErrors. Malformed TS integration checks canonical error fields and inherited locations, not only issue codes.
+
+Run the historical suites and cache guards using an installed Bit package graph without installing into the checkout:
+
+```sh
+BIT_LEGACY_ROOT=/path/to/installed/bit node scripts/rust-dependency-analysis/legacy-suites.cjs
+BIT_LEGACY_ROOT=/path/to/installed/bit node --test scripts/rust-dependency-analysis/cache-invalidation.test.cjs
+```
+
+The command configuration, many-edit and syntax drivers require an owned disposable private CLI built by `command-build.cjs`; they mutate and restore only that private workspace. They are explicit local validation, not lightweight CI jobs. Use `BIT_COMMAND_BENCH_MUTATIONS=many-sources` with `command-invalidation-benchmark.cjs` for 16 component edits. `command-configuration-benchmark.cjs <private-cli> <native> <report.json>` measures resolved-import, component-policy and ignored untracked TSconfig cases. `command-syntax-proof.cjs` uses the same arguments and requires the diagnostic enrichment source to have been compiled into that private CLI first.
