@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import type { ResolvedConfig } from '@pnpm/napi';
-import { PnpmPackageManager } from './pnpm.package-manager';
+import { PnpmPackageManager, mergeGraphLockfileIntoExisting } from './pnpm.package-manager';
 
 describe('PnpmPackageManager.getNetworkConfig', () => {
   it('uses the Bit user agent when no user agent is configured', async () => {
@@ -76,3 +76,21 @@ function createPackageManager(config: Partial<ResolvedConfig>) {
   });
   return packageManager;
 }
+
+describe('mergeGraphLockfileIntoExisting', () => {
+  function lockfile(pnpmfileChecksum?: string) {
+    return { lockfileVersion: '9.0', importers: {}, ...(pnpmfileChecksum ? { pnpmfileChecksum } : {}) };
+  }
+
+  it('keeps the pnpmfileChecksum both lockfiles were resolved with', () => {
+    const merged = mergeGraphLockfileIntoExisting(lockfile('bit-1'), lockfile('bit-1'));
+    expect(merged.pnpmfileChecksum).to.equal('bit-1');
+  });
+
+  it('drops a pnpmfileChecksum the lockfiles disagree on', () => {
+    expect(mergeGraphLockfileIntoExisting(lockfile('bit-1'), lockfile('bit-2'))).not.to.have.property(
+      'pnpmfileChecksum'
+    );
+    expect(mergeGraphLockfileIntoExisting(lockfile('bit-1'), lockfile())).not.to.have.property('pnpmfileChecksum');
+  });
+});

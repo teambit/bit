@@ -220,8 +220,13 @@ describe('convertLockfileToGraph simple case', () => {
     },
   };
   it('should convert the lockfile object to the graph object', () => {
+    // The lockfile records no pnpmfileChecksum. Whether the graph then has the
+    // property set to undefined or not at all depends on how the class is
+    // compiled, so it is checked on its own.
+    const { pnpmfileChecksum, ...graphFields } = graph;
+    expect(pnpmfileChecksum).to.equal(undefined);
     expect({
-      ...graph,
+      ...graphFields,
       packages: Object.fromEntries(graph.packages.entries()),
     }).to.eql(expected);
   });
@@ -1188,5 +1193,59 @@ describe('convertGraphToLockfile on invalid graph', () => {
     expect(error?.message).eq(
       `Failed to generate a valid lockfile. The "packages['foo@1.0.0']" entry doesn't have a "resolution" field.`
     );
+  });
+});
+
+describe('pnpmfileChecksum', () => {
+  const componentDir = 'comps/comp1';
+
+  function createLockfile(pnpmfileChecksum?: string): BitLockfileFile {
+    return {
+      lockfileVersion: '9.0',
+      pnpmfileChecksum,
+      importers: {
+        [componentDir]: {
+          dependencies: { foo: { version: '1.0.0', specifier: '1.0.0' } },
+        },
+      },
+      packages: {
+        'foo@1.0.0': { resolution: { integrity: 'sha512-aaa' } },
+      },
+      snapshots: {
+        'foo@1.0.0': {},
+      },
+    } as BitLockfileFile;
+  }
+
+  function graphToLockfile(graph: DependenciesGraph) {
+    return convertGraphToLockfile(graph, {
+      manifests: {
+        [path.resolve(componentDir)]: { dependencies: { foo: '1.0.0' } },
+      },
+      rootDir: process.cwd(),
+      resolve: () => ({ resolution: { integrity: '0000' } }) as any,
+    });
+  }
+
+  it('should be kept from the lockfile to the graph and back', async () => {
+    const graph = convertLockfileToGraph(createLockfile('bit-1'), {
+      componentRelativeDir: componentDir,
+      componentIdByPkgName: new Map(),
+    });
+    expect(graph.pnpmfileChecksum).to.equal('bit-1');
+
+    const lockfile = await graphToLockfile(DependenciesGraph.deserialize(graph.serialize())!);
+    expect(lockfile.pnpmfileChecksum).to.equal('bit-1');
+  });
+
+  it('should stay unset for a graph saved without one', async () => {
+    const graph = convertLockfileToGraph(createLockfile(), {
+      componentRelativeDir: componentDir,
+      componentIdByPkgName: new Map(),
+    });
+    expect(graph.pnpmfileChecksum).to.equal(undefined);
+
+    const lockfile = await graphToLockfile(graph);
+    expect(lockfile).not.to.have.property('pnpmfileChecksum');
   });
 });
