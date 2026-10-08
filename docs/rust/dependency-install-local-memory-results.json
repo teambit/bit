@@ -1,0 +1,1539 @@
+{
+  "provenance": {
+    "revision": "a72e7cb66dd52be1c86aacb8745296fa5147b461",
+    "version": "2.2.93"
+  },
+  "fixture": {
+    "schemaVersion": 1,
+    "cliRevision": "a72e7cb66dd52be1c86aacb8745296fa5147b461",
+    "components": 4,
+    "componentCount": 4,
+    "filesPerComponent": 16,
+    "sources": {
+      "source-0/file-1.js": "5509c1267283ac35777e93b6785a9d485beed130c090060ac220ddab4c483934",
+      "source-0/file-10.js": "0312d2f13051f6d6b5ad195fecf1ffa8599d80d2c1f12bcb5af88988b2a1e853",
+      "source-0/file-11.js": "f1f922273060ec36c19bd191b8a5b5f4f3b0edfb44d4453e4196c676c0a59219",
+      "source-0/file-12.js": "42fbb415dca47b0404500aa379da9040b657f93bf4ead87659463e397626f401",
+      "source-0/file-13.js": "33e00524367e3557deb4b0d8165127660b7fabdf09d6f7fe7b57c9b899b5eef9",
+      "source-0/file-14.js": "644ef4c82b8beeba6f2113d61793c24c32396b5fffe2c6c0c474c8eb1e262a36",
+      "source-0/file-15.js": "9cd0a446369aa2d6eae68dc3eff4478a1a4be6cbde7f353565517708c2bd7c98",
+      "source-0/file-2.js": "140f5c730683a036f591fdabb7ad8505977a0b155db1f914e6f77ed3b4f210a6",
+      "source-0/file-3.js": "07b97e1b7c68ea51be9f47f51851d428ca84a0c6a2f3867a1a2ab89caef45320",
+      "source-0/file-4.js": "085a5d9e1cbe56da3e2dda294b65f90ac5b7cd01dcc8ba62b05dc2786b092de5",
+      "source-0/file-5.js": "5adb552c500bf9ddd196100bd2ec3d5718c40e56024d0db4bbeaefec57108de8",
+      "source-0/file-6.js": "1d32359d9f6ec441aa1b402fd24787e718723761e1cde6e51b9f1105d21c87cc",
+      "source-0/file-7.js": "83f9f9653b7a1d091777949b1a154e8dd6d0431280a6e258e86d20409d0161a8",
+      "source-0/file-8.js": "c935338c5b54e1aef39f79aa65e43598583c53a61b6780ee34806d612e4790e2",
+      "source-0/file-9.js": "20b79c01da0f9c9e02db4fdaaefab3937626b8401edd66f0e8dfcbe1620ee482",
+      "source-0/index.js": "ad74a04f64461b98f407a7d5b45b803016aed515a574dcbf13860e924e49f271",
+      "source-1/file-1.js": "5509c1267283ac35777e93b6785a9d485beed130c090060ac220ddab4c483934",
+      "source-1/file-10.js": "0312d2f13051f6d6b5ad195fecf1ffa8599d80d2c1f12bcb5af88988b2a1e853",
+      "source-1/file-11.js": "f1f922273060ec36c19bd191b8a5b5f4f3b0edfb44d4453e4196c676c0a59219",
+      "source-1/file-12.js": "42fbb415dca47b0404500aa379da9040b657f93bf4ead87659463e397626f401",
+      "source-1/file-13.js": "33e00524367e3557deb4b0d8165127660b7fabdf09d6f7fe7b57c9b899b5eef9",
+      "source-1/file-14.js": "644ef4c82b8beeba6f2113d61793c24c32396b5fffe2c6c0c474c8eb1e262a36",
+      "source-1/file-15.js": "9cd0a446369aa2d6eae68dc3eff4478a1a4be6cbde7f353565517708c2bd7c98",
+      "source-1/file-2.js": "140f5c730683a036f591fdabb7ad8505977a0b155db1f914e6f77ed3b4f210a6",
+      "source-1/file-3.js": "07b97e1b7c68ea51be9f47f51851d428ca84a0c6a2f3867a1a2ab89caef45320",
+      "source-1/file-4.js": "085a5d9e1cbe56da3e2dda294b65f90ac5b7cd01dcc8ba62b05dc2786b092de5",
+      "source-1/file-5.js": "5adb552c500bf9ddd196100bd2ec3d5718c40e56024d0db4bbeaefec57108de8",
+      "source-1/file-6.js": "1d32359d9f6ec441aa1b402fd24787e718723761e1cde6e51b9f1105d21c87cc",
+      "source-1/file-7.js": "83f9f9653b7a1d091777949b1a154e8dd6d0431280a6e258e86d20409d0161a8",
+      "source-1/file-8.js": "c935338c5b54e1aef39f79aa65e43598583c53a61b6780ee34806d612e4790e2",
+      "source-1/file-9.js": "20b79c01da0f9c9e02db4fdaaefab3937626b8401edd66f0e8dfcbe1620ee482",
+      "source-1/index.js": "66f99e2ff5ed444f53b6f3f955d79bd9877985a27903dd4efc5704457e57c989",
+      "source-2/file-1.js": "5509c1267283ac35777e93b6785a9d485beed130c090060ac220ddab4c483934",
+      "source-2/file-10.js": "0312d2f13051f6d6b5ad195fecf1ffa8599d80d2c1f12bcb5af88988b2a1e853",
+      "source-2/file-11.js": "f1f922273060ec36c19bd191b8a5b5f4f3b0edfb44d4453e4196c676c0a59219",
+      "source-2/file-12.js": "42fbb415dca47b0404500aa379da9040b657f93bf4ead87659463e397626f401",
+      "source-2/file-13.js": "33e00524367e3557deb4b0d8165127660b7fabdf09d6f7fe7b57c9b899b5eef9",
+      "source-2/file-14.js": "644ef4c82b8beeba6f2113d61793c24c32396b5fffe2c6c0c474c8eb1e262a36",
+      "source-2/file-15.js": "9cd0a446369aa2d6eae68dc3eff4478a1a4be6cbde7f353565517708c2bd7c98",
+      "source-2/file-2.js": "140f5c730683a036f591fdabb7ad8505977a0b155db1f914e6f77ed3b4f210a6",
+      "source-2/file-3.js": "07b97e1b7c68ea51be9f47f51851d428ca84a0c6a2f3867a1a2ab89caef45320",
+      "source-2/file-4.js": "085a5d9e1cbe56da3e2dda294b65f90ac5b7cd01dcc8ba62b05dc2786b092de5",
+      "source-2/file-5.js": "5adb552c500bf9ddd196100bd2ec3d5718c40e56024d0db4bbeaefec57108de8",
+      "source-2/file-6.js": "1d32359d9f6ec441aa1b402fd24787e718723761e1cde6e51b9f1105d21c87cc",
+      "source-2/file-7.js": "83f9f9653b7a1d091777949b1a154e8dd6d0431280a6e258e86d20409d0161a8",
+      "source-2/file-8.js": "c935338c5b54e1aef39f79aa65e43598583c53a61b6780ee34806d612e4790e2",
+      "source-2/file-9.js": "20b79c01da0f9c9e02db4fdaaefab3937626b8401edd66f0e8dfcbe1620ee482",
+      "source-2/index.js": "d43bbb83f0ae3e8e1f67f5e00d569c859542d226ad8c1194c3d035f1701af554",
+      "source-3/file-1.js": "5509c1267283ac35777e93b6785a9d485beed130c090060ac220ddab4c483934",
+      "source-3/file-10.js": "0312d2f13051f6d6b5ad195fecf1ffa8599d80d2c1f12bcb5af88988b2a1e853",
+      "source-3/file-11.js": "f1f922273060ec36c19bd191b8a5b5f4f3b0edfb44d4453e4196c676c0a59219",
+      "source-3/file-12.js": "42fbb415dca47b0404500aa379da9040b657f93bf4ead87659463e397626f401",
+      "source-3/file-13.js": "33e00524367e3557deb4b0d8165127660b7fabdf09d6f7fe7b57c9b899b5eef9",
+      "source-3/file-14.js": "644ef4c82b8beeba6f2113d61793c24c32396b5fffe2c6c0c474c8eb1e262a36",
+      "source-3/file-15.js": "9cd0a446369aa2d6eae68dc3eff4478a1a4be6cbde7f353565517708c2bd7c98",
+      "source-3/file-2.js": "140f5c730683a036f591fdabb7ad8505977a0b155db1f914e6f77ed3b4f210a6",
+      "source-3/file-3.js": "07b97e1b7c68ea51be9f47f51851d428ca84a0c6a2f3867a1a2ab89caef45320",
+      "source-3/file-4.js": "085a5d9e1cbe56da3e2dda294b65f90ac5b7cd01dcc8ba62b05dc2786b092de5",
+      "source-3/file-5.js": "5adb552c500bf9ddd196100bd2ec3d5718c40e56024d0db4bbeaefec57108de8",
+      "source-3/file-6.js": "1d32359d9f6ec441aa1b402fd24787e718723761e1cde6e51b9f1105d21c87cc",
+      "source-3/file-7.js": "83f9f9653b7a1d091777949b1a154e8dd6d0431280a6e258e86d20409d0161a8",
+      "source-3/file-8.js": "c935338c5b54e1aef39f79aa65e43598583c53a61b6780ee34806d612e4790e2",
+      "source-3/file-9.js": "20b79c01da0f9c9e02db4fdaaefab3937626b8401edd66f0e8dfcbe1620ee482",
+      "source-3/index.js": "f16f1cf76e05cdefe964b92fae48c0ce08cb9ff9e97537624d6d63936d5175f8"
+    },
+    "externalRegistryDependencies": 0,
+    "localRuntimePackageLinks": ["react", "react-dom"],
+    "unusedEnvironmentTypePackagesRemovedBySupportedPolicy": ["@types/jest", "@types/node"],
+    "setup": "real bit init + bit add + bit link in unshare -Urn; no package installation"
+  },
+  "helperSha256": "a5b4e2f5a77447e26d30c616850db456bfd918040a2ffce5dad60a4a74edd455",
+  "node": "v24.21.0",
+  "platform": "linux/x64",
+  "cpu": "AMD Ryzen 9 9950X3D2 16-Core Processor",
+  "command": ["install", "--lockfile-only", "--skip-import", "--skip-compile", "--skip-write-config-files"],
+  "network": "unshare -Urn for every real CLI command; no external network",
+  "globalWrites": "BIT_GLOBALS_DIR plus native package store/cache inside owned workspace",
+  "installedState": "every run is restored from the same physical fixture snapshot",
+  "timingBoundary": "real Node CLI process startup through real package-manager completion, excluding restoration and cache inspection",
+  "acceptance": true,
+  "runs": [
+    {
+      "iteration": 0,
+      "variant": "legacy",
+      "measured": true,
+      "elapsedMs": 596.8751929999999,
+      "totalTreeCpuMs": 780,
+      "maxSingleProcessRssKiB": 307848,
+      "memory": {
+        "method": "near-simultaneous sampled sum of Linux /proc VmRSS for the command process and observed descendants",
+        "sampleIntervalMs": 20,
+        "samples": 31,
+        "peakSampledRssKiB": 315208,
+        "peakProcesses": [
+          {
+            "pid": 2577806,
+            "command": "time",
+            "startTime": "19134798",
+            "rssKiB": 1608
+          },
+          {
+            "pid": 2577807,
+            "command": "MainThread",
+            "startTime": "19134798",
+            "rssKiB": 313600
+          }
+        ],
+        "maxConcurrentProcesses": 2,
+        "uniqueProcesses": 2,
+        "missingProcessReads": 2,
+        "failedProcReads": 0,
+        "racedProcessReads": 0,
+        "observedRootExit": true,
+        "measurementSpanMs": 595.5674690000001,
+        "maxSampleGapMs": 20.39709099999982,
+        "maxSampleDurationMs": 0.5266329999999471,
+        "samplerCpuMs": 5.756000000000001
+      },
+      "cacheEntriesBefore": 0,
+      "installerCalls": [
+        {
+          "storeDir": "<benchmark-root>/workspace/.store/v11",
+          "cacheDir": "<benchmark-root>/workspace/.cache",
+          "lockfileOnly": true,
+          "projectCount": 6
+        }
+      ],
+      "treeCalls": 4,
+      "helperStarts": 0,
+      "maxConcurrentHelpers": 0,
+      "requests": 0,
+      "submittedFiles": 0,
+      "inlineFiles": 0,
+      "outcomes": {},
+      "helperPeakRssKiB": 0,
+      "nodePeakRssKiB": 307060,
+      "dependencyRecordsSha256": "84e730ec692135b91080b45d19ecb07bcb52e40b52824ce0251c01c09fa8277b",
+      "projectsSha256": "460013d9cb40264aee373e308b1a8ec72ca1f20e882924bdf2875de6df5282ba",
+      "lockfileSha256": "4bde9c1b137ea309a38def342ede1769dda65d601d7cc892a004d802ab7a90df"
+    },
+    {
+      "iteration": 0,
+      "variant": "native",
+      "measured": true,
+      "elapsedMs": 588.1150730000004,
+      "totalTreeCpuMs": 770,
+      "maxSingleProcessRssKiB": 303236,
+      "memory": {
+        "method": "near-simultaneous sampled sum of Linux /proc VmRSS for the command process and observed descendants",
+        "sampleIntervalMs": 20,
+        "samples": 31,
+        "peakSampledRssKiB": 308444,
+        "peakProcesses": [
+          {
+            "pid": 2577973,
+            "command": "time",
+            "startTime": "19134870",
+            "rssKiB": 1728
+          },
+          {
+            "pid": 2577974,
+            "command": "MainThread",
+            "startTime": "19134870",
+            "rssKiB": 306716
+          }
+        ],
+        "maxConcurrentProcesses": 3,
+        "uniqueProcesses": 3,
+        "missingProcessReads": 3,
+        "failedProcReads": 0,
+        "racedProcessReads": 0,
+        "observedRootExit": true,
+        "measurementSpanMs": 587.1174859999996,
+        "maxSampleGapMs": 20.78962700000011,
+        "maxSampleDurationMs": 0.4229349999995975,
+        "samplerCpuMs": 5.744000000000001
+      },
+      "cacheEntriesBefore": 0,
+      "installerCalls": [
+        {
+          "storeDir": "<benchmark-root>/workspace/.store/v11",
+          "cacheDir": "<benchmark-root>/workspace/.cache",
+          "lockfileOnly": true,
+          "projectCount": 6
+        }
+      ],
+      "treeCalls": 4,
+      "helperStarts": 1,
+      "maxConcurrentHelpers": 1,
+      "requests": 64,
+      "submittedFiles": 64,
+      "inlineFiles": 64,
+      "outcomes": {
+        "ok": 64
+      },
+      "helperPeakRssKiB": 0,
+      "nodePeakRssKiB": 302712,
+      "dependencyRecordsSha256": "84e730ec692135b91080b45d19ecb07bcb52e40b52824ce0251c01c09fa8277b",
+      "projectsSha256": "460013d9cb40264aee373e308b1a8ec72ca1f20e882924bdf2875de6df5282ba",
+      "lockfileSha256": "4bde9c1b137ea309a38def342ede1769dda65d601d7cc892a004d802ab7a90df"
+    },
+    {
+      "iteration": 1,
+      "variant": "native",
+      "measured": true,
+      "elapsedMs": 649.3975369999998,
+      "totalTreeCpuMs": 860,
+      "maxSingleProcessRssKiB": 303616,
+      "memory": {
+        "method": "near-simultaneous sampled sum of Linux /proc VmRSS for the command process and observed descendants",
+        "sampleIntervalMs": 20,
+        "samples": 34,
+        "peakSampledRssKiB": 308096,
+        "peakProcesses": [
+          {
+            "pid": 2578460,
+            "command": "time",
+            "startTime": "19134942",
+            "rssKiB": 1652
+          },
+          {
+            "pid": 2578461,
+            "command": "MainThread",
+            "startTime": "19134942",
+            "rssKiB": 306444
+          }
+        ],
+        "maxConcurrentProcesses": 3,
+        "uniqueProcesses": 3,
+        "missingProcessReads": 3,
+        "failedProcReads": 0,
+        "racedProcessReads": 0,
+        "observedRootExit": true,
+        "measurementSpanMs": 648.3514700000001,
+        "maxSampleGapMs": 20.93972500000018,
+        "maxSampleDurationMs": 0.5188140000000203,
+        "samplerCpuMs": 7.305999999999999
+      },
+      "cacheEntriesBefore": 0,
+      "installerCalls": [
+        {
+          "storeDir": "<benchmark-root>/workspace/.store/v11",
+          "cacheDir": "<benchmark-root>/workspace/.cache",
+          "lockfileOnly": true,
+          "projectCount": 6
+        }
+      ],
+      "treeCalls": 4,
+      "helperStarts": 1,
+      "maxConcurrentHelpers": 1,
+      "requests": 64,
+      "submittedFiles": 64,
+      "inlineFiles": 64,
+      "outcomes": {
+        "ok": 64
+      },
+      "helperPeakRssKiB": 4176,
+      "nodePeakRssKiB": 303084,
+      "dependencyRecordsSha256": "84e730ec692135b91080b45d19ecb07bcb52e40b52824ce0251c01c09fa8277b",
+      "projectsSha256": "460013d9cb40264aee373e308b1a8ec72ca1f20e882924bdf2875de6df5282ba",
+      "lockfileSha256": "4bde9c1b137ea309a38def342ede1769dda65d601d7cc892a004d802ab7a90df"
+    },
+    {
+      "iteration": 1,
+      "variant": "legacy",
+      "measured": true,
+      "elapsedMs": 648.140073,
+      "totalTreeCpuMs": 860,
+      "maxSingleProcessRssKiB": 307052,
+      "memory": {
+        "method": "near-simultaneous sampled sum of Linux /proc VmRSS for the command process and observed descendants",
+        "sampleIntervalMs": 20,
+        "samples": 34,
+        "peakSampledRssKiB": 312640,
+        "peakProcesses": [
+          {
+            "pid": 2578625,
+            "command": "time",
+            "startTime": "19135022",
+            "rssKiB": 1648
+          },
+          {
+            "pid": 2578626,
+            "command": "MainThread",
+            "startTime": "19135022",
+            "rssKiB": 310992
+          }
+        ],
+        "maxConcurrentProcesses": 2,
+        "uniqueProcesses": 2,
+        "missingProcessReads": 2,
+        "failedProcReads": 0,
+        "racedProcessReads": 0,
+        "observedRootExit": true,
+        "measurementSpanMs": 646.7911999999997,
+        "maxSampleGapMs": 20.797236999999768,
+        "maxSampleDurationMs": 0.45476400000006834,
+        "samplerCpuMs": 6.617999999999999
+      },
+      "cacheEntriesBefore": 0,
+      "installerCalls": [
+        {
+          "storeDir": "<benchmark-root>/workspace/.store/v11",
+          "cacheDir": "<benchmark-root>/workspace/.cache",
+          "lockfileOnly": true,
+          "projectCount": 6
+        }
+      ],
+      "treeCalls": 4,
+      "helperStarts": 0,
+      "maxConcurrentHelpers": 0,
+      "requests": 0,
+      "submittedFiles": 0,
+      "inlineFiles": 0,
+      "outcomes": {},
+      "helperPeakRssKiB": 0,
+      "nodePeakRssKiB": 306528,
+      "dependencyRecordsSha256": "84e730ec692135b91080b45d19ecb07bcb52e40b52824ce0251c01c09fa8277b",
+      "projectsSha256": "460013d9cb40264aee373e308b1a8ec72ca1f20e882924bdf2875de6df5282ba",
+      "lockfileSha256": "4bde9c1b137ea309a38def342ede1769dda65d601d7cc892a004d802ab7a90df"
+    },
+    {
+      "iteration": 2,
+      "variant": "legacy",
+      "measured": true,
+      "elapsedMs": 591.1647050000001,
+      "totalTreeCpuMs": 790,
+      "maxSingleProcessRssKiB": 309232,
+      "memory": {
+        "method": "near-simultaneous sampled sum of Linux /proc VmRSS for the command process and observed descendants",
+        "sampleIntervalMs": 20,
+        "samples": 31,
+        "peakSampledRssKiB": 312724,
+        "peakProcesses": [
+          {
+            "pid": 2578937,
+            "command": "time",
+            "startTime": "19135102",
+            "rssKiB": 1540
+          },
+          {
+            "pid": 2578938,
+            "command": "MainThread",
+            "startTime": "19135102",
+            "rssKiB": 311184
+          }
+        ],
+        "maxConcurrentProcesses": 2,
+        "uniqueProcesses": 2,
+        "missingProcessReads": 2,
+        "failedProcReads": 0,
+        "racedProcessReads": 0,
+        "observedRootExit": true,
+        "measurementSpanMs": 590.2570159999996,
+        "maxSampleGapMs": 20.599239000000125,
+        "maxSampleDurationMs": 0.430753999999979,
+        "samplerCpuMs": 5.472
+      },
+      "cacheEntriesBefore": 0,
+      "installerCalls": [
+        {
+          "storeDir": "<benchmark-root>/workspace/.store/v11",
+          "cacheDir": "<benchmark-root>/workspace/.cache",
+          "lockfileOnly": true,
+          "projectCount": 6
+        }
+      ],
+      "treeCalls": 4,
+      "helperStarts": 0,
+      "maxConcurrentHelpers": 0,
+      "requests": 0,
+      "submittedFiles": 0,
+      "inlineFiles": 0,
+      "outcomes": {},
+      "helperPeakRssKiB": 0,
+      "nodePeakRssKiB": 308684,
+      "dependencyRecordsSha256": "84e730ec692135b91080b45d19ecb07bcb52e40b52824ce0251c01c09fa8277b",
+      "projectsSha256": "460013d9cb40264aee373e308b1a8ec72ca1f20e882924bdf2875de6df5282ba",
+      "lockfileSha256": "4bde9c1b137ea309a38def342ede1769dda65d601d7cc892a004d802ab7a90df"
+    },
+    {
+      "iteration": 2,
+      "variant": "native",
+      "measured": true,
+      "elapsedMs": 616.5707430000002,
+      "totalTreeCpuMs": 810,
+      "maxSingleProcessRssKiB": 305328,
+      "memory": {
+        "method": "near-simultaneous sampled sum of Linux /proc VmRSS for the command process and observed descendants",
+        "sampleIntervalMs": 20,
+        "samples": 32,
+        "peakSampledRssKiB": 312796,
+        "peakProcesses": [
+          {
+            "pid": 2579161,
+            "command": "time",
+            "startTime": "19135173",
+            "rssKiB": 1608
+          },
+          {
+            "pid": 2579162,
+            "command": "MainThread",
+            "startTime": "19135173",
+            "rssKiB": 311188
+          }
+        ],
+        "maxConcurrentProcesses": 3,
+        "uniqueProcesses": 3,
+        "missingProcessReads": 3,
+        "failedProcReads": 0,
+        "racedProcessReads": 0,
+        "observedRootExit": true,
+        "measurementSpanMs": 615.6491640000004,
+        "maxSampleGapMs": 20.557800000000498,
+        "maxSampleDurationMs": 0.5362930000001143,
+        "samplerCpuMs": 6.602
+      },
+      "cacheEntriesBefore": 0,
+      "installerCalls": [
+        {
+          "storeDir": "<benchmark-root>/workspace/.store/v11",
+          "cacheDir": "<benchmark-root>/workspace/.cache",
+          "lockfileOnly": true,
+          "projectCount": 6
+        }
+      ],
+      "treeCalls": 4,
+      "helperStarts": 1,
+      "maxConcurrentHelpers": 1,
+      "requests": 64,
+      "submittedFiles": 64,
+      "inlineFiles": 64,
+      "outcomes": {
+        "ok": 64
+      },
+      "helperPeakRssKiB": 4252,
+      "nodePeakRssKiB": 305328,
+      "dependencyRecordsSha256": "84e730ec692135b91080b45d19ecb07bcb52e40b52824ce0251c01c09fa8277b",
+      "projectsSha256": "460013d9cb40264aee373e308b1a8ec72ca1f20e882924bdf2875de6df5282ba",
+      "lockfileSha256": "4bde9c1b137ea309a38def342ede1769dda65d601d7cc892a004d802ab7a90df"
+    },
+    {
+      "iteration": 3,
+      "variant": "native",
+      "measured": true,
+      "elapsedMs": 617.3573329999999,
+      "totalTreeCpuMs": 810,
+      "maxSingleProcessRssKiB": 305220,
+      "memory": {
+        "method": "near-simultaneous sampled sum of Linux /proc VmRSS for the command process and observed descendants",
+        "sampleIntervalMs": 20,
+        "samples": 32,
+        "peakSampledRssKiB": 310776,
+        "peakProcesses": [
+          {
+            "pid": 2579330,
+            "command": "time",
+            "startTime": "19135247",
+            "rssKiB": 1540
+          },
+          {
+            "pid": 2579331,
+            "command": "MainThread",
+            "startTime": "19135247",
+            "rssKiB": 309236
+          }
+        ],
+        "maxConcurrentProcesses": 3,
+        "uniqueProcesses": 3,
+        "missingProcessReads": 3,
+        "failedProcReads": 0,
+        "racedProcessReads": 0,
+        "observedRootExit": true,
+        "measurementSpanMs": 615.797372,
+        "maxSampleGapMs": 20.57466900000054,
+        "maxSampleDurationMs": 0.63169199999993,
+        "samplerCpuMs": 6.321
+      },
+      "cacheEntriesBefore": 0,
+      "installerCalls": [
+        {
+          "storeDir": "<benchmark-root>/workspace/.store/v11",
+          "cacheDir": "<benchmark-root>/workspace/.cache",
+          "lockfileOnly": true,
+          "projectCount": 6
+        }
+      ],
+      "treeCalls": 4,
+      "helperStarts": 1,
+      "maxConcurrentHelpers": 1,
+      "requests": 64,
+      "submittedFiles": 64,
+      "inlineFiles": 64,
+      "outcomes": {
+        "ok": 64
+      },
+      "helperPeakRssKiB": 0,
+      "nodePeakRssKiB": 304916,
+      "dependencyRecordsSha256": "84e730ec692135b91080b45d19ecb07bcb52e40b52824ce0251c01c09fa8277b",
+      "projectsSha256": "460013d9cb40264aee373e308b1a8ec72ca1f20e882924bdf2875de6df5282ba",
+      "lockfileSha256": "4bde9c1b137ea309a38def342ede1769dda65d601d7cc892a004d802ab7a90df"
+    },
+    {
+      "iteration": 3,
+      "variant": "legacy",
+      "measured": true,
+      "elapsedMs": 602.1906349999999,
+      "totalTreeCpuMs": 809.9999999999999,
+      "maxSingleProcessRssKiB": 307736,
+      "memory": {
+        "method": "near-simultaneous sampled sum of Linux /proc VmRSS for the command process and observed descendants",
+        "sampleIntervalMs": 20,
+        "samples": 31,
+        "peakSampledRssKiB": 313472,
+        "peakProcesses": [
+          {
+            "pid": 2579559,
+            "command": "time",
+            "startTime": "19135320",
+            "rssKiB": 1608
+          },
+          {
+            "pid": 2579560,
+            "command": "MainThread",
+            "startTime": "19135320",
+            "rssKiB": 311864
+          }
+        ],
+        "maxConcurrentProcesses": 2,
+        "uniqueProcesses": 2,
+        "missingProcessReads": 2,
+        "failedProcReads": 0,
+        "racedProcessReads": 0,
+        "observedRootExit": true,
+        "measurementSpanMs": 601.1013090000006,
+        "maxSampleGapMs": 20.616508000000067,
+        "maxSampleDurationMs": 0.3954650000005131,
+        "samplerCpuMs": 6.064
+      },
+      "cacheEntriesBefore": 0,
+      "installerCalls": [
+        {
+          "storeDir": "<benchmark-root>/workspace/.store/v11",
+          "cacheDir": "<benchmark-root>/workspace/.cache",
+          "lockfileOnly": true,
+          "projectCount": 6
+        }
+      ],
+      "treeCalls": 4,
+      "helperStarts": 0,
+      "maxConcurrentHelpers": 0,
+      "requests": 0,
+      "submittedFiles": 0,
+      "inlineFiles": 0,
+      "outcomes": {},
+      "helperPeakRssKiB": 0,
+      "nodePeakRssKiB": 307736,
+      "dependencyRecordsSha256": "84e730ec692135b91080b45d19ecb07bcb52e40b52824ce0251c01c09fa8277b",
+      "projectsSha256": "460013d9cb40264aee373e308b1a8ec72ca1f20e882924bdf2875de6df5282ba",
+      "lockfileSha256": "4bde9c1b137ea309a38def342ede1769dda65d601d7cc892a004d802ab7a90df"
+    },
+    {
+      "iteration": 4,
+      "variant": "legacy",
+      "measured": true,
+      "elapsedMs": 626.273040000001,
+      "totalTreeCpuMs": 840,
+      "maxSingleProcessRssKiB": 305576,
+      "memory": {
+        "method": "near-simultaneous sampled sum of Linux /proc VmRSS for the command process and observed descendants",
+        "sampleIntervalMs": 20,
+        "samples": 33,
+        "peakSampledRssKiB": 310804,
+        "peakProcesses": [
+          {
+            "pid": 2579830,
+            "command": "time",
+            "startTime": "19135392",
+            "rssKiB": 1604
+          },
+          {
+            "pid": 2579831,
+            "command": "MainThread",
+            "startTime": "19135392",
+            "rssKiB": 309200
+          }
+        ],
+        "maxConcurrentProcesses": 2,
+        "uniqueProcesses": 2,
+        "missingProcessReads": 2,
+        "failedProcReads": 0,
+        "racedProcessReads": 0,
+        "observedRootExit": true,
+        "measurementSpanMs": 625.191792999999,
+        "maxSampleGapMs": 20.503091000000495,
+        "maxSampleDurationMs": 0.7352599999994709,
+        "samplerCpuMs": 7.228
+      },
+      "cacheEntriesBefore": 0,
+      "installerCalls": [
+        {
+          "storeDir": "<benchmark-root>/workspace/.store/v11",
+          "cacheDir": "<benchmark-root>/workspace/.cache",
+          "lockfileOnly": true,
+          "projectCount": 6
+        }
+      ],
+      "treeCalls": 4,
+      "helperStarts": 0,
+      "maxConcurrentHelpers": 0,
+      "requests": 0,
+      "submittedFiles": 0,
+      "inlineFiles": 0,
+      "outcomes": {},
+      "helperPeakRssKiB": 0,
+      "nodePeakRssKiB": 305576,
+      "dependencyRecordsSha256": "84e730ec692135b91080b45d19ecb07bcb52e40b52824ce0251c01c09fa8277b",
+      "projectsSha256": "460013d9cb40264aee373e308b1a8ec72ca1f20e882924bdf2875de6df5282ba",
+      "lockfileSha256": "4bde9c1b137ea309a38def342ede1769dda65d601d7cc892a004d802ab7a90df"
+    },
+    {
+      "iteration": 4,
+      "variant": "native",
+      "measured": true,
+      "elapsedMs": 590.7272699999994,
+      "totalTreeCpuMs": 780,
+      "maxSingleProcessRssKiB": 304960,
+      "memory": {
+        "method": "near-simultaneous sampled sum of Linux /proc VmRSS for the command process and observed descendants",
+        "sampleIntervalMs": 20,
+        "samples": 31,
+        "peakSampledRssKiB": 309204,
+        "peakProcesses": [
+          {
+            "pid": 2580161,
+            "command": "time",
+            "startTime": "19135466",
+            "rssKiB": 1664
+          },
+          {
+            "pid": 2580162,
+            "command": "MainThread",
+            "startTime": "19135466",
+            "rssKiB": 307540
+          }
+        ],
+        "maxConcurrentProcesses": 3,
+        "uniqueProcesses": 3,
+        "missingProcessReads": 3,
+        "failedProcReads": 0,
+        "racedProcessReads": 0,
+        "observedRootExit": true,
+        "measurementSpanMs": 589.8758800000014,
+        "maxSampleGapMs": 20.88047600000027,
+        "maxSampleDurationMs": 0.39975499999854947,
+        "samplerCpuMs": 5.138999999999999
+      },
+      "cacheEntriesBefore": 0,
+      "installerCalls": [
+        {
+          "storeDir": "<benchmark-root>/workspace/.store/v11",
+          "cacheDir": "<benchmark-root>/workspace/.cache",
+          "lockfileOnly": true,
+          "projectCount": 6
+        }
+      ],
+      "treeCalls": 4,
+      "helperStarts": 1,
+      "maxConcurrentHelpers": 1,
+      "requests": 64,
+      "submittedFiles": 64,
+      "inlineFiles": 64,
+      "outcomes": {
+        "ok": 64
+      },
+      "helperPeakRssKiB": 0,
+      "nodePeakRssKiB": 304960,
+      "dependencyRecordsSha256": "84e730ec692135b91080b45d19ecb07bcb52e40b52824ce0251c01c09fa8277b",
+      "projectsSha256": "460013d9cb40264aee373e308b1a8ec72ca1f20e882924bdf2875de6df5282ba",
+      "lockfileSha256": "4bde9c1b137ea309a38def342ede1769dda65d601d7cc892a004d802ab7a90df"
+    },
+    {
+      "iteration": 5,
+      "variant": "native",
+      "measured": true,
+      "elapsedMs": 601.9408680000015,
+      "totalTreeCpuMs": 810,
+      "maxSingleProcessRssKiB": 306108,
+      "memory": {
+        "method": "near-simultaneous sampled sum of Linux /proc VmRSS for the command process and observed descendants",
+        "sampleIntervalMs": 20,
+        "samples": 31,
+        "peakSampledRssKiB": 311132,
+        "peakProcesses": [
+          {
+            "pid": 2580561,
+            "command": "time",
+            "startTime": "19135537",
+            "rssKiB": 1724
+          },
+          {
+            "pid": 2580562,
+            "command": "MainThread",
+            "startTime": "19135537",
+            "rssKiB": 309408
+          }
+        ],
+        "maxConcurrentProcesses": 3,
+        "uniqueProcesses": 3,
+        "missingProcessReads": 3,
+        "failedProcReads": 0,
+        "racedProcessReads": 0,
+        "observedRootExit": true,
+        "measurementSpanMs": 601.0495090000004,
+        "maxSampleGapMs": 20.742557999999917,
+        "maxSampleDurationMs": 0.570012999998653,
+        "samplerCpuMs": 5.432
+      },
+      "cacheEntriesBefore": 0,
+      "installerCalls": [
+        {
+          "storeDir": "<benchmark-root>/workspace/.store/v11",
+          "cacheDir": "<benchmark-root>/workspace/.cache",
+          "lockfileOnly": true,
+          "projectCount": 6
+        }
+      ],
+      "treeCalls": 4,
+      "helperStarts": 1,
+      "maxConcurrentHelpers": 1,
+      "requests": 64,
+      "submittedFiles": 64,
+      "inlineFiles": 64,
+      "outcomes": {
+        "ok": 64
+      },
+      "helperPeakRssKiB": 0,
+      "nodePeakRssKiB": 305816,
+      "dependencyRecordsSha256": "84e730ec692135b91080b45d19ecb07bcb52e40b52824ce0251c01c09fa8277b",
+      "projectsSha256": "460013d9cb40264aee373e308b1a8ec72ca1f20e882924bdf2875de6df5282ba",
+      "lockfileSha256": "4bde9c1b137ea309a38def342ede1769dda65d601d7cc892a004d802ab7a90df"
+    },
+    {
+      "iteration": 5,
+      "variant": "legacy",
+      "measured": true,
+      "elapsedMs": 587.5571899999995,
+      "totalTreeCpuMs": 780,
+      "maxSingleProcessRssKiB": 307076,
+      "memory": {
+        "method": "near-simultaneous sampled sum of Linux /proc VmRSS for the command process and observed descendants",
+        "sampleIntervalMs": 20,
+        "samples": 31,
+        "peakSampledRssKiB": 311608,
+        "peakProcesses": [
+          {
+            "pid": 2580724,
+            "command": "time",
+            "startTime": "19135608",
+            "rssKiB": 1728
+          },
+          {
+            "pid": 2580725,
+            "command": "MainThread",
+            "startTime": "19135608",
+            "rssKiB": 309880
+          }
+        ],
+        "maxConcurrentProcesses": 2,
+        "uniqueProcesses": 2,
+        "missingProcessReads": 2,
+        "failedProcReads": 0,
+        "racedProcessReads": 0,
+        "observedRootExit": true,
+        "measurementSpanMs": 586.622621999999,
+        "maxSampleGapMs": 20.79291700000067,
+        "maxSampleDurationMs": 0.5809819999994943,
+        "samplerCpuMs": 5.401000000000001
+      },
+      "cacheEntriesBefore": 0,
+      "installerCalls": [
+        {
+          "storeDir": "<benchmark-root>/workspace/.store/v11",
+          "cacheDir": "<benchmark-root>/workspace/.cache",
+          "lockfileOnly": true,
+          "projectCount": 6
+        }
+      ],
+      "treeCalls": 4,
+      "helperStarts": 0,
+      "maxConcurrentHelpers": 0,
+      "requests": 0,
+      "submittedFiles": 0,
+      "inlineFiles": 0,
+      "outcomes": {},
+      "helperPeakRssKiB": 0,
+      "nodePeakRssKiB": 306564,
+      "dependencyRecordsSha256": "84e730ec692135b91080b45d19ecb07bcb52e40b52824ce0251c01c09fa8277b",
+      "projectsSha256": "460013d9cb40264aee373e308b1a8ec72ca1f20e882924bdf2875de6df5282ba",
+      "lockfileSha256": "4bde9c1b137ea309a38def342ede1769dda65d601d7cc892a004d802ab7a90df"
+    },
+    {
+      "iteration": 6,
+      "variant": "legacy",
+      "measured": true,
+      "elapsedMs": 594.914956999999,
+      "totalTreeCpuMs": 790,
+      "maxSingleProcessRssKiB": 308132,
+      "memory": {
+        "method": "near-simultaneous sampled sum of Linux /proc VmRSS for the command process and observed descendants",
+        "sampleIntervalMs": 20,
+        "samples": 31,
+        "peakSampledRssKiB": 316404,
+        "peakProcesses": [
+          {
+            "pid": 2580912,
+            "command": "time",
+            "startTime": "19135679",
+            "rssKiB": 1656
+          },
+          {
+            "pid": 2580915,
+            "command": "MainThread",
+            "startTime": "19135679",
+            "rssKiB": 314748
+          }
+        ],
+        "maxConcurrentProcesses": 2,
+        "uniqueProcesses": 2,
+        "missingProcessReads": 2,
+        "failedProcReads": 0,
+        "racedProcessReads": 0,
+        "observedRootExit": true,
+        "measurementSpanMs": 594.0692679999993,
+        "maxSampleGapMs": 20.451990999999907,
+        "maxSampleDurationMs": 0.40842500000144355,
+        "samplerCpuMs": 5.65
+      },
+      "cacheEntriesBefore": 0,
+      "installerCalls": [
+        {
+          "storeDir": "<benchmark-root>/workspace/.store/v11",
+          "cacheDir": "<benchmark-root>/workspace/.cache",
+          "lockfileOnly": true,
+          "projectCount": 6
+        }
+      ],
+      "treeCalls": 4,
+      "helperStarts": 0,
+      "maxConcurrentHelpers": 0,
+      "requests": 0,
+      "submittedFiles": 0,
+      "inlineFiles": 0,
+      "outcomes": {},
+      "helperPeakRssKiB": 0,
+      "nodePeakRssKiB": 308132,
+      "dependencyRecordsSha256": "84e730ec692135b91080b45d19ecb07bcb52e40b52824ce0251c01c09fa8277b",
+      "projectsSha256": "460013d9cb40264aee373e308b1a8ec72ca1f20e882924bdf2875de6df5282ba",
+      "lockfileSha256": "4bde9c1b137ea309a38def342ede1769dda65d601d7cc892a004d802ab7a90df"
+    },
+    {
+      "iteration": 6,
+      "variant": "native",
+      "measured": true,
+      "elapsedMs": 602.4812709999987,
+      "totalTreeCpuMs": 800,
+      "maxSingleProcessRssKiB": 305464,
+      "memory": {
+        "method": "near-simultaneous sampled sum of Linux /proc VmRSS for the command process and observed descendants",
+        "sampleIntervalMs": 20,
+        "samples": 31,
+        "peakSampledRssKiB": 310616,
+        "peakProcesses": [
+          {
+            "pid": 2583702,
+            "command": "time",
+            "startTime": "19135749",
+            "rssKiB": 1728
+          },
+          {
+            "pid": 2583704,
+            "command": "MainThread",
+            "startTime": "19135749",
+            "rssKiB": 308888
+          }
+        ],
+        "maxConcurrentProcesses": 3,
+        "uniqueProcesses": 3,
+        "missingProcessReads": 3,
+        "failedProcReads": 0,
+        "racedProcessReads": 0,
+        "observedRootExit": true,
+        "measurementSpanMs": 601.6409719999992,
+        "maxSampleGapMs": 20.38372200000049,
+        "maxSampleDurationMs": 0.5490129999998317,
+        "samplerCpuMs": 6.0859999999999985
+      },
+      "cacheEntriesBefore": 0,
+      "installerCalls": [
+        {
+          "storeDir": "<benchmark-root>/workspace/.store/v11",
+          "cacheDir": "<benchmark-root>/workspace/.cache",
+          "lockfileOnly": true,
+          "projectCount": 6
+        }
+      ],
+      "treeCalls": 4,
+      "helperStarts": 1,
+      "maxConcurrentHelpers": 1,
+      "requests": 64,
+      "submittedFiles": 64,
+      "inlineFiles": 64,
+      "outcomes": {
+        "ok": 64
+      },
+      "helperPeakRssKiB": 0,
+      "nodePeakRssKiB": 305172,
+      "dependencyRecordsSha256": "84e730ec692135b91080b45d19ecb07bcb52e40b52824ce0251c01c09fa8277b",
+      "projectsSha256": "460013d9cb40264aee373e308b1a8ec72ca1f20e882924bdf2875de6df5282ba",
+      "lockfileSha256": "4bde9c1b137ea309a38def342ede1769dda65d601d7cc892a004d802ab7a90df"
+    },
+    {
+      "iteration": 7,
+      "variant": "native",
+      "measured": true,
+      "elapsedMs": 609.3105140000007,
+      "totalTreeCpuMs": 810,
+      "maxSingleProcessRssKiB": 304996,
+      "memory": {
+        "method": "near-simultaneous sampled sum of Linux /proc VmRSS for the command process and observed descendants",
+        "sampleIntervalMs": 20,
+        "samples": 32,
+        "peakSampledRssKiB": 309044,
+        "peakProcesses": [
+          {
+            "pid": 2586451,
+            "command": "time",
+            "startTime": "19135822",
+            "rssKiB": 1540
+          },
+          {
+            "pid": 2586454,
+            "command": "MainThread",
+            "startTime": "19135822",
+            "rssKiB": 307504
+          }
+        ],
+        "maxConcurrentProcesses": 3,
+        "uniqueProcesses": 3,
+        "missingProcessReads": 3,
+        "failedProcReads": 0,
+        "racedProcessReads": 0,
+        "observedRootExit": true,
+        "measurementSpanMs": 608.3607069999998,
+        "maxSampleGapMs": 20.492411000001084,
+        "maxSampleDurationMs": 0.4301850000010745,
+        "samplerCpuMs": 5.7780000000000005
+      },
+      "cacheEntriesBefore": 0,
+      "installerCalls": [
+        {
+          "storeDir": "<benchmark-root>/workspace/.store/v11",
+          "cacheDir": "<benchmark-root>/workspace/.cache",
+          "lockfileOnly": true,
+          "projectCount": 6
+        }
+      ],
+      "treeCalls": 4,
+      "helperStarts": 1,
+      "maxConcurrentHelpers": 1,
+      "requests": 64,
+      "submittedFiles": 64,
+      "inlineFiles": 64,
+      "outcomes": {
+        "ok": 64
+      },
+      "helperPeakRssKiB": 4188,
+      "nodePeakRssKiB": 304740,
+      "dependencyRecordsSha256": "84e730ec692135b91080b45d19ecb07bcb52e40b52824ce0251c01c09fa8277b",
+      "projectsSha256": "460013d9cb40264aee373e308b1a8ec72ca1f20e882924bdf2875de6df5282ba",
+      "lockfileSha256": "4bde9c1b137ea309a38def342ede1769dda65d601d7cc892a004d802ab7a90df"
+    },
+    {
+      "iteration": 7,
+      "variant": "legacy",
+      "measured": true,
+      "elapsedMs": 590.892147999999,
+      "totalTreeCpuMs": 780,
+      "maxSingleProcessRssKiB": 308876,
+      "memory": {
+        "method": "near-simultaneous sampled sum of Linux /proc VmRSS for the command process and observed descendants",
+        "sampleIntervalMs": 20,
+        "samples": 31,
+        "peakSampledRssKiB": 312344,
+        "peakProcesses": [
+          {
+            "pid": 2586686,
+            "command": "time",
+            "startTime": "19135894",
+            "rssKiB": 1656
+          },
+          {
+            "pid": 2586687,
+            "command": "MainThread",
+            "startTime": "19135894",
+            "rssKiB": 310688
+          }
+        ],
+        "maxConcurrentProcesses": 2,
+        "uniqueProcesses": 2,
+        "missingProcessReads": 2,
+        "failedProcReads": 0,
+        "racedProcessReads": 0,
+        "observedRootExit": true,
+        "measurementSpanMs": 589.7451529999998,
+        "maxSampleGapMs": 20.44818099999975,
+        "maxSampleDurationMs": 0.38496499999928346,
+        "samplerCpuMs": 4.5859999999999985
+      },
+      "cacheEntriesBefore": 0,
+      "installerCalls": [
+        {
+          "storeDir": "<benchmark-root>/workspace/.store/v11",
+          "cacheDir": "<benchmark-root>/workspace/.cache",
+          "lockfileOnly": true,
+          "projectCount": 6
+        }
+      ],
+      "treeCalls": 4,
+      "helperStarts": 0,
+      "maxConcurrentHelpers": 0,
+      "requests": 0,
+      "submittedFiles": 0,
+      "inlineFiles": 0,
+      "outcomes": {},
+      "helperPeakRssKiB": 0,
+      "nodePeakRssKiB": 308620,
+      "dependencyRecordsSha256": "84e730ec692135b91080b45d19ecb07bcb52e40b52824ce0251c01c09fa8277b",
+      "projectsSha256": "460013d9cb40264aee373e308b1a8ec72ca1f20e882924bdf2875de6df5282ba",
+      "lockfileSha256": "4bde9c1b137ea309a38def342ede1769dda65d601d7cc892a004d802ab7a90df"
+    },
+    {
+      "iteration": 8,
+      "variant": "legacy",
+      "measured": true,
+      "elapsedMs": 587.9783449999995,
+      "totalTreeCpuMs": 780,
+      "maxSingleProcessRssKiB": 308332,
+      "memory": {
+        "method": "near-simultaneous sampled sum of Linux /proc VmRSS for the command process and observed descendants",
+        "sampleIntervalMs": 20,
+        "samples": 31,
+        "peakSampledRssKiB": 312692,
+        "peakProcesses": [
+          {
+            "pid": 2586809,
+            "command": "time",
+            "startTime": "19135965",
+            "rssKiB": 1604
+          },
+          {
+            "pid": 2586810,
+            "command": "MainThread",
+            "startTime": "19135965",
+            "rssKiB": 311088
+          }
+        ],
+        "maxConcurrentProcesses": 2,
+        "uniqueProcesses": 2,
+        "missingProcessReads": 2,
+        "failedProcReads": 0,
+        "racedProcessReads": 0,
+        "observedRootExit": true,
+        "measurementSpanMs": 586.7890989999996,
+        "maxSampleGapMs": 20.634258999998565,
+        "maxSampleDurationMs": 0.4092450000007375,
+        "samplerCpuMs": 4.868
+      },
+      "cacheEntriesBefore": 0,
+      "installerCalls": [
+        {
+          "storeDir": "<benchmark-root>/workspace/.store/v11",
+          "cacheDir": "<benchmark-root>/workspace/.cache",
+          "lockfileOnly": true,
+          "projectCount": 6
+        }
+      ],
+      "treeCalls": 4,
+      "helperStarts": 0,
+      "maxConcurrentHelpers": 0,
+      "requests": 0,
+      "submittedFiles": 0,
+      "inlineFiles": 0,
+      "outcomes": {},
+      "helperPeakRssKiB": 0,
+      "nodePeakRssKiB": 307820,
+      "dependencyRecordsSha256": "84e730ec692135b91080b45d19ecb07bcb52e40b52824ce0251c01c09fa8277b",
+      "projectsSha256": "460013d9cb40264aee373e308b1a8ec72ca1f20e882924bdf2875de6df5282ba",
+      "lockfileSha256": "4bde9c1b137ea309a38def342ede1769dda65d601d7cc892a004d802ab7a90df"
+    },
+    {
+      "iteration": 8,
+      "variant": "native",
+      "measured": true,
+      "elapsedMs": 604.3031379999993,
+      "totalTreeCpuMs": 810,
+      "maxSingleProcessRssKiB": 303616,
+      "memory": {
+        "method": "near-simultaneous sampled sum of Linux /proc VmRSS for the command process and observed descendants",
+        "sampleIntervalMs": 20,
+        "samples": 32,
+        "peakSampledRssKiB": 310228,
+        "peakProcesses": [
+          {
+            "pid": 2586964,
+            "command": "time",
+            "startTime": "19136036",
+            "rssKiB": 1720
+          },
+          {
+            "pid": 2586965,
+            "command": "MainThread",
+            "startTime": "19136036",
+            "rssKiB": 308508
+          }
+        ],
+        "maxConcurrentProcesses": 3,
+        "uniqueProcesses": 3,
+        "missingProcessReads": 3,
+        "failedProcReads": 0,
+        "racedProcessReads": 0,
+        "observedRootExit": true,
+        "measurementSpanMs": 603.2699109999994,
+        "maxSampleGapMs": 20.634629000000132,
+        "maxSampleDurationMs": 0.6314219999985653,
+        "samplerCpuMs": 5.567
+      },
+      "cacheEntriesBefore": 0,
+      "installerCalls": [
+        {
+          "storeDir": "<benchmark-root>/workspace/.store/v11",
+          "cacheDir": "<benchmark-root>/workspace/.cache",
+          "lockfileOnly": true,
+          "projectCount": 6
+        }
+      ],
+      "treeCalls": 4,
+      "helperStarts": 1,
+      "maxConcurrentHelpers": 1,
+      "requests": 64,
+      "submittedFiles": 64,
+      "inlineFiles": 64,
+      "outcomes": {
+        "ok": 64
+      },
+      "helperPeakRssKiB": 0,
+      "nodePeakRssKiB": 303356,
+      "dependencyRecordsSha256": "84e730ec692135b91080b45d19ecb07bcb52e40b52824ce0251c01c09fa8277b",
+      "projectsSha256": "460013d9cb40264aee373e308b1a8ec72ca1f20e882924bdf2875de6df5282ba",
+      "lockfileSha256": "4bde9c1b137ea309a38def342ede1769dda65d601d7cc892a004d802ab7a90df"
+    }
+  ],
+  "lastAttempt": {
+    "variant": "native",
+    "status": 0,
+    "helper": {
+      "helperStarts": 1,
+      "maxConcurrentHelpers": 1,
+      "requests": 64,
+      "submittedFiles": 64,
+      "inlineFiles": 64,
+      "outcomes": {
+        "ok": 64
+      },
+      "helperPeakRssKiB": 0,
+      "nodePeakRssKiB": 303356
+    },
+    "pm": {
+      "calls": [
+        {
+          "projects": [
+            {
+              "rootDir": "<benchmark-root>/workspace/source-0",
+              "manifest": {
+                "name": "@validation/local.source-0",
+                "version": "0.0.1-new",
+                "dependencies": {},
+                "optionalDependencies": {},
+                "devDependencies": {},
+                "peerDependencies": {},
+                "peerDependenciesMeta": {}
+              }
+            },
+            {
+              "rootDir": "<benchmark-root>/workspace/source-1",
+              "manifest": {
+                "name": "@validation/local.source-1",
+                "version": "0.0.1-new",
+                "dependencies": {},
+                "optionalDependencies": {},
+                "devDependencies": {},
+                "peerDependencies": {},
+                "peerDependenciesMeta": {}
+              }
+            },
+            {
+              "rootDir": "<benchmark-root>/workspace/source-2",
+              "manifest": {
+                "name": "@validation/local.source-2",
+                "version": "0.0.1-new",
+                "dependencies": {},
+                "optionalDependencies": {},
+                "devDependencies": {},
+                "peerDependencies": {},
+                "peerDependenciesMeta": {}
+              }
+            },
+            {
+              "rootDir": "<benchmark-root>/workspace/source-3",
+              "manifest": {
+                "name": "@validation/local.source-3",
+                "version": "0.0.1-new",
+                "dependencies": {},
+                "optionalDependencies": {},
+                "devDependencies": {},
+                "peerDependencies": {},
+                "peerDependenciesMeta": {}
+              }
+            },
+            {
+              "rootDir": "<benchmark-root>/workspace",
+              "manifest": {
+                "name": "workspace",
+                "version": "1.0.0",
+                "dependencies": {
+                  "@teambit/bit": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/bit",
+                  "@teambit/aspect-loader": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/aspect-loader",
+                  "@teambit/cli": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/cli",
+                  "@teambit/dev-files": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/dev-files",
+                  "@teambit/workspace": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/workspace",
+                  "@teambit/workspace-config-files": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/workspace-config-files",
+                  "@teambit/install": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/install",
+                  "@teambit/workspace-root": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/workspace-root",
+                  "@teambit/eslint": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/eslint",
+                  "@teambit/prettier": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/prettier",
+                  "@teambit/compiler": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/compiler",
+                  "@teambit/linter": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/linter",
+                  "@teambit/formatter": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/formatter",
+                  "@teambit/validator": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/validator",
+                  "@teambit/component": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/component",
+                  "@teambit/mdx": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/mdx",
+                  "@teambit/readme": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/readme",
+                  "@teambit/preview": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/preview",
+                  "@teambit/component-sizer": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/component-sizer",
+                  "@teambit/docs": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/docs",
+                  "@teambit/yarn": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/yarn",
+                  "@teambit/compositions": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/compositions",
+                  "@teambit/global-config": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/global-config",
+                  "@teambit/graphql": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/graphql",
+                  "@teambit/pnpm": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/pnpm",
+                  "@teambit/multi-compiler": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/multi-compiler",
+                  "@teambit/ui": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/ui",
+                  "@teambit/generator": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/generator",
+                  "@teambit/workspace-starter": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/workspace-starter",
+                  "@teambit/envs": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/envs",
+                  "@teambit/env": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/env",
+                  "@teambit/empty-env": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/empty-env",
+                  "@teambit/graph": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/graph",
+                  "@teambit/pubsub": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/pubsub",
+                  "@teambit/dependency-resolver": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/dependency-resolver",
+                  "@teambit/insights": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/insights",
+                  "@teambit/isolator": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/isolator",
+                  "@teambit/logger": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/logger",
+                  "@teambit/pkg": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/pkg",
+                  "@teambit/react": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/react",
+                  "@teambit/vue-aspect": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/vue-aspect",
+                  "@teambit/worker": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/worker",
+                  "@teambit/scope": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/scope",
+                  "@teambit/tester": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/tester",
+                  "@teambit/multi-tester": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/multi-tester",
+                  "@teambit/builder": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/builder",
+                  "@teambit/variants": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/variants",
+                  "@teambit/deprecation": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/deprecation",
+                  "@teambit/internalize": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/internalize",
+                  "@teambit/express": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/express",
+                  "@teambit/aspect": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/aspect",
+                  "@teambit/webpack": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/webpack",
+                  "@teambit/schema": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/schema",
+                  "@teambit/react-router": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/react-router",
+                  "@teambit/typescript": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/typescript",
+                  "@teambit/panels": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/panels",
+                  "@teambit/babel": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/babel",
+                  "@teambit/node": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/node",
+                  "@teambit/notifications": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/notifications",
+                  "@teambit/bundler": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/bundler",
+                  "@teambit/jest": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/jest",
+                  "@teambit/cache": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/cache",
+                  "@teambit/changelog": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/changelog",
+                  "@teambit/code": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/code",
+                  "@teambit/command-bar": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/command-bar",
+                  "@teambit/sidebar": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/sidebar",
+                  "@teambit/component-tree": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/component-tree",
+                  "@teambit/export": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/export",
+                  "@teambit/importer": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/importer",
+                  "@teambit/harmony-ui-app": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/harmony-ui-app",
+                  "@teambit/user-agent": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/user-agent",
+                  "@teambit/application": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/application",
+                  "@teambit/eject": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/eject",
+                  "@teambit/lanes": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/lanes",
+                  "@teambit/forking": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/forking",
+                  "@teambit/renaming": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/renaming",
+                  "@teambit/new-component-helper": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/new-component-helper",
+                  "@teambit/component-log": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/component-log",
+                  "@teambit/clear-cache": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/clear-cache",
+                  "@teambit/mocha": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/mocha",
+                  "@teambit/diagnostic": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/diagnostic",
+                  "@teambit/status": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/status",
+                  "@teambit/community": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/community",
+                  "@teambit/cloud": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/cloud",
+                  "@teambit/snapping": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/snapping",
+                  "@teambit/merging": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/merging",
+                  "@teambit/issues": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/issues",
+                  "@teambit/refactoring": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/refactoring",
+                  "@teambit/component-compare": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/component-compare",
+                  "@teambit/lister": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/lister",
+                  "@teambit/dependencies": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/dependencies",
+                  "@teambit/remove": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/remove",
+                  "@teambit/merge-lanes": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/merge-lanes",
+                  "@teambit/checkout": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/checkout",
+                  "@teambit/component-writer": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/component-writer",
+                  "@teambit/api-reference": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/api-reference",
+                  "@teambit/api-server": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/api-server",
+                  "@teambit/tracker": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/tracker",
+                  "@teambit/mover": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/mover",
+                  "@teambit/watcher": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/watcher",
+                  "@teambit/stash": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/stash",
+                  "@teambit/git": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/git",
+                  "@teambit/ipc-events": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/ipc-events",
+                  "@teambit/config-merger": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/config-merger",
+                  "@teambit/version-history": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/version-history",
+                  "@teambit/host-initializer": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/host-initializer",
+                  "@teambit/doctor": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/doctor",
+                  "@teambit/objects": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/objects",
+                  "@teambit/config-store": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/config-store",
+                  "@teambit/cli-mcp-server": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/cli-mcp-server",
+                  "@teambit/ci": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/ci",
+                  "@teambit/ripple": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/ripple",
+                  "@teambit/scripts": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/scripts",
+                  "@teambit/config": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/config",
+                  "@teambit/harmony": "link:/tmp/bit-rust-final-cli/node_modules/.pnpm/@teambit+harmony@0.4.12/node_modules/@teambit/harmony",
+                  "@teambit/legacy": "link:/tmp/bit-rust-final-cli/node_modules/@teambit/legacy",
+                  "react-dom": "link:/tmp/bit-rust-final-cli/node_modules/react-dom",
+                  "react": "link:/tmp/bit-rust-final-cli/node_modules/react"
+                },
+                "optionalDependencies": {},
+                "devDependencies": {},
+                "peerDependencies": {},
+                "peerDependenciesMeta": {},
+                "dependenciesMeta": {}
+              }
+            },
+            {
+              "rootDir": "<benchmark-root>/workspace/node_modules/.bit_roots/teambit.harmony_node",
+              "manifest": {
+                "dependencies": {
+                  "react": "^19.0.0",
+                  "react-dom": "^19.0.0",
+                  "@validation/local.source-0": "workspace:*",
+                  "@validation/local.source-1": "workspace:*",
+                  "@validation/local.source-2": "workspace:*",
+                  "@validation/local.source-3": "workspace:*"
+                },
+                "installConfig": {
+                  "hoistingLimits": "workspaces"
+                }
+              }
+            }
+          ],
+          "dir": "<benchmark-root>/workspace",
+          "storeDir": "<benchmark-root>/workspace/.store/v11",
+          "cacheDir": "<benchmark-root>/workspace/.cache",
+          "lockfileOnly": true,
+          "offline": false
+        }
+      ],
+      "treeCalls": 4
+    },
+    "stdout": "Warning: running bit as root might cause permission issues later\n- running command \"install\"...\n  Resolving component dependencies for workspace: 'rust-install-fixture'\n  installing dependencies in workspace using pnpm (teambit.dependencies/pnpm)\n- loading 4 component(s)\n- linking components\n✔ linking components (completed in 8ms)\n- loading 4 component(s)\n- loading 4 component(s)\n- deduping dependencies for installation\n✔ deduping dependencies for installation\n- loading 4 component(s)\n- loading 4 component(s)\n- loading 4 component(s)\n- running pre install subscribers\n✔ running pre install subscribers\n- running package installation using pnpm\n\r\n\u001b[K\u001b[0J✔ done running package installation using pnpm (completed in 53ms)\n- running post install subscribers\n✔ running post install subscribers\n- loading 4 component(s)\n\nSuccessfully installed dependencies and compiled 4 component(s) in 0.359 seconds\n",
+    "stderr": "\nBIT_INSTALL_RESOURCE 0.68 0.13 303616\n"
+  },
+  "gate": {
+    "legacy": {
+      "variant": "legacy",
+      "measured": false,
+      "elapsedMs": 857.229455,
+      "totalTreeCpuMs": 1000,
+      "maxSingleProcessRssKiB": 310288,
+      "memory": {
+        "method": "near-simultaneous sampled sum of Linux /proc VmRSS for the command process and observed descendants",
+        "sampleIntervalMs": 20,
+        "samples": 44,
+        "peakSampledRssKiB": 316784,
+        "peakProcesses": [
+          {
+            "pid": 2577214,
+            "command": "time",
+            "startTime": "19134630",
+            "rssKiB": 1604
+          },
+          {
+            "pid": 2577215,
+            "command": "MainThread",
+            "startTime": "19134630",
+            "rssKiB": 315180
+          }
+        ],
+        "maxConcurrentProcesses": 2,
+        "uniqueProcesses": 2,
+        "missingProcessReads": 2,
+        "failedProcReads": 0,
+        "racedProcessReads": 0,
+        "observedRootExit": true,
+        "measurementSpanMs": 855.548257,
+        "maxSampleGapMs": 20.499621000000047,
+        "maxSampleDurationMs": 0.389144999999985,
+        "samplerCpuMs": 7.188
+      },
+      "cacheEntriesBefore": 0,
+      "installerCalls": [
+        {
+          "storeDir": "<benchmark-root>/workspace/.store/v11",
+          "cacheDir": "<benchmark-root>/workspace/.cache",
+          "lockfileOnly": true,
+          "projectCount": 6
+        }
+      ],
+      "treeCalls": 4,
+      "helperStarts": 0,
+      "maxConcurrentHelpers": 0,
+      "requests": 0,
+      "submittedFiles": 0,
+      "inlineFiles": 0,
+      "outcomes": {},
+      "helperPeakRssKiB": 0,
+      "nodePeakRssKiB": 310032,
+      "dependencyRecordsSha256": "84e730ec692135b91080b45d19ecb07bcb52e40b52824ce0251c01c09fa8277b",
+      "projectsSha256": "460013d9cb40264aee373e308b1a8ec72ca1f20e882924bdf2875de6df5282ba",
+      "lockfileSha256": "4bde9c1b137ea309a38def342ede1769dda65d601d7cc892a004d802ab7a90df"
+    },
+    "native": {
+      "variant": "native",
+      "measured": false,
+      "elapsedMs": 576.996504,
+      "totalTreeCpuMs": 750,
+      "maxSingleProcessRssKiB": 305016,
+      "memory": {
+        "method": "near-simultaneous sampled sum of Linux /proc VmRSS for the command process and observed descendants",
+        "sampleIntervalMs": 20,
+        "samples": 30,
+        "peakSampledRssKiB": 311704,
+        "peakProcesses": [
+          {
+            "pid": 2577471,
+            "command": "time",
+            "startTime": "19134728",
+            "rssKiB": 1604
+          },
+          {
+            "pid": 2577472,
+            "command": "MainThread",
+            "startTime": "19134728",
+            "rssKiB": 310100
+          }
+        ],
+        "maxConcurrentProcesses": 3,
+        "uniqueProcesses": 3,
+        "missingProcessReads": 3,
+        "failedProcReads": 0,
+        "racedProcessReads": 0,
+        "observedRootExit": true,
+        "measurementSpanMs": 576.0422859999999,
+        "maxSampleGapMs": 20.684487999999874,
+        "maxSampleDurationMs": 0.40572500000007494,
+        "samplerCpuMs": 5.037
+      },
+      "cacheEntriesBefore": 0,
+      "installerCalls": [
+        {
+          "storeDir": "<benchmark-root>/workspace/.store/v11",
+          "cacheDir": "<benchmark-root>/workspace/.cache",
+          "lockfileOnly": true,
+          "projectCount": 6
+        }
+      ],
+      "treeCalls": 4,
+      "helperStarts": 1,
+      "maxConcurrentHelpers": 1,
+      "requests": 64,
+      "submittedFiles": 64,
+      "inlineFiles": 64,
+      "outcomes": {
+        "ok": 64
+      },
+      "helperPeakRssKiB": 0,
+      "nodePeakRssKiB": 304472,
+      "dependencyRecordsSha256": "84e730ec692135b91080b45d19ecb07bcb52e40b52824ce0251c01c09fa8277b",
+      "projectsSha256": "460013d9cb40264aee373e308b1a8ec72ca1f20e882924bdf2875de6df5282ba",
+      "lockfileSha256": "4bde9c1b137ea309a38def342ede1769dda65d601d7cc892a004d802ab7a90df"
+    },
+    "exactDependencyRecords": true,
+    "exactProjectInputs": true,
+    "exactLockfileBytes": true
+  },
+  "legacyMedianMs": 594.914956999999,
+  "nativeMedianMs": 604.3031379999993,
+  "nativeToLegacyRatio": 1.0157807109899244,
+  "memoryMethod": "near-simultaneous 20ms Linux process-tree RSS sum, GNU time/unshare wrappers and observed CLI descendants included; driver excluded",
+  "memoryCaveats": [
+    "shared pages count once perprocess",
+    "short-lived processes and between-sample peaks may be missed",
+    "sampler CPU is reported separately and excluded from GNU time command-tree CPU"
+  ],
+  "legacyMedianTreeCpuMs": 790,
+  "legacyMedianSampledTreeRssKiB": 312692,
+  "nativeMedianTreeCpuMs": 810,
+  "nativeMedianSampledTreeRssKiB": 310228
+}
