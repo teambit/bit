@@ -1,5 +1,7 @@
 # Dependency extraction: audited baseline and integration design
 
+Raw JSON results and test logs are stored outside this repository. Historical filenames below identify generated outputs; see the [benchmark artifact policy](README.md#benchmark-artifacts).
+
 Updated completion: [final work-package checklist](completion-checklist.md) and [final command acceptance](final-command-acceptance.md). This report retains its historical inputs and results; later evidence supersedes its open follow-ups.
 
 Audit revision: `363a3570b894c381d1816e3c87a1af30f6c3ffcf` (2026-10-07).

@@ -1,5 +1,7 @@
 # Revision-matched Bit command benchmark
 
+Raw JSON results and test logs are stored outside this repository. Historical filenames below identify generated outputs; see the [benchmark artifact policy](README.md#benchmark-artifacts).
+
 Updated completion: [final work-package checklist](completion-checklist.md) and [final command acceptance](final-command-acceptance.md). This report retains its historical inputs and results; later evidence supersedes its open follow-ups.
 
 The current Rust branch can be built and measured as a complete CLI. On this Linux host, `bit status --json` with an empty dependency cache took a median **10,441 ms with legacy extraction and 7,261 ms with Rust** (30.5% reduction). With all 334 dependency-cache entries present, medians were **3,349 ms and 3,367 ms**; there is no demonstrated warm-cache improvement. Rust remains opt-in.
@@ -30,11 +32,11 @@ Each workload has a legacy reference, one discarded warmup per variant, and nine
 
 Cold status ranges were 10,383–10,485 ms for legacy and 7,194–7,296 ms for Rust. Warm ranges were 3,291–3,377 ms and 3,320–3,389 ms. All 36 measured status runs passed exact parity. All 18 startup-control runs also passed: list launched no helpers and showed no meaningful wall-time change (ranges 797–861 ms legacy and 810–868 ms native). Cold native commands submitted 2,944 inline files: 2,925 successful native results and 19 explicit unsupported fallbacks. Actual runtime hooks selected the inline-source path; these measurements do not assume the pure builtin prefetch path. The helper pool retained each of two sequential operation scopes; the observed maximum number of concurrent helpers was one.
 
-Raw results and provenance are in [command-benchmark-results.json](command-benchmark-results.json). The separately measured `list --json` startup control is recorded in [command-benchmark-list-results.json](command-benchmark-list-results.json).
+Raw results and provenance are in command-benchmark-results.json (`command-benchmark-results.json`). The separately measured `list --json` startup control is recorded in command-benchmark-list-results.json (`command-benchmark-list-results.json`).
 
 ## Graph parity blocker
 
-`graph --json` failed the strict gate before accepted measurements: independent **legacy-only cold runs** emitted graph arrays in different orders. The diagnostic records both complete-output hashes, the first differing field and node/edge counts in [command-benchmark-graph-blocker.json](command-benchmark-graph-blocker.json). Both outputs contained 334 nodes and 2,159 edges, and sorting all nodes and edges retained full-field semantic equality. That comparison is an independent diagnostic only; it never passes the acceptance gate. There is no accepted graph timing or attributed native regression. Deterministic graph serialization or an explicitly approved graph equality contract is separate follow-up work.
+`graph --json` failed the strict gate before accepted measurements: independent **legacy-only cold runs** emitted graph arrays in different orders. The diagnostic records both complete-output hashes, the first differing field and node/edge counts in command-benchmark-graph-blocker.json (`command-benchmark-graph-blocker.json`). Both outputs contained 334 nodes and 2,159 edges, and sorting all nodes and edges retained full-field semantic equality. That comparison is an independent diagnostic only; it never passes the acceptance gate. There is no accepted graph timing or attributed native regression. Deterministic graph serialization or an explicitly approved graph equality contract is separate follow-up work.
 
 ## Limits and next gates
 

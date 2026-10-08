@@ -1,8 +1,10 @@
 # Release extraction comparison: actual tracked source files
 
+Raw JSON results and test logs are stored outside this repository. Historical filenames below identify generated outputs; see the [benchmark artifact policy](README.md#benchmark-artifacts).
+
 Updated completion: [final work-package checklist](completion-checklist.md) and [final command acceptance](final-command-acceptance.md). This report retains its historical inputs and results; later evidence supersedes its open follow-ups.
 
-Recorded 2026-10-07 against the revision and executable SHA-256 in [raw results](dependency-benchmark-results.json). Build: `cargo build --locked --release` in `native/`. Run on Linux x86_64 with Node v24.21.0; the JSON records CPU model, Rust version, parser versions, worker count and the exact corpus with SHA-256 hashes.
+Recorded 2026-10-07 against the revision and executable SHA-256 in raw results (`dependency-benchmark-results.json`). Build: `cargo build --locked --release` in `native/`. Run on Linux x86_64 with Node v24.21.0; the JSON records CPU model, Rust version, parser versions, worker count and the exact corpus with SHA-256 hashes.
 
 ## Result and decision
 
@@ -30,7 +32,7 @@ cd ..
 BIT_LEGACY_ROOT=/path/to/installed-checkout \
   node scripts/rust-dependency-analysis/benchmark.cjs \
   native/target/release/bit-dependency-scanner \
-  docs/rust/dependency-benchmark-results.json
+  /tmp/dependency-benchmark-results.json
 ```
 
 `BIT_BENCH_THREADS` defaults to four. The runner requires GNU `/usr/bin/time`; its metrics are Linux-oriented. No native dependencies are installed by the script. Legacy packages are loaded from `BIT_LEGACY_ROOT` through the same harness as the compatibility suite.

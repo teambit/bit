@@ -1,6 +1,6 @@
 # Rust dependency analysis workstream
 
-Current completion and evidence: [work-package checklist](completion-checklist.md), [combined validation](final-consolidated-validation.md), [final command acceptance](final-command-acceptance.md), [extraction/control results](final-control-and-workspace-results.md), [CPU profiles](command-cpu-profile.md), and [parser/transport decision](parser-and-transport-decision.md). These supersede the initial sequence below; historical raw reports keep their original revisions.
+Current completion and evidence: [work-package checklist](completion-checklist.md), [combined validation](final-consolidated-validation.md), [final command acceptance](final-command-acceptance.md), [extraction/control results](final-control-and-workspace-results.md), [CPU profiles](command-cpu-profile.md), and [parser/transport decision](parser-and-transport-decision.md). These supersede the initial sequence below; historical summaries retain their recorded revisions.
 
 The integration branch for this work is `rust` in [zkochan/bit](https://github.com/zkochan/bit).
 Implementation PRs target that branch so the existing default branch keeps its current dependency-analysis backend.
@@ -32,3 +32,9 @@ Initial targets from #4 are 2x eligible extraction speedup over a batching-only 
 ## PR sequence
 
 Audit and compatibility work can proceed alongside the standalone engine. Review those foundations before changing production dispatch. Follow with batching-only measurements, opt-in command integration, platform packaging, and finally a separately reviewed default-enable decision.
+
+## Benchmark artifacts
+
+Do not commit generated benchmark JSON, CPU profiles, or raw test logs to the Bit source repository. Keep benchmark drivers, small correctness fixtures, and concise Markdown summaries here. Write raw output to `/tmp` or another directory outside the checkout; upload it as a CI artifact or store it in a separate evidence repository when permanent sharing is needed.
+
+The generated `docs/rust/*.json` and `docs/rust/*.log` paths are ignored to prevent accidental recommits. Historical report filenames in these documents identify external run outputs, not files shipped with Bit. Reproduction commands generate fresh results; no runtime or test depends on the removed reports.

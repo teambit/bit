@@ -1,5 +1,7 @@
 # Sampled simultaneous command memory
 
+Raw JSON results and test logs are stored outside this repository. Historical filenames below identify generated outputs; see the [benchmark artifact policy](README.md#benchmark-artifacts).
+
 The earlier reports added separately observed Node and helper high-water marks. The new Linux-only runner instead samples the RSS of the command and its observed descendants during the same sampling pass. It does not change ordinary Bit commands or scanner transport.
 
 ```sh
@@ -32,4 +34,4 @@ Every measured run had zero failed and zero identity-raced procfs reads. The lar
 
 Legacy cold sampled peaks ranged from 2,139,004 to 2,225,736 KiB; native from 1,145,552 to 1,172,168 KiB. Warm ranges were 1,056,144–1,242,596 KiB legacy and 978,700–1,071,704 KiB native. Do not confuse these sampled ranges with GNU time's per-process maximum or the historical independent high-water sums. Original cache contents were restored after completion.
 
-Raw results: [command-memory-results.json](command-memory-results.json). Multi-helper edit workloads, graph, install and other platforms still require their own memory evidence.
+Raw results: command-memory-results.json (`command-memory-results.json`). Multi-helper edit workloads, graph, install and other platforms still require their own memory evidence.

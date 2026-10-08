@@ -1,6 +1,8 @@
 # Stable local graph command JSON
 
-The cold command benchmark recorded two legacy `graph --json` results with 334 nodes and 2,159 edges. Their first difference was edge position 198; their node/edge contents were semantically equal. See [the recorded blocker](command-benchmark-graph-blocker.json). This is an output-order problem independent of native extraction.
+Raw JSON results and test logs are stored outside this repository. Historical filenames below identify generated outputs; see the [benchmark artifact policy](README.md#benchmark-artifacts).
+
+The cold command benchmark recorded two legacy `graph --json` results with 334 nodes and 2,159 edges. Their first difference was edge position 198; their node/edge contents were semantically equal. See the recorded blocker (`command-benchmark-graph-blocker.json`). This is an output-order problem independent of native extraction.
 
 `GraphIdsFromFsBuilder` inserts direct edges in `getComponentDependencies()` order and merges saved dependency subgraphs. `GraphBuilder.getGraphIds()` preserves those arrays when constructing `ComponentIdGraph`. Cleargraph's `toJson()` iterates its `nodeMap` and `edgeMap` insertion order. Consequently equivalent discovery sequences can produce different array order at the command boundary. These observations identify how discovery order reaches JSON; they do not identify a single asynchronous detector as the cause of the recorded legacy variation.
 

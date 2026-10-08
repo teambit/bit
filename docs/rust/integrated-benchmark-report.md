@@ -1,5 +1,7 @@
 # Actual dependency-tree pipeline benchmarks
 
+Raw JSON results and test logs are stored outside this repository. Historical filenames below identify generated outputs; see the [benchmark artifact policy](README.md#benchmark-artifacts).
+
 Updated completion: [final work-package checklist](completion-checklist.md) and [final command acceptance](final-command-acceptance.md). This report retains its historical inputs and results; later evidence supersedes its open follow-ups.
 
 These measurements run the new `generateTree` source, real installed detectives, the real filing-cabinet resolver and a release Rust helper. Each measured run must match the legacy final dependency graph, ordered path maps, missing dependencies and error codes. Parser-specific diagnostic text/stack traces are excluded from equality, as in the integration suite. No Bit command performance claim follows from these pipeline results.
@@ -45,9 +47,9 @@ For the pool comparison, point `BIT_SCANNER_INTEGRATION_ROOT` at a checkout cont
 
 Raw reports:
 
-- [Original per-operation integration matrix](integrated-benchmark-results.json): 126 measured runs.
-- [Pooled small/warm comparison](integrated-benchmark-pooled-results.json): 108 measured runs.
-- [Edit comparison](integrated-benchmark-edit-results.json): 54 measured runs.
+- Original per-operation integration matrix (`integrated-benchmark-results.json`): 126 measured runs.
+- Pooled small/warm comparison (`integrated-benchmark-pooled-results.json`): 108 measured runs.
+- Edit comparison (`integrated-benchmark-edit-results.json`): 54 measured runs.
 
 All 288 measured runs passed the same final-result parity gate, as did discarded warmups. The runner rotates variant order each iteration. Workloads use warm OS page caches, fresh Node workers, and freshly started helpers; warm visited/edited cases explicitly prime their graph inside the worker. Files come from tracked dependency/workspace/legacy component trees, including their real relative import closure. Entry paths, actual small-component groups, source hashes, graph/missing/error counts and raw timings are preserved in JSON. The edit report records the appended import separately from original source hashes.
 

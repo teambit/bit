@@ -1,6 +1,8 @@
 # Actual packaged Bit bundle smoke
 
-[Recorded results](packaged-cli-proof-results.json) accepted **10 actual CLI commands** with complete, unnormalized JSON equality. This is correctness evidence, not a timing benchmark.
+Raw JSON results and test logs are stored outside this repository. Historical filenames below identify generated outputs; see the [benchmark artifact policy](README.md#benchmark-artifacts).
+
+Recorded results (`packaged-cli-proof-results.json`) accepted **10 actual CLI commands** with complete, unnormalized JSON equality. This is correctness evidence, not a timing benchmark.
 
 The isolated snapshot starts with the previously verified **334-component, zero-error Bit 2.2.93 build** at `a72e7cb66`. It overlays dependency sources from `47d02780e` (packaged discovery plus the native prototype-key guard) and precinct diagnostics from `067477ad3`. Standard `bit compile dependencies --json --safe-mode` produced **855 outputs and zero errors**. The production assembler installed a trusted checkout-release archive; a whole Bit tar bundle was created, extracted into another directory, and its CLI reported **2.2.93**. Every internal source/package link is relative and confined to the extracted bundle. The fixture is a private copy of the four-component, 64-source-file install fixture; its runtime package aliases are explicitly redirected to that extracted CLI.
 

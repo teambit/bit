@@ -1,5 +1,7 @@
 # Isolated install acceptance gate
 
+Raw JSON results and test logs are stored outside this repository. Historical filenames below identify generated outputs; see the [benchmark artifact policy](README.md#benchmark-artifacts).
+
 Updated completion: [final work-package checklist](completion-checklist.md) and [final command acceptance](final-command-acceptance.md). This report retains its historical inputs and results; later evidence supersedes its open follow-ups.
 
 `install-validation.cjs` runs the real Bit CLI in a Linux network namespace. Its package-manager observer delegates to the original `@pnpm/napi` installer; it does not implement a fake successful install. The helper remains explicitly opt-in. Correctness and native participation must pass before this lane can support install timing claims.
@@ -35,4 +37,4 @@ Install acceptance remains open. There is no successful no-network install and n
 - a self-contained package metadata/lockfile baseline that succeeds under network denial;
 - deterministic ordering of install-time dependency data, or an explicitly approved order-insensitive contract.
 
-A compact observed result, including the control comparison, is recorded in [dependency-install-validation-results.json](dependency-install-validation-results.json).
+A compact observed result, including the control comparison, is recorded in dependency-install-validation-results.json (`dependency-install-validation-results.json`).

@@ -1,10 +1,12 @@
 # Final extraction, control and small-workspace validation
 
+Raw JSON results and test logs are stored outside this repository. Historical filenames below identify generated outputs; see the [benchmark artifact policy](README.md#benchmark-artifacts).
+
 These experiments use the final stage-capable helper with profiling disabled: executable SHA-256 `ab4aeb1eb389b443136f772a23f7b4d3e495638ddd4abfd07acf1091063ee14c`. Inputs, revisions, tool versions, raw runs and fallback counts are retained in each report. They are separate from earlier historical results and from the large command/memory matrix.
 
 ## Eligible extraction
 
-[Final standalone results](dependency-final-extraction-results.json): 240 source files, 1,176,557 bytes; 236 native successes and four explicit legacy fallbacks, with fallback reads/parsing included. Both unique and artificial threefold-duplicate workloads use nine measured runs per variant after warm-up, rotating legacy, batching-only control and Rust.
+Final standalone results (`dependency-final-extraction-results.json`): 240 source files, 1,176,557 bytes; 236 native successes and four explicit legacy fallbacks, with fallback reads/parsing included. Both unique and artificial threefold-duplicate workloads use nine measured runs per variant after warm-up, rotating legacy, batching-only control and Rust.
 
 | Workload     | Legacy startup-inclusive median | TypeScript control | Rust plus fallback | Control / Rust |
 | ------------ | ------------------------------: | -----------------: | -----------------: | -------------: |
@@ -15,7 +17,7 @@ The 2× extraction criterion passes including source reads, transfer, fallback, 
 
 ## Actual dependency-tree boundary
 
-[Integrated TypeScript control results](integrated-typescript-control-results.json): nine measured runs for each of three variants across nine workloads, **243 exact final-result comparisons**. The reproducible production-source inventory contains 324 files totaling 1,706,738 bytes. The large traversal reaches 293 eligible files; pure control records 293 reads/parses and 405 cache hits. The sole explicit native fallback is `scopes/dependencies/pnpm/load-pnpm-esm.cjs`.
+Integrated TypeScript control results (`integrated-typescript-control-results.json`): nine measured runs for each of three variants across nine workloads, **243 exact final-result comparisons**. The reproducible production-source inventory contains 324 files totaling 1,706,738 bytes. The large traversal reaches 293 eligible files; pure control records 293 reads/parses and 405 cache hits. The sole explicit native fallback is `scopes/dependencies/pnpm/load-pnpm-esm.cjs`.
 
 | Workload                      | Legacy pipeline median | TypeScript control | Native pipeline |
 | ----------------------------- | ---------------------: | -----------------: | --------------: |
@@ -35,7 +37,7 @@ The small-graph harness deliberately exercises separately owned graphs and there
 
 ## Small actual CLI workspace, Node 22 and 24
 
-[Node 24 report](command-small-memory-node24-results.json) and [Node 22 report](command-small-memory-node22-results.json) each contain **135 measured actual CLI commands**, nine per variant/state: cold/warm status, cold/warm graph, and warm list. The genuine four-component fixture has 64 source files totaling 5,012 bytes, verified by its source-hash manifest. All comparisons use complete unnormalized command JSON. Native cold commands must actually launch a helper and extract successful files; the control must actually parse; warm/startup cases must start no helpers.
+Node 24 report (`command-small-memory-node24-results.json`) and Node 22 report (`command-small-memory-node22-results.json`) each contain **135 measured actual CLI commands**, nine per variant/state: cold/warm status, cold/warm graph, and warm list. The genuine four-component fixture has 64 source files totaling 5,012 bytes, verified by its source-hash manifest. All comparisons use complete unnormalized command JSON. Native cold commands must actually launch a helper and extract successful files; the control must actually parse; warm/startup cases must start no helpers.
 
 | Node    | Command/state | Legacy median | TypeScript control | Native median | Native sampled RSS change |
 | ------- | ------------- | ------------: | -----------------: | ------------: | ------------------------: |

@@ -1,10 +1,12 @@
 # Final command acceptance
 
+Raw JSON results and test logs are stored outside this repository. Historical filenames below identify generated outputs; see the [benchmark artifact policy](README.md#benchmark-artifacts).
+
 The dependency-scanning experiment passes its measured extraction, cold-command, warm-command and sampled-memory gates. The Rust backend remains opt-in: this one-host evidence supports the implementation, while broader default rollout remains a separate decision. Final combined correctness and packaged-platform evidence is indexed in [completion checklist](completion-checklist.md).
 
 ## Large current-source workspace
 
-The [raw report](command-large-memory-results.json) contains **135 actual CLI commands**: nine interleaved measured runs per variant and workload after warm-up, comparing legacy, batching-only TypeScript control, and Rust. Every run matches complete, unnormalized command JSON. Cold native runs must launch the helper and successfully extract sources; the TypeScript control must actually parse. Warm status, graph and list start no helpers.
+The raw report (`command-large-memory-results.json`) contains **135 actual CLI commands**: nine interleaved measured runs per variant and workload after warm-up, comparing legacy, batching-only TypeScript control, and Rust. Every run matches complete, unnormalized command JSON. Cold native runs must launch the helper and successfully extract sources; the TypeScript control must actually parse. Warm status, graph and list start no helpers.
 
 The frozen private Bit 2.2.93 build comes from `a72e7cb66dd52be1c86aacb8745296fa5147b461`, with 334 compiled components and 17,215 outputs. The separate [source-read/CPU profiles](command-cpu-profile.md) inventory 2,979 unique source paths totaling 9,851,265 bytes in this snapshot; cold loading reads 6,222 times totaling 20,117,241 bytes. These source counts are diagnostic-profile evidence, not counters added to the timed matrix. Node 24.21.0 runs on Linux x64, AMD Ryzen 9 9950X3D2, 32 logical CPUs; kernel and compiled-module hashes are retained in the report. The immutable stage-capable helper has SHA-256 `ab4aeb1eb389b443136f772a23f7b4d3e495638ddd4abfd07acf1091063ee14c`; native detailed tracing is disabled. Later packaged-provenance and diagnostic changes have separate final correctness proofs and are not retrospectively attributed to this binary/build.
 

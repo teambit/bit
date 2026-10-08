@@ -1,5 +1,7 @@
 # Warm dependency-cache invalidation validation
 
+Raw JSON results and test logs are stored outside this repository. Historical filenames below identify generated outputs; see the [benchmark artifact policy](README.md#benchmark-artifacts).
+
 This follow-up measures the actual `bit status --json` command after dependency-bearing source edits and a workspace package configuration change. It restores the same pre-edit warm cache before every legacy/Rust run; it does not benchmark an already refreshed post-edit cache.
 
 ```sh
@@ -28,4 +30,4 @@ Both source workloads edit one-file components, so native extraction there cover
 
 This validates detection of newly missing dependencies and the workspace package invalidation boundary. It does not establish resolved-dependency replacement, component-specific policy/TS configuration changes, or install invalidation. Original source/package bytes were verified against the runner checkout after completion.
 
-Raw data: [command-invalidation-results.json](command-invalidation-results.json).
+Raw data: command-invalidation-results.json (`command-invalidation-results.json`).

@@ -1,5 +1,7 @@
 # Dependency scanner compatibility and cache evidence
 
+Raw JSON results and test logs are stored outside this repository. Historical filenames below identify generated outputs; see the [benchmark artifact policy](README.md#benchmark-artifacts).
+
 This audit maps the compatibility, batching and cache requirements in [issue #4](https://github.com/zkochan/bit/issues/4) to executable evidence at `a72e7cb66`. It does not mark unrelated command, packaging or rollout requirements complete. The Rust backend stays opt-in.
 
 ## Existing suites and extraction corpus
@@ -54,12 +56,12 @@ The source runner needs installed Mocha/Chai/Sinon/Rewire and the linked Bit dep
 
 The private CLI is the complete compiled `a72e7cb66` tree, Bit 2.2.93, with 334 components and zero compile errors. All measured comparisons use the entire parsed CLI JSON without sorting, filtering, or other normalization. Each workload also proves warm legacy output equals uncached legacy output before accepting native parity. These are nine interleaved pairs per case; time is end-to-end elapsed time. Independent process RSS peaks in these reports are diagnostic and are not simultaneous process-tree memory measurements.
 
-| Workload                                                            | Legacy median | Native median | Native analysis                          | Evidence                                                               |
-| ------------------------------------------------------------------- | ------------: | ------------: | ---------------------------------------- | ---------------------------------------------------------------------- |
-| Replace import with an existing sibling component                   |        7.252s |        7.269s | 1 helper, 4 successful source requests   | [Raw resolved-import report](command-resolved-import-results.json)     |
-| Change valid component dependency policy, `show --json`             |        0.600s |        0.596s | 1 helper, 3 successful source requests   | [Raw policy and TSconfig report](command-policy-tsconfig-results.json) |
-| Edit existing untracked root TSconfig, `status --json`              |        7.348s |        7.302s | No analysis or helper                    | Same report; legacy ignores this file and aliases                      |
-| Edit 16 distinct component entry points with unique missing imports |        7.378s |        7.413s | 4 helpers, 31 successful source requests | [Raw many-edit report](command-many-edit-results.json)                 |
+| Workload                                                            | Legacy median | Native median | Native analysis                          | Evidence                                                                |
+| ------------------------------------------------------------------- | ------------: | ------------: | ---------------------------------------- | ----------------------------------------------------------------------- |
+| Replace import with an existing sibling component                   |        7.252s |        7.269s | 1 helper, 4 successful source requests   | Raw resolved-import report (`command-resolved-import-results.json`)     |
+| Change valid component dependency policy, `show --json`             |        0.600s |        0.596s | 1 helper, 3 successful source requests   | Raw policy and TSconfig report (`command-policy-tsconfig-results.json`) |
+| Edit existing untracked root TSconfig, `status --json`              |        7.348s |        7.302s | No analysis or helper                    | Same report; legacy ignores this file and aliases                       |
+| Edit 16 distinct component entry points with unique missing imports |        7.378s |        7.413s | 4 helpers, 31 successful source requests | Raw many-edit report (`command-many-edit-results.json`)                 |
 
 The many-edit case verifies all 16 unique issue markers and all 16 actual dependency-tree entry paths on every run. Missing-dependency results are deliberately unsafe for persistent caching: old cached records and timestamps remain, and subsequent loads reanalyze them. This preserves existing behavior and does not claim cache timestamp refresh. Resolved safe import edits and component-policy edits prove analysis/cache refresh separately. The tracked TSconfig cache-guard unit test is distinct from the untracked TSconfig CLI ignore control.
 
@@ -69,11 +71,11 @@ Native parse failures recover the canonical built-in detective error on the rare
 
 Tests compare every own error property except the stack (which naturally contains different call sites), plus inherited name, lineNumber and column. The malformed TS fixture preserves `TSError`, `Type expected.`, location/fileName, line 1 and column 13, and the final `PARSING_ERROR` category. Prototype-key fallback tests compare full actual pipeline results, including legacy omissions and RangeError diagnostics, rather than comparing only error codes.
 
-The actual private CLI compiled the changed dependencies component with zero errors. Two uncached `status --json` commands on an actual malformed component produce exactly equal complete JSON without normalization, including `ParseErrors` and the canonical `Type expected. (line: 1, column: 13)` message. [Raw whole-CLI syntax proof](command-syntax-proof.json) records both complete results and source/compiled overlay hashes. Its complete JSON SHA256 is `9d9a75db80d94c75d31fafa7ab13431cf05ccb34c3df9035f80a2f59f84c3e30`.
+The actual private CLI compiled the changed dependencies component with zero errors. Two uncached `status --json` commands on an actual malformed component produce exactly equal complete JSON without normalization, including `ParseErrors` and the canonical `Type expected. (line: 1, column: 13)` message. Raw whole-CLI syntax proof (`command-syntax-proof.json`) records both complete results and source/compiled overlay hashes. Its complete JSON SHA256 is `9d9a75db80d94c75d31fafa7ab13431cf05ccb34c3df9035f80a2f59f84c3e30`.
 
 ## Many-edit process-tree memory
 
-[The raw many16 memory report](command-many-memory-results.json) repeats the 16-component missing-import edit workload with the existing strict Linux 20ms process-tree sampler and process-group cleanup controller. Nine interleaved pairs preserve exact complete CLI JSON, all 16 issue markers and actual analysis entry paths, plus uncached legacy freshness proof. The final diagnostic adapter is compiled into the private CLI; source/compiled hashes bind the overlay.
+The raw many16 memory report (`command-many-memory-results.json`) repeats the 16-component missing-import edit workload with the existing strict Linux 20ms process-tree sampler and process-group cleanup controller. Nine interleaved pairs preserve exact complete CLI JSON, all 16 issue markers and actual analysis entry paths, plus uncached legacy freshness proof. The final diagnostic adapter is compiled into the private CLI; source/compiled hashes bind the overlay.
 
 Median sampled summed RSS is **1,159,828 KiB legacy / 1,162,864 KiB native**, an increase of **0.26%**, within issue #4's **10%** memory gate for this workload. Native launches four helpers and observes four concurrently; maximum sampled process count is six (command, time wrapper, four helpers). Peak RSS ranges are 1,141,412–1,360,084 KiB legacy and 1,143,668–1,214,472 KiB native. Every measured run has zero failed procfs reads and zero PID-identity races. The raw report preserves each run's sampling span, maximum sampling gap and peak process identities/RSS.
 

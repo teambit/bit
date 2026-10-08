@@ -36,3 +36,7 @@ BIT_LEGACY_ROOT=/path/to/installed/bit node --test scripts/rust-dependency-analy
 ```
 
 The command configuration, many-edit and syntax drivers require an owned disposable private CLI built by `command-build.cjs`; they mutate and restore only that private workspace. They are explicit local validation, not lightweight CI jobs. Use `BIT_COMMAND_BENCH_MUTATIONS=many-sources` with `command-invalidation-benchmark.cjs` for 16 component edits. `command-configuration-benchmark.cjs <private-cli> <native> <report.json>` measures resolved-import, component-policy and ignored untracked TSconfig cases. `command-syntax-proof.cjs` uses the same arguments and requires the diagnostic enrichment source to have been compiled into that private CLI first.
+
+## Keep generated results out of Git
+
+Write benchmark JSON, profiles, and raw test logs outside the checkout, for example `/tmp/bit-rust-results.json`. Retain only compact Markdown summaries and reproducible correctness fixtures in the source repository. Use CI artifacts or a separate evidence repository for raw data that needs to be shared; see [the artifact policy](../../docs/rust/README.md#benchmark-artifacts).

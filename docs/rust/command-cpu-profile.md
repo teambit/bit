@@ -1,6 +1,8 @@
 # Diagnostic CLI CPU and source-work profiles
 
-[Raw profiles](command-cpu-profile-results.json) record eight exact whole-command JSON comparisons, using the frozen current-source 334-component CLI at `a72e7cb66`, Node 24.21.0, and the prototype-key guard helper whose SHA-256 is in the report. These are **diagnostic runs**, separate from acceptance timings. V8 samples the CLI main thread at 1 ms; helper CPU is excluded. Actual CLI process CPU is recorded separately and can include other threads.
+Raw JSON results and test logs are stored outside this repository. Historical filenames below identify generated outputs; see the [benchmark artifact policy](README.md#benchmark-artifacts).
+
+Raw profiles (`command-cpu-profile-results.json`) record eight exact whole-command JSON comparisons, using the frozen current-source 334-component CLI at `a72e7cb66`, Node 24.21.0, and the prototype-key guard helper whose SHA-256 is in the report. These are **diagnostic runs**, separate from acceptance timings. V8 samples the CLI main thread at 1 ms; helper CPU is excluded. Actual CLI process CPU is recorded separately and can include other threads.
 
 | Workload    | Legacy detective calls | Native detective calls | Legacy synchronous detective time | Native synchronous detective time | Legacy parsing/extraction sample weight | Native parsing/extraction sample weight |
 | ----------- | ---------------------: | ---------------------: | --------------------------------: | --------------------------------: | --------------------------------------: | --------------------------------------: |
@@ -22,7 +24,7 @@ Reproduce:
 ```sh
 node scripts/rust-dependency-analysis/command-profile.cjs \
   /tmp/bit-rust-final-cli /absolute/path/to/frozen/helper \
-  docs/rust/command-cpu-profile-results.json
+  /tmp/command-cpu-profile-results.json
 ```
 
 The driver validates compiled-module hashes, uses private global configuration, restores the dependency cache on completion/failure, and retains CLI-owner traces so detached children cannot overwrite results. Build revision, tool revision/hash, helper hash, Node, CPU and kernel are recorded in the raw report.
