@@ -189,7 +189,7 @@ export async function getPeerDependencyIssues(
   }
 }
 
-export type RebuildFn = (opts: { pending?: boolean; skipIfHasSideEffectsCache?: boolean }) => Promise<void>;
+export type RebuildFn = (opts?: { pending?: boolean; skipIfHasSideEffectsCache?: boolean }) => Promise<void>;
 
 /**
  * A stream the engine's rendered output can be written to. `columns` is
@@ -466,9 +466,12 @@ export async function install(
   }
   return {
     dependenciesChanged,
-    // The Rust engine's rebuild rebuilds every build-needing package and does not
-    // support the pending / skipIfHasSideEffectsCache selectors of the old engine.
-    rebuild: async () => {
+    // The engine has no skipIfHasSideEffectsCache selector; a pending rebuild
+    // is expressed as a selection of the packages the lockfile records as
+    // needing a build.
+    rebuild: async ({ pending } = {}) => {
+      const selectedNames = pending ? await pendingBuildNames(rootDir, depsRequiringBuild) : undefined;
+      if (selectedNames?.length === 0) return;
       // Reached without an install of its own after a dry run.
       prepareBuildScriptsPath(logger);
       // Same output routing as the install: the CLI server's stream has to
@@ -485,7 +488,7 @@ export async function install(
           reporter: options.hidePackageManagerOutput ? undefined : toReporterOptions(rebuildReportOptions),
         },
         undefined,
-        undefined,
+        selectedNames,
         options.hidePackageManagerOutput ? undefined : reporterOutput(rebuildReportOptions)
       );
     },
@@ -836,6 +839,32 @@ export function mergeBitLockfileAttrs(
 ): Partial<BitLockfileAttributes> | undefined {
   if (sortedDepsRequiringBuild == null) return preInstallAttrs;
   return { ...preInstallAttrs, depsRequiringBuild: sortedDepsRequiringBuild };
+}
+
+/**
+ * The packages a pending rebuild selects: the ones the install reported as
+ * needing a build, or the ones the lockfile's `bit:` block records when the
+ * install was served from the lockfile. Undefined when neither has a list,
+ * which leaves the selection to the engine.
+ */
+async function pendingBuildNames(
+  rootDir: string,
+  depsRequiringBuild: string[] | undefined
+): Promise<string[] | undefined> {
+  const depPaths = depsRequiringBuild ?? (await readBitLockfileAttrs(rootDir))?.depsRequiringBuild;
+  return depPaths?.map(packageNameOfDepPath);
+}
+
+/**
+ * `@scope/name@1.0.0(peer@2.0.0)` -> `@scope/name`. The engine matches a
+ * rebuild selection by package name, and a dep path's version may itself
+ * carry an `@` (a git or tarball resolution), so the name ends at the last
+ * `@` before the peer suffix.
+ */
+export function packageNameOfDepPath(depPath: string): string {
+  const withoutPeers = depPath.replace(/\(.*$/, '');
+  const versionAt = withoutPeers.lastIndexOf('@');
+  return versionAt > 0 ? withoutPeers.slice(0, versionAt) : withoutPeers;
 }
 
 /**

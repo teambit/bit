@@ -1,6 +1,12 @@
 import { expect } from 'chai';
 import type { PackageManifest } from '@pnpm/types';
-import { createReadPackageHooks, mergeBitLockfileAttrs, resolveScriptPolicies, sortDepsRequiringBuild } from './lynx';
+import {
+  createReadPackageHooks,
+  mergeBitLockfileAttrs,
+  packageNameOfDepPath,
+  resolveScriptPolicies,
+  sortDepsRequiringBuild,
+} from './lynx';
 
 describe('resolveScriptPolicies()', () => {
   it('should pass through the pnpm allow-all builds flag', () => {
@@ -89,5 +95,25 @@ describe('mergeBitLockfileAttrs()', () => {
 
   it('should write nothing when there is neither a computed list nor a recorded block', () => {
     expect(mergeBitLockfileAttrs(undefined, undefined)).to.equal(undefined);
+  });
+});
+
+describe('packageNameOfDepPath()', () => {
+  it('should take the name of a registry dependency', () => {
+    expect(packageNameOfDepPath('esbuild@0.16.12')).to.equal('esbuild');
+  });
+
+  it('should keep the scope', () => {
+    expect(packageNameOfDepPath('@teambit/harmony@0.4.7')).to.equal('@teambit/harmony');
+  });
+
+  it('should drop the peer suffix', () => {
+    expect(packageNameOfDepPath('react-xarrows@2.0.2(react@18.3.1)')).to.equal('react-xarrows');
+  });
+
+  it('should stop at the version even when the resolution carries an @', () => {
+    expect(packageNameOfDepPath('fuse-native@https://codeload.github.com/refinio/fuse-native/tar.gz/bba3d9')).to.equal(
+      'fuse-native'
+    );
   });
 });
