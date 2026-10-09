@@ -12,6 +12,7 @@ import { flatten, orderBy } from 'lodash';
 import type { LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
 import type { ExtensionDataList } from '@teambit/legacy.extension-data';
+import type { PackageManifestFetcher } from '@teambit/pkg.modules.component-package-name';
 import type { ComponentFactory } from './component-factory';
 import { ComponentAspect } from './component.aspect';
 import { componentSchema } from './component.graphql';
@@ -39,7 +40,6 @@ export type ShowFragmentSlot = SlotRegistry<ShowFragment[]>;
 /**
  * fetches the manifest of a package from the registry (implemented by the dependency-resolver).
  */
-export type PackageManifestFetcher = { fetchFullPackageManifest: (packageName: string) => Promise<any> };
 
 export class ComponentMain {
   private packageManifestFetcher?: PackageManifestFetcher;

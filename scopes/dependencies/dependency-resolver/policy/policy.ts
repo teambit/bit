@@ -1,11 +1,7 @@
 import type { DependencyLifecycleType } from '../dependencies';
-import type { SemverVersion } from '@teambit/dependencies.modules.dependency-resolver-contracts';
+import type { SemverVersion } from '@teambit/envs';
 
-export type {
-  SemverVersion,
-  PolicyConfigKeys,
-  PolicyConfigKeysNames,
-} from '@teambit/dependencies.modules.dependency-resolver-contracts';
+export type { SemverVersion, PolicyConfigKeys, PolicyConfigKeysNames } from '@teambit/envs';
 
 // TODO: add DetailedDependencyPolicy once support the force prop
 // export type DependencyPolicy = SemverVersionRule | DetailedDependencyPolicy;

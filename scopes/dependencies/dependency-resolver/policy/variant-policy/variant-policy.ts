@@ -8,7 +8,7 @@ import type {
   VariantPolicyEntryVersion,
   VariantPolicyEntryValue,
   VariantPolicyLifecycleConfigEntryObject,
-} from '@teambit/dependencies.modules.dependency-resolver-contracts';
+} from '@teambit/envs';
 import type { Policy, PolicyConfigKeysNames, PolicyEntry } from '../policy';
 import type { DependencyLifecycleType } from '../../dependencies';
 import { KEY_NAME_BY_LIFECYCLE_TYPE, LIFECYCLE_TYPE_BY_KEY_NAME } from '../../dependencies';
@@ -18,7 +18,7 @@ export type {
   VariantPolicyConfigEntryValue,
   VariantPolicyEntryVersion,
   VariantPolicyEntryValue,
-} from '@teambit/dependencies.modules.dependency-resolver-contracts';
+} from '@teambit/envs';
 
 export type VariantPolicyConfigArr = Partial<Record<PolicyConfigKeysNames, VariantPolicyLifecycleConfigEntryObject[]>>;
 type VariantPolicyConfigObj = Partial<Record<PolicyConfigKeysNames, Record<string, VariantPolicyConfigEntryValue>>>;

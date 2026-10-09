@@ -12,7 +12,7 @@ import type {
   VersionKeyName,
   EnvJsoncPolicyConfigKey,
   EnvPolicyConfigObject,
-} from '@teambit/dependencies.modules.dependency-resolver-contracts';
+} from '@teambit/envs';
 
 export type {
   EnvJsoncPolicyEntry,
@@ -22,7 +22,7 @@ export type {
   EnvPolicyEnvJsoncConfigObject,
   EnvPolicyLegacyConfigObject,
   EnvPolicyConfigObject,
-} from '@teambit/dependencies.modules.dependency-resolver-contracts';
+} from '@teambit/envs';
 
 export class EnvPolicy extends VariantPolicy {
   constructor(

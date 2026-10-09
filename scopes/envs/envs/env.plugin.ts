@@ -1,4 +1,3 @@
-import type { PluginDefinition } from '@teambit/harmony.modules.aspect-loader-contracts';
 import type { Harmony } from '@teambit/harmony';
 import { ComponentID } from '@teambit/component';
 import type { WorkerMain } from '@teambit/worker';
@@ -15,7 +14,7 @@ import type { EnvsRegistry, ServicesRegistry } from './environments.main.runtime
  */
 export const BIT_ENV_PATTERN = '*.bit-env.*';
 
-export class EnvPlugin implements PluginDefinition {
+export class EnvPlugin {
   constructor(
     private envSlot: EnvsRegistry,
     private servicesRegistry: ServicesRegistry,

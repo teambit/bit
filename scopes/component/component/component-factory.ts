@@ -3,7 +3,7 @@ import type { BitId } from '@teambit/legacy-bit-id';
 import type { ComponentID } from '@teambit/component-id';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import type { ComponentLog } from '@teambit/objects';
-import type { AspectDefinition } from '@teambit/harmony.modules.aspect-loader-contracts';
+import type { AspectDefinition } from './aspect-definition';
 import type { ComponentDependencyList } from './component-dependencies';
 import type { Component, InvalidComponent } from './component';
 import type { State } from './state';
@@ -172,7 +172,7 @@ export interface ComponentFactory {
     runtimeName?: string,
     componentIds?: ComponentID[],
     opts?: ResolveAspectsOptions
-  ) => Promise<AspectDefinition<Component>[]>;
+  ) => Promise<AspectDefinition[]>;
 
   /**
    * list all components in the host.

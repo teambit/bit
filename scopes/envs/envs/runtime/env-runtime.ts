@@ -1,5 +1,4 @@
-import type { AspectDefinition } from '@teambit/harmony.modules.aspect-loader-contracts';
-import type { Component } from '@teambit/component';
+import type { AspectDefinition, Component } from '@teambit/component';
 
 import type { Environment } from '../environment';
 
@@ -26,6 +25,6 @@ export class EnvRuntime {
     /**
      * Aspect definition of the env.
      */
-    readonly envAspectDefinition: AspectDefinition<Component>
+    readonly envAspectDefinition: AspectDefinition
   ) {}
 }

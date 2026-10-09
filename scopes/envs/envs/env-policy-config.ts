@@ -1,7 +1,7 @@
 // the shape of the dependency policies in the config files (workspace.jsonc variants, env.jsonc).
 
 /**
- * Allowed values are valid semver values
+ * Allowed values are valid semver values and the "-" sign.
  */
 export type SemverVersion = string;
 
@@ -15,7 +15,7 @@ export type PolicyConfigKeysNames = keyof PolicyConfigKeys;
 
 export type VariantPolicyConfigObject = Partial<Record<keyof PolicyConfigKeys, VariantPolicyLifecycleConfigObject>>;
 
-export type VariantPolicyLifecycleConfigObject = {
+type VariantPolicyLifecycleConfigObject = {
   [dependencyId: string]: VariantPolicyConfigEntryValue;
 };
 
@@ -48,19 +48,7 @@ export type VariantPolicyEntryValue = {
   override?: boolean;
 };
 
-export type EnvJsoncPolicyEntry = {
-  name: string;
-  version: string;
-  /**
-   * hide the dependency from the component's package.json / dependencies list
-   */
-  hidden?: boolean;
-  /**
-   * force add to component dependencies even if it's not used by the component.
-   */
-  force?: boolean;
-  optional?: boolean;
-};
+export type EnvJsoncPolicyEntry = VariantPolicyLifecycleConfigEntryObject;
 
 export type EnvJsoncPolicyPeerEntry = EnvJsoncPolicyEntry & {
   supportedRange: string;

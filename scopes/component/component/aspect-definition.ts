@@ -1,19 +1,15 @@
-/**
- * the component an aspect definition may hold. generic, so this module doesn't depend on the component aspect
- * (`@teambit/aspect-loader` exports it bound to its `Component`).
- */
-export type AspectDefinitionComponent = { id: { toString(): string } };
+import type { Component } from './component';
 
-export type AspectDefinitionProps<C extends AspectDefinitionComponent = AspectDefinitionComponent> = {
+export type AspectDefinitionProps = {
   id?: string;
-  component?: C;
+  component?: Component;
   aspectPath: string;
   runtimePath: string | null;
   aspectFilePath: string | null;
   local?: boolean;
 };
 
-export class AspectDefinition<C extends AspectDefinitionComponent = AspectDefinitionComponent> {
+export class AspectDefinition {
   constructor(
     /**
      * path to the root directory of the aspect module.
@@ -32,7 +28,7 @@ export class AspectDefinition<C extends AspectDefinitionComponent = AspectDefini
     /**
      * aspect component
      */
-    readonly component?: C,
+    readonly component?: Component,
     /**
      * id of the component (used instead of component in the case of core aspect)
      */
@@ -49,14 +45,7 @@ export class AspectDefinition<C extends AspectDefinitionComponent = AspectDefini
     return null;
   }
 
-  static from<C extends AspectDefinitionComponent>({
-    component,
-    aspectPath,
-    aspectFilePath,
-    runtimePath,
-    id,
-    local,
-  }: AspectDefinitionProps<C>) {
+  static from({ component, aspectPath, aspectFilePath, runtimePath, id, local }: AspectDefinitionProps) {
     return new AspectDefinition(aspectPath, aspectFilePath, runtimePath, component, id, local);
   }
 }

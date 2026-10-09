@@ -1,8 +1,10 @@
 import { parse } from 'comment-json';
-import type { DependencyDetector, FileContext } from '@teambit/dependencies.modules.dependency-resolver-contracts';
 
-export class EnvJsoncDetector implements DependencyDetector {
-  isSupported(context: FileContext): boolean {
+/**
+ * a dependency-resolver detector (registered by dependency-resolver) that reports the env an env.jsonc extends.
+ */
+export class EnvJsoncDetector {
+  isSupported(context: { filename: string }): boolean {
     return context.filename.endsWith('env.jsonc');
   }
 

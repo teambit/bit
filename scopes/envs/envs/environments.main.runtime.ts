@@ -5,9 +5,9 @@ import type { SourceFile } from '@teambit/component.sources';
 import type { CLIMain } from '@teambit/cli';
 import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import { CLIAspect } from '@teambit/cli';
-import type { Component, ComponentMain, RegularCompDescriptor } from '@teambit/component';
+import type { AspectDefinition, Component, ComponentMain, RegularCompDescriptor } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
-import type { EnvPolicyConfigObject } from '@teambit/dependencies.modules.dependency-resolver-contracts';
+import type { EnvPolicyConfigObject } from './env-policy-config';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import type { IssuesMain } from '@teambit/issues';
@@ -18,7 +18,6 @@ import type { Harmony, SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
-import type { AspectDefinition } from '@teambit/harmony.modules.aspect-loader-contracts';
 import type { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy.extension-data';
 import { BitError } from '@teambit/bit-error';
 import { findDuplications } from '@teambit/toolbox.array.duplications-finder';
@@ -1243,7 +1242,7 @@ if needed, use "bit env set" command to align the env id`;
     );
   }
 
-  private async getEnvAspectDef(envId: string): Promise<AspectDefinition<Component>> {
+  private async getEnvAspectDef(envId: string): Promise<AspectDefinition> {
     const host = this.componentMain.getHost();
     const id = await host.resolveComponentId(envId);
     // We don't want to filter by runtime here as we want to also get envs that configured as plugins. so they don't
