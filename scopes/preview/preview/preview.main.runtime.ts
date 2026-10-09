@@ -1,13 +1,21 @@
 import { ArtifactFactory, BuilderAspect } from '@teambit/builder';
 import type { BuilderMain } from '@teambit/builder';
-import type { Asset, BundlerMain } from '@teambit/bundler';
+import type { BundlerMain } from '@teambit/bundler';
 import { BundlerAspect } from '@teambit/bundler';
 import type { PubsubMain } from '@teambit/pubsub';
 import { PubsubAspect } from '@teambit/pubsub';
 import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import { CLIAspect } from '@teambit/cli';
 import type { CLIMain } from '@teambit/cli';
-import type { Component, ComponentMain, ComponentMap, ComponentID, ResolveAspectsOptions } from '@teambit/component';
+import type {
+  Component,
+  ComponentMain,
+  ComponentMap,
+  ComponentID,
+  ComponentPreviewSize,
+  ComponentPreviewSizedFile,
+  ResolveAspectsOptions,
+} from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
 import { EnvsAspect } from '@teambit/envs';
 import type { EnvsExecutionResult, EnvsMain, ExecutionContext, PreviewEnv } from '@teambit/envs';
@@ -97,18 +105,7 @@ export type PreviewFiles = {
   isBundledWithEnv: boolean;
 };
 
-export type ComponentPreviewSizedFile = Asset;
-
-export type ComponentPreviewSize = {
-  files: ComponentPreviewSizedFile[];
-  assets: ComponentPreviewSizedFile[];
-  totalFiles: number;
-  compressedTotalFiles?: number;
-  totalAssets: number;
-  compressedTotalAssets?: number;
-  total: number;
-  compressedTotal?: number;
-};
+export type { ComponentPreviewSize, ComponentPreviewSizedFile };
 
 export type ComponentPreviewMetaData = {
   size?: ComponentPreviewSize;
