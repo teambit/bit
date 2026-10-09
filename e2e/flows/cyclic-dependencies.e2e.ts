@@ -441,4 +441,30 @@ describe('cyclic dependencies', function () {
       expect(catComponent.dependencies).to.be.lengthOf(0);
     });
   });
+  describe('modified component depends on a non-workspace component that depends on its previous version', () => {
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(2); // comp1 -> comp2
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      // comp1@0.0.1 is not in the workspace and depends on comp2@0.0.1. comp2 is modified to depend on comp1@0.0.1.
+      // once comp2 is snapped, it gets a new version, so there is no cycle: comp2@new -> comp1@0.0.1 -> comp2@0.0.1
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponent('comp2');
+      helper.command.importComponent('comp1', '--objects');
+      helper.npm.addFakeNpmPackage(`@${helper.scopes.remote}/comp1`, '0.0.1', true);
+      helper.fs.outputFile(
+        `${helper.scopes.remote}/comp2/index.js`,
+        `const comp1 = require('@${helper.scopes.remote}/comp1');\nmodule.exports = () => 'comp2 and ' + comp1();`
+      );
+    });
+    it('should not show a circular dependencies issue', () => {
+      helper.command.expectStatusToNotHaveIssue(IssuesClasses.CircularDependencies.name);
+    });
+    it('should be able to snap', () => {
+      expect(() => helper.command.snapAllComponentsWithoutBuild()).to.not.throw();
+    });
+  });
 });

@@ -14,6 +14,7 @@ export type {
   ResolveAspectsOptions,
   FilterAspectsOptions,
   LoadAspectsOptions,
+  GetGraphIdsOpts,
 } from './component-factory';
 export type { AspectList } from './aspect-list';
 export { AspectEntry, AspectData, ResolveComponentIdFunc } from './aspect-entry';
