@@ -1,10 +1,9 @@
-import type { UiUI } from '@teambit/ui';
 import { UIRuntime } from '@teambit/harmony.modules.runtimes';
-import { UIAspect } from '@teambit/ui';
 import { EventEmitter2 } from 'eventemitter2';
 import { connectToChild } from 'penpal';
 import type { AsyncMethodReturns } from 'penpal/lib/types';
 import type { BitBaseEvent } from './bit-base-event';
+import { ClickInsideAnIframeEvent } from './click-inside-an-iframe';
 import { PubsubAspect } from './pubsub.aspect';
 import { createProvider } from './pubsub-context';
 import type { Callback } from './types';
@@ -51,7 +50,7 @@ export class PubsubUI {
     const connection = connectToChild<ChildMethods>({
       iframe,
       methods: {
-        pub: this.emitEvent,
+        pub: this.emitChildEvent,
       },
     });
 
@@ -82,6 +81,17 @@ export class PubsubUI {
   };
 
   /**
+   * publish an event coming from a nested iframe.
+   * a click inside the iframe doesn't reach this window, so it's re-dispatched here as a mousedown (e.g. to close open menus).
+   */
+  private emitChildEvent = (topic: string, event: BitBaseEvent<any>) => {
+    this.emitEvent(topic, event);
+    if (event.type === ClickInsideAnIframeEvent.TYPE) {
+      document.body?.dispatchEvent(new MouseEvent('mousedown', { view: window, bubbles: true, cancelable: true }));
+    }
+  };
+
+  /**
    * publish event to nested iframes
    */
   private pubToChild = (topic: string, event: BitBaseEvent<any>) => {
@@ -89,16 +99,10 @@ export class PubsubUI {
   };
 
   static runtime = UIRuntime;
-  static dependencies = [UIAspect];
+  static dependencies = [];
 
-  static async provider([uiUI]: [UiUI]) {
-    const pubsubUI = new PubsubUI();
-
-    const reactContext = pubsubUI.getPubSubContext();
-
-    if (uiUI) uiUI.registerRenderHooks({ reactContext });
-
-    return pubsubUI;
+  static async provider() {
+    return new PubsubUI();
   }
 }
 
