@@ -154,9 +154,6 @@ export class ComponentMain {
   }
 
   /**
-   * register a show fragment to display further information in the `bit show` command.
-   */
-  /**
    * lets the commands of this aspect fetch package manifests, e.g. `bit show <package-name>`.
    */
   registerPackageManifestFetcher(packageManifestFetcher: PackageManifestFetcher) {
@@ -168,6 +165,9 @@ export class ComponentMain {
     return this.packageManifestFetcher;
   }
 
+  /**
+   * register a show fragment to display further information in the `bit show` command.
+   */
   registerShowFragments(showFragments: ShowFragment[]) {
     this.showFragmentSlot.register(showFragments);
     return this;
