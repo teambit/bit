@@ -37,10 +37,6 @@ export type ComponentHostSlot = SlotRegistry<ComponentFactory>;
 
 export type ShowFragmentSlot = SlotRegistry<ShowFragment[]>;
 
-/**
- * fetches the manifest of a package from the registry (implemented by the dependency-resolver).
- */
-
 export class ComponentMain {
   private packageManifestFetcher?: PackageManifestFetcher;
   constructor(
