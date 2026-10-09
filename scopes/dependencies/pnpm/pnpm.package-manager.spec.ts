@@ -121,6 +121,19 @@ describe('mergeGraphLockfileIntoExisting', () => {
     );
   });
 
+  it('keeps the overrides both lockfiles were resolved with, and drops ones they disagree on', () => {
+    const overrides = { '@teambit/legacy@*': '-' };
+    expect(
+      mergeGraphLockfileIntoExisting(
+        { ...lockfile(), overrides },
+        resolved({ ...lockfile(), overrides: { ...overrides } })
+      ).overrides
+    ).to.eql(overrides);
+    expect(mergeGraphLockfileIntoExisting({ ...lockfile(), overrides }, resolved(lockfile()))).not.to.have.property(
+      'overrides'
+    );
+  });
+
   it('keeps the checksum and settings of the existing lockfile when the graph adds no resolutions', () => {
     const merged = mergeGraphLockfileIntoExisting({ ...lockfile('bit-1'), settings }, lockfile());
     expect(merged.pnpmfileChecksum).to.equal('bit-1');

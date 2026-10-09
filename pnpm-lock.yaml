@@ -31,8 +31,7 @@ overrides:
   encoding: '-'
   '@pnpm/util.lex-comparator': 3.0.2
   '@pnpm/config.nerf-dart': 1.0.1
-
-pnpmfileChecksum: bit-1
+  '@teambit/legacy@*': '-'
 
 importers:
 

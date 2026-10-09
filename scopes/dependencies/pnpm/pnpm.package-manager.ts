@@ -642,16 +642,19 @@ export function mergeGraphLockfileIntoExisting(existing: LockfileFile, graph: Lo
     snapshots: mergeEntryRecords(existing.snapshots, graph.snapshots),
   };
   // The merged lockfile mixes resolutions from both sides, so it can only
-  // claim the readPackage hooks checksum and the resolution settings both were
-  // resolved with. Otherwise drop them, and pnpm resolves again instead of
+  // claim the readPackage hooks checksum, the resolution settings and the
+  // overrides both were resolved with. Otherwise drop them, and pnpm resolves again instead of
   // trusting the mix. A graph that adds no resolutions (an empty or link-only
   // one) mixes nothing in, so the existing lockfile keeps its own.
   if (hasResolutions(graph)) {
     if (existing.pnpmfileChecksum !== graph.pnpmfileChecksum) {
       delete merged.pnpmfileChecksum;
     }
-    if (!sameLockfileSettings(existing.settings, graph.settings)) {
+    if (!sameRecords(existing.settings, graph.settings)) {
       delete merged.settings;
+    }
+    if (!sameRecords(existing.overrides, graph.overrides)) {
+      delete merged.overrides;
     }
   }
   if (existingBit || graphBit) {
@@ -669,10 +672,10 @@ function hasResolutions(lockfile: LockfileFile): boolean {
   return Object.keys(lockfile.packages ?? {}).length > 0 || Object.keys(lockfile.snapshots ?? {}).length > 0;
 }
 
-function sameLockfileSettings(settings1: LockfileFile['settings'], settings2: LockfileFile['settings']): boolean {
-  if (settings1 == null || settings2 == null) return settings1 === settings2;
-  const keys = new Set([...Object.keys(settings1), ...Object.keys(settings2)]);
-  return [...keys].every((key) => settings1[key] === settings2[key]);
+function sameRecords(record1?: object, record2?: object): boolean {
+  if (record1 == null || record2 == null) return record1 === record2;
+  const keys = new Set([...Object.keys(record1), ...Object.keys(record2)]);
+  return [...keys].every((key) => record1[key] === record2[key]);
 }
 
 function mergeEntryRecords<T extends object>(

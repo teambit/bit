@@ -99,11 +99,11 @@ describe('DependenciesGraph.merge', () => {
 describe('DependenciesGraph pnpmfileChecksum', () => {
   it('survives serialize and deserialize', () => {
     const graph = createGraph([rootEdge([])], []);
-    graph.pnpmfileChecksum = 'bit-1';
+    graph.pnpmfileChecksum = 'hooks-1';
 
     const restored = DependenciesGraph.deserialize(graph.serialize());
 
-    expect(restored?.pnpmfileChecksum).to.equal('bit-1');
+    expect(restored?.pnpmfileChecksum).to.equal('hooks-1');
   });
 
   it('is omitted from the serialized graph when unset', () => {
@@ -124,20 +124,20 @@ describe('DependenciesGraph pnpmfileChecksum', () => {
 
   it('is kept by merge when both graphs have the same value', () => {
     const base = createGraph([rootEdge([])], []);
-    base.pnpmfileChecksum = 'bit-1';
+    base.pnpmfileChecksum = 'hooks-1';
     const incoming = createGraph([rootEdge([])], []);
-    incoming.pnpmfileChecksum = 'bit-1';
+    incoming.pnpmfileChecksum = 'hooks-1';
 
     base.merge(incoming);
 
-    expect(base.pnpmfileChecksum).to.equal('bit-1');
+    expect(base.pnpmfileChecksum).to.equal('hooks-1');
   });
 
   it('is dropped by merge when the graphs have different values', () => {
     const base = createGraph([rootEdge([{ id: 'foo@1.0.0', name: 'foo', specifier: '1.0.0' }])], ['foo@1.0.0']);
-    base.pnpmfileChecksum = 'bit-1';
+    base.pnpmfileChecksum = 'hooks-1';
     const incoming = createGraph([rootEdge([{ id: 'bar@1.0.0', name: 'bar', specifier: '1.0.0' }])], ['bar@1.0.0']);
-    incoming.pnpmfileChecksum = 'bit-2';
+    incoming.pnpmfileChecksum = 'hooks-2';
 
     base.merge(incoming);
 
@@ -146,7 +146,7 @@ describe('DependenciesGraph pnpmfileChecksum', () => {
 
   it('is dropped by merge when only one graph has it', () => {
     const base = createGraph([rootEdge([{ id: 'foo@1.0.0', name: 'foo', specifier: '1.0.0' }])], ['foo@1.0.0']);
-    base.pnpmfileChecksum = 'bit-1';
+    base.pnpmfileChecksum = 'hooks-1';
 
     base.merge(createGraph([rootEdge([{ id: 'bar@1.0.0', name: 'bar', specifier: '1.0.0' }])], ['bar@1.0.0']));
 
@@ -155,21 +155,21 @@ describe('DependenciesGraph pnpmfileChecksum', () => {
 
   it('is not affected by merging a graph without dependencies', () => {
     const base = createGraph([rootEdge([{ id: 'foo@1.0.0', name: 'foo', specifier: '1.0.0' }])], ['foo@1.0.0']);
-    base.pnpmfileChecksum = 'bit-1';
+    base.pnpmfileChecksum = 'hooks-1';
 
     base.merge(createGraph([rootEdge([])], []));
 
-    expect(base.pnpmfileChecksum).to.equal('bit-1');
+    expect(base.pnpmfileChecksum).to.equal('hooks-1');
   });
 
   it('is taken from the incoming graph when the base has no dependencies', () => {
     const base = createGraph([rootEdge([])], []);
     const incoming = createGraph([rootEdge([{ id: 'foo@1.0.0', name: 'foo', specifier: '1.0.0' }])], ['foo@1.0.0']);
-    incoming.pnpmfileChecksum = 'bit-1';
+    incoming.pnpmfileChecksum = 'hooks-1';
 
     base.merge(incoming);
 
-    expect(base.pnpmfileChecksum).to.equal('bit-1');
+    expect(base.pnpmfileChecksum).to.equal('hooks-1');
   });
 });
 
@@ -185,6 +185,48 @@ function rootEdge(neighbours: DependencyEdge['neighbours']): DependencyEdge {
 function edge(id: string, neighbours: DependencyEdge['neighbours'] = []): DependencyEdge {
   return { id, neighbours };
 }
+
+describe('DependenciesGraph overrides', () => {
+  const overrides = { '@teambit/legacy@*': '-', react: '19.1.0' };
+
+  it('survives serialize and deserialize', () => {
+    const graph = createGraph([rootEdge([])], []);
+    graph.overrides = overrides;
+
+    expect(DependenciesGraph.deserialize(graph.serialize())?.overrides).to.eql(overrides);
+  });
+
+  it("stand in for the checksum of Bit's readPackage hooks, which the overrides replaced", () => {
+    const restored = DependenciesGraph.deserialize(
+      JSON.stringify({ schemaVersion: '2.0', packages: {}, edges: [rootEdge([])], pnpmfileChecksum: 'bit-1' })
+    );
+
+    expect(restored?.pnpmfileChecksum).to.equal(undefined);
+    expect(restored?.overrides).to.eql({ '@teambit/legacy@*': '-', '@teambit/harmony@*': '-' });
+  });
+
+  it('are kept by merge when both graphs have the same ones', () => {
+    const base = createGraph([rootEdge([{ id: 'foo@1.0.0', name: 'foo', specifier: '1.0.0' }])], ['foo@1.0.0']);
+    base.overrides = overrides;
+    const incoming = createGraph([rootEdge([{ id: 'bar@1.0.0', name: 'bar', specifier: '1.0.0' }])], ['bar@1.0.0']);
+    incoming.overrides = { ...overrides };
+
+    base.merge(incoming);
+
+    expect(base.overrides).to.eql(overrides);
+  });
+
+  it('are dropped by merge when the graphs have different ones', () => {
+    const base = createGraph([rootEdge([{ id: 'foo@1.0.0', name: 'foo', specifier: '1.0.0' }])], ['foo@1.0.0']);
+    base.overrides = overrides;
+    const incoming = createGraph([rootEdge([{ id: 'bar@1.0.0', name: 'bar', specifier: '1.0.0' }])], ['bar@1.0.0']);
+    incoming.overrides = { ...overrides, react: '18.3.1' };
+
+    base.merge(incoming);
+
+    expect(base.overrides).to.equal(undefined);
+  });
+});
 
 describe('DependenciesGraph lockfileSettings', () => {
   const settings = { autoInstallPeers: true, dedupePeers: true, injectWorkspacePackages: true };

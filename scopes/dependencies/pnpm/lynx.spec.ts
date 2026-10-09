@@ -26,7 +26,6 @@ describe('resolveScriptPolicies()', () => {
       allowBuilds: {
         'native-pkg': false,
       },
-      neverBuildPackageNames: ['native-pkg'],
     });
   });
 });

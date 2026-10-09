@@ -33,6 +33,21 @@ export type DependencyNeighbour = {
 
 const DEPENDENCIES_GRAPH_SCHEMA_VERSION = '2.0';
 
+/**
+ * The `pnpmfileChecksum` of graphs resolved with Bit's readPackage hooks. Those
+ * hooks removed `@teambit/legacy` and `@teambit/harmony` from every dependency.
+ * Bit now passes no hooks and removes them with the overrides below instead
+ * (`removedCoreDependencyOverrides` in the pnpm aspect), so such a graph holds
+ * the resolution those overrides produce. A workspace that forced a harmony
+ * version kept harmony, but it also recorded a harmony override, which no
+ * restored lockfile carried, so its graphs were never reused either way.
+ */
+const READ_PACKAGE_HOOKS_CHECKSUM = 'bit-1';
+const READ_PACKAGE_HOOKS_OVERRIDES: Record<string, string> = {
+  '@teambit/legacy@*': '-',
+  '@teambit/harmony@*': '-',
+};
+
 export class DependenciesGraph {
   static ROOT_EDGE_ID = '.';
 
@@ -56,6 +71,12 @@ export class DependenciesGraph {
    * before this field existed don't have it, and pnpm resolves them again.
    */
   lockfileSettings?: LockfileSettings;
+  /**
+   * The `overrides` of the lockfile the graph was created from. A lockfile
+   * restored from the graph carries them, so pnpm trusts the restored
+   * resolution only while the install's overrides are the same.
+   */
+  overrides?: Record<string, string>;
 
   constructor({
     packages,
@@ -63,17 +84,24 @@ export class DependenciesGraph {
     schemaVersion,
     pnpmfileChecksum,
     lockfileSettings,
+    overrides,
   }: {
     packages: PackagesMap;
     edges: DependencyEdge[];
     schemaVersion?: string;
     pnpmfileChecksum?: string;
     lockfileSettings?: LockfileSettings;
+    overrides?: Record<string, string>;
   }) {
     this.packages = packages;
     this.edges = edges;
     this.schemaVersion = schemaVersion ?? DEPENDENCIES_GRAPH_SCHEMA_VERSION;
-    this.pnpmfileChecksum = pnpmfileChecksum;
+    if (pnpmfileChecksum === READ_PACKAGE_HOOKS_CHECKSUM && overrides == null) {
+      this.overrides = { ...READ_PACKAGE_HOOKS_OVERRIDES };
+    } else {
+      this.pnpmfileChecksum = pnpmfileChecksum;
+      this.overrides = overrides;
+    }
     this.lockfileSettings = lockfileSettings;
   }
 
@@ -85,6 +113,7 @@ export class DependenciesGraph {
       // JSON.stringify omits these when undefined.
       pnpmfileChecksum: this.pnpmfileChecksum,
       lockfileSettings: this.lockfileSettings,
+      overrides: this.overrides,
     });
   }
 
@@ -100,12 +129,14 @@ export class DependenciesGraph {
       packages: new Map(Object.entries(parsed.packages)),
       pnpmfileChecksum: parsed.pnpmfileChecksum,
       lockfileSettings: parsed.lockfileSettings,
+      overrides: parsed.overrides,
     });
   }
 
   merge(graph: DependenciesGraph): void {
     this.pnpmfileChecksum = mergePnpmfileChecksums(this, graph);
     this.lockfileSettings = mergeLockfileSettings(this, graph);
+    this.overrides = mergeOverrides(this, graph);
     const rootEdge = this.findRootEdge();
     const incomingRootEdge = graph.findRootEdge();
     const directDependencies = incomingRootEdge?.neighbours;
@@ -332,13 +363,23 @@ function mergePnpmfileChecksums(graph1: DependenciesGraph, graph2: DependenciesG
 function mergeLockfileSettings(graph1: DependenciesGraph, graph2: DependenciesGraph): LockfileSettings | undefined {
   if (!graph2.hasResolutions()) return graph1.lockfileSettings;
   if (!graph1.hasResolutions()) return graph2.lockfileSettings;
-  return sameLockfileSettings(graph1.lockfileSettings, graph2.lockfileSettings) ? graph1.lockfileSettings : undefined;
+  return sameRecords(graph1.lockfileSettings, graph2.lockfileSettings) ? graph1.lockfileSettings : undefined;
 }
 
-function sameLockfileSettings(settings1?: LockfileSettings, settings2?: LockfileSettings): boolean {
-  if (settings1 == null || settings2 == null) return settings1 === settings2;
-  const keys = new Set([...Object.keys(settings1), ...Object.keys(settings2)]);
-  return [...keys].every((key) => settings1[key] === settings2[key]);
+/**
+ * A merged graph mixes resolutions from both graphs, so it can only claim the
+ * overrides both were resolved with.
+ */
+function mergeOverrides(graph1: DependenciesGraph, graph2: DependenciesGraph): Record<string, string> | undefined {
+  if (!graph2.hasResolutions()) return graph1.overrides;
+  if (!graph1.hasResolutions()) return graph2.overrides;
+  return sameRecords(graph1.overrides, graph2.overrides) ? graph1.overrides : undefined;
+}
+
+function sameRecords(record1?: object, record2?: object): boolean {
+  if (record1 == null || record2 == null) return record1 === record2;
+  const keys = new Set([...Object.keys(record1), ...Object.keys(record2)]);
+  return [...keys].every((key) => record1[key] === record2[key]);
 }
 
 function isSameDirectDependency(dep1: DependencyNeighbour, dep2: DependencyNeighbour): boolean {
