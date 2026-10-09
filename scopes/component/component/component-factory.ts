@@ -71,6 +71,15 @@ export type FilterAspectsOptions = {
   filterByRuntime?: boolean;
 };
 
+export type GetGraphIdsOpts = {
+  /**
+   * remove edges of modified workspace components (and their dependents) that won't exist once they're snapped.
+   * useful for detecting cycles the next snap creates. relevant for the workspace only.
+   * see GraphIdsFromFsBuilder.removeOutdatedEdgesOfModified() for more details.
+   */
+  excludeOutdatedEdgesOfModified?: boolean;
+};
+
 export interface ComponentFactory {
   /**
    * name of the component host.
@@ -132,7 +141,7 @@ export interface ComponentFactory {
    * get graph of the given component-ids and all their dependencies (recursively/flattened).
    * the nodes are ComponentIds and is much faster than `this.getGraph()`.
    */
-  getGraphIds(ids?: ComponentID[], shouldThrowOnMissingDep?: boolean): Promise<CompIdGraph>;
+  getGraphIds(ids?: ComponentID[], shouldThrowOnMissingDep?: boolean, opts?: GetGraphIdsOpts): Promise<CompIdGraph>;
 
   getLogs(id: ComponentID, shortHash?: boolean, startsFrom?: string): Promise<ComponentLog[]>;
 

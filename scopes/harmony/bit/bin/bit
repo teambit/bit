@@ -12,6 +12,15 @@
 // first used. a user-provided value wins. child processes inherit it, which is intended (they hit the same APFS cost).
 if (process.platform === 'darwin' && !process.env.UV_THREADPOOL_SIZE) process.env.UV_THREADPOOL_SIZE = '16';
 
+// aspects may use node's built-in `node:sqlite`, which prints "ExperimentalWarning: SQLite is an experimental feature"
+// on every load. it's noise for bit users, so drop that specific warning and let all others through.
+const originalEmitWarning = process.emitWarning;
+process.emitWarning = function (warning, ...args) {
+  const type = typeof args[0] === 'string' ? args[0] : args[0] && args[0].type;
+  if (type === 'ExperimentalWarning' && String(warning).includes('SQLite')) return;
+  return originalEmitWarning.call(process, warning, ...args);
+};
+
 if (!process.env.BIT_NO_COMPILE_CACHE) {
   try {
     require('module').enableCompileCache();

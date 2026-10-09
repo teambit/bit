@@ -150,8 +150,8 @@ importers:
         specifier: 1100.0.19
         version: 1100.0.19
       '@pnpm/napi':
-        specifier: 12.10.1
-        version: 12.10.1
+        specifier: 12.11.0
+        version: 12.11.0
       '@pnpm/network.ca-file':
         specifier: 3.0.3
         version: 3.0.3
@@ -921,8 +921,8 @@ importers:
         specifier: ^1.0.5
         version: 1.0.5(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/react.ui.component-highlighter':
-        specifier: 0.2.9
-        version: 0.2.9(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+        specifier: 0.2.10
+        version: 0.2.10(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/react.ui.highlighter.component-metadata.bit-component-meta':
         specifier: 0.0.45
         version: 0.0.45(react-dom@19.2.7)(react@19.2.7)
@@ -18348,8 +18348,8 @@ importers:
   scopes/dependencies/dependency-resolver:
     dependencies:
       '@pnpm/napi':
-        specifier: 12.10.1
-        version: 12.10.1
+        specifier: 12.11.0
+        version: 12.11.0
       '@pnpm/network.ca-file':
         specifier: 3.0.3
         version: 3.0.3
@@ -18506,8 +18506,8 @@ importers:
         specifier: 1100.0.19
         version: 1100.0.19
       '@pnpm/napi':
-        specifier: 12.10.1
-        version: 12.10.1
+        specifier: 12.11.0
+        version: 12.11.0
       '@pnpm/plugin-trusted-deps':
         specifier: 0.2.2
         version: 0.2.2
@@ -22224,8 +22224,8 @@ importers:
   scopes/pkg/pkg:
     dependencies:
       '@pnpm/napi':
-        specifier: 12.10.1
-        version: 12.10.1
+        specifier: 12.11.0
+        version: 12.11.0
       '@teambit/bit-error':
         specifier: ~0.0.404
         version: 0.0.404
@@ -23318,8 +23318,8 @@ importers:
   scopes/react/ui/highlighter-provider:
     dependencies:
       '@teambit/react.ui.component-highlighter':
-        specifier: 0.2.9
-        version: 0.2.9(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+        specifier: 0.2.10
+        version: 0.2.10(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react':
         specifier: ^16.0.0
         version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -29311,85 +29311,85 @@ packages:
     resolution: {integrity: sha512-A3bRMTIZ5ptDPAE/KsDeY1J5UqqOiyo66+k/mUvaVjx++OJdMbp9If5kisEq9ljAV5r5TRpkxsJbSdrdJ5WtzQ==}
     engines: {node: '>=22.13'}
 
-  '@pnpm/napi.android-arm64@12.10.1':
-    resolution: {integrity: sha512-fc1No8pWPGV6MDic3s9K5D32gEYurgKICG61+W4jAOppKUtOMCQ6k57irqpcFldJlP5IzFHf346w4qgDRQIPyw==}
+  '@pnpm/napi.android-arm64@12.11.0':
+    resolution: {integrity: sha512-OK2tktJKJYLk1bLWaTuTWnVszpYV0gQMnNekdgb/wdxfssw+UL+pVvX+n2ObcJo/eYUW75+xI2qtj8s1Fnfowg==}
     cpu: [arm64]
     os: [android]
 
-  '@pnpm/napi.android-x64@12.10.1':
-    resolution: {integrity: sha512-oU8GehRnuykJFO+lJ9N4iSsRRjCBVT8Lmfm7pZbOyiL+1JQYvnqjnwRUpYkPWbHQ6VmysbWlqQYmOT4mUM6G5A==}
+  '@pnpm/napi.android-x64@12.11.0':
+    resolution: {integrity: sha512-gj0cCUE51aYKPB7mngjrmo0BA/2rNyWjdMu4uKMwxr0wyLzum7QH1NMVvLOFbRTq4blz3sQgwZ2Z8MnryMPtoQ==}
     cpu: [x64]
     os: [android]
 
-  '@pnpm/napi.darwin-arm64@12.10.1':
-    resolution: {integrity: sha512-X9KMxG6kVTmW4cN9FTDeCi4iwrQcyTexgpTWEWsaqisSltj3rx4M8oFVeLBPmj/eiXalTvQfMW8ZAnE0AscA8g==}
+  '@pnpm/napi.darwin-arm64@12.11.0':
+    resolution: {integrity: sha512-d1HUWv2Df4fRWPUnL6mdqOHPggjknKSszI4xAnOpC/hzR+fwnEmqerdOHyCng0h/niXF4MQaiUdGzRTJ6ZwO+g==}
     cpu: [arm64]
     os: [darwin]
 
-  '@pnpm/napi.darwin-x64@12.10.1':
-    resolution: {integrity: sha512-fpiZY5ntJhLad0m718qX3XAdNmh9c0brHMwo/OPiMpAHFtHON1ObXYK1IpB6XFV2RDq3MEoh8BLj/+Unu9ecwA==}
+  '@pnpm/napi.darwin-x64@12.11.0':
+    resolution: {integrity: sha512-VkoF1ieaKTlbJErfoidwFSsUB5qJfLiefao/C+p2v3mf3dLgprOt6JJRxk+KJvB0cSW5LqgKdjAOfi3T9o99aA==}
     cpu: [x64]
     os: [darwin]
 
-  '@pnpm/napi.freebsd-x64@12.10.1':
-    resolution: {integrity: sha512-kwCyxa20/u/WGOTc1yCFzzWl94HvQMvPhcsscrtbo4ksysV7WtgyG0dPIafYONi4P83UxulXcaKXEI3SZF7Utg==}
+  '@pnpm/napi.freebsd-x64@12.11.0':
+    resolution: {integrity: sha512-RyKA78ay+8QW1DfpilB0m32gM5uc8mUhGnqLlojODXpKc9fTJup+aAA8OOZ14YHhbCOgtIJ2mcoI+FyDQY6FMw==}
     cpu: [x64]
     os: [freebsd]
 
-  '@pnpm/napi.linux-arm64-musl@12.10.1':
-    resolution: {integrity: sha512-hbPy+/tWqALiFUWTCt1IFEzpHBhxwSibjT7Vt0QrnQeor7Gx24pMsnwi7tVaHjlFUmGpRXFdrhlrG+8AT35B2Q==}
+  '@pnpm/napi.linux-arm64-musl@12.11.0':
+    resolution: {integrity: sha512-Yo3tQcFn5oyfB0yYQkK3SfseHI1VaGBUzjGZqXwSqqiMnXiEHbtPIeUv+FqH26/Kkfy1aTKV64tnV+4dP6yIuQ==}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
 
-  '@pnpm/napi.linux-arm64@12.10.1':
-    resolution: {integrity: sha512-G40T8fb5Al5Fbc1EdTw53sO6pGDETed6AJvtEqxPwZcLbrhVyRadI7joTXhxYf4DpG/y1jolT56s9sas5bGkUA==}
+  '@pnpm/napi.linux-arm64@12.11.0':
+    resolution: {integrity: sha512-5ehelYvg/Dhi13idmQ4iXnVDnIgVg6U5D8W50XuK5CFrqj3AHihJH+EX4jnY125ugcd0s/AX6aei9Vf7rIFxfQ==}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@pnpm/napi.linux-ppc64@12.10.1':
-    resolution: {integrity: sha512-oETxh00xqP0zYR4vANITNr7gFU8E2BCg58IKl9kZKCJ2JtZl+UVAGgad/PXrNO3jWiTUHsRyLeIEKJToMRjkkg==}
+  '@pnpm/napi.linux-ppc64@12.11.0':
+    resolution: {integrity: sha512-637DijJyUnLM6Jm66yL0xdCzntGDhLxla0OeADpEew3m8QquRi3FZuH6mF0/awD7rUw4rzE+XauRK+HM/yxz7g==}
     cpu: [ppc64]
     os: [linux]
     libc: [glibc]
 
-  '@pnpm/napi.linux-riscv64@12.10.1':
-    resolution: {integrity: sha512-9zd+NtSHYY+Dx60MJgSkVxw32LZ8Ca7Q9dv8TPm1wQmGQN9R8IqRYUx72zAZ90aFnTV6ZZQLVFYjRYG2E8hO/w==}
+  '@pnpm/napi.linux-riscv64@12.11.0':
+    resolution: {integrity: sha512-gYi3MuknalqqIYfh7ZLpfwLhTb9RNGBBxV8mnfHXJjeKQBFmfvuR+SMMzeY548k4vEjzkhhvG1AcSQDuyOoyoA==}
     cpu: [riscv64]
     os: [linux]
     libc: [glibc]
 
-  '@pnpm/napi.linux-s390x@12.10.1':
-    resolution: {integrity: sha512-HmEqVLuANo7y0DB8jkVy+wkd4Tuccawd4qo8MIuZJgrK2DwaRrdNTQCu0tUM9YISds0cJsROQnb8ihtHyiTIwg==}
+  '@pnpm/napi.linux-s390x@12.11.0':
+    resolution: {integrity: sha512-7T7PAIdcWhEYM6S8kmoMtN3gIat7wAYHpaBG66I2S8672tXaZydXTvLvUdlh/cfFz1tXzcnuxrPwL51i9YHT5g==}
     cpu: [s390x]
     os: [linux]
     libc: [glibc]
 
-  '@pnpm/napi.linux-x64-musl@12.10.1':
-    resolution: {integrity: sha512-2i02owfVka9/dWN7oZCq+WmHawMUi4a4Uwn2msx/gRJZoab7QKa4PXydZTEsmcLIr/lmn8t/Xk914nQ3yACRkg==}
+  '@pnpm/napi.linux-x64-musl@12.11.0':
+    resolution: {integrity: sha512-6CrVwAz3L1G5bEQNSmBZOR55fWfEX8M8yVWbuxAU/mwRq+xV2B9Nn7tiPNdl7iB+FeML7PYjV5KnstjT5J/HvQ==}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@pnpm/napi.linux-x64@12.10.1':
-    resolution: {integrity: sha512-8VANa3/3UpClEh31Id4a1SijKrwvkJtK6iE+Ne02vsIL/0tMUR7oNCOUbv692LXsB7732wBJ0GVEfxvltRZZ/w==}
+  '@pnpm/napi.linux-x64@12.11.0':
+    resolution: {integrity: sha512-uCgqlMfnHEZQrR7bOEIxv25Zzg4Fom+hVbCBu8zsKB3kfdKVniJHkSZYsATqWppH2EvvNHjOW0zJUq7cK6WJ4w==}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@pnpm/napi.win32-arm64@12.10.1':
-    resolution: {integrity: sha512-kZCIfVYLX39Zv3beHS0Z7x/sjfWYHdIxp3OmjXjLJWtKGD7W+A1aO/G/DFnux3+uJOpsm14sGenmR4mRKUZwEQ==}
+  '@pnpm/napi.win32-arm64@12.11.0':
+    resolution: {integrity: sha512-40x2G+tB6z3BmRCX0E8EIbeyUhKcQdwRsnFb4EZT321OA3C2RhK2qQvTc6Vj8rF+zH+0w1Y9ylb9Cv1/YM0yDw==}
     cpu: [arm64]
     os: [win32]
 
-  '@pnpm/napi.win32-x64@12.10.1':
-    resolution: {integrity: sha512-RYImd260EF2gikNyRSvhHOweK7+kFsVd+bbPC0gyKnJ5ZomvHQgz7dfXv8FZAYuBeV9IW6zjzBjAuFKJQKVg+Q==}
+  '@pnpm/napi.win32-x64@12.11.0':
+    resolution: {integrity: sha512-/R2FR9rEqoSAeOb2o/RQcSDvZqzAe6lw2MQHTenYr8KXwJvk8J3AEllnAU8izhN8tDAcXzCiTHpT0IMWKk2cgg==}
     cpu: [x64]
     os: [win32]
 
-  '@pnpm/napi@12.10.1':
-    resolution: {integrity: sha512-keDTuAz+h/5HRTYMPy52xrnbFvsB8zcI953TjmLIWl8JH1zQE9UO7u3gpFx8CrZw16RLpPe8q8FMqaEhVSfULQ==}
+  '@pnpm/napi@12.11.0':
+    resolution: {integrity: sha512-DahXFsAQNUyZiP5m4/E4IItiQsmdS9szCZApC5SnUItLAaot5ZME7DOuHi7/+GTPfOVPu6Lsjrr7top4kYtUdg==}
     engines: {node: '>=18.*'}
 
   '@pnpm/network.agent@0.1.0':
@@ -34579,14 +34579,14 @@ packages:
       react: 19.1.0
       react-dom: 19.1.0
 
-  '@teambit/react.ui.component-highlighter@0.2.8':
-    resolution: {integrity: sha512-4gpQvhbgdrBPSZQhgDVKc6ka8lpk36eCOuhAYK5YnpUAqST8aUWh2+jbhL314Umuq2kQ7V8+M6KAqwSf6LK2qA==}
+  '@teambit/react.ui.component-highlighter@0.2.10':
+    resolution: {integrity: sha512-jztNtLx/6NxLe90LQtkkT4O/M3O9CaVs+Bp0N3GIXg40uFL9KlwS9VgbP9iYVnhbTyLWeKC6dTIhS1Mj4VFV7A==}
     peerDependencies:
       react: 19.2.7
       react-dom: 19.2.7
 
-  '@teambit/react.ui.component-highlighter@0.2.9':
-    resolution: {integrity: sha512-EiPpjWIRfFc+sYcuvpB0p1OwyGVfPddT5QXD3rOtdXz8DSg6Z9UbIWVAEw8Hk1/aPsOoK2GfKKqkCqAYdIql2w==}
+  '@teambit/react.ui.component-highlighter@0.2.8':
+    resolution: {integrity: sha512-4gpQvhbgdrBPSZQhgDVKc6ka8lpk36eCOuhAYK5YnpUAqST8aUWh2+jbhL314Umuq2kQ7V8+M6KAqwSf6LK2qA==}
     peerDependencies:
       react: 19.2.7
       react-dom: 19.2.7
@@ -51706,64 +51706,64 @@ snapshots:
       bole: 5.0.29
       split2: 4.2.0
 
-  '@pnpm/napi.android-arm64@12.10.1':
+  '@pnpm/napi.android-arm64@12.11.0':
     optional: true
 
-  '@pnpm/napi.android-x64@12.10.1':
+  '@pnpm/napi.android-x64@12.11.0':
     optional: true
 
-  '@pnpm/napi.darwin-arm64@12.10.1':
+  '@pnpm/napi.darwin-arm64@12.11.0':
     optional: true
 
-  '@pnpm/napi.darwin-x64@12.10.1':
+  '@pnpm/napi.darwin-x64@12.11.0':
     optional: true
 
-  '@pnpm/napi.freebsd-x64@12.10.1':
+  '@pnpm/napi.freebsd-x64@12.11.0':
     optional: true
 
-  '@pnpm/napi.linux-arm64-musl@12.10.1':
+  '@pnpm/napi.linux-arm64-musl@12.11.0':
     optional: true
 
-  '@pnpm/napi.linux-arm64@12.10.1':
+  '@pnpm/napi.linux-arm64@12.11.0':
     optional: true
 
-  '@pnpm/napi.linux-ppc64@12.10.1':
+  '@pnpm/napi.linux-ppc64@12.11.0':
     optional: true
 
-  '@pnpm/napi.linux-riscv64@12.10.1':
+  '@pnpm/napi.linux-riscv64@12.11.0':
     optional: true
 
-  '@pnpm/napi.linux-s390x@12.10.1':
+  '@pnpm/napi.linux-s390x@12.11.0':
     optional: true
 
-  '@pnpm/napi.linux-x64-musl@12.10.1':
+  '@pnpm/napi.linux-x64-musl@12.11.0':
     optional: true
 
-  '@pnpm/napi.linux-x64@12.10.1':
+  '@pnpm/napi.linux-x64@12.11.0':
     optional: true
 
-  '@pnpm/napi.win32-arm64@12.10.1':
+  '@pnpm/napi.win32-arm64@12.11.0':
     optional: true
 
-  '@pnpm/napi.win32-x64@12.10.1':
+  '@pnpm/napi.win32-x64@12.11.0':
     optional: true
 
-  '@pnpm/napi@12.10.1':
+  '@pnpm/napi@12.11.0':
     optionalDependencies:
-      '@pnpm/napi.android-arm64': 12.10.1
-      '@pnpm/napi.android-x64': 12.10.1
-      '@pnpm/napi.darwin-arm64': 12.10.1
-      '@pnpm/napi.darwin-x64': 12.10.1
-      '@pnpm/napi.freebsd-x64': 12.10.1
-      '@pnpm/napi.linux-arm64': 12.10.1
-      '@pnpm/napi.linux-arm64-musl': 12.10.1
-      '@pnpm/napi.linux-ppc64': 12.10.1
-      '@pnpm/napi.linux-riscv64': 12.10.1
-      '@pnpm/napi.linux-s390x': 12.10.1
-      '@pnpm/napi.linux-x64': 12.10.1
-      '@pnpm/napi.linux-x64-musl': 12.10.1
-      '@pnpm/napi.win32-arm64': 12.10.1
-      '@pnpm/napi.win32-x64': 12.10.1
+      '@pnpm/napi.android-arm64': 12.11.0
+      '@pnpm/napi.android-x64': 12.11.0
+      '@pnpm/napi.darwin-arm64': 12.11.0
+      '@pnpm/napi.darwin-x64': 12.11.0
+      '@pnpm/napi.freebsd-x64': 12.11.0
+      '@pnpm/napi.linux-arm64': 12.11.0
+      '@pnpm/napi.linux-arm64-musl': 12.11.0
+      '@pnpm/napi.linux-ppc64': 12.11.0
+      '@pnpm/napi.linux-riscv64': 12.11.0
+      '@pnpm/napi.linux-s390x': 12.11.0
+      '@pnpm/napi.linux-x64': 12.11.0
+      '@pnpm/napi.linux-x64-musl': 12.11.0
+      '@pnpm/napi.win32-arm64': 12.11.0
+      '@pnpm/napi.win32-x64': 12.11.0
 
   '@pnpm/network.agent@0.1.0(supports-color@9.4.0)':
     dependencies:
@@ -63981,7 +63981,7 @@ snapshots:
 
   '@teambit/dependency-resolver@file:scopes/dependencies/dependency-resolver(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react@18.3.1)(supports-color@9.4.0)':
     dependencies:
-      '@pnpm/napi': 12.10.1
+      '@pnpm/napi': 12.11.0
       '@pnpm/network.ca-file': 3.0.3
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
@@ -64043,7 +64043,7 @@ snapshots:
 
   '@teambit/dependency-resolver@file:scopes/dependencies/dependency-resolver(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
-      '@pnpm/napi': 12.10.1
+      '@pnpm/napi': 12.11.0
       '@pnpm/network.ca-file': 3.0.3
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
@@ -64105,7 +64105,7 @@ snapshots:
 
   '@teambit/dependency-resolver@file:scopes/dependencies/dependency-resolver(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
-      '@pnpm/napi': 12.10.1
+      '@pnpm/napi': 12.11.0
       '@pnpm/network.ca-file': 3.0.3
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
@@ -75784,7 +75784,7 @@ snapshots:
 
   '@teambit/pkg@file:scopes/pkg/pkg(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react@18.3.1)(supports-color@9.4.0)':
     dependencies:
-      '@pnpm/napi': 12.10.1
+      '@pnpm/napi': 12.11.0
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.5
       '@teambit/component-issues': file:components/component-issues
@@ -75827,7 +75827,7 @@ snapshots:
 
   '@teambit/pkg@file:scopes/pkg/pkg(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
-      '@pnpm/napi': 12.10.1
+      '@pnpm/napi': 12.11.0
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.5
       '@teambit/component-issues': file:components/component-issues
@@ -75870,7 +75870,7 @@ snapshots:
 
   '@teambit/pkg@file:scopes/pkg/pkg(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
-      '@pnpm/napi': 12.10.1
+      '@pnpm/napi': 12.11.0
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.5
       '@teambit/component-issues': file:components/component-issues
@@ -75915,7 +75915,7 @@ snapshots:
     dependencies:
       '@pnpm/deps.path': 1100.1.0
       '@pnpm/lockfile.types': 1100.0.19
-      '@pnpm/napi': 12.10.1
+      '@pnpm/napi': 12.11.0
       '@pnpm/plugin-trusted-deps': 0.2.2
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
@@ -75953,7 +75953,7 @@ snapshots:
     dependencies:
       '@pnpm/deps.path': 1100.1.0
       '@pnpm/lockfile.types': 1100.0.19
-      '@pnpm/napi': 12.10.1
+      '@pnpm/napi': 12.11.0
       '@pnpm/plugin-trusted-deps': 0.2.2
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
@@ -75991,7 +75991,7 @@ snapshots:
     dependencies:
       '@pnpm/deps.path': 1100.1.0
       '@pnpm/lockfile.types': 1100.0.19
-      '@pnpm/napi': 12.10.1
+      '@pnpm/napi': 12.11.0
       '@pnpm/plugin-trusted-deps': 0.2.2
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
@@ -77977,6 +77977,48 @@ snapshots:
       use-debounce: 6.0.1(react@19.2.7)
       uuid: 3.4.0
 
+  '@teambit/react.ui.component-highlighter@0.2.10(@types/react@19.2.18)(react-dom@19.2.7)(react@18.3.1)':
+    dependencies:
+      '@floating-ui/react-dom': 0.7.2(@types/react@19.2.18)(react-dom@19.2.7)(react@18.3.1)
+      '@teambit/base-ui.routing.native-link': 1.0.1(react@18.3.1)
+      '@teambit/component-id': 1.2.5
+      '@teambit/component.modules.component-url': file:scopes/component/component-url(react@18.3.1)
+      '@teambit/react.modules.dom-to-react': 0.2.1(react@18.3.1)
+      '@teambit/react.ui.highlighter.component-metadata.bit-component-meta': 0.0.45(react-dom@19.2.7)(react@18.3.1)
+      '@teambit/react.ui.hover-selector': 0.2.1(react@18.3.1)
+      '@tippyjs/react': 4.2.0(react-dom@19.2.7)(react@18.3.1)
+      classnames: 2.5.1
+      get-xpath: 3.3.0
+      lodash.compact: 3.0.1
+      react: 18.3.1
+      react-dom: 19.2.7(react@18.3.1)
+      url-join: 4.0.1
+      use-debounce: 8.0.4(react@18.3.1)
+      uuid: 10.0.0
+    transitivePeerDependencies:
+      - '@types/react'
+
+  '@teambit/react.ui.component-highlighter@0.2.10(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)':
+    dependencies:
+      '@floating-ui/react-dom': 0.7.2(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/base-ui.routing.native-link': 1.0.1(react@19.2.7)
+      '@teambit/component-id': 1.2.5
+      '@teambit/component.modules.component-url': file:scopes/component/component-url(react@19.2.7)
+      '@teambit/react.modules.dom-to-react': 0.2.1(react@19.2.7)
+      '@teambit/react.ui.highlighter.component-metadata.bit-component-meta': 0.0.45(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/react.ui.hover-selector': 0.2.1(react@19.2.7)
+      '@tippyjs/react': 4.2.0(react-dom@19.2.7)(react@19.2.7)
+      classnames: 2.5.1
+      get-xpath: 3.3.0
+      lodash.compact: 3.0.1
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+      url-join: 4.0.1
+      use-debounce: 8.0.4(react@19.2.7)
+      uuid: 10.0.0
+    transitivePeerDependencies:
+      - '@types/react'
+
   '@teambit/react.ui.component-highlighter@0.2.8(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)':
     dependencies:
       '@floating-ui/react-dom': 0.7.2(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
@@ -77999,48 +78041,6 @@ snapshots:
       - '@types/react'
 
   '@teambit/react.ui.component-highlighter@0.2.8(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)':
-    dependencies:
-      '@floating-ui/react-dom': 0.7.2(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/base-ui.routing.native-link': 1.0.1(react@19.2.7)
-      '@teambit/component-id': 1.2.5
-      '@teambit/component.modules.component-url': 0.0.188(react@19.2.7)
-      '@teambit/react.modules.dom-to-react': 0.2.1(react@19.2.7)
-      '@teambit/react.ui.highlighter.component-metadata.bit-component-meta': 0.0.45(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/react.ui.hover-selector': 0.2.1(react@19.2.7)
-      '@tippyjs/react': 4.2.0(react-dom@19.2.7)(react@19.2.7)
-      classnames: 2.5.1
-      get-xpath: 3.3.0
-      lodash.compact: 3.0.1
-      react: 19.2.7
-      react-dom: 19.2.7(react@19.2.7)
-      url-join: 4.0.1
-      use-debounce: 8.0.4(react@19.2.7)
-      uuid: 10.0.0
-    transitivePeerDependencies:
-      - '@types/react'
-
-  '@teambit/react.ui.component-highlighter@0.2.9(@types/react@19.2.18)(react-dom@19.2.7)(react@18.3.1)':
-    dependencies:
-      '@floating-ui/react-dom': 0.7.2(@types/react@19.2.18)(react-dom@19.2.7)(react@18.3.1)
-      '@teambit/base-ui.routing.native-link': 1.0.1(react@18.3.1)
-      '@teambit/component-id': 1.2.5
-      '@teambit/component.modules.component-url': 0.0.188(react@18.3.1)
-      '@teambit/react.modules.dom-to-react': 0.2.1(react@18.3.1)
-      '@teambit/react.ui.highlighter.component-metadata.bit-component-meta': 0.0.45(react-dom@19.2.7)(react@18.3.1)
-      '@teambit/react.ui.hover-selector': 0.2.1(react@18.3.1)
-      '@tippyjs/react': 4.2.0(react-dom@19.2.7)(react@18.3.1)
-      classnames: 2.5.1
-      get-xpath: 3.3.0
-      lodash.compact: 3.0.1
-      react: 18.3.1
-      react-dom: 19.2.7(react@18.3.1)
-      url-join: 4.0.1
-      use-debounce: 8.0.4(react@18.3.1)
-      uuid: 10.0.0
-    transitivePeerDependencies:
-      - '@types/react'
-
-  '@teambit/react.ui.component-highlighter@0.2.9(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)':
     dependencies:
       '@floating-ui/react-dom': 0.7.2(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/base-ui.routing.native-link': 1.0.1(react@19.2.7)
@@ -78438,7 +78438,7 @@ snapshots:
 
   '@teambit/react.ui.highlighter-provider@file:scopes/react/ui/highlighter-provider(@testing-library/dom@10.4.1)(react@18.3.1)':
     dependencies:
-      '@teambit/react.ui.component-highlighter': 0.2.9(@types/react@19.2.18)(react-dom@19.2.7)(react@18.3.1)
+      '@teambit/react.ui.component-highlighter': 0.2.10(@types/react@19.2.18)(react-dom@19.2.7)(react@18.3.1)
       '@testing-library/react': 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@18.3.1)
       '@types/node': 22.10.5
       '@types/react': 19.2.18
@@ -78452,7 +78452,7 @@ snapshots:
 
   '@teambit/react.ui.highlighter-provider@file:scopes/react/ui/highlighter-provider(@testing-library/dom@10.4.1)(react@19.2.7)':
     dependencies:
-      '@teambit/react.ui.component-highlighter': 0.2.9(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/react.ui.component-highlighter': 0.2.10(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react': 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@types/node': 22.10.5
       '@types/react': 19.2.18
