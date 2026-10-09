@@ -846,25 +846,31 @@ export function mergeBitLockfileAttrs(
  * needing a build, or the ones the lockfile's `bit:` block records when the
  * install was served from the lockfile. Undefined when neither has a list,
  * which leaves the selection to the engine.
+ *
+ * An empty recorded list is not trusted: a lockfile restored from a
+ * dependency graph that was built without build information records an
+ * empty list too, so only the install's own answer can prove there is
+ * nothing to build.
  */
 async function pendingBuildNames(
   rootDir: string,
   depsRequiringBuild: string[] | undefined
 ): Promise<string[] | undefined> {
-  const depPaths = depsRequiringBuild ?? (await readBitLockfileAttrs(rootDir))?.depsRequiringBuild;
-  return depPaths?.map(packageNameOfDepPath);
+  if (depsRequiringBuild) return depsRequiringBuild.map(packageNameOfDepPath);
+  const recorded = (await readBitLockfileAttrs(rootDir))?.depsRequiringBuild;
+  return recorded?.length ? recorded.map(packageNameOfDepPath) : undefined;
 }
 
 /**
  * `@scope/name@1.0.0(peer@2.0.0)` -> `@scope/name`. The engine matches a
- * rebuild selection by package name, and a dep path's version may itself
- * carry an `@` (a git or tarball resolution), so the name ends at the last
- * `@` before the peer suffix.
+ * rebuild selection by package name. A package name carries no `@` past its
+ * scope prefix, while a version may (a git or tarball resolution such as
+ * `git+ssh://git@github.com/...`), so the name ends at the first `@` after
+ * the start.
  */
 export function packageNameOfDepPath(depPath: string): string {
-  const withoutPeers = depPath.replace(/\(.*$/, '');
-  const versionAt = withoutPeers.lastIndexOf('@');
-  return versionAt > 0 ? withoutPeers.slice(0, versionAt) : withoutPeers;
+  const versionAt = depPath.indexOf('@', 1);
+  return versionAt > 0 ? depPath.slice(0, versionAt) : depPath.replace(/\(.*$/, '');
 }
 
 /**

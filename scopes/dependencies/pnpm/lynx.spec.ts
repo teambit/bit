@@ -115,5 +115,9 @@ describe('packageNameOfDepPath()', () => {
     expect(packageNameOfDepPath('fuse-native@https://codeload.github.com/refinio/fuse-native/tar.gz/bba3d9')).to.equal(
       'fuse-native'
     );
+    expect(packageNameOfDepPath('private-pkg@git+ssh://git@github.com/org/private-pkg.git')).to.equal('private-pkg');
+    expect(packageNameOfDepPath('@org/private-pkg@git+ssh://git@github.com/org/private-pkg.git')).to.equal(
+      '@org/private-pkg'
+    );
   });
 });
