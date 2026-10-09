@@ -308,7 +308,7 @@ export class DependenciesMain {
    */
   async getCircularDependencies(includeDeps?: boolean): Promise<string[][]> {
     if (!this.workspace) throw new OutsideWorkspaceError();
-    const graph = await this.graph.getGraphIds();
+    const graph = await this.graph.getGraphIds(undefined, { excludeOutdatedEdgesOfModified: true });
     const cycles = graph.findCycles(undefined, includeDeps);
     // append the first component to the end to make the circular visible in the output
     cycles.forEach((cycle) => cycle.push(cycle[0]));

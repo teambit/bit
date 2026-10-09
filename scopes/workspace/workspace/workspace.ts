@@ -14,6 +14,7 @@ import type {
   InvalidComponent,
   ResolveAspectsOptions,
   AspectList,
+  GetGraphIdsOpts,
 } from '@teambit/component';
 import { AspectEntry } from '@teambit/component';
 import { BitError } from '@teambit/bit-error';
@@ -635,7 +636,11 @@ export class Workspace implements ComponentFactory {
     return this.buildOneGraphForComponents(ids, undefined, undefined, shouldThrowOnMissingDep);
   }
 
-  async getGraphIds(ids?: ComponentID[], shouldThrowOnMissingDep = true): Promise<CompIdGraph> {
+  async getGraphIds(
+    ids?: ComponentID[],
+    shouldThrowOnMissingDep = true,
+    opts: GetGraphIdsOpts = {}
+  ): Promise<CompIdGraph> {
     if (!ids || ids.length < 1) ids = this.listIds();
 
     const graphIdsFromFsBuilder = new GraphIdsFromFsBuilder(
@@ -644,7 +649,7 @@ export class Workspace implements ComponentFactory {
       this.dependencyResolver,
       shouldThrowOnMissingDep
     );
-    return graphIdsFromFsBuilder.buildGraph(ids);
+    return graphIdsFromFsBuilder.buildGraph(ids, opts);
   }
 
   async getUnavailableOnMainComponents(): Promise<ComponentID[]> {

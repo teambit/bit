@@ -1,5 +1,5 @@
 import type { PubsubPreview } from '@teambit/pubsub';
-import { PubsubAspect } from '@teambit/pubsub';
+import { PubsubAspect, ClickInsideAnIframeEvent } from '@teambit/pubsub';
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import { ComponentID } from '@teambit/component-id';
@@ -12,7 +12,6 @@ import { debounce, intersection, isObject } from 'lodash';
 import { PreviewNotFound } from './exceptions';
 import type { PreviewType } from './preview-type';
 import { PreviewAspect, PreviewRuntime } from './preview.aspect';
-import { ClickInsideAnIframeEvent } from './events';
 import type { ModuleFile, PreviewModule } from './types/preview-module';
 import { RenderingContext } from './rendering-context';
 import { fetchComponentAspects } from './gql/fetch-component-aspects';

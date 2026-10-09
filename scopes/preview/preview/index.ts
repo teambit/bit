@@ -1,6 +1,6 @@
 export { PreviewAspect as default, PreviewAspect, PreviewRuntime } from './preview.aspect';
 
-export * from './events';
+export { ClickInsideAnIframeEvent } from '@teambit/pubsub';
 export type { PreviewEnv, Preview } from './preview-env';
 export type {
   PreviewMain,
