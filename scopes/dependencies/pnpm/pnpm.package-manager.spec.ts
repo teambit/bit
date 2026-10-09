@@ -93,4 +93,24 @@ describe('mergeGraphLockfileIntoExisting', () => {
     );
     expect(mergeGraphLockfileIntoExisting(lockfile('bit-1'), lockfile())).not.to.have.property('pnpmfileChecksum');
   });
+
+  it('keeps the settings both lockfiles were resolved under', () => {
+    const settings = { autoInstallPeers: true, dedupePeers: true };
+    const merged = mergeGraphLockfileIntoExisting(
+      { ...lockfile(), settings },
+      { ...lockfile(), settings: { ...settings } }
+    );
+    expect(merged.settings).to.eql(settings);
+  });
+
+  it('drops settings the lockfiles disagree on', () => {
+    const settings = { autoInstallPeers: true, dedupePeers: true };
+    expect(
+      mergeGraphLockfileIntoExisting(
+        { ...lockfile(), settings },
+        { ...lockfile(), settings: { ...settings, dedupePeers: false } }
+      )
+    ).not.to.have.property('settings');
+    expect(mergeGraphLockfileIntoExisting({ ...lockfile(), settings }, lockfile())).not.to.have.property('settings');
+  });
 });

@@ -647,6 +647,10 @@ export function mergeGraphLockfileIntoExisting(existing: LockfileFile, graph: Lo
   if (existing.pnpmfileChecksum !== graph.pnpmfileChecksum) {
     delete merged.pnpmfileChecksum;
   }
+  // Likewise for the resolution settings.
+  if (!sameLockfileSettings(existing.settings, graph.settings)) {
+    delete merged.settings;
+  }
   if (existingBit || graphBit) {
     (merged as LockfileFile & { bit?: Record<string, unknown> }).bit = {
       ...existingBit,
@@ -656,6 +660,12 @@ export function mergeGraphLockfileIntoExisting(existing: LockfileFile, graph: Lo
   }
   pruneUnreachableLockfileEntries(merged);
   return merged;
+}
+
+function sameLockfileSettings(settings1: LockfileFile['settings'], settings2: LockfileFile['settings']): boolean {
+  if (settings1 == null || settings2 == null) return settings1 === settings2;
+  const keys = new Set([...Object.keys(settings1), ...Object.keys(settings2)]);
+  return [...keys].every((key) => settings1[key] === settings2[key]);
 }
 
 function mergeEntryRecords<T extends object>(
