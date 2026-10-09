@@ -921,8 +921,8 @@ importers:
         specifier: ^1.0.5
         version: 1.0.5(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/react.ui.component-highlighter':
-        specifier: 0.2.9
-        version: 0.2.9(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+        specifier: 0.2.10
+        version: 0.2.10(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/react.ui.highlighter.component-metadata.bit-component-meta':
         specifier: 0.0.45
         version: 0.0.45(react-dom@19.2.7)(react@19.2.7)
@@ -23321,8 +23321,8 @@ importers:
   scopes/react/ui/highlighter-provider:
     dependencies:
       '@teambit/react.ui.component-highlighter':
-        specifier: 0.2.9
-        version: 0.2.9(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+        specifier: 0.2.10
+        version: 0.2.10(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react':
         specifier: ^16.0.0
         version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -34582,14 +34582,14 @@ packages:
       react: 19.1.0
       react-dom: 19.1.0
 
-  '@teambit/react.ui.component-highlighter@0.2.8':
-    resolution: {integrity: sha512-4gpQvhbgdrBPSZQhgDVKc6ka8lpk36eCOuhAYK5YnpUAqST8aUWh2+jbhL314Umuq2kQ7V8+M6KAqwSf6LK2qA==}
+  '@teambit/react.ui.component-highlighter@0.2.10':
+    resolution: {integrity: sha512-jztNtLx/6NxLe90LQtkkT4O/M3O9CaVs+Bp0N3GIXg40uFL9KlwS9VgbP9iYVnhbTyLWeKC6dTIhS1Mj4VFV7A==}
     peerDependencies:
       react: 19.2.7
       react-dom: 19.2.7
 
-  '@teambit/react.ui.component-highlighter@0.2.9':
-    resolution: {integrity: sha512-EiPpjWIRfFc+sYcuvpB0p1OwyGVfPddT5QXD3rOtdXz8DSg6Z9UbIWVAEw8Hk1/aPsOoK2GfKKqkCqAYdIql2w==}
+  '@teambit/react.ui.component-highlighter@0.2.8':
+    resolution: {integrity: sha512-4gpQvhbgdrBPSZQhgDVKc6ka8lpk36eCOuhAYK5YnpUAqST8aUWh2+jbhL314Umuq2kQ7V8+M6KAqwSf6LK2qA==}
     peerDependencies:
       react: 19.2.7
       react-dom: 19.2.7
@@ -77974,6 +77974,48 @@ snapshots:
       use-debounce: 6.0.1(react@19.2.7)
       uuid: 3.4.0
 
+  '@teambit/react.ui.component-highlighter@0.2.10(@types/react@19.2.18)(react-dom@19.2.7)(react@18.3.1)':
+    dependencies:
+      '@floating-ui/react-dom': 0.7.2(@types/react@19.2.18)(react-dom@19.2.7)(react@18.3.1)
+      '@teambit/base-ui.routing.native-link': 1.0.1(react@18.3.1)
+      '@teambit/component-id': 1.2.5
+      '@teambit/component.modules.component-url': file:scopes/component/component-url(react@18.3.1)
+      '@teambit/react.modules.dom-to-react': 0.2.1(react@18.3.1)
+      '@teambit/react.ui.highlighter.component-metadata.bit-component-meta': 0.0.45(react-dom@19.2.7)(react@18.3.1)
+      '@teambit/react.ui.hover-selector': 0.2.1(react@18.3.1)
+      '@tippyjs/react': 4.2.0(react-dom@19.2.7)(react@18.3.1)
+      classnames: 2.5.1
+      get-xpath: 3.3.0
+      lodash.compact: 3.0.1
+      react: 18.3.1
+      react-dom: 19.2.7(react@18.3.1)
+      url-join: 4.0.1
+      use-debounce: 8.0.4(react@18.3.1)
+      uuid: 10.0.0
+    transitivePeerDependencies:
+      - '@types/react'
+
+  '@teambit/react.ui.component-highlighter@0.2.10(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)':
+    dependencies:
+      '@floating-ui/react-dom': 0.7.2(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/base-ui.routing.native-link': 1.0.1(react@19.2.7)
+      '@teambit/component-id': 1.2.5
+      '@teambit/component.modules.component-url': file:scopes/component/component-url(react@19.2.7)
+      '@teambit/react.modules.dom-to-react': 0.2.1(react@19.2.7)
+      '@teambit/react.ui.highlighter.component-metadata.bit-component-meta': 0.0.45(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/react.ui.hover-selector': 0.2.1(react@19.2.7)
+      '@tippyjs/react': 4.2.0(react-dom@19.2.7)(react@19.2.7)
+      classnames: 2.5.1
+      get-xpath: 3.3.0
+      lodash.compact: 3.0.1
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+      url-join: 4.0.1
+      use-debounce: 8.0.4(react@19.2.7)
+      uuid: 10.0.0
+    transitivePeerDependencies:
+      - '@types/react'
+
   '@teambit/react.ui.component-highlighter@0.2.8(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)':
     dependencies:
       '@floating-ui/react-dom': 0.7.2(@types/react@19.2.18)(react-dom@18.3.1)(react@18.3.1)
@@ -77996,48 +78038,6 @@ snapshots:
       - '@types/react'
 
   '@teambit/react.ui.component-highlighter@0.2.8(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)':
-    dependencies:
-      '@floating-ui/react-dom': 0.7.2(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/base-ui.routing.native-link': 1.0.1(react@19.2.7)
-      '@teambit/component-id': 1.2.5
-      '@teambit/component.modules.component-url': 0.0.188(react@19.2.7)
-      '@teambit/react.modules.dom-to-react': 0.2.1(react@19.2.7)
-      '@teambit/react.ui.highlighter.component-metadata.bit-component-meta': 0.0.45(react-dom@19.2.7)(react@19.2.7)
-      '@teambit/react.ui.hover-selector': 0.2.1(react@19.2.7)
-      '@tippyjs/react': 4.2.0(react-dom@19.2.7)(react@19.2.7)
-      classnames: 2.5.1
-      get-xpath: 3.3.0
-      lodash.compact: 3.0.1
-      react: 19.2.7
-      react-dom: 19.2.7(react@19.2.7)
-      url-join: 4.0.1
-      use-debounce: 8.0.4(react@19.2.7)
-      uuid: 10.0.0
-    transitivePeerDependencies:
-      - '@types/react'
-
-  '@teambit/react.ui.component-highlighter@0.2.9(@types/react@19.2.18)(react-dom@19.2.7)(react@18.3.1)':
-    dependencies:
-      '@floating-ui/react-dom': 0.7.2(@types/react@19.2.18)(react-dom@19.2.7)(react@18.3.1)
-      '@teambit/base-ui.routing.native-link': 1.0.1(react@18.3.1)
-      '@teambit/component-id': 1.2.5
-      '@teambit/component.modules.component-url': 0.0.188(react@18.3.1)
-      '@teambit/react.modules.dom-to-react': 0.2.1(react@18.3.1)
-      '@teambit/react.ui.highlighter.component-metadata.bit-component-meta': 0.0.45(react-dom@19.2.7)(react@18.3.1)
-      '@teambit/react.ui.hover-selector': 0.2.1(react@18.3.1)
-      '@tippyjs/react': 4.2.0(react-dom@19.2.7)(react@18.3.1)
-      classnames: 2.5.1
-      get-xpath: 3.3.0
-      lodash.compact: 3.0.1
-      react: 18.3.1
-      react-dom: 19.2.7(react@18.3.1)
-      url-join: 4.0.1
-      use-debounce: 8.0.4(react@18.3.1)
-      uuid: 10.0.0
-    transitivePeerDependencies:
-      - '@types/react'
-
-  '@teambit/react.ui.component-highlighter@0.2.9(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)':
     dependencies:
       '@floating-ui/react-dom': 0.7.2(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/base-ui.routing.native-link': 1.0.1(react@19.2.7)
@@ -78435,7 +78435,7 @@ snapshots:
 
   '@teambit/react.ui.highlighter-provider@file:scopes/react/ui/highlighter-provider(@testing-library/dom@10.4.1)(react@18.3.1)':
     dependencies:
-      '@teambit/react.ui.component-highlighter': 0.2.9(@types/react@19.2.18)(react-dom@19.2.7)(react@18.3.1)
+      '@teambit/react.ui.component-highlighter': 0.2.10(@types/react@19.2.18)(react-dom@19.2.7)(react@18.3.1)
       '@testing-library/react': 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@18.3.1)
       '@types/node': 22.10.5
       '@types/react': 19.2.18
@@ -78449,7 +78449,7 @@ snapshots:
 
   '@teambit/react.ui.highlighter-provider@file:scopes/react/ui/highlighter-provider(@testing-library/dom@10.4.1)(react@19.2.7)':
     dependencies:
-      '@teambit/react.ui.component-highlighter': 0.2.9(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/react.ui.component-highlighter': 0.2.10(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@testing-library/react': 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.4)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
       '@types/node': 22.10.5
       '@types/react': 19.2.18
