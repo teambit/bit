@@ -1,0 +1,47 @@
+[
+  {
+    "name": "gcc-COPYING.RUNTIME",
+    "source": "https://raw.githubusercontent.com/gcc-mirror/gcc/releases/gcc-9.2.0/COPYING.RUNTIME",
+    "sha256": "9d6b43ce4d8de0c878bf16b54d8e7a10d9bd42b75178153e3af6a815bdc90f74"
+  },
+  {
+    "name": "gcc-COPYING3",
+    "source": "https://raw.githubusercontent.com/gcc-mirror/gcc/releases/gcc-9.2.0/COPYING3",
+    "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903"
+  },
+  {
+    "name": "llvm-LICENSE.TXT",
+    "source": "https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-22.1.6/LICENSE.TXT",
+    "sha256": "8d85c1057d742e597985c7d4e6320b015a9139385cff4cbae06ffc0ebe89afee"
+  },
+  {
+    "name": "musl-COPYRIGHT",
+    "source": "https://git.musl-libc.org/cgit/musl/plain/COPYRIGHT?h=v1.2.5",
+    "sha256": "f9bc4423732350eb0b3f7ed7e91d530298476f8fec0c6c427a1c04ade22655af"
+  },
+  {
+    "name": "oxc-MIT.txt",
+    "source": "https://raw.githubusercontent.com/oxc-project/oxc/7f56ec9301e7327b4402c3010c87803b58b6ea30/LICENSE",
+    "sha256": "95ced5ecf1133fbf41d409b5555c86c344f83f3b019926057ddbc07cfdcc27b3"
+  },
+  {
+    "name": "oxc-index-MIT.txt",
+    "source": "https://raw.githubusercontent.com/oxc-project/oxc-index-vec/8e09fe324eb6df02f56e4eacdfac958930300380/LICENSE",
+    "sha256": "95ced5ecf1133fbf41d409b5555c86c344f83f3b019926057ddbc07cfdcc27b3"
+  },
+  {
+    "name": "rust-COPYRIGHT",
+    "source": "https://raw.githubusercontent.com/rust-lang/rust/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/COPYRIGHT",
+    "sha256": "172020dbfd5b53a226dfde77616190a48dcff519b0bc0e6deb91a8450782c4af"
+  },
+  {
+    "name": "rust-LICENSE-APACHE",
+    "source": "https://raw.githubusercontent.com/rust-lang/rust/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/LICENSE-APACHE",
+    "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+  },
+  {
+    "name": "rust-LICENSE-MIT",
+    "source": "https://raw.githubusercontent.com/rust-lang/rust/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/LICENSE-MIT",
+    "sha256": "b71bd43a069ca0641a9ecfe585ca7b3c53b5cc1608f8b68321168698e28b5ea1"
+  }
+]

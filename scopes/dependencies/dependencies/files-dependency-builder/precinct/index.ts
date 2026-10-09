@@ -22,6 +22,8 @@ import detectiveTypeScript from '@teambit/typescript.deps-detectors.detective-ty
 
 import type { DependencyDetector } from '@teambit/dependency-resolver';
 import { DetectorHook } from '@teambit/dependency-resolver';
+import type { RustDependencyScannerSession } from '../rust-scanner/session';
+import type { RustScannerOutcome } from '../rust-scanner/types';
 
 /**
  * The file info object.
@@ -36,10 +38,12 @@ type FileInfo = {
   type: string;
   ast: any;
   filename: string;
+  customDetector?: boolean;
 };
 
 type Options = {
   envDetectors?: DependencyDetector[];
+  rustScannerSession?: RustDependencyScannerSession;
   useContent?: boolean;
   includeCore?: boolean;
   type?: string;
@@ -125,6 +129,7 @@ const getDetector = (fileInfo: FileInfo, options?: Options): Detective | undefin
   if (options?.envDetectors) {
     for (const detector of options.envDetectors) {
       if (detector.isSupported({ ext, filename })) {
+        fileInfo.customDetector = true;
         fileInfo.type = detector.type || '';
         return detector.detect as Detective;
       }
@@ -137,6 +142,7 @@ const getDetector = (fileInfo: FileInfo, options?: Options): Detective | undefin
   if (detectorHook.isSupported(ext, filename)) {
     const detector = detectorHook.getDetector(ext, filename);
     if (detector) {
+      fileInfo.customDetector = true;
       fileInfo.type = ext;
       return detector.detect as Detective;
     }
@@ -194,8 +200,90 @@ const normalizeDeps = (deps: BuiltinDeps, includeCore?: boolean): string[] => {
   return includeCore ? normalizedDeps : normalizedDeps.filter((d) => !isBuiltin(d));
 };
 
+const hasSupportedRustOptions = (filename: string, options: Options = {}): boolean => {
+  const ext = path.extname(filename);
+  if (!jsExt.includes(ext) && !['.ts', '.tsx', '.mts', '.cts'].includes(ext)) return false;
+  return Object.keys(options).every((key) => {
+    if (['includeCore', 'envDetectors', 'rustScannerSession'].includes(key)) return true;
+    // Precinct itself adds this flag for TSX; Rust already selects TSX by extension.
+    if (key === 'ts') {
+      const tsOptions = options.ts;
+      if (!tsOptions || typeof tsOptions !== 'object' || Array.isArray(tsOptions)) return false;
+      if (![Object.prototype, null].includes(Object.getPrototypeOf(tsOptions))) return false;
+      return Object.keys(tsOptions).every((option) => option === 'jsx' && ext === '.tsx' && tsOptions.jsx === true);
+    }
+    return false;
+  });
+};
+
+/** Only prefetch contexts whose built-in dispatch is known without calling custom predicates. */
+export const isRustEligible = (filename: string, options: Options = {}): boolean =>
+  !options.envDetectors?.length && !DetectorHook.hooks.length && hasSupportedRustOptions(filename, options);
+
+const nativeDependencies = (
+  filename: string,
+  outcome: RustScannerOutcome | undefined,
+  options: Options
+): string[] | undefined => {
+  if (outcome?.status === 'ok') return normalizeDeps(outcome.dependencies, options.includeCore);
+  if (outcome?.status === 'parse_error') {
+    // dependency-tree converts this to the same PARSING_ERROR issue as legacy extraction.
+    throw new Error(outcome.diagnostics.join('\n') || `could not parse ${filename}`);
+  }
+  debug(
+    `Rust extraction fallback for ${filename}: ${outcome?.status || options.rustScannerSession?.unavailableReason || 'result unavailable'}`
+  );
+  return undefined;
+};
+
+// Native diagnostics do not carry the legacy parser's error class and locations, and Oxc is stricter
+// than the legacy parsers. On this rare path only, rerun the same built-in detective on the same source:
+// its canonical error is thrown, and if it accepts the source, its result is returned, so the native
+// backend never reports a parse failure legacy extraction would not.
+const legacyResultForParseError = async (
+  outcome: RustScannerOutcome,
+  filename: string,
+  options: Options,
+  fileInfo?: FileInfo,
+  selectedDetector?: Detective
+): Promise<string[]> => {
+  const nativeError = new Error(outcome.diagnostics.join('\n') || `could not parse ${filename}`);
+  let info = fileInfo;
+  if (!info) {
+    try {
+      info = getFileInfo(filename);
+    } catch {
+      // The source may disappear after prefetch. Diagnostic enrichment must not
+      // replace an established parse failure with a new file-read failure.
+      throw nativeError;
+    }
+  }
+  // Prefetch is restricted to built-in contexts. Inline dispatch has already
+  // selected its detector; never repeat custom predicates or read the file again.
+  const detective = fileInfo
+    ? selectedDetector || getJsDetector(info, options)
+    : typeToDetective[extToType[info.ext]] || getJsDetector(info, options);
+  if (!detective) throw nativeError;
+  if (!fileInfo) {
+    info.type = extToType[info.ext] || info.type;
+    if (info.ext === '.tsx') options.ts = { ...options.ts, jsx: true };
+  }
+  const deps = await detective(info.ast, options[info.type]);
+  debug(`Rust parse_error for ${filename} accepted by legacy parsing; using the legacy result`);
+  return normalizeDeps(deps, options.includeCore);
+};
+
 const getDepsFromFile = async (filename: string, options?: Options): Promise<string[]> => {
   const normalizedOptions: Options = assign({ includeCore: true }, options || {});
+  const session = normalizedOptions.rustScannerSession;
+  const prefetchedContext = session && isRustEligible(filename, normalizedOptions);
+  if (prefetchedContext) {
+    await session.prefetch([filename]);
+    const outcome = session.get(filename);
+    if (outcome?.status === 'parse_error') return legacyResultForParseError(outcome, filename, normalizedOptions);
+    const deps = nativeDependencies(filename, outcome, normalizedOptions);
+    if (deps !== undefined) return deps;
+  }
   const fileInfo = getFileInfo(filename);
   if (
     typeof fileInfo.content === 'string' &&
@@ -205,7 +293,23 @@ const getDepsFromFile = async (filename: string, options?: Options): Promise<str
     return [];
   }
 
-  const detective = getDetector(fileInfo, normalizedOptions) || getJsDetector(fileInfo, normalizedOptions);
+  const selectedDetector = getDetector(fileInfo, normalizedOptions);
+  if (
+    session &&
+    !prefetchedContext &&
+    !fileInfo.customDetector &&
+    hasSupportedRustOptions(filename, normalizedOptions)
+  ) {
+    // Custom predicates have already run in their original order. Use the exact source read
+    // above, so native extraction neither reruns predicates nor reads another source snapshot.
+    const outcome = await session.scanSource(filename, fileInfo.content as string);
+    if (outcome?.status === 'parse_error') {
+      return legacyResultForParseError(outcome, filename, normalizedOptions, fileInfo, selectedDetector);
+    }
+    const deps = nativeDependencies(filename, outcome, normalizedOptions);
+    if (deps !== undefined) return deps;
+  }
+  const detective = selectedDetector || getJsDetector(fileInfo, normalizedOptions);
   if (!detective) {
     debug(`skipping unsupported file ${filename}`);
     return [];

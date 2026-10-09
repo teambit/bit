@@ -1,0 +1,313 @@
+name: Rust dependency scanner
+
+on:
+  push:
+    branches: [rust]
+    paths:
+      - 'native/**'
+      - 'scripts/rust/**'
+      - 'scripts/rust-dependency-analysis/discovery*'
+      - '.circleci/config.yml'
+      - 'scripts/rust-dependency-analysis/session*'
+      - 'scripts/rust-dependency-analysis/artifacts/**'
+      - 'docs/rust/standalone-artifacts.md'
+      - 'scripts/rust-dependency-analysis/session-fixtures/**'
+      - 'scripts/rust-dependency-analysis/ci/**'
+      - 'scripts/rust-dependency-analysis/*scope*'
+      - 'scripts/rust-dependency-analysis/integration*'
+      - 'scripts/rust-dependency-analysis/compare*'
+      - 'scripts/rust-dependency-analysis/fixtures.cjs'
+      - 'scripts/rust-dependency-analysis/*memory*'
+      - 'scripts/rust-dependency-analysis/legacy-session-control*'
+      - 'scripts/rust-dependency-analysis/command-workspace*'
+      - 'scripts/rust-dependency-analysis/command-control-trace.cjs'
+      - 'scripts/rust-dependency-analysis/command-profile*'
+      - 'scopes/dependencies/dependencies/files-dependency-builder/rust-scanner/**'
+      - 'scopes/dependencies/dependencies/files-dependency-builder/**'
+      - 'scopes/dependencies/dependency-resolver/detector-hook.ts'
+      - '.github/workflows/rust-dependency-scanner.yml'
+  pull_request:
+    branches: [rust]
+    paths:
+      - 'native/**'
+      - 'scripts/rust/**'
+      - 'scripts/rust-dependency-analysis/discovery*'
+      - '.circleci/config.yml'
+      - 'scripts/rust-dependency-analysis/session*'
+      - 'scripts/rust-dependency-analysis/artifacts/**'
+      - 'docs/rust/standalone-artifacts.md'
+      - 'scripts/rust-dependency-analysis/session-fixtures/**'
+      - 'scripts/rust-dependency-analysis/ci/**'
+      - 'scripts/rust-dependency-analysis/*scope*'
+      - 'scripts/rust-dependency-analysis/integration*'
+      - 'scripts/rust-dependency-analysis/compare*'
+      - 'scripts/rust-dependency-analysis/fixtures.cjs'
+      - 'scripts/rust-dependency-analysis/*memory*'
+      - 'scripts/rust-dependency-analysis/legacy-session-control*'
+      - 'scripts/rust-dependency-analysis/command-workspace*'
+      - 'scripts/rust-dependency-analysis/command-control-trace.cjs'
+      - 'scripts/rust-dependency-analysis/command-profile*'
+      - 'scopes/dependencies/dependencies/files-dependency-builder/rust-scanner/**'
+      - 'scopes/dependencies/dependencies/files-dependency-builder/**'
+      - 'scopes/dependencies/dependency-resolver/detector-hook.ts'
+      - '.github/workflows/rust-dependency-scanner.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rust-scanner-${{ github.event.pull_request.number || github.ref }}
+  # Superseded PR pushes are cancelled; every commit on `rust` keeps its result.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  integration:
+    name: Real dependency pipeline and scoped helpers (Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+      - name: Install locked isolated detector and resolver dependencies
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/rust-scanner-integration-tools"
+          cp scripts/rust-dependency-analysis/ci/package.json scripts/rust-dependency-analysis/ci/package-lock.json "$RUNNER_TEMP/rust-scanner-integration-tools/"
+          npm ci --prefix "$RUNNER_TEMP/rust-scanner-integration-tools" --ignore-scripts --legacy-peer-deps --no-audit --no-fund
+          node scripts/rust-dependency-analysis/ci/prepare.cjs "$RUNNER_TEMP/rust-scanner-integration-tools"
+      - name: Validate batching-only control and isolated workspace guards
+        env:
+          BIT_LEGACY_ROOT: ${{ runner.temp }}/rust-scanner-integration-tools
+        run: node --test scripts/rust-dependency-analysis/legacy-session-control.test.cjs scripts/rust-dependency-analysis/command-workspace.test.cjs scripts/rust-dependency-analysis/command-profile-trace.test.cjs
+      # Restore only: this job builds just the binary and finishes first, so saving under the
+      # shared key would leave the Rust test job a cache without its test artifacts.
+      - name: Restore Rust build cache from the Rust test job
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            native/target/debug
+          key: rust-scanner-test-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('native/rust-toolchain.toml', 'native/Cargo.lock') }}
+          restore-keys: rust-scanner-test-${{ runner.os }}-${{ runner.arch }}-
+      - name: Build real scanner for pipeline validation
+        working-directory: native
+        run: cargo build --locked --workspace
+      - name: Validate actual dependency trees and scoped helper lifetimes
+        env:
+          BIT_LEGACY_ROOT: ${{ runner.temp }}/rust-scanner-integration-tools
+          BIT_TEST_NATIVE_SCANNER: ${{ github.workspace }}/native/target/debug/bit-dependency-scanner
+        run: |
+          node --test scripts/rust-dependency-analysis/compare.test.cjs scripts/rust-dependency-analysis/integration.test.cjs scripts/rust-dependency-analysis/command-scope.test.cjs
+          node scripts/rust-dependency-analysis/compare.cjs "$BIT_TEST_NATIVE_SCANNER"
+      - name: Validate Linux simultaneous process memory sampler
+        run: node --test scripts/rust-dependency-analysis/process-tree-memory.test.cjs
+
+  session:
+    name: Scanner session lifecycle tests (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+      - name: Install isolated TypeScript test compiler
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/rust-scanner-test-tools"
+          echo '{"private":true}' > "$RUNNER_TEMP/rust-scanner-test-tools/package.json"
+          npm install --prefix "$RUNNER_TEMP/rust-scanner-test-tools" --no-save --package-lock=false --ignore-scripts typescript@5.9.2
+      - name: Build real scanner for transport tests
+        working-directory: native
+        run: cargo build --locked --workspace
+      - name: Test helper protocol and lifecycle with real scanner
+        env:
+          BIT_LEGACY_ROOT: ${{ runner.temp }}/rust-scanner-test-tools
+          BIT_NATIVE_SCANNER_REQUIRED: '1'
+        run: node --test scripts/rust-dependency-analysis/session.test.cjs
+
+  lint:
+    name: pnpm Rust formatting and lints
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: native
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+      - name: Cache Cargo and formatter artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin/cargo-dylint
+            ~/.cargo/bin/dylint-link
+            ~/.dylint_drivers
+            ~/.cache/pnpm/rustfmt
+            native/target/debug
+          key: rust-scanner-lint-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('native/rust-toolchain.toml', 'native/Cargo.lock', 'native/Cargo.toml', 'scripts/rust/rustfmt.json') }}-dylint-6.0.4
+          # Keeps the installed Dylint binaries and registry when only the lockfile changes.
+          restore-keys: rust-scanner-lint-${{ runner.os }}-
+      - name: Cache pinned perfectionist library
+        uses: actions/cache@v4
+        with:
+          path: native/target/dylint
+          key: rust-scanner-perfectionist-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('native/rust-toolchain.toml', 'native/dylint.toml') }}-dylint-6.0.4
+      - name: Install pinned Rust and Clippy
+        run: |
+          rustup show
+          rustup component add clippy
+      - name: Check pnpm's pinned formatter
+        run: node ../scripts/rust/rustfmt.mjs --all -- --check
+      - name: Check Clippy
+        run: cargo clippy --locked --workspace --all-targets -- -D warnings
+      - name: Install pnpm's Dylint version
+        run: |
+          if ! cargo dylint --version 2>/dev/null | grep -Fxq 'cargo-dylint 6.0.4' || ! command -v dylint-link >/dev/null; then
+            cargo install --locked --force --version 6.0.4 cargo-dylint dylint-link
+          fi
+      - name: Check perfectionist
+        env:
+          RUSTFLAGS: '-D warnings'
+        run: cargo dylint --all -- --all-targets --workspace
+      - name: Check Rust documentation
+        env:
+          RUSTDOCFLAGS: '-D warnings'
+        run: cargo doc --locked --workspace --no-deps
+
+  test:
+    name: Rust tests (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-15-intel, macos-15, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: native
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Cache dependencies and build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            native/target/debug
+          key: rust-scanner-test-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('native/rust-toolchain.toml', 'native/Cargo.lock') }}
+          restore-keys: rust-scanner-test-${{ runner.os }}-${{ runner.arch }}-
+      - name: Install pinned Rust
+        run: rustup show
+      - name: Test scanner
+        run: cargo test --locked --workspace
+      - name: Validate deterministic packaging and archive safety
+        run: python ../scripts/rust-dependency-analysis/artifacts/test_artifacts.py
+      - name: Package standalone scanner
+        run: python ../scripts/rust-dependency-analysis/artifacts/package-helper.py package
+      - name: Extract and smoke-test standalone artifact
+        run: python ../scripts/rust-dependency-analysis/artifacts/package-helper.py smoke
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.0
+      - name: Install isolated packaged-discovery test compiler
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/rust-scanner-package-tools"
+          npm install --prefix "$RUNNER_TEMP/rust-scanner-package-tools" --no-save --package-lock=false --ignore-scripts typescript@5.9.2 debug@4.4.0
+      - name: Validate real packaged installation on minimum Node
+        shell: bash
+        env:
+          PYTHON: python
+          BIT_LEGACY_ROOT: ${{ runner.temp }}/rust-scanner-package-tools
+        run: |
+          export BIT_TEST_PACKAGED_ARCHIVE="$(find dist -maxdepth 1 -name '*.tar.gz' | head -1)"
+          node --test ../scripts/rust-dependency-analysis/discovery.test.cjs
+          python ../scripts/rust-dependency-analysis/artifacts/test_install.py
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+      - name: Validate real packaged installation on repository CI Node
+        shell: bash
+        env:
+          PYTHON: python
+          BIT_LEGACY_ROOT: ${{ runner.temp }}/rust-scanner-package-tools
+        run: |
+          export BIT_TEST_PACKAGED_ARCHIVE="$(find dist -maxdepth 1 -name '*.tar.gz' | head -1)"
+          node --test ../scripts/rust-dependency-analysis/discovery.test.cjs
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Validate real packaged installation on Node 24
+        shell: bash
+        env:
+          PYTHON: python
+          BIT_LEGACY_ROOT: ${{ runner.temp }}/rust-scanner-package-tools
+        run: |
+          export BIT_TEST_PACKAGED_ARCHIVE="$(find dist -maxdepth 1 -name '*.tar.gz' | head -1)"
+          node --test ../scripts/rust-dependency-analysis/discovery.test.cjs
+      - name: Upload validated experimental scanner artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-scanner-${{ runner.os }}-${{ runner.arch }}-${{ github.sha }}
+          path: native/dist/*
+          if-no-files-found: error
+          retention-days: 14
+
+  musl:
+    name: Packaged scanner on Alpine (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['22.13.0', '22.22.0', '24']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install musl linker and pinned target
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+          cd native
+          rustup target add x86_64-unknown-linux-musl
+          cargo fetch --locked
+      - name: Build and package actual musl release scanner
+        working-directory: native
+        run: |
+          python3 ../scripts/rust-dependency-analysis/artifacts/package-helper.py package --target x86_64-unknown-linux-musl
+      - name: Install, discover and execute packaged helper in actual Alpine
+        run: |
+          docker run --rm -v "$GITHUB_WORKSPACE:/repository:ro" -w /repository -e CI=1 "node:${{ matrix.node }}-alpine" sh -ec '
+            apk add --no-cache python3
+            mkdir /tmp/package-tools
+            npm install --prefix /tmp/package-tools --no-save --package-lock=false --ignore-scripts typescript@5.9.2 debug@4.4.0
+            export BIT_LEGACY_ROOT=/tmp/package-tools
+            export BIT_TEST_PACKAGED_ARCHIVE="$(find /repository/native/dist -name "*.tar.gz" | head -1)"
+            node --test scripts/rust-dependency-analysis/discovery.test.cjs
+            python3 scripts/rust-dependency-analysis/artifacts/test_install.py
+          '

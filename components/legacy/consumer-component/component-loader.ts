@@ -76,6 +76,10 @@ export class ComponentLoader {
 
   static loadDeps: LoadDepsFunc;
 
+  // Installed by the dependency aspect so the legacy loader need not import its
+  // runtime. Nested component loads inherit the operation's asynchronous scope.
+  static runDependencyLoadScope: <T>(operation: () => Promise<T>) => Promise<T> = (operation) => operation();
+
   clearComponentsCache() {
     this.componentsCache.deleteAll();
     this.cacheResolvedDependencies = {};
@@ -172,25 +176,27 @@ export class ComponentLoader {
     const allComponents: Component[] = [];
     const shouldRunInParallel = await this.shouldRunInParallel(idsToProcess);
     logger.debug(`loading ${idsToProcess.length} components in parallel: ${shouldRunInParallel.toString()}`);
-    await pMapPool(
-      idsToProcess,
-      async (id: ComponentID) => {
-        const component = await this.loadOne(
-          id,
-          throwOnFailure,
-          invalidComponents,
-          removedComponents,
-          loadOptsWithDefaults
-        );
-        if (component) {
-          if (storeInCache) {
-            this.componentsCache.set(component.id.toString(), component);
+    await ComponentLoader.runDependencyLoadScope(() =>
+      pMapPool(
+        idsToProcess,
+        async (id: ComponentID) => {
+          const component = await this.loadOne(
+            id,
+            throwOnFailure,
+            invalidComponents,
+            removedComponents,
+            loadOptsWithDefaults
+          );
+          if (component) {
+            if (storeInCache) {
+              this.componentsCache.set(component.id.toString(), component);
+            }
+            logger.trace(`ComponentLoader', 'Finished loading the component "${component.id.toString()}"`);
+            allComponents.push(component);
           }
-          logger.trace(`ComponentLoader', 'Finished loading the component "${component.id.toString()}"`);
-          allComponents.push(component);
-        }
-      },
-      { concurrency: shouldRunInParallel ? concurrentComponentsLimit() : 1 }
+        },
+        { concurrency: shouldRunInParallel ? concurrentComponentsLimit() : 1 }
+      )
     );
 
     return { components: allComponents.concat(alreadyLoadedComponents), invalidComponents, removedComponents };

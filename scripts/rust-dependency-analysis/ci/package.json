@@ -1,0 +1,30 @@
+{
+  "name": "bit-rust-dependency-integration-test-tools",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@teambit/mdx.deps-detectors.detective-mdx": "0.0.5",
+    "@teambit/node.deps-detectors.detective-es6": "0.0.6",
+    "@teambit/styling.deps-detectors.detective-css": "0.0.6",
+    "@teambit/styling.deps-detectors.detective-less": "0.0.6",
+    "@teambit/styling.deps-detectors.detective-sass": "0.0.9",
+    "@teambit/styling.deps-detectors.detective-scss": "0.0.9",
+    "@teambit/styling.deps-lookups.lookup-styling": "0.0.4",
+    "@teambit/typescript.deps-detectors.detective-typescript": "0.0.10",
+    "@teambit/typescript.deps-lookups.lookup-typescript": "0.0.2",
+    "debug": "4.3.4",
+    "detective-amd": "3.0.1",
+    "detective-stylus": "1.0.0",
+    "fs-extra": "10.0.0",
+    "module-definition": "3.3.1",
+    "node-source-walk": "4.2.0",
+    "resolve-dependency-path": "2.0.0",
+    "stylus-lookup": "3.0.2",
+    "typescript": "5.9.2",
+    "postcss": "8.4.45"
+  },
+  "overrides": {
+    "@typescript-eslint/typescript-estree": "8.39.0",
+    "@babel/parser": "7.29.8"
+  }
+}

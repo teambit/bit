@@ -1,0 +1,42 @@
+# Rust dependency extraction compatibility harness
+
+This standalone harness uses the installed Bit built-in JS and TypeScript detectives as the reference. It changes no production dispatch or package dependencies. Run from an installed checkout, or set `BIT_LEGACY_ROOT` to an installed Bit checkout:
+
+```sh
+node --test scripts/rust-dependency-analysis/compare.test.cjs
+node scripts/rust-dependency-analysis/compare.cjs
+node scripts/rust-dependency-analysis/compare.cjs /absolute/path/to/rust-engine
+node scripts/rust-dependency-analysis/compare.cjs --protocol /absolute/path/to/rust-engine
+node scripts/rust-dependency-analysis/compare.cjs --corpus /absolute/path/to/rust-engine
+node scripts/rust-dependency-analysis/compare.cjs --corpus /absolute/path/to/rust-engine scopes/dependencies/dependencies/files-dependency-builder/precinct/index.ts
+node scripts/rust-dependency-analysis/compare.cjs --corpus-reference scopes/dependencies/dependencies/files-dependency-builder/precinct/index.ts
+```
+
+With no arguments, the harness prints fixture reference results. Fixture comparison sends version 1 NDJSON requests through one engine process and exits unsuccessfully on any discrepancy; extra arguments are passed to the executable, for example `--threads 4`. Protocol mode checks disk reads, missing files, directories, inline-source precedence, malformed JSON, invalid versions, unknown fields, and recovery on subsequent requests.
+
+Corpus mode compares actual disk paths in batches of 32. Supply paths relative to this checkout or absolute paths. With no paths it uses sorted `git ls-files` selection of JS/JSX/CJS/MJS/TS/TSX/MTS/CTS files, including existing precinct and other repository fixtures. Paths are reproducible for a given checkout; contents reflect working-tree edits. Corpus reference mode emits one JSON record per file and uses the same selection. Summary counts distinguish exact comparisons, explicit native fallbacks, failures, and legacy parse errors, with fallback reasons and sample paths. Corpus fallback is accepted only when native returns `unsupported`, empty dependencies, and diagnostics; it is reported separately from exact parity. Fixed fixtures have stricter declared fallback expectations so a regression to unsupported cannot silently pass.
+
+Requests have `{ version: 1, id, files: [{ path, source? }], options?: {} }`; responses have `{ version: 1, id, files: [{ path, status, dependencies, diagnostics }] }`. File statuses are `ok`, `parse_error`, `read_error`, and `unsupported`. Invalid requests return top-level `invalid_request`. Dependencies are a record keyed by specifier with optional `importSpecifiers` and `isTypeImport` matching the legacy detector. Diagnostic wording is not compared. TS parse failures return `parse_error`; JS parse failures explicitly fall back to preserve Babel/Flow syntax compatibility. Neither may return partial successful extraction.
+
+The comparison checks ordered dependency keys consumed by precinct, then raw metadata. Precinct currently normalizes built-in results to keys, so metadata parity is a separate requirement for future integration. Undefined metadata fields are omitted when crossing JSON, matching legacy serialization for string-named imports/exports. The reference implements precinct's leading `@bit-no-check` short circuit, core filtering, and JS module classification before dispatch: AMD is unsupported; unclassified files (such as a lone `require.resolve`) yield no dependencies. Detectives receive only per-type options, with `jsx: true` added for TSX.
+
+Fixtures cover import/export aliases, type metadata, duplicates, dynamic imports (including dynamic-import-only modules), require calls, JSX in `.js`, Flow, syntax errors, comments, ignore directives, Angular assets, core filtering, optional calls and members (Babel types every call after a chain's first `?.` as `OptionalCallExpression`; ESTree does not), parenthesized callees, computed `import.meta` resolution, and string-named metadata. Existing precinct JS fixtures run with actual source plus explicitly named variants removing a leading `@bit-no-check` to exercise otherwise disabled imports. AMD, assignment classification, custom detectors, CSS, Angular decorators, nonempty options, TS nonstring literal calls, nonstring dynamic import sources, integer-like specifiers, Flow, and JS parse failures explicitly require native fallback. Legacy coerces nonstring literals into dependency keys (TS `require(123)`, and `import(5)` in both languages; JS ignores nonstring `require`), and JS objects enumerate integer-like keys first, so neither can be reproduced in order. Snapshot mode still records actual legacy results. The custom-detector flag is a protocol test marker, not a serialized detector implementation.
+
+Validation against the hardened prototype: eight harness/reference tests and all 120 fixture comparisons pass. The tracked corpus at this revision contains 3,327 files: 3,298 exact comparisons, 29 explicit fallbacks, and zero discrepancies. Fallbacks comprise 25 classification cases, three decorators/namespace/attributes cases, and one JS syntax case. This measures extraction compatibility and fallback coverage, not command speed.
+
+This does not replace precinct integration tests. Environment/global detector registration, resolution, source locations, arbitrary parser options, invalid UTF-8 file behavior, and workspace command timing need further coverage. Expand fixtures as gaps are found; do not silently bless mismatches as new expected output.
+
+For current expanded validation, see [the compatibility checklist](../../docs/rust/compatibility-checklist.md). The prototype-key cases execute the actual detective before checking conservative native fallback, including legacy empty outputs and metadata RangeErrors. Malformed TS integration checks canonical error fields and inherited locations, not only issue codes.
+
+Run the historical suites and cache guards using an installed Bit package graph without installing into the checkout:
+
+```sh
+BIT_LEGACY_ROOT=/path/to/installed/bit node scripts/rust-dependency-analysis/legacy-suites.cjs
+BIT_LEGACY_ROOT=/path/to/installed/bit node --test scripts/rust-dependency-analysis/cache-invalidation.test.cjs
+```
+
+The command configuration, many-edit and syntax drivers require an owned disposable private CLI built by `command-build.cjs`; they mutate and restore only that private workspace. They are explicit local validation, not lightweight CI jobs. Use `BIT_COMMAND_BENCH_MUTATIONS=many-sources` with `command-invalidation-benchmark.cjs` for 16 component edits. `command-configuration-benchmark.cjs <private-cli> <native> <report.json>` measures resolved-import, component-policy and ignored untracked TSconfig cases. `command-syntax-proof.cjs` uses the same arguments and requires the diagnostic enrichment source to have been compiled into that private CLI first.
+
+## Keep generated results out of Git
+
+Write benchmark JSON, profiles, and raw test logs outside the checkout, for example `/tmp/bit-rust-results.json`. Retain only compact Markdown summaries and reproducible correctness fixtures in the source repository. Use CI artifacts or a separate evidence repository for raw data that needs to be shared; see [the artifact policy](../../docs/rust/README.md#benchmark-artifacts).

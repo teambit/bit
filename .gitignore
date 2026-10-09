@@ -85,3 +85,7 @@ releases-docs/temp-files/
 
 # bundle stats written by BIT_UI_BUNDLE_STATS (see scripts/analyze-bundle.mjs)
 bundle-stats/
+
+# Generated Rust benchmark evidence belongs outside the source repository.
+/docs/rust/*.json
+/docs/rust/*.log
