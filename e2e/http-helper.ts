@@ -103,8 +103,14 @@ export class HttpHelper {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.httpProcess.stderr.on('data', (data) => {
         if (this.helper.debugMode) console.log(`stderr: ${data}`);
-        stderrData += data.toString();
-        this.stderr += data.toString();
+        const str = data.toString();
+        stderrData += str;
+        // `this.stderr` backs the "clean startup" assertions, so known-benign noise (e.g. Node's own
+        // deprecation warnings) is filtered here rather than in the raw `stderrData` used for debugging.
+        this.stderr += str
+          .split('\n')
+          .filter((line) => !this.shouldIgnoreHttpError(line))
+          .join('\n');
       });
       this.httpProcess.on('close', (code) => {
         if (this.helper.debugMode) console.log(`child process exited with code ${code}`);
@@ -219,7 +225,10 @@ export class HttpHelper {
   }
   shouldIgnoreHttpError(data: string): boolean {
     const msgToIgnore = ['@rollup/plugin-replace'];
-    return msgToIgnore.some((str) => data.startsWith(str));
+    // Node's own runtime warnings (e.g. the `url.parse()` DEP0169 notice added in Node 24, whose text
+    // contains the word "errors") are not startup failures and shouldn't trip the "clean stderr" checks.
+    const patternsToIgnore = [/\(node:\d+\)\s+\[\w+\]\s+(Deprecation)?Warning:/];
+    return msgToIgnore.some((str) => data.startsWith(str)) || patternsToIgnore.some((re) => re.test(data));
   }
 }
 
