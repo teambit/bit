@@ -223,9 +223,10 @@ describe('convertLockfileToGraph simple case', () => {
     // The lockfile records no pnpmfileChecksum. Whether the graph then has the
     // property set to undefined or not at all depends on how the class is
     // compiled, so it is checked on its own.
-    const { pnpmfileChecksum, lockfileSettings, ...graphFields } = graph;
+    const { pnpmfileChecksum, lockfileSettings, overrides, ...graphFields } = graph;
     expect(pnpmfileChecksum).to.equal(undefined);
     expect(lockfileSettings).to.equal(undefined);
+    expect(overrides).to.equal(undefined);
     expect({
       ...graphFields,
       packages: Object.fromEntries(graph.packages.entries()),
@@ -1229,14 +1230,14 @@ describe('pnpmfileChecksum', () => {
   }
 
   it('should be kept from the lockfile to the graph and back', async () => {
-    const graph = convertLockfileToGraph(createLockfile('bit-1'), {
+    const graph = convertLockfileToGraph(createLockfile('hooks-1'), {
       componentRelativeDir: componentDir,
       componentIdByPkgName: new Map(),
     });
-    expect(graph.pnpmfileChecksum).to.equal('bit-1');
+    expect(graph.pnpmfileChecksum).to.equal('hooks-1');
 
     const lockfile = await graphToLockfile(DependenciesGraph.deserialize(graph.serialize())!);
-    expect(lockfile.pnpmfileChecksum).to.equal('bit-1');
+    expect(lockfile.pnpmfileChecksum).to.equal('hooks-1');
   });
 
   it('should stay unset for a graph saved without one', async () => {
@@ -1248,6 +1249,62 @@ describe('pnpmfileChecksum', () => {
 
     const lockfile = await graphToLockfile(graph);
     expect(lockfile).not.to.have.property('pnpmfileChecksum');
+  });
+
+  it("should restore the checksum of Bit's readPackage hooks as the overrides that replaced them", async () => {
+    const graph = convertLockfileToGraph(createLockfile('bit-1'), {
+      componentRelativeDir: componentDir,
+      componentIdByPkgName: new Map(),
+    });
+
+    const lockfile = await graphToLockfile(DependenciesGraph.deserialize(graph.serialize())!);
+    expect(lockfile).not.to.have.property('pnpmfileChecksum');
+    expect(lockfile.overrides).to.eql({ '@teambit/legacy@*': '-', '@teambit/harmony@*': '-' });
+  });
+});
+
+describe('lockfile overrides', () => {
+  const componentDir = 'comps/comp1';
+  const overrides = { '@teambit/legacy@*': '-', react: '19.1.0' };
+
+  function createLockfile(lockfileOverrides?: Record<string, string>): BitLockfileFile {
+    return {
+      lockfileVersion: '9.0',
+      overrides: lockfileOverrides,
+      importers: {
+        [componentDir]: {
+          dependencies: { foo: { version: '1.0.0', specifier: '1.0.0' } },
+        },
+      },
+      packages: {
+        'foo@1.0.0': { resolution: { integrity: 'sha512-aaa' } },
+      },
+      snapshots: {
+        'foo@1.0.0': {},
+      },
+    } as BitLockfileFile;
+  }
+
+  async function roundTrip(lockfile: BitLockfileFile) {
+    const graph = convertLockfileToGraph(lockfile, {
+      componentRelativeDir: componentDir,
+      componentIdByPkgName: new Map(),
+    });
+    return convertGraphToLockfile(DependenciesGraph.deserialize(graph.serialize())!, {
+      manifests: {
+        [path.resolve(componentDir)]: { dependencies: { foo: '1.0.0' } },
+      },
+      rootDir: process.cwd(),
+      resolve: () => ({ resolution: { integrity: '0000' } }) as any,
+    });
+  }
+
+  it('should be kept from the lockfile to the graph and back', async () => {
+    expect((await roundTrip(createLockfile(overrides))).overrides).to.eql(overrides);
+  });
+
+  it('should stay unset for a lockfile without overrides', async () => {
+    expect(await roundTrip(createLockfile())).not.to.have.property('overrides');
   });
 });
 

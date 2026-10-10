@@ -266,7 +266,7 @@ describe('dependency-resolver extension', function () {
       });
     });
   });
-  describe('readPackage hooks checksum', function () {
+  describe('install without readPackage hooks', function () {
     let lockfile: any;
     before(() => {
       helper = new Helper();
@@ -278,12 +278,15 @@ describe('dependency-resolver extension', function () {
     after(() => {
       helper.scopeHelper.destroy();
     });
-    // Without a checksum, pnpm treats the hooks as untracked and resolves every dependency again
-    // on each install that changes anything.
-    it('should record a pnpmfileChecksum for the hooks', () => {
-      expect(lockfile.pnpmfileChecksum).to.be.a('string').and.have.length.above(0);
+    // Bit passes no readPackage hooks, so there is no checksum to record. A hook pnpm cannot
+    // fingerprint would make it resolve every dependency again on each install.
+    it('should record no pnpmfileChecksum', () => {
+      expect(lockfile).to.not.have.property('pnpmfileChecksum');
     });
-    it('should not mark the hooks as untracked', () => {
+    it('should record the override that removes @teambit/legacy from the dependencies', () => {
+      expect(lockfile.overrides).to.have.property('@teambit/legacy@*', '-');
+    });
+    it('should not mark a readPackage hook as untracked', () => {
       expect(lockfile).to.not.have.property('untrackedPnpmfileReadPackageHook');
     });
   });
