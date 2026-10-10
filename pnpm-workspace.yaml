@@ -1,0 +1,4 @@
+# Marks installs performed inside this repository at the registry, so the bit
+# CLI repo's own traffic can be told apart from real users' installs. pnpm v12
+# reads settings like this one here rather than from .npmrc.
+userAgent: bit-repo
