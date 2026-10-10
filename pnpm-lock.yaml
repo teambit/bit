@@ -6854,7 +6854,7 @@ importers:
         version: file:components/ui/queries/get-file-content(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)
       '@teambit/command-bar':
         specifier: workspace:*
-        version: file:scopes/explorer/command-bar(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/explorer/command-bar(chai@5.2.1)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/community':
         specifier: workspace:*
         version: file:scopes/community/community
@@ -7931,7 +7931,7 @@ importers:
         version: file:components/ui/queries/get-file-content(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)
       '@teambit/command-bar':
         specifier: workspace:*
-        version: file:scopes/explorer/command-bar(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/explorer/command-bar(chai@4.3.0)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/community':
         specifier: workspace:*
         version: file:scopes/community/community
@@ -8990,7 +8990,7 @@ importers:
         version: file:components/ui/queries/get-file-content(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)
       '@teambit/command-bar':
         specifier: workspace:*
-        version: file:scopes/explorer/command-bar(react@18.3.1)(supports-color@9.4.0)
+        version: file:scopes/explorer/command-bar(chai@4.3.0)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/community':
         specifier: workspace:*
         version: file:scopes/community/community
@@ -10061,7 +10061,7 @@ importers:
         version: file:components/ui/queries/get-file-content(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)
       '@teambit/command-bar':
         specifier: workspace:*
-        version: file:scopes/explorer/command-bar(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/explorer/command-bar(chai@4.3.0)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/community':
         specifier: workspace:*
         version: file:scopes/community/community
@@ -11108,7 +11108,7 @@ importers:
         version: file:components/ui/queries/get-file-content(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)
       '@teambit/command-bar':
         specifier: workspace:*
-        version: file:scopes/explorer/command-bar(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/explorer/command-bar(chai@4.3.0)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/community':
         specifier: workspace:*
         version: file:scopes/community/community
@@ -12155,7 +12155,7 @@ importers:
         version: file:components/ui/queries/get-file-content(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)
       '@teambit/command-bar':
         specifier: workspace:*
-        version: file:scopes/explorer/command-bar(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/explorer/command-bar(chai@4.3.0)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/community':
         specifier: workspace:*
         version: file:scopes/community/community
@@ -13214,7 +13214,7 @@ importers:
         version: file:components/ui/queries/get-file-content(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)
       '@teambit/command-bar':
         specifier: workspace:*
-        version: file:scopes/explorer/command-bar(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/explorer/command-bar(chai@4.3.0)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/community':
         specifier: workspace:*
         version: file:scopes/community/community
@@ -19011,6 +19011,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
+      chai:
+        specifier: 5.2.1
+        version: 5.2.1
       classnames:
         specifier: ^2.5.1
         version: 2.5.1
@@ -31430,6 +31433,7 @@ packages:
   '@teambit/command-bar@file:scopes/explorer/command-bar':
     resolution: {directory: scopes/explorer/command-bar, type: directory}
     peerDependencies:
+      chai: 5.2.1
       react: 19.2.7
 
   '@teambit/community.constants.links@0.0.2':
@@ -58850,7 +58854,7 @@ snapshots:
       - graphql
       - supports-color
 
-  '@teambit/command-bar@file:scopes/explorer/command-bar(react@18.3.1)(supports-color@9.4.0)':
+  '@teambit/command-bar@file:scopes/explorer/command-bar(chai@4.3.0)(react@18.3.1)(supports-color@9.4.0)':
     dependencies:
       '@teambit/base-ui.text.muted-text': 1.0.3(react-dom@19.2.7)(react@18.3.1)
       '@teambit/bit-error': 0.0.404
@@ -58865,6 +58869,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 4.3.0
       classnames: 2.5.1
       is-primitive: 3.0.1
       lodash.flatten: 4.4.0
@@ -58875,7 +58880,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@teambit/command-bar@file:scopes/explorer/command-bar(react@19.2.7)(supports-color@9.4.0)':
+  '@teambit/command-bar@file:scopes/explorer/command-bar(chai@4.3.0)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
       '@teambit/base-ui.text.muted-text': 1.0.3(react-dom@19.2.7)(react@19.2.7)
       '@teambit/bit-error': 0.0.404
@@ -58890,6 +58895,33 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 4.3.0
+      classnames: 2.5.1
+      is-primitive: 3.0.1
+      lodash.flatten: 4.4.0
+      mousetrap: 1.6.5
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+      react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
+    transitivePeerDependencies:
+      - supports-color
+
+  '@teambit/command-bar@file:scopes/explorer/command-bar(chai@5.2.1)(react@19.2.7)(supports-color@9.4.0)':
+    dependencies:
+      '@teambit/base-ui.text.muted-text': 1.0.3(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/bit-error': 0.0.404
+      '@teambit/design.buttons.action-button': 0.0.4(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+      '@teambit/design.ui.styles.ellipsis': 0.0.357(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/explorer.ui.command-bar': 2.0.19(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
+      '@teambit/harmony': 0.4.12
+      '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
+      '@teambit/ui-foundation.ui.is-browser': 0.0.500(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/ui-foundation.ui.keycap': 0.0.500(react-dom@19.2.7)(react@19.2.7)
+      '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@types/node': 22.10.5
+      '@types/react': 19.2.18
+      '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 5.2.1
       classnames: 2.5.1
       is-primitive: 3.0.1
       lodash.flatten: 4.4.0
