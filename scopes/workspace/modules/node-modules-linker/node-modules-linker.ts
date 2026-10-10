@@ -51,9 +51,12 @@ export default class NodeModuleLinker {
     // the workspace-root component (rootDir ".") is the workspace itself, not a package. linking it
     // would symlink the workspace into its own node_modules, .bitmap included. the package manager
     // side of the same rule is in InstallMain.getComponentsDirectory().
+    // a pnpm project is linked by pnpm, to its own directory, where its dependents need it.
     this.components = this.components.filter((component) => {
       const componentMap = this.bitMap.getComponentIfExist(component.id);
-      return componentMap && componentMap.rootDir !== WORKSPACE_ROOT_DIR;
+      return (
+        componentMap && componentMap.rootDir !== WORKSPACE_ROOT_DIR && !this.workspace.getPnpmProjectDir(component)
+      );
     });
     const links = await this.getLinks();
 

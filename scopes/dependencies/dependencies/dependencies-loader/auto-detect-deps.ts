@@ -2,7 +2,7 @@ import * as path from 'path';
 import fs from 'fs-extra';
 import semver from 'semver';
 import { isSnap } from '@teambit/component-version';
-import type { ComponentID } from '@teambit/component-id';
+import type { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { uniq, isEmpty, forEach, differenceWith } from 'lodash';
 import type { IssuesList } from '@teambit/component-issues';
 import { IssuesClasses } from '@teambit/component-issues';
@@ -15,9 +15,11 @@ import { getExt } from '@teambit/toolbox.fs.extension-getter';
 import type { PathLinux, PathLinuxRelative, PathOsBased } from '@teambit/legacy.utils';
 import { pathNormalizeToLinux, pathRelativeLinux, removeFileExtension } from '@teambit/legacy.utils';
 import type { ResolvedPackageData } from '../resolve-pkg-data';
-import type { ComponentMap } from '@teambit/legacy.bit-map';
+import type { BitMap, ComponentMap } from '@teambit/legacy.bit-map';
+import { WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import { SNAP_VERSION_PREFIX } from '@teambit/component-package-version';
 import type { DependencyResolverMain, DependencyDetector } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { getDependencyTree } from '../files-dependency-builder';
 import type { FileObject, DependenciesTree } from '../files-dependency-builder/types/dependency-tree-type';
 import type { DevFilesMain } from '@teambit/dev-files';
@@ -53,6 +55,11 @@ type PushToDepsArrayOpts = {
   depDebug: DebugComponentsDependency;
   isPeer?: boolean;
 };
+
+const workspaceComponentIdsByPackageNameCache = new WeakMap<
+  BitMap,
+  { allIds: ComponentIdList; byPackageName: Map<string, ComponentID> }
+>();
 
 export class AutoDetectDeps {
   componentId: ComponentID;
@@ -483,6 +490,20 @@ export class AutoDetectDeps {
         }
       }
     }
+    for (const packageName of Object.keys(packages)) {
+      const componentId = this.getWorkspaceComponentIdsByPackageName().get(packageName);
+      if (!componentId || componentId.isEqualWithoutVersion(this.componentId)) continue;
+      // no range: the detected value is the version in the dependency's own package.json, not the one it is snapped with
+      this._pushToDependenciesIfNotExist(new Dependency(componentId, [], packageName), {
+        fileType,
+        depDebug: {
+          id: componentId,
+          packageName,
+          versionResolvedFrom: 'BitMap',
+        },
+      });
+      delete packages[packageName];
+    }
     const packageNames = Object.keys(packages).concat(this.tree[originFile].missing?.packages ?? []);
     this._addTypesPackagesForTypeScript(packageNames, originFile);
     if (!packages || isEmpty(packages)) return;
@@ -491,6 +512,41 @@ export class AutoDetectDeps {
     } else {
       Object.assign(this.allPackagesDependencies.packageDependencies, packages);
     }
+  }
+
+  /**
+   * built once per state of the .bitmap, not per component: an AutoDetectDeps is made for every component
+   * loaded. the bitmap drops its cached ids on any change, which tells a stale map.
+   */
+  private getWorkspaceComponentIdsByPackageName(): Map<string, ComponentID> {
+    const bitMap = this.consumer.bitMap;
+    const allIds = bitMap.getAllBitIdsFromAllLanes();
+    const cached = workspaceComponentIdsByPackageNameCache.get(bitMap);
+    if (cached?.allIds === allIds) return cached.byPackageName;
+    const byPackageName = new Map<string, ComponentID>();
+    for (const componentMap of bitMap.components) {
+      // the workspace root is never depended on as a package, whatever its package.json says. a
+      // removed component, or one of another lane, is not here to be depended on either.
+      if (componentMap.rootDir === WORKSPACE_ROOT_DIR) continue;
+      if (componentMap.isRemoved() || !componentMap.isAvailableOnCurrentLane) continue;
+      const config = componentMap.config?.[DependencyResolverAspect.id];
+      const configuredPackageName = config && config !== '-' ? config.packageName : undefined;
+      if (typeof configuredPackageName === 'string' && configuredPackageName) {
+        byPackageName.set(configuredPackageName, componentMap.id);
+        continue;
+      }
+      // a component tracks its package.json as source only under trackAllFiles, e.g. a pnpm project.
+      if (!componentMap.files?.some((file) => file.relativePath === 'package.json')) continue;
+      const manifestPath = path.join(this.consumerPath, componentMap.rootDir, 'package.json');
+      try {
+        const packageName = fs.readJsonSync(manifestPath).name;
+        if (typeof packageName === 'string' && packageName) byPackageName.set(packageName, componentMap.id);
+      } catch {
+        // A missing or malformed manifest is reported by component loading.
+      }
+    }
+    workspaceComponentIdsByPackageNameCache.set(bitMap, { allIds, byPackageName });
+    return byPackageName;
   }
 
   private processMissing(originFile: PathLinuxRelative, fileType: FileType) {

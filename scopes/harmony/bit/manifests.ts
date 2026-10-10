@@ -51,6 +51,7 @@ import { WorkspaceAspect } from '@teambit/workspace';
 import { WorkspaceConfigFilesAspect } from '@teambit/workspace-config-files';
 import { InstallAspect } from '@teambit/install';
 import { WorkspaceRootAspect } from '@teambit/workspace-root';
+import { PnpmWorkspaceAspect } from '@teambit/pnpm-workspace';
 import { LinterAspect } from '@teambit/linter';
 import { FormatterAspect } from '@teambit/formatter';
 import { ValidatorAspect } from '@teambit/validator';
@@ -128,6 +129,7 @@ export const manifestsMap = {
   [WorkspaceConfigFilesAspect.id]: WorkspaceConfigFilesAspect,
   [InstallAspect.id]: InstallAspect,
   [WorkspaceRootAspect.id]: WorkspaceRootAspect,
+  [PnpmWorkspaceAspect.id]: PnpmWorkspaceAspect,
   [ESLintAspect.id]: ESLintAspect,
   [PrettierAspect.id]: PrettierAspect,
   [CompilerAspect.id]: CompilerAspect,

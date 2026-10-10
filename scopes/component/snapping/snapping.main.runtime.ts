@@ -114,6 +114,7 @@ export type SnapDataParsed = {
 };
 
 export type SnapResults = BasicTagResults & {
+  batchId: string;
   snappedComponents: ConsumerComponent[];
   autoSnappedResults: AutoTagResult[];
   laneName: string | null; // null if default
@@ -657,10 +658,11 @@ export class SnappingMain {
       ignoreIssues,
       autoAddedWorkspaceRoot,
     };
-    const { taggedComponents, autoTaggedResults, stagedConfig, removedComponents, totalComponentsCount } =
+    const { taggedComponents, autoTaggedResults, stagedConfig, removedComponents, totalComponentsCount, batchId } =
       await this.makeVersion(idsToSnap, components, makeVersionParams);
 
     const snapResults: Partial<SnapResults> = {
+      batchId,
       snappedComponents: taggedComponents,
       autoSnappedResults: autoTaggedResults,
       newComponents,

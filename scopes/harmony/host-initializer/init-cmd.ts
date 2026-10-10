@@ -66,6 +66,8 @@ supports various reset options to recover from corrupted state or restart from s
     ['', 'external-package-manager', 'enable external package manager mode (npm/yarn/pnpm)'],
     ['', 'skip-interactive', 'skip interactive mode for Git repositories'],
     ['', 'agent [type]', 'create an AI agent instructions file. options: claude, cursor, copilot (default: AGENTS.md)'],
+    ['', 'no-agent', 'do not create AI agent instructions'],
+    ['', 'no-mcp', 'do not create a default Bit Cloud MCP configuration'],
   ] as CommandOptions;
 
   constructor(
@@ -86,6 +88,8 @@ supports various reset options to recover from corrupted state or restart from s
       standalone,
       skipInteractive,
       externalPackageManager,
+      noAgent,
+      noMcp,
     } = flags;
 
     // Check if we should run interactive mode
@@ -110,16 +114,18 @@ supports various reset options to recover from corrupted state or restart from s
     try {
       const interactiveConfig = await HostInitializerMain.runInteractiveMode(projectPath);
 
-      if (interactiveConfig.mcpEditor) {
+      if (interactiveConfig.mcpEditor && !noMcp) {
         const displayName = McpConfigWriter.getEditorDisplayName(interactiveConfig.mcpEditor);
         this.logger.console(chalk.cyan(`\nConnecting Bit Cloud MCP to ${displayName}...`));
         await HostInitializerMain.setupMcpServer(interactiveConfig.mcpEditor, projectPath);
         this.logger.console(formatSuccessSummary(`Bit Cloud MCP connected to ${displayName}`));
 
-        interactiveConfig.agentFileWritten = await HostInitializerMain.writeMcpAgentRules(
-          interactiveConfig.mcpEditor,
-          projectPath
-        );
+        if (!noAgent) {
+          interactiveConfig.agentFileWritten = await HostInitializerMain.writeMcpAgentRules(
+            interactiveConfig.mcpEditor,
+            projectPath
+          );
+        }
       }
 
       return interactiveConfig;
@@ -147,6 +153,8 @@ supports various reset options to recover from corrupted state or restart from s
       defaultScope,
       externalPackageManager,
       agent,
+      noAgent,
+      noMcp,
     } = flags;
 
     if (path) path = pathlib.resolve(path);
@@ -205,7 +213,7 @@ supports various reset options to recover from corrupted state or restart from s
       workspaceExtensionProps,
       interactiveConfig?.generator || generator,
       agentType,
-      { skipDefaultMcp: userOptedOutOfMcp }
+      { skipAgentInstructions: Boolean(noAgent), skipDefaultMcp: Boolean(noMcp) || userOptedOutOfMcp }
     );
 
     return HostInitializerMain.generateInitMessage(

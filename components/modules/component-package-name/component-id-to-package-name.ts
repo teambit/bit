@@ -59,6 +59,9 @@ function getNameFromExtensions(id: ComponentID, extensions?: ExtensionDataList, 
     });
     return dep ? dep.packageName : null;
   }
+  // a component whose package.json is its own source, e.g. a pnpm project, keeps the name it has there
+  const configuredPackageName = extensions.findExtension(Extensions.dependencyResolver)?.config?.packageName;
+  if (typeof configuredPackageName === 'string' && configuredPackageName) return configuredPackageName;
   const pkgExt = extensions.findExtension(Extensions.pkg);
   if (!pkgExt) return null;
   const name = pkgExt.config?.packageJson?.name;

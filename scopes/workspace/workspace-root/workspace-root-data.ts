@@ -1,7 +1,9 @@
 import { ComponentID } from '@teambit/component-id';
-import type { BitMap, ComponentMap } from '@teambit/legacy.bit-map';
+import type { BitMap, ComponentMap, VersionedBitmapEntry } from '@teambit/legacy.bit-map';
+import { isWorkspaceMapFile, readVersionedBitmapEntries } from '@teambit/legacy.bit-map';
 import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { ExtensionDataEntry } from '@teambit/legacy.extension-data';
+import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import { WorkspaceRootAspect } from './workspace-root.aspect';
 
 /**
@@ -32,6 +34,18 @@ export type WorkspaceRootData = {
  */
 export function findWorkspaceRootMap(bitMap: BitMap): ComponentMap | undefined {
   return bitMap.getWorkspaceRootMap();
+}
+
+/**
+ * the components a workspace-root component lists in the `.bitmap` it versions, itself included,
+ * each with the directory it records for it. read from the root's files, so it is the same list
+ * wherever the root was loaded from.
+ */
+export function readRootBitmapEntries(
+  rootFiles: Array<{ relative: string; contents: Buffer }>
+): VersionedBitmapEntry[] {
+  const bitmapFile = rootFiles.find((file) => isWorkspaceMapFile(pathNormalizeToLinux(file.relative)));
+  return bitmapFile ? readVersionedBitmapEntries(bitmapFile.contents.toString()) : [];
 }
 
 function findData(extensions: ExtensionDataList): WorkspaceRootData | undefined {
