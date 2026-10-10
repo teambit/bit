@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import type { SchemaLocation } from '../schema-node';
 import { SchemaNode } from '../schema-node';
 import { SchemaRegistry } from '../schema-registry';
-import type { ExportSchema } from './export';
+import { ExportSchema } from './export';
 
 export class ModuleSchema extends SchemaNode {
   // exports could either be re exports (export declarations) or nodes with export modifier
@@ -22,6 +22,42 @@ export class ModuleSchema extends SchemaNode {
 
   getNodes() {
     return [...this.exports, ...this.internals];
+  }
+
+  /**
+   * the declarations this module exports, with export wrappers and nested namespaces unwrapped.
+   * unlike `flatExportsRecursively()`, this doesn't mutate the module.
+   */
+  listExports(): SchemaNode[] {
+    return this.exports.flatMap((node) => ModuleSchema.unwrap(node));
+  }
+
+  /**
+   * every declaration in this module: the exports, then the internals.
+   */
+  listDeclarations(): SchemaNode[] {
+    return [...this.listExports(), ...this.internals.flatMap((node) => ModuleSchema.unwrap(node))];
+  }
+
+  /**
+   * the declaration this module exports under `name` — its own name, or an alias such as
+   * `export { Props as ButtonProps }` or `export default Button`.
+   */
+  findExport(name: string): SchemaNode | undefined {
+    for (const node of this.exports) {
+      if (ExportSchema.isExportSchema(node)) {
+        if ((node.alias || node.name) === name) return ModuleSchema.unwrap(node)[0];
+      } else if (node.name === name) {
+        return node;
+      }
+    }
+    return undefined;
+  }
+
+  private static unwrap(node: SchemaNode): SchemaNode[] {
+    if (ExportSchema.isExportSchema(node)) return ModuleSchema.unwrap(node.exportNode);
+    if (ModuleSchema.isModuleSchema(node)) return node.listExports();
+    return [node];
   }
 
   flatExportsRecursively() {
