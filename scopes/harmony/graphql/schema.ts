@@ -1,6 +1,9 @@
 import type { DocumentNode } from 'graphql';
 import type { SchemaDirectives } from '@graphql-modules/core';
 
+export type { DocumentNode } from 'graphql';
+export type { SchemaDirectives } from '@graphql-modules/core';
+
 /**
  * graphql schema for an extension.
  */
