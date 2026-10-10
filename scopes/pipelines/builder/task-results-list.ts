@@ -81,7 +81,34 @@ export class TaskResultsList {
 
   private aggregateTaskErrorsToOneString(componentResult: ComponentResult) {
     const rawErrors = componentResult.errors || [];
-    const errors = rawErrors.map((e) => (typeof e === 'string' ? e : e.toString()));
+    const errors = rawErrors.map((e) => {
+      if (typeof e === 'string') {
+        return e;
+      }
+      if (e instanceof Error) {
+        return e.message;
+      }
+      // Handle error objects with message and/or stack properties
+      if (e && typeof e === 'object') {
+        const errorObj = e as Record<string, any>;
+        const hasMessage = 'message' in e && typeof errorObj.message === 'string';
+        const hasStack = 'stack' in e && typeof errorObj.stack === 'string';
+        if (hasMessage && hasStack) {
+          return `${errorObj.message}\n${errorObj.stack}`;
+        }
+        if (hasMessage) {
+          return errorObj.message;
+        }
+        if (hasStack) {
+          return errorObj.stack;
+        }
+      }
+      // Try toString as final fallback
+      if (typeof (e as any)?.toString === 'function') {
+        return (e as any).toString();
+      }
+      return `unknown error format: ${JSON.stringify(e)}`;
+    });
     return `component: ${componentResult.component.id.toString()}\n${errors.join('\n')}`;
   }
 
