@@ -185,3 +185,53 @@ function rootEdge(neighbours: DependencyEdge['neighbours']): DependencyEdge {
 function edge(id: string, neighbours: DependencyEdge['neighbours'] = []): DependencyEdge {
   return { id, neighbours };
 }
+
+describe('DependenciesGraph lockfileSettings', () => {
+  const settings = { autoInstallPeers: true, dedupePeers: true, injectWorkspacePackages: true };
+
+  it('survives serialize and deserialize', () => {
+    const graph = createGraph([rootEdge([])], []);
+    graph.lockfileSettings = settings;
+
+    expect(DependenciesGraph.deserialize(graph.serialize())?.lockfileSettings).to.eql(settings);
+  });
+
+  it('is unset on a graph serialized before the field existed', () => {
+    const restored = DependenciesGraph.deserialize(
+      JSON.stringify({ schemaVersion: '2.0', packages: {}, edges: [rootEdge([])] })
+    );
+
+    expect(restored?.lockfileSettings).to.equal(undefined);
+  });
+
+  it('is kept by merge when both graphs were resolved under the same settings', () => {
+    const base = createGraph([rootEdge([{ id: 'foo@1.0.0', name: 'foo', specifier: '1.0.0' }])], ['foo@1.0.0']);
+    base.lockfileSettings = settings;
+    const incoming = createGraph([rootEdge([{ id: 'bar@1.0.0', name: 'bar', specifier: '1.0.0' }])], ['bar@1.0.0']);
+    incoming.lockfileSettings = { ...settings };
+
+    base.merge(incoming);
+
+    expect(base.lockfileSettings).to.eql(settings);
+  });
+
+  it('is dropped by merge when the graphs were resolved under different settings', () => {
+    const base = createGraph([rootEdge([{ id: 'foo@1.0.0', name: 'foo', specifier: '1.0.0' }])], ['foo@1.0.0']);
+    base.lockfileSettings = settings;
+    const incoming = createGraph([rootEdge([{ id: 'bar@1.0.0', name: 'bar', specifier: '1.0.0' }])], ['bar@1.0.0']);
+    incoming.lockfileSettings = { ...settings, dedupePeers: false };
+
+    base.merge(incoming);
+
+    expect(base.lockfileSettings).to.equal(undefined);
+  });
+
+  it('is dropped by merge when only one graph has them', () => {
+    const base = createGraph([rootEdge([{ id: 'foo@1.0.0', name: 'foo', specifier: '1.0.0' }])], ['foo@1.0.0']);
+    base.lockfileSettings = settings;
+
+    base.merge(createGraph([rootEdge([{ id: 'bar@1.0.0', name: 'bar', specifier: '1.0.0' }])], ['bar@1.0.0']));
+
+    expect(base.lockfileSettings).to.equal(undefined);
+  });
+});

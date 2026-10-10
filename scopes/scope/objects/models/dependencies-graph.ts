@@ -1,5 +1,5 @@
 import semver from 'semver';
-import type { LockfilePackageInfo } from '@pnpm/lockfile.types';
+import type { LockfilePackageInfo, LockfileSettings } from '@pnpm/lockfile.types';
 
 export type PackagesMap = Map<string, PackageAttributes>;
 
@@ -47,22 +47,34 @@ export class DependenciesGraph {
    * existed don't have it.
    */
   pnpmfileChecksum?: string;
+  /**
+   * The `settings` block of the lockfile the graph was created from: the
+   * resolution settings (dedupePeers, injectWorkspacePackages, ...) the
+   * dependencies were resolved under. A lockfile restored from the graph
+   * carries them, so pnpm can install the restored resolution without
+   * resolving again while the install's settings still match. Graphs created
+   * before this field existed don't have it, and pnpm resolves them again.
+   */
+  lockfileSettings?: LockfileSettings;
 
   constructor({
     packages,
     edges,
     schemaVersion,
     pnpmfileChecksum,
+    lockfileSettings,
   }: {
     packages: PackagesMap;
     edges: DependencyEdge[];
     schemaVersion?: string;
     pnpmfileChecksum?: string;
+    lockfileSettings?: LockfileSettings;
   }) {
     this.packages = packages;
     this.edges = edges;
     this.schemaVersion = schemaVersion ?? DEPENDENCIES_GRAPH_SCHEMA_VERSION;
     this.pnpmfileChecksum = pnpmfileChecksum;
+    this.lockfileSettings = lockfileSettings;
   }
 
   serialize(): string {
@@ -70,8 +82,9 @@ export class DependenciesGraph {
       schemaVersion: this.schemaVersion,
       packages: Object.fromEntries(this.packages.entries()),
       edges: this.edges,
-      // JSON.stringify omits it when undefined.
+      // JSON.stringify omits these when undefined.
       pnpmfileChecksum: this.pnpmfileChecksum,
+      lockfileSettings: this.lockfileSettings,
     });
   }
 
@@ -86,11 +99,13 @@ export class DependenciesGraph {
       edges: parsed.edges,
       packages: new Map(Object.entries(parsed.packages)),
       pnpmfileChecksum: parsed.pnpmfileChecksum,
+      lockfileSettings: parsed.lockfileSettings,
     });
   }
 
   merge(graph: DependenciesGraph): void {
     this.pnpmfileChecksum = mergePnpmfileChecksums(this, graph);
+    this.lockfileSettings = mergeLockfileSettings(this, graph);
     const rootEdge = this.findRootEdge();
     const incomingRootEdge = graph.findRootEdge();
     const directDependencies = incomingRootEdge?.neighbours;
@@ -308,6 +323,22 @@ function mergePnpmfileChecksums(graph1: DependenciesGraph, graph2: DependenciesG
   if (!graph2.hasResolutions()) return graph1.pnpmfileChecksum;
   if (!graph1.hasResolutions()) return graph2.pnpmfileChecksum;
   return graph1.pnpmfileChecksum === graph2.pnpmfileChecksum ? graph1.pnpmfileChecksum : undefined;
+}
+
+/**
+ * A merged graph mixes resolutions from both graphs, so it can only claim the
+ * settings both were resolved under.
+ */
+function mergeLockfileSettings(graph1: DependenciesGraph, graph2: DependenciesGraph): LockfileSettings | undefined {
+  if (!graph2.hasResolutions()) return graph1.lockfileSettings;
+  if (!graph1.hasResolutions()) return graph2.lockfileSettings;
+  return sameLockfileSettings(graph1.lockfileSettings, graph2.lockfileSettings) ? graph1.lockfileSettings : undefined;
+}
+
+function sameLockfileSettings(settings1?: LockfileSettings, settings2?: LockfileSettings): boolean {
+  if (settings1 == null || settings2 == null) return settings1 === settings2;
+  const keys = new Set([...Object.keys(settings1), ...Object.keys(settings2)]);
+  return [...keys].every((key) => settings1[key] === settings2[key]);
 }
 
 function isSameDirectDependency(dep1: DependencyNeighbour, dep2: DependencyNeighbour): boolean {

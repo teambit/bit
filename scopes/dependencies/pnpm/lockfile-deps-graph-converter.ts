@@ -167,6 +167,7 @@ function _convertLockfileToGraph(
     edges: buildEdges(lockfile, { directDependencies, componentIdByPkgName }),
     packages: buildPackages(lockfile, { componentIdByPkgName }),
     pnpmfileChecksum: lockfile.pnpmfileChecksum,
+    lockfileSettings: lockfile.settings,
   });
   dropOrphanFilePkgs(graph);
   return graph;
@@ -366,6 +367,13 @@ export async function convertGraphToLockfile(
   // would not produce.
   if (graph.pnpmfileChecksum != null) {
     lockfile.pnpmfileChecksum = graph.pnpmfileChecksum;
+  }
+  // Carry the resolution settings the graph was resolved under as well. pnpm
+  // compares them with the install's settings, and a lockfile without them
+  // reads as resolved with dedupePeers and injectWorkspacePackages off, which
+  // Bit's installs never match, so every restored lockfile was resolved again.
+  if (graph.lockfileSettings != null) {
+    lockfile.settings = graph.lockfileSettings;
   }
   const rootEdge = graph.findRootEdge();
   if (rootEdge) {
