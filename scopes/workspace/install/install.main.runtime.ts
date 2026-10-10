@@ -816,12 +816,13 @@ export class InstallMain {
         })
       )
     );
-    await Promise.all(
-      loadedPlugins.map((plugin) => {
-        const runtime = plugin.getRuntime(MainRuntime);
-        return runtime?.provider(undefined, undefined, undefined, this.harmony);
-      })
-    );
+    // the provider registers the plugin, so run them one by one. a plugin that fails to load gets its component
+    // (and deps) compiled and is then re-loaded. in parallel, these compilations write the same files (e.g. of a
+    // shared env) while another plugin imports them.
+    await pMapSeries(loadedPlugins, (plugin) => {
+      const runtime = plugin.getRuntime(MainRuntime);
+      return runtime?.provider(undefined, undefined, undefined, this.harmony);
+    });
   }
 
   /**
