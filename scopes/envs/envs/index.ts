@@ -29,3 +29,20 @@ export { EnvsExecutionResult } from './runtime/envs-execution-result';
 export type { EnvServiceList } from './env-service-list';
 export { EnvDefinition } from './env-definition';
 export default EnvsAspect;
+export type {
+  SemverVersion,
+  PolicyConfigKeys,
+  PolicyConfigKeysNames,
+  VariantPolicyConfigObject,
+  VariantPolicyLifecycleConfigEntryObject,
+  VariantPolicyConfigEntryValue,
+  VariantPolicyEntryVersion,
+  VariantPolicyEntryValue,
+  EnvJsoncPolicyEntry,
+  EnvJsoncPolicyPeerEntry,
+  VersionKeyName,
+  EnvJsoncPolicyConfigKey,
+  EnvPolicyEnvJsoncConfigObject,
+  EnvPolicyLegacyConfigObject,
+  EnvPolicyConfigObject,
+} from './env-policy-config';

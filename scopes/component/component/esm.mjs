@@ -7,6 +7,7 @@ export const Component = cjsModule.Component;
 export const ComponentID = cjsModule.ComponentID;
 export const ComponentAspect = cjsModule.ComponentAspect;
 export const AspectEntry = cjsModule.AspectEntry;
+export const AspectDefinition = cjsModule.AspectDefinition;
 export const Snap = cjsModule.Snap;
 export const Tag = cjsModule.Tag;
 export const State = cjsModule.State;
