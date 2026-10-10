@@ -223,8 +223,9 @@ describe('convertLockfileToGraph simple case', () => {
     // The lockfile records no pnpmfileChecksum. Whether the graph then has the
     // property set to undefined or not at all depends on how the class is
     // compiled, so it is checked on its own.
-    const { pnpmfileChecksum, ...graphFields } = graph;
+    const { pnpmfileChecksum, lockfileSettings, ...graphFields } = graph;
     expect(pnpmfileChecksum).to.equal(undefined);
+    expect(lockfileSettings).to.equal(undefined);
     expect({
       ...graphFields,
       packages: Object.fromEntries(graph.packages.entries()),
@@ -1247,5 +1248,59 @@ describe('pnpmfileChecksum', () => {
 
     const lockfile = await graphToLockfile(graph);
     expect(lockfile).not.to.have.property('pnpmfileChecksum');
+  });
+});
+
+describe('lockfile settings', () => {
+  const componentDir = 'comps/comp1';
+  const settings = { autoInstallPeers: true, dedupePeers: true, injectWorkspacePackages: true };
+
+  function createLockfile(lockfileSettings?: BitLockfileFile['settings']): BitLockfileFile {
+    return {
+      lockfileVersion: '9.0',
+      ...(lockfileSettings ? { settings: lockfileSettings } : {}),
+      importers: {
+        [componentDir]: {
+          dependencies: { foo: { version: '1.0.0', specifier: '1.0.0' } },
+        },
+      },
+      packages: {
+        'foo@1.0.0': { resolution: { integrity: 'sha512-aaa' } },
+      },
+      snapshots: {
+        'foo@1.0.0': {},
+      },
+    } as BitLockfileFile;
+  }
+
+  function graphToLockfile(graph: DependenciesGraph) {
+    return convertGraphToLockfile(graph, {
+      manifests: {
+        [path.resolve(componentDir)]: { dependencies: { foo: '1.0.0' } },
+      },
+      rootDir: process.cwd(),
+      resolve: () => ({ resolution: { integrity: '0000' } }) as any,
+    });
+  }
+
+  it('should be kept from the lockfile to the graph and back', async () => {
+    const graph = convertLockfileToGraph(createLockfile(settings), {
+      componentRelativeDir: componentDir,
+      componentIdByPkgName: new Map(),
+    });
+    expect(graph.lockfileSettings).to.eql(settings);
+
+    const lockfile = await graphToLockfile(DependenciesGraph.deserialize(graph.serialize())!);
+    expect(lockfile.settings).to.eql(settings);
+  });
+
+  it('should stay unset for a graph saved without them', async () => {
+    const graph = convertLockfileToGraph(createLockfile(), {
+      componentRelativeDir: componentDir,
+      componentIdByPkgName: new Map(),
+    });
+
+    const lockfile = await graphToLockfile(graph);
+    expect(lockfile).not.to.have.property('settings');
   });
 });

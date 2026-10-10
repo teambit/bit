@@ -642,10 +642,17 @@ export function mergeGraphLockfileIntoExisting(existing: LockfileFile, graph: Lo
     snapshots: mergeEntryRecords(existing.snapshots, graph.snapshots),
   };
   // The merged lockfile mixes resolutions from both sides, so it can only
-  // claim the readPackage hooks checksum both were resolved with. Otherwise
-  // drop it, and pnpm resolves again instead of trusting the mix.
-  if (existing.pnpmfileChecksum !== graph.pnpmfileChecksum) {
-    delete merged.pnpmfileChecksum;
+  // claim the readPackage hooks checksum and the resolution settings both were
+  // resolved with. Otherwise drop them, and pnpm resolves again instead of
+  // trusting the mix. A graph that adds no resolutions (an empty or link-only
+  // one) mixes nothing in, so the existing lockfile keeps its own.
+  if (hasResolutions(graph)) {
+    if (existing.pnpmfileChecksum !== graph.pnpmfileChecksum) {
+      delete merged.pnpmfileChecksum;
+    }
+    if (!sameLockfileSettings(existing.settings, graph.settings)) {
+      delete merged.settings;
+    }
   }
   if (existingBit || graphBit) {
     (merged as LockfileFile & { bit?: Record<string, unknown> }).bit = {
@@ -656,6 +663,16 @@ export function mergeGraphLockfileIntoExisting(existing: LockfileFile, graph: Lo
   }
   pruneUnreachableLockfileEntries(merged);
   return merged;
+}
+
+function hasResolutions(lockfile: LockfileFile): boolean {
+  return Object.keys(lockfile.packages ?? {}).length > 0 || Object.keys(lockfile.snapshots ?? {}).length > 0;
+}
+
+function sameLockfileSettings(settings1: LockfileFile['settings'], settings2: LockfileFile['settings']): boolean {
+  if (settings1 == null || settings2 == null) return settings1 === settings2;
+  const keys = new Set([...Object.keys(settings1), ...Object.keys(settings2)]);
+  return [...keys].every((key) => settings1[key] === settings2[key]);
 }
 
 function mergeEntryRecords<T extends object>(
