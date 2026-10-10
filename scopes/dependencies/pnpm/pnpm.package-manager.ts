@@ -596,6 +596,9 @@ function applyComponentIdNames(trees: DependentsTree[]): void {
   trees.forEach(rename);
 }
 
+/** The lockfile fields that say what its resolutions were resolved with. */
+const RESOLUTION_CONTEXT_KEYS = ['pnpmfileChecksum', 'settings', 'overrides'] as const;
+
 // Merge a graph-derived lockfile into an existing wanted lockfile. The graph lockfile is
 // authoritative for keys it contains (a re-imported component can change the resolution
 // of its own deps), but must not erase packages, snapshots, or importer entries that are
@@ -643,10 +646,15 @@ export function mergeGraphLockfileIntoExisting(existing: LockfileFile, graph: Lo
   };
   // The merged lockfile mixes resolutions from both sides, so it can only
   // claim the readPackage hooks checksum, the resolution settings and the
-  // overrides both were resolved with. Otherwise drop them, and pnpm resolves again instead of
-  // trusting the mix. A graph that adds no resolutions (an empty or link-only
-  // one) mixes nothing in, so the existing lockfile keeps its own.
-  if (hasResolutions(graph)) {
+  // overrides both were resolved with. Otherwise drop them, and pnpm resolves
+  // again instead of trusting the mix. A side that adds no resolutions (an
+  // empty or link-only one) mixes nothing in, so the other side's values stand.
+  if (!hasResolutions(existing)) {
+    for (const key of RESOLUTION_CONTEXT_KEYS) {
+      if (graph[key] == null) delete merged[key];
+      else merged[key] = graph[key] as any;
+    }
+  } else if (hasResolutions(graph)) {
     if (existing.pnpmfileChecksum !== graph.pnpmfileChecksum) {
       delete merged.pnpmfileChecksum;
     }
