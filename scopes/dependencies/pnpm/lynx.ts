@@ -211,18 +211,44 @@ export interface ReportOptions {
 
 /**
  * `@teambit/legacy` and `@teambit/harmony` are never installed: the running bit
- * installation provides them, and Bit links them itself. The overrides remove
- * them from every manifest, peer dependencies included. The `@*` selector
- * matches only semver ranges, so the `link:` dependencies Bit's linker adds
- * stay. Harmony is kept when the workspace forces its version, which the
- * caller then sets as a regular override.
+ * installation provides them, and Bit links them itself. Harmony is kept when
+ * the workspace forces its version, which the caller then sets as a regular
+ * override.
+ */
+function removedCoreDependencies(forcedHarmonyVersion?: string): string[] {
+  return forcedHarmonyVersion ? ['@teambit/legacy'] : ['@teambit/legacy', '@teambit/harmony'];
+}
+
+/**
+ * The overrides remove the core dependencies from every manifest the engine
+ * resolves, peer dependencies included. The `@*` selector matches only semver
+ * ranges, so the `link:` dependencies Bit's linker adds stay. A registry
+ * package declares nothing else, while a workspace project may also use
+ * `workspace:`, `file:` or `npm:` specs: `removeCoreDependencies` removes those
+ * from the workspace manifests before the install.
  */
 export function removedCoreDependencyOverrides(forcedHarmonyVersion?: string): Record<string, string> {
-  const overrides: Record<string, string> = { '@teambit/legacy@*': '-' };
-  if (!forcedHarmonyVersion) {
-    overrides['@teambit/harmony@*'] = '-';
+  return Object.fromEntries(removedCoreDependencies(forcedHarmonyVersion).map((name) => [`${name}@*`, '-']));
+}
+
+/**
+ * Removes the core dependencies from a workspace project's manifest, whatever
+ * their spec, except the `link:` dependencies Bit's linker adds.
+ */
+export function removeCoreDependencies<T extends PackageManifest>(manifest: T, forcedHarmonyVersion?: string): T {
+  let result = manifest;
+  for (const name of removedCoreDependencies(forcedHarmonyVersion)) {
+    const dependency = result.dependencies?.[name];
+    if (dependency != null && !dependency.startsWith('link:')) {
+      const { [name]: _removed, ...dependencies } = result.dependencies!;
+      result = { ...result, dependencies };
+    }
+    if (result.peerDependencies?.[name] != null) {
+      const { [name]: _removed, ...peerDependencies } = result.peerDependencies;
+      result = { ...result, peerDependencies };
+    }
   }
-  return overrides;
+  return result;
 }
 
 export async function install(
@@ -319,12 +345,16 @@ export async function install(
   // The importer manifests are transformed here, with each importer's own
   // directory as workspaceDir. The engine needs no readPackage hook for the
   // dependency manifests: the core dependencies are removed by the overrides
-  // above, and a workspace project resolved as a dependency (an injected
+  // above (and from the workspace manifests here), and a workspace project resolved as a dependency (an injected
   // "file:" instance) gets its raw manifest through `dependencyManifest`. The
   // instance must keep the workspace-sibling deps the importer transform
   // strips, because they become the component's graph edges.
-  const projects: nodeApi.NodeApiProject[] = Object.entries(manifestsByPaths).map(([dir, rawManifest]) => {
-    const manifest = applyReadPackageHooks(hooks, rawManifest as unknown as PackageManifest, dir);
+  const projects: nodeApi.NodeApiProject[] = Object.entries(manifestsByPaths).map(([dir, projectManifest]) => {
+    const rawManifest = removeCoreDependencies(
+      projectManifest as unknown as PackageManifest,
+      options.forcedHarmonyVersion
+    );
+    const manifest = applyReadPackageHooks(hooks, rawManifest, dir);
     return {
       rootDir: dir,
       manifest: manifest as unknown as nodeApi.PackageManifest,
