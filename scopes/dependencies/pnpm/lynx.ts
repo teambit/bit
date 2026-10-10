@@ -559,13 +559,11 @@ export function resolveScriptPolicies({
 } {
   const allowBuilds: Record<string, boolean | string> = {};
   if (dangerouslyAllowAllScripts) {
-    if (!neverBuiltDependencies?.length) {
-      return { allowBuilds, dangerouslyAllowAllBuilds: true };
-    }
-    for (const pkg of neverBuiltDependencies) {
+    // The engine checks `allowBuilds` denials before the allow-all flag.
+    for (const pkg of neverBuiltDependencies ?? []) {
       allowBuilds[pkg] = false;
     }
-    return { allowBuilds };
+    return { allowBuilds, dangerouslyAllowAllBuilds: true };
   }
   for (const [packageDescriptor, allowedScript] of Object.entries(allowScripts ?? {})) {
     if (allowedScript === true || allowedScript === false) {

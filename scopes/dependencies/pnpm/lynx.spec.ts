@@ -17,7 +17,7 @@ describe('resolveScriptPolicies()', () => {
     });
   });
 
-  it('should preserve explicit never-built packages instead of passing the allow-all builds flag', () => {
+  it('should deny never-built packages alongside the allow-all builds flag', () => {
     expect(
       resolveScriptPolicies({
         dangerouslyAllowAllScripts: true,
@@ -27,6 +27,7 @@ describe('resolveScriptPolicies()', () => {
       allowBuilds: {
         'native-pkg': false,
       },
+      dangerouslyAllowAllBuilds: true,
     });
   });
 });
