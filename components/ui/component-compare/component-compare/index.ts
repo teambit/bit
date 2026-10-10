@@ -20,6 +20,8 @@ export { CompareSidebar } from './compare-sidebar';
 export type { CompareSidebarProps, CompareSidebarItem, CompareSidebarGroup } from './compare-sidebar';
 export { InlineComponentCompare, ComponentCompareHeader } from './component-compare';
 export type { InlineComponentCompareProps, ComponentCompareHeaderProps } from './component-compare';
+export { useComponentCompareIdentity } from './component-identity-context';
+export type { ComponentCompareIdentity } from './component-identity-context';
 export { CompareDataProvider, useCompareData, COMPARE_PAGE_SIZE } from './compare-data-context';
 export type { CompareDataContextModel, CompareComponentData, ComponentComparePair } from './compare-data-context';
 export { RegistryFeeder } from './component-compare';
