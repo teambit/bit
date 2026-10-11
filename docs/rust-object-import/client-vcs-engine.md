@@ -597,3 +597,29 @@ The existing restore and confirmation hooks, conflict-file deletion, checkout
 error handling, and public result shape retain their order. The engine remains
 opt-in. Backup/restore orchestration and configuration/aspect-data merge policy
 are still adapter boundaries for subsequent substantial chunks.
+
+Qualification uses the physically compiled 21-component CLI graph. All six
+main/lane/detached squash scenarios (one and three incoming snapshots) and a
+completed lane abort produce identical files, bitmap, objects, pending state,
+status, and reachable history in Node, native, missing-helper, and crashed-helper
+modes. Native diagnostics confirm eight policy, four message-read, and four
+history-reconciliation acknowledgements. Abort initializes, clears, and persists
+the pending list and restores eight source files through one owned helper.
+The fixture passes `--silent` and requires restoration output, the pre-merge
+bitmap/files/history, and deletion of the last-merged backup.
+
+Validation includes 169 Rust tests, 18 source adapter tests plus one intentional
+mixed-module lifecycle skip, all 19 physically compiled adapter tests, 120 source
+and 120 compiled regression tests, 69 canonical model tests, canonical lint,
+Clippy/Dylint/rustdoc, and 30 packaged-artifact/discovery tests. Tests cover fresh
+mutable Versions, non-string messages, legacy ancestry, first-record aliases,
+mutation before importer errors, malformed acknowledgements, modified inputs,
+custom hooks, and fallback helper retirement.
+
+The packaged Linux helper is bound to production revision
+`601390bb30f59eebfcc790357c82e9223599c574`, native source digest
+`29b99dcd1603266bc025d0585164da83f973334c0787fd70f1b3d29bff569fbd`,
+and binary SHA-256
+`6b67a603e0ee804af750a1e5d5737bf6682e349ce5825926cfafcbc71a128014`.
+Reports retain every source/compiled/harness fingerprint and verify them before
+and after qualification.
