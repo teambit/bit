@@ -349,7 +349,15 @@ function recoveryRemove(filename: string): Promise<void> {
 
 const recoveryPaths = Object.getOwnPropertyDescriptors(LastMerged.prototype);
 function isWorkspaceRoot(dir: string): boolean {
-  return path.resolve(dir) === path.resolve('.');
+  const workspace = path.resolve('.');
+  const candidate = path.resolve(dir);
+  if (candidate === workspace) return true;
+  try {
+    return fs.realpathSync(candidate) === fs.realpathSync(workspace);
+  } catch {
+    // Missing directories still use the existing removal/error path.
+    return false;
+  }
 }
 function disjointDirectories(dirs: string[]): boolean {
   const absolute = dirs.map((dir) => path.resolve(dir));

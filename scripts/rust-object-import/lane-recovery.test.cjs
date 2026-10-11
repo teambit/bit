@@ -172,6 +172,8 @@ test('workspace root aliases survive restore while bitmap and config recover', a
     const priorDirectory = process.cwd();
     await fs.mkdir(path.join(f.directory, '.bit'));
     await fs.mkdir(path.join(f.directory, 'alias'));
+    const rootLink = path.join(f.directory, 'root-link');
+    await fs.symlink(f.directory, rootLink, 'junction');
     await fs.writeFile(path.join(f.directory, 'unrelated.txt'), 'keep unrelated bytes');
     await fs.writeFile(path.join(f.directory, '.bit/protected'), 'keep repository');
     await fs.writeFile(path.join(f.backup, 'bitmap'), '// backup comment\n{ "version": "17.0.0", }');
@@ -180,6 +182,7 @@ test('workspace root aliases survive restore while bitmap and config recover', a
       '.': 'root-id',
       'alias/..': 'root-alias',
       [f.directory]: 'absolute-root',
+      [rootLink]: 'physical-root-alias',
     });
     process.chdir(f.directory);
     try {
@@ -187,6 +190,7 @@ test('workspace root aliases survive restore while bitmap and config recover', a
       assert.deepEqual(result.compDirsToRemove, []);
       assert.equal(await fs.readFile(path.join(f.directory, 'unrelated.txt'), 'utf8'), 'keep unrelated bytes');
       assert.equal(await fs.readFile(path.join(f.directory, '.bit/protected'), 'utf8'), 'keep repository');
+      assert.equal(await fs.readFile(path.join(rootLink, 'unrelated.txt'), 'utf8'), 'keep unrelated bytes');
       assert.equal(await fs.readFile(f.bitmap, 'utf8'), '// backup comment\n{ "version": "17.0.0", }');
       assert.equal(await fs.readFile(f.workspace, 'utf8'), '// restored config\n{}\n');
     } finally {

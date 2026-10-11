@@ -858,7 +858,8 @@ Class, parser, method and filesystem overrides also retain canonical execution.
 
 Abort now protects the workspace directory when a merge introduces a workspace
 root component. The directory itself is excluded from removal in both paths,
-including equivalent resolved paths. The bitmap and workspace configuration are
+including equivalent normalized and physical paths (for example, macOS `/var`
+and `/private/var`). The bitmap and workspace configuration are
 still restored, and the subsequent checkout handles the surviving components.
 This is an intentional correction to the previous abort behavior, which could
 recursively remove the workspace directory.
