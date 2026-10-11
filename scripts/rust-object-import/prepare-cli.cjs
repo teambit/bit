@@ -51,6 +51,9 @@ function links(directory) {
 }
 links(target);
 const files = [
+  'scopes/scope/objects/objects/rust-merge-state.ts',
+  'scopes/scope/objects/objects/rust-lane-snapshot.ts',
+  'components/legacy/scope/lanes/unmerged-components.ts',
   'scopes/scope/objects/objects/rust-merge-history.ts',
   'scopes/component/snap-distance/get-diverge-data.ts',
   'scopes/component/modules/merge-helper/three-way-merge.ts',
@@ -189,6 +192,9 @@ for (const component of compilation)
   for (const file of component.buildResults) assert.ok(fs.realpathSync(file).startsWith(target + path.sep));
 const modules = [
   'objects/dist/objects/rust-merge-history.js',
+  'objects/dist/objects/rust-merge-state.js',
+  'objects/dist/objects/rust-lane-snapshot.js',
+  'legacy.scope/dist/lanes/unmerged-components.js',
   'component.snap-distance/dist/get-diverge-data.js',
   'component.modules.merge-helper/dist/three-way-merge.js',
   'component.modules.merge-helper/dist/rust-three-way-merge.js',

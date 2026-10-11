@@ -65,6 +65,7 @@ pub(crate) fn serve_with_store(
     store: Option<&Store>,
 ) -> io::Result<()> {
     let mut checkout = crate::checkout::cache::State::default();
+    let mut merge = crate::merge_state::State::default();
     loop {
         let mut magic = [0; 4];
         // Clean EOF is valid; a partial frame must never produce partial success.
@@ -72,7 +73,7 @@ pub(crate) fn serve_with_store(
             return Ok(());
         }
         reader.read_exact(&mut magic[1..])?;
-        if serve_extension(magic, reader, writer, pool, store, &mut checkout)? {
+        if serve_extension(magic, reader, writer, pool, store, &mut checkout, &mut merge)? {
             continue;
         }
         let version = frame_version(magic, store)?;
@@ -234,7 +235,12 @@ fn serve_extension(
     pool: &ThreadPool,
     store: Option<&Store>,
     checkout: &mut crate::checkout::cache::State,
+    merge: &mut crate::merge_state::State,
 ) -> io::Result<bool> {
+    if magic == *b"BMT1" {
+        crate::merge_state::serve(reader, writer, merge)?;
+        return Ok(true);
+    }
     if magic == *b"BMH1" {
         crate::merge_history::serve(reader, writer)?;
         return Ok(true);

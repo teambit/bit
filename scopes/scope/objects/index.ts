@@ -43,3 +43,11 @@ export { ObjectsAspect };
 export { withRustSnapshotOperation, isRustSnapshotOperation, addRustSnapshotVersion } from './objects/rust-snapshot';
 
 export { getRustDivergence } from './objects/rust-merge-history';
+
+export { reconcileRustMergeSnapshot } from './objects/rust-lane-snapshot';
+export {
+  projectRustUnmergedIds,
+  registerRustUnmergedComponents,
+  transitionRustUnmergedState,
+  persistRustUnmergedState,
+} from './objects/rust-merge-state';
