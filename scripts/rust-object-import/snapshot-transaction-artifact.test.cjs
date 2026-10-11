@@ -24,7 +24,8 @@ async function fixture(t) {
   const previousHelper = process.env.BIT_RUST_OBJECT_IMPORT;
   process.env.BIT_RUST_CLIENT_VCS = 'on';
   process.env.BIT_RUST_OBJECT_IMPORT =
-    process.env.BIT_TEST_OBJECT_IMPORT || path.join(root, 'native/target/debug/bit-object-import');
+    process.env.BIT_TEST_OBJECT_IMPORT ||
+    path.join(root, 'native/target/debug/bit-object-import' + (process.platform === 'win32' ? '.exe' : ''));
   t.after(() => {
     if (previousFlag === undefined) delete process.env.BIT_RUST_CLIENT_VCS;
     else process.env.BIT_RUST_CLIENT_VCS = previousFlag;
