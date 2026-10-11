@@ -59,7 +59,8 @@ import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { DetachedHeads } from './detach-heads';
 const defaultDetachedSetHead = DetachedHeads.prototype.setHead;
 const defaultDetachedClearCurrent = DetachedHeads.prototype.clearCurrent;
-import { hasDefaultSnapshotMethods } from '../objects/rust-snapshot';
+import { isRustSnapshotOperation, hasDefaultSnapshotMethods } from '../objects/rust-snapshot';
+import { loadRustVersionParents } from '../objects/rust-merge-history';
 
 type State = {
   versions?: {
@@ -1470,6 +1471,17 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
   ): Promise<{ err?: Error; added?: VersionParents[] }> {
     const headExists = versionHistory.hasHash(head);
     if (exitWhenFind && headExists) return {};
+    if (exitWhenFind && isRustSnapshotOperation()) {
+      const native = await this.populateVersionHistoryMutex.runExclusive(async () => {
+        if (versionHistory.hasHash(head)) return undefined;
+        const added = await loadRustVersionParents(repo, versionHistory, head);
+        if (!added) return undefined;
+        versionHistory.addFromVersionParents(added);
+        await repo.writeObjectsToTheFS([versionHistory]);
+        return { added };
+      });
+      if (native) return native;
+    }
     const getVersionObj = async (ref: Ref) => (await ref.load(repo)) as Version | undefined;
     const versionsToAdd: Version[] = [];
     let err: Error | undefined;

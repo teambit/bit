@@ -51,6 +51,13 @@ function links(directory) {
 }
 links(target);
 const files = [
+  'scopes/scope/objects/objects/rust-merge-history.ts',
+  'scopes/component/snap-distance/get-diverge-data.ts',
+  'scopes/component/modules/merge-helper/three-way-merge.ts',
+  'scopes/component/modules/merge-helper/rust-three-way-merge.ts',
+  'scopes/component/modules/merge-helper/merge-files.ts',
+  'scopes/component/merging/merging.main.runtime.ts',
+  'scopes/lanes/merge-lanes/merge-lanes.main.runtime.ts',
   'scopes/scope/objects/objects/rust-snapshot.ts',
   'scopes/scope/objects/models/index.ts',
   'scopes/component/snapping/snapping.main.runtime.ts',
@@ -139,6 +146,10 @@ try {
       'teambit.component/component-compare',
       'teambit.workspace/workspace',
       'teambit.component/snapping',
+      'teambit.component/snap-distance',
+      'teambit.component/modules/merge-helper',
+      'teambit.component/merging',
+      'teambit.lanes/merge-lanes',
       '--json',
       '--safe-mode',
     ],
@@ -167,12 +178,23 @@ assert.deepEqual(
     'teambit.component/component-compare',
     'teambit.workspace/workspace',
     'teambit.component/snapping',
+    'teambit.component/snap-distance',
+    'teambit.component/modules/merge-helper',
+    'teambit.component/merging',
+    'teambit.lanes/merge-lanes',
   ].sort()
 );
 assert.ok(compilation.every((c) => c.errors.length === 0));
 for (const component of compilation)
   for (const file of component.buildResults) assert.ok(fs.realpathSync(file).startsWith(target + path.sep));
 const modules = [
+  'objects/dist/objects/rust-merge-history.js',
+  'component.snap-distance/dist/get-diverge-data.js',
+  'component.modules.merge-helper/dist/three-way-merge.js',
+  'component.modules.merge-helper/dist/rust-three-way-merge.js',
+  'component.modules.merge-helper/dist/merge-files.js',
+  'merging/dist/merging.main.runtime.js',
+  'merge-lanes/dist/merge-lanes.main.runtime.js',
   'objects/dist/objects/rust-snapshot.js',
   'objects/dist/models/index.js',
   'snapping/dist/snapping.main.runtime.js',

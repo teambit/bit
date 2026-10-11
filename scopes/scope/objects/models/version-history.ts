@@ -94,6 +94,17 @@ export default class VersionHistory extends BitObject {
     return Boolean(this.getVersionData(ref));
   }
 
+  addFromVersionParents(versions: VersionParents[]) {
+    versions.forEach((version) => {
+      const exists = this.getVersionData(version.hash);
+      if (exists) {
+        exists.parents = version.parents;
+        exists.unrelated = version.unrelated;
+        exists.squashed = version.squashed;
+      } else this.versionsObj[version.hash.hash] = version;
+    });
+  }
+
   addFromVersionsObjects(versions: Version[]) {
     versions.forEach((version) => {
       const exists = this.getVersionData(version.hash());
@@ -288,4 +299,24 @@ export function versionParentsToGraph(versions: VersionParents[]): Graph<string,
   graph.setNodes(nodes);
   graph.setEdges(edges);
   return graph;
+}
+
+const nativeHistoryMethods = ['getVersionData', 'hasHash', 'addFromVersionsObjects', 'addFromVersionParents'].map(
+  (name) => [name, VersionHistory.prototype[name]] as const
+);
+const nativeHistoryVersions = Object.getOwnPropertyDescriptor(VersionHistory.prototype, 'versions')?.get;
+/** A native ancestry plan must not bypass extensions on the live history model. */
+export function canPopulateHistoryNatively(history: VersionHistory): boolean {
+  return (
+    Object.getPrototypeOf(history) === VersionHistory.prototype &&
+    !Object.getOwnPropertyDescriptor(history, 'versions') &&
+    Object.getOwnPropertyDescriptor(VersionHistory.prototype, 'versions')?.get === nativeHistoryVersions &&
+    nativeHistoryMethods.every(
+      ([name, method]) =>
+        (
+          Object.getOwnPropertyDescriptor(history, name) ||
+          Object.getOwnPropertyDescriptor(VersionHistory.prototype, name)
+        )?.value === method
+    )
+  );
 }

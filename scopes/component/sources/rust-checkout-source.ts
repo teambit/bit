@@ -14,6 +14,21 @@ type Provenance = {
   contents?: PropertyDescriptor;
 };
 const sources = new WeakMap<AbstractVinyl, Provenance>();
+const refDefaults = { load: Ref.prototype.load, toString: Ref.prototype.toString };
+function ordinarySourceRef(reference: Ref): boolean {
+  const hash = reference && Object.getOwnPropertyDescriptor(reference, 'hash')?.value;
+  return Boolean(
+    reference &&
+      Object.getPrototypeOf(reference) === Ref.prototype &&
+      typeof hash === 'string' &&
+      /^[0-9a-f]{40}$/.test(hash) &&
+      Object.entries(refDefaults).every(([name, method]) => {
+        const descriptor =
+          Object.getOwnPropertyDescriptor(reference, name) || Object.getOwnPropertyDescriptor(Ref.prototype, name);
+        return descriptor?.value === method;
+      })
+  );
+}
 
 /** Only call after the native read-only plan has validated every referenced Source. */
 export function createRustCheckoutSourceFile(
@@ -21,7 +36,7 @@ export function createRustCheckoutSourceFile(
   repository: Repository,
   validated = false
 ): SourceFile | undefined {
-  if (!validated || model.file.load !== Ref.prototype.load || !repository.canReadCheckoutSourcesNatively([model.file]))
+  if (!validated || !ordinarySourceRef(model.file) || !repository.canReadCheckoutSourcesNatively([model.file]))
     return undefined;
   const hash = model.file.toString();
   if (!/^[0-9a-f]{40}$/.test(hash)) return undefined;
@@ -65,7 +80,7 @@ export async function prepareRustCheckoutSources(
   if (
     process.env.BIT_RUST_CLIENT_VCS !== 'on' ||
     !canReadWorkspaceFilesNatively() ||
-    !models.every((model) => model.file.load === Ref.prototype.load) ||
+    !models.every((model) => ordinarySourceRef(model.file)) ||
     !repository.canReadCheckoutSourcesNatively(models.map((model) => model.file))
   )
     return undefined;
@@ -173,11 +188,11 @@ export function getRustCheckoutSourceDescriptor(file: AbstractVinyl): RustChecko
   const contents = Object.getOwnPropertyDescriptor(file, 'contents');
   if (
     !provenance ||
+    !ordinarySourceRef(provenance.reference) ||
     provenance.reference.toString() !== provenance.descriptor.hash ||
     !contents?.get ||
     contents.get !== provenance.contents?.get ||
     contents.set !== provenance.contents?.set ||
-    provenance.reference.load !== Ref.prototype.load ||
     file.write !== defaultVinylWrite ||
     !provenance.repository.canReadCheckoutSourcesNatively([provenance.reference]) ||
     path.resolve(provenance.repository.getPath()) !== provenance.descriptor.objectsDirectory

@@ -235,6 +235,10 @@ fn serve_extension(
     store: Option<&Store>,
     checkout: &mut crate::checkout::cache::State,
 ) -> io::Result<bool> {
+    if magic == *b"BMH1" {
+        crate::merge_history::serve(reader, writer)?;
+        return Ok(true);
+    }
     if magic == *b"BSS1" {
         crate::snapshot::serve(reader, writer)?;
         return Ok(true);

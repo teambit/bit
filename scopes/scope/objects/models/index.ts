@@ -22,3 +22,6 @@ registerRustSnapshotModels({
   VersionHistory,
   LaneHistory,
 });
+
+import { registerRustHistoryVersion } from '../objects/rust-merge-history';
+registerRustHistoryVersion(Version);

@@ -1,6 +1,7 @@
 mod checkout;
 mod directory;
 mod inventory;
+mod merge_history;
 mod metadata;
 mod mutable_store;
 mod operation;

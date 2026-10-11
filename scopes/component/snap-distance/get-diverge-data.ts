@@ -3,7 +3,7 @@ import type { Graph } from '@teambit/graph.cleargraph';
 import type { UnmergedComponent } from '@teambit/legacy.scope';
 import { NoCommonSnap, VersionNotFoundOnFS } from '@teambit/legacy.scope';
 import type { ModelComponent, Repository, VersionParents } from '@teambit/objects';
-import { Ref, versionParentsToGraph } from '@teambit/objects';
+import { Ref, versionParentsToGraph, getRustDivergence } from '@teambit/objects';
 import { SnapsDistance } from './snaps-distance';
 import { getAllVersionHashes, getAllVersionParents } from './traverse-versions';
 import { TargetHeadNotFound } from './target-head-not-found';
@@ -95,6 +95,23 @@ export async function getDivergeData({
   }
   if (!versionParents.find((p) => p.hash.isEqual(localHead))) {
     throw new LocalHeadNotFound(modelComponent.id(), localHead.toString());
+  }
+
+  const native = await getRustDivergence(
+    versionParents,
+    localHead,
+    targetHead,
+    Boolean(unmergedData?.unrelated && unmergedData.head.isEqual(localHead))
+  );
+  if (native) {
+    const error = native.noCommon ? new NoCommonSnap(modelComponent.id()) : undefined;
+    if (error && throwForNoCommonSnap) throw error;
+    return new SnapsDistance(
+      native.sourceOnly.map(Ref.from),
+      native.targetOnly.map(Ref.from),
+      native.common ? Ref.from(native.common) : undefined,
+      error
+    );
   }
 
   return getDivergeDataBetweenTwoSnaps(

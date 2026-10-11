@@ -32,6 +32,10 @@ for (const args of [
     'teambit.component/component-compare',
     'teambit.workspace/workspace',
     'teambit.component/snapping',
+    'teambit.component/snap-distance',
+    'teambit.component/modules/merge-helper',
+    'teambit.component/merging',
+    'teambit.lanes/merge-lanes',
   ],
 ])
   cp.execFileSync(executable, [...prefix, ...args], { stdio: 'inherit' });
