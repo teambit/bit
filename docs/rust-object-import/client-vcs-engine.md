@@ -879,3 +879,118 @@ destination ownership and extended attributes. POSIX ACLs, links and other
 platforms retain canonical copying. Node continues to invoke public hooks and
 to serialize compressed lane backups. Rollout remains opt-in under
 `BIT_RUST_CLIENT_VCS=on`.
+
+### Recovery and reset qualification
+
+The production revision is
+`966c14f3127b293d23652b194e0dd1c082092dcf`. The packaged GNU helper has native
+source digest
+`819776cd3df0ab3c80a691d5fa9655f6a0412621cac20b1617f6739771f85dd5`
+and binary SHA256
+`6539e4701ce1bbfed059803413a0d8bab5d8bae2076bda849fbde2ef3cdd32c3`.
+The private CLI records the actual source and physically compiled module digests;
+qualification verifies these, the helper and its harness inputs before and after
+the run.
+
+Local checks pass 213 Rust tests, pinned formatting, strict Rust lints and full
+canonical CLI lint. Twelve recovery/reset tests pass in both source and compiled
+forms. They cover the already-written lane prefix, cancelled prompts, fresh
+staged bytes after compression hooks, compression errors, workspace-root aliases,
+typed bitmap errors, a 78-case bitmap corpus, Linux inode/mode/extended attributes,
+partially acknowledged backup persistence, main/visible/hidden-lane reset reference
+identity, changed cached parent identity after an acknowledged plan and custom
+loader error timing. Existing adapter regressions pass, with one intentional
+platform skip in the source suites. Nine diagnostic tests and all 30 packaged
+artifact/discovery tests also pass.
+
+The real-command driver creates three incoming lane snaps, performs a squash
+merge and a genuine silent abort, then creates two local snaps and runs head-only
+and full reset. It repeats this with staged snaps/configuration present and
+absent. Node, native, missing-helper and crashed-helper modes match exact source
+files, raw bitmap/configuration, stored objects, reachable history, staged state,
+recovery backups and public status. Reset retains the current working file bytes.
+
+Every native diagnostic command uses one helper. Both head-only and full reset
+must complete a `resetRefsPlan` request in each staged scenario. Abort must complete
+pending-state initialization/transition/commit and actual recovery filesystem
+steps. A successful outer protocol acknowledgement alone does not qualify: the
+driver requires positive `stepsCompleted` and zero `dataFailed`. Native merge
+capture/persistence completes 10 steps with staged state present and 6 with it
+absent; abort completes 5 and 3 respectively. Native bitmap planning succeeds in
+both aborts. Diagnostic observation preserves captured production method identities
+so that the observer itself does not force canonical fallback.
+
+Reproduce with `lane-recovery-qualification.cjs <private-cli> <release-helper>`.
+The qualification driver SHA256 is
+`936a93eaac52686d5d15f49bbd52260a60b42eb9309f0190736c04be7824aeb0`,
+merge fixture
+`55f63786803e14e9f7e78d7dfb172ae9054175d005e8a3aea7055ca2bf33f810`,
+staged/lane fixture
+`e615a25016b297b509ccb93e5803730b17374ced24c230d6fd28b2d1e1700551`,
+determinism preload
+`5e5bf6ca651bab8cc0744a468c9a4d4c882a79eb0b71b34c62740143f89c2722`,
+measurement core
+`8005a853e69a9245421df983a4810db841b7c391f84f45983b1dbd849f54e95d`,
+and observer
+`97cb446ff8a49d696e100be114868517646149dfd6a15c16191be1b18713975a`.
+
+### Recovery and reset command measurements
+
+`lane-recovery-measure.cjs <private-cli> <release-helper> <extra-files>
+<scratch-directory> <report.json>` invokes the same frozen qualification driver,
+with one warmup per mode and three alternating Node/native pairs. Use extra-files
+`0` and `256` for the 8- and 264-file workspaces. It retains separately identified
+staged-present and staged-absent samples for the incoming three-snap lane squash,
+silent abort, head-only reset and full reset. Warmups are excluded from medians.
+Diagnostics are disabled during measured commands. Wall time and CPU include the
+whole command; RSS samples the Node/helper/Git process tree every 10 ms.
+
+The fixture scratch directory selects tmpfs or Btrfs. Both modes use the same
+private CLI and shared `TMPDIR` under `/var/home/zoltan/bit-cli-staging`; this does
+not move every process temporary file onto the fixture filesystem. The native
+mode enables the shared client VCS engine, including its previously migrated
+kernels. These comparisons do not isolate the new recovery/reset policy alone.
+
+Ratios below are native/Node. Each row retains its staged state separately.
+
+| Case | Staged | Command | Wall ms Node→Rust | Ratio | CPU s Node→Rust | RSS MiB Node→Rust |
+|---|---|---|---:|---:|---:|---:|
+|tmpfs-8|present|lane merge --squash|386→396|1.03|0.54→0.55|216.8→220.2|
+|tmpfs-8|present|lane merge-abort --silent|306→315|1.03|0.39→0.40|161.0→165.4|
+|tmpfs-8|present|reset --head --force|241→246|1.02|0.29→0.30|145.0→148.5|
+|tmpfs-8|present|reset --force|232→249|1.07|0.28→0.31|143.3→148.2|
+|tmpfs-8|absent|lane merge --squash|383→392|1.03|0.54→0.55|216.5→221.1|
+|tmpfs-8|absent|lane merge-abort --silent|300→316|1.05|0.38→0.41|161.7→162.7|
+|tmpfs-8|absent|reset --head --force|237→244|1.03|0.29→0.29|145.0→148.9|
+|tmpfs-8|absent|reset --force|236→247|1.04|0.29→0.30|144.7→148.3|
+|tmpfs-264|present|lane merge --squash|561→574|1.02|0.78→0.77|315.3→339.7|
+|tmpfs-264|present|lane merge-abort --silent|455→433|0.95|0.59→0.57|204.4→232.6|
+|tmpfs-264|present|reset --head --force|244→250|1.03|0.29→0.30|144.3→149.0|
+|tmpfs-264|present|reset --force|243→241|0.99|0.29→0.29|144.4→149.3|
+|tmpfs-264|absent|lane merge --squash|533→575|1.08|0.73→0.77|314.7→338.3|
+|tmpfs-264|absent|lane merge-abort --silent|442→445|1.01|0.59→0.58|205.1→236.9|
+|tmpfs-264|absent|reset --head --force|246→250|1.02|0.29→0.31|145.3→149.0|
+|tmpfs-264|absent|reset --force|241→246|1.02|0.29→0.30|144.5→148.4|
+|btrfs-8|present|lane merge --squash|379→396|1.04|0.53→0.55|217.0→220.5|
+|btrfs-8|present|lane merge-abort --silent|311→320|1.03|0.40→0.42|157.5→162.8|
+|btrfs-8|present|reset --head --force|235→251|1.06|0.29→0.30|144.0→149.4|
+|btrfs-8|present|reset --force|235→246|1.04|0.29→0.30|144.4→149.0|
+|btrfs-8|absent|lane merge --squash|384→397|1.03|0.54→0.55|215.6→221.5|
+|btrfs-8|absent|lane merge-abort --silent|311→321|1.03|0.41→0.42|158.0→166.5|
+|btrfs-8|absent|reset --head --force|243→245|1.01|0.30→0.30|144.7→148.5|
+|btrfs-8|absent|reset --force|240→244|1.02|0.29→0.29|144.7→148.0|
+|btrfs-264|present|lane merge --squash|595→623|1.05|0.81→0.82|316.5→339.2|
+|btrfs-264|present|lane merge-abort --silent|500→468|0.94|0.67→0.63|204.5→230.5|
+|btrfs-264|present|reset --head --force|238→255|1.07|0.29→0.32|145.3→150.0|
+|btrfs-264|present|reset --force|244→251|1.03|0.30→0.30|144.0→147.8|
+|btrfs-264|absent|lane merge --squash|605→632|1.04|0.82→0.83|316.2→338.7|
+|btrfs-264|absent|lane merge-abort --silent|494→480|0.97|0.68→0.65|204.3→226.8|
+|btrfs-264|absent|reset --head --force|246→255|1.04|0.30→0.31|145.4→149.1|
+|btrfs-264|absent|reset --force|241→250|1.04|0.29→0.30|143.5→147.8|
+
+These measurements show no broad command speedup. Small-workspace medians are
+1.01–1.07 times the Node path. Large-workspace abort medians range from 0.94 to
+1.01, while squash ranges from 1.02 to 1.08 and reset from 0.99 to 1.07. Native
+RSS generally increases, especially for large squash/abort commands. The complete
+per-round samples and 96 paired ratios are retained with the case JSON, CSV and
+summary fingerprints; rollout stays opt-in.
