@@ -502,3 +502,61 @@ Dylint and rustdoc checks pass. The production revision is
 `c04e02ad536979b41993b78ec9a031f0d1c294c7136a77bf6935376da7576c4a`.
 The official explicit-target helper SHA-256 is
 `1d4f407a23fe73bfda8cd95a93232b42a5233a61dba34b6888157f32682ad940`.
+
+### Lane policy and state command measurements
+
+These measurements exercise the new lane snapshot and policy/state operation
+boundaries, with six real merge scenarios and 8 or 264 files at lane snapshot.
+Three retained alternating Node/native pairs follow an excluded paired warmup
+on Linux tmpfs and Btrfs. Every run retains exact six-policy workspace parity
+before generating compact report digests. Diagnostics are disabled for timing;
+CPU includes descendants, and RSS is sampled across the simultaneous process
+tree at 10 ms intervals. Both modes use `TMPDIR=/dev/shm`; canonical Git input
+files use the scope filesystem while native Git input files use system temp.
+
+| Filesystem | Files | Command         | Wall ms Node → Rust | Rust/Node | CPU s Node → Rust | RSS MiB Node → Rust |
+| ---------- | ----: | --------------- | ------------------: | --------: | ----------------: | ------------------: |
+| tmpfs      |     8 | laneSnap        |           404 → 420 |      1.04 |       0.54 → 0.56 |       231.1 → 245.6 |
+| tmpfs      |     8 | laneMergeManual |           440 → 438 |      1.00 |       0.60 → 0.59 |       232.4 → 238.2 |
+| tmpfs      |     8 | laneResolve     |           443 → 447 |      1.01 |       0.58 → 0.58 |       266.6 → 268.8 |
+| tmpfs      |     8 | laneMergeOurs   |           512 → 508 |      0.99 |       0.68 → 0.66 |       284.4 → 285.5 |
+| tmpfs      |     8 | laneAbort       |           209 → 212 |      1.01 |       0.25 → 0.26 |       130.1 → 130.8 |
+| tmpfs      |     8 | laneMergeSquash |           510 → 517 |      1.01 |       0.66 → 0.68 |       285.9 → 286.4 |
+| tmpfs      |   264 | laneSnap        |           569 → 591 |      1.04 |       0.81 → 0.80 |       340.9 → 364.4 |
+| tmpfs      |   264 | laneMergeManual |           703 → 714 |      1.01 |       0.99 → 0.97 |       337.9 → 354.1 |
+| tmpfs      |   264 | laneResolve     |           604 → 643 |      1.06 |       0.88 → 0.90 |       377.9 → 384.9 |
+| tmpfs      |   264 | laneMergeOurs   |           791 → 833 |      1.05 |       1.17 → 1.21 |       407.8 → 433.3 |
+| tmpfs      |   264 | laneAbort       |           218 → 211 |      0.97 |       0.26 → 0.25 |       130.6 → 129.5 |
+| tmpfs      |   264 | laneMergeSquash |           877 → 897 |      1.02 |       1.32 → 1.27 |       406.6 → 435.8 |
+| btrfs      |     8 | laneSnap        |           423 → 429 |      1.01 |       0.55 → 0.57 |       244.4 → 246.3 |
+| btrfs      |     8 | laneMergeManual |           452 → 444 |      0.98 |       0.60 → 0.57 |       234.1 → 235.6 |
+| btrfs      |     8 | laneResolve     |           455 → 449 |      0.99 |       0.58 → 0.56 |       267.0 → 268.1 |
+| btrfs      |     8 | laneMergeOurs   |           553 → 541 |      0.98 |       0.71 → 0.68 |       283.9 → 285.0 |
+| btrfs      |     8 | laneAbort       |           212 → 212 |      1.00 |       0.26 → 0.25 |       128.7 → 129.7 |
+| btrfs      |     8 | laneMergeSquash |           544 → 556 |      1.02 |       0.69 → 0.69 |       286.9 → 286.1 |
+| btrfs      |   264 | laneSnap        |           571 → 620 |      1.08 |       0.81 → 0.84 |       331.7 → 386.0 |
+| btrfs      |   264 | laneMergeManual |           752 → 759 |      1.01 |       1.08 → 1.03 |       336.8 → 353.1 |
+| btrfs      |   264 | laneResolve     |           625 → 671 |      1.07 |       0.96 → 0.91 |       377.3 → 392.8 |
+| btrfs      |   264 | laneMergeOurs   |           834 → 891 |      1.07 |       1.25 → 1.28 |       403.6 → 434.2 |
+| btrfs      |   264 | laneAbort       |           218 → 220 |      1.01 |       0.26 → 0.26 |       129.7 → 130.3 |
+| btrfs      |   264 | laneMergeSquash |          940 → 1005 |      1.07 |       1.46 → 1.44 |       402.3 → 432.1 |
+
+The selected small-case wall ratios range from 0.98 to 1.04; large-case ratios
+range from 0.97 to 1.08. Component abort and remerge range from 1.00 to 1.09,
+ours/theirs unrelated merges from 1.00 to 1.11, and automatic theirs from 0.99
+to 1.09 across all cases. These results establish operation ownership and
+correctness, with additional overhead on several large paths. They do not
+establish a broad command speedup. The engine remains opt-in.
+
+All four reports bind the production revision, native source and official
+helper fingerprints above, exact source/compiled adapter fingerprints, and the
+qualification harness digests. Retained per-round samples, full medians for
+all 44 case/operation combinations, CPU and RSS values, and CSV output remain
+in `bit-merge-state-evidence-2026-10-11/performance` outside Git. Reproduce with
+`merge-state-qualification.cjs <private-cli> <release-helper>` and
+`BIT_MERGE_STATE_QUALIFICATION_MEASURE=1`,
+`BIT_MERGE_STATE_QUALIFICATION_ROUNDS=3`,
+`BIT_MERGE_STATE_QUALIFICATION_DIAGNOSTICS=0`,
+`BIT_MERGE_STATE_QUALIFICATION_COMPACT_REPORT=1`, and
+`BIT_MERGE_STATE_QUALIFICATION_EXTRA_FILES=0` or `256`; select the filesystem
+with `BIT_MERGE_STATE_QUALIFICATION_TMPDIR`.

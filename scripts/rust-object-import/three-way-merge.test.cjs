@@ -81,6 +81,13 @@ async function setup(t) {
   return { directory, scope, model, current };
 }
 function publicResult(result) {
+  // Canonical updatedFiles pushes after parallel Source loads; compare its complete rows independently of I/O order.
+  const ordered = {
+    ...result,
+    updatedFiles: [...result.updatedFiles].sort((a, b) =>
+      a.filePath < b.filePath ? -1 : a.filePath > b.filePath ? 1 : 0
+    ),
+  };
   const file = (value) =>
     value && {
       relative: value.relative,
@@ -89,7 +96,7 @@ function publicResult(result) {
       label: value.label,
     };
   return Object.fromEntries(
-    Object.entries(result).map(([kind, rows]) => [
+    Object.entries(ordered).map(([kind, rows]) => [
       kind,
       Array.isArray(rows)
         ? rows.map((row) => ({
@@ -228,4 +235,47 @@ test('native merge input frames contain only verified descriptors rather than so
     assert.equal(row.body, undefined);
     assert.equal(row.contents, undefined);
   }
+});
+
+test('canonical updated files follow Source load completion order while parity preserves complete rows', async (t) => {
+  const fixture = await setup(t);
+  const params = {
+    scope: fixture.scope,
+    baseComponent: await fixture.model({ 'first.js': 'base first\n', 'second.js': 'base second\n' }),
+    otherComponent: await fixture.model({ 'first.js': 'other first\n', 'second.js': 'other second\n' }),
+    currentComponent: await fixture.current({ 'first.js': 'base first\n', 'second.js': 'base second\n' }),
+    currentLabel: 'current',
+    otherLabel: 'other',
+  };
+  const first = Source.from(Buffer.from('other first\n'));
+  const second = Source.from(Buffer.from('other second\n'));
+  let releaseFirst;
+  const firstLoad = new Promise((resolve) => {
+    releaseFirst = () => resolve(first);
+  });
+  params.otherComponent.files[0].file.load = () => firstLoad;
+  params.otherComponent.files[1].file.load = async () => second;
+  Object.defineProperty(second, 'contents', {
+    get() {
+      // Reading the second body happens immediately before its push; only then release the first load.
+      releaseFirst();
+      return Buffer.from('other second\n');
+    },
+  });
+  process.env.BIT_RUST_CLIENT_VCS = 'off';
+  let result;
+  try {
+    result = await merge.threeWayMerge(params);
+  } finally {
+    process.env.BIT_RUST_CLIENT_VCS = 'on';
+  }
+  assert.deepEqual(
+    result.updatedFiles.map((row) => row.filePath),
+    ['second.js', 'first.js']
+  );
+  assert.deepEqual(
+    result.updatedFiles.map((row) => row.content.toString()),
+    ['other second\n', 'other first\n']
+  );
+  assert.deepEqual(publicResult(result), publicResult({ ...result, updatedFiles: [...result.updatedFiles].reverse() }));
 });
