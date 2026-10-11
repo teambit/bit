@@ -312,15 +312,10 @@ Module._load = function (request, parent, isMain) {
     wrap(Version.prototype, 'validateVersion', 'versionConstructorChecks');
     wrap(Version.prototype, 'validate', 'versionFullValidation');
     wrap(Version.prototype, 'toObject', 'versionObjectProjection');
-    wrap(
-      Version.prototype,
-      'toBuffer',
-      'versionSerialization',
-      function (buffer) {
-        metrics.version.serializedObjects++;
-        metrics.version.serializedBytes += buffer.byteLength;
-      }
-    );
+    wrap(Version.prototype, 'toBuffer', 'versionSerialization', function (buffer) {
+      metrics.version.serializedObjects++;
+      metrics.version.serializedBytes += buffer.byteLength;
+    });
     // Keep serialize/compressWithSize identities intact: native eligibility compares them to BitObject's methods.
   }
   if (value?.Repository) {
