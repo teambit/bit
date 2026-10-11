@@ -1,11 +1,12 @@
 import vinylFile from 'vinyl-file';
 import fs from 'fs-extra';
 import { logger } from '@teambit/legacy.logger';
-import type { Repository, SourceFileModel } from '@teambit/objects';
+import { registerRustSnapshotTransactionClass, type Repository, type SourceFileModel } from '@teambit/objects';
 import type { PathOsBased } from '@teambit/toolbox.path.path';
 import FileSourceNotFound from './file-source-not-found';
 import AbstractVinyl from './abstract-vinyl';
 import { forEach } from 'lodash';
+import { inheritRustWorkspaceFileSnapshot } from './rust-workspace-identity';
 
 export default class SourceFile extends AbstractVinyl {
   static load(
@@ -53,11 +54,15 @@ export default class SourceFile extends AbstractVinyl {
 
   clone(): this {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return new SourceFile(this);
+    const clone = new SourceFile(this);
+    inheritRustWorkspaceFileSnapshot(this, clone);
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    return clone;
   }
 }
 
 const defaultSourceFileLoad = SourceFile.load;
+registerRustSnapshotTransactionClass('SourceFile', SourceFile);
 const defaultReadSync = vinylFile.readSync;
 const defaultModelLoad = SourceFile.loadFromSourceFileModel;
 /** Native reads must not bypass a custom SourceFile or Vinyl reader. */

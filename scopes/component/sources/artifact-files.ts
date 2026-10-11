@@ -6,12 +6,13 @@ import { logger } from '@teambit/legacy.logger';
 import type { Scope } from '@teambit/legacy.scope';
 import { MissingObjects } from '@teambit/legacy.scope';
 import type { Lane, Source } from '@teambit/objects';
-import { Ref } from '@teambit/objects';
+import { Ref, registerRustSnapshotTransactionClass } from '@teambit/objects';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { ArtifactVinyl } from './artifact';
 import { compact } from 'lodash';
+import { inheritRustArtifactFile, registerRustArtifactFile, registerRustArtifactSource } from './rust-artifact-source';
 
 export type ArtifactRef = { relativePath: string; ref: Ref; url?: string };
 export type ArtifactModel = { relativePath: string; file: string; url?: string };
@@ -52,7 +53,11 @@ export class ArtifactFiles {
   ) {}
 
   clone() {
-    const vinyls = this.vinyls.map((vinyl) => vinyl.clone());
+    const vinyls = this.vinyls.map((vinyl) => {
+      const clone = vinyl.clone();
+      inheritRustArtifactFile(vinyl, clone);
+      return clone;
+    });
     const refs = this.refs.map((ref) => ({ ...ref }));
     return new ArtifactFiles({ ...this.paths }, vinyls, refs);
   }
@@ -71,7 +76,10 @@ export class ArtifactFiles {
       const fullPath = path.join(rootDir, file);
       if (fs.existsSync(fullPath)) {
         existingPaths.push(file);
-        acc.push(new ArtifactVinyl({ path: file, contents: fs.readFileSync(fullPath) }));
+        const contents = fs.readFileSync(fullPath);
+        const vinyl = new ArtifactVinyl({ path: file, contents });
+        registerRustArtifactFile(vinyl, fullPath, contents);
+        acc.push(vinyl);
       } else {
         logger.debug(
           `populateVinylsFromPaths: file "${fullPath}" not found, skipping. (may have been removed by a later build task)`
@@ -113,9 +121,12 @@ export class ArtifactFiles {
 
   static fromVinylsToSources(vinyls: ArtifactVinyl[]): ArtifactSource[] {
     return vinyls.map((artifact) => {
+      const relativePath = pathNormalizeToLinux(artifact.relative);
+      const source = artifact.toSourceAsLinuxEOL();
+      registerRustArtifactSource(artifact, source);
       return {
-        relativePath: pathNormalizeToLinux(artifact.relative),
-        source: artifact.toSourceAsLinuxEOL(),
+        relativePath,
+        source,
         url: artifact.url,
       };
     });
@@ -375,3 +386,5 @@ export function deserializeArtifactFiles(obj: { paths: string[]; vinyls: Artifac
 function getBuildArtifacts(extensions: ExtensionDataList): ArtifactObject[] {
   return extensions.findExtension('teambit.pipelines/builder')?.data?.artifacts || [];
 }
+
+registerRustSnapshotTransactionClass('ArtifactFiles', ArtifactFiles);

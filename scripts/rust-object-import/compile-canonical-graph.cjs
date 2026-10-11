@@ -42,6 +42,10 @@ for (const args of [
     'teambit.legacy/scope-api',
     'teambit.legacy/extension-data',
     'teambit.legacy/logger',
+    'teambit.dependencies/dependency-resolver',
+    'teambit.harmony/aspect',
+    'teambit.envs/envs',
+    'teambit.pkg/modules/semver-helper',
   ],
 ])
   cp.execFileSync(executable, [...prefix, ...args], { stdio: 'inherit' });

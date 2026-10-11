@@ -1,4 +1,4 @@
-import { Ref, Source, canHashSourceNatively } from '@teambit/objects';
+import { Ref, Source, canHashSourceNatively, hasRustSnapshotTransactionClass } from '@teambit/objects';
 import * as eol from '@teambit/toolbox.string.eol';
 import type AbstractVinyl from './abstract-vinyl';
 import { defaultVinylToSource } from './abstract-vinyl';
@@ -37,6 +37,19 @@ export function registerRustWorkspaceFile(file: AbstractVinyl, read: RustWorkspa
   if (file.path !== read.path || !Buffer.isBuffer(file.contents) || !file.contents.equals(read.contents)) return;
   // The retained copy detects mutation of the original Buffer without hashing it again in Node.
   snapshots.set(file, { ...read, contents: Buffer.from(read.contents) });
+}
+
+/** Ordinary component clones keep the same verified disk snapshot and canonical Buffer aliasing. */
+export function inheritRustWorkspaceFileSnapshot(original: AbstractVinyl, clone: AbstractVinyl): void {
+  if (
+    process.env.BIT_RUST_CLIENT_VCS !== 'on' ||
+    !hasRustSnapshotTransactionClass(original, 'SourceFile') ||
+    !hasRustSnapshotTransactionClass(clone, 'SourceFile')
+  )
+    return;
+  const value = snapshot(original);
+  if (!value || !hasOrdinaryWorkspaceProperties(clone)) return;
+  registerRustWorkspaceFile(clone, value);
 }
 
 function snapshot(file: AbstractVinyl): Snapshot | undefined {

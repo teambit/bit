@@ -1,3 +1,4 @@
+import { registerRustSnapshotTransactionClass } from '@teambit/objects';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import fs from 'fs-extra';
 import { v4 } from 'uuid';
@@ -639,3 +640,5 @@ async function getLoadedFiles(
 function _getDocsForFiles(files: SourceFile[], componentFsCache: FsCache): Array<Promise<Doclet[]>> {
   return files.map((file) => (file.test ? Promise.resolve([]) : docsParser(file, componentFsCache)));
 }
+
+registerRustSnapshotTransactionClass('ConsumerComponent', Component);

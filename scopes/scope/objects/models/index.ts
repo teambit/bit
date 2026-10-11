@@ -34,7 +34,7 @@ registerRustSquashModels({ ModelComponent, Version, VersionHistory });
 
 import { registerRustResetClass } from '../objects/rust-reset-refs';
 import { DetachedHeads } from './detach-heads';
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BitId } from '@teambit/legacy-bit-id';
 for (const [name, constructor] of Object.entries({
   ModelComponent,
@@ -70,3 +70,27 @@ registerRustTransferClass('Array', Array, [
   'push',
   'forEach',
 ]);
+import { registerRustSnapshotTransactionClass, registerRustSnapshotFunctions } from '../objects/rust-snapshot-guards';
+import { LaneId } from '@teambit/lane-id';
+import Ref from '../objects/ref';
+import BitObject from '../objects/object';
+for (const [name, constructor] of Object.entries({
+  ModelComponent,
+  Version,
+  Lane,
+  VersionHistory,
+  LaneHistory,
+  Source,
+  ScopeMeta,
+  DetachedHeads,
+  ComponentID,
+  BitId,
+  LaneId,
+  Ref,
+  ComponentIdList,
+  Array,
+}))
+  registerRustSnapshotTransactionClass(name, constructor);
+registerRustSnapshotFunctions('SnapshotBitObject', BitObject, ['makeHash']);
+
+export { canPlanRustSnapshotFutureVersions } from './model-component';

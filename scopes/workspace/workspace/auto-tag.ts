@@ -1,3 +1,9 @@
+import {
+  isRustSnapshotTransaction,
+  registerRustSnapshotFunctionReference,
+  hasRustSnapshotFunctionReference,
+} from '@teambit/objects';
+import { planRustAutoTagInfo } from './rust-auto-tag';
 import graphlib, { Graph } from 'graphlib';
 import semver from 'semver';
 import { ComponentIdList } from '@teambit/component-id';
@@ -25,6 +31,13 @@ export async function getAutoTagInfo(
   const idsToLoad = new ComponentIdList(...potentialComponents, ...changedComponents);
   const workspaceComponents = await workspace.getMany(idsToLoad, undefined, false);
   const components = workspaceComponents.map((workspaceComponent) => workspaceComponent.state._consumer);
+  const native =
+    isRustSnapshotTransaction() &&
+    hasRustSnapshotFunctionReference('SnapshotIsTag', isTag) &&
+    hasRustSnapshotFunctionReference('SnapshotSemverGte', semver.gte)
+      ? await planRustAutoTagInfo(components, changedComponents)
+      : undefined;
+  if (native) return native;
   const graph = buildGraph(components);
 
   const autoTagResults: AutoTagResult[] = [];
@@ -99,3 +112,6 @@ function potentialComponentsForAutoTagging(consumer: Consumer, modifiedComponent
   );
   return ComponentIdList.fromArray(idsWithoutModified);
 }
+
+registerRustSnapshotFunctionReference('SnapshotIsTag', isTag);
+registerRustSnapshotFunctionReference('SnapshotSemverGte', semver.gte);

@@ -1,5 +1,6 @@
 import { registerRustTransferClass, persistRustTransferPending } from './rust-transfer';
 import { registerRustResetClass } from './rust-reset-refs';
+import { registerRustSnapshotFunctions } from './rust-snapshot-guards';
 import fs from 'fs-extra';
 import { registerRustSquashRepository } from './rust-squash-history';
 import { Mutex } from 'async-mutex';
@@ -35,6 +36,9 @@ import Ref from './ref';
 import { nativeObjectDirectory, nativeTraversalEnabled } from './rust-object-directory';
 import { NativeImportOperation } from './rust-object-operation';
 import { persistRustSnapshotObjects, createRustSnapshotIndexOperation } from './rust-snapshot';
+import { persistPreparedRustSnapshotObjects } from './rust-snapshot-store';
+import { isRustSnapshotTransaction } from './rust-snapshot-transaction';
+import { RustSnapshotRepositoryJournal } from './rust-snapshot-repository';
 import { registerRustHistoryRepository } from './rust-merge-history';
 import { resolveRustObjectImportExecutable } from './rust-object-discovery';
 import { nativeInventoryEnabled, nativeObjectExists } from './rust-object-inventory';
@@ -811,21 +815,41 @@ export default class Repository {
     // do not let two requests enter this critical area, otherwise, refs/index.json/objects could
     // be corrupted
     logger.debug(`Repository.persist, going to acquire a lock`);
+    let journal: RustSnapshotRepositoryJournal | undefined;
     await this.persistMutex.runExclusive(async () => {
       logger.debug(`Repository.persist, validate = ${validate.toString()}, a lock has been acquired`);
-      await this.deleteObjectsFromFS(this.objectsToRemove);
-      this.validateObjects(validate, Object.values(this.objects));
-      await this.writeObjectsToTheFS(Object.values(this.objects));
-      await this.writeRemoteLanes();
-      await this.unmergedComponents.write();
+      if (isRustSnapshotTransaction()) journal = await RustSnapshotRepositoryJournal.begin(this);
+      try {
+        await this.deleteObjectsFromFS(this.objectsToRemove);
+        if (journal) await journal.completed(Object.values(this.objects).length);
+        this.validateObjects(validate, Object.values(this.objects));
+        if (journal) await journal.completed(Object.values(this.objects).length);
+        const objects = Object.values(this.objects);
+        if (journal) {
+          await this.writeObjectsToTheFS(objects, undefined, () => journal!.completed());
+          if (!objects.length) {
+            await journal.completed();
+            await journal.completed();
+          }
+        } else await this.writeObjectsToTheFS(objects);
+        await this.writeRemoteLanes();
+        if (journal) await journal.completed();
+        await this.unmergedComponents.write();
+        if (journal) await journal.completed();
+      } catch (error) {
+        if (journal) await journal.failed();
+        throw error;
+      }
     });
     logger.debug(`Repository.persist, completed. the lock has been released`);
     this.clearObjects();
+    if (journal) await journal.completed();
     if (Repository.onPostObjectsPersist) {
       Repository.onPostObjectsPersist().catch((err) => {
         logger.error('fatal: onPostObjectsPersist encountered an error (this error does not stop the process)', err);
       });
     }
+    if (journal) await journal.completed();
   }
 
   async writeRemoteLanes() {
@@ -944,16 +968,33 @@ export default class Repository {
   /**
    * write all objects to the FS and index the components/lanes/symlink objects
    */
-  async writeObjectsToTheFS(objects: BitObject[], rawObjects?: RawObjectsMap): Promise<void> {
+  async writeObjectsToTheFS(
+    objects: BitObject[],
+    rawObjects?: RawObjectsMap,
+    receipt?: () => Promise<void>
+  ): Promise<void> {
     const count = objects.length;
     if (!count) return;
     logger.trace(`Repository.writeObjectsToTheFS: started writing ${count} objects`);
     const concurrency = concurrentIOLimit();
     const chownOptions = await this.getChownOptions();
-    const completed = await persistRustSnapshotObjects(this, objects, rawObjects, chownOptions);
+    const transaction = isRustSnapshotTransaction();
+    const completed = transaction
+      ? undefined
+      : await persistRustSnapshotObjects(this, objects, rawObjects, chownOptions);
     await pMapPool(
       completed ? objects.slice(completed) : objects,
       async (obj) => {
+        // Retain the canonical pool's failure prefix and per-object callback boundary.
+        const prepared = transaction
+          ? await persistPreparedRustSnapshotObjects(this, [obj], rawObjects, chownOptions)
+          : undefined;
+        if (prepared?.completed === 1) return;
+        const resume = prepared?.fallback.get(obj);
+        if (resume) {
+          await this._writeOne(obj, await resume(), chownOptions);
+          return;
+        }
         const operation = this.getNativeImportOperation();
         if (
           operation &&
@@ -988,6 +1029,7 @@ export default class Repository {
       { concurrency }
     );
     logger.trace(`Repository.writeObjectsToTheFS: completed writing ${count} objects`);
+    if (receipt) await receipt();
 
     const snapshot = createRustSnapshotIndexOperation(this, chownOptions);
     const added = await this.scopeIndex.addManyForImport(objects, snapshot || this.getNativeImportOperation());
@@ -1000,6 +1042,7 @@ export default class Repository {
         this.scopeIndex.nativeSnapshotOperation = previous;
       }
     }
+    if (receipt) await receipt();
   }
 
   async withNativeImportOperation<T>(run: () => Promise<T>): Promise<T> {
@@ -1273,6 +1316,37 @@ registerRustTransferClass('BitObject', BitObject, []);
 registerRustResetClass('BitObject', BitObject);
 registerRustHistoryRepository(Repository);
 registerRustSquashRepository(Repository, BitObject);
+registerRustSnapshotFunctions('SnapshotRepositoryFS', fs, [
+  'existsSync',
+  'stat',
+  'writeFile',
+  'mkdir',
+  'chown',
+  'chmod',
+  'rename',
+  'remove',
+  'readFile',
+  'mkdtemp',
+]);
+registerRustSnapshotFunctions('SnapshotRepositoryPath', path, ['join', 'resolve', 'dirname', 'basename']);
+registerRustSnapshotFunctions('SnapshotRepositoryLogger', logger, ['trace', 'debug', 'error']);
+registerRustSnapshotFunctions('SnapshotRepositoryMethods', Repository.prototype, [
+  'getCache',
+  'getPath',
+  'canPersistSnapshotsNatively',
+  'recordNativeObjectWrite',
+  'isNativeSourceStoreEligible',
+  'isContentTransformed',
+  'canWriteMutableObjectsNatively',
+]);
+registerRustSnapshotFunctions('SnapshotRepositoryJournal', Repository.prototype, [
+  'persist',
+  'deleteObjectsFromFS',
+  'validateObjects',
+  'writeObjectsToTheFS',
+  'writeRemoteLanes',
+  'clearObjects',
+]);
 
 const snapshotRepositoryDefaults = [
   'writeObjectsToTheFS',
