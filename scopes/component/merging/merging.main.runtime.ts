@@ -530,7 +530,7 @@ export class MergingMain {
       return tag ? componentId.changeVersion(tag) : componentId;
     };
 
-    const handleResolveUnrelated = (legacyCompToWrite?: ConsumerComponent) => {
+    const handleResolveUnrelated = async (legacyCompToWrite?: ConsumerComponent) => {
       if (!currentComponent) throw new Error('currentComponent must be defined when resolvedUnrelated');
       // because when on a main, we don't allow merging lanes with unrelated. we asks users to switch to the lane
       // first and then merge with --resolve-unrelated
@@ -542,7 +542,9 @@ export class MergingMain {
         headOnCurrentLane: resolvedUnrelated.headOnCurrentLane,
         unrelatedLaneId: resolvedUnrelated.unrelatedLaneId,
       };
-      legacyScope.objects.unmergedComponents.addEntry(unmergedComponent);
+      if (process.env.BIT_RUST_CLIENT_VCS === 'on')
+        await legacyScope.objects.unmergedComponents.addEntryNative(unmergedComponent);
+      else legacyScope.objects.unmergedComponents.addEntry(unmergedComponent);
       const idForOutput = convertHashToTagIfPossible(id);
       return { applyVersionResult: { id: idForOutput, filesStatus }, component: currentComponent, legacyCompToWrite };
     };
@@ -555,7 +557,9 @@ export class MergingMain {
     };
     if (mergeResults && mergeResults.hasConflicts && mergeStrategy === MergeOptions.ours) {
       markAllFilesAsUnchanged();
-      legacyScope.objects.unmergedComponents.addEntry(unmergedComponent);
+      if (process.env.BIT_RUST_CLIENT_VCS === 'on')
+        await legacyScope.objects.unmergedComponents.addEntryNative(unmergedComponent);
+      else legacyScope.objects.unmergedComponents.addEntry(unmergedComponent);
       const idForOutput = convertHashToTagIfPossible(id);
       return { applyVersionResult: { id: idForOutput, filesStatus }, component: currentComponent || undefined };
     }
@@ -604,7 +608,9 @@ export class MergingMain {
       if (mergeResults.hasConflicts && mergeStrategy === MergeOptions.manual) {
         unmergedComponent.unmergedPaths = mergeResults.modifiedFiles.filter((f) => f.conflict).map((f) => f.filePath);
       }
-      legacyScope.objects.unmergedComponents.addEntry(unmergedComponent);
+      if (process.env.BIT_RUST_CLIENT_VCS === 'on')
+        await legacyScope.objects.unmergedComponents.addEntryNative(unmergedComponent);
+      else legacyScope.objects.unmergedComponents.addEntry(unmergedComponent);
     } else if (currentLane) {
       if (resolvedUnrelated) {
         // must be "theirs"
@@ -635,7 +641,9 @@ export class MergingMain {
     const consumer = this.workspace.consumer;
     const ids = await this.getIdsForUnmerged(pattern);
     const results = await this.checkout.checkout({ ids, reset: true });
-    ids.forEach((id) => consumer.scope.objects.unmergedComponents.removeComponent(id));
+    if (process.env.BIT_RUST_CLIENT_VCS === 'on')
+      await consumer.scope.objects.unmergedComponents.removeComponentsNative(ids);
+    else ids.forEach((id) => consumer.scope.objects.unmergedComponents.removeComponent(id));
     await consumer.scope.objects.unmergedComponents.write();
     return { abortedComponents: results.components };
   }

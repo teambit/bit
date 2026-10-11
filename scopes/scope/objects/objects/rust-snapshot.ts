@@ -14,6 +14,7 @@ import type { AddVersionOpts } from '../models/model-component';
 import type Version from '../models/version';
 import type Lane from '../models/lane';
 import Ref from './ref';
+import { addRustLaneSnapshotVersion } from './rust-lane-snapshot';
 import { isTag } from '@teambit/component-version';
 
 type Constructor = { prototype: BitObject; name: string };
@@ -251,7 +252,8 @@ export async function addRustSnapshotVersion(
   previouslyUsedVersion?: string,
   options: AddVersionOpts = {}
 ): Promise<string | undefined> {
-  if (!isRustSnapshotOperation() || lane || !component.canAddSnapshotVersionNatively(version)) return undefined;
+  if (lane) return addRustLaneSnapshotVersion(component, version, versionToAdd, lane, previouslyUsedVersion, options);
+  if (!isRustSnapshotOperation() || !component.canAddSnapshotVersionNatively(version)) return undefined;
   const readReferences = () => {
     const head = component.getHead();
     const parent = previouslyUsedVersion ? component.getRef(previouslyUsedVersion) : undefined;

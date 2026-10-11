@@ -3,7 +3,13 @@ import fs from 'fs-extra';
 import { compact, difference, without } from 'lodash';
 import path from 'path';
 import { ComponentID } from '@teambit/component-id';
-import { Ref } from '@teambit/objects';
+import {
+  Ref,
+  projectRustUnmergedIds,
+  registerRustUnmergedComponents,
+  transitionRustUnmergedState,
+  persistRustUnmergedState,
+} from '@teambit/objects';
 
 export type UnmergedComponent = {
   id: {
@@ -111,6 +117,23 @@ export class UnmergedComponents {
     this.hasChanged = true;
   }
 
+  async addEntryNative(entry: UnmergedComponent): Promise<void> {
+    if (process.env.BIT_RUST_CLIENT_VCS !== 'on') {
+      this.addEntry(entry);
+      return;
+    }
+    const changed = await transitionRustUnmergedState(this, { kind: 'add', entry });
+    if (changed === undefined) this.addEntry(entry);
+  }
+
+  async removeComponentsNative(ids: ComponentID[]): Promise<boolean> {
+    if (process.env.BIT_RUST_CLIENT_VCS !== 'on') return this.removeMultipleComponents(ids);
+    const projected = projectRustUnmergedIds(ids);
+    if (!projected) return this.removeMultipleComponents(ids);
+    const changed = await transitionRustUnmergedState(this, { kind: 'remove', ids: projected });
+    return changed === undefined ? this.removeMultipleComponents(ids) : changed;
+  }
+
   getEntry(id: ComponentID): UnmergedComponent | undefined {
     return this.unmerged.find((u) => u.id.name === id.fullName && u.id.scope === id.scope);
   }
@@ -142,6 +165,7 @@ export class UnmergedComponents {
 
   async write() {
     if (!this.hasChanged) return;
+    if (process.env.BIT_RUST_CLIENT_VCS === 'on' && (await persistRustUnmergedState(this))) return;
     await fs.outputFile(this.filePath, JSON.stringify(this.toObject(), null, 2));
   }
 
@@ -167,3 +191,5 @@ export class UnmergedComponents {
     return `merge ${unmergedComponent.laneId.toString()}`;
   }
 }
+
+registerRustUnmergedComponents(UnmergedComponents);

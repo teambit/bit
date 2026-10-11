@@ -25,3 +25,6 @@ registerRustSnapshotModels({
 
 import { registerRustHistoryVersion } from '../objects/rust-merge-history';
 registerRustHistoryVersion(Version);
+
+import { registerRustLaneSnapshotModels } from '../objects/rust-lane-snapshot';
+registerRustLaneSnapshotModels({ ModelComponent, Version, Lane });

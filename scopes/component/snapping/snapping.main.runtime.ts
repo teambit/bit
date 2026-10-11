@@ -36,7 +36,15 @@ import { ConfigStoreAspect } from '@teambit/config-store';
 import type { ScopeMain } from '@teambit/scope';
 import { ScopeAspect } from '@teambit/scope';
 import type { Repository, Lane, ModelComponent, DepEdge, DepEdgeType, Log, AddVersionOpts } from '@teambit/objects';
-import { BitObject, Ref, Version, withRustSnapshotOperation, addRustSnapshotVersion } from '@teambit/objects';
+import {
+  BitObject,
+  Ref,
+  Version,
+  withRustSnapshotOperation,
+  addRustSnapshotVersion,
+  reconcileRustMergeSnapshot,
+  isRustSnapshotOperation,
+} from '@teambit/objects';
 import type { Component, ConsumerComponent } from '@teambit/component';
 import type { DependencyResolverMain, VariantPolicyConfigArr } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
@@ -1179,7 +1187,16 @@ another option, in case this dependency is not in main yet is to remove all refe
     }
     const unmergedComponent = this.scope.legacyScope.objects.unmergedComponents.getEntry(component.toComponentId());
     if (unmergedComponent) {
-      if (unmergedComponent.unrelated) {
+      const nativeReconciled = isRustSnapshotOperation()
+        ? await reconcileRustMergeSnapshot(
+            version,
+            unmergedComponent,
+            source.previouslyUsedVersion,
+            getLogForSquash,
+            (pending) => UnmergedComponents.buildSnapMessage(pending)
+          )
+        : false;
+      if (!nativeReconciled && unmergedComponent.unrelated) {
         this.logger.debug(
           `sources.addSource, unmerged component "${component.name}". adding an unrelated entry ${unmergedComponent.head.hash}`
         );
@@ -1198,7 +1215,7 @@ another option, in case this dependency is not in main yet is to remove all refe
           version.setUnrelated({ head: unrelated.unrelatedHead, laneId: unrelated.unrelatedLaneId });
           version.addAsOnlyParent(unrelated.headOnCurrentLane);
         }
-      } else if (unmergedComponent.shouldSquash) {
+      } else if (!nativeReconciled && unmergedComponent.shouldSquash) {
         // --squash on diverged components: record the dropped lane-b head in squashed metadata
         // and leave `version.parents` as the single current-lane head. lane-b's history remains
         // reachable only on its own scope; the merge snap chain stays self-contained on this lane.
@@ -1212,7 +1229,7 @@ another option, in case this dependency is not in main yet is to remove all refe
           `sources.addSource, unmerged component "${component.name}". squash-on-diverged: dropping parent ${unmergedComponent.head.hash}`
         );
         version.log.message = version.log.message || UnmergedComponents.buildSnapMessage(unmergedComponent);
-      } else {
+      } else if (!nativeReconciled) {
         // this is adding a second parent to the version. the order is important. the first parent is coming from the current-lane.
         version.addParent(unmergedComponent.head);
         this.logger.debug(
@@ -1220,7 +1237,11 @@ another option, in case this dependency is not in main yet is to remove all refe
         );
         version.log.message = version.log.message || UnmergedComponents.buildSnapMessage(unmergedComponent);
       }
-      this.scope.legacyScope.objects.unmergedComponents.removeComponent(component.toComponentId());
+      if (isRustSnapshotOperation()) {
+        await this.scope.legacyScope.objects.unmergedComponents.removeComponentsNative([component.toComponentId()]);
+      } else {
+        this.scope.legacyScope.objects.unmergedComponents.removeComponent(component.toComponentId());
+      }
     }
     if (shouldValidateVersion) version.validate();
     return { addedVersionStr, component, version };
