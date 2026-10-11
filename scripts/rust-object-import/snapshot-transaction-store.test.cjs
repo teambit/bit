@@ -63,8 +63,11 @@ async function fixture(t) {
     scopeJson: { name: 'qualification', groupName: undefined },
   });
   const oldFlag = process.env.BIT_RUST_CLIENT_VCS,
-    oldHelper = process.env.BIT_RUST_OBJECT_IMPORT;
+    oldHelper = process.env.BIT_RUST_OBJECT_IMPORT,
+    oldWindowsWrites = process.env.BIT_RUST_OBJECT_IMPORT_WINDOWS_WRITES;
   process.env.BIT_RUST_CLIENT_VCS = 'on';
+  // The repository intentionally requires a separate Windows write opt-in.
+  if (process.platform === 'win32') process.env.BIT_RUST_OBJECT_IMPORT_WINDOWS_WRITES = 'on';
   process.env.BIT_RUST_OBJECT_IMPORT =
     process.env.BIT_TEST_OBJECT_IMPORT ||
     path.join(root, 'native/target/debug/bit-object-import' + (process.platform === 'win32' ? '.exe' : ''));
@@ -73,6 +76,8 @@ async function fixture(t) {
     else process.env.BIT_RUST_CLIENT_VCS = oldFlag;
     if (oldHelper === undefined) delete process.env.BIT_RUST_OBJECT_IMPORT;
     else process.env.BIT_RUST_OBJECT_IMPORT = oldHelper;
+    if (oldWindowsWrites === undefined) delete process.env.BIT_RUST_OBJECT_IMPORT_WINDOWS_WRITES;
+    else process.env.BIT_RUST_OBJECT_IMPORT_WINDOWS_WRITES = oldWindowsWrites;
   });
   return repository;
 }
