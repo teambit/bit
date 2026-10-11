@@ -68,7 +68,7 @@ pub(super) fn plan(input: &Value) -> io::Result<(Value, Conflict)> {
     if contents.len() > MAX_BYTES {
         return Err(invalid("config output budget"));
     }
-    crate::merge_state::write::commit(&fallback, &contents)?;
+    candidate(&fallback, &contents)?;
     let digest = crate::validate::hexadecimal(&Sha1::digest(contents.as_bytes()));
     let mut token = Sha1::new();
     token.update(path.as_os_str().as_encoded_bytes());
@@ -128,4 +128,28 @@ fn absolute(path: &Path) -> io::Result<()> {
         return Err(invalid("config path"));
     }
     Ok(())
+}
+
+#[cfg(not(windows))]
+fn candidate(path: &Path, contents: &str) -> io::Result<()> {
+    crate::merge_state::write::commit(path, contents)
+}
+#[cfg(windows)]
+fn candidate(path: &Path, contents: &str) -> io::Result<()> {
+    use std::io::Write;
+    absolute(path)?;
+    let metadata = fs::symlink_metadata(path)?;
+    if !metadata.is_file() || metadata.len() != 0 || contents.len() > MAX_BYTES {
+        return Err(invalid("config private candidate changed"));
+    }
+    // The caller owns this empty temporary candidate, never a workspace target.
+    // Recreate it exclusively so even a hard-linked empty candidate cannot cause
+    // another inode alias to receive the conflict bytes. A raced replacement
+    // fails create_new rather than following it or truncating another file.
+    fs::remove_file(path)?;
+    fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(path)?
+        .write_all(contents.as_bytes())
 }

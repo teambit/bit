@@ -50,6 +50,59 @@ fn jsonc_missing_substring_preflight_preserves_source_and_candidate() {
     assert_eq!(std::fs::read(directory.0.join("workspace.jsonc")).unwrap(), source);
     assert!(std::fs::read(directory.0.join("fallback.jsonc")).unwrap().is_empty());
 }
+#[test]
+fn jsonc_private_candidate_plan_is_portable_and_does_not_write_workspace() {
+    use sha1::Digest;
+    let directory = Directory::new();
+    let input = directory.input();
+    let source = std::fs::read(directory.0.join("workspace.jsonc")).unwrap();
+    let response = request(input);
+    assert_eq!(response["failed"], false);
+    assert_eq!(response["completed"], 1);
+    assert_eq!(std::fs::read(directory.0.join("workspace.jsonc")).unwrap(), source);
+    let candidate = std::fs::read(directory.0.join("fallback.jsonc")).unwrap();
+    let text = String::from_utf8(candidate.clone()).unwrap();
+    assert!(text.contains("<<<<<<< ours"));
+    assert!(text.contains(">>>>>>> theirs"));
+    assert!(text.contains("1.0.0"));
+    assert!(text.contains("2.0.0"));
+    assert_eq!(response["data"]["bytes"], candidate.len());
+    assert_eq!(
+        response["data"]["sha1"],
+        crate::validate::hexadecimal(&sha1::Sha1::digest(&candidate)),
+    );
+}
+#[test]
+fn nonempty_private_candidate_declines_without_mutation() {
+    let directory = Directory::new();
+    let input = directory.input();
+    let source = std::fs::read(directory.0.join("workspace.jsonc")).unwrap();
+    std::fs::write(directory.0.join("fallback.jsonc"), "keep").unwrap();
+    assert_eq!(request(input)["failed"], true);
+    assert_eq!(std::fs::read(directory.0.join("workspace.jsonc")).unwrap(), source);
+    assert_eq!(std::fs::read(directory.0.join("fallback.jsonc")).unwrap(), b"keep");
+}
+
+#[cfg(windows)]
+#[test]
+fn windows_owned_candidate_recreation_keeps_hardlink_alias_and_public_target_untouched() {
+    let directory = Directory::new();
+    let input = directory.input();
+    let alias = directory.0.join("empty-alias");
+    std::fs::hard_link(directory.0.join("fallback.jsonc"), &alias).unwrap();
+    let source = std::fs::read(directory.0.join("workspace.jsonc")).unwrap();
+    let mut state = State::default();
+    let response = state_request(&mut state, input);
+    assert_eq!(response["failed"], false);
+    assert!(std::fs::read(alias).unwrap().is_empty());
+    let candidate = std::fs::read(directory.0.join("fallback.jsonc")).unwrap();
+    assert!(!candidate.is_empty());
+    let commit = json!({"kind":"configWorkspaceConflictCommit","path":directory.0.join("workspace.jsonc"),"token":response["data"]["token"]});
+    assert_eq!(state_request(&mut state, commit)["failed"], true);
+    assert_eq!(std::fs::read(directory.0.join("workspace.jsonc")).unwrap(), source);
+    assert_eq!(std::fs::read(directory.0.join("fallback.jsonc")).unwrap(), candidate);
+}
+
 #[cfg(unix)]
 #[test]
 fn jsonc_plan_commit_is_owned_and_consumes_successful_token() {
