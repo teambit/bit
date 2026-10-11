@@ -7,12 +7,13 @@ import { DEFAULT_LANE } from '@teambit/lane-id';
 import type { SnapsDistance } from '@teambit/component.snap-distance';
 import { getDivergeData } from '@teambit/component.snap-distance';
 import type { Lane, ModelComponent, Ref, Version } from '@teambit/objects';
+import { isRustSnapshotOperation } from '@teambit/objects';
 import { NoCommonSnap, Tmp } from '@teambit/legacy.scope';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import type { ImporterMain } from '@teambit/importer';
 import type { Logger } from '@teambit/logger';
 import { compact, isEqual } from 'lodash';
-import { ComponentConfigMerger } from '@teambit/config-merger';
+import { ComponentConfigMerger, tryRustComponentConfigMerge } from '@teambit/config-merger';
 import type { ScopeMain } from '@teambit/scope';
 import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import { threeWayMerge } from '@teambit/component.modules.merge-helper';
@@ -153,13 +154,20 @@ other:   ${otherLaneHead.toString()}`);
       this.logger,
       this.options.mergeStrategy
     );
-    const configMergeResult = configMerger.merge();
+    const nativeEligible = isRustSnapshotOperation() && canMergeConfigNatively(this);
+    const shouldMergeAspectsData = nativeEligible ? Boolean(this.options.shouldMergeAspectsData) : false;
+    const native = nativeEligible
+      ? await tryRustComponentConfigMerge(
+          configMerger,
+          shouldMergeAspectsData,
+          () => canMergeConfigNatively(this) && Boolean(this.options.shouldMergeAspectsData) === shouldMergeAspectsData
+        )
+      : undefined;
+    const configMergeResult = native ? native.configMergeResult : configMerger.merge();
 
-    const dataMergeResult = this.mergeExtensionsData(
-      currentComponent.extensions,
-      baseComponent.extensions,
-      otherComponent.extensions
-    );
+    const dataMergeResult = native
+      ? native.dataMergeResult
+      : this.mergeExtensionsData(currentComponent.extensions, baseComponent.extensions, otherComponent.extensions);
 
     const mergeResults = await threeWayMerge({
       scope: this.scope.legacyScope,
@@ -550,4 +558,22 @@ it was probably created in each lane separately and it also exists on main. plea
       `unsupported strategy "${resolveUnrelated}" of resolve-unrelated. supported strategies are: [ours, theirs]`
     );
   }
+}
+
+const canonicalMergeExtensionsData = (MergeStatusProvider.prototype as any).mergeExtensionsData;
+function canMergeConfigNatively(provider: MergeStatusProvider): boolean {
+  if (
+    Object.getPrototypeOf(provider) !== MergeStatusProvider.prototype ||
+    Object.getOwnPropertyDescriptor(provider, 'mergeExtensionsData')
+  )
+    return false;
+  if (
+    Object.getOwnPropertyDescriptor(MergeStatusProvider.prototype, 'mergeExtensionsData')?.value !==
+    canonicalMergeExtensionsData
+  )
+    return false;
+  const options = Object.getOwnPropertyDescriptor(provider, 'options');
+  if (!options || !('value' in options) || !options.value || Object.getPrototypeOf(options.value) !== Object.prototype)
+    return false;
+  return Object.values(Object.getOwnPropertyDescriptors(options.value)).every((descriptor) => 'value' in descriptor);
 }

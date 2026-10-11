@@ -1,7 +1,7 @@
+pub(crate) mod merge;
 pub(crate) mod metadata;
 
 mod graph;
-mod merge;
 use crate::protocol;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;

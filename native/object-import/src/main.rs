@@ -1,4 +1,5 @@
 mod checkout;
+mod config_merge;
 mod directory;
 mod inventory;
 mod merge_history;

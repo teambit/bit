@@ -31,7 +31,7 @@ import { compact } from 'lodash';
 import type { ApplyVersionWithComps, CheckoutMain, ComponentStatusBase } from '@teambit/checkout';
 import { CheckoutAspect, removeFilesIfNeeded, updateFileStatus } from '@teambit/checkout';
 import type { ConfigMergerMain, ConfigMergeResult, PolicyDependency } from '@teambit/config-merger';
-import { ConfigMergerAspect } from '@teambit/config-merger';
+import { ConfigMergerAspect, registerRustScopePolicy, tryRustScopePolicy } from '@teambit/config-merger';
 import type { SnapsDistance } from '@teambit/component.snap-distance';
 import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
@@ -593,8 +593,13 @@ export class MergingMain {
       if (successfullyMergedConfig) {
         // Process mergedConfig to merge scope-specific policy and filter deletion markers
         // This happens ONCE here, so both workspace and bare-scope merges use the same processed config
-        this.mergeScopeSpecificDepsPolicy(legacyComponent.extensions, successfullyMergedConfig);
-        this.filterDeletedDependenciesFromConfig(successfullyMergedConfig);
+        const nativePolicy =
+          process.env.BIT_RUST_CLIENT_VCS === 'on' &&
+          (await tryRustScopePolicy(this, legacyComponent.extensions, successfullyMergedConfig));
+        if (!nativePolicy) {
+          this.mergeScopeSpecificDepsPolicy(legacyComponent.extensions, successfullyMergedConfig);
+          this.filterDeletedDependenciesFromConfig(successfullyMergedConfig);
+        }
 
         unmergedComponent.mergedConfig = successfullyMergedConfig;
         // no need to `unmergedComponents.addEntry` here. it'll be added in the next lines inside `if (mergeResults)`.
@@ -968,4 +973,5 @@ export class MergingMain {
   }
 }
 
+registerRustScopePolicy(MergingMain);
 MergingAspect.addRuntime(MergingMain);

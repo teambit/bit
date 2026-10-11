@@ -1,11 +1,12 @@
+pub(crate) mod write;
 pub(crate) use state::State;
+
 mod lane;
 mod messages;
 mod rebase;
 mod reconcile;
 mod squash;
 mod state;
-mod write;
 
 use crate::protocol;
 use serde::Deserialize;
@@ -24,6 +25,12 @@ const MAX_JSON: usize = 4 * 1024 * 1024;
     deny_unknown_fields
 )]
 enum Request {
+    ConfigScopePolicy(Value),
+    ConfigWorkspaceConflictPlan(Value),
+    ConfigWorkspaceConflictCommit(Value),
+    ConfigComponent(Value),
+    ConfigWorkspaceMerge(Value),
+    ConfigWorkspaceUpdates(Value),
     SquashPolicy(squash::Policy),
     SquashMessages { objects_directory: PathBuf, refs: Vec<String> },
     HistoryRebase { existing_hashes: Vec<String>, incoming: Vec<rebase::Version> },
@@ -81,6 +88,20 @@ impl Write for Output {
 }
 fn apply(request: Request, state: &mut State, bytes: &[u8]) -> io::Result<Value> {
     match request {
+        Request::ConfigScopePolicy(input) => {
+            crate::config_merge::apply("configScopePolicy", &input)
+        }
+        Request::ConfigWorkspaceConflictPlan(input) => config_plan(&input, state),
+        Request::ConfigWorkspaceConflictCommit(input) => {
+            crate::config_merge::conflict_commit(&input, &mut state.conflict_plan)
+        }
+        Request::ConfigComponent(input) => crate::config_merge::apply("configComponent", &input),
+        Request::ConfigWorkspaceMerge(input) => {
+            crate::config_merge::apply("configWorkspaceMerge", &input)
+        }
+        Request::ConfigWorkspaceUpdates(input) => {
+            crate::config_merge::apply("configWorkspaceUpdates", &input)
+        }
         Request::SquashPolicy(input) => squash::policy(&input),
         Request::SquashMessages { objects_directory, refs } => {
             messages::read(&objects_directory, &refs)
@@ -103,6 +124,12 @@ fn apply(request: Request, state: &mut State, bytes: &[u8]) -> io::Result<Value>
         }
     }
 }
+fn config_plan(input: &Value, state: &mut State) -> io::Result<Value> {
+    let (output, pending) = crate::config_merge::conflict_plan(input)?;
+    state.conflict_plan = Some(pending);
+    Ok(output)
+}
+
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }
@@ -116,6 +143,8 @@ fn hash(hash: &str) -> io::Result<()> {
     }
     Ok(())
 }
+#[cfg(test)]
+mod config_tests;
 #[cfg(test)]
 mod squash_tests;
 #[cfg(test)]

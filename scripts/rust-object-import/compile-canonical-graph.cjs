@@ -37,6 +37,7 @@ for (const args of [
     'teambit.component/merging',
     'teambit.lanes/merge-lanes',
     'teambit.harmony/modules/in-memory-cache',
+    'teambit.workspace/config-merger',
   ],
 ])
   cp.execFileSync(executable, [...prefix, ...args], { stdio: 'inherit' });

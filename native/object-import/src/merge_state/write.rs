@@ -5,7 +5,7 @@ use std::{
     path::Path,
 };
 
-pub(super) fn commit(path: &Path, contents: &str) -> io::Result<()> {
+pub(crate) fn commit(path: &Path, contents: &str) -> io::Result<()> {
     let name = path.to_str().ok_or_else(|| invalid("non-UTF8 merge state path"))?;
     if !path.is_absolute() || name.len() > 32768 || name.contains('\0') {
         return Err(invalid("invalid merge state path"));

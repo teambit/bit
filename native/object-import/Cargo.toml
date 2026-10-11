@@ -9,7 +9,7 @@ flate2 = { version = "1.1", default-features = false, features = ["zlib-rs"] }
 sha1 = "0.10"
 rayon = "1.11"
 serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+serde_json = { version = "1", features = ["preserve_order"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 xattr = "1.6.1"

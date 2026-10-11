@@ -45,6 +45,12 @@ const metrics = {
       'squashPolicy',
       'squashMessages',
       'historyRebase',
+      'configComponent',
+      'configWorkspaceUpdates',
+      'configWorkspaceMerge',
+      'configWorkspaceConflictPlan',
+      'configWorkspaceConflictCommit',
+      'configScopePolicy',
     ].map((kind) => [kind, { frames: 0, files: 0, completed: 0, failed: 0 }])
   ),
   snapshot: Object.fromEntries(
@@ -218,6 +224,11 @@ function wrap(target, key, stage, inspect) {
   if (
     process.env.BIT_RUST_CLIENT_VCS === 'on' &&
     [
+      'debug',
+      'trace',
+      'info',
+      'warn',
+      'error',
       'toBuffer',
       'load',
       'parse',

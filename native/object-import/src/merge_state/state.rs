@@ -6,6 +6,7 @@ use std::io;
 
 #[derive(Default)]
 pub(crate) struct State {
+    pub(crate) conflict_plan: Option<crate::config_merge::Conflict>,
     entries: Vec<Value>,
     token: Option<String>,
     revision: u32,

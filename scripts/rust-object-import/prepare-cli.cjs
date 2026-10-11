@@ -51,6 +51,16 @@ function links(directory) {
 }
 links(target);
 const files = [
+  'scopes/component/merging/merge-status-provider.ts',
+  'scopes/workspace/config-merger/component-config-merger.ts',
+  'scopes/workspace/config-merger/config-merger.main.runtime.ts',
+  'scopes/workspace/config-merger/index.ts',
+  'scopes/workspace/config-merger/rust-config-operation.ts',
+  'scopes/workspace/config-merger/rust-config-guards.ts',
+  'scopes/workspace/config-merger/rust-component-config-merge.ts',
+  'scopes/workspace/config-merger/rust-workspace-config.ts',
+  'scopes/workspace/config-merger/rust-workspace-conflicts.ts',
+  'scopes/workspace/config-merger/rust-scope-policy.ts',
   'scopes/harmony/modules/in-memory-cache/lru-cache-adapter.ts',
   'scopes/harmony/modules/in-memory-cache/index.ts',
   'scopes/scope/objects/objects/live-objects.ts',
@@ -161,6 +171,7 @@ try {
       'teambit.component/merging',
       'teambit.lanes/merge-lanes',
       'teambit.harmony/modules/in-memory-cache',
+      'teambit.workspace/config-merger',
       '--json',
       '--safe-mode',
     ],
@@ -194,12 +205,23 @@ assert.deepEqual(
     'teambit.component/merging',
     'teambit.lanes/merge-lanes',
     'teambit.harmony/modules/in-memory-cache',
+    'teambit.workspace/config-merger',
   ].sort()
 );
 assert.ok(compilation.every((c) => c.errors.length === 0));
 for (const component of compilation)
   for (const file of component.buildResults) assert.ok(fs.realpathSync(file).startsWith(target + path.sep));
 const modules = [
+  'merging/dist/merge-status-provider.js',
+  'config-merger/dist/component-config-merger.js',
+  'config-merger/dist/config-merger.main.runtime.js',
+  'config-merger/dist/index.js',
+  'config-merger/dist/rust-config-operation.js',
+  'config-merger/dist/rust-config-guards.js',
+  'config-merger/dist/rust-component-config-merge.js',
+  'config-merger/dist/rust-workspace-config.js',
+  'config-merger/dist/rust-workspace-conflicts.js',
+  'config-merger/dist/rust-scope-policy.js',
   'objects/dist/objects/rust-merge-history.js',
   'objects/dist/objects/rust-merge-state.js',
   'objects/dist/objects/rust-lane-snapshot.js',

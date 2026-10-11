@@ -34,17 +34,20 @@ pub(super) fn git(
     fs::write(&currentpath, bytes.current)?;
     fs::write(&basepath, String::from_utf8_lossy(bytes.base).as_bytes())?;
     fs::write(&otherpath, String::from_utf8_lossy(bytes.other).as_bytes())?;
-    let (status, stdout, stderr) = execute(request, [currentpath, basepath, otherpath])?;
+    let (status, stdout, stderr) = execute(
+        [&request.labels.current, &request.labels.other],
+        [currentpath, basepath, otherpath],
+    )?;
     if output.fetch_add(stdout.len(), Ordering::Relaxed) + stdout.len() > MAX_RAW {
         return Err(invalid("merge aggregate Git output limit"));
     }
     interpret(status, &stdout, &stderr)
 }
 fn execute(
-    request: &Request,
+    labels: [&str; 2],
     paths: [PathBuf; 3],
 ) -> io::Result<(std::process::ExitStatus, Vec<u8>, Vec<u8>)> {
-    let mut child = spawn(request, paths)?;
+    let mut child = spawn(labels, paths)?;
     let stderr = child.0.stderr.take().ok_or_else(|| invalid("merge missing stderr"))?;
     let thread = std::thread::spawn(move || {
         let mut bytes = Vec::new();
@@ -90,18 +93,10 @@ fn interpret(status: std::process::ExitStatus, stdout: &[u8], stderr: &[u8]) -> 
     }
 }
 
-fn spawn(request: &Request, paths: [PathBuf; 3]) -> io::Result<Process> {
+fn spawn(labels: [&str; 2], paths: [PathBuf; 3]) -> io::Result<Process> {
     let child = Process(
         Command::new("git")
-            .args([
-                "merge-file",
-                "-L",
-                &request.labels.current,
-                "-L",
-                "Base File",
-                "-L",
-                &request.labels.other,
-            ])
+            .args(["merge-file", "-L", labels[0], "-L", "Base File", "-L", labels[1]])
             .args(paths)
             .arg("-p")
             .stdin(Stdio::null())
@@ -110,4 +105,14 @@ fn spawn(request: &Request, paths: [PathBuf; 3]) -> io::Result<Process> {
             .spawn()?,
     );
     Ok(child)
+}
+
+pub(crate) fn config_conflict(paths: [PathBuf; 3]) -> io::Result<String> {
+    let (status, stdout, stderr) = execute(["ours", "theirs"], paths)?;
+    let value = interpret(status, &stdout, &stderr)?;
+    value["conflict"]
+        .as_str()
+        .map(str::to_owned)
+        .filter(|text| !text.is_empty())
+        .ok_or_else(|| invalid("config Git merge has no conflict"))
 }

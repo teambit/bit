@@ -673,3 +673,154 @@ Reproduce with `scripts/rust-object-import/squash-history-qualification.cjs`,
 `BIT_SQUASH_HISTORY_QUALIFICATION_EXTRA_FILES=0` or `256`; choose the workspace
 filesystem with `BIT_SQUASH_HISTORY_QUALIFICATION_TMPDIR`. The checked report
 retains the individual wall/CPU/process-tree samples and exact input fingerprints.
+
+## Component configuration and workspace dependency reconciliation
+
+The shared client operation also owns configuration merge decisions. `BMT1`
+requests merge ordered component aspect configurations, compare aspect data,
+rescue scope dependency policies, reconcile workspace dependency versions, and
+prepare and commit workspace JSONC conflicts. Component, scope and workspace
+policy requests contain bounded metadata; source bodies remain in the existing
+native repository and file merge paths.
+
+Component policy covers ordinary aspects, environment versions and dependency
+resolver policy. Configuration equality preserves canonical JSON key order;
+aspect data compares object keys independently of insertion order and preserves
+array order. Explicit metadata preserves ordinary top-level own `undefined` data
+properties, including their distinction from absent properties; unsupported
+nested values retain the canonical path. Results retain canonical configuration and data references through
+source selectors. The adapter hydrates public classes and private merger state,
+including the original handled-ID array, so later calls see the same state.
+Scope policy appends missing forced dependencies before removing deletion
+markers. Existing entry references survive, while each retained lifecycle receives
+a new array, as in the canonical implementation.
+
+Workspace reconciliation retains lifecycle ordering, forced-policy precedence,
+conflict cleanup, public diagnostics and write ordering. Node parses npm semver
+syntax into bounded comparator metadata; Rust evaluates version comparisons,
+range satisfaction and dependency merge decisions. Public dependency-resolver
+collection, Harmony callbacks, presentation and configuration backup hooks remain
+adapter responsibilities.
+
+For workspace JSONC conflicts, Rust reads the file freshly, applies the canonical
+first literal replacement for each package and invokes the shared bounded Git
+merge. It retains the resulting bytes in an operation-owned private candidate.
+The adapter calls the public backup hook once before the native commit. A
+successful commit is authoritative for the captured original path. If the helper
+fails after planning or a backup hook installs a custom writer, the adapter
+validates and writes the retained candidate without repeating the backup or
+planning phase. Successful native writes do not pass the file body through Node.
+
+Unix commits preserve the inode and existing metadata of ordinary single-link
+files. Unsupported existing files, including Windows files, symlinks and hard
+links, use the retained-candidate write fallback. Missing helpers, unsupported
+metadata, changed methods, accessors or custom logger implementations retain the
+canonical path. Ordinary Harmony persistence callbacks and lane component-ID
+lists remain eligible because the configuration planner does not invoke the
+persistence callbacks and projects ID lists into plain wire arrays.
+
+This path remains controlled by `BIT_RUST_CLIENT_VCS=on`; configuration policy
+migration alone does not establish a command speedup.
+
+
+### Configuration qualification
+
+Qualification uses a physical private CLI with 22 compiled components. The
+production commit is `7f3383a5854f1b8df5acd961db7987b62e59a11e`, based on the
+merged squash/history commit `3cb390750a7c232a2564136620daab95dbeadaea`. The
+official `x86_64-unknown-linux-gnu` release artifact binds native source digest
+`a36d5de36d2d6897bb8842a267b033cc2c4862a00586125118de979af69071fa` and helper
+SHA256 `55d6a25e42f80ed23284c303880daa1195e9f7b2c3b92cdb8fdf9a3a3715823a`.
+
+All 192 Rust workspace tests pass with pinned formatting, strict Clippy, Dylint
+and rustdoc checks. Source and physically compiled configuration adapters each
+pass 24 tests. Existing source regressions pass 169 tests with one Windows-only
+skip on Linux; compiled regressions pass 159 tests, canonical model tests pass
+69, and official artifact/discovery tests pass 30 without skips. Full private
+CLI TypeScript checking and lint pass.
+
+The reproducible differential driver compares 2,500 seeded workspace policy
+cases and 1,500 scope policy cases with the actual canonical methods and installed
+npm semver. It checks diagnostics, lifecycle decisions, scope rescue/filter
+ordering, original-array mutations and retained aliases. The official helper
+passes all 4,000 cases, with source, compiled module, helper and driver bindings
+verified before and after execution.
+
+Real commands exercise clean and conflicting lane merges and imports in four
+modes: canonical, native, missing helper and crashed helper. They compare complete
+Sources and objects, bitmap, histories, pending merge configuration, raw JSONC
+comments/conflict markers, backup contents and reasons, and public status. The
+native lane commands acknowledge two component plans, one workspace merge and
+two scope policy plans; imports acknowledge workspace updates. Both conflict
+boundaries acknowledge JSONC preparation and commit. Acceptance requires a
+successful acknowledgement for every new operation, preventing silent fallback
+from counting as native qualification.
+
+Adapter tests additionally cover ordinary Harmony callbacks, lane ID list
+subclasses, environment own-undefined metadata, resolver optional metadata,
+accessor rejection without invocation, sparse arrays, read-only scratch fields,
+input mutation while planning, nested aliases and repeated merger calls. Failure
+cases verify helper reaping, candidate recovery after helper death, one backup,
+custom writers installed by backup hooks and the original captured target path.
+The actual-command results are local Linux qualification; source/compiled
+adapters run in the Linux/macOS/Windows CI matrix.
+
+Reproduce correctness with `config-merge-qualification.cjs <private-cli>
+<release-helper> <report.json>` and the seeded comparison with
+`config-merge-differential.cjs <private-cli> <release-helper> <report.json>` in
+`scripts/rust-object-import/`. The retained correctness report binds the
+qualification driver SHA256
+`88e4de51ce0c4d7b74c51849259073e689fd19e0f6168cbc8b32e3a7a3fd205f`, fixture
+`25b90da9545d3c402cb54053a0d6f267c626f03bdcf3999e4a754ef7bf0deeaa`,
+determinism preload
+`737384a5423f2487c6e1cd0210c14bb664d54fd79300f501327d4232aba046db`, and
+seeded driver `f9f928305b08101cba4828517f78fc7dbdf23874e87589456860a04cbcf6c991`.
+Full source/compiled module and harness bindings are retained and checked at
+both ends of each run.
+
+
+### Configuration complete-command measurements
+
+Four local Linux cases use tmpfs and Btrfs, with either 8 source files and one
+automatic dependency per component, or 264 source files and 257 automatic
+dependencies per component. Each has one warmup pair and three retained
+alternating canonical/native pairs. Timing covers actual clean/conflicting lane
+merge and import commands, including Node, helpers and Git descendants. CPU is
+process-tree CPU; peak RSS is the near-simultaneous process-tree sum sampled at
+10 ms, excluding filesystem cache. Fixture setup, warmups and separate diagnostic
+runs are excluded. Both modes use the same default temporary-directory settings;
+the workspace/scope scratch directory selects the filesystem.
+
+The larger lane workloads take 28–32% less wall time, with higher peak memory.
+Small workloads and imports have wall-time ratios of 0.96–1.05. These are
+whole-client flag comparisons that also enable earlier native stages; both file
+and dependency counts increase together. They do not isolate configuration-stage
+speedups or establish gains for other workloads. Rollout remains opt-in.
+
+| Filesystem | Sources | Auto deps/component | Command | Wall ms Node → Rust | Ratio | CPU s Node → Rust | RSS MiB Node → Rust |
+|---|---:|---:|---|---:|---:|---:|---:|
+| tmpfs | 8 | 1 | lane-clean | 463 → 484 | 1.05 | 0.60 → 0.64 | 240.1 → 243.8 |
+| tmpfs | 8 | 1 | lane-conflict | 481 → 476 | 0.99 | 0.64 → 0.62 | 239.4 → 244.1 |
+| tmpfs | 8 | 1 | import-clean | 273 → 282 | 1.03 | 0.34 → 0.36 | 148.6 → 149.2 |
+| tmpfs | 8 | 1 | import-conflict | 283 → 272 | 0.96 | 0.37 → 0.34 | 148.7 → 149.4 |
+| tmpfs | 264 | 257 | lane-clean | 1222 → 828 | 0.68 | 1.76 → 1.38 | 345.8 → 390.0 |
+| tmpfs | 264 | 257 | lane-conflict | 1218 → 840 | 0.69 | 1.75 → 1.41 | 343.3 → 386.0 |
+| tmpfs | 264 | 257 | import-clean | 370 → 389 | 1.05 | 0.49 → 0.48 | 171.8 → 181.2 |
+| tmpfs | 264 | 257 | import-conflict | 370 → 365 | 0.98 | 0.46 → 0.45 | 172.6 → 178.2 |
+| btrfs | 8 | 1 | lane-clean | 487 → 488 | 1.00 | 0.64 → 0.64 | 236.8 → 245.0 |
+| btrfs | 8 | 1 | lane-conflict | 476 → 477 | 1.00 | 0.62 → 0.62 | 247.9 → 242.8 |
+| btrfs | 8 | 1 | import-clean | 282 → 279 | 0.99 | 0.35 → 0.36 | 149.4 → 149.4 |
+| btrfs | 8 | 1 | import-conflict | 283 → 282 | 1.00 | 0.35 → 0.35 | 149.1 → 149.0 |
+| btrfs | 264 | 257 | lane-clean | 1252 → 882 | 0.70 | 1.91 → 1.44 | 343.6 → 396.8 |
+| btrfs | 264 | 257 | lane-conflict | 1235 → 888 | 0.72 | 1.89 → 1.48 | 344.2 → 396.9 |
+| btrfs | 264 | 257 | import-clean | 396 → 411 | 1.04 | 0.52 → 0.52 | 175.2 → 184.5 |
+| btrfs | 264 | 257 | import-conflict | 386 → 394 | 1.02 | 0.55 → 0.49 | 174.0 → 178.4 |
+
+Reproduce each case with `node scripts/rust-object-import/config-merge-measure.cjs
+<private-cli> <release-helper> <extra> <scratch-directory> <report.json>`, using
+`<extra>` equal to `0` or `256` and scratch directories on tmpfs or Btrfs. The
+wrapper calls the same frozen qualification implementation and options used by
+the retained measurement driver. Reports preserve individual samples, exact
+state fingerprints, source/compiled modules, helper identity and harness hashes,
+all verified at the start and end of every case. Separate correctness runs
+require successful native acknowledgements for all six operations.

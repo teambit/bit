@@ -1,16 +1,38 @@
-import type { ComponentID } from '@teambit/component-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
+import { BitId } from '@teambit/legacy-bit-id';
 import semver from 'semver';
-import type { Logger } from '@teambit/logger';
+import { Logger } from '@teambit/logger';
+import { logger as legacyLogger } from '@teambit/legacy.logger';
 import { BuilderAspect } from '@teambit/builder';
 import { isHash } from '@teambit/component-version';
 import type { SerializedDependency, VariantPolicyEntry } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect, VariantPolicy } from '@teambit/dependency-resolver';
 import type { Lane } from '@teambit/objects';
 import { EnvsAspect } from '@teambit/envs';
-import type { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
+import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import { compact, omit, uniqBy } from 'lodash';
 import { ConfigMergeResult } from './config-merge-result';
+import { registerRustConfigSemver } from './rust-config-operation';
+import {
+  registerRustConfigClass,
+  registerRustConfigLogger,
+  registerRustConfigLodash,
+  registerRustConfigStaticData,
+} from './rust-config-guards';
+
+registerRustConfigSemver();
+registerRustConfigLodash(require('lodash'));
+registerRustConfigClass(ComponentID);
+registerRustConfigClass(ComponentIdList);
+registerRustConfigClass(Array);
+registerRustConfigClass(Map);
+registerRustConfigClass(BitId);
+registerRustConfigClass(VariantPolicy);
+registerRustConfigLogger(Logger, legacyLogger);
+registerRustConfigClass(ExtensionDataEntry);
+registerRustConfigClass(ExtensionDataList);
+registerRustConfigStaticData(ExtensionDataList, 'validateBeforePersistHook');
 
 export type GenericConfigOrRemoved = Record<string, any> | '-';
 
@@ -694,3 +716,5 @@ export class ComponentConfigMerger {
     return VariantPolicy.fromConfigObject(config.policy).entries;
   }
 }
+
+registerRustConfigClass(ComponentConfigMerger);
