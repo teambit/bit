@@ -55,6 +55,16 @@ const metrics = {
       'recoveryAdvance',
       'recoveryBitmap',
       'resetRefsPlan',
+      'snapshotTransactionBegin',
+      'snapshotTransactionReceipt',
+      'snapshotRepositoryBegin',
+      'snapshotRepositoryReceipt',
+      'snapshotVersionIdentity',
+      'snapshotDependencyUpdates',
+      'snapshotAutoTag',
+      'snapshotFutureVersions',
+      'snapshotSerialize',
+      'snapshotCommit',
       'transferCollect',
       'transferInitialize',
       'transferArchive',
@@ -69,6 +79,19 @@ const metrics = {
         files: 0,
         completed: 0,
         failed: 0,
+        ...(kind.startsWith('snapshot') ? { helperIds: [] } : {}),
+        ...(kind === 'snapshotSerialize'
+          ? {
+              objects: 0,
+              sources: 0,
+              workspaceSources: 0,
+              artifactSources: 0,
+              repositorySources: 0,
+              generatedSources: 0,
+              bodyBytes: 0,
+            }
+          : {}),
+        ...(kind === 'snapshotCommit' ? { stepsCompleted: 0, dataFailed: 0 } : {}),
         ...(kind === 'recoveryAdvance' ? { stepsCompleted: 0, dataFailed: 0 } : {}),
         ...(kind.startsWith('transfer') ? { objects: 0, sources: 0, bodyBytes: 0, archiveBytes: 0 } : {}),
       },
@@ -108,14 +131,15 @@ if (output && process.pid === owner) {
   childProcess.spawn = function (...args) {
     const child = spawn.apply(this, args);
     if (!child.stdin || !child.stdout) return child;
-    let workspace = false;
+    let workspace = false,
+      workspaceId;
     const requests = [];
     let pending = '';
     const write = child.stdin.write;
     child.stdin.write = function (bytes, ...rest) {
       const magic = Buffer.isBuffer(bytes) ? bytes.subarray(0, 4).toString() : '';
       if (['BWM1', 'BWP1', 'BWC0', 'BWC1', 'BCK1', 'BWS1', 'BSS1', 'BMH1', 'BMT1'].includes(magic)) {
-        if (!workspace) metrics.persistence.helpers++;
+        if (!workspace) workspaceId = ++metrics.persistence.helpers;
         workspace = true;
         const operation = ['BWS1', 'BSS1', 'BMH1', 'BMT1'].includes(magic)
           ? JSON.parse(bytes.subarray(12).toString())
@@ -132,6 +156,7 @@ if (output && process.pid === owner) {
                   : metrics.workspace
           )[operation.kind];
           metric.frames++;
+          if (metric.helperIds && !metric.helperIds.includes(workspaceId)) metric.helperIds.push(workspaceId);
           metric.files += ['BMH1', 'BMT1'].includes(magic)
             ? 1
             : magic === 'BSS1'
@@ -139,6 +164,19 @@ if (output && process.pid === owner) {
                 ? operation.objects.length
                 : 1
               : operation.files?.length || (operation.kind === 'compare' ? 1 : 0);
+          if (magic === 'BMT1' && operation.kind === 'snapshotSerialize') {
+            metric.objects += operation.objects?.length || 0;
+            for (const object of operation.objects || []) {
+              if (object.type === 'Source') {
+                metric.sources++;
+                metric.workspaceSources += Number(Boolean(object.source));
+                metric.artifactSources += Number(object.source?.normalization === 'linuxEol');
+                metric.repositorySources += Number(Boolean(object.repository));
+                metric.generatedSources += Number(typeof object.body === 'string');
+                metric.bodyBytes += (object.body?.length || 0) / 2;
+              }
+            }
+          }
           if (magic === 'BMT1' && operation.kind === 'transferInitialize') {
             for (const object of operation.objects || []) {
               if (object.metadata?.type === 'Source') metric.bodyBytes += (object.metadata.compressed?.length || 0) / 2;
@@ -171,6 +209,7 @@ if (output && process.pid === owner) {
                 ? metrics.checkout.preflight
                 : metrics.checkout.write;
           metric.frames++;
+          if (metric.helperIds && !metric.helperIds.includes(workspaceId)) metric.helperIds.push(workspaceId);
           metric.files +=
             magic === 'BCK1' ? JSON.parse(bytes.subarray(12).toString()).expectedFiles.length : bytes.readUInt32BE(8);
         } else {
@@ -214,6 +253,10 @@ if (output && process.pid === owner) {
         try {
           const response = JSON.parse(pending.slice(0, newline));
           metric.completed += response.completed || 0;
+          if (magic === 'BMT1:snapshotCommit') {
+            metric.stepsCompleted += response.data?.completed || 0;
+            metric.dataFailed += Number(response.data?.failed === true);
+          }
           if (magic === 'BMT1:recoveryAdvance') {
             metric.stepsCompleted += response.data?.completed || 0;
             metric.dataFailed += Number(response.data?.failed === true);

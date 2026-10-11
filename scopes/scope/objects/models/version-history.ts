@@ -5,6 +5,7 @@ import { compact, difference, uniqBy } from 'lodash';
 import { getStringifyArgs } from '@teambit/legacy.utils';
 import Ref from '../objects/ref';
 import { BitObject } from '../objects';
+import { registerRustSnapshotFunctions } from '../objects/rust-snapshot-guards';
 import type Version from './version';
 import { getVersionParentsFromVersion } from '@teambit/component.snap-distance';
 import type ModelComponent from './model-component';
@@ -300,6 +301,8 @@ export function versionParentsToGraph(versions: VersionParents[]): Graph<string,
   graph.setEdges(edges);
   return graph;
 }
+
+registerRustSnapshotFunctions('SnapshotHistoryObject', Object, ['values']);
 
 const nativeHistoryMethods = ['getVersionData', 'hasHash', 'addFromVersionsObjects', 'addFromVersionParents'].map(
   (name) => [name, VersionHistory.prototype[name]] as const

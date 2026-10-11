@@ -1,4 +1,5 @@
 import AbstractVinyl from './abstract-vinyl';
+import { registerRustSnapshotTransactionClass, registerRustSnapshotFunctions } from '@teambit/objects';
 
 export class ArtifactVinyl extends AbstractVinyl {
   url?: string;
@@ -9,3 +10,9 @@ export class ArtifactVinyl extends AbstractVinyl {
     }
   }
 }
+
+registerRustSnapshotTransactionClass('ArtifactVinyl', ArtifactVinyl);
+registerRustSnapshotTransactionClass('Array', Array);
+registerRustSnapshotFunctions('SnapshotArtifactVinyl', ArtifactVinyl, ['isCustomProp']);
+registerRustSnapshotFunctions('SnapshotArtifactObject', Object, ['keys']);
+registerRustSnapshotFunctions('SnapshotArtifactBuffer', Buffer, ['from', 'isBuffer']);

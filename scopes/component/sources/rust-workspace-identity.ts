@@ -1,4 +1,4 @@
-import { Ref, Source, canHashSourceNatively } from '@teambit/objects';
+import { Ref, Source, canHashSourceNatively, hasRustSnapshotTransactionClass } from '@teambit/objects';
 import * as eol from '@teambit/toolbox.string.eol';
 import type AbstractVinyl from './abstract-vinyl';
 import { defaultVinylToSource } from './abstract-vinyl';
@@ -37,6 +37,19 @@ export function registerRustWorkspaceFile(file: AbstractVinyl, read: RustWorkspa
   if (file.path !== read.path || !Buffer.isBuffer(file.contents) || !file.contents.equals(read.contents)) return;
   // The retained copy detects mutation of the original Buffer without hashing it again in Node.
   snapshots.set(file, { ...read, contents: Buffer.from(read.contents) });
+}
+
+/** Ordinary component clones keep the same verified disk snapshot and canonical Buffer aliasing. */
+export function inheritRustWorkspaceFileSnapshot(original: AbstractVinyl, clone: AbstractVinyl): void {
+  if (
+    process.env.BIT_RUST_CLIENT_VCS !== 'on' ||
+    !hasRustSnapshotTransactionClass(original, 'SourceFile') ||
+    !hasRustSnapshotTransactionClass(clone, 'SourceFile')
+  )
+    return;
+  const value = snapshot(original);
+  if (!value || !hasOrdinaryWorkspaceProperties(clone)) return;
+  registerRustWorkspaceFile(clone, value);
 }
 
 function snapshot(file: AbstractVinyl): Snapshot | undefined {
@@ -95,6 +108,13 @@ export function getRustSnapshotSourceDescriptor(
   )
     return undefined;
   return { path: value.snapshot.path, hash: value.snapshot.hash, sourceHash: value.snapshot.linuxHash };
+}
+
+/** Capture the canonical bytes before an asynchronous write, without hydrating the public Source. */
+export function captureRustSnapshotSourceContents(source: Source): (() => Buffer) | undefined {
+  if (!getRustSnapshotSourceDescriptor(source)) return undefined;
+  const contents = sourceSnapshots.get(source)!.canonicalSnapshot;
+  return () => Buffer.from(contents);
 }
 
 /** Keep canonical Buffer aliasing while deferring exposure of the Source body. */

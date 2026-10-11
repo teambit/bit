@@ -1,5 +1,11 @@
+import {
+  registerRustSnapshotFunctionReference,
+  hasRustSnapshotFunctionReference,
+  registerRustSnapshotFunctions,
+  hasRustSnapshotFunctions,
+} from '@teambit/objects';
 import type { ReleaseType } from 'semver';
-import { valid, maxSatisfying, minVersion, gt } from 'semver';
+import { valid, maxSatisfying, minVersion, gt, inc, SemVer } from 'semver';
 import { InvalidVersion } from '@teambit/component-version';
 
 export function isStrReleaseType(str: string): boolean {
@@ -56,3 +62,54 @@ export function isRange1GreaterThanRange2Naively(range1: string, range2: string)
   if (!minVersion1 || !minVersion2) return false;
   return gt(minVersion1, minVersion2);
 }
+
+registerRustSnapshotFunctionReference('SnapshotGetValidVersion', getValidVersionOrReleaseType);
+registerRustSnapshotFunctionReference('SnapshotValidateVersion', validateVersion);
+registerRustSnapshotFunctionReference('SnapshotGetLatestVersion', getLatestVersion);
+registerRustSnapshotFunctionReference('SnapshotSemverValid', valid);
+registerRustSnapshotFunctionReference('SnapshotSemverMaxSatisfying', maxSatisfying);
+
+registerRustSnapshotFunctionReference('SnapshotSemverInc', inc);
+
+/** Parse the canonical npm grammar without evaluating version-selection policy. */
+export function snapshotSemverGrammar(values: Iterable<string>): Record<string, object> | undefined {
+  if (
+    !hasRustSnapshotFunctionReference('SnapshotSemverValid', valid) ||
+    !hasRustSnapshotFunctionReference('SnapshotSemverMaxSatisfying', maxSatisfying) ||
+    !hasRustSnapshotFunctionReference('SnapshotSemverConstructor', SemVer) ||
+    !hasRustSnapshotFunctions(['SnapshotHelperSemverPrototype'])
+  )
+    return undefined;
+  const result: Record<string, object> = Object.create(null);
+  const unique = new Set(values);
+  if (unique.size > 4096) return undefined;
+  for (const text of unique) {
+    if (typeof text !== 'string' || text.length > 4096) return undefined;
+    try {
+      const canonicalText = valid(text);
+      if (!canonicalText) result[text] = {};
+      else {
+        const parsed = new SemVer(text);
+        result[text] = {
+          canonicalText,
+          version: {
+            major: parsed.major,
+            minor: parsed.minor,
+            patch: parsed.patch,
+            prerelease: [...parsed.prerelease],
+          },
+        };
+      }
+    } catch {
+      return undefined;
+    }
+  }
+  return result;
+}
+registerRustSnapshotFunctionReference('SnapshotSemverConstructor', SemVer);
+registerRustSnapshotFunctionReference('SnapshotSemverGrammar', snapshotSemverGrammar);
+registerRustSnapshotFunctions(
+  'SnapshotHelperSemverPrototype',
+  SemVer.prototype,
+  Object.getOwnPropertyNames(SemVer.prototype)
+);

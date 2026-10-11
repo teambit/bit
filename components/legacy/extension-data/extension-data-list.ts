@@ -1,5 +1,9 @@
-import { registerRustTransferClass } from '@teambit/objects';
-import { sortBy, unionWith, isEmpty, cloneDeep, compact } from 'lodash';
+import {
+  registerRustTransferClass,
+  registerRustSnapshotTransactionClass,
+  registerRustSnapshotFunctions,
+} from '@teambit/objects';
+import lodash, { sortBy, unionWith, isEmpty, cloneDeep, compact } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
 import {
@@ -55,21 +59,8 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   }
 
   toModelObjects() {
-    // call the hook before "clone". otherwise, some classes are loosing their structure and become plain objects
-    ExtensionDataList.toModelObjectsHook.forEach((hook) => {
-      hook(this);
-    });
-    const extensionsClone = this.clone();
-    extensionsClone.forEach((ext) => {
-      if (ext.extensionId) {
-        // TODO: fix the types of extensions. after this it should be an object not an object id
-        // @ts-ignore
-        ext.extensionId = ext.extensionId.serialize();
-      }
-    });
-    convertBuildArtifactsToModelObject(extensionsClone);
-
-    return extensionsClone.map((ext) => ext.toModelObject());
+    runExtensionDataModelHooks(this);
+    return extensionDataToModelObjectsAfterHooks(this);
   }
 
   static fromModelObject(entries: ExtensionDataEntry[]): ExtensionDataList {
@@ -280,3 +271,27 @@ export function removeInternalConfigFieldsWithMutation(config?: ExtensionConfig)
 }
 
 registerRustTransferClass('ExtensionDataList', ExtensionDataList, ['findExtension', 'findCoreExtension', 'find']);
+/** The snapshot engine resumes this tail after a public serialization hook has already run. */
+export function runExtensionDataModelHooks(list: ExtensionDataList): void {
+  ExtensionDataList.toModelObjectsHook.forEach((hook) => hook(list));
+}
+
+export function extensionDataToModelObjectsAfterHooks(list: ExtensionDataList) {
+  const extensionsClone = list.clone();
+  extensionsClone.forEach((extension) => {
+    if (extension.extensionId) {
+      // The model stores a plain identifier rather than the live class instance.
+      // @ts-ignore
+      extension.extensionId = extension.extensionId.serialize();
+    }
+  });
+  convertBuildArtifactsToModelObject(extensionsClone);
+  return extensionsClone.map((extension) => extension.toModelObject());
+}
+
+registerRustSnapshotTransactionClass('ExtensionDataList', ExtensionDataList, [
+  'coreExtensionsNames',
+  'toModelObjectsHook',
+  'validateBeforePersistHook',
+]);
+registerRustSnapshotFunctions('ExtensionDataList', lodash, ['sortBy', 'unionWith', 'isEmpty', 'cloneDeep', 'compact']);

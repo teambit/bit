@@ -1,4 +1,5 @@
-import { cloneDeep, uniqBy } from 'lodash';
+import { registerRustSnapshotTransactionClass, registerRustSnapshotFunctions } from '@teambit/objects';
+import lodash, { cloneDeep, uniqBy } from 'lodash';
 import type { ComponentID } from '@teambit/component-id';
 import { ComponentIdList } from '@teambit/component-id';
 import type { BitIdStr } from '@teambit/legacy-bit-id';
@@ -173,3 +174,6 @@ export default class Dependencies {
     return new Dependencies(uniqBy(deps, (dep) => dep.id.toStringWithoutVersion()));
   }
 }
+
+registerRustSnapshotTransactionClass('Dependencies', Dependencies);
+registerRustSnapshotFunctions('Dependencies', lodash, ['cloneDeep', 'uniqBy']);

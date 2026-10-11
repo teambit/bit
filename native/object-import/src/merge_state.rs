@@ -32,6 +32,16 @@ enum Request {
     TransferPending(Value),
     TransferTransactionInitialize(Value),
     TransferTransactionReceipt(Value),
+    SnapshotTransactionBegin(Value),
+    SnapshotRepositoryBegin(Value),
+    SnapshotTransactionReceipt(Value),
+    SnapshotRepositoryReceipt(Value),
+    SnapshotVersionIdentity(Value),
+    SnapshotDependencyUpdates(Value),
+    SnapshotAutoTag(Value),
+    SnapshotFutureVersions(Value),
+    SnapshotSerialize(Value),
+    SnapshotCommit(Value),
     ResetRefsPlan(Value),
     RecoveryInitialize { operations: Vec<crate::recovery::Operation> },
     RecoveryAdvance { token: String, count: usize },
@@ -144,8 +154,32 @@ fn metadata(request: Request, state: &mut State, bytes: &[u8]) -> io::Result<Val
         Request::ConfigWorkspaceUpdates(input) => {
             crate::config_merge::apply("configWorkspaceUpdates", &input)
         }
-        request => transfer_request(request, &mut state.transfer),
+        request @ (Request::TransferCollect(_)
+        | Request::TransferInitialize(_)
+        | Request::TransferArchive(_)
+        | Request::TransferRelease(_)
+        | Request::TransferPending(_)
+        | Request::TransferTransactionInitialize(_)
+        | Request::TransferTransactionReceipt(_)) => transfer_request(request, &mut state.transfer),
+        request => snapshot_operation(request, state),
     }
+}
+
+fn snapshot_operation(request: Request, state: &mut State) -> io::Result<Value> {
+    let (kind, input) = match request {
+        Request::SnapshotTransactionBegin(input) => ("snapshotTransactionBegin", input),
+        Request::SnapshotRepositoryBegin(input) => ("snapshotRepositoryBegin", input),
+        Request::SnapshotTransactionReceipt(input) => ("snapshotTransactionReceipt", input),
+        Request::SnapshotRepositoryReceipt(input) => ("snapshotRepositoryReceipt", input),
+        Request::SnapshotVersionIdentity(input) => ("snapshotVersionIdentity", input),
+        Request::SnapshotFutureVersions(input) => ("snapshotFutureVersions", input),
+        Request::SnapshotDependencyUpdates(input) => ("snapshotDependencyUpdates", input),
+        Request::SnapshotAutoTag(input) => ("snapshotAutoTag", input),
+        Request::SnapshotSerialize(input) => ("snapshotSerialize", input),
+        Request::SnapshotCommit(input) => ("snapshotCommit", input),
+        _ => return Err(invalid("invalid metadata operation")),
+    };
+    crate::snapshot_transaction::apply(kind, input, &mut state.snapshot)
 }
 
 fn config_plan(input: &Value, state: &mut State) -> io::Result<Value> {

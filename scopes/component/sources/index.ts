@@ -15,7 +15,12 @@ export {
   compareRustVersionIds,
   getRustFilesDiff,
 } from './rust-workspace-reader';
-export { getRustWorkspaceMergeDescriptor, getRustSnapshotSourceDescriptor } from './rust-workspace-identity';
+export {
+  getRustWorkspaceMergeDescriptor,
+  getRustSnapshotSourceDescriptor,
+  captureRustSnapshotSourceContents,
+  inheritRustWorkspaceFileSnapshot,
+} from './rust-workspace-identity';
 export { PackageJsonFile } from './package-json-file';
 export { DataToPersist } from './data-to-persist';
 export {
@@ -32,6 +37,11 @@ export {
 export type { RustCheckoutSourceDescriptor } from './rust-checkout-source';
 export { RemovePath } from './remove-path';
 export { ArtifactVinyl } from './artifact';
+export {
+  getRustArtifactSourceDescriptor,
+  captureRustArtifactSourceContents,
+  hasRustArtifactVinyl,
+} from './rust-artifact-source';
 export {
   ArtifactSource,
   ArtifactObject,

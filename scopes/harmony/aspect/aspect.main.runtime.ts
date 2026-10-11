@@ -1,3 +1,9 @@
+import {
+  registerRustSnapshotValidationHook,
+  registerRustSnapshotFunctions,
+  hasRustSnapshotFunctions,
+  hasRustSnapshotMethods,
+} from '@teambit/objects';
 import type { Harmony } from '@teambit/harmony';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { AspectLoaderAspect } from '@teambit/aspect-loader';
@@ -324,10 +330,22 @@ export class AspectMain {
     ];
     cli.register(aspectCmd);
 
-    ExtensionDataList.validateBeforePersistHook = aspectMain.validateAspectsBeforePersist.bind(aspectMain);
+    const snapshotValidator = aspectMain.validateAspectsBeforePersist.bind(aspectMain);
+    registerRustSnapshotValidationHook(
+      snapshotValidator,
+      () =>
+        hasRustSnapshotMethods(aspectMain, 'SnapshotAspectValidation') &&
+        Object.getOwnPropertyDescriptor(aspectMain, 'envs')?.value === envs &&
+        Object.getOwnPropertyDescriptor(aspectMain, 'depsResolver')?.value === depResolver &&
+        hasRustSnapshotMethods(envs, 'SnapshotEnvValidation') &&
+        hasRustSnapshotMethods(depResolver, 'SnapshotResolverValidation') &&
+        hasRustSnapshotFunctions(['SnapshotEnvAspect', 'SnapshotValidationSemver', 'SnapshotResolverAspect'])
+    );
+    ExtensionDataList.validateBeforePersistHook = snapshotValidator;
 
     return aspectMain;
   }
 }
 
+registerRustSnapshotFunctions('SnapshotAspectValidation', AspectMain.prototype, ['validateAspectsBeforePersist']);
 AspectAspect.addRuntime(AspectMain);

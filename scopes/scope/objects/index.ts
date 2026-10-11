@@ -1,6 +1,7 @@
 export { resolveRustObjectImportExecutable } from './objects/rust-object-discovery';
 export {
   ModelComponent,
+  canPlanRustSnapshotFutureVersions,
   ScopeMeta,
   Source,
   Version,
@@ -75,3 +76,37 @@ export {
   rustTransferObjectsHash,
   rustTransferTar,
 } from './objects/rust-transfer';
+
+export {
+  registerRustSnapshotTransactionClass,
+  hasRustSnapshotTransactionClass,
+  registerRustSnapshotModelHook,
+  registerRustSnapshotValidationHook,
+  hasRustSnapshotValidationHook,
+  hasRustSnapshotModelHooks,
+  registerRustSnapshotFunctions,
+  hasRustSnapshotFunctions,
+  hasRustSnapshotMethods,
+  registerRustSnapshotFunctionReference,
+  hasRustSnapshotFunctionReference,
+} from './objects/rust-snapshot-guards';
+export { projectRustSnapshotValue } from './objects/rust-snapshot-values';
+export type { RustSnapshotValue } from './objects/rust-snapshot-values';
+export {
+  withRustSnapshotTransaction,
+  requestRustSnapshotTransaction,
+  runRustSnapshotPhases,
+  isRustSnapshotTransaction,
+  retireRustSnapshotTransaction,
+  registerRustSnapshotTransactionCleanup,
+} from './objects/rust-snapshot-transaction';
+export type { SnapshotPhase } from './objects/rust-snapshot-transaction';
+export { projectRustSnapshotFields } from './objects/rust-snapshot-projection';
+export { RustSnapshotRepositoryJournal } from './objects/rust-snapshot-repository';
+
+export {
+  planRustSnapshotFutureVersion,
+  snapshotPolicySemver,
+  snapshotPolicyId,
+  snapshotPolicyConsumerId,
+} from './objects/rust-snapshot-policy';

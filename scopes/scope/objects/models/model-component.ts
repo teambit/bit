@@ -1,6 +1,11 @@
+import {
+  registerRustSnapshotFunctionReference,
+  registerRustSnapshotFunctions,
+  hasRustSnapshotFunctionReference,
+} from '../objects/rust-snapshot-guards';
 import { collectRustExportObjects } from '../objects/rust-transfer';
 import { rebaseRustVersionHistory } from '../objects/rust-squash-history';
-import { forEach, isEmpty, pickBy, mapValues, isEqual, clone, findLastKey } from 'lodash';
+import lodash, { forEach, isEmpty, pickBy, mapValues, isEqual, clone, findLastKey } from 'lodash';
 import { Mutex } from 'async-mutex';
 import * as semver from 'semver';
 import { versionParser, isHash, isTag, isSnap, LATEST_VERSION } from '@teambit/component-version';
@@ -1595,3 +1600,12 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
     }
   }
 }
+
+registerRustSnapshotFunctions('SnapshotComponentLodash', lodash, ['forEach', 'isEmpty']);
+
+registerRustSnapshotFunctionReference('SnapshotModelSemverInc', semver.inc);
+export function canPlanRustSnapshotFutureVersions(): boolean {
+  return hasRustSnapshotFunctionReference('SnapshotModelSemverInc', semver.inc);
+}
+
+registerRustSnapshotFunctionReference('SnapshotCanPlanFutureVersions', canPlanRustSnapshotFutureVersions);

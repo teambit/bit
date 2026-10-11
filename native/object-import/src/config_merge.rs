@@ -83,3 +83,7 @@ fn array<'a>(input: &'a Value, field: &str) -> io::Result<&'a [Value]> {
 }
 #[cfg(test)]
 mod tests;
+
+pub(crate) fn compare_versions(left: &Value, right: &Value) -> io::Result<std::cmp::Ordering> {
+    semver::compare(left, right)
+}

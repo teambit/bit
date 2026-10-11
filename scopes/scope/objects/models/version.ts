@@ -1,4 +1,5 @@
-import { isEmpty, pickBy } from 'lodash';
+import lodash, { isEmpty, pickBy } from 'lodash';
+import { registerRustSnapshotFunctions } from '../objects/rust-snapshot-guards';
 import { isSnap } from '@teambit/component-version';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';
@@ -462,47 +463,9 @@ export default class Version extends BitObject {
   }
 
   toObject() {
-    return pickBy(
-      {
-        files: this.filesToObject(),
-        mainFile: this.mainFile,
-        bindingPrefix: this.bindingPrefix,
-        schema: this.schema,
-        log: this.logToObject(),
-        docs: this.docs,
-        dependencies: this.dependencies.cloneAsObject(),
-        devDependencies: this.devDependencies.cloneAsObject(),
-        flattenedDependencies: this.flattenedDependencies.map((dep) => dep.toObject()),
-        // @todo: uncomment this in the future, once all remotes are updated to support the backward compatibility.
-        // flattenedDependencies: this.flattenedDependencies.map((dep) => dep.toString()),
-        flattenedEdges: this.flattenedEdgesRef ? undefined : this.flattenedEdges.map((f) => Version.depEdgeToObject(f)),
-        flattenedEdgesRef: this.flattenedEdgesRef?.toString(),
-        dependenciesGraphRef: this.dependenciesGraphRef?.toString(),
-        extensions: this.extensions.toModelObjects(),
-        packageDependencies: this.packageDependencies,
-        devPackageDependencies: this.devPackageDependencies,
-        peerPackageDependencies: this.peerPackageDependencies,
-        overrides: this.overrides,
-        buildStatus: this.buildStatus,
-        packageJsonChangedProps: this.packageJsonChangedProps,
-        parents: this.parents.map((p) => p.toString()),
-        squashed: this.squashed
-          ? {
-              previousParents: this.squashed.previousParents.map((p) => p.toString()),
-              laneId: this.squashed.laneId.toObject(),
-            }
-          : undefined,
-        unrelated: this.unrelated
-          ? { head: this.unrelated.head.toString(), laneId: this.unrelated.laneId.toObject() }
-          : undefined,
-        bitVersion: this.bitVersion,
-        modified: this.modified,
-        origin: this.origin,
-        hidden: this.hidden,
-        batchId: this.batchId,
-      },
-      (val) => !!val
-    );
+    const prefix = captureVersionSerializationPrefix(this);
+    const extensions = this.extensions.toModelObjects();
+    return completeVersionSerialization(this, prefix, extensions);
   }
 
   validateBeforePersisting(versionStr: string): void {
@@ -846,3 +809,64 @@ export function canCompareVersionNatively(version: Version): boolean {
     BitObject.makeHash === defaultMakeHash
   );
 }
+
+/** Preserve the evaluation and aliasing of fields preceding extension serialization hooks. */
+export function captureVersionSerializationPrefix(version: Version) {
+  return {
+    files: (version as any).filesToObject(),
+    mainFile: version.mainFile,
+    bindingPrefix: version.bindingPrefix,
+    schema: version.schema,
+    log: (version as any).logToObject(),
+    docs: version.docs,
+    dependencies: version.dependencies.cloneAsObject(),
+    devDependencies: version.devDependencies.cloneAsObject(),
+    flattenedDependencies: version.flattenedDependencies.map((dep) => dep.toObject()),
+    // @todo: uncomment this in the future, once all remotes are updated to support the backward compatibility.
+    // flattenedDependencies: version.flattenedDependencies.map((dep) => dep.toString()),
+    flattenedEdges: version.flattenedEdgesRef
+      ? undefined
+      : (version as any).flattenedEdges.map((f: DepEdge) => Version.depEdgeToObject(f)),
+    flattenedEdgesRef: version.flattenedEdgesRef?.toString(),
+    dependenciesGraphRef: version.dependenciesGraphRef?.toString(),
+  };
+}
+
+/** Continue serialization after extension hooks without invoking them a second time. */
+export function completeVersionSerialization(
+  version: Version,
+  prefix: ReturnType<typeof captureVersionSerializationPrefix>,
+  extensions: ReturnType<ExtensionDataList['toModelObjects']>
+) {
+  return pickBy(
+    {
+      ...prefix,
+      extensions,
+      packageDependencies: version.packageDependencies,
+      devPackageDependencies: version.devPackageDependencies,
+      peerPackageDependencies: version.peerPackageDependencies,
+      overrides: version.overrides,
+      buildStatus: version.buildStatus,
+      packageJsonChangedProps: version.packageJsonChangedProps,
+      parents: version.parents.map((p) => p.toString()),
+      squashed: version.squashed
+        ? {
+            previousParents: version.squashed.previousParents.map((p) => p.toString()),
+            laneId: version.squashed.laneId.toObject(),
+          }
+        : undefined,
+      unrelated: version.unrelated
+        ? { head: version.unrelated.head.toString(), laneId: version.unrelated.laneId.toObject() }
+        : undefined,
+      bitVersion: version.bitVersion,
+      modified: version.modified,
+      origin: version.origin,
+      hidden: version.hidden,
+      batchId: version.batchId,
+    },
+    (value) => !!value
+  );
+}
+
+registerRustSnapshotFunctions('Version', lodash, ['isEmpty', 'pickBy']);
+registerRustSnapshotFunctions('SnapshotJSON', JSON, ['stringify', 'parse']);
