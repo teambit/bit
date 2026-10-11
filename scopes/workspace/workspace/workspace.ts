@@ -75,6 +75,9 @@ import {
   readRustWorkspaceFiles,
   registerRustWorkspaceFile,
   sourceFileFromWorkspaceRead,
+  withRustWorkspaceInspection,
+  isRustWorkspaceInspection,
+  canInspectWorkspaceSourcesNatively,
 } from '@teambit/component.sources';
 import { ScopeComponentsImporter, VersionNotFoundOnFS } from '@teambit/legacy.scope';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
@@ -124,6 +127,13 @@ import { WorkspaceAspectsLoader } from './workspace-aspects-loader';
 import type { MergeConflictFile } from './merge-conflict-file';
 import { MergeConfigConflict } from './exceptions/merge-config-conflict';
 import { CompFiles } from './workspace-component/comp-files';
+import {
+  inspectTrackedWorkspaceFiles,
+  summarizeCompFiles,
+  type FilesInspectionMode,
+  type FilesInspectionSummary,
+  type PreparedFilesInspection,
+} from './rust-files-inspection';
 import { Filter } from './filter';
 import type { ComponentStatusLegacy, ComponentStatusResult } from './workspace-component/component-status-loader';
 import { ComponentStatusLoader } from './workspace-component/component-status-loader';
@@ -774,19 +784,124 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
   }
 
   async getFilesModification(id: ComponentID): Promise<CompFiles> {
+    return this.readComponentFileState(id) as Promise<CompFiles>;
+  }
+
+  /** Internal summaries consume owned file snapshots before returning; public file getters stay eager. */
+  async withFilesInspection<T>(
+    ids: ComponentID[],
+    mode: FilesInspectionMode,
+    consume: (files: FilesInspectionSummary[]) => Promise<T>,
+    beforeRead?: { run: (id: ComponentID) => void; ordinary: (id: ComponentID) => boolean }
+  ): Promise<T> {
+    return withRustWorkspaceInspection(async () => {
+      const plans: PreparedFilesInspection[] = [];
+      try {
+        await mapSeries(ids, async (id) => {
+          // Capture the defining method after class initialization, so overrides retain their public behavior.
+          // eslint-disable-next-line no-use-before-define
+          if (this.getFilesModification !== defaultFilesModification) {
+            const comp = await this.getFilesModification(id);
+            plans.push({
+              prepareRead: () => ({ canonical: () => summarizeCompFiles(comp, mode) }),
+              release: async () => {},
+            });
+          } else plans.push((await this.readComponentFileState(id, mode)) as PreparedFilesInspection);
+        });
+        const allowNative = !beforeRead || ids.every((id) => beforeRead.ordinary(id));
+        const reads = plans.map((plan) => plan.prepareRead());
+        let files: FilesInspectionSummary[];
+        if (allowNative && reads.every((read) => read.native)) {
+          // Default pre-comparison methods are pure; preserve their synchronous boundary before native awaits.
+          if (beforeRead) ids.forEach((id) => beforeRead.run(id));
+          files = await mapSeries(reads, (read) => read.native!());
+        } else {
+          files = reads.map((read, index) => {
+            beforeRead?.run(ids[index]);
+            return read.canonical();
+          });
+        }
+        return await consume(files);
+      } finally {
+        for (const plan of plans) await plan.release();
+      }
+    });
+  }
+
+  private async readComponentFileState(
+    id: ComponentID,
+    mode?: FilesInspectionMode
+  ): Promise<CompFiles | PreparedFilesInspection> {
     const bitMapEntry = this.bitMap.getBitmapEntry(id, { ignoreVersion: true });
     const compDir = bitMapEntry.getComponentDir();
     const compDirAbs = path.join(this.path, compDir);
     const manifest = bitMapEntry.files.slice();
     const paths = manifest.map((file) => path.join(compDirAbs, file.relativePath));
-    const native = canReadWorkspaceFilesNatively() ? await readRustWorkspaceFiles(paths) : undefined;
-    const nativeValid =
-      native &&
-      canReadWorkspaceFilesNatively() &&
+    const repo = this.scope.legacyScope.objects;
+    const getModelFiles = async () => {
+      const modelComp = await this.scope.legacyScope.getModelComponentIfExist(id);
+      if (!modelComp) return [];
+      if (!bitMapEntry.id.hasVersion()) return [];
+      const verObj = await modelComp.loadVersion(bitMapEntry.id.version, repo);
+      return verObj.files;
+    };
+    const unchanged = () =>
       bitMapEntry.files.length === manifest.length &&
       bitMapEntry.files.every(
-        (file, index) => file === manifest[index] && path.join(compDirAbs, file.relativePath) === paths[index]
+        (file, index) =>
+          file === manifest[index] &&
+          path.join(compDirAbs, Object.getOwnPropertyDescriptor(file, 'relativePath')?.value || '') === paths[index]
       );
+    const ordinaryManifest = manifest.every(
+      (file) => typeof Object.getOwnPropertyDescriptor(file, 'relativePath')?.value === 'string'
+    );
+    if (
+      mode &&
+      ordinaryManifest &&
+      isRustWorkspaceInspection() &&
+      canReadWorkspaceFilesNatively() &&
+      canInspectWorkspaceSourcesNatively()
+    ) {
+      const files = paths.map((filePath) => ({ relativePath: path.relative(compDirAbs, filePath), path: filePath }));
+      const stats = paths.map((filePath) => {
+        try {
+          return fs.statSync(filePath);
+        } catch {
+          return undefined;
+        }
+      });
+      const native = await inspectTrackedWorkspaceFiles(
+        {
+          id,
+          compDir,
+          files,
+          workspaceRoot: bitMapEntry.rootDir === '.',
+          unchanged,
+          loadModelFiles: getModelFiles,
+          fallback: (contents, modelFiles) =>
+            new CompFiles(
+              id,
+              repo,
+              files.map(
+                (file, index) =>
+                  new SourceFile({
+                    base: compDirAbs,
+                    cwd: this.path,
+                    path: file.path,
+                    contents: contents[index],
+                    stat: stats[index],
+                  })
+              ),
+              compDir,
+              modelFiles
+            ),
+        },
+        mode
+      );
+      if (native) return native;
+    }
+    const native = canReadWorkspaceFilesNatively() ? await readRustWorkspaceFiles(paths) : undefined;
+    const nativeValid = native && canReadWorkspaceFilesNatively() && unchanged();
     const sourceFilesVinyls = bitMapEntry.files.map((file, index) => {
       const filePath = path.join(compDirAbs, file.relativePath);
       const read = nativeValid ? native[index] : undefined;
@@ -797,17 +912,10 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
       if (read) registerRustWorkspaceFile(sourceFile, read);
       return sourceFile;
     });
-    const repo = this.scope.legacyScope.objects;
-    const getModelFiles = async () => {
-      const modelComp = await this.scope.legacyScope.getModelComponentIfExist(id);
-      if (!modelComp) return [];
-      if (!bitMapEntry.id.hasVersion()) return [];
-
-      const verObj = await modelComp.loadVersion(bitMapEntry.id.version, repo);
-      return verObj.files;
-    };
-
-    return new CompFiles(id, repo, sourceFilesVinyls, compDir, await getModelFiles());
+    const result = new CompFiles(id, repo, sourceFilesVinyls, compDir, await getModelFiles());
+    return mode
+      ? { prepareRead: () => ({ canonical: () => summarizeCompFiles(result, mode) }), release: async () => {} }
+      : result;
   }
 
   /**
@@ -2861,5 +2969,7 @@ function shouldReFetchUnBuiltVersion() {
   const commandsToReFetch = ['import'];
   return commandsToReFetch.includes(process.argv[2]);
 }
+
+const defaultFilesModification = Workspace.prototype.getFilesModification;
 
 export default Workspace;

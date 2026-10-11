@@ -53,3 +53,12 @@ export class CompFiles {
     return result;
   }
 }
+
+const defaultModified = CompFiles.prototype.isModified;
+const defaultStatus = CompFiles.prototype.getFilesStatus;
+export function canInspectCompFilesNatively(): boolean {
+  return (
+    Object.getOwnPropertyDescriptor(CompFiles.prototype, 'isModified')?.value === defaultModified &&
+    Object.getOwnPropertyDescriptor(CompFiles.prototype, 'getFilesStatus')?.value === defaultStatus
+  );
+}

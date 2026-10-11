@@ -3,6 +3,7 @@ export {
   ExtensionDataList,
   runExtensionDataModelHooks,
   extensionDataToModelObjectsAfterHooks,
+  canSortInspectionExtensionsNatively,
   ValidateBeforePersistResult,
   removeInternalConfigFields,
   getCompareExtPredicate,

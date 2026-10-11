@@ -7,6 +7,12 @@ export { AbstractVinyl, Dist, License, SourceFile };
 export { withRustSourceReads, isRustSourceReadScope } from './rust-source-read-scope';
 export { canReadWorkspaceFilesNatively, sourceFileFromWorkspaceRead } from './source-file';
 export {
+  withRustWorkspaceInspection,
+  requestRustWorkspaceInspection,
+  retireRustWorkspaceInspection,
+  isRustWorkspaceInspection,
+} from './rust-workspace-inspection';
+export {
   scanRustWorkspace,
   readRustWorkspaceFiles,
   registerRustWorkspaceFile,
@@ -20,6 +26,7 @@ export {
   getRustSnapshotSourceDescriptor,
   captureRustSnapshotSourceContents,
   inheritRustWorkspaceFileSnapshot,
+  canInspectWorkspaceSourcesNatively,
 } from './rust-workspace-identity';
 export { PackageJsonFile } from './package-json-file';
 export { DataToPersist } from './data-to-persist';

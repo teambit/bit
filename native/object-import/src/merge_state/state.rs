@@ -8,6 +8,7 @@ use std::io;
 pub(crate) struct State {
     pub(crate) transfer: crate::transfer::State,
     pub(crate) recovery: crate::recovery::State,
+    pub(crate) inspection: crate::inspection::State,
     pub(crate) snapshot: crate::snapshot_transaction::State,
     pub(crate) conflict_plan: Option<crate::config_merge::Conflict>,
     entries: Vec<Value>,

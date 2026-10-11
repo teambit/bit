@@ -1,11 +1,19 @@
 import { Ref, Source, canHashSourceNatively, hasRustSnapshotTransactionClass } from '@teambit/objects';
 import * as eol from '@teambit/toolbox.string.eol';
-import type AbstractVinyl from './abstract-vinyl';
-import { defaultVinylToSource } from './abstract-vinyl';
+import AbstractVinyl, { defaultVinylToSource } from './abstract-vinyl';
 export type RustWorkspaceRead = { path: string; contents: Buffer; hash: string; linuxHash: string };
 type Snapshot = RustWorkspaceRead;
 const snapshots = new WeakMap<AbstractVinyl, Snapshot>();
 const defaultLf = eol.lf;
+
+/** File summaries must preserve the defining Source identity and binary/EOL policy. */
+export function canInspectWorkspaceSourcesNatively(): boolean {
+  return (
+    eol.lf === defaultLf &&
+    AbstractVinyl.prototype.toSourceAsLinuxEOL === defaultVinylToSource &&
+    canHashSourceNatively()
+  );
+}
 type SourceSnapshot = {
   file: AbstractVinyl;
   snapshot: Snapshot;

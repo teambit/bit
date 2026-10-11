@@ -173,10 +173,9 @@ export class ComponentLoader {
     }
     if (!idsToProcess.length) return { components: alreadyLoadedComponents, invalidComponents, removedComponents };
     const storeInCache = loadOptsWithDefaults?.storeInCache ?? true;
-    const allComponents: Component[] = [];
     const shouldRunInParallel = await this.shouldRunInParallel(idsToProcess);
     logger.debug(`loading ${idsToProcess.length} components in parallel: ${shouldRunInParallel.toString()}`);
-    await ComponentLoader.runDependencyLoadScope(() =>
+    const loadedComponents = await ComponentLoader.runDependencyLoadScope(() =>
       pMapPool(
         idsToProcess,
         async (id: ComponentID) => {
@@ -192,13 +191,15 @@ export class ComponentLoader {
               this.componentsCache.set(component.id.toString(), component);
             }
             logger.trace(`ComponentLoader', 'Finished loading the component "${component.id.toString()}"`);
-            allComponents.push(component);
           }
+          return component;
         },
         { concurrency: shouldRunInParallel ? concurrentComponentsLimit() : 1 }
       )
     );
 
+    // Pool results retain request order even when filesystem loads finish in a different order.
+    const allComponents = loadedComponents.filter((component): component is Component => Boolean(component));
     return { components: allComponents.concat(alreadyLoadedComponents), invalidComponents, removedComponents };
   }
 

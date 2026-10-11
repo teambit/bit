@@ -2,6 +2,7 @@ import {
   registerRustTransferClass,
   registerRustSnapshotTransactionClass,
   registerRustSnapshotFunctions,
+  hasRustSnapshotFunctions,
 } from '@teambit/objects';
 import lodash, { sortBy, unionWith, isEmpty, cloneDeep, compact } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
@@ -295,3 +296,17 @@ registerRustSnapshotTransactionClass('ExtensionDataList', ExtensionDataList, [
   'validateBeforePersistHook',
 ]);
 registerRustSnapshotFunctions('ExtensionDataList', lodash, ['sortBy', 'unionWith', 'isEmpty', 'cloneDeep', 'compact']);
+
+const inspectionSorter = sortObjectByKeys;
+const inspectionInternalFields = INTERNAL_CONFIG_FIELDS.slice();
+/** Preserve the default config sorter without reading extension data or running model hooks. */
+export function canSortInspectionExtensionsNatively(): boolean {
+  return (
+    sortObjectByKeys === inspectionSorter &&
+    hasRustSnapshotFunctions(['ExtensionDataList']) &&
+    INTERNAL_CONFIG_FIELDS.length === inspectionInternalFields.length &&
+    inspectionInternalFields.every(
+      (field, index) => Object.getOwnPropertyDescriptor(INTERNAL_CONFIG_FIELDS, String(index))?.value === field
+    )
+  );
+}

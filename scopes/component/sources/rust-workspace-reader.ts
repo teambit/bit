@@ -1,4 +1,12 @@
 import path from 'path';
+import fs from 'fs-extra';
+import os from 'os';
+import { createHash } from 'crypto';
+import {
+  withRustWorkspaceInspection,
+  requestRustWorkspaceInspection,
+  isRustWorkspaceInspection,
+} from './rust-workspace-inspection';
 import { canHashSourceNatively } from '@teambit/objects';
 import type AbstractVinyl from './abstract-vinyl';
 import { getRustCheckoutSourceDescriptor } from './rust-checkout-source';
@@ -10,6 +18,7 @@ const MAX_OUTPUT = 32 * 1024 * 1024;
 const MAX_BYTES = 8 * 1024 * 1024;
 import {
   getRustWorkspaceFileDescriptor,
+  getRustWorkspaceMergeDescriptor,
   hasOrdinaryWorkspaceProperties,
   type RustWorkspaceRead,
 } from './rust-workspace-identity';
@@ -179,6 +188,98 @@ export async function getRustFilesDiff(
         (!file.a || file.a.relative === file.relativePath) &&
         (!file.b || file.b.relative === file.relativePath)
     );
+  const inspection = await withRustWorkspaceInspection(async () => {
+    if (!isRustWorkspaceInspection() || !snapshotA.length || !snapshotB.length) return undefined;
+    const left = snapshotA.map((file) => ({
+      relativePath: file.relative,
+      descriptor: getRustCheckoutSourceDescriptor(file),
+    }));
+    const right = snapshotB.map((file) => ({
+      relativePath: file.relative,
+      descriptor: getRustWorkspaceMergeDescriptor(file),
+      file,
+    }));
+    const objectsDirectory = left[0].descriptor?.objectsDirectory;
+    if (
+      !objectsDirectory ||
+      left.some((file) => !file.descriptor || file.descriptor.objectsDirectory !== objectsDirectory) ||
+      right.some((file) => !file.descriptor || !Buffer.isBuffer(file.file.contents)) ||
+      new Set(left.map((file) => file.relativePath)).size !== left.length ||
+      new Set(right.map((file) => file.relativePath)).size !== right.length
+    )
+      return undefined;
+    // Bind private native captures to the caller's pre-LF bytes as well as its verified disk revision.
+    const current = right.map((file) => ({
+      relativePath: file.relativePath,
+      path: file.descriptor!.path,
+      rawHash: file.descriptor!.hash,
+      snapshotHash: createHash('sha1').update(file.file.contents).digest('hex'),
+    }));
+    const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'bit-workspace-diff-')).catch(() => undefined);
+    if (!directory) return undefined;
+    let token: string | undefined;
+    try {
+      const captured = await requestRustWorkspaceInspection(
+        { kind: 'inspectionBegin', files: current, workspaceRoot: false, snapshotDirectory: directory },
+        (
+          value
+        ): value is {
+          token: string;
+          count: number;
+          files: Array<{ relativePath: string; rawHash: string; snapshotHash: string }>;
+        } =>
+          Boolean(
+            value &&
+              hashString(value.token) &&
+              value.count === current.length &&
+              Array.isArray(value.files) &&
+              value.files.length === current.length &&
+              value.files.every(
+                (file, index) =>
+                  file.relativePath === current[index].relativePath &&
+                  file.rawHash === current[index].rawHash &&
+                  file.snapshotHash === current[index].snapshotHash
+              )
+          )
+      );
+      if (!captured) return undefined;
+      token = captured.token;
+      if (!valid()) return undefined;
+      const result = await requestRustWorkspaceInspection(
+        {
+          kind: 'inspectionDiff',
+          token,
+          objectsDirectory,
+          modelFiles: left.map((file) => ({ relativePath: file.relativePath, hash: file.descriptor!.hash })),
+          gitExecutable,
+          color,
+        },
+        (value): value is { files: RustWorkspaceDiff[] } =>
+          Boolean(
+            value &&
+              Array.isArray(value.files) &&
+              value.files.length === paths.length &&
+              value.files.every(
+                (file, index) =>
+                  file.relativePath === paths[index] &&
+                  typeof file.fromContent === 'string' &&
+                  typeof file.toContent === 'string' &&
+                  typeof file.rawDiff === 'string' &&
+                  typeof file.same === 'boolean'
+              )
+          )
+      );
+      return result && valid() ? result.files : undefined;
+    } finally {
+      if (token)
+        await requestRustWorkspaceInspection(
+          { kind: 'inspectionFinish', token },
+          (value): value is { finished: true } => value?.finished === true
+        );
+      await fs.remove(directory).catch(() => undefined);
+    }
+  });
+  if (inspection) return inspection;
   const result = await request(
     {
       kind: 'diff',

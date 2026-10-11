@@ -12,6 +12,7 @@ on:
       - 'scopes/component/status/**'
       - 'scopes/component/component-compare/**'
       - 'scopes/workspace/workspace/**'
+      - 'scopes/harmony/api-server/**'
       - 'components/legacy/bit-map/**'
       - 'components/legacy/consumer/**'
       - 'components/legacy/consumer-component/**'
@@ -67,6 +68,7 @@ on:
       - 'scopes/component/status/**'
       - 'scopes/component/component-compare/**'
       - 'scopes/workspace/workspace/**'
+      - 'scopes/harmony/api-server/**'
       - 'components/legacy/bit-map/**'
       - 'components/legacy/consumer/**'
       - 'components/legacy/consumer-component/**'
@@ -495,4 +497,6 @@ jobs:
           BIT_TEST_SNAPSHOT_TRANSACTION_COMPILED=1 node --test scripts/rust-object-import/snapshot-transaction.test.cjs scripts/rust-object-import/snapshot-transaction-store.test.cjs scripts/rust-object-import/snapshot-transaction-artifact.test.cjs
           node --test scripts/rust-object-import/three-way-merge.test.cjs
           BIT_TEST_THREE_WAY_MERGE_COMPILED=1 node --test scripts/rust-object-import/three-way-merge.test.cjs
+          node --test scripts/rust-object-import/workspace-inspection-test.cjs
+          BIT_TEST_WORKSPACE_INSPECTION_COMPILED=1 node --test scripts/rust-object-import/workspace-inspection-test.cjs
           node scripts/rust-object-import/canonical-model-tests.cjs

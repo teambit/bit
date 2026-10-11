@@ -35,7 +35,7 @@ struct Prepared {
 }
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(super) struct FileDiff {
+pub(crate) struct FileDiff {
     relative_path: String,
     from_content: String,
     to_content: String,
@@ -84,6 +84,36 @@ pub(super) fn diff(files: &[InputFile], git: &str, color: bool) -> io::Result<Ve
     if prepared.is_empty() {
         return Ok(Vec::new());
     }
+    execute(&prepared, git, color)
+}
+pub(crate) type Frozen = (String, Option<Vec<u8>>, Option<Vec<u8>>);
+pub(crate) fn frozen(files: Vec<Frozen>, git: &str, color: bool) -> io::Result<Vec<FileDiff>> {
+    if git.is_empty() || git.len() > 32768 || git.contains('\0') {
+        return Err(invalid("workspace invalid Git executable"));
+    }
+    let prepared = files
+        .into_iter()
+        .map(|(relative_path, left, right)| {
+            let left_hash = left
+                .as_ref()
+                .map(|bytes| hash(&crate::checkout::eol::normalize(bytes.clone(), false)));
+            let right_hash = right
+                .as_ref()
+                .map(|bytes| hash(&crate::checkout::eol::normalize(bytes.clone(), false)));
+            Prepared {
+                relative_path,
+                left: left.unwrap_or_default(),
+                right: right.unwrap_or_default(),
+                same: left_hash == right_hash,
+            }
+        })
+        .collect::<Vec<_>>();
+    if prepared.is_empty() {
+        return Ok(Vec::new());
+    }
+    execute(&prepared, git, color)
+}
+fn execute(prepared: &[Prepared], git: &str, color: bool) -> io::Result<Vec<FileDiff>> {
     let directory = Directory::new()?;
     let output = AtomicUsize::new(0);
     let pool = rayon::ThreadPoolBuilder::new()

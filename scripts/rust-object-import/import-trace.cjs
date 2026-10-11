@@ -72,6 +72,11 @@ const metrics = {
       'transferPending',
       'transferTransactionInitialize',
       'transferTransactionReceipt',
+      'inspectionBegin',
+      'inspectionFiles',
+      'inspectionCompare',
+      'inspectionDiff',
+      'inspectionFinish',
     ].map((kind) => [
       kind,
       {
@@ -79,7 +84,11 @@ const metrics = {
         files: 0,
         completed: 0,
         failed: 0,
-        ...(kind.startsWith('snapshot') ? { helperIds: [] } : {}),
+        ...(kind.startsWith('snapshot') || kind.startsWith('inspection') ? { helperIds: [] } : {}),
+        ...(kind.startsWith('inspection')
+          ? { snapshotBytes: 0, sourceBodyBytes: 0, publicContentBytes: 0, tokens: [] }
+          : {}),
+        ...(kind === 'inspectionCompare' ? { modelHashes: [] } : {}),
         ...(kind === 'snapshotSerialize'
           ? {
               objects: 0,
@@ -164,6 +173,20 @@ if (output && process.pid === owner) {
                 ? operation.objects.length
                 : 1
               : operation.files?.length || (operation.kind === 'compare' ? 1 : 0);
+          if (magic === 'BMT1' && operation.kind.startsWith('inspection') && operation.token)
+            metric.tokens.push({ token: operation.token, helperId: workspaceId });
+          if (magic === 'BMT1' && operation.kind === 'inspectionCompare') {
+            const field = (value, name) =>
+              value?.kind === 'object'
+                ? value.value.find(([key]) => String.fromCharCode(...key) === name)?.[1]
+                : undefined;
+            const files = field(operation.left, 'files');
+            for (const file of files?.value || []) {
+              const reference = field(file, 'file');
+              const value = reference?.kind === 'string' ? reference : field(reference, 'hash');
+              if (value?.kind === 'string') metric.modelHashes.push(String.fromCharCode(...value.value));
+            }
+          }
           if (magic === 'BMT1' && operation.kind === 'snapshotSerialize') {
             metric.objects += operation.objects?.length || 0;
             for (const object of operation.objects || []) {
@@ -260,6 +283,19 @@ if (output && process.pid === owner) {
           if (magic === 'BMT1:recoveryAdvance') {
             metric.stepsCompleted += response.data?.completed || 0;
             metric.dataFailed += Number(response.data?.failed === true);
+          }
+          if (magic === 'BMT1:inspectionBegin') {
+            if (response.data?.token) metric.tokens.push({ token: response.data.token, helperId: workspaceId });
+            for (const file of response.data?.files || []) {
+              metric.snapshotBytes += file.bytes || 0;
+              for (const key of ['contents', 'body', 'buffer'])
+                if (typeof file[key] === 'string') metric.sourceBodyBytes += Buffer.byteLength(file[key]);
+            }
+          }
+          if (magic === 'BMT1:inspectionDiff') {
+            for (const file of response.data?.files || [])
+              metric.publicContentBytes +=
+                Buffer.byteLength(file.fromContent || '') + Buffer.byteLength(file.toContent || '');
           }
           if (magic === 'BMT1:transferCollect') {
             metric.objects += response.data?.objects?.length || 0;

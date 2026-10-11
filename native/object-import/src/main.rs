@@ -1,6 +1,7 @@
 mod checkout;
 mod config_merge;
 mod directory;
+mod inspection;
 mod inventory;
 mod js_json;
 mod merge_history;

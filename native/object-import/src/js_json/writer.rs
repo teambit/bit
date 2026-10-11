@@ -9,11 +9,16 @@ pub(super) struct Writer {
     output: Vec<u8>,
     nodes: usize,
     pretty: bool,
+    spaces: usize,
 }
 
 impl Writer {
     pub(super) fn new(pretty: bool) -> Self {
-        Self { output: Vec::new(), nodes: 0, pretty }
+        Self { output: Vec::new(), nodes: 0, pretty, spaces: 2 }
+    }
+
+    pub(super) fn spacing(&mut self, spaces: usize) {
+        self.spaces = spaces;
     }
 
     pub(super) fn finish(self) -> Vec<u8> {
@@ -92,6 +97,6 @@ impl Writer {
 
     fn indent(&mut self, depth: usize) -> io::Result<()> {
         self.bytes(b"\n")?;
-        self.bytes(&vec![b' '; depth * 2])
+        self.bytes(&vec![b' '; depth * self.spaces])
     }
 }
