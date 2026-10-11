@@ -1,3 +1,4 @@
+import { rebaseRustVersionHistory } from '../objects/rust-squash-history';
 import { forEach, isEmpty, pickBy, mapValues, isEqual, clone, findLastKey } from 'lodash';
 import { Mutex } from 'async-mutex';
 import * as semver from 'semver';
@@ -1441,6 +1442,10 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
    */
   async updateRebasedVersionHistory(repo: Repository, versions: Version[]): Promise<VersionHistory | undefined> {
     const versionHistory = await this.getVersionHistory(repo);
+    const nativeUpdated = isRustSnapshotOperation()
+      ? await rebaseRustVersionHistory(this, versionHistory, versions)
+      : undefined;
+    if (nativeUpdated !== undefined) return nativeUpdated ? versionHistory : undefined;
     const hasUpdated = versions.some((version) => {
       const versionData = versionHistory.getVersionData(version.hash());
       if (!versionData) return false;

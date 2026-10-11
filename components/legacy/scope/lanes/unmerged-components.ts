@@ -134,6 +134,15 @@ export class UnmergedComponents {
     return changed === undefined ? this.removeMultipleComponents(ids) : changed;
   }
 
+  async removeAllComponentsNative(): Promise<void> {
+    if (process.env.BIT_RUST_CLIENT_VCS !== 'on') {
+      this.removeAllComponents();
+      return;
+    }
+    const changed = await transitionRustUnmergedState(this, { kind: 'removeAll' });
+    if (changed === undefined) this.removeAllComponents();
+  }
+
   getEntry(id: ComponentID): UnmergedComponent | undefined {
     return this.unmerged.find((u) => u.id.name === id.fullName && u.id.scope === id.scope);
   }

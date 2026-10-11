@@ -71,3 +71,29 @@ export class LRUCacheAdapter<T extends {} = any> implements InMemoryCache<T> {
     return Array.from(new Set([...keys, ...this.weakValues.keys()]));
   }
 }
+
+const nativeAdapterMethods = ['get', 'set'].map((name) => [name, LRUCacheAdapter.prototype[name]] as const);
+const nativeLruMethods = ['get', 'set', 'has', 'delete'].map((name) => [name, LRUCache.prototype[name]] as const);
+/** Native metadata readers must not call custom cache hooks speculatively. */
+export function canReadCacheNatively(cache: InMemoryCache<{}>): boolean {
+  if (!cache || Object.getPrototypeOf(cache) !== LRUCacheAdapter.prototype) return false;
+  const inner = Object.getOwnPropertyDescriptor(cache, 'cache')?.value;
+  const weak = Object.getOwnPropertyDescriptor(cache, 'weakValues');
+  return Boolean(
+    inner &&
+      Object.getPrototypeOf(inner) === LRUCache.prototype &&
+      (!weak || ('value' in weak && !weak.value)) &&
+      nativeAdapterMethods.every(
+        ([name, method]) =>
+          (
+            Object.getOwnPropertyDescriptor(cache, name) ||
+            Object.getOwnPropertyDescriptor(LRUCacheAdapter.prototype, name)
+          )?.value === method
+      ) &&
+      nativeLruMethods.every(
+        ([name, method]) =>
+          (Object.getOwnPropertyDescriptor(inner, name) || Object.getOwnPropertyDescriptor(LRUCache.prototype, name))
+            ?.value === method
+      )
+  );
+}

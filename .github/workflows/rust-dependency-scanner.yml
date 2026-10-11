@@ -478,6 +478,8 @@ jobs:
           BIT_TEST_MERGE_HISTORY_COMPILED=1 node --test scripts/rust-object-import/merge-history.test.cjs scripts/rust-object-import/rust-history-population.test.cjs
           node --test scripts/rust-object-import/merge-state.test.cjs
           BIT_TEST_MERGE_STATE_COMPILED=1 node --test scripts/rust-object-import/merge-state.test.cjs
+          node --test scripts/rust-object-import/squash-history.test.cjs
+          BIT_TEST_SQUASH_HISTORY_COMPILED=1 node --test scripts/rust-object-import/squash-history.test.cjs
           node --test scripts/rust-object-import/three-way-merge.test.cjs
           BIT_TEST_THREE_WAY_MERGE_COMPILED=1 node --test scripts/rust-object-import/three-way-merge.test.cjs
           node scripts/rust-object-import/canonical-model-tests.cjs

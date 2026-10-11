@@ -1,6 +1,7 @@
+pub(crate) mod metadata;
+
 mod graph;
 mod merge;
-mod metadata;
 use crate::protocol;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -100,7 +101,7 @@ fn invalid(message: &str) -> io::Error {
 fn count(count: usize) -> io::Result<()> {
     if count > MAX_FILES { Err(invalid("history count limit")) } else { Ok(()) }
 }
-fn path(path: &Path) -> io::Result<()> {
+pub(crate) fn path(path: &Path) -> io::Result<()> {
     if !path.is_absolute()
         || path
             .to_str()
@@ -111,7 +112,7 @@ fn path(path: &Path) -> io::Result<()> {
         Ok(())
     }
 }
-fn hash(hash: &str) -> io::Result<[u8; 20]> {
+pub(crate) fn hash(hash: &str) -> io::Result<[u8; 20]> {
     if hash.len() != 40
         || !hash
             .bytes()

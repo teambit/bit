@@ -520,33 +520,36 @@ files use the scope filesystem while native Git input files use system temp.
 | tmpfs      |     8 | laneMergeManual |           440 → 438 |      1.00 |       0.60 → 0.59 |       232.4 → 238.2 |
 | tmpfs      |     8 | laneResolve     |           443 → 447 |      1.01 |       0.58 → 0.58 |       266.6 → 268.8 |
 | tmpfs      |     8 | laneMergeOurs   |           512 → 508 |      0.99 |       0.68 → 0.66 |       284.4 → 285.5 |
-| tmpfs      |     8 | laneAbort       |           209 → 212 |      1.01 |       0.25 → 0.26 |       130.1 → 130.8 |
 | tmpfs      |     8 | laneMergeSquash |           510 → 517 |      1.01 |       0.66 → 0.68 |       285.9 → 286.4 |
 | tmpfs      |   264 | laneSnap        |           569 → 591 |      1.04 |       0.81 → 0.80 |       340.9 → 364.4 |
 | tmpfs      |   264 | laneMergeManual |           703 → 714 |      1.01 |       0.99 → 0.97 |       337.9 → 354.1 |
 | tmpfs      |   264 | laneResolve     |           604 → 643 |      1.06 |       0.88 → 0.90 |       377.9 → 384.9 |
 | tmpfs      |   264 | laneMergeOurs   |           791 → 833 |      1.05 |       1.17 → 1.21 |       407.8 → 433.3 |
-| tmpfs      |   264 | laneAbort       |           218 → 211 |      0.97 |       0.26 → 0.25 |       130.6 → 129.5 |
 | tmpfs      |   264 | laneMergeSquash |           877 → 897 |      1.02 |       1.32 → 1.27 |       406.6 → 435.8 |
 | btrfs      |     8 | laneSnap        |           423 → 429 |      1.01 |       0.55 → 0.57 |       244.4 → 246.3 |
 | btrfs      |     8 | laneMergeManual |           452 → 444 |      0.98 |       0.60 → 0.57 |       234.1 → 235.6 |
 | btrfs      |     8 | laneResolve     |           455 → 449 |      0.99 |       0.58 → 0.56 |       267.0 → 268.1 |
 | btrfs      |     8 | laneMergeOurs   |           553 → 541 |      0.98 |       0.71 → 0.68 |       283.9 → 285.0 |
-| btrfs      |     8 | laneAbort       |           212 → 212 |      1.00 |       0.26 → 0.25 |       128.7 → 129.7 |
 | btrfs      |     8 | laneMergeSquash |           544 → 556 |      1.02 |       0.69 → 0.69 |       286.9 → 286.1 |
 | btrfs      |   264 | laneSnap        |           571 → 620 |      1.08 |       0.81 → 0.84 |       331.7 → 386.0 |
 | btrfs      |   264 | laneMergeManual |           752 → 759 |      1.01 |       1.08 → 1.03 |       336.8 → 353.1 |
 | btrfs      |   264 | laneResolve     |           625 → 671 |      1.07 |       0.96 → 0.91 |       377.3 → 392.8 |
 | btrfs      |   264 | laneMergeOurs   |           834 → 891 |      1.07 |       1.25 → 1.28 |       403.6 → 434.2 |
-| btrfs      |   264 | laneAbort       |           218 → 220 |      1.01 |       0.26 → 0.26 |       129.7 → 130.3 |
 | btrfs      |   264 | laneMergeSquash |          940 → 1005 |      1.07 |       1.46 → 1.44 |       402.3 → 432.1 |
 
 The selected small-case wall ratios range from 0.98 to 1.04; large-case ratios
-range from 0.97 to 1.08. Component abort and remerge range from 1.00 to 1.09,
+range from 1.01 to 1.08. Component abort and remerge range from 1.00 to 1.09,
 ours/theirs unrelated merges from 1.00 to 1.11, and automatic theirs from 0.99
 to 1.09 across all cases. These results establish operation ownership and
 correctness, with additional overhead on several large paths. They do not
 establish a broad command speedup. The engine remains opt-in.
+
+The original lane-abort samples returned before the confirmation prompt
+completed with closed stdin. Their 209–220 ms timings do not measure a completed
+abort and have been removed from this table. The other command samples are
+unaffected. The next qualification uses `--silent`, requires successful restore
+output and checks completed restore state before recording replacement samples.
+The original reports are retained as historical evidence with that limitation.
 
 All four reports bind the production revision, native source and official
 helper fingerprints above, exact source/compiled adapter fingerprints, and the
@@ -560,3 +563,113 @@ in `bit-merge-state-evidence-2026-10-11/performance` outside Git. Reproduce with
 `BIT_MERGE_STATE_QUALIFICATION_COMPACT_REPORT=1`, and
 `BIT_MERGE_STATE_QUALIFICATION_EXTRA_FILES=0` or `256`; select the filesystem
 with `BIT_MERGE_STATE_QUALIFICATION_TMPDIR`.
+
+### Squash history and lane abort operations
+
+The next merge boundary extends the shared `BMT1` session with phased squash
+policy, verified repository commit-message reads, and history reconciliation.
+Rust selects whether fast-forward or detached squash should skip, request the
+existing public model lookup, or rewrite ancestry. The adapter applies the
+selected existing Ref objects and retains the original parent array for squash
+metadata. Legacy Version parent behavior and the canonical one-incoming-snap
+skip rule remain unchanged.
+
+Parent changes occur before the existing message import hook. A failed import
+or message load therefore leaves the same partial parent mutation as Node;
+fallback replays only the message-read phase. Rust reads Versions in fresh
+bounded batches because their identifiers can remain stable while their bodies
+change. The graph reader shares this validated decoder. Compressed and decoded
+batches are capped at 32 MiB, with 4096 references and a 4 MiB response. Normal
+cached Version messages must match the fresh result; mutated messages, custom
+readers, parsers, transforms, and cache hooks retain canonical loading. These
+reads return commit-message metadata, rather than file bodies or entire Versions.
+
+History reconciliation selects only the first supplied Version that already has
+an existing history record, matching the canonical short-circuit. Node applies
+that selection to the existing record and preserves its parent/unrelated/squash
+Ref and array aliases. Missing records are not inserted, and the existing dirty
+state remains unchanged.
+
+Lane abort now owns the shared operation session across its restore, reload,
+pending-state clear, persistence, and checkout. Rust clears the pending list
+through a token/revision-bound transition after the new consumer has loaded.
+The existing restore and confirmation hooks, conflict-file deletion, checkout
+error handling, and public result shape retain their order. The engine remains
+opt-in. Backup/restore orchestration and configuration/aspect-data merge policy
+are still adapter boundaries for subsequent substantial chunks.
+
+Qualification uses the physically compiled 21-component CLI graph. All six
+main/lane/detached squash scenarios (one and three incoming snapshots) and a
+completed lane abort produce identical files, bitmap, objects, pending state,
+status, and reachable history in Node, native, missing-helper, and crashed-helper
+modes. Native diagnostics confirm eight policy, four message-read, and four
+history-reconciliation acknowledgements. Abort initializes, clears, and persists
+the pending list and restores eight source files through one owned helper.
+The fixture passes `--silent` and requires restoration output, the pre-merge
+bitmap/files/history, and deletion of the last-merged backup.
+
+Validation includes 169 Rust tests, 18 source adapter tests plus one intentional
+mixed-module lifecycle skip, all 19 physically compiled adapter tests, 120 source
+and 120 compiled regression tests, 69 canonical model tests, canonical lint,
+Clippy/Dylint/rustdoc, and 30 packaged-artifact/discovery tests. Tests cover fresh
+mutable Versions, non-string messages, legacy ancestry, first-record aliases,
+mutation before importer errors, malformed acknowledgements, modified inputs,
+custom hooks, and fallback helper retirement.
+
+The packaged Linux helper is bound to production revision
+`601390bb30f59eebfcc790357c82e9223599c574`, native source digest
+`29b99dcd1603266bc025d0585164da83f973334c0787fd70f1b3d29bff569fbd`,
+and binary SHA-256
+`6b67a603e0ee804af750a1e5d5737bf6682e349ce5825926cfafcbc71a128014`.
+Reports retain every source/compiled/harness fingerprint and verify them before
+and after qualification.
+
+Complete-command measurements retain three alternating Node/native pairs after
+one warm-up pair for each filesystem and size. Diagnostics are disabled while
+timing; source/helper/harness bindings stay fixed. CPU includes subprocesses;
+RSS is the sampled peak of the complete process tree. Workspaces use the named
+filesystem, while `TMPDIR=/dev/shm` is common to both modes; canonical Git temps
+use the scope directory and native Git temps use the system temporary directory.
+Wall-time ratios span 0.96–1.09, without a broad speed gain. Larger native commands
+also generally use more memory. Rollout remains opt-in. These completed abort
+measurements replace the withdrawn pre-confirmation timings above.
+
+| Filesystem | Files at lane snapshot | Operation | Wall ms Node → Rust | Rust/Node | CPU s Node → Rust | RSS MiB Node → Rust |
+|---|---:|---|---:|---:|---:|---:|
+| tmpfs | 8 | squashMain1 | 396 → 405 | 1.02 | 0.55 → 0.55 | 221.4 → 222.4 |
+| tmpfs | 8 | squashLane1 | 368 → 382 | 1.04 | 0.52 → 0.53 | 213.2 → 218.4 |
+| tmpfs | 8 | squashDetached1 | 396 → 408 | 1.03 | 0.54 → 0.56 | 220.0 → 222.9 |
+| tmpfs | 8 | squashMain3 | 387 → 398 | 1.03 | 0.52 → 0.53 | 224.9 → 220.5 |
+| tmpfs | 8 | squashLane3 | 363 → 384 | 1.06 | 0.49 → 0.53 | 212.4 → 216.5 |
+| tmpfs | 8 | laneAbort3 | 300 → 300 | 1.00 | 0.39 → 0.38 | 155.9 → 157.9 |
+| tmpfs | 8 | squashDetached3 | 408 → 410 | 1.00 | 0.57 → 0.57 | 223.0 → 220.6 |
+| tmpfs | 264 | squashMain1 | 617 → 609 | 0.99 | 0.86 → 0.83 | 321.6 → 345.9 |
+| tmpfs | 264 | squashLane1 | 542 → 588 | 1.09 | 0.73 → 0.80 | 311.8 → 336.3 |
+| tmpfs | 264 | squashDetached1 | 592 → 605 | 1.02 | 0.84 → 0.85 | 319.2 → 342.6 |
+| tmpfs | 264 | squashMain3 | 591 → 629 | 1.06 | 0.84 → 0.87 | 320.9 → 345.4 |
+| tmpfs | 264 | squashLane3 | 545 → 579 | 1.06 | 0.73 → 0.79 | 312.1 → 336.8 |
+| tmpfs | 264 | laneAbort3 | 450 → 432 | 0.96 | 0.59 → 0.56 | 202.9 → 235.9 |
+| tmpfs | 264 | squashDetached3 | 597 → 623 | 1.04 | 0.85 → 0.88 | 320.5 → 343.7 |
+| btrfs | 8 | squashMain1 | 406 → 403 | 0.99 | 0.56 → 0.55 | 217.5 → 223.0 |
+| btrfs | 8 | squashLane1 | 367 → 373 | 1.02 | 0.49 → 0.50 | 211.8 → 217.3 |
+| btrfs | 8 | squashDetached1 | 399 → 409 | 1.03 | 0.54 → 0.56 | 219.7 → 224.3 |
+| btrfs | 8 | squashMain3 | 400 → 398 | 0.99 | 0.54 → 0.53 | 219.0 → 223.0 |
+| btrfs | 8 | squashLane3 | 367 → 387 | 1.06 | 0.51 → 0.53 | 212.3 → 217.4 |
+| btrfs | 8 | laneAbort3 | 314 → 316 | 1.01 | 0.39 → 0.39 | 157.2 → 158.6 |
+| btrfs | 8 | squashDetached3 | 397 → 411 | 1.03 | 0.54 → 0.56 | 220.4 → 223.9 |
+| btrfs | 264 | squashMain1 | 642 → 648 | 1.01 | 0.96 → 0.90 | 321.2 → 343.2 |
+| btrfs | 264 | squashLane1 | 563 → 584 | 1.04 | 0.77 → 0.78 | 304.3 → 337.4 |
+| btrfs | 264 | squashDetached1 | 606 → 649 | 1.07 | 0.87 → 0.90 | 322.9 → 344.6 |
+| btrfs | 264 | squashMain3 | 620 → 652 | 1.05 | 0.90 → 0.90 | 321.6 → 345.0 |
+| btrfs | 264 | squashLane3 | 564 → 591 | 1.05 | 0.81 → 0.78 | 312.9 → 337.3 |
+| btrfs | 264 | laneAbort3 | 466 → 475 | 1.02 | 0.62 → 0.62 | 204.4 → 233.1 |
+| btrfs | 264 | squashDetached3 | 611 → 660 | 1.08 | 0.89 → 0.94 | 322.5 → 343.5 |
+
+Reproduce with `scripts/rust-object-import/squash-history-qualification.cjs`,
+`BIT_SQUASH_HISTORY_QUALIFICATION_MEASURE=1`,
+`BIT_SQUASH_HISTORY_QUALIFICATION_ROUNDS=3`,
+`BIT_SQUASH_HISTORY_QUALIFICATION_DIAGNOSTICS=0`,
+`BIT_SQUASH_HISTORY_QUALIFICATION_COMPACT_REPORT=1`, and
+`BIT_SQUASH_HISTORY_QUALIFICATION_EXTRA_FILES=0` or `256`; choose the workspace
+filesystem with `BIT_SQUASH_HISTORY_QUALIFICATION_TMPDIR`. The checked report
+retains the individual wall/CPU/process-tree samples and exact input fingerprints.
