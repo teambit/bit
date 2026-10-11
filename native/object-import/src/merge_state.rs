@@ -25,6 +25,11 @@ const MAX_JSON: usize = 4 * 1024 * 1024;
     deny_unknown_fields
 )]
 enum Request {
+    InspectionBegin(Value),
+    InspectionFiles(Value),
+    InspectionCompare(Value),
+    InspectionDiff(Value),
+    InspectionFinish(Value),
     TransferCollect(Value),
     TransferInitialize(Value),
     TransferArchive(Value),
@@ -74,6 +79,14 @@ pub(crate) fn serve(
     }
     let mut bytes = vec![0; length];
     reader.read_exact(&mut bytes)?;
+    let output_limit = if serde_json::from_slice::<Value>(&bytes)
+        .ok()
+        .is_some_and(|input| input["kind"] == "inspectionDiff")
+    {
+        32 * 1024 * 1024
+    } else {
+        MAX_JSON
+    };
     let result = serde_json::from_slice(&bytes)
         .map_err(io::Error::other)
         .and_then(|request| apply(request, state, &bytes));
@@ -83,7 +96,7 @@ pub(crate) fn serve(
         }
         Err(_) => json!({"version":1,"id":id,"completed":0,"skipped":[],"failed":true}),
     };
-    let mut output = Output(Vec::new());
+    let mut output = Output(Vec::new(), output_limit);
     if serde_json::to_writer(&mut output, &response).is_err() {
         return protocol::respond(
             writer,
@@ -94,10 +107,10 @@ pub(crate) fn serve(
     writer.write_all(b"\n")?;
     writer.flush()
 }
-struct Output(Vec<u8>);
+struct Output(Vec<u8>, usize);
 impl Write for Output {
     fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
-        if self.0.len() + bytes.len() > MAX_JSON {
+        if self.0.len() + bytes.len() > self.1 {
             return Err(invalid("merge state output budget"));
         }
         self.0.extend_from_slice(bytes);
@@ -128,6 +141,21 @@ fn apply(request: Request, state: &mut State, bytes: &[u8]) -> io::Result<Value>
             state.contents(&contents)?;
             write::commit(&path, &contents)?;
             Ok(json!({"saved":true}))
+        }
+        Request::InspectionBegin(input) => {
+            crate::inspection::apply("inspectionBegin", input, &mut state.inspection)
+        }
+        Request::InspectionFiles(input) => {
+            crate::inspection::apply("inspectionFiles", input, &mut state.inspection)
+        }
+        Request::InspectionCompare(input) => {
+            crate::inspection::apply("inspectionCompare", input, &mut state.inspection)
+        }
+        Request::InspectionDiff(input) => {
+            crate::inspection::apply("inspectionDiff", input, &mut state.inspection)
+        }
+        Request::InspectionFinish(input) => {
+            crate::inspection::apply("inspectionFinish", input, &mut state.inspection)
         }
         request => metadata(request, state, bytes),
     }

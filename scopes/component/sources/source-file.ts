@@ -5,6 +5,7 @@ import { registerRustSnapshotTransactionClass, type Repository, type SourceFileM
 import type { PathOsBased } from '@teambit/toolbox.path.path';
 import FileSourceNotFound from './file-source-not-found';
 import AbstractVinyl from './abstract-vinyl';
+import * as definingSourceFile from './source-file';
 import { forEach } from 'lodash';
 import { inheritRustWorkspaceFileSnapshot } from './rust-workspace-identity';
 
@@ -68,6 +69,7 @@ const defaultModelLoad = SourceFile.loadFromSourceFileModel;
 /** Native reads must not bypass a custom SourceFile or Vinyl reader. */
 export function canReadWorkspaceFilesNatively(): boolean {
   return (
+    Object.getOwnPropertyDescriptor(definingSourceFile, 'default')?.value === SourceFile &&
     SourceFile.load === defaultSourceFileLoad &&
     SourceFile.loadFromSourceFileModel === defaultModelLoad &&
     vinylFile.readSync === defaultReadSync &&

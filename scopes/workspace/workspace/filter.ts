@@ -1,5 +1,4 @@
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
-import pMapSeries from 'p-map-series';
 import type { ModelComponent } from '@teambit/objects';
 import { compact } from 'lodash';
 import type { Workspace } from './workspace';
@@ -76,8 +75,8 @@ export class Filter {
 
   async byCodeModified(withinIds?: ComponentID[]): Promise<ComponentID[]> {
     const ids = withinIds || (await this.workspace.listIds());
-    const compFiles = await pMapSeries(ids, (id) => this.workspace.getFilesModification(id));
-    const modifiedIds = compFiles.filter((c) => c.isModified()).map((c) => c.id);
+    const compFiles = await this.workspace.withFilesInspection(ids, 'modified', async (files) => files);
+    const modifiedIds = compFiles.filter((c) => c.modified).map((c) => c.id);
     return compact(modifiedIds);
   }
 

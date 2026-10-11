@@ -604,8 +604,7 @@ export class APIForIDE {
 
   async getFilesStatus(id: string): Promise<FilesStatus> {
     const componentId = await this.workspace.resolveComponentId(id);
-    const compFiles = await this.workspace.getFilesModification(componentId);
-    return compFiles.getFilesStatus();
+    return this.workspace.withFilesInspection([componentId], 'status', async (files) => files[0].filesStatus!);
   }
 
   async getCompFilesDirPathFromLastSnapForAllComps(): Promise<{ [relativePath: string]: string }> {

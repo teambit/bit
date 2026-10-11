@@ -44,6 +44,7 @@ for (const args of [
     'teambit.legacy/logger',
     'teambit.dependencies/dependency-resolver',
     'teambit.harmony/aspect',
+    'teambit.harmony/api-server',
     'teambit.envs/envs',
     'teambit.pkg/modules/semver-helper',
   ],

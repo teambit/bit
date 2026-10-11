@@ -88,7 +88,7 @@ function unchanged(defaults: ClassDefaults): boolean {
 }
 
 /** Pure descriptor checks do not invoke getters or custom methods during speculative planning. */
-export function hasRustSnapshotTransactionClass(value: unknown, name: string): boolean {
+function hasClassFields(value: unknown, name: string, fields?: ReadonlySet<string>): boolean {
   const defaults = classes?.get(name);
   if (
     !value ||
@@ -101,7 +101,11 @@ export function hasRustSnapshotTransactionClass(value: unknown, name: string): b
   const own = Object.getOwnPropertyDescriptors(value);
   const keys = Reflect.ownKeys(own);
   for (let index = 0; index < keys.length; index += 1) {
-    if (!('value' in Object.getOwnPropertyDescriptor(own, keys[index])!.value)) return false;
+    if (
+      (!fields || (typeof keys[index] === 'string' && fields.has(keys[index] as string))) &&
+      !('value' in Object.getOwnPropertyDescriptor(own, keys[index])!.value)
+    )
+      return false;
   }
   for (let index = 0; index < defaults.prototypes.length; index += 1) {
     const prototypeKeys = Reflect.ownKeys(defaults.prototypes[index].descriptors);
@@ -112,6 +116,15 @@ export function hasRustSnapshotTransactionClass(value: unknown, name: string): b
     }
   }
   return true;
+}
+
+export function hasRustSnapshotTransactionClass(value: unknown, name: string): boolean {
+  return hasClassFields(value, name);
+}
+
+/** Semantic readers inspect selected data fields while retaining all defining method guards. */
+export function hasRustSnapshotTransactionClassFields(value: unknown, name: string, fields: string[]): boolean {
+  return hasClassFields(value, name, new Set(fields));
 }
 
 // eslint-disable-next-line no-var

@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import * as path from 'path';
-import { compact, isEmpty, sortBy } from 'lodash';
+import lodash, { compact, isEmpty, sortBy } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import type { BitIdStr } from '@teambit/legacy-bit-id';
@@ -18,7 +18,16 @@ import {
 import { logger } from '@teambit/legacy.logger';
 import { NoHeadNoVersion, Scope, ComponentNotFound, ScopeNotFound } from '@teambit/legacy.scope';
 import type { Lane, ModelComponent } from '@teambit/objects';
-import { Version, canCompareVersionNatively } from '@teambit/objects';
+import {
+  Version,
+  compareRustInspectionVersions,
+  registerRustSnapshotFunctions,
+  hasRustSnapshotFunctions,
+  registerRustSnapshotFunctionReference,
+  hasRustSnapshotFunctionReference,
+  hasRustSnapshotTransactionClass,
+  hasRustSnapshotTransactionClassFields,
+} from '@teambit/objects';
 // import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
 import format from 'string-format';
@@ -35,7 +44,7 @@ import type { NextVersion } from '@teambit/legacy.bit-map';
 import { BitMap, isWorkspaceMapFile, WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import type { Dependencies, ComponentLoadOptions, LoadManyResult } from '@teambit/legacy.consumer-component';
 import { ConsumerComponent as Component, ComponentLoader } from '@teambit/legacy.consumer-component';
-import { PackageJsonFile, compareRustVersionIds } from '@teambit/component.sources';
+import { PackageJsonFile, withRustWorkspaceInspection } from '@teambit/component.sources';
 import type { ILegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
 import { LegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
 import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
@@ -306,6 +315,15 @@ export default class Consumer {
    * a Version object. Once this is done, we have two Version objects, and we can compare their hashes
    */
   async isComponentModified(componentFromModel: Version, componentFromFileSystem: Component): Promise<boolean> {
+    const action = () =>
+      Consumer.prototype.isComponentModifiedWithinInspection.call(this, componentFromModel, componentFromFileSystem);
+    return process.env.BIT_RUST_CLIENT_VCS === 'on' ? withRustWorkspaceInspection(action) : action();
+  }
+
+  private async isComponentModifiedWithinInspection(
+    componentFromModel: Version,
+    componentFromFileSystem: Component
+  ): Promise<boolean> {
     if (!(componentFromModel instanceof Version)) {
       throw new TypeError(
         `isComponentModified expects componentFromModel to be Version, got ${typeof componentFromModel}`
@@ -319,6 +337,29 @@ export default class Consumer {
     if (typeof componentFromFileSystem._isModified === 'undefined') {
       componentFromFileSystem.log = componentFromModel.log; // ignore the log, it's irrelevant for the comparison
       const { version } = await this.scope.sources.consumerComponentToVersion(componentFromFileSystem);
+      if (
+        process.env.BIT_RUST_CLIENT_VCS === 'on' &&
+        canInspectConsumerNatively() &&
+        canInspectComponentCache(componentFromFileSystem)
+      ) {
+        const componentMap = Object.getOwnPropertyDescriptor(componentFromFileSystem, 'componentMap')?.value;
+        const rootDir = componentMap && Object.getOwnPropertyDescriptor(componentMap, 'rootDir')?.value;
+        const modified = await compareRustInspectionVersions(
+          componentFromModel,
+          version,
+          rootDir === WORKSPACE_ROOT_DIR,
+          'modified',
+          () =>
+            canInspectConsumerNatively() &&
+            canInspectComponentCache(componentFromFileSystem) &&
+            Object.getOwnPropertyDescriptor(componentFromFileSystem, 'componentMap')?.value === componentMap &&
+            (!componentMap || Object.getOwnPropertyDescriptor(componentMap, 'rootDir')?.value === rootDir)
+        );
+        if (modified !== undefined) {
+          componentFromFileSystem._isModified = modified;
+          return modified;
+        }
+      }
 
       // sometime dependencies from the FS don't have an exact version.
       const copyDependenciesVersionsFromModelToFS = (dependenciesFS: Dependencies, dependenciesModel: Dependencies) => {
@@ -367,26 +408,7 @@ export default class Consumer {
           console.log(version.id()); // eslint-disable-line no-console
           console.log('-------------------------END---------------------------------'); // eslint-disable-line no-console
         }
-        let nativeModified: boolean | undefined;
-        if (
-          process.env.BIT_RUST_CLIENT_VCS === 'on' &&
-          !process.env.BIT_LOG &&
-          canCompareVersionNatively(componentFromModel) &&
-          canCompareVersionNatively(version)
-        ) {
-          const left = componentFromModel.id();
-          const right = version.id();
-          nativeModified = await compareRustVersionIds(left, right);
-          if (
-            !canCompareVersionNatively(componentFromModel) ||
-            !canCompareVersionNatively(version) ||
-            componentFromModel.id() !== left ||
-            version.id() !== right
-          )
-            nativeModified = undefined;
-        }
-        componentFromFileSystem._isModified =
-          nativeModified ?? componentFromModel.calculateHash().hash !== version.calculateHash().hash;
+        componentFromFileSystem._isModified = componentFromModel.calculateHash().hash !== version.calculateHash().hash;
       } finally {
         componentFromModel.files = modelFiles;
       }
@@ -433,12 +455,36 @@ export default class Consumer {
     componentFromModel: Version,
     componentFromFileSystem: Component
   ): Promise<boolean> {
+    const action = () =>
+      Consumer.prototype.isComponentSourceCodeModifiedWithinInspection.call(
+        this,
+        componentFromModel,
+        componentFromFileSystem
+      );
+    return process.env.BIT_RUST_CLIENT_VCS === 'on' ? withRustWorkspaceInspection(action) : action();
+  }
+
+  private async isComponentSourceCodeModifiedWithinInspection(
+    componentFromModel: Version,
+    componentFromFileSystem: Component
+  ): Promise<boolean> {
     if (componentFromFileSystem._isModified === false) {
       // we only check for "false". if it's "true", it can be dependency changes not necessarily component files changes
       return false;
     }
     componentFromFileSystem.log = componentFromModel.log; // in order to convert to Version object
     const { version } = await this.scope.sources.consumerComponentToVersion(componentFromFileSystem);
+
+    if (process.env.BIT_RUST_CLIENT_VCS === 'on' && canInspectConsumerNatively()) {
+      const modified = await compareRustInspectionVersions(
+        componentFromModel,
+        version,
+        false,
+        'sourceCode',
+        canInspectConsumerNatively
+      );
+      if (modified !== undefined) return modified;
+    }
 
     version.files = sortBy(version.files, 'relativePath');
     componentFromModel.files = sortBy(componentFromModel.files, 'relativePath');
@@ -718,4 +764,36 @@ function composeComponentPath(
   }
   const result = format(defaultDir, { name: bitId.fullName, scope, owner, scopeId: bitId.scope });
   return result;
+}
+
+registerRustSnapshotFunctions('InspectionConsumerLodash', lodash, ['sortBy']);
+registerRustSnapshotFunctionReference('InspectionConsumerSorter', sortObjectByKeys);
+registerRustSnapshotFunctionReference('InspectionWorkspaceMap', isWorkspaceMapFile);
+const inspectionDependencyFields = DEPENDENCIES_FIELDS.slice();
+function canInspectConsumerNatively(): boolean {
+  return (
+    !process.env.BIT_LOG &&
+    hasRustSnapshotFunctions(['InspectionConsumerLodash']) &&
+    hasRustSnapshotFunctionReference('InspectionConsumerSorter', sortObjectByKeys) &&
+    hasRustSnapshotFunctionReference('InspectionWorkspaceMap', isWorkspaceMapFile) &&
+    hasRustSnapshotTransactionClass(DEPENDENCIES_FIELDS, 'Array') &&
+    DEPENDENCIES_FIELDS.length === inspectionDependencyFields.length &&
+    inspectionDependencyFields.every(
+      (field, index) => Object.getOwnPropertyDescriptor(DEPENDENCIES_FIELDS, String(index))?.value === field
+    )
+  );
+}
+
+function canInspectComponentCache(component: Component): boolean {
+  if (!hasRustSnapshotTransactionClassFields(component, 'ConsumerComponent', ['componentMap', '_isModified']))
+    return false;
+  const cached = Object.getOwnPropertyDescriptor(component, '_isModified');
+  if (cached ? !cached.writable : !Object.isExtensible(component)) return false;
+  const map = Object.getOwnPropertyDescriptor(component, 'componentMap')?.value;
+  return (
+    !map ||
+    Boolean(
+      Object.getOwnPropertyDescriptor(map, 'rootDir') && 'value' in Object.getOwnPropertyDescriptor(map, 'rootDir')!
+    )
+  );
 }

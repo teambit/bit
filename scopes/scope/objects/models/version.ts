@@ -1,5 +1,5 @@
 import lodash, { isEmpty, pickBy } from 'lodash';
-import { registerRustSnapshotFunctions } from '../objects/rust-snapshot-guards';
+import { registerRustSnapshotFunctions, registerRustSnapshotTransactionClass } from '../objects/rust-snapshot-guards';
 import { isSnap } from '@teambit/component-version';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';
@@ -800,6 +800,31 @@ export default class Version extends BitObject {
 const defaultVersionId = Version.prototype.id;
 const defaultCalculateHash = Version.prototype.calculateHash;
 const defaultMakeHash = BitObject.makeHash;
+const inspectionVersionMethods = ['id', 'calculateHash', 'filesToObject', 'logToObject'].map(
+  (name) => [name, Object.getOwnPropertyDescriptor(Version.prototype, name)?.value] as const
+);
+const inspectionExtensionDependencies = Object.getOwnPropertyDescriptor(
+  Version.prototype,
+  'extensionDependencies'
+)?.get;
+
+/** The semantic reader must preserve the defining identity primitives without invoking them. */
+export function hasDefaultInspectionVersionMethods(version: Version): boolean {
+  return (
+    BitObject.makeHash === defaultMakeHash &&
+    Object.getOwnPropertyDescriptor(Version.prototype, 'extensionDependencies')?.get ===
+      inspectionExtensionDependencies &&
+    !Object.getOwnPropertyDescriptor(version, 'extensionDependencies') &&
+    inspectionVersionMethods.every(
+      ([name, method]) =>
+        !Object.getOwnPropertyDescriptor(version, name) &&
+        Object.getOwnPropertyDescriptor(Version.prototype, name)?.value === method
+    )
+  );
+}
+
+registerRustSnapshotTransactionClass('Version', Version);
+registerRustSnapshotTransactionClass('Array', Array);
 
 /** Native comparison must not bypass patched Version identity or hashing hooks. */
 export function canCompareVersionNatively(version: Version): boolean {

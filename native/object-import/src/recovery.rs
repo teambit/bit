@@ -1,8 +1,8 @@
+pub(crate) mod jsonc;
 pub(crate) use operations::{Operation, State};
 
 mod bitmap;
 mod copy;
-mod jsonc;
 mod operations;
 mod reset;
 

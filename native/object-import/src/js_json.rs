@@ -72,6 +72,16 @@ pub fn stringify(value: &Value, pretty: bool) -> io::Result<Option<Vec<u8>>> {
     Ok(Some(writer.finish()))
 }
 
+pub fn stringify_indented(value: &Value, spaces: usize) -> io::Result<Vec<u8>> {
+    if spaces > 10 {
+        return Err(invalid("JavaScript indent out of bounds"));
+    }
+    let mut writer = writer::Writer::new(spaces > 0);
+    writer.spacing(spaces);
+    writer.value(value, 0)?;
+    Ok(writer.finish())
+}
+
 fn number(bits: &str) -> io::Result<f64> {
     if bits.len() != 16 || !bits.bytes().all(|byte| byte.is_ascii_hexdigit()) {
         return Err(invalid("invalid JavaScript number bits"));

@@ -25,7 +25,15 @@ export {
   type DependencyEdge,
   type DependencyNeighbour,
 } from './models/dependencies-graph';
-export { DepEdge, DepEdgeType, SourceFileModel, Log, canCompareVersionNatively } from './models/version';
+export {
+  DepEdge,
+  DepEdgeType,
+  SourceFileModel,
+  Log,
+  canCompareVersionNatively,
+  hasDefaultInspectionVersionMethods,
+} from './models/version';
+export { compareRustInspectionVersions } from './objects/rust-inspection-model';
 export { canHashSourceNatively } from './models/source';
 export { ComponentWithCollectOptions, ObjectsReadableGenerator } from './objects/objects-readable-generator';
 export { ScopeIndex } from './objects/scope-index';
@@ -80,6 +88,7 @@ export {
 export {
   registerRustSnapshotTransactionClass,
   hasRustSnapshotTransactionClass,
+  hasRustSnapshotTransactionClassFields,
   registerRustSnapshotModelHook,
   registerRustSnapshotValidationHook,
   hasRustSnapshotValidationHook,
