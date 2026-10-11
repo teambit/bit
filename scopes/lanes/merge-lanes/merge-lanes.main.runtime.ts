@@ -19,7 +19,7 @@ import { getLogForSquash } from '@teambit/harmony.modules.get-basic-log';
 import type { ComponentID } from '@teambit/component-id';
 import { ComponentIdList } from '@teambit/component-id';
 import type { Lane, Version, Log } from '@teambit/objects';
-import { Ref } from '@teambit/objects';
+import { Ref, withRustSnapshotOperation } from '@teambit/objects';
 import { isSnap } from '@teambit/component-version';
 import pMapSeries from 'p-map-series';
 import type { Scope as LegacyScope } from '@teambit/legacy.scope';
@@ -96,20 +96,22 @@ export class MergeLanesMain {
   ) {}
 
   async mergeLaneByCLI(laneName: string, options: MergeLaneOptions) {
-    if (!this.workspace) {
-      throw new BitError(`unable to merge a lane outside of Bit workspace`);
-    }
-    const currentLaneId = this.workspace.consumer.getCurrentLaneId();
-    const otherLaneId = await this.workspace.consumer.getParsedLaneId(laneName);
-    // Hidden lane updateDependents must participate in every merge — otherwise main→lane refresh
-    // (`bit lane merge main`) leaves the lane's cascaded entries stuck on their old main-head
-    // base, and lane→main merge would push a partially-consistent lane state. The bare-scope
-    // counterpart (`bit _merge-lane`, used by Ripple / the UI's "update lane" button) already
-    // sets this; the workspace path was the missing leg.
-    if (options.shouldIncludeUpdateDependents === undefined) {
-      options.shouldIncludeUpdateDependents = true;
-    }
-    return this.mergeLane(otherLaneId, currentLaneId, options);
+    return withRustSnapshotOperation(async () => {
+      if (!this.workspace) {
+        throw new BitError(`unable to merge a lane outside of Bit workspace`);
+      }
+      const currentLaneId = this.workspace.consumer.getCurrentLaneId();
+      const otherLaneId = await this.workspace.consumer.getParsedLaneId(laneName);
+      // Hidden lane updateDependents must participate in every merge — otherwise main→lane refresh
+      // (`bit lane merge main`) leaves the lane's cascaded entries stuck on their old main-head
+      // base, and lane→main merge would push a partially-consistent lane state. The bare-scope
+      // counterpart (`bit _merge-lane`, used by Ripple / the UI's "update lane" button) already
+      // sets this; the workspace path was the missing leg.
+      if (options.shouldIncludeUpdateDependents === undefined) {
+        options.shouldIncludeUpdateDependents = true;
+      }
+      return this.mergeLane(otherLaneId, currentLaneId, options);
+    });
   }
 
   /**
@@ -126,185 +128,191 @@ export class MergeLanesMain {
     mergedSuccessfullyIds: ComponentID[];
     conflicts: ConflictPerId[];
   }> {
-    this.validateMergeFlags(otherLaneId, currentLaneId, options);
-    const { currentLane, otherLane, laneToFetchArtifactsFrom, idsToMerge } = await this.resolveMergeContext(
-      otherLaneId,
-      currentLaneId,
-      options
-    );
+    return withRustSnapshotOperation(async () => {
+      this.validateMergeFlags(otherLaneId, currentLaneId, options);
+      const { currentLane, otherLane, laneToFetchArtifactsFrom, idsToMerge } = await this.resolveMergeContext(
+        otherLaneId,
+        currentLaneId,
+        options
+      );
 
-    const {
-      mergeStrategy,
-      noAutoSnap,
-      noSnap,
-      tag,
-      snapMessage,
-      existingOnWorkspaceOnly,
-      build,
-      loose,
-      keepReadme,
-      squash,
-      noSquash,
-      pattern,
-      includeDeps,
-      skipDependencyInstallation,
-      resolveUnrelated,
-      ignoreConfigChanges,
-      throwIfNotUpToDate,
-      detachHead,
-    } = options;
-    const legacyScope = this.scope.legacyScope;
-    const consumer = this.workspace?.consumer;
-
-    if (throwIfNotUpToDate) await this.throwIfNotUpToDate(otherLaneId, currentLaneId);
-
-    this.logger.debug(`merging the following ids: ${idsToMerge.toString()}`);
-
-    const shouldSquash = squash || (currentLaneId.isDefault() && !noSquash);
-    let allComponentsStatus = await this.merging.getMergeStatus(
-      idsToMerge,
-      {
+      const {
+        mergeStrategy,
+        noAutoSnap,
+        noSnap,
+        tag,
+        snapMessage,
+        existingOnWorkspaceOnly,
+        build,
+        loose,
+        keepReadme,
+        squash,
+        noSquash,
+        pattern,
+        includeDeps,
+        skipDependencyInstallation,
         resolveUnrelated,
         ignoreConfigChanges,
-        shouldSquash,
-        mergeStrategy,
-        handleTargetAheadAsDiverged: noSnap,
+        throwIfNotUpToDate,
         detachHead,
-        shouldMergeAspectsData: true,
-      },
-      currentLane,
-      otherLane
-    );
+      } = options;
+      const legacyScope = this.scope.legacyScope;
+      const consumer = this.workspace?.consumer;
 
-    if (pattern) {
-      const componentIds = idsToMerge;
-      const compIdsFromPattern = await (this.workspace || this.scope).filterIdsFromPoolIdsByPattern(
-        pattern,
-        componentIds
-      );
-      allComponentsStatus = await filterComponentsStatus(
-        allComponentsStatus,
-        compIdsFromPattern,
+      if (throwIfNotUpToDate) await this.throwIfNotUpToDate(otherLaneId, currentLaneId);
+
+      this.logger.debug(`merging the following ids: ${idsToMerge.toString()}`);
+
+      const shouldSquash = squash || (currentLaneId.isDefault() && !noSquash);
+      let allComponentsStatus = await this.merging.getMergeStatus(
         idsToMerge,
-        legacyScope,
-        includeDeps,
-        otherLane,
-        shouldSquash
+        {
+          resolveUnrelated,
+          ignoreConfigChanges,
+          shouldSquash,
+          mergeStrategy,
+          handleTargetAheadAsDiverged: noSnap,
+          detachHead,
+          shouldMergeAspectsData: true,
+        },
+        currentLane,
+        otherLane
       );
-      idsToMerge.forEach((bitId) => {
-        if (!allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(bitId))) {
-          allComponentsStatus.push({ id: bitId, unchangedLegitimately: true, unchangedMessage: `excluded by pattern` });
-        }
-      });
-    }
-    if (existingOnWorkspaceOnly && this.workspace) {
-      const workspaceIds = this.workspace.listIds();
-      const compIdsFromPattern = workspaceIds.filter((id) =>
-        allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(id))
-      );
-      allComponentsStatus = await filterComponentsStatus(
-        allComponentsStatus,
-        compIdsFromPattern,
-        idsToMerge,
-        legacyScope,
-        includeDeps,
-        otherLane,
-        shouldSquash
-      );
-      idsToMerge.forEach((bitId) => {
-        if (!allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(bitId))) {
-          allComponentsStatus.push({
-            id: bitId,
-            unchangedLegitimately: true,
-            unchangedMessage: `not in the workspace`,
-          });
-        }
-      });
-    }
 
-    throwForFailures(allComponentsStatus);
-
-    const succeededComponents = allComponentsStatus.filter((c) => !c.unchangedMessage);
-    if (shouldSquash) {
-      await squashSnaps(succeededComponents, currentLaneId, otherLaneId, legacyScope, {
-        messageTitle: options.snapMessage,
-        detachHead,
-      });
-    }
-
-    if (laneToFetchArtifactsFrom) {
-      const ids = allComponentsStatus.map((c) => c.id);
-      await this.importer.importHeadArtifactsFromLane(laneToFetchArtifactsFrom, ids, true);
-    }
-
-    const lastMerged = consumer ? new LastMerged(this.scope, consumer, this.logger) : undefined;
-    const snapshot = await lastMerged?.takeSnapshot(currentLane);
-
-    const mergeResults = await this.merging.mergeSnaps({
-      mergeStrategy,
-      allComponentsStatus,
-      otherLaneId,
-      currentLane,
-      noAutoSnap,
-      noSnap,
-      tag,
-      snapMessage,
-      build,
-      skipDependencyInstallation,
-      detachHead,
-      loose,
-      shouldSquash,
-    });
-
-    if (snapshot) await lastMerged?.persistSnapshot(snapshot);
-
-    const mergedSuccessfully =
-      !mergeResults.failedComponents ||
-      mergeResults.failedComponents.length === 0 ||
-      mergeResults.failedComponents.every((failedComponent) => failedComponent.unchangedLegitimately);
-
-    let deleteResults = {};
-
-    if (!keepReadme && otherLane && otherLane.readmeComponent && mergedSuccessfully) {
-      const readmeComponentId = otherLane.readmeComponent.id.changeVersion(otherLane.readmeComponent?.head?.hash);
-      deleteResults = await this.remove.removeLocallyByIds([readmeComponentId], { reasonForRemoval: 'lane-merge' });
-    } else if (otherLane && !otherLane.readmeComponent) {
-      deleteResults = { readmeResult: '' };
-    }
-    const configMergeResults = compact(allComponentsStatus.map((c) => c.configMergeResult));
-
-    const mergedSnapIds = ComponentIdList.fromArray(
-      mergeResults.mergeSnapResults?.snappedComponents.map((c) => c.id) || []
-    );
-    const componentsWithConfigConflicts = configMergeResults.filter((c) => c.hasConflicts()).map((c) => c.compIdStr);
-    const conflicts: ConflictPerId[] = [];
-    const mergedSuccessfullyIds: ComponentID[] = [];
-    mergeResults.components?.forEach((c) => {
-      const files = Object.keys(c.filesStatus).filter(
-        (f) => c.filesStatus[f] === FileStatus.manual || c.filesStatus[f] === FileStatus.binaryConflict
-      );
-      const config = componentsWithConfigConflicts.includes(c.id.toStringWithoutVersion());
-      if (files.length || config) {
-        conflicts.push({ id: c.id, files, config });
-      } else {
-        const snappedId = mergedSnapIds.searchWithoutVersion(c.id);
-        mergedSuccessfullyIds.push(snappedId || c.id);
+      if (pattern) {
+        const componentIds = idsToMerge;
+        const compIdsFromPattern = await (this.workspace || this.scope).filterIdsFromPoolIdsByPattern(
+          pattern,
+          componentIds
+        );
+        allComponentsStatus = await filterComponentsStatus(
+          allComponentsStatus,
+          compIdsFromPattern,
+          idsToMerge,
+          legacyScope,
+          includeDeps,
+          otherLane,
+          shouldSquash
+        );
+        idsToMerge.forEach((bitId) => {
+          if (!allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(bitId))) {
+            allComponentsStatus.push({
+              id: bitId,
+              unchangedLegitimately: true,
+              unchangedMessage: `excluded by pattern`,
+            });
+          }
+        });
       }
+      if (existingOnWorkspaceOnly && this.workspace) {
+        const workspaceIds = this.workspace.listIds();
+        const compIdsFromPattern = workspaceIds.filter((id) =>
+          allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(id))
+        );
+        allComponentsStatus = await filterComponentsStatus(
+          allComponentsStatus,
+          compIdsFromPattern,
+          idsToMerge,
+          legacyScope,
+          includeDeps,
+          otherLane,
+          shouldSquash
+        );
+        idsToMerge.forEach((bitId) => {
+          if (!allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(bitId))) {
+            allComponentsStatus.push({
+              id: bitId,
+              unchangedLegitimately: true,
+              unchangedMessage: `not in the workspace`,
+            });
+          }
+        });
+      }
+
+      throwForFailures(allComponentsStatus);
+
+      const succeededComponents = allComponentsStatus.filter((c) => !c.unchangedMessage);
+      if (shouldSquash) {
+        await squashSnaps(succeededComponents, currentLaneId, otherLaneId, legacyScope, {
+          messageTitle: options.snapMessage,
+          detachHead,
+        });
+      }
+
+      if (laneToFetchArtifactsFrom) {
+        const ids = allComponentsStatus.map((c) => c.id);
+        await this.importer.importHeadArtifactsFromLane(laneToFetchArtifactsFrom, ids, true);
+      }
+
+      const lastMerged = consumer ? new LastMerged(this.scope, consumer, this.logger) : undefined;
+      const snapshot = await lastMerged?.takeSnapshot(currentLane);
+
+      const mergeResults = await this.merging.mergeSnaps({
+        mergeStrategy,
+        allComponentsStatus,
+        otherLaneId,
+        currentLane,
+        noAutoSnap,
+        noSnap,
+        tag,
+        snapMessage,
+        build,
+        skipDependencyInstallation,
+        detachHead,
+        loose,
+        shouldSquash,
+      });
+
+      if (snapshot) await lastMerged?.persistSnapshot(snapshot);
+
+      const mergedSuccessfully =
+        !mergeResults.failedComponents ||
+        mergeResults.failedComponents.length === 0 ||
+        mergeResults.failedComponents.every((failedComponent) => failedComponent.unchangedLegitimately);
+
+      let deleteResults = {};
+
+      if (!keepReadme && otherLane && otherLane.readmeComponent && mergedSuccessfully) {
+        const readmeComponentId = otherLane.readmeComponent.id.changeVersion(otherLane.readmeComponent?.head?.hash);
+        deleteResults = await this.remove.removeLocallyByIds([readmeComponentId], { reasonForRemoval: 'lane-merge' });
+      } else if (otherLane && !otherLane.readmeComponent) {
+        deleteResults = { readmeResult: '' };
+      }
+      const configMergeResults = compact(allComponentsStatus.map((c) => c.configMergeResult));
+
+      const mergedSnapIds = ComponentIdList.fromArray(
+        mergeResults.mergeSnapResults?.snappedComponents.map((c) => c.id) || []
+      );
+      const componentsWithConfigConflicts = configMergeResults.filter((c) => c.hasConflicts()).map((c) => c.compIdStr);
+      const conflicts: ConflictPerId[] = [];
+      const mergedSuccessfullyIds: ComponentID[] = [];
+      mergeResults.components?.forEach((c) => {
+        const files = Object.keys(c.filesStatus).filter(
+          (f) => c.filesStatus[f] === FileStatus.manual || c.filesStatus[f] === FileStatus.binaryConflict
+        );
+        const config = componentsWithConfigConflicts.includes(c.id.toStringWithoutVersion());
+        if (files.length || config) {
+          conflicts.push({ id: c.id, files, config });
+        } else {
+          const snappedId = mergedSnapIds.searchWithoutVersion(c.id);
+          mergedSuccessfullyIds.push(snappedId || c.id);
+        }
+      });
+
+      // A merged head may reference — via its flattened dependencies — a non-head snap of another
+      // component. When merging to main the squash removes intermediate snaps from each component's own
+      // chain, and a bare-scope merge (`bit _merge-lane --push`) exports heads only; in both cases such a
+      // referenced snap wouldn't be exported, and on lean lanes it lives only on the lane scope. Import
+      // any missing one now so the export can ship it (otherwise the remote's dependency-integrity check
+      // would reject the push). Not needed for non-squash workspace merges, which export full history.
+      if (shouldSquash || !this.workspace) {
+        await this.importMissingReferencedDeps(mergedSuccessfullyIds, otherLane);
+      }
+
+      await this.workspace?.consumer.onDestroy(`lane-merge (${otherLaneId.name})`);
+
+      return { mergeResults, deleteResults, configMergeResults, mergedSuccessfullyIds, conflicts };
     });
-
-    // A merged head may reference — via its flattened dependencies — a non-head snap of another
-    // component. When merging to main the squash removes intermediate snaps from each component's own
-    // chain, and a bare-scope merge (`bit _merge-lane --push`) exports heads only; in both cases such a
-    // referenced snap wouldn't be exported, and on lean lanes it lives only on the lane scope. Import
-    // any missing one now so the export can ship it (otherwise the remote's dependency-integrity check
-    // would reject the push). Not needed for non-squash workspace merges, which export full history.
-    if (shouldSquash || !this.workspace) {
-      await this.importMissingReferencedDeps(mergedSuccessfullyIds, otherLane);
-    }
-
-    await this.workspace?.consumer.onDestroy(`lane-merge (${otherLaneId.name})`);
-
-    return { mergeResults, deleteResults, configMergeResults, mergedSuccessfullyIds, conflicts };
   }
 
   /**

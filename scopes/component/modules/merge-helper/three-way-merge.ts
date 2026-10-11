@@ -11,6 +11,7 @@ import { SourceFile } from '@teambit/component.sources';
 import type { Scope } from '@teambit/legacy.scope';
 import { Tmp } from '@teambit/legacy.scope';
 import { isEmpty } from 'lodash';
+import { tryRustThreeWayMerge } from './rust-three-way-merge';
 
 export type MergeResultsThreeWay = {
   addFiles: Array<{
@@ -80,6 +81,17 @@ export async function threeWayMerge({
   currentLabel: string;
   baseComponent: Version;
 }): Promise<MergeResultsThreeWay> {
+  if (process.env.BIT_RUST_CLIENT_VCS === 'on') {
+    const native = await tryRustThreeWayMerge({
+      scope,
+      otherComponent,
+      otherLabel,
+      currentComponent,
+      currentLabel,
+      baseComponent,
+    });
+    if (native) return native;
+  }
   // baseFiles and currentFiles come from the model, therefore their paths include the
   // sharedOriginallyDir. fsFiles come from the Fs, therefore their paths don't include the
   // sharedOriginallyDir.

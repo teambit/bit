@@ -62,6 +62,14 @@ export function getRustWorkspaceFileDescriptor(file: AbstractVinyl): { path: str
   return value && { path: value.path, hash: value.hash };
 }
 
+/** Merge planning needs both the raw disk snapshot and canonical Linux-EOL identity. */
+export function getRustWorkspaceMergeDescriptor(
+  file: AbstractVinyl
+): { path: string; hash: string; linuxHash: string } | undefined {
+  const value = snapshot(file);
+  return value && { path: value.path, hash: value.hash, linuxHash: value.linuxHash };
+}
+
 /** Retain disk provenance across read-only hydration, while rejecting any byte or method mutation. */
 export function getRustSnapshotSourceDescriptor(
   source: Source

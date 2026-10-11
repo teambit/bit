@@ -32,6 +32,7 @@ import Ref from './ref';
 import { nativeObjectDirectory, nativeTraversalEnabled } from './rust-object-directory';
 import { NativeImportOperation } from './rust-object-operation';
 import { persistRustSnapshotObjects, createRustSnapshotIndexOperation } from './rust-snapshot';
+import { registerRustHistoryRepository } from './rust-merge-history';
 import { resolveRustObjectImportExecutable } from './rust-object-discovery';
 import { nativeInventoryEnabled, nativeObjectExists } from './rust-object-inventory';
 import {
@@ -1242,6 +1243,8 @@ export default class Repository {
     return path.join(hash.slice(0, 2), hash.slice(2));
   }
 }
+
+registerRustHistoryRepository(Repository);
 
 const snapshotRepositoryDefaults = [
   'writeObjectsToTheFS',

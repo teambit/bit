@@ -41,3 +41,5 @@ export default ObjectsAspect;
 export { ObjectsAspect };
 
 export { withRustSnapshotOperation, isRustSnapshotOperation, addRustSnapshotVersion } from './objects/rust-snapshot';
+
+export { getRustDivergence } from './objects/rust-merge-history';
