@@ -284,7 +284,10 @@ function native(t, helper) {
   process.env.BIT_RUST_OBJECT_IMPORT =
     helper ||
     process.env.BIT_TEST_OBJECT_IMPORT ||
-    path.resolve(__dirname, '../../native/target/debug/bit-object-import');
+    path.resolve(
+      __dirname,
+      '../../native/target/debug/bit-object-import' + (process.platform === 'win32' ? '.exe' : '')
+    );
   persistence.withWorkspaceSession = actualSession;
   t.after(() => {
     for (const [key, value] of [
