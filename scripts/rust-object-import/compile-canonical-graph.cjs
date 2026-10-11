@@ -23,6 +23,7 @@ for (const args of [
     'teambit.component/sources',
     'teambit.component/component-writer',
     'teambit.scope/importer',
+    'teambit.component/checkout',
   ],
 ])
   cp.execFileSync(executable, [...prefix, ...args], { stdio: 'inherit' });

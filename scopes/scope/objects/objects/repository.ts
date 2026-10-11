@@ -312,6 +312,34 @@ export default class Repository {
     return parsedObject;
   }
 
+  /** Direct checkout reads must not bypass live objects, custom readers or content transforms. */
+  canReadCheckoutSourcesNatively(refs: Ref[]): boolean {
+    return (
+      this.canReadNatively() &&
+      this.load === Repository.prototype.load &&
+      this.loadSync === Repository.prototype.loadSync &&
+      this.getCache === Repository.prototype.getCache &&
+      this.getPath === Repository.prototype.getPath &&
+      refs.every((ref) => {
+        if (!/^[a-f0-9]{40}$/.test(ref.toString()) || this.objects[ref.toString()]) return false;
+        const cached = this.getCache(ref);
+        if (!cached) return true;
+        // A cached immutable Source can share the disk path only when its actual
+        // bytes still identify this ref. Accessor-backed and mutated objects stay canonical.
+        const contents = Object.getOwnPropertyDescriptor(cached, 'contents')?.value;
+        return Buffer.isBuffer(contents) && BitObject.makeHash(contents) === ref.toString();
+      })
+    );
+  }
+
+  /** Metadata plans are checked against the live hydrated model by their caller. */
+  canPlanCheckoutNatively(refs: Ref[]): boolean {
+    return (
+      this.canReadCheckoutSourcesNatively([]) &&
+      refs.every((ref) => /^[a-f0-9]{40}$/.test(ref.toString()) && !this.objects[ref.toString()])
+    );
+  }
+
   /**
    * this is restricted to provide objects according to the given types. Otherwise, big scopes (>1GB) could crush.
    * example usage: `this.list([ModelComponent, Symlink, Lane])`

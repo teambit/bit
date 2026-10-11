@@ -1150,7 +1150,12 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
    * convert a ModelComponent of a specific version to ConsumerComponent
    * @see sources.consumerComponentToVersion() for the opposite action.
    */
-  async toConsumerComponent(versionStr: string, scopeName: string, repository: Repository): Promise<ConsumerComponent> {
+  async toConsumerComponent(
+    versionStr: string,
+    scopeName: string,
+    repository: Repository,
+    sourceFiles?: SourceFile[]
+  ): Promise<ConsumerComponent> {
     logger.trace(`model-component, converting ${this.id()}, version: ${versionStr} to ConsumerComponent`);
     let componentVersion = this.toComponentVersion(versionStr);
     const version: Version = await componentVersion.getVersion(repository);
@@ -1176,7 +1181,7 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
         );
       return new ClassName({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
     };
-    const filesP = version.files ? Promise.all(version.files.map(loadFileInstance(SourceFile))) : null;
+    const filesP = sourceFiles || (version.files ? Promise.all(version.files.map(loadFileInstance(SourceFile))) : null);
     // @todo: this is weird. why the scopeMeta would be taken from the current scope and not he component scope?
     const scopeMetaP = scopeName ? ScopeMeta.fromScopeName(scopeName).load(repository) : Promise.resolve();
     const log = version.log || null;

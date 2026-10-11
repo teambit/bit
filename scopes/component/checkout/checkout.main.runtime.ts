@@ -18,6 +18,7 @@ import { ListerAspect } from '@teambit/lister';
 import { HEAD, LATEST } from '@teambit/legacy.constants';
 import type { ComponentWriterMain } from '@teambit/component-writer';
 import { ComponentWriterAspect } from '@teambit/component-writer';
+import { withWorkspacePersistence } from '@teambit/component.sources';
 import mapSeries from 'p-map-series';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import type { Version, Lane } from '@teambit/objects';
@@ -81,6 +82,10 @@ export class CheckoutMain {
   ) {}
 
   async checkout(checkoutProps: CheckoutProps): Promise<ApplyVersionResults> {
+    return withWorkspacePersistence(() => this.checkoutWithinPersistence(checkoutProps));
+  }
+
+  private async checkoutWithinPersistence(checkoutProps: CheckoutProps): Promise<ApplyVersionResults> {
     await this.ensureCheckoutConfiguration(checkoutProps);
     this.workspace.inInstallContext = true;
     const { version, ids, promptMergeOptions } = checkoutProps;

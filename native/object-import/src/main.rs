@@ -1,3 +1,4 @@
+mod checkout;
 mod directory;
 mod inventory;
 mod metadata;

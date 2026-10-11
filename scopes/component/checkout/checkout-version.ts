@@ -2,7 +2,7 @@ import type { Consumer } from '@teambit/legacy.consumer';
 import type { ComponentID } from '@teambit/component-id';
 import type { Version } from '@teambit/objects';
 import type { SourceFile } from '@teambit/component.sources';
-import { RemovePath, DataToPersist } from '@teambit/component.sources';
+import { RemovePath, DataToPersist, compareRustCheckoutSource } from '@teambit/component.sources';
 import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import { isWorkspaceMapFile, WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
@@ -11,6 +11,7 @@ import chalk from 'chalk';
 import type { ApplyVersionResult, FilesStatus, MergeResultsThreeWay } from '@teambit/component.modules.merge-helper';
 import { applyModifiedVersion, FileStatus, MergeOptions } from '@teambit/component.modules.merge-helper';
 import type { CheckoutProps } from './checkout.main.runtime';
+import { prepareRustCheckout } from './rust-checkout';
 
 export type ComponentStatusBase = {
   currentComponent?: ConsumerComponent;
@@ -74,14 +75,25 @@ export async function applyVersion(
     consumer.bitMap.updateComponentId(id);
     return { applyVersionResult: { id, filesStatus } };
   }
-  const component = await consumer.loadComponentFromModelImportIfNeeded(id);
+  let prepared =
+    !mergeResults && process.env.BIT_RUST_CLIENT_VCS === 'on'
+      ? await prepareRustCheckout(consumer, id, componentFromFS)
+      : undefined;
+  if (prepared && !prepared.valid()) prepared = undefined;
+  const component = prepared?.component || (await consumer.loadComponentFromModelImportIfNeeded(id));
   const componentMap = componentFromFS && componentFromFS.componentMap;
   if (componentFromFS && !componentMap) throw new BitError('applyVersion: componentMap was not found');
 
   const files = component.files;
-  updateFileStatus(files, filesStatus, componentFromFS || undefined);
-
-  await removeFilesIfNeeded(filesStatus, consumer, componentFromFS || undefined);
+  if (prepared) {
+    for (const status of prepared.statuses) filesStatus[status.relativePath] = FileStatus[status.status];
+    const data = new DataToPersist();
+    for (const filename of prepared.removals) data.removePath(new RemovePath(filename));
+    await data.persistAllToFS();
+  } else {
+    updateFileStatus(files, filesStatus, componentFromFS || undefined);
+    await removeFilesIfNeeded(filesStatus, consumer, componentFromFS || undefined);
+  }
 
   if (mergeResults) {
     // update files according to the merge results
@@ -102,7 +114,9 @@ export async function applyVersion(
 export function updateFileStatus(files: SourceFile[], filesStatus: FilesStatus, componentFromFS?: ConsumerComponent) {
   files.forEach((file) => {
     const fileFromFs = componentFromFS?.files.find((f) => f.relative === file.relative);
-    const areFilesEqual = fileFromFs && Buffer.compare(fileFromFs.contents, file.contents) === 0;
+    const areFilesEqual =
+      fileFromFs &&
+      (compareRustCheckoutSource(file, fileFromFs) ?? Buffer.compare(fileFromFs.contents, file.contents) === 0);
     // @ts-ignore
     filesStatus[pathNormalizeToLinux(file.relative)] = areFilesEqual ? FileStatus.unchanged : FileStatus.updated;
   });

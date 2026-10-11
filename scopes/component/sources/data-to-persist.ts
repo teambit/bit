@@ -72,7 +72,7 @@ export class DataToPersist {
     this._log();
     this._validateAbsolute();
     if (
-      process.env.BIT_RUST_WORKSPACE_PERSISTENCE === 'on' &&
+      (process.env.BIT_RUST_WORKSPACE_PERSISTENCE === 'on' || process.env.BIT_RUST_CLIENT_VCS === 'on') &&
       (await persistWorkspaceOperation(this, DataToPersist.defaultWorkspacePhases))
     )
       return;

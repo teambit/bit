@@ -64,6 +64,7 @@ pub(crate) fn serve_with_store(
     pool: &ThreadPool,
     store: Option<&Store>,
 ) -> io::Result<()> {
+    let mut checkout = crate::checkout::cache::State::default();
     loop {
         let mut magic = [0; 4];
         // Clean EOF is valid; a partial frame must never produce partial success.
@@ -71,7 +72,7 @@ pub(crate) fn serve_with_store(
             return Ok(());
         }
         reader.read_exact(&mut magic[1..])?;
-        if serve_extension(magic, reader, writer, pool, store)? {
+        if serve_extension(magic, reader, writer, pool, store, &mut checkout)? {
             continue;
         }
         let version = frame_version(magic, store)?;
@@ -227,6 +228,25 @@ fn serve_read_only(
 }
 
 fn serve_extension(
+    magic: [u8; 4],
+    reader: &mut impl Read,
+    writer: &mut impl Write,
+    pool: &ThreadPool,
+    store: Option<&Store>,
+    checkout: &mut crate::checkout::cache::State,
+) -> io::Result<bool> {
+    if magic == *b"BCK1" {
+        crate::checkout::plan::serve(reader, writer, checkout)?;
+        return Ok(true);
+    }
+    if magic == *b"BWC0" || magic == *b"BWC1" {
+        crate::checkout::serve(reader, writer, magic == *b"BWC0", checkout)?;
+        return Ok(true);
+    }
+    serve_standard_extension(magic, reader, writer, pool, store)
+}
+
+fn serve_standard_extension(
     magic: [u8; 4],
     reader: &mut impl Read,
     writer: &mut impl Write,
