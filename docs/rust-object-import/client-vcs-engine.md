@@ -405,3 +405,55 @@ Set `BIT_MERGE_QUALIFICATION_MEASURE=1`,
 `BIT_MERGE_QUALIFICATION_EXTRA_FILES=256` for alternating retained command pairs
 following excluded warmups. Generated workspaces, logs and reports stay outside
 Git at `$HOME/bit-merge-history-evidence-2026-10-11`.
+
+### Merge/history command measurements
+
+Three retained alternating pairs follow excluded paired warmups on Linux tmpfs
+and Btrfs, using one component with 8 or 264 current files. Large fixtures add
+256 unique approximately 4 KiB files with independently mergeable edits. The
+table reports independent medians for complete commands. CPU includes child
+processes; RSS sums near-simultaneous 10 ms samples of Node, helper and Git
+descendants. Diagnostics are disabled during measurement.
+
+| Filesystem | Files | Operation     | Wall ms Node → Rust | Rust/Node | CPU s Node → Rust | RSS MiB Node → Rust |
+| ---------- | ----: | ------------- | ------------------: | --------: | ----------------: | ------------------: |
+| tmpfs      |     8 | importObjects |           253 → 257 |      1.02 |       0.32 → 0.33 |       148.6 → 148.7 |
+| tmpfs      |     8 | merge         |           313 → 311 |      0.99 |       0.39 → 0.39 |       153.9 → 157.6 |
+| tmpfs      |     8 | abort         |         1211 → 1289 |      1.06 |       0.85 → 0.85 |       305.6 → 308.8 |
+| tmpfs      |     8 | remerge       |           316 → 310 |      0.98 |       0.40 → 0.39 |       155.0 → 158.1 |
+| tmpfs      |     8 | resolve       |           430 → 451 |      1.05 |       0.55 → 0.59 |       266.5 → 268.4 |
+| tmpfs      |   264 | importObjects |           281 → 289 |      1.03 |       0.37 → 0.39 |       151.1 → 152.2 |
+| tmpfs      |   264 | merge         |           871 → 538 |      0.62 |       1.18 → 0.79 |       277.9 → 236.7 |
+| tmpfs      |   264 | abort         |         1763 → 1845 |      1.05 |       1.84 → 1.93 |       510.8 → 521.0 |
+| tmpfs      |   264 | remerge       |           877 → 532 |      0.61 |       1.20 → 0.77 |       277.6 → 237.8 |
+| tmpfs      |   264 | resolve       |           596 → 657 |      1.10 |       0.88 → 0.92 |       378.4 → 383.4 |
+| btrfs      |     8 | importObjects |           256 → 263 |      1.03 |       0.32 → 0.34 |       149.4 → 150.2 |
+| btrfs      |     8 | merge         |           320 → 313 |      0.98 |       0.41 → 0.39 |       153.9 → 158.3 |
+| btrfs      |     8 | abort         |         1215 → 1211 |      1.00 |       0.86 → 0.85 |       331.0 → 312.2 |
+| btrfs      |     8 | remerge       |           325 → 314 |      0.97 |       0.41 → 0.39 |       154.6 → 158.7 |
+| btrfs      |     8 | resolve       |           459 → 457 |      0.99 |       0.59 → 0.58 |       266.5 → 268.1 |
+| btrfs      |   264 | importObjects |           295 → 303 |      1.03 |       0.39 → 0.41 |       150.9 → 151.0 |
+| btrfs      |   264 | merge         |           896 → 554 |      0.62 |       1.28 → 0.82 |       285.6 → 237.6 |
+| btrfs      |   264 | abort         |         1784 → 1928 |      1.08 |       1.92 → 1.96 |       514.1 → 526.9 |
+| btrfs      |   264 | remerge       |           886 → 564 |      0.64 |       1.30 → 0.82 |       285.9 → 237.2 |
+| btrfs      |   264 | resolve       |           627 → 648 |      1.03 |       0.90 → 0.88 |       367.9 → 388.3 |
+
+The large merge and remerge commands are approximately 36–39% faster in these
+fixtures, with less CPU and sampled memory. Small merges are broadly similar;
+large abort is 5–8% slower and resolve is 3–10% slower. This establishes a specific
+merge benefit rather than a general command speedup. The engine stays opt-in.
+Both modes receive the same environment. Native Git temporary files use system
+temp (`TMPDIR=/dev/shm` here), while canonical Git inputs use the scope filesystem;
+Btrfs measurements therefore include that existing implementation difference.
+
+These results qualify production revision `ae2e61cb56b2`, with exact source and
+compiled SHA-256 fingerprints in each report. The native source digest is
+`369b7333d1f068f8105296dee08ac1cf40d8c623ec9dd47299d23b0001d9b7fc`.
+The official explicit-target package and measured helper SHA-256 is
+`ba3fe4e8b5826d6e0bdc2ae8bdcdd28cbec9534eeaf54ce19633921e633afc4a`.
+Four-mode correctness and adapter tests also qualify the implicit-target helper
+`f8e7f8495dc8bda62074db9bd8781dfa4894602267d7198c0acd57454dfa0949`,
+built from the same native sources. Reports, retained samples and absolute medians
+are in `bit-merge-history-evidence-2026-10-11/performance` outside Git. Local
+qualification is Linux; the source/compiled adapter matrix covers Linux, macOS
+and Windows in CI.
