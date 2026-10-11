@@ -330,7 +330,8 @@ the remote scope "${scopeName}" was not found`);
     });
     try {
       if (
-        process.env.BIT_RUST_OBJECT_TAR === 'on' &&
+        (process.env.BIT_RUST_OBJECT_TAR === 'on' ||
+          (process.env.BIT_RUST_CLIENT_VCS === 'on' && process.env.BIT_RUST_OBJECT_TAR !== 'off')) &&
         process.env.BIT_RUST_OBJECT_IMPORT_MODE !== 'validate' &&
         tarExecutable &&
         this.repo.canWriteMutableObjectsNatively() &&

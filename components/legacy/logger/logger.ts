@@ -438,3 +438,22 @@ export function writeLogToScreen(levelOrPrefix = '') {
 }
 
 export default logger;
+
+// Capture observers before integrations can replace them; native batching otherwise changes hook order.
+const canonicalLoggerMethods = new Map(
+  ['debug', 'trace', 'warn', 'error', 'debugAndAddBreadCrumb', 'errorAndAddBreadCrumb'].map((name) => [
+    name,
+    (logger as any)[name],
+  ])
+);
+export function hasCanonicalLegacyLoggerMethods(): boolean {
+  return [...canonicalLoggerMethods].every(([name, method]) => {
+    let owner: object | null = logger;
+    while (owner) {
+      const descriptor = Object.getOwnPropertyDescriptor(owner, name);
+      if (descriptor) return descriptor.value === method;
+      owner = Object.getPrototypeOf(owner);
+    }
+    return false;
+  });
+}

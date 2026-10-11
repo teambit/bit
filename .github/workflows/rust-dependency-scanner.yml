@@ -484,6 +484,8 @@ jobs:
           BIT_TEST_CONFIG_MERGE_COMPILED=1 node --test scripts/rust-object-import/config-merge.test.cjs
           node --test scripts/rust-object-import/lane-recovery.test.cjs
           BIT_TEST_LANE_RECOVERY_COMPILED=1 node --test scripts/rust-object-import/lane-recovery.test.cjs
+          node --test scripts/rust-object-import/transfer.test.cjs scripts/rust-object-import/transfer-transaction.test.cjs
+          BIT_TEST_TRANSFER_COMPILED=1 node --test scripts/rust-object-import/transfer.test.cjs scripts/rust-object-import/transfer-transaction.test.cjs
           node --test scripts/rust-object-import/three-way-merge.test.cjs
           BIT_TEST_THREE_WAY_MERGE_COMPILED=1 node --test scripts/rust-object-import/three-way-merge.test.cjs
           node scripts/rust-object-import/canonical-model-tests.cjs

@@ -47,3 +47,26 @@ for (const [name, constructor] of Object.entries({
 })) {
   registerRustResetClass(name, constructor);
 }
+
+import { registerRustTransferClass } from '../objects/rust-transfer';
+registerRustTransferClass('ModelComponent', ModelComponent, [
+  'collectVersionsObjects',
+  'getLocalTagsOrHashes',
+  'getRef',
+  'loadVersion',
+]);
+registerRustTransferClass('Version', Version, ['hash', 'refsWithOptions', 'getType']);
+
+registerRustTransferClass('Array', Array, [
+  'map',
+  'filter',
+  'flat',
+  'includes',
+  'slice',
+  'every',
+  'some',
+  'flatMap',
+  'find',
+  'push',
+  'forEach',
+]);

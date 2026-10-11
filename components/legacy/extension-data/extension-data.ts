@@ -1,3 +1,4 @@
+import { registerRustTransferClass } from '@teambit/objects';
 import { cloneDeep } from 'lodash';
 import type { ComponentID } from '@teambit/component-id';
 
@@ -92,3 +93,5 @@ export class ExtensionDataEntry {
     );
   }
 }
+
+registerRustTransferClass('ExtensionDataEntry', ExtensionDataEntry, ['stringId']);

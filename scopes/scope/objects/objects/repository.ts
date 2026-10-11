@@ -1,3 +1,4 @@
+import { registerRustTransferClass, persistRustTransferPending } from './rust-transfer';
 import { registerRustResetClass } from './rust-reset-refs';
 import fs from 'fs-extra';
 import { registerRustSquashRepository } from './rust-squash-history';
@@ -1004,7 +1005,8 @@ export default class Repository {
   async withNativeImportOperation<T>(run: () => Promise<T>): Promise<T> {
     if (
       !this.nativeImportOperation &&
-      process.env.BIT_RUST_OBJECT_IMPORT_OPERATION === 'on' &&
+      (process.env.BIT_RUST_OBJECT_IMPORT_OPERATION === 'on' ||
+        (process.env.BIT_RUST_CLIENT_VCS === 'on' && process.env.BIT_RUST_OBJECT_IMPORT_OPERATION !== 'off')) &&
       this.canWriteMutableObjectsNatively() &&
       this.getNativeSourceStoreOptions === Repository.prototype.getNativeSourceStoreOptions &&
       this.getChownOptions === Repository.prototype.getChownOptions &&
@@ -1174,8 +1176,12 @@ export default class Repository {
       if (!isSnap(ref)) throw new BitError(`invalid object ref: ${JSON.stringify(ref)}`);
     }
     const chownOptions = await this.getChownOptions();
+    const completed =
+      process.env.BIT_RUST_CLIENT_VCS === 'on'
+        ? await persistRustTransferPending(this, objectList, pendingDir, chownOptions)
+        : undefined;
     await pMapPool(
-      objectList.objects,
+      completed === undefined ? objectList.objects : objectList.objects.slice(completed),
       (object) => this.writeObjectFile(path.join(pendingDir, this.hashPath(object.ref)), object.buffer, chownOptions),
       { concurrency: concurrentIOLimit() }
     );
@@ -1246,7 +1252,24 @@ export default class Repository {
   }
 }
 
+registerRustTransferClass('Repository', Repository, [
+  'load',
+  'loadSync',
+  'loadRaw',
+  'loadManyRaw',
+  'loadManyRawIgnoreMissing',
+  'getPath',
+  'isContentTransformed',
+  'objectPath',
+  'hashPath',
+  'getCache',
+  'canPlanCheckoutNatively',
+  'writeObjectsToPendingDir',
+  'writeObjectFile',
+  'getChownOptions',
+]);
 registerRustResetClass('Repository', Repository);
+registerRustTransferClass('BitObject', BitObject, []);
 registerRustResetClass('BitObject', BitObject);
 registerRustHistoryRepository(Repository);
 registerRustSquashRepository(Repository, BitObject);

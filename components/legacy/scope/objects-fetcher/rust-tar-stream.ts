@@ -18,7 +18,8 @@ export async function importTarStream(
       signal: options.signal,
       timeoutMs: options.timeoutMs,
       spool:
-        process.env.BIT_RUST_OBJECT_IMPORT_OPERATION === 'on'
+        process.env.BIT_RUST_OBJECT_IMPORT_OPERATION === 'on' ||
+        (process.env.BIT_RUST_CLIENT_VCS === 'on' && process.env.BIT_RUST_OBJECT_IMPORT_OPERATION !== 'off')
           ? (directory) => new NativeImportOperation(executable, { objectsDirectory: directory }, options.timeoutMs)
           : undefined,
       progressive:

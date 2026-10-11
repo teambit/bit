@@ -38,6 +38,10 @@ for (const args of [
     'teambit.lanes/merge-lanes',
     'teambit.harmony/modules/in-memory-cache',
     'teambit.workspace/config-merger',
+    'teambit.scope/export',
+    'teambit.legacy/scope-api',
+    'teambit.legacy/extension-data',
+    'teambit.legacy/logger',
   ],
 ])
   cp.execFileSync(executable, [...prefix, ...args], { stdio: 'inherit' });

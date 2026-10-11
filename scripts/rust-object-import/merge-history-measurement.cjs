@@ -16,9 +16,9 @@ function pairedEntries(rounds, modes) {
   if (!modes) for (const mode of ['missing-helper', 'crashed-helper']) entries.push({ mode, round: 0, fallback: true });
   return entries;
 }
-async function measuredCommand(nodeArgs, { cwd, env, step, operation }) {
+async function measuredCommand(nodeArgs, { cwd, env, step, operation, cpuDirectory = cwd }) {
   const linux = process.platform === 'linux';
-  const cpuFile = path.join(cwd, `merge-command-cpu-${step}.txt`);
+  const cpuFile = path.join(cpuDirectory, `merge-command-cpu-${step}.txt`);
   const started = performance.now();
   let processTree;
   const result = await new Promise((resolve, reject) => {

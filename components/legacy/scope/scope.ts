@@ -43,7 +43,16 @@ import type {
   ObjectItem,
   ObjectList,
 } from '@teambit/objects';
-import { DependenciesGraph, ModelComponent, Symlink, BitObject, Ref, Repository, IndexType } from '@teambit/objects';
+import {
+  DependenciesGraph,
+  ModelComponent,
+  Symlink,
+  BitObject,
+  Ref,
+  Repository,
+  IndexType,
+  registerRustTransferClass,
+} from '@teambit/objects';
 import type { RemovedObjects } from './removed-components';
 import { Tmp } from './repositories';
 import SourcesRepository from './repositories/sources';
@@ -831,3 +840,5 @@ export function pathHasAll(patterns: string[]): (absPath: string) => boolean {
     return state;
   };
 }
+
+registerRustTransferClass('Scope', Scope, ['getObjectItem']);

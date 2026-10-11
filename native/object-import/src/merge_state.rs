@@ -25,6 +25,13 @@ const MAX_JSON: usize = 4 * 1024 * 1024;
     deny_unknown_fields
 )]
 enum Request {
+    TransferCollect(Value),
+    TransferInitialize(Value),
+    TransferArchive(Value),
+    TransferRelease(Value),
+    TransferPending(Value),
+    TransferTransactionInitialize(Value),
+    TransferTransactionReceipt(Value),
     ResetRefsPlan(Value),
     RecoveryInitialize { operations: Vec<crate::recovery::Operation> },
     RecoveryAdvance { token: String, count: usize },
@@ -137,7 +144,7 @@ fn metadata(request: Request, state: &mut State, bytes: &[u8]) -> io::Result<Val
         Request::ConfigWorkspaceUpdates(input) => {
             crate::config_merge::apply("configWorkspaceUpdates", &input)
         }
-        _ => Err(invalid("invalid metadata operation")),
+        request => transfer_request(request, &mut state.transfer),
     }
 }
 
@@ -166,3 +173,22 @@ mod config_tests;
 mod squash_tests;
 #[cfg(test)]
 mod tests;
+
+fn transfer_request(request: Request, state: &mut crate::transfer::State) -> io::Result<Value> {
+    match request {
+        Request::TransferCollect(input) => crate::transfer::apply("transferCollect", &input, state),
+        Request::TransferInitialize(input) => {
+            crate::transfer::apply("transferInitialize", &input, state)
+        }
+        Request::TransferArchive(input) => crate::transfer::apply("transferArchive", &input, state),
+        Request::TransferPending(input) => crate::transfer::apply("transferPending", &input, state),
+        Request::TransferRelease(input) => crate::transfer::apply("transferRelease", &input, state),
+        Request::TransferTransactionInitialize(input) => {
+            crate::transfer::apply("transferTransactionInitialize", &input, state)
+        }
+        Request::TransferTransactionReceipt(input) => {
+            crate::transfer::apply("transferTransactionReceipt", &input, state)
+        }
+        _ => Err(invalid("invalid transfer operation")),
+    }
+}

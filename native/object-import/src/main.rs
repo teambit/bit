@@ -18,6 +18,7 @@ mod tar_batch;
 mod tar_extensions;
 mod tar_header;
 mod tar_progress;
+mod transfer;
 mod validate;
 mod workspace;
 
