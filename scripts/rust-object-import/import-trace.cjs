@@ -36,10 +36,16 @@ const metrics = {
     ])
   ),
   mergeState: Object.fromEntries(
-    ['initialize', 'transition', 'commit', 'laneSnap', 'reconcileSnap'].map((kind) => [
-      kind,
-      { frames: 0, files: 0, completed: 0, failed: 0 },
-    ])
+    [
+      'initialize',
+      'transition',
+      'commit',
+      'laneSnap',
+      'reconcileSnap',
+      'squashPolicy',
+      'squashMessages',
+      'historyRebase',
+    ].map((kind) => [kind, { frames: 0, files: 0, completed: 0, failed: 0 }])
   ),
   snapshot: Object.fromEntries(
     ['commit', 'plan', 'index', 'indexWrite'].map((kind) => [
@@ -215,6 +221,8 @@ function wrap(target, key, stage, inspect) {
       'toBuffer',
       'load',
       'parse',
+      'parseObject',
+      'parseObjectWithSize',
       'toObject',
       'writeObjectsToTheFS',
       'getNativeSourceStoreOptions',

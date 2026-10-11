@@ -520,33 +520,36 @@ files use the scope filesystem while native Git input files use system temp.
 | tmpfs      |     8 | laneMergeManual |           440 → 438 |      1.00 |       0.60 → 0.59 |       232.4 → 238.2 |
 | tmpfs      |     8 | laneResolve     |           443 → 447 |      1.01 |       0.58 → 0.58 |       266.6 → 268.8 |
 | tmpfs      |     8 | laneMergeOurs   |           512 → 508 |      0.99 |       0.68 → 0.66 |       284.4 → 285.5 |
-| tmpfs      |     8 | laneAbort       |           209 → 212 |      1.01 |       0.25 → 0.26 |       130.1 → 130.8 |
 | tmpfs      |     8 | laneMergeSquash |           510 → 517 |      1.01 |       0.66 → 0.68 |       285.9 → 286.4 |
 | tmpfs      |   264 | laneSnap        |           569 → 591 |      1.04 |       0.81 → 0.80 |       340.9 → 364.4 |
 | tmpfs      |   264 | laneMergeManual |           703 → 714 |      1.01 |       0.99 → 0.97 |       337.9 → 354.1 |
 | tmpfs      |   264 | laneResolve     |           604 → 643 |      1.06 |       0.88 → 0.90 |       377.9 → 384.9 |
 | tmpfs      |   264 | laneMergeOurs   |           791 → 833 |      1.05 |       1.17 → 1.21 |       407.8 → 433.3 |
-| tmpfs      |   264 | laneAbort       |           218 → 211 |      0.97 |       0.26 → 0.25 |       130.6 → 129.5 |
 | tmpfs      |   264 | laneMergeSquash |           877 → 897 |      1.02 |       1.32 → 1.27 |       406.6 → 435.8 |
 | btrfs      |     8 | laneSnap        |           423 → 429 |      1.01 |       0.55 → 0.57 |       244.4 → 246.3 |
 | btrfs      |     8 | laneMergeManual |           452 → 444 |      0.98 |       0.60 → 0.57 |       234.1 → 235.6 |
 | btrfs      |     8 | laneResolve     |           455 → 449 |      0.99 |       0.58 → 0.56 |       267.0 → 268.1 |
 | btrfs      |     8 | laneMergeOurs   |           553 → 541 |      0.98 |       0.71 → 0.68 |       283.9 → 285.0 |
-| btrfs      |     8 | laneAbort       |           212 → 212 |      1.00 |       0.26 → 0.25 |       128.7 → 129.7 |
 | btrfs      |     8 | laneMergeSquash |           544 → 556 |      1.02 |       0.69 → 0.69 |       286.9 → 286.1 |
 | btrfs      |   264 | laneSnap        |           571 → 620 |      1.08 |       0.81 → 0.84 |       331.7 → 386.0 |
 | btrfs      |   264 | laneMergeManual |           752 → 759 |      1.01 |       1.08 → 1.03 |       336.8 → 353.1 |
 | btrfs      |   264 | laneResolve     |           625 → 671 |      1.07 |       0.96 → 0.91 |       377.3 → 392.8 |
 | btrfs      |   264 | laneMergeOurs   |           834 → 891 |      1.07 |       1.25 → 1.28 |       403.6 → 434.2 |
-| btrfs      |   264 | laneAbort       |           218 → 220 |      1.01 |       0.26 → 0.26 |       129.7 → 130.3 |
 | btrfs      |   264 | laneMergeSquash |          940 → 1005 |      1.07 |       1.46 → 1.44 |       402.3 → 432.1 |
 
 The selected small-case wall ratios range from 0.98 to 1.04; large-case ratios
-range from 0.97 to 1.08. Component abort and remerge range from 1.00 to 1.09,
+range from 1.01 to 1.08. Component abort and remerge range from 1.00 to 1.09,
 ours/theirs unrelated merges from 1.00 to 1.11, and automatic theirs from 0.99
 to 1.09 across all cases. These results establish operation ownership and
 correctness, with additional overhead on several large paths. They do not
 establish a broad command speedup. The engine remains opt-in.
+
+The original lane-abort samples returned before the confirmation prompt
+completed with closed stdin. Their 209–220 ms timings do not measure a completed
+abort and have been removed from this table. The other command samples are
+unaffected. The next qualification uses `--silent`, requires successful restore
+output and checks completed restore state before recording replacement samples.
+The original reports are retained as historical evidence with that limitation.
 
 All four reports bind the production revision, native source and official
 helper fingerprints above, exact source/compiled adapter fingerprints, and the
@@ -560,3 +563,37 @@ in `bit-merge-state-evidence-2026-10-11/performance` outside Git. Reproduce with
 `BIT_MERGE_STATE_QUALIFICATION_COMPACT_REPORT=1`, and
 `BIT_MERGE_STATE_QUALIFICATION_EXTRA_FILES=0` or `256`; select the filesystem
 with `BIT_MERGE_STATE_QUALIFICATION_TMPDIR`.
+
+### Squash history and lane abort operations
+
+The next merge boundary extends the shared `BMT1` session with phased squash
+policy, verified repository commit-message reads, and history reconciliation.
+Rust selects whether fast-forward or detached squash should skip, request the
+existing public model lookup, or rewrite ancestry. The adapter applies the
+selected existing Ref objects and retains the original parent array for squash
+metadata. Legacy Version parent behavior and the canonical one-incoming-snap
+skip rule remain unchanged.
+
+Parent changes occur before the existing message import hook. A failed import
+or message load therefore leaves the same partial parent mutation as Node;
+fallback replays only the message-read phase. Rust reads Versions in fresh
+bounded batches because their identifiers can remain stable while their bodies
+change. The graph reader shares this validated decoder. Compressed and decoded
+batches are capped at 32 MiB, with 4096 references and a 4 MiB response. Normal
+cached Version messages must match the fresh result; mutated messages, custom
+readers, parsers, transforms, and cache hooks retain canonical loading. These
+reads return commit-message metadata, rather than file bodies or entire Versions.
+
+History reconciliation selects only the first supplied Version that already has
+an existing history record, matching the canonical short-circuit. Node applies
+that selection to the existing record and preserves its parent/unrelated/squash
+Ref and array aliases. Missing records are not inserted, and the existing dirty
+state remains unchanged.
+
+Lane abort now owns the shared operation session across its restore, reload,
+pending-state clear, persistence, and checkout. Rust clears the pending list
+through a token/revision-bound transition after the new consumer has loaded.
+The existing restore and confirmation hooks, conflict-file deletion, checkout
+error handling, and public result shape retain their order. The engine remains
+opt-in. Backup/restore orchestration and configuration/aspect-data merge policy
+are still adapter boundaries for subsequent substantial chunks.

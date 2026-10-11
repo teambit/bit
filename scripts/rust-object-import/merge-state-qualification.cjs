@@ -351,14 +351,16 @@ async function runQualification(cliRoot, helper, options = {}) {
       else assert.equal(versionBody.unrelated, undefined);
       policies[policy].status = await command(scenario, ['status', '--json'], 'node', 25);
       if (policy === 'ours') {
-        await command(scenario, ['lane', 'merge-abort', '--skip-dependency-installation'], mode, 26);
+        const abortResult = await command(
+          scenario,
+          ['lane', 'merge-abort', '--skip-dependency-installation', '--silent'],
+          mode,
+          26
+        );
+        assert.ok(abortResult.stdout.includes('restored successfully'), 'completed abort restores the lane');
         const restored = await state(scenario, scenarioRoot);
         assert.deepEqual(restored.files, before.files, 'completed lane abort restores sources');
-        assert.equal(
-          restored.bitmap,
-          merged.bitmap,
-          'canonical diverged auto-snap abort retains the merged bitmap version'
-        );
+        assert.equal(restored.bitmap, before.bitmap, 'completed lane abort restores the premerge bitmap version');
         policies[policy].laneAborted = restored;
       }
     }

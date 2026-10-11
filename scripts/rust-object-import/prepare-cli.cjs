@@ -51,6 +51,13 @@ function links(directory) {
 }
 links(target);
 const files = [
+  'scopes/harmony/modules/in-memory-cache/lru-cache-adapter.ts',
+  'scopes/harmony/modules/in-memory-cache/index.ts',
+  'scopes/scope/objects/objects/live-objects.ts',
+  'scopes/scope/objects/objects/ref.ts',
+  'scopes/component/snap-distance/snaps-distance.ts',
+  'scopes/component/snap-distance/index.ts',
+  'scopes/scope/objects/objects/rust-squash-history.ts',
   'scopes/scope/objects/objects/rust-merge-state.ts',
   'scopes/scope/objects/objects/rust-lane-snapshot.ts',
   'components/legacy/scope/lanes/unmerged-components.ts',
@@ -153,6 +160,7 @@ try {
       'teambit.component/modules/merge-helper',
       'teambit.component/merging',
       'teambit.lanes/merge-lanes',
+      'teambit.harmony/modules/in-memory-cache',
       '--json',
       '--safe-mode',
     ],
@@ -185,6 +193,7 @@ assert.deepEqual(
     'teambit.component/modules/merge-helper',
     'teambit.component/merging',
     'teambit.lanes/merge-lanes',
+    'teambit.harmony/modules/in-memory-cache',
   ].sort()
 );
 assert.ok(compilation.every((c) => c.errors.length === 0));
@@ -194,8 +203,15 @@ const modules = [
   'objects/dist/objects/rust-merge-history.js',
   'objects/dist/objects/rust-merge-state.js',
   'objects/dist/objects/rust-lane-snapshot.js',
+  'objects/dist/objects/rust-squash-history.js',
+  'objects/dist/objects/ref.js',
+  'objects/dist/objects/live-objects.js',
+  'harmony.modules.in-memory-cache/dist/index.js',
+  'harmony.modules.in-memory-cache/dist/lru-cache-adapter.js',
   'legacy.scope/dist/lanes/unmerged-components.js',
   'component.snap-distance/dist/get-diverge-data.js',
+  'component.snap-distance/dist/snaps-distance.js',
+  'component.snap-distance/dist/index.js',
   'component.modules.merge-helper/dist/three-way-merge.js',
   'component.modules.merge-helper/dist/rust-three-way-merge.js',
   'component.modules.merge-helper/dist/merge-files.js',
