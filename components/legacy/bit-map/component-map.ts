@@ -1,3 +1,4 @@
+import { registerRecoveryBitmapClass } from './rust-recovery-guards';
 import * as path from 'path';
 import globby from 'globby';
 import { scanRustWorkspace, isWorkspacePersistenceScope } from '@teambit/component.sources';
@@ -649,3 +650,5 @@ export async function getIgnoreListHarmony(
   }
   return ignoreList;
 }
+
+registerRecoveryBitmapClass('ComponentMap', ComponentMap);

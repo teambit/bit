@@ -287,3 +287,35 @@ test('CPU profile belongs to the command and forked children cannot overwrite it
   assert.ok(actual.nodes.some((node) => node.callFrame.functionName === 'owningCommandWork'));
   assert.ok(!actual.nodes.some((node) => node.callFrame.functionName === 'childOnlyWork'));
 });
+
+test('recovery diagnostics distinguish an accepted request from completed filesystem steps', (t) => {
+  const files = fixture(t);
+  const helper = path.join(files.directory, 'recovery-helper.cjs');
+  fs.writeFileSync(
+    helper,
+    `process.stdin.once('data', () => {
+    process.stdout.write(JSON.stringify({version:1,id:1,completed:1,skipped:[],failed:false,
+      data:{completed:0,nextIndex:0,failed:true}})+'\\n');
+    process.stdin.resume();
+  });`
+  );
+  const metrics = execute(
+    files,
+    `
+    const child = require('node:child_process').spawn(process.execPath,[${JSON.stringify(helper)}]);
+    const body=Buffer.from(JSON.stringify({kind:'recoveryAdvance',token:'a'.repeat(40),count:2}));
+    const frame=Buffer.alloc(12+body.length);frame.write('BMT1');frame.writeUInt32BE(1,4);
+    frame.writeUInt32BE(body.length,8);body.copy(frame,12);
+    child.stdout.once('data',()=>child.stdin.end());child.stdin.write(frame);
+  `
+  );
+  assert.deepEqual(metrics.mergeState.recoveryAdvance, {
+    frames: 1,
+    files: 1,
+    completed: 1,
+    failed: 0,
+    stepsCompleted: 0,
+    dataFailed: 1,
+  });
+  assert.equal(metrics.persistence.helpers, 1);
+});

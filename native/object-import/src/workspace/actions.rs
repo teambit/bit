@@ -83,7 +83,7 @@ fn apply(action: &Action) -> io::Result<()> {
     }
 }
 
-fn remove(path: &Path) -> io::Result<()> {
+pub(crate) fn remove(path: &Path) -> io::Result<()> {
     let metadata = match fs::symlink_metadata(path) {
         Ok(metadata) => metadata,
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),

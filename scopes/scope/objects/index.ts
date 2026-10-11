@@ -53,3 +53,12 @@ export {
 } from './objects/rust-merge-state';
 
 export { planRustSquash, readRustSquashMessages } from './objects/rust-squash-history';
+export {
+  advanceRustRecovery,
+  requestRustRecovery,
+  registerRustRecoveryScope,
+  hasRustRecoveryScope,
+} from './objects/rust-lane-recovery';
+export type { RustRecoveryOperation } from './objects/rust-lane-recovery';
+
+export { planRustResetRefs, registerRustResetClass, registerRustResetRepositoryHooks } from './objects/rust-reset-refs';

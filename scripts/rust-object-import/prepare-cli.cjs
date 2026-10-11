@@ -22,6 +22,12 @@ const previous = JSON.parse(fs.readFileSync(path.join(installed, '.bit-rust-priv
 const hash = (file) => createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 for (const module of previous.compiledModules)
   assert.equal(hash(path.join(installed, 'node_modules/@teambit', module.path)), module.sha256);
+const existingOverlayMarker = path.join(installed, '.bit-object-import-build.json');
+const installedOverlay = fs.existsSync(existingOverlayMarker)
+  ? JSON.parse(fs.readFileSync(existingOverlayMarker))
+  : undefined;
+for (const module of installedOverlay?.compiledModules || [])
+  assert.equal(hash(path.join(installed, 'node_modules/@teambit', module.path)), module.sha256);
 if (!refresh) {
   fs.mkdirSync(target);
   cp.execFileSync('cp', ['-a', '--reflink=auto', installed + '/.', target]);
@@ -70,6 +76,8 @@ const files = [
   'scopes/scope/objects/objects/rust-squash-history.ts',
   'scopes/scope/objects/objects/rust-merge-state.ts',
   'scopes/scope/objects/objects/rust-lane-snapshot.ts',
+  'scopes/scope/objects/objects/rust-lane-recovery.ts',
+  'scopes/scope/objects/objects/rust-reset-refs.ts',
   'components/legacy/scope/lanes/unmerged-components.ts',
   'scopes/scope/objects/objects/rust-merge-history.ts',
   'scopes/component/snap-distance/get-diverge-data.ts',
@@ -78,6 +86,9 @@ const files = [
   'scopes/component/modules/merge-helper/merge-files.ts',
   'scopes/component/merging/merging.main.runtime.ts',
   'scopes/lanes/merge-lanes/merge-lanes.main.runtime.ts',
+  'scopes/lanes/merge-lanes/last-merged.ts',
+  'components/legacy/scope/repositories/sources.ts',
+  'scopes/component/snapping/reset-component.ts',
   'scopes/scope/objects/objects/rust-snapshot.ts',
   'scopes/scope/objects/models/index.ts',
   'scopes/component/snapping/snapping.main.runtime.ts',
@@ -93,6 +104,9 @@ const files = [
   'components/legacy/consumer/consumer.ts',
   'components/legacy/consumer-component/consumer-component.ts',
   'components/legacy/bit-map/component-map.ts',
+  'components/legacy/bit-map/bit-map.ts',
+  'components/legacy/bit-map/index.ts',
+  'components/legacy/bit-map/rust-recovery-guards.ts',
   'components/legacy/component-diff/components-diff.ts',
   'scopes/component/sources/abstract-vinyl.ts',
   'scopes/component/sources/data-to-persist.ts',
@@ -225,6 +239,8 @@ const modules = [
   'objects/dist/objects/rust-merge-history.js',
   'objects/dist/objects/rust-merge-state.js',
   'objects/dist/objects/rust-lane-snapshot.js',
+  'objects/dist/objects/rust-lane-recovery.js',
+  'objects/dist/objects/rust-reset-refs.js',
   'objects/dist/objects/rust-squash-history.js',
   'objects/dist/objects/ref.js',
   'objects/dist/objects/live-objects.js',
@@ -239,6 +255,9 @@ const modules = [
   'component.modules.merge-helper/dist/merge-files.js',
   'merging/dist/merging.main.runtime.js',
   'merge-lanes/dist/merge-lanes.main.runtime.js',
+  'merge-lanes/dist/last-merged.js',
+  'legacy.scope/dist/repositories/sources.js',
+  'snapping/dist/reset-component.js',
   'objects/dist/objects/rust-snapshot.js',
   'objects/dist/models/index.js',
   'snapping/dist/snapping.main.runtime.js',
@@ -254,6 +273,9 @@ const modules = [
   'legacy.consumer/dist/consumer.js',
   'legacy.consumer-component/dist/consumer-component.js',
   'legacy.bit-map/dist/component-map.js',
+  'legacy.bit-map/dist/bit-map.js',
+  'legacy.bit-map/dist/index.js',
+  'legacy.bit-map/dist/rust-recovery-guards.js',
   'legacy.component-diff/dist/components-diff.js',
   'component.sources/dist/abstract-vinyl.js',
   'component.sources/dist/data-to-persist.js',

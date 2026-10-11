@@ -31,3 +31,19 @@ registerRustLaneSnapshotModels({ ModelComponent, Version, Lane });
 
 import { registerRustSquashModels } from '../objects/rust-squash-history';
 registerRustSquashModels({ ModelComponent, Version, VersionHistory });
+
+import { registerRustResetClass } from '../objects/rust-reset-refs';
+import { DetachedHeads } from './detach-heads';
+import { ComponentID } from '@teambit/component-id';
+import { BitId } from '@teambit/legacy-bit-id';
+for (const [name, constructor] of Object.entries({
+  ModelComponent,
+  Version,
+  Lane,
+  DetachedHeads,
+  ComponentID,
+  BitId,
+  Array,
+})) {
+  registerRustResetClass(name, constructor);
+}
