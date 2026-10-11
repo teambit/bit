@@ -623,3 +623,53 @@ and binary SHA-256
 `6b67a603e0ee804af750a1e5d5737bf6682e349ce5825926cfafcbc71a128014`.
 Reports retain every source/compiled/harness fingerprint and verify them before
 and after qualification.
+
+Complete-command measurements retain three alternating Node/native pairs after
+one warm-up pair for each filesystem and size. Diagnostics are disabled while
+timing; source/helper/harness bindings stay fixed. CPU includes subprocesses;
+RSS is the sampled peak of the complete process tree. Workspaces use the named
+filesystem, while `TMPDIR=/dev/shm` is common to both modes; canonical Git temps
+use the scope directory and native Git temps use the system temporary directory.
+Wall-time ratios span 0.96–1.09, without a broad speed gain. Larger native commands
+also generally use more memory. Rollout remains opt-in. These completed abort
+measurements replace the withdrawn pre-confirmation timings above.
+
+| Filesystem | Files at lane snapshot | Operation | Wall ms Node → Rust | Rust/Node | CPU s Node → Rust | RSS MiB Node → Rust |
+|---|---:|---|---:|---:|---:|---:|
+| tmpfs | 8 | squashMain1 | 396 → 405 | 1.02 | 0.55 → 0.55 | 221.4 → 222.4 |
+| tmpfs | 8 | squashLane1 | 368 → 382 | 1.04 | 0.52 → 0.53 | 213.2 → 218.4 |
+| tmpfs | 8 | squashDetached1 | 396 → 408 | 1.03 | 0.54 → 0.56 | 220.0 → 222.9 |
+| tmpfs | 8 | squashMain3 | 387 → 398 | 1.03 | 0.52 → 0.53 | 224.9 → 220.5 |
+| tmpfs | 8 | squashLane3 | 363 → 384 | 1.06 | 0.49 → 0.53 | 212.4 → 216.5 |
+| tmpfs | 8 | laneAbort3 | 300 → 300 | 1.00 | 0.39 → 0.38 | 155.9 → 157.9 |
+| tmpfs | 8 | squashDetached3 | 408 → 410 | 1.00 | 0.57 → 0.57 | 223.0 → 220.6 |
+| tmpfs | 264 | squashMain1 | 617 → 609 | 0.99 | 0.86 → 0.83 | 321.6 → 345.9 |
+| tmpfs | 264 | squashLane1 | 542 → 588 | 1.09 | 0.73 → 0.80 | 311.8 → 336.3 |
+| tmpfs | 264 | squashDetached1 | 592 → 605 | 1.02 | 0.84 → 0.85 | 319.2 → 342.6 |
+| tmpfs | 264 | squashMain3 | 591 → 629 | 1.06 | 0.84 → 0.87 | 320.9 → 345.4 |
+| tmpfs | 264 | squashLane3 | 545 → 579 | 1.06 | 0.73 → 0.79 | 312.1 → 336.8 |
+| tmpfs | 264 | laneAbort3 | 450 → 432 | 0.96 | 0.59 → 0.56 | 202.9 → 235.9 |
+| tmpfs | 264 | squashDetached3 | 597 → 623 | 1.04 | 0.85 → 0.88 | 320.5 → 343.7 |
+| btrfs | 8 | squashMain1 | 406 → 403 | 0.99 | 0.56 → 0.55 | 217.5 → 223.0 |
+| btrfs | 8 | squashLane1 | 367 → 373 | 1.02 | 0.49 → 0.50 | 211.8 → 217.3 |
+| btrfs | 8 | squashDetached1 | 399 → 409 | 1.03 | 0.54 → 0.56 | 219.7 → 224.3 |
+| btrfs | 8 | squashMain3 | 400 → 398 | 0.99 | 0.54 → 0.53 | 219.0 → 223.0 |
+| btrfs | 8 | squashLane3 | 367 → 387 | 1.06 | 0.51 → 0.53 | 212.3 → 217.4 |
+| btrfs | 8 | laneAbort3 | 314 → 316 | 1.01 | 0.39 → 0.39 | 157.2 → 158.6 |
+| btrfs | 8 | squashDetached3 | 397 → 411 | 1.03 | 0.54 → 0.56 | 220.4 → 223.9 |
+| btrfs | 264 | squashMain1 | 642 → 648 | 1.01 | 0.96 → 0.90 | 321.2 → 343.2 |
+| btrfs | 264 | squashLane1 | 563 → 584 | 1.04 | 0.77 → 0.78 | 304.3 → 337.4 |
+| btrfs | 264 | squashDetached1 | 606 → 649 | 1.07 | 0.87 → 0.90 | 322.9 → 344.6 |
+| btrfs | 264 | squashMain3 | 620 → 652 | 1.05 | 0.90 → 0.90 | 321.6 → 345.0 |
+| btrfs | 264 | squashLane3 | 564 → 591 | 1.05 | 0.81 → 0.78 | 312.9 → 337.3 |
+| btrfs | 264 | laneAbort3 | 466 → 475 | 1.02 | 0.62 → 0.62 | 204.4 → 233.1 |
+| btrfs | 264 | squashDetached3 | 611 → 660 | 1.08 | 0.89 → 0.94 | 322.5 → 343.5 |
+
+Reproduce with `scripts/rust-object-import/squash-history-qualification.cjs`,
+`BIT_SQUASH_HISTORY_QUALIFICATION_MEASURE=1`,
+`BIT_SQUASH_HISTORY_QUALIFICATION_ROUNDS=3`,
+`BIT_SQUASH_HISTORY_QUALIFICATION_DIAGNOSTICS=0`,
+`BIT_SQUASH_HISTORY_QUALIFICATION_COMPACT_REPORT=1`, and
+`BIT_SQUASH_HISTORY_QUALIFICATION_EXTRA_FILES=0` or `256`; choose the workspace
+filesystem with `BIT_SQUASH_HISTORY_QUALIFICATION_TMPDIR`. The checked report
+retains the individual wall/CPU/process-tree samples and exact input fingerprints.
