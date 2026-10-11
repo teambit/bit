@@ -36,7 +36,7 @@ import { ConfigStoreAspect } from '@teambit/config-store';
 import type { ScopeMain } from '@teambit/scope';
 import { ScopeAspect } from '@teambit/scope';
 import type { Repository, Lane, ModelComponent, DepEdge, DepEdgeType, Log, AddVersionOpts } from '@teambit/objects';
-import { BitObject, Ref, Version } from '@teambit/objects';
+import { BitObject, Ref, Version, withRustSnapshotOperation, addRustSnapshotVersion } from '@teambit/objects';
 import type { Component, ConsumerComponent } from '@teambit/component';
 import type { DependencyResolverMain, VariantPolicyConfigArr } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
@@ -198,7 +198,25 @@ export class SnappingMain {
    * tag can be done only on main, not on a lane.
    */
   // eslint-disable-next-line complexity
-  async tag({
+  async tag(
+    options: {
+      ids?: string[];
+      all?: boolean | string;
+      snapped?: boolean;
+      unmerged?: boolean;
+      version?: string;
+      releaseType?: ReleaseType;
+      autoTagReleaseType?: ReleaseType;
+      ignoreIssues?: string;
+      scope?: string | boolean;
+      incrementBy?: number;
+      failFast?: boolean;
+    } & Partial<BasicTagParams>
+  ): Promise<TagResults | null> {
+    return withRustSnapshotOperation(() => this.tagWithinSnapshot(options));
+  }
+
+  private async tagWithinSnapshot({
     ids = [],
     message = '',
     version,
@@ -336,7 +354,7 @@ export class SnappingMain {
     const consumerComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
     const componentIds = ComponentIdList.fromArray(ids);
     const versionMaker = new VersionMaker(this, components, consumerComponents, componentIds, params);
-    return versionMaker.makeVersion();
+    return withRustSnapshotOperation(() => versionMaker.makeVersion());
   }
 
   private async addAspectsFromConfigObject(
@@ -590,7 +608,23 @@ export class SnappingMain {
    * save the local changes of a component(s) into the scope. snap can be done on main or on a lane.
    * once a component is snapped on a lane, it becomes part of it.
    */
-  async snap({
+  async snap(
+    options: Partial<BasicTagSnapParams> & {
+      pattern?: string;
+      legacyBitIds?: ComponentIdList;
+      unmerged?: boolean;
+      editor?: string;
+      ignoreIssues?: string;
+      skipAutoSnap?: boolean;
+      disableTagAndSnapPipelines?: boolean;
+      unmodified?: boolean;
+      exitOnFirstFailedTask?: boolean;
+    }
+  ): Promise<SnapResults | null> {
+    return withRustSnapshotOperation(() => this.snapWithinSnapshot(options));
+  }
+
+  private async snapWithinSnapshot({
     pattern,
     legacyBitIds, // @todo: change to ComponentID[]. pass only if have the ids already parsed.
     unmerged,
@@ -1220,13 +1254,15 @@ another option, in case this dependency is not in main yet is to remove all refe
     if (flattenedEdges) this.objectsRepo.add(flattenedEdges);
     if (dependenciesGraph) this.objectsRepo.add(dependenciesGraph);
     if (!source.version) throw new Error(`addSource expects source.version to be set`);
-    const addedVersionStr = component.addVersion(
-      version,
-      source.version,
-      lane,
-      source.previouslyUsedVersion,
-      addVersionOpts
-    );
+    const addedVersionStr =
+      (await addRustSnapshotVersion(
+        component,
+        version,
+        source.version,
+        lane,
+        source.previouslyUsedVersion,
+        addVersionOpts
+      )) ?? component.addVersion(version, source.version, lane, source.previouslyUsedVersion, addVersionOpts);
     objectRepo.add(component);
     if (lane) objectRepo.add(lane);
     files.forEach((file) => objectRepo.add(file.file));

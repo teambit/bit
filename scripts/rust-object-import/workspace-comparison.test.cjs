@@ -604,3 +604,67 @@ test('native identities reject prototype Version hashing and shared BitObject ha
   assert.equal(canCompare(version), true);
   assert.equal(objects.canHashSourceNatively(), true);
 });
+
+test('snapshot Source provenance preserves raw disk and normalized hashes across read-only hydration', async (t) => {
+  const directory = await setup(t);
+  const filename = path.join(directory, 'snapshot.js');
+  const bytes = Buffer.from('first\r\nsecond\r\n');
+  await fs.writeFile(filename, bytes);
+  const [read] = await reader.readRustWorkspaceFiles([filename]);
+  const vinyl = file(directory, 'snapshot.js', read.contents);
+  reader.registerRustWorkspaceFile(vinyl, read);
+  const snapshot = reader.getRustWorkspaceSource(vinyl);
+  const getDescriptor = componentSources.getRustSnapshotSourceDescriptor;
+  assert.deepEqual(getDescriptor(snapshot), {
+    path: filename,
+    hash: sha1(bytes),
+    sourceHash: sha1(Buffer.from('first\nsecond\n')),
+  });
+  assert.equal(snapshot.hash().toString(), read.linuxHash);
+  assert.ok(getDescriptor(snapshot), 'hashing does not hydrate a native Source');
+  assert.deepEqual(snapshot.contents, Buffer.from('first\nsecond\n'));
+  assert.ok(getDescriptor(snapshot), 'read-only body exposure retains guarded native disk provenance');
+  assert.equal(Object.hasOwn(snapshot, 'hash'), false, 'hydrated Sources inherit canonical hashing');
+  snapshot.contents[0] = 88;
+  assert.equal(getDescriptor(snapshot), undefined, 'in-place Source body mutation invalidates provenance');
+});
+
+test('unhydrated native Sources preserve canonical LF and binary Buffer aliases after mutation', async (t) => {
+  const directory = await setup(t);
+  for (const [index, bytes] of [Buffer.from('original\n'), Buffer.from([0, 255, 13, 10, 254])].entries()) {
+    const filename = path.join(directory, `alias-${index}`);
+    await fs.writeFile(filename, bytes);
+    const [read] = await reader.readRustWorkspaceFiles([filename]);
+    const vinyl = file(directory, `alias-${index}`, read.contents);
+    const canonical = vinyl.toSourceAsLinuxEOL();
+    assert.equal(canonical.contents, vinyl.contents, 'canonical unchanged/binary normalization aliases the input');
+    reader.registerRustWorkspaceFile(vinyl, read);
+    const snapshot = reader.getRustWorkspaceSource(vinyl);
+    assert.ok(componentSources.getRustSnapshotSourceDescriptor(snapshot));
+    vinyl.contents[vinyl.contents.length - 1] = 65;
+    assert.equal(componentSources.getRustSnapshotSourceDescriptor(snapshot), undefined);
+    assert.equal(snapshot.hash().toString(), canonical.hash().toString());
+    assert.equal(snapshot.contents, vinyl.contents);
+    assert.deepEqual(snapshot.contents, canonical.contents);
+  }
+});
+
+test('unhydrated native CRLF Sources retain the canonical creation-time normalized copy', async (t) => {
+  const directory = await setup(t);
+  const filename = path.join(directory, 'normalized.js');
+  await fs.writeFile(filename, 'original\r\n');
+  const [read] = await reader.readRustWorkspaceFiles([filename]);
+  const vinyl = file(directory, 'normalized.js', read.contents);
+  const canonical = vinyl.toSourceAsLinuxEOL();
+  assert.notEqual(canonical.contents, vinyl.contents);
+  reader.registerRustWorkspaceFile(vinyl, read);
+  const snapshot = reader.getRustWorkspaceSource(vinyl);
+  assert.ok(componentSources.getRustSnapshotSourceDescriptor(snapshot));
+  // Mutate before any native Source body access; normalization must still reflect creation time.
+  vinyl.contents[0] = 88;
+  assert.equal(componentSources.getRustSnapshotSourceDescriptor(snapshot), undefined);
+  assert.equal(snapshot.hash().toString(), canonical.hash().toString());
+  assert.deepEqual(snapshot.contents, Buffer.from('original\n'));
+  assert.deepEqual(snapshot.contents, canonical.contents);
+  assert.notEqual(snapshot.contents, vinyl.contents);
+});

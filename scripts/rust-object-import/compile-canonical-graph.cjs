@@ -31,6 +31,7 @@ for (const args of [
     'teambit.component/status',
     'teambit.component/component-compare',
     'teambit.workspace/workspace',
+    'teambit.component/snapping',
   ],
 ])
   cp.execFileSync(executable, [...prefix, ...args], { stdio: 'inherit' });

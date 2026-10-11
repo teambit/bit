@@ -214,3 +214,123 @@ and binary SHA-256
 `b2710e1c394ffdd992f7af8b1ef556d66bf4cee2c11d8719505d90ac69760e46`.
 Both release builds use the same native source digest; the package smoke and
 artifact tests additionally validate the official target build.
+
+## Snapshot and tag persistence
+
+Starting from merged #75, `BIT_RUST_CLIENT_VCS=on` also owns an awaited helper
+lifetime around public snap/tag operations and scope-side version creation.
+The `BSS1` engine plans ordinary mainline parent/head/tag changes, prepares final
+objects after build and merge mutations finish, and writes objects through the
+existing atomic native store. It also reuses the Rust component/lane index
+planner; native index persistence remains Linux-only while other hosts use the
+canonical writer.
+
+Version refs remain the preallocated snap hashes used by Bit. They are not
+content hashes of the serialized metadata. Rust verifies Source SHA-1 identities,
+reads eligible workspace files directly, checks their captured raw disk hashes,
+strips only the UTF-8 BOM and applies canonical Linux EOL normalization. It builds
+the existing object header with decoded UTF-16 lengths, compresses objects and
+preserves their established IDs. TypeScript supplies final canonical metadata
+JSON bytes because JavaScript property ordering, number formatting and extension
+serialization are part of the existing format.
+
+The complete object set is prepared before writing. A committed prefix is
+acknowledged in order; failures retire the writer before canonical suffix replay.
+Unknown acknowledgements or live object changes trigger complete canonical
+replay. The repository retains its mutex, validation, deletion order, cache and
+live object identity, post-persist hooks, remote-lane/unmerged writes and bitmap
+updates. Index changes occur only after object persistence completes.
+
+Snapshot Sources preserve canonical Buffer aliasing: unchanged LF and binary
+buffers share their creation-time storage, while normalized CRLF buffers are
+independent copies. Disk provenance survives read-only hydration only while the
+original workspace snapshot and canonical Source buffer remain unchanged.
+Content assignment, in-place mutation, custom hashing/serialization, repository
+transforms, custom index paths and replaced instance/prototype methods retain
+canonical execution. Eligibility and live projections are checked again after
+asynchronous native work.
+
+Requests are bounded to 4 MiB of JSON, 4096 objects and 32 MiB of prepared raw
+bodies. Unsupported object classes, raw-object overrides, symlink workspace
+Sources, larger batches and unavailable helpers fall back. Lane parent policy,
+merge/squash/unrelated policy, VersionHistory construction, semver selection,
+dependency metadata, builds and hooks remain TypeScript adapters. This chunk
+does not complete the snapshot/tag milestone or the full client VCS roadmap.
+
+The real-command qualification creates fresh disposable workspaces and runs
+tag 1.0.0, an edited snap and tag 1.0.1. It compares inflated object headers and
+bodies, preallocated hashes, normalized/binary Source bytes, parent chains, tag
+aliases, index, bitmap, status and log output across Node, native, missing-helper
+and crashed-helper modes. A narrowly scoped deterministic fixture fixes only
+snapshot UUIDs and log timestamps. Separate wire diagnostics require actual
+native commit/parent/index work and one helper per operation; guarded methods
+are left untouched by the observer.
+
+`BIT_SNAPSHOT_QUALIFICATION_MEASURE=1` records complete persisted-tag and snap
+commands, with `BIT_SNAPSHOT_QUALIFICATION_ROUNDS` alternating Node/native pairs
+after excluded warmups. `BIT_SNAPSHOT_QUALIFICATION_EXTRA_FILES` adds unique
+4 KiB Sources, split between changed and unchanged files. GNU time CPU and
+simultaneous 10 ms process-tree RSS include helpers; setup and diagnostics are
+excluded. Reports verify source, physically compiled module, harness, fixture
+preload and release-helper SHA-256 fingerprints before and after each run.
+
+### Snapshot/tag qualification and measurements
+
+Verification passes 12 source and 12 physically compiled snapshot adapter tests,
+23 source and 23 compiled workspace comparison/provenance tests, 94 existing
+regressions (one Windows-only test skipped locally), 64 compiled checkout and
+persistence regressions, 69 canonical model tests and 129 Rust workspace tests.
+Canonical TypeScript lint, the 16-component Bit compilation, pinned Rust
+formatting, warning-denied Clippy, Dylint and rustdoc pass. Official package smoke
+and all 30 artifact/provisioning/discovery tests pass. Snapshot source and compiled
+adapter tests run in the existing Linux/macOS/Windows canonical-model CI matrix.
+
+Five alternating retained pairs follow excluded warmups on Linux tmpfs (`/tmp`)
+and Btrfs (home scratch), with one component, three versions and either 3 or 259
+files per version. Extra files are unique 4 KiB Sources, half changed at each
+stage. The following independent median ratios include the complete persisted
+tag or snap command. Values above 1 mean more native time or memory.
+
+| Filesystem / files | Command       |  Wall |   CPU | Peak tree RSS |
+| ------------------ | ------------- | ----: | ----: | ------------: |
+| tmpfs / 3          | initial tag   | 0.998 | 0.981 |         1.010 |
+| tmpfs / 3          | edited snap   | 1.007 | 1.019 |         1.011 |
+| tmpfs / 3          | following tag | 1.010 | 1.038 |         1.013 |
+| tmpfs / 259        | initial tag   | 1.057 | 0.974 |         1.030 |
+| tmpfs / 259        | edited snap   | 1.059 | 1.026 |         1.058 |
+| tmpfs / 259        | following tag | 1.067 | 1.012 |         1.124 |
+| Btrfs / 3          | initial tag   | 1.029 | 1.082 |         1.010 |
+| Btrfs / 3          | edited snap   | 0.996 | 1.019 |         1.011 |
+| Btrfs / 3          | following tag | 0.992 | 0.981 |         1.014 |
+| Btrfs / 259        | initial tag   | 1.084 | 0.962 |         1.099 |
+| Btrfs / 259        | edited snap   | 1.078 | 1.026 |         1.153 |
+| Btrfs / 259        | following tag | 1.062 | 1.000 |         1.117 |
+
+These measurements qualify production revision `b3495fe39258`, before the final
+custom-Ref guards and canonical fallback cleanup. Those follow-up changes reject
+custom Ref methods/getters before native policy and after asynchronous planning,
+preserve the original fallback object array, and avoid an extra canonical index
+serialization. Final source/compiled adapter tests and real four-mode command
+qualification cover those changes separately; a final 259-file pair verifies
+the updated measurement path and source/compiled fingerprints. The table remains
+the five-pair measurement of the explicitly identified earlier revision.
+
+Small commands are broadly similar. The 259-file native workflow is 5.7–8.4%
+slower by median wall time, with approximately 3–15% more sampled process-tree
+RSS. CPU is broadly similar. This supports continuing the migration behind
+`BIT_RUST_CLIENT_VCS=on`; it does not justify enabling the engine as a performance
+improvement. Harmony startup, dependency analysis, class hydration and canonical
+metadata preparation remain substantial Node work.
+
+Reports, absolute medians, logs and generated artifacts stay outside Git at
+`$HOME/bit-snapshot-tag-evidence-2026-10-11`. The private CLI's original base field
+records `517e93180cc0`; exact source and compiled-module SHA-256 fingerprints
+identify each qualified candidate. The measured helper SHA-256 is
+`85f94a2916ff6be6bdb8e23fdbc228afe451b5df6ae104e6116318dae1444121`.
+The official explicit-target package records revision `b3495fe39258`, native
+source digest `3b99d97934fd86ef6de413f5e8eaa60754c0cd86bf0fc580a0db50f2a9c5cbab`,
+and binary SHA-256
+`4b1bce25a84ae42bfc17bf0a68bfd568cfff6e8152723a64dc2b368e96e76fa6`.
+Both release builds and the final adapter candidate use the same native source
+digest. Real-command results here are local Linux qualification; cross-platform
+adapter and filesystem coverage is provided by CI.

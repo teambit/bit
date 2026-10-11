@@ -39,3 +39,5 @@ import { ObjectsAspect } from './objects.aspect';
 export type { ObjectsMain } from './objects.main.runtime';
 export default ObjectsAspect;
 export { ObjectsAspect };
+
+export { withRustSnapshotOperation, isRustSnapshotOperation, addRustSnapshotVersion } from './objects/rust-snapshot';

@@ -8,6 +8,7 @@ on:
       - 'scopes/component/sources/**'
       - 'scopes/component/component-writer/**'
       - 'scopes/component/checkout/**'
+      - 'scopes/component/snapping/**'
       - 'scopes/component/status/**'
       - 'scopes/component/component-compare/**'
       - 'scopes/workspace/workspace/**'
@@ -62,6 +63,7 @@ on:
       - 'scopes/component/sources/**'
       - 'scopes/component/component-writer/**'
       - 'scopes/component/checkout/**'
+      - 'scopes/component/snapping/**'
       - 'scopes/component/status/**'
       - 'scopes/component/component-compare/**'
       - 'scopes/workspace/workspace/**'
@@ -470,4 +472,6 @@ jobs:
           BIT_TEST_CHECKOUT_COMPILED=1 node --test scripts/rust-object-import/checkout.test.cjs
           node --test scripts/rust-object-import/workspace-comparison.test.cjs
           BIT_TEST_WORKSPACE_COMPARISON_COMPILED=1 node --test scripts/rust-object-import/workspace-comparison.test.cjs
+          node --test scripts/rust-object-import/snapshot-tag.test.cjs
+          BIT_TEST_SNAPSHOT_TAG_COMPILED=1 node --test scripts/rust-object-import/snapshot-tag.test.cjs
           node scripts/rust-object-import/canonical-model-tests.cjs

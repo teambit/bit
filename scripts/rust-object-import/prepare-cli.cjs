@@ -51,6 +51,9 @@ function links(directory) {
 }
 links(target);
 const files = [
+  'scopes/scope/objects/objects/rust-snapshot.ts',
+  'scopes/scope/objects/models/index.ts',
+  'scopes/component/snapping/snapping.main.runtime.ts',
   'scopes/component/sources/rust-source-read-scope.ts',
   'scopes/scope/objects/models/version.ts',
   'scopes/component/status/status.main.runtime.ts',
@@ -135,9 +138,7 @@ try {
       'teambit.component/status',
       'teambit.component/component-compare',
       'teambit.workspace/workspace',
-      'teambit.component/status',
-      'teambit.component/component-compare',
-      'teambit.workspace/workspace',
+      'teambit.component/snapping',
       '--json',
       '--safe-mode',
     ],
@@ -165,12 +166,16 @@ assert.deepEqual(
     'teambit.component/status',
     'teambit.component/component-compare',
     'teambit.workspace/workspace',
+    'teambit.component/snapping',
   ].sort()
 );
 assert.ok(compilation.every((c) => c.errors.length === 0));
 for (const component of compilation)
   for (const file of component.buildResults) assert.ok(fs.realpathSync(file).startsWith(target + path.sep));
 const modules = [
+  'objects/dist/objects/rust-snapshot.js',
+  'objects/dist/models/index.js',
+  'snapping/dist/snapping.main.runtime.js',
   'component.sources/dist/rust-source-read-scope.js',
   'objects/dist/models/version.js',
   'status/dist/status.main.runtime.js',

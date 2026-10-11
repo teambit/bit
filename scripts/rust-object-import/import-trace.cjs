@@ -29,6 +29,12 @@ const metrics = {
   workspace: Object.fromEntries(
     ['scan', 'read', 'compare', 'diff'].map((kind) => [kind, { frames: 0, files: 0, completed: 0, failed: 0 }])
   ),
+  snapshot: Object.fromEntries(
+    ['commit', 'plan', 'index', 'indexWrite'].map((kind) => [
+      kind,
+      { frames: 0, files: 0, completed: 0, failed: 0, workspaceSources: 0, sourceBodyBytes: 0 },
+    ])
+  ),
   inflation: { incoming: 0, repository: 0 },
   receivedObjects: 0,
   receivedCompressedBytes: 0,
@@ -63,15 +69,27 @@ if (output && process.pid === owner) {
     const write = child.stdin.write;
     child.stdin.write = function (bytes, ...rest) {
       const magic = Buffer.isBuffer(bytes) ? bytes.subarray(0, 4).toString() : '';
-      if (['BWM1', 'BWP1', 'BWC0', 'BWC1', 'BCK1', 'BWS1'].includes(magic)) {
+      if (['BWM1', 'BWP1', 'BWC0', 'BWC1', 'BCK1', 'BWS1', 'BSS1'].includes(magic)) {
         if (!workspace) metrics.persistence.helpers++;
         workspace = true;
-        const operation = magic === 'BWS1' ? JSON.parse(bytes.subarray(12).toString()) : undefined;
+        const operation = ['BWS1', 'BSS1'].includes(magic) ? JSON.parse(bytes.subarray(12).toString()) : undefined;
         requests.push(operation ? `${magic}:${operation.kind}` : magic);
         if (operation) {
-          const metric = metrics.workspace[operation.kind];
+          const metric = (magic === 'BSS1' ? metrics.snapshot : metrics.workspace)[operation.kind];
           metric.frames++;
-          metric.files += operation.files?.length || (operation.kind === 'compare' ? 1 : 0);
+          metric.files +=
+            magic === 'BSS1'
+              ? operation.kind === 'commit'
+                ? operation.objects.length
+                : 1
+              : operation.files?.length || (operation.kind === 'compare' ? 1 : 0);
+          if (magic === 'BSS1' && operation.kind === 'commit') {
+            for (const object of operation.objects) {
+              if (object.type !== 'Source') continue;
+              metric.workspaceSources += Number(Boolean(object.workspace));
+              metric.sourceBodyBytes += (object.body?.length || 0) / 2;
+            }
+          }
         } else if (magic === 'BWM1') {
           metrics.materialization.frames++;
           metrics.materialization.files += bytes.readUInt32BE(8);
@@ -107,17 +125,19 @@ if (output && process.pid === owner) {
       let newline;
       while ((newline = pending.indexOf('\n')) >= 0) {
         const magic = requests.shift();
-        const metric = magic?.startsWith('BWS1:')
-          ? metrics.workspace[magic.slice(5)]
-          : magic === 'BWM1'
-            ? metrics.materialization
-            : magic === 'BCK1'
-              ? metrics.checkout.plan
-              : magic === 'BWC0'
-                ? metrics.checkout.preflight
-                : magic === 'BWC1'
-                  ? metrics.checkout.write
-                  : metrics.persistence;
+        const metric = magic?.startsWith('BSS1:')
+          ? metrics.snapshot[magic.slice(5)]
+          : magic?.startsWith('BWS1:')
+            ? metrics.workspace[magic.slice(5)]
+            : magic === 'BWM1'
+              ? metrics.materialization
+              : magic === 'BCK1'
+                ? metrics.checkout.plan
+                : magic === 'BWC0'
+                  ? metrics.checkout.preflight
+                  : magic === 'BWC1'
+                    ? metrics.checkout.write
+                    : metrics.persistence;
         try {
           const response = JSON.parse(pending.slice(0, newline));
           metric.completed += response.completed || 0;
@@ -152,6 +172,22 @@ if (output && process.pid === owner)
     .enable();
 const seen = new WeakMap();
 function wrap(target, key, stage, inspect) {
+  // Snapshot defaults are captured before this observer sees module exports.
+  // Observe their native acknowledgements instead of changing eligibility.
+  if (
+    process.env.BIT_RUST_CLIENT_VCS === 'on' &&
+    [
+      'toBuffer',
+      'writeObjectsToTheFS',
+      'getNativeSourceStoreOptions',
+      'getChownOptions',
+      '_writeOne',
+      'writeObjectFile',
+      'addMany',
+      'write',
+    ].includes(key)
+  )
+    return;
   if (!target || typeof target[key] !== 'function') return;
   let keys = seen.get(target);
   if (!keys) {

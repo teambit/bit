@@ -9,3 +9,16 @@ import VersionHistory from './version-history';
 import { LaneHistory } from './lane-history';
 
 export { ModelComponent, ScopeMeta, Source, Version, Symlink, Lane, ExportMetadata, VersionHistory, LaneHistory };
+
+import { registerRustSnapshotModels } from '../objects/rust-snapshot';
+registerRustSnapshotModels({
+  ModelComponent,
+  ScopeMeta,
+  Source,
+  Version,
+  Symlink,
+  Lane,
+  ExportMetadata,
+  VersionHistory,
+  LaneHistory,
+});

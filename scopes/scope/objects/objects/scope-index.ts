@@ -11,6 +11,7 @@ import type BitObject from './object';
 import type Ref from './ref';
 import { difference } from 'lodash';
 import type { NativeImportOperation } from './rust-object-operation';
+import type { SnapshotIndexOperation } from './rust-snapshot';
 
 const COMPONENTS_INDEX_FILENAME = 'index.json';
 
@@ -57,6 +58,7 @@ type Index = { [IndexType.components]: ComponentItem[]; [IndexType.lanes]: LaneI
 
 export class ScopeIndex {
   nativeImportOperation?: NativeImportOperation;
+  nativeSnapshotOperation?: SnapshotIndexOperation;
   indexPath: string;
   index: Index;
   _writeIndexMutex?: Mutex;
@@ -107,18 +109,23 @@ export class ScopeIndex {
   async write() {
     // write only one at a time to avoid corrupting the json file.
     await this.writeIndexMutex.runExclusive(async () => {
-      const operation = this.nativeImportOperation;
+      // Snapshot policy must not bypass extensions installed after module initialization.
+      const operation =
+        (hasDefaultSnapshotIndexMethods(this) ? this.nativeSnapshotOperation : undefined) || this.nativeImportOperation;
+      const snapshot = Boolean(operation && operation === this.nativeSnapshotOperation);
+      const contents =
+        operation && process.platform === 'linux' ? JSON.stringify(this.index, null, 2) + '\n' : undefined;
       const saved =
         operation && process.platform === 'linux'
-          ? await operation.request(
-              { kind: 'indexWrite', contents: JSON.stringify(this.index, null, 2) + '\n' },
-              (value) => {
-                if (typeof value !== 'boolean') throw new Error('invalid native index acknowledgement');
-                return value;
-              }
-            )
+          ? await operation.request({ kind: 'indexWrite', contents }, (value) => {
+              if (typeof value !== 'boolean') throw new Error('invalid native index acknowledgement');
+              return value;
+            })
           : undefined;
-      if (saved) {
+      if (
+        saved &&
+        (!snapshot || (hasDefaultSnapshotIndexMethods(this) && contents === JSON.stringify(this.index, null, 2) + '\n'))
+      ) {
         operation!.stats.indexes++;
         return;
       }
@@ -144,7 +151,7 @@ export class ScopeIndex {
     return added.some((oneAdded) => oneAdded); // return true if one of the objects was added
   }
 
-  async addManyForImport(bitObjects: BitObject[], operation?: NativeImportOperation): Promise<boolean> {
+  async addManyForImport(bitObjects: BitObject[], operation?: SnapshotIndexOperation): Promise<boolean> {
     const objects = bitObjects.filter(
       (object) => object instanceof ModelComponent || object instanceof Symlink || object instanceof Lane
     );
@@ -299,4 +306,24 @@ export class ScopeIndex {
   static _composePath(basePath: string): string {
     return path.join(basePath, COMPONENTS_INDEX_FILENAME);
   }
+}
+
+const snapshotIndexDefaults = ['write', 'addManyForImport', 'addMany', 'addOne', 'find', '_exist', 'getPath'].map(
+  (name) => [name, ScopeIndex.prototype[name]] as const
+);
+
+function hasDefaultSnapshotIndexMethods(index: ScopeIndex): boolean {
+  return (
+    Object.getPrototypeOf(index) === ScopeIndex.prototype &&
+    snapshotIndexDefaults.every(([name, method]) => index[name] === method)
+  );
+}
+
+/** The native snapshot writer targets the ordinary scope index beside its objects directory. */
+export function canPersistSnapshotIndexNatively(index: ScopeIndex, objectsDirectory: string): boolean {
+  return (
+    hasDefaultSnapshotIndexMethods(index) &&
+    typeof index.indexPath === 'string' &&
+    path.resolve(index.indexPath) === path.join(path.dirname(path.resolve(objectsDirectory)), COMPONENTS_INDEX_FILENAME)
+  );
 }

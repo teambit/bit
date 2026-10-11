@@ -358,6 +358,16 @@ impl<'a> IndexState<'a> {
         Some(())
     }
 }
+pub(crate) fn project_index(value: Value) -> io::Result<Value> {
+    let plan: IndexPlan =
+        serde_json::from_value(value).map_err(|_| invalid("invalid index projection"))?;
+    let result = index(&plan.components, &plan.lanes, &plan.objects);
+    if result.is_null() {
+        return Err(invalid("unsupported index projection"));
+    }
+    Ok(result)
+}
+
 fn index(components: &[IndexEntry], lanes: &[IndexEntry], objects: &[IndexObject]) -> Value {
     let mut state = IndexState {
         found: HashMap::new(),

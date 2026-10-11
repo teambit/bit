@@ -57,6 +57,9 @@ import type { ObjectItem } from '../objects/object-list';
 import type { Scope } from '@teambit/legacy.scope';
 import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { DetachedHeads } from './detach-heads';
+const defaultDetachedSetHead = DetachedHeads.prototype.setHead;
+const defaultDetachedClearCurrent = DetachedHeads.prototype.clearCurrent;
+import { hasDefaultSnapshotMethods } from '../objects/rust-snapshot';
 
 type State = {
   versions?: {
@@ -731,6 +734,27 @@ export default class Component extends BitObject {
   }
 
   // eslint-disable-next-line complexity
+  /** Only ordinary mainline mutation methods may apply a native snapshot policy. */
+  canAddSnapshotVersionNatively(version: Version): boolean {
+    return (
+      hasDefaultSnapshotMethods(this, [
+        'addVersion',
+        'getHead',
+        'getRef',
+        'hasTag',
+        'setHead',
+        'setVersion',
+        'markVersionAsLocal',
+        'toBuffer',
+        'hash',
+      ]) &&
+      hasDefaultSnapshotMethods(version, ['hash', 'toBuffer', 'addAsOnlyParent']) &&
+      this.detachedHeads.setHead === defaultDetachedSetHead &&
+      this.detachedHeads.clearCurrent === defaultDetachedClearCurrent &&
+      !Object.hasOwn(version, 'isLegacy')
+    );
+  }
+
   addVersion(
     version: Version,
     versionToAdd: string,

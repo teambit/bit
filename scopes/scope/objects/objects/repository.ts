@@ -23,7 +23,7 @@ import {
   typesObj,
 } from '@teambit/legacy.scope';
 import type { IndexType, IndexItem } from './scope-index';
-import { ScopeIndex } from './scope-index';
+import { ScopeIndex, canPersistSnapshotIndexNatively } from './scope-index';
 import BitObject from './object';
 import type { ObjectItem, RawObjectsMap, CompressedObject } from './object-list';
 import { ObjectList } from './object-list';
@@ -31,6 +31,7 @@ import BitRawObject from './raw-object';
 import Ref from './ref';
 import { nativeObjectDirectory, nativeTraversalEnabled } from './rust-object-directory';
 import { NativeImportOperation } from './rust-object-operation';
+import { persistRustSnapshotObjects, createRustSnapshotIndexOperation } from './rust-snapshot';
 import { resolveRustObjectImportExecutable } from './rust-object-discovery';
 import { nativeInventoryEnabled, nativeObjectExists } from './rust-object-inventory';
 import {
@@ -945,8 +946,9 @@ export default class Repository {
     logger.trace(`Repository.writeObjectsToTheFS: started writing ${count} objects`);
     const concurrency = concurrentIOLimit();
     const chownOptions = await this.getChownOptions();
+    const completed = await persistRustSnapshotObjects(this, objects, rawObjects, chownOptions);
     await pMapPool(
-      objects,
+      completed ? objects.slice(completed) : objects,
       async (obj) => {
         const operation = this.getNativeImportOperation();
         if (
@@ -983,8 +985,17 @@ export default class Repository {
     );
     logger.trace(`Repository.writeObjectsToTheFS: completed writing ${count} objects`);
 
-    const added = await this.scopeIndex.addManyForImport(objects, this.getNativeImportOperation());
-    if (added) await this.scopeIndex.write();
+    const snapshot = createRustSnapshotIndexOperation(this, chownOptions);
+    const added = await this.scopeIndex.addManyForImport(objects, snapshot || this.getNativeImportOperation());
+    if (added) {
+      const previous = this.scopeIndex.nativeSnapshotOperation;
+      try {
+        this.scopeIndex.nativeSnapshotOperation = snapshot;
+        await this.scopeIndex.write();
+      } finally {
+        this.scopeIndex.nativeSnapshotOperation = previous;
+      }
+    }
   }
 
   async withNativeImportOperation<T>(run: () => Promise<T>): Promise<T> {
@@ -1065,6 +1076,16 @@ export default class Repository {
   async getNativeSourceStoreOptions(): Promise<{ objectsDirectory: string; owner: ObjectChownOptions } | undefined> {
     if (!this.isNativeSourceStoreEligible()) return undefined;
     return { objectsDirectory: path.resolve(this.getPath()), owner: await this.getChownOptions() };
+  }
+
+  /** Snapshot writes retain canonical repository policy and filesystem transforms. */
+  canPersistSnapshotsNatively(): boolean {
+    return (
+      this.isNativeSourceStoreEligible() &&
+      this.canWriteMutableObjectsNatively() &&
+      hasDefaultSnapshotRepositoryMethods(this) &&
+      canPersistSnapshotIndexNatively(this.scopeIndex, this.getPath())
+    );
   }
 
   canWriteMutableObjectsNatively(): boolean {
@@ -1220,6 +1241,21 @@ export default class Repository {
     const hash = ref.toString();
     return path.join(hash.slice(0, 2), hash.slice(2));
   }
+}
+
+const snapshotRepositoryDefaults = [
+  'writeObjectsToTheFS',
+  '_writeOne',
+  'objectPath',
+  'writeObjectFile',
+  'hashPath',
+  'getNativeSourceStoreOptions',
+  'getChownOptions',
+  'getPath',
+].map((name) => [name, Repository.prototype[name]] as const);
+
+function hasDefaultSnapshotRepositoryMethods(repository: Repository): boolean {
+  return snapshotRepositoryDefaults.every(([name, method]) => repository[name] === method);
 }
 
 async function removeFile(filePath: string, propagateDirs = false): Promise<boolean> {
