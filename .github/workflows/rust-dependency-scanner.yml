@@ -6,6 +6,8 @@ on:
     paths:
       - 'native/**'
       - 'scopes/component/sources/**'
+      - 'scopes/component/component-writer/**'
+      - 'scopes/scope/importer/**'
       - 'components/legacy/scope/objects-fetcher/**'
       - 'scopes/scope/objects/objects/repository.ts'
       - 'scopes/scope/objects/objects/object.ts'
@@ -50,6 +52,8 @@ on:
     paths:
       - 'native/**'
       - 'scopes/component/sources/**'
+      - 'scopes/component/component-writer/**'
+      - 'scopes/scope/importer/**'
       - 'components/legacy/scope/objects-fetcher/**'
       - 'scopes/scope/objects/objects/repository.ts'
       - 'scopes/scope/objects/objects/object.ts'
@@ -444,4 +448,6 @@ jobs:
           node --test scripts/rust-object-import/operation-model.test.cjs scripts/rust-object-import/platform-metadata.test.cjs
           node --test scripts/rust-object-import/workspace-materialization.test.cjs
           BIT_TEST_MATERIALIZATION_COMPILED=1 node --test scripts/rust-object-import/workspace-materialization.test.cjs
+          node --test scripts/rust-object-import/workspace-persistence.test.cjs
+          BIT_TEST_MATERIALIZATION_COMPILED=1 node --test scripts/rust-object-import/workspace-persistence.test.cjs
           node scripts/rust-object-import/canonical-model-tests.cjs

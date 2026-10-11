@@ -14,7 +14,7 @@ let active = 0;
 type ProjectedFile = { filename: Buffer; contents: Buffer; overwrite: boolean };
 type Result = { version: number; id: number; completed: number; skipped: number[]; failed: boolean };
 
-class MaterializationSession {
+export class MaterializationSession {
   private readonly child: ChildProcessWithoutNullStreams;
   private readonly closed: Promise<void>;
   private pending = Buffer.alloc(0);
@@ -44,18 +44,26 @@ class MaterializationSession {
   }
 
   write(files: ProjectedFile[]): Promise<number | undefined> {
+    return this.request((id) => frame(id, files), files.length);
+  }
+
+  request(build: (id: number) => Buffer, count: number): Promise<number | undefined> {
     if (this.stopped) return Promise.resolve(undefined);
     const id = ++this.sequence;
     return new Promise((resolve) => {
-      this.waiting = { id, count: files.length, resolve };
+      this.waiting = { id, count, resolve };
       this.deadline = setTimeout(() => this.stop(), 120000);
-      this.child.stdin.write(frame(id, files));
+      this.child.stdin.write(build(id));
     });
   }
 
   async dispose(): Promise<void> {
     this.stop();
     await this.closed;
+  }
+
+  get usable(): boolean {
+    return !this.stopped;
   }
 
   private stop() {
@@ -94,26 +102,47 @@ export async function persistWorkspaceFiles(files: AbstractVinyl[], concurrency:
     return false;
   const snapshot = files.slice();
   if (!hasNativeChunk(snapshot, concurrency)) return false;
+  const lease = acquireWorkspaceSession();
+  if (!lease) return false;
+  try {
+    await persistFilesInSession(snapshot, concurrency, lease.session);
+    return true;
+  } finally {
+    await lease.release();
+  }
+}
+
+export function acquireWorkspaceSession():
+  | { session: MaterializationSession; executable: string; release: () => Promise<void> }
+  | undefined {
+  if (active >= 4) return undefined;
   const executable = resolveRustObjectImportExecutable();
-  if (!executable) return false;
-  active++;
+  if (!executable) return undefined;
   let session: MaterializationSession;
   try {
     session = new MaterializationSession(executable);
   } catch {
-    active--;
-    return false;
+    return undefined;
   }
-  try {
-    await persist(snapshot, concurrency, session);
-    return true;
-  } finally {
-    await session.dispose();
-    active--;
-  }
+  active++;
+  let released = false;
+  return {
+    session,
+    executable,
+    async release() {
+      if (released) return;
+      released = true;
+      try {
+        await session.dispose();
+      } finally {
+        active--;
+      }
+    },
+  };
 }
 
-function hasNativeChunk(files: AbstractVinyl[], concurrency: number): boolean {
+export function hasNativeChunk(files: AbstractVinyl[], concurrency: number): boolean {
+  if (!(concurrency >= 1)) return false;
   const width = Number.isFinite(concurrency) ? Math.floor(concurrency) : files.length;
   for (let start = 0; start < files.length; start += width) {
     if (files.slice(start, start + width).every(eligible)) return true;
@@ -121,7 +150,15 @@ function hasNativeChunk(files: AbstractVinyl[], concurrency: number): boolean {
   return false;
 }
 
-async function persist(files: AbstractVinyl[], concurrency: number, session: MaterializationSession) {
+export async function persistFilesInSession(
+  files: AbstractVinyl[],
+  concurrency: number,
+  session: MaterializationSession
+) {
+  if (!(concurrency >= 1)) {
+    await pMapPool(files, (file) => file.write(), { concurrency });
+    return;
+  }
   // Preserve pMapPool's failure boundary: a rejected chunk must never start
   // files in the next configured concurrency chunk.
   const width = Number.isFinite(concurrency) ? Math.floor(concurrency) : files.length;

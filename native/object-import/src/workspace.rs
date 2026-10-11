@@ -1,3 +1,5 @@
+pub(crate) mod actions;
+
 use std::{
     collections::HashSet,
     fs::{self, OpenOptions},

@@ -16,3 +16,5 @@ export class RemovePath {
     return fs.remove(this.path);
   }
 }
+
+export const defaultRemovePath = RemovePath.prototype.persistToFS;

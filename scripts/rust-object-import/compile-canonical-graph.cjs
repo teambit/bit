@@ -21,6 +21,8 @@ for (const args of [
     'teambit.scope/network',
     'teambit.scope/scope',
     'teambit.component/sources',
+    'teambit.component/component-writer',
+    'teambit.scope/importer',
   ],
 ])
   cp.execFileSync(executable, [...prefix, ...args], { stdio: 'inherit' });

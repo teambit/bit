@@ -20,6 +20,7 @@ const metrics = {
   version: { serializedBytes: 0, serializedObjects: 0 },
   mutableFrames: { counts: {}, serializedBytes: 0 },
   materialization: { frames: 0, files: 0, bytes: 0, completed: 0, skipped: 0, failed: 0 },
+  persistence: { helpers: 0, frames: 0, actions: 0, completed: 0, failed: 0, kinds: {} },
   inflation: { incoming: 0, repository: 0 },
   receivedObjects: 0,
   receivedCompressedBytes: 0,
@@ -40,7 +41,7 @@ const metrics = {
   tar: { operations: 0, objects: 0, nativeSources: 0, fallbacks: 0, batches: 0 },
   modules: {},
 };
-// Observe BWM1 wire acknowledgements without wrapping writer methods whose
+// Observe workspace wire acknowledgements without wrapping writer methods whose
 // identities decide native eligibility. This preload is excluded from timing.
 if (output && process.pid === owner) {
   const childProcess = require('node:child_process');
@@ -49,14 +50,31 @@ if (output && process.pid === owner) {
     const child = spawn.apply(this, args);
     if (!child.stdin || !child.stdout) return child;
     let workspace = false;
+    const requests = [];
     let pending = '';
     const write = child.stdin.write;
     child.stdin.write = function (bytes, ...rest) {
-      if (Buffer.isBuffer(bytes) && bytes.subarray(0, 4).toString() === 'BWM1') {
+      const magic = Buffer.isBuffer(bytes) ? bytes.subarray(0, 4).toString() : '';
+      if (magic === 'BWM1' || magic === 'BWP1') {
+        if (!workspace) metrics.persistence.helpers++;
         workspace = true;
-        metrics.materialization.frames++;
-        metrics.materialization.files += bytes.readUInt32BE(8);
-        metrics.materialization.bytes += bytes.length;
+        requests.push(magic);
+        if (magic === 'BWM1') {
+          metrics.materialization.frames++;
+          metrics.materialization.files += bytes.readUInt32BE(8);
+          metrics.materialization.bytes += bytes.length;
+        } else {
+          metrics.persistence.frames++;
+          const count = bytes.readUInt32BE(8);
+          metrics.persistence.actions += count;
+          let offset = 12;
+          for (let index = 0; index < count; index++) {
+            const kind = ['remove', 'empty', 'link', 'symlink'][bytes.readUInt32BE(offset)];
+            metrics.persistence.kinds[kind] = (metrics.persistence.kinds[kind] || 0) + 1;
+            offset += 4;
+            for (let filename = 0; filename < 2; filename++) offset += 4 + bytes.readUInt32BE(offset);
+          }
+        }
       }
       return write.call(this, bytes, ...rest);
     };
@@ -65,13 +83,14 @@ if (output && process.pid === owner) {
       pending += bytes.toString();
       let newline;
       while ((newline = pending.indexOf('\n')) >= 0) {
+        const metric = requests.shift() === 'BWM1' ? metrics.materialization : metrics.persistence;
         try {
           const response = JSON.parse(pending.slice(0, newline));
-          metrics.materialization.completed += response.completed || 0;
-          metrics.materialization.skipped += response.skipped?.length || 0;
-          metrics.materialization.failed += Number(response.failed === true);
+          metric.completed += response.completed || 0;
+          if ('skipped' in metric) metric.skipped += response.skipped?.length || 0;
+          metric.failed += Number(response.failed === true);
         } catch {
-          metrics.materialization.failed++;
+          metric.failed++;
         }
         pending = pending.slice(newline + 1);
       }

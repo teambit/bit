@@ -1,4 +1,5 @@
 import { BitError } from '@teambit/bit-error';
+import { withWorkspacePersistence } from '@teambit/component.sources';
 import type { LaneId } from '@teambit/lane-id';
 import pMapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
@@ -136,6 +137,10 @@ export default class ImportComponents {
   }
 
   async importComponents(): Promise<ImportResult> {
+    return withWorkspacePersistence(() => this.importWithinPersistence());
+  }
+
+  private async importWithinPersistence(): Promise<ImportResult> {
     let result;
     this.logger.setStatusLine(BEFORE_IMPORT_ACTION);
     const startTime = process.hrtime();

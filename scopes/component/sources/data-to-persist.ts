@@ -8,8 +8,14 @@ import { removeFilesAndEmptyDirsRecursively } from './remove-files-and-empty-dir
 import type AbstractVinyl from './abstract-vinyl';
 import type { RemovePath } from './remove-path';
 import { persistWorkspaceFiles } from './rust-workspace-materializer';
+import { persistWorkspaceOperation } from './rust-workspace-persistence';
 
 export class DataToPersist {
+  private static readonly defaultWorkspacePhases = {
+    _deletePathsFromFS: DataToPersist.prototype._deletePathsFromFS,
+    _persistFilesToFS: DataToPersist.prototype._persistFilesToFS,
+    _persistSymlinksToFS: DataToPersist.prototype._persistSymlinksToFS,
+  };
   files: AbstractVinyl[];
   symlinks: Symlink[];
   remove: RemovePath[];
@@ -65,6 +71,11 @@ export class DataToPersist {
   async persistAllToFS() {
     this._log();
     this._validateAbsolute();
+    if (
+      process.env.BIT_RUST_WORKSPACE_PERSISTENCE === 'on' &&
+      (await persistWorkspaceOperation(this, DataToPersist.defaultWorkspacePhases))
+    )
+      return;
     // the order is super important. first remove, then create and finally symlink
     await this._deletePathsFromFS();
     await this._persistFilesToFS();

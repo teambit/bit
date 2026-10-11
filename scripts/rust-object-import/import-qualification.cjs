@@ -55,6 +55,8 @@ assert.ok(
         'tar-operation',
         'workspace-node',
         'workspace-native',
+        'persistence-node',
+        'persistence-native',
         'tar',
         'tar-staged',
         'tar-baseline',
@@ -80,7 +82,14 @@ assert.ok(
 assert.ok(!modes.includes('tar-baseline') || baselineCli, 'tar-baseline requires a separate compiled baseline CLI');
 async function command(directory, ids, requestedMode, allHistory, traceFile, cpuProfileFile) {
   const commandRoot = requestedMode === 'tar-baseline' ? baselineCli : cliRoot;
-  const mode = ['tar-baseline', 'tar-operation', 'workspace-node', 'workspace-native'].includes(requestedMode)
+  const mode = [
+    'tar-baseline',
+    'tar-operation',
+    'workspace-node',
+    'workspace-native',
+    'persistence-node',
+    'persistence-native',
+  ].includes(requestedMode)
     ? 'tar'
     : requestedMode;
   const commandHelper = requestedMode === 'tar-baseline' ? baselineHelper : helper;
@@ -100,6 +109,11 @@ async function command(directory, ids, requestedMode, allHistory, traceFile, cpu
   const env = {
     ...process.env,
     BIT_RUST_WORKSPACE_MATERIALIZATION: requestedMode === 'workspace-native' ? 'on' : 'off',
+    BIT_RUST_WORKSPACE_PERSISTENCE:
+      requestedMode === 'persistence-native' ||
+      (['missing', 'crash'].includes(requestedMode) && modes.includes('persistence-native'))
+        ? 'on'
+        : 'off',
     BIT_RUST_OBJECT_IMPORT:
       mode === 'native' ||
       mode === 'tar' ||
@@ -487,14 +501,21 @@ async function workspace(directory, manifest) {
               'overlapping imports require native merge coverage'
             );
         }
-        if (mode === 'workspace-native') {
+        if (mode === 'workspace-native' || mode === 'persistence-native') {
           assert.ok(commandKind !== 'objects', 'workspace qualification must materialize files');
           assert.ok(cold.trace.materialization.files > 0, 'actual workspace files must reach Rust');
           assert.equal(cold.trace.materialization.completed, cold.trace.materialization.files);
           assert.equal(cold.trace.materialization.failed, 0, 'ordinary fixture must not hide write fallback');
           assert.ok(cold.trace.materialization.completed >= cold.workspaceVerification.files);
         }
-        if (mode === 'workspace-node') assert.equal(cold.trace.materialization.files, 0);
+        if (mode === 'workspace-node' || mode === 'persistence-node') assert.equal(cold.trace.materialization.files, 0);
+        if (mode === 'persistence-native') {
+          if (commandKind === 'install')
+            assert.ok(cold.trace.persistence.kinds.link > 0, 'actual installation links must reach Rust');
+          assert.equal(cold.trace.persistence.completed, cold.trace.persistence.actions);
+          assert.equal(cold.trace.persistence.failed, 0, 'ordinary fixture must not hide action fallback');
+          assert.ok(cold.trace.persistence.helpers >= 1 && cold.trace.persistence.helpers <= 4);
+        }
         const incomingVersions = Object.values(manifest.hashes).filter((object) => object.type === 'Version').length;
         if (incomingVersions) {
           assert.ok(cold.trace.stages.versionParseOther?.calls >= incomingVersions, 'Version parsing must be traced');

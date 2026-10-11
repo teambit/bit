@@ -11,10 +11,10 @@ use super::serve;
 
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 
-struct Directory(PathBuf);
+pub(super) struct Directory(pub(super) PathBuf);
 
 impl Directory {
-    fn new() -> Self {
+    pub(super) fn new() -> Self {
         let id = NEXT.fetch_add(1, Ordering::Relaxed);
         let path = std::env::temp_dir().join(format!("bit-workspace-{}-{id}", std::process::id()));
         fs::create_dir(&path).unwrap();

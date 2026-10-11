@@ -6,6 +6,7 @@ import SourceFile from './source-file';
 export { AbstractVinyl, Dist, License, SourceFile };
 export { PackageJsonFile } from './package-json-file';
 export { DataToPersist } from './data-to-persist';
+export { withWorkspacePersistence } from './rust-workspace-persistence';
 export { RemovePath } from './remove-path';
 export { ArtifactVinyl } from './artifact';
 export {
