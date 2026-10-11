@@ -442,7 +442,11 @@ export class Http implements Network {
     signal?.throwIfAborted();
     logger.debug(`Http.fetch got a response, ${scopeData}, status ${res.status}, statusText ${res.statusText}`);
     await this.throwForNonOkStatus(res);
-    const objectListReadable = ObjectList.fromTarToObjectStream(res.body, process.env.BIT_RUST_OBJECT_TAR === 'on');
+    const objectListReadable = ObjectList.fromTarToObjectStream(
+      res.body,
+      process.env.BIT_RUST_OBJECT_TAR === 'on' ||
+        (process.env.BIT_RUST_CLIENT_VCS === 'on' && process.env.BIT_RUST_OBJECT_TAR !== 'off')
+    );
 
     return objectListReadable;
   }
