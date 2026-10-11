@@ -24,6 +24,13 @@ for (const args of [
     'teambit.component/component-writer',
     'teambit.scope/importer',
     'teambit.component/checkout',
+    'teambit.legacy/consumer',
+    'teambit.legacy/consumer-component',
+    'teambit.legacy/bit-map',
+    'teambit.legacy/component-diff',
+    'teambit.component/status',
+    'teambit.component/component-compare',
+    'teambit.workspace/workspace',
   ],
 ])
   cp.execFileSync(executable, [...prefix, ...args], { stdio: 'inherit' });

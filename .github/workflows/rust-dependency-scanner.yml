@@ -8,6 +8,13 @@ on:
       - 'scopes/component/sources/**'
       - 'scopes/component/component-writer/**'
       - 'scopes/component/checkout/**'
+      - 'scopes/component/status/**'
+      - 'scopes/component/component-compare/**'
+      - 'scopes/workspace/workspace/**'
+      - 'components/legacy/bit-map/**'
+      - 'components/legacy/consumer/**'
+      - 'components/legacy/consumer-component/**'
+      - 'components/legacy/component-diff/**'
       - 'scopes/scope/importer/**'
       - 'components/legacy/scope/objects-fetcher/**'
       - 'scopes/scope/objects/objects/repository.ts'
@@ -55,6 +62,13 @@ on:
       - 'scopes/component/sources/**'
       - 'scopes/component/component-writer/**'
       - 'scopes/component/checkout/**'
+      - 'scopes/component/status/**'
+      - 'scopes/component/component-compare/**'
+      - 'scopes/workspace/workspace/**'
+      - 'components/legacy/bit-map/**'
+      - 'components/legacy/consumer/**'
+      - 'components/legacy/consumer-component/**'
+      - 'components/legacy/component-diff/**'
       - 'scopes/scope/importer/**'
       - 'components/legacy/scope/objects-fetcher/**'
       - 'scopes/scope/objects/objects/repository.ts'
@@ -454,4 +468,6 @@ jobs:
           BIT_TEST_MATERIALIZATION_COMPILED=1 node --test scripts/rust-object-import/workspace-persistence.test.cjs
           node --test scripts/rust-object-import/rust-checkout-source.test.cjs scripts/rust-object-import/checkout.test.cjs
           BIT_TEST_CHECKOUT_COMPILED=1 node --test scripts/rust-object-import/checkout.test.cjs
+          node --test scripts/rust-object-import/workspace-comparison.test.cjs
+          BIT_TEST_WORKSPACE_COMPARISON_COMPILED=1 node --test scripts/rust-object-import/workspace-comparison.test.cjs
           node scripts/rust-object-import/canonical-model-tests.cjs

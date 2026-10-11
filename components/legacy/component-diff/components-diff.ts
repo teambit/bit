@@ -4,7 +4,8 @@ import { uniq } from 'lodash';
 import type { ComponentID } from '@teambit/component-id';
 import { diffFiles } from './diff-files';
 import type { PathOsBased } from '@teambit/toolbox.path.path';
-import type { SourceFile } from '@teambit/component.sources';
+import { getRustFilesDiff, type SourceFile } from '@teambit/component.sources';
+import { getGitExecutablePath } from '@teambit/git.modules.git-executable';
 
 export type DiffStatus = 'MODIFIED' | 'UNCHANGED' | 'NEW' | 'DELETED';
 
@@ -42,6 +43,10 @@ export async function getOneFileDiff(
   color = true
 ): Promise<string> {
   const fileDiff = await diffFiles(filePathA, filePathB, color);
+  return formatFileDiff(fileDiff, fileALabel, fileBLabel, fileOrFieldName);
+}
+
+function formatFileDiff(fileDiff: string, fileALabel: string, fileBLabel: string, fileOrFieldName: string): string {
   if (!fileDiff) return '';
   const diffStartsString = '--- '; // the part before this string is not needed for our purpose
   const diffStart = fileDiff.indexOf(diffStartsString);
@@ -65,6 +70,33 @@ export async function getFilesDiff(
   fileNameAttribute = 'relative',
   color = true
 ): Promise<FileDiff[]> {
+  const native =
+    process.env.BIT_RUST_CLIENT_VCS === 'on'
+      ? await getRustFilesDiff(filesA, filesB, fileNameAttribute, color, getGitExecutablePath())
+      : undefined;
+  if (native) {
+    const leftLabel = filesAVersion === filesBVersion ? `${filesAVersion} original` : filesAVersion;
+    const rightLabel = filesAVersion === filesBVersion ? `${filesBVersion} modified` : filesBVersion;
+    return native.map((file) => {
+      const diffOutput = file.same
+        ? ''
+        : formatFileDiff(file.rawDiff.replace(/\r?\n$/, ''), leftLabel, rightLabel, file.relativePath);
+      const status: DiffStatus = !diffOutput
+        ? 'UNCHANGED'
+        : !file.fromContent
+          ? 'NEW'
+          : !file.toContent
+            ? 'DELETED'
+            : 'MODIFIED';
+      return {
+        filePath: file.relativePath,
+        diffOutput,
+        status,
+        fromContent: file.fromContent,
+        toContent: file.toContent,
+      };
+    });
+  }
   const filesAPaths = filesA.map((f) => f[fileNameAttribute]);
   const filesBPaths = filesB.map((f) => f[fileNameAttribute]);
   const allPaths = uniq(filesAPaths.concat(filesBPaths));

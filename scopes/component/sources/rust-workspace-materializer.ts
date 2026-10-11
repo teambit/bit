@@ -34,6 +34,7 @@ export class MaterializationSession {
     resolve: (completed?: number) => void;
     validate?: (response: Result) => boolean;
     maximum: number;
+    variableCount: boolean;
   };
   private deadline?: NodeJS.Timeout;
   private killTimer?: NodeJS.Timeout;
@@ -65,12 +66,13 @@ export class MaterializationSession {
     build: (id: number) => Buffer,
     count: number,
     validate?: (response: Result) => boolean,
-    maximum = MAX_RESPONSE
+    maximum = MAX_RESPONSE,
+    variableCount = false
   ): Promise<number | undefined> {
     if (this.stopped) return Promise.resolve(undefined);
     const id = ++this.sequence;
     return new Promise((resolve) => {
-      this.waiting = { id, count, resolve, validate, maximum };
+      this.waiting = { id, count, resolve, validate, maximum, variableCount };
       this.deadline = setTimeout(() => this.stop(), 120000);
       this.child.stdin.write(build(id));
     });
@@ -106,7 +108,7 @@ export class MaterializationSession {
     } catch {
       return this.stop();
     }
-    if (!validResult(response, this.waiting.id, this.waiting.count)) return this.stop();
+    if (!validResult(response, this.waiting.id, this.waiting.count, this.waiting.variableCount)) return this.stop();
     try {
       if (this.waiting.validate && !this.waiting.validate(response)) return this.stop();
     } catch {
@@ -333,7 +335,7 @@ function frame(id: number, files: ProjectedFile[]): Buffer {
   return Buffer.concat(parts);
 }
 
-function validResult(response: Result, id: number, count: number): boolean {
+function validResult(response: Result, id: number, count: number, variableCount: boolean): boolean {
   if (
     !response ||
     response.version !== 1 ||
@@ -345,7 +347,7 @@ function validResult(response: Result, id: number, count: number): boolean {
     return false;
   if (
     typeof response.failed !== 'boolean' ||
-    response.failed !== response.completed < count ||
+    (variableCount ? response.failed && response.completed !== 0 : response.failed !== response.completed < count) ||
     !Array.isArray(response.skipped) ||
     response.skipped.length !== 0
   )

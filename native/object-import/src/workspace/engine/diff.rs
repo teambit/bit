@@ -1,0 +1,208 @@
+use super::{MAX_OUTPUT, MAX_RAW, count, expected_hash, hash, invalid, path, read};
+use rayon::prelude::*;
+use serde::{Deserialize, Serialize};
+use std::{
+    fs,
+    io::{self, Read},
+    path::{Path, PathBuf},
+    process::{Child, Command, Stdio},
+    sync::atomic::{AtomicUsize, Ordering},
+};
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(crate) struct InputFile {
+    relative_path: String,
+    left: Option<Input>,
+    right: Option<Input>,
+}
+#[derive(Deserialize)]
+#[serde(
+    tag = "kind",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase",
+    deny_unknown_fields
+)]
+enum Input {
+    Source { objects_directory: PathBuf, hash: String },
+    Workspace { path: PathBuf, hash: String },
+}
+struct Prepared {
+    relative_path: String,
+    left: Vec<u8>,
+    right: Vec<u8>,
+    same: bool,
+}
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(super) struct FileDiff {
+    relative_path: String,
+    from_content: String,
+    to_content: String,
+    raw_diff: String,
+    same: bool,
+}
+static NEXT: AtomicUsize = AtomicUsize::new(0);
+struct Directory(PathBuf);
+impl Directory {
+    fn new() -> io::Result<Self> {
+        for _ in 0..64 {
+            let directory = std::env::temp_dir()
+                .join(format!(
+                    "bit-workspace-diff-{}-{}",
+                    std::process::id(),
+                    NEXT.fetch_add(1, Ordering::Relaxed),
+                ));
+            match fs::create_dir(&directory) {
+                Ok(()) => return Ok(Self(directory)),
+                Err(error) if error.kind() == io::ErrorKind::AlreadyExists => continue,
+                Err(error) => return Err(error),
+            }
+        }
+        Err(invalid("workspace diff temporary directory unavailable"))
+    }
+}
+impl Drop for Directory {
+    fn drop(&mut self) {
+        let _cleanup = fs::remove_dir_all(&self.0);
+    }
+}
+struct Process(Child);
+impl Drop for Process {
+    fn drop(&mut self) {
+        let _kill = self.0.kill();
+        let _wait = self.0.wait();
+    }
+}
+
+pub(super) fn diff(files: &[InputFile], git: &str, color: bool) -> io::Result<Vec<FileDiff>> {
+    count(files.len())?;
+    if git.is_empty() || git.len() > 32768 || git.contains('\0') {
+        return Err(invalid("workspace invalid Git executable"));
+    }
+    let prepared = preflight(files)?;
+    if prepared.is_empty() {
+        return Ok(Vec::new());
+    }
+    let directory = Directory::new()?;
+    let output = AtomicUsize::new(0);
+    let pool = rayon::ThreadPoolBuilder::new()
+        .num_threads(prepared.len().min(4))
+        .build()
+        .map_err(io::Error::other)?;
+    pool.install(|| {
+        prepared
+            .par_iter()
+            .enumerate()
+            .map(|(index, file)| one(file, index, &directory.0, git, color, &output))
+            .collect()
+    })
+}
+fn preflight(files: &[InputFile]) -> io::Result<Vec<Prepared>> {
+    let mut total = 0;
+    let mut compressed = 0;
+    let mut prepared = Vec::with_capacity(files.len());
+    for file in files {
+        if file.relative_path.len() > 32768 || file.relative_path.contains('\0') {
+            return Err(invalid("workspace invalid relative path"));
+        }
+        let left = input(file.left.as_ref(), &mut total, &mut compressed)?;
+        let right = input(file.right.as_ref(), &mut total, &mut compressed)?;
+        let left_hash = file.left
+            .as_ref()
+            .map(|_| hash(&crate::checkout::eol::normalize(left.clone(), false)));
+        let right_hash = file.right
+            .as_ref()
+            .map(|_| hash(&crate::checkout::eol::normalize(right.clone(), false)));
+        prepared.push(Prepared {
+            relative_path: file.relative_path.clone(),
+            left,
+            right,
+            same: left_hash == right_hash,
+        });
+    }
+    Ok(prepared)
+}
+fn input(input: Option<&Input>, total: &mut usize, compressed: &mut usize) -> io::Result<Vec<u8>> {
+    let Some(input) = input else {
+        return Ok(Vec::new());
+    };
+    let bytes = match input {
+        Input::Source { objects_directory, hash } => {
+            path(objects_directory)?;
+            crate::checkout::repository::source(
+                objects_directory,
+                expected_hash(hash)?,
+                MAX_RAW - *total,
+                compressed,
+            )?
+        }
+        Input::Workspace { path, hash: expected } => {
+            expected_hash(expected)?;
+            let bytes = read::raw(path, MAX_RAW - *total)?;
+            if hash(&bytes) != *expected {
+                return Err(invalid("workspace snapshot changed"));
+            }
+            *total += bytes.len();
+            return Ok(read::strip_bom(bytes));
+        }
+    };
+    *total += bytes.len();
+    Ok(bytes)
+}
+fn one(
+    file: &Prepared,
+    index: usize,
+    directory: &Path,
+    git: &str,
+    color: bool,
+    output: &AtomicUsize,
+) -> io::Result<FileDiff> {
+    let raw_diff = if file.same {
+        String::new()
+    } else {
+        let left = directory.join(format!("{index}-left.js"));
+        let right = directory.join(format!("{index}-right.js"));
+        fs::write(&left, &file.left)?;
+        fs::write(&right, &file.right)?;
+        git_diff(git, &left, &right, color)?
+    };
+    if output.fetch_add(raw_diff.len(), Ordering::Relaxed) + raw_diff.len() > MAX_OUTPUT {
+        return Err(invalid("workspace Git output limit"));
+    }
+    Ok(FileDiff {
+        relative_path: file.relative_path.clone(),
+        from_content: String::from_utf8_lossy(&file.left).into_owned(),
+        to_content: String::from_utf8_lossy(&file.right).into_owned(),
+        raw_diff,
+        same: file.same,
+    })
+}
+fn git_diff(git: &str, left: &Path, right: &Path, color: bool) -> io::Result<String> {
+    let mut command = Command::new(git);
+    command.args(["diff", "--no-index"]);
+    if color {
+        command.arg("--color");
+    }
+    command
+        .arg(left)
+        .arg(right)
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null());
+    let mut child = Process(command.spawn()?);
+    let mut bytes = Vec::new();
+    child.0.stdout
+        .take()
+        .ok_or_else(|| invalid("workspace Git stdout missing"))?
+        .take((MAX_RAW + 1) as u64)
+        .read_to_end(&mut bytes)?;
+    if bytes.len() > MAX_RAW {
+        return Err(invalid("workspace Git stdout limit"));
+    }
+    let status = child.0.wait()?;
+    if status.code().is_none() || (!status.success() && bytes.is_empty()) {
+        return Err(invalid("workspace Git diff failed"));
+    }
+    Ok(String::from_utf8_lossy(&bytes).into_owned())
+}

@@ -13,7 +13,12 @@ import {
   Dependencies,
   Dependency,
 } from '@teambit/legacy.consumer-component';
-import { getRefsFromExtensions, SourceFile } from '@teambit/component.sources';
+import {
+  getRefsFromExtensions,
+  SourceFile,
+  prepareRustCheckoutSources,
+  isRustSourceReadScope,
+} from '@teambit/component.sources';
 import type { ComponentOverridesData } from '@teambit/legacy.consumer-config';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { Doclet } from '@teambit/semantics.doc-parser';
@@ -807,7 +812,9 @@ export default class Version extends BitObject {
     this.parents = [];
   }
 
-  modelFilesToSourceFiles(repository: Repository): Promise<SourceFile[]> {
+  async modelFilesToSourceFiles(repository: Repository): Promise<SourceFile[]> {
+    const native = isRustSourceReadScope() ? await prepareRustCheckoutSources(this.files, repository) : undefined;
+    if (native) return native;
     return Promise.all(this.files.map((file) => SourceFile.loadFromSourceFileModel(file, repository)));
   }
 
@@ -825,4 +832,17 @@ export default class Version extends BitObject {
   validate(): void {
     validateVersionInstance(this);
   }
+}
+
+const defaultVersionId = Version.prototype.id;
+const defaultCalculateHash = Version.prototype.calculateHash;
+const defaultMakeHash = BitObject.makeHash;
+
+/** Native comparison must not bypass patched Version identity or hashing hooks. */
+export function canCompareVersionNatively(version: Version): boolean {
+  return (
+    version.id === defaultVersionId &&
+    version.calculateHash === defaultCalculateHash &&
+    BitObject.makeHash === defaultMakeHash
+  );
 }

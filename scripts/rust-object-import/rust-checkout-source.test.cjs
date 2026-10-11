@@ -5,7 +5,7 @@ const path = require('node:path');
 const { source, installed } = require('./load-source.cjs');
 const { Ref } = installed('@teambit/objects');
 const adapter = source('scopes/component/sources/rust-checkout-source.ts');
-const materializer = source('scopes/component/sources/rust-workspace-materializer.ts');
+const persistence = source('scopes/component/sources/rust-workspace-persistence.ts');
 
 function fixture(contents = Buffer.from('source\r\n')) {
   const hash = createHash('sha1').update(contents).digest('hex');
@@ -100,9 +100,9 @@ test('changing a model reference cannot reuse the descriptor for its old hash', 
 test('manifest mutations during native preflight fall back before producing deferred sources', async (t) => {
   const previousFlag = process.env.BIT_RUST_CLIENT_VCS;
   process.env.BIT_RUST_CLIENT_VCS = 'on';
-  const previousAcquire = materializer.acquireWorkspaceSession;
+  const previousScope = persistence.withWorkspaceSession;
   t.after(() => {
-    materializer.acquireWorkspaceSession = previousAcquire;
+    persistence.withWorkspaceSession = previousScope;
     if (previousFlag === undefined) delete process.env.BIT_RUST_CLIENT_VCS;
     else process.env.BIT_RUST_CLIENT_VCS = previousFlag;
   });
@@ -130,19 +130,20 @@ test('manifest mutations during native preflight fall back before producing defe
     const fixtureData = fixture();
     const models = [fixtureData.model];
     let released = false;
-    materializer.acquireWorkspaceSession = () => ({
-      session: {
-        request: async (build, count) => {
-          const frame = build(1);
-          assert.equal(frame.subarray(0, 4).toString(), 'BWC0');
-          mutate(models);
-          return count;
-        },
-      },
-      release: async () => {
+    persistence.withWorkspaceSession = async (action) => {
+      try {
+        return await action({
+          request: async (build, count) => {
+            const frame = build(1);
+            assert.equal(frame.subarray(0, 4).toString(), 'BWC0');
+            mutate(models);
+            return count;
+          },
+        });
+      } finally {
         released = true;
-      },
-    });
+      }
+    };
     assert.equal(await adapter.prepareRustCheckoutSources(models, fixtureData.repository), undefined);
     assert.equal(released, true);
     assert.equal(fixtureData.reads(), 0);
@@ -181,29 +182,30 @@ test('file status uses original bytes without hydrating target sources or conver
   assert.equal(fixtureData.reads(), 0);
 });
 
-test('preflight validates all source batches and reaps its helper without loading bodies in Node', async (t) => {
+test('preflight validates all source batches and leaves its session scope without loading bodies in Node', async (t) => {
   const fixtureData = fixture();
   const previousFlag = process.env.BIT_RUST_CLIENT_VCS;
   process.env.BIT_RUST_CLIENT_VCS = 'on';
-  const previousAcquire = materializer.acquireWorkspaceSession;
+  const previousScope = persistence.withWorkspaceSession;
   let released = 0;
   const counts = [];
-  materializer.acquireWorkspaceSession = () => ({
-    session: {
-      request: async (build, count) => {
-        const frame = build(counts.length + 1);
-        assert.equal(frame.subarray(0, 4).toString(), 'BWC0');
-        assert.equal(frame.readUInt32BE(8), count);
-        counts.push(count);
-        return count;
-      },
-    },
-    release: async () => {
+  persistence.withWorkspaceSession = async (action) => {
+    try {
+      return await action({
+        request: async (build, count) => {
+          const frame = build(counts.length + 1);
+          assert.equal(frame.subarray(0, 4).toString(), 'BWC0');
+          assert.equal(frame.readUInt32BE(8), count);
+          counts.push(count);
+          return count;
+        },
+      });
+    } finally {
       released++;
-    },
-  });
+    }
+  };
   t.after(() => {
-    materializer.acquireWorkspaceSession = previousAcquire;
+    persistence.withWorkspaceSession = previousScope;
     if (previousFlag === undefined) delete process.env.BIT_RUST_CLIENT_VCS;
     else process.env.BIT_RUST_CLIENT_VCS = previousFlag;
   });
@@ -213,12 +215,13 @@ test('preflight validates all source batches and reaps its helper without loadin
   assert.deepEqual(counts, [64, 1]);
   assert.equal(released, 1);
   assert.equal(fixtureData.reads(), 0);
-  materializer.acquireWorkspaceSession = () => ({
-    session: { request: async () => 0 },
-    release: async () => {
+  persistence.withWorkspaceSession = async (action) => {
+    try {
+      return await action({ request: async () => 0 });
+    } finally {
       released++;
-    },
-  });
+    }
+  };
   assert.equal(await adapter.prepareRustCheckoutSources(models, fixtureData.repository), undefined);
   assert.equal(released, 2);
   assert.equal(fixtureData.reads(), 0);

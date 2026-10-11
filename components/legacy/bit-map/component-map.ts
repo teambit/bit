@@ -1,5 +1,6 @@
 import * as path from 'path';
 import globby from 'globby';
+import { scanRustWorkspace, isWorkspacePersistenceScope } from '@teambit/component.sources';
 import ignore from 'ignore';
 import { pickBy, isNil, sortBy, isEmpty } from 'lodash';
 import type { ComponentID } from '@teambit/component-id';
@@ -577,20 +578,30 @@ export async function getFilesByDir(
   excludeDirs: PathLinux[] = [],
   trackAllFiles = false
 ): Promise<ComponentMapFile[]> {
-  const matches = await globby(pathJoinLinux(dir, '**'), {
-    cwd: consumerPath,
-    dot: true,
-    onlyFiles: true,
-    ignore: getScanIgnorePatterns(dir, excludeDirs),
-    // the workspace root is the one scan that spans the whole tree, where a symbolic link the user made
-    // may lead anywhere. what it points to is not the workspace's source, so the link is not followed -
-    // the add-time scan does not follow links either.
-    followSymbolicLinks: dir !== WORKSPACE_ROOT_DIR,
-    // every pattern here is an explicit glob. with expansion on, globby stats each ignore pattern
-    // (relative to the process cwd, not to `cwd`) to decide whether to expand it, and `.git/**`
-    // throws ENOTDIR wherever `.git` is a file - every git worktree.
-    expandDirectories: false,
-  });
+  const native =
+    process.env.BIT_RUST_CLIENT_VCS === 'on' && isWorkspacePersistenceScope() && !/[!*?{}[\]\\]/.test(dir)
+      ? await scanRustWorkspace(
+          path.resolve(consumerPath, dir),
+          excludeDirs.map((excluded) => path.resolve(consumerPath, excluded)),
+          dir === WORKSPACE_ROOT_DIR
+        )
+      : undefined;
+  const matches =
+    native?.map((filename) => pathNormalizeToLinux(path.relative(consumerPath, filename))) ||
+    (await globby(pathJoinLinux(dir, '**'), {
+      cwd: consumerPath,
+      dot: true,
+      onlyFiles: true,
+      ignore: getScanIgnorePatterns(dir, excludeDirs),
+      // the workspace root is the one scan that spans the whole tree, where a symbolic link the user made
+      // may lead anywhere. what it points to is not the workspace's source, so the link is not followed -
+      // the add-time scan does not follow links either.
+      followSymbolicLinks: dir !== WORKSPACE_ROOT_DIR,
+      // every pattern here is an explicit glob. with expansion on, globby stats each ignore pattern
+      // (relative to the process cwd, not to `cwd`) to decide whether to expand it, and `.git/**`
+      // throws ENOTDIR wherever `.git` is a file - every git worktree.
+      expandDirectories: false,
+    }));
   if (!matches.length) throw new ComponentNotFoundInPath(dir);
   const filteredMatches: string[] = await filterByIgnoreFiles(dir, consumerPath, gitIgnore, matches, trackAllFiles);
   // the paths are relative to the workspace. make them relative to the component's root-dir.
@@ -602,7 +613,8 @@ export async function getFilesByDir(
     : relativePathsLinux.filter((match) => !IGNORE_ROOT_ONLY_LIST.includes(match));
   const filteredByBitIgnore = await filterByOwnIgnoreFile(dir, consumerPath, filteredByIgnoredFromRoot);
   if (!filteredByBitIgnore.length) throw new IgnoredDirectory(dir);
-  return filteredByBitIgnore.map((relativePath) => ({
+  // Match ComponentMap.sort instead of asynchronous directory discovery order in both readers.
+  return filteredByBitIgnore.sort().map((relativePath) => ({
     relativePath,
     test: false,
     name: path.basename(relativePath),

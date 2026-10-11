@@ -26,6 +26,9 @@ const metrics = {
     preflight: { frames: 0, files: 0, completed: 0, failed: 0 },
     write: { frames: 0, files: 0, completed: 0, failed: 0 },
   },
+  workspace: Object.fromEntries(
+    ['scan', 'read', 'compare', 'diff'].map((kind) => [kind, { frames: 0, files: 0, completed: 0, failed: 0 }])
+  ),
   inflation: { incoming: 0, repository: 0 },
   receivedObjects: 0,
   receivedCompressedBytes: 0,
@@ -60,11 +63,16 @@ if (output && process.pid === owner) {
     const write = child.stdin.write;
     child.stdin.write = function (bytes, ...rest) {
       const magic = Buffer.isBuffer(bytes) ? bytes.subarray(0, 4).toString() : '';
-      if (['BWM1', 'BWP1', 'BWC0', 'BWC1', 'BCK1'].includes(magic)) {
+      if (['BWM1', 'BWP1', 'BWC0', 'BWC1', 'BCK1', 'BWS1'].includes(magic)) {
         if (!workspace) metrics.persistence.helpers++;
         workspace = true;
-        requests.push(magic);
-        if (magic === 'BWM1') {
+        const operation = magic === 'BWS1' ? JSON.parse(bytes.subarray(12).toString()) : undefined;
+        requests.push(operation ? `${magic}:${operation.kind}` : magic);
+        if (operation) {
+          const metric = metrics.workspace[operation.kind];
+          metric.frames++;
+          metric.files += operation.files?.length || (operation.kind === 'compare' ? 1 : 0);
+        } else if (magic === 'BWM1') {
           metrics.materialization.frames++;
           metrics.materialization.files += bytes.readUInt32BE(8);
           metrics.materialization.bytes += bytes.length;
@@ -99,8 +107,9 @@ if (output && process.pid === owner) {
       let newline;
       while ((newline = pending.indexOf('\n')) >= 0) {
         const magic = requests.shift();
-        const metric =
-          magic === 'BWM1'
+        const metric = magic?.startsWith('BWS1:')
+          ? metrics.workspace[magic.slice(5)]
+          : magic === 'BWM1'
             ? metrics.materialization
             : magic === 'BCK1'
               ? metrics.checkout.plan
@@ -112,6 +121,7 @@ if (output && process.pid === owner) {
         try {
           const response = JSON.parse(pending.slice(0, newline));
           metric.completed += response.completed || 0;
+          if (magic === 'BWS1:scan') metric.files += response.completed || 0;
           if ('skipped' in metric) metric.skipped += response.skipped?.length || 0;
           metric.failed += Number(response.failed === true);
         } catch {

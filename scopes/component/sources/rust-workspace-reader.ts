@@ -1,0 +1,208 @@
+import path from 'path';
+import { canHashSourceNatively } from '@teambit/objects';
+import type AbstractVinyl from './abstract-vinyl';
+import { getRustCheckoutSourceDescriptor } from './rust-checkout-source';
+import { withWorkspaceSession } from './rust-workspace-persistence';
+
+const MAX_FILES = 4096;
+const MAX_INPUT = 4 * 1024 * 1024;
+const MAX_OUTPUT = 32 * 1024 * 1024;
+const MAX_BYTES = 8 * 1024 * 1024;
+import {
+  getRustWorkspaceFileDescriptor,
+  hasOrdinaryWorkspaceProperties,
+  type RustWorkspaceRead,
+} from './rust-workspace-identity';
+export {
+  registerRustWorkspaceFile,
+  getRustWorkspaceFileDescriptor,
+  getRustWorkspaceSource,
+} from './rust-workspace-identity';
+export type { RustWorkspaceRead } from './rust-workspace-identity';
+export type RustWorkspaceDiff = {
+  relativePath: string;
+  fromContent: string;
+  toContent: string;
+  rawDiff: string;
+  same: boolean;
+};
+const hashString = (value: unknown): value is string => typeof value === 'string' && /^[0-9a-f]{40}$/.test(value);
+const validPath = (value: string) =>
+  path.isAbsolute(value) &&
+  !value.includes('\0') &&
+  Buffer.byteLength(value) <= 32768 &&
+  Buffer.from(value).toString() === value;
+
+async function request<T>(
+  input: unknown,
+  count: number,
+  validate: (data: unknown, completed: number) => data is T
+): Promise<T | undefined> {
+  if (process.env.BIT_RUST_CLIENT_VCS !== 'on') return undefined;
+  const bytes = Buffer.from(JSON.stringify(input));
+  if (bytes.length > MAX_INPUT) return undefined;
+  let result: T | undefined;
+  await withWorkspaceSession(async (session) => {
+    await session.request(
+      (id) => {
+        const header = Buffer.alloc(12);
+        header.write('BWS1');
+        header.writeUInt32BE(id, 4);
+        header.writeUInt32BE(bytes.length, 8);
+        return Buffer.concat([header, bytes]);
+      },
+      count,
+      (response) => {
+        if (response.failed) return true;
+        if (!validate(response.data, response.completed)) return false;
+        result = response.data;
+        return true;
+      },
+      MAX_OUTPUT,
+      (input as { kind?: string })?.kind === 'scan'
+    );
+  });
+  return result;
+}
+
+/** Enumerate candidates only; ignore files and component ownership remain with the bitmap adapter. */
+export async function scanRustWorkspace(
+  root: string,
+  excludeDirs: string[],
+  workspaceRoot: boolean
+): Promise<string[] | undefined> {
+  if (!validPath(root) || !excludeDirs.every(validPath)) return undefined;
+  const result = await request(
+    { kind: 'scan', root, excludeDirs, workspaceRoot },
+    MAX_FILES,
+    (value, completed): value is { paths: string[] } => {
+      const paths = (value as { paths?: unknown })?.paths;
+      return (
+        Array.isArray(paths) &&
+        paths.length === completed &&
+        paths.length <= MAX_FILES &&
+        new Set(paths).size === paths.length &&
+        paths.every((filename) => {
+          if (typeof filename !== 'string' || !validPath(filename)) return false;
+          const relative = path.relative(root, filename);
+          return (
+            Boolean(relative) &&
+            !relative.startsWith(`..${path.sep}`) &&
+            relative !== '..' &&
+            !path.isAbsolute(relative)
+          );
+        })
+      );
+    }
+  );
+  return result?.paths;
+}
+
+/** Read and identify a complete file set before exposing any native snapshot. */
+export async function readRustWorkspaceFiles(paths: string[]): Promise<RustWorkspaceRead[] | undefined> {
+  if (!paths.length || paths.length > MAX_FILES || !paths.every(validPath)) return undefined;
+  type Wire = { path: string; contents: string; hash: string; linuxHash: string };
+  const result = await request(
+    { kind: 'read', files: paths },
+    paths.length,
+    (value, completed): value is { files: Wire[] } => {
+      const files = (value as { files?: unknown })?.files;
+      if (!Array.isArray(files) || files.length !== paths.length || completed !== paths.length) return false;
+      let bytes = 0;
+      return files.every((file, index) => {
+        if (
+          !file ||
+          file.path !== paths[index] ||
+          !hashString(file.hash) ||
+          !hashString(file.linuxHash) ||
+          typeof file.contents !== 'string' ||
+          file.contents.length % 2 ||
+          !/^[0-9a-f]*$/.test(file.contents)
+        )
+          return false;
+        bytes += file.contents.length / 2;
+        return bytes <= MAX_BYTES;
+      });
+    }
+  );
+  return result?.files.map((file) => ({ ...file, contents: Buffer.from(file.contents, 'hex') }));
+}
+
+export async function compareRustVersionIds(left: string, right: string): Promise<boolean | undefined> {
+  const result = await request(
+    { kind: 'compare', left, right },
+    1,
+    (value, completed): value is { modified: boolean } =>
+      completed === 1 && typeof (value as { modified?: unknown })?.modified === 'boolean'
+  );
+  return result?.modified;
+}
+
+/** Rust reads stored Sources and verified workspace snapshots directly; no body round trip for Git. */
+export async function getRustFilesDiff(
+  filesA: AbstractVinyl[],
+  filesB: AbstractVinyl[],
+  fileNameAttribute = 'relative',
+  color = true,
+  gitExecutable = 'git'
+): Promise<RustWorkspaceDiff[] | undefined> {
+  if (process.env.BIT_RUST_CLIENT_VCS !== 'on' || fileNameAttribute !== 'relative' || !canHashSourceNatively())
+    return undefined;
+  const snapshotA = [...filesA];
+  const snapshotB = [...filesB];
+  const files = [...snapshotA, ...snapshotB];
+  if (files.some((file) => !hasOrdinaryWorkspaceProperties(file))) return undefined;
+  const paths = [...new Set(files.map((file) => file.relative))];
+  if (!paths.length || paths.length > MAX_FILES) return undefined;
+  const input = (file: AbstractVinyl | undefined) => {
+    if (!file) return undefined;
+    const source = getRustCheckoutSourceDescriptor(file);
+    if (source) return { kind: 'source', ...source };
+    const workspace = getRustWorkspaceFileDescriptor(file);
+    return workspace && { kind: 'workspace', ...workspace };
+  };
+  const projected = paths.map((relativePath) => {
+    const a = filesA.find((file) => file.relative === relativePath);
+    const b = filesB.find((file) => file.relative === relativePath);
+    return { relativePath, left: input(a), right: input(b), a, b };
+  });
+  if (projected.some((file) => (file.a && !file.left) || (file.b && !file.right))) return undefined;
+  const valid = () =>
+    filesA.length === snapshotA.length &&
+    filesB.length === snapshotB.length &&
+    filesA.every((file, index) => file === snapshotA[index]) &&
+    filesB.every((file, index) => file === snapshotB[index]) &&
+    projected.every(
+      (file) =>
+        JSON.stringify(input(file.a)) === JSON.stringify(file.left) &&
+        JSON.stringify(input(file.b)) === JSON.stringify(file.right) &&
+        (!file.a || file.a.relative === file.relativePath) &&
+        (!file.b || file.b.relative === file.relativePath)
+    );
+  const result = await request(
+    {
+      kind: 'diff',
+      files: projected.map(({ relativePath, left, right }) => ({ relativePath, left, right })),
+      gitExecutable,
+      color,
+    },
+    paths.length,
+    (value, completed): value is { files: RustWorkspaceDiff[] } => {
+      const outputs = (value as { files?: unknown })?.files;
+      return (
+        Array.isArray(outputs) &&
+        outputs.length === paths.length &&
+        completed === paths.length &&
+        outputs.every(
+          (file, index) =>
+            file?.relativePath === paths[index] &&
+            typeof file.fromContent === 'string' &&
+            typeof file.toContent === 'string' &&
+            typeof file.rawDiff === 'string' &&
+            typeof file.same === 'boolean'
+        )
+      );
+    }
+  );
+  return result && valid() ? result.files : undefined;
+}

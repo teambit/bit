@@ -18,7 +18,7 @@ import {
 import { logger } from '@teambit/legacy.logger';
 import { NoHeadNoVersion, Scope, ComponentNotFound, ScopeNotFound } from '@teambit/legacy.scope';
 import type { Lane, ModelComponent } from '@teambit/objects';
-import { Version } from '@teambit/objects';
+import { Version, canCompareVersionNatively } from '@teambit/objects';
 // import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
 import format from 'string-format';
@@ -35,7 +35,7 @@ import type { NextVersion } from '@teambit/legacy.bit-map';
 import { BitMap, isWorkspaceMapFile, WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import type { Dependencies, ComponentLoadOptions, LoadManyResult } from '@teambit/legacy.consumer-component';
 import { ConsumerComponent as Component, ComponentLoader } from '@teambit/legacy.consumer-component';
-import { PackageJsonFile } from '@teambit/component.sources';
+import { PackageJsonFile, compareRustVersionIds } from '@teambit/component.sources';
 import type { ILegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
 import { LegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
 import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
@@ -367,7 +367,26 @@ export default class Consumer {
           console.log(version.id()); // eslint-disable-line no-console
           console.log('-------------------------END---------------------------------'); // eslint-disable-line no-console
         }
-        componentFromFileSystem._isModified = componentFromModel.calculateHash().hash !== version.calculateHash().hash;
+        let nativeModified: boolean | undefined;
+        if (
+          process.env.BIT_RUST_CLIENT_VCS === 'on' &&
+          !process.env.BIT_LOG &&
+          canCompareVersionNatively(componentFromModel) &&
+          canCompareVersionNatively(version)
+        ) {
+          const left = componentFromModel.id();
+          const right = version.id();
+          nativeModified = await compareRustVersionIds(left, right);
+          if (
+            !canCompareVersionNatively(componentFromModel) ||
+            !canCompareVersionNatively(version) ||
+            componentFromModel.id() !== left ||
+            version.id() !== right
+          )
+            nativeModified = undefined;
+        }
+        componentFromFileSystem._isModified =
+          nativeModified ?? componentFromModel.calculateHash().hash !== version.calculateHash().hash;
       } finally {
         componentFromModel.files = modelFiles;
       }

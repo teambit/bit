@@ -29,3 +29,16 @@ export default class Source extends BitObject {
     return new Source(buffer);
   }
 }
+
+const defaultFrom = Source.from;
+const defaultHash = Source.prototype.hash;
+const defaultId = Source.prototype.id;
+const defaultMakeHash = BitObject.makeHash;
+export function canHashSourceNatively(): boolean {
+  return (
+    Source.from === defaultFrom &&
+    Source.prototype.hash === defaultHash &&
+    Source.prototype.id === defaultId &&
+    BitObject.makeHash === defaultMakeHash
+  );
+}

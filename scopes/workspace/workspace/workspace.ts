@@ -67,7 +67,15 @@ import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import type { WatchOptions } from './watch-options';
 import type { ComponentLog, Lane } from '@teambit/objects';
 import type { JsonVinyl } from '@teambit/component.sources';
-import { SourceFile, DataToPersist, PackageJsonFile } from '@teambit/component.sources';
+import {
+  SourceFile,
+  DataToPersist,
+  PackageJsonFile,
+  canReadWorkspaceFilesNatively,
+  readRustWorkspaceFiles,
+  registerRustWorkspaceFile,
+  sourceFileFromWorkspaceRead,
+} from '@teambit/component.sources';
 import { ScopeComponentsImporter, VersionNotFoundOnFS } from '@teambit/legacy.scope';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
@@ -769,10 +777,24 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
     const bitMapEntry = this.bitMap.getBitmapEntry(id, { ignoreVersion: true });
     const compDir = bitMapEntry.getComponentDir();
     const compDirAbs = path.join(this.path, compDir);
-    const sourceFilesVinyls = bitMapEntry.files.map((file) => {
+    const manifest = bitMapEntry.files.slice();
+    const paths = manifest.map((file) => path.join(compDirAbs, file.relativePath));
+    const native = canReadWorkspaceFilesNatively() ? await readRustWorkspaceFiles(paths) : undefined;
+    const nativeValid =
+      native &&
+      canReadWorkspaceFilesNatively() &&
+      bitMapEntry.files.length === manifest.length &&
+      bitMapEntry.files.every(
+        (file, index) => file === manifest[index] && path.join(compDirAbs, file.relativePath) === paths[index]
+      );
+    const sourceFilesVinyls = bitMapEntry.files.map((file, index) => {
       const filePath = path.join(compDirAbs, file.relativePath);
-      const sourceFile = SourceFile.load(filePath, compDirAbs, this.path, {});
+      const read = nativeValid ? native[index] : undefined;
+      const sourceFile = read
+        ? sourceFileFromWorkspaceRead(read, compDirAbs, this.path)
+        : SourceFile.load(filePath, compDirAbs, this.path, {});
       sourceFile.contents = fileContentsForVersioning(bitMapEntry, file.relativePath, sourceFile.contents);
+      if (read) registerRustWorkspaceFile(sourceFile, read);
       return sourceFile;
     });
     const repo = this.scope.legacyScope.objects;

@@ -1,3 +1,4 @@
+import { withWorkspacePersistence, withRustSourceReads } from '@teambit/component.sources';
 import type { CLIMain } from '@teambit/cli';
 import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import { CLIAspect } from '@teambit/cli';
@@ -79,7 +80,11 @@ export class StatusMain {
     private merging: MergingMain
   ) {}
 
-  async status({
+  async status(options: { lanes?: boolean; ignoreCircularDependencies?: boolean }): Promise<StatusResult> {
+    return withWorkspacePersistence(() => withRustSourceReads(() => this.statusWithinPersistence(options)));
+  }
+
+  private async statusWithinPersistence({
     lanes,
     ignoreCircularDependencies,
   }: {
@@ -200,6 +205,15 @@ export class StatusMain {
   }
 
   async statusMini(componentPattern?: string, opts: MiniStatusOpts = {}): Promise<MiniStatusResults> {
+    return withWorkspacePersistence(() =>
+      withRustSourceReads(() => this.statusMiniWithinPersistence(componentPattern, opts))
+    );
+  }
+
+  private async statusMiniWithinPersistence(
+    componentPattern?: string,
+    opts: MiniStatusOpts = {}
+  ): Promise<MiniStatusResults> {
     const ids = componentPattern ? await this.workspace.idsByPattern(componentPattern) : this.workspace.listIds();
     const compFiles = await pMapSeries(ids, (id) => this.workspace.getFilesModification(id));
     const modified: ComponentID[] = [];

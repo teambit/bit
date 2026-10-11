@@ -14,7 +14,13 @@ import { BitId } from '@teambit/legacy-bit-id';
 import { DEFAULT_BIT_RELEASE_TYPE, DEFAULT_BIT_VERSION, DEFAULT_LANGUAGE, Extensions } from '@teambit/legacy.constants';
 import type { Dependencies, Dependency } from '@teambit/legacy.consumer-component';
 import { ConsumerComponent, SchemaName } from '@teambit/legacy.consumer-component';
-import { License, SourceFile, getRefsFromExtensions } from '@teambit/component.sources';
+import {
+  License,
+  SourceFile,
+  getRefsFromExtensions,
+  prepareRustCheckoutSources,
+  isRustSourceReadScope,
+} from '@teambit/component.sources';
 import { ComponentOverrides, getBindingPrefixByDefaultScope } from '@teambit/legacy.consumer-config';
 import { ValidationError } from '@teambit/legacy.cli.error';
 import { logger } from '@teambit/legacy.logger';
@@ -1181,7 +1187,14 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
         );
       return new ClassName({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
     };
-    const filesP = sourceFiles || (version.files ? Promise.all(version.files.map(loadFileInstance(SourceFile))) : null);
+    const nativeFiles =
+      !sourceFiles && isRustSourceReadScope() && version.files
+        ? await prepareRustCheckoutSources(version.files, repository)
+        : undefined;
+    const filesP =
+      sourceFiles ||
+      nativeFiles ||
+      (version.files ? Promise.all(version.files.map(loadFileInstance(SourceFile))) : null);
     // @todo: this is weird. why the scopeMeta would be taken from the current scope and not he component scope?
     const scopeMetaP = scopeName ? ScopeMeta.fromScopeName(scopeName).load(repository) : Promise.resolve();
     const log = version.log || null;

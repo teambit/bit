@@ -1,10 +1,10 @@
 import { createHash } from 'crypto';
 import path from 'path';
 import { Ref, type Repository, type Source, type SourceFileModel } from '@teambit/objects';
-import SourceFile from './source-file';
+import SourceFile, { canReadWorkspaceFilesNatively } from './source-file';
 import type AbstractVinyl from './abstract-vinyl';
 import { defaultVinylWrite } from './abstract-vinyl';
-import { acquireWorkspaceSession } from './rust-workspace-materializer';
+import { withWorkspaceSession } from './rust-workspace-persistence';
 
 export type RustCheckoutSourceDescriptor = { objectsDirectory: string; hash: string };
 type Provenance = {
@@ -64,6 +64,7 @@ export async function prepareRustCheckoutSources(
 ): Promise<SourceFile[] | undefined> {
   if (
     process.env.BIT_RUST_CLIENT_VCS !== 'on' ||
+    !canReadWorkspaceFilesNatively() ||
     !models.every((model) => model.file.load === Ref.prototype.load) ||
     !repository.canReadCheckoutSourcesNatively(models.map((model) => model.file))
   )
@@ -89,44 +90,42 @@ export async function prepareRustCheckoutSources(
     )
   )
     return undefined;
-  const lease = acquireWorkspaceSession();
-  if (!lease) return undefined;
   try {
-    for (let offset = 0; offset < manifest.length; offset += 64) {
-      const batch = manifest.slice(offset, offset + 64);
-      const completed = await lease.session.request(
-        (id) =>
-          checkoutSourceFrame(
-            'BWC0',
-            id,
-            objectsDirectory,
-            batch.map((entry) => ({
-              hash: entry.hash,
-              destination: path.resolve(objectsDirectory, entry.relativePath),
-            }))
-          ),
-        batch.length
-      );
-      if (completed !== batch.length) return undefined;
-    }
-    if (
-      models.length !== manifest.length ||
-      !manifest.every(
-        (entry, index) =>
-          models[index] === entry.model &&
-          entry.model.file.toString() === entry.hash &&
-          entry.model.relativePath === entry.relativePath &&
-          entry.model.name === entry.name &&
-          entry.model.test === entry.test
+    return await withWorkspaceSession(async (session) => {
+      for (let offset = 0; offset < manifest.length; offset += 64) {
+        const batch = manifest.slice(offset, offset + 64);
+        const completed = await session.request(
+          (id) =>
+            checkoutSourceFrame(
+              'BWC0',
+              id,
+              objectsDirectory,
+              batch.map((entry) => ({
+                hash: entry.hash,
+                destination: path.resolve(objectsDirectory, entry.relativePath),
+              }))
+            ),
+          batch.length
+        );
+        if (completed !== batch.length) return undefined;
+      }
+      if (
+        models.length !== manifest.length ||
+        !manifest.every(
+          (entry, index) =>
+            models[index] === entry.model &&
+            entry.model.file.toString() === entry.hash &&
+            entry.model.relativePath === entry.relativePath &&
+            entry.model.name === entry.name &&
+            entry.model.test === entry.test
+        )
       )
-    )
-      return undefined;
-    const files = models.map((model) => createRustCheckoutSourceFile(model, repository, true));
-    return files.every((file): file is SourceFile => Boolean(file)) ? files : undefined;
+        return undefined;
+      const files = models.map((model) => createRustCheckoutSourceFile(model, repository, true));
+      return files.every((file): file is SourceFile => Boolean(file)) ? files : undefined;
+    });
   } catch {
     return undefined;
-  } finally {
-    await lease.release();
   }
 }
 

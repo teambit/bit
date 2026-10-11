@@ -235,6 +235,10 @@ fn serve_extension(
     store: Option<&Store>,
     checkout: &mut crate::checkout::cache::State,
 ) -> io::Result<bool> {
+    if magic == *b"BWS1" {
+        crate::workspace::engine::serve(reader, writer)?;
+        return Ok(true);
+    }
     if magic == *b"BCK1" {
         crate::checkout::plan::serve(reader, writer, checkout)?;
         return Ok(true);

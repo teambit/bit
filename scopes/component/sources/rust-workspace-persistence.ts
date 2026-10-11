@@ -24,6 +24,12 @@ type Action = { kind: number; first: string; second: string };
 type PhaseMethods = Pick<DataToPersist, '_deletePathsFromFS' | '_persistFilesToFS' | '_persistSymlinksToFS'>;
 const scopes = new AsyncLocalStorage<Scope>();
 
+/** Inventory scans wait for an operation owner rather than starting helpers during Harmony bootstrap. */
+export function isWorkspacePersistenceScope(): boolean {
+  const scope = scopes.getStore();
+  return Boolean(scope && !scope.closed);
+}
+
 function claimEntry(scope: Scope | undefined): Entry | undefined {
   if (scope?.closed) return undefined;
   const executable = resolveRustObjectImportExecutable();

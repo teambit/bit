@@ -7,6 +7,7 @@ import { Source } from '@teambit/objects';
 import type { PathOsBased } from '@teambit/toolbox.path.path';
 import * as eol from '@teambit/toolbox.string.eol';
 import type { FileConstructor } from './vinyl-types';
+import { getRustWorkspaceSource } from './rust-workspace-identity';
 
 type AbstractVinylProps = {
   cwd: PathOsBased;
@@ -74,6 +75,8 @@ export default class AbstractVinyl extends (Vinyl as FileConstructor) {
    * then when working on the same components in Windows and Linux they won't appear as modified
    */
   toSourceAsLinuxEOL(): Source {
+    const native = getRustWorkspaceSource(this);
+    if (native) return native;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return Source.from(eol.lf(this.contents));
   }
@@ -106,3 +109,4 @@ export function logFileWrite(filePath: string, override: boolean, verbose: boole
 
 // Capture before other modules can replace the prototype method with a hook.
 export const defaultVinylWrite = AbstractVinyl.prototype.write;
+export const defaultVinylToSource = AbstractVinyl.prototype.toSourceAsLinuxEOL;

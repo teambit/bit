@@ -1,4 +1,5 @@
 pub(crate) mod actions;
+pub(crate) mod engine;
 
 use std::{
     collections::HashSet,
