@@ -110,6 +110,13 @@ export function getRustSnapshotSourceDescriptor(
   return { path: value.snapshot.path, hash: value.snapshot.hash, sourceHash: value.snapshot.linuxHash };
 }
 
+/** Capture the canonical bytes before an asynchronous write, without hydrating the public Source. */
+export function captureRustSnapshotSourceContents(source: Source): (() => Buffer) | undefined {
+  if (!getRustSnapshotSourceDescriptor(source)) return undefined;
+  const contents = sourceSnapshots.get(source)!.canonicalSnapshot;
+  return () => Buffer.from(contents);
+}
+
 /** Keep canonical Buffer aliasing while deferring exposure of the Source body. */
 export function getRustWorkspaceSource(file: AbstractVinyl): Source | undefined {
   const value = snapshot(file);

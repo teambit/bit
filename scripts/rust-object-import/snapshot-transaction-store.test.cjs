@@ -359,3 +359,119 @@ test('History record accessors decline before the defining versions getter can o
   });
   assert.equal(reads, 0);
 });
+
+test('Source byte aliases keep the synchronous canonical snapshot across private awaits', async (t) => {
+  const repository = await fixture(t);
+  const Source = compiled ? objects.Source : source('scopes/scope/objects/models/source.ts').default;
+  const Session = require(
+    path.join(path.dirname(installed.resolve('@teambit/component.sources')), 'rust-workspace-materializer.js')
+  ).MaterializationSession;
+  for (const boundary of ['serialize', 'directory']) {
+    const value = new Source(Buffer.from('original Source Ω\r\n'));
+    const expected = value.serialize();
+    const originalHash = value.hash().toString();
+    let reached = 0;
+    const originalRequest = Session.prototype.request;
+    if (boundary === 'serialize') {
+      Session.prototype.request = async function (build, ...args) {
+        const frame = build(1);
+        const input = frame.subarray(0, 4).toString() === 'BMT1' ? JSON.parse(frame.subarray(12)) : undefined;
+        const result = await originalRequest.call(this, build, ...args);
+        if (input?.kind === 'snapshotSerialize') {
+          reached++;
+          value.contents.fill(90);
+        }
+        return result;
+      };
+    }
+    try {
+      await tx.withRustSnapshotTransaction(async () => {
+        const pending = store.persistPreparedRustSnapshotObjects(repository, [value], undefined, null);
+        if (boundary === 'directory') {
+          reached++;
+          value.contents.fill(90);
+        }
+        const result = await pending;
+        assert.equal(reached, 1, boundary);
+        assert.equal(result?.completed, 0, boundary);
+        assert.notEqual(value.hash().toString(), originalHash);
+        const raw = await result.fallback.get(value)();
+        assert.deepEqual(
+          zlib.inflateSync(raw.buffer),
+          expected,
+          `${boundary}: original body/header must survive aliased mutation`
+        );
+        assert.equal(
+          raw.ref.toString(),
+          value.hash().toString(),
+          `${boundary}: destination retains canonical late Ref`
+        );
+      });
+    } finally {
+      Session.prototype.request = originalRequest;
+    }
+  }
+});
+
+test('Version captures its canonical body and header before the first private directory await', async (t) => {
+  const repository = await fixture(t),
+    value = version();
+  const expected = value.serialize();
+  await tx.withRustSnapshotTransaction(async () => {
+    const pending = store.persistPreparedRustSnapshotObjects(repository, [value], undefined, null);
+    value.log.message = 'late directory mutation';
+    value._hash = 'e'.repeat(40);
+    const result = await pending;
+    assert.equal(result?.completed, 0);
+    const raw = await result.fallback.get(value)();
+    assert.deepEqual(zlib.inflateSync(raw.buffer), expected);
+    assert.equal(raw.ref.toString(), 'e'.repeat(40));
+  });
+});
+
+test('metadata validation uses the flag and method captured before asynchronous serialization', async (t) => {
+  const repository = await fixture(t);
+  const Session = require(
+    path.join(path.dirname(installed.resolve('@teambit/component.sources')), 'rust-workspace-materializer.js')
+  ).MaterializationSession;
+  const request = Session.prototype.request;
+  t.after(() => {
+    Session.prototype.request = request;
+  });
+  for (const mutation of ['flag', 'method']) {
+    const value = version();
+    value.mainFile = 'missing-main.js';
+    let expected;
+    try {
+      value.serialize();
+    } catch (error) {
+      expected = error;
+    }
+    assert.ok(expected, 'ordinary canonical validation rejects the missing main file');
+    let patchedCalls = 0;
+    let serialized = 0;
+    Session.prototype.request = async function (build, ...args) {
+      const frame = build(1);
+      const input = frame.subarray(0, 4).toString() === 'BMT1' ? JSON.parse(frame.subarray(12)) : undefined;
+      const result = await request.call(this, build, ...args);
+      if (input?.kind === 'snapshotSerialize') {
+        serialized++;
+        if (mutation === 'flag') value.validateBeforePersist = false;
+        else
+          value.validateBeforePersisting = () => {
+            patchedCalls++;
+          };
+      }
+      return result;
+    };
+    await assert.rejects(
+      tx.withRustSnapshotTransaction(() =>
+        store.persistPreparedRustSnapshotObjects(repository, [value], undefined, null)
+      ),
+      (error) => error.constructor === expected.constructor && error.message === expected.message
+    );
+    assert.equal(serialized, 1, 'mutation follows the real native serialization acknowledgement');
+    assert.equal(patchedCalls, 0, 'a newly installed validator must not replace the original synchronous call');
+    await assert.rejects(fs.access(repository.objectPath(value.hash())), { code: 'ENOENT' });
+  }
+});

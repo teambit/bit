@@ -91,3 +91,9 @@ export function getRustArtifactSourceDescriptor(source: Source) {
     normalization: 'linuxEol' as const,
   };
 }
+
+export function captureRustArtifactSourceContents(source: Source): (() => Buffer) | undefined {
+  if (!getRustArtifactSourceDescriptor(source)) return undefined;
+  const contents = sources.get(source)!.copy;
+  return () => Buffer.from(contents);
+}

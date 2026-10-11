@@ -5,7 +5,12 @@ import crypto, { createHash } from 'crypto';
 import zlib, { inflateSync } from 'zlib';
 import { canReadCacheNatively } from '@teambit/harmony.modules.in-memory-cache';
 import { deflate } from '@teambit/legacy.utils';
-import { getRustSnapshotSourceDescriptor, getRustArtifactSourceDescriptor } from '@teambit/component.sources';
+import {
+  getRustSnapshotSourceDescriptor,
+  getRustArtifactSourceDescriptor,
+  captureRustSnapshotSourceContents,
+  captureRustArtifactSourceContents,
+} from '@teambit/component.sources';
 import type BitObject from './object';
 import type Repository from './repository';
 import type Version from '../models/version';
@@ -157,21 +162,42 @@ function commitReply(data: any, objects: Manifest[]): boolean {
   );
 }
 
+type CapturedValidation = { completed: boolean; validate?: (text: string) => void };
+
+function captureValidation(object: BitObject, type: string): CapturedValidation {
+  if (!['Version', 'Component', 'Lane'].includes(type) || !object.validateBeforePersist) return { completed: false };
+  const validate = (object as Version).validateBeforePersisting;
+  return { completed: false, validate: (text) => validate.call(object, text) };
+}
+
 async function canonicalVersion(
   object: BitObject,
   value: () => Record<string, any>,
   headerHash: string,
-  validation: { completed: boolean },
+  validation: CapturedValidation,
   type = 'Version'
 ): Promise<Raw> {
   const text = JSON.stringify(value());
-  if (['Version', 'Component', 'Lane'].includes(type) && object.validateBeforePersist && !validation.completed) {
-    (object as Version).validateBeforePersisting(text);
+  if (validation.validate && !validation.completed) {
+    validation.validate(text);
     validation.completed = true;
   }
   const body = Buffer.from(text);
   const inflated = Buffer.concat([Buffer.from(`${type} ${headerHash} ${body.toString().length}\0`), body]);
   return { buffer: await deflate(inflated), inflatedSize: inflated.length, ref: object.hash() };
+}
+
+function captureSourceFallback(object: BitObject, input: any): (() => Promise<Raw>) | undefined {
+  const retained = captureRustSnapshotSourceContents(object as any) || captureRustArtifactSourceContents(object as any);
+  const contents = retained ? undefined : Object.getOwnPropertyDescriptor(object, 'contents')?.value;
+  if (!retained && !Buffer.isBuffer(contents)) return undefined;
+  const copy = retained ? undefined : Buffer.from(contents);
+  const headerHash = input.hash;
+  return async () => {
+    const body = retained ? retained() : copy!;
+    const inflated = Buffer.concat([Buffer.from(`Source ${headerHash} ${body.toString().length}\0`), body]);
+    return { buffer: await deflate(inflated), inflatedSize: inflated.length, ref: object.hash() };
+  };
 }
 
 async function readMetadata(item: Manifest, object: BitObject): Promise<{ raw: Raw; body: string }> {
@@ -199,46 +225,52 @@ export async function persistPreparedRustSnapshotObjects(
   const planned = objects.map((object) => projection(object, repository));
   const snapshot = objects.slice();
   if (planned.some((value) => !value)) return undefined;
-  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'bit-snapshot-')).catch(() => undefined);
-  if (!directory) return undefined;
-  const owned = registerRustSnapshotTransactionCleanup(() => fs.remove(directory));
   const fallback = new Map<BitObject, () => Promise<Raw>>();
+  // Canonical Source.serialize copies bytes/header synchronously, before compression's first await.
+  // Retained disk provenance supplies an immutable continuation without exposing its public body.
+  for (let index = 0; index < objects.length; index += 1) {
+    if ((planned[index] as any).type !== 'Source') continue;
+    const resume = captureSourceFallback(objects[index], planned[index]);
+    if (!resume) return undefined;
+    fallback.set(objects[index], resume);
+  }
   const versionChecks = new Map<BitObject, () => unknown>();
-  const versionValidations = new Map<BitObject, { completed: boolean }>();
+  const versionValidations = new Map<BitObject, CapturedValidation>();
   const objectsDirectory = repository.getPath();
+  const input: any[] = [];
+  for (let index = 0; index < objects.length; index += 1) {
+    const object = objects[index];
+    if (hasRustSnapshotTransactionClass(object, 'Version')) {
+      const prepared = prepareRustSnapshotVersion(object as Version);
+      if (!prepared) return { completed: 0, fallback };
+      const headerHash = object.hash().toString();
+      const validation = captureValidation(object, 'Version');
+      fallback.set(object, () => canonicalVersion(object as Version, prepared.canonicalObject, headerHash, validation));
+      versionValidations.set(object, validation);
+      versionChecks.set(object, prepared.currentFields);
+      input[index] = { ...planned[index], hash: headerHash, fields: prepared.fields };
+      if (!prepared.fields) return { completed: 0, fallback };
+    } else {
+      input[index] = planned[index];
+      const type = input[index].type;
+      if (type !== 'Source') {
+        const value = snapshotCanonicalValue((object as Version).toObject());
+        const validation = captureValidation(object, type);
+        versionValidations.set(object, validation);
+        fallback.set(object, () => canonicalVersion(object, () => value, input[index].hash, validation, type));
+      }
+    }
+  }
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'bit-snapshot-')).catch(() => undefined);
+  if (!directory) return { completed: 0, fallback };
+  const owned = registerRustSnapshotTransactionCleanup(() => fs.remove(directory));
   try {
     if (
       !eligible(repository, objects) ||
       objects.length !== snapshot.length ||
       objects.some((object, index) => object !== snapshot[index])
     )
-      return undefined;
-    const input: any[] = [];
-    for (let index = 0; index < objects.length; index += 1) {
-      const object = objects[index];
-      if (hasRustSnapshotTransactionClass(object, 'Version')) {
-        const prepared = prepareRustSnapshotVersion(object as Version);
-        if (!prepared) return { completed: 0, fallback };
-        const headerHash = object.hash().toString();
-        const validation = { completed: false };
-        fallback.set(object, () =>
-          canonicalVersion(object as Version, prepared.canonicalObject, headerHash, validation)
-        );
-        versionValidations.set(object, validation);
-        versionChecks.set(object, prepared.currentFields);
-        input[index] = { ...planned[index], hash: headerHash, fields: prepared.fields };
-        if (!prepared.fields) return { completed: 0, fallback };
-      } else {
-        input[index] = planned[index];
-        const type = input[index].type;
-        if (type !== 'Source') {
-          const value = snapshotCanonicalValue((object as Version).toObject());
-          const validation = { completed: false };
-          versionValidations.set(object, validation);
-          fallback.set(object, () => canonicalVersion(object, () => value, input[index].hash, validation, type));
-        }
-      }
-    }
+      return fallback.size ? { completed: 0, fallback } : undefined;
     const serialized = await requestRustSnapshotTransaction<Serialized>(
       { kind: 'snapshotSerialize', objects: input, stagingDirectory: directory },
       (data) => manifest(data, input, directory)
@@ -267,10 +299,8 @@ export async function persistPreparedRustSnapshotObjects(
         await retireRustSnapshotTransaction();
         return { completed: 0, fallback };
       }
-      const validates = ['Version', 'Component', 'Lane'].includes(serialized.objects[index].type);
-      if (validates && objects[index].validateBeforePersist)
-        (objects[index] as Version).validateBeforePersisting(metadata.body);
       const validation = versionValidations.get(objects[index]);
+      if (validation?.validate && !validation.completed) validation.validate(metadata.body);
       if (validation) validation.completed = true;
       fallback.set(objects[index], () => Promise.resolve({ ...metadata.raw, ref: objects[index].hash() }));
     }
