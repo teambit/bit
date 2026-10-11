@@ -29,6 +29,12 @@ const metrics = {
   workspace: Object.fromEntries(
     ['scan', 'read', 'compare', 'diff'].map((kind) => [kind, { frames: 0, files: 0, completed: 0, failed: 0 }])
   ),
+  history: Object.fromEntries(
+    ['graph', 'diverge', 'mergeFiles'].map((kind) => [
+      kind,
+      { frames: 0, files: 0, completed: 0, failed: 0, workspaceFiles: 0, storedSources: 0, bodyBytes: 0 },
+    ])
+  ),
   snapshot: Object.fromEntries(
     ['commit', 'plan', 'index', 'indexWrite'].map((kind) => [
       kind,
@@ -69,20 +75,34 @@ if (output && process.pid === owner) {
     const write = child.stdin.write;
     child.stdin.write = function (bytes, ...rest) {
       const magic = Buffer.isBuffer(bytes) ? bytes.subarray(0, 4).toString() : '';
-      if (['BWM1', 'BWP1', 'BWC0', 'BWC1', 'BCK1', 'BWS1', 'BSS1'].includes(magic)) {
+      if (['BWM1', 'BWP1', 'BWC0', 'BWC1', 'BCK1', 'BWS1', 'BSS1', 'BMH1'].includes(magic)) {
         if (!workspace) metrics.persistence.helpers++;
         workspace = true;
-        const operation = ['BWS1', 'BSS1'].includes(magic) ? JSON.parse(bytes.subarray(12).toString()) : undefined;
+        const operation = ['BWS1', 'BSS1', 'BMH1'].includes(magic)
+          ? JSON.parse(bytes.subarray(12).toString())
+          : undefined;
         requests.push(operation ? `${magic}:${operation.kind}` : magic);
         if (operation) {
-          const metric = (magic === 'BSS1' ? metrics.snapshot : metrics.workspace)[operation.kind];
+          const metric = (magic === 'BMH1' ? metrics.history : magic === 'BSS1' ? metrics.snapshot : metrics.workspace)[
+            operation.kind
+          ];
           metric.frames++;
           metric.files +=
-            magic === 'BSS1'
-              ? operation.kind === 'commit'
-                ? operation.objects.length
-                : 1
-              : operation.files?.length || (operation.kind === 'compare' ? 1 : 0);
+            magic === 'BMH1'
+              ? 1
+              : magic === 'BSS1'
+                ? operation.kind === 'commit'
+                  ? operation.objects.length
+                  : 1
+                : operation.files?.length || (operation.kind === 'compare' ? 1 : 0);
+          if (magic === 'BMH1' && operation.kind === 'mergeFiles') {
+            for (const file of operation.current || []) {
+              metric.workspaceFiles += Number(Boolean(file.workspace));
+              metric.bodyBytes += (file.body?.length || 0) / 2;
+              metric.storedSources += Number(Boolean(file.source));
+            }
+            metric.storedSources += (operation.base?.length || 0) + (operation.other?.length || 0);
+          }
           if (magic === 'BSS1' && operation.kind === 'commit') {
             for (const object of operation.objects) {
               if (object.type !== 'Source') continue;
@@ -125,19 +145,21 @@ if (output && process.pid === owner) {
       let newline;
       while ((newline = pending.indexOf('\n')) >= 0) {
         const magic = requests.shift();
-        const metric = magic?.startsWith('BSS1:')
-          ? metrics.snapshot[magic.slice(5)]
-          : magic?.startsWith('BWS1:')
-            ? metrics.workspace[magic.slice(5)]
-            : magic === 'BWM1'
-              ? metrics.materialization
-              : magic === 'BCK1'
-                ? metrics.checkout.plan
-                : magic === 'BWC0'
-                  ? metrics.checkout.preflight
-                  : magic === 'BWC1'
-                    ? metrics.checkout.write
-                    : metrics.persistence;
+        const metric = magic?.startsWith('BMH1:')
+          ? metrics.history[magic.slice(5)]
+          : magic?.startsWith('BSS1:')
+            ? metrics.snapshot[magic.slice(5)]
+            : magic?.startsWith('BWS1:')
+              ? metrics.workspace[magic.slice(5)]
+              : magic === 'BWM1'
+                ? metrics.materialization
+                : magic === 'BCK1'
+                  ? metrics.checkout.plan
+                  : magic === 'BWC0'
+                    ? metrics.checkout.preflight
+                    : magic === 'BWC1'
+                      ? metrics.checkout.write
+                      : metrics.persistence;
         try {
           const response = JSON.parse(pending.slice(0, newline));
           metric.completed += response.completed || 0;
@@ -178,6 +200,9 @@ function wrap(target, key, stage, inspect) {
     process.env.BIT_RUST_CLIENT_VCS === 'on' &&
     [
       'toBuffer',
+      'load',
+      'parse',
+      'toObject',
       'writeObjectsToTheFS',
       'getNativeSourceStoreOptions',
       'getChownOptions',

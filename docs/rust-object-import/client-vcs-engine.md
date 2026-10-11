@@ -334,3 +334,74 @@ and binary SHA-256
 Both release builds and the final adapter candidate use the same native source
 digest. Real-command results here are local Linux qualification; cross-platform
 adapter and filesystem coverage is provided by CI.
+
+## Merge and history
+
+The merge operation shares the existing awaited repository/workspace helper
+lifetime. Its `BMH1` engine reads Version objects directly to populate missing
+ancestry, calculates divergence and the nearest common snap, and plans the entire
+three-way file merge. Graph order includes parent, squashed and unrelated edges;
+file classification includes additions, updates, deletions, renames represented
+as deletion/addition, textual conflicts and binary conflicts. Rust reads verified
+workspace paths and immutable repository Sources directly. File bodies are not
+sent from Node into the native merge request.
+
+The native planner preserves the canonical Git merge-file behavior, labels and
+final newlines. Stored Sources used as Git inputs undergo the same UTF-8 string
+conversion as the existing implementation; Source bytes returned for additions
+and updates retain their original representation. Workspace inputs use canonical
+LF normalization. The adapter validates the completed plan, checks live inputs
+again, and constructs the public SourceFile and merge result objects. No workspace
+files are changed while conflict strategy is undecided.
+
+Node continues to own component/configuration merging, extension hooks, lane
+selection and merge/squash/unrelated policy, unmerged-component bookkeeping,
+bitmap updates and user choices. Abort and resolve use the shared operation
+lifetime and existing persistence/snapshot adapters. Those public workflows are
+qualified end to end; their remaining orchestration is not claimed as a completed
+Rust migration. Public synchronous graph APIs remain canonical, as do ancestry
+repair requests that explicitly traverse an already cached history.
+
+Custom readers, transformed objects, custom Ref/model methods, changed live
+inputs, unsupported paths and bounded-request limits retain canonical execution.
+Missing or corrupt history and an unavailable or failed helper replay canonical
+traversal so existing typed errors and graceful partial-history behavior are
+preserved. Matching cached Versions retain their actual parent Ref identities; altered
+cached metadata retains canonical traversal. Histories with unsupported dependency
+or extension metadata also retain canonical parsing. Requests allow 4096 records/files,
+4 MiB of input and 32 MiB of output. Rollout remains `BIT_RUST_CLIENT_VCS=on`.
+
+### Merge/history qualification
+
+The isolated, physically compiled 20-component CLI passes canonical TypeScript
+lint and Bit compilation. Eighteen new graph, public-history and whole-file merge
+tests pass in both source and compiled modes. Existing coverage passes 46 source
+provenance/snapshot regressions, 75 additional source regressions (one Windows-only
+case skipped locally), 117 compiled tests including the new cases, and 69 canonical
+model tests. Native qualification passes 141 workspace tests, pinned formatting,
+warning-denied Clippy, Dylint and rustdoc. The official explicit-target release
+package passes smoke and all 30 artifact/provisioning/discovery tests.
+
+The real-command fixture creates sibling snapshots with textual and binary
+conflicts, clean independent edits, additions, deletion conflicts, rename-as-delete
+and add, and BOM/CRLF inputs. It executes manual merge, abort, remerge and resolve,
+then creates and merges a lane. Node, native, missing-helper and crashed-helper
+runs match complete files, decompressed objects, bitmap, index, unmerged state,
+status, log and lane history. Separate diagnostics prove successful native
+divergence and whole-file merge requests, workspace/repository descriptor inputs,
+zero Source body bytes in input frames and one helper per operation. Missing and
+corrupt history, live/pending Version mutations, parser hooks, stale inputs and
+concurrent population preserve canonical fallback and public Ref identity.
+
+An additional seeded comparison checks 1500 graphs against the actual synchronous
+Bit divergence implementation and Cleargraph, including shuffled insertion order,
+duplicate parents, squashed/unrelated edges, multiple common ancestors and cycles.
+The qualification harness verifies source, compiled module, helper and fixture
+SHA-256 fingerprints before and after commands. Run
+`merge-history-qualification.cjs <private-cli> <release-helper>` for correctness.
+Set `BIT_MERGE_QUALIFICATION_MEASURE=1`,
+`BIT_MERGE_QUALIFICATION_ROUNDS=3`,
+`BIT_MERGE_QUALIFICATION_DIAGNOSTICS=0` and optionally
+`BIT_MERGE_QUALIFICATION_EXTRA_FILES=256` for alternating retained command pairs
+following excluded warmups. Generated workspaces, logs and reports stay outside
+Git at `$HOME/bit-merge-history-evidence-2026-10-11`.
