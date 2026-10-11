@@ -51,6 +51,9 @@ function links(directory) {
 }
 links(target);
 const files = [
+  'scopes/component/sources/abstract-vinyl.ts',
+  'scopes/component/sources/data-to-persist.ts',
+  'scopes/component/sources/rust-workspace-materializer.ts',
   'components/legacy/scope/objects-fetcher/objects-fetcher.ts',
   'components/legacy/scope/objects-fetcher/import-cancellation.ts',
   'components/legacy/scope/objects-fetcher/objects-writable-stream.ts',
@@ -97,6 +100,7 @@ try {
       'teambit.scope/objects',
       'teambit.scope/network',
       'teambit.scope/scope',
+      'teambit.component/sources',
       '--json',
       '--safe-mode',
     ],
@@ -108,12 +112,21 @@ try {
 const compilation = JSON.parse(fs.readFileSync(path.join(target, '.bit-object-import-compile.json')));
 assert.deepEqual(
   compilation.map((component) => component.component.split('@')[0]).sort(),
-  ['teambit.legacy/scope', 'teambit.scope/objects', 'teambit.scope/network', 'teambit.scope/scope'].sort()
+  [
+    'teambit.legacy/scope',
+    'teambit.scope/objects',
+    'teambit.scope/network',
+    'teambit.scope/scope',
+    'teambit.component/sources',
+  ].sort()
 );
 assert.ok(compilation.every((c) => c.errors.length === 0));
 for (const component of compilation)
   for (const file of component.buildResults) assert.ok(fs.realpathSync(file).startsWith(target + path.sep));
 const modules = [
+  'component.sources/dist/abstract-vinyl.js',
+  'component.sources/dist/data-to-persist.js',
+  'component.sources/dist/rust-workspace-materializer.js',
   'legacy.scope/dist/objects-fetcher/objects-fetcher.js',
   'legacy.scope/dist/objects-fetcher/import-cancellation.js',
   'legacy.scope/dist/objects-fetcher/objects-writable-stream.js',

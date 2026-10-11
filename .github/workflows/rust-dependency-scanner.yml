@@ -2,9 +2,10 @@ name: Rust dependency scanner
 
 on:
   push:
-    branches: [rust, rust-object-import]
+    branches: [rust, rust-object-import, rust-workspace-materialization]
     paths:
       - 'native/**'
+      - 'scopes/component/sources/**'
       - 'components/legacy/scope/objects-fetcher/**'
       - 'scopes/scope/objects/objects/repository.ts'
       - 'scopes/scope/objects/objects/object.ts'
@@ -45,9 +46,10 @@ on:
       - 'scopes/dependencies/dependency-resolver/detector-hook.ts'
       - '.github/workflows/rust-dependency-scanner.yml'
   pull_request:
-    branches: [rust, rust-object-import]
+    branches: [rust, rust-object-import, rust-workspace-materialization]
     paths:
       - 'native/**'
+      - 'scopes/component/sources/**'
       - 'components/legacy/scope/objects-fetcher/**'
       - 'scopes/scope/objects/objects/repository.ts'
       - 'scopes/scope/objects/objects/object.ts'
@@ -440,4 +442,6 @@ jobs:
           BIT_LEGACY_ROOT: ${{ github.workspace }}
         run: |
           node --test scripts/rust-object-import/operation-model.test.cjs scripts/rust-object-import/platform-metadata.test.cjs
+          node --test scripts/rust-object-import/workspace-materialization.test.cjs
+          BIT_TEST_MATERIALIZATION_COMPILED=1 node --test scripts/rust-object-import/workspace-materialization.test.cjs
           node scripts/rust-object-import/canonical-model-tests.cjs

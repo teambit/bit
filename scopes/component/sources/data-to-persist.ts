@@ -7,6 +7,7 @@ import { logger } from '@teambit/legacy.logger';
 import { removeFilesAndEmptyDirsRecursively } from './remove-files-and-empty-dirs-recursively';
 import type AbstractVinyl from './abstract-vinyl';
 import type { RemovePath } from './remove-path';
+import { persistWorkspaceFiles } from './rust-workspace-materializer';
 
 export class DataToPersist {
   files: AbstractVinyl[];
@@ -150,6 +151,7 @@ export class DataToPersist {
   }
   async _persistFilesToFS() {
     const concurrency = concurrentIOLimit();
+    if (await persistWorkspaceFiles(this.files, concurrency)) return;
     return pMapPool(this.files, (file) => file.write(), { concurrency });
   }
   async _persistSymlinksToFS() {

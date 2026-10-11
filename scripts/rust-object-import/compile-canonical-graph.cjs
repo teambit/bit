@@ -14,6 +14,13 @@ for (const args of [
   ['config', 'set', 'registry', 'https://node-registry.bit.cloud'],
   ['init'],
   ['install'],
-  ['compile', 'teambit.legacy/scope', 'teambit.scope/objects', 'teambit.scope/network', 'teambit.scope/scope'],
+  [
+    'compile',
+    'teambit.legacy/scope',
+    'teambit.scope/objects',
+    'teambit.scope/network',
+    'teambit.scope/scope',
+    'teambit.component/sources',
+  ],
 ])
   cp.execFileSync(executable, [...prefix, ...args], { stdio: 'inherit' });

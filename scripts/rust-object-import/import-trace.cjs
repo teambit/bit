@@ -19,6 +19,7 @@ const metrics = {
   lookupResults: { repository: { found: 0, missing: 0 }, component: { found: 0, missing: 0 } },
   version: { serializedBytes: 0, serializedObjects: 0 },
   mutableFrames: { counts: {}, serializedBytes: 0 },
+  materialization: { frames: 0, files: 0, bytes: 0, completed: 0, skipped: 0, failed: 0 },
   inflation: { incoming: 0, repository: 0 },
   receivedObjects: 0,
   receivedCompressedBytes: 0,
@@ -39,6 +40,45 @@ const metrics = {
   tar: { operations: 0, objects: 0, nativeSources: 0, fallbacks: 0, batches: 0 },
   modules: {},
 };
+// Observe BWM1 wire acknowledgements without wrapping writer methods whose
+// identities decide native eligibility. This preload is excluded from timing.
+if (output && process.pid === owner) {
+  const childProcess = require('node:child_process');
+  const spawn = childProcess.spawn;
+  childProcess.spawn = function (...args) {
+    const child = spawn.apply(this, args);
+    if (!child.stdin || !child.stdout) return child;
+    let workspace = false;
+    let pending = '';
+    const write = child.stdin.write;
+    child.stdin.write = function (bytes, ...rest) {
+      if (Buffer.isBuffer(bytes) && bytes.subarray(0, 4).toString() === 'BWM1') {
+        workspace = true;
+        metrics.materialization.frames++;
+        metrics.materialization.files += bytes.readUInt32BE(8);
+        metrics.materialization.bytes += bytes.length;
+      }
+      return write.call(this, bytes, ...rest);
+    };
+    child.stdout.on('data', (bytes) => {
+      if (!workspace) return;
+      pending += bytes.toString();
+      let newline;
+      while ((newline = pending.indexOf('\n')) >= 0) {
+        try {
+          const response = JSON.parse(pending.slice(0, newline));
+          metrics.materialization.completed += response.completed || 0;
+          metrics.materialization.skipped += response.skipped?.length || 0;
+          metrics.materialization.failed += Number(response.failed === true);
+        } catch {
+          metrics.materialization.failed++;
+        }
+        pending = pending.slice(newline + 1);
+      }
+    });
+    return child;
+  };
+}
 if (output && process.pid === owner)
   asyncHooks
     .createHook({

@@ -44,11 +44,7 @@ export default class AbstractVinyl extends (Vinyl as FileConstructor) {
     verbose: boolean = this.verbose
   ): Promise<string | null | undefined> {
     const filePath = writePath || this.path;
-    const msg = _verboseMsg(filePath, override);
-    if (verbose) {
-      console.log(msg); // eslint-disable-line no-console
-    }
-    logger.debug(msg);
+    logFileWrite(filePath, override, verbose);
     if (!override && fs.existsSync(filePath)) return null;
     await fs.outputFile(filePath, eol.auto(this.contents));
     return filePath;
@@ -99,3 +95,14 @@ export function _verboseMsg(filePath: string, force: boolean) {
   const msg = `writing a file to the file-system at ${filePath}, force: ${force.toString()}`;
   return msg;
 }
+
+export function logFileWrite(filePath: string, override: boolean, verbose: boolean) {
+  const msg = _verboseMsg(filePath, override);
+  if (verbose) {
+    console.log(msg); // eslint-disable-line no-console
+  }
+  logger.debug(msg);
+}
+
+// Capture before other modules can replace the prototype method with a hook.
+export const defaultVinylWrite = AbstractVinyl.prototype.write;

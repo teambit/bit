@@ -12,6 +12,7 @@ mod tar_extensions;
 mod tar_header;
 mod tar_progress;
 mod validate;
+mod workspace;
 
 use std::{env, io, process::ExitCode};
 

@@ -33,6 +33,10 @@ function fixtures() {
 test('provisioning trusts only successful exact-revision push/dispatch builds in the release repository', () => {
   const { artifact, run } = fixtures();
   assert.equal(trustedArtifact(artifact, run, 'zkochan/bit', revision, name), artifact);
+  assert.equal(
+    trustedArtifact(artifact, { ...run, head_branch: 'rust-workspace-materialization' }, 'zkochan/bit', revision, name),
+    artifact
+  );
   for (const patch of [
     { event: 'pull_request' },
     { conclusion: 'failure' },

@@ -37,7 +37,10 @@ function trustedArtifact(artifact, run, repository, revision, name) {
   assert.equal(run.status, 'completed');
   assert.equal(run.conclusion, 'success');
   assert.ok(['push', 'workflow_dispatch'].includes(run.event), 'untrusted workflow event');
-  assert.ok(['rust', 'rust-object-import'].includes(run.head_branch), 'untrusted workflow branch');
+  assert.ok(
+    ['rust', 'rust-object-import', 'rust-workspace-materialization'].includes(run.head_branch),
+    'untrusted workflow branch'
+  );
   return artifact;
 }
 async function boundedBody(response, limit) {

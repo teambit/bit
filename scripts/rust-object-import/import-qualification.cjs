@@ -53,6 +53,8 @@ assert.ok(
         'store',
         'native',
         'tar-operation',
+        'workspace-node',
+        'workspace-native',
         'tar',
         'tar-staged',
         'tar-baseline',
@@ -78,7 +80,9 @@ assert.ok(
 assert.ok(!modes.includes('tar-baseline') || baselineCli, 'tar-baseline requires a separate compiled baseline CLI');
 async function command(directory, ids, requestedMode, allHistory, traceFile, cpuProfileFile) {
   const commandRoot = requestedMode === 'tar-baseline' ? baselineCli : cliRoot;
-  const mode = requestedMode === 'tar-baseline' || requestedMode === 'tar-operation' ? 'tar' : requestedMode;
+  const mode = ['tar-baseline', 'tar-operation', 'workspace-node', 'workspace-native'].includes(requestedMode)
+    ? 'tar'
+    : requestedMode;
   const commandHelper = requestedMode === 'tar-baseline' ? baselineHelper : helper;
   const cpuFile = path.join(directory, 'cpu.txt');
   const args = [
@@ -95,6 +99,7 @@ async function command(directory, ids, requestedMode, allHistory, traceFile, cpu
   if (traceFile) args.unshift('--require', path.join(__dirname, 'import-trace.cjs'));
   const env = {
     ...process.env,
+    BIT_RUST_WORKSPACE_MATERIALIZATION: requestedMode === 'workspace-native' ? 'on' : 'off',
     BIT_RUST_OBJECT_IMPORT:
       mode === 'native' ||
       mode === 'tar' ||
@@ -191,7 +196,8 @@ async function verifyWorkspace(directory, manifest) {
   const bitmap = load('comment-json').parse(await fs.readFile(path.join(directory, '.bitmap'), 'utf8'));
   const contents = [];
   for (const [id, expected] of Object.entries(manifest.components)) {
-    const entry = bitmap[id];
+    // Bitmap keys may omit the scope when names are unique in the workspace.
+    const entry = Object.values(bitmap).find((value) => value && `${value.scope}/${value.name}` === id);
     assert.ok(entry?.rootDir && entry.mainFile === 'index.js', `missing checkout entry ${id}`);
     for (const file of expected.files) {
       const filename = path.join(directory, entry.rootDir, file.relativePath);
@@ -481,6 +487,14 @@ async function workspace(directory, manifest) {
               'overlapping imports require native merge coverage'
             );
         }
+        if (mode === 'workspace-native') {
+          assert.ok(commandKind !== 'objects', 'workspace qualification must materialize files');
+          assert.ok(cold.trace.materialization.files > 0, 'actual workspace files must reach Rust');
+          assert.equal(cold.trace.materialization.completed, cold.trace.materialization.files);
+          assert.equal(cold.trace.materialization.failed, 0, 'ordinary fixture must not hide write fallback');
+          assert.ok(cold.trace.materialization.completed >= cold.workspaceVerification.files);
+        }
+        if (mode === 'workspace-node') assert.equal(cold.trace.materialization.files, 0);
         const incomingVersions = Object.values(manifest.hashes).filter((object) => object.type === 'Version').length;
         if (incomingVersions) {
           assert.ok(cold.trace.stages.versionParseOther?.calls >= incomingVersions, 'Version parsing must be traced');
