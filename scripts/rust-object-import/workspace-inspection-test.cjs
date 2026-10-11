@@ -34,49 +34,6 @@ async function fixture(t) {
 const beginReply = (data) => typeof data?.token === 'string' && Array.isArray(data.files);
 const filesReply = (data) => typeof data?.modified === 'boolean' && Array.isArray(data.statuses);
 const finishReply = (data) => data?.finished === true;
-test('parallel component loading returns request order while retaining completion-order cache effects', async () => {
-  const { ComponentLoader } = compiled
-    ? require(path.join(path.dirname(installed.resolve('@teambit/legacy.consumer-component')), 'component-loader.js'))
-    : source('components/legacy/consumer-component/component-loader.ts');
-  const { ComponentID, ComponentIdList } = installed('@teambit/component-id');
-  const ids = ['first', 'second', 'cached'].map((name) =>
-    ComponentID.fromObject({ name, scope: 'qualification.inspection', version: '1.0.0' })
-  );
-  const components = ids.map((id) => ({ id }));
-  const cache = new Map([[ids[2].toString(), components[2]]]);
-  const effects = [];
-  const pending = new Map();
-  let started;
-  const bothStarted = new Promise((resolve) => {
-    started = resolve;
-  });
-  const loader = Object.create(ComponentLoader.prototype);
-  loader.consumer = { bitmapIdsFromCurrentLaneIncludeRemoved: ComponentIdList.fromArray(ids) };
-  loader.componentsCache = {
-    get: (key) => cache.get(key),
-    set: (key, value) => {
-      effects.push(key);
-      cache.set(key, value);
-    },
-  };
-  loader.shouldRunInParallel = async () => true;
-  loader.loadOne = (id) =>
-    new Promise((resolve) => {
-      pending.set(id.toString(), resolve);
-      if (pending.size === 2) started();
-    });
-  const loading = loader.loadMany(ComponentIdList.fromArray(ids));
-  await bothStarted;
-  pending.get(ids[1].toString())(components[1]);
-  await new Promise((resolve) => setImmediate(resolve));
-  pending.get(ids[0].toString())(components[0]);
-  const result = await loading;
-  assert.deepEqual(effects, [ids[1].toString(), ids[0].toString()], 'cache effects still follow actual completion');
-  assert.deepEqual(result.components, components, 'loaded rows follow requests, followed by existing cache rows');
-  result.components.forEach((component, index) => assert.equal(component, components[index]));
-  assert.deepEqual(result.invalidComponents, []);
-  assert.deepEqual(result.removedComponents, []);
-});
 test('retained inspection snapshots preserve canonical bytes, ordered files and normalized hashes', async (t) => {
   const directory = await fixture(t),
     snapshots = path.join(directory, 'snapshots');
@@ -901,4 +858,48 @@ test('malformed snapshot and status replies retire the helper before preserving 
       NativeSession.prototype.request = request;
     }
   }
+});
+
+test('parallel component loading returns request order while retaining completion-order cache effects', async () => {
+  const { ComponentLoader } = compiled
+    ? require(path.join(path.dirname(installed.resolve('@teambit/legacy.consumer-component')), 'component-loader.js'))
+    : source('components/legacy/consumer-component/component-loader.ts');
+  const { ComponentID, ComponentIdList } = installed('@teambit/component-id');
+  const ids = ['first', 'second', 'cached'].map((name) =>
+    ComponentID.fromObject({ name, scope: 'qualification.inspection', version: '1.0.0' })
+  );
+  const components = ids.map((id) => ({ id }));
+  const cache = new Map([[ids[2].toString(), components[2]]]);
+  const effects = [];
+  const pending = new Map();
+  let started;
+  const bothStarted = new Promise((resolve) => {
+    started = resolve;
+  });
+  const loader = Object.create(ComponentLoader.prototype);
+  loader.consumer = { bitmapIdsFromCurrentLaneIncludeRemoved: ComponentIdList.fromArray(ids) };
+  loader.componentsCache = {
+    get: (key) => cache.get(key),
+    set: (key, value) => {
+      effects.push(key);
+      cache.set(key, value);
+    },
+  };
+  loader.shouldRunInParallel = async () => true;
+  loader.loadOne = (id) =>
+    new Promise((resolve) => {
+      pending.set(id.toString(), resolve);
+      if (pending.size === 2) started();
+    });
+  const loading = loader.loadMany(ComponentIdList.fromArray(ids));
+  await bothStarted;
+  pending.get(ids[1].toString())(components[1]);
+  await new Promise((resolve) => setImmediate(resolve));
+  pending.get(ids[0].toString())(components[0]);
+  const result = await loading;
+  assert.deepEqual(effects, [ids[1].toString(), ids[0].toString()], 'cache effects still follow actual completion');
+  assert.deepEqual(result.components, components, 'loaded rows follow requests, followed by existing cache rows');
+  result.components.forEach((component, index) => assert.equal(component, components[index]));
+  assert.deepEqual(result.invalidComponents, []);
+  assert.deepEqual(result.removedComponents, []);
 });
