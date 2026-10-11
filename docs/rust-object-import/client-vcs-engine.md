@@ -457,3 +457,48 @@ built from the same native sources. Reports, retained samples and absolute media
 are in `bit-merge-history-evidence-2026-10-11/performance` outside Git. Local
 qualification is Linux; the source/compiled adapter matrix covers Linux, macOS
 and Windows in CI.
+
+### Lane snapshot policy and pending merge state
+
+The next operation boundary uses the `BMT1` protocol in the existing workspace
+helper session. Rust selects lane snapshot parents, visible or hidden lane head
+updates, and readme head updates. Merge reconciliation covers ordinary second
+parents, diverged squash metadata, and unrelated history origin rules. Node
+applies guarded patches to the existing model objects and retains hook calls,
+configuration handling, public error classes, and object identities.
+
+Rust also owns a bounded pending merge list for each helper session. Opaque
+tokens and revisions bind initialization, add/remove transitions, and persistence
+to the exact state acknowledged by the helper. A stale or malformed response
+retires the helper before canonical fallback. Pending metadata is capped at
+4 MiB and 4096 entries. Node supplies canonical JSON formatting; Rust validates
+that its parsed value equals the owned list before writing it. Successful write
+acknowledgements remain authoritative if the live Node object subsequently changes.
+
+Existing ordinary Unix files retain their inode, permissions, ownership, ACLs,
+and extended attributes. Symlinks and hard links use canonical persistence.
+Existing Windows files use canonical persistence; native creation of new files
+is supported. This remains opt-in through `BIT_RUST_CLIENT_VCS=on`.
+
+`merge-state.test.cjs` runs against source and the physical compiled graph in
+the Linux/macOS/Windows CI matrix. Real workspace qualification exercises
+manual recovery, automatic ours/theirs, diverged squash, unrelated ours/theirs,
+and completed lane abort in native, missing-helper, and failed-helper modes.
+It compares source bytes, object contents and metadata, bitmap, index, status,
+history, and pending state. Diagnostic traces require accepted native lane
+snapshot, reconciliation, transition, and persistence requests with one helper
+per command. Evidence remains outside Git in
+`$HOME/bit-merge-state-evidence-2026-10-11`.
+
+Fast-forward and detached squash history rewriting, broader lane orchestration,
+and configuration merge policy remain for the next merge migration chunk. This
+boundary does not complete the merge milestone or the umbrella roadmap.
+
+Local qualification passes 22 source and 22 compiled adapter tests, 54 source
+and 54 compiled regressions, 69 unchanged canonical model tests, 154 Rust
+workspace tests, and 30 packaged-helper checks. Native formatting, Clippy,
+Dylint and rustdoc checks pass. The production revision is
+`65a0dae0d6456286bef2561bdb5646c6fdbf29f4`; native source SHA-256 is
+`c04e02ad536979b41993b78ec9a031f0d1c294c7136a77bf6935376da7576c4a`.
+The official explicit-target helper SHA-256 is
+`1d4f407a23fe73bfda8cd95a93232b42a5233a61dba34b6888157f32682ad940`.
