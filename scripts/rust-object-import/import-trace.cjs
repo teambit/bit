@@ -55,6 +55,13 @@ const metrics = {
       'recoveryAdvance',
       'recoveryBitmap',
       'resetRefsPlan',
+      'transferCollect',
+      'transferInitialize',
+      'transferArchive',
+      'transferRelease',
+      'transferPending',
+      'transferTransactionInitialize',
+      'transferTransactionReceipt',
     ].map((kind) => [
       kind,
       {
@@ -63,6 +70,7 @@ const metrics = {
         completed: 0,
         failed: 0,
         ...(kind === 'recoveryAdvance' ? { stepsCompleted: 0, dataFailed: 0 } : {}),
+        ...(kind.startsWith('transfer') ? { objects: 0, sources: 0, bodyBytes: 0, archiveBytes: 0 } : {}),
       },
     ])
   ),
@@ -131,6 +139,11 @@ if (output && process.pid === owner) {
                 ? operation.objects.length
                 : 1
               : operation.files?.length || (operation.kind === 'compare' ? 1 : 0);
+          if (magic === 'BMT1' && operation.kind === 'transferInitialize') {
+            for (const object of operation.objects || []) {
+              if (object.metadata?.type === 'Source') metric.bodyBytes += (object.metadata.compressed?.length || 0) / 2;
+            }
+          }
           if (magic === 'BMH1' && operation.kind === 'mergeFiles') {
             for (const file of operation.current || []) {
               metric.workspaceFiles += Number(Boolean(file.workspace));
@@ -205,6 +218,12 @@ if (output && process.pid === owner) {
             metric.stepsCompleted += response.data?.completed || 0;
             metric.dataFailed += Number(response.data?.failed === true);
           }
+          if (magic === 'BMT1:transferCollect') {
+            metric.objects += response.data?.objects?.length || 0;
+            metric.sources += response.data?.objects?.filter((object) => object.type === 'Source').length || 0;
+          }
+          if (magic === 'BMT1:transferInitialize') metric.objects += response.data?.count || 0;
+          if (magic === 'BMT1:transferArchive') metric.archiveBytes += response.data?.bytes || 0;
           if (magic === 'BWS1:scan') metric.files += response.completed || 0;
           if ('skipped' in metric) metric.skipped += response.skipped?.length || 0;
           metric.failed += Number(response.failed === true);
