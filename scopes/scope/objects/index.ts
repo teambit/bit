@@ -62,3 +62,16 @@ export {
 export type { RustRecoveryOperation } from './objects/rust-lane-recovery';
 
 export { planRustResetRefs, registerRustResetClass, registerRustResetRepositoryHooks } from './objects/rust-reset-refs';
+
+export {
+  registerRustTransferClass,
+  registerRustTransferRepositoryHooks,
+  hasRustTransferClass,
+  withRustTransferOperation,
+  requestRustTransfer,
+  collectRustTransferVersions,
+  collectRustExportObjects,
+  prepareRustTransferList,
+  rustTransferObjectsHash,
+  rustTransferTar,
+} from './objects/rust-transfer';

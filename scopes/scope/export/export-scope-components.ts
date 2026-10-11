@@ -21,6 +21,7 @@ import { ExportPersist, ExportValidate, RemovePendingDir, PendingDirStatus } fro
 import { loader } from '@teambit/legacy.loader';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentComponentsLimit, concurrentFetchLimit } from '@teambit/harmony.modules.concurrency';
+import { registerRustExportTransactionFunctions, tryRustExportTransaction } from './rust-export-transaction';
 
 /**
  * ** Legacy and "bit sign" Only **
@@ -372,11 +373,18 @@ export async function persistRemotes(manyObjectsPerRemote: RemotesForPersist[], 
 }
 
 export async function resumeExport(scope: Scope, exportId: string, remotes: string[]): Promise<string[]> {
+  const { withRustTransferOperation } = require('@teambit/objects');
+  return withRustTransferOperation(() => resumeExportWithinOperation(scope, exportId, remotes));
+}
+
+async function resumeExportWithinOperation(scope: Scope, exportId: string, remotes: string[]): Promise<string[]> {
   const scopeRemotes: Remotes = await getScopeRemotes(scope);
   const remotesObj = await Promise.all(remotes.map((r) => scopeRemotes.resolve(r)));
   const remotesForPersist: RemotesForPersist[] = remotesObj.map((remote) => ({ remote }));
-  await validateRemotes(remotesObj, exportId);
-  await persistRemotes(remotesForPersist, exportId);
+  if (!(await tryRustExportTransaction(remotesForPersist, exportId, true))) {
+    await validateRemotes(remotesObj, exportId);
+    await persistRemotes(remotesForPersist, exportId);
+  }
   return compact(remotesForPersist.map((r) => r.exportedIds).flat());
 }
 
@@ -493,3 +501,5 @@ export async function deletePendingExport(
     readAnswer: (result: RemovePendingDirResult) => result?.existed,
   });
 }
+
+registerRustExportTransactionFunctions(module.exports);

@@ -11,7 +11,8 @@ import {
 
 /** Search only beside this installed runtime. Never search PATH, a workspace, or the network. */
 export function resolveRustObjectImportExecutable(context: 'read' | 'import' = 'read'): string | undefined {
-  const configured = process.env.BIT_RUST_OBJECT_IMPORT;
+  const configured =
+    process.env.BIT_RUST_OBJECT_IMPORT || (process.env.BIT_RUST_CLIENT_VCS === 'on' ? 'packaged' : undefined);
   if (!configured || configured === 'off') return undefined;
   if (configured !== 'packaged') return path.isAbsolute(configured) ? path.toNamespacedPath(configured) : undefined;
   try {

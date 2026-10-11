@@ -1,3 +1,4 @@
+import { collectRustExportObjects } from '../objects/rust-transfer';
 import { rebaseRustVersionHistory } from '../objects/rust-squash-history';
 import { forEach, isEmpty, pickBy, mapValues, isEqual, clone, findLastKey } from 'lodash';
 import { Mutex } from 'async-mutex';
@@ -970,6 +971,10 @@ Error from "semver": ${err.message}`);
     throwForMissingLocalArtifacts = false,
     workspaceId?: ComponentID
   ): Promise<ObjectItem[]> {
+    if (process.env.BIT_RUST_CLIENT_VCS === 'on') {
+      const native = await collectRustExportObjects(this, repo, versions, throwForMissingLocalArtifacts, workspaceId);
+      if (native) return native;
+    }
     const refsWithoutArtifacts: Ref[] = [];
     const artifactsRefs: Ref[] = [];
     const artifactsRefsFromExportedVersions: Ref[] = [];

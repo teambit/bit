@@ -1,3 +1,4 @@
+import { registerRustTransferClass } from '@teambit/objects';
 import { sortBy, unionWith, isEmpty, cloneDeep, compact } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
@@ -277,3 +278,5 @@ export function removeInternalConfigFieldsWithMutation(config?: ExtensionConfig)
   if (!config || config === REMOVE_EXTENSION_SPECIAL_SIGN) return;
   INTERNAL_CONFIG_FIELDS.forEach((field) => delete config[field]);
 }
+
+registerRustTransferClass('ExtensionDataList', ExtensionDataList, ['findExtension', 'findCoreExtension', 'find']);
