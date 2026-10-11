@@ -46,3 +46,22 @@ export class LiveObjects {
     this.entries.clear();
   }
 }
+
+const nativeLiveMethods = ['get', 'set'].map((name) => [name, LiveObjects.prototype[name]] as const);
+const nativeEntriesGet = Map.prototype.get;
+/** Keep native cache inspections on the canonical weak-object registry. */
+export function canReadLiveObjectsNatively(live: LiveObjects): boolean {
+  if (!live || Object.getPrototypeOf(live) !== LiveObjects.prototype) return false;
+  const entries = Object.getOwnPropertyDescriptor(live, 'entries')?.value;
+  return Boolean(
+    entries &&
+      Object.getPrototypeOf(entries) === Map.prototype &&
+      (Object.getOwnPropertyDescriptor(entries, 'get') || Object.getOwnPropertyDescriptor(Map.prototype, 'get'))
+        ?.value === nativeEntriesGet &&
+      nativeLiveMethods.every(
+        ([name, method]) =>
+          (Object.getOwnPropertyDescriptor(live, name) || Object.getOwnPropertyDescriptor(LiveObjects.prototype, name))
+            ?.value === method
+      )
+  );
+}

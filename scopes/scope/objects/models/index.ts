@@ -28,3 +28,6 @@ registerRustHistoryVersion(Version);
 
 import { registerRustLaneSnapshotModels } from '../objects/rust-lane-snapshot';
 registerRustLaneSnapshotModels({ ModelComponent, Version, Lane });
+
+import { registerRustSquashModels } from '../objects/rust-squash-history';
+registerRustSquashModels({ ModelComponent, Version, VersionHistory });

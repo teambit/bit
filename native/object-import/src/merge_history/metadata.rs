@@ -2,7 +2,7 @@
 use super::{count, hash, invalid};
 use serde_json::Value;
 use std::io;
-pub(super) fn validate(value: &Value) -> io::Result<()> {
+pub(crate) fn validate(value: &Value) -> io::Result<()> {
     if !value
         .get("mainFile")
         .is_some_and(|value| {

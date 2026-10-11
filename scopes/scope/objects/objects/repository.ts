@@ -1,4 +1,5 @@
 import fs from 'fs-extra';
+import { registerRustSquashRepository } from './rust-squash-history';
 import { Mutex } from 'async-mutex';
 import { compact, uniqBy, differenceWith, isEqual } from 'lodash';
 import { BitError } from '@teambit/bit-error';
@@ -1245,6 +1246,7 @@ export default class Repository {
 }
 
 registerRustHistoryRepository(Repository);
+registerRustSquashRepository(Repository, BitObject);
 
 const snapshotRepositoryDefaults = [
   'writeObjectsToTheFS',

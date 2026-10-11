@@ -1,6 +1,9 @@
 pub(crate) use state::State;
 mod lane;
+mod messages;
+mod rebase;
 mod reconcile;
+mod squash;
 mod state;
 mod write;
 
@@ -21,6 +24,9 @@ const MAX_JSON: usize = 4 * 1024 * 1024;
     deny_unknown_fields
 )]
 enum Request {
+    SquashPolicy(squash::Policy),
+    SquashMessages { objects_directory: PathBuf, refs: Vec<String> },
+    HistoryRebase { existing_hashes: Vec<String>, incoming: Vec<rebase::Version> },
     LaneSnap(lane::Plan),
     ReconcileSnap(reconcile::Plan),
     Initialize { entries: Vec<Value> },
@@ -49,10 +55,39 @@ pub(crate) fn serve(
         }
         Err(_) => json!({"version":1,"id":id,"completed":0,"skipped":[],"failed":true}),
     };
-    protocol::respond(writer, &response)
+    let mut output = Output(Vec::new());
+    if serde_json::to_writer(&mut output, &response).is_err() {
+        return protocol::respond(
+            writer,
+            &json!({"version":1,"id":id,"completed":0,"skipped":[],"failed":true}),
+        );
+    }
+    writer.write_all(&output.0)?;
+    writer.write_all(b"\n")?;
+    writer.flush()
+}
+struct Output(Vec<u8>);
+impl Write for Output {
+    fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+        if self.0.len() + bytes.len() > MAX_JSON {
+            return Err(invalid("merge state output budget"));
+        }
+        self.0.extend_from_slice(bytes);
+        Ok(bytes.len())
+    }
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
+    }
 }
 fn apply(request: Request, state: &mut State, bytes: &[u8]) -> io::Result<Value> {
     match request {
+        Request::SquashPolicy(input) => squash::policy(&input),
+        Request::SquashMessages { objects_directory, refs } => {
+            messages::read(&objects_directory, &refs)
+        }
+        Request::HistoryRebase { existing_hashes, incoming } => {
+            rebase::plan(&existing_hashes, &incoming)
+        }
         Request::LaneSnap(input) => lane::plan(&input),
         Request::ReconcileSnap(input) => reconcile::plan(&input),
         Request::Initialize { entries } => state.initialize(entries, bytes),
@@ -81,5 +116,7 @@ fn hash(hash: &str) -> io::Result<()> {
     }
     Ok(())
 }
+#[cfg(test)]
+mod squash_tests;
 #[cfg(test)]
 mod tests;

@@ -8,6 +8,7 @@ mod mutable_store;
 mod operation;
 mod protocol;
 mod read_store;
+mod read_version;
 mod snapshot;
 mod store;
 mod tar_archive;

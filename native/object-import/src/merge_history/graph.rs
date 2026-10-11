@@ -1,4 +1,4 @@
-use super::{MAX_RAW, count, hash, invalid, path};
+use super::{count, hash, invalid, path};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::{
@@ -57,28 +57,11 @@ fn put(versions: &mut Vec<Version>, version: Version) {
     }
 }
 struct Reader<'a> {
-    directory: &'a std::path::Path,
-    compressed: usize,
-    raw: usize,
+    repository: crate::read_version::Reader<'a>,
 }
 impl Reader<'_> {
     fn version(&mut self, current: &str) -> io::Result<Version> {
-        let object = crate::checkout::repository::read(
-            self.directory,
-            hash(current)?,
-            MAX_RAW - self.raw,
-            &mut self.compressed,
-        )?;
-        self.raw += object.len();
-        let (size, body) = crate::checkout::repository::split(&object, hash(current)?, "Version")?;
-        if size.parse::<usize>().is_err() {
-            return Err(invalid("history invalid Version size"));
-        }
-        let value: Value = serde_json::from_slice(body).map_err(io::Error::other)?;
-        super::metadata::validate(&value)?;
-        if !value.is_object() {
-            return Err(invalid("history Version body must be object"));
-        }
+        let value = self.repository.read(current)?;
         let parents = value
             .get("parents")
             .filter(|value| !value.is_null())
@@ -152,7 +135,8 @@ pub(super) fn load(request: &Load) -> io::Result<Value> {
     }
     let mut versions = request.cached.clone();
     let mut added = Vec::new();
-    let mut reader = Reader { directory: &request.objects_directory, compressed: 0, raw: 0 };
+    let mut reader =
+        Reader { repository: crate::read_version::Reader::new(&request.objects_directory)? };
     for head in heads(request)? {
         reader.traverse(&head, &versions, &mut added)?;
     }

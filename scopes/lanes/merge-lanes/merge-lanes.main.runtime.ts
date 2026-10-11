@@ -19,7 +19,13 @@ import { getLogForSquash } from '@teambit/harmony.modules.get-basic-log';
 import type { ComponentID } from '@teambit/component-id';
 import { ComponentIdList } from '@teambit/component-id';
 import type { Lane, Version, Log } from '@teambit/objects';
-import { Ref, withRustSnapshotOperation } from '@teambit/objects';
+import {
+  Ref,
+  withRustSnapshotOperation,
+  isRustSnapshotOperation,
+  planRustSquash,
+  readRustSquashMessages,
+} from '@teambit/objects';
 import { isSnap } from '@teambit/component-version';
 import pMapSeries from 'p-map-series';
 import type { Scope as LegacyScope } from '@teambit/legacy.scope';
@@ -540,42 +546,46 @@ export class MergeLanesMain {
   }
 
   async abortLaneMerge(checkoutProps: CheckoutProps, mergeAbortOpts: MergeAbortOpts) {
-    if (!this.workspace) throw new OutsideWorkspaceError();
-    const lastMerge = new LastMerged(this.scope, this.workspace.consumer, this.logger);
-    const currentLane = await this.lanes.getCurrentLane();
-    const { compDirsToRemove } = await lastMerge.restoreFromLastMerged(mergeAbortOpts, currentLane);
+    return withRustSnapshotOperation(async () => {
+      if (!this.workspace) throw new OutsideWorkspaceError();
+      const lastMerge = new LastMerged(this.scope, this.workspace.consumer, this.logger);
+      const currentLane = await this.lanes.getCurrentLane();
+      const { compDirsToRemove } = await lastMerge.restoreFromLastMerged(mergeAbortOpts, currentLane);
 
-    await this.workspace._reloadConsumer();
+      await this.workspace._reloadConsumer();
 
-    this.workspace.consumer.scope.objects.unmergedComponents.removeAllComponents();
-    await this.workspace.consumer.scope.objects.unmergedComponents.write();
+      if (process.env.BIT_RUST_CLIENT_VCS === 'on')
+        await this.workspace.consumer.scope.objects.unmergedComponents.removeAllComponentsNative();
+      else this.workspace.consumer.scope.objects.unmergedComponents.removeAllComponents();
+      await this.workspace.consumer.scope.objects.unmergedComponents.write();
 
-    const configMergeFile = this.workspace.getConflictMergeFile();
-    await configMergeFile.delete();
+      const configMergeFile = this.workspace.getConflictMergeFile();
+      await configMergeFile.delete();
 
-    let checkoutResults: ApplyVersionResults | undefined;
-    let checkoutError: Error | undefined;
-    checkoutProps.ids = this.workspace.listIds();
-    checkoutProps.restoreMissingComponents = true;
-    try {
-      checkoutResults = await this.checkout.checkout(checkoutProps);
-    } catch (err: any) {
-      this.logger.error(`merge-abort got an error during the checkout stage`, err);
-      checkoutError = err;
-    }
+      let checkoutResults: ApplyVersionResults | undefined;
+      let checkoutError: Error | undefined;
+      checkoutProps.ids = this.workspace.listIds();
+      checkoutProps.restoreMissingComponents = true;
+      try {
+        checkoutResults = await this.checkout.checkout(checkoutProps);
+      } catch (err: any) {
+        this.logger.error(`merge-abort got an error during the checkout stage`, err);
+        checkoutError = err;
+      }
 
-    const restoredItems = [
-      `${path.basename(this.workspace.consumer.bitMap.mapPath)} file`,
-      `${path.basename(this.workspace.consumer.config.path)} file`,
-    ];
-    if (compDirsToRemove.length) {
-      restoredItems.push(`deleted components directories: ${compDirsToRemove.join(', ')}`);
-    }
-    if (currentLane) {
-      restoredItems.push(`${currentLane.id()} lane object`);
-    }
+      const restoredItems = [
+        `${path.basename(this.workspace.consumer.bitMap.mapPath)} file`,
+        `${path.basename(this.workspace.consumer.config.path)} file`,
+      ];
+      if (compDirsToRemove.length) {
+        restoredItems.push(`deleted components directories: ${compDirsToRemove.join(', ')}`);
+      }
+      if (currentLane) {
+        restoredItems.push(`${currentLane.id()} lane object`);
+      }
 
-    return { checkoutResults, restoredItems, checkoutError };
+      return { checkoutResults, restoredItems, checkoutError };
+    });
   }
 
   private async getMainIdsToMerge(lane?: Lane | null, includeNonLaneComps = true, includeUpdateDependents = false) {
@@ -836,6 +846,10 @@ async function squashOneComp(
   opts: { messageTitle?: string; detachHead?: boolean } = {}
 ): Promise<Version | undefined> {
   const { messageTitle, detachHead } = opts;
+  const nativePlan = isRustSnapshotOperation()
+    ? await planRustSquash(divergeData, currentLaneName === DEFAULT_LANE, Boolean(detachHead), componentFromModel)
+    : undefined;
+  if (nativePlan?.action === 'skip') return undefined;
   const shouldSquash = () => {
     if (divergeData.isDiverged()) {
       if (detachHead) {
@@ -858,7 +872,7 @@ async function squashOneComp(
     return true;
   };
 
-  if (!shouldSquash()) {
+  if (!nativePlan && !shouldSquash()) {
     return undefined;
   }
 
@@ -870,6 +884,10 @@ async function squashOneComp(
   const getAllMessages = async () => {
     if (!messageTitle) return [];
     await scope.scopeImporter.importManyObjects({ [otherLaneId.scope]: remoteSnaps.map((s) => s.toString()) });
+    const nativeMessages = isRustSnapshotOperation()
+      ? await readRustSquashMessages(scope.objects, remoteSnaps)
+      : undefined;
+    if (nativeMessages) return nativeMessages;
     const versionObjects = (await Promise.all(remoteSnaps.map((s) => scope.objects.load(s)))) as Version[];
     return compact(versionObjects).map((v) => v.log.message);
   };
@@ -888,11 +906,17 @@ async function squashOneComp(
 
   // if the remote has only one snap, there is nothing to squash.
   // other checks here is to make sure `componentFromModel.addAsOnlyParent` call is not needed.
-  if (remoteSnaps.length === 1 && divergeData.commonSnapBeforeDiverge && currentParents.length === 1) {
+  if (!nativePlan && remoteSnaps.length === 1 && divergeData.commonSnapBeforeDiverge && currentParents.length === 1) {
     return undefined;
   }
 
   const doSquash = async () => {
+    if (nativePlan?.action === 'rewrite') {
+      if (nativePlan.parentChoice === 'common')
+        componentFromModel.addAsOnlyParent(divergeData.commonSnapBeforeDiverge as Ref);
+      else componentFromModel.parents.forEach((ref) => componentFromModel.removeParent(ref));
+      return;
+    }
     if (divergeData.commonSnapBeforeDiverge) {
       componentFromModel.addAsOnlyParent(divergeData.commonSnapBeforeDiverge);
       return;
@@ -901,6 +925,25 @@ async function squashOneComp(
       // when squashing into lane, we have to take main into account
       const modelComponent = await scope.getModelComponentIfExist(id);
       if (!modelComponent) throw new Error(`missing ModelComponent for ${id.toString()}`);
+      const headDescriptor = Object.getOwnPropertyDescriptor(modelComponent, 'head');
+      const mainHead = headDescriptor?.value as Ref | undefined;
+      const mainPlan =
+        isRustSnapshotOperation() && headDescriptor && 'value' in headDescriptor
+          ? await planRustSquash(divergeData, false, Boolean(detachHead), componentFromModel, true, mainHead)
+          : undefined;
+      if (
+        mainPlan?.action === 'rewrite' &&
+        Object.getOwnPropertyDescriptor(modelComponent, 'head')?.value === mainHead
+      ) {
+        if (mainPlan.parentChoice === 'main' && mainHead) {
+          componentFromModel.addAsOnlyParent(mainHead);
+          return;
+        }
+        if (mainPlan.parentChoice === 'none') {
+          componentFromModel.parents.forEach((ref) => componentFromModel.removeParent(ref));
+          return;
+        }
+      }
       if (modelComponent.head) {
         componentFromModel.addAsOnlyParent(modelComponent.head);
         return;

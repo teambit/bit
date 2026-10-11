@@ -1,4 +1,4 @@
-export { SnapsDistance } from './snaps-distance';
+export { SnapsDistance, canPlanSquashNatively } from './snaps-distance';
 export { getDivergeData, getDivergeDataBetweenTwoSnaps } from './get-diverge-data';
 export {
   VersionInfo,

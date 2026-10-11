@@ -35,3 +35,20 @@ export class SnapsDistance {
     return !this.isTargetAhead();
   }
 }
+
+const squashMethods = ['isDiverged', 'isSourceAhead', 'isTargetAhead'].map(
+  (name) => [name, SnapsDistance.prototype[name]] as const
+);
+/** Capture canonical predicates with their class, before adapters or extensions load. */
+export function canPlanSquashNatively(distance: SnapsDistance): boolean {
+  return (
+    Object.getPrototypeOf(distance) === SnapsDistance.prototype &&
+    squashMethods.every(
+      ([name, method]) =>
+        (
+          Object.getOwnPropertyDescriptor(distance, name) ||
+          Object.getOwnPropertyDescriptor(SnapsDistance.prototype, name)
+        )?.value === method
+    )
+  );
+}

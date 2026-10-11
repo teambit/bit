@@ -51,3 +51,5 @@ export {
   transitionRustUnmergedState,
   persistRustUnmergedState,
 } from './objects/rust-merge-state';
+
+export { planRustSquash, readRustSquashMessages } from './objects/rust-squash-history';
