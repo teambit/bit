@@ -493,10 +493,9 @@ export async function install(
   }
   return {
     dependenciesChanged,
-    // The engine has no skipIfHasSideEffectsCache selector; a pending rebuild
-    // is expressed as a selection of the packages the lockfile records as
-    // needing a build.
-    rebuild: async ({ pending } = {}) => {
+    // A pending rebuild is expressed as a selection of the packages the
+    // lockfile records as needing a build.
+    rebuild: async ({ pending, skipIfHasSideEffectsCache } = {}) => {
       const selectedNames = pending ? await pendingBuildNames(rootDir, depsRequiringBuild) : undefined;
       if (selectedNames?.length === 0) return;
       // Reached without an install of its own after a dry run.
@@ -513,6 +512,9 @@ export async function install(
           ...installOptions,
           storeDir: resolvedStoreDir,
           reporter: options.hidePackageManagerOutput ? undefined : toReporterOptions(rebuildReportOptions),
+          // A selected package the side-effects cache already holds a build
+          // of is restored from it instead of running its scripts again.
+          skipIfHasSideEffectsCache,
         },
         undefined,
         selectedNames,
