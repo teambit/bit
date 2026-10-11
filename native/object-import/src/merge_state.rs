@@ -25,6 +25,10 @@ const MAX_JSON: usize = 4 * 1024 * 1024;
     deny_unknown_fields
 )]
 enum Request {
+    ResetRefsPlan(Value),
+    RecoveryInitialize { operations: Vec<crate::recovery::Operation> },
+    RecoveryAdvance { token: String, count: usize },
+    RecoveryBitmap { path: PathBuf, current_root_dirs: Vec<String> },
     ConfigScopePolicy(Value),
     ConfigWorkspaceConflictPlan(Value),
     ConfigWorkspaceConflictCommit(Value),
@@ -88,20 +92,6 @@ impl Write for Output {
 }
 fn apply(request: Request, state: &mut State, bytes: &[u8]) -> io::Result<Value> {
     match request {
-        Request::ConfigScopePolicy(input) => {
-            crate::config_merge::apply("configScopePolicy", &input)
-        }
-        Request::ConfigWorkspaceConflictPlan(input) => config_plan(&input, state),
-        Request::ConfigWorkspaceConflictCommit(input) => {
-            crate::config_merge::conflict_commit(&input, &mut state.conflict_plan)
-        }
-        Request::ConfigComponent(input) => crate::config_merge::apply("configComponent", &input),
-        Request::ConfigWorkspaceMerge(input) => {
-            crate::config_merge::apply("configWorkspaceMerge", &input)
-        }
-        Request::ConfigWorkspaceUpdates(input) => {
-            crate::config_merge::apply("configWorkspaceUpdates", &input)
-        }
         Request::SquashPolicy(input) => squash::policy(&input),
         Request::SquashMessages { objects_directory, refs } => {
             messages::read(&objects_directory, &refs)
@@ -122,8 +112,35 @@ fn apply(request: Request, state: &mut State, bytes: &[u8]) -> io::Result<Value>
             write::commit(&path, &contents)?;
             Ok(json!({"saved":true}))
         }
+        request => metadata(request, state, bytes),
     }
 }
+fn metadata(request: Request, state: &mut State, bytes: &[u8]) -> io::Result<Value> {
+    match request {
+        Request::ResetRefsPlan(input) => crate::recovery::reset(&input),
+        Request::RecoveryInitialize { operations } => state.recovery.initialize(operations, bytes),
+        Request::RecoveryAdvance { token, count } => state.recovery.advance(&token, count),
+        Request::RecoveryBitmap { path, current_root_dirs } => {
+            crate::recovery::bitmap(&path, &current_root_dirs)
+        }
+        Request::ConfigScopePolicy(input) => {
+            crate::config_merge::apply("configScopePolicy", &input)
+        }
+        Request::ConfigWorkspaceConflictPlan(input) => config_plan(&input, state),
+        Request::ConfigWorkspaceConflictCommit(input) => {
+            crate::config_merge::conflict_commit(&input, &mut state.conflict_plan)
+        }
+        Request::ConfigComponent(input) => crate::config_merge::apply("configComponent", &input),
+        Request::ConfigWorkspaceMerge(input) => {
+            crate::config_merge::apply("configWorkspaceMerge", &input)
+        }
+        Request::ConfigWorkspaceUpdates(input) => {
+            crate::config_merge::apply("configWorkspaceUpdates", &input)
+        }
+        _ => Err(invalid("invalid metadata operation")),
+    }
+}
+
 fn config_plan(input: &Value, state: &mut State) -> io::Result<Value> {
     let (output, pending) = crate::config_merge::conflict_plan(input)?;
     state.conflict_plan = Some(pending);

@@ -713,7 +713,9 @@ planning phase. Successful native writes do not pass the file body through Node.
 
 Unix commits preserve the inode and existing metadata of ordinary single-link
 files. Unsupported existing files, including Windows files, symlinks and hard
-links, use the retained-candidate write fallback. Missing helpers, unsupported
+links, use the retained-candidate write fallback. Rust can prepare its owned
+private candidate on Windows without changing that workspace-write fallback.
+Missing helpers, unsupported
 metadata, changed methods, accessors or custom logger implementations retain the
 canonical path. Ordinary Harmony persistence callbacks and lane component-ID
 lists remain eligible because the configuration planner does not invoke the
@@ -824,3 +826,56 @@ the retained measurement driver. Reports preserve individual samples, exact
 state fingerprints, source/compiled modules, helper identity and harness hashes,
 all verified at the start and end of every case. Separate correctness runs
 require successful native acknowledgements for all six operations.
+
+## Lane recovery and reset references
+
+The next operation chunk moves lane backup capture, persistence and restoration,
+bitmap recovery planning, and successful reset reference decisions into the
+shared Rust operation. `LastMerged` and the public reset entry point keep the
+helper alive through their persistence and workspace lifecycle.
+
+Recovery plans contain bounded file operations, with revision-bound tokens and
+acknowledged sequential prefixes. Rust reads each copy source when the operation
+executes; bytes are not cached across a prompt, lane compression callback or
+staged-configuration hook. Initial backup removal, directory creation and file
+copies can run as one phase. A failed phase resumes the canonical implementation
+at its unacknowledged tail, rather than repeating earlier public callbacks or
+the whole backup operation.
+
+The adapter preserves lane cloning and compression, typed errors, prompts and
+repository class hydration. During abort, the saved lane is written to the
+repository before bitmap parsing or the confirmation prompt. Cancellation
+therefore retains that existing lane-write prefix. Staged files are copied or
+deleted at their original lifecycle positions, and the backup is removed last.
+Independent directory removals preserve the existing concurrent behavior;
+sequential removal is eligible only when the directories are disjoint.
+
+The native bitmap reader accepts a bounded subset of JSON with comments and
+trailing commas. It validates component identities, scope/default-scope metadata,
+duplicate roots and lane metadata before returning directory decisions.
+Malformed or unsupported records retain canonical parsing and its public errors.
+Class, parser, method and filesystem overrides also retain canonical execution.
+
+Abort now protects the workspace directory when a merge introduces a workspace
+root component. The directory itself is excluded from removal in both paths,
+including equivalent resolved paths. The bitmap and workspace configuration are
+still restored, and the subsequent checkout handles the surviving components.
+This is an intentional correction to the previous abort behavior, which could
+recursively remove the workspace directory.
+
+For successful resets, Rust selects surviving parents, handles tag/orphaned-tag
+precedence, computes lane retention and detached-head changes, and decides whether
+to retain the model component. Returned parent selectors refer to the adapter's
+live `Ref` objects: equal hashes alone do not establish the reference identity
+used by the canonical lane-removal rule. Fresh bounded Version reads validate
+parent metadata when traversal is required; the common-snap shortcut does not
+require Version reads. Unsupported inputs or error outcomes decline before model
+mutations, preserving the canonical ordering of partial mutations and errors.
+Reset removes model references, rather than deleting the stored Version objects.
+
+Direct native file copies currently qualify ordinary single-link Linux files.
+They preserve an existing destination inode, copy source permissions and retain
+destination ownership and extended attributes. POSIX ACLs, links and other
+platforms retain canonical copying. Node continues to invoke public hooks and
+to serialize compressed lane backups. Rollout remains opt-in under
+`BIT_RUST_CLIENT_VCS=on`.

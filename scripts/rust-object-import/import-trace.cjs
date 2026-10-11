@@ -51,7 +51,20 @@ const metrics = {
       'configWorkspaceConflictPlan',
       'configWorkspaceConflictCommit',
       'configScopePolicy',
-    ].map((kind) => [kind, { frames: 0, files: 0, completed: 0, failed: 0 }])
+      'recoveryInitialize',
+      'recoveryAdvance',
+      'recoveryBitmap',
+      'resetRefsPlan',
+    ].map((kind) => [
+      kind,
+      {
+        frames: 0,
+        files: 0,
+        completed: 0,
+        failed: 0,
+        ...(kind === 'recoveryAdvance' ? { stepsCompleted: 0, dataFailed: 0 } : {}),
+      },
+    ])
   ),
   snapshot: Object.fromEntries(
     ['commit', 'plan', 'index', 'indexWrite'].map((kind) => [
@@ -188,6 +201,10 @@ if (output && process.pid === owner) {
         try {
           const response = JSON.parse(pending.slice(0, newline));
           metric.completed += response.completed || 0;
+          if (magic === 'BMT1:recoveryAdvance') {
+            metric.stepsCompleted += response.data?.completed || 0;
+            metric.dataFailed += Number(response.data?.failed === true);
+          }
           if (magic === 'BWS1:scan') metric.files += response.completed || 0;
           if ('skipped' in metric) metric.skipped += response.skipped?.length || 0;
           metric.failed += Number(response.failed === true);
@@ -234,9 +251,17 @@ function wrap(target, key, stage, inspect) {
       'parse',
       'parseObject',
       'parseObjectWithSize',
+      'parseInflatedObjectWithSize',
       'toObject',
       'writeObjectsToTheFS',
       'getNativeSourceStoreOptions',
+      'getNativeSourceStoreEligibility',
+      'writeValidatedSourceToFS',
+      'writeRemoteLanes',
+      '_findComponent',
+      'validateBeforePersisting',
+      'validateVersion',
+      'validate',
       'getChownOptions',
       '_writeOne',
       'writeObjectFile',
@@ -297,7 +322,7 @@ Module._load = function (request, parent, isMain) {
   )
     return value;
   const Version = value?.Version || (value?.default?.name === 'Version' ? value.default : undefined);
-  if (Version && !versionClasses.has(Version)) {
+  if (Version && !versionClasses.has(Version) && process.env.BIT_RUST_CLIENT_VCS !== 'on') {
     versionClasses.add(Version);
     const validate = Version.prototype.validateBeforePersisting;
     if (typeof validate === 'function') {

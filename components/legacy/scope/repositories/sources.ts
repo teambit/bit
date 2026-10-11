@@ -18,7 +18,15 @@ import {
 import { ComponentNotFound, MergeConflict } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
 import type { Source, Repository, BitObject, ComponentProps, Lane, LaneComponent } from '@teambit/objects';
-import { ModelComponent, Symlink, Version, Ref } from '@teambit/objects';
+import {
+  ModelComponent,
+  Symlink,
+  Version,
+  Ref,
+  isRustSnapshotOperation,
+  planRustResetRefs,
+  registerRustResetClass,
+} from '@teambit/objects';
 import type Scope from '../scope';
 import { ExportMissingVersions } from '../exceptions/export-missing-versions';
 import { ModelComponentMerger } from '../component-ops/model-components-merger';
@@ -345,6 +353,46 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const laneItemHead: Ref | undefined = visibleLaneItem?.head || hiddenLaneItem?.head;
     const isHiddenLaneEntry = !visibleLaneItem && Boolean(hiddenLaneItem);
 
+    const native = isRustSnapshotOperation()
+      ? await planRustResetRefs(
+          this,
+          component,
+          versionsRefs,
+          versions,
+          objectRepo,
+          { componentHadHead, compId, visibleLaneItem, laneItemHead, isHiddenLaneEntry },
+          lane,
+          removeOnlyHead
+        )
+      : undefined;
+    if (native) {
+      const { plan, newHead } = native;
+      if (plan.changeHead) component.setHead(newHead);
+      if (plan.changeLaneHead) {
+        if (newHead) {
+          if (isHiddenLaneEntry) lane?.addComponentToUpdateDependents(compId.changeVersion(newHead.toString()));
+          else if (visibleLaneItem) {
+            visibleLaneItem.head = newHead;
+            if (lane) lane.hasChanged = true;
+          }
+        }
+        if (plan.removeLane) {
+          if (isHiddenLaneEntry) lane?.removeComponentFromUpdateDependentsIfExist(compId);
+          else lane?.removeComponent(compId);
+        }
+        component.laneHeadLocal = newHead;
+        objectRepo.add(lane);
+      }
+      versions.forEach((version) => component.removeVersion(version));
+      const detached = component.detachedHeads as any;
+      detached.heads = plan.detachedRetained.map((index) => detached.heads[index]);
+      if (plan.clearDetachedCurrent) detached.current = undefined;
+      if (plan.keepComponent) objectRepo.add(component);
+      else objectRepo.removeObject(component.hash());
+      await objectRepo.unmergedComponents.removeComponentsNative([component.toComponentId()]);
+      return;
+    }
+
     let allVersionsObjects: Version[] | undefined;
 
     const getNewHead = async () => {
@@ -436,7 +484,9 @@ please either remove the component (bit remove) or remove the lane.`);
     } else {
       objectRepo.removeObject(component.hash());
     }
-    objectRepo.unmergedComponents.removeComponent(component.toComponentId());
+    if (isRustSnapshotOperation())
+      await objectRepo.unmergedComponents.removeComponentsNative([component.toComponentId()]);
+    else objectRepo.unmergedComponents.removeComponent(component.toComponentId());
   }
 
   /**
@@ -800,3 +850,5 @@ possible causes:
     return { mergeResults, mergeErrors, mergeLane };
   }
 }
+
+registerRustResetClass('Sources', SourceRepository);

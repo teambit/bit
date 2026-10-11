@@ -1,3 +1,4 @@
+import { registerRustResetClass } from './rust-reset-refs';
 import fs from 'fs-extra';
 import { registerRustSquashRepository } from './rust-squash-history';
 import { Mutex } from 'async-mutex';
@@ -1245,6 +1246,8 @@ export default class Repository {
   }
 }
 
+registerRustResetClass('Repository', Repository);
+registerRustResetClass('BitObject', BitObject);
 registerRustHistoryRepository(Repository);
 registerRustSquashRepository(Repository, BitObject);
 

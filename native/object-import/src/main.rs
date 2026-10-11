@@ -10,6 +10,7 @@ mod operation;
 mod protocol;
 mod read_store;
 mod read_version;
+mod recovery;
 mod snapshot;
 mod store;
 mod tar_archive;

@@ -844,6 +844,15 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     force = false,
     soft = false
   ): Promise<{ results: ResetResult[]; isSoftUntag: boolean }> {
+    return withRustSnapshotOperation(() => this.resetWithinOperation(componentPattern, head, force, soft));
+  }
+
+  private async resetWithinOperation(
+    componentPattern?: string,
+    head?: boolean,
+    force = false,
+    soft = false
+  ): Promise<{ results: ResetResult[]; isSoftUntag: boolean }> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer = this.workspace.consumer;
     const currentLane = await consumer.getCurrentLaneObject();

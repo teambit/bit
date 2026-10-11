@@ -33,7 +33,13 @@ import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import type { DependenciesGraph, DepEdge, ModelComponent, Lane, Version } from '@teambit/objects';
-import { Ref, Repository, ObjectList } from '@teambit/objects';
+import {
+  Ref,
+  Repository,
+  ObjectList,
+  registerRustRecoveryScope,
+  registerRustResetRepositoryHooks,
+} from '@teambit/objects';
 import type { Scope as LegacyScope, Types } from '@teambit/legacy.scope';
 import { Scope, loadScopeIfExist } from '@teambit/legacy.scope';
 import type { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
@@ -1521,6 +1527,7 @@ export class ScopeMain implements ComponentFactory {
     // used to answer "is content transformed?". the slot is filled by other aspects' providers, so
     // this is a live check rather than a snapshot taken here.
     Repository.hasPostObjectReadTransformer = () => postObjectReadSlot.values().length > 0;
+    registerRustResetRepositoryHooks(Repository);
     ExternalActions.externalActions.push(new ClearCacheAction(scope));
 
     express.register([
@@ -1544,4 +1551,5 @@ export class ScopeMain implements ComponentFactory {
   }
 }
 
+registerRustRecoveryScope(ScopeMain);
 ScopeAspect.addRuntime(ScopeMain);
