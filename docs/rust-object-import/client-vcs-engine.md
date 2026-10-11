@@ -673,3 +673,51 @@ Reproduce with `scripts/rust-object-import/squash-history-qualification.cjs`,
 `BIT_SQUASH_HISTORY_QUALIFICATION_EXTRA_FILES=0` or `256`; choose the workspace
 filesystem with `BIT_SQUASH_HISTORY_QUALIFICATION_TMPDIR`. The checked report
 retains the individual wall/CPU/process-tree samples and exact input fingerprints.
+
+## Component configuration and workspace dependency reconciliation
+
+The shared client operation also owns configuration merge decisions. `BMT1`
+requests merge ordered component aspect configurations, compare aspect data,
+rescue scope dependency policies, reconcile workspace dependency versions, and
+prepare and commit workspace JSONC conflicts. Component, scope and workspace
+policy requests contain bounded metadata; source bodies remain in the existing
+native repository and file merge paths.
+
+Component policy covers ordinary aspects, environment versions and dependency
+resolver policy. Configuration equality preserves canonical JSON key order;
+aspect data compares object keys independently of insertion order and preserves
+array order. Explicit metadata preserves ordinary top-level own `undefined` data
+properties, including their distinction from absent properties; unsupported
+nested values retain the canonical path. Results retain canonical configuration and data references through
+source selectors. The adapter hydrates public classes and private merger state,
+including the original handled-ID array, so later calls see the same state.
+Scope policy appends missing forced dependencies before removing deletion
+markers. Existing entry references survive, while each retained lifecycle receives
+a new array, as in the canonical implementation.
+
+Workspace reconciliation retains lifecycle ordering, forced-policy precedence,
+conflict cleanup, public diagnostics and write ordering. Node parses npm semver
+syntax into bounded comparator metadata; Rust evaluates version comparisons,
+range satisfaction and dependency merge decisions. Public dependency-resolver
+collection, Harmony callbacks, presentation and configuration backup hooks remain
+adapter responsibilities.
+
+For workspace JSONC conflicts, Rust reads the file freshly, applies the canonical
+first literal replacement for each package and invokes the shared bounded Git
+merge. It retains the resulting bytes in an operation-owned private candidate.
+The adapter calls the public backup hook once before the native commit. A
+successful commit is authoritative for the captured original path. If the helper
+fails after planning or a backup hook installs a custom writer, the adapter
+validates and writes the retained candidate without repeating the backup or
+planning phase. Successful native writes do not pass the file body through Node.
+
+Unix commits preserve the inode and existing metadata of ordinary single-link
+files. Unsupported existing files, including Windows files, symlinks and hard
+links, use the retained-candidate write fallback. Missing helpers, unsupported
+metadata, changed methods, accessors or custom logger implementations retain the
+canonical path. Ordinary Harmony persistence callbacks and lane component-ID
+lists remain eligible because the configuration planner does not invoke the
+persistence callbacks and projects ID lists into plain wire arrays.
+
+This path remains controlled by `BIT_RUST_CLIENT_VCS=on`; configuration policy
+migration alone does not establish a command speedup.

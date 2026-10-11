@@ -1,4 +1,4 @@
-mod git;
+pub(crate) mod git;
 use super::{MAX_RAW, count, hash, invalid, path};
 use git::{MergeBytes, git};
 use rayon::prelude::*;

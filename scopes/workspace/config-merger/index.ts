@@ -8,5 +8,7 @@ export type {
 } from '@teambit/component.modules.merge-helper';
 export type { ConfigMergeResult } from './config-merge-result';
 export { ComponentConfigMerger, PolicyDependency } from './component-config-merger';
+export { tryRustComponentConfigMerge } from './rust-component-config-merge';
+export { registerRustScopePolicy, tryRustScopePolicy } from './rust-scope-policy';
 export default ConfigMergerAspect;
 export { ConfigMergerAspect };

@@ -45,6 +45,12 @@ const metrics = {
       'squashPolicy',
       'squashMessages',
       'historyRebase',
+      'configComponent',
+      'configWorkspaceUpdates',
+      'configWorkspaceMerge',
+      'configWorkspaceConflictPlan',
+      'configWorkspaceConflictCommit',
+      'configScopePolicy',
     ].map((kind) => [kind, { frames: 0, files: 0, completed: 0, failed: 0 }])
   ),
   snapshot: Object.fromEntries(
@@ -218,6 +224,11 @@ function wrap(target, key, stage, inspect) {
   if (
     process.env.BIT_RUST_CLIENT_VCS === 'on' &&
     [
+      'debug',
+      'trace',
+      'info',
+      'warn',
+      'error',
       'toBuffer',
       'load',
       'parse',
@@ -301,10 +312,20 @@ Module._load = function (request, parent, isMain) {
     wrap(Version.prototype, 'validateVersion', 'versionConstructorChecks');
     wrap(Version.prototype, 'validate', 'versionFullValidation');
     wrap(Version.prototype, 'toObject', 'versionObjectProjection');
-    wrap(Version.prototype, 'toBuffer', 'versionSerialization', function (buffer) {
-      metrics.version.serializedObjects++;
-      metrics.version.serializedBytes += buffer.byteLength;
-    });
+    wrap(
+      Version.prototype,
+      'debug',
+      'trace',
+      'info',
+      'warn',
+      'error',
+      'toBuffer',
+      'versionSerialization',
+      function (buffer) {
+        metrics.version.serializedObjects++;
+        metrics.version.serializedBytes += buffer.byteLength;
+      }
+    );
     // Keep serialize/compressWithSize identities intact: native eligibility compares them to BitObject's methods.
   }
   if (value?.Repository) {

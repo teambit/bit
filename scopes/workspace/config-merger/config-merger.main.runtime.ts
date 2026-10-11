@@ -17,10 +17,18 @@ import type { ConfigMain } from '@teambit/config';
 import { ConfigAspect } from '@teambit/config';
 import { mergeFiles } from '@teambit/component.modules.merge-helper';
 import { isRange1GreaterThanRange2Naively } from '@teambit/pkg.modules.semver-helper';
+import { withRustSnapshotOperation } from '@teambit/objects';
 import type { ConfigMergeResult } from './config-merge-result';
 import { parseVersionLineWithConflict } from './config-merge-result';
 import { ConfigMergerAspect } from './config-merger.aspect';
 import { AggregatedDeps } from './aggregated-deps';
+import {
+  canPlanWorkspaceConfig,
+  planWorkspaceMerge,
+  planWorkspaceUpdates,
+  registerRustWorkspaceConfig,
+} from './rust-workspace-config';
+import { registerRustWorkspaceConflictHooks, writeWorkspaceConflictsNatively } from './rust-workspace-conflicts';
 import type {
   MergeFileParams,
   MergeStrategy,
@@ -80,6 +88,13 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
   private async writeWorkspaceJsoncWithConflicts(workspaceDepsConflicts: WorkspaceDepsConflicts) {
     const wsConfig = this.config.workspaceConfig;
     if (!wsConfig) throw new Error(`unable to get workspace config`);
+    if (
+      canPlanWorkspaceConfig(this) &&
+      (await writeWorkspaceConflictsNatively(this, wsConfig, workspaceDepsConflicts, mergeFiles, () =>
+        this.logger.debug('writing workspace.jsonc with conflicts')
+      ))
+    )
+      return;
     const wsJsoncPath = wsConfig.path;
     const wsJsoncOriginalContent = await fs.readFile(wsJsoncPath, 'utf8');
     let wsJsoncContent = wsJsoncOriginalContent;
@@ -129,6 +144,50 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
     workspaceDepsConflicts?: WorkspaceDepsConflicts;
     workspaceDepsUnchanged?: WorkspaceDepsUnchanged;
   }> {
+    return withRustSnapshotOperation(() => this.updateWorkspaceJsoncWithDepsWithinOperation(allConfigMerge));
+  }
+
+  private async updateWorkspaceJsoncWithDepsWithinOperation(allConfigMerge: ConfigMergeResult[]): Promise<{
+    workspaceDepsUpdates?: WorkspaceDepsUpdates;
+    workspaceDepsConflicts?: WorkspaceDepsConflicts;
+    workspaceDepsUnchanged?: WorkspaceDepsUnchanged;
+  }> {
+    const native = canPlanWorkspaceConfig(this) ? await planWorkspaceMerge(this, allConfigMerge) : undefined;
+    if (native) {
+      const { plan, workspaceConfig, workspacePolicy, resolverResults } = native;
+      plan.changes.forEach(({ field, name, version }, index) => {
+        workspacePolicy[field][name] = version;
+        this.logger.debug(plan.debug[index]);
+      });
+      plan.debug.slice(plan.changes.length).forEach((message) => this.logger.debug(message));
+      if (plan.removePackages.length) {
+        resolverResults.forEach((result) => {
+          if (!result?.conflict) return;
+          DEPENDENCIES_FIELDS.forEach((field) => {
+            if (!result.conflict[field]) return;
+            result.conflict[field] = result.conflict[field].filter(
+              (dependency) => !plan.removePackages.includes(dependency.name)
+            );
+            if (!result.conflict[field].length) delete result.conflict[field];
+          });
+          if (isEmpty(result.conflict)) result.conflict = undefined;
+        });
+      }
+      const updates: WorkspaceDepsUpdates = Object.fromEntries(
+        plan.updates.map(([name, from, to]) => [name, [from, to]])
+      );
+      // Canonical conflicts omit lifecycle fields without conflicts; the legacy type requires them.
+      const conflicts = plan.conflicts as WorkspaceDepsConflicts;
+      const unchanged: WorkspaceDepsUnchanged = Object.fromEntries(plan.unchanged);
+      if (Object.keys(updates).length) await workspaceConfig.write({ reasonForChange: 'merge (update dependencies)' });
+      this.logger.debug('final workspace.jsonc updates', updates);
+      this.logger.debug('final workspace.jsonc conflicts', conflicts);
+      return {
+        workspaceDepsUpdates: Object.keys(updates).length ? updates : undefined,
+        workspaceDepsConflicts: Object.keys(conflicts).length ? conflicts : undefined,
+        workspaceDepsUnchanged: Object.keys(unchanged).length ? unchanged : undefined,
+      };
+    }
     const allResults = allConfigMerge.map((c) => c.getDepsResolverResult());
 
     // aggregate all dependencies that can be updated (not conflicting)
@@ -263,6 +322,13 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
     components: ConsumerComponent[],
     mergeStrategy?: MergeStrategy
   ): Promise<WorkspaceConfigUpdateResult | undefined> {
+    return withRustSnapshotOperation(() => this.updateDepsInWorkspaceConfigWithinOperation(components, mergeStrategy));
+  }
+
+  private async updateDepsInWorkspaceConfigWithinOperation(
+    components: ConsumerComponent[],
+    mergeStrategy?: MergeStrategy
+  ): Promise<WorkspaceConfigUpdateResult | undefined> {
     if (mergeStrategy === 'ours') {
       this.logger.debug('mergeStrategy is "ours", skipping the workspace.jsonc update');
       return undefined;
@@ -308,130 +374,143 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
       return undefined;
     }
 
+    const nativePlan = canPlanWorkspaceConfig(this)
+      ? await planWorkspaceUpdates(this, workspacePolicy, componentDepsWithMultipleVer, mergeStrategy)
+      : undefined;
     const workspaceDepsUpdates: WorkspaceDepsUpdates = {};
     const workspaceDepsConflicts: WorkspaceDepsConflicts = { dependencies: [], peerDependencies: [] };
 
-    const logs: string[] = [];
+    const logs: string[] = nativePlan?.logs || [];
 
-    Object.keys(componentDeps).forEach((depId) => {
-      const depInCompVer: string = componentDeps[depId];
-      const depInWsVer: string = workspacePolicyObj[depId];
-      const isDepInCompVersion = Boolean(semver.valid(depInCompVer));
-      const isDepInCompRange = !isDepInCompVersion && Boolean(semver.validRange(depInCompVer));
+    if (nativePlan) {
+      nativePlan.updates.forEach(([name, from, to]) => {
+        workspaceDepsUpdates[name] = [from, to];
+      });
+      Object.assign(workspaceDepsConflicts, nativePlan.conflicts);
+      nativePlan.warnings.forEach((message) => this.logger.warn(message));
+    } else {
+      Object.keys(componentDeps).forEach((depId) => {
+        const depInCompVer: string = componentDeps[depId];
+        const depInWsVer: string = workspacePolicyObj[depId];
+        const isDepInCompVersion = Boolean(semver.valid(depInCompVer));
+        const isDepInCompRange = !isDepInCompVersion && Boolean(semver.validRange(depInCompVer));
 
-      const addNotUpdateToLogs = (reason: string) => {
-        logs.push(`${depId} - not updating. ${reason}`);
-      };
+        const addNotUpdateToLogs = (reason: string) => {
+          logs.push(`${depId} - not updating. ${reason}`);
+        };
 
-      if (!isDepInCompVersion && !isDepInCompRange) {
-        addNotUpdateToLogs(`probably a snap-hash`);
-        return; // probably a snap-hash.
-      }
-      const isDepInWsVersion = Boolean(semver.valid(depInWsVer));
-      const isDepInWsRange = !isDepInWsVersion && Boolean(semver.validRange(depInWsVer));
-      if (!isDepInWsVersion && !isDepInWsRange) {
-        addNotUpdateToLogs(`probably a snap-hash`);
-        return; // probably a snap-hash.
-      }
-
-      // both are either versions or ranges
-      const lifeCycle =
-        workspacePolicy.entries.find((d) => d.dependencyId === depId)?.lifecycleType === 'peer'
-          ? 'peerDependencies'
-          : 'dependencies';
-
-      const addToUpdate = (addRangeFrom?: string) => {
-        if (addRangeFrom) {
-          // depInCompVer is a version, depInWsVer is a range
-          const potentialRangeChar = depInWsVer[0];
-          const newRange = potentialRangeChar + depInCompVer;
-          if (newRange === depInWsVer) {
-            addNotUpdateToLogs(`the workspace range ${depInWsVer} already matches ${depInCompVer} from the component`);
-            return;
-          }
-          if (!semver.validRange(newRange)) {
-            const warnMsg = `failed to add the range "${potentialRangeChar}" to ${depInCompVer}, the result is not a valid range`;
-            this.logger.warn(warnMsg);
-            addNotUpdateToLogs(warnMsg);
-            return;
-          }
-          logs.push(`${depId} - updating from ${depInWsVer} to ${newRange} (new range based on ${depInCompVer})`);
-          workspaceDepsUpdates[depId] = [depInWsVer, newRange];
-        } else {
-          logs.push(`${depId} - updating from ${depInWsVer} to ${depInCompVer}`);
-          workspaceDepsUpdates[depId] = [depInWsVer, depInCompVer];
+        if (!isDepInCompVersion && !isDepInCompRange) {
+          addNotUpdateToLogs(`probably a snap-hash`);
+          return; // probably a snap-hash.
         }
-      };
-      const addToConflict = () => {
-        if (mergeStrategy === 'theirs') {
-          addToUpdate();
+        const isDepInWsVersion = Boolean(semver.valid(depInWsVer));
+        const isDepInWsRange = !isDepInWsVersion && Boolean(semver.validRange(depInWsVer));
+        if (!isDepInWsVersion && !isDepInWsRange) {
+          addNotUpdateToLogs(`probably a snap-hash`);
+          return; // probably a snap-hash.
+        }
+
+        // both are either versions or ranges
+        const lifeCycle =
+          workspacePolicy.entries.find((d) => d.dependencyId === depId)?.lifecycleType === 'peer'
+            ? 'peerDependencies'
+            : 'dependencies';
+
+        const addToUpdate = (addRangeFrom?: string) => {
+          if (addRangeFrom) {
+            // depInCompVer is a version, depInWsVer is a range
+            const potentialRangeChar = depInWsVer[0];
+            const newRange = potentialRangeChar + depInCompVer;
+            if (newRange === depInWsVer) {
+              addNotUpdateToLogs(
+                `the workspace range ${depInWsVer} already matches ${depInCompVer} from the component`
+              );
+              return;
+            }
+            if (!semver.validRange(newRange)) {
+              const warnMsg = `failed to add the range "${potentialRangeChar}" to ${depInCompVer}, the result is not a valid range`;
+              this.logger.warn(warnMsg);
+              addNotUpdateToLogs(warnMsg);
+              return;
+            }
+            logs.push(`${depId} - updating from ${depInWsVer} to ${newRange} (new range based on ${depInCompVer})`);
+            workspaceDepsUpdates[depId] = [depInWsVer, newRange];
+          } else {
+            logs.push(`${depId} - updating from ${depInWsVer} to ${depInCompVer}`);
+            workspaceDepsUpdates[depId] = [depInWsVer, depInCompVer];
+          }
+        };
+        const addToConflict = () => {
+          if (mergeStrategy === 'theirs') {
+            addToUpdate();
+            return;
+          }
+          workspaceDepsConflicts[lifeCycle].push({ name: depId, version: `CONFLICT::${depInWsVer}::${depInCompVer}` });
+          logs.push(`${depId} - conflict. ours: ${depInWsVer}, theirs: ${depInCompVer}`);
+        };
+
+        // both are versions
+        if (isDepInCompVersion && isDepInWsVersion) {
+          if (semver.gt(depInCompVer, depInWsVer)) {
+            addToConflict();
+            return;
+          }
+          addNotUpdateToLogs(`the workspace version ${depInWsVer} is greater than ${depInCompVer} from the component`);
           return;
         }
-        workspaceDepsConflicts[lifeCycle].push({ name: depId, version: `CONFLICT::${depInWsVer}::${depInCompVer}` });
-        logs.push(`${depId} - conflict. ours: ${depInWsVer}, theirs: ${depInCompVer}`);
-      };
 
-      // both are versions
-      if (isDepInCompVersion && isDepInWsVersion) {
-        if (semver.gt(depInCompVer, depInWsVer)) {
+        // both are ranges
+        if (isDepInCompRange && isDepInWsRange) {
+          if (isRange1GreaterThanRange2Naively(depInCompVer, depInWsVer)) {
+            addToUpdate();
+            return;
+          }
+          addNotUpdateToLogs(`the workspace range ${depInWsVer} is greater than ${depInCompVer} from the component`);
+          return;
+        }
+
+        if (isDepInCompVersion && isDepInWsRange) {
+          const wsMinVer = semver.minVersion(depInWsVer);
+          if (!wsMinVer) {
+            this.logger.warn(`unable to calculate the min version of ${depInWsVer}`);
+            addNotUpdateToLogs(`unable to calculate the min version of ${depInWsVer} from the workspace`);
+            return;
+          }
+          if (semver.gt(wsMinVer, depInCompVer)) {
+            addNotUpdateToLogs(
+              `the workspace range ${depInWsVer} (min version ${wsMinVer}) is greater than ${depInCompVer} from the component`
+            );
+            return;
+          }
+          if (semver.satisfies(depInCompVer, depInWsVer)) {
+            addToUpdate(depInWsVer);
+            return;
+          }
           addToConflict();
           return;
         }
-        addNotUpdateToLogs(`the workspace version ${depInWsVer} is greater than ${depInCompVer} from the component`);
-        return;
-      }
 
-      // both are ranges
-      if (isDepInCompRange && isDepInWsRange) {
-        if (isRange1GreaterThanRange2Naively(depInCompVer, depInWsVer)) {
-          addToUpdate();
+        if (isDepInCompRange && isDepInWsVersion) {
+          if (semver.satisfies(depInWsVer, depInCompVer)) {
+            addToUpdate();
+            return;
+          }
+          const compMinVer = semver.minVersion(depInCompVer);
+          if (!compMinVer) {
+            this.logger.warn(`unable to calculate the min version of ${compMinVer}`);
+            addNotUpdateToLogs(`unable to calculate the min version of ${compMinVer} from comp`);
+            return;
+          }
+          if (semver.gt(compMinVer, depInWsVer)) {
+            addToConflict();
+            return;
+          }
+          addNotUpdateToLogs(`the min version from comp ${compMinVer} is less than ${depInWsVer} from ws`);
           return;
         }
-        addNotUpdateToLogs(`the workspace range ${depInWsVer} is greater than ${depInCompVer} from the component`);
-        return;
-      }
-
-      if (isDepInCompVersion && isDepInWsRange) {
-        const wsMinVer = semver.minVersion(depInWsVer);
-        if (!wsMinVer) {
-          this.logger.warn(`unable to calculate the min version of ${depInWsVer}`);
-          addNotUpdateToLogs(`unable to calculate the min version of ${depInWsVer} from the workspace`);
-          return;
-        }
-        if (semver.gt(wsMinVer, depInCompVer)) {
-          addNotUpdateToLogs(
-            `the workspace range ${depInWsVer} (min version ${wsMinVer}) is greater than ${depInCompVer} from the component`
-          );
-          return;
-        }
-        if (semver.satisfies(depInCompVer, depInWsVer)) {
-          addToUpdate(depInWsVer);
-          return;
-        }
-        addToConflict();
-        return;
-      }
-
-      if (isDepInCompRange && isDepInWsVersion) {
-        if (semver.satisfies(depInWsVer, depInCompVer)) {
-          addToUpdate();
-          return;
-        }
-        const compMinVer = semver.minVersion(depInCompVer);
-        if (!compMinVer) {
-          this.logger.warn(`unable to calculate the min version of ${compMinVer}`);
-          addNotUpdateToLogs(`unable to calculate the min version of ${compMinVer} from comp`);
-          return;
-        }
-        if (semver.gt(compMinVer, depInWsVer)) {
-          addToConflict();
-          return;
-        }
-        addNotUpdateToLogs(`the min version from comp ${compMinVer} is less than ${depInWsVer} from ws`);
-        return;
-      }
-      throw new Error(`unhandled case: comp: ${depInCompVer}, ws: ${depInWsVer}`);
-    });
+        throw new Error(`unhandled case: comp: ${depInCompVer}, ws: ${depInWsVer}`);
+      });
+    }
 
     WS_DEPS_FIELDS.forEach((depField) => {
       if (isEmpty(workspaceDepsConflicts[depField])) delete workspaceDepsConflicts[depField];
@@ -492,6 +571,8 @@ see the conflicts below and edit your workspace.jsonc as you see fit.`;
   }
 }
 
+registerRustWorkspaceConfig(ConfigMergerMain);
+registerRustWorkspaceConflictHooks({ fs, tempy, mergeFiles });
 ConfigMergerAspect.addRuntime(ConfigMergerMain);
 
 export default ConfigMergerMain;
