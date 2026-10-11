@@ -314,11 +314,6 @@ Module._load = function (request, parent, isMain) {
     wrap(Version.prototype, 'toObject', 'versionObjectProjection');
     wrap(
       Version.prototype,
-      'debug',
-      'trace',
-      'info',
-      'warn',
-      'error',
       'toBuffer',
       'versionSerialization',
       function (buffer) {
