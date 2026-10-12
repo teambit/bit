@@ -7,7 +7,9 @@ function validateHistoryResetDiagnostics(diagnostics) {
   const totals = {};
   for (const row of diagnostics) {
     const metrics = row.trace.mergeState;
-    const required = ['historyResetBegin', 'historyResetReceipt', 'historyResetFinish'];
+    const retiredRead = ['missing-local-version', 'corrupt-local-version'].includes(row.scenario);
+    const required = ['historyResetBegin', 'historyResetReceipt'];
+    if (!retiredRead) required.push('historyResetFinish');
     const soft = row.scenario.startsWith('soft-');
     const never = row.scenario === 'never-exported';
     const batchRejected = row.scenario === 'dependent-blocked';
@@ -17,7 +19,10 @@ function validateHistoryResetDiagnostics(diagnostics) {
       'corrupt-local-version',
       'candidate-dependent-blocked',
     ].includes(row.scenario);
-    if (soft) required.push('historyResetSoft');
+    if (retiredRead) {
+      // The verified reader fails before candidate discovery; its engine retires.
+      // Healthy token cleanup is therefore forbidden after this exact prefix.
+    } else if (soft) required.push('historyResetSoft');
     else if (never) required.push('historyResetNeverExported');
     else if (batchRejected) required.push('historyResetDependents');
     else {
@@ -27,7 +32,6 @@ function validateHistoryResetDiagnostics(diagnostics) {
       if (!earlyChildRejected) required.push('historyResetComponentPlan');
     }
     if (
-      row.scenario === 'soft-pattern' ||
       batchRejected ||
       [
         'main-head',
@@ -48,6 +52,11 @@ function validateHistoryResetDiagnostics(diagnostics) {
       assert.ok(metrics[kind]?.completed > 0, row.scenario + ': missing accepted ' + kind);
       assert.equal(metrics[kind].failed, 0, row.scenario + ': failed required ' + kind);
     }
+    if (row.scenario === 'soft-pattern')
+      assert.ok(
+        metrics.historyResetReceipt.phases.some((phase) => phase.phase === 'softPattern'),
+        'soft-pattern: combined Soft selector must acknowledge the public pattern phase'
+      );
     if (row.scenario.startsWith('lane-')) {
       assert.ok(
         metrics.snapshotSerialize.acceptedTypes.LaneHistory > 0,
@@ -72,15 +81,39 @@ function validateHistoryResetDiagnostics(diagnostics) {
     const beginIndex = frames.findIndex((frame) => frame.kind === 'historyResetBegin');
     const finishIndex = frames.findLastIndex((frame) => frame.kind === 'historyResetFinish');
     const ownedFrames = frames
-      .slice(beginIndex, finishIndex + 1)
+      .slice(beginIndex, finishIndex < 0 ? frames.length : finishIndex + 1)
       .filter((frame) => ['BMT1', 'BMH1', 'BWS1', 'BWP1', 'BWC0', 'BWC1', 'BCK1'].includes(frame.magic));
     assert.equal(
       new Set(ownedFrames.map((frame) => frame.helperId)).size,
       1,
       row.scenario + ': owned history/workspace/persistence frames must share one physical helper'
     );
+    if (retiredRead) {
+      assert.deepEqual(
+        ownedFrames.map((frame) => [frame.magic, frame.kind]),
+        [
+          ['BMT1', 'historyResetBegin'],
+          ['BMT1', 'historyResetReceipt'],
+          ['BMH1', 'graph'],
+        ],
+        row.scenario + ': exact acknowledged prefix before reader retirement'
+      );
+      assert.equal(frames.at(-1).magic, 'BMH1');
+      assert.equal(frames.at(-1).kind, 'graph');
+      assert.equal(row.trace.history.graph.frames, 1);
+      assert.equal(row.trace.history.graph.completed, 0);
+      assert.equal(row.trace.history.graph.failed, 1);
+      assert.equal(row.trace.history.graph.bodyBytes, 0);
+      assert.deepEqual(
+        metrics.historyResetReceipt.phases.map(({ phase, revision }) => ({ phase, revision })),
+        [{ phase: 'captureLane', revision: 0 }]
+      );
+      for (const [kind, metric] of Object.entries(metrics))
+        if (kind.startsWith('historyReset') && !['historyResetBegin', 'historyResetReceipt'].includes(kind))
+          assert.equal(metric.frames, 0, row.scenario + ': no private suffix after failed verified read');
+    }
     const fork = metrics.historyResetFork;
-    if (!soft && !never && !batchRejected) {
+    if (!soft && !never && !batchRejected && !retiredRead) {
       assert.ok(fork.children.length, row.scenario + ': Fork must expose actual child tokens');
       const children = new Set(fork.children.map((child) => child.token));
       const phases = metrics.historyResetReceipt.phases.filter((phase) => children.has(phase.token));

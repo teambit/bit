@@ -228,3 +228,82 @@ test('whole-command acceptance refuses fallback-only components, empty forks and
   mergeState.historyResetComponentPlan.sourceBodyBytes = 1;
   assert.throws(() => validateHistoryResetDiagnostics(diagnostics), /private Source body/);
 });
+
+test('bad Version acceptance requires exactly the retired verified-reader prefix without private suffix', () => {
+  const { validateHistoryResetDiagnostics } = require('./history-reset-validation.cjs');
+  const metric = (frames = 0) => ({
+    frames,
+    completed: frames,
+    failed: 0,
+    sourceBodyBytes: 0,
+    helperIds: frames ? [1] : [],
+    phases: [],
+    children: [],
+  });
+  const mergeState = {
+    historyResetBegin: metric(1),
+    historyResetReceipt: metric(1),
+    historyResetFork: metric(),
+    historyResetFinish: metric(),
+    historyResetComponentPlan: metric(),
+  };
+  mergeState.historyResetReceipt.phases = [{ phase: 'captureLane', revision: 0 }];
+  const row = {
+    scenario: 'missing-local-version',
+    trace: {
+      mergeState,
+      history: { graph: { frames: 1, completed: 0, failed: 1, bodyBytes: 0 } },
+      workspaceFrames: [
+        { magic: 'BMT1', kind: 'historyResetBegin', helperId: 1 },
+        { magic: 'BMT1', kind: 'historyResetReceipt', helperId: 1 },
+        { magic: 'BMH1', kind: 'graph', helperId: 1 },
+      ],
+    },
+  };
+  assert.equal(validateHistoryResetDiagnostics([row]).commands, 1);
+  const late = structuredClone(row);
+  late.trace.workspaceFrames.push({ magic: 'BMT1', kind: 'historyResetFinish', helperId: 1 });
+  assert.throws(() => validateHistoryResetDiagnostics([late]), /exact acknowledged prefix/);
+  const reacquired = structuredClone(row);
+  reacquired.trace.workspaceFrames[2].helperId = 2;
+  assert.throws(() => validateHistoryResetDiagnostics([reacquired]), /one physical helper/);
+  const unhealthy = structuredClone(row);
+  unhealthy.trace.history.graph.failed = 0;
+  assert.throws(() => validateHistoryResetDiagnostics([unhealthy]));
+  const wrongPhase = structuredClone(row);
+  wrongPhase.trace.mergeState.historyResetReceipt.phases[0].phase = 'candidates';
+  assert.throws(() => validateHistoryResetDiagnostics([wrongPhase]));
+});
+
+test('soft-pattern acceptance requires the combined selector and the specific acknowledged pattern phase', () => {
+  const { validateHistoryResetDiagnostics } = require('./history-reset-validation.cjs');
+  const metric = () => ({
+    frames: 1,
+    completed: 1,
+    failed: 0,
+    sourceBodyBytes: 0,
+    helperIds: [1],
+    phases: [],
+    children: [],
+  });
+  const mergeState = Object.fromEntries(
+    ['historyResetBegin', 'historyResetReceipt', 'historyResetFinish', 'historyResetSoft'].map((kind) => [
+      kind,
+      metric(),
+    ])
+  );
+  mergeState.historyResetReceipt.phases = [{ phase: 'softPattern', revision: 2 }];
+  const row = {
+    scenario: 'soft-pattern',
+    trace: {
+      mergeState,
+      workspaceFrames: [
+        { magic: 'BMT1', kind: 'historyResetBegin', helperId: 1 },
+        { magic: 'BMT1', kind: 'historyResetFinish', helperId: 1 },
+      ],
+    },
+  };
+  assert.equal(validateHistoryResetDiagnostics([row]).commands, 1);
+  row.trace.mergeState.historyResetReceipt.phases = [];
+  assert.throws(() => validateHistoryResetDiagnostics([row]), /acknowledge the public pattern phase/);
+});
