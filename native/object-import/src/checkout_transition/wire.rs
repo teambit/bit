@@ -34,6 +34,7 @@ pub(super) struct Current {
     pub(super) raw_hash: String,
     pub(super) snapshot_hash: String,
     pub(super) protected: bool,
+    pub(super) source_hash: Option<String>,
     #[serde(default)]
     pub(super) bitmap: bool,
 }

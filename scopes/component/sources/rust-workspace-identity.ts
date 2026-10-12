@@ -1,4 +1,10 @@
-import { Ref, Source, canHashSourceNatively, hasRustSnapshotTransactionClass } from '@teambit/objects';
+import {
+  Ref,
+  Source,
+  canHashSourceNatively,
+  hasRustSnapshotTransactionClass,
+  registerRustSnapshotFunctionReference,
+} from '@teambit/objects';
 import * as eol from '@teambit/toolbox.string.eol';
 import { createHash } from 'crypto';
 import AbstractVinyl, { defaultVinylToSource } from './abstract-vinyl';
@@ -14,6 +20,8 @@ type Snapshot = RustWorkspaceRead;
 const snapshots = new WeakMap<AbstractVinyl, Snapshot>();
 const bitmapSnapshots = new WeakMap<AbstractVinyl, Snapshot>();
 const defaultLf = eol.lf;
+
+registerRustSnapshotFunctionReference('MergeWorkspaceSourceDescriptor', getRustWorkspaceMergeDescriptor);
 
 /** File summaries must preserve the defining Source identity and binary/EOL policy. */
 export function canInspectWorkspaceSourcesNatively(): boolean {

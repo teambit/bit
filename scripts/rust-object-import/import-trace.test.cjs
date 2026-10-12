@@ -394,3 +394,35 @@ test('query-only observer preserves defining class descriptors and labels framew
   assert.equal(metrics.frameworkObservation, 'disabled');
   assert.deepEqual(metrics.stages, {});
 });
+
+test('merge protocol diagnostics keep decoder reads distinct from manifests and partial write ACKs', (t) => {
+  const files = fixture(t);
+  const helper = path.join(files.directory, 'merge-helper.cjs');
+  fs.writeFileSync(
+    helper,
+    `process.stdin.on('data',frame=>{
+    const input=JSON.parse(frame.subarray(12));
+    const data=input.kind==='mergePrepare'?{token:'d'.repeat(40),bodies:Array.from({length:5},()=>({bytes:10})),reads:{versionObjects:1,versionInflatedBytes:120,sourceReads:2,sourceBodyBytes:20}}:{completed:1,skipped:[],failed:true};
+    process.stdout.write(JSON.stringify({version:1,id:frame.readUInt32BE(4),completed:1,skipped:[],failed:false,data})+'\\n');
+  });`
+  );
+  const metrics = execute(
+    files,
+    `
+    const child=require('node:child_process').spawn(process.execPath,[${JSON.stringify(helper)}]);
+    function send(id,input){const body=Buffer.from(JSON.stringify(input));const frame=Buffer.alloc(12+body.length);frame.write('BMT1');frame.writeUInt32BE(id,4);frame.writeUInt32BE(body.length,8);body.copy(frame,12);child.stdin.write(frame);}
+    let replies=0;child.stdout.on('data',()=>{if(++replies===1)send(2,{kind:'mergeMaterialize',token:'d'.repeat(40),files:[{planIndex:0,path:${JSON.stringify(path.join(files.directory, 'output'))}}]});else child.stdin.end();});
+    send(1,{kind:'mergePrepare',files:[{contents:Buffer.from([0,255,1])}]});
+  `,
+    { BIT_IMPORT_TRACE_PROTOCOL_ONLY: '1' }
+  );
+  assert.equal(metrics.frameworkObservation, 'disabled');
+  assert.equal(metrics.mergeState.mergePrepare.retainedBodies, 5);
+  assert.equal(metrics.mergeState.mergePrepare.retainedBytes, 50);
+  assert.equal(metrics.mergeState.mergePrepare.verifiedReads[0].sourceReads, 2);
+  assert.equal(metrics.mergeState.mergePrepare.sourceBodyBytes, 3);
+  assert.equal(metrics.mergeState.mergeMaterialize.completed, 1);
+  assert.equal(metrics.mergeState.mergeMaterialize.stepsCompleted, 1);
+  assert.equal(metrics.mergeState.mergeMaterialize.dataFailed, 1);
+  assert.deepEqual(metrics.mergeState.mergePrepare.helperIds, [1]);
+});

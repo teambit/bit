@@ -38,3 +38,10 @@ Audit and compatibility work can proceed alongside the standalone engine. Review
 Do not commit generated benchmark JSON, CPU profiles, or raw test logs to the Bit source repository. Keep benchmark drivers, small correctness fixtures, and concise Markdown summaries here. Write raw output to `/tmp` or another directory outside the checkout; upload it as a CI artifact or store it in a separate evidence repository when permanent sharing is needed.
 
 The generated `docs/rust/*.json` and `docs/rust/*.log` paths are ignored to prevent accidental recommits. Historical report filenames in these documents identify external run outputs, not files shipped with Bit. Reproduction commands generate fresh results; no runtime or test depends on the removed reports.
+
+## Client VCS migration
+
+The client engine work is tracked in [#73](https://github.com/zkochan/bit/issues/73)
+and targets `rust-workspace-materialization`. See [main and lane merge
+transactions](client-merge-transaction.md) for ownership, retained Source bodies,
+compatibility boundaries and command qualification.

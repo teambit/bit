@@ -1,7 +1,14 @@
 import vinylFile from 'vinyl-file';
 import fs from 'fs-extra';
+import path from 'path';
 import { logger } from '@teambit/legacy.logger';
-import { registerRustSnapshotTransactionClass, type Repository, type SourceFileModel } from '@teambit/objects';
+import {
+  registerRustSnapshotTransactionClass,
+  registerRustSnapshotFunctionReference,
+  registerRustSnapshotFunctions,
+  type Repository,
+  type SourceFileModel,
+} from '@teambit/objects';
 import type { PathOsBased } from '@teambit/toolbox.path.path';
 import FileSourceNotFound from './file-source-not-found';
 import AbstractVinyl from './abstract-vinyl';
@@ -73,15 +80,17 @@ const defaultSourceFileLoad = SourceFile.load;
 registerRustSnapshotTransactionClass('SourceFile', SourceFile);
 const defaultReadSync = vinylFile.readSync;
 const defaultModelLoad = SourceFile.loadFromSourceFileModel;
+const defaultAbstractPrototype = Object.getPrototypeOf(SourceFile.prototype);
 /** Native reads must not bypass a custom SourceFile or Vinyl reader. */
 export function canReadWorkspaceFilesNatively(): boolean {
   return (
     Object.getOwnPropertyDescriptor(definingSourceFile, 'default')?.value === SourceFile &&
-    SourceFile.load === defaultSourceFileLoad &&
-    SourceFile.loadFromSourceFileModel === defaultModelLoad &&
-    vinylFile.readSync === defaultReadSync &&
+    Object.getOwnPropertyDescriptor(SourceFile, 'load')?.value === defaultSourceFileLoad &&
+    Object.getOwnPropertyDescriptor(SourceFile, 'loadFromSourceFileModel')?.value === defaultModelLoad &&
+    Object.getOwnPropertyDescriptor(vinylFile, 'readSync')?.value === defaultReadSync &&
+    Object.getPrototypeOf(SourceFile.prototype) === defaultAbstractPrototype &&
     ['contents', 'path', 'relative', 'base', 'stat'].every(
-      (name) => !Object.hasOwn(SourceFile.prototype, name) && !Object.hasOwn(AbstractVinyl.prototype, name)
+      (name) => !Object.hasOwn(SourceFile.prototype, name) && !Object.hasOwn(defaultAbstractPrototype, name)
     )
   );
 }
@@ -103,3 +112,6 @@ export function sourceFileFromWorkspaceRead(
   for (const [key, value] of Object.entries(extendedProps)) file[key] = value;
   return file;
 }
+
+registerRustSnapshotFunctionReference('MergeWorkspaceFileReadEligibility', canReadWorkspaceFilesNatively);
+registerRustSnapshotFunctions('MergeSourceFilePaths', path, ['relative', 'normalize']);

@@ -1,6 +1,7 @@
+pub(super) mod sources;
+
 mod current;
 mod merge;
-mod sources;
 
 use super::{invalid, plan, wire};
 use serde_json::{Value, json};
@@ -24,7 +25,8 @@ pub(super) fn prepare(input: &Value, state: &mut plan::State) -> io::Result<Valu
     let mut compressed = 0;
     let target =
         sources::load(&request.objects_directory, &request.target, &mut total, &mut compressed)?;
-    let current = current::load(&request.current, &mut total)?;
+    let current =
+        current::load(&request.current, &request.objects_directory, &mut total, &mut compressed)?;
     let statuses = statuses(&request, &target, &current);
     let (mut bodies, target_indices, current_files) = retain_inputs(&request, target, &current);
     let rows = merge::rows(&request, &current, &mut bodies, &mut total, &mut compressed)?;
@@ -38,6 +40,7 @@ pub(super) fn prepare(input: &Value, state: &mut plan::State) -> io::Result<Valu
             .any(|row| row.get("conflictPlanIndex").is_some() || row["isBinaryConflict"] == true),
         statuses,
         merge_rows: rows,
+        other: None,
     };
     state.retain(plan, input, &request.snapshot_directory)
 }
@@ -61,6 +64,7 @@ fn retain_inputs(
             protected: request.current[index].protected,
             plan_index,
             shares_buffer: file.raw == file.normalized,
+            raw_hash: request.current[index].snapshot_hash.clone(),
         });
     }
     (bodies, target_indices, current_files)

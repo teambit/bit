@@ -95,6 +95,7 @@ export {
   registerRustSnapshotTransactionClass,
   hasRustSnapshotTransactionClass,
   hasRustSnapshotTransactionClassFields,
+  hasRustSnapshotTransactionClassConstructor,
   registerRustSnapshotModelHook,
   registerRustSnapshotValidationHook,
   hasRustSnapshotValidationHook,
@@ -126,6 +127,7 @@ export {
   retireRustHistoryQueryOperation,
   registerRustHistoryQueryCleanup,
   canUseRustHistoryQueryRepository,
+  captureRustHistoryQueryObjects,
   registerRustHistoryQueryRepositoryHooks,
   captureRustHistoryQuery,
   captureRustHistoryQueryVersion,
@@ -148,3 +150,40 @@ export {
   getRustHistoryFileDiff,
 } from './objects/rust-history-query-files';
 export type { HistoryFileCapture } from './objects/rust-history-query-files';
+
+export {
+  withRustMergeTransactionOperation,
+  isRustMergeTransactionOperation,
+  canRequestRustMergeTransaction,
+  requestRustMergeTransaction,
+  retireRustMergeTransaction,
+  registerRustMergeTransactionCleanup,
+  retainRustMergeTransactionToken,
+} from './objects/rust-merge-transaction';
+export {
+  withRustMergeTransactionJournal,
+  completeRustMergeTransactionPhase,
+  getRustMergeTransactionToken,
+  canUseRustMergeTransactionMode,
+  beginRustMergeStatus,
+  observeRustMergeStatus,
+} from './objects/rust-merge-transaction';
+export type {
+  MergeTransactionPhase,
+  MergeTransactionCursor,
+  MergeStatusObservation,
+  RustMergeStatusResult,
+  RustMergeStatusCursor,
+} from './objects/rust-merge-transaction';
+export {
+  registerRustMergeStatusProvider,
+  canUseRustMergeStatusProvider,
+  captureRustMergeStatusProvider,
+  captureRustMergeDivergence,
+} from './objects/rust-merge-transaction-guards';
+export {
+  canHydrateRustHistoryQuerySources,
+  validRustHistorySourceReceipt,
+  loadRustCapturedSourceCapsule,
+} from './objects/rust-history-query-sources';
+export type { HistorySourceCapsule } from './objects/rust-history-query-sources';

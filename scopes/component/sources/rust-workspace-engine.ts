@@ -73,11 +73,27 @@ export function hasRustWorkspaceEngineOwner(): boolean {
   return Boolean(owners.getStore());
 }
 
-export async function retireRustWorkspaceEngine(): Promise<void> {
+export async function retireRustWorkspaceEngine(cleanupBeforeReturning = false): Promise<void> {
   const owner = owners.getStore();
   if (!owner) return;
   owner.failed = true;
   await owner.lease?.session.dispose();
+  if (cleanupBeforeReturning) {
+    // Interactive adapters can leave their promise unsettled on stdin EOF.
+    // Hydrate escaped values before deleting their backing files, even then.
+    await owner.requests;
+    let failure: unknown;
+    let failed = false;
+    for (const cleanup of owner.cleanup.splice(0).reverse()) {
+      try {
+        await cleanup();
+      } catch (error) {
+        if (!failed) failure = error;
+        failed = true;
+      }
+    }
+    if (failed) throw failure;
+  }
 }
 
 /** Undefined means this owner has retired; callers must not acquire a replacement process. */

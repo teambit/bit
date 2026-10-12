@@ -3,6 +3,7 @@ mod materialize;
 mod plan;
 mod prepare;
 mod removals;
+mod retarget;
 mod select;
 #[cfg(test)]
 mod tests;
@@ -54,4 +55,33 @@ fn decision(input: &Value) -> io::Result<Value> {
 
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
+}
+
+pub(crate) fn retarget(input: Value, state: &mut State) -> io::Result<Value> {
+    retarget::apply(input, &mut state.plans)
+}
+
+pub(crate) fn order(token: &str, order: &[usize], state: &mut State) -> io::Result<Value> {
+    let plan = state.plans.plans.get_mut(token).ok_or_else(|| invalid("stale merge order plan"))?;
+    if order.len() != plan.merge_rows.len()
+        || order
+            .iter()
+            .copied()
+            .collect::<std::collections::HashSet<_>>()
+            .len()
+            != order.len()
+    {
+        return Err(invalid("merge plan permutation"));
+    }
+    let rows = order
+        .iter()
+        .map(|index| {
+            plan.merge_rows
+                .get(*index)
+                .cloned()
+                .ok_or_else(|| invalid("merge plan row range"))
+        })
+        .collect::<io::Result<Vec<_>>>()?;
+    plan.merge_rows = rows;
+    Ok(json!({"mergeRows":plan.merge_rows}))
 }

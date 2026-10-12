@@ -281,17 +281,21 @@ function projectPlanBatch(writes: Array<RustCheckoutPlanWriteContinuation | unde
   if (!first) return undefined;
   const batch: Array<{ planIndex: number; path: string; overwrite: true; eol: 'auto' }> = [];
   for (const write of writes.slice(start, start + MAX_FILES)) {
-    if (!write || write.descriptor.token !== first.token) break;
+    if (!write || write.descriptor.token !== first.token || write.descriptor.mergeOwnerToken !== first.mergeOwnerToken)
+      break;
     batch.push({ planIndex: write.descriptor.planIndex, path: write.path, overwrite: true, eol: 'auto' });
   }
-  return { token: first.token, files: batch };
+  return { token: first.token, mergeOwnerToken: first.mergeOwnerToken, files: batch };
 }
 
 async function persistPlanBatch(
   plan: NonNullable<ReturnType<typeof projectPlanBatch>>,
   session: MaterializationSession
 ): Promise<number | undefined> {
-  const bytes = Buffer.from(stringify({ kind: 'checkoutMaterialize', ...plan }));
+  const input = plan.mergeOwnerToken
+    ? { kind: 'mergeMaterialize', token: plan.mergeOwnerToken, planToken: plan.token, files: plan.files }
+    : { kind: 'checkoutMaterialize', token: plan.token, files: plan.files };
+  const bytes = Buffer.from(stringify(input));
   if (bytes.length > 4 * 1024 * 1024) return undefined;
   let completed: number | undefined;
   await session.request(

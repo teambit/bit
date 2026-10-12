@@ -8,6 +8,13 @@ on:
       - 'scopes/component/sources/**'
       - 'scopes/component/component-writer/**'
       - 'scopes/component/checkout/**'
+      - 'scopes/component/merging/**'
+      - 'scopes/component/modules/merge-helper/**'
+      - 'scopes/lanes/merge-lanes/**'
+      - 'scopes/scope/objects/objects/rust-merge-transaction*.ts'
+      - 'components/legacy/scope/scope.ts'
+      - 'components/legacy/scope/repositories/tmp.ts'
+      - 'components/legacy/scope/exceptions/no-common-snap.ts'
       - 'scopes/component/snapping/**'
       - 'scopes/component/status/**'
       - 'scopes/component/component-log/**'
@@ -44,6 +51,7 @@ on:
       - 'scripts/rust-object-import/**'
       - 'docs/rust-object-import/**'
       - 'docs/rust/client-history-query.md'
+      - 'docs/rust/client-merge-transaction.md'
       - 'scripts/rust/**'
       - 'scripts/rust-dependency-analysis/discovery*'
       - '.circleci/config.yml'
@@ -72,6 +80,13 @@ on:
       - 'scopes/component/sources/**'
       - 'scopes/component/component-writer/**'
       - 'scopes/component/checkout/**'
+      - 'scopes/component/merging/**'
+      - 'scopes/component/modules/merge-helper/**'
+      - 'scopes/lanes/merge-lanes/**'
+      - 'scopes/scope/objects/objects/rust-merge-transaction*.ts'
+      - 'components/legacy/scope/scope.ts'
+      - 'components/legacy/scope/repositories/tmp.ts'
+      - 'components/legacy/scope/exceptions/no-common-snap.ts'
       - 'scopes/component/snapping/**'
       - 'scopes/component/status/**'
       - 'scopes/component/component-log/**'
@@ -108,6 +123,7 @@ on:
       - 'scripts/rust-object-import/**'
       - 'docs/rust-object-import/**'
       - 'docs/rust/client-history-query.md'
+      - 'docs/rust/client-merge-transaction.md'
       - 'scripts/rust/**'
       - 'scripts/rust-dependency-analysis/discovery*'
       - '.circleci/config.yml'
@@ -485,6 +501,7 @@ jobs:
       - name: Differential canonical merge and OS metadata qualification
         env:
           BIT_LEGACY_ROOT: ${{ github.workspace }}
+          BIT_TEST_OBJECT_IMPORT: ${{ github.workspace }}/native/target/debug/bit-object-import${{ runner.os == 'Windows' && '.exe' || '' }}
         run: |
           node --test scripts/rust-object-import/operation-model.test.cjs scripts/rust-object-import/platform-metadata.test.cjs
           node --test scripts/rust-object-import/workspace-materialization.test.cjs
@@ -535,4 +552,7 @@ jobs:
           BIT_TEST_HISTORY_QUERY_COMPILED=1 node --test scripts/rust-object-import/history-query-graph.test.cjs
           node --test scripts/rust-object-import/history-query-validation.test.cjs
           node --test scripts/rust-object-import/history-query-measurement.test.cjs
+          node --test scripts/rust-object-import/merge-transaction.test.cjs scripts/rust-object-import/merge-transaction-bodies.test.cjs scripts/rust-object-import/merge-transaction-selectors.test.cjs scripts/rust-object-import/merge-transaction-lane-policy.test.cjs scripts/rust-object-import/merge-transaction-source-guards.test.cjs scripts/rust-object-import/merge-transaction-producer.test.cjs
+          BIT_TEST_MERGE_TRANSACTION_COMPILED=1 node --test scripts/rust-object-import/merge-transaction.test.cjs scripts/rust-object-import/merge-transaction-bodies.test.cjs scripts/rust-object-import/merge-transaction-selectors.test.cjs scripts/rust-object-import/merge-transaction-lane-policy.test.cjs scripts/rust-object-import/merge-transaction-source-guards.test.cjs scripts/rust-object-import/merge-transaction-producer.test.cjs
+          node --test scripts/rust-object-import/merge-transaction-validation.test.cjs scripts/rust-object-import/merge-transaction-measurement.test.cjs scripts/rust-object-import/merge-transaction-report.test.cjs
           node scripts/rust-object-import/canonical-model-tests.cjs

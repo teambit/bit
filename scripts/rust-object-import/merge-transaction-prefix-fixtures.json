@@ -1,0 +1,2910 @@
+[
+  {
+    "scenario": {
+      "name": "lane-lost-results-policy",
+      "fault": {
+        "kind": "mergeResultsSelect"
+      }
+    },
+    "rawTraceSha256": "cfdb50593b801bcaf83d3e3fd4f2a0d4cd21f5196abd249f59af913a634a0fae",
+    "trace": {
+      "workspaceFrames": [
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionBegin",
+          "helperId": 1,
+          "id": 1
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 2,
+          "phase": "validateFlags"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 3,
+          "phase": "context"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 4,
+          "phase": "upToDate"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionBegin",
+          "helperId": 1,
+          "id": 5
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusBegin",
+          "helperId": 1,
+          "id": 6
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 7,
+          "observe": "model"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 8,
+          "observe": "unmerged"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 9,
+          "observe": "incoming"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 10,
+          "observe": "currentId"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 11,
+          "observe": "locallyRemoved"
+        },
+        {
+          "magic": "BWC0",
+          "helperId": 1,
+          "id": 12
+        },
+        {
+          "magic": "BWC0",
+          "helperId": 1,
+          "id": 13
+        },
+        {
+          "magic": "BWC0",
+          "helperId": 1,
+          "id": 14
+        },
+        {
+          "magic": "BWS1",
+          "kind": "scan",
+          "helperId": 1,
+          "id": 15
+        },
+        {
+          "magic": "BWS1",
+          "kind": "read",
+          "helperId": 1,
+          "id": 16
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 17,
+          "observe": "current"
+        },
+        {
+          "magic": "BMH1",
+          "kind": "graph",
+          "helperId": 1,
+          "id": 18
+        },
+        {
+          "magic": "BMT1",
+          "kind": "snapshotSerialize",
+          "helperId": 1,
+          "id": 19
+        },
+        {
+          "magic": "BMT1",
+          "kind": "snapshotCommit",
+          "helperId": 1,
+          "id": 20
+        },
+        {
+          "magic": "BMH1",
+          "kind": "diverge",
+          "helperId": 1,
+          "id": 21
+        },
+        {
+          "magic": "BMT1",
+          "kind": "inspectionCompare",
+          "helperId": 1,
+          "id": 22
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 23,
+          "observe": "modified"
+        },
+        {
+          "magic": "BMH1",
+          "kind": "diverge",
+          "helperId": 1,
+          "id": 24
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 25,
+          "observe": "divergence"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 26,
+          "phase": "status"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 27,
+          "phase": "importGap"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "configComponent",
+          "helperId": 1,
+          "id": 28
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergePrepare",
+          "helperId": 1,
+          "id": 29
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergePlanOrder",
+          "helperId": 1,
+          "id": 30
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 31,
+          "phase": "plans"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 32,
+          "phase": "clearTemps"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 33,
+          "phase": "status"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 34,
+          "phase": "pattern"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 35,
+          "phase": "workspaceFilter"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 36,
+          "phase": "throwForFailures"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 37,
+          "phase": "squash"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 38,
+          "phase": "artifacts"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "recoveryInitialize",
+          "helperId": 1,
+          "id": 39
+        },
+        {
+          "magic": "BMT1",
+          "kind": "recoveryAdvance",
+          "helperId": 1,
+          "id": 40
+        },
+        {
+          "magic": "BMT1",
+          "kind": "recoveryInitialize",
+          "helperId": 1,
+          "id": 41
+        },
+        {
+          "magic": "BMT1",
+          "kind": "recoveryAdvance",
+          "helperId": 1,
+          "id": 42
+        },
+        {
+          "magic": "BMT1",
+          "kind": "recoveryInitialize",
+          "helperId": 1,
+          "id": 43
+        },
+        {
+          "magic": "BMT1",
+          "kind": "recoveryAdvance",
+          "helperId": 1,
+          "id": 44
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 45,
+          "phase": "lastMergedSnapshot"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionBegin",
+          "helperId": 1,
+          "id": 46
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 47,
+          "phase": "prompt"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeResultsSelect",
+          "helperId": 1,
+          "id": 48
+        }
+      ],
+      "mergeState": {
+        "mergeTransactionBegin": {
+          "frames": 3,
+          "completed": 3,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeTransactionReceipt": {
+          "frames": 15,
+          "completed": 15,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": [
+            {
+              "phase": "validateFlags"
+            },
+            {
+              "phase": "context"
+            },
+            {
+              "phase": "upToDate"
+            },
+            {
+              "phase": "status"
+            },
+            {
+              "phase": "importGap"
+            },
+            {
+              "phase": "plans"
+            },
+            {
+              "phase": "clearTemps"
+            },
+            {
+              "phase": "status"
+            },
+            {
+              "phase": "pattern"
+            },
+            {
+              "phase": "workspaceFilter"
+            },
+            {
+              "phase": "throwForFailures"
+            },
+            {
+              "phase": "squash"
+            },
+            {
+              "phase": "artifacts"
+            },
+            {
+              "phase": "lastMergedSnapshot"
+            },
+            {
+              "phase": "prompt"
+            }
+          ]
+        },
+        "mergeTransactionFinish": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeStatusBegin": {
+          "frames": 1,
+          "completed": 1,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeStatusReceipt": {
+          "frames": 8,
+          "completed": 8,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": [
+            {
+              "phase": "model"
+            },
+            {
+              "phase": "unmerged"
+            },
+            {
+              "phase": "incoming"
+            },
+            {
+              "phase": "currentId"
+            },
+            {
+              "phase": "locallyRemoved"
+            },
+            {
+              "phase": "current"
+            },
+            {
+              "phase": "modified"
+            },
+            {
+              "phase": "divergence"
+            }
+          ]
+        },
+        "mergeApplyDecision": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeLaneBucketDecision": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeResultsSelect": {
+          "frames": 1,
+          "completed": 1,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeDependencyCandidates": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeDependencyMissing": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergePatternDependencies": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergePatternOutcome": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergePlanOrder": {
+          "frames": 1,
+          "completed": 1,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergePrepare": {
+          "frames": 1,
+          "completed": 1,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [
+            {
+              "sourceReads": 20,
+              "sourceBodyBytes": 1140,
+              "helperId": 1
+            }
+          ],
+          "phases": []
+        },
+        "mergeApply": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeRemovals": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeMaterialize": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        }
+      }
+    }
+  },
+  {
+    "scenario": {
+      "name": "lane-lost-pending-write-receipt",
+      "fault": {
+        "kind": "mergeTransactionReceipt",
+        "phase": "pendingWrite"
+      }
+    },
+    "rawTraceSha256": "6349e38ac765eb05870060bb948f5f9f7b4df01729fe8993c1f89cb538555e42",
+    "trace": {
+      "workspaceFrames": [
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionBegin",
+          "helperId": 1,
+          "id": 1
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 2,
+          "phase": "validateFlags"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 3,
+          "phase": "context"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 4,
+          "phase": "upToDate"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionBegin",
+          "helperId": 1,
+          "id": 5
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusBegin",
+          "helperId": 1,
+          "id": 6
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 7,
+          "observe": "model"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 8,
+          "observe": "unmerged"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 9,
+          "observe": "incoming"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 10,
+          "observe": "currentId"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 11,
+          "observe": "locallyRemoved"
+        },
+        {
+          "magic": "BWC0",
+          "helperId": 1,
+          "id": 12
+        },
+        {
+          "magic": "BWC0",
+          "helperId": 1,
+          "id": 13
+        },
+        {
+          "magic": "BWC0",
+          "helperId": 1,
+          "id": 14
+        },
+        {
+          "magic": "BWS1",
+          "kind": "scan",
+          "helperId": 1,
+          "id": 15
+        },
+        {
+          "magic": "BWS1",
+          "kind": "read",
+          "helperId": 1,
+          "id": 16
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 17,
+          "observe": "current"
+        },
+        {
+          "magic": "BMH1",
+          "kind": "graph",
+          "helperId": 1,
+          "id": 18
+        },
+        {
+          "magic": "BMT1",
+          "kind": "snapshotSerialize",
+          "helperId": 1,
+          "id": 19
+        },
+        {
+          "magic": "BMT1",
+          "kind": "snapshotCommit",
+          "helperId": 1,
+          "id": 20
+        },
+        {
+          "magic": "BMH1",
+          "kind": "diverge",
+          "helperId": 1,
+          "id": 21
+        },
+        {
+          "magic": "BMT1",
+          "kind": "inspectionCompare",
+          "helperId": 1,
+          "id": 22
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 23,
+          "observe": "modified"
+        },
+        {
+          "magic": "BMH1",
+          "kind": "diverge",
+          "helperId": 1,
+          "id": 24
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 25,
+          "observe": "divergence"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 26,
+          "phase": "status"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 27,
+          "phase": "importGap"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "configComponent",
+          "helperId": 1,
+          "id": 28
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergePrepare",
+          "helperId": 1,
+          "id": 29
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergePlanOrder",
+          "helperId": 1,
+          "id": 30
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 31,
+          "phase": "plans"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 32,
+          "phase": "clearTemps"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 33,
+          "phase": "status"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 34,
+          "phase": "pattern"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 35,
+          "phase": "workspaceFilter"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 36,
+          "phase": "throwForFailures"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 37,
+          "phase": "squash"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 38,
+          "phase": "artifacts"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "recoveryInitialize",
+          "helperId": 1,
+          "id": 39
+        },
+        {
+          "magic": "BMT1",
+          "kind": "recoveryAdvance",
+          "helperId": 1,
+          "id": 40
+        },
+        {
+          "magic": "BMT1",
+          "kind": "recoveryInitialize",
+          "helperId": 1,
+          "id": 41
+        },
+        {
+          "magic": "BMT1",
+          "kind": "recoveryAdvance",
+          "helperId": 1,
+          "id": 42
+        },
+        {
+          "magic": "BMT1",
+          "kind": "recoveryInitialize",
+          "helperId": 1,
+          "id": 43
+        },
+        {
+          "magic": "BMT1",
+          "kind": "recoveryAdvance",
+          "helperId": 1,
+          "id": 44
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 45,
+          "phase": "lastMergedSnapshot"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionBegin",
+          "helperId": 1,
+          "id": 46
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 47,
+          "phase": "prompt"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeResultsSelect",
+          "helperId": 1,
+          "id": 48
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 49,
+          "phase": "results"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeApplyDecision",
+          "helperId": 1,
+          "id": 50
+        },
+        {
+          "magic": "BWC0",
+          "helperId": 1,
+          "id": 51
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeApply",
+          "helperId": 1,
+          "id": 52
+        },
+        {
+          "magic": "BMT1",
+          "kind": "initialize",
+          "helperId": 1,
+          "id": 53
+        },
+        {
+          "magic": "BMT1",
+          "kind": "transition",
+          "helperId": 1,
+          "id": 54
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 55,
+          "phase": "apply"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeResultsSelect",
+          "helperId": 1,
+          "id": 56
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeMaterialize",
+          "helperId": 1,
+          "id": 57
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 58,
+          "phase": "writeMany"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 59,
+          "phase": "workspaceConfig"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 60,
+          "phase": "configConflict"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 61,
+          "phase": "configFiles"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 62,
+          "phase": "laneHistory"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "snapshotRepositoryBegin",
+          "helperId": 1,
+          "id": 63
+        },
+        {
+          "magic": "BMT1",
+          "kind": "snapshotRepositoryReceipt",
+          "helperId": 1,
+          "id": 64
+        },
+        {
+          "magic": "BMT1",
+          "kind": "snapshotRepositoryReceipt",
+          "helperId": 1,
+          "id": 65
+        },
+        {
+          "magic": "BMT1",
+          "kind": "snapshotSerialize",
+          "helperId": 1,
+          "id": 66
+        },
+        {
+          "magic": "BMT1",
+          "kind": "snapshotCommit",
+          "helperId": 1,
+          "id": 67
+        },
+        {
+          "magic": "BMT1",
+          "kind": "snapshotRepositoryReceipt",
+          "helperId": 1,
+          "id": 68
+        },
+        {
+          "magic": "BSS1",
+          "kind": "index",
+          "helperId": 1,
+          "id": 69
+        },
+        {
+          "magic": "BMT1",
+          "kind": "snapshotRepositoryReceipt",
+          "helperId": 1,
+          "id": 70
+        },
+        {
+          "magic": "BMT1",
+          "kind": "snapshotRepositoryReceipt",
+          "helperId": 1,
+          "id": 71
+        },
+        {
+          "magic": "BMT1",
+          "kind": "commit",
+          "helperId": 1,
+          "id": 72
+        },
+        {
+          "magic": "BMT1",
+          "kind": "snapshotRepositoryReceipt",
+          "helperId": 1,
+          "id": 73
+        },
+        {
+          "magic": "BMT1",
+          "kind": "snapshotRepositoryReceipt",
+          "helperId": 1,
+          "id": 74
+        },
+        {
+          "magic": "BMT1",
+          "kind": "snapshotRepositoryReceipt",
+          "helperId": 1,
+          "id": 75
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 76,
+          "phase": "persist"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "commit",
+          "helperId": 1,
+          "id": 77
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 78,
+          "phase": "pendingWrite"
+        }
+      ],
+      "mergeState": {
+        "mergeTransactionBegin": {
+          "frames": 3,
+          "completed": 3,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeTransactionReceipt": {
+          "frames": 24,
+          "completed": 24,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": [
+            {
+              "phase": "validateFlags"
+            },
+            {
+              "phase": "context"
+            },
+            {
+              "phase": "upToDate"
+            },
+            {
+              "phase": "status"
+            },
+            {
+              "phase": "importGap"
+            },
+            {
+              "phase": "plans"
+            },
+            {
+              "phase": "clearTemps"
+            },
+            {
+              "phase": "status"
+            },
+            {
+              "phase": "pattern"
+            },
+            {
+              "phase": "workspaceFilter"
+            },
+            {
+              "phase": "throwForFailures"
+            },
+            {
+              "phase": "squash"
+            },
+            {
+              "phase": "artifacts"
+            },
+            {
+              "phase": "lastMergedSnapshot"
+            },
+            {
+              "phase": "prompt"
+            },
+            {
+              "phase": "results"
+            },
+            {
+              "phase": "apply"
+            },
+            {
+              "phase": "writeMany"
+            },
+            {
+              "phase": "workspaceConfig"
+            },
+            {
+              "phase": "configConflict"
+            },
+            {
+              "phase": "configFiles"
+            },
+            {
+              "phase": "laneHistory"
+            },
+            {
+              "phase": "persist"
+            },
+            {
+              "phase": "pendingWrite"
+            }
+          ]
+        },
+        "mergeTransactionFinish": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeStatusBegin": {
+          "frames": 1,
+          "completed": 1,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeStatusReceipt": {
+          "frames": 8,
+          "completed": 8,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": [
+            {
+              "phase": "model"
+            },
+            {
+              "phase": "unmerged"
+            },
+            {
+              "phase": "incoming"
+            },
+            {
+              "phase": "currentId"
+            },
+            {
+              "phase": "locallyRemoved"
+            },
+            {
+              "phase": "current"
+            },
+            {
+              "phase": "modified"
+            },
+            {
+              "phase": "divergence"
+            }
+          ]
+        },
+        "mergeApplyDecision": {
+          "frames": 1,
+          "completed": 1,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeLaneBucketDecision": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeResultsSelect": {
+          "frames": 2,
+          "completed": 2,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeDependencyCandidates": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeDependencyMissing": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergePatternDependencies": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergePatternOutcome": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergePlanOrder": {
+          "frames": 1,
+          "completed": 1,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergePrepare": {
+          "frames": 1,
+          "completed": 1,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [
+            {
+              "sourceReads": 20,
+              "sourceBodyBytes": 1140,
+              "helperId": 1
+            }
+          ],
+          "phases": []
+        },
+        "mergeApply": {
+          "frames": 1,
+          "completed": 1,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [
+            {
+              "sourceReads": 5,
+              "sourceBodyBytes": 284,
+              "helperId": 1
+            }
+          ],
+          "phases": []
+        },
+        "mergeRemovals": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeMaterialize": {
+          "frames": 1,
+          "completed": 1,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 5,
+          "verifiedReads": [],
+          "phases": []
+        }
+      }
+    }
+  },
+  {
+    "scenario": {
+      "name": "lane-lost-snap-receipt",
+      "fault": {
+        "kind": "mergeTransactionReceipt",
+        "phase": "snap"
+      }
+    },
+    "rawTraceSha256": "45e980020be11c0e67aa3c1d898a2c5d8addf61ec713ecc3e2f21eebeec7f4e4",
+    "trace": {
+      "workspaceFrames": [
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionBegin",
+          "helperId": 1,
+          "id": 1
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 2,
+          "phase": "validateFlags"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 3,
+          "phase": "context"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 4,
+          "phase": "upToDate"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionBegin",
+          "helperId": 1,
+          "id": 5
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusBegin",
+          "helperId": 1,
+          "id": 6
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 7,
+          "observe": "model"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 8,
+          "observe": "unmerged"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 9,
+          "observe": "incoming"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 10,
+          "observe": "currentId"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 11,
+          "observe": "locallyRemoved"
+        },
+        {
+          "magic": "BWC0",
+          "helperId": 1,
+          "id": 12
+        },
+        {
+          "magic": "BWC0",
+          "helperId": 1,
+          "id": 13
+        },
+        {
+          "magic": "BWC0",
+          "helperId": 1,
+          "id": 14
+        },
+        {
+          "magic": "BWS1",
+          "kind": "scan",
+          "helperId": 1,
+          "id": 15
+        },
+        {
+          "magic": "BWS1",
+          "kind": "read",
+          "helperId": 1,
+          "id": 16
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 17,
+          "observe": "current"
+        },
+        {
+          "magic": "BMH1",
+          "kind": "graph",
+          "helperId": 1,
+          "id": 18
+        },
+        {
+          "magic": "BMT1",
+          "kind": "snapshotSerialize",
+          "helperId": 1,
+          "id": 19
+        },
+        {
+          "magic": "BMT1",
+          "kind": "snapshotCommit",
+          "helperId": 1,
+          "id": 20
+        },
+        {
+          "magic": "BMH1",
+          "kind": "diverge",
+          "helperId": 1,
+          "id": 21
+        },
+        {
+          "magic": "BMT1",
+          "kind": "inspectionCompare",
+          "helperId": 1,
+          "id": 22
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 23,
+          "observe": "modified"
+        },
+        {
+          "magic": "BMH1",
+          "kind": "diverge",
+          "helperId": 1,
+          "id": 24
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 25,
+          "observe": "divergence"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 26,
+          "phase": "status"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 27,
+          "phase": "importGap"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "configComponent",
+          "helperId": 1,
+          "id": 28
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergePrepare",
+          "helperId": 1,
+          "id": 29
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergePlanOrder",
+          "helperId": 1,
+          "id": 30
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 31,
+          "phase": "plans"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 32,
+          "phase": "clearTemps"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 33,
+          "phase": "status"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 34,
+          "phase": "pattern"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 35,
+          "phase": "workspaceFilter"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 36,
+          "phase": "throwForFailures"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 37,
+          "phase": "squash"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 38,
+          "phase": "artifacts"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "recoveryInitialize",
+          "helperId": 1,
+          "id": 39
+        },
+        {
+          "magic": "BMT1",
+          "kind": "recoveryAdvance",
+          "helperId": 1,
+          "id": 40
+        },
+        {
+          "magic": "BMT1",
+          "kind": "recoveryInitialize",
+          "helperId": 1,
+          "id": 41
+        },
+        {
+          "magic": "BMT1",
+          "kind": "recoveryAdvance",
+          "helperId": 1,
+          "id": 42
+        },
+        {
+          "magic": "BMT1",
+          "kind": "recoveryInitialize",
+          "helperId": 1,
+          "id": 43
+        },
+        {
+          "magic": "BMT1",
+          "kind": "recoveryAdvance",
+          "helperId": 1,
+          "id": 44
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 45,
+          "phase": "lastMergedSnapshot"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionBegin",
+          "helperId": 1,
+          "id": 46
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 47,
+          "phase": "prompt"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeResultsSelect",
+          "helperId": 1,
+          "id": 48
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 49,
+          "phase": "results"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeApplyDecision",
+          "helperId": 1,
+          "id": 50
+        },
+        {
+          "magic": "BWC0",
+          "helperId": 1,
+          "id": 51
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeApply",
+          "helperId": 1,
+          "id": 52
+        },
+        {
+          "magic": "BMT1",
+          "kind": "initialize",
+          "helperId": 1,
+          "id": 53
+        },
+        {
+          "magic": "BMT1",
+          "kind": "transition",
+          "helperId": 1,
+          "id": 54
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 55,
+          "phase": "apply"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeResultsSelect",
+          "helperId": 1,
+          "id": 56
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeMaterialize",
+          "helperId": 1,
+          "id": 57
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 58,
+          "phase": "writeMany"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 59,
+          "phase": "workspaceConfig"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 60,
+          "phase": "configConflict"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 61,
+          "phase": "configFiles"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 62,
+          "phase": "laneHistory"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "snapshotRepositoryBegin",
+          "helperId": 1,
+          "id": 63
+        },
+        {
+          "magic": "BMT1",
+          "kind": "snapshotRepositoryReceipt",
+          "helperId": 1,
+          "id": 64
+        },
+        {
+          "magic": "BMT1",
+          "kind": "snapshotRepositoryReceipt",
+          "helperId": 1,
+          "id": 65
+        },
+        {
+          "magic": "BMT1",
+          "kind": "snapshotSerialize",
+          "helperId": 1,
+          "id": 66
+        },
+        {
+          "magic": "BMT1",
+          "kind": "snapshotCommit",
+          "helperId": 1,
+          "id": 67
+        },
+        {
+          "magic": "BMT1",
+          "kind": "snapshotRepositoryReceipt",
+          "helperId": 1,
+          "id": 68
+        },
+        {
+          "magic": "BSS1",
+          "kind": "index",
+          "helperId": 1,
+          "id": 69
+        },
+        {
+          "magic": "BMT1",
+          "kind": "snapshotRepositoryReceipt",
+          "helperId": 1,
+          "id": 70
+        },
+        {
+          "magic": "BMT1",
+          "kind": "snapshotRepositoryReceipt",
+          "helperId": 1,
+          "id": 71
+        },
+        {
+          "magic": "BMT1",
+          "kind": "commit",
+          "helperId": 1,
+          "id": 72
+        },
+        {
+          "magic": "BMT1",
+          "kind": "snapshotRepositoryReceipt",
+          "helperId": 1,
+          "id": 73
+        },
+        {
+          "magic": "BMT1",
+          "kind": "snapshotRepositoryReceipt",
+          "helperId": 1,
+          "id": 74
+        },
+        {
+          "magic": "BMT1",
+          "kind": "snapshotRepositoryReceipt",
+          "helperId": 1,
+          "id": 75
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 76,
+          "phase": "persist"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "commit",
+          "helperId": 1,
+          "id": 77
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 78,
+          "phase": "pendingWrite"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 79,
+          "phase": "bitmap"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 80,
+          "phase": "workspacePolicy"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 81,
+          "phase": "componentRemove"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 82,
+          "phase": "conflicts"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 83,
+          "phase": "install"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 84,
+          "phase": "updatedComponents"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 85,
+          "phase": "bitmapSnapBeforeAutoSnap"
+        },
+        {
+          "magic": "BWC0",
+          "helperId": 1,
+          "id": 86
+        },
+        {
+          "magic": "BWC0",
+          "helperId": 1,
+          "id": 87
+        },
+        {
+          "magic": "BWC0",
+          "helperId": 1,
+          "id": 88
+        },
+        {
+          "magic": "BWS1",
+          "kind": "scan",
+          "helperId": 1,
+          "id": 89
+        },
+        {
+          "magic": "BWS1",
+          "kind": "read",
+          "helperId": 1,
+          "id": 90
+        },
+        {
+          "magic": "BWC0",
+          "helperId": 1,
+          "id": 91
+        },
+        {
+          "magic": "BWC0",
+          "helperId": 1,
+          "id": 92
+        },
+        {
+          "magic": "BWS1",
+          "kind": "scan",
+          "helperId": 1,
+          "id": 93
+        },
+        {
+          "magic": "BWS1",
+          "kind": "read",
+          "helperId": 1,
+          "id": 94
+        },
+        {
+          "magic": "BWC0",
+          "helperId": 1,
+          "id": 95
+        },
+        {
+          "magic": "BWC0",
+          "helperId": 1,
+          "id": 96
+        },
+        {
+          "magic": "BWS1",
+          "kind": "scan",
+          "helperId": 1,
+          "id": 97
+        },
+        {
+          "magic": "BWS1",
+          "kind": "read",
+          "helperId": 1,
+          "id": 98
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 99,
+          "phase": "snap"
+        }
+      ],
+      "mergeState": {
+        "mergeTransactionBegin": {
+          "frames": 3,
+          "completed": 3,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeTransactionReceipt": {
+          "frames": 32,
+          "completed": 32,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": [
+            {
+              "phase": "validateFlags"
+            },
+            {
+              "phase": "context"
+            },
+            {
+              "phase": "upToDate"
+            },
+            {
+              "phase": "status"
+            },
+            {
+              "phase": "importGap"
+            },
+            {
+              "phase": "plans"
+            },
+            {
+              "phase": "clearTemps"
+            },
+            {
+              "phase": "status"
+            },
+            {
+              "phase": "pattern"
+            },
+            {
+              "phase": "workspaceFilter"
+            },
+            {
+              "phase": "throwForFailures"
+            },
+            {
+              "phase": "squash"
+            },
+            {
+              "phase": "artifacts"
+            },
+            {
+              "phase": "lastMergedSnapshot"
+            },
+            {
+              "phase": "prompt"
+            },
+            {
+              "phase": "results"
+            },
+            {
+              "phase": "apply"
+            },
+            {
+              "phase": "writeMany"
+            },
+            {
+              "phase": "workspaceConfig"
+            },
+            {
+              "phase": "configConflict"
+            },
+            {
+              "phase": "configFiles"
+            },
+            {
+              "phase": "laneHistory"
+            },
+            {
+              "phase": "persist"
+            },
+            {
+              "phase": "pendingWrite"
+            },
+            {
+              "phase": "bitmap"
+            },
+            {
+              "phase": "workspacePolicy"
+            },
+            {
+              "phase": "componentRemove"
+            },
+            {
+              "phase": "conflicts"
+            },
+            {
+              "phase": "install"
+            },
+            {
+              "phase": "updatedComponents"
+            },
+            {
+              "phase": "bitmapSnapBeforeAutoSnap"
+            },
+            {
+              "phase": "snap"
+            }
+          ]
+        },
+        "mergeTransactionFinish": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeStatusBegin": {
+          "frames": 1,
+          "completed": 1,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeStatusReceipt": {
+          "frames": 8,
+          "completed": 8,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": [
+            {
+              "phase": "model"
+            },
+            {
+              "phase": "unmerged"
+            },
+            {
+              "phase": "incoming"
+            },
+            {
+              "phase": "currentId"
+            },
+            {
+              "phase": "locallyRemoved"
+            },
+            {
+              "phase": "current"
+            },
+            {
+              "phase": "modified"
+            },
+            {
+              "phase": "divergence"
+            }
+          ]
+        },
+        "mergeApplyDecision": {
+          "frames": 1,
+          "completed": 1,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeLaneBucketDecision": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeResultsSelect": {
+          "frames": 2,
+          "completed": 2,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeDependencyCandidates": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeDependencyMissing": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergePatternDependencies": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergePatternOutcome": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergePlanOrder": {
+          "frames": 1,
+          "completed": 1,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergePrepare": {
+          "frames": 1,
+          "completed": 1,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [
+            {
+              "sourceReads": 20,
+              "sourceBodyBytes": 1140,
+              "helperId": 1
+            }
+          ],
+          "phases": []
+        },
+        "mergeApply": {
+          "frames": 1,
+          "completed": 1,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [
+            {
+              "sourceReads": 5,
+              "sourceBodyBytes": 284,
+              "helperId": 1
+            }
+          ],
+          "phases": []
+        },
+        "mergeRemovals": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeMaterialize": {
+          "frames": 1,
+          "completed": 1,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 5,
+          "verifiedReads": [],
+          "phases": []
+        }
+      }
+    }
+  },
+  {
+    "scenario": {
+      "name": "lane-dependency-required-error",
+      "error": true
+    },
+    "rawTraceSha256": "bafbbc7c0ea999c2affb811080316a8ffea2cfa797ec44eb3442ad027a9c94f4",
+    "trace": {
+      "workspaceFrames": [
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionBegin",
+          "helperId": 1,
+          "id": 1
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 2,
+          "phase": "validateFlags"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 3,
+          "phase": "context"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 4,
+          "phase": "upToDate"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionBegin",
+          "helperId": 1,
+          "id": 5
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusBegin",
+          "helperId": 1,
+          "id": 6
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 7,
+          "observe": "model"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 8,
+          "observe": "unmerged"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 9,
+          "observe": "incoming"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 10,
+          "observe": "currentId"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 11,
+          "observe": "locallyRemoved"
+        },
+        {
+          "magic": "BWC0",
+          "helperId": 1,
+          "id": 12
+        },
+        {
+          "magic": "BWC0",
+          "helperId": 1,
+          "id": 13
+        },
+        {
+          "magic": "BWC0",
+          "helperId": 1,
+          "id": 14
+        },
+        {
+          "magic": "BWS1",
+          "kind": "scan",
+          "helperId": 1,
+          "id": 15
+        },
+        {
+          "magic": "BWS1",
+          "kind": "read",
+          "helperId": 1,
+          "id": 16
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 17,
+          "observe": "current"
+        },
+        {
+          "magic": "BMH1",
+          "kind": "graph",
+          "helperId": 1,
+          "id": 18
+        },
+        {
+          "magic": "BMT1",
+          "kind": "snapshotSerialize",
+          "helperId": 1,
+          "id": 19
+        },
+        {
+          "magic": "BMT1",
+          "kind": "snapshotCommit",
+          "helperId": 1,
+          "id": 20
+        },
+        {
+          "magic": "BMH1",
+          "kind": "diverge",
+          "helperId": 1,
+          "id": 21
+        },
+        {
+          "magic": "BMT1",
+          "kind": "inspectionCompare",
+          "helperId": 1,
+          "id": 22
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 23,
+          "observe": "modified"
+        },
+        {
+          "magic": "BMH1",
+          "kind": "diverge",
+          "helperId": 1,
+          "id": 24
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 25,
+          "observe": "divergence"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 26,
+          "phase": "status"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusBegin",
+          "helperId": 1,
+          "id": 27
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 28,
+          "observe": "model"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 29,
+          "observe": "unmerged"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 30,
+          "observe": "incoming"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 31,
+          "observe": "currentId"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 32,
+          "observe": "locallyRemoved"
+        },
+        {
+          "magic": "BWC0",
+          "helperId": 1,
+          "id": 33
+        },
+        {
+          "magic": "BWC0",
+          "helperId": 1,
+          "id": 34
+        },
+        {
+          "magic": "BWC0",
+          "helperId": 1,
+          "id": 35
+        },
+        {
+          "magic": "BWS1",
+          "kind": "scan",
+          "helperId": 1,
+          "id": 36
+        },
+        {
+          "magic": "BWS1",
+          "kind": "read",
+          "helperId": 1,
+          "id": 37
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 38,
+          "observe": "current"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "inspectionCompare",
+          "helperId": 1,
+          "id": 39
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 40,
+          "observe": "modified"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeStatusReceipt",
+          "helperId": 1,
+          "id": 41,
+          "observe": "divergence"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 42,
+          "phase": "status"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 43,
+          "phase": "importGap"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "configComponent",
+          "helperId": 1,
+          "id": 44
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergePrepare",
+          "helperId": 1,
+          "id": 45
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergePlanOrder",
+          "helperId": 1,
+          "id": 46
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 47,
+          "phase": "plans"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 48,
+          "phase": "clearTemps"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionReceipt",
+          "helperId": 1,
+          "id": 49,
+          "phase": "status"
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergePatternDependencies",
+          "helperId": 1,
+          "id": 50
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergePatternOutcome",
+          "helperId": 1,
+          "id": 51
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionFinish",
+          "helperId": 1,
+          "id": 52
+        },
+        {
+          "magic": "BMT1",
+          "kind": "mergeTransactionFinish",
+          "helperId": 1,
+          "id": 53
+        }
+      ],
+      "mergeState": {
+        "mergeTransactionBegin": {
+          "frames": 2,
+          "completed": 2,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeTransactionReceipt": {
+          "frames": 9,
+          "completed": 9,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": [
+            {
+              "phase": "validateFlags"
+            },
+            {
+              "phase": "context"
+            },
+            {
+              "phase": "upToDate"
+            },
+            {
+              "phase": "status"
+            },
+            {
+              "phase": "status"
+            },
+            {
+              "phase": "importGap"
+            },
+            {
+              "phase": "plans"
+            },
+            {
+              "phase": "clearTemps"
+            },
+            {
+              "phase": "status"
+            }
+          ]
+        },
+        "mergeTransactionFinish": {
+          "frames": 2,
+          "completed": 2,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeStatusBegin": {
+          "frames": 2,
+          "completed": 2,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeStatusReceipt": {
+          "frames": 16,
+          "completed": 16,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": [
+            {
+              "phase": "model"
+            },
+            {
+              "phase": "unmerged"
+            },
+            {
+              "phase": "incoming"
+            },
+            {
+              "phase": "currentId"
+            },
+            {
+              "phase": "locallyRemoved"
+            },
+            {
+              "phase": "current"
+            },
+            {
+              "phase": "modified"
+            },
+            {
+              "phase": "divergence"
+            },
+            {
+              "phase": "model"
+            },
+            {
+              "phase": "unmerged"
+            },
+            {
+              "phase": "incoming"
+            },
+            {
+              "phase": "currentId"
+            },
+            {
+              "phase": "locallyRemoved"
+            },
+            {
+              "phase": "current"
+            },
+            {
+              "phase": "modified"
+            },
+            {
+              "phase": "divergence"
+            }
+          ]
+        },
+        "mergeApplyDecision": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeLaneBucketDecision": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeResultsSelect": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeDependencyCandidates": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeDependencyMissing": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergePatternDependencies": {
+          "frames": 1,
+          "completed": 1,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergePatternOutcome": {
+          "frames": 1,
+          "completed": 1,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergePlanOrder": {
+          "frames": 1,
+          "completed": 1,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergePrepare": {
+          "frames": 1,
+          "completed": 1,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [
+            {
+              "sourceReads": 20,
+              "sourceBodyBytes": 1140,
+              "helperId": 1
+            }
+          ],
+          "phases": []
+        },
+        "mergeApply": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeRemovals": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        },
+        "mergeMaterialize": {
+          "frames": 0,
+          "completed": 0,
+          "failed": 0,
+          "sourceBodyBytes": 0,
+          "dataFailed": 0,
+          "stepsCompleted": 0,
+          "verifiedReads": [],
+          "phases": []
+        }
+      }
+    }
+  }
+]

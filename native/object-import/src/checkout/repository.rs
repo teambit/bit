@@ -15,17 +15,7 @@ pub(crate) fn source(
     maximum: usize,
     compressed_total: &mut usize,
 ) -> io::Result<Vec<u8>> {
-    let object = read(directory, hash, maximum + 256, compressed_total)?;
-    let (header, body) = split(&object, hash, "Source")?;
-    if header.parse::<usize>().is_err()
-        || body.len() > maximum
-        || <[u8; 20]>::from(Sha1::digest(body)) != hash
-    {
-        return Err(invalid("checkout Source identity or size is invalid"));
-    }
-    // Match canonical source validation: the advertised size is syntactically
-    // numeric; content identity comes from the actual body, not that field.
-    Ok(body.to_vec())
+    Ok(source_record(directory, hash, maximum, compressed_total)?.body)
 }
 
 #[derive(Clone)]
@@ -49,7 +39,9 @@ pub(crate) fn source_record(
     {
         return Err(invalid("checkout Source identity or size is invalid"));
     }
-    Ok(SourceRecord { body: body.to_vec(), compressed, inflated_size: object.len() })
+    let record = SourceRecord { body: body.to_vec(), compressed, inflated_size: object.len() };
+    crate::merge_transaction::reads::source(hash, &record)?;
+    Ok(record)
 }
 pub(crate) fn read(
     directory: &Path,

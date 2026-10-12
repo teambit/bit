@@ -135,8 +135,11 @@ pub(super) fn load(request: &Load) -> io::Result<Value> {
     }
     let mut versions = request.cached.clone();
     let mut added = Vec::new();
-    let mut reader =
-        Reader { repository: crate::read_version::Reader::new(&request.objects_directory)? };
+    let mut reader = Reader {
+        repository: crate::read_version::Reader::history_with_artifacts(
+            &request.objects_directory,
+        )?,
+    };
     for head in heads(request)? {
         reader.traverse(&head, &versions, &mut added)?;
     }

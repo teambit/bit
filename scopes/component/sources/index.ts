@@ -81,6 +81,7 @@ export {
 export {
   createRustCheckoutPlanSourceFile,
   installRustCheckoutPlanSourceContents,
+  canInstallRustCheckoutPlanSourceContents,
   getRustCheckoutPlanSourceDescriptor,
 } from './rust-checkout-plan-source';
 export type { RustCheckoutPlanSourceDescriptor } from './rust-checkout-plan-source';

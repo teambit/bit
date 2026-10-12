@@ -1,7 +1,15 @@
 import { createHash } from 'crypto';
 import path from 'path';
 import { types } from 'util';
-import { Ref, registerRustSnapshotFunctionReference, hasRustSnapshotTransactionClassFields, hasRustSnapshotFunctionReference, type Repository, type Source, type SourceFileModel } from '@teambit/objects';
+import {
+  Ref,
+  registerRustSnapshotFunctionReference,
+  hasRustSnapshotTransactionClassFields,
+  hasRustSnapshotFunctionReference,
+  type Repository,
+  type Source,
+  type SourceFileModel,
+} from '@teambit/objects';
 import SourceFile, { canReadWorkspaceFilesNatively } from './source-file';
 import type AbstractVinyl from './abstract-vinyl';
 import { defaultVinylWrite } from './abstract-vinyl';
@@ -20,15 +28,29 @@ const bufferEquals = Buffer.prototype.equals;
 const bufferFrom = Buffer.from;
 const sourceCreateHash = createHash;
 
-function canRetainSourceBody(source: Source, body: unknown, hash: string): body is Buffer {
+function hasOwnedRepositorySourceOperation(): boolean {
+  if (process.env.BIT_RUST_CLIENT_VCS !== 'on') return false;
   const query = require('@teambit/objects/dist/objects/rust-history-query.js');
-  const active = Object.getOwnPropertyDescriptor(query, 'isRustHistoryQueryOperation')?.value;
-  if (!hasRustSnapshotFunctionReference('HistoryQueryOperationActive', active) || !active()) return false;
-  if (types.isProxy(source) || (body && typeof body === 'object' && types.isProxy(body)) ||
-    !hasRustSnapshotTransactionClassFields(source, 'Source', ['contents']) || !Buffer.isBuffer(body) ||
-    Object.getPrototypeOf(body) !== Buffer.prototype || Object.getOwnPropertyDescriptor(source, 'contents')?.value !== body ||
+  const queryActive = Object.getOwnPropertyDescriptor(query, 'isRustHistoryQueryOperation')?.value;
+  if (hasRustSnapshotFunctionReference('HistoryQueryOperationActive', queryActive) && queryActive()) return true;
+  const merge = require('@teambit/objects/dist/objects/rust-merge-transaction.js');
+  const mergeActive = Object.getOwnPropertyDescriptor(merge, 'isRustMergeTransactionOperation')?.value;
+  return hasRustSnapshotFunctionReference('MergeTransactionOperationActive', mergeActive) && mergeActive();
+}
+
+function canRetainSourceBody(source: Source, body: unknown, hash: string): body is Buffer {
+  if (!hasOwnedRepositorySourceOperation()) return false;
+  if (
+    types.isProxy(source) ||
+    (body && typeof body === 'object' && types.isProxy(body)) ||
+    !hasRustSnapshotTransactionClassFields(source, 'Source', ['contents']) ||
+    !Buffer.isBuffer(body) ||
+    Object.getPrototypeOf(body) !== Buffer.prototype ||
+    Object.getOwnPropertyDescriptor(source, 'contents')?.value !== body ||
     Object.getOwnPropertyDescriptor(Buffer, 'from')?.value !== bufferFrom ||
-    Object.getOwnPropertyDescriptor(require('crypto'), 'createHash')?.value !== sourceCreateHash) return false;
+    Object.getOwnPropertyDescriptor(require('crypto'), 'createHash')?.value !== sourceCreateHash
+  )
+    return false;
   return sourceCreateHash('sha1').update(body).digest('hex') === hash;
 }
 const vinylContents = Object.getOwnPropertyDescriptor(require('vinyl').prototype, 'contents');
@@ -40,8 +62,14 @@ function retainedFileBody(file: AbstractVinyl): Buffer | undefined {
   while (prototype) {
     const descriptor = Object.getOwnPropertyDescriptor(prototype, 'contents');
     if (descriptor) {
-      if (!vinylContents || descriptor.get !== vinylContents.get || descriptor.set !== vinylContents.set ||
-        descriptor.enumerable !== vinylContents.enumerable || descriptor.configurable !== vinylContents.configurable) return undefined;
+      if (
+        !vinylContents ||
+        descriptor.get !== vinylContents.get ||
+        descriptor.set !== vinylContents.set ||
+        descriptor.enumerable !== vinylContents.enumerable ||
+        descriptor.configurable !== vinylContents.configurable
+      )
+        return undefined;
       const contents = Object.getOwnPropertyDescriptor(file, '_contents');
       return contents && 'value' in contents && Buffer.isBuffer(contents.value) ? contents.value : undefined;
     }
@@ -246,7 +274,17 @@ function historySourceMetadata(file: AbstractVinyl): boolean {
   const descriptors = Object.getOwnPropertyDescriptors(file);
   Reflect.deleteProperty(descriptors, 'contents');
   const metadata = Object.create(Object.getPrototypeOf(file), descriptors);
-  if (!hasRustSnapshotTransactionClassFields(metadata, 'SourceFile', ['history', '_base', '_cwd', 'base', 'path', 'relative'])) return false;
+  if (
+    !hasRustSnapshotTransactionClassFields(metadata, 'SourceFile', [
+      'history',
+      '_base',
+      '_cwd',
+      'base',
+      'path',
+      'relative',
+    ])
+  )
+    return false;
   const history = descriptors.history?.value;
   if (!Array.isArray(history) || !hasRustSnapshotTransactionClassFields(history, 'Array', [])) return false;
   const fields = Object.getOwnPropertyDescriptors(history);
@@ -270,31 +308,55 @@ function hydratedSourceAuthority(provenance: Provenance): boolean {
   const capture = Object.getOwnPropertyDescriptor(query, 'captureRustHistoryQueryObjects')?.value;
   if (!hasRustSnapshotFunctionReference('HistoryQueryObjectCapture', capture)) return false;
   const objects = capture(provenance.repository) as Array<[string, object]> | undefined;
-  if (!objects || path.resolve(provenance.repository.getPath()) !== provenance.descriptor.objectsDirectory) return false;
+  if (!objects || path.resolve(provenance.repository.getPath()) !== provenance.descriptor.objectsDirectory)
+    return false;
   const cached = objects.find(([hash]) => hash === provenance.descriptor.hash)?.[1];
-  return (!cached || cached === hydrated.source || ownedHistorySourceAlias(provenance.repository, provenance.descriptor.hash)) &&
-    !types.isProxy(hydrated.source) && hasRustSnapshotTransactionClassFields(hydrated.source, 'Source', ['contents']) &&
-    Object.getOwnPropertyDescriptor(hydrated.source, 'contents')?.value === hydrated.body;
+  return (
+    (!cached ||
+      cached === hydrated.source ||
+      ownedHistorySourceAlias(provenance.repository, provenance.descriptor.hash)) &&
+    !types.isProxy(hydrated.source) &&
+    hasRustSnapshotTransactionClassFields(hydrated.source, 'Source', ['contents']) &&
+    Object.getOwnPropertyDescriptor(hydrated.source, 'contents')?.value === hydrated.body
+  );
 }
 
 /** History reads retain the actual public loader's repository authority. */
-export function getRustHistorySourceDescriptor(file: AbstractVinyl, repository: Repository): RustCheckoutSourceDescriptor | undefined {
+export function getRustHistorySourceDescriptor(
+  file: AbstractVinyl,
+  repository: Repository
+): RustCheckoutSourceDescriptor | undefined {
   const provenance = sources.get(file);
-  if (types.isProxy(file) || provenance?.repository !== repository || !historySourceMetadata(file) ||
+  if (
+    types.isProxy(file) ||
+    provenance?.repository !== repository ||
+    !historySourceMetadata(file) ||
     !ordinarySourceRef(provenance.reference) ||
-    Object.getOwnPropertyDescriptor(provenance.reference, 'hash')?.value !== provenance.descriptor.hash) return undefined;
+    Object.getOwnPropertyDescriptor(provenance.reference, 'hash')?.value !== provenance.descriptor.hash
+  )
+    return undefined;
   const hydrated = provenance.hydrated;
   if (hydrated) {
-    if (retainedFileBody(file) !== hydrated.body || Object.getPrototypeOf(hydrated.body) !== Buffer.prototype ||
+    if (
+      retainedFileBody(file) !== hydrated.body ||
+      Object.getPrototypeOf(hydrated.body) !== Buffer.prototype ||
       Object.getOwnPropertyDescriptor(Buffer.prototype, 'equals')?.value !== bufferEquals ||
-      !bufferEquals.call(hydrated.body, hydrated.snapshot) || !hydratedSourceAuthority(provenance)) return undefined;
+      !bufferEquals.call(hydrated.body, hydrated.snapshot) ||
+      !hydratedSourceAuthority(provenance)
+    )
+      return undefined;
     return { ...provenance.descriptor };
   }
   const contents = Object.getOwnPropertyDescriptor(file, 'contents');
-  if (!contents || contents.get !== provenance.contents?.get || contents.set !== provenance.contents?.set) return undefined;
+  if (!contents || contents.get !== provenance.contents?.get || contents.set !== provenance.contents?.set)
+    return undefined;
   const direct = getRustCheckoutSourceDescriptor(file);
   if (direct) return direct;
-  if (!repository.canReadCheckoutSourcesNatively([]) || !ownedHistorySourceAlias(repository, provenance.descriptor.hash)) return undefined;
+  if (
+    !repository.canReadCheckoutSourcesNatively([]) ||
+    !ownedHistorySourceAlias(repository, provenance.descriptor.hash)
+  )
+    return undefined;
   return { ...provenance.descriptor };
 }
 registerRustSnapshotFunctionReference('HistoryQuerySourceDescriptor', getRustHistorySourceDescriptor);
@@ -304,8 +366,19 @@ export function inheritRustHistorySourceSnapshot(original: SourceFile, clone: So
   if (types.isProxy(original) || types.isProxy(clone)) return;
   const provenance = sources.get(original);
   const body = provenance?.hydrated?.body;
-  if (!body || retainedFileBody(clone) !== body ||
-    !hasRustSnapshotTransactionClassFields(clone, 'SourceFile', ['history', '_base', '_cwd', 'base', 'path', 'relative'])) return;
+  if (
+    !body ||
+    retainedFileBody(clone) !== body ||
+    !hasRustSnapshotTransactionClassFields(clone, 'SourceFile', [
+      'history',
+      '_base',
+      '_cwd',
+      'base',
+      'path',
+      'relative',
+    ])
+  )
+    return;
   sources.set(clone, provenance!);
 }
 

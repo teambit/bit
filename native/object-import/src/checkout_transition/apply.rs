@@ -9,6 +9,8 @@ pub(super) struct File {
     pub(super) index: usize,
     pub(super) plan_index: usize,
     pub(super) path: String,
+    pub(super) alias_kind: &'static str,
+    pub(super) alias_index: usize,
 }
 pub(super) fn apply(input: Value, state: &plan::State) -> io::Result<Value> {
     let request: wire::Apply = serde_json::from_value(input).map_err(io::Error::other)?;
@@ -28,7 +30,7 @@ pub(super) fn apply(input: Value, state: &plan::State) -> io::Result<Value> {
     } else {
         effects::apply(plan, &mut files, &mut status)?
     };
-    let mut output = json!({"keepOurs":false,"files":files.iter().map(|file|json!({"kind":file.kind,"index":file.index,"planIndex":file.plan_index,"relativePath":file.path})).collect::<Vec<_>>(),"filesStatus":status.iter().map(|(path,status)|json!({"relativePath":path,"status":status})).collect::<Vec<_>>(),"removals":removal["removals"]});
+    let mut output = json!({"keepOurs":false,"files":files.iter().map(|file|json!({"kind":file.kind,"index":file.index,"planIndex":file.plan_index,"relativePath":file.path,"aliasKind":file.alias_kind,"aliasIndex":file.alias_index})).collect::<Vec<_>>(),"filesStatus":status.iter().map(|(path,status)|json!({"relativePath":path,"status":status})).collect::<Vec<_>>(),"removals":removal["removals"]});
     if let Some(message) = error {
         output["deferredError"] = json!({"phase":"applyModified","message":message});
     }
@@ -44,6 +46,8 @@ fn initial(
         .enumerate()
         .map(|(index, file)| File {
             kind: "target",
+            alias_kind: "target",
+            alias_index: index,
             index,
             plan_index: plan.target_indices[index],
             path: file.relative_path.clone(),
@@ -83,7 +87,9 @@ pub(super) fn path(plan: &plan::Plan, row: &Value) -> io::Result<String> {
     }
     let index =
         row["other"].as_u64().ok_or_else(|| invalid("checkout other merge index missing"))?;
-    plan.target
+    plan.other
+        .as_ref()
+        .unwrap_or(&plan.target)
         .get(index as usize)
         .map(|file| file.relative_path.clone())
         .ok_or_else(|| invalid("checkout other merge index"))

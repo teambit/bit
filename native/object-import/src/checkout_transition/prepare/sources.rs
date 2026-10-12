@@ -1,6 +1,6 @@
 use super::super::{invalid, wire};
 use std::{io, path::Path};
-pub(super) fn load(
+pub(in crate::checkout_transition) fn load(
     directory: &Path,
     version: &wire::Version,
     total: &mut usize,

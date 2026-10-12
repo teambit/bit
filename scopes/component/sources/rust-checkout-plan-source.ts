@@ -16,6 +16,7 @@ import {
 
 export type RustCheckoutPlanSourceDescriptor = {
   token: string;
+  mergeOwnerToken?: string;
   planIndex: number;
   snapshotPath: string;
   snapshotHash: string;
@@ -117,6 +118,7 @@ function ordinaryMetadata(
 function validDescriptor(descriptor: RustCheckoutPlanSourceDescriptor): boolean {
   return (
     /^[a-f0-9]{40}$/.test(descriptor.token) &&
+    (descriptor.mergeOwnerToken === undefined || /^[a-f0-9]{40}$/.test(descriptor.mergeOwnerToken)) &&
     Number.isSafeInteger(descriptor.planIndex) &&
     descriptor.planIndex >= 0 &&
     descriptor.planIndex < 4096 &&
@@ -214,20 +216,31 @@ export function createRustCheckoutPlanSourceFile(
   return installRustCheckoutPlanSourceContents(file, descriptor, contentsAlias) ? file : undefined;
 }
 
+/** Check an entire retained apply batch before any public file is changed. */
+export function canInstallRustCheckoutPlanSourceContents(
+  file: SourceFile,
+  descriptor: RustCheckoutPlanSourceDescriptor,
+  contentsAlias?: Buffer
+): boolean {
+  return Boolean(
+    workspaceEngineSession().owned &&
+      workspaceEngineIdentity() &&
+      ordinary(file) &&
+      validDescriptor(descriptor) &&
+      (contentsAlias === undefined ||
+        (Buffer.isBuffer(contentsAlias) &&
+          contentsAlias.length === descriptor.bytes &&
+          createHash('sha1').update(contentsAlias).digest('hex') === descriptor.snapshotHash))
+  );
+}
+
 /** Preserve the exact public clone identity when an apply prefix replaces only its body. */
 export function installRustCheckoutPlanSourceContents(
   file: SourceFile,
   descriptor: RustCheckoutPlanSourceDescriptor,
   contentsAlias?: Buffer
 ): boolean {
-  if (!workspaceEngineSession().owned || !ordinary(file) || !validDescriptor(descriptor)) return false;
-  if (
-    contentsAlias !== undefined &&
-    (!Buffer.isBuffer(contentsAlias) ||
-      contentsAlias.length !== descriptor.bytes ||
-      createHash('sha1').update(contentsAlias).digest('hex') !== descriptor.snapshotHash)
-  )
-    return false;
+  if (!canInstallRustCheckoutPlanSourceContents(file, descriptor, contentsAlias)) return false;
   const owner = workspaceEngineIdentity();
   if (!owner) return false;
   const capsule: Capsule = { owner, descriptor: { ...descriptor }, body: contentsAlias, files: new Set() };

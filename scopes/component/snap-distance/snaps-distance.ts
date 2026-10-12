@@ -1,4 +1,5 @@
 import type { Ref } from '@teambit/objects';
+import { registerRustSnapshotTransactionClass } from '@teambit/objects';
 
 export class SnapsDistance {
   constructor(
@@ -35,6 +36,7 @@ export class SnapsDistance {
     return !this.isTargetAhead();
   }
 }
+registerRustSnapshotTransactionClass('MergeSnapsDistance', SnapsDistance);
 
 const squashMethods = ['isDiverged', 'isSourceAhead', 'isTargetAhead'].map(
   (name) => [name, SnapsDistance.prototype[name]] as const

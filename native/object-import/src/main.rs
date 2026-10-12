@@ -9,6 +9,7 @@ mod inventory;
 mod js_json;
 mod merge_history;
 mod merge_state;
+mod merge_transaction;
 mod metadata;
 mod mutable_store;
 mod operation;

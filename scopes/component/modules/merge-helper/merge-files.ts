@@ -3,6 +3,7 @@ import execa from 'execa';
 import { logger } from '@teambit/legacy.logger';
 import { GitNotFound, getGitExecutablePath } from '@teambit/git.modules.git-executable';
 import type { PathLinux, PathOsBased } from '@teambit/legacy.utils';
+import { registerRustSnapshotFunctionReference } from '@teambit/objects';
 
 export type MergeFileResult = {
   filePath: PathLinux;
@@ -83,3 +84,5 @@ ${chalk.bold('message:')} ${err.message}
 ${chalk.bold('original error:')} ${err.stderr}`);
   }
 }
+
+registerRustSnapshotFunctionReference('MergeCanonicalFiles', mergeFiles);

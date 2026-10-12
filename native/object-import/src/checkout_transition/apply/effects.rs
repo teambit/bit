@@ -94,6 +94,8 @@ fn modified(
         return Ok(Some(format!("file {} does not have output nor conflict", error_path(path))));
     };
     file.plan_index = index;
+    file.alias_kind = if kind == "binaryConflict" { "current" } else { "new" };
+    file.alias_index = row["current"].as_u64().unwrap_or(0) as usize;
     status.insert(path.into(), json!(kind));
     Ok(None)
 }
@@ -113,21 +115,16 @@ fn add(
     {
         return Ok(());
     }
-    let source = if let Some(index) = row["current"].as_u64() {
-        let index = index as usize;
-        Some((
-            "current",
-            index,
-            plan.current.get(index).ok_or_else(|| invalid("checkout add current"))?.plan_index,
-        ))
-    } else if let (Some(index), Some(body)) = (row["other"].as_u64(), row["bodyPlanIndex"].as_u64())
-    {
-        Some(("target", index as usize, body as usize))
-    } else {
-        None
-    };
+    let source = add_source(plan, row)?;
     if let Some((kind, index, plan_index)) = source {
-        files.push(File { kind, index, plan_index, path: path.into() });
+        files.push(File {
+            kind,
+            index,
+            plan_index,
+            path: path.into(),
+            alias_kind: if kind == "current" { "current" } else { "other" },
+            alias_index: index,
+        });
         status.insert(path.into(), json!("added"));
     }
     Ok(())
@@ -148,9 +145,30 @@ fn update(
     file.plan_index = row["bodyPlanIndex"]
         .as_u64()
         .ok_or_else(|| invalid("checkout update body missing"))? as usize;
+    file.alias_kind = if kind == "overrideFiles" { "current" } else { "other" };
+    file.alias_index = row[if kind == "overrideFiles" { "current" } else { "other" }]
+        .as_u64()
+        .ok_or_else(|| invalid("checkout update alias missing"))? as usize;
     status.insert(
         path.into(),
         json!(if kind == "overrideFiles" { "overridden" } else { "updated" }),
     );
     Ok(None)
+}
+
+fn add_source(plan: &plan::Plan, row: &Value) -> io::Result<Option<(&'static str, usize, usize)>> {
+    let source = if let Some(index) = row["current"].as_u64() {
+        let index = index as usize;
+        Some((
+            "current",
+            index,
+            plan.current.get(index).ok_or_else(|| invalid("checkout add current"))?.plan_index,
+        ))
+    } else if let (Some(index), Some(body)) = (row["other"].as_u64(), row["bodyPlanIndex"].as_u64())
+    {
+        Some((if plan.other.is_some() { "other" } else { "target" }, index as usize, body as usize))
+    } else {
+        None
+    };
+    Ok(source)
 }

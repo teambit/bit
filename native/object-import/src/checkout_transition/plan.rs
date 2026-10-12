@@ -20,6 +20,7 @@ pub(super) struct Plan {
     pub(super) merge_rows: Vec<Value>,
     pub(super) has_conflicts: bool,
     pub(super) statuses: Vec<Value>,
+    pub(super) other: Option<Vec<wire::Manifest>>,
 }
 pub(super) struct Current {
     pub(super) relative_path: String,
@@ -27,6 +28,7 @@ pub(super) struct Current {
     pub(super) protected: bool,
     pub(super) plan_index: usize,
     pub(super) shares_buffer: bool,
+    pub(super) raw_hash: String,
 }
 pub(super) struct Body {
     pub(super) contents: Vec<u8>,
@@ -41,7 +43,7 @@ impl Body {
     pub(super) fn manifest(&self, index: usize) -> Value {
         json!({"planIndex":index,"spoolPath":self.path,"spoolHash":self.hash,"bytes":self.contents.len()})
     }
-    fn spool(&self) -> io::Result<()> {
+    pub(super) fn spool(&self) -> io::Result<()> {
         OpenOptions::new()
             .write(true)
             .create_new(true)
@@ -50,13 +52,13 @@ impl Body {
     }
 }
 impl Plan {
-    fn bytes(&self) -> usize {
+    pub(super) fn bytes(&self) -> usize {
         self.bodies
             .iter()
             .map(|body| body.contents.len())
             .sum()
     }
-    fn manifest(&self, token: &str) -> Value {
+    pub(super) fn manifest(&self, token: &str) -> Value {
         let target = self.target
             .iter()
             .enumerate()

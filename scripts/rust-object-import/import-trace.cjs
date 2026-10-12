@@ -11,7 +11,10 @@ const versionClasses = new WeakSet();
 const asyncTypes = new Map();
 const metrics = {
   schemaVersion: 1,
-  frameworkObservation: process.env.BIT_IMPORT_TRACE_QUERY_ONLY === '1' ? 'disabled' : 'legacy-class-observer',
+  frameworkObservation:
+    process.env.BIT_IMPORT_TRACE_QUERY_ONLY === '1' || process.env.BIT_IMPORT_TRACE_PROTOCOL_ONLY === '1'
+      ? 'disabled'
+      : 'legacy-class-observer',
   stages: {},
   asyncResources: {},
   objectTypes: {},
@@ -109,6 +112,23 @@ const metrics = {
       'historyQueryPopulateBegin',
       'historyQueryShow',
       'historyQueryToposort',
+      'mergeTransactionBegin',
+      'mergeTransactionReceipt',
+      'mergeTransactionFinish',
+      'mergeStatusBegin',
+      'mergeStatusReceipt',
+      'mergeApplyDecision',
+      'mergeLaneBucketDecision',
+      'mergeResultsSelect',
+      'mergeDependencyCandidates',
+      'mergeDependencyMissing',
+      'mergePatternDependencies',
+      'mergePatternOutcome',
+      'mergePlanOrder',
+      'mergePrepare',
+      'mergeApply',
+      'mergeRemovals',
+      'mergeMaterialize',
     ].map((kind) => [
       kind,
       {
@@ -120,13 +140,28 @@ const metrics = {
         kind.startsWith('inspection') ||
         kind.startsWith('checkout') ||
         kind.startsWith('historyReset') ||
-        kind.startsWith('historyQuery')
+        kind.startsWith('historyQuery') ||
+        kind.startsWith('merge')
           ? { helperIds: [] }
           : {}),
         ...(kind.startsWith('checkout') || kind.startsWith('historyReset')
           ? { tokens: [], sourceBodyBytes: 0, snapshotBytes: 0, stepsCompleted: 0, dataFailed: 0 }
           : {}),
         ...(kind.startsWith('historyReset') ? { phases: [], children: [] } : {}),
+        ...(kind.startsWith('merge')
+          ? {
+              tokens: [],
+              planTokens: [],
+              phases: [],
+              sourceBodyBytes: 0,
+              retainedBodies: 0,
+              retainedBytes: 0,
+              stepsCompleted: 0,
+              dataFailed: 0,
+              verifiedReads: [],
+              selections: [],
+            }
+          : {}),
         ...(kind.startsWith('historyQuery')
           ? { tokens: [], sourceBodyBytes: 0, publicContentBytes: 0, verifiedReads: [] }
           : {}),
@@ -204,6 +239,13 @@ if (output && process.pid === owner) {
           kind: operation?.kind,
           helperId: workspaceId,
           id: bytes.readUInt32BE(4),
+          ...(operation?.kind?.startsWith('merge')
+            ? Object.fromEntries(
+                ['token', 'planToken', 'index', 'revision', 'phase', 'observe']
+                  .filter((key) => operation[key] !== undefined)
+                  .map((key) => [key, operation[key]])
+              )
+            : {}),
         });
         requests.push(operation ? `${magic}:${operation.kind}` : magic);
         if (operation) {
@@ -231,14 +273,26 @@ if (output && process.pid === owner) {
             magic === 'BMT1' &&
             (operation.kind.startsWith('checkout') ||
               operation.kind.startsWith('historyReset') ||
-              operation.kind.startsWith('historyQuery'))
+              operation.kind.startsWith('historyQuery') ||
+              operation.kind.startsWith('merge'))
           ) {
             if (operation.token) metric.tokens.push({ token: operation.token, helperId: workspaceId });
+            if (operation.kind.startsWith('merge') && operation.planToken)
+              metric.planTokens.push({ token: operation.planToken, helperId: workspaceId });
             if (operation.kind.startsWith('historyReset') && operation.phase)
               metric.phases.push({
                 token: operation.token,
                 revision: operation.revision,
                 phase: operation.phase,
+                helperId: workspaceId,
+              });
+            if (operation.kind.startsWith('merge') && (operation.phase || operation.observe))
+              metric.phases.push({
+                token: operation.token,
+                phase: operation.phase || operation.observe,
+                revision: operation.revision,
+                index: operation.index,
+                completed: operation.completed,
                 helperId: workspaceId,
               });
             const inspect = (value) => {
@@ -371,6 +425,28 @@ if (output && process.pid === owner) {
             for (const key of ['fromContent', 'toContent'])
               if (typeof response.data?.[key] === 'string')
                 metric.publicContentBytes += Buffer.byteLength(response.data[key]);
+          }
+          if (magic?.startsWith('BMT1:merge') && response.completed > 0 && !response.failed) {
+            if (Array.isArray(response.data?.selected) || Array.isArray(response.data?.missing))
+              metric.selections.push({
+                indices: response.data.selected || response.data.missing,
+                ...(Array.isArray(response.data?.checked) ? { checked: response.data.checked } : {}),
+                helperId: workspaceId,
+              });
+            if (response.data?.token) metric.tokens.push({ token: response.data.token, helperId: workspaceId });
+            if (response.data?.reads) metric.verifiedReads.push({ ...response.data.reads, helperId: workspaceId });
+            if (magic === 'BMT1:mergePrepare' && response.data?.token)
+              metric.planTokens.push({
+                token: response.data.token,
+                ownerToken: response.data.ownerToken,
+                helperId: workspaceId,
+              });
+            metric.stepsCompleted += response.data?.completed || 0;
+            metric.dataFailed += Number(response.data?.failed === true);
+            for (const body of response.data?.bodies || []) {
+              metric.retainedBodies++;
+              metric.retainedBytes += body.bytes || 0;
+            }
           }
           if (magic === 'BMT1:snapshotCommit') {
             metric.stepsCompleted += response.data?.completed || 0;
@@ -531,6 +607,7 @@ Module._load = function (request, parent, isMain) {
   if (
     !output ||
     process.env.BIT_IMPORT_TRACE_QUERY_ONLY === '1' ||
+    process.env.BIT_IMPORT_TRACE_PROTOCOL_ONLY === '1' ||
     process.pid !== owner ||
     !/objects|scope|version|repositories|component.*merger|remote-lanes|source-validator|object-importer|rust-tar/.test(
       request

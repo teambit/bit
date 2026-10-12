@@ -147,6 +147,36 @@ test('an explicitly retired engine keeps compatibility cleanup alive without iss
   assert.deepEqual(effects, { acquisitions: 1, releases: 1, disposals: 1 });
 });
 
+test('prompt retirement hydrates escaped values and removes their backing files before awaiting input', async (t) => {
+  await fakeOwner(t, async () => undefined);
+  const events = [];
+  await engine.withRustWorkspaceEngine(async () => {
+    engine.registerRustWorkspaceEngineCleanup(() => events.push('remove'));
+    engine.registerRustWorkspaceEngineCleanup(() => events.push('hydrate'));
+    await engine.retireRustWorkspaceEngine(true);
+    assert.deepEqual(events, ['hydrate', 'remove']);
+    assert.equal(engine.isRustWorkspaceEngine(), false);
+    await engine.retireRustWorkspaceEngine(true);
+    assert.deepEqual(events, ['hydrate', 'remove']);
+  });
+  assert.deepEqual(events, ['hydrate', 'remove']);
+});
+
+test('prompt retirement still removes private files after a hydration failure', async (t) => {
+  await fakeOwner(t, async () => undefined);
+  const failure = new Error('hydrate');
+  let removed = 0;
+  await engine.withRustWorkspaceEngine(async () => {
+    engine.registerRustWorkspaceEngineCleanup(() => removed++);
+    engine.registerRustWorkspaceEngineCleanup(() => {
+      throw failure;
+    });
+    await assert.rejects(engine.retireRustWorkspaceEngine(true), (error) => error === failure);
+    assert.equal(removed, 1);
+  });
+  assert.equal(removed, 1);
+});
+
 test('escaped borrowed sessions are closed after the outer operation rather than after nested callbacks', async (t) => {
   const frames = [];
   const { effects } = await fakeOwner(t, async (name) => {

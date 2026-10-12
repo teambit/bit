@@ -25,6 +25,23 @@ const MAX_JSON: usize = 4 * 1024 * 1024;
     deny_unknown_fields
 )]
 enum Request {
+    MergeTransactionBegin(Value),
+    MergeTransactionReceipt(Value),
+    MergeTransactionFinish(Value),
+    MergePrepare(Value),
+    MergeApply(Value),
+    MergeMaterialize(Value),
+    MergeRemovals(Value),
+    MergePlanOrder(Value),
+    MergeStatusBegin(Value),
+    MergeStatusReceipt(Value),
+    MergeApplyDecision(Value),
+    MergeResultsSelect(Value),
+    MergeDependencyCandidates(Value),
+    MergeDependencyMissing(Value),
+    MergePatternDependencies(Value),
+    MergePatternOutcome(Value),
+    MergeLaneBucketDecision(Value),
     HistoryQueryBegin(Value),
     HistoryQueryFiles(Value),
     HistoryQueryBlame(Value),
@@ -191,8 +208,35 @@ fn apply(request: Request, state: &mut State, bytes: &[u8]) -> io::Result<Value>
         Request::InspectionFinish(input) => {
             crate::inspection::apply("inspectionFinish", input, &mut state.inspection)
         }
-        request => query_operation(request, state, bytes),
+        request => merge_transaction_operation(request, state, bytes),
     }
+}
+fn merge_transaction_operation(
+    request: Request,
+    state: &mut State,
+    bytes: &[u8],
+) -> io::Result<Value> {
+    let (kind, input) = match request {
+        Request::MergeTransactionBegin(input) => ("mergeTransactionBegin", input),
+        Request::MergeTransactionReceipt(input) => ("mergeTransactionReceipt", input),
+        Request::MergeTransactionFinish(input) => ("mergeTransactionFinish", input),
+        Request::MergePrepare(input) => ("mergePrepare", input),
+        Request::MergeApply(input) => ("mergeApply", input),
+        Request::MergePlanOrder(input) => ("mergePlanOrder", input),
+        Request::MergeRemovals(input) => ("mergeRemovals", input),
+        Request::MergeMaterialize(input) => ("mergeMaterialize", input),
+        Request::MergeStatusBegin(input) => ("mergeStatusBegin", input),
+        Request::MergeStatusReceipt(input) => ("mergeStatusReceipt", input),
+        Request::MergeApplyDecision(input) => ("mergeApplyDecision", input),
+        Request::MergeDependencyCandidates(input) => ("mergeDependencyCandidates", input),
+        Request::MergeDependencyMissing(input) => ("mergeDependencyMissing", input),
+        Request::MergePatternDependencies(input) => ("mergePatternDependencies", input),
+        Request::MergePatternOutcome(input) => ("mergePatternOutcome", input),
+        Request::MergeResultsSelect(input) => ("mergeResultsSelect", input),
+        Request::MergeLaneBucketDecision(input) => ("mergeLaneBucketDecision", input),
+        request => return query_operation(request, state, bytes),
+    };
+    crate::merge_transaction::apply(kind, input, &mut state.operations.merge_transaction)
 }
 fn query_operation(request: Request, state: &mut State, bytes: &[u8]) -> io::Result<Value> {
     let (kind, input) = match request {

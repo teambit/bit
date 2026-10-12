@@ -326,3 +326,60 @@ fn malformed_version_metadata_declines_before_graph_output() {
         assert!(result.get("data").is_none());
     }
 }
+
+#[test]
+fn dedicated_graph_reader_validates_built_artifacts_without_loading_artifact_sources() {
+    let directory = Directory::new();
+    let head = "e".repeat(40);
+    let parent = "d".repeat(40);
+    directory.version(&parent, &[]);
+    let body = json!({"mainFile":"index.js","files":[],"parents":[parent],"log":{},"extensions":[{"name":"teambit.pipelines/builder","data":{"artifacts":[{"files":[{"relativePath":"dist/index.js","file":"f".repeat(40),"url":"https://example.test/index.js"}]}]}}]});
+    directory.store("Version", &head, &serde_json::to_vec(&body).unwrap());
+    let loaded = response(&graph(&directory, &head));
+    assert_eq!(loaded["failed"], false);
+    assert_eq!(loaded["data"]["added"], json!([record(&head, &[&parent]), record(&parent, &[])]));
+    assert!(
+        crate::read_version::Reader::new(&directory.0)
+            .unwrap()
+            .read(&head)
+            .is_err(),
+    );
+    assert!(
+        crate::read_version::Reader::history_with_artifacts(&directory.0)
+            .unwrap()
+            .metadata()
+            .is_none(),
+    );
+    for file in [
+        json!({"relativePath":"dist/index.js","file":null}),
+        json!({"relativePath":false,"file":"f".repeat(40)}),
+        json!({"relativePath":"dist/index.js","file":"f".repeat(40),"url":0}),
+    ] {
+        let mut invalid = body.clone();
+        invalid["extensions"][0]["data"]["artifacts"][0]["files"] = json!([file]);
+        directory.store("Version", &head, &serde_json::to_vec(&invalid).unwrap());
+        let declined = response(&graph(&directory, &head));
+        assert_eq!(declined["failed"], true);
+        assert!(declined["data"].is_null());
+    }
+}
+#[test]
+fn actual_version_parser_hydrates_ordinary_artifact_refs() {
+    let Some(root) = std::env::var_os("BIT_TEST_SNAPSHOT_CLI") else { return };
+    let script = r"
+const {createRequire}=require('node:module');
+const {Version}=createRequire(process.argv[1]+'/package.json')('@teambit/objects');
+const hash='f'.repeat(40);
+const body={mainFile:'index.js',files:[],log:{},parents:[],extensions:[{name:'teambit.pipelines/builder',data:{artifacts:[{files:[{relativePath:'dist/index.js',file:hash,url:'https://example.test/index.js'}]}]}}]};
+const version=Version.parse(JSON.stringify(body),'e'.repeat(40));
+const files=version.extensions[0].data.artifacts[0].files;
+if(files.refs[0].ref.toString()!==hash||files.refs[0].relativePath!=='dist/index.js')throw Error('artifact constructor mismatch');
+";
+    let output = std::process::Command::new("node")
+        .arg("-e")
+        .arg(script)
+        .arg(root)
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
+}

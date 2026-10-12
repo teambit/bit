@@ -30,6 +30,7 @@ impl Fixture {
             merge_rows: vec![],
             has_conflicts: false,
             statuses: vec![],
+            other: None,
         };
         let output = state.plans
             .retain(plan, &json!({}), &self.0)
@@ -242,6 +243,7 @@ fn current(path: PathBuf, relative: &str) -> plan::Current {
         protected: true,
         plan_index: 0,
         shares_buffer: true,
+        raw_hash: "0".repeat(40),
     }
 }
 #[test]

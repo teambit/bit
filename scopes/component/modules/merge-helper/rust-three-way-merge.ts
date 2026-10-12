@@ -17,6 +17,7 @@ import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
 import { getGitExecutablePath, canUseDefaultGitNatively } from '@teambit/git.modules.git-executable';
 import { mergeFiles } from './merge-files';
 import type { MergeResultsThreeWay } from './three-way-merge';
+import { tryRustOwnedThreeWayMerge } from './rust-merge-three-way';
 
 const MAX_INPUT = 4 * 1024 * 1024;
 const MAX_OUTPUT = 32 * 1024 * 1024;
@@ -139,6 +140,8 @@ function models(files: SourceFileModel[]): Model[] | undefined {
 
 /** Native reads/classification/Git remain a pure plan until the caller chooses its merge strategy. */
 export async function tryRustThreeWayMerge(params: Params): Promise<MergeResultsThreeWay | undefined> {
+  const owned = await tryRustOwnedThreeWayMerge(params);
+  if (owned) return owned;
   const { scope, currentComponent, otherComponent, baseComponent, currentLabel, otherLabel } = params;
   if (
     process.env.BIT_RUST_CLIENT_VCS !== 'on' ||

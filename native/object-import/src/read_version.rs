@@ -12,16 +12,30 @@ pub(crate) struct Reader<'a> {
     raw: usize,
     records: usize,
     query: bool,
+    history_artifacts: bool,
     metadata: Option<(String, usize, usize)>,
 }
 impl<'a> Reader<'a> {
     pub(crate) fn new(directory: &'a Path) -> io::Result<Self> {
         merge_history::path(directory)?;
-        Ok(Self { directory, compressed: 0, raw: 0, records: 0, query: false, metadata: None })
+        Ok(Self {
+            directory,
+            compressed: 0,
+            raw: 0,
+            records: 0,
+            query: false,
+            history_artifacts: false,
+            metadata: None,
+        })
     }
     pub(crate) fn query(directory: &'a Path) -> io::Result<Self> {
         let mut reader = Self::new(directory)?;
         reader.query = true;
+        Ok(reader)
+    }
+    pub(crate) fn history_with_artifacts(directory: &'a Path) -> io::Result<Self> {
+        let mut reader = Self::new(directory)?;
+        reader.history_artifacts = true;
         Ok(reader)
     }
     pub(crate) fn metadata(&self) -> Option<&(String, usize, usize)> {
@@ -45,7 +59,7 @@ impl<'a> Reader<'a> {
             return Err(invalid("invalid Version header size"));
         }
         let value: Value = serde_json::from_slice(body).map_err(io::Error::other)?;
-        if self.query {
+        if self.query || self.history_artifacts {
             crate::history_query::validate_version(&value)?;
         } else {
             crate::transfer::collection::shape::history(&value)?;
