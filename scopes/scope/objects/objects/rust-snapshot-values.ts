@@ -3,19 +3,29 @@ export type RustSnapshotValue =
   | { kind: 'undefined' | 'null' }
   | { kind: 'boolean'; value: boolean }
   | { kind: 'number'; value: string }
-  | { kind: 'string'; value: number[] }
+  | { kind: 'string'; value: string | number[] }
   | { kind: 'array'; value: RustSnapshotValue[] }
-  | { kind: 'object'; value: [number[], RustSnapshotValue][] };
+  | { kind: 'object'; value: [string | number[], RustSnapshotValue][] };
 
 type Budget = { nodes: number; bytes: number; ancestors: Set<object> };
 const MAX_NODES = 65536;
 const MAX_BYTES = 4 * 1024 * 1024;
 const MAX_DEPTH = 64;
+const wellFormed: ((this: string) => boolean) | undefined = Object.getOwnPropertyDescriptor(
+  String.prototype,
+  'isWellFormed'
+)?.value;
+const charCode = String.prototype.charCodeAt;
 
 export function snapshotUtf16(value: string): number[] {
   const result: number[] = [];
-  for (let index = 0; index < value.length; index += 1) result.push(value.charCodeAt(index));
+  for (let index = 0; index < value.length; index += 1) result.push(charCode.call(value, index));
   return result;
+}
+
+/** UTF-8 JSON strings avoid a numeric array per character; lone surrogates remain exact UTF-16 units. */
+function wireText(value: string): string | number[] {
+  return wellFormed?.call(value) ? value : snapshotUtf16(value);
 }
 
 function numberBits(value: number): string {
@@ -53,14 +63,14 @@ function projectObject(value: object, budget: Budget, depth: number): RustSnapsh
       }
       return { kind: 'array', value: entries };
     }
-    const entries: [number[], RustSnapshotValue][] = [];
+    const entries: [string | number[], RustSnapshotValue][] = [];
     for (const key of Object.keys(descriptors)) {
       if (!descriptors[key].enumerable) continue;
       budget.bytes += key.length * 6;
       if (budget.bytes > MAX_BYTES) return undefined;
       const item = project(descriptors[key].value, budget, depth + 1);
       if (!item) return undefined;
-      entries.push([snapshotUtf16(key), item]);
+      entries.push([wireText(key), item]);
     }
     return { kind: 'object', value: entries };
   } finally {
@@ -77,7 +87,7 @@ function project(value: unknown, budget: Budget, depth: number): RustSnapshotVal
   if (typeof value === 'number') return { kind: 'number', value: numberBits(value) };
   if (typeof value === 'string') {
     budget.bytes += value.length * 6;
-    return budget.bytes <= MAX_BYTES ? { kind: 'string', value: snapshotUtf16(value) } : undefined;
+    return budget.bytes <= MAX_BYTES ? { kind: 'string', value: wireText(value) } : undefined;
   }
   return typeof value === 'object' ? projectObject(value, budget, depth) : undefined;
 }

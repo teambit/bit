@@ -67,7 +67,7 @@ impl State {
         let (binding, token) = self.binding(input, owners)?;
         let scope = reads::Scope::begin();
         let manifest = crate::checkout_transition::retarget(
-            json!({"token":token,"target":input["target"],"objectsDirectory":binding.objects,"snapshotDirectory":binding.directory}),
+            json!({"token":token,"target":input["target"],"objectsDirectory":binding.objects,"snapshotDirectory":binding.directory,"knownBodies":input["knownBodies"]}),
             &mut self.checkout,
         )?;
         let mut response = crate::checkout_transition::apply(
@@ -77,7 +77,12 @@ impl State {
         )?;
         response["reads"] = scope.finish().stats();
         response["bodies"] = manifest["bodies"].clone();
-        response["targetFiles"] = manifest["targetFiles"].clone();
+        if let Some(known) = manifest.get("knownBodies") {
+            response["knownBodies"] = known.clone();
+            response["bodyCount"] = manifest["bodyCount"].clone();
+        } else {
+            response["targetFiles"] = manifest["targetFiles"].clone();
+        }
         if let Some(files) = response["files"].as_array_mut() {
             for (index, file) in files.iter_mut().enumerate() {
                 file["finalIndex"] = json!(index);

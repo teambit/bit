@@ -34,6 +34,8 @@ type Applied = {
     aliasIndex: number;
   }>;
   bodies: RustMergeBody[];
+  knownBodies: number;
+  bodyCount: number;
   filesStatus: Array<{ relativePath: string; status: keyof typeof FileStatus }>;
   deferredError?: { phase: 'applyModified'; message: string };
 };
@@ -55,17 +57,20 @@ function validApplied(data: any, clones: SourceFile[], plan: RustMergeBodyPlan, 
     data.files.length > 8192 ||
     !Array.isArray(data.bodies) ||
     data.bodies.length > 4096 ||
+    data.knownBodies !== plan.bodies.length ||
+    data.bodyCount !== plan.bodies.length + data.bodies.length ||
+    data.bodyCount > 4096 ||
     !Array.isArray(data.filesStatus) ||
     data.filesStatus.length > 8192
   )
     return false;
   const directory = plan.snapshotDirectory;
   if (typeof directory !== 'string' || !path.isAbsolute(directory)) return false;
-  const bodies = new Set<number>();
-  const previousBodies = new Map(plan.bodies.map((body) => [body.planIndex, body]));
-  for (const body of data.bodies) {
+  const bodies = new Set(plan.bodies.map((body) => body.planIndex));
+  for (const [index, body] of data.bodies.entries()) {
     if (
       !body ||
+      body.planIndex !== plan.bodies.length + index ||
       !Number.isSafeInteger(body.planIndex) ||
       body.planIndex < 0 ||
       body.planIndex >= 4096 ||
@@ -89,15 +94,6 @@ function validApplied(data: any, clones: SourceFile[], plan: RustMergeBodyPlan, 
       const match = new RegExp(`^${plan.token}-(0|[1-9][0-9]*)[.]checkout-pack$`).exec(name);
       if (path.dirname(body.spoolPath) !== directory || !match || Number(match[1]) > body.planIndex) return false;
     }
-    const previous = previousBodies.get(body.planIndex);
-    if (
-      previous &&
-      (previous.spoolPath !== body.spoolPath ||
-        previous.spoolHash !== body.spoolHash ||
-        previous.bytes !== body.bytes ||
-        previous.spoolOffset !== body.spoolOffset)
-    )
-      return false;
     bodies.add(body.planIndex);
   }
   const paths = new Set([
@@ -174,6 +170,7 @@ export async function applyRetainedRustMerge(
       kind: 'mergeApply',
       token: plan.ownerToken,
       planToken: plan.token,
+      knownBodies: plan.bodies.length,
       target: target.manifest,
       strategy,
     },

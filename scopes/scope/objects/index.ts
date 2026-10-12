@@ -96,6 +96,7 @@ export {
   hasRustSnapshotTransactionClass,
   hasRustSnapshotTransactionClassFields,
   hasRustSnapshotTransactionClassFieldsBatch,
+  hasRustSnapshotTransactionClassBatch,
   hasRustSnapshotTransactionClassConstructor,
   registerRustSnapshotModelHook,
   registerRustSnapshotValidationHook,

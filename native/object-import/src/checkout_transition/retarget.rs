@@ -9,6 +9,7 @@ struct Request {
     objects_directory: PathBuf,
     snapshot_directory: PathBuf,
     target: wire::Version,
+    known_bodies: Option<usize>,
 }
 pub(super) fn apply(input: Value, state: &mut plan::State) -> io::Result<Value> {
     let request: Request = serde_json::from_value(input).map_err(io::Error::other)?;
@@ -50,7 +51,13 @@ pub(super) fn apply(input: Value, state: &mut plan::State) -> io::Result<Value> 
     plan.statuses = statuses(plan, &request.target.files);
     plan.target = request.target.files;
     plan.target_indices = indices;
-    Ok(plan.manifest(&request.token))
+    Ok(manifest(plan, &request.token, request.known_bodies))
+}
+
+fn manifest(plan: &plan::Plan, token: &str, known: Option<usize>) -> Value {
+    known.map_or_else(|| plan.manifest(token), |known| {
+        json!({"knownBodies":known,"bodyCount":plan.bodies.len(),"bodies":plan.bodies.iter().enumerate().skip(known).map(|(index, body)|body.manifest(index)).collect::<Vec<_>>()})
+    })
 }
 
 fn additions(
@@ -78,6 +85,9 @@ fn additions(
     (indices, added)
 }
 fn load(request: &Request, retained: usize, previous: &plan::Plan) -> io::Result<Vec<Vec<u8>>> {
+    if request.known_bodies.is_some_and(|count| count != previous.bodies.len()) {
+        return Err(invalid("merge retained body prefix mismatch"));
+    }
     let cached = previous.bodies
         .iter()
         .map(|body| (body.hash.as_str(), body.contents.as_slice()))

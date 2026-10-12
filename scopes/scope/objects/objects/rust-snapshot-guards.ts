@@ -123,22 +123,29 @@ export function hasRustSnapshotTransactionClassFields(value: unknown, name: stri
 }
 
 /** A synchronous descriptor-only batch: shared prototypes are checked once, never cached across calls. */
+function hasClassFieldsBatch(values: readonly unknown[], name: string, fields?: ReadonlySet<string>): boolean {
+  if (types.isProxy(values) || !Array.isArray(values) || Object.getPrototypeOf(values) !== Array.prototype)
+    return false;
+  const defaults = classes?.get(name);
+  if (!defaults || !unchanged(defaults)) return false;
+  const length = Object.getOwnPropertyDescriptor(values, 'length')!.value;
+  for (let index = 0; index < length; index++) {
+    const entry = Object.getOwnPropertyDescriptor(values, String(index));
+    if (!entry || !('value' in entry) || !hasInstanceFields(entry.value, defaults, fields)) return false;
+  }
+  return true;
+}
+
 export function hasRustSnapshotTransactionClassFieldsBatch(
   values: readonly unknown[],
   name: string,
   fields: string[]
 ): boolean {
-  if (types.isProxy(values) || !Array.isArray(values) || Object.getPrototypeOf(values) !== Array.prototype)
-    return false;
-  const defaults = classes?.get(name);
-  if (!defaults || !unchanged(defaults)) return false;
-  const selected = new Set(fields);
-  const length = Object.getOwnPropertyDescriptor(values, 'length')!.value;
-  for (let index = 0; index < length; index++) {
-    const entry = Object.getOwnPropertyDescriptor(values, String(index));
-    if (!entry || !('value' in entry) || !hasInstanceFields(entry.value, defaults, selected)) return false;
-  }
-  return true;
+  return hasClassFieldsBatch(values, name, new Set(fields));
+}
+
+export function hasRustSnapshotTransactionClassBatch(values: readonly unknown[], name: string): boolean {
+  return hasClassFieldsBatch(values, name);
 }
 
 /** Metadata hydration must use the original defining constructor and its unchanged methods. */

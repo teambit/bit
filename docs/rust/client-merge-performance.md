@@ -150,3 +150,16 @@ independent Buffers. Arbitrary newlines and invalid UTF-8 bytes are payload data
 truncated, surplus or oversized responses cannot acknowledge a prefix. Existing
 hex/JSON callers retain their format. Qualification tracing skips the exact raw
 payload length before parsing the next response.
+
+Projected model strings and property names use ordinary JSON strings when their
+UTF-16 is well formed. Lone surrogates retain the original numeric code-unit wire
+format. Rust accepts both encodings into the same UTF-16 representation and keeps
+its legacy response representation, canonical JSON ordering, escaping, number
+bits and hashes. Projection budgets remain unchanged. Inspection Ref guards are
+batched only over pure descriptor reads, retaining checks of every own property.
+
+Owned merge apply requests acknowledge the exact retained body prefix. Retargeting
+rejects stale counts before loading or writing anything, then returns only newly
+retained descriptors and the total count. Existing body descriptors remain guarded
+by the original plan's freshness checks. Legacy callers still receive the complete
+manifest; compact callers validate every new index and every selected old/new body.

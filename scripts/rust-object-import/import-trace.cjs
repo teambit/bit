@@ -315,13 +315,18 @@ if (output && process.pid === owner) {
           if (magic === 'BMT1' && operation.kind === 'inspectionCompare') {
             const field = (value, name) =>
               value?.kind === 'object'
-                ? value.value.find(([key]) => String.fromCharCode(...key) === name)?.[1]
+                ? value.value.find(
+                    ([key]) => (typeof key === 'string' ? key : String.fromCharCode(...key)) === name
+                  )?.[1]
                 : undefined;
             const files = field(operation.left, 'files');
             for (const file of files?.value || []) {
               const reference = field(file, 'file');
               const value = reference?.kind === 'string' ? reference : field(reference, 'hash');
-              if (value?.kind === 'string') metric.modelHashes.push(String.fromCharCode(...value.value));
+              if (value?.kind === 'string')
+                metric.modelHashes.push(
+                  typeof value.value === 'string' ? value.value : String.fromCharCode(...value.value)
+                );
             }
           }
           if (magic === 'BMT1' && operation.kind === 'snapshotSerialize') {

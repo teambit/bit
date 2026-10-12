@@ -2,6 +2,8 @@
 mod object;
 #[path = "js_json/string.rs"]
 mod string;
+#[path = "js_json/wire.rs"]
+mod wire;
 #[path = "js_json/writer.rs"]
 mod writer;
 
@@ -16,9 +18,9 @@ pub enum Value {
     Null,
     Boolean(bool),
     Number(String),
-    String(Vec<u16>),
+    String(#[serde(deserialize_with = "wire::text")] Vec<u16>),
     Array(Vec<Value>),
-    Object(Vec<(Vec<u16>, Value)>),
+    Object(#[serde(deserialize_with = "wire::entries")] Vec<(Vec<u16>, Value)>),
 }
 
 impl Value {

@@ -1,3 +1,4 @@
+mod compact_receipts;
 mod parallel_reads;
 use super::{State, apply};
 use flate2::{Compression, write::ZlibEncoder};

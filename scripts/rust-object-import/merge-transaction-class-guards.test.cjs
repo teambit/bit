@@ -103,6 +103,7 @@ test('batched class guards retain per-instance checks and recheck shared prototy
   values[37] = previous;
   Object.defineProperty(previous, 'unread', { get: getter });
   assert.equal(valid(), true);
+  assert.equal(guards.hasRustSnapshotTransactionClassBatch(values, name), false);
   assert.equal(calls, 0);
   assert.equal(guards.hasRustSnapshotTransactionClassFieldsBatch([], 'unregistered', []), false);
 });
