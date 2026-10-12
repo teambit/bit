@@ -4,6 +4,7 @@ use std::{
     collections::HashSet,
     fs::{self, OpenOptions},
     io::{self, Write},
+    path::PathBuf,
 };
 pub(super) fn apply(input: Value, state: &plan::State) -> io::Result<Value> {
     let request: wire::Materialize = serde_json::from_value(input).map_err(io::Error::other)?;
@@ -13,6 +14,7 @@ pub(super) fn apply(input: Value, state: &plan::State) -> io::Result<Value> {
     let contents = prepare(&request, plan)?;
     let mut completed = 0;
     let mut skipped = Vec::new();
+    let mut directories = HashSet::new();
     for (index, (file, body)) in request.files
         .iter()
         .zip(&contents)
@@ -23,7 +25,7 @@ pub(super) fn apply(input: Value, state: &plan::State) -> io::Result<Value> {
             skipped.push(index);
             continue;
         }
-        if write(file, body).is_err() {
+        if write(file, body, &mut directories).is_err() {
             break;
         }
         completed += 1;
@@ -59,10 +61,17 @@ fn prepare(request: &wire::Materialize, plan: &plan::Plan) -> io::Result<Vec<Vec
     }
     Ok(contents)
 }
-fn write(file: &wire::Destination, body: &[u8]) -> io::Result<()> {
+fn write(
+    file: &wire::Destination,
+    body: &[u8],
+    directories: &mut HashSet<PathBuf>,
+) -> io::Result<()> {
     let parent =
         file.path.parent().ok_or_else(|| invalid("checkout materialize destination parent"))?;
-    fs::create_dir_all(parent)?;
+    if !directories.contains(parent) {
+        fs::create_dir_all(parent)?;
+        directories.insert(parent.to_path_buf());
+    }
     OpenOptions::new()
         .write(true)
         .create(true)

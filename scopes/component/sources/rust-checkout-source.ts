@@ -27,13 +27,17 @@ const sources = new WeakMap<AbstractVinyl, Provenance>();
 const bufferEquals = Buffer.prototype.equals;
 const bufferFrom = Buffer.from;
 const sourceCreateHash = createHash;
+// Resolve package exports once while still observing live CommonJS exports on every guard.
+const historyQueryModule = require.resolve('@teambit/objects/dist/objects/rust-history-query.js');
+const mergeTransactionModule = require.resolve('@teambit/objects/dist/objects/rust-merge-transaction.js');
+const historySourcesModule = require.resolve('@teambit/objects/dist/objects/rust-history-query-sources.js');
 
 function hasOwnedRepositorySourceOperation(): boolean {
   if (process.env.BIT_RUST_CLIENT_VCS !== 'on') return false;
-  const query = require('@teambit/objects/dist/objects/rust-history-query.js');
+  const query = require(historyQueryModule);
   const queryActive = Object.getOwnPropertyDescriptor(query, 'isRustHistoryQueryOperation')?.value;
   if (hasRustSnapshotFunctionReference('HistoryQueryOperationActive', queryActive) && queryActive()) return true;
-  const merge = require('@teambit/objects/dist/objects/rust-merge-transaction.js');
+  const merge = require(mergeTransactionModule);
   const mergeActive = Object.getOwnPropertyDescriptor(merge, 'isRustMergeTransactionOperation')?.value;
   return hasRustSnapshotFunctionReference('MergeTransactionOperationActive', mergeActive) && mergeActive();
 }
@@ -296,7 +300,7 @@ function historySourceMetadata(file: AbstractVinyl): boolean {
 }
 
 function ownedHistorySourceAlias(repository: Repository, hash: string): boolean {
-  const querySources = require('@teambit/objects/dist/objects/rust-history-query-sources.js');
+  const querySources = require(historySourcesModule);
   const aliasGuard = Object.getOwnPropertyDescriptor(querySources, 'hasRustHistoryQuerySourceAlias')?.value;
   return hasRustSnapshotFunctionReference('HistoryQuerySourceAlias', aliasGuard) && aliasGuard(repository, hash);
 }
@@ -304,7 +308,7 @@ function ownedHistorySourceAlias(repository: Repository, hash: string): boolean 
 function hydratedSourceAuthority(provenance: Provenance): boolean {
   const hydrated = provenance.hydrated;
   if (!hydrated) return false;
-  const query = require('@teambit/objects/dist/objects/rust-history-query.js');
+  const query = require(historyQueryModule);
   const capture = Object.getOwnPropertyDescriptor(query, 'lookupRustHistoryQueryObject')?.value;
   if (!hasRustSnapshotFunctionReference('HistoryQueryObjectLookup', capture)) return false;
   const objects = capture(provenance.repository, provenance.descriptor.hash) as { value?: object } | undefined;

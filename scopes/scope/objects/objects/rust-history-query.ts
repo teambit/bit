@@ -53,13 +53,19 @@ export function registerRustHistoryQueryRepositoryHooks(constructor: any): void 
 }
 
 function sameDescriptors(owner: object, expected: PropertyDescriptorMap): boolean {
-  const current = Object.getOwnPropertyDescriptors(owner);
-  if (Reflect.ownKeys(current).length !== Reflect.ownKeys(expected).length) return false;
-  return Reflect.ownKeys(expected).every((key) => {
+  const keys = Reflect.ownKeys(expected);
+  if (Reflect.ownKeys(owner).length !== keys.length) return false;
+  for (const key of keys) {
     const before = Reflect.get(expected, key) as PropertyDescriptor;
-    const after = Reflect.get(current, key) as PropertyDescriptor | undefined;
-    return Boolean(after && Reflect.ownKeys(before).every((field) => Reflect.get(before, field) === Reflect.get(after, field)));
-  });
+    const after = Object.getOwnPropertyDescriptor(owner, key);
+    if (
+      !after || ('value' in before) !== ('value' in after) ||
+      before.value !== after.value || before.get !== after.get || before.set !== after.set ||
+      before.writable !== after.writable || before.enumerable !== after.enumerable ||
+      before.configurable !== after.configurable
+    ) return false;
+  }
+  return true;
 }
 
 /** Cached Versions are captured by the query projection; this guard only establishes safe cache access. */

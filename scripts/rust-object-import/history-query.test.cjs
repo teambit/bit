@@ -863,3 +863,59 @@ test('packed raw Source receipts verify only their declared range and reject cha
     await assert.rejects(capsules.loadRustCapturedSourceCapsule(empty, descriptor), /truncated/);
   });
 });
+
+test('coalesced Source reads retain concurrent miss aliases and later cache precedence', async (t) => {
+  const query = installed('@teambit/objects/dist/objects/rust-history-query.js');
+  const capsules = installed('@teambit/objects/dist/objects/rust-history-query-sources.js');
+  const { Repository, Source, Ref } = installed('@teambit/objects');
+  const disk = require('node:fs/promises');
+  const directory = await disk.mkdtemp(path.join(require('node:os').tmpdir(), 'batch-source-receipt-'));
+  t.after(() => disk.rm(directory, { recursive: true, force: true }));
+  owner(t, async () => { throw new Error('raw hydration requires no request'); });
+  const bytes = Buffer.from([0xff, 0, 13, 10]);
+  const original = Source.from(bytes), packed = await original.compressWithSize();
+  const descriptor = {
+    hash: original.hash().toString(), privatePath: path.join(directory, 'source.pack'),
+    compressedSize: packed.buffer.length, inflatedSize: packed.inflatedSize,
+    encoding: 'raw', bodySize: bytes.length, bodyOffset: 3,
+  };
+  await disk.writeFile(descriptor.privatePath, Buffer.concat([Buffer.from('pre'), bytes, Buffer.from('post')]));
+  await query.withRustHistoryQueryOperation(async () => {
+    const repository = new Repository(path.join(directory, 'scope'), { name: 'qualification.batch' });
+    const values = await Promise.all(Array.from({ length: 32 }, () => capsules.loadRustCapturedSourceCapsule(repository, descriptor)));
+    assert.equal(new Set(values).size, 32, 'concurrent cache misses must not become one shared Source');
+    values.forEach(value => assert.deepEqual(value.contents, bytes));
+    const cached = repository.getCache(new Ref(descriptor.hash));
+    assert.ok(values.includes(cached));
+    assert.equal(await capsules.loadRustCapturedSourceCapsule(repository, descriptor), cached);
+    values[0].contents[0] ^= 1;
+    values.slice(1).forEach(value => assert.deepEqual(value.contents, bytes, 'logical reads own independent body buffers'));
+    const pending = Source.from(Buffer.from(bytes));
+    repository.objects[descriptor.hash] = pending;
+    await disk.unlink(descriptor.privatePath);
+    assert.equal(await capsules.loadRustCapturedSourceCapsule(repository, descriptor), pending, 'live cache check precedes private I/O');
+  });
+});
+
+test('repository descriptor guards reject flags, accessors and extra symbols without invoking them', () => {
+  const { repository } = repositoryFixture();
+  const prototype = Object.getPrototypeOf(repository);
+  const before = Object.getOwnPropertyDescriptor(prototype, 'getPath');
+  const symbol = Symbol('unexpected repository method');
+  let reads = 0;
+  assert.equal(api.canUseRustHistoryQueryRepository(repository), true);
+  try {
+    Object.defineProperty(prototype, 'getPath', { ...before, enumerable: !before.enumerable });
+    assert.equal(api.canUseRustHistoryQueryRepository(repository), false);
+    Object.defineProperty(prototype, 'getPath', { configurable: true, get() { reads++; throw new Error('unread'); } });
+    assert.equal(api.canUseRustHistoryQueryRepository(repository), false);
+    Object.defineProperty(prototype, 'getPath', before);
+    Object.defineProperty(prototype, symbol, { configurable: true, value: undefined });
+    assert.equal(api.canUseRustHistoryQueryRepository(repository), false);
+  } finally {
+    Object.defineProperty(prototype, 'getPath', before);
+    delete prototype[symbol];
+  }
+  assert.equal(reads, 0);
+  assert.equal(api.canUseRustHistoryQueryRepository(repository), true);
+});

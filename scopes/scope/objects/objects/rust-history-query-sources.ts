@@ -31,6 +31,7 @@ export type HistorySourceCapsule = {
 export type HistorySourceReceipt = { sources: HistorySourceCapsule[]; sourceLoads: number[] };
 const aliases = new WeakMap<object, { hash: string; contents: Buffer; snapshot: Buffer }>();
 const equals = Buffer.prototype.equals;
+const registrarModule = require.resolve('@teambit/legacy.scope/dist/object-registrar.js');
 
 function sourceHydrationOwner(): boolean {
   if (isRustHistoryQueryOperation()) return true;
@@ -42,7 +43,7 @@ function sourceHydrationOwner(): boolean {
 export function canHydrateRustHistoryQuerySources(): boolean {
   const module = require('../models/source');
   const constructor = Object.getOwnPropertyDescriptor(module, 'default')?.value;
-  const registrar = require('@teambit/legacy.scope/dist/object-registrar.js');
+  const registrar = require(registrarModule);
   const registered = Object.getOwnPropertyDescriptor(registrar, 'typesObj')?.value;
   return (
     hasRustSnapshotTransactionClassConstructor('Source', constructor) &&

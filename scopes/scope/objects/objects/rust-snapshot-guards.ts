@@ -10,6 +10,7 @@ type ClassDefaults = {
   prototypes: Array<{ owner: object; entries: DescriptorEntry[] }>;
   statics: DescriptorEntry[];
   staticKeys: Set<string | symbol>;
+  instanceKeys: Set<string | symbol>;
   mutableStatics: Set<string>;
 };
 // Class modules can encounter this registry during cyclic initialization.
@@ -47,6 +48,7 @@ export function registerRustSnapshotTransactionClass(
     prototypes,
     statics: descriptorEntries(constructor),
     staticKeys: new Set(Reflect.ownKeys(constructor)),
+    instanceKeys: new Set(prototypes.flatMap(({ entries }) => entries.map(({ key }) => key))),
     mutableStatics: new Set(mutableStatics),
   });
 }
@@ -98,17 +100,12 @@ function hasInstanceFields(value: unknown, defaults: ClassDefaults, fields?: Rea
   )
     return false;
   for (const key of Reflect.ownKeys(value)) {
+    if (defaults.instanceKeys.has(key) && !(key === 'length' && Array.isArray(value))) return false;
     if (
       (!fields || (typeof key === 'string' && fields.has(key))) &&
       !('value' in Object.getOwnPropertyDescriptor(value, key)!)
     )
       return false;
-  }
-  for (const entry of defaults.prototypes) {
-    for (const { key } of entry.entries) {
-      if (key === 'length' && Array.isArray(value)) continue;
-      if (Object.getOwnPropertyDescriptor(value, key)) return false;
-    }
   }
   return true;
 }

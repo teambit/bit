@@ -46,21 +46,9 @@ fn parallel(
     compressed: &mut usize,
 ) -> io::Result<Vec<Vec<u8>>> {
     let mut files = Vec::with_capacity(version.files.len());
-    for batch in version.files.chunks(rayon::current_num_threads()) {
-        let budget = ((MAX_BYTES - *total) / batch.len(), (MAX_BYTES - *compressed) / batch.len());
-        let records = batch
-            .par_iter()
-            .map(|file| {
-                let hash = crate::merge_history::hash(&file.hash)?;
-                let mut packed = MAX_BYTES - budget.1;
-                repository::read_source_record(directory, hash, budget.0, &mut packed)
-                    .map(|record| (hash, record))
-            })
-            .collect::<io::Result<Vec<_>>>();
-        let records = match records {
-            Ok(records) => records,
-            Err(_) => serial_batch(directory, batch, *total, *compressed)?,
-        };
+    for batch in version.files.chunks(64) {
+        let records = read_batch(directory, batch, *total, *compressed)
+            .or_else(|_| worker_batches(directory, batch, *total, *compressed))?;
         for (hash, record) in records {
             *total += record.body.len();
             *compressed += record.compressed.len();
@@ -69,6 +57,45 @@ fn parallel(
         }
     }
     Ok(files)
+}
+fn read_batch(
+    directory: &Path,
+    batch: &[wire::Manifest],
+    total: usize,
+    compressed: usize,
+) -> io::Result<Vec<Source>> {
+    let budget = ((MAX_BYTES - total) / batch.len(), (MAX_BYTES - compressed) / batch.len());
+    batch
+        .par_iter()
+        .map(|file| {
+            let hash = crate::merge_history::hash(&file.hash)?;
+            let mut packed = MAX_BYTES - budget.1;
+            repository::read_source_record(directory, hash, budget.0, &mut packed)
+                .map(|record| (hash, record))
+        })
+        .collect()
+}
+fn worker_batches(
+    directory: &Path,
+    files: &[wire::Manifest],
+    mut total: usize,
+    mut compressed: usize,
+) -> io::Result<Vec<Source>> {
+    let mut sources = Vec::with_capacity(files.len());
+    for batch in files.chunks(rayon::current_num_threads()) {
+        let records = read_batch(directory, batch, total, compressed)
+            .or_else(|_| serial_batch(directory, batch, total, compressed))?;
+        total += records
+            .iter()
+            .map(|(_, record)| record.body.len())
+            .sum::<usize>();
+        compressed += records
+            .iter()
+            .map(|(_, record)| record.compressed.len())
+            .sum::<usize>();
+        sources.extend(records);
+    }
+    Ok(sources)
 }
 fn serial_batch(
     directory: &Path,

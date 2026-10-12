@@ -33,7 +33,8 @@ pub(super) fn read_with<Record: Send>(
     count(files.len())?;
     if files.len() >= 32
         && pool.current_num_threads() > 1
-        && let Ok(output) = parallel(files, pool, &record)
+        && let Ok(output) = parallel(files, pool, &record, 64)
+            .or_else(|_| parallel(files, pool, &record, pool.current_num_threads()))
     {
         return Ok(output);
     }
@@ -53,10 +54,11 @@ fn parallel<Record: Send>(
     files: &[PathBuf],
     pool: &ThreadPool,
     record: &(impl Fn(&Path, Vec<u8>) -> Record + Sync),
+    width: usize,
 ) -> io::Result<Vec<Record>> {
     let mut total = 0;
     let mut output = Vec::with_capacity(files.len());
-    for batch in files.chunks(pool.current_num_threads()) {
+    for batch in files.chunks(width) {
         let maximum = (MAX_RAW - total) / batch.len();
         let records = pool.install(|| {
             batch

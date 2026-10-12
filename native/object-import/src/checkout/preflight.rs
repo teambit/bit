@@ -10,7 +10,8 @@ pub(super) fn load(
 ) -> io::Result<Vec<Vec<u8>>> {
     if request.files.len() >= 32
         && pool.current_num_threads() > 1
-        && let Ok(files) = parallel(request, state, use_cache, pool)
+        && let Ok(files) = parallel(request, state, use_cache, pool, 64)
+            .or_else(|_| parallel(request, state, use_cache, pool, pool.current_num_threads()))
     {
         return Ok(files);
     }
@@ -23,11 +24,12 @@ fn parallel(
     state: &mut cache::State,
     use_cache: bool,
     pool: &ThreadPool,
+    width: usize,
 ) -> io::Result<Vec<Vec<u8>>> {
     let mut files = Vec::with_capacity(request.files.len());
     let mut inflated = 0;
     let mut compressed = 0;
-    for inputs in request.files.chunks(pool.current_num_threads()) {
+    for inputs in request.files.chunks(width) {
         let budget =
             ((MAX_BYTES - inflated) / inputs.len(), (MAX_BYTES - compressed) / inputs.len());
         let batch = pool.install(|| {

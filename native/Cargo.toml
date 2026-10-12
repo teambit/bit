@@ -74,3 +74,9 @@ negative_feature_names = "warn"
 redundant_feature_names = "warn"
 wildcard_dependencies = "warn"
 
+
+# Match pnpm's cross-crate release optimization for the packaged native helpers.
+[profile.release]
+lto = "fat"
+codegen-units = 1
+strip = "symbols"

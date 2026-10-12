@@ -23,14 +23,14 @@ fn parallel_sources_keep_order_complete_receipts_and_serial_equivalence() {
     let mut serial = None;
     for threads in [1, 4] {
         let fixture = Fixture::new();
-        let target = target(&fixture, &[4096; 64]);
+        let target = target(&fixture, &[4096; 130]);
         let pool = rayon::ThreadPoolBuilder::new()
             .num_threads(threads)
             .build()
             .unwrap();
         let prepared =
             pool.install(|| fixture.prepare_packed(&mut State::default(), &target, true));
-        assert_eq!(prepared["reads"], json!({"sourceReads":64,"sourceBodyBytes":64 * 4096}));
+        assert_eq!(prepared["reads"], json!({"sourceReads":130,"sourceBodyBytes":130 * 4096}));
         let hashes = prepared["bodies"]
             .as_array()
             .unwrap()
@@ -51,7 +51,7 @@ fn parallel_sources_keep_order_complete_receipts_and_serial_equivalence() {
                 .as_array()
                 .unwrap()
                 .len(),
-            64,
+            130,
         );
         let result = json!({"rows":prepared["mergeRows"],"groups":prepared["sourceGroups"],"statuses":prepared["statuses"],"hashes":hashes});
         if let Some(expected) = &serial {
@@ -141,4 +141,35 @@ fn retarget_reuses_verified_bodies_and_still_checks_the_version_manifest() {
     assert_eq!(applied["bodies"], prepared["bodies"]);
     fixture.object(&"1".repeat(40), "Version", b"{\"files\":[]}");
     assert!(pool.install(|| super::apply("mergeApply", request, &mut state)).is_err());
+}
+
+#[test]
+fn mixed_source_sizes_keep_ordered_receipts_across_parallel_retries() {
+    let fixture = Fixture::new();
+    let mut sizes = [4096; 128];
+    sizes[70] = 1024 * 1024;
+    let target = target(&fixture, &sizes);
+    let pool = rayon::ThreadPoolBuilder::new()
+        .num_threads(4)
+        .build()
+        .unwrap();
+    let prepared = pool.install(|| fixture.prepare_packed(&mut State::default(), &target, true));
+    assert_eq!(prepared["reads"]["sourceReads"], 128);
+    assert_eq!(prepared["reads"]["sourceBodyBytes"], sizes.iter().sum::<usize>());
+    assert_eq!(
+        prepared["sources"]
+            .as_array()
+            .unwrap()
+            .len(),
+        128,
+    );
+    for (index, body) in prepared["bodies"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .enumerate()
+    {
+        assert_eq!(body["spoolHash"], target["files"][index]["hash"]);
+        assert_eq!(body["bytes"], sizes[index]);
+    }
 }

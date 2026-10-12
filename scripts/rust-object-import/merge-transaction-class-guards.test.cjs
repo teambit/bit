@@ -107,3 +107,24 @@ test('batched class guards retain per-instance checks and recheck shared prototy
   assert.equal(calls, 0);
   assert.equal(guards.hasRustSnapshotTransactionClassFieldsBatch([], 'unregistered', []), false);
 });
+
+test('instance guards reject inherited symbol and nonenumerable shadows while allowing Array length', () => {
+  const symbol = Symbol('inherited');
+  class Parent { [symbol]() {} }
+  class Example extends Parent { field = 1; }
+  const name = 'MergeInstanceKeyFixture';
+  guards.registerRustSnapshotTransactionClass(name, Example);
+  const value = new Example();
+  const valid = () => guards.hasRustSnapshotTransactionClassFields(value, name, ['field']);
+  assert.equal(valid(), true);
+  let calls = 0;
+  for (const key of [symbol, 'constructor']) {
+    Object.defineProperty(value, key, { configurable: true, get() { calls++; throw new Error('unread'); } });
+    assert.equal(valid(), false);
+    delete value[key];
+    assert.equal(valid(), true);
+  }
+  guards.registerRustSnapshotTransactionClass('MergeArrayLengthFixture', Array);
+  assert.equal(guards.hasRustSnapshotTransactionClassFields([1, 2, 3], 'MergeArrayLengthFixture', []), true);
+  assert.equal(calls, 0);
+});
