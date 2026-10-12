@@ -14,7 +14,7 @@ import {
 } from './rust-snapshot-guards';
 import {
   canUseRustHistoryQueryRepository,
-  captureRustHistoryQueryObjects,
+  lookupRustHistoryQueryObject,
   isRustHistoryQueryOperation,
 } from './rust-history-query';
 
@@ -53,8 +53,7 @@ export function canHydrateRustHistoryQuerySources(): boolean {
 /** Only Sources hydrated from this owned query may keep a repository descriptor after a cache mirror. */
 export function hasRustHistoryQuerySourceAlias(repository: Repository, hash: string): boolean {
   if (!canUseRustHistoryQueryRepository(repository) || !canHydrateRustHistoryQuerySources()) return false;
-  const objects = captureRustHistoryQueryObjects(repository);
-  const source = objects?.find(([key]) => key === hash)?.[1];
+  const source = lookupRustHistoryQueryObject(repository, hash)?.value;
   if (!source || types.isProxy(source)) return false;
   const alias = aliases.get(source);
   const contents = Object.getOwnPropertyDescriptor(source, 'contents')?.value;

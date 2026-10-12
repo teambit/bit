@@ -305,12 +305,12 @@ function hydratedSourceAuthority(provenance: Provenance): boolean {
   const hydrated = provenance.hydrated;
   if (!hydrated) return false;
   const query = require('@teambit/objects/dist/objects/rust-history-query.js');
-  const capture = Object.getOwnPropertyDescriptor(query, 'captureRustHistoryQueryObjects')?.value;
-  if (!hasRustSnapshotFunctionReference('HistoryQueryObjectCapture', capture)) return false;
-  const objects = capture(provenance.repository) as Array<[string, object]> | undefined;
+  const capture = Object.getOwnPropertyDescriptor(query, 'lookupRustHistoryQueryObject')?.value;
+  if (!hasRustSnapshotFunctionReference('HistoryQueryObjectLookup', capture)) return false;
+  const objects = capture(provenance.repository, provenance.descriptor.hash) as { value?: object } | undefined;
   if (!objects || path.resolve(provenance.repository.getPath()) !== provenance.descriptor.objectsDirectory)
     return false;
-  const cached = objects.find(([hash]) => hash === provenance.descriptor.hash)?.[1];
+  const cached = objects.value;
   return (
     (!cached ||
       cached === hydrated.source ||

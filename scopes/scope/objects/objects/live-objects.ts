@@ -103,3 +103,39 @@ export function canReadLiveObjectsNatively(live: LiveObjects): boolean {
       )
   );
 }
+
+/** Look up one surviving weak alias without visiting or resurrecting unrelated entries. */
+export function lookupRustLiveObject(live: LiveObjects, key: string): { value?: BitObject } | undefined {
+  if (
+    types.isProxy(live) ||
+    !canReadLiveObjectsNatively(live) ||
+    Object.getOwnPropertyDescriptor(WeakRef.prototype, 'deref')?.value !== nativeWeakDeref
+  )
+    return undefined;
+  const entries = Object.getOwnPropertyDescriptor(live, 'entries')?.value;
+  if (types.isProxy(entries)) return undefined;
+  try {
+    const entry = nativeEntriesGet.call(entries, key);
+    if (entry === undefined) return {};
+    if (
+      !entry ||
+      typeof entry !== 'object' ||
+      types.isProxy(entry) ||
+      Object.getPrototypeOf(entry) !== Object.prototype
+    )
+      return undefined;
+    const fields = Object.getOwnPropertyDescriptors(entry),
+      ref = fields.ref?.value;
+    if (
+      !ref ||
+      types.isProxy(ref) ||
+      Object.getPrototypeOf(ref) !== WeakRef.prototype ||
+      Reflect.ownKeys(ref).length ||
+      Reflect.ownKeys(fields).some((field) => !('value' in Reflect.get(fields, field)))
+    )
+      return undefined;
+    return { value: nativeWeakDeref.call(ref) };
+  } catch {
+    return undefined;
+  }
+}

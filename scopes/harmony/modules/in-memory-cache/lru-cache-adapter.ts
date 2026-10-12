@@ -121,3 +121,44 @@ export function canReadCacheNatively(cache: InMemoryCache<{}>): boolean {
       )
   );
 }
+
+const nativeExpose = LRUCache.unsafeExposeInternals;
+const nativeMapGet = Map.prototype.get;
+
+/** Inspect one alias without promoting it or allocating a dump of the entire LRU. */
+export function lookupRustCacheEntry(cache: InMemoryCache<{}>, key: string): { value?: object } | undefined {
+  if (
+    types.isProxy(cache) ||
+    !canReadCacheNatively(cache) ||
+    Object.getOwnPropertyDescriptor(LRUCache, 'unsafeExposeInternals')?.value !== nativeExpose ||
+    Object.getOwnPropertyDescriptor(Map.prototype, 'get')?.value !== nativeMapGet
+  )
+    return undefined;
+  const inner = Object.getOwnPropertyDescriptor(cache, 'cache')?.value;
+  if (!inner || types.isProxy(inner)) return undefined;
+  try {
+    // This dependency's explicit introspection API exposes only private storage here.
+    // Any TTL tracking stays canonical, even when its public default ttl is zero.
+    const fields = nativeExpose(inner);
+    if (
+      fields.ttls ||
+      types.isProxy(fields.keyMap) ||
+      Object.getPrototypeOf(fields.keyMap) !== Map.prototype ||
+      Reflect.ownKeys(fields.keyMap).length ||
+      !Array.isArray(fields.valList) ||
+      types.isProxy(fields.valList)
+    )
+      return undefined;
+    const index = nativeMapGet.call(fields.keyMap, key);
+    if (index === undefined) return {};
+    if (!Number.isSafeInteger(index) || index < 0) return undefined;
+    const entry = Object.getOwnPropertyDescriptor(fields.valList, String(index));
+    if (!entry || !('value' in entry)) return undefined;
+    const value = entry.value;
+    if (value === undefined) return {};
+    // Background fetch promises have separate alias semantics; never inspect their properties.
+    return value && typeof value === 'object' && !types.isPromise(value) ? { value } : undefined;
+  } catch {
+    return undefined;
+  }
+}

@@ -36,6 +36,18 @@ read-only batch with the original serial budget. Indexed collection preserves
 file order; workspace writes and their failure prefixes remain serial. On Unix,
 normalization returns bytes without allocation when no carriage return exists.
 
+Single-Source authority checks use guarded direct pending, strong and weak cache
+lookups. Strong lookup inspects the dependency's explicit LRU introspection API
+without changing recency; unknown API replacements, TTL tracking, background
+fetch promises and accessor-backed selected entries decline. Weak lookup retains
+the actual surviving alias without promoting it. Full graph projections still
+capture all entries because they need that complete view.
+
+The helper response reader grows a bounded buffer geometrically and scans only
+the newly received bytes for the terminator. It preserves response limits,
+complete-frame validation and rejection of trailing data while avoiding repeated
+copies of every previously received chunk.
+
 ## Reproduction
 
 Build the release helper from `native/`, then run:

@@ -34,6 +34,7 @@ export class MaterializationSession {
   private readonly child: ChildProcessWithoutNullStreams;
   private readonly closed: Promise<void>;
   private pending = Buffer.alloc(0);
+  private pendingLength = 0;
   private stopped = false;
   private sequence = 0;
   private waiting?: {
@@ -107,14 +108,22 @@ export class MaterializationSession {
 
   private accept(data: Buffer) {
     if (this.stopped) return;
-    this.pending = Buffer.concat([this.pending, data]);
-    if (this.pending.length > (this.waiting?.maximum || MAX_RESPONSE)) return this.stop();
-    const newline = this.pending.indexOf(10);
+    const maximum = this.waiting?.maximum || MAX_RESPONSE;
+    const length = this.pendingLength + data.length;
+    if (length > maximum) return this.stop();
+    if (this.pending.length < length) {
+      const grown = Buffer.allocUnsafe(Math.min(maximum, Math.max(length, this.pending.length * 2, 4096)));
+      this.pending.copy(grown, 0, 0, this.pendingLength);
+      this.pending = grown;
+    }
+    data.copy(this.pending, this.pendingLength);
+    this.pendingLength = length;
+    const newline = data.indexOf(10);
     if (newline < 0) return;
-    if (!this.waiting || newline !== this.pending.length - 1) return this.stop();
+    if (!this.waiting || newline !== data.length - 1) return this.stop();
     let response: Result;
     try {
-      response = JSON.parse(this.pending.subarray(0, newline).toString());
+      response = JSON.parse(this.pending.subarray(0, length - 1).toString());
     } catch {
       return this.stop();
     }
@@ -127,6 +136,7 @@ export class MaterializationSession {
     const { resolve } = this.waiting;
     this.waiting = undefined;
     this.pending = Buffer.alloc(0);
+    this.pendingLength = 0;
     clearTimeout(this.deadline);
     resolve(response.completed);
   }

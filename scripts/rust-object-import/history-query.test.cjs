@@ -768,3 +768,66 @@ test('raw Source receipts preserve binary bytes and cache identity and reject ch
     await assert.rejects(capsules.loadRustCapturedSourceCapsule(empty, descriptor), /size changed/);
   });
 });
+
+test('single Source lookup preserves pending, strong and weak precedence without changing LRU order', () => {
+  const query = installed('@teambit/objects/dist/objects/rust-history-query.js');
+  const { Repository, Source } = installed('@teambit/objects');
+  const repository = new Repository(path.join(require('node:os').tmpdir(), 'source-cache-lookup'), { name: 'qualification.lookup' });
+  const first = Source.from(Buffer.from('first')), second = Source.from(Buffer.from('second'));
+  const key = first.hash().toString();
+  repository.setCache(first);
+  repository.setCache(second);
+  const order = repository.cache.keys();
+  assert.equal(query.lookupRustHistoryQueryObject(repository, key).value, first);
+  assert.deepEqual(repository.cache.keys(), order);
+  const pending = Source.from(Buffer.from('pending'));
+  repository.objects[key] = pending;
+  assert.equal(query.lookupRustHistoryQueryObject(repository, key).value, pending);
+  delete repository.objects[key];
+  repository.cache.delete(key);
+  const afterEviction = repository.cache.keys();
+  assert.equal(query.lookupRustHistoryQueryObject(repository, key).value, first);
+  assert.deepEqual(repository.cache.keys(), afterEviction, 'weak inspection must not promote the alias');
+  assert.deepEqual(query.lookupRustHistoryQueryObject(repository, 'f'.repeat(40)), {});
+});
+
+test('single cache lookup declines TTL tracking, background promises and selected storage getters', () => {
+  const cacheApi = installed('@teambit/harmony.modules.in-memory-cache/dist/lru-cache-adapter.js');
+  const { LRUCache } = installed('lru-cache');
+  const make = () => new cacheApi.LRUCacheAdapter({ maxSize: 10 });
+  const cache = make(), value = {};
+  cache.set('selected', value);
+  const inner = Object.getOwnPropertyDescriptor(cache, 'cache').value;
+  const fields = LRUCache.unsafeExposeInternals(inner);
+  const index = fields.keyMap.get('selected'), before = Object.getOwnPropertyDescriptor(fields.valList, String(index));
+  let reads = 0;
+  Object.defineProperty(fields.valList, String(index), { configurable: true, get() { reads++; throw new Error('unread'); } });
+  assert.equal(cacheApi.lookupRustCacheEntry(cache, 'selected'), undefined);
+  Object.defineProperty(fields.valList, String(index), before);
+  assert.equal(reads, 0);
+  assert.equal(cacheApi.lookupRustCacheEntry(cache, 'selected').value, value);
+  inner.set('selected', value, { ttl: 60000 });
+  delete inner.getRemainingTTL;
+  assert.equal(inner.ttl, 0);
+  assert.equal(cacheApi.lookupRustCacheEntry(cache, 'selected'), undefined);
+  const background = make();
+  background.set('selected', Promise.resolve(value));
+  assert.equal(cacheApi.lookupRustCacheEntry(background, 'selected'), undefined);
+});
+
+test('single weak lookup rejects selected getters and forged WeakRefs without observing them', () => {
+  const { LiveObjects, lookupRustLiveObject } = installed('@teambit/objects/dist/objects/live-objects.js');
+  const live = new LiveObjects(), value = {};
+  live.set('selected', value, 1, true);
+  const entries = Object.getOwnPropertyDescriptor(live, 'entries').value;
+  const original = entries.get('selected');
+  assert.equal(lookupRustLiveObject(live, 'selected').value, value);
+  let reads = 0;
+  entries.set('selected', { get ref() { reads++; throw new Error('unread'); } });
+  assert.equal(lookupRustLiveObject(live, 'selected'), undefined);
+  entries.set('selected', { ref: Object.create(WeakRef.prototype) });
+  assert.equal(lookupRustLiveObject(live, 'selected'), undefined);
+  entries.set('selected', original);
+  assert.equal(lookupRustLiveObject(live, 'selected').value, value);
+  assert.equal(reads, 0);
+});

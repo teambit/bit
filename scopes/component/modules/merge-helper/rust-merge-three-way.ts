@@ -264,9 +264,10 @@ function currentMetadata(files: SourceFile[], scope: Scope): Current[] | undefin
 function cachedSourcesMatch(scope: Scope, models: SourceFileModel[]): boolean {
   const entries = captureRustHistoryQueryObjects(scope.objects);
   if (!entries) return false;
+  const byHash = new Map(entries);
   for (const model of models) {
     const expected = Object.getOwnPropertyDescriptor(model.file, 'hash')?.value;
-    const cached = entries.find(([key]) => key === expected)?.[1];
+    const cached = byHash.get(expected);
     if (!cached) continue;
     if (types.isProxy(cached) || !hasRustSnapshotTransactionClassFields(cached, 'Source', ['contents'])) return false;
     const body = Object.getOwnPropertyDescriptor(cached, 'contents')?.value;

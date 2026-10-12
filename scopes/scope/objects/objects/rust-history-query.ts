@@ -2,8 +2,8 @@ import { AsyncLocalStorage } from 'async_hooks';
 import { types } from 'util';
 import type * as Sources from '@teambit/component.sources';
 import type Repository from './repository';
-import { canReadCacheNatively, captureRustCacheEntries } from '@teambit/harmony.modules.in-memory-cache';
-import { canReadLiveObjectsNatively, captureRustLiveObjects } from './live-objects';
+import { canReadCacheNatively, captureRustCacheEntries, lookupRustCacheEntry } from '@teambit/harmony.modules.in-memory-cache';
+import { canReadLiveObjectsNatively, captureRustLiveObjects, lookupRustLiveObject } from './live-objects';
 import { hasRustSnapshotTransactionClassFields, hasRustSnapshotFunctions, registerRustSnapshotFunctionReference } from './rust-snapshot-guards';
 import type Version from '../models/version';
 import type ModelComponent from '../models/model-component';
@@ -128,6 +128,18 @@ export function captureRustHistoryQueryObjects(repository: Repository): Array<[s
   return result.length <= 4096 ? result : undefined;
 }
 registerRustSnapshotFunctionReference('HistoryQueryObjectCapture', captureRustHistoryQueryObjects);
+
+/** Single-Source guards retain pending/strong/weak precedence without scanning every alias. */
+export function lookupRustHistoryQueryObject(repository: Repository, hash: string): { value?: object } | undefined {
+  if (!canUseRustHistoryQueryRepository(repository)) return undefined;
+  const fields = Object.getOwnPropertyDescriptors(repository);
+  const pending = Object.getOwnPropertyDescriptor(fields.objects.value, hash)?.value;
+  if (pending) return typeof pending === 'object' ? { value: pending } : undefined;
+  const strong = lookupRustCacheEntry(fields.cache.value, hash);
+  if (!strong || strong.value) return strong;
+  return lookupRustLiveObject(fields.liveObjects.value, hash);
+}
+registerRustSnapshotFunctionReference('HistoryQueryObjectLookup', lookupRustHistoryQueryObject);
 
 export type HistoryQueryOverlay = {
   hash: string;
