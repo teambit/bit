@@ -503,4 +503,14 @@ jobs:
           BIT_TEST_CHECKOUT_TRANSITION_COMPILED=1 node --test scripts/rust-object-import/checkout-transition.test.cjs
           node --test scripts/rust-object-import/checkout-files-guards.test.cjs
           BIT_TEST_CHECKOUT_TRANSITION_COMPILED=1 node --test scripts/rust-object-import/checkout-files-guards.test.cjs
+          node --test scripts/rust-object-import/history-reset-lane-history.test.cjs
+          BIT_TEST_HISTORY_RESET_COMPILED=1 node --test scripts/rust-object-import/history-reset-lane-history.test.cjs
+          node --test scripts/rust-object-import/history-reset.test.cjs
+          BIT_TEST_HISTORY_RESET_COMPILED=1 node --test scripts/rust-object-import/history-reset.test.cjs
+          node --test scripts/rust-object-import/history-reset-lane-prune.test.cjs
+          BIT_TEST_HISTORY_RESET_COMPILED=1 node --test scripts/rust-object-import/history-reset-lane-prune.test.cjs
+          node --test scripts/rust-object-import/history-reset-adapters.test.cjs
+          BIT_TEST_HISTORY_RESET_COMPILED=1 node --test scripts/rust-object-import/history-reset-adapters.test.cjs
+          node --test scripts/rust-object-import/history-reset-children.test.cjs
+          BIT_TEST_HISTORY_RESET_COMPILED=1 node --test scripts/rust-object-import/history-reset-children.test.cjs
           node scripts/rust-object-import/canonical-model-tests.cjs

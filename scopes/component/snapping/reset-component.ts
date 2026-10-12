@@ -6,8 +6,17 @@ import { ComponentsList } from '@teambit/legacy.component-list';
 import { logger } from '@teambit/legacy.logger';
 import type { Lane, ModelComponent } from '@teambit/objects';
 import type { RemoveMain } from '@teambit/remove';
-import { DependencyGraph } from '@teambit/legacy.dependency-graph';
 import type { Workspace } from '@teambit/workspace';
+import {
+  getRustResetLocalHashes,
+  selectRustResetLabels,
+  loadRustResetDependents,
+  selectRustResetCandidates,
+  completeRustHistoryResetPhase,
+  forkRustHistoryResetComponents,
+  withRustHistoryResetComponent,
+  completeRustHistoryResetComponentPhase,
+} from './rust-history-reset';
 
 export type ResetResult = {
   id: ComponentID;
@@ -33,16 +42,25 @@ export async function removeLocalVersion(
   force = false
 ): Promise<ResetResult> {
   const component: ModelComponent = await consumer.scope.getModelComponent(id);
+  if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetComponentPhase('model');
   const idStr = id.toString();
   const fromBitmap = consumer.bitMap.getComponentIdIfExist(id);
+  if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetComponentPhase('bitmap');
   // populate lane-aware heads so `getLocalHashes` diverges against the LANE remote head, not
   // the empty main one — otherwise a hidden cascade entry (no bitmap row, no main-side state)
   // would treat the entire local history as "local" and wipe the seeded base on reset.
   if (lane) await component.populateLocalAndRemoteHeads(consumer.scope.objects, lane);
+  if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetComponentPhase('laneHeads');
   // Pass `lane` so the lean-lane filter only keeps lane-origin snaps in localVersions. Without
   // it, a merged-in main tag (e.g. 0.0.2) would be wiped from the component's versions map
   // even though it still lives on the component's home scope — silent data loss for the user.
-  const localVersions = await component.getLocalHashes(consumer.scope.objects, fromBitmap, lane);
+  const nativeLocalVersions =
+    process.env.BIT_RUST_CLIENT_VCS === 'on'
+      ? await getRustResetLocalHashes(component, consumer.scope.objects, fromBitmap, lane)
+      : undefined;
+  const localVersions =
+    nativeLocalVersions ?? (await component.getLocalHashes(consumer.scope.objects, fromBitmap, lane));
+  if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetComponentPhase('localVersions');
   if (!localVersions.length) throw new BitError(`unable to untag ${idStr}, the component is not staged`);
   const headRef = component.getHeadRegardlessOfLane();
   if (!headRef) {
@@ -52,10 +70,13 @@ export async function removeLocalVersion(
     throw new Error(`unable to reset ${idStr}, the head ${headRef.toString()} is exported`);
   }
   const versionsToRemove = head ? [headRef] : localVersions;
-  const versionsToRemoveStr = component.switchHashesWithTagsIfExist(versionsToRemove);
+  if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetComponentPhase('headGuard');
+  const nativeLabels =
+    process.env.BIT_RUST_CLIENT_VCS === 'on' ? await selectRustResetLabels(component, versionsToRemove) : undefined;
+  const versionsToRemoveStr = nativeLabels ?? component.switchHashesWithTagsIfExist(versionsToRemove);
 
   if (!force) {
-    const dependencyGraph = await DependencyGraph.loadAllVersions(consumer.scope);
+    const dependencyGraph = await loadRustResetDependents(consumer.scope);
 
     versionsToRemoveStr.forEach((versionToRemove) => {
       const idWithVersion = component.toComponentId().changeVersion(versionToRemove);
@@ -70,6 +91,8 @@ export async function removeLocalVersion(
     });
   }
 
+  if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetComponentPhase('dependents');
+
   // Load version objects to extract batchIds before they are removed.
   // These batchIds are used to clean up the corresponding lane history entries.
   // Only needed on lanes — on main there's no lane history to clean up.
@@ -82,8 +105,10 @@ export async function removeLocalVersion(
     batchIds = [...new Set(compact(loadedVersions.map((v) => v.batchId)))];
   }
 
+  if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetComponentPhase('batchIds');
   const headBefore = component.getHead();
   await consumer.scope.sources.removeComponentVersions(component, versionsToRemove, versionsToRemoveStr, lane, head);
+  if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetComponentPhase('removeRefs');
   const headAfter = component.getHead();
   let versionToSetInBitmap;
   if (headBefore && headAfter && headBefore.isEqual(headAfter) && !lane) {
@@ -93,7 +118,9 @@ export async function removeLocalVersion(
     if (snapBeforeDetached) versionToSetInBitmap = component.getTagOfRefIfExists(snapBeforeDetached);
   }
 
-  return { id, versions: versionsToRemoveStr, component, versionToSetInBitmap, batchIds };
+  const result = { id, versions: versionsToRemoveStr, component, versionToSetInBitmap, batchIds };
+  if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetComponentPhase('result');
+  return result;
 }
 
 export async function removeLocalVersionsForAllComponents(
@@ -103,6 +130,8 @@ export async function removeLocalVersionsForAllComponents(
   head?: boolean
 ): Promise<ResetResult[]> {
   const componentsToUntag = await getComponentsWithOptionToUntag(workspace, remove);
+  if (process.env.BIT_RUST_CLIENT_VCS === 'on')
+    await completeRustHistoryResetPhase('candidates', componentsToUntag.length);
   const force = true; // when removing local versions from all components, no need to check if the component is used as a dependency
   return removeLocalVersionsForMultipleComponents(workspace.consumer, componentsToUntag, lane, head, force);
 }
@@ -119,7 +148,7 @@ export async function removeLocalVersionsForMultipleComponents(
   }
   // if only head is removed, there is risk of deleting dependencies version without their dependents.
   if (!force && head) {
-    const dependencyGraph = await DependencyGraph.loadAllVersions(consumer.scope);
+    const dependencyGraph = await loadRustResetDependents(consumer.scope);
     const candidateComponentsIds = componentsToUntag.map((component) => {
       const bitId = component.toComponentId();
       const headRef = component.getHeadRegardlessOfLane();
@@ -142,9 +171,21 @@ export async function removeLocalVersionsForMultipleComponents(
       }
     });
   }
+  if (process.env.BIT_RUST_CLIENT_VCS === 'on')
+    await completeRustHistoryResetPhase('batchGuard', componentsToUntag.length);
   logger.debug(`found ${componentsToUntag.length} components to untag`);
+  const children =
+    process.env.BIT_RUST_CLIENT_VCS === 'on'
+      ? await forkRustHistoryResetComponents(componentsToUntag.length)
+      : undefined;
   return Promise.all(
-    componentsToUntag.map((component) => removeLocalVersion(consumer, component.toComponentId(), lane, head, force))
+    componentsToUntag.map((component, index) =>
+      process.env.BIT_RUST_CLIENT_VCS === 'on'
+        ? withRustHistoryResetComponent(children?.[index], () =>
+            removeLocalVersion(consumer, component.toComponentId(), lane, head, force)
+          )
+        : removeLocalVersion(consumer, component.toComponentId(), lane, head, force)
+    )
   );
 }
 
@@ -161,9 +202,13 @@ export async function getComponentsWithOptionToUntag(
   const removedStagedIds = await remove.getRemovedStaged();
   if (!removedStagedIds.length) return components;
   const removedStagedBitIds = removedStagedIds.map((id) => id);
-  const nonExistsInStaged = removedStagedBitIds.filter(
-    (id) => !components.find((c) => c.toComponentId().isEqualWithoutVersion(id))
-  );
+  const nativeMissing =
+    process.env.BIT_RUST_CLIENT_VCS === 'on'
+      ? await selectRustResetCandidates(components, removedStagedBitIds)
+      : undefined;
+  const nonExistsInStaged = nativeMissing
+    ? nativeMissing.map((index) => removedStagedBitIds[index])
+    : removedStagedBitIds.filter((id) => !components.find((c) => c.toComponentId().isEqualWithoutVersion(id)));
   if (!nonExistsInStaged.length) return components;
   const modelComps = await Promise.all(nonExistsInStaged.map((id) => workspace.consumer.scope.getModelComponent(id)));
   components.push(...modelComps);

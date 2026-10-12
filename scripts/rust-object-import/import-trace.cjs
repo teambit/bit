@@ -86,6 +86,20 @@ const metrics = {
       'checkoutApply',
       'checkoutMaterialize',
       'checkoutFinish',
+      'historyResetBegin',
+      'historyResetReceipt',
+      'historyResetFork',
+      'historyResetFinish',
+      'historyResetCandidates',
+      'historyResetPattern',
+      'historyResetLocalAppend',
+      'historyResetLocalRead',
+      'historyResetLocalVersions',
+      'historyResetDependents',
+      'historyResetComponentPlan',
+      'historyResetLaneHistory',
+      'historyResetSoft',
+      'historyResetNeverExported',
     ].map((kind) => [
       kind,
       {
@@ -93,12 +107,16 @@ const metrics = {
         files: 0,
         completed: 0,
         failed: 0,
-        ...(kind.startsWith('snapshot') || kind.startsWith('inspection') || kind.startsWith('checkout')
+        ...(kind.startsWith('snapshot') ||
+        kind.startsWith('inspection') ||
+        kind.startsWith('checkout') ||
+        kind.startsWith('historyReset')
           ? { helperIds: [] }
           : {}),
-        ...(kind.startsWith('checkout')
+        ...(kind.startsWith('checkout') || kind.startsWith('historyReset')
           ? { tokens: [], sourceBodyBytes: 0, snapshotBytes: 0, stepsCompleted: 0, dataFailed: 0 }
           : {}),
+        ...(kind.startsWith('historyReset') ? { phases: [], children: [] } : {}),
         ...(kind.startsWith('inspection')
           ? { snapshotBytes: 0, sourceBodyBytes: 0, publicContentBytes: 0, tokens: [] }
           : {}),
@@ -106,6 +124,7 @@ const metrics = {
         ...(kind === 'snapshotSerialize'
           ? {
               objects: 0,
+              acceptedTypes: {},
               sources: 0,
               workspaceSources: 0,
               artifactSources: 0,
@@ -195,8 +214,18 @@ if (output && process.pid === owner) {
               : operation.files?.length || (operation.kind === 'compare' ? 1 : 0);
           if (magic === 'BMT1' && operation.kind.startsWith('inspection') && operation.token)
             metric.tokens.push({ token: operation.token, helperId: workspaceId });
-          if (magic === 'BMT1' && operation.kind.startsWith('checkout')) {
+          if (
+            magic === 'BMT1' &&
+            (operation.kind.startsWith('checkout') || operation.kind.startsWith('historyReset'))
+          ) {
             if (operation.token) metric.tokens.push({ token: operation.token, helperId: workspaceId });
+            if (operation.kind.startsWith('historyReset') && operation.phase)
+              metric.phases.push({
+                token: operation.token,
+                revision: operation.revision,
+                phase: operation.phase,
+                helperId: workspaceId,
+              });
             const inspect = (value) => {
               if (!value || typeof value !== 'object') return;
               for (const [key, item] of Object.entries(value)) {
@@ -318,6 +347,9 @@ if (output && process.pid === owner) {
             metric.stepsCompleted += response.data?.completed || 0;
             metric.dataFailed += Number(response.data?.failed === true);
           }
+          if (magic === 'BMT1:snapshotSerialize' && response.completed > 0 && !response.failed)
+            for (const object of response.data?.objects || [])
+              metric.acceptedTypes[object.type] = (metric.acceptedTypes[object.type] || 0) + 1;
           if (magic === 'BMT1:recoveryAdvance') {
             metric.stepsCompleted += response.data?.completed || 0;
             metric.dataFailed += Number(response.data?.failed === true);
@@ -329,6 +361,16 @@ if (output && process.pid === owner) {
             for (const file of response.data?.files || []) metric.snapshotBytes += file.bytes || 0;
             if (magic === 'BMT1:checkoutPrepare')
               for (const body of response.data?.bodies || []) metric.snapshotBytes += body.bytes || 0;
+          }
+          if (magic?.startsWith('BMT1:historyReset')) {
+            if (response.data?.token) metric.tokens.push({ token: response.data.token, helperId: workspaceId });
+            for (const child of response.data?.children || [])
+              metric.children.push({
+                token: child.token,
+                revision: child.revision,
+                directive: child.directive,
+                helperId: workspaceId,
+              });
           }
           if (magic === 'BMT1:inspectionBegin') {
             if (response.data?.token) metric.tokens.push({ token: response.data.token, helperId: workspaceId });

@@ -17,6 +17,7 @@ pub(crate) struct State {
 }
 #[derive(Default)]
 pub(crate) struct Operations {
+    pub(crate) history_reset: crate::history_reset::State,
     pub(crate) checkout_transition: crate::checkout_transition::State,
     pub(crate) transfer: crate::transfer::State,
 }

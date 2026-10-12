@@ -267,6 +267,50 @@ fn pure_divergence_same_head_preserves_common_snap() {
 }
 
 #[test]
+fn ordinary_graph_constructor_fixture_matches_real_version_parser() {
+    let Some(root) = std::env::var_os("BIT_TEST_SNAPSHOT_CLI") else { return };
+    let script = r"
+const {createRequire}=require('node:module');
+const {Version}=createRequire(process.argv[1]+'/package.json')('@teambit/objects');
+const body={mainFile:'index.js',files:[],log:{},parents:[],dependencies:[{id:{scope:'test.scope',name:'dep',version:'1.0.0'},relativePaths:[]}],flattenedDependencies:[{scope:'test.scope',name:'dep',version:'1.0.0'}],extensions:[{extensionId:{scope:'test.scope',name:'aspect'},data:{}}]};
+const parsed=Version.parse(JSON.stringify(body),'a'.repeat(40));
+if(parsed.dependencies.get()[0].id.toString()!=='test.scope/dep@1.0.0')throw Error('dependency parser mismatch');
+const bad=structuredClone(body);bad.dependencies[0].id.scope=null;let failed=false;try{Version.parse(JSON.stringify(bad),'a'.repeat(40))}catch{failed=true}if(!failed)throw Error('missing dependency scope accepted');
+";
+    let output = std::process::Command::new("node")
+        .arg("-e")
+        .arg(script)
+        .arg(root)
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
+}
+
+#[test]
+fn ordinary_dependency_graph_metadata_and_invalid_constructor_shapes() {
+    let directory = Directory::new();
+    let head = "a".repeat(40);
+    let body = json!({"mainFile":"index.js","files":[],"log":{},"parents":[],"dependencies":[{"id":{"scope":"test.scope","name":"dep","version":"1.0.0"},"relativePaths":[]}],"flattenedDependencies":[{"scope":"test.scope","name":"dep","version":"1.0.0"}],"extensions":[{"extensionId":{"scope":"test.scope","name":"aspect"},"data":{}}]});
+    directory.store("Version", &head, serde_json::to_string(&body).unwrap().as_bytes());
+    assert_eq!(response(&graph(&directory, &head))["failed"], false);
+    for field in ["scope", "name", "version"] {
+        let mut bad = body.clone();
+        bad["dependencies"][0]["id"][field] = json!({});
+        directory.store("Version", &head, serde_json::to_string(&bad).unwrap().as_bytes());
+        assert_eq!(response(&graph(&directory, &head))["failed"], true);
+    }
+    for extensions in [
+        json!([{"extensionId":{"scope":null,"name":"aspect"}}]),
+        json!([{"name":"teambit.pipelines/builder","data":{"artifacts":[{"files":{}}]}}]),
+    ] {
+        let mut bad = body.clone();
+        bad["extensions"] = extensions;
+        directory.store("Version", &head, serde_json::to_string(&bad).unwrap().as_bytes());
+        assert_eq!(response(&graph(&directory, &head))["failed"], true);
+    }
+}
+
+#[test]
 fn malformed_version_metadata_declines_before_graph_output() {
     let directory = Directory::new();
     let head = "a".repeat(40);

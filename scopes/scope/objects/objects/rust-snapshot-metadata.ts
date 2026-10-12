@@ -30,12 +30,14 @@ const laneFields = [
   'overrideUpdateDependents',
 ];
 const historyFields = ['name', 'scope', 'versions', 'graphCompleteRefs'];
+const laneHistoryFields = ['name', 'scope', 'laneHash', 'history'];
+type SnapshotMetadataType = 'Component' | 'Lane' | 'VersionHistory' | 'LaneHistory';
 
 /** Pass raw model state, retaining Rust ownership of model ordering, omission and identity rules. */
 export function prepareRustSnapshotMetadata(
   object: BitObject
-): { type: 'Component' | 'Lane' | 'VersionHistory'; fields: RustSnapshotValue } | undefined {
-  let type: 'Component' | 'Lane' | 'VersionHistory';
+): { type: SnapshotMetadataType; fields: RustSnapshotValue } | undefined {
+  let type: SnapshotMetadataType;
   let names: string[];
   if (hasRustSnapshotTransactionClass(object, 'ModelComponent')) {
     if (!hasRustSnapshotFunctions(['SnapshotComponentLodash'])) return undefined;
@@ -49,6 +51,9 @@ export function prepareRustSnapshotMetadata(
     if (!hasRustSnapshotFunctions(['SnapshotHistoryObject'])) return undefined;
     type = 'VersionHistory';
     names = historyFields;
+  } else if (hasRustSnapshotTransactionClass(object, 'LaneHistory')) {
+    type = 'LaneHistory';
+    names = laneHistoryFields;
   } else return undefined;
   const descriptors = Object.getOwnPropertyDescriptors(object);
   const raw: Record<string, unknown> = {};
@@ -58,7 +63,14 @@ export function prepareRustSnapshotMetadata(
     if (!projectRustSnapshotFields(descriptors.versionsObj?.value)) return undefined;
     raw.versions = (object as any).versions;
   }
-  const plain = type === 'Component' ? ['scopesList', 'state'] : type === 'Lane' ? ['log'] : ['graphCompleteRefs'];
+  const plain =
+    type === 'Component'
+      ? ['scopesList', 'state']
+      : type === 'Lane'
+        ? ['log']
+        : type === 'LaneHistory'
+          ? ['history']
+          : ['graphCompleteRefs'];
   for (let index = 0; index < plain.length; index += 1) {
     if (!projectRustSnapshotValue(raw[plain[index]])) return undefined;
   }

@@ -23,12 +23,17 @@ pub fn project(kind: &str, fields: &Value) -> io::Result<Value> {
         "Component" => models::component(fields),
         "Lane" => models::lane(fields),
         "VersionHistory" => models::history(fields),
+        "LaneHistory" => choose(fields, &["name", "scope", "laneHash", "history"], false),
         _ => Err(invalid("unsupported snapshot metadata type")),
     }
 }
 
 pub fn identity(kind: &str, fields: &Value, allocated: Option<&str>) -> io::Result<String> {
     object(fields)?;
+    if kind == "LaneHistory" {
+        let id = format!("{}:LaneHistory", text(get(fields, "laneHash"))?);
+        return Ok(hexadecimal(&Sha1::digest(id.as_bytes())));
+    }
     if matches!(kind, "Version" | "Lane") {
         let hash = allocated.ok_or_else(|| invalid("preallocated hash missing"))?;
         if hash.len() != 40

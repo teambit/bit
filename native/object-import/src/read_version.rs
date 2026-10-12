@@ -31,7 +31,7 @@ impl<'a> Reader<'a> {
             return Err(invalid("invalid Version header size"));
         }
         let value: Value = serde_json::from_slice(body).map_err(io::Error::other)?;
-        merge_history::metadata::validate(&value)?;
+        crate::transfer::collection::shape::history(&value)?;
         parents(&value)?;
         Ok(value)
     }

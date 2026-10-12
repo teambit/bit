@@ -1,10 +1,11 @@
 //! Repository-backed collection before archive materialization. Version snapshots
 //! remain local, while caller metadata can guard the live cache's reference view.
+pub(crate) mod shape;
+
 use std::{collections::HashSet, io, path::Path};
 
 use super::{Body, Descriptor, MAX_BYTES, MAX_OBJECTS, invalid, object};
 
-mod shape;
 #[cfg(test)]
 mod tests;
 mod version;

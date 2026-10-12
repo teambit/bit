@@ -20,14 +20,18 @@ assert.ok(!target.startsWith(installed + path.sep));
 assert.ok(refresh ? fs.existsSync(path.join(target, '.bit-object-import-build.json')) : !fs.existsSync(target));
 const previous = JSON.parse(fs.readFileSync(path.join(installed, '.bit-rust-private-build.json')));
 const hash = (file) => createHash('sha256').update(fs.readFileSync(file)).digest('hex');
-for (const module of previous.compiledModules)
-  assert.equal(hash(path.join(installed, 'node_modules/@teambit', module.path)), module.sha256);
 const existingOverlayMarker = path.join(installed, '.bit-object-import-build.json');
 const installedOverlay = fs.existsSync(existingOverlayMarker)
   ? JSON.parse(fs.readFileSync(existingOverlayMarker))
   : undefined;
-for (const module of installedOverlay?.compiledModules || [])
-  assert.equal(hash(path.join(installed, 'node_modules/@teambit', module.path)), module.sha256);
+// The integration marker replaces only its named compiled modules. Every other
+// bootstrap module must still match the original private build, and all overlay
+// modules must match the latest actual canonical compilation.
+if (installedOverlay) assert.equal(installedOverlay.installedRevision, previous.revision);
+const effectiveModules = new Map(previous.compiledModules.map((module) => [module.path, module]));
+for (const module of installedOverlay?.compiledModules || []) effectiveModules.set(module.path, module);
+for (const module of effectiveModules.values())
+  assert.equal(hash(path.join(installed, 'node_modules/@teambit', module.path)), module.sha256, module.path);
 if (!refresh) {
   fs.mkdirSync(target);
   cp.execFileSync('cp', ['-a', '--reflink=auto', installed + '/.', target]);
@@ -113,6 +117,12 @@ const files = [
   'scopes/lanes/merge-lanes/last-merged.ts',
   'components/legacy/scope/repositories/sources.ts',
   'scopes/component/snapping/reset-component.ts',
+  'scopes/component/snapping/rust-history-reset.ts',
+  'scopes/component/snapping/rust-history-reset-lane-history.ts',
+  'components/legacy/component-list/components-list.ts',
+  'components/legacy/component-list/index.ts',
+  'components/legacy/dependency-graph/scope-graph.ts',
+  'components/legacy/dependency-graph/index.ts',
   'scopes/scope/objects/objects/rust-snapshot.ts',
   'scopes/scope/objects/objects/rust-snapshot-transaction.ts',
   'scopes/scope/objects/objects/rust-snapshot-policy.ts',
@@ -234,6 +244,8 @@ try {
       'teambit.scope/importer',
       'teambit.component/checkout',
       'teambit.legacy/consumer',
+      'teambit.legacy/component-list',
+      'teambit.legacy/dependency-graph',
       'teambit.legacy/consumer-component',
       'teambit.legacy/bit-map',
       'teambit.legacy/component-diff',
@@ -279,6 +291,8 @@ assert.deepEqual(
     'teambit.scope/importer',
     'teambit.component/checkout',
     'teambit.legacy/consumer',
+    'teambit.legacy/component-list',
+    'teambit.legacy/dependency-graph',
     'teambit.legacy/consumer-component',
     'teambit.legacy/bit-map',
     'teambit.legacy/component-diff',
@@ -348,6 +362,12 @@ const modules = [
   'merge-lanes/dist/last-merged.js',
   'legacy.scope/dist/repositories/sources.js',
   'snapping/dist/reset-component.js',
+  'snapping/dist/rust-history-reset.js',
+  'snapping/dist/rust-history-reset-lane-history.js',
+  'legacy.component-list/dist/components-list.js',
+  'legacy.component-list/dist/index.js',
+  'legacy.dependency-graph/dist/scope-graph.js',
+  'legacy.dependency-graph/dist/index.js',
   'objects/dist/objects/rust-snapshot.js',
   'objects/dist/objects/rust-snapshot-transaction.js',
   'objects/dist/objects/rust-snapshot-policy.js',

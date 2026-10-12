@@ -25,6 +25,8 @@ for (const args of [
     'teambit.scope/importer',
     'teambit.component/checkout',
     'teambit.legacy/consumer',
+    'teambit.legacy/component-list',
+    'teambit.legacy/dependency-graph',
     'teambit.legacy/consumer-component',
     'teambit.legacy/bit-map',
     'teambit.legacy/component-diff',

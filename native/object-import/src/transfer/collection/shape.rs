@@ -4,6 +4,14 @@ use std::io;
 use crate::transfer::{MAX_OBJECTS, invalid};
 
 pub(super) fn eligible(value: &Value) -> io::Result<Value> {
+    prepare(value, true)
+}
+
+pub(crate) fn history(value: &Value) -> io::Result<()> {
+    prepare(value, false).map(|_| ())
+}
+
+fn prepare(value: &Value, artifacts: bool) -> io::Result<Value> {
     let mut clean = value.clone();
     dependencies(value, &mut clean)?;
     flattened(value, &mut clean)?;
@@ -15,7 +23,7 @@ pub(super) fn eligible(value: &Value) -> io::Result<Value> {
         }
     }
     edges(value, &mut clean)?;
-    extensions(value, &mut clean)?;
+    extensions(value, &mut clean, artifacts)?;
     crate::merge_history::metadata::validate(&clean)?;
     Ok(clean)
 }
@@ -136,7 +144,7 @@ fn specifiers(value: &Value) -> io::Result<()> {
     Ok(())
 }
 
-fn extensions(value: &Value, clean: &mut Value) -> io::Result<()> {
+fn extensions(value: &Value, clean: &mut Value, artifacts: bool) -> io::Result<()> {
     let Some(items) = array(value, "extensions")? else { return Ok(()) };
     for (index, item) in items.iter().enumerate() {
         if let Some(id) = item
@@ -149,7 +157,8 @@ fn extensions(value: &Value, clean: &mut Value) -> io::Result<()> {
                 .ok_or_else(|| invalid("invalid extension"))?
                 .remove("extensionId");
         }
-        if item.get("name").and_then(Value::as_str) == Some("teambit.pipelines/builder")
+        if artifacts
+            && item.get("name").and_then(Value::as_str) == Some("teambit.pipelines/builder")
             && let Some(data) =
                 clean["extensions"][index].get_mut("data").and_then(Value::as_object_mut)
         {
