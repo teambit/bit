@@ -369,19 +369,22 @@ test('query-only observer preserves defining class descriptors and labels framew
     class ObjectsWritable { writeObjectToFs() { return 'original'; } }
     module.exports = { Repository, ObjectsWritable };`
   );
+  const alias = path.join(files.directory, 'query-module-alias');
+  fs.symlinkSync(files.directory, alias, process.platform === 'win32' ? 'junction' : 'dir');
   const metrics = execute(
     files,
     `
     const assert = require('node:assert/strict');
     const fs = require('node:fs');
     const Module = require('node:module');
-    const filename = ${JSON.stringify(files.module)};
+    const requested = ${JSON.stringify(path.join(files.directory, 'query-module-alias', 'objects-fixture.cjs'))};
+    const filename = fs.realpathSync(requested);
     const original = new Module(filename); original.filename = filename;
     original._compile(fs.readFileSync(filename, 'utf8'), filename);
     require.cache[filename] = original;
     const before = Object.getOwnPropertyDescriptors(original.exports.Repository.prototype);
     const writer = original.exports.ObjectsWritable.prototype.writeObjectToFs;
-    const loaded = require(filename);
+    const loaded = require(requested);
     assert.deepEqual(Object.getOwnPropertyDescriptors(loaded.Repository.prototype), before);
     assert.equal(loaded.ObjectsWritable.prototype.writeObjectToFs, writer);
     assert.equal(new loaded.Repository().load(), 'original');
