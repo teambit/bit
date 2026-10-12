@@ -68,6 +68,31 @@ test('LF eligibility preserves the defining binary classifier without invoking a
   assert.equal(adapter.canUseRustCheckoutFileFunctions(), true);
 });
 
+test('Git eligibility rejects the defining config accessor before reading its public re-export', () => {
+  const git = compiled
+    ? installed('@teambit/git.modules.git-executable/dist/git-executable.js')
+    : source('scopes/git/modules/git-executable/git-executable.ts');
+  const config = installed('@teambit/config-store/dist/config-getter.js');
+  assert.equal(git.canUseDefaultGitNatively(), true);
+  const original = Object.getOwnPropertyDescriptor(config, 'getConfig');
+  let reads = 0;
+  try {
+    Object.defineProperty(config, 'getConfig', {
+      configurable: true,
+      enumerable: original.enumerable,
+      get() {
+        reads++;
+        return original.value;
+      },
+    });
+    assert.equal(git.canUseDefaultGitNatively(), false);
+    assert.equal(reads, 0);
+  } finally {
+    Object.defineProperty(config, 'getConfig', original);
+  }
+  assert.equal(git.canUseDefaultGitNatively(), true);
+});
+
 test('Apply eligibility initializes real lazy defining exports and rejects replaced defining callbacks', () => {
   const helper = installed('@teambit/component.modules.merge-helper');
   const defining = installed('@teambit/component.modules.merge-helper/dist/apply-version.js');

@@ -251,10 +251,15 @@ async function runQualification(cli, helper, options = {}) {
         args = ['checkout', route === 'ancestor' ? 'head~1' : route, fixture.id, '--skip-dependency-installation'];
       }
       const before = await fixtureModule.capture(directory, roots);
+      before.stash = await fixtureModule.readTree(path.join(directory, '.bit/stash'));
       const trace = mode === 'native' ? path.join(temporary, `${mode}-${route}-trace.json`) : undefined;
       const result = await command(directory, args, mode, trace, route);
       assert.equal(result.code, 0, result.stderr || result.stdout);
       const after = await fixtureModule.capture(directory, roots);
+      after.stash = await fixtureModule.readTree(path.join(directory, '.bit/stash'));
+      const status = await command(directory, ['status', '--json'], mode);
+      assert.equal(status.code, 0, status.stderr);
+      const modified = JSON.parse(status.stdout).modifiedComponents;
       const text = await fs.readFile(stable, 'utf8');
       if (route === 'stash-clean') assert.ok(text.startsWith('from stash\n'));
       if (route === 'stash-manual') {
@@ -262,6 +267,12 @@ async function runQualification(cli, helper, options = {}) {
       }
       if (route.startsWith('stash')) {
         assert.equal(after.bitmap, before.bitmap, 'stash load preserves bitmap version');
+        assert.ok(
+          modified.some((row) => JSON.stringify(row).includes('component')),
+          'loaded stash remains publicly modified'
+        );
+        assert.ok(Object.keys(before.stash).length > 0, 'raw saved stash metadata captured');
+        assert.deepEqual(after.stash, {}, 'public stash load deletes saved stash metadata');
         assert.equal(
           (await fs.readdir(path.join(directory, '.bit/stash'))).filter((name) => name.endsWith('.json')).length,
           0
@@ -273,7 +284,7 @@ async function runQualification(cli, helper, options = {}) {
           assert.ok(text.startsWith('untagged snap\n'));
         } else assert.equal(current, '1.0.1');
       }
-      stages.push({ route, args, result, before: comparable(before), after: comparable(after) });
+      stages.push({ route, args, result, status, before: comparable(before), after: comparable(after) });
     }
     if (runs.length) {
       if (options.report)
@@ -301,7 +312,7 @@ async function runQualification(cli, helper, options = {}) {
       assert.ok(metrics.checkoutMaterialize.stepsCompleted > 0, `${row.scenario} actual retained writes`);
       const owned = row.trace.workspaceFrames.filter(
         (frame) =>
-          ['BWP1', 'BWC0', 'BWC1', 'BCK1', 'BMH1'].includes(frame.magic) ||
+          ['BWS1', 'BWP1', 'BWC0', 'BWC1', 'BCK1', 'BMH1'].includes(frame.magic) ||
           (frame.magic === 'BMT1' && (frame.kind.startsWith('checkout') || frame.kind.startsWith('inspection')))
       );
       assert.equal(new Set(owned.map((frame) => frame.helperId)).size, 1, `${row.scenario} pinned checkout owner`);

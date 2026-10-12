@@ -7,14 +7,27 @@ export function getGitExecutablePath() {
   return executablePath || 'git';
 }
 
-const defaultGetConfig = getConfig;
 const configModule = require('@teambit/config-store');
 const configDescriptor = Object.getOwnPropertyDescriptor(configModule, 'getConfig');
+const definingConfig = require('@teambit/config-store/dist/config-getter.js');
+const definingConfigDescriptor = Object.getOwnPropertyDescriptor(definingConfig, 'getConfig');
+// Read the DATA descriptor rather than a re-export, which may delegate to a replaced accessor.
+const defaultGetConfig = definingConfigDescriptor?.value;
 
 /** Rust invokes the ordinary PATH Git binary; configured executables retain the public Node adapter. */
 export function canUseDefaultGitNatively(): boolean {
   const current = Object.getOwnPropertyDescriptor(configModule, 'getConfig');
+  const definingCurrent = Object.getOwnPropertyDescriptor(definingConfig, 'getConfig');
   if (
+    !definingConfigDescriptor ||
+    !('value' in definingConfigDescriptor) ||
+    typeof defaultGetConfig !== 'function' ||
+    !definingCurrent ||
+    !('value' in definingCurrent) ||
+    definingCurrent.value !== defaultGetConfig ||
+    definingCurrent.enumerable !== definingConfigDescriptor.enumerable ||
+    definingCurrent.configurable !== definingConfigDescriptor.configurable ||
+    definingCurrent.writable !== definingConfigDescriptor.writable ||
     !configDescriptor ||
     !current ||
     current.value !== configDescriptor.value ||
