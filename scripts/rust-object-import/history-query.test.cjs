@@ -831,3 +831,35 @@ test('single weak lookup rejects selected getters and forged WeakRefs without ob
   assert.equal(lookupRustLiveObject(live, 'selected').value, value);
   assert.equal(reads, 0);
 });
+
+test('packed raw Source receipts verify only their declared range and reject changed or truncated bodies', async (t) => {
+  const query = installed('@teambit/objects/dist/objects/rust-history-query.js');
+  const capsules = installed('@teambit/objects/dist/objects/rust-history-query-sources.js');
+  const { Repository, Source } = installed('@teambit/objects');
+  const disk = require('node:fs/promises');
+  const directory = await disk.mkdtemp(path.join(require('node:os').tmpdir(), 'packed-source-receipt-'));
+  t.after(() => disk.rm(directory, { recursive: true, force: true }));
+  owner(t, async () => { throw new Error('raw hydration requires no request'); });
+  const bytes = Buffer.from([0xff, 0, 13, 10]);
+  const original = Source.from(bytes);
+  const packed = await original.compressWithSize();
+  const descriptor = {
+    hash: original.hash().toString(), privatePath: path.join(directory, 'source.pack'),
+    compressedSize: packed.buffer.length, inflatedSize: packed.inflatedSize,
+    encoding: 'raw', bodySize: bytes.length, bodyOffset: 3,
+  };
+  for (const patch of [{ bodyOffset: -1 }, { bodyOffset: 0.5 }, { bodyOffset: 32 * 1024 * 1024 }, { encoding: undefined }])
+    assert.equal(capsules.validRustHistorySourceReceipt({ sources: [{ ...descriptor, ...patch }], sourceLoads: [0] }, directory), false);
+  const contents = Buffer.concat([Buffer.from('pre'), bytes, Buffer.from('post')]);
+  await disk.writeFile(descriptor.privatePath, contents);
+  await query.withRustHistoryQueryOperation(async () => {
+    const repository = new Repository(path.join(directory, 'scope'), { name: 'qualification.packed' });
+    assert.deepEqual((await capsules.loadRustCapturedSourceCapsule(repository, descriptor)).contents, bytes);
+    const changed = Buffer.from(contents); changed[3] ^= 1;
+    await disk.writeFile(descriptor.privatePath, changed);
+    const empty = new Repository(path.join(directory, 'empty'), { name: 'qualification.changed' });
+    await assert.rejects(capsules.loadRustCapturedSourceCapsule(empty, descriptor), /identity changed/);
+    await disk.truncate(descriptor.privatePath, 4);
+    await assert.rejects(capsules.loadRustCapturedSourceCapsule(empty, descriptor), /truncated/);
+  });
+});

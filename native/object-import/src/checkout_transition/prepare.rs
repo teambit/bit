@@ -21,6 +21,9 @@ pub(super) fn prepare(input: &Value, state: &mut plan::State) -> io::Result<Valu
     {
         return Err(invalid("checkout prepare path/count limit"));
     }
+    if request.packed_bodies && request.base.is_none() {
+        return Err(invalid("packed bodies require a merge base"));
+    }
     let mut total = 0;
     let mut compressed = 0;
     let target =

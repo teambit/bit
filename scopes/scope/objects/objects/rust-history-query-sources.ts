@@ -1,4 +1,5 @@
 import fs from 'fs-extra';
+import { readRustBodyRange } from './rust-body-range';
 import path from 'path';
 import { types } from 'util';
 import type Repository from './repository';
@@ -25,6 +26,7 @@ export type HistorySourceCapsule = {
   inflatedSize: number;
   encoding?: 'raw';
   bodySize?: number;
+  bodyOffset?: number;
 };
 export type HistorySourceReceipt = { sources: HistorySourceCapsule[]; sourceLoads: number[] };
 const aliases = new WeakMap<object, { hash: string; contents: Buffer; snapshot: Buffer }>();
@@ -92,6 +94,11 @@ export function validRustHistorySourceReceipt(data: any, directory: string): boo
       source.inflatedSize < 0 ||
       source.inflatedSize > 32 * 1024 * 1024 ||
       (source.encoding !== undefined && source.encoding !== 'raw') ||
+      (source.bodyOffset !== undefined &&
+        (source.encoding !== 'raw' ||
+          !Number.isSafeInteger(source.bodyOffset) ||
+          source.bodyOffset < 0 ||
+          source.bodyOffset + source.bodySize > 32 * 1024 * 1024)) ||
       (source.encoding === 'raw' &&
         (!Number.isSafeInteger(source.bodySize) || source.bodySize < 0 || source.bodySize > source.inflatedSize))
     )
@@ -121,7 +128,10 @@ export async function loadRustCapturedSourceCapsule(
   const pending = Object.getOwnPropertyDescriptor(repository.objects, descriptor.hash)?.value;
   const cached = pending || repository.getCache(reference);
   if (cached) return cached as Source;
-  const compressed = await fs.readFile(descriptor.privatePath);
+  const compressed =
+    descriptor.bodyOffset === undefined
+      ? await fs.readFile(descriptor.privatePath)
+      : await readRustBodyRange(descriptor.privatePath, descriptor.bodyOffset, descriptor.bodySize!);
   if (!sourceHydrationOwner() || !canHydrateRustHistoryQuerySources() || !canUseRustHistoryQueryRepository(repository))
     return undefined;
   if (compressed.length !== (descriptor.encoding === 'raw' ? descriptor.bodySize : descriptor.compressedSize))

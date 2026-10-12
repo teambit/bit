@@ -11,7 +11,13 @@ import { hasRustSnapshotTransactionClassFields } from '@teambit/objects';
 import type { Version } from '@teambit/objects';
 import type { MergeResultsThreeWay } from './three-way-merge';
 
-export type RustMergeBody = { planIndex: number; spoolPath: string; spoolHash: string; bytes: number };
+export type RustMergeBody = {
+  planIndex: number;
+  spoolPath: string;
+  spoolHash: string;
+  bytes: number;
+  spoolOffset?: number;
+};
 export type RustMergeRow = {
   kind: keyof MergeResultsThreeWay;
   current?: number;
@@ -227,11 +233,12 @@ export function appendRustMergeBodyPlanBodies(results: MergeResultsThreeWay, add
     if (!row || types.isProxy(row) || Object.getPrototypeOf(row) !== Object.prototype) return false;
     const fields = Object.getOwnPropertyDescriptors(row);
     if (
-      Reflect.ownKeys(fields).length !== 4 ||
+      Reflect.ownKeys(fields).length !== (fields.spoolOffset ? 5 : 4) ||
+      (fields.spoolOffset && !('value' in fields.spoolOffset)) ||
       ['planIndex', 'spoolPath', 'spoolHash', 'bytes'].some((key) => !fields[key] || !('value' in fields[key]))
     )
       return false;
-    const { planIndex, spoolPath, spoolHash, bytes } = row;
+    const { planIndex, spoolPath, spoolHash, bytes, spoolOffset } = row;
     if (
       !Number.isInteger(planIndex) ||
       planIndex < 0 ||
@@ -241,11 +248,13 @@ export function appendRustMergeBodyPlanBodies(results: MergeResultsThreeWay, add
       typeof spoolHash !== 'string' ||
       !/^[a-f0-9]{40}$/.test(spoolHash) ||
       !Number.isSafeInteger(bytes) ||
-      bytes < 0
+      bytes < 0 ||
+      (spoolOffset !== undefined &&
+        (!Number.isSafeInteger(spoolOffset) || spoolOffset < 0 || spoolOffset + bytes > 32 * 1024 * 1024))
     )
       return false;
     indices.add(planIndex);
-    copies.push({ planIndex, spoolPath, spoolHash, bytes });
+    copies.push({ planIndex, spoolPath, spoolHash, bytes, ...(spoolOffset === undefined ? {} : { spoolOffset }) });
   }
   plan.bodies.push(...copies);
   snapshots.splice(0, snapshots.length, descriptorSnapshot(plan.bodies), ...plan.bodies.map(descriptorSnapshot));
@@ -266,6 +275,7 @@ export function rustMergeBodyDescriptor(
     token: plan.token,
     planIndex: body.planIndex,
     snapshotPath: body.spoolPath,
+    ...(body.spoolOffset === undefined ? {} : { snapshotOffset: body.spoolOffset }),
     snapshotHash: body.spoolHash,
     bytes: body.bytes,
     mergeOwnerToken: plan.ownerToken,

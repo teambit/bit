@@ -35,11 +35,12 @@ pub(super) fn apply(input: Value, state: &mut plan::State) -> io::Result<Value> 
     {
         return Err(invalid("merge template spool directory"));
     }
-    let (indices, added) = additions(plan, contents, &directory, &request.token);
+    let (indices, mut added) = additions(plan, contents, &directory, &request.token);
     check_budget(body_count, retained, &added)?;
-    for body in &added {
-        body.spool()?;
+    if plan.bodies.first().is_some_and(|body| body.offset.is_some()) {
+        super::spool::assign(&mut added, &directory, &request.token, plan.bodies.len());
     }
+    super::spool::write(&added)?;
     plan.bodies.extend(added);
     if plan.other.is_none() {
         plan.other = Some(plan.target.clone());

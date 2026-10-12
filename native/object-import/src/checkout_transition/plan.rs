@@ -31,6 +31,7 @@ pub(super) struct Current {
     pub(super) raw_hash: String,
 }
 pub(super) struct Body {
+    pub(super) offset: Option<usize>,
     pub(super) contents: Vec<u8>,
     pub(super) path: PathBuf,
     pub(super) hash: String,
@@ -38,10 +39,14 @@ pub(super) struct Body {
 impl Body {
     pub(super) fn new(contents: Vec<u8>) -> Self {
         let hash = crate::validate::hexadecimal(&Sha1::digest(&contents));
-        Self { contents, path: PathBuf::new(), hash }
+        Self { contents, path: PathBuf::new(), hash, offset: None }
     }
     pub(super) fn manifest(&self, index: usize) -> Value {
-        json!({"planIndex":index,"spoolPath":self.path,"spoolHash":self.hash,"bytes":self.contents.len()})
+        let mut row = json!({"planIndex":index,"spoolPath":self.path,"spoolHash":self.hash,"bytes":self.contents.len()});
+        if let Some(offset) = self.offset {
+            row["spoolOffset"] = json!(offset);
+        }
+        row
     }
     pub(super) fn spool(&self) -> io::Result<()> {
         OpenOptions::new()
@@ -105,13 +110,14 @@ impl State {
         for (index, body) in plan.bodies.iter_mut().enumerate() {
             body.path = directory.join(format!("{token}-{index}.checkout"));
         }
+        if input["packedBodies"] == true {
+            super::spool::assign(&mut plan.bodies, directory, &token, 0);
+        }
         let output = plan.manifest(&token);
         if serde_json::to_vec(&output).map_err(io::Error::other)?.len() > 4 * 1024 * 1024 {
             return Err(invalid("checkout manifest output limit"));
         }
-        for body in &plan.bodies {
-            body.spool()?;
-        }
+        super::spool::write(&plan.bodies)?;
         self.sequence = sequence;
         self.plans.insert(token, plan);
         Ok(output)

@@ -1,3 +1,10 @@
+static POOL: std::sync::LazyLock<rayon::ThreadPool> = std::sync::LazyLock::new(|| {
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(4)
+        .build()
+        .unwrap()
+});
+mod read_batches;
 use super::serve;
 use flate2::{Compression, write::ZlibEncoder};
 use serde_json::{Value, json};
@@ -41,7 +48,7 @@ fn frame(value: &Value) -> Vec<u8> {
 }
 fn response(value: &Value) -> Value {
     let mut output = Vec::new();
-    serve(&mut Cursor::new(frame(value)), &mut output).unwrap();
+    serve(&mut Cursor::new(frame(value)), &mut output, &POOL).unwrap();
     serde_json::from_slice(&output).unwrap()
 }
 fn source(directory: &Directory, body: &[u8]) -> Value {
@@ -263,7 +270,7 @@ fn malformed_or_partial_frames_never_emit_partial_output() {
     let bytes = frame(&json!({"kind":"compare","left":"a","right":"b"}));
     for length in 0..bytes.len() {
         let mut output = Vec::new();
-        assert!(serve(&mut Cursor::new(&bytes[..length]), &mut output).is_err());
+        assert!(serve(&mut Cursor::new(&bytes[..length]), &mut output, &POOL).is_err());
         assert!(output.is_empty());
     }
     assert_eq!(response(&json!({"kind":"unknown"}))["failed"], true);

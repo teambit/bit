@@ -4,6 +4,7 @@ import path from 'path';
 import { types } from 'util';
 import { createHash } from 'crypto';
 import {
+  readRustBodyRangeSync,
   getRustMergeTransactionToken,
   requestRustMergeTransaction,
   canRequestRustMergeTransaction,
@@ -68,6 +69,7 @@ const hash = (value: unknown): value is string => typeof value === 'string' && /
 const bodyHash = createHash;
 const remove = fs.remove;
 const readFile = fs.readFileSync;
+const readRange = readRustBodyRangeSync;
 const equals = Buffer.prototype.equals;
 const exportsCaptured: Array<{ module: object; key: string; descriptor: PropertyDescriptor }> = [];
 const definingSources = {
@@ -318,7 +320,11 @@ function validPrepared(
       path.dirname(body.spoolPath) !== directory ||
       !Number.isSafeInteger(body.bytes) ||
       body.bytes < 0 ||
-      body.bytes > 32 * 1024 * 1024
+      body.bytes > 32 * 1024 * 1024 ||
+      (body.spoolOffset !== undefined &&
+        (!Number.isSafeInteger(body.spoolOffset) ||
+          body.spoolOffset < 0 ||
+          body.spoolOffset + body.bytes > 32 * 1024 * 1024))
     )
       return false;
   }
@@ -393,7 +399,13 @@ function lazyText(row: object, key: 'output' | 'conflict', body?: RustMergeBody)
   let value: string | undefined;
   const spoolPath = body.spoolPath;
   const get = () => {
-    value ??= readFile(spoolPath).toString();
+    if (value === undefined) {
+      const bytes =
+        body.spoolOffset === undefined ? readFile(spoolPath) : readRange(spoolPath, body.spoolOffset, body.bytes);
+      if (bytes.length !== body.bytes || bodyHash('sha1').update(bytes).digest('hex') !== body.spoolHash)
+        throw new Error('merge compatibility snapshot changed');
+      value = bytes.toString();
+    }
     return value;
   };
   const set = (next: string | null | undefined) => {
@@ -565,6 +577,7 @@ export async function tryRustOwnedThreeWayMerge(params: Params): Promise<MergeRe
   const prepared = await requestRustMergeTransaction<Prepared>(
     {
       kind: 'mergePrepare',
+      packedBodies: true,
       token,
       index,
       objectsDirectory: params.scope.objects.getPath(),

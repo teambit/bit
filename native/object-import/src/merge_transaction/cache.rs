@@ -12,7 +12,7 @@ struct Capsules {
     sources: Vec<Value>,
     directory: PathBuf,
     token: String,
-    retained: HashMap<String, PathBuf>,
+    retained: HashMap<String, (PathBuf, Option<u64>)>,
 }
 impl Capsules {
     fn reference(&mut self, input: &Value, side: &str, index: usize) -> io::Result<Value> {
@@ -28,8 +28,8 @@ impl Capsules {
         let record =
             self.trace.records.get(hash).ok_or_else(|| invalid("merge Source receipt missing"))?;
         let index = self.sources.len();
-        let path = if let Some(path) = self.retained.get(hash) {
-            path.clone()
+        let (path, offset) = if let Some(retained) = self.retained.get(hash) {
+            retained.clone()
         } else {
             let path = self.directory.join(format!("{}-{index}.source.body", self.token));
             OpenOptions::new()
@@ -37,9 +37,12 @@ impl Capsules {
                 .write(true)
                 .open(&path)?
                 .write_all(&record.body)?;
-            path
+            (path, None)
         };
         self.sources.push(json!({"hash":hash,"privatePath":path,"compressedSize":record.compressed_size,"inflatedSize":record.inflated_size,"encoding":"raw","bodySize":record.body.len()}));
+        if let Some(offset) = offset {
+            self.sources[index]["bodyOffset"] = json!(offset);
+        }
         self.seen.insert(hash.to_owned(), index);
         Ok(index)
     }
@@ -104,7 +107,7 @@ pub(super) fn receipts(input: &Value, output: &mut Value, trace: Trace) -> io::R
         .filter_map(|body| {
             Some((
                 body["spoolHash"].as_str()?.to_owned(),
-                PathBuf::from(body["spoolPath"].as_str()?),
+                (PathBuf::from(body["spoolPath"].as_str()?), body["spoolOffset"].as_u64()),
             ))
         })
         .collect();

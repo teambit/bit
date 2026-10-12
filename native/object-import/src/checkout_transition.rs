@@ -5,6 +5,7 @@ mod prepare;
 mod removals;
 mod retarget;
 mod select;
+mod spool;
 #[cfg(test)]
 mod tests;
 mod wire;

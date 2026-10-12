@@ -250,7 +250,7 @@ fn serve_extension(
         return Ok(true);
     }
     if magic == *b"BWS1" {
-        crate::workspace::engine::serve(reader, writer)?;
+        crate::workspace::engine::serve(reader, writer, pool)?;
         return Ok(true);
     }
     if magic == *b"BCK1" {

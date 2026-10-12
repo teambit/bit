@@ -74,14 +74,27 @@ function validApplied(data: any, clones: SourceFile[], plan: RustMergeBodyPlan, 
       !/^[a-f0-9]{40}$/.test(body.spoolHash) ||
       !Number.isSafeInteger(body.bytes) ||
       body.bytes < 0 ||
-      body.bytes > 32 * 1024 * 1024
+      body.bytes > 32 * 1024 * 1024 ||
+      (body.spoolOffset !== undefined &&
+        (!Number.isSafeInteger(body.spoolOffset) ||
+          body.spoolOffset < 0 ||
+          body.spoolOffset + body.bytes > 32 * 1024 * 1024))
     )
       return false;
-    if (body.spoolPath !== path.join(directory, `${plan.token}-${body.planIndex}.checkout`)) return false;
+    if (body.spoolOffset === undefined) {
+      if (body.spoolPath !== path.join(directory, `${plan.token}-${body.planIndex}.checkout`)) return false;
+    } else {
+      const name = path.basename(body.spoolPath);
+      const match = new RegExp(`^${plan.token}-(0|[1-9][0-9]*)[.]checkout-pack$`).exec(name);
+      if (path.dirname(body.spoolPath) !== directory || !match || Number(match[1]) > body.planIndex) return false;
+    }
     const previous = previousBodies.get(body.planIndex);
     if (
       previous &&
-      (previous.spoolPath !== body.spoolPath || previous.spoolHash !== body.spoolHash || previous.bytes !== body.bytes)
+      (previous.spoolPath !== body.spoolPath ||
+        previous.spoolHash !== body.spoolHash ||
+        previous.bytes !== body.bytes ||
+        previous.spoolOffset !== body.spoolOffset)
     )
       return false;
     bodies.add(body.planIndex);

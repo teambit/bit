@@ -1125,3 +1125,25 @@ test('async apply returns the exact retained result and propagates callback erro
   );
   assert.equal(clones, 2, 'each operation has one clone prefix even when its callback throws');
 });
+
+test('packed retained bodies preserve lazy aliases and exact write continuation bytes', async (t) => {
+  const { plan, contents, descriptor, template } = await plannedFixture(t);
+  const prefix = Buffer.from('unrelated prefix');
+  await fs.writeFile(descriptor.snapshotPath, Buffer.concat([prefix, contents, Buffer.from('suffix')]));
+  descriptor.snapshotOffset = prefix.length;
+  let original, clone;
+  await engine.withRustWorkspaceEngine(async () => {
+    original = plan.createRustCheckoutPlanSourceFile(template(), descriptor);
+    assert.ok(original);
+    clone = original.clone();
+    const write = plan.captureRustCheckoutPlanWriteContinuation(original);
+    assert.ok(write);
+    assert.deepEqual(write.descriptor, descriptor);
+    await write.persist();
+    assert.deepEqual(await fs.readFile(original.path), installed('@teambit/toolbox.string.eol').auto(contents));
+    assert.deepEqual(original.contents, contents);
+    assert.equal(original.contents, clone.contents);
+  });
+  await fs.unlink(descriptor.snapshotPath);
+  assert.deepEqual(clone.contents, contents);
+});

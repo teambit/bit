@@ -3,6 +3,8 @@ use std::path::PathBuf;
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Prepare {
+    #[serde(default)]
+    pub(super) packed_bodies: bool,
     pub(super) objects_directory: PathBuf,
     pub(super) snapshot_directory: PathBuf,
     pub(super) target: Version,

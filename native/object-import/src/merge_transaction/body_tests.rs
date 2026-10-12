@@ -44,11 +44,14 @@ impl Fixture {
         json!({"hash":version,"files":[{"hash":hash,"relativePath":"index.ts","name":"index.ts","test":false}]})
     }
     fn prepare(&self, state: &mut State, target: &Value) -> Value {
+        self.prepare_packed(state, target, false)
+    }
+    fn prepare_packed(&self, state: &mut State, target: &Value, packed: bool) -> Value {
         let base = "9".repeat(40);
         self.object(&base, "Version", b"{\"files\":[]}");
         let owner = apply("mergeTransactionBegin", json!({"mode":"status","count":1}), state)
             .expect("owner");
-        apply("mergePrepare", json!({"token":owner["token"],"index":0,"objectsDirectory":self.0.join("objects"),"snapshotDirectory":self.0.join("snapshots"),"target":target,"base":{"hash":base,"files":[]},"labels":{"current":"current","other":"other"},"current":[]}), state).expect("prepare")
+        apply("mergePrepare", json!({"packedBodies":packed,"token":owner["token"],"index":0,"objectsDirectory":self.0.join("objects"),"snapshotDirectory":self.0.join("snapshots"),"target":target,"base":{"hash":base,"files":[]},"labels":{"current":"current","other":"other"},"current":[]}), state).expect("prepare")
     }
 }
 impl Drop for Fixture {
@@ -184,4 +187,55 @@ fn updated_rows_reuse_verified_target_bodies_and_base_reads_are_not_repeated() {
         b"target\n",
     );
     assert_eq!(fs::read(current).expect("workspace unchanged"), b"base\n");
+}
+
+#[test]
+fn packed_bodies_preserve_ranges_source_receipts_and_retarget_without_rewriting_old_spools() {
+    let fixture = Fixture::new();
+    let mut state = State::default();
+    let first = fixture.version('1', b"first\n");
+    let second = fixture.version('2', b"\0\xffsecond\r\n");
+    let mut target = first;
+    let mut other = second["files"][0].clone();
+    other["relativePath"] = json!("other.bin");
+    other["name"] = json!("other.bin");
+    target["files"]
+        .as_array_mut()
+        .unwrap()
+        .push(other);
+    fixture.object(&"1".repeat(40), "Version", &serde_json::to_vec(&json!({"files":target["files"].as_array().unwrap().iter().map(|f|json!({"file":f["hash"],"relativePath":f["relativePath"],"name":f["name"],"test":false})).collect::<Vec<_>>()})).unwrap());
+    let prepared = fixture.prepare_packed(&mut state, &target, true);
+    let path = prepared["bodies"][0]["spoolPath"].as_str().unwrap();
+    let packed = fs::read(path).unwrap();
+    assert_eq!(packed, b"first\n\0\xffsecond\r\n");
+    assert_eq!(prepared["bodies"][1]["spoolPath"], prepared["bodies"][0]["spoolPath"]);
+    assert_eq!(prepared["bodies"][1]["spoolOffset"], 6);
+    assert_eq!(fs::read_dir(fixture.0.join("snapshots")).unwrap().count(), 1);
+    for source in prepared["sources"].as_array().unwrap() {
+        let offset = source["bodyOffset"].as_u64().unwrap() as usize;
+        let length = source["bodySize"].as_u64().unwrap() as usize;
+        assert_eq!(source["privatePath"], prepared["bodies"][0]["spoolPath"]);
+        assert_eq!(
+            source["hash"],
+            crate::validate::hexadecimal(&Sha1::digest(&packed[offset..offset + length])),
+        );
+    }
+    let next = fixture.version('3', b"late target");
+    let collision = fixture.0
+        .join("snapshots")
+        .join(format!("{}-2.checkout-pack", prepared["token"].as_str().unwrap()));
+    fs::write(&collision, b"must not overwrite").unwrap();
+    let request = json!({"token":prepared["ownerToken"],"planToken":prepared["token"],"target":next,"strategy":"ours"});
+    assert!(apply("mergeApply", request.clone(), &mut state).is_err());
+    assert_eq!(fs::read(&collision).unwrap(), b"must not overwrite");
+    assert_eq!(fs::read(path).unwrap(), packed);
+    fs::remove_file(collision).unwrap();
+    let applied = apply("mergeApply", request, &mut state).unwrap();
+    assert_eq!(applied["bodies"][0], prepared["bodies"][0]);
+    assert_eq!(applied["bodies"][2]["spoolOffset"], 0);
+    assert_eq!(
+        fs::read(applied["bodies"][2]["spoolPath"].as_str().unwrap()).unwrap(),
+        b"late target",
+    );
+    assert_eq!(fs::read(path).unwrap(), packed);
 }

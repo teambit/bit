@@ -187,3 +187,5 @@ export {
   loadRustCapturedSourceCapsule,
 } from './objects/rust-history-query-sources';
 export type { HistorySourceCapsule } from './objects/rust-history-query-sources';
+
+export { readRustBodyRange, readRustBodyRangeSync } from './objects/rust-body-range';

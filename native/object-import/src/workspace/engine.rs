@@ -54,7 +54,11 @@ impl Write for Output {
 }
 
 /// Read-only workspace operations return no partial results on unsupported data.
-pub(crate) fn serve(reader: &mut impl Read, writer: &mut impl Write) -> io::Result<()> {
+pub(crate) fn serve(
+    reader: &mut impl Read,
+    writer: &mut impl Write,
+    pool: &rayon::ThreadPool,
+) -> io::Result<()> {
     let id = protocol::word(reader)?;
     let length = protocol::word(reader)? as usize;
     if length == 0 || length > MAX_INPUT {
@@ -64,7 +68,7 @@ pub(crate) fn serve(reader: &mut impl Read, writer: &mut impl Write) -> io::Resu
     reader.read_exact(&mut bytes)?;
     let result = serde_json::from_slice(&bytes)
         .map_err(|_| invalid("workspace invalid request"))
-        .and_then(apply);
+        .and_then(|request| apply(request, pool));
     let response = match result {
         Ok((completed, data)) => Response {
             version: 1,
@@ -87,14 +91,14 @@ pub(crate) fn serve(reader: &mut impl Read, writer: &mut impl Write) -> io::Resu
 fn failure(id: u32) -> Response {
     Response { version: 1, id, completed: 0, skipped: Vec::new(), failed: true, data: None }
 }
-fn apply(request: Request) -> io::Result<(usize, Value)> {
+fn apply(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value)> {
     match request {
         Request::Scan { root, exclude_dirs, workspace_root } => {
             let paths = scan::scan(&root, &exclude_dirs, workspace_root)?;
             Ok((paths.len(), json!({"paths":paths})))
         }
         Request::Read { files } => {
-            let files = read::read(&files)?;
+            let files = read::read(&files, pool)?;
             Ok((files.len(), json!({"files":files})))
         }
         Request::Diff { files, git_executable, color } => {

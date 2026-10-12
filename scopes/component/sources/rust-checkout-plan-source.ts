@@ -1,5 +1,6 @@
 import { createHash } from 'crypto';
 import fs from 'fs-extra';
+import { readRustBodyRangeSync } from '@teambit/objects';
 import path from 'path';
 import { logger } from '@teambit/legacy.logger';
 import * as eol from '@teambit/toolbox.string.eol';
@@ -19,6 +20,7 @@ export type RustCheckoutPlanSourceDescriptor = {
   mergeOwnerToken?: string;
   planIndex: number;
   snapshotPath: string;
+  snapshotOffset?: number;
   snapshotHash: string;
   bytes: number;
 };
@@ -126,15 +128,26 @@ function validDescriptor(descriptor: RustCheckoutPlanSourceDescriptor): boolean 
     !descriptor.snapshotPath.includes('\0') &&
     Buffer.from(descriptor.snapshotPath).toString() === descriptor.snapshotPath &&
     /^[a-f0-9]{40}$/.test(descriptor.snapshotHash) &&
+    (descriptor.snapshotOffset === undefined ||
+      (Number.isSafeInteger(descriptor.snapshotOffset) &&
+        descriptor.snapshotOffset >= 0 &&
+        descriptor.snapshotOffset + descriptor.bytes <= 32 * 1024 * 1024)) &&
     Number.isSafeInteger(descriptor.bytes) &&
     descriptor.bytes >= 0 &&
     descriptor.bytes <= 32 * 1024 * 1024
   );
 }
 
+const readRange = readRustBodyRangeSync;
+function readBody(descriptor: RustCheckoutPlanSourceDescriptor): Buffer {
+  return descriptor.snapshotOffset === undefined
+    ? readSnapshot(descriptor.snapshotPath)
+    : readRange(descriptor.snapshotPath, descriptor.snapshotOffset, descriptor.bytes);
+}
+
 function body(capsule: Capsule): Buffer {
   if (capsule.body) return capsule.body;
-  const contents = readSnapshot(capsule.descriptor.snapshotPath);
+  const contents = readBody(capsule.descriptor);
   if (
     contents.length !== capsule.descriptor.bytes ||
     createHash('sha1').update(contents).digest('hex') !== capsule.descriptor.snapshotHash
@@ -349,7 +362,7 @@ export function captureRustCheckoutPlanWriteContinuation(
     async persist() {
       this.log();
       // A hydrated public Buffer may have changed after dispatch. The captured write owns the spool bytes.
-      const contents = readSnapshot(descriptor.snapshotPath);
+      const contents = readBody(descriptor);
       if (
         contents.length !== descriptor.bytes ||
         createHash('sha1').update(contents).digest('hex') !== descriptor.snapshotHash
