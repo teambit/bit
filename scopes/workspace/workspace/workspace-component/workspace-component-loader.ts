@@ -586,6 +586,10 @@ export class WorkspaceComponentLoader {
       await mapSeries(aspectIds, async (aspectId) => {
         try {
           await loadAsAspects([aspectId]);
+          // an aspect that failed during the batch is considered loaded (to not retry it), so it doesn't throw here
+          if (this.aspectLoader.failedAspects.includes(aspectId)) {
+            failures.push({ aspectId, errMsg: err.message || String(err) });
+          }
         } catch (singleErr: any) {
           failures.push({ aspectId, errMsg: singleErr.message || String(singleErr) });
         }
