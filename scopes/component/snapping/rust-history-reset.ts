@@ -32,7 +32,7 @@ export type HistoryResetOptions = {
   force: boolean;
 };
 type State = { token: string; revision: number; directive: { phase: string; count: number } };
-type Owner = { options: HistoryResetOptions; state?: State };
+type Owner = { options: HistoryResetOptions; state?: State; closing?: boolean };
 const isProxy = types.isProxy;
 const owners = new AsyncLocalStorage<Owner>();
 const childOwners = new AsyncLocalStorage<{ state?: State }>();
@@ -82,7 +82,8 @@ function metadata(value: unknown, seen = new Set<object>(), depth = 0): boolean 
 }
 
 export function isRustHistoryResetOperation(): boolean {
-  return Boolean(owners.getStore() && isRustWorkspaceEngine());
+  const owner = owners.getStore();
+  return Boolean(owner && !owner.closing && isRustWorkspaceEngine());
 }
 
 /** The existing snapshot transport shares this operation's physical request broker. */
@@ -148,8 +149,10 @@ export function withRustHistoryResetOperation<T>(options: HistoryResetOptions, a
           try {
             return await action();
           } finally {
-            if (owner.state && isRustHistoryResetOperation()) {
-              await requestRustHistoryReset<{ finished: true }>(
+            // Promise.all rejection leaves siblings running; stop new token work before releasing their parent.
+            owner.closing = true;
+            if (owner.state && isRustWorkspaceEngine()) {
+              await requestRustSnapshotTransaction<{ finished: true }>(
                 { kind: 'historyResetFinish', token: owner.state.token },
                 (value) => value?.finished === true
               ).catch(() => undefined);
@@ -231,7 +234,10 @@ export async function forkRustHistoryResetComponents(count: number): Promise<Sta
 }
 
 export function withRustHistoryResetComponent<T>(child: State | undefined, action: () => Promise<T>): Promise<T> {
-  return childOwners.run({ state: child }, () => withRustHistoryResetRefPlan(action));
+  const owner = owners.getStore();
+  return childOwners.run({ state: child }, () =>
+    withRustHistoryResetRefPlan(action, () => Boolean(owner && !owner.closing))
+  );
 }
 
 export async function completeRustHistoryResetComponentPhase(phase: string): Promise<void> {

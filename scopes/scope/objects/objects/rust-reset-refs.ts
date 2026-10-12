@@ -22,12 +22,18 @@ var defaults: Map<string, Registered> | undefined;
 // eslint-disable-next-line no-var
 var repositoryHooks: Map<any, Record<string, PropertyDescriptor | undefined>> | undefined;
 const versionIdAliases = new WeakMap<object, ComponentID>();
-const historyResetRefPlans = new AsyncLocalStorage<boolean>();
+const historyResetRefPlans = new AsyncLocalStorage<() => boolean>();
 const isProxy = types.isProxy;
 
 /** Keep reset's ref planning on its operation protocol without changing other callers. */
-export function withRustHistoryResetRefPlan<T>(action: () => Promise<T>): Promise<T> {
-  return historyResetRefPlans.run(true, action);
+export function withRustHistoryResetRefPlan<T>(
+  action: () => Promise<T>,
+  active: () => boolean = () => true
+): Promise<T> {
+  return historyResetRefPlans.run(active, action);
+}
+function historyResetClosed(): boolean {
+  return historyResetRefPlans.getStore()?.() === false;
 }
 function resetPlanKind(): 'historyResetComponentPlan' | 'resetRefsPlan' {
   return historyResetRefPlans.getStore() ? 'historyResetComponentPlan' : 'resetRefsPlan';
@@ -254,6 +260,7 @@ export async function planRustResetRefs(
   removeOnlyHead = false
 ): Promise<{ plan: RustResetPlan; newHead?: Ref } | undefined> {
   const ineligible = () =>
+    historyResetClosed() ||
     !isRustSnapshotOperation() ||
     !ordinary(source, 'Sources') ||
     !ordinary(component, 'ModelComponent') ||
@@ -436,8 +443,9 @@ export async function planRustResetRefs(
         JSON.stringify(refs(versionObjects[index].parents)) !== JSON.stringify(input.versions[index].parents) ||
         saved.refs.some((ref, parentIndex) => ref !== versionObjects[index].parents[parentIndex])
     );
+  if (historyResetClosed()) return undefined;
   const result = await requestRustRecovery<RustResetPlan>(input, validatePlan);
-  if (!result || defaultsChanged() || identityChanged() || contentsChanged()) return undefined;
+  if (!usableResetPlan(result, defaultsChanged, identityChanged, contentsChanged)) return undefined;
   const newHead =
     result.newHead &&
     ('common' in result.newHead
@@ -445,6 +453,14 @@ export async function planRustResetRefs(
       : versionObjects[result.newHead.parent.versionIndex].parents[result.newHead.parent.parentIndex]);
   if (result.changeLaneHead && newHead && !divergence) return undefined;
   return { plan: result, newHead };
+}
+function usableResetPlan(
+  value: RustResetPlan | undefined,
+  defaultsChanged: () => boolean,
+  identityChanged: () => unknown,
+  contentsChanged: () => unknown
+): value is RustResetPlan {
+  return Boolean(value && !historyResetClosed() && !defaultsChanged() && !identityChanged() && !contentsChanged());
 }
 function versionObjectsNeeded(input: any): boolean {
   return Boolean(

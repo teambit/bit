@@ -4,6 +4,8 @@ Repository history reset and untag use the Rust client engine when `BIT_RUST_CLI
 
 An awaited reset owns one helper lease and serialized request broker. Rust tracks completed operation phases and forks independent component cursors before the existing concurrent component map. Public callbacks remain concurrent; a rejected component does not cause the caller to await unrelated siblings. A retired helper is not replaced during that operation, and completed public effects are not replayed to reconstruct its cursor.
 
+Cleanup closes the native operation before releasing its tokens. Siblings that are still running after an earlier rejection retain their canonical continuation, while late receipts and ref plans decline native work. Cleanup does not wait for those public callbacks.
+
 Concurrent component removals queue the default unmerged-state initialize, transition and apply sequence per helper session. Persistence uses the same queue. Each queued operation captures the current state after its predecessor finishes, so concurrent removals cannot reuse a stale revision. Public component callbacks remain outside this queue.
 
 Rust selects staged and removed candidates, pattern membership, local-history unions and lane filtering, tag labels, immediate dependents and ref mutations from bounded metadata. Canonical model loaders still observe divergence, cached Versions and lane heads at their original boundaries. The dependency loader retains model and Version nodes, completion order and the canonical assignment of `Version.id`; Rust constructs its inbound dependency index from the resulting flattened-dependency strings. Ordinary dependency graph loading remains available to other callers.

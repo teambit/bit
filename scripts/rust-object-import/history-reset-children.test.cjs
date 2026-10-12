@@ -334,3 +334,78 @@ test('concurrent genuine Unmerged removals share fresh revisions and persist kee
     'no retirement or helper reacquisition after concurrent mutations'
   );
 });
+
+test('first child rejection closes receipts before a delayed Native Finish acknowledgement returns', async (t) => {
+  const frames = setup(t);
+  const observed = MaterializationSession.prototype.request;
+  let releaseSibling, siblingReady, sibling, lateFrames, completedWhileFinishPending;
+  const gate = new Promise((resolve) => {
+    releaseSibling = resolve;
+  });
+  const ready = new Promise((resolve) => {
+    siblingReady = resolve;
+  });
+  const original = new Error('first child callback failed');
+  const effects = [];
+  MaterializationSession.prototype.request = function (build, ...args) {
+    const input = JSON.parse(build(0).subarray(12));
+    const result = observed.call(this, build, ...args);
+    if (input.kind !== 'historyResetFinish') return result;
+    const count = frames.length;
+    releaseSibling();
+    return result.then(async (value) => {
+      let timer;
+      completedWhileFinishPending = await Promise.race([
+        sibling.then(() => true),
+        new Promise((resolve) => {
+          timer = setTimeout(() => resolve(false), 300);
+        }),
+      ]);
+      clearTimeout(timer);
+      lateFrames = frames.slice(count);
+      return value;
+    });
+  };
+  await assert.rejects(
+    api.withRustHistoryResetOperation(options, async () => {
+      const children = await fork(2);
+      sibling = api.withRustHistoryResetComponent(children[1], async () => {
+        effects.push('sibling model');
+        await api.completeRustHistoryResetComponentPhase('model');
+        siblingReady();
+        await gate;
+        for (const phase of childPhases.slice(1)) {
+          effects.push(phase);
+          await api.completeRustHistoryResetComponentPhase(phase);
+        }
+      });
+      await Promise.all([
+        sibling,
+        api.withRustHistoryResetComponent(children[0], async () => {
+          await api.completeRustHistoryResetComponentPhase('model');
+          await ready;
+          throw original;
+        }),
+      ]);
+    }),
+    (error) => error === original
+  );
+  await sibling;
+  assert.equal(
+    completedWhileFinishPending,
+    true,
+    'late canonical suffix must not wait on the pending private Finish acknowledgement'
+  );
+  assert.deepEqual(
+    effects,
+    ['sibling model', ...childPhases.slice(1)],
+    'late public suffix must execute once without an artificial production join'
+  );
+  assert.deepEqual(
+    lateFrames,
+    [],
+    'no child token request may follow parent Finish, even while its acknowledgement is pending'
+  );
+  assert.equal(frames.at(-1).input.kind, 'historyResetFinish');
+  assert.equal(new Set(frames.map((row) => row.session)).size, 1);
+});
