@@ -14,7 +14,7 @@ import { ComponentID } from '@teambit/component-id';
 import { Logger } from '@teambit/logger';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy.constants';
 import type { AbstractVinyl } from '@teambit/component.sources';
-import { Dist, DataToPersist, RemovePath } from '@teambit/component.sources';
+import { Dist, DataToPersist, RemovePath, removeFilesAndEmptyDirsRecursively } from '@teambit/component.sources';
 import {
   linkToNodeModulesByComponents,
   removeLinksFromNodeModules,
@@ -56,7 +56,8 @@ export type CompileOptions = {
   /**
    * remove stale files from the dist dirs only after the new dists were written, instead of deleting the whole
    * dist dir upfront. this way the dist files never disappear while consumers (e.g. webpack) are reading them.
-   * ignored when the compiler itself requires `deleteDistDir` (it generates files into dist during compilation).
+   * when the compiler itself requires `deleteDistDir` (it generates files into dist during compilation), the dist dir
+   * is deleted upfront instead. either way, `deleteDistDir` is ignored when this is set.
    */
   pruneStaleDist?: boolean;
   initiator: CompilationInitiator; // describes where the compilation is coming from
@@ -87,8 +88,11 @@ export class ComponentCompiler {
 
   async compile(noThrow = true, options: CompileOptions): Promise<BuildResult> {
     let dataToPersist;
-    const pruneStaleDist = Boolean(options.pruneStaleDist) && !this.compilerInstance.deleteDistDir;
-    const deleteDistDir = pruneStaleDist ? false : (options.deleteDistDir ?? this.compilerInstance.deleteDistDir);
+    const compilerRequiresDeleteDistDir = Boolean(this.compilerInstance.deleteDistDir);
+    const pruneStaleDist = Boolean(options.pruneStaleDist) && !compilerRequiresDeleteDistDir;
+    const deleteDistDir = options.pruneStaleDist
+      ? compilerRequiresDeleteDistDir
+      : (options.deleteDistDir ?? compilerRequiresDeleteDistDir);
     const distDirs = await this.distDirs();
     // delete dist folder before transpilation (because some compilers (like ngPackagr) can generate files there during the compilation process)
     if (deleteDistDir) {
@@ -154,7 +158,7 @@ export class ComponentCompiler {
    */
   private async pruneStaleDistFiles(distDirs: string[]) {
     const written = new Set(this.dists.map((distFile) => this.toAbsolutePath(distFile.path)));
-    await Promise.all(
+    const staleFilesPerDistDir = await Promise.all(
       distDirs.map(async (distDir) => {
         const distDirAbs = this.toAbsolutePath(distDir);
         const existing = await globby('**/*', {
@@ -163,9 +167,11 @@ export class ComponentCompiler {
           dot: true,
           ignore: ['**/node_modules/**'],
         });
-        await Promise.all(existing.filter((file) => !written.has(path.normalize(file))).map((file) => fs.remove(file)));
+        return existing.filter((file) => !written.has(path.normalize(file)));
       })
     );
+    const staleFiles = staleFilesPerDistDir.flat();
+    if (staleFiles.length) await removeFilesAndEmptyDirsRecursively(staleFiles);
   }
 
   getPackageDir() {
@@ -493,20 +499,20 @@ export class WorkspaceCompiler {
     watchOpts: WatchOptions
   ): Promise<SerializableResults | void> {
     if (!watchOpts.compile) return undefined;
-    // when files are removed, we need to remove the dist directories and the old symlinks, otherwise, it has
+    // when files are removed, we need to remove the stale dist files and the old symlinks, otherwise, it has
     // symlinks to non-exist files and the dist has stale files
-    const deleteDistDir = Boolean(removedFiles?.length);
-    if (removedFiles?.length) {
+    const hasRemovedFiles = Boolean(removedFiles?.length);
+    if (hasRemovedFiles) {
       await removeLinksFromNodeModules(component, this.workspace, removedFiles);
     }
     const buildResults = await this.compileComponents(
       [component.id.toString()],
       {
         initiator: watchOpts.initiator || CompilationInitiator.ComponentChanged,
-        deleteDistDir,
+        deleteDistDir: false,
         // when a file was removed (or a temp file of an atomic save), don't wipe the dist dir upfront. it makes dist
         // files disappear for the whole compilation time, which breaks the dev server that is reading them.
-        pruneStaleDist: deleteDistDir,
+        pruneStaleDist: hasRemovedFiles,
         generateTypes: watchOpts.generateTypes,
       },
       true
