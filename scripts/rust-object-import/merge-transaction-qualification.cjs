@@ -125,7 +125,10 @@ async function runQualification(cli, helper, options = {}) {
     assert.equal(options.modes, undefined, 'retained pairs require alternating Node/native order');
     assert.equal(options.rounds || 3, 3, 'one warmup and three retained pairs required');
   }
+  const nodeBaseline = options.nodeBaseline || 'object-helper';
+  assert.ok(['object-helper', 'javascript'].includes(nodeBaseline), 'unknown Node baseline');
   const fixtureDimensions = {
+    nodeBaseline,
     extraFiles: options.extraFiles || 0,
     scenarios: fixtureModule.scenarios
       .filter((item) => !options.scenarios || options.scenarios.includes(item.name))
@@ -262,7 +265,7 @@ async function runQualification(cli, helper, options = {}) {
     const commandEnv = {
       ...env,
       BIT_RUST_CLIENT_VCS: mode === 'node' ? 'off' : 'on',
-      BIT_RUST_OBJECT_IMPORT: executable,
+      BIT_RUST_OBJECT_IMPORT: mode === 'node' && nodeBaseline === 'javascript' ? 'off' : executable,
       BIT_CHECKOUT_TRANSITION_QUALIFICATION_SEED: hash(args.join('\0')),
       BIT_CHECKOUT_TRANSITION_QUALIFICATION_CLOCK: String(clock),
       BIT_CHECKOUT_TRANSITION_DISPLAY_DURATION: 'deterministic',
@@ -528,6 +531,7 @@ async function runQualification(cli, helper, options = {}) {
     qualified: !options.canonicalSmoke,
     comparison:
       'Raw artifacts retained; repository index entries, adjacent concurrent added/updated CLI rows, and complete VersionHistory rows in main-into-lane-clean are compared as multisets; all other output and state remain exact',
+    nodeBaseline,
     proofSha256,
     measurementScope: options.measure
       ? {

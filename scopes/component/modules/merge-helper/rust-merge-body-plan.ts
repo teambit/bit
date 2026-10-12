@@ -97,16 +97,20 @@ export function hasRustMergeBufferPrototypes(): boolean {
 
 /** Keep arbitrary metadata on the same alias, but never bypass a byte/serialization hook. */
 export function hasRustMergeBufferProperties(value: unknown): value is Buffer {
-  return Boolean(
-    value &&
-      typeof value === 'object' &&
-      !types.isProxy(value) &&
-      Object.getOwnPropertyDescriptor(Buffer, 'isBuffer')?.value === isBuffer &&
-      isBuffer(value) &&
-      Object.getPrototypeOf(value) === Buffer.prototype &&
-      Object.getOwnPropertySymbols(value).length === 0 &&
-      bufferProperties.every((name) => !Object.hasOwn(value, name))
-  );
+  if (
+    !value ||
+    typeof value !== 'object' ||
+    types.isProxy(value) ||
+    Object.getOwnPropertyDescriptor(Buffer, 'isBuffer')?.value !== isBuffer ||
+    !isBuffer(value) ||
+    Object.getPrototypeOf(value) !== Buffer.prototype ||
+    Object.getOwnPropertySymbols(value).length !== 0
+  )
+    return false;
+  for (let index = 0; index < bufferProperties.length; index++) {
+    if (Object.hasOwn(value, bufferProperties[index])) return false;
+  }
+  return true;
 }
 
 function matchingBodyAlias(value: unknown, body: RustMergeBody): value is Buffer {
@@ -174,23 +178,27 @@ function selectedBodyAlias(
 }
 
 function unchanged(snapshot: Snapshot): boolean {
-  if (types.isProxy(snapshot.object) || Object.getPrototypeOf(snapshot.object) !== snapshot.prototype) return false;
-  const keys = Reflect.ownKeys(snapshot.object);
-  return (
-    keys.length === snapshot.fields.length &&
-    snapshot.fields.every(({ key, descriptor: saved }) => {
-      const live = Object.getOwnPropertyDescriptor(snapshot.object, key);
-      return Boolean(
-        live &&
-          live.value === saved.value &&
-          live.get === saved.get &&
-          live.set === saved.set &&
-          live.writable === saved.writable &&
-          live.enumerable === saved.enumerable &&
-          live.configurable === saved.configurable
-      );
-    })
-  );
+  if (
+    types.isProxy(snapshot.object) ||
+    Object.getPrototypeOf(snapshot.object) !== snapshot.prototype ||
+    Reflect.ownKeys(snapshot.object).length !== snapshot.fields.length
+  )
+    return false;
+  for (let index = 0; index < snapshot.fields.length; index++) {
+    const { key, descriptor: saved } = snapshot.fields[index];
+    const live = Object.getOwnPropertyDescriptor(snapshot.object, key);
+    if (
+      !live ||
+      live.value !== saved.value ||
+      live.get !== saved.get ||
+      live.set !== saved.set ||
+      live.writable !== saved.writable ||
+      live.enumerable !== saved.enumerable ||
+      live.configurable !== saved.configurable
+    )
+      return false;
+  }
+  return true;
 }
 
 /** Record only our assembled public rows, including exact private lazy getter identities. */
@@ -245,7 +253,11 @@ export function rememberRustMergeResultBodyPlan(results: MergeResultsThreeWay, p
 /** Late Native Apply may extend the retained plan; callers cannot mutate already captured body records. */
 export function appendRustMergeBodyPlanBodies(results: MergeResultsThreeWay, additions: RustMergeBody[]): boolean {
   const plan = getRustMergeResultBodyPlan(results);
-  const snapshots = plan && bodySnapshots.get(plan);
+  return plan ? appendPlanBodies(plan, additions) : false;
+}
+
+function appendPlanBodies(plan: RustMergeBodyPlan, additions: RustMergeBody[]): boolean {
+  const snapshots = bodySnapshots.get(plan);
   if (
     !plan ||
     !snapshots ||
@@ -309,41 +321,94 @@ export function rustMergeBodyDescriptor(
   };
 }
 
+type BodySelection = {
+  files: Array<{
+    index: number;
+    planIndex: number;
+    relativePath: string;
+    aliasKind?: 'target' | 'current' | 'other' | 'new';
+    aliasIndex?: number;
+  }>;
+};
+type AppliedBodySelection = BodySelection['files'][number] & {
+  kind: 'target' | 'current' | 'other';
+  finalIndex: number;
+};
+
+/** Read retained public rows and attach bodies within one synchronous freshness boundary. */
+export function assembleRustMergeResultBodies(
+  results: MergeResultsThreeWay,
+  expected: RustMergeBodyPlan,
+  clones: SourceFile[],
+  selections: AppliedBodySelection[],
+  additions: RustMergeBody[]
+): SourceFile[] | undefined {
+  const plan = getRustMergeResultBodyPlan(results);
+  if (!plan || plan !== expected || !hasRustSnapshotTransactionClassFields(clones, 'Array', [])) return undefined;
+  const sourcesByPath = new Map<string, SourceFile>();
+  for (const rows of [
+    results.modifiedFiles,
+    results.addFiles,
+    results.deletedConflictFiles,
+    results.unModifiedFiles,
+    results.overrideFiles,
+  ]) {
+    for (const row of rows) {
+      if ('fsFile' in row && row.fsFile && !sourcesByPath.has(row.filePath))
+        sourcesByPath.set(row.filePath, row.fsFile);
+    }
+  }
+  const selected: SourceFile[] = [];
+  for (const row of selections) {
+    const file =
+      row.kind === 'target'
+        ? Object.getOwnPropertyDescriptor(clones, String(row.index))?.value
+        : sourcesByPath.get(row.relativePath);
+    if (!file) return undefined;
+    selected.push(file);
+  }
+  const selection = { files: selections.map((row) => ({ ...row, index: row.finalIndex })) };
+  return attachPlanBodies(plan, selected, selection, additions) ? selected : undefined;
+}
+
 /** The caller already executed clone/apply callbacks; preserve their exact returned SourceFile instances. */
 export function attachRustMergeResultBodies(
   results: MergeResultsThreeWay,
   files: SourceFile[],
-  selection: {
-    files: Array<{
-      index: number;
-      planIndex: number;
-      relativePath: string;
-      aliasKind?: 'target' | 'current' | 'other' | 'new';
-      aliasIndex?: number;
-    }>;
-  }
+  selection: BodySelection,
+  additions: RustMergeBody[] = []
 ): boolean {
   const plan = getRustMergeResultBodyPlan(results);
-  if (!plan || !hasRustSnapshotTransactionClassFields(files, 'Array', []) || files.length > 4096) return false;
+  return Boolean(plan && attachPlanBodies(plan, files, selection, additions));
+}
+
+function attachPlanBodies(
+  plan: RustMergeBodyPlan,
+  files: SourceFile[],
+  selection: BodySelection,
+  additions: RustMergeBody[]
+): boolean {
+  if (
+    !plan ||
+    !hasRustSnapshotTransactionClassFields(files, 'Array', []) ||
+    files.length > 4096 ||
+    !hasRustSnapshotTransactionClassFieldsBatch(files, 'SourceFile', [
+      'history',
+      '_base',
+      '_cwd',
+      'base',
+      'path',
+      'relative',
+    ]) ||
+    !appendPlanBodies(plan, additions)
+  )
+    return false;
   const patches: Array<{ file: SourceFile; body: RustMergeBody; alias?: Buffer }> = [];
   const bodiesByIndex = new Map(plan.bodies.map((body) => [body.planIndex, body]));
   for (const row of selection.files) {
     const file = Object.getOwnPropertyDescriptor(files, String(row.index))?.value;
     const body = bodiesByIndex.get(row.planIndex);
-    if (
-      !file ||
-      !body ||
-      types.isProxy(file) ||
-      !hasRustSnapshotTransactionClassFields(file, 'SourceFile', [
-        'history',
-        '_base',
-        '_cwd',
-        'base',
-        'path',
-        'relative',
-      ])
-    )
-      return false;
+    if (!file || !body || types.isProxy(file)) return false;
     const owned = getRustCheckoutPlanSourceDescriptor(file);
     const alias =
       Object.getOwnPropertyDescriptor(file, '_contents')?.value ??
@@ -362,11 +427,7 @@ export function attachRustMergeResultBodies(
               ? alias
               : undefined;
     if ((row.aliasKind === 'current' || row.aliasKind === 'other') && retained === undefined) return false;
-    if (
-      !canInstallRustCheckoutPlanSourceContents(file, rustMergeBodyDescriptor(plan, body), retained) ||
-      file.relative.replace(/\\/g, '/') !== row.relativePath
-    )
-      return false;
+    if (file.relative.replace(/\\/g, '/') !== row.relativePath) return false;
     patches.push({ file, body, ...(retained === undefined ? {} : { alias: retained }) });
   }
   if (

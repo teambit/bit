@@ -1,6 +1,10 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { validateMeasurementProof, measurementEntries, timedScenarios } = require('./merge-transaction-qualification.cjs');
+const {
+  validateMeasurementProof,
+  measurementEntries,
+  timedScenarios,
+} = require('./merge-transaction-qualification.cjs');
 
 test('measurement requires exact complete four-mode proof and fixture bindings', () => {
   const expected = {
@@ -8,7 +12,7 @@ test('measurement requires exact complete four-mode proof and fixture bindings',
     nativeSourceDigest: 'source',
     bindings: { driver: 'sha' },
     cliProvenance: { revision: 'production' },
-    fixtureDimensions: { extraFiles: 260, scenarios: ['log', 'missing'] },
+    fixtureDimensions: { nodeBaseline: 'object-helper', extraFiles: 260, scenarios: ['log', 'missing'] },
   };
   const proof = {
     ...expected,
@@ -33,6 +37,9 @@ test('measurement requires exact complete four-mode proof and fixture bindings',
     },
     (p) => {
       p.runs.pop();
+    },
+    (p) => {
+      p.fixtureDimensions.nodeBaseline = 'javascript';
     },
     (p) => {
       p.fixtureDimensions.extraFiles = 0;

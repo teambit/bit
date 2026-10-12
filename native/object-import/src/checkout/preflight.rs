@@ -58,7 +58,9 @@ fn read(
     use_cache: bool,
     budget: (usize, usize),
 ) -> io::Result<(Vec<u8>, usize)> {
-    if use_cache && let Some(body) = state.get(&request.directory, input.hash) {
+    if (use_cache || input.prefer_cached)
+        && let Some(body) = state.get(&request.directory, input.hash)
+    {
         if body.len() > budget.0 {
             return Err(invalid("checkout parallel Source share"));
         }

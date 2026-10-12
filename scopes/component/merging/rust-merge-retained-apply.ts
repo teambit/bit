@@ -6,8 +6,7 @@ import {
   type captureNativeMergeTarget,
   hasRustMergeRetainedBodyFunctions,
   getRustMergeResultBodyPlan,
-  attachRustMergeResultBodies,
-  appendRustMergeBodyPlanBodies,
+  assembleRustMergeResultBodies,
   FileStatus,
   type RustMergeBodyPlan,
   type RustMergeBody,
@@ -39,15 +38,6 @@ type Applied = {
   filesStatus: Array<{ relativePath: string; status: keyof typeof FileStatus }>;
   deferredError?: { phase: 'applyModified'; message: string };
 };
-function publicRows(results: MergeResultsThreeWay) {
-  return [
-    ...results.modifiedFiles,
-    ...results.addFiles,
-    ...results.deletedConflictFiles,
-    ...results.unModifiedFiles,
-    ...results.overrideFiles,
-  ];
-}
 // Keep complete wire and alias validation together before any public file mutation.
 // eslint-disable-next-line complexity
 function validApplied(data: any, clones: SourceFile[], plan: RustMergeBodyPlan, target: Target): data is Applied {
@@ -148,11 +138,11 @@ export async function applyRetainedRustMerge(
   target: Target,
   strategy: MergeStrategy | null | undefined
 ) {
-  const valid = () =>
+  const valid = (checkPlan = true) =>
     isRustMergeTransactionOperation() &&
     hasRustSnapshotFunctions(['MergeRetainedPublicGuard']) &&
     hasRustMergeRetainedBodyFunctions() &&
-    getRustMergeResultBodyPlan(results) === plan &&
+    (!checkPlan || getRustMergeResultBodyPlan(results) === plan) &&
     target.fresh() &&
     !types.isProxy(clones) &&
     hasRustSnapshotTransactionClassFields(clones, 'Array', []) &&
@@ -176,33 +166,10 @@ export async function applyRetainedRustMerge(
     },
     (data) => validApplied(data, clones, plan, target)
   );
-  if (!applied || !valid()) return undefined;
-  const rows = publicRows(results);
-  const files: SourceFile[] = [];
-  for (const selection of applied.files) {
-    const file =
-      selection.kind === 'target'
-        ? clones[selection.index]
-        : rows.find((row) => row.filePath === selection.relativePath && 'fsFile' in row && row.fsFile)?.fsFile;
-    if (!file) return undefined;
-    files.push(file);
-  }
-  // Retargeting may retain an additional current-head Source absent from the incoming/base plan.
-  const retainedIndices = new Set(plan.bodies.map((body) => body.planIndex));
-  const additions = applied.bodies.filter((body) => !retainedIndices.has(body.planIndex));
-  if (!appendRustMergeBodyPlanBodies(results, additions)) return undefined;
-  if (
-    !attachRustMergeResultBodies(results, files, {
-      files: applied.files.map((file) => ({
-        index: file.finalIndex,
-        planIndex: file.planIndex,
-        relativePath: file.relativePath,
-        aliasKind: file.aliasKind,
-        aliasIndex: file.aliasIndex,
-      })),
-    })
-  )
-    return undefined;
+  if (!applied || !valid(false)) return undefined;
+  // The assembler rechecks the retained plan before observing public rows, then attaches synchronously.
+  const files = assembleRustMergeResultBodies(results, plan, clones, applied.files, applied.bodies);
+  if (!files) return undefined;
   if (applied.deferredError) throw new BitError(applied.deferredError.message);
   const filesStatus: Record<string, string> = {};
   for (const row of applied.filesStatus) filesStatus[row.relativePath] = FileStatus[row.status];

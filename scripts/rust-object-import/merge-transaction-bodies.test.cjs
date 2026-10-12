@@ -258,3 +258,47 @@ test('private Buffer snapshots avoid prototype getters and decline changed byte 
   assert.equal(reads, 0);
   assert.equal(api.hasRustMergeBufferPrototypes(), true);
 });
+
+test('retarget additions and attachment share one freshness check and copy body metadata', () => {
+  assert.equal(typeof installed('@teambit/objects').Version, 'function');
+  const fixture = retained();
+  let checks = 0;
+  fixture.plan.valid = () => {
+    checks++;
+    return true;
+  };
+  api.rememberRustMergeResultBodyPlan(fixture.results, fixture.plan);
+  const addition = { planIndex: 1, spoolPath: '/owned/retarget', spoolHash: 'c'.repeat(40), bytes: 4 };
+  assert.equal(api.attachRustMergeResultBodies(fixture.results, [], { files: [] }, [addition]), true);
+  assert.equal(checks, 1);
+  addition.bytes = 5;
+  const plan = api.getRustMergeResultBodyPlan(fixture.results);
+  assert.equal(plan.bodies[1].bytes, 4);
+  const before = plan.bodies.slice();
+  let reads = 0;
+  const invalid = { ...addition, planIndex: 2 };
+  Object.defineProperty(invalid, 'bytes', {
+    get() {
+      reads++;
+      throw Error('must remain unread');
+    },
+  });
+  assert.equal(api.attachRustMergeResultBodies(fixture.results, [], { files: [] }, [invalid]), false);
+  assert.deepEqual(plan.bodies, before);
+  assert.equal(reads, 0);
+});
+
+test('combined assembly rechecks retained rows before observing a changed public accessor', () => {
+  const fixture = retained();
+  const expected = api.getRustMergeResultBodyPlan(fixture.results);
+  let reads = 0;
+  Object.defineProperty(fixture.row, 'filePath', {
+    configurable: true,
+    get() {
+      reads++;
+      throw Error('must remain unread');
+    },
+  });
+  assert.equal(api.assembleRustMergeResultBodies(fixture.results, expected, [], [], []), undefined);
+  assert.equal(reads, 0);
+});

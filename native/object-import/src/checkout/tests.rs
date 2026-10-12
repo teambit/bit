@@ -368,3 +368,5 @@ fn parallel_preflight_caches_every_ordered_raw_body_for_later_writes() {
         assert_eq!(fs::read(path).unwrap(), super::eol::auto(body));
     }
 }
+
+mod cached;

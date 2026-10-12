@@ -508,7 +508,8 @@ jobs:
           BIT_TEST_MATERIALIZATION_COMPILED=1 node --test scripts/rust-object-import/workspace-materialization.test.cjs scripts/rust-object-import/workspace-response.test.cjs
           node --test scripts/rust-object-import/workspace-persistence.test.cjs
           BIT_TEST_MATERIALIZATION_COMPILED=1 node --test scripts/rust-object-import/workspace-persistence.test.cjs
-          node --test scripts/rust-object-import/rust-checkout-source.test.cjs scripts/rust-object-import/checkout.test.cjs
+          node --test scripts/rust-object-import/rust-checkout-source.test.cjs scripts/rust-object-import/checkout-source-cache.test.cjs scripts/rust-object-import/checkout.test.cjs
+          BIT_TEST_CHECKOUT_SOURCE_COMPILED=1 node --test scripts/rust-object-import/checkout-source-cache.test.cjs
           BIT_TEST_CHECKOUT_COMPILED=1 node --test scripts/rust-object-import/checkout.test.cjs
           node --test scripts/rust-object-import/workspace-comparison.test.cjs
           BIT_TEST_WORKSPACE_COMPARISON_COMPILED=1 node --test scripts/rust-object-import/workspace-comparison.test.cjs

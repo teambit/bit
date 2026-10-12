@@ -79,7 +79,11 @@ const nativeDump = LRUCache.prototype.dump;
 const nativeUnshift = Array.prototype.unshift;
 
 /** Read object aliases without changing the LRU order or observing expiry callbacks. */
-export function captureRustCacheEntries(cache: InMemoryCache<{}>): Array<[string, object]> | undefined {
+export function captureRustCacheEntries(cache: InMemoryCache<{}>, keys?: string[]): Array<[string, object]> | undefined {
+  if (keys) {
+    const values = lookupRustCacheEntries(cache, keys);
+    return values?.flatMap((entry, index) => entry.value ? [[keys[index], entry.value] as [string, object]] : []);
+  }
   if (types.isProxy(cache) || !canReadCacheNatively(cache)) return undefined;
   const inner = Object.getOwnPropertyDescriptor(cache, 'cache')?.value;
   if (
@@ -127,6 +131,11 @@ const nativeMapGet = Map.prototype.get;
 
 /** Inspect one alias without promoting it or allocating a dump of the entire LRU. */
 export function lookupRustCacheEntry(cache: InMemoryCache<{}>, key: string): { value?: object } | undefined {
+  return lookupRustCacheEntries(cache, [key])?.[0];
+}
+
+/** Validate the shared LRU once, then inspect only the requested aliases without promotion. */
+function lookupRustCacheEntries(cache: InMemoryCache<{}>, keys: string[]): Array<{ value?: object }> | undefined {
   if (
     types.isProxy(cache) ||
     !canReadCacheNatively(cache) ||
@@ -149,15 +158,20 @@ export function lookupRustCacheEntry(cache: InMemoryCache<{}>, key: string): { v
       types.isProxy(fields.valList)
     )
       return undefined;
-    const index = nativeMapGet.call(fields.keyMap, key);
-    if (index === undefined) return {};
-    if (!Number.isSafeInteger(index) || index < 0) return undefined;
-    const entry = Object.getOwnPropertyDescriptor(fields.valList, String(index));
-    if (!entry || !('value' in entry)) return undefined;
-    const value = entry.value;
-    if (value === undefined) return {};
-    // Background fetch promises have separate alias semantics; never inspect their properties.
-    return value && typeof value === 'object' && !types.isPromise(value) ? { value } : undefined;
+    const result: Array<{ value?: object }> = [];
+    for (const key of keys) {
+      const index = nativeMapGet.call(fields.keyMap, key);
+      if (index === undefined) { result.push({}); continue; }
+      if (!Number.isSafeInteger(index) || index < 0) return undefined;
+      const entry = Object.getOwnPropertyDescriptor(fields.valList, String(index));
+      if (!entry || !('value' in entry)) return undefined;
+      const value = entry.value;
+      if (value === undefined) { result.push({}); continue; }
+      // Background fetch promises have separate alias semantics; never inspect their properties.
+      if (!value || typeof value !== 'object' || types.isPromise(value)) return undefined;
+      result.push({ value });
+    }
+    return result;
   } catch {
     return undefined;
   }

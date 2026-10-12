@@ -88,7 +88,7 @@ function unchanged(defaults: ClassDefaults): boolean {
 /** Pure descriptor checks do not invoke getters or custom methods during speculative planning. */
 function hasClassFields(value: unknown, name: string, fields?: ReadonlySet<string>): boolean {
   const defaults = classes?.get(name);
-  return Boolean(defaults && unchanged(defaults) && hasInstanceFields(value, defaults, fields));
+  return Boolean(defaults && hasInstanceFields(value, defaults, fields) && unchanged(defaults));
 }
 
 function hasInstanceFields(value: unknown, defaults: ClassDefaults, fields?: ReadonlySet<string>): boolean {

@@ -63,6 +63,7 @@ registerRustSnapshotFunctions('CheckoutPublicApplyGuard', checkoutPublicApply, [
 export {
   getRustMergeResultBodyPlan,
   attachRustMergeResultBodies,
+  assembleRustMergeResultBodies,
   appendRustMergeBodyPlanBodies,
   withRustMergeBodyPlanIndex,
 } from './rust-merge-body-plan';
@@ -75,6 +76,7 @@ const mergeRetainedNames = [
   'captureNativeMergeTarget',
   'getRustMergeResultBodyPlan',
   'attachRustMergeResultBodies',
+  'assembleRustMergeResultBodies',
   'appendRustMergeBodyPlanBodies',
   'withRustMergeBodyPlanIndex',
 ];

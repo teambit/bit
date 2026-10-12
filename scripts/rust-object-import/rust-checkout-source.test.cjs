@@ -209,10 +209,10 @@ test('preflight validates all source batches and leaves its session scope withou
     if (previousFlag === undefined) delete process.env.BIT_RUST_CLIENT_VCS;
     else process.env.BIT_RUST_CLIENT_VCS = previousFlag;
   });
-  const models = Array.from({ length: 65 }, (_, index) => ({ ...fixtureData.model, relativePath: `${index}.js` }));
+  const models = Array.from({ length: 257 }, (_, index) => ({ ...fixtureData.model, relativePath: `${index}.js` }));
   const files = await adapter.prepareRustCheckoutSources(models, fixtureData.repository);
-  assert.equal(files.length, 65);
-  assert.deepEqual(counts, [64, 1]);
+  assert.equal(files.length, 257);
+  assert.deepEqual(counts, [256, 1]);
   assert.equal(released, 1);
   assert.equal(fixtureData.reads(), 0);
   persistence.withWorkspaceSession = async (action) => {

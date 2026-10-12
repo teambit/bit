@@ -54,7 +54,11 @@ const nativeEntriesForEach = Map.prototype.forEach;
 const nativeWeakDeref = WeakRef.prototype.deref;
 
 /** Snapshot weak aliases without resurrecting them into the strong LRU cache. */
-export function captureRustLiveObjects(live: LiveObjects): Array<[string, BitObject]> | undefined {
+export function captureRustLiveObjects(live: LiveObjects, keys?: string[]): Array<[string, BitObject]> | undefined {
+  if (keys) {
+    const values = lookupRustLiveObjects(live, keys);
+    return values?.flatMap((entry, index) => entry.value ? [[keys[index], entry.value] as [string, BitObject]] : []);
+  }
   if (types.isProxy(live) || !canReadLiveObjectsNatively(live)) return undefined;
   const entries = Object.getOwnPropertyDescriptor(live, 'entries')?.value;
   if (
@@ -106,6 +110,10 @@ export function canReadLiveObjectsNatively(live: LiveObjects): boolean {
 
 /** Look up one surviving weak alias without visiting or resurrecting unrelated entries. */
 export function lookupRustLiveObject(live: LiveObjects, key: string): { value?: BitObject } | undefined {
+  return lookupRustLiveObjects(live, [key])?.[0];
+}
+
+function lookupRustLiveObjects(live: LiveObjects, keys: string[]): Array<{ value?: BitObject }> | undefined {
   if (
     types.isProxy(live) ||
     !canReadLiveObjectsNatively(live) ||
@@ -115,8 +123,10 @@ export function lookupRustLiveObject(live: LiveObjects, key: string): { value?: 
   const entries = Object.getOwnPropertyDescriptor(live, 'entries')?.value;
   if (types.isProxy(entries)) return undefined;
   try {
+    const result: Array<{ value?: BitObject }> = [];
+    for (const key of keys) {
     const entry = nativeEntriesGet.call(entries, key);
-    if (entry === undefined) return {};
+    if (entry === undefined) { result.push({}); continue; }
     if (
       !entry ||
       typeof entry !== 'object' ||
@@ -134,7 +144,9 @@ export function lookupRustLiveObject(live: LiveObjects, key: string): { value?: 
       Reflect.ownKeys(fields).some((field) => !('value' in Reflect.get(fields, field)))
     )
       return undefined;
-    return { value: nativeWeakDeref.call(ref) };
+    result.push({ value: nativeWeakDeref.call(ref) });
+    }
+    return result;
   } catch {
     return undefined;
   }

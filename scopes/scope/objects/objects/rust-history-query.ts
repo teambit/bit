@@ -103,18 +103,18 @@ function ordinaryObjectMap(value: unknown): boolean {
 }
 
 /** Pending objects precede strong cache entries, which precede surviving weak aliases. */
-export function captureRustHistoryQueryObjects(repository: Repository): Array<[string, object]> | undefined {
+export function captureRustHistoryQueryObjects(repository: Repository, hashes?: string[]): Array<[string, object]> | undefined {
   if (!canUseRustHistoryQueryRepository(repository)) return undefined;
   const fields = Object.getOwnPropertyDescriptors(repository);
-  const strong = captureRustCacheEntries(fields.cache.value);
-  const weak = captureRustLiveObjects(fields.liveObjects.value);
+  const strong = captureRustCacheEntries(fields.cache.value, hashes);
+  const weak = captureRustLiveObjects(fields.liveObjects.value, hashes);
   if (!strong || !weak) return undefined;
   const result: Array<[string, object]> = [];
   const seen = new Set<string>();
   const pending = Object.getOwnPropertyDescriptors(fields.objects.value);
-  for (const key of Reflect.ownKeys(pending)) {
+  for (const key of hashes || Reflect.ownKeys(pending)) {
     if (typeof key !== 'string') return undefined;
-    const value = Reflect.get(pending, key).value;
+    const value = Reflect.get(pending, key)?.value;
     if (!value) continue;
     if (typeof value !== 'object') return undefined;
     result[result.length] = [key, value];

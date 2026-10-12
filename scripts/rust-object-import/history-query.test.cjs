@@ -919,3 +919,25 @@ test('repository descriptor guards reject flags, accessors and extra symbols wit
   assert.equal(reads, 0);
   assert.equal(api.canUseRustHistoryQueryRepository(repository), true);
 });
+
+test('requested Source batches preserve cache precedence without dumping or inspecting unrelated weak aliases', () => {
+  const query = installed('@teambit/objects/dist/objects/rust-history-query.js');
+  const { Repository, Source } = installed('@teambit/objects');
+  const repository = new Repository(path.join(require('node:os').tmpdir(), 'source-cache-batch'), {});
+  const first = Source.from(Buffer.from('first')), second = Source.from(Buffer.from('second'));
+  const key = first.hash().toString();
+  repository.setCache(first); repository.setCache(second);
+  const order = repository.cache.keys();
+  let reads = 0;
+  Object.defineProperty(repository.cache.cache, 'dump', { configurable: true, get() { reads++; throw Error('no dump'); } });
+  repository.liveObjects.entries.set('unrelated', { get ref() { reads++; throw Error('unrelated'); } });
+  assert.deepEqual(query.captureRustHistoryQueryObjects(repository, [key, 'f'.repeat(40)]), [[key, first]]);
+  assert.deepEqual(repository.cache.keys(), order);
+  repository.objects[key] = second;
+  assert.deepEqual(query.captureRustHistoryQueryObjects(repository, [key]), [[key, second]]);
+  delete repository.objects[key]; repository.cache.delete(key);
+  const evicted = repository.cache.keys();
+  assert.deepEqual(query.captureRustHistoryQueryObjects(repository, [key]), [[key, first]]);
+  assert.deepEqual(repository.cache.keys(), evicted);
+  assert.equal(reads, 0);
+});
