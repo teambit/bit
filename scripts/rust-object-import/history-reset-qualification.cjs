@@ -230,6 +230,15 @@ async function runQualification(cli, helper, options = {}) {
   assert.ok(componentEntry && dependencyEntry, 'both genuine imported components must be tracked');
   const roots = [componentEntry.rootDir, dependencyEntry.rootDir];
   const runs = [];
+  const baselineStages = [];
+  const rawStageArtifacts = [];
+  const rawStageDirectory = options.omitStates
+    ? path.resolve(options.report ? options.report + '.states' : path.join(temporary, 'raw-stages'))
+    : undefined;
+  if (rawStageDirectory) {
+    assert.ok(!rawStageDirectory.startsWith(repository + path.sep), 'raw evidence must stay outside the checkout');
+    await fs.mkdir(rawStageDirectory, { recursive: true });
+  }
   const runEntries = options.measure
     ? pairedEntries(options.rounds || 3, options.modes).filter(
         (entry) => options.diagnostics !== false || !entry.fallback
@@ -266,7 +275,15 @@ async function runQualification(cli, helper, options = {}) {
         await fs.writeFile(
           options.report + '.progress',
           JSON.stringify(
-            { qualified: false, temporary, scenario: scenario.name, before: comparable(before), result, runs, stages },
+            {
+              qualified: false,
+              temporary,
+              scenario: scenario.name,
+              before: options.omitStates ? { sha256: hash(JSON.stringify(before)) } : comparable(before),
+              result,
+              runs,
+              stages,
+            },
             null,
             2
           )
@@ -292,7 +309,7 @@ async function runQualification(cli, helper, options = {}) {
         assert.equal(after.bitmap, before.bitmap, 'failed persistence must not execute the later bitmap write');
       }
       const status = await command(directory, ['status', '--json'], mode);
-      stages.push({
+      const stage = {
         scenario: scenario.name,
         args: scenario.command,
         result,
@@ -300,7 +317,24 @@ async function runQualification(cli, helper, options = {}) {
         before: comparable(before),
         after: comparable(after),
         rawIndex: { before: before.index, after: after.index },
-      });
+      };
+      const stageIndex = stages.length;
+      const comparableStage = ({ rawIndex, ...value }) => value;
+      if (entryIndex === 0) baselineStages.push(stage);
+      else
+        assert.deepEqual(
+          comparableStage(stage),
+          comparableStage(baselineStages[stageIndex]),
+          `${mode} ${scenario.name} exact command/error/partial-state parity`
+        );
+      if (options.omitStates) {
+        const bytes = JSON.stringify(stage);
+        const artifact = path.join(rawStageDirectory, `${entryIndex}-${mode}-${scenario.name}.json`);
+        await fs.writeFile(artifact, bytes + '\n');
+        const sha256 = hash(bytes + '\n');
+        rawStageArtifacts.push({ artifact, sha256 });
+        stages.push({ scenario: stage.scenario, sha256, artifact, rawIndex: stage.rawIndex });
+      } else stages.push(stage);
     }
     if (runs.length) {
       if (options.report)
@@ -308,12 +342,6 @@ async function runQualification(cli, helper, options = {}) {
           options.report + '.partial',
           JSON.stringify({ qualified: false, temporary, diagnostics, runs: [...runs, { mode, stages }] }, null, 2)
         );
-      const comparableStages = (items) => items.map(({ rawIndex, ...stage }) => stage);
-      assert.deepEqual(
-        comparableStages(stages),
-        comparableStages(runs[0].stages),
-        `${mode} exact history-reset command/error/partial-state parity`
-      );
     }
     runs.push({ ...entry, stages, measurements: measurements.slice(measurementStart) });
   }
@@ -323,6 +351,8 @@ async function runQualification(cli, helper, options = {}) {
       ? priorProof.acceptance
       : validateHistoryResetDiagnostics(diagnostics);
   await verify();
+  for (const { artifact, sha256 } of rawStageArtifacts)
+    assert.equal(hash(await fs.readFile(artifact)), sha256, 'raw stage evidence changed after comparison');
   const report = {
     qualified: !options.canonicalSmoke,
     fixtureDimensions,
@@ -336,19 +366,12 @@ async function runQualification(cli, helper, options = {}) {
     proofSha256,
     comparison:
       'Exact raw public outputs, object bodies, bitmap/config/history/pending/workspace state; only scope-index component/lane row order is compared semantically, with raw index bytes retained.',
-    actualWorkspaceSourceFiles: Object.values(runs[0].stages[0].before.roots).reduce(
+    actualWorkspaceSourceFiles: Object.values(baselineStages[0].before.roots).reduce(
       (count, files) => count + Object.keys(files).length,
       0
     ),
     runs,
   };
-  if (options.omitStates)
-    for (const run of report.runs)
-      run.stages = run.stages.map((stage) => ({
-        scenario: stage.scenario,
-        sha256: hash(JSON.stringify(stage)),
-        rawIndex: stage.rawIndex,
-      }));
   if (options.report) await fs.writeFile(options.report, JSON.stringify(report, null, 2) + '\n');
   return report;
 }
