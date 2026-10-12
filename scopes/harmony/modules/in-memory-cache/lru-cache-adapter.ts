@@ -1,6 +1,7 @@
 import { LRUCache } from 'lru-cache';
 import type { InMemoryCache, CacheOptions } from './in-memory-cache';
 import { WeakValues } from './weak-values';
+import { types } from 'util';
 
 export class LRUCacheAdapter<T extends {} = any> implements InMemoryCache<T> {
   private cache: LRUCache<string, T>;
@@ -74,6 +75,29 @@ export class LRUCacheAdapter<T extends {} = any> implements InMemoryCache<T> {
 
 const nativeAdapterMethods = ['get', 'set'].map((name) => [name, LRUCacheAdapter.prototype[name]] as const);
 const nativeLruMethods = ['get', 'set', 'has', 'delete'].map((name) => [name, LRUCache.prototype[name]] as const);
+const nativeDump = LRUCache.prototype.dump;
+const nativeUnshift = Array.prototype.unshift;
+
+/** Read object aliases without changing the LRU order or observing expiry callbacks. */
+export function captureRustCacheEntries(cache: InMemoryCache<{}>): Array<[string, object]> | undefined {
+  if (types.isProxy(cache) || !canReadCacheNatively(cache)) return undefined;
+  const inner = Object.getOwnPropertyDescriptor(cache, 'cache')?.value;
+  if (
+    types.isProxy(inner) ||
+    (Object.getOwnPropertyDescriptor(inner, 'dump') || Object.getOwnPropertyDescriptor(LRUCache.prototype, 'dump'))?.value !== nativeDump ||
+    Object.getOwnPropertyDescriptor(Array.prototype, 'unshift')?.value !== nativeUnshift ||
+    Object.getOwnPropertyDescriptor(inner, 'ttl')?.value !== 0
+  ) return undefined;
+  const dumped = nativeDump.call(inner);
+  if (dumped.length > 4096) return undefined;
+  const result: Array<[string, object]> = [];
+  for (let index = 0; index < dumped.length; index++) {
+    const [key, entry] = dumped[index];
+    if (typeof key !== 'string' || entry.ttl || !entry.value || typeof entry.value !== 'object') return undefined;
+    result[index] = [key, entry.value];
+  }
+  return result;
+}
 /** Native metadata readers must not call custom cache hooks speculatively. */
 export function canReadCacheNatively(cache: InMemoryCache<{}>): boolean {
   if (!cache || Object.getPrototypeOf(cache) !== LRUCacheAdapter.prototype) return false;

@@ -11,6 +11,7 @@ const versionClasses = new WeakSet();
 const asyncTypes = new Map();
 const metrics = {
   schemaVersion: 1,
+  frameworkObservation: process.env.BIT_IMPORT_TRACE_QUERY_ONLY === '1' ? 'disabled' : 'legacy-class-observer',
   stages: {},
   asyncResources: {},
   objectTypes: {},
@@ -100,6 +101,14 @@ const metrics = {
       'historyResetLaneHistory',
       'historyResetSoft',
       'historyResetNeverExported',
+      'historyQueryBegin',
+      'historyQueryFiles',
+      'historyQueryBlame',
+      'historyQueryDiff',
+      'historyQueryFinish',
+      'historyQueryPopulateBegin',
+      'historyQueryShow',
+      'historyQueryToposort',
     ].map((kind) => [
       kind,
       {
@@ -110,13 +119,17 @@ const metrics = {
         ...(kind.startsWith('snapshot') ||
         kind.startsWith('inspection') ||
         kind.startsWith('checkout') ||
-        kind.startsWith('historyReset')
+        kind.startsWith('historyReset') ||
+        kind.startsWith('historyQuery')
           ? { helperIds: [] }
           : {}),
         ...(kind.startsWith('checkout') || kind.startsWith('historyReset')
           ? { tokens: [], sourceBodyBytes: 0, snapshotBytes: 0, stepsCompleted: 0, dataFailed: 0 }
           : {}),
         ...(kind.startsWith('historyReset') ? { phases: [], children: [] } : {}),
+        ...(kind.startsWith('historyQuery')
+          ? { tokens: [], sourceBodyBytes: 0, publicContentBytes: 0, verifiedReads: [] }
+          : {}),
         ...(kind.startsWith('inspection')
           ? { snapshotBytes: 0, sourceBodyBytes: 0, publicContentBytes: 0, tokens: [] }
           : {}),
@@ -216,7 +229,9 @@ if (output && process.pid === owner) {
             metric.tokens.push({ token: operation.token, helperId: workspaceId });
           if (
             magic === 'BMT1' &&
-            (operation.kind.startsWith('checkout') || operation.kind.startsWith('historyReset'))
+            (operation.kind.startsWith('checkout') ||
+              operation.kind.startsWith('historyReset') ||
+              operation.kind.startsWith('historyQuery'))
           ) {
             if (operation.token) metric.tokens.push({ token: operation.token, helperId: workspaceId });
             if (operation.kind.startsWith('historyReset') && operation.phase)
@@ -343,6 +358,20 @@ if (output && process.pid === owner) {
         try {
           const response = JSON.parse(pending.slice(0, newline));
           metric.completed += response.completed || 0;
+          if (magic?.startsWith('BMT1:historyQuery') && response.completed > 0 && !response.failed) {
+            if (response.data?.token) metric.tokens.push({ token: response.data.token, helperId: workspaceId });
+            if (response.data?.reads) metric.verifiedReads.push({ ...response.data.reads, helperId: workspaceId });
+            for (const row of [
+              ...(response.data?.rows || []),
+              ...(response.data?.lines || []),
+              ...(response.data?.files || []),
+            ])
+              for (const key of ['fromContent', 'toContent', 'lineContent', 'previousLineContent', 'rawDiff'])
+                if (typeof row[key] === 'string') metric.publicContentBytes += Buffer.byteLength(row[key]);
+            for (const key of ['fromContent', 'toContent'])
+              if (typeof response.data?.[key] === 'string')
+                metric.publicContentBytes += Buffer.byteLength(response.data[key]);
+          }
           if (magic === 'BMT1:snapshotCommit') {
             metric.stepsCompleted += response.data?.completed || 0;
             metric.dataFailed += Number(response.data?.failed === true);
@@ -501,6 +530,7 @@ Module._load = function (request, parent, isMain) {
   const value = originalLoad.apply(this, arguments);
   if (
     !output ||
+    process.env.BIT_IMPORT_TRACE_QUERY_ONLY === '1' ||
     process.pid !== owner ||
     !/objects|scope|version|repositories|component.*merger|remote-lanes|source-validator|object-importer|rust-tar/.test(
       request

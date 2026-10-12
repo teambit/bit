@@ -6,6 +6,7 @@ import { diffFiles } from './diff-files';
 import type { PathOsBased } from '@teambit/toolbox.path.path';
 import { getRustFilesDiff, type SourceFile } from '@teambit/component.sources';
 import { getGitExecutablePath } from '@teambit/git.modules.git-executable';
+import { registerRustSnapshotFunctionReference } from '@teambit/objects';
 
 export type DiffStatus = 'MODIFIED' | 'UNCHANGED' | 'NEW' | 'DELETED';
 
@@ -46,7 +47,7 @@ export async function getOneFileDiff(
   return formatFileDiff(fileDiff, fileALabel, fileBLabel, fileOrFieldName);
 }
 
-function formatFileDiff(fileDiff: string, fileALabel: string, fileBLabel: string, fileOrFieldName: string): string {
+export function formatFileDiff(fileDiff: string, fileALabel: string, fileBLabel: string, fileOrFieldName: string): string {
   if (!fileDiff) return '';
   const diffStartsString = '--- '; // the part before this string is not needed for our purpose
   const diffStart = fileDiff.indexOf(diffStartsString);
@@ -253,3 +254,6 @@ export function outputDiffResultsFormatted(diffResults: DiffResults[], opts: Dif
   if (opts.stat) return outputDiffResultsStat(filtered);
   return outputDiffResults(filtered);
 }
+
+registerRustSnapshotFunctionReference('HistoryQueryPublicFilesDiff', getFilesDiff);
+registerRustSnapshotFunctionReference('HistoryQueryFormatFilesDiff', formatFileDiff);

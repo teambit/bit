@@ -10,6 +10,7 @@ on:
       - 'scopes/component/checkout/**'
       - 'scopes/component/snapping/**'
       - 'scopes/component/status/**'
+      - 'scopes/component/component-log/**'
       - 'scopes/component/component-compare/**'
       - 'scopes/workspace/workspace/**'
       - 'scopes/harmony/api-server/**'
@@ -18,6 +19,9 @@ on:
       - 'components/legacy/consumer-component/**'
       - 'components/legacy/component-diff/**'
       - 'scopes/scope/importer/**'
+      - 'scopes/scope/version-history/**'
+      - 'scopes/harmony/modules/in-memory-cache/**'
+      - 'scopes/git/modules/git-executable/**'
       - 'components/legacy/scope/objects-fetcher/**'
       - 'scopes/scope/objects/objects/repository.ts'
       - 'scopes/scope/objects/objects/object.ts'
@@ -27,6 +31,9 @@ on:
       - 'scopes/scope/objects/objects/rust-object-package.ts'
       - 'scopes/scope/objects/objects/rust-object-discovery.ts'
       - 'scopes/scope/objects/objects/rust-object-operation.ts'
+      - 'scopes/scope/objects/objects/rust-history-query*.ts'
+      - 'scopes/scope/objects/objects/live-objects.ts'
+      - 'scopes/scope/objects/objects/rust-snapshot-guards.ts'
       - 'scopes/scope/objects/objects/scope-index.ts'
       - 'scopes/scope/objects/models/**'
       - 'components/legacy/scope/component-ops/*component*merger.ts'
@@ -36,6 +43,7 @@ on:
       - 'scopes/scope/scope/scope.main.runtime.ts'
       - 'scripts/rust-object-import/**'
       - 'docs/rust-object-import/**'
+      - 'docs/rust/client-history-query.md'
       - 'scripts/rust/**'
       - 'scripts/rust-dependency-analysis/discovery*'
       - '.circleci/config.yml'
@@ -66,6 +74,7 @@ on:
       - 'scopes/component/checkout/**'
       - 'scopes/component/snapping/**'
       - 'scopes/component/status/**'
+      - 'scopes/component/component-log/**'
       - 'scopes/component/component-compare/**'
       - 'scopes/workspace/workspace/**'
       - 'scopes/harmony/api-server/**'
@@ -74,6 +83,9 @@ on:
       - 'components/legacy/consumer-component/**'
       - 'components/legacy/component-diff/**'
       - 'scopes/scope/importer/**'
+      - 'scopes/scope/version-history/**'
+      - 'scopes/harmony/modules/in-memory-cache/**'
+      - 'scopes/git/modules/git-executable/**'
       - 'components/legacy/scope/objects-fetcher/**'
       - 'scopes/scope/objects/objects/repository.ts'
       - 'scopes/scope/objects/objects/object.ts'
@@ -83,6 +95,9 @@ on:
       - 'scopes/scope/objects/objects/rust-object-package.ts'
       - 'scopes/scope/objects/objects/rust-object-discovery.ts'
       - 'scopes/scope/objects/objects/rust-object-operation.ts'
+      - 'scopes/scope/objects/objects/rust-history-query*.ts'
+      - 'scopes/scope/objects/objects/live-objects.ts'
+      - 'scopes/scope/objects/objects/rust-snapshot-guards.ts'
       - 'scopes/scope/objects/objects/scope-index.ts'
       - 'scopes/scope/objects/models/**'
       - 'components/legacy/scope/component-ops/*component*merger.ts'
@@ -92,6 +107,7 @@ on:
       - 'scopes/scope/scope/scope.main.runtime.ts'
       - 'scripts/rust-object-import/**'
       - 'docs/rust-object-import/**'
+      - 'docs/rust/client-history-query.md'
       - 'scripts/rust/**'
       - 'scripts/rust-dependency-analysis/discovery*'
       - '.circleci/config.yml'
@@ -513,4 +529,10 @@ jobs:
           BIT_TEST_HISTORY_RESET_COMPILED=1 node --test scripts/rust-object-import/history-reset-adapters.test.cjs
           node --test scripts/rust-object-import/history-reset-children.test.cjs
           BIT_TEST_HISTORY_RESET_COMPILED=1 node --test scripts/rust-object-import/history-reset-children.test.cjs
+          node --test scripts/rust-object-import/history-query.test.cjs
+          BIT_TEST_HISTORY_QUERY_COMPILED=1 node --test scripts/rust-object-import/history-query.test.cjs
+          node --test scripts/rust-object-import/history-query-graph.test.cjs
+          BIT_TEST_HISTORY_QUERY_COMPILED=1 node --test scripts/rust-object-import/history-query-graph.test.cjs
+          node --test scripts/rust-object-import/history-query-validation.test.cjs
+          node --test scripts/rust-object-import/history-query-measurement.test.cjs
           node scripts/rust-object-import/canonical-model-tests.cjs

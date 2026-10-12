@@ -1,11 +1,12 @@
 import { Graph, Edge, Node } from '@teambit/graph.cleargraph';
 import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
-import { compact, difference, uniqBy } from 'lodash';
+import lodash, { compact, difference, uniqBy } from 'lodash';
 import { getStringifyArgs } from '@teambit/legacy.utils';
 import Ref from '../objects/ref';
 import { BitObject } from '../objects';
 import { registerRustSnapshotFunctions } from '../objects/rust-snapshot-guards';
+import { registerRustHistoryQueryGraphDefaults } from '../objects/rust-history-query-graph';
 import type Version from './version';
 import { getVersionParentsFromVersion } from '@teambit/component.snap-distance';
 import type ModelComponent from './model-component';
@@ -303,6 +304,7 @@ export function versionParentsToGraph(versions: VersionParents[]): Graph<string,
 }
 
 registerRustSnapshotFunctions('SnapshotHistoryObject', Object, ['values']);
+registerRustHistoryQueryGraphDefaults(Graph, Node, Edge, lodash);
 
 const nativeHistoryMethods = ['getVersionData', 'hasHash', 'addFromVersionsObjects', 'addFromVersionParents'].map(
   (name) => [name, VersionHistory.prototype[name]] as const

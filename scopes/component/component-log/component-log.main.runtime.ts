@@ -10,11 +10,10 @@ import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
 import { compact } from 'lodash';
 import pMapSeries from 'p-map-series';
-import type { Source, Version } from '@teambit/objects';
-import { Ref } from '@teambit/objects';
+import { Ref, withRustHistoryQueryOperation, isRustHistoryQueryOperation, captureRustHistoryFileVersion, getRustHistoryFileLineage, getRustHistoryBlame, getRustHistoryFileDiff, getRustHistoryQueryGraphOrder, type Source, type Version, type HistoryFileCapture } from '@teambit/objects';
 import type { PathOsBased, PathOsBasedAbsolute } from '@teambit/toolbox.path.path';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
-import { getFilesDiff } from '@teambit/legacy.component-diff';
+import { getFilesDiff, formatFileDiff } from '@teambit/legacy.component-diff';
 import chalk from 'chalk';
 import { getRemoteByName } from '@teambit/scope.remotes';
 import { diffLines } from 'diff';
@@ -70,6 +69,11 @@ export class ComponentLogMain {
    * get component log sorted by the timestamp in ascending order (from the earliest to the latest)
    */
   async getLogs(id: string, options: LogOpts = {}): Promise<ComponentLog[]> {
+    if (options.isRemote) return this.getLogsWithinOperation(id, options);
+    return withRustHistoryQueryOperation(() => this.getLogsWithinOperation(id, options));
+  }
+
+  private async getLogsWithinOperation(id: string, options: LogOpts): Promise<ComponentLog[]> {
     const { isRemote = false, shortHash = false, shortMessage = false } = options;
     if (isRemote) {
       const consumer = this.workspace?.consumer;
@@ -96,9 +100,13 @@ export class ComponentLogMain {
   }
 
   async getLogsWithParents(id: string, options: LogOpts) {
+    return withRustHistoryQueryOperation(() => this.getLogsWithParentsWithinOperation(id, options));
+  }
+
+  private async getLogsWithParentsWithinOperation(id: string, options: LogOpts) {
     const logs = await this.getLogs(id, options);
     const graph = buildSnapGraph(logs);
-    const sorted = graph.toposort();
+    const sorted = (isRustHistoryQueryOperation() && await getRustHistoryQueryGraphOrder(graph)) || graph.toposort();
     return sorted.map((node) => this.stringifyLogInfoOneLine(node.attr));
   }
 
@@ -143,6 +151,10 @@ export class ComponentLogMain {
   }
 
   async getFileHistoryHashes(filePath: PathOsBasedAbsolute): Promise<FileLog[]> {
+    return withRustHistoryQueryOperation(() => this.getFileHistoryHashesWithinOperation(filePath));
+  }
+
+  private async getFileHistoryHashesWithinOperation(filePath: PathOsBasedAbsolute): Promise<FileLog[]> {
     const workspace = this.workspace;
     if (!workspace) throw new OutsideWorkspaceError();
     const componentId = await workspace.getComponentIdByPath(filePath);
@@ -161,10 +173,17 @@ export class ComponentLogMain {
     const modelComp = await workspace.scope.getBitObjectModelComponent(componentId);
     if (!modelComp) return []; // probably a new component
     const results: FileLog[] = [];
+    const fileCaptures: HistoryFileCapture[] = [];
+    let fileCaptureEligible = isRustHistoryQueryOperation();
     await pMap(
       logs,
       async (logItem) => {
         const versionObj = await workspace.scope.getBitObjectVersion(modelComp, logItem.hash, true);
+        if (fileCaptureEligible) {
+          const versionCapture = versionObj && captureRustHistoryFileVersion(versionObj);
+          if (versionCapture) fileCaptures.push(versionCapture);
+          else fileCaptureEligible = false;
+        }
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const fileInComp = versionObj!.files.find((f) => f.relativePath === filePathRelativeInComponent);
         if (!fileInComp) return;
@@ -173,6 +192,11 @@ export class ComponentLogMain {
           const parentObj = parent
             ? await workspace.scope.getBitObjectVersion(modelComp, parent.toString(), true)
             : undefined;
+          if (parentObj && fileCaptureEligible) {
+            const parentCapture = captureRustHistoryFileVersion(parentObj);
+            if (parentCapture) fileCaptures.push(parentCapture);
+            else fileCaptureEligible = false;
+          }
 
           const parentFileInComp = parentObj
             ? parentObj.files.find((f) => f.relativePath === filePathRelativeInComponent)
@@ -206,6 +230,11 @@ export class ComponentLogMain {
       { concurrency: 100 }
     );
 
+    if (fileCaptureEligible) {
+      const native = await getRustHistoryFileLineage(filePathRelativeInComponent, results, fileCaptures);
+      if (native) return native;
+    }
+
     // remove entries that their fileHash is the same as their parent.
     // however, if their parent is hidden, because they're going to be removed, use their parents.
     results.forEach((result) => {
@@ -221,6 +250,10 @@ export class ComponentLogMain {
   }
 
   async blame(filePath: PathOsBased): Promise<BlameLineInfo[]> {
+    return withRustHistoryQueryOperation(() => this.blameWithinOperation(filePath));
+  }
+
+  private async blameWithinOperation(filePath: PathOsBased): Promise<BlameLineInfo[]> {
     const workspace = this.workspace;
     if (!workspace) throw new OutsideWorkspaceError();
     const absPath = path.isAbsolute(filePath) ? filePath : workspace.consumer.toAbsolutePath(filePath);
@@ -228,6 +261,8 @@ export class ComponentLogMain {
     if (!reversedLogs.length) return [];
     // reverse order so it'll be from newer to older
     const logs = reversedLogs.reverse();
+    const native = isRustHistoryQueryOperation() ? await getRustHistoryBlame(workspace.scope.legacyScope.objects, logs) : undefined;
+    if (native) return native as BlameLineInfo[];
 
     const getFileContent = async (hash: string) => {
       const source = (await workspace.scope.legacyScope.objects.load(Ref.from(hash), true)) as Source;
@@ -316,6 +351,10 @@ export class ComponentLogMain {
   }
 
   async getFileLog(filePath: string) {
+    return withRustHistoryQueryOperation(() => this.getFileLogWithinOperation(filePath));
+  }
+
+  private async getFileLogWithinOperation(filePath: string) {
     const workspace = this.workspace;
     if (!workspace) throw new OutsideWorkspaceError();
     const componentId = await workspace.getComponentIdByPath(filePath);
@@ -336,17 +375,26 @@ export class ComponentLogMain {
       const lastResult = results[results.length - 1];
       const lastHash = lastResult?.fileHash;
       let fileHash: string;
+      const native = fileInComp && isRustHistoryQueryOperation() ? await getRustHistoryFileDiff(workspace.scope.legacyScope.objects, fileInComp, lastFile) : undefined;
       if (!fileInComp) {
         if (!lastHash) return;
         fileHash = '<REMOVED>';
       } else {
-        fileHash = fileInComp.toSourceAsLinuxEOL().hash().toString();
+        fileHash = native?.rightLinuxHash || fileInComp.toSourceAsLinuxEOL().hash().toString();
       }
       if (fileHash === lastHash) return;
 
       let diff;
       if (lastFile && fileInComp) {
-        diff = await getFilesDiff([lastFile], [fileInComp], logItem.hash, lastResult.hash, undefined);
+        if (native) {
+          const leftLabel = logItem.hash === lastResult.hash ? `${logItem.hash} original` : logItem.hash;
+          const rightLabel = logItem.hash === lastResult.hash ? `${lastResult.hash} modified` : lastResult.hash;
+          diff = native.files.map((file) => ({
+            diffOutput: file.same ? '' : formatFileDiff(file.rawDiff.replace(/\r?\n$/, ''), leftLabel, rightLabel, file.relativePath),
+          }));
+        } else {
+          diff = await getFilesDiff([lastFile], [fileInComp], logItem.hash, lastResult.hash, undefined);
+        }
       }
 
       lastFile = fileInComp;

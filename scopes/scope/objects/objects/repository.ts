@@ -1,6 +1,7 @@
 import { registerRustTransferClass, persistRustTransferPending } from './rust-transfer';
 import { registerRustResetClass } from './rust-reset-refs';
 import { registerRustSnapshotFunctions } from './rust-snapshot-guards';
+import { registerRustHistoryQueryRepository } from './rust-history-query';
 import fs from 'fs-extra';
 import { registerRustSquashRepository } from './rust-squash-history';
 import { Mutex } from 'async-mutex';
@@ -1149,6 +1150,15 @@ export default class Repository {
     );
   }
 
+  /** Verified native query reads use the same cache policy as ordinary repository loads. */
+  hydrateHistoryQueryVersion(version: BitObject, inflatedSize: number, compressedSize: number): void {
+    if (compressedSize < MAX_COMPRESSED_SIZE_TO_CACHE) {
+      this.setCache(version, inflatedSize);
+    } else {
+      this.liveObjects.set(version.hash().toString(), version, inflatedSize, false);
+    }
+  }
+
   /** Acknowledged native writes retain the canonical hydrated instance and cache size policy. */
   recordNativeObjectWrite(object: BitObject, inflatedSize: number, compressedSize: number) {
     const hash = object.hash().toString();
@@ -1315,6 +1325,7 @@ registerRustResetClass('Repository', Repository);
 registerRustTransferClass('BitObject', BitObject, []);
 registerRustResetClass('BitObject', BitObject);
 registerRustHistoryRepository(Repository);
+registerRustHistoryQueryRepository(Repository);
 registerRustSquashRepository(Repository, BitObject);
 registerRustSnapshotFunctions('SnapshotRepositoryFS', fs, [
   'existsSync',

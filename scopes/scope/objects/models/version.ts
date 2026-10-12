@@ -1,5 +1,5 @@
 import lodash, { isEmpty, pickBy } from 'lodash';
-import { registerRustSnapshotFunctions, registerRustSnapshotTransactionClass } from '../objects/rust-snapshot-guards';
+import { registerRustSnapshotFunctions, registerRustSnapshotTransactionClass, hasRustSnapshotTransactionClassConstructor, hasRustSnapshotFunctions, registerRustSnapshotFunctionReference } from '../objects/rust-snapshot-guards';
 import { isSnap } from '@teambit/component-version';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';
@@ -895,3 +895,34 @@ export function completeVersionSerialization(
 
 registerRustSnapshotFunctions('Version', lodash, ['isEmpty', 'pickBy']);
 registerRustSnapshotFunctions('SnapshotJSON', JSON, ['stringify', 'parse']);
+
+const historyFactoryModules = [
+  { name: 'ComponentID', module: require('@teambit/component-id/dist/component-id.js'), key: 'ComponentID' },
+  { name: 'ComponentIdList', module: require('@teambit/component-id/dist/component-id-list.js'), key: 'ComponentIdList' },
+  { name: 'BitId', module: require('@teambit/legacy-bit-id/dist/bit-id.js'), key: 'default' },
+  { name: 'LaneId', module: require('@teambit/lane-id/dist/lane-id.js'), key: 'LaneId' },
+  { name: 'Dependency', module: require('@teambit/legacy.consumer-component/dist/dependencies/dependency.js'), key: 'default' },
+  { name: 'Dependencies', module: require('@teambit/legacy.consumer-component/dist/dependencies/dependencies.js'), key: 'default' },
+  { name: 'ExtensionDataEntry', module: require('@teambit/legacy.extension-data/dist/extension-data.js'), key: 'ExtensionDataEntry' },
+  { name: 'ExtensionDataList', module: require('@teambit/legacy.extension-data/dist/extension-data-list.js'), key: 'ExtensionDataList' },
+  { name: 'ArtifactFiles', module: require('@teambit/component.sources/dist/artifact-files.js'), key: 'ArtifactFiles' },
+];
+
+/** Default metadata constructors may hydrate verified JSON; custom factories retain the original loader. */
+export function canHydrateHistoryVersionsNatively(): boolean {
+  if (!hasRustSnapshotTransactionClassConstructor('Version', Version) ||
+    !hasRustSnapshotTransactionClassConstructor('Ref', Ref) ||
+    !hasRustSnapshotTransactionClassConstructor('Array', Array) ||
+    !hasRustSnapshotFunctions(['SnapshotJSON', 'ExtensionDataList', 'HistoryQueryObjectParser'])) return false;
+  const registrar = require('@teambit/legacy.scope/dist/object-registrar.js');
+  const registeredTypes = Object.getOwnPropertyDescriptor(registrar, 'typesObj')?.value;
+  if (!registeredTypes || Object.getOwnPropertyDescriptor(registeredTypes, 'Version')?.value !== Version) return false;
+  for (let index = 0; index < historyFactoryModules.length; index++) {
+    const entry = historyFactoryModules[index];
+    const descriptor = Object.getOwnPropertyDescriptor(entry.module, entry.key);
+    if (!descriptor || !('value' in descriptor) || !hasRustSnapshotTransactionClassConstructor(entry.name, descriptor.value))
+      return false;
+  }
+  return true;
+}
+registerRustSnapshotFunctionReference('HistoryQueryVersionHydration', canHydrateHistoryVersionsNatively);

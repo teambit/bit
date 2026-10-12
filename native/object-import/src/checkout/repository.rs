@@ -28,12 +28,40 @@ pub(crate) fn source(
     Ok(body.to_vec())
 }
 
+#[derive(Clone)]
+pub(crate) struct SourceRecord {
+    pub(crate) body: Vec<u8>,
+    pub(crate) compressed: Vec<u8>,
+    pub(crate) inflated_size: usize,
+}
+pub(crate) fn source_record(
+    directory: &Path,
+    hash: [u8; 20],
+    maximum: usize,
+    compressed_total: &mut usize,
+) -> io::Result<SourceRecord> {
+    let compressed = packed(directory, hash, compressed_total)?;
+    let object = inflate(&compressed, maximum + 256)?;
+    let (header, body) = split(&object, hash, "Source")?;
+    if header.parse::<usize>().is_err()
+        || body.len() > maximum
+        || <[u8; 20]>::from(Sha1::digest(body)) != hash
+    {
+        return Err(invalid("checkout Source identity or size is invalid"));
+    }
+    Ok(SourceRecord { body: body.to_vec(), compressed, inflated_size: object.len() })
+}
 pub(crate) fn read(
     directory: &Path,
     hash: [u8; 20],
     maximum: usize,
     compressed_total: &mut usize,
 ) -> io::Result<Vec<u8>> {
+    let compressed = packed(directory, hash, compressed_total)?;
+    inflate(&compressed, maximum)
+}
+
+fn packed(directory: &Path, hash: [u8; 20], compressed_total: &mut usize) -> io::Result<Vec<u8>> {
     let identity = crate::validate::hexadecimal(&hash);
     let path = directory
         .join(&identity[..2])
@@ -50,9 +78,8 @@ pub(crate) fn read(
     if *compressed_total > MAX_BYTES {
         return Err(invalid("checkout compressed bytes out of bounds"));
     }
-    inflate(&compressed, maximum)
+    Ok(compressed)
 }
-
 fn inflate(compressed: &[u8], maximum: usize) -> io::Result<Vec<u8>> {
     let mut decoder = Decompress::new(true);
     let mut chunk = vec![0; 64 * 1024].into_boxed_slice();

@@ -6,4 +6,4 @@ export {
 } from './in-memory-cache';
 export { createInMemoryCache } from './cache-factory';
 
-export { canReadCacheNatively } from './lru-cache-adapter';
+export { canReadCacheNatively, captureRustCacheEntries } from './lru-cache-adapter';

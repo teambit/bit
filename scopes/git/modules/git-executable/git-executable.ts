@@ -1,5 +1,6 @@
 import { getConfig } from '@teambit/config-store';
 import { CFG_GIT_EXECUTABLE_PATH } from '@teambit/legacy.constants';
+import { registerRustSnapshotFunctionReference } from '@teambit/objects';
 import * as definingExecutable from './git-executable';
 
 export function getGitExecutablePath() {
@@ -46,3 +47,4 @@ export function canUseDefaultGitNatively(): boolean {
     return false;
   }
 }
+registerRustSnapshotFunctionReference('HistoryQueryGitEligibility', canUseDefaultGitNatively);

@@ -127,6 +127,12 @@ export function hasRustSnapshotTransactionClassFields(value: unknown, name: stri
   return hasClassFields(value, name, new Set(fields));
 }
 
+/** Metadata hydration must use the original defining constructor and its unchanged methods. */
+export function hasRustSnapshotTransactionClassConstructor(name: string, constructor: unknown): boolean {
+  const defaults = classes?.get(name);
+  return Boolean(defaults && constructor === defaults.constructor && unchanged(defaults));
+}
+
 // eslint-disable-next-line no-var
 var modelHooks: Map<Function, () => boolean> | undefined;
 // eslint-disable-next-line no-var

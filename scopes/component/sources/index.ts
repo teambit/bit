@@ -5,6 +5,7 @@ import SourceFile from './source-file';
 
 export { AbstractVinyl, Dist, License, SourceFile };
 export { withRustSourceReads, isRustSourceReadScope } from './rust-source-read-scope';
+export { canUseDefaultVinylToSourceNatively } from './abstract-vinyl';
 export { canReadWorkspaceFilesNatively, sourceFileFromWorkspaceRead } from './source-file';
 export {
   withRustWorkspaceInspection,
@@ -39,6 +40,7 @@ export {
 export {
   createRustCheckoutSourceFile,
   getRustCheckoutSourceDescriptor,
+  getRustHistorySourceDescriptor,
   compareRustCheckoutSource,
   prepareRustCheckoutSources,
 } from './rust-checkout-source';
