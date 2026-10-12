@@ -1,3 +1,5 @@
+import { AsyncLocalStorage } from 'async_hooks';
+import { types } from 'util';
 import type { ComponentID } from '@teambit/component-id';
 import type ModelComponent from '../models/model-component';
 import type Lane from '../models/lane';
@@ -19,6 +21,23 @@ type Registered = {
 var defaults: Map<string, Registered> | undefined;
 // eslint-disable-next-line no-var
 var repositoryHooks: Map<any, Record<string, PropertyDescriptor | undefined>> | undefined;
+const versionIdAliases = new WeakMap<object, ComponentID>();
+const historyResetRefPlans = new AsyncLocalStorage<() => boolean>();
+const isProxy = types.isProxy;
+
+/** Keep reset's ref planning on its operation protocol without changing other callers. */
+export function withRustHistoryResetRefPlan<T>(
+  action: () => Promise<T>,
+  active: () => boolean = () => true
+): Promise<T> {
+  return historyResetRefPlans.run(active, action);
+}
+function historyResetClosed(): boolean {
+  return historyResetRefPlans.getStore()?.() === false;
+}
+function resetPlanKind(): 'historyResetComponentPlan' | 'resetRefsPlan' {
+  return historyResetRefPlans.getStore() ? 'historyResetComponentPlan' : 'resetRefsPlan';
+}
 function hookNames(): string[] {
   return [
     'onPostObjectsPersist',
@@ -80,7 +99,9 @@ function ordinary(value: any, name: string): boolean {
   for (const captured of entry.owners) {
     if (!sameDescriptors(captured.owner, captured.descriptors)) return false;
     for (const key of Reflect.ownKeys(captured.descriptors)) {
-      if (!(name === 'Array' && key === 'length') && Object.getOwnPropertyDescriptor(value, key)) return false;
+      if (!(name === 'Array' && key === 'length') && Object.getOwnPropertyDescriptor(value, key)) {
+        if (!(name === 'Version' && key === 'id' && hasVersionIdAlias(value))) return false;
+      }
     }
   }
   return Reflect.ownKeys(value).every((key) => 'value' in Object.getOwnPropertyDescriptor(value, key)!);
@@ -145,6 +166,45 @@ function repositoryEligible(repository: Repository): boolean {
 function ordinaryId(id: any): boolean {
   return ordinary(id, 'ComponentID') && ordinary(Object.getOwnPropertyDescriptor(id, '_legacy')?.value, 'BitId');
 }
+function hasVersionIdAlias(version: object): boolean {
+  const alias = versionIdAliases.get(version);
+  const field = Object.getOwnPropertyDescriptor(version, 'id');
+  return Boolean(
+    alias &&
+      field &&
+      'value' in field &&
+      field.value === alias &&
+      field.writable &&
+      field.enumerable &&
+      field.configurable &&
+      ordinaryId(alias)
+  );
+}
+
+/** Record only the exact data alias about to be assigned by the canonical dependency loader. */
+export function noteRustResetVersionId(version: Version, id: ComponentID): void {
+  if (
+    !isRustSnapshotOperation() ||
+    !version ||
+    typeof version !== 'object' ||
+    isProxy(version) ||
+    !id ||
+    typeof id !== 'object' ||
+    isProxy(id) ||
+    isProxy(Object.getOwnPropertyDescriptor(id, '_legacy')?.value ?? {}) ||
+    !ordinaryId(id)
+  )
+    return;
+  const fields: Record<string, PropertyDescriptor> = Object.getOwnPropertyDescriptors(version);
+  const previous = fields.id;
+  if (previous && (!('value' in previous) || !previous.writable || !previous.enumerable || !previous.configurable))
+    return;
+  // Earlier graph loads may already have replaced this method. Validate every other defining
+  // method and data field without changing the live instance or blessing another shadow.
+  delete fields.id;
+  const metadata = Object.create(Object.getPrototypeOf(version), fields);
+  if (ordinary(metadata, 'Version')) versionIdAliases.set(version, id);
+}
 function laneEligible(lane: Lane | undefined): boolean {
   if (!lane) return true;
   if (!ordinary(lane, 'Lane') || !array(lane.components)) return false;
@@ -200,6 +260,7 @@ export async function planRustResetRefs(
   removeOnlyHead = false
 ): Promise<{ plan: RustResetPlan; newHead?: Ref } | undefined> {
   const ineligible = () =>
+    historyResetClosed() ||
     !isRustSnapshotOperation() ||
     !ordinary(source, 'Sources') ||
     !ordinary(component, 'ModelComponent') ||
@@ -227,7 +288,7 @@ export async function planRustResetRefs(
   const ordered = versions.map((label) => ({ label, hash: hash(component.getRef(label)) }));
   if (ordered.some((entry) => !entry.hash)) return undefined;
   const input: any = {
-    kind: 'resetRefsPlan',
+    kind: resetPlanKind(),
     objectsDirectory: repository.getPath(),
     versions: ordered,
     deletedRefs,
@@ -382,8 +443,9 @@ export async function planRustResetRefs(
         JSON.stringify(refs(versionObjects[index].parents)) !== JSON.stringify(input.versions[index].parents) ||
         saved.refs.some((ref, parentIndex) => ref !== versionObjects[index].parents[parentIndex])
     );
+  if (historyResetClosed()) return undefined;
   const result = await requestRustRecovery<RustResetPlan>(input, validatePlan);
-  if (!result || defaultsChanged() || identityChanged() || contentsChanged()) return undefined;
+  if (!usableResetPlan(result, defaultsChanged, identityChanged, contentsChanged)) return undefined;
   const newHead =
     result.newHead &&
     ('common' in result.newHead
@@ -391,6 +453,14 @@ export async function planRustResetRefs(
       : versionObjects[result.newHead.parent.versionIndex].parents[result.newHead.parent.parentIndex]);
   if (result.changeLaneHead && newHead && !divergence) return undefined;
   return { plan: result, newHead };
+}
+function usableResetPlan(
+  value: RustResetPlan | undefined,
+  defaultsChanged: () => boolean,
+  identityChanged: () => unknown,
+  contentsChanged: () => unknown
+): value is RustResetPlan {
+  return Boolean(value && !historyResetClosed() && !defaultsChanged() && !identityChanged() && !contentsChanged());
 }
 function versionObjectsNeeded(input: any): boolean {
   return Boolean(

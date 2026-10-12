@@ -70,7 +70,13 @@ export {
 } from './objects/rust-lane-recovery';
 export type { RustRecoveryOperation } from './objects/rust-lane-recovery';
 
-export { planRustResetRefs, registerRustResetClass, registerRustResetRepositoryHooks } from './objects/rust-reset-refs';
+export {
+  planRustResetRefs,
+  withRustHistoryResetRefPlan,
+  registerRustResetClass,
+  registerRustResetRepositoryHooks,
+  noteRustResetVersionId,
+} from './objects/rust-reset-refs';
 
 export {
   registerRustTransferClass,

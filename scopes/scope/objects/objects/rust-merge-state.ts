@@ -13,6 +13,24 @@ type Action =
   | { kind: 'removeAll' };
 type Context = { owner: Pending; fingerprint: string; token: string; revision: number };
 const contexts = new WeakMap<Session, Context>();
+const stateOperations = new WeakMap<Session, Promise<void>>();
+
+/** Serialize only the default state protocol and its synchronous apply, never public callbacks. */
+async function withStateOperation<T>(session: Session, action: () => Promise<T>): Promise<T> {
+  const previous = stateOperations.get(session) || Promise.resolve();
+  let release!: () => void;
+  const completed = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  stateOperations.set(session, completed);
+  await previous;
+  try {
+    return await action();
+  } finally {
+    release();
+    if (stateOperations.get(session) === completed) stateOperations.delete(session);
+  }
+}
 const MAX_BYTES = 4 * 1024 * 1024;
 const MAX_ENTRIES = 4096;
 const refDefaults = { toString: Ref.prototype.toString, isEqual: Ref.prototype.isEqual };
@@ -212,24 +230,31 @@ async function initialize(session: Session, owner: Pending, serialized: string):
 }
 
 /** Apply the native ordered state transition while retaining every public pending-entry object. */
+function eligibleAction(action: Action): boolean {
+  return Boolean(
+    action &&
+      Object.getPrototypeOf(action) === Object.prototype &&
+      Object.values(Object.getOwnPropertyDescriptors(action)).every(
+        (descriptor) => !descriptor.get && !descriptor.set
+      ) &&
+      ['add', 'remove', 'removeAll'].includes(action.kind) &&
+      (action.kind === 'add' ? ordinaryEntry(action.entry) : jsonData(action)) &&
+      (action.kind !== 'remove' ||
+        (Array.isArray(action.ids) &&
+          action.ids.length <= MAX_ENTRIES &&
+          action.ids.every(
+            (id) => id && typeof id.name === 'string' && (id.scope === undefined || typeof id.scope === 'string')
+          )))
+  );
+}
 export async function transitionRustUnmergedState(owner: Pending, action: Action): Promise<boolean | undefined> {
-  if (!isRustSnapshotOperation()) return undefined;
-  if (
-    !action ||
-    Object.getPrototypeOf(action) !== Object.prototype ||
-    Object.values(Object.getOwnPropertyDescriptors(action)).some((descriptor) => descriptor.get || descriptor.set) ||
-    !['add', 'remove', 'removeAll'].includes(action.kind) ||
-    (action.kind !== 'add' && !jsonData(action)) ||
-    (action.kind === 'remove' &&
-      (!Array.isArray(action.ids) ||
-        action.ids.length > MAX_ENTRIES ||
-        !action.ids.every(
-          (id) => id && typeof id.name === 'string' && (id.scope === undefined || typeof id.scope === 'string')
-        )))
-  )
-    return undefined;
+  if (!isRustSnapshotOperation() || !eligibleAction(action) || fingerprint(owner) === undefined) return undefined;
+  return withWorkspaceSession((session) => withStateOperation(session, () => transitionState(session, owner, action)));
+}
+async function transitionState(session: Session, owner: Pending, action: Action): Promise<boolean | undefined> {
+  if (!eligibleAction(action)) return undefined;
   const serialized = fingerprint(owner);
-  if (serialized === undefined || (action.kind === 'add' && !ordinaryEntry(action.entry))) return undefined;
+  if (serialized === undefined) return undefined;
   const projectedAction = action.kind === 'add' ? { kind: 'add', entry: newPendingEntry(action.entry) } : action;
   const actionSnapshot = JSON.stringify(projectedAction);
   const removed = new Set<number>();
@@ -243,50 +268,48 @@ export async function transitionRustUnmergedState(owner: Pending, action: Action
     .map((_, index) => index)
     .filter((index) => action.kind !== 'removeAll' && !removed.has(index));
   const expectedChanged = action.kind === 'add' || action.kind === 'removeAll' || removed.size > 0;
-  return withWorkspaceSession(async (session) => {
-    const context = await initialize(session, owner, serialized);
-    if (!context) return undefined;
-    const result = await request(
-      session,
-      { kind: 'transition', token: context.token, revision: context.revision, action: projectedAction },
-      (data) =>
-        token(data.token) &&
-        data.revision === context.revision + 1 &&
-        typeof data.changed === 'boolean' &&
-        Array.isArray(data.indices) &&
-        data.indices.every((index) => Number.isInteger(index) && index >= 0 && index < owner.unmerged.length) &&
-        new Set(data.indices).size === data.indices.length &&
-        data.indices.every((index, offset) => offset === 0 || index > data.indices[offset - 1]) &&
-        (data.added === undefined || typeof data.added === 'boolean') &&
-        data.changed === expectedChanged &&
-        Boolean(data.added) === (action.kind === 'add') &&
-        JSON.stringify(data.indices) === JSON.stringify(expectedIndices)
-    );
-    if (
-      !result ||
-      fingerprint(owner) !== serialized ||
-      (action.kind === 'add'
-        ? !ordinaryEntry(action.entry) ||
-          JSON.stringify({ kind: 'add', entry: newPendingEntry(action.entry) }) !== actionSnapshot
-        : !jsonData(action) || JSON.stringify(action) !== actionSnapshot)
-    ) {
-      contexts.delete(session);
-      return undefined;
-    }
-    if (action.kind === 'add') {
-      owner.unmerged.push(action.entry);
-    } else {
-      if (result.changed) owner.unmerged = result.indices.map((index) => owner.unmerged[index]);
-    }
-    if (result.changed) owner.hasChanged = true;
-    const next = fingerprint(owner);
-    if (next === undefined) {
-      contexts.delete(session);
-      return result.changed;
-    }
-    contexts.set(session, { owner, fingerprint: next, token: result.token, revision: result.revision });
+  const context = await initialize(session, owner, serialized);
+  if (!context) return undefined;
+  const result = await request(
+    session,
+    { kind: 'transition', token: context.token, revision: context.revision, action: projectedAction },
+    (data) =>
+      token(data.token) &&
+      data.revision === context.revision + 1 &&
+      typeof data.changed === 'boolean' &&
+      Array.isArray(data.indices) &&
+      data.indices.every((index) => Number.isInteger(index) && index >= 0 && index < owner.unmerged.length) &&
+      new Set(data.indices).size === data.indices.length &&
+      data.indices.every((index, offset) => offset === 0 || index > data.indices[offset - 1]) &&
+      (data.added === undefined || typeof data.added === 'boolean') &&
+      data.changed === expectedChanged &&
+      Boolean(data.added) === (action.kind === 'add') &&
+      JSON.stringify(data.indices) === JSON.stringify(expectedIndices)
+  );
+  if (
+    !result ||
+    fingerprint(owner) !== serialized ||
+    (action.kind === 'add'
+      ? !ordinaryEntry(action.entry) ||
+        JSON.stringify({ kind: 'add', entry: newPendingEntry(action.entry) }) !== actionSnapshot
+      : !jsonData(action) || JSON.stringify(action) !== actionSnapshot)
+  ) {
+    contexts.delete(session);
+    return undefined;
+  }
+  if (action.kind === 'add') {
+    owner.unmerged.push(action.entry);
+  } else {
+    if (result.changed) owner.unmerged = result.indices.map((index) => owner.unmerged[index]);
+  }
+  if (result.changed) owner.hasChanged = true;
+  const next = fingerprint(owner);
+  if (next === undefined) {
+    contexts.delete(session);
     return result.changed;
-  });
+  }
+  contexts.set(session, { owner, fingerprint: next, token: result.token, revision: result.revision });
+  return result.changed;
 }
 function newPendingEntry(entry: any): any {
   return {
@@ -306,24 +329,26 @@ function newPendingEntry(entry: any): any {
 
 /** Commit exact canonical JSON only after native state and live adapter state agree. */
 export async function persistRustUnmergedState(owner: Pending): Promise<boolean> {
-  if (!isRustSnapshotOperation()) return false;
-  const serialized = fingerprint(owner);
-  if (serialized === undefined) return false;
-  const filePath = owner.filePath;
+  if (!isRustSnapshotOperation() || fingerprint(owner) === undefined) return false;
   return Boolean(
-    await withWorkspaceSession(async (session) => {
-      const context = await initialize(session, owner, serialized);
-      if (!context || owner.filePath !== filePath || fingerprint(owner) !== serialized) return false;
-      const contents = JSON.stringify(owner.toObject(), null, 2);
-      const result = await request(
-        session,
-        { kind: 'commit', token: context.token, revision: context.revision, path: filePath, contents },
-        (data) => data.saved === true
-      );
-      if (!result) return false;
-      // A completed write is authoritative; replaying after a later live mutation could write a different path.
-      if (owner.filePath !== filePath || fingerprint(owner) !== serialized) contexts.delete(session);
-      return true;
-    })
+    await withWorkspaceSession((session) =>
+      withStateOperation(session, async () => {
+        const serialized = fingerprint(owner);
+        if (serialized === undefined) return false;
+        const filePath = owner.filePath;
+        const context = await initialize(session, owner, serialized);
+        if (!context || owner.filePath !== filePath || fingerprint(owner) !== serialized) return false;
+        const contents = JSON.stringify(owner.toObject(), null, 2);
+        const result = await request(
+          session,
+          { kind: 'commit', token: context.token, revision: context.revision, path: filePath, contents },
+          (data) => data.saved === true
+        );
+        if (!result) return false;
+        // A completed write is authoritative; replaying after a later live mutation could write a different path.
+        if (owner.filePath !== filePath || fingerprint(owner) !== serialized) contexts.delete(session);
+        return true;
+      })
+    )
   );
 }

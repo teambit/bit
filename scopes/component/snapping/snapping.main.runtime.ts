@@ -75,6 +75,14 @@ import {
   getComponentsWithOptionToUntag,
   removeLocalVersionsForMultipleComponents,
 } from './reset-component';
+import {
+  withRustHistoryResetOperation,
+  completeRustHistoryResetPhase,
+  selectRustResetPattern,
+  selectRustResetSoft,
+  selectRustNeverExported,
+} from './rust-history-reset';
+import { removeRustResetLaneHistoryEntries } from './rust-history-reset-lane-history';
 import type { ApplicationMain } from '@teambit/application';
 import { ApplicationAspect } from '@teambit/application';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
@@ -844,7 +852,10 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     force = false,
     soft = false
   ): Promise<{ results: ResetResult[]; isSoftUntag: boolean }> {
-    return withRustSnapshotOperation(() => this.resetWithinOperation(componentPattern, head, force, soft));
+    return withRustHistoryResetOperation(
+      { mode: soft ? 'soft' : 'real', pattern: Boolean(componentPattern), head: Boolean(head), force },
+      () => withRustSnapshotOperation(() => this.resetWithinOperation(componentPattern, head, force, soft))
+    );
   }
 
   private async resetWithinOperation(
@@ -856,27 +867,54 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer = this.workspace.consumer;
     const currentLane = await consumer.getCurrentLaneObject();
+    if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetPhase('captureLane');
     const untag = async (): Promise<ResetResult[]> => {
       if (!componentPattern) {
         return removeLocalVersionsForAllComponents(this.workspace, this.remove, currentLane, head);
       }
       const candidateComponents = await getComponentsWithOptionToUntag(this.workspace, this.remove);
+      if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetPhase('candidates');
       const idsMatchingPattern = await this.workspace.idsByPattern(componentPattern, true, { includeDeleted: true });
       const idsMatchingPatternBitIds = ComponentIdList.fromArray(idsMatchingPattern);
-      const componentsToUntag = candidateComponents.filter((modelComponent) =>
-        idsMatchingPatternBitIds.hasWithoutVersion(modelComponent.toComponentId())
-      );
+      const nativeCandidates =
+        process.env.BIT_RUST_CLIENT_VCS === 'on'
+          ? await selectRustResetPattern(candidateComponents, idsMatchingPatternBitIds)
+          : undefined;
+      const componentsToUntag =
+        nativeCandidates ||
+        candidateComponents.filter((modelComponent) =>
+          idsMatchingPatternBitIds.hasWithoutVersion(modelComponent.toComponentId())
+        );
+      if (process.env.BIT_RUST_CLIENT_VCS === 'on')
+        await completeRustHistoryResetPhase('pattern', componentsToUntag.length);
       return removeLocalVersionsForMultipleComponents(consumer, componentsToUntag, currentLane, head, force);
     };
     const softUntag = async () => {
       const softTaggedComponentsIds = this.workspace.filter.bySoftTagged();
+      if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetPhase('softCandidates');
       const idsToRemoveSoftTags = componentPattern
         ? await this.workspace.filterIdsFromPoolIdsByPattern(componentPattern, softTaggedComponentsIds)
         : softTaggedComponentsIds;
+      if (componentPattern && process.env.BIT_RUST_CLIENT_VCS === 'on')
+        await completeRustHistoryResetPhase('softPattern');
+      let nativePlan =
+        process.env.BIT_RUST_CLIENT_VCS === 'on'
+          ? await selectRustResetSoft(consumer.bitMap, idsToRemoveSoftTags)
+          : undefined;
+      if (nativePlan && !nativePlan.valid()) nativePlan = undefined;
       return compact(
-        idsToRemoveSoftTags.map((componentId) => {
+        idsToRemoveSoftTags.map((componentId, index) => {
           const componentMap = consumer.bitMap.getComponent(componentId, { ignoreVersion: true });
           const removedVersion = componentMap.nextVersion?.version;
+          if (
+            nativePlan &&
+            (componentMap !== nativePlan.entries[index] || (removedVersion || null) !== nativePlan.versions[index])
+          )
+            nativePlan = undefined;
+          if (nativePlan && !nativePlan.selected.includes(index)) {
+            if (!removedVersion) return null;
+            nativePlan = undefined;
+          }
           if (!removedVersion) return null;
           componentMap.clearNextVersion();
           return { id: componentId, versions: [removedVersion] };
@@ -887,6 +925,7 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     const isRealUntag = !soft;
     if (isRealUntag) {
       results = await untag();
+      if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetPhase('components');
 
       // Remove lane history entries that correspond to the reset snaps.
       // Each snap uses its batchId as the lane history key, so we can match them.
@@ -894,12 +933,18 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
         const allBatchIds = uniq(results.flatMap((r) => r.batchIds || []));
         if (allBatchIds.length) {
           const laneHistory = await consumer.scope.lanes.getOrCreateLaneHistory(currentLane);
-          laneHistory.removeHistoryEntries(allBatchIds);
+          const removedNatively =
+            process.env.BIT_RUST_CLIENT_VCS === 'on'
+              ? await removeRustResetLaneHistoryEntries(laneHistory, allBatchIds)
+              : false;
+          if (!removedNatively) laneHistory.removeHistoryEntries(allBatchIds);
           consumer.scope.objects.add(laneHistory);
         }
       }
+      if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetPhase('laneHistory');
 
       await consumer.scope.objects.persist();
+      if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetPhase('persist');
       const currentLaneId = consumer.getCurrentLaneId();
       const stagedConfig = await this.workspace.scope.getStagedConfig();
 
@@ -912,22 +957,39 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
         if (currentLane?.findUpdateDependent(compId)) return;
         await updateVersions(this.workspace, stagedConfig, currentLaneId, component, versionToSetInBitmap, false);
       });
+      if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetPhase('bitmap');
       await this.workspace.scope.legacyScope.stagedSnaps.write();
+      if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetPhase('stagedWrite');
     } else {
       results = await softUntag();
+      if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetPhase('softApply');
       consumer.bitMap.markAsChanged();
+      if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetPhase('markBitmap');
     }
 
     await consumer.onDestroy('reset');
+    if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetPhase('destroy');
     return { results, isSoftUntag: !isRealUntag };
   }
 
   async resetNeverExported(): Promise<ComponentID[]> {
+    return withRustHistoryResetOperation({ mode: 'neverExported', pattern: false, head: false, force: false }, () =>
+      this.resetNeverExportedWithinOperation()
+    );
+  }
+
+  private async resetNeverExportedWithinOperation(): Promise<ComponentID[]> {
     const notExported = this.workspace.consumer.getNotExportedIds();
-    const hashes = notExported.map((id) => BitObject.makeHash(id.fullName));
+    if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetPhase('ids');
+    const nativePlan =
+      process.env.BIT_RUST_CLIENT_VCS === 'on' ? await selectRustNeverExported(notExported) : undefined;
+    const hashes = nativePlan?.hashes || notExported.map((id) => BitObject.makeHash(id.fullName));
     await this.scope.legacyScope.objects.deleteObjectsFromFS(hashes.map((h) => Ref.from(h)));
+    if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetPhase('deleteObjects');
     notExported.map((id) => this.workspace.consumer.bitMap.updateComponentId(id.changeVersion(undefined)));
+    if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetPhase('updateBitmap');
     await this.workspace.bitMap.write(`reset (never-exported)`);
+    if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetPhase('writeBitmap');
     return notExported;
   }
 

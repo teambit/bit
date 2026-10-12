@@ -1603,6 +1603,10 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
 }
 
 registerRustSnapshotFunctions('SnapshotComponentLodash', lodash, ['forEach', 'isEmpty']);
+registerRustSnapshotFunctions('HistoryResetModelLodash', lodash, ['findLastKey']);
+registerRustSnapshotFunctionReference('HistoryResetGetDivergeData', getDivergeData);
+registerRustSnapshotFunctionReference('HistoryResetPMapPool', pMapPool);
+registerRustSnapshotFunctionReference('HistoryResetConcurrentComponentsLimit', concurrentComponentsLimit);
 
 registerRustSnapshotFunctionReference('SnapshotModelSemverInc', semver.inc);
 export function canPlanRustSnapshotFutureVersions(): boolean {

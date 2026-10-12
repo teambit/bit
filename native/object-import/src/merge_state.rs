@@ -25,6 +25,20 @@ const MAX_JSON: usize = 4 * 1024 * 1024;
     deny_unknown_fields
 )]
 enum Request {
+    HistoryResetBegin(Value),
+    HistoryResetReceipt(Value),
+    HistoryResetFork(Value),
+    HistoryResetFinish(Value),
+    HistoryResetLocalAppend(Value),
+    HistoryResetLocalRead(Value),
+    HistoryResetLaneHistory(Value),
+    HistoryResetLocalVersions(Value),
+    HistoryResetDependents(Value),
+    HistoryResetComponentPlan(Value),
+    HistoryResetCandidates(Value),
+    HistoryResetPattern(Value),
+    HistoryResetSoft(Value),
+    HistoryResetNeverExported(Value),
     CheckoutSelectBegin(Value),
     CheckoutSelectReceipt(Value),
     CheckoutApplyDecision(Value),
@@ -165,8 +179,28 @@ fn apply(request: Request, state: &mut State, bytes: &[u8]) -> io::Result<Value>
         Request::InspectionFinish(input) => {
             crate::inspection::apply("inspectionFinish", input, &mut state.inspection)
         }
-        request => checkout_operation(request, state, bytes),
+        request => history_operation(request, state, bytes),
     }
+}
+fn history_operation(request: Request, state: &mut State, bytes: &[u8]) -> io::Result<Value> {
+    let (kind, input) = match request {
+        Request::HistoryResetLocalRead(input) => ("historyResetLocalRead", input),
+        Request::HistoryResetLaneHistory(input) => ("historyResetLaneHistory", input),
+        Request::HistoryResetBegin(input) => ("historyResetBegin", input),
+        Request::HistoryResetReceipt(input) => ("historyResetReceipt", input),
+        Request::HistoryResetFork(input) => ("historyResetFork", input),
+        Request::HistoryResetFinish(input) => ("historyResetFinish", input),
+        Request::HistoryResetLocalAppend(input) => ("historyResetLocalAppend", input),
+        Request::HistoryResetLocalVersions(input) => ("historyResetLocalVersions", input),
+        Request::HistoryResetDependents(input) => ("historyResetDependents", input),
+        Request::HistoryResetComponentPlan(input) => ("historyResetComponentPlan", input),
+        Request::HistoryResetCandidates(input) => ("historyResetCandidates", input),
+        Request::HistoryResetPattern(input) => ("historyResetPattern", input),
+        Request::HistoryResetSoft(input) => ("historyResetSoft", input),
+        Request::HistoryResetNeverExported(input) => ("historyResetNeverExported", input),
+        request => return checkout_operation(request, state, bytes),
+    };
+    crate::history_reset::apply(kind, input, &mut state.operations.history_reset)
 }
 fn checkout_operation(request: Request, state: &mut State, bytes: &[u8]) -> io::Result<Value> {
     let (kind, input) = match request {
