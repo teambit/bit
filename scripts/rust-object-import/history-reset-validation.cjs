@@ -10,10 +10,13 @@ function validateHistoryResetDiagnostics(diagnostics) {
     const required = ['historyResetBegin', 'historyResetReceipt', 'historyResetFinish'];
     const soft = row.scenario.startsWith('soft-');
     const never = row.scenario === 'never-exported';
-    const batchRejected = ['dependent-blocked', 'candidate-dependent-blocked'].includes(row.scenario);
-    const earlyChildRejected = ['detached-head', 'missing-local-version', 'corrupt-local-version'].includes(
-      row.scenario
-    );
+    const batchRejected = row.scenario === 'dependent-blocked';
+    const earlyChildRejected = [
+      'detached-head',
+      'missing-local-version',
+      'corrupt-local-version',
+      'candidate-dependent-blocked',
+    ].includes(row.scenario);
     if (soft) required.push('historyResetSoft');
     else if (never) required.push('historyResetNeverExported');
     else if (batchRejected) required.push('historyResetDependents');
@@ -40,6 +43,7 @@ function validateHistoryResetDiagnostics(diagnostics) {
     if (row.scenario.startsWith('lane-'))
       required.push('historyResetLocalRead', 'historyResetLaneHistory', 'snapshotSerialize', 'snapshotCommit');
     if (row.scenario === 'detached-all') required.push('historyResetLocalAppend');
+    if (row.scenario === 'candidate-dependent-blocked') required.push('historyResetPattern', 'historyResetDependents');
     for (const kind of required) {
       assert.ok(metrics[kind]?.completed > 0, row.scenario + ': missing accepted ' + kind);
       assert.equal(metrics[kind].failed, 0, row.scenario + ': failed required ' + kind);
