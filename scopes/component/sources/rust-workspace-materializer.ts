@@ -35,13 +35,15 @@ export class MaterializationSession {
   private readonly closed: Promise<void>;
   private pending = Buffer.alloc(0);
   private pendingLength = 0;
+  private binaryResponse?: { response: Result; offset: number; length: number };
   private stopped = false;
   private sequence = 0;
   private waiting?: {
     id: number;
     count: number;
     resolve: (completed?: number) => void;
-    validate?: (response: Result) => boolean;
+    validate?: (response: Result, body?: Buffer) => boolean;
+    binary: boolean;
     maximum: number;
     variableCount: boolean;
   };
@@ -76,14 +78,15 @@ export class MaterializationSession {
   request(
     build: (id: number) => Buffer,
     count: number,
-    validate?: (response: Result) => boolean,
+    validate?: (response: Result, body?: Buffer) => boolean,
     maximum = MAX_RESPONSE,
-    variableCount = false
+    variableCount = false,
+    binary = false
   ): Promise<number | undefined> {
     if (this.stopped) return Promise.resolve(undefined);
     const id = ++this.sequence;
     return new Promise((resolve) => {
-      this.waiting = { id, count, resolve, validate, maximum, variableCount };
+      this.waiting = { id, count, resolve, validate, maximum, variableCount, binary };
       this.deadline = setTimeout(() => this.stop(), 120000);
       this.child.stdin.write(build(id));
     });
@@ -118,23 +121,50 @@ export class MaterializationSession {
     }
     data.copy(this.pending, this.pendingLength);
     this.pendingLength = length;
+    if (this.binaryResponse) return this.acceptBinary();
     const newline = data.indexOf(10);
     if (newline < 0) return;
-    if (!this.waiting || newline !== data.length - 1) return this.stop();
+    if (!this.waiting || (!this.waiting.binary && newline !== data.length - 1)) return this.stop();
+    const offset = length - data.length + newline + 1;
     let response: Result;
     try {
-      response = JSON.parse(this.pending.subarray(0, length - 1).toString());
+      response = JSON.parse(this.pending.subarray(0, offset - 1).toString());
     } catch {
       return this.stop();
     }
     if (!validResult(response, this.waiting.id, this.waiting.count, this.waiting.variableCount)) return this.stop();
+    if (this.waiting.binary) {
+      const bytes = response.failed ? 0 : response.binaryBytes;
+      if (typeof bytes !== 'number' || !Number.isSafeInteger(bytes) || bytes < 0 || bytes > maximum - offset)
+        return this.stop();
+      this.binaryResponse = { response, offset, length: offset + bytes };
+      if (this.pending.length < offset + bytes) {
+        const grown = Buffer.allocUnsafe(offset + bytes);
+        this.pending.copy(grown, 0, 0, this.pendingLength);
+        this.pending = grown;
+      }
+      return this.acceptBinary();
+    }
+    this.finishResponse(response);
+  }
+
+  private acceptBinary() {
+    const state = this.binaryResponse!;
+    if (this.pendingLength > state.length) return this.stop();
+    if (this.pendingLength < state.length) return;
+    this.finishResponse(state.response, this.pending.subarray(state.offset, state.length));
+  }
+
+  private finishResponse(response: Result, body?: Buffer) {
+    if (!this.waiting) return this.stop();
     try {
-      if (this.waiting.validate && !this.waiting.validate(response)) return this.stop();
+      if (this.waiting.validate && !this.waiting.validate(response, body)) return this.stop();
     } catch {
       return this.stop();
     }
     const { resolve } = this.waiting;
     this.waiting = undefined;
+    this.binaryResponse = undefined;
     this.pending = Buffer.alloc(0);
     this.pendingLength = 0;
     clearTimeout(this.deadline);

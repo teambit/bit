@@ -46,7 +46,8 @@ const validPath = (value: string) =>
 async function request<T>(
   input: unknown,
   count: number,
-  validate: (data: unknown, completed: number) => data is T
+  validate: (data: unknown, completed: number, body?: Buffer) => data is T,
+  binary = false
 ): Promise<T | undefined> {
   if (process.env.BIT_RUST_CLIENT_VCS !== 'on') return undefined;
   const bytes = Buffer.from(JSON.stringify(input));
@@ -62,14 +63,15 @@ async function request<T>(
         return Buffer.concat([header, bytes]);
       },
       count,
-      (response) => {
+      (response, body) => {
         if (response.failed) return true;
-        if (!validate(response.data, response.completed)) return false;
+        if (!validate(response.data, response.completed, body)) return false;
         result = response.data;
         return true;
       },
       MAX_OUTPUT,
-      (input as { kind?: string })?.kind === 'scan'
+      (input as { kind?: string })?.kind === 'scan',
+      binary
     );
   });
   return result;
@@ -111,32 +113,43 @@ export async function scanRustWorkspace(
 /** Read and identify a complete file set before exposing any native snapshot. */
 export async function readRustWorkspaceFiles(paths: string[]): Promise<RustWorkspaceRead[] | undefined> {
   if (!paths.length || paths.length > MAX_FILES || !paths.every(validPath)) return undefined;
-  type Wire = { path: string; contents: string; hash: string; linuxHash: string; snapshotHash?: string };
-  const result = await request(
-    { kind: 'read', files: paths },
+  type Wire = { path: string; offset: number; bytes: number; hash: string; linuxHash: string; snapshotHash: string };
+  let output: RustWorkspaceRead[] | undefined;
+  await request(
+    { kind: 'read', files: paths, binary: true },
     paths.length,
-    (value, completed): value is { files: Wire[] } => {
+    (value, completed, body): value is { files: Wire[] } => {
       const files = (value as { files?: unknown })?.files;
-      if (!Array.isArray(files) || files.length !== paths.length || completed !== paths.length) return false;
+      if (!body || !Array.isArray(files) || files.length !== paths.length || completed !== paths.length) return false;
       let bytes = 0;
-      return files.every((file, index) => {
+      for (const [index, file] of files.entries()) {
         if (
           !file ||
           file.path !== paths[index] ||
           !hashString(file.hash) ||
           !hashString(file.linuxHash) ||
-          (file.snapshotHash !== undefined && !hashString(file.snapshotHash)) ||
-          typeof file.contents !== 'string' ||
-          file.contents.length % 2 ||
-          !/^[0-9a-f]*$/.test(file.contents)
+          !hashString(file.snapshotHash) ||
+          file.offset !== bytes ||
+          !Number.isSafeInteger(file.bytes) ||
+          file.bytes < 0
         )
           return false;
-        bytes += file.contents.length / 2;
-        return bytes <= MAX_BYTES;
-      });
-    }
+        bytes += file.bytes;
+        if (bytes > MAX_BYTES) return false;
+      }
+      if (bytes !== body.length) return false;
+      output = files.map((file) => ({
+        path: file.path,
+        hash: file.hash,
+        linuxHash: file.linuxHash,
+        snapshotHash: file.snapshotHash,
+        contents: Buffer.from(body.subarray(file.offset, file.offset + file.bytes)),
+      }));
+      return true;
+    },
+    true
   );
-  return result?.files.map((file) => ({ ...file, contents: Buffer.from(file.contents, 'hex') }));
+  return output;
 }
 
 export async function compareRustVersionIds(left: string, right: string): Promise<boolean | undefined> {

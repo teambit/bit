@@ -1,6 +1,10 @@
 import type { Repository, Source, SourceFileModel, HistorySourceCapsule } from '@teambit/objects';
 import { types } from 'util';
-import { loadRustCapturedSourceCapsule, hasRustSnapshotTransactionClassFields } from '@teambit/objects';
+import {
+  loadRustCapturedSourceCapsule,
+  hasRustSnapshotTransactionClassFields,
+  hasRustSnapshotTransactionClassFieldsBatch,
+} from '@teambit/objects';
 import { SourceFile } from '@teambit/component.sources';
 import {
   copyRustMergeBuffer,
@@ -116,15 +120,13 @@ export async function observeRustMergeSourceGroups(
     groups: orders,
     fresh: () =>
       bufferPrototypes() &&
+      hasRustSnapshotTransactionClassFieldsBatch(
+        snapshots.map(({ source }) => source),
+        'Source',
+        ['contents']
+      ) &&
       snapshots.every(({ source, descriptor, body, copy }) => {
-        if (
-          !copy ||
-          !bufferProperties(body) ||
-          types.isProxy(source) ||
-          !hasRustSnapshotTransactionClassFields(source, 'Source', ['contents']) ||
-          !descriptor ||
-          !('value' in descriptor)
-        )
+        if (!copy || !bufferProperties(body) || types.isProxy(source) || !descriptor || !('value' in descriptor))
           return false;
         const live = Object.getOwnPropertyDescriptor(source, 'contents');
         return Boolean(

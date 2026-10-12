@@ -18,6 +18,7 @@ import {
   requestRustMergeTransaction,
   isRustMergeTransactionOperation,
   hasRustSnapshotTransactionClassFields,
+  hasRustSnapshotTransactionClassFieldsBatch,
   hasRustSnapshotFunctions,
 } from '@teambit/objects';
 
@@ -159,18 +160,14 @@ export async function applyRetainedRustMerge(
     target.fresh() &&
     !types.isProxy(clones) &&
     hasRustSnapshotTransactionClassFields(clones, 'Array', []) &&
-    clones.every(
-      (file) =>
-        !types.isProxy(file) &&
-        hasRustSnapshotTransactionClassFields(file, 'SourceFile', [
-          'history',
-          '_base',
-          '_cwd',
-          'base',
-          'path',
-          'relative',
-        ])
-    );
+    hasRustSnapshotTransactionClassFieldsBatch(clones, 'SourceFile', [
+      'history',
+      '_base',
+      '_cwd',
+      'base',
+      'path',
+      'relative',
+    ]);
   if (!valid()) return undefined;
   const applied = await requestRustMergeTransaction<Applied>(
     {

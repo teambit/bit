@@ -26,7 +26,7 @@ test('genuine retained producer keeps duplicate-path causal aliases and direct N
   process.env.BIT_RUST_OBJECT_IMPORT = helper;
   const request = sessionModule.MaterializationSession.prototype.request;
   const accepted = [];
-  sessionModule.MaterializationSession.prototype.request = function (build, count, validate) {
+  sessionModule.MaterializationSession.prototype.request = function (build, count, validate, ...options) {
     let input;
     return request.call(
       this,
@@ -36,12 +36,13 @@ test('genuine retained producer keeps duplicate-path causal aliases and direct N
         return frame;
       },
       count,
-      (response) => {
-        const valid = validate(response);
+      (response, body) => {
+        const valid = validate(response, body);
         if (valid && input?.kind?.startsWith('merge'))
           accepted.push({ kind: input.kind, data: response.data, session: this });
         return valid;
-      }
+      },
+      ...options
     );
   };
   t.after(async () => {
@@ -176,7 +177,7 @@ test('retained producer rejects unknown Scope.objects getter before reading it o
     executable = process.env.BIT_RUST_OBJECT_IMPORT;
   process.env.BIT_RUST_CLIENT_VCS = 'on';
   process.env.BIT_RUST_OBJECT_IMPORT = process.env.BIT_TEST_OBJECT_IMPORT;
-  sessionModule.MaterializationSession.prototype.request = function (build, count, validate) {
+  sessionModule.MaterializationSession.prototype.request = function (build, count, validate, ...options) {
     let input;
     return request.call(
       this,
@@ -186,12 +187,13 @@ test('retained producer rejects unknown Scope.objects getter before reading it o
         return frame;
       },
       count,
-      (response) => {
+      (response, body) => {
         if (input?.kind === 'mergePrepare') requests++;
-        const valid = validate(response);
+        const valid = validate(response, body);
         if (valid && input?.kind === 'mergeTransactionBegin') began++;
         return valid;
-      }
+      },
+      ...options
     );
   };
   t.after(async () => {
@@ -244,7 +246,7 @@ test('late Scope repository replacement after Prepare keeps canonical suffix and
   const request = sessionModule.MaterializationSession.prototype.request;
   const accepted = [];
   let replacement;
-  sessionModule.MaterializationSession.prototype.request = function (build, count, validate) {
+  sessionModule.MaterializationSession.prototype.request = function (build, count, validate, ...options) {
     let input;
     return request.call(
       this,
@@ -254,13 +256,14 @@ test('late Scope repository replacement after Prepare keeps canonical suffix and
         return frame;
       },
       count,
-      (response) => {
+      (response, body) => {
         if (input?.kind === 'mergePrepare') scope.objects = replacement;
-        const valid = validate(response);
+        const valid = validate(response, body);
         if (valid && input?.kind?.startsWith('merge'))
           accepted.push({ kind: input.kind, data: response.data, session: this });
         return valid;
-      }
+      },
+      ...options
     );
   };
   t.after(async () => {

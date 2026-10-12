@@ -275,9 +275,9 @@ test('the real native journal drives public phases using a single pinned session
       this,
       build,
       count,
-      (response) => {
+      (response, body) => {
         replies.push(response);
-        return validate(response);
+        return validate(response, body);
       },
       ...rest
     );

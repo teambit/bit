@@ -60,3 +60,49 @@ test('class guards detect descriptor and prototype changes without calling acces
   assert.equal(guards.hasRustSnapshotTransactionClass(value, name), false);
   assert.equal(calls, 0);
 });
+
+test('batched class guards retain per-instance checks and recheck shared prototypes on every call', () => {
+  class Example {
+    field = 2;
+    method() {}
+  }
+  const name = 'MergeBatchGuardFixture';
+  guards.registerRustSnapshotTransactionClass(name, Example);
+  const values = Array.from({ length: 64 }, () => new Example());
+  const valid = () => guards.hasRustSnapshotTransactionClassFieldsBatch(values, name, ['field']);
+  assert.equal(valid(), true);
+  let calls = 0;
+  const getter = () => {
+    calls++;
+    throw new Error('unobserved getter');
+  };
+  for (const [object, key, descriptor] of [
+    [values[37], 'field', { get: getter, configurable: true }],
+    [values[37], 'method', { get: getter, configurable: true }],
+    [Example.prototype, 'method', { get: getter, configurable: true }],
+    [Example, Symbol('extra'), { get: getter, configurable: true }],
+    [values, '37', { get: getter, configurable: true }],
+  ]) {
+    const previous = Object.getOwnPropertyDescriptor(object, key);
+    Object.defineProperty(object, key, descriptor);
+    assert.equal(valid(), false);
+    if (previous) Object.defineProperty(object, key, previous);
+    else delete object[key];
+    assert.equal(valid(), true);
+  }
+  const previous = values[37];
+  values[37] = new Proxy(previous, { getPrototypeOf: getter, ownKeys: getter, getOwnPropertyDescriptor: getter });
+  assert.equal(valid(), false);
+  values[37] = previous;
+  assert.equal(
+    guards.hasRustSnapshotTransactionClassFieldsBatch(new Proxy(values, { getPrototypeOf: getter }), name, ['field']),
+    false
+  );
+  delete values[37];
+  assert.equal(valid(), false);
+  values[37] = previous;
+  Object.defineProperty(previous, 'unread', { get: getter });
+  assert.equal(valid(), true);
+  assert.equal(calls, 0);
+  assert.equal(guards.hasRustSnapshotTransactionClassFieldsBatch([], 'unregistered', []), false);
+});

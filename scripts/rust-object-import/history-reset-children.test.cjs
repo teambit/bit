@@ -35,9 +35,9 @@ function setup(t, hook) {
       this,
       build,
       count,
-      (response) => {
+      (response, body) => {
         frame.response = response;
-        return hook?.(input, response) === false ? false : validate(response);
+        return hook?.(input, response) === false ? false : validate(response, body);
       },
       ...rest
     );

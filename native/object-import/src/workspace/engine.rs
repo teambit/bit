@@ -1,5 +1,6 @@
 pub(crate) mod diff;
 mod read;
+mod read_raw;
 mod scan;
 
 use crate::protocol;
@@ -24,10 +25,25 @@ const MAX_FILES: usize = 4096;
     deny_unknown_fields
 )]
 enum Request {
-    Scan { root: PathBuf, exclude_dirs: Vec<PathBuf>, workspace_root: bool },
-    Read { files: Vec<PathBuf> },
-    Diff { files: Vec<diff::InputFile>, git_executable: String, color: bool },
-    Compare { left: String, right: String },
+    Scan {
+        root: PathBuf,
+        exclude_dirs: Vec<PathBuf>,
+        workspace_root: bool,
+    },
+    Read {
+        files: Vec<PathBuf>,
+        #[serde(default)]
+        binary: bool,
+    },
+    Diff {
+        files: Vec<diff::InputFile>,
+        git_executable: String,
+        color: bool,
+    },
+    Compare {
+        left: String,
+        right: String,
+    },
 }
 #[derive(Serialize)]
 struct Response {
@@ -66,9 +82,11 @@ pub(crate) fn serve(
     }
     let mut bytes = vec![0; length];
     reader.read_exact(&mut bytes)?;
-    let result = serde_json::from_slice(&bytes)
-        .map_err(|_| invalid("workspace invalid request"))
-        .and_then(|request| apply(request, pool));
+    let request = serde_json::from_slice(&bytes).map_err(|_| invalid("workspace invalid request"));
+    if let Ok(Request::Read { files, binary: true }) = &request {
+        return read_raw::respond(id, files, pool, writer);
+    }
+    let result = request.and_then(|request| apply(request, pool));
     let response = match result {
         Ok((completed, data)) => Response {
             version: 1,
@@ -97,7 +115,7 @@ fn apply(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value
             let paths = scan::scan(&root, &exclude_dirs, workspace_root)?;
             Ok((paths.len(), json!({"paths":paths})))
         }
-        Request::Read { files } => {
+        Request::Read { files, .. } => {
             let files = read::read(&files, pool)?;
             Ok((files.len(), json!({"files":files})))
         }

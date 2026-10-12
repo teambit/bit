@@ -224,7 +224,8 @@ if (output && process.pid === owner) {
     let workspace = false,
       workspaceId;
     const requests = [];
-    let pending = '';
+    let pending = Buffer.alloc(0);
+    let binaryRemaining = 0;
     const write = child.stdin.write;
     child.stdin.write = function (bytes, ...rest) {
       const magic = Buffer.isBuffer(bytes) ? bytes.subarray(0, 4).toString() : '';
@@ -388,9 +389,16 @@ if (output && process.pid === owner) {
     };
     child.stdout.on('data', (bytes) => {
       if (!workspace) return;
-      pending += bytes.toString();
-      let newline;
-      while ((newline = pending.indexOf('\n')) >= 0) {
+      pending = Buffer.concat([pending, bytes]);
+      while (true) {
+        if (binaryRemaining) {
+          const consumed = Math.min(binaryRemaining, pending.length);
+          pending = pending.subarray(consumed);
+          binaryRemaining -= consumed;
+          if (binaryRemaining) return;
+        }
+        const newline = pending.indexOf(10);
+        if (newline < 0) return;
         const magic = requests.shift();
         const metric = magic?.startsWith('BMT1:')
           ? metrics.mergeState[magic.slice(5)]
@@ -410,7 +418,9 @@ if (output && process.pid === owner) {
                         ? metrics.checkout.write
                         : metrics.persistence;
         try {
-          const response = JSON.parse(pending.slice(0, newline));
+          const response = JSON.parse(pending.subarray(0, newline).toString());
+          if (magic === 'BWS1:read' && Number.isSafeInteger(response.binaryBytes) && response.binaryBytes >= 0)
+            binaryRemaining = response.binaryBytes;
           metric.completed += response.completed || 0;
           if (magic?.startsWith('BMT1:historyQuery') && response.completed > 0 && !response.failed) {
             if (response.data?.token) metric.tokens.push({ token: response.data.token, helperId: workspaceId });
@@ -502,7 +512,7 @@ if (output && process.pid === owner) {
         } catch {
           metric.failed++;
         }
-        pending = pending.slice(newline + 1);
+        pending = pending.subarray(newline + 1);
       }
     });
     return child;

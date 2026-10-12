@@ -9,18 +9,31 @@ use std::{
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct FileRecord {
-    path: PathBuf,
+    #[serde(flatten)]
+    metadata: Metadata,
     contents: String,
+}
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(super) struct Metadata {
+    path: PathBuf,
     hash: String,
     linux_hash: String,
     snapshot_hash: String,
 }
 
 pub(super) fn read(files: &[PathBuf], pool: &ThreadPool) -> io::Result<Vec<FileRecord>> {
+    read_with(files, pool, record)
+}
+pub(super) fn read_with<Record: Send>(
+    files: &[PathBuf],
+    pool: &ThreadPool,
+    record: impl Fn(&Path, Vec<u8>) -> Record + Sync,
+) -> io::Result<Vec<Record>> {
     count(files.len())?;
     if files.len() >= 32
         && pool.current_num_threads() > 1
-        && let Ok(output) = parallel(files, pool)
+        && let Ok(output) = parallel(files, pool, &record)
     {
         return Ok(output);
     }
@@ -36,7 +49,11 @@ pub(super) fn read(files: &[PathBuf], pool: &ThreadPool) -> io::Result<Vec<FileR
         })
         .collect()
 }
-fn parallel(files: &[PathBuf], pool: &ThreadPool) -> io::Result<Vec<FileRecord>> {
+fn parallel<Record: Send>(
+    files: &[PathBuf],
+    pool: &ThreadPool,
+    record: &(impl Fn(&Path, Vec<u8>) -> Record + Sync),
+) -> io::Result<Vec<Record>> {
     let mut total = 0;
     let mut output = Vec::with_capacity(files.len());
     for batch in files.chunks(pool.current_num_threads()) {
@@ -59,6 +76,10 @@ fn parallel(files: &[PathBuf], pool: &ThreadPool) -> io::Result<Vec<FileRecord>>
     Ok(output)
 }
 fn record(file: &Path, raw: Vec<u8>) -> FileRecord {
+    let (metadata, contents) = canonical(file, raw);
+    FileRecord { metadata, contents: crate::validate::hexadecimal(&contents) }
+}
+pub(super) fn canonical(file: &Path, raw: Vec<u8>) -> (Metadata, Vec<u8>) {
     let hash = hash(&raw);
     let has_bom = raw.starts_with(b"\xef\xbb\xbf");
     let contents = strip_bom(raw);
@@ -68,13 +89,7 @@ fn record(file: &Path, raw: Vec<u8>) -> FileRecord {
     } else {
         snapshot_hash.clone()
     };
-    FileRecord {
-        path: file.to_owned(),
-        contents: crate::validate::hexadecimal(&contents),
-        hash,
-        linux_hash,
-        snapshot_hash,
-    }
+    (Metadata { path: file.to_owned(), hash, linux_hash, snapshot_hash }, contents)
 }
 pub(super) fn raw(file: &Path, maximum: usize) -> io::Result<Vec<u8>> {
     path(file)?;

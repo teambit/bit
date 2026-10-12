@@ -26,9 +26,9 @@ function setup(t, hook) {
       this,
       build,
       count,
-      (response) => {
+      (response, body) => {
         const keep = hook?.(input, response);
-        return keep === false ? false : validate(response);
+        return keep === false ? false : validate(response, body);
       },
       ...rest
     );

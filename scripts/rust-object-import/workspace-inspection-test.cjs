@@ -801,12 +801,12 @@ test('malformed snapshot and status replies retire the helper before preserving 
         this,
         build,
         count,
-        (response) => {
+        (response, body) => {
           if (input?.kind === failure && response.data) {
             if (failure === 'inspectionBegin') response.data.files[0].relativePath = 'wrong-identity';
             else response.data.statuses = [];
           }
-          return validate(response);
+          return validate(response, body);
         },
         ...args
       );
@@ -902,4 +902,49 @@ test('parallel component loading returns request order while retaining completio
   result.components.forEach((component, index) => assert.equal(component, components[index]));
   assert.deepEqual(result.invalidComponents, []);
   assert.deepEqual(result.removedComponents, []);
+});
+
+test('raw workspace reads reject discontinuous ranges and preserve independent public buffers', async (t) => {
+  const directory = await fixture(t);
+  const reader = compiled
+    ? require(path.join(base, 'rust-workspace-reader.js'))
+    : source('scopes/component/sources/rust-workspace-reader.ts');
+  const paths = [path.join(directory, 'a'), path.join(directory, 'b')];
+  const request = Session.prototype.request;
+  t.after(() => {
+    Session.prototype.request = request;
+  });
+  for (const mode of ['valid', 'overlap', 'gap', 'negative', 'fractional', 'truncated', 'surplus', 'hash']) {
+    Session.prototype.request = async function (build, count, validate, maximum, variable, binary) {
+      assert.equal(binary, true);
+      const files = paths.map((filename, index) => ({
+        path: filename,
+        offset: index * 2,
+        bytes: 2,
+        hash: 'a'.repeat(40),
+        linuxHash: 'a'.repeat(40),
+        snapshotHash: 'a'.repeat(40),
+      }));
+      if (mode === 'overlap') files[1].offset = 0;
+      if (mode === 'gap') files[1].offset = 3;
+      if (mode === 'negative') files[1].bytes = -1;
+      if (mode === 'fractional') files[1].bytes = 1.5;
+      if (mode === 'hash') files[1].snapshotHash = 'invalid';
+      const body = Buffer.from([0, 255, 10, 13, 42]).subarray(0, mode === 'truncated' ? 3 : mode === 'surplus' ? 5 : 4);
+      return validate({ version: 1, id: 1, completed: 2, skipped: [], failed: false, data: { files } }, body)
+        ? 2
+        : undefined;
+    };
+    const result = await reader.readRustWorkspaceFiles(paths);
+    if (mode !== 'valid') {
+      assert.equal(result, undefined, mode);
+      continue;
+    }
+    assert.deepEqual(
+      result.map((file) => file.contents),
+      [Buffer.from([0, 255]), Buffer.from([10, 13])]
+    );
+    result[0].contents[0] = 12;
+    assert.deepEqual(result[1].contents, Buffer.from([10, 13]));
+  }
 });

@@ -21,7 +21,7 @@ MaterializationSession.prototype.request = function (build, count, validate, ...
     this,
     captured,
     count,
-    (response) => {
+    (response, body) => {
       const target =
         !fired &&
         input?.kind === process.env.BIT_MERGE_TRANSACTION_FAULT_KIND &&
@@ -42,7 +42,7 @@ MaterializationSession.prototype.request = function (build, count, validate, ...
         );
         return false; // The real session retires on a missing/invalid client receipt.
       }
-      return validate ? validate(response) : true;
+      return validate ? validate(response, body) : true;
     },
     ...options
   );

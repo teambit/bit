@@ -134,3 +134,19 @@ extra metadata stays on the exact original alias. Prototype descriptors are chec
 once per synchronous validation batch. Private comparison snapshots use captured
 typed-array length/set operations, so copying does not invoke public Buffer hooks.
 Byte hashes, lengths, alias identity and later mutation checks remain required.
+
+Synchronous class-guard batches validate shared constructor/prototype descriptors
+once and check every instance's own fields separately. Merge Source freshness,
+retained apply clones and captured Version references use these batches. No result
+is cached across calls or asynchronous boundaries; proxies, sparse arrays and
+accessor entries decline without running traps or getters. Captured reference
+identities remain protected by the existing row/array descriptor snapshots.
+
+Workspace read requests can opt into a raw response: one JSON metadata header
+followed by an exact bounded byte payload. Native code retains the parallel read
+budgets and prepares the complete header/payload before writing a receipt. Node
+validates the declared size, ordered contiguous ranges and metadata before exposing
+independent Buffers. Arbitrary newlines and invalid UTF-8 bytes are payload data;
+truncated, surplus or oversized responses cannot acknowledge a prefix. Existing
+hex/JSON callers retain their format. Qualification tracing skips the exact raw
+payload length before parsing the next response.

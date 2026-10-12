@@ -7,7 +7,7 @@ import {
   installRustCheckoutPlanSourceContents,
   canInstallRustCheckoutPlanSourceContents,
 } from '@teambit/component.sources';
-import { hasRustSnapshotTransactionClassFields } from '@teambit/objects';
+import { hasRustSnapshotTransactionClassFields, hasRustSnapshotTransactionClassFieldsBatch } from '@teambit/objects';
 import type { Version } from '@teambit/objects';
 import type { MergeResultsThreeWay } from './three-way-merge';
 
@@ -407,14 +407,15 @@ export function captureNativeMergeTarget(
   if (Reflect.ownKeys(arrayFields).length !== files.length + 1) return undefined;
   const snapshots: Snapshot[] = [descriptorSnapshot(files)];
   const output: RustMergeTargetManifest['files'] = [];
+  const references: object[] = [];
   for (let index = 0; index < files.length; index++) {
     const row = arrayFields[index]?.value;
     if (!row || types.isProxy(row) || Object.getPrototypeOf(row) !== Object.prototype) return undefined;
     const data = Object.getOwnPropertyDescriptors(row);
     if (Reflect.ownKeys(data).some((key) => !('value' in Reflect.get(data, key)))) return undefined;
     const reference = data.file?.value;
-    if (!reference || types.isProxy(reference) || !hasRustSnapshotTransactionClassFields(reference, 'Ref', ['hash']))
-      return undefined;
+    if (!reference || typeof reference !== 'object' || types.isProxy(reference)) return undefined;
+    references.push(reference);
     const fileHash = Object.getOwnPropertyDescriptor(reference, 'hash')?.value;
     const relativePath = data.relativePath?.value,
       name = data.name?.value,
@@ -435,6 +436,7 @@ export function captureNativeMergeTarget(
     };
     snapshots.push(descriptorSnapshot(row), descriptorSnapshot(reference));
   }
+  if (!hasRustSnapshotTransactionClassFieldsBatch(references, 'Ref', ['hash'])) return undefined;
   return {
     manifest: { hash, files: output },
     fresh: () =>
@@ -443,6 +445,6 @@ export function captureNativeMergeTarget(
       Object.getOwnPropertyDescriptor(version, '_hash')?.value === hash &&
       Object.getOwnPropertyDescriptor(version, 'files')?.value === files &&
       snapshots.every(unchanged) &&
-      files.every((row) => hasRustSnapshotTransactionClassFields(row.file, 'Ref', ['hash'])),
+      hasRustSnapshotTransactionClassFieldsBatch(references, 'Ref', ['hash']),
   };
 }

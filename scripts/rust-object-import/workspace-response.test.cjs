@@ -78,3 +78,75 @@ test('response size includes the terminator and trailing bytes cannot acknowledg
     });
   }
 });
+
+test('raw replies preserve arbitrary bytes across header/body fragmentation and subsequent JSON replies', async (t) => {
+  for (const width of [1, 37, 65536]) {
+    const { session, child } = setup(t);
+    const body = Buffer.alloc(64 * 1024).fill(Buffer.from([0, 255, 10, 13, 0xc3, 0xa9, 34, 92]));
+    const header = Buffer.from(
+      JSON.stringify({ version: 1, id: 1, completed: 1, skipped: [], failed: false, binaryBytes: body.length }) + '\n'
+    );
+    const wire = Buffer.concat([header, body]);
+    let observed = 0;
+    const pending = session.request(
+      () => Buffer.alloc(0),
+      1,
+      (value, contents) => {
+        assert.deepEqual(contents, body);
+        observed++;
+        return true;
+      },
+      wire.length,
+      false,
+      true
+    );
+    for (let offset = 0; offset < wire.length; offset += width)
+      child.stdout.emit('data', wire.subarray(offset, offset + width));
+    assert.equal(await pending, 1);
+    assert.equal(observed, 1);
+    const next = session.request(() => Buffer.alloc(0), 1);
+    child.stdout.emit('data', response(2, 'after raw'));
+    assert.equal(await next, 1);
+  }
+});
+
+test('raw replies reject malformed lengths, surplus bytes and incomplete bodies without acknowledging a prefix', async (t) => {
+  for (const mode of ['missing', 'negative', 'fractional', 'limit', 'surplus', 'incomplete']) {
+    await t.test(mode, async (t) => {
+      const { session, child } = setup(t);
+      let observed = 0;
+      const binaryBytes = {
+        missing: undefined,
+        negative: -1,
+        fractional: 1.5,
+        limit: 99999,
+        surplus: 1,
+        incomplete: 3,
+      }[mode];
+      const pending = session.request(
+        () => Buffer.alloc(0),
+        1,
+        () => {
+          observed++;
+          return true;
+        },
+        1024,
+        false,
+        true
+      );
+      child.stdout.emit(
+        'data',
+        Buffer.concat([
+          Buffer.from(
+            JSON.stringify({ version: 1, id: 1, completed: 1, skipped: [], failed: false, binaryBytes }) + '\n'
+          ),
+          Buffer.from([0, 255]),
+        ])
+      );
+      if (mode === 'incomplete') await session.dispose();
+      assert.equal(await pending, undefined);
+      assert.equal(observed, 0);
+      assert.equal(session.usable, false);
+    });
+  }
+});

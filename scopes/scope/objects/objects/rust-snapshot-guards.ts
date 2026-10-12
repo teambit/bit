@@ -1,3 +1,5 @@
+import { types } from 'util';
+
 type DescriptorEntry = { key: string | symbol; descriptor: PropertyDescriptor };
 function descriptorEntries(object: object): DescriptorEntry[] {
   return Reflect.ownKeys(object).map((key) => ({ key, descriptor: Object.getOwnPropertyDescriptor(object, key)! }));
@@ -84,12 +86,15 @@ function unchanged(defaults: ClassDefaults): boolean {
 /** Pure descriptor checks do not invoke getters or custom methods during speculative planning. */
 function hasClassFields(value: unknown, name: string, fields?: ReadonlySet<string>): boolean {
   const defaults = classes?.get(name);
+  return Boolean(defaults && unchanged(defaults) && hasInstanceFields(value, defaults, fields));
+}
+
+function hasInstanceFields(value: unknown, defaults: ClassDefaults, fields?: ReadonlySet<string>): boolean {
   if (
     !value ||
     typeof value !== 'object' ||
-    !defaults ||
-    Object.getPrototypeOf(value) !== defaults.constructor.prototype ||
-    !unchanged(defaults)
+    types.isProxy(value) ||
+    Object.getPrototypeOf(value) !== defaults.constructor.prototype
   )
     return false;
   for (const key of Reflect.ownKeys(value)) {
@@ -115,6 +120,25 @@ export function hasRustSnapshotTransactionClass(value: unknown, name: string): b
 /** Semantic readers inspect selected data fields while retaining all defining method guards. */
 export function hasRustSnapshotTransactionClassFields(value: unknown, name: string, fields: string[]): boolean {
   return hasClassFields(value, name, new Set(fields));
+}
+
+/** A synchronous descriptor-only batch: shared prototypes are checked once, never cached across calls. */
+export function hasRustSnapshotTransactionClassFieldsBatch(
+  values: readonly unknown[],
+  name: string,
+  fields: string[]
+): boolean {
+  if (types.isProxy(values) || !Array.isArray(values) || Object.getPrototypeOf(values) !== Array.prototype)
+    return false;
+  const defaults = classes?.get(name);
+  if (!defaults || !unchanged(defaults)) return false;
+  const selected = new Set(fields);
+  const length = Object.getOwnPropertyDescriptor(values, 'length')!.value;
+  for (let index = 0; index < length; index++) {
+    const entry = Object.getOwnPropertyDescriptor(values, String(index));
+    if (!entry || !('value' in entry) || !hasInstanceFields(entry.value, defaults, selected)) return false;
+  }
+  return true;
 }
 
 /** Metadata hydration must use the original defining constructor and its unchanged methods. */
