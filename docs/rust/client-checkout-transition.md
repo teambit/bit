@@ -16,7 +16,7 @@ Metadata-only checkout RPC does not imply zero Node body I/O. Current component 
 
 ## Qualification
 
-The frozen implementation is revision `d0b4e513fcd448d18306740a6d0ba17e3cdd26b6`. Its physically compiled private CLI uses the authentic Bit `2.2.93` baseline at `323f727bc81dd6a61bbf2b279d182bd465532984`, with 158 source and 156 compiled-module fingerprints and no runtime source rerouting. The qualification driver checks those fingerprints, the helper, native source and harness before and after each run.
+The frozen implementation is revision `d0b4e513fcd448d18306740a6d0ba17e3cdd26b6`. Subsequent commits record documentation and remove a leading blank line from a Rust test; qualified production code is unchanged. Its physically compiled private CLI uses the authentic Bit `2.2.93` baseline at `323f727bc81dd6a61bbf2b279d182bd465532984`, with 158 source and 156 compiled-module fingerprints and no runtime source rerouting. The qualification driver checks those fingerprints, the helper, native source and harness before and after each run.
 
 The native source digest is `8af182ec41b69e381b510dcbd16e82f4cb33f4d39fca3dd686a729c5d6056abc`; the GNU release helper SHA-256 is `c06a76d2d1da1b37f26e36d98138927b492162b473787231657be58b8d7133fc`. The official archive is `bit-object-import-0.1.0-x86_64-unknown-linux-gnu-d0b4e513fcd4.tar.gz`, SHA-256 `8f0ddbf0613ac88734b5bf6806b44bcb96af0342e8cc71424581365155749c85`. Loader and artifact checks use this packaged helper rather than an unbound development executable.
 
