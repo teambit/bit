@@ -22,10 +22,11 @@ const metrics = {
   materialization: { frames: 0, files: 0, bytes: 0, completed: 0, skipped: 0, failed: 0 },
   persistence: { helpers: 0, frames: 0, actions: 0, completed: 0, failed: 0, kinds: {} },
   checkout: {
-    plan: { frames: 0, files: 0, completed: 0, failed: 0 },
-    preflight: { frames: 0, files: 0, completed: 0, failed: 0 },
-    write: { frames: 0, files: 0, completed: 0, failed: 0 },
+    plan: { frames: 0, files: 0, completed: 0, failed: 0, helperIds: [] },
+    preflight: { frames: 0, files: 0, completed: 0, failed: 0, helperIds: [] },
+    write: { frames: 0, files: 0, completed: 0, failed: 0, helperIds: [] },
   },
+  workspaceFrames: [],
   workspace: Object.fromEntries(
     ['scan', 'read', 'compare', 'diff'].map((kind) => [kind, { frames: 0, files: 0, completed: 0, failed: 0 }])
   ),
@@ -77,6 +78,14 @@ const metrics = {
       'inspectionCompare',
       'inspectionDiff',
       'inspectionFinish',
+      'checkoutSelectBegin',
+      'checkoutSelectReceipt',
+      'checkoutApplyDecision',
+      'checkoutPrepare',
+      'checkoutRemovals',
+      'checkoutApply',
+      'checkoutMaterialize',
+      'checkoutFinish',
     ].map((kind) => [
       kind,
       {
@@ -84,7 +93,12 @@ const metrics = {
         files: 0,
         completed: 0,
         failed: 0,
-        ...(kind.startsWith('snapshot') || kind.startsWith('inspection') ? { helperIds: [] } : {}),
+        ...(kind.startsWith('snapshot') || kind.startsWith('inspection') || kind.startsWith('checkout')
+          ? { helperIds: [] }
+          : {}),
+        ...(kind.startsWith('checkout')
+          ? { tokens: [], sourceBodyBytes: 0, snapshotBytes: 0, stepsCompleted: 0, dataFailed: 0 }
+          : {}),
         ...(kind.startsWith('inspection')
           ? { snapshotBytes: 0, sourceBodyBytes: 0, publicContentBytes: 0, tokens: [] }
           : {}),
@@ -153,6 +167,12 @@ if (output && process.pid === owner) {
         const operation = ['BWS1', 'BSS1', 'BMH1', 'BMT1'].includes(magic)
           ? JSON.parse(bytes.subarray(12).toString())
           : undefined;
+        metrics.workspaceFrames.push({
+          magic,
+          kind: operation?.kind,
+          helperId: workspaceId,
+          id: bytes.readUInt32BE(4),
+        });
         requests.push(operation ? `${magic}:${operation.kind}` : magic);
         if (operation) {
           const metric = (
@@ -175,6 +195,24 @@ if (output && process.pid === owner) {
               : operation.files?.length || (operation.kind === 'compare' ? 1 : 0);
           if (magic === 'BMT1' && operation.kind.startsWith('inspection') && operation.token)
             metric.tokens.push({ token: operation.token, helperId: workspaceId });
+          if (magic === 'BMT1' && operation.kind.startsWith('checkout')) {
+            if (operation.token) metric.tokens.push({ token: operation.token, helperId: workspaceId });
+            const inspect = (value) => {
+              if (!value || typeof value !== 'object') return;
+              for (const [key, item] of Object.entries(value)) {
+                if (['contents', 'body', 'buffer', 'compressed'].includes(key) && typeof item === 'string')
+                  metric.sourceBodyBytes += Buffer.byteLength(item);
+                else if (
+                  ['contents', 'body', 'buffer', 'compressed'].includes(key) &&
+                  item?.type === 'Buffer' &&
+                  Array.isArray(item.data)
+                )
+                  metric.sourceBodyBytes += item.data.length;
+                else if (item && typeof item === 'object') inspect(item);
+              }
+            };
+            inspect(operation);
+          }
           if (magic === 'BMT1' && operation.kind === 'inspectionCompare') {
             const field = (value, name) =>
               value?.kind === 'object'
@@ -283,6 +321,14 @@ if (output && process.pid === owner) {
           if (magic === 'BMT1:recoveryAdvance') {
             metric.stepsCompleted += response.data?.completed || 0;
             metric.dataFailed += Number(response.data?.failed === true);
+          }
+          if (magic?.startsWith('BMT1:checkout')) {
+            if (response.data?.token) metric.tokens.push({ token: response.data.token, helperId: workspaceId });
+            metric.stepsCompleted += response.data?.completed || 0;
+            metric.dataFailed += Number(response.data?.failed === true);
+            for (const file of response.data?.files || []) metric.snapshotBytes += file.bytes || 0;
+            if (magic === 'BMT1:checkoutPrepare')
+              for (const body of response.data?.bodies || []) metric.snapshotBytes += body.bytes || 0;
           }
           if (magic === 'BMT1:inspectionBegin') {
             if (response.data?.token) metric.tokens.push({ token: response.data.token, helperId: workspaceId });

@@ -30,7 +30,7 @@ import { registerRustLaneSnapshotModels } from '../objects/rust-lane-snapshot';
 registerRustLaneSnapshotModels({ ModelComponent, Version, Lane });
 
 import { registerRustSquashModels } from '../objects/rust-squash-history';
-registerRustSquashModels({ ModelComponent, Version, VersionHistory });
+registerRustSquashModels({ ModelComponent, Version, VersionHistory, Source });
 
 import { registerRustResetClass } from '../objects/rust-reset-refs';
 import { DetachedHeads } from './detach-heads';

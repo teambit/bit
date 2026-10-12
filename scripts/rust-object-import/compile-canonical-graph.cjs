@@ -47,6 +47,8 @@ for (const args of [
     'teambit.harmony/api-server',
     'teambit.envs/envs',
     'teambit.pkg/modules/semver-helper',
+    'teambit.toolbox/string/eol',
+    'teambit.git/modules/git-executable',
   ],
 ])
   cp.execFileSync(executable, [...prefix, ...args], { stdio: 'inherit' });

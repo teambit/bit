@@ -25,6 +25,14 @@ const MAX_JSON: usize = 4 * 1024 * 1024;
     deny_unknown_fields
 )]
 enum Request {
+    CheckoutSelectBegin(Value),
+    CheckoutSelectReceipt(Value),
+    CheckoutApplyDecision(Value),
+    CheckoutPrepare(Value),
+    CheckoutRemovals(Value),
+    CheckoutApply(Value),
+    CheckoutMaterialize(Value),
+    CheckoutFinish(Value),
     InspectionBegin(Value),
     InspectionFiles(Value),
     InspectionCompare(Value),
@@ -157,9 +165,24 @@ fn apply(request: Request, state: &mut State, bytes: &[u8]) -> io::Result<Value>
         Request::InspectionFinish(input) => {
             crate::inspection::apply("inspectionFinish", input, &mut state.inspection)
         }
-        request => metadata(request, state, bytes),
+        request => checkout_operation(request, state, bytes),
     }
 }
+fn checkout_operation(request: Request, state: &mut State, bytes: &[u8]) -> io::Result<Value> {
+    let (kind, input) = match request {
+        Request::CheckoutSelectBegin(input) => ("checkoutSelectBegin", input),
+        Request::CheckoutSelectReceipt(input) => ("checkoutSelectReceipt", input),
+        Request::CheckoutApplyDecision(input) => ("checkoutApplyDecision", input),
+        Request::CheckoutRemovals(input) => ("checkoutRemovals", input),
+        Request::CheckoutPrepare(input) => ("checkoutPrepare", input),
+        Request::CheckoutApply(input) => ("checkoutApply", input),
+        Request::CheckoutMaterialize(input) => ("checkoutMaterialize", input),
+        Request::CheckoutFinish(input) => ("checkoutFinish", input),
+        request => return metadata(request, state, bytes),
+    };
+    crate::checkout_transition::apply(kind, input, &mut state.operations.checkout_transition)
+}
+
 fn metadata(request: Request, state: &mut State, bytes: &[u8]) -> io::Result<Value> {
     match request {
         Request::ResetRefsPlan(input) => crate::recovery::reset(&input),
@@ -188,7 +211,9 @@ fn metadata(request: Request, state: &mut State, bytes: &[u8]) -> io::Result<Val
         | Request::TransferRelease(_)
         | Request::TransferPending(_)
         | Request::TransferTransactionInitialize(_)
-        | Request::TransferTransactionReceipt(_)) => transfer_request(request, &mut state.transfer),
+        | Request::TransferTransactionReceipt(_)) => {
+            transfer_request(request, &mut state.operations.transfer)
+        }
         request => snapshot_operation(request, state),
     }
 }

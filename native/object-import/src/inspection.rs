@@ -1,3 +1,5 @@
+pub(crate) use bitmap::normalize as normalize_bitmap;
+
 mod bitmap;
 mod compare;
 mod diff;

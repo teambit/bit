@@ -14,7 +14,7 @@ import {
 import * as eol from '@teambit/toolbox.string.eol';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { pathNormalizeToLinux } from '@teambit/toolbox.path.path';
-import { getGitExecutablePath } from '@teambit/git.modules.git-executable';
+import { getGitExecutablePath, canUseDefaultGitNatively } from '@teambit/git.modules.git-executable';
 import { mergeFiles } from './merge-files';
 import type { MergeResultsThreeWay } from './three-way-merge';
 
@@ -96,6 +96,10 @@ type Current = {
   workspace?: { path: string; hash: string; linuxHash: string };
   source?: { hash: string };
 };
+function mergeWorkspaceDescriptor(file: SourceFile): Current['workspace'] {
+  const value = getRustWorkspaceMergeDescriptor(file);
+  return value && { path: value.path, hash: value.hash, linuxHash: value.linuxHash };
+}
 type Row = {
   kind: keyof MergeResultsThreeWay;
   current?: number;
@@ -138,6 +142,7 @@ export async function tryRustThreeWayMerge(params: Params): Promise<MergeResults
   const { scope, currentComponent, otherComponent, baseComponent, currentLabel, otherLabel } = params;
   if (
     process.env.BIT_RUST_CLIENT_VCS !== 'on' ||
+    !canUseDefaultGitNatively() ||
     !scope?.objects ||
     ![currentComponent, otherComponent, baseComponent].every((component) => ownData(component, 'files')) ||
     !ordinaryMethods(currentComponent, scope.objects) ||
@@ -166,7 +171,7 @@ export async function tryRustThreeWayMerge(params: Params): Promise<MergeResults
       return undefined;
     const relative = pathNormalizeToLinux(file.relative);
     if (!filePath(relative)) return undefined;
-    const workspace = getRustWorkspaceMergeDescriptor(file);
+    const workspace = mergeWorkspaceDescriptor(file);
     const stored = workspace ? undefined : getRustCheckoutSourceDescriptor(file);
     if (!workspace && (!stored || stored.objectsDirectory !== directory)) return undefined;
     current.push(workspace ? { path: relative, workspace } : { path: relative, source: { hash: stored!.hash } });
@@ -234,7 +239,7 @@ export async function tryRustThreeWayMerge(params: Params): Promise<MergeResults
     }) !== metadata ||
     currentFiles.some((file, index) => {
       const descriptor = current[index].workspace
-        ? getRustWorkspaceMergeDescriptor(file)
+        ? mergeWorkspaceDescriptor(file)
         : getRustCheckoutSourceDescriptor(file);
       return (
         JSON.stringify(descriptor) !==

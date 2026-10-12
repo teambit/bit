@@ -499,4 +499,8 @@ jobs:
           BIT_TEST_THREE_WAY_MERGE_COMPILED=1 node --test scripts/rust-object-import/three-way-merge.test.cjs
           node --test scripts/rust-object-import/workspace-inspection-test.cjs
           BIT_TEST_WORKSPACE_INSPECTION_COMPILED=1 node --test scripts/rust-object-import/workspace-inspection-test.cjs
+          node --test scripts/rust-object-import/checkout-transition.test.cjs
+          BIT_TEST_CHECKOUT_TRANSITION_COMPILED=1 node --test scripts/rust-object-import/checkout-transition.test.cjs
+          node --test scripts/rust-object-import/checkout-files-guards.test.cjs
+          BIT_TEST_CHECKOUT_TRANSITION_COMPILED=1 node --test scripts/rust-object-import/checkout-files-guards.test.cjs
           node scripts/rust-object-import/canonical-model-tests.cjs

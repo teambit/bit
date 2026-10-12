@@ -1,8 +1,11 @@
+pub(crate) use verification::verify_manifest;
+
 use std::{
     collections::{HashMap, HashSet},
     io::{self, Read, Write},
     path::{Path, PathBuf},
 };
+mod verification;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -220,7 +223,7 @@ fn absolute_path(path: &Path) -> io::Result<()> {
     Ok(())
 }
 
-fn relative_path(path: &str) -> io::Result<()> {
+pub(crate) fn relative_path(path: &str) -> io::Result<()> {
     if path.is_empty() || path.len() > MAX_PATH || path.contains(['\0', '\\', ':']) {
         return Err(invalid("checkout plan invalid relative path"));
     }

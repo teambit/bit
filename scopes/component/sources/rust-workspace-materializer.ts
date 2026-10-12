@@ -5,11 +5,18 @@ import { resolveRustObjectImportExecutable } from '@teambit/objects';
 import * as eol from '@teambit/toolbox.string.eol';
 import AbstractVinyl, { defaultVinylWrite, logFileWrite } from './abstract-vinyl';
 import { checkoutSourceFrame, getRustCheckoutSourceDescriptor } from './rust-checkout-source';
+import {
+  getRustCheckoutPlanSourceDescriptor,
+  isRustCheckoutPlanSourceFile,
+  captureRustCheckoutPlanWriteContinuation,
+  type RustCheckoutPlanWriteContinuation,
+} from './rust-checkout-plan-source';
 
 const MAX_FILES = 64;
 const MAX_BYTES = 32 * 1024 * 1024;
 const MAX_PATH = 32768;
 const MAX_RESPONSE = 65536;
+const stringify = JSON.stringify;
 let active = 0;
 
 type ProjectedFile = { filename: Buffer; contents: Buffer; overwrite: boolean };
@@ -196,8 +203,35 @@ export async function persistFilesInSession(
 }
 
 async function persistChunk(files: AbstractVinyl[], concurrency: number, session: MaterializationSession) {
+  const continuations = files.map((file) => captureRustCheckoutPlanWriteContinuation(file));
+  // The default pool starts every write in this concurrency chunk before its first asynchronous receipt.
+  // Freeze planned bodies and destinations across every bounded helper frame, including later frames.
+  if (continuations.every(Boolean)) continuations.forEach((write) => write!.log());
+  const persistSuffix = (start: number) =>
+    pMapPool(
+      files.slice(start).map((file, offset) => ({ file, write: continuations[start + offset] })),
+      async ({ file, write }) => {
+        if (write) await write.persist();
+        else await file.write();
+      },
+      { concurrency }
+    );
   let index = 0;
   while (index < files.length) {
+    const planned = projectPlanBatch(continuations, index);
+    if (planned) {
+      for (let offset = 0; offset < planned.files.length; offset++) {
+        continuations[index + offset]!.log();
+      }
+      const completed = await persistPlanBatch(planned, session);
+      if (completed === undefined || completed < planned.files.length) {
+        await session.dispose();
+        await persistSuffix(index + (completed || 0));
+        return;
+      }
+      index += completed;
+      continue;
+    }
     const source = projectSourceBatch(files, index);
     if (source) {
       for (let offset = 0; offset < source.files.length; offset++) {
@@ -210,7 +244,7 @@ async function persistChunk(files: AbstractVinyl[], concurrency: number, session
       );
       if (completed === undefined || completed < source.files.length) {
         await session.dispose();
-        await pMapPool(files.slice(index + (completed || 0)), (file) => file.write(), { concurrency });
+        await persistSuffix(index + (completed || 0));
         return;
       }
       index += completed;
@@ -218,7 +252,7 @@ async function persistChunk(files: AbstractVinyl[], concurrency: number, session
     }
     const batch = projectBatch(files, index);
     if (!batch.length) {
-      await pMapPool(files.slice(index), (file) => file.write(), { concurrency });
+      await persistSuffix(index);
       return;
     }
     for (let offset = 0; offset < batch.length; offset++) {
@@ -229,12 +263,65 @@ async function persistChunk(files: AbstractVinyl[], concurrency: number, session
     if (completed === undefined || completed < batch.length) {
       // Reap before replay: an unacknowledged in-place write may still be running.
       await session.dispose();
-      const remaining = files.slice(index + (completed || 0));
-      await pMapPool(remaining, (file) => file.write(), { concurrency });
+      await persistSuffix(index + (completed || 0));
       return;
     }
     index += completed;
   }
+}
+
+function projectPlanBatch(writes: Array<RustCheckoutPlanWriteContinuation | undefined>, start: number) {
+  if (
+    Object.getOwnPropertyDescriptor(JSON, 'stringify')?.value !== stringify ||
+    Object.getOwnPropertyDescriptor(Object.prototype, 'toJSON') ||
+    Object.getOwnPropertyDescriptor(Array.prototype, 'toJSON')
+  )
+    return undefined;
+  const first = writes[start]?.descriptor;
+  if (!first) return undefined;
+  const batch: Array<{ planIndex: number; path: string; overwrite: true; eol: 'auto' }> = [];
+  for (const write of writes.slice(start, start + MAX_FILES)) {
+    if (!write || write.descriptor.token !== first.token) break;
+    batch.push({ planIndex: write.descriptor.planIndex, path: write.path, overwrite: true, eol: 'auto' });
+  }
+  return { token: first.token, files: batch };
+}
+
+async function persistPlanBatch(
+  plan: NonNullable<ReturnType<typeof projectPlanBatch>>,
+  session: MaterializationSession
+): Promise<number | undefined> {
+  const bytes = Buffer.from(stringify({ kind: 'checkoutMaterialize', ...plan }));
+  if (bytes.length > 4 * 1024 * 1024) return undefined;
+  let completed: number | undefined;
+  await session.request(
+    (id) => {
+      const header = Buffer.alloc(12);
+      header.write('BMT1');
+      header.writeUInt32BE(id, 4);
+      header.writeUInt32BE(bytes.length, 8);
+      return Buffer.concat([header, bytes]);
+    },
+    1,
+    (response) => {
+      if (response.failed) return true;
+      const result = response.data as { completed?: number; skipped?: unknown; failed?: unknown } | undefined;
+      if (
+        response.completed !== 1 ||
+        !result ||
+        !Number.isSafeInteger(result.completed) ||
+        result.completed! < 0 ||
+        result.completed! > plan.files.length ||
+        !Array.isArray(result.skipped) ||
+        result.skipped.length !== 0 ||
+        result.failed !== result.completed! < plan.files.length
+      )
+        return false;
+      completed = result.completed;
+      return true;
+    }
+  );
+  return completed;
 }
 
 function projectSourceBatch(files: AbstractVinyl[], start: number) {
@@ -266,7 +353,7 @@ function projectBatch(files: AbstractVinyl[], start: number): ProjectedFile[] {
   const batch: ProjectedFile[] = [];
   let bytes = 0;
   for (const file of files.slice(start, start + MAX_FILES)) {
-    if (getRustCheckoutSourceDescriptor(file)) break;
+    if (getRustCheckoutSourceDescriptor(file) || getRustCheckoutPlanSourceDescriptor(file)) break;
     let projected: ProjectedFile | undefined;
     try {
       projected = project(file);
@@ -297,6 +384,8 @@ function eligible(file: AbstractVinyl): boolean {
 }
 
 function ordinaryFile(file: AbstractVinyl): boolean {
+  if (getRustCheckoutPlanSourceDescriptor(file)) return ordinarySourceFile(file);
+  if (isRustCheckoutPlanSourceFile(file)) return false;
   if (getRustCheckoutSourceDescriptor(file)) return ordinarySourceFile(file);
   if (
     !(file instanceof AbstractVinyl) ||

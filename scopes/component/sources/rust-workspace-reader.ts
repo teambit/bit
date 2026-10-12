@@ -24,6 +24,7 @@ import {
 } from './rust-workspace-identity';
 export {
   registerRustWorkspaceFile,
+  registerRustWorkspaceBitmapFile,
   getRustWorkspaceFileDescriptor,
   getRustWorkspaceSource,
 } from './rust-workspace-identity';
@@ -110,7 +111,7 @@ export async function scanRustWorkspace(
 /** Read and identify a complete file set before exposing any native snapshot. */
 export async function readRustWorkspaceFiles(paths: string[]): Promise<RustWorkspaceRead[] | undefined> {
   if (!paths.length || paths.length > MAX_FILES || !paths.every(validPath)) return undefined;
-  type Wire = { path: string; contents: string; hash: string; linuxHash: string };
+  type Wire = { path: string; contents: string; hash: string; linuxHash: string; snapshotHash?: string };
   const result = await request(
     { kind: 'read', files: paths },
     paths.length,
@@ -124,6 +125,7 @@ export async function readRustWorkspaceFiles(paths: string[]): Promise<RustWorks
           file.path !== paths[index] ||
           !hashString(file.hash) ||
           !hashString(file.linuxHash) ||
+          (file.snapshotHash !== undefined && !hashString(file.snapshotHash)) ||
           typeof file.contents !== 'string' ||
           file.contents.length % 2 ||
           !/^[0-9a-f]*$/.test(file.contents)

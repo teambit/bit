@@ -16,6 +16,7 @@ export {
   scanRustWorkspace,
   readRustWorkspaceFiles,
   registerRustWorkspaceFile,
+  registerRustWorkspaceBitmapFile,
   getRustWorkspaceFileDescriptor,
   getRustWorkspaceSource,
   compareRustVersionIds,
@@ -68,3 +69,16 @@ export {
 export { JsonVinyl } from './json-vinyl';
 export { removeFilesAndEmptyDirsRecursively } from './remove-files-and-empty-dirs-recursively';
 export { Symlink } from './symlink';
+export {
+  withRustWorkspaceEngine,
+  isRustWorkspaceEngine,
+  hasRustWorkspaceEngineOwner,
+  retireRustWorkspaceEngine,
+  registerRustWorkspaceEngineCleanup,
+} from './rust-workspace-engine';
+export {
+  createRustCheckoutPlanSourceFile,
+  installRustCheckoutPlanSourceContents,
+  getRustCheckoutPlanSourceDescriptor,
+} from './rust-checkout-plan-source';
+export type { RustCheckoutPlanSourceDescriptor } from './rust-checkout-plan-source';

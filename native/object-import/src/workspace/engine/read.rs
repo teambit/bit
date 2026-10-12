@@ -12,6 +12,7 @@ pub(super) struct FileRecord {
     contents: String,
     hash: String,
     linux_hash: String,
+    snapshot_hash: String,
 }
 
 pub(super) fn read(files: &[PathBuf]) -> io::Result<Vec<FileRecord>> {
@@ -23,12 +24,14 @@ pub(super) fn read(files: &[PathBuf]) -> io::Result<Vec<FileRecord>> {
         total += raw.len();
         let hash = hash(&raw);
         let contents = strip_bom(raw);
+        let snapshot_hash = super::hash(&contents);
         let linux_hash = super::hash(&crate::checkout::eol::normalize(contents.clone(), false));
         output.push(FileRecord {
             path: file.clone(),
             contents: crate::validate::hexadecimal(&contents),
             hash,
             linux_hash,
+            snapshot_hash,
         });
     }
     Ok(output)
