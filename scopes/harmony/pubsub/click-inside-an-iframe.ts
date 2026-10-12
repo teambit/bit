@@ -1,5 +1,5 @@
 /* eslint-disable max-classes-per-file */
-import { BitBaseEvent } from '@teambit/pubsub';
+import { BitBaseEvent } from './bit-base-event';
 
 class ClickInsideAnIframeEventData {
   constructor(private clickEvent: any) {}

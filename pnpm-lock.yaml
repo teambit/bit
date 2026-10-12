@@ -31,8 +31,7 @@ overrides:
   encoding: '-'
   '@pnpm/util.lex-comparator': 3.0.2
   '@pnpm/config.nerf-dart': 1.0.1
-
-pnpmfileChecksum: bit-1
+  '@teambit/legacy@*': '-'
 
 importers:
 
@@ -150,8 +149,8 @@ importers:
         specifier: 1100.0.19
         version: 1100.0.19
       '@pnpm/napi':
-        specifier: 12.11.0
-        version: 12.11.0
+        specifier: 12.12.1
+        version: 12.12.1
       '@pnpm/network.ca-file':
         specifier: 3.0.3
         version: 3.0.3
@@ -6854,7 +6853,7 @@ importers:
         version: file:components/ui/queries/get-file-content(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)
       '@teambit/command-bar':
         specifier: workspace:*
-        version: file:scopes/explorer/command-bar(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/explorer/command-bar(chai@5.2.1)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/community':
         specifier: workspace:*
         version: file:scopes/community/community
@@ -6980,7 +6979,7 @@ importers:
         version: file:scopes/compositions/model/composition-id(@testing-library/dom@10.4.1)
       '@teambit/compositions.model.composition-type':
         specifier: workspace:*
-        version: file:scopes/compositions/model/composition-type(react@19.2.7)
+        version: file:scopes/compositions/model/composition-type(@testing-library/dom@10.4.1)(react@19.2.7)
       '@teambit/compositions.panels.composition-gallery':
         specifier: workspace:*
         version: file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(react@19.2.7)
@@ -7931,7 +7930,7 @@ importers:
         version: file:components/ui/queries/get-file-content(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)
       '@teambit/command-bar':
         specifier: workspace:*
-        version: file:scopes/explorer/command-bar(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/explorer/command-bar(chai@4.3.0)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/community':
         specifier: workspace:*
         version: file:scopes/community/community
@@ -8057,7 +8056,7 @@ importers:
         version: file:scopes/compositions/model/composition-id(@testing-library/dom@10.4.1)
       '@teambit/compositions.model.composition-type':
         specifier: workspace:*
-        version: file:scopes/compositions/model/composition-type(react@19.2.7)
+        version: file:scopes/compositions/model/composition-type(@testing-library/dom@10.4.1)(react@19.2.7)
       '@teambit/compositions.panels.composition-gallery':
         specifier: workspace:*
         version: file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(react@19.2.7)
@@ -8990,7 +8989,7 @@ importers:
         version: file:components/ui/queries/get-file-content(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)
       '@teambit/command-bar':
         specifier: workspace:*
-        version: file:scopes/explorer/command-bar(react@18.3.1)(supports-color@9.4.0)
+        version: file:scopes/explorer/command-bar(chai@4.3.0)(react@18.3.1)(supports-color@9.4.0)
       '@teambit/community':
         specifier: workspace:*
         version: file:scopes/community/community
@@ -9116,7 +9115,7 @@ importers:
         version: file:scopes/compositions/model/composition-id(@testing-library/dom@10.4.1)
       '@teambit/compositions.model.composition-type':
         specifier: workspace:*
-        version: file:scopes/compositions/model/composition-type(react@18.3.1)
+        version: file:scopes/compositions/model/composition-type(@testing-library/dom@10.4.1)(react@18.3.1)
       '@teambit/compositions.panels.composition-gallery':
         specifier: workspace:*
         version: file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(react@18.3.1)
@@ -10061,7 +10060,7 @@ importers:
         version: file:components/ui/queries/get-file-content(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)
       '@teambit/command-bar':
         specifier: workspace:*
-        version: file:scopes/explorer/command-bar(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/explorer/command-bar(chai@4.3.0)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/community':
         specifier: workspace:*
         version: file:scopes/community/community
@@ -10187,7 +10186,7 @@ importers:
         version: file:scopes/compositions/model/composition-id(@testing-library/dom@10.4.1)
       '@teambit/compositions.model.composition-type':
         specifier: workspace:*
-        version: file:scopes/compositions/model/composition-type(react@19.2.7)
+        version: file:scopes/compositions/model/composition-type(@testing-library/dom@10.4.1)(react@19.2.7)
       '@teambit/compositions.panels.composition-gallery':
         specifier: workspace:*
         version: file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(react@19.2.7)
@@ -11108,7 +11107,7 @@ importers:
         version: file:components/ui/queries/get-file-content(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)
       '@teambit/command-bar':
         specifier: workspace:*
-        version: file:scopes/explorer/command-bar(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/explorer/command-bar(chai@4.3.0)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/community':
         specifier: workspace:*
         version: file:scopes/community/community
@@ -11234,7 +11233,7 @@ importers:
         version: file:scopes/compositions/model/composition-id(@testing-library/dom@10.4.1)
       '@teambit/compositions.model.composition-type':
         specifier: workspace:*
-        version: file:scopes/compositions/model/composition-type(react@19.2.7)
+        version: file:scopes/compositions/model/composition-type(@testing-library/dom@10.4.1)(react@19.2.7)
       '@teambit/compositions.panels.composition-gallery':
         specifier: workspace:*
         version: file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(react@19.2.7)
@@ -12155,7 +12154,7 @@ importers:
         version: file:components/ui/queries/get-file-content(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)
       '@teambit/command-bar':
         specifier: workspace:*
-        version: file:scopes/explorer/command-bar(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/explorer/command-bar(chai@4.3.0)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/community':
         specifier: workspace:*
         version: file:scopes/community/community
@@ -12281,7 +12280,7 @@ importers:
         version: file:scopes/compositions/model/composition-id(@testing-library/dom@10.4.1)
       '@teambit/compositions.model.composition-type':
         specifier: workspace:*
-        version: file:scopes/compositions/model/composition-type(react@19.2.7)
+        version: file:scopes/compositions/model/composition-type(@testing-library/dom@10.4.1)(react@19.2.7)
       '@teambit/compositions.panels.composition-gallery':
         specifier: workspace:*
         version: file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(react@19.2.7)
@@ -13214,7 +13213,7 @@ importers:
         version: file:components/ui/queries/get-file-content(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)
       '@teambit/command-bar':
         specifier: workspace:*
-        version: file:scopes/explorer/command-bar(react@19.2.7)(supports-color@9.4.0)
+        version: file:scopes/explorer/command-bar(chai@4.3.0)(react@19.2.7)(supports-color@9.4.0)
       '@teambit/community':
         specifier: workspace:*
         version: file:scopes/community/community
@@ -13340,7 +13339,7 @@ importers:
         version: file:scopes/compositions/model/composition-id(@testing-library/dom@10.4.1)
       '@teambit/compositions.model.composition-type':
         specifier: workspace:*
-        version: file:scopes/compositions/model/composition-type(react@19.2.7)
+        version: file:scopes/compositions/model/composition-type(@testing-library/dom@10.4.1)(react@19.2.7)
       '@teambit/compositions.panels.composition-gallery':
         specifier: workspace:*
         version: file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(react@19.2.7)
@@ -15238,9 +15237,6 @@ importers:
       '@teambit/legacy-bit-id':
         specifier: 1.1.4
         version: 1.1.4
-      '@teambit/ui-foundation.ui.is-browser':
-        specifier: ~0.0.500
-        version: 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.main-dropdown':
         specifier: ~0.0.505
         version: 0.0.505(react-dom@19.2.7)(react@19.2.7)
@@ -18351,8 +18347,8 @@ importers:
   scopes/dependencies/dependency-resolver:
     dependencies:
       '@pnpm/napi':
-        specifier: 12.11.0
-        version: 12.11.0
+        specifier: 12.12.1
+        version: 12.12.1
       '@pnpm/network.ca-file':
         specifier: 3.0.3
         version: 3.0.3
@@ -18509,8 +18505,8 @@ importers:
         specifier: 1100.0.19
         version: 1100.0.19
       '@pnpm/napi':
-        specifier: 12.11.0
-        version: 12.11.0
+        specifier: 12.12.1
+        version: 12.12.1
       '@pnpm/plugin-trusted-deps':
         specifier: 0.2.2
         version: 0.2.2
@@ -19014,6 +19010,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
+      chai:
+        specifier: 5.2.1
+        version: 5.2.1
       classnames:
         specifier: ^2.5.1
         version: 2.5.1
@@ -22227,8 +22226,8 @@ importers:
   scopes/pkg/pkg:
     dependencies:
       '@pnpm/napi':
-        specifier: 12.11.0
-        version: 12.11.0
+        specifier: 12.12.1
+        version: 12.12.1
       '@teambit/bit-error':
         specifier: ~0.0.404
         version: 0.0.404
@@ -23626,6 +23625,9 @@ importers:
       '@teambit/node.envs.node-babel-mocha':
         specifier: 2.1.3
         version: 2.1.3(@babel/core@7.28.3)(supports-color@9.4.0)
+      '@types/chai':
+        specifier: 4.2.15
+        version: 4.2.15
       '@types/http-proxy-agent':
         specifier: 2.0.2
         version: 2.0.2
@@ -23635,6 +23637,9 @@ importers:
       '@types/uuid':
         specifier: 8.3.4
         version: 8.3.4
+      chai:
+        specifier: 5.2.1
+        version: 5.2.1
 
   scopes/scope/objects:
     dependencies:
@@ -29314,85 +29319,85 @@ packages:
     resolution: {integrity: sha512-A3bRMTIZ5ptDPAE/KsDeY1J5UqqOiyo66+k/mUvaVjx++OJdMbp9If5kisEq9ljAV5r5TRpkxsJbSdrdJ5WtzQ==}
     engines: {node: '>=22.13'}
 
-  '@pnpm/napi.android-arm64@12.11.0':
-    resolution: {integrity: sha512-OK2tktJKJYLk1bLWaTuTWnVszpYV0gQMnNekdgb/wdxfssw+UL+pVvX+n2ObcJo/eYUW75+xI2qtj8s1Fnfowg==}
+  '@pnpm/napi.android-arm64@12.12.1':
+    resolution: {integrity: sha512-pnnpuLDRoqXTKGte1Hh+wmV5qAOLHKhIvLA0iR9J0A4BkHjZ3ki78+lXxWQ2d3HbwDTAi0F5MA1DG1IzTNd7Ww==}
     cpu: [arm64]
     os: [android]
 
-  '@pnpm/napi.android-x64@12.11.0':
-    resolution: {integrity: sha512-gj0cCUE51aYKPB7mngjrmo0BA/2rNyWjdMu4uKMwxr0wyLzum7QH1NMVvLOFbRTq4blz3sQgwZ2Z8MnryMPtoQ==}
+  '@pnpm/napi.android-x64@12.12.1':
+    resolution: {integrity: sha512-jtulZfsm61b7vVLZhpDd7v+Zrodpyz8zuG/SMLRj/d1MCi+17es5l35VAtGif82Hc3oqmC3yjlblY5blHXD23g==}
     cpu: [x64]
     os: [android]
 
-  '@pnpm/napi.darwin-arm64@12.11.0':
-    resolution: {integrity: sha512-d1HUWv2Df4fRWPUnL6mdqOHPggjknKSszI4xAnOpC/hzR+fwnEmqerdOHyCng0h/niXF4MQaiUdGzRTJ6ZwO+g==}
+  '@pnpm/napi.darwin-arm64@12.12.1':
+    resolution: {integrity: sha512-j7cFSJEX2KfxkHcISi6M3qFQcx6C3uulwqlPPC3/U9WbAQOJ/ouo8WISpdFBWiU5Ll7IhzDgs2RQZmZG/YiJTw==}
     cpu: [arm64]
     os: [darwin]
 
-  '@pnpm/napi.darwin-x64@12.11.0':
-    resolution: {integrity: sha512-VkoF1ieaKTlbJErfoidwFSsUB5qJfLiefao/C+p2v3mf3dLgprOt6JJRxk+KJvB0cSW5LqgKdjAOfi3T9o99aA==}
+  '@pnpm/napi.darwin-x64@12.12.1':
+    resolution: {integrity: sha512-nJc6d3J/4B8RFA0fdAdHhZIgPPYd3Gaq7bR4oVtAKu6TUo6zzuMCOZK0Dk3Cbct75M81fZE9ZaPXef4Vmn7e5g==}
     cpu: [x64]
     os: [darwin]
 
-  '@pnpm/napi.freebsd-x64@12.11.0':
-    resolution: {integrity: sha512-RyKA78ay+8QW1DfpilB0m32gM5uc8mUhGnqLlojODXpKc9fTJup+aAA8OOZ14YHhbCOgtIJ2mcoI+FyDQY6FMw==}
+  '@pnpm/napi.freebsd-x64@12.12.1':
+    resolution: {integrity: sha512-RRIVEfOwi5b+Q/grmc4Eit6J2KwRJRismI2nEjuBfzjkhRjDOyfySZvEBv2u/WaQughoHQphRw/4+QK0QEf9dA==}
     cpu: [x64]
     os: [freebsd]
 
-  '@pnpm/napi.linux-arm64-musl@12.11.0':
-    resolution: {integrity: sha512-Yo3tQcFn5oyfB0yYQkK3SfseHI1VaGBUzjGZqXwSqqiMnXiEHbtPIeUv+FqH26/Kkfy1aTKV64tnV+4dP6yIuQ==}
+  '@pnpm/napi.linux-arm64-musl@12.12.1':
+    resolution: {integrity: sha512-JT3ffviogPYmwG+yMUpDDxYANiTmLHxsQ3Ix01XP1IkZtQ3g7RnqonljRw1IcDq0gOlDT4soKp0+jHGxVdeWdg==}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
 
-  '@pnpm/napi.linux-arm64@12.11.0':
-    resolution: {integrity: sha512-5ehelYvg/Dhi13idmQ4iXnVDnIgVg6U5D8W50XuK5CFrqj3AHihJH+EX4jnY125ugcd0s/AX6aei9Vf7rIFxfQ==}
+  '@pnpm/napi.linux-arm64@12.12.1':
+    resolution: {integrity: sha512-Uud5eXbtoVy3fux/UG6T3ttXL9VqvRUSa3/sEEadb/z5bGFHxjp3S5aZGvXfEb5Osi8kt5LFYUDisZHGIKFzuQ==}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@pnpm/napi.linux-ppc64@12.11.0':
-    resolution: {integrity: sha512-637DijJyUnLM6Jm66yL0xdCzntGDhLxla0OeADpEew3m8QquRi3FZuH6mF0/awD7rUw4rzE+XauRK+HM/yxz7g==}
+  '@pnpm/napi.linux-ppc64@12.12.1':
+    resolution: {integrity: sha512-P/VSeF4Aap4Gj4LSynUipP5Jn3U1WPFzdESGknWimnsdec9GGpoK/zArSxmuJnTlNMkcPuEf1WM9vwYRdkeiZw==}
     cpu: [ppc64]
     os: [linux]
     libc: [glibc]
 
-  '@pnpm/napi.linux-riscv64@12.11.0':
-    resolution: {integrity: sha512-gYi3MuknalqqIYfh7ZLpfwLhTb9RNGBBxV8mnfHXJjeKQBFmfvuR+SMMzeY548k4vEjzkhhvG1AcSQDuyOoyoA==}
+  '@pnpm/napi.linux-riscv64@12.12.1':
+    resolution: {integrity: sha512-xuJPrglGv9rwl70qeopy9CrvkyZRiqlKbWh6GYqNn8mvQe3iQ0cDieqOZPUGPnla2XhHsyp4NKj85b+XEK45Wg==}
     cpu: [riscv64]
     os: [linux]
     libc: [glibc]
 
-  '@pnpm/napi.linux-s390x@12.11.0':
-    resolution: {integrity: sha512-7T7PAIdcWhEYM6S8kmoMtN3gIat7wAYHpaBG66I2S8672tXaZydXTvLvUdlh/cfFz1tXzcnuxrPwL51i9YHT5g==}
+  '@pnpm/napi.linux-s390x@12.12.1':
+    resolution: {integrity: sha512-zdB/esQy5lWmlgYIMQEelPUC5xMv5Oy/qDQYgaNgIDN7QQxxas5F0zG3En5LdpbynZ941LtLRvoRJP6Cl03WFQ==}
     cpu: [s390x]
     os: [linux]
     libc: [glibc]
 
-  '@pnpm/napi.linux-x64-musl@12.11.0':
-    resolution: {integrity: sha512-6CrVwAz3L1G5bEQNSmBZOR55fWfEX8M8yVWbuxAU/mwRq+xV2B9Nn7tiPNdl7iB+FeML7PYjV5KnstjT5J/HvQ==}
+  '@pnpm/napi.linux-x64-musl@12.12.1':
+    resolution: {integrity: sha512-UR578maK1HMgyw6GWGM7LU+eLI2eUPA+EasOrG2sKmuzVgUthtY/0Q/GW5BDG/DEsPWgigl5a8gOpyEBq6nkhg==}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@pnpm/napi.linux-x64@12.11.0':
-    resolution: {integrity: sha512-uCgqlMfnHEZQrR7bOEIxv25Zzg4Fom+hVbCBu8zsKB3kfdKVniJHkSZYsATqWppH2EvvNHjOW0zJUq7cK6WJ4w==}
+  '@pnpm/napi.linux-x64@12.12.1':
+    resolution: {integrity: sha512-l8OoZ1+QIuCSD9WbisptmBPfWc/aZt8ALhl8CtYsBrB7rwISG26GlpWTDZ/yq9t4q0RH1Y/ADst5L4xAH+HnXQ==}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@pnpm/napi.win32-arm64@12.11.0':
-    resolution: {integrity: sha512-40x2G+tB6z3BmRCX0E8EIbeyUhKcQdwRsnFb4EZT321OA3C2RhK2qQvTc6Vj8rF+zH+0w1Y9ylb9Cv1/YM0yDw==}
+  '@pnpm/napi.win32-arm64@12.12.1':
+    resolution: {integrity: sha512-SEfESbE5UtkSspDoestN2BG+mIdHAfUslREbmXmIg2j4uIUkLJRf1+g8Jl3sxpkse5vYnjVsj/uE77Pb2Fg/6g==}
     cpu: [arm64]
     os: [win32]
 
-  '@pnpm/napi.win32-x64@12.11.0':
-    resolution: {integrity: sha512-/R2FR9rEqoSAeOb2o/RQcSDvZqzAe6lw2MQHTenYr8KXwJvk8J3AEllnAU8izhN8tDAcXzCiTHpT0IMWKk2cgg==}
+  '@pnpm/napi.win32-x64@12.12.1':
+    resolution: {integrity: sha512-LfpOSr5CfqRubUM0clPVw2XMuPp82tKCWZuGw8tufxGPV+ScjXMS2sNRyQOY6hVx5tVaHu9y6kLEg3PXmGq2nQ==}
     cpu: [x64]
     os: [win32]
 
-  '@pnpm/napi@12.11.0':
-    resolution: {integrity: sha512-DahXFsAQNUyZiP5m4/E4IItiQsmdS9szCZApC5SnUItLAaot5ZME7DOuHi7/+GTPfOVPu6Lsjrr7top4kYtUdg==}
+  '@pnpm/napi@12.12.1':
+    resolution: {integrity: sha512-RpGzz8YP1EklV0ALFZSl1A488GnyrlIRh0PSuKQStZajBXRSRxCEPwkfUih1l0iQq2xCwg29pGIatT1pYIu2Cw==}
     engines: {node: '>=18.*'}
 
   '@pnpm/network.agent@0.1.0':
@@ -31427,6 +31432,7 @@ packages:
   '@teambit/command-bar@file:scopes/explorer/command-bar':
     resolution: {directory: scopes/explorer/command-bar, type: directory}
     peerDependencies:
+      chai: 5.2.1
       react: 19.2.7
 
   '@teambit/community.constants.links@0.0.2':
@@ -51709,64 +51715,64 @@ snapshots:
       bole: 5.0.29
       split2: 4.2.0
 
-  '@pnpm/napi.android-arm64@12.11.0':
+  '@pnpm/napi.android-arm64@12.12.1':
     optional: true
 
-  '@pnpm/napi.android-x64@12.11.0':
+  '@pnpm/napi.android-x64@12.12.1':
     optional: true
 
-  '@pnpm/napi.darwin-arm64@12.11.0':
+  '@pnpm/napi.darwin-arm64@12.12.1':
     optional: true
 
-  '@pnpm/napi.darwin-x64@12.11.0':
+  '@pnpm/napi.darwin-x64@12.12.1':
     optional: true
 
-  '@pnpm/napi.freebsd-x64@12.11.0':
+  '@pnpm/napi.freebsd-x64@12.12.1':
     optional: true
 
-  '@pnpm/napi.linux-arm64-musl@12.11.0':
+  '@pnpm/napi.linux-arm64-musl@12.12.1':
     optional: true
 
-  '@pnpm/napi.linux-arm64@12.11.0':
+  '@pnpm/napi.linux-arm64@12.12.1':
     optional: true
 
-  '@pnpm/napi.linux-ppc64@12.11.0':
+  '@pnpm/napi.linux-ppc64@12.12.1':
     optional: true
 
-  '@pnpm/napi.linux-riscv64@12.11.0':
+  '@pnpm/napi.linux-riscv64@12.12.1':
     optional: true
 
-  '@pnpm/napi.linux-s390x@12.11.0':
+  '@pnpm/napi.linux-s390x@12.12.1':
     optional: true
 
-  '@pnpm/napi.linux-x64-musl@12.11.0':
+  '@pnpm/napi.linux-x64-musl@12.12.1':
     optional: true
 
-  '@pnpm/napi.linux-x64@12.11.0':
+  '@pnpm/napi.linux-x64@12.12.1':
     optional: true
 
-  '@pnpm/napi.win32-arm64@12.11.0':
+  '@pnpm/napi.win32-arm64@12.12.1':
     optional: true
 
-  '@pnpm/napi.win32-x64@12.11.0':
+  '@pnpm/napi.win32-x64@12.12.1':
     optional: true
 
-  '@pnpm/napi@12.11.0':
+  '@pnpm/napi@12.12.1':
     optionalDependencies:
-      '@pnpm/napi.android-arm64': 12.11.0
-      '@pnpm/napi.android-x64': 12.11.0
-      '@pnpm/napi.darwin-arm64': 12.11.0
-      '@pnpm/napi.darwin-x64': 12.11.0
-      '@pnpm/napi.freebsd-x64': 12.11.0
-      '@pnpm/napi.linux-arm64': 12.11.0
-      '@pnpm/napi.linux-arm64-musl': 12.11.0
-      '@pnpm/napi.linux-ppc64': 12.11.0
-      '@pnpm/napi.linux-riscv64': 12.11.0
-      '@pnpm/napi.linux-s390x': 12.11.0
-      '@pnpm/napi.linux-x64': 12.11.0
-      '@pnpm/napi.linux-x64-musl': 12.11.0
-      '@pnpm/napi.win32-arm64': 12.11.0
-      '@pnpm/napi.win32-x64': 12.11.0
+      '@pnpm/napi.android-arm64': 12.12.1
+      '@pnpm/napi.android-x64': 12.12.1
+      '@pnpm/napi.darwin-arm64': 12.12.1
+      '@pnpm/napi.darwin-x64': 12.12.1
+      '@pnpm/napi.freebsd-x64': 12.12.1
+      '@pnpm/napi.linux-arm64': 12.12.1
+      '@pnpm/napi.linux-arm64-musl': 12.12.1
+      '@pnpm/napi.linux-ppc64': 12.12.1
+      '@pnpm/napi.linux-riscv64': 12.12.1
+      '@pnpm/napi.linux-s390x': 12.12.1
+      '@pnpm/napi.linux-x64': 12.12.1
+      '@pnpm/napi.linux-x64-musl': 12.12.1
+      '@pnpm/napi.win32-arm64': 12.12.1
+      '@pnpm/napi.win32-x64': 12.12.1
 
   '@pnpm/network.agent@0.1.0(supports-color@9.4.0)':
     dependencies:
@@ -58847,7 +58853,7 @@ snapshots:
       - graphql
       - supports-color
 
-  '@teambit/command-bar@file:scopes/explorer/command-bar(react@18.3.1)(supports-color@9.4.0)':
+  '@teambit/command-bar@file:scopes/explorer/command-bar(chai@4.3.0)(react@18.3.1)(supports-color@9.4.0)':
     dependencies:
       '@teambit/base-ui.text.muted-text': 1.0.3(react-dom@19.2.7)(react@18.3.1)
       '@teambit/bit-error': 0.0.404
@@ -58862,6 +58868,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 4.3.0
       classnames: 2.5.1
       is-primitive: 3.0.1
       lodash.flatten: 4.4.0
@@ -58872,7 +58879,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@teambit/command-bar@file:scopes/explorer/command-bar(react@19.2.7)(supports-color@9.4.0)':
+  '@teambit/command-bar@file:scopes/explorer/command-bar(chai@4.3.0)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
       '@teambit/base-ui.text.muted-text': 1.0.3(react-dom@19.2.7)(react@19.2.7)
       '@teambit/bit-error': 0.0.404
@@ -58887,6 +58894,33 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 4.3.0
+      classnames: 2.5.1
+      is-primitive: 3.0.1
+      lodash.flatten: 4.4.0
+      mousetrap: 1.6.5
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+      react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
+    transitivePeerDependencies:
+      - supports-color
+
+  '@teambit/command-bar@file:scopes/explorer/command-bar(chai@5.2.1)(react@19.2.7)(supports-color@9.4.0)':
+    dependencies:
+      '@teambit/base-ui.text.muted-text': 1.0.3(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/bit-error': 0.0.404
+      '@teambit/design.buttons.action-button': 0.0.4(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)(supports-color@9.4.0)
+      '@teambit/design.ui.styles.ellipsis': 0.0.357(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/explorer.ui.command-bar': 2.0.19(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react-router-dom@6.30.4)(react@19.2.7)
+      '@teambit/harmony': 0.4.12
+      '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
+      '@teambit/ui-foundation.ui.is-browser': 0.0.500(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/ui-foundation.ui.keycap': 0.0.500(react-dom@19.2.7)(react@19.2.7)
+      '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
+      '@types/node': 22.10.5
+      '@types/react': 19.2.18
+      '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 5.2.1
       classnames: 2.5.1
       is-primitive: 3.0.1
       lodash.flatten: 4.4.0
@@ -62056,6 +62090,7 @@ snapshots:
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/component.ui.deprecation-icon': 0.0.509(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@18.3.1)
       '@teambit/component.ui.version-dropdown': file:components/ui/version-dropdown(@testing-library/dom@10.4.1)(@testing-library/react@14.3.1)(react-router-dom@6.30.4)(react@18.3.1)(supports-color@9.4.0)
+      '@teambit/compositions.model.composition-type': file:scopes/compositions/model/composition-type(@testing-library/dom@10.4.1)(react@18.3.1)
       '@teambit/design.inputs.dropdown': 1.3.3(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@18.3.1)
       '@teambit/design.inputs.selectors.menu-item': 1.1.0(react@18.3.1)
       '@teambit/design.navigation.responsive-navbar': 0.0.8(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@18.3.1)
@@ -62094,7 +62129,6 @@ snapshots:
       '@teambit/toolbox.string.capitalize': file:scopes/toolbox/string/capitalize
       '@teambit/toolbox.string.eol': file:scopes/toolbox/string/eol
       '@teambit/ui-foundation.ui.hooks.use-data-query': file:components/ui/hooks/use-data-query(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(react@18.3.1)
-      '@teambit/ui-foundation.ui.is-browser': 0.0.500(react-dom@19.2.7)(react@18.3.1)
       '@teambit/ui-foundation.ui.main-dropdown': 0.0.505(react-dom@19.2.7)(react@18.3.1)
       '@teambit/ui-foundation.ui.menu-widget-icon': 0.0.502(react-dom@19.2.7)(react@18.3.1)
       '@teambit/ui-foundation.ui.react-router.slot-router': file:components/ui/react-router/slot-router(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(react-router-dom@6.30.4)(react@18.3.1)
@@ -62145,6 +62179,7 @@ snapshots:
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/component.ui.deprecation-icon': 0.0.509(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.version-dropdown': file:components/ui/version-dropdown(@testing-library/dom@10.4.1)(@testing-library/react@14.3.1)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
+      '@teambit/compositions.model.composition-type': file:scopes/compositions/model/composition-type(@testing-library/dom@10.4.1)(react@19.2.7)
       '@teambit/design.inputs.dropdown': 1.3.3(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.inputs.selectors.menu-item': 1.1.0(react@19.2.7)
       '@teambit/design.navigation.responsive-navbar': 0.0.8(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -62183,7 +62218,6 @@ snapshots:
       '@teambit/toolbox.string.capitalize': file:scopes/toolbox/string/capitalize
       '@teambit/toolbox.string.eol': file:scopes/toolbox/string/eol
       '@teambit/ui-foundation.ui.hooks.use-data-query': file:components/ui/hooks/use-data-query(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(react@19.2.7)
-      '@teambit/ui-foundation.ui.is-browser': 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.main-dropdown': 0.0.505(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.menu-widget-icon': 0.0.502(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.react-router.slot-router': file:components/ui/react-router/slot-router(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(react-router-dom@6.30.4)(react@19.2.7)
@@ -62234,6 +62268,7 @@ snapshots:
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/component.ui.deprecation-icon': 0.0.509(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/component.ui.version-dropdown': file:components/ui/version-dropdown(@testing-library/dom@10.4.1)(@testing-library/react@14.3.1)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
+      '@teambit/compositions.model.composition-type': file:scopes/compositions/model/composition-type(@testing-library/dom@10.4.1)(react@19.2.7)
       '@teambit/design.inputs.dropdown': 1.3.3(@testing-library/react@14.3.1)(react-dom@19.2.7)(react@19.2.7)
       '@teambit/design.inputs.selectors.menu-item': 1.1.0(react@19.2.7)
       '@teambit/design.navigation.responsive-navbar': 0.0.8(@testing-library/react@14.3.1)(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -62272,7 +62307,6 @@ snapshots:
       '@teambit/toolbox.string.capitalize': file:scopes/toolbox/string/capitalize
       '@teambit/toolbox.string.eol': file:scopes/toolbox/string/eol
       '@teambit/ui-foundation.ui.hooks.use-data-query': file:components/ui/hooks/use-data-query(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(react@19.2.7)
-      '@teambit/ui-foundation.ui.is-browser': 0.0.500(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.main-dropdown': 0.0.505(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.menu-widget-icon': 0.0.502(react-dom@19.2.7)(react@19.2.7)
       '@teambit/ui-foundation.ui.react-router.slot-router': file:components/ui/react-router/slot-router(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(react-router-dom@6.30.4)(react@19.2.7)
@@ -62498,23 +62532,29 @@ snapshots:
     dependencies:
       react: 19.2.7
 
-  '@teambit/compositions.model.composition-type@file:scopes/compositions/model/composition-type(react@18.3.1)':
+  '@teambit/compositions.model.composition-type@file:scopes/compositions/model/composition-type(@testing-library/dom@10.4.1)(react@18.3.1)':
     dependencies:
+      '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(@testing-library/dom@10.4.1)
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       react: 18.3.1
       react-dom: 19.2.7(react@18.3.1)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@18.3.1)
+    transitivePeerDependencies:
+      - '@testing-library/dom'
 
-  '@teambit/compositions.model.composition-type@file:scopes/compositions/model/composition-type(react@19.2.7)':
+  '@teambit/compositions.model.composition-type@file:scopes/compositions/model/composition-type(@testing-library/dom@10.4.1)(react@19.2.7)':
     dependencies:
+      '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(@testing-library/dom@10.4.1)
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       react-router-dom: 6.30.4(react-dom@19.2.7)(react@19.2.7)
+    transitivePeerDependencies:
+      - '@testing-library/dom'
 
   '@teambit/compositions.panels.composition-gallery@file:scopes/compositions/panels/composition-gallery(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(react@18.3.1)':
     dependencies:
@@ -62721,7 +62761,7 @@ snapshots:
       '@teambit/component-id': 1.2.5
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/compositions.aspect-docs.compositions': file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@18.3.1)
-      '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(@testing-library/dom@10.4.1)
+      '@teambit/compositions.model.composition-type': file:scopes/compositions/model/composition-type(@testing-library/dom@10.4.1)(react@18.3.1)
       '@teambit/compositions.ui.composition-compare': file:components/ui/composition-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react@18.3.1)
       '@teambit/compositions.ui.composition-compare-section': file:components/ui/composition-compare-section(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)
       '@teambit/compositions.ui.composition-live-controls': 0.0.7(react@18.3.1)
@@ -62791,7 +62831,7 @@ snapshots:
       '@teambit/component-id': 1.2.5
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/compositions.aspect-docs.compositions': file:scopes/compositions/aspect-docs/compositions(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(react@19.2.7)
-      '@teambit/compositions.model.composition-id': file:scopes/compositions/model/composition-id(@testing-library/dom@10.4.1)
+      '@teambit/compositions.model.composition-type': file:scopes/compositions/model/composition-type(@testing-library/dom@10.4.1)(react@19.2.7)
       '@teambit/compositions.ui.composition-compare': file:components/ui/composition-compare(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react@19.2.7)
       '@teambit/compositions.ui.composition-compare-section': file:components/ui/composition-compare-section(@apollo/client@3.12.11)(@testing-library/dom@10.4.1)(graphql@15.8.0)(react-router-dom@6.30.4)
       '@teambit/compositions.ui.composition-live-controls': 0.0.7(react@19.2.7)
@@ -63978,7 +64018,7 @@ snapshots:
 
   '@teambit/dependency-resolver@file:scopes/dependencies/dependency-resolver(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react@18.3.1)(supports-color@9.4.0)':
     dependencies:
-      '@pnpm/napi': 12.11.0
+      '@pnpm/napi': 12.12.1
       '@pnpm/network.ca-file': 3.0.3
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
@@ -64040,7 +64080,7 @@ snapshots:
 
   '@teambit/dependency-resolver@file:scopes/dependencies/dependency-resolver(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
-      '@pnpm/napi': 12.11.0
+      '@pnpm/napi': 12.12.1
       '@pnpm/network.ca-file': 3.0.3
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
@@ -64102,7 +64142,7 @@ snapshots:
 
   '@teambit/dependency-resolver@file:scopes/dependencies/dependency-resolver(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
-      '@pnpm/napi': 12.11.0
+      '@pnpm/napi': 12.12.1
       '@pnpm/network.ca-file': 3.0.3
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
@@ -75781,7 +75821,7 @@ snapshots:
 
   '@teambit/pkg@file:scopes/pkg/pkg(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react@18.3.1)(supports-color@9.4.0)':
     dependencies:
-      '@pnpm/napi': 12.11.0
+      '@pnpm/napi': 12.12.1
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.5
       '@teambit/component-issues': file:components/component-issues
@@ -75824,7 +75864,7 @@ snapshots:
 
   '@teambit/pkg@file:scopes/pkg/pkg(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
-      '@pnpm/napi': 12.11.0
+      '@pnpm/napi': 12.12.1
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.5
       '@teambit/component-issues': file:components/component-issues
@@ -75867,7 +75907,7 @@ snapshots:
 
   '@teambit/pkg@file:scopes/pkg/pkg(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
-      '@pnpm/napi': 12.11.0
+      '@pnpm/napi': 12.12.1
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.5
       '@teambit/component-issues': file:components/component-issues
@@ -75912,7 +75952,7 @@ snapshots:
     dependencies:
       '@pnpm/deps.path': 1100.1.0
       '@pnpm/lockfile.types': 1100.0.19
-      '@pnpm/napi': 12.11.0
+      '@pnpm/napi': 12.12.1
       '@pnpm/plugin-trusted-deps': 0.2.2
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
@@ -75950,7 +75990,7 @@ snapshots:
     dependencies:
       '@pnpm/deps.path': 1100.1.0
       '@pnpm/lockfile.types': 1100.0.19
-      '@pnpm/napi': 12.11.0
+      '@pnpm/napi': 12.12.1
       '@pnpm/plugin-trusted-deps': 0.2.2
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
@@ -75988,7 +76028,7 @@ snapshots:
     dependencies:
       '@pnpm/deps.path': 1100.1.0
       '@pnpm/lockfile.types': 1100.0.19
-      '@pnpm/napi': 12.11.0
+      '@pnpm/napi': 12.12.1
       '@pnpm/plugin-trusted-deps': 0.2.2
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
