@@ -1,3 +1,4 @@
+mod parallel_reads;
 use super::{State, apply};
 use flate2::{Compression, write::ZlibEncoder};
 use serde_json::{Value, json};

@@ -11,7 +11,7 @@ fn state_request(state: &mut State, input: impl serde::Serialize) -> Value {
     frame.extend((bytes.len() as u32).to_be_bytes());
     frame.extend(bytes);
     let mut output = Vec::new();
-    serve(&mut Cursor::new(frame), &mut output, state).unwrap();
+    serve(&mut Cursor::new(frame), &mut output, state, &super::tests::POOL).unwrap();
     serde_json::from_slice(&output).unwrap()
 }
 struct Directory(std::path::PathBuf);

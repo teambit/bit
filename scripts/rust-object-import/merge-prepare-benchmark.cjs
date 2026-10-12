@@ -10,7 +10,11 @@ const { createInterface } = require('node:readline');
 const { once } = require('node:events');
 const hash = (body) => createHash('sha1').update(body).digest('hex');
 async function main() {
-  assert.equal(process.argv.length, 3, 'usage: merge-prepare-benchmark.cjs <release-helper>');
+  assert.ok(
+    process.argv.length === 3 || (process.argv.length === 4 && process.argv[3] === '--packed'),
+    'usage: merge-prepare-benchmark.cjs <release-helper> [--packed]'
+  );
+  const packedBodies = process.argv[3] === '--packed';
   const helper = await fs.realpath(process.argv[2]);
   const helperSha256 = createHash('sha256')
     .update(await fs.readFile(helper))
@@ -77,6 +81,7 @@ async function main() {
         const start = performance.now();
         const result = await request({
           kind: 'mergePrepare',
+          ...(packedBodies ? { packedBodies: true } : {}),
           token: owner.token,
           index: 0,
           objectsDirectory,
@@ -88,11 +93,19 @@ async function main() {
         });
         const milliseconds = performance.now() - start;
         assert.equal(result.mergeRows.length, count);
+        const spools = new Map();
         for (const [index, row] of result.mergeRows.entries()) {
           assert.equal(row.kind, 'updatedFiles');
           assert.equal(row.current, index);
           const retained = result.bodies[row.bodyPlanIndex];
-          assert.equal(hash(await fs.readFile(retained.spoolPath)), targetFiles[index].hash);
+          if (!spools.has(retained.spoolPath)) spools.set(retained.spoolPath, await fs.readFile(retained.spoolPath));
+          const contents = spools.get(retained.spoolPath);
+          const body =
+            retained.spoolOffset === undefined
+              ? contents
+              : contents.subarray(retained.spoolOffset, retained.spoolOffset + retained.bytes);
+          assert.equal(body.length, retained.bytes);
+          assert.equal(hash(body), targetFiles[index].hash);
         }
         if (round > 0) samples.push({ milliseconds, reads: result.reads });
         await request({ kind: 'mergeTransactionFinish', token: owner.token });
@@ -112,6 +125,7 @@ async function main() {
         scope: 'native-merge-prepare-only',
         helper,
         helperSha256,
+        packedBodies,
         platform: process.platform,
         architecture: process.arch,
         warmups: 1,

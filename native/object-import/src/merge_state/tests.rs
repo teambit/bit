@@ -1,3 +1,9 @@
+pub(super) static POOL: std::sync::LazyLock<rayon::ThreadPool> = std::sync::LazyLock::new(|| {
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(4)
+        .build()
+        .unwrap()
+});
 use super::{State, serve, write};
 use serde_json::{Value, json};
 use std::io::Cursor;
@@ -11,7 +17,7 @@ fn request(state: &mut State, value: impl serde::Serialize) -> Value {
     frame.extend((bytes.len() as u32).to_be_bytes());
     frame.extend(bytes);
     let mut output = Vec::new();
-    serve(&mut Cursor::new(frame), &mut output, state).unwrap();
+    serve(&mut Cursor::new(frame), &mut output, state, &POOL).unwrap();
     serde_json::from_slice(&output).unwrap()
 }
 fn entry(name: &str) -> Value {
@@ -196,7 +202,7 @@ fn malformed_complete_and_truncated_frames_do_not_reset_state() {
     frame.extend(15_u32.to_be_bytes());
     frame.extend(b"{}");
     let mut output = Vec::new();
-    assert!(serve(&mut Cursor::new(frame), &mut output, &mut state).is_err());
+    assert!(serve(&mut Cursor::new(frame), &mut output, &mut state, &POOL).is_err());
     assert!(output.is_empty());
 }
 #[test]

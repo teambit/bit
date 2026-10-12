@@ -133,8 +133,11 @@ test('public merge array prototype mutation refuses native reuse without inherit
   assert.equal(reads, 0);
 });
 
-test('retained Buffer aliases reject extra string, symbol and accessor properties without observing getters', async (t) => {
+test('retained Buffer aliases preserve inert metadata and reject behavior hooks without observing getters', async (t) => {
   const path = require('node:path');
+  const disk = require('node:fs/promises');
+  const base = await disk.mkdtemp(path.join(require('node:os').tmpdir(), 'retained-buffer-alias-'));
+  t.after(() => disk.rm(base, { recursive: true, force: true }));
   const { createHash } = require('node:crypto');
   const sources = installed('@teambit/component.sources');
   const materializer = installed('@teambit/component.sources/dist/rust-workspace-materializer.js');
@@ -152,9 +155,27 @@ test('retained Buffer aliases reject extra string, symbol and accessor propertie
   });
   let reads = 0;
   await sources.withRustWorkspaceEngine(async () => {
-    for (const key of [undefined, 'extra', Symbol('extra'), 'accessor', 'length']) {
+    for (const key of [
+      undefined,
+      'extra',
+      Symbol('extra'),
+      'accessor',
+      'length',
+      'byteLength',
+      'byteOffset',
+      'buffer',
+      'toString',
+      'utf8Slice',
+      'equals',
+      'slice',
+      'subarray',
+      'copy',
+      'constructor',
+      'then',
+      '_isBuffer',
+    ]) {
       const body = Buffer.alloc(64 * 1024, 97);
-      if (key !== undefined && key !== 'length')
+      if (key === 'extra' || key === 'accessor' || typeof key === 'symbol')
         Object.defineProperty(body, key, {
           configurable: true,
           get() {
@@ -162,7 +183,6 @@ test('retained Buffer aliases reject extra string, symbol and accessor propertie
             throw new Error('Buffer decoration must remain unread');
           },
         });
-      const base = path.resolve('retained-buffer-alias');
       const file = new sources.SourceFile({ base, path: path.join(base, 'index.js'), contents: body });
       const results = {};
       const bodyRecord = {
@@ -184,7 +204,7 @@ test('retained Buffer aliases reject extra string, symbol and accessor propertie
         targetManifest: { hash: 'c'.repeat(40), files: [] },
         valid: () => true,
       });
-      if (key === 'length')
+      if (typeof key === 'string' && !['extra', 'accessor'].includes(key))
         Object.defineProperty(body, key, {
           configurable: true,
           get() {
@@ -196,10 +216,45 @@ test('retained Buffer aliases reject extra string, symbol and accessor propertie
         api.attachRustMergeResultBodies(results, [file], {
           files: [{ index: 0, planIndex: 0, relativePath: 'index.js', aliasKind: 'current', aliasIndex: 0 }],
         }),
-        key === undefined
+        key === undefined || key === 'extra' || key === 'accessor'
       );
       assert.strictEqual(file.contents, body);
+      if (key === undefined || key === 'extra' || key === 'accessor') {
+        await file.write();
+        assert.deepEqual(await disk.readFile(file.path), body);
+        assert.strictEqual(file.contents, body);
+      }
     }
   });
   assert.equal(reads, 0);
+});
+
+test('private Buffer snapshots avoid prototype getters and decline changed byte operations', () => {
+  const bytes = Buffer.from([17, 29, 43]);
+  let reads = 0;
+  for (const [prototype, key] of [
+    [Buffer.prototype, 'toString'],
+    [Object.getPrototypeOf(Uint8Array.prototype), 'length'],
+    [Object.prototype, 'then'],
+  ]) {
+    const previous = Object.getOwnPropertyDescriptor(prototype, key);
+    try {
+      Object.defineProperty(prototype, key, {
+        configurable: true,
+        get() {
+          reads++;
+          throw new Error('prototype hook');
+        },
+      });
+      assert.equal(api.hasRustMergeBufferPrototypes(), false);
+      const copy = api.copyRustMergeBuffer(bytes);
+      assert.equal(copy[0], 17);
+      assert.equal(copy[2], 43);
+    } finally {
+      if (previous) Object.defineProperty(prototype, key, previous);
+      else delete prototype[key];
+    }
+  }
+  assert.equal(reads, 0);
+  assert.equal(api.hasRustMergeBufferPrototypes(), true);
 });

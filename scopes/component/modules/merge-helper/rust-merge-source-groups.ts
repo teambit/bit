@@ -2,7 +2,15 @@ import type { Repository, Source, SourceFileModel, HistorySourceCapsule } from '
 import { types } from 'util';
 import { loadRustCapturedSourceCapsule, hasRustSnapshotTransactionClassFields } from '@teambit/objects';
 import { SourceFile } from '@teambit/component.sources';
-import type { RustMergeRow } from './rust-merge-body-plan';
+import {
+  copyRustMergeBuffer,
+  hasRustMergeBufferProperties,
+  hasRustMergeBufferPrototypes,
+  type RustMergeRow,
+} from './rust-merge-body-plan';
+const bufferProperties = hasRustMergeBufferProperties;
+const copyBuffer = copyRustMergeBuffer;
+const bufferPrototypes = hasRustMergeBufferPrototypes;
 
 export type MergeSourceReference = { source: number; ref: { side: 'base' | 'other'; index: number } };
 export type MergeSourceGroup = {
@@ -63,13 +71,8 @@ export async function observeRustMergeSourceGroups(
     const body = source.contents;
     const descriptor = Object.getOwnPropertyDescriptor(source, 'contents');
     const copy =
-      body &&
-      typeof body === 'object' &&
-      !types.isProxy(body) &&
-      Buffer.isBuffer(body) &&
-      Object.getPrototypeOf(body) === Buffer.prototype &&
-      Object.getOwnPropertyDescriptor(Buffer, 'from')?.value === sourceBufferFrom
-        ? sourceBufferFrom(body)
+      bufferProperties(body) && Object.getOwnPropertyDescriptor(Buffer, 'from')?.value === sourceBufferFrom
+        ? copyBuffer(body)
         : undefined;
     snapshots.push({ source, descriptor, body, copy });
     remember(loaded, model, source);
@@ -112,9 +115,11 @@ export async function observeRustMergeSourceGroups(
     sources,
     groups: orders,
     fresh: () =>
+      bufferPrototypes() &&
       snapshots.every(({ source, descriptor, body, copy }) => {
         if (
           !copy ||
+          !bufferProperties(body) ||
           types.isProxy(source) ||
           !hasRustSnapshotTransactionClassFields(source, 'Source', ['contents']) ||
           !descriptor ||

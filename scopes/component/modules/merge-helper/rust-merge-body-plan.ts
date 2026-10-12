@@ -72,8 +72,31 @@ const bodyCreateHash = createHash;
 const isBuffer = Buffer.isBuffer;
 const typedArrayLength = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(Uint8Array.prototype), 'length')!.get!;
 const mapGet = Map.prototype.get;
+const allocateSnapshot = Buffer.allocUnsafeSlow;
+const setSnapshotBytes = Uint8Array.prototype.set;
 
-function matchingBodyAlias(value: unknown, body: RustMergeBody): value is Buffer {
+/** Private byte copies use captured typed-array intrinsics, never a public Buffer hook. */
+export function copyRustMergeBuffer(value: Buffer): Buffer {
+  const copy = allocateSnapshot(typedArrayLength.call(value));
+  setSnapshotBytes.call(copy, value);
+  return copy;
+}
+
+const bufferPrototypes: Snapshot[] = [];
+const bufferPropertyNames = new Set(['then', '_isBuffer']);
+for (let prototype: object | null = Buffer.prototype; prototype; prototype = Object.getPrototypeOf(prototype)) {
+  if (prototype !== Object.prototype) bufferPrototypes.push(descriptorSnapshot(prototype));
+  Object.getOwnPropertyNames(prototype).forEach((name) => bufferPropertyNames.add(name));
+}
+const bufferProperties = [...bufferPropertyNames];
+
+/** Check once for a synchronous batch, before any captured Buffer methods execute. */
+export function hasRustMergeBufferPrototypes(): boolean {
+  return !Object.getOwnPropertyDescriptor(Object.prototype, 'then') && bufferPrototypes.every(unchanged);
+}
+
+/** Keep arbitrary metadata on the same alias, but never bypass a byte/serialization hook. */
+export function hasRustMergeBufferProperties(value: unknown): value is Buffer {
   return Boolean(
     value &&
       typeof value === 'object' &&
@@ -81,12 +104,16 @@ function matchingBodyAlias(value: unknown, body: RustMergeBody): value is Buffer
       Object.getOwnPropertyDescriptor(Buffer, 'isBuffer')?.value === isBuffer &&
       isBuffer(value) &&
       Object.getPrototypeOf(value) === Buffer.prototype &&
-      // Typed arrays have one non-deletable own index per byte. Counting keys after
-      // reading the intrinsic length rejects extra properties without per-byte regex work.
+      Object.getOwnPropertySymbols(value).length === 0 &&
+      bufferProperties.every((name) => !Object.hasOwn(value, name))
+  );
+}
+
+function matchingBodyAlias(value: unknown, body: RustMergeBody): value is Buffer {
+  return Boolean(
+    hasRustMergeBufferProperties(value) &&
       typedArrayLength.call(value) === body.bytes &&
-      Reflect.ownKeys(value).length === body.bytes &&
       Object.getOwnPropertyDescriptor(require('crypto'), 'createHash')?.value === bodyCreateHash &&
-      value.length === body.bytes &&
       bodyCreateHash('sha1').update(value).digest('hex') === body.spoolHash
   );
 }
@@ -186,15 +213,15 @@ export function rememberRustMergeResultBodyPlan(results: MergeResultsThreeWay, p
     const body =
       Object.getOwnPropertyDescriptor(file, '_contents')?.value ??
       Object.getOwnPropertyDescriptor(file, 'contents')?.value;
-    return Buffer.isBuffer(body) && Object.getPrototypeOf(body) === Buffer.prototype
-      ? { file, body, copy: Buffer.from(body) }
-      : undefined;
+    return hasRustMergeBufferProperties(body) ? { file, body, copy: copyRustMergeBuffer(body) } : undefined;
   });
   const metadata: Snapshot[] = [descriptorSnapshot(plan.bodies), ...plan.bodies.map(descriptorSnapshot)];
   const valid = plan.valid;
   const guarded = {
     ...plan,
     valid: () =>
+      hasRustMergeBufferPrototypes() &&
+      bodies.every((saved) => saved && hasRustMergeBufferProperties(saved.body)) &&
       valid() &&
       metadata.every(unchanged) &&
       snapshots.every(unchanged) &&

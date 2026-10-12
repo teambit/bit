@@ -1,4 +1,5 @@
 use std::{
+    cell::RefCell,
     fs::File,
     io::{self, Read},
     path::Path,
@@ -30,6 +31,18 @@ pub(crate) fn source_record(
     maximum: usize,
     compressed_total: &mut usize,
 ) -> io::Result<SourceRecord> {
+    let record = read_source_record(directory, hash, maximum, compressed_total)?;
+    crate::merge_transaction::reads::source(hash, &record)?;
+    Ok(record)
+}
+
+/// Worker reads return verified bytes without touching the caller's ordered receipt trace.
+pub(crate) fn read_source_record(
+    directory: &Path,
+    hash: [u8; 20],
+    maximum: usize,
+    compressed_total: &mut usize,
+) -> io::Result<SourceRecord> {
     let compressed = packed(directory, hash, compressed_total)?;
     let object = inflate(&compressed, maximum + 256)?;
     let (header, body) = split(&object, hash, "Source")?;
@@ -39,9 +52,7 @@ pub(crate) fn source_record(
     {
         return Err(invalid("checkout Source identity or size is invalid"));
     }
-    let record = SourceRecord { body: body.to_vec(), compressed, inflated_size: object.len() };
-    crate::merge_transaction::reads::source(hash, &record)?;
-    Ok(record)
+    Ok(SourceRecord { body: body.to_vec(), compressed, inflated_size: object.len() })
 }
 pub(crate) fn read(
     directory: &Path,
@@ -63,7 +74,7 @@ fn packed(directory: &Path, hash: [u8; 20], compressed_total: &mut usize) -> io:
     if !metadata.is_file() || metadata.len() > (MAX_BYTES - *compressed_total) as u64 {
         return Err(invalid("checkout compressed bytes out of bounds"));
     }
-    let mut compressed = Vec::new();
+    let mut compressed = Vec::with_capacity(metadata.len() as usize);
     file.take((MAX_BYTES - *compressed_total + 1) as u64)
         .read_to_end(&mut compressed)?;
     *compressed_total += compressed.len();
@@ -72,15 +83,35 @@ fn packed(directory: &Path, hash: [u8; 20], compressed_total: &mut usize) -> io:
     }
     Ok(compressed)
 }
+struct Inflation {
+    decoder: Decompress,
+    chunk: Box<[u8]>,
+}
+thread_local! {
+    static INFLATION: RefCell<Inflation> = RefCell::new(Inflation {
+        decoder: Decompress::new(true),
+        chunk: vec![0; 64 * 1024].into_boxed_slice(),
+    });
+}
 fn inflate(compressed: &[u8], maximum: usize) -> io::Result<Vec<u8>> {
-    let mut decoder = Decompress::new(true);
-    let mut chunk = vec![0; 64 * 1024].into_boxed_slice();
+    INFLATION.with(|inflation| {
+        let Inflation { decoder, chunk } = &mut *inflation.borrow_mut();
+        decoder.reset(true);
+        inflate_using(compressed, maximum, decoder, chunk)
+    })
+}
+fn inflate_using(
+    compressed: &[u8],
+    maximum: usize,
+    decoder: &mut Decompress,
+    chunk: &mut [u8],
+) -> io::Result<Vec<u8>> {
     let mut output = Vec::new();
     loop {
         let before_in = decoder.total_in();
         let before_out = decoder.total_out();
         let status = decoder
-            .decompress(&compressed[before_in as usize..], &mut chunk, FlushDecompress::None)
+            .decompress(&compressed[before_in as usize..], chunk, FlushDecompress::None)
             .map_err(|_| invalid("checkout invalid compressed object"))?;
         let count = (decoder.total_out() - before_out) as usize;
         if output.len() + count > maximum {
@@ -126,3 +157,6 @@ pub(crate) fn split<'a>(
     }
     Ok((size, &object[end + 1..]))
 }
+
+#[cfg(test)]
+mod tests;

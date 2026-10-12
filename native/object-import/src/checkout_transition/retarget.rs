@@ -1,7 +1,7 @@
 use super::{invalid, plan, prepare, wire};
 use serde::Deserialize;
 use serde_json::{Value, json};
-use std::{io, path::PathBuf};
+use std::{collections::HashMap, io, path::PathBuf};
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Request {
@@ -23,7 +23,9 @@ pub(super) fn apply(input: Value, state: &mut plan::State) -> io::Result<Value> 
         .values()
         .map(|plan| plan.bodies.len())
         .sum::<usize>();
-    let contents = load(&request, retained)?;
+    let previous =
+        state.plans.get(&request.token).ok_or_else(|| invalid("stale merge template plan"))?;
+    let contents = load(&request, retained, previous)?;
     let plan =
         state.plans.get_mut(&request.token).ok_or_else(|| invalid("stale merge template plan"))?;
     let directory = request.snapshot_directory;
@@ -75,9 +77,37 @@ fn additions(
     }
     (indices, added)
 }
-fn load(request: &Request, retained: usize) -> io::Result<Vec<Vec<u8>>> {
+fn load(request: &Request, retained: usize, previous: &plan::Plan) -> io::Result<Vec<Vec<u8>>> {
+    let cached = previous.bodies
+        .iter()
+        .map(|body| (body.hash.as_str(), body.contents.as_slice()))
+        .collect::<HashMap<_, _>>();
     let mut total = retained;
     let mut compressed = 0;
+    if request.target.files
+        .iter()
+        .all(|file| cached.contains_key(file.hash.as_str()))
+    {
+        // Public target cloning has already observed its Sources. Reuse verified
+        // operation-owned bytes while still checking the complete Version manifest.
+        crate::checkout::plan::verify_manifest(
+            &request.objects_directory,
+            &request.target.hash,
+            &serde_json::to_value(&request.target.files).map_err(io::Error::other)?,
+            &mut compressed,
+        )?;
+        return request.target.files
+            .iter()
+            .map(|file| {
+                let body = cached[file.hash.as_str()];
+                total += body.len();
+                if total > 32 * 1024 * 1024 {
+                    return Err(invalid("checkout prepared raw limit"));
+                }
+                Ok(body.to_vec())
+            })
+            .collect();
+    }
     prepare::sources::load(&request.objects_directory, &request.target, &mut total, &mut compressed)
 }
 fn check_budget(body_count: usize, retained: usize, added: &[plan::Body]) -> io::Result<()> {

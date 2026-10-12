@@ -1,6 +1,7 @@
 pub(crate) mod write;
 pub(crate) use state::State;
 
+mod execution;
 mod lane;
 mod messages;
 mod rebase;
@@ -118,6 +119,7 @@ pub(crate) fn serve(
     reader: &mut impl Read,
     writer: &mut impl Write,
     state: &mut State,
+    pool: &rayon::ThreadPool,
 ) -> io::Result<()> {
     let id = protocol::word(reader)?;
     let length = protocol::word(reader)? as usize;
@@ -140,7 +142,7 @@ pub(crate) fn serve(
     };
     let result = serde_json::from_slice(&bytes)
         .map_err(io::Error::other)
-        .and_then(|request| apply(request, state, &bytes));
+        .and_then(|request| execution::run(request, state, &bytes, pool));
     let response = match result {
         Ok(data) => {
             json!({"version":1,"id":id,"completed":1,"skipped":[],"failed":false,"data":data})

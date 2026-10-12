@@ -1,3 +1,9 @@
+static POOL: std::sync::LazyLock<rayon::ThreadPool> = std::sync::LazyLock::new(|| {
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(4)
+        .build()
+        .unwrap()
+});
 use super::serve;
 use flate2::{Compression, write::ZlibEncoder};
 use serde_json::{Value, json};
@@ -62,7 +68,7 @@ fn response(value: &Value) -> Value {
     bytes.extend_from_slice(&(json.len() as u32).to_be_bytes());
     bytes.extend_from_slice(&json);
     let mut output = Vec::new();
-    serve(&mut Cursor::new(bytes), &mut output).unwrap();
+    serve(&mut Cursor::new(bytes), &mut output, &POOL).unwrap();
     serde_json::from_slice(&output).unwrap()
 }
 fn graph(directory: &Directory, head: &str) -> Value {
@@ -247,7 +253,7 @@ fn partial_frames_and_duplicate_paths_do_not_return_partial_plans() {
     bytes.extend_from_slice(&10_u32.to_be_bytes());
     bytes.extend_from_slice(b"{}");
     let mut output = Vec::new();
-    assert!(serve(&mut Cursor::new(bytes), &mut output).is_err());
+    assert!(serve(&mut Cursor::new(bytes), &mut output, &POOL).is_err());
     assert!(output.is_empty());
     let directory = Directory::new();
     let source = directory.source(b"same");

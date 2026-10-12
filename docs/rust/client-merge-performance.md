@@ -110,3 +110,27 @@ continuation. Source hydration and lazy compatibility getters read only the sele
 range, reject truncation and verify its hash. Each public read gets an independent
 Buffer while existing clone aliases remain shared. Native materialization continues
 to use retained Rust bytes, and escaped getters become eager before pack cleanup.
+
+Owned merge preparation and retargeting dispatch their heavy work onto the helper's
+existing configured Rayon pool. Source reads use bounded worker shares for both
+compressed and raw bytes, commit receipts in input order, and retry only an
+unsupported read-only batch with the full remaining serial budget. Failed worker
+reads do not publish duplicate Source receipts. Merge classification reuses this
+pool, including the caller's one-thread setting, instead of creating another pool.
+Each worker reuses its zlib decoder and 64 KiB scratch buffer, resetting before every
+object, including after errors. The preparation microbenchmark accepts `--packed`
+to include packed private snapshots while verifying every selected body.
+
+Retargeting also reuses operation-owned bodies when every target Source hash is
+already retained. It still verifies the complete Version manifest and preserves
+the existing byte budget. Public target cloning and the Node alias/hash guards
+remain the authority for live cached Sources; unretained bodies follow the normal
+read path. This avoids reading and decompressing those same objects a third time.
+
+Buffer alias validation checks behavior-affecting property names rather than
+enumerating every byte index. It rejects own Buffer/typed-array method and field
+shadows, symbols, and thenable/legacy buffer hooks without invoking getters. Plain
+extra metadata stays on the exact original alias. Prototype descriptors are checked
+once per synchronous validation batch. Private comparison snapshots use captured
+typed-array length/set operations, so copying does not invoke public Buffer hooks.
+Byte hashes, lengths, alias identity and later mutation checks remain required.

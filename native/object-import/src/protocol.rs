@@ -238,11 +238,11 @@ fn serve_extension(
     merge: &mut crate::merge_state::State,
 ) -> io::Result<bool> {
     if magic == *b"BMT1" {
-        crate::merge_state::serve(reader, writer, merge)?;
+        crate::merge_state::serve(reader, writer, merge, pool)?;
         return Ok(true);
     }
     if magic == *b"BMH1" {
-        crate::merge_history::serve(reader, writer)?;
+        crate::merge_history::serve(reader, writer, pool)?;
         return Ok(true);
     }
     if magic == *b"BSS1" {

@@ -31,6 +31,9 @@ import {
 import { continueThreeWayMerge } from './three-way-merge';
 import type { MergeResultsThreeWay, MergeCurrentObservation } from './three-way-merge';
 import {
+  copyRustMergeBuffer,
+  hasRustMergeBufferProperties,
+  hasRustMergeBufferPrototypes,
   captureNativeMergeTarget,
   getRustMergeBodyPlanIndex,
   rememberRustMergeResultBodyPlan,
@@ -536,7 +539,13 @@ export async function tryRustOwnedThreeWayMerge(params: Params): Promise<MergeRe
   const observedCurrent = applyLabelPrefix(currentFiles, baseFiles, otherFiles, params.currentLabel, params.otherLabel);
   target = captureNativeMergeTarget(params.otherComponent);
   base = captureNativeMergeTarget(params.baseComponent);
-  const currentBodies = currentFiles.map((file) => ({ body: file.contents, copy: Buffer.from(file.contents) }));
+  const currentBodies = currentFiles.map((file) => {
+    const body = file.contents;
+    return {
+      body,
+      copy: hasRustMergeBufferProperties(body) ? copyRustMergeBuffer(body) : undefined,
+    };
+  });
   const continuation = (observed?: MergeSourceObservation) =>
     continueThreeWayMerge({
       scope: params.scope,
@@ -570,7 +579,11 @@ export async function tryRustOwnedThreeWayMerge(params: Params): Promise<MergeRe
         live.configurable === repositoryField.configurable &&
         capturedTarget.fresh() &&
         capturedBase.fresh() &&
-        currentBodies.every(({ body, copy }, at) => currentFiles[at].contents === body && equals.call(body, copy))
+        hasRustMergeBufferPrototypes() &&
+        currentBodies.every(
+          ({ body, copy }, at) =>
+            copy && hasRustMergeBufferProperties(body) && currentFiles[at].contents === body && equals.call(body, copy)
+        )
     );
   };
   if (!fresh()) return continuation();

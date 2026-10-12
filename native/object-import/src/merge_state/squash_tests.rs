@@ -17,7 +17,8 @@ fn request(input: impl serde::Serialize) -> Value {
     frame.extend((bytes.len() as u32).to_be_bytes());
     frame.extend(bytes);
     let mut output = Vec::new();
-    serve(&mut Cursor::new(frame), &mut output, &mut State::default()).unwrap();
+    serve(&mut Cursor::new(frame), &mut output, &mut State::default(), &super::tests::POOL)
+        .unwrap();
     serde_json::from_slice(&output).unwrap()
 }
 fn policy() -> Value {

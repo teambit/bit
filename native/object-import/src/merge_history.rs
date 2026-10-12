@@ -52,7 +52,11 @@ impl Write for Output {
         Ok(())
     }
 }
-pub(crate) fn serve(reader: &mut impl Read, writer: &mut impl Write) -> io::Result<()> {
+pub(crate) fn serve(
+    reader: &mut impl Read,
+    writer: &mut impl Write,
+    pool: &rayon::ThreadPool,
+) -> io::Result<()> {
     let id = protocol::word(reader)?;
     let length = protocol::word(reader)? as usize;
     if length == 0 || length > MAX_INPUT {
@@ -60,7 +64,9 @@ pub(crate) fn serve(reader: &mut impl Read, writer: &mut impl Write) -> io::Resu
     }
     let mut bytes = vec![0; length];
     reader.read_exact(&mut bytes)?;
-    let result = serde_json::from_slice(&bytes).map_err(io::Error::other).and_then(apply);
+    let result = serde_json::from_slice(&bytes)
+        .map_err(io::Error::other)
+        .and_then(|request| pool.install(|| apply(request)));
     let response = match result {
         Ok((completed, data)) => Response {
             version: 1,
