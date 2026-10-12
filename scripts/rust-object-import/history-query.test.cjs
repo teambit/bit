@@ -709,3 +709,24 @@ test('Source setter and arbitrary cached replacement cannot retain query provena
     assert.equal(provenance.getRustHistorySourceDescriptor(file, repository), undefined);
   });
 });
+// Append to history-query.test.cjs after final frozen proof exits. Uses genuine defining installed owner in both loaders.
+test('private Source capsule cleanup preserves captured authority after a late fs.remove hook', async (t) => {
+  const query = installed('@teambit/objects/dist/objects/rust-history-query.js');
+  assert.equal(typeof installed('@teambit/objects').Repository, 'function', 'load genuine defining FS registration');
+  const disk = installed('fs-extra');
+  const promises = require('node:fs/promises');
+  const original = Object.getOwnPropertyDescriptor(disk, 'remove');
+  let directory, calls = 0;
+  owner(t, async () => { throw new Error('private directory cleanup needs no Native request'); });
+  try {
+    await query.withRustHistoryQueryOperation(async () => {
+      directory = await query.getRustHistoryQuerySourceDirectory();
+      assert.ok(directory, 'default defining FS eligibility creates real private directory');
+      Object.defineProperty(disk, 'remove', { ...original, value: async () => { calls++; } });
+    });
+  } finally {
+    Object.defineProperty(disk, 'remove', original);
+  }
+  assert.equal(calls, 0, 'private cleanup must not invoke newly installed public compatibility hook');
+  await assert.rejects(promises.stat(directory), { code: 'ENOENT' });
+});

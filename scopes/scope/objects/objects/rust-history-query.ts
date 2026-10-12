@@ -441,10 +441,11 @@ export function getRustHistoryQuerySourceDirectory(): Promise<string | undefined
   if (!owner || !isRustHistoryQueryOperation() || !hasRustSnapshotFunctions(['SnapshotRepositoryFS', 'SnapshotRepositoryPath']))
     return Promise.resolve(undefined);
   if (!owner.sourceDirectory) {
+    const remove = Object.getOwnPropertyDescriptor(fs, 'remove')!.value as typeof fs.remove;
     owner.sourceDirectory = fs.mkdtemp(path.join(os.tmpdir(), 'bit-history-query-sources-')).catch(() => undefined);
     owner.cleanups[owner.cleanups.length] = async () => {
       const directory = await owner.sourceDirectory;
-      if (directory) await fs.remove(directory);
+      if (directory) await remove.call(fs, directory);
     };
   }
   return owner.sourceDirectory;
