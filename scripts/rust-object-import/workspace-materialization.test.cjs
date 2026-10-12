@@ -62,10 +62,12 @@ function frames(acknowledgements) {
   return acknowledgements.join('').trim().split('\n').filter(Boolean).map(JSON.parse);
 }
 test('actual DataToPersist materializes 150 nested files through multiple bounded native frames', async (t) => {
-  const { directory, acknowledgements } = await setup(t);
+  const { directory, acknowledgements, spawns } = await setup(t);
   const data = new DataToPersist();
   for (let index = 0; index < 150; index++) data.addFile(file(directory, `nested/${index}.ts`, `a\r\nb\rc\n${index}`));
   await data.persistAllToFS();
+  assert.ok(spawns.length > 0);
+  assert.deepEqual(spawns[0][1], ['--threads', String(Math.min(4, os.availableParallelism()))], 'use a CPU-sized bounded worker pool and reject invalid helpers promptly');
   for (const vinyl of data.files) assert.deepEqual(await fs.readFile(vinyl.path), eol.auto(vinyl.contents));
   assert.deepEqual(
     frames(acknowledgements).map((frame) => frame.completed),

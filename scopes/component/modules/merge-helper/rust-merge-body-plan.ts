@@ -40,9 +40,17 @@ export type RustMergeBodyPlan = {
   otherAliases?: Map<number, Buffer>;
   valid: () => boolean;
 };
-type Snapshot = { object: object; fields: object; prototype: object | null };
+type Snapshot = {
+  object: object;
+  fields: Array<{ key: string | symbol; descriptor: PropertyDescriptor }>;
+  prototype: object | null;
+};
 function descriptorSnapshot(object: object): Snapshot {
-  return { object, fields: Object.getOwnPropertyDescriptors(object), prototype: Object.getPrototypeOf(object) };
+  return {
+    object,
+    fields: Reflect.ownKeys(object).map((key) => ({ key, descriptor: Object.getOwnPropertyDescriptor(object, key)! })),
+    prototype: Object.getPrototypeOf(object),
+  };
 }
 const plans = new WeakMap<MergeResultsThreeWay, { plan: RustMergeBodyPlan; snapshots: Snapshot[] }>();
 const mergePlanIndices = new AsyncLocalStorage<number>();
@@ -56,6 +64,7 @@ const bodySnapshots = new WeakMap<RustMergeBodyPlan, Snapshot[]>();
 const equals = Buffer.prototype.equals;
 const bodyCreateHash = createHash;
 const isBuffer = Buffer.isBuffer;
+const typedArrayLength = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(Uint8Array.prototype), 'length')!.get!;
 const mapGet = Map.prototype.get;
 
 function matchingBodyAlias(value: unknown, body: RustMergeBody): value is Buffer {
@@ -66,7 +75,10 @@ function matchingBodyAlias(value: unknown, body: RustMergeBody): value is Buffer
       Object.getOwnPropertyDescriptor(Buffer, 'isBuffer')?.value === isBuffer &&
       isBuffer(value) &&
       Object.getPrototypeOf(value) === Buffer.prototype &&
-      Reflect.ownKeys(value).every((key) => typeof key === 'string' && /^(0|[1-9][0-9]*)$/.test(key)) &&
+      // Typed arrays have one non-deletable own index per byte. Counting keys after
+      // reading the intrinsic length rejects extra properties without per-byte regex work.
+      typedArrayLength.call(value) === body.bytes &&
+      Reflect.ownKeys(value).length === body.bytes &&
       Object.getOwnPropertyDescriptor(require('crypto'), 'createHash')?.value === bodyCreateHash &&
       value.length === body.bytes &&
       bodyCreateHash('sha1').update(value).digest('hex') === body.spoolHash
@@ -130,13 +142,11 @@ function selectedBodyAlias(
 
 function unchanged(snapshot: Snapshot): boolean {
   if (types.isProxy(snapshot.object) || Object.getPrototypeOf(snapshot.object) !== snapshot.prototype) return false;
-  const current = Object.getOwnPropertyDescriptors(snapshot.object);
-  const keys = Reflect.ownKeys(snapshot.fields);
+  const keys = Reflect.ownKeys(snapshot.object);
   return (
-    keys.length === Reflect.ownKeys(current).length &&
-    keys.every((key) => {
-      const saved = Reflect.get(snapshot.fields, key) as PropertyDescriptor;
-      const live = Reflect.get(current, key) as PropertyDescriptor | undefined;
+    keys.length === snapshot.fields.length &&
+    snapshot.fields.every(({ key, descriptor: saved }) => {
+      const live = Object.getOwnPropertyDescriptor(snapshot.object, key);
       return Boolean(
         live &&
           live.value === saved.value &&
@@ -279,9 +289,10 @@ export function attachRustMergeResultBodies(
   const plan = getRustMergeResultBodyPlan(results);
   if (!plan || !hasRustSnapshotTransactionClassFields(files, 'Array', []) || files.length > 4096) return false;
   const patches: Array<{ file: SourceFile; body: RustMergeBody; alias?: Buffer }> = [];
+  const bodiesByIndex = new Map(plan.bodies.map((body) => [body.planIndex, body]));
   for (const row of selection.files) {
     const file = Object.getOwnPropertyDescriptor(files, String(row.index))?.value;
-    const body = plan.bodies.find((candidate) => candidate.planIndex === row.planIndex);
+    const body = bodiesByIndex.get(row.planIndex);
     if (
       !file ||
       !body ||

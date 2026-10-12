@@ -730,3 +730,41 @@ test('private Source capsule cleanup preserves captured authority after a late f
   assert.equal(calls, 0, 'private cleanup must not invoke newly installed public compatibility hook');
   await assert.rejects(promises.stat(directory), { code: 'ENOENT' });
 });
+
+test('raw Source receipts preserve binary bytes and cache identity and reject changed spools', async (t) => {
+  const query = installed('@teambit/objects/dist/objects/rust-history-query.js');
+  const capsules = installed('@teambit/objects/dist/objects/rust-history-query-sources.js');
+  const { Repository, Source, Ref } = installed('@teambit/objects');
+  const disk = require('node:fs/promises');
+  const directory = await disk.mkdtemp(path.join(require('node:os').tmpdir(), 'raw-source-receipt-'));
+  t.after(() => disk.rm(directory, { recursive: true, force: true }));
+  owner(t, async () => { throw new Error('raw hydration requires no native request'); });
+  const bytes = Buffer.from([0xef, 0xbb, 0xbf, 0xff, 0, 13, 10]);
+  const original = Source.from(bytes);
+  const packed = await original.compressWithSize();
+  const descriptor = {
+    hash: original.hash().toString(), privatePath: path.join(directory, 'source.body'),
+    compressedSize: packed.buffer.length, inflatedSize: packed.inflatedSize,
+    encoding: 'raw', bodySize: bytes.length,
+  };
+  const receipt = { sources: [descriptor], sourceLoads: [0] };
+  assert.equal(capsules.validRustHistorySourceReceipt(receipt, directory), true);
+  for (const patch of [{ encoding: 'unknown' }, { bodySize: -1 }, { bodySize: packed.inflatedSize + 1 }]) {
+    assert.equal(capsules.validRustHistorySourceReceipt({ ...receipt, sources: [{ ...descriptor, ...patch }] }, directory), false);
+  }
+  await disk.writeFile(descriptor.privatePath, bytes);
+  await query.withRustHistoryQueryOperation(async () => {
+    const repository = new Repository(path.join(directory, 'scope'), { name: 'qualification.raw' });
+    const source = await capsules.loadRustCapturedSourceCapsule(repository, descriptor);
+    assert.ok(source instanceof Source);
+    assert.deepEqual(source.contents, bytes);
+    assert.equal(repository.getCache(new Ref(descriptor.hash)), source);
+    assert.equal(await capsules.loadRustCapturedSourceCapsule(repository, descriptor), source);
+    const changed = Buffer.from(bytes); changed[0] ^= 1;
+    await disk.writeFile(descriptor.privatePath, changed);
+    const empty = new Repository(path.join(directory, 'empty'), { name: 'qualification.changed' });
+    await assert.rejects(capsules.loadRustCapturedSourceCapsule(empty, descriptor), /identity changed/);
+    await disk.writeFile(descriptor.privatePath, bytes.subarray(1));
+    await assert.rejects(capsules.loadRustCapturedSourceCapsule(empty, descriptor), /size changed/);
+  });
+});

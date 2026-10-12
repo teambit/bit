@@ -61,6 +61,7 @@ function validApplied(data: any, clones: SourceFile[], plan: RustMergeBodyPlan, 
   const directory = plan.snapshotDirectory;
   if (typeof directory !== 'string' || !path.isAbsolute(directory)) return false;
   const bodies = new Set<number>();
+  const previousBodies = new Map(plan.bodies.map((body) => [body.planIndex, body]));
   for (const body of data.bodies) {
     if (
       !body ||
@@ -77,7 +78,7 @@ function validApplied(data: any, clones: SourceFile[], plan: RustMergeBodyPlan, 
     )
       return false;
     if (body.spoolPath !== path.join(directory, `${plan.token}-${body.planIndex}.checkout`)) return false;
-    const previous = plan.bodies.find((row) => row.planIndex === body.planIndex);
+    const previous = previousBodies.get(body.planIndex);
     if (
       previous &&
       (previous.spoolPath !== body.spoolPath || previous.spoolHash !== body.spoolHash || previous.bytes !== body.bytes)
@@ -142,7 +143,6 @@ export async function applyRetainedRustMerge(
     hasRustSnapshotFunctions(['MergeRetainedPublicGuard']) &&
     hasRustMergeRetainedBodyFunctions() &&
     getRustMergeResultBodyPlan(results) === plan &&
-    plan.valid() &&
     target.fresh() &&
     !types.isProxy(clones) &&
     hasRustSnapshotTransactionClassFields(clones, 'Array', []) &&
@@ -181,9 +181,8 @@ export async function applyRetainedRustMerge(
     files.push(file);
   }
   // Retargeting may retain an additional current-head Source absent from the incoming/base plan.
-  const additions = applied.bodies.filter(
-    (body) => !plan.bodies.some((retained) => retained.planIndex === body.planIndex)
-  );
+  const retainedIndices = new Set(plan.bodies.map((body) => body.planIndex));
+  const additions = applied.bodies.filter((body) => !retainedIndices.has(body.planIndex));
   if (!appendRustMergeBodyPlanBodies(results, additions)) return undefined;
   if (
     !attachRustMergeResultBodies(results, files, {

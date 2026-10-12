@@ -258,7 +258,7 @@ fn serve_extension(
         return Ok(true);
     }
     if magic == *b"BWC0" || magic == *b"BWC1" {
-        crate::checkout::serve(reader, writer, magic == *b"BWC0", checkout)?;
+        crate::checkout::serve(reader, writer, magic == *b"BWC0", checkout, pool)?;
         return Ok(true);
     }
     serve_standard_extension(magic, reader, writer, pool, store)

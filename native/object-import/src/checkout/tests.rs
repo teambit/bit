@@ -9,6 +9,15 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
+fn pool() -> &'static rayon::ThreadPool {
+    static POOL: std::sync::LazyLock<rayon::ThreadPool> = std::sync::LazyLock::new(|| {
+        rayon::ThreadPoolBuilder::new()
+            .num_threads(4)
+            .build()
+            .unwrap()
+    });
+    &POOL
+}
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 struct Directory(PathBuf);
 impl Directory {
@@ -65,8 +74,14 @@ fn append_path(bytes: &mut Vec<u8>, path: &Path) {
 }
 fn response(bytes: Vec<u8>, preflight: bool) -> Value {
     let mut output = Vec::new();
-    serve(&mut Cursor::new(bytes), &mut output, preflight, &mut super::cache::State::default())
-        .unwrap();
+    serve(
+        &mut Cursor::new(bytes),
+        &mut output,
+        preflight,
+        &mut super::cache::State::default(),
+        pool(),
+    )
+    .unwrap();
     serde_json::from_slice(&output).unwrap()
 }
 #[test]
@@ -134,7 +149,8 @@ fn incomplete_or_invalid_frames_never_mutate_destinations() {
                 &mut Cursor::new(&bytes[..length]),
                 &mut Vec::new(),
                 false,
-                &mut super::cache::State::default()
+                &mut super::cache::State::default(),
+                pool(),
             )
             .is_err(),
         );
@@ -149,6 +165,7 @@ fn incomplete_or_invalid_frames_never_mutate_destinations() {
                 &mut Vec::new(),
                 false,
                 &mut super::cache::State::default(),
+                pool(),
             )
             .is_err(),
         );
@@ -233,6 +250,7 @@ fn writes_verified_snapshot_after_preflight_without_rereading_repository() {
         &mut output,
         true,
         &mut state,
+        pool(),
     )
     .unwrap();
     let identity = crate::validate::hexadecimal(&hash);
@@ -248,9 +266,105 @@ fn writes_verified_snapshot_after_preflight_without_rereading_repository() {
         &mut output,
         false,
         &mut state,
+        pool(),
     )
     .unwrap();
     let result: Value = serde_json::from_slice(&output).unwrap();
     assert_eq!(result["completed"], 1);
     assert_eq!(fs::read(destination).unwrap(), super::eol::auto(b"verified snapshot\r\n".to_vec()));
+}
+
+#[test]
+fn parallel_preflight_preserves_order_and_large_source_fallback() {
+    let directory = Directory::new();
+    let large = vec![b'x'; 9 * 1024 * 1024];
+    let hash = store(&directory.0, &large);
+    let small = store(&directory.0, b"small\r\n");
+    let paths = (0..32)
+        .map(|index| directory.0.join(format!("output/{index}")))
+        .collect::<Vec<_>>();
+    let inputs = paths
+        .iter()
+        .enumerate()
+        .map(|(index, path)| (if index == 3 { hash } else { small }, path.as_path(), 1, 1))
+        .collect::<Vec<_>>();
+    let result = response(frame(&directory.0, &inputs), false);
+    assert_eq!(result["completed"], 32);
+    assert_eq!(result["failed"], false);
+    for (index, path) in paths.iter().enumerate() {
+        assert_eq!(
+            fs::read(path).unwrap(),
+            if index == 3 { large.clone() } else { super::eol::auto(b"small\r\n".to_vec()) },
+        );
+    }
+}
+#[test]
+fn parallel_preflight_rejects_corrupt_tail_before_public_writes() {
+    let directory = Directory::new();
+    let hash = store(&directory.0, b"verified");
+    store_raw(&directory.0, [7; 20], b"corrupt");
+    let paths = (0..32)
+        .map(|index| directory.0.join(format!("output/{index}")))
+        .collect::<Vec<_>>();
+    let inputs = paths
+        .iter()
+        .enumerate()
+        .map(|(index, path)| (if index == 31 { [7; 20] } else { hash }, path.as_path(), 1, 1))
+        .collect::<Vec<_>>();
+    let result = response(frame(&directory.0, &inputs), false);
+    assert_eq!(result["completed"], 0);
+    assert_eq!(result["failed"], true);
+    assert!(!directory.0.join("output").exists());
+}
+#[test]
+fn parallel_preflight_enforces_aggregate_inflated_budget() {
+    let directory = Directory::new();
+    let hash = store(&directory.0, &vec![b'x'; 2 * 1024 * 1024]);
+    let paths = (0..32)
+        .map(|index| directory.0.join(format!("output/{index}")))
+        .collect::<Vec<_>>();
+    let inputs = paths
+        .iter()
+        .map(|path| (hash, path.as_path(), 1, 0))
+        .collect::<Vec<_>>();
+    let result = response(frame(&directory.0, &inputs), false);
+    assert_eq!(result["completed"], 0);
+    assert_eq!(result["failed"], true);
+    assert!(!directory.0.join("output").exists());
+}
+
+#[test]
+fn parallel_preflight_caches_every_ordered_raw_body_for_later_writes() {
+    let directory = Directory::new();
+    let bodies = (0..32)
+        .map(|index| format!("file {index}\r\n").into_bytes())
+        .collect::<Vec<_>>();
+    let paths = (0..32)
+        .map(|index| directory.0.join(format!("output/{index}")))
+        .collect::<Vec<_>>();
+    let inputs = bodies
+        .iter()
+        .zip(&paths)
+        .map(|(body, path)| (store(&directory.0, body), path.as_path(), 1, 1))
+        .collect::<Vec<_>>();
+    let request = frame(&directory.0, &inputs);
+    let mut state = super::cache::State::default();
+    let mut output = Vec::new();
+    serve(&mut Cursor::new(&request), &mut output, true, &mut state, pool()).unwrap();
+    assert_eq!(serde_json::from_slice::<Value>(&output).unwrap()["completed"], 32);
+    for (hash, _, _, _) in &inputs {
+        let name = crate::validate::hexadecimal(hash);
+        fs::remove_file(
+            directory.0
+                .join(&name[..2])
+                .join(&name[2..]),
+        )
+        .unwrap();
+    }
+    output.clear();
+    serve(&mut Cursor::new(&request), &mut output, false, &mut state, pool()).unwrap();
+    assert_eq!(serde_json::from_slice::<Value>(&output).unwrap()["completed"], 32);
+    for (body, path) in bodies.into_iter().zip(paths) {
+        assert_eq!(fs::read(path).unwrap(), super::eol::auto(body));
+    }
 }

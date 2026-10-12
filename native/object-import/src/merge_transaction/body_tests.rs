@@ -77,7 +77,13 @@ fn retained_prepare_capsules_and_late_template_preserve_raw_bytes_before_auto_eo
         fs::metadata(capsule["privatePath"].as_str().expect("capsule"))
             .expect("capsule exists")
             .len(),
-        capsule["compressedSize"].as_u64().expect("compressed size"),
+        capsule["bodySize"].as_u64().expect("body size"),
+    );
+    assert_eq!(capsule["encoding"], "raw");
+    assert_eq!(capsule["privatePath"], prepared["bodies"][0]["spoolPath"]);
+    assert_eq!(
+        fs::read(capsule["privatePath"].as_str().expect("capsule")).expect("body"),
+        b"incoming\n",
     );
     for (revision, phase, completed) in
         [(0, "status", 1), (1, "importGap", 1), (2, "plans", 0), (3, "clearTemps", 1)]

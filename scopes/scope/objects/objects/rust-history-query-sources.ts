@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import { types } from 'util';
 import type Repository from './repository';
-import type Source from '../models/source';
+import Source from '../models/source';
 import BitObject from './object';
 import Ref from './ref';
 import {
@@ -18,7 +18,14 @@ import {
   isRustHistoryQueryOperation,
 } from './rust-history-query';
 
-export type HistorySourceCapsule = { hash: string; privatePath: string; compressedSize: number; inflatedSize: number };
+export type HistorySourceCapsule = {
+  hash: string;
+  privatePath: string;
+  compressedSize: number;
+  inflatedSize: number;
+  encoding?: 'raw';
+  bodySize?: number;
+};
 export type HistorySourceReceipt = { sources: HistorySourceCapsule[]; sourceLoads: number[] };
 const aliases = new WeakMap<object, { hash: string; contents: Buffer; snapshot: Buffer }>();
 const equals = Buffer.prototype.equals;
@@ -84,7 +91,10 @@ export function validRustHistorySourceReceipt(data: any, directory: string): boo
       source.compressedSize > 32 * 1024 * 1024 ||
       !Number.isSafeInteger(source.inflatedSize) ||
       source.inflatedSize < 0 ||
-      source.inflatedSize > 32 * 1024 * 1024
+      source.inflatedSize > 32 * 1024 * 1024 ||
+      (source.encoding !== undefined && source.encoding !== 'raw') ||
+      (source.encoding === 'raw' &&
+        (!Number.isSafeInteger(source.bodySize) || source.bodySize < 0 || source.bodySize > source.inflatedSize))
     )
       return false;
   }
@@ -115,8 +125,14 @@ export async function loadRustCapturedSourceCapsule(
   const compressed = await fs.readFile(descriptor.privatePath);
   if (!sourceHydrationOwner() || !canHydrateRustHistoryQuerySources() || !canUseRustHistoryQueryRepository(repository))
     return undefined;
-  if (compressed.length !== descriptor.compressedSize) throw new Error('history query Source capsule size changed');
-  const parsed = await BitObject.parseObjectWithSize(compressed, descriptor.privatePath);
+  if (compressed.length !== (descriptor.encoding === 'raw' ? descriptor.bodySize : descriptor.compressedSize))
+    throw new Error('history query Source capsule size changed');
+  // Merge preparation already parsed and verified these bytes. Keep the defining Source
+  // constructor and repository size accounting without inflating the same object twice.
+  const parsed =
+    descriptor.encoding === 'raw'
+      ? { object: Source.parse(compressed), inflatedSize: descriptor.inflatedSize }
+      : await BitObject.parseObjectWithSize(compressed, descriptor.privatePath);
   if (!sourceHydrationOwner() || !canHydrateRustHistoryQuerySources() || !canUseRustHistoryQueryRepository(repository))
     return undefined;
   if (

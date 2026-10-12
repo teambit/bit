@@ -1,5 +1,6 @@
 import { spawn, type ChildProcessWithoutNullStreams } from 'child_process';
 import path from 'path';
+import { availableParallelism } from 'os';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { resolveRustObjectImportExecutable } from '@teambit/objects';
 import * as eol from '@teambit/toolbox.string.eol';
@@ -47,7 +48,9 @@ export class MaterializationSession {
   private killTimer?: NodeJS.Timeout;
 
   constructor(executable: string) {
-    this.child = spawn(executable, ['--threads', '1'], { stdio: ['pipe', 'pipe', 'pipe'] });
+    this.child = spawn(executable, ['--threads', String(Math.min(4, availableParallelism()))], {
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
     this.child.stderr.resume();
     this.closed = new Promise((resolve) => {
       this.child.once('close', () => {

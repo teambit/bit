@@ -1,7 +1,13 @@
+type DescriptorEntry = { key: string | symbol; descriptor: PropertyDescriptor };
+function descriptorEntries(object: object): DescriptorEntry[] {
+  return Reflect.ownKeys(object).map((key) => ({ key, descriptor: Object.getOwnPropertyDescriptor(object, key)! }));
+}
+
 type ClassDefaults = {
   constructor: any;
-  prototypes: Array<{ owner: object; descriptors: PropertyDescriptorMap }>;
-  statics: PropertyDescriptorMap;
+  prototypes: Array<{ owner: object; entries: DescriptorEntry[] }>;
+  statics: DescriptorEntry[];
+  staticKeys: Set<string | symbol>;
   mutableStatics: Set<string>;
 };
 // Class modules can encounter this registry during cyclic initialization.
@@ -30,57 +36,45 @@ export function registerRustSnapshotTransactionClass(
   const prototypes: ClassDefaults['prototypes'] = [];
   let current = constructor.prototype;
   while (current && current !== Object.prototype) {
-    prototypes.push({ owner: current, descriptors: Object.getOwnPropertyDescriptors(current) });
+    prototypes.push({ owner: current, entries: descriptorEntries(current) });
     current = Object.getPrototypeOf(current);
   }
   classes ||= new Map();
   classes.set(name, {
     constructor,
     prototypes,
-    statics: Object.getOwnPropertyDescriptors(constructor),
+    statics: descriptorEntries(constructor),
+    staticKeys: new Set(Reflect.ownKeys(constructor)),
     mutableStatics: new Set(mutableStatics),
   });
 }
 
 function unchanged(defaults: ClassDefaults): boolean {
-  const statics = Object.getOwnPropertyDescriptors(defaults.constructor);
-  const keys = Reflect.ownKeys(statics);
-  for (let index = 0; index < keys.length; index += 1) {
-    const key = keys[index];
+  const keys = Reflect.ownKeys(defaults.constructor);
+  for (const key of keys) {
     if (
-      !Object.getOwnPropertyDescriptor(defaults.statics, key) &&
-      (typeof key !== 'string' || !defaults.mutableStatics.has(key) || !('value' in statics[key]))
+      !defaults.staticKeys.has(key) &&
+      (typeof key !== 'string' ||
+        !defaults.mutableStatics.has(key) ||
+        !('value' in Object.getOwnPropertyDescriptor(defaults.constructor, key)!))
     )
       return false;
   }
-  const originalKeys = Reflect.ownKeys(defaults.statics);
-  for (let index = 0; index < originalKeys.length; index += 1) {
-    const key = originalKeys[index];
+  for (const { key, descriptor } of defaults.statics) {
     if (
       !sameDescriptor(
-        Object.getOwnPropertyDescriptor(defaults.statics, key)!.value,
-        Object.getOwnPropertyDescriptor(statics, key)?.value,
+        descriptor,
+        Object.getOwnPropertyDescriptor(defaults.constructor, key),
         typeof key === 'string' && defaults.mutableStatics.has(key)
       )
     )
       return false;
   }
   let prototype = defaults.constructor.prototype;
-  for (let index = 0; index < defaults.prototypes.length; index += 1) {
-    const entry = defaults.prototypes[index];
-    if (prototype !== entry.owner) return false;
-    const current = Object.getOwnPropertyDescriptors(prototype);
-    const beforeKeys = Reflect.ownKeys(entry.descriptors);
-    if (Reflect.ownKeys(current).length !== beforeKeys.length) return false;
-    for (let field = 0; field < beforeKeys.length; field += 1) {
-      const key = beforeKeys[field];
-      if (
-        !sameDescriptor(
-          Object.getOwnPropertyDescriptor(entry.descriptors, key)!.value,
-          Object.getOwnPropertyDescriptor(current, key)?.value
-        )
-      )
-        return false;
+  for (const entry of defaults.prototypes) {
+    if (prototype !== entry.owner || Reflect.ownKeys(prototype).length !== entry.entries.length) return false;
+    for (const { key, descriptor } of entry.entries) {
+      if (!sameDescriptor(descriptor, Object.getOwnPropertyDescriptor(prototype, key))) return false;
     }
     prototype = Object.getPrototypeOf(prototype);
   }
@@ -98,21 +92,17 @@ function hasClassFields(value: unknown, name: string, fields?: ReadonlySet<strin
     !unchanged(defaults)
   )
     return false;
-  const own = Object.getOwnPropertyDescriptors(value);
-  const keys = Reflect.ownKeys(own);
-  for (let index = 0; index < keys.length; index += 1) {
+  for (const key of Reflect.ownKeys(value)) {
     if (
-      (!fields || (typeof keys[index] === 'string' && fields.has(keys[index] as string))) &&
-      !('value' in Object.getOwnPropertyDescriptor(own, keys[index])!.value)
+      (!fields || (typeof key === 'string' && fields.has(key))) &&
+      !('value' in Object.getOwnPropertyDescriptor(value, key)!)
     )
       return false;
   }
-  for (let index = 0; index < defaults.prototypes.length; index += 1) {
-    const prototypeKeys = Reflect.ownKeys(defaults.prototypes[index].descriptors);
-    for (let field = 0; field < prototypeKeys.length; field += 1) {
-      const key = prototypeKeys[field];
+  for (const entry of defaults.prototypes) {
+    for (const { key } of entry.entries) {
       if (key === 'length' && Array.isArray(value)) continue;
-      if (Object.getOwnPropertyDescriptor(own, key)) return false;
+      if (Object.getOwnPropertyDescriptor(value, key)) return false;
     }
   }
   return true;

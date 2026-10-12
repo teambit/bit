@@ -152,9 +152,9 @@ test('retained Buffer aliases reject extra string, symbol and accessor propertie
   });
   let reads = 0;
   await sources.withRustWorkspaceEngine(async () => {
-    for (const key of [undefined, 'extra', Symbol('extra'), 'accessor']) {
+    for (const key of [undefined, 'extra', Symbol('extra'), 'accessor', 'length']) {
       const body = Buffer.alloc(64 * 1024, 97);
-      if (key !== undefined)
+      if (key !== undefined && key !== 'length')
         Object.defineProperty(body, key, {
           configurable: true,
           get() {
@@ -169,7 +169,7 @@ test('retained Buffer aliases reject extra string, symbol and accessor propertie
         planIndex: 0,
         spoolPath: path.join(base, 'private-spool'),
         spoolHash: createHash('sha1').update(body).digest('hex'),
-        bytes: body.length,
+        bytes: body.length + Number(key === 'length'),
       };
       api.rememberRustMergeResultBodyPlan(results, {
         ownerToken: 'a'.repeat(40),
@@ -184,6 +184,14 @@ test('retained Buffer aliases reject extra string, symbol and accessor propertie
         targetManifest: { hash: 'c'.repeat(40), files: [] },
         valid: () => true,
       });
+      if (key === 'length')
+        Object.defineProperty(body, key, {
+          configurable: true,
+          get() {
+            reads++;
+            throw new Error('shadowed Buffer length must remain unread');
+          },
+        });
       assert.equal(
         api.attachRustMergeResultBodies(results, [file], {
           files: [{ index: 0, planIndex: 0, relativePath: 'index.js', aliasKind: 'current', aliasIndex: 0 }],

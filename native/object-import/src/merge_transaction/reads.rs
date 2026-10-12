@@ -5,10 +5,16 @@ use std::{cell::RefCell, collections::HashMap, io};
 thread_local! {static ACTIVE: RefCell<Option<Trace>> = const {RefCell::new(None)};}
 #[derive(Default)]
 pub(super) struct Trace {
-    pub(super) records: HashMap<String, SourceRecord>,
+    pub(super) records: HashMap<String, Receipt>,
     source_reads: usize,
     source_bytes: usize,
     compressed: usize,
+    retained_bytes: usize,
+}
+pub(super) struct Receipt {
+    pub(super) body: Vec<u8>,
+    pub(super) compressed_size: usize,
+    pub(super) inflated_size: usize,
 }
 pub(super) struct Scope {
     previous: Option<Trace>,
@@ -54,10 +60,21 @@ pub(crate) fn source(hash: [u8; 20], record: &SourceRecord) -> io::Result<()> {
         let hash = crate::validate::hexadecimal(&hash);
         if !trace.records.contains_key(&hash) {
             trace.compressed += record.compressed.len();
-            if trace.compressed > 32 * 1024 * 1024 || trace.records.len() >= 4096 {
+            trace.retained_bytes += record.body.len();
+            if trace.compressed > 32 * 1024 * 1024
+                || trace.retained_bytes > 32 * 1024 * 1024
+                || trace.records.len() >= 4096
+            {
                 return Err(invalid("merge Source receipt budget"));
             }
-            trace.records.insert(hash, record.clone());
+            trace.records.insert(
+                hash,
+                Receipt {
+                    body: record.body.clone(),
+                    compressed_size: record.compressed.len(),
+                    inflated_size: record.inflated_size,
+                },
+            );
         }
         Ok(())
     })

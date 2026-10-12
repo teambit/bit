@@ -73,7 +73,7 @@ pub(crate) fn auto(bytes: Vec<u8>) -> Vec<u8> {
 }
 
 pub(crate) fn normalize(bytes: Vec<u8>, windows: bool) -> Vec<u8> {
-    if binary(&bytes) {
+    if (!windows && !bytes.contains(&b'\r')) || binary(&bytes) {
         return bytes;
     }
     let text = String::from_utf8_lossy(&bytes);

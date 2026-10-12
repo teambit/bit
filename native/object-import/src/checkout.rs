@@ -3,6 +3,8 @@ pub(crate) mod eol;
 pub(crate) mod plan;
 pub(crate) mod repository;
 
+mod preflight;
+
 use std::{
     collections::HashSet,
     fs::{self, OpenOptions},
@@ -44,11 +46,12 @@ pub(crate) fn serve(
     writer: &mut impl Write,
     preflight_only: bool,
     state: &mut cache::State,
+    pool: &rayon::ThreadPool,
 ) -> io::Result<()> {
     let request = request(reader)?;
     let mut response =
         Response { version: 1, id: request.id, completed: 0, skipped: Vec::new(), failed: false };
-    let Ok(contents) = preflight(&request, state, !preflight_only) else {
+    let Ok(contents) = preflight::load(&request, state, !preflight_only, pool) else {
         response.failed = true;
         return protocol::respond(writer, &response);
     };
@@ -107,7 +110,7 @@ pub(crate) fn path(reader: &mut impl Read) -> io::Result<PathBuf> {
     Ok(path)
 }
 
-fn preflight(
+fn sequential_preflight(
     request: &Request,
     state: &mut cache::State,
     use_cache: bool,
