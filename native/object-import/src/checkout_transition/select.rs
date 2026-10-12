@@ -38,7 +38,7 @@ struct Record {
 }
 impl State {
     pub(super) fn begin(&mut self, input: &Value) -> io::Result<Value> {
-        let request: Begin = serde_json::from_value(input.clone()).map_err(io::Error::other)?;
+        let request: Begin = serde::Deserialize::deserialize(input).map_err(io::Error::other)?;
         validate(&request)?;
         let sequence = self.sequence
             .checked_add(1)

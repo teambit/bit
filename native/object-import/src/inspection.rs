@@ -33,7 +33,7 @@ pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<V
     }
 }
 fn begin(input: &Value, state: &mut State) -> io::Result<Value> {
-    let request: wire::Begin = serde_json::from_value(input.clone()).map_err(io::Error::other)?;
+    let request: wire::Begin = serde::Deserialize::deserialize(input).map_err(io::Error::other)?;
     let count: usize = state.plans.values().map(Vec::len).sum();
     if state.plans.len() >= MAX_FILES || request.files.len() + count > MAX_FILES {
         return Err(invalid("inspection retained file limit"));

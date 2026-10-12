@@ -29,7 +29,7 @@ impl State {
     }
 
     pub(super) fn transaction(&mut self, input: &Value) -> io::Result<Value> {
-        let request = serde_json::from_value(input.clone()).map_err(io::Error::other)?;
+        let request = serde::Deserialize::deserialize(input).map_err(io::Error::other)?;
         let bytes = serde_json::to_vec(input).map_err(io::Error::other)?;
         let token = self.token(&bytes)?;
         let transaction = transaction::Transaction::initialize(request, token)?;
@@ -39,7 +39,7 @@ impl State {
     }
 
     pub(super) fn receipt(&mut self, input: &Value) -> io::Result<Value> {
-        let request = serde_json::from_value(input.clone()).map_err(io::Error::other)?;
+        let request = serde::Deserialize::deserialize(input).map_err(io::Error::other)?;
         self.transaction
             .as_mut()
             .ok_or_else(|| invalid("no owned transfer transaction"))?

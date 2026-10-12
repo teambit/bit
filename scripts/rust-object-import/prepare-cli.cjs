@@ -90,6 +90,7 @@ const files = [
   'scopes/component/modules/merge-helper/rust-merge-body-plan.ts',
   'scopes/component/modules/merge-helper/rust-merge-source-groups.ts',
   'scopes/component/modules/merge-helper/rust-merge-three-way.ts',
+  'scopes/component/modules/merge-helper/rust-merge-row-order.ts',
   'components/legacy/scope/exceptions/no-common-snap.ts',
   'scopes/scope/objects/objects/rust-merge-transaction.ts',
   'scopes/scope/objects/objects/rust-merge-transaction-guards.ts',

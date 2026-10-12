@@ -2,6 +2,7 @@ import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
 import { types } from 'util';
+import { orderedRustMergeRows, rustMergeRowKey } from './rust-merge-row-order';
 import { createHash } from 'crypto';
 import {
   readRustBodyRangeSync,
@@ -376,23 +377,6 @@ function validPrepared(
   return validRustMergeSourceGroups(value.sourceGroups, value.sources, value.mergeRows, baseFiles, otherFiles);
 }
 
-function validOrdered(value: any, prepared: Prepared): boolean {
-  if (!Array.isArray(value?.mergeRows) || value.mergeRows.length !== prepared.mergeRows.length) return false;
-  const remaining = prepared.mergeRows.slice();
-  for (const row of value.mergeRows) {
-    if (!row || typeof row !== 'object') return false;
-    const keys = Object.keys(row);
-    const index = remaining.findIndex((original) => {
-      const fields = Object.getOwnPropertyDescriptors(original);
-      return (
-        keys.length === Object.keys(fields).length && keys.every((key) => fields[key] && fields[key].value === row[key])
-      );
-    });
-    if (index < 0) return false;
-    remaining.splice(index, 1);
-  }
-  return true;
-}
 
 function lazyText(row: object, key: 'output' | 'conflict', body?: RustMergeBody): void {
   if (!body) {
@@ -448,16 +432,14 @@ function assemble(
   for (const currentRow of prepared.currentFiles) {
     aliases.set(`${currentRow.planIndex}:${currentRow.relativePath}`, current[currentRow.index].contents);
   }
+  const firstRows = new Map<string, number>();
+  prepared.mergeRows.forEach((row, index) => {
+    const key = rustMergeRowKey(row);
+    if (!firstRows.has(key)) firstRows.set(key, index);
+  });
   for (const row of rows) {
     // Row identity remains the immutable prepare ordinal even after category ordering.
-    const original = prepared.mergeRows.findIndex(
-      (candidate) =>
-        candidate.kind === row.kind &&
-        candidate.current === row.current &&
-        candidate.other === row.other &&
-        candidate.base === row.base &&
-        candidate.bodyPlanIndex === row.bodyPlanIndex
-    );
+    const original = firstRows.get(rustMergeRowKey(row))!;
     const observed = observation.sources.get(original);
     if (row.other !== undefined && observed) otherAliases.set(row.other, observed.otherContents);
     const fsFile = row.current === undefined ? observed?.file : current[row.current];
@@ -611,12 +593,13 @@ export async function tryRustOwnedThreeWayMerge(params: Params): Promise<MergeRe
     otherFiles
   );
   if (!fresh() || !observed.fresh()) return continuation(observed);
-  const ordered = await requestRustMergeTransaction<{ mergeRows: RustMergeRow[] }>(
-    { kind: 'mergePlanOrder', token, planToken: prepared.token, groups: observed.groups },
-    (value) => validOrdered(value, prepared)
+  const ordered = await requestRustMergeTransaction<{ rowIndices: number[] }>(
+    { kind: 'mergePlanOrder', indexedRows: true, token, planToken: prepared.token, groups: observed.groups },
+    (value) => Boolean(orderedRustMergeRows(value, prepared.mergeRows))
   );
   if (!ordered || !fresh() || !observed.fresh()) return continuation(observed);
-  const assembled = assemble(prepared, ordered.mergeRows, observed, currentFiles, baseFiles, otherFiles);
+  const orderedRows = orderedRustMergeRows(ordered, prepared.mergeRows)!;
+  const assembled = assemble(prepared, orderedRows, observed, currentFiles, baseFiles, otherFiles);
   // Canonical label writes occurred above; capture their intended metadata effects for future prompt freshness checks.
   const labelledTarget = captureNativeMergeTarget(params.otherComponent),
     labelledBase = captureNativeMergeTarget(params.baseComponent);
@@ -626,7 +609,7 @@ export async function tryRustOwnedThreeWayMerge(params: Params): Promise<MergeRe
     index,
     snapshotDirectory: directory,
     bodies: prepared.bodies,
-    rows: ordered.mergeRows,
+    rows: orderedRows,
     currentFiles: originalFiles,
     currentClones: currentFiles,
     currentRows: prepared.currentFiles,

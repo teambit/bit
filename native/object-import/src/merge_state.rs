@@ -128,21 +128,18 @@ pub(crate) fn serve(
     }
     let mut bytes = vec![0; length];
     reader.read_exact(&mut bytes)?;
-    let output_limit = if serde_json::from_slice::<Value>(&bytes)
-        .ok()
-        .is_some_and(|input| {
-            matches!(
-                input["kind"].as_str(),
-                Some("inspectionDiff" | "historyQueryBlame" | "historyQueryDiff"),
-            )
-        }) {
+    let request = serde_json::from_slice::<Request>(&bytes).map_err(io::Error::other);
+    let output_limit = if matches!(
+        &request,
+        Ok(Request::InspectionDiff(_)
+            | Request::HistoryQueryBlame(_)
+            | Request::HistoryQueryDiff(_)),
+    ) {
         32 * 1024 * 1024
     } else {
         MAX_JSON
     };
-    let result = serde_json::from_slice(&bytes)
-        .map_err(io::Error::other)
-        .and_then(|request| execution::run(request, state, &bytes, pool));
+    let result = request.and_then(|request| execution::run(request, state, &bytes, pool));
     let response = match result {
         Ok(data) => {
             json!({"version":1,"id":id,"completed":1,"skipped":[],"failed":false,"data":data})

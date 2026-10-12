@@ -62,7 +62,12 @@ pub(crate) fn retarget(input: Value, state: &mut State) -> io::Result<Value> {
     retarget::apply(input, &mut state.plans)
 }
 
-pub(crate) fn order(token: &str, order: &[usize], state: &mut State) -> io::Result<Value> {
+pub(crate) fn order(
+    token: &str,
+    order: &[usize],
+    indexed: bool,
+    state: &mut State,
+) -> io::Result<Value> {
     let plan = state.plans.plans.get_mut(token).ok_or_else(|| invalid("stale merge order plan"))?;
     if order.len() != plan.merge_rows.len()
         || order
@@ -84,5 +89,5 @@ pub(crate) fn order(token: &str, order: &[usize], state: &mut State) -> io::Resu
         })
         .collect::<io::Result<Vec<_>>>()?;
     plan.merge_rows = rows;
-    Ok(json!({"mergeRows":plan.merge_rows}))
+    if indexed { Ok(json!({"rowIndices":order})) } else { Ok(json!({"mergeRows":plan.merge_rows})) }
 }

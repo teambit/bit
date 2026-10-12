@@ -11,6 +11,7 @@ mod source;
 mod tests;
 mod wire;
 
+use serde::Deserialize;
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{collections::HashMap, fs, io, path::Path};
@@ -47,7 +48,7 @@ pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<V
 }
 
 fn serialize(input: &Value, state: &mut State) -> io::Result<Value> {
-    let request: wire::Serialize = serde_json::from_value(input.clone()).map_err(io::Error::other)?;
+    let request = wire::Serialize::deserialize(input).map_err(io::Error::other)?;
     if request.objects.len() > MAX_OBJECTS {
         return Err(invalid("snapshot object count limit"));
     }

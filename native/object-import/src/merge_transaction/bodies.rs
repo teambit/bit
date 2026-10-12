@@ -96,7 +96,12 @@ impl State {
             return Err(invalid("merge completion order already acknowledged"));
         }
         let indices = super::order::permutation(input, &binding.groups, binding.rows.len())?;
-        let output = crate::checkout_transition::order(&token, &indices, &mut self.checkout)?;
+        let output = crate::checkout_transition::order(
+            &token,
+            &indices,
+            input["indexedRows"] == true,
+            &mut self.checkout,
+        )?;
         self.bindings.get_mut(&token).ok_or_else(|| invalid("stale merge body plan"))?.ordered =
             true;
         Ok(output)

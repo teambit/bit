@@ -5,10 +5,10 @@ mod merge;
 
 use super::{invalid, plan, wire};
 use serde_json::{Value, json};
-use std::{fs, io};
+use std::{collections::HashMap, fs, io};
 
 pub(super) fn prepare(input: &Value, state: &mut plan::State) -> io::Result<Value> {
-    let request: wire::Prepare = serde_json::from_value(input.clone()).map_err(io::Error::other)?;
+    let request: wire::Prepare = serde::Deserialize::deserialize(input).map_err(io::Error::other)?;
     if !request.snapshot_directory.is_absolute()
         || !fs::symlink_metadata(&request.snapshot_directory)?.is_dir()
         || fs::read_dir(&request.snapshot_directory)?.next().is_some()
@@ -81,14 +81,17 @@ fn statuses(
     target: &[Vec<u8>],
     current: &[current::Loaded],
 ) -> Vec<Value> {
+    let mut positions = HashMap::new();
+    for (index, file) in request.current.iter().enumerate() {
+        positions.entry(file.relative_path.as_str()).or_insert(index);
+    }
     request.target.files
         .iter()
         .enumerate()
         .map(|(index, file)| {
-            let equal = request.current
-                .iter()
-                .position(|other| other.relative_path == file.relative_path)
-                .is_some_and(|position| current[position].raw == target[index]);
+            let equal = positions
+                .get(file.relative_path.as_str())
+                .is_some_and(|&position| current[position].raw == target[index]);
             json!({"relativePath":file.relative_path,"status":if equal{"unchanged"}else{"updated"}})
         })
         .collect()

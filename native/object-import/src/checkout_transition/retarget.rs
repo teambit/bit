@@ -60,20 +60,25 @@ fn manifest(plan: &plan::Plan, token: &str, known: Option<usize>) -> Value {
     })
 }
 
+fn retained_indices(plan: &plan::Plan) -> HashMap<&str, usize> {
+    let mut indices = HashMap::new();
+    for (index, body) in plan.bodies.iter().enumerate() {
+        indices.entry(body.hash.as_str()).or_insert(index);
+    }
+    indices
+}
 fn additions(
     plan: &plan::Plan,
     contents: Vec<Vec<u8>>,
     directory: &std::path::Path,
     token: &str,
 ) -> (Vec<usize>, Vec<plan::Body>) {
+    let retained = retained_indices(plan);
     let mut indices = Vec::new();
     let mut added = Vec::new();
     for body in contents {
         let mut body = plan::Body::new(body);
-        if let Some(index) = plan.bodies
-            .iter()
-            .position(|existing| existing.hash == body.hash)
-        {
+        if let Some(&index) = retained.get(body.hash.as_str()) {
             indices.push(index);
         } else {
             let index = plan.bodies.len() + added.len();
@@ -134,14 +139,20 @@ fn check_budget(body_count: usize, retained: usize, added: &[plan::Body]) -> io:
     Ok(())
 }
 fn statuses(plan: &plan::Plan, target: &[wire::Manifest]) -> Vec<Value> {
+    let mut current = HashMap::new();
+    for file in &plan.current {
+        current.entry(file.relative_path.as_str()).or_insert(file);
+    }
     target
         .iter()
         .map(|file| {
-            let same = plan.current
-                .iter()
-                .find(|current| current.relative_path == file.relative_path)
+            let same = current
+                .get(file.relative_path.as_str())
                 .is_some_and(|current| current.raw_hash == file.hash);
             json!({"relativePath":file.relative_path,"status":if same {"unchanged"}else{"updated"}})
         })
         .collect()
 }
+
+#[cfg(test)]
+mod tests;

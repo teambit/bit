@@ -24,7 +24,7 @@ pub(super) fn collect(input: &serde_json::Value) -> std::io::Result<Collect> {
     {
         return Err(invalid("unknown collection field"));
     }
-    serde_json::from_value(input.clone()).map_err(std::io::Error::other)
+    serde::Deserialize::deserialize(input).map_err(std::io::Error::other)
 }
 
 #[derive(Deserialize)]

@@ -151,7 +151,7 @@ fn describe(token: &str, entries: &[Entry]) -> Value {
 
 pub(super) fn initialize(state: &mut State, input: &Value) -> io::Result<Value> {
     let request: wire::Initialize =
-        serde_json::from_value(input.clone()).map_err(io::Error::other)?;
+        serde::Deserialize::deserialize(input).map_err(io::Error::other)?;
     if request.objects.len() > MAX_OBJECTS {
         return Err(invalid("transfer initialization count limit"));
     }
@@ -258,7 +258,7 @@ fn limits(entries: &[Entry]) -> io::Result<()> {
 }
 
 pub(super) fn archive(state: &State, input: &Value) -> io::Result<Value> {
-    let request: wire::Archive = serde_json::from_value(input.clone()).map_err(io::Error::other)?;
+    let request: wire::Archive = serde::Deserialize::deserialize(input).map_err(io::Error::other)?;
     let plan = state.plans.get(&request.token).ok_or_else(|| invalid("unknown transfer token"))?;
     archive::write(plan, &request)
 }

@@ -1,7 +1,7 @@
 use super::super::invalid;
 use crate::js_json::Value as Js;
 use serde_json::{Value, json};
-use std::io;
+use std::{collections::HashMap, io};
 
 pub(super) fn get<'a>(value: &'a Js, key: &str) -> &'a Js {
     static MISSING: Js = Js::Undefined;
@@ -80,17 +80,24 @@ pub(super) fn align(left: &Js, right: &mut Js) -> io::Result<Value> {
     let metadata = align_files(left, right)?;
     Ok(json!({"dependencyVersions":versions,"fileMetadata":metadata}))
 }
+fn file_positions(model: &[Js]) -> HashMap<Vec<u16>, usize> {
+    let mut positions = HashMap::new();
+    for (index, row) in model.iter().enumerate() {
+        if let Ok(path) = text(get(row, "relativePath")) {
+            positions.entry(path).or_insert(index);
+        }
+    }
+    positions
+}
 fn align_files(left: &Js, right: &mut Js) -> io::Result<Vec<Value>> {
     let model = array(get(left, "files"))?;
     let mut current = array(get(right, "files"))?.to_vec();
     let mut metadata = Vec::new();
+    let positions = file_positions(model);
     for (index, row) in current.iter_mut().enumerate() {
         let path = text(get(row, "relativePath"))?;
-        if let Some((model_index, other)) = model
-            .iter()
-            .enumerate()
-            .find(|(_, other)| text(get(other, "relativePath")).ok().as_ref() == Some(&path))
-        {
+        if let Some(&model_index) = positions.get(&path) {
+            let other = &model[model_index];
             for field in ["name", "test"] {
                 set(row, field, get(other, field).clone())?;
             }
@@ -118,3 +125,7 @@ fn align_dependency(row: &mut Js, model: &[Js]) -> io::Result<Option<usize>> {
     }
     Ok(None)
 }
+
+#[cfg(test)]
+#[path = "fields/tests.rs"]
+mod tests;

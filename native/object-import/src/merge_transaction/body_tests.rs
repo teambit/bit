@@ -158,6 +158,22 @@ fn completion_order_ack_cannot_be_replayed_and_failures_preserve_original_order(
 }
 
 #[test]
+fn indexed_completion_receipt_omits_rows_and_still_consumes_order_ack() {
+    let fixture = Fixture::new();
+    let mut state = State::default();
+    let target = fixture.version('3', b"target");
+    let prepared = fixture.prepare(&mut state, &target);
+    let request = json!({"token":prepared["ownerToken"],"planToken":prepared["token"],"indexedRows":true,
+        "groups":[{"stage":"currentUpdated","order":[]},{"stage":"added","order":[0]},
+        {"stage":"deletedConflict","order":[]},{"stage":"modified","order":[]}]});
+    assert_eq!(
+        apply("mergePlanOrder", request.clone(), &mut state).expect("ordered"),
+        json!({"rowIndices":[0]}),
+    );
+    assert!(apply("mergePlanOrder", request, &mut state).is_err());
+}
+
+#[test]
 fn updated_rows_reuse_verified_target_bodies_and_base_reads_are_not_repeated() {
     let fixture = Fixture::new();
     let base = fixture.version('4', b"base\n");
