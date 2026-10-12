@@ -2,6 +2,7 @@ mod checkout;
 mod checkout_transition;
 mod config_merge;
 mod directory;
+mod history_query;
 mod history_reset;
 mod inspection;
 mod inventory;

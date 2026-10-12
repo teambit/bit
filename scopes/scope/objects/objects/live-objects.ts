@@ -1,5 +1,6 @@
 /// <reference lib="es2021.weakref" />
 import type BitObject from './object';
+import { types } from 'util';
 
 type LiveObjectEntry = {
   ref: WeakRef<BitObject>;
@@ -49,6 +50,43 @@ export class LiveObjects {
 
 const nativeLiveMethods = ['get', 'set'].map((name) => [name, LiveObjects.prototype[name]] as const);
 const nativeEntriesGet = Map.prototype.get;
+const nativeEntriesForEach = Map.prototype.forEach;
+const nativeWeakDeref = WeakRef.prototype.deref;
+
+/** Snapshot weak aliases without resurrecting them into the strong LRU cache. */
+export function captureRustLiveObjects(live: LiveObjects): Array<[string, BitObject]> | undefined {
+  if (types.isProxy(live) || !canReadLiveObjectsNatively(live)) return undefined;
+  const entries = Object.getOwnPropertyDescriptor(live, 'entries')?.value;
+  if (
+    types.isProxy(entries) ||
+    Object.getOwnPropertyDescriptor(Map.prototype, 'forEach')?.value !== nativeEntriesForEach ||
+    Object.getOwnPropertyDescriptor(WeakRef.prototype, 'deref')?.value !== nativeWeakDeref
+  ) return undefined;
+  const result: Array<[string, BitObject]> = [];
+  let valid = true;
+  nativeEntriesForEach.call(entries, (entry: unknown, key: unknown) => {
+    if (!valid) return;
+    if (!entry || typeof entry !== 'object' || types.isProxy(entry) || Object.getPrototypeOf(entry) !== Object.prototype) {
+      valid = false;
+      return;
+    }
+    const fields = Object.getOwnPropertyDescriptors(entry);
+    const ref = fields.ref?.value;
+    if (
+      typeof key !== 'string' || !ref || types.isProxy(ref) ||
+      Object.getPrototypeOf(ref) !== WeakRef.prototype ||
+      Reflect.ownKeys(ref).length ||
+      Reflect.ownKeys(fields).some((field) => !('value' in Reflect.get(fields, field)))
+    ) {
+      valid = false;
+      return;
+    }
+    const object = nativeWeakDeref.call(ref) as BitObject | undefined;
+    if (object) result[result.length] = [key, object];
+    if (result.length > 4096) valid = false;
+  });
+  return valid ? result : undefined;
+}
 /** Keep native cache inspections on the canonical weak-object registry. */
 export function canReadLiveObjectsNatively(live: LiveObjects): boolean {
   if (!live || Object.getPrototypeOf(live) !== LiveObjects.prototype) return false;

@@ -5,6 +5,9 @@ import {
 } from '../objects/rust-snapshot-guards';
 import { collectRustExportObjects } from '../objects/rust-transfer';
 import { rebaseRustVersionHistory } from '../objects/rust-squash-history';
+import { populateRustHistoryQuery } from '../objects/rust-history-query-populate';
+import { getRustHistoryQueryLogVersions } from '../objects/rust-history-query-logs';
+import { isRustHistoryQueryOperation } from '../objects/rust-history-query';
 import lodash, { forEach, isEmpty, pickBy, mapValues, isEqual, clone, findLastKey } from 'lodash';
 import { Mutex } from 'async-mutex';
 import * as semver from 'semver';
@@ -579,7 +582,10 @@ export default class Component extends BitObject {
    */
   async collectLogs(scope: Scope, shortHash = false, startFrom?: Ref): Promise<ComponentLog[]> {
     const repo = scope.objects;
-    let versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
+    const readVersions = async () =>
+      (isRustHistoryQueryOperation() && await getRustHistoryQueryLogVersions(this, repo, startFrom)) ||
+      getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
+    let versionsInfo = await readVersions();
 
     // due to recent changes of getting version-history object rather than fetching the entire history, some version
     // objects might be missing. import the component from the remote
@@ -600,7 +606,7 @@ export default class Component extends BitObject {
             reason: 'to collect logs (including parents)',
           }
         );
-        versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
+        versionsInfo = await readVersions();
         // Lean-lane-scope fallback: if the lane is on a different scope from the component's
         // home scope (e.g. a feature lane for a component that lives on main in another scope),
         // older main snaps may not be on the lane scope. Re-fetch without lane so the fetcher
@@ -619,7 +625,7 @@ export default class Component extends BitObject {
               reason: 'to collect logs from component home scope (lean-lane-scope fallback)',
             }
           );
-          versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
+          versionsInfo = await readVersions();
         }
       } catch (err) {
         logger.error(`collectLogs failed to import ${this.id()} history`, err);
@@ -1524,6 +1530,21 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
       return { err: new HeadNotFound(this.id(), head.toString()) };
     }
     return this.populateVersionHistoryMutex.runExclusive(async () => {
+      const native = isRustHistoryQueryOperation()
+        ? await populateRustHistoryQuery(this, repo, versionHistory, head, headVer, headExists, exitWhenFind)
+        : undefined;
+      if (native) {
+        for (const missing of native.missing) {
+          const ref = Ref.from(missing.hash);
+          const tag = this.getTagOfRefIfExists(ref);
+          err = tag ? new VersionNotFound(tag, this.id()) : new ParentNotFound(this.id(), missing.parentOf, missing.hash);
+        }
+        if (err) return { err, added: native.added };
+        versionHistory.addFromVersionParents(native.added);
+        logger.debug(`populateVersionHistoryIfMissingGracefully, updating ${this.id()} with ${native.added.length} versions`);
+        await repo.writeObjectsToTheFS([versionHistory]);
+        return { added: native.added };
+      }
       if (!headExists) versionsToAdd.push(headVer);
       await addParentsRecursively(headVer);
       const added = versionsToAdd.map((v) => getVersionParentsFromVersion(v));

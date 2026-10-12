@@ -11,17 +11,31 @@ pub(crate) struct Reader<'a> {
     compressed: usize,
     raw: usize,
     records: usize,
+    query: bool,
+    metadata: Option<(String, usize, usize)>,
 }
 impl<'a> Reader<'a> {
     pub(crate) fn new(directory: &'a Path) -> io::Result<Self> {
         merge_history::path(directory)?;
-        Ok(Self { directory, compressed: 0, raw: 0, records: 0 })
+        Ok(Self { directory, compressed: 0, raw: 0, records: 0, query: false, metadata: None })
+    }
+    pub(crate) fn query(directory: &'a Path) -> io::Result<Self> {
+        let mut reader = Self::new(directory)?;
+        reader.query = true;
+        Ok(reader)
+    }
+    pub(crate) fn metadata(&self) -> Option<&(String, usize, usize)> {
+        self.metadata.as_ref()
+    }
+    pub(crate) fn stats(&self) -> (usize, usize) {
+        (self.records, self.raw)
     }
     pub(crate) fn read(&mut self, reference: &str) -> io::Result<Value> {
         if self.records >= MAX_RECORDS {
             return Err(invalid("Version read count limit"));
         }
         let hash = merge_history::hash(reference)?;
+        let before = self.compressed;
         let object =
             repository::read(self.directory, hash, MAX_BYTES - self.raw, &mut self.compressed)?;
         self.raw += object.len();
@@ -31,8 +45,19 @@ impl<'a> Reader<'a> {
             return Err(invalid("invalid Version header size"));
         }
         let value: Value = serde_json::from_slice(body).map_err(io::Error::other)?;
-        crate::transfer::collection::shape::history(&value)?;
+        if self.query {
+            crate::history_query::validate_version(&value)?;
+        } else {
+            crate::transfer::collection::shape::history(&value)?;
+        }
         parents(&value)?;
+        if self.query {
+            self.metadata = Some((
+                String::from_utf8(body.to_vec()).map_err(io::Error::other)?,
+                object.len(),
+                self.compressed - before,
+            ));
+        }
         Ok(value)
     }
 }

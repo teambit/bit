@@ -120,8 +120,31 @@ export { projectRustSnapshotFields } from './objects/rust-snapshot-projection';
 export { RustSnapshotRepositoryJournal } from './objects/rust-snapshot-repository';
 
 export {
+  withRustHistoryQueryOperation,
+  isRustHistoryQueryOperation,
+  requestRustHistoryQuery,
+  retireRustHistoryQueryOperation,
+  registerRustHistoryQueryCleanup,
+  canUseRustHistoryQueryRepository,
+  registerRustHistoryQueryRepositoryHooks,
+  captureRustHistoryQuery,
+  captureRustHistoryQueryVersion,
+  captureRustHistoryQueryVersionGuard,
+  retainRustHistoryQueryToken,
+} from './objects/rust-history-query';
+export { getRustHistoryQueryGraphOrder, getRustHistoryQueryHistoryGraph } from './objects/rust-history-query-graph';
+
+export {
   planRustSnapshotFutureVersion,
   snapshotPolicySemver,
   snapshotPolicyId,
   snapshotPolicyConsumerId,
 } from './objects/rust-snapshot-policy';
+
+export {
+  captureRustHistoryFileVersion,
+  getRustHistoryFileLineage,
+  getRustHistoryBlame,
+  getRustHistoryFileDiff,
+} from './objects/rust-history-query-files';
+export type { HistoryFileCapture } from './objects/rust-history-query-files';

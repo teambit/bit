@@ -42,6 +42,11 @@ pub(crate) struct FileDiff {
     raw_diff: String,
     same: bool,
 }
+impl FileDiff {
+    pub(crate) fn raw(self) -> serde_json::Value {
+        serde_json::json!({"relativePath":self.relative_path,"rawDiff":self.raw_diff,"same":self.same})
+    }
+}
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 struct Directory(PathBuf);
 impl Directory {

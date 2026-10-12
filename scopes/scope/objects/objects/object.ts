@@ -7,6 +7,7 @@ import { UnknownObjectType, typesObj as types } from '@teambit/legacy.scope';
 import type { ObjectItem } from './object-list';
 import Ref from './ref';
 import type Repository from './repository';
+import { registerRustSnapshotFunctions } from './rust-snapshot-guards';
 
 function parse(buffer: Buffer): BitObject {
   const { type, hash, contents } = extractHeaderAndContent(buffer);
@@ -212,3 +213,4 @@ path: ${err.path}`);
     return sha1(str);
   }
 }
+registerRustSnapshotFunctions('HistoryQueryObjectParser', BitObject, ['parseObjectWithSize']);

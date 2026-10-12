@@ -25,6 +25,14 @@ const MAX_JSON: usize = 4 * 1024 * 1024;
     deny_unknown_fields
 )]
 enum Request {
+    HistoryQueryBegin(Value),
+    HistoryQueryFiles(Value),
+    HistoryQueryBlame(Value),
+    HistoryQueryDiff(Value),
+    HistoryQueryFinish(Value),
+    HistoryQueryPopulateBegin(Value),
+    HistoryQueryShow(Value),
+    HistoryQueryToposort(Value),
     HistoryResetBegin(Value),
     HistoryResetReceipt(Value),
     HistoryResetFork(Value),
@@ -103,8 +111,12 @@ pub(crate) fn serve(
     reader.read_exact(&mut bytes)?;
     let output_limit = if serde_json::from_slice::<Value>(&bytes)
         .ok()
-        .is_some_and(|input| input["kind"] == "inspectionDiff")
-    {
+        .is_some_and(|input| {
+            matches!(
+                input["kind"].as_str(),
+                Some("inspectionDiff" | "historyQueryBlame" | "historyQueryDiff"),
+            )
+        }) {
         32 * 1024 * 1024
     } else {
         MAX_JSON
@@ -179,8 +191,22 @@ fn apply(request: Request, state: &mut State, bytes: &[u8]) -> io::Result<Value>
         Request::InspectionFinish(input) => {
             crate::inspection::apply("inspectionFinish", input, &mut state.inspection)
         }
-        request => history_operation(request, state, bytes),
+        request => query_operation(request, state, bytes),
     }
+}
+fn query_operation(request: Request, state: &mut State, bytes: &[u8]) -> io::Result<Value> {
+    let (kind, input) = match request {
+        Request::HistoryQueryBegin(input) => ("historyQueryBegin", input),
+        Request::HistoryQueryFiles(input) => ("historyQueryFiles", input),
+        Request::HistoryQueryBlame(input) => ("historyQueryBlame", input),
+        Request::HistoryQueryDiff(input) => ("historyQueryDiff", input),
+        Request::HistoryQueryFinish(input) => ("historyQueryFinish", input),
+        Request::HistoryQueryPopulateBegin(input) => ("historyQueryPopulateBegin", input),
+        Request::HistoryQueryShow(input) => ("historyQueryShow", input),
+        Request::HistoryQueryToposort(input) => ("historyQueryToposort", input),
+        request => return history_operation(request, state, bytes),
+    };
+    crate::history_query::apply(kind, input, &mut state.operations.history_query)
 }
 fn history_operation(request: Request, state: &mut State, bytes: &[u8]) -> io::Result<Value> {
     let (kind, input) = match request {

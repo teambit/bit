@@ -40,6 +40,7 @@ import {
   registerRustRecoveryScope,
   registerRustResetRepositoryHooks,
   registerRustTransferRepositoryHooks,
+  registerRustHistoryQueryRepositoryHooks,
 } from '@teambit/objects';
 import type { Scope as LegacyScope, Types } from '@teambit/legacy.scope';
 import { Scope, loadScopeIfExist } from '@teambit/legacy.scope';
@@ -1530,6 +1531,7 @@ export class ScopeMain implements ComponentFactory {
     Repository.hasPostObjectReadTransformer = () => postObjectReadSlot.values().length > 0;
     registerRustResetRepositoryHooks(Repository);
     registerRustTransferRepositoryHooks(Repository);
+    registerRustHistoryQueryRepositoryHooks(Repository);
     ExternalActions.externalActions.push(new ClearCacheAction(scope));
 
     express.register([

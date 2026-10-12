@@ -11,6 +11,10 @@ pub(crate) fn history(value: &Value) -> io::Result<()> {
     prepare(value, false).map(|_| ())
 }
 
+pub(crate) fn query(value: &Value) -> io::Result<()> {
+    prepare(value, true).map(|_| ())
+}
+
 fn prepare(value: &Value, artifacts: bool) -> io::Result<Value> {
     let mut clean = value.clone();
     dependencies(value, &mut clean)?;
