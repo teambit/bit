@@ -66,9 +66,7 @@ function matchingBodyAlias(value: unknown, body: RustMergeBody): value is Buffer
       Object.getOwnPropertyDescriptor(Buffer, 'isBuffer')?.value === isBuffer &&
       isBuffer(value) &&
       Object.getPrototypeOf(value) === Buffer.prototype &&
-      Reflect.ownKeys(Object.getOwnPropertyDescriptors(value)).every(
-        (key) => typeof key === 'string' && /^(0|[1-9][0-9]*)$/.test(key)
-      ) &&
+      Reflect.ownKeys(value).every((key) => typeof key === 'string' && /^(0|[1-9][0-9]*)$/.test(key)) &&
       Object.getOwnPropertyDescriptor(require('crypto'), 'createHash')?.value === bodyCreateHash &&
       value.length === body.bytes &&
       bodyCreateHash('sha1').update(value).digest('hex') === body.spoolHash

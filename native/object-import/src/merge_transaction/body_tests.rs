@@ -63,7 +63,15 @@ fn retained_prepare_capsules_and_late_template_preserve_raw_bytes_before_auto_eo
     let incoming = fixture.version('1', b"incoming\n");
     let prepared = fixture.prepare(&mut state, &incoming);
     assert_eq!(prepared["sourceGroups"][1]["loads"][0]["row"], 0);
-    assert!(prepared["reads"]["sourceReads"].as_u64().expect("read calls") > 0);
+    assert_eq!(prepared["reads"]["sourceReads"], 1);
+    assert_eq!(
+        prepared["bodies"]
+            .as_array()
+            .expect("retained bodies")
+            .len(),
+        1,
+    );
+    assert_eq!(prepared["mergeRows"][0]["bodyPlanIndex"], prepared["targetFiles"][0]["planIndex"]);
     let capsule = &prepared["sources"][0];
     assert_eq!(
         fs::metadata(capsule["privatePath"].as_str().expect("capsule"))
@@ -136,4 +144,38 @@ fn completion_order_ack_cannot_be_replayed_and_failures_preserve_original_order(
         prepared["mergeRows"],
     );
     assert!(apply("mergePlanOrder", request, &mut state).is_err());
+}
+
+#[test]
+fn updated_rows_reuse_verified_target_bodies_and_base_reads_are_not_repeated() {
+    let fixture = Fixture::new();
+    let base = fixture.version('4', b"base\n");
+    let target = fixture.version('5', b"target\n");
+    let current = fixture.0.join("index.ts");
+    fs::write(&current, b"base\n").expect("workspace file");
+    let mut state = State::default();
+    let owner = apply("mergeTransactionBegin", json!({"mode":"status","count":1}), &mut state)
+        .expect("owner");
+    let prepared = apply("mergePrepare", json!({
+        "token":owner["token"],"index":0,"objectsDirectory":fixture.0.join("objects"),
+        "snapshotDirectory":fixture.0.join("snapshots"),"base":base,"target":target,
+        "labels":{"current":"current","other":"other"},
+        "current":[{"relativePath":"index.ts","workspace":{"path":current,"rawHash":base["files"][0]["hash"],"snapshotHash":base["files"][0]["hash"]}}]
+    }), &mut state).expect("prepare");
+    assert_eq!(prepared["reads"]["sourceReads"], 2);
+    assert_eq!(
+        prepared["bodies"]
+            .as_array()
+            .expect("bodies")
+            .len(),
+        2,
+    );
+    assert_eq!(prepared["mergeRows"][0]["kind"], "updatedFiles");
+    assert_eq!(prepared["mergeRows"][0]["bodyPlanIndex"], prepared["targetFiles"][0]["planIndex"]);
+    let index = prepared["mergeRows"][0]["bodyPlanIndex"].as_u64().expect("index") as usize;
+    assert_eq!(
+        fs::read(prepared["bodies"][index]["spoolPath"].as_str().expect("spool")).expect("read"),
+        b"target\n",
+    );
+    assert_eq!(fs::read(current).expect("workspace unchanged"), b"base\n");
 }

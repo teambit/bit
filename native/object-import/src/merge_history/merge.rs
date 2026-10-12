@@ -1,11 +1,15 @@
 pub(crate) mod git;
+pub(crate) use verified::verified;
+mod verified;
 use super::{MAX_RAW, count, hash, invalid, path};
 use git::{MergeBytes, git};
-use rayon::prelude::*;
+use workers::classify_all;
+mod workers;
 use serde::Deserialize;
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{
+    collections::{HashMap, HashSet},
     fs,
     io::{self, Read},
     path::PathBuf,
@@ -76,41 +80,67 @@ impl Drop for Directory {
         let _cleanup = fs::remove_dir_all(&self.0);
     }
 }
-struct Prepared {
+struct Owned {
     base: Vec<Vec<u8>>,
     other: Vec<Vec<u8>>,
     current: Vec<Vec<u8>>,
 }
+pub(crate) struct Prepared<'a> {
+    pub(crate) base: Vec<&'a [u8]>,
+    pub(crate) other: Vec<&'a [u8]>,
+    pub(crate) current: Vec<&'a [u8]>,
+}
+impl Owned {
+    fn borrowed(&self) -> Prepared<'_> {
+        Prepared {
+            base: self.base
+                .iter()
+                .map(Vec::as_slice)
+                .collect(),
+            other: self.other
+                .iter()
+                .map(Vec::as_slice)
+                .collect(),
+            current: self.current
+                .iter()
+                .map(Vec::as_slice)
+                .collect(),
+        }
+    }
+}
 struct Execution<'a> {
     request: &'a Request,
-    prepared: &'a Prepared,
+    prepared: &'a Prepared<'a>,
+    base: HashMap<&'a str, usize>,
+    other: HashMap<&'a str, usize>,
     directory: Directory,
     output: AtomicUsize,
+    wire_bodies: bool,
 }
 pub(super) fn merge(request: &Request) -> io::Result<Value> {
-    let prepared = preflight(request, None)?;
-    execute(request, &prepared)
+    let prepared = preflight(request)?;
+    execute(request, &prepared.borrowed(), true)
 }
-pub(crate) fn frozen(input: Value, current: &[Vec<u8>]) -> io::Result<Value> {
-    let request: Request = serde_json::from_value(input).map_err(io::Error::other)?;
-    let prepared = preflight(&request, Some(current))?;
-    execute(&request, &prepared)
-}
-fn execute(request: &Request, prepared: &Prepared) -> io::Result<Value> {
-    let execution =
-        Execution { request, prepared, directory: Directory::new()?, output: AtomicUsize::new(0) };
-    let pool = rayon::ThreadPoolBuilder::new()
-        .num_threads(4)
-        .build()
-        .map_err(io::Error::other)?;
-    let mut rows = pool.install(|| {
-        request.current
-            .par_iter()
+fn execute(request: &Request, prepared: &Prepared<'_>, wire_bodies: bool) -> io::Result<Value> {
+    let execution = Execution {
+        request,
+        prepared,
+        directory: Directory::new()?,
+        output: AtomicUsize::new(0),
+        wire_bodies,
+        base: request.base
+            .iter()
             .enumerate()
-            .map(|(index, file)| classify(index, file, &execution))
-            .collect::<io::Result<Vec<_>>>()
-    })?;
-    rows.extend(missing(request, prepared));
+            .map(|(index, file)| (file.path.as_str(), index))
+            .collect(),
+        other: request.other
+            .iter()
+            .enumerate()
+            .map(|(index, file)| (file.path.as_str(), index))
+            .collect(),
+    };
+    let mut rows = classify_all(&execution)?;
+    rows.extend(missing(request, prepared, &execution.base, wire_bodies));
     let conflicts = rows
         .iter()
         .any(|row| {
@@ -124,7 +154,7 @@ fn execute(request: &Request, prepared: &Prepared) -> io::Result<Value> {
         });
     Ok(json!({"files":rows,"hasConflicts":conflicts}))
 }
-fn preflight(request: &Request, frozen: Option<&[Vec<u8>]>) -> io::Result<Prepared> {
+fn preflight(request: &Request) -> io::Result<Owned> {
     path(&request.objects_directory)?;
     count(request.current.len())?;
     count(request.base.len())?;
@@ -137,30 +167,15 @@ fn preflight(request: &Request, frozen: Option<&[Vec<u8>]>) -> io::Result<Prepar
     let other = load_models(&request.other, request, &mut total, &mut compressed)?;
     let mut current = Vec::new();
     let mut seen = std::collections::HashSet::new();
-    if frozen
-        .as_ref()
-        .is_some_and(|files| files.len() != request.current.len())
-    {
-        return Err(invalid("merge frozen snapshot count"));
-    }
-    for (index, file) in request.current.iter().enumerate() {
+    for file in &request.current {
         text(&file.path)?;
         if !seen.insert(&file.path) {
             return Err(invalid("merge duplicate current path"));
         }
-        let bytes = if let Some(frozen) = &frozen {
-            let bytes = frozen[index].clone();
-            total += bytes.len();
-            if total > MAX_RAW {
-                return Err(invalid("merge frozen byte limit"));
-            }
-            bytes
-        } else {
-            read_current(file, request, &mut total, &mut compressed)?
-        };
+        let bytes = read_current(file, request, &mut total, &mut compressed)?;
         current.push(bytes);
     }
-    Ok(Prepared { base, other, current })
+    Ok(Owned { base, other, current })
 }
 fn read_current(
     file: &Current,
@@ -220,13 +235,9 @@ fn category(current: &str, base: Option<&Model>, other: Option<&Model>) -> &'sta
 }
 fn classify(index: usize, file: &Current, execution: &Execution<'_>) -> io::Result<Value> {
     let request = execution.request;
-    let base = request.base
-        .iter()
-        .position(|item| item.path == file.path);
-    let other = request.other
-        .iter()
-        .position(|item| item.path == file.path);
-    let current_hash = digest(&execution.prepared.current[index]);
+    let base = execution.base.get(file.path.as_str()).copied();
+    let other = execution.other.get(file.path.as_str()).copied();
+    let current_hash = digest(execution.prepared.current[index]);
     let kind = category(
         &current_hash,
         base.map(|index| &request.base[index]),
@@ -240,8 +251,7 @@ fn classify(index: usize, file: &Current, execution: &Execution<'_>) -> io::Resu
         row["other"] = json!(other);
     }
     if kind == "updatedFiles" {
-        row["body"] =
-            json!(crate::validate::hexadecimal(&execution.prepared.other[other.unwrap()]));
+        other_body(&mut row, other.unwrap(), execution.prepared, execution.wire_bodies);
     }
     if kind == "modifiedFiles" {
         row.as_object_mut()
@@ -255,23 +265,29 @@ fn classify(index: usize, file: &Current, execution: &Execution<'_>) -> io::Resu
     }
     Ok(row)
 }
-fn missing(request: &Request, prepared: &Prepared) -> Vec<Value> {
+fn missing(
+    request: &Request,
+    prepared: &Prepared<'_>,
+    base_indices: &HashMap<&str, usize>,
+    wire_bodies: bool,
+) -> Vec<Value> {
+    let current_paths: HashSet<&str> = request.current
+        .iter()
+        .map(|file| file.path.as_str())
+        .collect();
     let mut deleted = Vec::new();
     let mut conflicts = Vec::new();
     let mut added = Vec::new();
     let mut loaded = Vec::new();
     for (index, file) in request.other.iter().enumerate() {
-        if request.current
-            .iter()
-            .any(|current| current.path == file.path)
-        {
+        if current_paths.contains(file.path.as_str()) {
             continue;
         }
-        let base = request.base
-            .iter()
-            .position(|item| item.path == file.path);
+        let base = base_indices.get(file.path.as_str()).copied();
         let Some(base) = base else {
-            added.push(json!({"kind":"addFiles","other":index,"body":crate::validate::hexadecimal(&prepared.other[index])}));
+            let mut row = json!({"kind":"addFiles","other":index});
+            other_body(&mut row, index, prepared, wire_bodies);
+            added.push(row);
             continue;
         };
         if request.base[base].hash == file.hash {
@@ -279,7 +295,9 @@ fn missing(request: &Request, prepared: &Prepared) -> Vec<Value> {
             continue;
         }
         conflicts.push(json!({"kind":"deletedConflictFiles","other":index,"base":base}));
-        loaded.push(json!({"kind":"deletedConflictFiles","other":index,"base":base,"body":crate::validate::hexadecimal(&prepared.other[index])}));
+        let mut row = json!({"kind":"deletedConflictFiles","other":index,"base":base});
+        other_body(&mut row, index, prepared, wire_bodies);
+        loaded.push(row);
     }
     deleted.extend(conflicts);
     deleted.extend(added);
@@ -338,14 +356,22 @@ fn merged(
     git(
         index,
         MergeBytes {
-            current: &execution.prepared.current[index],
+            current: execution.prepared.current[index],
             base: base
-                .map(|index| execution.prepared.base[index].as_slice())
+                .map(|index| execution.prepared.base[index])
                 .unwrap_or_default(),
-            other: &execution.prepared.other[other],
+            other: execution.prepared.other[other],
         },
         execution.request,
         &execution.directory,
         &execution.output,
     )
+}
+
+fn other_body(row: &mut Value, index: usize, prepared: &Prepared<'_>, wire_bodies: bool) {
+    if wire_bodies {
+        row["body"] = json!(crate::validate::hexadecimal(prepared.other[index]));
+    } else {
+        row["bodyPlanIndex"] = json!(index);
+    }
 }

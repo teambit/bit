@@ -27,14 +27,16 @@ pub(super) fn prepare(input: &Value, state: &mut plan::State) -> io::Result<Valu
         sources::load(&request.objects_directory, &request.target, &mut total, &mut compressed)?;
     let current =
         current::load(&request.current, &request.objects_directory, &mut total, &mut compressed)?;
+    let mut merged_bodies = Vec::new();
+    let rows =
+        merge::rows(&request, &target, &current, &mut merged_bodies, &mut total, &mut compressed)?;
     let statuses = statuses(&request, &target, &current);
-    let (mut bodies, target_indices, current_files) = retain_inputs(&request, target, &current);
-    let rows = merge::rows(&request, &current, &mut bodies, &mut total, &mut compressed)?;
+    let retained = retain_inputs(&request, target, &current, merged_bodies);
     let plan = plan::Plan {
-        bodies,
+        bodies: retained.0,
         target: request.target.files,
-        target_indices,
-        current: current_files,
+        target_indices: retained.1,
+        current: retained.2,
         has_conflicts: rows
             .iter()
             .any(|row| row.get("conflictPlanIndex").is_some() || row["isBinaryConflict"] == true),
@@ -48,6 +50,7 @@ fn retain_inputs(
     request: &wire::Prepare,
     target: Vec<Vec<u8>>,
     current: &[current::Loaded],
+    merged_bodies: Vec<plan::Body>,
 ) -> (Vec<plan::Body>, Vec<usize>, Vec<plan::Current>) {
     let mut bodies = target
         .into_iter()
@@ -67,6 +70,7 @@ fn retain_inputs(
             raw_hash: request.current[index].snapshot_hash.clone(),
         });
     }
+    bodies.extend(merged_bodies);
     (bodies, target_indices, current_files)
 }
 fn statuses(

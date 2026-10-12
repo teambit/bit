@@ -132,3 +132,66 @@ test('public merge array prototype mutation refuses native reuse without inherit
   assert.equal(api.getRustMergeResultBodyPlan(fixture.results), undefined);
   assert.equal(reads, 0);
 });
+
+test('retained Buffer aliases reject extra string, symbol and accessor properties without observing getters', async (t) => {
+  const path = require('node:path');
+  const { createHash } = require('node:crypto');
+  const sources = installed('@teambit/component.sources');
+  const materializer = installed('@teambit/component.sources/dist/rust-workspace-materializer.js');
+  const original = materializer.acquireWorkspaceSession;
+  const flag = process.env.BIT_RUST_CLIENT_VCS;
+  materializer.acquireWorkspaceSession = () => ({
+    session: { usable: true, dispose: async () => {} },
+    release: async () => {},
+  });
+  process.env.BIT_RUST_CLIENT_VCS = 'on';
+  t.after(() => {
+    materializer.acquireWorkspaceSession = original;
+    if (flag === undefined) delete process.env.BIT_RUST_CLIENT_VCS;
+    else process.env.BIT_RUST_CLIENT_VCS = flag;
+  });
+  let reads = 0;
+  await sources.withRustWorkspaceEngine(async () => {
+    for (const key of [undefined, 'extra', Symbol('extra'), 'accessor']) {
+      const body = Buffer.alloc(64 * 1024, 97);
+      if (key !== undefined)
+        Object.defineProperty(body, key, {
+          configurable: true,
+          get() {
+            reads++;
+            throw new Error('Buffer decoration must remain unread');
+          },
+        });
+      const base = path.resolve('retained-buffer-alias');
+      const file = new sources.SourceFile({ base, path: path.join(base, 'index.js'), contents: body });
+      const results = {};
+      const bodyRecord = {
+        planIndex: 0,
+        spoolPath: path.join(base, 'private-spool'),
+        spoolHash: createHash('sha1').update(body).digest('hex'),
+        bytes: body.length,
+      };
+      api.rememberRustMergeResultBodyPlan(results, {
+        ownerToken: 'a'.repeat(40),
+        token: 'b'.repeat(40),
+        index: 0,
+        snapshotDirectory: base,
+        bodies: [bodyRecord],
+        rows: [],
+        currentFiles: [],
+        currentRows: [],
+        currentClones: [file],
+        targetManifest: { hash: 'c'.repeat(40), files: [] },
+        valid: () => true,
+      });
+      assert.equal(
+        api.attachRustMergeResultBodies(results, [file], {
+          files: [{ index: 0, planIndex: 0, relativePath: 'index.js', aliasKind: 'current', aliasIndex: 0 }],
+        }),
+        key === undefined
+      );
+      assert.strictEqual(file.contents, body);
+    }
+  });
+  assert.equal(reads, 0);
+});
