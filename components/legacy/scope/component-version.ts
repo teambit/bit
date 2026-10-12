@@ -2,6 +2,8 @@ import type { ComponentIdList } from '@teambit/component-id';
 import { ComponentID } from '@teambit/component-id';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import type { Repository, Version, ModelComponent } from '@teambit/objects';
+import { registerRustSnapshotTransactionClass, hasRustSnapshotTransactionClassFields } from '@teambit/objects';
+import type { SourceFile } from '@teambit/component.sources';
 
 export class ComponentVersion {
   readonly component: ModelComponent;
@@ -36,8 +38,14 @@ export class ComponentVersion {
     return this.toComponentId();
   }
 
-  toConsumer(repo: Repository): Promise<ConsumerComponent> {
+  toConsumer(
+    repo: Repository,
+    sourceFiles?: (version: Version) => SourceFile[] | undefined
+  ): Promise<ConsumerComponent> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.component.toConsumerComponent(this.version, this.component.scope, repo);
+    return sourceFiles && hasRustSnapshotTransactionClassFields(this.component, 'ModelComponent', [])
+      ? this.component.toConsumerComponent(this.version, this.component.scope, repo, sourceFiles)
+      : this.component.toConsumerComponent(this.version, this.component.scope, repo);
   }
 }
+registerRustSnapshotTransactionClass('CheckoutComponentVersion', ComponentVersion);

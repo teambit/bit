@@ -1,9 +1,18 @@
 import { Ref, Source, canHashSourceNatively, hasRustSnapshotTransactionClass } from '@teambit/objects';
 import * as eol from '@teambit/toolbox.string.eol';
+import { createHash } from 'crypto';
 import AbstractVinyl, { defaultVinylToSource } from './abstract-vinyl';
-export type RustWorkspaceRead = { path: string; contents: Buffer; hash: string; linuxHash: string };
+export type RustWorkspaceRead = {
+  path: string;
+  contents: Buffer;
+  hash: string;
+  linuxHash: string;
+  snapshotHash?: string;
+  bitmap?: true;
+};
 type Snapshot = RustWorkspaceRead;
 const snapshots = new WeakMap<AbstractVinyl, Snapshot>();
+const bitmapSnapshots = new WeakMap<AbstractVinyl, Snapshot>();
 const defaultLf = eol.lf;
 
 /** File summaries must preserve the defining Source identity and binary/EOL policy. */
@@ -47,6 +56,30 @@ export function registerRustWorkspaceFile(file: AbstractVinyl, read: RustWorkspa
   snapshots.set(file, { ...read, contents: Buffer.from(read.contents) });
 }
 
+/** The canonical root transformation has already run; retain its observed bytes without invoking it again. */
+export function registerRustWorkspaceBitmapFile(file: AbstractVinyl, read: RustWorkspaceRead): void {
+  const history = Object.getOwnPropertyDescriptor(file, 'history')?.value;
+  if (!Array.isArray(history) || Object.getPrototypeOf(history) !== Array.prototype || history.length > 4096) return;
+  const historyFields = Object.getOwnPropertyDescriptors(history);
+  if (Reflect.ownKeys(historyFields).length !== history.length + 1) return;
+  for (let index = 0; index < history.length; index++) {
+    const field = historyFields[index];
+    if (!field || !('value' in field) || typeof field.value !== 'string') return;
+  }
+  if (!hasOrdinaryWorkspaceProperties(file) || file.path !== read.path) return;
+  const contents = Object.getOwnPropertyDescriptor(file, '_contents')?.value;
+  // The default versioned bitmap is LF text. Other callback results retain canonical byte handling.
+  if (!Buffer.isBuffer(contents) || contents.includes(13)) return;
+  const snapshotHash = createHash('sha1').update(contents).digest('hex');
+  bitmapSnapshots.set(file, {
+    ...read,
+    contents: Buffer.from(contents),
+    snapshotHash,
+    linuxHash: snapshotHash,
+    bitmap: true,
+  });
+}
+
 /** Ordinary component clones keep the same verified disk snapshot and canonical Buffer aliasing. */
 export function inheritRustWorkspaceFileSnapshot(original: AbstractVinyl, clone: AbstractVinyl): void {
   if (
@@ -60,8 +93,8 @@ export function inheritRustWorkspaceFileSnapshot(original: AbstractVinyl, clone:
   registerRustWorkspaceFile(clone, value);
 }
 
-function snapshot(file: AbstractVinyl): Snapshot | undefined {
-  const value = snapshots.get(file);
+function snapshot(file: AbstractVinyl, registry = snapshots): Snapshot | undefined {
+  const value = registry.get(file);
   if (
     !value ||
     process.env.BIT_RUST_CLIENT_VCS !== 'on' ||
@@ -85,10 +118,19 @@ export function getRustWorkspaceFileDescriptor(file: AbstractVinyl): { path: str
 
 /** Merge planning needs both the raw disk snapshot and canonical Linux-EOL identity. */
 export function getRustWorkspaceMergeDescriptor(
-  file: AbstractVinyl
-): { path: string; hash: string; linuxHash: string } | undefined {
-  const value = snapshot(file);
-  return value && { path: value.path, hash: value.hash, linuxHash: value.linuxHash };
+  file: AbstractVinyl,
+  allowBitmap = false
+): { path: string; hash: string; linuxHash: string; snapshotHash?: string; bitmap?: true } | undefined {
+  const value = (allowBitmap ? snapshot(file, bitmapSnapshots) : undefined) || snapshot(file);
+  return (
+    value && {
+      path: value.path,
+      hash: value.hash,
+      linuxHash: value.linuxHash,
+      ...(value.snapshotHash ? { snapshotHash: value.snapshotHash } : {}),
+      ...(value.bitmap ? { bitmap: value.bitmap } : {}),
+    }
+  );
 }
 
 /** Retain disk provenance across read-only hydration, while rejecting any byte or method mutation. */

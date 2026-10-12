@@ -88,13 +88,17 @@ struct Execution<'a> {
     output: AtomicUsize,
 }
 pub(super) fn merge(request: &Request) -> io::Result<Value> {
-    let prepared = preflight(request)?;
-    let execution = Execution {
-        request,
-        prepared: &prepared,
-        directory: Directory::new()?,
-        output: AtomicUsize::new(0),
-    };
+    let prepared = preflight(request, None)?;
+    execute(request, &prepared)
+}
+pub(crate) fn frozen(input: Value, current: &[Vec<u8>]) -> io::Result<Value> {
+    let request: Request = serde_json::from_value(input).map_err(io::Error::other)?;
+    let prepared = preflight(&request, Some(current))?;
+    execute(&request, &prepared)
+}
+fn execute(request: &Request, prepared: &Prepared) -> io::Result<Value> {
+    let execution =
+        Execution { request, prepared, directory: Directory::new()?, output: AtomicUsize::new(0) };
     let pool = rayon::ThreadPoolBuilder::new()
         .num_threads(4)
         .build()
@@ -106,7 +110,7 @@ pub(super) fn merge(request: &Request) -> io::Result<Value> {
             .map(|(index, file)| classify(index, file, &execution))
             .collect::<io::Result<Vec<_>>>()
     })?;
-    rows.extend(missing(request, &prepared));
+    rows.extend(missing(request, prepared));
     let conflicts = rows
         .iter()
         .any(|row| {
@@ -120,7 +124,7 @@ pub(super) fn merge(request: &Request) -> io::Result<Value> {
         });
     Ok(json!({"files":rows,"hasConflicts":conflicts}))
 }
-fn preflight(request: &Request) -> io::Result<Prepared> {
+fn preflight(request: &Request, frozen: Option<&[Vec<u8>]>) -> io::Result<Prepared> {
     path(&request.objects_directory)?;
     count(request.current.len())?;
     count(request.base.len())?;
@@ -133,12 +137,28 @@ fn preflight(request: &Request) -> io::Result<Prepared> {
     let other = load_models(&request.other, request, &mut total, &mut compressed)?;
     let mut current = Vec::new();
     let mut seen = std::collections::HashSet::new();
-    for file in &request.current {
+    if frozen
+        .as_ref()
+        .is_some_and(|files| files.len() != request.current.len())
+    {
+        return Err(invalid("merge frozen snapshot count"));
+    }
+    for (index, file) in request.current.iter().enumerate() {
         text(&file.path)?;
         if !seen.insert(&file.path) {
             return Err(invalid("merge duplicate current path"));
         }
-        current.push(read_current(file, request, &mut total, &mut compressed)?);
+        let bytes = if let Some(frozen) = &frozen {
+            let bytes = frozen[index].clone();
+            total += bytes.len();
+            if total > MAX_RAW {
+                return Err(invalid("merge frozen byte limit"));
+            }
+            bytes
+        } else {
+            read_current(file, request, &mut total, &mut compressed)?
+        };
+        current.push(bytes);
     }
     Ok(Prepared { base, other, current })
 }

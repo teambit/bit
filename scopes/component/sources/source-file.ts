@@ -8,6 +8,7 @@ import AbstractVinyl from './abstract-vinyl';
 import * as definingSourceFile from './source-file';
 import { forEach } from 'lodash';
 import { inheritRustWorkspaceFileSnapshot } from './rust-workspace-identity';
+import { cloneRustCheckoutPlanSourceFile, registerRustCheckoutPlanSourceClass } from './rust-checkout-plan-source';
 
 export default class SourceFile extends AbstractVinyl {
   static load(
@@ -54,6 +55,8 @@ export default class SourceFile extends AbstractVinyl {
   }
 
   clone(): this {
+    const planned = cloneRustCheckoutPlanSourceFile(this);
+    if (planned) return planned as this;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const clone = new SourceFile(this);
     inheritRustWorkspaceFileSnapshot(this, clone);
@@ -61,6 +64,8 @@ export default class SourceFile extends AbstractVinyl {
     return clone;
   }
 }
+
+registerRustCheckoutPlanSourceClass(SourceFile);
 
 const defaultSourceFileLoad = SourceFile.load;
 registerRustSnapshotTransactionClass('SourceFile', SourceFile);

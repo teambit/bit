@@ -319,3 +319,44 @@ test('recovery diagnostics distinguish an accepted request from completed filesy
   });
   assert.equal(metrics.persistence.helpers, 1);
 });
+
+test('checkout diagnostics bind token ownership and distinguish request ACKs from partial write prefixes', (t) => {
+  const files = fixture(t);
+  const helper = path.join(files.directory, 'checkout-helper.cjs');
+  fs.writeFileSync(
+    helper,
+    `process.stdin.on('data',frame=>{
+    const input=JSON.parse(frame.subarray(12));
+    const data=input.kind==='checkoutPrepare'?{token:'b'.repeat(40),files:[{bytes:17}]}:{completed:1,skipped:[],failed:true};
+    process.stdout.write(JSON.stringify({version:1,id:frame.readUInt32BE(4),completed:1,skipped:[],failed:false,data})+'\\n');
+  });`
+  );
+  const metrics = execute(
+    files,
+    `
+    const child=require('node:child_process').spawn(process.execPath,[${JSON.stringify(helper)}]);
+    function send(id,input){const body=Buffer.from(JSON.stringify(input));const frame=Buffer.alloc(12+body.length);frame.write('BMT1');frame.writeUInt32BE(id,4);frame.writeUInt32BE(body.length,8);body.copy(frame,12);child.stdin.write(frame);}
+    let replies=0;child.stdout.on('data',()=>{if(++replies===1)send(2,{kind:'checkoutMaterialize',token:'b'.repeat(40),files:[{planIndex:0,path:${JSON.stringify(path.join(files.directory, 'output'))}}]});else child.stdin.end();});
+    send(1,{kind:'checkoutPrepare',files:[{contents:Buffer.from([0,255,1])}]});
+  `
+  );
+  assert.deepEqual(metrics.mergeState.checkoutPrepare.helperIds, [1]);
+  assert.deepEqual(metrics.mergeState.checkoutPrepare.tokens, [{ token: 'b'.repeat(40), helperId: 1 }]);
+  assert.equal(metrics.mergeState.checkoutPrepare.snapshotBytes, 17);
+  assert.equal(
+    metrics.mergeState.checkoutPrepare.sourceBodyBytes,
+    3,
+    'observer detects forbidden Buffer JSON payloads'
+  );
+  assert.equal(metrics.mergeState.checkoutMaterialize.completed, 1);
+  assert.equal(metrics.mergeState.checkoutMaterialize.stepsCompleted, 1);
+  assert.equal(metrics.mergeState.checkoutMaterialize.dataFailed, 1);
+  assert.equal(metrics.mergeState.checkoutMaterialize.sourceBodyBytes, 0);
+  assert.deepEqual(
+    metrics.workspaceFrames.map(({ magic, kind, helperId }) => ({ magic, kind, helperId })),
+    [
+      { magic: 'BMT1', kind: 'checkoutPrepare', helperId: 1 },
+      { magic: 'BMT1', kind: 'checkoutMaterialize', helperId: 1 },
+    ]
+  );
+});

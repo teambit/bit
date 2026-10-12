@@ -1,5 +1,6 @@
 import { AsyncLocalStorage } from 'async_hooks';
 import { withWorkspaceSession } from './rust-workspace-persistence';
+import { isBorrowedWorkspaceEngineSession } from './rust-workspace-engine';
 
 type Session = Parameters<Parameters<typeof withWorkspaceSession>[0]>[0];
 type Owner = { session?: Session; requests: Promise<void>; failed: boolean };
@@ -28,7 +29,7 @@ export async function withRustWorkspaceInspection<T>(action: () => Promise<T>): 
       return await owners.run(owner, action);
     } finally {
       await owner.requests;
-      await session.dispose();
+      if (!isBorrowedWorkspaceEngineSession(session)) await session.dispose();
     }
   });
   return entered ? (result as T) : owners.run(owner, action);

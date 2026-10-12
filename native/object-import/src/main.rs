@@ -1,4 +1,5 @@
 mod checkout;
+mod checkout_transition;
 mod config_merge;
 mod directory;
 mod inspection;

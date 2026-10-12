@@ -27,7 +27,9 @@ import {
   hasRustSnapshotFunctionReference,
   hasRustSnapshotTransactionClass,
   hasRustSnapshotTransactionClassFields,
+  registerRustSnapshotTransactionClass,
 } from '@teambit/objects';
+import type { SourceFile } from '@teambit/component.sources';
 // import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
 import format from 'string-format';
@@ -260,7 +262,11 @@ export default class Consumer {
     });
   }
 
-  async loadComponentFromModelImportIfNeeded(id: ComponentID, throwIfNotExist = true): Promise<Component> {
+  async loadComponentFromModelImportIfNeeded(
+    id: ComponentID,
+    throwIfNotExist = true,
+    sourceFiles?: (version: Version) => SourceFile[] | undefined
+  ): Promise<Component> {
     const scopeComponentsImporter = this.scope.scopeImporter;
     const getModelComponent = async (): Promise<ModelComponent> => {
       if (throwIfNotExist) return this.scope.getModelComponent(id);
@@ -278,7 +284,14 @@ export default class Consumer {
     }
 
     const compVersion = modelComponent.toComponentVersion(id.version);
-    const consumerComp = await compVersion.toConsumer(this.scope.objects);
+    const forwardedSourceFiles =
+      sourceFiles &&
+      hasRustSnapshotTransactionClassFields(compVersion, 'CheckoutComponentVersion', ['component', 'version'])
+        ? sourceFiles
+        : undefined;
+    const consumerComp = forwardedSourceFiles
+      ? await compVersion.toConsumer(this.scope.objects, forwardedSourceFiles)
+      : await compVersion.toConsumer(this.scope.objects);
     return consumerComp;
   }
 
@@ -707,6 +720,8 @@ export default class Consumer {
     await this.writeBitMap(reasonForBitmapChange);
   }
 }
+
+registerRustSnapshotTransactionClass('CheckoutConsumer', Consumer);
 
 export function currentDateAndTimeToFileName() {
   const date = new Date();

@@ -1196,7 +1196,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
     versionStr: string,
     scopeName: string,
     repository: Repository,
-    sourceFiles?: SourceFile[]
+    sourceFiles?: SourceFile[] | ((version: Version) => SourceFile[] | undefined)
   ): Promise<ConsumerComponent> {
     logger.trace(`model-component, converting ${this.id()}, version: ${versionStr} to ConsumerComponent`);
     let componentVersion = this.toComponentVersion(versionStr);
@@ -1223,12 +1223,13 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
         );
       return new ClassName({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
     };
+    const selectedSourceFiles = typeof sourceFiles === 'function' ? sourceFiles(version) : sourceFiles;
     const nativeFiles =
-      !sourceFiles && isRustSourceReadScope() && version.files
+      !selectedSourceFiles && isRustSourceReadScope() && version.files
         ? await prepareRustCheckoutSources(version.files, repository)
         : undefined;
     const filesP =
-      sourceFiles ||
+      selectedSourceFiles ||
       nativeFiles ||
       (version.files ? Promise.all(version.files.map(loadFileInstance(SourceFile))) : null);
     // @todo: this is weird. why the scopeMeta would be taken from the current scope and not he component scope?

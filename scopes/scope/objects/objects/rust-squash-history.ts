@@ -11,6 +11,7 @@ import type Repository from './repository';
 import type Ref from './ref';
 import { hasCanonicalRefMethods } from './ref';
 import { isRustSnapshotOperation } from './rust-snapshot';
+import { hasRustSnapshotFunctions } from './rust-snapshot-guards';
 
 type Constructor = { prototype: any; parse?: unknown };
 type Registered = {
@@ -22,6 +23,8 @@ type Registered = {
 // Model registration may run through a partially initialized cyclic objects import.
 // eslint-disable-next-line no-var
 var models: Registered[] | undefined;
+// eslint-disable-next-line no-var
+var checkoutSourceDefault: { constructor: Constructor; parse: unknown } | undefined;
 function property(object: object, name: string): PropertyDescriptor | undefined {
   let owner: object | null = object;
   while (owner) {
@@ -34,6 +37,10 @@ function property(object: object, name: string): PropertyDescriptor | undefined 
 export function registerRustSquashModels(constructors: Record<string, Constructor | undefined>): void {
   models ||= [];
   for (const [kind, constructor] of Object.entries(constructors)) {
+    if (kind === 'Source') {
+      if (constructor) checkoutSourceDefault ||= { constructor, parse: constructor.parse };
+      continue;
+    }
     if (!constructor || models.some((entry) => entry.constructor === constructor)) continue;
     const names = [
       'hash',
@@ -226,6 +233,7 @@ var repositoryDefaults:
   | {
       prototype: object;
       methods: Map<string, unknown>;
+      descriptors: Map<string, PropertyDescriptor | undefined>;
       parser?: { constructor: object; methods: Map<string, unknown> };
     }
   | undefined;
@@ -235,7 +243,12 @@ export function registerRustSquashRepository(constructor: { prototype: Repositor
       prototype: constructor.prototype,
       parser: parser && {
         constructor: parser,
-        methods: new Map(['parseObjectWithSize', 'parseObject'].map((name) => [name, property(parser, name)?.value])),
+        methods: new Map(
+          ['parseObjectWithSize', 'parseObject', 'parseInflatedObjectWithSize', 'makeHash'].map((name) => [
+            name,
+            property(parser, name)?.value,
+          ])
+        ),
       },
       methods: new Map(
         [
@@ -250,6 +263,20 @@ export function registerRustSquashRepository(constructor: { prototype: Repositor
           'objectPath',
           'hashPath',
         ].map((name) => [name, property(constructor.prototype, name)?.value])
+      ),
+      descriptors: new Map(
+        [
+          'load',
+          'loadSync',
+          'getCache',
+          'getPath',
+          'canPlanCheckoutNatively',
+          'canReadCheckoutSourcesNatively',
+          'canReadNatively',
+          'isContentTransformed',
+          'objectPath',
+          'hashPath',
+        ].map((name) => [name, property(constructor.prototype, name)])
       ),
     };
 }
@@ -267,6 +294,52 @@ function ordinaryRepository(repository: Repository): boolean {
       Object.getPrototypeOf(repository) === repositoryDefaults.prototype &&
       [...repositoryDefaults.methods].every(([name, method]) => property(repository, name)?.value === method)
   );
+}
+
+/** Guard the defining loader/cache/parser domain before any speculative checkout capability call. */
+export function canReadRustCheckoutRepository(repository: Repository, sources: Ref[], versions: Ref[] = []): boolean {
+  const sourceClass = checkoutSourceDefault;
+  const versionClass = models?.find((entry) => entry.kind === 'Version');
+  if (
+    !repositoryDefaults ||
+    !hasRustSnapshotFunctions(['SnapshotRepositoryFS', 'SnapshotRepositoryPath', 'SnapshotRepositoryLogger']) ||
+    !ordinaryRepository(repository) ||
+    !sourceClass ||
+    !versionClass ||
+    !ownData(repository, ['onRead', 'defaultOnRead', 'scopePath', 'objects', 'cache', 'liveObjects']) ||
+    !ordinaryPendingObjects(repository) ||
+    !refArray(sources) ||
+    !refArray(versions) ||
+    !canReadCacheNatively(Object.getOwnPropertyDescriptor(repository, 'cache')?.value) ||
+    !canReadLiveObjectsNatively(Object.getOwnPropertyDescriptor(repository, 'liveObjects')?.value)
+  )
+    return false;
+  for (const [name, before] of repositoryDefaults.descriptors) {
+    const after = property(repository, name);
+    if (
+      !before ||
+      !after ||
+      before.value !== after.value ||
+      before.get !== after.get ||
+      before.set !== after.set ||
+      before.enumerable !== after.enumerable ||
+      before.configurable !== after.configurable ||
+      before.writable !== after.writable
+    )
+      return false;
+  }
+  if (
+    !repositoryDefaults.parser ||
+    [...repositoryDefaults.parser.methods].some(
+      ([name, method]) => property(repositoryDefaults!.parser!.constructor, name)?.value !== method
+    ) ||
+    Object.getOwnPropertyDescriptor(typesObj, 'Source')?.value !== sourceClass.constructor ||
+    property(sourceClass.constructor, 'parse')?.value !== sourceClass.parse ||
+    Object.getOwnPropertyDescriptor(typesObj, 'Version')?.value !== versionClass.constructor ||
+    property(versionClass.constructor, 'parse')?.value !== versionClass.parse
+  )
+    return false;
+  return repository.canPlanCheckoutNatively(versions) && repository.canReadCheckoutSourcesNatively(sources);
 }
 /** Read fresh disk Version messages while respecting mutable canonical caches and parser hooks. */
 export async function readRustSquashMessages(

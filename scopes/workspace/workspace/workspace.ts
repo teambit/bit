@@ -74,6 +74,7 @@ import {
   canReadWorkspaceFilesNatively,
   readRustWorkspaceFiles,
   registerRustWorkspaceFile,
+  registerRustWorkspaceBitmapFile,
   sourceFileFromWorkspaceRead,
   withRustWorkspaceInspection,
   isRustWorkspaceInspection,
@@ -909,7 +910,14 @@ it's possible that the version ${component.id.version} belong to ${idStr.split('
         ? sourceFileFromWorkspaceRead(read, compDirAbs, this.path)
         : SourceFile.load(filePath, compDirAbs, this.path, {});
       sourceFile.contents = fileContentsForVersioning(bitMapEntry, file.relativePath, sourceFile.contents);
-      if (read) registerRustWorkspaceFile(sourceFile, read);
+      if (read) {
+        registerRustWorkspaceFile(sourceFile, read);
+        if (
+          Object.getOwnPropertyDescriptor(bitMapEntry, 'rootDir')?.value === '.' &&
+          Object.getOwnPropertyDescriptor(file, 'relativePath')?.value === '.bitmap'
+        )
+          registerRustWorkspaceBitmapFile(sourceFile, read);
+      }
       return sourceFile;
     });
     const result = new CompFiles(id, repo, sourceFilesVinyls, compDir, await getModelFiles());

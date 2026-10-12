@@ -61,7 +61,7 @@ export {
   persistRustUnmergedState,
 } from './objects/rust-merge-state';
 
-export { planRustSquash, readRustSquashMessages } from './objects/rust-squash-history';
+export { planRustSquash, readRustSquashMessages, canReadRustCheckoutRepository } from './objects/rust-squash-history';
 export {
   advanceRustRecovery,
   requestRustRecovery,

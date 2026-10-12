@@ -1,0 +1,74 @@
+use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(super) struct Prepare {
+    pub(super) objects_directory: PathBuf,
+    pub(super) snapshot_directory: PathBuf,
+    pub(super) target: Version,
+    pub(super) current: Vec<Current>,
+    pub(super) base: Option<Version>,
+    pub(super) labels: Option<Labels>,
+}
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct Version {
+    pub(super) hash: String,
+    pub(super) files: Vec<Manifest>,
+}
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(super) struct Manifest {
+    pub(super) hash: String,
+    pub(super) relative_path: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(super) name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(super) test: Option<bool>,
+}
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(super) struct Current {
+    pub(super) relative_path: String,
+    pub(super) path: PathBuf,
+    pub(super) raw_hash: String,
+    pub(super) snapshot_hash: String,
+    pub(super) protected: bool,
+    #[serde(default)]
+    pub(super) bitmap: bool,
+}
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct Labels {
+    pub(super) current: String,
+    pub(super) other: String,
+}
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(super) struct Apply {
+    pub(super) token: String,
+    pub(super) strategy: Option<String>,
+    pub(super) force_ours: bool,
+    pub(super) current_exists: bool,
+    pub(super) tracked: bool,
+    pub(super) workspace_root: bool,
+}
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(super) struct Materialize {
+    pub(super) token: String,
+    pub(super) files: Vec<Destination>,
+}
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(super) struct Destination {
+    pub(super) plan_index: usize,
+    pub(super) path: PathBuf,
+    pub(super) overwrite: bool,
+    pub(super) eol: String,
+}
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct Token {
+    pub(super) token: String,
+}

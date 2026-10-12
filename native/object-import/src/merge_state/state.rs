@@ -6,7 +6,7 @@ use std::io;
 
 #[derive(Default)]
 pub(crate) struct State {
-    pub(crate) transfer: crate::transfer::State,
+    pub(crate) operations: Operations,
     pub(crate) recovery: crate::recovery::State,
     pub(crate) inspection: crate::inspection::State,
     pub(crate) snapshot: crate::snapshot_transaction::State,
@@ -14,6 +14,11 @@ pub(crate) struct State {
     entries: Vec<Value>,
     token: Option<String>,
     revision: u32,
+}
+#[derive(Default)]
+pub(crate) struct Operations {
+    pub(crate) checkout_transition: crate::checkout_transition::State,
+    pub(crate) transfer: crate::transfer::State,
 }
 #[derive(Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]

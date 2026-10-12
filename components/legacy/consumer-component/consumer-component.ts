@@ -26,6 +26,7 @@ import {
   canReadWorkspaceFilesNatively,
   readRustWorkspaceFiles,
   registerRustWorkspaceFile,
+  registerRustWorkspaceBitmapFile,
   sourceFileFromWorkspaceRead,
 } from '@teambit/component.sources';
 import type { ComponentConfigLoadOptions } from '@teambit/legacy.consumer-config';
@@ -627,7 +628,14 @@ async function getLoadedFiles(
       ? sourceFileFromWorkspaceRead(read, bitDir, consumer.getPath(), { test: file.test || false })
       : SourceFile.load(filePath, bitDir, consumer.getPath(), { test: file.test || false });
     sourceFile.contents = fileContentsForVersioning(componentMap, file.relativePath, sourceFile.contents);
-    if (read) registerRustWorkspaceFile(sourceFile, read);
+    if (read) {
+      registerRustWorkspaceFile(sourceFile, read);
+      if (
+        Object.getOwnPropertyDescriptor(componentMap, 'rootDir')?.value === '.' &&
+        Object.getOwnPropertyDescriptor(file, 'relativePath')?.value === '.bitmap'
+      )
+        registerRustWorkspaceBitmapFile(sourceFile, read);
+    }
     return sourceFile;
   });
   const filePaths = componentMap.getAllFilesPaths();

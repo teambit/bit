@@ -10,6 +10,7 @@ import type { DataToPersist } from './data-to-persist';
 import { RemovePath, defaultRemovePath } from './remove-path';
 import { Symlink, defaultSymlinkWrite } from './symlink';
 import { removeFilesAndEmptyDirsRecursively } from './remove-files-and-empty-dirs-recursively';
+import { workspaceEngineSession } from './rust-workspace-engine';
 import {
   acquireWorkspaceSession,
   hasNativeChunk,
@@ -18,7 +19,7 @@ import {
 } from './rust-workspace-materializer';
 
 type Lease = NonNullable<ReturnType<typeof acquireWorkspaceSession>>;
-type Entry = { lease: Lease; busy: boolean };
+type Entry = { lease: Lease; busy: boolean; engine?: true };
 type Scope = { entries: Entry[]; closed: boolean };
 type Action = { kind: number; first: string; second: string };
 type PhaseMethods = Pick<DataToPersist, '_deletePathsFromFS' | '_persistFilesToFS' | '_persistSymlinksToFS'>;
@@ -32,6 +33,15 @@ export function isWorkspacePersistenceScope(): boolean {
 
 function claimEntry(scope: Scope | undefined): Entry | undefined {
   if (scope?.closed) return undefined;
+  const engine = workspaceEngineSession();
+  if (engine.owned) {
+    if (!engine.session || !engine.executable) return undefined;
+    return {
+      lease: { session: engine.session, executable: engine.executable, release: async () => {} },
+      busy: true,
+      engine: true,
+    };
+  }
   const executable = resolveRustObjectImportExecutable();
   if (!executable) return undefined;
   let entry = scope?.entries.find(
@@ -49,6 +59,7 @@ function claimEntry(scope: Scope | undefined): Entry | undefined {
 }
 
 async function releaseEntry(entry: Entry, scope: Scope | undefined) {
+  if (entry.engine) return;
   if (scope && !scope.closed && entry.lease.session.usable) entry.busy = false;
   else {
     await entry.lease.release();

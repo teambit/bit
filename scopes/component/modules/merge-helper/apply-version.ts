@@ -4,6 +4,8 @@ import type { SourceFile } from '@teambit/component.sources';
 import type { MergeResultsThreeWay } from './three-way-merge';
 import type { PathOsBased } from '@teambit/toolbox.path.path';
 import { FileStatus, MergeOptions, type MergeStrategy } from './merge-version';
+import { registerRustSnapshotFunctions } from '@teambit/objects';
+import * as definingApply from './apply-version';
 
 /**
  * relevant only when
@@ -17,7 +19,31 @@ export function applyModifiedVersion(
   mergeResults: MergeResultsThreeWay,
   mergeStrategy: MergeStrategy | null | undefined
 ): { filesStatus: Record<string, any>; modifiedFiles: SourceFile[] } {
-  let modifiedFiles = componentFiles.map((file) => file.clone());
+  return applyToClones(
+    componentFiles.map((file) => file.clone()),
+    mergeResults,
+    mergeStrategy
+  );
+}
+
+/** Keep the public clone prefix when a retained plan declines or its helper is lost. */
+export async function applyModifiedVersionWithPlan(
+  componentFiles: SourceFile[],
+  mergeResults: MergeResultsThreeWay,
+  mergeStrategy: MergeStrategy | null | undefined,
+  applyPlan: (
+    clones: SourceFile[]
+  ) => Promise<{ filesStatus: Record<string, any>; modifiedFiles: SourceFile[] } | undefined>
+): Promise<{ filesStatus: Record<string, any>; modifiedFiles: SourceFile[] }> {
+  const clones = componentFiles.map((file) => file.clone());
+  return (await applyPlan(clones)) || applyToClones(clones, mergeResults, mergeStrategy);
+}
+
+function applyToClones(
+  modifiedFiles: SourceFile[],
+  mergeResults: MergeResultsThreeWay,
+  mergeStrategy: MergeStrategy | null | undefined
+): { filesStatus: Record<string, any>; modifiedFiles: SourceFile[] } {
   const filesStatus = {};
   if (mergeResults.hasConflicts && mergeStrategy !== MergeOptions.manual) {
     return { filesStatus, modifiedFiles };
@@ -85,3 +111,8 @@ export function applyModifiedVersion(
 
   return { filesStatus, modifiedFiles };
 }
+
+registerRustSnapshotFunctions('CheckoutDefiningApply', definingApply, [
+  'applyModifiedVersion',
+  'applyModifiedVersionWithPlan',
+]);
