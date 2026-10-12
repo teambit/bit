@@ -125,6 +125,31 @@ describe('bit dependencies command', function () {
         expect(deps).to.not.include(`${helper.scopes.remote}/comp1@0.0.1`);
       });
     });
+    describe('setting an old version of a workspace component', () => {
+      let tagOutput: string;
+      before(() => {
+        helper.scopeHelper.reInitWorkspace();
+        helper.fixtures.populateComponents(2);
+        helper.command.tagAllWithoutBuild();
+        const comp2Pkg = helper.general.getPackageNameByCompName('comp2', false);
+        helper.command.dependenciesSet('comp1', `${comp2Pkg}@0.0.1`);
+        helper.command.tagAllWithoutBuild('--unmodified');
+      });
+      it('should keep the version from the config when tagging the dependency with it', () => {
+        const comp1 = helper.command.catComponent('comp1@latest');
+        expect(comp1.dependencies[0].id.version).to.equal('0.0.1');
+        expect(helper.command.statusJson().modifiedComponents).to.have.lengthOf(0);
+      });
+      describe('tagging the dependency', () => {
+        before(() => {
+          tagOutput = helper.command.tagWithoutBuild('comp2', '--unmodified');
+        });
+        it('should not auto-tag the dependent', () => {
+          expect(tagOutput).to.not.have.string('comp1');
+          expect(helper.command.statusJson().modifiedComponents).to.have.lengthOf(0);
+        });
+      });
+    });
     (supportNpmCiRegistryTesting ? describe : describe.skip)('adding component dependency', () => {
       let npmCiRegistry: NpmCiRegistry;
       before(async () => {

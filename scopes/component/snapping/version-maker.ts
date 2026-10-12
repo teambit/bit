@@ -706,9 +706,13 @@ export class VersionMaker {
     // from main. we want to keep it as the user requested. Otherwise, this changes the dependency version to the newly
     // snapped one unintentionally.
     const componentsToTag = this.allComponentsToTag.filter((c) => !c.isRemoved());
-    const getNewDependencyVersion = (id: ComponentID): ComponentID | null => {
+    const getNewDependencyVersion = (id: ComponentID, dependent?: ConsumerComponent): ComponentID | null => {
       const foundDependency = componentsToTag.find((component) => component.id.isEqualWithoutVersion(id));
-      return foundDependency ? id.changeVersion(foundDependency.version) : null;
+      if (!foundDependency) return null;
+      // the dependent uses the version set in its config (e.g. "bit deps set"), not the workspace one. keep it.
+      // otherwise, the dependent is saved with the new version and it's shown as modified right after the tag.
+      if (dependent?.dependenciesWithVersionFromConfig?.includes(id.toStringWithoutVersion())) return null;
+      return id.changeVersion(foundDependency.version);
     };
     const changeExtensionsVersion = (component: ConsumerComponent): void => {
       component.extensions.forEach((ext) => {
@@ -736,7 +740,7 @@ export class VersionMaker {
         // "ComponentID.fromObject expect to get an object, got an instance of ComponentID" (locally it didn't happen)
         const depId =
           dep.componentId instanceof ComponentID ? dep.componentId : ComponentID.fromObject(dep.componentId);
-        const newDepId = getNewDependencyVersion(depId);
+        const newDepId = getNewDependencyVersion(depId, component);
         dep.componentId = (newDepId || depId).serialize();
         dep.id = (newDepId || depId).toString();
         dep.version = (newDepId || depId).version;
@@ -754,7 +758,7 @@ export class VersionMaker {
       const componentRangePrefix =
         this.dependencyResolver.calcComponentRangePrefixByConsumerComponent(oneComponentToTag);
       oneComponentToTag.getAllDependencies().forEach((dependency) => {
-        const newDepId = getNewDependencyVersion(dependency.id);
+        const newDepId = getNewDependencyVersion(dependency.id, oneComponentToTag);
         if (!newDepId) return;
         dependency.id = newDepId;
         // if componentRangePrefix === '+', then, only it only saves packages in workspace.jsonc.

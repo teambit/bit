@@ -125,6 +125,11 @@ export class Component {
   componentFromModel: Component | undefined; // populated when loadedFromFileSystem is true and it exists in the model
   modelComponent?: ModelComponent; // populated when loadedFromFileSystem is true and it exists in the model
   issues: IssuesList;
+  /**
+   * ids (without version) of the dependencies whose version is set by the config (e.g. "bit deps set") and not
+   * resolved from the workspace. populated when loading the dependencies in the workspace. not saved in the model.
+   */
+  dependenciesWithVersionFromConfig?: string[];
   deprecated: boolean;
   protected removed?: boolean; // was it soft-removed. to get this data please use isRemoved() method.
   defaultScope: string | null;
