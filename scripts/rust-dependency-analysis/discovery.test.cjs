@@ -20,7 +20,7 @@ function runtime(context) {
     for (const session of sessions) session.dispose();
     await fs.promises.rm(directory, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
   });
-  for (const name of ['discovery', 'types', 'protocol', 'session']) {
+  for (const name of ['discovery', 'types', 'protocol', 'session', 'workspace-transport']) {
     fs.writeFileSync(
       path.join(directory, name + '.js'),
       ts.transpileModule(fs.readFileSync(path.join(sourceRoot, name + '.ts'), 'utf8'), {
@@ -169,7 +169,7 @@ test(
     );
     const moduleDirectory = path.join(distribution, moduleRelative);
     fs.mkdirSync(moduleDirectory, { recursive: true });
-    for (const name of ['discovery', 'types', 'protocol', 'session'])
+    for (const name of ['discovery', 'types', 'protocol', 'session', 'workspace-transport'])
       fs.copyFileSync(path.join(r.directory, name + '.js'), path.join(moduleDirectory, name + '.js'));
     cp.execFileSync(
       process.env.PYTHON || 'python3',

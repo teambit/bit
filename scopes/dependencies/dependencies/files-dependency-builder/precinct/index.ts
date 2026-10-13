@@ -6,20 +6,6 @@ import path from 'path';
 // @ts-ignore we currently have @types/node as v12, and this is available > 16. once updated, remove the ts-ignore
 import { isBuiltin } from 'module';
 
-import getModuleType from 'module-definition';
-import Walker from 'node-source-walk';
-
-import detectiveAmd from 'detective-amd';
-import detectiveStylus from 'detective-stylus';
-
-import detectiveMdx from '@teambit/mdx.deps-detectors.detective-mdx';
-import detectiveEs6 from '@teambit/node.deps-detectors.detective-es6';
-import detectiveCss from '@teambit/styling.deps-detectors.detective-css';
-import detectiveLess from '@teambit/styling.deps-detectors.detective-less';
-import detectiveSass from '@teambit/styling.deps-detectors.detective-sass';
-import detectiveScss from '@teambit/styling.deps-detectors.detective-scss';
-import detectiveTypeScript from '@teambit/typescript.deps-detectors.detective-typescript';
-
 import type { DependencyDetector } from '@teambit/dependency-resolver';
 import { DetectorHook } from '@teambit/dependency-resolver';
 import type { RustDependencyScannerSession } from '../rust-scanner/session';
@@ -69,17 +55,25 @@ const extToType = {
   '.mdx': 'md',
 };
 
+// Keep parser packages cold when the embedded Rust scanner handles the graph.
+// Wrappers retain built-in dispatch identity without loading a parser until it is called.
+const builtin =
+  (load: () => any): Detective =>
+  (content, options) => {
+    const module = load();
+    return (module.default || module)(content, options);
+  };
 const typeToDetective: Record<string, Detective> = {
-  css: detectiveCss,
-  sass: detectiveSass,
-  less: detectiveLess,
-  scss: detectiveScss,
-  stylus: detectiveStylus,
-  ts: detectiveTypeScript,
-  commonjs: detectiveEs6,
-  es6: detectiveEs6,
-  amd: detectiveAmd,
-  md: detectiveMdx,
+  css: builtin(() => require('@teambit/styling.deps-detectors.detective-css')),
+  sass: builtin(() => require('@teambit/styling.deps-detectors.detective-sass')),
+  less: builtin(() => require('@teambit/styling.deps-detectors.detective-less')),
+  scss: builtin(() => require('@teambit/styling.deps-detectors.detective-scss')),
+  stylus: builtin(() => require('detective-stylus')),
+  ts: builtin(() => require('@teambit/typescript.deps-detectors.detective-typescript')),
+  commonjs: builtin(() => require('@teambit/node.deps-detectors.detective-es6')),
+  es6: builtin(() => require('@teambit/node.deps-detectors.detective-es6')),
+  amd: builtin(() => require('detective-amd')),
+  md: builtin(() => require('@teambit/mdx.deps-detectors.detective-mdx')),
 };
 
 const debug = require('debug')('precinct');
@@ -175,6 +169,8 @@ const getJsDetector = (fileInfo: FileInfo, options?: Options): Detective | undef
   }
 
   if (typeof fileInfo.content !== 'object') {
+    const walkerModule = require('node-source-walk');
+    const Walker = walkerModule.default || walkerModule;
     const walker = new Walker();
     try {
       fileInfo.ast = walker.parse(fileInfo.content);
@@ -184,6 +180,8 @@ const getJsDetector = (fileInfo: FileInfo, options?: Options): Detective | undef
     }
   }
 
+  const moduleDefinition = require('module-definition');
+  const getModuleType = moduleDefinition.default || moduleDefinition;
   const useContent = options?.useContent;
   const type = useContent ? getModuleType.fromSource(fileInfo.content) : getModuleType.fromSource(fileInfo.ast);
   const detector = typeToDetective[type];

@@ -1,5 +1,5 @@
 import { AsyncLocalStorage } from 'async_hooks';
-import { resolveRustDependencyScannerExecutable } from './discovery';
+import { resolveRustDependencyScannerRuntime } from './runtime';
 import { RustDependencyScannerSession } from './session';
 
 type Slot = { session: RustDependencyScannerSession; busy: boolean };
@@ -15,9 +15,9 @@ class ScannerScope {
   private helpers = 0;
   closed = false;
 
-  acquire(executable: string, cwd: string): RustScannerLease | undefined {
+  acquire(executable: string, cwd: string, workspaceAddon?: string): RustScannerLease | undefined {
     if (this.closed) return undefined;
-    const key = JSON.stringify([executable, cwd]);
+    const key = JSON.stringify([executable, cwd, workspaceAddon]);
     if (this.failed.has(key)) return undefined;
     const pool = this.slots.get(key) || [];
     let slot = pool.find((candidate) => !candidate.busy);
@@ -26,7 +26,7 @@ class ScannerScope {
         require('debug')('precinct')('Rust extraction fallback: operation helper lease limit reached');
         return undefined;
       }
-      slot = { session: new RustDependencyScannerSession({ executable, cwd }), busy: false };
+      slot = { session: new RustDependencyScannerSession({ executable, cwd, workspaceAddon }), busy: false };
       pool.push(slot);
       this.slots.set(key, pool);
       this.helpers++;
@@ -70,8 +70,8 @@ export async function withRustDependencyScannerScope<T>(operation: () => Promise
   // (e.g. a callback scheduled during loading), so a closed store does not count:
   // the new operation owns a fresh scope and disposes it in its own finally.
   if (scopes.getStore()?.closed === false) return operation();
-  const executable = resolveRustDependencyScannerExecutable();
-  if (!executable) return operation();
+  const runtime = resolveRustDependencyScannerRuntime();
+  if (!runtime) return operation();
   const scope = new ScannerScope();
   try {
     return await scopes.run(scope, operation);
@@ -81,10 +81,13 @@ export async function withRustDependencyScannerScope<T>(operation: () => Promise
 }
 
 /** Every tree owns an exclusive cache snapshot; only the underlying process is reused. */
-export function acquireRustDependencyScannerSession(executable: string): RustScannerLease | undefined {
+export function acquireRustDependencyScannerSession(
+  executable: string,
+  workspaceAddon?: string
+): RustScannerLease | undefined {
   const cwd = process.cwd();
   const scope = scopes.getStore();
-  if (scope) return scope.acquire(executable, cwd);
-  const session = new RustDependencyScannerSession({ executable, cwd });
+  if (scope) return scope.acquire(executable, cwd, workspaceAddon);
+  const session = new RustDependencyScannerSession({ executable, cwd, workspaceAddon });
   return { session, release: () => session.dispose() };
 }

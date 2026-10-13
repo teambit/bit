@@ -48,6 +48,16 @@ function notices(target, compiler) {
       .readdirSync(directory)
       .filter((name) => /^(LICENSE|COPYING|NOTICE)/i.test(name) && fs.statSync(path.join(directory, name)).isFile())
       .sort();
+    if (!files.length && entry.name.startsWith('oxc_')) {
+      const index = entry.name === 'oxc_index';
+      const revision = index ? '8e09fe324eb6df02f56e4eacdfac958930300380' : '7f56ec9301e7327b4402c3010c87803b58b6ea30';
+      assert.equal(JSON.parse(fs.readFileSync(path.join(directory, '.cargo_vcs_info.json'))).git.sha1, revision,
+        'OXC license fallback revision mismatch');
+      assert.equal(entry.license, 'MIT');
+      blocks.push(`\n=== ${entry.name} ${entry.version} ===\nSPDX: MIT\nRepository: ${entry.repository}\n` +
+        pinned(index ? 'oxc-index-MIT.txt' : 'oxc-MIT.txt'));
+      continue;
+    }
     if (!files.length && Object.hasOwn(napiRevisions, entry.name)) {
       const [version, revision] = napiRevisions[entry.name];
       assert.equal(entry.version, version, 'update pinned napi-rs notices after upgrading');

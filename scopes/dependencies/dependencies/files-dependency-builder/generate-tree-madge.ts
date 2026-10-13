@@ -6,7 +6,7 @@ import path from 'path';
 
 import dependencyTree from './dependency-tree';
 import { isRustEligible } from './precinct';
-import { resolveRustDependencyScannerExecutable } from './rust-scanner/discovery';
+import { resolveRustDependencyScannerRuntime } from './rust-scanner/runtime';
 import { acquireRustDependencyScannerSession } from './rust-scanner/scope';
 import type { PathLinuxRelative } from '@teambit/toolbox.path.path';
 
@@ -129,8 +129,8 @@ export default async function generateTree(files: string[] = [], config): Promis
   const pathMap = [];
   const errors = {};
 
-  const executable = resolveRustDependencyScannerExecutable();
-  const lease = executable ? acquireRustDependencyScannerSession(executable) : undefined;
+  const runtime = resolveRustDependencyScannerRuntime();
+  const lease = runtime ? acquireRustDependencyScannerSession(runtime.executable, runtime.workspaceAddon) : undefined;
   const rustScannerSession = lease?.session;
 
   try {

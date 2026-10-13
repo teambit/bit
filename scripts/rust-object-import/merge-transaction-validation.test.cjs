@@ -252,3 +252,14 @@ test('hidden history updates require repository Source plans without workspace m
     assert.throws(() => validateMergeTransactionDiagnostics(copy, scenario, options));
   }
 });
+
+test('stateless dependency parsing has a separate graph owner without relaxing transaction ownership', () => {
+  const trace = positive();
+  trace.workspaceFrames.splice(2, 0, { magic: 'BWS1', kind: 'dependencyScan', helperId: 2 });
+  validateMergeTransactionDiagnostics(trace, { name: 'embedded-dependencies' });
+  for (const kind of ['read', 'diff', 'fileStatus', 'inventoryBegin']) {
+    const changed = structuredClone(trace);
+    changed.workspaceFrames[2].kind = kind;
+    assert.throws(() => validateMergeTransactionDiagnostics(changed, { name: kind }), /replacement helper/);
+  }
+});

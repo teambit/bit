@@ -81,6 +81,10 @@ function sourceIdentity(root = ROOT) {
     files.push('native/workspace-napi/Cargo.toml', 'native/workspace-napi/build.rs');
     visit('native/workspace-napi/src');
   }
+  if (fs.existsSync(path.join(root, 'native/dependency-scanner/src/lib.rs'))) {
+    files.push('native/dependency-scanner/Cargo.toml');
+    visit('native/dependency-scanner/src');
+  }
   const digest = createHash('sha256');
   for (const name of files.sort()) {
     digest.update(name + '\0');

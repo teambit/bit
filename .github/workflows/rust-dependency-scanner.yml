@@ -508,7 +508,7 @@ jobs:
           BIT_LEGACY_ROOT: ${{ github.workspace }}
           BIT_TEST_OBJECT_IMPORT: ${{ github.workspace }}/native/target/debug/bit-object-import${{ runner.os == 'Windows' && '.exe' || '' }}
           BIT_TEST_WORKSPACE_ADDON: ${{ github.workspace }}/native/target/debug/bit-workspace.node
-        run: node --test scripts/rust-object-import/workspace-addon.test.cjs scripts/rust-object-import/object-addon.test.cjs scripts/rust-object-import/workspace-status-runtime.test.cjs
+        run: node --test scripts/rust-object-import/workspace-addon.test.cjs scripts/rust-object-import/object-addon.test.cjs scripts/rust-object-import/workspace-status-runtime.test.cjs scripts/rust-dependency-analysis/embedded-session.test.cjs
       - name: Differential native snapshot models against the compiled CLI
         working-directory: native
         env:

@@ -3,6 +3,7 @@ import type { ChildProcessWithoutNullStreams } from 'child_process';
 import path from 'path';
 import { createHash } from 'crypto';
 import { decodeResponse } from './protocol';
+import { RustScannerWorkspaceTransport } from './workspace-transport';
 import type { RustDependencyScannerSessionOptions, RustScannerOutcome } from './types';
 
 export type { RustDependencyScannerSessionOptions, RustScannerOutcome } from './types';
@@ -36,6 +37,7 @@ export class RustDependencyScannerSession {
   private readonly cwd: string;
   private readonly limits: Limits;
   private child?: ChildProcessWithoutNullStreams;
+  private workspace?: RustScannerWorkspaceTransport;
   private pending?: Pending;
   private output = Buffer.alloc(0);
   private stderr = Buffer.alloc(0);
@@ -52,6 +54,11 @@ export class RustDependencyScannerSession {
   constructor(options: RustDependencyScannerSessionOptions) {
     if (!options.executable || typeof options.executable !== 'string')
       throw new Error('Rust scanner executable is required');
+    if (
+      options.workspaceAddon !== undefined &&
+      (typeof options.workspaceAddon !== 'string' || !path.isAbsolute(options.workspaceAddon) || options.args?.length)
+    )
+      throw new Error('invalid Rust scanner workspace transport');
     if (options.threads !== undefined) limit(options.threads, 8, 64, 'threads');
     if (
       options.args !== undefined &&
@@ -160,6 +167,7 @@ export class RustDependencyScannerSession {
     this.cacheBytes = 0;
     this.output = Buffer.alloc(0);
     this.stderr = Buffer.alloc(0);
+    this.workspace?.close();
     if (this.pending) {
       clearTimeout(this.pending.timer);
       this.pending.resolve(undefined);
@@ -176,7 +184,15 @@ export class RustDependencyScannerSession {
   }
 
   private start(): void {
-    if (this.child || this.failure) return;
+    if (this.child || this.workspace || this.failure) return;
+    if (this.options.workspaceAddon) {
+      try {
+        this.workspace = new RustScannerWorkspaceTransport(this.options.workspaceAddon, this.options.threads);
+      } catch (error) {
+        this.fail(`Rust scanner workspace transport failed: ${String(error)}`);
+      }
+      return;
+    }
     const args = [...(this.options.args || [])];
     if (this.options.threads !== undefined) args.push('--threads', String(this.options.threads));
     this.child = spawn(this.options.executable, args, { cwd: this.cwd, stdio: 'pipe', shell: false });
@@ -253,11 +269,18 @@ export class RustDependencyScannerSession {
       return undefined;
     }
     this.start();
-    if (this.failure || !this.child) return undefined;
+    if (this.failure || (!this.child && !this.workspace)) return undefined;
     return new Promise((resolve) => {
       const timer = setTimeout(() => this.fail('Rust scanner response timed out'), this.limits.timeoutMs);
       this.pending = { id, paths, timer, resolve };
       this.keepAlive(true);
+      if (this.workspace) {
+        this.workspace.request(input, this.sequence).then(
+          (bytes) => this.receive(bytes),
+          (error) => this.fail(`Rust scanner workspace request failed: ${String(error)}`)
+        );
+        return;
+      }
       this.child!.stdin.write(`${input}\n`, (error) => {
         if (error) this.fail(`Rust scanner write failed: ${error.message}`);
       });

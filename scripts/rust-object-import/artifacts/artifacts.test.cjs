@@ -257,7 +257,9 @@ test(
     const manifest = smoke(process.env.BIT_TEST_OBJECT_ARTIFACT);
     assert.equal(manifest.objectImportSourceSha256, sourceIdentity());
     assert.ok(manifest.dependencies.some(({ name }) => name === 'zlib-rs'));
-    assert.ok(!manifest.dependencies.some(({ name }) => name.startsWith('oxc_')));
+    assert.ok(manifest.dependencies.some(({ name, license }) => name === 'oxc_parser' && license === 'MIT'));
+    const { members } = verifiedArchive(process.env.BIT_TEST_OBJECT_ARTIFACT);
+    assert.match(members['THIRD-PARTY-NOTICES.txt'].toString(), /=== oxc_parser [^\n]+ ===\nSPDX: MIT/);
   }
 );
 

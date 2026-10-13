@@ -28,6 +28,9 @@ const MAX_FILES: usize = 4096;
     deny_unknown_fields
 )]
 enum Request {
+    DependencyScan {
+        request: Value,
+    },
     StatusPrepare(client_status::Prepare),
     StatusScan(client_status::Scan),
     StatusFinish(client_status::Finish),
@@ -146,6 +149,7 @@ fn failure(id: u32) -> Response {
 }
 fn apply(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value)> {
     match request {
+        Request::DependencyScan { request } => dependency_scan(&request, pool),
         Request::StatusPrepare(_)
         | Request::StatusScan(_)
         | Request::StatusFinish(_)
@@ -171,6 +175,15 @@ fn apply(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value
             json!({"modified":Sha1::digest(left.as_bytes())!=Sha1::digest(right.as_bytes())}),
         )),
     }
+}
+fn dependency_scan(request: &Value, pool: &rayon::ThreadPool) -> io::Result<(usize, Value)> {
+    let input = serde_json::to_string(request).map_err(io::Error::other)?;
+    let output = bit_dependency_scanner::scan_request(&input, pool).map_err(io::Error::other)?;
+    let count = output["files"]
+        .as_array()
+        .ok_or_else(|| invalid("dependency scan declined"))?
+        .len();
+    Ok((count, output))
 }
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)

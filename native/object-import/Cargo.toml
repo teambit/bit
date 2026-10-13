@@ -5,6 +5,7 @@ edition = "2024"
 publish = false
 
 [dependencies]
+bit-dependency-scanner = { path = "../dependency-scanner" }
 flate2 = { version = "1.1", default-features = false, features = ["zlib-rs"] }
 sha1 = "0.10"
 rayon = "1.11"

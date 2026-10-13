@@ -36,3 +36,26 @@ Nine interleaved runs of eleven component-shaped graphs with 25 visited files pr
 | Registered nonmatching hook | 47.8 ms |         38.3 ms |       20.6 ms | 11 to 1         |
 
 Pooling saved approximately 17 ms beyond per-tree native extraction in this workload. Warm visited graphs launched no helpers: legacy/per-tree/scoped medians were 2.18/2.02/2.13 ms for built-ins and 2.19/2.25/2.32 ms for hooks. Runner module loading itself takes approximately 250 ms, so the complete worker saving is much smaller than the graph-stage ratio suggests. These are controlled integration measurements, not a `bit status` or other full-command speedup claim.
+
+## Embedded VCS dependency extraction
+
+With `BIT_RUST_CLIENT_VCS=on`, dependency graph loading now selects the verified
+workspace addon unless `BIT_RUST_DEPENDENCY_SCANNER` explicitly selects another
+scanner or disables scanning. The existing OXC scanner is a shared Rust library;
+its `dependencyScan` workspace operation runs on the VCS engine's bounded Rayon
+pool. Each graph still owns its cache snapshot, and operation scope reuse clears
+that snapshot before another graph leases the engine. No scanner child process
+is needed for this path.
+
+The embedded transport retains the scanner protocol's result validation,
+timeouts, cancellation, queue limits and fallback semantics. The workspace frame
+limits requests to 4 MiB; workers share an atomic 8 MiB output budget while work-stealing across the
+whole request, without barriers between worker-sized batches. Unsupported syntax, parser options and custom
+detectors retain canonical extraction. Built-in Node parser packages load only
+when their detective is invoked; successful native extraction avoids those
+precinct imports. Dependency resolution and custom detector orchestration still
+run in Node.
+
+`embedded-session.test.cjs` exercises actual addon results, graph parity, custom
+detector precedence, cache invalidation, cancellation and transport failure.
+Whole-command benchmarks remain the performance acceptance criterion.

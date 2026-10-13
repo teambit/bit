@@ -25,7 +25,8 @@ function validateMergeTransactionDiagnostics(trace, scenario, options = {}) {
     new Set(
       frames
         .slice(first, last + 1)
-        .filter((frame) => workspace.has(frame.magic))
+        // Dependency parsing owns a graph cache on the shared pool, not transaction state.
+        .filter((frame) => workspace.has(frame.magic) && !(frame.magic === 'BWS1' && frame.kind === 'dependencyScan'))
         .map((frame) => frame.helperId)
     ).size,
     1,

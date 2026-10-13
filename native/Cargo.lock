@@ -33,6 +33,7 @@ dependencies = [
 name = "bit-object-import"
 version = "0.1.0"
 dependencies = [
+ "bit-dependency-scanner",
  "flate2",
  "rayon",
  "regress",

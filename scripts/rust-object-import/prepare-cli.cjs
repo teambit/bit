@@ -61,6 +61,13 @@ function links(directory) {
 }
 links(target);
 const files = [
+  'scopes/dependencies/dependencies/files-dependency-builder/rust-scanner/types.ts',
+  'scopes/dependencies/dependencies/files-dependency-builder/rust-scanner/scope.ts',
+  'scopes/dependencies/dependencies/files-dependency-builder/rust-scanner/runtime.ts',
+  'scopes/dependencies/dependencies/files-dependency-builder/rust-scanner/workspace-transport.ts',
+  'scopes/dependencies/dependencies/files-dependency-builder/generate-tree-madge.ts',
+  'scopes/dependencies/dependencies/files-dependency-builder/precinct/index.ts',
+
   'scopes/harmony/bit/run-bit.ts',
   'scopes/harmony/bit/bootstrap.ts',
   'scopes/harmony/bit/rust-mini-status.ts',
@@ -369,6 +376,13 @@ assert.ok(compilation.every((c) => c.errors.length === 0));
 for (const component of compilation)
   for (const file of component.buildResults) assert.ok(fs.realpathSync(file).startsWith(target + path.sep));
 const modules = [
+  'dependencies/dist/files-dependency-builder/rust-scanner/types.js',
+  'dependencies/dist/files-dependency-builder/rust-scanner/scope.js',
+  'dependencies/dist/files-dependency-builder/rust-scanner/runtime.js',
+  'dependencies/dist/files-dependency-builder/rust-scanner/workspace-transport.js',
+  'dependencies/dist/files-dependency-builder/generate-tree-madge.js',
+  'dependencies/dist/files-dependency-builder/precinct/index.js',
+
   'bit/dist/run-bit.js',
   'bit/dist/bootstrap.js',
   'bit/dist/rust-mini-status.js',
