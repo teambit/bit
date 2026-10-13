@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import classnames from 'classnames';
-import { findLastIndex } from 'lodash';
 import { ResponsiveNavbar } from '@teambit/design.navigation.responsive-navbar';
 import type { TabProps } from '@teambit/design.navigation.responsive-navbar';
 import { Dropdown } from '@teambit/design.inputs.dropdown';
@@ -75,13 +74,21 @@ export function CollapsibleMenuNav({
     return (_widgetPlugins || []).filter((widget) => !widget[1].props.hideInMinimalMode).sort(sortFn);
   }, [widgetSlot, widgetPlugins, isMinimal]);
 
-  // in minimal mode, tabs up to (and including) the last primary tab render outside the
-  // ResponsiveNavbar, which would otherwise collapse any tab but the first when space runs out.
-  const fixedCount = isMinimal ? findLastIndex(plugins, ([, { props }]) => !!props.primaryInMinimalMode) + 1 : 0;
-  const fixedPlugins = plugins.slice(0, fixedCount);
-  const collapsiblePlugins = plugins.slice(fixedCount);
+  // in minimal mode, primary tabs (e.g. Preview) render outside the ResponsiveNavbar, which would
+  // otherwise collapse any tab but the first when space runs out. The first tab is kept with them
+  // to preserve its position (the navbar never collapses it either); all other tabs stay collapsible.
+  const hasPrimary = isMinimal && plugins.some(([, { props }]) => props.primaryInMinimalMode);
+  const fixedPlugins = hasPrimary
+    ? plugins.filter(([, { props }], index) => index === 0 || props.primaryInMinimalMode)
+    : [];
+  const collapsiblePlugins = plugins.filter((plugin) => !fixedPlugins.includes(plugin));
+  const responsiveItems = [...collapsiblePlugins, ...widgets];
 
-  const links = [...collapsiblePlugins, ...widgets].map(([, menuItem], index) => {
+  // `activeTabIndex` refers to the full list; map it to the responsive list (-1 when a fixed tab is active)
+  const responsiveActiveIndex =
+    activeTabIndex === undefined ? undefined : responsiveItems.indexOf([...plugins, ...widgets][activeTabIndex]);
+
+  const links = responsiveItems.map(([, menuItem], index) => {
     // these styles keep plugins to the left and widgets to the right.
     const lastPluginStyle = collapsiblePlugins.length - 1 === index ? { marginRight: 'auto' } : {};
 
@@ -115,7 +122,7 @@ export function CollapsibleMenuNav({
         style={{ width: '100%', height: '100%' }}
         priority="none"
         tabs={links}
-        defaultActiveIndex={activeTabIndex}
+        defaultActiveIndex={responsiveActiveIndex}
         alwaysShowActiveTab={alwaysShowActiveTab}
       >
         {children}
