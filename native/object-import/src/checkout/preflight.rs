@@ -1,4 +1,5 @@
 use super::{Input, MAX_BYTES, Request, cache, eol, invalid, repository, sequential_preflight};
+use crate::read_budget::Budget;
 use rayon::{ThreadPool, prelude::*};
 use std::io;
 
@@ -10,13 +11,12 @@ pub(super) fn load(
 ) -> io::Result<Vec<Vec<u8>>> {
     if request.files.len() >= 32
         && pool.current_num_threads() > 1
-        && let Ok(files) = parallel(request, state, use_cache, pool, 64)
-            .or_else(|_| parallel(request, state, use_cache, pool, pool.current_num_threads()))
+        && let Ok(files) = parallel(request, state, use_cache, pool)
     {
         return Ok(files);
     }
-    // A large single Source may exceed a worker's conservative share while fitting
-    // the original batch budget. Retry the read-only phase with that full budget.
+    // Changed files and conservative normalization reservations can still use
+    // the canonical read-only retry before any workspace writes.
     sequential_preflight(request, state, use_cache)
 }
 fn parallel(
@@ -24,30 +24,23 @@ fn parallel(
     state: &mut cache::State,
     use_cache: bool,
     pool: &ThreadPool,
-    width: usize,
 ) -> io::Result<Vec<Vec<u8>>> {
+    let raw = Budget::new(MAX_BYTES);
+    let packed = Budget::new(MAX_BYTES);
+    let bodies = pool.install(|| {
+        request.files
+            .par_iter()
+            .map(|input| read(request, input, state, use_cache, (&raw, &packed)))
+            .collect::<io::Result<Vec<_>>>()
+    })?;
     let mut files = Vec::with_capacity(request.files.len());
-    let mut inflated = 0;
-    let mut compressed = 0;
-    for inputs in request.files.chunks(width) {
-        let budget =
-            ((MAX_BYTES - inflated) / inputs.len(), (MAX_BYTES - compressed) / inputs.len());
-        let batch = pool.install(|| {
-            inputs
-                .par_iter()
-                .map(|input| read(request, input, state, use_cache, budget))
-                .collect::<io::Result<Vec<_>>>()
-        })?;
-        for (input, (body, packed)) in inputs.iter().zip(batch) {
-            compressed += packed;
-            state.insert(&request.directory, input.hash, body.clone());
-            let contents = if input.normalize { eol::auto(body) } else { body };
-            inflated += contents.len();
-            if inflated > MAX_BYTES {
-                return Err(invalid("checkout materialized bytes out of bounds"));
-            }
-            files.push(contents);
-        }
+    for (input, body) in request.files.iter().zip(bodies) {
+        let length = body.len();
+        state.insert(&request.directory, input.hash, body.clone());
+        let contents = if input.normalize { eol::auto(body) } else { body };
+        raw.reserve(contents.len().saturating_sub(length))
+            .map_err(|_| invalid("checkout materialized bytes out of bounds"))?;
+        files.push(contents);
     }
     Ok(files)
 }
@@ -56,17 +49,14 @@ fn read(
     input: &Input,
     state: &cache::State,
     use_cache: bool,
-    budget: (usize, usize),
-) -> io::Result<(Vec<u8>, usize)> {
+    budget: (&Budget, &Budget),
+) -> io::Result<Vec<u8>> {
     if (use_cache || input.prefer_cached)
         && let Some(body) = state.get(&request.directory, input.hash)
     {
-        if body.len() > budget.0 {
-            return Err(invalid("checkout parallel Source share"));
-        }
-        return Ok((body.clone(), 0));
+        budget.0.reserve(body.len())?;
+        return Ok(body.clone());
     }
-    let mut compressed = MAX_BYTES - budget.1;
-    let body = repository::source(&request.directory, input.hash, budget.0, &mut compressed)?;
-    Ok((body, compressed - (MAX_BYTES - budget.1)))
+    repository::read_source_shared(&request.directory, input.hash, budget.0, budget.1)
+        .map(|record| record.body)
 }

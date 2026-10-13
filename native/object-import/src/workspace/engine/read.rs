@@ -1,4 +1,5 @@
 use super::{MAX_RAW, count, hash, invalid, path};
+use crate::read_budget::Budget;
 use rayon::{ThreadPool, prelude::*};
 use serde::Serialize;
 use std::{
@@ -35,13 +36,12 @@ pub(super) fn read_with<Record: Send>(
     count(files.len())?;
     if files.len() >= 32
         && pool.current_num_threads() > 1
-        && let Ok(output) = parallel(files, pool, &record, 64)
-            .or_else(|_| parallel(files, pool, &record, pool.current_num_threads()))
+        && let Ok(output) = parallel(files, pool, &record)
     {
         return Ok(output);
     }
-    // A single file can exceed its worker share while fitting the batch budget.
-    // This phase only reads, so retry using the original serial budget.
+    // A file may change size after its reservation. This phase only reads, so
+    // retry using the canonical serial budget before publishing any results.
     let mut total = 0;
     files
         .iter()
@@ -56,28 +56,24 @@ fn parallel<Record: Send>(
     files: &[PathBuf],
     pool: &ThreadPool,
     record: &(impl Fn(&Path, Vec<u8>) -> Record + Sync),
-    width: usize,
 ) -> io::Result<Vec<Record>> {
-    let mut total = 0;
-    let mut output = Vec::with_capacity(files.len());
-    for batch in files.chunks(width) {
-        let maximum = (MAX_RAW - total) / batch.len();
-        let records = pool.install(|| {
-            batch
-                .par_iter()
-                .map(|file| {
-                    let bytes = raw(file, maximum)?;
-                    let length = bytes.len();
-                    Ok((length, record(file, bytes)))
-                })
-                .collect::<io::Result<Vec<_>>>()
-        })?;
-        for (length, record) in records {
-            total += length;
-            output.push(record);
-        }
+    let remaining = Budget::new(MAX_RAW);
+    pool.install(|| {
+        files
+            .par_iter()
+            .map(|file| reserved(file, &remaining).map(|bytes| record(file, bytes)))
+            .collect()
+    })
+}
+
+// Reserve the complete raw allocation before reading. Large files can use the
+// shared budget without being constrained to a fraction of a 64-file batch.
+fn reserved(file: &Path, remaining: &Budget) -> io::Result<Vec<u8>> {
+    path(file)?;
+    if !fs::symlink_metadata(file)?.is_file() {
+        return Err(invalid("workspace unsupported file type"));
     }
-    Ok(output)
+    remaining.read(File::open(file)?)
 }
 fn record(file: &Path, raw: Vec<u8>) -> FileRecord {
     let (metadata, contents) = canonical(file, raw);

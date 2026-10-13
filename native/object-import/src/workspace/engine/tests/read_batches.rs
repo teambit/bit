@@ -30,7 +30,7 @@ fn parallel_reads_match_serial_order_bytes_and_three_hashes() {
     assert_eq!(output["data"]["files"][1]["linuxHash"], super::super::hash(b"text\n"));
 }
 #[test]
-fn large_single_file_retries_with_full_serial_budget() {
+fn large_single_file_can_use_the_shared_request_budget() {
     let directory = Directory::new();
     let empty = directory.write("empty", b"");
     let mut files = vec![empty; 32];
@@ -69,15 +69,15 @@ fn parallel_reads_preserve_exact_aggregate_limit_and_return_no_partial_data() {
 fn mixed_file_sizes_keep_successful_reads_on_the_worker_pool() {
     let directory = Directory::new();
     let ordinary = directory.write("ordinary", &[0xff; 4096]);
-    let mut files = vec![ordinary; 64];
-    files[33] = directory.write("larger", &vec![b'x'; 256 * 1024]);
+    let mut files = vec![ordinary; 130];
+    files[33] = directory.write("larger", &vec![b'x'; 3 * 1024 * 1024]);
     let output = super::super::read::read_with(&files, &super::POOL, |_, body| {
         (body.len(), rayon::current_thread_index())
     })
     .unwrap();
-    assert_eq!(output.len(), 64);
+    assert_eq!(output.len(), 130);
     for (index, (length, worker)) in output.iter().enumerate() {
-        assert_eq!(*length, if index == 33 { 256 * 1024 } else { 4096 });
+        assert_eq!(*length, if index == 33 { 3 * 1024 * 1024 } else { 4096 });
         assert!(worker.is_some(), "an oversized batch share must not serialize the whole read");
     }
 }

@@ -2,6 +2,7 @@ mod parallel;
 mod retained;
 
 use super::{hash, invalid, wire};
+use crate::read_budget::Budget;
 use serde_json::{Value, json};
 use std::{
     collections::HashSet,
@@ -70,7 +71,29 @@ fn capture_file(
     maximum: usize,
     snapshots: Option<&crate::workspace::snapshots::State>,
 ) -> io::Result<(File, usize)> {
-    let (raw, raw_size, raw_hash) = retained::load(file, maximum, snapshots)?;
+    capture_loaded(file, request, retained::load(file, maximum, snapshots)?, maximum)
+}
+
+fn capture_shared(
+    file: &wire::Input,
+    request: &wire::Begin,
+    budget: &Budget,
+    snapshots: Option<&crate::workspace::snapshots::State>,
+) -> io::Result<File> {
+    let loaded = retained::load_shared(file, budget, snapshots)?;
+    let reserved = loaded.1.max(loaded.0.len());
+    let (captured, used) = capture_loaded(file, request, loaded, super::MAX_BYTES)?;
+    budget.reserve(used.saturating_sub(reserved))?;
+    Ok(captured)
+}
+
+fn capture_loaded(
+    file: &wire::Input,
+    request: &wire::Begin,
+    loaded: (Vec<u8>, usize, String),
+    maximum: usize,
+) -> io::Result<(File, usize)> {
+    let (raw, raw_size, raw_hash) = loaded;
     let changed = file.read_token.is_some()
         || raw.starts_with(b"\xef\xbb\xbf")
         || (request.workspace_root && file.relative_path == ".bitmap");
@@ -124,6 +147,13 @@ fn raw(path: &PathBuf, maximum: usize) -> io::Result<Vec<u8>> {
         return Err(invalid("inspection byte budget"));
     }
     Ok(bytes)
+}
+
+fn raw_shared(path: &PathBuf, budget: &Budget) -> io::Result<Vec<u8>> {
+    if !path.is_absolute() || !fs::symlink_metadata(path)?.is_file() {
+        return Err(invalid("inspection unsupported path"));
+    }
+    budget.read(DiskFile::open(path)?)
 }
 fn strip_bom(mut bytes: Vec<u8>) -> Vec<u8> {
     if bytes.starts_with(b"\xef\xbb\xbf") {

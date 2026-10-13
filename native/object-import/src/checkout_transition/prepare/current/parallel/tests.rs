@@ -76,7 +76,7 @@ fn ordered_parallel_reads_match_serial_bom_and_line_ending_semantics() {
 }
 
 #[test]
-fn skewed_reads_retry_without_exceeding_the_aggregate_budget() {
+fn skewed_reads_share_the_exact_aggregate_budget() {
     let fixture = Fixture::new();
     let mut files = fixture.files(65);
     files[0] = fixture.file(0, &vec![b'x'; 1024 * 1024]);

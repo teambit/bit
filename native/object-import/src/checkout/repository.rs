@@ -9,6 +9,7 @@ use flate2::{Decompress, FlushDecompress, Status};
 use sha1::{Digest, Sha1};
 
 use super::{MAX_BYTES, invalid};
+use crate::read_budget::Budget;
 
 pub(crate) fn source(
     directory: &Path,
@@ -45,7 +46,34 @@ pub(crate) fn read_source_record(
 ) -> io::Result<SourceRecord> {
     let compressed = packed(directory, hash, compressed_total)?;
     let object = inflate(&compressed, maximum + 256)?;
-    let (header, body) = split(&object, hash, "Source")?;
+    source_contents(compressed, &object, hash, maximum)
+}
+
+/// Independent worker reads share complete request budgets, not fixed file-size shares.
+pub(crate) fn read_source_shared(
+    directory: &Path,
+    hash: [u8; 20],
+    raw: &Budget,
+    packed: &Budget,
+) -> io::Result<SourceRecord> {
+    let identity = crate::validate::hexadecimal(&hash);
+    let file = File::open(
+        directory
+            .join(&identity[..2])
+            .join(&identity[2..]),
+    )?;
+    let compressed = packed.read(file)?;
+    let object = inflate_with(&compressed, MAX_BYTES + 256, Some(raw))?;
+    source_contents(compressed, &object, hash, MAX_BYTES)
+}
+
+fn source_contents(
+    compressed: Vec<u8>,
+    object: &[u8],
+    hash: [u8; 20],
+    maximum: usize,
+) -> io::Result<SourceRecord> {
+    let (header, body) = split(object, hash, "Source")?;
     if header.parse::<usize>().is_err()
         || body.len() > maximum
         || <[u8; 20]>::from(Sha1::digest(body)) != hash
@@ -94,10 +122,13 @@ thread_local! {
     });
 }
 fn inflate(compressed: &[u8], maximum: usize) -> io::Result<Vec<u8>> {
+    inflate_with(compressed, maximum, None)
+}
+fn inflate_with(compressed: &[u8], maximum: usize, budget: Option<&Budget>) -> io::Result<Vec<u8>> {
     INFLATION.with(|inflation| {
         let Inflation { decoder, chunk } = &mut *inflation.borrow_mut();
         decoder.reset(true);
-        inflate_using(compressed, maximum, decoder, chunk)
+        inflate_using(compressed, maximum, decoder, chunk, budget)
     })
 }
 fn inflate_using(
@@ -105,8 +136,10 @@ fn inflate_using(
     maximum: usize,
     decoder: &mut Decompress,
     chunk: &mut [u8],
+    budget: Option<&Budget>,
 ) -> io::Result<Vec<u8>> {
     let mut output = Vec::new();
+    let mut header = None;
     loop {
         let before_in = decoder.total_in();
         let before_out = decoder.total_out();
@@ -117,6 +150,7 @@ fn inflate_using(
         if output.len() + count > maximum {
             return Err(invalid("checkout inflated bytes out of bounds"));
         }
+        reserve_inflated(budget, &mut header, output.len(), &chunk[..count])?;
         output.extend_from_slice(&chunk[..count]);
         if status == Status::StreamEnd {
             break;
@@ -129,6 +163,29 @@ fn inflate_using(
         return Err(invalid("checkout trailing compressed data"));
     }
     Ok(output)
+}
+
+fn reserve_inflated(
+    budget: Option<&Budget>,
+    header: &mut Option<usize>,
+    previous: usize,
+    chunk: &[u8],
+) -> io::Result<()> {
+    let Some(budget) = budget else { return Ok(()) };
+    if header.is_some() {
+        return budget.reserve(chunk.len());
+    }
+    if let Some(end) = chunk.iter().position(|byte| *byte == 0) {
+        if previous + end >= 256 {
+            return Err(invalid("checkout object header exceeds bounds"));
+        }
+        *header = Some(previous + end + 1);
+        return budget.reserve(chunk.len() - end - 1);
+    }
+    if previous + chunk.len() >= 256 {
+        return Err(invalid("checkout object header exceeds bounds"));
+    }
+    Ok(())
 }
 
 pub(crate) fn split<'a>(

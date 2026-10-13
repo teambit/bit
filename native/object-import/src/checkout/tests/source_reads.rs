@@ -82,7 +82,7 @@ fn source_reads_reject_normalization_and_excessive_counts_before_any_acknowledge
     assert!(!target.exists());
 }
 #[test]
-fn skewed_source_sizes_retry_with_the_full_budget_and_whole_batch_limits_still_apply() {
+fn skewed_source_sizes_share_the_request_budget_and_whole_batch_limits_still_apply() {
     let directory = Directory::new();
     let target = directory.0.join("must-not-write");
     let body = vec![b'x'; 1024 * 1024];
@@ -93,6 +93,11 @@ fn skewed_source_sizes_retry_with_the_full_budget_and_whole_batch_limits_still_a
     let (header, bytes) = response(frame(&directory.0, &inputs), &mut cache::State::default());
     assert_eq!(header["completed"], 64);
     assert_eq!(&bytes[63 * 5..], body);
+    let inputs = vec![(hash, target.as_path(), 1, 0); 32];
+    let (header, bytes) = response(frame(&directory.0, &inputs), &mut cache::State::default());
+    assert_eq!(header["failed"], false);
+    assert_eq!(header["completed"], 32);
+    assert_eq!(bytes.len(), 32 * body.len());
     let inputs = vec![(hash, target.as_path(), 1, 0); 33];
     let (header, bytes) = response(frame(&directory.0, &inputs), &mut cache::State::default());
     assert_eq!(header["failed"], true);

@@ -1,4 +1,5 @@
-use super::{File, capture_file, wire};
+use super::{File, capture_file, capture_shared, wire};
+use crate::read_budget::Budget;
 use rayon::prelude::*;
 use std::io;
 
@@ -7,32 +8,12 @@ pub(super) fn capture(
     maximum: usize,
     snapshots: Option<&crate::workspace::snapshots::State>,
 ) -> io::Result<Vec<File>> {
-    let mut output = Vec::with_capacity(request.files.len());
-    let mut remaining = maximum;
-    for files in request.files.chunks(64) {
-        let batch = read_batch(files, request, remaining, snapshots)
-            .or_else(|_| smaller(files, request, remaining, snapshots))?;
-        for (file, bytes) in batch {
-            remaining -= bytes;
-            output.push(file);
-        }
-    }
-    Ok(output)
-}
-
-// Every concurrent read receives a disjoint share of the remaining raw/normalized budget.
-fn read_batch(
-    files: &[wire::Input],
-    request: &wire::Begin,
-    maximum: usize,
-    snapshots: Option<&crate::workspace::snapshots::State>,
-) -> io::Result<Vec<(File, usize)>> {
-    let limit = maximum / files.len();
-    let results: Vec<_> = files
+    let budget = Budget::new(maximum);
+    let result = request.files
         .par_iter()
-        .map(|file| capture_file(file, request, limit, snapshots))
-        .collect();
-    results.into_iter().collect()
+        .map(|file| capture_shared(file, request, &budget, snapshots))
+        .collect::<io::Result<Vec<_>>>();
+    result.or_else(|_| smaller(&request.files, request, maximum, snapshots))
 }
 
 // Skewed file sizes retry serially before any spool or public plan is published.
@@ -41,13 +22,13 @@ fn smaller(
     request: &wire::Begin,
     mut remaining: usize,
     snapshots: Option<&crate::workspace::snapshots::State>,
-) -> io::Result<Vec<(File, usize)>> {
+) -> io::Result<Vec<File>> {
     files
         .iter()
         .map(|file| {
             let captured = capture_file(file, request, remaining, snapshots)?;
             remaining -= captured.1;
-            Ok(captured)
+            Ok(captured.0)
         })
         .collect()
 }

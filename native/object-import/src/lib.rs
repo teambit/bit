@@ -19,6 +19,7 @@ mod metadata;
 mod mutable_store;
 mod operation;
 mod protocol;
+mod read_budget;
 mod read_store;
 mod read_version;
 mod recovery;

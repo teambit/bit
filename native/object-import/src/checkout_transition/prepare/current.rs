@@ -1,4 +1,5 @@
 use super::super::{invalid, wire};
+use crate::read_budget::Budget;
 use sha1::{Digest, Sha1};
 use std::{
     collections::HashSet,
@@ -63,6 +64,21 @@ fn read(file: &wire::Current, total: &mut usize) -> io::Result<Loaded> {
         return Err(invalid("checkout current disk snapshot differs"));
     }
     *total += raw.len();
+    canonical(file, raw)
+}
+
+fn read_shared(file: &wire::Current, budget: &Budget) -> io::Result<(Loaded, usize)> {
+    crate::merge_history::hash(&file.raw_hash)?;
+    crate::merge_history::hash(&file.snapshot_hash)?;
+    let raw = budget.read(fs::File::open(&file.path)?)?;
+    if digest(&raw) != file.raw_hash {
+        return Err(invalid("checkout current disk snapshot differs"));
+    }
+    let length = raw.len();
+    canonical(file, raw).map(|loaded| (loaded, length))
+}
+
+fn canonical(file: &wire::Current, mut raw: Vec<u8>) -> io::Result<Loaded> {
     if raw.starts_with(b"\xef\xbb\xbf") {
         raw.drain(..3);
     }

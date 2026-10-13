@@ -1,5 +1,6 @@
 //! Complete read-only Source loads: return verified raw bodies and canonical cache weights.
 use super::{MAX_BYTES, Request, Response, cache, invalid, repository, request};
+use crate::read_budget::Budget;
 use rayon::{ThreadPool, prelude::*};
 use serde::Serialize;
 use std::io::{self, Read, Write};
@@ -39,28 +40,41 @@ fn records(
     request: &Request,
     state: &cache::State,
     pool: &ThreadPool,
-    width: usize,
 ) -> io::Result<Vec<Option<Record>>> {
-    let mut output = Vec::with_capacity(request.files.len());
+    let raw = Budget::new(MAX_BYTES);
+    let packed = Budget::new(MAX_BYTES);
+    pool.install(|| {
+        request.files
+            .par_iter()
+            .map(|input| {
+                if input.cached(request, state, false).is_some() {
+                    return Ok(None);
+                }
+                let source =
+                    repository::read_source_shared(&request.directory, input.hash, &raw, &packed)?;
+                Ok(Some(Record {
+                    compressed: source.compressed.len(),
+                    inflated: source.inflated_size,
+                    body: source.body,
+                }))
+            })
+            .collect()
+    })
+}
+fn serial_records(request: &Request, state: &cache::State) -> io::Result<Vec<Option<Record>>> {
     let mut raw = 0;
     let mut compressed = 0;
-    for files in request.files.chunks(width) {
-        let budget = ((MAX_BYTES - raw) / files.len(), (MAX_BYTES - compressed) / files.len());
-        let batch = pool.install(|| {
-            files
-                .par_iter()
-                .map(|input| read(request, input, state, budget))
-                .collect::<io::Result<Vec<_>>>()
-        })?;
-        for record in batch {
+    request.files
+        .iter()
+        .map(|input| {
+            let record = read(request, input, state, (MAX_BYTES - raw, MAX_BYTES - compressed))?;
             if let Some(source) = &record {
                 raw += source.body.len();
                 compressed += source.compressed;
             }
-            output.push(record);
-        }
-    }
-    Ok(output)
+            Ok(record)
+        })
+        .collect()
 }
 fn response(request: &Request, records: &[Option<Record>]) -> Output {
     let mut binary_bytes = 0;
@@ -92,9 +106,7 @@ fn prepare(request: &Request, state: &mut cache::State, pool: &ThreadPool) -> io
     if request.files.iter().any(|input| input.normalize) {
         return Err(invalid("Source reads require original bytes"));
     }
-    let records = records(request, state, pool, 64)
-        .or_else(|_| records(request, state, pool, pool.current_num_threads()))
-        .or_else(|_| records(request, state, pool, 1))?;
+    let records = records(request, state, pool).or_else(|_| serial_records(request, state))?;
     let metadata = response(request, &records);
     let mut output = serde_json::to_vec(&metadata)?;
     output.push(b'\n');

@@ -29,11 +29,12 @@ index, so extra string or symbol properties increase that count. This preserves
 extra-property rejection without running a regular expression for every byte.
 
 The workspace helper uses its CPU-aware default pool, capped at four workers.
-Checkout Source batches of at least 32 files read and verify chunks of up to
-64 files, retrying with worker-sized and serial chunks when a Source exceeds its share. Each worker receives a share of the remaining compressed and
-inflated byte budgets. A Source exceeding that conservative share retries the
-read-only batch with the original serial budget. Indexed collection preserves
-file order; workspace writes and their failure prefixes remain serial. On Unix,
+Checkout Source requests of at least 32 files use one indexed parallel queue.
+Workers reserve bytes from shared request budgets before allocating compressed
+buffers or retaining inflated bodies. A large file can use the available request
+allowance without forcing other workers to wait at a fixed chunk boundary. Failed
+reads retry the complete read-only request with the original serial budget.
+Indexed collection preserves file order; workspace writes and their failure prefixes remain serial. On Unix,
 normalization returns bytes without allocation when no carriage return exists.
 
 Single-Source authority checks use guarded direct pending, strong and weak cache
@@ -139,16 +140,17 @@ They require a matching four-mode correctness proof before retaining timings.
 
 The Node adapter still observes and normalizes current buffers, takes freshness
 snapshots, hydrates public Source instances and preserves callback behavior.
-Preparation reads are serial, and component requests share a serialized protocol
-session. Removing those costs requires a wider ownership boundary; increasing
+Owned preparation reads run in Rust, while component requests still share a
+serialized protocol session. Removing those costs requires a wider ownership boundary; increasing
 worker count alone does not remove them. This change does not parallelize
 filesystem mutations or alter fallback behavior.
 
-Workspace reads use the same bounded worker pool for batches of at least 32 files. Each
-worker receives a share of the remaining 8 MiB raw-byte budget; a read-only serial
-retry preserves support for a single file larger than that share. Results preserve
-input order and never publish a partial batch. File metadata sizes reserve bounded
-read buffers, and ordinary LF files reuse their raw hash for snapshot/Linux identity.
+Workspace reads use the same bounded worker pool for requests of at least 32 files.
+Workers draw from the complete request and reserve from one 8 MiB raw-byte budget.
+Results preserve input order and never publish a partial request. File metadata
+sizes reserve buffers before allocation; growth or shrinkage retries the complete
+read-only request using the original serial reader. This avoids per-worker byte
+shares that unnecessarily retried skewed file sizes, and ordinary LF files reuse their raw hash for snapshot/Linux identity.
 The `workspace-read-benchmark.cjs <baseline-helper> <candidate-helper>` microbenchmark
 includes response transfer and verifies every returned body and hash; it does not
 replace paired whole-command measurements.
@@ -164,9 +166,10 @@ Buffer while existing clone aliases remain shared. Native materialization contin
 to use retained Rust bytes, and escaped getters become eager before pack cleanup.
 
 Owned merge preparation and retargeting dispatch their heavy work onto the helper's
-existing configured Rayon pool. Source reads use bounded worker shares for both
-compressed and raw bytes, commit receipts in input order, and retry only an
-unsupported read-only batch with the full remaining serial budget. Failed worker
+existing configured Rayon pool. Source reads share separate request budgets for
+compressed and raw bytes, commit receipts in input order, and retry an unsupported
+read-only request with the full remaining serial budget. Current-file reads also
+reserve from one request budget before allocation. Failed worker
 reads do not publish duplicate Source receipts. Merge classification reuses this
 pool, including the caller's one-thread setting, instead of creating another pool.
 Each worker reuses its zlib decoder and 64 KiB scratch buffer, resetting before every
@@ -229,13 +232,13 @@ Snapshot preparation validates source bodies and identities in input order, with
 
 Status/diff qualification observes the automatically discovered addon without wrapping public class methods, and records its digest alongside the helper and CLI fingerprints. Linux filesystem diagnostics distinguish the shared Rust workers (`bit-vcs-0` through `bit-vcs-7`) from JavaScript and libuv threads using successful thread-name syscalls. Native source reads are reported separately; mini-status still requires zero source/spool reads by JavaScript or libuv. Unnamed threads and reads before a thread is named remain charged to Node. The external observer retains its synchronous, asynchronous and child-process controls.
 
-Inspection captures reuse raw digests when BOM/bitmap conversion leaves bytes untouched, retain snapshot digests, and reuse them for unchanged Linux line endings. Captures of eight or more files use bounded batches on the shared Rayon pool; each concurrent read receives a disjoint share of the remaining raw/normalized byte budget. Skewed batches retry serially before publishing a plan or writing a snapshot. Results stay in input order. Both inspection and snapshot compression enter the configured pool in child-helper mode as well as the addon. A 256-file local diagnostic compared original, updated serial and updated parallel captures with identical hashes and ordering; it is separate from whole-command acceptance.
+Inspection captures reuse raw digests when BOM/bitmap conversion leaves bytes untouched, retain snapshot digests, and reuse them for unchanged Linux line endings. Captures of eight or more files use the shared Rayon pool and one atomic request allowance for raw/normalized bytes. File reads reserve before allocation, and normalization growth reserves additional bytes. Failed parallel reads retry serially before publishing a plan or writing a snapshot. Results stay in input order. Both inspection and snapshot compression enter the configured pool in child-helper mode as well as the addon. A 256-file local diagnostic compared original, updated serial and updated parallel captures with identical hashes and ordering; it is separate from whole-command acceptance.
 
 Checkout, inspection, source snapshot and raw object readers reserve the file size already checked against their byte budget before reading. Header reads reserve only the bounded header prefix. The read limit and post-read size/hash checks still detect growth and changed contents. A Linux syscall diagnostic over 256 files accounted for the same 7,901,184 source bytes before and after preallocation, with 2,816 versus 512 nonempty reads. These counters describe I/O work, not a complete-command speedup. The observer handles interrupted reads as well as interrupted thread-name syscalls.
 
 Diff captures bound to the caller’s raw and canonical snapshot hashes retain their bytes in memory without writing Source spools: the caller already owns the canonical fallback bytes. Where an existing operation owns a read, capture can also reuse that read’s token after checking its path and hashes. Other captures still read and validate the filesystem, and independent inspection captures retain their spool contract. Full status and diff do not create an additional ownership scope just to retain reads. The raw-byte budget includes stripped BOM bytes, and a retained body is never stripped a second time. Qualification requires real diff commands to accept captures with zero Source spools.
 
-Diff execution also uses the operation’s configured Rayon pool rather than creating a pool per comparison. At most four workers draw files from a shared work queue and can spawn Git children, including when the pool has more workers; results retain their input order. Identical optional byte inputs skip normalization and SHA work while absent-versus-empty and EOL/binary semantics remain unchanged. All-equal batches create no Git temporary directory. Model Source reads use bounded ordered batches with independent raw/compressed allowances and serial retry for skewed files; output and verified read receipts retain model order.
+Diff execution also uses the operation’s configured Rayon pool rather than creating a pool per comparison. At most four workers draw files from a shared work queue and can spawn Git children, including when the pool has more workers; results retain their input order. Identical optional byte inputs skip normalization and SHA work while absent-versus-empty and EOL/binary semantics remain unchanged. All-equal batches create no Git temporary directory. Model Source reads use one indexed parallel queue with shared, independent raw/compressed allowances and read-only serial retry; output and verified read receipts retain model order.
 
 Semantic inspection capture hydrates only the configuration and package maps required to validate native mutations. File and dependency rows retain their compact wire representation and original aliases. Dense-array and selected file/Version metadata checks inspect descriptors directly; cross-model alias checks use a set instead of pairwise scans. Post-request capture still validates hashes, values and container identities before applying a native plan. Local capture-only timings are diagnostic; whole-command performance must still be established by the hosted paired corpus.
 
