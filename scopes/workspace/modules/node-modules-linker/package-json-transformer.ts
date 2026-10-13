@@ -8,7 +8,8 @@ type PackageJsonTransformers = Function[];
 
 export class PackageJsonTransformer {
   static packageJsonTransformersRegistry: PackageJsonTransformers = [];
-  private static transformerByKey = new Map<string, Function>();
+  // weak, so it holds no transformer, and stays right when a loader resets or restores the array
+  private static keyOfTransformer = new WeakMap<Function, string>();
 
   /**
    * @param key when given, a later registration with the same key replaces this one. aspects pass their id, so a
@@ -18,11 +19,12 @@ export class PackageJsonTransformer {
     func: (component: Component, packageJsonObject: Record<string, any>) => Promise<Record<string, any>>,
     key?: string
   ) {
-    const previous = key ? this.transformerByKey.get(key) : undefined;
-    const index = previous ? this.packageJsonTransformersRegistry.indexOf(previous) : -1;
+    const index = key
+      ? this.packageJsonTransformersRegistry.findIndex((fn) => this.keyOfTransformer.get(fn) === key)
+      : -1;
     if (index === -1) this.packageJsonTransformersRegistry.push(func);
     else this.packageJsonTransformersRegistry[index] = func;
-    if (key) this.transformerByKey.set(key, func);
+    if (key) this.keyOfTransformer.set(func, key);
   }
 
   /**

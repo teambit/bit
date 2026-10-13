@@ -65,16 +65,16 @@ export class ComponentLoader {
   }
 
   static onComponentLoadSubscribers: OnComponentLoadSubscriber[] = [];
-  private static onComponentLoadSubscriberByKey = new Map<string, OnComponentLoadSubscriber>();
+  // weak, so it holds no subscriber, and stays right when a loader resets or restores the array
+  private static keyOfSubscriber = new WeakMap<OnComponentLoadSubscriber, string>();
   /**
    * @param key a later registration with the same key replaces this one, so another harmony load replaces it.
    */
   static registerOnComponentLoadSubscriber(func: OnComponentLoadSubscriber, key?: string) {
-    const previous = key ? this.onComponentLoadSubscriberByKey.get(key) : undefined;
-    const index = previous ? this.onComponentLoadSubscribers.indexOf(previous) : -1;
+    const index = key ? this.onComponentLoadSubscribers.findIndex((fn) => this.keyOfSubscriber.get(fn) === key) : -1;
     if (index === -1) this.onComponentLoadSubscribers.push(func);
     else this.onComponentLoadSubscribers[index] = func;
-    if (key) this.onComponentLoadSubscriberByKey.set(key, func);
+    if (key) this.keyOfSubscriber.set(func, key);
   }
 
   static onComponentIssuesCalcSubscribers: OnComponentIssuesCalcSubscriber[] = [];
