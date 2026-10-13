@@ -551,10 +551,23 @@ function findImporterDepPath(
   specifier: string,
   workspaceVersions: Map<string, string>
 ): string | undefined {
-  const neighbour = rootEdge.neighbours.find(
-    (directDep) => directDep.name === name && specifierMatchesDirectDep(name, specifier, directDep, workspaceVersions)
+  const sameName = rootEdge.neighbours.filter((directDep) => directDep.name === name);
+  // A merged graph keeps one neighbour per distinct specifier of a package,
+  // so the one recorded for this very specifier or version comes first; a
+  // range is matched only when none was, and among several resolutions that
+  // satisfy it the highest version, which is what a resolution would pick.
+  const recorded =
+    sameName.find((directDep) => directDep.specifier === specifier) ??
+    sameName.find((directDep) => dp.removeSuffix(directDep.id) === `${name}@${specifier}`);
+  if (recorded) return recorded.id;
+  const satisfying = sameName.filter((directDep) =>
+    specifierMatchesDirectDep(name, specifier, directDep, workspaceVersions)
   );
-  if (neighbour) return neighbour.id;
+  if (satisfying.length > 0) {
+    return satisfying.reduce((highest, directDep) =>
+      semver.gt(dp.parse(directDep.id).version!, dp.parse(highest.id).version!) ? directDep : highest
+    ).id;
+  }
   const pkgId = `${name}@${specifier}`;
   const candidates = graph.edges
     .filter((edge) => edge.id !== DependenciesGraph.ROOT_EDGE_ID && (edge.attr?.pkgId ?? dp.removeSuffix(edge.id)) === pkgId)
@@ -572,12 +585,12 @@ function findImporterDepPath(
 }
 
 /**
- * Whether the manifest's `specifier` for `name` is satisfied by the direct
- * dependency the graph recorded: the same specifier, the same version, a
- * workspace reference the graph resolved to the version of the workspace
- * component of that name, or a range the resolved version satisfies, read
- * the way pnpm reads ranges, so a prerelease satisfies only a range that
- * names one.
+ * Whether the manifest's `specifier` for `name`, which no direct dependency
+ * was recorded for, is satisfied by the direct dependency the graph recorded
+ * under another specifier: a workspace reference the graph resolved to the
+ * version of the workspace component of that name, or a range the resolved
+ * version satisfies, read the way pnpm reads ranges, so a prerelease
+ * satisfies only a range that names one.
  */
 function specifierMatchesDirectDep(
   name: string,
@@ -585,8 +598,6 @@ function specifierMatchesDirectDep(
   directDep: DependencyNeighbour,
   workspaceVersions: Map<string, string>
 ): boolean {
-  if (directDep.specifier === specifier) return true;
-  if (dp.removeSuffix(directDep.id) === `${name}@${specifier}`) return true;
   const { version } = dp.parse(directDep.id);
   if (version == null) return false;
   if (specifier.startsWith('workspace:')) {

@@ -1689,3 +1689,50 @@ describe('workspace: specifiers in a restored lockfile', () => {
     expect(lockfile.importers![comp1Dir].dependencies).not.to.have.property(comp2);
   });
 });
+
+describe('several direct dependencies of the same name in a restored lockfile', () => {
+  const comp1Dir = 'comps/comp1';
+  // A merged graph keeps one root neighbour per distinct specifier of foo.
+  const graph = new DependenciesGraph({
+    packages: new Map([
+      ['foo@1.5.0', { resolution: { integrity: 'sha512-five' } }],
+      ['foo@1.2.0', { resolution: { integrity: 'sha512-two' } }],
+      ['foo@1.9.0', { resolution: { integrity: 'sha512-nine' } }],
+    ] as any),
+    edges: [
+      {
+        id: DependenciesGraph.ROOT_EDGE_ID,
+        neighbours: [
+          { id: 'foo@1.5.0', name: 'foo', specifier: '^1.5.0', lifecycle: 'runtime' },
+          { id: 'foo@1.2.0', name: 'foo', specifier: '^1.0.0', lifecycle: 'runtime' },
+          { id: 'foo@1.9.0', name: 'foo', specifier: '*', lifecycle: 'runtime' },
+        ],
+      },
+    ],
+  });
+
+  function restore(specifier: string) {
+    return convertGraphToLockfile(DependenciesGraph.deserialize(graph.serialize())!, {
+      manifests: { [path.resolve(comp1Dir)]: { dependencies: { foo: specifier } } },
+      rootDir: process.cwd(),
+      resolve: () => {
+        throw new Error('nothing here needs the registry');
+      },
+    });
+  }
+
+  it('takes the dependency recorded for the very specifier over one that merely satisfies it', async () => {
+    const lockfile = await restore('^1.0.0');
+    expect(lockfile.importers![comp1Dir].dependencies!.foo).to.eql({ version: '1.2.0', specifier: '^1.0.0' });
+  });
+
+  it('takes the dependency recorded at the very version', async () => {
+    const lockfile = await restore('1.5.0');
+    expect(lockfile.importers![comp1Dir].dependencies!.foo).to.eql({ version: '1.5.0', specifier: '1.5.0' });
+  });
+
+  it('takes the highest satisfying resolution when none was recorded for the specifier', async () => {
+    const lockfile = await restore('^1.1.0');
+    expect(lockfile.importers![comp1Dir].dependencies!.foo).to.eql({ version: '1.9.0', specifier: '^1.1.0' });
+  });
+});
