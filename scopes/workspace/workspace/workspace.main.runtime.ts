@@ -244,7 +244,8 @@ export class WorkspaceMain {
         const id = legacyComponent.id;
         const newComponent = await workspace.get(id, legacyComponent, true, true, opts);
         return newComponent.state._consumer;
-      }
+      },
+      WorkspaceAspect.id
     );
 
     ConsumerComponent.registerOnComponentConfigLoading(EXT_NAME, async (id, loadOpts: ComponentConfigLoadOptions) => {
