@@ -1,4 +1,4 @@
-mod capture;
+pub(super) mod capture;
 
 use super::{invalid, semantic, versions};
 use rayon::prelude::*;
@@ -14,12 +14,12 @@ pub(crate) struct Request {
 }
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct Target {
-    identity: String,
-    version: String,
-    directory: String,
-    files: Vec<String>,
-    current: Value,
+pub(super) struct Target {
+    pub(super) identity: String,
+    pub(super) version: String,
+    pub(super) directory: String,
+    pub(super) files: Vec<String>,
+    pub(super) current: Value,
 }
 
 /// Own both sides of a full semantic comparison. Source bytes, parsed Version
@@ -86,7 +86,7 @@ fn compare_all(
     Ok((comparisons.len(), json!({"comparisons":comparisons})))
 }
 
-fn compare(target: &Target, files: &Value, model: &Value) -> io::Result<Value> {
+pub(super) fn compare(target: &Target, files: &Value, model: &Value) -> io::Result<Value> {
     let mut current = target.current.clone();
     current["files"] = files.clone();
     // The canonical consumer assigns the stored log before constructing its

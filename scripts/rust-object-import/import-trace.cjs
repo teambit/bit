@@ -45,6 +45,7 @@ const metrics = {
       'statusContext',
       'statusCompare',
       'statusResult',
+      'workspaceDiff',
       'dependencyPolicyCached',
       'scan',
       'inventoryBegin',

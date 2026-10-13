@@ -52,6 +52,7 @@ enum Request {
     StatusResult(status_result::Request),
     StatusModels(status_models::Request),
     StatusCompare(status_models::comparison::Request),
+    WorkspaceDiff(status_models::workspace_diff::Request),
     StatusPrepare(client_status::Prepare),
     StatusScan(client_status::Scan),
     StatusFinish(client_status::Finish),
@@ -174,6 +175,7 @@ fn apply(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value
         Request::StatusResult(request) => status_result::read(&request),
         Request::StatusModels(request) => status_models::read(&request, pool),
         Request::StatusCompare(request) => status_models::comparison::read(&request, pool),
+        Request::WorkspaceDiff(request) => status_models::workspace_diff::read(&request, pool),
         Request::Scan { root, exclude_dirs, workspace_root } => {
             let paths = scan::scan(&root, &exclude_dirs, workspace_root)?;
             Ok((paths.len(), json!({"paths":paths})))
