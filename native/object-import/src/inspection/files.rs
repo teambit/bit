@@ -4,13 +4,13 @@ use std::{
     collections::{HashMap, HashSet},
     io,
 };
-pub(super) fn plan(input: Value, plans: &HashMap<String, Vec<read::File>>) -> io::Result<Value> {
+pub(super) fn plan(input: Value, plans: &super::Plans) -> io::Result<Value> {
     let request: wire::Files = serde_json::from_value(input).map_err(io::Error::other)?;
     let files = plans.get(&request.token).ok_or_else(|| invalid("stale inspection token"))?;
     let models = validated_models(&request.model_files)?;
     let mut statuses = Vec::new();
     let mut current = HashSet::new();
-    for file in files {
+    for file in files.iter() {
         current.insert(&file.relative_path);
         let status = match models.get(&file.relative_path) {
             None => "new",

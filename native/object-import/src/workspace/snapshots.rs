@@ -11,6 +11,7 @@ const MAX_TOKEN: u64 = (1 << 53) - 1;
 /// Operation-local observations, never a cache that silently replaces a later filesystem read.
 #[derive(Default)]
 pub(crate) struct State {
+    pub(crate) inventory: super::engine::inventory::State,
     next: u64,
     bytes: usize,
     order: VecDeque<u64>,

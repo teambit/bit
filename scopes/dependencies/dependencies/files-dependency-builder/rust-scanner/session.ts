@@ -168,7 +168,7 @@ export class RustDependencyScannerSession {
     this.child?.stdin.destroy();
     this.child?.stdout.destroy();
     this.child?.stderr.destroy();
-    if (this.child && this.child.exitCode === null && this.child.signalCode === null) {
+    if (this.child?.pid && this.child.pid > 0 && this.child.exitCode === null && this.child.signalCode === null) {
       this.child.kill();
       this.killTimer = setTimeout(() => this.child?.kill('SIGKILL'), 1000);
       this.killTimer.unref();

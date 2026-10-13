@@ -33,7 +33,7 @@ const metrics = {
   workspaceFrames: [],
   importFrames: [],
   workspace: Object.fromEntries(
-    ['scan', 'read', 'compare', 'diff', 'fileStatus'].map((kind) => [
+    ['scan', 'inventoryBegin', 'inventoryFinish', 'inventoryCancel', 'read', 'compare', 'diff', 'fileStatus'].map((kind) => [
       kind,
       { frames: 0, files: 0, completed: 0, failed: 0 },
     ])
@@ -535,7 +535,7 @@ function observeWorkspaceTransport(child) {
         }
         if (magic === 'BMT1:transferInitialize') metric.objects += response.data?.count || 0;
         if (magic === 'BMT1:transferArchive') metric.archiveBytes += response.data?.bytes || 0;
-        if (magic === 'BWS1:scan') metric.files += response.completed || 0;
+        if (['BWS1:scan', 'BWS1:inventoryBegin', 'BWS1:inventoryFinish'].includes(magic)) metric.files += response.completed || 0;
         if ('skipped' in metric) metric.skipped += response.skipped?.length || 0;
         metric.failed += Number(response.failed === true);
       } catch {

@@ -14,6 +14,14 @@ Full status preserves component-to-Version conversion callbacks. The native defa
 
 File diff reuses verified workspace and repository provenance. Its native capture verifies both the raw disk identity and the caller's pre-LF byte identity before writing private capsules. A changed disk revision declines this path. Rust reads verified stored Sources and runs Git over retained bytes; public file content remains part of the diff result. Existing component loading may still hydrate file bodies, so this path does not claim that complete diff commands avoid Node file body reads.
 
+## Native inventory and embedded captures
+
+The embedded addon retains immutable inspection bytes in Rust. A read handle can outlive its engine and returns independent Buffer copies for canonical continuation; it releases its budget when the final handle closes. Embedded mini-status no longer writes temporary Source capsules. The standalone helper retains the existing capsule transport.
+
+Workspace inventory uses `inventoryBegin` and `inventoryFinish` on one owner. Rust scans and retains candidates, reads nested ignore files on the shared worker pool, evaluates configured policies, rebases component paths and builds the sorted manifest. The reply includes the final manifest and root ignore-cache additions needed to preserve the existing object; it does not expose intermediate filtered lists. Filtering uses ordered 64-file batches above 128 candidates. The adapter supplies the installed ignore compiler's expressions and checks custom hooks and mutations before applying root-cache additions. Failed or cancelled operations publish no manifest.
+
+An owner permits at most 32 pending inventories, 4096 retained candidate paths and 8 MiB of candidate path bytes. Parent-policy evaluation additionally bounds depth to 128 and aggregate cache prefixes to 65,536 entries and 8 MiB. Nested ignore files are limited to 64 KiB each and 1 MiB of total pattern text. Unsupported limits, custom ignore implementations and Unicode paths/expressions use canonical filtering. The Unicode fallback preserves V8 legacy case folding, which the pinned native regex engine does not fully reproduce. Native inventory is a migration boundary; it does not itself establish a whole-command speedup.
+
 ## Compatibility and limits
 
 Native inspection snapshots are bounded to 4096 files and 32 MiB per helper owner. Unsupported shapes and budgets decline to canonical behavior. Root bitmap normalization shares the existing JSONC parser subset and JavaScript property ordering and number formatting. The Node path remains available for other JSONC grammar and custom behavior.

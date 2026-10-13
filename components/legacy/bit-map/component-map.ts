@@ -1,3 +1,4 @@
+import { readRustComponentInventory } from './rust-native-inventory';
 import { registerRecoveryBitmapClass } from './rust-recovery-guards';
 import * as path from 'path';
 import globby from 'globby';
@@ -579,6 +580,21 @@ export async function getFilesByDir(
   excludeDirs: PathLinux[] = [],
   trackAllFiles = false
 ): Promise<ComponentMapFile[]> {
+  if (process.env.BIT_RUST_CLIENT_VCS === 'on' && isWorkspacePersistenceScope() && !/[!*?{}[\]\\]/.test(dir)) {
+    const inventory = await readRustComponentInventory(
+      dir,
+      consumerPath,
+      gitIgnore,
+      excludeDirs,
+      trackAllFiles,
+      rebaseIgnorePattern
+    );
+    if (inventory) {
+      if (!inventory.count) throw new ComponentNotFoundInPath(dir);
+      if (!inventory.files.length) throw new IgnoredDirectory(dir);
+      return inventory.files;
+    }
+  }
   const native =
     process.env.BIT_RUST_CLIENT_VCS === 'on' && isWorkspacePersistenceScope() && !/[!*?{}[\]\\]/.test(dir)
       ? await scanRustWorkspace(

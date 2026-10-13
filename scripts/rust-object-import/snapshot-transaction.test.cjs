@@ -392,3 +392,27 @@ test('changed JSON transport intrinsics decline without invoking hooks or repeat
     );
   }
 });
+
+test('metadata batches Ref validation while preserving nested data and rejecting late custom references', () => {
+  const directory = path.dirname(installed.resolve('@teambit/objects'));
+  const projection = compiled
+    ? require(path.join(directory, 'objects/rust-snapshot-projection.js'))
+    : source('scopes/scope/objects/objects/rust-snapshot-projection.ts');
+  const values = compiled
+    ? require(path.join(directory, 'objects/rust-snapshot-values.js'))
+    : source('scopes/scope/objects/objects/rust-snapshot-values.ts');
+  const Ref = compiled ? require(path.join(directory, 'objects/ref.js')).default : source('scopes/scope/objects/objects/ref.ts').default;
+  const guards = compiled ? require(path.join(directory, 'objects/rust-snapshot-guards.js')) : source('scopes/scope/objects/objects/rust-snapshot-guards.ts');
+  guards.registerRustSnapshotTransactionClass('Ref', Ref);
+  const rows = Array.from({ length: 1024 }, (_, index) => ({ file: new Ref(index.toString(16).padStart(40, '0')) }));
+  assert.deepEqual(projection.projectRustSnapshotFields({ rows }), values.projectRustCompactSnapshotValue({
+    rows: rows.map(({ file }) => ({ file: file.toString() })),
+  }));
+  rows.at(-1).file.toString = () => 'custom';
+  assert.equal(projection.projectRustSnapshotFields({ rows }), undefined);
+  delete rows.at(-1).file.toString;
+  let traps = 0;
+  rows.at(-1).file = new Proxy(rows.at(-1).file, { ownKeys() { traps++; throw Error('unexpected proxy trap'); } });
+  assert.equal(projection.projectRustSnapshotFields({ rows }), undefined);
+  assert.equal(traps, 0);
+});

@@ -1,4 +1,5 @@
 pub(crate) mod diff;
+pub(crate) mod inventory;
 mod read;
 mod read_raw;
 mod scan;
@@ -26,6 +27,11 @@ const MAX_FILES: usize = 4096;
     deny_unknown_fields
 )]
 enum Request {
+    InventoryBegin(inventory::Begin),
+    InventoryFinish(inventory::Finish),
+    InventoryCancel {
+        token: u64,
+    },
     Scan {
         root: PathBuf,
         exclude_dirs: Vec<PathBuf>,
@@ -94,7 +100,7 @@ pub(crate) fn serve(
     if let Ok(Request::Read { files, binary: true, retain }) = &request {
         return read_raw::respond(id, files, pool, writer, retain.then_some(snapshots));
     }
-    let result = request.and_then(|request| apply(request, pool));
+    let result = request.and_then(|request| owned(request, snapshots, pool));
     let response = match result {
         Ok((completed, data)) => Response {
             version: 1,
@@ -114,11 +120,26 @@ pub(crate) fn serve(
     writer.write_all(b"\n")?;
     writer.flush()
 }
+fn owned(
+    request: Request,
+    snapshots: &mut super::snapshots::State,
+    pool: &rayon::ThreadPool,
+) -> io::Result<(usize, Value)> {
+    match request {
+        Request::InventoryBegin(input) => inventory::begin(input, &mut snapshots.inventory, pool),
+        Request::InventoryFinish(input) => inventory::finish(input, &mut snapshots.inventory, pool),
+        Request::InventoryCancel { token } => inventory::cancel(token, &mut snapshots.inventory),
+        request => apply(request, pool),
+    }
+}
 fn failure(id: u32) -> Response {
     Response { version: 1, id, completed: 0, skipped: Vec::new(), failed: true, data: None }
 }
 fn apply(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value)> {
     match request {
+        Request::InventoryBegin(_)
+        | Request::InventoryFinish(_)
+        | Request::InventoryCancel { .. } => Err(invalid("inventory operation requires an owner")),
         Request::Scan { root, exclude_dirs, workspace_root } => {
             let paths = scan::scan(&root, &exclude_dirs, workspace_root)?;
             Ok((paths.len(), json!({"paths":paths})))

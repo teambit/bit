@@ -35,6 +35,7 @@ version = "0.1.0"
 dependencies = [
  "flate2",
  "rayon",
+ "regress",
  "ryu-js",
  "serde",
  "serde_json",
@@ -872,6 +873,15 @@ checksum = "22e18b0f0062d30d4230b2e85ff77fdfe4326feb054b9783a3460d8435c8ab91"
 dependencies = [
  "crossbeam-deque",
  "crossbeam-utils",
+]
+
+[[package]]
+name = "regress"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "32eef8b209c3c1c15dbad02c1f30f9539f00dc7253e0cbcdaae442a50a09d7c1"
+dependencies = [
+ "memchr",
 ]
 
 [[package]]

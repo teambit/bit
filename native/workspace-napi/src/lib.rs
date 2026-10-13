@@ -1,5 +1,7 @@
+pub use inspection::WorkspaceInspectionSnapshot;
 pub use stream::ImportStreamEngine;
 
+mod inspection;
 mod stream;
 mod stream_io;
 

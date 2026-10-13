@@ -104,6 +104,7 @@ function walk(directory: string, prefixes: string[], headers: boolean): Promise<
     const stop = () => {
       if (failed) return;
       failed = true;
+      if (!child.pid || child.pid <= 0) return;
       child.kill('SIGTERM');
       killTimer = setTimeout(() => child.kill('SIGKILL'), 250);
       killTimer.unref();

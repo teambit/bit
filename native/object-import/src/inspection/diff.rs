@@ -1,6 +1,6 @@
 mod read;
 
-use super::{invalid, read::File, wire};
+use super::{invalid, wire};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{
@@ -17,7 +17,7 @@ struct Request {
     git_executable: String,
     color: bool,
 }
-pub(super) fn plan(input: Value, plans: &HashMap<String, Vec<File>>) -> io::Result<Value> {
+pub(super) fn plan(input: Value, plans: &super::Plans) -> io::Result<Value> {
     let request: Request = serde_json::from_value(input).map_err(io::Error::other)?;
     let current = plans.get(&request.token).ok_or_else(|| invalid("stale inspection token"))?;
     if !request.objects_directory.is_absolute() || request.model_files.len() > super::MAX_FILES {
@@ -46,7 +46,7 @@ pub(super) fn plan(input: Value, plans: &HashMap<String, Vec<File>>) -> io::Resu
         let right = by_path.get(&model.relative_path).map(|file| file.contents.clone());
         files.push((model.relative_path, Some(body), right));
     }
-    for file in current {
+    for file in current.iter() {
         if seen.insert(file.relative_path.clone()) {
             files.push((file.relative_path.clone(), None, Some(file.contents.clone())));
         }

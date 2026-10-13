@@ -29,12 +29,19 @@ impl WorkspaceSession {
         if !(1..=8).contains(&threads) {
             return Err(io::Error::other("thread count must be between 1 and 8"));
         }
+        let mut merge = crate::merge_state::State::default();
+        merge.inspection.enable_memory_snapshots();
         Ok(Self {
             pool: shared_pool(threads)?,
             checkout: crate::checkout::cache::State::default(),
-            merge: crate::merge_state::State::default(),
+            merge,
             store: None,
         })
+    }
+
+    /// Keep immutable inspection bytes alive independently of this session's lifetime.
+    pub fn inspection_snapshot(&self, token: &str) -> io::Result<crate::InspectionSnapshot> {
+        self.merge.inspection.snapshot(token)
     }
 
     #[must_use]

@@ -1,4 +1,4 @@
-import { spawnRustImportTransport, type RustImportTransport } from './rust-import-transport';
+import { killRustImportTransport, spawnRustImportTransport, type RustImportTransport } from './rust-import-transport';
 import path from 'path';
 
 export type SourceValidation = { inflatedBytes: number };
@@ -187,9 +187,9 @@ export class RustSourceValidator {
     const child = this.child;
     if (!child) return;
     child.stdin.destroy();
-    child.kill('SIGTERM');
+    killRustImportTransport(child, 'SIGTERM');
     const escalation = setTimeout(() => {
-      if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL');
+      if (child.exitCode === null && child.signalCode === null) killRustImportTransport(child, 'SIGKILL');
     }, 250);
     escalation.unref();
     child.once('exit', () => clearTimeout(escalation));

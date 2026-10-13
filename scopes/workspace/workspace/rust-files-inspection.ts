@@ -2,13 +2,16 @@ import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
 import { createHash } from 'crypto';
+import { types } from 'util';
 import type { ComponentID } from '@teambit/component-id';
 import type { SourceFileModel } from '@teambit/objects';
-import { hasRustSnapshotTransactionClass } from '@teambit/objects';
+import { hasRustSnapshotTransactionClassBatch } from '@teambit/objects';
 import {
   canReadWorkspaceFilesNatively,
   canInspectWorkspaceSourcesNatively,
   isRustWorkspaceInspection,
+  canRetainRustWorkspaceInspectionSnapshot,
+  retainRustWorkspaceInspectionSnapshot,
   requestRustWorkspaceInspection,
 } from '@teambit/component.sources';
 import { canInspectCompFilesNatively, type CompFiles, type FilesStatus } from './workspace-component/comp-files';
@@ -65,26 +68,23 @@ export function summarizeCompFiles(comp: CompFiles, mode: FilesInspectionMode): 
 }
 
 function modelManifest(files: SourceFileModel[]): Array<{ relativePath: string; hash: string }> | undefined {
-  if (!Array.isArray(files) || files.length > 4096) return undefined;
+  if (types.isProxy(files) || !Array.isArray(files) || files.length > 4096) return undefined;
   const output: Array<{ relativePath: string; hash: string }> = [];
   const seen = new Set<string>();
+  const references: object[] = [];
   for (let index = 0; index < files.length; index += 1) {
     const file = Object.getOwnPropertyDescriptor(files, index)?.value;
-    if (!file || typeof file !== 'object') return undefined;
+    if (!file || typeof file !== 'object' || types.isProxy(file)) return undefined;
     const relativePath = Object.getOwnPropertyDescriptor(file, 'relativePath')?.value;
     const ref = Object.getOwnPropertyDescriptor(file, 'file')?.value;
-    const reference = ref && Object.getOwnPropertyDescriptor(ref, 'hash')?.value;
-    if (
-      !safeRelative(relativePath) ||
-      seen.has(relativePath) ||
-      !hasRustSnapshotTransactionClass(ref, 'Ref') ||
-      !hash(reference)
-    )
-      return undefined;
+    if (!ref || typeof ref !== 'object' || types.isProxy(ref)) return undefined;
+    const reference = Object.getOwnPropertyDescriptor(ref, 'hash')?.value;
+    if (!safeRelative(relativePath) || seen.has(relativePath) || !hash(reference)) return undefined;
     seen.add(relativePath);
+    references.push(ref);
     output.push({ relativePath, hash: reference });
   }
-  return output;
+  return references.length === 0 || hasRustSnapshotTransactionClassBatch(references, 'Ref') ? output : undefined;
 }
 
 function fromNativeResult(options: Options, mode: FilesInspectionMode, result: Result): FilesInspectionSummary {
@@ -127,22 +127,28 @@ export async function inspectTrackedWorkspaceFiles(
     new Set(options.files.map((file) => file.relativePath)).size !== options.files.length
   )
     return undefined;
-  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'bit-workspace-inspection-')).catch(() => undefined);
-  if (!directory) return undefined;
+  const ownedMemory = canRetainRustWorkspaceInspectionSnapshot();
+  const directory = ownedMemory
+    ? undefined
+    : await fs.mkdtemp(path.join(os.tmpdir(), 'bit-workspace-inspection-')).catch(() => undefined);
+  if (!ownedMemory && !directory) return undefined;
   let captured: Captured | undefined;
   let retained = false;
+  let memorySnapshot: ReturnType<typeof retainRustWorkspaceInspectionSnapshot>;
   const release = async () => {
+    memorySnapshot?.close();
     if (captured)
       await requestRustWorkspaceInspection(
         { kind: 'inspectionFinish', token: captured.token },
         (value): value is { finished: true } => value?.finished === true
       );
-    await fs.remove(directory).catch(() => undefined);
+    if (directory) await fs.remove(directory).catch(() => undefined);
   };
   try {
     captured = await requestRustWorkspaceInspection(
       {
         kind: 'inspectionBegin',
+        ownedMemory,
         files: options.files,
         workspaceRoot: options.workspaceRoot,
         snapshotDirectory: directory,
@@ -160,7 +166,9 @@ export async function inspectTrackedWorkspaceFiles(
                 hash(file.rawHash) &&
                 hash(file.linuxHash) &&
                 hash(file.snapshotHash) &&
-                file.snapshotPath === path.join(directory, `${value.token}-${index}.snapshot`) &&
+                (ownedMemory
+                  ? file.snapshotPath === undefined
+                  : file.snapshotPath === path.join(directory!, `${value.token}-${index}.snapshot`)) &&
                 Number.isSafeInteger(file.bytes) &&
                 file.bytes >= 0 &&
                 file.bytes <= 32 * 1024 * 1024
@@ -168,11 +176,15 @@ export async function inspectTrackedWorkspaceFiles(
         )
     );
     if (!captured || !ordinary() || !options.unchanged()) return undefined;
+    if (ownedMemory) {
+      memorySnapshot = retainRustWorkspaceInspectionSnapshot(captured.token);
+      if (!memorySnapshot) return undefined;
+    }
     const snapshot = captured;
     const modelFiles = await options.loadModelFiles();
     const canonical = () => {
-      const contents = snapshot.files.map((file) => {
-        const body = readSnapshot(file.snapshotPath);
+      const contents = snapshot.files.map((file, index) => {
+        const body = memorySnapshot ? memorySnapshot.read(index) : readSnapshot(file.snapshotPath);
         if (body.length !== file.bytes || hashSnapshot('sha1').update(body).digest('hex') !== file.snapshotHash)
           throw new Error('workspace inspection fallback snapshot changed');
         return body;

@@ -105,6 +105,12 @@ class NativeImportTransport extends EventEmitter {
 }
 
 /** Interactive selection waits on its own protocol thread, leaving shared Rayon workers available. */
+/** Failed process creation owns no PID; addon transports still require their native close. */
+export function killRustImportTransport(child: RustImportTransport, signal: NodeJS.Signals = 'SIGTERM'): boolean {
+  if (child instanceof NativeImportTransport || (child.pid && child.pid > 0)) return child.kill(signal);
+  return false;
+}
+
 export function spawnRustImportTransport(executable: string, args: string[]): RustImportTransport {
   const options = process.env.BIT_RUST_CLIENT_VCS === 'on' ? nativeOptions(args) : undefined;
   if (options) {

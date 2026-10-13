@@ -108,3 +108,11 @@ export function requestRustWorkspaceInspection<T>(
   );
   return request;
 }
+
+export function canRetainRustWorkspaceInspectionSnapshot(): boolean {
+  return isRustWorkspaceInspection() && owners.getStore()?.session?.supportsInspectionSnapshots === true;
+}
+
+export function retainRustWorkspaceInspectionSnapshot(token: string) {
+  return owners.getStore()?.session?.retainInspectionSnapshot(token);
+}

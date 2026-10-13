@@ -7,6 +7,9 @@ pub(super) struct Begin {
     pub(super) workspace_root: bool,
     #[serde(default)]
     pub(super) memory_only: bool,
+    #[serde(default)]
+    pub(super) owned_memory: bool,
+    #[serde(default)]
     pub(super) snapshot_directory: PathBuf,
 }
 #[derive(Deserialize)]

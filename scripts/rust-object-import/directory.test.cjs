@@ -200,6 +200,7 @@ test('portable directory replies reject invalid sequences, partial frames and fa
     killed = false;
   cp.spawn = () => {
     const child = new EventEmitter();
+    child.pid = 12345;
     child.stdout = new EventEmitter();
     child.stdin = new EventEmitter();
     child.kill = () => {

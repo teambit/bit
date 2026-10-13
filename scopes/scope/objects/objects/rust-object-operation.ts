@@ -327,6 +327,7 @@ export class NativeImportOperation {
     const child = this.child;
     if (!child) return;
     child.stdin.destroy();
+    if (!child.pid || child.pid <= 0) return;
     child.kill('SIGTERM');
     const timer = setTimeout(() => {
       if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL');

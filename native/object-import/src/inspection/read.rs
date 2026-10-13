@@ -36,9 +36,10 @@ pub(super) fn capture(
     snapshots: Option<&crate::workspace::snapshots::State>,
 ) -> io::Result<Vec<File>> {
     let directory = &request.snapshot_directory;
-    if !directory.is_absolute()
-        || !fs::symlink_metadata(directory)?.is_dir()
-        || fs::read_dir(directory)?.next().is_some()
+    if !request.owned_memory
+        && (!directory.is_absolute()
+            || !fs::symlink_metadata(directory)?.is_dir()
+            || fs::read_dir(directory)?.next().is_some())
     {
         return Err(invalid("inspection snapshot directory must be ordinary empty"));
     }

@@ -145,3 +145,40 @@ test('independent owners share bounded Rust workers without blocking each other'
     engines.forEach((engine) => engine.close());
   }
 });
+
+test('owned inspection bytes outlive engine closure and returned buffers cannot mutate capture', async (t) => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'bit-addon-snapshot-'));
+  t.after(() => fs.rm(directory, { force: true, recursive: true }));
+  const filename = path.join(directory, 'file');
+  const snapshots = path.join(directory, 'snapshots');
+  await fs.mkdir(snapshots);
+  await fs.writeFile(filename, '\ufefforiginal\r\n');
+  const engine = new WorkspaceEngine(2);
+  t.after(() => engine.close());
+  const input = frame(1, {
+    kind: 'inspectionBegin',
+    ownedMemory: true,
+    workspaceRoot: false,
+    snapshotDirectory: snapshots,
+    files: [{ relativePath: 'file', path: filename }],
+  });
+  input.write('BMT1');
+  const result = JSON.parse(await engine.request(input));
+  assert.equal(result.failed, false);
+  assert.equal(result.data.spooledFiles, 0);
+  assert.equal(result.data.files[0].snapshotPath, undefined);
+  assert.deepEqual(await fs.readdir(snapshots), []);
+  const retained = engine.inspectionSnapshot(result.data.token);
+  t.after(() => retained.close());
+  assert.throws(() => engine.inspectionSnapshot('stale'), /stale/);
+  const finish = frame(2, { kind: 'inspectionFinish', token: result.data.token });
+  finish.write('BMT1');
+  assert.equal(JSON.parse(await engine.request(finish)).failed, false);
+  engine.close();
+  await fs.unlink(filename);
+  retained.read(0).fill(0);
+  assert.equal(retained.read(0).toString(), 'original\r\n');
+  assert.throws(() => retained.read(1), /index/);
+  retained.close();
+  assert.throws(() => retained.read(0), /closed/);
+});

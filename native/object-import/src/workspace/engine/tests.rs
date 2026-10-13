@@ -4,6 +4,7 @@ static POOL: std::sync::LazyLock<rayon::ThreadPool> = std::sync::LazyLock::new(|
         .build()
         .unwrap()
 });
+mod inventory;
 mod read_batches;
 mod read_raw;
 mod status;

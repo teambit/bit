@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { spawnRustImportTransport } from './rust-import-transport';
+import { killRustImportTransport, spawnRustImportTransport } from './rust-import-transport';
 import path from 'path';
 import fs from 'fs/promises';
 
@@ -117,8 +117,8 @@ async function readArchive(
     pending?.reject(error);
     pending = undefined;
     if (!closed) {
-      child.kill();
-      killTimer = setTimeout(() => child.kill('SIGKILL'), 250);
+      killRustImportTransport(child);
+      killTimer = setTimeout(() => killRustImportTransport(child, 'SIGKILL'), 250);
     }
   }
   child.on('error', fail);

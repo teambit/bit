@@ -1,11 +1,19 @@
-import { hasRustSnapshotTransactionClass } from './rust-snapshot-guards';
+import { types } from 'util';
+import Ref from './ref';
+import { hasRustSnapshotTransactionClass, hasRustSnapshotTransactionClassBatch } from './rust-snapshot-guards';
 import { hasRustArtifactVinyl } from '@teambit/component.sources';
 import { projectRustCompactSnapshotValue, type RustCompactSnapshotValue } from './rust-snapshot-values';
 
 const invalid = Symbol('unsupported snapshot metadata');
 const recordClasses = ['Dependency', 'ExtensionDataEntry', 'DetachedHeads'];
 
-function artifactFields(value: object, descriptors: PropertyDescriptorMap, seen: Set<object>, depth: number) {
+function artifactFields(
+  value: object,
+  descriptors: PropertyDescriptorMap,
+  seen: Set<object>,
+  depth: number,
+  references: object[]
+) {
   // Generated vinyls have separate callback ownership; stored artifact references are pure metadata.
   const vinyls = descriptors.vinyls?.value;
   if (!hasRustSnapshotTransactionClass(vinyls, 'Array')) return invalid;
@@ -20,29 +28,32 @@ function artifactFields(value: object, descriptors: PropertyDescriptorMap, seen:
   if (Reflect.ownKeys(refEntries).length !== storedRefs.length + 1) return invalid;
   for (let index = 0; index < storedRefs.length; index += 1) {
     const entry = refEntries[index]?.value;
-    if (!entry || typeof entry !== 'object') return invalid;
+    if (!entry || typeof entry !== 'object' || types.isProxy(entry)) return invalid;
     const reference = Object.getOwnPropertyDescriptor(entry, 'ref');
-    if (!reference || !('value' in reference) || !hasRustSnapshotTransactionClass(reference.value, 'Ref'))
-      return invalid;
+    if (!reference || !('value' in reference)) return invalid;
+    references.push(reference.value);
   }
   seen.add(value);
-  const paths = plain(descriptors.paths?.value, seen, depth + 1);
-  const refs = plain(descriptors.refs?.value, seen, depth + 1);
+  const paths = plain(descriptors.paths?.value, seen, depth + 1, references);
+  const refs = plain(descriptors.refs?.value, seen, depth + 1, references);
   seen.delete(value);
   return paths === invalid || refs === invalid ? invalid : { snapshotArtifactFiles: true, refs };
 }
 
 /** Snapshot ordinary class data without executing an unknown getter, serializer or iterator. */
-function plain(value: unknown, seen: Set<object>, depth: number): unknown | typeof invalid {
+function plain(value: unknown, seen: Set<object>, depth: number, references: object[]): unknown | typeof invalid {
   if (!value || typeof value !== 'object') return typeof value === 'function' ? invalid : value;
-  if (depth > 64 || seen.has(value)) return invalid;
+  if (depth > 64 || seen.has(value) || types.isProxy(value)) return invalid;
   const descriptors = Object.getOwnPropertyDescriptors(value);
   const keys = Reflect.ownKeys(descriptors);
   for (let index = 0; index < keys.length; index += 1) {
     const key = keys[index];
     if (typeof key !== 'string' || !('value' in descriptors[key])) return invalid;
   }
-  if (hasRustSnapshotTransactionClass(value, 'Ref')) return descriptors.hash?.value;
+  if (Object.getPrototypeOf(value) === Ref.prototype) {
+    references.push(value);
+    return descriptors.hash?.value;
+  }
   if (hasRustSnapshotTransactionClass(value, 'ComponentID')) {
     if (!hasRustSnapshotTransactionClass(descriptors._legacy?.value, 'BitId')) return invalid;
     // The ID's public serialization is the canonical primitive projection boundary.
@@ -50,7 +61,7 @@ function plain(value: unknown, seen: Set<object>, depth: number): unknown | type
   }
   if (hasRustSnapshotTransactionClass(value, 'LaneId')) return (value as any).toObject();
   if (hasRustSnapshotTransactionClass(value, 'ArtifactFiles')) {
-    return artifactFields(value, descriptors, seen, depth);
+    return artifactFields(value, descriptors, seen, depth, references);
   }
   // Only the registered ArtifactFiles conversion above can introduce this private wire marker.
   if (Object.getOwnPropertyDescriptor(descriptors, 'snapshotArtifactFiles')) return invalid;
@@ -78,7 +89,7 @@ function plain(value: unknown, seen: Set<object>, depth: number): unknown | type
     for (let index = 0; index < length; index += 1) {
       const descriptor = descriptors[index];
       if (!descriptor) return invalid;
-      const item = plain(descriptor.value, seen, depth + 1);
+      const item = plain(descriptor.value, seen, depth + 1, references);
       if (item === invalid) return invalid;
       result[index] = item;
     }
@@ -86,7 +97,7 @@ function plain(value: unknown, seen: Set<object>, depth: number): unknown | type
     for (let index = 0; index < keys.length; index += 1) {
       const key = keys[index] as string;
       if (!descriptors[key].enumerable) continue;
-      const item = plain(descriptors[key].value, seen, depth + 1);
+      const item = plain(descriptors[key].value, seen, depth + 1, references);
       if (item === invalid) return invalid;
       result[key] = item;
     }
@@ -97,6 +108,9 @@ function plain(value: unknown, seen: Set<object>, depth: number): unknown | type
 
 /** Raw metadata is encoded as JavaScript values; Rust owns model transforms and JSON bytes. */
 export function projectRustSnapshotFields(value: unknown): RustCompactSnapshotValue | undefined {
-  const projected = plain(value, new Set(), 0);
-  return projected === invalid ? undefined : projectRustCompactSnapshotValue(projected);
+  const references: object[] = [];
+  const projected = plain(value, new Set(), 0, references);
+  return projected === invalid || (references.length > 0 && !hasRustSnapshotTransactionClassBatch(references, 'Ref'))
+    ? undefined
+    : projectRustCompactSnapshotValue(projected);
 }

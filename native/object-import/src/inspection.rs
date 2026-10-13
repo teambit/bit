@@ -1,22 +1,31 @@
 pub(crate) use bitmap::normalize as normalize_bitmap;
+pub use snapshot::InspectionSnapshot;
 
 mod bitmap;
 mod compare;
 mod diff;
 mod files;
 mod read;
+mod snapshot;
 mod wire;
 
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
-use std::{collections::HashMap, io};
+use std::{
+    collections::HashMap,
+    io,
+    sync::{Arc, Weak},
+};
+type Plans = HashMap<String, Arc<[read::File]>>;
 
 const MAX_FILES: usize = 4096;
 const MAX_BYTES: usize = 32 * 1024 * 1024;
 #[derive(Default)]
 pub(crate) struct State {
-    plans: HashMap<String, Vec<read::File>>,
+    plans: Plans,
     revision: u64,
+    memory_snapshots: bool,
+    retained: Vec<Weak<[read::File]>>,
 }
 pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<Value> {
     match kind {
@@ -38,23 +47,9 @@ pub(crate) fn begin(
     snapshots: Option<&crate::workspace::snapshots::State>,
 ) -> io::Result<Value> {
     let request: wire::Begin = serde::Deserialize::deserialize(input).map_err(io::Error::other)?;
-    if request.memory_only
-        && request.files
-            .iter()
-            .any(|file| file.raw_hash.is_none() || file.snapshot_hash.is_none())
-    {
-        return Err(invalid("inspection memory-only capture requires caller hashes"));
-    }
-    let count: usize = state.plans.values().map(Vec::len).sum();
-    if state.plans.len() >= MAX_FILES || request.files.len() + count > MAX_FILES {
-        return Err(invalid("inspection retained file limit"));
-    }
-    let retained: usize = state.plans
-        .values()
-        .flatten()
-        .map(|file| file.contents.len())
-        .sum();
-    let mut files = read::capture(&request, MAX_BYTES - retained, snapshots)?;
+    snapshot::validate_mode(&request, state)?;
+    let maximum = snapshot::remaining(state, request.files.len())?;
+    let mut files = read::capture(&request, maximum, snapshots)?;
     let revision =
         state.revision.checked_add(1).ok_or_else(|| invalid("inspection revision overflow"))?;
     let mut digest = Sha1::new();
@@ -68,12 +63,14 @@ pub(crate) fn begin(
     if serde_json::to_vec(&output).map_err(io::Error::other)?.len() > 4 * 1024 * 1024 {
         return Err(invalid("inspection manifest response limit"));
     }
-    if !request.memory_only {
+    if !request.memory_only && !request.owned_memory {
         for file in &files {
             file.spool()?;
         }
     }
     state.revision = revision;
+    let files: Arc<[read::File]> = files.into();
+    state.retained.push(Arc::downgrade(&files));
     state.plans.insert(token, files);
     Ok(output)
 }
@@ -82,7 +79,7 @@ fn manifest(token: &str, files: &[read::File], request: &wire::Begin) -> Value {
         .iter()
         .map(|file| {
             let mut summary = file.summary();
-            if request.memory_only {
+            if request.memory_only || request.owned_memory {
                 summary
                     .as_object_mut()
                     .expect("inspection summary object")
@@ -95,7 +92,7 @@ fn manifest(token: &str, files: &[read::File], request: &wire::Begin) -> Value {
         .iter()
         .filter(|file| file.read_token.is_some())
         .count();
-    let spooled_files = if request.memory_only { 0 } else { files.len() };
+    let spooled_files = if request.memory_only || request.owned_memory { 0 } else { files.len() };
     json!({"token":token,"count":files.len(),"files":summaries,"retainedReads":retained_reads,"spooledFiles":spooled_files})
 }
 
@@ -117,3 +114,6 @@ mod bitmap_tests;
 
 #[cfg(test)]
 mod retained_tests;
+
+#[cfg(test)]
+mod snapshot_tests;

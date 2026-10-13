@@ -11,6 +11,7 @@ const api =
 function setup(t) {
   const original = cp.spawn;
   const child = new EventEmitter();
+  child.pid = 12345;
   child.stdin = new PassThrough();
   child.stdout = new PassThrough();
   child.stderr = new PassThrough();
@@ -149,4 +150,26 @@ test('raw replies reject malformed lengths, surplus bytes and incomplete bodies 
       assert.equal(session.usable, false);
     });
   }
+});
+
+test('failed spawn cleanup never signals a child without a positive PID', async (t) => {
+  const original = cp.ChildProcess.prototype.kill;
+  const unsafe = [];
+  cp.ChildProcess.prototype.kill = function (signal) {
+    if (!this.pid || this.pid <= 0) {
+      unsafe.push(signal);
+      return false;
+    }
+    return original.call(this, signal);
+  };
+  t.after(() => {
+    cp.ChildProcess.prototype.kill = original;
+  });
+  const session = new api.MaterializationSession(
+    require('node:path').join(require('node:os').tmpdir(), `bit-missing-${process.pid}-${Date.now()}`, 'helper')
+  );
+  // Dispose both before the asynchronous spawn-error event and after it.
+  await session.dispose();
+  assert.equal(session.usable, false);
+  assert.deepEqual(unsafe, []);
 });

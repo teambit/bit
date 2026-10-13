@@ -1,4 +1,5 @@
 pub use import_stream::ImportStream;
+pub use inspection::InspectionSnapshot;
 pub use session::{WorkspaceDispatcher, WorkspaceSession};
 
 mod checkout;
