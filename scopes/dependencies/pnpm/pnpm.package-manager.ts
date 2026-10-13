@@ -23,6 +23,7 @@ import { ServerSendOutStream } from '@teambit/legacy.logger';
 import { join } from 'path';
 import {
   convertLockfileToGraph,
+  markOptionalOnlyEntries,
   convertGraphToLockfile,
   init as initLockfileDepsGraphConverter,
 } from './lockfile-deps-graph-converter';
@@ -100,6 +101,8 @@ export class PnpmPackageManager implements PackageManager {
       registries?: Registries;
       proxyConfig?: PackageManagerProxyConfig;
       networkConfig?: PackageManagerNetworkConfig;
+      /** The install's `excludeLinksFromLockfile`, recorded in the restored lockfile's settings. */
+      excludeLinksFromLockfile?: boolean;
     }
   ) {
     await initLockfileDepsGraphConverter();
@@ -113,6 +116,9 @@ export class PnpmPackageManager implements PackageManager {
     const graphLockfile: LockfileFile = await convertGraphToLockfile(dependenciesGraph, {
       ...opts,
       resolve,
+      onComponentPkgDropped: (pkgId, reason) => {
+        this.logger.debug(`the lockfile restored from the dependencies graph leaves out ${pkgId}: ${reason}`);
+      },
     });
     const nodeApi = loadNodeApi();
     // Merge the graph-derived subset into any existing wanted lockfile rather than
@@ -124,6 +130,13 @@ export class PnpmPackageManager implements PackageManager {
     const mergedLockfile = existingLockfile
       ? mergeGraphLockfileIntoExisting(existingLockfile, graphLockfile)
       : graphLockfile;
+    // Whether the lockfile lists `link:` dependencies is the install's choice,
+    // not the resolution's. The graph carries the setting of the workspace it
+    // was saved in, which excludes links, and an install that includes them
+    // (fusepm does) would reject the restored lockfile over that alone.
+    if (mergedLockfile.settings && opts.excludeLinksFromLockfile != null) {
+      mergedLockfile.settings.excludeLinksFromLockfile = opts.excludeLinksFromLockfile;
+    }
     Object.assign(mergedLockfile, {
       bit: {
         ...(mergedLockfile as LockfileFile & { bit?: Record<string, unknown> }).bit,
@@ -174,6 +187,7 @@ export class PnpmPackageManager implements PackageManager {
           proxyConfig,
           networkConfig,
           cacheDir: config.cacheDir,
+          excludeLinksFromLockfile: installOptions.excludeLinksFromLockfile ?? true,
         });
       } catch (error) {
         this.logger.error((error as Error).message);
@@ -673,6 +687,8 @@ export function mergeGraphLockfileIntoExisting(existing: LockfileFile, graph: Lo
     };
   }
   pruneUnreachableLockfileEntries(merged);
+  // The merged importers decide which entries only optional edges reach.
+  markOptionalOnlyEntries(merged);
   return merged;
 }
 

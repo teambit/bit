@@ -167,6 +167,42 @@ export class DependenciesGraph {
     this.pruneUnreachableFromRoot();
   }
 
+  /**
+   * Add a dependency's own graph under the node `pkgId`, the way this graph
+   * records any other package: the dependency's direct runtime dependencies
+   * become the node's edge, and its packages and edges join this graph. The
+   * node also becomes a direct dependency of this graph's root, so a manifest
+   * that declares it restores to it. Nothing happens when this graph already
+   * holds the node.
+   *
+   * A component's graph leaves out its extensions (its env above all), since
+   * the workspace links them, but a capsule installs them, so their graphs are
+   * attached when the capsule's lockfile is restored.
+   */
+  attachDependencyGraph(pkgId: string, graph: DependenciesGraph, attributes: Partial<PackageAttributes> = {}): void {
+    const edgeIds = new Set(this.edges.map(({ id }) => id));
+    if (edgeIds.has(pkgId) || this.packages.has(pkgId)) return;
+    const neighbours = (graph.findRootEdge()?.neighbours ?? [])
+      .filter((neighbour) => neighbour.lifecycle !== 'dev')
+      .map(({ id, optional }) => (optional ? { id, optional } : { id }));
+    this.edges.push({ id: pkgId, neighbours });
+    for (const edge of graph.edges) {
+      if (edge.id === DependenciesGraph.ROOT_EDGE_ID || edgeIds.has(edge.id)) continue;
+      this.edges.push(edge);
+      edgeIds.add(edge.id);
+    }
+    for (const [id, pkgAttributes] of graph.packages.entries()) {
+      if (!this.packages.has(id)) this.packages.set(id, pkgAttributes);
+    }
+    // Without a resolution: the restore resolves the node from the registry.
+    this.packages.set(pkgId, attributes as PackageAttributes);
+    const parsed = parsePkgId(pkgId);
+    const rootEdge = this.findRootEdge();
+    if (parsed && rootEdge && !rootEdge.neighbours.some((neighbour) => neighbour.id === pkgId)) {
+      rootEdge.neighbours.push({ id: pkgId, name: parsed.name, specifier: parsed.version, lifecycle: 'dev' });
+    }
+  }
+
   isEmpty(): boolean {
     return this.packages.size === 0 && this.edges.length === 0;
   }
@@ -409,6 +445,7 @@ function mergeNeighbours(existingNeighbours: DependencyNeighbour[], newNeighbour
   }
 }
 
+/** The name and version of a graph node id, its peer suffix left aside. */
 function parsePkgId(pkgId: string): { name: string; version: string } | undefined {
   const depPathWithoutPeerSuffix = nodeIdWithoutPeerSuffix(pkgId);
   const versionStart = depPathWithoutPeerSuffix.lastIndexOf('@');
@@ -463,3 +500,5 @@ function nodeIdWithoutPeerSuffix(nodeId: string): string {
   const suffixStart = nodeId.indexOf('(');
   return suffixStart === -1 ? nodeId : nodeId.slice(0, suffixStart);
 }
+
+export { parsePkgId as parseDependenciesGraphNodeId, splitPeerIds as splitDependenciesGraphPeerIds };

@@ -63,6 +63,7 @@ export type GetComponentManifestsOptions = {
   includeAllEnvPeers?: boolean;
   hasRootComponents?: boolean;
   excludeExtensionsDependencies?: boolean;
+  useDependenciesGraph?: boolean;
 } & Pick<
   PackageManagerInstallOptions,
   | 'dedupe'
@@ -276,6 +277,9 @@ export class DependencyInstaller {
       resolveVersionsFromDependenciesOnly: options.resolveVersionsFromDependenciesOnly,
       referenceLocalPackages: packageManagerOptions.rootComponentsForCapsules,
       includeAllEnvPeers: packageManagerOptions.rootComponentsForCapsules,
+      // A capsule declares what the component's graph resolved, so that the
+      // lockfile restored from the graph satisfies it.
+      useDependenciesGraph: packageManagerOptions.rootComponentsForCapsules,
       excludeExtensionsDependencies: options.excludeExtensionsDependencies,
     });
     return this.installComponents(
@@ -481,6 +485,7 @@ export class DependencyInstaller {
     includeAllEnvPeers,
     hasRootComponents,
     excludeExtensionsDependencies,
+    useDependenciesGraph,
   }: GetComponentManifestsOptions): Promise<{
     manifests: Record<string, ProjectManifest>;
     peerOverrides: Record<string, string>;
@@ -495,6 +500,7 @@ export class DependencyInstaller {
       includeAllEnvPeers,
       hasRootComponents,
       excludeExtensionsDependencies,
+      useDependenciesGraph,
     };
     const workspaceManifest = await this.dependencyResolver.getWorkspaceManifest(
       undefined,

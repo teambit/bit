@@ -197,3 +197,24 @@ describe('mergeGraphLockfileIntoExisting with workspace components', () => {
     ]);
   });
 });
+
+describe('mergeGraphLockfileIntoExisting optional flags', () => {
+  it('recomputes the optional flags from the merged importers', () => {
+    const merged = mergeGraphLockfileIntoExisting(
+      {
+        lockfileVersion: '9.0',
+        importers: { 'comps/comp1': { dependencies: { nan: { version: '2.29.0', specifier: '2.29.0' } } } },
+        packages: { 'nan@2.29.0': { resolution: { integrity: 'sha512-nan' } } },
+        snapshots: { 'nan@2.29.0': {} },
+      } as any,
+      {
+        lockfileVersion: '9.0',
+        importers: { 'comps/comp2': { optionalDependencies: { nan: { version: '2.29.0', specifier: '2.29.0' } } } },
+        packages: { 'nan@2.29.0': { resolution: { integrity: 'sha512-nan' } } },
+        // The graph lockfile reaches nan optionally only, and says so.
+        snapshots: { 'nan@2.29.0': { optional: true } },
+      } as any
+    );
+    expect(merged.snapshots!['nan@2.29.0']).not.to.have.property('optional');
+  });
+});

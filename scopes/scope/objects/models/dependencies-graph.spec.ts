@@ -277,3 +277,44 @@ describe('DependenciesGraph lockfileSettings', () => {
     expect(base.lockfileSettings).to.equal(undefined);
   });
 });
+
+describe('DependenciesGraph.attachDependencyGraph', () => {
+  const envPkgId = '@org/my-env@0.0.0-9b688a446040db8b4c50fec72ea3134c1e2c9d0e';
+
+  function envGraph(): DependenciesGraph {
+    return createGraph(
+      [
+        rootEdge([
+          { id: 'webpack@5.0.0(esbuild@0.20.0)', name: 'webpack', specifier: '5.0.0', lifecycle: 'runtime' },
+          { id: 'mocha@10.0.0', name: 'mocha', specifier: '10.0.0', lifecycle: 'dev' },
+          { id: 'fsevents@2.3.3', name: 'fsevents', specifier: '*', lifecycle: 'runtime', optional: true },
+        ]),
+        { id: 'webpack@5.0.0(esbuild@0.20.0)', attr: { pkgId: 'webpack@5.0.0' }, neighbours: [{ id: 'esbuild@0.20.0' }] },
+      ],
+      ['webpack@5.0.0', 'esbuild@0.20.0', 'mocha@10.0.0', 'fsevents@2.3.3', 'foo@1.0.0']
+    );
+  }
+
+  it('adds the dependency as a node with its runtime dependencies, and as a direct dependency of the root', () => {
+    const graph = createGraph([rootEdge([{ id: 'foo@1.0.0', name: 'foo', specifier: '1.0.0' }])], ['foo@1.0.0']);
+
+    graph.attachDependencyGraph(envPkgId, envGraph(), { component: { scope: 'org', name: 'my-env' } });
+
+    const envEdge = graph.edges.find(({ id }) => id === envPkgId);
+    expect(envEdge?.neighbours).to.eql([{ id: 'webpack@5.0.0(esbuild@0.20.0)' }, { id: 'fsevents@2.3.3', optional: true }]);
+    expect(graph.packages.get(envPkgId)).to.eql({ component: { scope: 'org', name: 'my-env' } });
+    expect(graph.packages.has('esbuild@0.20.0')).to.equal(true);
+    expect(graph.edges.some(({ id }) => id === 'webpack@5.0.0(esbuild@0.20.0)')).to.equal(true);
+    expect(graph.findRootEdge()?.neighbours.map(({ id }) => id)).to.eql(['foo@1.0.0', envPkgId]);
+    expect(graph.findRootEdge()?.neighbours[1]).to.include({ name: '@org/my-env', lifecycle: 'dev' });
+  });
+
+  it('leaves a graph that already holds the node alone', () => {
+    const graph = createGraph([rootEdge([]), edge(envPkgId, [{ id: 'foo@1.0.0' }])], ['foo@1.0.0', envPkgId]);
+
+    graph.attachDependencyGraph(envPkgId, envGraph());
+
+    expect(graph.edges.find(({ id }) => id === envPkgId)?.neighbours).to.eql([{ id: 'foo@1.0.0' }]);
+    expect(graph.packages.has('webpack@5.0.0')).to.equal(false);
+  });
+});

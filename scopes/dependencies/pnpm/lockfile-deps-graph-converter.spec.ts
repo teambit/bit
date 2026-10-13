@@ -1474,3 +1474,167 @@ describe('workspace components in a restored lockfile', () => {
     expect(lockfile.packages).not.to.have.property(comp2FilePkgId);
   });
 });
+
+describe('importer entries of a restored lockfile', () => {
+  const comp1Dir = 'comps/comp1';
+  const apolloVariant = '@apollo/client@3.3.21(graphql@15.8.0)';
+  const graph = new DependenciesGraph({
+    packages: new Map([
+      ['@babel/runtime@7.20.0', { resolution: { integrity: 'sha512-runtime' } }],
+      ['@teambit/ui.app@0.0.110', { resolution: { integrity: 'sha512-app' } }],
+      ['@apollo/client@3.3.21', { resolution: { integrity: 'sha512-apollo' }, peerDependencies: { graphql: '*' } }],
+      ['graphql@15.8.0', { resolution: { integrity: 'sha512-graphql' } }],
+      ['graphql@16.0.0', { resolution: { integrity: 'sha512-graphql16' } }],
+      ['lonely@1.0.0', { resolution: { integrity: 'sha512-lonely' } }],
+    ] as any),
+    edges: [
+      {
+        id: DependenciesGraph.ROOT_EDGE_ID,
+        neighbours: [
+          { id: '@babel/runtime@7.20.0', name: '@babel/runtime', specifier: '*', lifecycle: 'runtime' },
+          { id: `@teambit/ui.app@0.0.110(${apolloVariant})`, name: '@teambit/ui.app', specifier: '0.0.110', lifecycle: 'runtime' },
+        ],
+      },
+      {
+        id: `@teambit/ui.app@0.0.110(${apolloVariant})`,
+        attr: { pkgId: '@teambit/ui.app@0.0.110' },
+        neighbours: [{ id: apolloVariant }],
+      },
+      { id: apolloVariant, attr: { pkgId: '@apollo/client@3.3.21' }, neighbours: [{ id: 'graphql@15.8.0' }] },
+      {
+        id: '@apollo/client@3.3.21(graphql@16.0.0)',
+        attr: { pkgId: '@apollo/client@3.3.21' },
+        neighbours: [{ id: 'graphql@16.0.0' }],
+      },
+    ],
+  });
+
+  function restore(dependencies: Record<string, string>) {
+    return convertGraphToLockfile(DependenciesGraph.deserialize(graph.serialize())!, {
+      manifests: { [path.resolve(comp1Dir)]: { dependencies } },
+      rootDir: process.cwd(),
+      resolve: () => {
+        throw new Error('nothing here needs the registry');
+      },
+    });
+  }
+
+  it('matches a range specifier against the version the graph resolved', async () => {
+    const lockfile = await restore({ '@babel/runtime': '^7.8.4' });
+    expect(lockfile.importers![comp1Dir].dependencies!['@babel/runtime']).to.eql({
+      version: '7.20.0',
+      specifier: '^7.8.4',
+    });
+  });
+
+  it('leaves a range specifier the resolved version does not satisfy without an entry', async () => {
+    const lockfile = await restore({ '@babel/runtime': '^8.0.0' });
+    expect(lockfile.importers![comp1Dir].dependencies).not.to.have.property('@babel/runtime');
+  });
+
+  it('points a version the graph holds only deeper in the tree at the variant the direct dependencies use', async () => {
+    const lockfile = await restore({ '@apollo/client': '3.3.21', '@teambit/ui.app': '0.0.110' });
+    expect(lockfile.importers![comp1Dir].dependencies!['@apollo/client']).to.eql({
+      version: '3.3.21(graphql@15.8.0)',
+      specifier: '3.3.21',
+    });
+    expect(lockfile.snapshots![apolloVariant]).to.eql({ dependencies: { graphql: '15.8.0' } });
+  });
+
+  it('points a version the graph holds only as a package at that package', async () => {
+    const lockfile = await restore({ lonely: '1.0.0' });
+    expect(lockfile.importers![comp1Dir].dependencies!.lonely).to.eql({ version: '1.0.0', specifier: '1.0.0' });
+    expect(lockfile.snapshots!['lonely@1.0.0']).to.eql({});
+  });
+
+  it('leaves a version the graph does not hold without an entry', async () => {
+    const lockfile = await restore({ '@apollo/client': '3.3.7' });
+    expect(lockfile.importers![comp1Dir].dependencies).not.to.have.property('@apollo/client');
+  });
+});
+
+describe('resolving a workspace-component package from the registry on restore', () => {
+  const comp1Dir = 'comps/comp1';
+  const pkgId = '@my-org/my-scope.comp2@1.0.0';
+
+  function restore(resolve: (...args: any[]) => any) {
+    const graph = new DependenciesGraph({
+      packages: new Map([[pkgId, { component: { scope: 'my-org.my-scope', name: 'comp2' } } as any]]),
+      edges: [
+        {
+          id: DependenciesGraph.ROOT_EDGE_ID,
+          neighbours: [{ id: pkgId, name: '@my-org/my-scope.comp2', specifier: '1.0.0', lifecycle: 'runtime' }],
+        },
+        { id: pkgId, neighbours: [] },
+      ],
+    });
+    return convertGraphToLockfile(graph, {
+      manifests: { [path.resolve(comp1Dir)]: { dependencies: { '@my-org/my-scope.comp2': '1.0.0' } } },
+      rootDir: process.cwd(),
+      resolve,
+    });
+  }
+
+  // `@pnpm/napi`'s resolveDependency reports a registry package's integrity in
+  // the manifest's `dist`, and no `resolution` at all.
+  it("takes the integrity from the resolved manifest's dist when the resolver reports no resolution", async () => {
+    const lockfile = await restore(() => ({ manifest: { dist: { integrity: 'sha512-fromdist' } } }));
+    expect(lockfile.packages![pkgId]).to.eql({ resolution: { integrity: 'sha512-fromdist' } });
+    expect(lockfile.importers![comp1Dir].dependencies!['@my-org/my-scope.comp2']).to.eql({
+      version: '1.0.0',
+      specifier: '1.0.0',
+    });
+  });
+
+  it('prefers the integrity of a resolution the resolver reports', async () => {
+    const lockfile = await restore(() => ({
+      resolution: { integrity: 'sha512-fromresolution' },
+      manifest: { dist: { integrity: 'sha512-fromdist' } },
+    }));
+    expect(lockfile.packages![pkgId]).to.eql({ resolution: { integrity: 'sha512-fromresolution' } });
+  });
+});
+
+describe('optional flags of a restored lockfile', () => {
+  const comp1Dir = 'comps/comp1';
+
+  it('marks the entries only optional edges reach, and leaves one a required path reaches alone', async () => {
+    const graph = new DependenciesGraph({
+      packages: new Map(
+        ['ssh2@1.0.0', 'cpu-features@0.0.10', 'nan@2.29.0', 'fsevents@2.3.3'].map((id) => [
+          id,
+          { resolution: { integrity: `sha512-${id}` } } as any,
+        ])
+      ),
+      edges: [
+        {
+          id: DependenciesGraph.ROOT_EDGE_ID,
+          neighbours: [
+            { id: 'ssh2@1.0.0', name: 'ssh2', specifier: '1.0.0', lifecycle: 'runtime' },
+            { id: 'nan@2.29.0', name: 'nan', specifier: '2.29.0', lifecycle: 'runtime' },
+            { id: 'fsevents@2.3.3', name: 'fsevents', specifier: '2.3.3', lifecycle: 'runtime', optional: true },
+          ],
+        },
+        { id: 'ssh2@1.0.0', neighbours: [{ id: 'cpu-features@0.0.10', optional: true }] },
+        { id: 'cpu-features@0.0.10', neighbours: [{ id: 'nan@2.29.0' }] },
+      ],
+    });
+    const lockfile = await convertGraphToLockfile(graph, {
+      manifests: {
+        [path.resolve(comp1Dir)]: {
+          dependencies: { ssh2: '1.0.0', nan: '2.29.0' },
+          optionalDependencies: { fsevents: '2.3.3' },
+        },
+      },
+      rootDir: process.cwd(),
+      resolve: () => {
+        throw new Error('nothing here needs the registry');
+      },
+    });
+    expect(lockfile.snapshots!['cpu-features@0.0.10'].optional).to.equal(true);
+    expect(lockfile.snapshots!['fsevents@2.3.3'].optional).to.equal(true);
+    expect(lockfile.snapshots!['ssh2@1.0.0']).not.to.have.property('optional');
+    // nan is reached optionally through cpu-features and directly as well.
+    expect(lockfile.snapshots!['nan@2.29.0']).not.to.have.property('optional');
+  });
+});

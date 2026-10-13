@@ -59,7 +59,7 @@ import type { PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { pathNormalizeToLinux } from '@teambit/legacy.utils';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
-import { type DependenciesGraph } from '@teambit/objects';
+import { DependenciesGraph } from '@teambit/objects';
 
 import fs, { copyFile } from 'fs-extra';
 import hash from 'object-hash';
@@ -962,7 +962,7 @@ export class IsolatorMain {
           ? await legacyScope?.getDependenciesGraphByComponentIds(capsuleList.getAllComponentIDs())
           : undefined;
         const capsulesWithoutDependenciesGraph = opts.useDependenciesGraph
-          ? await this.getCapsulesWithoutDependenciesGraph(capsuleList, legacyScope)
+          ? await this.loadDependenciesGraphs(capsuleList, legacyScope, dependenciesGraph)
           : CapsuleList.fromArray([]);
         const linkedDependencies = await this.linkInCapsules(capsuleList, capsulesWithPackagesData);
         linkedDependencies[capsulesDir] = rootLinks;
@@ -1016,20 +1016,63 @@ export class IsolatorMain {
   }
   /* eslint-enable complexity */
 
-  private async getCapsulesWithoutDependenciesGraph(
+  /**
+   * Load each capsule component's own dependencies graph onto it, for its
+   * capsule manifest to declare the versions the graph resolved, and return the
+   * capsules whose component has no graph. The graphs of the component's
+   * extensions, which its own graph leaves out, are attached to its graph and
+   * to `installGraph`, the merged graph the capsules' lockfile is restored
+   * from, so that the env a capsule installs restores too.
+   */
+  private async loadDependenciesGraphs(
     capsuleList: CapsuleList,
-    legacyScope?: Scope
+    legacyScope?: Scope,
+    installGraph?: DependenciesGraph
   ): Promise<CapsuleList> {
     if (!legacyScope) return capsuleList;
     const capsules = await pMap(
       capsuleList,
       async (capsule) => {
-        const dependenciesGraph = await legacyScope.getDependenciesGraphByComponentId(capsule.component.id);
-        return dependenciesGraph == null || dependenciesGraph.isEmpty() ? capsule : undefined;
+        const stored = await legacyScope.getDependenciesGraphByComponentId(capsule.component.id);
+        if (stored == null || stored.isEmpty()) return capsule;
+        // The scope caches the graph on the Version object, so a copy is what
+        // gets the extensions attached.
+        const dependenciesGraph = DependenciesGraph.deserialize(stored.serialize())!;
+        await this.attachExtensionGraphs(capsule.component, compact([dependenciesGraph, installGraph]), legacyScope);
+        capsule.component.state._consumer.dependenciesGraph = dependenciesGraph;
+        return undefined;
       },
       { concurrency: concurrentComponentsLimit() }
     );
     return CapsuleList.fromArray(compact(capsules));
+  }
+
+  private async attachExtensionGraphs(component: Component, graphs: DependenciesGraph[], legacyScope: Scope) {
+    const dependencies = this.dependencyResolver
+      .getDependencies(component, { includeHidden: true })
+      .toTypeArray<ComponentDependency>('component');
+    for (const dependency of dependencies) {
+      if (!dependency.componentId.hasVersion()) continue;
+      const pkgId = `${dependency.packageName}@${snapToSemver(dependency.componentId.version as string)}`;
+      // A component dependency the graph holds was resolved with the rest; one
+      // it lacks is an extension (the env above all), which the workspace
+      // links rather than installs.
+      if (graphs.every((graph) => graph.packages.has(pkgId))) continue;
+      const extensionGraph = await legacyScope.getDependenciesGraphByComponentId(dependency.componentId);
+      if (extensionGraph == null || extensionGraph.isEmpty()) {
+        this.logger.debug(
+          `isolator: no dependencies graph for ${dependency.componentId.toString()}, a dependency of ${component.id.toString()} its graph lacks`
+        );
+        continue;
+      }
+      this.logger.debug(`isolator: attaching the dependencies graph of ${pkgId} to ${component.id.toString()}`);
+      const attributes = {
+        component: { scope: dependency.componentId.scope, name: dependency.componentId.fullName },
+      };
+      for (const graph of graphs) {
+        graph.attachDependencyGraph(pkgId, extensionGraph, attributes);
+      }
+    }
   }
 
   private async addDependenciesGraphToComponents(
