@@ -1638,3 +1638,54 @@ describe('optional flags of a restored lockfile', () => {
     expect(lockfile.snapshots!['nan@2.29.0']).not.to.have.property('optional');
   });
 });
+
+describe('workspace: specifiers in a restored lockfile', () => {
+  const comp1Dir = 'comps/comp1';
+  const comp2Dir = 'comps/comp2';
+  const comp2 = '@my-org/my-scope.comp2';
+  // A merged graph can hold the sibling at two versions as direct dependencies.
+  const graph = new DependenciesGraph({
+    packages: new Map([
+      [`${comp2}@1.0.0`, { resolution: { integrity: 'sha512-one' } }],
+      [`${comp2}@2.0.0`, { resolution: { integrity: 'sha512-two' } }],
+    ] as any),
+    edges: [
+      {
+        id: DependenciesGraph.ROOT_EDGE_ID,
+        neighbours: [
+          { id: `${comp2}@1.0.0`, name: comp2, specifier: '1.0.0', lifecycle: 'runtime' },
+          { id: `${comp2}@2.0.0`, name: comp2, specifier: '2.0.0', lifecycle: 'runtime' },
+        ],
+      },
+    ],
+  });
+
+  function restore(specifier: string, comp2Version: string) {
+    return convertGraphToLockfile(DependenciesGraph.deserialize(graph.serialize())!, {
+      manifests: {
+        [path.resolve(comp1Dir)]: { dependencies: { [comp2]: specifier } },
+        [path.resolve(comp2Dir)]: { name: comp2, version: comp2Version },
+      },
+      rootDir: process.cwd(),
+      resolve: () => ({ resolution: { integrity: 'sha512-other' } }) as any,
+    });
+  }
+
+  it("points at the version the workspace holds, not the first same-name neighbour", async () => {
+    const lockfile = await restore('workspace:^2', '2.0.0');
+    expect(lockfile.importers![comp1Dir].dependencies![comp2]).to.eql({
+      version: `file:${comp2Dir}`,
+      specifier: 'workspace:^2',
+    });
+  });
+
+  it('leaves the entry out when the range rejects the version the workspace holds', async () => {
+    const lockfile = await restore('workspace:^3', '2.0.0');
+    expect(lockfile.importers![comp1Dir].dependencies).not.to.have.property(comp2);
+  });
+
+  it('leaves the entry out when the graph lacks the version the workspace holds', async () => {
+    const lockfile = await restore('workspace:*', '3.0.0');
+    expect(lockfile.importers![comp1Dir].dependencies).not.to.have.property(comp2);
+  });
+});

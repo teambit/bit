@@ -112,6 +112,18 @@ describe('applyDependenciesGraph', () => {
     expect(applied.dependencies).not.to.have.property('react');
   });
 
+  it('never pins a prerelease the declared range does not name', () => {
+    const held = graphWithDirectDeps([], ['pkg@1.5.0', 'pkg@1.6.0-beta.1', 'other@2.0.0-rc.1']);
+    const applied = applyDependenciesGraph({
+      graph: held,
+      declared: { dependencies: { pkg: '^1.0.0', other: '^2.0.0-rc.0' } },
+      envPeers: {},
+      exclude: new Set(),
+    });
+    expect(applied.dependencies.pkg).to.equal('1.5.0');
+    expect(applied.dependencies.other).to.equal('2.0.0-rc.1');
+  });
+
   it('declares nothing from an empty graph beyond the declarations', () => {
     const applied = applyDependenciesGraph({ graph: graphWithDirectDeps([]), declared, envPeers, exclude });
     expect(applied.dependencies).to.eql(declared.dependencies);

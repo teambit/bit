@@ -407,6 +407,12 @@ export async function convertGraphToLockfile(
   }
   const rootEdge = graph.findRootEdge();
   if (rootEdge) {
+    const workspaceVersions = new Map(
+      Array.from(workspaceComponentDirs(manifests, rootDir).keys()).map((pkgId) => {
+        const parsed = dp.parse(pkgId);
+        return [parsed.name!, parsed.version!] as [string, string];
+      })
+    );
     for (const [projectDir, manifest] of Object.entries(manifests)) {
       const projectId = getLockfileImporterId(rootDir, projectDir);
       lockfile.importers![projectId] = {
@@ -420,7 +426,7 @@ export async function convertGraphToLockfile(
             const version = `link:${normalizePath(path.relative(projectDir, specifier.substring(5)))}`;
             lockfile.importers![projectId][depType][name] = { version, specifier };
           } else {
-            const edgeId = findImporterDepPath(graph, rootEdge, name, specifier);
+            const edgeId = findImporterDepPath(graph, rootEdge, name, specifier, workspaceVersions);
             if (edgeId) {
               const parsed = dp.parse(edgeId);
               const ref = depPathToRef(parsed);
@@ -542,10 +548,11 @@ function findImporterDepPath(
   graph: DependenciesGraph,
   rootEdge: DependencyEdge,
   name: string,
-  specifier: string
+  specifier: string,
+  workspaceVersions: Map<string, string>
 ): string | undefined {
   const neighbour = rootEdge.neighbours.find(
-    (directDep) => directDep.name === name && specifierMatchesDirectDep(name, specifier, directDep)
+    (directDep) => directDep.name === name && specifierMatchesDirectDep(name, specifier, directDep, workspaceVersions)
   );
   if (neighbour) return neighbour.id;
   const pkgId = `${name}@${specifier}`;
@@ -567,19 +574,31 @@ function findImporterDepPath(
 /**
  * Whether the manifest's `specifier` for `name` is satisfied by the direct
  * dependency the graph recorded: the same specifier, the same version, a
- * workspace reference (the graph's version is then the sibling's), or a range
- * the resolved version satisfies.
+ * workspace reference the graph resolved to the version of the workspace
+ * component of that name, or a range the resolved version satisfies, read
+ * the way pnpm reads ranges, so a prerelease satisfies only a range that
+ * names one.
  */
-function specifierMatchesDirectDep(name: string, specifier: string, directDep: DependencyNeighbour): boolean {
+function specifierMatchesDirectDep(
+  name: string,
+  specifier: string,
+  directDep: DependencyNeighbour,
+  workspaceVersions: Map<string, string>
+): boolean {
   if (directDep.specifier === specifier) return true;
-  if (specifier.startsWith('workspace:')) return true;
   if (dp.removeSuffix(directDep.id) === `${name}@${specifier}`) return true;
   const { version } = dp.parse(directDep.id);
-  return (
-    version != null &&
-    semver.validRange(specifier) != null &&
-    semver.satisfies(version, specifier, { includePrerelease: true })
-  );
+  if (version == null) return false;
+  if (specifier.startsWith('workspace:')) {
+    // The entry becomes the workspace component's `file:` record, so only the
+    // version the workspace holds can stand for it, and the range, when the
+    // reference carries one, has to accept that version.
+    if (workspaceVersions.get(name) !== version) return false;
+    const range = specifier.slice('workspace:'.length);
+    if (range === '' || range === '*' || range === '^' || range === '~') return true;
+    return semver.validRange(range) != null && semver.satisfies(version, range);
+  }
+  return semver.validRange(specifier) != null && semver.satisfies(version, specifier);
 }
 
 interface PkgToResolve {

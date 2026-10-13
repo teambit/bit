@@ -42,15 +42,16 @@ export function resolvedVersionsInGraph(graph: DependenciesGraph): Map<string, s
 
 /**
  * Whether a version the graph holds is one the component declares it accepts:
- * an open declaration, the same snap or version, or a range it satisfies. A
- * dependency on a directory or a workspace package is never taken from the
- * graph.
+ * an open declaration, the same snap or version, or a range it satisfies the
+ * way pnpm reads ranges, so a prerelease satisfies only a range that names
+ * one. A dependency on a directory or a workspace package is never taken from
+ * the graph.
  */
 function declarationAccepts(spec: string | undefined, version: string): boolean {
   if (spec == null || spec === '' || spec === '*') return true;
   if (snapToSemver(spec) === version) return true;
   if (spec.startsWith('workspace:') || spec.startsWith('link:') || spec.startsWith('file:')) return false;
-  return semver.validRange(spec) != null && semver.satisfies(version, spec, { includePrerelease: true });
+  return semver.validRange(spec) != null && semver.satisfies(version, spec);
 }
 
 /** The highest version of `name` among the graph's packages that `spec` accepts. */
