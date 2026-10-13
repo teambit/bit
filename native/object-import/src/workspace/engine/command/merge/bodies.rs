@@ -1,0 +1,307 @@
+use super::{
+    super::{capture::Captured, input::Options},
+    State, invalid,
+};
+use serde_json::{Value, json};
+use std::{
+    fs, io,
+    path::{Path, PathBuf},
+};
+
+pub(in crate::workspace::engine::command) struct VersionSide<'a> {
+    pub(in crate::workspace::engine::command) hash: &'a str,
+    pub(in crate::workspace::engine::command) value: &'a Value,
+}
+pub(in crate::workspace::engine::command) struct BodyInput<'a> {
+    pub(in crate::workspace::engine::command) root: &'a Path,
+    pub(in crate::workspace::engine::command) directory: &'a Path,
+    pub(in crate::workspace::engine::command) index: usize,
+    pub(in crate::workspace::engine::command) current: &'a Captured,
+    pub(in crate::workspace::engine::command) sides: [VersionSide<'a>; 3], // base, current, incoming
+    pub(in crate::workspace::engine::command) options: &'a Options,
+}
+pub(in crate::workspace::engine::command) struct Prepared {
+    pub(in crate::workspace::engine::command) output: Value,
+    pub(in crate::workspace::engine::command) version: Value,
+    pub(in crate::workspace::engine::command) version_name: String,
+    pub(in crate::workspace::engine::command) files: Vec<Value>,
+    pub(in crate::workspace::engine::command) has_conflicts: bool,
+    pub(in crate::workspace::engine::command) conflict_paths: Vec<String>,
+    request: Value,
+    removals: Vec<PathBuf>,
+}
+
+impl BodyInput<'_> {
+    fn metadata_guard(&self) -> io::Result<()> {
+        // The initial native autosnap domain changes sources, not component policy.
+        // Dependency topology is independently re-detected from retained merged files.
+        for field in [
+            "mainFile",
+            "bindingPrefix",
+            "schema",
+            "docs",
+            "packageDependencies",
+            "devPackageDependencies",
+            "peerPackageDependencies",
+            "overrides",
+            "packageJsonChangedProps",
+            "extensions",
+        ] {
+            if self.sides
+                .iter()
+                .any(|side| side.value[field] != self.sides[1].value[field])
+            {
+                return Err(invalid(
+                    "command merge metadata change requires canonical policy merge",
+                ));
+            }
+        }
+        for field in ["dependencies", "devDependencies"] {
+            for side in &self.sides {
+                equivalent_dependencies(&side.value[field], &self.sides[1].value[field])?;
+            }
+        }
+        if !self.sides[1].value["docs"].as_array().is_some_and(Vec::is_empty) {
+            return Err(invalid("command merge documentation projection"));
+        }
+        Ok(())
+    }
+
+    pub(in crate::workspace::engine::command) fn request(&self) -> io::Result<Value> {
+        self.metadata_guard()?;
+        let current =
+            self.current.files.as_array().ok_or_else(|| invalid("command merge current files"))?;
+        Ok(
+            json!({"index":self.index,"objectsDirectory":self.root.join(".bit/objects"),"snapshotDirectory":self.directory,
+                "base":manifest(&self.sides[0])?,"target":manifest(&self.sides[2])?,
+                "current":current.iter().map(|file| json!({"relativePath":file["relativePath"],"workspace":{
+                    "path":file["path"],"rawHash":file["rawHash"],"snapshotHash":file["snapshotHash"]}})).collect::<Vec<_>>(),
+                "labels":{"current":self.current.target.version,"other":self.sides[2].hash},
+            }),
+        )
+    }
+}
+
+impl State {
+    pub(in crate::workspace::engine::command) fn prepare_result(
+        &mut self,
+        input: &BodyInput<'_>,
+        plan: &Value,
+    ) -> io::Result<Prepared> {
+        if plan["hasConflicts"] == true && input.options.strategy.is_none() {
+            return Err(invalid("command merge requires conflict prompt"));
+        }
+        let target = if input.options.strategy.as_deref() == Some("theirs") {
+            &input.sides[2]
+        } else {
+            &input.sides[1]
+        };
+        let applied = self.apply(json!({"planToken":plan["token"],"target":manifest(target)?,"strategy":input.options.strategy}))?;
+        if applied.get("deferredError").is_some() {
+            return Err(invalid("command merge deferred apply failure"));
+        }
+        let removals = crate::merge_transaction::apply(
+            "mergeRemovals",
+            json!({"token":self.owner(),"planToken":plan["token"],
+            "filesStatus":applied["filesStatus"],"tracked":true,"workspaceRoot":false}),
+            &mut self.native,
+        )?;
+        Prepared::new(input, plan, &applied, &removals)
+    }
+}
+
+impl Prepared {
+    fn new(
+        input: &BodyInput<'_>,
+        plan: &Value,
+        applied: &Value,
+        removals: &Value,
+    ) -> io::Result<Self> {
+        let files = output_files(applied)?;
+        let statuses = removals["filesStatus"]
+            .as_array()
+            .ok_or_else(|| invalid("command merge statuses"))?
+            .iter()
+            .map(|row| {
+                Ok((
+                    row["relativePath"]
+                        .as_str()
+                        .ok_or_else(|| invalid("command merge status path"))?
+                        .to_owned(),
+                    row["status"].clone(),
+                ))
+            })
+            .collect::<io::Result<serde_json::Map<_, _>>>()?;
+        let destinations = files.iter().map(|file| json!({"planIndex":file["planIndex"],
+            "path":input.root.join(&input.current.target.directory).join(file["relativePath"].as_str().unwrap_or_default()),"overwrite":true,"eol":"auto"})).collect::<Vec<_>>();
+        let removals = removals["removals"]
+            .as_array()
+            .ok_or_else(|| invalid("command merge removals"))?
+            .iter()
+            .map(|value| {
+                value
+                    .as_str()
+                    .map(PathBuf::from)
+                    .ok_or_else(|| invalid("command merge removal path"))
+            })
+            .collect::<io::Result<_>>()?;
+        Ok(Self {
+            output: json!({"id":format!("{}@{}",input.current.target.identity,input.current.target.version),"filesStatus":statuses}),
+            version: current_version(input),
+            version_name: input.current.target.version.clone(),
+            files,
+            conflict_paths: conflict_paths(input, plan)?,
+            has_conflicts: plan["hasConflicts"] == true
+                && input.options.strategy.as_deref() == Some("manual"),
+            request: json!({"planToken":plan["token"],"files":destinations}),
+            removals,
+        })
+    }
+    pub(in crate::workspace::engine::command) fn validate(&self, root: &Path) -> io::Result<()> {
+        for row in
+            self.request["files"].as_array().ok_or_else(|| invalid("merge destination files"))?
+        {
+            validate_path(
+                root,
+                Path::new(row["path"].as_str().ok_or_else(|| invalid("merge destination path"))?),
+            )?;
+        }
+        for path in &self.removals {
+            validate_path(root, path)?;
+        }
+        Ok(())
+    }
+    pub(in crate::workspace::engine::command) fn write(&self, state: &mut State) -> io::Result<()> {
+        for path in &self.removals {
+            match fs::remove_file(path) {
+                Ok(()) => {}
+                Err(error) if error.kind() == io::ErrorKind::NotFound => {}
+                Err(error) => return Err(error),
+            }
+        }
+        state.materialize(self.request.clone())
+    }
+}
+
+fn output_files(applied: &Value) -> io::Result<Vec<Value>> {
+    let bodies =
+        applied["bodies"].as_array().ok_or_else(|| invalid("command merge body manifest"))?;
+    let files =
+        applied["files"].as_array().ok_or_else(|| invalid("command merge applied files"))?;
+    if files.is_empty() {
+        return Err(invalid("command merged component has no files"));
+    }
+    files
+        .iter()
+        .map(|file| {
+            let path = file["relativePath"]
+                .as_str()
+                .ok_or_else(|| invalid("command merge output path"))?;
+            crate::checkout::plan::relative_path(path)?;
+            if path == ".bitmap" {
+                return Err(invalid("command nested bitmap merge"));
+            }
+            let body = bodies
+                .iter()
+                .find(|body| body["planIndex"] == file["planIndex"])
+                .ok_or_else(|| invalid("command merge retained body"))?;
+            Ok(json!({"relativePath":path,"planIndex":file["planIndex"],"source":body}))
+        })
+        .collect()
+}
+fn manifest(side: &VersionSide<'_>) -> io::Result<Value> {
+    let files =
+        side.value["files"].as_array().ok_or_else(|| invalid("command merge Version files"))?;
+    let files = files
+        .iter()
+        .map(|file| {
+            let mut row = json!({"hash":file["file"],"relativePath":file["relativePath"]});
+            for field in ["name", "test"] {
+                if let Some(value) = file.get(field) {
+                    row[field] = value.clone();
+                }
+            }
+            row
+        })
+        .collect::<Vec<_>>();
+    Ok(json!({"hash":side.hash,"files":files}))
+}
+
+fn validate_path(root: &Path, path: &Path) -> io::Result<()> {
+    let relative = path.strip_prefix(root).map_err(io::Error::other)?;
+    crate::checkout::plan::relative_path(
+        relative.to_str().ok_or_else(|| invalid("merge nonUTF8 path"))?,
+    )?;
+    let mut current = root.to_path_buf();
+    for component in relative.components() {
+        current.push(component);
+        match fs::symlink_metadata(&current) {
+            Ok(metadata)
+                if current == path && metadata.is_file()
+                    || current != path && metadata.is_dir() => {}
+            Err(error) if error.kind() == io::ErrorKind::NotFound => {}
+            Err(error) => return Err(error),
+            _ => return Err(invalid("merge nonordinary destination")),
+        }
+    }
+    Ok(())
+}
+
+fn conflict_paths(input: &BodyInput<'_>, plan: &Value) -> io::Result<Vec<String>> {
+    if input.options.strategy.as_deref() != Some("manual") {
+        return Ok(Vec::new());
+    }
+    plan["mergeRows"]
+        .as_array()
+        .ok_or_else(|| invalid("merge retained rows"))?
+        .iter()
+        .filter(|row| row["kind"] == "modifiedFiles" && row.get("conflictPlanIndex").is_some())
+        .map(|row| {
+            let index =
+                row["current"].as_u64().ok_or_else(|| invalid("merge conflict file index"))?
+                    as usize;
+            input.current.files[index]["relativePath"]
+                .as_str()
+                .map(str::to_owned)
+                .ok_or_else(|| invalid("merge conflict path"))
+        })
+        .collect()
+}
+
+pub(super) fn equivalent_dependencies(value: &Value, current: &Value) -> io::Result<()> {
+    let mut normalized = value.clone();
+    let rows = normalized.as_array_mut().ok_or_else(|| invalid("merge dependency metadata"))?;
+    let reference =
+        current.as_array().ok_or_else(|| invalid("merge current dependency metadata"))?;
+    if rows.len() != reference.len() {
+        return Err(invalid("merge dependency metadata count"));
+    }
+    for (row, expected) in rows.iter_mut().zip(reference) {
+        if row.get("packageName").is_none()
+            && let Some(name) = expected.get("packageName")
+        {
+            row["packageName"] = name.clone();
+        }
+    }
+    if normalized != *current {
+        return Err(invalid("merge dependency metadata differs"));
+    }
+    Ok(())
+}
+
+fn current_version(input: &BodyInput<'_>) -> Value {
+    let mut version = input.sides[1].value.clone();
+    for field in [
+        "mainFile",
+        "dependencies",
+        "devDependencies",
+        "packageDependencies",
+        "devPackageDependencies",
+        "peerPackageDependencies",
+        "bindingPrefix",
+        "overrides",
+    ] {
+        version[field] = input.current.target.current[field].clone();
+    }
+    version
+}

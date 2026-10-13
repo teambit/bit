@@ -17,6 +17,14 @@ const builtinNames = [
   ...new Set(builtinModules.flatMap((name) => (name.startsWith('node:') ? [name] : [name, `node:${name}`]))),
 ];
 
+export function nativeDependencyGrammar() {
+  return {
+    builtins: builtinNames,
+    detectorExtensions: [...rustGraphDetectorExtensions, '.jsonc'],
+    typescript: lookupRequire('typescript/package.json').version === '5.9.2',
+  };
+}
+
 export type FreshDependencyCachePlan = { cache: FsCache; reset: boolean };
 
 export async function planFreshDependencyCache(root: string): Promise<FreshDependencyCachePlan> {
@@ -49,9 +57,7 @@ export async function readFreshDependencies(
     detection: {
       graph: {
         home: homedir(),
-        builtins: builtinNames,
-        detectorExtensions: [...rustGraphDetectorExtensions, '.jsonc'],
-        typescript: lookupRequire('typescript/package.json').version === '5.9.2',
+        ...nativeDependencyGrammar(),
       },
       devFiles,
       modelPackages: policy.modelPackages,

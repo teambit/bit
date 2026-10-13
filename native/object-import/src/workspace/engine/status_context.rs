@@ -10,10 +10,10 @@ use std::{io, path::PathBuf};
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Request {
-    root: PathBuf,
-    home: PathBuf,
+    pub(super) root: PathBuf,
+    pub(super) home: PathBuf,
     #[serde(default = "default_history")]
-    history: bool,
+    pub(super) history: bool,
 }
 
 /// Capture current configuration and model metadata without loading Harmony.
@@ -28,6 +28,28 @@ pub(super) fn read(request: &Request, pool: &rayon::ThreadPool) -> io::Result<(u
         return Err(invalid("status context requires canonical lifecycle"));
     }
     let proofs = if request.history { controls(request)? } else { Vec::new() };
+    let mut output = metadata(request, pool)?;
+    let targets = output["targets"].as_array().ok_or_else(|| invalid("status targets"))?;
+    let model_request =
+        serde_json::from_value(json!({"root":request.root,"history":request.history,"stageHistory":true,"includeHeads":true,
+        "targets":targets.iter().map(|target| json!({"identity":target["identity"],
+            "version":target["version"]})).collect::<Vec<_>>()}))
+        .map_err(io::Error::other)?;
+    let (_, models) = status_models::read(&model_request, pool)?;
+    output
+        .as_object_mut()
+        .ok_or_else(|| invalid("status context"))?
+        .extend(
+            models
+                .as_object()
+                .ok_or_else(|| invalid("status models"))?
+                .clone(),
+        );
+    attach_controls(&mut output, &proofs)?;
+    Ok((output["targets"].as_array().map_or(0, Vec::len), output))
+}
+
+pub(super) fn metadata(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Value> {
     let settings = config::configuration(&request.root)?;
     let targets = config::context_targets(&request.root, &settings)?;
     let budget = Budget::new(8 * 1024 * 1024);
@@ -37,22 +59,15 @@ pub(super) fn read(request: &Request, pool: &rayon::ThreadPool) -> io::Result<(u
             .map(|target| metadata::component(&request.root, target, &budget))
             .collect::<io::Result<Vec<_>>>()
     })?;
-    let model_request =
-        serde_json::from_value(json!({"root":request.root,"history":request.history,"stageHistory":true,"includeHeads":true,
-        "targets":targets.iter().map(|target| json!({"identity":target["identity"],
-            "version":target["version"]})).collect::<Vec<_>>()}))
-        .map_err(io::Error::other)?;
-    let (_, mut output) = status_models::read(&model_request, pool)?;
-    attach_controls(&mut output, &proofs)?;
+    let mut output = json!({});
     output["options"] =
         config::options(&settings, &super::inventory::patterns::own(&request.root)?);
     output["workspace"] = config::document(&request.root.join("workspace.jsonc"))?;
     output["scope"] = metadata::optional(&request.root.join(".bit/scope.json"), &budget)?;
     metadata::scope(&output["scope"])?;
     output["packageJson"] = metadata::optional(&request.root.join("package.json"), &budget)?;
-    let count = targets.len();
     output["targets"] = Value::Array(targets);
-    Ok((count, output))
+    Ok(output)
 }
 
 #[cfg(test)]

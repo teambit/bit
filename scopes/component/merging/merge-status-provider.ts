@@ -57,7 +57,8 @@ export type DataMergeResult = {
 };
 
 export const compIsAlreadyMergedMsg = 'component is already merged';
-export const compHasBeenRemovedMsg = 'component has been removed';
+import { compHasBeenRemovedMsg } from './merge-messages';
+export { compHasBeenRemovedMsg } from './merge-messages';
 export class MergeStatusProvider {
   constructor(
     private scope: ScopeMain,

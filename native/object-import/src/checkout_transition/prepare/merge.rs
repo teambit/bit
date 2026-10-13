@@ -10,15 +10,21 @@ pub(super) fn rows(
     target: &[Vec<u8>],
     current: &[current::Loaded],
     bodies: &mut Vec<plan::Body>,
-    total: &mut usize,
-    compressed: &mut usize,
+    budgets: &mut (&mut usize, &mut usize),
+    overlay: Option<&crate::command_import::Overlay>,
 ) -> io::Result<Vec<Value>> {
     let Some(base) = &request.base else {
         return Ok(Vec::new());
     };
     let needed = required_base(request, base, current);
-    let base_bodies =
-        sources::selected(&request.objects_directory, base, &needed, total, compressed)?;
+    let base_bodies = sources::selected(
+        &request.objects_directory,
+        base,
+        &needed,
+        budgets.0,
+        budgets.1,
+        overlay,
+    )?;
     let labels = request.labels.as_ref().ok_or_else(|| invalid("checkout merge labels missing"))?;
     let input = json!({"objectsDirectory":request.objects_directory,"labels":{"current":labels.current,"other":labels.other},"base":base.files.iter().map(|file|json!({"path":file.relative_path,"hash":file.hash})).collect::<Vec<_>>(),"other":request.target.files.iter().map(|file|json!({"path":file.relative_path,"hash":file.hash})).collect::<Vec<_>>(),"current":request.current.iter().map(|file|json!({"path":file.relative_path,"source":{"hash":file.snapshot_hash}})).collect::<Vec<_>>()});
     let prepared = crate::merge_history::merge::Prepared {

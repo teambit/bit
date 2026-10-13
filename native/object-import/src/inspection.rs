@@ -1,4 +1,4 @@
-pub(crate) use bitmap::normalize as normalize_bitmap;
+pub(crate) use bitmap::{normalize as normalize_bitmap, render as render_bitmap};
 pub(crate) use compare::modified as compare_owned;
 pub(crate) use modified::modified;
 pub use snapshot::InspectionSnapshot;

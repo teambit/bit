@@ -20,7 +20,8 @@ const ignore = bitmapRequire('ignore') as typeof defaultIgnore;
 export type NativeClientRequest = (input: object) => Promise<any>;
 
 export async function withRustClientRequest<T>(
-  read: (request: NativeClientRequest) => Promise<T>
+  read: (request: NativeClientRequest) => Promise<T>,
+  mustPropagateError: () => boolean = () => false
 ): Promise<T | undefined> {
   const executable = resolveRustObjectImportExecutable();
   const addon = executable && resolveRustWorkspaceAddon(executable);
@@ -46,7 +47,8 @@ export async function withRustClientRequest<T>(
       return response.data;
     };
     return await read(request);
-  } catch {
+  } catch (error) {
+    if (mustPropagateError()) throw error;
     return undefined;
   } finally {
     engine?.close();
@@ -57,7 +59,8 @@ export async function captureRustClientCurrent(
   root: string,
   context: any,
   request: NativeClientRequest,
-  targets = context.targets
+  targets = context.targets,
+  captureOptions: { verifyFreshDependencies?: boolean } = {}
 ) {
   if (isFeatureEnabled(NO_FS_CACHE_FEATURE)) return undefined;
   const { options } = context;
@@ -125,6 +128,21 @@ export async function captureRustClientCurrent(
       dependencies = fresh.dependencies;
       pending.push(fresh.cache);
     }
+    if (
+      captureOptions.verifyFreshDependencies &&
+      dependencies.needsDetection !== true &&
+      !pending.some((row) => row.identity === fullIdentity(target))
+    ) {
+      const { readFreshDependencies } = await import('./rust-fresh-dependencies');
+      const fresh = await readFreshDependencies(root, context, target, files, policy, request);
+      if (
+        JSON.stringify(currentStatusMetadata(target, policy, fresh.dependencies)) !==
+          JSON.stringify(currentStatusMetadata(target, policy, dependencies)) ||
+        JSON.stringify(fresh.dependencies.issues) !== JSON.stringify(dependencies.issues)
+      )
+        return undefined;
+      pending.push(fresh.cache);
+    }
     const current = currentStatusMetadata(target, policy, dependencies);
     const entry = {
       identity: target.identity,
@@ -149,6 +167,7 @@ export async function captureRustClientCurrent(
   }
   return {
     comparisons,
+    dependencyReadSet: pending.flatMap((entry) => entry.readSet),
     captured,
     components,
     fresh: () => rootPolicy.fresh(),

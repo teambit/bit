@@ -47,7 +47,7 @@ fn capture(path: &Path, bytes: Vec<u8>, bitmap: &Path) -> io::Result<read::Metad
     Ok(metadata)
 }
 
-pub(in crate::workspace::engine::status_models) fn validate(target: &Target) -> io::Result<()> {
+pub(in crate::workspace::engine) fn validate(target: &Target) -> io::Result<()> {
     if target.directory != "." {
         relative(&target.directory)?;
     }

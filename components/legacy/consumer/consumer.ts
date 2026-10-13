@@ -1,3 +1,5 @@
+import { currentDateAndTimeToFileName } from './bitmap-history-file-id';
+export { currentDateAndTimeToFileName } from './bitmap-history-file-id';
 import fs from 'fs-extra';
 import * as path from 'path';
 import lodash, { compact, isEmpty, sortBy } from 'lodash';
@@ -723,16 +725,6 @@ export default class Consumer {
 
 registerRustSnapshotTransactionClass('CheckoutConsumer', Consumer);
 
-export function currentDateAndTimeToFileName() {
-  const date = new Date();
-  const year = date.getFullYear();
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
-  const seconds = date.getSeconds();
-  return `${year}-${month}-${day}-${hours}-${minutes}-${seconds}`;
-}
 
 export async function getParsedHistoryMetadata(metadataPath: string): Promise<{ [fileId: string]: string }> {
   let fileContent: string | undefined;

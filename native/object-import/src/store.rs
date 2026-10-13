@@ -86,7 +86,22 @@ impl Store {
         Ok(())
     }
 
+    /// Validate platform support and the existing index without publishing anything.
+    pub(crate) fn validate_index_write(&self) -> io::Result<()> {
+        #[cfg(target_os = "linux")]
+        {
+            let scope = self.directory.parent().ok_or_else(|| io::Error::other("missing scope"))?;
+            open_index(&scope.join("index.json"))?;
+            Ok(())
+        }
+        #[cfg(not(target_os = "linux"))]
+        {
+            Err(io::Error::other("index ACL preservation is supported on Linux"))
+        }
+    }
+
     pub(crate) fn write_index(&self, contents: &[u8]) -> io::Result<()> {
+        self.validate_index_write()?;
         let scope = self.directory.parent().ok_or_else(|| io::Error::other("missing scope"))?;
         let path = scope.join("index.json");
         let counter = NEXT_TEMPORARY.fetch_add(1, Ordering::Relaxed);

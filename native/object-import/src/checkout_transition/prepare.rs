@@ -12,22 +12,41 @@ pub(super) fn prepare(
     state: &mut plan::State,
     snapshots: Option<&crate::workspace::snapshots::State>,
 ) -> io::Result<Value> {
-    let request: wire::Prepare = serde::Deserialize::deserialize(input).map_err(io::Error::other)?;
-    validate(&request)?;
+    prepare_with_overlay(input, state, snapshots, None)
+}
+pub(super) fn prepare_with_overlay(
+    input: &Value,
+    state: &mut plan::State,
+    snapshots: Option<&crate::workspace::snapshots::State>,
+    overlay: Option<&crate::command_import::Overlay>,
+) -> io::Result<Value> {
+    let request = parse_request(input)?;
     let mut total = 0;
     let mut compressed = 0;
-    let target =
-        sources::load(&request.objects_directory, &request.target, &mut total, &mut compressed)?;
-    let current = current::load(
+    let target = sources::load_with_overlay(
+        &request.objects_directory,
+        &request.target,
+        &mut total,
+        &mut compressed,
+        overlay,
+    )?;
+    let current = current::load_with_overlay(
         &request.current,
         &request.objects_directory,
         &mut total,
         &mut compressed,
         snapshots,
+        overlay,
     )?;
     let mut merged_bodies = Vec::new();
-    let rows =
-        merge::rows(&request, &target, &current, &mut merged_bodies, &mut total, &mut compressed)?;
+    let rows = merge::rows(
+        &request,
+        &target,
+        &current,
+        &mut merged_bodies,
+        &mut (&mut total, &mut compressed),
+        overlay,
+    )?;
     let statuses = statuses(&request, &target, &current);
     let retained = retain_inputs(&request, target, &current, merged_bodies);
     let plan = plan::Plan {
@@ -35,14 +54,21 @@ pub(super) fn prepare(
         target: request.target.files,
         target_indices: retained.1,
         current: retained.2,
-        has_conflicts: rows
-            .iter()
-            .any(|row| row.get("conflictPlanIndex").is_some() || row["isBinaryConflict"] == true),
+        has_conflicts: has_conflicts(&rows),
         statuses,
         merge_rows: rows,
         other: None,
     };
     state.retain(plan, input, &request.snapshot_directory)
+}
+fn has_conflicts(rows: &[Value]) -> bool {
+    rows.iter()
+        .any(|row| row.get("conflictPlanIndex").is_some() || row["isBinaryConflict"] == true)
+}
+fn parse_request(input: &Value) -> io::Result<wire::Prepare> {
+    let request = serde::Deserialize::deserialize(input).map_err(io::Error::other)?;
+    validate(&request)?;
+    Ok(request)
 }
 fn validate(request: &wire::Prepare) -> io::Result<()> {
     if !request.snapshot_directory.is_absolute()

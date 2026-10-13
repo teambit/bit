@@ -1,4 +1,4 @@
-use super::{digest, load, wire};
+use super::{digest, wire};
 use crate::workspace::snapshots::{Observation, State};
 
 fn observed(bytes: &[u8]) -> (wire::Current, State) {
@@ -56,4 +56,14 @@ fn retained_reads_count_the_original_bom_bytes_toward_the_whole_plan_budget() {
     let (file, snapshots) = observed(b"original");
     let mut total = 32 * 1024 * 1024 - 10;
     assert!(load(&[file], &std::env::temp_dir(), &mut total, &mut 0, Some(&snapshots)).is_err());
+}
+
+pub(super) fn load(
+    files: &[wire::Current],
+    directory: &std::path::Path,
+    total: &mut usize,
+    compressed: &mut usize,
+    snapshots: Option<&crate::workspace::snapshots::State>,
+) -> std::io::Result<Vec<super::Loaded>> {
+    super::load_with_overlay(files, directory, total, compressed, snapshots, None)
 }

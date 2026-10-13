@@ -5,6 +5,7 @@ pub use workspace::engine::dependency_policy::plan as plan_dependency_policy;
 
 mod checkout;
 mod checkout_transition;
+mod command_import;
 mod config_merge;
 mod directory;
 mod history_query;

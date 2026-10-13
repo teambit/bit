@@ -46,6 +46,14 @@ pub(crate) fn prepare_with_workspace(
 ) -> io::Result<Value> {
     prepare::prepare(input, &mut state.plans, Some(snapshots))
 }
+pub(crate) fn prepare_with_overlay(
+    input: &Value,
+    state: &mut State,
+    snapshots: Option<&crate::workspace::snapshots::State>,
+    overlay: &crate::command_import::Overlay,
+) -> io::Result<Value> {
+    prepare::prepare_with_overlay(input, &mut state.plans, snapshots, Some(overlay))
+}
 fn decision(input: &Value) -> io::Result<Value> {
     let current = input["currentExists"]
         .as_bool()

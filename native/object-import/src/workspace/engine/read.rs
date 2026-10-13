@@ -33,10 +33,19 @@ pub(super) fn read_with<Record: Send>(
     pool: &ThreadPool,
     record: impl Fn(&Path, Vec<u8>) -> Record + Sync,
 ) -> io::Result<Vec<Record>> {
+    read_with_budget(files, pool, MAX_RAW, record)
+}
+/// Private native consumers may retain larger captures without enlarging the wire response.
+pub(super) fn read_with_budget<Record: Send>(
+    files: &[PathBuf],
+    pool: &ThreadPool,
+    maximum: usize,
+    record: impl Fn(&Path, Vec<u8>) -> Record + Sync,
+) -> io::Result<Vec<Record>> {
     count(files.len())?;
     if files.len() >= 32
         && pool.current_num_threads() > 1
-        && let Ok(output) = parallel(files, pool, &record)
+        && let Ok(output) = parallel(files, pool, maximum, &record)
     {
         return Ok(output);
     }
@@ -46,7 +55,7 @@ pub(super) fn read_with<Record: Send>(
     files
         .iter()
         .map(|file| {
-            let bytes = raw(file, MAX_RAW - total)?;
+            let bytes = raw(file, maximum - total)?;
             total += bytes.len();
             Ok(record(file, bytes))
         })
@@ -55,9 +64,10 @@ pub(super) fn read_with<Record: Send>(
 fn parallel<Record: Send>(
     files: &[PathBuf],
     pool: &ThreadPool,
+    maximum: usize,
     record: &(impl Fn(&Path, Vec<u8>) -> Record + Sync),
 ) -> io::Result<Vec<Record>> {
-    let remaining = Budget::new(MAX_RAW);
+    let remaining = Budget::new(maximum);
     pool.install(|| {
         files
             .par_iter()

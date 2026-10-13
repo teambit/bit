@@ -17,6 +17,7 @@ type CommandResult = { data: any; exitCode: number };
 
 export class CommandRunner {
   private commandName: string;
+  private executionPrepared = false;
   constructor(
     private command: Command,
     private args: CLIArgs,
@@ -31,9 +32,7 @@ export class CommandRunner {
    */
   async runCommand(shouldReturnResult = false): Promise<void | CommandResult> {
     try {
-      this.bootstrapCommand();
-      await this.invokeOnCommandStart();
-      this.determineConsoleWritingDuringCommand();
+      await this.prepareForExecution();
       if (this.flags.json) {
         return await this.runJsonHandler(shouldReturnResult);
       }
@@ -49,6 +48,15 @@ export class CommandRunner {
     }
 
     throw new Error(`command "${this.commandName}" doesn't implement "render" nor "report" nor "wait" methods`);
+  }
+
+  /** Prepare command logging and progress before an externally prepared operation commits. */
+  async prepareForExecution() {
+    if (this.executionPrepared) return;
+    this.bootstrapCommand();
+    await this.invokeOnCommandStart();
+    this.determineConsoleWritingDuringCommand();
+    this.executionPrepared = true;
   }
 
   private bootstrapCommand() {

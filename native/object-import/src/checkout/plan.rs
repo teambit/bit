@@ -1,4 +1,4 @@
-pub(crate) use verification::verify_manifest;
+pub(crate) use verification::{verify_manifest, verify_manifest_value};
 
 use std::{
     collections::{HashMap, HashSet},

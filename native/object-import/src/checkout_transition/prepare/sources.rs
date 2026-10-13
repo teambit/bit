@@ -1,3 +1,6 @@
+pub(super) use overlay::body;
+mod overlay;
+
 use super::super::{invalid, wire};
 use crate::{checkout::repository, read_budget::Budget};
 use rayon::prelude::*;
@@ -10,13 +13,17 @@ pub(in crate::checkout_transition) fn load(
     total: &mut usize,
     compressed: &mut usize,
 ) -> io::Result<Vec<Vec<u8>>> {
-    crate::checkout::plan::verify_manifest(
-        directory,
-        &version.hash,
-        &serde_json::to_value(&version.files).map_err(io::Error::other)?,
-        compressed,
-    )?;
-    load_files(directory, &version.files, total, compressed)
+    load_with_overlay(directory, version, total, compressed, None)
+}
+pub(in crate::checkout_transition) fn load_with_overlay(
+    directory: &Path,
+    version: &wire::Version,
+    total: &mut usize,
+    compressed: &mut usize,
+    overlay: Option<&crate::command_import::Overlay>,
+) -> io::Result<Vec<Vec<u8>>> {
+    overlay::verify(directory, version, compressed, overlay)?;
+    overlay::files(directory, &version.files, total, compressed, overlay)
 }
 
 fn load_files(
@@ -111,13 +118,9 @@ pub(super) fn selected(
     needed: &[bool],
     total: &mut usize,
     compressed: &mut usize,
+    overlay: Option<&crate::command_import::Overlay>,
 ) -> io::Result<Vec<Option<Vec<u8>>>> {
-    crate::checkout::plan::verify_manifest(
-        directory,
-        &version.hash,
-        &serde_json::to_value(&version.files).map_err(io::Error::other)?,
-        compressed,
-    )?;
+    overlay::verify(directory, version, compressed, overlay)?;
     if needed.len() != version.files.len() {
         return Err(invalid("checkout selected Source count"));
     }
@@ -127,7 +130,7 @@ pub(super) fn selected(
         .filter(|(_, needed)| **needed)
         .map(|(file, _)| file.clone())
         .collect();
-    let mut bodies = load_files(directory, &manifests, total, compressed)?.into_iter();
+    let mut bodies = overlay::files(directory, &manifests, total, compressed, overlay)?.into_iter();
     Ok(needed
         .iter()
         .map(|needed| if *needed { bodies.next() } else { None })

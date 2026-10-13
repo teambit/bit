@@ -18,8 +18,11 @@ pub(crate) fn normalize(bytes: &[u8]) -> io::Result<Vec<u8>> {
             map.shift_remove(&key);
         }
     }
+    render(&value)
+}
+pub(crate) fn render(value: &Value) -> io::Result<Vec<u8>> {
     let mut output = PREFIX.as_bytes().to_vec();
-    output.extend(js_json::stringify_indented(&ast(&value)?, 4)?);
+    output.extend(js_json::stringify_indented(&ast(value)?, 4)?);
     Ok(output)
 }
 fn removed(entry: &Map<String, Value>) -> bool {

@@ -1,4 +1,5 @@
 pub(crate) mod client_status;
+pub(crate) mod command;
 pub(crate) mod dependency_policy;
 pub(crate) mod diff;
 pub(crate) mod inventory;
@@ -56,6 +57,10 @@ enum Request {
     DependencyScan {
         request: Value,
     },
+    CommandPrepare(command::input::Prepare),
+    CommandPlan(command::Plan),
+    CommandApply(command::Apply),
+    CommandFinalize(command::Finalize),
     StatusContext(status_context::Request),
     StatusResult(status_result::Request),
     StatusModels(status_models::Request),
@@ -164,6 +169,16 @@ fn owned(
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
     match request {
+        Request::CommandPlan(input) => command::plan(input, snapshots, pool),
+        Request::CommandFinalize(input) => {
+            pool.install(|| command::finalize(&input, &mut snapshots.command))
+        }
+        Request::CommandApply(input) => {
+            pool.install(|| command::apply(&input, &mut snapshots.command))
+        }
+        Request::CommandPrepare(input) => {
+            pool.install(|| command::prepare(input, &mut snapshots.command, pool))
+        }
         Request::StatusPrepare(input) => client_status::prepare(input, &mut snapshots.status),
         Request::StatusScan(input) => client_status::scan(&input, &mut snapshots.status, pool),
         Request::StatusFinish(input) => client_status::finish(&input, &mut snapshots.status, pool),
