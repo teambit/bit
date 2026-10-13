@@ -1035,3 +1035,82 @@ test('owned diff reuses the observed bytes without a second disk read or source 
     assert.equal(retained, 1, 'mutated public bytes cannot reuse a read token');
   });
 });
+
+test('large semantic captures preserve nested configuration, ordering and original row aliases', async (t) => {
+  await fixture(t);
+  const Consumer = compiled
+    ? installed('@teambit/legacy.consumer').Consumer
+    : source('components/legacy/consumer/consumer.ts').default;
+  const { Ref } = installed('@teambit/objects');
+  const states = [];
+  for (const flag of ['off', 'on']) {
+    process.env.BIT_RUST_CLIENT_VCS = flag;
+    const f = semanticFixture('modified', 'same');
+    for (const version of [f.left, f.right]) {
+      version.files = Array.from({ length: 262 }, (_, index) => ({
+        relativePath: `file-${261 - index}.js`,
+        name: `file-${261 - index}.js`,
+        test: false,
+        file: new Ref('1'.repeat(40)),
+      }));
+      version.extensions[0].rawConfig = { nested: { z: [null, false, -0, '\ud800'], a: { value: 'Ω' } } };
+      version.overrides = { dependencies: { z: '^2', a: '^1' }, peerDependencies: { y: '*', b: '^3' } };
+    }
+    const original = new Set([...f.left.files, ...f.right.files]);
+    const result = await Consumer.prototype.isComponentModified.call(f.context, f.left, f.filesystem);
+    assert.equal(result, false);
+    assert.ok([...f.left.files, ...f.right.files].every((row) => original.has(row)));
+    states.push({
+      files: f.right.files.map((row) => row.relativePath),
+      config: f.right.extensions[0].rawConfig,
+      packages: Object.entries(f.right.packageDependencies),
+      overrides: f.right.overrides,
+    });
+  }
+  assert.deepEqual(states[1], states[0]);
+});
+
+test('semantic capture revalidates file, configuration and container aliases after the native reply', async (t) => {
+  await fixture(t);
+  const { compareRustInspectionVersions: compare } = installed(
+    '@teambit/objects/dist/objects/rust-inspection-model.js'
+  );
+  const { withRustWorkspaceInspection } = installed('@teambit/component.sources');
+  const NativeSession = require(path.join(base, 'rust-workspace-materializer.js')).MaterializationSession;
+  const request = NativeSession.prototype.request;
+  t.after(() => {
+    NativeSession.prototype.request = request;
+  });
+  for (const mutate of [
+    (f) => {
+      f.right.files[0].file.hash = '4'.repeat(40);
+    },
+    (f) => {
+      f.right.files = f.right.files.slice();
+    },
+    (f) => {
+      f.right.extensions[0].rawConfig = { ...f.right.extensions[0].rawConfig };
+    },
+    (f) => {
+      f.right.overrides.dependencies = { ...f.right.overrides.dependencies };
+    },
+  ]) {
+    const f = semanticFixture('modified', 'same');
+    f.right.log = f.left.log;
+    let replies = 0;
+    NativeSession.prototype.request = async function (build, ...args) {
+      const frame = build(1);
+      const result = await request.call(this, build, ...args);
+      if (frame.subarray(0, 4).toString() === 'BMT1' && JSON.parse(frame.subarray(12)).kind === 'inspectionCompare') {
+        assert.ok(result, 'ordinary capture must reach a successful native reply');
+        replies++;
+        mutate(f);
+      }
+      return result;
+    };
+    const result = await withRustWorkspaceInspection(() => compare(f.left, f.right, false));
+    assert.equal(replies, 1);
+    assert.equal(result, undefined, 'late mutation must decline before applying the native plan');
+    assert.equal(f.left.files[0].relativePath, 'z.js', 'declined plan must not reorder the model');
+  }
+});

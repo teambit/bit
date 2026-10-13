@@ -776,7 +776,7 @@ export default class Version extends BitObject {
   }
 
   async modelFilesToSourceFiles(repository: Repository): Promise<SourceFile[]> {
-    const native = isRustSourceReadScope() ? await prepareRustCheckoutSources(this.files, repository) : undefined;
+    const native = isRustSourceReadScope() ? await prepareRustCheckoutSources(this.files, repository, true) : undefined;
     if (native) return native;
     return Promise.all(this.files.map((file) => SourceFile.loadFromSourceFileModel(file, repository)));
   }

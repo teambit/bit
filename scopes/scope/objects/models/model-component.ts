@@ -1232,7 +1232,7 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
     const selectedSourceFiles = typeof sourceFiles === 'function' ? sourceFiles(version) : sourceFiles;
     const nativeFiles =
       !selectedSourceFiles && isRustSourceReadScope() && version.files
-        ? await prepareRustCheckoutSources(version.files, repository)
+        ? await prepareRustCheckoutSources(version.files, repository, true)
         : undefined;
     const filesP =
       selectedSourceFiles ||

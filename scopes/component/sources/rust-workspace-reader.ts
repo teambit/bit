@@ -10,6 +10,7 @@ import {
 } from './rust-workspace-inspection';
 import { canHashSourceNatively, registerRustSnapshotFunctionReference } from '@teambit/objects';
 import type AbstractVinyl from './abstract-vinyl';
+import { indexRustWorkspaceFiles } from './rust-workspace-file-index';
 import { getRustCheckoutSourceDescriptor } from './rust-checkout-source';
 import { withWorkspaceSession } from './rust-workspace-persistence';
 import { isRustWorkspaceEngine, workspaceEngineIdentity } from './rust-workspace-engine';
@@ -219,7 +220,12 @@ export async function getRustFilesDiff(
   const snapshotB = [...filesB];
   const files = [...snapshotA, ...snapshotB];
   if (files.some((file) => !hasOrdinaryWorkspaceProperties(file))) return undefined;
-  const paths = [...new Set(files.map((file) => file.relative))];
+  const observedPaths = files.map((file) => file.relative);
+  const paths = [...new Set(observedPaths)];
+  const indexedA =
+    snapshotA.length >= 8 ? indexRustWorkspaceFiles(snapshotA, observedPaths.slice(0, snapshotA.length)) : undefined;
+  const indexedB =
+    snapshotB.length >= 8 ? indexRustWorkspaceFiles(snapshotB, observedPaths.slice(snapshotA.length)) : undefined;
   if (!paths.length || paths.length > MAX_FILES) return undefined;
   const input = (file: AbstractVinyl | undefined) => {
     if (!file) return undefined;
@@ -229,8 +235,8 @@ export async function getRustFilesDiff(
     return workspace && { kind: 'workspace', ...workspace };
   };
   const projected = paths.map((relativePath) => {
-    const a = filesA.find((file) => file.relative === relativePath);
-    const b = filesB.find((file) => file.relative === relativePath);
+    const a = indexedA ? indexedA.get(relativePath) : filesA.find((file) => file.relative === relativePath);
+    const b = indexedB ? indexedB.get(relativePath) : filesB.find((file) => file.relative === relativePath);
     return { relativePath, left: input(a), right: input(b), a, b };
   });
   if (projected.some((file) => (file.a && !file.left) || (file.b && !file.right))) return undefined;

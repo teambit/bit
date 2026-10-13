@@ -547,8 +547,8 @@ jobs:
           BIT_TEST_SNAPSHOT_TRANSACTION_COMPILED=1 node --test scripts/rust-object-import/snapshot-values.test.cjs scripts/rust-object-import/snapshot-transaction.test.cjs scripts/rust-object-import/snapshot-transaction-store.test.cjs scripts/rust-object-import/snapshot-transaction-artifact.test.cjs
           node --test scripts/rust-object-import/three-way-merge.test.cjs
           BIT_TEST_THREE_WAY_MERGE_COMPILED=1 node --test scripts/rust-object-import/three-way-merge.test.cjs
-          node --test scripts/rust-object-import/workspace-inspection-test.cjs
-          BIT_TEST_WORKSPACE_INSPECTION_COMPILED=1 node --test scripts/rust-object-import/workspace-inspection-test.cjs
+          node --test scripts/rust-object-import/workspace-inspection-test.cjs scripts/rust-object-import/workspace-file-index.test.cjs
+          BIT_TEST_WORKSPACE_INSPECTION_COMPILED=1 node --test scripts/rust-object-import/workspace-inspection-test.cjs scripts/rust-object-import/workspace-file-index.test.cjs
           node --test scripts/rust-object-import/checkout-transition.test.cjs
           BIT_TEST_CHECKOUT_TRANSITION_COMPILED=1 node --test scripts/rust-object-import/checkout-transition.test.cjs
           node --test scripts/rust-object-import/checkout-files-guards.test.cjs

@@ -339,3 +339,24 @@ test('owned Source snapshots detect mutations without invoking public Buffer met
     assert.strictEqual(reloaded.contents, cached.contents, 'new aliases are verified with the canonical body hash');
   });
 });
+
+test('ordinary model loads own only their Source batch and return eager bodies after the owner closes', async (t) => {
+  const f = await fixture(t),
+    bytes = Buffer.from('source body read exactly once\r\n');
+  const { ref, filename } = await store(f.repository, bytes);
+  assert.equal(query.isRustHistoryQueryOperation(), false);
+  const files = await sources.prepareRustCheckoutSources(models(ref, 65), f.repository, true);
+  assert.ok(files);
+  assert.equal(files.length, 65);
+  assert.equal(query.isRustHistoryQueryOperation(), false, 'read ownership must end with the model load');
+  assert.ok(f.frames.some((frame) => frame.magic === 'BWC2' && frame.accepted && frame.bytes > 0));
+  assert.ok(!f.frames.some((frame) => frame.magic === 'BWC0'), 'eager loading must not also preflight the same bodies');
+  await fs.unlink(filename);
+  for (const file of files) {
+    assert.deepEqual(file.contents, bytes);
+    assert.equal(sources.getRustCheckoutSourceDescriptor(file)?.hash, ref.toString());
+  }
+  const cached = f.repository.getCache(ref);
+  assert.ok(cached);
+  assert.deepEqual(cached.contents, bytes);
+});

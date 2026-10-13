@@ -3,6 +3,7 @@ import path from 'path';
 import { types } from 'util';
 import {
   Ref,
+  withRustHistoryQueryOperation,
   registerRustSnapshotFunctionReference,
   hasRustSnapshotTransactionClassFields,
   hasRustSnapshotTransactionClassFieldsBatch,
@@ -195,8 +196,11 @@ function cachedCheckoutHashes(repository: Repository, hashes: string[]): Set<str
 /** Validate the complete source set before checkout can remove any old workspace files. */
 export async function prepareRustCheckoutSources(
   models: SourceFileModel[],
-  repository: Repository
+  repository: Repository,
+  ownReads = false
 ): Promise<SourceFile[] | undefined> {
+  if (ownReads && process.env.BIT_RUST_CLIENT_VCS === 'on' && !hasOwnedRepositorySourceOperation())
+    return withRustHistoryQueryOperation(() => prepareRustCheckoutSources(models, repository));
   if (
     process.env.BIT_RUST_CLIENT_VCS !== 'on' ||
     !canReadWorkspaceFilesNatively() ||

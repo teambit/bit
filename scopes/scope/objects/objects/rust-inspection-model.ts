@@ -73,12 +73,13 @@ type Plan = {
 function dense(value: any, mutable = false): value is any[] {
   if (!hasRustSnapshotTransactionClass(value, 'Array') && !hasRustSnapshotTransactionClass(value, 'ComponentIdList'))
     return false;
-  const own = Object.getOwnPropertyDescriptors(value);
-  const length = own.length?.value;
-  if (!Number.isSafeInteger(length) || length > 4096 || Reflect.ownKeys(own).length !== length + 1) return false;
-  if (mutable && !own.length.writable) return false;
+  const size = Object.getOwnPropertyDescriptor(value, 'length');
+  const length = size?.value;
+  if (!Number.isSafeInteger(length) || length > 4096 || Reflect.ownKeys(value).length !== length + 1) return false;
+  if (mutable && !size?.writable) return false;
   for (let index = 0; index < length; index += 1) {
-    if (!own[index] || !('value' in own[index]) || (mutable && !own[index].writable)) return false;
+    const entry = Object.getOwnPropertyDescriptor(value, String(index));
+    if (!entry || !('value' in entry) || (mutable && !entry.writable)) return false;
   }
   return true;
 }
@@ -111,8 +112,16 @@ function files(value: any, mode: Mode): { rows: any[]; original: any[] } | undef
   for (let index = 0; index < value.length; index += 1) {
     const entry = value[index];
     if (!entry || types.isProxy(entry) || Object.getPrototypeOf(entry) !== Object.prototype) return undefined;
-    const own = Object.getOwnPropertyDescriptors(entry),
-      ref = own.file?.value;
+    const own =
+      mode === 'modified'
+        ? {
+            file: Object.getOwnPropertyDescriptor(entry, 'file'),
+            relativePath: Object.getOwnPropertyDescriptor(entry, 'relativePath'),
+            name: Object.getOwnPropertyDescriptor(entry, 'name'),
+            test: Object.getOwnPropertyDescriptor(entry, 'test'),
+          }
+        : Object.getOwnPropertyDescriptors(entry);
+    const ref = own.file?.value;
     if (!ref || typeof ref !== 'object' || types.isProxy(ref)) return undefined;
     references.push(ref);
     const hash = Object.getOwnPropertyDescriptor(ref, 'hash')?.value;
@@ -228,10 +237,9 @@ function capture(version: Version, mode: Mode): Capture | undefined {
     !canSortInspectionExtensionsNatively()
   )
     return undefined;
-  const own = Object.getOwnPropertyDescriptors(version),
-    selected: Record<string, any> = {};
+  const selected: Record<string, any> = {};
   for (const field of mode === 'modified' ? semanticFields : ['files']) {
-    selected[field] = own[field]?.value;
+    selected[field] = Object.getOwnPropertyDescriptor(version, field)?.value;
     if (!writable(version, field)) return undefined;
   }
   const fileRows = files(selected.files, mode);
@@ -274,7 +282,13 @@ function captured(
   devDeps: any[] = [],
   exts: any[] = []
 ): Capture {
-  const copy = hydrate(fields);
+  // Only mutation validation needs hydrated configuration/maps; file and dependency rows stay on the wire.
+  const projected = fields as { kind: 'object'; value: [string | number[], RustCompactSnapshotValue][] };
+  const retained = new Set([...packageFields, 'overrides', 'extensions']);
+  const copy = hydrate({
+    kind: 'object',
+    value: projected.value.filter(([key]) => typeof key === 'string' && retained.has(key)),
+  });
   return {
     version,
     fields,
@@ -505,6 +519,11 @@ function unchanged(before: Capture, after?: Capture): boolean {
   );
 }
 
+function overlaps(left: readonly object[], right: readonly object[]): boolean {
+  const entries = new Set(right);
+  return left.some((entry) => entries.has(entry));
+}
+
 /** Rust owns semantic normalization and SHA comparison after the existing conversion callbacks. */
 export async function compareRustInspectionVersions(
   leftVersion: Version,
@@ -519,9 +538,9 @@ export async function compareRustInspectionVersions(
   if (!left || !right) return undefined;
   if (
     leftVersion === rightVersion ||
-    left.files.some((entry) => right.files.includes(entry)) ||
-    left.dependencies.some((entry) => right.dependencies.includes(entry)) ||
-    left.devDependencies.some((entry) => right.devDependencies.includes(entry))
+    overlaps(left.files, right.files) ||
+    overlaps(left.dependencies, right.dependencies) ||
+    overlaps(left.devDependencies, right.devDependencies)
   )
     return undefined;
   const plan = await requestRustWorkspaceInspection<Plan>(
