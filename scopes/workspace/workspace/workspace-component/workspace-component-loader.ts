@@ -584,14 +584,14 @@ export class WorkspaceComponentLoader {
       // and only the failing ones (and the components using them) are reported.
       const failures: Array<{ aspectId: string; errMsg: string }> = [];
       await mapSeries(aspectIds, async (aspectId) => {
-        try {
-          await loadAsAspects([aspectId]);
-          // an aspect that failed during the batch is considered loaded (to not retry it), so it doesn't throw here
-          if (this.aspectLoader.failedAspects.includes(aspectId)) {
-            failures.push({ aspectId, errMsg: err.message || String(err) });
-          }
-        } catch (singleErr: any) {
-          failures.push({ aspectId, errMsg: singleErr.message || String(singleErr) });
+        let singleErr: any;
+        await loadAsAspects([aspectId]).catch((loadErr) => {
+          singleErr = loadErr;
+        });
+        // a load that doesn't throw is not enough. the loader hides errors it already reported in the batch.
+        if (!this.aspectLoader.hasAspectInstance(aspectId)) {
+          const failure = singleErr || err;
+          failures.push({ aspectId, errMsg: failure.message || String(failure) });
         }
       });
       // the error is not thrown (best-effort loading), but it's surfaced as a component issue
