@@ -76,7 +76,7 @@ const commandHistoryFile = 'command-history';
 class BitLogger implements IBitLogger {
   logger: PinoLogger;
   private profiler: Profiler;
-  private onBeforeExitFns: Function[] = [];
+  private onBeforeExitFns = new Map<string | symbol, Function>();
 
   private _isDaemon = false; // 'bit cli' is a daemon as it should never exit the process, unless the user kills it
   private _rotationTimer: ReturnType<typeof setInterval> | undefined;
@@ -231,12 +231,20 @@ class BitLogger implements IBitLogger {
     if (shouldWriteToConsole) this.console(fullMsg);
   }
 
-  registerOnBeforeExitFn(fn: Function) {
-    this.onBeforeExitFns.push(fn);
+  /**
+   * @param key when given, a later registration with the same key replaces this one. pass it for a hook that each
+   * harmony load registers, so a process that loads harmony more than once keeps one copy of the hook, and not one
+   * per load (each copy keeps its harmony instance in memory).
+   */
+  registerOnBeforeExitFn(fn: Function, key?: string) {
+    this.onBeforeExitFns.set(key ?? Symbol('on-before-exit'), fn);
   }
 
   async runOnBeforeExitFns() {
-    return pMapSeries(this.onBeforeExitFns, (fn) => fn());
+    // each hook runs once. "bit cli" gets here after every command, and must not run the same hooks again each time.
+    const fns = [...this.onBeforeExitFns.values()];
+    this.onBeforeExitFns.clear();
+    return pMapSeries(fns, (fn) => fn());
   }
 
   async exitAfterFlush(code = 0, commandName: string, cliOutput = '') {

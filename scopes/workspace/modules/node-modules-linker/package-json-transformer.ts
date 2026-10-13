@@ -8,10 +8,21 @@ type PackageJsonTransformers = Function[];
 
 export class PackageJsonTransformer {
   static packageJsonTransformersRegistry: PackageJsonTransformers = [];
+  private static transformerByKey = new Map<string, Function>();
+
+  /**
+   * @param key when given, a later registration with the same key replaces this one. aspects pass their id, so a
+   * process that loads harmony more than once runs the transformer of the latest load only.
+   */
   static registerPackageJsonTransformer(
-    func: (component: Component, packageJsonObject: Record<string, any>) => Promise<Record<string, any>>
+    func: (component: Component, packageJsonObject: Record<string, any>) => Promise<Record<string, any>>,
+    key?: string
   ) {
-    this.packageJsonTransformersRegistry.push(func);
+    const previous = key ? this.transformerByKey.get(key) : undefined;
+    const index = previous ? this.packageJsonTransformersRegistry.indexOf(previous) : -1;
+    if (index === -1) this.packageJsonTransformersRegistry.push(func);
+    else this.packageJsonTransformersRegistry[index] = func;
+    if (key) this.transformerByKey.set(key, func);
   }
 
   /**

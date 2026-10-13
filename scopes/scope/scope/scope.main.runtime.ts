@@ -1520,7 +1520,7 @@ export class ScopeMain implements ComponentFactory {
     // used to answer "is content transformed?". the slot is filled by other aspects' providers, so
     // this is a live check rather than a snapshot taken here.
     Repository.hasPostObjectReadTransformer = () => postObjectReadSlot.values().length > 0;
-    ExternalActions.externalActions.push(new ClearCacheAction(scope));
+    ExternalActions.register(new ClearCacheAction(scope));
 
     express.register([
       new PutRoute(scope, postPutSlot),

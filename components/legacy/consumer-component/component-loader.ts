@@ -65,8 +65,17 @@ export class ComponentLoader {
   }
 
   static onComponentLoadSubscribers: OnComponentLoadSubscriber[] = [];
-  static registerOnComponentLoadSubscriber(func: OnComponentLoadSubscriber) {
-    this.onComponentLoadSubscribers.push(func);
+  private static onComponentLoadSubscriberByKey = new Map<string, OnComponentLoadSubscriber>();
+  /**
+   * @param key when given, a later registration with the same key replaces this one. aspects pass their id, so a
+   * process that loads harmony more than once runs the subscriber of the latest load only.
+   */
+  static registerOnComponentLoadSubscriber(func: OnComponentLoadSubscriber, key?: string) {
+    const previous = key ? this.onComponentLoadSubscriberByKey.get(key) : undefined;
+    const index = previous ? this.onComponentLoadSubscribers.indexOf(previous) : -1;
+    if (index === -1) this.onComponentLoadSubscribers.push(func);
+    else this.onComponentLoadSubscribers[index] = func;
+    if (key) this.onComponentLoadSubscriberByKey.set(key, func);
   }
 
   static onComponentIssuesCalcSubscribers: OnComponentIssuesCalcSubscriber[] = [];
