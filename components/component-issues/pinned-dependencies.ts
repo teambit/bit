@@ -1,9 +1,9 @@
 import { ComponentIssue, ISSUE_FORMAT_SPACE } from './component-issue';
 
 export class PinnedDependencies extends ComponentIssue {
-  description = 'dependencies with a version set in the component config (e.g. "bit deps set"), not by the workspace';
-  solution =
-    'if the version is not needed in the component config, run "bit deps unset <component> <package>". to change the version for the workspace, run "bit install <package>@<version>"';
+  description =
+    'dependencies on workspace components with a version set in the config (e.g. "bit deps set"), not the workspace version';
+  solution = 'to use the workspace version, run "bit deps unset <component> <package>"';
   data: string[] = []; // package@version
   isTagBlocker = false;
   dataToString() {

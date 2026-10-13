@@ -3,9 +3,9 @@ import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import { CLIAspect } from '@teambit/cli';
 import moment from 'moment';
 import type { ComponentID } from '@teambit/component-id';
-import type { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
+import type { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect, KEY_NAME_BY_LIFECYCLE_TYPE } from '@teambit/dependency-resolver';
-import type { ExtensionsOrigin, Workspace } from '@teambit/workspace';
+import type { Workspace } from '@teambit/workspace';
 import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
 import fs from 'fs-extra';
 import path from 'path';
@@ -278,69 +278,26 @@ export class DependenciesMain {
   }
 
   /**
-   * add an issue for the dependencies whose version is set in the component config (e.g. "bit deps set") and is
-   * different from what the workspace sets (variants, env or workspace.jsonc). it's not a tag blocker, it's there to make it visible, because often a
-   * version is set this way when it's not needed, e.g. instead of "bit install <package>@<version>".
+   * add an issue for dependencies on workspace components whose version is set in the config (e.g. "bit deps set").
+   * such a dependency doesn't follow the workspace version of the component, e.g. it's not auto-tagged with it.
+   * it's not a tag blocker, it's there to make it visible, because often a version is set this way when not needed.
    */
   async addPinnedDependenciesIssues(components: Component[], issuesToIgnore: string[]) {
     if (issuesToIgnore.includes(IssuesClasses.PinnedDependencies.name)) return;
-    const rootPolicy = this.dependencyResolver.getWorkspacePolicy();
-    await pMapSeries(components, async (component) => {
-      const setByComponentConfig = await this.getPolicyFromConfig(component.id, 'component');
-      if (!setByComponentConfig.length) return;
-      const setByVariants = await this.getPolicyFromConfig(component.id, 'variants');
-      const envPolicy = await this.dependencyResolver.getComponentEnvPolicy(component);
-      const componentDeps = this.dependencyResolver
-        .getDependencies(component)
-        .toTypeArray<ComponentDependency>('component');
-      const pinned = setByComponentConfig.filter(({ pkgName, version }) => {
-        const componentDep = componentDeps.find((dep) => dep.getPackageName() === pkgName);
-        // a component in the workspace is resolved to its workspace version, unless its version is set in the config.
-        // with the config, it doesn't follow the workspace version anymore. e.g. it's not auto-tagged with it.
-        if (componentDep && this.workspace.hasId(componentDep.componentId, { ignoreVersion: true })) return true;
-        const versionsFromWorkspace = [
-          setByVariants.find((entry) => entry.pkgName === pkgName)?.version,
-          envPolicy.find(pkgName)?.value.version,
-          rootPolicy.getDepVersion(pkgName),
-        ];
-        return !versionsFromWorkspace.includes(version);
-      });
-      if (pinned.length) {
-        component.state.issues.getOrCreate(IssuesClasses.PinnedDependencies).data = pinned.map(
-          ({ pkgName, version }) => `${pkgName}@${version}`
+    components.forEach((component) => {
+      const consumerComponent: ConsumerComponent = component.state._consumer;
+      const pinned = consumerComponent
+        .getAllDependencies()
+        .filter(
+          (dep) =>
+            consumerComponent.dependenciesWithVersionFromConfig?.includes(dep.id.toStringWithoutVersion()) &&
+            this.workspace.hasId(dep.id, { ignoreVersion: true })
         );
-      }
+      if (!pinned.length) return;
+      component.state.issues.getOrCreate(IssuesClasses.PinnedDependencies).data = pinned.map(
+        (dep) => `${dep.packageName || dep.id.toStringWithoutVersion()}@${dep.id.version}`
+      );
     });
-  }
-
-  /**
-   * returns the dependencies with a version in the dependency-resolver policy of the component config:
-   * "component" - .bitmap, component.json or the config saved with the component (once it was tagged/snapped).
-   * "variants" - the variants of workspace.jsonc.
-   */
-  private async getPolicyFromConfig(
-    id: ComponentID,
-    configOrigin: 'component' | 'variants'
-  ): Promise<Array<{ pkgName: string; version: string }>> {
-    const excludeOrigins: ExtensionsOrigin[] =
-      configOrigin === 'component'
-        ? ['WorkspaceVariants', 'ModelNonSpecific', 'ConfigMerge']
-        : ['BitmapFile', 'ComponentJsonFile', 'ModelSpecific', 'ModelNonSpecific', 'ConfigMerge'];
-    const componentFromScope =
-      configOrigin === 'component' && id.hasVersion() ? await this.workspace.scope.get(id) : undefined;
-    const { extensions } = await this.workspace.componentExtensions(id, componentFromScope, excludeOrigins, {
-      loadExtensions: false,
-    });
-    const policy = extensions.findCoreExtension(DependencyResolverAspect.id)?.config?.policy;
-    if (!policy) return [];
-    return Object.values(KEY_NAME_BY_LIFECYCLE_TYPE).flatMap((depField) =>
-      Object.entries(policy[depField] || {}).flatMap(([pkgName, value]: [string, any]) => {
-        const version = typeof value === 'string' ? value : value?.version;
-        // "-" removes the dependency and "+" uses the workspace version. neither sets a version.
-        if (!version || version === '-' || version === '+') return [];
-        return [{ pkgName, version }];
-      })
-    );
   }
 
   async reset(componentPattern: string): Promise<ComponentID[]> {
