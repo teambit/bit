@@ -149,8 +149,8 @@ importers:
         specifier: 1100.0.19
         version: 1100.0.19
       '@pnpm/napi':
-        specifier: 12.12.1
-        version: 12.12.1
+        specifier: 12.13.0
+        version: 12.13.0
       '@pnpm/network.ca-file':
         specifier: 3.0.3
         version: 3.0.3
@@ -18347,8 +18347,8 @@ importers:
   scopes/dependencies/dependency-resolver:
     dependencies:
       '@pnpm/napi':
-        specifier: 12.12.1
-        version: 12.12.1
+        specifier: 12.13.0
+        version: 12.13.0
       '@pnpm/network.ca-file':
         specifier: 3.0.3
         version: 3.0.3
@@ -18505,8 +18505,8 @@ importers:
         specifier: 1100.0.19
         version: 1100.0.19
       '@pnpm/napi':
-        specifier: 12.12.1
-        version: 12.12.1
+        specifier: 12.13.0
+        version: 12.13.0
       '@pnpm/plugin-trusted-deps':
         specifier: 0.2.2
         version: 0.2.2
@@ -22226,8 +22226,8 @@ importers:
   scopes/pkg/pkg:
     dependencies:
       '@pnpm/napi':
-        specifier: 12.12.1
-        version: 12.12.1
+        specifier: 12.13.0
+        version: 12.13.0
       '@teambit/bit-error':
         specifier: ~0.0.404
         version: 0.0.404
@@ -29319,85 +29319,85 @@ packages:
     resolution: {integrity: sha512-A3bRMTIZ5ptDPAE/KsDeY1J5UqqOiyo66+k/mUvaVjx++OJdMbp9If5kisEq9ljAV5r5TRpkxsJbSdrdJ5WtzQ==}
     engines: {node: '>=22.13'}
 
-  '@pnpm/napi.android-arm64@12.12.1':
-    resolution: {integrity: sha512-pnnpuLDRoqXTKGte1Hh+wmV5qAOLHKhIvLA0iR9J0A4BkHjZ3ki78+lXxWQ2d3HbwDTAi0F5MA1DG1IzTNd7Ww==}
+  '@pnpm/napi.android-arm64@12.13.0':
+    resolution: {integrity: sha512-p8PHeYKi42Cxq7pajTMoIctP72X4W2kJ5d1fTzeRDRx8og5R+twuyGm4yZq+qZighGsXeItjBftzildW0/qC4A==}
     cpu: [arm64]
     os: [android]
 
-  '@pnpm/napi.android-x64@12.12.1':
-    resolution: {integrity: sha512-jtulZfsm61b7vVLZhpDd7v+Zrodpyz8zuG/SMLRj/d1MCi+17es5l35VAtGif82Hc3oqmC3yjlblY5blHXD23g==}
+  '@pnpm/napi.android-x64@12.13.0':
+    resolution: {integrity: sha512-8fBAlhZJJz5ik9Xr6sCRs2hwEZbxAd/YthybOW3EGxjWe5IWdScXOCkKkD+Lw8vZ5wbJ81ffoou8Lj5vuVYjqw==}
     cpu: [x64]
     os: [android]
 
-  '@pnpm/napi.darwin-arm64@12.12.1':
-    resolution: {integrity: sha512-j7cFSJEX2KfxkHcISi6M3qFQcx6C3uulwqlPPC3/U9WbAQOJ/ouo8WISpdFBWiU5Ll7IhzDgs2RQZmZG/YiJTw==}
+  '@pnpm/napi.darwin-arm64@12.13.0':
+    resolution: {integrity: sha512-0ez05b1AMyaqxR0gOqY6VTN8LJsmXIKsElGcrZwEoZkMo3h7FrfddN1iJ9cYA1a4gNbq82PK6ii00ZzLcY0A6Q==}
     cpu: [arm64]
     os: [darwin]
 
-  '@pnpm/napi.darwin-x64@12.12.1':
-    resolution: {integrity: sha512-nJc6d3J/4B8RFA0fdAdHhZIgPPYd3Gaq7bR4oVtAKu6TUo6zzuMCOZK0Dk3Cbct75M81fZE9ZaPXef4Vmn7e5g==}
+  '@pnpm/napi.darwin-x64@12.13.0':
+    resolution: {integrity: sha512-B7Pk2PX2qQG0p41bjhys8CGjHvCXC1QLaRQf1E6IGjVPruQB4jT2uXc0BkYdPKAOG6QMCeWhDenozD/lsiGZqg==}
     cpu: [x64]
     os: [darwin]
 
-  '@pnpm/napi.freebsd-x64@12.12.1':
-    resolution: {integrity: sha512-RRIVEfOwi5b+Q/grmc4Eit6J2KwRJRismI2nEjuBfzjkhRjDOyfySZvEBv2u/WaQughoHQphRw/4+QK0QEf9dA==}
+  '@pnpm/napi.freebsd-x64@12.13.0':
+    resolution: {integrity: sha512-UJrlUiyAlWMbngXZ2duqR+erIoVzmo90gq+4NpYPfIAwG4wmiXS7llP+Xdk0iSxrSJ7vkxZOhLtO5uCQzE3Zhg==}
     cpu: [x64]
     os: [freebsd]
 
-  '@pnpm/napi.linux-arm64-musl@12.12.1':
-    resolution: {integrity: sha512-JT3ffviogPYmwG+yMUpDDxYANiTmLHxsQ3Ix01XP1IkZtQ3g7RnqonljRw1IcDq0gOlDT4soKp0+jHGxVdeWdg==}
+  '@pnpm/napi.linux-arm64-musl@12.13.0':
+    resolution: {integrity: sha512-JF2ZCdywhVqQfPEIg8C4D0Bmt2EhPz/RxGPw3LT0iT8CPYPOM8FQhQ+e4sjpswBUSWUxjJQonmZpGtCxCZ3k0g==}
     cpu: [arm64]
     os: [linux]
     libc: [musl]
 
-  '@pnpm/napi.linux-arm64@12.12.1':
-    resolution: {integrity: sha512-Uud5eXbtoVy3fux/UG6T3ttXL9VqvRUSa3/sEEadb/z5bGFHxjp3S5aZGvXfEb5Osi8kt5LFYUDisZHGIKFzuQ==}
+  '@pnpm/napi.linux-arm64@12.13.0':
+    resolution: {integrity: sha512-ZgaRgfQn8Up/zP/sRxpFwEmgB5EOEgVh/GRTprHs3KwVCNZh+/sWhtcZXf9lNv0d1Fw62Ld5QjsaJHBkIz/ZRw==}
     cpu: [arm64]
     os: [linux]
     libc: [glibc]
 
-  '@pnpm/napi.linux-ppc64@12.12.1':
-    resolution: {integrity: sha512-P/VSeF4Aap4Gj4LSynUipP5Jn3U1WPFzdESGknWimnsdec9GGpoK/zArSxmuJnTlNMkcPuEf1WM9vwYRdkeiZw==}
+  '@pnpm/napi.linux-ppc64@12.13.0':
+    resolution: {integrity: sha512-jmpz8BRONuslw2IUjwAKajSnrEePUpBhLHA68x0hHKW/QCGwzgkffxLN3SiTH9ryatLrv9ZTj6t+21eF3EU0LQ==}
     cpu: [ppc64]
     os: [linux]
     libc: [glibc]
 
-  '@pnpm/napi.linux-riscv64@12.12.1':
-    resolution: {integrity: sha512-xuJPrglGv9rwl70qeopy9CrvkyZRiqlKbWh6GYqNn8mvQe3iQ0cDieqOZPUGPnla2XhHsyp4NKj85b+XEK45Wg==}
+  '@pnpm/napi.linux-riscv64@12.13.0':
+    resolution: {integrity: sha512-bBpcsjuBwMjlYsqEo1WjyZkCkVIMESILpzBokf5I+AGhiQh3hCiQLvciE5BfD/tkX+ppe83vtbunMHMgQEntSQ==}
     cpu: [riscv64]
     os: [linux]
     libc: [glibc]
 
-  '@pnpm/napi.linux-s390x@12.12.1':
-    resolution: {integrity: sha512-zdB/esQy5lWmlgYIMQEelPUC5xMv5Oy/qDQYgaNgIDN7QQxxas5F0zG3En5LdpbynZ941LtLRvoRJP6Cl03WFQ==}
+  '@pnpm/napi.linux-s390x@12.13.0':
+    resolution: {integrity: sha512-lorNyKSflfvdOHs7uPZcR4cdOeysmVGcS2gHsh02j7UBVfB9MGc8/zHX3sQxTqUd0PUm1LNjuFniPLuFmCh/jA==}
     cpu: [s390x]
     os: [linux]
     libc: [glibc]
 
-  '@pnpm/napi.linux-x64-musl@12.12.1':
-    resolution: {integrity: sha512-UR578maK1HMgyw6GWGM7LU+eLI2eUPA+EasOrG2sKmuzVgUthtY/0Q/GW5BDG/DEsPWgigl5a8gOpyEBq6nkhg==}
+  '@pnpm/napi.linux-x64-musl@12.13.0':
+    resolution: {integrity: sha512-WDa8y4hEwJ41BbA4rUpU19Jv+Vj24S9hur9CNgSNMIikS6wS68+/rQAGmLSiUSBf1IFb1SPfVUe/LsIlyvYwrQ==}
     cpu: [x64]
     os: [linux]
     libc: [musl]
 
-  '@pnpm/napi.linux-x64@12.12.1':
-    resolution: {integrity: sha512-l8OoZ1+QIuCSD9WbisptmBPfWc/aZt8ALhl8CtYsBrB7rwISG26GlpWTDZ/yq9t4q0RH1Y/ADst5L4xAH+HnXQ==}
+  '@pnpm/napi.linux-x64@12.13.0':
+    resolution: {integrity: sha512-NkmHfCrZbhlE+HcZGAcmmu7n4DWoPgSia9ZDWKgBG537N1hqjPbQsFXCV0g7ZvU+OgAvQUNUL5DemLuNMxJ2gQ==}
     cpu: [x64]
     os: [linux]
     libc: [glibc]
 
-  '@pnpm/napi.win32-arm64@12.12.1':
-    resolution: {integrity: sha512-SEfESbE5UtkSspDoestN2BG+mIdHAfUslREbmXmIg2j4uIUkLJRf1+g8Jl3sxpkse5vYnjVsj/uE77Pb2Fg/6g==}
+  '@pnpm/napi.win32-arm64@12.13.0':
+    resolution: {integrity: sha512-qMsC0oJFiHZlCZO9BMKw4gUBEI0jhbwO2IfO7ESYU4MqtfwzvIeVqz1BIhboO/zm+TwL4Nq51w86iEGQfo5bOA==}
     cpu: [arm64]
     os: [win32]
 
-  '@pnpm/napi.win32-x64@12.12.1':
-    resolution: {integrity: sha512-LfpOSr5CfqRubUM0clPVw2XMuPp82tKCWZuGw8tufxGPV+ScjXMS2sNRyQOY6hVx5tVaHu9y6kLEg3PXmGq2nQ==}
+  '@pnpm/napi.win32-x64@12.13.0':
+    resolution: {integrity: sha512-AFOGxiWUDNJd2ZUC5XpeJyXUr8RFvpXBwZ/aVZ6hxu28cG2utr46Dj3meA6YGqT9Ioid0m3f+gvo+SRwbRAZhA==}
     cpu: [x64]
     os: [win32]
 
-  '@pnpm/napi@12.12.1':
-    resolution: {integrity: sha512-RpGzz8YP1EklV0ALFZSl1A488GnyrlIRh0PSuKQStZajBXRSRxCEPwkfUih1l0iQq2xCwg29pGIatT1pYIu2Cw==}
+  '@pnpm/napi@12.13.0':
+    resolution: {integrity: sha512-SCFr0EX7pX2evPGMMmM3iRj4WTcrPJAQT+agtbA6dBJ+IFwwK87D9KKBRAry0WQbLB5hQwaOPFBsLibw0/BVng==}
     engines: {node: '>=18.*'}
 
   '@pnpm/network.agent@0.1.0':
@@ -51715,64 +51715,64 @@ snapshots:
       bole: 5.0.29
       split2: 4.2.0
 
-  '@pnpm/napi.android-arm64@12.12.1':
+  '@pnpm/napi.android-arm64@12.13.0':
     optional: true
 
-  '@pnpm/napi.android-x64@12.12.1':
+  '@pnpm/napi.android-x64@12.13.0':
     optional: true
 
-  '@pnpm/napi.darwin-arm64@12.12.1':
+  '@pnpm/napi.darwin-arm64@12.13.0':
     optional: true
 
-  '@pnpm/napi.darwin-x64@12.12.1':
+  '@pnpm/napi.darwin-x64@12.13.0':
     optional: true
 
-  '@pnpm/napi.freebsd-x64@12.12.1':
+  '@pnpm/napi.freebsd-x64@12.13.0':
     optional: true
 
-  '@pnpm/napi.linux-arm64-musl@12.12.1':
+  '@pnpm/napi.linux-arm64-musl@12.13.0':
     optional: true
 
-  '@pnpm/napi.linux-arm64@12.12.1':
+  '@pnpm/napi.linux-arm64@12.13.0':
     optional: true
 
-  '@pnpm/napi.linux-ppc64@12.12.1':
+  '@pnpm/napi.linux-ppc64@12.13.0':
     optional: true
 
-  '@pnpm/napi.linux-riscv64@12.12.1':
+  '@pnpm/napi.linux-riscv64@12.13.0':
     optional: true
 
-  '@pnpm/napi.linux-s390x@12.12.1':
+  '@pnpm/napi.linux-s390x@12.13.0':
     optional: true
 
-  '@pnpm/napi.linux-x64-musl@12.12.1':
+  '@pnpm/napi.linux-x64-musl@12.13.0':
     optional: true
 
-  '@pnpm/napi.linux-x64@12.12.1':
+  '@pnpm/napi.linux-x64@12.13.0':
     optional: true
 
-  '@pnpm/napi.win32-arm64@12.12.1':
+  '@pnpm/napi.win32-arm64@12.13.0':
     optional: true
 
-  '@pnpm/napi.win32-x64@12.12.1':
+  '@pnpm/napi.win32-x64@12.13.0':
     optional: true
 
-  '@pnpm/napi@12.12.1':
+  '@pnpm/napi@12.13.0':
     optionalDependencies:
-      '@pnpm/napi.android-arm64': 12.12.1
-      '@pnpm/napi.android-x64': 12.12.1
-      '@pnpm/napi.darwin-arm64': 12.12.1
-      '@pnpm/napi.darwin-x64': 12.12.1
-      '@pnpm/napi.freebsd-x64': 12.12.1
-      '@pnpm/napi.linux-arm64': 12.12.1
-      '@pnpm/napi.linux-arm64-musl': 12.12.1
-      '@pnpm/napi.linux-ppc64': 12.12.1
-      '@pnpm/napi.linux-riscv64': 12.12.1
-      '@pnpm/napi.linux-s390x': 12.12.1
-      '@pnpm/napi.linux-x64': 12.12.1
-      '@pnpm/napi.linux-x64-musl': 12.12.1
-      '@pnpm/napi.win32-arm64': 12.12.1
-      '@pnpm/napi.win32-x64': 12.12.1
+      '@pnpm/napi.android-arm64': 12.13.0
+      '@pnpm/napi.android-x64': 12.13.0
+      '@pnpm/napi.darwin-arm64': 12.13.0
+      '@pnpm/napi.darwin-x64': 12.13.0
+      '@pnpm/napi.freebsd-x64': 12.13.0
+      '@pnpm/napi.linux-arm64': 12.13.0
+      '@pnpm/napi.linux-arm64-musl': 12.13.0
+      '@pnpm/napi.linux-ppc64': 12.13.0
+      '@pnpm/napi.linux-riscv64': 12.13.0
+      '@pnpm/napi.linux-s390x': 12.13.0
+      '@pnpm/napi.linux-x64': 12.13.0
+      '@pnpm/napi.linux-x64-musl': 12.13.0
+      '@pnpm/napi.win32-arm64': 12.13.0
+      '@pnpm/napi.win32-x64': 12.13.0
 
   '@pnpm/network.agent@0.1.0(supports-color@9.4.0)':
     dependencies:
@@ -64018,7 +64018,7 @@ snapshots:
 
   '@teambit/dependency-resolver@file:scopes/dependencies/dependency-resolver(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react@18.3.1)(supports-color@9.4.0)':
     dependencies:
-      '@pnpm/napi': 12.12.1
+      '@pnpm/napi': 12.13.0
       '@pnpm/network.ca-file': 3.0.3
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
@@ -64080,7 +64080,7 @@ snapshots:
 
   '@teambit/dependency-resolver@file:scopes/dependencies/dependency-resolver(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
-      '@pnpm/napi': 12.12.1
+      '@pnpm/napi': 12.13.0
       '@pnpm/network.ca-file': 3.0.3
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
@@ -64142,7 +64142,7 @@ snapshots:
 
   '@teambit/dependency-resolver@file:scopes/dependencies/dependency-resolver(@teambit/documenter.theme.theme-compositions@4.1.5)(@teambit/mdx.ui.mdx-layout@1.0.14)(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
-      '@pnpm/napi': 12.12.1
+      '@pnpm/napi': 12.13.0
       '@pnpm/network.ca-file': 3.0.3
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
@@ -75821,7 +75821,7 @@ snapshots:
 
   '@teambit/pkg@file:scopes/pkg/pkg(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react@18.3.1)(supports-color@9.4.0)':
     dependencies:
-      '@pnpm/napi': 12.12.1
+      '@pnpm/napi': 12.13.0
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.5
       '@teambit/component-issues': file:components/component-issues
@@ -75864,7 +75864,7 @@ snapshots:
 
   '@teambit/pkg@file:scopes/pkg/pkg(chai@4.3.0)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
-      '@pnpm/napi': 12.12.1
+      '@pnpm/napi': 12.13.0
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.5
       '@teambit/component-issues': file:components/component-issues
@@ -75907,7 +75907,7 @@ snapshots:
 
   '@teambit/pkg@file:scopes/pkg/pkg(chai@5.2.1)(domexception@4.0.0)(graphql@15.8.0)(react@19.2.7)(supports-color@9.4.0)':
     dependencies:
-      '@pnpm/napi': 12.12.1
+      '@pnpm/napi': 12.13.0
       '@teambit/bit-error': 0.0.404
       '@teambit/component-id': 1.2.5
       '@teambit/component-issues': file:components/component-issues
@@ -75952,7 +75952,7 @@ snapshots:
     dependencies:
       '@pnpm/deps.path': 1100.1.0
       '@pnpm/lockfile.types': 1100.0.19
-      '@pnpm/napi': 12.12.1
+      '@pnpm/napi': 12.13.0
       '@pnpm/plugin-trusted-deps': 0.2.2
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
@@ -75990,7 +75990,7 @@ snapshots:
     dependencies:
       '@pnpm/deps.path': 1100.1.0
       '@pnpm/lockfile.types': 1100.0.19
-      '@pnpm/napi': 12.12.1
+      '@pnpm/napi': 12.13.0
       '@pnpm/plugin-trusted-deps': 0.2.2
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
@@ -76028,7 +76028,7 @@ snapshots:
     dependencies:
       '@pnpm/deps.path': 1100.1.0
       '@pnpm/lockfile.types': 1100.0.19
-      '@pnpm/napi': 12.12.1
+      '@pnpm/napi': 12.13.0
       '@pnpm/plugin-trusted-deps': 0.2.2
       '@pnpm/types': 1101.9.0
       '@teambit/bit-error': 0.0.404
