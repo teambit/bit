@@ -68,6 +68,12 @@ export type BasicTagParams = BasicTagSnapParams & {
   skipPublishedVersions?: boolean;
 };
 
+/**
+ * a workspace component that depends on a tagged/snapped component, but its config sets the version of this
+ * dependency (e.g. "bit deps set"). it doesn't use the workspace version, so it's not auto-tagged.
+ */
+export type DependentWithPinnedDeps = { id: ComponentID; pinnedDependencies: string[] };
+
 export type VersionMakerParams = {
   tagDataPerComp?: TagDataPerComp[];
   populateArtifactsFrom?: ComponentID[];
@@ -123,6 +129,7 @@ export class VersionMaker {
   async makeVersion(): Promise<{
     taggedComponents: ConsumerComponent[];
     autoTaggedResults: AutoTagResult[];
+    dependentsWithPinnedDeps: DependentWithPinnedDeps[];
     publishedPackages: string[];
     stagedConfig?: StagedConfig;
     removedComponents?: ComponentIdList;
@@ -154,6 +161,7 @@ export class VersionMaker {
     this.params.isSnap ? this.setHashes() : await this.setFutureVersions(autoTagIds);
     // go through all dependencies and update their versions
     this.updateDependenciesVersions();
+    const dependentsWithPinnedDeps = this.getDependentsWithPinnedDeps();
     this.recordWorkspaceRoot();
     await this.addLogToComponents(componentsToTag, autoTagComponents, messagePerId);
     // don't move it down. otherwise, it'll be empty and we don't know which components were during merge.
@@ -167,6 +175,7 @@ export class VersionMaker {
       return {
         taggedComponents: componentsToTag,
         autoTaggedResults: autoTagData,
+        dependentsWithPinnedDeps,
         publishedPackages: [],
         stagedConfig,
         totalComponentsCount: this.allComponentsToTag.length,
@@ -270,6 +279,7 @@ export class VersionMaker {
     return {
       taggedComponents: componentsToTag,
       autoTaggedResults: autoTagData,
+      dependentsWithPinnedDeps,
       publishedPackages,
       stagedConfig,
       removedComponents,
@@ -706,9 +716,12 @@ export class VersionMaker {
     // from main. we want to keep it as the user requested. Otherwise, this changes the dependency version to the newly
     // snapped one unintentionally.
     const componentsToTag = this.allComponentsToTag.filter((c) => !c.isRemoved());
-    const getNewDependencyVersion = (id: ComponentID): ComponentID | null => {
+    const getNewDependencyVersion = (id: ComponentID, dependent?: ConsumerComponent): ComponentID | null => {
       const foundDependency = componentsToTag.find((component) => component.id.isEqualWithoutVersion(id));
-      return foundDependency ? id.changeVersion(foundDependency.version) : null;
+      if (!foundDependency) return null;
+      // the dependent uses the version set in its config (e.g. "bit deps set"), not the workspace one. keep it.
+      if (dependent?.isDependencyVersionFromConfig(id)) return null;
+      return id.changeVersion(foundDependency.version);
     };
     const changeExtensionsVersion = (component: ConsumerComponent): void => {
       component.extensions.forEach((ext) => {
@@ -736,7 +749,7 @@ export class VersionMaker {
         // "ComponentID.fromObject expect to get an object, got an instance of ComponentID" (locally it didn't happen)
         const depId =
           dep.componentId instanceof ComponentID ? dep.componentId : ComponentID.fromObject(dep.componentId);
-        const newDepId = getNewDependencyVersion(depId);
+        const newDepId = getNewDependencyVersion(depId, component);
         dep.componentId = (newDepId || depId).serialize();
         dep.id = (newDepId || depId).toString();
         dep.version = (newDepId || depId).version;
@@ -754,7 +767,7 @@ export class VersionMaker {
       const componentRangePrefix =
         this.dependencyResolver.calcComponentRangePrefixByConsumerComponent(oneComponentToTag);
       oneComponentToTag.getAllDependencies().forEach((dependency) => {
-        const newDepId = getNewDependencyVersion(dependency.id);
+        const newDepId = getNewDependencyVersion(dependency.id, oneComponentToTag);
         if (!newDepId) return;
         dependency.id = newDepId;
         // if componentRangePrefix === '+', then, only it only saves packages in workspace.jsonc.
@@ -767,6 +780,25 @@ export class VersionMaker {
       changeExtensionsVersion(oneComponentToTag);
       oneComponentToTag = updateDepsResolverData(oneComponentToTag);
     });
+  }
+
+  private getDependentsWithPinnedDeps(): DependentWithPinnedDeps[] {
+    if (!this.allWorkspaceComps) return [];
+    const idsToTag = ComponentIdList.fromArray(this.allComponentsToTag.map((c) => c.id));
+    // like updateDependenciesVersions, a removed component doesn't count as a new version of a dependency
+    const idsWithNewVersion = ComponentIdList.fromArray(
+      this.allComponentsToTag.filter((c) => !c.isRemoved()).map((c) => c.id)
+    );
+    return compact(
+      this.allWorkspaceComps.map((component) => {
+        const consumerComponent: ConsumerComponent = component.state._consumer;
+        const pinnedDependencies = consumerComponent.getDependenciesWithVersionFromConfig((id) =>
+          idsWithNewVersion.hasWithoutVersion(id)
+        );
+        if (!pinnedDependencies.length || idsToTag.hasWithoutVersion(component.id)) return null;
+        return { id: component.id, pinnedDependencies };
+      })
+    );
   }
 
   /**

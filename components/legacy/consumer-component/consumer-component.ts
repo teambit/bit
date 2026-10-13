@@ -125,6 +125,11 @@ export class Component {
   componentFromModel: Component | undefined; // populated when loadedFromFileSystem is true and it exists in the model
   modelComponent?: ModelComponent; // populated when loadedFromFileSystem is true and it exists in the model
   issues: IssuesList;
+  /**
+   * ids (without version) of the dependencies whose version is set by the config (e.g. "bit deps set") and not
+   * resolved from the workspace. populated when loading the dependencies in the workspace. not saved in the model.
+   */
+  dependenciesWithVersionFromConfig?: string[];
   deprecated: boolean;
   protected removed?: boolean; // was it soft-removed. to get this data please use isRemoved() method.
   defaultScope: string | null;
@@ -328,6 +333,20 @@ export class Component {
 
   get extensionDependencies() {
     return new Dependencies(this.extensions.extensionsBitIds.map((id) => new Dependency(id, [])));
+  }
+
+  isDependencyVersionFromConfig(id: ComponentID): boolean {
+    return Boolean(this.dependenciesWithVersionFromConfig?.includes(id.toStringWithoutVersion()));
+  }
+
+  /**
+   * "package@version" of the dependencies whose version is set by the config (see dependenciesWithVersionFromConfig).
+   */
+  getDependenciesWithVersionFromConfig(filter: (id: ComponentID) => boolean = () => true): string[] {
+    if (!this.dependenciesWithVersionFromConfig?.length) return [];
+    return this.getAllDependencies()
+      .filter((dep) => this.isDependencyVersionFromConfig(dep.id) && filter(dep.id))
+      .map((dep) => `${dep.packageName || dep.id.toStringWithoutVersion()}@${dep.id.version}`);
   }
 
   getAllDependencies(): Dependency[] {
