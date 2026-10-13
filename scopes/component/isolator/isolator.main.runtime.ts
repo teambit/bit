@@ -1044,14 +1044,21 @@ export class IsolatorMain {
       async (capsule) => {
         const stored = await legacyScope.getDependenciesGraphByComponentId(capsule.component.id);
         if (stored == null || stored.isEmpty()) return capsule;
+        // No install graph means the graph feature is off and no lockfile is
+        // restored; a manifest pinned to the graph would then only lose the
+        // env's pins without gaining the frozen install.
+        if (!installGraph) return undefined;
         const dependenciesGraph = DependenciesGraph.deserialize(stored.serialize())!;
-        await this.attachExtensionGraphs(capsule.component, compact([dependenciesGraph, installGraph]), legacyScope);
+        await this.attachExtensionGraphs(capsule.component, [dependenciesGraph, installGraph], legacyScope);
         componentDependenciesGraphs.set(capsule.component.id.toString(), dependenciesGraph);
         return undefined;
       },
       { concurrency: concurrentComponentsLimit() }
     );
-    return { capsulesWithoutDependenciesGraph: CapsuleList.fromArray(compact(capsules)), componentDependenciesGraphs };
+    return {
+      capsulesWithoutDependenciesGraph: CapsuleList.fromArray(compact(capsules)),
+      componentDependenciesGraphs: installGraph ? componentDependenciesGraphs : undefined,
+    };
   }
 
   private async attachExtensionGraphs(component: Component, graphs: DependenciesGraph[], legacyScope: Scope) {

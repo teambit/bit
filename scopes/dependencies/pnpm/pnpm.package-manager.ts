@@ -127,16 +127,17 @@ export class PnpmPackageManager implements PackageManager {
     // locked version must be preserved so pnpm doesn't re-resolve it to a newer
     // registry version.
     const existingLockfile = await nodeApi.readLockfile<LockfileFile>({ dir: opts.rootDir });
-    const mergedLockfile = existingLockfile
-      ? mergeGraphLockfileIntoExisting(existingLockfile, graphLockfile)
-      : graphLockfile;
     // Whether the lockfile lists `link:` dependencies is the install's choice,
     // not the resolution's. The graph carries the setting of the workspace it
     // was saved in, which excludes links, and an install that includes them
-    // (fusepm does) would reject the restored lockfile over that alone.
-    if (mergedLockfile.settings && opts.excludeLinksFromLockfile != null) {
-      mergedLockfile.settings.excludeLinksFromLockfile = opts.excludeLinksFromLockfile;
-    }
+    // (fusepm does) would reject the restored lockfile over that alone. Both
+    // sides take the install's value before the merge compares their settings,
+    // so a difference in it alone does not cost the settings block.
+    applyInstallLinkSetting(graphLockfile, opts.excludeLinksFromLockfile);
+    if (existingLockfile) applyInstallLinkSetting(existingLockfile, opts.excludeLinksFromLockfile);
+    const mergedLockfile = existingLockfile
+      ? mergeGraphLockfileIntoExisting(existingLockfile, graphLockfile)
+      : graphLockfile;
     Object.assign(mergedLockfile, {
       bit: {
         ...(mergedLockfile as LockfileFile & { bit?: Record<string, unknown> }).bit,
@@ -714,6 +715,16 @@ function mergeEntryRecords<T extends object>(
     merged[key] = existingEntry ? ({ ...existingEntry, ...graphEntry } as T) : graphEntry;
   }
   return merged;
+}
+
+/**
+ * Record the install's `excludeLinksFromLockfile` in a lockfile's settings,
+ * when it records settings at all. See `dependenciesGraphToLockfile`.
+ */
+export function applyInstallLinkSetting(lockfile: LockfileFile, excludeLinksFromLockfile?: boolean): void {
+  if (lockfile.settings && excludeLinksFromLockfile != null) {
+    lockfile.settings.excludeLinksFromLockfile = excludeLinksFromLockfile;
+  }
 }
 
 function pruneUnreachableLockfileEntries(lockfile: LockfileFile): void {

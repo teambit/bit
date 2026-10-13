@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import type { ResolvedConfig } from '@pnpm/napi';
-import { PnpmPackageManager, mergeGraphLockfileIntoExisting } from './pnpm.package-manager';
+import { PnpmPackageManager, applyInstallLinkSetting, mergeGraphLockfileIntoExisting } from './pnpm.package-manager';
 
 describe('PnpmPackageManager.getNetworkConfig', () => {
   it('uses the Bit user agent when no user agent is configured', async () => {
@@ -216,5 +216,30 @@ describe('mergeGraphLockfileIntoExisting optional flags', () => {
       } as any
     );
     expect(merged.snapshots!['nan@2.29.0']).not.to.have.property('optional');
+  });
+});
+
+describe('applyInstallLinkSetting', () => {
+  it("records the install's value in a lockfile that records settings, so a merge keeps the block", () => {
+    const existing = {
+      lockfileVersion: '9.0',
+      importers: {},
+      settings: { autoInstallPeers: true, excludeLinksFromLockfile: false },
+    } as any;
+    const graph = {
+      lockfileVersion: '9.0',
+      importers: {},
+      settings: { autoInstallPeers: true, excludeLinksFromLockfile: true },
+    } as any;
+    applyInstallLinkSetting(existing, false);
+    applyInstallLinkSetting(graph, false);
+    const merged = mergeGraphLockfileIntoExisting(existing, graph);
+    expect(merged.settings).to.eql({ autoInstallPeers: true, excludeLinksFromLockfile: false });
+  });
+
+  it('leaves a lockfile without settings alone', () => {
+    const lockfile = { lockfileVersion: '9.0', importers: {} } as any;
+    applyInstallLinkSetting(lockfile, false);
+    expect(lockfile).not.to.have.property('settings');
   });
 });

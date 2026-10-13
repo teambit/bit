@@ -1736,3 +1736,29 @@ describe('several direct dependencies of the same name in a restored lockfile', 
     expect(lockfile.importers![comp1Dir].dependencies!.foo).to.eql({ version: '1.9.0', specifier: '^1.1.0' });
   });
 });
+
+describe('entries no importer reaches in a restored lockfile', () => {
+  it('are dropped before anything is resolved from the registry', async () => {
+    const graph = new DependenciesGraph({
+      packages: new Map([
+        ['foo@1.0.0', { resolution: { integrity: 'sha512-foo' } }],
+        // An attached extension's dev dependency: no resolution, and nothing reaches it.
+        ['@org/dev-only@1.0.0', { component: { scope: 'org', name: 'dev-only' } }],
+      ] as any),
+      edges: [
+        {
+          id: DependenciesGraph.ROOT_EDGE_ID,
+          neighbours: [{ id: 'foo@1.0.0', name: 'foo', specifier: '1.0.0', lifecycle: 'runtime' }],
+        },
+      ],
+    });
+    const lockfile = await convertGraphToLockfile(graph, {
+      manifests: { [path.resolve('comps/comp1')]: { dependencies: { foo: '1.0.0' } } },
+      rootDir: process.cwd(),
+      resolve: () => {
+        throw new Error('an unreachable entry must not be resolved');
+      },
+    });
+    expect(Object.keys(lockfile.packages!)).to.eql(['foo@1.0.0']);
+  });
+});

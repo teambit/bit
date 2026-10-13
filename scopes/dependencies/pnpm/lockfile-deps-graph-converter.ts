@@ -438,6 +438,10 @@ export async function convertGraphToLockfile(
     }
   }
   linkWorkspaceComponents(lockfile, manifests, rootDir);
+  // Only what the importers reach is worth resolving: a graph holds entries
+  // no manifest here declares (an attached extension's dev dependencies, for
+  // one), and a registry lookup for them would be wasted or could fail.
+  dropUnreachableLockfileEntries(lockfile);
   const pkgsToResolve = getPkgsToResolve(lockfile, manifests);
   const failedWorkspaceComponentPkgs = new Set<string>();
   await Promise.all(
