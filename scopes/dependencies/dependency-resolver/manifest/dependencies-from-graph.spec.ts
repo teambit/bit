@@ -72,6 +72,20 @@ describe('applyDependenciesGraph', () => {
     expect(applied.dependencies['@teambit/ui.app']).to.equal('0.0.111');
   });
 
+  it('keeps a contradicted declaration even when the graph holds a satisfying version elsewhere', () => {
+    const updated = graphWithDirectDeps(
+      [{ id: 'foo@2.0.0', name: 'foo', specifier: '^2.0.0', lifecycle: 'runtime' }],
+      ['foo@2.0.0', 'foo@1.0.0']
+    );
+    const applied = applyDependenciesGraph({
+      graph: updated,
+      declared: { dependencies: { foo: '^1.0.0' } },
+      envPeers: {},
+      exclude: new Set(),
+    });
+    expect(applied.dependencies.foo).to.equal('^1.0.0');
+  });
+
   it('leaves a direct dependency the component declares nowhere out, such as an attached extension', () => {
     const withExtension = graphWithDirectDeps([
       ...graph.findRootEdge()!.neighbours,

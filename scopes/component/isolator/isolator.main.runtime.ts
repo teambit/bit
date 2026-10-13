@@ -1068,11 +1068,12 @@ export class IsolatorMain {
     for (const dependency of dependencies) {
       if (!dependency.componentId.hasVersion()) continue;
       const pkgId = `${dependency.packageName}@${snapToSemver(dependency.componentId.version as string)}`;
-      // A component dependency whose own dependencies the graph records was
-      // resolved with the rest. One it only knows as a package, or not at all,
-      // is an extension (the env above all), which the workspace links rather
-      // than installs, so its graph records nothing of what it depends on.
-      if (graphs.every((graph) => graph.hasDependencyNode(pkgId))) continue;
+      // A component dependency the graph records as resolved, with its own
+      // edge or as a resolved leaf, was resolved with the rest. One the graph
+      // knows only as an unresolved record, or not at all, is an extension
+      // (the env above all), which the workspace links rather than installs,
+      // so its graph records nothing of what it depends on.
+      if (graphs.every((graph) => graph.recordsResolvedPackage(pkgId))) continue;
       const extensionGraph = await legacyScope.getDependenciesGraphByComponentId(dependency.componentId);
       if (extensionGraph == null || extensionGraph.isEmpty()) {
         this.logger.debug(

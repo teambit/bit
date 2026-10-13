@@ -168,18 +168,6 @@ export class DependenciesGraph {
   }
 
   /**
-   * Add a dependency's own graph under the node `pkgId`, the way this graph
-   * records any other package: the dependency's direct runtime dependencies
-   * become the node's edge, and its packages and edges join this graph. The
-   * node also becomes a direct dependency of this graph's root, so a manifest
-   * that declares it restores to it. Nothing happens when this graph already
-   * holds the node.
-   *
-   * A component's graph leaves out its extensions (its env above all), since
-   * the workspace links them, but a capsule installs them, so their graphs are
-   * attached when the capsule's lockfile is restored.
-   */
-  /**
    * Whether this graph records the package's own dependencies: an edge for
    * it, under its id or a peer variant of it. A package record alone says
    * only that something reached the package, not what it depends on.
@@ -188,8 +176,30 @@ export class DependenciesGraph {
     return this.edges.some((edge) => edge.id !== DependenciesGraph.ROOT_EDGE_ID && (edge.attr?.pkgId ?? edge.id) === pkgId);
   }
 
+  /**
+   * Whether this graph records the package as resolved: with its own edge, or
+   * as a record that carries a resolution, which is how a package without
+   * dependencies of its own is recorded. A record without one is a package
+   * the workspace linked, an extension above all.
+   */
+  recordsResolvedPackage(pkgId: string): boolean {
+    return this.hasDependencyNode(pkgId) || this.packages.get(pkgId)?.resolution != null;
+  }
+
+  /**
+   * Add a dependency's own graph under the node `pkgId`, the way this graph
+   * records any other package: the dependency's direct runtime dependencies
+   * become the node's edge, and its packages and edges join this graph. The
+   * node also becomes a direct dependency of this graph's root, so a manifest
+   * that declares it restores to it. Nothing happens when this graph already
+   * records the package as resolved.
+   *
+   * A component's graph leaves out its extensions (its env above all), since
+   * the workspace links them, but a capsule installs them, so their graphs are
+   * attached when the capsule's lockfile is restored.
+   */
   attachDependencyGraph(pkgId: string, graph: DependenciesGraph, attributes: Partial<PackageAttributes> = {}): void {
-    if (this.hasDependencyNode(pkgId)) return;
+    if (this.recordsResolvedPackage(pkgId)) return;
     const edgeIds = new Set(this.edges.map(({ id }) => id));
     // The attached resolutions join this graph's, so the resolution inputs
     // (hooks, settings, overrides) can only be claimed when both agree, as a

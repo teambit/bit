@@ -110,6 +110,10 @@ export function applyDependenciesGraph({
     envPeers: {},
   };
   const placed = new Set<string>();
+  // Direct dependencies whose declaration the graph contradicts: the
+  // declaration changed since the graph was saved, so only a resolution can
+  // say what it means now. A version the graph holds elsewhere is no answer.
+  const contradicted = new Set<string>();
   const declaredSpec = (name: string): string | undefined =>
     MANIFEST_GROUPS.map((group) => declared[group]?.[name]).find((spec) => spec != null) ??
     declared.peerDependencies?.[name];
@@ -124,7 +128,10 @@ export function applyDependenciesGraph({
     // manifest left out on purpose, stays out.
     const spec = declaredSpec(name);
     if (spec == null && !(name in envPeers)) continue;
-    if (!declarationAccepts(spec, parsed.version)) continue;
+    if (!declarationAccepts(spec, parsed.version)) {
+      contradicted.add(name);
+      continue;
+    }
     // Under the group the component declares it in, else the one the graph
     // records: the lifecycle of the workspace's own declaration.
     const group =
@@ -139,7 +146,7 @@ export function applyDependenciesGraph({
   // of a component's declared dependencies to its root, so the graph meets
   // them only deeper down.
   const versionHeldFor = (name: string, spec: string): string | undefined => {
-    if (exclude.has(name)) return undefined;
+    if (exclude.has(name) || contradicted.has(name)) return undefined;
     const resolved = versions.get(name);
     if (resolved != null && declarationAccepts(spec, resolved)) return resolved;
     return highestHeldVersion(graph, name, spec);

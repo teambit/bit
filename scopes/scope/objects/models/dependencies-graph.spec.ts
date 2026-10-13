@@ -346,6 +346,19 @@ describe('DependenciesGraph.attachDependencyGraph', () => {
     expect(graph.findRootEdge()?.neighbours.map(({ id }) => id)).to.eql(['foo@1.0.0', envPkgId]);
   });
 
+  it('leaves a package the graph records as a resolved leaf alone', () => {
+    // A component dependency without dependencies of its own has no edge, only
+    // a record with a resolution; it is no extension.
+    const graph = createGraph([rootEdge([{ id: envPkgId, name: '@org/my-env', specifier: '1.0.0' }])], []);
+    graph.packages.set(envPkgId, { resolution: { integrity: 'sha512-leaf' } } as any);
+    expect(graph.recordsResolvedPackage(envPkgId)).to.equal(true);
+
+    graph.attachDependencyGraph(envPkgId, envGraph());
+
+    expect(graph.hasDependencyNode(envPkgId)).to.equal(false);
+    expect(graph.packages.has('webpack@5.0.0')).to.equal(false);
+  });
+
   it('leaves a graph that already holds the node alone', () => {
     const graph = createGraph([rootEdge([]), edge(envPkgId, [{ id: 'foo@1.0.0' }])], ['foo@1.0.0', envPkgId]);
 
