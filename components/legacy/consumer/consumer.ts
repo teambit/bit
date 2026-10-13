@@ -538,9 +538,8 @@ export default class Consumer {
       scope,
     });
     await consumer.setBitMap();
-    // the scope is cached for the whole process (Scope.scopeCache), so it can outlive this consumer. it must not keep
-    // the consumer alive, since the consumer leads to the workspace and to the whole harmony instance. once nothing
-    // else holds the consumer, nothing uses that workspace any more.
+    // the scope is cached for the whole process (Scope.scopeCache) and must not keep the consumer, and through it the
+    // workspace and the whole harmony instance, alive.
     const consumerRef = new WeakRef(consumer);
     scope.currentLaneIdFunc = () => consumerRef.deref()?.getCurrentLaneIdIfExist();
     scope.notExportedIdsFunc = () => consumerRef.deref()?.getNotExportedIds() ?? new ComponentIdList();
