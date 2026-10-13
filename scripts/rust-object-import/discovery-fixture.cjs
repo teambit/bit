@@ -32,6 +32,16 @@ function fixture(t) {
         fileName: source,
       }).outputText
     );
+  compile(
+    'scopes/scope/objects/objects/rust-artifact-verification.ts',
+    path.join(moduleDirectory, 'rust-artifact-verification.js')
+  );
+  const previousGlobals = process.env.BIT_GLOBALS_DIR;
+  process.env.BIT_GLOBALS_DIR = path.join(directory, 'globals');
+  t.after(() => {
+    if (previousGlobals === undefined) delete process.env.BIT_GLOBALS_DIR;
+    else process.env.BIT_GLOBALS_DIR = previousGlobals;
+  });
   compile('scopes/scope/objects/objects/rust-object-package.ts', path.join(moduleDirectory, 'rust-object-package.js'));
   const load = createRequire(path.join(directory, 'package.json'));
   const contract = load(path.join(moduleDirectory, 'rust-object-package.js'));

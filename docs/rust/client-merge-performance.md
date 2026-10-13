@@ -215,3 +215,10 @@ rejects stale counts before loading or writing anything, then returns only newly
 retained descriptors and the total count. Existing body descriptors remain guarded
 by the original plan's freshness checks. Legacy callers still receive the complete
 manifest; compact callers validate every new index and every selected old/new body.
+
+Configuration compatibility guards retain registered property names and descriptors,
+then inspect each live descriptor directly. This avoids rebuilding descriptor maps
+and scanning the class registry for every aspect while still checking method
+replacements, accessors, extra properties and instance overrides on every call.
+Only registration metadata is retained; eligibility is never cached across hooks
+or asynchronous work.

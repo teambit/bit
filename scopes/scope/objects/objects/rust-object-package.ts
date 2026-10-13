@@ -2,10 +2,12 @@ import fs from 'fs';
 import path from 'path';
 import { createHash } from 'crypto';
 import { createRequire } from 'module';
+import { verifyPackagedFiles } from './rust-artifact-verification';
 
 export const OBJECT_IMPORT_VERSION = '0.1.0';
 export const OBJECT_IMPORT_RUNTIME_MODULES = [
   'rust-object-package.js',
+  'rust-artifact-verification.js',
   'rust-object-discovery.js',
   'rust-object-inventory.js',
   'rust-object-reader.js',
@@ -45,7 +47,6 @@ export const OBJECT_IMPORT_NETWORK_MODULES = ['http.js'];
 export type ObjectHelperSelection = { version: string; target: string; revision: string };
 const digest = (data: Buffer) => createHash('sha256').update(data).digest('hex');
 let verifiedRuntime: { fingerprint: string; matches: boolean } | undefined;
-let verifiedArtifact: { fingerprint: string; executable: string } | undefined;
 let host: { platform: string; arch: string; getReport: unknown; header?: { glibcVersionRuntime?: string } } | undefined;
 
 export function readPackagedFile(filename: string, limit: number): Buffer {
@@ -187,27 +188,24 @@ export function objectArtifactExecutable(
   }
   const executable = path.join(directory, filename);
   const files = [filename, 'LICENSE', 'THIRD-PARTY-NOTICES.txt'];
-  const stamps = files.map((name) => {
-    const stat = fs.lstatSync(path.join(directory, name));
-    if (!stat.isFile()) throw new Error('packaged artifact redirect');
-    return [stat.dev, stat.ino, stat.size, stat.mtimeMs, stat.ctimeMs];
-  });
-  const fingerprint = JSON.stringify([directory, manifest, stamps]);
-  if (verifiedArtifact?.fingerprint === fingerprint) return verifiedArtifact.executable;
-  for (const [index, field] of ['binary', 'license', 'notices'].entries()) {
-    const data = readPackagedFile(path.join(directory, files[index]), (index === 0 ? 64 : 4) * 1024 * 1024);
-    if (
-      manifest[field]?.name !== files[index] ||
-      manifest[field]?.sha256 !== digest(data) ||
-      (index === 0 && manifest.binary.bytes !== data.length)
+  const fields = ['binary', 'license', 'notices'];
+  if (fields.some((field, index) => manifest[field]?.name !== files[index])) return undefined;
+  if (
+    !Number.isSafeInteger(manifest.binary.bytes) ||
+    manifest.binary.bytes < 0 ||
+    !verifyPackagedFiles(
+      fields.map((field, index) => ({
+        filename: path.join(directory, files[index]),
+        sha256: manifest[field].sha256,
+        limit: (index === 0 ? 64 : 4) * 1024 * 1024,
+        bytes: index === 0 ? manifest.binary.bytes : undefined,
+      }))
     )
-      return undefined;
-  }
-  verifiedArtifact = { fingerprint, executable: path.toNamespacedPath(executable) };
-  return verifiedArtifact.executable;
+  )
+    return undefined;
+  return path.toNamespacedPath(executable);
 }
 
-let verifiedAddon: { fingerprint: string; filename: string } | undefined;
 /** A companion addon must match the same verified helper artifact and supported Node-API version. */
 export function objectArtifactAddon(executable: string): string | undefined {
   const directory = path.dirname(executable);
@@ -231,19 +229,10 @@ export function objectArtifactAddon(executable: string): string | undefined {
     if (actual[0] < required[0] || (actual[0] === required[0] && actual[1] < required[1])) return undefined;
   }
   const filename = path.join(directory, 'bit-workspace.node');
-  const stat = fs.lstatSync(filename);
-  if (!stat.isFile() || stat.size > 64 * 1024 * 1024 || stat.size !== manifest.addon.bytes) return undefined;
-  const fingerprint = JSON.stringify([
-    filename,
-    manifest.addon,
-    stat.dev,
-    stat.ino,
-    stat.size,
-    stat.mtimeMs,
-    stat.ctimeMs,
-  ]);
-  if (verifiedAddon?.fingerprint === fingerprint) return verifiedAddon.filename;
-  if (digest(readPackagedFile(filename, 64 * 1024 * 1024)) !== manifest.addon.sha256) return undefined;
-  verifiedAddon = { fingerprint, filename };
-  return filename;
+  if (!Number.isSafeInteger(manifest.addon.bytes) || manifest.addon.bytes < 0) return undefined;
+  return verifyPackagedFiles([
+    { filename, sha256: manifest.addon.sha256, bytes: manifest.addon.bytes, limit: 64 * 1024 * 1024 },
+  ])
+    ? filename
+    : undefined;
 }

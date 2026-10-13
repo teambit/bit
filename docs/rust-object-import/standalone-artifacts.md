@@ -46,3 +46,20 @@ Tests cover deterministic byte preservation, malicious archives, decompression b
 Local validation passes all 12 artifact tests (including the real release executable), all 72 existing Node coordinator/repository tests, canonical isolated `npm run lint`, and inherited pnpm Rust formatting/Clippy/perfectionist checks with all 40 Rust workspace tests. The extracted release executable also passes the genuine 16,384-Source scope read/inventory qualification and complete compiled file/original HTTP-tar import-command smoke, including missing/crashing helper fallback. This reuses the existing compiled runtime because packaging does not change runtime sources. Other OS/ABI results require CI. Raw evidence remains outside Git.
 
 Explicit assembly, immutable installation, compiled-runtime identity binding, adjacent-only discovery and rollback are implemented in [packaged-helper.md](./packaged-helper.md). Automatic release-pipeline assembly and broader full-command platform qualification remain open. These artifacts do not change the default runtime behavior or establish whole-command performance gains.
+
+### Reusing unchanged artifact verification
+
+On hosts with POSIX ownership checks, successful helper/addon hashes are cached in
+`<Bit cache>/rust-artifact-verification-v1`. The cache directory and entries must
+be private to the current user. Each entry binds the expected digests and size
+bounds to resolved paths, device/inode identity, size, and nanosecond modification
+and change timestamps. A changed file or expected digest requires a fresh hash;
+files changed during hashing are rejected. Missing, malformed, inaccessible or
+non-private cache entries fall back to content verification. Windows continues
+to verify content on each process startup. Runtime module/build-contract checks
+and addon compatibility checks still run before selection.
+
+This is an unchanged-file cache, like pnpm's store verification metadata. It is
+not publisher authentication: the installed artifact directory and the user's
+private cache remain within the existing trusted local installation boundary.
+Cold-cache and warm-cache performance must be distinguished in measurements.

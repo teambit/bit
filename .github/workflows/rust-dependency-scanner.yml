@@ -361,7 +361,7 @@ jobs:
         run: |
           export BIT_TEST_PACKAGED_ARCHIVE="$(find dist -maxdepth 1 -name '*.tar.gz' | head -1)"
           node --test ../scripts/rust-dependency-analysis/discovery.test.cjs
-          BIT_TEST_OBJECT_ARTIFACT="$(cat "$RUNNER_TEMP/bit-object-artifact-path.txt")" node --test ../scripts/rust-object-import/artifacts/artifacts.test.cjs ../scripts/rust-object-import/artifacts/provision-release.test.cjs ../scripts/rust-object-import/discovery.test.cjs
+          BIT_TEST_OBJECT_ARTIFACT="$(cat "$RUNNER_TEMP/bit-object-artifact-path.txt")" node --test ../scripts/rust-object-import/artifacts/artifacts.test.cjs ../scripts/rust-object-import/artifacts/provision-release.test.cjs ../scripts/rust-object-import/discovery.test.cjs ../scripts/rust-object-import/artifact-verification.test.cjs
           python ../scripts/rust-dependency-analysis/artifacts/test_install.py
       - uses: actions/setup-node@v4
         with:
@@ -374,7 +374,7 @@ jobs:
         run: |
           export BIT_TEST_PACKAGED_ARCHIVE="$(find dist -maxdepth 1 -name '*.tar.gz' | head -1)"
           node --test ../scripts/rust-dependency-analysis/discovery.test.cjs
-          BIT_TEST_OBJECT_ARTIFACT="$(cat "$RUNNER_TEMP/bit-object-artifact-path.txt")" node --test ../scripts/rust-object-import/artifacts/artifacts.test.cjs ../scripts/rust-object-import/artifacts/provision-release.test.cjs ../scripts/rust-object-import/discovery.test.cjs
+          BIT_TEST_OBJECT_ARTIFACT="$(cat "$RUNNER_TEMP/bit-object-artifact-path.txt")" node --test ../scripts/rust-object-import/artifacts/artifacts.test.cjs ../scripts/rust-object-import/artifacts/provision-release.test.cjs ../scripts/rust-object-import/discovery.test.cjs ../scripts/rust-object-import/artifact-verification.test.cjs
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -386,7 +386,7 @@ jobs:
         run: |
           export BIT_TEST_PACKAGED_ARCHIVE="$(find dist -maxdepth 1 -name '*.tar.gz' | head -1)"
           node --test ../scripts/rust-dependency-analysis/discovery.test.cjs
-          BIT_TEST_OBJECT_ARTIFACT="$(cat "$RUNNER_TEMP/bit-object-artifact-path.txt")" node --test ../scripts/rust-object-import/artifacts/artifacts.test.cjs ../scripts/rust-object-import/artifacts/provision-release.test.cjs ../scripts/rust-object-import/discovery.test.cjs
+          BIT_TEST_OBJECT_ARTIFACT="$(cat "$RUNNER_TEMP/bit-object-artifact-path.txt")" node --test ../scripts/rust-object-import/artifacts/artifacts.test.cjs ../scripts/rust-object-import/artifacts/provision-release.test.cjs ../scripts/rust-object-import/discovery.test.cjs ../scripts/rust-object-import/artifact-verification.test.cjs
       - name: Upload validated experimental object-import artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -443,7 +443,7 @@ jobs:
             export BIT_TEST_OBJECT_ARTIFACT="$(find /artifacts -maxdepth 1 -name "*.tar.gz")"
             npm install --prefix /tmp/object-import-tools --no-save --package-lock=false --ignore-scripts typescript@5.9.2
             export BIT_LEGACY_ROOT=/tmp/object-import-tools
-            node --test scripts/rust-object-import/artifacts/artifacts.test.cjs scripts/rust-object-import/discovery.test.cjs
+            node --test scripts/rust-object-import/artifacts/artifacts.test.cjs scripts/rust-object-import/discovery.test.cjs scripts/rust-object-import/artifact-verification.test.cjs
           '
       - name: Upload validated experimental musl object-import artifact
         uses: actions/upload-artifact@v4
@@ -537,7 +537,7 @@ jobs:
           BIT_TEST_MERGE_STATE_COMPILED=1 node --test scripts/rust-object-import/merge-state.test.cjs
           node --test scripts/rust-object-import/squash-history.test.cjs
           BIT_TEST_SQUASH_HISTORY_COMPILED=1 node --test scripts/rust-object-import/squash-history.test.cjs
-          node --test scripts/rust-object-import/config-merge.test.cjs
+          node --test scripts/rust-object-import/config-merge.test.cjs scripts/rust-object-import/config-guards.test.cjs
           BIT_TEST_CONFIG_MERGE_COMPILED=1 node --test scripts/rust-object-import/config-merge.test.cjs
           node --test scripts/rust-object-import/lane-recovery.test.cjs
           BIT_TEST_LANE_RECOVERY_COMPILED=1 node --test scripts/rust-object-import/lane-recovery.test.cjs

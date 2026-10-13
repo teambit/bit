@@ -1,11 +1,14 @@
 type Registration = {
   constructor: any;
   statics: PropertyDescriptorMap;
+  staticNames: Array<string | symbol>;
   allowedStaticData: Set<string>;
-  descriptors: Array<{ owner: object; values: PropertyDescriptorMap }>;
+  descriptors: Array<{ owner: object; entries: Array<{ name: string | symbol; descriptor: PropertyDescriptor }> }>;
 };
 // eslint-disable-next-line no-var
-var registrations: Registration[] | undefined;
+var registrations: Map<any, Registration> | undefined;
+// eslint-disable-next-line no-var
+var prototypeRegistrations: Map<object, Registration> | undefined;
 // eslint-disable-next-line no-var
 var lodashDefaults: { singleton: object; methods: Map<string, PropertyDescriptor | undefined> } | undefined;
 export function registerRustConfigLodash(singleton: object): void {
@@ -67,20 +70,30 @@ export function hasRustConfigLogger(value: any): boolean {
 }
 export function registerRustConfigClass(constructor: any): void {
   if (!constructor?.prototype) return;
-  registrations ||= [];
-  if (registrations.some((entry) => entry.constructor === constructor)) return;
+  registrations ||= new Map();
+  if (registrations.has(constructor)) return;
   const descriptors: Registration['descriptors'] = [];
   let owner = constructor.prototype;
   while (owner && owner !== Object.prototype) {
-    descriptors.push({ owner, values: Object.getOwnPropertyDescriptors(owner) });
+    descriptors.push({
+      owner,
+      entries: Reflect.ownKeys(owner).map((name) => ({
+        name,
+        descriptor: Object.getOwnPropertyDescriptor(owner, name)!,
+      })),
+    });
     owner = Object.getPrototypeOf(owner);
   }
-  registrations.push({
+  const registered = {
     constructor,
     statics: Object.getOwnPropertyDescriptors(constructor),
+    staticNames: Reflect.ownKeys(constructor),
     descriptors,
-    allowedStaticData: new Set(),
-  });
+    allowedStaticData: new Set<string>(),
+  };
+  registrations.set(constructor, registered);
+  prototypeRegistrations ||= new Map();
+  if (!prototypeRegistrations.has(constructor.prototype)) prototypeRegistrations.set(constructor.prototype, registered);
 }
 /** Config merging does not read the framework's persistence validation callback. */
 export function registerRustConfigStaticData(constructor: any, name: string): void {
@@ -90,7 +103,7 @@ export function registerRustConfigStaticData(constructor: any, name: string): vo
 export function hasRustConfigConstructor(constructor: any): boolean {
   const registered = registration(constructor);
   if (!registered) return false;
-  const names = Reflect.ownKeys(registered.statics);
+  const names = registered.staticNames;
   const currentNames = Reflect.ownKeys(constructor);
   let allowedAdditional = 0;
   for (let index = 0; index < currentNames.length; index += 1) {
@@ -116,17 +129,8 @@ export function hasRustConfigConstructor(constructor: any): boolean {
   return true;
 }
 function registration(constructor: any, value?: object): Registration | undefined {
-  if (!registrations) return undefined;
-  for (let index = 0; index < registrations.length; index += 1) {
-    const entry = registrations[index];
-    if (
-      constructor
-        ? entry.constructor === constructor
-        : value && Object.getPrototypeOf(value) === entry.constructor.prototype
-    )
-      return entry;
-  }
-  return undefined;
+  if (constructor) return registrations?.get(constructor);
+  return value ? prototypeRegistrations?.get(Object.getPrototypeOf(value)) : undefined;
 }
 export function hasRustConfigClass(value: any, constructor?: any): boolean {
   if (!value) return false;
@@ -140,14 +144,10 @@ export function hasRustConfigClass(value: any, constructor?: any): boolean {
   )
     return false;
   for (let index = 0; index < registered.descriptors.length; index += 1) {
-    const { owner, values } = registered.descriptors[index];
-    const live = Object.getOwnPropertyDescriptors(owner);
-    if (Reflect.ownKeys(live).length !== Reflect.ownKeys(values).length) return false;
-    const names = Reflect.ownKeys(values);
-    for (let nameIndex = 0; nameIndex < names.length; nameIndex += 1) {
-      const name = names[nameIndex];
-      const descriptor = (values as any)[name] as PropertyDescriptor;
-      const current = (live as any)[name] as PropertyDescriptor;
+    const { owner, entries } = registered.descriptors[index];
+    if (Reflect.ownKeys(owner).length !== entries.length) return false;
+    for (const { name, descriptor } of entries) {
+      const current = Object.getOwnPropertyDescriptor(owner, name);
       if (
         !current ||
         current.value !== descriptor.value ||
