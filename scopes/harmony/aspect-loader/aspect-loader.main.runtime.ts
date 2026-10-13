@@ -5,11 +5,12 @@ import { readdirSync, existsSync } from 'fs-extra';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { reportLoadFailure } from '@teambit/harmony.modules.load-trace';
 import { recordLoadedEsmFile } from './record-loaded-esm-file';
+import { replaceNeverLoadedAspects } from './replace-never-loaded-aspects';
 import { ComponentID } from '@teambit/component-id';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy.constants';
 import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { ExtensionManifest, Harmony, SlotRegistry } from '@teambit/harmony';
-import { Aspect, Extension, Slot } from '@teambit/harmony';
+import { Aspect, Slot } from '@teambit/harmony';
 import { BitError } from '@teambit/bit-error';
 import type { LoggerMain, Logger } from '@teambit/logger';
 import type { Component, FilterAspectsOptions } from '@teambit/component';
@@ -714,27 +715,6 @@ export class AspectLoaderMain {
     this.pluginSlot.register(pluginDefs);
   }
 
-  /**
-   * harmony keeps the first manifest it got for an aspect-id and ignores later ones, also when the first one never
-   * loaded. a manifest holds the paths the aspect was resolved from at that time. e.g. before the first install, a
-   * workspace env with root-components is resolved from its link in node_modules (".bit_roots" doesn't exist yet), and
-   * fails to load. after the install, its new manifest points to ".bit_roots", but harmony runs the old one, so the env
-   * gets the dependencies of the root node_modules instead of its own. replace such an aspect with the new manifest.
-   */
-  private replaceNeverLoadedAspects(manifests: Aspect[]) {
-    const graph = this.harmony.graph;
-    manifests.forEach((aspect) => {
-      // harmony.load gets these same aspects as manifests (see the ts-ignore there)
-      const manifest = aspect as unknown as ExtensionManifest;
-      const existing: Extension | undefined = graph.get(aspect.id);
-      if (!existing || existing.loaded || existing.manifest === manifest) return;
-      this.logger.debug(`replaceNeverLoadedAspects: replacing the manifest of ${aspect.id}, which never loaded`);
-      graph.setNode(aspect.id, new Extension(manifest)); // keeps the edges of the node
-      // @ts-ignore the graph caches the extension per id, so the cached one must go as well
-      graph.cache.delete(aspect.id);
-    });
-  }
-
   async loadExtensionsByManifests(
     extensionsManifests: Array<ExtensionManifest | Aspect>,
     context: LoadExtByManifestContext = {
@@ -777,7 +757,10 @@ export class AspectLoaderMain {
         return nodesUniq.map((n) => n.attr);
       };
       const relevantManifests = getOnlyDeclaredDependenciesManifests();
-      this.replaceNeverLoadedAspects(relevantManifests);
+      const replacedIds = replaceNeverLoadedAspects(this.harmony, relevantManifests);
+      if (replacedIds.length) {
+        this.logger.debug(`loadExtensionsByManifests, replaced never-loaded aspects: ${replacedIds.join(', ')}`);
+      }
       // @ts-ignore TODO: fix this
       await this.harmony.load(relevantManifests);
     } catch (e: any) {
