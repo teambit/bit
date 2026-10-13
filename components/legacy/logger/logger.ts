@@ -262,8 +262,11 @@ class BitLogger implements IBitLogger {
     return allSucceeded;
   }
 
-  async exitAfterFlush(code = 0, commandName: string, cliOutput = '') {
+  async exitAfterFlush(commandCode = 0, commandName: string, cliOutput = '') {
     await Analytics.sendData();
+    const hooksSucceeded = await this.runOnBeforeExitFns();
+    // a failed clean-up fails the command, as it did when a failing hook stopped the exit with an error
+    const code = hooksSucceeded ? commandCode : commandCode || 1;
     const isSuccess = code === 0;
     const level = isSuccess ? 'info' : 'error';
     if (cliOutput) {
@@ -280,9 +283,7 @@ class BitLogger implements IBitLogger {
     // finalLogger[level](msg);
     this.logger[level](msg);
     this.writeCommandHistoryEnd(code);
-    const hooksSucceeded = await this.runOnBeforeExitFns();
-    // a failed clean-up fails the command, as it did when a failing hook stopped the exit with an error
-    if (!this.isDaemon) process.exit(hooksSucceeded ? code : code || 1);
+    if (!this.isDaemon) process.exit(code);
   }
 
   private commandHistoryMsgPrefix() {
