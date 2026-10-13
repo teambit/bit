@@ -21,15 +21,17 @@ export class CompositionsSection implements Section {
     private options: Options,
     private emptyStateSlot: EmptyStateSlot,
     private usePreviewSandboxSlot: UsePreviewSandboxSlot,
-    private usePreviewPropsSlot: UsePreviewPropsSlot,
-    private pinned = false
+    private usePreviewPropsSlot: UsePreviewPropsSlot
   ) {}
 
   navigationLink = {
     href: '~compositions',
-    children: this.pinned ? <MenuWidgetIcon icon="preview" tooltipContent="Preview" /> : 'Preview',
+    children: 'Preview',
     displayName: 'Preview',
-    hideInMinimalMode: !this.pinned,
+    // Preview is the most important view in minimal (Hope) mode: a text tab right after Overview on
+    // desktop, and on mobile an icon pinned next to the compact "More" menu that holds Overview.
+    primaryInMinimalMode: true,
+    minimalMobileChildren: <MenuWidgetIcon icon="preview" tooltipContent="Preview" />,
   };
 
   route = {
@@ -45,5 +47,5 @@ export class CompositionsSection implements Section {
     ),
   };
 
-  order = this.pinned ? 10 : 20;
+  order = 20;
 }

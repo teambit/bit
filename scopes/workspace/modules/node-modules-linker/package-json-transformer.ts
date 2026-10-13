@@ -8,10 +8,23 @@ type PackageJsonTransformers = Function[];
 
 export class PackageJsonTransformer {
   static packageJsonTransformersRegistry: PackageJsonTransformers = [];
+  // weak, so it holds no transformer, and stays right when a loader resets or restores the array
+  private static keyOfTransformer = new WeakMap<Function, string>();
+
+  /**
+   * @param key when given, a later registration with the same key replaces this one. aspects pass their id, so a
+   * process that loads harmony more than once runs the transformer of the latest load only.
+   */
   static registerPackageJsonTransformer(
-    func: (component: Component, packageJsonObject: Record<string, any>) => Promise<Record<string, any>>
+    func: (component: Component, packageJsonObject: Record<string, any>) => Promise<Record<string, any>>,
+    key?: string
   ) {
-    this.packageJsonTransformersRegistry.push(func);
+    const index = key
+      ? this.packageJsonTransformersRegistry.findIndex((fn) => this.keyOfTransformer.get(fn) === key)
+      : -1;
+    if (index === -1) this.packageJsonTransformersRegistry.push(func);
+    else this.packageJsonTransformersRegistry[index] = func;
+    if (key) this.keyOfTransformer.set(func, key);
   }
 
   /**

@@ -176,7 +176,7 @@ export class VersionHistoryMain {
       new VersionHistoryBuildCmd(versionHistory),
     ];
     cli.register(versionHistoryCmd, new CatVersionHistoryCmd());
-    ExternalActions.externalActions.push(new BuildVersionHistoryAction(versionHistory));
+    ExternalActions.register(new BuildVersionHistoryAction(versionHistory));
     return versionHistory;
   }
 }

@@ -598,6 +598,8 @@ export class IsolatorMain {
     cacheLockFileOnly = false
   ): void {
     this.logger.info(`registering process.on(exit) to move capsules from ${datedCapsuleDir} to ${targetCapsuleDir}`);
+    // keyed by the dirs, so isolating again into the same dated dir doesn't add another hook for the same move
+    const hookKey = `teambit.component/isolator:move-capsules:${datedCapsuleDir}:${targetCapsuleDir}:${cacheLockFileOnly}`;
     this.cli.registerOnBeforeExit(async () => {
       const allDirs = await this.getAllCapsulesDirsFromRoot(datedCapsuleDir);
       if (cacheLockFileOnly) {
@@ -605,7 +607,7 @@ export class IsolatorMain {
       } else {
         await this.moveCapsulesToTargetDir(allDirs, datedCapsuleDir, targetCapsuleDir);
       }
-    });
+    }, hookKey);
   }
 
   private async getAllCapsulesDirsFromRoot(rootDir: string): Promise<string[]> {
