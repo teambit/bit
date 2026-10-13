@@ -82,7 +82,7 @@ function buildGraph(components: Component[]): Graph {
       const depId = dependency.id.toStringWithoutVersion();
       // the component uses the version set in its config (e.g. "bit deps set"), not the workspace one. so a change in
       // the workspace one doesn't affect it.
-      if (component.dependenciesWithVersionFromConfig?.includes(depId)) return;
+      if (component.isDependencyVersionFromConfig(dependency.id)) return;
       // save the full ComponentID of a string id to be able to retrieve it later with no confusion
       if (!graph.hasNode(idStr)) graph.setNode(idStr, component.id);
       if (!graph.hasNode(depId)) graph.setNode(depId, dependency.id);

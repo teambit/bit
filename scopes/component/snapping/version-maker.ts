@@ -720,8 +720,7 @@ export class VersionMaker {
       const foundDependency = componentsToTag.find((component) => component.id.isEqualWithoutVersion(id));
       if (!foundDependency) return null;
       // the dependent uses the version set in its config (e.g. "bit deps set"), not the workspace one. keep it.
-      // otherwise, the dependent is saved with the new version and it's shown as modified right after the tag.
-      if (dependent?.dependenciesWithVersionFromConfig?.includes(id.toStringWithoutVersion())) return null;
+      if (dependent?.isDependencyVersionFromConfig(id)) return null;
       return id.changeVersion(foundDependency.version);
     };
     const changeExtensionsVersion = (component: ConsumerComponent): void => {
@@ -788,19 +787,11 @@ export class VersionMaker {
     const idsToTag = ComponentIdList.fromArray(this.allComponentsToTag.map((c) => c.id));
     return compact(
       this.allWorkspaceComps.map((component) => {
-        if (idsToTag.hasWithoutVersion(component.id)) return null;
         const consumerComponent: ConsumerComponent = component.state._consumer;
-        const pinned = consumerComponent
-          .getAllDependencies()
-          .filter(
-            (dep) =>
-              idsToTag.hasWithoutVersion(dep.id) &&
-              consumerComponent.dependenciesWithVersionFromConfig?.includes(dep.id.toStringWithoutVersion())
-          );
-        if (!pinned.length) return null;
-        const pinnedDependencies = pinned.map(
-          (dep) => `${dep.packageName || dep.id.toStringWithoutVersion()}@${dep.id.version}`
+        const pinnedDependencies = consumerComponent.getDependenciesWithVersionFromConfig((id) =>
+          idsToTag.hasWithoutVersion(id)
         );
+        if (!pinnedDependencies.length || idsToTag.hasWithoutVersion(component.id)) return null;
         return { id: component.id, pinnedDependencies };
       })
     );

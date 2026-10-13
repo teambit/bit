@@ -286,17 +286,10 @@ export class DependenciesMain {
     if (issuesToIgnore.includes(IssuesClasses.PinnedDependencies.name)) return;
     components.forEach((component) => {
       const consumerComponent: ConsumerComponent = component.state._consumer;
-      const pinned = consumerComponent
-        .getAllDependencies()
-        .filter(
-          (dep) =>
-            consumerComponent.dependenciesWithVersionFromConfig?.includes(dep.id.toStringWithoutVersion()) &&
-            this.workspace.hasId(dep.id, { ignoreVersion: true })
-        );
-      if (!pinned.length) return;
-      component.state.issues.getOrCreate(IssuesClasses.PinnedDependencies).data = pinned.map(
-        (dep) => `${dep.packageName || dep.id.toStringWithoutVersion()}@${dep.id.version}`
+      const pinned = consumerComponent.getDependenciesWithVersionFromConfig((id) =>
+        this.workspace.hasId(id, { ignoreVersion: true })
       );
+      if (pinned.length) component.state.issues.getOrCreate(IssuesClasses.PinnedDependencies).data = pinned;
     });
   }
 

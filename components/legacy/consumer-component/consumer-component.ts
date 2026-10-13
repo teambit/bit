@@ -335,6 +335,20 @@ export class Component {
     return new Dependencies(this.extensions.extensionsBitIds.map((id) => new Dependency(id, [])));
   }
 
+  isDependencyVersionFromConfig(id: ComponentID): boolean {
+    return Boolean(this.dependenciesWithVersionFromConfig?.includes(id.toStringWithoutVersion()));
+  }
+
+  /**
+   * "package@version" of the dependencies whose version is set by the config (see dependenciesWithVersionFromConfig).
+   */
+  getDependenciesWithVersionFromConfig(filter: (id: ComponentID) => boolean = () => true): string[] {
+    if (!this.dependenciesWithVersionFromConfig?.length) return [];
+    return this.getAllDependencies()
+      .filter((dep) => this.isDependencyVersionFromConfig(dep.id) && filter(dep.id))
+      .map((dep) => `${dep.packageName || dep.id.toStringWithoutVersion()}@${dep.id.version}`);
+  }
+
   getAllDependencies(): Dependency[] {
     return [
       ...this.dependencies.dependencies,

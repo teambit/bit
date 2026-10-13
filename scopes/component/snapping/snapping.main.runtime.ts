@@ -138,10 +138,6 @@ export type BasicTagResults = {
   warnings: string[];
   newComponents: ComponentIdList;
   removedComponents?: ComponentIdList;
-  /**
-   * workspace components that were not auto-tagged/snapped, because their config sets the version of the
-   * tagged/snapped dependency (e.g. "bit deps set").
-   */
   dependentsWithPinnedDeps?: DependentWithPinnedDeps[];
   totalComponentsCount?: number; // total count of all components tagged/snapped (including auto-tagged)
   /**

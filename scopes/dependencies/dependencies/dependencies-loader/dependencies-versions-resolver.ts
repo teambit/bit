@@ -29,7 +29,8 @@ export async function updateDependenciesVersions(
   const currentLane = await workspace.getCurrentLaneObject();
   const componentRangePrefix = depsResolver.calcComponentRangePrefixByConsumerComponent(component);
   const supportComponentRange = componentRangePrefix && componentRangePrefix !== '-';
-  component.dependenciesWithVersionFromConfig = [];
+  const dependenciesWithVersionFromConfig: string[] = [];
+  component.dependenciesWithVersionFromConfig = dependenciesWithVersionFromConfig;
   updateDependencies(component.dependencies, 'dependencies');
   updateDependencies(component.devDependencies, 'devDependencies');
   updateDependencies(component.peerDependencies, 'peerDependencies');
@@ -114,7 +115,7 @@ export async function updateDependenciesVersions(
     if (!resolvedVersion) {
       return;
     }
-    if (fromConfig) component.dependenciesWithVersionFromConfig?.push(id.toStringWithoutVersion());
+    if (fromConfig) dependenciesWithVersionFromConfig.push(id.toStringWithoutVersion());
     dependency.id = dependency.id.changeVersion(resolvedVersion);
     if (supportComponentRange) {
       if (range) dependency.versionRange = range;
