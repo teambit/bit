@@ -46,7 +46,7 @@ describe('applyDependenciesGraph', () => {
       '@teambit/my-env': '0.0.0-9b688a446040db8b4c50fec72ea3134c1e2c9d0e',
     },
     devDependencies: { '@types/jest': '~26.0.9' },
-    optionalDependencies: {},
+    optionalDependencies: { fsevents: '^2.0.0' },
     peerDependencies: { react: '^18.0.0' },
   };
   const envPeers = { [apollo]: '3.3.7', '@types/node': '18.16.1', react: '18.2.0' };
@@ -70,6 +70,17 @@ describe('applyDependenciesGraph', () => {
     const resnapped = { ...declared, dependencies: { ...declared.dependencies, '@teambit/ui.app': '0.0.111' } };
     const applied = applyDependenciesGraph({ graph, declared: resnapped, envPeers, exclude });
     expect(applied.dependencies['@teambit/ui.app']).to.equal('0.0.111');
+  });
+
+  it('leaves a direct dependency the component declares nowhere out, such as an attached extension', () => {
+    const withExtension = graphWithDirectDeps([
+      ...graph.findRootEdge()!.neighbours,
+      { id: '@teambit/my-aspect@0.0.3', name: '@teambit/my-aspect', specifier: '0.0.3', lifecycle: 'dev' },
+    ]);
+    const applied = applyDependenciesGraph({ graph: withExtension, declared, envPeers, exclude });
+    expect(applied.dependencies).not.to.have.property('@teambit/my-aspect');
+    expect(applied.devDependencies).not.to.have.property('@teambit/my-aspect');
+    expect(applied.envPeers).not.to.have.property('@teambit/my-aspect');
   });
 
   it('never takes an excluded package from the graph', () => {

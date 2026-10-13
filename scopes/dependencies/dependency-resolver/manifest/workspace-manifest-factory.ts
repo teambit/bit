@@ -517,7 +517,11 @@ export class WorkspaceManifestFactory {
       if (dependenciesGraph && !dependenciesGraph.isEmpty()) {
         const applied = applyDependenciesGraph({
           graph: dependenciesGraph,
-          declared: depManifest,
+          declared: {
+            ...depManifest,
+            dependencies: { ...unresolvedRuntimeMissingRootDeps, ...depManifest.dependencies },
+            devDependencies: { ...unresolvedDevMissingRootDeps, ...depManifest.devDependencies },
+          },
           envPeers: peerDepsForManifest,
           exclude: new Set([...packageNames, '@teambit/legacy', '@teambit/harmony']),
         });

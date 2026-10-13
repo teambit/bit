@@ -72,11 +72,14 @@ function highestHeldVersion(graph: DependenciesGraph, name: string, spec: string
  * that a lockfile restored from the same graph satisfies the manifest and the
  * install needs no resolution.
  *
- * - Every direct dependency of the graph's root edge is declared at its
- *   resolved version, under the lifecycle the graph records, as long as the
- *   component's own declaration accepts that version. A declaration the graph
+ * - Every direct dependency of the graph's root edge the component declares,
+ *   as a dependency, a peer, or through its env's peers, is declared at its
+ *   resolved version, under the group the component declares it in, as long
+ *   as the declaration accepts that version. A declaration the graph
  *   contradicts (a dependency re-snapped since the graph was saved) wins, and
- *   that dependency is resolved again.
+ *   that dependency is resolved again. A direct dependency the component
+ *   declares nowhere, such as an extension the manifest leaves out, stays out:
+ *   the graph decides versions, not what is installed.
  * - A declared dependency the root edge lacks keeps its declaration, at the
  *   version the graph resolved it to elsewhere when that satisfies it.
  * - A declared peer the graph resolved becomes a runtime dependency at that
@@ -115,7 +118,12 @@ export function applyDependenciesGraph({
     if (!parsed) continue;
     const name = neighbour.name ?? parsed.name;
     if (exclude.has(name) || placed.has(name)) continue;
-    if (!declarationAccepts(declaredSpec(name), parsed.version)) continue;
+    // The graph decides versions, never what the manifest declares: a direct
+    // dependency the component declares nowhere, such as an extension the
+    // manifest left out on purpose, stays out.
+    const spec = declaredSpec(name);
+    if (spec == null && !(name in envPeers)) continue;
+    if (!declarationAccepts(spec, parsed.version)) continue;
     // Under the group the component declares it in, else the one the graph
     // records: the lifecycle of the workspace's own declaration.
     const group =
