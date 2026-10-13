@@ -3,7 +3,12 @@
  */
 import fs from 'fs';
 import debugFactory from 'debug';
-import cabinet, { canUseRustCommonJS, isRustCommonJSDependency, registerRustCommonJSPath } from '../filing-cabinet';
+import cabinet, {
+  canUseRustCommonJS,
+  isRustCommonJSDependency,
+  registerRustCommonJSPath,
+  rustDependencyResolutionMode,
+} from '../filing-cabinet';
 import precinct, { isRustEligible } from '../precinct';
 import Config from './Config';
 
@@ -92,11 +97,14 @@ module.exports._getDependencies = async function (config) {
   const pathMapFile = { file: config.filename };
 
   let nativeResolved: Map<string, string> | undefined;
+  let nativeMode: 'commonjs' | 'typescript5.9' = 'commonjs';
   if (config.rustScannerSession && canUseRustCommonJS(config.filename, config)) {
+    nativeMode = rustDependencyResolutionMode(config.filename);
     const candidates = dependencies.filter(
-      (dependency) => !isHttp(dependency) && isRustCommonJSDependency(config.filename, dependency)
+      (dependency) =>
+        !isHttp(dependency) && (nativeMode === 'typescript5.9' || isRustCommonJSDependency(config.filename, dependency))
     );
-    const resolved = await config.rustScannerSession.resolveDependencies?.(config.filename, candidates);
+    const resolved = await config.rustScannerSession.resolveDependencies?.(config.filename, candidates, nativeMode);
     if (resolved && canUseRustCommonJS(config.filename, config)) {
       nativeResolved = new Map();
       resolved.forEach((result, index) => {
@@ -134,8 +142,9 @@ module.exports._getDependencies = async function (config) {
     let result;
     try {
       result = nativeResolved?.get(dependency);
-      if (result) registerRustCommonJSPath(config.filename);
-      else result = cabinet(cabinetParams);
+      if (result) {
+        if (nativeMode !== 'typescript5.9' || !dependency.startsWith('.')) registerRustCommonJSPath(config.filename);
+      } else result = cabinet(cabinetParams);
     } catch (err: any) {
       debug(`error resolving dependencies: ${err.message}`);
       debug(err.stack);

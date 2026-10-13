@@ -97,6 +97,41 @@ test('environment lookup callbacks retain their invocation order and results', a
   assert.ok(!f.resolutions.some(({ result }) => result?.some(Boolean)));
 });
 
+test('TypeScript relative paths use native substitution without CommonJS module-path effects', async (t) => {
+  const f = fixture(t);
+  const file = f.write('typed/entry.ts', "import './value.js'; import './package';");
+  f.write('typed/value.js', 'export const value = 0;');
+  f.write('typed/value.ts', 'export const value = 1;');
+  f.write('typed/package/package.json', '{"types":"declarations.d.ts"}');
+  f.write('typed/package/declarations.d.ts', 'export declare const value: number;');
+  assert.ok(!require.main.paths.includes(path.join(f.root, 'typed/node_modules')));
+  const native = await generateTree([file], f.config());
+  if (cabinet.rustDependencyResolutionMode(file) === 'typescript5.9') {
+    assert.ok(f.resolutions.some(({ args, result }) => args[2] === 'typescript5.9' && result?.some(Boolean)));
+  }
+  assert.ok(!require.main.paths.includes(path.join(f.root, 'typed/node_modules')));
+  process.env.BIT_RUST_CLIENT_VCS = 'off';
+  const legacy = await generateTree([file], f.config());
+  assert.deepEqual(native, legacy);
+  assert.ok(native.madgeTree['typed/entry.ts'].includes('typed/value.ts'));
+});
+
+test('TypeScript package type edits remain fresh across graphs and bare imports retain CommonJS behavior', async (t) => {
+  const f = fixture(t);
+  const file = f.write('mixed/entry.ts', "import './package'; import 'package-a';");
+  f.write('mixed/package/package.json', '{"types":"first.d.ts"}');
+  f.write('mixed/package/first.d.ts', 'export declare const first: number;');
+  f.write('mixed/package/second.d.ts', 'export declare const second: number;');
+  const first = await generateTree([file], f.config());
+  assert.ok(first.madgeTree['mixed/entry.ts'].includes('mixed/package/first.d.ts'));
+  assert.ok(require.main.paths.includes(path.join(f.root, 'mixed/node_modules')));
+  f.write('mixed/package/package.json', '{"types":"second.d.ts"}');
+  const second = await generateTree([file], f.config());
+  assert.ok(second.madgeTree['mixed/entry.ts'].includes('mixed/package/second.d.ts'));
+  process.env.BIT_RUST_CLIENT_VCS = 'off';
+  assert.deepEqual(second, await generateTree([file], f.config()));
+});
+
 test('registered lookup overrides keep canonical precedence', async (t) => {
   const f = fixture(t);
   const { lookupJavaScript } = installed('@teambit/typescript.deps-lookups.lookup-typescript');

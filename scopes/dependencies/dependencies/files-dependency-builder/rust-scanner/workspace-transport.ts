@@ -23,13 +23,10 @@ export class RustScannerWorkspaceTransport {
     filename: string,
     dependencies: string[],
     id: number,
-    limits: { requestBytes: number; responseBytes: number }
+    limits: { requestBytes: number; responseBytes: number },
+    mode: 'commonjs' | 'typescript5.9' = 'commonjs'
   ): Promise<Array<string | null> | undefined> {
-    const response = await this.operation(
-      { kind: 'dependencyResolve', mode: 'commonjs', filename, dependencies },
-      id,
-      limits
-    );
+    const response = await this.operation({ kind: 'dependencyResolve', mode, filename, dependencies }, id, limits);
     if (response.failed) return undefined;
     const resolved = response.data?.resolved;
     if (

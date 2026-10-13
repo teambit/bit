@@ -89,3 +89,17 @@ reporting, path maps, traversal order or detector precedence.
 resolver; `resolution-integration.test.cjs` verifies source and compiled graph
 integration, fresh package/source reads, custom lookup precedence and response
 limits. Whole-command performance remains a separate acceptance requirement.
+
+
+The embedded resolver also supports relative TypeScript imports when the installed
+lookup uses TypeScript 5.9.2. It follows the canonical fixed CommonJS compiler
+options: typed/declaration candidates precede JavaScript, extension substitutions
+preserve JSX/MTS/CTS order, and package `typings`, `types`, `main` and directory
+indexes retain their precedence. Successful relative TypeScript lookups do not
+perform the CommonJS module-search-path side effect. Missing results fall back to
+the installed lookup, including its final CommonJS attempt.
+
+Other TypeScript versions, package `typesVersions` mappings and unsupported JSON retain canonical lookup. The adapter checks
+the installed compiler version without loading its parser. Differential tests
+cover 2,400 competing extension cases plus package-entry and directory rules;
+source and compiled graph tests exercise native results and module-path behavior.

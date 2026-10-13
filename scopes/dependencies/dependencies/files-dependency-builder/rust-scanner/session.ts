@@ -131,7 +131,11 @@ export class RustDependencyScannerSession {
     return !this.failure && result ? { ...JSON.parse(JSON.stringify(result)), path: logicalPath } : undefined;
   }
 
-  async resolveDependencies(filename: string, dependencies: string[]): Promise<Array<string | null> | undefined> {
+  async resolveDependencies(
+    filename: string,
+    dependencies: string[],
+    mode: 'commonjs' | 'typescript5.9' = 'commonjs'
+  ): Promise<Array<string | null> | undefined> {
     if (
       !this.options.workspaceAddon ||
       dependencies.length > 4096 ||
@@ -154,7 +158,8 @@ export class RustDependencyScannerSession {
             path.resolve(this.cwd, filename),
             dependencies,
             ++this.sequence,
-            this.limits
+            this.limits,
+            mode
           );
         } finally {
           clearTimeout(timer);

@@ -4,6 +4,7 @@ pub(crate) mod inventory;
 mod read;
 mod read_raw;
 mod resolve_dependencies;
+mod resolve_typescript;
 mod scan;
 mod status;
 

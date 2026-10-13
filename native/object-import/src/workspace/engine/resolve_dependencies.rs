@@ -24,7 +24,7 @@ pub(super) struct Request {
 }
 
 pub(super) fn resolve(request: &Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value)> {
-    if request.mode != "commonjs" {
+    if !matches!(request.mode.as_str(), "commonjs" | "typescript5.9") {
         return Err(invalid("dependency resolution mode"));
     }
     path(&request.filename)?;
@@ -48,7 +48,9 @@ pub(super) fn resolve(request: &Request, pool: &rayon::ThreadPool) -> io::Result
     let resolved = pool.install(|| {
         request.dependencies
             .par_iter()
-            .map(|dependency| resolve_one(dependency, parent, request.home.as_deref(), &budget))
+            .map(|dependency| {
+                resolve_one(dependency, parent, request.home.as_deref(), &budget, &request.mode)
+            })
             .collect::<io::Result<Vec<_>>>()
     })?;
     Ok((resolved.len(), json!({"resolved":resolved})))
@@ -59,8 +61,14 @@ fn resolve_one(
     parent: &Path,
     home: Option<&Path>,
     budget: &Budget,
+    mode: &str,
 ) -> io::Result<Option<String>> {
-    lookup(dependency, parent, home, budget)?
+    let resolved = if mode == "typescript5.9" && dependency.starts_with('.') {
+        super::resolve_typescript::lookup(dependency, parent, budget)?
+    } else {
+        lookup(dependency, parent, home, budget)?
+    };
+    resolved
         .map(|file| {
             file.to_str()
                 .map(str::to_owned)
@@ -69,12 +77,12 @@ fn resolve_one(
         .transpose()
 }
 
-struct Budget {
+pub(super) struct Budget {
     operations: AtomicUsize,
     bytes: AtomicUsize,
 }
 impl Budget {
-    fn metadata(&self, file: &Path) -> io::Result<Option<fs::Metadata>> {
+    pub(super) fn metadata(&self, file: &Path) -> io::Result<Option<fs::Metadata>> {
         if self.operations.fetch_add(1, Ordering::Relaxed) >= 16384 {
             return Err(invalid("dependency resolution filesystem limit"));
         }
@@ -91,7 +99,7 @@ impl Budget {
             Err(error) => Err(error),
         }
     }
-    fn package(&self, file: &Path) -> io::Result<Option<Value>> {
+    pub(super) fn package(&self, file: &Path) -> io::Result<Option<Value>> {
         let Some(metadata) = self.metadata(file)? else {
             return Ok(None);
         };
@@ -168,7 +176,7 @@ fn package_candidate(file: &Path, budget: &Budget) -> io::Result<Option<PathBuf>
     }
     Ok(None)
 }
-fn normalize(file: &Path) -> PathBuf {
+pub(super) fn normalize(file: &Path) -> PathBuf {
     let mut output = PathBuf::new();
     for component in file.components() {
         match component {
@@ -220,7 +228,7 @@ fn load_file(file: &Path, budget: &Budget) -> io::Result<Option<PathBuf>> {
     }
     Ok(None)
 }
-fn regular_file(file: &Path, budget: &Budget) -> io::Result<bool> {
+pub(super) fn regular_file(file: &Path, budget: &Budget) -> io::Result<bool> {
     match budget.metadata(file)? {
         Some(metadata) if metadata.is_file() => Ok(true),
         Some(metadata) if !metadata.is_dir() => Err(invalid("dependency special file")),

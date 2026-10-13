@@ -86,6 +86,16 @@ export function isRustCommonJSDependency(filename: string, dependency: string): 
   return !['.ts', '.tsx', '.cts', '.mts'].includes(path.extname(filename)) || !dependency.startsWith('.');
 }
 
+/** The native relative resolver is qualified against this installed TypeScript implementation. */
+export function rustDependencyResolutionMode(filename: string): 'commonjs' | 'typescript5.9' {
+  if (!['.ts', '.tsx', '.cts', '.mts'].includes(path.extname(filename))) return 'commonjs';
+  try {
+    return lookupRequire('typescript/package.json').version === '5.9.2' ? 'typescript5.9' : 'commonjs';
+  } catch {
+    return 'commonjs';
+  }
+}
+
 /** Preserve the existing lookup's public module search-path side effect. */
 export function registerRustCommonJSPath(filename: string): void {
   appModulePath.addPath(path.join(path.dirname(filename), 'node_modules'));
