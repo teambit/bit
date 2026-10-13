@@ -496,7 +496,7 @@ test('cold command classification matches stored model paths without classifying
   const metrics = execute(files, modules.map((name) => `require(${JSON.stringify(name)});`).join('\n'), {
     BIT_IMPORT_TRACE_PROTOCOL_ONLY: '1',
   });
-  assert.deepEqual(metrics.loadedCommandModels, modules.slice(1));
+  assert.deepEqual(metrics.loadedCommandModels, modules.slice(1).map((filename) => fs.realpathSync(filename)));
 });
 
 test('cold command classification distinguishes scalar versions from stored models and Consumer hydration', (t) => {
