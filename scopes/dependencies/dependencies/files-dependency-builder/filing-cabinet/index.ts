@@ -66,7 +66,8 @@ export function canUseRustCommonJS(
     requireConfig?: unknown;
     webpackConfig?: unknown;
     resolveConfig?: unknown;
-  }
+  },
+  graph = false
 ): boolean {
   const ext = path.extname(filename);
   return (
@@ -74,7 +75,7 @@ export function canUseRustCommonJS(
     ['.js', '.jsx', '.cjs', '.mjs', '.ts', '.tsx', '.cts', '.mts'].includes(ext) &&
     defaultLookups[ext] === nativeDefaults[ext] &&
     appModulePath.addPath === originalAddPath &&
-    !DetectorHook.hooks.length &&
+    (graph ? DetectorHook.canSkipNativeGraphHooks(filename) : !DetectorHook.hooks.length) &&
     !options.envDetectors?.length &&
     !options.requireConfig &&
     !options.webpackConfig &&

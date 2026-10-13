@@ -1,3 +1,4 @@
+import { defaultCompositionsPatterns } from './default-dev-patterns';
 import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import type { AspectData, Component, IComponent } from '@teambit/component';
 import { ComponentMap } from '@teambit/component';
@@ -164,7 +165,7 @@ export class CompositionsMain {
   }
 
   static defaultConfig: CompositionsConfig = {
-    compositionFilePattern: ['**/*.composition?(s).*'],
+    compositionFilePattern: defaultCompositionsPatterns(),
     compositionPreviewFilePattern: ['**/*.{t,j}s?(x)'],
   };
 

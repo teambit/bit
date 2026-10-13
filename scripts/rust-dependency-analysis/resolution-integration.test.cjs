@@ -39,6 +39,16 @@ function fixture(t) {
   write('node_modules/package-a/package.json', '{"main":"index.js"}');
   write('node_modules/package-a/index.js', 'module.exports = 1;');
   const resolutions = [];
+  const graphs = [];
+  const originalGraph = RustDependencyScannerSession.prototype.dependencyGraph;
+  RustDependencyScannerSession.prototype.dependencyGraph = async function (...args) {
+    const result = await originalGraph.apply(this, args);
+    graphs.push({ args, result });
+    return result;
+  };
+  t.after(() => {
+    RustDependencyScannerSession.prototype.dependencyGraph = originalGraph;
+  });
   const original = RustDependencyScannerSession.prototype.resolveDependencies;
   RustDependencyScannerSession.prototype.resolveDependencies = async function (...args) {
     const result = await original.apply(this, args);
@@ -49,7 +59,7 @@ function fixture(t) {
     RustDependencyScannerSession.prototype.resolveDependencies = original;
   });
   const config = () => ({ baseDir: root, envDetectors: [], detectiveOptions: {} });
-  return { root, file, write, resolutions, config };
+  return { root, file, write, resolutions, graphs, config };
 }
 
 test('resolved graphs consume Rust paths, preserve missing imports and keep module search-path effects', async (t) => {
@@ -107,7 +117,9 @@ test('TypeScript relative paths use native substitution without CommonJS module-
   assert.ok(!require.main.paths.includes(path.join(f.root, 'typed/node_modules')));
   const native = await generateTree([file], f.config());
   if (cabinet.rustDependencyResolutionMode(file) === 'typescript5.9') {
-    assert.ok(f.resolutions.some(({ args, result }) => args[2] === 'typescript5.9' && result?.some(Boolean)));
+    assert.equal(f.graphs.length, 1);
+    assert.ok(f.graphs[0].result, 'native graph must succeed for qualified TypeScript');
+    assert.equal(f.resolutions.length, 0, 'whole graph avoids per-file resolution');
   }
   assert.ok(!require.main.paths.includes(path.join(f.root, 'typed/node_modules')));
   process.env.BIT_RUST_CLIENT_VCS = 'off';

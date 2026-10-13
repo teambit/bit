@@ -126,6 +126,9 @@ export function statusPolicy(context: any, target: any) {
   return {
     input,
     extensions,
+    modelPackages: ['packageDependencies', 'devPackageDependencies', 'peerPackageDependencies'].map((field) =>
+      map(version?.[field])
+    ),
     overrides,
     bindingPrefix: model?.bindingPrefix || `@${target.identity.split('.')[0].split('/')[0]}`,
     packageName: packageName(target.identity, model?.bindingPrefix),

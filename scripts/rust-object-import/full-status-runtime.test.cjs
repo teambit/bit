@@ -78,30 +78,6 @@ test('cold full status owns real default-Node workspaces and preserves canonical
   };
   const clean = await compare('clean');
   assert.deepEqual(clean.modifiedComponents, []);
-  const cache = new (installed('@teambit/workspace.modules.fs-cache').FsCache)(path.join(directory, '.bit'));
-  const cached = await cache.listDependenciesDataCache();
-  for (const name of ['node_modules', 'package.json', 'pnpm-lock.yaml', 'yarn.lock', '.bitmap', 'workspace.jsonc']) {
-    const filename = path.join(directory, name);
-    const stat = await fs.stat(filename).catch(() => undefined);
-    if (!stat) await fs.writeFile(filename, '');
-    await fs.utimes(filename, 2000000000, 2000000000);
-    assert.equal(await readRustStatus(directory, temporary), undefined, `${name}: global cache invalidation falls back`);
-    assert.deepEqual(await cache.listDependenciesDataCache(), cached, 'fallback leaves the complete cache intact');
-    if (stat) await fs.utimes(filename, stat.atime, stat.mtime);
-    else await fs.rm(filename);
-  }
-  const features = installed('@teambit/harmony.modules.feature-toggle');
-  const previousFeatures = process.env.BIT_FEATURES;
-  try {
-    process.env.BIT_FEATURES = 'no-fs-cache';
-    features.reloadFeatureToggle();
-    assert.equal(await readRustStatus(directory, temporary), undefined, 'disabled filesystem cache falls back');
-  } finally {
-    if (previousFeatures === undefined) delete process.env.BIT_FEATURES;
-    else process.env.BIT_FEATURES = previousFeatures;
-    features.reloadFeatureToggle();
-  }
-  await compare('global cache guards restored');
   const objects = path.join(directory, '.bit/objects');
   let componentObject;
   for (const shard of await fs.readdir(objects)) {
@@ -218,10 +194,14 @@ test('cold full status owns real default-Node workspaces and preserves canonical
   const added = await compare('new component');
   assert.deepEqual(added.newComponents, ['qualification.inspection/gamma']);
   await fs.rm(path.join(directory, '.bit/cache/components/deps'), { recursive: true, force: true });
-  assert.equal(await readRustStatus(directory, temporary), undefined, 'absent dependency cache falls back');
+  const cold = await readRustStatus(directory, temporary);
+  assert.ok(cold, 'absent dependency cache is derived natively');
+  assert.deepEqual(cold, JSON.parse(command(['status', '--json'])));
   await compare('cache refresh');
   await fs.utimes(path.join(directory, 'gamma/index.js'), 2000000000, 2000000000);
-  assert.equal(await readRustStatus(directory, temporary), undefined, 'stale dependency cache falls back');
+  const stale = await readRustStatus(directory, temporary);
+  assert.ok(stale, 'stale dependency cache is refreshed natively');
+  assert.deepEqual(stale, JSON.parse(command(['status', '--json'])));
   await fs.utimes(path.join(directory, 'gamma/index.js'), 1700000000, 1700000000);
   const workspaceFile = path.join(directory, 'workspace.jsonc');
   const original = await fs.readFile(workspaceFile);

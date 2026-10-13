@@ -26,33 +26,64 @@ pub(in crate::workspace::engine) fn apply(
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
     validate(request)?;
-    let detected = load(request, pool)?;
-    let mut initial = detected::initial(&detected, &request.finish)?;
+    let Some(detected) = load(request, pool)? else {
+        return Ok((0, json!({"needsDetection":true})));
+    };
+    complete(
+        &Complete {
+            root: request.root.clone(),
+            component_root: request.component_root.clone(),
+            detected,
+            policies: request.policies.clone(),
+            finish: request.finish.clone(),
+            resolution: request.resolution.clone(),
+        },
+        pool,
+    )
+}
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(in crate::workspace::engine) struct Complete {
+    root: PathBuf,
+    component_root: PathBuf,
+    detected: Value,
+    policies: Value,
+    finish: Value,
+    resolution: Value,
+}
+pub(in crate::workspace::engine) fn complete(
+    request: &Complete,
+    pool: &rayon::ThreadPool,
+) -> io::Result<(usize, Value)> {
+    let mut initial = detected::initial(&request.detected, &request.finish)?;
     initial["policies"] = request.policies.clone();
     let input =
         serde_json::from_value(json!({"root":request.root,"componentRoot":request.component_root,
         "initial":initial,"finish":request.finish,"resolution":request.resolution}))
         .map_err(io::Error::other)?;
     let (_, mut output) = pipeline::apply(&input, pool)?;
-    output["issues"] = issues::apply(&detected["issues"], &output)?;
+    output["issues"] = issues::apply(&request.detected["issues"], &output)?;
     Ok((1, output))
 }
 
-fn load(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Value> {
+fn load(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Option<Value>> {
     if request.root == request.component_root {
-        return Ok(
+        return Ok(Some(
             json!({"allDependencies":{"dependencies":[],"devDependencies":[],"peerDependencies":[]},
             "allPackagesDependencies":{"packageDependencies":{},"devPackageDependencies":{},"peerPackageDependencies":{}},
             "issues":[]}),
-        );
+        ));
     }
     let input =
         serde_json::from_value(json!({"cache":request.root.join(".bit/cache/components/deps"),
         "key":request.identity}))
         .map_err(io::Error::other)?;
     let (_, result) = read_dependency_cache::read(&input)?;
+    if result["cache"].is_null() {
+        return Ok(None);
+    }
     let cache =
-        result["cache"].as_object().ok_or_else(|| invalid("status missing dependency cache"))?;
+        result["cache"].as_object().ok_or_else(|| invalid("status dependency cache shape"))?;
     let mut files = request.files.clone();
     files.push(request.component_root.join("component.json"));
     let input = serde_json::from_value(json!({"root":request.component_root,"files":files,
@@ -60,13 +91,13 @@ fn load(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Value> {
     .map_err(io::Error::other)?;
     let (_, freshness) = read_dependency_cache::freshness(&input, pool)?;
     if freshness["stale"] != false {
-        return Err(invalid("status stale dependency cache"));
+        return Ok(None);
     }
     let data = cache
         .get("data")
         .and_then(Value::as_str)
         .ok_or_else(|| invalid("status dependency cache data"))?;
-    serde_json::from_str(data).map_err(io::Error::other)
+    serde_json::from_str(data).map(Some).map_err(io::Error::other)
 }
 
 fn validate(request: &Request) -> io::Result<()> {

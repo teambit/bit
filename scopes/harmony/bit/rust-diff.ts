@@ -91,6 +91,7 @@ export async function readRustDiff(root: string, home: string, pattern?: string)
         ...(fieldsDiff === undefined ? {} : { fieldsDiff }),
       });
     }
+    await capture.commit();
     return output;
   });
 }

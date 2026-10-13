@@ -1147,3 +1147,18 @@ test('packed retained bodies preserve lazy aliases and exact write continuation 
   await fs.unlink(descriptor.snapshotPath);
   assert.deepEqual(clone.contents, contents);
 });
+
+test('checkout ownership excludes only separate dependency sessions and retains all state/body operations', () => {
+  const { checkoutOwnsFrame } = require('./checkout-transition-qualification.cjs');
+  const owned = [
+    { magic: 'BMT1', kind: 'checkoutSelectBegin', helperId: 1 },
+    { magic: 'BWS1', kind: 'inventoryBegin', helperId: 1 },
+    { magic: 'BWC1', helperId: 1 },
+  ];
+  const graph = ['dependencyGraph', 'dependencyCacheRead', 'dependencyScan', 'dependencyResolve', 'dependencyCacheFreshness']
+    .map((kind) => ({ magic: 'BWS1', kind, helperId: 2 }));
+  assert.deepEqual([...owned, ...graph].filter(checkoutOwnsFrame), owned);
+  for (const kind of ['read', 'fileStatus', 'dependencyGraphUnknown'])
+    assert.equal(checkoutOwnsFrame({ magic: 'BWS1', kind, helperId: 2 }), true);
+  assert.equal(checkoutOwnsFrame({ magic: 'BMT1', kind: 'inspectionFinish', helperId: 2 }), true);
+});

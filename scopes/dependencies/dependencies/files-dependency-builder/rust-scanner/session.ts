@@ -4,7 +4,12 @@ import path from 'path';
 import { createHash } from 'crypto';
 import { decodeResponse } from './protocol';
 import { RustScannerWorkspaceTransport } from './workspace-transport';
-import type { RustDependencyScannerSessionOptions, RustScannerOutcome } from './types';
+import type {
+  RustDependencyGraph,
+  RustDependencyGraphRequest,
+  RustDependencyScannerSessionOptions,
+  RustScannerOutcome,
+} from './types';
 
 export type { RustDependencyScannerSessionOptions, RustScannerOutcome } from './types';
 
@@ -149,6 +154,14 @@ export class RustDependencyScannerSession {
     return this.workspaceRequest(bytes, (workspace, id) =>
       workspace.resolve(path.resolve(this.cwd, filename), captured, id, this.limits, mode)
     );
+  }
+
+  dependencyGraph(input: RustDependencyGraphRequest): Promise<RustDependencyGraph | undefined> {
+    const serialized = JSON.stringify(input);
+    const bytes = Buffer.byteLength(serialized) + 64;
+    if (bytes > this.limits.requestBytes) return Promise.resolve(undefined);
+    const captured = JSON.parse(serialized) as RustDependencyGraphRequest;
+    return this.workspaceRequest(bytes, (workspace, id) => workspace.graph(captured, id, this.limits));
   }
 
   readDependencyCache(cache: string, key: string): Promise<{ timestamp: number; data: string } | null | undefined> {

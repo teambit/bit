@@ -38,6 +38,29 @@ function packageHelper(directory, target) {
   const identity = sourceIdentity();
   const build = buildCommand(target);
   const cargoTarget = path.join(ROOT, 'native/target');
+  // Cargo's timestamp fingerprints can reuse a different worktree's output when
+  // both checkouts share a target directory. Rebuild workspace crates so the
+  // manifest's source identity describes the bytes we actually package.
+  execFileSync(
+    'cargo',
+    [
+      'clean',
+      '--release',
+      '--target',
+      target,
+      '--package',
+      'bit-dependency-scanner',
+      '--package',
+      'bit-object-import',
+      '--package',
+      'bit-workspace-napi',
+    ],
+    {
+      cwd: path.join(ROOT, 'native'),
+      env: { ...process.env, CARGO_TARGET_DIR: cargoTarget },
+      stdio: ['ignore', 'ignore', 'inherit'],
+    }
+  );
   execFileSync(build[0], build.slice(1), {
     cwd: path.join(ROOT, 'native'),
     env: { ...process.env, CARGO_TARGET_DIR: cargoTarget },

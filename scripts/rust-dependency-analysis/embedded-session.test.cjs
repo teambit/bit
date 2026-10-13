@@ -124,6 +124,13 @@ test('VCS selection uses the actual addon for resolved graphs and preserves cust
   const config = { baseDir: cwd, envDetectors: [], detectiveOptions: {} };
   const sourceSession = source(prefix + 'session.ts').RustDependencyScannerSession;
   const get = sourceSession.prototype.get;
+  const graph = sourceSession.prototype.dependencyGraph;
+  let embeddedGraphs = 0;
+  sourceSession.prototype.dependencyGraph = async function (...args) {
+    const result = await graph.apply(this, args);
+    if (this.workspace && result) embeddedGraphs++;
+    return result;
+  };
   let embeddedResults = 0;
   sourceSession.prototype.get = function (...args) {
     const result = get.apply(this, args);
@@ -132,9 +139,11 @@ test('VCS selection uses the actual addon for resolved graphs and preserves cust
   };
   t.after(() => {
     sourceSession.prototype.get = get;
+    sourceSession.prototype.dependencyGraph = graph;
   });
   const native = await generateTree([path.join(cwd, 'a.ts')], config);
-  assert.ok(embeddedResults >= 2, 'resolved graph must actually consume embedded results');
+  assert.equal(embeddedGraphs, 1, 'resolved graph must actually consume the whole embedded graph');
+  assert.equal(embeddedResults, 0, 'whole graph avoids per-file embedded results');
   assert.deepEqual(native.madgeTree, { 'a.ts': ['b.ts'], 'b.ts': [] });
   process.env.BIT_RUST_DEPENDENCY_SCANNER = 'off';
   assert.deepEqual(await generateTree([path.join(cwd, 'a.ts')], config), native);

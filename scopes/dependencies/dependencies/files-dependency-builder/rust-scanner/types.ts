@@ -25,3 +25,33 @@ export type RustDependencyScannerSessionOptions = {
   maxPendingRequests?: number;
   signal?: AbortSignal;
 };
+
+export type RustGraphPathMap = {
+  file: string;
+  dependencies: {
+    importSource: string;
+    resolvedDep: string;
+    importSpecifiers?: RustScannerDependency['importSpecifiers'];
+  }[];
+};
+export type RustGraphVisited = { pathMap: RustGraphPathMap; missing?: string[]; error?: undefined };
+export type RustDependencyGraphRequest = {
+  root: string;
+  files: string[];
+  home: string;
+  builtins: string[];
+  typescript: boolean;
+  includeNpm: boolean;
+  detectorExtensions: string[];
+  visited?: Record<string, RustGraphVisited>;
+};
+export type RustDependencyGraph = {
+  tree: Record<string, string[]>;
+  pathMap: RustGraphPathMap[];
+  pathMapOrigins: number[];
+  missing: Record<string, string[]>;
+  errors: Record<string, never>;
+  visited: Record<string, RustGraphVisited>;
+  registeredPaths: string[];
+  scannedPaths: string[];
+};

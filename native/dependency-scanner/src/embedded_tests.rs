@@ -59,3 +59,23 @@ fn embedded_bounds_expanded_dependency_metadata() {
     assert!(input.len() < limits::REQUEST_BYTES);
     assert_eq!(scan_request(&input, &pool).unwrap()["status"], "invalid_request");
 }
+
+#[test]
+fn captured_source_entrypoint_preserves_embedded_outcomes() {
+    let pool = ThreadPoolBuilder::new()
+        .num_threads(2)
+        .build()
+        .unwrap();
+    for (path, source) in [
+        ("a.ts", "import {x} from './x';"),
+        ("a.js", "require('pkg');"),
+        ("a.ts", "const = ;"),
+        ("a.js", "require('2');"),
+    ] {
+        let input = json!({"version":1,"files":[{"path":path,"source":source}]}).to_string();
+        assert_eq!(
+            crate::scan_source(path.into(), source.into()).unwrap(),
+            scan_request(&input, &pool).unwrap()["files"][0],
+        );
+    }
+}

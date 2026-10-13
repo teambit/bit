@@ -45,6 +45,7 @@ export async function readRustStatus(root: string, home: string): Promise<any | 
       if (Array.isArray(rows) && key !== 'importPendingComponents')
         rows.sort((a, b) => (typeof a === 'string' ? a : a.id).localeCompare(typeof b === 'string' ? b : b.id));
     }
+    await capture.commit();
     return result;
   });
 }
