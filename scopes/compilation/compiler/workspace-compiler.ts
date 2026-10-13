@@ -53,6 +53,12 @@ export type CompileOptions = {
    * start` to avoid webpack "EINTR" error.
    */
   deleteDistDir?: boolean;
+  /**
+   * source files (absolute paths) that were removed from the component. once the new dists are written, their stale
+   * dists are deleted. (used by watch, which can't delete the entire dist dir, as other processes such as webpack
+   * may read it meanwhile)
+   */
+  removedFiles?: PathOsBasedAbsolute[];
   initiator: CompilationInitiator; // describes where the compilation is coming from
   // should we create links in node_modules for the compiled components (default = true)
   // this will link the source files, and create the package.json
@@ -134,6 +140,7 @@ export class ComponentCompiler {
       await dataToPersist.persistAllToFS();
     }
     await Promise.all(absoluteDists.map((distFile) => distFile.write()));
+    if (options.removedFiles?.length) await this.removeDistsOfRemovedFiles(options.removedFiles, distDirs);
     const buildResults = this.dists.map((distFile) => distFile.path);
     if (this.component.state._consumer.compiler) this.logger.consoleSuccess();
 
@@ -166,6 +173,38 @@ ${this.compileErrors.map(formatError).join('\n')}`);
 
       this.logger.console(err.message);
     }
+  }
+
+  /**
+   * delete only the dists generated from the removed files, rather than the whole dist dir. this way, files that were
+   * never compiled (e.g. temp files of an atomic save) delete nothing, and the remaining dists are always available.
+   */
+  private async removeDistsOfRemovedFiles(removedFiles: PathOsBasedAbsolute[], distDirs: string[]) {
+    const distDirName = this.compilerInstance.getDistDir?.() || DEFAULT_DIST_DIRNAME;
+    // a file might have been re-created meanwhile (e.g. delete-then-recreate save), its dists are valid then.
+    const stillRemoved = compact(
+      await Promise.all(removedFiles.map(async (file) => ((await fs.pathExists(file)) ? null : file)))
+    );
+    const pathsInDistDir = stillRemoved.flatMap((removedFile) => {
+      const relativePath = path.relative(this.componentDir, removedFile);
+      if (!relativePath || relativePath.startsWith('..') || path.isAbsolute(relativePath)) return [];
+      const compiledPath = path.relative(distDirName, this.compilerInstance.getDistPathBySrcPath(relativePath));
+      const compiledPathNoExt = compiledPath.replace(/\.js$/, '');
+      return [
+        relativePath, // a non-supported file copied as is, or a removed directory
+        compiledPath,
+        `${compiledPath}.map`,
+        `${compiledPathNoExt}.d.ts`,
+        `${compiledPathNoExt}.d.ts.map`,
+      ];
+    });
+    const writtenDists = new Set(this.dists.map((distFile) => path.resolve(this.toAbsolutePath(distFile.path))));
+    const pathsToRemove = uniq(
+      distDirs.flatMap((distDir) =>
+        pathsInDistDir.map((pathInDistDir) => path.resolve(this.toAbsolutePath(distDir), pathInDistDir))
+      )
+    ).filter((pathToRemove) => !writtenDists.has(pathToRemove));
+    await Promise.all(pathsToRemove.map((pathToRemove) => fs.remove(pathToRemove)));
   }
 
   private async distDirs(): Promise<string[]> {
@@ -466,9 +505,10 @@ export class WorkspaceCompiler {
     watchOpts: WatchOptions
   ): Promise<SerializableResults | void> {
     if (!watchOpts.compile) return undefined;
-    // when files are removed, we need to remove the dist directories and the old symlinks, otherwise, it has
-    // symlinks to non-exist files and the dist has stale files
-    const deleteDistDir = Boolean(removedFiles?.length);
+    // when files are removed, we need to remove their dists and the old symlinks, otherwise, it has
+    // symlinks to non-exist files and the dist has stale files.
+    // don't delete the entire dist dir here. other processes (e.g. a webpack dev-server) may read it meanwhile and
+    // fail with ENOENT. also, "removed files" include temp files of atomic saves, which have no dists at all.
     if (removedFiles?.length) {
       await removeLinksFromNodeModules(component, this.workspace, removedFiles);
     }
@@ -476,7 +516,8 @@ export class WorkspaceCompiler {
       [component.id.toString()],
       {
         initiator: watchOpts.initiator || CompilationInitiator.ComponentChanged,
-        deleteDistDir,
+        deleteDistDir: false,
+        removedFiles,
         generateTypes: watchOpts.generateTypes,
       },
       true
