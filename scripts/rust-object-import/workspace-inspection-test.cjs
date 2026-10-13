@@ -148,28 +148,31 @@ test('nested inspection operations preserve the original public error and dispos
 
 test('external body observer separates named Rust workers without hiding JavaScript or libuv reads', () => {
   const { summarize } = require('./workspace-inspection-body-read.cjs');
-  const observed = summarize([
-    '100 execve("/usr/bin/node", [], []) = 0',
-    '100 clone(flags=CLONE_VM|CLONE_THREAD) = 101',
-    '100 clone3({flags=CLONE_VM|CLONE_THREAD}, 88) = 102',
-    '100 clone(flags=SIGCHLD) = 103',
-    '100 read(3</source>, "js", 2) = 2',
-    '101 read(3</source>, "before", 6) = 6',
-    '101 prctl(PR_SET_NAME, "bit-vcs-0" <unfinished ...>',
-    '101 <... prctl resumed>) = 0',
-    '101 read(3</source> <unfinished ...>',
-    '101 <... read resumed>, "rust", 4) = 4',
-    '102 prctl(PR_SET_NAME, "bit-vcs-1") = -1 EPERM',
-    '102 read(3</source> <unfinished ...>',
-    '102 <... read resumed>, "libuv", 5) = 5',
-    '101 prctl(PR_SET_NAME, "libuv-worker") = 0',
-    '101 read(3</source>, "after", 5) = 5',
-    '103 prctl(PR_SET_NAME, "bit-vcs-2") = 0',
-    '103 read(3</source>, "child", 5) = 5',
-  ].join('\n'), ['/source']);
+  const observed = summarize(
+    [
+      '100 execve("/usr/bin/node", [], []) = 0',
+      '100 clone(flags=CLONE_VM|CLONE_THREAD) = 101',
+      '100 clone3({flags=CLONE_VM|CLONE_THREAD}, 88) = 102',
+      '100 clone(flags=SIGCHLD) = 103',
+      '100 read(3</source>, "js", 2) = 2',
+      '101 read(3</source>, "before", 6) = 6',
+      '101 prctl(PR_SET_NAME, "bit-vcs-0" <unfinished ...>',
+      '101 <... prctl resumed>) = 0',
+      '101 read(3</source> <unfinished ...>',
+      '101 <... read resumed>, "rust", 4) = 4',
+      '102 prctl(PR_SET_NAME, "bit-vcs-1") = -1 EPERM',
+      '102 read(3</source> <unfinished ...>',
+      '102 <... read resumed>, "libuv", 5) = 5',
+      '101 prctl(PR_SET_NAME, "libuv-worker") = 0',
+      '101 read(3</source>, "after", 5) = 5',
+      '103 prctl(PR_SET_NAME, "bit-vcs-2") = 0',
+      '103 read(3</source>, "child", 5) = 5',
+    ].join('\n'),
+    ['/source']
+  );
   assert.equal(observed.bytes, 18);
   assert.equal(observed.rustBytes, 4);
-  assert.deepEqual(observed.rustReads, [{thread:101, path:'/source', bytes:4, kind:'source'}]);
+  assert.deepEqual(observed.rustReads, [{ thread: 101, path: '/source', bytes: 4, kind: 'source' }]);
 });
 
 test('external body observer detects main Node and libuv reads while excluding another process', async (t) => {
@@ -772,6 +775,8 @@ test('real diff binds the retained caller bytes before and after native capture'
       input = frame.subarray(0, 4).toString() === 'BMT1' ? JSON.parse(frame.subarray(12)) : undefined;
     const result = await originalRequest.call(this, build, ...args);
     if (input?.kind === 'inspectionBegin') {
+      assert.equal(input.memoryOnly, true);
+      assert.deepEqual(await fs.readdir(input.snapshotDirectory), []);
       begins++;
       if (mutate) await fs.writeFile(filename, 'changed only after Begin');
     }
@@ -973,4 +978,60 @@ test('raw workspace reads reject discontinuous ranges and preserve independent p
     result[0].contents[0] = 12;
     assert.deepEqual(result[1].contents, Buffer.from([10, 13]));
   }
+});
+
+test('owned diff reuses the observed bytes without a second disk read or source spool', async (t) => {
+  const directory = await fixture(t);
+  const load = (name) =>
+    compiled ? require(path.join(base, `${name}.js`)) : source(`scopes/component/sources/${name}.ts`);
+  const engine = load('rust-workspace-engine'),
+    reader = load('rust-workspace-reader'),
+    checkout = load('rust-checkout-source');
+  const SourceFile = compiled ? installed('@teambit/component.sources').SourceFile : load('source-file').default;
+  const objects = installed('@teambit/objects');
+  const repository = await objects.Repository.create({
+    scopePath: path.join(directory, 'scope'),
+    scopeJson: { name: 'qualification' },
+  });
+  const stored = new objects.Source(Buffer.from('old source\n'));
+  const objectPath = repository.objectPath(stored.hash());
+  await fs.mkdir(path.dirname(objectPath), { recursive: true });
+  await fs.writeFile(objectPath, require('node:zlib').deflateSync(stored.serialize()));
+  const filename = path.join(directory, 'index.js'),
+    body = Buffer.from('observed source\r\n');
+  await fs.writeFile(filename, body);
+  const originalRequest = Session.prototype.request;
+  let retained = 0;
+  Session.prototype.request = async function (build, ...args) {
+    const frame = build(1),
+      input = frame.subarray(0, 4).toString() === 'BMT1' ? JSON.parse(frame.subarray(12)) : undefined;
+    const result = await originalRequest.call(this, build, ...args);
+    if (input?.kind === 'inspectionBegin') {
+      assert.equal(input.memoryOnly, true);
+      assert.ok(input.files.every((file) => Number.isSafeInteger(file.readToken)));
+      assert.deepEqual(await fs.readdir(input.snapshotDirectory), []);
+      retained++;
+    }
+    return result;
+  };
+  t.after(() => {
+    Session.prototype.request = originalRequest;
+  });
+  await engine.withRustWorkspaceEngine(async () => {
+    const model = await checkout.prepareRustCheckoutSources(
+      [{ relativePath: 'index.js', name: 'index.js', test: false, file: stored.hash() }],
+      repository
+    );
+    const reads = await reader.readRustWorkspaceFiles([filename]);
+    const current = new SourceFile({ cwd: directory, base: directory, path: filename, contents: reads[0].contents });
+    reader.registerRustWorkspaceFile(current, reads[0]);
+    await fs.unlink(filename);
+    const result = await reader.getRustFilesDiff(model, [current], 'relative', false);
+    assert.equal(retained, 1);
+    assert.equal(result?.[0].fromContent, 'old source\n');
+    assert.equal(result?.[0].toContent, body.toString());
+    current.contents.fill(120);
+    assert.equal(await reader.getRustFilesDiff(model, [current], 'relative', false), undefined);
+    assert.equal(retained, 1, 'mutated public bytes cannot reuse a read token');
+  });
 });

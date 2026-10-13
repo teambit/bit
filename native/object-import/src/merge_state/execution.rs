@@ -13,7 +13,9 @@ pub(super) fn run(
             | Request::MergeApply(_)
             | Request::CheckoutPrepare(_)
             | Request::SnapshotSerialize(_)
-            | Request::InspectionBegin(_),
+            | Request::InspectionBegin(_)
+            | Request::InspectionDiff(_)
+            | Request::HistoryQueryDiff(_),
     ) {
         pool.install(|| apply(request, state, bytes))
     } else {

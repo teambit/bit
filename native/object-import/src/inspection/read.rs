@@ -1,4 +1,5 @@
 mod parallel;
+mod retained;
 
 use super::{hash, invalid, wire};
 use serde_json::{Value, json};
@@ -29,7 +30,11 @@ impl File {
             .write_all(&self.contents)
     }
 }
-pub(super) fn capture(request: &wire::Begin, maximum: usize) -> io::Result<Vec<File>> {
+pub(super) fn capture(
+    request: &wire::Begin,
+    maximum: usize,
+    snapshots: Option<&crate::workspace::snapshots::State>,
+) -> io::Result<Vec<File>> {
     let directory = &request.snapshot_directory;
     if !directory.is_absolute()
         || !fs::symlink_metadata(directory)?.is_dir()
@@ -45,13 +50,13 @@ pub(super) fn capture(request: &wire::Begin, maximum: usize) -> io::Result<Vec<F
         }
     }
     if request.files.len() >= 8 && rayon::current_num_threads() > 1 {
-        return parallel::capture(request, maximum);
+        return parallel::capture(request, maximum, snapshots);
     }
     let mut total = 0;
     request.files
         .iter()
         .map(|file| {
-            let (captured, bytes) = capture_file(file, request, maximum - total)?;
+            let (captured, bytes) = capture_file(file, request, maximum - total, snapshots)?;
             total += bytes;
             Ok(captured)
         })
@@ -62,13 +67,13 @@ fn capture_file(
     file: &wire::Input,
     request: &wire::Begin,
     maximum: usize,
+    snapshots: Option<&crate::workspace::snapshots::State>,
 ) -> io::Result<(File, usize)> {
-    let raw = raw(&file.path, maximum)?;
-    let raw_size = raw.len();
-    let raw_hash = hash(&raw);
-    let changed = raw.starts_with(b"\xef\xbb\xbf")
+    let (raw, raw_size, raw_hash) = retained::load(file, maximum, snapshots)?;
+    let changed = file.read_token.is_some()
+        || raw.starts_with(b"\xef\xbb\xbf")
         || (request.workspace_root && file.relative_path == ".bitmap");
-    let mut contents = strip_bom(raw);
+    let mut contents = if file.read_token.is_some() { raw } else { strip_bom(raw) };
     if request.workspace_root && file.relative_path == ".bitmap" {
         contents = super::bitmap::normalize(&contents)?;
     }
@@ -79,11 +84,7 @@ fn capture_file(
     let snapshot_hash = if changed { hash(&contents) } else { raw_hash.clone() };
     verify_expected(file.raw_hash.as_deref(), &raw_hash)?;
     verify_expected(file.snapshot_hash.as_deref(), &snapshot_hash)?;
-    let linux_hash = if !contents.contains(&b'\r') || crate::checkout::eol::binary(&contents) {
-        snapshot_hash.clone()
-    } else {
-        hash(&crate::checkout::eol::normalize(contents.clone(), false))
-    };
+    let linux_hash = linux_hash(&contents, &snapshot_hash);
     Ok((
         File {
             relative_path: file.relative_path.clone(),
@@ -95,6 +96,14 @@ fn capture_file(
         },
         used,
     ))
+}
+
+fn linux_hash(contents: &[u8], snapshot_hash: &str) -> String {
+    if !contents.contains(&b'\r') || crate::checkout::eol::binary(contents) {
+        snapshot_hash.to_string()
+    } else {
+        hash(&crate::checkout::eol::normalize(contents.to_vec(), false))
+    }
 }
 
 fn raw(path: &PathBuf, maximum: usize) -> io::Result<Vec<u8>> {

@@ -297,7 +297,11 @@ async function runQualification(cli, helper, options = {}) {
     }
     for (const entry of diagnostics) {
       assert.equal(entry.trace.frameworkObservation, 'disabled', 'observation must preserve public class guards');
-      if (addon) assert.ok(entry.trace.workspaceFrames.every(frame => frame.backend === 'addon'), 'packaged inspection must use the addon');
+      if (addon)
+        assert.ok(
+          entry.trace.workspaceFrames.every((frame) => frame.backend === 'addon'),
+          'packaged inspection must use the addon'
+        );
       const metrics = entry.trace.mergeState;
       const operationHelpers = new Set(kinds.flatMap((kind) => metrics[kind].helperIds));
       assert.equal(
@@ -330,8 +334,13 @@ async function runQualification(cli, helper, options = {}) {
         assert.ok(metrics.inspectionBegin.snapshotBytes > 0);
         if (process.platform === 'linux') {
           assert.ok(entry.bodyReads, 'Linux body-read evidence is mandatory');
-          assert.equal(entry.bodyReads.bytes, 0, `${entry.operation}: JavaScript/libuv must not read Source files/spools`);
-          if (addon) assert.ok(entry.bodyReads.rustBytes > 0, 'named native workers must account for captured Source reads');
+          assert.equal(
+            entry.bodyReads.bytes,
+            0,
+            `${entry.operation}: JavaScript/libuv must not read Source files/spools`
+          );
+          if (addon)
+            assert.ok(entry.bodyReads.rustBytes > 0, 'named native workers must account for captured Source reads');
         }
       }
     }
@@ -354,6 +363,10 @@ async function runQualification(cli, helper, options = {}) {
       ),
       'metadata-only dependent comparison must accept beta, not merely an unrelated unchanged component'
     );
+    for (const phase of ['config', 'content', 'inventory']) {
+      const diff = diagnostics.find((entry) => entry.operation === `${phase}-diff`);
+      assert.equal(diff.trace.mergeState.inspectionBegin.spooledFiles, 0, 'diff must not spool caller-owned sources');
+    }
     options.validateNative?.(diagnostics);
   }
   await verify();

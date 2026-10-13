@@ -128,7 +128,7 @@ fn apply(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value
             Ok((files.len(), json!({"files":files})))
         }
         Request::Diff { files, git_executable, color } => {
-            let files = diff::diff(&files, &git_executable, color)?;
+            let files = pool.install(|| diff::diff(&files, &git_executable, color))?;
             Ok((files.len(), json!({"files":files})))
         }
         Request::FileStatus { target, current } => status::compare(&target, &current),

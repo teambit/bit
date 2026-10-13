@@ -5,6 +5,8 @@ use std::path::PathBuf;
 pub(super) struct Begin {
     pub(super) files: Vec<Input>,
     pub(super) workspace_root: bool,
+    #[serde(default)]
+    pub(super) memory_only: bool,
     pub(super) snapshot_directory: PathBuf,
 }
 #[derive(Deserialize)]
@@ -13,6 +15,7 @@ pub(super) struct Input {
     pub(super) relative_path: String,
     pub(super) path: PathBuf,
     pub(super) raw_hash: Option<String>,
+    pub(super) read_token: Option<u64>,
     pub(super) snapshot_hash: Option<String>,
 }
 #[derive(Deserialize)]

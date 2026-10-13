@@ -192,9 +192,11 @@ fn apply(request: Request, state: &mut State, bytes: &[u8]) -> io::Result<Value>
             write::commit(&path, &contents)?;
             Ok(json!({"saved":true}))
         }
-        Request::InspectionBegin(input) => {
-            crate::inspection::apply("inspectionBegin", input, &mut state.inspection)
-        }
+        Request::InspectionBegin(input) => crate::inspection::begin(
+            &input,
+            &mut state.inspection,
+            Some(&state.operations.workspace_reads),
+        ),
         Request::InspectionFiles(input) => {
             crate::inspection::apply("inspectionFiles", input, &mut state.inspection)
         }

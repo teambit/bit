@@ -1,4 +1,6 @@
-use super::{invalid, read, wire};
+mod read;
+
+use super::{invalid, read::File, wire};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{
@@ -15,7 +17,7 @@ struct Request {
     git_executable: String,
     color: bool,
 }
-pub(super) fn plan(input: Value, plans: &HashMap<String, Vec<read::File>>) -> io::Result<Value> {
+pub(super) fn plan(input: Value, plans: &HashMap<String, Vec<File>>) -> io::Result<Value> {
     let request: Request = serde_json::from_value(input).map_err(io::Error::other)?;
     let current = plans.get(&request.token).ok_or_else(|| invalid("stale inspection token"))?;
     if !request.objects_directory.is_absolute() || request.model_files.len() > super::MAX_FILES {
@@ -23,27 +25,25 @@ pub(super) fn plan(input: Value, plans: &HashMap<String, Vec<read::File>>) -> io
     }
     let mut files = Vec::new();
     let mut seen = HashSet::new();
-    let mut total = current
+    let total = current
         .iter()
         .map(|file| file.contents.len())
         .sum::<usize>();
-    let mut compressed = 0;
-    for model in request.model_files {
-        read::relative(&model.relative_path)?;
+    for model in &request.model_files {
+        super::read::relative(&model.relative_path)?;
+        crate::merge_history::hash(&model.hash)?;
         if !seen.insert(model.relative_path.clone()) {
             return Err(invalid("duplicate inspection diff model path"));
         }
-        let body = crate::checkout::repository::source(
-            &request.objects_directory,
-            crate::merge_history::hash(&model.hash)?,
-            super::MAX_BYTES - total,
-            &mut compressed,
-        )?;
-        total += body.len();
-        let right = current
-            .iter()
-            .find(|file| file.relative_path == model.relative_path)
-            .map(|file| file.contents.clone());
+    }
+    let bodies =
+        read::load(&request.objects_directory, &request.model_files, super::MAX_BYTES - total)?;
+    let by_path: HashMap<_, _> = current
+        .iter()
+        .map(|file| (&file.relative_path, file))
+        .collect();
+    for (model, body) in request.model_files.into_iter().zip(bodies) {
+        let right = by_path.get(&model.relative_path).map(|file| file.contents.clone());
         files.push((model.relative_path, Some(body), right));
     }
     for file in current {

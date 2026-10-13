@@ -272,13 +272,20 @@ export async function getRustFilesDiff(
       path: file.descriptor!.path,
       rawHash: file.descriptor!.hash,
       snapshotHash: createHash('sha1').update(file.file.contents).digest('hex'),
+      ...(file.descriptor!.readToken ? { readToken: file.descriptor!.readToken } : {}),
     }));
     const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'bit-workspace-diff-')).catch(() => undefined);
     if (!directory) return undefined;
     let token: string | undefined;
     try {
       const captured = await requestRustWorkspaceInspection(
-        { kind: 'inspectionBegin', files: current, workspaceRoot: false, snapshotDirectory: directory },
+        {
+          kind: 'inspectionBegin',
+          files: current,
+          workspaceRoot: false,
+          snapshotDirectory: directory,
+          memoryOnly: true,
+        },
         (
           value
         ): value is {

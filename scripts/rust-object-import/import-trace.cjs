@@ -170,7 +170,14 @@ const metrics = {
           ? { tokens: [], sourceBodyBytes: 0, publicContentBytes: 0, verifiedReads: [] }
           : {}),
         ...(kind.startsWith('inspection')
-          ? { snapshotBytes: 0, sourceBodyBytes: 0, publicContentBytes: 0, tokens: [] }
+          ? {
+              snapshotBytes: 0,
+              sourceBodyBytes: 0,
+              publicContentBytes: 0,
+              tokens: [],
+              retainedReads: 0,
+              spooledFiles: 0,
+            }
           : {}),
         ...(kind === 'inspectionCompare' ? { modelHashes: [] } : {}),
         ...(kind === 'snapshotSerialize'
@@ -231,9 +238,9 @@ function observeWorkspaceTransport(child) {
   const write = child.stdin.write;
   child.stdin.write = function (bytes, ...rest) {
     const magic = Buffer.isBuffer(bytes) ? bytes.subarray(0, 4).toString() : '';
-    if (['BOI1','BOI2','BOI3','BOC2','BOC3','BMP1','BMS1','BTI1','BTI2','BTC1','BTP1'].includes(magic)) {
+    if (['BOI1', 'BOI2', 'BOI3', 'BOC2', 'BOC3', 'BMP1', 'BMS1', 'BTI1', 'BTI2', 'BTC1', 'BTP1'].includes(magic)) {
       importId ||= ++nextImportTransport;
-      metrics.importFrames.push({backend:child.backend || 'process', magic, transportId:importId});
+      metrics.importFrames.push({ backend: child.backend || 'process', magic, transportId: importId });
     }
     if (['BWM1', 'BWP1', 'BWC0', 'BWC2', 'BWC1', 'BCK1', 'BWS1', 'BSS1', 'BMH1', 'BMT1'].includes(magic)) {
       if (!workspace) workspaceId = ++metrics.persistence.helpers;
@@ -322,14 +329,13 @@ function observeWorkspaceTransport(child) {
         if (magic === 'BMT1' && operation.kind === 'inspectionCompare') {
           const field = (value, name) =>
             value?.kind === 'object'
-              ? value.value.find(
-                  ([key]) => (typeof key === 'string' ? key : String.fromCharCode(...key)) === name
-                )?.[1]
+              ? value.value.find(([key]) => (typeof key === 'string' ? key : String.fromCharCode(...key)) === name)?.[1]
               : undefined;
           const files = field(operation.left, 'files');
           for (const file of (Array.isArray(files) ? files : files?.value) || []) {
             const reference = field(file, 'file');
-            const value = typeof reference === 'string' || reference?.kind === 'string' ? reference : field(reference, 'hash');
+            const value =
+              typeof reference === 'string' || reference?.kind === 'string' ? reference : field(reference, 'hash');
             if (typeof value === 'string') metric.modelHashes.push(value);
             else if (value?.kind === 'string')
               metric.modelHashes.push(
@@ -509,6 +515,8 @@ function observeWorkspaceTransport(child) {
             });
         }
         if (magic === 'BMT1:inspectionBegin') {
+          metric.retainedReads += response.data?.retainedReads || 0;
+          metric.spooledFiles += response.data?.spooledFiles || 0;
           if (response.data?.token) metric.tokens.push({ token: response.data.token, helperId: workspaceId });
           for (const file of response.data?.files || []) {
             metric.snapshotBytes += file.bytes || 0;
@@ -552,11 +560,18 @@ if (output && process.pid === owner) {
     if (ImportStreamEngine) {
       binding.ImportStreamEngine = class extends ImportStreamEngine {
         constructor(callback, ...args) {
-          const transport = observeWorkspaceTransport({backend:'addon',stdin:{write(){}},stdout:new EventEmitter()});
-          super(event => {
-            if (event.kind === 'output') transport.stdout.emit('data', event.data);
-            callback(event);
-          }, ...args);
+          const transport = observeWorkspaceTransport({
+            backend: 'addon',
+            stdin: { write() {} },
+            stdout: new EventEmitter(),
+          });
+          super(
+            (event) => {
+              if (event.kind === 'output') transport.stdout.emit('data', event.data);
+              callback(event);
+            },
+            ...args
+          );
           this.traceTransport = transport;
         }
         write(bytes) {

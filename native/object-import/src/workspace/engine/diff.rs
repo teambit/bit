@@ -1,5 +1,5 @@
 use super::{MAX_OUTPUT, MAX_RAW, count, expected_hash, hash, invalid, path, read};
-use rayon::prelude::*;
+mod workers;
 use serde::{Deserialize, Serialize};
 use std::{
     fs,
@@ -99,17 +99,12 @@ pub(crate) fn frozen(files: Vec<Frozen>, git: &str, color: bool) -> io::Result<V
     let prepared = files
         .into_iter()
         .map(|(relative_path, left, right)| {
-            let left_hash = left
-                .as_ref()
-                .map(|bytes| hash(&crate::checkout::eol::normalize(bytes.clone(), false)));
-            let right_hash = right
-                .as_ref()
-                .map(|bytes| hash(&crate::checkout::eol::normalize(bytes.clone(), false)));
+            let same = equivalent(left.as_deref(), right.as_deref());
             Prepared {
                 relative_path,
                 left: left.unwrap_or_default(),
                 right: right.unwrap_or_default(),
-                same: left_hash == right_hash,
+                same,
             }
         })
         .collect::<Vec<_>>();
@@ -119,20 +114,45 @@ pub(crate) fn frozen(files: Vec<Frozen>, git: &str, color: bool) -> io::Result<V
     execute(&prepared, git, color)
 }
 fn execute(prepared: &[Prepared], git: &str, color: bool) -> io::Result<Vec<FileDiff>> {
-    let directory = Directory::new()?;
+    let directory = prepared
+        .iter()
+        .any(|file| !file.same)
+        .then(Directory::new)
+        .transpose()?;
     let output = AtomicUsize::new(0);
-    let pool = rayon::ThreadPoolBuilder::new()
-        .num_threads(prepared.len().min(4))
-        .build()
-        .map_err(io::Error::other)?;
-    pool.install(|| {
-        prepared
-            .par_iter()
+    let run = |(index, file)| {
+        one(file, index, directory.as_ref().map(|value| value.0.as_path()), git, color, &output)
+    };
+    if prepared.len() < 2
+        || rayon::current_thread_index().is_none()
+        || rayon::current_num_threads() == 1
+    {
+        return prepared
+            .iter()
             .enumerate()
-            .map(|(index, file)| one(file, index, &directory.0, git, color, &output))
-            .collect()
-    })
+            .map(run)
+            .collect();
+    }
+    workers::execute(
+        prepared,
+        directory.as_ref().map(|value| value.0.as_path()),
+        git,
+        color,
+        &output,
+    )
 }
+
+fn equivalent(left: Option<&[u8]>, right: Option<&[u8]>) -> bool {
+    left == right || left.map(linux_hash) == right.map(linux_hash)
+}
+fn linux_hash(bytes: &[u8]) -> String {
+    if bytes.contains(&b'\r') {
+        hash(&crate::checkout::eol::normalize(bytes.to_vec(), false))
+    } else {
+        hash(bytes)
+    }
+}
+
 fn preflight(files: &[InputFile]) -> io::Result<Vec<Prepared>> {
     let mut total = 0;
     let mut compressed = 0;
@@ -143,18 +163,11 @@ fn preflight(files: &[InputFile]) -> io::Result<Vec<Prepared>> {
         }
         let left = input(file.left.as_ref(), &mut total, &mut compressed)?;
         let right = input(file.right.as_ref(), &mut total, &mut compressed)?;
-        let left_hash = file.left
-            .as_ref()
-            .map(|_| hash(&crate::checkout::eol::normalize(left.clone(), false)));
-        let right_hash = file.right
-            .as_ref()
-            .map(|_| hash(&crate::checkout::eol::normalize(right.clone(), false)));
-        prepared.push(Prepared {
-            relative_path: file.relative_path.clone(),
-            left,
-            right,
-            same: left_hash == right_hash,
-        });
+        let same = equivalent(
+            file.left.as_ref().map(|_| left.as_slice()),
+            file.right.as_ref().map(|_| right.as_slice()),
+        );
+        prepared.push(Prepared { relative_path: file.relative_path.clone(), left, right, same });
     }
     Ok(prepared)
 }
@@ -188,7 +201,7 @@ fn input(input: Option<&Input>, total: &mut usize, compressed: &mut usize) -> io
 fn one(
     file: &Prepared,
     index: usize,
-    directory: &Path,
+    directory: Option<&Path>,
     git: &str,
     color: bool,
     output: &AtomicUsize,
@@ -196,6 +209,7 @@ fn one(
     let raw_diff = if file.same {
         String::new()
     } else {
+        let directory = directory.ok_or_else(|| invalid("workspace diff directory missing"))?;
         let left = directory.join(format!("{index}-left.js"));
         let right = directory.join(format!("{index}-right.js"));
         fs::write(&left, &file.left)?;
@@ -241,3 +255,6 @@ fn git_diff(git: &str, left: &Path, right: &Path, color: bool) -> io::Result<Str
     }
     Ok(String::from_utf8_lossy(&bytes).into_owned())
 }
+
+#[cfg(test)]
+mod tests;
