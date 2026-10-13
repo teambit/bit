@@ -8,6 +8,32 @@ const compiled = process.env.BIT_TEST_COMMAND_COMPILED === '1';
 const load = (name) => (compiled ? installed(`@teambit/bit/dist/${name}.js`) : source(`scopes/harmony/bit/${name}.ts`));
 const { parseRustWorkspaceCommand } = load('rust-workspace-command-options');
 
+test('CLI binding verifies unchanged bootstrap modules and replacement overlay bytes', async (t) => {
+  const { verifyCli } = require('./cold-command-binding.cjs');
+  const { createHash } = require('node:crypto');
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'bit-cold-binding-'));
+  t.after(() => fs.rm(directory, { recursive: true, force: true }));
+  const modules = path.join(directory, 'node_modules/@teambit');
+  await fs.mkdir(modules, { recursive: true });
+  const entry = (name, bytes) => ({ path: name, sha256: createHash('sha256').update(bytes).digest('hex') });
+  await fs.writeFile(
+    path.join(directory, '.bit-rust-private-build.json'),
+    JSON.stringify({ revision: 'base', compiledModules: [entry('bootstrap.js', 'base'), entry('overlay.js', 'old')] })
+  );
+  await fs.writeFile(
+    path.join(directory, '.bit-object-import-build.json'),
+    JSON.stringify({ installedRevision: 'base', compiledModules: [entry('overlay.js', 'new')] })
+  );
+  await fs.writeFile(path.join(modules, 'bootstrap.js'), 'base');
+  await fs.writeFile(path.join(modules, 'overlay.js'), 'new');
+  assert.equal((await verifyCli(directory)).modules.length, 2);
+  await fs.writeFile(path.join(modules, 'bootstrap.js'), 'tampered');
+  await assert.rejects(verifyCli(directory), /bootstrap.js/);
+  await fs.writeFile(path.join(modules, 'bootstrap.js'), 'base');
+  await fs.writeFile(path.join(modules, 'overlay.js'), 'tampered');
+  await assert.rejects(verifyCli(directory), /overlay.js/);
+});
+
 test('qualification snap identities are independent of discarded comparison Version UUIDs', async () => {
   const preload = await fs.readFile(path.join(__dirname, 'checkout-transition-determinism.cjs'), 'utf8');
   function identities(discardedVersions) {

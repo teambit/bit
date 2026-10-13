@@ -20,7 +20,8 @@ async function rebaseLinks(directory, from, to) {
   }
 }
 
-async function createFixture(cli, temporary) {
+async function createFixture(cli, temporary, { extraFiles = 0 } = {}) {
+  assert.ok(Number.isInteger(extraFiles) && extraFiles >= 0 && extraFiles <= 2048, 'extraFiles must be 0..2048');
   const load = createRequire(path.join(cli, 'package.json'));
   const globals = benchmarkGlobals(temporary);
   const scopeName = 'qualification.command';
@@ -157,6 +158,11 @@ async function createFixture(cli, temporary) {
   );
   await write(author, 'component/stable.txt', 'first\nsecond\nthird\n');
   await write(author, 'component/removed.js', 'module.exports = "old";\n');
+  const extraSources = Array.from({ length: extraFiles }, (_, index) => ({
+    relative: `extra/group-${index % 16}/source-${String(index).padStart(4, '0')}.js`,
+    body: `// Ordinary tracked source ${index}.\nmodule.exports = ${index};\n`,
+  }));
+  for (const source of extraSources) await write(author, `component/${source.relative}`, source.body);
   for (const name of ['dependency', 'component']) command(author, ['add', name, '--id', name, '--main', 'index.js']);
   command(author, ['link']);
   tag(author, '1.0.0');
@@ -192,6 +198,14 @@ async function createFixture(cli, temporary) {
   const roots = Object.entries(bitmap)
     .filter(([, entry]) => entry?.rootDir)
     .map(([, entry]) => entry.rootDir);
+  const importedComponent = Object.entries(bitmap).find(([name]) => name === 'component' || name === id)?.[1];
+  assert.ok(importedComponent?.rootDir, 'fixture imported component root');
+  for (const source of extraSources)
+    assert.equal(
+      await fs.readFile(path.join(consumer, importedComponent.rootDir, source.relative), 'utf8'),
+      source.body,
+      'extra source must be tagged, exported and imported before qualification'
+    );
   async function state(directory) {
     const currentBitmap = load('comment-json').parse(await fs.readFile(path.join(directory, '.bitmap'), 'utf8'));
     const currentRoots = Object.values(currentBitmap)
@@ -228,6 +242,7 @@ async function createFixture(cli, temporary) {
   }
   return {
     cli,
+    extraFiles,
     temporary,
     globals,
     author,

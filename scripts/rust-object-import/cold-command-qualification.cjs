@@ -17,15 +17,11 @@ async function binding(cli, helper, allowUnmarkedCli = false) {
   const load = createRequire(path.join(cli, 'package.json'));
   const discovery = load('@teambit/objects/dist/objects/rust-object-discovery.js');
   const addon = helper && discovery.resolveRustWorkspaceAddon(helper);
+  const verifiedCli = await require('./cold-command-binding.cjs').verifyCli(cli, allowUnmarkedCli);
   return {
     nativeSourceDigest: sourceIdentity(path.resolve(__dirname, '../..')),
-    cliMarker: await fs
-      .readFile(path.join(cli, '.bit-object-import-build.json'), 'utf8')
-      .then(JSON.parse)
-      .catch((error) => {
-        if (allowUnmarkedCli && error.code === 'ENOENT') return null;
-        throw error;
-      }),
+    cliMarker: verifiedCli.marker,
+    verifiedCli,
     helperSha256: helper ? await sha256(helper) : undefined,
     addonSha256: addon ? await sha256(addon) : undefined,
     harness: Object.fromEntries(
@@ -37,6 +33,7 @@ async function binding(cli, helper, allowUnmarkedCli = false) {
           'workspace-inspection-body-read.cjs',
           'import-trace.cjs',
           'cold-command-measure.cjs',
+          'cold-command-binding.cjs',
           'cold-command-wrapper-baseline.cjs',
           'merge-history-measurement.cjs',
           '../rust-dependency-analysis/process-tree-memory.cjs',
@@ -111,6 +108,9 @@ function comparable(state) {
 
 async function runQualification(cli, helper, options = {}) {
   const bound = await binding(cli, helper, options.allowUnmarkedCli);
+  const dimensions = { extraFiles: options.extraFiles ?? 0 };
+  const wrapperEligibility = {};
+  let wrapperAuditSha256;
   let proofSha256;
   if (options.measure) {
     assert.ok(options.proof, 'measurement requires matching completed four-mode proof');
@@ -122,16 +122,30 @@ async function runQualification(cli, helper, options = {}) {
     assert.equal(proof.runs.length, 52, 'all thirteen scenarios need four-mode qualification');
     assert.deepEqual(proof.binding, bound, 'measure exactly the qualified source, CLI, binaries and harness');
     assert.deepEqual(proof.endBinding, bound);
+    assert.deepEqual(proof.dimensions, dimensions);
     for (const run of proof.runs.filter((run) => run.mode === 'native' && run.scenario !== 'checkout-divergent-head')) {
       assert.deepEqual(run.trace.loadedCommandModels, []);
       assert.ok(run.trace.workspaceFrames.some((frame) => frame.kind === 'commandApply'));
     }
     proofSha256 = createHash('sha256').update(bytes).digest('hex');
+    if (options.wrapper) {
+      assert.ok(options.wrapperProof, 'wrapper baselines require complete eligibility audit');
+      const auditBytes = await fs.readFile(options.wrapperProof);
+      const audit = JSON.parse(auditBytes);
+      assert.equal(audit.wrapperAudit, true);
+      assert.equal(audit.runs.length, 24);
+      assert.deepEqual(audit.binding, bound);
+      assert.deepEqual(audit.endBinding, bound);
+      assert.deepEqual(audit.dimensions, dimensions);
+      Object.assign(wrapperEligibility, audit.wrapperEligibility);
+      assert.equal(Object.keys(wrapperEligibility).length, 12);
+      wrapperAuditSha256 = createHash('sha256').update(auditBytes).digest('hex');
+    }
   }
   if (!options.canonicalOnly)
     assert.ok(bound.addonSha256, 'resolved native addon required (debug builds need BIT_TEST_WORKSPACE_ADDON)');
   const temporary = await fs.mkdtemp(path.join(options.scratch || os.tmpdir(), 'bit-cold-command-'));
-  const fixture = await createFixture(cli, temporary);
+  const fixture = await createFixture(cli, temporary, dimensions);
   const skip = '--skip-dependency-installation';
   const scenarios = [
     { name: 'local-head-noop', base: 'local', args: ['checkout', 'head', fixture.id, skip] },
@@ -166,7 +180,7 @@ async function runQualification(cli, helper, options = {}) {
   const runs = [];
   for (const scenario of scenarios) {
     if (options.scenarios && !options.scenarios.includes(scenario.name)) continue;
-    if (options.measure && scenario.fallback) continue;
+    if ((options.measure || options.wrapperAudit) && scenario.fallback) continue;
     let expected;
     const workspace = path.join(temporary, scenario.name, 'workspace');
     const prepared = path.join(temporary, scenario.name, 'prepared');
@@ -198,7 +212,8 @@ async function runQualification(cli, helper, options = {}) {
       : (options.canonicalOnly ? ['node'] : ['node', 'native', 'missing-helper', 'crashed-helper']).map((mode) => ({
           mode,
         }));
-    if (options.measure && options.wrapper) {
+    if (options.wrapperAudit) entries = [{ mode: 'node' }, { mode: 'wrapper', diagnostic: true }];
+    if (options.measure && options.wrapper && wrapperEligibility[scenario.name].eligible) {
       entries = [{ mode: 'wrapper', round: -2, warmup: true, diagnostic: true }];
       for (let round = -1; round < (options.rounds || 3); round++) {
         const modes = ['node', 'native', 'wrapper'];
@@ -301,15 +316,29 @@ async function runQualification(cli, helper, options = {}) {
       }
       if (!expected) expected = row;
       else {
-        assert.deepEqual(output, expected.output, `${scenario.name}/${mode}: exact public command output`);
-        assert.deepEqual(
-          comparable(after),
-          comparable(expected.after),
-          `${scenario.name}/${mode}: exact workspace state`
-        );
-        assert.deepEqual(remoteObjects, expected.remoteObjects, `${scenario.name}/${mode}: exact remote object state`);
-        for (const [key, value] of Object.entries(after.docsCache))
-          assert.equal(value, expected.after.docsCache[key], `${scenario.name}/${mode}: canonical docs cache ${key}`);
+        const compare = () => {
+          assert.deepEqual(output, expected.output, `${scenario.name}/${mode}: exact public command output`);
+          assert.deepEqual(
+            comparable(after),
+            comparable(expected.after),
+            `${scenario.name}/${mode}: exact workspace state`
+          );
+          assert.deepEqual(
+            remoteObjects,
+            expected.remoteObjects,
+            `${scenario.name}/${mode}: exact remote object state`
+          );
+          for (const [key, value] of Object.entries(after.docsCache))
+            assert.equal(value, expected.after.docsCache[key], `${scenario.name}/${mode}: canonical docs cache ${key}`);
+        };
+        if (options.wrapperAudit) {
+          try {
+            compare();
+            wrapperEligibility[scenario.name] = { eligible: true };
+          } catch (error) {
+            wrapperEligibility[scenario.name] = { eligible: false, reason: error.message };
+          }
+        } else compare();
       }
       if (scenario.name.includes('keeps-cached-remote')) {
         assert.deepEqual(after.roots, before.roots, 'main merge must not fetch advanced remote files');
@@ -332,10 +361,14 @@ async function runQualification(cli, helper, options = {}) {
     'source, CLI, helper, addon and harness must remain frozen during qualification'
   );
   const report = {
-    qualified: !options.canonicalOnly && !options.diagnostic && Boolean(bound.cliMarker),
+    qualified: !options.canonicalOnly && !options.diagnostic && !options.wrapperAudit && Boolean(bound.cliMarker),
+    dimensions,
     temporary,
     binding: bound,
     endBinding,
+    ...(options.wrapperAudit || options.wrapper
+      ? { wrapperAudit: Boolean(options.wrapperAudit), wrapperEligibility, wrapperAuditSha256 }
+      : {}),
     ...(options.measure
       ? { proofSha256, measurement: true, qualificationOnlyScenarios: ['checkout-divergent-head'] }
       : {}),
