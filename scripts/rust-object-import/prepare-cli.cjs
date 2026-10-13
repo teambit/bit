@@ -62,6 +62,7 @@ function links(directory) {
 links(target);
 const files = [
   'scopes/workspace/modules/fs-cache/fs-cache.ts',
+  'scopes/workspace/modules/fs-cache/dependency-cache-state.ts',
   'scopes/workspace/modules/fs-cache/index.ts',
   'scopes/toolbox/fs/last-modified/last-modified.ts',
   'scopes/toolbox/fs/last-modified/index.ts',
@@ -408,6 +409,7 @@ const modules = [
   'dependencies/dist/files-dependency-builder/rust-scanner/workspace-transport.js',
   'dependencies/dist/files-dependency-builder/rust-scanner/dependency-cache.js',
   'workspace.modules.fs-cache/dist/fs-cache.js',
+  'workspace.modules.fs-cache/dist/dependency-cache-state.js',
   'workspace.modules.fs-cache/dist/index.js',
   'toolbox.fs.last-modified/dist/last-modified.js',
   'toolbox.fs.last-modified/dist/index.js',

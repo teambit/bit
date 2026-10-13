@@ -1,4 +1,6 @@
 import type defaultIgnore from 'ignore';
+import { isFeatureEnabled, NO_FS_CACHE_FEATURE } from '@teambit/harmony.modules.feature-toggle';
+import { FsCache, dependencyCacheNeedsInvalidation } from '@teambit/workspace.modules.fs-cache';
 import path from 'path';
 import { availableParallelism } from 'os';
 import { createRequire } from 'module';
@@ -57,6 +59,9 @@ export async function captureRustClientCurrent(
   request: NativeClientRequest,
   targets = context.targets
 ) {
+  if (isFeatureEnabled(NO_FS_CACHE_FEATURE)) return undefined;
+  const cache = new FsCache(path.join(root, '.bit'));
+  if (await dependencyCacheNeedsInvalidation(cache, root, path.join(root, 'workspace.jsonc'))) return undefined;
   const { options } = context;
   const rootIgnore = ignore().add([
     ...options.patterns,
