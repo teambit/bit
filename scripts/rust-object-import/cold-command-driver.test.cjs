@@ -8,6 +8,40 @@ const compiled = process.env.BIT_TEST_COMMAND_COMPILED === '1';
 const load = (name) => (compiled ? installed(`@teambit/bit/dist/${name}.js`) : source(`scopes/harmony/bit/${name}.ts`));
 const { parseRustWorkspaceCommand } = load('rust-workspace-command-options');
 
+test('download progress preserves hundred-object boundaries and canonical CI suppression', async (t) => {
+  const { loader } = installed('@teambit/legacy.loader');
+  const { commandProgress } = load('rust-workspace-command-progress');
+  const originalStart = loader.start;
+  const originalCI = process.env.CI;
+  const messages = [];
+  loader.start = (message) => messages.push(message);
+  t.after(() => {
+    loader.start = originalStart;
+    if (originalCI === undefined) delete process.env.CI;
+    else process.env.CI = originalCI;
+  });
+  for (const ci of ['', 'true']) {
+    process.env.CI = ci;
+    for (const objects of [99, 100, 200, 201]) {
+      messages.length = 0;
+      const receipt = {
+        bitmapCount: 1,
+        imports: [{ reason: null, ids: ['scope/component@1.0.0'], components: 1, objects }],
+      };
+      const render = commandProgress(receipt, 'merge');
+      assert.deepEqual(messages, [], 'receipt validation must not start visible progress');
+      await render();
+      const downloads = ci
+        ? []
+        : Array.from(
+            { length: Math.floor(objects / 100) },
+            (_, index) => `importing 1 components. downloaded ${(index + 1) * 100} objects.`
+          );
+      assert.deepEqual(messages, ['importing 1 components', ...downloads, 'successfully imported 1 components']);
+    }
+  }
+});
+
 test('CLI binding verifies unchanged bootstrap modules and replacement overlay bytes', async (t) => {
   const { verifyCli } = require('./cold-command-binding.cjs');
   const { createHash } = require('node:crypto');

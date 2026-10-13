@@ -32,7 +32,8 @@ export function commandProgress(value: any, operation: 'checkout' | 'merge') {
         !Number.isSafeInteger(row.components) ||
         row.components < 0 ||
         !Number.isSafeInteger(row.objects) ||
-        row.objects < 0
+        row.objects < 0 ||
+        row.objects > 16384
     )
   )
     throw new Error('native command import progress receipt');
@@ -73,7 +74,11 @@ function renderImport(row: ImportProgress) {
   const count = new Set(row.ids.map((id) => id.replace(/@[^@]+$/, ''))).size;
   const ids = count === row.ids.length ? `${count} components` : `${count} components, ${row.ids.length} versions`;
   const reason = row.reason ? ` ${row.reason}` : '';
-  loader.start(`importing ${ids}${reason}`);
+  const message = `importing ${ids}${reason}`;
+  loader.start(message);
+  if (!process.env.CI)
+    for (let downloaded = 100; downloaded <= row.objects; downloaded += 100)
+      loader.start(`${message}. downloaded ${downloaded} objects.`);
   const imported = row.components ? `${row.components} components` : `${row.objects} objects`;
   loader.start(`successfully imported ${imported}${reason}`);
 }

@@ -6,10 +6,8 @@ use std::{
     fs,
     io::{self, Write},
     path::Path,
-    sync::atomic::{AtomicU64, Ordering},
 };
 
-static SEQUENCE: AtomicU64 = AtomicU64::new(0);
 pub(super) fn object(hash: &str, kind: &str, value: Value) -> io::Result<Object> {
     let serialized = serialized(hash, kind, &value)?;
     let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
@@ -78,26 +76,12 @@ impl PreparedImport {
 fn write_file(path: &Path, bytes: &[u8]) -> io::Result<()> {
     let parent = path.parent().ok_or_else(|| invalid("import publication parent"))?;
     fs::create_dir_all(parent)?;
-    let temporary = parent.join(format!(
-        ".bit-command-import.{}.{}",
-        std::process::id(),
-        SEQUENCE.fetch_add(1, Ordering::Relaxed),
-    ));
-    let result = (|| {
-        let mut file = fs::OpenOptions::new()
-            .create_new(true)
-            .write(true)
-            .open(&temporary)?;
-        if let Ok(metadata) = fs::metadata(path) {
-            file.set_permissions(metadata.permissions())?;
-        }
-        file.write_all(bytes)?;
-        file.sync_all()?;
-        fs::rename(&temporary, path)?;
-        fs::File::open(parent)?.sync_all()
-    })();
-    if result.is_err() {
-        let _cleanup = fs::remove_file(&temporary);
-    }
-    result
+    // Canonical outputFile preserves the existing inode and its owner/ACLs.
+    let mut file = fs::OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open(path)?;
+    file.write_all(bytes)?;
+    file.sync_all()
 }

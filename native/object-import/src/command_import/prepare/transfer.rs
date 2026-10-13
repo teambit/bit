@@ -93,13 +93,15 @@ fn receive_sources(plan: &mut PreparedImport, directory: &Path, version: &Value)
             sources.push(hash.to_owned());
         }
     }
+    // The wire stream queues sources again on later fetches even when our retained
+    // overlay can reuse their validated bytes. Count the phase's unique queue entries.
+    plan.progress
+        .last_mut()
+        .ok_or_else(|| invalid("import progress phase"))?
+        .objects
+        .extend(sources.iter().cloned());
     sources.retain(|hash| !plan.overlay.objects.contains_key(hash));
     for (hash, source) in plan.capture.sources(directory, &sources)? {
-        plan.progress
-            .last_mut()
-            .unwrap()
-            .objects
-            .insert(hash.clone());
         plan.overlay.objects.insert(hash, source);
     }
     Ok(())

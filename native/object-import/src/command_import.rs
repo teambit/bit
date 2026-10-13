@@ -95,6 +95,10 @@ struct Writes {
 }
 impl PreparedImport {
     pub(crate) fn validate(&self) -> io::Result<()> {
+        if self.writes.index_changed {
+            crate::store::Store::new(self.environment.local_directory.clone(), None)?
+                .validate_index_write()?;
+        }
         self.capture.validate()
     }
 }

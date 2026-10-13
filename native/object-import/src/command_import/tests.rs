@@ -1,7 +1,11 @@
-use super::{Object, Overlay, Target, history, object_hash, prepare, prepare_cached, publish};
+use super::{
+    Object, Overlay, PreparedImport, Target, history, object_hash, prepare, prepare_cached, publish,
+};
 use serde_json::{Value, json};
 use std::{
+    collections::BTreeMap,
     fs,
+    io::{self, Write},
     path::{Path, PathBuf},
     sync::atomic::{AtomicUsize, Ordering},
 };
@@ -29,6 +33,30 @@ impl Fixture {
         fs::write(remote.join("scope.json"), b"{\"name\":\"remote.scope\",\"remotes\":{}}")
             .unwrap();
         Self { root, remote, global }
+    }
+    fn index_action<Output>(&self, action: impl FnOnce() -> io::Result<Output>) -> Option<Output> {
+        let before = tree(self.root.parent().unwrap());
+        let result = action();
+        if cfg!(target_os = "linux") {
+            Some(result.unwrap())
+        } else {
+            assert!(
+                result
+                    .err()
+                    .unwrap()
+                    .to_string()
+                    .contains("index ACL preservation"),
+            );
+            assert_eq!(
+                tree(self.root.parent().unwrap()),
+                before,
+                "unsupported index publication must leave every remote/local file unchanged",
+            );
+            None
+        }
+    }
+    fn imported(&self) -> Option<PreparedImport> {
+        self.index_action(|| prepare(&self.root, &self.global, &[Self::target()]))
     }
     fn write(directory: &Path, hash: &str, kind: &str, value: Value) {
         let object = publish::object(hash, kind, value).unwrap();
@@ -63,7 +91,9 @@ fn file_refresh_is_staged_and_validated_before_publication() {
     let fixture = Fixture::new();
     let head = "a".repeat(40);
     fixture.model(&head);
-    let plan = prepare(&fixture.root, &fixture.global, &[Fixture::target()]).unwrap();
+    let Some(plan) = fixture.imported() else {
+        return;
+    };
     assert!(
         plan.overlay
             .read(&head, "Version")
@@ -95,7 +125,9 @@ fn commits_remote_history_and_local_mutable_objects_then_refs() {
     let fixture = Fixture::new();
     let head = "b".repeat(40);
     fixture.model(&head);
-    let plan = prepare(&fixture.root, &fixture.global, &[Fixture::target()]).unwrap();
+    let Some(plan) = fixture.imported() else {
+        return;
+    };
     plan.commit().unwrap();
     let history = history::identity("remote.scope/alpha");
     for directory in [fixture.remote.join("objects"), fixture.root.join(".bit/objects")] {
@@ -131,7 +163,9 @@ fn equal_remote_head_still_copies_scope_meta_without_populating_remote_history()
     let fixture = Fixture::new();
     let head = "c".repeat(40);
     fixture.model(&head);
-    let plan = prepare(&fixture.root, &fixture.global, &[Fixture::target()]).unwrap();
+    let Some(plan) = fixture.imported() else {
+        return;
+    };
     plan.commit().unwrap();
     let history = history::identity("remote.scope/alpha");
     let remote_history = fixture.remote
@@ -139,7 +173,9 @@ fn equal_remote_head_still_copies_scope_meta_without_populating_remote_history()
         .join(&history[..2])
         .join(&history[2..]);
     fs::remove_file(&remote_history).unwrap();
-    let plan = prepare(&fixture.root, &fixture.global, &[Fixture::target()]).unwrap();
+    let Some(plan) = fixture.imported() else {
+        return;
+    };
     assert!(plan.writes.remote_objects.is_empty());
     assert_eq!(plan.progress[0].components.len(), 0);
     assert_eq!(plan.progress[0].objects.len(), 1);
@@ -177,8 +213,13 @@ fn main_merge_gap_keeps_selection_cached_then_records_fetched_origin_head() {
     assert!(plan.overlay.models().is_empty());
     assert!(plan.progress.is_empty());
     assert!(!fixture.global.exists());
-    plan.prepare_merge_gap(&[Fixture::target()])
-        .unwrap();
+    if fixture
+        .index_action(|| plan.prepare_merge_gap(&[Fixture::target()]))
+        .is_none()
+    {
+        assert!(plan.commit().is_err());
+        return;
+    }
     assert_eq!(
         plan.progress[0].reason.as_deref(),
         Some("for getting the common-snap between main and main"),
@@ -227,8 +268,13 @@ fn unexported_head_sync_is_noop_for_own_scope_and_fetches_explicit_file_origin()
     assert!(!fixture.global.exists());
     let head = "f".repeat(40);
     fixture.model(&head);
-    plan.sync_unexported(&fixture.global, &[Fixture::target()])
-        .unwrap();
+    if fixture
+        .index_action(|| plan.sync_unexported(&fixture.global, &[Fixture::target()]))
+        .is_none()
+    {
+        assert!(plan.commit().is_err());
+        return;
+    }
     assert_eq!(
         plan.progress[0].reason.as_deref(),
         Some("for making sure the new components are really new and are not out-of-sync"),
@@ -245,10 +291,10 @@ fn cached_external_gap_initializes_remotes_even_without_object_fetch() {
     let fixture = Fixture::new();
     let head = "1".repeat(40);
     fixture.model(&head);
-    prepare(&fixture.root, &fixture.global, &[Fixture::target()])
-        .unwrap()
-        .commit()
-        .unwrap();
+    let Some(plan) = fixture.imported() else {
+        return;
+    };
+    plan.commit().unwrap();
     fs::remove_file(&fixture.global).unwrap();
     Fixture::write(
         &fixture.root.join(".bit/objects"),
@@ -281,4 +327,115 @@ pub(crate) fn test_overlay(objects: Vec<(String, String, Vec<u8>, Option<Value>)
         overlay.objects.insert(hash, Object { kind, bytes, value, source });
     }
     overlay
+}
+
+fn tree(directory: &Path) -> BTreeMap<PathBuf, Vec<u8>> {
+    let mut output = BTreeMap::new();
+    for entry in fs::read_dir(directory).unwrap() {
+        let path = entry.unwrap().path();
+        if path.is_dir() {
+            output.extend(tree(&path));
+        } else {
+            output.insert(path.clone(), fs::read(path).unwrap());
+        }
+    }
+    output
+}
+
+#[test]
+fn cached_gap_without_index_changes_publishes_global_config_on_every_platform() {
+    let fixture = Fixture::new();
+    let head = "2".repeat(40);
+    fixture.model(&head);
+    let model_hash = object_hash("remote.scope/alpha");
+    for hash in [&model_hash, &head] {
+        let relative = Path::new(&hash[..2]).join(&hash[2..]);
+        let destination = fixture.root.join(".bit/objects").join(&relative);
+        fs::create_dir_all(destination.parent().unwrap()).unwrap();
+        fs::copy(fixture.remote.join("objects").join(relative), destination).unwrap();
+    }
+    Fixture::write(
+        &fixture.root.join(".bit/objects"),
+        &head,
+        "Version",
+        json!({"mainFile":"index.js","files":[],"log":{"date":"1","message":"tag"},
+            "parents":[],"flattenedDependencies":[],"buildStatus":"succeed"}),
+    );
+    let before = tree(fixture.root.parent().unwrap());
+    let mut plan = prepare_cached(&fixture.root, &fixture.global).unwrap();
+    plan.prepare_merge_gap(&[Fixture::target()])
+        .unwrap();
+    assert!(!plan.writes.index_changed);
+    assert!(plan.overlay.objects.is_empty());
+    assert_eq!(tree(fixture.root.parent().unwrap()), before);
+    plan.commit().unwrap();
+    let mut expected = before;
+    expected.insert(fixture.global.clone(), b"{}".to_vec());
+    assert_eq!(tree(fixture.root.parent().unwrap()), expected);
+}
+
+#[test]
+fn unsupported_index_metadata_declines_before_remote_or_local_publication() {
+    let fixture = Fixture::new();
+    fixture.model(&"3".repeat(40));
+    fs::hard_link(fixture.root.join(".bit/index.json"), fixture.root.join("index-alias")).unwrap();
+    let before = tree(fixture.root.parent().unwrap());
+    assert!(prepare(&fixture.root, &fixture.global, &[Fixture::target()]).is_err());
+    assert_eq!(tree(fixture.root.parent().unwrap()), before);
+}
+
+#[test]
+fn repeated_fetch_counts_cached_sources_and_preserves_existing_ref_inode() {
+    let fixture = Fixture::new();
+    let head = "4".repeat(40);
+    fixture.model(&head);
+    let source = "module.exports = 1;\n";
+    let source_hash = object_hash(source);
+    let mut encoder = flate2::write::ZlibEncoder::new(Vec::new(), flate2::Compression::default());
+    write!(encoder, "Source {source_hash} {}\0{source}", source.len()).unwrap();
+    crate::store::Store::new(fixture.remote.join("objects"), None)
+        .unwrap()
+        .write(&source_hash, &encoder.finish().unwrap())
+        .unwrap();
+    Fixture::write(
+        &fixture.remote.join("objects"),
+        &head,
+        "Version",
+        json!({"mainFile":"index.js","files":[
+            {"relativePath":"index.js","name":"index.js","test":false,"file":source_hash},
+            {"relativePath":"copy.js","name":"copy.js","test":false,"file":source_hash}],
+            "log":{"date":"1","message":"tag"},"parents":[],"flattenedDependencies":[],"buildStatus":"pending"}),
+    );
+    fs::write(fixture.root.join(".bit/index.json"), serde_json::to_vec(&json!({"components":[
+        {"id":{"scope":"remote.scope","name":"alpha"},"hash":object_hash("remote.scope/alpha"),"isSymlink":false}],"lanes":[]})).unwrap()).unwrap();
+    let refs = fixture.root.join(".bit/refs/remotes/remote.scope/main");
+    fs::create_dir_all(refs.parent().unwrap()).unwrap();
+    fs::write(&refs, b"[]").unwrap();
+    let alias = fixture.root.join("refs-alias");
+    fs::hard_link(&refs, &alias).unwrap();
+    let before = tree(fixture.root.parent().unwrap());
+    let mut plan = prepare_cached(&fixture.root, &fixture.global).unwrap();
+    plan.prepare_versions(&[Fixture::target()])
+        .unwrap();
+    plan.prepare_versions(&[Fixture::target()])
+        .unwrap();
+    for row in &plan.progress {
+        assert!(row.objects.contains(&source_hash));
+        assert_eq!(
+            row.objects.len(),
+            3,
+            "Source duplicates count once alongside Version and ScopeMeta",
+        );
+    }
+    assert_eq!(plan.progress.len(), 2);
+    assert!(!plan.writes.index_changed);
+    assert_eq!(tree(fixture.root.parent().unwrap()), before);
+    plan.commit().unwrap();
+    let bytes = fs::read(&refs).unwrap();
+    assert_eq!(
+        fs::read(alias).unwrap(),
+        bytes,
+        "canonical outputFile preserves existing hard links",
+    );
+    assert_eq!(serde_json::from_slice::<Value>(&bytes).unwrap()[0]["head"], head);
 }
