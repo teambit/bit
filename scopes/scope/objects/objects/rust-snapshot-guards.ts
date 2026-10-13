@@ -141,6 +141,38 @@ export function hasRustSnapshotTransactionClassFieldsBatch(
   return hasClassFieldsBatch(values, name, new Set(fields));
 }
 
+/** Classify a heterogeneous synchronous batch without rechecking shared class definitions per instance. */
+export function classifyRustSnapshotTransactionClasses(
+  values: readonly unknown[],
+  schemas: Record<string, readonly string[]>
+): string[] | undefined {
+  if (types.isProxy(values) || !Array.isArray(values) || Object.getPrototypeOf(values) !== Array.prototype)
+    return undefined;
+  const prototypes = new Map<object, { name: string; defaults: ClassDefaults; fields: Set<string> }>();
+  for (const [name, fields] of Object.entries(schemas)) {
+    const defaults = classes?.get(name);
+    if (defaults?.prototypes[0])
+      prototypes.set(defaults.prototypes[0].owner, { name, defaults, fields: new Set(fields) });
+  }
+  const checked = new Set<ClassDefaults>();
+  const result: string[] = [];
+  const length = Object.getOwnPropertyDescriptor(values, 'length')!.value;
+  for (let index = 0; index < length; index++) {
+    const value = Object.getOwnPropertyDescriptor(values, String(index))?.value;
+    if (!value || typeof value !== 'object' || types.isProxy(value)) return undefined;
+    const type = prototypes.get(Object.getPrototypeOf(value));
+    if (
+      !type ||
+      (!checked.has(type.defaults) && !unchanged(type.defaults)) ||
+      !hasInstanceFields(value, type.defaults, type.fields)
+    )
+      return undefined;
+    checked.add(type.defaults);
+    result.push(type.name);
+  }
+  return result;
+}
+
 export function hasRustSnapshotTransactionClassBatch(values: readonly unknown[], name: string): boolean {
   return hasClassFieldsBatch(values, name);
 }

@@ -2,6 +2,7 @@ pub(crate) mod diff;
 mod read;
 mod read_raw;
 mod scan;
+mod status;
 
 use crate::protocol;
 use serde::{Deserialize, Serialize};
@@ -39,6 +40,10 @@ enum Request {
         files: Vec<diff::InputFile>,
         git_executable: String,
         color: bool,
+    },
+    FileStatus {
+        target: Vec<status::File>,
+        current: Vec<status::File>,
     },
     Compare {
         left: String,
@@ -123,6 +128,7 @@ fn apply(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value
             let files = diff::diff(&files, &git_executable, color)?;
             Ok((files.len(), json!({"files":files})))
         }
+        Request::FileStatus { target, current } => status::compare(&target, &current),
         Request::Compare { left, right } => Ok((
             1,
             json!({"modified":Sha1::digest(left.as_bytes())!=Sha1::digest(right.as_bytes())}),

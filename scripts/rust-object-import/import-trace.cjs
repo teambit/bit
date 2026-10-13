@@ -32,7 +32,10 @@ const metrics = {
   },
   workspaceFrames: [],
   workspace: Object.fromEntries(
-    ['scan', 'read', 'compare', 'diff'].map((kind) => [kind, { frames: 0, files: 0, completed: 0, failed: 0 }])
+    ['scan', 'read', 'compare', 'diff', 'fileStatus'].map((kind) => [
+      kind,
+      { frames: 0, files: 0, completed: 0, failed: 0 },
+    ])
   ),
   history: Object.fromEntries(
     ['graph', 'diverge', 'mergeFiles'].map((kind) => [
@@ -229,7 +232,7 @@ if (output && process.pid === owner) {
     const write = child.stdin.write;
     child.stdin.write = function (bytes, ...rest) {
       const magic = Buffer.isBuffer(bytes) ? bytes.subarray(0, 4).toString() : '';
-      if (['BWM1', 'BWP1', 'BWC0', 'BWC1', 'BCK1', 'BWS1', 'BSS1', 'BMH1', 'BMT1'].includes(magic)) {
+      if (['BWM1', 'BWP1', 'BWC0', 'BWC2', 'BWC1', 'BCK1', 'BWS1', 'BSS1', 'BMH1', 'BMT1'].includes(magic)) {
         if (!workspace) workspaceId = ++metrics.persistence.helpers;
         workspace = true;
         const operation = ['BWS1', 'BSS1', 'BMH1', 'BMT1'].includes(magic)
@@ -267,7 +270,7 @@ if (output && process.pid === owner) {
               ? operation.kind === 'commit'
                 ? operation.objects.length
                 : 1
-              : operation.files?.length || (operation.kind === 'compare' ? 1 : 0);
+              : operation.files?.length || operation.target?.length || (operation.kind === 'compare' ? 1 : 0);
           if (magic === 'BMT1' && operation.kind.startsWith('inspection') && operation.token)
             metric.tokens.push({ token: operation.token, helperId: workspaceId });
           if (
@@ -366,11 +369,11 @@ if (output && process.pid === owner) {
           metrics.materialization.frames++;
           metrics.materialization.files += bytes.readUInt32BE(8);
           metrics.materialization.bytes += bytes.length;
-        } else if (magic === 'BWC0' || magic === 'BWC1' || magic === 'BCK1') {
+        } else if (magic === 'BWC0' || magic === 'BWC2' || magic === 'BWC1' || magic === 'BCK1') {
           const metric =
             magic === 'BCK1'
               ? metrics.checkout.plan
-              : magic === 'BWC0'
+              : magic === 'BWC0' || magic === 'BWC2'
                 ? metrics.checkout.preflight
                 : metrics.checkout.write;
           metric.frames++;
@@ -417,15 +420,23 @@ if (output && process.pid === owner) {
                   ? metrics.materialization
                   : magic === 'BCK1'
                     ? metrics.checkout.plan
-                    : magic === 'BWC0'
+                    : magic === 'BWC0' || magic === 'BWC2'
                       ? metrics.checkout.preflight
                       : magic === 'BWC1'
                         ? metrics.checkout.write
                         : metrics.persistence;
         try {
           const response = JSON.parse(pending.subarray(0, newline).toString());
-          if (magic === 'BWS1:read' && Number.isSafeInteger(response.binaryBytes) && response.binaryBytes >= 0)
+          if (
+            (magic === 'BWS1:read' || magic === 'BWC2') &&
+            Number.isSafeInteger(response.binaryBytes) &&
+            response.binaryBytes >= 0
+          )
             binaryRemaining = response.binaryBytes;
+          if (magic === 'BWC2') {
+            metric.bodyFrames = (metric.bodyFrames || 0) + Number(response.completed > 0 && !response.failed);
+            metric.rawBodyBytes = (metric.rawBodyBytes || 0) + (response.binaryBytes || 0);
+          }
           metric.completed += response.completed || 0;
           if (magic?.startsWith('BMT1:historyQuery') && response.completed > 0 && !response.failed) {
             if (response.data?.token) metric.tokens.push({ token: response.data.token, helperId: workspaceId });

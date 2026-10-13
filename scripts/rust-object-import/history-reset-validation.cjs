@@ -82,7 +82,7 @@ function validateHistoryResetDiagnostics(diagnostics) {
     const finishIndex = frames.findLastIndex((frame) => frame.kind === 'historyResetFinish');
     const ownedFrames = frames
       .slice(beginIndex, finishIndex < 0 ? frames.length : finishIndex + 1)
-      .filter((frame) => ['BMT1', 'BMH1', 'BWS1', 'BWP1', 'BWC0', 'BWC1', 'BCK1'].includes(frame.magic));
+      .filter((frame) => ['BMT1', 'BMH1', 'BWS1', 'BWP1', 'BWC0', 'BWC2', 'BWC1', 'BCK1'].includes(frame.magic));
     assert.equal(
       new Set(ownedFrames.map((frame) => frame.helperId)).size,
       1,

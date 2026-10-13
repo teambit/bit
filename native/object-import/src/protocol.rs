@@ -257,6 +257,10 @@ fn serve_extension(
         crate::checkout::plan::serve(reader, writer, checkout)?;
         return Ok(true);
     }
+    if magic == *b"BWC2" {
+        crate::checkout::read_sources(reader, writer, checkout, pool)?;
+        return Ok(true);
+    }
     if magic == *b"BWC0" || magic == *b"BWC1" {
         crate::checkout::serve(reader, writer, magic == *b"BWC0", checkout, pool)?;
         return Ok(true);

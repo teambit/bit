@@ -378,7 +378,7 @@ async function runQualification(cli, helper, options = {}) {
     for (const row of diagnostics) {
       const owned = row.trace.workspaceFrames.filter(
         (frame) =>
-          ['BWS1', 'BWP1', 'BWC0', 'BWC1', 'BCK1', 'BMH1'].includes(frame.magic) ||
+          ['BWS1', 'BWP1', 'BWC0', 'BWC2', 'BWC1', 'BCK1', 'BMH1'].includes(frame.magic) ||
           (frame.magic === 'BMT1' && (frame.kind.startsWith('checkout') || frame.kind.startsWith('inspection')))
       );
       assert.equal(

@@ -322,3 +322,24 @@ export async function getRustFilesDiff(
   );
   return result && valid() ? result.files : undefined;
 }
+
+/** Compare verified identities in one native first-match path index. */
+export async function compareRustFileStatuses(
+  target: Array<{ relativePath: string; hash: string }>,
+  current: Array<{ relativePath: string; hash: string }>
+): Promise<boolean[] | undefined> {
+  const result = await request(
+    { kind: 'fileStatus', target, current },
+    target.length,
+    (value, completed): value is { unchanged: boolean[] } => {
+      const rows = (value as { unchanged?: unknown })?.unchanged;
+      return (
+        completed === target.length &&
+        Array.isArray(rows) &&
+        rows.length === target.length &&
+        rows.every((row) => typeof row === 'boolean')
+      );
+    }
+  );
+  return result?.unchanged;
+}

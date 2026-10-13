@@ -6,6 +6,7 @@ import {
   registerRustSnapshotFunctionReference,
   hasRustSnapshotTransactionClassFields,
   hasRustSnapshotTransactionClassFieldsBatch,
+  hasRustSnapshotTransactionClassConstructor,
   hasRustSnapshotFunctionReference,
   type Repository,
   type Source,
@@ -15,6 +16,7 @@ import SourceFile, { canReadWorkspaceFilesNatively } from './source-file';
 import type AbstractVinyl from './abstract-vinyl';
 import { defaultVinylWrite } from './abstract-vinyl';
 import { withWorkspaceSession } from './rust-workspace-persistence';
+import { readRustCheckoutSourceBodies } from './rust-checkout-source-bodies';
 
 export type RustCheckoutSourceDescriptor = { objectsDirectory: string; hash: string };
 type Provenance = {
@@ -23,8 +25,11 @@ type Provenance = {
   descriptor: RustCheckoutSourceDescriptor;
   contents?: PropertyDescriptor;
   hydrated?: { body: Buffer; snapshot: Buffer; source: Source };
+  eager?: true;
 };
 const sources = new WeakMap<AbstractVinyl, Provenance>();
+const sourceBodyReader = readRustCheckoutSourceBodies;
+const sourceBodyModule = require('./rust-checkout-source-bodies');
 const bufferEquals = Buffer.prototype.equals;
 const bufferFrom = Buffer.from;
 const sourceCreateHash = createHash;
@@ -69,6 +74,7 @@ function retainedFileBody(file: AbstractVinyl): Buffer | undefined {
   if (own) return 'value' in own && Buffer.isBuffer(own.value) ? own.value : undefined;
   let prototype = Object.getPrototypeOf(file);
   while (prototype) {
+    if (types.isProxy(prototype)) return undefined;
     const descriptor = Object.getOwnPropertyDescriptor(prototype, 'contents');
     if (descriptor) {
       if (
@@ -201,6 +207,7 @@ export async function prepareRustCheckoutSources(
   if (!models.length) return [];
   const manifest = models.map((model) => ({
     model,
+    reference: model.file,
     hash: model.file.toString(),
     relativePath: model.relativePath,
     name: model.name,
@@ -220,6 +227,52 @@ export async function prepareRustCheckoutSources(
   )
     return undefined;
   try {
+    if (
+      hasOwnedRepositorySourceOperation() &&
+      hasRustSnapshotFunctionReference('CheckoutSourceBodyReader', sourceBodyReader)
+    ) {
+      const references = [...new Set(manifest.map((entry) => entry.reference))];
+      const fresh = () =>
+        Object.getOwnPropertyDescriptor(sourceBodyModule, 'readRustCheckoutSourceBodies')?.value === sourceBodyReader &&
+        hasRustSnapshotTransactionClassConstructor('SourceFile', SourceFile) &&
+        canReadWorkspaceFilesNatively() &&
+        models.length === manifest.length &&
+        hasRustSnapshotTransactionClassFieldsBatch(references, 'Ref', ['hash']) &&
+        manifest.every((entry, index) => {
+          if (
+            Object.getOwnPropertyDescriptor(models, String(index))?.value !== entry.model ||
+            types.isProxy(entry.model)
+          )
+            return false;
+          const file = Object.getOwnPropertyDescriptor(entry.model, 'file');
+          const relativePath = Object.getOwnPropertyDescriptor(entry.model, 'relativePath');
+          const name = Object.getOwnPropertyDescriptor(entry.model, 'name');
+          const test = Object.getOwnPropertyDescriptor(entry.model, 'test');
+          return (
+            Object.getOwnPropertyDescriptor(entry.reference, 'hash')?.value === entry.hash &&
+            [file, relativePath, name, test].every((field) => !field || 'value' in field) &&
+            file?.value === entry.reference &&
+            relativePath?.value === entry.relativePath &&
+            name?.value === entry.name &&
+            test?.value === entry.test
+          );
+        });
+      const bodies = fresh() ? await sourceBodyReader(repository, objectsDirectory, manifest, fresh) : undefined;
+      if (bodies && fresh())
+        return bodies.map((source, index) => {
+          const entry = manifest[index],
+            body = source.contents;
+          const file = new SourceFile({ base: '.', path: entry.relativePath, contents: body, test: entry.test });
+          sources.set(file, {
+            repository,
+            reference: entry.reference,
+            descriptor: { objectsDirectory, hash: entry.hash },
+            hydrated: { body, snapshot: bufferFrom(body), source },
+            eager: true,
+          });
+          return file;
+        });
+    }
     return await withWorkspaceSession(async (session) => {
       let width = 256;
       for (let offset = 0; offset < manifest.length; ) {
@@ -283,7 +336,7 @@ function validPath(filename: string): boolean {
 }
 
 export function checkoutSourceFrame(
-  magic: 'BWC0' | 'BWC1',
+  magic: 'BWC0' | 'BWC1' | 'BWC2',
   id: number,
   objectsDirectory: string,
   files: { hash: string; destination: string; preferCached?: boolean }[]
@@ -304,8 +357,8 @@ export function checkoutSourceFrame(
     parts.push(Buffer.from(file.hash, 'hex'));
     writePath(file.destination);
     const flags = Buffer.alloc(8);
-    flags.writeUInt32BE(magic === 'BWC0' && file.preferCached ? 3 : 1, 0);
-    flags.writeUInt32BE(1, 4);
+    flags.writeUInt32BE(magic !== 'BWC1' && file.preferCached ? 3 : 1, 0);
+    flags.writeUInt32BE(magic === 'BWC2' ? 0 : 1, 4);
     parts.push(flags);
   }
   return Buffer.concat(parts);
@@ -314,6 +367,7 @@ export function checkoutSourceFrame(
 /** Inspect provenance without touching the lazy contents getter. */
 export function getRustCheckoutSourceDescriptor(file: AbstractVinyl): RustCheckoutSourceDescriptor | undefined {
   const provenance = sources.get(file);
+  if (provenance?.eager) return eagerSourceDescriptor(file, provenance);
   const contents = Object.getOwnPropertyDescriptor(file, 'contents');
   if (
     !provenance ||
@@ -325,6 +379,52 @@ export function getRustCheckoutSourceDescriptor(file: AbstractVinyl): RustChecko
     file.write !== defaultVinylWrite ||
     !provenance.repository.canReadCheckoutSourcesNatively([provenance.reference]) ||
     path.resolve(provenance.repository.getPath()) !== provenance.descriptor.objectsDirectory
+  )
+    return undefined;
+  return { ...provenance.descriptor };
+}
+
+/** Validate shared SourceFile definitions once while inspecting a synchronous ordinary-file batch. */
+export function getRustCheckoutSourceDescriptors(
+  files: SourceFile[]
+): Array<RustCheckoutSourceDescriptor | undefined> | undefined {
+  if (
+    !hasRustSnapshotTransactionClassFieldsBatch(files, 'SourceFile', [
+      'history',
+      '_base',
+      '_cwd',
+      'contents',
+      '_contents',
+      'write',
+    ])
+  )
+    return undefined;
+  return files.map((file) => {
+    const provenance = sources.get(file);
+    return provenance?.eager ? eagerSourceDescriptor(file, provenance, true) : getRustCheckoutSourceDescriptor(file);
+  });
+}
+
+/** Eager loads own their observed bytes; later cache replacements cannot change a public file body. */
+function eagerSourceDescriptor(
+  file: AbstractVinyl,
+  provenance: Provenance,
+  definitionsChecked = false
+): RustCheckoutSourceDescriptor | undefined {
+  const value = provenance.hydrated;
+  if (
+    !value ||
+    (!definitionsChecked &&
+      !hasRustSnapshotTransactionClassFields(file, 'SourceFile', ['contents', '_contents', 'write'])) ||
+    retainedFileBody(file) !== value.body ||
+    types.isProxy(value.body) ||
+    Object.getPrototypeOf(value.body) !== Buffer.prototype ||
+    Object.getOwnPropertySymbols(value.body).length ||
+    ['length', 'byteLength', 'byteOffset', 'buffer', 'equals', 'compare', 'toString', 'valueOf', 'constructor'].some(
+      (name) => Object.hasOwn(value.body, name)
+    ) ||
+    Object.getOwnPropertyDescriptor(Buffer.prototype, 'equals')?.value !== bufferEquals ||
+    !bufferEquals.call(value.body, value.snapshot)
   )
     return undefined;
   return { ...provenance.descriptor };
@@ -387,6 +487,11 @@ export function getRustHistorySourceDescriptor(
   repository: Repository
 ): RustCheckoutSourceDescriptor | undefined {
   const provenance = sources.get(file);
+  if (provenance?.eager && provenance.repository === repository) {
+    if (!historySourceMetadata(file) || path.resolve(repository.getPath()) !== provenance.descriptor.objectsDirectory)
+      return undefined;
+    return eagerSourceDescriptor(file, provenance);
+  }
   if (
     types.isProxy(file) ||
     provenance?.repository !== repository ||

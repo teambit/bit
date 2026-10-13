@@ -370,3 +370,5 @@ fn parallel_preflight_caches_every_ordered_raw_body_for_later_writes() {
 }
 
 mod cached;
+
+mod source_reads;

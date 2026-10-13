@@ -1,10 +1,6 @@
 import type { Repository, Source, SourceFileModel, HistorySourceCapsule } from '@teambit/objects';
 import { types } from 'util';
-import {
-  loadRustCapturedSourceCapsule,
-  hasRustSnapshotTransactionClassFields,
-  hasRustSnapshotTransactionClassFieldsBatch,
-} from '@teambit/objects';
+import { loadRustCapturedSourceCapsule, hasRustSnapshotTransactionClassFieldsBatch } from '@teambit/objects';
 import { SourceFile } from '@teambit/component.sources';
 import {
   copyRustMergeBuffer,
@@ -168,6 +164,7 @@ export function validRustMergeSourceGroups(
   if (!Array.isArray(value) || value.length !== 4) return false;
   const stages = ['currentUpdated', 'added', 'deletedConflict', 'modified'];
   const kinds = ['updatedFiles', 'addFiles', 'deletedConflictFiles', 'modifiedFiles'];
+  const references: object[] = [];
   const validReference = (reference: any): boolean => {
     if (
       !reference ||
@@ -179,11 +176,14 @@ export function validRustMergeSourceGroups(
     )
       return false;
     const model = (reference.ref.side === 'base' ? baseFiles : otherFiles)[reference.ref.index];
-    return Boolean(
-      model &&
-        hasRustSnapshotTransactionClassFields(model.file, 'Ref', ['hash']) &&
-        Object.getOwnPropertyDescriptor(model.file, 'hash')?.value === capsules[reference.source].hash
-    );
+    if (
+      !model ||
+      types.isProxy(model.file) ||
+      Object.getOwnPropertyDescriptor(model.file, 'hash')?.value !== capsules[reference.source].hash
+    )
+      return false;
+    references.push(model.file);
+    return true;
   };
   for (let index = 0; index < stages.length; index++) {
     const group = value[index];
@@ -220,5 +220,5 @@ export function validRustMergeSourceGroups(
     );
     if (seen.size !== expected) return false;
   }
-  return true;
+  return hasRustSnapshotTransactionClassFieldsBatch(references, 'Ref', ['hash']);
 }

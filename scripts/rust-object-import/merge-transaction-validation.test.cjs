@@ -209,3 +209,46 @@ test('no-snap fast-forward uses the retained three-way body path', () => {
     })
   );
 });
+
+test('Source body qualification cannot pass with read-only preflight ACKs alone', () => {
+  const trace = positive();
+  trace.checkout = { preflight: { completed: 3, bodyFrames: 0 } };
+  assert.throws(
+    () => validateMergeTransactionDiagnostics(trace, { name: 'Source body regression' }, { sourceBodies: true }),
+    /completed native Source body reads required/
+  );
+});
+
+test('file status qualification rejects silent fallback to JavaScript matching', () => {
+  const trace = positive();
+  assert.throws(
+    () => validateMergeTransactionDiagnostics(trace, { name: 'component-main-theirs' }, { fileStatuses: true }),
+    /completed native file status decisions required/
+  );
+});
+
+test('hidden history updates require repository Source plans without workspace materialization', () => {
+  const trace = positive();
+  trace.mergeState.mergeStatusBegin.completed = 2;
+  trace.mergeState.mergeResultsSelect.completed = 2;
+  trace.workspaceFrames = trace.workspaceFrames.filter((frame) => frame.kind !== 'mergeMaterialize');
+  trace.mergeState.mergeMaterialize = { frames: 0, completed: 0, failed: 0 };
+  const scenario = { name: 'hidden-main-into-lane', hidden: true };
+  const options = { repositorySourcePlans: true };
+  validateMergeTransactionDiagnostics(trace, scenario, options);
+  for (const change of [
+    (copy) => {
+      copy.mergeState.mergePrepare.completed = 0;
+    },
+    (copy) => {
+      copy.mergeState.mergeMaterialize.frames = 1;
+    },
+    (copy) => {
+      copy.checkout = { write: { completed: 1 } };
+    },
+  ]) {
+    const copy = structuredClone(trace);
+    change(copy);
+    assert.throws(() => validateMergeTransactionDiagnostics(copy, scenario, options));
+  }
+});

@@ -10,6 +10,7 @@ import {
   requestRustMergeTransaction,
   canRequestRustMergeTransaction,
   hasRustSnapshotTransactionClassFields,
+  hasRustSnapshotTransactionClassFieldsBatch,
   hasRustSnapshotTransactionClassConstructor,
   canUseRustHistoryQueryRepository,
   canHydrateRustHistoryQuerySources,
@@ -55,7 +56,7 @@ type Current = {
   relativePath: string;
   protected: boolean;
   workspace?: { path: string; rawHash: string; snapshotHash: string; bitmap?: boolean };
-  source?: { hash: string; path: string };
+  source?: { hash: string; path?: string };
 };
 type Prepared = {
   token: string;
@@ -196,10 +197,17 @@ function applyLabelPrefix(
   otherLabel: string
 ): MergeCurrentObservation[] {
   const observations: MergeCurrentObservation[] = [];
+  const firstRows = (files: SourceFileModel[]) => {
+    const rows = new Map<string, SourceFileModel>();
+    for (const file of files) if (!rows.has(file.relativePath)) rows.set(file.relativePath, file);
+    return rows;
+  };
+  const otherRows = firstRows(other),
+    baseRows = firstRows(base);
   for (const file of current) {
     const relativePath = file.relative.replace(/\\/g, '/');
-    const otherFile = other.find((row) => row.relativePath === relativePath);
-    const baseFile = base.find((row) => row.relativePath === relativePath);
+    const otherFile = otherRows.get(relativePath);
+    const baseFile = baseRows.get(relativePath);
     const currentHash = prefixSha(file.contents);
     observations.push({
       filePath: relativePath,
@@ -236,14 +244,9 @@ function denseFiles(files: unknown): files is SourceFile[] {
 }
 
 function currentMetadata(files: SourceFile[], scope: Scope): Current[] | undefined {
+  if (!hasRustSnapshotTransactionClassFieldsBatch(files, 'SourceFile', ['history', '_base', '_cwd'])) return undefined;
   const rows: Current[] = [];
   for (const file of files) {
-    if (
-      !file ||
-      types.isProxy(file) ||
-      !hasRustSnapshotTransactionClassFields(file, 'SourceFile', ['history', '_base', '_cwd'])
-    )
-      return undefined;
     const workspace = getRustWorkspaceMergeDescriptor(file, true);
     const source = workspace ? undefined : getRustHistorySourceDescriptor(file, scope.objects);
     if (!workspace && !source) return undefined;
@@ -260,7 +263,7 @@ function currentMetadata(files: SourceFile[], scope: Scope): Current[] | undefin
               ...(workspace.bitmap ? { bitmap: true } : {}),
             },
           }
-        : { source: { hash: source!.hash, path: file.path } }),
+        : { source: { hash: source!.hash, ...(path.isAbsolute(file.path) ? { path: file.path } : {}) } }),
     });
     if (workspace && !hash(workspace.snapshotHash)) return undefined;
   }
@@ -268,14 +271,18 @@ function currentMetadata(files: SourceFile[], scope: Scope): Current[] | undefin
 }
 
 function cachedSourcesMatch(scope: Scope, models: SourceFileModel[]): boolean {
-  const entries = captureRustHistoryQueryObjects(scope.objects);
-  if (!entries) return false;
-  const byHash = new Map(entries);
-  for (const model of models) {
-    const expected = Object.getOwnPropertyDescriptor(model.file, 'hash')?.value;
-    const cached = byHash.get(expected);
-    if (!cached) continue;
-    if (types.isProxy(cached) || !hasRustSnapshotTransactionClassFields(cached, 'Source', ['contents'])) return false;
+  const hashes = [...new Set(models.map((model) => Object.getOwnPropertyDescriptor(model.file, 'hash')?.value))];
+  const entries = captureRustHistoryQueryObjects(scope.objects, hashes);
+  if (
+    !entries ||
+    !hasRustSnapshotTransactionClassFieldsBatch(
+      entries.map(([, source]) => source),
+      'Source',
+      ['contents']
+    )
+  )
+    return false;
+  for (const [expected, cached] of entries) {
     const body = Object.getOwnPropertyDescriptor(cached, 'contents')?.value;
     if (
       !body ||
@@ -376,7 +383,6 @@ function validPrepared(
   }
   return validRustMergeSourceGroups(value.sourceGroups, value.sources, value.mergeRows, baseFiles, otherFiles);
 }
-
 
 function lazyText(row: object, key: 'output' | 'conflict', body?: RustMergeBody): void {
   if (!body) {

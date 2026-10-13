@@ -1,3 +1,4 @@
+import { types } from 'util';
 import type { Consumer } from '@teambit/legacy.consumer';
 import type { ComponentID } from '@teambit/component-id';
 import type { Version } from '@teambit/objects';
@@ -7,6 +8,7 @@ import {
   RemovePath,
   DataToPersist,
   compareRustCheckoutSource,
+  getRustFileStatuses,
   isRustWorkspaceEngine,
   hasRustWorkspaceEngineOwner,
   getRustCheckoutPlanSourceDescriptor,
@@ -162,7 +164,7 @@ export async function applyVersion(
       for (const filename of removal.removals) data.removePath(new RemovePath(filename));
       await data.persistAllToFS();
     } else {
-      updateFileStatus(files, filesStatus, componentFromFS || undefined);
+      await updateFileStatusWithRust(files, filesStatus, componentFromFS || undefined);
       await removeFilesIfNeeded(filesStatus, consumer, componentFromFS || undefined, checkpoint);
       transition = undefined;
     }
@@ -199,7 +201,7 @@ export async function applyVersion(
     for (const filename of prepared.removals) data.removePath(new RemovePath(filename));
     await data.persistAllToFS();
   } else {
-    updateFileStatus(files, filesStatus, componentFromFS || undefined);
+    await updateFileStatusWithRust(files, filesStatus, componentFromFS || undefined);
     await removeFilesIfNeeded(filesStatus, consumer, componentFromFS || undefined);
   }
 
@@ -476,6 +478,44 @@ function applySelectors(
   const filesStatus = {};
   for (const row of applied.filesStatus) filesStatus[row.relativePath] = FileStatus[row.status];
   return { modifiedFiles, filesStatus };
+}
+
+function ordinaryFileStatusMap(statuses: FilesStatus): boolean {
+  return (
+    !types.isProxy(statuses) &&
+    Object.getPrototypeOf(statuses) === Object.prototype &&
+    Reflect.ownKeys(statuses).every((key) => 'value' in Object.getOwnPropertyDescriptor(statuses, key)!)
+  );
+}
+
+/** Preserve the synchronous public fallback while batching ordinary owned file status work. */
+export async function updateFileStatusWithRust(
+  files: SourceFile[],
+  filesStatus: FilesStatus,
+  componentFromFS?: ConsumerComponent
+): Promise<void> {
+  if (
+    process.env.BIT_RUST_CLIENT_VCS === 'on' &&
+    ordinaryFileStatusMap(filesStatus) &&
+    (!componentFromFS || hasRustSnapshotTransactionClassFields(componentFromFS, 'ConsumerComponent', ['files']))
+  ) {
+    const current = componentFromFS?.files;
+    const statuses = await getRustFileStatuses(files, current || []);
+    if (
+      statuses &&
+      ordinaryFileStatusMap(filesStatus) &&
+      (!componentFromFS || hasRustSnapshotTransactionClassFields(componentFromFS, 'ConsumerComponent', ['files'])) &&
+      componentFromFS?.files === current
+    ) {
+      for (const row of statuses) {
+        filesStatus[pathNormalizeToLinux(row.relativePath)] = (
+          row.unchanged ? FileStatus.unchanged : FileStatus.updated
+        ) as FilesStatus[string];
+      }
+      return;
+    }
+  }
+  updateFileStatus(files, filesStatus, componentFromFS);
 }
 
 export function updateFileStatus(files: SourceFile[], filesStatus: FilesStatus, componentFromFS?: ConsumerComponent) {

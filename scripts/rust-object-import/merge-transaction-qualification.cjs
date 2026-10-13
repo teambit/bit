@@ -129,6 +129,9 @@ async function runQualification(cli, helper, options = {}) {
   assert.ok(['object-helper', 'javascript'].includes(nodeBaseline), 'unknown Node baseline');
   const fixtureDimensions = {
     nodeBaseline,
+    sourceBodies: true,
+    fileStatuses: true,
+    repositorySourcePlans: true,
     extraFiles: options.extraFiles || 0,
     scenarios: fixtureModule.scenarios
       .filter((item) => !options.scenarios || options.scenarios.includes(item.name))
@@ -185,7 +188,8 @@ async function runQualification(cli, helper, options = {}) {
           assert.ok(stage.diagnostics, 'proof must retain Native acceptance for every route');
           validateMergeTransactionDiagnostics(
             stage.diagnostics,
-            fixtureModule.scenarios.find((scenario) => scenario.name === stage.scenario)
+            fixtureModule.scenarios.find((scenario) => scenario.name === stage.scenario),
+            { sourceBodies: true, fileStatuses: true, repositorySourcePlans: true }
           );
         }
       }
@@ -491,7 +495,12 @@ async function runQualification(cli, helper, options = {}) {
         }
       }
       const diagnostics = tracePath ? JSON.parse(await fs.readFile(tracePath)) : undefined;
-      if (diagnostics) validateMergeTransactionDiagnostics(diagnostics, scenario);
+      if (diagnostics)
+        validateMergeTransactionDiagnostics(diagnostics, scenario, {
+          sourceBodies: true,
+          fileStatuses: true,
+          repositorySourcePlans: true,
+        });
       const faultArtifact =
         scenario.fault && mode === 'native'
           ? { artifact: faultPath, sha256: hash(await fs.readFile(faultPath)) }

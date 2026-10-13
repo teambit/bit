@@ -9,6 +9,7 @@ import Ref from './ref';
 import {
   hasRustSnapshotTransactionClassConstructor,
   hasRustSnapshotTransactionClassFields,
+  hasRustSnapshotTransactionClassFieldsBatch,
   hasRustSnapshotFunctions,
   registerRustSnapshotFunctionReference,
   hasRustSnapshotFunctionReference,
@@ -31,6 +32,7 @@ export type HistorySourceCapsule = {
 export type HistorySourceReceipt = { sources: HistorySourceCapsule[]; sourceLoads: number[] };
 const aliases = new WeakMap<object, { hash: string; contents: Buffer; snapshot: Buffer }>();
 const equals = Buffer.prototype.equals;
+const compareBytes = Buffer.compare;
 const registrarModule = require.resolve('@teambit/legacy.scope/dist/object-registrar.js');
 
 function sourceHydrationOwner(): boolean {
@@ -52,6 +54,15 @@ export function canHydrateRustHistoryQuerySources(): boolean {
     hasRustSnapshotFunctions(['HistoryQueryObjectParser', 'SnapshotRepositoryFS', 'SnapshotRepositoryPath'])
   );
 }
+
+registerRustSnapshotFunctionReference('HistoryQuerySourceHydrationEligibility', canHydrateRustHistoryQuerySources);
+
+/** A private byte snapshot can validate an owned Source without hashing the same bytes again. */
+export function hasRustCapturedSourceContents(source: Source, hash: string, body: Buffer): boolean {
+  const alias = aliases.get(source);
+  return Boolean(alias && alias.hash === hash && alias.contents === body && compareBytes(body, alias.snapshot) === 0);
+}
+registerRustSnapshotFunctionReference('HistoryQuerySourceContents', hasRustCapturedSourceContents);
 
 /** Only Sources hydrated from this owned query may keep a repository descriptor after a cache mirror. */
 export function hasRustHistoryQuerySourceAlias(repository: Repository, hash: string): boolean {
@@ -143,11 +154,16 @@ export async function loadRustCapturedSourceCapsule(
     descriptor.encoding === 'raw'
       ? { object: Source.parse(compressed), inflatedSize: descriptor.inflatedSize }
       : await BitObject.parseObjectWithSize(compressed, descriptor.privatePath);
-  if (!sourceHydrationOwner() || !canHydrateRustHistoryQuerySources() || !canUseRustHistoryQueryRepository(repository))
+  // Raw Source.parse is synchronous and its defining class was verified immediately above.
+  // Compressed parsing awaits user-visible asynchronous work, so it needs a new boundary check.
+  if (
+    descriptor.encoding !== 'raw' &&
+    (!sourceHydrationOwner() || !canHydrateRustHistoryQuerySources() || !canUseRustHistoryQueryRepository(repository))
+  )
     return undefined;
   if (
     parsed.inflatedSize !== descriptor.inflatedSize ||
-    !hasRustSnapshotTransactionClassFields(parsed.object, 'Source', ['contents'])
+    (descriptor.encoding !== 'raw' && !hasRustSnapshotTransactionClassFields(parsed.object, 'Source', ['contents']))
   )
     throw new Error('history query Source capsule metadata changed');
   const source = parsed.object as Source;
@@ -172,3 +188,41 @@ export async function hydrateRustHistoryQuerySources(
   }
   return true;
 }
+
+export type CapturedSourceBody = { hash: string; body: Buffer; inflatedSize: number; compressedSize: number };
+/** Hydrate one completed parallel read group with the canonical asynchronous load cache policy. */
+export function hydrateRustCapturedSourceBodies(
+  repository: Repository,
+  records: CapturedSourceBody[]
+): Source[] | undefined {
+  if (!sourceHydrationOwner() || !canUseRustHistoryQueryRepository(repository) || !canHydrateRustHistoryQuerySources())
+    return undefined;
+  if (
+    records.length > 4096 ||
+    records.some(
+      (record) =>
+        !Buffer.isBuffer(record.body) ||
+        !/^[a-f0-9]{40}$/.test(record.hash) ||
+        !Number.isSafeInteger(record.inflatedSize) ||
+        record.inflatedSize < record.body.length ||
+        record.inflatedSize > record.body.length + 256 ||
+        !Number.isSafeInteger(record.compressedSize) ||
+        record.compressedSize <= 0 ||
+        record.compressedSize > 32 * 1024 * 1024
+    )
+  )
+    return undefined;
+  const sources = records.map((record) => Source.parse(record.body));
+  if (
+    !hasRustSnapshotTransactionClassFieldsBatch(sources, 'Source', ['contents']) ||
+    sources.some((source, index) => source.hash().toString() !== records[index].hash)
+  )
+    return undefined;
+  for (const [index, source] of sources.entries()) {
+    const record = records[index];
+    aliases.set(source, { hash: record.hash, contents: source.contents, snapshot: Buffer.from(source.contents) });
+    repository.hydrateHistoryQueryVersion(source, record.inflatedSize, record.compressedSize);
+  }
+  return sources;
+}
+registerRustSnapshotFunctionReference('HistoryQuerySourceBodyHydration', hydrateRustCapturedSourceBodies);

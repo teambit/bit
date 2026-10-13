@@ -50,7 +50,7 @@ import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
 import { compact } from 'lodash';
 import type { ApplyVersionWithComps, CheckoutMain, ComponentStatusBase } from '@teambit/checkout';
-import { CheckoutAspect, removeFilesIfNeeded, updateFileStatus } from '@teambit/checkout';
+import { CheckoutAspect, removeFilesIfNeeded, updateFileStatusWithRust } from '@teambit/checkout';
 import type { ConfigMergerMain, ConfigMergeResult, PolicyDependency } from '@teambit/config-merger';
 import { ConfigMergerAspect, registerRustScopePolicy, tryRustScopePolicy } from '@teambit/config-merger';
 import type { SnapsDistance } from '@teambit/component.snap-distance';
@@ -729,7 +729,7 @@ export class MergingMain {
       legacyComponent.version = id.version;
     }
     const files = legacyComponent.files;
-    updateFileStatus(files, filesStatus, currentComponent || undefined);
+    await updateFileStatusWithRust(files, filesStatus, currentComponent || undefined);
 
     if (mergeResults) {
       // update files according to the merge results

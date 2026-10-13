@@ -3,7 +3,10 @@ pub(crate) mod eol;
 pub(crate) mod plan;
 pub(crate) mod repository;
 
+pub(crate) use source_read::serve as read_sources;
+
 mod preflight;
+mod source_read;
 
 use std::{
     collections::HashSet,

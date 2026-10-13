@@ -85,3 +85,5 @@ export {
   getRustCheckoutPlanSourceDescriptor,
 } from './rust-checkout-plan-source';
 export type { RustCheckoutPlanSourceDescriptor } from './rust-checkout-plan-source';
+
+export { getRustFileStatuses } from './rust-file-status';

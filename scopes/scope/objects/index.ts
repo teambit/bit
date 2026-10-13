@@ -187,7 +187,8 @@ export {
   canHydrateRustHistoryQuerySources,
   validRustHistorySourceReceipt,
   loadRustCapturedSourceCapsule,
+  hydrateRustCapturedSourceBodies,
 } from './objects/rust-history-query-sources';
-export type { HistorySourceCapsule } from './objects/rust-history-query-sources';
+export type { HistorySourceCapsule, CapturedSourceBody } from './objects/rust-history-query-sources';
 
 export { readRustBodyRange, readRustBodyRangeSync } from './objects/rust-body-range';

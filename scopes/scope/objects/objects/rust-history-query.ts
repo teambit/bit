@@ -4,7 +4,7 @@ import type * as Sources from '@teambit/component.sources';
 import type Repository from './repository';
 import { canReadCacheNatively, captureRustCacheEntries, lookupRustCacheEntry } from '@teambit/harmony.modules.in-memory-cache';
 import { canReadLiveObjectsNatively, captureRustLiveObjects, lookupRustLiveObject } from './live-objects';
-import { hasRustSnapshotTransactionClassFields, hasRustSnapshotFunctions, registerRustSnapshotFunctionReference } from './rust-snapshot-guards';
+import { classifyRustSnapshotTransactionClasses, hasRustSnapshotTransactionClassFields, hasRustSnapshotFunctions, registerRustSnapshotFunctionReference } from './rust-snapshot-guards';
 import type Version from '../models/version';
 import type ModelComponent from '../models/model-component';
 import type Ref from './ref';
@@ -92,6 +92,8 @@ export function canUseRustHistoryQueryRepository(repository: Repository): boolea
   );
 }
 
+registerRustSnapshotFunctionReference('HistoryQueryRepositoryEligibility', canUseRustHistoryQueryRepository);
+
 function ordinaryObjectMap(value: unknown): boolean {
   if (!value || typeof value !== 'object' || types.isProxy(value)) return false;
   if (![Object.prototype, null].includes(Object.getPrototypeOf(value))) return false;
@@ -159,11 +161,6 @@ export type HistoryQueryOverlay = {
 type LabelRef = { label: string; hash: string };
 const otherQueryObjects = ['ModelComponent', 'Source', 'Lane', 'VersionHistory', 'LaneHistory', 'ScopeMeta'];
 
-function isOtherQueryObject(value: object): boolean {
-  for (let index = 0; index < otherQueryObjects.length; index++)
-    if (hasRustSnapshotTransactionClassFields(value, otherQueryObjects[index], [])) return true;
-  return false;
-}
 
 function labelRefs(value: unknown): LabelRef[] | undefined {
   if (!ordinaryObjectMap(value)) return undefined;
@@ -234,15 +231,17 @@ export function captureRustHistoryQuery(
   if (!tags || !orphaned || (lastFoundTag !== undefined && typeof lastFoundTag !== 'string')) return undefined;
   const objects = captureRustHistoryQueryObjects(repository);
   if (!objects) return undefined;
+  const objectClasses = classifyRustSnapshotTransactionClasses(objects.map(([, object]) => object), {
+    ...Object.fromEntries(otherQueryObjects.map((name) => [name, []])),
+    Version: ['_hash', 'parents', 'log', 'hidden'],
+  });
+  if (!objectClasses) return undefined;
   const overlays: HistoryQueryOverlay[] = [];
   const versions: Version[] = [];
   const refs = new Map<string, Ref>();
   for (let index = 0; index < objects.length; index++) {
     const object = objects[index][1];
-    if (!hasRustSnapshotTransactionClassFields(object, 'Version', ['_hash', 'parents', 'log', 'hidden'])) {
-      if (!isOtherQueryObject(object)) return undefined;
-      continue;
-    }
+    if (objectClasses[index] !== 'Version') continue;
     const overlay = captureRustHistoryQueryVersion(object as Version);
     if (!overlay || overlay.hash !== objects[index][0]) return undefined;
     overlays[overlays.length] = overlay;

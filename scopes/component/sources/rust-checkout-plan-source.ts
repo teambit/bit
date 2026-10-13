@@ -90,7 +90,9 @@ function ordinary(file: AbstractVinyl): file is SourceFile {
     if (!field || !('value' in field) || typeof field.value !== 'string') return false;
   }
   const provenance = files.get(file);
-  const repositorySource = getRustCheckoutSourceDescriptor(file);
+  const contents = Object.getOwnPropertyDescriptor(file, 'contents');
+  const repositorySource =
+    contents?.get && contents.get !== provenance?.contents?.get ? getRustCheckoutSourceDescriptor(file) : undefined;
   return ordinaryMetadata(file, defaults.getters, provenance, Boolean(repositorySource));
 }
 

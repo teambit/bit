@@ -312,7 +312,7 @@ async function runQualification(cli, helper, options = {}) {
       assert.ok(metrics.checkoutMaterialize.stepsCompleted > 0, `${row.scenario} actual retained writes`);
       const owned = row.trace.workspaceFrames.filter(
         (frame) =>
-          ['BWS1', 'BWP1', 'BWC0', 'BWC1', 'BCK1', 'BMH1'].includes(frame.magic) ||
+          ['BWS1', 'BWP1', 'BWC0', 'BWC2', 'BWC1', 'BCK1', 'BMH1'].includes(frame.magic) ||
           (frame.magic === 'BMT1' && (frame.kind.startsWith('checkout') || frame.kind.startsWith('inspection')))
       );
       assert.equal(new Set(owned.map((frame) => frame.helperId)).size, 1, `${row.scenario} pinned checkout owner`);

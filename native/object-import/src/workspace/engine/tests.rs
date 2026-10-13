@@ -6,6 +6,7 @@ static POOL: std::sync::LazyLock<rayon::ThreadPool> = std::sync::LazyLock::new(|
 });
 mod read_batches;
 mod read_raw;
+mod status;
 use super::serve;
 use flate2::{Compression, write::ZlibEncoder};
 use serde_json::{Value, json};

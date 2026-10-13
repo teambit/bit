@@ -18,7 +18,7 @@ function validateHistoryQueryDiagnostics(trace, scenario) {
   assert.ok(!owners.has(undefined), 'physical helper identity must be recorded');
   const first = frames.findIndex((frame) => owned.includes(frame));
   const last = frames.findLastIndex((frame) => owned.includes(frame));
-  const workspaceKinds = new Set(['BMT1', 'BMH1', 'BWS1', 'BWP1', 'BWC0', 'BWC1', 'BCK1']);
+  const workspaceKinds = new Set(['BMT1', 'BMH1', 'BWS1', 'BWP1', 'BWC0', 'BWC2', 'BWC1', 'BCK1']);
   const workspace = frames.slice(first, last + 1).filter((frame) => workspaceKinds.has(frame.magic));
   assert.equal(
     new Set(workspace.map((frame) => frame.helperId)).size,
