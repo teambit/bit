@@ -240,18 +240,26 @@ class BitLogger implements IBitLogger {
     this.onBeforeExitFns.set(key ?? Symbol('on-before-exit'), fn);
   }
 
-  async runOnBeforeExitFns() {
+  /**
+   * @returns whether all the hooks succeeded
+   */
+  async runOnBeforeExitFns(): Promise<boolean> {
     // each hook runs once. "bit cli" gets here after every command, and must not run the same hooks again each time.
     const fns = [...this.onBeforeExitFns.values()];
     this.onBeforeExitFns.clear();
+    let allSucceeded = true;
     // the hooks are independent clean-ups, so one that fails must not stop the others
     await pMapSeries(fns, async (fn) => {
       try {
         await fn();
       } catch (err: any) {
-        this.error(`an on-before-exit hook failed: ${err?.message ?? err}`, err);
+        allSucceeded = false;
+        const msg = `an on-before-exit hook failed: ${err?.message ?? err}`;
+        this.error(msg, err);
+        process.stderr.write(`${msg}\n`);
       }
     });
+    return allSucceeded;
   }
 
   async exitAfterFlush(code = 0, commandName: string, cliOutput = '') {
@@ -272,8 +280,9 @@ class BitLogger implements IBitLogger {
     // finalLogger[level](msg);
     this.logger[level](msg);
     this.writeCommandHistoryEnd(code);
-    await this.runOnBeforeExitFns();
-    if (!this.isDaemon) process.exit(code);
+    const hooksSucceeded = await this.runOnBeforeExitFns();
+    // a failed clean-up fails the command, as it did when a failing hook stopped the exit with an error
+    if (!this.isDaemon) process.exit(hooksSucceeded ? code : code || 1);
   }
 
   private commandHistoryMsgPrefix() {
