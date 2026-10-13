@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { spawn } from 'child_process';
+import { spawnRustImportTransport } from './rust-import-transport';
 import path from 'path';
 import fs from 'fs/promises';
 
@@ -79,7 +79,7 @@ async function readArchive(
   options.signal?.throwIfAborted();
   const args = options.objectsDirectory ? ['--objects-dir', options.objectsDirectory] : [];
   if (options.owner) args.push('--owner', `${options.owner.uid}:${options.owner.gid}`);
-  const child = spawn(executable, args, { stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true });
+  const child = spawnRustImportTransport(executable, args);
   let output = Buffer.alloc(0),
     failure: Error | undefined,
     pending: { resolve: (frame: Frame) => void; reject: (error: Error) => void } | undefined,

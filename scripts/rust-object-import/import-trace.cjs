@@ -31,6 +31,7 @@ const metrics = {
     write: { frames: 0, files: 0, completed: 0, failed: 0, helperIds: [] },
   },
   workspaceFrames: [],
+  importFrames: [],
   workspace: Object.fromEntries(
     ['scan', 'read', 'compare', 'diff', 'fileStatus'].map((kind) => [
       kind,
@@ -218,8 +219,10 @@ const metrics = {
 };
 // Observe workspace wire acknowledgements without wrapping writer methods whose
 // identities decide native eligibility. This preload is excluded from timing.
+let nextImportTransport = 0;
 function observeWorkspaceTransport(child) {
   if (!child.stdin || !child.stdout) return child;
+  let importId;
   let workspace = false,
     workspaceId;
   const requests = [];
@@ -228,6 +231,10 @@ function observeWorkspaceTransport(child) {
   const write = child.stdin.write;
   child.stdin.write = function (bytes, ...rest) {
     const magic = Buffer.isBuffer(bytes) ? bytes.subarray(0, 4).toString() : '';
+    if (['BOI1','BOI2','BOI3','BOC2','BOC3','BMP1','BMS1','BTI1','BTI2','BTC1','BTP1'].includes(magic)) {
+      importId ||= ++nextImportTransport;
+      metrics.importFrames.push({backend:child.backend || 'process', magic, transportId:importId});
+    }
     if (['BWM1', 'BWP1', 'BWC0', 'BWC2', 'BWC1', 'BCK1', 'BWS1', 'BSS1', 'BMH1', 'BMT1'].includes(magic)) {
       if (!workspace) workspaceId = ++metrics.persistence.helpers;
       workspace = true;
@@ -539,7 +546,28 @@ if (output && process.pid === owner) {
   const workspaceAddon = process.env.BIT_TEST_WORKSPACE_ADDON || process.env.BIT_IMPORT_TRACE_WORKSPACE_ADDON;
   if (workspaceAddon) {
     const { EventEmitter } = require('node:events');
-    const { WorkspaceEngine } = require(workspaceAddon);
+    const binding = require(workspaceAddon);
+    const { WorkspaceEngine, ImportStreamEngine } = binding;
+    if (ImportStreamEngine) {
+      binding.ImportStreamEngine = class extends ImportStreamEngine {
+        constructor(callback, ...args) {
+          const transport = observeWorkspaceTransport({backend:'addon',stdin:{write(){}},stdout:new EventEmitter()});
+          super(event => {
+            if (event.kind === 'output') transport.stdout.emit('data', event.data);
+            callback(event);
+          }, ...args);
+          this.traceTransport = transport;
+        }
+        write(bytes) {
+          this.traceTransport.stdin.write(bytes);
+          return super.write(bytes);
+        }
+        writev(parts) {
+          for (const bytes of parts) this.traceTransport.stdin.write(bytes);
+          return super.writev(parts);
+        }
+      };
+    }
     const request = WorkspaceEngine.prototype.request;
     const transports = new WeakMap();
     WorkspaceEngine.prototype.request = async function (bytes) {

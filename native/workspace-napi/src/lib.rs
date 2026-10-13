@@ -1,3 +1,8 @@
+pub use stream::ImportStreamEngine;
+
+mod stream;
+mod stream_io;
+
 use bit_object_import::{WorkspaceDispatcher, WorkspaceSession};
 use napi::{
     Env, Error, Result, Task,

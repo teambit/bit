@@ -28,6 +28,7 @@ export const OBJECT_IMPORT_LEGACY_MODULES = [
   'rust-source-validator.js',
   'rust-object-importer.js',
   'rust-tar-client.js',
+  'rust-import-transport.js',
   'rust-tar-importer.js',
   'rust-tar-transfer.js',
   'rust-tar-staging.js',

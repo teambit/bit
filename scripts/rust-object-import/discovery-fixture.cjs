@@ -49,7 +49,7 @@ function fixture(t) {
       `scopes/scope/objects/objects/rust-object-${name}.ts`,
       path.join(moduleDirectory, `rust-object-${name}.js`)
     );
-  for (const name of ['rust-source-validator', 'rust-object-importer'])
+  for (const name of ['rust-source-validator', 'rust-object-importer', 'rust-import-transport'])
     compile(`components/legacy/scope/objects-fetcher/${name}.ts`, path.join(legacyDirectory, `${name}.js`));
   const previousAddon = process.env.BIT_TEST_WORKSPACE_ADDON;
   // Test the child transport here; addon discovery executes separately in a disposable process.

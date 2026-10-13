@@ -1,5 +1,4 @@
-import { spawn } from 'child_process';
-import type { ChildProcessWithoutNullStreams } from 'child_process';
+import { spawnRustImportTransport, type RustImportTransport } from './rust-import-transport';
 import type { SourceValidation } from './rust-source-validator';
 
 export type NativeSourceStoreOptions = { objectsDirectory: string; owner?: { uid: number; gid: number } | null };
@@ -36,7 +35,7 @@ export class RustObjectImporter {
     mutableFallbacks: 0,
   };
   unavailableReason?: string;
-  private child?: ChildProcessWithoutNullStreams;
+  private child?: RustImportTransport;
   private pending?: Pending;
   private output: Buffer[] = [];
   private outputBytes = 0;
@@ -328,7 +327,7 @@ export class RustObjectImporter {
     if (this.child) return this.child;
     const args = [...this.args, '--objects-dir', this.options.objectsDirectory];
     if (this.options.owner) args.push('--owner', `${this.options.owner.uid}:${this.options.owner.gid}`);
-    const child = spawn(this.executable, args, { stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true });
+    const child = spawnRustImportTransport(this.executable, args);
     this.child = child;
     this.stopped = new Promise((resolve) => {
       child.once('exit', () => resolve());

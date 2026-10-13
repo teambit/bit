@@ -77,7 +77,7 @@ impl WorkspaceSession {
     }
 }
 
-fn shared_pool(threads: usize) -> io::Result<Arc<rayon::ThreadPool>> {
+pub(crate) fn shared_pool(threads: usize) -> io::Result<Arc<rayon::ThreadPool>> {
     let entry = &POOLS[threads - 1];
     if let Some(pool) = entry.get() {
         return Ok(Arc::clone(pool));

@@ -1,4 +1,5 @@
 const { test } = require('node:test');
+process.env.BIT_RUST_CLIENT_VCS = 'on';
 const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const os = require('node:os');
@@ -55,4 +56,82 @@ test('object operation retirement waits for native completion before exposing fa
   release();
   assert.equal(await pending, undefined);
   await disposal;
+});
+
+const { spawnRustImportTransport } = installed('@teambit/legacy.scope/dist/objects-fetcher/rust-import-transport.js');
+const { RustObjectImporter } = installed('@teambit/legacy.scope/dist/objects-fetcher/rust-object-importer.js');
+const { ImportStreamEngine } = require(process.env.BIT_TEST_WORKSPACE_ADDON);
+const { createHash } = require('node:crypto');
+const { deflateSync } = require('node:zlib');
+
+function sourceObject(text) {
+  const body = Buffer.from(text), hash = createHash('sha1').update(body).digest('hex');
+  return { ref: { toString: () => hash }, buffer: deflateSync(Buffer.concat([Buffer.from(`Source ${hash} ${text.length}\0`), body])) };
+}
+
+test('compiled Source imports keep validation and selection on one in-process owner', async (t) => {
+  const { objectsDirectory } = await fixture(t);
+  const importer = new RustObjectImporter(process.env.BIT_TEST_OBJECT_IMPORT, { objectsDirectory });
+  t.after(() => importer.disposeAndWait());
+  const item = sourceObject('native stream 🚀');
+  const expected = Buffer.from(item.buffer);
+  await importer.importBatch([item], async (values) => {
+    assert.equal(importer.child.backend, 'addon');
+    assert.ok(values[0]);
+    assert.deepEqual(await fs.readdir(objectsDirectory), []);
+    item.buffer.fill(0); // Selection cannot mutate the native bytes already validated.
+    return [0];
+  }, async (_, persisted) => assert.deepEqual([...persisted], [0]));
+  const hash = item.ref.toString();
+  assert.deepEqual(await fs.readFile(path.join(objectsDirectory, hash.slice(0, 2), hash.slice(2))), expected);
+  await importer.disposeAndWait();
+  assert.notEqual(importer.child.signalCode, null);
+});
+
+test('native import transport handles clean EOF, malformed input and cancellation without hanging', async () => {
+  for (const kind of ['eof', 'invalid', 'cancel']) {
+    const child = spawnRustImportTransport(process.env.BIT_TEST_OBJECT_IMPORT, []);
+    assert.equal(child.backend, 'addon');
+    const closed = new Promise(resolve => child.once('close', (code, signal) => resolve({code, signal})));
+    child.stdin.on('error', () => {});
+    child.stdout.resume(); child.stderr.resume();
+    if (kind === 'cancel') child.kill();
+    else child.stdin.end(kind === 'invalid' ? Buffer.from('nope') : undefined);
+    const result = await closed;
+    assert.deepEqual(result, kind === 'cancel' ? {code:null,signal:'SIGTERM'} : {code:kind === 'eof' ? 0 : 1,signal:null});
+  }
+});
+
+test('waiting import streams do not occupy shared Rayon workers and release their capacity', async () => {
+  for (let index = 0; index < 20; index++) assert.throws(() => new ImportStreamEngine(() => {}, 0), /options/);
+  const streams = [];
+  try {
+    for (let index = 0; index < 16; index++) {
+      let closed;
+      const stopped = new Promise(resolve => { closed = resolve; });
+      const engine = new ImportStreamEngine(event => { if (event.kind === 'closed') closed(); }, 2);
+      streams.push({engine, stopped});
+    }
+    assert.throws(() => new ImportStreamEngine(() => {}, 2), /limit/);
+    const engine = new WorkspaceEngine(2);
+    try {
+      const body = Buffer.from(JSON.stringify({kind:'compare',left:'same',right:'same'}));
+      const header = Buffer.alloc(12); header.write('BWS1'); header.writeUInt32BE(1,4); header.writeUInt32BE(body.length,8);
+      let timer;
+      try {
+        const response = await Promise.race([engine.request(Buffer.concat([header,body])), new Promise((_, reject) => {
+          timer = setTimeout(() => reject(Error('waiting import owners blocked shared workers')), 5000);
+        })]);
+        assert.equal(JSON.parse(response).failed, false);
+      } finally { clearTimeout(timer); }
+    } finally { engine.close(); }
+  } finally {
+    streams.forEach(({engine}) => engine.close());
+    await Promise.all(streams.map(({stopped}) => stopped));
+  }
+  let closed;
+  const stopped = new Promise(resolve => { closed = resolve; });
+  const replacement = new ImportStreamEngine(event => { if (event.kind === 'closed') closed(); }, 2);
+  replacement.end();
+  await stopped;
 });

@@ -1,5 +1,4 @@
-import { spawn } from 'child_process';
-import type { ChildProcessWithoutNullStreams } from 'child_process';
+import { spawnRustImportTransport, type RustImportTransport } from './rust-import-transport';
 import path from 'path';
 
 export type SourceValidation = { inflatedBytes: number };
@@ -19,7 +18,7 @@ const MAX_RESPONSE_BYTES = 16 * 1024;
 export class RustSourceValidator {
   readonly stats = { submitted: 0, sources: 0, legacy: 0, batches: 0 };
   unavailableReason?: string;
-  private child?: ChildProcessWithoutNullStreams;
+  private child?: RustImportTransport;
   private stopped: Promise<void> = Promise.resolve();
   private queued: Request[] = [];
   private active?: Batch;
@@ -85,9 +84,9 @@ export class RustSourceValidator {
     });
   }
 
-  private start(): ChildProcessWithoutNullStreams {
+  private start(): RustImportTransport {
     if (this.child) return this.child;
-    const child = spawn(this.executable, this.args, { stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true });
+    const child = spawnRustImportTransport(this.executable, this.args);
     this.child = child;
     this.stopped = new Promise((resolve) => {
       child.once('exit', resolve);

@@ -1,3 +1,4 @@
+pub use import_stream::ImportStream;
 pub use session::{WorkspaceDispatcher, WorkspaceSession};
 
 mod checkout;
@@ -6,6 +7,7 @@ mod config_merge;
 mod directory;
 mod history_query;
 mod history_reset;
+mod import_stream;
 mod inspection;
 mod inventory;
 mod js_json;

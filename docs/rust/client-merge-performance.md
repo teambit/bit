@@ -64,6 +64,23 @@ of occupying libuv workers. Pools initialize after loading the library, avoiding
 dynamic linker lock during module initialization. Retirement waits for outstanding
 native work before exposing the canonical fallback.
 
+With `BIT_RUST_CLIENT_VCS=on`, Source validation, mutable-object writes and
+interactive tar imports also use the verified addon when available. Each stream
+owns a dedicated protocol thread, with at most sixteen streams in process. Waiting
+for a JavaScript selection or progressive archive input therefore never occupies a
+Rayon worker needed by another native operation. Compression, validation and file
+work continue to share the configured Rayon pools.
+
+The stream reuses the standalone protocol handlers, including their validation,
+selection and commit barriers. Acknowledged input drives Writable backpressure:
+at most one input chunk is queued beside the current chunk, and each chunk is
+bounded to the existing 128 MiB batch budget plus framing. Output queues hold at
+most one callback and individual responses are bounded. Closing interrupts input
+waits; the close notification follows completion and cleanup of all native work,
+so fallback cannot race an in-flight rename. Unsupported companions and custom
+helper arguments retain the child transport before any input is sent. Qualification
+records the actual import transport and rejects child imports in addon proofs.
+
 Owned workspace read receipts retain bounded snapshots in Rust. A later prepare can
 reuse only a receipt from the same owner with matching path and identity; ordinary
 new reads still observe the filesystem. Public clones share private verification

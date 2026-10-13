@@ -13,7 +13,7 @@ function frame(magic, id, input) {
 }
 (async () => {
   const [addon, executable, directory] = process.argv.slice(2);
-  const { WorkspaceEngine } = require(addon);
+  const { WorkspaceEngine, ImportStreamEngine } = require(addon);
   const filename = path.join(directory, 'addon-source.txt');
   fs.writeFileSync(filename, '\ufeffstandalone addon\r\n');
   const inputs = [1, 2].map((id) => frame('BWS1', id, { kind: 'read', files: [filename], binary: true, retain: true }));
@@ -34,6 +34,17 @@ function frame(magic, id, input) {
   } finally {
     objects.close();
   }
+  const received = [];
+  await new Promise((resolve, reject) => {
+    const stream = new ImportStreamEngine((event) => {
+      if (event.kind === 'output') received.push(event.data);
+      if (event.kind === 'closed') event.error ? reject(Error(event.error)) : resolve();
+    }, 2, directory);
+    stream.write(frame('BOP1', 4, [{kind:'version',existing:'9',incoming:'10'}]));
+    stream.end();
+  });
+  assert.deepEqual(JSON.parse(Buffer.concat(received)), {version:1,id:4,results:[true]});
+
 })().catch((error) => {
   console.error(error);
   process.exitCode = 1;
