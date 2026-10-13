@@ -35,9 +35,8 @@ function metadata(value: unknown, seen = new Set<object>(), depth = 0): boolean 
       : ![Object.prototype, null].includes(Object.getPrototypeOf(value))
   )
     return false;
-  const fields = Object.getOwnPropertyDescriptors(value);
-  const keys = Reflect.ownKeys(fields);
-  const length = array ? fields.length?.value : undefined;
+  const keys = Reflect.ownKeys(value);
+  const length = array ? Object.getOwnPropertyDescriptor(value, 'length')?.value : undefined;
   if (
     keys.length > 16385 ||
     (array && (!Number.isSafeInteger(length) || length < 0 || length > 16384 || keys.length !== length + 1))
@@ -45,7 +44,7 @@ function metadata(value: unknown, seen = new Set<object>(), depth = 0): boolean 
     return false;
   seen.add(value);
   for (const key of keys) {
-    const descriptor = Reflect.get(fields, key) as PropertyDescriptor;
+    const descriptor = Object.getOwnPropertyDescriptor(value, key)!;
     if (array && key === 'length') continue;
     if (
       typeof key !== 'string' ||

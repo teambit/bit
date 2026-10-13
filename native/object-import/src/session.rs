@@ -85,6 +85,7 @@ pub(crate) fn shared_pool(threads: usize) -> io::Result<Arc<rayon::ThreadPool>> 
     let pool = Arc::new(
         rayon::ThreadPoolBuilder::new()
             .num_threads(threads)
+            .thread_name(|index| format!("bit-vcs-{index}"))
             .build()
             .map_err(io::Error::other)?,
     );

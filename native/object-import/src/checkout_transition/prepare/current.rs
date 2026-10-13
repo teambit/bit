@@ -51,10 +51,11 @@ fn read(file: &wire::Current, total: &mut usize) -> io::Result<Loaded> {
     crate::merge_history::hash(&file.snapshot_hash)?;
     let maximum = 32 * 1024 * 1024 - *total;
     let input = fs::File::open(&file.path)?;
-    if input.metadata()?.len() > maximum as u64 {
+    let length = input.metadata()?.len();
+    if length > maximum as u64 {
         return Err(invalid("checkout current byte limit"));
     }
-    let mut raw = Vec::new();
+    let mut raw = Vec::with_capacity(length as usize);
     input
         .take((maximum + 1) as u64)
         .read_to_end(&mut raw)?;

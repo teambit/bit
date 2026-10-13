@@ -43,7 +43,7 @@ fn begin(input: &Value, state: &mut State) -> io::Result<Value> {
         .flatten()
         .map(|file| file.contents.len())
         .sum();
-    let mut files = read::capture(request, MAX_BYTES - retained)?;
+    let mut files = read::capture(&request, MAX_BYTES - retained)?;
     let revision =
         state.revision.checked_add(1).ok_or_else(|| invalid("inspection revision overflow"))?;
     let mut digest = Sha1::new();

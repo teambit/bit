@@ -36,21 +36,32 @@ function summarize(text, sourcePaths) {
         changed = true;
       }
   }
-  const sourceSet = new Set(sourcePaths.map((filename) => path.resolve(filename)));
+  const sourceSet = new Set(sourcePaths.map((filename) => path.posix.resolve(filename)));
+  const rustThreads = new Set();
+  const rustReads = [];
   for (const line of lines) {
-    const read = line.match(/^\s*(\d+)\s+(?:read|pread64)\(\d+<([^>]+)>,.*\)\s+=\s+(\d+)/);
+    const named = line.match(/^\s*(\d+)\s+prctl\(PR_SET_NAME, "([^"]+)"\s*\)\s+=\s+0$/);
+    if (named && threads.has(Number(named[1]))) {
+      if (/^bit-vcs-[0-7]$/.test(named[2])) rustThreads.add(Number(named[1]));
+      else rustThreads.delete(Number(named[1]));
+    }
+    const read = line.match(/^\s*(\d+)\s+(?:read|pread64)\(\d+<([^>]+)>\s*,.*\)\s+=\s+(\d+)/);
     if (!read || !threads.has(Number(read[1])) || Number(read[3]) === 0) continue;
     const filename = read[2].replace(/ \(deleted\)$/, '');
     const snapshot = /\/bit-workspace-inspection-[^/]+\//.test(filename);
     if (sourceSet.has(filename) || snapshot)
-      reads.push({
+      (rustThreads.has(Number(read[1])) ? rustReads : reads).push({
         thread: Number(read[1]),
         path: filename,
         bytes: Number(read[3]),
         kind: snapshot ? 'snapshot' : 'source',
       });
   }
-  return { nodePid, threads: [...threads], reads, bytes: reads.reduce((sum, read) => sum + read.bytes, 0) };
+  return {
+    nodePid, threads: [...threads], rustThreads: [...rustThreads], reads, rustReads,
+    bytes: reads.reduce((sum, read) => sum + read.bytes, 0),
+    rustBytes: rustReads.reduce((sum, read) => sum + read.bytes, 0),
+  };
 }
 async function observe(filename, sourcePaths) {
   return summarize(await fs.readFile(filename, 'utf8'), sourcePaths);

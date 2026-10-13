@@ -1,3 +1,5 @@
+import { types } from 'util';
+
 /** JavaScript values cross the snapshot boundary before canonical JSON serialization. */
 export type RustSnapshotValue =
   | { kind: 'undefined' | 'null' }
@@ -45,14 +47,12 @@ function numberBits(value: number): string {
 }
 
 function projectObject(value: object, budget: Budget, depth: number): RustCompactSnapshotValue | undefined {
-  if (budget.ancestors.has(value)) return undefined;
+  if (types.isProxy(value) || budget.ancestors.has(value)) return undefined;
   const prototype = Object.getPrototypeOf(value);
   const array = Array.isArray(value);
   if (prototype !== (array ? Array.prototype : Object.prototype) && (array || prototype !== null)) return undefined;
-  const descriptors = Object.getOwnPropertyDescriptors(value);
-  if (Reflect.ownKeys(descriptors).some((key) => typeof key !== 'string' || !('value' in descriptors[key])))
-    return undefined;
-  if (Object.prototype.hasOwnProperty.call(descriptors, 'toJSON')) return undefined;
+  const keys = Reflect.ownKeys(value);
+  if (keys.some((key) => typeof key !== 'string' || key === 'toJSON')) return undefined;
   if (
     array &&
     [Array.prototype, Object.prototype].some((base) =>
@@ -63,22 +63,27 @@ function projectObject(value: object, budget: Budget, depth: number): RustCompac
   budget.ancestors.add(value);
   try {
     if (array) {
-      const length = descriptors.length.value;
+      for (const key of keys) {
+        if (!('value' in Object.getOwnPropertyDescriptor(value, key)!)) return undefined;
+      }
+      const length = Object.getOwnPropertyDescriptor(value, 'length')!.value;
       if (!Number.isSafeInteger(length) || length < 0 || length > MAX_NODES) return undefined;
       const entries: RustCompactSnapshotValue[] = [];
       for (let index = 0; index < length; index += 1) {
-        const item = project(descriptors[index]?.value, budget, depth + 1);
+        const item = project(Object.getOwnPropertyDescriptor(value, String(index))?.value, budget, depth + 1);
         if (item === undefined) return undefined;
         entries.push(item);
       }
       return budget.compact ? entries : { kind: 'array', value: entries };
     }
     const entries: [string | number[], RustCompactSnapshotValue][] = [];
-    for (const key of Object.keys(descriptors)) {
-      if (!descriptors[key].enumerable) continue;
+    for (const key of keys as string[]) {
+      const descriptor = Object.getOwnPropertyDescriptor(value, key)!;
+      if (!('value' in descriptor)) return undefined;
+      if (!descriptor.enumerable) continue;
       budget.bytes += key.length * 6;
       if (budget.bytes > MAX_BYTES) return undefined;
-      const item = project(descriptors[key].value, budget, depth + 1);
+      const item = project(descriptor.value, budget, depth + 1);
       if (item === undefined) return undefined;
       entries.push([wireText(key), item]);
     }

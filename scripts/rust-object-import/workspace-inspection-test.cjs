@@ -146,6 +146,32 @@ test('nested inspection operations preserve the original public error and dispos
   assert.equal(effects, 1);
 });
 
+test('external body observer separates named Rust workers without hiding JavaScript or libuv reads', () => {
+  const { summarize } = require('./workspace-inspection-body-read.cjs');
+  const observed = summarize([
+    '100 execve("/usr/bin/node", [], []) = 0',
+    '100 clone(flags=CLONE_VM|CLONE_THREAD) = 101',
+    '100 clone3({flags=CLONE_VM|CLONE_THREAD}, 88) = 102',
+    '100 clone(flags=SIGCHLD) = 103',
+    '100 read(3</source>, "js", 2) = 2',
+    '101 read(3</source>, "before", 6) = 6',
+    '101 prctl(PR_SET_NAME, "bit-vcs-0" <unfinished ...>',
+    '101 <... prctl resumed>) = 0',
+    '101 read(3</source> <unfinished ...>',
+    '101 <... read resumed>, "rust", 4) = 4',
+    '102 prctl(PR_SET_NAME, "bit-vcs-1") = -1 EPERM',
+    '102 read(3</source> <unfinished ...>',
+    '102 <... read resumed>, "libuv", 5) = 5',
+    '101 prctl(PR_SET_NAME, "libuv-worker") = 0',
+    '101 read(3</source>, "after", 5) = 5',
+    '103 prctl(PR_SET_NAME, "bit-vcs-2") = 0',
+    '103 read(3</source>, "child", 5) = 5',
+  ].join('\n'), ['/source']);
+  assert.equal(observed.bytes, 18);
+  assert.equal(observed.rustBytes, 4);
+  assert.deepEqual(observed.rustReads, [{thread:101, path:'/source', bytes:4, kind:'source'}]);
+});
+
 test('external body observer detects main Node and libuv reads while excluding another process', async (t) => {
   if (process.platform !== 'linux') {
     t.skip('Linux strace diagnostic only');

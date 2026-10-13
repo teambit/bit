@@ -9,7 +9,11 @@ pub(super) fn run(
 ) -> io::Result<Value> {
     if matches!(
         &request,
-        Request::MergePrepare(_) | Request::MergeApply(_) | Request::CheckoutPrepare(_),
+        Request::MergePrepare(_)
+            | Request::MergeApply(_)
+            | Request::CheckoutPrepare(_)
+            | Request::SnapshotSerialize(_)
+            | Request::InspectionBegin(_),
     ) {
         pool.install(|| apply(request, state, bytes))
     } else {

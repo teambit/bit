@@ -1,7 +1,41 @@
-use super::encode;
+use super::{compress, encode};
 use flate2::read::ZlibDecoder;
 use serde_json::Value;
 use std::{io::Read, process::Command};
+
+#[test]
+fn parallel_compression_preserves_order_and_serial_bytes_in_shared_pools() {
+    let inputs: Vec<_> = (0_u32..32)
+        .map(|index| {
+            let bytes = index
+                .to_be_bytes()
+                .repeat((index as usize + 1) * 256);
+            ("Source".to_owned(), format!("{index:040x}"), bytes)
+        })
+        .collect();
+    let bytes = inputs
+        .iter()
+        .map(|(_, _, body)| body.len())
+        .sum();
+    let expected: Vec<_> = inputs
+        .iter()
+        .map(|(kind, hash, body)| encode(kind.clone(), hash.clone(), body).unwrap())
+        .collect();
+    for threads in [1, 2, 4] {
+        let pool = rayon::ThreadPoolBuilder::new()
+            .num_threads(threads)
+            .build()
+            .unwrap();
+        let actual = pool.install(|| compress(inputs.clone(), bytes)).unwrap();
+        assert_eq!(actual.len(), expected.len());
+        for (actual, expected) in actual.iter().zip(&expected) {
+            assert_eq!(actual.hash, expected.hash);
+            assert_eq!(actual.kind, expected.kind);
+            assert_eq!(actual.inflated_size, expected.inflated_size);
+            assert_eq!(actual.compressed, expected.compressed);
+        }
+    }
+}
 
 #[test]
 fn seeded_invalid_utf8_source_headers_match_node_buffer_decoding() {

@@ -1,4 +1,5 @@
 use flate2::{Compression, write::ZlibEncoder};
+use rayon::prelude::*;
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{
@@ -20,10 +21,9 @@ pub(super) struct Prepared {
 
 pub(super) fn prepare(objects: Vec<wire::Object>, pretty: bool) -> io::Result<Vec<Prepared>> {
     let mut total = 0;
-    let mut compressed = 0;
     let mut input_compressed = 0;
     let mut hashes = HashSet::new();
-    let mut output = Vec::new();
+    let mut inputs = Vec::with_capacity(objects.len());
     for object in objects {
         let body = body(&object, pretty, MAX_RAW - total, &mut input_compressed)?;
         total += body.len();
@@ -34,14 +34,39 @@ pub(super) fn prepare(objects: Vec<wire::Object>, pretty: bool) -> io::Result<Ve
         if !hashes.insert(hash.clone()) {
             return Err(invalid("duplicate snapshot hash"));
         }
-        let prepared = encode(object.kind, hash, &body)?;
-        compressed += prepared.compressed.len();
-        if compressed > MAX_RAW {
-            return Err(invalid("snapshot compressed budget"));
-        }
-        output.push(prepared);
+        inputs.push((object.kind, hash, body));
     }
-    Ok(output)
+    compress(inputs, total)
+}
+
+fn compress(inputs: Vec<(String, String, Vec<u8>)>, bytes: usize) -> io::Result<Vec<Prepared>> {
+    // Validate and bound all source reads before scheduling CPU work. Indexed collection
+    // preserves manifest order; persistence still acknowledges only an ordered prefix.
+    // Tiny transactions avoid worker scheduling, and the raw input stays within MAX_RAW.
+    let encode_input = |(kind, hash, body): (String, String, Vec<u8>)| encode(kind, hash, &body);
+    let results: Vec<_> = if inputs.len() > 1 && bytes >= 64 * 1024 {
+        inputs
+            .into_par_iter()
+            .map(encode_input)
+            .collect()
+    } else {
+        inputs
+            .into_iter()
+            .map(encode_input)
+            .collect()
+    };
+    let mut compressed = 0;
+    results
+        .into_iter()
+        .map(|result| {
+            let prepared = result?;
+            compressed += prepared.compressed.len();
+            if compressed > MAX_RAW {
+                return Err(invalid("snapshot compressed budget"));
+            }
+            Ok(prepared)
+        })
+        .collect()
 }
 
 fn body(

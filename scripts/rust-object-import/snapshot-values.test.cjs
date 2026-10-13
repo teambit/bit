@@ -120,3 +120,31 @@ test('compact values retain no-getter fallback and the existing resource limits'
   sparse[1] = false;
   assert.deepEqual(api.projectRustCompactSnapshotValue(sparse), [{ kind: 'undefined' }, false]);
 });
+
+test('descriptor traversal preserves sparse arrays, property order and ignored data properties', () => {
+  const input = Object.create(null);
+  input['10'] = 'ten';
+  input['2'] = 'two';
+  input.last = [undefined, , 'tail'];
+  Object.defineProperty(input, 'hidden', { value: 'ignored' });
+  Object.defineProperty(input.last, 'extra', { value: 'ignored' });
+  Object.defineProperty(input, '__proto__', { value: 'literal', enumerable: true });
+  assert.deepEqual(api.projectRustCompactSnapshotValue(input), {
+    kind: 'object',
+    value: [['2', 'two'], ['10', 'ten'], ['last', [{ kind: 'undefined' }, { kind: 'undefined' }, 'tail']], ['__proto__', 'literal']],
+  });
+});
+
+test('projection declines proxy traps, symbols, hidden accessors and late custom hooks without calling them', () => {
+  let calls = 0;
+  const trap = () => { calls++; throw new Error('must remain unread'); };
+  const proxy = new Proxy({}, { getPrototypeOf: trap, ownKeys: trap, getOwnPropertyDescriptor: trap });
+  const accessor = Object.defineProperty({ first: ['ordinary'] }, 'hidden', { get: trap });
+  const toJSON = Object.defineProperty([], 'toJSON', { get: trap });
+  const symbol = { [Symbol('private')]: true };
+  for (const value of [proxy, { nested: proxy }, accessor, toJSON, symbol]) {
+    assert.equal(api.projectRustSnapshotValue(value), undefined);
+    assert.equal(api.projectRustCompactSnapshotValue(value), undefined);
+  }
+  assert.equal(calls, 0);
+});

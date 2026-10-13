@@ -327,10 +327,11 @@ function observeWorkspaceTransport(child) {
                 )?.[1]
               : undefined;
           const files = field(operation.left, 'files');
-          for (const file of files?.value || []) {
+          for (const file of (Array.isArray(files) ? files : files?.value) || []) {
             const reference = field(file, 'file');
-            const value = reference?.kind === 'string' ? reference : field(reference, 'hash');
-            if (value?.kind === 'string')
+            const value = typeof reference === 'string' || reference?.kind === 'string' ? reference : field(reference, 'hash');
+            if (typeof value === 'string') metric.modelHashes.push(value);
+            else if (value?.kind === 'string')
               metric.modelHashes.push(
                 typeof value.value === 'string' ? value.value : String.fromCharCode(...value.value)
               );

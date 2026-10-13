@@ -41,7 +41,7 @@ fn workspace(source: &wire::Workspace, maximum: usize) -> io::Result<Vec<u8>> {
     if !metadata.is_file() || metadata.len() > maximum as u64 {
         return Err(invalid("snapshot workspace size/type"));
     }
-    let mut bytes = Vec::new();
+    let mut bytes = Vec::with_capacity(metadata.len() as usize);
     File::open(&source.path)?
         .take((maximum + 1) as u64)
         .read_to_end(&mut bytes)?;

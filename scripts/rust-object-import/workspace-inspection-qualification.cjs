@@ -5,6 +5,7 @@ const path = require('node:path');
 const os = require('node:os');
 const cp = require('node:child_process');
 const { createHash } = require('node:crypto');
+const { createRequire } = require('node:module');
 const { sourceIdentity } = require('./artifacts/contract.cjs');
 const { benchmarkGlobals } = require('../rust-dependency-analysis/command-workspace.cjs');
 const { pairedEntries, measuredCommand } = require('./merge-history-measurement.cjs');
@@ -33,6 +34,10 @@ async function runQualification(cli, helper, options = {}) {
   const marker = JSON.parse(await fs.readFile(path.join(cli, '.bit-object-import-build.json'), 'utf8'));
   const helperSha256 = digest(await fs.readFile(helper)),
     nativeSourceDigest = sourceIdentity(root);
+  const load = createRequire(path.join(cli, 'package.json'));
+  const discovery = load(path.join(path.dirname(load.resolve('@teambit/objects')), 'objects/rust-object-discovery.js'));
+  const addon = discovery.resolveRustWorkspaceAddon(helper);
+  const addonSha256 = addon ? digest(await fs.readFile(addon)) : undefined;
   const names = [
     'workspace-inspection-qualification.cjs',
     'workspace-inspection-fixture.cjs',
@@ -59,6 +64,7 @@ async function runQualification(cli, helper, options = {}) {
     for (const [name, hash] of Object.entries(bindings))
       assert.equal(digest(await fs.readFile(path.join(__dirname, name))), hash, `harness ${name}`);
     assert.equal(digest(await fs.readFile(helper)), helperSha256);
+    if (addon) assert.equal(digest(await fs.readFile(addon)), addonSha256);
     if (!options.canonicalSmoke) assert.equal(sourceIdentity(root), nativeSourceDigest);
   }
   await verify();
@@ -88,6 +94,9 @@ async function runQualification(cli, helper, options = {}) {
       'BIT_RUST_OBJECT_IMPORT_OPERATION',
       'BIT_IMPORT_TRACE',
       'BIT_IMPORT_TRACE_OWNER',
+      'BIT_IMPORT_TRACE_QUERY_ONLY',
+      'BIT_IMPORT_TRACE_PROTOCOL_ONLY',
+      'BIT_IMPORT_TRACE_WORKSPACE_ADDON',
     ])
       delete env[name];
     const traced = Boolean(operation && mode === 'native' && options.diagnostics !== false);
@@ -95,6 +104,8 @@ async function runQualification(cli, helper, options = {}) {
     const nodeArgs = ['--require', path.join(__dirname, 'workspace-inspection-determinism.cjs')];
     if (traced) {
       env.BIT_IMPORT_TRACE = trace;
+      env.BIT_IMPORT_TRACE_PROTOCOL_ONLY = '1';
+      if (addon) env.BIT_IMPORT_TRACE_WORKSPACE_ADDON = addon;
       nodeArgs.push('--require', path.join(__dirname, 'import-trace.cjs'));
     }
     nodeArgs.push(path.join(cli, 'bin/bit.js'), ...args);
@@ -108,7 +119,7 @@ async function runQualification(cli, helper, options = {}) {
           '-s',
           '32',
           '-e',
-          'trace=execve,clone,clone3,read,pread64',
+          'trace=execve,clone,clone3,prctl,read,pread64',
           '-o',
           systemTrace,
           process.execPath,
@@ -285,6 +296,8 @@ async function runQualification(cli, helper, options = {}) {
       );
     }
     for (const entry of diagnostics) {
+      assert.equal(entry.trace.frameworkObservation, 'disabled', 'observation must preserve public class guards');
+      if (addon) assert.ok(entry.trace.workspaceFrames.every(frame => frame.backend === 'addon'), 'packaged inspection must use the addon');
       const metrics = entry.trace.mergeState;
       const operationHelpers = new Set(kinds.flatMap((kind) => metrics[kind].helperIds));
       assert.equal(
@@ -317,7 +330,8 @@ async function runQualification(cli, helper, options = {}) {
         assert.ok(metrics.inspectionBegin.snapshotBytes > 0);
         if (process.platform === 'linux') {
           assert.ok(entry.bodyReads, 'Linux body-read evidence is mandatory');
-          assert.equal(entry.bodyReads.bytes, 0, `${entry.operation}: main Node must not read Source files/spools`);
+          assert.equal(entry.bodyReads.bytes, 0, `${entry.operation}: JavaScript/libuv must not read Source files/spools`);
+          if (addon) assert.ok(entry.bodyReads.rustBytes > 0, 'named native workers must account for captured Source reads');
         }
       }
     }
@@ -348,6 +362,7 @@ async function runQualification(cli, helper, options = {}) {
     temporary,
     cliProvenance: marker,
     helperSha256,
+    addonSha256,
     nativeSourceDigest,
     bindings,
     diagnostics,
@@ -362,7 +377,7 @@ async function runQualification(cli, helper, options = {}) {
         }))
       : runs,
     bodyReadContract:
-      'Mini-status reads zero Source files/spools in the main Node process; full status framework loading and public diff content remain reported separately.',
+      'Mini-status reads zero Source files/spools on JavaScript/libuv threads; named Rust workers, full status framework loading and public diff content are reported separately.',
     indexComparison:
       'All fields/duplicates compared; component/lane index row insertion order only sorted. Raw bytes retained.',
   };

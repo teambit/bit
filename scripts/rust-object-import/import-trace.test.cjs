@@ -426,3 +426,22 @@ test('merge protocol diagnostics keep decoder reads distinct from manifests and 
   assert.equal(metrics.mergeState.mergeMaterialize.dataFailed, 1);
   assert.deepEqual(metrics.mergeState.mergePrepare.helperIds, [1]);
 });
+
+test('inspection diagnostics retain model hashes in compact and tagged snapshot encodings', (t) => {
+  const files = fixture(t), helper = path.join(files.directory, 'inspection-helper.cjs');
+  fs.writeFileSync(helper, `process.stdin.once('data', () => {process.stdout.write(JSON.stringify({version:1,id:1,completed:1,skipped:[],failed:false,data:{modified:false}})+'\\n');process.stdin.resume();});`);
+  const hash = 'c'.repeat(40), units = text => [...text].map(c => c.charCodeAt(0));
+  const object = (name, value, tagged = false) => ({kind:'object', value:[[tagged ? units(name) : name, value]]});
+  const tagged = object('files', {kind:'array', value:[object('file', {kind:'string',value:units(hash)},true)]},true);
+  for (const left of [tagged, object('files',[object('file',hash)]), object('files',[object('file',object('hash',hash))])]) {
+    const metrics = execute(files, `
+      const child=require('node:child_process').spawn(process.execPath,[${JSON.stringify(helper)}]);
+      const body=Buffer.from(JSON.stringify(${JSON.stringify({kind:'inspectionCompare',left})}));
+      const frame=Buffer.alloc(12+body.length);frame.write('BMT1');frame.writeUInt32BE(1,4);frame.writeUInt32BE(body.length,8);body.copy(frame,12);
+      child.stdout.once('data',()=>child.stdin.end());child.stdin.write(frame);
+    `, {BIT_IMPORT_TRACE_PROTOCOL_ONLY:'1'});
+    assert.equal(metrics.frameworkObservation,'disabled');
+    assert.equal(metrics.mergeState.inspectionCompare.completed,1);
+    assert.deepEqual(metrics.mergeState.inspectionCompare.modelHashes,[hash]);
+  }
+});

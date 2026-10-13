@@ -121,7 +121,7 @@ fn read_raw(path: &Path) -> Option<Vec<u8>> {
     if !metadata.is_file() || metadata.len() > MAX_RAW_BYTES {
         return None;
     }
-    let mut output = Vec::new();
+    let mut output = Vec::with_capacity(metadata.len() as usize);
     file.take(MAX_RAW_BYTES + 1)
         .read_to_end(&mut output)
         .ok()?;
@@ -135,7 +135,7 @@ pub(crate) fn classify(path: &Path) -> Option<Header> {
         return None;
     }
     let mtime_ms = modified_milliseconds(metadata.modified().ok()?)?;
-    let mut compressed = Vec::new();
+    let mut compressed = Vec::with_capacity(metadata.len().min(HEADER_INPUT_BYTES) as usize);
     File::open(path)
         .ok()?
         .take(HEADER_INPUT_BYTES)
