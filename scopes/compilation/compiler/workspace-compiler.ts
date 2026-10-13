@@ -26,7 +26,7 @@ import type { PathOsBasedAbsolute } from '@teambit/toolbox.path.path';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import type { UiMain, PreStartOpts } from '@teambit/ui';
 import { readRootComponentsDir } from '@teambit/workspace.root-components';
-import { compact, groupBy, uniq } from 'lodash';
+import { compact, groupBy, uniq, uniqBy } from 'lodash';
 import type { CompIdGraph } from '@teambit/graph';
 import { CompilerAspect } from './compiler.aspect';
 import { CompilerErrorEvent } from './events';
@@ -573,27 +573,28 @@ export class WorkspaceCompiler {
   }
 
   /**
-   * an env instance keeps absolute paths into the package dir it was loaded from, such as its tsconfig, which is
-   * usually resolved relative to its "dist". when the package manager re-creates that dir mid-install (sources
-   * only, no "dist"), a compiler created from that instance points to missing files. get-tsconfig, for example,
-   * then searches up the tree and picks whatever tsconfig.json it finds, and fails when that one is invalid from
-   * inside node_modules. compiling such a workspace env writes its "dist" back into its package dirs, so the
-   * paths the instance holds exist again. its own env is checked the same way (recursively) when it's compiled.
+   * an env instance keeps absolute paths into the package dir it was loaded from, such as its tsconfig in "dist".
+   * when the package manager re-creates that dir (sources only, no "dist"), a compiler created from that instance
+   * reads missing files, and get-tsconfig falls back to whatever tsconfig.json it finds up the tree. compiling the
+   * workspace env writes its "dist" back, so the paths are valid again. this runs on every compile, not only in
+   * install, because a long-lived process (e.g. "bit server") can hold such an instance after another process installs.
    */
   private async restoreEnvsWithMissingFiles(components: Component[], options: CompileOptions) {
-    const envIds = uniq(
-      components
-        .map((component) => this.envs.getOrCalculateEnv(component))
-        .filter((envDef) => {
-          const pluginPath = envDef.env?.__resolvedPath;
-          return pluginPath && !fs.existsSync(pluginPath);
-        })
-        .map((envDef) => envDef.id)
-    ).filter(
-      (envId) =>
-        !this.envsBeingRestored.has(envId) &&
-        this.workspace.hasId(ComponentID.fromString(envId), { ignoreVersion: true })
+    const envDefs = uniqBy(
+      components.map((component) => this.envs.getOrCalculateEnv(component)),
+      (envDef) => envDef.id
     );
+    const envIds = envDefs
+      .filter((envDef) => {
+        const pluginPath = envDef.env?.__resolvedPath;
+        return (
+          pluginPath &&
+          !fs.existsSync(pluginPath) &&
+          !this.envsBeingRestored.has(envDef.id) &&
+          this.workspace.hasId(ComponentID.fromString(envDef.id), { ignoreVersion: true })
+        );
+      })
+      .map((envDef) => envDef.id);
     if (!envIds.length) return;
     this.logger.debug(`restoreEnvsWithMissingFiles: compiling ${envIds.join(', ')} before using them`);
     envIds.forEach((envId) => this.envsBeingRestored.add(envId));
