@@ -961,9 +961,9 @@ export class IsolatorMain {
         const dependenciesGraph = opts.useDependenciesGraph
           ? await legacyScope?.getDependenciesGraphByComponentIds(capsuleList.getAllComponentIDs())
           : undefined;
-        const capsulesWithoutDependenciesGraph = opts.useDependenciesGraph
+        const { capsulesWithoutDependenciesGraph, componentDependenciesGraphs } = opts.useDependenciesGraph
           ? await this.loadDependenciesGraphs(capsuleList, legacyScope, dependenciesGraph)
-          : CapsuleList.fromArray([]);
+          : { capsulesWithoutDependenciesGraph: CapsuleList.fromArray([]), componentDependenciesGraphs: undefined };
         const linkedDependencies = await this.linkInCapsules(capsuleList, capsulesWithPackagesData);
         linkedDependencies[capsulesDir] = rootLinks;
         await this.installInCapsules(capsulesDir, capsuleList, installOptions, {
@@ -971,6 +971,7 @@ export class IsolatorMain {
           linkedDependencies,
           packageManager: opts.packageManager,
           dependenciesGraph,
+          componentDependenciesGraphs,
         });
         if (capsulesWithoutDependenciesGraph.length) {
           // If the graph was not present in the model, use the just-created lockfile inside the capsules
@@ -1017,34 +1018,40 @@ export class IsolatorMain {
   /* eslint-enable complexity */
 
   /**
-   * Load each capsule component's own dependencies graph onto it, for its
-   * capsule manifest to declare the versions the graph resolved, and return the
-   * capsules whose component has no graph. The graphs of the component's
-   * extensions, which its own graph leaves out, are attached to its graph and
-   * to `installGraph`, the merged graph the capsules' lockfile is restored
-   * from, so that the env a capsule installs restores too.
+   * Load each capsule component's own dependencies graph, by component id,
+   * for its capsule manifest to declare the versions the graph resolved, and
+   * find the capsules whose component has no graph. The graphs of the
+   * component's extensions, which its own graph leaves out, are attached to
+   * its graph and to `installGraph`, the merged graph the capsules' lockfile
+   * is restored from, so that the env a capsule installs restores too.
+   *
+   * The graphs are copies, kept off the components: the scope caches a graph
+   * on its Version object, and a component's graph is persisted again when a
+   * build enriches its Version, neither of which should see the attachments.
    */
   private async loadDependenciesGraphs(
     capsuleList: CapsuleList,
     legacyScope?: Scope,
     installGraph?: DependenciesGraph
-  ): Promise<CapsuleList> {
-    if (!legacyScope) return capsuleList;
+  ): Promise<{
+    capsulesWithoutDependenciesGraph: CapsuleList;
+    componentDependenciesGraphs?: Map<string, DependenciesGraph>;
+  }> {
+    if (!legacyScope) return { capsulesWithoutDependenciesGraph: capsuleList };
+    const componentDependenciesGraphs = new Map<string, DependenciesGraph>();
     const capsules = await pMap(
       capsuleList,
       async (capsule) => {
         const stored = await legacyScope.getDependenciesGraphByComponentId(capsule.component.id);
         if (stored == null || stored.isEmpty()) return capsule;
-        // The scope caches the graph on the Version object, so a copy is what
-        // gets the extensions attached.
         const dependenciesGraph = DependenciesGraph.deserialize(stored.serialize())!;
         await this.attachExtensionGraphs(capsule.component, compact([dependenciesGraph, installGraph]), legacyScope);
-        capsule.component.state._consumer.dependenciesGraph = dependenciesGraph;
+        componentDependenciesGraphs.set(capsule.component.id.toString(), dependenciesGraph);
         return undefined;
       },
       { concurrency: concurrentComponentsLimit() }
     );
-    return CapsuleList.fromArray(compact(capsules));
+    return { capsulesWithoutDependenciesGraph: CapsuleList.fromArray(compact(capsules)), componentDependenciesGraphs };
   }
 
   private async attachExtensionGraphs(component: Component, graphs: DependenciesGraph[], legacyScope: Scope) {
@@ -1141,6 +1148,7 @@ export class IsolatorMain {
       packageManager?: string;
       nodeLinker?: NodeLinker;
       dependenciesGraph?: DependenciesGraph;
+      componentDependenciesGraphs?: Map<string, DependenciesGraph>;
     }
   ) {
     const installer = this.dependencyResolver.getInstaller({
@@ -1163,6 +1171,7 @@ export class IsolatorMain {
       excludeExtensionsDependencies: true,
       dedupeInjectedDeps: true,
       dependenciesGraph: opts.dependenciesGraph,
+      componentDependenciesGraphs: opts.componentDependenciesGraphs,
     };
 
     const packageManagerInstallOptions: PackageManagerInstallOptions = {

@@ -309,6 +309,25 @@ describe('DependenciesGraph.attachDependencyGraph', () => {
     expect(graph.findRootEdge()?.neighbours[1]).to.include({ name: '@org/my-env', lifecycle: 'dev' });
   });
 
+  it('claims the resolution inputs only when both graphs agree on them, like a merge', () => {
+    const graph = createGraph([rootEdge([{ id: 'foo@1.0.0', name: 'foo', specifier: '1.0.0' }])], ['foo@1.0.0']);
+    graph.overrides = { 'react@19': '19.2.7' };
+    graph.lockfileSettings = { autoInstallPeers: true, dedupePeers: true } as any;
+    const sameContext = envGraph();
+    sameContext.overrides = { 'react@19': '19.2.7' };
+    sameContext.lockfileSettings = { autoInstallPeers: true, dedupePeers: true } as any;
+
+    graph.attachDependencyGraph(envPkgId, sameContext);
+    expect(graph.overrides).to.eql({ 'react@19': '19.2.7' });
+    expect(graph.lockfileSettings).to.eql({ autoInstallPeers: true, dedupePeers: true });
+
+    const otherContext = envGraph();
+    otherContext.overrides = { 'react@19': '19.2.8' };
+    graph.attachDependencyGraph('@org/other-env@1.0.0', otherContext);
+    expect(graph.overrides).to.equal(undefined);
+    expect(graph.lockfileSettings).to.equal(undefined);
+  });
+
   it('leaves a graph that already holds the node alone', () => {
     const graph = createGraph([rootEdge([]), edge(envPkgId, [{ id: 'foo@1.0.0' }])], ['foo@1.0.0', envPkgId]);
 

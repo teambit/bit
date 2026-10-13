@@ -52,6 +52,12 @@ export type InstallOptions = {
   excludeExtensionsDependencies?: boolean;
   dedupeInjectedDeps?: boolean;
   dependenciesGraph?: DependenciesGraph;
+  /**
+   * Each component's own dependencies graph, by component id, for its
+   * manifest to declare the versions the graph resolved. Capsule installs
+   * pass it; see `applyDependenciesGraph`.
+   */
+  componentDependenciesGraphs?: Map<string, DependenciesGraph>;
 };
 
 export type GetComponentManifestsOptions = {
@@ -63,7 +69,7 @@ export type GetComponentManifestsOptions = {
   includeAllEnvPeers?: boolean;
   hasRootComponents?: boolean;
   excludeExtensionsDependencies?: boolean;
-  useDependenciesGraph?: boolean;
+  componentDependenciesGraphs?: Map<string, DependenciesGraph>;
 } & Pick<
   PackageManagerInstallOptions,
   | 'dedupe'
@@ -279,7 +285,7 @@ export class DependencyInstaller {
       includeAllEnvPeers: packageManagerOptions.rootComponentsForCapsules,
       // A capsule declares what the component's graph resolved, so that the
       // lockfile restored from the graph satisfies it.
-      useDependenciesGraph: packageManagerOptions.rootComponentsForCapsules,
+      componentDependenciesGraphs: options.componentDependenciesGraphs,
       excludeExtensionsDependencies: options.excludeExtensionsDependencies,
     });
     return this.installComponents(
@@ -485,7 +491,7 @@ export class DependencyInstaller {
     includeAllEnvPeers,
     hasRootComponents,
     excludeExtensionsDependencies,
-    useDependenciesGraph,
+    componentDependenciesGraphs,
   }: GetComponentManifestsOptions): Promise<{
     manifests: Record<string, ProjectManifest>;
     peerOverrides: Record<string, string>;
@@ -500,7 +506,7 @@ export class DependencyInstaller {
       includeAllEnvPeers,
       hasRootComponents,
       excludeExtensionsDependencies,
-      useDependenciesGraph,
+      dependenciesGraphs: componentDependenciesGraphs,
     };
     const workspaceManifest = await this.dependencyResolver.getWorkspaceManifest(
       undefined,

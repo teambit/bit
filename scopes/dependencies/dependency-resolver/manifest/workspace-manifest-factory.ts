@@ -22,6 +22,7 @@ import type { DedupedDependencies } from './deduping';
 import { dedupeDependencies, getEmptyDedupedDependencies } from './deduping';
 import type { ManifestToJsonOptions, ManifestDependenciesObject, DepObjectValue } from './manifest';
 import { updateDependencyVersion } from './update-dependency-version';
+import type { DependenciesGraph } from '@teambit/objects';
 import { applyDependenciesGraph } from './dependencies-from-graph';
 import { WorkspaceManifest } from './workspace-manifest';
 
@@ -43,10 +44,11 @@ export type CreateFromComponentsOptions = {
   hasRootComponents?: boolean;
   excludeExtensionsDependencies?: boolean;
   /**
-   * Declare each component's dependencies at the versions its dependencies
-   * graph resolved them to, when it has one. See `applyDependenciesGraph`.
+   * Each component's own dependencies graph, by component id. A component
+   * with one declares its dependencies at the versions the graph resolved
+   * them to. See `applyDependenciesGraph`.
    */
-  useDependenciesGraph?: boolean;
+  dependenciesGraphs?: Map<string, DependenciesGraph>;
 };
 
 const DEFAULT_CREATE_OPTIONS: CreateFromComponentsOptions = {
@@ -85,7 +87,7 @@ export class WorkspaceManifestFactory {
       referenceLocalPackages: optsWithDefaults.referenceLocalPackages && hasRootComponents,
       includeAllEnvPeers: optsWithDefaults.includeAllEnvPeers,
       rootDependencies: hasRootComponents ? rootPolicy.toManifest().dependencies : undefined,
-      useDependenciesGraph: optsWithDefaults.useDependenciesGraph,
+      dependenciesGraphs: optsWithDefaults.dependenciesGraphs,
     });
     let dedupedDependencies = getEmptyDedupedDependencies();
     if (hasRootComponents) {
@@ -398,7 +400,7 @@ export class WorkspaceManifestFactory {
       includeAllEnvPeers,
       rootDependencies,
       rootPolicy,
-      useDependenciesGraph,
+      dependenciesGraphs,
     }: {
       dependencyFilterFn?: DepsFilterFn;
       filterComponentsFromManifests?: boolean;
@@ -407,7 +409,7 @@ export class WorkspaceManifestFactory {
       includeAllEnvPeers?: boolean;
       rootDependencies?: Record<string, string>;
       rootPolicy?: WorkspacePolicy;
-      useDependenciesGraph?: boolean;
+      dependenciesGraphs?: Map<string, DependenciesGraph>;
     }
   ): Promise<ComponentDependenciesMap> {
     const packageNames = components.map((component) => this.dependencyResolver.getPackageName(component));
@@ -513,7 +515,7 @@ export class WorkspaceManifestFactory {
       // restored from the same graph, so its install needs no resolution. The
       // components installed alongside are linked, and the core packages the
       // install removes stay out, whatever the graph holds for them.
-      const dependenciesGraph = useDependenciesGraph ? component.state._consumer.dependenciesGraph : undefined;
+      const dependenciesGraph = dependenciesGraphs?.get(component.id.toString());
       if (dependenciesGraph && !dependenciesGraph.isEmpty()) {
         const applied = applyDependenciesGraph({
           graph: dependenciesGraph,

@@ -182,6 +182,12 @@ export class DependenciesGraph {
   attachDependencyGraph(pkgId: string, graph: DependenciesGraph, attributes: Partial<PackageAttributes> = {}): void {
     const edgeIds = new Set(this.edges.map(({ id }) => id));
     if (edgeIds.has(pkgId) || this.packages.has(pkgId)) return;
+    // The attached resolutions join this graph's, so the resolution inputs
+    // (hooks, settings, overrides) can only be claimed when both agree, as a
+    // merge claims them.
+    this.pnpmfileChecksum = mergePnpmfileChecksums(this, graph);
+    this.lockfileSettings = mergeLockfileSettings(this, graph);
+    this.overrides = mergeOverrides(this, graph);
     const neighbours = (graph.findRootEdge()?.neighbours ?? [])
       .filter((neighbour) => neighbour.lifecycle !== 'dev')
       .map(({ id, optional }) => (optional ? { id, optional } : { id }));
