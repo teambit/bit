@@ -3,6 +3,7 @@
 mod calls;
 mod classification;
 mod embedded;
+mod exports;
 mod limits;
 mod protocol;
 mod scanning;

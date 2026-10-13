@@ -3,7 +3,7 @@
  */
 import fs from 'fs';
 import debugFactory from 'debug';
-import cabinet from '../filing-cabinet';
+import cabinet, { canUseRustCommonJS, isRustCommonJSDependency, registerRustCommonJSPath } from '../filing-cabinet';
 import precinct, { isRustEligible } from '../precinct';
 import Config from './Config';
 
@@ -91,6 +91,19 @@ module.exports._getDependencies = async function (config) {
   const pathMapDependencies = [];
   const pathMapFile = { file: config.filename };
 
+  let nativeResolved: Map<string, string> | undefined;
+  if (config.rustScannerSession && canUseRustCommonJS(config.filename, config)) {
+    const candidates = dependencies.filter(
+      (dependency) => !isHttp(dependency) && isRustCommonJSDependency(config.filename, dependency)
+    );
+    const resolved = await config.rustScannerSession.resolveDependencies?.(config.filename, candidates);
+    if (resolved && canUseRustCommonJS(config.filename, config)) {
+      nativeResolved = new Map();
+      resolved.forEach((result, index) => {
+        if (result) nativeResolved!.set(candidates[index], result);
+      });
+    }
+  }
   dependencies.forEach((dependency) => processDependency(dependency));
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   pathMapFile.dependencies = pathMapDependencies;
@@ -120,7 +133,9 @@ module.exports._getDependencies = async function (config) {
     }
     let result;
     try {
-      result = cabinet(cabinetParams);
+      result = nativeResolved?.get(dependency);
+      if (result) registerRustCommonJSPath(config.filename);
+      else result = cabinet(cabinetParams);
     } catch (err: any) {
       debug(`error resolving dependencies: ${err.message}`);
       debug(err.stack);

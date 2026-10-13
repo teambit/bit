@@ -67,6 +67,8 @@ const files = [
   'scopes/dependencies/dependencies/files-dependency-builder/rust-scanner/workspace-transport.ts',
   'scopes/dependencies/dependencies/files-dependency-builder/generate-tree-madge.ts',
   'scopes/dependencies/dependencies/files-dependency-builder/precinct/index.ts',
+  'scopes/dependencies/dependencies/files-dependency-builder/dependency-tree/index.ts',
+  'scopes/dependencies/dependencies/files-dependency-builder/filing-cabinet/index.ts',
 
   'scopes/harmony/bit/run-bit.ts',
   'scopes/harmony/bit/bootstrap.ts',
@@ -382,6 +384,8 @@ const modules = [
   'dependencies/dist/files-dependency-builder/rust-scanner/workspace-transport.js',
   'dependencies/dist/files-dependency-builder/generate-tree-madge.js',
   'dependencies/dist/files-dependency-builder/precinct/index.js',
+  'dependencies/dist/files-dependency-builder/dependency-tree/index.js',
+  'dependencies/dist/files-dependency-builder/filing-cabinet/index.js',
 
   'bit/dist/run-bit.js',
   'bit/dist/bootstrap.js',

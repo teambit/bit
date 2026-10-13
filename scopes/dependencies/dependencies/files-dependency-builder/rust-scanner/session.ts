@@ -131,6 +131,44 @@ export class RustDependencyScannerSession {
     return !this.failure && result ? { ...JSON.parse(JSON.stringify(result)), path: logicalPath } : undefined;
   }
 
+  async resolveDependencies(filename: string, dependencies: string[]): Promise<Array<string | null> | undefined> {
+    if (
+      !this.options.workspaceAddon ||
+      dependencies.length > 4096 ||
+      !dependencies.length ||
+      this.cache.get(path.resolve(this.cwd, filename))?.status !== 'ok'
+    )
+      return undefined;
+    const bytes =
+      Buffer.byteLength(filename) + dependencies.reduce((sum, name) => sum + Buffer.byteLength(name) + 16, 0);
+    if (bytes > this.limits.requestBytes || !this.reserveQueue(bytes)) return undefined;
+    let result: Array<string | null> | undefined;
+    this.queue = this.queue
+      .then(async () => {
+        if (this.failure) return;
+        this.start();
+        if (!this.workspace) return;
+        const timer = setTimeout(() => this.fail('Rust resolution response timed out'), this.limits.timeoutMs);
+        try {
+          result = await this.workspace.resolve(
+            path.resolve(this.cwd, filename),
+            dependencies,
+            ++this.sequence,
+            this.limits
+          );
+        } finally {
+          clearTimeout(timer);
+        }
+      })
+      .catch((error) => this.fail(String(error)))
+      .finally(() => {
+        this.queuedBytes -= bytes;
+        this.queuedRequests -= 1;
+      });
+    await this.queue;
+    return this.failure ? undefined : result;
+  }
+
   private reserveQueue(bytes: number): boolean {
     if (this.failure) return false;
     if (this.queuedBytes + bytes > this.limits.queuedBytes || this.queuedRequests >= this.limits.pendingRequests)

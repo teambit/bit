@@ -53,9 +53,39 @@ limits requests to 4 MiB; workers share an atomic 8 MiB output budget while work
 whole request, without barriers between worker-sized batches. Unsupported syntax, parser options and custom
 detectors retain canonical extraction. Built-in Node parser packages load only
 when their detective is invoked; successful native extraction avoids those
-precinct imports. Dependency resolution and custom detector orchestration still
-run in Node.
+precinct imports. Custom detector orchestration remains in Node.
 
 `embedded-session.test.cjs` exercises actual addon results, graph parity, custom
 detector precedence, cache invalidation, cancellation and transport failure.
 Whole-command benchmarks remain the performance acceptance criterion.
+
+
+## Native default dependency resolution
+
+The embedded graph lease also handles `dependencyResolve`: one file's dependency
+paths are resolved in parallel on the shared Rayon pool. Rust implements the
+canonical CommonJS extension order, directory/package-main lookup, ancestor
+`node_modules` search and logical symlink paths. It rereads source classification
+and package files for each request, without carrying resolution caches between
+graphs. Assignment-style CommonJS exports now use the legacy classifier's exact
+AST shapes, including its distinction between computed identifiers and strings.
+
+The adapter uses this path only for default JS-family lookups and bare imports
+from TS-family files with a successful native scan. Relative TypeScript imports,
+registered lookups, detector hooks and resolver configurations retain their
+canonical lookup. Null results and declined requests also use canonical lookup.
+Node's module-search-path side effect is preserved for successful native results.
+Lookup implementations load lazily, so eligible graphs avoid loading the Node
+parser and TypeScript resolver through filing-cabinet.
+
+Requests retain session queue, cancellation, timeout and byte limits. Native
+resolution additionally bounds dependencies (4096), filesystem probes (16384),
+package nesting (32), individual package reads (1 MiB) and aggregate package reads
+(8 MiB). Unsupported spellings, special files and JSON that cannot be faithfully
+parsed decline to the existing lookup. The adapter does not change missing-import
+reporting, path maps, traversal order or detector precedence.
+
+`resolution.test.cjs` compares actual helper paths with the installed canonical
+resolver; `resolution-integration.test.cjs` verifies source and compiled graph
+integration, fresh package/source reads, custom lookup precedence and response
+limits. Whole-command performance remains a separate acceptance requirement.

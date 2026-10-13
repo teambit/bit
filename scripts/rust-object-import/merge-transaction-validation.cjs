@@ -1,4 +1,6 @@
 const assert = require('node:assert/strict');
+const graphFrame = (frame) =>
+  frame.magic === 'BWS1' && ['dependencyScan', 'dependencyResolve'].includes(frame.kind);
 
 // Healthy command acceptance requires the new transaction and body engines independently.
 // Genuine error prefixes are added only from retained command traces; fallback-only is never sufficient.
@@ -26,7 +28,7 @@ function validateMergeTransactionDiagnostics(trace, scenario, options = {}) {
       frames
         .slice(first, last + 1)
         // Dependency parsing owns a graph cache on the shared pool, not transaction state.
-        .filter((frame) => workspace.has(frame.magic) && !(frame.magic === 'BWS1' && frame.kind === 'dependencyScan'))
+        .filter((frame) => workspace.has(frame.magic) && !graphFrame(frame))
         .map((frame) => frame.helperId)
     ).size,
     1,
@@ -114,8 +116,8 @@ function validateMergeTransactionDiagnostics(trace, scenario, options = {}) {
       else assert.ok(accepted(kind), `${scenario.name}: missing completed ${kind} prefix`);
     }
     if (!resultLoss) assert.ok(metrics.mergeMaterialize.stepsCompleted > 0);
-    const terminal = frames.at(-1);
-    assert.equal(terminal.kind, scenario.fault.kind, 'no helper requests after discarded receipt');
+    const terminal = frames.filter((frame) => !graphFrame(frame)).at(-1);
+    assert.equal(terminal.kind, scenario.fault.kind, 'no transaction or workspace effects after discarded receipt');
     if (scenario.fault.phase) assert.equal(terminal.phase, scenario.fault.phase);
     return;
   }

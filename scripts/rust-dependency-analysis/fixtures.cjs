@@ -53,15 +53,15 @@ module.exports = [
 const fs = require('node:fs');
 const path = require('node:path');
 const precinctDirectory = path.resolve(__dirname, '../../scopes/dependencies/dependencies/files-dependency-builder/fixtures/precinct');
-const classificationFallback = new Set(['Gruntfile.js', 'amd.js', 'cjsExportLazy.js', 'exampleAST.js']);
+const classificationFallback = new Set(['amd.js']);
 for (const filename of fs.readdirSync(precinctDirectory).filter((filename) => filename.endsWith('.js')).sort()) {
   const source = fs.readFileSync(path.join(precinctDirectory, filename), 'utf8');
   module.exports.push({ name: `precinct-original-${filename}`, path: filename, source,
-    ...(classificationFallback.has(filename) && !source.startsWith('// @bit-no-check') ? { expectFallback: 'Assignment-based or AMD classification retains legacy dispatch' } : {}),
+    ...(classificationFallback.has(filename) && !source.startsWith('// @bit-no-check') ? { expectFallback: 'AMD classification retains legacy dispatch' } : {}),
   });
   if (source.startsWith('// @bit-no-check')) {
     module.exports.push({ name: `precinct-enabled-${filename}`, path: filename, source: source.replace(/^\/\/ @bit-no-check\r?\n/, ''),
-      ...(classificationFallback.has(filename) ? { expectFallback: 'Assignment-based or AMD classification retains legacy dispatch' } : {}),
+      ...(classificationFallback.has(filename) ? { expectFallback: 'AMD classification retains legacy dispatch' } : {}),
     });
   }
 }
@@ -94,4 +94,16 @@ for (const name of ['constructor', '__proto__', 'toString']) {
       source: `import { ${name} } from 'pkg'; export { ${name} };`,
     });
   }
+}
+
+for (const [index, assignment] of [
+  'module.exports = {}', 'module[exports] = {}', 'module["exports"] = {}',
+  'module.exports.foo = {}', 'module.exports[foo] = {}', 'module[exports].foo = {}',
+  'module["exports"].foo = {}', 'module.exports.a.b = {}', 'exports.foo = {}',
+  'exports["foo"] = {}', 'exports = {}', 'exports += 1', 'exports++',
+  'foo = {}', 'foo = exports = {}', '({ exports } = {})',
+  'class X { #x; f() { exports.#x = {}; } }',
+].entries()) {
+  module.exports.push({ name: `assignment-classification-${index}`, path: 'assignment.js',
+    source: `${assignment}; require.resolve('./resolved');` });
 }

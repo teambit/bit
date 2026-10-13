@@ -33,8 +33,13 @@ impl<'ast> Visit<'ast> for Classifier {
                 Classification::None
             }
             AstKind::CallExpression(call) => classify_call(&call.callee, &call.arguments),
-            // Assignment-based exports need exact legacy AST matching before native dispatch.
-            AstKind::AssignmentExpression(_) => Classification::Fallback,
+            AstKind::AssignmentExpression(assignment) => {
+                if crate::exports::is_exports(&assignment.left) {
+                    Classification::Supported
+                } else {
+                    Classification::None
+                }
+            }
             _ => Classification::None,
         };
     }

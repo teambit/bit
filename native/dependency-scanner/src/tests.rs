@@ -84,6 +84,7 @@ fn javascript_classification_matches_first_recognized_module_node() {
         assert_eq!(result.dependencies.len(), 0);
     }
     for source in [
+        "module.exports = {}; require.resolve('./resolved');",
         "import './marker'; require.resolve('./resolved');",
         "require.resolve('./resolved'); import './marker';",
         "require(variable); import.meta.resolve('./resolved');",
@@ -93,11 +94,9 @@ fn javascript_classification_matches_first_recognized_module_node() {
         assert_eq!(result.status, "ok");
         assert!(result.dependencies.contains_key("./resolved"));
     }
-    for source in [
-        "module.exports = {}; require.resolve('./resolved');",
-        "require(['./amd'], function () {});",
-        "define([], function () {}); import './marker';",
-    ] {
+    for source in
+        ["require(['./amd'], function () {});", "define([], function () {}); import './marker';"]
+    {
         assert_eq!(scan(&fixture("js", source), false).status, "unsupported");
     }
     let result = scan(&fixture("ts", "require.resolve('./resolved'); import('./dynamic');"), false);

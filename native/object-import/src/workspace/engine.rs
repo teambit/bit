@@ -3,6 +3,7 @@ pub(crate) mod diff;
 pub(crate) mod inventory;
 mod read;
 mod read_raw;
+mod resolve_dependencies;
 mod scan;
 mod status;
 
@@ -28,6 +29,7 @@ const MAX_FILES: usize = 4096;
     deny_unknown_fields
 )]
 enum Request {
+    DependencyResolve(resolve_dependencies::Request),
     DependencyScan {
         request: Value,
     },
@@ -149,6 +151,7 @@ fn failure(id: u32) -> Response {
 }
 fn apply(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value)> {
     match request {
+        Request::DependencyResolve(request) => resolve_dependencies::resolve(&request, pool),
         Request::DependencyScan { request } => dependency_scan(&request, pool),
         Request::StatusPrepare(_)
         | Request::StatusScan(_)
