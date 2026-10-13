@@ -32,14 +32,32 @@ pub(super) fn run(
     record.repository.validate()?;
     proof::verify(&record.proofs)?;
     let mut output = json!({"token":record.token,"result":planned.result,"progress":record.repository.progress()});
-    if let Some(identities) = planned.merge.as_ref().and_then(merge_planning::Prepared::needs_snap)
-    {
-        output["needsSnap"] = json!(identities);
-    }
+    snap_receipt(&mut output, &planned)?;
     let count = planned.result["components"].as_array().map_or(0, Vec::len);
     record.planned = Some(PreparedPlan { plan: planned, bitmap, snap_bitmap: None });
     snapshots.command.record = Some(record);
     Ok((count, output))
+}
+
+fn snap_receipt(output: &mut Value, planned: &planning::Planned) -> io::Result<()> {
+    if let Some(identities) = planned.merge.as_ref().and_then(merge_planning::Prepared::needs_snap)
+    {
+        output["needsSnap"] = json!(identities);
+        output["dependencyCacheVersions"] = json!(
+            planned.materials
+                .iter()
+                .map(|material| {
+                    let identity = material.output["id"]
+                        .as_str()
+                        .and_then(|id| id.rsplit_once('@'))
+                        .ok_or_else(|| invalid("command dependency cache identity"))?
+                        .0;
+                    Ok(json!({"identity":identity,"version":material.version_name}))
+                })
+                .collect::<io::Result<Vec<_>>>()?
+        );
+    }
+    Ok(())
 }
 
 fn validate_versions(record: &mut Record) -> io::Result<()> {

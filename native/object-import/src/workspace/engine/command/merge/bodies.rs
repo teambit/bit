@@ -2,6 +2,7 @@ use super::{
     super::{capture::Captured, input::Options},
     State, invalid,
 };
+use crate::workspace::engine::status_models::harmony;
 use serde_json::{Value, json};
 use std::{
     fs, io,
@@ -33,38 +34,11 @@ pub(in crate::workspace::engine::command) struct Prepared {
 
 impl BodyInput<'_> {
     fn metadata_guard(&self) -> io::Result<()> {
-        // The initial native autosnap domain changes sources, not component policy.
-        // Dependency topology is independently re-detected from retained merged files.
-        for field in [
-            "mainFile",
-            "bindingPrefix",
-            "schema",
-            "docs",
-            "packageDependencies",
-            "devPackageDependencies",
-            "peerPackageDependencies",
-            "overrides",
-            "packageJsonChangedProps",
-            "extensions",
-        ] {
-            if self.sides
-                .iter()
-                .any(|side| side.value[field] != self.sides[1].value[field])
-            {
-                return Err(invalid(
-                    "command merge metadata change requires canonical policy merge",
-                ));
-            }
-        }
-        for field in ["dependencies", "devDependencies"] {
-            for side in &self.sides {
-                equivalent_dependencies(&side.value[field], &self.sides[1].value[field])?;
-            }
-        }
-        if !self.sides[1].value["docs"].as_array().is_some_and(Vec::is_empty) {
-            return Err(invalid("command merge documentation projection"));
-        }
-        Ok(())
+        let projected = self.sides
+            .iter()
+            .map(|side| harmony::project(side.value))
+            .collect::<io::Result<Vec<_>>>()?;
+        metadata_guard(&projected)
     }
 
     pub(in crate::workspace::engine::command) fn request(&self) -> io::Result<Value> {
@@ -147,7 +121,7 @@ impl Prepared {
             .collect::<io::Result<_>>()?;
         Ok(Self {
             output: json!({"id":format!("{}@{}",input.current.target.identity,input.current.target.version),"filesStatus":statuses}),
-            version: current_version(input),
+            version: current_version(input)?,
             version_name: input.current.target.version.clone(),
             files,
             conflict_paths: conflict_paths(input, plan)?,
@@ -171,7 +145,7 @@ impl Prepared {
         }
         Ok(())
     }
-    pub(in crate::workspace::engine::command) fn write(&self, state: &mut State) -> io::Result<()> {
+    pub(in crate::workspace::engine::command) fn remove(&self) -> io::Result<()> {
         for path in &self.removals {
             match fs::remove_file(path) {
                 Ok(()) => {}
@@ -179,6 +153,9 @@ impl Prepared {
                 Err(error) => return Err(error),
             }
         }
+        Ok(())
+    }
+    pub(in crate::workspace::engine::command) fn write(&self, state: &mut State) -> io::Result<()> {
         state.materialize(self.request.clone())
     }
 }
@@ -268,7 +245,10 @@ fn conflict_paths(input: &BodyInput<'_>, plan: &Value) -> io::Result<Vec<String>
         .collect()
 }
 
-pub(super) fn equivalent_dependencies(value: &Value, current: &Value) -> io::Result<()> {
+pub(in crate::workspace::engine::command) fn equivalent_dependencies(
+    value: &Value,
+    current: &Value,
+) -> io::Result<()> {
     let mut normalized = value.clone();
     let rows = normalized.as_array_mut().ok_or_else(|| invalid("merge dependency metadata"))?;
     let reference =
@@ -289,8 +269,8 @@ pub(super) fn equivalent_dependencies(value: &Value, current: &Value) -> io::Res
     Ok(())
 }
 
-fn current_version(input: &BodyInput<'_>) -> Value {
-    let mut version = input.sides[1].value.clone();
+fn current_version(input: &BodyInput<'_>) -> io::Result<Value> {
+    let mut version = harmony::project(input.sides[1].value)?;
     for field in [
         "mainFile",
         "dependencies",
@@ -303,5 +283,37 @@ fn current_version(input: &BodyInput<'_>) -> Value {
     ] {
         version[field] = input.current.target.current[field].clone();
     }
-    version
+    Ok(version)
+}
+
+pub(super) fn metadata_guard(projected: &[Value]) -> io::Result<()> {
+    // The initial native autosnap domain changes sources, not component policy.
+    // Dependency topology is independently re-detected from retained merged files.
+    for field in [
+        "mainFile",
+        "bindingPrefix",
+        "docs",
+        "packageDependencies",
+        "devPackageDependencies",
+        "peerPackageDependencies",
+        "overrides",
+        "packageJsonChangedProps",
+        "extensions",
+    ] {
+        if projected
+            .iter()
+            .any(|side| side[field] != projected[1][field])
+        {
+            return Err(invalid("command merge metadata change requires canonical policy merge"));
+        }
+    }
+    for field in ["dependencies", "devDependencies"] {
+        for side in projected {
+            equivalent_dependencies(&side[field], &projected[1][field])?;
+        }
+    }
+    if !projected[1]["docs"].as_array().is_some_and(Vec::is_empty) {
+        return Err(invalid("command merge documentation projection"));
+    }
+    Ok(())
 }

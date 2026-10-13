@@ -6,7 +6,6 @@ use super::{
         resolve_dependencies::{Budget, resolve_one},
     },
     capture::Captured,
-    merge::Prepared,
 };
 use rayon::prelude::*;
 use serde_json::Value;
@@ -25,14 +24,14 @@ pub(super) fn verify(
     root: &Path,
     home: &Path,
     current: &Captured,
-    merged: &Prepared,
+    merged: &[Value],
     grammar: &Value,
 ) -> io::Result<Vec<proof::Proof>> {
     let grammar = Grammar::parse(grammar)?;
     let files = Files::parse(current, merged, &grammar)?;
     let bytes = AtomicUsize::new(0);
     let budget = Budget::capture(true);
-    let mut spool_proofs = spool_proofs(&merged.files)?;
+    let mut spool_proofs = spool_proofs(merged)?;
     let comparison = Comparison {
         root,
         home,
@@ -77,16 +76,16 @@ struct Files<'a> {
 impl<'a> Files<'a> {
     fn parse(
         current: &'a Captured,
-        merged: &'a Prepared,
+        merged: &'a [Value],
         grammar: &Grammar<'_>,
     ) -> io::Result<Self> {
         let before =
             current.files.as_array().ok_or_else(|| invalid("merge dependency current files"))?;
-        if before.len() > 4096 || merged.files.len() > 4096 || grammar.builtins.len() > 4096 {
+        if before.len() > 4096 || merged.len() > 4096 || grammar.builtins.len() > 4096 {
             return Err(invalid("merge dependency input budget"));
         }
         let before = indexed(before)?;
-        let after = indexed(&merged.files)?;
+        let after = indexed(merged)?;
         let mut names = before
             .keys()
             .chain(after.keys())

@@ -3,6 +3,23 @@ use crate::js_json::Value as Js;
 use serde_json::{Value, json};
 
 #[test]
+fn autosnap_upgrades_harmony_version_schema_without_rewriting_original() {
+    let original = json!({"schema":"1.0.0","files":[],"log":{"date":"1","message":"initial"},"extensions":[],"flattenedDependencies":["scope/dep@1.0.0"]});
+    let projected = metadata::current_schema(&original).unwrap();
+    let object = metadata::object("Version", Some(&"a".repeat(40)), projected).unwrap();
+    let fields: Js = serde_json::from_value(object["fields"].clone()).unwrap();
+    let bytes = crate::snapshot_projection::serialize("Version", &fields, false).unwrap();
+    let stored: Value = serde_json::from_slice(&bytes).unwrap();
+    assert_eq!(stored["schema"], "2.0.0");
+    assert_eq!(
+        stored["flattenedDependencies"],
+        json!([{"scope":"scope","name":"dep","version":"1.0.0"}]),
+    );
+    assert_eq!(original["schema"], "1.0.0");
+    assert_eq!(original["flattenedDependencies"], json!(["scope/dep@1.0.0"]));
+}
+
+#[test]
 fn model_projection_keeps_existing_local_tags_and_adds_snap_without_version_tag() {
     let model = json!({"name":"alpha","scope":"scope","versions":{"1.0.0":"a".repeat(40)},
         "lang":"javascript","deprecated":false,"bindingPrefix":"@scope","remotes":[],"schema":"2.0.0",
@@ -43,4 +60,27 @@ fn merged_application_registration_files_decline_before_allocation() {
         assert!(metadata::no_application_files(&[json!({"relativePath":path})]).is_err());
     }
     assert!(metadata::no_application_files(&[json!({"relativePath":"index.js"})]).is_ok());
+}
+
+#[test]
+fn snapshot_and_fast_forward_share_canonical_local_state_mutation() {
+    let head = "c".repeat(40);
+    for state in [
+        json!({"custom":true}),
+        json!({"custom":true,"versions":{head.clone():{"extra":"preserved","local":false}}}),
+    ] {
+        let input = json!({"state":state});
+        let snapshot = metadata::model(&input, &head).unwrap();
+        let fast_forward = super::local_model(&input, &head).unwrap();
+        assert_eq!(snapshot, fast_forward);
+        if input["state"]["versions"].is_null() {
+            assert_eq!(snapshot["state"], json!({"versions":{head.clone():{"local":true}}}));
+        } else {
+            assert_eq!(snapshot["state"]["custom"], true);
+            assert_eq!(
+                snapshot["state"]["versions"][&head],
+                json!({"extra":"preserved","local":true}),
+            );
+        }
+    }
 }

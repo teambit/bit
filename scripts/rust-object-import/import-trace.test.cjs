@@ -428,47 +428,78 @@ test('merge protocol diagnostics keep decoder reads distinct from manifests and 
 });
 
 test('inspection diagnostics retain model hashes in compact and tagged snapshot encodings', (t) => {
-  const files = fixture(t), helper = path.join(files.directory, 'inspection-helper.cjs');
-  fs.writeFileSync(helper, `process.stdin.once('data', () => {process.stdout.write(JSON.stringify({version:1,id:1,completed:1,skipped:[],failed:false,data:{modified:false}})+'\\n');process.stdin.resume();});`);
-  const hash = 'c'.repeat(40), units = text => [...text].map(c => c.charCodeAt(0));
-  const object = (name, value, tagged = false) => ({kind:'object', value:[[tagged ? units(name) : name, value]]});
-  const tagged = object('files', {kind:'array', value:[object('file', {kind:'string',value:units(hash)},true)]},true);
-  for (const left of [tagged, object('files',[object('file',hash)]), object('files',[object('file',object('hash',hash))])]) {
-    const metrics = execute(files, `
+  const files = fixture(t),
+    helper = path.join(files.directory, 'inspection-helper.cjs');
+  fs.writeFileSync(
+    helper,
+    `process.stdin.once('data', () => {process.stdout.write(JSON.stringify({version:1,id:1,completed:1,skipped:[],failed:false,data:{modified:false}})+'\\n');process.stdin.resume();});`
+  );
+  const hash = 'c'.repeat(40),
+    units = (text) => [...text].map((c) => c.charCodeAt(0));
+  const object = (name, value, tagged = false) => ({ kind: 'object', value: [[tagged ? units(name) : name, value]] });
+  const tagged = object(
+    'files',
+    { kind: 'array', value: [object('file', { kind: 'string', value: units(hash) }, true)] },
+    true
+  );
+  for (const left of [
+    tagged,
+    object('files', [object('file', hash)]),
+    object('files', [object('file', object('hash', hash))]),
+  ]) {
+    const metrics = execute(
+      files,
+      `
       const child=require('node:child_process').spawn(process.execPath,[${JSON.stringify(helper)}]);
-      const body=Buffer.from(JSON.stringify(${JSON.stringify({kind:'inspectionCompare',left})}));
+      const body=Buffer.from(JSON.stringify(${JSON.stringify({ kind: 'inspectionCompare', left })}));
       const frame=Buffer.alloc(12+body.length);frame.write('BMT1');frame.writeUInt32BE(1,4);frame.writeUInt32BE(body.length,8);body.copy(frame,12);
       child.stdout.once('data',()=>child.stdin.end());child.stdin.write(frame);
-    `, {BIT_IMPORT_TRACE_PROTOCOL_ONLY:'1'});
-    assert.equal(metrics.frameworkObservation,'disabled');
-    assert.equal(metrics.mergeState.inspectionCompare.completed,1);
-    assert.deepEqual(metrics.mergeState.inspectionCompare.modelHashes,[hash]);
+    `,
+      { BIT_IMPORT_TRACE_PROTOCOL_ONLY: '1' }
+    );
+    assert.equal(metrics.frameworkObservation, 'disabled');
+    assert.equal(metrics.mergeState.inspectionCompare.completed, 1);
+    assert.deepEqual(metrics.mergeState.inspectionCompare.modelHashes, [hash]);
   }
 });
 
 test('cold diagnostics do not invoke lazy model export getters', (t) => {
   const files = fixture(t);
-  fs.writeFileSync(files.module, `let reads=0; Object.defineProperty(exports,'Version',{enumerable:true,get(){reads++;return class Version{}}});exports.reads=()=>reads;`);
-  execute(files, `
+  fs.writeFileSync(
+    files.module,
+    `let reads=0; Object.defineProperty(exports,'Version',{enumerable:true,get(){reads++;return class Version{}}});exports.reads=()=>reads;`
+  );
+  execute(
+    files,
+    `
     const assert=require('node:assert/strict');
     const value=require(${JSON.stringify(files.module)});
     assert.equal(value.reads(),0);
     assert.equal(typeof Object.getOwnPropertyDescriptor(value,'Version').get,'function');
     assert.equal(value.Version.name,'Version');
     assert.equal(value.reads(),1);
-  `, {BIT_RUST_CLIENT_VCS:'on'});
+  `,
+    { BIT_RUST_CLIENT_VCS: 'on' }
+  );
 });
 
 test('cold command diagnostics count nested Source bytes in both bridge directions', (t) => {
   const files = fixture(t);
   const helper = path.join(files.directory, 'command-helper.cjs');
-  fs.writeFileSync(helper, `process.stdin.once('data', () => {process.stdout.write(JSON.stringify({version:1,id:1,completed:1,skipped:[],failed:false,data:{nested:{body:'reply'}}})+'\\n');process.stdin.resume();});`);
-  const metrics = execute(files, `
+  fs.writeFileSync(
+    helper,
+    `process.stdin.once('data', () => {process.stdout.write(JSON.stringify({version:1,id:1,completed:1,skipped:[],failed:false,data:{nested:{body:'reply'}}})+'\\n');process.stdin.resume();});`
+  );
+  const metrics = execute(
+    files,
+    `
     const child=require('node:child_process').spawn(process.execPath,[${JSON.stringify(helper)}]);
     const body=Buffer.from(JSON.stringify({kind:'commandPlan',current:[{nested:{contents:'request'}}]}));
     const frame=Buffer.alloc(12+body.length);frame.write('BWS1');frame.writeUInt32BE(1,4);frame.writeUInt32BE(body.length,8);body.copy(frame,12);
     child.stdout.once('data',()=>child.stdin.end());child.stdin.write(frame);
-  `, {BIT_IMPORT_TRACE_PROTOCOL_ONLY:'1'});
+  `,
+    { BIT_IMPORT_TRACE_PROTOCOL_ONLY: '1' }
+  );
   assert.equal(metrics.workspace.commandPlan.frames, 1);
   assert.equal(metrics.workspace.commandPlan.sourceBodyBytes, 12);
   for (const kind of ['commandPrepare', 'commandFinalize', 'commandApply'])
@@ -481,7 +512,9 @@ test('protocol observation preserves native dependency work and unknown workspac
   const filename = path.join(files.directory, 'entry.js');
   fs.writeFileSync(filename, "module.exports = {}; require('./dependency');");
   fs.writeFileSync(path.join(files.directory, 'dependency.js'), '');
-  const metrics = execute(files, `
+  const metrics = execute(
+    files,
+    `
     const assert = require('node:assert/strict');
     const { WorkspaceEngine } = require(process.env.BIT_TEST_WORKSPACE_ADDON);
     const engine = new WorkspaceEngine(2);
@@ -501,7 +534,9 @@ test('protocol observation preserves native dependency work and unknown workspac
         assert.equal(result.id,id);
       }
     } finally { engine.close(); } })().catch(error => { console.error(error); process.exitCode = 1; });
-  `, { BIT_IMPORT_TRACE_PROTOCOL_ONLY: '1' });
+  `,
+    { BIT_IMPORT_TRACE_PROTOCOL_ONLY: '1' }
+  );
   for (const kind of ['dependencyScan', 'dependencyResolve', 'dependencyCacheRead', 'dependencyCacheFreshness']) {
     assert.equal(metrics.workspace[kind].frames, 1);
     assert.equal(metrics.workspace[kind].completed, 1);
@@ -525,7 +560,10 @@ test('cold command classification matches stored model paths without classifying
   const metrics = execute(files, modules.map((name) => `require(${JSON.stringify(name)});`).join('\n'), {
     BIT_IMPORT_TRACE_PROTOCOL_ONLY: '1',
   });
-  assert.deepEqual(metrics.loadedCommandModels, modules.slice(1).map((filename) => fs.realpathSync(filename)));
+  assert.deepEqual(
+    metrics.loadedCommandModels,
+    modules.slice(1).map((filename) => fs.realpathSync(filename))
+  );
 });
 
 test('cold command classification distinguishes scalar versions from stored models and Consumer hydration', (t) => {
@@ -557,4 +595,54 @@ test('cold command classification distinguishes scalar versions from stored mode
       .filter((entry) => path.basename(entry) === 'version.js')
       .every((entry) => /[/\\]models[/\\]version\.js$/.test(entry))
   );
+});
+
+test('persistence hook observation counts invocation without awaiting or changing callback results', (t) => {
+  const files = fixture(t);
+  files.module = path.join(files.directory, 'repository.cjs');
+  fs.writeFileSync(files.module, 'class Repository {}\nmodule.exports = { default: Repository };\n');
+  const metrics = execute(
+    files,
+    `
+    const assert = require('node:assert/strict');
+    const { default: Repository } = require(${JSON.stringify(files.module)});
+    const pending = new Promise(() => {});
+    Repository.onPostObjectsPersist = function (value) {
+      assert.equal(this, Repository);
+      assert.equal(value, 'first');
+      return pending;
+    };
+    assert.equal(Repository.onPostObjectsPersist('first'), pending);
+    const failure = new Error('same failure');
+    Repository.onPostObjectsPersist = () => { throw failure; };
+    assert.throws(() => Repository.onPostObjectsPersist(), error => error === failure);
+  `
+  );
+  assert.equal(metrics.postPersistNotifications, 2);
+});
+
+test('successful no-op command counts native persistence notifications without file effect ACKs', (t) => {
+  const files = fixture(t);
+  const helper = path.join(files.directory, 'notification-helper.cjs');
+  fs.writeFileSync(
+    helper,
+    `process.stdin.once('data', () => {
+    process.stdout.write(JSON.stringify({version:1,id:1,completed:0,skipped:[],failed:false,
+      data:{applied:true,postPersistNotifications:1}})+'\\n');process.stdin.resume();});`
+  );
+  const metrics = execute(
+    files,
+    `
+    const child=require('node:child_process').spawn(process.execPath,[${JSON.stringify(helper)}]);
+    const body=Buffer.from(JSON.stringify({kind:'commandApply',token:'retained'}));
+    const frame=Buffer.alloc(12+body.length);frame.write('BWS1');frame.writeUInt32BE(1,4);
+    frame.writeUInt32BE(body.length,8);body.copy(frame,12);
+    child.stdout.once('data',()=>child.stdin.end());child.stdin.write(frame);
+  `,
+    { BIT_IMPORT_TRACE_PROTOCOL_ONLY: '1' }
+  );
+  assert.equal(metrics.workspace.commandApply.completed, 0);
+  assert.equal(metrics.workspace.commandApply.applied, 1);
+  assert.deepEqual(metrics.workspaceFrames[0].receipt, { completed: 0, failed: false, applied: true });
+  assert.equal(metrics.postPersistNotifications, 1);
 });

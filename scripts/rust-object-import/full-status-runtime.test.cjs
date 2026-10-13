@@ -116,6 +116,38 @@ test('cold full status owns real default-Node workspaces and preserves canonical
   const versionOriginal = await fs.readFile(versionFile);
   const versionBytes = inflateSync(versionOriginal);
   const versionData = JSON.parse(versionBytes.subarray(versionBytes.indexOf(0) + 1));
+  const harmonyOne = { ...versionData, schema: '1.0.0' };
+  delete harmonyOne.docs;
+  harmonyOne.flattenedDependencies = (harmonyOne.flattenedDependencies ?? []).map((id) =>
+    typeof id === 'string' ? id : `${id.scope}/${id.name}${id.version ? `@${id.version}` : ''}`
+  );
+  const harmonyBody = Buffer.from(JSON.stringify(harmonyOne));
+  const harmonyObject = deflateSync(
+    Buffer.concat([Buffer.from(`Version ${versionHash} ${harmonyBody.length}\0`), harmonyBody])
+  );
+  const betaSource = path.join(directory, 'beta/index.js');
+  const betaOriginal = await fs.readFile(betaSource);
+  await fs.writeFile(versionFile, harmonyObject);
+  try {
+    const readRustDiff =
+      process.env.BIT_TEST_STATUS_COMPILED === '1'
+        ? installed('@teambit/bit/dist/rust-diff.js').readRustDiff
+        : source('scopes/harmony/bit/rust-diff.ts').readRustDiff;
+    for (const modified of [false, true]) {
+      if (modified) await fs.appendFile(betaSource, '\n// Harmony 1 source modification\n');
+      await compare(`Harmony 1 omitted docs, modified=${modified}`);
+      for (const pattern of [undefined, 'beta']) {
+        const expected = JSON.parse(command(['diff', ...(pattern ? [pattern] : []), '--json']));
+        const actual = await readRustDiff(directory, temporary, pattern);
+        assert.ok(actual, 'Harmony 1 diff must complete natively');
+        assert.equal(JSON.stringify(actual), JSON.stringify(expected), 'Harmony 1 exact diff JSON');
+      }
+      assert.deepEqual(await fs.readFile(versionFile), harmonyObject, 'historical Harmony 1 object stays unchanged');
+    }
+  } finally {
+    await fs.writeFile(betaSource, betaOriginal);
+    await fs.writeFile(versionFile, versionOriginal);
+  }
   versionData.extensions
     .find((extension) => extension.name === 'teambit.dependencies/dependency-resolver')
     .data.dependencies.push({

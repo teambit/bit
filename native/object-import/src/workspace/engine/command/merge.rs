@@ -1,7 +1,7 @@
 pub(super) mod finalization;
 pub(super) mod snapshot;
 
-pub(super) use bodies::{BodyInput, Prepared, VersionSide};
+pub(super) use bodies::{BodyInput, Prepared, VersionSide, equivalent_dependencies};
 pub(super) use status::Input;
 
 mod bodies;

@@ -165,3 +165,34 @@ test('unknown graph vertices and deprecation/removal heads decline before format
     assert.equal(await collectRustStatusIssues('/unused', context, [row]), undefined);
   }
 });
+
+test('scoped Harmony 1 policy matches Harmony 2 while legacy aliases remain unsupported', () => {
+  const { statusPolicy } = source('scopes/harmony/bit/rust-status-policy.ts');
+  const target = { identity: 'test.scope/alpha', version: '1.0.0' };
+  const hash = 'a'.repeat(40);
+  const version = {
+    schema: '1.0.0',
+    dependencies: [{ id: { scope: 'test.scope', name: 'beta', version: '1.0.0' }, relativePaths: [] }],
+    extensions: [{ name: 'teambit.envs/envs', config: {}, data: { id: 'teambit.harmony/node' } }],
+  };
+  const context = {
+    models: [{ scope: 'test.scope', name: 'alpha', versions: { '1.0.0': hash }, bindingPrefix: '@test' }],
+    versions: [[hash, version]],
+    targets: [target],
+    workspace: {},
+    packageJson: {},
+  };
+  const original = JSON.stringify(context);
+  const harmony1 = statusPolicy(context, target);
+  assert.equal(JSON.stringify(context), original, 'policy projection must not mutate stored objects');
+  version.schema = '2.0.0';
+  assert.deepEqual(statusPolicy(context, target), harmony1);
+  version.schema = '1.0.0';
+  delete version.dependencies[0].id.scope;
+  assert.throws(() => statusPolicy(context, target), /unscoped dependency/);
+  version.dependencies[0].id.scope = 'test.scope';
+  for (const schema of ['0.0.0', '3.0.0', undefined]) {
+    version.schema = schema;
+    assert.throws(() => statusPolicy(context, target), /legacy component/);
+  }
+});

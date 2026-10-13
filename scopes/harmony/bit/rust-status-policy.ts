@@ -55,6 +55,22 @@ export function dependencyGrammar(values: any): object {
     ])
   );
 }
+function validateHarmonyVersion(version: any) {
+  if (version && !['1.0.0', '2.0.0'].includes(version.schema)) throw new Error('status legacy component');
+  for (const dependency of [...(version?.dependencies ?? []), ...(version?.devDependencies ?? [])]) {
+    if (
+      !dependency.id ||
+      typeof dependency.id.scope !== 'string' ||
+      !dependency.id.scope ||
+      typeof dependency.id.name !== 'string' ||
+      !dependency.id.name
+    )
+      throw new Error('status unscoped dependency');
+    if (!Array.isArray(dependency.relativePaths) || dependency.relativePaths.length)
+      throw new Error('status relative dependency paths');
+  }
+}
+
 /** Construct only the built-in Node environment policy; configured runtimes fall back before output. */
 export function statusPolicy(context: any, target: any) {
   const model = context.models.find((item) => `${item.scope}/${item.name}` === target.identity);
@@ -64,7 +80,7 @@ export function statusPolicy(context: any, target: any) {
     ? target.version
     : (model?.orphanedVersions?.[target.version] ?? model?.versions?.[target.version]);
   const version = context.versions.find(([hash]) => hash === reference)?.[1];
-  if (version && version.schema !== '2.0.0') throw new Error('status legacy component');
+  validateHarmonyVersion(version);
   if (target.version && !version) throw new Error('status version absent');
   const extensions = statusExtensions(version, target);
   const componentPolicy = extensions.find((extension) => extension.name === resolver)?.config.policy ?? {};

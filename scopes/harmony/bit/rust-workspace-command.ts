@@ -69,11 +69,25 @@ export async function readRustWorkspaceCommand(
         // Replace the selected-only cache plan so a staged global reset executes once.
         const allCapture = await captureRustClientCurrent(root, prepared.context, request, undefined, {
           verifyFreshDependencies: true,
+          resetDependencyCache: true,
+          dependencyCacheVersions: plan.dependencyCacheVersions,
         });
         if (!allCapture || !capture.fresh() || !allCapture.fresh()) return undefined;
         if (
           allCapture.captured.some((component) =>
             component.files.some((file: string) => /\.(?:bit-app|node-app|react-app)\.[^/]+$/.test(file))
+          )
+        )
+          return undefined;
+        const changed = new Set([
+          ...plan.needsSnap,
+          ...(plan.dependencyCacheVersions ?? []).map((target) => target.identity),
+        ]);
+        if (
+          allCapture.captured.some((component) =>
+            [...component.current.dependencies, ...component.current.devDependencies].some((dependency) =>
+              changed.has(`${dependency.id.scope}/${dependency.id.name}`)
+            )
           )
         )
           return undefined;

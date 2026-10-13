@@ -62,7 +62,8 @@ export function parseRustWorkspaceCommand(args: string[]): RustWorkspaceCommandO
     return undefined;
   if (flags['--all'] && (to === 'head' || to === 'latest')) return undefined;
   const pattern = positionals[0];
-  if (pattern && !/^[a-z0-9_./-]+$/.test(pattern)) return undefined;
+  if (pattern && !(operation === 'merge' && pattern === '**') && !/^[a-z0-9_./-]+$/.test(pattern))
+    return undefined;
   return {
     operation,
     to,

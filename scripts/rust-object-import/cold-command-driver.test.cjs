@@ -90,6 +90,35 @@ test('qualification snap identities are independent of discarded comparison Vers
   assert.notEqual(identities(0)[0], identities(0)[1]);
 });
 
+test('bitmap backup identities are deterministic per command for canonical and cold helper imports', async () => {
+  const preload = await fs.readFile(path.join(__dirname, 'checkout-transition-determinism.cjs'), 'utf8');
+  function identity(seed, request) {
+    const module = { _load: () => ({ currentDateAndTimeToFileName: () => 'real-clock' }) };
+    const context = require('node:vm').createContext({
+      require: (name) => (name === 'node:module' ? module : require(name)),
+      process: {
+        env: {
+          BIT_CHECKOUT_TRANSITION_QUALIFICATION_SEED: seed,
+          BIT_CHECKOUT_TRANSITION_QUALIFICATION_CLOCK: '1800000000000',
+        },
+      },
+    });
+    require('node:vm').runInContext(preload, context);
+    assert.notEqual(
+      require('node:vm').runInContext('new Date().getTime()', context),
+      1800000000000,
+      'Date.now override does not control new Date'
+    );
+    const helper = module._load(request);
+    assert.equal(helper.currentDateAndTimeToFileName(), helper.currentDateAndTimeToFileName());
+    return helper.currentDateAndTimeToFileName();
+  }
+  const canonical = identity('merge-command', './bitmap-history-file-id');
+  assert.match(canonical, /^\d{4}-\d{1,2}-\d{1,2}-\d{1,2}-\d{1,2}-\d{1,2}$/);
+  assert.equal(canonical, identity('merge-command', '/legacy/dist/bitmap-history-file-id.js'));
+  assert.notEqual(canonical, identity('setup-command', './bitmap-history-file-id'));
+});
+
 test('wrapper benchmark bypasses only the cold entry and retains native kernel modules', async () => {
   const preload = await fs.readFile(path.join(__dirname, 'cold-command-wrapper-baseline.cjs'), 'utf8');
   const kernel = { request: () => 'native kernel' };
@@ -119,10 +148,15 @@ test('cold workspace command grammar rejects unsupported or ambiguous options be
     ['merge', '-x', '-r', 'invalid'],
     ['merge', '-x', '--abort'],
     ['merge', '-x', '--resolve'],
+    ['merge', '*', '-x'],
+    ['merge', 'scope/*', '-x'],
+    ['merge', 'scope/**', '-x'],
+    ['checkout', 'head', '**', '-x'],
   ])
     assert.equal(parseRustWorkspaceCommand(args), undefined, args.join(' '));
   assert.equal(parseRustWorkspaceCommand(['checkout', 'head', 'scope/component', '-x']).operation, 'checkout');
   assert.equal(parseRustWorkspaceCommand(['merge', 'scope/component', '-x', '--no-snap']).noSnap, true);
+  assert.equal(parseRustWorkspaceCommand(['merge', '**', '-x']).pattern, '**');
 });
 
 test('cold driver validates the complete plan before writes and propagates failures once commit starts', async (t) => {

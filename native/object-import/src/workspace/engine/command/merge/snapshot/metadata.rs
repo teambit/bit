@@ -21,7 +21,7 @@ pub(super) fn receipt(value: &Value, inputs: &[Input<'_>]) -> io::Result<()> {
     Ok(())
 }
 pub(super) fn version(input: &Input<'_>, receipt: &Value, message: &str) -> io::Result<Value> {
-    let mut version = input.material.version.clone();
+    let mut version = current_schema(&input.material.version)?;
     version
         .as_object_mut()
         .ok_or_else(|| invalid("command snap Version"))?
@@ -58,21 +58,38 @@ pub(super) fn version(input: &Input<'_>, receipt: &Value, message: &str) -> io::
     }
     Ok(version)
 }
-pub(super) fn model(input: &Value, hash: &str) -> io::Result<Value> {
+pub(super) fn current_schema(value: &Value) -> io::Result<Value> {
+    let mut version = crate::workspace::engine::status_models::harmony::project(value)?;
+    version["schema"] = json!("2.0.0");
+    Ok(version)
+}
+// ModelComponent.setHead followed by markVersionAsLocal preserves existing row
+// metadata, but replaces the whole state when it has no versions member.
+pub(super) fn model(input: &Value, head: &str) -> io::Result<Value> {
+    crate::merge_history::hash(head)?;
     let mut model = input.clone();
     if !model.is_object() {
-        return Err(invalid("command snap model"));
+        return Err(invalid("command local model"));
     }
-    model["head"] = json!(hash);
-    if model.get("state").is_none() {
-        model["state"] = json!({});
+    model["head"] = json!(head);
+    if model["state"]["versions"].is_null() {
+        model["state"] = json!({"versions":{}});
     }
-    if model["state"].get("versions").is_none() {
-        model["state"]["versions"] = json!({});
+    let versions = model["state"]["versions"]
+        .as_object_mut()
+        .ok_or_else(|| invalid("command local versions"))?;
+    let row = versions
+        .entry(head)
+        .or_insert_with(|| json!({}));
+    if row.is_null() || *row == false {
+        *row = json!({});
     }
-    model["state"]["versions"][hash] = json!({"local":true});
+    row.as_object_mut()
+        .ok_or_else(|| invalid("command local version"))?
+        .insert("local".into(), json!(true));
     Ok(model)
 }
+
 pub(super) fn object(kind: &str, hash: Option<&str>, mut fields: Value) -> io::Result<Value> {
     if kind == "Version" {
         for extension in fields["extensions"]

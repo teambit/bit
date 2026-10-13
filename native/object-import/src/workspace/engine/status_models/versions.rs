@@ -56,6 +56,9 @@ pub(super) fn read(
                 let value = reader.read(reference, "Version")?;
                 crate::history_query::validate_version(&value)?;
                 crate::read_version::parents(&value)?;
+                if matches!(value["schema"].as_str(), Some("1.0.0" | "2.0.0")) {
+                    super::harmony::validate(&value)?;
+                }
                 Ok((reference.clone(), value))
             })
             .collect()

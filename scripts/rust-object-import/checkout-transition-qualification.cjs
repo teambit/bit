@@ -12,18 +12,54 @@ const { pairedEntries, measuredCommand } = require('./merge-history-measurement.
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
 
 function checkoutOwnsFrame(frame) {
-  if (frame.magic === 'BWS1' &&
-    ['dependencyScan', 'dependencyResolve', 'dependencyGraph', 'dependencyCacheRead', 'dependencyCacheFreshness'].includes(frame.kind)) return false;
-  return ['BWS1', 'BWP1', 'BWC0', 'BWC2', 'BWC1', 'BCK1', 'BMH1'].includes(frame.magic) ||
-    (frame.magic === 'BMT1' && (frame.kind.startsWith('checkout') || frame.kind.startsWith('inspection')));
+  if (
+    frame.magic === 'BWS1' &&
+    [
+      'dependencyScan',
+      'dependencyResolve',
+      'dependencyGraph',
+      'dependencyCacheRead',
+      'dependencyCacheFreshness',
+    ].includes(frame.kind)
+  )
+    return false;
+  return (
+    ['BWS1', 'BWP1', 'BWC0', 'BWC2', 'BWC1', 'BCK1', 'BMH1'].includes(frame.magic) ||
+    (frame.magic === 'BMT1' && (frame.kind.startsWith('checkout') || frame.kind.startsWith('inspection')))
+  );
 }
 
 function declinedPreflightOwners(frames) {
-  return new Set(frames
-    .filter((frame) => frame.magic === 'BWS1' && frame.kind === 'commandPrepare')
-    .map((frame) => frame.helperId)
-    .filter((helperId) => frames.filter((frame) => frame.helperId === helperId)
-      .every((frame) => frame.magic === 'BWS1' && frame.kind === 'commandPrepare')));
+  const readOnly = new Set([
+    'commandPrepare',
+    'inventoryBegin',
+    'inventoryFinish',
+    'dependencyDetectFresh',
+    'dependencyPolicyDetected',
+    'commandPlan',
+  ]);
+  return new Set(
+    frames
+      .filter((frame) => frame.magic === 'BWS1' && frame.kind === 'commandPrepare')
+      .map((frame) => frame.helperId)
+      .filter((helperId) => {
+        const owned = frames.filter((frame) => frame.helperId === helperId);
+        if (owned.some((frame) => frame.receipt?.applied)) return false;
+        if (owned.every((frame) => frame.magic === 'BWS1' && frame.kind === 'commandPrepare')) return true;
+        return (
+          owned.at(-1)?.receipt?.failed === true &&
+          owned.filter((frame) => frame.receipt?.failed).length === 1 &&
+          owned.every(
+            (frame) =>
+              frame.magic === 'BWS1' &&
+              readOnly.has(frame.kind) &&
+              frame.receipt &&
+              !frame.receipt.applied &&
+              (frame.kind !== 'commandPlan' || frame.receipt.failed)
+          )
+        );
+      })
+  );
 }
 
 // Only the documented pre-existing scope-index insertion order is normalized.
@@ -383,9 +419,24 @@ async function runQualification(cli, helper, options = {}) {
       'checkoutMaterialize',
       'checkoutFinish',
     ];
+    const cold = (row) => row.trace.workspace.commandApply?.applied > 0;
+    for (const row of diagnostics.filter(cold)) {
+      assert.deepEqual(row.trace.loadedCommandModels, [], `${row.scenario}: cold ownership avoids canonical models`);
+      assert.equal(row.trace.objectTypes?.Source || 0, 0, `${row.scenario}: no Node Source parsing`);
+      for (const kind of ['commandPrepare', 'commandPlan', 'commandFinalize', 'commandApply'])
+        assert.equal(row.trace.workspace[kind]?.sourceBodyBytes || 0, 0, `${row.scenario}/${kind}: metadata only`);
+      assert.ok(row.trace.workspaceFrames.some((frame) => frame.kind === 'commandPlan'));
+    }
     for (const kind of kinds) {
       assert.ok(
-        diagnostics.some((row) => row.trace.mergeState[kind]?.completed > 0),
+        diagnostics.some((row) => row.trace.mergeState[kind]?.completed > 0) ||
+          (kind === 'checkoutApply' &&
+            ['head-preserves-local-edit', 'head-preserves-local-deletion', 'conflict-manual', 'conflict-theirs'].every(
+              (scenario) => {
+                const row = diagnostics.find((entry) => entry.scenario === scenario);
+                return row && cold(row) && row.trace.workspace.commandApply.completed > 0;
+              }
+            )),
         `actual commands must accept ${kind}`
       );
       for (const row of diagnostics) {
@@ -400,7 +451,7 @@ async function runQualification(cli, helper, options = {}) {
     for (const row of diagnostics) {
       const frames = row.trace.workspaceFrames;
       const preflightOwners = declinedPreflightOwners(frames);
-      // A declined cold preflight has no plan/apply/finalize or publication frames.
+      // A declined cold preflight has no accepted plan, apply, finalize or publication frames.
       // Every frame of the subsequent canonical transaction still has one owner.
       row.declinedColdPreflight = frames.filter((frame) => preflightOwners.has(frame.helperId));
       const owned = frames.filter((frame) => !preflightOwners.has(frame.helperId) && checkoutOwnsFrame(frame));
@@ -415,13 +466,21 @@ async function runQualification(cli, helper, options = {}) {
       }
     }
     assert.ok(
-      diagnostics.some((row) => row.trace.mergeState.checkoutMaterialize.stepsCompleted > 0),
+      diagnostics.some(
+        (row) =>
+          (cold(row) && row.trace.workspace.commandApply.completed > 0) ||
+          row.trace.mergeState.checkoutMaterialize.stepsCompleted > 0
+      ),
       'positive ACK alone is insufficient: actual retained Sources must be written'
     );
     const retainedWriteScenarios = ['clean-old', 'reset-edited-deleted', 'reset-workspace-root'];
     for (const scenario of retainedWriteScenarios) {
       const row = diagnostics.find((entry) => entry.scenario === scenario);
       assert.ok(row, `${scenario} must retain its actual Native command diagnostic`);
+      if (cold(row)) {
+        assert.ok(row.trace.workspace.commandApply.completed > 0, `${scenario}: accepted apply must write files`);
+        continue;
+      }
       assert.ok(
         row.trace.mergeState.checkoutPrepare.completed > 0,
         `${scenario} cannot pass entirely through canonical preparation`
@@ -438,19 +497,24 @@ async function runQualification(cli, helper, options = {}) {
       assert.ok(row.trace.mergeState.checkoutFinish.completed > 0, `${scenario} must close its retained plan`);
     }
     const ours = diagnostics.find((row) => row.scenario === 'conflict-ours');
-    assert.ok(ours?.trace.mergeState.checkoutSelectBegin.completed > 0, 'ours still uses Native selection');
-    assert.ok(ours?.trace.mergeState.checkoutApplyDecision.completed > 0, 'ours must accept its early apply decision');
-    const oursDecision = ours.trace.workspaceFrames.findIndex((frame) => frame.kind === 'checkoutApplyDecision');
-    assert.ok(oursDecision >= 0);
-    assert.ok(
-      !ours.trace.workspaceFrames.slice(oursDecision + 1).some((frame) => frame.kind === 'checkoutPrepare'),
-      'ours may detect conflicts first but must not reload a target plan after its early apply decision'
-    );
-    assert.equal(
-      ours.trace.mergeState.checkoutMaterialize.frames,
-      0,
-      'ours retains existing Sources without target writes'
-    );
+    if (!cold(ours)) {
+      assert.ok(ours?.trace.mergeState.checkoutSelectBegin.completed > 0, 'ours still uses Native selection');
+      assert.ok(
+        ours?.trace.mergeState.checkoutApplyDecision.completed > 0,
+        'ours must accept its early apply decision'
+      );
+      const oursDecision = ours.trace.workspaceFrames.findIndex((frame) => frame.kind === 'checkoutApplyDecision');
+      assert.ok(oursDecision >= 0);
+      assert.ok(
+        !ours.trace.workspaceFrames.slice(oursDecision + 1).some((frame) => frame.kind === 'checkoutPrepare'),
+        'ours may detect conflicts first but must not reload a target plan after its early apply decision'
+      );
+      assert.equal(
+        ours.trace.mergeState.checkoutMaterialize.frames,
+        0,
+        'ours retains existing Sources without target writes'
+      );
+    }
     const conflict = diagnostics.find((row) => row.scenario === 'conflict-rejected');
     assert.ok(
       conflict?.trace.mergeState.checkoutPrepare.completed > 0,

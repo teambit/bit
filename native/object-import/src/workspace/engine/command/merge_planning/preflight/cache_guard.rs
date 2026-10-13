@@ -1,0 +1,90 @@
+use crate::workspace::engine::{
+    command::{Record, capture::Captured, materialization, merge_dependency_guard},
+    dependency_graph::proof::Proof,
+    invalid,
+    status_models::harmony,
+};
+use serde_json::{Value, json};
+use std::{collections::BTreeSet, io};
+
+#[cfg(test)]
+mod tests;
+
+pub(super) fn verify(
+    record: &Record,
+    captured: &[Captured],
+    target: &materialization::Prepared,
+    identity: &str,
+) -> io::Result<Vec<Proof>> {
+    let current = captured
+        .iter()
+        .find(|current| current.target.identity == identity)
+        .ok_or_else(|| invalid("command fast-forward capture"))?;
+    metadata(&current.target.current, &current.target.files, &target.version)?;
+    merge_dependency_guard::verify(
+        &record.request.root,
+        &record.request.home,
+        current,
+        &target.files,
+        &record.request.dependency_grammar,
+    )
+}
+
+// Autosnap reloads all workspace dependency data after materialization. A
+// pre-write capture can be rekeyed only when the incoming files have the same
+// classification and component policy. Imports are checked against retained
+// source bodies separately, without crossing the JavaScript boundary.
+pub(super) fn metadata(current: &Value, files: &[String], target: &Value) -> io::Result<()> {
+    let target = harmony::project(target)?;
+    for field in [
+        "mainFile",
+        "bindingPrefix",
+        "packageDependencies",
+        "devPackageDependencies",
+        "peerPackageDependencies",
+        "overrides",
+    ] {
+        if current[field] != target[field] {
+            return Err(invalid("command fast-forward dependency cache policy changed"));
+        }
+    }
+    for field in ["dependencies", "devDependencies"] {
+        crate::workspace::engine::command::merge::equivalent_dependencies(
+            &target[field],
+            &current[field],
+        )?;
+    }
+    if current["extensions"] != extensions(&target)? {
+        return Err(invalid("command fast-forward dependency cache extensions changed"));
+    }
+    let incoming = target["files"]
+        .as_array()
+        .ok_or_else(|| invalid("command fast-forward files"))?
+        .iter()
+        .map(|file| {
+            file["relativePath"].as_str().ok_or_else(|| invalid("command fast-forward file name"))
+        })
+        .collect::<io::Result<BTreeSet<_>>>()?;
+    let existing = files
+        .iter()
+        .map(String::as_str)
+        .collect::<BTreeSet<_>>();
+    if incoming != existing {
+        return Err(invalid("command fast-forward dependency cache file layout changed"));
+    }
+    Ok(())
+}
+
+fn extensions(target: &Value) -> io::Result<Value> {
+    let rows = target["extensions"]
+        .as_array()
+        .ok_or_else(|| invalid("command fast-forward extensions"))?;
+    let rows = rows.iter().map(|row| {
+        if row.get("extensionId").is_some() || row.get("legacyId").is_some()
+            || row["name"] == "teambit.envs/envs" && row["data"]["id"] != "teambit.harmony/node" {
+            return Err(invalid("command fast-forward dependency cache environment"));
+        }
+        Ok(json!({"name":row["name"],"config":row.get("config").cloned().unwrap_or_else(|| json!({}))}))
+    }).collect::<io::Result<Vec<_>>>()?;
+    Ok(json!(rows))
+}

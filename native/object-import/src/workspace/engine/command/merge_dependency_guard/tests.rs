@@ -5,6 +5,38 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 static NEXT: AtomicUsize = AtomicUsize::new(0);
+
+#[test]
+fn retained_fast_forward_sources_preserve_imports_and_detect_stale_capture() {
+    use serde_json::json;
+    let fixture = Fixture::new();
+    let current_path = fixture.0.join("component/index.js");
+    let spool = fixture.0.join("retained-source");
+    let original = b"module.exports = 1;";
+    fs::write(&current_path, original).unwrap();
+    let current = crate::workspace::engine::command::capture::Captured {
+        target: serde_json::from_value(json!({"identity":"scope/peer","version":"1.0.0",
+            "directory":"component","files":["index.js"],"current":{}}))
+        .unwrap(),
+        metadata: json!([]),
+        files: json!([{"relativePath":"index.js","path":current_path,
+            "rawHash":crate::workspace::engine::hash(original)}]),
+    };
+    let grammar = json!({"builtins":["fs"],"detectorExtensions":[".js"],"typescript":true});
+    for (body, supported) in
+        [("module.exports = 2;", true), ("require('fs'); module.exports = 2;", false)]
+    {
+        fs::write(&spool, body).unwrap();
+        let rows = vec![json!({"relativePath":"index.js","source":{"spoolPath":spool,
+            "spoolHash":crate::workspace::engine::hash(body.as_bytes()),"bytes":body.len()}})];
+        assert_eq!(
+            super::verify(&fixture.0, &fixture.0, &current, &rows, &grammar).is_ok(),
+            supported,
+        );
+    }
+    fs::write(&current_path, b"module.exports = 3;").unwrap();
+    assert!(super::verify(&fixture.0, &fixture.0, &current, &[], &grammar).is_err());
+}
 struct Fixture(std::path::PathBuf);
 impl Fixture {
     fn new() -> Self {
