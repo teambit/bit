@@ -2,6 +2,7 @@ pub(crate) mod client_status;
 pub(crate) mod diff;
 pub(crate) mod inventory;
 mod read;
+mod read_dependency_cache;
 mod read_raw;
 mod resolve_dependencies;
 mod resolve_typescript;
@@ -30,6 +31,8 @@ const MAX_FILES: usize = 4096;
     deny_unknown_fields
 )]
 enum Request {
+    DependencyCacheRead(read_dependency_cache::Read),
+    DependencyCacheFreshness(read_dependency_cache::Freshness),
     DependencyResolve(resolve_dependencies::Request),
     DependencyScan {
         request: Value,
@@ -152,6 +155,10 @@ fn failure(id: u32) -> Response {
 }
 fn apply(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value)> {
     match request {
+        Request::DependencyCacheRead(request) => read_dependency_cache::read(&request),
+        Request::DependencyCacheFreshness(request) => {
+            read_dependency_cache::freshness(&request, pool)
+        }
         Request::DependencyResolve(request) => resolve_dependencies::resolve(&request, pool),
         Request::DependencyScan { request } => dependency_scan(&request, pool),
         Request::StatusPrepare(_)

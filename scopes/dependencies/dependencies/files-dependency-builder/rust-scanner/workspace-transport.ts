@@ -43,6 +43,37 @@ export class RustScannerWorkspaceTransport {
     return resolved;
   }
 
+  async readCache(
+    cache: string,
+    key: string,
+    id: number,
+    limits: { requestBytes: number; responseBytes: number }
+  ): Promise<{ timestamp: number; data: string } | null | undefined> {
+    const response = await this.operation({ kind: 'dependencyCacheRead', cache, key }, id, limits);
+    if (response.failed) return undefined;
+    const value = response.data?.cache;
+    if (
+      response.completed !== 1 ||
+      (value !== null && (!value || !Number.isSafeInteger(value.timestamp) || typeof value.data !== 'string'))
+    )
+      throw new Error('workspace dependency cache protocol');
+    return value;
+  }
+
+  async cacheStale(
+    root: string,
+    files: string[],
+    timestamp: number,
+    id: number,
+    limits: { requestBytes: number; responseBytes: number }
+  ): Promise<boolean | undefined> {
+    const response = await this.operation({ kind: 'dependencyCacheFreshness', root, files, timestamp }, id, limits);
+    if (response.failed) return undefined;
+    if (response.completed !== 1 || typeof response.data?.stale !== 'boolean')
+      throw new Error('workspace dependency freshness protocol');
+    return response.data.stale;
+  }
+
   private async operation(
     input: object,
     id: number,

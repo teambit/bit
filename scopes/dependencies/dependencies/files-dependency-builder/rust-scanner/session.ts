@@ -145,22 +145,40 @@ export class RustDependencyScannerSession {
       return undefined;
     const bytes =
       Buffer.byteLength(filename) + dependencies.reduce((sum, name) => sum + Buffer.byteLength(name) + 16, 0);
-    if (bytes > this.limits.requestBytes || !this.reserveQueue(bytes)) return undefined;
-    let result: Array<string | null> | undefined;
+    const captured = [...dependencies];
+    return this.workspaceRequest(bytes, (workspace, id) =>
+      workspace.resolve(path.resolve(this.cwd, filename), captured, id, this.limits, mode)
+    );
+  }
+
+  readDependencyCache(cache: string, key: string): Promise<{ timestamp: number; data: string } | null | undefined> {
+    const bytes = Buffer.byteLength(cache) + Buffer.byteLength(key) + 128;
+    return this.workspaceRequest(bytes, (workspace, id) => workspace.readCache(cache, key, id, this.limits));
+  }
+
+  dependencyCacheStale(root: string, files: string[], timestamp: number): Promise<boolean | undefined> {
+    if (files.length > 65536) return Promise.resolve(undefined);
+    const bytes = Buffer.byteLength(root) + files.reduce((total, file) => total + Buffer.byteLength(file) + 16, 128);
+    const captured = [...files];
+    return this.workspaceRequest(bytes, (workspace, id) =>
+      workspace.cacheStale(root, captured, timestamp, id, this.limits)
+    );
+  }
+
+  private async workspaceRequest<T>(
+    bytes: number,
+    request: (workspace: RustScannerWorkspaceTransport, id: number) => Promise<T | undefined>
+  ): Promise<T | undefined> {
+    if (!this.options.workspaceAddon || bytes > this.limits.requestBytes || !this.reserveQueue(bytes)) return undefined;
+    let result: T | undefined;
     this.queue = this.queue
       .then(async () => {
         if (this.failure) return;
         this.start();
         if (!this.workspace) return;
-        const timer = setTimeout(() => this.fail('Rust resolution response timed out'), this.limits.timeoutMs);
+        const timer = setTimeout(() => this.fail('Rust dependency response timed out'), this.limits.timeoutMs);
         try {
-          result = await this.workspace.resolve(
-            path.resolve(this.cwd, filename),
-            dependencies,
-            ++this.sequence,
-            this.limits,
-            mode
-          );
+          result = await request(this.workspace, ++this.sequence);
         } finally {
           clearTimeout(timer);
         }

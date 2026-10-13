@@ -8,6 +8,8 @@ publish = false
 bit-dependency-scanner = { path = "../dependency-scanner" }
 flate2 = { version = "1.1", default-features = false, features = ["zlib-rs"] }
 sha1 = "0.10"
+sha2 = "0.10"
+base64 = "0.22"
 rayon = "1.11"
 ryu-js = "=1.0.3"
 regress = "=0.12.0"

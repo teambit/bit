@@ -37,3 +37,13 @@ export async function getPathStatIfExist(path: string): Promise<Stats | null> {
     throw err;
   }
 }
+
+const nativeTimestampStat = fs.stat;
+
+/** Native freshness is eligible only while the defining module retains its original reader. */
+export function canReadModificationTimestampsNatively(): boolean {
+  return (
+    module.exports.getLastModifiedComponentTimestampMs === getLastModifiedComponentTimestampMs &&
+    fs.stat === nativeTimestampStat
+  );
+}

@@ -445,3 +445,38 @@ test('inspection diagnostics retain model hashes in compact and tagged snapshot 
     assert.deepEqual(metrics.mergeState.inspectionCompare.modelHashes,[hash]);
   }
 });
+
+test('protocol observation preserves native dependency work and unknown workspace replies', (t) => {
+  if (!process.env.BIT_TEST_WORKSPACE_ADDON) return t.skip('actual addon required');
+  const files = fixture(t);
+  const filename = path.join(files.directory, 'entry.js');
+  fs.writeFileSync(filename, "module.exports = {}; require('./dependency');");
+  fs.writeFileSync(path.join(files.directory, 'dependency.js'), '');
+  const metrics = execute(files, `
+    const assert = require('node:assert/strict');
+    const { WorkspaceEngine } = require(process.env.BIT_TEST_WORKSPACE_ADDON);
+    const engine = new WorkspaceEngine(2);
+    const operations = [
+      { kind: 'dependencyScan', request: { version: 1, files: [{ path: ${JSON.stringify(filename)} }] } },
+      { kind: 'dependencyResolve', mode: 'commonjs', filename: ${JSON.stringify(filename)}, dependencies: ['./dependency'] },
+      { kind: 'dependencyCacheRead', cache: ${JSON.stringify(path.join(files.directory, 'cache'))}, key: 'missing' },
+      { kind: 'dependencyCacheFreshness', root: ${JSON.stringify(files.directory)}, files: [], timestamp: Date.now()+10000 },
+      { kind: 'futureReadOnlyTest' },
+    ];
+    (async () => { try {
+      for (const [id, operation] of operations.entries()) {
+        const body = Buffer.from(JSON.stringify(operation));
+        const header = Buffer.alloc(12); header.write('BWS1'); header.writeUInt32BE(id,4); header.writeUInt32BE(body.length,8);
+        const result = JSON.parse(await engine.request(Buffer.concat([header,body])));
+        assert.equal(result.failed, operation.kind === 'futureReadOnlyTest');
+        assert.equal(result.id,id);
+      }
+    } finally { engine.close(); } })().catch(error => { console.error(error); process.exitCode = 1; });
+  `, { BIT_IMPORT_TRACE_PROTOCOL_ONLY: '1' });
+  for (const kind of ['dependencyScan', 'dependencyResolve', 'dependencyCacheRead', 'dependencyCacheFreshness']) {
+    assert.equal(metrics.workspace[kind].frames, 1);
+    assert.equal(metrics.workspace[kind].completed, 1);
+    assert.equal(metrics.workspace[kind].failed, 0);
+  }
+  assert.equal(metrics.workspace.futureReadOnlyTest.failed, 1);
+});

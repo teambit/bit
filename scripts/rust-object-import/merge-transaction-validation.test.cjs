@@ -259,6 +259,10 @@ test('stateless dependency parsing has a separate graph owner without relaxing t
   validateMergeTransactionDiagnostics(trace, { name: 'embedded-dependencies' });
   trace.workspaceFrames[2].kind = 'dependencyResolve';
   validateMergeTransactionDiagnostics(trace, { name: 'embedded-resolution' });
+  for (const kind of ['dependencyCacheRead', 'dependencyCacheFreshness']) {
+    trace.workspaceFrames[2].kind = kind;
+    validateMergeTransactionDiagnostics(trace, { name: kind });
+  }
   for (const kind of ['read', 'diff', 'fileStatus', 'inventoryBegin']) {
     const changed = structuredClone(trace);
     changed.workspaceFrames[2].kind = kind;
@@ -270,7 +274,7 @@ test('stateless dependency parsing has a separate graph owner without relaxing t
 test('post-error dependency graphs cannot hide workspace effects after a discarded receipt', () => {
   for (const fixture of require('./merge-transaction-prefix-fixtures.json').filter((item) => item.scenario.fault)) {
     const trace = structuredClone(fixture.trace);
-    for (const kind of ['dependencyScan', 'dependencyResolve']) {
+    for (const kind of ['dependencyScan', 'dependencyResolve', 'dependencyCacheRead', 'dependencyCacheFreshness']) {
       trace.workspaceFrames.push({ magic: 'BWS1', kind, helperId: 2 });
     }
     validateMergeTransactionDiagnostics(trace, fixture.scenario);

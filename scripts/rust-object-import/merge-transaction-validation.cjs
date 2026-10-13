@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const graphFrame = (frame) =>
-  frame.magic === 'BWS1' && ['dependencyScan', 'dependencyResolve'].includes(frame.kind);
+  frame.magic === 'BWS1' && ['dependencyScan', 'dependencyResolve', 'dependencyCacheRead', 'dependencyCacheFreshness'].includes(frame.kind);
 
 // Healthy command acceptance requires the new transaction and body engines independently.
 // Genuine error prefixes are added only from retained command traces; fallback-only is never sufficient.

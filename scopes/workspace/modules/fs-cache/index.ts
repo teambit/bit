@@ -1,1 +1,1 @@
-export { FsCache } from './fs-cache';
+export { FsCache, nativeDependencyCacheDirectory } from './fs-cache';

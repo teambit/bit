@@ -34,6 +34,10 @@ const metrics = {
   importFrames: [],
   workspace: Object.fromEntries(
     [
+      'dependencyScan',
+      'dependencyResolve',
+      'dependencyCacheRead',
+      'dependencyCacheFreshness',
       'statusPrepare',
       'statusScan',
       'statusFinish',
@@ -274,6 +278,11 @@ function observeWorkspaceTransport(child) {
       });
       requests.push(operation ? `${magic}:${operation.kind}` : magic);
       if (operation) {
+        // Observation must not prevent a new workspace operation from reaching Rust.
+        if (magic === 'BWS1' && !Object.hasOwn(metrics.workspace, operation.kind))
+          Object.defineProperty(metrics.workspace, operation.kind, {
+            value: { frames: 0, files: 0, completed: 0, failed: 0 }, enumerable: true,
+          });
         const metric = (
           magic === 'BMT1'
             ? metrics.mergeState
@@ -459,6 +468,9 @@ function observeWorkspaceTransport(child) {
           metric.rawBodyBytes = (metric.rawBodyBytes || 0) + (response.binaryBytes || 0);
         }
         metric.completed += response.completed || 0;
+        if (magic === 'BWS1:dependencyCacheRead' && !response.failed &&
+          Number.isSafeInteger(response.data?.cache?.timestamp) && typeof response.data.cache.data === 'string')
+          metric.hits = (metric.hits || 0) + 1;
         if (magic?.startsWith('BMT1:historyQuery') && response.completed > 0 && !response.failed) {
           if (response.data?.token) metric.tokens.push({ token: response.data.token, helperId: workspaceId });
           if (response.data?.reads) metric.verifiedReads.push({ ...response.data.reads, helperId: workspaceId });

@@ -103,3 +103,31 @@ Other TypeScript versions, package `typesVersions` mappings and unsupported JSON
 the installed compiler version without loading its parser. Differential tests
 cover 2,400 competing extension cases plus package-entry and directory rules;
 source and compiled graph tests exercise native results and module-path behavior.
+
+
+## Native dependency-cache reads and freshness
+
+Component loading now reuses the operation's embedded graph lease to read ordinary
+cacache 20.0.3 dependency entries and validate their freshness. Rust verifies the
+index entry SHA-1, key bucket SHA-256 and content SHA-512, including newest-entry,
+deleted-entry and missing-content semantics. It returns the existing serialized
+dependency data; Node keeps deserialization, overrides and cache writes. Corrupt or
+unsupported cache formats return to the canonical reader, preserving its eviction
+and error behavior. Custom FsCache methods, disabled caching and memoized aliases
+retain canonical dispatch.
+
+Freshness validation mirrors globby 11.0.1's visible directory traversal and the
+explicit source/config file list. File stats run on the shared Rayon pool, with no
+cross-call timestamp cache. Directory timestamps detect file additions/deletions;
+explicit hidden files still participate. Ordinary directory symlinks are followed;
+repeated physical directories, glob spellings and unsupported inputs retain
+canonical traversal. Environment-file invalidation and global dependency-cache
+clearing keep their existing ordering in DependenciesLoader.
+
+Index/content reads are bounded to 8 MiB each. Freshness requests accept at most
+65,536 paths and traversal entries, with an 8 MiB retained directory-path budget;
+existing session request, response, timeout and queue limits also apply. The two
+cache operations are read-only and independent of merge transaction ownership.
+Qualification now requires actual status/diff commands to complete both native
+cache reads and freshness checks; accepting a fallback-only implementation is
+insufficient.

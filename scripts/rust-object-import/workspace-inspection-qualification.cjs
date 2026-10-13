@@ -287,6 +287,16 @@ async function runQualification(cli, helper, options = {}) {
       diagnostics.some((entry) => entry.trace.workspace.inventoryFinish?.completed > 0),
       'actual commands must complete native inventory'
     );
+    if (addon) {
+      for (const kind of ['dependencyCacheRead', 'dependencyCacheFreshness']) {
+        assert.ok(diagnostics.some((entry) => entry.trace.workspace[kind].completed > 0),
+          `actual commands must consume native ${kind}`);
+        assert.equal(diagnostics.reduce((sum, entry) => sum + entry.trace.workspace[kind].failed, 0), 0,
+          `ordinary commands must not decline ${kind}`);
+      }
+      assert.ok(diagnostics.some((entry) => entry.trace.workspace.dependencyCacheRead.hits > 0),
+        'actual commands must receive native dependency cache hits');
+    }
     const kinds = ['inspectionBegin', 'inspectionFiles', 'inspectionCompare', 'inspectionDiff', 'inspectionFinish'];
     for (const kind of kinds) {
       if (!addon || kind !== 'inspectionFiles')

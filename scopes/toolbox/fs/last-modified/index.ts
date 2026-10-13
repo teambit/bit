@@ -1,4 +1,5 @@
 export {
+  canReadModificationTimestampsNatively,
   getLastModifiedPathsTimestampMs,
   getPathStatIfExist,
   getLastModifiedComponentTimestampMs,
