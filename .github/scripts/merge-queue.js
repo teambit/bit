@@ -14,8 +14,8 @@
  * - Gate: this script owns the `merge-queue/turn` commit status, which is a required check on
  *   master. It stays `pending` on every queued PR except the one whose turn it is; flipping it to
  *   `success` lets GitHub's own auto-merge perform the actual squash-merge (see "Merge fallback" below).
- * - Turn-taking ("fast" mode): when master is settled, the FIRST queued PR that is green,
- *   mergeable, and up to date with master gets the turn. PRs with failing/pending checks or
+ * - Turn-taking ("fast" mode): when master is settled, the FIRST queued PR that is approved,
+ *   green, mergeable, and up to date with master gets the turn. PRs with failing/pending checks or
  *   conflicts keep their queue position but are passed over until they recover.
  * - Merge fallback: GitHub's auto-merge only re-evaluates a PR on certain events, and the gate's
  *   own `success` status (posted with the workflow's GITHUB_TOKEN) doesn't reliably wake it — a PR
@@ -23,6 +23,10 @@
  *   once a turn is older than AUTO_MERGE_GRACE_MS and the PR is still open, the bot squash-merges
  *   it itself, pinned to the head sha that was granted the turn and using the commit message the
  *   PR's auto-merge request would have used.
+ * - Review gate: the merge fallback's token belongs to an admin, and admins bypass master's
+ *   required-review rule (enforce_admins is off, see the rollout note) — so the script itself must
+ *   enforce it. A PR whose reviewDecision isn't APPROVED never gets the turn, is never
+ *   auto-updated, and is never merged by the fallback; a winner that loses its approval is demoted.
  * - A granted turn is revoked when auto-merge hasn't fired within 15m (something outside this
  *   model blocks the merge, e.g. a review requirement) or when master becomes busy first — the
  *   queue then moves on instead of stalling behind the stuck PR.
@@ -259,6 +263,7 @@ async function fetchOpenPullRequestsPage(cursor) {
           isDraft
           mergeable
           mergeStateStatus
+          reviewDecision
           headRefOid
           labels(first: 20) {
             nodes {
@@ -328,6 +333,15 @@ function getCheckContexts(pullRequest) {
 
 function isPriorityPullRequest(pullRequest) {
   return pullRequest.labels.nodes.some((label) => label.name === PRIORITY_LABEL);
+}
+
+/**
+ * Master requires an approving review, but the merge fallback's admin token bypasses that rule —
+ * so it's enforced here. Strict on purpose: a null reviewDecision (no review rule applies) also
+ * blocks, so dropping the branch rule can't silently turn the queue into an unreviewed merge path.
+ */
+function isApproved(pullRequest) {
+  return pullRequest.reviewDecision === 'APPROVED';
 }
 
 /** true when the PR has more check contexts than the single page we fetched */
@@ -433,6 +447,9 @@ function describeQueueEntry({ entry, index, queueSize, winner, updateCandidate, 
       description: `${position} — checks failing (${checks.failing[0]}${extra}), passed over until green`,
     };
   }
+  if (!isApproved(pullRequest)) {
+    return { state: 'pending', description: `${position} — awaiting an approving review` };
+  }
   if (entry === updateCandidate) {
     return { state: 'pending', description: `${position} — updating branch with master, checks will re-run` };
   }
@@ -479,6 +496,11 @@ async function updateBranchWithMaster(pullRequest) {
  * the stuck-winner timeout still moves the queue on if the merge keeps being refused.
  */
 async function mergeStuckWinner(pullRequest) {
+  // last line of defense: the merge token bypasses required reviews, so never merge unapproved
+  if (!isApproved(pullRequest)) {
+    console.log(`  #${pullRequest.number}: not merging directly — reviewDecision is ${pullRequest.reviewDecision}`);
+    return;
+  }
   const { mergeMethod, commitHeadline, commitBody } = pullRequest.autoMergeRequest;
   console.log(
     `merging #${pullRequest.number} directly — auto-merge did not fire within ${AUTO_MERGE_GRACE_MS / 1000}s`
@@ -512,6 +534,7 @@ function dashboardEntryState({ entry, winner, updateCandidate }) {
   if (entry.demoted) return '⚠️ turn revoked, see its merge-queue/turn status';
   if (pullRequest.mergeable === 'CONFLICTING') return '⚠️ conflicts with master';
   if (checks.state === 'failing') return `❌ failing: ${escapeTableCell(checks.failing.join(', '))}`;
+  if (!isApproved(pullRequest)) return '👀 awaiting approval';
   if (entry === updateCandidate) return '🔄 updating branch with master';
   if (pullRequest.mergeStateStatus === 'BEHIND') return '⏳ behind master, awaiting auto-update';
   if (checks.state === 'pending') return '⏳ checks running';
@@ -725,7 +748,9 @@ async function main() {
   for (const entry of entries) {
     const gate = getGateStatus(entry.pullRequest);
     if (gate?.state !== 'SUCCESS') continue;
-    if (!masterState.settled) {
+    if (!isApproved(entry.pullRequest)) {
+      entry.demoted = 'approval missing or withdrawn — turn revoked until approved';
+    } else if (!masterState.settled) {
       entry.demoted = `master became busy before auto-merge fired (${masterState.reason}) — turn revoked`;
     } else if (Date.now() - new Date(gate.createdAt).getTime() > STUCK_WINNER_TIMEOUT_MS) {
       entry.demoted = `auto-merge did not fire within ${STUCK_WINNER_TIMEOUT_MS / 60000}m — passed over; check review or other merge requirements`;
@@ -735,15 +760,16 @@ async function main() {
     if (entry.demoted) console.log(`demoting #${entry.pullRequest.number}: ${entry.demoted}`);
   }
 
-  // fast mode: the first queued PR that is fully green, mergeable, and up to date takes the turn;
-  // PRs ahead of it that are red/pending/conflicting/behind keep their position but are passed
-  // over this round.
+  // fast mode: the first queued PR that is approved, fully green, mergeable, and up to date takes
+  // the turn; PRs ahead of it that are unapproved/red/pending/conflicting/behind keep their
+  // position but are passed over this round.
   const winner =
     stickyWinner ??
     (masterState.settled
       ? entries.find(
           (entry) =>
             !entry.demoted &&
+            isApproved(entry.pullRequest) &&
             entry.checks.state === 'ready' &&
             entry.pullRequest.mergeable === 'MERGEABLE' &&
             entry.pullRequest.mergeStateStatus !== 'BEHIND'
@@ -760,12 +786,15 @@ async function main() {
 
   // Master's strict up-to-date protection means a behind PR can never merge, and every bump
   // commit puts ALL open PRs behind — so when nothing can merge right now, press "Update branch"
-  // on the first eligible behind PR. Skipped while a winner exists or bit_merge is running: the
-  // update would be invalidated by the master commit that's about to land either way.
+  // on the first eligible behind PR. Unapproved PRs are skipped: they can't take the turn, so
+  // updating them would only burn CI and starve approved PRs behind them. Skipped while a winner
+  // exists or bit_merge is running: the update would be invalidated by the master commit that's
+  // about to land either way.
   const updateCandidate =
     masterState.settled && !winner
       ? entries.find(
           (entry) =>
+            isApproved(entry.pullRequest) &&
             entry.pullRequest.mergeable === 'MERGEABLE' &&
             entry.checks.state !== 'failing' &&
             entry.pullRequest.mergeStateStatus === 'BEHIND'
