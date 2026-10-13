@@ -1,4 +1,4 @@
-mod patterns;
+pub(super) mod patterns;
 mod rules;
 
 use super::{invalid, scan};

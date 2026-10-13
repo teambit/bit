@@ -33,10 +33,20 @@ const metrics = {
   workspaceFrames: [],
   importFrames: [],
   workspace: Object.fromEntries(
-    ['scan', 'inventoryBegin', 'inventoryFinish', 'inventoryCancel', 'read', 'compare', 'diff', 'fileStatus'].map((kind) => [
-      kind,
-      { frames: 0, files: 0, completed: 0, failed: 0 },
-    ])
+    [
+      'statusPrepare',
+      'statusScan',
+      'statusFinish',
+      'statusComplete',
+      'scan',
+      'inventoryBegin',
+      'inventoryFinish',
+      'inventoryCancel',
+      'read',
+      'compare',
+      'diff',
+      'fileStatus',
+    ].map((kind) => [kind, { frames: 0, files: 0, completed: 0, failed: 0 }])
   ),
   history: Object.fromEntries(
     ['graph', 'diverge', 'mergeFiles'].map((kind) => [
@@ -535,7 +545,8 @@ function observeWorkspaceTransport(child) {
         }
         if (magic === 'BMT1:transferInitialize') metric.objects += response.data?.count || 0;
         if (magic === 'BMT1:transferArchive') metric.archiveBytes += response.data?.bytes || 0;
-        if (['BWS1:scan', 'BWS1:inventoryBegin', 'BWS1:inventoryFinish'].includes(magic)) metric.files += response.completed || 0;
+        if (['BWS1:scan', 'BWS1:inventoryBegin', 'BWS1:inventoryFinish'].includes(magic))
+          metric.files += response.completed || 0;
         if ('skipped' in metric) metric.skipped += response.skipped?.length || 0;
         metric.failed += Number(response.failed === true);
       } catch {
@@ -871,5 +882,10 @@ Module._load = function (request, parent, isMain) {
   return value;
 };
 process.on('exit', () => {
-  if (output && process.pid === owner) fs.writeFileSync(output, JSON.stringify(metrics, null, 2));
+  if (output && process.pid === owner) {
+    metrics.loadedCommandModels = Object.keys(require.cache).filter((filename) =>
+      /[/\\](?:load-bit|model-component|version|workspace)\.js$/.test(filename)
+    );
+    fs.writeFileSync(output, JSON.stringify(metrics, null, 2));
+  }
 });

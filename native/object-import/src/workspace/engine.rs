@@ -1,3 +1,4 @@
+pub(crate) mod client_status;
 pub(crate) mod diff;
 pub(crate) mod inventory;
 mod read;
@@ -27,6 +28,10 @@ const MAX_FILES: usize = 4096;
     deny_unknown_fields
 )]
 enum Request {
+    StatusPrepare(client_status::Prepare),
+    StatusScan(client_status::Scan),
+    StatusFinish(client_status::Finish),
+    StatusComplete,
     InventoryBegin(inventory::Begin),
     InventoryFinish(inventory::Finish),
     InventoryCancel {
@@ -126,6 +131,10 @@ fn owned(
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
     match request {
+        Request::StatusPrepare(input) => client_status::prepare(input, &mut snapshots.status),
+        Request::StatusScan(input) => client_status::scan(&input, &mut snapshots.status, pool),
+        Request::StatusFinish(input) => client_status::finish(&input, &mut snapshots.status, pool),
+        Request::StatusComplete => client_status::complete(&mut snapshots.status),
         Request::InventoryBegin(input) => inventory::begin(input, &mut snapshots.inventory, pool),
         Request::InventoryFinish(input) => inventory::finish(input, &mut snapshots.inventory, pool),
         Request::InventoryCancel { token } => inventory::cancel(token, &mut snapshots.inventory),
@@ -137,7 +146,11 @@ fn failure(id: u32) -> Response {
 }
 fn apply(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value)> {
     match request {
-        Request::InventoryBegin(_)
+        Request::StatusPrepare(_)
+        | Request::StatusScan(_)
+        | Request::StatusFinish(_)
+        | Request::StatusComplete
+        | Request::InventoryBegin(_)
         | Request::InventoryFinish(_)
         | Request::InventoryCancel { .. } => Err(invalid("inventory operation requires an owner")),
         Request::Scan { root, exclude_dirs, workspace_root } => {

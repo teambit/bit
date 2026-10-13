@@ -64,7 +64,7 @@ fn directories(paths: &[String], policy: &mut Matcher) -> Vec<(String, String)> 
     selected.sort_by_key(|(directory, _)| directory.split('/').count());
     selected
 }
-pub(super) fn own(root: &Path) -> io::Result<Vec<String>> {
+pub(in crate::workspace::engine) fn own(root: &Path) -> io::Result<Vec<String>> {
     let bit = root.join(".bitignore");
     if fs::metadata(&bit).is_ok() {
         read(&bit, false)

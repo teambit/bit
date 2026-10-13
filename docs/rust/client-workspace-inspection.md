@@ -1,6 +1,14 @@
 # Client workspace inspection in Rust
 
-`BIT_RUST_CLIENT_VCS=on` enables the native inspection engine. It remains opt-in. Node owns workspace discovery, component loading, extension callbacks, issue reporting, lane presentation and public output formatting. Rust owns captured tracked-file comparisons, default Version semantic comparison and verified file diff planning. This does not retire every TypeScript client VCS path.
+`BIT_RUST_CLIENT_VCS=on` enables the native inspection engine. It remains opt-in. Supported cold mini-status commands let Rust own workspace and repository loading as described below. Other commands retain Node component loading, extension callbacks, issue reporting, lane presentation and public output formatting. Rust also owns captured tracked-file comparisons, default Version semantic comparison and verified file diff planning. This does not retire every TypeScript client VCS path.
+
+## Cold mini-status runtime
+
+`mini-status --json` and `ms -j` can run before Harmony and the Node workspace/model graph load. The usual CLI bootstrap still runs, including dependency-resolution setup, analytics consent and environment checks. Successful commands use the existing command runner for JSON formatting, logging and exit behavior. Server commands and explicit additional aspects retain their existing entry point.
+
+One embedded Rust engine owns `statusPrepare`, `statusScan`, `statusFinish` and `statusComplete`. It parses workspace configuration and the bitmap, scans each component, captures file bytes on the bounded Rayon pool, reads Component and Version objects directly, and compares normalized file identities. Mutable Version bodies are read afresh. Node supplies the installed ignore compiler's expressions; candidate paths, private ignore caches, file manifests and model file metadata stay in Rust. Only policy text, progress and the final summary cross the boundary. A failed attempt closes the engine before the canonical command runs, with no public model aliases or partial output to recover.
+
+This entry point currently supports main-lane schema-17 workspaces with ordinary bitmap entries, plain numeric tags or lowercase snap hashes, and supported core configuration. Patterns, issue reporting, configured extensions/environments, global `.bitrc.jsonc`, unsupported bitmap fields, Unicode inventories, unavailable addons and exceeded budgets retain Harmony. Each component releases its inventory and captured bytes before the next one; existing per-inventory and per-capture budgets apply. The general in-process Workspace API keeps its callback and alias-preservation path.
 
 ## Operation ownership
 

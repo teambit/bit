@@ -61,6 +61,10 @@ function links(directory) {
 }
 links(target);
 const files = [
+  'scopes/harmony/bit/run-bit.ts',
+  'scopes/harmony/bit/bootstrap.ts',
+  'scopes/harmony/bit/rust-mini-status.ts',
+  'components/legacy/bit-map/ignore-pattern.ts',
   'scopes/toolbox/string/eol/eol.ts',
   'scopes/toolbox/string/eol/index.ts',
   'scopes/git/modules/git-executable/git-executable.ts',
@@ -298,6 +302,7 @@ try {
       'teambit.scope/export',
       'teambit.legacy/scope-api',
       'teambit.legacy/extension-data',
+      'teambit.harmony/bit',
       'teambit.legacy/logger',
       'teambit.dependencies/dependency-resolver',
       'teambit.dependencies/dependencies',
@@ -348,6 +353,7 @@ assert.deepEqual(
     'teambit.scope/export',
     'teambit.legacy/scope-api',
     'teambit.legacy/extension-data',
+    'teambit.harmony/bit',
     'teambit.legacy/logger',
     'teambit.dependencies/dependency-resolver',
     'teambit.dependencies/dependencies',
@@ -363,6 +369,10 @@ assert.ok(compilation.every((c) => c.errors.length === 0));
 for (const component of compilation)
   for (const file of component.buildResults) assert.ok(fs.realpathSync(file).startsWith(target + path.sep));
 const modules = [
+  'bit/dist/run-bit.js',
+  'bit/dist/bootstrap.js',
+  'bit/dist/rust-mini-status.js',
+  'legacy.bit-map/dist/ignore-pattern.js',
   'toolbox.string.eol/dist/eol.js',
   'toolbox.string.eol/dist/index.js',
   'git.modules.git-executable/dist/git-executable.js',

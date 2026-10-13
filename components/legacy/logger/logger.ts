@@ -11,7 +11,7 @@ import pMapSeries from 'p-map-series';
 import { Analytics } from '@teambit/legacy.analytics';
 import { getLoadTraceLogPrefix, setSpanEmitter } from '@teambit/harmony.modules.load-trace';
 import { getConfig } from '@teambit/config-store';
-import { defaultErrorHandler } from '@teambit/cli';
+import defaultErrorHandler from '@teambit/cli/dist/default-error-handler.js';
 import { CFG_LOG_JSON_FORMAT, CFG_LOG_LEVEL, CFG_NO_WARNINGS, DEBUG_LOG, GLOBAL_LOGS } from '@teambit/legacy.constants';
 import { getPinoLogger } from './pino-logger';
 import { Profiler } from './profiler';

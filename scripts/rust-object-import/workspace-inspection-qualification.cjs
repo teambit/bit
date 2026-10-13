@@ -283,14 +283,17 @@ async function runQualification(cli, helper, options = {}) {
     runs.push({ ...entry, stages, measurements });
   }
   if (options.diagnostics !== false && entries.some((entry) => entry.mode === 'native')) {
-    assert.ok(diagnostics.some((entry) => entry.trace.workspace.inventoryFinish?.completed > 0),
-      'actual commands must complete native inventory');
+    assert.ok(
+      diagnostics.some((entry) => entry.trace.workspace.inventoryFinish?.completed > 0),
+      'actual commands must complete native inventory'
+    );
     const kinds = ['inspectionBegin', 'inspectionFiles', 'inspectionCompare', 'inspectionDiff', 'inspectionFinish'];
     for (const kind of kinds) {
-      assert.ok(
-        diagnostics.some((entry) => entry.trace.mergeState[kind].completed > 0),
-        `actual commands must accept ${kind}`
-      );
+      if (!addon || kind !== 'inspectionFiles')
+        assert.ok(
+          diagnostics.some((entry) => entry.trace.mergeState[kind].completed > 0),
+          `actual commands must accept ${kind}`
+        );
       assert.equal(
         diagnostics.reduce((sum, entry) => sum + entry.trace.mergeState[kind].failed, 0),
         0,
@@ -309,11 +312,22 @@ async function runQualification(cli, helper, options = {}) {
         assert.equal(entry.trace.workspace.inventoryBegin.failed + entry.trace.workspace.inventoryFinish.failed, 0);
         assert.equal(entry.trace.workspace.scan.frames, 0, `${entry.operation}: no legacy scan/filter continuation`);
       }
+      const coldStatus = Boolean(addon && entry.operation.endsWith('-mini'));
+      if (coldStatus) {
+        for (const kind of ['statusPrepare', 'statusScan', 'statusFinish', 'statusComplete']) {
+          assert.ok(entry.trace.workspace[kind].completed > 0, `${entry.operation}: ${kind} must own the command`);
+          assert.equal(entry.trace.workspace[kind].failed, 0);
+        }
+        assert.equal(entry.trace.workspace.statusPrepare.frames, 1);
+        assert.equal(entry.trace.workspace.statusComplete.frames, 1);
+        assert.equal(new Set(entry.trace.workspaceFrames.map((frame) => frame.helperId)).size, 1);
+        assert.deepEqual(entry.trace.loadedCommandModels, [], 'cold status must not hydrate Node workspace/models');
+      }
       const metrics = entry.trace.mergeState;
       const operationHelpers = new Set(kinds.flatMap((kind) => metrics[kind].helperIds));
       assert.equal(
         operationHelpers.size,
-        1,
+        coldStatus ? 0 : 1,
         `${entry.operation}: all inspection requests, including semantic Compare, must share one command owner`
       );
       const starts = new Map(metrics.inspectionBegin.tokens.map((row) => [row.token, row.helperId]));
@@ -336,9 +350,11 @@ async function runQualification(cli, helper, options = {}) {
           `${entry.operation}: private protocol must not inline Source bodies`
         );
       if (entry.operation.endsWith('-mini')) {
-        for (const kind of ['inspectionBegin', 'inspectionFiles', 'inspectionFinish'])
-          assert.ok(metrics[kind].completed > 0, `${entry.operation}: snapshot file summary must be Native`);
-        assert.ok(metrics.inspectionBegin.snapshotBytes > 0);
+        if (!coldStatus) {
+          for (const kind of ['inspectionBegin', 'inspectionFiles', 'inspectionFinish'])
+            assert.ok(metrics[kind].completed > 0, `${entry.operation}: snapshot file summary must be Native`);
+          assert.ok(metrics.inspectionBegin.snapshotBytes > 0);
+        }
         if (addon) assert.equal(metrics.inspectionBegin.spooledFiles, 0, 'addon mini-status must retain bytes in Rust');
         if (process.platform === 'linux') {
           assert.ok(entry.bodyReads, 'Linux body-read evidence is mandatory');

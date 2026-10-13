@@ -1,3 +1,4 @@
+import { rebaseIgnorePattern } from './ignore-pattern';
 import { readRustComponentInventory } from './rust-native-inventory';
 import { registerRecoveryBitmapClass } from './rust-recovery-guards';
 import * as path from 'path';
@@ -207,17 +208,6 @@ async function getNestedIgnorePatterns(
     })
   );
   return ([] as string[]).concat(...patternsPerDir);
-}
-
-function rebaseIgnorePattern(pattern: string, dir: PathLinux): string {
-  const negated = pattern.startsWith('!');
-  const body = negated ? pattern.slice(1) : pattern;
-  const anchored = body.slice(0, -1).includes('/');
-  // a trailing slash means "directories only". the join drops it, so it is put back.
-  const dirOnly = body.endsWith('/') ? '/' : '';
-  const base = anchored ? pathJoinLinux(dir, body.replace(/^\//, '')) : pathJoinLinux(dir, '**', body);
-  const rebased = base + dirOnly;
-  return negated ? `!${rebased}` : rebased;
 }
 
 /** backslash-escapes the characters that globby and glob read as pattern syntax */

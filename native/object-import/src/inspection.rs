@@ -1,10 +1,12 @@
 pub(crate) use bitmap::normalize as normalize_bitmap;
+pub(crate) use modified::modified;
 pub use snapshot::InspectionSnapshot;
 
 mod bitmap;
 mod compare;
 mod diff;
 mod files;
+mod modified;
 mod read;
 mod snapshot;
 mod wire;

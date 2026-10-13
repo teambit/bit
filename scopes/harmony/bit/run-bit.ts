@@ -9,9 +9,8 @@ gracefulFs.gracefulify(fs);
 
 import './hook-require';
 import { bootstrap } from './bootstrap';
-import { handleErrorAndExit } from '@teambit/cli';
+import { handleErrorAndExit } from '@teambit/cli/dist/handle-errors.js';
 import type { Aspect } from '@teambit/harmony';
-import { runCLI } from './load-bit';
 import { autocomplete } from './autocomplete';
 import { ServerCommander, shouldUseBitServer } from './server-commander';
 import { spawnPTY } from './server-forever';
@@ -45,6 +44,17 @@ async function initApp(additionalAspects?: Aspect[]) {
   });
   try {
     await bootstrap();
+    if (
+      !additionalAspects?.length &&
+      process.env.BIT_RUST_CLIENT_VCS === 'on' &&
+      process.argv.length === 4 &&
+      ['mini-status', 'ms'].includes(process.argv[2]) &&
+      ['--json', '-j'].includes(process.argv[3])
+    ) {
+      const { runRustMiniStatus } = await import('./rust-mini-status');
+      if (await runRustMiniStatus()) return;
+    }
+    const { runCLI } = await import('./load-bit');
     await runCLI(additionalAspects);
   } catch (err: any) {
     const originalError = err.originalError || err;
