@@ -179,9 +179,18 @@ export class DependenciesGraph {
    * the workspace links them, but a capsule installs them, so their graphs are
    * attached when the capsule's lockfile is restored.
    */
+  /**
+   * Whether this graph records the package's own dependencies: an edge for
+   * it, under its id or a peer variant of it. A package record alone says
+   * only that something reached the package, not what it depends on.
+   */
+  hasDependencyNode(pkgId: string): boolean {
+    return this.edges.some((edge) => edge.id !== DependenciesGraph.ROOT_EDGE_ID && (edge.attr?.pkgId ?? edge.id) === pkgId);
+  }
+
   attachDependencyGraph(pkgId: string, graph: DependenciesGraph, attributes: Partial<PackageAttributes> = {}): void {
+    if (this.hasDependencyNode(pkgId)) return;
     const edgeIds = new Set(this.edges.map(({ id }) => id));
-    if (edgeIds.has(pkgId) || this.packages.has(pkgId)) return;
     // The attached resolutions join this graph's, so the resolution inputs
     // (hooks, settings, overrides) can only be claimed when both agree, as a
     // merge claims them.
@@ -201,7 +210,9 @@ export class DependenciesGraph {
       if (!this.packages.has(id)) this.packages.set(id, pkgAttributes);
     }
     // Without a resolution: the restore resolves the node from the registry.
-    this.packages.set(pkgId, attributes as PackageAttributes);
+    // A record the graph already holds for the node, from a dependency that
+    // reached it, stays.
+    if (!this.packages.has(pkgId)) this.packages.set(pkgId, attributes as PackageAttributes);
     const parsed = parsePkgId(pkgId);
     const rootEdge = this.findRootEdge();
     if (parsed && rootEdge && !rootEdge.neighbours.some((neighbour) => neighbour.id === pkgId)) {

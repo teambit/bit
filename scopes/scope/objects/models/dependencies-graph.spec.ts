@@ -328,6 +328,24 @@ describe('DependenciesGraph.attachDependencyGraph', () => {
     expect(graph.lockfileSettings).to.equal(undefined);
   });
 
+  it('completes a node the graph knows only as a package record, keeping that record', () => {
+    // The workspace links its env, so a component's graph records the env as a
+    // package some dependency reached, with nothing of what the env depends on.
+    const graph = createGraph([rootEdge([{ id: 'foo@1.0.0', name: 'foo', specifier: '1.0.0' }])], ['foo@1.0.0']);
+    graph.packages.set(envPkgId, { component: { scope: 'org', name: 'my-env' }, requiresBuild: true } as any);
+    expect(graph.hasDependencyNode(envPkgId)).to.equal(false);
+
+    graph.attachDependencyGraph(envPkgId, envGraph(), { component: { scope: 'org', name: 'my-env' } });
+
+    expect(graph.hasDependencyNode(envPkgId)).to.equal(true);
+    expect(graph.edges.find(({ id }) => id === envPkgId)?.neighbours.map(({ id }) => id)).to.eql([
+      'webpack@5.0.0(esbuild@0.20.0)',
+      'fsevents@2.3.3',
+    ]);
+    expect(graph.packages.get(envPkgId)).to.eql({ component: { scope: 'org', name: 'my-env' }, requiresBuild: true });
+    expect(graph.findRootEdge()?.neighbours.map(({ id }) => id)).to.eql(['foo@1.0.0', envPkgId]);
+  });
+
   it('leaves a graph that already holds the node alone', () => {
     const graph = createGraph([rootEdge([]), edge(envPkgId, [{ id: 'foo@1.0.0' }])], ['foo@1.0.0', envPkgId]);
 
