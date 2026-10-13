@@ -18,6 +18,14 @@ function checkoutOwnsFrame(frame) {
     (frame.magic === 'BMT1' && (frame.kind.startsWith('checkout') || frame.kind.startsWith('inspection')));
 }
 
+function declinedPreflightOwners(frames) {
+  return new Set(frames
+    .filter((frame) => frame.magic === 'BWS1' && frame.kind === 'commandPrepare')
+    .map((frame) => frame.helperId)
+    .filter((helperId) => frames.filter((frame) => frame.helperId === helperId)
+      .every((frame) => frame.magic === 'BWS1' && frame.kind === 'commandPrepare')));
+}
+
 // Only the documented pre-existing scope-index insertion order is normalized.
 function comparable(state) {
   if (!state.index) return state;
@@ -390,7 +398,12 @@ async function runQualification(cli, helper, options = {}) {
       }
     }
     for (const row of diagnostics) {
-      const owned = row.trace.workspaceFrames.filter(checkoutOwnsFrame);
+      const frames = row.trace.workspaceFrames;
+      const preflightOwners = declinedPreflightOwners(frames);
+      // A declined cold preflight has no plan/apply/finalize or publication frames.
+      // Every frame of the subsequent canonical transaction still has one owner.
+      row.declinedColdPreflight = frames.filter((frame) => preflightOwners.has(frame.helperId));
+      const owned = frames.filter((frame) => !preflightOwners.has(frame.helperId) && checkoutOwnsFrame(frame));
       assert.equal(
         new Set(owned.map((frame) => frame.helperId)).size,
         1,
@@ -478,4 +491,4 @@ async function runQualification(cli, helper, options = {}) {
   if (options.report) await fs.writeFile(options.report, JSON.stringify(report, null, 2) + '\n');
   return report;
 }
-module.exports = { runQualification, checkoutOwnsFrame };
+module.exports = { runQualification, checkoutOwnsFrame, declinedPreflightOwners };

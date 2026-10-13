@@ -1162,3 +1162,14 @@ test('checkout ownership excludes only separate dependency sessions and retains 
     assert.equal(checkoutOwnsFrame({ magic: 'BWS1', kind, helperId: 2 }), true);
   assert.equal(checkoutOwnsFrame({ magic: 'BMT1', kind: 'inspectionFinish', helperId: 2 }), true);
 });
+
+test('declined cold preflight exclusion requires the entire helper to remain read-only preparation', () => {
+  const { declinedPreflightOwners } = require('./checkout-transition-qualification.cjs');
+  const prepare = { magic: 'BWS1', kind: 'commandPrepare', helperId: 1 };
+  const legacy = { magic: 'BMT1', kind: 'checkoutMaterialize', helperId: 2 };
+  assert.deepEqual([...declinedPreflightOwners([prepare, legacy])], [1]);
+  for (const kind of ['commandPlan', 'commandApply', 'commandFinalize', 'unknown']) {
+    assert.deepEqual([...declinedPreflightOwners([prepare, { ...prepare, kind }, legacy])], []);
+  }
+  assert.deepEqual([...declinedPreflightOwners([prepare, { ...legacy, helperId: 1 }])], []);
+});
