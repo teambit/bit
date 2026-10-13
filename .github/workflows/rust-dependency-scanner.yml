@@ -525,6 +525,9 @@ jobs:
           BIT_TEST_DIFF_COMPILED=1 node --test scripts/rust-object-import/full-diff-runtime.test.cjs
           node --test scripts/rust-object-import/cold-command-driver.test.cjs
           BIT_TEST_COMMAND_COMPILED=1 node --test scripts/rust-object-import/cold-command-driver.test.cjs
+      - name: Install Linux source ownership tracing
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y strace
       - name: Differential public cold checkout and main merge
         if: runner.os == 'Linux'
         env:
