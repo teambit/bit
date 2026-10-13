@@ -154,9 +154,20 @@ export async function captureRustClientCurrent(
     fresh: () => rootPolicy.fresh(),
     commit: async () => {
       if (!rootPolicy.fresh()) throw new Error('status inventory policy changed');
+      const plans = context.pendingHistory ?? [];
+      if (!Array.isArray(plans)) throw new Error('status history plans');
+      if (plans.length) {
+        const validated = await request({ kind: 'statusHistoryValidate', root, plans });
+        if (validated.fresh !== true) throw new Error('status history changed');
+      }
       if (cachePlan && (pending.length || cachePlan.reset)) {
         const { commitFreshDependencies } = await import('./rust-fresh-dependencies');
         await commitFreshDependencies(cachePlan, pending, request);
+      }
+      if (plans.length) {
+        const committed = await request({ kind: 'statusHistoryCommit', root, plans });
+        if (!Number.isSafeInteger(committed.written) || committed.written < 0 || committed.written > plans.length)
+          throw new Error('status history commit receipt');
       }
     },
   };

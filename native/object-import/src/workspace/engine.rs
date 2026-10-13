@@ -12,6 +12,7 @@ mod resolve_typescript;
 mod scan;
 mod status;
 mod status_context;
+mod status_history;
 mod status_models;
 mod status_result;
 
@@ -41,6 +42,8 @@ enum Request {
     DependencyDetectFresh(Box<dependency_policy::fresh::Detect>),
     DependencyPolicyDetected(Box<dependency_policy::fresh::Complete>),
     DependencyFreshValidate(dependency_graph::proof::Request),
+    StatusHistoryValidate(status_history::Request),
+    StatusHistoryCommit(status_history::Request),
     DependencyPolicyComplete(Box<dependency_policy::pipeline::Request>),
     DependencyPolicyPackages(dependency_policy::packages_on_disk::Request),
     DependencyPolicy(Box<dependency_policy::Request>),
@@ -207,6 +210,10 @@ fn dependencies(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize
         Request::DependencyPolicyDetected(request) => {
             dependency_policy::fresh::apply(&request, pool)
         }
+        Request::StatusHistoryValidate(request) => {
+            pool.install(|| status_history::validate(&request))
+        }
+        Request::StatusHistoryCommit(request) => pool.install(|| status_history::commit(&request)),
         Request::DependencyFreshValidate(request) => {
             pool.install(|| dependency_graph::proof::apply(&request))
         }

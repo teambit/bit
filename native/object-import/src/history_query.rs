@@ -1,4 +1,5 @@
 //! Owned, read-only repository history queries. Public imports and errors remain adapter checkpoints.
+pub(crate) mod populate;
 pub(crate) use state::State;
 
 mod artifacts;
@@ -7,7 +8,6 @@ mod blame;
 mod diff;
 mod files;
 mod lines;
-mod populate;
 mod show;
 mod sources;
 mod state;

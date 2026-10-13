@@ -45,6 +45,8 @@ const metrics = {
       'statusContext',
       'statusCompare',
       'statusResult',
+      'statusHistoryValidate',
+      'statusHistoryCommit',
       'workspaceDiff',
       'dependencyPolicyCached',
       'dependencyGraph',

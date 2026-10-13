@@ -40,7 +40,7 @@ impl Fixture {
             .num_threads(2)
             .build()
             .unwrap();
-        read(&Request { root: self.0.clone(), home: self.0.join("home") }, &pool)
+        read(&Request { root: self.0.clone(), home: self.0.join("home"), history: true }, &pool)
             .map(|(_, value)| value)
     }
 }

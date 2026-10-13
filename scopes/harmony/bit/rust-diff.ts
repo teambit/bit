@@ -16,7 +16,7 @@ type DiffJson = {
 
 export async function readRustDiff(root: string, home: string, pattern?: string): Promise<DiffJson[] | undefined> {
   return withRustClientRequest(async (request) => {
-    const context = await request({ kind: 'statusContext', root, home });
+    const context = await request({ kind: 'statusContext', root, home, history: !pattern });
     if (
       context.targets.some(
         (target) =>

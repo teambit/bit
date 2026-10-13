@@ -215,6 +215,9 @@ async function runQualification(cli, helper, options = {}) {
       'node'
     );
     assert.equal(persisted.code, 0, persisted.stdout + persisted.stderr);
+    // Qualify the first command with an actual dependency-cache miss; the deterministic
+    // command clock may otherwise make setup caches appear newer than fixture edits.
+    await fs.rm(path.join(directory, '.bit/cache/components/deps'), { recursive: true, force: true });
     const stages = [];
     for (const phase of ['clean', 'eol', 'config', 'content', 'inventory', 'missing-main']) {
       if (phase !== 'clean') await mutate(directory, phase);
@@ -266,6 +269,7 @@ async function runQualification(cli, helper, options = {}) {
               temporary,
               cliProvenance: marker,
               helperSha256,
+              addonSha256,
               nativeSourceDigest,
               bindings,
               runs,
@@ -296,9 +300,15 @@ async function runQualification(cli, helper, options = {}) {
           `${phase}: ordinary full status must complete without Harmony`
         );
       }
+      for (const kind of ['statusHistoryValidate', 'statusHistoryCommit']) {
+        assert.ok(
+          diagnostics.some((entry) => entry.operation === 'clean-status' && entry.trace.workspace[kind]?.completed > 0),
+          `clean status must own native ${kind}`
+        );
+      }
       for (const kind of ['dependencyDetectFresh', 'dependencyPolicyDetected', 'dependencyFreshValidate']) {
         assert.ok(
-          diagnostics.some((entry) => entry.trace.workspace[kind]?.completed > 0),
+          diagnostics.some((entry) => entry.operation === 'clean-status' && entry.trace.workspace[kind]?.completed > 0),
           `actual commands must consume native ${kind}`
         );
         assert.equal(

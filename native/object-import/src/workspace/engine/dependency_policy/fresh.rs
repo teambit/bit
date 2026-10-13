@@ -21,6 +21,7 @@ pub(in crate::workspace::engine) fn detect(
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
     validate(request)?;
+    validate_packages(request)?;
     let mut controls = controls(request)?;
     let mut graph = request.detection.graph.clone();
     let object = graph.as_object_mut().ok_or_else(|| invalid("fresh dependency graph grammar"))?;
@@ -96,4 +97,18 @@ fn controls(request: &Detect) -> io::Result<Vec<proof::Proof>> {
         proof::read(&file, &mut proofs)?;
     }
     Ok(proofs)
+}
+
+fn validate_packages(request: &Detect) -> io::Result<()> {
+    for packages in
+        request.detection.model_packages.iter().chain(&request.detection.workspace_policy)
+    {
+        if packages
+            .values()
+            .any(|value| value.as_str().is_none_or(str::is_empty))
+        {
+            return Err(invalid("fresh dependency version map requires canonical fallback"));
+        }
+    }
+    Ok(())
 }
