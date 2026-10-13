@@ -785,11 +785,15 @@ export class VersionMaker {
   private getDependentsWithPinnedDeps(): DependentWithPinnedDeps[] {
     if (!this.allWorkspaceComps) return [];
     const idsToTag = ComponentIdList.fromArray(this.allComponentsToTag.map((c) => c.id));
+    // like updateDependenciesVersions, a removed component doesn't count as a new version of a dependency
+    const idsWithNewVersion = ComponentIdList.fromArray(
+      this.allComponentsToTag.filter((c) => !c.isRemoved()).map((c) => c.id)
+    );
     return compact(
       this.allWorkspaceComps.map((component) => {
         const consumerComponent: ConsumerComponent = component.state._consumer;
         const pinnedDependencies = consumerComponent.getDependenciesWithVersionFromConfig((id) =>
-          idsToTag.hasWithoutVersion(id)
+          idsWithNewVersion.hasWithoutVersion(id)
         );
         if (!pinnedDependencies.length || idsToTag.hasWithoutVersion(component.id)) return null;
         return { id: component.id, pinnedDependencies };
