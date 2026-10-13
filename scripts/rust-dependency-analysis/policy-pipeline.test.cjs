@@ -210,8 +210,8 @@ test('cached policy pipeline owns freshness, cache hydration and current missing
       expected.components, `components ${index}`);
     await cacache.put(cache, request.finish.selfIdentity, JSON.stringify(detected), { metadata: { timestamp: 0 } });
     const stale = native(input, 'dependencyPolicyCached');
-    assert.equal(stale.failed, true);
-    assert.equal(stale.data, undefined);
+    assert.equal(stale.failed, false);
+    assert.deepEqual(stale.data, { needsDetection: true });
   }
 });
 
@@ -222,7 +222,9 @@ test('cached policy pipeline rejects custom envs and malformed caches while root
   const cacache = installed('cacache');
   const input = { ...location, identity: request.finish.selfIdentity, files: [],
     policies: request.initial.policies, finish: request.finish, resolution: request.resolution };
-  assert.equal(native(input, 'dependencyPolicyCached').failed, true, 'missing cache');
+  const missing = native(input, 'dependencyPolicyCached');
+  assert.equal(missing.failed, false, 'ordinary missing cache requests fresh detection');
+  assert.deepEqual(missing.data, { needsDetection: true });
   const empty = { allDependencies: { dependencies: [], devDependencies: [], peerDependencies: [] },
     allPackagesDependencies: { packageDependencies: {}, devPackageDependencies: {}, peerPackageDependencies: {} }, issues: [] };
   for (const detected of [{ ...empty, allDependencies: {} }, { ...empty, allPackagesDependencies: null },

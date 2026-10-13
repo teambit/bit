@@ -11,6 +11,13 @@ const fixtureModule = require('./checkout-transition-fixture.cjs');
 const { pairedEntries, measuredCommand } = require('./merge-history-measurement.cjs');
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
 
+function checkoutOwnsFrame(frame) {
+  if (frame.magic === 'BWS1' &&
+    ['dependencyScan', 'dependencyResolve', 'dependencyGraph', 'dependencyCacheRead', 'dependencyCacheFreshness'].includes(frame.kind)) return false;
+  return ['BWS1', 'BWP1', 'BWC0', 'BWC2', 'BWC1', 'BCK1', 'BMH1'].includes(frame.magic) ||
+    (frame.magic === 'BMT1' && (frame.kind.startsWith('checkout') || frame.kind.startsWith('inspection')));
+}
+
 // Only the documented pre-existing scope-index insertion order is normalized.
 function comparable(state) {
   if (!state.index) return state;
@@ -177,7 +184,14 @@ async function runQualification(cli, helper, options = {}) {
   await successful(baseline, ['init', '--skip-interactive', '--default-scope', 'qualification.destination']);
   const scopeFile = path.join(baseline, '.bit/scope.json');
   const scope = JSON.parse(await fs.readFile(scopeFile));
-  scope.remotes = fixture.remotes;
+  // A newly created local lane still resolves its scope during checkout history lookup.
+  // Keep that lookup inside the disposable fixture instead of contacting bit.cloud.
+  const destinationRemote = path.join(temporary, 'destination-remote');
+  const { Scope } = load('@teambit/legacy.scope');
+  const destination = await Scope.ensure(destinationRemote, 'qualification.destination');
+  await destination.ensureDir();
+  Scope.scopeCache = {};
+  scope.remotes = { ...fixture.remotes, 'qualification.destination': `file://${destinationRemote}` };
   scope.name = 'qualification.destination';
   await fs.writeFile(scopeFile, JSON.stringify(scope));
   await fs.writeFile(
@@ -376,11 +390,7 @@ async function runQualification(cli, helper, options = {}) {
       }
     }
     for (const row of diagnostics) {
-      const owned = row.trace.workspaceFrames.filter(
-        (frame) =>
-          ['BWS1', 'BWP1', 'BWC0', 'BWC2', 'BWC1', 'BCK1', 'BMH1'].includes(frame.magic) ||
-          (frame.magic === 'BMT1' && (frame.kind.startsWith('checkout') || frame.kind.startsWith('inspection')))
-      );
+      const owned = row.trace.workspaceFrames.filter(checkoutOwnsFrame);
       assert.equal(
         new Set(owned.map((frame) => frame.helperId)).size,
         1,
@@ -468,4 +478,4 @@ async function runQualification(cli, helper, options = {}) {
   if (options.report) await fs.writeFile(options.report, JSON.stringify(report, null, 2) + '\n');
   return report;
 }
-module.exports = { runQualification };
+module.exports = { runQualification, checkoutOwnsFrame };

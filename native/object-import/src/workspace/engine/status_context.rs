@@ -1,6 +1,6 @@
 mod metadata;
 
-use super::{client_status::config, invalid, status_models};
+use super::{client_status::config, dependency_graph::proof, invalid, status_models};
 use crate::read_budget::Budget;
 use rayon::prelude::*;
 use serde::Deserialize;
@@ -12,6 +12,8 @@ use std::{io, path::PathBuf};
 pub(super) struct Request {
     root: PathBuf,
     home: PathBuf,
+    #[serde(default = "default_history")]
+    history: bool,
 }
 
 /// Capture current configuration and model metadata without loading Harmony.
@@ -25,6 +27,7 @@ pub(super) fn read(request: &Request, pool: &rayon::ThreadPool) -> io::Result<(u
     {
         return Err(invalid("status context requires canonical lifecycle"));
     }
+    let proofs = if request.history { controls(request)? } else { Vec::new() };
     let settings = config::configuration(&request.root)?;
     let targets = config::context_targets(&request.root, &settings)?;
     let budget = Budget::new(8 * 1024 * 1024);
@@ -35,11 +38,12 @@ pub(super) fn read(request: &Request, pool: &rayon::ThreadPool) -> io::Result<(u
             .collect::<io::Result<Vec<_>>>()
     })?;
     let model_request =
-        serde_json::from_value(json!({"root":request.root,"history":true,"includeHeads":true,
+        serde_json::from_value(json!({"root":request.root,"history":request.history,"stageHistory":true,"includeHeads":true,
         "targets":targets.iter().map(|target| json!({"identity":target["identity"],
             "version":target["version"]})).collect::<Vec<_>>()}))
         .map_err(io::Error::other)?;
     let (_, mut output) = status_models::read(&model_request, pool)?;
+    attach_controls(&mut output, &proofs)?;
     output["options"] =
         config::options(&settings, &super::inventory::patterns::own(&request.root)?);
     output["workspace"] = config::document(&request.root.join("workspace.jsonc"))?;
@@ -53,3 +57,35 @@ pub(super) fn read(request: &Request, pool: &rayon::ThreadPool) -> io::Result<(u
 
 #[cfg(test)]
 mod tests;
+
+fn default_history() -> bool {
+    true
+}
+
+fn controls(request: &Request) -> io::Result<Vec<proof::Proof>> {
+    let mut proofs = Vec::new();
+    for name in
+        [".bitmap", "workspace.jsonc", ".bit/scope.json", ".bit/index.json", ".bit/unmerged.json"]
+    {
+        proof::read(&request.root.join(name), &mut proofs)?;
+    }
+    Ok(proofs)
+}
+fn attach_controls(output: &mut Value, proofs: &[proof::Proof]) -> io::Result<()> {
+    if let Some(plans) = output["pendingHistory"].as_array_mut() {
+        let controls = serde_json::to_value(proofs).map_err(io::Error::other)?;
+        for plan in plans {
+            plan["readSet"]
+                .as_array_mut()
+                .ok_or_else(|| invalid("status history proof"))?
+                .extend(
+                    controls
+                        .as_array()
+                        .ok_or_else(|| invalid("status control proof"))?
+                        .iter()
+                        .cloned(),
+                );
+        }
+    }
+    Ok(())
+}

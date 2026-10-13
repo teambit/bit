@@ -45,8 +45,14 @@ const metrics = {
       'statusContext',
       'statusCompare',
       'statusResult',
+      'statusHistoryValidate',
+      'statusHistoryCommit',
       'workspaceDiff',
       'dependencyPolicyCached',
+      'dependencyGraph',
+      'dependencyDetectFresh',
+      'dependencyPolicyDetected',
+      'dependencyFreshValidate',
       'scan',
       'inventoryBegin',
       'inventoryFinish',
@@ -252,6 +258,7 @@ function observeWorkspaceTransport(child) {
   let workspace = false,
     workspaceId;
   const requests = [];
+  const requestTimes = [];
   let pending = Buffer.alloc(0);
   let binaryRemaining = 0;
   const write = child.stdin.write;
@@ -281,6 +288,7 @@ function observeWorkspaceTransport(child) {
             )
           : {}),
       });
+      requestTimes.push(process.hrtime.bigint());
       requests.push(operation ? `${magic}:${operation.kind}` : magic);
       if (operation) {
         // Observation must not prevent a new workspace operation from reaching Rust.
@@ -299,6 +307,7 @@ function observeWorkspaceTransport(child) {
                 : metrics.workspace
         )[operation.kind];
         metric.frames++;
+        if (magic === 'BWS1') metric.requestBytes = (metric.requestBytes || 0) + bytes.length;
         if (magic === 'BWS1' && operation.kind === 'statusCompare')
           metric.identities = [...(metric.identities || []), ...operation.targets.map((target) => target.identity)];
         if (metric.helperIds && !metric.helperIds.includes(workspaceId)) metric.helperIds.push(workspaceId);
@@ -415,6 +424,7 @@ function observeWorkspaceTransport(child) {
               ? metrics.checkout.preflight
               : metrics.checkout.write;
         metric.frames++;
+        if (magic === 'BWS1') metric.requestBytes = (metric.requestBytes || 0) + bytes.length;
         if (metric.helperIds && !metric.helperIds.includes(workspaceId)) metric.helperIds.push(workspaceId);
         metric.files +=
           magic === 'BCK1' ? JSON.parse(bytes.subarray(12).toString()).expectedFiles.length : bytes.readUInt32BE(8);
@@ -446,6 +456,7 @@ function observeWorkspaceTransport(child) {
       const newline = pending.indexOf(10);
       if (newline < 0) return;
       const magic = requests.shift();
+      const started = requestTimes.shift();
       const metric = magic?.startsWith('BMT1:')
         ? metrics.mergeState[magic.slice(5)]
         : magic?.startsWith('BMH1:')
@@ -465,6 +476,12 @@ function observeWorkspaceTransport(child) {
                       : metrics.persistence;
       try {
         const response = JSON.parse(pending.subarray(0, newline).toString());
+        if (magic?.startsWith('BWS1:')) {
+          metric.responseBytes = (metric.responseBytes || 0) + newline + 1;
+          if (started !== undefined)
+            metric.summedRoundTripMs =
+              (metric.summedRoundTripMs || 0) + Number(process.hrtime.bigint() - started) / 1e6;
+        }
         if (
           (magic === 'BWS1:read' || magic === 'BWC2') &&
           Number.isSafeInteger(response.binaryBytes) &&

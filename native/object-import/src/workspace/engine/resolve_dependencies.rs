@@ -1,4 +1,4 @@
-use super::{invalid, path};
+use super::{dependency_graph::proof, invalid, path};
 use rayon::prelude::*;
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -6,7 +6,10 @@ use std::{
     fs,
     io::{self, Read},
     path::{Component, Path, PathBuf},
-    sync::atomic::{AtomicUsize, Ordering},
+    sync::{
+        Mutex,
+        atomic::{AtomicUsize, Ordering},
+    },
 };
 
 const EXTENSIONS: [&str; 15] = [
@@ -56,7 +59,7 @@ pub(super) fn resolve(request: &Request, pool: &rayon::ThreadPool) -> io::Result
     Ok((resolved.len(), json!({"resolved":resolved})))
 }
 
-fn resolve_one(
+pub(super) fn resolve_one(
     dependency: &str,
     parent: &Path,
     home: Option<&Path>,
@@ -80,16 +83,46 @@ fn resolve_one(
 pub(super) struct Budget {
     operations: AtomicUsize,
     bytes: AtomicUsize,
+    proofs: Option<Mutex<Vec<proof::Proof>>>,
 }
 impl Budget {
     pub(super) fn new() -> Self {
-        Self { operations: AtomicUsize::new(0), bytes: AtomicUsize::new(0) }
+        Self::capture(false)
+    }
+    pub(super) fn capture(enabled: bool) -> Self {
+        Self {
+            operations: AtomicUsize::new(0),
+            bytes: AtomicUsize::new(0),
+            proofs: enabled.then(|| Mutex::new(Vec::new())),
+        }
+    }
+    pub(super) fn proofs(&self) -> io::Result<Vec<proof::Proof>> {
+        self.proofs
+            .as_ref()
+            .map_or_else(
+                || Ok(Vec::new()),
+                |proofs| {
+                    proofs
+                        .lock()
+                        .map(|proofs| proofs.clone())
+                        .map_err(|_| invalid("dependency proof lock"))
+                },
+            )
+    }
+    fn record(&self, value: proof::Proof) -> io::Result<()> {
+        if let Some(proofs) = &self.proofs {
+            proofs
+                .lock()
+                .map_err(|_| invalid("dependency proof lock"))?
+                .push(value);
+        }
+        Ok(())
     }
     pub(super) fn metadata(&self, file: &Path) -> io::Result<Option<fs::Metadata>> {
         if self.operations.fetch_add(1, Ordering::Relaxed) >= 16384 {
             return Err(invalid("dependency resolution filesystem limit"));
         }
-        match fs::metadata(file) {
+        let metadata = match fs::metadata(file) {
             Ok(metadata) => Ok(Some(metadata)),
             Err(error)
                 if matches!(
@@ -100,7 +133,11 @@ impl Budget {
                 Ok(None)
             }
             Err(error) => Err(error),
+        }?;
+        if self.proofs.is_some() {
+            self.record(proof::metadata(file, metadata.as_ref())?)?;
         }
+        Ok(metadata)
     }
     pub(super) fn package(&self, file: &Path) -> io::Result<Option<Value>> {
         let Some(metadata) = self.metadata(file)? else {
@@ -117,6 +154,9 @@ impl Budget {
             || self.bytes.fetch_add(bytes.len(), Ordering::Relaxed) + bytes.len() > 8 * 1024 * 1024
         {
             return Err(invalid("dependency package read limit"));
+        }
+        if self.proofs.is_some() {
+            self.record(proof::content(file, &bytes))?;
         }
         let source = std::str::from_utf8(&bytes).map_err(|_| invalid("dependency package UTF-8"))?;
         serde_json::from_str(source)

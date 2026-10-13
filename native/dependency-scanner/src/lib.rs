@@ -284,3 +284,10 @@ pub fn scan_request(input: &str, pool: &rayon::ThreadPool) -> Result<Value, serd
     }
     embedded::process(input, pool)
 }
+
+/// Scan one captured source on a caller-owned worker without a JSON source round trip.
+/// The caller owns scheduling and aggregate output limits; per-source limits remain enforced.
+pub fn scan_source(path: String, source: String) -> Result<Value, serde_json::Error> {
+    let file = File { path, source: Some(source), kind: None };
+    serde_json::to_value(scan_with_metrics(&file, false, None))
+}

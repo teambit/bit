@@ -3,6 +3,7 @@ pub(crate) mod dependency_policy;
 pub(crate) mod diff;
 pub(crate) mod inventory;
 
+mod dependency_graph;
 mod read;
 mod read_dependency_cache;
 mod read_raw;
@@ -11,6 +12,7 @@ mod resolve_typescript;
 mod scan;
 mod status;
 mod status_context;
+mod status_history;
 mod status_models;
 mod status_result;
 
@@ -37,6 +39,11 @@ const MAX_FILES: usize = 4096;
 )]
 enum Request {
     DependencyPolicyCached(Box<dependency_policy::cached::Request>),
+    DependencyDetectFresh(Box<dependency_policy::fresh::Detect>),
+    DependencyPolicyDetected(Box<dependency_policy::fresh::Complete>),
+    DependencyFreshValidate(dependency_graph::proof::Request),
+    StatusHistoryValidate(status_history::Request),
+    StatusHistoryCommit(status_history::Request),
     DependencyPolicyComplete(Box<dependency_policy::pipeline::Request>),
     DependencyPolicyPackages(dependency_policy::packages_on_disk::Request),
     DependencyPolicy(Box<dependency_policy::Request>),
@@ -45,6 +52,7 @@ enum Request {
     DependencyCacheRead(read_dependency_cache::Read),
     DependencyCacheFreshness(read_dependency_cache::Freshness),
     DependencyResolve(resolve_dependencies::Request),
+    DependencyGraph(dependency_graph::Request),
     DependencyScan {
         request: Value,
     },
@@ -198,6 +206,17 @@ fn apply(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value
 }
 fn dependencies(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value)> {
     match request {
+        Request::DependencyDetectFresh(request) => dependency_policy::fresh::detect(&request, pool),
+        Request::DependencyPolicyDetected(request) => {
+            dependency_policy::fresh::apply(&request, pool)
+        }
+        Request::StatusHistoryValidate(request) => {
+            pool.install(|| status_history::validate(&request))
+        }
+        Request::StatusHistoryCommit(request) => pool.install(|| status_history::commit(&request)),
+        Request::DependencyFreshValidate(request) => {
+            pool.install(|| dependency_graph::proof::apply(&request))
+        }
         Request::DependencyPolicyCached(request) => {
             dependency_policy::cached::apply(&request, pool)
         }
@@ -215,6 +234,7 @@ fn dependencies(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize
             read_dependency_cache::freshness(&request, pool)
         }
         Request::DependencyResolve(request) => resolve_dependencies::resolve(&request, pool),
+        Request::DependencyGraph(request) => dependency_graph::apply(&request, pool),
         Request::DependencyScan { request } => dependency_scan(&request, pool),
         Request::StatusPrepare(_)
         | Request::StatusScan(_)

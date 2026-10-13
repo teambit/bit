@@ -80,6 +80,7 @@ fn model_request(request: &Request) -> super::Request {
             })
             .collect(),
         history: false,
+        stage_history: false,
         include_heads: false,
     }
 }

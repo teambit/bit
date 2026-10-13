@@ -6,8 +6,8 @@ const os = require('node:os');
 const { execFileSync } = require('node:child_process');
 const { installed } = require('./load-source.cjs');
 const { ModelComponent, Version, Source } = installed('@teambit/objects');
-function request(root, targets, history = false, compare = false) {
-  const body = Buffer.from(JSON.stringify(compare ? { kind: 'statusCompare', root, targets } : { kind: 'statusModels', root, targets, history }));
+function request(root, targets, history = false, compare = false, options = {}) {
+  const body = Buffer.from(JSON.stringify(compare ? { kind: 'statusCompare', root, targets } : { kind: 'statusModels', root, targets, history, ...options }));
   const header = Buffer.alloc(12);
   header.write('BWS1');
   header.writeUInt32BE(1, 4);
@@ -335,4 +335,45 @@ test('missing history keeps population and writes on the canonical path', async 
   assert.equal(response.failed, true);
   assert.equal(response.data, undefined);
   assert.equal(request(root, targets).failed, false);
+});
+
+test('detached remote histories decline new population without changing complete-history support', async (t) => {
+  const { root, models, version, index, targets, write } = await fixture(t);
+  const { VersionHistory, Ref } = installed('@teambit/objects');
+  index.components = index.components.slice(0, 1);
+  await fs.writeFile(path.join(root, '.bit/index.json'), JSON.stringify(index));
+  const model = models[0];
+  const second = Version.parse(version.toBuffer().toString(), '2'.repeat(40));
+  second.parents = [version.hash()];
+  await write(second);
+  model.head = second.hash();
+  await write(model);
+  const remoteFile = path.join(root, '.bit/refs/remotes', model.scope, 'main');
+  await fs.mkdir(path.dirname(remoteFile), { recursive: true });
+  await fs.writeFile(remoteFile, JSON.stringify([
+    { id: { scope: model.scope, name: model.name }, head: version.hash().toString() },
+  ]));
+  const history = new VersionHistory({
+    name: model.name, scope: model.scope,
+    versions: [{ hash: version.hash(), parents: [] }],
+    graphCompleteRefs: [version.hash().toString()],
+  });
+  const hash = history.hash().toString();
+  const filename = path.join(root, '.bit/objects', hash.slice(0, 2), hash.slice(2));
+  const read = () => request(root, targets.slice(0, 1), true, false, { stageHistory: true });
+  assert.equal(read().failed, true, 'missing detached history must retain canonical population ordering');
+  await assert.rejects(fs.access(filename), { code: 'ENOENT' }, 'decline must not publish a new history');
+  await write(history);
+  const partial = await fs.readFile(filename);
+  assert.equal(read().failed, true, 'partial detached history also requires canonical population');
+  assert.deepEqual(await fs.readFile(filename), partial, 'decline must preserve an existing history byte for byte');
+  history.addFromVersionParents([{ hash: new Ref('2'.repeat(40)), parents: [version.hash()] }]);
+  await write(history);
+  const complete = await fs.readFile(filename);
+  const supported = read();
+  assert.equal(supported.failed, false, 'complete cached detached histories remain supported');
+  assert.equal(supported.data.pendingHistory, undefined);
+  assert.deepEqual(supported.data.histories[0].status, { sourceOnly: [], targetOnly: [], noCommon: false });
+  assert.deepEqual(supported.data.histories[0].merge.sourceOnly, [second.hash().toString()]);
+  assert.deepEqual(await fs.readFile(filename), complete, 'complete history reads must not rewrite objects');
 });

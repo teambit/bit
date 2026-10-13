@@ -218,6 +218,17 @@ const hasSupportedRustOptions = (filename: string, options: Options = {}): boole
 export const isRustEligible = (filename: string, options: Options = {}): boolean =>
   !options.envDetectors?.length && !DetectorHook.hooks.length && hasSupportedRustOptions(filename, options);
 
+/** The graph owner can skip files only when the canonical dispatcher has no detector. */
+export const rustGraphDetectorExtensions = Object.freeze([...new Set([...jsExt, ...Object.keys(extToType)])]);
+export const isRustGraphEligible = (filename: string, options: Options = {}): boolean => {
+  if (!DetectorHook.canSkipNativeGraphHooks(filename)) return false;
+  if (rustGraphDetectorExtensions.includes(path.extname(filename)))
+    return !options.envDetectors?.length && hasSupportedRustOptions(filename, options);
+  return (
+    !options.envDetectors?.length && Object.keys(options).every((key) => ['includeCore', 'envDetectors'].includes(key))
+  );
+};
+
 const nativeDependencies = (
   filename: string,
   outcome: RustScannerOutcome | undefined,

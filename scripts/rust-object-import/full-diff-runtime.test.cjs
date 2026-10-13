@@ -138,7 +138,11 @@ test('cold diff owns ordinary workspaces with byte-exact canonical JSON and no f
   assert.equal(byRoot[0].id, 'qualification.inspection/z-new');
   await fs.writeFile(bitmapFile, originalBitmap);
   await fs.rm(path.join(directory, '.bit/cache/components/deps'), { recursive: true, force: true });
-  assert.equal(await readRustDiff(directory, temporary), undefined, 'missing dependency cache declines');
+  const cold = await readRustDiff(directory, temporary);
+  assert.ok(cold, 'missing dependency cache is derived natively');
+  const expectedCold = JSON.parse(command(['diff', '--json']));
+  assert.deepEqual(cold, expectedCold);
+  assert.equal(JSON.stringify(cold), JSON.stringify(expectedCold));
   await compare('cache refresh');
   await fs.mkdir(path.join(directory, '.bitTmp'));
   assert.equal(await readRustDiff(directory, temporary), undefined, 'canonical lifecycle cleanup declines');

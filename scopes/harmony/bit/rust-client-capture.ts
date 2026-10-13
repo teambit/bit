@@ -1,6 +1,6 @@
 import type defaultIgnore from 'ignore';
 import { isFeatureEnabled, NO_FS_CACHE_FEATURE } from '@teambit/harmony.modules.feature-toggle';
-import { FsCache, dependencyCacheNeedsInvalidation } from '@teambit/workspace.modules.fs-cache';
+import type { FreshDependencyCache } from './rust-fresh-dependencies';
 import path from 'path';
 import { availableParallelism } from 'os';
 import { createRequire } from 'module';
@@ -60,8 +60,6 @@ export async function captureRustClientCurrent(
   targets = context.targets
 ) {
   if (isFeatureEnabled(NO_FS_CACHE_FEATURE)) return undefined;
-  const cache = new FsCache(path.join(root, '.bit'));
-  if (await dependencyCacheNeedsInvalidation(cache, root, path.join(root, 'workspace.jsonc'))) return undefined;
   const { options } = context;
   const rootIgnore = ignore().add([
     ...options.patterns,
@@ -78,6 +76,10 @@ export async function captureRustClientCurrent(
   const comparisons: any[] = [];
   const captured: any[] = [];
   const components: any[] = [];
+  const pending: FreshDependencyCache[] = [];
+  const cachePlan = targets.length
+    ? await (await import('./rust-fresh-dependencies')).planFreshDependencyCache(root)
+    : undefined;
   for (const target of targets) {
     const policy = statusPolicy(context, target);
     const componentRoot = path.join(root, target.directory);
@@ -106,14 +108,23 @@ export async function captureRustClientCurrent(
     });
     const files = manifest.files.map((file) => file.relativePath);
     if (!files.includes(target.mainFile)) return undefined;
-    const dependencies = await request({
-      kind: 'dependencyPolicyCached',
-      root,
-      componentRoot,
-      identity: fullIdentity(target),
-      files: files.map((file) => path.join(componentRoot, file)),
-      ...policy.input,
-    });
+    let dependencies =
+      cachePlan?.reset && target.directory !== '.'
+        ? { needsDetection: true }
+        : await request({
+            kind: 'dependencyPolicyCached',
+            root,
+            componentRoot,
+            identity: fullIdentity(target),
+            files: files.map((file) => path.join(componentRoot, file)),
+            ...policy.input,
+          });
+    if (dependencies.needsDetection === true) {
+      const { readFreshDependencies } = await import('./rust-fresh-dependencies');
+      const fresh = await readFreshDependencies(root, context, target, files, policy, request);
+      dependencies = fresh.dependencies;
+      pending.push(fresh.cache);
+    }
     const current = currentStatusMetadata(target, policy, dependencies);
     const entry = {
       identity: target.identity,
@@ -136,5 +147,28 @@ export async function captureRustClientCurrent(
       issues: dependencies.issues,
     });
   }
-  return { comparisons, captured, components, fresh: () => rootPolicy.fresh() };
+  return {
+    comparisons,
+    captured,
+    components,
+    fresh: () => rootPolicy.fresh(),
+    commit: async () => {
+      if (!rootPolicy.fresh()) throw new Error('status inventory policy changed');
+      const plans = context.pendingHistory ?? [];
+      if (!Array.isArray(plans)) throw new Error('status history plans');
+      if (plans.length) {
+        const validated = await request({ kind: 'statusHistoryValidate', root, plans });
+        if (validated.fresh !== true) throw new Error('status history changed');
+      }
+      if (cachePlan && (pending.length || cachePlan.reset)) {
+        const { commitFreshDependencies } = await import('./rust-fresh-dependencies');
+        await commitFreshDependencies(cachePlan, pending, request);
+      }
+      if (plans.length) {
+        const committed = await request({ kind: 'statusHistoryCommit', root, plans });
+        if (!Number.isSafeInteger(committed.written) || committed.written < 0 || committed.written > plans.length)
+          throw new Error('status history commit receipt');
+      }
+    },
+  };
 }

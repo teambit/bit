@@ -285,3 +285,19 @@ test('post-error dependency graphs cannot hide workspace effects after a discard
     }
   }
 });
+
+test('whole dependency graph sessions remain separate from the single merge transaction owner', () => {
+  const trace = positive();
+  for (let helperId = 2; helperId <= 5; helperId++) trace.workspaceFrames.splice(2, 0,
+    { magic: 'BWS1', kind: 'dependencyCacheRead', helperId },
+    { magic: 'BWS1', kind: 'dependencyGraph', helperId });
+  const scenario = { name: 'lane-clean-diverge' };
+  validateMergeTransactionDiagnostics(trace, scenario);
+  for (const kind of ['inventoryBegin', 'read', 'fileStatus', 'dependencyGraphUnknown']) {
+    const invalid = structuredClone(trace);
+    invalid.workspaceFrames.splice(2, 0, { magic: 'BWS1', kind, helperId: 2 });
+    assert.throws(() => validateMergeTransactionDiagnostics(invalid, scenario), /replacement helper/);
+  }
+  trace.workspaceFrames.find((frame) => frame.kind === 'mergeStatusReceipt').helperId = 2;
+  assert.throws(() => validateMergeTransactionDiagnostics(trace, scenario), /more than one merge owner/);
+});

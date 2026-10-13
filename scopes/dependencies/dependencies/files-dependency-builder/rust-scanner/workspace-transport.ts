@@ -1,5 +1,6 @@
 import { availableParallelism } from 'os';
 import path from 'path';
+import type { RustDependencyGraph, RustDependencyGraphRequest } from './types';
 
 type Engine = { request: (input: Buffer) => Promise<Buffer>; close: () => void };
 
@@ -41,6 +42,18 @@ export class RustScannerWorkspaceTransport {
     )
       throw new Error('workspace resolution protocol');
     return resolved;
+  }
+
+  async graph(
+    input: RustDependencyGraphRequest,
+    id: number,
+    limits: { requestBytes: number; responseBytes: number }
+  ): Promise<RustDependencyGraph | undefined> {
+    const response = await this.operation({ kind: 'dependencyGraph', ...input }, id, limits);
+    if (response.failed) return undefined;
+    if (response.completed < 0 || response.completed > 4096 || !response.data || typeof response.data !== 'object')
+      throw new Error('workspace dependency graph protocol');
+    return response.data;
   }
 
   async readCache(

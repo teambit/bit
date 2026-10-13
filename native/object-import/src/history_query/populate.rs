@@ -266,7 +266,7 @@ struct Labels {
     orphaned: Vec<Value>,
     last_found_tag: Option<String>,
 }
-pub(super) fn begin(input: Value) -> io::Result<Value> {
+pub(crate) fn begin(input: Value) -> io::Result<Value> {
     let (request, labels) = parse(input)?;
     crate::merge_history::hash(&request.head)?;
     if request.head_data.get("hash").and_then(Value::as_str) != Some(&request.head) {

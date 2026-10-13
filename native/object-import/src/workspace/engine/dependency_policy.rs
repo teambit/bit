@@ -2,6 +2,7 @@
 //! Rows identify caller-owned component dependencies; this planner never hydrates public models.
 pub(super) mod cached;
 pub(super) mod finalize;
+pub(super) mod fresh;
 pub(super) mod packages_on_disk;
 pub(super) mod pipeline;
 pub(super) mod versions;

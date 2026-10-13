@@ -38,6 +38,7 @@ pub(in crate::workspace::engine) fn read(
             })
             .collect(),
         history: false,
+        stage_history: false,
         include_heads: false,
     };
     let snapshot = super::load(&input, pool, false)?;

@@ -2,6 +2,7 @@ pub(super) mod comparison;
 pub(super) mod workspace_diff;
 
 mod history;
+mod history_population;
 mod index;
 mod remotes;
 mod semantic;
@@ -26,6 +27,8 @@ pub(super) struct Request {
     history: bool,
     #[serde(default)]
     include_heads: bool,
+    #[serde(default)]
+    stage_history: bool,
 }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -34,12 +37,15 @@ struct Target {
     version: String,
 }
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub(super) struct Snapshot {
     models: Vec<Value>,
     versions: Vec<(String, Value)>,
     semantics: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     histories: Option<Vec<Value>>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pending_history: Vec<Value>,
 }
 pub(super) fn read(request: &Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value)> {
     let snapshot = load(request, pool, true)?;
@@ -78,9 +84,13 @@ fn load(request: &Request, pool: &rayon::ThreadPool, stored_hashes: bool) -> io:
     } else {
         Vec::new()
     };
-    let histories =
-        if request.history { Some(history::read(&reader, &models, request, pool)?) } else { None };
-    Ok(Snapshot { models, versions, semantics, histories })
+    let (histories, pending_history) = if request.history {
+        let (histories, pending) = history::read(&reader, &models, request, pool)?;
+        (Some(histories), pending)
+    } else {
+        (None, Vec::new())
+    };
+    Ok(Snapshot { models, versions, semantics, histories, pending_history })
 }
 struct Reader<'a> {
     directory: &'a Path,

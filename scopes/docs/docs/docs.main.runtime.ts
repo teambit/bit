@@ -1,3 +1,4 @@
+import { defaultDocsPatterns } from './default-dev-patterns';
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import { MainRuntime } from '@teambit/harmony.modules.runtimes';
@@ -182,7 +183,7 @@ export class DocsMain {
   ];
 
   static defaultConfig = {
-    patterns: ['**/*.docs.*'],
+    patterns: defaultDocsPatterns(),
   };
 
   static async provider(
