@@ -289,7 +289,9 @@ export class DependenciesMain {
       const pinned = consumerComponent.getDependenciesWithVersionFromConfig((id) =>
         this.workspace.hasId(id, { ignoreVersion: true })
       );
+      // the component can be reused from the cache, so remove an issue that was added when it had pinned dependencies
       if (pinned.length) component.state.issues.getOrCreate(IssuesClasses.PinnedDependencies).data = pinned;
+      else component.state.issues.delete(IssuesClasses.PinnedDependencies);
     });
   }
 
