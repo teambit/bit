@@ -468,10 +468,12 @@ export function dependentsWithPinnedDepsSection(
   );
   const section = formatSection(
     `dependents not auto-${action}`,
-    `their config sets the version of the ${action} dependency (e.g. "bit deps set"), so they keep using it`,
+    `their config sets the version of the ${action} dependency ("bit deps set", variants or env), so they keep using it`,
     items
   );
-  const hint = formatHint('(to use the workspace version, run "bit deps unset <component> <package>")');
+  const hint = formatHint(
+    '(to use the workspace version, remove the version from the config, e.g. "bit deps unset <component> <package>")'
+  );
   return `${section}\n${hint}`;
 }
 
