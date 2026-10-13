@@ -1316,6 +1316,8 @@ supports various reset options to recover from corrupted state or restart from s
 | `--external-package-manager`              |                  | enable external package manager mode (npm/yarn/pnpm)                                                                                      |
 | `--skip-interactive`                      |                  | skip interactive mode for Git repositories                                                                                                |
 | `--agent [type]`                          |                  | create an AI agent instructions file. options: claude, cursor, copilot (default: AGENTS.md)                                               |
+| `--no-agent`                              |                  | do not create AI agent instructions                                                                                                       |
+| `--no-mcp`                                |                  | do not create a default Bit Cloud MCP configuration                                                                                       |
 
 ---
 
@@ -2145,6 +2147,50 @@ to match a state and another criteria, use " AND " keyword. e.g. '$modified AND 
 
 ---
 
+## pnpm
+
+**Description**: adopt and maintain a raw pnpm workspace with Bit
+
+`bit pnpm [sub-command]`
+
+### pnpm init
+
+**Usage**: `pnpm init`
+
+**Description**: make a Bit workspace out of a pnpm workspace, and synchronize its projects  
+runs at the root of a pnpm workspace, the directory of "pnpm-workspace.yaml". the workspace is standalone, its scope is kept in ".bit", and pnpm keeps installing it: bit writes workspace.jsonc and .bitmap only, and leaves package.json alone.  
+then synchronizes the projects the way "bit pnpm sync" does. run that one whenever projects are added, moved or deleted.
+
+| **Option**                        | **Option alias** | **Description**                                                                                                                                                                                      |
+| --------------------------------- | :--------------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--default-scope <default-scope>` |                  | set the default scope for components in the workspace                                                                                                                                                |
+| `--env <env-id>`                  |                  | the env of the projects with a build, test or lint script (default: teambit.workspace/pnpm-workspace). the others get the empty env. saved in workspace.jsonc, a later sync without it keeps the env |
+| `--json`                          |       `-j`       | return the synchronization result in JSON format                                                                                                                                                     |
+
+### pnpm sync
+
+**Usage**: `pnpm sync`
+
+**Description**: discover pnpm workspace projects and synchronize them with Bit components  
+tracks every project "pnpm-workspace.yaml" lists as a component, and the workspace root as the  
+workspace-root component. package.json and the lockfile are tracked as source (trackAllFiles).  
+a project that refers to another one by "workspace:" refers to it by "catalog:" after the sync, and the default catalog  
+gets the "workspace:" specifier. an import into another workspace binds it there to the exact version instead, and so  
+does a re-run once the project left this workspace.  
+safe to re-run: tracked projects keep their ids, new ones are added, and the ones that left the workspace are removed.
+
+| **Option**       | **Option alias** | **Description**                                                                                                                                                                                      |
+| ---------------- | :--------------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--json`         |       `-j`       | return the synchronization result in JSON format                                                                                                                                                     |
+| `--env <env-id>` |                  | the env of the projects with a build, test or lint script (default: teambit.workspace/pnpm-workspace). the others get the empty env. saved in workspace.jsonc, a later sync without it keeps the env |
+
+| **Option**       | **Option alias** | **Description**                                                                                                                                                                                      |
+| ---------------- | :--------------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--json`         |       `-j`       | return the synchronization result in JSON format                                                                                                                                                     |
+| `--env <env-id>` |                  | the env of the projects with a build, test or lint script (default: teambit.workspace/pnpm-workspace). the others get the empty env. saved in workspace.jsonc, a later sync without it keeps the env |
+
+---
+
 ## recover
 
 **Description**: restore soft-deleted components  
@@ -2693,6 +2739,7 @@ snapshots maintain component history and enable collaboration without formal rel
 
 | **Option**                 | **Option alias** | **Description**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | -------------------------- | :--------------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `--json`                   |       `-j`       | return the snap result in JSON format                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `--message <message>`      |       `-m`       | snap message describing the latest changes - will appear in component history log                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `--unmodified`             |       `-u`       | include unmodified components (by default, only new and modified components are snapped)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `--unmerged`               |                  | complete a merge process by snapping the unmerged components                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |

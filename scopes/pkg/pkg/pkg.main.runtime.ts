@@ -1,5 +1,5 @@
 import { compact, omit } from 'lodash';
-import { join } from 'path';
+import { join, relative } from 'path';
 import fs from 'fs-extra';
 import type { CLIMain } from '@teambit/cli';
 import { MainRuntime } from '@teambit/harmony.modules.runtimes';
@@ -239,6 +239,9 @@ export class PkgMain {
    * In case you call this in order to run the code from the path, please refer to the `getRuntimeModulePath` API
    */
   getModulePath(component: Component, options: GetModulePathOptions = {}) {
+    // a pnpm project is its own package, pnpm links its dependents to its directory
+    const pnpmProjectDir = this.workspace?.getPnpmProjectDir(component);
+    if (pnpmProjectDir) return options?.absPath ? pnpmProjectDir : relative(this.workspace.path, pnpmProjectDir);
     const relativePath = this.dependencyResolver.getModulePath(component);
     if (options?.absPath) {
       if (this.workspace) {

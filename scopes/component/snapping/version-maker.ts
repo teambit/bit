@@ -7,7 +7,7 @@ import type { Scope } from '@teambit/legacy.scope';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { BuildStatus, Extensions } from '@teambit/legacy.constants';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import { CURRENT_SCHEMA } from '@teambit/legacy.consumer-component';
+import { CURRENT_SCHEMA, Dependency } from '@teambit/legacy.consumer-component';
 import { linkToNodeModulesByComponents } from '@teambit/workspace.modules.node-modules-linker';
 import type { Consumer } from '@teambit/legacy.consumer';
 import { NewerVersionFound } from '@teambit/legacy.consumer';
@@ -20,6 +20,7 @@ import { PkgAspect, getPublishRegistry, shouldPublishToExternalRegistry } from '
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { isSnap as isSnapVersion } from '@teambit/component-version';
+import { SNAP_VERSION_PREFIX } from '@teambit/component-package-version';
 import type { BuilderMain, OnTagOpts } from '@teambit/builder';
 import type { ModelComponent, Log, Lane } from '@teambit/objects';
 import { DependenciesGraph } from '@teambit/objects';
@@ -89,6 +90,87 @@ export type VersionMakerParams = {
   autoAddedWorkspaceRoot?: ComponentID;
 } & BasicTagParams;
 
+export type GraphComponentDependency = {
+  id: ComponentID;
+  packageName: string;
+  lifecycle: 'runtime' | 'dev';
+  optional: boolean;
+};
+
+/**
+ * The package-manager graph keeps the authored package specifier while its
+ * package entry carries the Bit component identity. Convert only direct root
+ * edges here; transitive component edges belong to their owning components.
+ */
+export function componentDependenciesFromGraph(graph: DependenciesGraph): GraphComponentDependency[] {
+  const rootEdge = graph.findRootEdge();
+  if (!rootEdge) return [];
+  return compact(
+    rootEdge.neighbours.map((neighbour): GraphComponentDependency | undefined => {
+      if (!neighbour.name) return undefined;
+      // the id of a neighbour carries its peers, e.g. "comp1@0.0.1(react@17.0.0)", the package's does not
+      const packageAttributes = graph.packages.get(neighbour.id) ?? graph.packages.get(withoutPeers(neighbour.id));
+      const component = packageAttributes?.component;
+      const packageVersion = packageAttributes?.version;
+      if (!component?.scope || !component.name || !packageVersion) return undefined;
+      const snapVersion = packageVersion.startsWith(SNAP_VERSION_PREFIX)
+        ? packageVersion.slice(SNAP_VERSION_PREFIX.length)
+        : undefined;
+      const version = snapVersion && isSnapVersion(snapVersion) ? snapVersion : packageVersion;
+      return {
+        id: ComponentID.fromObject({ scope: component.scope, name: component.name, version }),
+        packageName: neighbour.name,
+        lifecycle: neighbour.lifecycle ?? 'runtime',
+        optional: Boolean(neighbour.optional),
+      };
+    })
+  );
+}
+
+function isPeerDependency(component: ConsumerComponent, packageName: string): boolean {
+  return (
+    packageName in component.peerPackageDependencies ||
+    Boolean(component.peerDependencies.getByPackageName(packageName))
+  );
+}
+
+function withoutPeers(depPath: string): string {
+  const peersIndex = depPath.indexOf('(');
+  return peersIndex === -1 ? depPath : depPath.slice(0, peersIndex);
+}
+
+function removeDependencyByPackageName(dependencies: Dependency[], packageName: string): void {
+  for (let index = dependencies.length - 1; index >= 0; index -= 1) {
+    if (dependencies[index].packageName === packageName) dependencies.splice(index, 1);
+  }
+}
+
+function promoteDependencyResolverData(component: ConsumerComponent, graphDependency: GraphComponentDependency): void {
+  const entry = component.extensions.findCoreExtension(DependencyResolverAspect.id);
+  if (!entry) return;
+  const dependencies = Array.isArray(entry.data?.dependencies) ? entry.data.dependencies : [];
+  const isSamePackage = (dependency) =>
+    dependency.packageName === graphDependency.packageName || dependency.id === graphDependency.packageName;
+  const existing = dependencies.find(isSamePackage);
+  const promoted = {
+    id: graphDependency.id.toString(),
+    componentId: graphDependency.id.serialize(),
+    isExtension: false,
+    packageName: graphDependency.packageName,
+    version: graphDependency.id.version,
+    __type: COMPONENT_DEP_TYPE,
+    lifecycle: graphDependency.lifecycle,
+    source: existing?.source ?? 'auto',
+    hidden: existing?.hidden,
+    // a tag sets the ^/~ range the package.json of the dependent gets
+    versionRange: existing?.versionRange,
+    optional: graphDependency.optional,
+  };
+  entry.data = {
+    ...entry.data,
+    dependencies: [...dependencies.filter((dependency) => !isSamePackage(dependency)), promoted],
+  };
+}
 type ComputedVersion = { componentToTag: ConsumerComponent; version: string };
 
 /**
@@ -176,10 +258,11 @@ export class VersionMaker {
 
     const { rebuildDepsGraph, noLockDeps, build, updateDependentsOnLane, setHeadAsParent, detachHead, overrideHead } =
       this.params;
-    await this.snapping._addFlattenedDependenciesToComponents(this.allComponentsToTag, rebuildDepsGraph);
     if (!noLockDeps) {
       await this._addDependenciesGraphToComponents();
+      this._promoteGraphComponentDependencies();
     }
+    await this.snapping._addFlattenedDependenciesToComponents(this.allComponentsToTag, rebuildDepsGraph);
     await this.snapping.throwForDepsFromAnotherLane(this.allComponentsToTag);
     if (!build) this.emptyBuilderData();
     this.addBuildStatus(this.allComponentsToTag, BuildStatus.Pending);
@@ -290,19 +373,56 @@ export class VersionMaker {
       rootComponentsPath: this.workspace.rootComponentsPath,
       componentIdByPkgName,
     };
-    const components: Array<{ component: Component; componentRelativeDir: string }> = [];
+    const components: Array<{ component: Component; componentRelativeDir: string; packageName?: string }> = [];
+    const workspaceComponents = new Map<ConsumerComponent, Component>();
     for (const consumerComponent of this.allComponentsToTag) {
       const component = this._findWorkspaceCompByConsumerComp(consumerComponent);
-      if (consumerComponent.componentMap?.rootDir && component) {
+      if (component) workspaceComponents.set(consumerComponent, component);
+      const componentRelativeDir = consumerComponent.componentMap?.rootDir;
+      if (componentRelativeDir && component) {
         components.push({
           component,
-          componentRelativeDir: consumerComponent.componentMap.rootDir,
+          componentRelativeDir,
+          packageName: this._getDeclaredPackageName(component),
         });
       }
     }
     await this.dependencyResolver.addDependenciesGraph(components, options);
+    workspaceComponents.forEach((workspaceComponent, consumerComponent) => {
+      const graph = workspaceComponent.state._consumer.dependenciesGraph;
+      if (graph) consumerComponent.dependenciesGraph = graph;
+    });
     this.snapping.logger.clearStatusLine();
     this.snapping.logger.profile('snap._addDependenciesGraphToComponents');
+  }
+
+  private _promoteGraphComponentDependencies(): void {
+    for (const component of this.allComponentsToTag) {
+      const graph = component.dependenciesGraph;
+      if (!graph) continue;
+      // only the package.json a component carries declares its dependencies, e.g. a pnpm project's.
+      // bit generates the others' from what it detects, which the graph has no more to add to
+      if (!component.files.some((file) => file.relative === 'package.json')) continue;
+      const graphDependencies = componentDependenciesFromGraph(graph);
+      for (const graphDependency of graphDependencies) {
+        if (component.id.isEqualWithoutVersion(graphDependency.id)) continue;
+        // the lockfile has no peer lifecycle, a peer stays as detected
+        if (isPeerDependency(component, graphDependency.packageName)) continue;
+        const target = graphDependency.lifecycle === 'dev' ? component.devDependencies : component.dependencies;
+        const other = graphDependency.lifecycle === 'dev' ? component.dependencies : component.devDependencies;
+        removeDependencyByPackageName(other.get(), graphDependency.packageName);
+        const existing = target.getByPackageName(graphDependency.packageName);
+        if (existing) {
+          existing.id = graphDependency.id;
+        } else {
+          target.add(new Dependency(graphDependency.id, [], graphDependency.packageName));
+        }
+        delete component.packageDependencies[graphDependency.packageName];
+        delete component.devPackageDependencies[graphDependency.packageName];
+        delete component.peerPackageDependencies[graphDependency.packageName];
+        promoteDependencyResolverData(component, graphDependency);
+      }
+    }
   }
 
   private _findWorkspaceCompByConsumerComp(consumerComponent: ConsumerComponent): Component | undefined {
@@ -317,6 +437,8 @@ export class VersionMaker {
       if (component) {
         const pkgName = this.dependencyResolver.getPackageName(component);
         componentIdByPkgName.set(pkgName, consumerComponent.id);
+        const declaredPackageName = this._getDeclaredPackageName(component);
+        if (declaredPackageName) componentIdByPkgName.set(declaredPackageName, consumerComponent.id);
       }
     });
     for (const workspaceComp of this.allWorkspaceComps) {
@@ -326,9 +448,32 @@ export class VersionMaker {
         )
       ) {
         componentIdByPkgName.set(this.dependencyResolver.getPackageName(workspaceComp), workspaceComp.id);
+        const declaredPackageName = this._getDeclaredPackageName(workspaceComp);
+        if (declaredPackageName) componentIdByPkgName.set(declaredPackageName, workspaceComp.id);
       }
     }
     return componentIdByPkgName;
+  }
+
+  private declaredPackageNames = new Map<Component, string | undefined>();
+
+  /** the name the package.json a component carries declares, e.g. a pnpm project's */
+  private _getDeclaredPackageName(component: Component): string | undefined {
+    if (!this.declaredPackageNames.has(component)) {
+      this.declaredPackageNames.set(component, this._readDeclaredPackageName(component));
+    }
+    return this.declaredPackageNames.get(component);
+  }
+
+  private _readDeclaredPackageName(component: Component): string | undefined {
+    const packageJsonFile = component.state._consumer.files.find((file) => file.relative === 'package.json');
+    if (!packageJsonFile) return undefined;
+    try {
+      const packageJson = JSON.parse(packageJsonFile.contents.toString());
+      return typeof packageJson.name === 'string' && packageJson.name ? packageJson.name : undefined;
+    } catch {
+      return undefined;
+    }
   }
 
   private async triggerOnPreSnap(autoTagIds: ComponentIdList) {

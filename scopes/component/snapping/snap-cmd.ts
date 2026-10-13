@@ -25,6 +25,29 @@ import { outputIdsIfExists, compInBold } from './tag-cmd';
 import type { BasicTagSnapParams } from './version-maker';
 import type { ConfigStoreMain } from '@teambit/config-store';
 
+type SnapFlags = BasicTagSnapParams & {
+  unmerged?: boolean;
+  editor?: string;
+  ignoreIssues?: string;
+  skipAutoSnap?: boolean;
+  disableSnapPipeline?: boolean;
+  unmodified?: boolean;
+  failFast?: boolean;
+};
+
+export type SnapJsonResult = {
+  schemaVersion: 1;
+  snapped: boolean;
+  batchId: string | null;
+  laneName: string | null;
+  snappedComponents: string[];
+  autoSnappedComponents: Array<{ id: string; triggeredBy: string[] }>;
+  newComponents: string[];
+  removedComponents: string[];
+  warnings: string[];
+  totalComponentsCount: number;
+};
+
 export class SnapCmd implements Command {
   name = 'snap [component-pattern]';
   description = 'create immutable component snapshots for development versions';
@@ -41,6 +64,7 @@ snapshots maintain component history and enable collaboration without formal rel
   helpUrl = 'reference/components/snaps';
   alias = '';
   options = [
+    ['j', 'json', 'return the snap result in JSON format'],
     ['m', 'message <message>', 'snap message describing the latest changes - will appear in component history log'],
     ['u', 'unmodified', 'include unmodified components (by default, only new and modified components are snapped)'],
     ['', 'unmerged', 'complete a merge process by snapping the unmerged components'],
@@ -93,7 +117,18 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
     private configStore: ConfigStoreMain
   ) {}
 
-  async report(
+  async report(args: string[], flags: SnapFlags) {
+    const results = await this.snap(args, flags);
+    if (!results) return chalk.yellow(NOTHING_TO_SNAP_MSG);
+    return snapResultReport(results);
+  }
+
+  async json(args: string[], flags: SnapFlags): Promise<SnapJsonResult> {
+    const results = await this.snap(args, flags);
+    return results ? snapResultJson(results) : emptySnapResultJson();
+  }
+
+  private async snap(
     [pattern]: string[],
     {
       message = '',
@@ -112,16 +147,8 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       failFast = false,
       detachHead,
       loose = false,
-    }: {
-      unmerged?: boolean;
-      editor?: string;
-      ignoreIssues?: string;
-      skipAutoSnap?: boolean;
-      disableSnapPipeline?: boolean;
-      unmodified?: boolean;
-      failFast?: boolean;
-    } & BasicTagSnapParams
-  ) {
+    }: SnapFlags
+  ): Promise<SnapResults | null> {
     build = this.configStore.getConfigBoolean(CFG_FORCE_LOCAL_BUILD) || Boolean(build);
     const disableTagAndSnapPipelines = disableSnapPipeline;
     if (!message && !editor) {
@@ -150,9 +177,42 @@ to ignore multiple issues, separate them by a comma and wrap with quotes. to ign
       loose,
     });
 
-    if (!results) return chalk.yellow(NOTHING_TO_SNAP_MSG);
-    return snapResultReport(results);
+    return results;
   }
+}
+
+export function snapResultJson(results: SnapResults): SnapJsonResult {
+  return {
+    schemaVersion: 1,
+    snapped: true,
+    batchId: results.batchId ?? null,
+    laneName: results.laneName ?? null,
+    snappedComponents: results.snappedComponents.map((component) => component.id.toString()),
+    autoSnappedComponents: results.autoSnappedResults.map(({ component, triggeredBy }) => ({
+      id: component.id.toString(),
+      triggeredBy: triggeredBy.map((id) => id.toString()),
+    })),
+    newComponents: results.newComponents.map((id) => id.toStringWithoutVersion()),
+    removedComponents: results.removedComponents?.map((id) => id.toStringWithoutVersion()) ?? [],
+    warnings: results.warnings ?? [],
+    totalComponentsCount:
+      results.totalComponentsCount ?? results.snappedComponents.length + results.autoSnappedResults.length,
+  };
+}
+
+export function emptySnapResultJson(): SnapJsonResult {
+  return {
+    schemaVersion: 1,
+    snapped: false,
+    batchId: null,
+    laneName: null,
+    snappedComponents: [],
+    autoSnappedComponents: [],
+    newComponents: [],
+    removedComponents: [],
+    warnings: [],
+    totalComponentsCount: 0,
+  };
 }
 
 export function snapResultReport(results: SnapResults): string | Report {

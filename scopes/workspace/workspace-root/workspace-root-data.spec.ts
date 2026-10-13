@@ -6,6 +6,7 @@ import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension
 import {
   findWorkspaceRootMap,
   isWorkspaceRootComponent,
+  readRootBitmapEntries,
   readWorkspaceRoot,
   writeWorkspaceRoot,
 } from './workspace-root-data';
@@ -89,6 +90,25 @@ describe('workspace-root data', () => {
       writeWorkspaceRoot(extensions, rootId);
       expect(isWorkspaceRootComponent(extensions)).to.be.false;
       expect(readWorkspaceRoot(extensions)?.toString()).to.equal(rootId.toString());
+    });
+  });
+  describe('readRootBitmapEntries', () => {
+    const bitmap = `/**\n * the banner\n */\n${JSON.stringify({
+      'my-root': { name: 'my-root', scope: 'my-scope', rootDir: '.' },
+      comp1: { name: 'comp1', scope: 'my-scope', rootDir: 'packages/comp1' },
+    })}`;
+    it('should list the components of the .bitmap among the root files, the root included', () => {
+      const files = [
+        { relative: 'package.json', contents: Buffer.from('{}') },
+        { relative: '.bitmap', contents: Buffer.from(bitmap) },
+      ];
+      expect(readRootBitmapEntries(files)).to.deep.equal([
+        { id: 'my-scope/my-root', rootDir: '.' },
+        { id: 'my-scope/comp1', rootDir: 'packages/comp1' },
+      ]);
+    });
+    it('should list nothing when the root has no .bitmap', () => {
+      expect(readRootBitmapEntries([{ relative: 'package.json', contents: Buffer.from('{}') }])).to.deep.equal([]);
     });
   });
 });

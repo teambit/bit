@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import { resolvePackageNameByPath, resolvePackagePath } from '@teambit/legacy.utils';
 import type { ResolvedPackageData } from '../resolve-pkg-data';
 import { resolvePackageData } from '../resolve-pkg-data';
@@ -58,7 +60,11 @@ export class MissingHandler {
       if (resolvedPackageData.componentId) {
         foundPackages.components.push(resolvedPackageData);
       } else {
-        const version = resolvedPackageData.versionUsedByDependent || resolvedPackageData.concreteVersion;
+        const version =
+          resolvedPackageData.versionUsedByDependent ||
+          resolvedPackageData.concreteVersion ||
+          // a private package of a pnpm workspace may have no version. any version of it is the one there
+          (isWorkspaceProjectPackage(resolvedPath, this.workspacePath) ? '*' : undefined);
         if (!version) throw new Error(`unable to find the version for a package ${packageName}`);
         const packageWithVersion = {
           [resolvedPackageData.name]: version,
@@ -78,5 +84,24 @@ export class MissingHandler {
     return Object.keys(this.missing).map((key) =>
       Object.assign({ originFile: processPath(key, {}, this.componentDir) }, groupBy(this.missing[key], byPathType))
     );
+  }
+}
+
+/**
+ * a package linked to a project of the workspace: its real path is in the workspace, outside of any
+ * node_modules. an installed package is under node_modules, wherever the link to it points.
+ */
+function isWorkspaceProjectPackage(packagePath: string, workspacePath: string): boolean {
+  try {
+    const relativePath = path.relative(fs.realpathSync(workspacePath), fs.realpathSync(packagePath));
+    const segments = relativePath.split(path.sep);
+    return (
+      Boolean(relativePath) &&
+      !path.isAbsolute(relativePath) &&
+      segments[0] !== '..' &&
+      !segments.includes('node_modules')
+    );
+  } catch {
+    return false;
   }
 }

@@ -374,6 +374,100 @@ describe('convertLockfileToGraph with a link: importer dependency', () => {
     expect(rootNeighbourIds).to.not.include(null);
     expect(rootNeighbourIds).to.not.include('null');
   });
+
+  it('should keep the runtime and dev links to workspace components of a component under a root', () => {
+    const lockfile: BitLockfileFile = {
+      importers: {
+        '.': {},
+        'node_modules/.bit_roots/env': {
+          dependencies: {
+            comp1: { version: 'file:comps/comp1', specifier: '*' },
+          },
+        },
+        'comps/comp1': {
+          devDependencies: {
+            '@acme/tools': { version: 'link:../tools', specifier: 'workspace:*' },
+          },
+        },
+      },
+      lockfileVersion: '9.0',
+      snapshots: {
+        'comp1@file:comps/comp1': { dependencies: { '@acme/foo': 'link:../foo' } },
+      },
+      packages: {
+        'comp1@file:comps/comp1': {
+          resolution: { directory: 'comps/comp1', type: 'directory' },
+        },
+      },
+    } as BitLockfileFile;
+    const graph = convertLockfileToGraph(lockfile, {
+      pkgName: 'comp1',
+      componentRelativeDir: 'comps/comp1',
+      componentRootDir: 'node_modules/.bit_roots/env',
+      componentIdByPkgName: new Map([
+        ['comp1', ComponentID.fromString('acme.scope/comp1@1.0.0')],
+        ['@acme/foo', ComponentID.fromString('acme.scope/foo@abcdef')],
+        ['@acme/tools', ComponentID.fromString('acme.scope/tools@1.0.0')],
+      ]),
+    });
+    const neighbours = graph.findRootEdge()!.neighbours;
+    expect(neighbours.map(({ id, lifecycle }) => [id, lifecycle])).to.have.deep.members([
+      ['@acme/tools@1.0.0', 'dev'],
+      ['@acme/foo@0.0.0-abcdef', 'runtime'],
+    ]);
+    neighbours.forEach(({ id }) => expect(graph.packages.get(id)?.component).to.not.be.undefined);
+  });
+
+  it('should preserve a link dependency when it maps to a workspace component', () => {
+    const lockfile: BitLockfileFile = {
+      importers: {
+        'packages/bar': {
+          dependencies: {
+            '@acme/foo': { version: 'link:../foo', specifier: 'workspace:*' },
+          },
+        },
+      },
+      lockfileVersion: '9.0',
+      snapshots: {},
+      packages: {},
+    } as BitLockfileFile;
+    const graph = convertLockfileToGraph(lockfile, {
+      pkgName: '@acme/bar',
+      componentRelativeDir: 'packages/bar',
+      componentIdByPkgName: new Map([['@acme/foo', ComponentID.fromString('acme.scope/foo@abcdef')]]),
+    });
+
+    const rootNeighbour = graph.findRootEdge()!.neighbours[0];
+    expect(rootNeighbour.name).to.equal('@acme/foo');
+    expect(rootNeighbour.id).to.equal('@acme/foo@0.0.0-abcdef');
+    expect(graph.packages.get(rootNeighbour.id)?.component).to.deep.equal({ scope: 'acme.scope', name: 'foo' });
+  });
+
+  it('should keep the lockfile entry of a registry package that has the name of a workspace component', () => {
+    const lockfile: BitLockfileFile = {
+      importers: {
+        'packages/bar': {
+          dependencies: {
+            '@acme/foo': { version: '2.0.0(react@17.0.0)', specifier: '^2.0.0' },
+          },
+        },
+      },
+      lockfileVersion: '9.0',
+      snapshots: { '@acme/foo@2.0.0(react@17.0.0)': {} },
+      packages: { '@acme/foo@2.0.0': { resolution: { integrity: 'sha512-foo' } } },
+    } as BitLockfileFile;
+    const graph = convertLockfileToGraph(lockfile, {
+      pkgName: '@acme/bar',
+      componentRelativeDir: 'packages/bar',
+      componentIdByPkgName: new Map([['@acme/foo', ComponentID.fromString('acme.scope/foo@abcdef')]]),
+    });
+
+    // the neighbour carries its peers, the package it points at does not
+    const rootNeighbour = graph.findRootEdge()!.neighbours[0];
+    expect(rootNeighbour.id).to.equal('@acme/foo@2.0.0(react@17.0.0)');
+    expect(graph.packages.get('@acme/foo@2.0.0')?.resolution).to.deep.equal({ integrity: 'sha512-foo' });
+    expect(graph.packages.has(rootNeighbour.id)).to.be.false;
+  });
 });
 
 describe('convertLockfileToGraph with a circular workspace dependency back to the component being processed', () => {

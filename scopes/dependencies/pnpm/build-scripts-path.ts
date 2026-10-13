@@ -4,6 +4,9 @@ import { delimiter, dirname, join } from 'path';
 import { CACHE_ROOT } from '@teambit/legacy.constants';
 import type { Logger } from '@teambit/logger';
 
+/** the PATH before prepareBuildScriptsPath first changed it, see getPathBeforeBuildScripts */
+let pathBeforeBuildScripts: string | undefined;
+
 /**
  * pnpm's engine spawns dependency lifecycle scripts with the PATH of this
  * process, extended only with the relevant `node_modules/.bin` directories, and
@@ -32,8 +35,18 @@ import type { Logger } from '@teambit/logger';
  * installed themselves still takes precedence.
  */
 export function prepareBuildScriptsPath(logger?: Logger): void {
+  pathBeforeBuildScripts ??= process.env.PATH;
   addNodeToPath();
   addNodeGypToPath(logger);
+}
+
+/**
+ * the PATH as it was before prepareBuildScriptsPath changed it, for running a tool the user picked
+ * rather than one for dependency build scripts. with the node of Bit first, a `pnpm` installed next
+ * to that node hides the one the user's shell runs.
+ */
+export function getPathBeforeBuildScripts(): string | undefined {
+  return pathBeforeBuildScripts ?? process.env.PATH;
 }
 
 function addNodeToPath(): void {

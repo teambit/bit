@@ -720,7 +720,7 @@ export default class CommandHelper {
     const statusJson = this.statusJson();
     Object.keys(statusJson).forEach((key) => {
       if (exclude.includes(key)) return;
-      if (key === 'currentLaneId' || key === 'forkedLaneId') return;
+      if (key === 'currentLaneId' || key === 'forkedLaneId' || key === 'schemaVersion') return;
       expect(statusJson[key], `status.${key} should be empty`).to.have.lengthOf(0);
     });
   }

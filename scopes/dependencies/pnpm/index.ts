@@ -3,3 +3,4 @@ export type { PnpmUI } from './pnpm.ui.runtime';
 export { PnpmAspect as default, PnpmAspect } from './pnpm.aspect';
 export type { PnpmPackageManager, InstallResult, RebuildFn } from './pnpm.package-manager';
 export { type BitLockfileFile, createReadPackageHooks } from './lynx';
+export { getPathBeforeBuildScripts } from './build-scripts-path';

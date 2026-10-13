@@ -146,5 +146,7 @@ Workspace & Project Setup
 init [path] - initialize a Bit workspace in an existing project
 new <template-name> <workspace-name> - create a new Bit workspace from a template
 clone <component-id> [dir] - create a workspace from its workspace-root component, with every component it lists
+pnpm [sub-command] - adopt and maintain a raw pnpm workspace with Bit
+Subcommands: init, sync
 
 IMPORTANT: When you need flags, arguments, or subcommand details, READ the file CLI_REFERENCE.md in this same directory using the Read tool. Only fall back to 'bit <command> --help' if the reference file doesn't cover what you need.

@@ -6,7 +6,8 @@ import type { CompilerMain } from '@teambit/compiler';
 import { CompilerAspect, CompilationInitiator } from '@teambit/compiler';
 import type { CLIMain, CommandList } from '@teambit/cli';
 import { MainRuntime } from '@teambit/harmony.modules.runtimes';
-import { CLIAspect, formatWarningSummary } from '@teambit/cli';
+import { CLIAspect, formatHint, formatWarningSummary } from '@teambit/cli';
+import { BitError } from '@teambit/bit-error';
 import chalk from 'chalk';
 import yesno from 'yesno';
 import type { Workspace } from '@teambit/workspace';
@@ -184,6 +185,7 @@ export class InstallMain {
    * @memberof Workspace
    */
   async install(packages?: string[], options?: WorkspaceInstallOptions): Promise<ComponentMap<string>> {
+    if (this.workspace.isPnpmWorkspace()) return this.leaveInstallToPnpm(packages, options);
     // Check if external package manager mode is enabled
     const workspaceConfig = this.workspace.getWorkspaceConfig();
     const depResolverExtConfig = workspaceConfig.extensions.findExtension('teambit.dependencies/dependency-resolver');
@@ -251,6 +253,21 @@ export class InstallMain {
     await this.ipcEvents.publishIpcEvent('onPostInstall');
 
     return res;
+  }
+
+  /**
+   * pnpm installs a pnpm workspace from the packages' own manifests, so bit neither installs it nor writes the
+   * dependencies into the root package.json, which the root component owns. it does not offer to switch to
+   * its own package manager either: that install leaves node_modules in a layout pnpm does not keep.
+   */
+  private leaveInstallToPnpm(packages: string[] = [], options?: WorkspaceInstallOptions): ComponentMap<string> {
+    // set by "bit install" only, the other commands install as one step of their own
+    if (options?.showExternalPackageManagerPrompt) {
+      const command = packages.length ? `pnpm add ${packages.join(' ')} --filter <project>` : 'pnpm install';
+      throw new BitError(`pnpm installs this pnpm workspace, run "${command}" instead of "bit install"`);
+    }
+    this.logger.console(formatHint('run "pnpm install" to install the dependencies'));
+    return new ComponentMap(new Map());
   }
 
   async writeDependenciesToPackageJson(): Promise<void> {

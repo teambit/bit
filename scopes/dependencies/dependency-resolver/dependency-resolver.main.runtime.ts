@@ -109,6 +109,7 @@ export interface DependencyResolverComponentData {
 
 export interface DependencyResolverVariantConfig {
   policy: VariantPolicyConfigObject;
+  packageName?: string;
 }
 
 export type RootPolicyRegistry = SlotRegistry<WorkspacePolicy>;
@@ -686,6 +687,7 @@ export class DependencyResolverMain {
     components: Array<{
       component: Component;
       componentRelativeDir: string;
+      packageName?: string;
     }>,
     options: {
       rootDir: string;
@@ -694,7 +696,7 @@ export class DependencyResolverMain {
     }
   ): Promise<void> {
     try {
-      const componentsForCalc = components.map(({ component, componentRelativeDir }) => ({
+      const componentsForCalc = components.map(({ component, componentRelativeDir, packageName }) => ({
         component,
         componentRootDir: options.rootComponentsPath
           ? this.getComponentDirInBitRoots(component, {
@@ -702,7 +704,7 @@ export class DependencyResolverMain {
               rootComponentsPath: options.rootComponentsPath,
             })
           : undefined,
-        pkgName: this.getPackageName(component),
+        pkgName: packageName || this.getPackageName(component),
         componentRelativeDir,
       }));
 

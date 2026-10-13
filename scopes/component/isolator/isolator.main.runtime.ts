@@ -5,7 +5,7 @@ import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import { CLIAspect } from '@teambit/cli';
 import semver from 'semver';
 import chalk from 'chalk';
-import { compact, flatten, isEqual, pick, uniqBy } from 'lodash';
+import { compact, flatten, isEqual, omit, pick, uniqBy } from 'lodash';
 import { isFeatureEnabled, DISABLE_CAPSULE_OPTIMIZATION } from '@teambit/harmony.modules.feature-toggle';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { AspectLoaderAspect } from '@teambit/aspect-loader';
@@ -1543,6 +1543,15 @@ export class IsolatorMain {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       packageJson.addOrUpdateProperty('version', semver.inc(legacyComp.version!, 'prerelease') || '0.0.1-0');
     }
+    // only a component whose main file is its package.json, as a pnpm project's is, is described by it. a component
+    // of another env that happens to track a package.json keeps the main bit generates for its dist
+    const ownPackageJsonFields =
+      legacyComp.mainFile === 'package.json' ? readOwnPackageJsonFields(legacyComp) : undefined;
+    packageJson.mergePackageJsonObject(ownPackageJsonFields);
+    // bit's main is the package.json itself then. when the package.json names no main of its own, node's default applies
+    if (ownPackageJsonFields && !ownPackageJsonFields.main && !ownPackageJsonFields.exports) {
+      packageJson.removeProperty('main');
+    }
     // "as any" is needed when compiling in a capsule: this file gets PackageJsonFile from the
     // capsule-source of component.sources, while node-modules-linker's d.ts references the
     // installed dist copy. they're identical, but protected members make TS treat them as
@@ -1830,3 +1839,30 @@ export class IsolatorMain {
 }
 
 IsolatorAspect.addRuntime(IsolatorMain);
+
+/** the fields of the package.json bit writes from the component model - its identity and its dependencies */
+const PACKAGE_JSON_FIELDS_OF_BIT = [
+  'name',
+  'version',
+  'componentId',
+  'dependencies',
+  'devDependencies',
+  'peerDependencies',
+  'optionalDependencies',
+];
+
+/**
+ * a component that carries a package.json of its own - a project of a pnpm workspace - has its
+ * package described by it: main, exports, bin, files and the rest. bit still writes the fields it owns,
+ * so the dependencies are the exact versions the component was snapped with, not "workspace:" or "catalog:".
+ */
+function readOwnPackageJsonFields(legacyComp: ConsumerComponent): Record<string, any> | undefined {
+  const ownPackageJson = legacyComp.files.find((file) => file.relative === 'package.json');
+  if (!ownPackageJson) return undefined;
+  try {
+    return omit(JSON.parse(ownPackageJson.contents.toString()), PACKAGE_JSON_FIELDS_OF_BIT);
+  } catch {
+    // not a manifest bit can read, the one bit generates stays as is
+    return undefined;
+  }
+}
