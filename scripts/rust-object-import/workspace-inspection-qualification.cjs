@@ -288,14 +288,27 @@ async function runQualification(cli, helper, options = {}) {
       'actual commands must complete native inventory'
     );
     if (addon) {
+      assert.ok(
+        diagnostics.some(
+          (entry) => entry.operation === 'eol-status' && entry.trace.workspace.statusResult?.completed > 0
+        ),
+        'the warm ordinary full-status command must complete without Harmony'
+      );
       for (const kind of ['dependencyCacheRead', 'dependencyCacheFreshness']) {
-        assert.ok(diagnostics.some((entry) => entry.trace.workspace[kind].completed > 0),
-          `actual commands must consume native ${kind}`);
-        assert.equal(diagnostics.reduce((sum, entry) => sum + entry.trace.workspace[kind].failed, 0), 0,
-          `ordinary commands must not decline ${kind}`);
+        assert.ok(
+          diagnostics.some((entry) => entry.trace.workspace[kind].completed > 0),
+          `actual commands must consume native ${kind}`
+        );
+        assert.equal(
+          diagnostics.reduce((sum, entry) => sum + entry.trace.workspace[kind].failed, 0),
+          0,
+          `ordinary commands must not decline ${kind}`
+        );
       }
-      assert.ok(diagnostics.some((entry) => entry.trace.workspace.dependencyCacheRead.hits > 0),
-        'actual commands must receive native dependency cache hits');
+      assert.ok(
+        diagnostics.some((entry) => entry.trace.workspace.dependencyCacheRead.hits > 0),
+        'actual commands must receive native dependency cache hits'
+      );
     }
     const kinds = ['inspectionBegin', 'inspectionFiles', 'inspectionCompare', 'inspectionDiff', 'inspectionFinish'];
     for (const kind of kinds) {
@@ -322,8 +335,12 @@ async function runQualification(cli, helper, options = {}) {
         assert.equal(entry.trace.workspace.inventoryBegin.failed + entry.trace.workspace.inventoryFinish.failed, 0);
         assert.equal(entry.trace.workspace.scan.frames, 0, `${entry.operation}: no legacy scan/filter continuation`);
       }
-      const coldStatus = Boolean(addon && entry.operation.endsWith('-mini'));
-      if (coldStatus) {
+      const coldMini = Boolean(addon && entry.operation.endsWith('-mini'));
+      const coldFull = Boolean(
+        addon && entry.operation.endsWith('-status') && entry.trace.workspace.statusResult?.completed
+      );
+      const coldStatus = coldMini || coldFull;
+      if (coldMini) {
         for (const kind of ['statusPrepare', 'statusScan', 'statusFinish', 'statusComplete']) {
           assert.ok(entry.trace.workspace[kind].completed > 0, `${entry.operation}: ${kind} must own the command`);
           assert.equal(entry.trace.workspace[kind].failed, 0);
@@ -332,6 +349,19 @@ async function runQualification(cli, helper, options = {}) {
         assert.equal(entry.trace.workspace.statusComplete.frames, 1);
         assert.equal(new Set(entry.trace.workspaceFrames.map((frame) => frame.helperId)).size, 1);
         assert.deepEqual(entry.trace.loadedCommandModels, [], 'cold status must not hydrate Node workspace/models');
+      }
+      if (coldFull) {
+        for (const kind of ['statusContext', 'dependencyPolicyCached', 'statusCompare', 'statusResult']) {
+          assert.ok(entry.trace.workspace[kind].completed > 0, `${entry.operation}: ${kind} must own full status`);
+          assert.equal(entry.trace.workspace[kind].failed, 0);
+        }
+        assert.equal(new Set(entry.trace.workspaceFrames.map((frame) => frame.helperId)).size, 1);
+        assert.deepEqual(entry.trace.loadedCommandModels, [], 'cold full status must not load Node workspace/models');
+        if (process.platform === 'linux') {
+          assert.ok(entry.bodyReads, 'Linux body-read evidence is mandatory');
+          assert.equal(entry.bodyReads.bytes, 0, 'cold full status must not read Source files on JavaScript/libuv');
+          assert.ok(entry.bodyReads.rustBytes > 0, 'native workers must own full-status Source reads');
+        }
       }
       const metrics = entry.trace.mergeState;
       const operationHelpers = new Set(kinds.flatMap((kind) => metrics[kind].helperIds));
@@ -393,7 +423,10 @@ async function runQualification(cli, helper, options = {}) {
     assert.ok(
       diagnostics.some(
         (entry) =>
-          entry.operation === 'config-status' && entry.trace.mergeState.inspectionCompare.modelHashes.includes(betaHash)
+          entry.operation === 'config-status' &&
+          (entry.trace.mergeState.inspectionCompare.modelHashes.includes(betaHash) ||
+            (entry.trace.workspace.statusResult?.completed > 0 &&
+              entry.trace.workspace.statusCompare.identities.includes('qualification.inspection/beta')))
       ),
       'metadata-only dependent comparison must accept beta, not merely an unrelated unchanged component'
     );
@@ -424,7 +457,7 @@ async function runQualification(cli, helper, options = {}) {
         }))
       : runs,
     bodyReadContract:
-      'Mini-status reads zero Source files/spools on JavaScript/libuv threads; named Rust workers, full status framework loading and public diff content are reported separately.',
+      'Cold mini-status and full status read zero Source files/spools on JavaScript/libuv threads; named Rust workers, canonical fallback and public diff content are reported separately.',
     indexComparison:
       'All fields/duplicates compared; component/lane index row insertion order only sorted. Raw bytes retained.',
   };

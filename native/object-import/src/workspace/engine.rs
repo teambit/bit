@@ -1,6 +1,8 @@
 pub(crate) mod client_status;
+pub(crate) mod dependency_policy;
 pub(crate) mod diff;
 pub(crate) mod inventory;
+
 mod read;
 mod read_dependency_cache;
 mod read_raw;
@@ -8,6 +10,9 @@ mod resolve_dependencies;
 mod resolve_typescript;
 mod scan;
 mod status;
+mod status_context;
+mod status_models;
+mod status_result;
 
 use crate::protocol;
 use serde::{Deserialize, Serialize};
@@ -31,12 +36,22 @@ const MAX_FILES: usize = 4096;
     deny_unknown_fields
 )]
 enum Request {
+    DependencyPolicyCached(Box<dependency_policy::cached::Request>),
+    DependencyPolicyComplete(Box<dependency_policy::pipeline::Request>),
+    DependencyPolicyPackages(dependency_policy::packages_on_disk::Request),
+    DependencyPolicy(Box<dependency_policy::Request>),
+    DependencyPolicyFinish(Box<dependency_policy::finalize::Request>),
+    DependencyPolicyVersions(Box<dependency_policy::versions::Request>),
     DependencyCacheRead(read_dependency_cache::Read),
     DependencyCacheFreshness(read_dependency_cache::Freshness),
     DependencyResolve(resolve_dependencies::Request),
     DependencyScan {
         request: Value,
     },
+    StatusContext(status_context::Request),
+    StatusResult(status_result::Request),
+    StatusModels(status_models::Request),
+    StatusCompare(status_models::comparison::Request),
     StatusPrepare(client_status::Prepare),
     StatusScan(client_status::Scan),
     StatusFinish(client_status::Finish),
@@ -155,19 +170,10 @@ fn failure(id: u32) -> Response {
 }
 fn apply(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value)> {
     match request {
-        Request::DependencyCacheRead(request) => read_dependency_cache::read(&request),
-        Request::DependencyCacheFreshness(request) => {
-            read_dependency_cache::freshness(&request, pool)
-        }
-        Request::DependencyResolve(request) => resolve_dependencies::resolve(&request, pool),
-        Request::DependencyScan { request } => dependency_scan(&request, pool),
-        Request::StatusPrepare(_)
-        | Request::StatusScan(_)
-        | Request::StatusFinish(_)
-        | Request::StatusComplete
-        | Request::InventoryBegin(_)
-        | Request::InventoryFinish(_)
-        | Request::InventoryCancel { .. } => Err(invalid("inventory operation requires an owner")),
+        Request::StatusContext(request) => status_context::read(&request, pool),
+        Request::StatusResult(request) => status_result::read(&request),
+        Request::StatusModels(request) => status_models::read(&request, pool),
+        Request::StatusCompare(request) => status_models::comparison::read(&request, pool),
         Request::Scan { root, exclude_dirs, workspace_root } => {
             let paths = scan::scan(&root, &exclude_dirs, workspace_root)?;
             Ok((paths.len(), json!({"paths":paths})))
@@ -185,6 +191,37 @@ fn apply(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value
             1,
             json!({"modified":Sha1::digest(left.as_bytes())!=Sha1::digest(right.as_bytes())}),
         )),
+        request => dependencies(request, pool),
+    }
+}
+fn dependencies(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value)> {
+    match request {
+        Request::DependencyPolicyCached(request) => {
+            dependency_policy::cached::apply(&request, pool)
+        }
+        Request::DependencyPolicyComplete(request) => {
+            dependency_policy::pipeline::apply(&request, pool)
+        }
+        Request::DependencyPolicyPackages(request) => {
+            dependency_policy::packages_on_disk::read(&request, pool)
+        }
+        Request::DependencyPolicy(request) => dependency_policy::apply(&request),
+        Request::DependencyPolicyFinish(request) => dependency_policy::finalize::apply(&request),
+        Request::DependencyPolicyVersions(request) => dependency_policy::versions::apply(&request),
+        Request::DependencyCacheRead(request) => read_dependency_cache::read(&request),
+        Request::DependencyCacheFreshness(request) => {
+            read_dependency_cache::freshness(&request, pool)
+        }
+        Request::DependencyResolve(request) => resolve_dependencies::resolve(&request, pool),
+        Request::DependencyScan { request } => dependency_scan(&request, pool),
+        Request::StatusPrepare(_)
+        | Request::StatusScan(_)
+        | Request::StatusFinish(_)
+        | Request::StatusComplete
+        | Request::InventoryBegin(_)
+        | Request::InventoryFinish(_)
+        | Request::InventoryCancel { .. } => Err(invalid("inventory operation requires an owner")),
+        _ => Err(invalid("unsupported dependency operation")),
     }
 }
 fn dependency_scan(request: &Value, pool: &rayon::ThreadPool) -> io::Result<(usize, Value)> {

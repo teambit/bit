@@ -1,4 +1,4 @@
-mod config;
+pub(super) mod config;
 mod models;
 
 use super::{invalid, inventory};

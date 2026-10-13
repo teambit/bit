@@ -44,6 +44,7 @@ for (const args of [
     'teambit.legacy/scope-api',
     'teambit.legacy/extension-data',
     'teambit.harmony/bit',
+    'teambit.harmony/node',
     'teambit.legacy/logger',
     'teambit.dependencies/dependency-resolver',
     'teambit.dependencies/dependencies',

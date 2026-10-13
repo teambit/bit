@@ -92,6 +92,22 @@ pub(crate) fn read(
     inflate(&compressed, maximum)
 }
 
+/// Read mutable repository models in parallel under one request-wide allowance.
+pub(crate) fn read_shared(
+    directory: &Path,
+    hash: [u8; 20],
+    raw: &Budget,
+    packed: &Budget,
+) -> io::Result<Vec<u8>> {
+    let identity = crate::validate::hexadecimal(&hash);
+    let compressed = packed.read(File::open(
+        directory
+            .join(&identity[..2])
+            .join(&identity[2..]),
+    )?)?;
+    inflate_with(&compressed, MAX_BYTES + 256, Some(raw))
+}
+
 fn packed(directory: &Path, hash: [u8; 20], compressed_total: &mut usize) -> io::Result<Vec<u8>> {
     let identity = crate::validate::hexadecimal(&hash);
     let path = directory

@@ -7,7 +7,7 @@ mod stream_io;
 
 use bit_object_import::{WorkspaceDispatcher, WorkspaceSession};
 use napi::{
-    Env, Error, Result, Task,
+    Env, Error, JsString, Result, Task,
     bindgen_prelude::{Buffer, Object},
 };
 use napi_derive::napi;
@@ -161,4 +161,17 @@ impl Drop for WorkspaceRequest {
 
 fn failure(error: impl std::fmt::Display) -> Error {
     Error::from_reason(error.to_string())
+}
+
+/// Pure synchronous planning avoids an event-loop hop between policy checkpoints.
+#[napi]
+pub fn plan_dependency_policy(input: JsString<'_>, finish: bool) -> Result<String> {
+    if input.utf8_len()? > 4 * 1024 * 1024 {
+        return Err(failure("dependency policy input limit"));
+    }
+    let input = input.into_utf8()?;
+    let input = input.as_str()?;
+    catch_unwind(|| bit_object_import::plan_dependency_policy(input, finish))
+        .map_err(|_| failure("dependency policy panicked"))?
+        .map_err(failure)
 }

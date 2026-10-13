@@ -79,7 +79,7 @@ fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }
 
-fn parents(value: &Value) -> io::Result<()> {
+pub(crate) fn parents(value: &Value) -> io::Result<()> {
     let Some(parents) = value
         .get("parents")
         .filter(|parents| !parents.is_null())

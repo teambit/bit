@@ -19,7 +19,7 @@ pub(super) struct FileRecord {
 pub(super) struct Metadata {
     pub(super) path: PathBuf,
     pub(super) hash: String,
-    linux_hash: String,
+    pub(super) linux_hash: String,
     pub(super) snapshot_hash: String,
     #[serde(skip)]
     pub(super) raw_bytes: usize,

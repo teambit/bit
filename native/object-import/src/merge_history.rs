@@ -1,5 +1,6 @@
 pub(crate) mod merge;
 pub(crate) mod metadata;
+pub(crate) mod status;
 
 mod graph;
 use crate::protocol;

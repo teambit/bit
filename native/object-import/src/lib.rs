@@ -1,6 +1,7 @@
 pub use import_stream::ImportStream;
 pub use inspection::InspectionSnapshot;
 pub use session::{WorkspaceDispatcher, WorkspaceSession};
+pub use workspace::engine::dependency_policy::plan as plan_dependency_policy;
 
 mod checkout;
 mod checkout_transition;

@@ -1,0 +1,86 @@
+use super::{Reader, Target, invalid};
+use rayon::prelude::*;
+use serde_json::Value;
+use std::{
+    collections::{HashMap, HashSet},
+    io,
+};
+
+pub(super) fn references(models: &[Value], targets: &[Target]) -> io::Result<Vec<String>> {
+    let index: HashMap<_, _> = models
+        .iter()
+        .map(|model| {
+            let scope = model["scope"].as_str().unwrap_or_default();
+            let name = model["name"].as_str().unwrap_or_default();
+            (if scope.is_empty() { name.to_owned() } else { format!("{scope}/{name}") }, model)
+        })
+        .collect();
+    let mut seen = HashSet::new();
+    let mut references = Vec::new();
+    for target in targets {
+        if target.version.is_empty() {
+            continue;
+        }
+        let Some(model) = index.get(&target.identity) else {
+            continue;
+        };
+        let reference = reference(model, &target.version)?;
+        if seen.insert(reference.clone()) {
+            references.push(reference);
+        }
+    }
+    Ok(references)
+}
+pub(super) fn reference(model: &Value, version: &str) -> io::Result<String> {
+    if crate::merge_history::hash(version).is_ok() {
+        return Ok(version.to_owned());
+    }
+    model["orphanedVersions"]
+        .get(version)
+        .unwrap_or_else(|| &model["versions"][version])
+        .as_str()
+        .map(str::to_owned)
+        .ok_or_else(|| invalid("status model version absent"))
+}
+
+// The mutable Version body is read once per reference in this command.
+pub(super) fn read(
+    reader: &Reader<'_>,
+    references: &[String],
+    pool: &rayon::ThreadPool,
+) -> io::Result<Vec<(String, Value)>> {
+    pool.install(|| {
+        references
+            .par_iter()
+            .map(|reference| {
+                let value = reader.read(reference, "Version")?;
+                crate::history_query::validate_version(&value)?;
+                crate::read_version::parents(&value)?;
+                Ok((reference.clone(), value))
+            })
+            .collect()
+    })
+}
+
+pub(super) fn include_heads(models: &[Value], references: &mut Vec<String>) -> io::Result<()> {
+    let mut seen: HashSet<_> = references.iter().cloned().collect();
+    for model in models {
+        if model["deprecated"].as_bool().unwrap_or(false) {
+            return Err(invalid("status deprecated model requires canonical issues"));
+        }
+        if let Some(head) = model
+            .get("head")
+            .filter(|head| !head.is_null())
+        {
+            let head = head.as_str().ok_or_else(|| invalid("status model head"))?;
+            crate::merge_history::hash(head)?;
+            if seen.insert(head.to_owned()) {
+                references.push(head.to_owned());
+            }
+        }
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests;

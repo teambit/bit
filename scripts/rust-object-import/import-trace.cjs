@@ -42,6 +42,10 @@ const metrics = {
       'statusScan',
       'statusFinish',
       'statusComplete',
+      'statusContext',
+      'statusCompare',
+      'statusResult',
+      'dependencyPolicyCached',
       'scan',
       'inventoryBegin',
       'inventoryFinish',
@@ -281,7 +285,8 @@ function observeWorkspaceTransport(child) {
         // Observation must not prevent a new workspace operation from reaching Rust.
         if (magic === 'BWS1' && !Object.hasOwn(metrics.workspace, operation.kind))
           Object.defineProperty(metrics.workspace, operation.kind, {
-            value: { frames: 0, files: 0, completed: 0, failed: 0 }, enumerable: true,
+            value: { frames: 0, files: 0, completed: 0, failed: 0 },
+            enumerable: true,
           });
         const metric = (
           magic === 'BMT1'
@@ -293,6 +298,8 @@ function observeWorkspaceTransport(child) {
                 : metrics.workspace
         )[operation.kind];
         metric.frames++;
+        if (magic === 'BWS1' && operation.kind === 'statusCompare')
+          metric.identities = [...(metric.identities || []), ...operation.targets.map((target) => target.identity)];
         if (metric.helperIds && !metric.helperIds.includes(workspaceId)) metric.helperIds.push(workspaceId);
         metric.files += ['BMH1', 'BMT1'].includes(magic)
           ? 1
@@ -468,8 +475,12 @@ function observeWorkspaceTransport(child) {
           metric.rawBodyBytes = (metric.rawBodyBytes || 0) + (response.binaryBytes || 0);
         }
         metric.completed += response.completed || 0;
-        if (magic === 'BWS1:dependencyCacheRead' && !response.failed &&
-          Number.isSafeInteger(response.data?.cache?.timestamp) && typeof response.data.cache.data === 'string')
+        if (
+          magic === 'BWS1:dependencyCacheRead' &&
+          !response.failed &&
+          Number.isSafeInteger(response.data?.cache?.timestamp) &&
+          typeof response.data.cache.data === 'string'
+        )
           metric.hits = (metric.hits || 0) + 1;
         if (magic?.startsWith('BMT1:historyQuery') && response.completed > 0 && !response.failed) {
           if (response.data?.token) metric.tokens.push({ token: response.data.token, helperId: workspaceId });

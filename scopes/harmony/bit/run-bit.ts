@@ -48,11 +48,16 @@ async function initApp(additionalAspects?: Aspect[]) {
       !additionalAspects?.length &&
       process.env.BIT_RUST_CLIENT_VCS === 'on' &&
       process.argv.length === 4 &&
-      ['mini-status', 'ms'].includes(process.argv[2]) &&
+      ['mini-status', 'ms', 'status', 's'].includes(process.argv[2]) &&
       ['--json', '-j'].includes(process.argv[3])
     ) {
-      const { runRustMiniStatus } = await import('./rust-mini-status');
-      if (await runRustMiniStatus()) return;
+      if (['status', 's'].includes(process.argv[2])) {
+        const { runRustStatus } = await import('./rust-status');
+        if (await runRustStatus()) return;
+      } else {
+        const { runRustMiniStatus } = await import('./rust-mini-status');
+        if (await runRustMiniStatus()) return;
+      }
     }
     const { runCLI } = await import('./load-bit');
     await runCLI(additionalAspects);

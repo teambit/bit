@@ -10,6 +10,7 @@ import { COMPONENT_PREVIEW_STRATEGY_NAME } from '@teambit/preview';
 import type { SchemaExtractor } from '@teambit/schema';
 import type { TsConfigSourceFile } from 'typescript';
 import { join } from 'path';
+import { getNodeDependencyPolicy } from './default-dependency-policy';
 
 export const NodeEnvType = 'node';
 
@@ -26,34 +27,7 @@ export class NodeEnv implements DependenciesEnv, PackageEnv {
   icon = 'https://static.bit.dev/extensions-icons/nodejs.svg';
 
   getDependencies(): EnvPolicyConfigObject {
-    return {
-      // dependencies: {
-      //   react: '-',
-      //   'react-dom': '-',
-      // },
-      devDependencies: {
-        // react: '-',
-        // 'react-dom': '-',
-        '@types/jest': '26.0.20',
-        '@types/node': '22.10.5',
-      },
-      peers: [
-        {
-          name: 'react',
-          /* the version to be installed and used by the env */
-          version: '^19.0.0',
-          /* the range of versions this env's components are compatible with */
-          supportedRange: '^17.0.0 || ^18.0.0 || ^19.0.0',
-        },
-        {
-          name: 'react-dom',
-          /* the version to be installed and used by the env */
-          version: '^19.0.0',
-          /* the range of versions this env's components are compatible with */
-          supportedRange: '^17.0.0 || ^18.0.0 || ^19.0.0',
-        },
-      ],
-    };
+    return getNodeDependencyPolicy();
   }
 
   getCompiler(transformers: TsConfigTransformer[] = [], tsModule) {

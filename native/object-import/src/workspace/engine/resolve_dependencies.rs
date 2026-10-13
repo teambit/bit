@@ -44,7 +44,7 @@ pub(super) fn resolve(request: &Request, pool: &rayon::ThreadPool) -> io::Result
         return Err(invalid("dependency resolution count limit"));
     }
     let parent = request.filename.parent().ok_or_else(|| invalid("dependency source parent"))?;
-    let budget = Budget { operations: AtomicUsize::new(0), bytes: AtomicUsize::new(0) };
+    let budget = Budget::new();
     let resolved = pool.install(|| {
         request.dependencies
             .par_iter()
@@ -82,6 +82,9 @@ pub(super) struct Budget {
     bytes: AtomicUsize,
 }
 impl Budget {
+    pub(super) fn new() -> Self {
+        Self { operations: AtomicUsize::new(0), bytes: AtomicUsize::new(0) }
+    }
     pub(super) fn metadata(&self, file: &Path) -> io::Result<Option<fs::Metadata>> {
         if self.operations.fetch_add(1, Ordering::Relaxed) >= 16384 {
             return Err(invalid("dependency resolution filesystem limit"));

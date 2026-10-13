@@ -8,7 +8,7 @@ use std::{
     path::Path,
 };
 
-pub(super) fn configuration(root: &Path) -> io::Result<Value> {
+pub(in crate::workspace::engine) fn configuration(root: &Path) -> io::Result<Value> {
     let config = document(&root.join("workspace.jsonc"))?;
     let object = config.as_object().ok_or_else(|| invalid("status workspace configuration"))?;
     if object
@@ -43,6 +43,13 @@ fn workspace_settings(config: &Value) -> io::Result<Value> {
         .get("teambit.workspace/workspace")
         .and_then(Value::as_object)
         .ok_or_else(|| invalid("status workspace settings"))?;
+    identifier(
+        workspace
+            .get("defaultScope")
+            .and_then(Value::as_str)
+            .ok_or_else(|| invalid("status workspace default scope"))?,
+        false,
+    )?;
     if workspace
         .keys()
         .any(|key| {
@@ -67,7 +74,11 @@ fn workspace_settings(config: &Value) -> io::Result<Value> {
     {
         return Err(invalid("status invalid trackAllFiles"));
     }
-    if let Some(ignored) = workspace.get("ignoredFiles") {
+    ignored_files(workspace.get("ignoredFiles"))?;
+    Ok(Value::Object(workspace.clone()))
+}
+fn ignored_files(ignored: Option<&Value>) -> io::Result<()> {
+    if let Some(ignored) = ignored {
         let patterns = ignored.as_array().ok_or_else(|| invalid("status ignoredFiles"))?;
         if patterns.len() > 4096
             || patterns
@@ -77,7 +88,7 @@ fn workspace_settings(config: &Value) -> io::Result<Value> {
             return Err(invalid("status ignoredFiles limit"));
         }
     }
-    Ok(Value::Object(workspace.clone()))
+    Ok(())
 }
 fn extensions(config: &Value) -> io::Result<()> {
     for (name, allowed) in [
@@ -108,6 +119,9 @@ fn extensions(config: &Value) -> io::Result<()> {
 
 pub(super) fn targets(root: &Path, config: &Value) -> io::Result<Vec<Target>> {
     let bitmap = document(&root.join(".bitmap"))?;
+    bitmap_targets(&bitmap, config)
+}
+fn bitmap_targets(bitmap: &Value, config: &Value) -> io::Result<Vec<Target>> {
     let entries = bitmap.as_object().ok_or_else(|| invalid("status bitmap"))?;
     if bitmap["$schema-version"] != "17.0.0" || entries.len() > 4097 {
         return Err(invalid("status bitmap schema or count"));
@@ -244,7 +258,7 @@ fn relative(value: &str, root: bool) -> io::Result<()> {
 fn text<'a>(value: &'a Value, key: &str) -> io::Result<&'a str> {
     value[key].as_str().ok_or_else(|| invalid("status invalid component field"))
 }
-pub(super) fn document(path: &Path) -> io::Result<Value> {
+pub(in crate::workspace::engine) fn document(path: &Path) -> io::Result<Value> {
     if !fs::symlink_metadata(path)?.is_file() {
         return Err(invalid("status nonordinary configuration"));
     }
@@ -257,7 +271,29 @@ pub(super) fn document(path: &Path) -> io::Result<Value> {
     }
     jsonc::parse(&bytes)
 }
-pub(super) fn options(config: &Value, patterns: &[String]) -> Value {
+pub(in crate::workspace::engine) fn options(config: &Value, patterns: &[String]) -> Value {
     json!({"trackAllFiles":config["trackAllFiles"].as_bool().unwrap_or(false),
         "ignoredFiles":config.get("ignoredFiles").cloned().unwrap_or_else(|| json!([])),"patterns":patterns})
+}
+
+/// Preserve bitmap order while exposing only the fields the cold command owns.
+pub(in crate::workspace::engine) fn context_targets(
+    root: &Path,
+    config: &Value,
+) -> io::Result<Vec<Value>> {
+    let bitmap = document(&root.join(".bitmap"))?;
+    let targets = bitmap_targets(&bitmap, config)?;
+    let entries = bitmap.as_object().ok_or_else(|| invalid("status bitmap"))?;
+    Ok(targets
+        .into_iter()
+        .zip(
+            entries
+                .iter()
+                .filter(|(key, _)| key.as_str() != "$schema-version"),
+        )
+        .map(|(target, (_, entry))| {
+            json!({"identity":target.id,"directory":target.directory,
+            "version":target.version,"mainFile":entry["mainFile"]})
+        })
+        .collect())
 }

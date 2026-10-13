@@ -9,7 +9,7 @@ use std::{
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Version {
-    hash: String,
+    pub(super) hash: String,
     parents: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     unrelated: Option<String>,
@@ -27,7 +27,7 @@ pub(super) struct Load {
     #[serde(default)]
     stop_at: Vec<String>,
 }
-fn validate(versions: &[Version]) -> io::Result<()> {
+pub(super) fn validate(versions: &[Version]) -> io::Result<()> {
     count(versions.len())?;
     let mut seen = HashSet::new();
     let mut edges = 0;
@@ -157,7 +157,7 @@ pub(super) fn load(request: &Load) -> io::Result<Value> {
     }
     Ok(data)
 }
-fn subset(versions: &[Version], from: &str, stop: &[String]) -> Vec<String> {
+pub(super) fn subset(versions: &[Version], from: &str, stop: &[String]) -> Vec<String> {
     let index: HashMap<_, _> = versions
         .iter()
         .map(|version| (version.hash.as_str(), version))

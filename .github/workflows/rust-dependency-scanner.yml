@@ -64,6 +64,7 @@ on:
       - 'scripts/rust-dependency-analysis/integration*'
       - 'scripts/rust-dependency-analysis/compare*'
       - 'scripts/rust-dependency-analysis/fixtures.cjs'
+      - 'scripts/rust-dependency-analysis/policy*'
       - 'scripts/rust-dependency-analysis/*memory*'
       - 'scripts/rust-dependency-analysis/legacy-session-control*'
       - 'scripts/rust-dependency-analysis/command-workspace*'
@@ -136,6 +137,7 @@ on:
       - 'scripts/rust-dependency-analysis/integration*'
       - 'scripts/rust-dependency-analysis/compare*'
       - 'scripts/rust-dependency-analysis/fixtures.cjs'
+      - 'scripts/rust-dependency-analysis/policy*'
       - 'scripts/rust-dependency-analysis/*memory*'
       - 'scripts/rust-dependency-analysis/legacy-session-control*'
       - 'scripts/rust-dependency-analysis/command-workspace*'
@@ -509,6 +511,15 @@ jobs:
           BIT_TEST_OBJECT_IMPORT: ${{ github.workspace }}/native/target/debug/bit-object-import${{ runner.os == 'Windows' && '.exe' || '' }}
           BIT_TEST_WORKSPACE_ADDON: ${{ github.workspace }}/native/target/debug/bit-workspace.node
         run: node --test scripts/rust-object-import/workspace-addon.test.cjs scripts/rust-object-import/object-addon.test.cjs scripts/rust-object-import/workspace-status-runtime.test.cjs scripts/rust-dependency-analysis/embedded-session.test.cjs scripts/rust-dependency-analysis/resolution.test.cjs scripts/rust-dependency-analysis/typescript-resolution.test.cjs scripts/rust-dependency-analysis/resolution-integration.test.cjs scripts/rust-dependency-analysis/cache.test.cjs scripts/rust-dependency-analysis/cache-integration.test.cjs
+      - name: Differential native dependency policy and cold command models
+        env:
+          BIT_LEGACY_ROOT: ${{ github.workspace }}
+          BIT_TEST_OBJECT_IMPORT: ${{ github.workspace }}/native/target/debug/bit-object-import${{ runner.os == 'Windows' && '.exe' || '' }}
+          BIT_TEST_WORKSPACE_ADDON: ${{ github.workspace }}/native/target/debug/bit-workspace.node
+        run: |
+          node --test scripts/rust-dependency-analysis/policy.test.cjs scripts/rust-dependency-analysis/policy-finalize.test.cjs scripts/rust-dependency-analysis/policy-versions.test.cjs scripts/rust-dependency-analysis/policy-packages.test.cjs scripts/rust-dependency-analysis/policy-kernel.test.cjs scripts/rust-dependency-analysis/policy-pipeline.test.cjs scripts/rust-object-import/status-models.test.cjs scripts/rust-object-import/status-result.test.cjs scripts/rust-object-import/full-status-issues.test.cjs
+          BIT_TEST_SCANNER_COMPILED=1 node --test scripts/rust-dependency-analysis/policy-kernel.test.cjs
+          BIT_TEST_STATUS_COMPILED=1 node --test scripts/rust-object-import/full-status-runtime.test.cjs
       - name: Differential native snapshot models against the compiled CLI
         working-directory: native
         env:

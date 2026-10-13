@@ -17,18 +17,22 @@ struct Request {
 }
 pub(super) fn plan(input: Value) -> io::Result<Value> {
     let request: Request = serde_json::from_value(input).map_err(io::Error::other)?;
-    let mut left = request.left;
-    let mut right = request.right;
+    let left = request.left;
+    let right = request.right;
     if request.mode == "sourceCode" {
         return source_code(left, right);
     }
     if request.mode != "modified" {
         return Err(invalid("unknown inspection compare mode"));
     }
+    modified(left, right, request.workspace_root)
+}
+
+pub(crate) fn modified(mut left: Js, mut right: Js, workspace_root: bool) -> io::Result<Value> {
     let alignment = fields::align(&left, &mut right)?;
     let mut left_mutations = sort::all(&mut left)?;
     let mut right_mutations = sort::all(&mut right)?;
-    if !request.workspace_root {
+    if !workspace_root {
         fields::filter_bitmap(&mut left)?;
     }
     let left_semantic = crate::snapshot_projection::semantic(&left)?;
