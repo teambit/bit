@@ -19,7 +19,7 @@ Module._load = function (request, parent, ...args) {
     return () => '0ms';
   if (
     request !== 'uuid' ||
-    !/[\\/]((version-maker)|(version)|(lane)|(lane-history)|(consumer-component))\.js$/.test(parent?.filename || '')
+    !/[\\/]((version-maker)|(new-snap-hash)|(version)|(lane)|(lane-history)|(consumer-component))\.js$/.test(parent?.filename || '')
   )
     return value;
   return {

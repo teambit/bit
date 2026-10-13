@@ -133,6 +133,18 @@ pub(crate) fn serve(
     protocol::respond(writer, &Response { version: 1, id, results })
 }
 
+/// Reuse import decisions within a retained command without a transport roundtrip.
+pub(crate) fn plan(value: Value) -> io::Result<Value> {
+    let operation: Operation = serde_json::from_value(value).map_err(io::Error::other)?;
+    if !matches!(
+        operation,
+        Operation::Version { .. } | Operation::VersionHistory(_) | Operation::Component(_),
+    ) {
+        return Err(invalid("command import requires a pure decision"));
+    }
+    Ok(execute(operation, None))
+}
+
 fn execute(operation: Operation, store: Option<&Store>) -> Value {
     match operation {
         // JavaScript compares these string dates lexicographically, in UTF-16 code units.

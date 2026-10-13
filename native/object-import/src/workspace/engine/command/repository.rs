@@ -1,0 +1,155 @@
+use super::super::dependency_graph::proof;
+use crate::{checkout::repository, command_import, read_budget::Budget};
+use serde_json::Value;
+use std::{
+    collections::HashMap,
+    io,
+    path::{Path, PathBuf},
+};
+
+pub(super) struct Repository {
+    directory: PathBuf,
+    imported: Option<command_import::PreparedImport>,
+    raw: Budget,
+    packed: Budget,
+    values: HashMap<(String, String), Value>,
+    proofs: Vec<proof::Proof>,
+}
+impl Repository {
+    pub(super) fn new(root: &Path, imported: Option<command_import::PreparedImport>) -> Self {
+        Self {
+            directory: root.join(".bit/objects"),
+            imported,
+            raw: Budget::new(32 * 1024 * 1024),
+            packed: Budget::new(32 * 1024 * 1024),
+            values: HashMap::new(),
+            proofs: Vec::new(),
+        }
+    }
+    pub(super) fn read(&mut self, reference: &str, kind: &str) -> io::Result<Value> {
+        let hash = crate::merge_history::hash(reference)?;
+        if let Some(imported) = &self.imported
+            && let Some(value) = imported.overlay.read(reference, kind)?
+        {
+            return Ok(value.clone());
+        }
+        let key = (reference.to_owned(), kind.to_owned());
+        if let Some(value) = self.values.get(&key) {
+            return Ok(value.clone());
+        }
+        let file = self.directory
+            .join(&reference[..2])
+            .join(&reference[2..]);
+        proof::read(&file, &mut self.proofs)?;
+        let bytes = repository::read_shared(&self.directory, hash, &self.raw, &self.packed)?;
+        let (_, body) = repository::split(&bytes, hash, kind)?;
+        let value: Value = serde_json::from_slice(body).map_err(io::Error::other)?;
+        proof::verify(&self.proofs[self.proofs.len() - 1..])?;
+        self.values.insert(key, value.clone());
+        Ok(value)
+    }
+    pub(super) fn validate(&self) -> io::Result<()> {
+        if let Some(imported) = &self.imported {
+            imported.validate()?;
+        }
+        proof::verify(&self.proofs)
+    }
+    pub(super) fn remote_head(&mut self, identity: &str) -> io::Result<Option<String>> {
+        let (scope, name) = identity
+            .split_once('/')
+            .ok_or_else(|| super::super::invalid("command remote identity"))?;
+        if scope.is_empty()
+            || matches!(scope, "." | "..")
+            || scope
+                .bytes()
+                .any(|byte| !byte.is_ascii_alphanumeric() && !b"._-".contains(&byte))
+        {
+            return Err(super::super::invalid("command remote scope"));
+        }
+        let rows = self.remote_rows(scope)?;
+        if rows.len() > 4096 {
+            return Err(super::super::invalid("command remote row limit"));
+        }
+        for row in rows {
+            let head =
+                row["head"].as_str().ok_or_else(|| super::super::invalid("command remote head"))?;
+            crate::merge_history::hash(head)?;
+            if row["id"]["scope"] == scope && row["id"]["name"] == name {
+                return Ok(Some(head.to_owned()));
+            }
+        }
+        Ok(None)
+    }
+    fn remote_rows(&mut self, scope: &str) -> io::Result<Vec<Value>> {
+        if let Some(rows) = self
+            .overlay()
+            .and_then(|overlay| overlay.refs(scope))
+        {
+            Ok(rows.to_vec())
+        } else {
+            let file = self.directory
+                .parent()
+                .ok_or_else(|| super::super::invalid("command scope path"))?
+                .join("refs/remotes")
+                .join(scope)
+                .join("main");
+            let bytes = proof::read(&file, &mut self.proofs)?;
+            Ok(match bytes {
+                Some(bytes) => {
+                    serde_json::from_slice::<Vec<Value>>(&bytes).map_err(io::Error::other)?
+                }
+                None => Vec::new(),
+            })
+        }
+    }
+    pub(super) fn overlay(&self) -> Option<&command_import::Overlay> {
+        self.imported.as_ref().map(|imported| &imported.overlay)
+    }
+    pub(super) fn prepare_versions(
+        &mut self,
+        targets: &[command_import::Target],
+    ) -> io::Result<()> {
+        if let Some(imported) = &mut self.imported {
+            imported.prepare_versions(targets)?;
+        }
+        Ok(())
+    }
+    pub(super) fn prepare_merge_gap(
+        &mut self,
+        targets: &[command_import::Target],
+    ) -> io::Result<()> {
+        if let Some(imported) = &mut self.imported {
+            imported.prepare_merge_gap(targets)?;
+        }
+        Ok(())
+    }
+    pub(super) fn progress(&self) -> Value {
+        let Some(imported) = &self.imported else {
+            return serde_json::json!({"bitmapCount":0,"imports":[]});
+        };
+        serde_json::json!({"bitmapCount":imported.bitmap_count,"imports":imported.progress.iter().map(|progress| {
+            serde_json::json!({"reason":progress.reason,"ids":progress.ids,"components":progress.components.len(),"objects":progress.objects.len()})
+        }).collect::<Vec<_>>()})
+    }
+    pub(super) fn commit_import(&self) -> io::Result<()> {
+        if let Some(imported) = &self.imported {
+            imported.commit()?;
+        }
+        Ok(())
+    }
+}
+
+pub(super) fn model(context: &Value, identity: &str) -> io::Result<Option<Value>> {
+    Ok(context["models"]
+        .as_array()
+        .ok_or_else(|| super::super::invalid("command models"))?
+        .iter()
+        .find(|model| {
+            format!(
+                "{}/{}",
+                model["scope"].as_str().unwrap_or_default(),
+                model["name"].as_str().unwrap_or_default(),
+            ) == identity
+        })
+        .cloned())
+}

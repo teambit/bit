@@ -13,12 +13,13 @@ pub(super) struct Loaded {
     pub(super) raw: Vec<u8>,
     pub(super) normalized: Vec<u8>,
 }
-pub(super) fn load(
+pub(super) fn load_with_overlay(
     files: &[wire::Current],
     directory: &std::path::Path,
     total: &mut usize,
     compressed: &mut usize,
     snapshots: Option<&crate::workspace::snapshots::State>,
+    overlay: Option<&crate::command_import::Overlay>,
 ) -> io::Result<Vec<Loaded>> {
     let mut seen = HashSet::new();
     if files.len() >= 32
@@ -39,7 +40,7 @@ pub(super) fn load(
         let loaded = if let Some(token) = file.read_token {
             retained(file, token, snapshots, total)?
         } else if let Some(hash) = &file.source_hash {
-            read_source(file, directory, hash, total, compressed)?
+            read_source(file, directory, hash, total, compressed, overlay)?
         } else {
             read(file, total)?
         };
@@ -101,17 +102,12 @@ fn read_source(
     hash: &str,
     total: &mut usize,
     compressed: &mut usize,
+    overlay: Option<&crate::command_import::Overlay>,
 ) -> io::Result<Loaded> {
     if file.bitmap || file.raw_hash != hash || file.snapshot_hash != hash {
         return Err(invalid("checkout current Source snapshot identity"));
     }
-    let raw = crate::checkout::repository::source(
-        directory,
-        crate::merge_history::hash(hash)?,
-        32 * 1024 * 1024 - *total,
-        compressed,
-    )?;
-    *total += raw.len();
+    let raw = super::sources::body(directory, hash, total, compressed, overlay)?;
     let normalized = crate::checkout::eol::normalize(raw.clone(), false);
     Ok(Loaded { raw, normalized })
 }

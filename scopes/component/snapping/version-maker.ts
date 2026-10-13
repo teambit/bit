@@ -2,7 +2,7 @@ import { updateRustSnapshotDependencies } from './rust-snapshot-dependencies';
 import mapSeries from 'p-map-series';
 import { compact, get } from 'lodash';
 import type { ReleaseType } from 'semver';
-import { v4 } from 'uuid';
+import { newSnapHash, newSnapBatchId } from './new-snap-hash';
 import { BitError } from '@teambit/bit-error';
 import type { Scope } from '@teambit/legacy.scope';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
@@ -19,7 +19,6 @@ import { getValidVersionOrReleaseType, getLatestVersion, validateVersion } from 
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { PkgAspect, getPublishRegistry, shouldPublishToExternalRegistry } from '@teambit/pkg';
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
-import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { isSnap as isSnapVersion } from '@teambit/component-version';
 import type { BuilderMain, OnTagOpts } from '@teambit/builder';
 import type { ModelComponent, Log, Lane } from '@teambit/objects';
@@ -143,7 +142,7 @@ export class VersionMaker {
     batchId: string;
   }> {
     if (this.canRunSnapshotPhasesNatively()) return this.makeVersionNatively();
-    this.batchId = v4();
+    this.batchId = newSnapBatchId();
     this.allWorkspaceComps = this.workspace ? await this.workspace.list() : undefined;
     const componentsToTag = this.getUniqCompsToTag();
     const idsToTag = ComponentIdList.fromArray(componentsToTag.map((c) => c.id));
@@ -378,7 +377,7 @@ export class VersionMaker {
         iteratorExhausted ? 0 : canonicalSeries ? (canonicalSeriesDone ? 0 : 1) : batch?.length || 0,
       actions: {
         initialize: async () => {
-          this.batchId = v4();
+          this.batchId = newSnapBatchId();
           this.allWorkspaceComps = this.workspace ? await this.workspace.list() : undefined;
           componentsToTag = this.getUniqCompsToTag();
           idsToTag = ComponentIdList.fromArray(componentsToTag.map((c) => c.id));
@@ -1052,7 +1051,7 @@ export class VersionMaker {
 
   private setHashes(): void {
     this.allComponentsToTag.forEach((componentToTag) => {
-      componentToTag.setNewVersion(sha1(v4()));
+      componentToTag.setNewVersion(newSnapHash());
     });
   }
 

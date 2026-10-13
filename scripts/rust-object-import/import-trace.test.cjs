@@ -446,6 +446,35 @@ test('inspection diagnostics retain model hashes in compact and tagged snapshot 
   }
 });
 
+test('cold diagnostics do not invoke lazy model export getters', (t) => {
+  const files = fixture(t);
+  fs.writeFileSync(files.module, `let reads=0; Object.defineProperty(exports,'Version',{enumerable:true,get(){reads++;return class Version{}}});exports.reads=()=>reads;`);
+  execute(files, `
+    const assert=require('node:assert/strict');
+    const value=require(${JSON.stringify(files.module)});
+    assert.equal(value.reads(),0);
+    assert.equal(typeof Object.getOwnPropertyDescriptor(value,'Version').get,'function');
+    assert.equal(value.Version.name,'Version');
+    assert.equal(value.reads(),1);
+  `, {BIT_RUST_CLIENT_VCS:'on'});
+});
+
+test('cold command diagnostics count nested Source bytes in both bridge directions', (t) => {
+  const files = fixture(t);
+  const helper = path.join(files.directory, 'command-helper.cjs');
+  fs.writeFileSync(helper, `process.stdin.once('data', () => {process.stdout.write(JSON.stringify({version:1,id:1,completed:1,skipped:[],failed:false,data:{nested:{body:'reply'}}})+'\\n');process.stdin.resume();});`);
+  const metrics = execute(files, `
+    const child=require('node:child_process').spawn(process.execPath,[${JSON.stringify(helper)}]);
+    const body=Buffer.from(JSON.stringify({kind:'commandPlan',current:[{nested:{contents:'request'}}]}));
+    const frame=Buffer.alloc(12+body.length);frame.write('BWS1');frame.writeUInt32BE(1,4);frame.writeUInt32BE(body.length,8);body.copy(frame,12);
+    child.stdout.once('data',()=>child.stdin.end());child.stdin.write(frame);
+  `, {BIT_IMPORT_TRACE_PROTOCOL_ONLY:'1'});
+  assert.equal(metrics.workspace.commandPlan.frames, 1);
+  assert.equal(metrics.workspace.commandPlan.sourceBodyBytes, 12);
+  for (const kind of ['commandPrepare', 'commandFinalize', 'commandApply'])
+    assert.equal(metrics.workspace[kind].sourceBodyBytes, 0);
+});
+
 test('protocol observation preserves native dependency work and unknown workspace replies', (t) => {
   if (!process.env.BIT_TEST_WORKSPACE_ADDON) return t.skip('actual addon required');
   const files = fixture(t);

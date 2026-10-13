@@ -1,0 +1,51 @@
+use serde::Deserialize;
+use std::path::PathBuf;
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(in crate::workspace::engine) struct Prepare {
+    pub(super) root: PathBuf,
+    pub(super) home: PathBuf,
+    pub(super) global_remotes_file: PathBuf,
+    pub(super) operation: Operation,
+    pub(super) options: Options,
+    #[serde(default)]
+    pub(super) dependency_grammar: serde_json::Value,
+}
+#[derive(Clone, Copy, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(super) enum Operation {
+    Checkout,
+    Merge,
+}
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(super) struct Options {
+    pub(super) to: Option<String>,
+    pub(super) pattern: Option<String>,
+    pub(super) strategy: Option<String>,
+    pub(super) message: Option<String>,
+    #[serde(flatten)]
+    flags: Flags,
+}
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(super) struct Flags {
+    #[serde(default)]
+    pub(super) all: bool,
+    #[serde(default)]
+    pub(super) force_ours: bool,
+    #[serde(default)]
+    pub(super) force_theirs: bool,
+    #[serde(default)]
+    pub(super) no_snap: bool,
+    #[serde(default, rename = "verbose")]
+    _verbose: bool,
+    pub(super) skip_dependency_installation: bool,
+}
+impl std::ops::Deref for Options {
+    type Target = Flags;
+    fn deref(&self) -> &Flags {
+        &self.flags
+    }
+}

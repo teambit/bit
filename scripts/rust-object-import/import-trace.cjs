@@ -9,6 +9,16 @@ const asyncHooks = require('node:async_hooks');
 const versionParseContext = new asyncHooks.AsyncLocalStorage();
 const versionClasses = new WeakSet();
 const asyncTypes = new Map();
+function commandSourceBodyBytes(value) {
+  if (!value || typeof value !== 'object') return 0;
+  return Object.entries(value).reduce((total, [key, item]) => {
+    if (['contents', 'body', 'buffer', 'compressed'].includes(key)) {
+      if (typeof item === 'string') return total + Buffer.byteLength(item);
+      if (item?.type === 'Buffer' && Array.isArray(item.data)) return total + item.data.length;
+    }
+    return total + commandSourceBodyBytes(item);
+  }, 0);
+}
 const metrics = {
   schemaVersion: 1,
   frameworkObservation:
@@ -48,6 +58,10 @@ const metrics = {
       'statusHistoryValidate',
       'statusHistoryCommit',
       'workspaceDiff',
+      'commandPrepare',
+      'commandPlan',
+      'commandFinalize',
+      'commandApply',
       'dependencyPolicyCached',
       'dependencyGraph',
       'dependencyDetectFresh',
@@ -61,7 +75,16 @@ const metrics = {
       'compare',
       'diff',
       'fileStatus',
-    ].map((kind) => [kind, { frames: 0, files: 0, completed: 0, failed: 0 }])
+    ].map((kind) => [
+      kind,
+      {
+        frames: 0,
+        files: 0,
+        completed: 0,
+        failed: 0,
+        ...(kind.startsWith('command') ? { sourceBodyBytes: 0 } : {}),
+      },
+    ])
   ),
   history: Object.fromEntries(
     ['graph', 'diverge', 'mergeFiles'].map((kind) => [
@@ -308,6 +331,8 @@ function observeWorkspaceTransport(child) {
         )[operation.kind];
         metric.frames++;
         if (magic === 'BWS1') metric.requestBytes = (metric.requestBytes || 0) + bytes.length;
+        if (magic === 'BWS1' && operation.kind.startsWith('command'))
+          metric.sourceBodyBytes += commandSourceBodyBytes(operation);
         if (magic === 'BWS1' && operation.kind === 'statusCompare')
           metric.identities = [...(metric.identities || []), ...operation.targets.map((target) => target.identity)];
         if (metric.helperIds && !metric.helperIds.includes(workspaceId)) metric.helperIds.push(workspaceId);
@@ -478,6 +503,7 @@ function observeWorkspaceTransport(child) {
         const response = JSON.parse(pending.subarray(0, newline).toString());
         if (magic?.startsWith('BWS1:')) {
           metric.responseBytes = (metric.responseBytes || 0) + newline + 1;
+          if (magic.startsWith('BWS1:command')) metric.sourceBodyBytes += commandSourceBodyBytes(response.data);
           if (started !== undefined)
             metric.summedRoundTripMs =
               (metric.summedRoundTripMs || 0) + Number(process.hrtime.bigint() - started) / 1e6;
@@ -746,7 +772,7 @@ function wrap(target, key, stage, inspect) {
 }
 const originalLoad = Module._load;
 Module._load = function (request, parent, isMain) {
-  const value = originalLoad.apply(this, arguments);
+  const originalValue = originalLoad.apply(this, arguments);
   if (
     !output ||
     process.env.BIT_IMPORT_TRACE_QUERY_ONLY === '1' ||
@@ -756,7 +782,15 @@ Module._load = function (request, parent, isMain) {
       request
     )
   )
-    return value;
+    return originalValue;
+  // Reading Babel re-export getters can hydrate model classes solely for diagnostics.
+  // Observe data exports without changing the lazy module's public identity or writes.
+  const value =
+    process.env.BIT_RUST_CLIENT_VCS === 'on' &&
+    originalValue &&
+    (typeof originalValue === 'object' || typeof originalValue === 'function')
+      ? new Proxy(originalValue, { get: (target, key) => Object.getOwnPropertyDescriptor(target, key)?.value })
+      : originalValue;
   const Version = value?.Version || (value?.default?.name === 'Version' ? value.default : undefined);
   if (Version && !versionClasses.has(Version) && process.env.BIT_RUST_CLIENT_VCS !== 'on') {
     versionClasses.add(Version);
@@ -920,7 +954,7 @@ Module._load = function (request, parent, isMain) {
     if (!metrics.modules[file])
       metrics.modules[file] = createHash('sha256').update(fs.readFileSync(file)).digest('hex');
   }
-  return value;
+  return originalValue;
 };
 process.on('exit', () => {
   if (output && process.pid === owner) {

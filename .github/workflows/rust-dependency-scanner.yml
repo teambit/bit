@@ -523,6 +523,15 @@ jobs:
           BIT_TEST_STATUS_COMPILED=1 node --test scripts/rust-object-import/full-status-runtime.test.cjs scripts/rust-dependency-analysis/fresh-status-runtime.test.cjs
           node --test scripts/rust-object-import/workspace-diff.test.cjs scripts/rust-object-import/diff-metadata.test.cjs
           BIT_TEST_DIFF_COMPILED=1 node --test scripts/rust-object-import/full-diff-runtime.test.cjs
+          node --test scripts/rust-object-import/cold-command-driver.test.cjs
+          BIT_TEST_COMMAND_COMPILED=1 node --test scripts/rust-object-import/cold-command-driver.test.cjs
+      - name: Differential public cold checkout and main merge
+        if: runner.os == 'Linux'
+        env:
+          BIT_LEGACY_ROOT: ${{ github.workspace }}
+          BIT_TEST_OBJECT_IMPORT: ${{ github.workspace }}/native/target/debug/bit-object-import
+          BIT_TEST_WORKSPACE_ADDON: ${{ github.workspace }}/native/target/debug/bit-workspace.node
+        run: node --test scripts/rust-object-import/cold-command-runtime.test.cjs
       - name: Differential native snapshot models against the compiled CLI
         working-directory: native
         env:

@@ -69,6 +69,14 @@ async function initApp(additionalAspects?: Aspect[]) {
       const { runRustDiff } = await import('./rust-diff');
       if (await runRustDiff()) return;
     }
+    if (
+      !additionalAspects?.length &&
+      process.env.BIT_RUST_CLIENT_VCS === 'on' &&
+      ['checkout', 'U', 'merge'].includes(process.argv[2])
+    ) {
+      const { runRustWorkspaceCommand } = await import('./rust-workspace-command');
+      if (await runRustWorkspaceCommand()) return;
+    }
     const { runCLI } = await import('./load-bit');
     await runCLI(additionalAspects);
   } catch (err: any) {
