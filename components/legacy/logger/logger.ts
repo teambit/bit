@@ -244,7 +244,14 @@ class BitLogger implements IBitLogger {
     // each hook runs once. "bit cli" gets here after every command, and must not run the same hooks again each time.
     const fns = [...this.onBeforeExitFns.values()];
     this.onBeforeExitFns.clear();
-    return pMapSeries(fns, (fn) => fn());
+    // the hooks are independent clean-ups, so one that fails must not stop the others
+    await pMapSeries(fns, async (fn) => {
+      try {
+        await fn();
+      } catch (err: any) {
+        this.error(`an on-before-exit hook failed: ${err?.message ?? err}`, err);
+      }
+    });
   }
 
   async exitAfterFlush(code = 0, commandName: string, cliOutput = '') {
