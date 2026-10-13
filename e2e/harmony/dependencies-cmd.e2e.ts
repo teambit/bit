@@ -24,6 +24,12 @@ describe('bit dependencies command', function () {
     });
   });
   describe('bit deps set', () => {
+    const getPinnedDependencies = (): string[] | undefined => {
+      const comp1 = helper.command
+        .statusJson(undefined, '--warnings')
+        .componentsWithIssues.find((c) => c.id.includes('comp1'));
+      return comp1?.issues.find((issue) => issue.type === IssuesClasses.PinnedDependencies.name)?.data;
+    };
     describe('adding prod dep', () => {
       before(() => {
         helper.scopeHelper.setWorkspaceWithRemoteScope();
@@ -33,6 +39,20 @@ describe('bit dependencies command', function () {
       it('bit show should show the newly added dep', () => {
         const show = helper.command.showComponent('comp1');
         expect(show).to.have.string('lodash@3.3.1');
+      });
+      it('bit status should show the version set by the component config as an issue', () => {
+        expect(getPinnedDependencies()).to.deep.equal(['lodash@3.3.1']);
+      });
+      describe('setting the same version in workspace.jsonc', () => {
+        before(() => {
+          helper.workspaceJsonc.addPolicyToDependencyResolver({ dependencies: { lodash: '3.3.1' } });
+        });
+        after(() => {
+          helper.workspaceJsonc.addKeyValToDependencyResolver('policy', {});
+        });
+        it('bit status should not show the issue, as the component config does not change the version', () => {
+          expect(getPinnedDependencies()).to.be.undefined;
+        });
       });
       describe('adding another dep as a devDep', () => {
         let showConfig: Record<string, any>;
@@ -140,13 +160,20 @@ describe('bit dependencies command', function () {
         expect(comp1.dependencies[0].id.version).to.equal('0.0.1');
         expect(helper.command.statusJson().modifiedComponents).to.have.lengthOf(0);
       });
+      it('bit status should show the version set by the config as an issue that does not block the tag', () => {
+        helper.command.expectStatusToHaveIssue(IssuesClasses.PinnedDependencies.name);
+      });
       describe('tagging the dependency', () => {
         before(() => {
           tagOutput = helper.command.tagWithoutBuild('comp2', '--unmodified');
         });
         it('should not auto-tag the dependent', () => {
-          expect(tagOutput).to.not.have.string('comp1');
+          expect(tagOutput).to.have.string('1 component(s) tagged');
           expect(helper.command.statusJson().modifiedComponents).to.have.lengthOf(0);
+        });
+        it('should show the dependent that was not auto-tagged and the version it keeps', () => {
+          expect(tagOutput).to.have.string('dependents not auto-tagged');
+          expect(tagOutput).to.have.string(`${helper.scopes.remote}/comp1`);
         });
       });
     });
@@ -183,7 +210,7 @@ describe('bit dependencies command', function () {
         });
         it('bit install should fix it', () => {
           helper.command.install();
-          helper.command.expectStatusToNotHaveIssues();
+          helper.command.expectStatusToNotHaveIssue(IssuesClasses.MissingManuallyConfiguredPackages.name);
         });
         it('should recognize it as a component after the installation', () => {
           const deps = helper.command.dependenciesGet('comp1');

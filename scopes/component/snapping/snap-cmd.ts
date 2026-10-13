@@ -21,7 +21,7 @@ import {
 } from '@teambit/legacy.constants';
 import type { Logger } from '@teambit/logger';
 import type { SnappingMain, SnapResults } from './snapping.main.runtime';
-import { outputIdsIfExists, compInBold } from './tag-cmd';
+import { outputIdsIfExists, compInBold, dependentsWithPinnedDepsSection } from './tag-cmd';
 import type { BasicTagSnapParams } from './version-maker';
 import type { ConfigStoreMain } from '@teambit/config-store';
 
@@ -201,6 +201,7 @@ export function snapResultReport(results: SnapResults): string | Report {
   };
 
   const removedSection = outputIdsIfExists('removed components', removedComponents);
+  const pinnedSection = dependentsWithPinnedDepsSection(results.dependentsWithPinnedDeps, 'snapped');
 
   const warningsSection =
     warnings && warnings.length ? warnings.map((w) => `${warnSymbol} ${chalk.yellow(w)}`).join('\n') : '';
@@ -240,6 +241,7 @@ export function snapResultReport(results: SnapResults): string | Report {
     changedSection,
     workspaceRootHint,
     autoSnapSection,
+    pinnedSection,
     removedSection,
     warningsSection,
     footerParts,
@@ -256,6 +258,7 @@ export function snapResultReport(results: SnapResults): string | Report {
     newDetailed,
     changedDetailed,
     workspaceRootHint,
+    pinnedSection,
     removedSection,
     warningsSection,
     detailedFooter,

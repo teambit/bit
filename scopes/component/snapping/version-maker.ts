@@ -68,6 +68,12 @@ export type BasicTagParams = BasicTagSnapParams & {
   skipPublishedVersions?: boolean;
 };
 
+/**
+ * a workspace component that depends on a tagged/snapped component, but its config sets the version of this
+ * dependency (e.g. "bit deps set"). it doesn't use the workspace version, so it's not auto-tagged.
+ */
+export type DependentWithPinnedDeps = { id: ComponentID; pinnedDependencies: string[] };
+
 export type VersionMakerParams = {
   tagDataPerComp?: TagDataPerComp[];
   populateArtifactsFrom?: ComponentID[];
@@ -123,6 +129,7 @@ export class VersionMaker {
   async makeVersion(): Promise<{
     taggedComponents: ConsumerComponent[];
     autoTaggedResults: AutoTagResult[];
+    dependentsWithPinnedDeps: DependentWithPinnedDeps[];
     publishedPackages: string[];
     stagedConfig?: StagedConfig;
     removedComponents?: ComponentIdList;
@@ -154,6 +161,7 @@ export class VersionMaker {
     this.params.isSnap ? this.setHashes() : await this.setFutureVersions(autoTagIds);
     // go through all dependencies and update their versions
     this.updateDependenciesVersions();
+    const dependentsWithPinnedDeps = this.getDependentsWithPinnedDeps();
     this.recordWorkspaceRoot();
     await this.addLogToComponents(componentsToTag, autoTagComponents, messagePerId);
     // don't move it down. otherwise, it'll be empty and we don't know which components were during merge.
@@ -167,6 +175,7 @@ export class VersionMaker {
       return {
         taggedComponents: componentsToTag,
         autoTaggedResults: autoTagData,
+        dependentsWithPinnedDeps,
         publishedPackages: [],
         stagedConfig,
         totalComponentsCount: this.allComponentsToTag.length,
@@ -270,6 +279,7 @@ export class VersionMaker {
     return {
       taggedComponents: componentsToTag,
       autoTaggedResults: autoTagData,
+      dependentsWithPinnedDeps,
       publishedPackages,
       stagedConfig,
       removedComponents,
@@ -771,6 +781,29 @@ export class VersionMaker {
       changeExtensionsVersion(oneComponentToTag);
       oneComponentToTag = updateDepsResolverData(oneComponentToTag);
     });
+  }
+
+  private getDependentsWithPinnedDeps(): DependentWithPinnedDeps[] {
+    if (!this.allWorkspaceComps) return [];
+    const idsToTag = ComponentIdList.fromArray(this.allComponentsToTag.map((c) => c.id));
+    return compact(
+      this.allWorkspaceComps.map((component) => {
+        if (idsToTag.hasWithoutVersion(component.id)) return null;
+        const consumerComponent: ConsumerComponent = component.state._consumer;
+        const pinned = consumerComponent
+          .getAllDependencies()
+          .filter(
+            (dep) =>
+              idsToTag.hasWithoutVersion(dep.id) &&
+              consumerComponent.dependenciesWithVersionFromConfig?.includes(dep.id.toStringWithoutVersion())
+          );
+        if (!pinned.length) return null;
+        const pinnedDependencies = pinned.map(
+          (dep) => `${dep.packageName || dep.id.toStringWithoutVersion()}@${dep.id.version}`
+        );
+        return { id: component.id, pinnedDependencies };
+      })
+    );
   }
 
   /**

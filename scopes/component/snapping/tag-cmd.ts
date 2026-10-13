@@ -19,7 +19,7 @@ import type { ReleaseType } from 'semver';
 import { BitError } from '@teambit/bit-error';
 import type { Logger } from '@teambit/logger';
 import type { TagResults, SnappingMain } from './snapping.main.runtime';
-import type { BasicTagParams } from './version-maker';
+import type { BasicTagParams, DependentWithPinnedDeps } from './version-maker';
 import type { ConfigStoreMain } from '@teambit/config-store';
 
 export const NOTHING_TO_TAG_MSG = 'nothing to tag';
@@ -350,6 +350,7 @@ export function tagResultReport(results: TagResults): string | Report {
   };
 
   const removedSection = outputIdsIfExists('removed components', removedComponents);
+  const pinnedSection = dependentsWithPinnedDepsSection(results.dependentsWithPinnedDeps, 'tagged');
 
   const publishSection = (() => {
     const { publishedPackages } = results;
@@ -416,6 +417,7 @@ export function tagResultReport(results: TagResults): string | Report {
     changedSection,
     workspaceRootHint,
     autoTagSection,
+    pinnedSection,
     removedSection,
     publishSection,
     exportedSection,
@@ -434,6 +436,7 @@ export function tagResultReport(results: TagResults): string | Report {
     newDetailed,
     changedDetailed,
     workspaceRootHint,
+    pinnedSection,
     removedSection,
     publishSection,
     exportedSection,
@@ -453,6 +456,23 @@ export function tagResultOutput(results: TagResults): string {
 export function compInBold(id: ComponentID): string {
   const version = id.hasVersion() ? `@${id.version}` : '';
   return `${chalk.bold(id.toStringWithoutVersion())}${version}`;
+}
+
+export function dependentsWithPinnedDepsSection(
+  dependents: DependentWithPinnedDeps[] | undefined,
+  action: 'tagged' | 'snapped'
+): string {
+  if (!dependents?.length) return '';
+  const items = dependents.map((dependent) =>
+    formatItem(`${compInBold(dependent.id)} ${chalk.dim(`(${dependent.pinnedDependencies.join(', ')})`)}`, warnSymbol)
+  );
+  const section = formatSection(
+    `dependents not auto-${action}`,
+    `their config sets the version of the ${action} dependency (e.g. "bit deps set"), so they keep using it`,
+    items
+  );
+  const hint = formatHint('(to use the workspace version, run "bit deps unset <component> <package>")');
+  return `${section}\n${hint}`;
 }
 
 export function outputIdsIfExists(label: string, ids?: ComponentIdList) {
