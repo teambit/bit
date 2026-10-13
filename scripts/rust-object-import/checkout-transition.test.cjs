@@ -1155,8 +1155,13 @@ test('checkout ownership excludes only separate dependency sessions and retains 
     { magic: 'BWS1', kind: 'inventoryBegin', helperId: 1 },
     { magic: 'BWC1', helperId: 1 },
   ];
-  const graph = ['dependencyGraph', 'dependencyCacheRead', 'dependencyScan', 'dependencyResolve', 'dependencyCacheFreshness']
-    .map((kind) => ({ magic: 'BWS1', kind, helperId: 2 }));
+  const graph = [
+    'dependencyGraph',
+    'dependencyCacheRead',
+    'dependencyScan',
+    'dependencyResolve',
+    'dependencyCacheFreshness',
+  ].map((kind) => ({ magic: 'BWS1', kind, helperId: 2 }));
   assert.deepEqual([...owned, ...graph].filter(checkoutOwnsFrame), owned);
   for (const kind of ['read', 'fileStatus', 'dependencyGraphUnknown'])
     assert.equal(checkoutOwnsFrame({ magic: 'BWS1', kind, helperId: 2 }), true);
@@ -1172,4 +1177,36 @@ test('declined cold preflight exclusion requires the entire helper to remain rea
     assert.deepEqual([...declinedPreflightOwners([prepare, { ...prepare, kind }, legacy])], []);
   }
   assert.deepEqual([...declinedPreflightOwners([prepare, { ...legacy, helperId: 1 }])], []);
+});
+
+test('failed cold planning and inventory exclude only proven read-only helper receipts', () => {
+  const { declinedPreflightOwners } = require('./checkout-transition-qualification.cjs');
+  const kinds = [
+    'commandPrepare',
+    'inventoryBegin',
+    'inventoryFinish',
+    'dependencyDetectFresh',
+    'dependencyPolicyDetected',
+    'commandPlan',
+  ];
+  const frame = (kind, failed = false) => ({
+    magic: 'BWS1',
+    kind,
+    helperId: 1,
+    receipt: { completed: failed ? 0 : 1, failed, applied: false },
+  });
+  const planned = kinds.map((kind, index) => frame(kind, index === kinds.length - 1));
+  const missingRoot = [frame('commandPrepare'), frame('inventoryBegin', true)];
+  for (const frames of [planned, missingRoot]) {
+    assert.deepEqual([...declinedPreflightOwners(frames)], [1]);
+    const noReceipt = frames.map(({ receipt, ...rest }) => rest);
+    assert.deepEqual([...declinedPreflightOwners(noReceipt)], []);
+    for (const kind of ['commandApply', 'commandFinalize', 'statusHistoryCommit', 'snapshotCommit', 'unknown'])
+      assert.deepEqual([...declinedPreflightOwners([...frames, frame(kind, true)])], []);
+  }
+  assert.deepEqual([...declinedPreflightOwners([...planned.slice(0, -1), frame('commandPlan')])], []);
+  assert.deepEqual(
+    [...declinedPreflightOwners([frame('commandPrepare'), frame('commandPlan'), frame('inventoryBegin', true)])],
+    []
+  );
 });

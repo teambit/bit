@@ -9,6 +9,7 @@ pub(super) struct Prepared {
     pub(super) version_name: String,
     pub(super) keep_ours: bool,
     pub(super) has_conflicts: bool,
+    pub(super) files: Vec<Value>,
     request: Value,
     removals: Vec<String>,
 }
@@ -84,9 +85,28 @@ fn finish(input: &Input<'_>, plan: &Value, applied: &Value) -> io::Result<Prepar
         version_name,
         keep_ours: applied["keepOurs"] == true,
         has_conflicts: plan["hasConflicts"] == true,
+        files: retained_files(plan, applied)?,
         request: json!({"token":plan["token"],"files":files}),
         removals,
     })
+}
+
+fn retained_files(plan: &Value, applied: &Value) -> io::Result<Vec<Value>> {
+    let bodies = plan["bodies"].as_array().ok_or_else(|| invalid("command retained bodies"))?;
+    applied["files"]
+        .as_array()
+        .ok_or_else(|| invalid("command retained files"))?
+        .iter()
+        .map(|file| {
+            let index = file["planIndex"]
+                .as_u64()
+                .and_then(|index| usize::try_from(index).ok())
+                .ok_or_else(|| invalid("command retained body index"))?;
+            let source =
+                bodies.get(index).ok_or_else(|| invalid("command retained body missing"))?;
+            Ok(json!({"relativePath":file["relativePath"],"source":source}))
+        })
+        .collect()
 }
 pub(super) fn remove(plan: &Prepared) -> io::Result<()> {
     for path in &plan.removals {
@@ -106,9 +126,8 @@ pub(super) fn write(plan: &Prepared, state: &mut checkout_transition::State) -> 
     Ok(())
 }
 fn manifest(hash: &str, version: &Value) -> io::Result<Value> {
-    if version["schema"] != "2.0.0" {
-        return Err(invalid("command legacy Version"));
-    }
+    crate::history_query::validate_version(version)?;
+    super::super::status_models::harmony::validate(version)?;
     let files = version["files"].as_array().ok_or_else(|| invalid("command Version files"))?;
     let files = files
         .iter()

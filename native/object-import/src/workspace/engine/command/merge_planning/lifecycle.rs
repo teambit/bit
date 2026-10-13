@@ -111,13 +111,24 @@ impl Prepared {
     pub(in crate::workspace::engine::command) fn finish_snap(
         &mut self,
         root: &Path,
-    ) -> io::Result<()> {
+    ) -> io::Result<usize> {
+        if let Some(models) = &mut self.fast_forward {
+            models.commit(root)?;
+        }
+        if !self.materials.is_empty() {
+            fs::write(
+                root.join(".bit/unmerged.json"),
+                serde_json::to_vec_pretty(&self.unmerged).map_err(io::Error::other)?,
+            )?;
+        }
+        let mut notifications = super::super::apply_command::notify(root);
         if let Some(finalized) = &mut self.finalized {
             finalized.snapshot.commit(root)?;
+            notifications += super::super::apply_command::notify(root);
             finalized.files.commit()?;
             fs::write(root.join(".bit/unmerged.json"), b"[]")?;
         }
-        Ok(())
+        Ok(notifications)
     }
 
     pub(in crate::workspace::engine::command) fn validate(&self, root: &Path) -> io::Result<()> {
@@ -125,6 +136,9 @@ impl Prepared {
             return Err(invalid("command snap receipt required before apply"));
         }
         proof::verify(&self.proofs)?;
+        if let Some(models) = &self.fast_forward {
+            models.validate()?;
+        }
         if let Some(finalized) = &self.finalized {
             finalized.snapshot.validate()?;
             finalized.files.validate()?;
@@ -142,16 +156,19 @@ impl Prepared {
         }
         Ok(())
     }
-    pub(in crate::workspace::engine::command) fn write(&mut self, root: &Path) -> io::Result<()> {
+    pub(in crate::workspace::engine::command) fn remove(&self) -> io::Result<()> {
+        for material in &self.materials {
+            material.remove()?;
+        }
+        Ok(())
+    }
+    pub(in crate::workspace::engine::command) fn write(&mut self) -> io::Result<()> {
         for material in &self.materials {
             material.write(&mut self.state)?;
-        }
-        if !self.materials.is_empty() {
-            fs::write(
-                root.join(".bit/unmerged.json"),
-                serde_json::to_vec_pretty(&self.unmerged).map_err(io::Error::other)?,
-            )?;
         }
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests;

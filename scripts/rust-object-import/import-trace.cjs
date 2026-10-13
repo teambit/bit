@@ -41,6 +41,7 @@ const metrics = {
     write: { frames: 0, files: 0, completed: 0, failed: 0, helperIds: [] },
   },
   workspaceFrames: [],
+  postPersistNotifications: 0,
   importFrames: [],
   workspace: Object.fromEntries(
     [
@@ -502,6 +503,19 @@ function observeWorkspaceTransport(child) {
       try {
         const response = JSON.parse(pending.subarray(0, newline).toString());
         if (magic?.startsWith('BWS1:')) {
+          const frame = metrics.workspaceFrames.find(
+            (frame) =>
+              frame.helperId === workspaceId &&
+              frame.magic === 'BWS1' &&
+              frame.id === response.id &&
+              frame.kind === magic.slice(5)
+          );
+          if (frame)
+            frame.receipt = {
+              completed: response.completed || 0,
+              failed: Boolean(response.failed),
+              applied: response.data?.applied === true,
+            };
           metric.responseBytes = (metric.responseBytes || 0) + newline + 1;
           if (magic.startsWith('BWS1:command')) metric.sourceBodyBytes += commandSourceBodyBytes(response.data);
           if (started !== undefined)
@@ -517,6 +531,10 @@ function observeWorkspaceTransport(child) {
         if (magic === 'BWC2') {
           metric.bodyFrames = (metric.bodyFrames || 0) + Number(response.completed > 0 && !response.failed);
           metric.rawBodyBytes = (metric.rawBodyBytes || 0) + (response.binaryBytes || 0);
+        }
+        if (magic === 'BWS1:commandApply' && response.data?.applied === true && !response.failed) {
+          metric.applied = (metric.applied || 0) + 1;
+          metrics.postPersistNotifications += response.data?.postPersistNotifications || 0;
         }
         metric.completed += response.completed || 0;
         if (
@@ -770,6 +788,7 @@ function wrap(target, key, stage, inspect) {
     }
   };
 }
+const observedPersistRepositories = new WeakSet();
 const originalLoad = Module._load;
 Module._load = function (request, parent, isMain) {
   const originalValue = originalLoad.apply(this, arguments);
@@ -778,7 +797,7 @@ Module._load = function (request, parent, isMain) {
     process.env.BIT_IMPORT_TRACE_QUERY_ONLY === '1' ||
     process.env.BIT_IMPORT_TRACE_PROTOCOL_ONLY === '1' ||
     process.pid !== owner ||
-    !/objects|scope|version|repositories|component.*merger|remote-lanes|source-validator|object-importer|rust-tar/.test(
+    !/objects|scope|version|repositories|repository|component.*merger|remote-lanes|source-validator|object-importer|rust-tar/.test(
       request
     )
   )
@@ -791,6 +810,25 @@ Module._load = function (request, parent, isMain) {
     (typeof originalValue === 'object' || typeof originalValue === 'function')
       ? new Proxy(originalValue, { get: (target, key) => Object.getOwnPropertyDescriptor(target, key)?.value })
       : originalValue;
+  const repository = value?.Repository || (value?.default?.name === 'Repository' ? value.default : undefined);
+  if (repository && !observedPersistRepositories.has(repository)) {
+    observedPersistRepositories.add(repository);
+    const observe = (callback) =>
+      typeof callback !== 'function'
+        ? callback
+        : function (...args) {
+            metrics.postPersistNotifications++;
+            return callback.apply(this, args);
+          };
+    let callback = observe(repository.onPostObjectsPersist);
+    Object.defineProperty(repository, 'onPostObjectsPersist', {
+      configurable: true,
+      get: () => callback,
+      set: (value) => {
+        callback = observe(value);
+      },
+    });
+  }
   const Version = value?.Version || (value?.default?.name === 'Version' ? value.default : undefined);
   if (Version && !versionClasses.has(Version) && process.env.BIT_RUST_CLIENT_VCS !== 'on') {
     versionClasses.add(Version);

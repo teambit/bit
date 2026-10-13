@@ -1,3 +1,4 @@
+mod fast_forward;
 mod lifecycle;
 mod preflight;
 use super::{
@@ -19,6 +20,7 @@ pub(super) struct Prepared {
     proofs: Vec<proof::Proof>,
     pending: Vec<Pending>,
     finalized: Option<Finalized>,
+    fast_forward: Option<merge::snapshot::Snapshot>,
 }
 struct Pending {
     identity: String,
@@ -87,7 +89,7 @@ pub(super) fn plan(
     for index in 0..planned.captured.len() {
         selected.push(select(record, &mut planned, &mut state, index)?);
     }
-    prepare_materials(record, &mut planned, state, &mut selected)?;
+    prepare_materials(record, &mut planned, state, &mut selected, snapshots)?;
     Ok(planned)
 }
 
@@ -97,7 +99,14 @@ struct Selected {
     current_hash: String,
     versions: [Value; 3],
     base: String,
-    merge: bool,
+    action: Action,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Action {
+    Unchanged,
+    Merge,
+    Target,
 }
 
 fn select(
@@ -160,7 +169,7 @@ fn load_selected(record: &mut Record, captured: &capture::Captured) -> io::Resul
         current_hash,
         versions: [Value::Null, current, incoming],
         base: String::new(),
-        merge: false,
+        action: Action::Unchanged,
     })
 }
 fn apply_selection(
@@ -174,14 +183,18 @@ fn apply_selection(
         result["failedComponents"].as_array_mut().unwrap().push(json!({"id":format!("{identity}@{}",selected.remote),"unchangedMessage":outcome["message"],"unchangedLegitimately":true}));
         return Ok(());
     }
-    if outcome["action"] != "merge" || outcome["shouldBeRemoved"] == true {
+    if outcome["shouldBeRemoved"] == true {
         return Err(invalid("command merge requires canonical transition"));
     }
+    selected.action = match outcome["action"].as_str() {
+        Some("merge") => Action::Merge,
+        Some("target") => Action::Target,
+        _ => return Err(invalid("command merge requires canonical transition")),
+    };
     distance["common"]
         .as_str()
         .ok_or_else(|| invalid("command merge common version"))?
         .clone_into(&mut selected.base);
-    selected.merge = true;
     Ok(())
 }
 
@@ -210,13 +223,14 @@ fn prepare_materials(
     planned: &mut planning::Planned,
     mut state: merge::State,
     selected: &mut [Selected],
+    snapshots: &snapshots::State,
 ) -> io::Result<()> {
     import_gap(record, selected)?;
     let directory = scratch::Directory::create()?;
     let requests = selected
         .iter()
         .enumerate()
-        .filter(|(_, selected)| selected.merge)
+        .filter(|(_, selected)| selected.action == Action::Merge)
         .map(|(index, selected)| {
             body(record, selected, &planned.captured[index], &directory.0, index).request()
         })
@@ -229,16 +243,18 @@ fn prepare_materials(
         proofs: Vec::new(),
         pending: Vec::new(),
         finalized: None,
+        fast_forward: None,
     };
     for ((index, selected), plan) in selected
         .iter()
         .enumerate()
-        .filter(|(_, selected)| selected.merge)
+        .filter(|(_, selected)| selected.action == Action::Merge)
         .zip(plans)
     {
         add_material(record, planned, &mut prepared, selected, index, &directory.0, &plan)?;
     }
-    preflight::validate(record, &prepared)?;
+    fast_forward::prepare(record, planned, &mut prepared, selected, snapshots)?;
+    preflight::validate(record, &mut prepared, &planned.materials, &planned.captured)?;
     planned.directories.push(directory);
     planned.merge = Some(prepared);
     Ok(())
@@ -246,7 +262,7 @@ fn prepare_materials(
 fn import_gap(record: &mut Record, selected: &mut [Selected]) -> io::Result<()> {
     let gap = selected
         .iter()
-        .filter(|selected| selected.merge)
+        .filter(|selected| selected.action != Action::Unchanged)
         .map(|selected| {
             Ok(crate::command_import::Target {
                 scope: selected.model["scope"].as_str().map(str::to_owned),
@@ -259,21 +275,31 @@ fn import_gap(record: &mut Record, selected: &mut [Selected]) -> io::Result<()> 
         })
         .collect::<io::Result<Vec<_>>>()?;
     record.repository.prepare_merge_gap(&gap)?;
-    for selected in selected.iter_mut().filter(|selected| selected.merge) {
+    for selected in selected
+        .iter_mut()
+        .filter(|selected| selected.action != Action::Unchanged)
+    {
         let identity = format!(
             "{}/{}",
             selected.model["scope"].as_str().unwrap_or_default(),
             selected.model["name"].as_str().unwrap_or_default(),
         );
         let model = record.repository.read(&super::super::hash(identity.as_bytes()), "Component")?;
-        if model["head"] != selected.model["head"] {
-            return Err(invalid("command merge local head changed during gap import"));
-        }
-        selected.model = model;
+        refresh_model(selected, model)?;
         selected.versions[0] = record.repository.read(&selected.base, "Version")?;
     }
     Ok(())
 }
+fn refresh_model(selected: &mut Selected, model: Value) -> io::Result<()> {
+    if selected.action == Action::Merge && model["head"] != selected.model["head"] {
+        return Err(invalid("command merge local head changed during gap import"));
+    }
+    // Import can advance a fast-forward model, but never changes the cached target
+    // selected before fetching the common snap.
+    selected.model = model;
+    Ok(())
+}
+
 fn add_material(
     record: &Record,
     planned: &mut planning::Planned,
@@ -323,7 +349,7 @@ fn retain_snapshot(
         &record.request.root,
         &record.request.home,
         current,
-        material,
+        &material.files,
         &record.request.dependency_grammar,
     )?);
     prepared.pending.push(Pending {

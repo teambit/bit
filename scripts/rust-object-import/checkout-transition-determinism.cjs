@@ -10,6 +10,21 @@ const originalLoad = Module._load;
 const ordinals = new Map();
 Module._load = function (request, parent, ...args) {
   const value = originalLoad.call(this, request, parent, ...args);
+  if (/[\\/]bitmap-history-file-id(?:\.js)?$/.test(request)) {
+    // new Date() ignores Date.now overrides. Give each disposable command its
+    // own second, while both merge bitmap writes deliberately share that ID.
+    const seconds = parseInt(createHash('sha256').update(seed).digest('hex').slice(0, 8), 16);
+    const date = new Date(Date.UTC(2030, 0, 1) + seconds * 1000);
+    const fileId = [
+      date.getUTCFullYear(),
+      date.getUTCMonth() + 1,
+      date.getUTCDate(),
+      date.getUTCHours(),
+      date.getUTCMinutes(),
+      date.getUTCSeconds(),
+    ].join('-');
+    return { ...value, currentDateAndTimeToFileName: () => fileId };
+  }
   // Fix only elapsed UI presentation: correctness and paired timing still use actual hrtime/performance clocks.
   if (
     process.env.BIT_CHECKOUT_TRANSITION_DISPLAY_DURATION === 'deterministic' &&

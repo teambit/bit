@@ -18,6 +18,36 @@ pub(in crate::workspace::engine::command) struct Snapshot {
     pub versions: Vec<Value>,
 }
 
+pub(in crate::workspace::engine::command) fn validate_application_files(
+    files: &[Value],
+) -> io::Result<()> {
+    metadata::no_application_files(files)
+}
+
+pub(in crate::workspace::engine::command) fn local_model(
+    input: &Value,
+    head: &str,
+) -> io::Result<Value> {
+    metadata::model(input, head)
+}
+
+pub(in crate::workspace::engine::command) fn prepare_models(
+    staging: &Path,
+    models: Vec<Value>,
+) -> io::Result<Snapshot> {
+    let objects = models
+        .into_iter()
+        .map(|model| metadata::object("Component", None, model))
+        .collect::<io::Result<Vec<_>>>()?;
+    let mut state = crate::snapshot_transaction::State::default();
+    let result = crate::snapshot_transaction::apply(
+        "snapshotSerialize",
+        json!({"objects":objects,"stagingDirectory":staging}),
+        &mut state,
+    )?;
+    Ok(Snapshot { state, token: result["token"].clone(), proofs: Vec::new(), versions: Vec::new() })
+}
+
 pub(in crate::workspace::engine::command) fn prepare(
     root: &Path,
     staging: &Path,

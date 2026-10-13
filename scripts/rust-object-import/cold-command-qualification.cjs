@@ -93,10 +93,13 @@ async function durableTree(directory, prefix = '') {
   }
   return result;
 }
-function comparable(state) {
+function comparable(state, persistEvent = false) {
   const value = structuredClone(state);
   // Cold commands do not request docs. Any entries they do write are validated below.
   delete value.docsCache;
+  // Repository.persist launches this async hook without awaiting its file write.
+  // Compare invocation intent and present payload separately from exit-time presence.
+  if (persistEvent) delete value.events.onPostObjectsPersist;
   if (value.index) {
     value.index = JSON.parse(Buffer.from(value.index, 'hex'));
     for (const field of ['components', 'lanes'])
@@ -119,13 +122,17 @@ async function runQualification(cli, helper, options = {}) {
     const bytes = await fs.readFile(options.proof);
     const proof = JSON.parse(bytes);
     assert.equal(proof.qualified, true);
-    assert.equal(proof.runs.length, 52, 'all thirteen scenarios need four-mode qualification');
+    assert.equal(proof.runs.length, 80, 'all twenty scenarios need four-mode qualification');
     assert.deepEqual(proof.binding, bound, 'measure exactly the qualified source, CLI, binaries and harness');
     assert.deepEqual(proof.endBinding, bound);
     assert.deepEqual(proof.dimensions, dimensions);
-    for (const run of proof.runs.filter((run) => run.mode === 'native' && run.scenario !== 'checkout-divergent-head')) {
+    for (const run of proof.runs.filter(
+      (run) =>
+        run.mode === 'native' &&
+        !['checkout-divergent-head', 'main-mixed-changed-graph-fallback'].includes(run.scenario)
+    )) {
       assert.deepEqual(run.trace.loadedCommandModels, []);
-      assert.ok(run.trace.workspaceFrames.some((frame) => frame.kind === 'commandApply'));
+      assert.equal(run.trace.workspace.commandApply.applied, 1);
     }
     proofSha256 = createHash('sha256').update(bytes).digest('hex');
     if (options.wrapper) {
@@ -133,12 +140,12 @@ async function runQualification(cli, helper, options = {}) {
       const auditBytes = await fs.readFile(options.wrapperProof);
       const audit = JSON.parse(auditBytes);
       assert.equal(audit.wrapperAudit, true);
-      assert.equal(audit.runs.length, 24);
+      assert.equal(audit.runs.length, 36);
       assert.deepEqual(audit.binding, bound);
       assert.deepEqual(audit.endBinding, bound);
       assert.deepEqual(audit.dimensions, dimensions);
       Object.assign(wrapperEligibility, audit.wrapperEligibility);
-      assert.equal(Object.keys(wrapperEligibility).length, 12);
+      assert.equal(Object.keys(wrapperEligibility).length, 18);
       wrapperAuditSha256 = createHash('sha256').update(auditBytes).digest('hex');
     }
   }
@@ -169,6 +176,56 @@ async function runQualification(cli, helper, options = {}) {
       importRemote: true,
     },
     { name: 'main-divergent-auto-snap', args: ['merge', fixture.id, skip], diverge: true, importRemote: true },
+    { name: 'main-fast-forward', args: ['merge', fixture.id, skip], importRemote: true, fastForward: fixture.id },
+    {
+      name: 'main-fast-forward-cached-target',
+      args: ['merge', fixture.id, skip],
+      importRemote: true,
+      fastForward: fixture.id,
+      advancedRemote: true,
+    },
+    {
+      name: 'main-mixed-no-snap',
+      args: ['merge', '**', skip, '--no-snap'],
+      diverge: true,
+      importRemote: true,
+      peerVersion: '1.0.1',
+      fastForward: fixture.peerId,
+    },
+    {
+      name: 'main-mixed-auto-snap',
+      seedUnrelatedCache: true,
+      args: ['merge', '**', skip],
+      diverge: true,
+      importRemote: true,
+      peerVersion: '1.0.1',
+      fastForward: fixture.peerId,
+    },
+    {
+      name: 'main-mixed-changed-graph-fallback',
+      args: ['merge', '**', skip],
+      remote: 'remoteGraph',
+      diverge: true,
+      importRemote: true,
+      fastForward: fixture.peerId,
+      incomingVersion: '1.0.2',
+      fallback: true,
+    },
+    {
+      name: 'main-bare-divergent-only',
+      args: ['merge', skip, '--no-snap'],
+      diverge: true,
+      importRemote: true,
+      peerVersion: '1.0.0',
+      fastForward: fixture.peerId,
+    },
+    {
+      name: 'main-harmony1-auto-snap',
+      args: ['merge', fixture.id, skip],
+      diverge: true,
+      importRemote: true,
+      harmony1: true,
+    },
     {
       name: 'checkout-divergent-head',
       args: ['checkout', 'head', fixture.id, skip],
@@ -198,6 +255,9 @@ async function runQualification(cli, helper, options = {}) {
       fixture.tag(prepared, '2.0.0', fixture.id);
     }
     if (scenario.importRemote) fixture.command(prepared, ['import', '--objects']);
+    if (scenario.fastForward) await fixture.stageFastForward(prepared, scenario.fastForward, scenario.incomingVersion);
+    if (scenario.harmony1) await fixture.stageHarmony1(prepared, fixture.id);
+    if (scenario.advancedRemote) await replace(fixture.remoteThree, fixture.remote);
     if (scenario.missingRefs) await fs.rm(path.join(prepared, '.bit/refs/remotes'), { recursive: true, force: true });
     if (scenario.missingVersions) await removeObjects(path.join(prepared, '.bit'), 'Version');
     if (scenario.missingRemoteHistories) await removeObjects(fixture.remote, 'VersionHistory');
@@ -226,14 +286,13 @@ async function runQualification(cli, helper, options = {}) {
       await replace(prepared, workspace);
       await rebaseLinks(workspace, prepared, workspace);
       await replace(remoteBefore, fixture.remote);
+      if (scenario.seedUnrelatedCache) await fixture.seedUnrelatedCache(workspace);
       const before = await fixture.state(workspace);
       const durableBefore = await durableTree(workspace);
       const trace =
-        (mode === 'native' && !options.measure) || diagnostic
-          ? path.join(temporary, `${scenario.name}-${mode}-trace.json`)
-          : undefined;
+        !options.measure || diagnostic ? path.join(temporary, `${scenario.name}-${mode}-trace.json`) : undefined;
       const systemTrace =
-        trace && !diagnostic && process.platform === 'linux' && options.bodyObservation !== false
+        trace && mode === 'native' && !diagnostic && process.platform === 'linux' && options.bodyObservation !== false
           ? `${trace}.strace`
           : undefined;
       const selectedHelper =
@@ -289,7 +348,13 @@ async function runQualification(cli, helper, options = {}) {
         row.trace = JSON.parse(await fs.readFile(trace));
         if (options.report)
           await fs.writeFile(`${options.report}.${scenario.name}.${mode}.json`, JSON.stringify(row, null, 2));
-        if (scenario.fallback || mode === 'wrapper') {
+        if (scenario.args[0] === 'merge') {
+          const expectedNotifications = scenario.diverge && !scenario.args.includes('--no-snap') ? 2 : 1;
+          assert.equal(row.trace.postPersistNotifications, expectedNotifications, 'canonical persistence hook intent');
+        }
+        if (mode !== 'native' && mode !== 'wrapper') {
+          assert.ok(row.trace.loadedCommandModels.length, 'canonical mode loads command models');
+        } else if (scenario.fallback || mode === 'wrapper') {
           assert.ok(
             row.trace.loadedCommandModels.length,
             `${scenario.name}: unsupported state must reach canonical command`
@@ -310,17 +375,20 @@ async function runQualification(cli, helper, options = {}) {
             row.trace.workspaceFrames.some((frame) => frame.kind === 'commandApply'),
             `${scenario.name}: actual native command owner`
           );
+          assert.equal(row.trace.workspace.commandApply.applied, 1, 'one successful retained command apply receipt');
           for (const kind of ['commandPrepare', 'commandPlan', 'commandFinalize', 'commandApply'])
             assert.equal(row.trace.workspace[kind].sourceBodyBytes, 0, `${kind}: no Source bytes cross Node`);
         }
       }
+      if (scenario.args[0] === 'merge' && after.events.onPostObjectsPersist)
+        assert.deepEqual(after.events.onPostObjectsPersist, { bytes: '' }, 'canonical persistence event payload');
       if (!expected) expected = row;
       else {
         const compare = () => {
           assert.deepEqual(output, expected.output, `${scenario.name}/${mode}: exact public command output`);
           assert.deepEqual(
-            comparable(after),
-            comparable(expected.after),
+            comparable(after, scenario.args[0] === 'merge'),
+            comparable(expected.after, scenario.args[0] === 'merge'),
             `${scenario.name}/${mode}: exact workspace state`
           );
           assert.deepEqual(
@@ -343,6 +411,50 @@ async function runQualification(cli, helper, options = {}) {
       if (scenario.name.includes('keeps-cached-remote')) {
         assert.deepEqual(after.roots, before.roots, 'main merge must not fetch advanced remote files');
         assert.deepEqual(after.remoteRefs, before.remoteRefs, 'main merge must retain cached remote refs');
+      }
+      if (scenario.advancedRemote) {
+        const bitmap = createRequire(path.join(cli, 'package.json'))('comment-json').parse(
+          Buffer.from(after.bitmap, 'hex').toString()
+        );
+        assert.equal((bitmap.component || bitmap[fixture.id]).version, '1.0.1', 'merge uses cached selected target');
+        assert.match(
+          Buffer.from(after.roots['command/component']['index.js'].bytes, 'hex').toString(),
+          /first = 'two'/
+        );
+      }
+      if (scenario.peerVersion) {
+        const bitmap = createRequire(path.join(cli, 'package.json'))('comment-json').parse(
+          Buffer.from(after.bitmap, 'hex').toString()
+        );
+        const peer = bitmap.peer || bitmap[fixture.peerId];
+        assert.equal(peer?.version, scenario.peerVersion, `${scenario.name}: canonical peer selection`);
+        const expectedPeer = scenario.peerVersion === '1.0.1' ? 'peer-two' : 'peer-one';
+        assert.equal(
+          Buffer.from(after.roots['command/peer']['index.js'].bytes, 'hex').toString(),
+          `module.exports = "${expectedPeer}";\n`,
+          `${scenario.name}: peer materialization`
+        );
+      }
+      if (scenario.seedUnrelatedCache)
+        assert.equal(
+          after.dependenciesCache['unrelated/stale@1.0.0'],
+          undefined,
+          'snap clears unrelated dependency cache'
+        );
+      if (scenario.harmony1) {
+        const versionObjects = (state) =>
+          Object.entries(state.objects).flatMap(([hash, hex]) => {
+            const bytes = Buffer.from(hex, 'hex');
+            const separator = bytes.indexOf(0);
+            return bytes.subarray(0, separator).toString().startsWith('Version ')
+              ? [[hash, JSON.parse(bytes.subarray(separator + 1).toString())]]
+              : [];
+          });
+        for (const [hash] of versionObjects(before))
+          assert.equal(after.objects[hash], before.objects[hash], 'historical Version bytes remain immutable');
+        const created = versionObjects(after).filter(([hash]) => !before.objects[hash]);
+        assert.equal(created.length, 1, 'canonical autosnap creates one Version');
+        assert.equal(created[0][1].schema, '2.0.0', 'new snap upgrades mixed ancestry to schema2');
       }
       runs.push(row);
       if (options.report)
@@ -370,7 +482,11 @@ async function runQualification(cli, helper, options = {}) {
       ? { wrapperAudit: Boolean(options.wrapperAudit), wrapperEligibility, wrapperAuditSha256 }
       : {}),
     ...(options.measure
-      ? { proofSha256, measurement: true, qualificationOnlyScenarios: ['checkout-divergent-head'] }
+      ? {
+          proofSha256,
+          measurement: true,
+          qualificationOnlyScenarios: ['checkout-divergent-head', 'main-mixed-changed-graph-fallback'],
+        }
       : {}),
     runs,
   };

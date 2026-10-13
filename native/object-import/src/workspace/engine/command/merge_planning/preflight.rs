@@ -2,17 +2,32 @@ use super::{Prepared, Record, invalid, merge};
 use serde_json::Value;
 use std::{collections::HashSet, io};
 
-pub(super) fn validate(record: &Record, prepared: &Prepared) -> io::Result<()> {
+pub(super) fn validate(
+    record: &Record,
+    prepared: &mut Prepared,
+    targets: &[super::super::materialization::Prepared],
+    captured: &[super::super::capture::Captured],
+) -> io::Result<()> {
     if prepared.pending.is_empty() {
         return Ok(());
     }
     if prepared.pending.len() != prepared.materials.len() {
         return Err(invalid("command mixed merge conflict autosnap"));
     }
-    let identities = prepared.pending
+    let mut identities = prepared.pending
         .iter()
         .map(|input| input.identity.as_str())
         .collect::<HashSet<_>>();
+    for target in targets {
+        validate_target(&target.version)?;
+        let identity = target.output["id"]
+            .as_str()
+            .and_then(|id| id.rsplit_once('@'))
+            .ok_or_else(|| invalid("command fast-forward identity"))?
+            .0;
+        prepared.proofs.extend(cache_guard::verify(record, captured, target, identity)?);
+        identities.insert(identity);
+    }
     for row in
         record.context["versions"].as_array().ok_or_else(|| invalid("command merge versions"))?
     {
@@ -31,6 +46,8 @@ pub(super) fn validate(record: &Record, prepared: &Prepared) -> io::Result<()> {
     let versions = merge::snapshot::preflight(&record.request.root, &snapshots)?;
     validate_finalization(record, prepared, &versions)
 }
+
+mod cache_guard;
 
 fn reject_dependents(version: &Value, identities: &HashSet<&str>) -> io::Result<()> {
     for field in ["dependencies", "devDependencies"] {
@@ -73,3 +90,11 @@ fn validate_finalization(
     merge::finalization::prepare(&record.request.root, &inputs, roots)?;
     Ok(())
 }
+
+fn validate_target(version: &Value) -> io::Result<()> {
+    let files = version["files"].as_array().ok_or_else(|| invalid("command target files"))?;
+    merge::snapshot::validate_application_files(files)
+}
+
+#[cfg(test)]
+mod tests;

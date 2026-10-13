@@ -3,6 +3,7 @@ import { isFeatureEnabled, NO_FS_CACHE_FEATURE } from '@teambit/harmony.modules.
 import type { FreshDependencyCache } from './rust-fresh-dependencies';
 import path from 'path';
 import { availableParallelism } from 'os';
+import semver from 'semver';
 import { createRequire } from 'module';
 import { ALWAYS_IGNORE_LIST, IGNORE_LIST, IGNORE_ROOT_ONLY_LIST } from '@teambit/legacy.constants';
 import {
@@ -18,6 +19,34 @@ const bitmapRequire = createRequire(require.resolve('@teambit/legacy.bit-map'));
 const ignore = bitmapRequire('ignore') as typeof defaultIgnore;
 
 export type NativeClientRequest = (input: object) => Promise<any>;
+
+type CaptureOptions = {
+  verifyFreshDependencies?: boolean;
+  resetDependencyCache?: boolean;
+  dependencyCacheVersions?: { identity: string; version: string }[];
+};
+
+function cacheVersionUpdates(targets: any[], options: CaptureOptions) {
+  const updates = options.dependencyCacheVersions ?? [];
+  if (!Array.isArray(updates) || updates.length > targets.length) throw new Error('command cache version receipt');
+  const identities = new Set(targets.map((target) => target.identity));
+  const versions = new Map<string, string>();
+  for (const update of updates) {
+    if (
+      !options.resetDependencyCache ||
+      !options.verifyFreshDependencies ||
+      !update ||
+      !identities.has(update.identity) ||
+      versions.has(update.identity) ||
+      typeof update.version !== 'string' ||
+      update.version.length > 256 ||
+      !(semver.valid(update.version) || /^[a-f\d]{40}$/i.test(update.version))
+    )
+      throw new Error('command cache version receipt');
+    versions.set(update.identity, update.version);
+  }
+  return versions;
+}
 
 export async function withRustClientRequest<T>(
   read: (request: NativeClientRequest) => Promise<T>,
@@ -60,9 +89,10 @@ export async function captureRustClientCurrent(
   context: any,
   request: NativeClientRequest,
   targets = context.targets,
-  captureOptions: { verifyFreshDependencies?: boolean } = {}
+  captureOptions: CaptureOptions = {}
 ) {
   if (isFeatureEnabled(NO_FS_CACHE_FEATURE)) return undefined;
+  const cacheVersions = cacheVersionUpdates(targets, captureOptions);
   const { options } = context;
   const rootIgnore = ignore().add([
     ...options.patterns,
@@ -83,6 +113,7 @@ export async function captureRustClientCurrent(
   const cachePlan = targets.length
     ? await (await import('./rust-fresh-dependencies')).planFreshDependencyCache(root)
     : undefined;
+  if (cachePlan && captureOptions.resetDependencyCache) cachePlan.reset = true;
   for (const target of targets) {
     const policy = statusPolicy(context, target);
     const componentRoot = path.join(root, target.directory);
@@ -181,7 +212,13 @@ export async function captureRustClientCurrent(
       }
       if (cachePlan && (pending.length || cachePlan.reset)) {
         const { commitFreshDependencies } = await import('./rust-fresh-dependencies');
-        await commitFreshDependencies(cachePlan, pending, request);
+        const entries = pending.map((entry) => {
+          const separator = entry.identity.lastIndexOf('@');
+          const identity = separator < 0 ? entry.identity : entry.identity.slice(0, separator);
+          const version = cacheVersions.get(identity);
+          return version ? { ...entry, identity: `${identity}@${version}` } : entry;
+        });
+        await commitFreshDependencies(cachePlan, entries, request);
       }
       if (plans.length) {
         const committed = await request({ kind: 'statusHistoryCommit', root, plans });

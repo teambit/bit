@@ -50,3 +50,20 @@ fn optional_dependency_package_name_does_not_change_policy() {
     wrong[0]["id"]["version"] = json!("2.0.0");
     assert!(super::bodies::equivalent_dependencies(&wrong, &current).is_err());
 }
+
+#[test]
+fn mixed_harmony_schemas_allow_only_unchanged_component_policy() {
+    use crate::workspace::engine::status_models::harmony;
+    let old = json!({"schema":"1.0.0","mainFile":"index.js","docs":[]});
+    let mut new = old.clone();
+    new["schema"] = json!("2.0.0");
+    new["packageDependencies"] = json!({});
+    let mut sides = vec![
+        harmony::project(&old).unwrap(),
+        harmony::project(&new).unwrap(),
+        harmony::project(&old).unwrap(),
+    ];
+    assert!(super::bodies::metadata_guard(&sides).is_ok());
+    sides[2]["packageDependencies"] = json!({"changed":"1.0.0"});
+    assert!(super::bodies::metadata_guard(&sides).is_err());
+}

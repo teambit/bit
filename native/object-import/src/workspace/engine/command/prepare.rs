@@ -6,6 +6,9 @@ use crate::{
 use serde_json::{Value, json};
 use std::io;
 
+#[cfg(test)]
+mod tests;
+
 pub(super) fn context(
     request: &Prepare,
     pool: &rayon::ThreadPool,
@@ -148,6 +151,11 @@ pub(super) fn selected(request: &Prepare, context: &Value) -> io::Result<Vec<Val
     if let Some(pattern) = &request.options.pattern {
         if request.options.all {
             return Err(invalid("command ambiguous selection"));
+        }
+        // Canonical multimatch treats ** as all scoped IDs. An explicit pattern
+        // also selects fast-forward targets, unlike bare merge's divergent set.
+        if request.operation == Operation::Merge && pattern == "**" && !targets.is_empty() {
+            return Ok(targets.clone());
         }
         return select_pattern(targets, pattern);
     }
