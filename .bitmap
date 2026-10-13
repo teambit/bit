@@ -19,14 +19,14 @@
     "api-reference": {
         "name": "api-reference",
         "scope": "teambit.api-reference",
-        "version": "1.0.1221",
+        "version": "1.0.1222",
         "mainFile": "index.ts",
         "rootDir": "scopes/api-reference/api-reference"
     },
     "api-server": {
         "name": "api-server",
         "scope": "teambit.harmony",
-        "version": "1.0.1254",
+        "version": "1.0.1255",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/api-server"
     },
@@ -47,7 +47,7 @@
     "aspect": {
         "name": "aspect",
         "scope": "teambit.harmony",
-        "version": "1.0.1220",
+        "version": "1.0.1221",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/aspect"
     },
@@ -215,53 +215,9 @@
     "bit": {
         "name": "bit",
         "scope": "teambit.harmony",
-        "version": "2.2.106",
+        "version": "2.2.107",
         "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/bit",
-        "config": {
-            "teambit.dependencies/dependency-resolver": {
-                "policy": {
-                    "dependencies": {
-                        "@teambit/base-react.navigation.link": "2.0.31",
-                        "@teambit/ui-foundation.ui.navigation.react-router-adapter": "6.1.3",
-                        "@apollo/client": "3.6.9",
-                        "@yarnpkg/cli": "3.6.1",
-                        "@yarnpkg/core": "3.5.2",
-                        "@yarnpkg/plugin-pack": "3.2.0",
-                        "@types/react": "^19.0.0",
-                        "@types/react-dom": "^19.0.0",
-                        "graphql": "15.8.0",
-                        "browserslist": "4.23.3",
-                        "reflect-metadata": "0.1.13",
-                        "mz": "2.7.0",
-                        "react": "19.1.0",
-                        "react-dom": "19.1.0",
-                        "core-js": "3.13.0",
-                        "postcss": "8.4.18",
-                        "buffer": "6.0.3",
-                        "process": "0.11.10",
-                        "react-router-dom": "6.3.0",
-                        "typescript": "5.9.2",
-                        "@parcel/css": "^1.8.3",
-                        "lightningcss": "^1.20.0",
-                        "@swc/css": "^0.0.20",
-                        "@teambit/legacy": "2.1.0"
-                    },
-                    "devDependencies": {},
-                    "peerDependencies": {
-                        "@teambit/base-react.navigation.link": "-",
-                        "@teambit/legacy": "-",
-                        "@teambit/ui-foundation.ui.navigation.react-router-adapter": "-",
-                        "browserslist": "-",
-                        "graphql": "-",
-                        "react": "-",
-                        "react-dom": "-",
-                        "react-router-dom": "-",
-                        "core-js": "-"
-                    }
-                }
-            }
-        }
+        "rootDir": "scopes/harmony/bit"
     },
     "bit-map": {
         "name": "bit-map",
@@ -455,7 +411,7 @@
     "component-sizer": {
         "name": "component-sizer",
         "scope": "teambit.component",
-        "version": "1.0.1220",
+        "version": "1.0.1221",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-sizer"
     },
@@ -539,7 +495,7 @@
     "content/cli-reference": {
         "name": "content/cli-reference",
         "scope": "teambit.harmony",
-        "version": "2.0.1315",
+        "version": "2.0.1316",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/cli-reference"
     },
@@ -574,7 +530,7 @@
     "deprecation": {
         "name": "deprecation",
         "scope": "teambit.component",
-        "version": "1.0.1220",
+        "version": "1.0.1221",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/deprecation"
     },
@@ -609,7 +565,7 @@
     "docs": {
         "name": "docs",
         "scope": "teambit.docs",
-        "version": "1.0.1220",
+        "version": "1.0.1221",
         "mainFile": "index.ts",
         "rootDir": "scopes/docs/docs"
     },
@@ -665,7 +621,7 @@
     "env": {
         "name": "env",
         "scope": "teambit.envs",
-        "version": "1.0.1220",
+        "version": "1.0.1221",
         "mainFile": "index.ts",
         "rootDir": "scopes/envs/env"
     },
@@ -945,7 +901,7 @@
     "jest": {
         "name": "jest",
         "scope": "teambit.defender",
-        "version": "1.0.1220",
+        "version": "1.0.1221",
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/jest"
     },
@@ -1001,7 +957,7 @@
     "mdx": {
         "name": "mdx",
         "scope": "teambit.mdx",
-        "version": "1.0.1221",
+        "version": "1.0.1222",
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/mdx"
     },
@@ -1330,7 +1286,7 @@
     "multi-tester": {
         "name": "multi-tester",
         "scope": "teambit.defender",
-        "version": "1.0.1220",
+        "version": "1.0.1221",
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/multi-tester"
     },
@@ -1358,7 +1314,7 @@
     "node": {
         "name": "node",
         "scope": "teambit.harmony",
-        "version": "1.0.1220",
+        "version": "1.0.1221",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/node"
     },
@@ -1484,7 +1440,7 @@
     "react": {
         "name": "react",
         "scope": "teambit.react",
-        "version": "1.0.1220",
+        "version": "1.0.1221",
         "mainFile": "index.ts",
         "rootDir": "scopes/react/react"
     },
@@ -1498,7 +1454,7 @@
     "readme": {
         "name": "readme",
         "scope": "teambit.mdx",
-        "version": "1.0.1221",
+        "version": "1.0.1222",
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/readme"
     },
@@ -1533,7 +1489,7 @@
     "renaming": {
         "name": "renaming",
         "scope": "teambit.component",
-        "version": "1.0.1221",
+        "version": "1.0.1222",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/renaming"
     },
@@ -1687,7 +1643,7 @@
     "tester": {
         "name": "tester",
         "scope": "teambit.defender",
-        "version": "1.0.1220",
+        "version": "1.0.1221",
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/tester"
     },
@@ -2310,7 +2266,7 @@
     "validator": {
         "name": "validator",
         "scope": "teambit.defender",
-        "version": "0.0.457",
+        "version": "0.0.458",
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/validator"
     },
@@ -2331,7 +2287,7 @@
     "vue-aspect": {
         "name": "vue-aspect",
         "scope": "teambit.vue",
-        "version": "0.0.586",
+        "version": "0.0.587",
         "mainFile": "index.ts",
         "rootDir": "scopes/vue/vue"
     },
@@ -2380,7 +2336,7 @@
     "workspace-starter": {
         "name": "workspace-starter",
         "scope": "teambit.generator",
-        "version": "0.0.22",
+        "version": "0.0.23",
         "mainFile": "index.ts",
         "rootDir": "scopes/generator/workspace-starter"
     },
