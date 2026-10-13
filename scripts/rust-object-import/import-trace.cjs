@@ -45,6 +45,7 @@ const metrics = {
       'statusContext',
       'statusCompare',
       'statusResult',
+      'workspaceDiff',
       'dependencyPolicyCached',
       'scan',
       'inventoryBegin',
@@ -906,8 +907,10 @@ Module._load = function (request, parent, isMain) {
 };
 process.on('exit', () => {
   if (output && process.pid === owner) {
-    metrics.loadedCommandModels = Object.keys(require.cache).filter((filename) =>
-      /[/\\](?:load-bit|model-component|version|workspace)\.js$/.test(filename)
+    metrics.loadedCommandModels = Object.keys(require.cache).filter(
+      (filename) =>
+        /[/\\](?:load-bit|model-component|workspace|consumer-component)\.js$/.test(filename) ||
+        /[/\\]models[/\\]version\.js$/.test(filename)
     );
     fs.writeFileSync(output, JSON.stringify(metrics, null, 2));
   }

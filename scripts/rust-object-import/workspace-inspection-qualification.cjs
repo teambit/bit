@@ -314,7 +314,11 @@ async function runQualification(cli, helper, options = {}) {
     for (const kind of kinds) {
       if (!addon || kind !== 'inspectionFiles')
         assert.ok(
-          diagnostics.some((entry) => entry.trace.mergeState[kind].completed > 0),
+          diagnostics.some(
+            (entry) =>
+              entry.trace.mergeState[kind].completed > 0 ||
+              (kind === 'inspectionDiff' && entry.trace.workspace.workspaceDiff?.completed > 0)
+          ),
           `actual commands must accept ${kind}`
         );
       assert.equal(
@@ -340,6 +344,9 @@ async function runQualification(cli, helper, options = {}) {
         addon && entry.operation.endsWith('-status') && entry.trace.workspace.statusResult?.completed
       );
       const coldStatus = coldMini || coldFull;
+      const coldDiff = Boolean(
+        addon && entry.operation.endsWith('-diff') && entry.trace.workspace.workspaceDiff?.completed
+      );
       if (coldMini) {
         for (const kind of ['statusPrepare', 'statusScan', 'statusFinish', 'statusComplete']) {
           assert.ok(entry.trace.workspace[kind].completed > 0, `${entry.operation}: ${kind} must own the command`);
@@ -363,11 +370,24 @@ async function runQualification(cli, helper, options = {}) {
           assert.ok(entry.bodyReads.rustBytes > 0, 'native workers must own full-status Source reads');
         }
       }
+      if (coldDiff) {
+        for (const kind of ['statusContext', 'dependencyPolicyCached', 'workspaceDiff']) {
+          assert.ok(entry.trace.workspace[kind].completed > 0, `${entry.operation}: ${kind} must own diff`);
+          assert.equal(entry.trace.workspace[kind].failed, 0);
+        }
+        assert.equal(new Set(entry.trace.workspaceFrames.map((frame) => frame.helperId)).size, 1);
+        assert.deepEqual(entry.trace.loadedCommandModels, [], 'cold diff must not load Node workspace/models');
+        if (process.platform === 'linux') {
+          assert.ok(entry.bodyReads, 'Linux body-read evidence is mandatory');
+          assert.equal(entry.bodyReads.bytes, 0, 'cold diff must not read Source files on JavaScript/libuv');
+          assert.ok(entry.bodyReads.rustBytes > 0, 'native workers must own diff Source reads');
+        }
+      }
       const metrics = entry.trace.mergeState;
       const operationHelpers = new Set(kinds.flatMap((kind) => metrics[kind].helperIds));
       assert.equal(
         operationHelpers.size,
-        coldStatus ? 0 : 1,
+        coldStatus || coldDiff ? 0 : 1,
         `${entry.operation}: all inspection requests, including semantic Compare, must share one command owner`
       );
       const starts = new Map(metrics.inspectionBegin.tokens.map((row) => [row.token, row.helperId]));
@@ -411,7 +431,11 @@ async function runQualification(cli, helper, options = {}) {
     for (const phase of ['config', 'content', 'inventory'])
       assert.ok(
         diagnostics.some(
-          (entry) => entry.operation === `${phase}-diff` && entry.trace.mergeState.inspectionDiff.completed > 0
+          (entry) =>
+            entry.operation === `${phase}-diff` &&
+            (addon
+              ? entry.trace.workspace.workspaceDiff?.completed > 0
+              : entry.trace.mergeState.inspectionDiff.completed > 0)
         ),
         `${phase}: real public diff must use the retained Native engine`
       );

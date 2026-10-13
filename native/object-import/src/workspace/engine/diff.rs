@@ -43,6 +43,11 @@ pub(crate) struct FileDiff {
     same: bool,
 }
 impl FileDiff {
+    pub(crate) fn without_contents(self) -> serde_json::Value {
+        serde_json::json!({"relativePath":self.relative_path,"rawDiff":self.raw_diff,
+            "same":self.same,"fromEmpty":self.from_content.is_empty(),"toEmpty":self.to_content.is_empty()})
+    }
+
     pub(crate) fn raw(self) -> serde_json::Value {
         serde_json::json!({"relativePath":self.relative_path,"rawDiff":self.raw_diff,"same":self.same})
     }

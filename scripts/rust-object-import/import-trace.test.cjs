@@ -480,3 +480,52 @@ test('protocol observation preserves native dependency work and unknown workspac
   }
   assert.equal(metrics.workspace.futureReadOnlyTest.failed, 1);
 });
+
+test('cold command classification matches stored model paths without classifying scalar version modules', (t) => {
+  const files = fixture(t);
+  const modules = [
+    'component-version/dist/version.js',
+    'objects/dist/models/version.js',
+    'objects/dist/models/model-component.js',
+    'legacy.consumer-component/dist/consumer-component.js',
+  ].map((name) => path.join(files.directory, 'node_modules/@teambit', name));
+  for (const filename of modules) {
+    fs.mkdirSync(path.dirname(filename), { recursive: true });
+    fs.writeFileSync(filename, 'module.exports = {};');
+  }
+  const metrics = execute(files, modules.map((name) => `require(${JSON.stringify(name)});`).join('\n'), {
+    BIT_IMPORT_TRACE_PROTOCOL_ONLY: '1',
+  });
+  assert.deepEqual(metrics.loadedCommandModels, modules.slice(1).map((filename) => fs.realpathSync(filename)));
+});
+
+test('cold command classification distinguishes scalar versions from stored models and Consumer hydration', (t) => {
+  const files = fixture(t);
+  const installedRoot = process.env.BIT_LEGACY_ROOT || path.resolve(__dirname, '../..');
+  const installed = require('node:module').createRequire(path.join(installedRoot, 'package.json'));
+  try {
+    for (const name of ['@teambit/component-id', '@teambit/objects', '@teambit/legacy.consumer-component'])
+      installed.resolve(name);
+  } catch (error) {
+    if (error.code !== 'MODULE_NOT_FOUND') throw error;
+    return t.skip('canonical CLI packages are not installed in the minimal scanner test environment');
+  }
+  const load = `const load = require('node:module').createRequire(${JSON.stringify(path.join(installedRoot, 'package.json'))});`;
+  const scalar = execute(files, `${load} load('@teambit/component-id');`, { BIT_IMPORT_TRACE_PROTOCOL_ONLY: '1' });
+  assert.deepEqual(scalar.loadedCommandModels, [], 'component ID version wrappers are not stored Versions');
+  const canonical = execute(
+    files,
+    `${load} void load('@teambit/objects').ModelComponent; void load('@teambit/objects').Version; void load('@teambit/legacy.consumer-component').ConsumerComponent;`,
+    { BIT_IMPORT_TRACE_PROTOCOL_ONLY: '1' }
+  );
+  for (const filename of ['model-component.js', 'version.js', 'consumer-component.js'])
+    assert.ok(
+      canonical.loadedCommandModels.some((entry) => path.basename(entry) === filename),
+      filename
+    );
+  assert.ok(
+    canonical.loadedCommandModels
+      .filter((entry) => path.basename(entry) === 'version.js')
+      .every((entry) => /[/\\]models[/\\]version\.js$/.test(entry))
+  );
+});

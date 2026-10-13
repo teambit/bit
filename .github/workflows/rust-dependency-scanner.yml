@@ -520,6 +520,8 @@ jobs:
           node --test scripts/rust-dependency-analysis/policy.test.cjs scripts/rust-dependency-analysis/policy-finalize.test.cjs scripts/rust-dependency-analysis/policy-versions.test.cjs scripts/rust-dependency-analysis/policy-packages.test.cjs scripts/rust-dependency-analysis/policy-kernel.test.cjs scripts/rust-dependency-analysis/policy-pipeline.test.cjs scripts/rust-object-import/status-models.test.cjs scripts/rust-object-import/status-result.test.cjs scripts/rust-object-import/full-status-issues.test.cjs
           BIT_TEST_SCANNER_COMPILED=1 node --test scripts/rust-dependency-analysis/policy-kernel.test.cjs
           BIT_TEST_STATUS_COMPILED=1 node --test scripts/rust-object-import/full-status-runtime.test.cjs
+          node --test scripts/rust-object-import/workspace-diff.test.cjs scripts/rust-object-import/diff-metadata.test.cjs
+          BIT_TEST_DIFF_COMPILED=1 node --test scripts/rust-object-import/full-diff-runtime.test.cjs
       - name: Differential native snapshot models against the compiled CLI
         working-directory: native
         env:

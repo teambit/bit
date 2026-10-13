@@ -1,24 +1,21 @@
 import mapSeries from 'p-map-series';
 import type { ComponentIdList } from '@teambit/component-id';
 import { ComponentID } from '@teambit/component-id';
-import * as path from 'path';
 import type { ComponentIssue } from '@teambit/component-issues';
 import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { getMaxSizeForComponents, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { currentLoadSpan, loadSpan } from '@teambit/harmony.modules.load-trace';
-import { BIT_MAP } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
 import type { ModelComponent } from '@teambit/objects';
 import { VERSION_ZERO } from '@teambit/objects';
 import { getLatestVersionNumber } from '@teambit/legacy.utils';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
-import { getLastModifiedPathsTimestampMs } from '@teambit/toolbox.fs.last-modified';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import type { InvalidComponent } from './consumer-component';
 import { Component } from './consumer-component';
 import type { Consumer } from '@teambit/legacy.consumer';
 import { ComponentsPendingImport } from '@teambit/legacy.consumer';
-import { FsCache } from '@teambit/workspace.modules.fs-cache';
+import { FsCache, dependencyCacheNeedsInvalidation } from '@teambit/workspace.modules.fs-cache';
 import type { ComponentMap } from '@teambit/legacy.bit-map';
 import { loader } from '@teambit/legacy.loader';
 
@@ -107,23 +104,11 @@ export class ComponentLoader {
   }
 
   private async invalidateDependenciesCache(): Promise<void> {
-    const pathsToCheck = [
-      path.join(this.consumer.getPath(), 'node_modules'),
-      path.join(this.consumer.getPath(), 'package.json'),
-      path.join(this.consumer.getPath(), 'pnpm-lock.yaml'),
-      path.join(this.consumer.getPath(), 'yarn.lock'),
-      path.join(this.consumer.getPath(), BIT_MAP),
-      this.consumer.config.path,
-    ];
-    const [lastModified, dependenciesCacheList] = await Promise.all([
-      getLastModifiedPathsTimestampMs(pathsToCheck),
-      this.componentFsCache.listDependenciesDataCache(),
-    ]);
-    const lastUpdateAllComps = Object.keys(dependenciesCacheList).map((key) => dependenciesCacheList[key].time);
-    const firstCacheEntered = Math.min(...lastUpdateAllComps);
-    // if lastUpdateAllComps is empty, firstCacheEntered is Infinity so shouldInvalidate is
-    // always false, which is good. no need to invalidate the cache if nothing there.
-    const shouldInvalidate = lastModified > firstCacheEntered;
+    const shouldInvalidate = await dependencyCacheNeedsInvalidation(
+      this.componentFsCache,
+      this.consumer.getPath(),
+      this.consumer.config.path
+    );
     if (shouldInvalidate) {
       // at least one component inserted to the cache before workspace-config/node-modules
       // modification, invalidate the entire deps-cache.

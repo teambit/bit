@@ -1,4 +1,5 @@
 pub(super) mod comparison;
+pub(super) mod workspace_diff;
 
 mod history;
 mod index;
