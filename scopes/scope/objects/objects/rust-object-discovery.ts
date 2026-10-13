@@ -7,6 +7,7 @@ import {
   packagedObjectTarget,
   objectRuntimeMatches,
   objectArtifactExecutable,
+  objectArtifactAddon,
 } from './rust-object-package';
 
 /** Search only beside this installed runtime. Never search PATH, a workspace, or the network. */
@@ -33,6 +34,19 @@ export function resolveRustObjectImportExecutable(context: 'read' | 'import' = '
     const manifest = JSON.parse(manifestBytes.toString('utf8'));
     if (!objectRuntimeMatches(__dirname, manifestBytes, manifest, chosen, context === 'import')) return undefined;
     return objectArtifactExecutable(directory, manifest, chosen);
+  } catch {
+    return undefined;
+  }
+}
+
+/** Optional verified companion; unsupported or damaged addons keep the existing child helper. */
+export function resolveRustWorkspaceAddon(executable: string): string | undefined {
+  if (!/^bit-object-import(?:\.exe)?$/.test(path.basename(executable)) || !fs.existsSync(executable)) return undefined;
+  const override = process.env.BIT_TEST_WORKSPACE_ADDON;
+  if (override) return path.isAbsolute(override) ? override : undefined;
+  if (!fs.existsSync(path.join(path.dirname(executable), 'bit-workspace.node'))) return undefined;
+  try {
+    return objectArtifactAddon(executable);
   } catch {
     return undefined;
   }

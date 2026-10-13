@@ -97,6 +97,15 @@ function smoke(archive) {
         .equals(compressed),
       'standalone persisted bytes differ'
     );
+    if (manifest.addon) {
+      const addon = path.join(directory, manifest.addon.name);
+      fs.writeFileSync(addon, members[manifest.addon.name]);
+      const checked = spawnSync(process.execPath, [path.join(__dirname, 'addon-smoke.cjs'), addon, executable, directory], {
+        encoding:'utf8', timeout:30000, maxBuffer:1024 * 1024,
+      });
+      assert.ifError(checked.error);
+      assert.equal(checked.status, 0, checked.stderr);
+    }
     return manifest;
   } finally {
     fs.rmSync(directory, { recursive: true, force: true });

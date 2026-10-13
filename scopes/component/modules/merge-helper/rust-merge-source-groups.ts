@@ -1,6 +1,10 @@
 import type { Repository, Source, SourceFileModel, HistorySourceCapsule } from '@teambit/objects';
 import { types } from 'util';
-import { loadRustCapturedSourceCapsule, hasRustSnapshotTransactionClassFieldsBatch } from '@teambit/objects';
+import {
+  loadRustCapturedSourceCapsule,
+  loadRustCapturedSourceCapsuleBatch,
+  hasRustSnapshotTransactionClassFieldsBatch,
+} from '@teambit/objects';
 import { SourceFile } from '@teambit/component.sources';
 import {
   copyRustMergeBuffer,
@@ -61,11 +65,14 @@ export async function observeRustMergeSourceGroups(
   };
   const modelFor = (reference: MergeSourceReference): SourceFileModel =>
     (reference.ref.side === 'base' ? baseFiles : otherFiles)[reference.ref.index];
+  let batchSources: Array<Promise<Source | undefined>> | undefined;
+  let batchIndex = 0;
   const load = async (reference: MergeSourceReference): Promise<{ source: Source; body: Buffer }> => {
     const model = modelFor(reference);
     // A helper loss changes only the private byte provider; the original public load occurs once.
     const source =
-      (await loadRustCapturedSourceCapsule(repository, capsules[reference.source], model.file)) ||
+      (await (batchSources?.[batchIndex++] ||
+        loadRustCapturedSourceCapsule(repository, capsules[reference.source], model.file))) ||
       ((await model.file.load(repository)) as Source);
     // This is the canonical post-load contents observation, retained for any later fallback suffix.
     const body = source.contents;
@@ -80,6 +87,22 @@ export async function observeRustMergeSourceGroups(
     return { source, body };
   };
   for (const group of groups) {
+    const references = group.loads.flatMap((entry) =>
+      group.stage === 'modified'
+        ? [...(entry.base ? [entry.base] : []), entry.other!]
+        : [{ source: entry.source!, ref: entry.ref! }]
+    );
+    batchIndex = 0;
+    batchSources =
+      references.length >= 8
+        ? loadRustCapturedSourceCapsuleBatch(
+            repository,
+            references.map((reference) => ({
+              descriptor: capsules[reference.source],
+              reference: modelFor(reference).file,
+            }))
+          )
+        : undefined;
     const order: number[] = [];
     orders.push({ stage: group.stage, order });
     await Promise.all(

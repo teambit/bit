@@ -1,5 +1,6 @@
 mod compact_receipts;
 mod parallel_reads;
+mod selected_base;
 use super::{State, apply};
 use flate2::{Compression, write::ZlibEncoder};
 use serde_json::{Value, json};
@@ -174,7 +175,7 @@ fn indexed_completion_receipt_omits_rows_and_still_consumes_order_ack() {
 }
 
 #[test]
-fn updated_rows_reuse_verified_target_bodies_and_base_reads_are_not_repeated() {
+fn updated_rows_reuse_verified_target_bodies_without_reading_unused_base() {
     let fixture = Fixture::new();
     let base = fixture.version('4', b"base\n");
     let target = fixture.version('5', b"target\n");
@@ -189,7 +190,7 @@ fn updated_rows_reuse_verified_target_bodies_and_base_reads_are_not_repeated() {
         "labels":{"current":"current","other":"other"},
         "current":[{"relativePath":"index.ts","workspace":{"path":current,"rawHash":base["files"][0]["hash"],"snapshotHash":base["files"][0]["hash"]}}]
     }), &mut state).expect("prepare");
-    assert_eq!(prepared["reads"]["sourceReads"], 2);
+    assert_eq!(prepared["reads"]["sourceReads"], 1);
     assert_eq!(
         prepared["bodies"]
             .as_array()

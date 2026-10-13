@@ -17,7 +17,7 @@ installed('@teambit/checkout/dist/checkout.main.runtime.js');
 const sessionModule = installed('@teambit/component.sources/dist/rust-workspace-materializer.js');
 const retainedApply = installed('@teambit/merging/dist/rust-merge-retained-apply.js');
 
-for (const currentOrigin of ['workspace', 'repository']) {
+for (const currentOrigin of ['workspace', 'workspace-deleted', 'repository']) {
   test(`genuine retained producer keeps causal aliases and Native apply with ${currentOrigin} current files`, async (t) => {
     const helper = process.env.BIT_TEST_OBJECT_IMPORT;
     assert.ok(helper, 'actual new merge helper is required');
@@ -40,7 +40,7 @@ for (const currentOrigin of ['workspace', 'repository']) {
         (response, body) => {
           const valid = validate(response, body);
           if (valid && input?.kind?.startsWith('merge'))
-            accepted.push({ kind: input.kind, data: response.data, session: this });
+            accepted.push({ kind: input.kind, input, data: response.data, session: this });
           return valid;
         },
         ...options
@@ -103,6 +103,9 @@ for (const currentOrigin of ['workspace', 'repository']) {
         sources.registerRustWorkspaceFile(file, read);
         return file;
       });
+      if (currentOrigin === 'workspace-deleted') {
+        for (const filename of filenames) await fs.rm(filename);
+      }
       if (currentOrigin === 'repository') {
         const currentVersion = await version(currentBody, 'c'.repeat(40));
         current.files = await objects.withRustHistoryQueryOperation(() =>
@@ -157,6 +160,10 @@ for (const currentOrigin of ['workspace', 'repository']) {
             // Keep the public lazy rows unread until the owner has removed its private directory.
             escaped = result.modifiedFiles;
             assert.ok(accepted.some((frame) => frame.kind === 'mergePrepare' && frame.data.reads.sourceReads > 0));
+            if (currentOrigin.startsWith('workspace')) {
+              const prepared = accepted.find((frame) => frame.kind === 'mergePrepare');
+              assert.ok(prepared.input.current.every((file) => Number.isSafeInteger(file.workspace.readToken)));
+            }
             assert.equal(new Set(accepted.map((frame) => frame.session)).size, 1);
           })
         )

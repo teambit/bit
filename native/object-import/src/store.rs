@@ -9,10 +9,11 @@ use std::{
     },
 };
 
+static NEXT_TEMPORARY: AtomicU64 = AtomicU64::new(0);
+
 pub(crate) struct Store {
     directory: PathBuf,
     owner: Option<(u32, u32)>,
-    counter: AtomicU64,
     written: Mutex<HashMap<String, Arc<Mutex<bool>>>>,
 }
 
@@ -28,12 +29,7 @@ impl Store {
                 "object directory must be absolute",
             ));
         }
-        Ok(Self {
-            directory,
-            owner,
-            counter: AtomicU64::new(0),
-            written: Mutex::new(HashMap::new()),
-        })
+        Ok(Self { directory, owner, written: Mutex::new(HashMap::new()) })
     }
 
     pub(crate) fn write(&self, hash: &str, compressed: &[u8]) -> io::Result<()> {
@@ -59,7 +55,7 @@ impl Store {
         let path = self.directory
             .join(&hash[..2])
             .join(&hash[2..]);
-        let counter = self.counter.fetch_add(1, Ordering::Relaxed);
+        let counter = NEXT_TEMPORARY.fetch_add(1, Ordering::Relaxed);
         let temporary =
             path.with_file_name(format!(".{}.{}.{}", &hash[2..], std::process::id(), counter));
         let result = Self::atomic_write(&path, &temporary, compressed, self.owner);
@@ -93,7 +89,7 @@ impl Store {
     pub(crate) fn write_index(&self, contents: &[u8]) -> io::Result<()> {
         let scope = self.directory.parent().ok_or_else(|| io::Error::other("missing scope"))?;
         let path = scope.join("index.json");
-        let counter = self.counter.fetch_add(1, Ordering::Relaxed);
+        let counter = NEXT_TEMPORARY.fetch_add(1, Ordering::Relaxed);
         let temporary = scope.join(format!(".index.json.{}.{}", std::process::id(), counter));
         let result = Self::atomic_index(&path, &temporary, contents);
         if result.is_err() {

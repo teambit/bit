@@ -7,7 +7,17 @@ export type RustSnapshotValue =
   | { kind: 'array'; value: RustSnapshotValue[] }
   | { kind: 'object'; value: [string | number[], RustSnapshotValue][] };
 
-type Budget = { nodes: number; bytes: number; ancestors: Set<object> };
+/** Primitive leaves and arrays need no per-value envelope; exceptional values retain tagged encoding. */
+export type RustCompactSnapshotValue =
+  | RustSnapshotValue
+  | string
+  | boolean
+  | null
+  | RustCompactSnapshotValue[]
+  | { kind: 'object'; value: [string | number[], RustCompactSnapshotValue][] }
+  | { kind: 'array'; value: RustCompactSnapshotValue[] };
+
+type Budget = { nodes: number; bytes: number; ancestors: Set<object>; compact: boolean };
 const MAX_NODES = 65536;
 const MAX_BYTES = 4 * 1024 * 1024;
 const MAX_DEPTH = 64;
@@ -34,7 +44,7 @@ function numberBits(value: number): string {
   return bytes.toString('hex');
 }
 
-function projectObject(value: object, budget: Budget, depth: number): RustSnapshotValue | undefined {
+function projectObject(value: object, budget: Budget, depth: number): RustCompactSnapshotValue | undefined {
   if (budget.ancestors.has(value)) return undefined;
   const prototype = Object.getPrototypeOf(value);
   const array = Array.isArray(value);
@@ -55,21 +65,21 @@ function projectObject(value: object, budget: Budget, depth: number): RustSnapsh
     if (array) {
       const length = descriptors.length.value;
       if (!Number.isSafeInteger(length) || length < 0 || length > MAX_NODES) return undefined;
-      const entries: RustSnapshotValue[] = [];
+      const entries: RustCompactSnapshotValue[] = [];
       for (let index = 0; index < length; index += 1) {
         const item = project(descriptors[index]?.value, budget, depth + 1);
-        if (!item) return undefined;
+        if (item === undefined) return undefined;
         entries.push(item);
       }
-      return { kind: 'array', value: entries };
+      return budget.compact ? entries : { kind: 'array', value: entries };
     }
-    const entries: [string | number[], RustSnapshotValue][] = [];
+    const entries: [string | number[], RustCompactSnapshotValue][] = [];
     for (const key of Object.keys(descriptors)) {
       if (!descriptors[key].enumerable) continue;
       budget.bytes += key.length * 6;
       if (budget.bytes > MAX_BYTES) return undefined;
       const item = project(descriptors[key].value, budget, depth + 1);
-      if (!item) return undefined;
+      if (item === undefined) return undefined;
       entries.push([wireText(key), item]);
     }
     return { kind: 'object', value: entries };
@@ -78,16 +88,18 @@ function projectObject(value: object, budget: Budget, depth: number): RustSnapsh
   }
 }
 
-function project(value: unknown, budget: Budget, depth: number): RustSnapshotValue | undefined {
+function project(value: unknown, budget: Budget, depth: number): RustCompactSnapshotValue | undefined {
   budget.nodes += 1;
   if (budget.nodes > MAX_NODES || depth > MAX_DEPTH) return undefined;
   if (value === undefined) return { kind: 'undefined' };
-  if (value === null) return { kind: 'null' };
-  if (typeof value === 'boolean') return { kind: 'boolean', value };
+  if (value === null) return budget.compact ? null : { kind: 'null' };
+  if (typeof value === 'boolean') return budget.compact ? value : { kind: 'boolean', value };
   if (typeof value === 'number') return { kind: 'number', value: numberBits(value) };
   if (typeof value === 'string') {
     budget.bytes += value.length * 6;
-    return budget.bytes <= MAX_BYTES ? { kind: 'string', value: wireText(value) } : undefined;
+    if (budget.bytes > MAX_BYTES) return undefined;
+    const text = wireText(value);
+    return budget.compact && typeof text === 'string' ? text : { kind: 'string', value: text };
   }
   return typeof value === 'object' ? projectObject(value, budget, depth) : undefined;
 }
@@ -99,5 +111,17 @@ export function projectRustSnapshotValue(value: unknown): RustSnapshotValue | un
     Object.getOwnPropertyDescriptor(Array.prototype, 'toJSON')
   )
     return undefined;
-  return project(value, { nodes: 0, bytes: 0, ancestors: new Set() }, 0);
+  return project(value, { nodes: 0, bytes: 0, ancestors: new Set(), compact: false }, 0) as
+    | RustSnapshotValue
+    | undefined;
+}
+
+/** The same descriptor and resource checks, with fewer allocations and smaller native requests. */
+export function projectRustCompactSnapshotValue(value: unknown): RustCompactSnapshotValue | undefined {
+  if (
+    Object.getOwnPropertyDescriptor(Object.prototype, 'toJSON') ||
+    Object.getOwnPropertyDescriptor(Array.prototype, 'toJSON')
+  )
+    return undefined;
+  return project(value, { nodes: 0, bytes: 0, ancestors: new Set(), compact: true }, 0);
 }

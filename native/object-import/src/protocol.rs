@@ -228,7 +228,7 @@ fn serve_read_only(
     Ok(true)
 }
 
-fn serve_extension(
+pub(crate) fn serve_extension(
     magic: [u8; 4],
     reader: &mut impl Read,
     writer: &mut impl Write,
@@ -250,7 +250,12 @@ fn serve_extension(
         return Ok(true);
     }
     if magic == *b"BWS1" {
-        crate::workspace::engine::serve(reader, writer, pool)?;
+        crate::workspace::engine::serve(
+            reader,
+            writer,
+            pool,
+            &mut merge.operations.workspace_reads,
+        )?;
         return Ok(true);
     }
     if magic == *b"BCK1" {

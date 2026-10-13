@@ -20,6 +20,39 @@
     "sha256": "f9bc4423732350eb0b3f7ed7e91d530298476f8fec0c6c427a1c04ade22655af"
   },
   {
+    "name": "napi-rs-MIT.txt",
+    "source": "https://raw.githubusercontent.com/napi-rs/napi-rs/444bf29b8534216dd1cec4695a71e5996a173e87/LICENSE",
+    "additionalSources": [
+      "https://raw.githubusercontent.com/napi-rs/napi-rs/a94cef33f62e74682963dd085e283f52dcec2600/LICENSE",
+      "https://raw.githubusercontent.com/napi-rs/napi-rs/8bab46ee5dfd48a7b51e8bad3d09aed315ada4df/LICENSE",
+      "https://raw.githubusercontent.com/napi-rs/napi-rs/4694e6d7c7d7eb2ac6b9a634374c3519a9e5851f/LICENSE",
+      "https://raw.githubusercontent.com/napi-rs/napi-rs/37109f133043aff379a38edfb8b1548e7e9309e5/LICENSE"
+    ],
+    "sha256": "3f1ce66533302df3a32edbfdfc0b78f0dd34659e4c1f5817162e5ea3c2297215",
+    "packages": {
+      "napi": {
+        "version": "3.12.2",
+        "revision": "444bf29b8534216dd1cec4695a71e5996a173e87"
+      },
+      "napi-build": {
+        "version": "2.6.0",
+        "revision": "a94cef33f62e74682963dd085e283f52dcec2600"
+      },
+      "napi-derive": {
+        "version": "3.6.12",
+        "revision": "8bab46ee5dfd48a7b51e8bad3d09aed315ada4df"
+      },
+      "napi-derive-backend": {
+        "version": "6.1.5",
+        "revision": "4694e6d7c7d7eb2ac6b9a634374c3519a9e5851f"
+      },
+      "napi-sys": {
+        "version": "3.4.0",
+        "revision": "37109f133043aff379a38edfb8b1548e7e9309e5"
+      }
+    }
+  },
+  {
     "name": "oxc-MIT.txt",
     "source": "https://raw.githubusercontent.com/oxc-project/oxc/7f56ec9301e7327b4402c3010c87803b58b6ea30/LICENSE",
     "sha256": "95ced5ecf1133fbf41d409b5555c86c344f83f3b019926057ddbc07cfdcc27b3"

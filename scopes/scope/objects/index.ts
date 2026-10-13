@@ -1,4 +1,4 @@
-export { resolveRustObjectImportExecutable } from './objects/rust-object-discovery';
+export { resolveRustObjectImportExecutable, resolveRustWorkspaceAddon } from './objects/rust-object-discovery';
 export {
   ModelComponent,
   canPlanRustSnapshotFutureVersions,
@@ -187,6 +187,7 @@ export {
   canHydrateRustHistoryQuerySources,
   validRustHistorySourceReceipt,
   loadRustCapturedSourceCapsule,
+  loadRustCapturedSourceCapsuleBatch,
   hydrateRustCapturedSourceBodies,
 } from './objects/rust-history-query-sources';
 export type { HistorySourceCapsule, CapturedSourceBody } from './objects/rust-history-query-sources';

@@ -1,6 +1,6 @@
 import { hasRustSnapshotTransactionClass } from './rust-snapshot-guards';
 import { hasRustArtifactVinyl } from '@teambit/component.sources';
-import { projectRustSnapshotValue, type RustSnapshotValue } from './rust-snapshot-values';
+import { projectRustCompactSnapshotValue, type RustCompactSnapshotValue } from './rust-snapshot-values';
 
 const invalid = Symbol('unsupported snapshot metadata');
 const recordClasses = ['Dependency', 'ExtensionDataEntry', 'DetachedHeads'];
@@ -96,7 +96,7 @@ function plain(value: unknown, seen: Set<object>, depth: number): unknown | type
 }
 
 /** Raw metadata is encoded as JavaScript values; Rust owns model transforms and JSON bytes. */
-export function projectRustSnapshotFields(value: unknown): RustSnapshotValue | undefined {
+export function projectRustSnapshotFields(value: unknown): RustCompactSnapshotValue | undefined {
   const projected = plain(value, new Set(), 0);
-  return projected === invalid ? undefined : projectRustSnapshotValue(projected);
+  return projected === invalid ? undefined : projectRustCompactSnapshotValue(projected);
 }

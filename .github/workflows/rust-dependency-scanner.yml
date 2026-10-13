@@ -428,10 +428,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22.22.0
-      - name: Build and package actual musl object-import helper
-        env:
-          BIT_OBJECT_ARTIFACT_DIRECTORY: ${{ runner.temp }}/bit-object-import-artifacts
-        run: node scripts/rust-object-import/artifacts/package-helper.cjs --directory "$BIT_OBJECT_ARTIFACT_DIRECTORY" --target x86_64-unknown-linux-musl
+      - name: Build and package actual musl object-import helper and addon in Alpine
+        run: |
+          mkdir -p "$RUNNER_TEMP/bit-object-import-artifacts"
+          docker run --rm -v "$GITHUB_WORKSPACE:/repository" -v "$RUNNER_TEMP/bit-object-import-artifacts:/artifacts" -w /repository/native rust:1.97.0-alpine sh -ec '
+            apk add --no-cache nodejs git
+            git config --global --add safe.directory /repository
+            cargo fetch --locked
+            node ../scripts/rust-object-import/artifacts/package-helper.cjs --directory /artifacts --target x86_64-unknown-linux-musl
+          '
       - name: Execute standalone object-import artifact in actual Alpine
         run: |
           docker run --rm -v "$GITHUB_WORKSPACE:/repository:ro" -v "$RUNNER_TEMP/bit-object-import-artifacts:/artifacts:ro" -w /repository "node:${{ matrix.node }}-alpine" sh -ec '
@@ -493,6 +498,17 @@ jobs:
       - name: Build actual native object import helper
         working-directory: native
         run: cargo build --locked --package bit-object-import
+      - name: Build in-process workspace engine
+        working-directory: native
+        run: |
+          cargo build --locked --package bit-workspace-napi
+          node -e "const fs=require('fs'); const name=process.platform==='win32'?'bit_workspace_napi.dll':process.platform==='darwin'?'libbit_workspace_napi.dylib':'libbit_workspace_napi.so'; fs.copyFileSync('target/debug/'+name,'target/debug/bit-workspace.node');"
+      - name: Qualify in-process ownership and object operation lifecycle
+        env:
+          BIT_LEGACY_ROOT: ${{ github.workspace }}
+          BIT_TEST_OBJECT_IMPORT: ${{ github.workspace }}/native/target/debug/bit-object-import${{ runner.os == 'Windows' && '.exe' || '' }}
+          BIT_TEST_WORKSPACE_ADDON: ${{ github.workspace }}/native/target/debug/bit-workspace.node
+        run: node --test scripts/rust-object-import/workspace-addon.test.cjs scripts/rust-object-import/object-addon.test.cjs
       - name: Differential native snapshot models against the compiled CLI
         working-directory: native
         env:
@@ -554,6 +570,7 @@ jobs:
           node --test scripts/rust-object-import/history-query-validation.test.cjs
           node --test scripts/rust-object-import/history-query-measurement.test.cjs
           node --test scripts/rust-object-import/checkout-source-bodies.test.cjs
+          node --test scripts/rust-object-import/workspace-read-receipts.test.cjs
           node --test scripts/rust-object-import/merge-transaction.test.cjs scripts/rust-object-import/merge-transaction-bodies.test.cjs scripts/rust-object-import/merge-row-order.test.cjs scripts/rust-object-import/body-range.test.cjs scripts/rust-object-import/merge-transaction-selectors.test.cjs scripts/rust-object-import/merge-transaction-lane-policy.test.cjs scripts/rust-object-import/merge-transaction-source-guards.test.cjs scripts/rust-object-import/merge-transaction-class-guards.test.cjs scripts/rust-object-import/merge-transaction-producer.test.cjs
           BIT_TEST_MERGE_TRANSACTION_COMPILED=1 node --test scripts/rust-object-import/merge-transaction.test.cjs scripts/rust-object-import/merge-transaction-bodies.test.cjs scripts/rust-object-import/merge-row-order.test.cjs scripts/rust-object-import/body-range.test.cjs scripts/rust-object-import/merge-transaction-selectors.test.cjs scripts/rust-object-import/merge-transaction-lane-policy.test.cjs scripts/rust-object-import/merge-transaction-source-guards.test.cjs scripts/rust-object-import/merge-transaction-class-guards.test.cjs scripts/rust-object-import/merge-transaction-producer.test.cjs
           node --test scripts/rust-object-import/merge-transaction-validation.test.cjs scripts/rust-object-import/merge-transaction-measurement.test.cjs scripts/rust-object-import/merge-transaction-report.test.cjs

@@ -17,6 +17,7 @@ pub(crate) struct State {
 }
 #[derive(Default)]
 pub(crate) struct Operations {
+    pub(crate) workspace_reads: crate::workspace::snapshots::State,
     pub(crate) merge_transaction: crate::merge_transaction::State,
     pub(crate) history_query: crate::history_query::State,
     pub(crate) history_reset: crate::history_reset::State,

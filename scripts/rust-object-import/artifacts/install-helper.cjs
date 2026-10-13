@@ -128,7 +128,7 @@ function installed(root, chosen) {
         name,
         read(
           path.join(directory, name),
-          name.startsWith('bit-object-import') ? 64 * 1024 * 1024 : name === 'manifest.json' ? 65536 : 4 * 1024 * 1024
+          (name.startsWith('bit-object-import') || name === 'bit-workspace.node') ? 64 * 1024 * 1024 : name === 'manifest.json' ? 65536 : 4 * 1024 * 1024
         ),
       ])
   );

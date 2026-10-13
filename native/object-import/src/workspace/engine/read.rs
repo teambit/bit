@@ -16,10 +16,12 @@ pub(super) struct FileRecord {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct Metadata {
-    path: PathBuf,
-    hash: String,
+    pub(super) path: PathBuf,
+    pub(super) hash: String,
     linux_hash: String,
-    snapshot_hash: String,
+    pub(super) snapshot_hash: String,
+    #[serde(skip)]
+    pub(super) raw_bytes: usize,
 }
 
 pub(super) fn read(files: &[PathBuf], pool: &ThreadPool) -> io::Result<Vec<FileRecord>> {
@@ -82,6 +84,7 @@ fn record(file: &Path, raw: Vec<u8>) -> FileRecord {
     FileRecord { metadata, contents: crate::validate::hexadecimal(&contents) }
 }
 pub(super) fn canonical(file: &Path, raw: Vec<u8>) -> (Metadata, Vec<u8>) {
+    let raw_bytes = raw.len();
     let hash = hash(&raw);
     let has_bom = raw.starts_with(b"\xef\xbb\xbf");
     let contents = strip_bom(raw);
@@ -91,7 +94,7 @@ pub(super) fn canonical(file: &Path, raw: Vec<u8>) -> (Metadata, Vec<u8>) {
     } else {
         snapshot_hash.clone()
     };
-    (Metadata { path: file.to_owned(), hash, linux_hash, snapshot_hash }, contents)
+    (Metadata { path: file.to_owned(), hash, linux_hash, snapshot_hash, raw_bytes }, contents)
 }
 pub(super) fn raw(file: &Path, maximum: usize) -> io::Result<Vec<u8>> {
     path(file)?;

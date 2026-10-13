@@ -218,321 +218,342 @@ const metrics = {
 };
 // Observe workspace wire acknowledgements without wrapping writer methods whose
 // identities decide native eligibility. This preload is excluded from timing.
+function observeWorkspaceTransport(child) {
+  if (!child.stdin || !child.stdout) return child;
+  let workspace = false,
+    workspaceId;
+  const requests = [];
+  let pending = Buffer.alloc(0);
+  let binaryRemaining = 0;
+  const write = child.stdin.write;
+  child.stdin.write = function (bytes, ...rest) {
+    const magic = Buffer.isBuffer(bytes) ? bytes.subarray(0, 4).toString() : '';
+    if (['BWM1', 'BWP1', 'BWC0', 'BWC2', 'BWC1', 'BCK1', 'BWS1', 'BSS1', 'BMH1', 'BMT1'].includes(magic)) {
+      if (!workspace) workspaceId = ++metrics.persistence.helpers;
+      workspace = true;
+      const operation = ['BWS1', 'BSS1', 'BMH1', 'BMT1'].includes(magic)
+        ? JSON.parse(bytes.subarray(12).toString())
+        : undefined;
+      metrics.workspaceFrames.push({
+        backend: child.backend || 'process',
+        magic,
+        kind: operation?.kind,
+        helperId: workspaceId,
+        id: bytes.readUInt32BE(4),
+        ...(operation?.kind?.startsWith('merge')
+          ? Object.fromEntries(
+              ['token', 'planToken', 'index', 'revision', 'phase', 'observe']
+                .filter((key) => operation[key] !== undefined)
+                .map((key) => [key, operation[key]])
+            )
+          : {}),
+      });
+      requests.push(operation ? `${magic}:${operation.kind}` : magic);
+      if (operation) {
+        const metric = (
+          magic === 'BMT1'
+            ? metrics.mergeState
+            : magic === 'BMH1'
+              ? metrics.history
+              : magic === 'BSS1'
+                ? metrics.snapshot
+                : metrics.workspace
+        )[operation.kind];
+        metric.frames++;
+        if (metric.helperIds && !metric.helperIds.includes(workspaceId)) metric.helperIds.push(workspaceId);
+        metric.files += ['BMH1', 'BMT1'].includes(magic)
+          ? 1
+          : magic === 'BSS1'
+            ? operation.kind === 'commit'
+              ? operation.objects.length
+              : 1
+            : operation.files?.length || operation.target?.length || (operation.kind === 'compare' ? 1 : 0);
+        if (magic === 'BMT1' && operation.kind.startsWith('inspection') && operation.token)
+          metric.tokens.push({ token: operation.token, helperId: workspaceId });
+        if (
+          magic === 'BMT1' &&
+          (operation.kind.startsWith('checkout') ||
+            operation.kind.startsWith('historyReset') ||
+            operation.kind.startsWith('historyQuery') ||
+            operation.kind.startsWith('merge'))
+        ) {
+          if (operation.token) metric.tokens.push({ token: operation.token, helperId: workspaceId });
+          if (operation.kind.startsWith('merge') && operation.planToken)
+            metric.planTokens.push({ token: operation.planToken, helperId: workspaceId });
+          if (operation.kind.startsWith('historyReset') && operation.phase)
+            metric.phases.push({
+              token: operation.token,
+              revision: operation.revision,
+              phase: operation.phase,
+              helperId: workspaceId,
+            });
+          if (operation.kind.startsWith('merge') && (operation.phase || operation.observe))
+            metric.phases.push({
+              token: operation.token,
+              phase: operation.phase || operation.observe,
+              revision: operation.revision,
+              index: operation.index,
+              completed: operation.completed,
+              helperId: workspaceId,
+            });
+          const inspect = (value) => {
+            if (!value || typeof value !== 'object') return;
+            for (const [key, item] of Object.entries(value)) {
+              if (['contents', 'body', 'buffer', 'compressed'].includes(key) && typeof item === 'string')
+                metric.sourceBodyBytes += Buffer.byteLength(item);
+              else if (
+                ['contents', 'body', 'buffer', 'compressed'].includes(key) &&
+                item?.type === 'Buffer' &&
+                Array.isArray(item.data)
+              )
+                metric.sourceBodyBytes += item.data.length;
+              else if (item && typeof item === 'object') inspect(item);
+            }
+          };
+          inspect(operation);
+        }
+        if (magic === 'BMT1' && operation.kind === 'inspectionCompare') {
+          const field = (value, name) =>
+            value?.kind === 'object'
+              ? value.value.find(
+                  ([key]) => (typeof key === 'string' ? key : String.fromCharCode(...key)) === name
+                )?.[1]
+              : undefined;
+          const files = field(operation.left, 'files');
+          for (const file of files?.value || []) {
+            const reference = field(file, 'file');
+            const value = reference?.kind === 'string' ? reference : field(reference, 'hash');
+            if (value?.kind === 'string')
+              metric.modelHashes.push(
+                typeof value.value === 'string' ? value.value : String.fromCharCode(...value.value)
+              );
+          }
+        }
+        if (magic === 'BMT1' && operation.kind === 'snapshotSerialize') {
+          metric.objects += operation.objects?.length || 0;
+          for (const object of operation.objects || []) {
+            if (object.type === 'Source') {
+              metric.sources++;
+              metric.workspaceSources += Number(Boolean(object.source));
+              metric.artifactSources += Number(object.source?.normalization === 'linuxEol');
+              metric.repositorySources += Number(Boolean(object.repository));
+              metric.generatedSources += Number(typeof object.body === 'string');
+              metric.bodyBytes += (object.body?.length || 0) / 2;
+            }
+          }
+        }
+        if (magic === 'BMT1' && operation.kind === 'transferInitialize') {
+          for (const object of operation.objects || []) {
+            if (object.metadata?.type === 'Source') metric.bodyBytes += (object.metadata.compressed?.length || 0) / 2;
+          }
+        }
+        if (magic === 'BMH1' && operation.kind === 'mergeFiles') {
+          for (const file of operation.current || []) {
+            metric.workspaceFiles += Number(Boolean(file.workspace));
+            metric.bodyBytes += (file.body?.length || 0) / 2;
+            metric.storedSources += Number(Boolean(file.source));
+          }
+          metric.storedSources += (operation.base?.length || 0) + (operation.other?.length || 0);
+        }
+        if (magic === 'BSS1' && operation.kind === 'commit') {
+          for (const object of operation.objects) {
+            if (object.type !== 'Source') continue;
+            metric.workspaceSources += Number(Boolean(object.workspace));
+            metric.sourceBodyBytes += (object.body?.length || 0) / 2;
+          }
+        }
+      } else if (magic === 'BWM1') {
+        metrics.materialization.frames++;
+        metrics.materialization.files += bytes.readUInt32BE(8);
+        metrics.materialization.bytes += bytes.length;
+      } else if (magic === 'BWC0' || magic === 'BWC2' || magic === 'BWC1' || magic === 'BCK1') {
+        const metric =
+          magic === 'BCK1'
+            ? metrics.checkout.plan
+            : magic === 'BWC0' || magic === 'BWC2'
+              ? metrics.checkout.preflight
+              : metrics.checkout.write;
+        metric.frames++;
+        if (metric.helperIds && !metric.helperIds.includes(workspaceId)) metric.helperIds.push(workspaceId);
+        metric.files +=
+          magic === 'BCK1' ? JSON.parse(bytes.subarray(12).toString()).expectedFiles.length : bytes.readUInt32BE(8);
+      } else {
+        metrics.persistence.frames++;
+        const count = bytes.readUInt32BE(8);
+        metrics.persistence.actions += count;
+        let offset = 12;
+        for (let index = 0; index < count; index++) {
+          const kind = ['remove', 'empty', 'link', 'symlink'][bytes.readUInt32BE(offset)];
+          metrics.persistence.kinds[kind] = (metrics.persistence.kinds[kind] || 0) + 1;
+          offset += 4;
+          for (let filename = 0; filename < 2; filename++) offset += 4 + bytes.readUInt32BE(offset);
+        }
+      }
+    }
+    return write.call(this, bytes, ...rest);
+  };
+  child.stdout.on('data', (bytes) => {
+    if (!workspace) return;
+    pending = Buffer.concat([pending, bytes]);
+    while (true) {
+      if (binaryRemaining) {
+        const consumed = Math.min(binaryRemaining, pending.length);
+        pending = pending.subarray(consumed);
+        binaryRemaining -= consumed;
+        if (binaryRemaining) return;
+      }
+      const newline = pending.indexOf(10);
+      if (newline < 0) return;
+      const magic = requests.shift();
+      const metric = magic?.startsWith('BMT1:')
+        ? metrics.mergeState[magic.slice(5)]
+        : magic?.startsWith('BMH1:')
+          ? metrics.history[magic.slice(5)]
+          : magic?.startsWith('BSS1:')
+            ? metrics.snapshot[magic.slice(5)]
+            : magic?.startsWith('BWS1:')
+              ? metrics.workspace[magic.slice(5)]
+              : magic === 'BWM1'
+                ? metrics.materialization
+                : magic === 'BCK1'
+                  ? metrics.checkout.plan
+                  : magic === 'BWC0' || magic === 'BWC2'
+                    ? metrics.checkout.preflight
+                    : magic === 'BWC1'
+                      ? metrics.checkout.write
+                      : metrics.persistence;
+      try {
+        const response = JSON.parse(pending.subarray(0, newline).toString());
+        if (
+          (magic === 'BWS1:read' || magic === 'BWC2') &&
+          Number.isSafeInteger(response.binaryBytes) &&
+          response.binaryBytes >= 0
+        )
+          binaryRemaining = response.binaryBytes;
+        if (magic === 'BWC2') {
+          metric.bodyFrames = (metric.bodyFrames || 0) + Number(response.completed > 0 && !response.failed);
+          metric.rawBodyBytes = (metric.rawBodyBytes || 0) + (response.binaryBytes || 0);
+        }
+        metric.completed += response.completed || 0;
+        if (magic?.startsWith('BMT1:historyQuery') && response.completed > 0 && !response.failed) {
+          if (response.data?.token) metric.tokens.push({ token: response.data.token, helperId: workspaceId });
+          if (response.data?.reads) metric.verifiedReads.push({ ...response.data.reads, helperId: workspaceId });
+          for (const row of [
+            ...(response.data?.rows || []),
+            ...(response.data?.lines || []),
+            ...(response.data?.files || []),
+          ])
+            for (const key of ['fromContent', 'toContent', 'lineContent', 'previousLineContent', 'rawDiff'])
+              if (typeof row[key] === 'string') metric.publicContentBytes += Buffer.byteLength(row[key]);
+          for (const key of ['fromContent', 'toContent'])
+            if (typeof response.data?.[key] === 'string')
+              metric.publicContentBytes += Buffer.byteLength(response.data[key]);
+        }
+        if (magic?.startsWith('BMT1:merge') && response.completed > 0 && !response.failed) {
+          if (Array.isArray(response.data?.selected) || Array.isArray(response.data?.missing))
+            metric.selections.push({
+              indices: response.data.selected || response.data.missing,
+              ...(Array.isArray(response.data?.checked) ? { checked: response.data.checked } : {}),
+              helperId: workspaceId,
+            });
+          if (response.data?.token) metric.tokens.push({ token: response.data.token, helperId: workspaceId });
+          if (response.data?.reads) metric.verifiedReads.push({ ...response.data.reads, helperId: workspaceId });
+          if (magic === 'BMT1:mergePrepare' && response.data?.token)
+            metric.planTokens.push({
+              token: response.data.token,
+              ownerToken: response.data.ownerToken,
+              helperId: workspaceId,
+            });
+          metric.stepsCompleted += response.data?.completed || 0;
+          metric.dataFailed += Number(response.data?.failed === true);
+          for (const body of response.data?.bodies || []) {
+            metric.retainedBodies++;
+            metric.retainedBytes += body.bytes || 0;
+          }
+        }
+        if (magic === 'BMT1:snapshotCommit') {
+          metric.stepsCompleted += response.data?.completed || 0;
+          metric.dataFailed += Number(response.data?.failed === true);
+        }
+        if (magic === 'BMT1:snapshotSerialize' && response.completed > 0 && !response.failed)
+          for (const object of response.data?.objects || [])
+            metric.acceptedTypes[object.type] = (metric.acceptedTypes[object.type] || 0) + 1;
+        if (magic === 'BMT1:recoveryAdvance') {
+          metric.stepsCompleted += response.data?.completed || 0;
+          metric.dataFailed += Number(response.data?.failed === true);
+        }
+        if (magic?.startsWith('BMT1:checkout')) {
+          if (response.data?.token) metric.tokens.push({ token: response.data.token, helperId: workspaceId });
+          metric.stepsCompleted += response.data?.completed || 0;
+          metric.dataFailed += Number(response.data?.failed === true);
+          for (const file of response.data?.files || []) metric.snapshotBytes += file.bytes || 0;
+          if (magic === 'BMT1:checkoutPrepare')
+            for (const body of response.data?.bodies || []) metric.snapshotBytes += body.bytes || 0;
+        }
+        if (magic?.startsWith('BMT1:historyReset')) {
+          if (response.data?.token) metric.tokens.push({ token: response.data.token, helperId: workspaceId });
+          for (const child of response.data?.children || [])
+            metric.children.push({
+              token: child.token,
+              revision: child.revision,
+              directive: child.directive,
+              helperId: workspaceId,
+            });
+        }
+        if (magic === 'BMT1:inspectionBegin') {
+          if (response.data?.token) metric.tokens.push({ token: response.data.token, helperId: workspaceId });
+          for (const file of response.data?.files || []) {
+            metric.snapshotBytes += file.bytes || 0;
+            for (const key of ['contents', 'body', 'buffer'])
+              if (typeof file[key] === 'string') metric.sourceBodyBytes += Buffer.byteLength(file[key]);
+          }
+        }
+        if (magic === 'BMT1:inspectionDiff') {
+          for (const file of response.data?.files || [])
+            metric.publicContentBytes +=
+              Buffer.byteLength(file.fromContent || '') + Buffer.byteLength(file.toContent || '');
+        }
+        if (magic === 'BMT1:transferCollect') {
+          metric.objects += response.data?.objects?.length || 0;
+          metric.sources += response.data?.objects?.filter((object) => object.type === 'Source').length || 0;
+        }
+        if (magic === 'BMT1:transferInitialize') metric.objects += response.data?.count || 0;
+        if (magic === 'BMT1:transferArchive') metric.archiveBytes += response.data?.bytes || 0;
+        if (magic === 'BWS1:scan') metric.files += response.completed || 0;
+        if ('skipped' in metric) metric.skipped += response.skipped?.length || 0;
+        metric.failed += Number(response.failed === true);
+      } catch {
+        metric.failed++;
+      }
+      pending = pending.subarray(newline + 1);
+    }
+  });
+  return child;
+}
 if (output && process.pid === owner) {
   const childProcess = require('node:child_process');
   const spawn = childProcess.spawn;
   childProcess.spawn = function (...args) {
-    const child = spawn.apply(this, args);
-    if (!child.stdin || !child.stdout) return child;
-    let workspace = false,
-      workspaceId;
-    const requests = [];
-    let pending = Buffer.alloc(0);
-    let binaryRemaining = 0;
-    const write = child.stdin.write;
-    child.stdin.write = function (bytes, ...rest) {
-      const magic = Buffer.isBuffer(bytes) ? bytes.subarray(0, 4).toString() : '';
-      if (['BWM1', 'BWP1', 'BWC0', 'BWC2', 'BWC1', 'BCK1', 'BWS1', 'BSS1', 'BMH1', 'BMT1'].includes(magic)) {
-        if (!workspace) workspaceId = ++metrics.persistence.helpers;
-        workspace = true;
-        const operation = ['BWS1', 'BSS1', 'BMH1', 'BMT1'].includes(magic)
-          ? JSON.parse(bytes.subarray(12).toString())
-          : undefined;
-        metrics.workspaceFrames.push({
-          magic,
-          kind: operation?.kind,
-          helperId: workspaceId,
-          id: bytes.readUInt32BE(4),
-          ...(operation?.kind?.startsWith('merge')
-            ? Object.fromEntries(
-                ['token', 'planToken', 'index', 'revision', 'phase', 'observe']
-                  .filter((key) => operation[key] !== undefined)
-                  .map((key) => [key, operation[key]])
-              )
-            : {}),
-        });
-        requests.push(operation ? `${magic}:${operation.kind}` : magic);
-        if (operation) {
-          const metric = (
-            magic === 'BMT1'
-              ? metrics.mergeState
-              : magic === 'BMH1'
-                ? metrics.history
-                : magic === 'BSS1'
-                  ? metrics.snapshot
-                  : metrics.workspace
-          )[operation.kind];
-          metric.frames++;
-          if (metric.helperIds && !metric.helperIds.includes(workspaceId)) metric.helperIds.push(workspaceId);
-          metric.files += ['BMH1', 'BMT1'].includes(magic)
-            ? 1
-            : magic === 'BSS1'
-              ? operation.kind === 'commit'
-                ? operation.objects.length
-                : 1
-              : operation.files?.length || operation.target?.length || (operation.kind === 'compare' ? 1 : 0);
-          if (magic === 'BMT1' && operation.kind.startsWith('inspection') && operation.token)
-            metric.tokens.push({ token: operation.token, helperId: workspaceId });
-          if (
-            magic === 'BMT1' &&
-            (operation.kind.startsWith('checkout') ||
-              operation.kind.startsWith('historyReset') ||
-              operation.kind.startsWith('historyQuery') ||
-              operation.kind.startsWith('merge'))
-          ) {
-            if (operation.token) metric.tokens.push({ token: operation.token, helperId: workspaceId });
-            if (operation.kind.startsWith('merge') && operation.planToken)
-              metric.planTokens.push({ token: operation.planToken, helperId: workspaceId });
-            if (operation.kind.startsWith('historyReset') && operation.phase)
-              metric.phases.push({
-                token: operation.token,
-                revision: operation.revision,
-                phase: operation.phase,
-                helperId: workspaceId,
-              });
-            if (operation.kind.startsWith('merge') && (operation.phase || operation.observe))
-              metric.phases.push({
-                token: operation.token,
-                phase: operation.phase || operation.observe,
-                revision: operation.revision,
-                index: operation.index,
-                completed: operation.completed,
-                helperId: workspaceId,
-              });
-            const inspect = (value) => {
-              if (!value || typeof value !== 'object') return;
-              for (const [key, item] of Object.entries(value)) {
-                if (['contents', 'body', 'buffer', 'compressed'].includes(key) && typeof item === 'string')
-                  metric.sourceBodyBytes += Buffer.byteLength(item);
-                else if (
-                  ['contents', 'body', 'buffer', 'compressed'].includes(key) &&
-                  item?.type === 'Buffer' &&
-                  Array.isArray(item.data)
-                )
-                  metric.sourceBodyBytes += item.data.length;
-                else if (item && typeof item === 'object') inspect(item);
-              }
-            };
-            inspect(operation);
-          }
-          if (magic === 'BMT1' && operation.kind === 'inspectionCompare') {
-            const field = (value, name) =>
-              value?.kind === 'object'
-                ? value.value.find(
-                    ([key]) => (typeof key === 'string' ? key : String.fromCharCode(...key)) === name
-                  )?.[1]
-                : undefined;
-            const files = field(operation.left, 'files');
-            for (const file of files?.value || []) {
-              const reference = field(file, 'file');
-              const value = reference?.kind === 'string' ? reference : field(reference, 'hash');
-              if (value?.kind === 'string')
-                metric.modelHashes.push(
-                  typeof value.value === 'string' ? value.value : String.fromCharCode(...value.value)
-                );
-            }
-          }
-          if (magic === 'BMT1' && operation.kind === 'snapshotSerialize') {
-            metric.objects += operation.objects?.length || 0;
-            for (const object of operation.objects || []) {
-              if (object.type === 'Source') {
-                metric.sources++;
-                metric.workspaceSources += Number(Boolean(object.source));
-                metric.artifactSources += Number(object.source?.normalization === 'linuxEol');
-                metric.repositorySources += Number(Boolean(object.repository));
-                metric.generatedSources += Number(typeof object.body === 'string');
-                metric.bodyBytes += (object.body?.length || 0) / 2;
-              }
-            }
-          }
-          if (magic === 'BMT1' && operation.kind === 'transferInitialize') {
-            for (const object of operation.objects || []) {
-              if (object.metadata?.type === 'Source') metric.bodyBytes += (object.metadata.compressed?.length || 0) / 2;
-            }
-          }
-          if (magic === 'BMH1' && operation.kind === 'mergeFiles') {
-            for (const file of operation.current || []) {
-              metric.workspaceFiles += Number(Boolean(file.workspace));
-              metric.bodyBytes += (file.body?.length || 0) / 2;
-              metric.storedSources += Number(Boolean(file.source));
-            }
-            metric.storedSources += (operation.base?.length || 0) + (operation.other?.length || 0);
-          }
-          if (magic === 'BSS1' && operation.kind === 'commit') {
-            for (const object of operation.objects) {
-              if (object.type !== 'Source') continue;
-              metric.workspaceSources += Number(Boolean(object.workspace));
-              metric.sourceBodyBytes += (object.body?.length || 0) / 2;
-            }
-          }
-        } else if (magic === 'BWM1') {
-          metrics.materialization.frames++;
-          metrics.materialization.files += bytes.readUInt32BE(8);
-          metrics.materialization.bytes += bytes.length;
-        } else if (magic === 'BWC0' || magic === 'BWC2' || magic === 'BWC1' || magic === 'BCK1') {
-          const metric =
-            magic === 'BCK1'
-              ? metrics.checkout.plan
-              : magic === 'BWC0' || magic === 'BWC2'
-                ? metrics.checkout.preflight
-                : metrics.checkout.write;
-          metric.frames++;
-          if (metric.helperIds && !metric.helperIds.includes(workspaceId)) metric.helperIds.push(workspaceId);
-          metric.files +=
-            magic === 'BCK1' ? JSON.parse(bytes.subarray(12).toString()).expectedFiles.length : bytes.readUInt32BE(8);
-        } else {
-          metrics.persistence.frames++;
-          const count = bytes.readUInt32BE(8);
-          metrics.persistence.actions += count;
-          let offset = 12;
-          for (let index = 0; index < count; index++) {
-            const kind = ['remove', 'empty', 'link', 'symlink'][bytes.readUInt32BE(offset)];
-            metrics.persistence.kinds[kind] = (metrics.persistence.kinds[kind] || 0) + 1;
-            offset += 4;
-            for (let filename = 0; filename < 2; filename++) offset += 4 + bytes.readUInt32BE(offset);
-          }
-        }
-      }
-      return write.call(this, bytes, ...rest);
-    };
-    child.stdout.on('data', (bytes) => {
-      if (!workspace) return;
-      pending = Buffer.concat([pending, bytes]);
-      while (true) {
-        if (binaryRemaining) {
-          const consumed = Math.min(binaryRemaining, pending.length);
-          pending = pending.subarray(consumed);
-          binaryRemaining -= consumed;
-          if (binaryRemaining) return;
-        }
-        const newline = pending.indexOf(10);
-        if (newline < 0) return;
-        const magic = requests.shift();
-        const metric = magic?.startsWith('BMT1:')
-          ? metrics.mergeState[magic.slice(5)]
-          : magic?.startsWith('BMH1:')
-            ? metrics.history[magic.slice(5)]
-            : magic?.startsWith('BSS1:')
-              ? metrics.snapshot[magic.slice(5)]
-              : magic?.startsWith('BWS1:')
-                ? metrics.workspace[magic.slice(5)]
-                : magic === 'BWM1'
-                  ? metrics.materialization
-                  : magic === 'BCK1'
-                    ? metrics.checkout.plan
-                    : magic === 'BWC0' || magic === 'BWC2'
-                      ? metrics.checkout.preflight
-                      : magic === 'BWC1'
-                        ? metrics.checkout.write
-                        : metrics.persistence;
-        try {
-          const response = JSON.parse(pending.subarray(0, newline).toString());
-          if (
-            (magic === 'BWS1:read' || magic === 'BWC2') &&
-            Number.isSafeInteger(response.binaryBytes) &&
-            response.binaryBytes >= 0
-          )
-            binaryRemaining = response.binaryBytes;
-          if (magic === 'BWC2') {
-            metric.bodyFrames = (metric.bodyFrames || 0) + Number(response.completed > 0 && !response.failed);
-            metric.rawBodyBytes = (metric.rawBodyBytes || 0) + (response.binaryBytes || 0);
-          }
-          metric.completed += response.completed || 0;
-          if (magic?.startsWith('BMT1:historyQuery') && response.completed > 0 && !response.failed) {
-            if (response.data?.token) metric.tokens.push({ token: response.data.token, helperId: workspaceId });
-            if (response.data?.reads) metric.verifiedReads.push({ ...response.data.reads, helperId: workspaceId });
-            for (const row of [
-              ...(response.data?.rows || []),
-              ...(response.data?.lines || []),
-              ...(response.data?.files || []),
-            ])
-              for (const key of ['fromContent', 'toContent', 'lineContent', 'previousLineContent', 'rawDiff'])
-                if (typeof row[key] === 'string') metric.publicContentBytes += Buffer.byteLength(row[key]);
-            for (const key of ['fromContent', 'toContent'])
-              if (typeof response.data?.[key] === 'string')
-                metric.publicContentBytes += Buffer.byteLength(response.data[key]);
-          }
-          if (magic?.startsWith('BMT1:merge') && response.completed > 0 && !response.failed) {
-            if (Array.isArray(response.data?.selected) || Array.isArray(response.data?.missing))
-              metric.selections.push({
-                indices: response.data.selected || response.data.missing,
-                ...(Array.isArray(response.data?.checked) ? { checked: response.data.checked } : {}),
-                helperId: workspaceId,
-              });
-            if (response.data?.token) metric.tokens.push({ token: response.data.token, helperId: workspaceId });
-            if (response.data?.reads) metric.verifiedReads.push({ ...response.data.reads, helperId: workspaceId });
-            if (magic === 'BMT1:mergePrepare' && response.data?.token)
-              metric.planTokens.push({
-                token: response.data.token,
-                ownerToken: response.data.ownerToken,
-                helperId: workspaceId,
-              });
-            metric.stepsCompleted += response.data?.completed || 0;
-            metric.dataFailed += Number(response.data?.failed === true);
-            for (const body of response.data?.bodies || []) {
-              metric.retainedBodies++;
-              metric.retainedBytes += body.bytes || 0;
-            }
-          }
-          if (magic === 'BMT1:snapshotCommit') {
-            metric.stepsCompleted += response.data?.completed || 0;
-            metric.dataFailed += Number(response.data?.failed === true);
-          }
-          if (magic === 'BMT1:snapshotSerialize' && response.completed > 0 && !response.failed)
-            for (const object of response.data?.objects || [])
-              metric.acceptedTypes[object.type] = (metric.acceptedTypes[object.type] || 0) + 1;
-          if (magic === 'BMT1:recoveryAdvance') {
-            metric.stepsCompleted += response.data?.completed || 0;
-            metric.dataFailed += Number(response.data?.failed === true);
-          }
-          if (magic?.startsWith('BMT1:checkout')) {
-            if (response.data?.token) metric.tokens.push({ token: response.data.token, helperId: workspaceId });
-            metric.stepsCompleted += response.data?.completed || 0;
-            metric.dataFailed += Number(response.data?.failed === true);
-            for (const file of response.data?.files || []) metric.snapshotBytes += file.bytes || 0;
-            if (magic === 'BMT1:checkoutPrepare')
-              for (const body of response.data?.bodies || []) metric.snapshotBytes += body.bytes || 0;
-          }
-          if (magic?.startsWith('BMT1:historyReset')) {
-            if (response.data?.token) metric.tokens.push({ token: response.data.token, helperId: workspaceId });
-            for (const child of response.data?.children || [])
-              metric.children.push({
-                token: child.token,
-                revision: child.revision,
-                directive: child.directive,
-                helperId: workspaceId,
-              });
-          }
-          if (magic === 'BMT1:inspectionBegin') {
-            if (response.data?.token) metric.tokens.push({ token: response.data.token, helperId: workspaceId });
-            for (const file of response.data?.files || []) {
-              metric.snapshotBytes += file.bytes || 0;
-              for (const key of ['contents', 'body', 'buffer'])
-                if (typeof file[key] === 'string') metric.sourceBodyBytes += Buffer.byteLength(file[key]);
-            }
-          }
-          if (magic === 'BMT1:inspectionDiff') {
-            for (const file of response.data?.files || [])
-              metric.publicContentBytes +=
-                Buffer.byteLength(file.fromContent || '') + Buffer.byteLength(file.toContent || '');
-          }
-          if (magic === 'BMT1:transferCollect') {
-            metric.objects += response.data?.objects?.length || 0;
-            metric.sources += response.data?.objects?.filter((object) => object.type === 'Source').length || 0;
-          }
-          if (magic === 'BMT1:transferInitialize') metric.objects += response.data?.count || 0;
-          if (magic === 'BMT1:transferArchive') metric.archiveBytes += response.data?.bytes || 0;
-          if (magic === 'BWS1:scan') metric.files += response.completed || 0;
-          if ('skipped' in metric) metric.skipped += response.skipped?.length || 0;
-          metric.failed += Number(response.failed === true);
-        } catch {
-          metric.failed++;
-        }
-        pending = pending.subarray(newline + 1);
-      }
-    });
-    return child;
+    return observeWorkspaceTransport(spawn.apply(this, args));
   };
+  const workspaceAddon = process.env.BIT_TEST_WORKSPACE_ADDON || process.env.BIT_IMPORT_TRACE_WORKSPACE_ADDON;
+  if (workspaceAddon) {
+    const { EventEmitter } = require('node:events');
+    const { WorkspaceEngine } = require(workspaceAddon);
+    const request = WorkspaceEngine.prototype.request;
+    const transports = new WeakMap();
+    WorkspaceEngine.prototype.request = async function (bytes) {
+      let transport = transports.get(this);
+      if (!transport) {
+        transport = observeWorkspaceTransport({ backend: 'addon', stdin: { write() {} }, stdout: new EventEmitter() });
+        transports.set(this, transport);
+      }
+      transport.stdin.write(bytes);
+      const response = await request.call(this, bytes);
+      transport.stdout.emit('data', response);
+      return response;
+    };
+  }
 }
 if (output && process.pid === owner)
   asyncHooks

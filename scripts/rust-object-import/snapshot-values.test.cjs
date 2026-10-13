@@ -67,3 +67,56 @@ test('private string encoding never invokes subsequently replaced String methods
   }
   assert.equal(calls, 0);
 });
+
+test('compact values omit primitive and array wrappers while preserving exceptional JavaScript values', () => {
+  const input = { items: [null, false, '', undefined, -0, Infinity, '\ud800', [true, 'Ω🌱']], omitted: undefined };
+  const value = api.projectRustCompactSnapshotValue(input);
+  assert.deepEqual(value, {
+    kind: 'object',
+    value: [
+      [
+        'items',
+        [
+          null,
+          false,
+          '',
+          { kind: 'undefined' },
+          { kind: 'number', value: '8000000000000000' },
+          { kind: 'number', value: '7ff0000000000000' },
+          { kind: 'string', value: [0xd800] },
+          [true, 'Ω🌱'],
+        ],
+      ],
+      ['omitted', { kind: 'undefined' }],
+    ],
+  });
+  for (const leaf of [null, false, true, '', 'text']) assert.equal(api.projectRustCompactSnapshotValue(leaf), leaf);
+  const rows = Array.from({ length: 265 }, (_, index) => ({
+    relativePath: `file-${index}.js`,
+    hash: 'a'.repeat(40),
+    test: false,
+  }));
+  assert.ok(
+    JSON.stringify(api.projectRustCompactSnapshotValue(rows)).length <
+      JSON.stringify(api.projectRustSnapshotValue(rows)).length * 0.7
+  );
+});
+
+test('compact values retain no-getter fallback and the existing resource limits', () => {
+  let calls = 0;
+  const value = { ok: false };
+  Object.defineProperty(value, 'hook', {
+    enumerable: true,
+    get() {
+      calls++;
+      throw Error('unread');
+    },
+  });
+  assert.equal(api.projectRustCompactSnapshotValue(value), undefined);
+  assert.equal(calls, 0);
+  assert.equal(api.projectRustCompactSnapshotValue('a'.repeat(Math.floor((4 * 1024 * 1024) / 6) + 1)), undefined);
+  const sparse = [];
+  sparse.length = 2;
+  sparse[1] = false;
+  assert.deepEqual(api.projectRustCompactSnapshotValue(sparse), [{ kind: 'undefined' }, false]);
+});

@@ -55,7 +55,7 @@ type Params = {
 type Current = {
   relativePath: string;
   protected: boolean;
-  workspace?: { path: string; rawHash: string; snapshotHash: string; bitmap?: boolean };
+  workspace?: { path: string; rawHash: string; snapshotHash: string; bitmap?: boolean; readToken?: number };
   source?: { hash: string; path?: string };
 };
 type Prepared = {
@@ -261,6 +261,7 @@ function currentMetadata(files: SourceFile[], scope: Scope): Current[] | undefin
               rawHash: workspace.hash,
               snapshotHash: workspace.snapshotHash!,
               ...(workspace.bitmap ? { bitmap: true } : {}),
+              ...(workspace.readToken === undefined ? {} : { readToken: workspace.readToken }),
             },
           }
         : { source: { hash: source!.hash, ...(path.isAbsolute(file.path) ? { path: file.path } : {}) } }),

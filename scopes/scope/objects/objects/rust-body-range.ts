@@ -32,6 +32,22 @@ type ReadBatch = { ranges: PendingRange[]; bytes: number };
 const pending = new Map<string, ReadBatch>();
 const maximumBytes = 32 * 1024 * 1024;
 const copy = Buffer.prototype.copy;
+const allocateBuffer = Buffer.allocUnsafe;
+const enqueue = queueMicrotask;
+const promiseConstructor = Promise;
+const mapGet = Map.prototype.get;
+const mapSet = Map.prototype.set;
+
+/** The synchronous enqueue prefix must not call user replacements between guarded cache reads. */
+export function canBatchRustBodyRangeReads(): boolean {
+  return (
+    Object.getOwnPropertyDescriptor(Buffer, 'allocUnsafe')?.value === allocateBuffer &&
+    Object.getOwnPropertyDescriptor(globalThis, 'queueMicrotask')?.value === enqueue &&
+    Object.getOwnPropertyDescriptor(globalThis, 'Promise')?.value === promiseConstructor &&
+    Object.getOwnPropertyDescriptor(Map.prototype, 'get')?.value === mapGet &&
+    Object.getOwnPropertyDescriptor(Map.prototype, 'set')?.value === mapSet
+  );
+}
 
 async function readRange(filename: string, offset: number, body: Buffer): Promise<Buffer> {
   const descriptor = await open(filename, 'r');

@@ -3,7 +3,8 @@ use super::{
     current, sources,
 };
 use serde_json::{Value, json};
-use std::io;
+use sha1::{Digest, Sha1};
+use std::{collections::HashMap, io};
 pub(super) fn rows(
     request: &wire::Prepare,
     target: &[Vec<u8>],
@@ -15,13 +16,15 @@ pub(super) fn rows(
     let Some(base) = &request.base else {
         return Ok(Vec::new());
     };
-    let base_bodies = sources::load(&request.objects_directory, base, total, compressed)?;
+    let needed = required_base(request, base, current);
+    let base_bodies =
+        sources::selected(&request.objects_directory, base, &needed, total, compressed)?;
     let labels = request.labels.as_ref().ok_or_else(|| invalid("checkout merge labels missing"))?;
     let input = json!({"objectsDirectory":request.objects_directory,"labels":{"current":labels.current,"other":labels.other},"base":base.files.iter().map(|file|json!({"path":file.relative_path,"hash":file.hash})).collect::<Vec<_>>(),"other":request.target.files.iter().map(|file|json!({"path":file.relative_path,"hash":file.hash})).collect::<Vec<_>>(),"current":request.current.iter().map(|file|json!({"path":file.relative_path,"source":{"hash":file.snapshot_hash}})).collect::<Vec<_>>()});
     let prepared = crate::merge_history::merge::Prepared {
         base: base_bodies
             .iter()
-            .map(Vec::as_slice)
+            .map(|body| body.as_deref())
             .collect(),
         other: target
             .iter()
@@ -75,4 +78,32 @@ fn retain_field(
         row[output] = json!(index);
     }
     Ok(())
+}
+
+fn required_base(
+    request: &wire::Prepare,
+    base: &wire::Version,
+    current: &[current::Loaded],
+) -> Vec<bool> {
+    let base_indices: HashMap<_, _> = base.files
+        .iter()
+        .enumerate()
+        .map(|(index, file)| (file.relative_path.as_str(), index))
+        .collect();
+    let other: HashMap<_, _> = request.target.files
+        .iter()
+        .map(|file| (file.relative_path.as_str(), file.hash.as_str()))
+        .collect();
+    let mut needed = vec![false; base.files.len()];
+    for (file, loaded) in request.current.iter().zip(current) {
+        let Some(&index) = base_indices.get(file.relative_path.as_str()) else {
+            continue;
+        };
+        let Some(&other_hash) = other.get(file.relative_path.as_str()) else {
+            continue;
+        };
+        let current_hash = crate::validate::hexadecimal(&Sha1::digest(&loaded.normalized));
+        needed[index] = current_hash != base.files[index].hash && current_hash != other_hash;
+    }
+    needed
 }

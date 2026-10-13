@@ -1,9 +1,63 @@
 use super::Value;
 use serde::{
     Deserialize, Deserializer,
-    de::{SeqAccess, Visitor},
+    de::{MapAccess, SeqAccess, Visitor, value::MapAccessDeserializer},
 };
 use std::fmt;
+
+// The tagged form remains accepted and serialized for existing callers and responses.
+#[derive(Deserialize)]
+#[serde(
+    remote = "Value",
+    tag = "kind",
+    content = "value",
+    rename_all = "camelCase",
+    deny_unknown_fields
+)]
+enum TaggedValue {
+    Undefined,
+    Null,
+    Boolean(bool),
+    Number(String),
+    String(#[serde(deserialize_with = "text")] Vec<u16>),
+    Array(Vec<Value>),
+    Object(#[serde(deserialize_with = "entries")] Vec<(Vec<u16>, Value)>),
+}
+
+struct ValueVisitor;
+impl<'de> Visitor<'de> for ValueVisitor {
+    type Value = Value;
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("a tagged JavaScript value or compact null, boolean, string, or array")
+    }
+    fn visit_unit<Error: serde::de::Error>(self) -> Result<Value, Error> {
+        Ok(Value::Null)
+    }
+    fn visit_bool<Error: serde::de::Error>(self, value: bool) -> Result<Value, Error> {
+        Ok(Value::Boolean(value))
+    }
+    fn visit_str<Error: serde::de::Error>(self, value: &str) -> Result<Value, Error> {
+        Ok(Value::String(value.encode_utf16().collect()))
+    }
+    fn visit_seq<Sequence: SeqAccess<'de>>(
+        self,
+        mut sequence: Sequence,
+    ) -> Result<Value, Sequence::Error> {
+        let mut values = Vec::new();
+        while let Some(value) = sequence.next_element()? {
+            values.push(value);
+        }
+        Ok(Value::Array(values))
+    }
+    fn visit_map<Map: MapAccess<'de>>(self, map: Map) -> Result<Value, Map::Error> {
+        TaggedValue::deserialize(MapAccessDeserializer::new(map))
+    }
+}
+impl<'de> Deserialize<'de> for Value {
+    fn deserialize<Input: Deserializer<'de>>(input: Input) -> Result<Self, Input::Error> {
+        input.deserialize_any(ValueVisitor)
+    }
+}
 
 struct Utf16(Vec<u16>);
 struct TextVisitor;

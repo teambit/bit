@@ -35,6 +35,8 @@ enum Request {
         files: Vec<PathBuf>,
         #[serde(default)]
         binary: bool,
+        #[serde(default)]
+        retain: bool,
     },
     Diff {
         files: Vec<diff::InputFile>,
@@ -79,6 +81,7 @@ pub(crate) fn serve(
     reader: &mut impl Read,
     writer: &mut impl Write,
     pool: &rayon::ThreadPool,
+    snapshots: &mut super::snapshots::State,
 ) -> io::Result<()> {
     let id = protocol::word(reader)?;
     let length = protocol::word(reader)? as usize;
@@ -88,8 +91,8 @@ pub(crate) fn serve(
     let mut bytes = vec![0; length];
     reader.read_exact(&mut bytes)?;
     let request = serde_json::from_slice(&bytes).map_err(|_| invalid("workspace invalid request"));
-    if let Ok(Request::Read { files, binary: true }) = &request {
-        return read_raw::respond(id, files, pool, writer);
+    if let Ok(Request::Read { files, binary: true, retain }) = &request {
+        return read_raw::respond(id, files, pool, writer, retain.then_some(snapshots));
     }
     let result = request.and_then(|request| apply(request, pool));
     let response = match result {

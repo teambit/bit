@@ -205,3 +205,44 @@ export function objectArtifactExecutable(
   verifiedArtifact = { fingerprint, executable: path.toNamespacedPath(executable) };
   return verifiedArtifact.executable;
 }
+
+let verifiedAddon: { fingerprint: string; filename: string } | undefined;
+/** A companion addon must match the same verified helper artifact and supported Node-API version. */
+export function objectArtifactAddon(executable: string): string | undefined {
+  const directory = path.dirname(executable);
+  const manifest = JSON.parse(readPackagedFile(path.join(directory, 'manifest.json'), 65536).toString('utf8'));
+  const target = packagedObjectTarget();
+  const selection = { version: manifest.version, target: manifest.target, revision: manifest.gitRevision };
+  if (
+    !validObjectSelection(selection) ||
+    selection.target !== target ||
+    objectArtifactExecutable(directory, manifest, selection) !== path.toNamespacedPath(executable) ||
+    manifest.addon?.name !== 'bit-workspace.node' ||
+    manifest.addon?.napiVersion !== 8 ||
+    !(Number(process.versions.napi) >= 8) ||
+    !/^[a-f0-9]{64}$/.test(manifest.addon.sha256)
+  )
+    return undefined;
+  if (target?.endsWith('-gnu')) {
+    const actual = hostHeader()?.glibcVersionRuntime?.split('.').map(Number);
+    if (!actual || !/^[0-9]+\.[0-9]+$/.test(manifest.addon.minimumGlibc || '')) return undefined;
+    const required = manifest.addon.minimumGlibc.split('.').map(Number);
+    if (actual[0] < required[0] || (actual[0] === required[0] && actual[1] < required[1])) return undefined;
+  }
+  const filename = path.join(directory, 'bit-workspace.node');
+  const stat = fs.lstatSync(filename);
+  if (!stat.isFile() || stat.size > 64 * 1024 * 1024 || stat.size !== manifest.addon.bytes) return undefined;
+  const fingerprint = JSON.stringify([
+    filename,
+    manifest.addon,
+    stat.dev,
+    stat.ino,
+    stat.size,
+    stat.mtimeMs,
+    stat.ctimeMs,
+  ]);
+  if (verifiedAddon?.fingerprint === fingerprint) return verifiedAddon.filename;
+  if (digest(readPackagedFile(filename, 64 * 1024 * 1024)) !== manifest.addon.sha256) return undefined;
+  verifiedAddon = { fingerprint, filename };
+  return filename;
+}

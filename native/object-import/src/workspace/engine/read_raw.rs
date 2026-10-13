@@ -14,6 +14,8 @@ struct Record {
     bytes: usize,
     #[serde(skip)]
     body: Vec<u8>,
+    #[serde(rename = "readToken", skip_serializing_if = "Option::is_none")]
+    read_token: Option<u64>,
 }
 #[derive(Serialize)]
 struct Data<'a> {
@@ -32,15 +34,21 @@ struct Response<'a> {
 }
 fn record(file: &Path, raw: Vec<u8>) -> Record {
     let (metadata, body) = read::canonical(file, raw);
-    Record { metadata, offset: 0, bytes: body.len(), body }
+    Record { metadata, offset: 0, bytes: body.len(), body, read_token: None }
 }
-fn prepare(id: u32, files: &[PathBuf], pool: &ThreadPool) -> io::Result<Output> {
+fn prepare(
+    id: u32,
+    files: &[PathBuf],
+    pool: &ThreadPool,
+    snapshots: Option<&mut crate::workspace::snapshots::State>,
+) -> io::Result<Output> {
     let mut files = read::read_with(files, pool, record)?;
     let mut bytes = 0;
     for file in &mut files {
         file.offset = bytes;
         bytes += file.bytes;
     }
+    retain(&mut files, snapshots);
     let response = Response {
         version: 1,
         id,
@@ -62,14 +70,29 @@ fn prepare(id: u32, files: &[PathBuf], pool: &ThreadPool) -> io::Result<Output> 
     }
     Ok(output)
 }
+fn retain(files: &mut [Record], snapshots: Option<&mut crate::workspace::snapshots::State>) {
+    let Some(snapshots) = snapshots else {
+        return;
+    };
+    for file in files {
+        file.read_token = snapshots.retain(crate::workspace::snapshots::Observation {
+            path: file.metadata.path.clone(),
+            raw_hash: file.metadata.hash.clone(),
+            snapshot_hash: file.metadata.snapshot_hash.clone(),
+            raw_bytes: file.metadata.raw_bytes,
+            contents: file.body.as_slice().into(),
+        });
+    }
+}
 /// Header and bounded raw payload are fully prepared before acknowledging any files.
 pub(super) fn respond(
     id: u32,
     files: &[PathBuf],
     pool: &ThreadPool,
     writer: &mut impl Write,
+    snapshots: Option<&mut crate::workspace::snapshots::State>,
 ) -> io::Result<()> {
-    match prepare(id, files, pool) {
+    match prepare(id, files, pool, snapshots) {
         Ok(output) => {
             writer.write_all(&output.0)?;
             writer.flush()

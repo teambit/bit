@@ -7,20 +7,20 @@ mod wire;
 #[path = "js_json/writer.rs"]
 mod writer;
 
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::io;
 
 /// Accessor-free JavaScript data, preserving undefined, UTF-16 and binary64 bits.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize)]
 #[serde(tag = "kind", content = "value", rename_all = "camelCase", deny_unknown_fields)]
 pub enum Value {
     Undefined,
     Null,
     Boolean(bool),
     Number(String),
-    String(#[serde(deserialize_with = "wire::text")] Vec<u16>),
+    String(Vec<u16>),
     Array(Vec<Value>),
-    Object(#[serde(deserialize_with = "wire::entries")] Vec<(Vec<u16>, Value)>),
+    Object(Vec<(Vec<u16>, Value)>),
 }
 
 impl Value {

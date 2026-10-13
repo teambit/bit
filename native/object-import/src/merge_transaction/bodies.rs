@@ -21,6 +21,7 @@ impl State {
         &mut self,
         mut input: Value,
         owners: &journal::State,
+        snapshots: Option<&crate::workspace::snapshots::State>,
     ) -> io::Result<Value> {
         let owner = text(&input, "token")?.to_owned();
         let index = input["index"]
@@ -31,7 +32,7 @@ impl State {
         let directory = PathBuf::from(text(&input, "snapshotDirectory")?);
         let objects = PathBuf::from(text(&input, "objectsDirectory")?);
         translate_current(&mut input, &directory)?;
-        let mut response = prepare_response(&input, &mut self.checkout)?;
+        let mut response = prepare_response(&input, &mut self.checkout, snapshots)?;
         let token = text(&response, "token")?.to_owned();
         response["ownerToken"] = json!(owner);
         response["index"] = json!(index);
@@ -158,6 +159,9 @@ fn current_file(file: &Value, directory: &std::path::Path, index: usize) -> io::
             output["path"] = workspace["path"].clone();
             output["rawHash"] = workspace["rawHash"].clone();
             output["snapshotHash"] = workspace["snapshotHash"].clone();
+            if let Some(token) = workspace.get("readToken") {
+                output["readToken"] = token.clone();
+            }
             output["bitmap"] = workspace
                 .get("bitmap")
                 .cloned()
@@ -208,9 +212,15 @@ fn array(input: &Value, field: &str) -> io::Result<Vec<Value>> {
 fn prepare_response(
     input: &Value,
     state: &mut crate::checkout_transition::State,
+    snapshots: Option<&crate::workspace::snapshots::State>,
 ) -> io::Result<Value> {
     let scope = reads::Scope::begin();
-    let mut response = crate::checkout_transition::apply("checkoutPrepare", input.clone(), state)?;
+    let mut response = match snapshots {
+        Some(snapshots) => {
+            crate::checkout_transition::prepare_with_workspace(input, state, snapshots)?
+        }
+        None => crate::checkout_transition::apply("checkoutPrepare", input.clone(), state)?,
+    };
     if let Err(error) = cache::receipts(input, &mut response, scope.finish()) {
         crate::checkout_transition::apply(
             "checkoutFinish",

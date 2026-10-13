@@ -86,7 +86,7 @@ struct Owned {
     current: Vec<Vec<u8>>,
 }
 pub(crate) struct Prepared<'a> {
-    pub(crate) base: Vec<&'a [u8]>,
+    pub(crate) base: Vec<Option<&'a [u8]>>,
     pub(crate) other: Vec<&'a [u8]>,
     pub(crate) current: Vec<&'a [u8]>,
 }
@@ -95,7 +95,7 @@ impl Owned {
         Prepared {
             base: self.base
                 .iter()
-                .map(Vec::as_slice)
+                .map(|bytes| Some(bytes.as_slice()))
                 .collect(),
             other: self.other
                 .iter()
@@ -358,7 +358,12 @@ fn merged(
         MergeBytes {
             current: execution.prepared.current[index],
             base: base
-                .map(|index| execution.prepared.base[index])
+                .map(|index| {
+                    execution.prepared.base[index].ok_or_else(|| {
+                        invalid("merge required base body missing")
+                    })
+                })
+                .transpose()?
                 .unwrap_or_default(),
             other: execution.prepared.other[other],
         },

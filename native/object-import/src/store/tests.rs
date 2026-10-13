@@ -88,6 +88,39 @@ fn invalid_paths_and_identities_cannot_escape_object_directory() {
     assert_eq!(fs::read_dir(&directory.0).unwrap().count(), 0);
 }
 
+#[test]
+fn independent_sessions_share_no_temporary_write_paths() {
+    let directory = Directory::new();
+    let barrier = std::sync::Barrier::new(8);
+    let body = vec![b'x'; 2 * 1024 * 1024];
+    std::thread::scope(|scope| {
+        let writes: Vec<_> = (0..8)
+            .map(|_| {
+                let store = Store::new(directory.0.clone(), None).unwrap();
+                let barrier = &barrier;
+                let body = &body;
+                scope.spawn(move || {
+                    barrier.wait();
+                    store.write(&"e".repeat(40), body)
+                })
+            })
+            .collect();
+        for write in writes {
+            write.join().unwrap().unwrap();
+        }
+    });
+    assert_eq!(
+        fs::read(
+            directory.0
+                .join("ee")
+                .join("e".repeat(38))
+        )
+        .unwrap(),
+        body,
+    );
+    assert_eq!(fs::read_dir(directory.0.join("ee")).unwrap().count(), 1);
+}
+
 #[cfg(unix)]
 #[test]
 fn replacement_preserves_mode_and_existing_owner() {

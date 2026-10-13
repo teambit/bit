@@ -1,0 +1,19 @@
+[package]
+name = "bit-workspace-napi"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+bit-object-import = { path = "../object-import" }
+napi = { version = "=3.12.2", default-features = false, features = ["napi8"] }
+napi-derive = "3.5.9"
+
+[build-dependencies]
+napi-build = "2.3.2"
+
+[lints]
+workspace = true

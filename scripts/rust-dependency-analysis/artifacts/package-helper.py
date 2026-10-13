@@ -91,7 +91,7 @@ def archive_bytes(binary, manifest, license_bytes, notices_bytes=b""):
 
 
 def release_command(target):
-    return ["cargo", "build", "--locked", "--offline", "--release", "--workspace", "--target", target]
+    return ["cargo", "build", "--locked", "--offline", "--release", "--package", "bit-dependency-scanner", "--target", target]
 
 
 def package(output_directory, binary_path=None, target_override=None):

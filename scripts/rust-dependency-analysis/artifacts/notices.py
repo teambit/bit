@@ -9,7 +9,9 @@ OXC_REVISION = "7f56ec9301e7327b4402c3010c87803b58b6ea30"
 
 def notices(root, target):
     license_root = Path(__file__).parent / "licenses"
-    for entry in json.loads((license_root / "sources.json").read_text()):
+    sources = json.loads((license_root / "sources.json").read_text())
+    napi_pins = next(entry["packages"] for entry in sources if entry["name"] == "napi-rs-MIT.txt")
+    for entry in sources:
         if Path(entry["name"]).name != entry["name"] or hashlib.sha256((license_root / entry["name"]).read_bytes()).hexdigest() != entry["sha256"]:
             raise ValueError("vendored license checksum mismatch")
     metadata = json.loads(subprocess.check_output(["cargo", "metadata", "--locked", "--offline", "--format-version", "1"], cwd=root / "native", text=True))
@@ -26,6 +28,12 @@ def notices(root, target):
             if vcs["git"]["sha1"] != expected_revision or package["license"] != "MIT":
                 raise ValueError("OXC license fallback revision mismatch")
             files = [fallback.with_name("oxc-index-MIT.txt") if package["name"] == "oxc_index" else fallback]
+        if not files and package["name"] in napi_pins:
+            pin = napi_pins[package["name"]]
+            vcs = json.loads((directory / ".cargo_vcs_info.json").read_text())
+            if package["version"] != pin["version"] or vcs["git"]["sha1"] != pin["revision"] or package["license"] != "MIT" or package["repository"] != "https://github.com/napi-rs/napi-rs":
+                raise ValueError("napi-rs license fallback revision mismatch")
+            files = [license_root / "napi-rs-MIT.txt"]
         if not files:
             raise ValueError(f"missing license text: {package['name']} {package['version']}")
         blocks.append(f"\n=== {package['name']} {package['version']} ===\nSPDX: {package['license']}\nRepository: {package.get('repository') or ''}\n")

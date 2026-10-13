@@ -1,7 +1,7 @@
 import type BitObject from './object';
 import { hasRustSnapshotFunctions, hasRustSnapshotTransactionClass } from './rust-snapshot-guards';
 import { projectRustSnapshotFields } from './rust-snapshot-projection';
-import { projectRustSnapshotValue, type RustSnapshotValue } from './rust-snapshot-values';
+import { projectRustSnapshotValue, type RustCompactSnapshotValue } from './rust-snapshot-values';
 
 const componentFields = [
   'name',
@@ -36,7 +36,7 @@ type SnapshotMetadataType = 'Component' | 'Lane' | 'VersionHistory' | 'LaneHisto
 /** Pass raw model state, retaining Rust ownership of model ordering, omission and identity rules. */
 export function prepareRustSnapshotMetadata(
   object: BitObject
-): { type: SnapshotMetadataType; fields: RustSnapshotValue } | undefined {
+): { type: SnapshotMetadataType; fields: RustCompactSnapshotValue } | undefined {
   let type: SnapshotMetadataType;
   let names: string[];
   if (hasRustSnapshotTransactionClass(object, 'ModelComponent')) {

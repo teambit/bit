@@ -21,6 +21,7 @@ pub(crate) fn verified(input: Value, prepared: &Prepared<'_>) -> io::Result<Valu
     }
     if prepared.base
         .iter()
+        .flatten()
         .chain(&prepared.other)
         .chain(&prepared.current)
         .map(|bytes| bytes.len())
@@ -33,9 +34,11 @@ pub(crate) fn verified(input: Value, prepared: &Prepared<'_>) -> io::Result<Valu
 }
 
 fn validate_models(request: &Request, prepared: &Prepared<'_>) -> io::Result<()> {
-    for (models, bodies) in [(&request.base, &prepared.base), (&request.other, &prepared.other)] {
+    for (models, bodies) in
+        [(&request.base, prepared.base.len()), (&request.other, prepared.other.len())]
+    {
         count(models.len())?;
-        if models.len() != bodies.len() {
+        if models.len() != bodies {
             return Err(invalid("merge verified model count"));
         }
         let mut seen = HashSet::new();

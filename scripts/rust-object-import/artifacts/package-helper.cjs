@@ -10,6 +10,10 @@ const {
   sha256,
   sourceIdentity,
   binaryName,
+  addonName,
+  addonLibrary,
+  addonBuildCommand,
+  addonRustFlags,
   buildCommand,
   verifyBinary,
   verifyMembers,
@@ -45,6 +49,18 @@ function packageHelper(directory, target) {
   assert.ok(stat.isFile() && stat.size <= 64 * 1024 * 1024, 'invalid release binary');
   const binary = fs.readFileSync(binaryPath);
   verifyBinary(binary, target);
+  const addonBuild = addonBuildCommand(target);
+  execFileSync(addonBuild[0], addonBuild.slice(1), {
+    cwd: path.join(ROOT, 'native'),
+    env: { ...process.env, CARGO_TARGET_DIR: cargoTarget, RUSTFLAGS: addonRustFlags(target) },
+    stdio: ['ignore', 'ignore', 'inherit'],
+  });
+  assert.equal(sourceIdentity(), identity, 'native sources changed during addon build');
+  const addonPath = path.join(cargoTarget, target, 'release', addonLibrary(target));
+  const addonStat = fs.lstatSync(addonPath);
+  assert.ok(addonStat.isFile() && addonStat.size <= 64 * 1024 * 1024, 'invalid workspace addon');
+  const addon = fs.readFileSync(addonPath);
+  verifyBinary(addon, target);
   const license = fs.readFileSync(path.join(ROOT, 'LICENSE'));
   const inventory = notices(target, compiler);
   const manifest = {
@@ -72,6 +88,15 @@ function packageHelper(directory, target) {
     },
     dependencies: inventory.dependencies,
     binary: { name: binaryName(target), bytes: binary.length, sha256: sha256(binary) },
+    addon: {
+      name: addonName,
+      bytes: addon.length,
+      sha256: sha256(addon),
+      napiVersion: 8,
+      buildCommand: addonBuild,
+      rustFlags: addonRustFlags(target),
+      ...(target.endsWith('-gnu') ? { minimumGlibc: minimumGlibc(addon) } : {}),
+    },
     license: { name: 'LICENSE', sha256: sha256(license) },
     notices: { name: 'THIRD-PARTY-NOTICES.txt', sha256: sha256(inventory.data) },
   };
@@ -81,6 +106,7 @@ function packageHelper(directory, target) {
     LICENSE: license,
     'THIRD-PARTY-NOTICES.txt': inventory.data,
     [binaryName(target)]: binary,
+    [addonName]: addon,
     'manifest.json': manifestBytes,
   };
   verifyMembers(members);

@@ -1,5 +1,5 @@
 [workspace]
-members = ["dependency-scanner", "object-import"]
+members = ["dependency-scanner", "object-import", "workspace-napi"]
 resolver = "3"
 
 [workspace.lints.rust]

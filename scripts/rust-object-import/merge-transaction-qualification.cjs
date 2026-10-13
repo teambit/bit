@@ -87,6 +87,7 @@ function validateMeasurementProof(proof, expected) {
   );
   for (const key of ['helperSha256', 'nativeSourceDigest', 'bindings', 'cliProvenance', 'fixtureDimensions'])
     assert.deepEqual(proof[key], expected[key], key);
+  assert.deepEqual(proof.addonSha256, expected.addonSha256, 'addonSha256');
   for (const run of proof.runs)
     assert.deepEqual(
       run.stages.map((stage) => stage.scenario),
@@ -140,6 +141,12 @@ async function runQualification(cli, helper, options = {}) {
   const repository = path.resolve(__dirname, '../..');
   const marker = JSON.parse(await fs.readFile(path.join(cli, '.bit-object-import-build.json')));
   const helperSha256 = hash(await fs.readFile(helper));
+  const addonLoad = createRequire(path.join(cli, 'package.json'));
+  const discovery = addonLoad(path.join(path.dirname(addonLoad.resolve('@teambit/objects')), 'objects/rust-object-discovery.js'));
+  const addon = discovery.resolveRustWorkspaceAddon
+    ? discovery.resolveRustWorkspaceAddon(helper)
+    : process.env.BIT_TEST_WORKSPACE_ADDON;
+  const addonSha256 = addon ? hash(await fs.readFile(addon)) : undefined;
   const nativeSourceDigest = sourceIdentity(repository);
   const names = await localRuntimeDependencies([
     'merge-transaction-qualification.cjs',
@@ -170,6 +177,7 @@ async function runQualification(cli, helper, options = {}) {
     proofSha256 = hash(bytes);
     validateMeasurementProof(priorProof, {
       helperSha256,
+      addonSha256,
       nativeSourceDigest,
       bindings,
       cliProvenance: marker,
@@ -205,6 +213,7 @@ async function runQualification(cli, helper, options = {}) {
     for (const [name, expected] of Object.entries(bindings))
       assert.equal(hash(await fs.readFile(path.join(__dirname, name))), expected, name);
     assert.equal(hash(await fs.readFile(helper)), helperSha256);
+    if (addon) assert.equal(hash(await fs.readFile(addon)), addonSha256);
     if (proofSha256) {
       assert.equal(hash(await fs.readFile(options.proof)), proofSha256);
       for (const run of priorProof.runs)
@@ -273,7 +282,7 @@ async function runQualification(cli, helper, options = {}) {
       BIT_CHECKOUT_TRANSITION_QUALIFICATION_SEED: hash(args.join('\0')),
       BIT_CHECKOUT_TRANSITION_QUALIFICATION_CLOCK: String(clock),
       BIT_CHECKOUT_TRANSITION_DISPLAY_DURATION: 'deterministic',
-      ...(trace ? { BIT_IMPORT_TRACE: trace, BIT_IMPORT_TRACE_PROTOCOL_ONLY: '1' } : {}),
+      ...(trace ? { BIT_IMPORT_TRACE: trace, BIT_IMPORT_TRACE_PROTOCOL_ONLY: '1', BIT_IMPORT_TRACE_WORKSPACE_ADDON: addon } : {}),
       ...(fault
         ? {
             BIT_MERGE_TRANSACTION_FAULT_CLI: cli,
@@ -501,6 +510,8 @@ async function runQualification(cli, helper, options = {}) {
           fileStatuses: true,
           repositorySourcePlans: true,
         });
+      if (diagnostics && addon)
+        assert.ok(diagnostics.workspaceFrames.every((item) => item.backend === 'addon'), 'addon proof used a child transport');
       const faultArtifact =
         scenario.fault && mode === 'native'
           ? { artifact: faultPath, sha256: hash(await fs.readFile(faultPath)) }
@@ -560,6 +571,7 @@ async function runQualification(cli, helper, options = {}) {
     temporary,
     cliProvenance: marker,
     helperSha256,
+    addonSha256,
     nativeSourceDigest,
     actualWorkspaceSourceFiles,
     workspaceSourceFiles,

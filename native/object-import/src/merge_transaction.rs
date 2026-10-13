@@ -25,7 +25,7 @@ pub(crate) struct State {
 }
 pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<Value> {
     match kind {
-        "mergePrepare" => state.bodies.prepare(input, &state.journal),
+        "mergePrepare" => state.bodies.prepare(input, &state.journal, None),
         "mergeApply" => state.bodies.apply(&input, &state.journal),
         "mergePlanOrder" => state.bodies.order(&input, &state.journal),
         "mergeRemovals" => state.bodies.removals(&input, &state.journal),
@@ -51,6 +51,13 @@ pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<V
         }
         _ => policy(kind, &input, &state.journal),
     }
+}
+pub(crate) fn prepare_with_workspace(
+    input: Value,
+    state: &mut State,
+    snapshots: &crate::workspace::snapshots::State,
+) -> io::Result<Value> {
+    state.bodies.prepare(input, &state.journal, Some(snapshots))
 }
 fn verify(input: &Value, state: &journal::State) -> io::Result<()> {
     let token = input["token"].as_str().ok_or_else(|| invalid("merge owner token"))?;

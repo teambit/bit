@@ -1,10 +1,10 @@
-// Deliberately accepts only the four flat, regular USTAR members produced here.
+// Deliberately accepts only the declared flat, regular USTAR members produced here.
 const assert = require('node:assert/strict');
 const zlib = require('node:zlib');
 const MAX_ARCHIVE = 64 * 1024 * 1024;
 const MAX_EXPANDED = 80 * 1024 * 1024;
 const names = ['LICENSE', 'THIRD-PARTY-NOTICES.txt', 'bit-object-import', 'manifest.json'];
-const allowed = new Set([...names, 'bit-object-import.exe']);
+const allowed = new Set([...names, 'bit-object-import.exe', 'bit-workspace.node']);
 const sum = (header) => header.reduce((total, byte, index) => total + (index >= 148 && index < 156 ? 32 : byte), 0);
 const octal = (buffer, offset, length, value) =>
   buffer.write(value.toString(8).padStart(length - 1, '0') + '\0', offset, length, 'ascii');
@@ -73,7 +73,7 @@ function decode(compressed) {
     data.subarray(offset).every((byte) => byte === 0),
     'data after USTAR terminator'
   );
-  assert.equal(Object.keys(members).length, 4, 'artifact must contain four members');
+  assert.equal(Object.keys(members).length, Object.hasOwn(members, 'bit-workspace.node') ? 5 : 4, 'unexpected artifact member count');
   return members;
 }
 module.exports = { encode, decode, MAX_ARCHIVE };

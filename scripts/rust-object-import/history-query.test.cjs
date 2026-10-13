@@ -941,3 +941,58 @@ test('requested Source batches preserve cache precedence without dumping or insp
   assert.deepEqual(repository.cache.keys(), evicted);
   assert.equal(reads, 0);
 });
+
+
+test('batch Source guards preserve miss aliases, pending precedence and asynchronous revalidation', async (t) => {
+  const query = installed('@teambit/objects/dist/objects/rust-history-query.js');
+  const capsules = installed('@teambit/objects/dist/objects/rust-history-query-sources.js');
+  const { Repository, Source, Ref } = installed('@teambit/objects');
+  const disk = require('node:fs/promises');
+  const directory = await disk.mkdtemp(path.join(require('node:os').tmpdir(), 'source-guard-batch-'));
+  t.after(() => disk.rm(directory, { recursive: true, force: true }));
+  owner(t, async () => { throw new Error('raw hydration requires no request'); });
+  const bytes = Buffer.from([0xff, 0, 13, 10]);
+  const original = Source.from(bytes), packed = await original.compressWithSize();
+  const descriptor = {
+    hash: original.hash().toString(), privatePath: path.join(directory, 'source.pack'),
+    compressedSize: packed.buffer.length, inflatedSize: packed.inflatedSize,
+    encoding: 'raw', bodySize: bytes.length, bodyOffset: 0,
+  };
+  await disk.writeFile(descriptor.privatePath, bytes);
+  const requests = Array.from({ length: 32 }, () => ({ descriptor, reference: new Ref(descriptor.hash) }));
+  await query.withRustHistoryQueryOperation(async () => {
+    const repository = new Repository(path.join(directory, 'scope'), { name: 'qualification.batch' });
+    const values = await Promise.all(capsules.loadRustCapturedSourceCapsuleBatch(repository, requests));
+    assert.equal(new Set(values).size, 32);
+    values[0].contents[0] ^= 1;
+    values.slice(1).forEach(value => assert.deepEqual(value.contents, bytes));
+    const pending = Source.from(Buffer.from(bytes));
+    repository.objects[descriptor.hash] = pending;
+    assert.deepEqual(await Promise.all(capsules.loadRustCapturedSourceCapsuleBatch(repository, requests)), Array(32).fill(pending));
+    let thenReads = 0;
+    Object.defineProperty(pending, 'then', { configurable: true, get() { thenReads++; throw new Error('must not inspect then'); } });
+    assert.equal(capsules.loadRustCapturedSourceCapsuleBatch(repository, requests), undefined);
+    assert.equal(thenReads, 0);
+    Reflect.deleteProperty(pending, 'then');
+    let descriptorReads = 0;
+    const accessor = { ...descriptor };
+    Object.defineProperty(accessor, 'bodyOffset', { get() { descriptorReads++; return 0; } });
+    assert.equal(capsules.loadRustCapturedSourceCapsuleBatch(repository, [{ descriptor: accessor, reference: new Ref(descriptor.hash) }]), undefined);
+    assert.equal(descriptorReads, 0);
+    const enqueue = globalThis.queueMicrotask;
+    let enqueueCalls = 0;
+    try {
+      globalThis.queueMicrotask = () => { enqueueCalls++; throw new Error('custom enqueue must not run'); };
+      assert.equal(capsules.loadRustCapturedSourceCapsuleBatch(repository, requests), undefined);
+      assert.equal(enqueueCalls, 0);
+    } finally {
+      globalThis.queueMicrotask = enqueue;
+    }
+    const empty = new Repository(path.join(directory, 'empty'), { name: 'qualification.empty' });
+    assert.equal(capsules.loadRustCapturedSourceCapsuleBatch(empty, [{ descriptor, reference: new Ref('f'.repeat(40)) }]), undefined);
+    const active = capsules.loadRustCapturedSourceCapsuleBatch(empty, requests);
+    empty.onRead = () => { throw new Error('changed hook must not execute'); };
+    assert.deepEqual(await Promise.all(active), Array(32).fill(undefined));
+    assert.equal(empty.getCache(new Ref(descriptor.hash)), undefined);
+  });
+});

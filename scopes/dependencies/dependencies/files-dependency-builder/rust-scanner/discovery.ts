@@ -194,7 +194,7 @@ function matchesPackagedContract(
     manifest.platform?.arch !== process.arch ||
     manifest.provenance?.binaryInput !== 'checkout release output' ||
     JSON.stringify(manifest.provenance?.buildCommand) !==
-      JSON.stringify(['cargo', 'build', '--locked', '--offline', '--release', '--workspace', '--target', target])
+      JSON.stringify(['cargo', 'build', '--locked', '--offline', '--release', '--package', 'bit-dependency-scanner', '--target', target])
   );
 }
 

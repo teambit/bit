@@ -136,6 +136,7 @@ type FilesPlan = {
 };
 type Manifest = { hash: string; relativePath: string; name?: string; test?: boolean };
 type Current = {
+  readToken?: number;
   relativePath: string;
   path: string;
   rawHash: string;
@@ -253,6 +254,7 @@ function current(component?: ConsumerComponent): { files: SourceFile[]; rows: Cu
       snapshotHash: descriptor.snapshotHash,
       protected: false,
       ...(descriptor.bitmap ? { bitmap: true } : {}),
+      ...(descriptor.readToken === undefined ? {} : { readToken: descriptor.readToken }),
     });
   }
   return { files: files.slice(), rows };

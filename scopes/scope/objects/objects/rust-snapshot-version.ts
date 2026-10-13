@@ -8,7 +8,7 @@ import {
   hasRustSnapshotValidationHook,
 } from './rust-snapshot-guards';
 import { projectRustSnapshotFields } from './rust-snapshot-projection';
-import { projectRustSnapshotValue, type RustSnapshotValue } from './rust-snapshot-values';
+import { projectRustSnapshotValue, type RustCompactSnapshotValue } from './rust-snapshot-values';
 
 const tailNames = [
   'packageDependencies',
@@ -87,8 +87,8 @@ export function canPrepareRustSnapshotVersion(version: Version): boolean {
 }
 
 export type PreparedRustSnapshotVersion = {
-  fields?: RustSnapshotValue;
-  currentFields: () => RustSnapshotValue | undefined;
+  fields?: RustCompactSnapshotValue;
+  currentFields: () => RustCompactSnapshotValue | undefined;
   /** A declined helper resumes after the already completed model hook, never before it. */
   canonicalObject: () => ReturnType<typeof completeVersionSerialization>;
 };

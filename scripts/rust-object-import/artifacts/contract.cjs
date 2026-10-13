@@ -32,6 +32,32 @@ const buildCommand = (target) => [
   target,
 ];
 
+const addonName = 'bit-workspace.node';
+const addonLibrary = (target) =>
+  targets[target].os === 'win32'
+    ? 'bit_workspace_napi.dll'
+    : targets[target].os === 'darwin'
+      ? 'libbit_workspace_napi.dylib'
+      : 'libbit_workspace_napi.so';
+const addonBuildCommand = (target) => [...buildCommand(target).slice(0, 6), 'bit-workspace-napi', '--target', target];
+const addonRustFlags = (target) => (target.endsWith('-musl') ? '-C target-feature=-crt-static -C linker=cc' : '');
+function verifyAddon(members, manifest) {
+  const addon = members[addonName],
+    target = manifest.target;
+  assert.ok(addon, 'missing workspace addon');
+  verifyBinary(addon, target);
+  const expected = {
+    name: addonName,
+    bytes: addon.length,
+    sha256: sha256(addon),
+    napiVersion: 8,
+    buildCommand: addonBuildCommand(target),
+    rustFlags: addonRustFlags(target),
+  };
+  if (target.endsWith('-gnu')) expected.minimumGlibc = minimumGlibc(addon);
+  assert.deepEqual(manifest.addon, expected, 'workspace addon metadata mismatch');
+}
+
 function sourceIdentity(root = ROOT) {
   const files = [
     'native/Cargo.toml',
@@ -51,6 +77,10 @@ function sourceIdentity(root = ROOT) {
     if (fs.existsSync(path.join(root, relative))) visit(relative);
   }
   if (fs.existsSync(path.join(root, 'native/object-import/build.rs'))) files.push('native/object-import/build.rs');
+  if (fs.existsSync(path.join(root, 'native/workspace-napi'))) {
+    files.push('native/workspace-napi/Cargo.toml', 'native/workspace-napi/build.rs');
+    visit('native/workspace-napi/src');
+  }
   const digest = createHash('sha256');
   for (const name of files.sort()) {
     digest.update(name + '\0');
@@ -116,7 +146,10 @@ function verifyMembers(members) {
   assert.deepEqual(manifest.provenance?.buildCommand, buildCommand(target));
   if (target.endsWith('-gnu')) assert.match(manifest.minimumGlibc, /^[0-9]+\.[0-9]+$/);
   const name = binaryName(target);
-  assert.deepEqual(Object.keys(members).sort(), ['LICENSE', 'THIRD-PARTY-NOTICES.txt', name, 'manifest.json'].sort());
+  assert.deepEqual(
+    Object.keys(members).sort(),
+    ['LICENSE', 'THIRD-PARTY-NOTICES.txt', name, 'manifest.json', ...(manifest.addon ? [addonName] : [])].sort()
+  );
   for (const [field, filename] of [
     ['license', 'LICENSE'],
     ['notices', 'THIRD-PARTY-NOTICES.txt'],
@@ -131,6 +164,7 @@ function verifyMembers(members) {
     if (field === 'binary') expected.bytes = data.length;
     assert.deepEqual(manifest[field], expected, `${field} checksum or metadata mismatch`);
   }
+  if (manifest.addon) verifyAddon(members, manifest);
   verifyBinary(members[name], target);
   if (target.endsWith('-gnu'))
     assert.equal(manifest.minimumGlibc, minimumGlibc(members[name]), 'GLIBC requirement mismatch');
@@ -142,6 +176,10 @@ module.exports = {
   sha256,
   command,
   binaryName,
+  addonName,
+  addonLibrary,
+  addonBuildCommand,
+  addonRustFlags,
   buildCommand,
   sourceIdentity,
   verifyBinary,

@@ -324,3 +324,48 @@ test(
     assert.throws(() => assembleRelease(f.directory, 'unsupported', artifacts), /supported target/);
   }
 );
+
+
+test('verified companion discovery rejects corruption while retaining the child helper', real, (t) => {
+  const f = installedFixture(t);
+  const manifest = verifiedArchive(archive).manifest;
+  if (!manifest.addon) return;
+  delete process.env.BIT_TEST_WORKSPACE_ADDON;
+  const { resolveRustWorkspaceAddon } = f.load(path.join(f.moduleDirectory, 'rust-object-discovery.js'));
+  const addon = path.join(f.destination, 'bit-workspace.node');
+  assert.equal(resolveRustWorkspaceAddon(f.executable), addon);
+  const bytes = fs.readFileSync(addon);
+  fs.writeFileSync(addon, Buffer.from('corrupt addon'));
+  assert.equal(resolveRustWorkspaceAddon(f.executable), undefined);
+  assert.equal(f.resolve(), path.toNamespacedPath(f.executable));
+  fs.writeFileSync(addon, bytes);
+  assert.equal(resolveRustWorkspaceAddon(f.executable), addon);
+  const script = `
+    const assert = require('node:assert/strict');
+    const {NativeImportOperation}=require(process.argv[1]);
+    const WorkspaceEngine=process.argv[5] === 'addon' ? require(process.argv[3]).WorkspaceEngine : undefined;
+    (async()=>{const operation=new NativeImportOperation(process.argv[2], {objectsDirectory:process.argv[4]});
+      try { assert.equal(await operation.request({kind:'version',existing:'9',incoming:'10'},value=>value),true);
+        if (WorkspaceEngine) { assert.ok(operation.engine instanceof WorkspaceEngine); assert.equal(operation.child,undefined); }
+        else { assert.equal(operation.engine,undefined); assert.ok(operation.child); }
+      } finally { await operation.disposeAndWait(); }
+    })().catch(error=>{console.error(error);process.exitCode=1});`;
+  const child = require('node:child_process').spawnSync(process.execPath, ['-e', script,
+    path.join(f.moduleDirectory,'rust-object-operation.js'), f.executable, addon, path.join(f.directory,'addon-objects'), 'addon'],
+    {encoding:'utf8',timeout:30000});
+  assert.ifError(child.error);
+  assert.equal(child.status,0,child.stderr);
+  const invalid = Buffer.from('unsupported native library');
+  fs.writeFileSync(addon, invalid);
+  const changed = structuredClone(manifest);
+  changed.addon.bytes = invalid.length;
+  changed.addon.sha256 = sha256(invalid);
+  fs.writeFileSync(path.join(f.destination, 'manifest.json'), JSON.stringify(changed));
+  // An explicit helper may have an incompatible companion. Failure to load it
+  // must select the child before accepting any operation, including on Windows.
+  const fallback = require('node:child_process').spawnSync(process.execPath, ['-e', script,
+    path.join(f.moduleDirectory,'rust-object-operation.js'), f.executable, addon, path.join(f.directory,'fallback-objects'), 'child'],
+    {encoding:'utf8',timeout:30000});
+  assert.ifError(fallback.error);
+  assert.equal(fallback.status,0,fallback.stderr);
+});

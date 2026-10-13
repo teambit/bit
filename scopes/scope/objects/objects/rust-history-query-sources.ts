@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import { readRustBodyRange } from './rust-body-range';
+import { readRustBodyRange, canBatchRustBodyRangeReads } from './rust-body-range';
 import path from 'path';
 import { types } from 'util';
 import type Repository from './repository';
@@ -8,6 +8,7 @@ import BitObject from './object';
 import Ref from './ref';
 import {
   hasRustSnapshotTransactionClassConstructor,
+  hasRustSnapshotTransactionClass,
   hasRustSnapshotTransactionClassFields,
   hasRustSnapshotTransactionClassFieldsBatch,
   hasRustSnapshotFunctions,
@@ -16,6 +17,7 @@ import {
 } from './rust-snapshot-guards';
 import {
   canUseRustHistoryQueryRepository,
+  captureRustHistoryQueryObjects,
   lookupRustHistoryQueryObject,
   isRustHistoryQueryOperation,
 } from './rust-history-query';
@@ -33,6 +35,7 @@ export type HistorySourceReceipt = { sources: HistorySourceCapsule[]; sourceLoad
 const aliases = new WeakMap<object, { hash: string; contents: Buffer; snapshot: Buffer }>();
 const equals = Buffer.prototype.equals;
 const compareBytes = Buffer.compare;
+const bodyRangeBatchGuard = canBatchRustBodyRangeReads;
 const registrarModule = require.resolve('@teambit/legacy.scope/dist/object-registrar.js');
 
 function sourceHydrationOwner(): boolean {
@@ -137,6 +140,71 @@ export async function loadRustCapturedSourceCapsule(
     Object.getOwnPropertyDescriptor(reference, 'hash')?.value !== descriptor.hash
   )
     return undefined;
+  return loadCapturedSource(repository, descriptor, reference);
+}
+
+/** Start a synchronous group of canonical cache checks with shared defining-class guards. */
+export function loadRustCapturedSourceCapsuleBatch(
+  repository: Repository,
+  requests: Array<{ descriptor: HistorySourceCapsule; reference: Ref }>
+): Array<Promise<Source | undefined>> | undefined {
+  if (
+    !hasRustSnapshotTransactionClass(requests, 'Array') ||
+    requests.length > 16384 ||
+    canBatchRustBodyRangeReads !== bodyRangeBatchGuard ||
+    !bodyRangeBatchGuard() ||
+    !requests.every(
+      (request) =>
+        ordinaryBatchRecord(request) &&
+        Object.hasOwn(request, 'descriptor') &&
+        Object.hasOwn(request, 'reference') &&
+        ordinaryBatchRecord(request.descriptor) &&
+        ['hash', 'bodyOffset', 'privatePath', 'bodySize'].every((key) => Object.hasOwn(request.descriptor, key))
+    ) ||
+    !sourceHydrationOwner() ||
+    !canUseRustHistoryQueryRepository(repository) ||
+    !canHydrateRustHistoryQuerySources() ||
+    !hasRustSnapshotTransactionClassFieldsBatch(
+      requests.map((request) => request.reference),
+      'Ref',
+      ['hash']
+    ) ||
+    requests.some(
+      ({ descriptor, reference }) => Object.getOwnPropertyDescriptor(reference, 'hash')?.value !== descriptor.hash
+    )
+  )
+    return undefined;
+  const cached = captureRustHistoryQueryObjects(
+    repository,
+    requests.map(({ descriptor }) => descriptor.hash)
+  );
+  if (
+    !cached ||
+    Object.getOwnPropertyDescriptor(Object.prototype, 'then') ||
+    !hasRustSnapshotTransactionClassFieldsBatch(
+      cached.map(([, value]) => value),
+      'Source',
+      []
+    ) ||
+    cached.some(([, value]) => Object.hasOwn(value, 'then'))
+  )
+    return undefined;
+  // These guarded synchronous cache reads invoke no user callbacks. Every read's
+  // asynchronous continuation still rechecks the live repository and constructors.
+  return requests.map(({ descriptor, reference }) => loadCapturedSource(repository, descriptor, reference));
+}
+
+function ordinaryBatchRecord(value: unknown): value is Record<string, any> {
+  if (!value || typeof value !== 'object' || types.isProxy(value) || Object.getPrototypeOf(value) !== Object.prototype)
+    return false;
+  return Reflect.ownKeys(value).every((key) => 'value' in Object.getOwnPropertyDescriptor(value, key)!);
+}
+
+async function loadCapturedSource(
+  repository: Repository,
+  descriptor: HistorySourceCapsule,
+  reference: Ref
+): Promise<Source | undefined> {
   const pending = Object.getOwnPropertyDescriptor(repository.objects, descriptor.hash)?.value;
   const cached = pending || repository.getCache(reference);
   if (cached) return cached as Source;

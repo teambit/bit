@@ -21,7 +21,7 @@ pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<V
     match kind {
         "checkoutApply" => apply::apply(input, &state.plans),
         "checkoutMaterialize" => materialize::apply(input, &state.plans),
-        "checkoutPrepare" => prepare::prepare(&input, &mut state.plans),
+        "checkoutPrepare" => prepare::prepare(&input, &mut state.plans, None),
         "checkoutRemovals" => removals::apply(input, &state.plans),
         "checkoutFinish" => {
             let request: wire::Token = serde_json::from_value(input).map_err(io::Error::other)?;
@@ -38,6 +38,13 @@ pub(crate) fn apply(kind: &str, input: Value, state: &mut State) -> io::Result<V
             "unsupported checkout transition operation",
         )),
     }
+}
+pub(crate) fn prepare_with_workspace(
+    input: &Value,
+    state: &mut State,
+    snapshots: &crate::workspace::snapshots::State,
+) -> io::Result<Value> {
+    prepare::prepare(input, &mut state.plans, Some(snapshots))
 }
 fn decision(input: &Value) -> io::Result<Value> {
     let current = input["currentExists"]

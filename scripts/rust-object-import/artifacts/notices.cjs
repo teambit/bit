@@ -5,6 +5,7 @@ const path = require('node:path');
 const { ROOT, sha256, command } = require('./contract.cjs');
 const licenseRoot = path.join(ROOT, 'scripts/rust-dependency-analysis/artifacts/licenses');
 
+
 function dependencyInventory(metadata) {
   const root = metadata.packages.find((entry) => entry.name === 'bit-object-import' && entry.source === null);
   assert.ok(root, 'missing object-import package');
@@ -17,6 +18,8 @@ function dependencyInventory(metadata) {
     nodes.get(id).dependencies.forEach(visit);
   };
   visit(root.id);
+  const addon = metadata.packages.find((entry) => entry.name === 'bit-workspace-napi' && entry.source === null);
+  if (addon) visit(addon.id);
   return metadata.packages
     .filter((entry) => selected.has(entry.id) && entry.source !== null)
     .sort((a, b) => `${a.name} ${a.version}`.localeCompare(`${b.name} ${b.version}`, 'en'));
@@ -24,6 +27,7 @@ function dependencyInventory(metadata) {
 
 function notices(target, compiler) {
   const sources = JSON.parse(fs.readFileSync(path.join(licenseRoot, 'sources.json'), 'utf8'));
+  const napiRevisions = Object.fromEntries(Object.entries(sources.find(entry => entry.name === 'napi-rs-MIT.txt').packages).map(([name, pin]) => [name, [pin.version, pin.revision]]));
   const pinned = (name) => {
     const entry = sources.find((source) => source.name === name);
     assert.ok(entry && path.basename(name) === name, 'unrecognized vendored license');
@@ -44,6 +48,15 @@ function notices(target, compiler) {
       .readdirSync(directory)
       .filter((name) => /^(LICENSE|COPYING|NOTICE)/i.test(name) && fs.statSync(path.join(directory, name)).isFile())
       .sort();
+    if (!files.length && Object.hasOwn(napiRevisions, entry.name)) {
+      const [version, revision] = napiRevisions[entry.name];
+      assert.equal(entry.version, version, 'update pinned napi-rs notices after upgrading');
+      assert.equal(entry.license, 'MIT');
+      assert.equal(entry.repository, 'https://github.com/napi-rs/napi-rs');
+      assert.equal(JSON.parse(fs.readFileSync(path.join(directory, '.cargo_vcs_info.json'))).git.sha1, revision);
+      blocks.push(`\n=== ${entry.name} ${entry.version} ===\nSPDX: MIT\nRepository: ${entry.repository}\n` + pinned('napi-rs-MIT.txt'));
+      continue;
+    }
     assert.ok(files.length, `missing license text: ${entry.name} ${entry.version}`);
     blocks.push(
       `\n=== ${entry.name} ${entry.version} ===\nSPDX: ${entry.license}\nRepository: ${entry.repository || ''}\n`

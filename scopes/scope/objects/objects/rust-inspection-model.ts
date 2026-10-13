@@ -7,7 +7,12 @@ import {
   hasRustSnapshotTransactionClassFields,
   hasRustSnapshotFunctions,
 } from './rust-snapshot-guards';
-import { projectRustSnapshotValue, type RustSnapshotValue } from './rust-snapshot-values';
+import {
+  projectRustSnapshotValue,
+  projectRustCompactSnapshotValue,
+  type RustSnapshotValue,
+  type RustCompactSnapshotValue,
+} from './rust-snapshot-values';
 import { canSortInspectionExtensionsNatively } from '@teambit/legacy.extension-data';
 import {
   isRustWorkspaceInspection,
@@ -33,7 +38,7 @@ const extensionFields = ['extensionId', 'name', 'legacyId', 'rawConfig'];
 type Mode = 'modified' | 'sourceCode';
 type Capture = {
   version: Version;
-  fields: RustSnapshotValue;
+  fields: RustCompactSnapshotValue;
   files: any[];
   dependencies: any[];
   devDependencies: any[];
@@ -232,7 +237,7 @@ function capture(version: Version, mode: Mode): Capture | undefined {
   const fileRows = files(selected.files, mode);
   if (!fileRows) return undefined;
   if (mode === 'sourceCode') {
-    const fields = projectRustSnapshotValue({ files: fileRows.rows });
+    const fields = projectRustCompactSnapshotValue({ files: fileRows.rows });
     return fields ? captured(version, fields, fileRows, selected) : undefined;
   }
   const deps = dependencies(selected.dependencies),
@@ -247,7 +252,7 @@ function capture(version: Version, mode: Mode): Capture | undefined {
       return undefined;
     logRow[field] = log[field]?.value;
   }
-  const fields = projectRustSnapshotValue({
+  const fields = projectRustCompactSnapshotValue({
     ...selected,
     files: fileRows.rows,
     log: logRow,
@@ -262,7 +267,7 @@ function capture(version: Version, mode: Mode): Capture | undefined {
 
 function captured(
   version: Version,
-  fields: RustSnapshotValue,
+  fields: RustCompactSnapshotValue,
   fileRows: { rows: any[]; original: any[] },
   values: Record<string, any>,
   deps: any[] = [],
@@ -318,6 +323,11 @@ function text(units: string | number[]): string {
   return result;
 }
 function hydrate(value: any, depth = 0): any {
+  if (depth <= 64) {
+    if (value === null || typeof value === 'boolean') return value;
+    if (typeof value === 'string' && wireText(value)) return value;
+    if (Array.isArray(value) && value.length <= 4096) return value.map((item) => hydrate(item, depth + 1));
+  }
   if (!value || depth > 64) throw Error('invalid inspection value');
   switch (value.kind) {
     case 'undefined':

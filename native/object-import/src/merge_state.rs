@@ -235,7 +235,15 @@ fn merge_transaction_operation(
         Request::MergeLaneBucketDecision(input) => ("mergeLaneBucketDecision", input),
         request => return query_operation(request, state, bytes),
     };
-    crate::merge_transaction::apply(kind, input, &mut state.operations.merge_transaction)
+    if kind == "mergePrepare" {
+        crate::merge_transaction::prepare_with_workspace(
+            input,
+            &mut state.operations.merge_transaction,
+            &state.operations.workspace_reads,
+        )
+    } else {
+        crate::merge_transaction::apply(kind, input, &mut state.operations.merge_transaction)
+    }
 }
 fn query_operation(request: Request, state: &mut State, bytes: &[u8]) -> io::Result<Value> {
     let (kind, input) = match request {
@@ -283,7 +291,15 @@ fn checkout_operation(request: Request, state: &mut State, bytes: &[u8]) -> io::
         Request::CheckoutFinish(input) => ("checkoutFinish", input),
         request => return metadata(request, state, bytes),
     };
-    crate::checkout_transition::apply(kind, input, &mut state.operations.checkout_transition)
+    if kind == "checkoutPrepare" {
+        crate::checkout_transition::prepare_with_workspace(
+            &input,
+            &mut state.operations.checkout_transition,
+            &state.operations.workspace_reads,
+        )
+    } else {
+        crate::checkout_transition::apply(kind, input, &mut state.operations.checkout_transition)
+    }
 }
 
 fn metadata(request: Request, state: &mut State, bytes: &[u8]) -> io::Result<Value> {

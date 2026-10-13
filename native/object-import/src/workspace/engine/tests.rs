@@ -50,7 +50,13 @@ fn frame(value: &Value) -> Vec<u8> {
 }
 fn response(value: &Value) -> Value {
     let mut output = Vec::new();
-    serve(&mut Cursor::new(frame(value)), &mut output, &POOL).unwrap();
+    serve(
+        &mut Cursor::new(frame(value)),
+        &mut output,
+        &POOL,
+        &mut crate::workspace::snapshots::State::default(),
+    )
+    .unwrap();
     serde_json::from_slice(&output).unwrap()
 }
 fn source(directory: &Directory, body: &[u8]) -> Value {
@@ -272,7 +278,15 @@ fn malformed_or_partial_frames_never_emit_partial_output() {
     let bytes = frame(&json!({"kind":"compare","left":"a","right":"b"}));
     for length in 0..bytes.len() {
         let mut output = Vec::new();
-        assert!(serve(&mut Cursor::new(&bytes[..length]), &mut output, &POOL).is_err());
+        assert!(
+            serve(
+                &mut Cursor::new(&bytes[..length]),
+                &mut output,
+                &POOL,
+                &mut crate::workspace::snapshots::State::default()
+            )
+            .is_err(),
+        );
         assert!(output.is_empty());
     }
     assert_eq!(response(&json!({"kind":"unknown"}))["failed"], true);

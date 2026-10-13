@@ -5,6 +5,9 @@ use std::{
     fs,
     io::{self, Read},
 };
+mod parallel;
+#[cfg(test)]
+mod tests;
 pub(super) struct Loaded {
     pub(super) raw: Vec<u8>,
     pub(super) normalized: Vec<u8>,
@@ -14,12 +17,27 @@ pub(super) fn load(
     directory: &std::path::Path,
     total: &mut usize,
     compressed: &mut usize,
+    snapshots: Option<&crate::workspace::snapshots::State>,
 ) -> io::Result<Vec<Loaded>> {
     let mut seen = HashSet::new();
+    if files.len() >= 32
+        && files
+            .iter()
+            .all(|file| file.source_hash.is_none() && file.read_token.is_none())
+        && rayon::current_thread_index().is_some()
+        && rayon::current_num_threads() > 1
+    {
+        for file in files {
+            validate(file, &mut seen, false)?;
+        }
+        return parallel::load(files, total);
+    }
     let mut output = Vec::new();
     for file in files {
-        validate(file, &mut seen)?;
-        let loaded = if let Some(hash) = &file.source_hash {
+        validate(file, &mut seen, file.read_token.is_some())?;
+        let loaded = if let Some(token) = file.read_token {
+            retained(file, token, snapshots, total)?
+        } else if let Some(hash) = &file.source_hash {
             read_source(file, directory, hash, total, compressed)?
         } else {
             read(file, total)?
@@ -81,7 +99,11 @@ fn read_source(
     Ok(Loaded { raw, normalized })
 }
 
-fn validate<'a>(file: &'a wire::Current, seen: &mut HashSet<&'a str>) -> io::Result<()> {
+fn validate<'a>(
+    file: &'a wire::Current,
+    seen: &mut HashSet<&'a str>,
+    retained: bool,
+) -> io::Result<()> {
     crate::checkout::plan::relative_path(&file.relative_path)?;
     if file.bitmap && file.relative_path != ".bitmap" {
         return Err(invalid("checkout bitmap normalization label"));
@@ -90,9 +112,40 @@ fn validate<'a>(file: &'a wire::Current, seen: &mut HashSet<&'a str>) -> io::Res
         || file.relative_path.len() > 32768
         || file.relative_path.contains('\0')
         || !seen.insert(file.relative_path.as_str())
-        || (file.source_hash.is_none() && !fs::symlink_metadata(&file.path)?.is_file())
     {
         return Err(invalid("checkout current path/type"));
     }
+    if !retained && file.source_hash.is_none() && !fs::symlink_metadata(&file.path)?.is_file() {
+        return Err(invalid("checkout current path/type"));
+    }
     Ok(())
+}
+
+fn retained(
+    file: &wire::Current,
+    token: u64,
+    snapshots: Option<&crate::workspace::snapshots::State>,
+    total: &mut usize,
+) -> io::Result<Loaded> {
+    let snapshot = snapshots
+        .and_then(|state| state.get(token, &file.path, &file.raw_hash))
+        .filter(|snapshot| {
+            file.source_hash.is_none() && snapshot.raw_bytes <= 32 * 1024 * 1024 - *total
+        })
+        .ok_or_else(|| invalid("checkout retained workspace observation"))?;
+    let raw = if file.bitmap {
+        let bytes = crate::inspection::normalize_bitmap(&snapshot.contents)?;
+        if digest(&bytes) != file.snapshot_hash {
+            return Err(invalid("checkout retained bitmap identity"));
+        }
+        bytes
+    } else {
+        if snapshot.snapshot_hash != file.snapshot_hash {
+            return Err(invalid("checkout retained workspace identity"));
+        }
+        snapshot.contents.to_vec()
+    };
+    *total += snapshot.raw_bytes;
+    let normalized = crate::checkout::eol::normalize(raw.clone(), false);
+    Ok(Loaded { raw, normalized })
 }

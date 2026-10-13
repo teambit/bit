@@ -286,3 +286,29 @@ test('artifact sidecars reject redirects and oversize files', { skip: process.pl
   fs.writeFileSync(archive + '.sha256', Buffer.alloc(4097));
   assert.throws(() => verifiedArchive(archive), /sidecar/);
 });
+
+
+test('optional workspace addon is bound to exact bytes, target, ABI and build provenance', () => {
+  const { addonBuildCommand, addonRustFlags } = require('./contract.cjs');
+  const members = fixture();
+  const manifest = JSON.parse(members['manifest.json']);
+  const addon = Buffer.from(members['bit-object-import']);
+  members['bit-workspace.node'] = addon;
+  manifest.addon = {name:'bit-workspace.node', bytes:addon.length, sha256:sha256(addon), napiVersion:8,
+    buildCommand:addonBuildCommand(manifest.target), rustFlags:addonRustFlags(manifest.target), minimumGlibc:'2.17'};
+  members['manifest.json'] = Buffer.from(JSON.stringify(manifest));
+  assert.deepEqual(verifyMembers(decode(encode(members))), manifest);
+  for (const edit of [
+    value => { value.napiVersion = 9; }, value => { value.bytes++; },
+    value => { value.sha256 = '0'.repeat(64); }, value => { value.name = '../addon.node'; },
+    value => { value.buildCommand.pop(); }, value => { value.rustFlags = '-C target-cpu=native'; },
+    value => { value.minimumGlibc = '2.1'; },
+  ]) {
+    const changed = structuredClone(manifest); edit(changed.addon);
+    assert.throws(() => verifyMembers({...members, 'manifest.json':Buffer.from(JSON.stringify(changed))}));
+  }
+  const missing = {...members}; delete missing['bit-workspace.node'];
+  assert.throws(() => verifyMembers(missing));
+  addon[18] ^= 1;
+  assert.throws(() => verifyMembers(members));
+});

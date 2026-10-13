@@ -2,7 +2,7 @@ import { spawn, type ChildProcessWithoutNullStreams } from 'child_process';
 import path from 'path';
 import { availableParallelism } from 'os';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
-import { resolveRustObjectImportExecutable } from '@teambit/objects';
+import { resolveRustObjectImportExecutable, resolveRustWorkspaceAddon } from '@teambit/objects';
 import * as eol from '@teambit/toolbox.string.eol';
 import AbstractVinyl, { defaultVinylWrite, logFileWrite } from './abstract-vinyl';
 import { checkoutSourceFrame, getRustCheckoutSourceDescriptor } from './rust-checkout-source';
@@ -21,6 +21,7 @@ const stringify = JSON.stringify;
 let active = 0;
 
 type ProjectedFile = { filename: Buffer; contents: Buffer; overwrite: boolean };
+type WorkspaceEngine = { request: (frame: Buffer) => Promise<Buffer>; close: () => void };
 type Result = {
   version: number;
   id: number;
@@ -31,9 +32,12 @@ type Result = {
 };
 
 export class MaterializationSession {
-  private readonly child: ChildProcessWithoutNullStreams;
+  private readonly child?: ChildProcessWithoutNullStreams;
+  private readonly engine?: WorkspaceEngine;
+  private nativeActive?: Promise<void>;
+  private nativeClosed?: () => void;
   private readonly closed: Promise<void>;
-  private pending = Buffer.alloc(0);
+  private pending: Buffer = Buffer.alloc(0);
   private pendingLength = 0;
   private binaryResponse?: { response: Result; offset: number; length: number };
   private stopped = false;
@@ -51,12 +55,25 @@ export class MaterializationSession {
   private killTimer?: NodeJS.Timeout;
 
   constructor(executable: string) {
+    const addon = resolveRustWorkspaceAddon(executable);
+    if (addon) {
+      try {
+        const binding = require(addon) as { WorkspaceEngine: new (threads: number) => WorkspaceEngine };
+        this.engine = new binding.WorkspaceEngine(Math.min(4, availableParallelism()));
+        this.closed = new Promise((resolve) => {
+          this.nativeClosed = resolve;
+        });
+        return;
+      } catch {
+        // A load-time ABI or platform mismatch falls back before any native request starts.
+      }
+    }
     this.child = spawn(executable, ['--threads', String(Math.min(4, availableParallelism()))], {
       stdio: ['pipe', 'pipe', 'pipe'],
     });
     this.child.stderr.resume();
     this.closed = new Promise((resolve) => {
-      this.child.once('close', () => {
+      this.child!.once('close', () => {
         this.stopped = true;
         clearTimeout(this.deadline);
         clearTimeout(this.killTimer);
@@ -88,8 +105,27 @@ export class MaterializationSession {
     return new Promise((resolve) => {
       this.waiting = { id, count, resolve, validate, maximum, variableCount, binary };
       this.deadline = setTimeout(() => this.stop(), 120000);
-      this.child.stdin.write(build(id));
+      if (this.engine) this.nativeActive = this.requestNative(build(id));
+      else this.child!.stdin.write(build(id));
     });
+  }
+
+  private async requestNative(input: Buffer): Promise<void> {
+    try {
+      this.accept(await Promise.resolve().then(() => this.engine!.request(input)));
+    } catch {
+      this.stop();
+    } finally {
+      this.nativeActive = undefined;
+      if (this.stopped) this.finishNativeClose();
+    }
+  }
+
+  private finishNativeClose() {
+    clearTimeout(this.deadline);
+    this.waiting?.resolve();
+    this.waiting = undefined;
+    this.nativeClosed?.();
   }
 
   async dispose(): Promise<void> {
@@ -104,8 +140,13 @@ export class MaterializationSession {
   private stop() {
     if (this.stopped) return;
     this.stopped = true;
-    this.child.kill('SIGTERM');
-    this.killTimer = setTimeout(() => this.child.kill('SIGKILL'), 250);
+    if (this.engine) {
+      this.engine.close();
+      if (!this.nativeActive) this.finishNativeClose();
+      return;
+    }
+    this.child!.kill('SIGTERM');
+    this.killTimer = setTimeout(() => this.child!.kill('SIGKILL'), 250);
     this.killTimer.unref();
   }
 
@@ -114,12 +155,14 @@ export class MaterializationSession {
     const maximum = this.waiting?.maximum || MAX_RESPONSE;
     const length = this.pendingLength + data.length;
     if (length > maximum) return this.stop();
-    if (this.pending.length < length) {
+    const ownedResponse = this.engine && this.pendingLength === 0;
+    if (ownedResponse) this.pending = data;
+    else if (this.pending.length < length) {
       const grown = Buffer.allocUnsafe(Math.min(maximum, Math.max(length, this.pending.length * 2, 4096)));
       this.pending.copy(grown, 0, 0, this.pendingLength);
       this.pending = grown;
     }
-    data.copy(this.pending, this.pendingLength);
+    if (!ownedResponse) data.copy(this.pending, this.pendingLength);
     this.pendingLength = length;
     if (this.binaryResponse) return this.acceptBinary();
     const newline = data.indexOf(10);

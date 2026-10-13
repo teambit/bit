@@ -16,14 +16,23 @@ pub(in crate::checkout_transition) fn load(
         &serde_json::to_value(&version.files).map_err(io::Error::other)?,
         compressed,
     )?;
-    if version.files.len() >= 32
+    load_files(directory, &version.files, total, compressed)
+}
+
+fn load_files(
+    directory: &Path,
+    manifests: &[wire::Manifest],
+    total: &mut usize,
+    compressed: &mut usize,
+) -> io::Result<Vec<Vec<u8>>> {
+    if manifests.len() >= 32
         && rayon::current_thread_index().is_some()
         && rayon::current_num_threads() > 1
     {
-        return parallel(directory, version, total, compressed);
+        return parallel(directory, manifests, total, compressed);
     }
     let mut files = Vec::new();
-    for file in &version.files {
+    for file in manifests {
         let body = crate::checkout::repository::source(
             directory,
             crate::merge_history::hash(&file.hash)?,
@@ -41,12 +50,12 @@ pub(in crate::checkout_transition) fn load(
 
 fn parallel(
     directory: &Path,
-    version: &wire::Version,
+    manifests: &[wire::Manifest],
     total: &mut usize,
     compressed: &mut usize,
 ) -> io::Result<Vec<Vec<u8>>> {
-    let mut files = Vec::with_capacity(version.files.len());
-    for batch in version.files.chunks(64) {
+    let mut files = Vec::with_capacity(manifests.len());
+    for batch in manifests.chunks(64) {
         let records = read_batch(directory, batch, *total, *compressed)
             .or_else(|_| worker_batches(directory, batch, *total, *compressed))?;
         for (hash, record) in records {
@@ -117,4 +126,34 @@ fn serial_batch(
             Ok((hash, record))
         })
         .collect()
+}
+
+/// Verify the complete Version, but read bodies only where a three-way merge needs them.
+pub(super) fn selected(
+    directory: &Path,
+    version: &wire::Version,
+    needed: &[bool],
+    total: &mut usize,
+    compressed: &mut usize,
+) -> io::Result<Vec<Option<Vec<u8>>>> {
+    crate::checkout::plan::verify_manifest(
+        directory,
+        &version.hash,
+        &serde_json::to_value(&version.files).map_err(io::Error::other)?,
+        compressed,
+    )?;
+    if needed.len() != version.files.len() {
+        return Err(invalid("checkout selected Source count"));
+    }
+    let manifests: Vec<_> = version.files
+        .iter()
+        .zip(needed)
+        .filter(|(_, needed)| **needed)
+        .map(|(file, _)| file.clone())
+        .collect();
+    let mut bodies = load_files(directory, &manifests, total, compressed)?.into_iter();
+    Ok(needed
+        .iter()
+        .map(|needed| if *needed { bodies.next() } else { None })
+        .collect())
 }

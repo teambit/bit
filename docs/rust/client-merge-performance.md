@@ -29,8 +29,8 @@ index, so extra string or symbol properties increase that count. This preserves
 extra-property rejection without running a regular expression for every byte.
 
 The workspace helper uses its CPU-aware default pool, capped at four workers.
-Checkout Source batches of at least 32 files read and verify one worker-sized
-chunk at a time. Each worker receives a share of the remaining compressed and
+Checkout Source batches of at least 32 files read and verify chunks of up to
+64 files, retrying with worker-sized and serial chunks when a Source exceeds its share. Each worker receives a share of the remaining compressed and
 inflated byte budgets. A Source exceeding that conservative share retries the
 read-only batch with the original serial budget. Indexed collection preserves
 file order; workspace writes and their failure prefixes remain serial. On Unix,
@@ -47,6 +47,41 @@ The helper response reader grows a bounded buffer geometrically and scans only
 the newly received bytes for the terminator. It preserves response limits,
 complete-frame validation and rejection of trailing data while avoiding repeated
 copies of every previously received chunk.
+
+## In-process workspace engine
+
+New object-import archives also contain `bit-workspace.node`, a Node-API 8
+binding to the same Rust workspace and object-operation handlers. Discovery checks
+the companion's checksum, size, target and libc requirement beside the selected
+helper. Older archives and unavailable or incompatible companions retain the child
+transport. The archive smoke test runs both transports and checks identical binary
+workspace responses, retained read tokens and object decisions. The addon runs in
+a separate smoke process so Windows can release its library mapping before cleanup.
+
+Each owner has one active request. Inputs are copied before returning to JavaScript;
+outputs own their bytes. Requests dispatch directly to shared Rayon workers instead
+of occupying libuv workers. Pools initialize after loading the library, avoiding the
+dynamic linker lock during module initialization. Retirement waits for outstanding
+native work before exposing the canonical fallback.
+
+Owned workspace read receipts retain bounded snapshots in Rust. A later prepare can
+reuse only a receipt from the same owner with matching path and identity; ordinary
+new reads still observe the filesystem. Public clones share private verification
+bytes while preserving their mutable public Buffer aliases. Base Source bodies are
+loaded only for actual three-way modified rows, after verifying the complete Version
+manifest. A representative 266-file merge needs 266 verified Source reads instead of
+530; this work-count reduction alone does not establish a whole-command speedup.
+
+Logical capsule loads keep independent Source instances and Buffers for concurrent
+cache misses. Groups of at least eight can share their synchronous eligibility
+checks. Every asynchronous continuation still checks the current repository and
+constructors; accessors, thenable cache entries and replaced enqueue intrinsics
+fall back to the individual loader.
+
+Complete command timings must still pass the four-mode qualification corpus and
+bind the CLI, Rust source, helper and selected addon fingerprints. Diagnostic traces
+can observe an automatically discovered companion without forcing the runtime to
+select it. The production opt-in remains `BIT_RUST_CLIENT_VCS=on`.
 
 ## Reproduction
 

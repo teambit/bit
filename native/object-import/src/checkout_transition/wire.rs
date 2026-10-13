@@ -31,6 +31,7 @@ pub(super) struct Manifest {
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Current {
+    pub(super) read_token: Option<u64>,
     pub(super) relative_path: String,
     pub(super) path: PathBuf,
     pub(super) raw_hash: String,

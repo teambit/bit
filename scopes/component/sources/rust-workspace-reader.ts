@@ -2,20 +2,26 @@ import path from 'path';
 import fs from 'fs-extra';
 import os from 'os';
 import { createHash } from 'crypto';
+import { types } from 'util';
 import {
   withRustWorkspaceInspection,
   requestRustWorkspaceInspection,
   isRustWorkspaceInspection,
 } from './rust-workspace-inspection';
-import { canHashSourceNatively } from '@teambit/objects';
+import { canHashSourceNatively, registerRustSnapshotFunctionReference } from '@teambit/objects';
 import type AbstractVinyl from './abstract-vinyl';
 import { getRustCheckoutSourceDescriptor } from './rust-checkout-source';
 import { withWorkspaceSession } from './rust-workspace-persistence';
+import { isRustWorkspaceEngine, workspaceEngineIdentity } from './rust-workspace-engine';
 
 const MAX_FILES = 4096;
 const MAX_INPUT = 4 * 1024 * 1024;
 const MAX_OUTPUT = 32 * 1024 * 1024;
 const MAX_BYTES = 8 * 1024 * 1024;
+const readReceipts = new WeakMap<RustWorkspaceRead, { owner: object; token: number; value: RustWorkspaceRead }>();
+const receiptCompare = Buffer.compare;
+const receiptCopy = Buffer.from;
+const receiptIsBuffer = Buffer.isBuffer;
 import {
   getRustWorkspaceFileDescriptor,
   getRustWorkspaceMergeDescriptor,
@@ -36,6 +42,27 @@ export type RustWorkspaceDiff = {
   rawDiff: string;
   same: boolean;
 };
+registerRustSnapshotFunctionReference('WorkspaceReadReceipt', getRustWorkspaceReadReceipt);
+
+/** Only actual helper read results can confer ownership of an operation-local snapshot. */
+export function getRustWorkspaceReadReceipt(read: RustWorkspaceRead): { owner: object; token: number } | undefined {
+  const receipt = readReceipts.get(read);
+  if (!receipt || receipt.owner !== workspaceEngineIdentity() || !isRustWorkspaceEngine()) return undefined;
+  const fields = Object.getOwnPropertyDescriptors(read);
+  for (const key of ['path', 'hash', 'linuxHash', 'snapshotHash'] as const) {
+    if (!fields[key] || !('value' in fields[key]) || fields[key].value !== receipt.value[key]) return undefined;
+  }
+  const contents = fields.contents?.value;
+  if (
+    !receiptIsBuffer(contents) ||
+    types.isProxy(contents) ||
+    Object.getPrototypeOf(contents) !== Buffer.prototype ||
+    ['length', 'byteLength', 'byteOffset', 'buffer'].some((key) => Object.hasOwn(contents, key)) ||
+    receiptCompare(contents, receipt.value.contents) !== 0
+  )
+    return undefined;
+  return { owner: receipt.owner, token: receipt.token };
+}
 const hashString = (value: unknown): value is string => typeof value === 'string' && /^[0-9a-f]{40}$/.test(value);
 const validPath = (value: string) =>
   path.isAbsolute(value) &&
@@ -113,10 +140,19 @@ export async function scanRustWorkspace(
 /** Read and identify a complete file set before exposing any native snapshot. */
 export async function readRustWorkspaceFiles(paths: string[]): Promise<RustWorkspaceRead[] | undefined> {
   if (!paths.length || paths.length > MAX_FILES || !paths.every(validPath)) return undefined;
-  type Wire = { path: string; offset: number; bytes: number; hash: string; linuxHash: string; snapshotHash: string };
+  type Wire = {
+    path: string;
+    offset: number;
+    bytes: number;
+    hash: string;
+    linuxHash: string;
+    snapshotHash: string;
+    readToken?: number;
+  };
+  const owner = isRustWorkspaceEngine() ? workspaceEngineIdentity() : undefined;
   let output: RustWorkspaceRead[] | undefined;
   await request(
-    { kind: 'read', files: paths, binary: true },
+    { kind: 'read', files: paths, binary: true, ...(owner ? { retain: true } : {}) },
     paths.length,
     (value, completed, body): value is { files: Wire[] } => {
       const files = (value as { files?: unknown })?.files;
@@ -129,6 +165,7 @@ export async function readRustWorkspaceFiles(paths: string[]): Promise<RustWorks
           !hashString(file.hash) ||
           !hashString(file.linuxHash) ||
           !hashString(file.snapshotHash) ||
+          (file.readToken !== undefined && (!Number.isSafeInteger(file.readToken) || file.readToken <= 0)) ||
           file.offset !== bytes ||
           !Number.isSafeInteger(file.bytes) ||
           file.bytes < 0
@@ -145,6 +182,12 @@ export async function readRustWorkspaceFiles(paths: string[]): Promise<RustWorks
         snapshotHash: file.snapshotHash,
         contents: Buffer.from(body.subarray(file.offset, file.offset + file.bytes)),
       }));
+      if (owner)
+        output.forEach((read, index) => {
+          const token = files[index].readToken;
+          if (token !== undefined)
+            readReceipts.set(read, { owner, token, value: { ...read, contents: receiptCopy(read.contents) } });
+        });
       return true;
     },
     true
