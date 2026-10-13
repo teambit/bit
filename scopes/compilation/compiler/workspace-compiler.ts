@@ -578,6 +578,7 @@ export class WorkspaceCompiler {
    * reads missing files, and get-tsconfig falls back to whatever tsconfig.json it finds up the tree. compiling the
    * workspace env writes its "dist" back, so the paths are valid again. this runs on every compile, not only in
    * install, because a long-lived process (e.g. "bit server") can hold such an instance after another process installs.
+   * when the package dir was moved instead of re-created, compiling can't help; install's reloadMovedEnvs reloads it.
    */
   private async restoreEnvsWithMissingFiles(components: Component[], options: CompileOptions) {
     const envDefs = uniqBy(
@@ -598,8 +599,13 @@ export class WorkspaceCompiler {
     if (!envIds.length) return;
     this.logger.debug(`restoreEnvsWithMissingFiles: compiling ${envIds.join(', ')} before using them`);
     envIds.forEach((envId) => this.envsBeingRestored.add(envId));
+    // without a version, so an env instance loaded from another version than the workspace's is still compiled
+    // (its package dir is the workspace component's).
+    const idsToCompile = envIds.map((envId) => ComponentID.fromString(envId).toStringWithoutVersion());
     try {
-      await this.compileComponents(envIds, { initiator: options.initiator }, true, { loadSeedersAsAspects: false });
+      await this.compileComponents(idsToCompile, { initiator: options.initiator }, true, {
+        loadSeedersAsAspects: false,
+      });
     } finally {
       envIds.forEach((envId) => this.envsBeingRestored.delete(envId));
     }
