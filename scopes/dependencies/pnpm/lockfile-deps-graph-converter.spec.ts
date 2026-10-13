@@ -957,7 +957,11 @@ describe('convertGraphToLockfile on invalid graph', () => {
     expect(lockfile.snapshots!['foo@1.0.0']).to.eql({});
   });
 
-  it('should keep workspace-component pkgs that already have a valid resolution', async () => {
+  // pnpm links a dependency on the version the workspace holds to the
+  // workspace component, so the registry resolution the graph carries for it
+  // would only be resolved again. The restored lockfile records the component
+  // the way pnpm does, as a `file:` directory package.
+  it('should link workspace-component pkgs at the version the workspace holds, whatever resolution they carry', async () => {
     const componentPkgId = '@my-org/my-scope.comp2@1.0.0';
     const packages: PackagesMap = new Map([
       [
@@ -999,21 +1003,23 @@ describe('convertGraphToLockfile on invalid graph', () => {
       },
     });
     expect(lockfile.importers!['comps/comp1'].dependencies!['@my-org/my-scope.comp2']).to.eql({
-      version: '1.0.0',
+      version: 'file:comps/comp2',
       specifier: '1.0.0',
     });
-    expect(lockfile.packages![componentPkgId]).to.eql({ resolution: { integrity: 'sha512-comp2' } });
-    expect(lockfile.snapshots![componentPkgId]).to.eql({});
+    expect(Object.keys(lockfile.packages!)).to.eql(['@my-org/my-scope.comp2@file:comps/comp2']);
+    expect(lockfile.packages!['@my-org/my-scope.comp2@file:comps/comp2']).to.eql({
+      resolution: { directory: 'comps/comp2', type: 'directory' },
+    });
+    expect(Object.keys(lockfile.snapshots!)).to.eql(['@my-org/my-scope.comp2@file:comps/comp2']);
+    expect(lockfile.snapshots!['@my-org/my-scope.comp2@file:comps/comp2']).to.eql({});
   });
 
-  // A workspace-component snap reaches lockfile validation with no resolution
-  // even though resolve() never threw NO_MATCHING_VERSION, because
-  // getPkgsToResolve skips any pkgId whose name+version matches a manifest in
-  // the sign/capsule set. The snap is a seeder being signed, so it is in the
-  // manifests, never sent to the resolver, and would surface as
-  // `packages['...button-base@0.0.0-<snap>'] entry doesn't have a "resolution"
-  // field`. It must be scrubbed so pnpm links it from the manifest instead.
-  it('should drop workspace-component snaps skipped by the resolver (seeder in manifests)', async () => {
+  // A workspace-component snap whose name+version matches a manifest in the
+  // sign/capsule set is a seeder being signed. Its snap version was never
+  // published, so it is never sent to the resolver; pnpm links it from the
+  // manifest, transitive dependencies on it included, so the restored lockfile
+  // records it as a `file:` directory package and points the dependency at it.
+  it('should link workspace-component snaps that are seeders in the manifests', async () => {
     const snapPkgId = '@my-org/my-scope.components.button-base@0.0.0-e1613079b55eabc19ad484478b769d929986c124';
     const packages: PackagesMap = new Map([
       [snapPkgId, { component: { scope: 'my-org.my-scope', name: 'components/button-base' } } as any],
@@ -1048,9 +1054,15 @@ describe('convertGraphToLockfile on invalid graph', () => {
       },
     });
     expect(resolverCalled).to.equal(false);
-    expect(Object.keys(lockfile.packages!).sort()).to.eql(['foo@1.0.0']);
-    expect(Object.keys(lockfile.snapshots!).sort()).to.eql(['foo@1.0.0']);
-    expect(lockfile.snapshots!['foo@1.0.0']).to.eql({});
+    const linkedPkgId = '@my-org/my-scope.components.button-base@file:comps/button-base';
+    expect(Object.keys(lockfile.packages!).sort()).to.eql([linkedPkgId, 'foo@1.0.0']);
+    expect(lockfile.packages![linkedPkgId]).to.eql({
+      resolution: { directory: 'comps/button-base', type: 'directory' },
+    });
+    expect(Object.keys(lockfile.snapshots!).sort()).to.eql([linkedPkgId, 'foo@1.0.0']);
+    expect(lockfile.snapshots!['foo@1.0.0']).to.eql({
+      dependencies: { '@my-org/my-scope.components.button-base': 'file:comps/button-base' },
+    });
   });
 
   // Sibling of the above: even when the resolver IS called for a
@@ -1359,5 +1371,106 @@ describe('lockfile settings', () => {
 
     const lockfile = await graphToLockfile(graph);
     expect(lockfile).not.to.have.property('settings');
+  });
+});
+
+describe('workspace components in a restored lockfile', () => {
+  const comp1Dir = 'comps/comp1';
+  const comp2Dir = 'comps/comp2';
+  const comp2 = '@my-org/my-scope.comp2';
+  const comp2FilePkgId = `${comp2}@file:${comp2Dir}`;
+  const comp2FileDepPath = `${comp2FilePkgId}(react@18.3.1)`;
+
+  /** A workspace lockfile where comp1 depends on the injected comp2, which has a peer. */
+  function workspaceLockfile(): BitLockfileFile {
+    return {
+      lockfileVersion: '9.0',
+      importers: {
+        [comp1Dir]: {
+          dependencies: {
+            [comp2]: { version: `file:${comp2Dir}(react@18.3.1)`, specifier: '2.0.0' },
+            react: { version: '18.3.1', specifier: '18.3.1' },
+          },
+        },
+      },
+      packages: {
+        [comp2FilePkgId]: {
+          resolution: { directory: comp2Dir, type: 'directory' },
+          peerDependencies: { react: '*' },
+        },
+        'foo@1.0.0': { resolution: { integrity: 'sha512-foo' } },
+        'react@18.3.1': { resolution: { integrity: 'sha512-react' } },
+      },
+      snapshots: {
+        [comp2FileDepPath]: { dependencies: { foo: '1.0.0', react: '18.3.1' } },
+        'foo@1.0.0': {},
+        'react@18.3.1': {},
+      },
+      bit: { depsRequiringBuild: [comp2FilePkgId] },
+    } as BitLockfileFile;
+  }
+
+  function toGraph(lockfile: BitLockfileFile) {
+    return convertLockfileToGraph(lockfile, {
+      componentRelativeDir: comp1Dir,
+      componentIdByPkgName: new Map([[comp2, ComponentID.fromString('my-org.my-scope/comp2@2.0.0')]]),
+    });
+  }
+
+  function toLockfile(graph: DependenciesGraph, comp2Version: string, resolve = failingResolver) {
+    return convertGraphToLockfile(DependenciesGraph.deserialize(graph.serialize())!, {
+      manifests: {
+        [path.resolve(comp1Dir)]: { dependencies: { [comp2]: '2.0.0', react: '18.3.1' } },
+        [path.resolve(comp2Dir)]: { name: comp2, version: comp2Version },
+      },
+      rootDir: process.cwd(),
+      resolve,
+    });
+  }
+
+  function failingResolver(): never {
+    throw new Error('a workspace component must not be resolved from the registry');
+  }
+
+  it('should restore the file: package and snapshot of a workspace component, peer suffix included', async () => {
+    const graph = toGraph(workspaceLockfile());
+    expect(graph.packages.has(`${comp2}@2.0.0`)).to.equal(true);
+
+    const lockfile = await toLockfile(graph, '2.0.0');
+
+    expect(lockfile.importers![comp1Dir].dependencies![comp2]).to.eql({
+      version: `file:${comp2Dir}(react@18.3.1)`,
+      specifier: '2.0.0',
+    });
+    expect(lockfile.packages![comp2FilePkgId]).to.eql({
+      resolution: { directory: comp2Dir, type: 'directory' },
+      peerDependencies: { react: '*' },
+    });
+    expect(lockfile.packages).not.to.have.property(`${comp2}@2.0.0`);
+    expect(lockfile.snapshots![comp2FileDepPath]).to.eql({ dependencies: { foo: '1.0.0', react: '18.3.1' } });
+    expect(lockfile.snapshots).not.to.have.property(`${comp2}@2.0.0(react@18.3.1)`);
+    expect(lockfile.packages!['foo@1.0.0']).to.eql({ resolution: { integrity: 'sha512-foo' } });
+    expect(lockfile.bit?.depsRequiringBuild).to.eql([comp2FilePkgId]);
+  });
+
+  it('should keep a dependency on another version of a workspace component as a registry package', async () => {
+    const graph = toGraph(workspaceLockfile());
+    const resolved: string[] = [];
+
+    const lockfile = await toLockfile(graph, '3.0.0', (async ({ alias, bareSpecifier }) => {
+      resolved.push(`${alias}@${bareSpecifier}`);
+      return { resolution: { integrity: 'sha512-comp2' } };
+    }) as any);
+
+    expect(resolved).to.eql([`${comp2}@2.0.0`]);
+    expect(lockfile.importers![comp1Dir].dependencies![comp2]).to.eql({
+      version: '2.0.0(react@18.3.1)',
+      specifier: '2.0.0',
+    });
+    expect(lockfile.packages![`${comp2}@2.0.0`]).to.eql({
+      resolution: { integrity: 'sha512-comp2' },
+      peerDependencies: { react: '*' },
+    });
+    expect(lockfile.packages).not.to.have.property(comp2FilePkgId);
   });
 });

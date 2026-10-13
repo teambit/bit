@@ -155,3 +155,45 @@ describe('mergeGraphLockfileIntoExisting', () => {
     expect(merged.settings).to.eql(settings);
   });
 });
+
+describe('mergeGraphLockfileIntoExisting with workspace components', () => {
+  // Workspace components are `file:` directory packages, reached through
+  // `file:` refs. The merge must keep them like any other reachable entry.
+  it('keeps the file: snapshots the importers and other snapshots reach', () => {
+    const merged = mergeGraphLockfileIntoExisting(
+      {
+        lockfileVersion: '9.0',
+        importers: {
+          'comps/comp1': {
+            dependencies: { '@org/comp2': { version: 'file:comps/comp2(react@18.3.1)', specifier: '2.0.0' } },
+          },
+        },
+        packages: {
+          '@org/comp2@file:comps/comp2': { resolution: { directory: 'comps/comp2', type: 'directory' } },
+          '@org/comp3@file:comps/comp3': { resolution: { directory: 'comps/comp3', type: 'directory' } },
+          'react@18.3.1': { resolution: { integrity: 'sha512-react' } },
+          'unused@1.0.0': { resolution: { integrity: 'sha512-unused' } },
+        },
+        snapshots: {
+          '@org/comp2@file:comps/comp2(react@18.3.1)': {
+            dependencies: { '@org/comp3': 'file:comps/comp3', react: '18.3.1' },
+          },
+          '@org/comp3@file:comps/comp3': {},
+          'react@18.3.1': {},
+          'unused@1.0.0': {},
+        },
+      } as any,
+      { lockfileVersion: '9.0', importers: {} }
+    );
+    expect(Object.keys(merged.packages!).sort()).to.eql([
+      '@org/comp2@file:comps/comp2',
+      '@org/comp3@file:comps/comp3',
+      'react@18.3.1',
+    ]);
+    expect(Object.keys(merged.snapshots!).sort()).to.eql([
+      '@org/comp2@file:comps/comp2(react@18.3.1)',
+      '@org/comp3@file:comps/comp3',
+      'react@18.3.1',
+    ]);
+  });
+});

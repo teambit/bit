@@ -717,7 +717,9 @@ function pruneUnreachableLockfileEntries(lockfile: LockfileFile): void {
       if (!snapshot) continue;
       for (const depType of ['dependencies', 'optionalDependencies'] as const) {
         for (const [name, ref] of Object.entries(snapshot[depType] ?? {}) as Array<[string, string]>) {
-          if (ref.startsWith('link:') || ref.startsWith('file:')) continue;
+          // A `file:` ref names a workspace component's own snapshot, which
+          // is reachable through it like any other. A `link:` ref has none.
+          if (ref.startsWith('link:')) continue;
           stack.push(`${name}@${ref}`);
         }
       }
@@ -729,7 +731,7 @@ function pruneUnreachableLockfileEntries(lockfile: LockfileFile): void {
         [string, { version?: string } | string]
       >) {
         const version = typeof dep === 'string' ? dep : dep.version;
-        if (!version || version.startsWith('link:') || version.startsWith('file:')) continue;
+        if (!version || version.startsWith('link:')) continue;
         visit(`${name}@${version}`);
       }
     }
