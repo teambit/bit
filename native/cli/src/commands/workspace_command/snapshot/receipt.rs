@@ -15,7 +15,7 @@ use std::{
     collections::HashMap,
     fmt::Write,
     fs, io,
-    path::Path,
+    path::{Path, PathBuf},
     process::Command,
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
@@ -194,21 +194,48 @@ fn uuid_v4() -> io::Result<String> {
     Ok(format!("{}-{}-{}-{}-{}", &hex[0..8], &hex[8..12], &hex[12..16], &hex[16..20], &hex[20..32]))
 }
 
+/// The Node.js CLI the native commands stand in for: its Node (absolute,
+/// `process.execPath`), its `@teambit/bit` package and that package's
+/// version (`getBitVersion()`).
+pub struct NodeCli {
+    pub node: PathBuf,
+    pub bit_dir: PathBuf,
+    pub version: String,
+}
+
+impl NodeCli {
+    pub fn find() -> io::Result<Self> {
+        let Ok(Target::Entry(cli)) = discovery::find() else {
+            return Err(decline("the Node.js CLI's version"));
+        };
+        let bit_dir = cli.bit_dir.ok_or_else(|| decline("the Node.js CLI's version"))?;
+        let manifest: Value = serde_json::from_slice(&fs::read(bit_dir.join("package.json"))?)
+            .map_err(io::Error::other)?;
+        let version = manifest
+            .get("version")
+            .and_then(Value::as_str)
+            .filter(|version| !version.is_empty());
+        let version = version.ok_or_else(|| decline("the Node.js CLI's version"))?.to_string();
+        let node = absolute_node(&cli.node).ok_or_else(|| decline("the Node.js executable"))?;
+        Ok(Self { node, bit_dir, version })
+    }
+}
+
+/// `node` resolved on `PATH` when discovery left it bare.
+fn absolute_node(node: &Path) -> Option<PathBuf> {
+    if node.is_absolute() {
+        return Some(node.to_path_buf());
+    }
+    let path = std::env::var_os("PATH")?;
+    std::env::split_paths(&path)
+        .map(|dir| dir.join(node))
+        .find(|candidate| candidate.is_file())
+}
+
 /// `getBitVersion()`: the version of the `@teambit/bit` package the Node.js
 /// CLI runs from.
 fn bit_version() -> io::Result<String> {
-    let Ok(Target::Entry(cli)) = discovery::find() else {
-        return Err(decline("the Node.js CLI's version"));
-    };
-    let package =
-        cli.bit_dir.ok_or_else(|| decline("the Node.js CLI's version"))?.join("package.json");
-    let manifest: Value = serde_json::from_slice(&fs::read(package)?).map_err(io::Error::other)?;
-    manifest
-        .get("version")
-        .and_then(Value::as_str)
-        .filter(|version| !version.is_empty())
-        .map(str::to_string)
-        .ok_or_else(|| decline("the Node.js CLI's version"))
+    NodeCli::find().map(|cli| cli.version)
 }
 
 #[cfg(test)]

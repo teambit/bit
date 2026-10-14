@@ -93,6 +93,31 @@ impl Progress {
         }
     }
 
+    /// Print the lines of `bit import` and `bit fetch` (`importer`): the
+    /// latest heads, then the missing versions, which `importMany` fetches
+    /// only when components are missing.
+    pub fn render_inbound(&self, output: &Output, fetch: bool, with_ids: bool) {
+        if fetch {
+            output.status("fetching objects...");
+        }
+        output.status("importing components");
+        if with_ids {
+            output.status("importing components");
+        }
+        for row in &self.imports {
+            if row.reason.as_deref() == Some(REASONS[1]) {
+                output.status(&format!(
+                    "import {} components with their dependencies (if missing)",
+                    row.ids.len(),
+                ));
+                if row.components == 0 {
+                    continue;
+                }
+            }
+            render_import(output, row);
+        }
+    }
+
     /// Print the lines, as the loader does while checkout runs.
     pub fn render_checkout(&self, output: &Output) {
         output.status("switching component version...");

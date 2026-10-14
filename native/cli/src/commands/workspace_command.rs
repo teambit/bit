@@ -13,6 +13,8 @@ pub mod resolve;
 pub mod results;
 pub mod versions;
 
+pub use snapshot::receipt::NodeCli;
+
 mod defaults;
 mod policy;
 mod snapshot;
@@ -137,7 +139,7 @@ impl Steps<'_> {
 }
 
 /// The user's home directory, as Node's `os.homedir()` reads it.
-fn home() -> PathBuf {
+pub fn home() -> PathBuf {
     PathBuf::from(
         env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).unwrap_or_default(),
     )
@@ -186,12 +188,26 @@ pub fn execute(
     report: &Report,
     progress: impl FnOnce(&Output),
 ) -> io::Result<Outcome> {
+    execute_with(root, args, command, report, |output| {
+        progress(output);
+        commit(&mut planned, root)
+    })
+}
+
+/// The loader's `running command` line, `work`, then the report; a failure
+/// of `work` is the command's own, printed in red with exit code 1.
+pub fn execute_with(
+    root: &Path,
+    args: &[OsString],
+    command: &str,
+    report: &Report,
+    work: impl FnOnce(&Output) -> io::Result<()>,
+) -> io::Result<Outcome> {
     let chalk = Chalk::detect(args);
     let history = History::start(root, args);
     let output = loader_output(chalk);
     output.status(&format!(r#"running command "{command}"..."#));
-    progress(&output);
-    if let Err(error) = commit(&mut planned, root) {
+    if let Err(error) = work(&output) {
         output.stop();
         history.end(false);
         eprintln!("{}", chalk.red(&error.to_string()));
@@ -235,7 +251,7 @@ fn commit(planned: &mut Planned, root: &Path) -> io::Result<()> {
 }
 
 /// `currentDateAndTimeToFileName()`: local time, unpadded.
-fn file_id() -> String {
+pub fn file_id() -> String {
     use chrono::{Datelike, Timelike};
     let now = chrono::Local::now();
     format!(
