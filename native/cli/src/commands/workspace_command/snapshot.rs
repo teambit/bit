@@ -30,13 +30,7 @@ impl Steps<'_> {
     ) -> io::Result<Capture> {
         let snap_failed = plan.get("snapFailed") == Some(&Value::Bool(true));
         let needs_snap = needs_snap(plan, snap_failed)?;
-        let options = &request.options;
-        if request.operation != "merge"
-            || truthy(options.get("noSnap"))
-            || options.get("lane").is_some()
-        {
-            return Err(decline("command snapshot options"));
-        }
+        self.supported(request, snap_failed, &needs_snap)?;
         // Failed issue checks repopulate only the divergent targets' staged caches.
         if snap_failed && caches.is_empty() {
             return Err(decline("command failed snapshot without dependency caches"));
@@ -47,22 +41,50 @@ impl Steps<'_> {
             return Err(decline("command snapshot dependents"));
         }
         issues::validate(self.root, &context, &capture.components, plan)?;
+        // The lane step comes before the snapshot identities are allocated.
+        if let Some(preparation) = plan
+            .as_object_mut()
+            .and_then(|plan| plan.remove("lanePreparation"))
+        {
+            self.finalize_lane(plan, &preparation)?;
+        }
         if !snap_failed {
             *plan = self.finalize(&needs_snap, &capture)?;
         }
         Ok(capture)
     }
 
+    /// The snapshots the native step writes: merges that snap, not lane
+    /// merges without auto-snap, nor lane snaps of hidden components or
+    /// that fail.
+    fn supported(
+        &self,
+        request: &Request<'_>,
+        snap_failed: bool,
+        needs_snap: &[String],
+    ) -> io::Result<()> {
+        let options = &request.options;
+        let lane = options.get("lane");
+        let no_auto_snap = lane.is_some_and(|lane| truthy(lane.get("noAutoSnap")));
+        if request.operation != "merge" || truthy(options.get("noSnap")) || no_auto_snap {
+            return Err(decline("command snapshot options"));
+        }
+        if lane.is_some() && (snap_failed || hidden_only(self.context, needs_snap)) {
+            return Err(decline("command lane snapshot of hidden or failed components"));
+        }
+        Ok(())
+    }
+
     /// `commandSnapshotReceipt` and `commandFinalize`: the finalized plan.
     fn finalize(&mut self, needs_snap: &[String], capture: &Capture) -> io::Result<Value> {
-        if truthy(self.context["lane"].get("shouldSquash")) {
-            return Err(decline("command snapshot squash log"));
-        }
         let hashes = receipt::new_snap_hashes(needs_snap.len())?;
         let graphs = graphs(self.root, self.context, needs_snap, &hashes, capture)?;
         let snapped = receipt::Snapped { identities: needs_snap, hashes: &hashes, graphs: &graphs };
         let lane_log = truthy(self.context["lane"].get("current"));
-        let receipt = receipt::snapshot(self.root, &snapped, lane_log)?;
+        let mut receipt = receipt::snapshot(self.root, &snapped, lane_log)?;
+        if truthy(self.context["lane"].get("shouldSquash")) {
+            squash_logs(&mut receipt, self.context)?;
+        }
         let finalized: Value = self.engine.request(&json!({
             "kind": "commandFinalize",
             "token": self.token,
@@ -202,6 +224,60 @@ fn package_name<'c>(capture: &'c Capture, identity: &str) -> io::Result<&'c str>
         .find(|component| without_version(&component.identity) == identity)
         .map(|component| component.package_name.as_str())
         .ok_or_else(|| decline("command snapshot component"))
+}
+
+/// A lane merge whose snaps are all hidden lane components, absent from
+/// the bitmap: they are scope-only snapshots.
+fn hidden_only(context: &Value, needs_snap: &[String]) -> bool {
+    let targets = context["lane"]["targets"].as_array();
+    !needs_snap.is_empty()
+        && needs_snap
+            .iter()
+            .all(|identity| {
+                targets.is_some_and(|targets| {
+                    targets
+                        .iter()
+                        .any(|target| {
+                            target["identity"] == identity.as_str()
+                                && target["hidden"] == true
+                                && target["bitmapPresent"] == false
+                        })
+                })
+            })
+}
+
+/// `squashLog` per version: `getLogForSquash(commandOtherLane(context,
+/// identity))`, the merged lane, or main in the component's scope.
+fn squash_logs(receipt: &mut Value, context: &Value) -> io::Result<()> {
+    let other = &context["lane"]["otherId"];
+    let (Some(name), Some(scope)) = (
+        other["name"]
+            .as_str()
+            .filter(|name| !name.is_empty()),
+        other["scope"]
+            .as_str()
+            .filter(|scope| !scope.is_empty()),
+    ) else {
+        return Err(decline("command lane identity receipt"));
+    };
+    let log = receipt["log"].clone();
+    for version in receipt["versions"]
+        .as_array_mut()
+        .into_iter()
+        .flatten()
+    {
+        let identity = text(version.get("identity"))?;
+        let own_scope = identity
+            .split_once('/')
+            .map(|(scope, _)| scope)
+            .filter(|scope| !scope.is_empty());
+        let own_scope = own_scope.ok_or_else(|| decline("command lane component identity"))?;
+        let lane_scope = if name == "main" { own_scope } else { scope };
+        let mut squash = log.clone();
+        squash["message"] = json!(format!("squashed during merge from {lane_scope}/{name}"));
+        version["squashLog"] = squash;
+    }
+    Ok(())
 }
 
 /// `plan.needsSnap`: the identities to snap, absent when the snap failed.
