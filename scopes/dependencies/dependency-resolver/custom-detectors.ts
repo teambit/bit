@@ -1,12 +1,19 @@
 import fs from 'fs';
+import { isBuiltin } from 'module';
 import path from 'path';
 import { DetectorHook, type DependencyDetector } from './detector-hook';
 
 export type CustomDetection = {
   /** what the detector returned, in its order (an object's keys, as `dependency-tree` reads them). */
   dependencies: string[];
-  /** resolved through `lookupTypeScript` (a registered detector), not the extension's default lookup. */
+  /** resolved through `lookupTypeScript` (a registered detector supports the file), not the extension's default lookup. */
   typescript: boolean;
+  /**
+   * what a detector's `dependencyLookup` returned per specifier: an absolute path (`path.resolve`d, as
+   * `fs.existsSync` reads it), or `null` when it returned nothing. Absent when no lookup applies.
+   * Built-ins and http specifiers are not looked up, as `dependency-tree` skips them.
+   */
+  lookups?: Record<string, string | null>;
 };
 
 /**
@@ -15,11 +22,13 @@ export type CustomDetection = {
  * (`getDepDetectors()`) supporting it, else the first detector aspects registered
  * (`registerDetector`) when one of them is not natively replicated (`canSkipNativeGraphHooks`).
  * Files no custom detector claims are left out: the native scanner detects them.
+ * `directory` is the component dir `filing-cabinet` passes a `dependencyLookup`.
  * `null` when there is no custom detector at all.
  */
 export async function detectWithCustomDetectors(
   envDetectors: DependencyDetector[] | null | undefined,
-  files: string[]
+  files: string[],
+  directory: string
 ): Promise<Record<string, CustomDetection> | null> {
   const fromEnv = envDetectors ?? [];
   const registered = !DetectorHook.canSkipNativeGraphHooks('');
@@ -28,13 +37,10 @@ export async function detectWithCustomDetectors(
   const result: Record<string, CustomDetection> = {};
   for (const filename of files) {
     const ext = path.extname(filename);
-    let typescript = false;
-    let detector = fromEnv.find((candidate) => candidate.isSupported({ ext, filename }));
+    const context = { ext, filename };
     // env.jsonc keeps its native handling, as the canonical env.jsonc detector does.
-    if (!detector && registered && !filename.endsWith('env.jsonc')) {
-      detector = hook.getDetector(ext, filename);
-      typescript = true;
-    }
+    const fromHook = registered && !filename.endsWith('env.jsonc') ? hook.getDetector(ext, filename) : undefined;
+    const detector = fromEnv.find((candidate) => candidate.isSupported(context)) ?? fromHook;
     if (!detector) continue;
     let content: string;
     try {
@@ -42,19 +48,60 @@ export async function detectWithCustomDetectors(
     } catch {
       continue;
     }
-    result[filename] = { dependencies: await detect(detector, content), typescript };
+    const lookup = dependencyLookup(fromEnv, fromHook, context);
+    const detection: CustomDetection = { dependencies: [], typescript: Boolean(fromHook) };
+    try {
+      const raw = await detect(detector, content);
+      detection.dependencies = Array.isArray(raw) ? raw : Object.keys(raw);
+      if (lookup) detection.lookups = lookUp(lookup, raw, { filename, directory, envDetectors: fromEnv });
+    } catch {
+      // `dependency-tree` records a parse or resolve error for the file: it yields nothing.
+      detection.dependencies = [];
+    }
+    result[filename] = detection;
   }
   return result;
 }
 
-/** `getDepsFromFile` on a custom detector: `@bit-no-check` files and parse errors yield nothing. */
-async function detect(detector: DependencyDetector, content: string): Promise<string[]> {
-  if (content.startsWith('// @bit-no-check') || content.startsWith('/* @bit-no-check')) return [];
-  try {
-    const deps: unknown = await detector.detect(content);
-    if (Array.isArray(deps)) return deps.filter((dep): dep is string => typeof dep === 'string');
-    return deps && typeof deps === 'object' ? Object.keys(deps) : [];
-  } catch {
-    return [];
+/**
+ * `filing-cabinet`'s resolver choice: the lookup of the registered detector supporting the file,
+ * overridden by the last env detector supporting it that has one. Called unbound, as there.
+ */
+function dependencyLookup(
+  fromEnv: DependencyDetector[],
+  fromHook: DependencyDetector | undefined,
+  context: { ext: string; filename: string }
+): DependencyDetector['dependencyLookup'] {
+  let lookup = fromHook?.dependencyLookup;
+  for (const detector of fromEnv) {
+    if (detector.isSupported(context) && detector.dependencyLookup) lookup = detector.dependencyLookup;
   }
+  return lookup;
+}
+
+/** The `cabinet()` options `dependency-tree` builds, without the parser state a custom detector never sets. */
+function lookUp(
+  lookup: NonNullable<DependencyDetector['dependencyLookup']>,
+  raw: string[] | Record<string, any>,
+  options: { filename: string; directory: string; envDetectors: DependencyDetector[] }
+): Record<string, string | null> {
+  const lookups: Record<string, string | null> = {};
+  const dependencies = Array.isArray(raw) ? raw : Object.keys(raw);
+  for (const dependency of dependencies) {
+    if (dependency in lookups || isBuiltin(dependency) || /^https?:\/\//.test(dependency)) continue;
+    const params: Record<string, any> = { ...options, dependency, config: null, webpackConfig: null };
+    // used for vue
+    if (!Array.isArray(raw) && raw[dependency]?.isScript !== undefined) params.isScript = raw[dependency].isScript;
+    const resolved: unknown = lookup(params as any);
+    lookups[dependency] = typeof resolved === 'string' && resolved ? path.resolve(resolved) : null;
+  }
+  return lookups;
+}
+
+/** `getDepsFromFile` on a custom detector: `@bit-no-check` files yield nothing, other values are dropped. */
+async function detect(detector: DependencyDetector, content: string): Promise<string[] | Record<string, any>> {
+  if (content.startsWith('// @bit-no-check') || content.startsWith('/* @bit-no-check')) return [];
+  const deps: unknown = await detector.detect(content);
+  if (Array.isArray(deps)) return deps.filter((dep): dep is string => typeof dep === 'string');
+  return deps && typeof deps === 'object' ? (deps as Record<string, any>) : [];
 }

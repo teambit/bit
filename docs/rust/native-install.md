@@ -134,29 +134,87 @@ the loader on after the package manager, and status lines are not shown on CI
 Precinct asks custom detectors before its built-in detectives: first the env's
 detectors (`getDepDetectors()`), then those aspects register (`registerDetector`).
 The first one supporting a file (`isSupported({ ext, filename })`) detects it alone.
-`detectDependencies` takes the env id (without version) and the component's
-absolute file paths. It runs `detectWithCustomDetectors` of
+`detectDependencies` takes the env id (without version), the component dir and
+the component's absolute file paths. It runs `detectWithCustomDetectors` of
 `@teambit/dependency-resolver`, which returns
-`{ "<file>": { dependencies, typescript } }` for the files a custom detector
-supports, or `null` when the env has no detectors and every registered detector
-is one Rust replicates (env.jsonc, MDX). `typescript` marks a registered detector:
-`filing-cabinet` resolves its relative imports through `lookupTypeScript`. The
-detected specifiers replace the native scan of the file. After that they are
-resolved and classified like any other import: packages, components, relative
-files and missing packages. `@bit-no-check` files and detector errors yield
-nothing.
+`{ "<file>": { dependencies, typescript, lookups } }` for the files a custom
+detector supports, or `null` when the env has no detectors and every registered
+detector is one Rust replicates (env.jsonc, MDX). `typescript` marks a file a
+registered detector supports: `filing-cabinet` resolves its relative imports
+through `lookupTypeScript`. The detected specifiers replace the native scan of the
+file. After that they are resolved and classified like any other import: packages,
+components, relative files and missing packages. `@bit-no-check` files and detector
+errors yield nothing.
+
+`filing-cabinet` resolves a file's imports with a detector's `dependencyLookup`
+when one applies: the lookup of the registered detector supporting the file,
+replaced by that of the last env detector supporting it. The host calls it as
+`filing-cabinet` does, unbound, with `{ dependency, filename, directory, config,
+webpackConfig, envDetectors }` (`directory` is the component dir, `isScript` is
+added for an object result), for every specifier except built-ins and http ones.
+`lookups` maps each to the returned path (`path.resolve`d, as `fs.existsSync`
+reads it) or to `null` when the lookup returned nothing; a lookup that throws
+yields nothing for the file, as a resolve error does. Rust classifies a returned
+path as `dependency-tree` does: an existing path under `node_modules` is the
+package containing it (`resolvePackageData`; one without a `package.json` is
+ignored), any other existing path a file of the component, of another component,
+or untracked. A path that does not exist is missing: a relative specifier is a
+missing file, a package is looked up by name (`MissingHandler`). When the lookup
+returned nothing and the specifier has a different extension with a default
+lookup, that lookup is tried first, as `filing-cabinet` retries.
 
 The host is asked only for a component that can have a custom detector. Its env
-must not be a core env, because no core env implements `getDepDetectors()`, or the
-component must configure a non-core aspect, which could register a detector.
-An env the host reports without detectors is not asked about again. Components of
-core envs without custom aspects therefore never reach the host. A non-core env
-loads the env in the host, but the host already loads it for its dev patterns.
+must not be a core env, because no core env implements `getDepDetectors()`, or a
+non-core aspect must be configured, which could register a detector: on the
+component, or at the root of `workspace.jsonc`. The CLI loads the root aspects on
+start (`getNotLoadedConfiguredExtensions`), but `loadBit` does not, so the first
+`detectDependencies` request carries them as `aspectIds` and the host loads them
+before detecting. The aspects the components configure are loaded earlier, by
+`dependencyPolicies`. An env the host reports without detectors is not asked about
+again. Components of core envs therefore never reach the host in a workspace
+without custom aspects. A non-core env loads the env in the host, but the host
+already loads it for its dev patterns.
 
 The dependency cache entry is keyed by the component id and checked against file
 times, as in TypeScript, and does not record detector output. An entry written by
 an install that did not apply the detectors would be stale. A component a custom
 detector applies to is therefore always detected, and its entry is written again.
+
+## Repeat installs skip `afterInstall`
+
+`afterInstall` loads Harmony to compile the workspace and write its config files. On
+a repeat install that changed nothing, the native installer skips it and prints the
+compile step's success line itself.
+
+After a compilation without errors and a complete config write, the hosts return the
+paths both wrote: each compiled component's dist directories (`BuildResult.distDirs`,
+including injected directories) and the config files. Rust then writes a stamp to
+`<scope>/cache/native-install/after-install.json` with:
+
+- **an input fingerprint:** the bit version, `workspace.jsonc`, `.bitmap`,
+  `pnpm-lock.yaml`, and the size and modification time of every file under each
+  component directory except `node_modules`. The component loader also picks up files
+  `.bitmap` does not list, so directories are walked, not the `.bitmap` file lists.
+- **an output snapshot:** the size and modification time of every file in those paths.
+
+The next install skips the step only when both still match. Any source, config or
+package change, and any removed or edited output, runs it again.
+
+The step always runs:
+
+- for programmatic installs;
+- with `--skip-compile` or `--skip-write-config-files`;
+- when an env failed to load;
+- with the `no-fs-cache` feature;
+- when a `link:` or `file:` dependency resolves outside the workspace's components,
+  its `node_modules` and the directories bit links its core aspects from, because
+  such a package can change without any input changing.
+
+No stamp is written after compile errors, a failed config write, or a config write
+that left files bit did not generate, because each of those prints output every time.
+An installed bit whose hosts don't report these paths never writes one either. Bit's
+own code is identified by its version, so a development build changed without a
+version bump needs one full install, or removing the stamp.
 
 ## Crate layout (`native/install/src`)
 
@@ -300,8 +358,6 @@ programmatic entry.
 
 ## Known differences
 
-- A custom detector's `dependencyLookup` is not called: the specifiers it detects are resolved natively, with the lookup `filing-cabinet` uses when there is none.
-- A detector registered by a workspace aspect that no component configures is not applied to components on core envs: the host is asked only for components with a non-core env or a non-core configured aspect.
 - Workspaces configured with the yarn package manager use the TypeScript command, because yarn is a JavaScript package manager.
 
 ## CI
@@ -313,3 +369,7 @@ The PR e2e jobs never provision the addon, so they run the TypeScript command. T
 `BIT_NATIVE_INSTALL_REQUIRE=on`. With that variable, a missing or unusable addon is an
 error instead of a fallback, so the job cannot pass on the TypeScript command by accident.
 Workspaces the native command declines on purpose (yarn) still fall back.
+
+`native-install-full-e2e.yml` runs the whole e2e suite the same way, in 20 shards split
+like CircleCI's (`scripts/split-e2e-tests.js`). It is too heavy for every PR, so it runs
+on PRs labeled `native-install-full-e2e`, or by hand.

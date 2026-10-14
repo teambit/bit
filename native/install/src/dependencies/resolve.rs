@@ -27,6 +27,11 @@ const COMMONJS_EXTENSIONS: [&str; 15] = [
 const TYPESCRIPT_EXTENSIONS: [&str; 3] = ["ts", "tsx", "d.ts"];
 /// Origin files `filing-cabinet` resolves through TypeScript.
 const TYPESCRIPT_ORIGINS: [&str; 6] = ["ts", "tsx", "cts", "mts", "md", "mdx"];
+/// The extensions `filing-cabinet` has a default lookup for (`defaultLookups`).
+const DEFAULT_LOOKUPS: [&str; 14] = [
+    "js", "cjs", "mjs", "jsx", "ts", "tsx", "cts", "mts", "scss", "sass", "styl", "less", "md",
+    "mdx",
+];
 
 /// The classification of one specifier.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -145,14 +150,16 @@ impl<'a> Resolver<'a> {
     ) -> Resolved {
         let origin = component.dir.join(file);
         let base = origin.parent().unwrap_or(&component.dir);
-        let typescript = typescript
-            || origin
-                .extension()
-                .and_then(|extension| extension.to_str())
-                .is_some_and(|extension| TYPESCRIPT_ORIGINS.contains(&extension));
+        let typescript = typescript || is_typescript_origin(&origin);
         let Some(target) = find_file(&normalize(&base.join(specifier)), typescript) else {
             return Resolved::MissingFile(specifier.to_owned());
         };
+        self.file(component, &target)
+    }
+
+    /// A file a dependency resolved to: the importing component's, another
+    /// component's, or one no component tracks.
+    fn file(&self, component: &WorkspaceComponent, target: &Path) -> Resolved {
         // The owner is the deepest component containing the file (`getComponentIdByPath`);
         // the workspace-root component (`rootDir "."`) owns no other component's files.
         let owner = self.components
@@ -162,8 +169,101 @@ impl<'a> Resolver<'a> {
         match owner {
             Some(owner) if owner.id == component.id => Resolved::Internal,
             Some(owner) => Resolved::OtherComponent(owner.id.clone()),
-            None => Resolved::Untracked(workspace_relative(self.root, &target)),
+            None => Resolved::Untracked(workspace_relative(self.root, target)),
         }
+    }
+
+    /// Classify `specifier` imported from `file` by what a custom detector's
+    /// `dependencyLookup` returned (`cabinet()` in `dependency-tree`):
+    /// - an existing path is a dependency path (`groupDependencyList`): under
+    ///   `node_modules` the package containing it (`resolvePackageData`), else a file;
+    /// - nothing makes `filing-cabinet` retry with the default lookup of the
+    ///   specifier's extension when that differs from the file's;
+    /// - otherwise the specifier does not exist: a relative one is a missing file,
+    ///   a package is looked up by name (`MissingHandler`).
+    pub fn looked_up(
+        &mut self,
+        component: &WorkspaceComponent,
+        file: &str,
+        specifier: &str,
+        result: Option<&Path>,
+    ) -> io::Result<Resolved> {
+        if let Some(path) = result.filter(|path| path.exists()) {
+            return self.dependency_path(component, &normalize(path));
+        }
+        if !(specifier.starts_with('.') || specifier.starts_with('/')) {
+            return self.resolve_from(component, file, specifier, false);
+        }
+        let extension = |path: &str| {
+            Path::new(path)
+                .extension()
+                .and_then(|extension| extension.to_str())
+                .map(str::to_owned)
+        };
+        let retry = result.is_none()
+            && extension(specifier)
+                .is_some_and(|dependency| {
+                    Some(&dependency) != extension(file).as_ref()
+                        && DEFAULT_LOOKUPS.contains(&dependency.as_str())
+                });
+        if !retry {
+            return Ok(Resolved::MissingFile(specifier.to_owned()));
+        }
+        let origin = component.dir.join(file);
+        let base = origin.parent().unwrap_or(&component.dir);
+        let target = normalize(&base.join(specifier));
+        Ok(match find_file(&target, is_typescript_origin(&target)) {
+            Some(target) => self.file(component, &target),
+            None => Resolved::MissingFile(specifier.to_owned()),
+        })
+    }
+
+    /// `groupDependencyList` for one existing path.
+    fn dependency_path(
+        &mut self,
+        component: &WorkspaceComponent,
+        target: &Path,
+    ) -> io::Result<Resolved> {
+        let relative = target.strip_prefix(&component.dir).unwrap_or(target);
+        let parts: Vec<String> = relative
+            .components()
+            .map(|part| {
+                part.as_os_str()
+                    .to_string_lossy()
+                    .into_owned()
+            })
+            .collect();
+        let Some(index) = parts
+            .iter()
+            .rposition(|part| part == "node_modules")
+        else {
+            return Ok(self.file(component, target));
+        };
+        // `resolvePackageDirFromFilePath`: the last `node_modules` and the package name.
+        let name = package_name(&parts[index + 1..].join("/"));
+        let dir = target
+            .ancestors()
+            .find(|dir| dir.ends_with("node_modules"))
+            .unwrap_or(target)
+            .join(&name);
+        let Some(manifest) = self.read(&dir.join("package.json"))? else {
+            // `unidentifiedPackages`: a package without a `package.json`.
+            return Ok(Resolved::Ignored);
+        };
+        if let Some(aspect) = manifest["name"]
+            .as_str()
+            .and_then(|name| {
+                self.core_aspects
+                    .iter()
+                    .find(|aspect| aspect.package_name == name)
+            })
+        {
+            return Ok(Resolved::CoreAspect(aspect.id.clone()));
+        }
+        Ok(match from_manifest(&manifest, &name) {
+            Resolved::Missing(_) => Resolved::Ignored,
+            other => other,
+        })
     }
 
     /// `resolvePackagePath` from the component dir, then `resolvePackageData`.
@@ -171,20 +271,7 @@ impl<'a> Resolver<'a> {
         let Some(manifest) = self.find_manifest(from, name)? else {
             return Ok(Resolved::Missing(name.to_owned()));
         };
-        let Some(package_name) = manifest["name"]
-            .as_str()
-            .filter(|name| !name.is_empty())
-        else {
-            return Ok(Resolved::Missing(name.to_owned()));
-        };
-        let concrete = manifest["version"].as_str().map(str::to_owned);
-        if manifest["componentId"].is_object() {
-            return Ok(Resolved::Component(component_package(&manifest, package_name, concrete)));
-        }
-        Ok(match concrete {
-            Some(version) => Resolved::Package { name: package_name.to_owned(), version },
-            None => Resolved::Missing(name.to_owned()),
-        })
+        Ok(from_manifest(&manifest, name))
     }
 
     /// The `package.json` of `node_modules/<name>` closest to `from`.
@@ -220,6 +307,32 @@ impl<'a> Resolver<'a> {
         self.manifests.insert(path.to_path_buf(), manifest.clone());
         Ok(manifest)
     }
+}
+
+/// `resolvePackageData` of a found `package.json`: a component, a package with its
+/// version, or missing (`name` is the specifier's package name).
+fn from_manifest(manifest: &Value, name: &str) -> Resolved {
+    let Some(package_name) = manifest["name"]
+        .as_str()
+        .filter(|name| !name.is_empty())
+    else {
+        return Resolved::Missing(name.to_owned());
+    };
+    let concrete = manifest["version"].as_str().map(str::to_owned);
+    if manifest["componentId"].is_object() {
+        return Resolved::Component(component_package(manifest, package_name, concrete));
+    }
+    match concrete {
+        Some(version) => Resolved::Package { name: package_name.to_owned(), version },
+        None => Resolved::Missing(name.to_owned()),
+    }
+}
+
+/// An origin file `filing-cabinet` resolves through TypeScript.
+fn is_typescript_origin(path: &Path) -> bool {
+    path.extension()
+        .and_then(|extension| extension.to_str())
+        .is_some_and(|extension| TYPESCRIPT_ORIGINS.contains(&extension))
 }
 
 fn component_package(

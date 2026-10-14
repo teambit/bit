@@ -1,6 +1,7 @@
 //! `_installModules`: link, calculate manifests, run the engine, link the
 //! components, compile, and repeat while legacy envs keep changing the manifests.
 
+mod compile_stamp;
 mod engine_run;
 mod linking;
 
@@ -15,7 +16,7 @@ use crate::{
     model::DependencyMap, output::Style,
 };
 use serde_json::{Value, json};
-use std::{collections::HashSet, fs, io, path::Path};
+use std::{collections::HashSet, fs, io, path::Path, time::Instant};
 
 const MAX_CYCLES: usize = 5;
 
@@ -82,7 +83,7 @@ async fn run_cycles(
         linking::link_components(session, loaded, calculated).await?;
         linking::sync_core_aspects(session, loaded, calculated)?;
         let old_non_loaded_envs = calculated.non_loaded_envs();
-        after_install(session, &old_non_loaded_envs).await?;
+        after_install(session, loaded, calculated, &old_non_loaded_envs).await?;
         if !result.dependencies_changed
             || !session.options.recurring_install
             || old_non_loaded_envs.is_empty()
@@ -106,18 +107,75 @@ struct CycleContext<'a> {
     restore: Option<&'a engine::RestoreInput>,
 }
 
-/// Compile and write the config files through the JavaScript host.
-async fn after_install(session: &Session<'_>, non_loaded_envs: &[String]) -> io::Result<()> {
+/// Compile and write the config files through the JavaScript host, unless nothing
+/// changed since its last compilation (see [`compile_stamp`]).
+async fn after_install(
+    session: &Session<'_>,
+    loaded: &Loaded,
+    calculated: &Calculated,
+    non_loaded_envs: &[String],
+) -> io::Result<()> {
     let request = AfterInstall {
         compile: !session.options.skip_compile,
         write_config_files: !session.options.skip_write_config_files,
         clear_cache: !non_loaded_envs.is_empty(),
     };
-    if request.compile || request.write_config_files {
-        session.output.stop();
-        session.host.after_install(request).await?;
+    if !request.compile && !request.write_config_files {
+        return Ok(());
+    }
+    let stamp = may_skip(session, calculated, &request)
+        .then(|| compile_stamp::path(&loaded.workspace.scope_path));
+    let inputs = compile_stamp::Inputs {
+        root: &session.root,
+        bit_version: &session.info.bit_version,
+        components: &calculated.components,
+    };
+    if let Some(stamp) = &stamp {
+        let started = Instant::now();
+        if compile_stamp::is_fresh(stamp, &inputs)? {
+            // What the compile step prints, without loading Harmony to compile the same files.
+            session.output.success(COMPILING, Some(started));
+            return Ok(());
+        }
+        compile_stamp::remove(stamp);
+    }
+    session.output.stop();
+    let result = session.host.after_install(request).await?;
+    if let (Some(stamp), Some(outputs)) = (&stamp, result.outputs) {
+        compile_stamp::write(stamp, &inputs, outputs)?;
     }
     Ok(())
+}
+
+/// `logger.consoleSuccess('compiling components', started)` of the compile step.
+const COMPILING: &str = "compiling components";
+
+/// The `afterInstall` step may be skipped: a command-line install that compiles and
+/// writes the config files, with every env loaded, the filesystem cache enabled, and no
+/// packages linked from outside the workspace.
+fn may_skip(session: &Session<'_>, calculated: &Calculated, request: &AfterInstall) -> bool {
+    if !request.compile
+        || !request.write_config_files
+        || request.clear_cache
+        || session.options.programmatic
+        || crate::dependencies::cache::disabled()
+    {
+        return false;
+    }
+    let info = session.info;
+    let bit_dirs: Vec<std::path::PathBuf> = info.core_aspects
+        .iter()
+        .chain(&info.core_packages)
+        .map(|aspect| aspect.dir.clone())
+        .chain([info.bit_dir.clone()])
+        .chain(info.bvm_dir.clone())
+        .collect();
+    !compile_stamp::has_external_links(
+        &calculated.outcome.plan.projects,
+        &calculated.components,
+        &session.root,
+        &bit_dirs,
+    )
 }
 
 fn print_manifest_messages(session: &Session<'_>, calculated: &Calculated) {

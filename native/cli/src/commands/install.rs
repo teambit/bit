@@ -10,7 +10,9 @@ use crate::{
     workspace,
 };
 use async_trait::async_trait;
-use bit_install::{AfterInstall, AfterInstallResult, HostInfo, Outcome as Installed};
+use bit_install::{
+    AfterInstall, AfterInstallResult, DetectRequest, HostInfo, Outcome as Installed,
+};
 use serde::de::DeserializeOwned;
 use serde_json::{Value, json};
 use std::{
@@ -214,12 +216,8 @@ impl bit_install::Host for JsHost {
         self.call("dependencyPolicies", json!({ "extensionIds": extension_ids })).await
     }
 
-    async fn detect_dependencies(
-        &self,
-        env_id: &str,
-        files: &[String],
-    ) -> io::Result<Option<Value>> {
-        self.call("detectDependencies", json!({ "envId": env_id, "files": files })).await
+    async fn detect_dependencies(&self, request: &DetectRequest<'_>) -> io::Result<Option<Value>> {
+        self.call("detectDependencies", json!(request)).await
     }
 
     async fn app_types(&self) -> io::Result<Vec<String>> {

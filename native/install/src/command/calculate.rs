@@ -338,7 +338,19 @@ fn dependency_options(
         use_cache: true,
         dev_patterns: DevPatternConfig::from_aspects(&|id| loaded.config.aspect(id).cloned()),
         policy_slots: Vec::new(),
+        workspace_aspects: workspace_aspects(session, loaded),
     })
+}
+
+/// `getNotLoadedConfiguredExtensions` of the CLI start: the `workspace.jsonc` aspects
+/// that are not core, whose providers run in TypeScript before any component loads.
+fn workspace_aspects(session: &Session<'_>, loaded: &Loaded) -> Vec<String> {
+    let core_aspects = &session.info.core_aspects;
+    loaded.config
+        .user_aspect_ids(&session.core_ids())
+        .into_iter()
+        .filter(|id| !policy::slots::is_core(split_version(id).0, core_aspects))
+        .collect()
 }
 
 /// `getIdFromUpdateDependentsOnLane`: the current lane's hidden dependents, with

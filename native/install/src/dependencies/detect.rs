@@ -57,7 +57,12 @@ fn file_tree(
     };
     let typescript = custom.is_some_and(|custom| custom.typescript);
     for specifier in specifiers {
-        let resolved = match resolver.resolve_from(component, file, &specifier, typescript)? {
+        let lookup = custom.and_then(|custom| custom.lookups.get(&specifier));
+        let resolved = match lookup {
+            Some(result) => resolver.looked_up(component, file, &specifier, result.as_deref())?,
+            None => resolver.resolve_from(component, file, &specifier, typescript)?,
+        };
+        let resolved = match resolved {
             Resolved::CoreAspect(_) if is_core => {
                 resolver.package(&component.dir, &super::resolve::package_name(&specifier))?
             }

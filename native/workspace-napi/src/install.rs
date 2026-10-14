@@ -14,7 +14,9 @@
 )]
 
 use async_trait::async_trait;
-use bit_install::{AfterInstall, AfterInstallResult, Host, HostInfo, InstallOptions, Outcome};
+use bit_install::{
+    AfterInstall, AfterInstallResult, DetectRequest, Host, HostInfo, InstallOptions, Outcome,
+};
 use napi::{
     Status,
     bindgen_prelude::{FnArgs, Promise},
@@ -167,12 +169,8 @@ impl Host for JsHost {
         self.call("dependencyPolicies", json!({ "extensionIds": extension_ids })).await
     }
 
-    async fn detect_dependencies(
-        &self,
-        env_id: &str,
-        files: &[String],
-    ) -> io::Result<Option<Value>> {
-        self.call("detectDependencies", json!({ "envId": env_id, "files": files })).await
+    async fn detect_dependencies(&self, request: &DetectRequest<'_>) -> io::Result<Option<Value>> {
+        self.call("detectDependencies", json!(request)).await
     }
 
     async fn app_types(&self) -> io::Result<Vec<String>> {

@@ -77,6 +77,9 @@ pub struct DependencyOptions {
     pub dev_patterns: DevPatternConfig,
     /// Dependency policies aspects registered (`registerDependenciesPolicies`).
     pub policy_slots: Vec<crate::policy::slots::Registration>,
+    /// The non-core aspects `workspace.jsonc` configures at its root, which the CLI
+    /// loads on start (`getNotLoadedConfiguredExtensions`): any may register a detector.
+    pub workspace_aspects: Vec<String>,
 }
 
 /// Workspace-wide inputs shared by every component.
@@ -172,7 +175,7 @@ pub async fn compute(
         .map_err(io::Error::other)?;
     let mut resolver = Resolver::new(root, components, &options.core_aspects);
     let mut env_patterns = EnvPatterns::new(&reader, host, &options.dev_patterns);
-    let mut detectors = Detectors::new(host, &options.core_aspects);
+    let mut detectors = Detectors::new(host, &options.core_aspects, &options.workspace_aspects);
     let mut result = IndexMap::new();
     for component in components {
         let mut subject =

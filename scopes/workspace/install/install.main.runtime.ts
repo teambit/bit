@@ -1000,9 +1000,13 @@ export class InstallMain {
    * function is successfully executed, nothing is being returned. If an error occurs during the execution of
    * `writeConfigFiles`, an error message is being returned.
    */
-  private async tryWriteConfigFiles(clearCache: boolean) {
+  /**
+   * returns the config files written, which native `bit install` snapshots to skip the next write
+   * when nothing changed. `undefined` when the write failed or left files bit did not generate.
+   */
+  private async tryWriteConfigFiles(clearCache: boolean): Promise<string[] | undefined> {
     const shouldWrite = this.wsConfigFiles.isWorkspaceConfigWriteEnabled();
-    if (!shouldWrite) return;
+    if (!shouldWrite) return [];
     if (clearCache) {
       await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
     }
@@ -1017,11 +1021,18 @@ export class InstallMain {
       this.logger.consoleFailure(
         `failed generating workspace config files, please run "bit ws-config write" manually. error: ${err.message}`
       );
-      return;
+      return undefined;
     }
     const skippedWarning = this.wsConfigFiles.formatSkippedFilesWarning(writeResults?.skippedPaths);
     // the formatted section already starts with the shared warning symbol, so no need for consoleWarning here.
-    if (skippedWarning) this.logger.console(`\n${skippedWarning}`);
+    if (skippedWarning) {
+      this.logger.console(`\n${skippedWarning}`);
+      return undefined;
+    }
+    return (writeResults?.writersResult ?? []).flatMap((writerResult) => [
+      ...writerResult.realConfigFiles.map((file) => file.writtenRealConfigFile.filePath),
+      ...writerResult.extendingConfigFiles.flatMap((file) => file.extendingConfigFile.filePaths),
+    ]);
   }
 
   private async addConfiguredAspectsToWorkspacePolicy(): Promise<WorkspacePolicy> {

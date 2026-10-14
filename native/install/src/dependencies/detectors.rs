@@ -6,40 +6,52 @@
 //! They are JavaScript, so the host runs them. It is asked only for a component
 //! that can have one: no core env implements `getDepDetectors()`, and the
 //! detectors Bit's core aspects register (env.jsonc, MDX) are replicated natively,
-//! so a component of a core env is asked about only when it configures a
-//! non-core aspect (which may register a detector). An env the host reports
-//! without detectors is not asked about again.
+//! so a component of a core env is asked about only when the workspace configures
+//! a non-core aspect, at its root or on the component (either may register a
+//! detector). An env the host reports without detectors is not asked about again.
 
 use super::scan;
 use crate::{
-    host::{CoreAspect, Host},
+    host::{CoreAspect, DetectRequest, Host},
     model::WorkspaceComponent,
     policy::{is_core_env, slots, split_version},
 };
 use indexmap::IndexMap;
 use serde_json::Value;
-use std::{collections::HashSet, io};
+use std::{collections::HashSet, io, path::PathBuf};
 
 /// What a custom detector found in one file.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct CustomDetection {
     /// The specifiers, in detector order and without duplicates.
     pub specifiers: Vec<String>,
-    /// A registered detector: relative imports resolve through `lookupTypeScript`
-    /// whatever the file extension (`filing-cabinet`).
+    /// A registered detector supports the file: relative imports resolve through
+    /// `lookupTypeScript` whatever the file extension (`filing-cabinet`).
     pub typescript: bool,
+    /// What a detector's `dependencyLookup` resolved each specifier to (an absolute
+    /// path, `None` when it returned nothing). A specifier without an entry is
+    /// resolved natively.
+    pub lookups: IndexMap<String, Option<PathBuf>>,
 }
 
 /// Asks the host once per component, skipping envs known to have no detectors.
 pub struct Detectors<'a> {
     host: &'a dyn Host,
     core_aspects: &'a [CoreAspect],
+    /// The non-core aspects `workspace.jsonc` configures at its root.
+    workspace_aspects: &'a [String],
+    /// Whether the host was asked already, which loaded `workspace_aspects`.
+    asked: bool,
     without: HashSet<String>,
 }
 
 impl<'a> Detectors<'a> {
-    pub fn new(host: &'a dyn Host, core_aspects: &'a [CoreAspect]) -> Self {
-        Self { host, core_aspects, without: HashSet::new() }
+    pub fn new(
+        host: &'a dyn Host,
+        core_aspects: &'a [CoreAspect],
+        workspace_aspects: &'a [String],
+    ) -> Self {
+        Self { host, core_aspects, workspace_aspects, asked: false, without: HashSet::new() }
     }
 
     /// The files of `component` a custom detector supports, by component-relative path.
@@ -52,7 +64,7 @@ impl<'a> Detectors<'a> {
         if component.root_dir == "."
             || component.files.is_empty()
             || self.without.contains(env)
-            || !may_have_detectors(component, self.core_aspects)
+            || !self.may_have_detectors(component)
         {
             return Ok(IndexMap::new());
         }
@@ -65,24 +77,34 @@ impl<'a> Detectors<'a> {
                     .into_owned()
             })
             .collect();
-        let Some(found) = self.host.detect_dependencies(env, &paths).await? else {
+        let request = DetectRequest {
+            env_id: env,
+            component_dir: component.dir.to_string_lossy().into_owned(),
+            files: paths,
+            aspect_ids: if self.asked { Vec::new() } else { self.workspace_aspects.to_vec() },
+        };
+        self.asked = true;
+        let Some(found) = self.host.detect_dependencies(&request).await? else {
             self.without.insert(env.to_owned());
             return Ok(IndexMap::new());
         };
         Ok(component.files
             .iter()
-            .zip(&paths)
+            .zip(&request.files)
             .filter_map(|(file, path)| Some((file.clone(), parse(found.get(path)?))))
             .collect())
     }
+
+    /// A non-core env, or a non-core aspect configured for the workspace or the
+    /// component, may bring a detector.
+    fn may_have_detectors(&self, component: &WorkspaceComponent) -> bool {
+        !is_core_env(&component.env_id)
+            || !self.workspace_aspects.is_empty()
+            || slots::configures_non_core(component, self.core_aspects)
+    }
 }
 
-/// A non-core env, or a configured non-core aspect, may bring a detector.
-fn may_have_detectors(component: &WorkspaceComponent, core_aspects: &[CoreAspect]) -> bool {
-    !is_core_env(&component.env_id) || slots::configures_non_core(component, core_aspects)
-}
-
-/// `{ dependencies, typescript }`; `dependency-tree` reads an object's keys.
+/// `{ dependencies, typescript, lookups }`; `dependency-tree` reads an object's keys.
 fn parse(entry: &Value) -> CustomDetection {
     let specifiers = match &entry["dependencies"] {
         Value::Array(items) => items
@@ -94,8 +116,21 @@ fn parse(entry: &Value) -> CustomDetection {
         Value::Object(map) => map.keys().cloned().collect(),
         _ => Vec::new(),
     };
+    let lookups = entry["lookups"]
+        .as_object()
+        .into_iter()
+        .flatten()
+        .map(|(specifier, path)| {
+            let path = path
+                .as_str()
+                .filter(|path| !path.is_empty())
+                .map(PathBuf::from);
+            (specifier.clone(), path)
+        })
+        .collect();
     CustomDetection {
         specifiers: scan::dedupe(specifiers),
         typescript: entry["typescript"].as_bool().unwrap_or(false),
+        lookups,
     }
 }

@@ -82,6 +82,26 @@ pub struct AfterInstallResult {
     pub old_non_loaded_envs: Vec<String>,
     /// Number of components compiled, for the summary line.
     pub compiled: usize,
+    /// What compiling and writing the config files produced: the dist directories
+    /// (`BuildResult.distDirs`) and the config files written. `None` when a component
+    /// failed to compile, the config write failed or skipped files, or the host does not
+    /// report them.
+    #[serde(default)]
+    pub outputs: Option<Vec<PathBuf>>,
+}
+
+/// The `detectDependencies` request: one component's files.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DetectRequest<'a> {
+    /// The component's env, without version.
+    pub env_id: &'a str,
+    /// The component dir, absolute: the `directory` `filing-cabinet` passes a `dependencyLookup`.
+    pub component_dir: String,
+    pub files: Vec<String>,
+    /// Workspace aspects to load first (`getNotLoadedConfiguredExtensions`, which the CLI
+    /// loads on start): any of them may register a detector. Sent with the first request.
+    pub aspect_ids: Vec<String>,
 }
 
 /// Callbacks implemented by JavaScript. Each is invoked only when the
@@ -114,19 +134,17 @@ pub trait Host: Send + Sync {
         Ok(None)
     }
 
-    /// What custom detectors find in `files` (absolute paths) of a component of `env_id`
-    /// (`detectWithCustomDetectors` of `@teambit/dependency-resolver`): per file the first
-    /// env detector (`getDepDetectors()`) supporting it, else the first detector an aspect
-    /// registered (`registerDetector`) that Rust does not replicate. The result is
-    /// `{ "<file>": { dependencies, typescript } }` for the claimed files only, `typescript`
-    /// marking a registered detector, whose imports `filing-cabinet` resolves through
-    /// `lookupTypeScript`. `None` when neither kind of detector exists.
-    async fn detect_dependencies(
-        &self,
-        env_id: &str,
-        files: &[String],
-    ) -> io::Result<Option<Value>> {
-        let _ = (env_id, files);
+    /// What custom detectors find in `request.files` (absolute paths) of a component of
+    /// `request.env_id` (`detectWithCustomDetectors` of `@teambit/dependency-resolver`): per
+    /// file the first env detector (`getDepDetectors()`) supporting it, else the first
+    /// detector an aspect registered (`registerDetector`) that Rust does not replicate. The
+    /// result is `{ "<file>": { dependencies, typescript, lookups? } }` for the claimed files
+    /// only. `typescript` marks a file a registered detector supports, whose imports
+    /// `filing-cabinet` resolves through `lookupTypeScript`; `lookups` holds what a detector's
+    /// `dependencyLookup` returned per specifier (an absolute path or `null`). `None` when
+    /// neither kind of detector exists.
+    async fn detect_dependencies(&self, request: &DetectRequest<'_>) -> io::Result<Option<Value>> {
+        let _ = request;
         Ok(None)
     }
 

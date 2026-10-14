@@ -29,12 +29,12 @@ describe('detectWithCustomDetectors()', () => {
   };
 
   it('should return null without any custom detector', async () => {
-    expect(await detectWithCustomDetectors(null, [file('index.ts', "import 'a';")])).to.eq(null);
+    expect(await detectWithCustomDetectors(null, [file('index.ts', "import 'a';")], dir)).to.eq(null);
   });
   it('should detect only the files an env detector supports', async () => {
     const vue = file('button.vue', "import x from 'vue';\nimport y from './y';");
     const ts = file('index.ts', "import 'a';");
-    expect(await detectWithCustomDetectors([vueDetector], [vue, ts])).to.deep.equal({
+    expect(await detectWithCustomDetectors([vueDetector], [vue, ts], dir)).to.deep.equal({
       [vue]: { dependencies: ['vue', './y'], typescript: false },
     });
   });
@@ -47,7 +47,7 @@ describe('detectWithCustomDetectors()', () => {
         throw new Error('parse');
       },
     };
-    expect(await detectWithCustomDetectors([throwing, vueDetector], [skipped, broken])).to.deep.equal({
+    expect(await detectWithCustomDetectors([throwing, vueDetector], [skipped, broken], dir)).to.deep.equal({
       [skipped]: { dependencies: [], typescript: false },
       [broken]: { dependencies: [], typescript: false },
     });
@@ -56,8 +56,59 @@ describe('detectWithCustomDetectors()', () => {
     DetectorHook.hooks = [{ isSupported: () => true, detect: () => ['svelte'] }];
     const svelte = file('a.svelte', '');
     const config = file('env.jsonc', '{}');
-    expect(await detectWithCustomDetectors([], [svelte, config])).to.deep.equal({
+    expect(await detectWithCustomDetectors([], [svelte, config], dir)).to.deep.equal({
       [svelte]: { dependencies: ['svelte'], typescript: true },
+    });
+  });
+  it("should return what a detector's dependencyLookup resolves, as filing-cabinet calls it", async () => {
+    const calls: Array<Record<string, any>> = [];
+    const withLookup: DependencyDetector = {
+      ...vueDetector,
+      dependencyLookup: (context) => {
+        calls.push(context);
+        if (context.dependency === './missing') return '';
+        return context.dependency === 'vue' ? 'node_modules/vue/index.js' : '/abs/y.vue';
+      },
+    };
+    const vue = file(
+      'button.vue',
+      "import x from 'vue';\nimport y from './y';\nimport z from './missing';\nimport f from 'fs';"
+    );
+    const found = await detectWithCustomDetectors([withLookup], [vue], dir);
+    expect(found).to.deep.equal({
+      [vue]: {
+        dependencies: ['vue', './y', './missing', 'fs'],
+        typescript: false,
+        lookups: {
+          vue: path.resolve('node_modules/vue/index.js'),
+          './y': path.resolve('/abs/y.vue'),
+          './missing': null,
+        },
+      },
+    });
+    expect(calls[0]).to.include({ dependency: 'vue', filename: vue, directory: dir });
+    expect(calls).to.have.lengthOf(3, 'built-ins are not looked up');
+  });
+  it("should prefer an env detector's lookup over a registered one's, and resolve through TypeScript", async () => {
+    DetectorHook.hooks = [{ isSupported: () => true, detect: () => ['hook'], dependencyLookup: () => '/hook.js' }];
+    const fromEnv: DependencyDetector = { ...vueDetector, dependencyLookup: () => '/env.js' };
+    const vue = file('a.vue', "import x from 'x';");
+    const svelte = file('b.svelte', '');
+    expect(await detectWithCustomDetectors([fromEnv], [vue, svelte], dir)).to.deep.equal({
+      [vue]: { dependencies: ['x'], typescript: true, lookups: { x: path.resolve('/env.js') } },
+      [svelte]: { dependencies: ['hook'], typescript: true, lookups: { hook: path.resolve('/hook.js') } },
+    });
+  });
+  it('should yield nothing for a file whose lookup throws', async () => {
+    const throwing: DependencyDetector = {
+      ...vueDetector,
+      dependencyLookup: () => {
+        throw new Error('resolve');
+      },
+    };
+    const vue = file('a.vue', "import x from 'vue';");
+    expect(await detectWithCustomDetectors([throwing], [vue], dir)).to.deep.equal({
+      [vue]: { dependencies: [], typescript: false },
     });
   });
 });

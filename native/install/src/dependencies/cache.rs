@@ -136,7 +136,8 @@ fn segmented(root: &Path, hash: &str) -> PathBuf {
         .join(&hash[4..])
 }
 
-fn hex(bytes: &[u8]) -> String {
+/// Lowercase hex digits of `bytes`.
+pub(crate) fn hex(bytes: &[u8]) -> String {
     bytes
         .iter()
         .fold(String::with_capacity(bytes.len() * 2), |mut text, byte| {

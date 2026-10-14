@@ -9,7 +9,7 @@ use super::{
     specifier_package_name, valid_component_version,
 };
 use crate::{
-    host::{AfterInstall, AfterInstallResult, Host},
+    host::{AfterInstall, AfterInstallResult, DetectRequest, Host},
     model::{
         ComponentDependencies, ComponentId, EnvPolicy, Lifecycle, PackageDependency, PolicyEntry,
         WorkspaceComponent,
@@ -534,9 +534,14 @@ async fn detection_is_cached_in_bit_format_unless_it_has_issues() {
 /// A host whose `acme/envs/vue` env has detectors: `*.vue` files and `custom.ts`
 /// (whatever its content, as a detector replaces the built-in detective). Files of
 /// other envs are claimed only through a registered `*.svelte` detector.
+/// A file of `acme/envs/lookup` is claimed by a detector with a `dependencyLookup`
+/// whose results are `lookups`.
 #[derive(Default)]
 struct DetectorHost {
     calls: std::sync::Mutex<Vec<(String, usize)>>,
+    /// The `aspectIds` of each request.
+    aspect_ids: std::sync::Mutex<Vec<Vec<String>>>,
+    lookups: Value,
 }
 
 #[async_trait]
@@ -547,16 +552,29 @@ impl Host for DetectorHost {
     async fn app_types(&self) -> io::Result<Vec<String>> {
         Ok(Vec::new())
     }
-    async fn detect_dependencies(
-        &self,
-        env_id: &str,
-        files: &[String],
-    ) -> io::Result<Option<Value>> {
+    async fn detect_dependencies(&self, request: &DetectRequest<'_>) -> io::Result<Option<Value>> {
+        let (env_id, files) = (request.env_id, &request.files);
         self.calls
             .lock()
             .expect("calls")
             .push((env_id.to_owned(), files.len()));
+        self.aspect_ids
+            .lock()
+            .expect("aspect ids")
+            .push(request.aspect_ids.clone());
         let mut found = serde_json::Map::new();
+        if env_id == "acme/envs/lookup" {
+            let specifiers: Vec<&String> = self.lookups
+                .as_object()
+                .expect("lookups")
+                .keys()
+                .collect();
+            found.insert(
+                files[0].clone(),
+                json!({"dependencies": specifiers, "typescript": false, "lookups": self.lookups}),
+            );
+            return Ok(Some(Value::Object(found)));
+        }
         for file in files {
             if env_id == "acme/envs/vue" && file.ends_with(".vue") {
                 found.insert(
@@ -663,6 +681,110 @@ async fn detectors_are_asked_only_for_components_that_can_have_them() {
     assert_eq!(
         packages(&result["acme/with-aspect"], Lifecycle::Runtime),
         vec![("svelte".into(), "4.2.0".into())],
+    );
+}
+
+#[test]
+fn a_dependency_lookup_result_is_classified_as_dependency_tree_does() {
+    let temp = tempfile::tempdir().expect("tempdir");
+    let root = temp.path();
+    let mut widget = component(root, "acme/ui/widget@1.0.0", "acme/envs/lookup");
+    widget.files = vec!["widget.vue".into(), "alt.ts".into()];
+    write(&widget.dir.join("alt.ts"), "export const alt = 1;\n");
+    let mut card = component(root, "acme/ui/card@1.0.0", "acme/envs/lookup");
+    card.files = vec!["index.ts".into()];
+    write(&card.dir.join("index.ts"), "export const card = 1;\n");
+    package(root, "vue", &json!({"name": "vue", "version": "3.4.0"}));
+    write(&root.join("node_modules/vue/dist/vue.js"), "");
+    write(&root.join("node_modules/bare/index.js"), "");
+    package(root, "lodash", &json!({"name": "lodash", "version": "4.17.21"}));
+    write(&root.join("outside.js"), "");
+    let card_id = card.id.clone();
+    let components = [widget, card];
+    let mut resolver = Resolver::new(root, &components, &[]);
+    let mut resolve = |specifier: &str, result: Option<&Path>| {
+        resolver
+            .looked_up(&components[0], "widget.vue", specifier, result)
+            .expect("resolve")
+    };
+    let vue = Resolved::Package { name: "vue".into(), version: "3.4.0".into() };
+    assert_eq!(resolve("my-vue", Some(&root.join("node_modules/vue/dist/vue.js"))), vue);
+    assert_eq!(
+        resolve("./x", Some(&root.join("ui/card/index.ts"))),
+        Resolved::OtherComponent(card_id),
+    );
+    assert_eq!(
+        resolve("./x", Some(&root.join("outside.js"))),
+        Resolved::Untracked("outside.js".into()),
+    );
+    assert_eq!(
+        resolve("./x", Some(&root.join("node_modules/bare/index.js"))),
+        Resolved::Ignored,
+        "a package without a package.json is unidentified",
+    );
+    // A path that does not exist: a missing file, or a package looked up by name.
+    assert_eq!(
+        resolve("./alt", Some(&root.join("gone.ts"))),
+        Resolved::MissingFile("./alt".into()),
+    );
+    assert_eq!(
+        resolve("lodash", Some(&root.join("gone.js"))),
+        Resolved::Package { name: "lodash".into(), version: "4.17.21".into() },
+    );
+    // Nothing: the default lookup of another extension is tried, else the file is missing.
+    assert_eq!(resolve("./alt.ts", None), Resolved::Internal);
+    assert_eq!(resolve("./alt", None), Resolved::MissingFile("./alt".into()));
+}
+
+#[tokio::test]
+async fn a_detector_lookup_resolves_what_the_detector_finds() {
+    let temp = tempfile::tempdir().expect("tempdir");
+    let root = temp.path();
+    let mut widget = component(root, "acme/ui/widget@1.0.0", "acme/envs/lookup@1.0.0");
+    widget.files = vec!["widget.vue".into()];
+    write(&widget.dir.join("widget.vue"), "");
+    package(root, "vue", &json!({"name": "vue", "version": "3.4.0"}));
+    let vue = root.join("node_modules/vue/dist/vue.js");
+    write(&vue, "");
+    let host = DetectorHost {
+        lookups: json!({"my-vue": vue.to_string_lossy(), "missing-pkg": null}),
+        ..DetectorHost::default()
+    };
+    let result =
+        run_with(root, &[widget], &IndexMap::new(), &DependencyOptions::default(), &host).await;
+    let widget = &result["acme/ui/widget"];
+    assert_eq!(packages(widget, Lifecycle::Runtime), vec![("vue".into(), "3.4.0".into())]);
+    assert_eq!(widget.missing_packages.runtime, ["missing-pkg"]);
+}
+
+#[tokio::test]
+async fn workspace_aspects_make_components_of_core_envs_reach_the_host() {
+    let temp = tempfile::tempdir().expect("tempdir");
+    let root = temp.path();
+    let mut components = Vec::new();
+    for name in ["first", "second"] {
+        let mut svelte = component(root, &format!("acme/{name}@1.0.0"), "teambit.react/react");
+        svelte.files = vec!["index.svelte".into()];
+        write(&svelte.dir.join("index.svelte"), "");
+        components.push(svelte);
+    }
+    package(root, "svelte", &json!({"name": "svelte", "version": "4.2.0"}));
+    let host = DetectorHost::default();
+    let options = DependencyOptions {
+        workspace_aspects: vec!["acme/aspects/svelte@1.0.0".into()],
+        ..DependencyOptions::default()
+    };
+    let result = run_with(root, &components, &IndexMap::new(), &options, &host).await;
+    for name in ["acme/first", "acme/second"] {
+        assert_eq!(
+            packages(&result[name], Lifecycle::Runtime),
+            vec![("svelte".into(), "4.2.0".into())],
+        );
+    }
+    assert_eq!(
+        *host.aspect_ids.lock().expect("aspect ids"),
+        vec![vec!["acme/aspects/svelte@1.0.0".to_owned()], Vec::new()],
+        "the host loads the workspace aspects once, before its first detection",
     );
 }
 

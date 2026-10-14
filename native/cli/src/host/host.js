@@ -78,7 +78,8 @@ const handlers = {
   envPolicy: ({ envId }) => envPolicy(envId),
   devPatterns: ({ envId }) => devPatterns(envId),
   dependencyPolicies: ({ extensionIds }) => dependencyPolicies(extensionIds),
-  detectDependencies: ({ envId, files }) => detectDependencies(envId, files),
+  detectDependencies: ({ envId, files, componentDir, aspectIds }) =>
+    detectDependencies(envId, files, componentDir, aspectIds),
   appTypes,
   packageJsonProps: ({ envId }) => packageJsonProps(envId),
   transformPackageJson: ({ component, manifest }) => transformPackageJson(component, manifest),
@@ -206,12 +207,18 @@ async function dependencyPolicies(extensionIds) {
 
 /**
  * The import specifiers custom detectors find in `files`: the env's `getDepDetectors()`, then
- * the detectors aspects registered (`registerDetector`); `null` when there are none.
+ * the detectors aspects registered (`registerDetector`); `null` when there are none. `aspectIds`
+ * are the workspace aspects the CLI loads on start (`getNotLoadedConfiguredExtensions`), which
+ * `loadBit` does not.
  */
-async function detectDependencies(envId, files) {
+async function detectDependencies(envId, files, componentDir, aspectIds) {
+  if (aspectIds?.length) {
+    const workspace = (await loadHarmony()).get('teambit.workspace/workspace');
+    await workspace.loadAspects(aspectIds, false, undefined, { throwOnError: false, hideMissingModuleError: true });
+  }
   const env = await loadEnv(envId);
   const { detectWithCustomDetectors } = bitRequire('@teambit/dependency-resolver/dist/custom-detectors.js');
-  return detectWithCustomDetectors(env?.getDepDetectors?.(), files);
+  return detectWithCustomDetectors(env?.getDepDetectors?.(), files, componentDir);
 }
 
 async function appTypes() {
@@ -267,6 +274,7 @@ async function afterInstall(request) {
     await install.reloadMovedEnvs();
     await install.reloadNonLoadedEnvs();
     let compiled = 0;
+    let distDirs = null;
     if (request.compile) {
       const { CompilationInitiator } = bitRequire('@teambit/compiler');
       const logger = loaded.get('teambit.harmony/logger').createLogger('teambit.workspace/install');
@@ -276,13 +284,32 @@ async function afterInstall(request) {
         .get('teambit.compilation/compiler')
         .compileOnWorkspace([], { initiator: CompilationInitiator.Install });
       compiled = results.length;
+      distDirs = cleanDistDirs(results);
       logger.consoleSuccess('compiling components', started);
     }
-    if (request.writeConfigFiles) await install.tryWriteConfigFiles(false);
-    return { oldNonLoadedEnvs: envs.getFailedToLoadEnvs(), compiled };
+    const configFiles = request.writeConfigFiles ? await install.tryWriteConfigFiles(false) : [];
+    // what native `bit install` snapshots: `null` unless both steps left a complete record.
+    const outputs = distDirs && configFiles ? [...distDirs, ...configFiles] : null;
+    return { oldNonLoadedEnvs: envs.getFailedToLoadEnvs(), compiled, outputs };
   } finally {
     workspace.inInstallContext = false;
   }
+}
+
+/**
+ * The dist directories of a compilation without errors, which native `bit install` snapshots to
+ * skip the next `afterInstall` when nothing changed. `null` when any component failed, or when the
+ * compiler does not report its directories.
+ */
+function cleanDistDirs(results) {
+  const distDirs = [];
+  for (const result of results) {
+    if (result.errors.length) return null;
+    if (result.skipped) continue;
+    if (!result.distDirs) return null;
+    distDirs.push(...result.distDirs);
+  }
+  return distDirs;
 }
 
 function loadHarmony() {

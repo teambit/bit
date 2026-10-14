@@ -42,6 +42,10 @@ export type BuildResult = {
    * component is neither a success nor a failure, so it is counted and reported on its own.
    */
   skipped?: { reason: string };
+  /**
+   * absolute dist directories the compilation wrote to: the package dir's dist and the injected dirs.
+   */
+  distDirs?: string[];
 };
 
 export type CompileOptions = {
@@ -137,7 +141,12 @@ export class ComponentCompiler {
     const buildResults = this.dists.map((distFile) => distFile.path);
     if (this.component.state._consumer.compiler) this.logger.consoleSuccess();
 
-    return { component: this.component.id.toString(), buildResults, errors: this.compileErrors };
+    return {
+      component: this.component.id.toString(),
+      buildResults,
+      errors: this.compileErrors,
+      distDirs: distDirs.map((distDir) => this.toAbsolutePath(distDir)),
+    };
   }
 
   getPackageDir() {

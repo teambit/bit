@@ -106,7 +106,9 @@ pub fn configures_non_core(component: &WorkspaceComponent, core_aspects: &[CoreA
         .any(|id| !is_core(super::split_version(id).0, core_aspects))
 }
 
-fn is_core(id: &str, core_aspects: &[CoreAspect]) -> bool {
+/// A Bit core aspect, a core env or an id Bit reserves.
+#[must_use]
+pub fn is_core(id: &str, core_aspects: &[CoreAspect]) -> bool {
     RESERVED.contains(&id)
         || is_core_env(id)
         || core_aspects
