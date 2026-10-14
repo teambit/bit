@@ -2,6 +2,7 @@
 //! one of its aliases, exactly as the Node.js CLI spells them.
 
 mod install;
+mod mini_status;
 
 use crate::native::Outcome;
 use std::{ffi::OsString, io};
@@ -13,7 +14,7 @@ pub struct Command {
     pub run: fn(&[OsString]) -> io::Result<Outcome>,
 }
 
-pub const COMMANDS: &[Command] = &[install::COMMAND];
+pub const COMMANDS: &[Command] = &[install::COMMAND, mini_status::COMMAND];
 
 pub fn find(name: &str) -> Option<&'static Command> {
     COMMANDS

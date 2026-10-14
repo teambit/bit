@@ -75,7 +75,34 @@ Each host method is removed once its behavior is ported to Rust.
 | --- | --- | --- | --- |
 | `install`, `in` | `bit-install` ([details](rust/native-install.md)) | `hostInfo`, `envPolicy`, `appTypes`, `packageJsonProps`, `transformPackageJson`, `afterInstall` | `--help`, outside a workspace, non-UTF-8 arguments, the yarn package manager, a Node.js CLI found only as a wrapper script |
 
+| `mini-status --json`, `ms -j` | `bit-object-import` status engine, `bit-ignore` | none | any other flag or argument, outside a workspace, a workspace the engine does not own: configured extensions or aspect settings, environments in the generator config, a global `.bitrc.jsonc`, a scope in `.git/bit`, a checked-out lane, more than 4096 components |
+
 `confirm` prompts are asked by the Rust process itself, since it owns the terminal.
+
+Native commands append to the workspace's `command-history` file (in `.bit`,
+or `.git/bit`) as the Node.js CLI does. A declined command writes nothing, so
+the Node.js CLI's own lines are not duplicated.
+
+### Ignore rules
+
+The workspace inventory follows `.gitignore`, `.bitignore` and Bit's own lists
+through `ignore` 3.3.10, the npm package `@teambit/legacy.bit-map` uses. The
+`bit-ignore` crate (`native/ignore`) ports its rule compiler. Each replacement
+step keeps the package's original JavaScript regular expression and runs it
+with `regress`, so the compiled rule sources are the ones Node would produce.
+Its tests compare them with sources the package itself produced.
+
+The port includes the package's module-level cache. The cache is keyed by the
+pattern alone, so a pattern compiled once as positive stays positive when it
+is later negated, as in Node. Patterns named like `Object.prototype` members,
+such as `constructor`, break the package and are declined.
+
+## Versions
+
+A native command reproduces the behavior of the Node.js CLI built from the same
+commit. Delegated commands run whatever Node.js CLI discovery finds. Both are
+shipped together, so they agree. A binary paired with an older Node.js CLI can
+disagree on details the two versions changed in between.
 
 ## Relation to the in-process integration
 

@@ -10,7 +10,9 @@ name = "bit"
 path = "src/main.rs"
 
 [dependencies]
+bit-ignore = { path = "../ignore" }
 bit-install = { path = "../install" }
+bit-object-import = { path = "../object-import" }
 async-trait = "0.1"
 pnpm-diagnostics = { workspace = true }
 serde = { version = "1", features = ["derive"] }

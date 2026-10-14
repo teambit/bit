@@ -8,9 +8,11 @@
 mod commands;
 mod delegate;
 mod discovery;
+mod history;
 mod host;
 mod native;
 mod trace;
+mod workspace;
 
 use std::{env, ffi::OsString, process::ExitCode};
 

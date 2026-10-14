@@ -330,7 +330,9 @@ name = "bit-cli"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "bit-ignore",
  "bit-install",
+ "bit-object-import",
  "pnpm-diagnostics",
  "serde",
  "serde_json",
@@ -350,6 +352,16 @@ dependencies = [
  "oxc_parser",
  "oxc_span",
  "rayon",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "bit-ignore"
+version = "0.1.0"
+dependencies = [
+ "pretty_assertions",
+ "regress",
  "serde",
  "serde_json",
 ]

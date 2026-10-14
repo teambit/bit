@@ -3,9 +3,11 @@
 
 use crate::{
     commands::Command,
-    discovery::{self, Target},
+    discovery::{self, NodeCli, Target},
+    history::History,
     host::Host,
     native::Outcome,
+    workspace,
 };
 use async_trait::async_trait;
 use bit_install::{AfterInstall, AfterInstallResult, HostInfo, Outcome as Installed};
@@ -15,7 +17,7 @@ use std::{
     env,
     ffi::OsString,
     io::{self, IsTerminal, Write},
-    path::{Path, PathBuf},
+    path::PathBuf,
     process::ExitCode,
     sync::Arc,
     thread,
@@ -24,56 +26,70 @@ use std::{
 pub const COMMAND: Command = Command { name: "install", aliases: &["in"], run };
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
-    let Some(argv) = utf8(args) else {
-        return Ok(Outcome::Declined("arguments are not UTF-8".to_string()));
-    };
-    // `bit install --help` is rendered by the Node.js CLI's command registry.
-    if argv
-        .iter()
-        .any(|arg| arg == "--help" || arg == "-h")
-    {
-        return Ok(Outcome::Declined("--help".to_string()));
-    }
-    let Target::Entry(cli) = discovery::find()? else {
-        return Ok(Outcome::Declined("the Node.js CLI is only reachable as a wrapper".to_string()));
-    };
-    if cli.bit_dir.is_none() {
-        return Ok(
-            Outcome::Declined("the entry is not inside an @teambit/bit package".to_string()),
-        );
-    }
-    let cwd = env::current_dir()?;
-    let Some(root) = workspace_root(&cwd) else {
-        return Ok(Outcome::Declined("not inside a workspace".to_string()));
+    let Prepared { argv, cli, cwd, root } = match prepare(args)? {
+        Ok(prepared) => prepared,
+        Err(reason) => return Ok(Outcome::Declined(reason)),
     };
     let terminal = Terminal::detect(&argv);
-    let host = Arc::new(Host::new(cli, root, terminal.color));
+    let host = Arc::new(Host::new(cli, root.clone(), terminal.color));
     // A host that cannot describe the Node.js CLI leaves the command to it.
     let info = match host_info(&host, &terminal) {
         Ok(info) => info,
         Err(error) => return Ok(Outcome::Declined(format!("JavaScript host: {error}"))),
     };
+    let history = History::start(&root, args);
     match run_install(cwd, argv, info, host)? {
-        Ok(Installed::Installed(_)) => Ok(Outcome::Exit(ExitCode::SUCCESS)),
+        Ok(Installed::Installed(_)) => {
+            history.end(true);
+            Ok(Outcome::Exit(ExitCode::SUCCESS))
+        }
         Ok(Installed::Help) => Ok(Outcome::Declined("--help".to_string())),
         Ok(Installed::Unsupported) => Ok(Outcome::Declined("unsupported workspace".to_string())),
         Err(error) => {
+            history.end(false);
             eprintln!("{}", terminal.red(&error.to_string()));
             Ok(Outcome::Exit(ExitCode::FAILURE))
         }
     }
 }
 
+/// What the command needs before any work starts.
+struct Prepared {
+    argv: Vec<String>,
+    cli: NodeCli,
+    cwd: PathBuf,
+    root: PathBuf,
+}
+
+/// The checks that leave the command to the Node.js CLI; `Err` names the reason.
+fn prepare(args: &[OsString]) -> io::Result<Result<Prepared, String>> {
+    let Some(argv) = utf8(args) else {
+        return Ok(Err("arguments are not UTF-8".to_string()));
+    };
+    // `bit install --help` is rendered by the Node.js CLI's command registry.
+    if argv
+        .iter()
+        .any(|arg| arg == "--help" || arg == "-h")
+    {
+        return Ok(Err("--help".to_string()));
+    }
+    let Target::Entry(cli) = discovery::find()? else {
+        return Ok(Err("the Node.js CLI is only reachable as a wrapper".to_string()));
+    };
+    if cli.bit_dir.is_none() {
+        return Ok(Err("the entry is not inside an @teambit/bit package".to_string()));
+    }
+    let cwd = env::current_dir()?;
+    let Some(root) = workspace::root(&cwd) else {
+        return Ok(Err("not inside a workspace".to_string()));
+    };
+    Ok(Ok(Prepared { argv, cli, cwd, root }))
+}
+
 fn utf8(args: &[OsString]) -> Option<Vec<String>> {
     args.iter()
         .map(|arg| arg.to_str().map(str::to_string))
         .collect()
-}
-
-fn workspace_root(cwd: &Path) -> Option<PathBuf> {
-    cwd.ancestors()
-        .find(|dir| dir.join("workspace.jsonc").is_file())
-        .map(Path::to_path_buf)
 }
 
 /// The host computes everything `HostInfo` needs from Node and adds the PATH
