@@ -15,7 +15,11 @@ fn literal_patterns_select_one_component_with_its_version() {
         ]),
     );
     assert_eq!(entered_versions(Some(&rows)), ["2.0.0", "minor"]);
-    for pattern in ["s/*", "s/one,s/two", "s/two@bad", "s/two@1@2", "s/three"] {
+    let globbed = selections(&context, &["s/*@minor".to_string()]).unwrap().unwrap();
+    assert_eq!(globbed, json!([{ "identity": "s/two", "version": "minor", "patternIndex": 0 }]));
+    let listed = selections(&context, &["s/two, s/ui/one".to_string()]).unwrap().unwrap();
+    assert_eq!(listed.as_array().map(Vec::len), Some(2));
+    for pattern in ["s/{a,b}", "s/two@bad", "s/two@1@2", "s/three"] {
         assert!(selections(&context, &[pattern.to_string()]).is_err(), "{pattern}");
     }
 }

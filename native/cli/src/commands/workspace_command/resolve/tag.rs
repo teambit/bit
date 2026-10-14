@@ -2,7 +2,10 @@
 //! select, and with which entered version; and the versions the plan gives
 //! the tagged components.
 
-use crate::commands::status::js::{array, decline, text};
+use crate::commands::{
+    patterns as component_patterns,
+    status::js::{array, decline, text},
+};
 use serde_json::{Value, json};
 use std::{collections::HashMap, io};
 
@@ -11,8 +14,8 @@ const RELEASE_TYPES: [&str; 7] =
     ["major", "premajor", "minor", "preminor", "patch", "prepatch", "prerelease"];
 
 /// `tagPatternSelections(context, patterns)`: `{ identity, version,
-/// patternIndex }` rows, `None` without patterns. Only literal ids, which
-/// name exactly one component, are matched natively.
+/// patternIndex }` rows, `None` without patterns: globs and lists match
+/// with `multimatch`, a literal names exactly one component.
 pub fn selections(context: &Value, patterns: &[String]) -> io::Result<Option<Value>> {
     if patterns.is_empty() {
         return Ok(None);
@@ -24,8 +27,17 @@ pub fn selections(context: &Value, patterns: &[String]) -> io::Result<Option<Val
     let mut rows = Vec::new();
     for (index, pattern) in patterns.iter().enumerate() {
         let (pattern, version) = split(pattern)?;
-        let identity = literal_match(&identities, pattern)?;
-        rows.push(json!({ "identity": identity, "version": version, "patternIndex": index }));
+        let matches = if pattern.contains('*') || pattern.contains(',') {
+            component_patterns::matching(&identities, &component_patterns::split(pattern))?
+        } else {
+            vec![literal_match(&identities, pattern)?]
+        };
+        for identity in matches {
+            rows.push(json!({ "identity": identity, "version": version, "patternIndex": index }));
+        }
+        if rows.len() > 4096 {
+            return Err(decline("tag selection budget"));
+        }
     }
     Ok(Some(Value::Array(rows)))
 }

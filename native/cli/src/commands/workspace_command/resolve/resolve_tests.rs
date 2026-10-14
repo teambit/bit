@@ -2,11 +2,19 @@ use super::{Versions, pattern_ids, validate_preparation};
 use serde_json::json;
 
 #[test]
-fn patterns_select_one_literal_id() {
-    let context = json!({ "targets": [{ "identity": "s/one" }, { "identity": "s/two" }] });
+fn patterns_select_the_matching_targets() {
+    let context = json!({ "targets": [{ "identity": "s/one" }, { "identity": "s/two" }, { "identity": "t/one" }] });
     assert_eq!(pattern_ids(&context, None).unwrap(), None);
     assert_eq!(pattern_ids(&context, Some("s/two")).unwrap(), Some(vec!["s/two".to_string()]));
-    for pattern in ["s/*", "**", "s/one,s/two", "s/one@1.0.0", "s/three"] {
+    assert_eq!(
+        pattern_ids(&context, Some("s/*")).unwrap(),
+        Some(vec!["s/one".to_string(), "s/two".to_string()]),
+    );
+    assert_eq!(
+        pattern_ids(&context, Some("**, !s/one")).unwrap(),
+        Some(vec!["s/two".to_string(), "t/one".to_string()]),
+    );
+    for pattern in ["s/three", "$modified", "s/{one,two}"] {
         assert!(pattern_ids(&context, Some(pattern)).is_err(), "{pattern}");
     }
 }

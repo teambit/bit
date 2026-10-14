@@ -11,6 +11,7 @@ use super::{
 };
 use crate::commands::{
     engine::Engine,
+    patterns,
     status::{
         cache,
         capture::{self, Capture, CaptureOptions},
@@ -319,30 +320,32 @@ fn component_receipts(context: &Value, capture: &Capture) -> io::Result<Vec<Valu
         .collect()
 }
 
-/// `resolvePatternIds` for a single component id, which `bit snap`
-/// resolves directly (`resolveComponentId`), modified or not. Globs, lists
-/// and versions are filtered among the tag-pending components in Node:
-/// they decline.
+/// `resolvePatternIds`: the targets the pattern matches (`multimatch`).
+/// The engine keeps the matching snap candidates, or for a single id, the
+/// id itself (`resolveComponentId`).
 fn pattern_ids(context: &Value, pattern: Option<&str>) -> io::Result<Option<Vec<String>>> {
     let Some(pattern) = pattern else { return Ok(None) };
-    let literal = !pattern.is_empty()
-        && pattern
-            .chars()
-            .all(|character| {
-                character.is_ascii_lowercase()
-                    || character.is_ascii_digit()
-                    || "_./-".contains(character)
-            });
-    if !literal {
-        return Err(decline("resolve pattern outside the native grammar"));
-    }
-    let known = array(context.get("targets"), "targets")?
+    let patterns = patterns::split(pattern);
+    if patterns
         .iter()
-        .any(|target| target["identity"] == pattern);
-    if !known {
+        .any(|part| part.starts_with('$') || part.contains(" AND "))
+    {
+        return Err(decline("resolve state selector requires canonical callbacks"));
+    }
+    let identities: Vec<&str> = array(context.get("targets"), "targets")?
+        .iter()
+        .map(|target| text(target.get("identity")))
+        .collect::<io::Result<_>>()?;
+    let selected = patterns::matching(&identities, &patterns)?;
+    if selected.is_empty() {
         return Err(decline("resolve pattern has no matches"));
     }
-    Ok(Some(vec![pattern.to_string()]))
+    Ok(Some(
+        selected
+            .into_iter()
+            .map(str::to_string)
+            .collect(),
+    ))
 }
 
 /// `plan.needsSnap`: distinct, non-empty identities.

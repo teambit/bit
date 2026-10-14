@@ -11,6 +11,7 @@ mod install;
 mod inventory;
 mod merge;
 mod mini_status;
+mod patterns;
 mod snap;
 mod status;
 mod tag;
