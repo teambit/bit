@@ -18,7 +18,10 @@ pub(super) fn prepare(
     let mut proofs = control_proofs(request)?;
     let (mut context, imported) = metadata(request, pool)?;
     let ordinary: input::Prepare = serde_json::from_value(json!({"root":request.root,"home":request.home,
-        "globalRemotesFile":request.global_remotes_file,"operation":"merge","options":{"skipDependencyInstallation":true,"pattern":request.options.pattern},"dependencyGrammar":request.dependency_grammar})).map_err(io::Error::other)?;
+        "globalRemotesFile":request.global_remotes_file,"operation":"merge","options":{"skipDependencyInstallation":true,"pattern":request.options.pattern,"message":request.options.message},"dependencyGrammar":request.dependency_grammar})).map_err(io::Error::other)?;
+    if request.ordinary_tag && !context["lane"]["current"].is_null() {
+        return Err(invalid("tag is only supported on main"));
+    }
     load_models(request, pool, &mut context, &imported)?;
     super::super::setup::component_controls(&ordinary, &context, &mut proofs)?;
     validate_extensions(&context)?;
@@ -62,11 +65,11 @@ fn initial(
         record,
         pending,
         selected,
-        message: request.options.message.clone().unwrap_or_default(),
         materials: Vec::new(),
         result: Value::Null,
         finalized: super::publication::Phase::Pending,
         snap: request.ordinary_snap.then(|| request.options.clone()),
+        tag: request.tag_options.clone(),
     }
 }
 
@@ -122,6 +125,9 @@ fn metadata(
 }
 
 fn validate_request(request: &Prepare) -> io::Result<()> {
+    if request.ordinary_tag != request.tag_options.is_some() {
+        return Err(invalid("unexpected tag options"));
+    }
     for path in [&request.root, &request.home, &request.global_remotes_file] {
         crate::workspace::engine::path(path)?;
     }

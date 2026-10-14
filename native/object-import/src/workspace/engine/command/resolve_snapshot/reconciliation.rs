@@ -29,7 +29,7 @@ fn unrelated(
 ) -> io::Result<()> {
     let previous = pending["previouslyUsedVersion"]
         .as_str()
-        .or(Some(material.current_head.as_str()))
+        .or(Some(material.version_state.current_head.as_str()))
         .filter(|value| !value.is_empty())
         .ok_or_else(|| invalid("resolve unrelated prior version"))?;
     if pending["unrelated"] == true {

@@ -142,6 +142,7 @@ impl Prepared {
                     hash: version["hash"]
                         .as_str()
                         .ok_or_else(|| invalid("command snap final reference"))?,
+                    semantic_version: None,
                     version: &version["version"],
                 })
             })

@@ -9,7 +9,7 @@ type ImportProgress = {
 };
 
 /** Validate the entire receipt before any visible command or filesystem effects. */
-export function commandProgress(value: any, operation: 'checkout' | 'merge' | 'recovery' | 'snap') {
+export function commandProgress(value: any, operation: 'checkout' | 'merge' | 'recovery' | 'snap' | 'tag') {
   if (value === undefined) return async () => {};
   if (!Number.isSafeInteger(value.bitmapCount) || value.bitmapCount < 0 || !Array.isArray(value.imports))
     throw new Error('native command progress receipt');
@@ -18,12 +18,12 @@ export function commandProgress(value: any, operation: 'checkout' | 'merge' | 'r
   const loads: number[] = value.loads ?? [];
   if (
     !Array.isArray(loads) ||
-    loads.length > (operation === 'snap' ? 5 : 4) ||
+    loads.length > (['snap', 'tag'].includes(operation) ? 5 : 4) ||
     loads.some((count) => !Number.isSafeInteger(count) || count < 0 || count > 4096)
   )
     throw new Error('native command snap progress receipt');
   const graphRows: ImportProgress[] = value.graphImports ?? [];
-  if (!Array.isArray(graphRows) || (operation !== 'snap' && graphRows.length))
+  if (!Array.isArray(graphRows) || (!['snap', 'tag'].includes(operation) && graphRows.length))
     throw new Error('native graph import progress');
   const rows: ImportProgress[] = [...value.imports, ...graphRows];
   if (

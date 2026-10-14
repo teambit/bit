@@ -1,7 +1,7 @@
 use super::{
     super::{
         capture, invalid, repository,
-        resolve_snapshot::{Material, Participation},
+        resolve_snapshot::{Material, Participation, VersionState},
     },
     Retained, selection,
 };
@@ -19,7 +19,7 @@ pub(super) fn append(
     let selected = materials
         .iter()
         .filter(|row| row.participation.selected)
-        .map(|row| (row.identity.clone(), row.current_head.clone()))
+        .map(|row| (row.identity.clone(), row.version_state.current_head.clone()))
         .collect::<Vec<_>>();
     let visible: HashSet<_> = materials
         .iter()
@@ -94,7 +94,7 @@ fn material(
             .as_array()
             .ok_or_else(|| invalid("resolve hidden files"))?
             .clone(),
-        current_head: entry.head.clone(),
+        version_state: VersionState { current_head: entry.head.clone(), tagged_version: None },
         pending: retained.pending
             .iter()
             .find(|pending| {

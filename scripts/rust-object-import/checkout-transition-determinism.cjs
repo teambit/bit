@@ -34,7 +34,7 @@ Module._load = function (request, parent, ...args) {
     return () => '0ms';
   if (
     request !== 'uuid' ||
-    !/[\\/]((version-maker)|(new-snap-hash)|(version)|(lane)|(lane-history)|(new-lane-history-key))\.js$/.test(
+    !/[\\/]((version-maker)|(new-snap-hash)|(new-tag-hash)|(version)|(lane)|(lane-history)|(new-lane-history-key))\.js$/.test(
       parent?.filename || ''
     )
   )
@@ -46,6 +46,8 @@ Module._load = function (request, parent, ...args) {
       // Both command implementations use the same durable scalar helpers and stream.
       const stream = /[\\/]new-lane-history-key\.js$/.test(parent?.filename || '')
         ? 'lane-history'
+        : /[\\/]new-tag-hash\.js$/.test(parent?.filename || '')
+          ? 'tag'
         : /[\\/]((version-maker)|(new-snap-hash))\.js$/.test(parent?.filename || '')
           ? 'snap'
           : 'model';

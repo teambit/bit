@@ -185,14 +185,15 @@ fn manifest(
     ] {
         package[field] = input.version[version_field].clone();
     }
-    let version = format!("0.0.0-{}", input.hash);
+    let component_version = input.semantic_version.unwrap_or(input.hash);
+    let version =
+        input.semantic_version.map_or_else(|| format!("0.0.0-{}", input.hash), str::to_owned);
     package["version"] = value!(version);
     if package["componentId"].get("version").is_none() {
         let component = &package["componentId"];
-        package["componentId"] =
-            value!({"name":component["name"],"version":input.hash,"scope":component["scope"]});
+        package["componentId"] = value!({"name":component["name"],"version":component_version,"scope":component["scope"]});
     } else {
-        package["componentId"]["version"] = value!(input.hash);
+        package["componentId"]["version"] = value!(component_version);
     }
     output.writes.push((manifest, pretty(&package, true)?));
     Ok(())

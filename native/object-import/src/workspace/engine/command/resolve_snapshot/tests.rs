@@ -1,4 +1,4 @@
-use super::{Material, Participation, allocations};
+use super::{Material, Participation, VersionState, allocations};
 use serde_json::json;
 
 #[test]
@@ -8,7 +8,7 @@ fn distinct_components_cannot_share_a_snapshot_hash() {
         model: json!({}),
         version: json!({}),
         files: Vec::new(),
-        current_head: String::new(),
+        version_state: VersionState { current_head: String::new(), tagged_version: None },
         pending: None,
         hidden: false,
         participation: Participation { selected: true, automatic: false },

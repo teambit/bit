@@ -98,7 +98,7 @@ impl State {
         Ok(())
     }
 }
-fn populate(
+pub(super) fn populate(
     root: &Path,
     history: &mut Value,
     head: &str,

@@ -16,6 +16,7 @@ pub(in crate::workspace::engine::command) struct Input<'a> {
     pub identity: &'a str,
     pub directory: &'a str,
     pub hash: &'a str,
+    pub semantic_version: Option<&'a str>,
     pub version: &'a Value,
 }
 pub(in crate::workspace::engine::command) struct Prepared {

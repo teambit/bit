@@ -82,6 +82,7 @@ fn validate_finalization(
             identity: &input.identity,
             directory: &input.directory,
             hash: &input.remote,
+            semantic_version: None,
             version,
         })
         .collect::<Vec<_>>();

@@ -32,8 +32,14 @@ pub(in crate::workspace::engine::command) fn preflight(
 }
 
 fn validate_identity(material: &Material) -> io::Result<()> {
-    if !material.current_head.is_empty() {
-        crate::merge_history::hash(&material.current_head)?;
+    if let Some(tag) = &material.version_state.tagged_version
+        && (material.hidden || tag.is_empty() || material.model["versions"].get(tag).is_some())
+    {
+        return Err(invalid("tag invalid semantic allocation"));
+    }
+
+    if !material.version_state.current_head.is_empty() {
+        crate::merge_history::hash(&material.version_state.current_head)?;
     }
     if let Some(pending) = &material.pending {
         let head = pending["head"].as_str().ok_or_else(|| invalid("resolve pending head"))?;

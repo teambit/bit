@@ -1337,7 +1337,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     const artifactFiles = getArtifactsFiles(source.extensions);
     const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
     const { version, files, flattenedEdges, dependenciesGraph } =
-      await this.scope.legacyScope.sources.consumerComponentToVersion(source);
+      await this.scope.legacyScope.sources.consumerComponentToVersion(source, true);
     version.origin = {
       id: { scope: source.scope || (source.defaultScope as string), name: source.name },
       lane: lane ? { scope: lane.scope, name: lane.name, hash: lane.hash().toString() } : undefined,

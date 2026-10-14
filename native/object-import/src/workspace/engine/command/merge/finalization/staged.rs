@@ -125,6 +125,6 @@ fn update(rows: &mut Value, bitmap: &Value, input: &Input<'_>) -> io::Result<()>
         }
     }
     component_map.insert("isAvailableOnCurrentLane".into(), value!(true));
-    rows.push(value!({"id":{"scope":scope,"name":name,"version":input.hash},"componentMapObject":component_map}));
+    rows.push(value!({"id":{"scope":scope,"name":name,"version":input.semantic_version.unwrap_or(input.hash)},"componentMapObject":component_map}));
     Ok(())
 }

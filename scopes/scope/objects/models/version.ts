@@ -34,6 +34,7 @@ import { BitIdCompIdError, VersionInvalid, validateVersionInstance } from '@team
 import Source from './source';
 import { DependenciesGraph } from './dependencies-graph';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
+import { newTagHash } from './new-tag-hash';
 
 export type SourceFileModel = {
   name: string;
@@ -648,11 +649,13 @@ export default class Version extends BitObject {
     files,
     flattenedEdges,
     dependenciesGraph,
+    durableTag = false,
   }: {
     component: ConsumerComponent;
     files: Array<SourceFileModel>;
     flattenedEdges?: Source;
     dependenciesGraph?: Source;
+    durableTag?: boolean;
   }) {
     const parseFile = (file) => {
       return {
@@ -691,14 +694,14 @@ export default class Version extends BitObject {
     if (isSnap(component.version)) {
       version._hash = component.version as string;
     } else {
-      version.setNewHash();
+      version.setNewHash(durableTag);
     }
 
     return version;
   }
 
-  setNewHash() {
-    this._hash = sha1(v4());
+  setNewHash(durableTag = false) {
+    this._hash = durableTag ? newTagHash() : sha1(v4());
   }
 
   get ignoreSharedDir(): boolean {

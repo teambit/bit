@@ -7,6 +7,7 @@ pub(super) struct Context<'a> {
     pub root: &'a Path,
     pub receipt: &'a Value,
     pub lane: Option<&'a Value>,
+    pub versions: &'a HashMap<&'a str, &'a str>,
     pub hashes: &'a HashMap<&'a str, &'a str>,
     pub snapshots: &'a snapshots::State,
 }
@@ -18,7 +19,7 @@ pub(super) fn prepare(
     proofs: &mut Vec<proof::Proof>,
 ) -> io::Result<Value> {
     let hash = context.hashes[material.identity.as_str()];
-    let mut version = metadata(material, context.receipt, context.lane, context.hashes)?;
+    let mut version = metadata(material, context.receipt, context.lane, context.versions)?;
     let allocation = context.receipt["versions"]
         .as_array()
         .unwrap()
@@ -27,16 +28,24 @@ pub(super) fn prepare(
         .ok_or_else(|| invalid("resolve allocation absent"))?;
     reconciliation::reconcile(&mut version, material, allocation)?;
     sources::sources(&mut version, material, context.snapshots, objects)?;
-    graph::graph(context.root, &mut version, material, hash, context.hashes, objects, proofs)?;
+    graph::graph(
+        context.root,
+        &mut version,
+        material,
+        context.versions[material.identity.as_str()],
+        context.versions,
+        objects,
+        proofs,
+    )?;
     let model = if context.lane.is_some() || material.hidden {
         material.model.clone()
     } else {
-        snapshot::local_model(&material.model, hash)?
+        local_model(material, hash)?
     };
     objects.push(snapshot::object("Version", Some(hash), version.clone())?);
     objects.push(snapshot::object("Component", None, model.clone())?);
     Ok(json!({"identity":material.identity,"hash":hash,"version":version,"model":model,
-        "selected":material.participation.selected,"hidden":material.hidden}))
+        "componentVersion":context.versions[material.identity.as_str()],"selected":material.participation.selected,"hidden":material.hidden}))
 }
 
 fn metadata(
@@ -56,11 +65,11 @@ fn metadata(
     version["bitVersion"] = receipt["bitVersion"].clone();
     version["buildStatus"] = json!("pending");
     version["modified"] = json!([]);
-    version["parents"] = if material.current_head.is_empty() {
+    version["parents"] = if material.version_state.current_head.is_empty() {
         json!([])
     } else {
-        crate::merge_history::hash(&material.current_head)?;
-        json!([material.current_head])
+        crate::merge_history::hash(&material.version_state.current_head)?;
+        json!([material.version_state.current_head])
     };
     let fields = version.as_object_mut().ok_or_else(|| invalid("resolve Version"))?;
     fields.remove("squashed");
@@ -99,4 +108,35 @@ fn origin(version: &mut Value, material: &Material, lane: Option<&Value>) -> io:
         version["origin"]["lane"]["hash"] = lane["hash"].clone();
     }
     Ok(())
+}
+
+pub(super) fn local_model(material: &Material, hash: &str) -> io::Result<Value> {
+    let Some(tag) = &material.version_state.tagged_version else {
+        return snapshot::local_model(&material.model, hash);
+    };
+    let mut model = material.model.clone();
+    let tags = model["versions"].as_object_mut().ok_or_else(|| invalid("tag model versions"))?;
+    if tags.contains_key(tag) {
+        return Err(invalid("tag version already exists"));
+    }
+    tags.insert(tag.clone(), json!(hash));
+    if let Some(orphaned) = model.get_mut("orphanedVersions") {
+        orphaned
+            .as_object_mut()
+            .ok_or_else(|| invalid("tag orphaned versions"))?
+            .remove(tag);
+    }
+    model["head"] = json!(hash);
+    if model["state"]["versions"].is_null() {
+        model["state"] = json!({"versions":{}});
+    }
+    let versions =
+        model["state"]["versions"].as_object_mut().ok_or_else(|| invalid("tag local versions"))?;
+    let row = versions
+        .entry(tag.clone())
+        .or_insert_with(|| json!({}));
+    row.as_object_mut()
+        .ok_or_else(|| invalid("tag local version"))?
+        .insert("local".into(), json!(true));
+    Ok(model)
 }

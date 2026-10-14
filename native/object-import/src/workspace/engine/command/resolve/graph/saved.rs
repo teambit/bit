@@ -8,9 +8,9 @@ pub(super) fn capture(materials: &[Material], repository: &mut Repository) -> io
     let mut graph = Graph::new();
     for material in materials
         .iter()
-        .filter(|material| !material.current_head.is_empty())
+        .filter(|material| !material.version_state.current_head.is_empty())
     {
-        let version = repository.read(&material.current_head, "Version")?;
+        let version = repository.read(&material.version_state.current_head, "Version")?;
         let edges = match version["flattenedEdgesRef"].as_str() {
             Some(reference) => repository.source_json(reference)?,
             None => version

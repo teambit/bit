@@ -34,6 +34,7 @@ fn new_links_are_planned_without_writes_or_declined_before_writes_on_non_unix() 
             identity: "scope/alpha",
             directory: "alpha",
             hash: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            semantic_version: None,
             version: &version,
         }],
         false,
@@ -63,6 +64,7 @@ fn existing_links_remain_eligible_and_do_not_get_replaced_during_preparation() {
             identity: "scope/alpha",
             directory: "alpha",
             hash: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            semantic_version: None,
             version: &version,
         }],
         false,
@@ -94,6 +96,7 @@ fn lane_snapshot_stages_current_lane_config_and_validates_its_original_bytes() {
             identity: "scope/alpha",
             directory: "alpha",
             hash: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            semantic_version: None,
             version: &version,
         }],
         &mut prepared,
@@ -154,6 +157,7 @@ fn existing_lane_only_marker_is_retained_in_staged_configuration() {
             identity: "scope/alpha",
             directory: "alpha",
             hash: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            semantic_version: None,
             version: &version,
         }],
         &mut prepared,
@@ -180,6 +184,7 @@ fn scope_only_snapshot_stages_hashes_without_workspace_config_or_package_writes(
             identity: "scope/hidden",
             directory: "",
             hash: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            semantic_version: None,
             version: &version,
         }],
         false,
@@ -234,6 +239,7 @@ fn package_component_id_preserves_existing_order_and_serializes_first_snapshot_i
                 identity: "scope/alpha",
                 directory: "alpha",
                 hash: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                semantic_version: None,
                 version: &version,
             }],
             false,
@@ -260,4 +266,38 @@ fn package_component_id_preserves_existing_order_and_serializes_first_snapshot_i
         );
         assert_eq!(package["componentId"]["version"], "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
     }
+}
+
+#[test]
+fn tag_package_and_staged_config_use_semver_while_staged_snaps_use_object_hash() {
+    let (directory, mut version) = fixture();
+    version["files"] = json!([]);
+    let hash = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    let prepared = prepare(
+        &directory.0,
+        &[Input {
+            identity: "scope/alpha",
+            directory: "alpha",
+            hash,
+            semantic_version: Some("2.1.0-beta.2"),
+            version: &version,
+        }],
+        false,
+    )
+    .unwrap();
+    let bytes = |relative: &str| {
+        &prepared.writes
+            .iter()
+            .find(|(path, _)| *path == directory.0.join(relative))
+            .unwrap()
+            .1
+    };
+    let package: Value =
+        serde_json::from_slice(bytes("node_modules/@scope/alpha/package.json")).unwrap();
+    assert_eq!(package["version"], "2.1.0-beta.2");
+    assert_eq!(package["componentId"]["version"], "2.1.0-beta.2");
+    let staged: Value = serde_json::from_slice(bytes(".bit/staged-config/main.json")).unwrap();
+    assert_eq!(staged[0]["id"]["version"], "2.1.0-beta.2");
+    assert_eq!(bytes(".bit/staged-snaps"), hash.as_bytes());
+    assert!(!directory.0.join(".bit/staged-snaps").exists());
 }

@@ -35,7 +35,7 @@ pub(super) fn select(
     filter_pattern(candidates, &known, pattern, &options)
 }
 
-fn candidates(
+pub(super) fn candidates(
     retained: &mut Retained,
     captured: &[capture::Captured],
     options: &Options,
@@ -136,7 +136,7 @@ pub(super) fn report(
         )
     });
     Ok(
-        serde_json::json!({"snappedComponents":selected,"newComponents":materials.iter().filter(|material| material.current_head.is_empty() && material.participation.selected).map(|material|material.identity.clone()).collect::<Vec<_>>(),"autoSnappedResults":automatic,"laneName":lane_name,"totalComponentsCount":materials.len()}),
+        serde_json::json!({"snappedComponents":selected,"newComponents":materials.iter().filter(|material| material.version_state.current_head.is_empty() && material.participation.selected).map(|material|material.identity.clone()).collect::<Vec<_>>(),"autoSnappedResults":automatic,"laneName":lane_name,"totalComponentsCount":materials.len()}),
     )
 }
 
@@ -154,10 +154,10 @@ pub(super) fn hidden_reports(
                         && super::hidden::depends_on(
                             &material.version,
                             &seed.identity,
-                            &seed.current_head,
+                            &seed.version_state.current_head,
                         )
                 })
-                .map(|seed| format!("{}@{}", seed.identity, seed.current_head))
+                .map(|seed| format!("{}@{}", seed.identity, seed.version_state.current_head))
                 .collect();
             if triggered.is_empty() {
                 return Err(invalid("snap hidden trigger absent"));
@@ -174,7 +174,7 @@ pub(super) fn prepare_graph_imports(
     let mut known = known_previous(materials, &mut retained.record.repository)?;
     let mut targets = Vec::new();
     for material in materials {
-        let source = serde_json::json!({"scope":material.model["scope"],"name":material.model["name"],"version":material.current_head});
+        let source = serde_json::json!({"scope":material.model["scope"],"name":material.model["name"],"version":material.version_state.current_head});
         for edge in super::graph::edges(&source, &material.version)? {
             let id = &edge["target"];
             let identity = selection::identity(id)?;
@@ -208,9 +208,9 @@ fn known_previous(
     let mut known = HashSet::new();
     for material in materials
         .iter()
-        .filter(|material| !material.current_head.is_empty())
+        .filter(|material| !material.version_state.current_head.is_empty())
     {
-        let previous = repository.read(&material.current_head, "Version")?;
+        let previous = repository.read(&material.version_state.current_head, "Version")?;
         let edges = if let Some(reference) = previous["flattenedEdgesRef"].as_str() {
             repository.source_json(reference)?
         } else {
@@ -272,7 +272,10 @@ pub(super) fn new_material(
             .as_array()
             .ok_or_else(|| invalid("snap new files"))?
             .clone(),
-        current_head: String::new(),
+        version_state: super::super::resolve_snapshot::VersionState {
+            current_head: String::new(),
+            tagged_version: None,
+        },
         pending: None,
         hidden: false,
         participation,

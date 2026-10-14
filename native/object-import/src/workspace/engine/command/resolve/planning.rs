@@ -1,9 +1,9 @@
 use super::{
     super::{
         capture, invalid, repository,
-        resolve_snapshot::{Material, Participation},
+        resolve_snapshot::{Material, Participation, VersionState},
     },
-    Plan, Retained, cascade, graph, projection, selection,
+    Plan, Retained, Selection, cascade, graph, projection, selection,
 };
 use crate::workspace::{engine::status_models::versions, snapshots};
 use serde_json::{Value, json};
@@ -18,11 +18,7 @@ pub(super) fn prepare(
     validate_capture(retained, &input)?;
     let captured =
         capture::all(&retained.record.request.root, input.current.clone(), snapshots, pool)?;
-    let selected = if retained.snap.is_some() {
-        super::snap::select(retained, &captured, input.selected_ids.as_deref())?
-    } else {
-        select(retained, &input)?
-    };
+    let Selection { identities: selected, load_count } = selected(retained, &captured, &input)?;
     retained.record.proofs.extend(super::source_proofs::capture(&captured, snapshots)?);
     if selected.is_empty() {
         retain_proofs(retained, input.dependency_read_set)?;
@@ -36,6 +32,9 @@ pub(super) fn prepare(
     if retained.snap.is_some() {
         super::snap::prepare_graph_imports(retained, &materials)?;
     }
+    if retained.tag.is_some() {
+        super::tag::versions(retained, &input, &mut materials)?;
+    }
     preflight(retained, &mut materials, snapshots)?;
     let issue_graph = super::issue_graph::capture(
         &input.components,
@@ -44,17 +43,46 @@ pub(super) fn prepare(
         &mut retained.record.repository,
     )?;
     retain_proofs(retained, input.dependency_read_set)?;
-    let result = if retained.snap.is_some() {
-        super::snap::report(retained, &selected, &materials, &automatic)?
-    } else {
-        json!({"resolvedComponents":selected.iter().map(|id| json!({"id":id})).collect::<Vec<_>>()})
-    };
-    let mut output = response(retained, &selected, &materials, &result, auto_loaded);
+    let result = report(retained, &input.semver, &selected, &materials, &automatic)?;
+    let mut output = response(retained, &selected, &materials, &result, (auto_loaded, load_count));
     output["issueGraph"] = issue_graph;
     retained.selected = selected;
     retained.materials = materials;
     retained.result = result;
     Ok(output)
+}
+
+fn report(
+    retained: &Retained,
+    semver: &Value,
+    selected: &[String],
+    materials: &[Material],
+    automatic: &[Value],
+) -> io::Result<Value> {
+    if retained.tag.is_some() {
+        super::tag::report(retained, semver, selected, materials, automatic)
+    } else if retained.snap.is_some() {
+        super::snap::report(retained, selected, materials, automatic)
+    } else {
+        Ok(
+            json!({"resolvedComponents":selected.iter().map(|id| json!({"id":id})).collect::<Vec<_>>()}),
+        )
+    }
+}
+
+fn selected(
+    retained: &mut Retained,
+    captured: &[capture::Captured],
+    input: &Plan,
+) -> io::Result<Selection> {
+    if retained.tag.is_some() {
+        super::tag::select(retained, captured, input)
+    } else if retained.snap.is_some() {
+        super::snap::select(retained, captured, input.selected_ids.as_deref())
+            .map(Selection::unique)
+    } else {
+        select(retained, input).map(Selection::unique)
+    }
 }
 
 fn retain_proofs(retained: &mut Retained, proofs: Vec<super::proof::Proof>) -> io::Result<()> {
@@ -164,13 +192,13 @@ fn response(
     selected: &[String],
     materials: &[Material],
     result: &Value,
-    auto_loaded: bool,
+    loading: (bool, usize),
 ) -> Value {
     let order: Vec<_> = materials
         .iter()
         .map(|material| &material.identity)
         .collect();
-    json!({"token":retained.record.token,"selectedIds":selected,"needsSnap":order,"result":result,"issueTargets":materials.iter().map(|material| json!({"identity":format!("{}@{}",material.identity,material.current_head),"dependencies":material.version["dependencies"],"devDependencies":material.version["devDependencies"],"flattenedDependencies":material.version["flattenedDependencies"]})).collect::<Vec<_>>(),"scalarPreparation":{"laneHistory":!retained.record.context["lane"]["current"].is_null(),"squash":materials.iter().filter_map(|material| material.pending.as_ref().filter(|pending|pending["shouldSquash"]==true).map(|pending|json!({"identity":material.identity,"laneId":pending["laneId"]}))).collect::<Vec<_>>()},"progress":progress(retained,selected.len(),auto_loaded)})
+    json!({"token":retained.record.token,"selectedIds":selected,"needsSnap":order,"result":result,"issueTargets":materials.iter().map(|material| json!({"identity":format!("{}@{}",material.identity,material.version_state.current_head),"dependencies":material.version["dependencies"],"devDependencies":material.version["devDependencies"],"flattenedDependencies":material.version["flattenedDependencies"]})).collect::<Vec<_>>(),"scalarPreparation":{"laneHistory":!retained.record.context["lane"]["current"].is_null(),"squash":materials.iter().filter_map(|material| material.pending.as_ref().filter(|pending|pending["shouldSquash"]==true).map(|pending|json!({"identity":material.identity,"laneId":pending["laneId"]}))).collect::<Vec<_>>()},"progress":progress(retained,loading.1,loading.0)})
 }
 
 fn progress(retained: &Retained, selected: usize, auto_loaded: bool) -> Value {
@@ -181,7 +209,8 @@ fn progress(retained: &Retained, selected: usize, auto_loaded: bool) -> Value {
         if !auto_loaded {
             loads.pop();
         }
-        if !options.unmodified && !options.unmerged {
+        // Tag loads the pending workspace set even with --unmerged; snap skips it.
+        if !options.unmodified && (!options.unmerged || retained.tag.is_some()) {
             loads.insert(0, count);
         }
         output["graphImports"] = retained.record.repository.progress()["imports"].clone();
@@ -259,7 +288,7 @@ fn material(
             .as_array()
             .ok_or_else(|| invalid("resolve files"))?
             .clone(),
-        current_head: head,
+        version_state: VersionState { current_head: head, tagged_version: None },
         pending: retained.pending
             .iter()
             .find(|row| selection::identity(&row["id"]).ok().as_ref() == Some(identity))

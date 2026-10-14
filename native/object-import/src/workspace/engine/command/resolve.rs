@@ -10,6 +10,8 @@ mod publication;
 mod selection;
 mod snap;
 mod source_proofs;
+mod tag;
+mod tag_versions;
 
 use super::{Record, State, invalid, proof};
 use serde::Deserialize;
@@ -25,6 +27,9 @@ pub(in crate::workspace::engine) struct Prepare {
     options: Options,
     #[serde(skip)]
     ordinary_snap: bool,
+    #[serde(skip)]
+    ordinary_tag: bool,
+    tag_options: Option<tag::Options>,
     #[serde(default)]
     dependency_grammar: Value,
 }
@@ -43,15 +48,25 @@ struct Options {
     skip_auto_snap: bool,
 }
 
+struct Selection {
+    identities: Vec<String>,
+    load_count: usize,
+}
+impl Selection {
+    fn unique(identities: Vec<String>) -> Self {
+        Self { load_count: identities.len(), identities }
+    }
+}
+
 pub(super) struct Retained {
     record: Record,
     pending: Vec<Value>,
     selected: Vec<String>,
-    message: String,
     materials: Vec<super::resolve_snapshot::Material>,
     result: Value,
     finalized: publication::Phase,
     snap: Option<Options>,
+    tag: Option<tag::Options>,
 }
 
 pub(in crate::workspace::engine) fn prepare(
@@ -79,6 +94,18 @@ pub(in crate::workspace::engine) fn prepare_snap(
     prepare(&input, state, pool)
 }
 
+pub(in crate::workspace::engine) fn prepare_tag(
+    mut input: Prepare,
+    state: &mut State,
+    pool: &rayon::ThreadPool,
+) -> io::Result<(usize, Value)> {
+    let tag = input.tag_options.as_ref().ok_or_else(|| invalid("tag options absent"))?;
+    input.options.skip_auto_snap = tag.skip_auto_tag;
+    input.ordinary_snap = true;
+    input.ordinary_tag = true;
+    prepare(&input, state, pool)
+}
+
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Plan {
@@ -87,6 +114,7 @@ pub(in crate::workspace::engine) struct Plan {
     components: Vec<projection::Component>,
     semver: Value,
     selected_ids: Option<Vec<String>>,
+    tag_selections: Option<Vec<Value>>,
     #[serde(default)]
     dependency_read_set: Vec<proof::Proof>,
 }

@@ -32,10 +32,10 @@ pub(super) fn preflight(
         .map(|material| {
             (
                 material.identity.as_str(),
-                if material.current_head.is_empty() {
+                if material.version_state.current_head.is_empty() {
                     "0000000000000000000000000000000000000000"
                 } else {
-                    material.current_head.as_str()
+                    material.version_state.current_head.as_str()
                 },
             )
         })
@@ -108,12 +108,17 @@ fn batch<'a>(
         crate::merge_history::hash(hash)?;
         let directory = directory(context, material)?;
         if !material.hidden {
-            output.updates.push(bitmap_update(material, version, hash));
+            output.updates.push(bitmap_update(
+                material,
+                version,
+                material.version_state.tagged_version.as_deref().unwrap_or(hash),
+            ));
         }
         output.inputs.push(finalization::Input {
             identity: &material.identity,
             directory,
             hash,
+            semantic_version: material.version_state.tagged_version.as_deref(),
             version: &version["version"],
         });
     }
@@ -166,9 +171,13 @@ fn pending_bytes(pending: &[Value], identities: &HashSet<&str>) -> io::Result<Ve
     serde_json::to_vec_pretty(&remaining).map_err(io::Error::other)
 }
 
-fn reason(receipt: &Value) -> String {
+fn reason(receipt: &Value, tag: bool) -> String {
     let message = receipt["log"]["message"].as_str().unwrap_or_default();
-    format!("snap (message: {})", if message.is_empty() { "N/A" } else { message })
+    format!(
+        "{} (message: {})",
+        if tag { "tag" } else { "snap" },
+        if message.is_empty() { "N/A" } else { message },
+    )
 }
 
 fn lane_new_ids(context: &Value, materials: &[resolve_snapshot::Material]) -> Vec<String> {
@@ -180,7 +189,9 @@ fn lane_new_ids(context: &Value, materials: &[resolve_snapshot::Material]) -> Ve
     }
     materials
         .iter()
-        .filter(|material| !material.hidden && material.current_head.is_empty())
+        .filter(|material| {
+            !material.hidden && material.version_state.current_head.is_empty()
+        })
         .map(|material| material.identity.clone())
         .collect()
 }
@@ -207,7 +218,7 @@ pub(super) fn prepare(
         root,
         materials
             .iter()
-            .filter(|material| material.current_head.is_empty())
+            .filter(|material| material.version_state.current_head.is_empty())
             .map(|material| material.identity.as_str()),
     )?;
     let pending_path = root.join(".bit/unmerged.json");
@@ -223,7 +234,12 @@ pub(super) fn prepare(
         pending_path,
         pending_bytes,
         proofs,
-        reason: reason(receipt),
+        reason: reason(
+            receipt,
+            materials
+                .iter()
+                .any(|material| material.version_state.tagged_version.is_some()),
+        ),
     };
     output.validate()?;
     Ok(output)

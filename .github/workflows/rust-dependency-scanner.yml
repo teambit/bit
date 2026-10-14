@@ -659,6 +659,8 @@ jobs:
           BIT_TEST_COMMAND_COMPILED=1 node --test scripts/rust-object-import/workspace-resolve-driver.test.cjs scripts/rust-object-import/cold-resolve-validation.test.cjs
           node --test scripts/rust-object-import/workspace-snap-driver.test.cjs scripts/rust-object-import/cold-snap-validation.test.cjs
           BIT_TEST_COMMAND_COMPILED=1 node --test scripts/rust-object-import/workspace-snap-driver.test.cjs scripts/rust-object-import/cold-snap-validation.test.cjs
+          node --test scripts/rust-object-import/workspace-tag-driver.test.cjs scripts/rust-object-import/cold-tag-validation.test.cjs
+          BIT_TEST_COMMAND_COMPILED=1 node --test scripts/rust-object-import/workspace-tag-driver.test.cjs scripts/rust-object-import/cold-tag-validation.test.cjs
       - name: Install Linux source ownership tracing
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y strace
@@ -690,6 +692,13 @@ jobs:
           BIT_TEST_OBJECT_IMPORT: ${{ github.workspace }}/native/target/debug/bit-object-import
           BIT_TEST_WORKSPACE_ADDON: ${{ github.workspace }}/native/target/debug/bit-workspace.node
         run: node --test scripts/rust-object-import/cold-snap-runtime.test.cjs
+      - name: Differential public cold ordinary tag
+        if: runner.os == 'Linux'
+        env:
+          BIT_LEGACY_ROOT: ${{ github.workspace }}
+          BIT_TEST_OBJECT_IMPORT: ${{ github.workspace }}/native/target/debug/bit-object-import
+          BIT_TEST_WORKSPACE_ADDON: ${{ github.workspace }}/native/target/debug/bit-workspace.node
+        run: node --test scripts/rust-object-import/cold-tag-runtime.test.cjs
       - name: Differential native snapshot models against the compiled CLI
         working-directory: native
         env:

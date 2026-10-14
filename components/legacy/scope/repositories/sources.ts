@@ -285,7 +285,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
    * @see model-components.toConsumerComponent() for the opposite action. (converting Version to
    * ConsumerComponent).
    */
-  async consumerComponentToVersion(consumerComponent: ConsumerComponent): Promise<{
+  async consumerComponentToVersion(consumerComponent: ConsumerComponent, durableTag = false): Promise<{
     version: Version;
     files: any;
     flattenedEdges?: Source;
@@ -309,6 +309,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       files: files as any,
       flattenedEdges,
       dependenciesGraph,
+      durableTag,
     });
     // $FlowFixMe it's ok to override the pendingVersion attribute
     consumerComponent.pendingVersion = version as any; // helps to validate the version against the consumer-component

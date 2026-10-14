@@ -59,6 +59,10 @@ enum Request {
         request: Value,
     },
     CommandPrepare(command::input::Prepare),
+    CommandTagPrepare(command::resolve::Prepare),
+    CommandTagPlan(command::resolve::Plan),
+    CommandTagFinalize(command::resolve::Finalize),
+    CommandTagApply(command::resolve::Apply),
     CommandSnapPrepare(command::resolve::Prepare),
     CommandSnapPlan(command::resolve::Plan),
     CommandSnapFinalize(command::resolve::Finalize),
@@ -186,28 +190,30 @@ fn owned(
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
     match request {
+        Request::CommandTagPrepare(input) => {
+            pool.install(|| command::resolve::prepare_tag(input, &mut snapshots.command, pool))
+        }
+
         Request::CommandSnapPrepare(input) => {
             pool.install(|| command::resolve::prepare_snap(input, &mut snapshots.command, pool))
         }
-        Request::CommandSnapPlan(input) => {
-            pool.install(|| command::resolve::plan(input, snapshots, pool))
-        }
-        Request::CommandSnapFinalize(input) => {
-            pool.install(|| command::resolve::finalize(input, snapshots))
-        }
-        Request::CommandSnapApply(input) => {
-            pool.install(|| command::resolve::apply(&input, &mut snapshots.command))
-        }
+
         Request::CommandResolvePrepare(input) => {
             pool.install(|| command::resolve::prepare(&input, &mut snapshots.command, pool))
         }
-        Request::CommandResolvePlan(input) => {
+        Request::CommandResolvePlan(input)
+        | Request::CommandSnapPlan(input)
+        | Request::CommandTagPlan(input) => {
             pool.install(|| command::resolve::plan(input, snapshots, pool))
         }
-        Request::CommandResolveFinalize(input) => {
+        Request::CommandResolveFinalize(input)
+        | Request::CommandSnapFinalize(input)
+        | Request::CommandTagFinalize(input) => {
             pool.install(|| command::resolve::finalize(input, snapshots))
         }
-        Request::CommandResolveApply(input) => {
+        Request::CommandResolveApply(input)
+        | Request::CommandSnapApply(input)
+        | Request::CommandTagApply(input) => {
             pool.install(|| command::resolve::apply(&input, &mut snapshots.command))
         }
         Request::CommandRecoveryPrepare(input) => {

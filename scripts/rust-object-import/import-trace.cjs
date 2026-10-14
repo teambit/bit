@@ -75,6 +75,10 @@ const metrics = {
       'commandResolvePlan',
       'commandResolveFinalize',
       'commandResolveApply',
+      'commandTagPrepare',
+      'commandTagPlan',
+      'commandTagFinalize',
+      'commandTagApply',
       'commandSnapPrepare',
       'commandSnapPlan',
       'commandSnapFinalize',
@@ -561,6 +565,7 @@ function observeWorkspaceTransport(child) {
             'BWS1:commandRecoveryApply',
             'BWS1:commandResolveApply',
             'BWS1:commandSnapApply',
+            'BWS1:commandTagApply',
           ].includes(magic) &&
           response.data?.applied === true &&
           !response.failed

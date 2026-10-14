@@ -32,7 +32,8 @@ pub(super) fn finalize(
     retained.record.proofs.extend(input.dependency_read_set);
     validate(retained)?;
     let mut receipt = input.snap_receipt;
-    receipt["log"]["message"] = json!(retained.message);
+    receipt["log"]["message"] =
+        json!(retained.record.request.options.message.as_deref().unwrap_or_default());
     let lane = lane_current(&retained.record.context);
     let directory = scratch::Directory::create()?;
     let snapshot = resolve_snapshot::prepare(
@@ -53,7 +54,7 @@ pub(super) fn finalize(
         retained.record.repository.imported_index(),
     )?;
     publication.validate()?;
-    if retained.snap.is_some() {
+    if retained.snap.is_some() && retained.tag.is_none() {
         allocate_snap_report(&mut retained.result, &snapshot.versions)?;
     }
     retained.finalized =

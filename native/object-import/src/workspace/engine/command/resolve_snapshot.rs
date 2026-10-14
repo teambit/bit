@@ -3,6 +3,7 @@
 pub(super) mod eligibility;
 pub(super) use eligibility::preflight;
 mod graph;
+mod history;
 mod lane;
 mod object;
 mod reconciliation;
@@ -22,10 +23,16 @@ pub(super) struct Material {
     pub model: Value,
     pub version: Value,
     pub files: Vec<Value>,
-    pub current_head: String,
+    pub version_state: VersionState,
     pub pending: Option<Value>,
     pub hidden: bool,
     pub participation: Participation,
+}
+
+/// The previous object ref and the semantic alias planned for its successor.
+pub(super) struct VersionState {
+    pub current_head: String,
+    pub tagged_version: Option<String>,
 }
 
 #[derive(Clone, Copy)]
@@ -65,17 +72,31 @@ pub(super) fn prepare(
 ) -> io::Result<Snapshot> {
     preflight(root, materials, snapshots)?;
     let hashes = allocations(materials, receipt)?;
+    let versions_by_id = publication_versions(materials, &hashes, lane)?;
     let mut objects = Vec::new();
     let mut versions = Vec::new();
     let mut proofs = Vec::new();
-    let context = object::Context { root, receipt, lane, hashes: &hashes, snapshots };
+    let context = object::Context {
+        root,
+        receipt,
+        lane,
+        hashes: &hashes,
+        versions: &versions_by_id,
+        snapshots,
+    };
     for material in materials {
         versions.push(object::prepare(&context, material, &mut objects, &mut proofs)?);
     }
     let mut seen = HashSet::new();
-    let repository = if let Some(lane) = lane {
+    let repository = if lane.is_some()
+        || materials.iter().any(|material| material.version_state.tagged_version.is_some())
+    {
         let mut repository = Repository::new(root, None);
-        lane::lane_objects(lane, materials, receipt, &mut objects, &mut repository)?;
+        if let Some(lane) = lane {
+            lane::lane_objects(lane, materials, receipt, &mut objects, &mut repository)?;
+        } else {
+            history::tag_histories(root, materials, &mut objects, &mut repository)?;
+        }
         Some(repository)
     } else {
         None
@@ -87,6 +108,29 @@ pub(super) fn prepare(
         repository,
         versions,
     })
+}
+
+fn publication_versions<'a>(
+    materials: &'a [Material],
+    hashes: &HashMap<&'a str, &'a str>,
+    lane: Option<&Value>,
+) -> io::Result<HashMap<&'a str, &'a str>> {
+    if lane.is_some()
+        && materials.iter().any(|material| material.version_state.tagged_version.is_some())
+    {
+        return Err(invalid("tag is only supported on main"));
+    }
+    Ok(materials
+        .iter()
+        .map(|material| {
+            (
+                material.identity.as_str(),
+                material.version_state.tagged_version
+                    .as_deref()
+                    .unwrap_or_else(|| hashes[material.identity.as_str()]),
+            )
+        })
+        .collect())
 }
 
 fn allocations<'a>(
@@ -128,3 +172,6 @@ fn validate_scalars(receipt: &Value) -> io::Result<()> {
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod tag_tests;
