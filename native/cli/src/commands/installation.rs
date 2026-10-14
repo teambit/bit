@@ -4,8 +4,13 @@
 
 use crate::{
     commands::{
+        color::Chalk,
         install::{self, Input, Terminal},
-        status::cache::cache_root,
+        status::{
+            cache::cache_root,
+            js::{array, text},
+        },
+        workspace_command::format::Formatter,
     },
     discovery::{self, Target},
     host::Host,
@@ -14,9 +19,38 @@ use bit_install::{
     HostInfo, InstallOptions, Outcome,
     config::{EffectiveConfig, ScopeJson, WorkspaceConfig, load_global_config, scope_path},
 };
+use serde_json::Value;
 use std::{env, io, path::Path, sync::Arc};
 
 const YARN: &str = "teambit.dependencies/yarn";
+
+/// Versions passed to `ComponentWriter.finalizeWrite`: changed components and
+/// newly added lane components, without duplicates.
+pub(super) fn component_ids(result: &Value) -> io::Result<Vec<String>> {
+    let mut ids = array(result.get("components"), "changed components")?
+        .iter()
+        .map(|row| text(row.get("id")).map(str::to_string))
+        .collect::<io::Result<Vec<_>>>()?;
+    ids.extend(
+        array(result.get("addedComponents"), "added components")?
+            .iter()
+            .map(|id| text(Some(id)).map(str::to_string))
+            .collect::<io::Result<Vec<_>>>()?,
+    );
+    ids.sort();
+    ids.dedup();
+    Ok(ids)
+}
+
+pub(super) fn error_report(chalk: Chalk, error: &str) -> String {
+    let formatter = Formatter::new(chalk);
+    format!(
+        "{} {}\nThe following error was thrown by the package manager:\n{}\nUse \"bit install\" to complete the installation, remove the imported components using \"bit remove <comp id>\" or remove the missing dependencies from their source code",
+        formatter.error_symbol(),
+        formatter.title("Installation Error"),
+        formatter.chalk.red(error),
+    )
+}
 
 /// The JavaScript host the installation calls, started before anything is
 /// fetched or written, so a host that cannot serve leaves the command to Node.

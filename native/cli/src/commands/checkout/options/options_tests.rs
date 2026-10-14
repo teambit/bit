@@ -15,7 +15,8 @@ fn accepts_the_native_subset() {
 
 #[test]
 fn rejects_everything_else() {
-    assert!(parse(&["head"]).is_none(), "without -x an install follows");
+    assert!(!parse(&["head"]).unwrap().skip_install);
+    assert!(parse(&["head", "-x"]).unwrap().skip_install);
     assert!(parse(&["head", "-x", "-x"]).is_none());
     assert!(parse(&["head", "-x", "--manual", "-r", "ours"]).is_none());
     assert!(parse(&["head", "-x", "-r", "mine"]).is_none());

@@ -8,7 +8,7 @@ mod tests;
 
 use super::{
     color::Chalk,
-    installation::Installer,
+    installation::{self, Installer},
     status::js::{array, decline, text},
     workspace_command::{
         self, Planned, Request, format::Formatter, progress::Progress, results::Report,
@@ -81,19 +81,10 @@ fn install_and_report(
         let formatter = Formatter::new(Chalk::detect(args));
         prepared.report.data = Formatter::join(&[
             prepared.report.data,
-            installation_error(&formatter, &error.to_string()),
+            installation::error_report(formatter.chalk, &error.to_string()),
         ]);
     }
     Ok(prepared.report)
-}
-
-fn installation_error(formatter: &Formatter, error: &str) -> String {
-    format!(
-        "{} {}\nThe following error was thrown by the package manager:\n{}\nUse \"bit install\" to complete the installation, remove the imported components using \"bit remove <comp id>\" or remove the missing dependencies from their source code",
-        formatter.error_symbol(),
-        formatter.title("Installation Error"),
-        formatter.chalk.red(error),
-    )
 }
 
 fn render_progress(output: &Output, imports: &[RemoteImport], checkout: bool, count: u64) {
@@ -149,24 +140,8 @@ fn prepare(
         checkout.components = import_count;
         checkout.objects = 0;
     }
-    let install_ids = install_ids(&planned.plan["result"])?;
+    let install_ids = installation::component_ids(&planned.plan["result"])?;
     Ok(PreparedSwitch { planned, report, import_count, imports, install_ids })
-}
-
-fn install_ids(result: &Value) -> io::Result<Vec<String>> {
-    let mut ids = array(result.get("components"), "switch components")?
-        .iter()
-        .map(|row| text(row.get("id")).map(str::to_string))
-        .collect::<io::Result<Vec<_>>>()?;
-    ids.extend(
-        array(result.get("addedComponents"), "switch added components")?
-            .iter()
-            .map(|id| text(Some(id)).map(str::to_string))
-            .collect::<io::Result<Vec<_>>>()?,
-    );
-    ids.sort();
-    ids.dedup();
-    Ok(ids)
 }
 
 struct RemoteImport {

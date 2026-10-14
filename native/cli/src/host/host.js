@@ -110,9 +110,19 @@ function hostInfo(terminal) {
   const { GLOBAL_CONFIG } = bitRequire('@teambit/legacy.constants');
   const { getBitVersion } = bitRequire('@teambit/bit.get-bit-version');
   const { findBvmDir } = bitRequire('@teambit/bvm.path/dist/path.js');
-  const { prepareBuildScriptsPath } = bitRequire('@teambit/pnpm/dist/build-scripts-path.js');
-  // Shapes PATH for the lifecycle scripts the engine runs: this Node first, a node-gyp wrapper last.
-  prepareBuildScriptsPath();
+  // Recent Bit releases shape PATH for lifecycle scripts with a pnpm helper.
+  // Older releases do not ship it; their CLI wrapper already puts this Node on PATH.
+  let buildScriptsPath;
+  try {
+    buildScriptsPath = bitRequire.resolve('@teambit/pnpm/dist/build-scripts-path.js');
+  } catch (error) {
+    if (error.code !== 'MODULE_NOT_FOUND') throw error;
+  }
+  if (buildScriptsPath) bitRequire(buildScriptsPath).prepareBuildScriptsPath();
+  const nodeDir = path.dirname(process.execPath);
+  if ((process.env.PATH ?? '').split(path.delimiter)[0] !== nodeDir) {
+    process.env.PATH = `${nodeDir}${path.delimiter}${process.env.PATH ?? ''}`;
+  }
   return {
     ...coreAspectsInfo(),
     bvmDir: findBvmDir(entry) ?? null,
@@ -453,7 +463,13 @@ async function writeConfigFiles(loaded) {
     );
     return null;
   }
-  const skippedWarning = wsConfigFiles.formatSkippedFilesWarning(writeResults?.skippedPaths);
+  const skippedPaths = writeResults?.skippedPaths ?? [];
+  const skippedWarning =
+    typeof wsConfigFiles.formatSkippedFilesWarning === 'function'
+      ? wsConfigFiles.formatSkippedFilesWarning(skippedPaths)
+      : skippedPaths.length
+        ? `some workspace config files were skipped: ${skippedPaths.join(', ')}`
+        : '';
   // the formatted section already starts with the shared warning symbol, so no need for consoleWarning here.
   if (skippedWarning) {
     logger.console(`\n${skippedWarning}`);

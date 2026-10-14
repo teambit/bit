@@ -14,6 +14,7 @@ pub struct Options {
     pub force_ours: bool,
     pub force_theirs: bool,
     pub verbose: bool,
+    pub skip_install: bool,
 }
 
 const BOOLEAN: [&str; 6] = [
@@ -69,7 +70,7 @@ fn build(flags: &Map<String, Value>, positionals: &[&str]) -> Option<Options> {
     let flag = |name: &str| flags.get(name) == Some(&Value::Bool(true));
     let strategy = strategy(flags)?;
     let conflicting = flag("--force-ours") && flag("--force-theirs");
-    if !flag("--skip-dependency-installation") || conflicting || positionals.len() > 2 {
+    if conflicting || positionals.len() > 2 {
         return None;
     }
     let to = positionals.first().filter(|to| valid_to(to))?;
@@ -86,6 +87,7 @@ fn build(flags: &Map<String, Value>, positionals: &[&str]) -> Option<Options> {
         force_ours: flag("--force-ours"),
         force_theirs: flag("--force-theirs"),
         verbose: flag("--verbose"),
+        skip_install: flag("--skip-dependency-installation"),
     })
 }
 
@@ -170,6 +172,7 @@ impl Options {
         options["forceTheirs"] = json!(self.force_theirs);
         options["noSnap"] = json!(false);
         options["verbose"] = json!(self.verbose);
+        // The native CLI installs after committing the VCS plan.
         options["skipDependencyInstallation"] = json!(true);
         options
     }

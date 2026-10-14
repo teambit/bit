@@ -1,12 +1,19 @@
-//! Native `bit checkout <to> [component-pattern] -x`, a workspace command
+//! Native `bit checkout <to> [component-pattern]`, a workspace command
 //! (`workspace_command`) with the checkout options and report.
 
 mod options;
 mod report;
 
-use super::workspace_command::{self, Request, progress::Progress};
+use super::{
+    color::Chalk,
+    installation::{self, Installer},
+    workspace_command::{
+        self, Planned, Request, format::Formatter, progress::Progress, results::Report,
+    },
+};
 use crate::{commands::Command, native::Outcome, workspace};
-use std::{env, ffi::OsString, io};
+use bit_install::output::Output;
+use std::{env, ffi::OsString, io, path::Path};
 
 pub const COMMAND: Command = Command { name: "checkout", aliases: &["U"], run };
 
@@ -25,26 +32,95 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".to_string()));
     };
+    let installer = match start_installer(&root, &argv, options.skip_install) {
+        Ok(installer) => installer,
+        Err(error) => return Ok(Outcome::Declined(format!("checkout installation: {error}"))),
+    };
+    let prepared = match prepare(&root, args, &options) {
+        Ok(prepared) => prepared,
+        Err(error) => return Ok(Outcome::Declined(format!("checkout: {error}"))),
+    };
+    execute(&root, args, prepared, installer)
+}
+
+fn start_installer(root: &Path, argv: &[&str], skip: bool) -> io::Result<Option<Installer>> {
+    if skip { Ok(None) } else { Installer::start(root, argv).map(Some) }
+}
+
+struct PreparedCheckout {
+    planned: Planned,
+    report: Report,
+    progress: Option<Progress>,
+    ids: Vec<String>,
+    conflicts: bool,
+}
+
+fn prepare(
+    root: &Path,
+    args: &[OsString],
+    options: &options::Options,
+) -> io::Result<PreparedCheckout> {
     let request = Request {
         operation: "checkout",
         options: options.request(),
         to: Some(&options.to),
         verify_fresh: false,
     };
-    let prepared = workspace_command::plan(&root, &request)
-        .and_then(|planned| {
-            let chalk = super::color::Chalk::detect(args);
-            let report = report::format(&planned.plan["result"], &options, chalk)?;
-            let progress = Progress::parse(planned.plan.get("progress"))?;
-            Ok((planned, report, progress))
+    let planned = workspace_command::plan(root, &request)?;
+    let report = report::format(&planned.plan["result"], options, Chalk::detect(args))?;
+    let progress = Progress::parse(planned.plan.get("progress"))?;
+    let ids = installation::component_ids(&planned.plan["result"])?;
+    let conflicts = planned.plan["result"]["leftUnresolvedConflicts"] == true;
+    Ok(PreparedCheckout { planned, report, progress, ids, conflicts })
+}
+
+fn execute(
+    root: &Path,
+    args: &[OsString],
+    prepared: PreparedCheckout,
+    installer: Option<Installer>,
+) -> io::Result<Outcome> {
+    if let Some(installer) = installer {
+        return workspace_command::execute_then(root, args, "checkout", |output| {
+            install_and_report(root, args, output, prepared, installer)
         });
-    let (planned, report, progress) = match prepared {
-        Ok(prepared) => prepared,
-        Err(error) => return Ok(Outcome::Declined(format!("checkout: {error}"))),
-    };
-    workspace_command::execute(&root, args, "checkout", planned, &report, |output| {
-        if let Some(progress) = &progress {
-            progress.render_checkout(output);
-        }
-    })
+    }
+    workspace_command::execute(
+        root,
+        args,
+        "checkout",
+        prepared.planned,
+        &prepared.report,
+        |output| {
+            render_progress(output, prepared.progress.as_ref());
+        },
+    )
+}
+
+fn install_and_report(
+    root: &Path,
+    args: &[OsString],
+    output: &Output,
+    mut prepared: PreparedCheckout,
+    installer: Installer,
+) -> io::Result<Report> {
+    render_progress(output, prepared.progress.as_ref());
+    workspace_command::commit(&mut prepared.planned, root)?;
+    if !prepared.conflicts
+        && !prepared.ids.is_empty()
+        && let Err(error) = installer.install(root, false, &prepared.ids)
+    {
+        output.failure(&format!("installation failed with the following error: {error}"));
+        prepared.report.data = Formatter::join(&[
+            prepared.report.data,
+            installation::error_report(Chalk::detect(args), &error.to_string()),
+        ]);
+    }
+    Ok(prepared.report)
+}
+
+fn render_progress(output: &Output, progress: Option<&Progress>) {
+    if let Some(progress) = progress {
+        progress.render_checkout(output);
+    }
 }

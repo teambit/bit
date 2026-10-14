@@ -52,7 +52,11 @@ fn input_outside_the_native_grammar_declines() {
     let dir = setup();
     let root = dir.path().join("ws");
     let grammar = "outside the native checkout grammar";
-    declined(&bit(&dir, &root, &["checkout", "head"]), r#"["checkout","head"]"#, grammar);
+    declined(
+        &bit(&dir, &root, &["checkout", "head", "--json"]),
+        r#"["checkout","head","--json"]"#,
+        grammar,
+    );
     declined(
         &bit(&dir, &root, &["U", "head", "-x", "--all"]),
         r#"["U","head","-x","--all"]"#,
@@ -61,6 +65,17 @@ fn input_outside_the_native_grammar_declines() {
     declined(&bit(&dir, &root, &["checkout", "1.0", "-x"]), r#"["checkout","1.0","-x"]"#, grammar);
     let output = bit(&dir, &root, &["checkout", "head", "-x", "--json"]);
     declined(&output, r#"["checkout","head","-x","--json"]"#, grammar);
+}
+
+#[test]
+fn default_checkout_preflights_the_install_host_before_planning() {
+    let dir = setup();
+    let output = bit(&dir, &dir.path().join("ws"), &["checkout", "reset"]);
+    declined(
+        &output,
+        r#"["checkout","reset"]"#,
+        "checkout installation: the Node.js CLI entry does not belong to an @teambit/bit package",
+    );
 }
 
 #[test]
