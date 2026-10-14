@@ -561,3 +561,69 @@ fn local_new_lane_common_snap_fetches_from_component_home_scope() {
             .is_some(),
     );
 }
+
+#[test]
+fn recovery_control_transition_requires_exact_restored_bytes() {
+    let fixture = Fixture::new();
+    let file = fixture.root.join("staged-recovery-proof");
+    fs::write(&file, b"before").unwrap();
+    let mut capture = super::Capture::default();
+    capture.read(&file).unwrap();
+    fs::write(&file, b"after").unwrap();
+    assert!(capture.validate().is_err());
+    assert!(
+        capture
+            .accept_restored(&file, Some(b"wrong"))
+            .is_err(),
+    );
+    assert!(capture.validate().is_err());
+    capture
+        .accept_restored(&file, Some(b"after"))
+        .unwrap();
+    capture.validate().unwrap();
+    fs::write(&file, b"later race").unwrap();
+    assert!(capture.validate().is_err());
+}
+
+#[test]
+fn cached_refresh_preserves_unexported_local_version_when_origin_omits_it() {
+    let fixture = Fixture::new();
+    let remote_head = "a".repeat(40);
+    let local_head = "b".repeat(40);
+    fixture.model(&remote_head);
+    Fixture::write(
+        &fixture.root.join(".bit/objects"),
+        &object_hash("remote.scope/alpha"),
+        "Component",
+        json!({"name":"alpha","scope":"remote.scope","versions":{"1.0.0":remote_head},"head":local_head}),
+    );
+    let version = json!({"mainFile":"index.js","files":[],"log":{"date":"2","message":"local"},"parents":[],"flattenedDependencies":[],"buildStatus":"pending"});
+    Fixture::write(&fixture.root.join(".bit/objects"), &local_head, "Version", version.clone());
+    let before = tree(&fixture.root);
+    let mut plan = prepare_cached(&fixture.root, &fixture.global).unwrap();
+    let target = Target { version: local_head.clone(), ..Fixture::target() };
+    plan.prepare_versions(std::slice::from_ref(&target))
+        .unwrap();
+    assert!(!plan.overlay.objects.contains_key(&local_head));
+    assert!(!plan.overlay.objects.contains_key(&object_hash("remote.scope/alpha")));
+    assert!(plan.overlay.remote_refs.is_empty());
+    assert_eq!(
+        plan.progress
+            .last()
+            .unwrap()
+            .components
+            .len(),
+        0,
+    );
+    assert_eq!(plan.progress.last().unwrap().ids.len(), 1);
+    assert_eq!(tree(&fixture.root), before);
+    plan.validate().unwrap();
+    Fixture::write(&fixture.remote.join("objects"), &local_head, "Version", version);
+    assert!(plan.validate().is_err());
+    let missing = Target { version: "c".repeat(40), ..target };
+    let mut plan = prepare_cached(&fixture.root, &fixture.global).unwrap();
+    assert!(
+        plan.prepare_versions(&[missing])
+            .is_err(),
+    );
+}

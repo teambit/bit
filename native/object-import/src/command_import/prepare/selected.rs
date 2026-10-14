@@ -125,7 +125,7 @@ impl PreparedImport {
             let incoming = read_model(self, &directory, target)?
                 .ok_or_else(|| invalid("import selected component missing"))?;
             let hash = version_ref(&incoming, &target.version)?;
-            receive(self, &directory, target, &incoming, &hash, false)?;
+            super::transfer::receive_cached(self, &directory, target, &incoming, &hash)?;
         }
         self.validate()
     }

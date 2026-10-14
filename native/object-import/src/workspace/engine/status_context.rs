@@ -60,11 +60,28 @@ pub(super) fn metadata_with_targets(
     settings: &Value,
     targets: Vec<Value>,
 ) -> io::Result<Value> {
+    metadata_projected(request, pool, settings, targets, false)
+}
+pub(super) fn metadata_for_recovery(
+    request: &Request,
+    pool: &rayon::ThreadPool,
+    settings: &Value,
+    targets: Vec<Value>,
+) -> io::Result<Value> {
+    metadata_projected(request, pool, settings, targets, true)
+}
+fn metadata_projected(
+    request: &Request,
+    pool: &rayon::ThreadPool,
+    settings: &Value,
+    targets: Vec<Value>,
+    recovery: bool,
+) -> io::Result<Value> {
     let budget = Budget::new(8 * 1024 * 1024);
     let targets = pool.install(|| {
         targets
             .into_par_iter()
-            .map(|target| metadata::component(&request.root, target, &budget))
+            .map(|target| metadata::component(&request.root, target, &budget, recovery))
             .collect::<io::Result<Vec<_>>>()
     })?;
     let mut output = json!({});

@@ -54,6 +54,79 @@ first bitmap history entry uses the writer's `merge` reason; the later
 lane-specific write creates no additional entry when the bitmap is already
 clean.
 
+## Abort and recovery
+
+The cold entry point also offers `merge --abort -x` and
+`lane merge-abort -x --silent` to a retained recovery owner. Component abort
+resets the selected unresolved components before removing their pending entries.
+Lane abort restores the saved lane and workspace controls, removes component
+directories introduced by the merge, restores or removes staged metadata, and
+clears pending merge state before checkout reset. A checkout error after that
+restoration remains a partial-success report; it must not replay the command.
+
+Planning uses the exact backed-up bitmap and workspace configuration without
+publishing them first. The live controls, repository objects, captured Source
+hashes, and retained backup permissions are checked before restoration. Lane
+recovery then runs three ordered phases: `commandRecoveryRestore`, dependency
+cache commit, and `commandRecoveryApply`. Restore publishes the saved controls
+and clears pending merge state. Apply performs checkout reset against those
+restored controls; bitmap history records the restored bitmap bytes.
+
+Restoring the controls invalidates the canonical dependency cache, including
+entries for components removed by the abort. Lane capture therefore computes
+fresh dependency metadata before restoration, then resets and commits the cache
+after restoration. Rust returns proof replacements only for the exact restored
+control paths. The adapter validates that projection and preserves all Source
+and other unchanged proofs; Rust also retains the projected proofs for Apply.
+The token and bitmap-history identifier bind Restore and Apply to the same
+recovery. A cache error after restoration is reported as a checkout error and
+prevents reset. It cannot trigger canonical fallback or a second restoration.
+Component abort keeps its separate ordering: cache commit and successful reset
+precede clearing selected pending entries.
+
+Cache-enabled selected imports also preserve a validated local Version when the
+origin omits that unexported version, matching canonical import behavior. The
+missing remote object remains a freshness proof; no remote model or head is
+merged for that omission. A version missing both locally and remotely still
+declines before publication.
+
+Conflict markers may prevent dependency parsing. A recovery reset can discard
+those files when Rust proves that their canonical Source hashes or paths differ
+from the stored Version. This does not invent dependency metadata: equal Sources
+still require the full semantic comparison. Inventory, supported workspace
+configuration, and freshness checks remain mandatory.
+
+The canonical component-abort path now forwards the public `-x` flag to internal
+checkout; previously abort ignored it. Without that flag it retains dependency
+installation. Comparisons use this corrected canonical path so skipped
+installation is not counted as a native speedup. Recovery emits internal import
+progress, without adding the public checkout command's wrapper messages.
+
+Reset preserves generated package manifests and existing links. For components
+actually reset, it removes their bitmap configuration and rewrites an existing
+`component.json` using the supported stored aspect configuration, original
+propagation rule, and canonical `propagate: false` output. It does not create a
+configuration file where none existed. Supported overrides are the bounded
+resolver policy and empty built-in core configurations; bitmap overrides take
+precedence during capture. Custom aspect configuration, duplicate stored aspect
+entries, and component-abort pending merged configuration that cannot be
+projected exactly decline before publication. Lane recovery clears pending
+configuration before reset.
+
+Configuration replacement and backup copying retain their filesystem eligibility
+checks. The current metadata-preserving publication path is qualified on Linux;
+unsupported platform, ownership, attribute, or symlink states decline before
+restoration. Configuration writes prove ordinary ancestors and original contents
+and preserve file ownership and mode. No whole-command filesystem rollback is
+claimed: once recovery or cache publication starts, errors are surfaced without
+replaying the canonical command.
+
+Missing component roots retain canonical handling: their initial model restore
+has different reporting and cache effects from an ordinary reset. A checkout
+failure detected before native planning also declines before recovery starts.
+Interactive lane abort and dependency installation retain canonical handling.
+These compatibility paths do not establish cold native ownership.
+
 ## Remaining fallback boundaries
 
 The owner declines unsupported states before publishing retained changes. These

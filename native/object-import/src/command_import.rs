@@ -89,6 +89,18 @@ pub(crate) struct PreparedImport {
     writes: Writes,
 }
 impl PreparedImport {
+    pub(crate) fn recovery_staged(&mut self, bytes: Option<&[u8]>) -> io::Result<()> {
+        self.cache.staged =
+            String::from_utf8(bytes.unwrap_or_default().to_vec()).map_err(io::Error::other)?;
+        Ok(())
+    }
+    pub(crate) fn accept_recovery_staged(
+        &mut self,
+        root: &std::path::Path,
+        bytes: Option<&[u8]>,
+    ) -> io::Result<()> {
+        self.capture.accept_restored(&root.join(".bit/staged-snaps"), bytes)
+    }
     pub(crate) fn planned_index(&self) -> &Value {
         &self.writes.index
     }

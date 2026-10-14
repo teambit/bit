@@ -149,7 +149,7 @@ export class MergingMain {
       if (resolve) {
         mergeResults = await this.resolveMerge(pattern, message, build);
       } else if (abort) {
-        mergeResults = await this.abortMerge(pattern);
+        mergeResults = await this.abortMerge(pattern, skipDependencyInstallation);
       } else {
         const bitIds = await this.getComponentsToMerge(pattern);
         mergeResults = await this.mergeComponentsFromRemote(
@@ -812,10 +812,10 @@ export class MergingMain {
     };
   }
 
-  private async abortMerge(pattern: string): Promise<ApplyVersionResults> {
+  private async abortMerge(pattern: string, skipDependencyInstallation: boolean): Promise<ApplyVersionResults> {
     const consumer = this.workspace.consumer;
     const ids = await this.getIdsForUnmerged(pattern);
-    const results = await this.checkout.checkout({ ids, reset: true });
+    const results = await this.checkout.checkout({ ids, reset: true, skipNpmInstall: skipDependencyInstallation });
     if (process.env.BIT_RUST_CLIENT_VCS === 'on')
       await consumer.scope.objects.unmergedComponents.removeComponentsNative(ids);
     else ids.forEach((id) => consumer.scope.objects.unmergedComponents.removeComponent(id));

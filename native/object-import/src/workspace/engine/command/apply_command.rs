@@ -35,7 +35,7 @@ fn validate(record: &Record, prepared: &PreparedPlan) -> io::Result<()> {
     }
     Ok(())
 }
-fn publish_sources(plan: &mut planning::Planned) -> io::Result<()> {
+pub(super) fn publish_sources(plan: &mut planning::Planned) -> io::Result<()> {
     if let Some(merge) = &plan.merge {
         merge.remove()?;
     }
@@ -64,7 +64,7 @@ fn reason(record: &Record, plan: &planning::Planned) -> io::Result<String> {
     }
     Ok("checkout".to_owned())
 }
-fn publish_bitmap(
+pub(super) fn publish_bitmap(
     prepared: &mut PreparedPlan,
     record: &Record,
     file_id: &str,

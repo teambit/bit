@@ -1,5 +1,6 @@
 pub(super) mod input;
 pub(super) mod policy;
+pub(super) mod recovery;
 
 mod apply_command;
 mod bitmap;
@@ -19,6 +20,8 @@ mod plan_command;
 mod planning;
 mod prepare;
 mod repository;
+mod reset;
+mod reset_config;
 mod scratch;
 mod selection;
 mod setup;
@@ -33,6 +36,7 @@ use std::io;
 pub(crate) struct State {
     sequence: u64,
     record: Option<Record>,
+    recovery: Option<recovery::Retained>,
 }
 struct Record {
     request: Prepare,
@@ -48,6 +52,7 @@ struct PreparedPlan {
     plan: planning::Planned,
     bitmap: bitmap::Prepared,
     snap_bitmap: Option<bitmap::Prepared>,
+    reset_config: Option<reset_config::Prepared>,
 }
 pub(super) fn prepare(
     request: Prepare,

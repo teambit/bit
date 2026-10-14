@@ -25,6 +25,7 @@ type CaptureOptions = {
   resetDependencyCache?: boolean;
   dependencyCacheVersions?: { identity: string; version: string }[];
   retainDependencyState?: boolean;
+  recoveryDiscardedSources?: boolean;
 };
 
 function cacheVersionUpdates(targets: any[], options: CaptureOptions) {
@@ -117,7 +118,10 @@ export async function captureRustClientCurrent(
     : undefined;
   if (cachePlan && captureOptions.resetDependencyCache) cachePlan.reset = true;
   for (const target of targets) {
-    const policy = statusPolicy(context, target);
+    const policy = statusPolicy(
+      context,
+      captureOptions.recoveryDiscardedSources ? { ...target, recoveryConfig: true } : target
+    );
     const componentRoot = path.join(root, target.directory);
     const scan = await request({
       kind: 'inventoryBegin',
@@ -144,38 +148,54 @@ export async function captureRustClientCurrent(
     });
     const files = manifest.files.map((file) => file.relativePath);
     if (!files.includes(target.mainFile)) return undefined;
-    let dependencies =
-      cachePlan?.reset && target.directory !== '.'
-        ? { needsDetection: true }
-        : await request({
-            kind: 'dependencyPolicyCached',
-            root,
-            componentRoot,
-            identity: fullIdentity(target),
-            files: files.map((file) => path.join(componentRoot, file)),
-            ...policy.input,
-          });
-    if (dependencies.needsDetection === true) {
-      const { readFreshDependencies } = await import('./rust-fresh-dependencies');
-      const fresh = await readFreshDependencies(root, context, target, files, policy, request);
-      dependencies = fresh.dependencies;
-      pending.push(fresh.cache);
-    }
-    if (
-      captureOptions.verifyFreshDependencies &&
-      dependencies.needsDetection !== true &&
-      !pending.some((row) => row.identity === fullIdentity(target))
-    ) {
-      const { readFreshDependencies } = await import('./rust-fresh-dependencies');
-      const fresh = await readFreshDependencies(root, context, target, files, policy, request);
+    let dependencies;
+    try {
+      dependencies =
+        cachePlan?.reset && target.directory !== '.'
+          ? { needsDetection: true }
+          : await request({
+              kind: 'dependencyPolicyCached',
+              root,
+              componentRoot,
+              identity: fullIdentity(target),
+              files: files.map((file) => path.join(componentRoot, file)),
+              ...policy.input,
+            });
+      if (dependencies.needsDetection === true) {
+        const { readFreshDependencies } = await import('./rust-fresh-dependencies');
+        const fresh = await readFreshDependencies(root, context, target, files, policy, request);
+        dependencies = fresh.dependencies;
+        pending.push(fresh.cache);
+      }
       if (
-        JSON.stringify(currentStatusMetadata(target, policy, fresh.dependencies)) !==
-          JSON.stringify(currentStatusMetadata(target, policy, dependencies)) ||
-        JSON.stringify(fresh.dependencies.issues) !== JSON.stringify(dependencies.issues)
-      )
-        return undefined;
-      pending.push(fresh.cache);
-      dependencies = fresh.dependencies;
+        captureOptions.verifyFreshDependencies &&
+        dependencies.needsDetection !== true &&
+        !pending.some((row) => row.identity === fullIdentity(target))
+      ) {
+        const { readFreshDependencies } = await import('./rust-fresh-dependencies');
+        const fresh = await readFreshDependencies(root, context, target, files, policy, request);
+        if (
+          JSON.stringify(currentStatusMetadata(target, policy, fresh.dependencies)) !==
+            JSON.stringify(currentStatusMetadata(target, policy, dependencies)) ||
+          JSON.stringify(fresh.dependencies.issues) !== JSON.stringify(dependencies.issues)
+        )
+          return undefined;
+        pending.push(fresh.cache);
+        dependencies = fresh.dependencies;
+      }
+    } catch (error) {
+      if (!captureOptions.recoveryDiscardedSources) throw error;
+      // Reset may discard conflict-marker Sources that cannot be parsed. Native planning
+      // must prove these exact captured Sources differ before accepting incomplete metadata.
+      captured.push({
+        identity: target.identity,
+        version: target.version,
+        directory: target.directory,
+        files,
+        current: { mainFile: target.mainFile },
+        peerDependencies: [],
+      });
+      continue;
     }
     const current = currentStatusMetadata(target, policy, dependencies);
     if (captureOptions.retainDependencyState) dependencyStates.set(target.identity, dependencies.state);

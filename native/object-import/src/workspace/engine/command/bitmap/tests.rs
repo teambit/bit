@@ -1,4 +1,4 @@
-use super::{Prepared, Update, prepare_after, prepare_changes, validate_history_file_id};
+use super::{Prepared, Update, prepare_after, prepare_bytes, validate_history_file_id};
 use serde_json::{Value, json};
 use std::{
     fs, io,
@@ -6,9 +6,40 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 fn prepare(root: &Path, context: &Value, updates: &[Update]) -> io::Result<Prepared> {
-    prepare_changes(root, context, updates, &[])
+    prepare_bytes(root, fs::read(root.join(".bitmap"))?, context, updates, &[])
 }
 static NEXT: AtomicUsize = AtomicUsize::new(0);
+
+#[test]
+fn reset_clears_only_written_overrides_and_retains_original_history() {
+    let fixture = Fixture::new();
+    let original = json!({
+        "alpha": {"name":"alpha","scope":"local.scope","version":"1.0.0","mainFile":"index.js","rootDir":"alpha","config":{"teambit.envs/envs":{"env":"node"}}},
+        "beta": {"name":"beta","scope":"local.scope","version":"1.0.0","mainFile":"index.js","rootDir":"beta","config":{"teambit.envs/envs":{"env":"other"}}},
+        "$schema-version":"17.0.0",
+    });
+    let bytes = crate::inspection::render_bitmap(&original).unwrap();
+    fs::write(fixture.0.join(".bitmap"), &bytes).unwrap();
+    let mut prepared = prepare(&fixture.0, &json!({}), &[]).unwrap();
+    prepared
+        .clear_config(&json!({}), &["local.scope/alpha".into()])
+        .unwrap();
+    assert_eq!(fs::read(fixture.0.join(".bitmap")).unwrap(), bytes);
+    prepared.commit("2026-10-14-1-2-3", "checkout (reset)").unwrap();
+    let result =
+        crate::recovery::jsonc::parse(&fs::read(fixture.0.join(".bitmap")).unwrap()).unwrap();
+    assert!(result["alpha"].get("config").is_none());
+    assert_eq!(result["beta"], original["beta"]);
+    assert_eq!(
+        fs::read(fixture.0.join(".bit/bitmap-history/.bitmap-2026-10-14-1-2-3")).unwrap(),
+        bytes,
+    );
+    assert!(
+        prepared
+            .clear_config(&json!({}), &["local.scope/absent".into()])
+            .is_err(),
+    );
+}
 struct Fixture(PathBuf);
 impl Fixture {
     fn new() -> Self {
@@ -81,6 +112,42 @@ fn stale_bitmap_declines_before_backup_or_publication() {
     assert!(plan.commit("2026-10-13-1-2-3", "checkout").is_err());
     assert!(!fixture.0.join(".bit/bitmap-history").exists());
     assert_eq!(fs::read(fixture.0.join(".bitmap")).unwrap(), b"concurrent edit");
+}
+
+#[test]
+fn projected_reset_bitmap_waits_for_exact_restoration_and_backs_up_restored_bytes() {
+    let fixture = Fixture::new();
+    let live = fs::read(fixture.0.join(".bitmap")).unwrap();
+    let mut restored = crate::recovery::jsonc::parse(&live).unwrap();
+    restored["alpha"]["version"] = json!("0.9.0");
+    let restored = crate::inspection::render_bitmap(&restored).unwrap();
+    let prepared = super::prepare_bytes(
+        &fixture.0,
+        restored.clone(),
+        &json!({}),
+        &[Update {
+            identity: "local.scope/alpha".into(),
+            version: "0.9.0".into(),
+            main_file: "index.js".into(),
+            keep_ours: false,
+        }],
+        &[],
+    )
+    .unwrap();
+    assert!(prepared.commit("2026-10-14-1-2-3", "checkout").is_err());
+    assert_eq!(fs::read(fixture.0.join(".bitmap")).unwrap(), live);
+    assert!(!fixture.0.join(".bit/bitmap-history").exists());
+    fs::write(fixture.0.join(".bitmap"), &restored).unwrap();
+    prepared.commit("2026-10-14-1-2-3", "checkout").unwrap();
+    assert_eq!(
+        fs::read(fixture.0.join(".bit/bitmap-history/.bitmap-2026-10-14-1-2-3")).unwrap(),
+        restored,
+    );
+    assert_eq!(
+        crate::recovery::jsonc::parse(&fs::read(fixture.0.join(".bitmap")).unwrap()).unwrap()["alpha"]
+            ["version"],
+        "0.9.0",
+    );
 }
 
 #[test]

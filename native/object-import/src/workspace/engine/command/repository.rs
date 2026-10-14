@@ -96,6 +96,16 @@ impl Repository {
         }
         self.read(reference, "Source")
     }
+    pub(super) fn accept_recovery_staged(
+        &mut self,
+        root: &Path,
+        bytes: Option<&[u8]>,
+    ) -> io::Result<()> {
+        if let Some(imported) = &mut self.imported {
+            imported.accept_recovery_staged(root, bytes)?;
+        }
+        Ok(())
+    }
     pub(super) fn validate(&self) -> io::Result<()> {
         if let Some(imported) = &self.imported {
             imported.validate()?;

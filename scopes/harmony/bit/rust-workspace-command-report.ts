@@ -30,7 +30,7 @@ function id(value: any): ComponentID {
   return ComponentID.fromString(value);
 }
 
-export function formatRustWorkspaceCommand(value: any, options: RustWorkspaceCommandOptions) {
+export function hydrateRustWorkspaceCommand(value: any, options: RustWorkspaceCommandOptions) {
   record(value, [
     'components',
     'failedComponents',
@@ -110,6 +110,11 @@ export function formatRustWorkspaceCommand(value: any, options: RustWorkspaceCom
     if (!components.length) throw new Error('native command snap error components absent');
     result.mergeSnapError = new ComponentsHaveIssues(components as any);
   }
+  return result;
+}
+
+export function formatRustWorkspaceCommand(value: any, options: RustWorkspaceCommandOptions) {
+  const result = hydrateRustWorkspaceCommand(value, options);
   if (options.operation === 'merge') {
     // MergeLaneCmd forwards the full result, including manual conflict and removal reporting.
     if (options.lane) {

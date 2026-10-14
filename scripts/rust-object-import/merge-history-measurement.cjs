@@ -41,12 +41,13 @@ async function measuredCommand(nodeArgs, { cwd, env, step, operation, cpuDirecto
       control?.dispose();
       reject(error);
     });
-    child.once('close', (code) => {
+    child.once('close', (code, signal) => {
       clearTimeout(timer);
       processTree = sampler?.stop();
       control?.dispose();
       if (control?.failure) return reject(control.failure);
-      if (code) reject(new Error(`${operation} (${code})\n${stdout}\n${stderr}`));
+      if (code !== 0 || signal)
+        reject(new Error(`${operation} (exit ${String(code)}, signal ${signal || 'none'})\n${stdout}\n${stderr}`));
       else resolve({ stdout, stderr });
     });
   });

@@ -274,11 +274,20 @@ function statusExtensions(version: any, target: any) {
       return { name: extension.name, config: extension.config ?? {} };
     });
   for (const [name, config] of Object.entries(target.config?.extensions ?? {})) {
+    const emptyRecoveryCore =
+      target.recoveryConfig === true &&
+      cores.has(name) &&
+      config &&
+      typeof config === 'object' &&
+      !Array.isArray(config) &&
+      !Object.keys(config).length;
     if (
-      name !== resolver ||
-      !config ||
-      typeof config !== 'object' ||
-      Object.keys(config).some((key) => key !== 'policy')
+      !emptyRecoveryCore &&
+      (name !== resolver ||
+        !config ||
+        typeof config !== 'object' ||
+        Array.isArray(config) ||
+        Object.keys(config).some((key) => key !== 'policy'))
     )
       throw new Error('status component extension');
     if (merged.has(name)) continue;
@@ -286,6 +295,25 @@ function statusExtensions(version: any, target: any) {
     const extension = { name, config: { ...config, __specific: true } };
     if (index < 0) extensions.unshift(extension);
     else extensions[index] = extension;
+  }
+  if (target.recoveryConfig === true) {
+    const names = Object.keys(target.config?.extensions ?? {});
+    const configured = names.map((name) => extensions.find((extension) => extension.name === name)!);
+    const inherited = extensions.filter((extension) => !names.includes(extension.name));
+    extensions.splice(0, extensions.length, ...configured, ...inherited);
+  }
+  if (target.bitmapConfig !== undefined) {
+    const bitmap = target.bitmapConfig;
+    if (!bitmap || Array.isArray(bitmap) || typeof bitmap !== 'object') throw new Error('recovery bitmap config');
+    const overrides = Object.entries(bitmap).map(([name, config]) => {
+      if (!cores.has(name) || !config || Array.isArray(config) || typeof config !== 'object')
+        throw new Error('recovery bitmap aspect');
+      const keys = Object.keys(config);
+      if (name === resolver ? keys.some((key) => key !== 'policy') : keys.length > 0)
+        throw new Error('recovery bitmap aspect configuration');
+      return { name, config: { ...config, __specific: true } };
+    });
+    return [...overrides, ...extensions.filter((entry) => !Object.hasOwn(bitmap, entry.name))];
   }
   if (!merged.size) return extensions;
   return [

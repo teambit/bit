@@ -67,6 +67,10 @@ const metrics = {
       'commandLaneFinalize',
       'commandFinalize',
       'commandApply',
+      'commandRecoveryPrepare',
+      'commandRecoveryPlan',
+      'commandRecoveryRestore',
+      'commandRecoveryApply',
       'dependencyPolicyCached',
       'dependencyGraph',
       'dependencyDetectFresh',
@@ -519,6 +523,7 @@ function observeWorkspaceTransport(child) {
               completed: response.completed || 0,
               failed: Boolean(response.failed),
               applied: response.data?.applied === true,
+              ...(magic === 'BWS1:commandRecoveryRestore' ? { restored: response.data?.restored === true } : {}),
               ...(magic === 'BWS1:commandFinalize'
                 ? { snapped: response.data?.result?.mergeSnapResults?.snappedComponents?.length || 0 }
                 : {}),
@@ -539,7 +544,14 @@ function observeWorkspaceTransport(child) {
           metric.bodyFrames = (metric.bodyFrames || 0) + Number(response.completed > 0 && !response.failed);
           metric.rawBodyBytes = (metric.rawBodyBytes || 0) + (response.binaryBytes || 0);
         }
-        if (magic === 'BWS1:commandApply' && response.data?.applied === true && !response.failed) {
+        if (magic === 'BWS1:commandRecoveryRestore' && response.data?.restored === true && !response.failed) {
+          metric.restored = (metric.restored || 0) + 1;
+        }
+        if (
+          ['BWS1:commandApply', 'BWS1:commandRecoveryApply'].includes(magic) &&
+          response.data?.applied === true &&
+          !response.failed
+        ) {
           metric.applied = (metric.applied || 0) + 1;
           metrics.postPersistNotifications += response.data?.postPersistNotifications || 0;
         }

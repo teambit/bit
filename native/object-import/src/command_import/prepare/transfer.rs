@@ -172,3 +172,21 @@ pub(super) fn update_index(
     );
     Ok(())
 }
+
+/// Cache-enabled importWithoutDeps may ask the origin for an unbuilt local snap
+/// that was never exported. The origin omits that component from its stream;
+/// preserve the retained local Version and do not merge remote model metadata.
+pub(super) fn receive_cached(
+    plan: &mut PreparedImport,
+    directory: &Path,
+    target: &Target,
+    incoming: &Value,
+    hash: &str,
+) -> io::Result<()> {
+    if plan.capture.object(directory, hash, "Version")?.is_some() {
+        return receive(plan, directory, target, incoming, hash, false);
+    }
+    let local = read_version(plan, hash)?
+        .ok_or_else(|| invalid("import requested Version absent locally and remotely"))?;
+    crate::history_query::validate_version(&local)
+}

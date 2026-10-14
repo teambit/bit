@@ -20,7 +20,12 @@ pub(super) fn optional(path: &Path, budget: &Budget) -> io::Result<Value> {
     Ok(value)
 }
 
-pub(super) fn component(root: &Path, mut target: Value, budget: &Budget) -> io::Result<Value> {
+pub(super) fn component(
+    root: &Path,
+    mut target: Value,
+    budget: &Budget,
+    recovery: bool,
+) -> io::Result<Value> {
     let directory =
         target["directory"].as_str().ok_or_else(|| invalid("status context directory"))?;
     let path = root.join(directory);
@@ -32,7 +37,7 @@ pub(super) fn component(root: &Path, mut target: Value, budget: &Budget) -> io::
         _ => {}
     }
     let component = optional(&path.join("component.json"), budget)?;
-    configuration(&component)?;
+    configuration(&component, recovery)?;
     if !component.is_null()
         && format!(
             "{}/{}",
@@ -47,7 +52,7 @@ pub(super) fn component(root: &Path, mut target: Value, budget: &Budget) -> io::
     Ok(target)
 }
 
-fn configuration(config: &Value) -> io::Result<()> {
+fn configuration(config: &Value, recovery: bool) -> io::Result<()> {
     let Some(object) = config.as_object() else {
         return Ok(());
     };
@@ -65,15 +70,37 @@ fn configuration(config: &Value) -> io::Result<()> {
     };
     let extensions = extensions.as_object().ok_or_else(|| invalid("status context extensions"))?;
     for (name, value) in extensions {
-        if name != "teambit.dependencies/dependency-resolver" {
-            return Err(invalid("status context extension requires Harmony"));
-        }
-        let fields = value.as_object().ok_or_else(|| invalid("status context resolver"))?;
-        if fields.keys().any(|key| key != "policy") {
-            return Err(invalid("status context resolver requires Harmony"));
-        }
+        extension_configuration(name, value, recovery)?;
     }
     Ok(())
+}
+fn extension_configuration(name: &str, value: &Value, recovery: bool) -> io::Result<()> {
+    if recovery && empty_core(name, value) {
+        return Ok(());
+    }
+    if name != "teambit.dependencies/dependency-resolver" {
+        return Err(invalid("status context extension requires Harmony"));
+    }
+    let fields = value.as_object().ok_or_else(|| invalid("status context resolver"))?;
+    if fields.keys().any(|key| key != "policy") {
+        return Err(invalid("status context resolver requires Harmony"));
+    }
+    Ok(())
+}
+
+fn empty_core(name: &str, value: &Value) -> bool {
+    matches!(
+        name,
+        "teambit.envs/envs"
+            | "teambit.component/dev-files"
+            | "teambit.semantics/schema"
+            | "teambit.pkg/pkg"
+            | "teambit.preview/preview"
+            | "teambit.compositions/compositions"
+            | "teambit.docs/docs"
+            | "teambit.pipelines/builder"
+            | "teambit.component/deprecation",
+    ) && value.as_object().is_some_and(serde_json::Map::is_empty)
 }
 
 pub(super) fn scope(scope: &Value) -> io::Result<()> {
@@ -87,3 +114,5 @@ pub(super) fn scope(scope: &Value) -> io::Result<()> {
     }
     Ok(())
 }
+#[cfg(test)]
+mod tests;

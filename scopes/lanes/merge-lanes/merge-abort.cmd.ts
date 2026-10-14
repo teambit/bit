@@ -1,8 +1,6 @@
-import chalk from 'chalk';
 import type { CheckoutProps } from '@teambit/checkout';
-import { checkoutOutput } from '@teambit/checkout';
 import type { Command, CommandOptions, Report } from '@teambit/cli';
-import { formatItem, formatSuccessSummary, joinSections } from '@teambit/cli';
+import { formatLaneMergeAbort } from './merge-abort-output';
 import type { MergeLanesMain } from './merge-lanes.main.runtime';
 
 export type MergeAbortOpts = {
@@ -50,26 +48,6 @@ also, checkout the workspace components according to the restored lane state`;
       mergeAbortOpts
     );
 
-    const getCheckoutErrorStr = () => {
-      if (!checkoutError) return '';
-      const errMsg = `\n\nFailed to change component files to the pre-merge state due to an error:
-${checkoutError.message}
-please fix the error and then run "bit checkout reset --all" to revert the components to the pre-merge state`;
-      return chalk.red(errMsg);
-    };
-
-    const checkoutResult = checkoutResults ? checkoutOutput(checkoutResults, checkoutProps) : '';
-    const restoredItemsOutput = restoredItems.map((item) => formatItem(item)).join('\n');
-    const extraSections = [
-      `${formatSuccessSummary('The following have been restored successfully')}\n${restoredItemsOutput}`,
-      getCheckoutErrorStr(),
-    ];
-
-    if (typeof checkoutResult !== 'string') {
-      const data = joinSections([checkoutResult.data, ...extraSections]);
-      const details = checkoutResult.details ? joinSections([checkoutResult.details, ...extraSections]) : undefined;
-      return { data, code: checkoutResult.code, details };
-    }
-    return joinSections([checkoutResult, ...extraSections]);
+    return formatLaneMergeAbort({ checkoutResults, restoredItems, checkoutError }, checkoutProps);
   }
 }

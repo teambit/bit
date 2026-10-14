@@ -29,6 +29,18 @@ pub(super) struct Capture {
     raw_bytes: usize,
 }
 impl Capture {
+    pub(super) fn accept_restored(
+        &mut self,
+        path: &Path,
+        expected: Option<&[u8]>,
+    ) -> io::Result<()> {
+        let actual = read(path, MAX_BYTES)?;
+        if actual.as_deref() != expected || !self.proofs.contains_key(path) {
+            return Err(invalid("import restored control changed"));
+        }
+        self.proofs.insert(path.to_owned(), expected.map(|bytes| Sha256::digest(bytes).into()));
+        Ok(())
+    }
     pub(super) fn read(&mut self, path: &Path) -> io::Result<Option<Vec<u8>>> {
         if self.proofs.len() >= MAX_RECORDS {
             return Err(invalid("import proof limit"));

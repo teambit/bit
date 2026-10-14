@@ -1,4 +1,5 @@
 mod history_replay;
+mod reset_comparison;
 use super::{
     super::{invalid, status_models::comparison},
     Record, capture, history, materialization, repository, scratch, selection,
@@ -24,6 +25,28 @@ pub(super) fn checkout(
     pool: &rayon::ThreadPool,
 ) -> io::Result<Planned> {
     validate_current(record, &current)?;
+    checkout_captured(record, current, semver, snapshots, pool, false)
+}
+
+pub(super) fn checkout_reset(
+    record: &mut Record,
+    current: Vec<Value>,
+    semver: &Value,
+    snapshots: &mut snapshots::State,
+    pool: &rayon::ThreadPool,
+) -> io::Result<Planned> {
+    validate_current_inner(record, &current, true)?;
+    checkout_captured(record, current, semver, snapshots, pool, true)
+}
+
+fn checkout_captured(
+    record: &mut Record,
+    current: Vec<Value>,
+    semver: &Value,
+    snapshots: &mut snapshots::State,
+    pool: &rayon::ThreadPool,
+    recovery_reset: bool,
+) -> io::Result<Planned> {
     let captured = capture::all(&record.request.root, current, snapshots, pool)?;
     let mut plan = Planned {
         captured,
@@ -43,6 +66,7 @@ pub(super) fn checkout(
             semver,
             &mut plan.history,
             &mut plan.transitions,
+            recovery_reset,
         )?);
     }
     import_selected(record, &selections)?;
@@ -56,16 +80,26 @@ pub(super) fn checkout(
     Ok(plan)
 }
 pub(super) fn validate_current(record: &Record, current: &[Value]) -> io::Result<()> {
+    validate_current_inner(record, current, false)
+}
+fn validate_current_inner(
+    record: &Record,
+    current: &[Value],
+    recovery_reset: bool,
+) -> io::Result<()> {
     if current.len() != record.targets.len() {
         return Err(invalid("command capture selection"));
     }
     for (current, target) in current.iter().zip(&record.targets) {
-        for key in ["identity", "directory", "version"] {
-            if current[key] != target[key] {
-                return Err(invalid("command capture target changed"));
-            }
+        if ["identity", "directory", "version"]
+            .iter()
+            .any(|key| current[key] != target[key])
+        {
+            return Err(invalid("command capture target changed"));
         }
-        if !target["config"].is_null() {
+        if recovery_reset {
+            super::reset_config::validate_target(target)?;
+        } else if !target["config"].is_null() {
             return Err(invalid("command component configuration write"));
         }
     }
@@ -89,12 +123,19 @@ fn select(
     semver: &Value,
     histories: &mut history::State,
     state: &mut checkout_transition::State,
+    recovery_reset: bool,
 ) -> io::Result<Value> {
     let identity = &captured.target.identity;
     let model = repository::model(&record.context, identity)?;
     let remote = record.repository.remote_head(identity)?;
-    let (modified, pending) =
-        modification(record, captured, model.as_ref(), remote.as_deref(), histories)?;
+    let (modified, pending) = modification(
+        record,
+        captured,
+        model.as_ref(),
+        remote.as_deref(),
+        histories,
+        recovery_reset,
+    )?;
     let selected = selection::select(
         &record.request.options,
         &selection::Selection {
@@ -294,31 +335,37 @@ fn modification(
     model: Option<&Value>,
     remote: Option<&str>,
     histories: &history::State,
+    recovery_reset: bool,
 ) -> io::Result<(bool, bool)> {
     let identity = &captured.target.identity;
     let mut staged = histories.clone();
-    if let Some(model) = model {
-        if record.repository.read(&super::super::hash(identity.as_bytes()), "Component")? != *model
-        {
-            return Err(invalid("command model changed"));
+    let Some(model) = model else {
+        if recovery_reset && reset_comparison::incomplete(&captured.target.current) {
+            return Err(invalid("reset Source comparison requires a stored component"));
         }
-        let hash = selection::versions::reference(model, &captured.target.version)?;
-        let version = record.repository.read(&hash, "Version")?;
-        let modified = comparison::compare(&captured.target, &captured.metadata, &version)?["modified"]
-            == true;
-        let distance = staged.distance(
-            &record.request.root,
-            identity,
-            model,
-            [model["head"].as_str(), remote],
-            &mut record.repository,
-        )?;
-        Ok((
-            modified,
-            !distance["sourceOnly"].as_array().is_some_and(Vec::is_empty)
-                && !distance["targetOnly"].as_array().is_some_and(Vec::is_empty),
-        ))
-    } else {
-        Ok((false, false))
+        return Ok((false, false));
+    };
+    if record.repository.read(&super::super::hash(identity.as_bytes()), "Component")? != *model {
+        return Err(invalid("command model changed"));
     }
+    let hash = selection::versions::reference(model, &captured.target.version)?;
+    let version = record.repository.read(&hash, "Version")?;
+    let modified = if recovery_reset && reset_comparison::incomplete(&captured.target.current) {
+        reset_comparison::prove_changed(&captured.metadata, &version)?;
+        true
+    } else {
+        comparison::compare(&captured.target, &captured.metadata, &version)?["modified"] == true
+    };
+    let distance = staged.distance(
+        &record.request.root,
+        identity,
+        model,
+        [model["head"].as_str(), remote],
+        &mut record.repository,
+    )?;
+    Ok((
+        modified,
+        !distance["sourceOnly"].as_array().is_some_and(Vec::is_empty)
+            && !distance["targetOnly"].as_array().is_some_and(Vec::is_empty),
+    ))
 }

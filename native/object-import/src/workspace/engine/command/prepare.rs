@@ -75,7 +75,7 @@ fn unexported_targets(
         })
         .collect())
 }
-fn extend_models(
+pub(super) fn extend_models(
     request: &Prepare,
     pool: &rayon::ThreadPool,
     context: &mut Value,

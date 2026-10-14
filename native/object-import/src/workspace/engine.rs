@@ -59,6 +59,10 @@ enum Request {
         request: Value,
     },
     CommandPrepare(command::input::Prepare),
+    CommandRecoveryPrepare(command::recovery::Prepare),
+    CommandRecoveryPlan(command::recovery::Plan),
+    CommandRecoveryApply(command::recovery::Apply),
+    CommandRecoveryRestore(command::recovery::Restore),
     CommandPlan(command::Plan),
     CommandPolicyPrepare(command::policy::Prepare),
     CommandDependencyDetect(command::policy::dependencies::Detect),
@@ -169,6 +173,27 @@ pub(crate) fn serve(
     writer.flush()
 }
 fn owned(
+    request: Request,
+    snapshots: &mut super::snapshots::State,
+    pool: &rayon::ThreadPool,
+) -> io::Result<(usize, Value)> {
+    match request {
+        Request::CommandRecoveryPrepare(input) => {
+            pool.install(|| command::recovery::prepare(&input, &mut snapshots.command, pool))
+        }
+        Request::CommandRecoveryPlan(input) => {
+            pool.install(|| command::recovery::plan(input, snapshots, pool))
+        }
+        Request::CommandRecoveryRestore(input) => {
+            pool.install(|| command::recovery::restore(&input, &mut snapshots.command))
+        }
+        Request::CommandRecoveryApply(input) => {
+            pool.install(|| command::recovery::apply(&input, &mut snapshots.command))
+        }
+        request => owned_command(request, snapshots, pool),
+    }
+}
+fn owned_command(
     request: Request,
     snapshots: &mut super::snapshots::State,
     pool: &rayon::ThreadPool,

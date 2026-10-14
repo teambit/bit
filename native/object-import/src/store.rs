@@ -113,6 +113,32 @@ impl Store {
         result
     }
 
+    /// Atomic metadata publication with the same proven owner/mode preservation as the index.
+    pub(crate) fn validate_metadata_write(path: &Path) -> io::Result<()> {
+        #[cfg(target_os = "linux")]
+        {
+            open_index(path)?;
+            Ok(())
+        }
+        #[cfg(not(target_os = "linux"))]
+        {
+            let _path = path;
+            Err(io::Error::other("metadata preservation is supported on Linux"))
+        }
+    }
+
+    pub(crate) fn write_metadata(path: &Path, contents: &[u8]) -> io::Result<()> {
+        Self::validate_metadata_write(path)?;
+        let parent = path.parent().ok_or_else(|| io::Error::other("metadata parent"))?;
+        let counter = NEXT_TEMPORARY.fetch_add(1, Ordering::Relaxed);
+        let temporary = parent.join(format!(".bit-metadata.{}.{}", std::process::id(), counter));
+        let result = Self::atomic_index(path, &temporary, contents);
+        if result.is_err() {
+            let _cleanup = fs::remove_file(&temporary);
+        }
+        result
+    }
+
     fn atomic_index(path: &Path, temporary: &Path, contents: &[u8]) -> io::Result<()> {
         #[cfg(target_os = "linux")]
         {

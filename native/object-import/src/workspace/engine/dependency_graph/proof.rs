@@ -225,3 +225,31 @@ pub(in crate::workspace::engine) fn unique(proofs: Vec<Proof>) -> Vec<Proof> {
         .filter(|proof| seen.insert(proof.clone()))
         .collect()
 }
+
+/// Rebind a validated control after the owner has published its exact retained bytes.
+pub(in crate::workspace::engine) fn restored_control(
+    original: &Proof,
+    expected: Option<&[u8]>,
+) -> io::Result<Proof> {
+    validate_restored_control(original)?;
+    if contents(&original.path)?.as_deref() != expected {
+        return Err(invalid("restored dependency control differs"));
+    }
+    let mut output = original.clone();
+    if original.metadata.is_some() {
+        let metadata = fs::metadata(&original.path).ok();
+        output.metadata = Some(Metadata::capture(&original.path, metadata.as_ref())?);
+    } else if original.exists.is_some() {
+        output.exists = Some(expected.is_some());
+    } else {
+        output.hash = expected.map(hash);
+    }
+    Ok(output)
+}
+
+pub(in crate::workspace::engine) fn validate_restored_control(original: &Proof) -> io::Result<()> {
+    if original.range.is_some() {
+        return Err(invalid("restored control cannot use a byte range"));
+    }
+    Ok(())
+}

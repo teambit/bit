@@ -1,6 +1,7 @@
 //! Command-only lane metadata. The public status boundary remains main-only.
+pub(super) mod visibility;
+
 mod additions;
-mod visibility;
 
 use super::input::Prepare;
 use crate::{

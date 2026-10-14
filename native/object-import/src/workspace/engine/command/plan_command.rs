@@ -41,7 +41,8 @@ pub(super) fn run(
         output["lanePreparation"] = receipt;
     }
     let count = planned.result["components"].as_array().map_or(0, Vec::len);
-    record.planned = Some(PreparedPlan { plan: planned, bitmap, snap_bitmap: None });
+    record.planned =
+        Some(PreparedPlan { plan: planned, bitmap, snap_bitmap: None, reset_config: None });
     snapshots.command.record = Some(record);
     Ok((count, output))
 }
@@ -71,7 +72,7 @@ fn snap_receipt(output: &mut Value, planned: &planning::Planned) -> io::Result<(
     Ok(())
 }
 
-fn validate_versions(record: &mut Record) -> io::Result<()> {
+pub(super) fn validate_versions(record: &mut Record) -> io::Result<()> {
     for row in
         record.context["versions"].as_array().ok_or_else(|| invalid("command context versions"))?
     {
@@ -85,6 +86,14 @@ fn validate_versions(record: &mut Record) -> io::Result<()> {
 }
 
 fn prepare_bitmap(record: &Record, planned: &planning::Planned) -> io::Result<bitmap::Prepared> {
+    prepare_bitmap_bytes(record, planned, std::fs::read(record.request.root.join(".bitmap"))?)
+}
+
+pub(super) fn prepare_bitmap_bytes(
+    record: &Record,
+    planned: &planning::Planned,
+    original: Vec<u8>,
+) -> io::Result<bitmap::Prepared> {
     let mut updates = planned.materials
         .iter()
         .map(|material| bitmap_update(record, material))
@@ -92,7 +101,7 @@ fn prepare_bitmap(record: &Record, planned: &planning::Planned) -> io::Result<bi
     if let Some(merge) = &planned.merge {
         updates.extend(merge.bitmap_updates()?);
     }
-    bitmap::prepare_changes(&record.request.root, &record.context, &updates, &[])
+    bitmap::prepare_bytes(&record.request.root, original, &record.context, &updates, &[])
 }
 
 fn bitmap_update(

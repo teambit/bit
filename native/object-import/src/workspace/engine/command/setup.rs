@@ -10,7 +10,7 @@ pub(super) fn run(
     state: &mut State,
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
-    if state.record.is_some() {
+    if state.record.is_some() || state.recovery.is_some() {
         return Err(invalid("command owner already active"));
     }
     let mut proofs = Vec::new();
@@ -67,7 +67,10 @@ fn validate_license(scope: &str, repository: &mut repository::Repository) -> io:
     Ok(())
 }
 
-fn validate_licenses(context: &Value, repository: &mut repository::Repository) -> io::Result<()> {
+pub(super) fn validate_licenses(
+    context: &Value,
+    repository: &mut repository::Repository,
+) -> io::Result<()> {
     let mut scopes = std::collections::HashSet::new();
     scopes.insert(context["scope"]["name"].as_str().ok_or_else(|| invalid("command scope name"))?);
     let visible = context["targets"].as_array().ok_or_else(|| invalid("command target scopes"))?;

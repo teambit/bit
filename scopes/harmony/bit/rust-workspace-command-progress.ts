@@ -1,9 +1,15 @@
 import { loader } from '@teambit/legacy.loader';
 
-type ImportProgress = { reason: string | null; ids: string[]; components: number; objects: number; objectRequest?: boolean };
+type ImportProgress = {
+  reason: string | null;
+  ids: string[];
+  components: number;
+  objects: number;
+  objectRequest?: boolean;
+};
 
 /** Validate the entire receipt before any visible command or filesystem effects. */
-export function commandProgress(value: any, operation: 'checkout' | 'merge') {
+export function commandProgress(value: any, operation: 'checkout' | 'merge' | 'recovery') {
   if (value === undefined) return async () => {};
   if (!Number.isSafeInteger(value.bitmapCount) || value.bitmapCount < 0 || !Array.isArray(value.imports))
     throw new Error('native command progress receipt');
@@ -37,6 +43,7 @@ export function commandProgress(value: any, operation: 'checkout' | 'merge') {
   return async () => {
     if (operation !== 'checkout') {
       rows.forEach(renderImport);
+      if (operation === 'recovery') return;
       for (const count of loads) loader.start(`loading ${count} component(s)`);
       if (loads.length && !value.snapFailed) {
         loader.start('importing missing dependencies...');
@@ -71,7 +78,9 @@ function renderImport(row: ImportProgress) {
   const count = new Set(row.ids.map((id) => id.replace(/@[^@]+$/, ''))).size;
   const ids = row.objectRequest
     ? `${row.ids.length} objects`
-    : count === row.ids.length ? `${count} components` : `${count} components, ${row.ids.length} versions`;
+    : count === row.ids.length
+      ? `${count} components`
+      : `${count} components, ${row.ids.length} versions`;
   const reason = row.reason ? ` ${row.reason}` : '';
   const message = `importing ${ids}${reason}`;
   loader.start(message);
@@ -83,16 +92,21 @@ function renderImport(row: ImportProgress) {
 }
 
 function importReason(reason: unknown): boolean {
-  if ([
-    null,
-    'of their latest on main',
-    'for getting missing versions and dependencies',
-    'for making sure the new components are really new and are not out-of-sync',
-    'import all history of given patterns components to check whether they have dependencies on the lane',
-  ].includes(reason as string | null)) return true;
+  if (
+    [
+      null,
+      'of their latest on main',
+      'for getting missing versions and dependencies',
+      'for making sure the new components are really new and are not out-of-sync',
+      'import all history of given patterns components to check whether they have dependencies on the lane',
+    ].includes(reason as string | null)
+  )
+    return true;
   if (typeof reason !== 'string' || reason.length > 4096) return false;
-  return /^for fetching lane [^/\s]+\/[^/\s]+$/.test(reason) ||
+  return (
+    /^for fetching lane [^/\s]+\/[^/\s]+$/.test(reason) ||
     /^for getting the common-snap between [^\s]+ and [^\s]+$/.test(reason) ||
     /^for filling the gap between the common-snap and the head of [^/\s]+\/[^/\s]+$/.test(reason) ||
-    /^to get all artifacts for \d+ components from lane [^/\s]+\/[^/\s]+$/.test(reason);
+    /^to get all artifacts for \d+ components from lane [^/\s]+\/[^/\s]+$/.test(reason)
+  );
 }

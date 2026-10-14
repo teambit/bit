@@ -1,4 +1,5 @@
 pub(crate) mod jsonc;
+pub(crate) use copy::{file as copy_file, validate as validate_copy};
 pub(crate) use operations::{Operation, State};
 
 mod bitmap;

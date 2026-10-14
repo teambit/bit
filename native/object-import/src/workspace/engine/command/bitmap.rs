@@ -21,13 +21,35 @@ pub(super) struct Prepared {
     output: Vec<u8>,
     changed: bool,
 }
-pub(super) fn prepare_changes(
-    root: &Path,
-    context: &Value,
-    updates: &[Update],
-    removed: &[String],
-) -> io::Result<Prepared> {
-    prepare_bytes(root, fs::read(root.join(".bitmap"))?, context, updates, removed)
+impl Prepared {
+    /// Reset removes overrides only for components actually passed to the writer.
+    /// Keep the original bytes intact for freshness checks and bitmap history.
+    pub(super) fn clear_config(
+        &mut self,
+        context: &Value,
+        identities: &[String],
+    ) -> io::Result<()> {
+        let bitmap = crate::recovery::jsonc::parse(&self.output)?;
+        let mut entries = rows(&bitmap)?;
+        let mut selected = HashSet::new();
+        for id in identities {
+            if !selected.insert(id) {
+                return Err(invalid("reset duplicate configuration identity"));
+            }
+            let entry = entries
+                .iter_mut()
+                .find(|entry| identity(entry).ok().as_ref() == Some(id))
+                .ok_or_else(|| invalid("reset configuration identity absent"))?;
+            self.changed |= entry
+                .as_object_mut()
+                .ok_or_else(|| invalid("reset bitmap configuration"))?
+                .shift_remove("config")
+                .is_some();
+        }
+        self.output =
+            render_rows(entries, &bitmap["$schema-version"], lane::header(context, &bitmap)?)?;
+        Ok(())
+    }
 }
 pub(super) fn prepare_after(
     previous: &Prepared,
@@ -37,7 +59,7 @@ pub(super) fn prepare_after(
     let original = if previous.changed { &previous.output } else { &previous.original };
     prepare_bytes(&previous.root, original.clone(), context, updates, &[])
 }
-fn prepare_bytes(
+pub(super) fn prepare_bytes(
     root: &Path,
     original: Vec<u8>,
     context: &Value,

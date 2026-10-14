@@ -526,6 +526,8 @@ jobs:
           BIT_TEST_DIFF_COMPILED=1 node --test scripts/rust-object-import/full-diff-runtime.test.cjs
           node --test scripts/rust-object-import/cold-command-driver.test.cjs scripts/rust-object-import/merge-policy-defaults.test.cjs
           BIT_TEST_COMMAND_COMPILED=1 node --test scripts/rust-object-import/cold-command-driver.test.cjs scripts/rust-object-import/merge-policy-defaults.test.cjs
+          node --test scripts/rust-object-import/cold-recovery-driver.test.cjs scripts/rust-object-import/cold-recovery-proof.test.cjs
+          BIT_TEST_COMMAND_COMPILED=1 node --test scripts/rust-object-import/cold-recovery-driver.test.cjs scripts/rust-object-import/cold-recovery-proof.test.cjs
       - name: Install Linux source ownership tracing
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y strace
@@ -536,6 +538,13 @@ jobs:
           BIT_TEST_OBJECT_IMPORT: ${{ github.workspace }}/native/target/debug/bit-object-import
           BIT_TEST_WORKSPACE_ADDON: ${{ github.workspace }}/native/target/debug/bit-workspace.node
         run: node --test scripts/rust-object-import/cold-command-runtime.test.cjs
+      - name: Differential public cold component and lane recovery
+        if: runner.os == 'Linux'
+        env:
+          BIT_LEGACY_ROOT: ${{ github.workspace }}
+          BIT_TEST_OBJECT_IMPORT: ${{ github.workspace }}/native/target/debug/bit-object-import
+          BIT_TEST_WORKSPACE_ADDON: ${{ github.workspace }}/native/target/debug/bit-workspace.node
+        run: node --test scripts/rust-object-import/cold-recovery-runtime.test.cjs
       - name: Differential native snapshot models against the compiled CLI
         working-directory: native
         env:
@@ -573,6 +582,7 @@ jobs:
           node --test scripts/rust-object-import/snapshot-values.test.cjs scripts/rust-object-import/snapshot-transaction.test.cjs scripts/rust-object-import/snapshot-transaction-store.test.cjs scripts/rust-object-import/snapshot-transaction-artifact.test.cjs
           BIT_TEST_SNAPSHOT_TRANSACTION_COMPILED=1 node --test scripts/rust-object-import/snapshot-values.test.cjs scripts/rust-object-import/snapshot-transaction.test.cjs scripts/rust-object-import/snapshot-transaction-store.test.cjs scripts/rust-object-import/snapshot-transaction-artifact.test.cjs
           node --test scripts/rust-object-import/cold-lane-validation.test.cjs
+          node --test scripts/rust-object-import/cold-recovery-validation.test.cjs scripts/rust-object-import/merge-history-measurement.test.cjs
           node --test scripts/rust-object-import/three-way-merge.test.cjs
           BIT_TEST_THREE_WAY_MERGE_COMPILED=1 node --test scripts/rust-object-import/three-way-merge.test.cjs
           node --test scripts/rust-object-import/workspace-inventory.test.cjs

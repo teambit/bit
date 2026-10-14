@@ -16,6 +16,13 @@ pub(in crate::workspace::engine) fn configuration_for_command(
     lane: bool,
 ) -> io::Result<Value> {
     let config = document(&root.join("workspace.jsonc"))?;
+    configuration_value(root, &config, lane)
+}
+pub(in crate::workspace::engine) fn configuration_value(
+    root: &Path,
+    config: &Value,
+    lane: bool,
+) -> io::Result<Value> {
     let object = config.as_object().ok_or_else(|| invalid("status workspace configuration"))?;
     if object
         .keys()
@@ -32,8 +39,8 @@ pub(in crate::workspace::engine) fn configuration_for_command(
     {
         return Err(invalid("status configured extensions require Harmony"));
     }
-    let workspace = workspace_settings(&config)?;
-    extensions(&config)?;
+    let workspace = workspace_settings(config)?;
+    extensions(config)?;
     let scope = document(&root.join(".bit/scope.json"))?;
     if (!lane && scope["lanes"]["current"] != "main") || scope.get("license").is_some() {
         return Err(invalid("status non-main scope"));

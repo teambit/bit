@@ -4,7 +4,12 @@ use std::{fs, io, path::Path};
 /// File copying uses fresh source contents and preserves the existing destination
 /// inode while copying source permissions. Unsupported link/platform metadata
 /// declines before opening the destination; the caller retries only this step.
-pub(super) fn file(source: &Path, destination: &Path) -> io::Result<()> {
+pub(crate) fn file(source: &Path, destination: &Path) -> io::Result<()> {
+    validate(source, destination)?;
+    fs::copy(source, destination)?;
+    Ok(())
+}
+pub(crate) fn validate(source: &Path, destination: &Path) -> io::Result<()> {
     regular(source)?;
     let existing = match fs::symlink_metadata(destination) {
         Ok(_) => Some(regular(destination)?),
@@ -21,7 +26,6 @@ pub(super) fn file(source: &Path, destination: &Path) -> io::Result<()> {
     }
     ancestors(source)?;
     ancestors(destination)?;
-    fs::copy(source, destination)?;
     Ok(())
 }
 fn regular(path: &Path) -> io::Result<fs::Metadata> {

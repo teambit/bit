@@ -24,7 +24,10 @@ pub(super) fn identity_bitmap(bitmap: &Value, settings: &Value) -> io::Result<Va
     Ok(projected)
 }
 
-pub(super) fn targets(bitmap: &Value, settings: &Value) -> io::Result<Vec<Value>> {
+pub(in crate::workspace::engine::command) fn targets(
+    bitmap: &Value,
+    settings: &Value,
+) -> io::Result<Vec<Value>> {
     let mut visible = bitmap
         .as_object()
         .ok_or_else(|| invalid("command lane bitmap"))?

@@ -73,7 +73,7 @@ async function initApp(additionalAspects?: Aspect[]) {
       !additionalAspects?.length &&
       process.env.BIT_RUST_CLIENT_VCS === 'on' &&
       (['checkout', 'U', 'merge'].includes(process.argv[2]) ||
-        (process.argv[2] === 'lane' && process.argv[3] === 'merge'))
+        (process.argv[2] === 'lane' && ['merge', 'merge-abort'].includes(process.argv[3])))
     ) {
       const { runRustWorkspaceCommand } = await import('./rust-workspace-command');
       if (await runRustWorkspaceCommand()) return;
