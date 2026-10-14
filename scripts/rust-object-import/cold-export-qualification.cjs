@@ -14,11 +14,21 @@ const sha = (value) => createHash('sha256').update(value).digest('hex');
 const scenarios = [
   { name: 'staged-default', args: ['export'], native: true },
   { name: 'selected-id', args: ['export', 'qualification.alpha/alpha'], native: true },
+  { name: 'short-id', args: ['export', 'alpha'], native: true },
   { name: 'origin-directly', args: ['export', '--origin-directly'], native: true },
   { name: 'json-fallback', args: ['export', '--origin-directly', '--json'], native: false },
   { name: 'missing-id', args: ['export', 'qualification.alpha/missing'], native: false, fails: true },
   { name: 'persist-failure', args: ['export', '--origin-directly'], native: true, fails: true, httpOnly: true },
   { name: 'two-staged-components', args: ['export'], native: true, setup: 'two-components' },
+  { name: 'two-staged-scopes', args: ['export', '--origin-directly'], native: true, setup: 'two-scopes', multiScope: true },
+  { name: 'validate-failure', args: ['export', '--origin-directly'], native: true, fails: true, httpOnly: true },
+  { name: 'validate-failure-two-scopes', args: ['export', '--origin-directly'], native: true, fails: true, httpOnly: true, setup: 'two-scopes', multiScope: true },
+  { name: 'persist-failure-second', args: ['export', '--origin-directly'], native: true, fails: true, httpOnly: true, setup: 'two-scopes', multiScope: true },
+  { name: 'resume-after-persist-failure', args: ['export', '--origin-directly', '--resume'], native: false, httpOnly: true, setup: 'resumable' },
+  { name: 'lane-export-fallback', args: ['export', '--origin-directly', '--json'], native: false, setup: 'lane' },
+  ...(typeof process.getgid === 'function'
+    ? [{ name: 'file-group-fallback', args: ['export', '--origin-directly'], native: false, fileOnly: true, setup: 'group' }]
+    : []),
   { name: 'parented-followup', args: ['export'], native: true, setup: 'followup' },
 ];
 
@@ -146,6 +156,7 @@ async function snapshotRemote(directory) {
   const contents = {};
   const compressedObjects = {};
   const pendingHashes = {};
+  const fileMetadata = {};
   async function walk(current, relative = '') {
     for (const entry of (await fs.readdir(current, { withFileTypes: true })).sort((a, b) =>
       a.name.localeCompare(b.name)
@@ -154,7 +165,14 @@ async function snapshotRemote(directory) {
       paths.push(`${entry.isDirectory() ? 'dir' : entry.isFile() ? 'file' : 'other'}:${name}`);
       if (entry.isDirectory()) await walk(path.join(current, entry.name), name);
       else if (entry.isFile()) {
-        const digest = sha(await fs.readFile(path.join(current, entry.name)));
+        const file = path.join(current, entry.name);
+        const digest = sha(await fs.readFile(file));
+        const stat = await fs.stat(file);
+        fileMetadata[name] = {
+          mode: stat.mode & 0o7777,
+          ...(Number.isSafeInteger(stat.uid) ? { uid: stat.uid } : {}),
+          ...(Number.isSafeInteger(stat.gid) ? { gid: stat.gid } : {}),
+        };
         if (/^objects\/[a-f0-9]{2}\/[a-f0-9]{38}$/.test(name))
           compressedObjects[name.slice(8).replace('/', '')] = digest;
         else if (name.startsWith('pending-objects/')) pendingHashes[name] = digest;
@@ -163,7 +181,28 @@ async function snapshotRemote(directory) {
     }
   }
   await walk(directory);
-  return { ...state, storagePaths: paths, storageContents: contents, compressedObjects, pendingHashes };
+  return { ...state, storagePaths: paths, storageContents: contents, compressedObjects, pendingHashes, fileMetadata };
+}
+
+async function snapshotRemotes(remotes) {
+  return Object.fromEntries(
+    await Promise.all(Object.entries(remotes).map(async ([name, directory]) => [name, await snapshotRemote(directory)]))
+  );
+}
+
+function remoteEventsByScope(events) {
+  const byScope = {};
+  for (const event of events) (byScope[event.scope] ||= []).push(event);
+  return byScope;
+}
+
+function remoteActions(events) {
+  return Object.fromEntries(
+    Object.entries(remoteEventsByScope(events)).map(([scope, rows]) => [
+      scope,
+      rows.map((event) => (event.operation === 'action' ? event.name : event.operation)),
+    ])
+  );
 }
 
 async function stageExportProducer(cli, directory, remotes, command, extraFiles = 0) {
@@ -195,10 +234,11 @@ async function cloneExportScenario(producer, directory, scenario, remotes, comma
     const result = await command(directory, args);
     assert.equal(result.code, 0, `${args.join(' ')}: ${result.stderr || result.stdout}`);
   };
-  if (scenario.setup === 'two-components') {
+  if (scenario.setup === 'two-components' || scenario.setup === 'two-scopes') {
     await fs.mkdir(path.join(directory, 'sibling'));
     await fs.writeFile(path.join(directory, 'sibling/index.js'), 'exports.sibling = true;\n');
     await run(['add', 'sibling', '--id', 'sibling', '--main', 'index.js']);
+    if (scenario.setup === 'two-scopes') await run(['scope', 'set', 'qualification.beta', 'sibling']);
     await run([
       'tag',
       'sibling',
@@ -228,6 +268,11 @@ async function cloneExportScenario(producer, directory, scenario, remotes, comma
       '*',
     ]);
     await run(['tag', 'alpha', '--persist=skip-build', '--disable-tag-pipeline', '--ignore-issues', '*']);
+  } else if (scenario.setup === 'lane') {
+    await run(['export', '--origin-directly']);
+    await run(['lane', 'create', 'feature', '--scope', 'qualification.alpha']);
+    await fs.writeFile(path.join(directory, 'alpha/index.js'), 'exports.value = "alpha:lane";\n');
+    await run(['snap', '--message', 'lane', '--skip-auto-snap', '--disable-snap-pipeline', '--ignore-issues', '*']);
   }
 }
 
@@ -324,11 +369,19 @@ async function run(cli, helper, reportFile, options = {}) {
     for (const transport of transports) {
       for (const mode of modes) {
         for (const scenario of selected) {
-          if (scenario.httpOnly && transport !== 'http') continue;
+          if ((scenario.httpOnly && transport !== 'http') || (scenario.fileOnly && transport !== 'file')) continue;
           const directory = path.join(temporary, `${transport}-${mode}-${scenario.name}`);
           const activeRemotes = path.join(temporary, `${transport}-active-remotes`);
           await fs.rm(activeRemotes, { recursive: true, force: true });
           const remotes = await createTransferRemotes(cli, activeRemotes);
+          if (scenario.setup === 'group') {
+            const groupName = cp.execFileSync('id', ['-gn'], { encoding: 'utf8' }).trim();
+            assert.ok(groupName, 'file group fixture requires the current group name');
+            const scopeFile = path.join(remotes['qualification.alpha'], 'scope.json');
+            const scopeConfig = JSON.parse(await fs.readFile(scopeFile, 'utf8'));
+            scopeConfig.groupName = groupName;
+            await fs.writeFile(scopeFile, JSON.stringify(scopeConfig));
+          }
           const urls =
             transport === 'http'
               ? httpRemotes
@@ -341,7 +394,13 @@ async function run(cli, helper, reportFile, options = {}) {
                   name,
                   {
                     path: target,
-                    failPersist: scenario.name === 'persist-failure' && name === 'qualification.alpha',
+                    failPersist:
+                      (scenario.name === 'persist-failure' && name === 'qualification.alpha') ||
+                      (scenario.name === 'resume-after-persist-failure' && name === 'qualification.alpha') ||
+                      (scenario.name === 'persist-failure-second' && name === 'qualification.beta'),
+                    failValidate:
+                      ['validate-failure', 'validate-failure-two-scopes'].includes(scenario.name) &&
+                      name === 'qualification.alpha',
                   },
                 ])
               ),
@@ -349,12 +408,27 @@ async function run(cli, helper, reportFile, options = {}) {
             await ready;
           }
           await cloneExportScenario(producer, directory, scenario, urls, command);
+          let args = scenario.args;
+          let setupResult;
+          if (scenario.setup === 'resumable') {
+            setupResult = await command(directory, ['export', '--origin-directly'], 'node');
+            assert.notEqual(setupResult.code, 0, 'resumable fixture must fail its first persist');
+            const pending = await snapshotRemote(remotes['qualification.alpha']);
+            const exportIds = new Set(Object.keys(pending.pending).map((name) => name.split('/')[0]));
+            assert.equal(exportIds.size, 1, 'resumable fixture must retain one export ID');
+            args = [...scenario.args, ...exportIds];
+            const ready = ipc(server, (value) => value.configured);
+            server.send({
+              configure: Object.fromEntries(Object.entries(remotes).map(([name, target]) => [name, { path: target }])),
+            });
+            await ready;
+          }
           const before = {
             local: await snapshot(cli, directory, true),
-            remote: await snapshotRemote(remotes['qualification.alpha']),
+            remotes: await snapshotRemotes(remotes),
           };
           const trace = mode === 'native' ? path.join(directory, 'export-trace.json') : undefined;
-          const result = await command(directory, scenario.args, mode, trace);
+          const result = await command(directory, args, mode, trace);
           assert.equal(result.signal, null, `${transport}/${mode}/${scenario.name}: signal`);
           assert.equal(
             result.code === 0,
@@ -367,7 +441,8 @@ async function run(cli, helper, reportFile, options = {}) {
             if (scenario.native) {
               for (const kind of ['commandOutboundPrepare', 'commandOutboundApply']) {
                 assert.equal(diagnostics.workspace[kind].frames, 1, `${scenario.name}: ${kind} must be Rust-owned`);
-                assert.ok(diagnostics.workspace[kind].completed > 0, `${scenario.name}: ${kind} must complete`);
+                if (kind === 'commandOutboundPrepare' || !scenario.fails)
+                  assert.ok(diagnostics.workspace[kind].completed > 0, `${scenario.name}: ${kind} must complete`);
                 assert.equal(
                   diagnostics.workspace[kind].sourceBodyBytes,
                   0,
@@ -387,37 +462,67 @@ async function run(cli, helper, reportFile, options = {}) {
                 1,
                 'single retained Rust helper'
               );
-            } else if (scenario.name === 'json-fallback') {
+            } else if (['json-fallback', 'lane-export-fallback'].includes(scenario.name)) {
               assert.equal(
                 diagnostics.workspace.commandOutboundPrepare.frames,
                 0,
                 'unsupported option must use canonical export'
               );
+            } else if (scenario.name === 'file-group-fallback') {
+              assert.equal(diagnostics.workspace.commandOutboundPrepare.frames, 1, 'group scope must reach native preflight');
+              assert.equal(diagnostics.workspace.commandOutboundApply.frames, 0, 'group scope must decline before transfer');
             }
           }
           const after = {
             local: await snapshot(cli, directory, true),
-            remote: await snapshotRemote(remotes['qualification.alpha']),
+            remotes: await snapshotRemotes(remotes),
           };
-          const beta = await snapshotRemote(remotes['qualification.beta']);
-          assert.equal(beta.index, null, 'unselected remote must remain empty');
-          assert.deepEqual(beta.objects, {}, 'unselected remote must receive no objects');
+          const alpha = after.remotes['qualification.alpha'];
+          const beta = after.remotes['qualification.beta'];
+          if (!scenario.multiScope) {
+            assert.equal(beta.index, null, 'unselected remote must remain empty');
+            assert.deepEqual(beta.objects, {}, 'unselected remote must receive no objects');
+          }
           if (!scenario.fails) {
-            assert.ok(Object.keys(after.remote.objects).length > 0, 'selected remote must receive object closure');
-            assert.ok(after.remote.index, 'selected remote must persist index');
+            assert.ok(Object.keys(alpha.objects).length > 0, 'selected remote must receive object closure');
+            assert.ok(alpha.index, 'selected remote must persist index');
+            if (scenario.multiScope) {
+              assert.ok(Object.keys(beta.objects).length > 0, 'second remote must receive object closure');
+              assert.ok(beta.index, 'second remote must persist index');
+            }
           }
           if (scenario.name === 'missing-id') {
             assert.deepEqual(after.local, before.local, 'failed prepare must preserve source workspace');
-            assert.deepEqual(after.remote, before.remote, 'failed prepare must preserve remote');
+            assert.deepEqual(after.remotes, before.remotes, 'failed prepare must preserve remotes');
           }
           if (scenario.name === 'persist-failure') {
             assert.equal(after.local.bitmap, before.local.bitmap, 'failed persist must not publish bitmap');
             assert.equal(after.local.index, before.local.index, 'failed persist must not advance local index');
-            assert.equal(after.remote.index, before.remote.index, 'failed persist must not publish remote index');
+            assert.equal(alpha.index, before.remotes['qualification.alpha'].index, 'failed persist must not publish remote index');
             assert.ok(
-              Object.keys(after.remote.pending).length > 0,
+              Object.keys(alpha.pending).length > 0,
               'failed persist must retain canonical pending objects'
             );
+          }
+          if (['validate-failure', 'validate-failure-two-scopes'].includes(scenario.name)) {
+            assert.equal(after.local.bitmap, before.local.bitmap, 'failed validation must not publish bitmap');
+            assert.equal(alpha.index, before.remotes['qualification.alpha'].index, 'failed validation must not publish index');
+            assert.deepEqual(alpha.pending, {}, 'validation cleanup must remove pending objects');
+            if (scenario.multiScope) {
+              assert.equal(beta.index, before.remotes['qualification.beta'].index, 'failed validation must not publish second index');
+              assert.deepEqual(beta.pending, {}, 'validation cleanup must remove second pending objects');
+            }
+          }
+          if (scenario.name === 'persist-failure-second') {
+            assert.equal(after.local.bitmap, before.local.bitmap, 'partial persist must not publish bitmap');
+            assert.ok(alpha.index, 'first remote must be committed before partial failure');
+            assert.deepEqual(alpha.pending, {}, 'committed remote must have no pending objects');
+            assert.equal(beta.index, before.remotes['qualification.beta'].index, 'failing remote must not publish index');
+            assert.ok(Object.keys(beta.pending).length > 0, 'failing remote must retain resumable objects');
+          }
+          if (scenario.name === 'resume-after-persist-failure') {
+            assert.ok(Object.keys(before.remotes['qualification.alpha'].pending).length > 0, 'resume must start with pending objects');
+            assert.deepEqual(alpha.pending, {}, 'resume must clear pending objects after persistence');
           }
           let events;
           if (server && transport === 'http') {
@@ -425,20 +530,68 @@ async function run(cli, helper, reportFile, options = {}) {
             server.send({ events: true });
             events = (await received).events;
             if (!scenario.fails) {
-              const cycle = ['put', 'ExportValidate', 'ExportPersist'];
-              assert.deepEqual(
-                events.map((e) => (e.operation === 'action' ? e.name : e.operation)),
-                scenario.setup === 'followup' ? [...cycle, ...cycle] : cycle
-              );
+              const cycle = scenario.setup === 'resumable' ? ['ExportValidate', 'ExportPersist'] : ['put', 'ExportValidate', 'ExportPersist'];
+              const expectedCycle =
+                scenario.setup === 'lane'
+                  ? [...cycle, 'fetch', ...cycle]
+                  : scenario.setup === 'followup'
+                    ? [...cycle, ...cycle]
+                    : cycle;
+              const actions = remoteActions(events);
+              assert.deepEqual(actions['qualification.alpha'], expectedCycle);
+              if (scenario.multiScope) assert.deepEqual(actions['qualification.beta'], cycle);
+              else assert.equal(actions['qualification.beta'], undefined, 'unselected scope receives no request');
             }
             if (scenario.name === 'persist-failure') {
-              const operations = events.map((e) => (e.operation === 'action' ? e.name : e.operation));
+              const operations = remoteActions(events)['qualification.alpha'];
               assert.deepEqual(operations.slice(0, 3), ['put', 'ExportValidate', 'ExportPersist']);
               assert.ok(
                 operations.slice(3).every((operation) => operation === 'ExportPersist'),
                 'only persist may retry'
               );
             }
+            if (['validate-failure', 'validate-failure-two-scopes'].includes(scenario.name)) {
+              const actions = remoteActions(events);
+              assert.deepEqual(actions['qualification.alpha'], ['put', 'ExportValidate', 'RemovePendingDir']);
+              if (scenario.multiScope)
+                assert.deepEqual(actions['qualification.beta'], ['put', 'ExportValidate', 'RemovePendingDir']);
+            }
+            if (scenario.name === 'persist-failure-second') {
+              const actions = remoteActions(events);
+              assert.deepEqual(actions['qualification.alpha'], ['put', 'ExportValidate', 'ExportPersist']);
+              assert.deepEqual(actions['qualification.beta'].slice(0, 3), ['put', 'ExportValidate', 'ExportPersist']);
+              assert.ok(actions['qualification.beta'].slice(3).every((action) => action === 'ExportPersist'));
+            }
+          }
+          let recovery;
+          if (scenario.name === 'persist-failure-second') {
+            const exportIds = new Set(Object.keys(beta.pending).map((name) => name.split('/')[0]));
+            assert.equal(exportIds.size, 1, 'partial failure must leave one resumable export ID');
+            const ready = ipc(server, (value) => value.configured);
+            server.send({
+              configure: Object.fromEntries(Object.entries(remotes).map(([name, target]) => [name, { path: target }])),
+            });
+            await ready;
+            const resume = await command(directory, ['export', '--origin-directly', '--resume', ...exportIds], 'node');
+            assert.equal(resume.code, 0, `canonical resume after ${mode} partial failure: ${resume.stderr || resume.stdout}`);
+            const resumed = {
+              local: await snapshot(cli, directory, true),
+              remotes: await snapshotRemotes(remotes),
+            };
+            assert.deepEqual(
+              resumed.remotes['qualification.alpha'],
+              alpha,
+              'resume must retain already-persisted first remote'
+            );
+            assert.deepEqual(
+              resumed.remotes['qualification.beta'].pending,
+              {},
+              'resume must clear second remote pending objects'
+            );
+            assert.ok(resumed.remotes['qualification.beta'].index, 'resume must persist second remote index');
+            const received = ipc(server, (value) => value.events);
+            server.send({ events: true });
+            recovery = { after: resumed, result: resume, events: (await received).events };
           }
           // Failure stacks include implementation frames, while the first
           // diagnostic line and complete exit/state remain public behavior.
@@ -448,7 +601,14 @@ async function run(cli, helper, reportFile, options = {}) {
             code: result.code,
             stdout: result.stdout,
             stderr: scenario.fails ? result.stderr.split('\n')[0] : result.stderr,
-            events,
+            events: events && (scenario.multiScope ? remoteEventsByScope(events) : events),
+            recovery: recovery && {
+              after: recovery.after,
+              code: recovery.result.code,
+              stdout: recovery.result.stdout,
+              stderr: recovery.result.stderr,
+              events: remoteEventsByScope(recovery.events),
+            },
           });
           const key = `${transport}/${scenario.name}`;
           if (mode === 'node') expected.set(key, state);
@@ -461,7 +621,7 @@ async function run(cli, helper, reportFile, options = {}) {
           const artifact = path.join(directory, 'qualification-state.json');
           await fs.writeFile(
             artifact,
-            JSON.stringify({ state, raw: { before, after, result, events }, diagnostics }, null, 2)
+            JSON.stringify({ state, raw: { before, after, setupResult, result, events, recovery }, diagnostics }, null, 2)
           );
           report.runs.push({
             transport,

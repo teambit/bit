@@ -51,6 +51,25 @@ pub struct Network {
 }
 
 impl Network {
+    /// Run a canonical scope server action. Unlike fetch, Bit's `Http.action`
+    /// makes a single request; export persistence retries at the caller level.
+    pub async fn action(&self, url: &str, name: &str, options: &Value) -> io::Result<Value> {
+        let endpoint = format!("{url}/api/scope/action");
+        let body = json!({"name": name, "options": options});
+        let response = self
+            .headers(self.client.post(&endpoint), "write")
+            .json(&body)
+            .send()
+            .await
+            .map_err(|error| network_error(&error))?;
+        let response = throw_for_action_status(response).await?;
+        response.json().await.map_err(|_| {
+            invalid(&format!(
+                "fatal: failed parsing http json response, please make sure the response is a valid json object. url: {endpoint}"
+            ))
+        })
+    }
+
     /// POST compressed objects to a remote pending directory. Validation and
     /// persistence are separate server actions, preserving export recovery.
     pub async fn push(
@@ -171,6 +190,28 @@ impl Network {
             }
         }
     }
+}
+
+/// `Http.action` surfaces the server message to the command handler. In
+/// particular `UnexpectedNetworkError.message` is the raw server message,
+/// even though its inherited constructor formats a longer description.
+async fn throw_for_action_status(response: Response) -> io::Result<Response> {
+    if response.status().is_success() {
+        return Ok(response);
+    }
+    let url = response.url().to_string();
+    let parsed: Value = response.json().await.unwrap_or(Value::Null);
+    let error = if parsed["error"]["code"].is_null() { &parsed } else { &parsed["error"] };
+    let message = error["message"]
+        .as_str()
+        .or_else(|| parsed["message"].as_str())
+        .unwrap_or("unknown error")
+        .to_owned();
+    let code = error["code"].as_u64();
+    Err(match code {
+        Some(127..=130) => remote_error(code, error, &url, message),
+        _ => io::Error::other(message),
+    })
 }
 
 /// `throwForNonOkStatus` with `remoteErrorHandler`'s messages.
@@ -308,3 +349,6 @@ fn config_str<'a>(global: &'a GlobalConfig, key: &str) -> Option<&'a str> {
         .and_then(Value::as_str)
         .filter(|value| !value.is_empty())
 }
+
+#[cfg(test)]
+mod action_tests;

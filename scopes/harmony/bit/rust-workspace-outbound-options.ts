@@ -20,7 +20,7 @@ export function parseRustWorkspaceOutbound(args: string[]): RustWorkspaceOutboun
         arg.includes('\0') ||
         arg.includes('*') ||
         arg.includes('?') ||
-        !/^[^/@\s]+\/.+(?:@[^@\s]+)?$/.test(arg) ||
+        !/^[^/@\s]+(?:\/[^@\s]+)?(?:@[^@\s]+)?$/.test(arg) ||
         ids.length >= 4096
       )
         return undefined;

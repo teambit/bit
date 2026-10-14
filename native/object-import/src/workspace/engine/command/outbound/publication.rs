@@ -1,9 +1,9 @@
-//! Publish one original-scope export batch locally after remote `ExportPersist`.
+//! Publish all original-scope export batches locally after remote `ExportPersist`.
 use super::{Prepare, invalid, model::Selected};
 use crate::store::Store;
 use serde_json::{Value, json};
 use std::{
-    collections::HashSet,
+    collections::{BTreeMap, HashMap, HashSet},
     fs,
     io::{self, Write},
     path::{Path, PathBuf},
@@ -18,18 +18,17 @@ struct Component {
 }
 struct Preimage {
     index: Vec<u8>,
-    refs: Option<Vec<u8>>,
+    refs: BTreeMap<String, Option<Vec<u8>>>,
     staged: Option<Vec<u8>>,
     staged_config: Vec<u8>,
 }
 struct Output {
-    refs: Vec<u8>,
+    refs: BTreeMap<String, Vec<u8>>,
     staged_config: Vec<u8>,
 }
 
 pub(super) struct Prepared {
     root: PathBuf,
-    scope: String,
     components: Vec<Component>,
     preimage: Preimage,
     output: Output,
@@ -38,18 +37,24 @@ pub(super) struct Prepared {
     expected_ids: HashSet<String>,
 }
 
-pub(super) fn prepare(input: &Prepare, selected: &[Selected], host: &str) -> io::Result<Prepared> {
+pub(super) fn prepare(
+    input: &Prepare,
+    selected: &[Selected],
+    hosts: &HashMap<String, String>,
+) -> io::Result<Prepared> {
     super::super::bitmap::validate_history_file_id(&input.transport.bitmap_history_file_id)?;
-    if host.is_empty() {
-        return Err(invalid("outbound remote host"));
-    }
-    let first = validate_selected(selected)?;
+    let scopes = validate_selected(selected, hosts)?;
     let bitmap = prepare_bitmap(input, selected)?;
-    let preimage = prepare_preimage(&input.root, &first.scope)?;
-    let output = Output {
-        refs: prepare_refs(preimage.refs.as_deref(), &first.scope, selected)?,
-        staged_config: prepare_staged_config(&preimage.staged_config, selected)?,
-    };
+    let preimage = prepare_preimage(&input.root, &scopes)?;
+    let refs = scopes
+        .iter()
+        .map(|scope| {
+            let before = preimage.refs.get(scope).ok_or_else(|| invalid("outbound remote refs"))?;
+            Ok((scope.clone(), prepare_refs(before.as_deref(), scope, selected)?))
+        })
+        .collect::<io::Result<BTreeMap<_, _>>>()?;
+    let output =
+        Output { refs, staged_config: prepare_staged_config(&preimage.staged_config, selected)? };
     let expected_ids = expected_ids(selected)?;
     let components = selected
         .iter()
@@ -63,7 +68,6 @@ pub(super) fn prepare(input: &Prepare, selected: &[Selected], host: &str) -> io:
         .collect();
     Ok(Prepared {
         root: input.root.clone(),
-        scope: first.scope.clone(),
         components,
         preimage,
         output,
@@ -73,16 +77,27 @@ pub(super) fn prepare(input: &Prepare, selected: &[Selected], host: &str) -> io:
     })
 }
 
-fn validate_selected(selected: &[Selected]) -> io::Result<&Selected> {
-    let first = selected.first().ok_or_else(|| invalid("outbound empty publication"))?;
-    if selected.len() > 4096
-        || selected
-            .iter()
-            .any(|item| item.scope != first.scope)
-    {
-        return Err(invalid("outbound multiple remote scopes"));
+fn validate_selected(
+    selected: &[Selected],
+    hosts: &HashMap<String, String>,
+) -> io::Result<Vec<String>> {
+    if selected.is_empty() || selected.len() > 4096 {
+        return Err(invalid("outbound empty or oversized publication"));
     }
-    Ok(first)
+    let mut scopes = selected
+        .iter()
+        .map(|item| item.scope.clone())
+        .collect::<Vec<_>>();
+    scopes.sort_unstable();
+    scopes.dedup();
+    if scopes.len() != hosts.len()
+        || scopes
+            .iter()
+            .any(|scope| hosts.get(scope).is_none_or(String::is_empty))
+    {
+        return Err(invalid("outbound remote hosts"));
+    }
+    Ok(scopes)
 }
 
 fn expected_ids(selected: &[Selected]) -> io::Result<HashSet<String>> {
@@ -108,7 +123,7 @@ fn prepare_bitmap(
     super::super::bitmap::prepare_export_scopes(&input.root, original, &identities)
 }
 
-fn prepare_preimage(root: &Path, scope: &str) -> io::Result<Preimage> {
+fn prepare_preimage(root: &Path, scopes: &[String]) -> io::Result<Preimage> {
     let staged = read_optional(&root.join(".bit/staged-snaps"))?;
     if staged
         .as_ref()
@@ -116,9 +131,13 @@ fn prepare_preimage(root: &Path, scope: &str) -> io::Result<Preimage> {
     {
         return Err(invalid("outbound staged snap bounds"));
     }
+    let refs = scopes
+        .iter()
+        .map(|scope| Ok((scope.clone(), read_optional(&refs_path(root, scope))?)))
+        .collect::<io::Result<BTreeMap<_, _>>>()?;
     Ok(Preimage {
         index: fs::read(root.join(".bit/index.json"))?,
-        refs: read_optional(&refs_path(root, scope))?,
+        refs,
         staged,
         staged_config: fs::read(root.join(".bit/staged-config/main.json"))?,
     })
@@ -172,10 +191,13 @@ impl Prepared {
         if read_optional(&self.root.join(".bit/staged-snaps"))? != self.preimage.staged
             || fs::read(self.root.join(".bit/staged-config/main.json"))?
                 != self.preimage.staged_config
-            || read_optional(&refs_path(&self.root, &self.scope))?
-                != self.preimage.refs
         {
             return Err(invalid("outbound staged or remote state changed"));
+        }
+        for (scope, before) in &self.preimage.refs {
+            if read_optional(&refs_path(&self.root, scope))? != *before {
+                return Err(invalid("outbound remote state changed"));
+            }
         }
         Ok(())
     }
@@ -186,7 +208,9 @@ impl Prepared {
             store.write(&item.model_hash, &item.model_after)?;
             store.write(&item.history_hash, &item.history)?;
         }
-        write_refs(&refs_path(&self.root, &self.scope), &self.output.refs)?;
+        for (scope, refs) in &self.output.refs {
+            write_refs(&refs_path(&self.root, scope), refs)?;
+        }
         fs::write(self.root.join(".bit/staged-config/main.json"), self.output.staged_config)?;
         if self.preimage.staged.is_some() {
             fs::remove_file(self.root.join(".bit/staged-snaps"))?;
@@ -228,6 +252,9 @@ fn prepare_refs(before: Option<&[u8]>, scope: &str, selected: &[Selected]) -> io
         return Err(invalid("outbound remote refs bounds"));
     }
     for item in selected {
+        if item.scope != scope {
+            continue;
+        }
         let matches = rows
             .iter()
             .enumerate()
@@ -268,4 +295,49 @@ fn write_refs(path: &Path, bytes: &[u8]) -> io::Result<()> {
         .open(path)?;
     file.write_all(bytes)?;
     file.sync_all()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::workspace::engine::command::outbound::model::{HistoryBytes, ModelBytes};
+
+    fn selected(scope: &str, name: &str, head: &str) -> Selected {
+        Selected {
+            scope: scope.to_owned(),
+            name: name.to_owned(),
+            model: ModelBytes {
+                hash: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".to_owned(),
+                before: Vec::new(),
+                after: Vec::new(),
+            },
+            history: HistoryBytes {
+                hash: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb".to_owned(),
+                bytes: Vec::new(),
+            },
+            head: head.to_owned(),
+            version: "1.0.0".to_owned(),
+            objects: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn prepares_remote_refs_independently_per_scope() {
+        let selected = [selected("scope.one", "one", "111"), selected("scope.two", "two", "222")];
+        let first: Vec<Value> =
+            serde_json::from_slice(&prepare_refs(None, "scope.one", &selected).unwrap()).unwrap();
+        let second: Vec<Value> =
+            serde_json::from_slice(&prepare_refs(None, "scope.two", &selected).unwrap()).unwrap();
+        assert_eq!(first, vec![json!({"id":{"scope":"scope.one","name":"one"},"head":"111"})]);
+        assert_eq!(second, vec![json!({"id":{"scope":"scope.two","name":"two"},"head":"222"})]);
+    }
+
+    #[test]
+    fn validates_host_for_every_selected_scope() {
+        let selected = [selected("scope.one", "one", "111"), selected("scope.two", "two", "222")];
+        let mut hosts = HashMap::from([("scope.one".to_owned(), "file:///one".to_owned())]);
+        assert!(validate_selected(&selected, &hosts).is_err());
+        hosts.insert("scope.two".to_owned(), "file:///two".to_owned());
+        assert_eq!(validate_selected(&selected, &hosts).unwrap(), ["scope.one", "scope.two"]);
+    }
 }

@@ -52,7 +52,8 @@ function cacheVersionUpdates(targets: any[], options: CaptureOptions) {
 
 export async function withRustClientRequest<T>(
   read: (request: NativeClientRequest) => Promise<T>,
-  mustPropagateError: () => boolean = () => false
+  mustPropagateError: () => boolean = () => false,
+  nativeFailure?: (response: { error?: string }, input: object) => Error | undefined
 ): Promise<T | undefined> {
   const executable = resolveRustObjectImportExecutable();
   const addon = executable && resolveRustWorkspaceAddon(executable);
@@ -73,8 +74,10 @@ export async function withRustClientRequest<T>(
       const bytes = await engine!.request(Buffer.concat([header, body]));
       if (bytes.length > 32 * 1024 * 1024) throw new Error('status output limit');
       const response = JSON.parse(bytes.toString());
-      if (response.version !== 1 || response.id !== id || response.failed || response.skipped?.length)
+      if (response.version !== 1 || response.id !== id || response.skipped?.length)
         throw new Error('status native request declined');
+      if (response.failed)
+        throw nativeFailure?.(response, input) ?? new Error('status native request declined');
       return response.data;
     };
     return await read(request);

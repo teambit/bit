@@ -22,6 +22,10 @@ const sha = (value) => createHash('sha256').update(value).digest('hex');
 const median = (values) => [...values].sort((a, b) => a - b)[Math.floor(values.length / 2)];
 const fingerprint = async (file) => ({ file, sha256: sha(await fs.readFile(file)) });
 const timedScenarios = scenarios.filter((scenario) => scenario.native && !scenario.fails);
+const fullQualificationRows = scenarios.reduce(
+  (count, scenario) => count + (scenario.httpOnly || scenario.fileOnly ? 4 : 8),
+  0
+);
 
 function ipc(server, predicate) {
   return new Promise((resolve, reject) => {
@@ -66,7 +70,7 @@ async function benchmark(cli, helper, reportFile, options = {}) {
   const required = new Set(
     scenarios.flatMap((scenario) =>
       ['file', 'http'].flatMap((kind) =>
-        scenario.httpOnly && kind === 'file'
+        (scenario.httpOnly && kind === 'file') || (scenario.fileOnly && kind === 'http')
           ? []
           : ['node', 'native', 'missing-helper', 'crashed-helper'].map((mode) => `${kind}/${mode}/${scenario.name}`)
       )
@@ -74,7 +78,7 @@ async function benchmark(cli, helper, reportFile, options = {}) {
   );
   for (const row of qualification.runs) required.delete(`${row.transport}/${row.mode}/${row.scenario}`);
   assert.equal(required.size, 0, `qualification rows missing: ${[...required].join(', ')}`);
-  assert.equal(qualification.runs.length, 60, 'exact full export qualification required');
+  assert.equal(qualification.runs.length, fullQualificationRows, 'exact full export qualification required');
   const repository = path.resolve(__dirname, '../..');
   assert.equal(
     sourceIdentity(repository),
@@ -197,6 +201,7 @@ async function benchmark(cli, helper, reportFile, options = {}) {
           const before = {
             local: await snapshot(cli, directory, true),
             remote: await snapshotRemote(remotes['qualification.alpha']),
+            ...(scenario.multiScope ? { secondRemote: await snapshotRemote(remotes['qualification.beta']) } : {}),
           };
           const result = await command(directory, scenario.args, mode);
           assert.equal(result.signal, null, `${scenario.name}/${round}/${mode}: signal`);
@@ -204,10 +209,16 @@ async function benchmark(cli, helper, reportFile, options = {}) {
           const after = {
             local: await snapshot(cli, directory, true),
             remote: await snapshotRemote(remotes['qualification.alpha']),
+            ...(scenario.multiScope ? { secondRemote: await snapshotRemote(remotes['qualification.beta']) } : {}),
           };
-          const untouched = await snapshotRemote(remotes['qualification.beta']);
-          assert.equal(untouched.index, null, 'unselected remote index changed');
-          assert.deepEqual(untouched.objects, {}, 'unselected remote objects changed');
+          if (scenario.multiScope) {
+            assert.ok(after.secondRemote.index, 'second remote index must persist');
+            assert.ok(Object.keys(after.secondRemote.objects).length > 0, 'second remote must receive objects');
+          } else {
+            const untouched = await snapshotRemote(remotes['qualification.beta']);
+            assert.equal(untouched.index, null, 'unselected remote index changed');
+            assert.deepEqual(untouched.objects, {}, 'unselected remote objects changed');
+          }
           const state = comparable({ before, after, code: result.code, stdout: result.stdout, stderr: result.stderr });
           const artifact = path.join(directory, 'timing-state.json');
           await fs.writeFile(artifact, JSON.stringify({ state, wallMs: result.wallMs }));

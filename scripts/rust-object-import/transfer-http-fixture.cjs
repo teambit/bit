@@ -54,6 +54,10 @@ const logger = { debug() {}, info() {}, warn() {}, error() {} };
         req.body = JSON.parse(Buffer.concat(chunks).toString());
         if (req.url === '/api/scope/action') {
           events.push({ scope: name, operation: 'action', name: req.body.name, options: req.body.options });
+          if (config.failValidate && req.body.name === 'ExportValidate') {
+            res.status(500).json({ message: 'qualification validation failure', code: 'QUALIFICATION_VALIDATE_FAILED' });
+            return;
+          }
           if (config.failPersist && req.body.name === 'ExportPersist') {
             res.status(500).json({ message: 'qualification persist failure', code: 'QUALIFICATION_PERSIST_FAILED' });
             return;

@@ -1,7 +1,6 @@
 //! Public outbound export owner. Prepare captures and validates local objects;
-//! Apply transfers their compressed bytes to the remote pending directory.
-//! Canonical server actions validate/persist that pending directory before
-//! Finalize publishes local bookkeeping.
+//! Apply transfers compressed objects and owns remote validation/persistence.
+//! Finalize publishes local bookkeeping from the retained acknowledgements.
 mod model;
 mod publication;
 mod remote;
@@ -35,6 +34,7 @@ struct Transport {
     client_id: String,
     export_date: String,
     bitmap_history_file_id: String,
+    bit_dir: PathBuf,
     #[serde(default)]
     token: Option<String>,
 }
@@ -56,27 +56,30 @@ pub(in crate::workspace::engine) struct Apply {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Finalize {
     token: String,
-    exported_ids: Vec<String>,
 }
 
 pub(super) struct Retained {
     token: String,
     root: PathBuf,
-    pending: Pending,
+    client_id: String,
+    pending: Vec<Pending>,
+    selected_order: HashMap<String, usize>,
     network: NetworkConfig,
     publication: Option<publication::Prepared>,
     transferred: bool,
+    exported_ids: Vec<String>,
 }
 
 struct Pending {
-    scope: Option<String>,
-    host: Option<String>,
-    client_id: String,
+    scope: String,
+    host: String,
     objects: Vec<ObjectItem>,
 }
 
 struct NetworkConfig {
     global_config_dir: PathBuf,
+    node_executable: PathBuf,
+    bit_dir: PathBuf,
     bit_version: String,
     auth_token: Option<String>,
 }
@@ -89,34 +92,74 @@ pub(in crate::workspace::engine) fn prepare(
     validate(input)?;
     let selected = model::select(input)?;
     let count = selected.len();
+    let selected_order = selected
+        .iter()
+        .enumerate()
+        .map(|(index, item)| (format!("{}/{}", item.scope, item.name), index))
+        .collect();
     state.sequence = state.sequence.wrapping_add(1);
     let token = format!("outbound-{}", state.sequence);
-    let (scope, remote_host, objects, publication) = if let Some(first) = selected.first() {
-        let scope = first.scope.clone();
-        let host = remote::host(input, &scope)?;
-        let plan = publication::prepare(input, &selected, &host)?;
-        (Some(scope), Some(host), objects(&selected)?, Some(plan))
+    let mut hosts = HashMap::new();
+    for item in &selected {
+        if !hosts.contains_key(&item.scope) {
+            hosts.insert(item.scope.clone(), remote::host(input, &item.scope)?);
+        }
+    }
+    let publication = if selected.is_empty() {
+        None
     } else {
-        (None, None, Vec::new(), None)
+        Some(publication::prepare(input, &selected, &hosts)?)
     };
+    let mut grouped: Vec<(String, Vec<model::Selected>)> = Vec::new();
+    let mut group_indices = HashMap::new();
+    for item in selected {
+        let index = if let Some(index) = group_indices.get(&item.scope) {
+            *index
+        } else {
+            let index = grouped.len();
+            group_indices.insert(item.scope.clone(), index);
+            grouped.push((item.scope.clone(), Vec::new()));
+            index
+        };
+        grouped[index].1.push(item);
+    }
+    let pending = grouped
+        .into_iter()
+        .map(|(scope, selected)| {
+            Ok(Pending {
+                host: hosts
+                    .get(&scope)
+                    .ok_or_else(|| invalid("outbound remote host"))?
+                    .clone(),
+                scope,
+                objects: objects(&selected)?,
+            })
+        })
+        .collect::<io::Result<Vec<_>>>()?;
+    let object_count = pending
+        .iter()
+        .map(|batch| batch.objects.len())
+        .sum::<usize>();
     let receipt = json!({"token":token,"owner":"rust","nothingToExport":count == 0,
-        "scope":scope,"objectCount":objects.len()});
+        "scopes":pending.iter().map(|batch| &batch.scope).collect::<Vec<_>>(),
+        "fileRemote":pending.iter().any(|batch| batch.host.starts_with("file://")),
+        "objectCount":object_count});
     state.outbound = Some(Retained {
         token,
         root: input.root.clone(),
-        pending: Pending {
-            scope,
-            host: remote_host,
-            client_id: input.transport.client_id.clone(),
-            objects,
-        },
+        client_id: input.transport.client_id.clone(),
+        pending,
+        selected_order,
         network: NetworkConfig {
             global_config_dir: input.transport.global_config_dir.clone(),
+            node_executable: input.transport.node_executable.clone(),
+            bit_dir: input.transport.bit_dir.clone(),
             bit_version: input.transport.bit_version.clone(),
             auth_token: input.transport.token.clone(),
         },
         publication,
         transferred: false,
+        exported_ids: Vec::new(),
     });
     Ok((count, receipt))
 }
@@ -163,19 +206,54 @@ pub(in crate::workspace::engine) fn apply(
     if retained.token != input.token || retained.transferred {
         return Err(invalid("outbound owner token"));
     }
-    let pending = retained.pending.scope.is_some();
+    let pending = !retained.pending.is_empty();
     if let Some(plan) = &retained.publication {
         plan.stage_history()?;
     }
-    if let (Some(scope), Some(host)) = (&retained.pending.scope, &retained.pending.host) {
-        remote::push(retained, scope, host)?;
+    let mut actions = remote::Actions::new(retained)?;
+    for (pushed, batch) in retained.pending.iter().enumerate() {
+        if let Err(error) = remote::push(retained, batch) {
+            for prior in &retained.pending[..pushed] {
+                let _ = actions.cleanup(retained, prior);
+            }
+            return Err(error);
+        }
     }
+    let mut validation_error = None;
+    for batch in &retained.pending {
+        if let Err(error) = actions.validate(retained, batch)
+            && validation_error.is_none()
+        {
+            validation_error = Some(error);
+        }
+    }
+    if let Some(error) = validation_error {
+        for pushed in &retained.pending {
+            let _ = actions.cleanup(retained, pushed);
+        }
+        return Err(io::Error::new(error.kind(), format!("outbound validate failed: {error}")));
+    }
+    let mut exported_ids = Vec::new();
+    for batch in &retained.pending {
+        exported_ids.extend(actions.persist(retained, batch)?);
+    }
+    exported_ids.sort_by_key(|id| {
+        let identity = id.rsplit_once('@').map_or(id.as_str(), |(name, _)| name);
+        retained.selected_order
+            .get(identity)
+            .copied()
+            .unwrap_or(usize::MAX)
+    });
+    retained.exported_ids = exported_ids;
     retained.transferred = true;
     Ok((
-        retained.pending.objects.len(),
+        retained.pending
+            .iter()
+            .map(|batch| batch.objects.len())
+            .sum(),
         json!({"token":retained.token,"owner":"rust",
-        "scope":retained.pending.scope,"remoteHost":retained.pending.host,
-        "clientId":retained.pending.client_id,"objectCount":retained.pending.objects.len(),"pending":pending}),
+        "scopes":retained.pending.iter().map(|batch| &batch.scope).collect::<Vec<_>>(),
+        "clientId":retained.client_id,"objectCount":retained.pending.iter().map(|batch| batch.objects.len()).sum::<usize>(),"pending":pending}),
     ))
 }
 
@@ -188,11 +266,11 @@ pub(in crate::workspace::engine) fn finalize(
         return Err(invalid("outbound owner token"));
     }
     if let Some(plan) = retained.publication {
-        plan.commit(&input.exported_ids)?;
-    } else if !input.exported_ids.is_empty() {
+        plan.commit(&retained.exported_ids)?;
+    } else if !retained.exported_ids.is_empty() {
         return Err(invalid("outbound unexpected remote ids"));
     }
-    let components = input.exported_ids
+    let components = retained.exported_ids
         .iter()
         .map(|id| {
             id.rsplit_once('@')
@@ -203,7 +281,7 @@ pub(in crate::workspace::engine) fn finalize(
     Ok((
         components.len(),
         json!({"token":retained.token,"owner":"rust","applied":true,
-        "componentsIds":components,"newIdsOnRemote":input.exported_ids,
+        "componentsIds":components,"newIdsOnRemote":retained.exported_ids,
         "nonExistOnBitMap":[],"removedIds":[],"missingScope":[],
         "exportedLanes":[],"rippleJobUrls":[]}),
     ))
@@ -216,6 +294,7 @@ fn validate(input: &Prepare) -> io::Result<()> {
         &input.global_remotes_file,
         &input.transport.global_config_dir,
         &input.transport.node_executable,
+        &input.transport.bit_dir,
     ] {
         if !path.is_absolute() {
             return Err(invalid("outbound absolute paths"));

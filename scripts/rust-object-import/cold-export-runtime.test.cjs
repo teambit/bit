@@ -17,5 +17,8 @@ test('public export retains canonical file/HTTP objects, results, failures and n
     { scratch: directory, addon: process.env.BIT_TEST_WORKSPACE_ADDON }
   );
   assert.equal(result.qualified, true);
-  assert.equal(result.runs.length, (scenarios.length * 2 - scenarios.filter((row) => row.httpOnly).length) * 4);
+  assert.equal(
+    result.runs.length,
+    (scenarios.length * 2 - scenarios.filter((row) => row.httpOnly || row.fileOnly).length) * 4
+  );
 });

@@ -53,18 +53,10 @@ pub(super) fn select(input: &Prepare) -> io::Result<Vec<Selected>> {
     }
     let rows = index["components"].as_array().ok_or_else(|| invalid("outbound index"))?;
     let staged = staged_rows(root, rows)?;
-    let selected = requested(input, staged)?;
+    let selected = requested(&input.ids, staged)?;
     let mut components = Vec::new();
-    let mut selected_scope = None;
     for (row, model) in selected {
         let component = select_one(input, &row, model)?;
-        if selected_scope
-            .as_ref()
-            .is_some_and(|scope| scope != &component.scope)
-        {
-            return Err(invalid("outbound multiple remote scopes"));
-        }
-        selected_scope = Some(component.scope.clone());
         components.push(component);
     }
     Ok(components)
@@ -81,25 +73,44 @@ fn staged_rows(root: &Path, rows: &[Value]) -> io::Result<Vec<(Value, Value)>> {
     Ok(staged)
 }
 
-fn requested(input: &Prepare, staged: Vec<(Value, Value)>) -> io::Result<Vec<(Value, Value)>> {
-    if input.ids.is_empty() {
+fn requested(ids: &[String], staged: Vec<(Value, Value)>) -> io::Result<Vec<(Value, Value)>> {
+    if ids.is_empty() {
         return Ok(staged);
     }
     let mut chosen = Vec::new();
-    for id in &input.ids {
-        let (scope, named) = id.split_once('/').ok_or_else(|| invalid("outbound unscoped id"))?;
-        let (name, version) = named
+    for id in ids {
+        let (identity, version) = id
             .rsplit_once('@')
-            .map_or((named, None), |(name, version)| (name, Some(version)));
-        let component = staged
+            .map_or((id.as_str(), None), |(identity, version)| (identity, Some(version)));
+        let matching_version = |model: &Value| {
+            version.is_none_or(|version| {
+                model["versions"][version].as_str() == model["head"].as_str()
+            })
+        };
+        // A slash can mean either a scope separator or part of a component
+        // name. Without bitmap resolution, only slash-free unscoped aliases
+        // are unambiguous; the other form stays on the canonical path.
+        let scoped = staged
             .iter()
             .find(|(row, model)| {
-                row["id"]["scope"] == scope
-                    && row["id"]["name"] == name
-                    && version.is_none_or(|version| {
-                        model["versions"][version].as_str() == model["head"].as_str()
-                    })
+                row["id"]["scope"]
+                    .as_str()
+                    .zip(row["id"]["name"].as_str())
+                    .is_some_and(|(scope, name)| format!("{scope}/{name}") == identity)
+                    && matching_version(model)
             });
+        let unscoped = if identity.contains('/') {
+            Vec::new()
+        } else {
+            staged
+                .iter()
+                .filter(|(row, model)| row["id"]["name"] == identity && matching_version(model))
+                .collect::<Vec<_>>()
+        };
+        let component = scoped.or_else(|| (unscoped.len() == 1).then(|| unscoped[0]));
+        if scoped.is_none() && unscoped.len() > 1 {
+            return Err(invalid("outbound ambiguous unscoped component"));
+        }
         let Some(component) = component else {
             return Err(invalid("outbound requested component is not staged"));
         };
@@ -301,4 +312,48 @@ fn collect(dir: &Path, model_hash: &str, model: &[u8], head: &str) -> io::Result
         return Err(invalid("outbound object budget"));
     }
     Ok(objects)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn staged(scope: &str, name: &str, hash: &str) -> (Value, Value) {
+        (
+            json!({"id":{"scope":scope,"name":name},"hash":hash}),
+            json!({"head":hash,"versions":{"1.0.0":hash}}),
+        )
+    }
+
+    #[test]
+    fn resolves_scoped_and_unscoped_staged_ids() {
+        let rows = vec![staged("scope.one", "one", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")];
+        for id in ["scope.one/one", "one", "one@1.0.0", "scope.one/one@1.0.0"] {
+            let chosen = requested(&[id.to_owned()], rows.clone()).unwrap();
+            assert_eq!(chosen[0].0["id"]["name"], "one");
+        }
+        assert!(requested(&["one@2.0.0".to_owned()], rows).is_err());
+    }
+
+    #[test]
+    fn unscoped_identity_must_be_unambiguous() {
+        let rows = vec![
+            staged("scope.one", "one", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+            staged("scope.two", "one", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"),
+        ];
+        assert!(requested(&["one".to_owned()], rows.clone()).is_err());
+        let chosen = requested(&["scope.two/one".to_owned()], rows).unwrap();
+        assert_eq!(chosen[0].0["id"]["scope"], "scope.two");
+    }
+
+    #[test]
+    fn scoped_id_wins_over_name_containing_slash() {
+        let rows = vec![
+            staged("scope.one", "one", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+            staged("scope.two", "scope.one/one", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"),
+        ];
+        let chosen = requested(&["scope.one/one".to_owned()], rows.clone()).unwrap();
+        assert_eq!(chosen[0].0["id"]["scope"], "scope.one");
+        assert!(requested(&["scope.one/missing".to_owned()], rows).is_err());
+    }
 }

@@ -29,6 +29,7 @@ export async function readRustWorkspaceOutbound(
         globalRemotesFile: path.join(GLOBAL_CONFIG, GLOBAL_REMOTES),
         globalConfigDir: GLOBAL_CONFIG,
         nodeExecutable: process.execPath,
+        bitDir: __dirname,
         bitVersion: getBitVersion(),
         bitmapHistoryFileId: currentDateAndTimeToFileName(),
         clientId,
@@ -42,12 +43,39 @@ export async function readRustWorkspaceOutbound(
         prepared.owner !== 'rust' ||
         typeof prepared.token !== 'string' ||
         !prepared.token ||
-        typeof prepared.nothingToExport !== 'boolean'
+        typeof prepared.nothingToExport !== 'boolean' ||
+        typeof prepared.fileRemote !== 'boolean' ||
+        !Array.isArray(prepared.scopes) ||
+        prepared.scopes.some((scope: unknown) => typeof scope !== 'string' || !scope)
       )
         throw new Error('native outbound prepare receipt');
+      if (prepared.fileRemote) {
+        const { ExportPersist } = await import('@teambit/scope.remote-actions');
+        if (ExportPersist.onPutHook) return undefined;
+      }
       await beforeCommit?.();
       committing = true;
-      const applied = await request({ kind: 'commandOutboundApply', token: prepared.token });
+      let applied;
+      try {
+        applied = await request({ kind: 'commandOutboundApply', token: prepared.token });
+      } catch (error) {
+        const message = (error as Error).message;
+        if (message.startsWith('outbound validate failed: ')) {
+          loader.start('verifying that objects can be merged on the remotes...');
+          throw new Error(message.slice('outbound validate failed: '.length));
+        }
+        const persist = /^outbound persist failed: ([^:]+): ([\s\S]*)$/.exec(message);
+        if (persist) {
+          loader.start('verifying that objects can be merged on the remotes...');
+          for (const scope of prepared.scopes) {
+            loader.start(`persisting data on the remote "${scope}"...`);
+            if (scope === persist[1]) break;
+          }
+          const { PersistFailed } = await import('@teambit/legacy.scope');
+          throw new PersistFailed([persist[1]], { [persist[1]]: persist[2] });
+        }
+        throw error;
+      }
       if (
         !applied ||
         applied.token !== prepared.token ||
@@ -56,56 +84,31 @@ export async function readRustWorkspaceOutbound(
       )
         throw new Error('native outbound pending receipt');
       if (applied.pending === Boolean(prepared.nothingToExport)) throw new Error('native outbound empty state changed');
-      let exportedIds: string[] = [];
+      if (
+        !Array.isArray(applied.scopes) ||
+        applied.scopes.some((scope: unknown) => typeof scope !== 'string' || !scope) ||
+        typeof applied.clientId !== 'string' ||
+        applied.clientId !== clientId ||
+        !Number.isSafeInteger(applied.objectCount) ||
+        applied.objectCount < (applied.pending ? 1 : 0)
+      )
+        throw new Error('native outbound remote receipt');
       if (applied.pending) {
-        if (
-          typeof applied.scope !== 'string' ||
-          !applied.scope ||
-          typeof applied.remoteHost !== 'string' ||
-          !/^(file|https?):\/\//.test(applied.remoteHost) ||
-          typeof applied.clientId !== 'string' ||
-          applied.clientId !== clientId ||
-          !Number.isSafeInteger(applied.objectCount) ||
-          applied.objectCount < 1
-        )
-          throw new Error('native outbound remote receipt');
-        const { Remote } = await import('@teambit/scope.remotes/dist/remote.js');
-        const remote = new Remote(applied.remoteHost, applied.scope);
         loader.start('verifying that objects can be merged on the remotes...');
-        try {
-          await remote.action('ExportValidate', { clientId, isResumingExport: true });
-        } catch (error) {
-          await remote.action('RemovePendingDir', { clientId });
-          throw error;
-        }
-        loader.start(`persisting data on the remote "${applied.scope}"...`);
-        let lastErrMsg = '';
-        let persisted = false;
-        for (let attempt = 0; attempt < 3; attempt += 1) {
-          try {
-            // eslint-disable-next-line no-await-in-loop
-            exportedIds = await remote.action<{ clientId: string }, string[]>('ExportPersist', { clientId });
-            persisted = true;
-            break;
-          } catch (error: any) {
-            lastErrMsg = error.message;
-          }
-        }
-        if (!persisted) {
-          const { PersistFailed } = await import('@teambit/legacy.scope');
-          throw new PersistFailed([applied.scope], { [applied.scope]: lastErrMsg });
-        }
-        if (!Array.isArray(exportedIds) || exportedIds.some((id) => typeof id !== 'string'))
-          throw new Error('native outbound persisted identities');
+        for (const scope of applied.scopes) loader.start(`persisting data on the remote "${scope}"...`);
       }
-      const finalized = await request({ kind: 'commandOutboundFinalize', token: prepared.token, exportedIds });
+      const finalized = await request({ kind: 'commandOutboundFinalize', token: prepared.token });
       if (finalized?.applied !== true) throw new Error('native outbound finalize receipt');
       const published = validateRustOutboundReceipt(finalized);
       if (published.token !== prepared.token) throw new Error('native outbound publication changed');
       const report = await formatRustWorkspaceOutbound(published, options);
       return report;
     },
-    () => committing
+    () => committing,
+    (response, input) =>
+      'kind' in input && String(input.kind).startsWith('commandOutbound')
+        ? new Error(response.error ?? 'native outbound request declined')
+        : undefined
   );
 }
 
