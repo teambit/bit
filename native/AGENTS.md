@@ -3,7 +3,23 @@
 `native/` is a Cargo workspace that builds `bit`, a Rust CLI that runs some commands natively and
 delegates everything else to the Node.js Bit CLI. Read [docs/rust-cli.md](../docs/rust-cli.md)
 before changing a command: it lists every native command, what it declines, and how it finds the
-Node.js CLI.
+Node.js CLI. The repository-wide guide ([../CLAUDE.md](../CLAUDE.md)) applies too; this file
+specializes it for the Rust code.
+
+## Behavior policy
+
+The Node.js CLI defines Bit's behavior; a native command is a faster implementation of it.
+
+1. **Match observable behavior, not structure.** What must match is what a user or a tool can
+   observe: stdout and stderr, colors, exit codes, the files written (the workspace, `.bit`,
+   remote scopes) and the order of everything printed. Mirroring the TypeScript decomposition is
+   a convenience for cross-referencing, not a requirement.
+2. **New behavior belongs to the Node.js CLI first.** A native command does not add flags,
+   output or features the Node.js CLI lacks. When the Node.js CLI changes, the port follows it.
+3. **Bugs in Bit are reproduced, not fixed, in the port.** If the Node.js CLI behaves oddly (for
+   example, `bit export <id>` in 2.2.94 reports "nothing to export" after exporting), either
+   reproduce it or decline that input, and point it out; fixing it is a Node.js change.
+4. If the intended behavior is unclear or looks wrong, stop and ask rather than guessing.
 
 ## Scope: never change the Node.js CLI
 
@@ -56,8 +72,31 @@ Parity is checked against a released Node.js CLI, not against this repository's 
 - Oracle tests that run the Node.js CLI's own functions are opt-in:
   `BIT_TEST_SNAPSHOT_CLI=<@teambit/bit installation> cargo test`.
 
-Name the Node.js behavior a port reproduces in its doc comment (`StatusMain.status`,
-`ExportCmd.report`, …), and describe what the code does, not how an earlier integration did it.
+### Tests
+
+- Prefer unit tests next to the code (`<module>/<module>_tests.rs`) and integration tests in
+  `cli/tests/` with a stub Node.js CLI.
+- No tolerant tests: a test that needs `node` or `git` calls it and lets the missing tool fail
+  the test; never probe for it and `return` early. The oracle tests above are the one opt-in
+  set, selected by `BIT_TEST_SNAPSHOT_CLI`, not by probing. Gate platform-only tests with
+  `#[cfg(...)]` or `#[cfg_attr(..., ignore = "...")]` so the report shows them.
+- When temporarily breaking an implementation to prove a test catches the regression, revert
+  with `git restore <file>`, never by moving a saved copy back: Cargo's freshness check is
+  mtime-based, and a stale binary makes later runs fail in impossible-looking ways. If test
+  outcomes flip with no code change, `touch` the source file and rerun first.
+
+## Style
+
+- Warnings are errors (Clippy's pedantic and nursery groups, the perfectionist lints). When a
+  lint must be suppressed, use `#[expect(lint, reason = "…")]` with the specific reason, never a
+  bare `#[allow(...)]`; split a function into steps instead of suppressing a size lint.
+- No `unsafe` without a `// SAFETY:` comment stating the invariant, and a reason it is needed.
+- No star imports of modules this workspace owns (`use super::*`); external preludes are fine.
+- Doc comments (`///`, `//!`) state the contract. Name the Node.js behavior a port reproduces
+  (`StatusMain.status`, `ExportCmd.report`, …) and describe what the code does, not how an
+  earlier integration did it. Put implementation-only rationale in `//` comments, and do not
+  restate in prose what a test already shows.
+- Prefer renaming or extracting a helper over a comment that translates the code.
 
 ## Checks
 
@@ -72,9 +111,31 @@ cargo test --locked --workspace --no-fail-fast
 ```
 
 `node ../scripts/rust/prepare-pnpm-engine.mjs` prepares pnpm's engine sources once (CI runs it
-before building). The perfectionist lints bound function size, nesting and local names: split a
-function into steps rather than allowing a lint. Prefer unit tests next to the code
-(`<module>/<module>_tests.rs`) and integration tests in `cli/tests/` with a stub Node.js CLI.
+before building). A test failure that also fails on the base branch is reported as such, never
+hidden.
 
 When a command's native coverage changes, update its row in the native commands table of
 `docs/rust-cli.md`.
+
+## Dependencies
+
+Check `[workspace.dependencies]` and the crates already in `Cargo.lock` before adding one, and
+add a dependency to the crate that needs it, not to a shared crate. Do not add a third-party
+crate the workspace does not already use without a human's approval. pnpm's engine crates are
+pinned to one pnpm commit in `Cargo.toml`; bump them together, never one at a time.
+
+## Commits and pull requests
+
+- Conventional Commits with the `rust` scope: `feat(rust): native bit lane list`,
+  `fix(rust): …`, `ci(rust): …`.
+- Keep commits focused: a port does not also refactor or reformat unrelated code.
+- A pull request says what was verified against the Node.js CLI and how (fixtures, flags,
+  masked fields), and what still declines.
+
+## Things not to do
+
+- Do not change files outside the Rust CLI's paths (see Scope), even to make a port easier.
+- Do not make a native command print or write something the Node.js CLI would not.
+- Do not decline after the first write, or retry a write by delegating to the Node.js CLI.
+- Do not disable lints, tests or CI checks (including `Rust scope`) to make a pull request
+  green.
