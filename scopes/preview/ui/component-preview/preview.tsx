@@ -242,12 +242,9 @@ export function ComponentPreview({
     heightReportsRef.current = [];
     viewportSizedContentRef.current = undefined;
   }, [url]);
-  // the bottom padding goes on the wrapper, outside the iframe. inside the iframe it would grow the viewport,
-  // which content sized to the viewport (e.g. min-height: 100vh) reports back as new height on every report.
-  const bottomPadding = isScaling && !forceHeight ? innerBottomPadding : 0;
   // const currentHeight = fullContentHeight ? '100%' : height || 1024;
   const containerWidth = containerRef.current?.offsetWidth || 0;
-  const containerHeight = Math.max((containerRef.current?.offsetHeight || 0) - bottomPadding, 0);
+  const containerHeight = containerRef.current?.offsetHeight || 0;
   const currentWidth = fullContentHeight ? '100%' : width || 1280;
   const legacyCurrentWidth = '100%';
   const targetWidth = typeof currentWidth === 'string' ? currentWidth : Math.max(currentWidth, containerWidth);
@@ -258,11 +255,7 @@ export function ComponentPreview({
   const isWaitingForSize = width === 0 && isScaling && !fullContentHeight && !forceVisible;
 
   return (
-    <div
-      ref={containerRef}
-      className={classNames(styles.preview, className)}
-      style={{ height: forceHeight, paddingBottom: bottomPadding || undefined }}
-    >
+    <div ref={containerRef} className={classNames(styles.preview, className)} style={{ height: forceHeight }}>
       <iframe
         {...rest}
         sandbox={sandbox || undefined}
@@ -271,7 +264,7 @@ export function ComponentPreview({
         inert={isWaitingForSize}
         style={{
           ...style,
-          height: forceHeight || (isScaling ? finalHeight : legacyIframeHeight),
+          height: forceHeight || (isScaling ? finalHeight + innerBottomPadding : legacyIframeHeight),
           width: isScaling ? targetWidth : legacyCurrentWidth,
           // hide with opacity, not visibility. chrome stops rendering a cross-site iframe with visibility: hidden,
           // so its ResizeObserver never fires and the size report this waits for never arrives.
