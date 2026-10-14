@@ -1,16 +1,7 @@
 import { parse } from 'comment-json';
-import { DetectorHook, type DependencyDetector, type FileContext } from '@teambit/dependency-resolver';
-
-// Captured during module initialization before consumers can patch the prototype.
-let nativePredicate: DependencyDetector['isSupported'];
+import type { DependencyDetector, FileContext } from '@teambit/dependency-resolver';
 
 export class EnvJsoncDetector implements DependencyDetector {
-  constructor() {
-    if (new.target === EnvJsoncDetector) {
-      DetectorHook.registerNativeEnvJsoncDetector(this, EnvJsoncDetector.prototype, nativePredicate);
-    }
-  }
-
   isSupported(context: FileContext): boolean {
     return context.filename.endsWith('env.jsonc');
   }
@@ -26,5 +17,3 @@ export class EnvJsoncDetector implements DependencyDetector {
     return [parsed.extends];
   }
 }
-
-nativePredicate = EnvJsoncDetector.prototype.isSupported;

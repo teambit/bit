@@ -1,5 +1,5 @@
 //! The merge's snapshot results: `mergeSnapResults` and `mergeSnapError`
-//! as `hydrateRustWorkspaceCommand` validates them, and the snaps section
+//! validated, and the snaps section
 //! of `mergeReport`.
 
 use super::rows;

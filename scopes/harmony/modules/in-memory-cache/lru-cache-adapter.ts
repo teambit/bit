@@ -1,7 +1,6 @@
 import { LRUCache } from 'lru-cache';
 import type { InMemoryCache, CacheOptions } from './in-memory-cache';
 import { WeakValues } from './weak-values';
-import { types } from 'util';
 
 export class LRUCacheAdapter<T extends {} = any> implements InMemoryCache<T> {
   private cache: LRUCache<string, T>;
@@ -70,109 +69,5 @@ export class LRUCacheAdapter<T extends {} = any> implements InMemoryCache<T> {
     const keys = Array.from(this.cache.keys());
     if (!this.weakValues) return keys;
     return Array.from(new Set([...keys, ...this.weakValues.keys()]));
-  }
-}
-
-const nativeAdapterMethods = ['get', 'set'].map((name) => [name, LRUCacheAdapter.prototype[name]] as const);
-const nativeLruMethods = ['get', 'set', 'has', 'delete'].map((name) => [name, LRUCache.prototype[name]] as const);
-const nativeDump = LRUCache.prototype.dump;
-const nativeUnshift = Array.prototype.unshift;
-
-/** Read object aliases without changing the LRU order or observing expiry callbacks. */
-export function captureRustCacheEntries(cache: InMemoryCache<{}>, keys?: string[]): Array<[string, object]> | undefined {
-  if (keys) {
-    const values = lookupRustCacheEntries(cache, keys);
-    return values?.flatMap((entry, index) => entry.value ? [[keys[index], entry.value] as [string, object]] : []);
-  }
-  if (types.isProxy(cache) || !canReadCacheNatively(cache)) return undefined;
-  const inner = Object.getOwnPropertyDescriptor(cache, 'cache')?.value;
-  if (
-    types.isProxy(inner) ||
-    (Object.getOwnPropertyDescriptor(inner, 'dump') || Object.getOwnPropertyDescriptor(LRUCache.prototype, 'dump'))?.value !== nativeDump ||
-    Object.getOwnPropertyDescriptor(Array.prototype, 'unshift')?.value !== nativeUnshift ||
-    Object.getOwnPropertyDescriptor(inner, 'ttl')?.value !== 0
-  ) return undefined;
-  const dumped = nativeDump.call(inner);
-  if (dumped.length > 4096) return undefined;
-  const result: Array<[string, object]> = [];
-  for (let index = 0; index < dumped.length; index++) {
-    const [key, entry] = dumped[index];
-    if (typeof key !== 'string' || entry.ttl || !entry.value || typeof entry.value !== 'object') return undefined;
-    result[index] = [key, entry.value];
-  }
-  return result;
-}
-/** Native metadata readers must not call custom cache hooks speculatively. */
-export function canReadCacheNatively(cache: InMemoryCache<{}>): boolean {
-  if (!cache || Object.getPrototypeOf(cache) !== LRUCacheAdapter.prototype) return false;
-  const inner = Object.getOwnPropertyDescriptor(cache, 'cache')?.value;
-  const weak = Object.getOwnPropertyDescriptor(cache, 'weakValues');
-  return Boolean(
-    inner &&
-      Object.getPrototypeOf(inner) === LRUCache.prototype &&
-      (!weak || ('value' in weak && !weak.value)) &&
-      nativeAdapterMethods.every(
-        ([name, method]) =>
-          (
-            Object.getOwnPropertyDescriptor(cache, name) ||
-            Object.getOwnPropertyDescriptor(LRUCacheAdapter.prototype, name)
-          )?.value === method
-      ) &&
-      nativeLruMethods.every(
-        ([name, method]) =>
-          (Object.getOwnPropertyDescriptor(inner, name) || Object.getOwnPropertyDescriptor(LRUCache.prototype, name))
-            ?.value === method
-      )
-  );
-}
-
-const nativeExpose = LRUCache.unsafeExposeInternals;
-const nativeMapGet = Map.prototype.get;
-
-/** Inspect one alias without promoting it or allocating a dump of the entire LRU. */
-export function lookupRustCacheEntry(cache: InMemoryCache<{}>, key: string): { value?: object } | undefined {
-  return lookupRustCacheEntries(cache, [key])?.[0];
-}
-
-/** Validate the shared LRU once, then inspect only the requested aliases without promotion. */
-function lookupRustCacheEntries(cache: InMemoryCache<{}>, keys: string[]): Array<{ value?: object }> | undefined {
-  if (
-    types.isProxy(cache) ||
-    !canReadCacheNatively(cache) ||
-    Object.getOwnPropertyDescriptor(LRUCache, 'unsafeExposeInternals')?.value !== nativeExpose ||
-    Object.getOwnPropertyDescriptor(Map.prototype, 'get')?.value !== nativeMapGet
-  )
-    return undefined;
-  const inner = Object.getOwnPropertyDescriptor(cache, 'cache')?.value;
-  if (!inner || types.isProxy(inner)) return undefined;
-  try {
-    // This dependency's explicit introspection API exposes only private storage here.
-    // Any TTL tracking stays canonical, even when its public default ttl is zero.
-    const fields = nativeExpose(inner);
-    if (
-      fields.ttls ||
-      types.isProxy(fields.keyMap) ||
-      Object.getPrototypeOf(fields.keyMap) !== Map.prototype ||
-      Reflect.ownKeys(fields.keyMap).length ||
-      !Array.isArray(fields.valList) ||
-      types.isProxy(fields.valList)
-    )
-      return undefined;
-    const result: Array<{ value?: object }> = [];
-    for (const key of keys) {
-      const index = nativeMapGet.call(fields.keyMap, key);
-      if (index === undefined) { result.push({}); continue; }
-      if (!Number.isSafeInteger(index) || index < 0) return undefined;
-      const entry = Object.getOwnPropertyDescriptor(fields.valList, String(index));
-      if (!entry || !('value' in entry)) return undefined;
-      const value = entry.value;
-      if (value === undefined) { result.push({}); continue; }
-      // Background fetch promises have separate alias semantics; never inspect their properties.
-      if (!value || typeof value !== 'object' || types.isPromise(value)) return undefined;
-      result.push({ value });
-    }
-    return result;
-  } catch {
-    return undefined;
   }
 }

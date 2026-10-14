@@ -145,7 +145,7 @@ struct Plan {
     options: Options,
 }
 
-/// `readRustMiniStatus`: prepare, then scan and finish each component, then
+/// Prepare, then scan and finish each component, then
 /// complete. `None` when the workspace is outside the engine's limits.
 fn summarize(root: &Path, home: &Path) -> io::Result<Option<Summary>> {
     let mut engine = Engine::new()?;

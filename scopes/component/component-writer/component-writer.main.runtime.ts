@@ -22,7 +22,7 @@ import type { ComponentMap } from '@teambit/legacy.bit-map';
 import { isWorkspaceMapFile, WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import { isWorkspaceRootComponent } from '@teambit/workspace-root';
 import { COMPONENT_CONFIG_FILE_NAME, WORKSPACE_JSONC } from '@teambit/legacy.constants';
-import { DataToPersist, withWorkspacePersistence } from '@teambit/component.sources';
+import { DataToPersist } from '@teambit/component.sources';
 import type { ConfigMergerMain, WorkspaceConfigUpdateResult } from '@teambit/config-merger';
 import { ConfigMergerAspect } from '@teambit/config-merger';
 import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
@@ -78,10 +78,6 @@ export class ComponentWriterMain {
   }
 
   async writeMany(opts: ManyComponentsWriterParams): Promise<ComponentWriterResults> {
-    return withWorkspacePersistence(() => this.writeManyWithinPersistence(opts));
-  }
-
-  private async writeManyWithinPersistence(opts: ManyComponentsWriterParams): Promise<ComponentWriterResults> {
     if (!opts.components.length) return {};
     this.logger.debug('writeMany, started');
     await this.writeComponentsFiles(opts);
@@ -107,10 +103,6 @@ export class ComponentWriterMain {
    * dep install, compile. Runs once per import, not per batch.
    */
   async finalizeWrite(opts: ManyComponentsWriterParams): Promise<ComponentWriterResults> {
-    return withWorkspacePersistence(() => this.finalizeWithinPersistence(opts));
-  }
-
-  private async finalizeWithinPersistence(opts: ManyComponentsWriterParams): Promise<ComponentWriterResults> {
     if (!opts.components.length) return {};
     let installationError: Error | undefined;
     let compilationError: Error | undefined;

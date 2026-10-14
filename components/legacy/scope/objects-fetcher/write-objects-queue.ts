@@ -4,26 +4,16 @@ import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
 export class WriteObjectsQueue {
   private queue: PQueue;
   addedHashes: string[] = [];
-  private seenHashes = new Set<string>();
   added = 0;
   constructor(concurrency = concurrentIOLimit()) {
     this.queue = new PQueue({ concurrency, autoStart: true });
   }
   addImmutableObject<T>(hash: string, fn: () => Promise<T | null>) {
-    if (!this.reserve(hash)) return null;
-    return this.add(fn);
-  }
-  reserveNativeSource(hash: string): boolean {
-    if (!this.reserve(hash)) return false;
-    this.added += 1;
-    this.queue.emit('add');
-    return true;
-  }
-  private reserve(hash: string): boolean {
-    if (this.seenHashes.has(hash)) return false;
-    this.seenHashes.add(hash);
+    if (this.addedHashes.includes(hash)) {
+      return null;
+    }
     this.addedHashes.push(hash);
-    return true;
+    return this.add(fn);
   }
   getQueue() {
     return this.queue;

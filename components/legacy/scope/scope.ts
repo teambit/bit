@@ -23,7 +23,6 @@ import {
   SCOPE_JSON,
   PENDING_OBJECTS_DIR,
 } from '@teambit/legacy.constants';
-import type { SourceFile } from '@teambit/component.sources';
 import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import type { Consumer } from '@teambit/legacy.consumer';
 import { UnexpectedPackageName } from '@teambit/legacy.consumer';
@@ -44,18 +43,7 @@ import type {
   ObjectItem,
   ObjectList,
 } from '@teambit/objects';
-import {
-  DependenciesGraph,
-  ModelComponent,
-  Symlink,
-  BitObject,
-  Ref,
-  Repository,
-  IndexType,
-  registerRustTransferClass,
-  registerRustSnapshotTransactionClass,
-  hasRustSnapshotTransactionClassFields,
-} from '@teambit/objects';
+import { DependenciesGraph, ModelComponent, Symlink, BitObject, Ref, Repository, IndexType } from '@teambit/objects';
 import type { RemovedObjects } from './removed-components';
 import { Tmp } from './repositories';
 import SourcesRepository from './repositories/sources';
@@ -541,21 +529,13 @@ once done, to continue working, please run "bit cc"`
   /**
    * throws if component was not found
    */
-  async getConsumerComponent(
-    id: ComponentID,
-    sourceFiles?: (version: Version) => SourceFile[] | undefined
-  ): Promise<Component> {
+  async getConsumerComponent(id: ComponentID): Promise<Component> {
     const modelComponent: ModelComponent = await this.getModelComponent(id);
     // $FlowFixMe version must be set
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const componentVersion = modelComponent.toComponentVersion(id.version);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const factory =
-      sourceFiles &&
-      hasRustSnapshotTransactionClassFields(componentVersion, 'CheckoutComponentVersion', ['component', 'version'])
-        ? sourceFiles
-        : undefined;
-    return factory ? componentVersion.toConsumer(this.objects, factory) : componentVersion.toConsumer(this.objects);
+    return componentVersion.toConsumer(this.objects);
   }
 
   async getManyConsumerComponents(ids: ComponentID[]): Promise<Component[]> {
@@ -851,7 +831,3 @@ export function pathHasAll(patterns: string[]): (absPath: string) => boolean {
     return state;
   };
 }
-
-registerRustTransferClass('Scope', Scope, ['getObjectItem']);
-
-registerRustSnapshotTransactionClass('MergeLegacyScope', Scope, ['onPostExport', 'scopeCache']);

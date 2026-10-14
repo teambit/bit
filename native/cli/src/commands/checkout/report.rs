@@ -11,7 +11,7 @@ use crate::commands::{
 use serde_json::Value;
 use std::io;
 
-/// `formatRustWorkspaceCommand(result, options)` for checkout.
+/// The checkout report of the engine's result.
 pub fn format(result: &Value, options: &Options, chalk: Chalk) -> io::Result<Report> {
     let results = hydrate(result)?;
     if results.snaps.is_some() || results.snap_error.is_some() {

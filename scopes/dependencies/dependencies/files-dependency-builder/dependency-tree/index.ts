@@ -3,13 +3,8 @@
  */
 import fs from 'fs';
 import debugFactory from 'debug';
-import cabinet, {
-  canUseRustCommonJS,
-  isRustCommonJSDependency,
-  registerRustCommonJSPath,
-  rustDependencyResolutionMode,
-} from '../filing-cabinet';
-import precinct, { isRustEligible } from '../precinct';
+import cabinet from '../filing-cabinet';
+import precinct from '../precinct';
 import Config from './Config';
 
 const debug = debugFactory('tree');
@@ -69,15 +64,11 @@ module.exports._getDependencies = async function (config) {
   const precinctOptions = config.detectiveConfig;
   precinctOptions.includeCore = false;
   precinctOptions.envDetectors = config.envDetectors;
-  // Keep session state out of shared detector options and legacy detective calls.
-  const extractionOptions = config.rustScannerSession
-    ? { ...precinctOptions, rustScannerSession: config.rustScannerSession }
-    : precinctOptions;
   // @ts-ignore
   delete precinct.ast;
 
   try {
-    dependenciesRaw = await precinct.paperwork(config.filename, extractionOptions);
+    dependenciesRaw = await precinct.paperwork(config.filename, precinctOptions);
   } catch (e: any) {
     debug(`error getting dependencies: ${e.message}`);
     debug(e.stack);
@@ -96,22 +87,6 @@ module.exports._getDependencies = async function (config) {
   const pathMapDependencies = [];
   const pathMapFile = { file: config.filename };
 
-  let nativeResolved: Map<string, string> | undefined;
-  let nativeMode: 'commonjs' | 'typescript5.9' = 'commonjs';
-  if (config.rustScannerSession && canUseRustCommonJS(config.filename, config)) {
-    nativeMode = rustDependencyResolutionMode(config.filename);
-    const candidates = dependencies.filter(
-      (dependency) =>
-        !isHttp(dependency) && (nativeMode === 'typescript5.9' || isRustCommonJSDependency(config.filename, dependency))
-    );
-    const resolved = await config.rustScannerSession.resolveDependencies?.(config.filename, candidates, nativeMode);
-    if (resolved && canUseRustCommonJS(config.filename, config)) {
-      nativeResolved = new Map();
-      resolved.forEach((result, index) => {
-        if (result) nativeResolved!.set(candidates[index], result);
-      });
-    }
-  }
   dependencies.forEach((dependency) => processDependency(dependency));
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   pathMapFile.dependencies = pathMapDependencies;
@@ -141,10 +116,7 @@ module.exports._getDependencies = async function (config) {
     }
     let result;
     try {
-      result = nativeResolved?.get(dependency);
-      if (result) {
-        if (nativeMode !== 'typescript5.9' || !dependency.startsWith('.')) registerRustCommonJSPath(config.filename);
-      } else result = cabinet(cabinetParams);
+      result = cabinet(cabinetParams);
     } catch (err: any) {
       debug(`error resolving dependencies: ${err.message}`);
       debug(err.stack);
@@ -230,18 +202,6 @@ async function traverse(config) {
       missing: config.nonExistent[dependency],
       error: config.errors[dependency],
     };
-    if (config.rustScannerSession) {
-      // Resolution and filters have already run in legacy order. Only stage accepted edges.
-      const nextFiles = dependencies.filter(
-        (filename) =>
-          !config.visited[filename] &&
-          isRustEligible(filename, {
-            ...localConfig.detectiveConfig,
-            envDetectors: localConfig.envDetectors,
-          })
-      );
-      await config.rustScannerSession.prefetch(nextFiles);
-    }
     stack.push(...dependencies);
   }
 

@@ -1,6 +1,5 @@
-//! The workspace commands the Node.js glue ran through
-//! `readRustWorkspaceCommand` (`rust-workspace-command.ts`): the engine
-//! prepares and plans, the status capture supplies the current components,
+//! The workspace commands (checkout, merge, lane merge): the engine prepares
+//! and plans, the status capture supplies the current components,
 //! and the report is formatted before anything is written.
 //!
 //! Until the commit starts, every failure leaves the command to the Node.js

@@ -1,22 +1,10 @@
 import vinylFile from 'vinyl-file';
-import fs from 'fs-extra';
-import path from 'path';
 import { logger } from '@teambit/legacy.logger';
-import {
-  registerRustSnapshotTransactionClass,
-  registerRustSnapshotFunctionReference,
-  registerRustSnapshotFunctions,
-  type Repository,
-  type SourceFileModel,
-} from '@teambit/objects';
+import type { Repository, SourceFileModel } from '@teambit/objects';
 import type { PathOsBased } from '@teambit/toolbox.path.path';
 import FileSourceNotFound from './file-source-not-found';
 import AbstractVinyl from './abstract-vinyl';
-import * as definingSourceFile from './source-file';
 import { forEach } from 'lodash';
-import { inheritRustWorkspaceFileSnapshot } from './rust-workspace-identity';
-import { inheritRustHistorySourceSnapshot } from './rust-checkout-source';
-import { cloneRustCheckoutPlanSourceFile, registerRustCheckoutPlanSourceClass } from './rust-checkout-plan-source';
 
 export default class SourceFile extends AbstractVinyl {
   static load(
@@ -63,55 +51,7 @@ export default class SourceFile extends AbstractVinyl {
   }
 
   clone(): this {
-    const planned = cloneRustCheckoutPlanSourceFile(this);
-    if (planned) return planned as this;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const clone = new SourceFile(this);
-    inheritRustWorkspaceFileSnapshot(this, clone);
-    inheritRustHistorySourceSnapshot(this, clone);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return clone;
+    return new SourceFile(this);
   }
 }
-
-registerRustCheckoutPlanSourceClass(SourceFile);
-
-const defaultSourceFileLoad = SourceFile.load;
-registerRustSnapshotTransactionClass('SourceFile', SourceFile);
-const defaultReadSync = vinylFile.readSync;
-const defaultModelLoad = SourceFile.loadFromSourceFileModel;
-const defaultAbstractPrototype = Object.getPrototypeOf(SourceFile.prototype);
-/** Native reads must not bypass a custom SourceFile or Vinyl reader. */
-export function canReadWorkspaceFilesNatively(): boolean {
-  return (
-    Object.getOwnPropertyDescriptor(definingSourceFile, 'default')?.value === SourceFile &&
-    Object.getOwnPropertyDescriptor(SourceFile, 'load')?.value === defaultSourceFileLoad &&
-    Object.getOwnPropertyDescriptor(SourceFile, 'loadFromSourceFileModel')?.value === defaultModelLoad &&
-    Object.getOwnPropertyDescriptor(vinylFile, 'readSync')?.value === defaultReadSync &&
-    Object.getPrototypeOf(SourceFile.prototype) === defaultAbstractPrototype &&
-    ['contents', 'path', 'relative', 'base', 'stat'].every(
-      (name) => !Object.hasOwn(SourceFile.prototype, name) && !Object.hasOwn(defaultAbstractPrototype, name)
-    )
-  );
-}
-
-/** Preserve Vinyl metadata and public missing-file errors after a native body read. */
-export function sourceFileFromWorkspaceRead(
-  read: { path: string; contents: Buffer },
-  base: string,
-  consumerPath: string,
-  extendedProps: Record<string, any> = {}
-): SourceFile {
-  let stat;
-  try {
-    stat = fs.statSync(read.path);
-  } catch {
-    return SourceFile.load(read.path, base, consumerPath, extendedProps);
-  }
-  const file = new SourceFile({ base, cwd: consumerPath, path: read.path, contents: read.contents, stat });
-  for (const [key, value] of Object.entries(extendedProps)) file[key] = value;
-  return file;
-}
-
-registerRustSnapshotFunctionReference('MergeWorkspaceFileReadEligibility', canReadWorkspaceFilesNatively);
-registerRustSnapshotFunctions('MergeSourceFilePaths', path, ['relative', 'normalize']);

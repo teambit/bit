@@ -1,4 +1,4 @@
-//! The merge half of `parseRustWorkspaceCommand`: the unambiguous subset of
+//! The native merge grammar: the unambiguous subset of
 //! `bit merge [component-pattern]` that native planning accepts.
 
 use serde_json::{Value, json};

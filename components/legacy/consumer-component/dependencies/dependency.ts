@@ -1,4 +1,3 @@
-import { registerRustSnapshotTransactionClass } from '@teambit/objects';
 import { cloneDeep } from 'lodash';
 import { ComponentID } from '@teambit/component-id';
 import type { PathLinux } from '@teambit/toolbox.path.path';
@@ -85,5 +84,3 @@ export default class Dependency {
     };
   }
 }
-
-registerRustSnapshotTransactionClass('Dependency', Dependency);

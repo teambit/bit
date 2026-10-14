@@ -3,7 +3,7 @@ import type { ApplyVersionResult, WorkspaceConfigUpdateResult, WorkspaceDepsUpda
 import chalk from 'chalk';
 import { compact } from 'lodash';
 import isBinaryPath from 'is-binary-path';
-import { errorSymbol, formatTitle, joinSections } from '@teambit/cli/dist/output-formatter.js';
+import { errorSymbol, formatTitle, joinSections } from '@teambit/cli';
 import { FileStatus } from './merge-version';
 import { FILE_CHANGES_CHECKOUT_MSG } from '@teambit/legacy.constants';
 

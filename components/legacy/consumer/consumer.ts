@@ -1,8 +1,6 @@
-import { currentDateAndTimeToFileName } from './bitmap-history-file-id';
-export { currentDateAndTimeToFileName } from './bitmap-history-file-id';
 import fs from 'fs-extra';
 import * as path from 'path';
-import lodash, { compact, isEmpty, sortBy } from 'lodash';
+import { compact, isEmpty, sortBy } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { DEFAULT_LANE, LaneId } from '@teambit/lane-id';
 import type { BitIdStr } from '@teambit/legacy-bit-id';
@@ -20,18 +18,7 @@ import {
 import { logger } from '@teambit/legacy.logger';
 import { NoHeadNoVersion, Scope, ComponentNotFound, ScopeNotFound } from '@teambit/legacy.scope';
 import type { Lane, ModelComponent } from '@teambit/objects';
-import {
-  Version,
-  compareRustInspectionVersions,
-  registerRustSnapshotFunctions,
-  hasRustSnapshotFunctions,
-  registerRustSnapshotFunctionReference,
-  hasRustSnapshotFunctionReference,
-  hasRustSnapshotTransactionClass,
-  hasRustSnapshotTransactionClassFields,
-  registerRustSnapshotTransactionClass,
-} from '@teambit/objects';
-import type { SourceFile } from '@teambit/component.sources';
+import { Version } from '@teambit/objects';
 // import { generateRandomStr } from '@teambit/toolbox.string.random';
 import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
 import format from 'string-format';
@@ -48,7 +35,7 @@ import type { NextVersion } from '@teambit/legacy.bit-map';
 import { BitMap, isWorkspaceMapFile, WORKSPACE_ROOT_DIR } from '@teambit/legacy.bit-map';
 import type { Dependencies, ComponentLoadOptions, LoadManyResult } from '@teambit/legacy.consumer-component';
 import { ConsumerComponent as Component, ComponentLoader } from '@teambit/legacy.consumer-component';
-import { PackageJsonFile, withRustWorkspaceInspection } from '@teambit/component.sources';
+import { PackageJsonFile } from '@teambit/component.sources';
 import type { ILegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
 import { LegacyWorkspaceConfig } from '@teambit/legacy.consumer-config';
 import { getWorkspaceInfo } from '@teambit/workspace.modules.workspace-locator';
@@ -264,11 +251,7 @@ export default class Consumer {
     });
   }
 
-  async loadComponentFromModelImportIfNeeded(
-    id: ComponentID,
-    throwIfNotExist = true,
-    sourceFiles?: (version: Version) => SourceFile[] | undefined
-  ): Promise<Component> {
+  async loadComponentFromModelImportIfNeeded(id: ComponentID, throwIfNotExist = true): Promise<Component> {
     const scopeComponentsImporter = this.scope.scopeImporter;
     const getModelComponent = async (): Promise<ModelComponent> => {
       if (throwIfNotExist) return this.scope.getModelComponent(id);
@@ -286,14 +269,7 @@ export default class Consumer {
     }
 
     const compVersion = modelComponent.toComponentVersion(id.version);
-    const forwardedSourceFiles =
-      sourceFiles &&
-      hasRustSnapshotTransactionClassFields(compVersion, 'CheckoutComponentVersion', ['component', 'version'])
-        ? sourceFiles
-        : undefined;
-    const consumerComp = forwardedSourceFiles
-      ? await compVersion.toConsumer(this.scope.objects, forwardedSourceFiles)
-      : await compVersion.toConsumer(this.scope.objects);
+    const consumerComp = await compVersion.toConsumer(this.scope.objects);
     return consumerComp;
   }
 
@@ -330,15 +306,6 @@ export default class Consumer {
    * a Version object. Once this is done, we have two Version objects, and we can compare their hashes
    */
   async isComponentModified(componentFromModel: Version, componentFromFileSystem: Component): Promise<boolean> {
-    const action = () =>
-      Consumer.prototype.isComponentModifiedWithinInspection.call(this, componentFromModel, componentFromFileSystem);
-    return process.env.BIT_RUST_CLIENT_VCS === 'on' ? withRustWorkspaceInspection(action) : action();
-  }
-
-  private async isComponentModifiedWithinInspection(
-    componentFromModel: Version,
-    componentFromFileSystem: Component
-  ): Promise<boolean> {
     if (!(componentFromModel instanceof Version)) {
       throw new TypeError(
         `isComponentModified expects componentFromModel to be Version, got ${typeof componentFromModel}`
@@ -352,29 +319,6 @@ export default class Consumer {
     if (typeof componentFromFileSystem._isModified === 'undefined') {
       componentFromFileSystem.log = componentFromModel.log; // ignore the log, it's irrelevant for the comparison
       const { version } = await this.scope.sources.consumerComponentToVersion(componentFromFileSystem);
-      if (
-        process.env.BIT_RUST_CLIENT_VCS === 'on' &&
-        canInspectConsumerNatively() &&
-        canInspectComponentCache(componentFromFileSystem)
-      ) {
-        const componentMap = Object.getOwnPropertyDescriptor(componentFromFileSystem, 'componentMap')?.value;
-        const rootDir = componentMap && Object.getOwnPropertyDescriptor(componentMap, 'rootDir')?.value;
-        const modified = await compareRustInspectionVersions(
-          componentFromModel,
-          version,
-          rootDir === WORKSPACE_ROOT_DIR,
-          'modified',
-          () =>
-            canInspectConsumerNatively() &&
-            canInspectComponentCache(componentFromFileSystem) &&
-            Object.getOwnPropertyDescriptor(componentFromFileSystem, 'componentMap')?.value === componentMap &&
-            (!componentMap || Object.getOwnPropertyDescriptor(componentMap, 'rootDir')?.value === rootDir)
-        );
-        if (modified !== undefined) {
-          componentFromFileSystem._isModified = modified;
-          return modified;
-        }
-      }
 
       // sometime dependencies from the FS don't have an exact version.
       const copyDependenciesVersionsFromModelToFS = (dependenciesFS: Dependencies, dependenciesModel: Dependencies) => {
@@ -470,36 +414,12 @@ export default class Consumer {
     componentFromModel: Version,
     componentFromFileSystem: Component
   ): Promise<boolean> {
-    const action = () =>
-      Consumer.prototype.isComponentSourceCodeModifiedWithinInspection.call(
-        this,
-        componentFromModel,
-        componentFromFileSystem
-      );
-    return process.env.BIT_RUST_CLIENT_VCS === 'on' ? withRustWorkspaceInspection(action) : action();
-  }
-
-  private async isComponentSourceCodeModifiedWithinInspection(
-    componentFromModel: Version,
-    componentFromFileSystem: Component
-  ): Promise<boolean> {
     if (componentFromFileSystem._isModified === false) {
       // we only check for "false". if it's "true", it can be dependency changes not necessarily component files changes
       return false;
     }
     componentFromFileSystem.log = componentFromModel.log; // in order to convert to Version object
     const { version } = await this.scope.sources.consumerComponentToVersion(componentFromFileSystem);
-
-    if (process.env.BIT_RUST_CLIENT_VCS === 'on' && canInspectConsumerNatively()) {
-      const modified = await compareRustInspectionVersions(
-        componentFromModel,
-        version,
-        false,
-        'sourceCode',
-        canInspectConsumerNatively
-      );
-      if (modified !== undefined) return modified;
-    }
 
     version.files = sortBy(version.files, 'relativePath');
     componentFromModel.files = sortBy(componentFromModel.files, 'relativePath');
@@ -723,8 +643,16 @@ export default class Consumer {
   }
 }
 
-registerRustSnapshotTransactionClass('CheckoutConsumer', Consumer);
-
+export function currentDateAndTimeToFileName() {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  const seconds = date.getSeconds();
+  return `${year}-${month}-${day}-${hours}-${minutes}-${seconds}`;
+}
 
 export async function getParsedHistoryMetadata(metadataPath: string): Promise<{ [fileId: string]: string }> {
   let fileContent: string | undefined;
@@ -771,36 +699,4 @@ function composeComponentPath(
   }
   const result = format(defaultDir, { name: bitId.fullName, scope, owner, scopeId: bitId.scope });
   return result;
-}
-
-registerRustSnapshotFunctions('InspectionConsumerLodash', lodash, ['sortBy']);
-registerRustSnapshotFunctionReference('InspectionConsumerSorter', sortObjectByKeys);
-registerRustSnapshotFunctionReference('InspectionWorkspaceMap', isWorkspaceMapFile);
-const inspectionDependencyFields = DEPENDENCIES_FIELDS.slice();
-function canInspectConsumerNatively(): boolean {
-  return (
-    !process.env.BIT_LOG &&
-    hasRustSnapshotFunctions(['InspectionConsumerLodash']) &&
-    hasRustSnapshotFunctionReference('InspectionConsumerSorter', sortObjectByKeys) &&
-    hasRustSnapshotFunctionReference('InspectionWorkspaceMap', isWorkspaceMapFile) &&
-    hasRustSnapshotTransactionClass(DEPENDENCIES_FIELDS, 'Array') &&
-    DEPENDENCIES_FIELDS.length === inspectionDependencyFields.length &&
-    inspectionDependencyFields.every(
-      (field, index) => Object.getOwnPropertyDescriptor(DEPENDENCIES_FIELDS, String(index))?.value === field
-    )
-  );
-}
-
-function canInspectComponentCache(component: Component): boolean {
-  if (!hasRustSnapshotTransactionClassFields(component, 'ConsumerComponent', ['componentMap', '_isModified']))
-    return false;
-  const cached = Object.getOwnPropertyDescriptor(component, '_isModified');
-  if (cached ? !cached.writable : !Object.isExtensible(component)) return false;
-  const map = Object.getOwnPropertyDescriptor(component, 'componentMap')?.value;
-  return (
-    !map ||
-    Boolean(
-      Object.getOwnPropertyDescriptor(map, 'rootDir') && 'value' in Object.getOwnPropertyDescriptor(map, 'rootDir')!
-    )
-  );
 }

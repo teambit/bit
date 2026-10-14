@@ -1,7 +1,6 @@
 import { v4 } from 'uuid';
 import { gte } from 'semver';
-import lodash, { cloneDeep, isEqual, pickBy } from 'lodash';
-import { registerRustSnapshotFunctions } from '../objects/rust-snapshot-guards';
+import { cloneDeep, isEqual, pickBy } from 'lodash';
 import { BitError } from '@teambit/bit-error';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { isSnap } from '@teambit/component-version';
@@ -412,5 +411,3 @@ export default class Lane extends BitObject {
     });
   }
 }
-
-registerRustSnapshotFunctions('SnapshotLaneLodash', lodash, ['pickBy']);

@@ -1,11 +1,4 @@
-import { extractAutoDependencyPolicy } from './extract-auto-dependency-policy';
-import {
-  registerRustTransferClass,
-  registerRustSnapshotTransactionClass,
-  registerRustSnapshotFunctions,
-  hasRustSnapshotFunctions,
-} from '@teambit/objects';
-import lodash, { sortBy, unionWith, isEmpty, cloneDeep, compact } from 'lodash';
+import { sortBy, unionWith, isEmpty, cloneDeep, compact } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { sortObjectByKeys } from '@teambit/toolbox.object.sorter';
 import {
@@ -61,8 +54,21 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   }
 
   toModelObjects() {
-    runExtensionDataModelHooks(this);
-    return extensionDataToModelObjectsAfterHooks(this);
+    // call the hook before "clone". otherwise, some classes are loosing their structure and become plain objects
+    ExtensionDataList.toModelObjectsHook.forEach((hook) => {
+      hook(this);
+    });
+    const extensionsClone = this.clone();
+    extensionsClone.forEach((ext) => {
+      if (ext.extensionId) {
+        // TODO: fix the types of extensions. after this it should be an object not an object id
+        // @ts-ignore
+        ext.extensionId = ext.extensionId.serialize();
+      }
+    });
+    convertBuildArtifactsToModelObject(extensionsClone);
+
+    return extensionsClone.map((ext) => ext.toModelObject());
   }
 
   static fromModelObject(entries: ExtensionDataEntry[]): ExtensionDataList {
@@ -157,7 +163,29 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
    */
   extractAutoDepsFromConfig(): VariantPolicyConfigArr | undefined {
     const policy = this.findCoreExtension(DependencyResolverAspect.id)?.config.policy;
-    return extractAutoDependencyPolicy(policy);
+    if (!policy) return;
+
+    const autoDepsObj: VariantPolicyConfigArr = {};
+    ['dependencies', 'devDependencies', 'peerDependencies'].forEach((key) => {
+      if (!policy[key]) return;
+      // this is only relevant when it is saved as an array. otherwise, it's always force: true.
+      if (!Array.isArray(policy[key])) return;
+
+      autoDepsObj[key] = policy[key].filter((dep) => !dep.force);
+      policy[key] = policy[key].filter((dep) => dep.force);
+
+      if (!policy[key].length) {
+        delete policy[key];
+        return;
+      }
+      // convert to object
+      policy[key] = policy[key].reduce((acc, current) => {
+        acc[current.name] = current.version;
+        return acc;
+      }, {});
+    });
+
+    return autoDepsObj;
   }
 
   static fromConfigObject(obj: { [extensionId: string]: any } = {}): ExtensionDataList {
@@ -248,44 +276,4 @@ export function removeInternalConfigFields(config?: ExtensionConfig): ExtensionC
 export function removeInternalConfigFieldsWithMutation(config?: ExtensionConfig) {
   if (!config || config === REMOVE_EXTENSION_SPECIAL_SIGN) return;
   INTERNAL_CONFIG_FIELDS.forEach((field) => delete config[field]);
-}
-
-registerRustTransferClass('ExtensionDataList', ExtensionDataList, ['findExtension', 'findCoreExtension', 'find']);
-/** The snapshot engine resumes this tail after a public serialization hook has already run. */
-export function runExtensionDataModelHooks(list: ExtensionDataList): void {
-  ExtensionDataList.toModelObjectsHook.forEach((hook) => hook(list));
-}
-
-export function extensionDataToModelObjectsAfterHooks(list: ExtensionDataList) {
-  const extensionsClone = list.clone();
-  extensionsClone.forEach((extension) => {
-    if (extension.extensionId) {
-      // The model stores a plain identifier rather than the live class instance.
-      // @ts-ignore
-      extension.extensionId = extension.extensionId.serialize();
-    }
-  });
-  convertBuildArtifactsToModelObject(extensionsClone);
-  return extensionsClone.map((extension) => extension.toModelObject());
-}
-
-registerRustSnapshotTransactionClass('ExtensionDataList', ExtensionDataList, [
-  'coreExtensionsNames',
-  'toModelObjectsHook',
-  'validateBeforePersistHook',
-]);
-registerRustSnapshotFunctions('ExtensionDataList', lodash, ['sortBy', 'unionWith', 'isEmpty', 'cloneDeep', 'compact']);
-
-const inspectionSorter = sortObjectByKeys;
-const inspectionInternalFields = INTERNAL_CONFIG_FIELDS.slice();
-/** Preserve the default config sorter without reading extension data or running model hooks. */
-export function canSortInspectionExtensionsNatively(): boolean {
-  return (
-    sortObjectByKeys === inspectionSorter &&
-    hasRustSnapshotFunctions(['ExtensionDataList']) &&
-    INTERNAL_CONFIG_FIELDS.length === inspectionInternalFields.length &&
-    inspectionInternalFields.every(
-      (field, index) => Object.getOwnPropertyDescriptor(INTERNAL_CONFIG_FIELDS, String(index))?.value === field
-    )
-  );
 }

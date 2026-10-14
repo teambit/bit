@@ -1,5 +1,3 @@
-import path from 'path';
-
 export type FileContext = {
   /**
    * extension of the file. (e.g. `.js`, '.jsx', '.ts', etc.)
@@ -52,40 +50,7 @@ export interface DependencyDetector {
   dependencyLookup?(file: DependencyContext): string;
 }
 
-const nativeEnvJsoncDetectors = new WeakMap<
-  DependencyDetector,
-  { prototype: object; predicate: unknown; mdx?: boolean }
->();
-
 export class DetectorHook {
-  /** Receipt for the canonical, pure env.jsonc predicate; arbitrary hooks still require dispatch. */
-  static registerNativeEnvJsoncDetector(detector: DependencyDetector, prototype: object, predicate: unknown) {
-    nativeEnvJsoncDetectors.set(detector, { prototype, predicate });
-  }
-
-  static registerNativeMdxDetector(detector: DependencyDetector, prototype: object, predicate: unknown) {
-    nativeEnvJsoncDetectors.set(detector, { prototype, predicate, mdx: true });
-  }
-
-  static replayNativeGraphHooks(filename: string | undefined) {
-    if (!filename) return;
-    for (const hook of DetectorHook.hooks) {
-      if (nativeEnvJsoncDetectors.get(hook)?.mdx) (hook as any).currentFilename = filename;
-    }
-  }
-
-  static canSkipNativeGraphHooks(filename: string): boolean {
-    return DetectorHook.hooks.every((hook) => {
-      const receipt = nativeEnvJsoncDetectors.get(hook);
-      return Boolean(
-        receipt &&
-          Object.getPrototypeOf(hook) === receipt.prototype &&
-          !Object.hasOwn(hook, 'isSupported') &&
-          Object.getOwnPropertyDescriptor(receipt.prototype, 'isSupported')?.value === receipt.predicate &&
-          (receipt.mdx ? canSkipMdx(hook, filename) : !filename.endsWith('env.jsonc'))
-      );
-    });
-  }
   static hooks: DependencyDetector[] = [];
 
   isSupported(ext: string, filename: string): boolean {
@@ -105,18 +70,4 @@ export class DetectorHook {
       });
     });
   }
-}
-
-function canSkipMdx(hook: DependencyDetector, filename: string): boolean {
-  const extensions = Object.getOwnPropertyDescriptor(hook, 'supportedExtensions')?.value;
-  const current = Object.getOwnPropertyDescriptor(hook, 'currentFilename');
-  if (current ? !('value' in current) || !current.writable : !Object.isExtensible(hook)) return false;
-  if (current && current.value !== undefined && typeof current.value !== 'string') return false;
-  if (!Array.isArray(extensions) || Object.getPrototypeOf(extensions) !== Array.prototype) return false;
-  if (extensions.length > 256 || Reflect.ownKeys(extensions).length !== extensions.length + 1) return false;
-  for (let index = 0; index < extensions.length; index++) {
-    const extension = Object.getOwnPropertyDescriptor(extensions, String(index))?.value;
-    if (typeof extension !== 'string' || extension === path.extname(filename)) return false;
-  }
-  return true;
 }

@@ -1,7 +1,4 @@
-use super::{File, Outcome, scan_with_metrics};
-fn scan(file: &File, unsupported_options: bool) -> Outcome {
-    scan_with_metrics(file, unsupported_options, None)
-}
+use super::{File, scan};
 use serde_json::json;
 
 fn fixture(kind: &str, source: &str) -> File {
@@ -167,10 +164,9 @@ fn oversized_batch_preserves_session_protocol_error() {
         .num_threads(1)
         .build()
         .unwrap();
-    let response = crate::protocol::process_request(&request, &pool).unwrap();
+    let response = crate::scan_request(&request, &pool).unwrap();
     assert_eq!(response["status"], "invalid_request");
-    let response =
-        crate::protocol::process_request(r#"{"version":1,"files":[],"id":"next"}"#, &pool).unwrap();
+    let response = crate::scan_request(r#"{"version":1,"files":[],"id":"next"}"#, &pool).unwrap();
     assert_eq!(response["id"], "next");
 }
 

@@ -11,22 +11,15 @@ import { ScopeNotFound } from '../exceptions';
 import { ErrorFromRemote } from '../exceptions/error-from-remote';
 import { UnexpectedNetworkError } from '@teambit/scope.network';
 import type { Repository, ObjectItemsStream, Lane } from '@teambit/objects';
-import { resolveRustObjectImportExecutable } from '@teambit/objects';
 import { ObjectsWritable } from './objects-writable-stream';
 import { WriteObjectsQueue } from './write-objects-queue';
 import { groupByScopeName } from '../component-ops/scope-components-importer';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { concurrentFetchLimit } from '@teambit/harmony.modules.concurrency';
-import { RustObjectImporter } from './rust-object-importer';
-import { createRustSourceValidator } from './rust-source-validator';
-import type { RustSourceValidator } from './rust-source-validator';
 import type { Remotes, Remote } from '@teambit/scope.remotes';
 import { ScopeNotFoundOrDenied } from '@teambit/scope.remotes';
 import type { ComponentsPerRemote } from '../component-ops/multiple-component-merger';
 import { MultipleComponentMerger } from '../component-ops/multiple-component-merger';
-import { importTarStream } from './rust-tar-stream';
-import { TarRemoteError } from './rust-tar-importer';
-import { withImportCancellation, cancelImportStream } from './import-cancellation';
 
 /**
  * due to the use of streams, this is memory efficient and can handle easily GBs of objects.
@@ -51,46 +44,10 @@ export class ObjectFetcher {
     private context = {},
     private throwOnUnavailableScope = true,
     private groupedHashes?: { [scopeName: string]: string[] },
-    private reason?: string, // console the reason why the import is needed
-    private signal?: AbortSignal
+    private reason?: string // console the reason why the import is needed
   ) {}
 
   public async fetchFromRemoteAndWrite(): Promise<string[]> {
-    this.signal?.throwIfAborted();
-    const executable = resolveRustObjectImportExecutable('import');
-    const validator = createRustSourceValidator(executable);
-    const options =
-      validator && process.env.BIT_RUST_OBJECT_IMPORT_MODE !== 'validate'
-        ? await this.repo.getNativeSourceStoreOptions()
-        : undefined;
-    const importer = options ? new RustObjectImporter(executable!, options) : undefined;
-    const mutableWriter =
-      options && process.env.BIT_RUST_OBJECT_IMPORT_MUTABLE !== 'off'
-        ? new RustObjectImporter(executable!, options)
-        : undefined;
-    const abort = () => {
-      validator?.dispose();
-      importer?.dispose();
-      void mutableWriter?.disposeAndWait();
-      void this.repo.getNativeImportOperation?.()?.disposeAndWait();
-    };
-    this.signal?.addEventListener('abort', abort, { once: true });
-    try {
-      this.signal?.throwIfAborted();
-      const run = () => this.fetchAndWrite(importer ? undefined : validator, importer, mutableWriter, executable);
-      return await (this.repo.withNativeImportOperation ? this.repo.withNativeImportOperation(run) : run());
-    } finally {
-      this.signal?.removeEventListener('abort', abort);
-      await Promise.all([validator?.disposeAndWait(), importer?.disposeAndWait(), mutableWriter?.disposeAndWait()]);
-    }
-  }
-
-  private async fetchAndWrite(
-    validator?: RustSourceValidator,
-    importer?: RustObjectImporter,
-    mutableWriter?: RustObjectImporter,
-    tarExecutable?: string
-  ): Promise<string[]> {
     this.fetchOptions = {
       type: 'component',
       withoutDependencies: true, // backward compatibility. not needed for remotes > 0.0.900
@@ -115,23 +72,12 @@ export class ObjectFetcher {
     await pMapPool(
       scopes,
       async (scopeName) => {
-        this.signal?.throwIfAborted();
         const readableStream = await this.fetchFromSingleRemote(scopeName, idsGrouped[scopeName]);
         if (!readableStream) return;
-        await this.writeFromSingleRemote(
-          readableStream,
-          scopeName,
-          objectsQueue,
-          componentsPerRemote,
-          validator,
-          importer,
-          mutableWriter,
-          tarExecutable
-        );
+        await this.writeFromSingleRemote(readableStream, scopeName, objectsQueue, componentsPerRemote);
       },
       { concurrency: concurrentFetchLimit() }
     );
-    this.signal?.throwIfAborted();
     if (Object.keys(this.failedScopes).length) {
       const failedScopesErr = Object.keys(this.failedScopes).map(
         (failedScope) => `${failedScope} - ${this.failedScopes[failedScope].message}`
@@ -143,7 +89,6 @@ server responded with the following error messages:
 ${failedScopesErr.join('\n')}`);
     }
     await objectsQueue.onIdle();
-    this.signal?.throwIfAborted();
     logger.debug(`[-] fetchFromRemoteAndWrite, completed writing ${objectsQueue.added} objects`);
     const multipleComponentsMerger = new MultipleComponentMerger(componentsPerRemote, this.scope.sources);
     const totalComponents = multipleComponentsMerger.totalComponents();
@@ -153,20 +98,15 @@ ${failedScopesErr.join('\n')}`);
       await this.mergeAndPersistComponents(multipleComponentsMerger);
     }
     // even when no component has updated, we need to write the refs we got from the remote lanes
-    this.signal?.throwIfAborted();
     await this.repo.writeRemoteLanes();
-    this.signal?.throwIfAborted();
     logger.debug(`[-] fetchFromRemoteAndWrite, completed writing ${totalComponents} components`);
 
     return objectsQueue.addedHashes;
   }
 
   private async mergeAndPersistComponents(multipleComponentsMerger: MultipleComponentMerger) {
-    this.signal?.throwIfAborted();
     const modelComponents = await multipleComponentsMerger.merge();
-    this.signal?.throwIfAborted();
     await this.repo.writeObjectsToTheFS(modelComponents);
-    this.signal?.throwIfAborted();
 
     const mergedPerRemote = modelComponents.reduce((acc, component) => {
       if (!component.remoteHead) {
@@ -220,7 +160,7 @@ ${failedScopesErr.join('\n')}`);
     const shouldThrowOnUnavailableScope = this.throwOnUnavailableScope && !this.fetchOptions.withoutDependencies;
     let remote: Remote;
     try {
-      remote = await withImportCancellation(this.remotes.resolve(scopeName), this.signal);
+      remote = await this.remotes.resolve(scopeName);
     } catch (err: any) {
       if (err instanceof ScopeNotFoundOrDenied) {
         throw new Error(`unable to import the following component(s): ${ids.join(', ')}.
@@ -253,18 +193,8 @@ the remote scope "${scopeName}" was not found`);
     const maxAttempts = 3;
     for (let attempt = 1; ; attempt += 1) {
       try {
-        this.signal?.throwIfAborted();
-        return await withImportCancellation(
-          remote.fetch(
-            ids,
-            this.getFetchOptionsPerRemote(scopeName),
-            this.signal ? { ...this.context, signal: this.signal } : this.context
-          ),
-          this.signal,
-          (stream) => stream.destroy()
-        );
+        return await remote.fetch(ids, this.getFetchOptionsPerRemote(scopeName), this.context);
       } catch (err: any) {
-        this.signal?.throwIfAborted();
         if (!(err instanceof UnexpectedNetworkError) || attempt >= maxAttempts) throw err;
         const delayMs = 3000 * 4 ** (attempt - 1); // 3s, then 12s
         logger.warn(
@@ -272,20 +202,7 @@ the remote scope "${scopeName}" was not found`);
             delayMs / 1000
           }s. error: ${err.message}`
         );
-        await new Promise<void>((resolve, reject) => {
-          let timer: ReturnType<typeof setTimeout>;
-          const abort = () => {
-            clearTimeout(timer);
-            this.signal?.removeEventListener('abort', abort);
-            reject(this.signal?.reason);
-          };
-          timer = setTimeout(() => {
-            this.signal?.removeEventListener('abort', abort);
-            resolve();
-          }, delayMs);
-          this.signal?.addEventListener('abort', abort, { once: true });
-          if (this.signal?.aborted) abort();
-        });
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
       }
     }
   }
@@ -305,22 +222,9 @@ the remote scope "${scopeName}" was not found`);
     objectsStream: ObjectItemsStream,
     scopeName: string,
     objectsQueue: WriteObjectsQueue,
-    componentsPerRemote: ComponentsPerRemote,
-    validator?: RustSourceValidator,
-    importer?: RustObjectImporter,
-    mutableWriter?: RustObjectImporter,
-    tarExecutable?: string
+    componentsPerRemote: ComponentsPerRemote
   ) {
-    const writable = new ObjectsWritable(
-      this.repo,
-      scopeName,
-      objectsQueue,
-      componentsPerRemote,
-      validator,
-      importer,
-      mutableWriter
-    );
-    const detachCancellation = cancelImportStream(objectsStream, this.signal);
+    const writable = new ObjectsWritable(this.repo, scopeName, objectsQueue, componentsPerRemote);
     // add an error listener for the ObjectList to differentiate between errors coming from the
     // remote and errors happening inside the Writable.
     let readableError: Error | undefined;
@@ -329,29 +233,8 @@ the remote scope "${scopeName}" was not found`);
       readableError = err;
     });
     try {
-      if (
-        (process.env.BIT_RUST_OBJECT_TAR === 'on' ||
-          (process.env.BIT_RUST_CLIENT_VCS === 'on' && process.env.BIT_RUST_OBJECT_TAR !== 'off')) &&
-        process.env.BIT_RUST_OBJECT_IMPORT_MODE !== 'validate' &&
-        tarExecutable &&
-        this.repo.canWriteMutableObjectsNatively() &&
-        objectsStream.claimTarInput
-      ) {
-        const options = await this.repo.getNativeSourceStoreOptions();
-        const input = options && objectsStream.claimTarInput();
-        if (input) {
-          try {
-            await importTarStream(input, tarExecutable, writable, { ...options, signal: this.signal });
-          } catch (error) {
-            if (error instanceof TarRemoteError) throw new ErrorFromRemote(scopeName, error.message);
-            throw error;
-          }
-          return;
-        }
-      }
       await pipeline(objectsStream, writable);
     } catch (err: any) {
-      this.signal?.throwIfAborted();
       if (readableError) {
         if (!readableError.message) {
           logger.error(`error coming from a remote has no message, please fix!`, readableError);
@@ -360,10 +243,6 @@ the remote scope "${scopeName}" was not found`);
       }
       // the error is coming from the writable, no need to treat it specially. just throw it.
       throw err;
-    } finally {
-      detachCancellation();
-      writable.destroy();
-      objectsStream.destroy();
     }
   }
 

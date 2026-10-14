@@ -1,5 +1,4 @@
-import lodash, { isEmpty, pickBy } from 'lodash';
-import { registerRustSnapshotFunctions, registerRustSnapshotTransactionClass, hasRustSnapshotTransactionClassConstructor, hasRustSnapshotFunctions, registerRustSnapshotFunctionReference } from '../objects/rust-snapshot-guards';
+import { isEmpty, pickBy } from 'lodash';
 import { isSnap } from '@teambit/component-version';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { LaneId } from '@teambit/lane-id';
@@ -14,12 +13,7 @@ import {
   Dependencies,
   Dependency,
 } from '@teambit/legacy.consumer-component';
-import {
-  getRefsFromExtensions,
-  SourceFile,
-  prepareRustCheckoutSources,
-  isRustSourceReadScope,
-} from '@teambit/component.sources';
+import { getRefsFromExtensions, SourceFile } from '@teambit/component.sources';
 import type { ComponentOverridesData } from '@teambit/legacy.consumer-config';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { Doclet } from '@teambit/semantics.doc-parser';
@@ -34,7 +28,6 @@ import { BitIdCompIdError, VersionInvalid, validateVersionInstance } from '@team
 import Source from './source';
 import { DependenciesGraph } from './dependencies-graph';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
-import { newTagHash } from './new-tag-hash';
 
 export type SourceFileModel = {
   name: string;
@@ -464,9 +457,47 @@ export default class Version extends BitObject {
   }
 
   toObject() {
-    const prefix = captureVersionSerializationPrefix(this);
-    const extensions = this.extensions.toModelObjects();
-    return completeVersionSerialization(this, prefix, extensions);
+    return pickBy(
+      {
+        files: this.filesToObject(),
+        mainFile: this.mainFile,
+        bindingPrefix: this.bindingPrefix,
+        schema: this.schema,
+        log: this.logToObject(),
+        docs: this.docs,
+        dependencies: this.dependencies.cloneAsObject(),
+        devDependencies: this.devDependencies.cloneAsObject(),
+        flattenedDependencies: this.flattenedDependencies.map((dep) => dep.toObject()),
+        // @todo: uncomment this in the future, once all remotes are updated to support the backward compatibility.
+        // flattenedDependencies: this.flattenedDependencies.map((dep) => dep.toString()),
+        flattenedEdges: this.flattenedEdgesRef ? undefined : this.flattenedEdges.map((f) => Version.depEdgeToObject(f)),
+        flattenedEdgesRef: this.flattenedEdgesRef?.toString(),
+        dependenciesGraphRef: this.dependenciesGraphRef?.toString(),
+        extensions: this.extensions.toModelObjects(),
+        packageDependencies: this.packageDependencies,
+        devPackageDependencies: this.devPackageDependencies,
+        peerPackageDependencies: this.peerPackageDependencies,
+        overrides: this.overrides,
+        buildStatus: this.buildStatus,
+        packageJsonChangedProps: this.packageJsonChangedProps,
+        parents: this.parents.map((p) => p.toString()),
+        squashed: this.squashed
+          ? {
+              previousParents: this.squashed.previousParents.map((p) => p.toString()),
+              laneId: this.squashed.laneId.toObject(),
+            }
+          : undefined,
+        unrelated: this.unrelated
+          ? { head: this.unrelated.head.toString(), laneId: this.unrelated.laneId.toObject() }
+          : undefined,
+        bitVersion: this.bitVersion,
+        modified: this.modified,
+        origin: this.origin,
+        hidden: this.hidden,
+        batchId: this.batchId,
+      },
+      (val) => !!val
+    );
   }
 
   validateBeforePersisting(versionStr: string): void {
@@ -649,13 +680,11 @@ export default class Version extends BitObject {
     files,
     flattenedEdges,
     dependenciesGraph,
-    durableTag = false,
   }: {
     component: ConsumerComponent;
     files: Array<SourceFileModel>;
     flattenedEdges?: Source;
     dependenciesGraph?: Source;
-    durableTag?: boolean;
   }) {
     const parseFile = (file) => {
       return {
@@ -694,14 +723,14 @@ export default class Version extends BitObject {
     if (isSnap(component.version)) {
       version._hash = component.version as string;
     } else {
-      version.setNewHash(durableTag);
+      version.setNewHash();
     }
 
     return version;
   }
 
-  setNewHash(durableTag = false) {
-    this._hash = durableTag ? newTagHash() : sha1(v4());
+  setNewHash() {
+    this._hash = sha1(v4());
   }
 
   get ignoreSharedDir(): boolean {
@@ -778,9 +807,7 @@ export default class Version extends BitObject {
     this.parents = [];
   }
 
-  async modelFilesToSourceFiles(repository: Repository): Promise<SourceFile[]> {
-    const native = isRustSourceReadScope() ? await prepareRustCheckoutSources(this.files, repository, true) : undefined;
-    if (native) return native;
+  modelFilesToSourceFiles(repository: Repository): Promise<SourceFile[]> {
     return Promise.all(this.files.map((file) => SourceFile.loadFromSourceFileModel(file, repository)));
   }
 
@@ -799,133 +826,3 @@ export default class Version extends BitObject {
     validateVersionInstance(this);
   }
 }
-
-const defaultVersionId = Version.prototype.id;
-const defaultCalculateHash = Version.prototype.calculateHash;
-const defaultMakeHash = BitObject.makeHash;
-const inspectionVersionMethods = ['id', 'calculateHash', 'filesToObject', 'logToObject'].map(
-  (name) => [name, Object.getOwnPropertyDescriptor(Version.prototype, name)?.value] as const
-);
-const inspectionExtensionDependencies = Object.getOwnPropertyDescriptor(
-  Version.prototype,
-  'extensionDependencies'
-)?.get;
-
-/** The semantic reader must preserve the defining identity primitives without invoking them. */
-export function hasDefaultInspectionVersionMethods(version: Version): boolean {
-  return (
-    BitObject.makeHash === defaultMakeHash &&
-    Object.getOwnPropertyDescriptor(Version.prototype, 'extensionDependencies')?.get ===
-      inspectionExtensionDependencies &&
-    !Object.getOwnPropertyDescriptor(version, 'extensionDependencies') &&
-    inspectionVersionMethods.every(
-      ([name, method]) =>
-        !Object.getOwnPropertyDescriptor(version, name) &&
-        Object.getOwnPropertyDescriptor(Version.prototype, name)?.value === method
-    )
-  );
-}
-
-registerRustSnapshotTransactionClass('Version', Version);
-registerRustSnapshotTransactionClass('Array', Array);
-
-/** Native comparison must not bypass patched Version identity or hashing hooks. */
-export function canCompareVersionNatively(version: Version): boolean {
-  return (
-    version.id === defaultVersionId &&
-    version.calculateHash === defaultCalculateHash &&
-    BitObject.makeHash === defaultMakeHash
-  );
-}
-
-/** Preserve the evaluation and aliasing of fields preceding extension serialization hooks. */
-export function captureVersionSerializationPrefix(version: Version) {
-  return {
-    files: (version as any).filesToObject(),
-    mainFile: version.mainFile,
-    bindingPrefix: version.bindingPrefix,
-    schema: version.schema,
-    log: (version as any).logToObject(),
-    docs: version.docs,
-    dependencies: version.dependencies.cloneAsObject(),
-    devDependencies: version.devDependencies.cloneAsObject(),
-    flattenedDependencies: version.flattenedDependencies.map((dep) => dep.toObject()),
-    // @todo: uncomment this in the future, once all remotes are updated to support the backward compatibility.
-    // flattenedDependencies: version.flattenedDependencies.map((dep) => dep.toString()),
-    flattenedEdges: version.flattenedEdgesRef
-      ? undefined
-      : (version as any).flattenedEdges.map((f: DepEdge) => Version.depEdgeToObject(f)),
-    flattenedEdgesRef: version.flattenedEdgesRef?.toString(),
-    dependenciesGraphRef: version.dependenciesGraphRef?.toString(),
-  };
-}
-
-/** Continue serialization after extension hooks without invoking them a second time. */
-export function completeVersionSerialization(
-  version: Version,
-  prefix: ReturnType<typeof captureVersionSerializationPrefix>,
-  extensions: ReturnType<ExtensionDataList['toModelObjects']>
-) {
-  return pickBy(
-    {
-      ...prefix,
-      extensions,
-      packageDependencies: version.packageDependencies,
-      devPackageDependencies: version.devPackageDependencies,
-      peerPackageDependencies: version.peerPackageDependencies,
-      overrides: version.overrides,
-      buildStatus: version.buildStatus,
-      packageJsonChangedProps: version.packageJsonChangedProps,
-      parents: version.parents.map((p) => p.toString()),
-      squashed: version.squashed
-        ? {
-            previousParents: version.squashed.previousParents.map((p) => p.toString()),
-            laneId: version.squashed.laneId.toObject(),
-          }
-        : undefined,
-      unrelated: version.unrelated
-        ? { head: version.unrelated.head.toString(), laneId: version.unrelated.laneId.toObject() }
-        : undefined,
-      bitVersion: version.bitVersion,
-      modified: version.modified,
-      origin: version.origin,
-      hidden: version.hidden,
-      batchId: version.batchId,
-    },
-    (value) => !!value
-  );
-}
-
-registerRustSnapshotFunctions('Version', lodash, ['isEmpty', 'pickBy']);
-registerRustSnapshotFunctions('SnapshotJSON', JSON, ['stringify', 'parse']);
-
-const historyFactoryModules = [
-  { name: 'ComponentID', module: require('@teambit/component-id/dist/component-id.js'), key: 'ComponentID' },
-  { name: 'ComponentIdList', module: require('@teambit/component-id/dist/component-id-list.js'), key: 'ComponentIdList' },
-  { name: 'BitId', module: require('@teambit/legacy-bit-id/dist/bit-id.js'), key: 'default' },
-  { name: 'LaneId', module: require('@teambit/lane-id/dist/lane-id.js'), key: 'LaneId' },
-  { name: 'Dependency', module: require('@teambit/legacy.consumer-component/dist/dependencies/dependency.js'), key: 'default' },
-  { name: 'Dependencies', module: require('@teambit/legacy.consumer-component/dist/dependencies/dependencies.js'), key: 'default' },
-  { name: 'ExtensionDataEntry', module: require('@teambit/legacy.extension-data/dist/extension-data.js'), key: 'ExtensionDataEntry' },
-  { name: 'ExtensionDataList', module: require('@teambit/legacy.extension-data/dist/extension-data-list.js'), key: 'ExtensionDataList' },
-  { name: 'ArtifactFiles', module: require('@teambit/component.sources/dist/artifact-files.js'), key: 'ArtifactFiles' },
-];
-
-/** Default metadata constructors may hydrate verified JSON; custom factories retain the original loader. */
-export function canHydrateHistoryVersionsNatively(): boolean {
-  if (!hasRustSnapshotTransactionClassConstructor('Version', Version) ||
-    !hasRustSnapshotTransactionClassConstructor('Ref', Ref) ||
-    !hasRustSnapshotTransactionClassConstructor('Array', Array) ||
-    !hasRustSnapshotFunctions(['SnapshotJSON', 'ExtensionDataList', 'HistoryQueryObjectParser'])) return false;
-  const registrar = require('@teambit/legacy.scope/dist/object-registrar.js');
-  const registeredTypes = Object.getOwnPropertyDescriptor(registrar, 'typesObj')?.value;
-  if (!registeredTypes || Object.getOwnPropertyDescriptor(registeredTypes, 'Version')?.value !== Version) return false;
-  for (let index = 0; index < historyFactoryModules.length; index++) {
-    const entry = historyFactoryModules[index];
-    const descriptor = Object.getOwnPropertyDescriptor(entry.module, entry.key);
-    if (!descriptor || !('value' in descriptor) || !hasRustSnapshotTransactionClassConstructor(entry.name, descriptor.value))
-      return false;
-  }
-  return true;
-}
-registerRustSnapshotFunctionReference('HistoryQueryVersionHydration', canHydrateHistoryVersionsNatively);

@@ -1,4 +1,4 @@
-import { newLaneHistoryKey } from './new-lane-history-key';
+import { v4 } from 'uuid';
 import { getStringifyArgs } from '@teambit/legacy.utils';
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { BitObject } from '../objects';
@@ -91,7 +91,7 @@ export class LaneHistory extends BitObject {
     // post-PR entry that legitimately had no hidden entries (drop current hidden) from a legacy
     // pre-PR entry that never recorded the field at all (leave current hidden alone).
     const updateDependents = (laneObj.updateDependents || []).map((id) => id.toString());
-    this.history[historyKey || newLaneHistoryKey()] = {
+    this.history[historyKey || v4()] = {
       log,
       components,
       ...(deleted.length && { deleted }),
@@ -107,11 +107,6 @@ export class LaneHistory extends BitObject {
 
   merge(laneHistory: LaneHistory) {
     this.history = { ...this.history, ...laneHistory.history };
-  }
-
-  mergeNative(laneHistory: LaneHistory, selections: [number, number][]) {
-    const values = [Object.entries(this.history), Object.entries(laneHistory.history)];
-    this.history = Object.fromEntries(selections.map(([side, index]) => values[side][index]));
   }
 
   static create(name: string, scope: string, laneHash: string) {

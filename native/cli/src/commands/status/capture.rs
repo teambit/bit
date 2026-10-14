@@ -1,5 +1,5 @@
-//! `captureRustClientCurrent` of the Node.js glue (`rust-client-capture.ts`),
-//! shared by status and diff: each selected component's files and
+//! The capture of the current workspace, shared by status, diff and the
+//! workspace commands: each selected component's files and
 //! dependencies, and the commit that writes what the command staged.
 
 use super::{
@@ -114,7 +114,7 @@ pub fn capture(
     capture_with(engine, root, home, context, targets, CaptureOptions::default())
 }
 
-/// `captureRustClientCurrent` with the write commands' `captureOptions`.
+/// The capture with the write commands' options.
 pub fn capture_with(
     engine: &mut Engine,
     root: &Path,

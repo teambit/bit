@@ -26,5 +26,3 @@ export {
   NextVersion,
   WORKSPACE_ROOT_DIR,
 } from './component-map';
-
-export { canRecoverBitmapNatively } from './rust-recovery-guards';

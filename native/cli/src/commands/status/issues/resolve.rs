@@ -1,4 +1,4 @@
-//! `rust-workspace-resolve-heads.ts`: for snap and tag, the engine proves
+//! For snap and tag, the engine proves
 //! the models' heads and the dependencies outside the workspace.
 
 use super::{super::js::truthy, Component};

@@ -1,5 +1,4 @@
-//! The snap and tag reports: `formatRustWorkspaceSnap` and
-//! `formatRustWorkspaceTag` validate the engine's result, and
+//! The snap and tag reports: the engine's result, validated, and
 //! `snapResultReport` and `tagResultReport` of `@teambit/snapping` format it.
 
 use super::{format::Formatter, results::Report};

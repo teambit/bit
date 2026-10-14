@@ -1,4 +1,4 @@
-use crate::{File, Request, limits, scan_with_metrics, transport};
+use crate::{File, Request, invalid_request, limits, scan};
 use rayon::{ThreadPool, prelude::*};
 use serde_json::{Value, json};
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -7,7 +7,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 pub(crate) fn process(input: &str, pool: &ThreadPool) -> Result<Value, serde_json::Error> {
     let request: Request = serde_json::from_str(input)?;
     if request.version != 1 || request.files.len() > limits::BATCH_FILES {
-        return Ok(transport::invalid_request("unsupported scanner request"));
+        return Ok(invalid_request("unsupported scanner request"));
     }
     let remaining = AtomicUsize::new(8 * 1024 * 1024);
     let files: Vec<Option<Value>> = pool.install(|| {
@@ -17,7 +17,7 @@ pub(crate) fn process(input: &str, pool: &ThreadPool) -> Result<Value, serde_jso
             .collect::<Result<_, _>>()
     })?;
     if files.iter().any(Option::is_none) {
-        return Ok(transport::invalid_request("embedded scanner output limit"));
+        return Ok(invalid_request("embedded scanner output limit"));
     }
     Ok(json!({"version":1,"id":request.id,"files":files}))
 }
@@ -30,7 +30,7 @@ fn bounded(
     if remaining.load(Ordering::Relaxed) == 0 {
         return Ok(None);
     }
-    let outcome = scan_with_metrics(file, unsupported, None);
+    let outcome = scan(file, unsupported);
     let bytes = serde_json::to_vec(&outcome)?.len();
     if !reserve(remaining, bytes) {
         return Ok(None);

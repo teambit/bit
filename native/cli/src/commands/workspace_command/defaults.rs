@@ -1,5 +1,4 @@
-//! `commandDefaultNodeReceipt` (`rust-workspace-command-defaults.ts`): what
-//! the built-in Node environment's callbacks return for one component, so
+//! What the built-in Node environment's callbacks return for one component, so
 //! the engine can build its metadata. Every value is a constant of the
 //! environment, apart from the dev files.
 

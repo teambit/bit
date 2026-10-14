@@ -1,6 +1,5 @@
 //! Fresh dependency detection, for components whose dependency cache entry
-//! is missing or stale: `readFreshDependencies` and `commitFreshDependencies`
-//! of the Node.js glue (`rust-fresh-dependencies.ts`). The engine scans and
+//! is missing or stale, and the commit of their cache entries. The engine scans and
 //! resolves; this module supplies what Node knew: the dev-file patterns, the
 //! running Node's built-in modules, the bundled TypeScript version and the
 //! core aspect packages.
@@ -24,10 +23,10 @@ const DETECTOR_EXTENSIONS: [&str; 16] = [
 ];
 /// The TypeScript version the engine's import resolution reproduces.
 const TYPESCRIPT: &str = "5.9.2";
-/// `getAllCoreAspectsIds()`: the repository's list, which a Node.js spec
-/// keeps equal to `manifests.ts`.
+/// `getAllCoreAspectsIds()`: the list `npm run generate-core-aspects-ids`
+/// writes for `load-aspect` (`bit aspect list-core --json`).
 const CORE_ASPECT_IDS: &str =
-    include_str!("../../../../../scopes/harmony/bit/core-aspect-ids.json");
+    include_str!("../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json");
 
 /// A detection whose cache entry is written once the whole command succeeded.
 #[derive(Clone)]

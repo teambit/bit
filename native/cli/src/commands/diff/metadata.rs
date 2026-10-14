@@ -1,4 +1,4 @@
-//! `fieldsDiff` of `bit diff`: `rustDiffMetadata` of the Node.js glue and
+//! `fieldsDiff` of `bit diff`: each side's metadata and
 //! `diffMetadata` of `@teambit/legacy.component-diff` with
 //! `formatDepsAsTable: false`.
 

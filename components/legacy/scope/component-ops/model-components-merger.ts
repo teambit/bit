@@ -1,7 +1,7 @@
 import { logger } from '@teambit/legacy.logger';
 import { MergeConflict } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
-import { ModelComponent, Ref, nativeSelections, type Repository, type NativeImportOperation } from '@teambit/objects';
+import type { ModelComponent, Repository } from '@teambit/objects';
 
 /**
  * the base component to save is the existingComponent because it might contain local data that
@@ -16,8 +16,7 @@ export class ModelComponentMerger {
     private isImport: boolean,
     private isIncomingFromOrigin: boolean, // import: incoming from original scope. export: component belong to current scope
     private existingHeadIsMissingInIncomingComponent?: boolean, // needed for export only
-    private repo?: Repository,
-    private nativeOperation?: NativeImportOperation
+    private repo?: Repository
   ) {
     this.isExport = !this.isImport;
   }
@@ -28,8 +27,6 @@ export class ModelComponentMerger {
    */
   async merge(): Promise<{ mergedComponent: ModelComponent; mergedVersions: string[] }> {
     logger.debug(`model-component-merger.merge component ${this.incomingComponent.id()}`);
-    if (this.isImport && this.nativeOperation && (await this.mergeNative()))
-      return { mergedComponent: this.existingComponent, mergedVersions: this.mergedVersions };
     await this.throwComponentNeedsUpdateIfNeeded();
     const locallyChanged = this.existingComponent.isLocallyChangedRegardlessOfLanes();
     await this.throwMergeConflictIfNeeded(locallyChanged);
@@ -42,127 +39,6 @@ export class ModelComponentMerger {
     this.mergeDetachedHeads();
 
     return { mergedComponent: this.existingComponent, mergedVersions: this.mergedVersions };
-  }
-
-  private async mergeNative(): Promise<boolean> {
-    const old = this.existingComponent,
-      incoming = this.incomingComponent;
-    if (
-      Object.getPrototypeOf(old) !== ModelComponent.prototype ||
-      Object.getPrototypeOf(incoming) !== ModelComponent.prototype ||
-      old.setVersion !== ModelComponent.prototype.setVersion ||
-      old.setOrphanedVersion !== ModelComponent.prototype.setOrphanedVersion ||
-      old.getLocalVersions !== ModelComponent.prototype.getLocalVersions ||
-      old.compatibleWith !== ModelComponent.prototype.compatibleWith ||
-      old.setHead !== ModelComponent.prototype.setHead ||
-      old.hasLocalTag !== ModelComponent.prototype.hasLocalTag ||
-      old.isLocallyChangedRegardlessOfLanes !== ModelComponent.prototype.isLocallyChangedRegardlessOfLanes ||
-      incoming.getHead !== ModelComponent.prototype.getHead ||
-      incoming._getComparableVersionsObjects !== ModelComponent.prototype._getComparableVersionsObjects ||
-      typeof old.detachedHeads.canMergeNatively !== 'function' ||
-      typeof incoming.detachedHeads.canMergeNatively !== 'function' ||
-      !old.detachedHeads.canMergeNatively() ||
-      !incoming.detachedHeads.canMergeNatively()
-    )
-      return false;
-    const tags = [
-      Object.entries(old.versions),
-      Object.entries(incoming.versions),
-      Object.entries(incoming.orphanedVersions),
-    ];
-    const heads = [old.detachedHeads.toObject(), incoming.detachedHeads.toObject()];
-    if (
-      tags.some((entries) =>
-        entries.some(
-          ([tag, ref]) =>
-            !/^\d+\.\d+\.\d+(?:[-+].*)?$/.test(tag) ||
-            !ref ||
-            Object.getPrototypeOf(ref) !== Ref.prototype ||
-            typeof ref.hash !== 'string' ||
-            ref.isEqual !== Ref.prototype.isEqual ||
-            ref.toString !== Ref.prototype.toString ||
-            Object.keys(ref).some((key) => key !== 'hash')
-        )
-      ) ||
-      incoming.compatibleWith !== ModelComponent.prototype.compatibleWith ||
-      incoming.diffWith !== ModelComponent.prototype.diffWith
-    )
-      return false;
-    const local = old.getLocalVersions();
-    const plan = await this.nativeOperation!.plan(
-      () => ({
-        kind: 'component',
-        existing: Object.entries(old.versions).map(([tag, ref]) => [tag, ref.toString()]),
-        incoming: Object.entries(incoming.versions).map(([tag, ref]) => [tag, ref.toString()]),
-        orphaned: Object.entries(incoming.orphanedVersions).map(([tag, ref]) => [tag, ref.toString()]),
-        local: old.getLocalVersions(),
-        origin: this.isIncomingFromOrigin,
-        heads: [old.detachedHeads.toObject()?.heads || [], incoming.detachedHeads.toObject()?.heads || []],
-        deleted: [old.detachedHeads.toObject()?.deleted || [], incoming.detachedHeads.toObject()?.deleted || []],
-      }),
-      (value) => {
-        if (
-          !value ||
-          !Array.isArray(value.conflicts) ||
-          value.conflicts.some((tag: unknown) => typeof tag !== 'string' || !incoming.versions[tag])
-        )
-          throw new Error('invalid native conflicts');
-        if (value.conflicts.length) return value;
-        if (!Array.isArray(value.actions)) throw new Error('invalid native component actions');
-        for (const action of value.actions)
-          if (
-            !Array.isArray(action) ||
-            action.length !== 3 ||
-            !['tag', 'remove', 'orphan'].includes(action[0]) ||
-            !Number.isInteger(action[1]) ||
-            action[1] < 0 ||
-            action[1] > 2 ||
-            !Number.isInteger(action[2]) ||
-            action[2] < 0 ||
-            action[2] >= tags[action[1]].length
-          )
-            throw new Error('invalid native tag action');
-        nativeSelections(
-          value.heads,
-          heads.map((head) => head?.heads?.length || 0)
-        );
-        nativeSelections(
-          value.deleted,
-          heads.map((head) => head?.deleted?.length || 0)
-        );
-        return value;
-      }
-    );
-    if (!plan) return false;
-    return (
-      plan.apply((result) => {
-        if (
-          tags.some((entries, side) =>
-            entries.some(
-              ([tag, ref]) => [old.versions, incoming.versions, incoming.orphanedVersions][side][tag] !== ref
-            )
-          )
-        ) {
-          this.nativeOperation!.stats.stalePlans++;
-          return false;
-        }
-        if (result.conflicts.length) throw new MergeConflict(incoming.id(), result.conflicts, undefined);
-        for (const [kind, side, index] of result.actions) {
-          const [tag, ref] = tags[side][index];
-          if (kind === 'remove') {
-            delete old.versions[tag];
-            old.setOrphanedVersion(tag, ref);
-          } else {
-            if (kind === 'tag') old.setVersion(tag, ref);
-            else old.setOrphanedVersion(tag, ref);
-            this.mergedVersions.push(tag);
-          }
-        }
-        this.setHead(Boolean(local.length));
-        old.detachedHeads.mergeNative(incoming.detachedHeads, result.heads, result.deleted);
-        return true;
-      }) ?? false
-    );
   }
 
   private async isDeletedInOrigin() {

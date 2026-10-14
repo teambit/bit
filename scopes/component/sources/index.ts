@@ -4,56 +4,10 @@ import License from './license';
 import SourceFile from './source-file';
 
 export { AbstractVinyl, Dist, License, SourceFile };
-export { withRustSourceReads, isRustSourceReadScope } from './rust-source-read-scope';
-export { canUseDefaultVinylToSourceNatively } from './abstract-vinyl';
-export { canReadWorkspaceFilesNatively, sourceFileFromWorkspaceRead } from './source-file';
-export {
-  withRustWorkspaceInspection,
-  requestRustWorkspaceInspection,
-  retireRustWorkspaceInspection,
-  isRustWorkspaceInspection,
-  canRetainRustWorkspaceInspectionSnapshot,
-  retainRustWorkspaceInspectionSnapshot,
-} from './rust-workspace-inspection';
-export {
-  scanRustWorkspace,
-  readRustWorkspaceFiles,
-  registerRustWorkspaceFile,
-  registerRustWorkspaceBitmapFile,
-  getRustWorkspaceFileDescriptor,
-  getRustWorkspaceSource,
-  compareRustVersionIds,
-  getRustFilesDiff,
-} from './rust-workspace-reader';
-export {
-  getRustWorkspaceMergeDescriptor,
-  getRustSnapshotSourceDescriptor,
-  captureRustSnapshotSourceContents,
-  inheritRustWorkspaceFileSnapshot,
-  canInspectWorkspaceSourcesNatively,
-} from './rust-workspace-identity';
 export { PackageJsonFile } from './package-json-file';
 export { DataToPersist } from './data-to-persist';
-export {
-  withWorkspacePersistence,
-  withWorkspaceSession,
-  isWorkspacePersistenceScope,
-} from './rust-workspace-persistence';
-export {
-  createRustCheckoutSourceFile,
-  getRustCheckoutSourceDescriptor,
-  getRustHistorySourceDescriptor,
-  compareRustCheckoutSource,
-  prepareRustCheckoutSources,
-} from './rust-checkout-source';
-export type { RustCheckoutSourceDescriptor } from './rust-checkout-source';
 export { RemovePath } from './remove-path';
 export { ArtifactVinyl } from './artifact';
-export {
-  getRustArtifactSourceDescriptor,
-  captureRustArtifactSourceContents,
-  hasRustArtifactVinyl,
-} from './rust-artifact-source';
 export {
   ArtifactSource,
   ArtifactObject,
@@ -73,27 +27,3 @@ export {
 export { JsonVinyl } from './json-vinyl';
 export { removeFilesAndEmptyDirsRecursively } from './remove-files-and-empty-dirs-recursively';
 export { Symlink } from './symlink';
-export {
-  withRustWorkspaceEngine,
-  isRustWorkspaceEngine,
-  hasRustWorkspaceEngineOwner,
-  retireRustWorkspaceEngine,
-  registerRustWorkspaceEngineCleanup,
-} from './rust-workspace-engine';
-export {
-  createRustCheckoutPlanSourceFile,
-  installRustCheckoutPlanSourceContents,
-  canInstallRustCheckoutPlanSourceContents,
-  getRustCheckoutPlanSourceDescriptor,
-} from './rust-checkout-plan-source';
-export type { RustCheckoutPlanSourceDescriptor } from './rust-checkout-plan-source';
-
-export { getRustFileStatuses } from './rust-file-status';
-
-export { runRustWorkspaceInventory } from './rust-workspace-inventory';
-export type {
-  RustInventoryPolicy,
-  RustInventoryBegin,
-  RustInventoryConfiguration,
-  RustInventoryFile,
-} from './rust-workspace-inventory';

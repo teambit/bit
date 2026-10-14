@@ -1,14 +1,4 @@
-import {
-  registerRustSnapshotFunctionReference,
-  registerRustSnapshotFunctions,
-  hasRustSnapshotFunctionReference,
-} from '../objects/rust-snapshot-guards';
-import { collectRustExportObjects } from '../objects/rust-transfer';
-import { rebaseRustVersionHistory } from '../objects/rust-squash-history';
-import { populateRustHistoryQuery } from '../objects/rust-history-query-populate';
-import { getRustHistoryQueryLogVersions } from '../objects/rust-history-query-logs';
-import { isRustHistoryQueryOperation } from '../objects/rust-history-query';
-import lodash, { forEach, isEmpty, pickBy, mapValues, isEqual, clone, findLastKey } from 'lodash';
+import { forEach, isEmpty, pickBy, mapValues, isEqual, clone, findLastKey } from 'lodash';
 import { Mutex } from 'async-mutex';
 import * as semver from 'semver';
 import { versionParser, isHash, isTag, isSnap, LATEST_VERSION } from '@teambit/component-version';
@@ -24,13 +14,7 @@ import { BitId } from '@teambit/legacy-bit-id';
 import { DEFAULT_BIT_RELEASE_TYPE, DEFAULT_BIT_VERSION, DEFAULT_LANGUAGE, Extensions } from '@teambit/legacy.constants';
 import type { Dependencies, Dependency } from '@teambit/legacy.consumer-component';
 import { ConsumerComponent, SchemaName } from '@teambit/legacy.consumer-component';
-import {
-  License,
-  SourceFile,
-  getRefsFromExtensions,
-  prepareRustCheckoutSources,
-  isRustSourceReadScope,
-} from '@teambit/component.sources';
+import { License, SourceFile, getRefsFromExtensions } from '@teambit/component.sources';
 import { ComponentOverrides, getBindingPrefixByDefaultScope } from '@teambit/legacy.consumer-config';
 import { ValidationError } from '@teambit/legacy.cli.error';
 import { logger } from '@teambit/legacy.logger';
@@ -67,10 +51,6 @@ import type { ObjectItem } from '../objects/object-list';
 import type { Scope } from '@teambit/legacy.scope';
 import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { DetachedHeads } from './detach-heads';
-const defaultDetachedSetHead = DetachedHeads.prototype.setHead;
-const defaultDetachedClearCurrent = DetachedHeads.prototype.clearCurrent;
-import { isRustSnapshotOperation, hasDefaultSnapshotMethods } from '../objects/rust-snapshot';
-import { loadRustVersionParents } from '../objects/rust-merge-history';
 
 type State = {
   versions?: {
@@ -582,10 +562,7 @@ export default class Component extends BitObject {
    */
   async collectLogs(scope: Scope, shortHash = false, startFrom?: Ref): Promise<ComponentLog[]> {
     const repo = scope.objects;
-    const readVersions = async () =>
-      (isRustHistoryQueryOperation() && await getRustHistoryQueryLogVersions(this, repo, startFrom)) ||
-      getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
-    let versionsInfo = await readVersions();
+    let versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
 
     // due to recent changes of getting version-history object rather than fetching the entire history, some version
     // objects might be missing. import the component from the remote
@@ -606,7 +583,7 @@ export default class Component extends BitObject {
             reason: 'to collect logs (including parents)',
           }
         );
-        versionsInfo = await readVersions();
+        versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
         // Lean-lane-scope fallback: if the lane is on a different scope from the component's
         // home scope (e.g. a feature lane for a component that lives on main in another scope),
         // older main snaps may not be on the lane scope. Re-fetch without lane so the fetcher
@@ -625,7 +602,7 @@ export default class Component extends BitObject {
               reason: 'to collect logs from component home scope (lean-lane-scope fallback)',
             }
           );
-          versionsInfo = await readVersions();
+          versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false, startFrom });
         }
       } catch (err) {
         logger.error(`collectLogs failed to import ${this.id()} history`, err);
@@ -748,27 +725,6 @@ export default class Component extends BitObject {
   }
 
   // eslint-disable-next-line complexity
-  /** Only ordinary mainline mutation methods may apply a native snapshot policy. */
-  canAddSnapshotVersionNatively(version: Version): boolean {
-    return (
-      hasDefaultSnapshotMethods(this, [
-        'addVersion',
-        'getHead',
-        'getRef',
-        'hasTag',
-        'setHead',
-        'setVersion',
-        'markVersionAsLocal',
-        'toBuffer',
-        'hash',
-      ]) &&
-      hasDefaultSnapshotMethods(version, ['hash', 'toBuffer', 'addAsOnlyParent']) &&
-      this.detachedHeads.setHead === defaultDetachedSetHead &&
-      this.detachedHeads.clearCurrent === defaultDetachedClearCurrent &&
-      !Object.hasOwn(version, 'isLegacy')
-    );
-  }
-
   addVersion(
     version: Version,
     versionToAdd: string,
@@ -982,10 +938,6 @@ Error from "semver": ${err.message}`);
     throwForMissingLocalArtifacts = false,
     workspaceId?: ComponentID
   ): Promise<ObjectItem[]> {
-    if (process.env.BIT_RUST_CLIENT_VCS === 'on') {
-      const native = await collectRustExportObjects(this, repo, versions, throwForMissingLocalArtifacts, workspaceId);
-      if (native) return native;
-    }
     const refsWithoutArtifacts: Ref[] = [];
     const artifactsRefs: Ref[] = [];
     const artifactsRefsFromExportedVersions: Ref[] = [];
@@ -1198,12 +1150,7 @@ consider using --ignore-missing-artifacts flag if you're sure the artifacts are 
    * convert a ModelComponent of a specific version to ConsumerComponent
    * @see sources.consumerComponentToVersion() for the opposite action.
    */
-  async toConsumerComponent(
-    versionStr: string,
-    scopeName: string,
-    repository: Repository,
-    sourceFiles?: SourceFile[] | ((version: Version) => SourceFile[] | undefined)
-  ): Promise<ConsumerComponent> {
+  async toConsumerComponent(versionStr: string, scopeName: string, repository: Repository): Promise<ConsumerComponent> {
     logger.trace(`model-component, converting ${this.id()}, version: ${versionStr} to ConsumerComponent`);
     let componentVersion = this.toComponentVersion(versionStr);
     const version: Version = await componentVersion.getVersion(repository);
@@ -1229,15 +1176,7 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
         );
       return new ClassName({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
     };
-    const selectedSourceFiles = typeof sourceFiles === 'function' ? sourceFiles(version) : sourceFiles;
-    const nativeFiles =
-      !selectedSourceFiles && isRustSourceReadScope() && version.files
-        ? await prepareRustCheckoutSources(version.files, repository, true)
-        : undefined;
-    const filesP =
-      selectedSourceFiles ||
-      nativeFiles ||
-      (version.files ? Promise.all(version.files.map(loadFileInstance(SourceFile))) : null);
+    const filesP = version.files ? Promise.all(version.files.map(loadFileInstance(SourceFile))) : null;
     // @todo: this is weird. why the scopeMeta would be taken from the current scope and not he component scope?
     const scopeMetaP = scopeName ? ScopeMeta.fromScopeName(scopeName).load(repository) : Promise.resolve();
     const log = version.log || null;
@@ -1459,10 +1398,6 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
    */
   async updateRebasedVersionHistory(repo: Repository, versions: Version[]): Promise<VersionHistory | undefined> {
     const versionHistory = await this.getVersionHistory(repo);
-    const nativeUpdated = isRustSnapshotOperation()
-      ? await rebaseRustVersionHistory(this, versionHistory, versions)
-      : undefined;
-    if (nativeUpdated !== undefined) return nativeUpdated ? versionHistory : undefined;
     const hasUpdated = versions.some((version) => {
       const versionData = versionHistory.getVersionData(version.hash());
       if (!versionData) return false;
@@ -1493,17 +1428,6 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
   ): Promise<{ err?: Error; added?: VersionParents[] }> {
     const headExists = versionHistory.hasHash(head);
     if (exitWhenFind && headExists) return {};
-    if (exitWhenFind && isRustSnapshotOperation()) {
-      const native = await this.populateVersionHistoryMutex.runExclusive(async () => {
-        if (versionHistory.hasHash(head)) return undefined;
-        const added = await loadRustVersionParents(repo, versionHistory, head);
-        if (!added) return undefined;
-        versionHistory.addFromVersionParents(added);
-        await repo.writeObjectsToTheFS([versionHistory]);
-        return { added };
-      });
-      if (native) return native;
-    }
     const getVersionObj = async (ref: Ref) => (await ref.load(repo)) as Version | undefined;
     const versionsToAdd: Version[] = [];
     let err: Error | undefined;
@@ -1530,21 +1454,6 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
       return { err: new HeadNotFound(this.id(), head.toString()) };
     }
     return this.populateVersionHistoryMutex.runExclusive(async () => {
-      const native = isRustHistoryQueryOperation()
-        ? await populateRustHistoryQuery(this, repo, versionHistory, head, headVer, headExists, exitWhenFind)
-        : undefined;
-      if (native) {
-        for (const missing of native.missing) {
-          const ref = Ref.from(missing.hash);
-          const tag = this.getTagOfRefIfExists(ref);
-          err = tag ? new VersionNotFound(tag, this.id()) : new ParentNotFound(this.id(), missing.parentOf, missing.hash);
-        }
-        if (err) return { err, added: native.added };
-        versionHistory.addFromVersionParents(native.added);
-        logger.debug(`populateVersionHistoryIfMissingGracefully, updating ${this.id()} with ${native.added.length} versions`);
-        await repo.writeObjectsToTheFS([versionHistory]);
-        return { added: native.added };
-      }
       if (!headExists) versionsToAdd.push(headVer);
       await addParentsRecursively(headVer);
       const added = versionsToAdd.map((v) => getVersionParentsFromVersion(v));
@@ -1622,16 +1531,3 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
     }
   }
 }
-
-registerRustSnapshotFunctions('SnapshotComponentLodash', lodash, ['forEach', 'isEmpty']);
-registerRustSnapshotFunctions('HistoryResetModelLodash', lodash, ['findLastKey']);
-registerRustSnapshotFunctionReference('HistoryResetGetDivergeData', getDivergeData);
-registerRustSnapshotFunctionReference('HistoryResetPMapPool', pMapPool);
-registerRustSnapshotFunctionReference('HistoryResetConcurrentComponentsLimit', concurrentComponentsLimit);
-
-registerRustSnapshotFunctionReference('SnapshotModelSemverInc', semver.inc);
-export function canPlanRustSnapshotFutureVersions(): boolean {
-  return hasRustSnapshotFunctionReference('SnapshotModelSemverInc', semver.inc);
-}
-
-registerRustSnapshotFunctionReference('SnapshotCanPlanFutureVersions', canPlanRustSnapshotFutureVersions);

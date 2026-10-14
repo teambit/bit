@@ -1,9 +1,4 @@
-import { registerRustTransferClass, persistRustTransferPending } from './rust-transfer';
-import { registerRustResetClass } from './rust-reset-refs';
-import { registerRustSnapshotFunctions } from './rust-snapshot-guards';
-import { registerRustHistoryQueryRepository } from './rust-history-query';
 import fs from 'fs-extra';
-import { registerRustSquashRepository } from './rust-squash-history';
 import { Mutex } from 'async-mutex';
 import { compact, uniqBy, differenceWith, isEqual } from 'lodash';
 import { BitError } from '@teambit/bit-error';
@@ -14,7 +9,7 @@ import { userInfo } from 'os';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { OBJECTS_DIR } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
-import { deflate, type PathOsBasedAbsolute } from '@teambit/legacy.utils';
+import type { PathOsBasedAbsolute } from '@teambit/legacy.utils';
 import { glob } from 'glob';
 import { removeEmptyDir } from '@teambit/toolbox.fs.remove-empty-dir';
 import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
@@ -25,31 +20,14 @@ import {
   UnknownObjectType,
   UnmergedComponents,
   RemoteLanes,
-  typesObj,
 } from '@teambit/legacy.scope';
 import type { IndexType, IndexItem } from './scope-index';
-import { ScopeIndex, canPersistSnapshotIndexNatively } from './scope-index';
+import { ScopeIndex } from './scope-index';
 import BitObject from './object';
 import type { ObjectItem, RawObjectsMap, CompressedObject } from './object-list';
 import { ObjectList } from './object-list';
 import BitRawObject from './raw-object';
 import Ref from './ref';
-import { nativeObjectDirectory, nativeTraversalEnabled } from './rust-object-directory';
-import { NativeImportOperation } from './rust-object-operation';
-import { persistRustSnapshotObjects, createRustSnapshotIndexOperation } from './rust-snapshot';
-import { persistPreparedRustSnapshotObjects } from './rust-snapshot-store';
-import { isRustSnapshotTransaction } from './rust-snapshot-transaction';
-import { RustSnapshotRepositoryJournal } from './rust-snapshot-repository';
-import { registerRustHistoryRepository } from './rust-merge-history';
-import { resolveRustObjectImportExecutable } from './rust-object-discovery';
-import { nativeInventoryEnabled, nativeObjectExists } from './rust-object-inventory';
-import {
-  nativeObjectBuffers,
-  nativeObjectHeaders,
-  nativeReadsEnabled,
-  nativeHeadersEnabled,
-} from './rust-object-reader';
-import type { NativeObjectHeader } from './rust-object-reader';
 import { LiveObjects } from './live-objects';
 import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { getCacheOptionsForObjects, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
@@ -80,15 +58,10 @@ export default class Repository {
   scopeJson: ScopeJson;
   onRead: ContentTransformer;
   onPersist: ContentTransformer;
-  private defaultOnPersist: ContentTransformer;
-  private defaultOnRead: ContentTransformer;
   scopePath: string;
   scopeIndex: ScopeIndex;
   protected cache: InMemoryCache<BitObject>;
   private liveObjects = new LiveObjects();
-  private nativeImportOperation?: NativeImportOperation;
-  private nativeImportGroupName?: string;
-  private nativeImportDepth = 0;
   remoteLanes!: RemoteLanes;
   unmergedComponents!: UnmergedComponents;
   _persistMutex?: Mutex;
@@ -97,8 +70,6 @@ export default class Repository {
     this.scopeJson = scopeJson;
     this.onRead = (content: Buffer) => Repository.onPostObjectRead?.(content) || content;
     this.onPersist = (content: Buffer) => Repository.onPreObjectPersist?.(content) || content;
-    this.defaultOnPersist = this.onPersist;
-    this.defaultOnRead = this.onRead;
     this.cache = createInMemoryCache(getCacheOptionsForObjects());
   }
 
@@ -147,9 +118,6 @@ export default class Repository {
    * which needs to maintain sync behavior for compatibility with existing code.
    */
   static onPreObjectPersist?: (content: Buffer) => Buffer;
-
-  /** Live check for the scope aspect's usually empty persist-transformer slot. */
-  static hasPreObjectPersistTransformer?: () => boolean;
 
   /**
    * Hook for transforming content after objects are read from the filesystem.
@@ -233,19 +201,6 @@ export default class Repository {
   }
 
   async hasMultiple(refs: Ref[]): Promise<Ref[]> {
-    // Preserve custom scalar/path overrides and the existing disk-only semantics.
-    if (
-      nativeInventoryEnabled(refs.length) &&
-      this.has === Repository.prototype.has &&
-      this.objectPath === Repository.prototype.objectPath &&
-      this.hashPath === Repository.prototype.hashPath
-    ) {
-      const exists = await nativeObjectExists(
-        path.resolve(this.getPath()),
-        refs.map((ref) => ref.toString())
-      );
-      if (exists) return refs.filter((_, index) => exists[index]);
-    }
     const concurrency = concurrentIOLimit();
     const existingRefs = await pMapPool(
       refs,
@@ -271,24 +226,6 @@ export default class Repository {
     if (cached) {
       return cached;
     }
-    const operation =
-      !throws &&
-      process.env.BIT_RUST_OBJECT_IMPORT_MISSING === 'on' &&
-      this.load === Repository.prototype.load &&
-      this.getCache === Repository.prototype.getCache
-        ? this.getNativeImportOperation()
-        : undefined;
-    const generation = operation?.writeGeneration;
-    if (
-      operation &&
-      (await operation.revalidateMissing(ref.toString())) === false &&
-      this.getNativeImportOperation() === operation
-    ) {
-      const nowCached = this.objects[ref.hash.toString()] || this.getCache(ref);
-      if (nowCached) return nowCached;
-      // @ts-ignore @todo: fix! it should return BitObject | null.
-      return null;
-    }
     let fileContentsRaw: Buffer;
     const objectPath = this.objectPath(ref);
     try {
@@ -298,7 +235,6 @@ export default class Repository {
         logger.error(`Failed reading a ref file ${objectPath}. Error: ${err.message}`);
         throw err;
       }
-      if (operation && generation !== undefined) operation.rememberMissing(ref.toString(), generation);
       logger.trace(`Failed finding a ref file ${objectPath}.`);
       if (throws) {
         // if we just `throw err` we loose the stack trace.
@@ -320,34 +256,6 @@ export default class Repository {
       this.liveObjects.set(ref.toString(), parsedObject, inflatedSize, false);
     }
     return parsedObject;
-  }
-
-  /** Direct checkout reads must not bypass live objects, custom readers or content transforms. */
-  canReadCheckoutSourcesNatively(refs: Ref[]): boolean {
-    return (
-      this.canReadNatively() &&
-      this.load === Repository.prototype.load &&
-      this.loadSync === Repository.prototype.loadSync &&
-      this.getCache === Repository.prototype.getCache &&
-      this.getPath === Repository.prototype.getPath &&
-      refs.every((ref) => {
-        if (!/^[a-f0-9]{40}$/.test(ref.toString()) || this.objects[ref.toString()]) return false;
-        const cached = this.getCache(ref);
-        if (!cached) return true;
-        // A cached immutable Source can share the disk path only when its actual
-        // bytes still identify this ref. Accessor-backed and mutated objects stay canonical.
-        const contents = Object.getOwnPropertyDescriptor(cached, 'contents')?.value;
-        return Buffer.isBuffer(contents) && BitObject.makeHash(contents) === ref.toString();
-      })
-    );
-  }
-
-  /** Metadata plans are checked against the live hydrated model by their caller. */
-  canPlanCheckoutNatively(refs: Ref[]): boolean {
-    return (
-      this.canReadCheckoutSourcesNatively([]) &&
-      refs.every((ref) => /^[a-f0-9]{40}$/.test(ref.toString()) && !this.objects[ref.toString()])
-    );
   }
 
   /**
@@ -393,35 +301,10 @@ export default class Repository {
    * to the whole buffer, so in that case the file is read in full.
    */
   async listObjectsWithType(): Promise<ObjectsWithType> {
-    const directory =
-      nativeTraversalEnabled() &&
-      this.canReadNatively() &&
-      this.listRefs === Repository.prototype.listRefs &&
-      this.readObjectType === Repository.prototype.readObjectType &&
-      this.getObjectTypeGracefully === Repository.prototype.getObjectTypeGracefully
-        ? await nativeObjectDirectory(path.resolve(this.getPath()), true)
-        : undefined;
-    const refs = directory ? directory.map(({ hash }) => new Ref(hash)) : await this.listRefs();
+    const refs = await this.listRefs();
     const concurrency = concurrentIOLimit();
     logger.debug(`Repository.listObjectsWithType, classifying ${refs.length} objects`);
-    const headers = directory
-      ? directory.map(({ header }) => header)
-      : nativeHeadersEnabled(refs.length) &&
-          this.canReadNatively() &&
-          this.readObjectType === Repository.prototype.readObjectType &&
-          this.getObjectTypeGracefully === Repository.prototype.getObjectTypeGracefully
-        ? await nativeObjectHeaders(
-            path.resolve(this.getPath()),
-            refs.map((ref) => ref.toString())
-          )
-        : undefined;
-    const results = headers
-      ? await pMapPool(
-          refs.map((ref, index) => ({ ref, header: headers[index] })),
-          ({ ref, header }) => this.classifyObject(ref, header),
-          { concurrency }
-        )
-      : await pMapPool(refs, (ref) => this.getObjectTypeGracefully(ref), { concurrency });
+    const results = await pMapPool(refs, (ref) => this.getObjectTypeGracefully(ref), { concurrency });
     const objects = compact(results.map((result) => result.object));
     const unreadable = compact(results.map((result) => result.unreadable));
     if (unreadable.length) {
@@ -435,23 +318,6 @@ export default class Repository {
    * this inventory (the garbage collector) has to know that it's incomplete, because an object it
    * can't see is one it can't reason about.
    */
-  private async classifyObject(
-    ref: Ref,
-    header?: NativeObjectHeader
-  ): Promise<{ object?: ObjectWithType; unreadable?: Ref }> {
-    if (header && typesObj[header.type]) return { object: { ref, ...header } };
-    return this.getObjectTypeGracefully(ref);
-  }
-
-  private canReadNatively(): boolean {
-    return (
-      this.onRead === this.defaultOnRead &&
-      !this.isContentTransformed() &&
-      this.objectPath === Repository.prototype.objectPath &&
-      this.hashPath === Repository.prototype.hashPath
-    );
-  }
-
   private async getObjectTypeGracefully(ref: Ref): Promise<{ object?: ObjectWithType; unreadable?: Ref }> {
     const objectPath = this.objectPath(ref);
     try {
@@ -535,8 +401,6 @@ export default class Repository {
   }
 
   async listRefs(cwd = this.getPath()): Promise<Array<Ref>> {
-    const directory = nativeTraversalEnabled() ? await nativeObjectDirectory(path.resolve(cwd)) : undefined;
-    if (directory) return directory.map(({ hash }) => new Ref(hash));
     const matches = await glob(path.join('*', '*'), { cwd });
     const refs = matches.map((str) => {
       const hash = str.replace(path.sep, '');
@@ -660,43 +524,24 @@ export default class Repository {
   async loadManyRaw(refs: Ref[]): Promise<ObjectItem[]> {
     const concurrency = concurrentIOLimit();
     const uniqRefs = uniqBy(refs, 'hash');
-    const buffers = await this.readRawBatch(uniqRefs);
-    if (!buffers) return pMapPool(uniqRefs, async (ref) => ({ ref, buffer: await this.loadRaw(ref) }), { concurrency });
-    return pMapPool(
-      uniqRefs.map((ref, index) => ({ ref, buffer: buffers[index] })),
-      async ({ ref, buffer }) => ({ ref, buffer: buffer ?? (await this.loadRaw(ref)) }),
-      { concurrency }
-    );
-  }
-
-  private async readRawBatch(refs: Ref[]): Promise<(Buffer | undefined)[] | undefined> {
-    if (!nativeReadsEnabled(refs.length) || !this.canReadNatively() || this.loadRaw !== Repository.prototype.loadRaw)
-      return undefined;
-    return nativeObjectBuffers(
-      path.resolve(this.getPath()),
-      refs.map((ref) => ref.toString())
-    );
+    return pMapPool(uniqRefs, async (ref) => ({ ref, buffer: await this.loadRaw(ref) }), { concurrency });
   }
 
   async loadManyRawIgnoreMissing(refs: Ref[]): Promise<ObjectItem[]> {
     const concurrency = concurrentIOLimit();
-    const buffers = await this.readRawBatch(refs);
-    const read = async (ref: Ref, existing?: Buffer) => {
-      try {
-        const buffer = existing ?? (await this.loadRaw(ref));
-        return { ref, buffer };
-      } catch (err: any) {
-        if (err.code === 'ENOENT') return null;
-        throw err;
-      }
-    };
-    const results = buffers
-      ? await pMapPool(
-          refs.map((ref, index) => ({ ref, buffer: buffers[index] })),
-          ({ ref, buffer }) => read(ref, buffer),
-          { concurrency }
-        )
-      : await pMapPool(refs, (ref) => read(ref), { concurrency });
+    const results = await pMapPool(
+      refs,
+      async (ref) => {
+        try {
+          const buffer = await this.loadRaw(ref);
+          return { ref, buffer };
+        } catch (err: any) {
+          if (err.code === 'ENOENT') return null;
+          throw err;
+        }
+      },
+      { concurrency }
+    );
     return compact(results);
   }
 
@@ -748,7 +593,6 @@ export default class Repository {
   }
 
   removeFromCache(ref: Ref) {
-    this.nativeImportOperation?.invalidateMissing(ref.toString());
     this.cache.delete(ref.toString());
     this.liveObjects.delete(ref.toString());
   }
@@ -760,7 +604,6 @@ export default class Repository {
   }
   clearObjectsFromCache() {
     logger.debug('repository.clearObjectsFromCache');
-    this.nativeImportOperation?.invalidateMissing();
     this.cache.deleteAll();
     this.liveObjects.clear();
   }
@@ -816,41 +659,21 @@ export default class Repository {
     // do not let two requests enter this critical area, otherwise, refs/index.json/objects could
     // be corrupted
     logger.debug(`Repository.persist, going to acquire a lock`);
-    let journal: RustSnapshotRepositoryJournal | undefined;
     await this.persistMutex.runExclusive(async () => {
       logger.debug(`Repository.persist, validate = ${validate.toString()}, a lock has been acquired`);
-      if (isRustSnapshotTransaction()) journal = await RustSnapshotRepositoryJournal.begin(this);
-      try {
-        await this.deleteObjectsFromFS(this.objectsToRemove);
-        if (journal) await journal.completed(Object.values(this.objects).length);
-        this.validateObjects(validate, Object.values(this.objects));
-        if (journal) await journal.completed(Object.values(this.objects).length);
-        const objects = Object.values(this.objects);
-        if (journal) {
-          await this.writeObjectsToTheFS(objects, undefined, () => journal!.completed());
-          if (!objects.length) {
-            await journal.completed();
-            await journal.completed();
-          }
-        } else await this.writeObjectsToTheFS(objects);
-        await this.writeRemoteLanes();
-        if (journal) await journal.completed();
-        await this.unmergedComponents.write();
-        if (journal) await journal.completed();
-      } catch (error) {
-        if (journal) await journal.failed();
-        throw error;
-      }
+      await this.deleteObjectsFromFS(this.objectsToRemove);
+      this.validateObjects(validate, Object.values(this.objects));
+      await this.writeObjectsToTheFS(Object.values(this.objects));
+      await this.writeRemoteLanes();
+      await this.unmergedComponents.write();
     });
     logger.debug(`Repository.persist, completed. the lock has been released`);
     this.clearObjects();
-    if (journal) await journal.completed();
     if (Repository.onPostObjectsPersist) {
       Repository.onPostObjectsPersist().catch((err) => {
         logger.error('fatal: onPostObjectsPersist encountered an error (this error does not stop the process)', err);
       });
     }
-    if (journal) await journal.completed();
   }
 
   async writeRemoteLanes() {
@@ -969,211 +792,17 @@ export default class Repository {
   /**
    * write all objects to the FS and index the components/lanes/symlink objects
    */
-  async writeObjectsToTheFS(
-    objects: BitObject[],
-    rawObjects?: RawObjectsMap,
-    receipt?: () => Promise<void>
-  ): Promise<void> {
+  async writeObjectsToTheFS(objects: BitObject[], rawObjects?: RawObjectsMap): Promise<void> {
     const count = objects.length;
     if (!count) return;
     logger.trace(`Repository.writeObjectsToTheFS: started writing ${count} objects`);
     const concurrency = concurrentIOLimit();
     const chownOptions = await this.getChownOptions();
-    const transaction = isRustSnapshotTransaction();
-    const completed = transaction
-      ? undefined
-      : await persistRustSnapshotObjects(this, objects, rawObjects, chownOptions);
-    await pMapPool(
-      completed ? objects.slice(completed) : objects,
-      async (obj) => {
-        // Retain the canonical pool's failure prefix and per-object callback boundary.
-        const prepared = transaction
-          ? await persistPreparedRustSnapshotObjects(this, [obj], rawObjects, chownOptions)
-          : undefined;
-        if (prepared?.completed === 1) return;
-        const resume = prepared?.fallback.get(obj);
-        if (resume) {
-          await this._writeOne(obj, await resume(), chownOptions);
-          return;
-        }
-        const operation = this.getNativeImportOperation();
-        if (
-          operation &&
-          !rawObjects?.get(obj) &&
-          (obj instanceof ModelComponent || obj instanceof Lane || obj instanceof ScopeMeta) &&
-          obj.serialize === BitObject.prototype.serialize &&
-          obj.compressWithSize === BitObject.prototype.compressWithSize
-        ) {
-          const buffer = obj.serialize();
-          const size =
-            buffer.length <= 16 * 1024
-              ? await operation.request(
-                  { kind: 'persist', hash: obj.hash().toString(), serialized: buffer.toString('hex') },
-                  (value) => {
-                    if (value !== null && (!Number.isSafeInteger(value) || value < 1 || value > 513 * 1024))
-                      throw new Error('invalid native model size');
-                    return value as number | null;
-                  }
-                )
-              : undefined;
-          if (size) {
-            this.recordNativeObjectWrite(obj, buffer.length, size);
-            operation.stats.persisted++;
-            return;
-          }
-          const compressed = await deflate(buffer);
-          await this._writeOne(obj, { buffer: compressed, inflatedSize: buffer.length, ref: obj.hash() }, chownOptions);
-          return;
-        }
-        await this._writeOne(obj, rawObjects?.get(obj), chownOptions);
-      },
-      { concurrency }
-    );
+    await pMapPool(objects, (obj) => this._writeOne(obj, rawObjects?.get(obj), chownOptions), { concurrency });
     logger.trace(`Repository.writeObjectsToTheFS: completed writing ${count} objects`);
-    if (receipt) await receipt();
 
-    const snapshot = createRustSnapshotIndexOperation(this, chownOptions);
-    const added = await this.scopeIndex.addManyForImport(objects, snapshot || this.getNativeImportOperation());
-    if (added) {
-      const previous = this.scopeIndex.nativeSnapshotOperation;
-      try {
-        this.scopeIndex.nativeSnapshotOperation = snapshot;
-        await this.scopeIndex.write();
-      } finally {
-        this.scopeIndex.nativeSnapshotOperation = previous;
-      }
-    }
-    if (receipt) await receipt();
-  }
-
-  async withNativeImportOperation<T>(run: () => Promise<T>): Promise<T> {
-    if (
-      !this.nativeImportOperation &&
-      (process.env.BIT_RUST_OBJECT_IMPORT_OPERATION === 'on' ||
-        (process.env.BIT_RUST_CLIENT_VCS === 'on' && process.env.BIT_RUST_OBJECT_IMPORT_OPERATION !== 'off')) &&
-      this.canWriteMutableObjectsNatively() &&
-      this.getNativeSourceStoreOptions === Repository.prototype.getNativeSourceStoreOptions &&
-      this.getChownOptions === Repository.prototype.getChownOptions &&
-      this.getPath === Repository.prototype.getPath
-    ) {
-      const groupName = this.scopeJson.groupName;
-      const executable = resolveRustObjectImportExecutable('import');
-      const options = executable ? await this.getNativeSourceStoreOptions() : undefined;
-      if (options && !this.nativeImportOperation && groupName === this.scopeJson.groupName) {
-        this.nativeImportGroupName = groupName;
-        this.nativeImportOperation = new NativeImportOperation(executable!, options);
-      }
-    }
-    this.nativeImportDepth++;
-    try {
-      return await run();
-    } finally {
-      this.nativeImportDepth--;
-      if (!this.nativeImportDepth) {
-        const operation = this.nativeImportOperation;
-        this.nativeImportOperation = undefined;
-        this.scopeIndex.nativeImportOperation = undefined;
-        await operation?.disposeAndWait();
-      }
-    }
-  }
-
-  getNativeImportOperation(): NativeImportOperation | undefined {
-    if (
-      !this.nativeImportOperation ||
-      this.nativeImportOperation.unavailableReason ||
-      !this.isNativeSourceStoreEligible() ||
-      !this.canWriteMutableObjectsNatively() ||
-      this.scopeIndex.indexPath !== path.join(this.scopePath, 'index.json') ||
-      this.nativeImportOperation.objectsDirectory !== path.resolve(this.getPath()) ||
-      this.scopeJson.groupName !== this.nativeImportGroupName
-    ) {
-      this.scopeIndex.nativeImportOperation = undefined;
-      return undefined;
-    }
-    this.scopeIndex.nativeImportOperation = this.nativeImportOperation;
-    return this.nativeImportOperation;
-  }
-
-  /** Recheck live policy without allocating options when the default store needs no ownership lookup. */
-  getNativeSourceStoreEligibility(): boolean | undefined {
-    if (
-      this.scopeJson.groupName ||
-      this.getNativeSourceStoreOptions !== Repository.prototype.getNativeSourceStoreOptions ||
-      this.getChownOptions !== Repository.prototype.getChownOptions ||
-      this.getPath !== Repository.prototype.getPath
-    )
-      return undefined;
-    return this.isNativeSourceStoreEligible();
-  }
-
-  private isNativeSourceStoreEligible(): boolean {
-    // Custom transforms stay in JavaScript. Native writes are currently qualified on Unix hosts.
-    return (
-      (process.platform === 'linux' ||
-        process.platform === 'darwin' ||
-        (process.platform === 'win32' && process.env.BIT_RUST_OBJECT_IMPORT_WINDOWS_WRITES === 'on')) &&
-      this.onPersist === this.defaultOnPersist &&
-      this.onRead === this.defaultOnRead &&
-      !(Repository.hasPreObjectPersistTransformer
-        ? Repository.hasPreObjectPersistTransformer()
-        : Boolean(Repository.onPreObjectPersist)) &&
-      !this.isContentTransformed()
-    );
-  }
-
-  async getNativeSourceStoreOptions(): Promise<{ objectsDirectory: string; owner: ObjectChownOptions } | undefined> {
-    if (!this.isNativeSourceStoreEligible()) return undefined;
-    return { objectsDirectory: path.resolve(this.getPath()), owner: await this.getChownOptions() };
-  }
-
-  /** Snapshot writes retain canonical repository policy and filesystem transforms. */
-  canPersistSnapshotsNatively(): boolean {
-    return (
-      this.isNativeSourceStoreEligible() &&
-      this.canWriteMutableObjectsNatively() &&
-      hasDefaultSnapshotRepositoryMethods(this) &&
-      canPersistSnapshotIndexNatively(this.scopeIndex, this.getPath())
-    );
-  }
-
-  canWriteMutableObjectsNatively(): boolean {
-    return (
-      this.writeObjectsToTheFS === Repository.prototype.writeObjectsToTheFS &&
-      this._writeOne === Repository.prototype._writeOne &&
-      this.scopeIndex.addMany === ScopeIndex.prototype.addMany &&
-      this.scopeIndex.addOne === ScopeIndex.prototype.addOne &&
-      this.scopeIndex.write === ScopeIndex.prototype.write &&
-      this.objectPath === Repository.prototype.objectPath &&
-      this.writeObjectFile === Repository.prototype.writeObjectFile &&
-      this.hashPath === Repository.prototype.hashPath
-    );
-  }
-
-  /** Verified native query reads use the same cache policy as ordinary repository loads. */
-  hydrateHistoryQueryVersion(version: BitObject, inflatedSize: number, compressedSize: number): void {
-    if (compressedSize < MAX_COMPRESSED_SIZE_TO_CACHE) {
-      this.setCache(version, inflatedSize);
-    } else {
-      this.liveObjects.set(version.hash().toString(), version, inflatedSize, false);
-    }
-  }
-
-  /** Acknowledged native writes retain the canonical hydrated instance and cache size policy. */
-  recordNativeObjectWrite(object: BitObject, inflatedSize: number, compressedSize: number) {
-    const hash = object.hash().toString();
-    this.nativeImportOperation?.invalidateMissing(hash);
-    if (this.cache.has(hash)) this.cache.set(hash, object, inflatedSize);
-    this.liveObjects.set(hash, object, inflatedSize, compressedSize < MAX_COMPRESSED_SIZE_TO_CACHE);
-  }
-
-  /** Internal import fast path: only content-validated immutable Sources, never indexed/mutable objects. */
-  async writeValidatedSourceToFS(ref: Ref, compressed: Buffer): Promise<void> {
-    if (!isSnap(ref.toString())) throw new BitError('invalid validated Source ref');
-    const options = await this.getChownOptions();
-    await this.writeObjectFile(this.objectPath(ref), this.onPersist(compressed), options);
-    // A native Source has no hydrated JS object. Invalidate both layers so later loads read the committed data.
-    this.removeFromCache(ref);
+    const added = this.scopeIndex.addMany(objects);
+    if (added) await this.scopeIndex.write();
   }
 
   /**
@@ -1206,7 +835,6 @@ export default class Repository {
     logger.trace(`repository._writeOne: ${objectPath}`);
     // Run hook to transform content pre persisting
     const transformedContent = this.onPersist(contents);
-    this.nativeImportOperation?.invalidateMissing(hash.toString());
     await this.writeObjectFile(objectPath, transformedContent, options);
     // once written, the object is the up-to-date one. this also replaces the size-estimate of objects that
     // were cached by `add()`.
@@ -1229,12 +857,8 @@ export default class Repository {
       if (!isSnap(ref)) throw new BitError(`invalid object ref: ${JSON.stringify(ref)}`);
     }
     const chownOptions = await this.getChownOptions();
-    const completed =
-      process.env.BIT_RUST_CLIENT_VCS === 'on'
-        ? await persistRustTransferPending(this, objectList, pendingDir, chownOptions)
-        : undefined;
     await pMapPool(
-      completed === undefined ? objectList.objects : objectList.objects.slice(completed),
+      objectList.objects,
       (object) => this.writeObjectFile(path.join(pendingDir, this.hashPath(object.ref)), object.buffer, chownOptions),
       { concurrency: concurrentIOLimit() }
     );
@@ -1303,75 +927,6 @@ export default class Repository {
     const hash = ref.toString();
     return path.join(hash.slice(0, 2), hash.slice(2));
   }
-}
-
-registerRustTransferClass('Repository', Repository, [
-  'load',
-  'loadSync',
-  'loadRaw',
-  'loadManyRaw',
-  'loadManyRawIgnoreMissing',
-  'getPath',
-  'isContentTransformed',
-  'objectPath',
-  'hashPath',
-  'getCache',
-  'canPlanCheckoutNatively',
-  'writeObjectsToPendingDir',
-  'writeObjectFile',
-  'getChownOptions',
-]);
-registerRustResetClass('Repository', Repository);
-registerRustTransferClass('BitObject', BitObject, []);
-registerRustResetClass('BitObject', BitObject);
-registerRustHistoryRepository(Repository);
-registerRustHistoryQueryRepository(Repository);
-registerRustSquashRepository(Repository, BitObject);
-registerRustSnapshotFunctions('SnapshotRepositoryFS', fs, [
-  'existsSync',
-  'stat',
-  'writeFile',
-  'mkdir',
-  'chown',
-  'chmod',
-  'rename',
-  'remove',
-  'readFile',
-  'mkdtemp',
-]);
-registerRustSnapshotFunctions('SnapshotRepositoryPath', path, ['join', 'resolve', 'dirname', 'basename']);
-registerRustSnapshotFunctions('SnapshotRepositoryLogger', logger, ['trace', 'debug', 'error']);
-registerRustSnapshotFunctions('SnapshotRepositoryMethods', Repository.prototype, [
-  'getCache',
-  'getPath',
-  'canPersistSnapshotsNatively',
-  'recordNativeObjectWrite',
-  'isNativeSourceStoreEligible',
-  'isContentTransformed',
-  'canWriteMutableObjectsNatively',
-]);
-registerRustSnapshotFunctions('SnapshotRepositoryJournal', Repository.prototype, [
-  'persist',
-  'deleteObjectsFromFS',
-  'validateObjects',
-  'writeObjectsToTheFS',
-  'writeRemoteLanes',
-  'clearObjects',
-]);
-
-const snapshotRepositoryDefaults = [
-  'writeObjectsToTheFS',
-  '_writeOne',
-  'objectPath',
-  'writeObjectFile',
-  'hashPath',
-  'getNativeSourceStoreOptions',
-  'getChownOptions',
-  'getPath',
-].map((name) => [name, Repository.prototype[name]] as const);
-
-function hasDefaultSnapshotRepositoryMethods(repository: Repository): boolean {
-  return snapshotRepositoryDefaults.every(([name, method]) => repository[name] === method);
 }
 
 async function removeFile(filePath: string, propagateDirs = false): Promise<boolean> {

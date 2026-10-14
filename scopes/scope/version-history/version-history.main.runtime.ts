@@ -17,13 +17,7 @@ import type { ComponentID } from '@teambit/component-id';
 import { ComponentIdList } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
 import type { VersionHistoryGraph, ModelComponent, VersionHistory } from '@teambit/objects';
-import {
-  Ref,
-  withRustHistoryQueryOperation,
-  getRustHistoryQueryGraphOrder,
-  getRustHistoryQueryHistoryGraph,
-  isRustHistoryQueryOperation,
-} from '@teambit/objects';
+import { Ref } from '@teambit/objects';
 import { ExternalActions } from '@teambit/legacy.scope-api';
 import { BuildVersionHistoryAction } from './build-version-history-action';
 import type { Logger, LoggerMain } from '@teambit/logger';
@@ -41,10 +35,6 @@ export class VersionHistoryMain {
   ) {}
 
   async build(id: ComponentID, options: BuildOptions = {}): Promise<BuildResult> {
-    return withRustHistoryQueryOperation(() => this.buildWithinOperation(id, options));
-  }
-
-  private async buildWithinOperation(id: ComponentID, options: BuildOptions): Promise<BuildResult> {
     const { fromSnap } = options;
     const modelComponent = (await this.scope.getBitObjectModelComponent(
       id.changeVersion(undefined),
@@ -105,13 +95,9 @@ export class VersionHistoryMain {
   }
 
   async show(id: string, options: ShowOptions): Promise<ShowResult[]> {
-    return withRustHistoryQueryOperation(() => this.showWithinOperation(id, options));
-  }
-
-  private async showWithinOperation(id: string, options: ShowOptions): Promise<ShowResult[]> {
     const graph = await this.generateGraph(id, options.shortHash);
-    const sorted = (await getRustHistoryQueryGraphOrder(graph)) || graph.toposort();
-    const results: ShowResult[] = sorted.map((node) => {
+
+    const results: ShowResult[] = graph.toposort().map((node) => {
       const metadata = typeof node.attr === 'string' ? undefined : node.attr;
       const pointers = compact([...(metadata?.pointers || []), metadata?.tag]);
       const edges = graph.outEdges(node.id).map((e) => ({ hash: e.targetId, type: e.attr }));
@@ -128,14 +114,6 @@ export class VersionHistoryMain {
   }
 
   async generateGraph(id: string, shortHash?: boolean, limit?: number): Promise<VersionHistoryGraph> {
-    return withRustHistoryQueryOperation(() => this.generateGraphWithinOperation(id, shortHash, limit));
-  }
-
-  private async generateGraphWithinOperation(
-    id: string,
-    shortHash?: boolean,
-    limit?: number
-  ): Promise<VersionHistoryGraph> {
     const compId = await this.scope.resolveComponentId(id);
     const modelComponent = (await this.scope.getBitObjectModelComponent(compId, true)) as ModelComponent;
     const repo = this.scope.legacyScope.objects;
@@ -152,10 +130,7 @@ export class VersionHistoryMain {
       laneHeads[hash].push(lane);
     });
 
-    const native = isRustHistoryQueryOperation()
-      ? await getRustHistoryQueryHistoryGraph(versionHistory, modelComponent, repo, laneHeads, shortHash, limit)
-      : undefined;
-    return native || versionHistory.getGraph(modelComponent, laneHeads, shortHash, limit);
+    return versionHistory.getGraph(modelComponent, laneHeads, shortHash, limit);
   }
 
   async buildOnRemote(
@@ -176,13 +151,6 @@ export class VersionHistoryMain {
       delete options.remote;
       return this.buildOnRemote(remote, pattern, options);
     }
-    return withRustHistoryQueryOperation(() => this.buildByPatternWithinOperation(pattern, options));
-  }
-
-  private async buildByPatternWithinOperation(
-    pattern: string,
-    options: BuildOptions
-  ): Promise<{ [idStr: string]: BuildResult }> {
     const ids = await this.scope.idsByPattern(pattern);
     if (ids.length > 1 && options.fromSnap) {
       throw new BitError(`to use the "--from-snap" flag, please provide a single component-id, not a pattern`);

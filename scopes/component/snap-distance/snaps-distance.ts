@@ -1,5 +1,4 @@
 import type { Ref } from '@teambit/objects';
-import { registerRustSnapshotTransactionClass } from '@teambit/objects';
 
 export class SnapsDistance {
   constructor(
@@ -35,22 +34,4 @@ export class SnapsDistance {
   isUpToDate(): boolean {
     return !this.isTargetAhead();
   }
-}
-registerRustSnapshotTransactionClass('MergeSnapsDistance', SnapsDistance);
-
-const squashMethods = ['isDiverged', 'isSourceAhead', 'isTargetAhead'].map(
-  (name) => [name, SnapsDistance.prototype[name]] as const
-);
-/** Capture canonical predicates with their class, before adapters or extensions load. */
-export function canPlanSquashNatively(distance: SnapsDistance): boolean {
-  return (
-    Object.getPrototypeOf(distance) === SnapsDistance.prototype &&
-    squashMethods.every(
-      ([name, method]) =>
-        (
-          Object.getOwnPropertyDescriptor(distance, name) ||
-          Object.getOwnPropertyDescriptor(SnapsDistance.prototype, name)
-        )?.value === method
-    )
-  );
 }

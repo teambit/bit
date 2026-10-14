@@ -6,35 +6,16 @@ import type { LaneId } from '@teambit/lane-id';
 import { DEFAULT_LANE } from '@teambit/lane-id';
 import type { SnapsDistance } from '@teambit/component.snap-distance';
 import { getDivergeData } from '@teambit/component.snap-distance';
-import {
-  type Lane,
-  type ModelComponent,
-  type Ref,
-  type Version,
-  isRustSnapshotOperation,
-  withRustMergeTransactionOperation,
-  withRustMergeTransactionJournal,
-  completeRustMergeTransactionPhase,
-  isRustMergeTransactionOperation,
-  registerRustMergeStatusProvider,
-  canUseRustMergeStatusProvider,
-  captureRustMergeStatusProvider,
-  beginRustMergeStatus,
-  observeRustMergeStatus,
-  captureRustMergeDivergence,
-  type RustMergeStatusCursor,
-  type RustMergeStatusResult,
-  hasRustSnapshotTransactionClassFields,
-} from '@teambit/objects';
+import type { Lane, ModelComponent, Ref, Version } from '@teambit/objects';
 import { NoCommonSnap, Tmp } from '@teambit/legacy.scope';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import type { ImporterMain } from '@teambit/importer';
 import type { Logger } from '@teambit/logger';
 import { compact, isEqual } from 'lodash';
-import { ComponentConfigMerger, tryRustComponentConfigMerge } from '@teambit/config-merger';
+import { ComponentConfigMerger } from '@teambit/config-merger';
 import type { ScopeMain } from '@teambit/scope';
 import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
-import { threeWayMerge, withRustMergeBodyPlanIndex } from '@teambit/component.modules.merge-helper';
+import { threeWayMerge } from '@teambit/component.modules.merge-helper';
 import type { ComponentMergeStatus, ComponentMergeStatusBeforeMergeAttempt } from './merging.main.runtime';
 import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
@@ -57,8 +38,7 @@ export type DataMergeResult = {
 };
 
 export const compIsAlreadyMergedMsg = 'component is already merged';
-import { compHasBeenRemovedMsg } from './merge-messages';
-export { compHasBeenRemovedMsg } from './merge-messages';
+export const compHasBeenRemovedMsg = 'component has been removed';
 export class MergeStatusProvider {
   constructor(
     private scope: ScopeMain,
@@ -73,30 +53,12 @@ export class MergeStatusProvider {
   async getStatus(
     bitIds: ComponentID[] // the id.version is the version we want to merge to the current component
   ): Promise<ComponentMergeStatus[]> {
-    if (process.env.BIT_RUST_CLIENT_VCS !== 'on' || !canUseRustMergeStatusProvider(this, bitIds))
-      return this.getStatusWithinOperation(bitIds);
-    return withRustMergeTransactionOperation(() =>
-      withRustMergeTransactionJournal(
-        {
-          mode: 'status',
-          count: bitIds.length,
-          importMain: Boolean(!this.currentLane && this.otherLane),
-        },
-        () => this.getStatusWithinOperation(bitIds)
-      )
-    );
-  }
-
-  private async getStatusWithinOperation(bitIds: ComponentID[]): Promise<ComponentMergeStatus[]> {
     if (!this.currentLane && this.otherLane) {
       await this.importer.importObjectsFromMainIfExist(this.otherLane.toBitIds().toVersionLatest());
-      if (isRustMergeTransactionOperation()) await completeRustMergeTransactionPhase('importMain');
     }
-    const componentStatusBeforeMergeAttempt = await mapSeries(bitIds, async (id, index) => {
-      const result = await this.getComponentStatusBeforeMergeAttempt(id, index);
-      if (isRustMergeTransactionOperation()) await completeRustMergeTransactionPhase('status');
-      return result;
-    });
+    const componentStatusBeforeMergeAttempt = await mapSeries(bitIds, (id) =>
+      this.getComponentStatusBeforeMergeAttempt(id)
+    );
     // whether or not we need to import the gap between the common-snap and the other lane.
     // the common-snap itself we need anyway in order to get the files hash/content for checking conflicts.
     // the gap is needed only when the other side is a lane from a different scope than ours: its snaps
@@ -134,21 +96,13 @@ export class MergeStatusProvider {
     ) as ComponentMergeStatus[];
     const compStatusNeedMerge = componentStatusBeforeMergeAttempt.filter((c) => c.mergeProps);
 
-    if (isRustMergeTransactionOperation())
-      await completeRustMergeTransactionPhase('importGap', 1, compStatusNeedMerge.length);
     const getComponentsStatusNeedMerge = async (): Promise<ComponentMergeStatus[]> => {
       const tmp = new Tmp(this.scope.legacyScope);
       try {
         const componentsStatus = await Promise.all(
-          compStatusNeedMerge.map((compStatus, index) =>
-            isRustMergeTransactionOperation()
-              ? withRustMergeBodyPlanIndex(index, () => this.getComponentMergeStatus(compStatus))
-              : this.getComponentMergeStatus(compStatus)
-          )
+          compStatusNeedMerge.map((compStatus) => this.getComponentMergeStatus(compStatus))
         );
-        if (isRustMergeTransactionOperation()) await completeRustMergeTransactionPhase('plans');
         await tmp.clear();
-        if (isRustMergeTransactionOperation()) await completeRustMergeTransactionPhase('clearTemps');
         return componentsStatus;
       } catch (err: any) {
         await tmp.clear();
@@ -199,20 +153,13 @@ other:   ${otherLaneHead.toString()}`);
       this.logger,
       this.options.mergeStrategy
     );
-    const nativeEligible = isRustSnapshotOperation() && canMergeConfigNatively(this);
-    const shouldMergeAspectsData = nativeEligible ? Boolean(this.options.shouldMergeAspectsData) : false;
-    const native = nativeEligible
-      ? await tryRustComponentConfigMerge(
-          configMerger,
-          shouldMergeAspectsData,
-          () => canMergeConfigNatively(this) && Boolean(this.options.shouldMergeAspectsData) === shouldMergeAspectsData
-        )
-      : undefined;
-    const configMergeResult = native ? native.configMergeResult : configMerger.merge();
+    const configMergeResult = configMerger.merge();
 
-    const dataMergeResult = native
-      ? native.dataMergeResult
-      : this.mergeExtensionsData(currentComponent.extensions, baseComponent.extensions, otherComponent.extensions);
+    const dataMergeResult = this.mergeExtensionsData(
+      currentComponent.extensions,
+      baseComponent.extensions,
+      otherComponent.extensions
+    );
 
     const mergeResults = await threeWayMerge({
       scope: this.scope.legacyScope,
@@ -301,38 +248,11 @@ other:   ${otherLaneHead.toString()}`);
 
   // eslint-disable-next-line complexity
   private async getComponentStatusBeforeMergeAttempt(
-    id: ComponentID, // the id.version is the version we want to merge to the current component
-    index = 0
+    id: ComponentID // the id.version is the version we want to merge to the current component
   ): Promise<ComponentMergeStatusBeforeMergeAttempt> {
     const consumer = this.workspace?.consumer;
     const componentStatus: ComponentMergeStatusBeforeMergeAttempt = { id };
-    const captured = isRustMergeTransactionOperation() ? captureRustMergeStatusProvider(this, id) : undefined;
-    let cursor = captured
-      ? await beginRustMergeStatus({
-          index,
-          id: captured.id,
-          idWithoutVersion: captured.idWithoutVersion,
-          hasConsumer: Boolean(consumer),
-          hasWorkspace: Boolean(this.workspace),
-        })
-      : undefined;
-    const observe = async (stage: Parameters<typeof observeRustMergeStatus>[1], value: object) => {
-      if (!cursor || !captured?.fresh()) {
-        cursor = undefined;
-        return undefined;
-      }
-      const next = await observeRustMergeStatus(cursor, stage, value);
-      if (!captured.fresh()) {
-        cursor = undefined;
-        return undefined;
-      }
-      return next?.result;
-    };
-    const unchanged = (result: RustMergeStatusResult | undefined) =>
-      result?.action === 'unchanged' ? this.returnUnmerged(id, result.message!, result.legitimate) : undefined;
     const modelComponent = await this.scope.legacyScope.getModelComponentIfExist(id);
-    const modelResult = cursor && unchanged(await observe('model', { present: Boolean(modelComponent) }));
-    if (modelResult) return modelResult;
     if (!modelComponent) {
       return this.returnUnmerged(
         id,
@@ -340,8 +260,6 @@ other:   ${otherLaneHead.toString()}`);
       );
     }
     const unmerged = this.scope.legacyScope.objects.unmergedComponents.getEntry(id);
-    const unmergedResult = cursor && unchanged(await observe('unmerged', { present: Boolean(unmerged) }));
-    if (unmergedResult) return unmergedResult;
     if (unmerged) {
       return this.returnUnmerged(
         id,
@@ -360,33 +278,11 @@ other:   ${otherLaneHead.toString()}`);
     const idOnCurrentLane =
       this.currentLane?.getComponent(id) || this.currentLane?.getUpdateDependentAsLaneComponent(id);
 
-    const incomingRemoved = componentOnOther.isRemoved();
-    const incomingResult =
-      cursor &&
-      unchanged(
-        await observe('incoming', {
-          removed: Boolean(incomingRemoved),
-          onLane: Boolean(idOnCurrentLane),
-          bitmapPresent: Boolean(existingBitMapId),
-          currentLanePresent: Boolean(this.currentLane),
-        })
-      );
-    if (incomingResult) return incomingResult;
-    if (incomingRemoved) {
+    if (componentOnOther.isRemoved()) {
       // if exist in current lane, we want the current lane to get the soft-remove update.
       // or if it was removed with --update-main, we want to merge it so then main will get the update.
       // (unless this component does not exist on main, in which case, we don't want to merge it).
-      const removeOnMain = !idOnCurrentLane && componentOnOther.shouldRemoveFromMain();
-      const mainHead = removeOnMain && modelComponent.head;
-      const shouldMerge = idOnCurrentLane || (removeOnMain && mainHead);
-      if (cursor && !idOnCurrentLane) {
-        const removalResult = unchanged(await observe('removeOnMain', { removeOnMain: Boolean(removeOnMain) }));
-        if (removalResult) return removalResult;
-        if (removeOnMain) {
-          const headResult = unchanged(await observe('mainHead', { present: Boolean(mainHead) }));
-          if (headResult) return headResult;
-        }
-      }
+      const shouldMerge = idOnCurrentLane || (componentOnOther.shouldRemoveFromMain() && modelComponent.head);
       if (shouldMerge) {
         // remove the component from the workspace if exist.
         componentStatus.shouldBeRemoved = true;
@@ -409,18 +305,13 @@ other:   ${otherLaneHead.toString()}`);
       }
       return null;
     };
-    const selector = cursor?.directive?.observe === 'currentId' ? cursor.directive.selector : undefined;
-    const currentId = selector === 'bitmap' ? existingBitMapId : selector === 'none' ? null : getCurrentId();
-    if (cursor) await observe('currentId', { present: Boolean(currentId) });
+    const currentId = getCurrentId();
     if (!currentId) {
       const divergeData = await getDivergeData({ repo, modelComponent, targetHead: otherLaneHead, throws: false });
-      if (cursor) await observe('divergence', {});
       return { ...componentStatus, componentFromModel: componentOnOther, divergeData };
     }
     const componentMap = consumer?.bitMap.getComponentIfExist(currentId, { ignoreVersion: true });
     const isLocallyRemoved = componentMap?.isRemoved();
-    const localResult = cursor && unchanged(await observe('locallyRemoved', { removed: Boolean(isLocallyRemoved) }));
-    if (localResult) return localResult;
     if (isLocallyRemoved) {
       return this.returnUnmerged(
         id,
@@ -435,10 +326,7 @@ other:   ${otherLaneHead.toString()}`);
       return this.scope.legacyScope.getConsumerComponent(currentId);
     };
     const currentComponent = await getCurrentComponent();
-    const currentRemoved = currentComponent.isRemoved();
-    const currentResult = cursor && unchanged(await observe('current', { removed: Boolean(currentRemoved) }));
-    if (currentResult) return currentResult;
-    if (currentRemoved) {
+    if (currentComponent.isRemoved()) {
       // we have a few options:
       // 1. "other" is main.
       // 1.a. it was deleted on the lane with --update-main. in this case, we need to merge because eventually we need this component
@@ -452,21 +340,7 @@ other:   ${otherLaneHead.toString()}`);
       const isRemovedOnMain =
         currentComponent.extensions.findCoreExtension('teambit.component/remove')?.config?.removeOnMain;
       const divergeData = await getDivergeData({ repo, modelComponent, targetHead: otherLaneHead, throws: false });
-      const distance = cursor && captureRustMergeDivergence(divergeData);
       const isTargetNotAhead = !divergeData.err && !divergeData.isTargetAhead();
-      if (cursor && distance) {
-        await observe('removedMain', { removeOnMain: Boolean(isRemovedOnMain) });
-        if (distance.fresh()) {
-          const removedResult = unchanged(
-            await observe('removedDivergence', {
-              error: Boolean(divergeData.err),
-              targetAhead: distance.targetAhead,
-              otherLanePresent: Boolean(this.otherLane),
-            })
-          );
-          if (removedResult && distance.fresh()) return removedResult;
-        } else cursor = undefined;
-      } else cursor = undefined;
       const shouldIgnore = this.otherLane
         ? isTargetNotAhead // option #2 and #3 above
         : !isRemovedOnMain; // it's main. option #1 above.
@@ -490,15 +364,6 @@ other:   ${otherLaneHead.toString()}`);
     };
 
     const modifiedType = await isModified();
-    const modificationResult =
-      cursor &&
-      unchanged(
-        await observe('modified', {
-          ...(modifiedType === undefined ? {} : { type: modifiedType }),
-          ignoreConfigChanges: Boolean(this.options?.ignoreConfigChanges),
-        })
-      );
-    if (modificationResult) return modificationResult;
     if (modifiedType === 'config' && !this.options?.ignoreConfigChanges) {
       return this.returnUnmerged(
         id,
@@ -519,37 +384,8 @@ other:   ${otherLaneHead.toString()}`);
       targetHead: otherLaneHead,
       throws: false,
     });
-    let distance = cursor && captureRustMergeDivergence(divergeData);
-    // Keep the original public typed-error observation once, before the private branch plan.
-    const noCommon = divergeData.err ? divergeData.err instanceof NoCommonSnap : false;
-    if (noCommon && !hasRustSnapshotTransactionClassFields(divergeData.err!, 'MergeNoCommonSnap', ['message']))
-      distance = undefined;
-    const selection =
-      cursor && distance
-        ? await observe('divergence', {
-            sourceAhead: distance.sourceAhead,
-            targetAhead: distance.targetAhead,
-            diverged: distance.diverged,
-            ...(distance.common ? { common: distance.common } : {}),
-            ...(distance.error
-              ? {
-                  error: {
-                    kind: noCommon ? 'noCommon' : 'other',
-                    message: Object.getOwnPropertyDescriptor(distance.error, 'message')!.value,
-                  },
-                }
-              : {}),
-            resolveUnrelated: this.options.resolveUnrelated,
-            detachHead: Boolean(this.options.detachHead),
-            handleTargetAheadAsDiverged: Boolean(this.options.handleTargetAheadAsDiverged),
-          })
-        : undefined;
-    if (distance && !distance.fresh()) cursor = undefined;
-    const chosen = cursor ? selection : undefined;
-    const divergenceFailure = unchanged(chosen);
-    if (divergenceFailure) return divergenceFailure;
     if (divergeData.err) {
-      if (!noCommon || !this.options?.resolveUnrelated) {
+      if (!(divergeData.err instanceof NoCommonSnap) || !this.options?.resolveUnrelated) {
         return this.returnUnmerged(id, `unable to traverse history. error: ${divergeData.err.message}`);
       }
       return this.handleNoCommonSnap(
@@ -558,14 +394,10 @@ other:   ${otherLaneHead.toString()}`);
         otherLaneHead,
         currentComponent,
         componentOnOther,
-        divergeData,
-        cursor && captured?.fresh() ? { cursor, fresh: captured.fresh } : undefined
+        divergeData
       );
     }
-    if (
-      (chosen?.action === 'detach' || (chosen === undefined && this.options.detachHead)) &&
-      divergeData.commonSnapBeforeDiverge
-    ) {
+    if (this.options.detachHead && divergeData.commonSnapBeforeDiverge) {
       // just override with the model data
       const commonSnapId = id.changeVersion(divergeData.commonSnapBeforeDiverge.toString());
       const commonSnapComp = await this.scope.legacyScope.getConsumerComponent(commonSnapId);
@@ -576,9 +408,7 @@ other:   ${otherLaneHead.toString()}`);
         divergeData,
       };
     }
-    if (chosen?.action === 'target')
-      return { ...componentStatus, currentComponent, componentFromModel: componentOnOther, divergeData };
-    if (chosen === undefined && !divergeData.isDiverged()) {
+    if (!divergeData.isDiverged()) {
       if (divergeData.isSourceAhead()) {
         // component is ahead nothing to merge.
         return this.returnUnmerged(id, compIsAlreadyMergedMsg, true);
@@ -616,8 +446,7 @@ other:   ${otherLaneHead.toString()}`);
     otherLaneHead: Ref,
     currentComponent: ConsumerComponent,
     componentOnOther?: Version,
-    divergeData?: SnapsDistance,
-    native?: { cursor: RustMergeStatusCursor; fresh: () => boolean }
+    divergeData?: SnapsDistance
   ): Promise<ComponentMergeStatusBeforeMergeAttempt> {
     let { resolveUnrelated } = this.options || {};
     if (currentComponent.isRemoved()) {
@@ -689,36 +518,15 @@ other:   ${otherLaneHead.toString()}`);
       };
       const hasResolvedLocally = await hasResolvedFromMain(modelComponent.getHeadRegardlessOfLane() as Ref);
       const hasResolvedRemotely = await hasResolvedFromMain(otherLaneHead);
-      let selection: RustMergeStatusResult | undefined;
-      if (native?.fresh() && (resolveUnrelated === 'ours' || resolveUnrelated === 'theirs')) {
-        const state = await observeRustMergeStatus(native.cursor, 'unrelated', {
-          strategy: resolveUnrelated,
-          hasMain: true,
-          hasResolvedLocally,
-          hasResolvedRemotely,
-        });
-        if (native.fresh()) selection = state?.result;
-      }
       if (!hasResolvedLocally && !hasResolvedRemotely) {
-        const message = `unable to traverse ${currentComponent.id.toString()} history. the main-head ${mainHead.toString()} doesn't appear in both lanes.
-it was probably created in each lane separately and it also exists on main. please merge main first to one of these lanes`;
-        if (native?.fresh()) await observeRustMergeStatus(native.cursor, 'unrelatedFailure', { message });
-        return this.returnUnmerged(id, message);
+        return this.returnUnmerged(
+          id,
+          `unable to traverse ${currentComponent.id.toString()} history. the main-head ${mainHead.toString()} doesn't appear in both lanes.
+it was probably created in each lane separately and it also exists on main. please merge main first to one of these lanes`
+        );
       }
-      const refToSaveInLane = selection?.unrelated
-        ? selection.unrelated.head === 'current'
-          ? currentVersionRef
-          : otherVersionRef
-        : hasResolvedLocally
-          ? currentVersionRef
-          : otherVersionRef;
-      const unrelatedHeadRef = selection?.unrelated
-        ? selection.unrelated.unrelatedHead === 'current'
-          ? currentVersionRef
-          : otherVersionRef
-        : hasResolvedLocally
-          ? otherVersionRef
-          : currentVersionRef;
+      const refToSaveInLane = hasResolvedLocally ? currentVersionRef : otherVersionRef;
+      const unrelatedHeadRef = hasResolvedLocally ? otherVersionRef : currentVersionRef;
       if (resolveUnrelated === 'ours') {
         return returnAccordingToOurs(refToSaveInLane, unrelatedHeadRef, this.currentLane?.toLaneId() as LaneId);
       }
@@ -730,28 +538,8 @@ it was probably created in each lane separately and it also exists on main. plea
       );
     }
 
-    let selection: RustMergeStatusResult | undefined;
-    if (native?.fresh() && (resolveUnrelated === 'ours' || resolveUnrelated === 'theirs')) {
-      const state = await observeRustMergeStatus(native.cursor, 'unrelated', {
-        strategy: resolveUnrelated,
-        hasMain: false,
-      });
-      if (native.fresh()) selection = state?.result;
-    }
-    const refToSaveInLane = selection?.unrelated
-      ? selection.unrelated.head === 'current'
-        ? currentVersionRef
-        : otherVersionRef
-      : resolveUnrelated === 'ours'
-        ? currentVersionRef
-        : otherVersionRef;
-    const unrelatedHeadRef = selection?.unrelated
-      ? selection.unrelated.unrelatedHead === 'current'
-        ? currentVersionRef
-        : otherVersionRef
-      : resolveUnrelated === 'ours'
-        ? otherVersionRef
-        : currentVersionRef;
+    const refToSaveInLane = resolveUnrelated === 'ours' ? currentVersionRef : otherVersionRef;
+    const unrelatedHeadRef = resolveUnrelated === 'ours' ? otherVersionRef : currentVersionRef;
     if (resolveUnrelated === 'ours') {
       return returnAccordingToOurs(refToSaveInLane, unrelatedHeadRef, this.otherLane?.toLaneId() as LaneId);
     }
@@ -763,23 +551,3 @@ it was probably created in each lane separately and it also exists on main. plea
     );
   }
 }
-
-const canonicalMergeExtensionsData = (MergeStatusProvider.prototype as any).mergeExtensionsData;
-function canMergeConfigNatively(provider: MergeStatusProvider): boolean {
-  if (
-    Object.getPrototypeOf(provider) !== MergeStatusProvider.prototype ||
-    Object.getOwnPropertyDescriptor(provider, 'mergeExtensionsData')
-  )
-    return false;
-  if (
-    Object.getOwnPropertyDescriptor(MergeStatusProvider.prototype, 'mergeExtensionsData')?.value !==
-    canonicalMergeExtensionsData
-  )
-    return false;
-  const options = Object.getOwnPropertyDescriptor(provider, 'options');
-  if (!options || !('value' in options) || !options.value || Object.getPrototypeOf(options.value) !== Object.prototype)
-    return false;
-  return Object.values(Object.getOwnPropertyDescriptors(options.value)).every((descriptor) => 'value' in descriptor);
-}
-
-registerRustMergeStatusProvider(MergeStatusProvider);

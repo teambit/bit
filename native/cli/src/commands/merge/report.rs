@@ -1,7 +1,7 @@
 //! The merge report: `mergeReport` of `@teambit/merging`. For `bit merge`
-//! the glue forwards `MergeCmd`'s projection: components, skipped
+//! the report gets `MergeCmd`'s projection: components, skipped
 //! components, the version, the snapshot results and `verbose`, so the
-//! removed and conflict sections stay empty. `bit lane merge` forwards the
+//! removed and conflict sections stay empty. `bit lane merge` gets the
 //! whole result (`MergeLaneCmd`).
 
 use crate::commands::{

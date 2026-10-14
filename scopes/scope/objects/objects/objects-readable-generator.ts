@@ -1,11 +1,3 @@
-import {
-  registerRustTransferReadable,
-  withRustTransferReadable,
-  collectRustTransferVersions,
-  collectRustTransferObjects,
-  rustTransferMissingObjectIndices,
-  hasRustTransferClass,
-} from './rust-transfer';
 import pMapSeries from 'p-map-series';
 import { BitError } from '@teambit/bit-error';
 import { Readable } from 'stream';
@@ -36,12 +28,8 @@ export class ObjectsReadableGenerator {
     private callbackOnceDone: Function
   ) {
     this.readable = new Readable({ objectMode: true, read() {} });
-    registerRustTransferReadable(this.readable);
   }
   async pushObjectsToReadable(componentsWithOptions: ComponentWithCollectOptions[]) {
-    return withRustTransferReadable(this.readable, () => this.pushComponentsWithinOperation(componentsWithOptions));
-  }
-  private async pushComponentsWithinOperation(componentsWithOptions: ComponentWithCollectOptions[]) {
     try {
       await this.pushScopeMeta();
       await pMapSeries(componentsWithOptions, async (componentWithOptions) =>
@@ -54,9 +42,6 @@ export class ObjectsReadableGenerator {
   }
 
   async pushLanes(lanesToFetch: Lane[], lanesHistory: LaneHistory[] = []) {
-    return withRustTransferReadable(this.readable, () => this.pushLanesWithinOperation(lanesToFetch, lanesHistory));
-  }
-  private async pushLanesWithinOperation(lanesToFetch: Lane[], lanesHistory: LaneHistory[]) {
     try {
       const lanesItems = await Promise.all(lanesToFetch.map((laneToFetch) => this.bitObjectToItem(laneToFetch)));
       const laneHistoryItems = await Promise.all(lanesHistory.map((laneHistory) => this.bitObjectToItem(laneHistory)));
@@ -68,29 +53,7 @@ export class ObjectsReadableGenerator {
   }
 
   async pushObjects(refs: Ref[], scope: Scope) {
-    return withRustTransferReadable(this.readable, () => this.pushObjectsWithinOperation(refs, scope));
-  }
-  private async pushObjectsWithinOperation(refs: Ref[], scope: Scope) {
     try {
-      if (
-        process.env.BIT_RUST_CLIENT_VCS === 'on' &&
-        hasRustTransferClass(scope, 'Scope') &&
-        Object.getOwnPropertyDescriptor(scope, 'objects')?.value === this.repo
-      ) {
-        const native = await collectRustTransferObjects(this.repo, refs);
-        if (native) {
-          const missing = new Set(rustTransferMissingObjectIndices(native));
-          const byHash = new Map(native.map((item) => [item.ref.toString(), item]));
-          for (let index = 0; index < refs.length; index++) {
-            const item = missing.has(index)
-              ? await this.getObjectGracefully(refs[index], scope)
-              : byHash.get(refs[index].toString());
-            if (item) this.push(item);
-          }
-          this.closeReadableSuccessfully();
-          return;
-        }
-      }
       await pMapSeries(refs, async (ref) => {
         const objectItem = await this.getObjectGracefully(ref, scope);
         if (objectItem) this.push(objectItem);
@@ -203,13 +166,6 @@ export class ObjectsReadableGenerator {
       // note: don't bring the head. otherwise, component-delta of the head won't bring all history of this comp.
     }
     allVersions.push(version);
-    if (process.env.BIT_RUST_CLIENT_VCS === 'on') {
-      const native = await collectRustTransferVersions(this.repo, allVersions, [], 'fetch', false, collectArtifacts);
-      if (native) {
-        this.pushManyObjects(native);
-        return;
-      }
-    }
     await pMapSeries(allVersions, async (ver) => {
       const versionObjects = await collectVersionObjects(ver);
       this.pushManyObjects(versionObjects);

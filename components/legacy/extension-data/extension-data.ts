@@ -1,9 +1,4 @@
-import {
-  registerRustTransferClass,
-  registerRustSnapshotTransactionClass,
-  registerRustSnapshotFunctions,
-} from '@teambit/objects';
-import lodash, { cloneDeep } from 'lodash';
+import { cloneDeep } from 'lodash';
 import type { ComponentID } from '@teambit/component-id';
 
 type ExtensionConfig = { [extName: string]: any } | RemoveExtensionSpecialSign;
@@ -97,7 +92,3 @@ export class ExtensionDataEntry {
     );
   }
 }
-
-registerRustTransferClass('ExtensionDataEntry', ExtensionDataEntry, ['stringId']);
-registerRustSnapshotTransactionClass('ExtensionDataEntry', ExtensionDataEntry);
-registerRustSnapshotFunctions('ExtensionDataEntry', lodash, ['cloneDeep']);

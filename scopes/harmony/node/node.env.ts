@@ -5,13 +5,13 @@ import type { TsConfigTransformer, TypescriptMain } from '@teambit/typescript';
 import type { ReactMain } from '@teambit/react';
 import type { Tester } from '@teambit/tester';
 import type { BuildTask } from '@teambit/builder';
+import type { PreviewStrategyName } from '@teambit/preview';
+import { COMPONENT_PREVIEW_STRATEGY_NAME } from '@teambit/preview';
 import type { SchemaExtractor } from '@teambit/schema';
 import type { TsConfigSourceFile } from 'typescript';
 import { join } from 'path';
-import { getNodeDependencyPolicy } from './default-dependency-policy';
-import { NODE_ENV_ICON, getNodeEnvDescriptor, getNodePreviewConfig } from './default-load-data';
 
-export { NodeEnvType } from './default-load-data';
+export const NodeEnvType = 'node';
 
 type GetBuildPipeModifiers = PipeServiceModifiersMap & {
   tsModifier?: PipeServiceModifier;
@@ -23,10 +23,37 @@ export class NodeEnv implements DependenciesEnv, PackageEnv {
     protected reactAspect: ReactMain
   ) {}
 
-  icon = NODE_ENV_ICON;
+  icon = 'https://static.bit.dev/extensions-icons/nodejs.svg';
 
   getDependencies(): EnvPolicyConfigObject {
-    return getNodeDependencyPolicy();
+    return {
+      // dependencies: {
+      //   react: '-',
+      //   'react-dom': '-',
+      // },
+      devDependencies: {
+        // react: '-',
+        // 'react-dom': '-',
+        '@types/jest': '26.0.20',
+        '@types/node': '22.10.5',
+      },
+      peers: [
+        {
+          name: 'react',
+          /* the version to be installed and used by the env */
+          version: '^19.0.0',
+          /* the range of versions this env's components are compatible with */
+          supportedRange: '^17.0.0 || ^18.0.0 || ^19.0.0',
+        },
+        {
+          name: 'react-dom',
+          /* the version to be installed and used by the env */
+          version: '^19.0.0',
+          /* the range of versions this env's components are compatible with */
+          supportedRange: '^17.0.0 || ^18.0.0 || ^19.0.0',
+        },
+      ],
+    };
   }
 
   getCompiler(transformers: TsConfigTransformer[] = [], tsModule) {
@@ -53,7 +80,10 @@ export class NodeEnv implements DependenciesEnv, PackageEnv {
   }
 
   getPreviewConfig() {
-    return getNodePreviewConfig();
+    return {
+      strategyName: COMPONENT_PREVIEW_STRATEGY_NAME as PreviewStrategyName,
+      splitComponentBundle: false,
+    };
   }
 
   getPackageJsonProps() {
@@ -69,6 +99,8 @@ export class NodeEnv implements DependenciesEnv, PackageEnv {
   }
 
   async __getDescriptor() {
-    return getNodeEnvDescriptor();
+    return {
+      type: NodeEnvType,
+    };
   }
 }

@@ -5,23 +5,12 @@ use std::{
 
 static POOLS: [OnceLock<Arc<rayon::ThreadPool>>; 8] = [const { OnceLock::new() }; 8];
 
-/// Schedule requests on the same bounded workers used by their parallel file operations.
-#[derive(Clone)]
-pub struct WorkspaceDispatcher(Arc<rayon::ThreadPool>);
-
-impl WorkspaceDispatcher {
-    pub fn spawn(&self, task: impl FnOnce() + Send + 'static) {
-        self.0.spawn(task);
-    }
-}
-
 /// A workspace protocol session whose state survives individual requests.
 /// Callers must serialize requests and wait for outstanding work before replaying it.
 pub struct WorkspaceSession {
     pool: Arc<rayon::ThreadPool>,
     checkout: crate::checkout::cache::State,
     merge: crate::merge_state::State,
-    store: Option<crate::store::Store>,
 }
 
 impl WorkspaceSession {
@@ -35,28 +24,7 @@ impl WorkspaceSession {
             pool: shared_pool(threads)?,
             checkout: crate::checkout::cache::State::default(),
             merge,
-            store: None,
         })
-    }
-
-    /// Keep immutable inspection bytes alive independently of this session's lifetime.
-    pub fn inspection_snapshot(&self, token: &str) -> io::Result<crate::InspectionSnapshot> {
-        self.merge.inspection.snapshot(token)
-    }
-
-    #[must_use]
-    pub fn dispatcher(&self) -> WorkspaceDispatcher {
-        WorkspaceDispatcher(Arc::clone(&self.pool))
-    }
-
-    pub fn with_store(
-        threads: usize,
-        directory: std::path::PathBuf,
-        owner: Option<(u32, u32)>,
-    ) -> io::Result<Self> {
-        let mut session = Self::new(threads)?;
-        session.store = Some(crate::store::Store::new(directory, owner)?);
-        Ok(session)
     }
 
     /// Dispatch one existing workspace frame. An error retires the owning session.
@@ -73,7 +41,6 @@ impl WorkspaceSession {
             &mut reader,
             &mut output,
             &self.pool,
-            self.store.as_ref(),
             &mut self.checkout,
             &mut self.merge,
         )? || reader.position() != frame.len() as u64

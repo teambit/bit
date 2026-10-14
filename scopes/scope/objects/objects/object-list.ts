@@ -1,9 +1,3 @@
-import {
-  registerRustTransferClass,
-  rustTransferTar,
-  rustTransferObjectsHash,
-  rustTransferReadableTar,
-} from './rust-transfer';
 import tarStream from 'tar-stream';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
 import { compact } from 'lodash';
@@ -16,7 +10,6 @@ import { logger } from '@teambit/legacy.logger';
 import { concurrentIOLimit } from '@teambit/harmony.modules.concurrency';
 import { ExportMetadata } from '../models';
 import { UnknownObjectType } from '@teambit/legacy.scope';
-import { deferTarInput } from './tar-input-stream';
 
 /**
  * when error occurred during streaming between HTTP server and client, there is no good way to
@@ -51,7 +44,7 @@ export const FETCH_FORMAT_OBJECT_LIST = 'ObjectList';
 /**
  * Stream.Readable that operates with objectMode, while each 'data' event emits one ObjectItem object.
  */
-export type ObjectItemsStream = Readable & { claimTarInput?: () => Readable | undefined };
+export type ObjectItemsStream = Readable;
 
 /**
  * compressed buffer of an object (as stored on the filesystem) and the size of its inflated content.
@@ -76,8 +69,6 @@ export class ObjectList {
    * Performance wise, it's not too bad. ~98ms for 150 components on CircleCI.
    */
   getSha1Hash(): string {
-    const native = rustTransferObjectsHash(this);
-    if (native) return native;
     const hash = crypto.createHash('sha1');
     for (const obj of this.objects) {
       hash.update(new Uint8Array(obj.buffer));
@@ -108,8 +99,6 @@ export class ObjectList {
     return JSON.stringify(this.objects);
   }
   toTar(): NodeJS.ReadableStream {
-    const native = rustTransferTar(this);
-    if (native) return native;
     const pack = tarStream.pack();
     this.objects.forEach((obj) => {
       pack.entry({ name: ObjectList.combineScopeAndHash(obj) }, obj.buffer);
@@ -153,10 +142,7 @@ export class ObjectList {
     return new ObjectList(objectItems);
   }
 
-  static fromTarToObjectStream(packStream: NodeJS.ReadableStream, defer = false): ObjectItemsStream {
-    if (defer && packStream instanceof Readable) {
-      return deferTarInput(packStream, (input) => ObjectList.fromTarToObjectStream(input));
-    }
+  static fromTarToObjectStream(packStream: NodeJS.ReadableStream): ObjectItemsStream {
     const passThrough = new PassThrough({ objectMode: true });
     const extract = tarStream.extract();
     let startData: StartFile | undefined;
@@ -223,15 +209,6 @@ export class ObjectList {
   }
 
   static fromObjectStreamToTar(readable: Readable, scopeName: string) {
-    const native = rustTransferReadableTar(readable, scopeName, (items, error) => {
-      const input = new Readable({ objectMode: true, read() {} });
-      const result = ObjectList.fromObjectStreamToTar(input, scopeName);
-      for (const item of items) input.push(item);
-      if (error) process.nextTick(() => input.emit('error', error));
-      else input.push(null);
-      return result;
-    });
-    if (native) return native;
     const pack = tarStream.pack();
     const startFile: StartFile = { schema: OBJECT_LIST_CURRENT_SCHEMA, scopeName };
     logger.debug('fromObjectStreamToTar, start sending data', startFile);
@@ -385,5 +362,3 @@ export class ObjectList {
     console.log(this.objects.map((o) => o.ref.hash).join('\n')); // eslint-disable-line no-console
   }
 }
-
-registerRustTransferClass('ObjectList', ObjectList, ['toTar', 'getSha1Hash', 'count', 'addIfNotExist']);

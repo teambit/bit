@@ -10,5 +10,3 @@ In this case, you might want to remove the local component and import the remote
 Another case of this error is when a lane has a component and the remote of that component has also a component with the same name. to fix this, use "--resolve-unrelated" flag for "bit lane merge" command`);
   }
 }
-import { registerRustSnapshotTransactionClass } from '@teambit/objects';
-registerRustSnapshotTransactionClass('MergeNoCommonSnap', NoCommonSnap);

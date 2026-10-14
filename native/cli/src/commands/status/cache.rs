@@ -1,4 +1,4 @@
-//! The workspace-wide dependency cache checks of the Node.js glue: the
+//! The workspace-wide dependency cache checks: the
 //! `no-fs-cache` feature, and `dependencyCacheNeedsInvalidation`, which
 //! compares the newest workspace-level change with the oldest cache entry.
 //! Native status runs only when neither applies.

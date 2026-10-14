@@ -47,5 +47,3 @@ export class Symlink {
     return new Symlink(src, dest, componentId, avoidHardLink);
   }
 }
-
-export const defaultSymlinkWrite = Symlink.prototype.write;

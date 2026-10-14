@@ -1,7 +1,6 @@
-//! The resolve commands of the Node.js glue (`rust-workspace-snap.ts`,
-//! `rust-workspace-resolve-metadata.ts`, `rust-workspace-resolve-receipt.ts`):
-//! `bit snap` planned by the engine's `commandSnap*` requests, on top of the
-//! status capture and the snapshot receipt merges use.
+//! The resolve commands, `bit snap`, `bit tag` and `bit merge --resolve`,
+//! planned by the engine's `command{Snap,Tag,Resolve}*` requests on top of
+//! the status capture and the snapshot receipt merges use.
 
 mod tag;
 
@@ -62,7 +61,7 @@ pub struct ResolveRequest<'r> {
     pub selection: Selection<'r>,
 }
 
-/// `readRustWorkspaceSnap` and `readRustWorkspaceTag` up to the commit:
+/// `bit snap` and `bit tag` up to the commit:
 /// the plan, and unless there is nothing to do, the finalized versions.
 pub fn plan(root: &Path, request: &ResolveRequest<'_>) -> io::Result<Planned> {
     if cache::no_fs_cache(root) {

@@ -365,8 +365,8 @@ export class ScopeComponentsImporter {
     }
     if (!found)
       throw new Error(`importMissingHistoryOne, found is empty, it must be populated when nothing is missing`);
-    const existing = await this.scope.objects.hasMultiple(found.map((hash) => Ref.from(hash)));
-    const someAreMissing = existing.length !== found.length;
+    const allExist = await Promise.all(found.map((f) => this.scope.objects.has(Ref.from(f))));
+    const someAreMissing = allExist.some((e) => !e);
     if (someAreMissing) return id;
     return null;
   }
@@ -555,9 +555,10 @@ export class ScopeComponentsImporter {
       await Promise.all(
         Object.keys(groupedHashes).map(async (scopeName) => {
           const uniqueHashes: string[] = uniq(groupedHashes[scopeName]);
-          const existing = await this.repo.hasMultiple(uniqueHashes.map((hash) => new Ref(hash)));
-          const existingHashes = new Set(existing.map((ref) => ref.toString()));
-          const missing = uniqueHashes.filter((hash) => !existingHashes.has(hash));
+          const missingWithNull = await Promise.all(
+            uniqueHashes.map(async (hash) => (!(await this.repo.has(new Ref(hash))) ? hash : null))
+          );
+          const missing = compact(missingWithNull);
           if (missing.length) {
             groupedHashedMissing[scopeName] = missing;
           }

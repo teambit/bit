@@ -1,5 +1,4 @@
-//! The engine's command result as the Node.js glue hydrates it
-//! (`hydrateRustWorkspaceCommand`), and the `merge-output` helpers of
+//! The engine's command result with the ids and versions it reports, and the `merge-output` helpers of
 //! `@teambit/component.modules.merge-helper` that checkout and merge share.
 
 mod snaps;
@@ -101,7 +100,7 @@ pub struct Results {
     pub snap_error: Option<snaps::SnapError>,
 }
 
-/// `hydrateRustWorkspaceCommand`: the engine's result, validated.
+/// The engine's result, validated.
 pub fn hydrate(value: &Value) -> io::Result<Results> {
     let map = object(value)?;
     if map

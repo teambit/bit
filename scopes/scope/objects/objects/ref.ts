@@ -43,18 +43,3 @@ export default class Ref {
     return new Ref(hash);
   }
 }
-
-const canonicalRefFrom = Ref.from;
-const canonicalRefMethods = ['toString', 'isEqual', 'load'].map((name) => [name, Ref.prototype[name]] as const);
-/** Keep native readers on the class defaults even when an adapter is loaded after extension hooks. */
-export function hasCanonicalRefMethods(ref: Ref): boolean {
-  return (
-    Object.getPrototypeOf(ref) === Ref.prototype &&
-    Object.getOwnPropertyDescriptor(Ref, 'from')?.value === canonicalRefFrom &&
-    canonicalRefMethods.every(
-      ([name, method]) =>
-        (Object.getOwnPropertyDescriptor(ref, name) || Object.getOwnPropertyDescriptor(Ref.prototype, name))?.value ===
-        method
-    )
-  );
-}

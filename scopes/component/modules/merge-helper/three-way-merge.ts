@@ -11,8 +11,6 @@ import { SourceFile } from '@teambit/component.sources';
 import type { Scope } from '@teambit/legacy.scope';
 import { Tmp } from '@teambit/legacy.scope';
 import { isEmpty } from 'lodash';
-import { tryRustThreeWayMerge } from './rust-three-way-merge';
-import { registerRustSnapshotFunctionReference } from '@teambit/objects';
 
 export type MergeResultsThreeWay = {
   addFiles: Array<{
@@ -53,14 +51,6 @@ export type MergeResultsThreeWay = {
   }>;
   hasConflicts: boolean;
 };
-export type MergeCurrentObservation = {
-  filePath: PathLinux;
-  hash: string;
-  baseFile?: SourceFileModel;
-  otherFile?: SourceFileModel;
-  baseHash?: string;
-  otherHash?: string;
-};
 
 /**
  * to do the actual merge we use git, specifically `merge-file` command, so we try to use the same
@@ -90,17 +80,6 @@ export async function threeWayMerge({
   currentLabel: string;
   baseComponent: Version;
 }): Promise<MergeResultsThreeWay> {
-  if (process.env.BIT_RUST_CLIENT_VCS === 'on') {
-    const native = await tryRustThreeWayMerge({
-      scope,
-      otherComponent,
-      otherLabel,
-      currentComponent,
-      currentLabel,
-      baseComponent,
-    });
-    if (native) return native;
-  }
   // baseFiles and currentFiles come from the model, therefore their paths include the
   // sharedOriginallyDir. fsFiles come from the Fs, therefore their paths don't include the
   // sharedOriginallyDir.
@@ -118,35 +97,6 @@ export async function threeWayMerge({
   currentFiles.forEach((fsFile) => {
     fsFile.contents = eol.lf(fsFile.contents) as Buffer;
   });
-  return continueThreeWayMerge({ scope, currentLabel, otherLabel, baseFiles, otherFiles, currentFiles });
-}
-
-registerRustSnapshotFunctionReference('MergeCanonicalSha1', sha1);
-
-/** Continue after the public clone/LF prefix without replaying it on a native-plan decline. */
-export async function continueThreeWayMerge({
-  scope,
-  currentLabel,
-  otherLabel,
-  baseFiles,
-  otherFiles,
-  currentFiles,
-  observedSources,
-  observedCurrent,
-}: {
-  scope: Scope;
-  currentLabel: string;
-  otherLabel: string;
-  baseFiles: SourceFileModel[];
-  otherFiles: SourceFileModel[];
-  currentFiles: SourceFile[];
-  observedSources?: {
-    load: (file: SourceFileModel) => Promise<Source>;
-    file: (file: SourceFileModel) => Promise<SourceFile>;
-    contents: (file: SourceFileModel, source: Source) => Buffer;
-  };
-  observedCurrent?: MergeCurrentObservation[];
-}): Promise<MergeResultsThreeWay> {
   const results: MergeResultsThreeWay = {
     addFiles: [],
     removeFiles: [],
@@ -158,14 +108,9 @@ export async function continueThreeWayMerge({
     updatedFiles: [],
     hasConflicts: false,
   };
-  const getFileResult = async (
-    fsFile: SourceFile,
-    baseFile?: SourceFileModel,
-    otherFile?: SourceFileModel,
-    captured?: MergeCurrentObservation
-  ): Promise<MergeResultsThreeWay['updatedFiles'][number] | undefined> => {
-    const filePath: PathLinux = captured ? captured.filePath : pathNormalizeToLinux(fsFile.relative);
-    const fsFileHash = captured ? captured.hash : sha1(fsFile.contents);
+  const getFileResult = async (fsFile: SourceFile, baseFile?: SourceFileModel, otherFile?: SourceFileModel) => {
+    const filePath: PathLinux = pathNormalizeToLinux(fsFile.relative);
+    const fsFileHash = sha1(fsFile.contents);
     if (!otherFile) {
       // if !otherFile && !baseFile, the file was created after the last tag, no need to do any
       // calculation, the file should be added
@@ -173,7 +118,7 @@ export async function continueThreeWayMerge({
         results.addFiles.push({ filePath, fsFile });
         return;
       }
-      const baseFileHash = captured ? captured.baseHash : baseFile.file.hash;
+      const baseFileHash = baseFile.file.hash;
       if (fsFileHash === baseFileHash) {
         results.removeFiles.push({ filePath });
         return;
@@ -181,47 +126,35 @@ export async function continueThreeWayMerge({
       results.deletedConflictFiles.push({ filePath });
       return;
     }
-    const otherFileHash = captured ? captured.otherHash : otherFile.file.hash;
+    const otherFileHash = otherFile.file.hash;
     if (fsFileHash === otherFileHash) {
       // if fs === other, no need to take any action (regardless the base)
       results.unModifiedFiles.push({ filePath, fsFile });
       return;
     }
-    if (baseFile && fsFileHash === (captured ? captured.baseHash : baseFile.file.hash)) {
+    if (baseFile && fsFileHash === baseFile.file.hash) {
       // the file has no local modification.
       // the file currently in the fs, is not the same as the file we want to write (other).
       // but no need to check whether it has conflicts because we always want to write the other.
-      const content = observedSources
-        ? await observedSources.load(otherFile)
-        : ((await otherFile.file.load(scope.objects)) as Source);
-      return {
-        filePath,
-        otherFile,
-        content: observedSources ? observedSources.contents(otherFile, content) : content.contents,
-      };
+      const content = (await otherFile.file.load(scope.objects)) as Source;
+      results.updatedFiles.push({ filePath, otherFile, content: content.contents });
+      return;
     }
     // it was changed in both, there is a chance for conflict. (regardless the base)
-    if (!captured) {
-      fsFile.label = currentLabel;
-      // @ts-ignore it's a hack to pass the data, version is not a valid attribute.
-      otherFile.label = otherLabel;
-    }
+    fsFile.label = currentLabel;
+    // @ts-ignore it's a hack to pass the data, version is not a valid attribute.
+    otherFile.label = otherLabel;
     results.modifiedFiles.push({ filePath, fsFile, baseFile, otherFile, output: null, conflict: null });
   };
 
-  const updatedFiles = await Promise.all(
-    currentFiles.map(async (fsFile, index) => {
-      const captured = observedCurrent?.[index];
-      if (captured) return getFileResult(fsFile, captured.baseFile, captured.otherFile, captured);
+  await Promise.all(
+    currentFiles.map(async (fsFile) => {
       const relativePath = pathNormalizeToLinux(fsFile.relative);
       const baseFile = baseFiles.find((file) => file.relativePath === relativePath);
       const otherFile = otherFiles.find((file) => file.relativePath === relativePath);
-      return getFileResult(fsFile, baseFile, otherFile);
+      await getFileResult(fsFile, baseFile, otherFile);
     })
   );
-  for (const updatedFile of updatedFiles) {
-    if (updatedFile) results.updatedFiles.push(updatedFile);
-  }
   const fsFilesPaths = currentFiles.map((fsFile) => pathNormalizeToLinux(fsFile.relative));
   const baseFilesPaths = baseFiles.map((baseFile) => baseFile.relativePath);
   const isOtherSameAsBase = (otherFile: SourceFileModel) => {
@@ -247,27 +180,21 @@ export async function continueThreeWayMerge({
   deletedFromFs.forEach((file) => results.remainDeletedFiles.push({ filePath: file.relativePath }));
   deletedAndModified.forEach((file) => results.deletedConflictFiles.push({ filePath: file.relativePath }));
 
-  const addedFiles = await Promise.all(
+  await Promise.all(
     addedOnOther.map(async (file) => {
-      const fsFile = observedSources
-        ? await observedSources.file(file)
-        : await SourceFile.loadFromSourceFileModel(file, scope.objects);
-      return { filePath: file.relativePath, fsFile };
+      const fsFile = await SourceFile.loadFromSourceFileModel(file, scope.objects);
+      results.addFiles.push({ filePath: file.relativePath, fsFile });
     })
   );
-  results.addFiles.push(...addedFiles);
-  const restoredFiles = await Promise.all(
+  await Promise.all(
     deletedAndModified.map(async (file) => {
-      const fsFile = observedSources
-        ? await observedSources.file(file)
-        : await SourceFile.loadFromSourceFileModel(file, scope.objects);
-      return { filePath: file.relativePath, fsFile };
+      const fsFile = await SourceFile.loadFromSourceFileModel(file, scope.objects);
+      results.deletedConflictFiles.push({ filePath: file.relativePath, fsFile });
     })
   );
-  results.deletedConflictFiles.push(...restoredFiles);
   if (isEmpty(results.modifiedFiles)) return results;
 
-  const conflictResults = await getMergeResults(scope, results.modifiedFiles, observedSources);
+  const conflictResults = await getMergeResults(scope, results.modifiedFiles);
   conflictResults.forEach((conflictResult: MergeFileResult) => {
     const modifiedFile = results.modifiedFiles.find((file) => file.filePath === conflictResult.filePath);
     if (!modifiedFile) throw new BitError(`unable to find ${conflictResult.filePath} in modified files array`);
@@ -282,21 +209,16 @@ export async function continueThreeWayMerge({
 
 async function getMergeResults(
   scope: Scope,
-  modifiedFiles: MergeResultsThreeWay['modifiedFiles'],
-  observedSources?: {
-    load: (file: SourceFileModel) => Promise<Source>;
-    contents: (file: SourceFileModel, source: Source) => Buffer;
-  }
+  modifiedFiles: MergeResultsThreeWay['modifiedFiles']
 ): Promise<MergeFileResult[]> {
   const tmp = new Tmp(scope);
   const conflictResultsP = modifiedFiles.map(async (modifiedFile) => {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const fsFilePathP = tmp.save(modifiedFile.fsFile.contents);
     const writeFile = async (file: SourceFileModel): Promise<PathOsBased> => {
-      const content = observedSources ? await observedSources.load(file) : await file.file.load(scope.objects);
-      return tmp.save(
-        (observedSources ? observedSources.contents(file, content as Source) : (content as Source).contents).toString()
-      );
+      const content = await file.file.load(scope.objects);
+      // @ts-ignore
+      return tmp.save(content.contents.toString());
     };
     const baseFilePathP = modifiedFile.baseFile ? writeFile(modifiedFile.baseFile) : tmp.save('');
     const otherFilePathP = writeFile(modifiedFile.otherFile);

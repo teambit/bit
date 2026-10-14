@@ -1,5 +1,4 @@
-//! `prepareRustCommandPolicy` (`rust-workspace-command-policy.ts`): when a
-//! merge changes a component's configuration, the engine asks for the
+//! When a merge changes a component's configuration, the engine asks for the
 //! built-in Node environment's defaults and, for the merged files, a fresh
 //! dependency detection, before it plans the merged metadata.
 
@@ -22,7 +21,7 @@ pub struct Prepared {
 }
 
 impl Steps<'_> {
-    /// `prepareRustCommandPolicy(prepared, plan, dependencyStates)`.
+    /// The command policy of the prepared plan and its dependency states.
     pub(super) fn prepare_policy(
         &mut self,
         mut plan: Value,

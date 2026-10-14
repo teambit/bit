@@ -2,12 +2,9 @@ import chalk from 'chalk';
 import tempy from 'tempy';
 import { uniq } from 'lodash';
 import type { ComponentID } from '@teambit/component-id';
-import { getOneFileDiff, formatFileDiff } from './format-file-diff';
-export { getOneFileDiff, formatFileDiff } from './format-file-diff';
+import { diffFiles } from './diff-files';
 import type { PathOsBased } from '@teambit/toolbox.path.path';
-import { getRustFilesDiff, type SourceFile } from '@teambit/component.sources';
-import { getGitExecutablePath } from '@teambit/git.modules.git-executable';
-import { registerRustSnapshotFunctionReference } from '@teambit/objects';
+import type { SourceFile } from '@teambit/component.sources';
 
 export type DiffStatus = 'MODIFIED' | 'UNCHANGED' | 'NEW' | 'DELETED';
 
@@ -36,6 +33,30 @@ export type DiffOptions = {
   compareToParent?: boolean; // compare to the parent (previous) version
 };
 
+export async function getOneFileDiff(
+  filePathA: PathOsBased,
+  filePathB: PathOsBased,
+  fileALabel: string,
+  fileBLabel: string,
+  fileOrFieldName: string,
+  color = true
+): Promise<string> {
+  const fileDiff = await diffFiles(filePathA, filePathB, color);
+  if (!fileDiff) return '';
+  const diffStartsString = '--- '; // the part before this string is not needed for our purpose
+  const diffStart = fileDiff.indexOf(diffStartsString);
+  if (!diffStart || diffStart < 1) return ''; // invalid diff
+
+  // e.g. Linux: --- a/private/var/folders/z ... .js
+  // Windows: --- "a/C:\\Users\\David\\AppData\\Local\\Temp\\bit ... .js
+  const regExpA = /--- ["]?a.*\n/; // exact "---", follow by a or "a (for Windows) then \n
+  const regExpB = /\+\+\+ ["]?b.*\n/; // exact "+++", follow by b or "b (for Windows) then \n
+  return fileDiff
+    .slice(diffStart)
+    .replace(regExpA, `--- ${fileOrFieldName} (${fileALabel})\n`)
+    .replace(regExpB, `+++ ${fileOrFieldName} (${fileBLabel})\n`);
+}
+
 export async function getFilesDiff(
   filesA: SourceFile[],
   filesB: SourceFile[],
@@ -44,33 +65,6 @@ export async function getFilesDiff(
   fileNameAttribute = 'relative',
   color = true
 ): Promise<FileDiff[]> {
-  const native =
-    process.env.BIT_RUST_CLIENT_VCS === 'on'
-      ? await getRustFilesDiff(filesA, filesB, fileNameAttribute, color, getGitExecutablePath())
-      : undefined;
-  if (native) {
-    const leftLabel = filesAVersion === filesBVersion ? `${filesAVersion} original` : filesAVersion;
-    const rightLabel = filesAVersion === filesBVersion ? `${filesBVersion} modified` : filesBVersion;
-    return native.map((file) => {
-      const diffOutput = file.same
-        ? ''
-        : formatFileDiff(file.rawDiff.replace(/\r?\n$/, ''), leftLabel, rightLabel, file.relativePath);
-      const status: DiffStatus = !diffOutput
-        ? 'UNCHANGED'
-        : !file.fromContent
-          ? 'NEW'
-          : !file.toContent
-            ? 'DELETED'
-            : 'MODIFIED';
-      return {
-        filePath: file.relativePath,
-        diffOutput,
-        status,
-        fromContent: file.fromContent,
-        toContent: file.toContent,
-      };
-    });
-  }
   const filesAPaths = filesA.map((f) => f[fileNameAttribute]);
   const filesBPaths = filesB.map((f) => f[fileNameAttribute]);
   const allPaths = uniq(filesAPaths.concat(filesBPaths));
@@ -227,6 +221,3 @@ export function outputDiffResultsFormatted(diffResults: DiffResults[], opts: Dif
   if (opts.stat) return outputDiffResultsStat(filtered);
   return outputDiffResults(filtered);
 }
-
-registerRustSnapshotFunctionReference('HistoryQueryPublicFilesDiff', getFilesDiff);
-registerRustSnapshotFunctionReference('HistoryQueryFormatFilesDiff', formatFileDiff);

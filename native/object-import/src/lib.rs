@@ -1,27 +1,19 @@
-pub use import_stream::ImportStream;
-pub use inspection::InspectionSnapshot;
 /// Native import merge decisions (`kind: component | version | versionHistory | ...`).
 pub use operation::plan as plan_import_operation;
 /// Bit's JSONC reader (comments and trailing commas), used for `.bitmap`.
 pub use recovery::jsonc::parse as parse_jsonc;
-pub use session::{WorkspaceDispatcher, WorkspaceSession};
-pub use workspace::engine::{
-    dependency_policy::plan as plan_dependency_policy,
-    read_dependency_cache::{
-        cache_stale as dependency_cache_stale, read_cache as read_dependency_cache,
-    },
+pub use session::WorkspaceSession;
+pub use workspace::engine::read_dependency_cache::{
+    cache_stale as dependency_cache_stale, read_cache as read_dependency_cache,
 };
 
 mod checkout;
 mod checkout_transition;
 mod command_import;
 mod config_merge;
-mod directory;
 mod history_query;
 mod history_reset;
-mod import_stream;
 mod inspection;
-mod inventory;
 mod js_json;
 mod merge_history;
 mod merge_state;
@@ -31,7 +23,6 @@ mod mutable_store;
 mod operation;
 mod protocol;
 mod read_budget;
-mod read_store;
 mod read_version;
 mod recovery;
 mod session;
@@ -39,80 +30,6 @@ mod snapshot;
 mod snapshot_projection;
 mod snapshot_transaction;
 mod store;
-mod tar_archive;
-mod tar_batch;
-mod tar_extensions;
-mod tar_header;
-mod tar_progress;
 mod transfer;
 mod validate;
 mod workspace;
-
-use std::{env, io, process::ExitCode};
-
-type Options = (usize, Option<std::path::PathBuf>, Option<(u32, u32)>);
-
-fn options() -> Result<Options, Box<dyn std::error::Error>> {
-    let args: Vec<String> = env::args().skip(1).collect();
-    let mut threads =
-        std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get).min(4);
-    let mut directory = None;
-    let mut owner = None;
-    let mut arguments = args.iter();
-    while let Some(argument) = arguments.next() {
-        match argument.as_str() {
-            "--threads" => {
-                threads = arguments
-                    .next()
-                    .ok_or("missing thread count")?
-                    .parse::<usize>()?;
-            }
-            "--objects-dir" => {
-                directory = Some(std::path::PathBuf::from(
-                    arguments.next().ok_or("missing object directory")?,
-                ));
-            }
-            "--owner" => {
-                let value = arguments.next().ok_or("missing owner")?;
-                let (uid, gid) = value.split_once(':').ok_or("expected owner uid:gid")?;
-                owner = Some((uid.parse::<u32>()?, gid.parse::<u32>()?));
-            }
-            _ => return Err(
-                "usage: bit-object-import [--threads 1..8] [--objects-dir PATH] [--owner uid:gid]"
-                    .into(),
-            ),
-        }
-    }
-    if owner.is_some() && directory.is_none() {
-        return Err("owner requires object directory".into());
-    }
-    if !(1..=8).contains(&threads) {
-        return Err("thread count must be between 1 and 8".into());
-    }
-    Ok((threads, directory, owner))
-}
-
-fn run() -> Result<(), Box<dyn std::error::Error>> {
-    let (threads, directory, owner) = options()?;
-    let store = directory.map(|directory| store::Store::new(directory, owner)).transpose()?;
-    let pool = rayon::ThreadPoolBuilder::new().num_threads(threads).build()?;
-    protocol::serve_with_store(
-        &mut io::stdin().lock(),
-        &mut io::stdout().lock(),
-        &pool,
-        store.as_ref(),
-    )?;
-    Ok(())
-}
-
-/// Run the standalone object-import protocol server.
-#[must_use]
-pub fn main() -> ExitCode {
-    match run() {
-        Ok(()) => ExitCode::SUCCESS,
-        Err(error) => {
-            eprintln!("bit-object-import: {error}");
-            ExitCode::FAILURE
-        }
-    }
-}

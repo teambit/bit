@@ -1,8 +1,3 @@
-import {
-  tryRustExportTransaction,
-  hasRustExportTransactionOwner,
-  registerRustExportTransactionOwner,
-} from './rust-export-transaction';
 import crypto from 'crypto';
 import fs from 'fs-extra';
 import type { CLIMain } from '@teambit/cli';
@@ -43,7 +38,7 @@ import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { persistRemotes, validateRemotes, removePendingDirs } from './export-scope-components';
 import { writeLastExport } from './last-export';
 import type { Lane, ModelComponent, ObjectItem, LaneReadmeComponent, BitObject, Ref, Version } from '@teambit/objects';
-import { ObjectList, withRustTransferOperation, prepareRustTransferList } from '@teambit/objects';
+import { ObjectList } from '@teambit/objects';
 import { Scope, PersistFailed } from '@teambit/legacy.scope';
 import { getAllVersionHashes } from '@teambit/component.snap-distance';
 import { ExportAspect } from './export.aspect';
@@ -300,11 +295,7 @@ if the export fails with missing objects/versions/components, run "bit fetch --l
   /**
    * the export process uses four steps. read more about it here: https://github.com/teambit/bit/pull/3371
    */
-  async pushToScopes(params: PushToScopesParams): Promise<PushToScopesResult> {
-    return withRustTransferOperation(() => this.pushToScopesWithinOperation(params));
-  }
-
-  private async pushToScopesWithinOperation({
+  async pushToScopes({
     scope,
     ids, // when exporting a lane, the ids are the lane component ids
     laneObject,
@@ -621,7 +612,6 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
         objectList.addIfNotExist([laneData]);
       }
 
-      if (process.env.BIT_RUST_CLIENT_VCS === 'on') await prepareRustTransferList(objectList);
       return { remote, objectList, objectListPerName, idsToChangeLocally, modelComponents: exportedModelComponents };
     };
 
@@ -633,7 +623,6 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
 
     const pushAllToCentralHub = async () => {
       const objectList = this.transformToOneObjectListWithScopeData(manyObjectsPerRemote);
-      if (process.env.BIT_RUST_CLIENT_VCS === 'on') await prepareRustTransferList(objectList);
       const http = await Http.connect(CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME);
       const pushResults = await http.pushToCentralHub(objectList, { origin: exportOrigin });
       const { failedScopes, successIds, errors, metadata } = pushResults;
@@ -713,11 +702,9 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
     let centralHubResults;
     try {
       if (resumeExportId) {
-        if (!(await tryRustExportTransaction(manyObjectsPerRemote, resumeExportId, true))) {
-          const remotes = manyObjectsPerRemote.map((o) => o.remote);
-          await validateRemotes(remotes, resumeExportId);
-          await persistRemotes(manyObjectsPerRemote, resumeExportId);
-        }
+        const remotes = manyObjectsPerRemote.map((o) => o.remote);
+        await validateRemotes(remotes, resumeExportId);
+        await persistRemotes(manyObjectsPerRemote, resumeExportId);
       } else if (this.shouldPushToCentralHub(manyObjectsPerRemote, scopeRemotes, originDirectly)) {
         centralHubResults = await pushAllToCentralHub();
       } else {
@@ -779,18 +766,6 @@ if the scope name is wrong and you've already snapped/tagged, run "bit reset" to
     // vanishingly unlikely (64 bits of randomness). Use node's built-in `crypto` rather than a
     // component helper so this core aspect doesn't gain a new component dependency.
     const clientId = resumeExportId || `${Date.now()}-${crypto.randomBytes(8).toString('hex')}`;
-    if (
-      hasRustExportTransactionOwner(this) &&
-      (await tryRustExportTransaction(
-        manyObjectsPerRemote,
-        clientId,
-        Boolean(resumeExportId),
-        this.logger,
-        Boolean(resumeExportId),
-        () => hasRustExportTransactionOwner(this)
-      ))
-    )
-      return;
     await this.pushRemotesPendingDir(clientId, manyObjectsPerRemote, resumeExportId);
     await validateRemotes(remotes, clientId, Boolean(resumeExportId));
     // Intentionally no cleanup on `persistRemotes` failure: pending dirs are the substrate for
@@ -975,7 +950,6 @@ ${localOnlyExportPending.map((c) => c.toString()).join('\n')}`);
   }
 }
 
-registerRustExportTransactionOwner(ExportMain);
 ExportAspect.addRuntime(ExportMain);
 
 /**

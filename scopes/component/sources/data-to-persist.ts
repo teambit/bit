@@ -7,15 +7,8 @@ import { logger } from '@teambit/legacy.logger';
 import { removeFilesAndEmptyDirsRecursively } from './remove-files-and-empty-dirs-recursively';
 import type AbstractVinyl from './abstract-vinyl';
 import type { RemovePath } from './remove-path';
-import { persistWorkspaceFiles } from './rust-workspace-materializer';
-import { persistWorkspaceOperation } from './rust-workspace-persistence';
 
 export class DataToPersist {
-  private static readonly defaultWorkspacePhases = {
-    _deletePathsFromFS: DataToPersist.prototype._deletePathsFromFS,
-    _persistFilesToFS: DataToPersist.prototype._persistFilesToFS,
-    _persistSymlinksToFS: DataToPersist.prototype._persistSymlinksToFS,
-  };
   files: AbstractVinyl[];
   symlinks: Symlink[];
   remove: RemovePath[];
@@ -71,11 +64,6 @@ export class DataToPersist {
   async persistAllToFS() {
     this._log();
     this._validateAbsolute();
-    if (
-      (process.env.BIT_RUST_WORKSPACE_PERSISTENCE === 'on' || process.env.BIT_RUST_CLIENT_VCS === 'on') &&
-      (await persistWorkspaceOperation(this, DataToPersist.defaultWorkspacePhases))
-    )
-      return;
     // the order is super important. first remove, then create and finally symlink
     await this._deletePathsFromFS();
     await this._persistFilesToFS();
@@ -162,7 +150,6 @@ export class DataToPersist {
   }
   async _persistFilesToFS() {
     const concurrency = concurrentIOLimit();
-    if (await persistWorkspaceFiles(this.files, concurrency)) return;
     return pMapPool(this.files, (file) => file.write(), { concurrency });
   }
   async _persistSymlinksToFS() {

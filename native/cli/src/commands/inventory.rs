@@ -1,5 +1,4 @@
-//! The component file inventory the Node.js glue drove for every status-like
-//! command: Bit's ignore lists and the workspace's patterns compiled with
+//! The component file inventory of every status-like command: Bit's ignore lists and the workspace's patterns compiled with
 //! `bit-ignore`, and the scan/finish requests of the workspace engine.
 
 pub use rebase::normalize;
@@ -110,7 +109,7 @@ impl Inventory {
                 row.patterns.iter().map(|pattern| rebase::pattern(pattern, &row.directory))
             })
             .collect();
-        // Compiled in the Node.js glue's order: the regex cache is shared.
+        // Compiled in this order: the regex cache is shared.
         let combined = compile(Some(&self.root), &nested)?;
         let hard = compile(None, &self.hard)?;
         let own = compile(None, &scan.own)?;
@@ -137,7 +136,7 @@ fn compile(base: Option<&Ignore>, patterns: &[impl AsRef<str>]) -> io::Result<Ig
     Ok(ignore)
 }
 
-/// `captureRustInventoryPolicy(ignore)` of a fresh instance: its rules and
+/// The ignore policy of a fresh instance: its rules and
 /// its empty match cache.
 fn policy(rules: &[Rule]) -> Value {
     json!({ "rules": rules, "cache": [] })

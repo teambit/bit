@@ -1,4 +1,4 @@
-//! The engine's outbound receipts (`validateRustOutboundReceipt`) and
+//! The engine's outbound receipts and
 //! `ExportCmd.report` for the exports that run natively: components only,
 //! without lanes, ejecting or ripple jobs.
 
@@ -59,7 +59,7 @@ pub(super) fn prepared(value: &Value) -> io::Result<Prepared> {
     Ok(Prepared { token: token.to_string(), nothing_to_export, count, scopes, transfers })
 }
 
-/// `validateRustOutboundReceipt` of `commandOutboundFinalize`'s receipt.
+/// `commandOutboundFinalize`'s receipt, validated.
 pub(super) fn published(value: &Value, token: &str) -> io::Result<Value> {
     let map = object(value)?;
     if map.get("applied") != Some(&Value::Bool(true))

@@ -1,5 +1,5 @@
-//! The `BWS1` request frames of `bit-object-import`'s workspace session, the
-//! protocol the Node.js glue sends through the `bit-workspace.node` addon.
+//! The `BWS1` request frames of `bit-object-import`'s workspace session: one
+//! JSON request per frame, answered with a versioned JSON response.
 
 use bit_object_import::WorkspaceSession;
 use serde::{Deserialize, de::DeserializeOwned};

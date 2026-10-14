@@ -1,8 +1,4 @@
 import path from 'path';
-import {
-  readNativeDependencyCache,
-  nativeDependencyCacheStale,
-} from '../files-dependency-builder/rust-scanner/dependency-cache';
 import { uniq } from 'lodash';
 import { IssuesClasses } from '@teambit/component-issues';
 import {
@@ -131,11 +127,7 @@ export class DependenciesLoader {
     if (!opts.useDependenciesCache) {
       return null;
     }
-    const nativeCache = await readNativeDependencyCache(workspace.consumer.componentFsCache, this.idStr);
-    const cacheData =
-      nativeCache === undefined
-        ? await workspace.consumer.componentFsCache.getDependenciesDataFromCache(this.idStr)
-        : nativeCache;
+    const cacheData = await workspace.consumer.componentFsCache.getDependenciesDataFromCache(this.idStr);
     if (!cacheData) {
       return null; // probably the first time, so it wasn't entered to the cache yet.
     }
@@ -149,9 +141,8 @@ export class DependenciesLoader {
     const filesPaths = this.component.files.map((f) => f.path);
     const componentConfigPath = path.join(workspace.path, rootDir, COMPONENT_CONFIG_FILE_NAME);
     filesPaths.push(componentConfigPath);
-    const nativeStale = await nativeDependencyCacheStale(rootDir, filesPaths, cacheData.timestamp);
-    const wasModifiedAfterCache =
-      nativeStale ?? (await getLastModifiedComponentTimestampMs(rootDir, filesPaths)) > cacheData.timestamp;
+    const lastModifiedComponent = await getLastModifiedComponentTimestampMs(rootDir, filesPaths);
+    const wasModifiedAfterCache = lastModifiedComponent > cacheData.timestamp;
 
     if (wasModifiedAfterCache) {
       // in case the env.jsonc was modified, all components using this env should be invalidated as well.

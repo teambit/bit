@@ -1,4 +1,4 @@
-//! `parseRustWorkspaceTag` with `validateOptions` of `@teambit/snapping`:
+//! The native tag grammar, with `validateOptions` of `@teambit/snapping`:
 //! ordinary persisted tags only. Editor, build, soft and publish flags stay
 //! with the Node.js CLI.
 

@@ -4,36 +4,16 @@
  * this file had been forked from https://github.com/dependents/node-filing-cabinet
  */
 import path from 'path';
-import { createRequire } from 'module';
+import resolveDependencyPath from 'resolve-dependency-path';
+import stylusLookup from 'stylus-lookup';
+
+import { lookupJavaScript, lookupTypeScript } from '@teambit/typescript.deps-lookups.lookup-typescript';
+import { lookupStyling } from '@teambit/styling.deps-lookups.lookup-styling';
 
 import type { DependencyDetector } from '@teambit/dependency-resolver';
 import { DetectorHook } from '@teambit/dependency-resolver';
 
 const debug = require('debug')('cabinet');
-
-// Default native resolution does not need the TypeScript, Babel or styling lookup packages.
-function lazyLookup(load: () => (options: Options) => any): (options: Options) => any {
-  let lookup: ((options: Options) => any) | undefined;
-  return (options) => {
-    lookup ||= load();
-    return lookup(options);
-  };
-}
-const lookupJavaScript = lazyLookup(
-  () => require('@teambit/typescript.deps-lookups.lookup-typescript').lookupJavaScript
-);
-const lookupTypeScript = lazyLookup(
-  () => require('@teambit/typescript.deps-lookups.lookup-typescript').lookupTypeScript
-);
-const lookupStyling = lazyLookup(() => require('@teambit/styling.deps-lookups.lookup-styling').lookupStyling);
-const resolveDependencyPath = lazyLookup(() => {
-  const loaded = require('resolve-dependency-path');
-  return loaded.default || loaded;
-});
-const stylusLookup = lazyLookup(() => {
-  const loaded = require('stylus-lookup');
-  return loaded.default || loaded;
-});
 
 const defaultLookups = {
   '.js': lookupJavaScript,
@@ -52,55 +32,6 @@ const defaultLookups = {
   '.md': lookupTypeScript,
   '.mdx': lookupTypeScript,
 };
-
-const nativeDefaults = { ...defaultLookups };
-const lookupRequire = createRequire(require.resolve('@teambit/typescript.deps-lookups.lookup-typescript'));
-const appModulePath = lookupRequire('app-module-path') as { addPath: (directory: string) => void };
-const originalAddPath = appModulePath.addPath;
-
-/** Custom lookups and detector predicates retain their original synchronous dispatch. */
-export function canUseRustCommonJS(
-  filename: string,
-  options: {
-    envDetectors?: DependencyDetector[];
-    requireConfig?: unknown;
-    webpackConfig?: unknown;
-    resolveConfig?: unknown;
-  },
-  graph = false
-): boolean {
-  const ext = path.extname(filename);
-  return (
-    module.exports.default === cabinet &&
-    ['.js', '.jsx', '.cjs', '.mjs', '.ts', '.tsx', '.cts', '.mts'].includes(ext) &&
-    defaultLookups[ext] === nativeDefaults[ext] &&
-    appModulePath.addPath === originalAddPath &&
-    (graph ? DetectorHook.canSkipNativeGraphHooks(filename) : !DetectorHook.hooks.length) &&
-    !options.envDetectors?.length &&
-    !options.requireConfig &&
-    !options.webpackConfig &&
-    !options.resolveConfig
-  );
-}
-
-export function isRustCommonJSDependency(filename: string, dependency: string): boolean {
-  return !['.ts', '.tsx', '.cts', '.mts'].includes(path.extname(filename)) || !dependency.startsWith('.');
-}
-
-/** The native relative resolver is qualified against this installed TypeScript implementation. */
-export function rustDependencyResolutionMode(filename: string): 'commonjs' | 'typescript5.9' {
-  if (!['.ts', '.tsx', '.cts', '.mts'].includes(path.extname(filename))) return 'commonjs';
-  try {
-    return lookupRequire('typescript/package.json').version === '5.9.2' ? 'typescript5.9' : 'commonjs';
-  } catch {
-    return 'commonjs';
-  }
-}
-
-/** Preserve the existing lookup's public module search-path side effect. */
-export function registerRustCommonJSPath(filename: string): void {
-  appModulePath.addPath(path.join(path.dirname(filename), 'node_modules'));
-}
 
 type Options = {
   dependency: string; // previous name was "partial"

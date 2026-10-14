@@ -80,7 +80,6 @@ export { extendWithComponentsFromDir } from './extend-with-components-from-dir';
 export { isRange } from './manifest/deduping/hoist-dependencies';
 export type { DependencyEnv } from './dependency-env';
 export { DetectorHook, DependencyDetector, FileContext } from './detector-hook';
-export { detectWithCustomDetectors, type CustomDetection } from './custom-detectors';
 export {
   ensureHoistedDependencyResolution,
   ensureSelfInstallationBridge,

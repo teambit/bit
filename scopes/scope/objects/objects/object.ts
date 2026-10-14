@@ -7,7 +7,6 @@ import { UnknownObjectType, typesObj as types } from '@teambit/legacy.scope';
 import type { ObjectItem } from './object-list';
 import Ref from './ref';
 import type Repository from './repository';
-import { registerRustSnapshotFunctions } from './rust-snapshot-guards';
 
 function parse(buffer: Buffer): BitObject {
   const { type, hash, contents } = extractHeaderAndContent(buffer);
@@ -141,11 +140,6 @@ path: ${err.path}`);
     return { object: parse(buffer), inflatedSize: buffer.byteLength };
   }
 
-  /** Internal import path for native, losslessly decoded, completely inflated metadata. */
-  static parseInflatedObjectWithSize(buffer: Buffer): { object: BitObject; inflatedSize: number } {
-    return { object: parse(buffer), inflatedSize: buffer.byteLength };
-  }
-
   /**
    * same as `parseObject`, however, if the type is not one of the given "typeNames", it returns null.
    * the performance improvement is huge compare to "parseObject", as it doesn't parse the object if not needed.
@@ -213,4 +207,3 @@ path: ${err.path}`);
     return sha1(str);
   }
 }
-registerRustSnapshotFunctions('HistoryQueryObjectParser', BitObject, ['parseObjectWithSize']);

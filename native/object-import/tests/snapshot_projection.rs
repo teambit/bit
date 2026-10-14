@@ -18,13 +18,12 @@ const load=createRequire(path.join(process.argv[1],'package.json'));
 const {Version}=load('@teambit/objects');
 function ast(v){if(v===undefined)return{kind:'undefined'};if(v===null)return{kind:'null'};if(typeof v==='boolean')return{kind:'boolean',value:v};if(typeof v==='number'){const b=Buffer.alloc(8);b.writeDoubleBE(v);return{kind:'number',value:b.toString('hex')}};if(typeof v==='string')return{kind:'string',value:Array.from({length:v.length},(_,i)=>v.charCodeAt(i))};if(Array.isArray(v))return{kind:'array',value:v.map(ast)};return{kind:'object',value:Object.keys(v).map(k=>[ast(k).value,ast(v[k])])};}
 let seed=0x4917;function next(){seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;return seed>>>0;}
-function plain(v){if(v===null||!['object','function'].includes(typeof v))return v;if(Array.isArray(v))return Array.from(v,plain);return Object.fromEntries(Object.keys(v).map(k=>[k,plain(v[k])]))}
 const rows=[];
 for(let i=0;i<250;i++){
  const n=next();const payload={files:[{file:'1'.repeat(40),relativePath:'index.js',name:'index.js',test:!!(n&1)}],mainFile:'index.js',log:{message:i%3?'message 😀\ud800':'',date:String(n),username:i%2?'user':undefined},dependencies:[],devDependencies:[],flattenedDependencies:[],extensions:[{name:'qualification/aspect',config:{'2':i,'1':n,z:undefined,a:[null,false,i]},data:{nested:{value:i}}}],packageDependencies:{'qualification':i%2?'^1.0.0':''},parents:i%2?['2'.repeat(40)]:[],hidden:i%3?false:true,bindingPrefix:i%4?'@bit':'',batchId:i%5?'batch':undefined};
  const v=Version.parse(JSON.stringify(payload),'3'.repeat(40));
  const fields={...v,files:v.files.map(f=>({...f,file:f.file.toString()})),dependencies:v.dependencies.dependencies.map(d=>({...d,id:d.id.serialize()})),devDependencies:v.devDependencies.dependencies.map(d=>({...d,id:d.id.serialize()})),flattenedDependencies:v.flattenedDependencies.map(d=>d.toObject()),extensions:v.extensions.map(e=>({extensionId:e.extensionId?.serialize(),rawConfig:e.rawConfig,data:e.data,legacyId:e.legacyId,name:e.name,newExtensionId:e.newExtensionId})),parents:v.parents.map(p=>p.toString())};
- rows.push({fields:ast(fields),compact:load('@teambit/objects/dist/objects/rust-snapshot-values.js').projectRustSnapshotValue(plain(fields)),body:JSON.stringify(v.toObject()),pretty:JSON.stringify(v.toObject(),null,2),semantic:v.id(),semanticHash:v.calculateHash().toString(),assignments:v.extensions.map(e=>ast(e.rawConfig))});
+ rows.push({fields:ast(fields),body:JSON.stringify(v.toObject()),pretty:JSON.stringify(v.toObject(),null,2),semantic:v.id(),semanticHash:v.calculateHash().toString(),assignments:v.extensions.map(e=>ast(e.rawConfig))});
 }
 process.stdout.write(JSON.stringify(rows));
 ";
@@ -37,7 +36,6 @@ process.stdout.write(JSON.stringify(rows));
     let rows: Vec<serde_json::Value> = serde_json::from_slice(&output.stdout).unwrap();
     for (index, row) in rows.iter().enumerate() {
         let fields: Value = serde_json::from_value(row["fields"].clone()).unwrap();
-        same_projection(&fields, &row["compact"]);
         for (pretty, name) in [(false, "body"), (true, "pretty")] {
             let bytes = snapshot_projection::serialize("Version", &fields, pretty).unwrap();
             assert_eq!(
@@ -53,11 +51,6 @@ process.stdout.write(JSON.stringify(rows));
             assert_eq!(serde_json::to_value(config).unwrap(), row["assignments"][source]);
         }
     }
-}
-
-fn same_projection(fields: &Value, compact: &serde_json::Value) {
-    let compact: Value = serde_json::from_value(compact.clone()).unwrap();
-    assert_eq!(serde_json::to_value(fields).unwrap(), serde_json::to_value(compact).unwrap());
 }
 
 #[test]

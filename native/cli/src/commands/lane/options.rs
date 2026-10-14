@@ -1,4 +1,4 @@
-//! `parseRustLaneCommand`: the lane merge grammar native planning accepts.
+//! The lane merge grammar native planning accepts.
 
 use serde_json::{Map, Value, json};
 
@@ -86,7 +86,7 @@ impl Read {
         Some(pattern)
     }
 
-    /// The flag combinations `parseRustLaneCommand` rejects.
+    /// The flag combinations the native grammar rejects.
     fn conflicting(&self, pattern: Option<&str>) -> bool {
         (self.has("--manual") && self.value("--auto-merge-resolve").is_some())
             || (self.has("--no-squash") && self.has("--squash"))
@@ -166,7 +166,7 @@ impl Options {
             .any(|known| known == flag)
     }
 
-    /// `RustWorkspaceCommandOptions` without `operation`, as `JSON.stringify`
+    /// The engine's command options without `operation`, as `JSON.stringify`
     /// writes them.
     pub fn request(&self) -> Value {
         let lane = json!({

@@ -36,15 +36,7 @@ import { ConfigStoreAspect } from '@teambit/config-store';
 import type { ScopeMain } from '@teambit/scope';
 import { ScopeAspect } from '@teambit/scope';
 import type { Repository, Lane, ModelComponent, DepEdge, DepEdgeType, Log, AddVersionOpts } from '@teambit/objects';
-import {
-  BitObject,
-  Ref,
-  Version,
-  withRustSnapshotOperation,
-  addRustSnapshotVersion,
-  reconcileRustMergeSnapshot,
-  isRustSnapshotOperation,
-} from '@teambit/objects';
+import { BitObject, Ref, Version } from '@teambit/objects';
 import type { Component, ConsumerComponent } from '@teambit/component';
 import type { DependencyResolverMain, VariantPolicyConfigArr } from '@teambit/dependency-resolver';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
@@ -75,14 +67,6 @@ import {
   getComponentsWithOptionToUntag,
   removeLocalVersionsForMultipleComponents,
 } from './reset-component';
-import {
-  withRustHistoryResetOperation,
-  completeRustHistoryResetPhase,
-  selectRustResetPattern,
-  selectRustResetSoft,
-  selectRustNeverExported,
-} from './rust-history-reset';
-import { removeRustResetLaneHistoryEntries } from './rust-history-reset-lane-history';
 import type { ApplicationMain } from '@teambit/application';
 import { ApplicationAspect } from '@teambit/application';
 import { LaneNotFound } from '@teambit/legacy.scope-api';
@@ -214,25 +198,7 @@ export class SnappingMain {
    * tag can be done only on main, not on a lane.
    */
   // eslint-disable-next-line complexity
-  async tag(
-    options: {
-      ids?: string[];
-      all?: boolean | string;
-      snapped?: boolean;
-      unmerged?: boolean;
-      version?: string;
-      releaseType?: ReleaseType;
-      autoTagReleaseType?: ReleaseType;
-      ignoreIssues?: string;
-      scope?: string | boolean;
-      incrementBy?: number;
-      failFast?: boolean;
-    } & Partial<BasicTagParams>
-  ): Promise<TagResults | null> {
-    return withRustSnapshotOperation(() => this.tagWithinSnapshot(options));
-  }
-
-  private async tagWithinSnapshot({
+  async tag({
     ids = [],
     message = '',
     version,
@@ -370,7 +336,7 @@ export class SnappingMain {
     const consumerComponents = components.map((c) => c.state._consumer) as ConsumerComponent[];
     const componentIds = ComponentIdList.fromArray(ids);
     const versionMaker = new VersionMaker(this, components, consumerComponents, componentIds, params);
-    return withRustSnapshotOperation(() => versionMaker.makeVersion());
+    return versionMaker.makeVersion();
   }
 
   private async addAspectsFromConfigObject(
@@ -624,23 +590,7 @@ export class SnappingMain {
    * save the local changes of a component(s) into the scope. snap can be done on main or on a lane.
    * once a component is snapped on a lane, it becomes part of it.
    */
-  async snap(
-    options: Partial<BasicTagSnapParams> & {
-      pattern?: string;
-      legacyBitIds?: ComponentIdList;
-      unmerged?: boolean;
-      editor?: string;
-      ignoreIssues?: string;
-      skipAutoSnap?: boolean;
-      disableTagAndSnapPipelines?: boolean;
-      unmodified?: boolean;
-      exitOnFirstFailedTask?: boolean;
-    }
-  ): Promise<SnapResults | null> {
-    return withRustSnapshotOperation(() => this.snapWithinSnapshot(options));
-  }
-
-  private async snapWithinSnapshot({
+  async snap({
     pattern,
     legacyBitIds, // @todo: change to ComponentID[]. pass only if have the ids already parsed.
     unmerged,
@@ -852,69 +802,30 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     force = false,
     soft = false
   ): Promise<{ results: ResetResult[]; isSoftUntag: boolean }> {
-    return withRustHistoryResetOperation(
-      { mode: soft ? 'soft' : 'real', pattern: Boolean(componentPattern), head: Boolean(head), force },
-      () => withRustSnapshotOperation(() => this.resetWithinOperation(componentPattern, head, force, soft))
-    );
-  }
-
-  private async resetWithinOperation(
-    componentPattern?: string,
-    head?: boolean,
-    force = false,
-    soft = false
-  ): Promise<{ results: ResetResult[]; isSoftUntag: boolean }> {
     if (!this.workspace) throw new OutsideWorkspaceError();
     const consumer = this.workspace.consumer;
     const currentLane = await consumer.getCurrentLaneObject();
-    if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetPhase('captureLane');
     const untag = async (): Promise<ResetResult[]> => {
       if (!componentPattern) {
         return removeLocalVersionsForAllComponents(this.workspace, this.remove, currentLane, head);
       }
       const candidateComponents = await getComponentsWithOptionToUntag(this.workspace, this.remove);
-      if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetPhase('candidates');
       const idsMatchingPattern = await this.workspace.idsByPattern(componentPattern, true, { includeDeleted: true });
       const idsMatchingPatternBitIds = ComponentIdList.fromArray(idsMatchingPattern);
-      const nativeCandidates =
-        process.env.BIT_RUST_CLIENT_VCS === 'on'
-          ? await selectRustResetPattern(candidateComponents, idsMatchingPatternBitIds)
-          : undefined;
-      const componentsToUntag =
-        nativeCandidates ||
-        candidateComponents.filter((modelComponent) =>
-          idsMatchingPatternBitIds.hasWithoutVersion(modelComponent.toComponentId())
-        );
-      if (process.env.BIT_RUST_CLIENT_VCS === 'on')
-        await completeRustHistoryResetPhase('pattern', componentsToUntag.length);
+      const componentsToUntag = candidateComponents.filter((modelComponent) =>
+        idsMatchingPatternBitIds.hasWithoutVersion(modelComponent.toComponentId())
+      );
       return removeLocalVersionsForMultipleComponents(consumer, componentsToUntag, currentLane, head, force);
     };
     const softUntag = async () => {
       const softTaggedComponentsIds = this.workspace.filter.bySoftTagged();
-      if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetPhase('softCandidates');
       const idsToRemoveSoftTags = componentPattern
         ? await this.workspace.filterIdsFromPoolIdsByPattern(componentPattern, softTaggedComponentsIds)
         : softTaggedComponentsIds;
-      if (componentPattern && process.env.BIT_RUST_CLIENT_VCS === 'on')
-        await completeRustHistoryResetPhase('softPattern');
-      let nativePlan =
-        process.env.BIT_RUST_CLIENT_VCS === 'on'
-          ? await selectRustResetSoft(consumer.bitMap, idsToRemoveSoftTags)
-          : undefined;
-      if (nativePlan && !nativePlan.valid()) nativePlan = undefined;
       return compact(
-        idsToRemoveSoftTags.map((componentId, index) => {
+        idsToRemoveSoftTags.map((componentId) => {
           const componentMap = consumer.bitMap.getComponent(componentId, { ignoreVersion: true });
           const removedVersion = componentMap.nextVersion?.version;
-          if (
-            nativePlan &&
-            (componentMap !== nativePlan.entries[index] || (removedVersion || null) !== nativePlan.versions[index])
-          )
-            nativePlan = undefined;
-          if (nativePlan && !nativePlan.selected.includes(index)) {
-            if (!removedVersion) return null;
-            nativePlan = undefined;
-          }
           if (!removedVersion) return null;
           componentMap.clearNextVersion();
           return { id: componentId, versions: [removedVersion] };
@@ -925,7 +836,6 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
     const isRealUntag = !soft;
     if (isRealUntag) {
       results = await untag();
-      if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetPhase('components');
 
       // Remove lane history entries that correspond to the reset snaps.
       // Each snap uses its batchId as the lane history key, so we can match them.
@@ -933,18 +843,12 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
         const allBatchIds = uniq(results.flatMap((r) => r.batchIds || []));
         if (allBatchIds.length) {
           const laneHistory = await consumer.scope.lanes.getOrCreateLaneHistory(currentLane);
-          const removedNatively =
-            process.env.BIT_RUST_CLIENT_VCS === 'on'
-              ? await removeRustResetLaneHistoryEntries(laneHistory, allBatchIds)
-              : false;
-          if (!removedNatively) laneHistory.removeHistoryEntries(allBatchIds);
+          laneHistory.removeHistoryEntries(allBatchIds);
           consumer.scope.objects.add(laneHistory);
         }
       }
-      if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetPhase('laneHistory');
 
       await consumer.scope.objects.persist();
-      if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetPhase('persist');
       const currentLaneId = consumer.getCurrentLaneId();
       const stagedConfig = await this.workspace.scope.getStagedConfig();
 
@@ -957,39 +861,22 @@ in case you're unsure about the pattern syntax, use "bit pattern [--help]"`);
         if (currentLane?.findUpdateDependent(compId)) return;
         await updateVersions(this.workspace, stagedConfig, currentLaneId, component, versionToSetInBitmap, false);
       });
-      if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetPhase('bitmap');
       await this.workspace.scope.legacyScope.stagedSnaps.write();
-      if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetPhase('stagedWrite');
     } else {
       results = await softUntag();
-      if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetPhase('softApply');
       consumer.bitMap.markAsChanged();
-      if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetPhase('markBitmap');
     }
 
     await consumer.onDestroy('reset');
-    if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetPhase('destroy');
     return { results, isSoftUntag: !isRealUntag };
   }
 
   async resetNeverExported(): Promise<ComponentID[]> {
-    return withRustHistoryResetOperation({ mode: 'neverExported', pattern: false, head: false, force: false }, () =>
-      this.resetNeverExportedWithinOperation()
-    );
-  }
-
-  private async resetNeverExportedWithinOperation(): Promise<ComponentID[]> {
     const notExported = this.workspace.consumer.getNotExportedIds();
-    if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetPhase('ids');
-    const nativePlan =
-      process.env.BIT_RUST_CLIENT_VCS === 'on' ? await selectRustNeverExported(notExported) : undefined;
-    const hashes = nativePlan?.hashes || notExported.map((id) => BitObject.makeHash(id.fullName));
+    const hashes = notExported.map((id) => BitObject.makeHash(id.fullName));
     await this.scope.legacyScope.objects.deleteObjectsFromFS(hashes.map((h) => Ref.from(h)));
-    if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetPhase('deleteObjects');
     notExported.map((id) => this.workspace.consumer.bitMap.updateComponentId(id.changeVersion(undefined)));
-    if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetPhase('updateBitmap');
     await this.workspace.bitMap.write(`reset (never-exported)`);
-    if (process.env.BIT_RUST_CLIENT_VCS === 'on') await completeRustHistoryResetPhase('writeBitmap');
     return notExported;
   }
 
@@ -1258,16 +1145,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     }
     const unmergedComponent = this.scope.legacyScope.objects.unmergedComponents.getEntry(component.toComponentId());
     if (unmergedComponent) {
-      const nativeReconciled = isRustSnapshotOperation()
-        ? await reconcileRustMergeSnapshot(
-            version,
-            unmergedComponent,
-            source.previouslyUsedVersion,
-            getLogForSquash,
-            (pending) => UnmergedComponents.buildSnapMessage(pending)
-          )
-        : false;
-      if (!nativeReconciled && unmergedComponent.unrelated) {
+      if (unmergedComponent.unrelated) {
         this.logger.debug(
           `sources.addSource, unmerged component "${component.name}". adding an unrelated entry ${unmergedComponent.head.hash}`
         );
@@ -1286,7 +1164,7 @@ another option, in case this dependency is not in main yet is to remove all refe
           version.setUnrelated({ head: unrelated.unrelatedHead, laneId: unrelated.unrelatedLaneId });
           version.addAsOnlyParent(unrelated.headOnCurrentLane);
         }
-      } else if (!nativeReconciled && unmergedComponent.shouldSquash) {
+      } else if (unmergedComponent.shouldSquash) {
         // --squash on diverged components: record the dropped lane-b head in squashed metadata
         // and leave `version.parents` as the single current-lane head. lane-b's history remains
         // reachable only on its own scope; the merge snap chain stays self-contained on this lane.
@@ -1300,7 +1178,7 @@ another option, in case this dependency is not in main yet is to remove all refe
           `sources.addSource, unmerged component "${component.name}". squash-on-diverged: dropping parent ${unmergedComponent.head.hash}`
         );
         version.log.message = version.log.message || UnmergedComponents.buildSnapMessage(unmergedComponent);
-      } else if (!nativeReconciled) {
+      } else {
         // this is adding a second parent to the version. the order is important. the first parent is coming from the current-lane.
         version.addParent(unmergedComponent.head);
         this.logger.debug(
@@ -1308,11 +1186,7 @@ another option, in case this dependency is not in main yet is to remove all refe
         );
         version.log.message = version.log.message || UnmergedComponents.buildSnapMessage(unmergedComponent);
       }
-      if (isRustSnapshotOperation()) {
-        await this.scope.legacyScope.objects.unmergedComponents.removeComponentsNative([component.toComponentId()]);
-      } else {
-        this.scope.legacyScope.objects.unmergedComponents.removeComponent(component.toComponentId());
-      }
+      this.scope.legacyScope.objects.unmergedComponents.removeComponent(component.toComponentId());
     }
     if (shouldValidateVersion) version.validate();
     return { addedVersionStr, component, version };
@@ -1337,7 +1211,7 @@ another option, in case this dependency is not in main yet is to remove all refe
     const artifactFiles = getArtifactsFiles(source.extensions);
     const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
     const { version, files, flattenedEdges, dependenciesGraph } =
-      await this.scope.legacyScope.sources.consumerComponentToVersion(source, true);
+      await this.scope.legacyScope.sources.consumerComponentToVersion(source);
     version.origin = {
       id: { scope: source.scope || (source.defaultScope as string), name: source.name },
       lane: lane ? { scope: lane.scope, name: lane.name, hash: lane.hash().toString() } : undefined,
@@ -1346,15 +1220,13 @@ another option, in case this dependency is not in main yet is to remove all refe
     if (flattenedEdges) this.objectsRepo.add(flattenedEdges);
     if (dependenciesGraph) this.objectsRepo.add(dependenciesGraph);
     if (!source.version) throw new Error(`addSource expects source.version to be set`);
-    const addedVersionStr =
-      (await addRustSnapshotVersion(
-        component,
-        version,
-        source.version,
-        lane,
-        source.previouslyUsedVersion,
-        addVersionOpts
-      )) ?? component.addVersion(version, source.version, lane, source.previouslyUsedVersion, addVersionOpts);
+    const addedVersionStr = component.addVersion(
+      version,
+      source.version,
+      lane,
+      source.previouslyUsedVersion,
+      addVersionOpts
+    );
     objectRepo.add(component);
     if (lane) objectRepo.add(lane);
     files.forEach((file) => objectRepo.add(file.file));

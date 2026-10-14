@@ -1,14 +1,12 @@
 import fs from 'fs-extra';
 import * as path from 'path';
 import Vinyl from 'vinyl';
-import { types } from 'util';
 
 import { logger } from '@teambit/legacy.logger';
-import { Source, hasRustSnapshotFunctionReference, registerRustSnapshotFunctionReference, registerRustSnapshotFunctions, hasRustSnapshotFunctions } from '@teambit/objects';
+import { Source } from '@teambit/objects';
 import type { PathOsBased } from '@teambit/toolbox.path.path';
 import * as eol from '@teambit/toolbox.string.eol';
 import type { FileConstructor } from './vinyl-types';
-import { getRustWorkspaceSource } from './rust-workspace-identity';
 
 type AbstractVinylProps = {
   cwd: PathOsBased;
@@ -46,7 +44,11 @@ export default class AbstractVinyl extends (Vinyl as FileConstructor) {
     verbose: boolean = this.verbose
   ): Promise<string | null | undefined> {
     const filePath = writePath || this.path;
-    logFileWrite(filePath, override, verbose);
+    const msg = _verboseMsg(filePath, override);
+    if (verbose) {
+      console.log(msg); // eslint-disable-line no-console
+    }
+    logger.debug(msg);
     if (!override && fs.existsSync(filePath)) return null;
     await fs.outputFile(filePath, eol.auto(this.contents));
     return filePath;
@@ -76,8 +78,6 @@ export default class AbstractVinyl extends (Vinyl as FileConstructor) {
    * then when working on the same components in Windows and Linux they won't appear as modified
    */
   toSourceAsLinuxEOL(): Source {
-    const native = getRustWorkspaceSource(this);
-    if (native) return native;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return Source.from(eol.lf(this.contents));
   }
@@ -99,62 +99,3 @@ export function _verboseMsg(filePath: string, force: boolean) {
   const msg = `writing a file to the file-system at ${filePath}, force: ${force.toString()}`;
   return msg;
 }
-
-export function logFileWrite(filePath: string, override: boolean, verbose: boolean) {
-  const msg = _verboseMsg(filePath, override);
-  if (verbose) {
-    console.log(msg); // eslint-disable-line no-console
-  }
-  logger.debug(msg);
-}
-
-// Capture before other modules can replace the prototype method with a hook.
-export const defaultVinylWrite = AbstractVinyl.prototype.write;
-export const defaultVinylToSource = AbstractVinyl.prototype.toSourceAsLinuxEOL;
-const definingEol = require('@teambit/toolbox.string.eol/dist/eol.js');
-const defaultLfGuard = Object.getOwnPropertyDescriptor(definingEol, 'captureDefaultEolLf')?.value;
-const eolExport = Object.getOwnPropertyDescriptor(eol, 'lf');
-const objectExports = require('@teambit/objects');
-const sourceExport = Object.getOwnPropertyDescriptor(objectExports, 'Source');
-const modelExports = require('@teambit/objects/dist/models/index.js');
-const modelSourceExport = Object.getOwnPropertyDescriptor(modelExports, 'Source');
-
-function sameSourceExport(owner: object, key: string, before: PropertyDescriptor | undefined): boolean {
-  const after = Object.getOwnPropertyDescriptor(owner, key);
-  return Boolean(before && after && Reflect.ownKeys(before).every((field) => Reflect.get(before, field) === Reflect.get(after, field)));
-}
-
-/** Inspect the default normalization closure without reading a deferred Source body. */
-export function canUseDefaultVinylToSourceNatively(file: AbstractVinyl): boolean {
-  let owner: object | null = file;
-  let method: PropertyDescriptor | undefined;
-  while (owner && !method) {
-    if (types.isProxy(owner)) return false;
-    method = Object.getOwnPropertyDescriptor(owner, 'toSourceAsLinuxEOL');
-    owner = Object.getPrototypeOf(owner);
-  }
-  const lfGuard = Object.getOwnPropertyDescriptor(definingEol, 'captureDefaultEolLf');
-  const definingSource = require('@teambit/objects/dist/models/source.js');
-  const constructor = Object.getOwnPropertyDescriptor(definingSource, 'default')?.value;
-  const hashGuard = Object.getOwnPropertyDescriptor(definingSource, 'canHashSourceNatively')?.value;
-  let writeOwner: object | null = file;
-  let write: PropertyDescriptor | undefined;
-  while (writeOwner && !write) {
-    if (types.isProxy(writeOwner)) return false;
-    write = Object.getOwnPropertyDescriptor(writeOwner, 'write');
-    writeOwner = Object.getPrototypeOf(writeOwner);
-  }
-  return Boolean(
-    hasRustSnapshotFunctions(['HistoryQuerySourcePaths']) &&
-    method?.value === defaultVinylToSource && typeof defaultLfGuard === 'function' &&
-    write?.value === defaultVinylWrite &&
-    sameSourceExport(eol, 'lf', eolExport) && sameSourceExport(objectExports, 'Source', sourceExport) &&
-    sameSourceExport(modelExports, 'Source', modelSourceExport) &&
-    lfGuard?.value === defaultLfGuard &&
-    hasRustSnapshotFunctionReference('HistoryQuerySourceClass', constructor) &&
-    hasRustSnapshotFunctionReference('HistoryQuerySourceIdentity', hashGuard) &&
-    defaultLfGuard() && hashGuard()
-  );
-}
-registerRustSnapshotFunctionReference('HistoryQueryVinylIdentity', canUseDefaultVinylToSourceNatively);
-registerRustSnapshotFunctions('HistoryQuerySourcePaths', require('path'), ['relative', 'resolve', 'dirname']);

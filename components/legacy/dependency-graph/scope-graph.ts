@@ -1,5 +1,4 @@
 import GraphLib, { Graph } from 'graphlib';
-import { types } from 'util';
 import pMapSeries from 'p-map-series';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { VERSION_DELIMITER } from '@teambit/legacy.constants';
@@ -10,16 +9,8 @@ import { getLatestVersionNumber } from '@teambit/legacy.utils';
 import { getAllVersionsInfo } from '@teambit/component.snap-distance';
 import type { Scope } from '@teambit/legacy.scope';
 import { IdNotFoundInGraph } from '@teambit/legacy.scope';
-import { noteRustResetVersionId, type ModelComponent, type Version } from '@teambit/objects';
+import type { ModelComponent, Version } from '@teambit/objects';
 import type { Workspace } from '@teambit/workspace';
-
-const resetIndexes = new WeakMap<
-  object,
-  {
-    index: Map<string, string[]>;
-    rows: Array<{ id: string; dependencies: string[] }>;
-  }
->();
 
 export type DependenciesInfo = {
   id: ComponentID;
@@ -50,50 +41,6 @@ export class DependencyGraph {
     return new DependencyGraph(graph);
   }
 
-  /** Reset captures canonical loader/cache effects once; Rust owns the inbound flattened-dependency index. */
-  static async loadResetIndex(
-    scope: Scope,
-    plan: (rows: Array<{ id: string; dependencies: string[] }>, queries: string[]) => Promise<string[][] | undefined>
-  ): Promise<DependencyGraph> {
-    if (!resetGraphDefaults()) return DependencyGraph.loadAllVersions(scope);
-    let indexed: Map<string, string[]> | undefined;
-    let capturedRows: Array<{ id: string; dependencies: string[] }> = [];
-    const graph = await DependencyGraph.buildGraphWithAllVersions(scope, async (rows) => {
-      capturedRows = rows;
-      const uniqueQueries = new Set<string>();
-      for (const row of rows) {
-        uniqueQueries.add(row.id);
-        for (const dependency of row.dependencies) uniqueQueries.add(dependency);
-      }
-      const queries = [...uniqueQueries];
-      const result = await plan(rows, queries);
-      if (!result || !resetGraphDefaults() || result.length !== queries.length) return false;
-      indexed = new Map(queries.map((query, index) => [query, result[index]]));
-      return true;
-    });
-    const result = new DependencyGraph(graph);
-    if (indexed) {
-      resetIndexes.set(result, { index: indexed, rows: capturedRows });
-      Object.defineProperty(result, 'getImmediateDependentsPerId', {
-        configurable: true,
-        get() {
-          if (!resetGraphDefaults()) ensureCanonicalResetGraph(result);
-          return DependencyGraph.prototype.getImmediateDependentsPerId;
-        },
-        set(value) {
-          ensureCanonicalResetGraph(result);
-          Object.defineProperty(result, 'getImmediateDependentsPerId', {
-            value,
-            writable: true,
-            enumerable: true,
-            configurable: true,
-          });
-        },
-      });
-    }
-    return result;
-  }
-
   static async loadLatest(scope: Scope): Promise<DependencyGraph> {
     const graph = await DependencyGraph.buildGraphFromScope(scope);
     return new DependencyGraph(graph);
@@ -115,10 +62,7 @@ export class DependencyGraph {
    * @todo: refactor this to work with the newer method `buildGraphFromScope`.
    */
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  static async buildGraphWithAllVersions(
-    scope: Scope,
-    plan?: (rows: Array<{ id: string; dependencies: string[] }>) => Promise<boolean>
-  ): Promise<Graph> {
+  static async buildGraphWithAllVersions(scope: Scope): Promise<Graph> {
     const graph = new Graph({ compound: true });
     const depObj: { [id: string]: Version } = {};
     const allComponents = await scope.list();
@@ -134,10 +78,8 @@ export class DependencyGraph {
             const idWithVersion = `${component.id()}${VERSION_DELIMITER}${version}`;
             graph.setNode(idWithVersion, componentVersion);
             graph.setParent(idWithVersion, component.id());
-            const assignedId = component.toComponentId();
-            noteRustResetVersionId(componentVersion, assignedId);
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-            componentVersion.id = assignedId;
+            componentVersion.id = component.toComponentId();
             depObj[idWithVersion] = componentVersion;
           })
         );
@@ -146,20 +88,9 @@ export class DependencyGraph {
     // set all edges
     // @todo: currently the label is "require". Change it to be "direct" and "indirect" depends on whether it comes from
     // flattenedDependencies or from dependencies.
-    if (plan && resetGraphInstance(graph)) {
-      const rows = Object.keys(depObj).map((id) => {
-        const dependencies: string[] = [];
-        depObj[id].flattenedDependencies.forEach((dep) => dependencies.push(dep.toString()));
-        return { id, dependencies };
-      });
-      if (await plan(rows)) return graph;
-      // Reuse every observed callback and cached Version.id assignment after helper loss.
-      rows.forEach((row) => row.dependencies.forEach((dependency) => graph.setEdge(row.id, dependency, 'require')));
-    } else {
-      Object.keys(depObj).forEach((id) =>
-        depObj[id].flattenedDependencies.forEach((dep) => graph.setEdge(id, dep.toString(), 'require'))
-      );
-    }
+    Object.keys(depObj).forEach((id) =>
+      depObj[id].flattenedDependencies.forEach((dep) => graph.setEdge(id, dep.toString(), 'require'))
+    );
     return graph;
   }
 
@@ -400,12 +331,6 @@ export class DependencyGraph {
   }
 
   getImmediateDependentsPerId(id: ComponentID, returnNodeValue = false): Array<string | Component | ComponentID> {
-    const planned = resetIndexes.get(this);
-    if (planned && resetGraphDefaults()) {
-      const idsStr = planned.index.get(id.toString()) || [];
-      return returnNodeValue ? idsStr.map((idStr) => this.graph.node(idStr)) : idsStr.slice();
-    }
-    if (planned) ensureCanonicalResetGraph(this);
     const nodeEdges = this.graph.inEdges(id.toString());
     if (!nodeEdges) return [];
     const idsStr = nodeEdges.map((node) => node.v);
@@ -421,94 +346,4 @@ export class DependencyGraph {
   serialize(graph: Graph = this.graph) {
     return GraphLib.json.write(graph);
   }
-}
-
-const resetSetEdge = Graph.prototype.setEdge;
-const resetGraphConstructor = Graph;
-const resetGraphPrototype = Graph.prototype;
-const resetGraphExport = Object.getOwnPropertyDescriptor(GraphLib, 'Graph');
-const resetGraphConstructorPrototype = Object.getOwnPropertyDescriptor(resetGraphConstructor, 'prototype');
-const resetIsProxy = types.isProxy;
-function resetGraphInstance(graph: Graph): boolean {
-  if (resetIsProxy(graph) || Object.getPrototypeOf(graph) !== resetGraphPrototype || !resetGraphDefaults())
-    return false;
-  const fields = Object.getOwnPropertyDescriptors(graph);
-  return Reflect.ownKeys(fields).every((key) => {
-    const field = Object.getOwnPropertyDescriptor(fields, key)!.value as PropertyDescriptor;
-    const prototype = Object.getOwnPropertyDescriptor(resetGraphPrototype, key);
-    if (!prototype) return 'value' in field;
-    return (
-      (key === '_nodeCount' || key === '_edgeCount') &&
-      'value' in prototype &&
-      prototype.value === 0 &&
-      'value' in field &&
-      Number.isSafeInteger(field.value) &&
-      field.value >= 0 &&
-      field.writable === prototype.writable &&
-      field.enumerable === prototype.enumerable &&
-      field.configurable === prototype.configurable
-    );
-  });
-}
-function ensureCanonicalResetGraph(result: DependencyGraph): void {
-  const planned = resetIndexes.get(result);
-  if (!planned) return;
-  // These strings and aliases were observed at the original callback phase.
-  planned.rows.forEach((row) =>
-    row.dependencies.forEach((dependency) =>
-      (resetSetEdge as (this: Graph, from: string, to: string, label: string) => Graph).call(
-        result.graph,
-        row.id,
-        dependency,
-        'require'
-      )
-    )
-  );
-  resetIndexes.delete(result);
-}
-
-const resetGraphFunctions = [
-  { owner: DependencyGraph, names: ['loadAllVersions', 'buildGraphWithAllVersions'] },
-  { owner: DependencyGraph.prototype, names: ['getImmediateDependentsPerId'] },
-  { owner: Graph.prototype, names: ['setNode', 'setParent', 'setEdge', 'inEdges', 'node'] },
-].map(({ owner, names }) => ({
-  owner,
-  fields: names.map((name) => ({ name, descriptor: Object.getOwnPropertyDescriptor(owner, name)! })),
-}));
-function resetGraphDefaults(): boolean {
-  const exported = Object.getOwnPropertyDescriptor(GraphLib, 'Graph');
-  const prototype = Object.getOwnPropertyDescriptor(resetGraphConstructor, 'prototype');
-  if (
-    !resetGraphExport ||
-    !('value' in resetGraphExport) ||
-    resetGraphExport.value !== resetGraphConstructor ||
-    !exported ||
-    !('value' in exported) ||
-    exported.value !== resetGraphConstructor ||
-    exported.get !== resetGraphExport.get ||
-    exported.set !== resetGraphExport.set ||
-    exported.writable !== resetGraphExport.writable ||
-    exported.enumerable !== resetGraphExport.enumerable ||
-    exported.configurable !== resetGraphExport.configurable ||
-    !prototype ||
-    prototype.value !== resetGraphPrototype ||
-    prototype.writable !== resetGraphConstructorPrototype?.writable ||
-    prototype.enumerable !== resetGraphConstructorPrototype?.enumerable ||
-    prototype.configurable !== resetGraphConstructorPrototype?.configurable
-  )
-    return false;
-  return resetGraphFunctions.every(({ owner, fields }) =>
-    fields.every(({ name, descriptor }) => {
-      const current = Object.getOwnPropertyDescriptor(owner, name);
-      return Boolean(
-        current &&
-          current.value === descriptor.value &&
-          current.get === descriptor.get &&
-          current.set === descriptor.set &&
-          current.enumerable === descriptor.enumerable &&
-          current.configurable === descriptor.configurable &&
-          current.writable === descriptor.writable
-      );
-    })
-  );
 }

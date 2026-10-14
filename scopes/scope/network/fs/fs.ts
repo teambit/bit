@@ -6,8 +6,8 @@ import type { ListScopeResult } from '@teambit/legacy.component-list';
 import { ComponentsList } from '@teambit/legacy.component-list';
 import type { ConsumerComponent as Component } from '@teambit/legacy.consumer-component';
 import { DependencyGraph } from '@teambit/legacy.dependency-graph';
-import type { ComponentLog, ObjectItemsStream } from '@teambit/objects';
-import { Ref, ObjectList, hasRustTransferClass, registerRustTransferClass } from '@teambit/objects';
+import type { ComponentLog, ObjectItemsStream, ObjectList } from '@teambit/objects';
+import { Ref } from '@teambit/objects';
 import type { LaneData, Scope, ScopeDescriptor } from '@teambit/legacy.scope';
 import { RemovedObjects, loadScope } from '@teambit/legacy.scope';
 import type { DoctorResponse } from '@teambit/doctor';
@@ -55,10 +55,6 @@ export default class Fs implements Network {
 
   async fetch(ids: string[], fetchOptions: FETCH_OPTIONS): Promise<ObjectItemsStream> {
     const objectsReadable = await fetch(this.scopePath, ids, fetchOptions);
-    if (process.env.BIT_RUST_CLIENT_VCS === 'on' && hasRustTransferClass(this, 'Fs')) {
-      const pack = ObjectList.fromObjectStreamToTar(objectsReadable, this.getScope().name);
-      return ObjectList.fromTarToObjectStream(pack, true);
-    }
     return objectsReadable;
   }
 
@@ -125,5 +121,3 @@ export default class Fs implements Network {
     return results.map((result) => result.toString());
   }
 }
-
-registerRustTransferClass('Fs', Fs, ['fetch', 'getScope']);

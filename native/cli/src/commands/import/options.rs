@@ -1,4 +1,4 @@
-//! `parseRustWorkspaceInbound`: `bit fetch -c <ids...>` and the `bit import`
+//! The native import grammar: `bit fetch -c <ids...>` and the `bit import`
 //! forms that write no component files or install nothing.
 
 use serde_json::{Value, json};

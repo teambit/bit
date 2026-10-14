@@ -1,4 +1,4 @@
-//! The import and fetch reports: `validateRustInboundReceipt`, then
+//! The import and fetch reports: the engine's receipt, validated, then
 //! `ImportCmd.report` and `FetchCmd.report` of `@teambit/importer` over the
 //! engine's receipt.
 
@@ -27,7 +27,7 @@ pub struct Receipt {
     details: Vec<Details>,
 }
 
-/// `validateRustInboundReceipt`.
+/// The engine's inbound receipt, validated.
 pub fn validate(value: &Value) -> io::Result<Receipt> {
     let rows = array(value.get("importedIds"), "imported ids")?;
     let details = array(value.get("importDetails"), "import details")?;

@@ -1,8 +1,7 @@
-import { updateRustSnapshotDependencies } from './rust-snapshot-dependencies';
 import mapSeries from 'p-map-series';
 import { compact, get } from 'lodash';
 import type { ReleaseType } from 'semver';
-import { newSnapHash, newSnapBatchId } from './new-snap-hash';
+import { v4 } from 'uuid';
 import { BitError } from '@teambit/bit-error';
 import type { Scope } from '@teambit/legacy.scope';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
@@ -15,26 +14,15 @@ import { NewerVersionFound } from '@teambit/legacy.consumer';
 import type { Component } from '@teambit/component';
 import { RemoveAspect, deleteComponentsFiles } from '@teambit/remove';
 import { formatItem, formatSection, formatWarningSummary } from '@teambit/cli';
-import { getValidVersionOrReleaseType, getLatestVersion, validateVersion } from '@teambit/pkg.modules.semver-helper';
+import { getValidVersionOrReleaseType } from '@teambit/pkg.modules.semver-helper';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { PkgAspect, getPublishRegistry, shouldPublishToExternalRegistry } from '@teambit/pkg';
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
+import { sha1 } from '@teambit/toolbox.crypto.sha1';
 import { isSnap as isSnapVersion } from '@teambit/component-version';
 import type { BuilderMain, OnTagOpts } from '@teambit/builder';
 import type { ModelComponent, Log, Lane } from '@teambit/objects';
-import {
-  DependenciesGraph,
-  runRustSnapshotPhases,
-  planRustSnapshotFutureVersion,
-  canPlanRustSnapshotFutureVersions,
-  isRustSnapshotTransaction,
-  snapshotPolicyId,
-  snapshotPolicyConsumerId,
-  hasRustSnapshotFunctionReference,
-  registerRustSnapshotFunctionReference,
-  hasRustSnapshotTransactionClass,
-  registerRustSnapshotTransactionClass,
-} from '@teambit/objects';
+import { DependenciesGraph } from '@teambit/objects';
 import type { MessagePerComponent } from './message-per-component';
 import { MessagePerComponentFetcher } from './message-per-component';
 import { VersionFileParser } from './version-file-parser';
@@ -141,8 +129,7 @@ export class VersionMaker {
     totalComponentsCount?: number;
     batchId: string;
   }> {
-    if (this.canRunSnapshotPhasesNatively()) return this.makeVersionNatively();
-    this.batchId = newSnapBatchId();
+    this.batchId = v4();
     this.allWorkspaceComps = this.workspace ? await this.workspace.list() : undefined;
     const componentsToTag = this.getUniqCompsToTag();
     const idsToTag = ComponentIdList.fromArray(componentsToTag.map((c) => c.id));
@@ -289,246 +276,6 @@ export class VersionMaker {
       totalComponentsCount: this.allComponentsToTag.length,
       batchId: this.batchId,
     };
-  }
-
-  private async makeVersionNatively(): Promise<Awaited<ReturnType<VersionMaker['makeVersion']>>> {
-    let componentsToTag: ConsumerComponent[] = [];
-    let idsToTag = ComponentIdList.fromArray([]);
-    let autoTagData: AutoTagResult[] = [];
-    let autoTagComponents: ConsumerComponent[] = [];
-    let autoTagComponentsFiltered: ConsumerComponent[] = [];
-    let autoTagIds = ComponentIdList.fromArray([]);
-    let unmergedComps: ComponentID[] = [];
-    let lane: Lane | undefined;
-    let stagedConfig: StagedConfig | undefined;
-    let currentLane: LaneId | undefined;
-    let addOptions: Pick<
-      VersionMakerParams,
-      'build' | 'updateDependentsOnLane' | 'setHeadAsParent' | 'detachHead' | 'overrideHead'
-    > = {};
-    let batch: ConsumerComponent[] | undefined;
-    let iterator: IterableIterator<ConsumerComponent> | undefined;
-    let component: ConsumerComponent;
-    let results: Awaited<ReturnType<SnappingMain['_addCompToObjects']>>;
-    let isHiddenLaneEntry = false;
-    let harmonyCompsToTag: Component[] = [];
-    let removedComponents: ComponentIdList | undefined;
-    let softTagged = false;
-    const publishedPackages: string[] = [];
-    const addOne = async () => {
-      const { build, updateDependentsOnLane, setHeadAsParent, detachHead, overrideHead } = addOptions;
-      // hidden lane entries (lane.updateDependents) cascade through autotag but must not enter
-      // the workspace bitmap. Detect via two signals: workspace flow uses absence-from-bitmap
-      // (cascade autotag loaded the comp from scope); bare-scope flow checks updateDependents.
-      isHiddenLaneEntry = Boolean(
-        (this.consumer && !this.consumer.bitMap.getComponentIfExist(component.id, { ignoreVersion: true })) ||
-          (!this.consumer && lane?.findUpdateDependent(component.id))
-      );
-      // explicit signal to addVersion. Order matters — auto-tag cascade results check the
-      // existing entry's bucket BEFORE applying the caller-level `updateDependentsOnLane` flag,
-      // so a bare-scope reverse cascade that auto-tags a *visible* lane.components dependent
-      // doesn't accidentally move it into the hidden bucket.
-      //  - explicit target of `snapFromScope({ updateDependents: true })` → hidden (caller flag)
-      //  - hidden cascade snap (auto-tagged) → keep hidden, raise override flag
-      //  - workspace component (in bitmap) → promote to visible (the promote-on-import path)
-      //  - auto-tagged visible lane component → keep visible
-      const isExplicitTarget = this.ids.searchWithoutVersion(component.id) !== undefined;
-      const addToUpdateDependentsInLane = (updateDependentsOnLane && isExplicitTarget) || isHiddenLaneEntry;
-      results = await this.snapping._addCompToObjects({
-        source: component,
-        lane,
-        shouldValidateVersion: Boolean(build),
-        addVersionOpts: {
-          addToUpdateDependentsInLane,
-          setHeadAsParent,
-          detachHead,
-          overrideHead: overrideHead,
-        },
-        batchId: this.batchId,
-      });
-    };
-    const updateOne = async () => {
-      if (this.workspace && !isHiddenLaneEntry) {
-        const modelComponent = component.modelComponent || (await this.legacyScope.getModelComponent(component.id));
-        await updateVersions(
-          this.workspace,
-          stagedConfig!,
-          currentLane!,
-          modelComponent,
-          results.addedVersionStr,
-          true
-        );
-      } else if (this.workspace && isHiddenLaneEntry) {
-        // hidden cascade snaps don't get a bitmap entry, but the new Version still needs to be
-        // tracked in stagedSnaps so `bit export` includes it when computing the export set and
-        // sends its objects over the wire.
-        const modelComponent = component.modelComponent || (await this.legacyScope.getModelComponent(component.id));
-        const hash = modelComponent.getRef(results.addedVersionStr);
-        if (hash) this.workspace.scope.legacyScope.stagedSnaps.addSnap(hash.toString());
-      }
-    };
-    let canonicalSeries = false;
-    let canonicalSeriesDone = false;
-    let iteratorExhausted = false;
-    return runRustSnapshotPhases({
-      soft: () => Boolean(this.params.soft),
-      eligible: () => this.canRunSnapshotPhasesNatively() && !canonicalSeries && !iteratorExhausted,
-      componentCount: () =>
-        iteratorExhausted ? 0 : canonicalSeries ? (canonicalSeriesDone ? 0 : 1) : batch?.length || 0,
-      actions: {
-        initialize: async () => {
-          this.batchId = newSnapBatchId();
-          this.allWorkspaceComps = this.workspace ? await this.workspace.list() : undefined;
-          componentsToTag = this.getUniqCompsToTag();
-          idsToTag = ComponentIdList.fromArray(componentsToTag.map((c) => c.id));
-          autoTagData = await this.getAutoTagData(idsToTag);
-          autoTagComponents = autoTagData.map((autoTagItem) => autoTagItem.component);
-          autoTagComponentsFiltered = autoTagComponents.filter((c) => !idsToTag.has(c.id));
-          autoTagIds = ComponentIdList.fromArray(autoTagComponentsFiltered.map((autoTag) => autoTag.id));
-
-          // Validate component issues for auto-tag components
-          if (this.allWorkspaceComps && autoTagIds.length) {
-            const autoTagHarmonyComponents = this.allWorkspaceComps.filter((c) => autoTagIds.has(c.id));
-            await this.builder.throwForComponentIssues(autoTagHarmonyComponents, this.params.ignoreIssues);
-          }
-        },
-        preSnap: async () => {
-          await this.triggerOnPreSnap(autoTagIds);
-        },
-        prepareVersions: async () => {
-          this.allComponentsToTag = [...componentsToTag, ...autoTagComponentsFiltered];
-          await this.parseVersionsFile(idsToTag, autoTagIds);
-          const messagePerId = await this.getMessagePerId(idsToTag, autoTagIds);
-          await this.checkForNewerVersions();
-          this.setCurrentSchema();
-          // go through all components and find the future versions for them
-          this.params.isSnap ? this.setHashes() : await this.setFutureVersions(autoTagIds);
-          // go through all dependencies and update their versions
-          await this.updateDependenciesVersionsNatively();
-          this.recordWorkspaceRoot();
-          await this.addLogToComponents(componentsToTag, autoTagComponents, messagePerId);
-        },
-        captureLane: async () => {
-          unmergedComps = (await this.workspace?.listComponentsDuringMerge()) || [];
-          lane = await this.legacyScope.getCurrentLaneObject();
-          stagedConfig = (await this.workspace?.scope.getStagedConfig()) || undefined;
-        },
-        softTag: async () => {
-          if (!this.consumer) throw new Error('unable to soft-tag without consumer');
-          this.consumer.updateNextVersionOnBitmap(this.allComponentsToTag, this.params.preReleaseId);
-          softTagged = true;
-        },
-        flattenDependencies: async () => {
-          const {
-            rebuildDepsGraph,
-            noLockDeps,
-            build,
-            updateDependentsOnLane,
-            setHeadAsParent,
-            detachHead,
-            overrideHead,
-          } = this.params;
-          addOptions = { build, updateDependentsOnLane, setHeadAsParent, detachHead, overrideHead };
-          await this.snapping._addFlattenedDependenciesToComponents(this.allComponentsToTag, rebuildDepsGraph);
-          if (!noLockDeps) {
-            await this._addDependenciesGraphToComponents();
-          }
-          await this.snapping.throwForDepsFromAnotherLane(this.allComponentsToTag);
-          if (!build) this.emptyBuilderData();
-          this.addBuildStatus(this.allComponentsToTag, BuildStatus.Pending);
-
-          currentLane = this.consumer?.getCurrentLaneId();
-
-          batch = this.allComponentsToTag;
-          canonicalSeries = !hasRustSnapshotTransactionClass(batch, 'Array');
-          if (!canonicalSeries) iterator = batch[Symbol.iterator]();
-        },
-        addObjects: async () => {
-          if (canonicalSeries) {
-            await mapSeries(batch!, async (item) => {
-              component = item;
-              await addOne();
-              await updateOne();
-            });
-            canonicalSeriesDone = true;
-          } else {
-            const next = iterator!.next();
-            if (next.done) {
-              iteratorExhausted = true;
-              return;
-            }
-            component = await next.value;
-            await addOne();
-          }
-        },
-        updateWorkspace: async () => {
-          if (!canonicalSeries && !iteratorExhausted) await updateOne();
-        },
-        stagedWrite: async () => {
-          if (this.workspace) await this.workspace.scope.legacyScope.stagedSnaps.write();
-        },
-        hydrateBuild: async () => {
-          // hidden lane entries are scope-only — `workspace.getManyByLegacy` would throw
-          // MissingBitMapComponent for them. Route the workspace path through visible-only and load
-          // any hidden cascade entries from scope so the build pipeline still sees them.
-          const visibleCompsToTag = this.workspace
-            ? this.allComponentsToTag.filter((c) =>
-                this.consumer?.bitMap.getComponentIfExist(c.id, { ignoreVersion: true })
-              )
-            : this.allComponentsToTag;
-          const hiddenCompsToTag = this.workspace
-            ? this.allComponentsToTag.filter(
-                (c) => !this.consumer?.bitMap.getComponentIfExist(c.id, { ignoreVersion: true })
-              )
-            : [];
-          const harmonyVisibleCompsToTag = await (this.workspace || this.scope).getManyByLegacy(visibleCompsToTag);
-          const harmonyHiddenCompsToTag = hiddenCompsToTag.length
-            ? await this.scope.getManyByLegacy(hiddenCompsToTag)
-            : [];
-          harmonyCompsToTag = [...harmonyVisibleCompsToTag, ...harmonyHiddenCompsToTag];
-          // this is not necessarily the same as the previous allComponentsToTag. although it should be, because
-          // harmonyCompsToTag is created from allComponentsToTag. however, for aspects, the getMany returns them from cache
-          // and therefore, their instance of ConsumerComponent can be different than the one in allComponentsToTag.
-          this.allComponentsToTag = harmonyCompsToTag.map((c) => c.state._consumer);
-          await this.build(harmonyCompsToTag, publishedPackages);
-        },
-        removeWorkspace: async () => {
-          removedComponents = await removeDeletedComponentsFromBitmap(this.allComponentsToTag, this.workspace);
-        },
-        addLane: async () => {
-          await this.addLaneObject(lane);
-        },
-        persist: async () => {
-          await this.legacyScope.objects.persist();
-        },
-        mergeConfigCleanup: async () => {
-          await removeMergeConfigFromComponents(unmergedComps, this.allComponentsToTag, this.workspace);
-        },
-        linkWorkspace: async () => {
-          if (this.workspace) await linkToNodeModulesByComponents(harmonyCompsToTag, this.workspace);
-        },
-        clearCache: async () => {
-          this.legacyScope.objects.clearObjectsFromCache();
-        },
-      },
-      result: () => ({
-        taggedComponents: componentsToTag,
-        autoTaggedResults: autoTagData,
-        publishedPackages,
-        stagedConfig,
-        ...(softTagged ? {} : { removedComponents }),
-        totalComponentsCount: this.allComponentsToTag.length,
-        batchId: this.batchId,
-      }),
-    });
-  }
-
-  private canRunSnapshotPhasesNatively(): boolean {
-    if (process.env.BIT_RUST_CLIENT_VCS !== 'on' || !hasRustSnapshotTransactionClass(this, 'VersionMaker'))
-      return false;
-    const params = Object.getOwnPropertyDescriptor(this, 'params')?.value;
-    if (!params || ![Object.prototype, null].includes(Object.getPrototypeOf(params))) return false;
-    return Reflect.ownKeys(params).every((key) => 'value' in Object.getOwnPropertyDescriptor(params, key)!);
   }
 
   private async _addDependenciesGraphToComponents(): Promise<void> {
@@ -829,149 +576,13 @@ export class VersionMaker {
             : versionByEnteredId ||
                 modelComponent.getVersionToAdd(releaseType, exactVersion, incrementBy, preReleaseId);
         };
-        const planned = isRustSnapshotTransaction()
-          ? await this.planFutureVersionNatively(componentToTag, modelComponent, {
-              isAutoTag,
-              isAutoAddedRoot,
-              nextVersion,
-              releaseType,
-              autoTagReleaseType,
-              tagDataPerComp,
-              incrementBy,
-              persist,
-              soft,
-              exactVersion,
-              preReleaseId,
-            })
-          : undefined;
-        return { componentToTag, version: planned ?? getNewVersion() };
+        return { componentToTag, version: getNewVersion() };
       })
     );
     const versionsToSkip = await this.getVersionsPublishedToRegistry(computedVersions);
     computedVersions.forEach(({ componentToTag, version }) => {
       componentToTag.setNewVersion(versionsToSkip.get(componentToTag.id.toStringWithoutVersion()) || version);
     });
-  }
-
-  private async planFutureVersionNatively(
-    component: ConsumerComponent,
-    model: ModelComponent,
-    state: any
-  ): Promise<string | undefined> {
-    if (
-      !hasDefaultFutureVersionPolicy() ||
-      !hasRustSnapshotTransactionClass(model, 'ModelComponent') ||
-      !hasRustSnapshotTransactionClass(component, 'ConsumerComponent') ||
-      !hasRustSnapshotTransactionClass(this.ids, 'ComponentIdList')
-    )
-      return undefined;
-    const versions = Object.getOwnPropertyDescriptor(model, 'versions')?.value;
-    if (!versions || Object.getPrototypeOf(versions) !== Object.prototype) return undefined;
-    const descriptors = Object.getOwnPropertyDescriptors(versions);
-    if (
-      Reflect.ownKeys(descriptors).some(
-        (key) =>
-          typeof key !== 'string' ||
-          !('value' in descriptors[key]) ||
-          !hasRustSnapshotTransactionClass(descriptors[key].value, 'Ref')
-      )
-    )
-      return undefined;
-    const tags = Object.keys(descriptors);
-    const id = snapshotPolicyConsumerId(component);
-    if (!id) return undefined;
-    if (this.ids.some((value) => !snapshotPolicyId(value))) return undefined;
-    const entered = this.ids.searchWithoutVersion(id);
-    const tagData = state.tagDataPerComp;
-    if (tagData && !hasRustSnapshotTransactionClass(tagData, 'Array')) return undefined;
-    if (
-      tagData?.some(
-        (row) =>
-          !row ||
-          Object.getPrototypeOf(row) !== Object.prototype ||
-          Reflect.ownKeys(row).some((key) => !('value' in Object.getOwnPropertyDescriptor(row, key)!)) ||
-          !snapshotPolicyId(row.componentId)
-      )
-    )
-      return undefined;
-    const row = tagData?.find((entry) => entry.componentId.isEqualWithoutVersion(id));
-    const map = Object.getOwnPropertyDescriptor(component, 'componentMap')?.value;
-    if (map && Reflect.ownKeys(map).some((key) => !('value' in Object.getOwnPropertyDescriptor(map, key)!)))
-      return undefined;
-    const next = map && Object.getOwnPropertyDescriptor(map, 'nextVersion')?.value;
-    // Unsupported property hooks resume the canonical callback before any version is applied.
-    if (next && Reflect.ownKeys(next).some((key) => !('value' in Object.getOwnPropertyDescriptor(next, key)!)))
-      return undefined;
-    const strings = [
-      state.releaseType,
-      state.autoTagReleaseType,
-      state.nextVersion,
-      next?.preRelease,
-      entered?.version,
-      row?.versionToTag,
-      row?.prereleaseId,
-      state.exactVersion,
-      state.preReleaseId,
-    ];
-    if (
-      strings.some((value) => value !== undefined && value !== null && typeof value !== 'string') ||
-      (state.incrementBy !== undefined && state.incrementBy !== null && typeof state.incrementBy !== 'number')
-    )
-      return undefined;
-    const componentInput = {
-      versions: tags,
-      isAutoTag: state.isAutoTag,
-      isAutoAddedRoot: state.isAutoAddedRoot,
-      nextVersion: state.nextVersion,
-      nextPreRelease: next?.preRelease,
-      enteredVersion: entered?.version,
-      tagData: row && { versionToTag: row.versionToTag, prereleaseId: row.prereleaseId },
-    };
-    if (state.releaseType === null || state.releaseType === '' || (state.soft && state.releaseType === undefined))
-      return undefined;
-    const params = {
-      releaseType: state.releaseType === undefined ? 'patch' : state.releaseType,
-      autoTagReleaseType: state.autoTagReleaseType,
-      incrementBy: state.incrementBy || 1,
-      persist: Boolean(state.persist),
-      soft: Boolean(state.soft),
-      exactVersion: state.exactVersion,
-      preReleaseId: state.preReleaseId,
-      hasTagData: Boolean(tagData),
-    };
-    const inputs = [...tags, state.exactVersion, state.nextVersion, entered?.version, row?.versionToTag].filter(
-      (value): value is string => typeof value === 'string'
-    );
-    const plainData = (value: object) =>
-      Reflect.ownKeys(value).every((key) => 'value' in Object.getOwnPropertyDescriptor(value, key)!);
-    const rowFingerprint = row && JSON.stringify([row.versionToTag, row.prereleaseId]);
-    const nextFingerprint = next && JSON.stringify([next.version, next.preRelease]);
-    const versionEntries = Object.entries(descriptors);
-
-    return planRustSnapshotFutureVersion(
-      { components: [componentInput], params },
-      inputs,
-      () =>
-        hasDefaultFutureVersionPolicy() &&
-        hasRustSnapshotTransactionClass(model, 'ModelComponent') &&
-        hasRustSnapshotTransactionClass(component, 'ConsumerComponent') &&
-        model.versions === versions &&
-        JSON.stringify(Object.keys(model.versions)) === JSON.stringify(tags) &&
-        versionEntries.every(
-          ([key, descriptor]) => Object.getOwnPropertyDescriptor(versions, key)?.value === descriptor.value
-        ) &&
-        snapshotPolicyId(snapshotPolicyConsumerId(component))?.version === id.version &&
-        hasRustSnapshotTransactionClass(this.ids, 'ComponentIdList') &&
-        this.ids.every((value) => snapshotPolicyId(value)) &&
-        this.ids.searchWithoutVersion(id)?.version === componentInput.enteredVersion &&
-        (!tagData ||
-          (hasRustSnapshotTransactionClass(tagData, 'Array') &&
-            tagData.every((entry) => entry && plainData(entry) && snapshotPolicyId(entry.componentId)) &&
-            tagData.find((entry) => entry.componentId.isEqualWithoutVersion(id)) === row)) &&
-        (!map || (plainData(map) && Object.getOwnPropertyDescriptor(map, 'nextVersion')?.value === next)) &&
-        (!row || (plainData(row) && rowFingerprint === JSON.stringify([row.versionToTag, row.prereleaseId]))) &&
-        (!next || (plainData(next) && nextFingerprint === JSON.stringify([next.version, next.preRelease])))
-    );
   }
 
   /**
@@ -1051,7 +662,7 @@ export class VersionMaker {
 
   private setHashes(): void {
     this.allComponentsToTag.forEach((componentToTag) => {
-      componentToTag.setNewVersion(newSnapHash());
+      componentToTag.setNewVersion(sha1(v4()));
     });
   }
 
@@ -1089,33 +700,12 @@ export class VersionMaker {
     });
   }
 
-  private async updateDependenciesVersionsNatively(): Promise<void> {
-    if (
-      !this.allComponentsToTag.every((component) => hasRustSnapshotTransactionClass(component, 'ConsumerComponent'))
-    ) {
-      this.updateDependenciesVersions();
-      return;
-    }
-    const components = this.allComponentsToTag.filter((component) => !component.isRemoved());
-    for (let index = 0; index < components.length; index += 1) {
-      const component = components[index];
-      const prefix = this.dependencyResolver.calcComponentRangePrefixByConsumerComponent(component);
-      if (!(await updateRustSnapshotDependencies(components, index, prefix))) {
-        this.updateDependenciesVersions({ component, prefix, components });
-      }
-    }
-  }
-
-  private updateDependenciesVersions(selected?: {
-    component: ConsumerComponent;
-    prefix?: ComponentRangePrefix;
-    components: ConsumerComponent[];
-  }) {
+  private updateDependenciesVersions() {
     // filter out removed components.
     // if a component has a deleted-component as a dependency, it was probably running "bit install <dep>" with a version
     // from main. we want to keep it as the user requested. Otherwise, this changes the dependency version to the newly
     // snapped one unintentionally.
-    const componentsToTag = selected?.components || this.allComponentsToTag.filter((c) => !c.isRemoved());
+    const componentsToTag = this.allComponentsToTag.filter((c) => !c.isRemoved());
     const getNewDependencyVersion = (id: ComponentID): ComponentID | null => {
       const foundDependency = componentsToTag.find((component) => component.id.isEqualWithoutVersion(id));
       return foundDependency ? id.changeVersion(foundDependency.version) : null;
@@ -1160,10 +750,9 @@ export class VersionMaker {
       return component;
     };
 
-    (selected ? [selected.component] : componentsToTag).forEach((oneComponentToTag) => {
-      const componentRangePrefix = selected
-        ? selected.prefix
-        : this.dependencyResolver.calcComponentRangePrefixByConsumerComponent(oneComponentToTag);
+    componentsToTag.forEach((oneComponentToTag) => {
+      const componentRangePrefix =
+        this.dependencyResolver.calcComponentRangePrefixByConsumerComponent(oneComponentToTag);
       oneComponentToTag.getAllDependencies().forEach((dependency) => {
         const newDepId = getNewDependencyVersion(dependency.id);
         if (!newDepId) return;
@@ -1266,8 +855,6 @@ export class VersionMaker {
     });
   }
 }
-
-registerRustSnapshotTransactionClass('VersionMaker', VersionMaker);
 
 async function throwForNewestVersion(allComponentsToTag: ConsumerComponent[], legacyScope: Scope) {
   const newestVersionsP = allComponentsToTag.map(async (component) => {
@@ -1476,17 +1063,5 @@ async function updateHiddenProp(scope: ScopeMain, ids: ComponentID[]) {
       scope.legacyScope.objects.add(versionObj);
     },
     { concurrency: 50 }
-  );
-}
-
-registerRustSnapshotFunctionReference('SnapshotIsSnap', isSnapVersion);
-
-function hasDefaultFutureVersionPolicy(): boolean {
-  return (
-    hasRustSnapshotFunctionReference('SnapshotCanPlanFutureVersions', canPlanRustSnapshotFutureVersions) &&
-    canPlanRustSnapshotFutureVersions() &&
-    hasRustSnapshotFunctionReference('SnapshotGetValidVersion', getValidVersionOrReleaseType) &&
-    hasRustSnapshotFunctionReference('SnapshotValidateVersion', validateVersion) &&
-    hasRustSnapshotFunctionReference('SnapshotGetLatestVersion', getLatestVersion)
   );
 }

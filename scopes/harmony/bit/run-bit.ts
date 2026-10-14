@@ -9,8 +9,9 @@ gracefulFs.gracefulify(fs);
 
 import './hook-require';
 import { bootstrap } from './bootstrap';
-import { handleErrorAndExit } from '@teambit/cli/dist/handle-errors.js';
+import { handleErrorAndExit } from '@teambit/cli';
 import type { Aspect } from '@teambit/harmony';
+import { runCLI } from './load-bit';
 import { autocomplete } from './autocomplete';
 import { ServerCommander, shouldUseBitServer } from './server-commander';
 import { spawnPTY } from './server-forever';
@@ -44,53 +45,6 @@ async function initApp(additionalAspects?: Aspect[]) {
   });
   try {
     await bootstrap();
-    if (
-      !additionalAspects?.length &&
-      process.env.BIT_RUST_CLIENT_VCS === 'on' &&
-      process.argv.length === 4 &&
-      ['mini-status', 'ms', 'status', 's'].includes(process.argv[2]) &&
-      ['--json', '-j'].includes(process.argv[3])
-    ) {
-      if (['status', 's'].includes(process.argv[2])) {
-        const { runRustStatus } = await import('./rust-status');
-        if (await runRustStatus()) return;
-      } else {
-        const { runRustMiniStatus } = await import('./rust-mini-status');
-        if (await runRustMiniStatus()) return;
-      }
-    }
-    if (!additionalAspects?.length && ['install', 'in'].includes(process.argv[2])) {
-      const { runRustInstall } = await import('./rust-install');
-      if (await runRustInstall()) return;
-    }
-    if (
-      !additionalAspects?.length &&
-      process.env.BIT_RUST_CLIENT_VCS === 'on' &&
-      process.argv[2] === 'diff' &&
-      [4, 5].includes(process.argv.length) &&
-      ['--json', '-j'].includes(process.argv.at(-1)!)
-    ) {
-      const { runRustDiff } = await import('./rust-diff');
-      if (await runRustDiff()) return;
-    }
-    if (
-      !additionalAspects?.length &&
-      process.env.BIT_RUST_CLIENT_VCS === 'on' &&
-      (['checkout', 'U', 'merge', 'snap', 'tag', 't', 'fetch', 'import', 'export', 'e'].includes(process.argv[2]) ||
-        (process.argv[2] === 'lane' && ['merge', 'merge-abort'].includes(process.argv[3])))
-    ) {
-      if (['export', 'e'].includes(process.argv[2])) {
-        const { runRustWorkspaceOutbound } = await import('./rust-workspace-outbound');
-        if (await runRustWorkspaceOutbound()) return;
-      } else if (['fetch', 'import'].includes(process.argv[2])) {
-        const { runRustWorkspaceInbound } = await import('./rust-workspace-inbound');
-        if (await runRustWorkspaceInbound()) return;
-      } else {
-        const { runRustWorkspaceCommand } = await import('./rust-workspace-command');
-        if (await runRustWorkspaceCommand()) return;
-      }
-    }
-    const { runCLI } = await import('./load-bit');
     await runCLI(additionalAspects);
   } catch (err: any) {
     const originalError = err.originalError || err;

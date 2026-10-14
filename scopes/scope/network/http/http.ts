@@ -384,9 +384,7 @@ export class Http implements Network {
     return results;
   }
 
-  async fetch(ids: string[], fetchOptions: FETCH_OPTIONS, context?: Record<string, any>): Promise<ObjectItemsStream> {
-    const signal = context?.signal as AbortSignal | undefined;
-    signal?.throwIfAborted();
+  async fetch(ids: string[], fetchOptions: FETCH_OPTIONS): Promise<ObjectItemsStream> {
     const route = 'api/scope/fetch';
     const getImporterUrl = () => {
       if (this.url.startsWith('http:') || this.url.includes('//localhost')) return undefined; // it's a local scope
@@ -411,21 +409,14 @@ export class Http implements Network {
     });
     const opts = this.addAgentIfExist({
       method: 'post',
-      ...(signal ? { signal } : {}),
       body,
       headers,
     });
 
     const res = await retry(
-      async (bail) => {
-        try {
-          signal?.throwIfAborted();
-          return await _fetch(urlToFetch, opts);
-        } catch (error) {
-          if (!signal?.aborted) throw error;
-          bail(signal.reason instanceof Error ? signal.reason : new Error('object import aborted'));
-          return undefined;
-        }
+      async () => {
+        const retiedRes = await _fetch(urlToFetch, opts);
+        return retiedRes;
       },
       {
         retries: this.networkConfig?.fetchRetries,
@@ -437,16 +428,10 @@ export class Http implements Network {
         },
       }
     );
-    if (!res) throw new Error('object import fetch aborted');
     // const res = await fetch(urlToFetch, opts);
-    signal?.throwIfAborted();
     logger.debug(`Http.fetch got a response, ${scopeData}, status ${res.status}, statusText ${res.statusText}`);
     await this.throwForNonOkStatus(res);
-    const objectListReadable = ObjectList.fromTarToObjectStream(
-      res.body,
-      process.env.BIT_RUST_OBJECT_TAR === 'on' ||
-        (process.env.BIT_RUST_CLIENT_VCS === 'on' && process.env.BIT_RUST_OBJECT_TAR !== 'off')
-    );
+    const objectListReadable = ObjectList.fromTarToObjectStream(res.body);
 
     return objectListReadable;
   }

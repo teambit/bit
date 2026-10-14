@@ -1,4 +1,4 @@
-//! JavaScript value semantics the status glue relied on, over `serde_json` values.
+//! JavaScript value semantics the Node.js CLI relies on, over `serde_json` values.
 
 use serde_json::{Map, Value};
 use std::io;

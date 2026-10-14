@@ -78,10 +78,6 @@ jobs:
       - name: compile (bbit compile)
         run: bbit compile
 
-      - name: test compiled tar repository coordination
-        if: matrix.shard == 0
-        run: node --test scripts/rust-object-import/tar-coordination.test.cjs scripts/rust-object-import/tar-adapter.test.cjs scripts/rust-object-import/http-tar.test.cjs
-
       - name: link the repo bit binary for the e2e tests
         run: |
           mkdir -p "$HOME/.npm-global/bin"

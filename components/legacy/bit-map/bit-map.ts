@@ -1,5 +1,3 @@
-import { registerRecoveryBitmapClass, registerRecoveryBitmapFunctions } from './rust-recovery-guards';
-import { registerRustSnapshotTransactionClass } from '@teambit/objects';
 import objectHash from 'object-hash';
 import json from 'comment-json';
 import fs from 'fs-extra';
@@ -1290,13 +1288,3 @@ async function outputFile({
   await fs.outputFile(filePath, data);
   return Promise.resolve(filePath);
 }
-
-registerRecoveryBitmapClass('BitMap', BitMap);
-registerRustSnapshotTransactionClass('CheckoutBitMap', BitMap);
-registerRecoveryBitmapClass('BitId', BitId);
-registerRecoveryBitmapClass('ComponentID', ComponentID);
-registerRecoveryBitmapClass('LaneId', LaneId);
-registerRecoveryBitmapClass('Array', Array);
-registerRecoveryBitmapFunctions(json, ['parse']);
-registerRecoveryBitmapFunctions(Object, ['keys']);
-registerRecoveryBitmapFunctions(require('lodash'), ['compact', 'uniq']);

@@ -1,6 +1,5 @@
 //! Native `bit merge [component-pattern] --resolve`: the components in merge
-//! state are snapped by the engine's `commandResolve*` requests
-//! (`rust-workspace-resolve.ts`), and reported like `MergeCmd`'s resolved
+//! state are snapped by the engine's `commandResolve*` requests, and reported like `MergeCmd`'s resolved
 //! components.
 
 use super::force_local_build;
@@ -19,7 +18,7 @@ use crate::{
 use serde_json::{Value, json};
 use std::{collections::HashSet, env, ffi::OsString, io};
 
-/// `parseRustWorkspaceResolve`: `--resolve` with an optional pattern,
+/// `--resolve` with an optional pattern,
 /// `--message` and `-x`.
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct Options {
@@ -76,7 +75,7 @@ impl Options {
         Some(())
     }
 
-    /// `RustWorkspaceResolveOptions` as `JSON.stringify` writes them.
+    /// The engine's resolve options.
     fn request(&self) -> Value {
         let mut options = json!({});
         if let Some(pattern) = &self.pattern {
@@ -118,7 +117,7 @@ pub fn run(args: &[OsString], options: &Options) -> io::Result<Outcome> {
     })
 }
 
-/// `formatRustWorkspaceResolve`: the resolved components, without versions.
+/// The resolved components, without versions.
 fn format(result: &Value, chalk: Chalk) -> io::Result<Report> {
     let map = object(result)?;
     let rows = array(map.get("resolvedComponents"), "resolved components")?;

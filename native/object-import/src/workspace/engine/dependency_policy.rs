@@ -50,20 +50,3 @@ fn ignored(request: &Request, plan: &mut Plan) {
         .collect();
     plan.components[1].retain(|index| !identities.contains(&&request.entries[*index].identity));
 }
-
-/// Plan pure dependency policies synchronously, without creating a workspace session.
-pub fn plan(input: &str, finish: bool) -> io::Result<String> {
-    if input.len() > 4 * 1024 * 1024 {
-        return Err(invalid("dependency policy input limit"));
-    }
-    let (_, result) = if finish {
-        finalize::apply(&serde_json::from_str(input).map_err(io::Error::other)?)?
-    } else {
-        apply(&serde_json::from_str(input).map_err(io::Error::other)?)?
-    };
-    let output = serde_json::to_string(&result).map_err(io::Error::other)?;
-    if output.len() > 32 * 1024 * 1024 {
-        return Err(invalid("dependency policy output limit"));
-    }
-    Ok(output)
-}

@@ -1,4 +1,4 @@
-//! The checkout half of `parseRustWorkspaceCommand`: the unambiguous subset
+//! The native checkout grammar: the unambiguous subset
 //! of `bit checkout <to> [component-pattern]` that native planning accepts.
 //! Anything else is `None`, and the Node.js CLI runs the command.
 

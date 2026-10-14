@@ -86,15 +86,7 @@ export class MultipleComponentMerger {
       if (isIncomingFromOrigin) incomingComp.remoteHead = incomingComp.head;
       return incomingComp;
     }
-    const modelComponentMerger = new ModelComponentMerger(
-      existingComp,
-      incomingComp,
-      true,
-      isIncomingFromOrigin,
-      undefined,
-      undefined,
-      this.sources.objects()?.getNativeImportOperation?.()
-    );
+    const modelComponentMerger = new ModelComponentMerger(existingComp, incomingComp, true, isIncomingFromOrigin);
     const { mergedComponent } = await modelComponentMerger.merge();
     if (isIncomingFromOrigin) mergedComponent.remoteHead = incomingComp.head;
     return mergedComponent;

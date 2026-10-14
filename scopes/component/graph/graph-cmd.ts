@@ -107,12 +107,7 @@ by default shows only workspace components; use --include-dependencies for full 
 
       const jsonGraph = filteredGraph.toJson();
       if (jsonGraph.nodes) {
-        // Graph construction preserves dependency discovery order, which can vary between cold loads.
-        // Order only the CLI representation, without changing the graph used by other consumers.
-        jsonGraph.nodes = jsonGraph.nodes.map((node) => node.id).sort();
-      }
-      if (jsonGraph.edges) {
-        jsonGraph.edges = [...jsonGraph.edges].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+        jsonGraph.nodes = jsonGraph.nodes.map((node) => node.id);
       }
       return jsonGraph;
     }

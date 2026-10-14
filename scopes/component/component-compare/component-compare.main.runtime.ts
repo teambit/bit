@@ -1,4 +1,3 @@
-import { withWorkspacePersistence, withRustSourceReads, withRustWorkspaceInspection } from '@teambit/component.sources';
 import type { CLIMain } from '@teambit/cli';
 import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import { CLIAspect } from '@teambit/cli';
@@ -332,19 +331,6 @@ export class ComponentCompareMain {
   }
 
   async diffByCLIValues(
-    pattern?: string,
-    version?: string,
-    toVersion?: string,
-    options: { verbose?: boolean; table?: boolean; parent?: boolean } = {}
-  ): Promise<any> {
-    return withWorkspacePersistence(() =>
-      withRustSourceReads(() =>
-        withRustWorkspaceInspection(() => this.diffByCLIValuesWithinPersistence(pattern, version, toVersion, options))
-      )
-    );
-  }
-
-  private async diffByCLIValuesWithinPersistence(
     pattern?: string,
     version?: string,
     toVersion?: string,

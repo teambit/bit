@@ -1,4 +1,3 @@
-import { splitComponentPatterns, matchComponentPatterns } from './component-id-patterns';
 import mapSeries from 'p-map-series';
 import path from 'path';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
@@ -34,15 +33,7 @@ import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
 import type { DependenciesGraph, DepEdge, ModelComponent, Lane, Version } from '@teambit/objects';
-import {
-  Ref,
-  Repository,
-  ObjectList,
-  registerRustRecoveryScope,
-  registerRustResetRepositoryHooks,
-  registerRustTransferRepositoryHooks,
-  registerRustHistoryQueryRepositoryHooks,
-} from '@teambit/objects';
+import { Ref, Repository, ObjectList } from '@teambit/objects';
 import type { Scope as LegacyScope, Types } from '@teambit/legacy.scope';
 import { Scope, loadScopeIfExist } from '@teambit/legacy.scope';
 import type { LegacyComponentLog as ComponentLog } from '@teambit/legacy-component-log';
@@ -1092,13 +1083,19 @@ export class ScopeMain implements ComponentFactory {
     throwForNoMatch = true,
     filterByStateFunc?: (state: any, poolIds: ComponentID[]) => Promise<ComponentID[]>
   ) {
-    const patterns = splitComponentPatterns(pattern);
+    const patterns = pattern.split(',').map((p) => p.trim());
+
+    if (patterns.every((p) => p.startsWith('!'))) {
+      // otherwise it'll never match anything. don't use ".push()". it must be the first item in the array.
+      patterns.unshift('**');
+    }
     const [statePatterns, nonStatePatterns] = partition(patterns, (p) => p.startsWith('$') || p.includes(' AND '));
+    const nonStatePatternsNoVer = nonStatePatterns.map((p) => p.split('@')[0]); // no need for the version
     const idsMap: { [id: string]: ComponentID } = Object.fromEntries(
       ids.map((id) => [id.toStringWithoutVersion(), id])
     );
-    const idsFiltered = nonStatePatterns.length
-      ? matchComponentPatterns(Object.keys(idsMap), nonStatePatterns).map((idStr) => idsMap[idStr])
+    const idsFiltered = nonStatePatternsNoVer.length
+      ? multimatch(Object.keys(idsMap), nonStatePatternsNoVer).map((idStr) => idsMap[idStr])
       : [];
 
     const idsStateFiltered = await mapSeries(statePatterns, async (statePattern) => {
@@ -1518,15 +1515,11 @@ export class ScopeMain implements ComponentFactory {
     Scope.onPostExport = onPostExportHook;
     Repository.onPostObjectsPersist = onPostObjectsPersistHook;
     Repository.onPreObjectPersist = onPreObjectPersistHook;
-    Repository.hasPreObjectPersistTransformer = () => preObjectPersistSlot.values().length > 0;
     Repository.onPostObjectRead = onPostObjectReadHook;
     // the hook above is installed whether or not anything registered a transformer, so it can't be
     // used to answer "is content transformed?". the slot is filled by other aspects' providers, so
     // this is a live check rather than a snapshot taken here.
     Repository.hasPostObjectReadTransformer = () => postObjectReadSlot.values().length > 0;
-    registerRustResetRepositoryHooks(Repository);
-    registerRustTransferRepositoryHooks(Repository);
-    registerRustHistoryQueryRepositoryHooks(Repository);
     ExternalActions.externalActions.push(new ClearCacheAction(scope));
 
     express.register([
@@ -1550,5 +1543,4 @@ export class ScopeMain implements ComponentFactory {
   }
 }
 
-registerRustRecoveryScope(ScopeMain);
 ScopeAspect.addRuntime(ScopeMain);

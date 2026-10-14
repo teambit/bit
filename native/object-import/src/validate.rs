@@ -128,17 +128,3 @@ fn update_digest(
     digest.update(&bytes[start..]);
     Ok(())
 }
-
-pub(crate) fn validate_with_metadata(compressed: &[u8], expected: [u8; 20]) -> Outcome {
-    let mut outcome = validate(compressed, expected);
-    if outcome.reason != Some("mutable-or-unknown-type") {
-        return outcome;
-    }
-    if let Some(metadata) = crate::metadata::inflate(compressed) {
-        outcome.status = "metadata";
-        outcome.inflated_bytes = metadata.len();
-        outcome.reason = None;
-        outcome.metadata = Some(metadata);
-    }
-    outcome
-}

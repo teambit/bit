@@ -1,29 +1,7 @@
-use crate::{limits, protocol, scan_request};
+use crate::{limits, scan_request};
 use rayon::ThreadPoolBuilder;
 use serde_json::json;
 use std::fmt::Write;
-
-#[test]
-fn embedded_preserves_standalone_results_and_order_across_worker_batches() {
-    let pool = ThreadPoolBuilder::new()
-        .num_threads(2)
-        .build()
-        .unwrap();
-    let files = vec![
-        json!({"path":"a.ts","source":"import type { A } from 'types'; export { A };"}),
-        json!({"path":"b.js","source":"const x = require('common'); import('dynamic');"}),
-        json!({"path":"c.ts","source":"import {"}),
-        json!({"path":"d.css","source":"@import 'styles';"}),
-        json!({"path":"e.ts","source":"// @bit-ignore\nimport { A } from 'ignored';"}),
-    ];
-    for options in [json!({}), json!({"custom":true})] {
-        let input = json!({"version":1,"id":37,"files":files,"options":options}).to_string();
-        assert_eq!(
-            scan_request(&input, &pool).unwrap(),
-            protocol::process_request(&input, &pool).unwrap(),
-        );
-    }
-}
 
 #[test]
 fn embedded_declines_invalid_or_unbounded_requests() {

@@ -1,5 +1,4 @@
-//! Native `bit status --json` (`s -j`), the flow of `readRustStatus` and
-//! `captureRustClientCurrent` in the Node.js glue: the workspace engine of
+//! Native `bit status --json` (`s -j`): the workspace engine of
 //! `bit-object-import` reads the workspace, models and dependency caches;
 //! this module computes the policy, ignore and semver inputs Node computed.
 //! Without `--json`, `report` formats the same result like `StatusCmd.report`.
@@ -7,7 +6,7 @@
 //! It runs only on a warm dependency cache. A component whose dependencies
 //! need fresh detection, an invalidated cache, the `no-fs-cache` feature,
 //! component-level dependency policies, other environments and every other
-//! input the glue could not prove decline to the Node.js CLI, which then
+//! input this module cannot prove declines to the Node.js CLI, which then
 //! writes the cache for the next run.
 
 pub(super) mod cache;
@@ -127,7 +126,7 @@ fn report_status(
     })
 }
 
-/// `readRustStatus`: the status result, after its history plans are
+/// The status result, after its history plans are
 /// committed. `prepare` runs on the result and the context before the commit.
 fn read<Prepared>(
     root: &Path,

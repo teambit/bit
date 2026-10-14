@@ -6,18 +6,18 @@ pnpm's Rust engine (pacquet) directly as a library. It does not go through
 `@pnpm/napi`, and no component is loaded through Harmony.
 
 JavaScript runs only where a component or aspect implements the behavior in
-JavaScript. These **host callbacks** follow the model `@pnpm/napi` uses for a
-JavaScript `readPackage` hook: the engine runs on its own thread and calls a
-JavaScript function through a thread-safe function. The callbacks are:
+JavaScript. The engine asks for these **host callbacks** while it runs; the Rust
+CLI serves them from its embedded host script, which loads the Node.js CLI's
+aspects only when a callback is needed. The callbacks are:
 
-| Callback | Why it is JavaScript |
-| --- | --- |
-| `envPolicy` | The dependency policy of a core env, or of a legacy env without `env.jsonc`, comes from the env's `getDependencies()` |
-| `dependencyPolicies` | Aspects and env aspects register dependency policies in their providers (`registerDependenciesPolicies`) |
-| `appTypes` | Aspects register application types (file patterns) |
+| Callback             | Why it is JavaScript                                                                                                                  |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `envPolicy`          | The dependency policy of a core env, or of a legacy env without `env.jsonc`, comes from the env's `getDependencies()`                 |
+| `dependencyPolicies` | Aspects and env aspects register dependency policies in their providers (`registerDependenciesPolicies`)                              |
+| `appTypes`           | Aspects register application types (file patterns)                                                                                    |
 | `detectDependencies` | Custom dependency detectors: the env's `getDepDetectors()` (or `detectors()`) and the detectors aspects register (`registerDetector`) |
-| `packageJsonProps` | Envs and aspects transform the generated `node_modules/<pkg>/package.json` |
-| `afterInstall` | Compilation (env compilers) and workspace config files (env config writers) |
+| `packageJsonProps`   | Envs and aspects transform the generated `node_modules/<pkg>/package.json`                                                            |
+| `afterInstall`       | Compilation (env compilers) and workspace config files (env config writers)                                                           |
 
 Everything else is Rust:
 
@@ -37,91 +37,15 @@ Everything else is Rust:
 
 The Rust `bit` CLI (`native/cli`, see [the Rust CLI](../rust-cli.md)) runs the
 command in process and serves the host callbacks with its embedded JavaScript
-host. The in-process route below is the earlier integration and is superseded.
-
-
-`scopes/harmony/bit/run-bit.ts` routes `bit install`/`bit in` to
-`scopes/harmony/bit/rust-install.ts` before Harmony is bootstrapped. That
-module:
-
-1. loads `bit-workspace.node`;
-2. calls its `install(argv, hostInfo, hostCallback)` export;
-3. renders nothing itself: Rust writes all output.
-
-`hostInfo` carries only process facts:
+host. `hostInfo`, the host's first answer, carries only process facts:
 
 - bit's installation directories and the bvm directory, for linking core aspects;
-- `process.execPath`;
+- the Node.js executable;
 - the global config directory;
 - terminal width and color support;
 - the core aspect package list.
 
-`BIT_NATIVE_INSTALL=off` routes the command to the previous TypeScript
-implementation.
-
-## Programmatic installs
-
-Other commands install through `InstallMain.install` (`bit import`, `bit new`,
-`bit fork`, `bit rename`, `bit merge`, `bit clone`, `bit lane import`, `bit eject`,
-generators creating components, the IDE API). Those calls also run on the native
-installer: `scopes/workspace/install/native-install.ts` calls the addon's
-`installWithOptions` with the options as JSON, and the running Harmony instance
-serves the host callbacks. `afterInstall` runs the TypeScript cycle body on the
-loaded aspects (global virtual store bridge, `setOldNonLoadedEnvs`, env reloads,
-compile, config files) without loading Harmony again.
-
-In programmatic mode the native installer prints neither the command's runner
-line, its "Resolving component dependencies" line nor the summary, and does not
-resolve component ids among the packages, as `InstallMain.install` does not. It
-returns the old non-loaded envs (`getOldNonLoadedEnvs`). The TypeScript side then
-reloads `workspace.jsonc` when the native installer changed it
-(`triggerOnWorkspaceConfigChange`), clears the workspace cache and returns the
-component directory map. The native installer writes the `onPostInstall` event,
-so it is not published again.
-
-The calling command may have changed the workspace config in memory without
-writing it (`setExtension`). The TypeScript install reads those changes, and
-`persistConfig` writes them along with its own edits because it writes the whole
-config. The native installer reads and edits `workspace.jsonc` on disk. So when
-the parsed file and the in-memory config differ in content (comments and
-formatting aside), `native-install.ts` first writes the in-memory config the way
-`persistConfig` does: `WorkspaceConfig.write`, with a history backup whose reason
-is `install`. The native installer then sees those changes and edits on top of
-them. One difference remains: the TypeScript install writes pending changes only
-when it edits the config itself, while the native path writes them before every
-call. When the native installer edits nothing, the file already holds what the
-calling command would write later.
-
-| `WorkspaceInstallOptions` | Native |
-| --- | --- |
-| `lifecycleType`, `savePrefix`, `updateAll`, `addMissingDeps`, `skipUnavailable`, `recurringInstall`, `lockfileOnly`, `restoreFromDependenciesGraph`, `allowScripts`, `skipPrune`, `copyPeerToRuntimeOnComponents` | same option |
-| `copyPeerToRuntimeOnRoot` | same option; unset means `true` |
-| `addMissingPeers` | same option. Missing peers, like added packages and missing deps, use `lifecycleType` or `runtime` (`_addPackages`). `bit install --add-missing-peers` sets the lifecycle to `peer`, as `install.cmd.tsx` does |
-| `dedupe` | `skipDedupe: !dedupe` (unset means no dedupe, as in TypeScript) |
-| `import` | `skipImport: !import` (unset means no import) |
-| `compile`, `writeConfigFiles`, `includeOptionalDeps` | skipped only when `false` |
-| `updateExisting`, `skipIfExisting` | `existingEntries`: `skip`, else `update`, else `fail` (`EntryAlreadyExist`) |
-| `optimizeReportForNonTerminal` | `appendOnly` reporter |
-| `showExternalPackageManagerPrompt` | `externalPrompt`. Without it, external package manager mode writes the dependencies to `package.json` instead of installing (below) |
-| `dependenciesGraph` (explicit graph) | `dependenciesGraph`: the serialized graph (`DependenciesGraph.serialize()`). It comes before the graphs `restoreFromDependenciesGraph` reads, and like them it is restored only with root components. A conversion failure fails the install only with `restoreFromDependenciesGraph` (`failOnDependenciesGraphError`) |
-
-External package manager mode without `showExternalPackageManagerPrompt` follows
-`writeDependenciesToPackageJson`. The root manifest is calculated as
-`_getComponentsManifests(installer, mergedRootPolicy, { dedupe: true,
-includeAllEnvPeers: false })` calculates it: the root copies no peers to its
-dependencies and gets no env peers. There is no dependency filter and no linked
-root dependency. Without `resolveEnvPeersFromRoot`, components get only the env
-peers they use or list in their own policy, plus `react-dom` along with `react`.
-`{ ...devDependencies, ...dependencies }` of that manifest is set in the root
-`package.json`'s `dependencies`, keeping the file's indentation and newlines
-(`detect-indent`, `detect-newline`, `stringify-package`). The skip notice follows.
-Nothing is imported, installed or compiled, and no `onPostInstall` event is
-written. The addon returns `{ outcome: "skipped" }`, and `InstallMain.install`
-returns an empty component map without reloading the config or clearing caches.
-
-Workspaces using yarn, `BIT_NATIVE_INSTALL=off` and a missing addon keep the
-TypeScript implementation; `BIT_NATIVE_INSTALL_REQUIRE=on` turns the last two into
-errors.
+Workspaces using yarn decline to the Node.js CLI.
 
 Output follows Bit's logger. The native installer prints status and success
 lines while Bit's loader exists, and console lines without a loader only when
@@ -227,20 +151,20 @@ version bump needs one full install, or removing the stamp.
 
 ## Crate layout (`native/install/src`)
 
-| Module | Responsibility | TypeScript reference |
-| --- | --- | --- |
-| `options` | argv → `InstallOptions`, flag validation | `install.cmd.tsx` |
-| `host` | `Host` trait (callbacks above), `HostInfo` | — |
-| `jsonc` | JSONC parse and comment-preserving edits | `comment-json` usage in `workspace-config.ts` |
-| `config` | Global bit config, `workspace.jsonc` aspects, `dependency-resolver` settings, `scope.json` | `dependency-resolver.main.runtime.ts`, `workspace-config.ts` |
-| `workspace` | `.bitmap`, component ids, dirs, files, merged component config (bitmap > component.json > variants), env id, package name | `bit-map.ts`, `component-config`, `variants`, `componentIdToPackageName` |
-| `policy` | Workspace, variant and env policies; `env.jsonc` with `extends` | `policy/*`, `environments.main.runtime.ts` |
-| `dependencies` | Per-component dependency list: detection (scanner and cache), overrides, versions | `dependencies-loader/*`, `apply-overrides.ts` |
-| `manifests` | Workspace and component manifests: dedupe, env peers, root components, linked root deps | `workspace-manifest-factory.ts`, `deduping/*`, `install.main.runtime.ts` |
-| `engine` | pacquet driver: config overlay, registries, proxy and network, script policy, hooks, reporter, lockfile `bit:` block, restore, prune, version resolution | `lynx.ts`, `pnpm.package-manager.ts`, `pnpm-prune-modules.ts` |
-| `links` | Core aspect `link:` deps, `node_modules/<component>` linking, injected `package.json` links, bit-roots hard links, global virtual store links | `dependency-linker.ts`, `node-modules-linker.ts` |
-| `import` | Pre-install object import (bitmap or lane objects) | `importer.main.runtime.ts` (`importCurrentObjects`) |
-| `command` | Orchestration, install loop, external package manager mode, `allowScripts` persistence, `bit install <pkgs>`, output | `install.main.runtime.ts` |
+| Module         | Responsibility                                                                                                                                           | TypeScript reference                                                     |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `options`      | argv → `InstallOptions`, flag validation                                                                                                                 | `install.cmd.tsx`                                                        |
+| `host`         | `Host` trait (callbacks above), `HostInfo`                                                                                                               | —                                                                        |
+| `jsonc`        | JSONC parse and comment-preserving edits                                                                                                                 | `comment-json` usage in `workspace-config.ts`                            |
+| `config`       | Global bit config, `workspace.jsonc` aspects, `dependency-resolver` settings, `scope.json`                                                               | `dependency-resolver.main.runtime.ts`, `workspace-config.ts`             |
+| `workspace`    | `.bitmap`, component ids, dirs, files, merged component config (bitmap > component.json > variants), env id, package name                                | `bit-map.ts`, `component-config`, `variants`, `componentIdToPackageName` |
+| `policy`       | Workspace, variant and env policies; `env.jsonc` with `extends`                                                                                          | `policy/*`, `environments.main.runtime.ts`                               |
+| `dependencies` | Per-component dependency list: detection (scanner and cache), overrides, versions                                                                        | `dependencies-loader/*`, `apply-overrides.ts`                            |
+| `manifests`    | Workspace and component manifests: dedupe, env peers, root components, linked root deps                                                                  | `workspace-manifest-factory.ts`, `deduping/*`, `install.main.runtime.ts` |
+| `engine`       | pacquet driver: config overlay, registries, proxy and network, script policy, hooks, reporter, lockfile `bit:` block, restore, prune, version resolution | `lynx.ts`, `pnpm.package-manager.ts`, `pnpm-prune-modules.ts`            |
+| `links`        | Core aspect `link:` deps, `node_modules/<component>` linking, injected `package.json` links, bit-roots hard links, global virtual store links            | `dependency-linker.ts`, `node-modules-linker.ts`                         |
+| `import`       | Pre-install object import (bitmap or lane objects)                                                                                                       | `importer.main.runtime.ts` (`importCurrentObjects`)                      |
+| `command`      | Orchestration, install loop, external package manager mode, `allowScripts` persistence, `bit install <pkgs>`, output                                     | `install.main.runtime.ts`                                                |
 
 ## Engine pin
 
@@ -255,30 +179,6 @@ writes a stub that fails loudly into the pinned checkout. The script is
 idempotent; every CI job runs it after fetching and before compiling, including
 the Alpine release container. It must also run after a restored `~/.cargo/git`
 cache.
-
-## Packaging
-
-The engine ships inside `bit-workspace.node`, the addon of the packaged
-object-import helper. The artifact's source identity covers `native/install`.
-
-Third-party notices take each crate's own license files where it publishes them.
-Otherwise they use pinned texts from
-`scripts/rust-dependency-analysis/artifacts/licenses/sources.json`:
-
-- **pnpm engine crates:** the MIT `pnpm-*` crates use the pnpm repository's root
-  `LICENSE` at the pinned revision. The packager checks it against the checkout.
-- **`pnpr-*` crates:** they reach the engine through `pnpm-pnpr-client` and name
-  a `license-file` with PolyForm Shield 1.0.0. That is not an OSI license. The
-  file is included verbatim and its hash is checked.
-- **A few crates.io crates without license files:** their upstream text, or the
-  canonical SPDX text with the crate authors as copyright holders. Each is
-  pinned by version and VCS revision.
-
-The engine raises the dependency count to about 560 crates. Each distinct
-license text is therefore written once, and later crates reference it by
-digest. For `aarch64-apple-darwin` that keeps the notices at about 1.5 MB, well
-inside the 4 MiB bound that packaging, installation and runtime discovery
-verify. The scanner artifact lists only the scanner's own dependency closure.
 
 ## Lockfile compatibility
 
@@ -346,7 +246,7 @@ the current directory.
 
 ## Validation
 
-The same templates were installed with the TypeScript command (`BIT_NATIVE_INSTALL=off`) and natively:
+The same templates were installed with the Node.js CLI (`BIT_NATIVE=off`) and natively:
 
 - plain install and repeat install
 - `bit install <pkg>`, `<pkg>@<version>`, `--save-prefix`, `-t peer`
@@ -354,7 +254,8 @@ The same templates were installed with the TypeScript command (`BIT_NATIVE_INSTA
 
 The comparison covers console output, `pnpm-lock.yaml` (including the `bit:` block and `pnpmfileChecksum`), `workspace.jsonc`, the `node_modules` tree, link targets and the generated component `package.json` files. All of these match. The only differences are throttled progress-line fragments.
 
-These install e2e suites pass on the native path:
+These install e2e suites passed on the native engine, run through the earlier
+integration that loaded it into the Node.js CLI:
 
 - `install`
 - `install-and-compile`
@@ -362,23 +263,12 @@ These install e2e suites pass on the native path:
 - `dependencies/allow-scripts`
 - `root-components`
 
-`commands/import` runs installs through `InstallMain.install`, so it covers the
-programmatic entry.
-
 ## Known differences
 
-- Workspaces configured with the yarn package manager use the TypeScript command, because yarn is a JavaScript package manager.
+- Workspaces configured with the yarn package manager decline to the Node.js CLI, because yarn is a JavaScript package manager.
+- Against a released Node.js CLI (bit 2.2.94), the installed files are identical, but some progress lines differ: the compile step's status and success lines come from the host process on stderr instead of stdout, the pre-install import prints one more line (`import 0 components with their dependencies (if missing)`) and can count its imported objects differently, and pnpm's throttled progress lines vary. These are tracked with the other install gaps in #123.
 
 ## CI
 
-The PR e2e jobs never provision the addon, so they run the TypeScript command. The
-`Native install e2e` job of `rust-dependency-scanner.yml` builds the addon, points
-`BIT_NATIVE_INSTALL_ADDON` at it, and runs the install e2e suites and `commands/import`
-(programmatic installs) with
-`BIT_NATIVE_INSTALL_REQUIRE=on`. With that variable, a missing or unusable addon is an
-error instead of a fallback, so the job cannot pass on the TypeScript command by accident.
-Workspaces the native command declines on purpose (yarn) still fall back.
-
-`native-install-full-e2e.yml` runs the whole e2e suite the same way, in 20 shards split
-like CircleCI's (`scripts/split-e2e-tests.js`). It is too heavy for every PR, so it runs
-on PRs labeled `native-install-full-e2e`, or by hand.
+The `Rust` workflow (`.github/workflows/rust.yml`) runs the crate's unit tests with
+the rest of the native workspace. The e2e suites run the Node.js CLI.

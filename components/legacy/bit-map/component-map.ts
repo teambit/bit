@@ -1,9 +1,5 @@
-import { rebaseIgnorePattern } from './ignore-pattern';
-import { readRustComponentInventory } from './rust-native-inventory';
-import { registerRecoveryBitmapClass } from './rust-recovery-guards';
 import * as path from 'path';
 import globby from 'globby';
-import { scanRustWorkspace, isWorkspacePersistenceScope } from '@teambit/component.sources';
 import ignore from 'ignore';
 import { pickBy, isNil, sortBy, isEmpty } from 'lodash';
 import type { ComponentID } from '@teambit/component-id';
@@ -208,6 +204,17 @@ async function getNestedIgnorePatterns(
     })
   );
   return ([] as string[]).concat(...patternsPerDir);
+}
+
+function rebaseIgnorePattern(pattern: string, dir: PathLinux): string {
+  const negated = pattern.startsWith('!');
+  const body = negated ? pattern.slice(1) : pattern;
+  const anchored = body.slice(0, -1).includes('/');
+  // a trailing slash means "directories only". the join drops it, so it is put back.
+  const dirOnly = body.endsWith('/') ? '/' : '';
+  const base = anchored ? pathJoinLinux(dir, body.replace(/^\//, '')) : pathJoinLinux(dir, '**', body);
+  const rebased = base + dirOnly;
+  return negated ? `!${rebased}` : rebased;
 }
 
 /** backslash-escapes the characters that globby and glob read as pattern syntax */
@@ -570,45 +577,20 @@ export async function getFilesByDir(
   excludeDirs: PathLinux[] = [],
   trackAllFiles = false
 ): Promise<ComponentMapFile[]> {
-  if (process.env.BIT_RUST_CLIENT_VCS === 'on' && isWorkspacePersistenceScope() && !/[!*?{}[\]\\]/.test(dir)) {
-    const inventory = await readRustComponentInventory(
-      dir,
-      consumerPath,
-      gitIgnore,
-      excludeDirs,
-      trackAllFiles,
-      rebaseIgnorePattern
-    );
-    if (inventory) {
-      if (!inventory.count) throw new ComponentNotFoundInPath(dir);
-      if (!inventory.files.length) throw new IgnoredDirectory(dir);
-      return inventory.files;
-    }
-  }
-  const native =
-    process.env.BIT_RUST_CLIENT_VCS === 'on' && isWorkspacePersistenceScope() && !/[!*?{}[\]\\]/.test(dir)
-      ? await scanRustWorkspace(
-          path.resolve(consumerPath, dir),
-          excludeDirs.map((excluded) => path.resolve(consumerPath, excluded)),
-          dir === WORKSPACE_ROOT_DIR
-        )
-      : undefined;
-  const matches =
-    native?.map((filename) => pathNormalizeToLinux(path.relative(consumerPath, filename))) ||
-    (await globby(pathJoinLinux(dir, '**'), {
-      cwd: consumerPath,
-      dot: true,
-      onlyFiles: true,
-      ignore: getScanIgnorePatterns(dir, excludeDirs),
-      // the workspace root is the one scan that spans the whole tree, where a symbolic link the user made
-      // may lead anywhere. what it points to is not the workspace's source, so the link is not followed -
-      // the add-time scan does not follow links either.
-      followSymbolicLinks: dir !== WORKSPACE_ROOT_DIR,
-      // every pattern here is an explicit glob. with expansion on, globby stats each ignore pattern
-      // (relative to the process cwd, not to `cwd`) to decide whether to expand it, and `.git/**`
-      // throws ENOTDIR wherever `.git` is a file - every git worktree.
-      expandDirectories: false,
-    }));
+  const matches = await globby(pathJoinLinux(dir, '**'), {
+    cwd: consumerPath,
+    dot: true,
+    onlyFiles: true,
+    ignore: getScanIgnorePatterns(dir, excludeDirs),
+    // the workspace root is the one scan that spans the whole tree, where a symbolic link the user made
+    // may lead anywhere. what it points to is not the workspace's source, so the link is not followed -
+    // the add-time scan does not follow links either.
+    followSymbolicLinks: dir !== WORKSPACE_ROOT_DIR,
+    // every pattern here is an explicit glob. with expansion on, globby stats each ignore pattern
+    // (relative to the process cwd, not to `cwd`) to decide whether to expand it, and `.git/**`
+    // throws ENOTDIR wherever `.git` is a file - every git worktree.
+    expandDirectories: false,
+  });
   if (!matches.length) throw new ComponentNotFoundInPath(dir);
   const filteredMatches: string[] = await filterByIgnoreFiles(dir, consumerPath, gitIgnore, matches, trackAllFiles);
   // the paths are relative to the workspace. make them relative to the component's root-dir.
@@ -620,8 +602,7 @@ export async function getFilesByDir(
     : relativePathsLinux.filter((match) => !IGNORE_ROOT_ONLY_LIST.includes(match));
   const filteredByBitIgnore = await filterByOwnIgnoreFile(dir, consumerPath, filteredByIgnoredFromRoot);
   if (!filteredByBitIgnore.length) throw new IgnoredDirectory(dir);
-  // Match ComponentMap.sort instead of asynchronous directory discovery order in both readers.
-  return filteredByBitIgnore.sort().map((relativePath) => ({
+  return filteredByBitIgnore.map((relativePath) => ({
     relativePath,
     test: false,
     name: path.basename(relativePath),
@@ -656,5 +637,3 @@ export async function getIgnoreListHarmony(
   }
   return ignoreList;
 }
-
-registerRecoveryBitmapClass('ComponentMap', ComponentMap);

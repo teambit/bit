@@ -6,7 +6,6 @@ import { BIT_TMP_DIRNAME } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
 import type { PathOsBased } from '@teambit/toolbox.path.path';
 import Repository from '../repository';
-import { registerRustSnapshotTransactionClass } from '@teambit/objects';
 
 export default class Tmp extends Repository {
   getPath(): string {
@@ -57,5 +56,3 @@ export default class Tmp extends Repository {
     return fs.emptyDirSync(dirToDelete);
   }
 }
-
-registerRustSnapshotTransactionClass('MergeTmp', Tmp);

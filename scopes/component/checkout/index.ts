@@ -4,13 +4,7 @@ export type { CheckoutMain, CheckoutProps } from './checkout.main.runtime';
 export default CheckoutAspect;
 export { CheckoutAspect };
 
-export {
-  applyVersion,
-  removeFilesIfNeeded,
-  updateFileStatus,
-  updateFileStatusWithRust,
-  throwForFailures,
-} from './checkout-version';
+export { applyVersion, removeFilesIfNeeded, updateFileStatus, throwForFailures } from './checkout-version';
 
 // backward compatibility
 // export {

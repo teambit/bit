@@ -1,28 +1,9 @@
-use super::{MAX_BYTES, MAX_FILES, State, invalid, read, wire};
-use std::{io, sync::Arc};
+use super::{MAX_BYTES, MAX_FILES, State, invalid, wire};
+use std::io;
 
-/// Immutable captured bytes remain available after the owning engine retires.
-pub struct InspectionSnapshot {
-    files: Arc<[read::File]>,
-}
-impl InspectionSnapshot {
-    pub fn read(&self, index: usize) -> io::Result<Vec<u8>> {
-        self.files
-            .get(index)
-            .map(|file| file.contents.clone())
-            .ok_or_else(|| invalid("inspection snapshot index"))
-    }
-}
 impl State {
     pub(crate) fn enable_memory_snapshots(&mut self) {
         self.memory_snapshots = true;
-    }
-    pub(crate) fn snapshot(&self, token: &str) -> io::Result<InspectionSnapshot> {
-        if !self.memory_snapshots {
-            return Err(invalid("inspection snapshot ownership unavailable"));
-        }
-        let files = self.plans.get(token).ok_or_else(|| invalid("stale inspection token"))?;
-        Ok(InspectionSnapshot { files: Arc::clone(files) })
     }
 }
 pub(super) fn remaining(state: &mut State, incoming: usize) -> io::Result<usize> {

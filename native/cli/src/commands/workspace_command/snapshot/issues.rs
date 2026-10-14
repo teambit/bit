@@ -1,5 +1,4 @@
-//! `validateRustCommandIssues` (`rust-workspace-command-issues.ts`): the
-//! issues that block a snap, computed over the projected workspace, must be
+//! The issues that block a snap, computed over the projected workspace, must be
 //! the ones the engine predicted: none, or the snap error it reported.
 
 use crate::commands::status::{

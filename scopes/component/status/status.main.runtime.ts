@@ -1,4 +1,3 @@
-import { withWorkspacePersistence, withRustSourceReads, withRustWorkspaceInspection } from '@teambit/component.sources';
 import type { CLIMain } from '@teambit/cli';
 import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import { CLIAspect } from '@teambit/cli';
@@ -17,7 +16,7 @@ import { RemoveAspect } from '@teambit/remove';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { ComponentsPendingImport } from '@teambit/legacy.consumer';
 import { ComponentsList } from '@teambit/legacy.component-list';
-import { hasRustSnapshotTransactionClass, type ModelComponent } from '@teambit/objects';
+import type { ModelComponent } from '@teambit/objects';
 import type { InsightsMain } from '@teambit/insights';
 import { InsightsAspect } from '@teambit/insights';
 import type { SnapsDistance } from '@teambit/component.snap-distance';
@@ -80,13 +79,7 @@ export class StatusMain {
     private merging: MergingMain
   ) {}
 
-  async status(options: { lanes?: boolean; ignoreCircularDependencies?: boolean }): Promise<StatusResult> {
-    return withWorkspacePersistence(() =>
-      withRustSourceReads(() => withRustWorkspaceInspection(() => this.statusWithinPersistence(options)))
-    );
-  }
-
-  private async statusWithinPersistence({
+  async status({
     lanes,
     ignoreCircularDependencies,
   }: {
@@ -207,28 +200,13 @@ export class StatusMain {
   }
 
   async statusMini(componentPattern?: string, opts: MiniStatusOpts = {}): Promise<MiniStatusResults> {
-    return withWorkspacePersistence(() =>
-      withRustSourceReads(() => this.statusMiniWithinPersistence(componentPattern, opts))
-    );
-  }
-
-  private async statusMiniWithinPersistence(
-    componentPattern?: string,
-    opts: MiniStatusOpts = {}
-  ): Promise<MiniStatusResults> {
     const ids = componentPattern ? await this.workspace.idsByPattern(componentPattern) : this.workspace.listIds();
-    const newComps: ComponentID[] = [];
-    const compFiles = await this.workspace.withFilesInspection(ids, 'modified', async (files) => files, {
-      run: (id) => {
-        if (!id.hasVersion()) newComps.push(id);
-      },
-      ordinary: (id) =>
-        hasRustSnapshotTransactionClass(id, 'ComponentID') &&
-        hasRustSnapshotTransactionClass(Object.getOwnPropertyDescriptor(id, '_legacy')?.value, 'BitId'),
-    });
+    const compFiles = await pMapSeries(ids, (id) => this.workspace.getFilesModification(id));
     const modified: ComponentID[] = [];
+    const newComps: ComponentID[] = [];
     compFiles.forEach((comp) => {
-      if (comp.modified) modified.push(comp.id);
+      if (!comp.id.hasVersion()) newComps.push(comp.id);
+      if (comp.isModified()) modified.push(comp.id);
     });
     const loadOpts = {
       loadDocs: false,

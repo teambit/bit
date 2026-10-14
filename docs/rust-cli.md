@@ -110,7 +110,7 @@ such as `constructor`, break the package and are declined.
 
 ### Status inputs
 
-`status --json` follows the Node.js glue it replaces (`scopes/harmony/bit/rust-status*.ts`, `rust-client-capture.ts`, `rust-fresh-dependencies.ts`). The engine reads the workspace, the models and the dependency caches. The CLI computes what Node computed:
+`status` reproduces `StatusMain.status` over the workspace engine. The engine reads the workspace, the models and the dependency caches. The CLI computes what Node computed:
 
 - **Dependency policy.** The Node environment's policy, the workspace policy and the root `package.json`, merged as `statusPolicy` merges them.
 - **Semver facts.** npm `semver`'s `valid`, `validRange` and `coerce`, from the `npm` module of pnpm's `node-semver` fork, a port of semver 7.7.1 tested against the package's own output.
@@ -160,20 +160,20 @@ commit. Delegated commands run whatever Node.js CLI discovery finds. Both are
 shipped together, so they agree. A binary paired with an older Node.js CLI can
 disagree on details the two versions changed in between.
 
-The JavaScript host uses only APIs the Node.js CLI already ships, plus a few
-modules that exist only to serve it:
+The JavaScript host uses only modules the published `@teambit/bit` package
+ships:
 
-- `@teambit/node/dist/default-dependency-policy.js` and
-  `@teambit/typescript/dist/cjs-package-json-props.js` hold the default node
-  env's dependency policy and `package.json` props. With them, a workspace on
-  the default env installs without loading Harmony. Specs keep them equal to
-  `NodeEnv.getDependencies()` and `TypescriptMain.getCjsPackageJsonProps()`.
-- `@teambit/dependency-resolver/dist/custom-detectors.js` runs custom
-  dependency detectors for the native scanner.
+- the default node env's dependency policy and `package.json` props are
+  `NodeEnv.getDependencies()` and `TypescriptMain.getCjsPackageJsonProps()`,
+  called unbound: both return constants, so a workspace on the default env
+  installs without loading Harmony;
+- custom dependency detectors (the env's `getDepDetectors()` and the
+  `registerDetector` hooks of `@teambit/dependency-resolver`'s `DetectorHook`)
+  run in the host for the files the native scanner leaves to them.
 
-`hostInfo` checks for these modules first. A Node.js CLI that predates them
-makes native `install` decline before it writes anything, and the Node.js CLI
-runs the install.
+`hostInfo` checks for these modules first. A Node.js CLI without them makes
+native `install` decline before it writes anything, and the Node.js CLI runs
+the install.
 
 The repeat-install skip needs the dist directories and config files
 `afterInstall` wrote. The host computes them itself, the way the compiler's
@@ -182,8 +182,8 @@ do, so it works with any Node.js CLI that ships the modules above.
 
 ## Relation to the in-process integration
 
-Earlier work ran Rust inside the Node.js CLI, through the `bit-workspace.node`
+Earlier work ran Rust inside the Node.js CLI, through a `bit-workspace.node`
 addon and spawned helpers, behind `BIT_RUST_*` and `BIT_NATIVE_INSTALL` flags.
-That integration is superseded. The crates it uses become libraries of this
-CLI. The Node.js glue is removed from the integration branch once this CLI
-covers the same commands, and it is not ported to `teambit/bit` master.
+That integration is removed: the crates are libraries of this CLI, and nothing
+outside `native/`, the `Rust` workflow and these docs belongs to the Rust CLI.
+The Node.js CLI is unchanged, so it is the complete fallback for every command.

@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import semver from 'semver';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
 import { Analytics } from '@teambit/legacy.analytics';
-import { handleUnhandledRejection } from '@teambit/cli/dist/handle-errors.js';
+import { handleUnhandledRejection } from '@teambit/cli';
 import path from 'path';
 import { GLOBAL_CONFIG, GLOBAL_LOGS, WORKSPACE_JSONC } from '@teambit/legacy.constants';
 import { printWarning, shouldDisableConsole, shouldDisableLoader } from '@teambit/legacy.logger';

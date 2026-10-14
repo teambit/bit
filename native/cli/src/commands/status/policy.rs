@@ -1,5 +1,4 @@
-//! `statusPolicy` and `currentStatusMetadata` of the Node.js glue
-//! (`rust-status-policy.ts`): the dependency policy inputs of one component,
+//! The dependency policy inputs of one component and its status metadata,
 //! for components on the built-in Node environment. Component-level
 //! dependency policies, which need the `EnvPolicy`/`VariantPolicy` merge, and
 //! every pending-configuration projection decline.

@@ -5,10 +5,6 @@ import os from 'os';
 import path from 'path';
 
 import dependencyTree from './dependency-tree';
-import { isRustEligible } from './precinct';
-import { resolveRustDependencyScannerRuntime } from './rust-scanner/runtime';
-import { acquireRustDependencyScannerSession } from './rust-scanner/scope';
-import { tryRustDependencyGraph } from './rust-scanner/graph';
 import type { PathLinuxRelative } from '@teambit/toolbox.path.path';
 
 /**
@@ -127,77 +123,48 @@ export default async function generateTree(files: string[] = [], config): Promis
   const nonExistent = {};
   const npmPaths = {};
   const pathCache = {};
-  const pathMap: any[] = [];
+  const pathMap = [];
   const errors = {};
 
-  const runtime = resolveRustDependencyScannerRuntime();
-  const lease = runtime ? acquireRustDependencyScannerSession(runtime.executable, runtime.workspaceAddon) : undefined;
-  const rustScannerSession = lease?.session;
-
-  try {
-    const graph = rustScannerSession ? await tryRustDependencyGraph(files, config, rustScannerSession) : undefined;
-    if (graph) {
-      Object.assign(depTree, graph.tree);
-      Object.assign(nonExistent, graph.missing);
-      pathMap.push(...graph.pathMap);
-      Object.assign(errors, graph.errors);
-    } else {
-      if (rustScannerSession) {
-        await rustScannerSession.prefetch(
-          files.filter(
-            (filename) =>
-              !config.visited?.[path.resolve(filename)] &&
-              isRustEligible(filename, {
-                ...config.detectiveOptions,
-                envDetectors: config.envDetectors,
-              })
-          )
-        );
-      }
-      for await (const file of files) {
-        if (depTree[file]) {
-          continue;
-        }
-
-        const detective = config.detectiveOptions;
-        try {
-          const dependencyTreeResult = await dependencyTree({
-            filename: file,
-            directory: config.baseDir,
-            requireConfig: config.requireConfig,
-            webpackConfig: config.webpackConfig,
-            resolveConfig: config.resolveConfig,
-            visited: config.visited,
-            rustScannerSession,
-            errors,
-            filter: (dependencyFilePath, traversedFilePath) => {
-              let dependencyFilterRes = true;
-              const isNpmPath = isNpmPathFunc(dependencyFilePath);
-
-              if (config.dependencyFilter) {
-                dependencyFilterRes = config.dependencyFilter(dependencyFilePath, traversedFilePath, config.baseDir);
-              }
-
-              if (config.includeNpm && isNpmPath) {
-                (npmPaths[traversedFilePath] = npmPaths[traversedFilePath] || []).push(dependencyFilePath);
-              }
-
-              return !isNpmPath && (dependencyFilterRes || dependencyFilterRes === undefined);
-            },
-            detective,
-            nonExistent,
-            pathMap,
-            cacheProjectAst: config.cacheProjectAst,
-            envDetectors: config.envDetectors,
-          });
-          Object.assign(depTree, dependencyTreeResult);
-        } catch (err: any) {
-          errors[file] = err;
-        }
-      }
+  for await (const file of files) {
+    if (depTree[file]) {
+      continue;
     }
-  } finally {
-    lease?.release();
+
+    const detective = config.detectiveOptions;
+    try {
+      const dependencyTreeResult = await dependencyTree({
+        filename: file,
+        directory: config.baseDir,
+        requireConfig: config.requireConfig,
+        webpackConfig: config.webpackConfig,
+        resolveConfig: config.resolveConfig,
+        visited: config.visited,
+        errors,
+        filter: (dependencyFilePath, traversedFilePath) => {
+          let dependencyFilterRes = true;
+          const isNpmPath = isNpmPathFunc(dependencyFilePath);
+
+          if (config.dependencyFilter) {
+            dependencyFilterRes = config.dependencyFilter(dependencyFilePath, traversedFilePath, config.baseDir);
+          }
+
+          if (config.includeNpm && isNpmPath) {
+            (npmPaths[traversedFilePath] = npmPaths[traversedFilePath] || []).push(dependencyFilePath);
+          }
+
+          return !isNpmPath && (dependencyFilterRes || dependencyFilterRes === undefined);
+        },
+        detective,
+        nonExistent,
+        pathMap,
+        cacheProjectAst: config.cacheProjectAst,
+        envDetectors: config.envDetectors,
+      });
+      Object.assign(depTree, dependencyTreeResult);
+    } catch (err: any) {
+      errors[file] = err;
+    }
   }
 
   let tree = convertTreePaths(depTree, pathCache, config.baseDir);

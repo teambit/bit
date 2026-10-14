@@ -71,7 +71,7 @@ fn visit<'v>(value: &'v Value, strings: &mut Vec<&'v str>) {
 
 /// `normalizeSemverInputs` of `@teambit/config-merger` over every string in
 /// `values`: the parsed version, the comparator sets and the minimum of
-/// each. `None` where the Node.js glue returned `undefined`.
+/// each. `None` for values outside the ported grammar.
 pub fn config_inputs(values: &Value) -> Option<Value> {
     let mut strings = Vec::new();
     visit(values, &mut strings);

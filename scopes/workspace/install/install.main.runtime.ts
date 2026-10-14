@@ -82,8 +82,6 @@ import {
 import type { UnpublishedSnapDependency } from './exceptions';
 import { InstallAspect } from './install.aspect';
 import { pickOutdatedPkgs } from './pick-outdated-pkgs';
-import type { AfterInstallRequest, AfterInstallResult, NativeInstallResult } from './native-install';
-import { runNativeInstall } from './native-install';
 import { LinkCommand } from './link';
 import InstallCmd from './install.cmd';
 import UninstallCmd from './uninstall.cmd';
@@ -186,8 +184,6 @@ export class InstallMain {
    * @memberof Workspace
    */
   async install(packages?: string[], options?: WorkspaceInstallOptions): Promise<ComponentMap<string>> {
-    const installedNatively = await this.installNatively(packages, options);
-    if (installedNatively) return installedNatively;
     // Check if external package manager mode is enabled
     const workspaceConfig = this.workspace.getWorkspaceConfig();
     const depResolverExtConfig = workspaceConfig.extensions.findExtension('teambit.dependencies/dependency-resolver');
@@ -255,81 +251,6 @@ export class InstallMain {
     await this.ipcEvents.publishIpcEvent('onPostInstall');
 
     return res;
-  }
-
-  /**
-   * Run the installation on the native installer (`native-install.ts`), serving its JavaScript
-   * callbacks from this Harmony instance. `undefined` leaves it to the TypeScript implementation.
-   */
-  private async installNatively(
-    packages: string[] | undefined,
-    options: WorkspaceInstallOptions | undefined
-  ): Promise<ComponentMap<string> | undefined> {
-    this.workspace.inInstallContext = true;
-    this.workspace.inInstallAfterPmContext = false;
-    let result: NativeInstallResult | undefined;
-    try {
-      result = await runNativeInstall(
-        {
-          workspace: this.workspace,
-          envs: this.envs,
-          app: this.app,
-          aspectLoader: this.aspectLoader,
-          dependencyResolver: this.dependencyResolver,
-          logger: this.logger,
-          afterInstall: (request) => this.nativeAfterInstall(request),
-        },
-        packages,
-        options
-      );
-    } finally {
-      this.workspace.inInstallContext = false;
-      this.workspace.inInstallAfterPmContext = false;
-    }
-    if (!result) return undefined;
-    // external package manager mode: the dependencies went to package.json, as
-    // writeDependenciesToPackageJson does, and nothing was installed.
-    if (result.skipped) return new ComponentMap(new Map());
-    this.oldNonLoadedEnvs = result.oldNonLoadedEnvs;
-    // the native installer edits workspace.jsonc on disk (added packages, allowScripts, leaving
-    // external package manager mode); a later persistConfig must not write the stale copy back.
-    if (result.configChanged) await this.workspace.triggerOnWorkspaceConfigChange();
-    // the native installer already wrote the onPostInstall event file (publishIpcEvent).
-    await this.workspace.clearCache();
-    return this.getComponentsDirectory([]);
-  }
-
-  /**
-   * One TypeScript install cycle after the package manager, for the native installer: the
-   * global-virtual-store bridge, env reloads, compile and workspace config files.
-   */
-  private async nativeAfterInstall(request: AfterInstallRequest): Promise<AfterInstallResult> {
-    this.workspace.inInstallAfterPmContext = true;
-    if (this.dependencyResolver.enableGlobalVirtualStore()) {
-      ensureHoistedDependencyResolution(this.workspace.path);
-    }
-    const oldNonLoadedEnvs = this.setOldNonLoadedEnvs();
-    await this.reloadMovedEnvs();
-    await this.reloadNonLoadedEnvs();
-    const shouldClearCacheOnInstall = this.shouldClearCacheOnInstall();
-    let cacheCleared = false;
-    let compiled = 0;
-    if (request.compile) {
-      const compileStartTime = process.hrtime();
-      const compileOutputMessage = `compiling components`;
-      this.logger.setStatusLine(compileOutputMessage);
-      if (shouldClearCacheOnInstall) {
-        await this.workspace.clearCache();
-        cacheCleared = true;
-      }
-      const results = await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
-      compiled = results.length;
-      this.logger.consoleSuccess(compileOutputMessage, compileStartTime);
-    }
-    if (request.writeConfigFiles) {
-      await this.tryWriteConfigFiles(!cacheCleared && shouldClearCacheOnInstall);
-    }
-    return { oldNonLoadedEnvs, compiled };
   }
 
   async writeDependenciesToPackageJson(): Promise<void> {
@@ -1000,13 +921,9 @@ export class InstallMain {
    * function is successfully executed, nothing is being returned. If an error occurs during the execution of
    * `writeConfigFiles`, an error message is being returned.
    */
-  /**
-   * returns the config files written, which native `bit install` snapshots to skip the next write
-   * when nothing changed. `undefined` when the write failed or left files bit did not generate.
-   */
-  private async tryWriteConfigFiles(clearCache: boolean): Promise<string[] | undefined> {
+  private async tryWriteConfigFiles(clearCache: boolean) {
     const shouldWrite = this.wsConfigFiles.isWorkspaceConfigWriteEnabled();
-    if (!shouldWrite) return [];
+    if (!shouldWrite) return;
     if (clearCache) {
       await this.workspace.clearCache({ skipClearFailedToLoadEnvs: true });
     }
@@ -1021,18 +938,11 @@ export class InstallMain {
       this.logger.consoleFailure(
         `failed generating workspace config files, please run "bit ws-config write" manually. error: ${err.message}`
       );
-      return undefined;
+      return;
     }
     const skippedWarning = this.wsConfigFiles.formatSkippedFilesWarning(writeResults?.skippedPaths);
     // the formatted section already starts with the shared warning symbol, so no need for consoleWarning here.
-    if (skippedWarning) {
-      this.logger.console(`\n${skippedWarning}`);
-      return undefined;
-    }
-    return (writeResults?.writersResult ?? []).flatMap((writerResult) => [
-      ...writerResult.realConfigFiles.map((file) => file.writtenRealConfigFile.filePath),
-      ...writerResult.extendingConfigFiles.flatMap((file) => file.extendingConfigFile.filePaths),
-    ]);
+    if (skippedWarning) this.logger.console(`\n${skippedWarning}`);
   }
 
   private async addConfiguredAspectsToWorkspacePolicy(): Promise<WorkspacePolicy> {

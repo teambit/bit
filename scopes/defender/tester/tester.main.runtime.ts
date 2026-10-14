@@ -1,4 +1,3 @@
-import { defaultTestPatterns } from './default-dev-patterns';
 import fs from 'fs-extra';
 import type { CLIMain } from '@teambit/cli';
 import { MainRuntime } from '@teambit/harmony.modules.runtimes';
@@ -264,7 +263,7 @@ export class TesterMain {
     /**
      * default test regex for which files tester to apply on.
      */
-    patterns: defaultTestPatterns(),
+    patterns: ['**/*.spec.+(js|ts|jsx|tsx)', '**/*.test.+(js|ts|jsx|tsx)'],
 
     /**
      * determine whether to watch on start.

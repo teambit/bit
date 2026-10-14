@@ -1,6 +1,5 @@
-//! The snapshot step of a merge (`captureForSnapshot`,
-//! `commandSnapshotReceipt` and `commandFinalize` in
-//! `rust-workspace-command.ts`): when the merge snaps, the whole workspace
+//! The snapshot step of a merge (`commandSnapshotReceipt` and
+//! `commandFinalize`): when the merge snaps, the whole workspace
 //! is captured again with a fresh dependency cache, the issues that block a
 //! snap are checked against the engine's prediction, and the engine writes
 //! the snaps with new hashes and the user's log.

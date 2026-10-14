@@ -1,10 +1,9 @@
-//! Native `bit diff --json` and `bit diff <component> --json`, the flow of
-//! `readRustDiff` in the Node.js glue (`rust-diff.ts`): the shared status
-//! capture, the workspace engine's `workspaceDiff`, and the file and
+//! Native `bit diff --json` and `bit diff <component> --json`: the shared
+//! status capture, the workspace engine's `workspaceDiff`, and the file and
 //! metadata formatting of `@teambit/legacy.component-diff`.
 //!
 //! A configured git executable, a component whose model lacks a head,
-//! patterns the glue did not resolve, and everything the status capture
+//! patterns this module does not resolve, and everything the status capture
 //! declines run on the Node.js CLI.
 
 mod files;
@@ -69,7 +68,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
-/// `readRustDiff`.
+/// The diff of the selected components.
 fn read(root: &Path, home: &Path, pattern: Option<&str>, chalk: Chalk) -> io::Result<Value> {
     if cache::no_fs_cache(root) || git_path_configured(root) {
         return Err(decline("no-fs-cache or a configured git executable"));

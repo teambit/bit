@@ -18,10 +18,6 @@ pub(crate) struct Store {
 }
 
 impl Store {
-    pub(crate) fn directory(&self) -> &Path {
-        &self.directory
-    }
-
     pub(crate) fn new(directory: PathBuf, owner: Option<(u32, u32)>) -> io::Result<Self> {
         if !directory.is_absolute() {
             return Err(io::Error::new(
@@ -65,17 +61,6 @@ impl Store {
         result?;
         *completed = true;
         Ok(())
-    }
-
-    pub(crate) fn exists(&self, hash: &[u8; 20]) -> bool {
-        fs::metadata(self.object_path(hash)).is_ok()
-    }
-
-    pub(crate) fn object_path(&self, hash: &[u8; 20]) -> PathBuf {
-        let identity = crate::validate::hexadecimal(hash);
-        self.directory
-            .join(&identity[..2])
-            .join(&identity[2..])
     }
 
     pub(crate) fn finish_batch(&self) -> io::Result<()> {

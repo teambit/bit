@@ -1,4 +1,4 @@
-//! `parseRustWorkspaceSnap`: ordinary snaps only. Build, editor and
+//! The native snap grammar: ordinary snaps only. Build, editor and
 //! hook-altering flags stay with the Node.js CLI.
 
 use serde_json::{Value, json};
@@ -72,7 +72,7 @@ impl Options {
         Some(0)
     }
 
-    /// `RustWorkspaceSnapOptions` as `JSON.stringify` writes them.
+    /// The engine's snap options.
     pub fn request(&self) -> Value {
         let mut options = json!({});
         if let Some(pattern) = &self.pattern {

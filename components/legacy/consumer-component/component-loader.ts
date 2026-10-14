@@ -1,21 +1,24 @@
 import mapSeries from 'p-map-series';
 import type { ComponentIdList } from '@teambit/component-id';
 import { ComponentID } from '@teambit/component-id';
+import * as path from 'path';
 import type { ComponentIssue } from '@teambit/component-issues';
 import type { InMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { getMaxSizeForComponents, createInMemoryCache } from '@teambit/harmony.modules.in-memory-cache';
 import { currentLoadSpan, loadSpan } from '@teambit/harmony.modules.load-trace';
+import { BIT_MAP } from '@teambit/legacy.constants';
 import { logger } from '@teambit/legacy.logger';
 import type { ModelComponent } from '@teambit/objects';
 import { VERSION_ZERO } from '@teambit/objects';
 import { getLatestVersionNumber } from '@teambit/legacy.utils';
 import { pMapPool } from '@teambit/toolbox.promise.map-pool';
+import { getLastModifiedPathsTimestampMs } from '@teambit/toolbox.fs.last-modified';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import type { InvalidComponent } from './consumer-component';
 import { Component } from './consumer-component';
 import type { Consumer } from '@teambit/legacy.consumer';
 import { ComponentsPendingImport } from '@teambit/legacy.consumer';
-import { FsCache, dependencyCacheNeedsInvalidation } from '@teambit/workspace.modules.fs-cache';
+import { FsCache } from '@teambit/workspace.modules.fs-cache';
 import type { ComponentMap } from '@teambit/legacy.bit-map';
 import { loader } from '@teambit/legacy.loader';
 
@@ -73,10 +76,6 @@ export class ComponentLoader {
 
   static loadDeps: LoadDepsFunc;
 
-  // Installed by the dependency aspect so the legacy loader need not import its
-  // runtime. Nested component loads inherit the operation's asynchronous scope.
-  static runDependencyLoadScope: <T>(operation: () => Promise<T>) => Promise<T> = (operation) => operation();
-
   clearComponentsCache() {
     this.componentsCache.deleteAll();
     this.cacheResolvedDependencies = {};
@@ -104,11 +103,23 @@ export class ComponentLoader {
   }
 
   private async invalidateDependenciesCache(): Promise<void> {
-    const shouldInvalidate = await dependencyCacheNeedsInvalidation(
-      this.componentFsCache,
-      this.consumer.getPath(),
-      this.consumer.config.path
-    );
+    const pathsToCheck = [
+      path.join(this.consumer.getPath(), 'node_modules'),
+      path.join(this.consumer.getPath(), 'package.json'),
+      path.join(this.consumer.getPath(), 'pnpm-lock.yaml'),
+      path.join(this.consumer.getPath(), 'yarn.lock'),
+      path.join(this.consumer.getPath(), BIT_MAP),
+      this.consumer.config.path,
+    ];
+    const [lastModified, dependenciesCacheList] = await Promise.all([
+      getLastModifiedPathsTimestampMs(pathsToCheck),
+      this.componentFsCache.listDependenciesDataCache(),
+    ]);
+    const lastUpdateAllComps = Object.keys(dependenciesCacheList).map((key) => dependenciesCacheList[key].time);
+    const firstCacheEntered = Math.min(...lastUpdateAllComps);
+    // if lastUpdateAllComps is empty, firstCacheEntered is Infinity so shouldInvalidate is
+    // always false, which is good. no need to invalidate the cache if nothing there.
+    const shouldInvalidate = lastModified > firstCacheEntered;
     if (shouldInvalidate) {
       // at least one component inserted to the cache before workspace-config/node-modules
       // modification, invalidate the entire deps-cache.
@@ -158,33 +169,30 @@ export class ComponentLoader {
     }
     if (!idsToProcess.length) return { components: alreadyLoadedComponents, invalidComponents, removedComponents };
     const storeInCache = loadOptsWithDefaults?.storeInCache ?? true;
+    const allComponents: Component[] = [];
     const shouldRunInParallel = await this.shouldRunInParallel(idsToProcess);
     logger.debug(`loading ${idsToProcess.length} components in parallel: ${shouldRunInParallel.toString()}`);
-    const loadedComponents = await ComponentLoader.runDependencyLoadScope(() =>
-      pMapPool(
-        idsToProcess,
-        async (id: ComponentID) => {
-          const component = await this.loadOne(
-            id,
-            throwOnFailure,
-            invalidComponents,
-            removedComponents,
-            loadOptsWithDefaults
-          );
-          if (component) {
-            if (storeInCache) {
-              this.componentsCache.set(component.id.toString(), component);
-            }
-            logger.trace(`ComponentLoader', 'Finished loading the component "${component.id.toString()}"`);
+    await pMapPool(
+      idsToProcess,
+      async (id: ComponentID) => {
+        const component = await this.loadOne(
+          id,
+          throwOnFailure,
+          invalidComponents,
+          removedComponents,
+          loadOptsWithDefaults
+        );
+        if (component) {
+          if (storeInCache) {
+            this.componentsCache.set(component.id.toString(), component);
           }
-          return component;
-        },
-        { concurrency: shouldRunInParallel ? concurrentComponentsLimit() : 1 }
-      )
+          logger.trace(`ComponentLoader', 'Finished loading the component "${component.id.toString()}"`);
+          allComponents.push(component);
+        }
+      },
+      { concurrency: shouldRunInParallel ? concurrentComponentsLimit() : 1 }
     );
 
-    // Pool results retain request order even when filesystem loads finish in a different order.
-    const allComponents = loadedComponents.filter((component): component is Component => Boolean(component));
     return { components: allComponents.concat(alreadyLoadedComponents), invalidComponents, removedComponents };
   }
 

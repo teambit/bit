@@ -1,4 +1,4 @@
-import { DetectorHook, type DependencyDetector, type FileContext } from '@teambit/dependency-resolver';
+import type { DependencyDetector, FileContext } from '@teambit/dependency-resolver';
 import { compileSync } from '@mdx-js/mdx';
 import { mdxOptions } from '@teambit/mdx.modules.mdx-v3-options';
 import { detective as detectImportsWithRegex } from '@teambit/mdx.deps-detectors.detective-mdx';
@@ -41,9 +41,6 @@ function getDetectorMdxOptions() {
   return _detectorMdxOptions;
 }
 
-// Captured during module initialization before consumers can patch the prototype.
-let nativePredicate: DependencyDetector['isSupported'];
-
 export class MDXDependencyDetector implements DependencyDetector {
   private logger?: Logger;
   private currentFilename?: string;
@@ -52,9 +49,6 @@ export class MDXDependencyDetector implements DependencyDetector {
     private supportedExtensions: string[],
     logger?: Logger
   ) {
-    if (new.target === MDXDependencyDetector) {
-      DetectorHook.registerNativeMdxDetector(this, MDXDependencyDetector.prototype, nativePredicate);
-    }
     this.logger = logger;
     // Bind detect to preserve `this` context when passed as a detached function.
     this.detect = this.detect.bind(this);
@@ -85,5 +79,3 @@ export class MDXDependencyDetector implements DependencyDetector {
     }
   }
 }
-
-nativePredicate = MDXDependencyDetector.prototype.isSupported;

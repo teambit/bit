@@ -3,7 +3,7 @@ import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { flatten, partition } from 'lodash';
 import type { Consumer } from '@teambit/legacy.consumer';
 import type { Component, ComponentID } from '@teambit/component';
-import { ComponentLoader, ConsumerComponent } from '@teambit/legacy.consumer-component';
+import { ConsumerComponent } from '@teambit/legacy.consumer-component';
 import { ComponentIdList } from '@teambit/component-id';
 import type { ComponentDependency, DependencyResolverMain } from '@teambit/dependency-resolver';
 import type { CompIdGraph, DepEdgeType } from '@teambit/graph';
@@ -54,12 +54,8 @@ export class GraphIdsFromFsBuilder {
   async buildGraph(ids: ComponentID[]): Promise<Graph<ComponentID, DepEdgeType>> {
     this.logger.debug(`GraphIdsFromFsBuilder, buildGraph with ${ids.length} seeders`);
     const start = Date.now();
-    // Components are loaded one at a time below, each as its own load operation. Run the whole
-    // build as one dependency-load operation so those loads share scanner helpers.
-    await ComponentLoader.runDependencyLoadScope(async () => {
-      const components = await this.loadManyComponents(ids);
-      await this.processManyComponents(components);
-    });
+    const components = await this.loadManyComponents(ids);
+    await this.processManyComponents(components);
     this.logger.debug(
       `GraphIdsFromFsBuilder, buildGraph with ${ids.length} seeders completed (${(Date.now() - start) / 1000} sec)`
     );

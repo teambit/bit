@@ -1,5 +1,4 @@
-//! `collectRustStatusIssues` (`rust-status-issues.ts`): the issues status
-//! adds to what dependency detection found, formatted as
+//! The issues status adds to what dependency detection found, formatted as
 //! `IssuesList.toObjectIncludeDataAsString()` formats them.
 
 use super::js::{array, decline, nullish, text, truthy, without_version};
@@ -28,7 +27,7 @@ pub struct Component {
     pub issues: Value,
 }
 
-/// `None` where the Node.js glue returned `undefined`: a dependency outside
+/// `None` where the native status declines: a dependency outside
 /// the workspace, or a model whose head is deprecated or removed.
 pub fn collect(
     root: &Path,
@@ -41,7 +40,7 @@ pub fn collect(
     collect_graph(root, context, components, components)
 }
 
-/// `collectRustStatusIssues` with `resolveIssueHeads`: the dependencies
+/// The status issues with the resolved issue heads: the dependencies
 /// outside the workspace are the engine's external vertices (`issueGraph`),
 /// and the models' heads are the engine's proofs.
 pub fn collect_resolved(

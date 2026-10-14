@@ -5,12 +5,9 @@ mod classification;
 mod embedded;
 mod exports;
 mod limits;
-mod protocol;
 mod scanning;
-mod timings;
-mod transport;
 
-use crate::scanning::scan_with_metrics;
+use crate::scanning::scan;
 use indexmap::IndexMap;
 use oxc_ast::ast::{
     Argument, CallExpression, Decorator, ExportAllDeclaration, ExportDefaultDeclaration,
@@ -40,12 +37,6 @@ struct File {
     path: String,
     source: Option<String>,
     kind: Option<String>,
-}
-#[derive(Serialize)]
-struct Response {
-    version: u32,
-    id: Value,
-    files: Vec<Outcome>,
 }
 #[derive(Serialize)]
 struct Outcome {
@@ -267,11 +258,6 @@ fn outcome(file: &File, status: &'static str, message: String) -> Outcome {
         diagnostics: vec![message],
     }
 }
-/// Run the standalone dependency scanner transport.
-pub fn run() -> Result<(), Box<dyn std::error::Error>> {
-    transport::run()
-}
-
 #[cfg(test)]
 mod embedded_tests;
 #[cfg(test)]
@@ -280,7 +266,7 @@ mod tests;
 /// Scan an owned request on the caller's bounded worker pool.
 pub fn scan_request(input: &str, pool: &rayon::ThreadPool) -> Result<Value, serde_json::Error> {
     if input.len() > limits::REQUEST_BYTES {
-        return Ok(transport::invalid_request("request exceeds 8 MiB limit"));
+        return Ok(invalid_request("request exceeds 8 MiB limit"));
     }
     embedded::process(input, pool)
 }
@@ -289,5 +275,10 @@ pub fn scan_request(input: &str, pool: &rayon::ThreadPool) -> Result<Value, serd
 /// The caller owns scheduling and aggregate output limits; per-source limits remain enforced.
 pub fn scan_source(path: String, source: String) -> Result<Value, serde_json::Error> {
     let file = File { path, source: Some(source), kind: None };
-    serde_json::to_value(scan_with_metrics(&file, false, None))
+    serde_json::to_value(scan(&file, false))
+}
+
+/// The response to a request the scanner cannot read.
+pub(crate) fn invalid_request(message: &str) -> Value {
+    serde_json::json!({"version":1,"status":"invalid_request","diagnostics":[message]})
 }

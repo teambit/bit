@@ -1,4 +1,4 @@
-//! `bit lane merge` (`rust-workspace-command-lane.ts`): the lane pattern's
+//! `bit lane merge`: the lane pattern's
 //! ids, and the lane step (`commandLaneFinalize`) with what the engine
 //! cannot know about the lane objects it writes: history keys, logs and
 //! squash dates (`commandLaneReceipt`).

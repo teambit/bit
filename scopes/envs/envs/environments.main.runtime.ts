@@ -1,4 +1,3 @@
-import { registerRustSnapshotFunctions } from '@teambit/objects';
 import type { Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
 import pLocate from 'p-locate';
 import { parse } from 'comment-json';
@@ -1318,6 +1317,4 @@ if needed, use "bit env set" command to align the env id`;
   }
 }
 
-registerRustSnapshotFunctions('SnapshotEnvValidation', EnvsMain.prototype, ['validateEnvId']);
-registerRustSnapshotFunctions('SnapshotEnvAspect', EnvsAspect, ['id']);
 EnvsAspect.addRuntime(EnvsMain);

@@ -120,31 +120,3 @@ export class FsCache {
     return path.join(this.basePath, cacheName);
   }
 }
-
-const nativeReaderMethods = Object.getOwnPropertyDescriptors(FsCache.prototype);
-const nativeCacheGet = cacache.get;
-
-/** Capture default reader identities in their defining module, before extension registration. */
-export function nativeDependencyCacheDirectory(cache: FsCache): string | undefined {
-  if (
-    !cache ||
-    typeof cache !== 'object' ||
-    cacache.get !== nativeCacheGet ||
-    Object.getPrototypeOf(cache) !== FsCache.prototype
-  )
-    return undefined;
-  const fields = Object.getOwnPropertyDescriptors(cache);
-  if (fields.isNoFsCacheFeatureEnabled?.value !== false || typeof fields.basePath?.value !== 'string') return undefined;
-  for (const [name, descriptor] of Object.entries(nativeReaderMethods)) {
-    const current = Object.getOwnPropertyDescriptor(FsCache.prototype, name);
-    if (
-      Object.hasOwn(fields, name) ||
-      !current ||
-      current.value !== descriptor.value ||
-      current.get !== descriptor.get ||
-      current.set !== descriptor.set
-    )
-      return undefined;
-  }
-  return path.join(fields.basePath.value, DEPS);
-}

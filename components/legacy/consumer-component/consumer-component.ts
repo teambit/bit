@@ -1,4 +1,3 @@
-import { registerRustSnapshotTransactionClass } from '@teambit/objects';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import fs from 'fs-extra';
 import { v4 } from 'uuid';
@@ -20,15 +19,7 @@ import type { ComponentMap } from '@teambit/legacy.bit-map';
 import { fileContentsForVersioning } from '@teambit/legacy.bit-map';
 import { IgnoredDirectory } from './exceptions/ignored-directory';
 import type { Dist, PackageJsonFile, DataToPersist } from '@teambit/component.sources';
-import {
-  License,
-  SourceFile,
-  canReadWorkspaceFilesNatively,
-  readRustWorkspaceFiles,
-  registerRustWorkspaceFile,
-  registerRustWorkspaceBitmapFile,
-  sourceFileFromWorkspaceRead,
-} from '@teambit/component.sources';
+import { License, SourceFile } from '@teambit/component.sources';
 import type { ComponentConfigLoadOptions } from '@teambit/legacy.consumer-config';
 import { ComponentConfig, ComponentOverrides, getBindingPrefixByDefaultScope } from '@teambit/legacy.consumer-config';
 import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy.extension-data';
@@ -611,31 +602,10 @@ async function getLoadedFiles(
     throw componentMap.noFilesError;
   }
   await consumer.bitMap.trackDirectoryChanges(componentMap);
-  const manifest = componentMap.files.slice();
-  const paths = manifest.map((file) => path.join(bitDir, file.relativePath));
-  const native = canReadWorkspaceFilesNatively() ? await readRustWorkspaceFiles(paths) : undefined;
-  const nativeValid =
-    native &&
-    canReadWorkspaceFilesNatively() &&
-    componentMap.files.length === manifest.length &&
-    componentMap.files.every(
-      (file, index) => file === manifest[index] && path.join(bitDir, file.relativePath) === paths[index]
-    );
-  const sourceFiles = componentMap.files.map((file, index) => {
+  const sourceFiles = componentMap.files.map((file) => {
     const filePath = path.join(bitDir, file.relativePath);
-    const read = nativeValid ? native[index] : undefined;
-    const sourceFile = read
-      ? sourceFileFromWorkspaceRead(read, bitDir, consumer.getPath(), { test: file.test || false })
-      : SourceFile.load(filePath, bitDir, consumer.getPath(), { test: file.test || false });
+    const sourceFile = SourceFile.load(filePath, bitDir, consumer.getPath(), { test: file.test || false });
     sourceFile.contents = fileContentsForVersioning(componentMap, file.relativePath, sourceFile.contents);
-    if (read) {
-      registerRustWorkspaceFile(sourceFile, read);
-      if (
-        Object.getOwnPropertyDescriptor(componentMap, 'rootDir')?.value === '.' &&
-        Object.getOwnPropertyDescriptor(file, 'relativePath')?.value === '.bitmap'
-      )
-        registerRustWorkspaceBitmapFile(sourceFile, read);
-    }
     return sourceFile;
   });
   const filePaths = componentMap.getAllFilesPaths();
@@ -648,5 +618,3 @@ async function getLoadedFiles(
 function _getDocsForFiles(files: SourceFile[], componentFsCache: FsCache): Array<Promise<Doclet[]>> {
   return files.map((file) => (file.test ? Promise.resolve([]) : docsParser(file, componentFsCache)));
 }
-
-registerRustSnapshotTransactionClass('ConsumerComponent', Component);

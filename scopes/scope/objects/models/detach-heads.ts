@@ -49,29 +49,6 @@ export class DetachedHeads {
     this.deleted = uniqBy([...this.deleted, ...incoming.deleted], 'hash');
   }
 
-  canMergeNatively(): boolean {
-    return (
-      Object.getPrototypeOf(this) === DetachedHeads.prototype &&
-      this.merge === DetachedHeads.prototype.merge &&
-      this.toObject === DetachedHeads.prototype.toObject &&
-      this.mergeNative === DetachedHeads.prototype.mergeNative &&
-      [...this.heads, ...this.deleted].every(
-        (ref) =>
-          Boolean(ref) &&
-          Object.getPrototypeOf(ref) === Ref.prototype &&
-          ref.toString === Ref.prototype.toString &&
-          typeof ref.hash === 'string'
-      )
-    );
-  }
-
-  mergeNative(incoming: DetachedHeads, heads: [number, number][], deleted: [number, number][]) {
-    const allHeads = [this.heads, incoming.heads];
-    const allDeleted = [this.deleted, incoming.deleted];
-    this.heads = heads.map(([side, index]) => allHeads[side][index]);
-    this.deleted = deleted.map(([side, index]) => allDeleted[side][index]);
-  }
-
   deleteFromHeadsIfNeeded() {
     this.heads = this.heads.filter((head) => !this.deleted.find((deleted) => deleted.isEqual(head)));
   }

@@ -19,19 +19,7 @@ import { getLogForSquash } from '@teambit/harmony.modules.get-basic-log';
 import type { ComponentID } from '@teambit/component-id';
 import { ComponentIdList } from '@teambit/component-id';
 import type { Lane, Version, Log } from '@teambit/objects';
-import {
-  Ref,
-  withRustSnapshotOperation,
-  withRustMergeTransactionOperation,
-  withRustMergeTransactionJournal,
-  canUseRustMergeTransactionMode,
-  completeRustMergeTransactionPhase,
-  hasRustSnapshotTransactionClassFields,
-  registerRustSnapshotTransactionClass,
-  isRustSnapshotOperation,
-  planRustSquash,
-  readRustSquashMessages,
-} from '@teambit/objects';
+import { Ref } from '@teambit/objects';
 import { isSnap } from '@teambit/component-version';
 import pMapSeries from 'p-map-series';
 import type { Scope as LegacyScope } from '@teambit/legacy.scope';
@@ -51,12 +39,6 @@ import { compact, uniq } from 'lodash';
 import type { ExportMain } from '@teambit/export';
 import { ExportAspect } from '@teambit/export';
 import { MergeLanesAspect } from './merge-lanes.aspect';
-import {
-  tryRustMergePatternDependencies,
-  tryRustMergeDependencyMissing,
-  tryRustMergeDependencyCandidates,
-  tryRustMergePatternOutcome,
-} from './rust-merge-lane-policy';
 import { MergeLaneCmd } from './merge-lane.cmd';
 import { MissingCompsToMerge } from './exceptions/missing-comps-to-merge';
 import type { MergeAbortOpts } from './merge-abort.cmd';
@@ -114,22 +96,20 @@ export class MergeLanesMain {
   ) {}
 
   async mergeLaneByCLI(laneName: string, options: MergeLaneOptions) {
-    return withRustSnapshotOperation(async () => {
-      if (!this.workspace) {
-        throw new BitError(`unable to merge a lane outside of Bit workspace`);
-      }
-      const currentLaneId = this.workspace.consumer.getCurrentLaneId();
-      const otherLaneId = await this.workspace.consumer.getParsedLaneId(laneName);
-      // Hidden lane updateDependents must participate in every merge — otherwise main→lane refresh
-      // (`bit lane merge main`) leaves the lane's cascaded entries stuck on their old main-head
-      // base, and lane→main merge would push a partially-consistent lane state. The bare-scope
-      // counterpart (`bit _merge-lane`, used by Ripple / the UI's "update lane" button) already
-      // sets this; the workspace path was the missing leg.
-      if (options.shouldIncludeUpdateDependents === undefined) {
-        options.shouldIncludeUpdateDependents = true;
-      }
-      return this.mergeLane(otherLaneId, currentLaneId, options);
-    });
+    if (!this.workspace) {
+      throw new BitError(`unable to merge a lane outside of Bit workspace`);
+    }
+    const currentLaneId = this.workspace.consumer.getCurrentLaneId();
+    const otherLaneId = await this.workspace.consumer.getParsedLaneId(laneName);
+    // Hidden lane updateDependents must participate in every merge — otherwise main→lane refresh
+    // (`bit lane merge main`) leaves the lane's cascaded entries stuck on their old main-head
+    // base, and lane→main merge would push a partially-consistent lane state. The bare-scope
+    // counterpart (`bit _merge-lane`, used by Ripple / the UI's "update lane" button) already
+    // sets this; the workspace path was the missing leg.
+    if (options.shouldIncludeUpdateDependents === undefined) {
+      options.shouldIncludeUpdateDependents = true;
+    }
+    return this.mergeLane(otherLaneId, currentLaneId, options);
   }
 
   /**
@@ -146,225 +126,185 @@ export class MergeLanesMain {
     mergedSuccessfullyIds: ComponentID[];
     conflicts: ConflictPerId[];
   }> {
-    return withRustMergeTransactionOperation(async () => {
-      // Receipts follow the canonical effect sequence; keep its callback and error boundaries visible.
-      // eslint-disable-next-line complexity
-      const merge = async () => {
-        const nativeLane = canUseRustMergeTransactionMode('lane');
-        this.validateMergeFlags(otherLaneId, currentLaneId, options);
-        if (nativeLane && canUseRustMergeTransactionMode('lane'))
-          await completeRustMergeTransactionPhase('validateFlags');
-        const { currentLane, otherLane, laneToFetchArtifactsFrom, idsToMerge } = await this.resolveMergeContext(
-          otherLaneId,
-          currentLaneId,
-          options
-        );
+    this.validateMergeFlags(otherLaneId, currentLaneId, options);
+    const { currentLane, otherLane, laneToFetchArtifactsFrom, idsToMerge } = await this.resolveMergeContext(
+      otherLaneId,
+      currentLaneId,
+      options
+    );
 
-        if (nativeLane && canUseRustMergeTransactionMode('lane')) await completeRustMergeTransactionPhase('context');
-        const {
-          mergeStrategy,
-          noAutoSnap,
-          noSnap,
-          tag,
-          snapMessage,
-          existingOnWorkspaceOnly,
-          build,
-          loose,
-          keepReadme,
-          squash,
-          noSquash,
-          pattern,
-          includeDeps,
-          skipDependencyInstallation,
-          resolveUnrelated,
-          ignoreConfigChanges,
-          throwIfNotUpToDate,
-          detachHead,
-        } = options;
-        const legacyScope = this.scope.legacyScope;
-        const consumer = this.workspace?.consumer;
+    const {
+      mergeStrategy,
+      noAutoSnap,
+      noSnap,
+      tag,
+      snapMessage,
+      existingOnWorkspaceOnly,
+      build,
+      loose,
+      keepReadme,
+      squash,
+      noSquash,
+      pattern,
+      includeDeps,
+      skipDependencyInstallation,
+      resolveUnrelated,
+      ignoreConfigChanges,
+      throwIfNotUpToDate,
+      detachHead,
+    } = options;
+    const legacyScope = this.scope.legacyScope;
+    const consumer = this.workspace?.consumer;
 
-        if (throwIfNotUpToDate) await this.throwIfNotUpToDate(otherLaneId, currentLaneId);
+    if (throwIfNotUpToDate) await this.throwIfNotUpToDate(otherLaneId, currentLaneId);
 
-        if (nativeLane && canUseRustMergeTransactionMode('lane')) await completeRustMergeTransactionPhase('upToDate');
-        this.logger.debug(`merging the following ids: ${idsToMerge.toString()}`);
+    this.logger.debug(`merging the following ids: ${idsToMerge.toString()}`);
 
-        const shouldSquash = squash || (currentLaneId.isDefault() && !noSquash);
-        let allComponentsStatus = await this.merging.getMergeStatus(
-          idsToMerge,
-          {
-            resolveUnrelated,
-            ignoreConfigChanges,
-            shouldSquash,
-            mergeStrategy,
-            handleTargetAheadAsDiverged: noSnap,
-            detachHead,
-            shouldMergeAspectsData: true,
-          },
-          currentLane,
-          otherLane
-        );
+    const shouldSquash = squash || (currentLaneId.isDefault() && !noSquash);
+    let allComponentsStatus = await this.merging.getMergeStatus(
+      idsToMerge,
+      {
+        resolveUnrelated,
+        ignoreConfigChanges,
+        shouldSquash,
+        mergeStrategy,
+        handleTargetAheadAsDiverged: noSnap,
+        detachHead,
+        shouldMergeAspectsData: true,
+      },
+      currentLane,
+      otherLane
+    );
 
-        if (nativeLane && canUseRustMergeTransactionMode('lane')) await completeRustMergeTransactionPhase('status');
-        if (pattern) {
-          const componentIds = idsToMerge;
-          const compIdsFromPattern = await (this.workspace || this.scope).filterIdsFromPoolIdsByPattern(
-            pattern,
-            componentIds
-          );
-          allComponentsStatus = await filterComponentsStatus(
-            allComponentsStatus,
-            compIdsFromPattern,
-            idsToMerge,
-            legacyScope,
-            includeDeps,
-            otherLane,
-            shouldSquash,
-            this
-          );
-          idsToMerge.forEach((bitId) => {
-            if (!allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(bitId))) {
-              allComponentsStatus.push({
-                id: bitId,
-                unchangedLegitimately: true,
-                unchangedMessage: `excluded by pattern`,
-              });
-            }
+    if (pattern) {
+      const componentIds = idsToMerge;
+      const compIdsFromPattern = await (this.workspace || this.scope).filterIdsFromPoolIdsByPattern(
+        pattern,
+        componentIds
+      );
+      allComponentsStatus = await filterComponentsStatus(
+        allComponentsStatus,
+        compIdsFromPattern,
+        idsToMerge,
+        legacyScope,
+        includeDeps,
+        otherLane,
+        shouldSquash
+      );
+      idsToMerge.forEach((bitId) => {
+        if (!allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(bitId))) {
+          allComponentsStatus.push({ id: bitId, unchangedLegitimately: true, unchangedMessage: `excluded by pattern` });
+        }
+      });
+    }
+    if (existingOnWorkspaceOnly && this.workspace) {
+      const workspaceIds = this.workspace.listIds();
+      const compIdsFromPattern = workspaceIds.filter((id) =>
+        allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(id))
+      );
+      allComponentsStatus = await filterComponentsStatus(
+        allComponentsStatus,
+        compIdsFromPattern,
+        idsToMerge,
+        legacyScope,
+        includeDeps,
+        otherLane,
+        shouldSquash
+      );
+      idsToMerge.forEach((bitId) => {
+        if (!allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(bitId))) {
+          allComponentsStatus.push({
+            id: bitId,
+            unchangedLegitimately: true,
+            unchangedMessage: `not in the workspace`,
           });
         }
-        if (nativeLane && canUseRustMergeTransactionMode('lane')) await completeRustMergeTransactionPhase('pattern');
-        if (existingOnWorkspaceOnly && this.workspace) {
-          const workspaceIds = this.workspace.listIds();
-          const compIdsFromPattern = workspaceIds.filter((id) =>
-            allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(id))
-          );
-          allComponentsStatus = await filterComponentsStatus(
-            allComponentsStatus,
-            compIdsFromPattern,
-            idsToMerge,
-            legacyScope,
-            includeDeps,
-            otherLane,
-            shouldSquash,
-            this
-          );
-          idsToMerge.forEach((bitId) => {
-            if (!allComponentsStatus.find((c) => c.id.isEqualWithoutVersion(bitId))) {
-              allComponentsStatus.push({
-                id: bitId,
-                unchangedLegitimately: true,
-                unchangedMessage: `not in the workspace`,
-              });
-            }
-          });
-        }
+      });
+    }
 
-        if (nativeLane && canUseRustMergeTransactionMode('lane'))
-          await completeRustMergeTransactionPhase('workspaceFilter');
-        throwForFailures(allComponentsStatus);
-        if (nativeLane && canUseRustMergeTransactionMode('lane'))
-          await completeRustMergeTransactionPhase('throwForFailures');
+    throwForFailures(allComponentsStatus);
 
-        const succeededComponents = allComponentsStatus.filter((c) => !c.unchangedMessage);
-        if (shouldSquash) {
-          await squashSnaps(succeededComponents, currentLaneId, otherLaneId, legacyScope, {
-            messageTitle: options.snapMessage,
-            detachHead,
-          });
-        }
+    const succeededComponents = allComponentsStatus.filter((c) => !c.unchangedMessage);
+    if (shouldSquash) {
+      await squashSnaps(succeededComponents, currentLaneId, otherLaneId, legacyScope, {
+        messageTitle: options.snapMessage,
+        detachHead,
+      });
+    }
 
-        if (nativeLane && canUseRustMergeTransactionMode('lane')) await completeRustMergeTransactionPhase('squash');
-        if (laneToFetchArtifactsFrom) {
-          const ids = allComponentsStatus.map((c) => c.id);
-          await this.importer.importHeadArtifactsFromLane(laneToFetchArtifactsFrom, ids, true);
-        }
+    if (laneToFetchArtifactsFrom) {
+      const ids = allComponentsStatus.map((c) => c.id);
+      await this.importer.importHeadArtifactsFromLane(laneToFetchArtifactsFrom, ids, true);
+    }
 
-        if (nativeLane && canUseRustMergeTransactionMode('lane')) await completeRustMergeTransactionPhase('artifacts');
-        const lastMerged = consumer ? new LastMerged(this.scope, consumer, this.logger) : undefined;
-        const snapshot = await lastMerged?.takeSnapshot(currentLane);
+    const lastMerged = consumer ? new LastMerged(this.scope, consumer, this.logger) : undefined;
+    const snapshot = await lastMerged?.takeSnapshot(currentLane);
 
-        if (nativeLane && canUseRustMergeTransactionMode('lane'))
-          await completeRustMergeTransactionPhase('lastMergedSnapshot');
-        const mergeResults = await this.merging.mergeSnaps({
-          mergeStrategy,
-          allComponentsStatus,
-          otherLaneId,
-          currentLane,
-          noAutoSnap,
-          noSnap,
-          tag,
-          snapMessage,
-          build,
-          skipDependencyInstallation,
-          detachHead,
-          loose,
-          shouldSquash,
-        });
-
-        if (nativeLane && canUseRustMergeTransactionMode('lane')) await completeRustMergeTransactionPhase('apply');
-        if (snapshot) await lastMerged?.persistSnapshot(snapshot);
-
-        if (nativeLane && canUseRustMergeTransactionMode('lane'))
-          await completeRustMergeTransactionPhase('persistLastMergedSnapshot');
-        const mergedSuccessfully =
-          !mergeResults.failedComponents ||
-          mergeResults.failedComponents.length === 0 ||
-          mergeResults.failedComponents.every((failedComponent) => failedComponent.unchangedLegitimately);
-
-        let deleteResults = {};
-
-        if (!keepReadme && otherLane && otherLane.readmeComponent && mergedSuccessfully) {
-          const readmeComponentId = otherLane.readmeComponent.id.changeVersion(otherLane.readmeComponent?.head?.hash);
-          deleteResults = await this.remove.removeLocallyByIds([readmeComponentId], { reasonForRemoval: 'lane-merge' });
-        } else if (otherLane && !otherLane.readmeComponent) {
-          deleteResults = { readmeResult: '' };
-        }
-        if (nativeLane && canUseRustMergeTransactionMode('lane')) await completeRustMergeTransactionPhase('readme');
-        const configMergeResults = compact(allComponentsStatus.map((c) => c.configMergeResult));
-
-        const mergedSnapIds = ComponentIdList.fromArray(
-          mergeResults.mergeSnapResults?.snappedComponents.map((c) => c.id) || []
-        );
-        const componentsWithConfigConflicts = configMergeResults
-          .filter((c) => c.hasConflicts())
-          .map((c) => c.compIdStr);
-        const conflicts: ConflictPerId[] = [];
-        const mergedSuccessfullyIds: ComponentID[] = [];
-        mergeResults.components?.forEach((c) => {
-          const files = Object.keys(c.filesStatus).filter(
-            (f) => c.filesStatus[f] === FileStatus.manual || c.filesStatus[f] === FileStatus.binaryConflict
-          );
-          const config = componentsWithConfigConflicts.includes(c.id.toStringWithoutVersion());
-          if (files.length || config) {
-            conflicts.push({ id: c.id, files, config });
-          } else {
-            const snappedId = mergedSnapIds.searchWithoutVersion(c.id);
-            mergedSuccessfullyIds.push(snappedId || c.id);
-          }
-        });
-
-        // A merged head may reference — via its flattened dependencies — a non-head snap of another
-        // component. When merging to main the squash removes intermediate snaps from each component's own
-        // chain, and a bare-scope merge (`bit _merge-lane --push`) exports heads only; in both cases such a
-        // referenced snap wouldn't be exported, and on lean lanes it lives only on the lane scope. Import
-        // any missing one now so the export can ship it (otherwise the remote's dependency-integrity check
-        // would reject the push). Not needed for non-squash workspace merges, which export full history.
-        if (nativeLane && canUseRustMergeTransactionMode('lane')) await completeRustMergeTransactionPhase('report');
-        if (shouldSquash || !this.workspace) {
-          await this.importMissingReferencedDeps(mergedSuccessfullyIds, otherLane);
-        }
-
-        if (nativeLane && canUseRustMergeTransactionMode('lane'))
-          await completeRustMergeTransactionPhase('importReferencedDeps');
-        await this.workspace?.consumer.onDestroy(`lane-merge (${otherLaneId.name})`);
-
-        if (nativeLane && canUseRustMergeTransactionMode('lane')) await completeRustMergeTransactionPhase('destroy');
-        return { mergeResults, deleteResults, configMergeResults, mergedSuccessfullyIds, conflicts };
-      };
-      return hasRustSnapshotTransactionClassFields(this, 'MergeLanesMain', [])
-        ? withRustMergeTransactionJournal({ mode: 'lane', count: 1 }, merge)
-        : merge();
+    const mergeResults = await this.merging.mergeSnaps({
+      mergeStrategy,
+      allComponentsStatus,
+      otherLaneId,
+      currentLane,
+      noAutoSnap,
+      noSnap,
+      tag,
+      snapMessage,
+      build,
+      skipDependencyInstallation,
+      detachHead,
+      loose,
+      shouldSquash,
     });
+
+    if (snapshot) await lastMerged?.persistSnapshot(snapshot);
+
+    const mergedSuccessfully =
+      !mergeResults.failedComponents ||
+      mergeResults.failedComponents.length === 0 ||
+      mergeResults.failedComponents.every((failedComponent) => failedComponent.unchangedLegitimately);
+
+    let deleteResults = {};
+
+    if (!keepReadme && otherLane && otherLane.readmeComponent && mergedSuccessfully) {
+      const readmeComponentId = otherLane.readmeComponent.id.changeVersion(otherLane.readmeComponent?.head?.hash);
+      deleteResults = await this.remove.removeLocallyByIds([readmeComponentId], { reasonForRemoval: 'lane-merge' });
+    } else if (otherLane && !otherLane.readmeComponent) {
+      deleteResults = { readmeResult: '' };
+    }
+    const configMergeResults = compact(allComponentsStatus.map((c) => c.configMergeResult));
+
+    const mergedSnapIds = ComponentIdList.fromArray(
+      mergeResults.mergeSnapResults?.snappedComponents.map((c) => c.id) || []
+    );
+    const componentsWithConfigConflicts = configMergeResults.filter((c) => c.hasConflicts()).map((c) => c.compIdStr);
+    const conflicts: ConflictPerId[] = [];
+    const mergedSuccessfullyIds: ComponentID[] = [];
+    mergeResults.components?.forEach((c) => {
+      const files = Object.keys(c.filesStatus).filter(
+        (f) => c.filesStatus[f] === FileStatus.manual || c.filesStatus[f] === FileStatus.binaryConflict
+      );
+      const config = componentsWithConfigConflicts.includes(c.id.toStringWithoutVersion());
+      if (files.length || config) {
+        conflicts.push({ id: c.id, files, config });
+      } else {
+        const snappedId = mergedSnapIds.searchWithoutVersion(c.id);
+        mergedSuccessfullyIds.push(snappedId || c.id);
+      }
+    });
+
+    // A merged head may reference — via its flattened dependencies — a non-head snap of another
+    // component. When merging to main the squash removes intermediate snaps from each component's own
+    // chain, and a bare-scope merge (`bit _merge-lane --push`) exports heads only; in both cases such a
+    // referenced snap wouldn't be exported, and on lean lanes it lives only on the lane scope. Import
+    // any missing one now so the export can ship it (otherwise the remote's dependency-integrity check
+    // would reject the push). Not needed for non-squash workspace merges, which export full history.
+    if (shouldSquash || !this.workspace) {
+      await this.importMissingReferencedDeps(mergedSuccessfullyIds, otherLane);
+    }
+
+    await this.workspace?.consumer.onDestroy(`lane-merge (${otherLaneId.name})`);
+
+    return { mergeResults, deleteResults, configMergeResults, mergedSuccessfullyIds, conflicts };
   }
 
   /**
@@ -381,7 +321,6 @@ export class MergeLanesMain {
     const legacyScope = this.scope.legacyScope;
     // one existence check per unique hash — the same snap appears in the flattened list of many heads
     const checkedHashes = new Set<string>();
-    const checkedCandidateHashes: string[] = [];
     const candidateRefs: Ref[] = [];
     await pMapSeries(ids, async (id) => {
       // strip the version — a versioned lookup (sources.get) returns undefined when that Version
@@ -394,19 +333,7 @@ export class MergeLanesMain {
       // flattened (not only direct) to mirror the remote-side check, which validates the flattened
       // dependencies of every exported head (see throwForMissingLocalDependencies). cheap: only the
       // heads are loaded and each unique hash is stat-ed once.
-      const flattenedDependencies = headVersion.getAllFlattenedDependencies();
-      const nativeCandidates = canUseRustMergeTransactionMode('lane')
-        ? await tryRustMergeDependencyCandidates(this, id, checkedCandidateHashes, flattenedDependencies)
-        : undefined;
-      if (nativeCandidates) {
-        for (const hash of nativeCandidates.checked) {
-          checkedHashes.add(hash);
-          checkedCandidateHashes.push(hash);
-          candidateRefs.push(Ref.from(hash));
-        }
-        return;
-      }
-      flattenedDependencies.forEach((depId) => {
+      headVersion.getAllFlattenedDependencies().forEach((depId) => {
         // the remote check validates only same-scope deps (it skips `depId.scope !== scope.name`,
         // cross-scope deps are fetched later by the remote itself), so same-scope is all the export
         // needs to ship. this also filters out the vast majority of the flattened list.
@@ -417,21 +344,13 @@ export class MergeLanesMain {
         if (!depId.version || !isSnap(depId.version)) return;
         if (checkedHashes.has(depId.version)) return;
         checkedHashes.add(depId.version);
-        checkedCandidateHashes.push(depId.version);
         candidateRefs.push(Ref.from(depId.version));
       });
     });
     // hasMultiple bounds the I/O concurrency, unlike a Promise.all of has() calls
     const existingRefs = await legacyScope.objects.hasMultiple(candidateRefs);
-    const existingHashRows = existingRefs.map((ref) => ref.toString());
-    const existingHashes = new Set(existingHashRows);
-    const candidateHashRows = candidateRefs.map((ref) => ref.toString());
-    const nativeMissing = canUseRustMergeTransactionMode('lane')
-      ? await tryRustMergeDependencyMissing(this, candidateHashRows, existingHashRows)
-      : undefined;
-    const missingHashes = nativeMissing
-      ? nativeMissing.map((index) => candidateHashRows[index])
-      : candidateHashRows.filter((hash) => !existingHashes.has(hash));
+    const existingHashes = new Set(existingRefs.map((ref) => ref.toString()));
+    const missingHashes = candidateRefs.map((ref) => ref.toString()).filter((hash) => !existingHashes.has(hash));
     if (!missingHashes.length) return;
     this.logger.debug(
       `importMissingReferencedDeps, importing ${missingHashes.length} non-head dependency snaps referenced by the merged heads from ${otherLane.scope}`
@@ -454,15 +373,8 @@ export class MergeLanesMain {
         subRefs.push(ref);
       });
     });
-    const existingSubRows = (await legacyScope.objects.hasMultiple(subRefs)).map((ref) => ref.toString());
-    const existingSubRefs = new Set(existingSubRows);
-    const subHashRows = subRefs.map((ref) => ref.toString());
-    const nativeMissingSub = canUseRustMergeTransactionMode('lane')
-      ? await tryRustMergeDependencyMissing(this, subHashRows, existingSubRows)
-      : undefined;
-    const missingSubRefs = nativeMissingSub
-      ? nativeMissingSub.map((index) => subHashRows[index])
-      : subHashRows.filter((hash) => !existingSubRefs.has(hash));
+    const existingSubRefs = new Set((await legacyScope.objects.hasMultiple(subRefs)).map((ref) => ref.toString()));
+    const missingSubRefs = subRefs.map((ref) => ref.toString()).filter((hash) => !existingSubRefs.has(hash));
     if (!missingSubRefs.length) return;
     await legacyScope.scopeImporter.importManyObjects({ [otherLane.scope]: missingSubRefs });
   }
@@ -620,46 +532,42 @@ export class MergeLanesMain {
   }
 
   async abortLaneMerge(checkoutProps: CheckoutProps, mergeAbortOpts: MergeAbortOpts) {
-    return withRustSnapshotOperation(async () => {
-      if (!this.workspace) throw new OutsideWorkspaceError();
-      const lastMerge = new LastMerged(this.scope, this.workspace.consumer, this.logger);
-      const currentLane = await this.lanes.getCurrentLane();
-      const { compDirsToRemove } = await lastMerge.restoreFromLastMerged(mergeAbortOpts, currentLane);
+    if (!this.workspace) throw new OutsideWorkspaceError();
+    const lastMerge = new LastMerged(this.scope, this.workspace.consumer, this.logger);
+    const currentLane = await this.lanes.getCurrentLane();
+    const { compDirsToRemove } = await lastMerge.restoreFromLastMerged(mergeAbortOpts, currentLane);
 
-      await this.workspace._reloadConsumer();
+    await this.workspace._reloadConsumer();
 
-      if (process.env.BIT_RUST_CLIENT_VCS === 'on')
-        await this.workspace.consumer.scope.objects.unmergedComponents.removeAllComponentsNative();
-      else this.workspace.consumer.scope.objects.unmergedComponents.removeAllComponents();
-      await this.workspace.consumer.scope.objects.unmergedComponents.write();
+    this.workspace.consumer.scope.objects.unmergedComponents.removeAllComponents();
+    await this.workspace.consumer.scope.objects.unmergedComponents.write();
 
-      const configMergeFile = this.workspace.getConflictMergeFile();
-      await configMergeFile.delete();
+    const configMergeFile = this.workspace.getConflictMergeFile();
+    await configMergeFile.delete();
 
-      let checkoutResults: ApplyVersionResults | undefined;
-      let checkoutError: Error | undefined;
-      checkoutProps.ids = this.workspace.listIds();
-      checkoutProps.restoreMissingComponents = true;
-      try {
-        checkoutResults = await this.checkout.checkout(checkoutProps);
-      } catch (err: any) {
-        this.logger.error(`merge-abort got an error during the checkout stage`, err);
-        checkoutError = err;
-      }
+    let checkoutResults: ApplyVersionResults | undefined;
+    let checkoutError: Error | undefined;
+    checkoutProps.ids = this.workspace.listIds();
+    checkoutProps.restoreMissingComponents = true;
+    try {
+      checkoutResults = await this.checkout.checkout(checkoutProps);
+    } catch (err: any) {
+      this.logger.error(`merge-abort got an error during the checkout stage`, err);
+      checkoutError = err;
+    }
 
-      const restoredItems = [
-        `${path.basename(this.workspace.consumer.bitMap.mapPath)} file`,
-        `${path.basename(this.workspace.consumer.config.path)} file`,
-      ];
-      if (compDirsToRemove.length) {
-        restoredItems.push(`deleted components directories: ${compDirsToRemove.join(', ')}`);
-      }
-      if (currentLane) {
-        restoredItems.push(`${currentLane.id()} lane object`);
-      }
+    const restoredItems = [
+      `${path.basename(this.workspace.consumer.bitMap.mapPath)} file`,
+      `${path.basename(this.workspace.consumer.config.path)} file`,
+    ];
+    if (compDirsToRemove.length) {
+      restoredItems.push(`deleted components directories: ${compDirsToRemove.join(', ')}`);
+    }
+    if (currentLane) {
+      restoredItems.push(`${currentLane.id()} lane object`);
+    }
 
-      return { checkoutResults, restoredItems, checkoutError };
-    });
+    return { checkoutResults, restoredItems, checkoutError };
   }
 
   private async getMainIdsToMerge(lane?: Lane | null, includeNonLaneComps = true, includeUpdateDependents = false) {
@@ -760,8 +668,7 @@ async function filterComponentsStatus(
   legacyScope: LegacyScope,
   includeDeps = false,
   otherLane?: Lane, // lane that gets merged into the current lane. if not provided, it's main that gets merged into the current lane
-  shouldSquash?: boolean,
-  receiver?: MergeLanesMain
+  shouldSquash?: boolean
 ): Promise<ComponentMergeStatus[]> {
   const bitIdsFromPattern = ComponentIdList.fromArray(compIdsToKeep);
   const bitIdsNotFromPattern = allBitIds.filter((bitId) => !bitIdsFromPattern.hasWithoutVersion(bitId));
@@ -819,13 +726,9 @@ async function filterComponentsStatus(
     await pMapSeries(targetVersions, async (remoteVersion) => {
       const versionObj = await modelComponent.loadVersion(remoteVersion.toString(), legacyScope.objects);
       const flattenedDeps = versionObj.getAllFlattenedDependencies();
-      const nativeDependencyIndices =
-        receiver && canUseRustMergeTransactionMode('lane')
-          ? await tryRustMergePatternDependencies(receiver, bitIdsNotFromPattern, flattenedDeps)
-          : undefined;
-      const depsNotIncludeInPattern = nativeDependencyIndices
-        ? nativeDependencyIndices.map((index) => flattenedDeps[index])
-        : flattenedDeps.filter((id) => bitIdsNotFromPattern.find((bitId) => bitId.isEqualWithoutVersion(id)));
+      const depsNotIncludeInPattern = flattenedDeps.filter((id) =>
+        bitIdsNotFromPattern.find((bitId) => bitId.isEqualWithoutVersion(id))
+      );
       if (!depsNotIncludeInPattern.length) {
         return;
       }
@@ -842,20 +745,11 @@ async function filterComponentsStatus(
         return;
       }
       if (includeDeps) {
-        const outcome =
-          receiver && canUseRustMergeTransactionMode('lane')
-            ? await tryRustMergePatternOutcome(receiver, { includeDeps: true, hasDependencies: true })
-            : undefined;
-        if (outcome === undefined || outcome === 'add') depsToAdd.push(...depsOnLane);
+        depsToAdd.push(...depsOnLane);
       } else {
         const headOnTarget = otherLane ? otherLane.getCompHeadIncludeUpdateDependents(compId) : modelComponent.head;
         const depsOnLaneStr = depsOnLane.map((dep) => dep.toStringWithoutVersion());
-        const headMatches = Boolean(headOnTarget?.isEqual(remoteVersion));
-        const outcome =
-          receiver && canUseRustMergeTransactionMode('lane')
-            ? await tryRustMergePatternOutcome(receiver, { includeDeps: false, hasDependencies: true, headMatches })
-            : undefined;
-        if (outcome ? outcome === 'head' : headMatches) {
+        if (headOnTarget?.isEqual(remoteVersion)) {
           depsOnLaneStr.forEach((dep) => {
             (missingDepsFromHead[dep] ||= []).push(compId.toStringWithoutVersion());
           });
@@ -934,10 +828,6 @@ async function squashOneComp(
   opts: { messageTitle?: string; detachHead?: boolean } = {}
 ): Promise<Version | undefined> {
   const { messageTitle, detachHead } = opts;
-  const nativePlan = isRustSnapshotOperation()
-    ? await planRustSquash(divergeData, currentLaneName === DEFAULT_LANE, Boolean(detachHead), componentFromModel)
-    : undefined;
-  if (nativePlan?.action === 'skip') return undefined;
   const shouldSquash = () => {
     if (divergeData.isDiverged()) {
       if (detachHead) {
@@ -960,7 +850,7 @@ async function squashOneComp(
     return true;
   };
 
-  if (!nativePlan && !shouldSquash()) {
+  if (!shouldSquash()) {
     return undefined;
   }
 
@@ -972,10 +862,6 @@ async function squashOneComp(
   const getAllMessages = async () => {
     if (!messageTitle) return [];
     await scope.scopeImporter.importManyObjects({ [otherLaneId.scope]: remoteSnaps.map((s) => s.toString()) });
-    const nativeMessages = isRustSnapshotOperation()
-      ? await readRustSquashMessages(scope.objects, remoteSnaps)
-      : undefined;
-    if (nativeMessages) return nativeMessages;
     const versionObjects = (await Promise.all(remoteSnaps.map((s) => scope.objects.load(s)))) as Version[];
     return compact(versionObjects).map((v) => v.log.message);
   };
@@ -994,17 +880,11 @@ async function squashOneComp(
 
   // if the remote has only one snap, there is nothing to squash.
   // other checks here is to make sure `componentFromModel.addAsOnlyParent` call is not needed.
-  if (!nativePlan && remoteSnaps.length === 1 && divergeData.commonSnapBeforeDiverge && currentParents.length === 1) {
+  if (remoteSnaps.length === 1 && divergeData.commonSnapBeforeDiverge && currentParents.length === 1) {
     return undefined;
   }
 
   const doSquash = async () => {
-    if (nativePlan?.action === 'rewrite') {
-      if (nativePlan.parentChoice === 'common')
-        componentFromModel.addAsOnlyParent(divergeData.commonSnapBeforeDiverge as Ref);
-      else componentFromModel.parents.forEach((ref) => componentFromModel.removeParent(ref));
-      return;
-    }
     if (divergeData.commonSnapBeforeDiverge) {
       componentFromModel.addAsOnlyParent(divergeData.commonSnapBeforeDiverge);
       return;
@@ -1013,25 +893,6 @@ async function squashOneComp(
       // when squashing into lane, we have to take main into account
       const modelComponent = await scope.getModelComponentIfExist(id);
       if (!modelComponent) throw new Error(`missing ModelComponent for ${id.toString()}`);
-      const headDescriptor = Object.getOwnPropertyDescriptor(modelComponent, 'head');
-      const mainHead = headDescriptor?.value as Ref | undefined;
-      const mainPlan =
-        isRustSnapshotOperation() && headDescriptor && 'value' in headDescriptor
-          ? await planRustSquash(divergeData, false, Boolean(detachHead), componentFromModel, true, mainHead)
-          : undefined;
-      if (
-        mainPlan?.action === 'rewrite' &&
-        Object.getOwnPropertyDescriptor(modelComponent, 'head')?.value === mainHead
-      ) {
-        if (mainPlan.parentChoice === 'main' && mainHead) {
-          componentFromModel.addAsOnlyParent(mainHead);
-          return;
-        }
-        if (mainPlan.parentChoice === 'none') {
-          componentFromModel.parents.forEach((ref) => componentFromModel.removeParent(ref));
-          return;
-        }
-      }
       if (modelComponent.head) {
         componentFromModel.addAsOnlyParent(modelComponent.head);
         return;
@@ -1051,5 +912,3 @@ async function squashOneComp(
 MergeLanesAspect.addRuntime(MergeLanesMain);
 
 export default MergeLanesMain;
-
-registerRustSnapshotTransactionClass('MergeLanesMain', MergeLanesMain);

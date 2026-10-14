@@ -1,8 +1,6 @@
 use crate::{
-    File, Outcome, Scanner,
-    classification::classification_outcome,
-    limits, line, line_starts, outcome,
-    timings::{Metrics, Stage, measure},
+    File, Outcome, Scanner, classification::classification_outcome, limits, line, line_starts,
+    outcome,
 };
 use indexmap::IndexMap;
 use oxc_allocator::Allocator;
@@ -12,11 +10,7 @@ use oxc_parser::{ParseOptions, Parser};
 use oxc_span::SourceType;
 use std::io;
 
-pub(crate) fn scan_with_metrics(
-    file: &File,
-    unsupported_options: bool,
-    metrics: Option<&Metrics>,
-) -> Outcome {
+pub(crate) fn scan(file: &File, unsupported_options: bool) -> Outcome {
     if unsupported_options
         || file.source
             .as_ref()
@@ -36,9 +30,7 @@ pub(crate) fn scan_with_metrics(
     let Some(source_type) = source_type(kind) else {
         return outcome(file, "unsupported", "unsupported file kind".into());
     };
-    let source = match measure(metrics, Stage::SourceRead, || {
-        limits::source(file.source.as_deref(), std::path::Path::new(&file.path))
-    }) {
+    let source = match limits::source(file.source.as_deref(), std::path::Path::new(&file.path)) {
         Ok(source) => source,
         Err(error)
             if matches!(error.kind(), io::ErrorKind::FileTooLarge | io::ErrorKind::InvalidData) =>
@@ -55,21 +47,13 @@ pub(crate) fn scan_with_metrics(
             diagnostics: vec![],
         };
     }
-    parse_source(file, &source, source_type, ts, metrics)
+    parse_source(file, &source, source_type, ts)
 }
-fn parse_source(
-    file: &File,
-    source: &str,
-    source_type: SourceType,
-    ts: bool,
-    metrics: Option<&Metrics>,
-) -> Outcome {
+fn parse_source(file: &File, source: &str, source_type: SourceType, ts: bool) -> Outcome {
     let allocator = Allocator::default();
     // Babel and TypeScript ESTree drop parentheses, so `(require)('x')` is a plain require call.
     let options = ParseOptions { preserve_parens: false, ..ParseOptions::default() };
-    let parsed = measure(metrics, Stage::Parse, || {
-        Parser::new(&allocator, source, source_type).with_options(options).parse()
-    });
+    let parsed = Parser::new(&allocator, source, source_type).with_options(options).parse();
     if !parsed.diagnostics.is_empty() || parsed.fatal_error {
         return Outcome {
             path: file.path.clone(),
@@ -82,7 +66,7 @@ fn parse_source(
                 .collect(),
         };
     }
-    measure(metrics, Stage::Extract, || extract_source(file, source, ts, &parsed.program))
+    extract_source(file, source, ts, &parsed.program)
 }
 fn extract_source(file: &File, source: &str, ts: bool, program: &Program<'_>) -> Outcome {
     if !ts && let Some(result) = classification_outcome(file, program) {

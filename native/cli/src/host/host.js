@@ -114,14 +114,15 @@ function hostInfo(terminal) {
 }
 
 /**
- * Modules the callbacks read without loading Harmony: the default node env's constants and the
- * custom-detector bridge. A Node.js CLI that predates them fails `hostInfo`, so the native
- * command declines before it writes anything and the Node.js CLI runs the install.
+ * Modules the callbacks read without loading Harmony: the node env and the typescript aspect,
+ * whose constants they call unbound, and the registered dependency detectors. A Node.js CLI
+ * without them fails `hostInfo`, so the native command declines before it writes anything and
+ * the Node.js CLI runs the install.
  */
 const HELPERS = [
-  '@teambit/node/dist/default-dependency-policy.js',
-  '@teambit/typescript/dist/cjs-package-json-props.js',
-  '@teambit/dependency-resolver/dist/custom-detectors.js',
+  '@teambit/node/dist/node.env.js',
+  '@teambit/typescript/dist/typescript.main.runtime.js',
+  '@teambit/dependency-resolver/dist/detector-hook.js',
 ];
 
 function requireHelpers() {
@@ -191,8 +192,9 @@ function corePackageSource(name) {
 
 async function envPolicy(envId) {
   if (envId === 'teambit.harmony/node') {
-    const { getNodeDependencyPolicy } = bitRequire('@teambit/node/dist/default-dependency-policy.js');
-    return getNodeDependencyPolicy();
+    // The node env's policy is constant: `getDependencies()` without loading the env.
+    const { NodeEnv } = bitRequire('@teambit/node/dist/node.env.js');
+    return NodeEnv.prototype.getDependencies.call(undefined);
   }
   const env = await loadEnv(envId);
   const policy = await env?.getDependencies?.();
@@ -239,8 +241,104 @@ async function detectDependencies(envId, files, componentDir, aspectIds) {
     await workspace.loadAspects(aspectIds, false, undefined, { throwOnError: false, hideMissingModuleError: true });
   }
   const env = await loadEnv(envId);
-  const { detectWithCustomDetectors } = bitRequire('@teambit/dependency-resolver/dist/custom-detectors.js');
   return detectWithCustomDetectors(env?.getDepDetectors?.(), files, componentDir);
+}
+
+/**
+ * The detection precinct's `getDetector` performs before the built-in detectives: per file, the
+ * first env detector (`getDepDetectors()`) supporting it, else the first detector aspects
+ * registered (`registerDetector`) when one of them is not replicated by the native scanner. Files
+ * no custom detector claims are left out: the native scanner detects them. `directory` is the
+ * component dir `filing-cabinet` passes a `dependencyLookup`. `null` without any custom detector.
+ * Each file maps to `{ dependencies, typescript, lookups? }`: what the detector returned, whether
+ * a registered detector claimed it (resolved through `lookupTypeScript`), and what a detector's
+ * `dependencyLookup` returned per specifier (an absolute path, or `null`).
+ */
+async function detectWithCustomDetectors(envDetectors, files, directory) {
+  const { DetectorHook } = bitRequire('@teambit/dependency-resolver/dist/detector-hook.js');
+  const fromEnv = envDetectors ?? [];
+  const registered = DetectorHook.hooks.some((hook) => !isNativelyReplicated(hook));
+  if (!fromEnv.length && !registered) return null;
+  const hook = new DetectorHook();
+  const result = {};
+  for (const filename of files) {
+    const ext = path.extname(filename);
+    const context = { ext, filename };
+    // env.jsonc keeps its native handling, as the canonical env.jsonc detector does.
+    const fromHook = registered && !filename.endsWith('env.jsonc') ? hook.getDetector(ext, filename) : undefined;
+    const detector = fromEnv.find((candidate) => candidate.isSupported(context)) ?? fromHook;
+    if (!detector) continue;
+    let content;
+    try {
+      content = fs.readFileSync(filename, 'utf8');
+    } catch {
+      continue;
+    }
+    const lookup = dependencyLookup(fromEnv, fromHook, context);
+    const detection = { dependencies: [], typescript: Boolean(fromHook) };
+    try {
+      const raw = await detectFile(detector, content);
+      detection.dependencies = Array.isArray(raw) ? raw : Object.keys(raw);
+      if (lookup) detection.lookups = lookUp(lookup, raw, { filename, directory, envDetectors: fromEnv });
+    } catch {
+      // `dependency-tree` records a parse or resolve error for the file: it yields nothing.
+      detection.dependencies = [];
+    }
+    result[filename] = detection;
+  }
+  return result;
+}
+
+/** The detectors Bit's own aspects register, which the native scanner replicates. */
+const NATIVE_DETECTORS = new Set(['EnvJsoncDetector', 'MDXDependencyDetector']);
+
+/**
+ * A registered detector the native scanner replicates: an instance of the env.jsonc or the MDX
+ * detector class itself (not a subclass), whose support predicate is not overridden on the instance.
+ */
+function isNativelyReplicated(hook) {
+  const prototype = Object.getPrototypeOf(hook);
+  return (
+    NATIVE_DETECTORS.has(prototype?.constructor?.name) &&
+    Object.getPrototypeOf(prototype) === Object.prototype &&
+    !Object.hasOwn(hook, 'isSupported')
+  );
+}
+
+/**
+ * `filing-cabinet`'s resolver choice: the lookup of the registered detector supporting the file,
+ * overridden by the last env detector supporting it that has one. Called unbound, as there.
+ */
+function dependencyLookup(fromEnv, fromHook, context) {
+  let lookup = fromHook?.dependencyLookup;
+  for (const detector of fromEnv) {
+    if (detector.isSupported(context) && detector.dependencyLookup) lookup = detector.dependencyLookup;
+  }
+  return lookup;
+}
+
+/** The `cabinet()` options `dependency-tree` builds, without the parser state a custom detector never sets. */
+function lookUp(lookup, raw, options) {
+  const { isBuiltin } = require('module');
+  const lookups = {};
+  const dependencies = Array.isArray(raw) ? raw : Object.keys(raw);
+  for (const dependency of dependencies) {
+    if (dependency in lookups || isBuiltin(dependency) || /^https?:\/\//.test(dependency)) continue;
+    const params = { ...options, dependency, config: null, webpackConfig: null };
+    // used for vue
+    if (!Array.isArray(raw) && raw[dependency]?.isScript !== undefined) params.isScript = raw[dependency].isScript;
+    const resolved = lookup(params);
+    lookups[dependency] = typeof resolved === 'string' && resolved ? path.resolve(resolved) : null;
+  }
+  return lookups;
+}
+
+/** `getDepsFromFile` on a custom detector: `@bit-no-check` files yield nothing, other values are dropped. */
+async function detectFile(detector, content) {
+  if (content.startsWith('// @bit-no-check') || content.startsWith('/* @bit-no-check')) return [];
+  const deps = await detector.detect(content);
+  if (Array.isArray(deps)) return deps.filter((dep) => typeof dep === 'string');
+  return deps && typeof deps === 'object' ? deps : [];
 }
 
 async function appTypes() {
@@ -250,8 +348,9 @@ async function appTypes() {
 /** The env's `getPackageJsonProps()` and whether it implements `modifyPackageJson()`. */
 async function packageJsonProps(envId) {
   if (envId === 'teambit.harmony/node') {
-    const { getCjsPackageJsonProps } = bitRequire('@teambit/typescript/dist/cjs-package-json-props.js');
-    return { props: getCjsPackageJsonProps(), modifiesPackageJson: false };
+    // The node env's props are the typescript aspect's constant CJS props.
+    const { TypescriptMain } = bitRequire('@teambit/typescript/dist/typescript.main.runtime.js');
+    return { props: TypescriptMain.prototype.getCjsPackageJsonProps.call(undefined), modifiesPackageJson: false };
   }
   const env = await loadEnv(envId);
   return {

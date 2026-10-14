@@ -18,23 +18,10 @@ import { ListerAspect } from '@teambit/lister';
 import { HEAD, LATEST } from '@teambit/legacy.constants';
 import type { ComponentWriterMain } from '@teambit/component-writer';
 import { ComponentWriterAspect } from '@teambit/component-writer';
-import {
-  withWorkspacePersistence,
-  withRustWorkspaceEngine,
-  isRustWorkspaceEngine,
-  withRustWorkspaceInspection,
-  withRustSourceReads,
-} from '@teambit/component.sources';
 import mapSeries from 'p-map-series';
 import { ComponentIdList, ComponentID } from '@teambit/component-id';
-import type { Version, Lane, Repository } from '@teambit/objects';
-import type { Consumer } from '@teambit/legacy.consumer';
-import {
-  ModelComponent,
-  hasRustSnapshotTransactionClassFields,
-  registerRustSnapshotTransactionClass,
-  snapshotPolicyId,
-} from '@teambit/objects';
+import type { Version, Lane } from '@teambit/objects';
+import { ModelComponent } from '@teambit/objects';
 import { Tmp } from '@teambit/legacy.scope';
 import { ComponentNotFoundInPath } from '@teambit/legacy.consumer-component';
 import { CheckoutCmd } from './checkout-cmd';
@@ -45,17 +32,6 @@ import { RevertCmd } from './revert-cmd';
 import type { ComponentMap } from '@teambit/legacy.bit-map';
 import { MissingBitMapComponent } from '@teambit/legacy.bit-map';
 import type { ConsumerComponent } from '@teambit/legacy.consumer-component';
-import {
-  selectRustCheckout,
-  registerRustCheckoutSelectionTransport,
-  type CheckoutObservation,
-} from './rust-checkout-transition';
-import {
-  registerRustCheckoutFileFunctions,
-  prepareRustCheckoutFiles,
-  checkoutMergeResults,
-  withRustCheckoutPlans,
-} from './rust-checkout-files';
 
 export type CheckoutProps = {
   version?: string; // if reset/head/latest is true, the version is undefined
@@ -105,16 +81,6 @@ export class CheckoutMain {
   ) {}
 
   async checkout(checkoutProps: CheckoutProps): Promise<ApplyVersionResults> {
-    return withWorkspacePersistence(() =>
-      withRustWorkspaceEngine(() =>
-        withRustCheckoutPlans(() =>
-          withRustWorkspaceInspection(() => withRustSourceReads(() => this.checkoutWithinPersistence(checkoutProps)))
-        )
-      )
-    );
-  }
-
-  private async checkoutWithinPersistence(checkoutProps: CheckoutProps): Promise<ApplyVersionResults> {
     await this.ensureCheckoutConfiguration(checkoutProps);
     this.workspace.inInstallContext = true;
     const { version, ids, promptMergeOptions } = checkoutProps;
@@ -187,12 +153,9 @@ export class CheckoutMain {
     // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
     // which can be an issue when some components are also dependencies of others
     const checkoutPropsLegacy = { ...checkoutProps, ids: checkoutProps.ids?.map((id) => id) };
-    const componentsResults = await mapSeries(
-      succeededComponents,
-      ({ id, currentComponent, componentFromModel, mergeResults }) => {
-        return applyVersion(consumer, id, currentComponent, mergeResults, checkoutPropsLegacy, componentFromModel);
-      }
-    );
+    const componentsResults = await mapSeries(succeededComponents, ({ id, currentComponent, mergeResults }) => {
+      return applyVersion(consumer, id, currentComponent, mergeResults, checkoutPropsLegacy);
+    });
 
     const componentsLegacy = compact(componentsResults.map((c) => c.component));
 
@@ -342,21 +305,6 @@ export class CheckoutMain {
   }
 
   async checkoutByCLIValues(componentPattern: string, checkoutProps: CheckoutProps): Promise<ApplyVersionResults> {
-    return withWorkspacePersistence(() =>
-      withRustWorkspaceEngine(() =>
-        withRustCheckoutPlans(() =>
-          withRustWorkspaceInspection(() =>
-            withRustSourceReads(() => this.checkoutByCLIValuesWithinEngine(componentPattern, checkoutProps))
-          )
-        )
-      )
-    );
-  }
-
-  private async checkoutByCLIValuesWithinEngine(
-    componentPattern: string,
-    checkoutProps: CheckoutProps
-  ): Promise<ApplyVersionResults> {
     const { revert, head } = checkoutProps;
     this.logger.setStatusLine(revert ? 'reverting components...' : 'switching component version...');
     if (!this.workspace) throw new OutsideWorkspaceError();
@@ -508,8 +456,6 @@ export class CheckoutMain {
     id: ComponentID,
     checkoutProps: CheckoutProps
   ): Promise<ComponentStatusBeforeMergeAttempt> {
-    if (process.env.BIT_RUST_CLIENT_VCS !== 'on')
-      return this.getComponentStatusBeforeMergeAttemptCanonical(id, checkoutProps);
     const consumer = this.workspace.consumer;
     const {
       version,
@@ -550,304 +496,6 @@ export class CheckoutMain {
     }
 
     const componentModel = await consumer.scope.getModelComponentIfExist(id);
-    const componentStatus: ComponentStatusBeforeMergeAttempt = { id };
-    const returnFailure = (msg: string, unchangedLegitimately = false) => {
-      componentStatus.unchangedMessage = msg;
-      componentStatus.unchangedLegitimately = unchangedLegitimately;
-      return componentStatus;
-    };
-    const selectedModel = componentModel!;
-    const getNewVersion = async (): Promise<string> => {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      if (reset) return component!.id.version as string;
-      if (headVersion) return selectedModel.headIncludeRemote(repo);
-      if (ancestor) {
-        const previousParent = await selectedModel.getRefOfAncestor(repo, ancestor);
-        return selectedModel.getTagOfRefIfExists(previousParent)?.toString() || previousParent.toString();
-      }
-      // we verified previously that head exists in case of "main"
-      if (main) return selectedModel.head?.toString() as string;
-      if (latestVersion) {
-        const latest = selectedModel.latestVersionIfExist();
-        return latest || selectedModel.headIncludeRemote(repo);
-      }
-      if (versionPerId) {
-        return versionPerId.find((bitId) => bitId.isEqualWithoutVersion(id))?.version as string;
-      }
-
-      // if all above are false, the version is defined
-      return version as string;
-    };
-    const observed = new Map<CheckoutObservation, any>();
-    let componentVersion: Version | undefined;
-    const observe = async (stage: CheckoutObservation, requestedVersion?: string): Promise<any> => {
-      if (observed.has(stage)) return observed.get(stage);
-      let value: any;
-      switch (stage) {
-        case 'unmerged':
-          value = Boolean(repo.unmergedComponents.getEntry(id));
-          break;
-        case 'resolveTarget':
-          value = await getNewVersion();
-          break;
-        case 'hasVersion':
-          value = await selectedModel.hasVersion(version as string, repo);
-          break;
-        case 'currentVersion':
-          value = { value: existingBitMapId?.version, hasBitmap: Boolean(existingBitMapId) };
-          break;
-        case 'mergePending': {
-          const diverge = await selectedModel.getDivergeDataForMergePending(repo);
-          value = diverge.isDiverged();
-          break;
-        }
-        case 'modified': {
-          const loaded = await selectedModel.loadVersion(requestedVersion as string, repo);
-          const modified = await consumer.isComponentModified(loaded, component!);
-          value = { modified, isRemoved: Boolean(component && component.isRemoved()) };
-          break;
-        }
-        case 'targetRemoved': {
-          const reference = selectedModel.getRef(requestedVersion as string);
-          if (!reference) throw new Error(`unable to get ref ${requestedVersion} from ${selectedModel.id()}`);
-          componentVersion = (await consumer.scope.getObject(reference.hash)) as Version | undefined;
-          value = { removed: Boolean(componentVersion?.isRemoved()), hasBitmap: Boolean(existingBitMapId) };
-          break;
-        }
-        default:
-          throw new Error(`unknown checkout observation ${stage}`);
-      }
-      observed.set(stage, value);
-      return value;
-    };
-    const identifier = snapshotPolicyId(id);
-    const sameIdentifier = () => {
-      const current = snapshotPolicyId(id);
-      return Boolean(
-        identifier &&
-          current &&
-          identifier.name === current.name &&
-          identifier.scope === current.scope &&
-          identifier.version === current.version
-      );
-    };
-    const ordinary = () =>
-      hasRustSnapshotTransactionClassFields(this, 'CheckoutMain', []) &&
-      sameIdentifier() &&
-      (!componentModel || hasRustSnapshotTransactionClassFields(componentModel, 'ModelComponent', ['head'])) &&
-      [reset, headVersion, main, latestVersion, forceOurs, forceTheirs, revert, loadStash].every(
-        (flag) => flag === undefined || typeof flag === 'boolean'
-      ) &&
-      (version === undefined || typeof version === 'string') &&
-      (ancestor === undefined || (Number.isSafeInteger(ancestor) && ancestor > 0));
-    if (!ordinary()) {
-      return this.getComponentStatusBeforeMergeAttemptCanonical(id, checkoutProps, {
-        consumer,
-        repo,
-        component,
-        existingBitMapId,
-        componentModel,
-        options: {
-          version,
-          head: headVersion,
-          ancestor,
-          reset,
-          revert,
-          main,
-          latest: latestVersion,
-          versionPerId,
-          forceOurs,
-          forceTheirs,
-          loadStash,
-        },
-      });
-    }
-    const native = await selectRustCheckout(
-      {
-        component: {
-          id: ordinary() ? id.toString() : '',
-          idWithoutVersion: ordinary() ? id.toStringWithoutVersion() : '',
-          hasBitmap: Boolean(existingBitMapId),
-          currentExists: Boolean(component),
-          isRemoved: false,
-        },
-        model: componentModel
-          ? { hasMainHead: Boolean(Object.getOwnPropertyDescriptor(componentModel, 'head')?.value) }
-          : undefined,
-        options: {
-          reset: Boolean(reset),
-          head: Boolean(headVersion),
-          main: Boolean(main),
-          latest: Boolean(latestVersion),
-          ancestor,
-          version,
-          versionPerId: versionPerId ? {} : undefined,
-          forceOurs: Boolean(forceOurs),
-          forceTheirs: Boolean(forceTheirs),
-          revert: Boolean(revert),
-          loadStash: Boolean(loadStash),
-        },
-      },
-      observe,
-      ordinary
-    );
-    if (native.selection?.kind === 'failure') {
-      if (native.selection.shouldBeRemoved) componentStatus.shouldBeRemoved = true;
-      return returnFailure(native.selection.message, native.selection.legitimate);
-    }
-    if (native.selection?.kind === 'target') {
-      const newId = id.changeVersion(native.selection.version);
-      return {
-        currentComponent: component,
-        componentFromModel: componentVersion,
-        id: newId,
-        ...(native.selection.merge
-          ? {
-              propsForMerge: {
-                currentlyUsedVersion: observed.get('currentVersion').value,
-                componentModel: selectedModel,
-              },
-            }
-          : {}),
-      };
-    }
-    if (!native.began) {
-      if (!componentModel) return returnFailure(`component ${id.toString()} is new, no version to checkout`, true);
-      if (main && !componentModel.head) return returnFailure(`component ${id.toString()} is not available on main`);
-    }
-    const unmerged = await observe('unmerged');
-    if (!native.acknowledged.has('unmerged') && !reset && unmerged) {
-      return returnFailure(
-        `component ${id.toStringWithoutVersion()} is in during-merge state, please snap/tag it first (or use bit merge --resolve/--abort)`
-      );
-    }
-    const newVersion = await observe('resolveTarget');
-    if (version && !headVersion) {
-      const hasVersion = await observe('hasVersion');
-      if (!native.acknowledged.has('hasVersion') && !hasVersion)
-        return returnFailure(`component ${id.toStringWithoutVersion()} doesn't have version ${version}`);
-    }
-    const currentVersion = await observe('currentVersion');
-    const currentlyUsedVersion = currentVersion.value;
-    if (!native.acknowledged.has('currentVersion') && currentVersion.hasBitmap && !currentlyUsedVersion) {
-      return returnFailure(`component ${id.toStringWithoutVersion()} is new`);
-    }
-
-    if (
-      !native.acknowledged.has('currentVersion') &&
-      ((version && currentlyUsedVersion === version) || (versionPerId && currentlyUsedVersion === newVersion))
-    ) {
-      // it won't be relevant for 'reset' as it doesn't have a version/versionPerId
-      return returnFailure(
-        `component ${id.toStringWithoutVersion()} is already at version ${version || newVersion}`,
-        true
-      );
-    }
-    if (
-      !native.acknowledged.has('currentVersion') &&
-      (headVersion || latestVersion) &&
-      currentlyUsedVersion === newVersion
-    ) {
-      return returnFailure(
-        `component ${id.toStringWithoutVersion()} is already at the latest version, which is ${newVersion}`,
-        true
-      );
-    }
-    if (!reset) {
-      const isMergePending = await observe('mergePending');
-      if (!native.acknowledged.has('mergePending') && isMergePending) {
-        return returnFailure(`component is merge-pending and cannot be checked out, run "bit status" for more info`);
-      }
-    }
-    let isModified = false;
-    if (currentlyUsedVersion) {
-      const modification = await observe('modified', currentlyUsedVersion);
-      isModified = modification.modified;
-      if (!native.acknowledged.has('modified') && !isModified && !modification.isRemoved && reset) {
-        return returnFailure(`component ${id.toStringWithoutVersion()} is not modified`, true);
-      }
-    }
-
-    const removed = await observe('targetRemoved', newVersion);
-    if (!native.acknowledged.has('targetRemoved') && removed.removed) {
-      if (removed.hasBitmap) componentStatus.shouldBeRemoved = true;
-      return returnFailure(`component has been removed`, true);
-    }
-
-    const newId = id.changeVersion(newVersion);
-
-    if (reset || (!isModified && !loadStash) || revert || !currentlyUsedVersion || forceTheirs || forceOurs) {
-      // if the component is not modified, no need to try merge the files, they will be written later on according to the
-      // checked out version. same thing when no version is specified, it'll be reset to the model-version later.
-      // in case of "loadStash", we want to merge the stashed modifications regardless whether it's modified currently.
-
-      // if !currentlyUsedVersion it only exists in the model, so just write it. (happening during bit-switch/bit-lane-import)
-      return { currentComponent: component, componentFromModel: componentVersion, id: newId };
-    }
-
-    const propsForMerge = {
-      currentlyUsedVersion,
-      componentModel: selectedModel,
-    };
-
-    return { currentComponent: component, componentFromModel: componentVersion, id: newId, propsForMerge };
-  }
-
-  // eslint-disable-next-line complexity
-  private async getComponentStatusBeforeMergeAttemptCanonical(
-    id: ComponentID,
-    checkoutProps: CheckoutProps,
-    prefix?: {
-      consumer: Consumer;
-      repo: Repository;
-      component?: ConsumerComponent;
-      existingBitMapId?: ComponentID;
-      componentModel?: ModelComponent;
-      options: CheckoutProps;
-    }
-  ): Promise<ComponentStatusBeforeMergeAttempt> {
-    const consumer = prefix ? prefix.consumer : this.workspace.consumer;
-    const {
-      version,
-      head: headVersion,
-      ancestor,
-      reset,
-      revert,
-      main,
-      latest: latestVersion,
-      versionPerId,
-      forceOurs,
-      forceTheirs,
-      loadStash,
-    } = prefix ? prefix.options : checkoutProps;
-    const repo = prefix ? prefix.repo : consumer.scope.objects;
-
-    let existingBitMapId = prefix
-      ? prefix.existingBitMapId
-      : consumer.bitMap.getComponentIdIfExist(id, { ignoreVersion: true });
-    const getComponent = async () => {
-      try {
-        // an id that is not in the .bitmap must fail here. (workspace.get below would have
-        // returned the component from the scope instead of throwing)
-        if (!existingBitMapId) throw new MissingBitMapComponent(id.toString());
-        const workspaceComp = await this.workspace.get(id);
-        const legacyComp: ConsumerComponent = workspaceComp.state._consumer;
-        if (!legacyComp.isRemoved()) return legacyComp;
-        if (checkoutProps.includeLocallyDeleted) return legacyComp;
-      } catch (err) {
-        if (checkoutProps.allowAddingComponentsFromScope && !existingBitMapId) return undefined;
-        throw err;
-      }
-      return undefined;
-    };
-    const component = prefix ? prefix.component : await getComponent();
-    if (!prefix && component) {
-      // the component might fix an out-of-sync issue and as a result, the id has changed
-      id = component.id;
-      existingBitMapId = consumer.bitMap.getComponentIdIfExist(id, { ignoreVersion: true });
-    }
-
-    const componentModel = prefix ? prefix.componentModel : await consumer.scope.getModelComponentIfExist(id);
     const componentStatus: ComponentStatusBeforeMergeAttempt = { id };
     const returnFailure = (msg: string, unchangedLegitimately = false) => {
       componentStatus.unchangedMessage = msg;
@@ -987,20 +635,14 @@ export class CheckoutMain {
       baseComponent = await componentModel.loadVersion(baseVersion, repo);
     }
 
-    const labels = { current: `${currentlyUsedVersion} modified`, other: loadStash ? 'stash' : newVersion };
-    const prepared = isRustWorkspaceEngine()
-      ? await prepareRustCheckoutFiles(repo, otherComponent, componentFromFS, baseComponent, labels)
-      : undefined;
-    const mergeResults = prepared
-      ? checkoutMergeResults(prepared, componentFromFS, labels)
-      : await threeWayMerge({
-          scope: consumer.scope,
-          otherComponent,
-          otherLabel: loadStash ? 'stash' : newVersion,
-          currentComponent: componentFromFS,
-          currentLabel: `${currentlyUsedVersion} modified`,
-          baseComponent,
-        });
+    const mergeResults = await threeWayMerge({
+      scope: consumer.scope,
+      otherComponent,
+      otherLabel: loadStash ? 'stash' : newVersion,
+      currentComponent: componentFromFS,
+      currentLabel: `${currentlyUsedVersion} modified`,
+      baseComponent,
+    });
 
     return { currentComponent: componentFromFS, componentFromModel, id, mergeResults };
   }
@@ -1034,9 +676,6 @@ export class CheckoutMain {
   }
 }
 
-registerRustSnapshotTransactionClass('CheckoutMain', CheckoutMain);
-registerRustCheckoutSelectionTransport(JSON.stringify);
-registerRustCheckoutFileFunctions();
 CheckoutAspect.addRuntime(CheckoutMain);
 
 export default CheckoutMain;

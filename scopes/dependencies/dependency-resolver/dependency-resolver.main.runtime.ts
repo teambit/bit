@@ -1,4 +1,3 @@
-import { registerRustSnapshotModelHook, registerRustSnapshotFunctions } from '@teambit/objects';
 /* eslint-disable max-lines */
 import multimatch from 'multimatch';
 import { isSnap } from '@teambit/component-version';
@@ -58,7 +57,7 @@ import { applyUpdates } from './apply-updates';
 import { ROOT_NAME } from './dependencies/constants';
 import type { PreInstallSubscriberList, PostInstallSubscriberList, DepInstallerContext } from './dependency-installer';
 import { DependencyInstaller } from './dependency-installer';
-import { DependencyResolverAspect, hasDefaultDependencyResolverSnapshotId } from './dependency-resolver.aspect';
+import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { DependencyVersionResolver } from './dependency-version-resolver';
 import type { DepLinkerContext, LinkingOptions } from './dependency-linker';
 import { DependencyLinker } from './dependency-linker';
@@ -2019,15 +2018,6 @@ as an alternative, you can use "+" to keep the same version installed in the wor
         }
       });
     };
-    const defaultSnapshotLodashGet = get;
-    const defaultSnapshotForEach = Array.prototype.forEach;
-    registerRustSnapshotModelHook(
-      serializeDepResolverDataBeforePersist,
-      () =>
-        get === defaultSnapshotLodashGet &&
-        Array.prototype.forEach === defaultSnapshotForEach &&
-        hasDefaultDependencyResolverSnapshotId()
-    );
     ExtensionDataList.toModelObjectsHook.push(serializeDepResolverDataBeforePersist);
     PackageJsonTransformer.registerPackageJsonTransformer(async (component, packageJsonObject) => {
       const deps = dependencyResolver.getDependencies(component);
@@ -2082,12 +2072,6 @@ as an alternative, you can use "+" to keep the same version installed in the wor
   }
 }
 
-registerRustSnapshotFunctions('SnapshotResolverValidation', DependencyResolverMain.prototype, [
-  'validateAspectData',
-  'isValidVersionSpecifier',
-]);
-registerRustSnapshotFunctions('SnapshotValidationSemver', semver, ['valid', 'validRange']);
-registerRustSnapshotFunctions('SnapshotResolverAspect', DependencyResolverAspect, ['id']);
 DependencyResolverAspect.addRuntime(DependencyResolverMain);
 
 function repeatPrefix(originalSpec: string, newVersion: string): string {
