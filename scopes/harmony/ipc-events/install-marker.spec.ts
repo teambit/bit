@@ -54,6 +54,11 @@ describe('install marker', () => {
     expect(await getInstallRunningElsewhere(scopePath, alive)).to.be.undefined;
   });
 
+  it('should ignore a marker with a start time far in the future (e.g. the clock moved back)', async () => {
+    await writeMarkerOfAnotherProcess(Date.now() + INSTALL_MARKER_MAX_AGE_MS + 60_000);
+    expect(await getInstallRunningElsewhere(scopePath, alive)).to.be.undefined;
+  });
+
   it('should ignore a corrupted marker', async () => {
     await fs.outputFile(getInstallMarkerPath(scopePath), '{"pid": ');
     expect(await getInstallRunningElsewhere(scopePath, alive)).to.be.undefined;

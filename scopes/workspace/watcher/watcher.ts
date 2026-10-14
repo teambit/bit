@@ -285,7 +285,9 @@ export class Watcher {
   }
 
   async watch() {
-    await this.waitForInstallRunningElsewhere();
+    // the pre-compilation (when enabled) compiles all components after the wait, edits made meanwhile included.
+    // without it, the listeners are registered right away and each change waits for the install by itself.
+    if (this.options.preCompile) await this.waitForInstallRunningElsewhere();
     await this.setRootDirs();
     const componentIds = Object.values(this.rootDirs);
     await this.watcherMain.triggerOnPreWatch(componentIds, this.options);

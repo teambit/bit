@@ -47,7 +47,8 @@ export async function getInstallRunningElsewhere(
   const marker = await readInstallMarker(scopePath);
   if (!marker) return undefined;
   if (marker.pid === process.pid) return undefined; // the in-process install is tracked by workspace.inInstallContext
-  if (Date.now() - marker.startedAt > INSTALL_MARKER_MAX_AGE_MS) return undefined;
+  // abs: a marker "from the future" (e.g. the clock moved back) shouldn't hold others for longer than the max age
+  if (Math.abs(Date.now() - marker.startedAt) > INSTALL_MARKER_MAX_AGE_MS) return undefined;
   if (!isAlive(marker.pid)) return undefined;
   return marker;
 }
