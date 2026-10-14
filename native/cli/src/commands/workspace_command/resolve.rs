@@ -3,6 +3,8 @@
 //! `bit snap` planned by the engine's `commandSnap*` requests, on top of the
 //! status capture and the snapshot receipt merges use.
 
+mod tag;
+
 use super::{
     Planned, defaults, home,
     snapshot::{graphs, receipt},
@@ -21,94 +23,135 @@ use crate::commands::{
 use serde_json::{Value, json};
 use std::{collections::HashSet, io, path::Path};
 
-/// What `bit snap` asks for.
-pub struct SnapRequest<'r> {
-    /// `RustWorkspaceSnapOptions`, as the engine reads them.
-    pub options: Value,
-    pub pattern: Option<&'r str>,
-    pub unmerged: bool,
+/// `bit snap` or `bit tag`: the engine's `commandSnap*` or `commandTag*`.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Kind {
+    Snap,
+    Tag,
 }
 
-/// `readRustWorkspaceSnap` up to the commit: the plan, and unless there is
-/// nothing to snap, the finalized snaps.
-pub fn plan_snap(root: &Path, request: &SnapRequest<'_>) -> io::Result<Planned> {
+impl Kind {
+    fn request(self, step: &str) -> String {
+        match self {
+            Self::Snap => format!("commandSnap{step}"),
+            Self::Tag => format!("commandTag{step}"),
+        }
+    }
+}
+
+/// Which components the command selects.
+pub enum Selection<'r> {
+    /// `bit snap [component-id]`, or the components during a merge.
+    Snap { pattern: Option<&'r str>, unmerged: bool },
+    /// `bit tag [patterns...]`: the tag options, the patterns and `--ver`.
+    Tag { tag_options: Value, patterns: &'r [String], exact_version: Option<&'r str> },
+}
+
+/// What a resolve command asks for.
+pub struct ResolveRequest<'r> {
+    pub kind: Kind,
+    /// The command's `options`, as the engine reads them.
+    pub options: Value,
+    pub selection: Selection<'r>,
+}
+
+/// `readRustWorkspaceSnap` and `readRustWorkspaceTag` up to the commit:
+/// the plan, and unless there is nothing to do, the finalized versions.
+pub fn plan(root: &Path, request: &ResolveRequest<'_>) -> io::Result<Planned> {
     if cache::no_fs_cache(root) {
         return Err(decline("no-fs-cache may be enabled"));
     }
-    let mut snap = Snap::prepare(root, &request.options)?;
-    let plan = snap.plan(request)?;
+    let mut session = Session::prepare(root, request)?;
+    let plan = session.plan(request)?;
     let needs_snap = array(plan.get("needsSnap"), "needs snap")?;
     if plan.get("noop") == Some(&Value::Bool(true)) {
         if !plan["result"].is_null() || !needs_snap.is_empty() {
             return Err(decline("native snap noop receipt"));
         }
-        return Ok(snap.planned(plan));
+        return Ok(session.planned(plan));
     }
     let needs_snap = identities(needs_snap)?;
-    let plan = snap.finalize(&plan, &needs_snap)?;
-    snap.capture.cache.force_reset();
-    Ok(snap.planned(plan))
+    let plan = session.finalize(&plan, &needs_snap)?;
+    session.capture.cache.force_reset();
+    Ok(session.planned(plan))
 }
 
-/// One snap's engine session and capture.
-struct Snap<'r> {
+/// One resolve command's engine session and capture.
+struct Session<'r> {
     root: &'r Path,
+    kind: Kind,
     engine: Engine,
     token: String,
     context: Value,
     capture: Capture,
 }
 
-impl<'r> Snap<'r> {
-    /// `commandSnapPrepare` and the capture of its targets.
-    fn prepare(root: &'r Path, options: &Value) -> io::Result<Self> {
+impl<'r> Session<'r> {
+    /// `command*Prepare` and the capture of its targets.
+    fn prepare(root: &'r Path, request: &ResolveRequest<'_>) -> io::Result<Self> {
         let home = home();
         let mut engine = Engine::new()?;
-        let prepared: Value = engine.request(&json!({
-            "kind": "commandSnapPrepare",
+        let mut prepare = json!({
+            "kind": request.kind.request("Prepare"),
             "root": root,
             "home": home,
-            "options": options,
+            "options": request.options,
             "dependencyGrammar": dependency_grammar()?,
             "globalRemotesFile": cache::cache_root().join("config").join("global-remotes.json"),
-        }))?;
+        });
+        if let Selection::Tag { tag_options, .. } = &request.selection {
+            prepare["tagOptions"] = tag_options.clone();
+        }
+        let prepared: Value = engine.request(&prepare)?;
         validate_preparation(&prepared)?;
         let token = text(prepared.get("token"))?.to_string();
         let context = prepared["context"].clone();
         let targets = array(prepared.get("targets"), "targets")?;
         let verify = CaptureOptions { verify: true, ..CaptureOptions::default() };
         let capture = capture::capture_with(&mut engine, root, &home, &context, targets, verify)?;
-        Ok(Self { root, engine, token, context, capture })
+        Ok(Self { root, kind: request.kind, engine, token, context, capture })
     }
 
-    /// `commandSnapPlan`.
-    fn plan(&mut self, request: &SnapRequest<'_>) -> io::Result<Value> {
+    /// `command*Plan`, with the snap's selected ids or the tag's selections.
+    fn plan(&mut self, request: &ResolveRequest<'_>) -> io::Result<Value> {
+        let mut versions = semver_values(&self.context, &self.capture)?;
         let mut plan_request = json!({
-            "kind": "commandSnapPlan",
+            "kind": self.kind.request("Plan"),
             "token": self.token,
             "current": self.capture.captured,
             "dependencyReadSet": self.capture.dependency_read_set(),
-            "semver": semver(&self.context, &self.capture)?,
             "components": component_receipts(&self.context, &self.capture)?,
         });
-        if !request.unmerged
-            && let Some(ids) = pattern_ids(&self.context, request.pattern)?
-        {
-            plan_request["selectedIds"] = json!(ids);
+        match &request.selection {
+            Selection::Snap { pattern, unmerged } => {
+                if !unmerged && let Some(ids) = pattern_ids(&self.context, *pattern)? {
+                    plan_request["selectedIds"] = json!(ids);
+                }
+            }
+            Selection::Tag { patterns, exact_version, .. } => {
+                let selections = tag::selections(&self.context, patterns)?;
+                versions.extend(exact_version.iter().map(ToString::to_string));
+                versions.extend(tag::entered_versions(selections.as_ref()));
+                if let Some(selections) = selections {
+                    plan_request["tagSelections"] = selections;
+                }
+            }
         }
+        plan_request["semver"] = grammar::snapshot(versions.iter().map(String::as_str))
+            .ok_or_else(|| decline("semver grammar limits"))?;
         let plan: Value = self.engine.request(&plan_request)?;
         check_token(&plan, &self.token)?;
         Ok(plan)
     }
 
-    /// The issue check, the receipt and `commandSnapFinalize`: the result
-    /// and progress to report.
+    /// The issue check, the receipt and `command*Finalize`: the result and
+    /// progress to report.
     fn finalize(&mut self, plan: &Value, needs_snap: &[String]) -> io::Result<Value> {
         let resolved = Resolved { root: self.root, context: &self.context, capture: &self.capture };
         resolved.validate_issues(needs_snap, plan.get("issueGraph"))?;
-        let receipt = resolved.receipt(needs_snap, &plan["scalarPreparation"])?;
+        let receipt = resolved.receipt(self.kind, needs_snap, plan)?;
         let finalized: Value = self.engine.request(&json!({
-            "kind": "commandSnapFinalize",
+            "kind": self.kind.request("Finalize"),
             "token": self.token,
             "snapReceipt": receipt,
             "dependencyReadSet": self.capture.dependency_read_set(),
@@ -122,8 +165,12 @@ impl<'r> Snap<'r> {
     }
 
     fn planned(self, plan: Value) -> Planned {
+        let apply = match self.kind {
+            Kind::Snap => "commandSnapApply",
+            Kind::Tag => "commandTagApply",
+        };
         let Self { engine, token, context, capture, .. } = self;
-        Planned { engine, token, context, capture, plan, apply: "commandSnapApply" }
+        Planned { engine, token, context, capture, plan, apply }
     }
 }
 
@@ -169,9 +216,9 @@ fn validate_preparation(prepared: &Value) -> io::Result<()> {
     Ok(())
 }
 
-/// `resolveSemver`: every version the models, the context's versions, the
-/// capture and the dependency states mention.
-fn semver(context: &Value, capture: &Capture) -> io::Result<Value> {
+/// `resolveSemver`'s inputs: every version the models, the context's
+/// versions, the capture and the dependency states mention.
+fn semver_values(context: &Value, capture: &Capture) -> io::Result<Vec<String>> {
     let mut versions = Versions::default();
     for model in array(context.get("models"), "models")? {
         model_versions(model, &mut versions)?;
@@ -183,8 +230,7 @@ fn semver(context: &Value, capture: &Capture) -> io::Result<Value> {
     capture.dependency_states
         .values()
         .for_each(|state| versions.visit(state));
-    grammar::snapshot(versions.list.iter().map(String::as_str))
-        .ok_or_else(|| decline("semver grammar limits"))
+    Ok(versions.list)
 }
 
 /// A model's version and orphaned version names.
@@ -369,17 +415,23 @@ impl Resolved<'_> {
 
     /// `resolveSnapshotReceipt` with the dependency graphs: squashing
     /// declines.
-    fn receipt(&self, needs_snap: &[String], preparation: &Value) -> io::Result<Value> {
+    fn receipt(&self, kind: Kind, needs_snap: &[String], plan: &Value) -> io::Result<Value> {
+        let preparation = &plan["scalarPreparation"];
         let lane_history = preparation.get("laneHistory").and_then(Value::as_bool);
         let squash = preparation.get("squash").and_then(Value::as_array);
         let (Some(lane_history), Some(squash)) = (lane_history, squash) else {
             return Err(decline("resolve snapshot scalar preparation"));
         };
-        if !squash.is_empty() {
-            return Err(decline("resolve snapshot squash log"));
+        if !squash.is_empty() || (kind == Kind::Tag && lane_history) {
+            return Err(decline("resolve snapshot squash or lane log"));
         }
         let hashes = receipt::new_snap_hashes(needs_snap.len())?;
-        let graphs = graphs(self.root, self.context, needs_snap, &hashes, self.capture)?;
+        // The graphs name a snap by its hash and a tag by its version.
+        let versions = match kind {
+            Kind::Snap => hashes.clone(),
+            Kind::Tag => tag::planned_versions(&plan["result"], needs_snap)?,
+        };
+        let graphs = graphs(self.root, self.context, needs_snap, &versions, self.capture)?;
         let snapped = receipt::Snapped { identities: needs_snap, hashes: &hashes, graphs: &graphs };
         receipt::snapshot(self.root, &snapped, lane_history)
     }

@@ -2,12 +2,11 @@
 //! snaps (`workspace_command::resolve`), with the snap options and report.
 
 mod options;
-mod report;
 
 use super::{
     color::Chalk,
     merge::force_local_build,
-    workspace_command::{self, progress::Progress, resolve},
+    workspace_command::{self, progress::Progress, resolve, versions},
 };
 use crate::{commands::Command, native::Outcome, workspace};
 use std::{env, ffi::OsString, io};
@@ -30,14 +29,18 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     if force_local_build(&root) {
         return Ok(Outcome::Declined("force_local_build may be set".to_string()));
     }
-    let request = resolve::SnapRequest {
+    let request = resolve::ResolveRequest {
+        kind: resolve::Kind::Snap,
         options: options.request(),
-        pattern: options.pattern.as_deref(),
-        unmerged: options.unmerged,
+        selection: resolve::Selection::Snap {
+            pattern: options.pattern.as_deref(),
+            unmerged: options.unmerged,
+        },
     };
-    let prepared = resolve::plan_snap(&root, &request)
+    let prepared = resolve::plan(&root, &request)
         .and_then(|planned| {
-            let report = report::format(&planned.plan["result"], Chalk::detect(args))?;
+            let report =
+                versions::format(&planned.plan["result"], Chalk::detect(args), &versions::SNAP)?;
             let progress = Progress::parse_snap(planned.plan.get("progress"))?;
             Ok((planned, report, progress))
         });

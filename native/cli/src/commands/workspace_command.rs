@@ -11,6 +11,7 @@ pub mod format;
 pub mod progress;
 pub mod resolve;
 pub mod results;
+pub mod versions;
 
 mod defaults;
 mod policy;

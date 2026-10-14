@@ -12,6 +12,7 @@ mod merge;
 mod mini_status;
 mod snap;
 mod status;
+mod tag;
 mod workspace_command;
 
 use crate::native::Outcome;
@@ -32,6 +33,7 @@ pub const COMMANDS: &[Command] = &[
     mini_status::COMMAND,
     snap::COMMAND,
     status::COMMAND,
+    tag::COMMAND,
 ];
 
 pub fn find(name: &str) -> Option<&'static Command> {
