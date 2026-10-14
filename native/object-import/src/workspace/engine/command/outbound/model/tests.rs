@@ -1,4 +1,4 @@
-use super::{requested, staged_head};
+use super::{requested, staged as staged_versions};
 use serde_json::{Value, json};
 
 fn staged(scope: &str, name: &str, hash: &str) -> (Value, Value) {
@@ -41,15 +41,21 @@ fn scoped_id_wins_over_name_containing_slash() {
 }
 
 #[test]
-fn a_staged_tag_or_snap_is_the_exported_head() {
-    let hash = "cccccccccccccccccccccccccccccccccccccccc";
-    let tag = json!({"head":hash,"versions":{"1.0.0":hash},"state":{"versions":{"1.0.0":{"local":true}}}});
-    assert_eq!(staged_head(&tag).unwrap(), ("1.0.0".to_owned(), hash.to_owned()));
-    let snap = json!({"head":hash,"versions":{},"state":{"versions":{(hash):{"local":true}}}});
-    assert_eq!(staged_head(&snap).unwrap(), (hash.to_owned(), hash.to_owned()));
-    let older =
-        json!({"head":"d".repeat(40),"versions":{},"state":{"versions":{(hash):{"local":true}}}});
-    assert!(staged_head(&older).is_err(), "a local snap that is not the head");
-    let unknown = json!({"head":hash,"versions":{},"state":{"versions":{"2.0.0":{"local":true}}}});
-    assert!(staged_head(&unknown).is_err(), "a tag without a Version ref");
+fn every_local_version_is_exported_with_the_head() {
+    let head = "cccccccccccccccccccccccccccccccccccccccc";
+    let older = "dddddddddddddddddddddddddddddddddddddddd";
+    let tag = json!({"head":head,"versions":{"1.0.0":head},"state":{"versions":{"1.0.0":{"local":true}}}});
+    let staged_tag = staged_versions(&tag).unwrap();
+    assert_eq!((staged_tag.version.as_str(), staged_tag.head.as_str()), ("1.0.0", head));
+    assert_eq!(staged_tag.hashes, [head]);
+    // A tag followed by a snap: both are exported, the snap is the head.
+    let both = json!({"head":head,"versions":{"1.0.0":older},
+        "state":{"versions":{"1.0.0":{"local":true},(head):{"local":true}}}});
+    let staged_both = staged_versions(&both).unwrap();
+    assert_eq!(staged_both.version, head);
+    assert_eq!(staged_both.hashes, [older, head]);
+    let not_head = json!({"head":head,"versions":{},"state":{"versions":{(older):{"local":true}}}});
+    assert!(staged_versions(&not_head).is_err(), "the head must be a local version");
+    let unknown = json!({"head":head,"versions":{},"state":{"versions":{"2.0.0":{"local":true}}}});
+    assert!(staged_versions(&unknown).is_err(), "a tag without a Version ref");
 }

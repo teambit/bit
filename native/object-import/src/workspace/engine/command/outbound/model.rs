@@ -21,6 +21,8 @@ pub(super) struct Selected {
     pub(super) history: HistoryBytes,
     pub(super) head: String,
     pub(super) version: String,
+    /// Each local version's tag or hash, the head's among them.
+    pub(super) labels: Vec<String>,
     pub(super) objects: Vec<ObjectItem>,
 }
 
@@ -133,7 +135,7 @@ fn find_requested<'s>(staged: &'s [(Value, Value)], id: &str) -> io::Result<&'s 
 fn select_one(input: &Prepare, row: &Value, mut model: Value) -> io::Result<Selected> {
     let root = &input.root;
     let identity = identity(row, &model)?;
-    let (version_name, head) = staged_head(&model)?;
+    let staged = staged(&model)?;
     let objects_dir = root.join(".bit/objects");
     let model_before = transfer::object::repository(
         &objects_dir,
@@ -143,18 +145,20 @@ fn select_one(input: &Prepare, row: &Value, mut model: Value) -> io::Result<Sele
     let history_hash = crate::validate::hexadecimal(&Sha1::digest(
         format!("{}/{}:VersionHistory", identity.scope, identity.name).as_bytes(),
     ));
-    let history = history(&objects_dir, &identity.scope, &identity.name, &head, &history_hash)?;
+    let history =
+        history(&objects_dir, &identity.scope, &identity.name, &staged.hashes, &history_hash)?;
     let host = super::remote::configured_host(input, &identity.scope)?;
     clear_and_mark_exported(&mut model, &identity.scope, &host, &input.transport.export_date)?;
     let model_after = encode(&identity.model_hash, "Component", &model)?;
-    let objects = collect(&objects_dir, &identity.model_hash, &model_after, &head)?;
+    let objects = collect(&objects_dir, &identity.model_hash, &model_after, &staged.hashes)?;
     Ok(Selected {
         scope: identity.scope,
         name: identity.name,
         model: ModelBytes { hash: identity.model_hash, before: model_before, after: model_after },
         history: HistoryBytes { hash: history_hash, bytes: history },
-        head,
-        version: version_name,
+        head: staged.head,
+        version: staged.version,
+        labels: staged.labels,
         objects,
     })
 }
@@ -197,48 +201,53 @@ fn has_staged(model: &Value) -> bool {
                 .any(|row| row["local"] == true)
         })
 }
-fn staged_head(model: &Value) -> io::Result<(String, String)> {
+/// The local versions of a staged model: the head's version name, the head,
+/// and every local Version (the head among them).
+struct Staged {
+    version: String,
+    head: String,
+    hashes: Vec<String>,
+    labels: Vec<String>,
+}
+
+fn staged(model: &Value) -> io::Result<Staged> {
     let rows =
         model["state"]["versions"].as_object().ok_or_else(|| invalid("outbound local versions"))?;
-    let local = rows
+    let head = model["head"].as_str().ok_or_else(|| invalid("outbound non-head local Version"))?;
+    crate::merge_history::hash(head)?;
+    let mut version = None;
+    let mut hashes = Vec::new();
+    let mut labels = Vec::new();
+    for (key, _) in rows
         .iter()
         .filter(|(_, row)| row["local"] == true)
-        .collect::<Vec<_>>();
-    if local.len() != 1 {
-        return Err(invalid("outbound multiple local versions"));
+    {
+        // A tag names its Version through `versions`; a snap is its own hash.
+        let hash = match model["versions"][key].as_str() {
+            Some(hash) => hash,
+            None if crate::merge_history::hash(key).is_ok() => key,
+            None => return Err(invalid("outbound local Version ref")),
+        };
+        crate::merge_history::hash(hash)?;
+        if hash == head {
+            version = Some(key.clone());
+        }
+        if !hashes.iter().any(|known| known == hash) {
+            hashes.push(hash.to_owned());
+        }
+        labels.push(key.clone());
     }
-    // A tag names its Version through `versions`; a snap is its own hash.
-    let key = local[0].0.as_str();
-    let hash = match model["versions"][key].as_str() {
-        Some(hash) => hash,
-        None if crate::merge_history::hash(key).is_ok() => key,
-        None => return Err(invalid("outbound local Version ref")),
-    };
-    if model["head"] != hash {
-        return Err(invalid("outbound non-head local Version"));
-    }
-    crate::merge_history::hash(hash)?;
-    Ok((local[0].0.to_owned(), hash.to_owned()))
+    let version = version.ok_or_else(|| invalid("outbound non-head local Version"))?;
+    Ok(Staged { version, head: head.to_owned(), hashes, labels })
 }
 
 fn history(
     dir: &Path,
     scope: &str,
     name: &str,
-    head: &str,
+    hashes: &[String],
     history_hash: &str,
 ) -> io::Result<Vec<u8>> {
-    let version = read_object(dir, head, "Version")?;
-    if version["unrelated"] == true || version["squashed"] == true {
-        return Err(invalid("outbound rewritten history requires canonical export"));
-    }
-    let parents =
-        version["parents"].as_array().ok_or_else(|| invalid("outbound Version parents"))?;
-    for parent in parents {
-        crate::merge_history::hash(
-            parent.as_str().ok_or_else(|| invalid("outbound Version parent"))?,
-        )?;
-    }
     let path = dir
         .join(&history_hash[..2])
         .join(&history_hash[2..]);
@@ -252,13 +261,31 @@ fn history(
     }
     let rows =
         value["versions"].as_array_mut().ok_or_else(|| invalid("outbound VersionHistory rows"))?;
-    if !rows
-        .iter()
-        .any(|row| row["hash"] == head)
-    {
-        rows.push(json!({"hash":head,"parents":parents}));
+    for hash in hashes {
+        let parents = parents(dir, hash)?;
+        if !rows
+            .iter()
+            .any(|row| row["hash"] == hash.as_str())
+        {
+            rows.push(json!({"hash":hash,"parents":parents}));
+        }
     }
     encode(history_hash, "VersionHistory", &value)
+}
+/// A local Version's parents; a rewritten history stays with Node.js.
+fn parents(dir: &Path, hash: &str) -> io::Result<Value> {
+    let version = read_object(dir, hash, "Version")?;
+    if version["unrelated"] == true || version["squashed"] == true {
+        return Err(invalid("outbound rewritten history requires canonical export"));
+    }
+    let parents =
+        version["parents"].as_array().ok_or_else(|| invalid("outbound Version parents"))?;
+    for parent in parents {
+        crate::merge_history::hash(
+            parent.as_str().ok_or_else(|| invalid("outbound Version parent"))?,
+        )?;
+    }
+    Ok(version["parents"].clone())
 }
 fn clear_and_mark_exported(
     model: &mut Value,
@@ -288,12 +315,22 @@ fn encode(hash: &str, kind: &str, value: &Value) -> io::Result<Vec<u8>> {
     write!(encoder, "{kind} {hash} {}\0{body}", body.encode_utf16().count())?;
     encoder.finish()
 }
-fn collect(dir: &Path, model_hash: &str, model: &[u8], head: &str) -> io::Result<Vec<ObjectItem>> {
-    let versions = [collection::Version {
-        hash: crate::merge_history::hash(head)?,
-        locally_changed: true,
-        expected: None,
-    }];
+fn collect(
+    dir: &Path,
+    model_hash: &str,
+    model: &[u8],
+    hashes: &[String],
+) -> io::Result<Vec<ObjectItem>> {
+    let versions = hashes
+        .iter()
+        .map(|hash| {
+            Ok(collection::Version {
+                hash: crate::merge_history::hash(hash)?,
+                locally_changed: true,
+                expected: None,
+            })
+        })
+        .collect::<io::Result<Vec<_>>>()?;
     let descriptors = collection::select(
         dir,
         &versions,

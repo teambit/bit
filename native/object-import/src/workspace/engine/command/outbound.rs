@@ -97,20 +97,13 @@ pub(in crate::workspace::engine) fn prepare(
     state.outbound = None;
     validate(input)?;
     let selected = model::select(input)?;
+    let resume = resume_context(input, &selected)?;
     let count = selected.len();
     let selected_order = selected
         .iter()
         .enumerate()
         .map(|(index, item)| (format!("{}/{}", item.scope, item.name), index))
         .collect();
-    let resume = input.options.resume
-        .as_ref()
-        .map(|_| ResumeContext {
-            selected: selected
-                .iter()
-                .map(|item| (item.scope.clone(), item.name.clone(), item.version.clone()))
-                .collect(),
-        });
     state.sequence = state.sequence.wrapping_add(1);
     let token = format!("outbound-{}", state.sequence);
     let hosts = hosts(input, &selected)?;
@@ -132,6 +125,29 @@ pub(in crate::workspace::engine) fn prepare(
         transferred: None,
     });
     Ok((count, receipt))
+}
+
+/// What a resumed export acknowledges: the selected heads, so each
+/// component must have one local version.
+fn resume_context(
+    input: &Prepare,
+    selected: &[model::Selected],
+) -> io::Result<Option<ResumeContext>> {
+    if input.options.resume.is_none() {
+        return Ok(None);
+    }
+    if selected
+        .iter()
+        .any(|item| item.labels.len() > 1)
+    {
+        return Err(invalid("outbound resume of multiple local versions"));
+    }
+    Ok(Some(ResumeContext {
+        selected: selected
+            .iter()
+            .map(|item| (item.scope.clone(), item.name.clone(), item.version.clone()))
+            .collect(),
+    }))
 }
 
 /// Each selected scope's remote host.
@@ -324,14 +340,18 @@ pub(in crate::workspace::engine) fn finalize(
     } else if !exported_ids.is_empty() {
         return Err(invalid("outbound unexpected remote ids"));
     }
-    let components = exported_ids
-        .iter()
-        .map(|id| {
-            id.rsplit_once('@')
-                .map_or(id.as_str(), |(component, _)| component)
-                .to_owned()
-        })
-        .collect::<Vec<_>>();
+    // `ComponentIdList.uniqFromArray`: a component once, whatever its
+    // number of exported versions.
+    let mut components: Vec<String> = Vec::new();
+    for id in &exported_ids {
+        let component = id.rsplit_once('@').map_or(id.as_str(), |(component, _)| component);
+        if !components
+            .iter()
+            .any(|known| known == component)
+        {
+            components.push(component.to_owned());
+        }
+    }
     Ok((
         components.len(),
         json!({"token":retained.token,"owner":"rust","applied":true,

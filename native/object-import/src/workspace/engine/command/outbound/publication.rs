@@ -100,12 +100,21 @@ fn validate_selected(
     Ok(scopes)
 }
 
+/// `ExportPersist` acknowledges every exported version, by its tag or hash.
 fn expected_ids(selected: &[Selected]) -> io::Result<HashSet<String>> {
+    let count = selected
+        .iter()
+        .map(|item| item.labels.len())
+        .sum::<usize>();
     let ids = selected
         .iter()
-        .map(|item| format!("{}/{}@{}", item.scope, item.name, item.version))
+        .flat_map(|item| {
+            item.labels
+                .iter()
+                .map(|label| format!("{}/{}@{label}", item.scope, item.name))
+        })
         .collect::<HashSet<_>>();
-    if ids.len() != selected.len() {
+    if ids.len() != count {
         return Err(invalid("outbound duplicate component"));
     }
     Ok(ids)
