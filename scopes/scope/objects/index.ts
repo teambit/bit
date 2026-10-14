@@ -1,4 +1,8 @@
-export { resolveRustObjectImportExecutable, resolveRustWorkspaceAddon } from './objects/rust-object-discovery';
+export {
+  resolveRustObjectImportExecutable,
+  resolveRustWorkspaceAddon,
+  resolvePackagedRustWorkspaceAddon,
+} from './objects/rust-object-discovery';
 export {
   ModelComponent,
   canPlanRustSnapshotFutureVersions,

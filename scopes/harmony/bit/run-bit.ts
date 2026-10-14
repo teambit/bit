@@ -59,6 +59,10 @@ async function initApp(additionalAspects?: Aspect[]) {
         if (await runRustMiniStatus()) return;
       }
     }
+    if (!additionalAspects?.length && ['install', 'in'].includes(process.argv[2])) {
+      const { runRustInstall } = await import('./rust-install');
+      if (await runRustInstall()) return;
+    }
     if (
       !additionalAspects?.length &&
       process.env.BIT_RUST_CLIENT_VCS === 'on' &&

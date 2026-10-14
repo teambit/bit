@@ -73,6 +73,10 @@ on:
       - 'scopes/dependencies/dependencies/files-dependency-builder/rust-scanner/**'
       - 'scopes/dependencies/dependencies/files-dependency-builder/**'
       - 'scopes/dependencies/dependency-resolver/detector-hook.ts'
+      - 'scopes/harmony/bit/rust-install*.ts'
+      - 'scopes/harmony/bit/core-aspect-ids*'
+      - 'scopes/harmony/bit/run-bit.ts'
+      - 'docs/rust/native-install.md'
       - '.github/workflows/rust-dependency-scanner.yml'
   pull_request:
     branches: [rust, rust-object-import, rust-workspace-materialization]
@@ -146,6 +150,10 @@ on:
       - 'scopes/dependencies/dependencies/files-dependency-builder/rust-scanner/**'
       - 'scopes/dependencies/dependencies/files-dependency-builder/**'
       - 'scopes/dependencies/dependency-resolver/detector-hook.ts'
+      - 'scopes/harmony/bit/rust-install*.ts'
+      - 'scopes/harmony/bit/core-aspect-ids*'
+      - 'scopes/harmony/bit/run-bit.ts'
+      - 'docs/rust/native-install.md'
       - '.github/workflows/rust-dependency-scanner.yml'
   workflow_dispatch:
 
@@ -191,6 +199,8 @@ jobs:
             native/target/debug
           key: rust-scanner-test-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('native/rust-toolchain.toml', 'native/Cargo.lock') }}
           restore-keys: rust-scanner-test-${{ runner.os }}-${{ runner.arch }}-
+      - name: Prepare pinned pnpm engine sources
+        run: node scripts/rust/prepare-pnpm-engine.mjs
       - name: Build real scanner for pipeline validation
         working-directory: native
         run: cargo build --locked --workspace
@@ -232,6 +242,8 @@ jobs:
         shell: bash
         run: |
           node "$RUNNER_TEMP/rust-scanner-test-tools/node_modules/typescript/bin/tsc" --noEmit --strict --skipLibCheck --target ES2022 --module commonjs --esModuleInterop --types node --typeRoots "$RUNNER_TEMP/rust-scanner-test-tools/node_modules/@types" components/legacy/scope/objects-fetcher/rust-source-validator.ts components/legacy/scope/objects-fetcher/rust-object-importer.ts components/legacy/scope/objects-fetcher/rust-tar-client.ts components/legacy/scope/objects-fetcher/rust-tar-transfer.ts components/legacy/scope/objects-fetcher/rust-tar-staging.ts components/legacy/scope/objects-fetcher/import-cancellation.ts scopes/scope/objects/objects/rust-object-operation.ts scopes/scope/objects/objects/rust-object-inventory.ts scopes/scope/objects/objects/rust-object-reader.ts scopes/scope/objects/objects/rust-object-directory.ts scopes/scope/objects/objects/rust-object-package.ts scopes/scope/objects/objects/rust-object-discovery.ts
+      - name: Prepare pinned pnpm engine sources
+        run: node scripts/rust/prepare-pnpm-engine.mjs
       - name: Build real scanner for transport tests
         working-directory: native
         run: cargo build --locked --workspace
@@ -284,6 +296,8 @@ jobs:
           rustup component add clippy
       - name: Check pnpm's pinned formatter
         run: node ../scripts/rust/rustfmt.mjs --all -- --check
+      - name: Prepare pinned pnpm engine sources
+        run: node ../scripts/rust/prepare-pnpm-engine.mjs
       - name: Check Clippy
         run: cargo clippy --locked --workspace --all-targets -- -D warnings
       - name: Install pnpm's Dylint version
@@ -307,8 +321,10 @@ jobs:
       matrix:
         os: [ubuntu-latest, ubuntu-24.04-arm, macos-15-intel, macos-15, windows-latest]
     runs-on: ${{ matrix.os }}
-    # Intel macOS builds both release helpers from a cold cache after workspace tests.
-    timeout-minutes: ${{ matrix.os == 'macos-15-intel' && 45 || 20 }}
+    # The packaging step builds the release helper and addon from a cold cache after the
+    # workspace tests. The addon links pnpm's engine, so the fat-LTO build takes most of
+    # the limit; Intel macOS is the slowest runner.
+    timeout-minutes: ${{ matrix.os == 'macos-15-intel' && 90 || 60 }}
     defaults:
       run:
         working-directory: native
@@ -330,6 +346,11 @@ jobs:
           restore-keys: rust-scanner-test-${{ runner.os }}-${{ runner.arch }}-
       - name: Install pinned Rust
         run: rustup show
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+      - name: Prepare pinned pnpm engine sources
+        run: node ../scripts/rust/prepare-pnpm-engine.mjs
       - name: Test scanner
         run: cargo test --locked --workspace
       - name: Validate deterministic packaging and archive safety
@@ -438,6 +459,7 @@ jobs:
             apk add --no-cache nodejs git
             git config --global --add safe.directory /repository
             cargo fetch --locked
+            node ../scripts/rust/prepare-pnpm-engine.mjs
             node ../scripts/rust-object-import/artifacts/package-helper.cjs --directory /artifacts --target x86_64-unknown-linux-musl
           '
       - name: Execute standalone object-import artifact in actual Alpine
@@ -498,6 +520,8 @@ jobs:
           node -e "console.log(require('path').join(require('os').homedir(),'bin'))" >> "$GITHUB_PATH"
       - name: Compile the actual object import graph
         run: node scripts/rust-object-import/compile-canonical-graph.cjs
+      - name: Prepare pinned pnpm engine sources
+        run: node scripts/rust/prepare-pnpm-engine.mjs
       - name: Build actual native object import helper
         working-directory: native
         run: cargo build --locked --package bit-object-import

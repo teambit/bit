@@ -4,6 +4,11 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { ROOT, sha256, command } = require('./contract.cjs');
 const licenseRoot = path.join(ROOT, 'scripts/rust-dependency-analysis/artifacts/licenses');
+// pnpm's engine is a git dependency at this revision (`native/Cargo.toml`). Its crates carry
+// no per-crate license file: the MIT `pnpm-*` crates are covered by the repository root
+// LICENSE and the `pnpr-*` crates name their `license-file`.
+const PNPM_REVISION = '343f3c4198b43dce5e58bc7de9927cb96aed59fc';
+const PNPM_SOURCE = `git+https://github.com/pnpm/pnpm?rev=${PNPM_REVISION}#${PNPM_REVISION}`;
 
 
 function dependencyInventory(metadata) {
@@ -42,8 +47,21 @@ function notices(target, compiler) {
     'Third-party notices for bit-object-import\nIncludes conservative locked runtime/build dependencies for this target.\n',
   ];
   const dependencies = dependencyInventory(metadata);
+  // Hundreds of crates repeat the same license files; each distinct text is written once and
+  // later entries reference it by digest, which keeps the notices within the 4 MiB bound that
+  // installation and runtime discovery verify.
+  const seen = new Map();
+  const text = (label, data, owner) => {
+    const bytes = Buffer.from(data);
+    const digest = sha256(bytes);
+    const first = seen.get(digest);
+    if (first) return `\n--- ${label} (SHA256 ${digest}) ---\nSame text as listed for ${first}.\n`;
+    seen.set(digest, owner);
+    return `\n--- ${label} (SHA256 ${digest}) ---\n${bytes.toString('utf8')}`;
+  };
   for (const entry of dependencies) {
     const directory = path.dirname(entry.manifest_path);
+    const owner = `${entry.name} ${entry.version}`;
     const files = fs
       .readdirSync(directory)
       .filter((name) => /^(LICENSE|COPYING|NOTICE)/i.test(name) && fs.statSync(path.join(directory, name)).isFile())
@@ -54,8 +72,9 @@ function notices(target, compiler) {
       assert.equal(JSON.parse(fs.readFileSync(path.join(directory, '.cargo_vcs_info.json'))).git.sha1, revision,
         'OXC license fallback revision mismatch');
       assert.equal(entry.license, 'MIT');
+      const name = index ? 'oxc-index-MIT.txt' : 'oxc-MIT.txt';
       blocks.push(`\n=== ${entry.name} ${entry.version} ===\nSPDX: MIT\nRepository: ${entry.repository}\n` +
-        pinned(index ? 'oxc-index-MIT.txt' : 'oxc-MIT.txt'));
+        text(name, pinned(name), owner));
       continue;
     }
     if (!files.length && Object.hasOwn(napiRevisions, entry.name)) {
@@ -64,17 +83,28 @@ function notices(target, compiler) {
       assert.equal(entry.license, 'MIT');
       assert.equal(entry.repository, 'https://github.com/napi-rs/napi-rs');
       assert.equal(JSON.parse(fs.readFileSync(path.join(directory, '.cargo_vcs_info.json'))).git.sha1, revision);
-      blocks.push(`\n=== ${entry.name} ${entry.version} ===\nSPDX: MIT\nRepository: ${entry.repository}\n` + pinned('napi-rs-MIT.txt'));
+      blocks.push(`\n=== ${entry.name} ${entry.version} ===\nSPDX: MIT\nRepository: ${entry.repository}\n` +
+        text('napi-rs-MIT.txt', pinned('napi-rs-MIT.txt'), owner));
+      continue;
+    }
+    if (!files.length && entry.source === PNPM_SOURCE) {
+      blocks.push(`\n=== ${entry.name} ${entry.version} ===\nSPDX: ${entry.license ?? 'see license file'}\n` +
+        `Repository: https://github.com/pnpm/pnpm (${PNPM_REVISION})\n` +
+        text('LICENSE', pnpmLicense(entry, directory, sources, pinned), owner));
+      continue;
+    }
+    const fallbacks = packageFallbacks(entry, directory, sources);
+    if (!files.length && fallbacks.length) {
+      blocks.push(`\n=== ${entry.name} ${entry.version} ===\nSPDX: ${entry.license}\nRepository: ${entry.repository || ''}\n` +
+        `Copyright holders (crate authors): ${entry.authors.join(', ') || 'see repository'}\n` +
+        fallbacks.map((name) => text(name, pinned(name), owner)).join(''));
       continue;
     }
     assert.ok(files.length, `missing license text: ${entry.name} ${entry.version}`);
     blocks.push(
       `\n=== ${entry.name} ${entry.version} ===\nSPDX: ${entry.license}\nRepository: ${entry.repository || ''}\n`
     );
-    for (const name of files) {
-      const data = fs.readFileSync(path.join(directory, name));
-      blocks.push(`\n--- ${name} (SHA256 ${sha256(data)}) ---\n${data.toString('utf8')}`);
-    }
+    for (const name of files) blocks.push(text(name, fs.readFileSync(path.join(directory, name)), owner));
   }
   assert.ok(
     compiler.includes('commit-hash: 2d8144b7880597b6e6d3dfd63a9a9efae3f533d3'),
@@ -94,4 +124,35 @@ function notices(target, compiler) {
   assert.ok(data.length <= 4 * 1024 * 1024, 'third-party notices exceed limit');
   return { data, dependencies: dependencies.map(({ name, version, license }) => ({ name, version, license })) };
 }
+/** The pinned license text of a crate from pnpm's engine checkout, verified against the checkout. */
+function pnpmLicense(entry, directory, sources, pinned) {
+  if (entry.license_file) {
+    const actual = sha256(fs.readFileSync(path.resolve(directory, entry.license_file)));
+    const source = sources.find((candidate) => candidate.gitRevision === PNPM_REVISION && candidate.sha256 === actual);
+    assert.ok(source, `unpinned pnpm license file: ${entry.name} ${entry.license_file}`);
+    return pinned(source.name);
+  }
+  assert.equal(entry.license, 'MIT', `unexpected pnpm crate license: ${entry.name}`);
+  // `<checkout>/pnpm/crates/<crate>/Cargo.toml`
+  const root = path.resolve(directory, '..', '..', '..');
+  const vendored = sources.find((source) => source.name === 'pnpm-MIT.txt');
+  assert.equal(sha256(fs.readFileSync(path.join(root, 'LICENSE'))), vendored.sha256,
+    'pnpm license changed; update the vendored copy with the engine pin');
+  return pinned('pnpm-MIT.txt');
+}
+
+/** Vendored texts pinned for a crate that publishes no license file (`packages` in sources.json). */
+function packageFallbacks(entry, directory, sources) {
+  const matches = sources.filter((source) => source.name !== 'napi-rs-MIT.txt' && source.packages?.[entry.name]);
+  for (const source of matches) {
+    const pin = source.packages[entry.name];
+    assert.equal(entry.version, pin.version, `update the pinned ${source.name} notice for ${entry.name}`);
+    if (pin.revision) {
+      const vcs = JSON.parse(fs.readFileSync(path.join(directory, '.cargo_vcs_info.json'))).git;
+      assert.equal(vcs.sha1, pin.revision, `${entry.name} license fallback revision mismatch`);
+    }
+  }
+  return matches.map((source) => source.name);
+}
+
 module.exports = { notices, dependencyInventory };

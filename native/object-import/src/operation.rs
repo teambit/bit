@@ -134,7 +134,7 @@ pub(crate) fn serve(
 }
 
 /// Reuse import decisions within a retained command without a transport roundtrip.
-pub(crate) fn plan(value: Value) -> io::Result<Value> {
+pub fn plan(value: Value) -> io::Result<Value> {
     let operation: Operation = serde_json::from_value(value).map_err(io::Error::other)?;
     if !matches!(
         operation,

@@ -4,7 +4,7 @@ use std::io;
 
 /// The native eligibility subset accepts JSON plus comments and trailing commas.
 /// Other comment-json syntax declines so canonical parsing owns its public errors.
-pub(crate) fn parse(bytes: &[u8]) -> io::Result<Value> {
+pub fn parse(bytes: &[u8]) -> io::Result<Value> {
     std::str::from_utf8(bytes).map_err(io::Error::other)?;
     let clean = comments(bytes)?;
     serde_json::from_slice(&commas(&clean)).map_err(io::Error::other)

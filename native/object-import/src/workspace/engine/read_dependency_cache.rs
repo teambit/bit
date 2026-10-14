@@ -45,3 +45,18 @@ pub(super) fn freshness(
     let stale = freshness::stale(&request.root, &request.files, request.timestamp, pool)?;
     Ok((1, json!({"stale":stale})))
 }
+
+/// Read one entry of Bit's `cacache` dependency cache: `{ timestamp, data }`.
+pub fn read_cache(cache: &std::path::Path, key: &str) -> io::Result<Option<Value>> {
+    reader::read(cache, key)
+}
+
+/// Whether a component dir or one of `files` changed after `timestamp` (milliseconds).
+pub fn cache_stale(
+    root: &std::path::Path,
+    files: &[PathBuf],
+    timestamp: f64,
+    pool: &rayon::ThreadPool,
+) -> io::Result<bool> {
+    freshness::stale(root, files, timestamp, pool)
+}

@@ -8,9 +8,15 @@ publish = false
 crate-type = ["cdylib"]
 
 [dependencies]
+bit-install = { path = "../install" }
 bit-object-import = { path = "../object-import" }
-napi = { version = "=3.12.2", default-features = false, features = ["napi8"] }
+async-trait = "0.1"
+napi = { version = "=3.12.2", default-features = false, features = ["napi8", "async"] }
 napi-derive = "3.5.9"
+pnpm-diagnostics = { workspace = true }
+serde = "1"
+serde_json = "1"
+tokio = { version = "1", features = ["rt-multi-thread", "sync"] }
 
 [build-dependencies]
 napi-build = "2.3.2"

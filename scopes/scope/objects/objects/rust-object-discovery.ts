@@ -16,6 +16,11 @@ export function resolveRustObjectImportExecutable(context: 'read' | 'import' = '
     process.env.BIT_RUST_OBJECT_IMPORT || (process.env.BIT_RUST_CLIENT_VCS === 'on' ? 'packaged' : undefined);
   if (!configured || configured === 'off') return undefined;
   if (configured !== 'packaged') return path.isAbsolute(configured) ? path.toNamespacedPath(configured) : undefined;
+  return resolvePackagedObjectImportExecutable(context);
+}
+
+/** The installed, source-bound helper beside this runtime, regardless of the opt-in variables. */
+function resolvePackagedObjectImportExecutable(context: 'read' | 'import'): string | undefined {
   try {
     const [major, minor] = process.versions.node.split('.').map(Number);
     if (major < 22 || (major === 22 && minor < 13)) return undefined;
@@ -50,4 +55,13 @@ export function resolveRustWorkspaceAddon(executable: string): string | undefine
   } catch {
     return undefined;
   }
+}
+
+/**
+ * The verified workspace addon of the installed helper. Native `bit install` uses it by default,
+ * independently of `BIT_RUST_OBJECT_IMPORT`/`BIT_RUST_CLIENT_VCS`.
+ */
+export function resolvePackagedRustWorkspaceAddon(): string | undefined {
+  const executable = resolvePackagedObjectImportExecutable('read');
+  return executable && resolveRustWorkspaceAddon(executable);
 }

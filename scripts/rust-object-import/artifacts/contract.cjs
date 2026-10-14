@@ -81,6 +81,11 @@ function sourceIdentity(root = ROOT) {
     files.push('native/workspace-napi/Cargo.toml', 'native/workspace-napi/build.rs');
     visit('native/workspace-napi/src');
   }
+  // The addon links the native install command.
+  if (fs.existsSync(path.join(root, 'native/install/src'))) {
+    files.push('native/install/Cargo.toml');
+    visit('native/install/src');
+  }
   if (fs.existsSync(path.join(root, 'native/dependency-scanner/src/lib.rs'))) {
     files.push('native/dependency-scanner/Cargo.toml');
     visit('native/dependency-scanner/src');

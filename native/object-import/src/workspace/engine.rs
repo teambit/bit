@@ -3,10 +3,10 @@ pub(crate) mod command;
 pub(crate) mod dependency_policy;
 pub(crate) mod diff;
 pub(crate) mod inventory;
+pub(crate) mod read_dependency_cache;
 
 mod dependency_graph;
 mod read;
-mod read_dependency_cache;
 mod read_raw;
 mod resolve_dependencies;
 mod resolve_typescript;

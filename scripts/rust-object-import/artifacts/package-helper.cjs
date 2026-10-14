@@ -54,6 +54,8 @@ function packageHelper(directory, target) {
       'bit-object-import',
       '--package',
       'bit-workspace-napi',
+      '--package',
+      'bit-install',
     ],
     {
       cwd: path.join(ROOT, 'native'),

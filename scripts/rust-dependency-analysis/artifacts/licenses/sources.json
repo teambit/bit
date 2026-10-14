@@ -76,5 +76,137 @@
     "name": "rust-LICENSE-MIT",
     "source": "https://raw.githubusercontent.com/rust-lang/rust/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/LICENSE-MIT",
     "sha256": "b71bd43a069ca0641a9ecfe585ca7b3c53b5cc1608f8b68321168698e28b5ea1"
+  },
+  {
+    "name": "pnpm-MIT.txt",
+    "source": "https://raw.githubusercontent.com/pnpm/pnpm/343f3c4198b43dce5e58bc7de9927cb96aed59fc/LICENSE",
+    "sha256": "4b8e2a57502758b2d034ece9cabf19dd098c5609003ed8dbdafd085274f25bd9",
+    "gitRevision": "343f3c4198b43dce5e58bc7de9927cb96aed59fc",
+    "note": "Root license of the pinned pnpm engine checkout; covers its MIT `pnpm-*` workspace crates, which ship no per-crate license file."
+  },
+  {
+    "name": "pnpr-PolyForm-Shield-1.0.0.md",
+    "source": "https://raw.githubusercontent.com/pnpm/pnpm/343f3c4198b43dce5e58bc7de9927cb96aed59fc/pnpr/LICENSE.md",
+    "sha256": "81524faa0d8f0cd85899edc8c82093bfe068715057beb1f33ea0a0d7faed355d",
+    "gitRevision": "343f3c4198b43dce5e58bc7de9927cb96aed59fc",
+    "note": "`license-file` of the `pnpr-*` crates pulled in through pnpm-pnpr-client. PolyForm Shield 1.0.0 is not an OSI license."
+  },
+  {
+    "name": "bitfields-rs-MIT.txt",
+    "source": "https://raw.githubusercontent.com/gregorygaines/bitfields-rs/a3c3d994c87c4f9cab566b3bbb5eb9bd1b2a9a98/LICENSE",
+    "sha256": "20e54144e38eee8d67e970ab43fd4f124519931090ac015be8c7ff1a6b4a5f88",
+    "packages": {
+      "bitfields": {
+        "version": "1.0.3",
+        "revision": "a3c3d994c87c4f9cab566b3bbb5eb9bd1b2a9a98"
+      },
+      "bitfields-impl": {
+        "version": "1.0.3",
+        "revision": "a3c3d994c87c4f9cab566b3bbb5eb9bd1b2a9a98"
+      }
+    }
+  },
+  {
+    "name": "crc24-rs-MIT.txt",
+    "source": "https://raw.githubusercontent.com/sellibitze/crc24-rs/master/LICENSE-MIT",
+    "sha256": "44211bdaa21e5ba423e717d1afdcb4752f0277f5fcc5dc5a5dad1fd351624e24",
+    "note": "crc24 0.1.6 was published without VCS info; the text is the repository license at the time of vendoring.",
+    "packages": {
+      "crc24": {
+        "version": "0.1.6"
+      }
+    }
+  },
+  {
+    "name": "deno_error-MIT.txt",
+    "source": "https://raw.githubusercontent.com/denoland/deno_error/ad8072187d4d9be7ca7f56a477bb0030967450fc/LICENSE",
+    "sha256": "e70487678a799f089f7f78db7302e779d5dc7320ccd02cc13f494a4fb8b88300",
+    "packages": {
+      "deno_error_macro": {
+        "version": "0.7.3",
+        "revision": "ad8072187d4d9be7ca7f56a477bb0030967450fc"
+      }
+    }
+  },
+  {
+    "name": "rust-analyzer-MIT.txt",
+    "source": "https://raw.githubusercontent.com/rust-lang/rust-analyzer/3bda0cc2c07f6330b543be2c12c5e156847ba94e/LICENSE-MIT",
+    "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+    "packages": {
+      "line-index": {
+        "version": "0.1.2",
+        "revision": "3bda0cc2c07f6330b543be2c12c5e156847ba94e"
+      }
+    }
+  },
+  {
+    "name": "zizmor-MIT.txt",
+    "source": "https://raw.githubusercontent.com/zizmorcore/zizmor/99a054ed9283c90abdd2d5b9fb5101d27dde9783/LICENSE",
+    "sha256": "a6fd1bd18da7cec8284639d5b0d351b90934317be1b9f9ea94a077621c6f35af",
+    "packages": {
+      "tree-sitter-iter": {
+        "version": "1.30.1",
+        "revision": "99a054ed9283c90abdd2d5b9fb5101d27dde9783"
+      }
+    }
+  },
+  {
+    "name": "zune-image-LICENSE.md",
+    "source": "https://raw.githubusercontent.com/etemesi254/zune-image/69502ce83fdfecdd0beefd677e2abb3781b29d98/LICENSE.md",
+    "sha256": "e870d7fd7819a9f0453c62798cb52ae95d148a8c91dc2de1d983f997143c72de",
+    "packages": {
+      "zune-inflate": {
+        "version": "0.2.54",
+        "revision": "69502ce83fdfecdd0beefd677e2abb3781b29d98"
+      }
+    }
+  },
+  {
+    "name": "spdx-MIT.txt",
+    "source": "https://raw.githubusercontent.com/spdx/license-list-data/v3.27.0/text/MIT.txt",
+    "sha256": "b05785f9f18e6716bab63424b11454513b9943a222595b70411009202fc592b5",
+    "note": "Canonical text for crates whose repository has no license file at the published revision; the crate authors are the copyright holders.",
+    "packages": {
+      "backtrace-ext": {
+        "version": "0.2.1",
+        "revision": "043c95350875a36be6cd755dcef21a44a52ec2cc"
+      },
+      "sys_traits": {
+        "version": "0.1.29",
+        "revision": "0b168a2935d4c398d38ea5d25af8f793858299b5"
+      },
+      "sys_traits_macros": {
+        "version": "0.1.0",
+        "revision": "75cbf3ea478624cc78275b0264e78e9ae13ce3f5"
+      },
+      "zune-inflate": {
+        "version": "0.2.54",
+        "revision": "69502ce83fdfecdd0beefd677e2abb3781b29d98"
+      }
+    }
+  },
+  {
+    "name": "spdx-BSD-3-Clause.txt",
+    "source": "https://raw.githubusercontent.com/spdx/license-list-data/v3.27.0/text/BSD-3-Clause.txt",
+    "sha256": "5a93d5831e1297ab10fe643e1a631e83be392896da14ee2951285a79012df69d",
+    "note": "cx448 publishes no license file; the crate authors are the copyright holders.",
+    "packages": {
+      "cx448": {
+        "version": "0.1.1",
+        "revision": "58785c9ea154f646d03ccec4185f0a1ffa1c67e5"
+      }
+    }
+  },
+  {
+    "name": "spdx-MPL-2.0.txt",
+    "source": "https://raw.githubusercontent.com/spdx/license-list-data/v3.27.0/text/MPL-2.0.txt",
+    "sha256": "66a3107d5ad6a058aab753eaac2047ccb2ed0e39465dd0fe5844da3e300d5172",
+    "note": "priority-queue is LGPL-3.0-or-later OR MPL-2.0 and publishes no license file; Bit distributes it under MPL-2.0.",
+    "packages": {
+      "priority-queue": {
+        "version": "2.7.0",
+        "revision": "0c76fb8fe75e4457f16f8e6c8e86508d1a89ba1d"
+      }
+    }
   }
 ]

@@ -17,8 +17,18 @@ def notices(root, target):
     metadata = json.loads(subprocess.check_output(["cargo", "metadata", "--locked", "--offline", "--format-version", "1"], cwd=root / "native", text=True))
     blocks = ["Third-party notices for bit-dependency-scanner\nIncludes conservative locked build/runtime dependency inventory.\n"]
     fallback = Path(__file__).parent / "licenses" / "oxc-MIT.txt"
+    # Only the scanner's own (build/runtime/dev) dependency closure: other workspace members, such
+    # as the install engine, ship in the object-import artifact with their own notices.
+    nodes = {node["id"]: node for node in metadata["resolve"]["nodes"]}
+    scanner = next(package["id"] for package in metadata["packages"] if package["name"] == "bit-dependency-scanner" and package["source"] is None)
+    closure, pending = set(), [scanner]
+    while pending:
+        current = pending.pop()
+        if current not in closure:
+            closure.add(current)
+            pending.extend(nodes[current]["dependencies"])
     for package in sorted(metadata["packages"], key=lambda item: (item["name"], item["version"])):
-        if package["source"] is None:
+        if package["source"] is None or package["id"] not in closure:
             continue
         directory = Path(package["manifest_path"]).parent
         files = sorted(file for file in directory.iterdir() if file.is_file() and file.name.upper().startswith(("LICENSE", "COPYING", "NOTICE")))
