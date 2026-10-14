@@ -3,14 +3,14 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
 
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Component {
     pub(super) identity: String,
     extensions: Value,
     package_name: String,
     default_node: policy::projection::Defaults,
-    dependency_state: Value,
+    pub(super) dependency_state: Value,
 }
 
 pub(super) fn version(
@@ -64,6 +64,27 @@ fn component_dependencies(version: &mut Value, state: &Value) -> io::Result<()> 
             values.push(policy::dependencies::component(entry, &HashSet::new())?);
         }
         version[*field] = json!(values);
+    }
+    Ok(())
+}
+
+pub(super) fn bind_new_dependencies(
+    components: &mut [Component],
+    identities: &HashSet<String>,
+) -> io::Result<()> {
+    for component in components {
+        let entries = component.dependency_state["entries"]
+            .as_array_mut()
+            .ok_or_else(|| invalid("snap dependency entries"))?;
+        for entry in entries {
+            let Some(identity) = entry["identity"]
+                .as_str()
+                .filter(|identity| identities.contains(*identity))
+            else {
+                continue;
+            };
+            entry["identity"] = json!(format!("{identity}@__bit_pending_snapshot__:{identity}"));
+        }
     }
     Ok(())
 }

@@ -13,5 +13,9 @@ Module._load = function (request, parent, ...args) {
     assert.equal(typeof value.runRustWorkspaceResolve, 'function');
     return { ...value, runRustWorkspaceResolve: async () => false };
   }
+  if (/[\\/]rust-workspace-snap(?:\.js)?$/.test(request)) {
+    assert.equal(typeof value.runRustWorkspaceSnap, 'function');
+    return { ...value, runRustWorkspaceSnap: async () => false };
+  }
   return value;
 };

@@ -22,6 +22,41 @@ pub(super) struct Prepared {
     changed: bool,
 }
 impl Prepared {
+    /// A first snapshot on a lane makes a newly tracked component lane-only.
+    /// Keep the staged bitmap bytes as the input to this transformation.
+    pub(super) fn mark_lane_new(
+        &mut self,
+        context: &Value,
+        identities: &[String],
+    ) -> io::Result<()> {
+        if identities.is_empty() {
+            return Ok(());
+        }
+        if !lane::on_lane(context) {
+            return Err(invalid("command lane-only update outside lane"));
+        }
+        let bitmap = crate::recovery::jsonc::parse(&self.output)?;
+        let mut entries = rows(&bitmap)?;
+        let mut seen = HashSet::new();
+        for id in identities {
+            if !seen.insert(id) {
+                return Err(invalid("command duplicate lane-only identity"));
+            }
+            let entry = entries
+                .iter_mut()
+                .find(|entry| identity(entry).ok().as_ref() == Some(id))
+                .ok_or_else(|| invalid("command lane-only identity absent"))?;
+            let fields =
+                entry.as_object_mut().ok_or_else(|| invalid("command lane-only bitmap entry"))?;
+            fields.insert("onLanesOnly".into(), Value::Bool(true));
+            fields.insert("isAvailableOnCurrentLane".into(), Value::Bool(true));
+        }
+        self.output =
+            render_rows(entries, &bitmap["$schema-version"], lane::header(context, &bitmap)?)?;
+        self.changed = true;
+        Ok(())
+    }
+
     /// Reset removes overrides only for components actually passed to the writer.
     /// Keep the original bytes intact for freshness checks and bitmap history.
     pub(super) fn clear_config(

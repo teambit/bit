@@ -20,6 +20,8 @@ export async function runRustInstall(): Promise<boolean> {
   if (root) logger.commandHistoryBasePath = path.join(root, '.bit');
   // the "started" history line is written once the native path owns the command: a help or
   // yarn outcome falls back to the CLI parser, which writes its own line.
+  // The module defines InstallHost before runRustInstall can be called.
+  // eslint-disable-next-line @typescript-eslint/no-use-before-define
   const host = new InstallHost(root ?? process.cwd());
   const { prepareBuildScriptsPath } = await import('@teambit/pnpm/dist/build-scripts-path.js');
   prepareBuildScriptsPath();

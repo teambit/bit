@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod tests;
 
+mod metadata;
 mod packages;
 mod staged;
 use super::invalid;
@@ -48,6 +49,14 @@ pub(in crate::workspace::engine::command) fn prepare(
     Ok(prepared)
 }
 impl Prepared {
+    pub(in crate::workspace::engine::command) fn mark_lane_new(
+        &mut self,
+        root: &Path,
+        identities: &[String],
+    ) -> io::Result<()> {
+        staged::mark_lane_new(root, identities, self)
+    }
+
     /// Ordinary resolve regenerates each visible package from its current `ConsumerComponent`.
     /// Its license label follows the new Version's license, not the old package manifest.
     pub(in crate::workspace::engine::command) fn resolve_licenses(
@@ -79,6 +88,36 @@ impl Prepared {
             );
             row.1 = pretty(&manifest, true)?;
         }
+        Ok(())
+    }
+    pub(in crate::workspace::engine::command) fn snapshot_index<'a>(
+        &mut self,
+        root: &Path,
+        identities: impl Iterator<Item = &'a str>,
+    ) -> io::Result<()> {
+        let path = root.join(".bit/index.json");
+        let row = self.writes
+            .iter_mut()
+            .find(|(name, _)| *name == path)
+            .ok_or_else(|| invalid("snapshot index plan absent"))?;
+        let mut index = json(&row.1)?;
+        let rows = if index.is_array() { &mut index } else { &mut index["components"] };
+        let rows = rows.as_array_mut().ok_or_else(|| invalid("snapshot index components"))?;
+        for identity in identities {
+            let (scope, name) =
+                identity.split_once('/').ok_or_else(|| invalid("snapshot index identity"))?;
+            let hash = crate::workspace::engine::hash(identity.as_bytes());
+            if rows
+                .iter()
+                .any(|row| row["hash"] == hash)
+            {
+                return Err(invalid("snapshot new index component exists"));
+            }
+            rows.push(
+                serde_json::json!({"id":{"scope":scope,"name":name},"isSymlink":false,"hash":hash}),
+            );
+        }
+        row.1 = pretty(&index, true)?;
         Ok(())
     }
     pub(in crate::workspace::engine::command) fn imported_index(
@@ -117,7 +156,14 @@ impl Prepared {
         }
         for (path, bytes) in &self.writes {
             fs::create_dir_all(path.parent().ok_or_else(|| invalid("merge metadata parent"))?)?;
-            fs::write(path, bytes)?;
+            if path
+                .file_name()
+                .is_some_and(|name| name == "package.json")
+            {
+                metadata::replace(path, bytes)?;
+            } else {
+                fs::write(path, bytes)?;
+            }
         }
         Ok(())
     }

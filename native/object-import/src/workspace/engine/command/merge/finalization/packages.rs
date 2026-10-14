@@ -187,7 +187,13 @@ fn manifest(
     }
     let version = format!("0.0.0-{}", input.hash);
     package["version"] = value!(version);
-    package["componentId"]["version"] = value!(input.hash);
+    if package["componentId"].get("version").is_none() {
+        let component = &package["componentId"];
+        package["componentId"] =
+            value!({"name":component["name"],"version":input.hash,"scope":component["scope"]});
+    } else {
+        package["componentId"]["version"] = value!(input.hash);
+    }
     output.writes.push((manifest, pretty(&package, true)?));
     Ok(())
 }

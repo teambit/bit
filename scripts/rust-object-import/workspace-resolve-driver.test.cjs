@@ -340,3 +340,44 @@ test('proven missing resolve heads preserve ordinary status fallback and all sna
     /snapshot issues/
   );
 });
+
+test('snapshot external issue graph retains cycles and requires every absent-model proof', async () => {
+  const { collectRustStatusIssues } = load('rust-status-issues');
+  const { validateResolveIssues } = load('rust-workspace-resolve-metadata');
+  const { resolveExternalIssueVertices: vertices } = load('rust-workspace-resolve-heads');
+  const component = {
+    identity: 'scope/one@1.0.0',
+    packageName: '@scope/one',
+    dependencies: ['external/aspect@2.0.0'],
+    issues: [],
+  };
+  const context = {
+    models: [],
+    versions: [],
+    workspace: {},
+    targets: [{ identity: 'scope/one', directory: 'one' }],
+    resolveIssueHeads: [],
+  };
+  const receipt = { external: [{ identity: 'external/aspect@2.0.0', dependencies: [], model: null }] };
+  assert.equal(await collectRustStatusIssues(process.cwd(), context, [component]), undefined);
+  await validateResolveIssues(process.cwd(), context, { components: [component] }, ['scope/one'], receipt);
+  const cycle = structuredClone(receipt);
+  cycle.external[0].dependencies.push(component.identity);
+  await assert.rejects(
+    validateResolveIssues(process.cwd(), context, { components: [component] }, ['scope/one'], cycle),
+    /snapshot issues/
+  );
+  for (const bad of [
+    undefined,
+    { external: [] },
+    { external: [{ ...receipt.external[0], model: {} }] },
+    { external: [{ ...receipt.external[0], dependencies: ['external/missing@1.0.0'] }] },
+    { external: [...receipt.external, receipt.external[0]] },
+    { external: [...receipt.external, { identity: 'external/unreachable@1.0.0', dependencies: [], model: null }] },
+  ])
+    assert.equal(vertices([component], bad), undefined);
+  const transit = structuredClone(receipt);
+  transit.external[0].dependencies.push('external/leaf@3.0.0');
+  transit.external.push({ identity: 'external/leaf@3.0.0', dependencies: [], model: null });
+  assert.equal(vertices([component], transit).length, 2);
+});

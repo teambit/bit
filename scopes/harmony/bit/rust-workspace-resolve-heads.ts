@@ -34,3 +34,60 @@ export function ordinaryResolveIssueHeads(context: any, receipt: any): boolean {
     });
   });
 }
+
+/** External snapshot issue vertices carry retained adjacency and a proven absent
+ * local ModelComponent. Canonical removal/deprecation callbacks return false in
+ * that case; cycle detection must still retain every reachable external edge. */
+export function resolveExternalIssueVertices(
+  components: { identity: string; dependencies: string[] }[],
+  receipt: any
+): { identity: string; dependencies: string[] }[] | undefined {
+  const workspace = new Set(components.map((component) => component.identity));
+  const requested = components.flatMap((component) => component.dependencies).filter((id) => !workspace.has(id));
+  if (receipt === undefined) return requested.length ? undefined : [];
+  if (
+    !receipt ||
+    typeof receipt !== 'object' ||
+    Array.isArray(receipt) ||
+    Object.keys(receipt).some((key) => key !== 'external') ||
+    !Array.isArray(receipt.external) ||
+    receipt.external.length > 4096
+  )
+    return undefined;
+  const external = new Map<string, { identity: string; dependencies: string[] }>();
+  for (const row of receipt.external) {
+    if (
+      !row ||
+      typeof row !== 'object' ||
+      Array.isArray(row) ||
+      Object.keys(row).some((key) => !['identity', 'dependencies', 'model'].includes(key)) ||
+      !versionedIdentity(row.identity) ||
+      workspace.has(row.identity) ||
+      external.has(row.identity) ||
+      row.model !== null ||
+      !Array.isArray(row.dependencies) ||
+      row.dependencies.some((id: any) => typeof id !== 'string' || (!workspace.has(id) && !versionedIdentity(id))) ||
+      new Set(row.dependencies).size !== row.dependencies.length
+    )
+      return undefined;
+    external.set(row.identity, { identity: row.identity, dependencies: row.dependencies });
+  }
+  const seen = new Set<string>();
+  const pending = [...requested];
+  let edges = 0;
+  while (pending.length) {
+    const id = pending.pop() as string;
+    if (workspace.has(id) || seen.has(id)) continue;
+    const row = external.get(id);
+    if (!row) return undefined;
+    seen.add(id);
+    edges += row.dependencies.length;
+    if (edges > 16384) return undefined;
+    pending.push(...row.dependencies);
+  }
+  return seen.size === external.size ? [...external.values()] : undefined;
+}
+
+function versionedIdentity(value: any): value is string {
+  return typeof value === 'string' && /^[^@\s]+\/[^@\s]+@[^@\s]+$/.test(value);
+}

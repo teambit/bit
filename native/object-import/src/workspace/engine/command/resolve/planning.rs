@@ -1,10 +1,13 @@
 use super::{
-    super::{capture, invalid, repository, resolve_snapshot::Material},
+    super::{
+        capture, invalid, repository,
+        resolve_snapshot::{Material, Participation},
+    },
     Plan, Retained, cascade, graph, projection, selection,
 };
 use crate::workspace::{engine::status_models::versions, snapshots};
 use serde_json::{Value, json};
-use std::io;
+use std::{collections::HashSet, io};
 
 pub(super) fn prepare(
     retained: &mut Retained,
@@ -12,48 +15,183 @@ pub(super) fn prepare(
     snapshots: &mut snapshots::State,
     pool: &rayon::ThreadPool,
 ) -> io::Result<Value> {
-    let selected = select(retained, &input)?;
-    let cascaded = cascade::visible(&input.current, &selected, &input.semver)?;
-    let mut order = selected.clone();
-    order.extend(cascaded);
-    let captured = capture::all(&retained.record.request.root, input.current, snapshots, pool)?;
+    validate_capture(retained, &input)?;
+    let captured =
+        capture::all(&retained.record.request.root, input.current.clone(), snapshots, pool)?;
+    let selected = if retained.snap.is_some() {
+        super::snap::select(retained, &captured, input.selected_ids.as_deref())?
+    } else {
+        select(retained, &input)?
+    };
     retained.record.proofs.extend(super::source_proofs::capture(&captured, snapshots)?);
-    let mut materials = order
-        .iter()
-        .map(|identity| {
-            material(retained, identity, selected.contains(identity), &captured, &input.components)
-        })
-        .collect::<io::Result<Vec<_>>>()?;
-    super::hidden::append(retained, &mut materials, snapshots)?;
-    order = materials
-        .iter()
-        .map(|material| material.identity.clone())
-        .collect();
+    if selected.is_empty() {
+        retain_proofs(retained, input.dependency_read_set)?;
+        retained.finalized = super::publication::Phase::Noop;
+        return Ok(
+            json!({"token":retained.record.token,"noop":true,"needsSnap":[],"result":null,"progress":{"bitmapCount":retained.record.targets.len(),"imports":[],"loads":[retained.record.targets.len()],"snapFailed":true}}),
+        );
+    }
+    let (mut materials, automatic, auto_loaded) =
+        materials(retained, &selected, &captured, &input, snapshots)?;
+    if retained.snap.is_some() {
+        super::snap::prepare_graph_imports(retained, &materials)?;
+    }
     preflight(retained, &mut materials, snapshots)?;
-    retained.record.proofs.extend(input.dependency_read_set);
-    retained.record.repository.validate()?;
-    super::proof::verify(&retained.record.proofs)?;
-    let result = json!({"resolvedComponents":selected.iter().map(|id| json!({"id":id})).collect::<Vec<_>>()});
-    let output = json!({"token":retained.record.token,"selectedIds":selected,"needsSnap":order,"result":result,"issueTargets":materials.iter().map(|material| json!({"identity":format!("{}@{}",material.identity,material.current_head),"dependencies":material.version["dependencies"],"devDependencies":material.version["devDependencies"],"flattenedDependencies":material.version["flattenedDependencies"]})).collect::<Vec<_>>(),"scalarPreparation":{"laneHistory":!retained.record.context["lane"]["current"].is_null(),"squash":materials.iter().filter_map(|material| material.pending.as_ref().filter(|pending|pending["shouldSquash"]==true).map(|pending|json!({"identity":material.identity,"laneId":pending["laneId"]}))).collect::<Vec<_>>()},"progress":{"bitmapCount":retained.record.targets.len(),"imports":[],"loads":[retained.record.targets.len(),selected.len(),retained.record.targets.len(),retained.record.targets.len()]}});
+    let issue_graph = super::issue_graph::capture(
+        &input.components,
+        &input.current,
+        &materials,
+        &mut retained.record.repository,
+    )?;
+    retain_proofs(retained, input.dependency_read_set)?;
+    let result = if retained.snap.is_some() {
+        super::snap::report(retained, &selected, &materials, &automatic)?
+    } else {
+        json!({"resolvedComponents":selected.iter().map(|id| json!({"id":id})).collect::<Vec<_>>()})
+    };
+    let mut output = response(retained, &selected, &materials, &result, auto_loaded);
+    output["issueGraph"] = issue_graph;
     retained.selected = selected;
     retained.materials = materials;
     retained.result = result;
     Ok(output)
 }
 
+fn retain_proofs(retained: &mut Retained, proofs: Vec<super::proof::Proof>) -> io::Result<()> {
+    retained.record.proofs.extend(proofs);
+    retained.record.repository.validate()?;
+    super::proof::verify(&retained.record.proofs)
+}
+
+fn materials(
+    retained: &mut Retained,
+    selected: &[String],
+    captured: &[capture::Captured],
+    input: &Plan,
+    snapshots: &mut snapshots::State,
+) -> io::Result<(Vec<Material>, Vec<Value>, bool)> {
+    let seeds = auto_seeds(retained, selected, captured);
+    let mut automatic = if seeds.is_empty() {
+        Vec::new()
+    } else {
+        cascade::reports(&input.current, &seeds, &input.semver)?
+    };
+    let order = material_order(selected, &automatic);
+    let mut components = input.components.clone();
+    bind_new(retained, selected, captured, &mut components)?;
+    let automatic_ids = automatic
+        .iter()
+        .filter_map(|row| row["id"].as_str())
+        .collect::<HashSet<_>>();
+    let mut materials = order
+        .iter()
+        .map(|identity| {
+            material(
+                retained,
+                identity,
+                Participation {
+                    selected: selected.contains(identity),
+                    automatic: automatic_ids.contains(identity.as_str()),
+                },
+                captured,
+                &components,
+            )
+        })
+        .collect::<io::Result<Vec<_>>>()?;
+    if !retained.snap.as_ref().is_some_and(|options| options.skip_auto_snap) {
+        super::hidden::append(retained, &mut materials, snapshots)?;
+    }
+    if retained.snap.is_some() {
+        automatic.extend(super::snap::hidden_reports(&materials)?);
+    }
+    Ok((materials, automatic, !seeds.is_empty()))
+}
+
+fn material_order(selected: &[String], automatic: &[Value]) -> Vec<String> {
+    let mut order = selected.to_vec();
+    order.extend(
+        automatic
+            .iter()
+            .map(|row| row["id"].as_str().unwrap().to_owned())
+            .filter(|identity| !selected.contains(identity)),
+    );
+    order
+}
+
+fn auto_seeds(
+    retained: &Retained,
+    selected: &[String],
+    captured: &[capture::Captured],
+) -> Vec<String> {
+    if retained.snap.as_ref().is_some_and(|options| options.skip_auto_snap) {
+        return Vec::new();
+    }
+    selected
+        .iter()
+        .filter(|identity| {
+            captured
+                .iter()
+                .any(|current| {
+                    current.target.identity == **identity
+                        && !current.target.version.is_empty()
+                })
+        })
+        .cloned()
+        .collect()
+}
+
+fn bind_new(
+    retained: &Retained,
+    selected: &[String],
+    captured: &[capture::Captured],
+    components: &mut [projection::Component],
+) -> io::Result<()> {
+    if retained.snap.is_some() {
+        let new_ids = captured
+            .iter()
+            .filter(|current| {
+                current.target.version.is_empty() && selected.contains(&current.target.identity)
+            })
+            .map(|current| current.target.identity.clone())
+            .collect();
+        projection::bind_new_dependencies(components, &new_ids)?;
+    }
+    Ok(())
+}
+
+fn response(
+    retained: &Retained,
+    selected: &[String],
+    materials: &[Material],
+    result: &Value,
+    auto_loaded: bool,
+) -> Value {
+    let order: Vec<_> = materials
+        .iter()
+        .map(|material| &material.identity)
+        .collect();
+    json!({"token":retained.record.token,"selectedIds":selected,"needsSnap":order,"result":result,"issueTargets":materials.iter().map(|material| json!({"identity":format!("{}@{}",material.identity,material.current_head),"dependencies":material.version["dependencies"],"devDependencies":material.version["devDependencies"],"flattenedDependencies":material.version["flattenedDependencies"]})).collect::<Vec<_>>(),"scalarPreparation":{"laneHistory":!retained.record.context["lane"]["current"].is_null(),"squash":materials.iter().filter_map(|material| material.pending.as_ref().filter(|pending|pending["shouldSquash"]==true).map(|pending|json!({"identity":material.identity,"laneId":pending["laneId"]}))).collect::<Vec<_>>()},"progress":progress(retained,selected.len(),auto_loaded)})
+}
+
+fn progress(retained: &Retained, selected: usize, auto_loaded: bool) -> Value {
+    let count = retained.record.targets.len();
+    let mut loads = vec![count, selected, count, count];
+    let mut output = json!({"bitmapCount":count,"imports":[]});
+    if let Some(options) = &retained.snap {
+        if !auto_loaded {
+            loads.pop();
+        }
+        if !options.unmodified && !options.unmerged {
+            loads.insert(0, count);
+        }
+        output["graphImports"] = retained.record.repository.progress()["imports"].clone();
+    }
+    output["loads"] = json!(loads);
+    output
+}
+
 fn select(retained: &Retained, input: &Plan) -> io::Result<Vec<String>> {
     let targets = &retained.record.targets;
-    if input.current.len() != targets.len() || input.components.len() != targets.len() {
-        return Err(invalid("resolve capture count"));
-    }
-    for (current, target) in input.current.iter().zip(targets) {
-        if current["identity"] != target["identity"]
-            || current["version"] != target["version"]
-            || current["directory"] != target["directory"]
-        {
-            return Err(invalid("resolve capture binding"));
-        }
-    }
     let selected = if retained.record.request.options.pattern.is_some() {
         selection::select(
             targets,
@@ -69,10 +207,26 @@ fn select(retained: &Retained, input: &Plan) -> io::Result<Vec<String>> {
     Ok(selected)
 }
 
+fn validate_capture(retained: &Retained, input: &Plan) -> io::Result<()> {
+    let targets = &retained.record.targets;
+    if input.current.len() != targets.len() || input.components.len() != targets.len() {
+        return Err(invalid("resolve capture count"));
+    }
+    for (current, target) in input.current.iter().zip(targets) {
+        if current["identity"] != target["identity"]
+            || current["version"] != target["version"]
+            || current["directory"] != target["directory"]
+        {
+            return Err(invalid("resolve capture binding"));
+        }
+    }
+    Ok(())
+}
+
 fn material(
     retained: &mut Retained,
     identity: &String,
-    selected: bool,
+    participation: Participation,
     captured: &[capture::Captured],
     components: &[projection::Component],
 ) -> io::Result<Material> {
@@ -84,8 +238,11 @@ fn material(
         .iter()
         .find(|row| row.identity == *identity)
         .ok_or_else(|| invalid("resolve policy receipt absent"))?;
-    let model = repository::model(&retained.record.context, identity)?
-        .ok_or_else(|| invalid("resolve model absent"))?;
+    let model = repository::model(&retained.record.context, identity)?;
+    if model.is_none() && retained.snap.is_some() && current.target.version.is_empty() {
+        return super::snap::new_material(retained, current, receipt, participation);
+    }
+    let model = model.ok_or_else(|| invalid("resolve model absent"))?;
     let reference = versions::reference(&model, &current.target.version)?;
     let stored = retained.record.repository.read(&reference, "Version")?;
     let version =
@@ -108,7 +265,7 @@ fn material(
             .find(|row| selection::identity(&row["id"]).ok().as_ref() == Some(identity))
             .cloned(),
         hidden: false,
-        selected,
+        participation,
     })
 }
 
@@ -138,9 +295,7 @@ fn preflight(
         &retained.record.context,
         materials,
         &retained.pending,
-        retained.record.context
-            .get("lane")
-            .and_then(|lane| lane.get("current")),
+        retained.record.repository.imported_index(),
     )?;
     Ok(())
 }

@@ -231,7 +231,8 @@ export async function captureRustClientCurrent(
       replacements: FreshDependencyCache[] = [],
       replacementsOnly = false,
       retainedIdentities?: ReadonlySet<string>,
-      skipDependencyCache = false
+      skipDependencyCache = false,
+      forceDependencyCacheReset = false
     ) => {
       if (!rootPolicy.fresh()) throw new Error('status inventory policy changed');
       if (skipDependencyCache && replacements.length) throw new Error('scope-only command has workspace caches');
@@ -241,7 +242,11 @@ export async function captureRustClientCurrent(
         const validated = await request({ kind: 'statusHistoryValidate', root, plans });
         if (validated.fresh !== true) throw new Error('status history changed');
       }
-      if (!skipDependencyCache && cachePlan && (pending.length || replacements.length || cachePlan.reset)) {
+      if (
+        !skipDependencyCache &&
+        cachePlan &&
+        (pending.length || replacements.length || cachePlan.reset || forceDependencyCacheReset)
+      ) {
         const { commitFreshDependencies } = await import('./rust-fresh-dependencies');
         const baseIdentity = (identity: string) => {
           const separator = identity.lastIndexOf('@');
@@ -260,7 +265,11 @@ export async function captureRustClientCurrent(
               (!replacementsOnly || retainedIdentities?.has(entry.identity)) &&
               !replaced.has(baseIdentity(entry.identity))
           );
-        await commitFreshDependencies(cachePlan, [...entries, ...replacements], request);
+        await commitFreshDependencies(
+          forceDependencyCacheReset ? { ...cachePlan, reset: true } : cachePlan,
+          [...entries, ...replacements],
+          request
+        );
       }
       if (plans.length) {
         const committed = await request({ kind: 'statusHistoryCommit', root, plans });

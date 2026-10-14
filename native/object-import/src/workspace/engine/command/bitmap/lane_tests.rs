@@ -70,6 +70,36 @@ fn lane_updates_preserve_membership_and_emit_canonical_header_order() {
 }
 
 #[test]
+fn first_lane_snapshot_marks_the_existing_bitmap_row_lane_only() {
+    let mut keep = update("local.scope/alpha");
+    keep.keep_ours = true;
+    let mut prepared = prepare_bytes(
+        Path::new("."),
+        serde_json::to_vec(&bitmap()).unwrap(),
+        &context(),
+        &[keep],
+        &[],
+    )
+    .unwrap();
+    prepared
+        .mark_lane_new(&context(), &["local.scope/alpha".into()])
+        .unwrap();
+    let bytes = std::str::from_utf8(&prepared.output).unwrap();
+    let result = crate::recovery::jsonc::parse(&prepared.output).unwrap();
+    assert_eq!(result["alpha"]["onLanesOnly"], true);
+    assert_eq!(result["alpha"]["isAvailableOnCurrentLane"], true);
+    assert!(
+        bytes.find(r#""onLanesOnly""#).unwrap()
+            < bytes.find(r#""isAvailableOnCurrentLane""#).unwrap(),
+    );
+    assert!(
+        prepared
+            .mark_lane_new(&context(), &["local.scope/missing".into()])
+            .is_err(),
+    );
+}
+
+#[test]
 fn lane_membership_changes_recompute_duplicate_name_keys() {
     let mut context = context();
     context["lane"]["additions"] = json!([row("remote.scope", "alpha", "remote-alpha")]);

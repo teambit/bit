@@ -2,11 +2,13 @@ mod cascade;
 mod context;
 mod graph;
 mod hidden;
+mod issue_graph;
 mod issue_heads;
 mod planning;
 mod projection;
 mod publication;
 mod selection;
+mod snap;
 mod source_proofs;
 
 use super::{Record, State, invalid, proof};
@@ -21,16 +23,24 @@ pub(in crate::workspace::engine) struct Prepare {
     home: PathBuf,
     global_remotes_file: PathBuf,
     options: Options,
+    #[serde(skip)]
+    ordinary_snap: bool,
     #[serde(default)]
     dependency_grammar: Value,
 }
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Options {
     pattern: Option<String>,
     message: Option<String>,
     #[serde(default)]
     build: bool,
+    #[serde(default)]
+    unmodified: bool,
+    #[serde(default)]
+    unmerged: bool,
+    #[serde(default)]
+    skip_auto_snap: bool,
 }
 
 pub(super) struct Retained {
@@ -40,7 +50,8 @@ pub(super) struct Retained {
     message: String,
     materials: Vec<super::resolve_snapshot::Material>,
     result: Value,
-    finalized: Option<publication::Prepared>,
+    finalized: publication::Phase,
+    snap: Option<Options>,
 }
 
 pub(in crate::workspace::engine) fn prepare(
@@ -57,6 +68,15 @@ pub(in crate::workspace::engine) fn prepare(
     let count = retained.record.targets.len();
     state.resolve = Some(retained);
     Ok((count, output))
+}
+
+pub(in crate::workspace::engine) fn prepare_snap(
+    mut input: Prepare,
+    state: &mut State,
+    pool: &rayon::ThreadPool,
+) -> io::Result<(usize, Value)> {
+    input.ordinary_snap = true;
+    prepare(&input, state, pool)
 }
 
 #[derive(Deserialize)]
@@ -77,7 +97,10 @@ pub(in crate::workspace::engine) fn plan(
 ) -> io::Result<(usize, Value)> {
     let mut retained =
         snapshots.command.resolve.take().ok_or_else(|| invalid("resolve owner absent"))?;
-    if retained.record.token != input.token || !retained.materials.is_empty() {
+    if retained.record.token != input.token
+        || !retained.materials.is_empty()
+        || !matches!(retained.finalized, publication::Phase::Pending)
+    {
         return Err(invalid("resolve planning state"));
     }
     let result = planning::prepare(&mut retained, input, snapshots, pool);

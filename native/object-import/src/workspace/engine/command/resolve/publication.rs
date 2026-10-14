@@ -6,6 +6,12 @@ use crate::workspace::snapshots;
 use serde_json::{Value, json};
 use std::io;
 
+pub(super) enum Phase {
+    Pending,
+    Noop,
+    Prepared(Box<Prepared>),
+}
+
 pub(super) struct Prepared {
     _directory: scratch::Directory,
     snapshot: resolve_snapshot::Snapshot,
@@ -19,7 +25,7 @@ pub(super) fn finalize(
 ) -> io::Result<Value> {
     if retained.record.token != input.token
         || retained.materials.is_empty()
-        || retained.finalized.is_some()
+        || !matches!(retained.finalized, Phase::Pending)
     {
         return Err(invalid("resolve finalize state"));
     }
@@ -27,15 +33,7 @@ pub(super) fn finalize(
     validate(retained)?;
     let mut receipt = input.snap_receipt;
     receipt["log"]["message"] = json!(retained.message);
-    let lane = retained.record.context
-        .get("lane")
-        .and_then(|value| value.get("current"))
-        .filter(|value| !value.is_null())
-        .map(|current| {
-            let mut value = current.clone();
-            value["id"] = retained.record.context["lane"]["currentId"].clone();
-            value
-        });
+    let lane = lane_current(&retained.record.context);
     let directory = scratch::Directory::create()?;
     let snapshot = resolve_snapshot::prepare(
         &retained.record.request.root,
@@ -51,12 +49,57 @@ pub(super) fn finalize(
         &retained.materials,
         &snapshot.versions,
         &retained.pending,
-        lane.as_ref(),
         &receipt,
+        retained.record.repository.imported_index(),
     )?;
     publication.validate()?;
-    retained.finalized = Some(Prepared { _directory: directory, snapshot, publication });
+    if retained.snap.is_some() {
+        allocate_snap_report(&mut retained.result, &snapshot.versions)?;
+    }
+    retained.finalized =
+        Phase::Prepared(Box::new(Prepared { _directory: directory, snapshot, publication }));
     Ok(json!({"token":retained.record.token,"result":retained.result}))
+}
+
+fn lane_current(context: &Value) -> Option<Value> {
+    context
+        .get("lane")
+        .and_then(|value| value.get("current"))
+        .filter(|value| !value.is_null())
+        .map(|current| {
+            let mut value = current.clone();
+            value["id"] = context["lane"]["currentId"].clone();
+            value
+        })
+}
+
+fn allocate_snap_report(result: &mut Value, versions: &[Value]) -> io::Result<()> {
+    result["snappedComponents"] = json!(
+        versions
+            .iter()
+            .filter(|row| row["selected"] == true)
+            .map(|row| format!(
+                "{}@{}",
+                row["identity"].as_str().unwrap(),
+                row["hash"].as_str().unwrap()
+            ))
+            .collect::<Vec<_>>()
+    );
+    for row in result["autoSnappedResults"]
+        .as_array_mut()
+        .ok_or_else(|| invalid("snap automatic report"))?
+    {
+        let version = versions
+            .iter()
+            .find(|version| version["identity"] == row["id"])
+            .ok_or_else(|| invalid("snap automatic allocation"))?;
+        row["id"] = json!(format!(
+            "{}@{}",
+            version["identity"].as_str().unwrap(),
+            version["hash"].as_str().unwrap()
+        ));
+    }
+    Ok(())
 }
 
 pub(super) fn apply(input: &Apply, retained: &mut Retained) -> io::Result<Value> {
@@ -66,8 +109,12 @@ pub(super) fn apply(input: &Apply, retained: &mut Retained) -> io::Result<Value>
     super::super::bitmap::validate_history_file_id(&input.file_id)?;
     proof::verify(&input.dependency_read_set)?;
     validate(retained)?;
-    let prepared =
-        retained.finalized.as_mut().ok_or_else(|| invalid("resolve incomplete finalization"))?;
+    if matches!(retained.finalized, Phase::Noop) && retained.snap.is_some() {
+        return Ok(json!({"applied":true,"result":null,"postPersistNotifications":0}));
+    }
+    let Phase::Prepared(prepared) = &mut retained.finalized else {
+        return Err(invalid("resolve incomplete finalization"));
+    };
     prepared.snapshot.validate()?;
     prepared.publication.validate()?;
     retained.record.repository.commit_import()?;

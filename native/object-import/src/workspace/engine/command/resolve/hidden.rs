@@ -1,5 +1,8 @@
 use super::{
-    super::{capture, invalid, repository, resolve_snapshot::Material},
+    super::{
+        capture, invalid, repository,
+        resolve_snapshot::{Material, Participation},
+    },
     Retained, selection,
 };
 use crate::workspace::{engine::status_models::harmony, snapshots};
@@ -15,7 +18,7 @@ pub(super) fn append(
     let entries = crate::command_import::lane::entries(&lane["value"])?;
     let selected = materials
         .iter()
-        .filter(|row| row.selected)
+        .filter(|row| row.participation.selected)
         .map(|row| (row.identity.clone(), row.current_head.clone()))
         .collect::<Vec<_>>();
     let visible: HashSet<_> = materials
@@ -30,6 +33,7 @@ pub(super) fn append(
         let version = retained.record.repository.read(&entry.head, "Version")?;
         let mut version = harmony::project(&version)?;
         enrich_packages(&mut version)?;
+        saved::validate(&entry, &version, &mut retained.record.repository)?;
         candidates.push((entry, version));
     }
     // GraphIds.predecessors is keyed by exact version, unlike workspace autotag.
@@ -46,7 +50,10 @@ pub(super) fn append(
     Ok(())
 }
 
-fn depends_on(version: &Value, identity: &str, head: &str) -> bool {
+pub(super) fn depends_on(version: &Value, identity: &str, head: &str) -> bool {
+    let matches = |id: &Value| {
+        selection::identity(id).ok().as_deref() == Some(identity) && id["version"] == head
+    };
     ["dependencies", "devDependencies"]
         .iter()
         .any(|field| {
@@ -54,11 +61,13 @@ fn depends_on(version: &Value, identity: &str, head: &str) -> bool {
                 .as_array()
                 .into_iter()
                 .flatten()
-                .any(|dep| {
-                    selection::identity(&dep["id"]).ok().as_deref() == Some(identity)
-                        && dep["id"]["version"] == head
-                })
+                .any(|dep| matches(&dep["id"]))
         })
+        || version["extensions"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .any(|extension| matches(&extension["extensionId"]))
 }
 
 fn material(
@@ -93,7 +102,7 @@ fn material(
             })
             .cloned(),
         hidden: true,
-        selected: false,
+        participation: Participation { selected: false, automatic: true },
     })
 }
 
@@ -142,3 +151,5 @@ fn enrich_package(dependency: &mut Value, entries: &[Value]) -> io::Result<()> {
 
 #[cfg(test)]
 mod tests;
+
+mod saved;

@@ -233,6 +233,8 @@ async function captureForSnapshot(
 export async function runRustWorkspaceCommand(): Promise<boolean> {
   const { runRustWorkspaceRecovery } = await import('./rust-workspace-recovery');
   if (await runRustWorkspaceRecovery()) return true;
+  const { runRustWorkspaceSnap } = await import('./rust-workspace-snap');
+  if (await runRustWorkspaceSnap()) return true;
   const { runRustWorkspaceResolve } = await import('./rust-workspace-resolve');
   if (await runRustWorkspaceResolve()) return true;
   const options = parseRustWorkspaceCommand(process.argv.slice(2));

@@ -41,9 +41,21 @@ export function resolveSemver(context: any, capture: Capture) {
   return snapshotSemverGrammar(versions);
 }
 
-export async function validateResolveIssues(root: string, context: any, capture: Capture, identities: string[]) {
+export async function validateResolveIssues(
+  root: string,
+  context: any,
+  capture: Capture,
+  identities: string[],
+  issueGraph?: any
+) {
   if (!Array.isArray(context.resolveIssueHeads)) throw new Error('resolve issue head proof receipt absent');
-  const issues = await collectRustStatusIssues(root, context, capture.components, context.resolveIssueHeads);
+  const issues = await collectRustStatusIssues(
+    root,
+    context,
+    capture.components,
+    context.resolveIssueHeads,
+    issueGraph
+  );
   if (!issues) throw new Error('resolve issue callback requires canonical loading');
   const selected = new Set(identities);
   if (issues.some((component) => selected.has(component.id) && component.issues.some((issue) => issue.isTagBlocker)))

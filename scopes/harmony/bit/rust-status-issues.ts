@@ -1,4 +1,4 @@
-import { ordinaryResolveIssueHeads } from './rust-workspace-resolve-heads';
+import { ordinaryResolveIssueHeads, resolveExternalIssueVertices } from './rust-workspace-resolve-heads';
 import fs from 'fs';
 import path from 'path';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
@@ -18,10 +18,14 @@ export async function collectRustStatusIssues(
   root: string,
   context: any,
   components: Component[],
-  resolveIssueHeads?: any
+  resolveIssueHeads?: any,
+  issueGraph?: any
 ) {
-  const ids = new Set(components.map((component) => component.identity));
-  if (components.some((component) => component.dependencies.some((id) => !ids.has(id)))) return undefined;
+  const external = resolveIssueHeads === undefined ? [] : resolveExternalIssueVertices(components, issueGraph);
+  if (!external) return undefined;
+  const graphComponents = [...components, ...external];
+  const graphIds = new Set(graphComponents.map((component) => component.identity));
+  if (components.some((component) => component.dependencies.some((id) => !graphIds.has(id)))) return undefined;
   if (
     !(resolveIssueHeads === undefined
       ? ordinaryModelHeads(context)
@@ -29,8 +33,8 @@ export async function collectRustStatusIssues(
   )
     return undefined;
   const graph = new Graph(
-    components.map((component) => new Node(component.identity, true)),
-    components.flatMap((component) =>
+    graphComponents.map((component) => new Node(component.identity, true)),
+    graphComponents.flatMap((component) =>
       [...new Set(component.dependencies)].map((id) => new Edge(component.identity, id, true))
     )
   );

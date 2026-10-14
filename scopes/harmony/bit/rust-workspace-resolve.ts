@@ -84,7 +84,7 @@ export async function readRustWorkspaceResolve(
       formatRustWorkspaceResolve(plan.result);
       commandProgress(plan.progress, 'merge');
       if (!Array.isArray(plan.needsSnap)) return undefined;
-      await validateResolveIssues(root, prepared.context, capture, plan.needsSnap);
+      await validateResolveIssues(root, prepared.context, capture, plan.needsSnap, plan.issueGraph);
       const snapReceipt = await resolveSnapshotReceipt(plan.needsSnap, plan.scalarPreparation);
       const finalized = await request({
         kind: 'commandResolveFinalize',

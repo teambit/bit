@@ -171,3 +171,26 @@ fn retained_sources_project_the_same_raw_data_as_the_post_write_workspace() {
     }
     assert!(proof::verify(&proofs).is_err());
 }
+
+#[test]
+fn installed_external_component_retains_package_identity_and_freshness() {
+    let fixture = Fixture::new();
+    fixture.write("comp/index.js", "require('@external/aspect');");
+    fixture.write("node_modules/@external/aspect/package.json", r#"{"name":"@external/aspect","version":"0.4.12","main":"index.js","componentId":{"scope":"external.scope","name":"aspect","version":"0.4.12"}}"#);
+    fixture.write("node_modules/@external/aspect/index.js", "module.exports = 1;");
+    let request = fixture.request(&["index.js"]);
+    let output = Fixture::run(request.clone()).unwrap();
+    assert_eq!(
+        output["detected"]["allDependencies"]["dependencies"],
+        json!([{
+            "id":{"scope":"external.scope","name":"aspect","version":"0.4.12"},
+            "relativePaths":[],"packageName":"@external/aspect"
+        }]),
+    );
+    assert_eq!(output["grammarInputs"], json!(["0.4.12"]));
+    let read_set: Vec<proof::Proof> = serde_json::from_value(output["readSet"].clone()).unwrap();
+    proof::verify(&read_set).unwrap();
+    fixture.write("node_modules/@external/aspect/package.json", r#"{"name":"@external/aspect","version":"0.4.13","main":"index.js","componentId":{"scope":"external.scope","name":"aspect","version":"0.4.13"},"bit":{"peer":true}}"#);
+    assert!(proof::verify(&read_set).is_err());
+    assert!(Fixture::run(request).is_err());
+}

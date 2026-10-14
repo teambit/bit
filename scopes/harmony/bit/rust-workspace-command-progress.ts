@@ -9,7 +9,7 @@ type ImportProgress = {
 };
 
 /** Validate the entire receipt before any visible command or filesystem effects. */
-export function commandProgress(value: any, operation: 'checkout' | 'merge' | 'recovery') {
+export function commandProgress(value: any, operation: 'checkout' | 'merge' | 'recovery' | 'snap') {
   if (value === undefined) return async () => {};
   if (!Number.isSafeInteger(value.bitmapCount) || value.bitmapCount < 0 || !Array.isArray(value.imports))
     throw new Error('native command progress receipt');
@@ -18,11 +18,14 @@ export function commandProgress(value: any, operation: 'checkout' | 'merge' | 'r
   const loads: number[] = value.loads ?? [];
   if (
     !Array.isArray(loads) ||
-    loads.length > 4 ||
+    loads.length > (operation === 'snap' ? 5 : 4) ||
     loads.some((count) => !Number.isSafeInteger(count) || count < 0 || count > 4096)
   )
     throw new Error('native command snap progress receipt');
-  const rows: ImportProgress[] = value.imports;
+  const graphRows: ImportProgress[] = value.graphImports ?? [];
+  if (!Array.isArray(graphRows) || (operation !== 'snap' && graphRows.length))
+    throw new Error('native graph import progress');
+  const rows: ImportProgress[] = [...value.imports, ...graphRows];
   if (
     rows.length > 16384 ||
     rows.some(
@@ -42,11 +45,12 @@ export function commandProgress(value: any, operation: 'checkout' | 'merge' | 'r
     throw new Error('native command import progress receipt');
   return async () => {
     if (operation !== 'checkout') {
-      rows.forEach(renderImport);
+      value.imports.forEach(renderImport);
       if (operation === 'recovery') return;
       for (const count of loads) loader.start(`loading ${count} component(s)`);
       if (loads.length && !value.snapFailed) {
         loader.start('importing missing dependencies...');
+        graphRows.forEach(renderImport);
         loader.start('adding dependencies graph...');
       }
       return;

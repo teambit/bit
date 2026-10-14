@@ -30,6 +30,13 @@ function dependencyInventory(metadata) {
     .sort((a, b) => `${a.name} ${a.version}`.localeCompare(`${b.name} ${b.version}`, 'en'));
 }
 
+// Some crates (including junction on Windows) publish their full license as COPYRIGHT.
+function licenseFiles(directory) {
+  return fs.readdirSync(directory)
+    .filter((name) => /^(LICENSE|COPYING|NOTICE|COPYRIGHT)/i.test(name) && fs.statSync(path.join(directory, name)).isFile())
+    .sort();
+}
+
 function notices(target, compiler) {
   const sources = JSON.parse(fs.readFileSync(path.join(licenseRoot, 'sources.json'), 'utf8'));
   const napiRevisions = Object.fromEntries(Object.entries(sources.find(entry => entry.name === 'napi-rs-MIT.txt').packages).map(([name, pin]) => [name, [pin.version, pin.revision]]));
@@ -62,10 +69,7 @@ function notices(target, compiler) {
   for (const entry of dependencies) {
     const directory = path.dirname(entry.manifest_path);
     const owner = `${entry.name} ${entry.version}`;
-    const files = fs
-      .readdirSync(directory)
-      .filter((name) => /^(LICENSE|COPYING|NOTICE)/i.test(name) && fs.statSync(path.join(directory, name)).isFile())
-      .sort();
+    const files = licenseFiles(directory);
     if (!files.length && entry.name.startsWith('oxc_')) {
       const index = entry.name === 'oxc_index';
       const revision = index ? '8e09fe324eb6df02f56e4eacdfac958930300380' : '7f56ec9301e7327b4402c3010c87803b58b6ea30';
@@ -155,4 +159,4 @@ function packageFallbacks(entry, directory, sources) {
   return matches.map((source) => source.name);
 }
 
-module.exports = { notices, dependencyInventory };
+module.exports = { notices, dependencyInventory, licenseFiles };

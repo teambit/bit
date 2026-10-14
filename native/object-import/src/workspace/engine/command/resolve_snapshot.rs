@@ -25,7 +25,13 @@ pub(super) struct Material {
     pub current_head: String,
     pub pending: Option<Value>,
     pub hidden: bool,
+    pub participation: Participation,
+}
+
+#[derive(Clone, Copy)]
+pub(super) struct Participation {
     pub selected: bool,
+    pub automatic: bool,
 }
 
 pub(super) struct Snapshot {

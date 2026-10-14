@@ -4,11 +4,11 @@ use std::{collections::HashSet, io};
 
 /// Reuse the independently qualified graphlib-compatible snapshot kernel.
 /// Candidate order precedes selected order, just like workspace.getAutoTagInfo.
-pub(super) fn visible(
+pub(super) fn reports(
     current: &[Value],
     selected: &[String],
     semver: &Value,
-) -> io::Result<Vec<String>> {
+) -> io::Result<Vec<Value>> {
     let selected_set: HashSet<_> = selected
         .iter()
         .map(String::as_str)
@@ -32,7 +32,16 @@ pub(super) fn visible(
         .as_array()
         .ok_or_else(|| invalid("resolve autotag result"))?
         .iter()
-        .map(|row| result_identity(row, &ordered))
+        .map(|row| {
+            let identity = result_identity(row, &ordered)?;
+            let triggers = row["triggeredBy"]
+                .as_array()
+                .ok_or_else(|| invalid("snap cascade triggers"))?
+                .iter()
+                .map(|locator| trigger(locator, &rows))
+                .collect::<io::Result<Vec<_>>>()?;
+            Ok(json!({"id":identity,"triggeredBy":triggers}))
+        })
         .collect()
 }
 
@@ -91,8 +100,38 @@ fn id(row: &Value) -> io::Result<Value> {
     let (scope, name) =
         identity.split_once('/').ok_or_else(|| invalid("resolve scoped identity"))?;
     let version = row["version"].as_str().ok_or_else(|| invalid("resolve capture version"))?;
-    Ok(json!({"scope":scope,"name":name,"version":version}))
+    Ok(if version.is_empty() {
+        json!({"scope":scope,"name":name})
+    } else {
+        json!({"scope":scope,"name":name,"version":version})
+    })
 }
 
 #[cfg(test)]
 mod tests;
+
+fn trigger(locator: &Value, rows: &[Value]) -> io::Result<String> {
+    let index =
+        locator["component"].as_u64().ok_or_else(|| invalid("snap trigger component"))? as usize;
+    let row = rows.get(index).ok_or_else(|| invalid("snap trigger row"))?;
+    let id = if locator["kind"] == "component" {
+        &row["id"]
+    } else {
+        let index =
+            locator["index"].as_u64().ok_or_else(|| invalid("snap trigger dependency"))? as usize;
+        row["dependencies"]
+            .as_array()
+            .and_then(|values| values.get(index))
+            .ok_or_else(|| invalid("snap trigger dependency index"))?
+    };
+    let identity = super::selection::identity(id)?;
+    Ok(
+        match id["version"]
+            .as_str()
+            .filter(|version| !version.is_empty())
+        {
+            Some(version) => format!("{identity}@{version}"),
+            None => identity,
+        },
+    )
+}

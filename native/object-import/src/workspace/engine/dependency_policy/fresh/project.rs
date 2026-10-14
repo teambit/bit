@@ -205,8 +205,9 @@ impl Projection<'_> {
         if !self.request.detection.workspace_components
             .iter()
             .any(|identity| unversioned(identity) == base)
+            && package.concrete.as_deref().is_none_or(str::is_empty)
         {
-            return Err(invalid("fresh external component graph"));
+            return Err(invalid("fresh external component version absent"));
         }
         if package.manifest["bit"]["peer"] != Value::Null
             && package.manifest["bit"]["peer"] != false

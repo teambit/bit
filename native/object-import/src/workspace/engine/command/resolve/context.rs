@@ -28,35 +28,54 @@ pub(super) fn prepare(
         .as_array()
         .ok_or_else(|| invalid("resolve targets"))?
         .clone();
-    let selected = selection::select(&targets, &pending, None)?;
+    let selected = if request.ordinary_snap {
+        Vec::new()
+    } else {
+        selection::select(&targets, &pending, None)?
+    };
     let mut repository = repository::Repository::new(&request.root, Some(imported));
     bind_models(&context, &mut repository)?;
     context["resolveIssueHeads"] = super::issue_heads::capture(&context, &mut repository)?;
     super::super::setup::validate_licenses(&context, &mut repository)?;
     proof::verify(&proofs)?;
     let token = token(state)?;
-    Ok(Retained {
-        record: Record {
-            request: ordinary,
-            context,
-            targets,
-            repository,
-            proofs,
-            token,
-            planned: None,
-            history: history::State::default(),
-        },
+    let record = Record {
+        request: ordinary,
+        context,
+        targets,
+        repository,
+        proofs,
+        token,
+        planned: None,
+        history: history::State::default(),
+    };
+    Ok(initial(record, pending, selected, request))
+}
+
+fn initial(
+    record: Record,
+    pending: Vec<Value>,
+    selected: Vec<String>,
+    request: &Prepare,
+) -> Retained {
+    Retained {
+        record,
         pending,
         selected,
         message: request.options.message.clone().unwrap_or_default(),
         materials: Vec::new(),
         result: Value::Null,
-        finalized: None,
-    })
+        finalized: super::publication::Phase::Pending,
+        snap: request.ordinary_snap.then(|| request.options.clone()),
+    }
 }
 
 fn pending_rows(request: &Prepare) -> io::Result<Vec<Value>> {
-    config::document(&request.root.join(".bit/unmerged.json"))?
+    let path = request.root.join(".bit/unmerged.json");
+    if request.ordinary_snap && !path.try_exists()? {
+        return Ok(Vec::new());
+    }
+    config::document(&path)?
         .as_array()
         .cloned()
         .ok_or_else(|| invalid("resolve pending list"))
@@ -67,6 +86,16 @@ fn metadata(
     pool: &rayon::ThreadPool,
 ) -> io::Result<(Value, command_import::PreparedImport)> {
     let bitmap = config::document(&request.root.join(".bitmap"))?;
+    if request.ordinary_snap
+        && bitmap
+            .as_object()
+            .is_some_and(|rows| {
+                rows.values()
+                    .any(|row| row["localOnly"] == true)
+            })
+    {
+        return Err(invalid("snap local-only selection requires canonical policy"));
+    }
     let settings = config::configuration_for_command(&request.root, true)?;
     let (structural, configs) = recovery::bitmap::project(&bitmap)?;
     let targets = super::super::lane_context::visibility::targets(&structural, &settings)?;
@@ -95,6 +124,13 @@ fn metadata(
 fn validate_request(request: &Prepare) -> io::Result<()> {
     for path in [&request.root, &request.home, &request.global_remotes_file] {
         crate::workspace::engine::path(path)?;
+    }
+    if !request.ordinary_snap
+        && (request.options.unmodified
+            || request.options.unmerged
+            || request.options.skip_auto_snap)
+    {
+        return Err(invalid("resolve ordinary snapshot flags"));
     }
     if request.options.build
         || request.home.join(".bitrc.jsonc").try_exists()?

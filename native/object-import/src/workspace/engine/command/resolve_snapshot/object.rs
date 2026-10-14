@@ -36,7 +36,7 @@ pub(super) fn prepare(
     objects.push(snapshot::object("Version", Some(hash), version.clone())?);
     objects.push(snapshot::object("Component", None, model.clone())?);
     Ok(json!({"identity":material.identity,"hash":hash,"version":version,"model":model,
-        "selected":material.selected,"hidden":material.hidden}))
+        "selected":material.participation.selected,"hidden":material.hidden}))
 }
 
 fn metadata(
@@ -49,7 +49,7 @@ fn metadata(
     version["schema"] = json!("2.0.0");
     references::rewrite_batch_refs(&mut version, hashes)?;
     version["log"] = receipt["log"].clone();
-    if !material.selected {
+    if material.participation.automatic {
         auto_message(&mut version);
     }
     version["batchId"] = receipt["batchId"].clone();

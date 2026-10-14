@@ -12,7 +12,7 @@ pub(super) struct Prepared {
     bitmap: bitmap::Prepared,
     finalization: finalization::Prepared,
     pending_path: PathBuf,
-    pending_bytes: Vec<u8>,
+    pending_bytes: Option<Vec<u8>>,
     proofs: Vec<proof::Proof>,
     reason: String,
 }
@@ -25,22 +25,31 @@ pub(super) fn preflight(
     context: &Value,
     materials: &[resolve_snapshot::Material],
     pending: &[Value],
-    lane: Option<&Value>,
+    imported_index: Option<&Value>,
 ) -> io::Result<()> {
     let heads = materials
         .iter()
-        .map(|material| (material.identity.as_str(), material.current_head.as_str()))
+        .map(|material| {
+            (
+                material.identity.as_str(),
+                if material.current_head.is_empty() {
+                    "0000000000000000000000000000000000000000"
+                } else {
+                    material.current_head.as_str()
+                },
+            )
+        })
         .collect::<HashMap<_, _>>();
     let versions = materials
         .iter()
         .map(|material| {
             let mut version = material.version.clone();
             resolve_markers(&mut version, &heads)?;
-            Ok(json!({"identity":material.identity,"hash":material.current_head,"version":version}))
+            Ok(json!({"identity":material.identity,"hash":heads[material.identity.as_str()],"version":version}))
         })
         .collect::<io::Result<Vec<_>>>()?;
     let receipt = json!({"log":{"message":""}});
-    prepare(root, context, materials, &versions, pending, lane, &receipt)?.validate()
+    prepare(root, context, materials, &versions, pending, &receipt, imported_index)?.validate()
 }
 
 fn resolve_markers(value: &mut Value, heads: &HashMap<&str, &str>) -> io::Result<()> {
@@ -162,24 +171,52 @@ fn reason(receipt: &Value) -> String {
     format!("snap (message: {})", if message.is_empty() { "N/A" } else { message })
 }
 
+fn lane_new_ids(context: &Value, materials: &[resolve_snapshot::Material]) -> Vec<String> {
+    if context["lane"]["currentId"]["name"]
+        .as_str()
+        .is_none_or(|name| name == "main")
+    {
+        return Vec::new();
+    }
+    materials
+        .iter()
+        .filter(|material| !material.hidden && material.current_head.is_empty())
+        .map(|material| material.identity.clone())
+        .collect()
+}
+
 pub(super) fn prepare(
     root: &Path,
     context: &Value,
     materials: &[resolve_snapshot::Material],
     versions: &[Value],
     pending: &[Value],
-    _lane: Option<&Value>,
     receipt: &Value,
+    imported_index: Option<&Value>,
 ) -> io::Result<Prepared> {
     let batch = batch(context, materials, versions)?;
+    let lane_new = lane_new_ids(context, materials);
     let original = fs::read(root.join(".bitmap"))?;
-    let bitmap = bitmap::prepare_bytes(root, original, context, &batch.updates, &[])?;
+    let mut bitmap = bitmap::prepare_bytes(root, original, context, &batch.updates, &[])?;
+    bitmap.mark_lane_new(context, &lane_new)?;
     let mut finalization = finalization::prepare(root, &batch.inputs, true)?;
+    finalization.mark_lane_new(root, &lane_new)?;
     finalization.resolve_licenses(root, &batch.inputs)?;
+    finalization.imported_index(root, imported_index)?;
+    finalization.snapshot_index(
+        root,
+        materials
+            .iter()
+            .filter(|material| material.current_head.is_empty())
+            .map(|material| material.identity.as_str()),
+    )?;
     let pending_path = root.join(".bit/unmerged.json");
     let mut proofs = Vec::new();
     proof::read(&pending_path, &mut proofs)?;
-    let pending_bytes = pending_bytes(pending, &batch.identities)?;
+    let pending_bytes = pending_path
+        .try_exists()?
+        .then(|| pending_bytes(pending, &batch.identities))
+        .transpose()?;
     let output = Prepared {
         bitmap,
         finalization,
@@ -205,7 +242,9 @@ impl Prepared {
         if backup.is_some() {
             return Err(invalid("resolve bitmap history backup"));
         }
-        fs::write(&self.pending_path, &self.pending_bytes)?;
+        if let Some(bytes) = &self.pending_bytes {
+            fs::write(&self.pending_path, bytes)?;
+        }
         Ok(())
     }
 }

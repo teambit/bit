@@ -1,4 +1,4 @@
-use super::{Material, allocations};
+use super::{Material, Participation, allocations};
 use serde_json::json;
 
 #[test]
@@ -11,7 +11,7 @@ fn distinct_components_cannot_share_a_snapshot_hash() {
         current_head: String::new(),
         pending: None,
         hidden: false,
-        selected: true,
+        participation: Participation { selected: true, automatic: false },
     };
     let materials = [material("scope/one"), material("scope/two")];
     let receipt = json!({"batchId":"batch","bitVersion":"2.2.93","log":{"date":"1"},

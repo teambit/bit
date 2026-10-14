@@ -107,6 +107,22 @@ fn lane_snapshot_stages_current_lane_config_and_validates_its_original_bytes() {
         .1;
     let rows: Value = serde_json::from_slice(bytes).unwrap();
     assert_eq!(rows[0]["id"]["version"], "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+    prepared
+        .mark_lane_new(&directory.0, &["scope/alpha".into()])
+        .unwrap();
+    let bytes = &prepared.writes
+        .iter()
+        .find(|(path, _)| *path == config)
+        .unwrap()
+        .1;
+    let marked: Value = serde_json::from_slice(bytes).unwrap();
+    assert_eq!(marked[0]["componentMapObject"]["onLanesOnly"], true);
+    assert_eq!(marked[0]["componentMapObject"]["isAvailableOnCurrentLane"], true);
+    let text = std::str::from_utf8(bytes).unwrap();
+    assert!(
+        text.find(r#""onLanesOnly""#).unwrap()
+            < text.find(r#""isAvailableOnCurrentLane""#).unwrap(),
+    );
     assert!(
         !prepared.writes
             .iter()
@@ -116,6 +132,43 @@ fn lane_snapshot_stages_current_lane_config_and_validates_its_original_bytes() {
     prepared.validate().unwrap();
     fs::write(config, b"[{}]").unwrap();
     assert!(prepared.validate().is_err());
+}
+
+#[test]
+fn existing_lane_only_marker_is_retained_in_staged_configuration() {
+    let (directory, version) = fixture();
+    let bitmap_path = directory.0.join(".bitmap");
+    let mut bitmap: Value = serde_json::from_slice(&fs::read(&bitmap_path).unwrap()).unwrap();
+    bitmap["_bit_lane"] = json!({"id":{"scope":"scope","name":"feature"},"exported":true});
+    bitmap["alpha"]["onLanesOnly"] = json!(true);
+    fs::write(bitmap_path, serde_json::to_vec(&bitmap).unwrap()).unwrap();
+    let mut prepared = super::Prepared {
+        proofs: Vec::new(),
+        writes: Vec::new(),
+        links: Vec::new(),
+        copies: Vec::new(),
+    };
+    super::staged::prepare(
+        &directory.0,
+        &[Input {
+            identity: "scope/alpha",
+            directory: "alpha",
+            hash: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            version: &version,
+        }],
+        &mut prepared,
+    )
+    .unwrap();
+    prepared.validate().unwrap();
+    let staged = directory.0.join(".bit/staged-config/scope/feature.json");
+    let bytes = &prepared.writes
+        .iter()
+        .find(|(path, _)| *path == staged)
+        .unwrap()
+        .1;
+    let rows: Value = serde_json::from_slice(bytes).unwrap();
+    assert_eq!(rows[0]["componentMapObject"]["onLanesOnly"], true);
+    assert_eq!(rows[0]["componentMapObject"]["isAvailableOnCurrentLane"], true);
 }
 
 #[test]
@@ -162,4 +215,49 @@ fn snapshot_finalization_keeps_planned_import_index_entries_and_original_freshne
         serde_json::from_slice(&fs::read(directory.0.join(".bit/index.json")).unwrap()).unwrap();
     assert_eq!(persisted, imported);
     assert!(planned.validate().is_err());
+}
+
+#[test]
+fn package_component_id_preserves_existing_order_and_serializes_first_snapshot_id() {
+    for new_component in [false, true] {
+        let (directory, mut version) = fixture();
+        version["files"] = json!([]);
+        let manifest = directory.0.join("node_modules/@scope/alpha/package.json");
+        if new_component {
+            let mut package: Value = serde_json::from_slice(&fs::read(&manifest).unwrap()).unwrap();
+            package["componentId"] = json!({"name":"alpha","scope":"scope"});
+            fs::write(&manifest, serde_json::to_vec(&package).unwrap()).unwrap();
+        }
+        let prepared = prepare(
+            &directory.0,
+            &[Input {
+                identity: "scope/alpha",
+                directory: "alpha",
+                hash: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                version: &version,
+            }],
+            false,
+        )
+        .unwrap();
+        let (_, bytes) = prepared.writes
+            .iter()
+            .find(|(path, _)| *path == manifest)
+            .unwrap();
+        let package: Value = serde_json::from_slice(bytes).unwrap();
+        let keys: Vec<_> = package["componentId"]
+            .as_object()
+            .unwrap()
+            .keys()
+            .map(String::as_str)
+            .collect();
+        assert_eq!(
+            keys,
+            if new_component {
+                vec!["name", "version", "scope"]
+            } else {
+                vec!["scope", "name", "version"]
+            },
+        );
+        assert_eq!(package["componentId"]["version"], "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+    }
 }

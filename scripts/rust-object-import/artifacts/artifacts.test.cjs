@@ -6,7 +6,7 @@ const os = require('node:os');
 const zlib = require('node:zlib');
 const { encode, decode, MAX_ARCHIVE } = require('./archive.cjs');
 const { targets, sha256, buildCommand, sourceIdentity, verifyBinary, verifyMembers } = require('./contract.cjs');
-const { dependencyInventory } = require('./notices.cjs');
+const { dependencyInventory, licenseFiles } = require('./notices.cjs');
 const { verifiedArchive, smoke } = require('./smoke.cjs');
 const { packageHelper } = require('./package-helper.cjs');
 function fixture(target = 'x86_64-unknown-linux-gnu') {
@@ -313,6 +313,20 @@ test('optional workspace addon is bound to exact bytes, target, ABI and build pr
   assert.throws(() => verifyMembers(missing));
   addon[18] ^= 1;
   assert.throws(() => verifyMembers(members));
+});
+
+test('notice discovery includes COPYRIGHT license text and excludes matching directories', (t) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'bit-notice-copyright-'));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const license = 'MIT License\nCopyright (c) fixture author\nPermission is hereby granted...\n';
+  fs.writeFileSync(path.join(directory, 'COPYRIGHT'), license);
+  fs.writeFileSync(path.join(directory, 'README.md'), 'not a license');
+  fs.mkdirSync(path.join(directory, 'LICENSES'));
+  assert.deepEqual(licenseFiles(directory), ['COPYRIGHT']);
+  assert.equal(fs.readFileSync(path.join(directory, licenseFiles(directory)[0]), 'utf8'), license);
+  fs.writeFileSync(path.join(directory, 'license-mit.txt'), license);
+  fs.writeFileSync(path.join(directory, 'NOTICE'), 'notice');
+  assert.deepEqual(licenseFiles(directory), ['COPYRIGHT', 'NOTICE', 'license-mit.txt']);
 });
 
 test('Apple addons are stripped by Apple strip and re-signed, other targets by rustc', () => {
