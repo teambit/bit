@@ -24,6 +24,20 @@ const scenarios = [
     fresh: true,
   },
   { name: 'fetch-default', args: ['fetch', '--components'], fresh: false },
+  {
+    name: 'fetch-lane-selected',
+    args: ['fetch', 'qualification.alpha/feature', '--lanes'],
+    fresh: true,
+    fileOnly: true,
+  },
+  {
+    name: 'fetch-lane-repeat',
+    args: ['fetch', 'qualification.alpha/feature', '--lanes'],
+    fresh: true,
+    fileOnly: true,
+    setup: 'prefetched-lane',
+    allowsNoObjects: true,
+  },
   { name: 'import-objects-selected', args: ['import', 'qualification.alpha/alpha@1.0.0', '--objects'], fresh: true },
   {
     name: 'import-objects-all-history',
@@ -172,6 +186,10 @@ async function cloneInboundScenario(producer, directory, scenario, remotes, comm
     await fs.rm(path.join(directory, '.bit/index.json'), { force: true });
   }
   await scopeRemotes(directory, remotes);
+  if (scenario.setup === 'prefetched-lane') {
+    const result = await command(directory, ['fetch', 'qualification.alpha/feature', '--lanes']);
+    assert.equal(result.code, 0, result.stderr || result.stdout);
+  }
   return snapshotScope(directory, true);
 }
 
@@ -262,6 +280,18 @@ async function run(cli, helper, reportFile, options = {}) {
       const result = await runCommand(producer, args);
       assert.equal(result.code, 0, `${args.join(' ')}: ${result.stderr || result.stdout}`);
     }
+    const laneProducer = path.join(temporary, 'lane-producer');
+    await fs.cp(producer, laneProducer, { recursive: true, verbatimSymlinks: true });
+    for (const args of [
+      ['lane', 'create', 'feature', '--scope', 'qualification.alpha'],
+      ['snap', 'alpha', '--message', 'lane', '--skip-auto-snap', '--disable-snap-pipeline', '--ignore-issues', '*'],
+      ['export', '--origin-directly'],
+    ]) {
+      if (args[0] === 'snap')
+        await fs.writeFile(path.join(laneProducer, 'alpha/index.js'), 'exports.value = "alpha:lane";\n');
+      const result = await runCommand(laneProducer, args);
+      assert.equal(result.code, 0, `${args.join(' ')}: ${result.stderr || result.stdout}`);
+    }
     const remoteBefore = Object.fromEntries(
       await Promise.all(Object.entries(paths).map(async ([name, target]) => [name, await snapshotScope(target)]))
     );
@@ -308,6 +338,7 @@ async function run(cli, helper, reportFile, options = {}) {
       const remotes = transport === 'http' ? httpRemotes : fileRemotes;
       for (const mode of modes) {
         for (const scenario of selected) {
+          if (scenario.fileOnly && transport !== 'file') continue;
           const directory = path.join(temporary, `${transport}-${mode}-${scenario.name}`);
           const beforeBase = await cloneInboundScenario(producer, directory, scenario, remotes, runCommand);
           const before = { ...beforeBase, ...(await captureStorage(cli, directory, beforeBase)) };
@@ -329,7 +360,8 @@ async function run(cli, helper, reportFile, options = {}) {
             );
           }
           assert.ok(
-            Object.keys(after.objects).length > Object.keys(before.objects).length,
+            Object.keys(after.objects).length > Object.keys(before.objects).length ||
+              (scenario.allowsNoObjects && Object.keys(after.objects).length === Object.keys(before.objects).length),
             `${scenario.name}: object bytes must persist`
           );
           if (scenario.writesFiles)

@@ -4,6 +4,7 @@ import type { RustWorkspaceInboundOptions } from './rust-workspace-inbound-optio
 export type RustInboundReceipt = {
   token: string;
   owner: 'rust';
+  laneFetch?: boolean;
   importedIds: string[];
   progress: { reason: string | null; ids: string[]; components: number; objects: number; objectRequest?: boolean }[];
   importDetails: {
@@ -26,6 +27,7 @@ export function validateRustInboundReceipt(value: any): RustInboundReceipt {
     typeof value.token !== 'string' ||
     !value.token ||
     value.owner !== 'rust' ||
+    (value.laneFetch !== undefined && typeof value.laneFetch !== 'boolean') ||
     !Array.isArray(value.importedIds) ||
     value.importedIds.length > 4096 ||
     !Array.isArray(value.progress) ||
@@ -73,7 +75,11 @@ export async function formatRustWorkspaceInbound(value: RustInboundReceipt, opti
   if (options.operation === 'fetch') {
     const { FetchCmd } = await import('@teambit/importer/dist/fetch-cmd.js');
     const command = new FetchCmd({ fetch: async () => ({ importedIds, importDetails }) } as any);
-    return command.report([options.ids], { components: true, allHistory: options.allHistory });
+    return command.report([options.ids], {
+      components: !options.lanes,
+      lanes: options.lanes,
+      allHistory: options.allHistory,
+    });
   }
   const { ImportCmd } = await import('@teambit/importer/dist/import.cmd.js');
   const command = new ImportCmd({

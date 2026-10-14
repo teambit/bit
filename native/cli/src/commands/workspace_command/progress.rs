@@ -118,6 +118,22 @@ impl Progress {
         }
     }
 
+    /// Workspace lane fetch leaves the dependency result as its final loader
+    /// status after the command-level success line.
+    pub fn render_lane_fetch_tail(&self, output: &Output) {
+        if let Some(row) = self.imports.last()
+            && !row.ids.is_empty()
+            && let Some(reason) = &row.reason
+        {
+            let count = if row.components > 0 {
+                format!("{} components", row.components)
+            } else {
+                format!("{} objects", row.objects)
+            };
+            output.success(&format!("successfully imported {count} {reason}"), None);
+        }
+    }
+
     /// Print the lines, as the loader does while checkout runs.
     pub fn render_checkout(&self, output: &Output) {
         output.status("switching component version...");
@@ -195,6 +211,7 @@ fn import(row: &Value) -> io::Result<Import> {
 fn known_reason(reason: &str) -> bool {
     REASONS.contains(&reason)
         || reason.strip_prefix("for fetching lane ").is_some_and(lane_name)
+        || reason.strip_prefix("of their latest on lane ").is_some_and(lane_name)
         || reason
             .strip_prefix("for filling the gap between the common-snap and the head of ")
             .is_some_and(lane_name)

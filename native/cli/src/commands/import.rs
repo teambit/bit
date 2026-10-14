@@ -43,6 +43,11 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             progress.render_inbound(output, fetch, with_ids);
         }
         output.success("importing components", Some(started));
+        if options.lanes
+            && let Some(progress) = &planned.progress
+        {
+            progress.render_lane_fetch_tail(output);
+        }
         Ok(())
     })
 }
@@ -59,6 +64,11 @@ struct Planned {
 impl Planned {
     fn plan(root: &Path, options: &options::Options, chalk: Chalk) -> io::Result<Self> {
         let (engine, prepared) = prepare(root, options)?;
+        if prepared["laneFetch"] == true && !options.lanes
+            || prepared["laneFetch"] != true && options.lanes
+        {
+            return Err(io::Error::other("native inbound lane receipt"));
+        }
         let receipt = report::validate(&prepared)?;
         let report = if options.operation == "fetch" {
             receipt.fetch_report(chalk)?
@@ -79,6 +89,7 @@ impl Planned {
         }
         let published = report::validate(&applied)?;
         let same = applied["token"] == self.prepared["token"]
+            && applied["laneFetch"] == self.prepared["laneFetch"]
             && published.ids == self.receipt.ids
             && applied["importDetails"] == self.prepared["importDetails"];
         if !same {

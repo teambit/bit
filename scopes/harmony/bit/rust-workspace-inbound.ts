@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { homedir } from 'os';
+import chalk from 'chalk';
 import type { CommandRunner } from '@teambit/cli/dist/command-runner.js';
 import { GLOBAL_CONFIG, GLOBAL_REMOTES } from '@teambit/legacy.constants';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
@@ -40,11 +41,12 @@ export async function readRustWorkspaceInbound(
             allHistory: options.allHistory,
             fromOriginalScope: options.fromOriginalScope,
             skipDependencyInstallation: options.skipDependencyInstallation,
-            lanes: false,
-            components: options.operation === 'fetch',
+            lanes: options.lanes,
+            components: options.operation === 'fetch' && !options.lanes,
           },
         })
       );
+      if (Boolean(prepared.laneFetch) !== options.lanes) throw new Error('native inbound lane receipt');
       const progress = commandProgress({ bitmapCount: 0, imports: prepared.progress }, 'inbound');
       const report = await formatRustWorkspaceInbound(prepared, options);
       await beforeCommit?.(report);
@@ -54,6 +56,7 @@ export async function readRustWorkspaceInbound(
       if (applied.applied !== true) throw new Error('native inbound apply receipt');
       const published = validateRustInboundReceipt(applied);
       if (
+        Boolean(published.laneFetch) !== options.lanes ||
         published.token !== prepared.token ||
         JSON.stringify(published.importedIds) !== JSON.stringify(prepared.importedIds) ||
         JSON.stringify(published.importDetails) !== JSON.stringify(prepared.importDetails)
@@ -61,6 +64,13 @@ export async function readRustWorkspaceInbound(
         throw new Error('native inbound publication changed');
       await progress();
       loader.succeed('importing components', started);
+      if (options.lanes) {
+        const last = prepared.progress.at(-1);
+        if (last?.ids.length && last.reason)
+          process.stdout.write(
+            `${chalk.green('✔')} successfully imported ${last.components ? `${last.components} components` : `${last.objects} objects`} ${last.reason}\n`
+          );
+      }
       return report;
     },
     () => committing

@@ -109,6 +109,7 @@ function importReason(reason: unknown): boolean {
   if (typeof reason !== 'string' || reason.length > 4096) return false;
   return (
     /^for fetching lane [^/\s]+\/[^/\s]+$/.test(reason) ||
+    /^of their latest on lane [^/\s]+\/[^/\s]+$/.test(reason) ||
     /^for getting the common-snap between [^\s]+ and [^\s]+$/.test(reason) ||
     /^for filling the gap between the common-snap and the head of [^/\s]+\/[^/\s]+$/.test(reason) ||
     /^to get all artifacts for \d+ components from lane [^/\s]+\/[^/\s]+$/.test(reason)

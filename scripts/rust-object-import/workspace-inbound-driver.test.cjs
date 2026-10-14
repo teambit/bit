@@ -31,6 +31,7 @@ test('ordinary inbound parser accepts selected/default object transfer and leave
     allHistory: false,
     fromOriginalScope: false,
     skipDependencyInstallation: false,
+    lanes: false,
   });
   assert.deepEqual(parse(['fetch', '-c', '--all-history']), {
     operation: 'fetch',
@@ -39,6 +40,7 @@ test('ordinary inbound parser accepts selected/default object transfer and leave
     allHistory: true,
     fromOriginalScope: false,
     skipDependencyInstallation: false,
+    lanes: false,
   });
   assert.deepEqual(parse(['import', 'qualification.alpha/alpha', '-o']), {
     operation: 'import',
@@ -47,6 +49,7 @@ test('ordinary inbound parser accepts selected/default object transfer and leave
     allHistory: false,
     fromOriginalScope: false,
     skipDependencyInstallation: false,
+    lanes: false,
   });
   assert.deepEqual(parse(['import']), {
     operation: 'import',
@@ -55,6 +58,7 @@ test('ordinary inbound parser accepts selected/default object transfer and leave
     allHistory: false,
     fromOriginalScope: false,
     skipDependencyInstallation: false,
+    lanes: false,
   });
   assert.deepEqual(parse(['import', 'qualification.alpha/alpha', '-x']), {
     operation: 'import',
@@ -63,7 +67,10 @@ test('ordinary inbound parser accepts selected/default object transfer and leave
     allHistory: false,
     fromOriginalScope: false,
     skipDependencyInstallation: true,
+    lanes: false,
   });
+  assert.equal(parse(['fetch', 'qualification.alpha/feature', '--lanes']).lanes, true);
+  assert.equal(parse(['fetch', 'qualification.alpha/feature', 'qualification.alpha/other', '--lanes']), undefined);
   for (const args of [
     ['fetch'],
     ['fetch', '--lanes'],
@@ -106,6 +113,7 @@ test('inbound report is rendered by the public FetchCmd and ImportCmd', async ()
     allHistory: false,
     fromOriginalScope: false,
     skipDependencyInstallation: false,
+    lanes: false,
   });
   const canonicalFetch = new FetchCmd({ fetch: async () => ({ importedIds, importDetails: receipt.importDetails }) });
   assert.equal(
@@ -127,6 +135,9 @@ test('inbound report is rendered by the public FetchCmd and ImportCmd', async ()
     import: async () => ({ importedIds: [], importDetails: [], importedDeps: [], missingIds: [] }),
   });
   assert.equal(await format(empty, options('fetch')), await emptyFetch.report([[]], { components: true }));
+  const laneOptions = { ...options('fetch'), ids: ['qualification.alpha/feature'], lanes: true };
+  const laneReceipt = { ...receipt, laneFetch: true };
+  assert.equal(await format(laneReceipt, laneOptions), await canonicalFetch.report([laneOptions.ids], { lanes: true }));
   assert.equal(await format(empty, options('import')), await emptyImport.report([[]], { objects: true }));
 });
 
@@ -159,6 +170,7 @@ test('inbound driver formats before publication and never falls back after apply
     allHistory: false,
     fromOriginalScope: false,
     skipDependencyInstallation: false,
+    lanes: false,
   };
   const report = await read('/workspace', '/home', options, async () => {
     events.push('beforeCommit');

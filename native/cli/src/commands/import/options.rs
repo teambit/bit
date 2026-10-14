@@ -11,6 +11,7 @@ pub struct Options {
     pub objects_only: bool,
     pub all_history: bool,
     pub skip_dependency_installation: bool,
+    pub lanes: bool,
 }
 
 /// `args` starts with the command name.
@@ -43,11 +44,15 @@ fn split<'a>(args: &[&'a str]) -> Option<(Vec<String>, Vec<&'a str>)> {
 
 /// `bit fetch --components [ids...]`.
 fn fetch(ids: Vec<String>, flags: &[&str]) -> Option<Options> {
-    let allowed = ["--components", "-c", "--all-history"];
+    let allowed = ["--components", "-c", "--lanes", "-l", "--all-history"];
+    let components =
+        usize::from(flags.contains(&"--components")) + usize::from(flags.contains(&"-c"));
+    let lanes = usize::from(flags.contains(&"--lanes")) + usize::from(flags.contains(&"-l"));
     if flags
         .iter()
         .any(|flag| !allowed.contains(flag))
-        || flags.contains(&"--components") == flags.contains(&"-c")
+        || components + lanes != 1
+        || (lanes == 1 && (ids.len() != 1 || flags.contains(&"--all-history")))
     {
         return None;
     }
@@ -58,6 +63,7 @@ fn fetch(ids: Vec<String>, flags: &[&str]) -> Option<Options> {
         objects_only: true,
         all_history,
         skip_dependency_installation: false,
+        lanes: lanes == 1,
     })
 }
 
@@ -86,6 +92,7 @@ fn import(ids: Vec<String>, flags: &[&str]) -> Option<Options> {
         objects_only,
         all_history,
         skip_dependency_installation,
+        lanes: false,
     })
 }
 
@@ -97,8 +104,8 @@ impl Options {
             "allHistory": self.all_history,
             "fromOriginalScope": false,
             "skipDependencyInstallation": self.skip_dependency_installation,
-            "lanes": false,
-            "components": self.operation == "fetch",
+            "lanes": self.lanes,
+            "components": self.operation == "fetch" && !self.lanes,
         })
     }
 }

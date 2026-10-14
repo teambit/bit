@@ -5,7 +5,7 @@ use super::{
     super::{client_status::config, invalid},
     State,
 };
-use crate::command_import::{self, Target, VirtualRemote};
+use crate::command_import::{self, Target, VirtualRemote, lane};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use sha1::Digest;
@@ -78,6 +78,9 @@ pub(in crate::workspace::engine) fn prepare(
 ) -> io::Result<(usize, Value)> {
     state.inbound = None;
     validate(input)?;
+    if input.options.lanes {
+        return prepare_lanes(input, state);
+    }
     let targets = targets(input)?;
     let virtual_remotes = remote::objects(input, &targets)?;
     let import = command_import::prepare_with_virtual(
@@ -102,6 +105,78 @@ pub(in crate::workspace::engine) fn prepare(
     let count = targets.len();
     state.inbound = Some(Retained { token, receipt: receipt.clone(), import, workspace });
     Ok((count, receipt))
+}
+
+/// Public `fetch <scope>/<lane> --lanes` for configured file scopes. The
+/// existing lane importer owns component closure and remote refs without
+/// publishing the Lane object into the local index.
+fn prepare_lanes(input: &Prepare, state: &mut State) -> io::Result<(usize, Value)> {
+    let mut import = command_import::prepare_lane(&input.root, &input.global_remotes_file)?;
+    let targets = fetch_lane_targets(&mut import, &input.ids[0])?;
+    append_lane_dependency_progress(&input.root, &mut import, &targets)?;
+    state.sequence = state.sequence.wrapping_add(1);
+    let token = format!("inbound-{}", state.sequence);
+    let mut receipt = receipt(&input.root, &targets, &import, &token)?;
+    receipt["laneFetch"] = json!(true);
+    let count = targets.len();
+    state.inbound = Some(Retained { token, receipt: receipt.clone(), import, workspace: None });
+    Ok((count, receipt))
+}
+
+fn fetch_lane_targets(
+    import: &mut command_import::PreparedImport,
+    text: &str,
+) -> io::Result<Vec<Target>> {
+    let (scope, name) = text.split_once('/').ok_or_else(|| invalid("inbound lane ID"))?;
+    let id = lane::Id { scope: scope.to_owned(), name: name.to_owned() };
+    id.validate()?;
+    if id.is_main() {
+        return Err(invalid("inbound main lane requires canonical fetch"));
+    }
+    let record = import.fetch_lane_contents(&id)?;
+    import.retain_remote_lane_refs(&record)?;
+    if let Some(progress) = import.progress.last_mut() {
+        progress.reason = Some(format!("of their latest on lane {scope}/{name}"));
+    }
+    lane::entries(&record.value)?
+        .into_iter()
+        .map(|entry| {
+            let (scope, name) = entry.identity
+                .split_once('/')
+                .ok_or_else(|| invalid("inbound lane component identity"))?;
+            Ok(Target { scope: Some(scope.to_owned()), name: name.to_owned(), version: entry.head })
+        })
+        .collect()
+}
+
+fn append_lane_dependency_progress(
+    root: &Path,
+    import: &mut command_import::PreparedImport,
+    targets: &[Target],
+) -> io::Result<()> {
+    let mut dependencies = command_import::Progress {
+        reason: Some("for getting missing versions and dependencies".into()),
+        ..Default::default()
+    };
+    for target in targets {
+        dependencies.ids.push(identity(target)?);
+        let Some(version) = import.overlay.read(&target.version, "Version")? else { continue };
+        if let Some(graph) = version["flattenedEdgesRef"].as_str() {
+            crate::merge_history::hash(graph)?;
+            if !root
+                .join(".bit/objects")
+                .join(&graph[..2])
+                .join(&graph[2..])
+                .try_exists()?
+            {
+                dependencies.objects.insert(graph.to_owned());
+            }
+        }
+    }
+    if !dependencies.objects.is_empty() {
+        import.progress.push(dependencies);
+    }
+    Ok(())
 }
 
 fn receipt(
@@ -161,8 +236,11 @@ fn validate(input: &Prepare) -> io::Result<()> {
     {
         return Err(invalid("inbound command requires canonical lifecycle"));
     }
-    if input.options.lanes || input.options.from_original_scope || !valid_operation(input) {
+    if input.options.from_original_scope || !valid_operation(input) {
         return Err(invalid("inbound command requires canonical lifecycle"));
+    }
+    if input.options.lanes && (input.ids.len() != 1 || input.options.all_history) {
+        return Err(invalid("inbound lanes require explicit IDs"));
     }
     if !valid_write_mode(input) || input.root.join(".bitTmp").try_exists()? {
         return Err(invalid("inbound command requires canonical lifecycle"));
@@ -171,7 +249,11 @@ fn validate(input: &Prepare) -> io::Result<()> {
 }
 fn valid_operation(input: &Prepare) -> bool {
     match input.operation.as_str() {
-        "fetch" => input.options.components && input.options.objects_only,
+        "fetch" => {
+            (input.options.components || input.options.lanes)
+                && input.options.components != input.options.lanes
+                && input.options.objects_only
+        }
         "import" => !input.options.components,
         _ => false,
     }

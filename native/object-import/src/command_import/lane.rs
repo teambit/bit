@@ -50,6 +50,12 @@ impl Id {
 }
 
 impl PreparedImport {
+    /// Publish the remote lane's refs without adding its Lane object to the
+    /// local index. Public workspace fetch keeps only these refs.
+    pub(crate) fn retain_remote_lane_refs(&mut self, record: &Record) -> io::Result<()> {
+        merge::remote_refs(self, record)
+    }
+
     pub(crate) fn fetched_lane(&self) -> Option<&Record> {
         self.cache.fetched_lane.as_ref()
     }

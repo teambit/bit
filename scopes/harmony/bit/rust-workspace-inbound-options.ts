@@ -5,6 +5,7 @@ export type RustWorkspaceInboundOptions = {
   allHistory: boolean;
   fromOriginalScope: boolean;
   skipDependencyInstallation: boolean;
+  lanes: boolean;
 };
 
 /** Ordinary inbound forms; Rust decides final eligibility before any workspace mutation. */
@@ -23,9 +24,11 @@ export function parseRustWorkspaceInbound(args: string[]): RustWorkspaceInboundO
     }
   }
   if (operation === 'fetch') {
-    const allowed = new Set(['--components', '-c', '--all-history']);
+    const allowed = new Set(['--components', '-c', '--lanes', '-l', '--all-history']);
     if ([...flags].some((flag) => !allowed.has(flag))) return undefined;
-    if (flags.has('--components') === flags.has('-c')) return undefined;
+    const components = Number(flags.has('--components')) + Number(flags.has('-c'));
+    const lanes = Number(flags.has('--lanes')) + Number(flags.has('-l'));
+    if (components + lanes !== 1 || (lanes && (ids.length !== 1 || flags.has('--all-history')))) return undefined;
     return {
       operation,
       ids,
@@ -33,6 +36,7 @@ export function parseRustWorkspaceInbound(args: string[]): RustWorkspaceInboundO
       allHistory: flags.has('--all-history'),
       fromOriginalScope: false,
       skipDependencyInstallation: false,
+      lanes: Boolean(lanes),
     };
   }
   const allowed = new Set(['--objects', '-o', '--all-history', '--skip-dependency-installation', '-x']);
@@ -49,5 +53,6 @@ export function parseRustWorkspaceInbound(args: string[]): RustWorkspaceInboundO
     allHistory: flags.has('--all-history'),
     fromOriginalScope: false,
     skipDependencyInstallation,
+    lanes: false,
   };
 }
