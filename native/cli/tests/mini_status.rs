@@ -88,10 +88,21 @@ fn reports_new_components_natively() {
 }
 
 #[test]
-fn other_flags_decline() {
+fn reports_without_flags_natively() {
     let workspace = Workspace::new();
     let output = workspace.bit(&workspace.root(), &["mini-status"]);
-    assert_eq!(stdout(&output), r#"["mini-status"]"#);
+    assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
+    assert_eq!(
+        stdout(&output),
+        "- running command \"mini-status\"...\nmodified components (files only):\n<none>\n\nnew components:\nmy.scope/alpha\nmy.scope/beta\n",
+    );
+}
+
+#[test]
+fn other_flags_decline() {
+    let workspace = Workspace::new();
+    let output = workspace.bit(&workspace.root(), &["mini-status", "--show-issues"]);
+    assert_eq!(stdout(&output), r#"["mini-status","--show-issues"]"#);
     let output = workspace.bit(&workspace.root(), &["ms", "--json", "alpha"]);
     assert_eq!(stdout(&output), r#"["ms","--json","alpha"]"#);
 }

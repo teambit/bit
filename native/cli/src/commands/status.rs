@@ -40,11 +40,23 @@ pub const COMMAND: Command = Command { name: "status", aliases: &["s"], run };
 enum Mode {
     Json,
     Report(report::Flags),
+    /// `--quick`, with `--json` or not.
+    Quick(bool),
 }
 
 fn mode(args: &[OsString]) -> Option<Mode> {
     if matches!(args, [_, flag] if flag == "--json" || flag == "-j") {
         return Some(Mode::Json);
+    }
+    let json = |flag: &OsString| flag == "--json" || flag == "-j";
+    match args {
+        [_, flag] if flag == "--quick" => return Some(Mode::Quick(false)),
+        [_, first, second]
+            if (first == "--quick" && json(second)) || (json(first) && second == "--quick") =>
+        {
+            return Some(Mode::Quick(true));
+        }
+        _ => {}
     }
     let arguments = workspace_command::utf8_args(args)?;
     report::parse(&arguments[1..]).map(Mode::Report)
@@ -64,6 +76,8 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     match mode {
         Mode::Json => json_status(&root, Path::new(&home), args),
         Mode::Report(flags) => report_status(&root, Path::new(&home), args, &flags),
+        // `statusMini`: the file changes only.
+        Mode::Quick(json) => super::mini_status::quick(args, json),
     }
 }
 

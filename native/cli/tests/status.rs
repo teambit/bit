@@ -75,7 +75,7 @@ fn declined(output: &Output, reason: &str) {
 fn other_flags_decline() {
     let dir = workspace();
     let root = dir.path().join("ws");
-    for args in [&["s", "--json", "--strict"][..], &["status", "--quick"], &["status", "-c"]] {
+    for args in [&["s", "--json", "--strict"][..], &["status", "--lanes"], &["status", "-c"]] {
         let output = bit(&dir, &root, args, &[]);
         assert_eq!(stdout(&output), serde_json::to_string(args).unwrap());
         declined(&output, "flags outside the native `status` grammar");
