@@ -17,7 +17,7 @@ pub(super) mod issues;
 pub(super) mod js;
 pub(super) mod policy;
 
-mod collate;
+pub(super) mod collate;
 
 use super::engine::Engine;
 use crate::{commands::Command, history::History, native::Outcome, workspace};

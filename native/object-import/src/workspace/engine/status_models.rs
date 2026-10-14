@@ -1,5 +1,6 @@
 pub(super) mod comparison;
 pub(super) mod harmony;
+pub(super) mod list;
 pub(super) mod versions;
 pub(super) mod workspace_diff;
 
