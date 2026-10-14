@@ -2,8 +2,10 @@
 //! `ListerMain.localList` and `ComponentsList.listAll`. The workspace engine's
 //! `scopeList` reads the scope's models; the bitmap gives the workspace ids.
 //!
-//! A remote scope, `--outdated`, `--include-deleted`, a lane, and ids or
-//! namespaces this module cannot match like Node run on the Node.js CLI.
+//! On a lane, the components' heads are their lane heads.
+//!
+//! A remote scope, `--outdated`, `--include-deleted`, and ids or namespaces
+//! this module cannot match like Node run on the Node.js CLI.
 
 mod bitmap;
 mod table;
@@ -157,8 +159,8 @@ struct Model {
 /// `localList`: the workspace's (or with `--local-scope`, the scope's) ids,
 /// filtered, sorted by `localeCompare` of their ids.
 fn list(root: &Path, options: &Options) -> io::Result<Vec<Row>> {
-    let bitmap = bitmap::read(root)?;
-    let models = models(root)?;
+    let bitmap::Bitmap { entries: bitmap, lane } = bitmap::read(root)?;
+    let (models, lane) = models(root, lane.as_ref())?;
     let mut ids = all_ids(&bitmap, &models, options.local_scope);
     if let Some(namespace) = &options.namespace {
         let pattern = Wildcard::new(&namespace_pattern(namespace))?;
@@ -167,7 +169,7 @@ fn list(root: &Path, options: &Options) -> io::Result<Vec<Row>> {
     let mut rows: Vec<Row> = ids
         .into_iter()
         .map(|(identity, _)| row(identity, &bitmap, &models))
-        .filter(|row| listed(row, &bitmap, options))
+        .filter(|row| listed(row, &bitmap, &lane, options))
         .collect();
     if !rows
         .iter()
@@ -179,9 +181,9 @@ fn list(root: &Path, options: &Options) -> io::Result<Vec<Row>> {
     Ok(rows)
 }
 
-/// `--scope`'s filter, then, without `--local-scope`, `isIdOnCurrentLane`
-/// on main.
-fn listed(row: &Row, bitmap: &[bitmap::Entry], options: &Options) -> bool {
+/// `--scope`'s filter, then, without `--local-scope`, `isIdOnCurrentLane`.
+/// `lane` lists the current lane's components.
+fn listed(row: &Row, bitmap: &[bitmap::Entry], lane: &[String], options: &Options) -> bool {
     let in_scope = options.scope
         .as_ref()
         .is_none_or(|scope| {
@@ -189,24 +191,40 @@ fn listed(row: &Row, bitmap: &[bitmap::Entry], options: &Options) -> bool {
                 .split_once('/')
                 .is_some_and(|(own, _)| own == scope)
         });
-    let on_main = || {
+    let on_lane = || {
         bitmap
             .iter()
-            .any(|entry| entry.identity == row.identity && entry.on_main())
+            .any(|entry| entry.identity == row.identity && entry.on_current_lane(lane))
     };
-    in_scope && (options.local_scope || on_main())
+    in_scope && (options.local_scope || on_lane())
 }
 
-/// The scope's models, from the engine's `scopeList`.
-fn models(root: &Path) -> io::Result<Vec<Model>> {
+/// The scope's models, from the engine's `scopeList` with their heads on the
+/// current lane, and that lane's components.
+fn models(root: &Path, lane: Option<&Value>) -> io::Result<(Vec<Model>, Vec<String>)> {
     let mut engine = Engine::new()?;
-    let listed: Value = engine.request(&json!({"kind": "scopeList", "root": root}))?;
-    listed["components"]
+    let mut request = json!({"kind": "scopeList", "root": root});
+    if let Some(lane) = lane {
+        request["lane"] = lane.clone();
+    }
+    let listed: Value = engine.request(&request)?;
+    let models = listed["components"]
         .as_array()
         .ok_or_else(|| decline("scope list"))?
         .iter()
         .map(model)
-        .collect()
+        .collect::<io::Result<_>>()?;
+    let lane = listed["laneComponents"]
+        .as_array()
+        .ok_or_else(|| decline("scope list lane"))?
+        .iter()
+        .map(|id| {
+            id.as_str()
+                .map(str::to_string)
+                .ok_or_else(|| decline("scope list lane"))
+        })
+        .collect::<io::Result<_>>()?;
+    Ok((models, lane))
 }
 
 /// `ComponentIdList.uniqFromArray`: the bitmap's ids first, then the

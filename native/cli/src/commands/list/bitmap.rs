@@ -1,5 +1,5 @@
 //! The `.bitmap` entries `bit list` reads: `getAllBitIds()`,
-//! `getComponentDir()` and whether a component is on main.
+//! `getComponentDir()`, the current lane and whether a component is on it.
 
 use super::decline;
 use serde_json::Value;
@@ -19,25 +19,50 @@ pub(super) struct Entry {
 }
 
 impl Entry {
-    /// `isIdOnCurrentLane` when the workspace is on main.
-    pub fn on_main(&self) -> bool {
-        !self.removed && self.available
+    /// `isIdOnCurrentLane`: not removed, and available on the lane or one of
+    /// its components. On main, `lane` is empty.
+    pub fn on_current_lane(&self, lane: &[String]) -> bool {
+        !self.removed && (self.available || lane.contains(&self.identity))
     }
 }
 
-/// The entries in the bitmap's order. A workspace on a lane declines.
-pub(super) fn read(root: &Path) -> io::Result<Vec<Entry>> {
+/// The bitmap: its entries, in order, and the current lane's id
+/// (`_bit_lane.id`), absent on main.
+pub(super) struct Bitmap {
+    pub entries: Vec<Entry>,
+    pub lane: Option<Value>,
+}
+
+pub(super) fn read(root: &Path) -> io::Result<Bitmap> {
     let text = fs::read_to_string(root.join(".bitmap"))?;
     let document = bit_install::jsonc::parse(&text).map_err(|_| decline("bitmap syntax"))?;
     let document = document.as_object().ok_or_else(|| decline("bitmap"))?;
-    if document.contains_key("_bit_lane") {
-        return Err(decline("the workspace is on a lane"));
-    }
-    document
+    let lane = match document.get("_bit_lane") {
+        None => None,
+        Some(lane) => Some(lane_id(lane)?),
+    };
+    let entries = document
         .iter()
-        .filter(|(key, value)| !key.starts_with('$') && value.is_object())
+        .filter(|(key, value)| {
+            !key.starts_with('$') && key.as_str() != "_bit_lane" && value.is_object()
+        })
         .map(|(_, value)| entry(value))
-        .collect()
+        .collect::<io::Result<_>>()?;
+    Ok(Bitmap { entries, lane })
+}
+
+/// `{ scope, name }` of `_bit_lane.id`.
+fn lane_id(lane: &Value) -> io::Result<Value> {
+    let id = &lane["id"];
+    let valid = |field: &str| {
+        id[field]
+            .as_str()
+            .is_some_and(|text| !text.is_empty())
+    };
+    if !valid("scope") || !valid("name") {
+        return Err(decline("bitmap lane id"));
+    }
+    Ok(serde_json::json!({ "scope": id["scope"], "name": id["name"] }))
 }
 
 fn entry(value: &Value) -> io::Result<Entry> {

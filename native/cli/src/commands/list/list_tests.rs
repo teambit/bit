@@ -90,3 +90,27 @@ fn colors_the_head_borders_and_multiline_ids() {
     assert_eq!(lines.len(), 8);
     let _ = table::colors(&[]);
 }
+
+#[test]
+fn reads_the_current_lane_and_its_components() {
+    let dir = tempfile::tempdir().unwrap();
+    std::fs::write(
+        dir.path().join(".bitmap"),
+        r#"/* header */ {
+            "a": { "name": "a", "scope": "s", "version": "", "rootDir": "a" },
+            "b": { "name": "b", "scope": "s", "version": "", "rootDir": "b", "isAvailableOnCurrentLane": false },
+            "c": { "name": "c", "scope": "s", "version": "", "rootDir": "c", "isAvailableOnCurrentLane": false },
+            "$schema-version": "17.0.0",
+            "_bit_lane": { "id": { "name": "dev", "scope": "s" }, "exported": false }
+        }"#,
+    )
+    .unwrap();
+    let bitmap = super::bitmap::read(dir.path()).unwrap();
+    assert_eq!(bitmap.lane, Some(serde_json::json!({"scope": "s", "name": "dev"})));
+    let lane = ["s/c".to_string()];
+    let on_lane: Vec<bool> = bitmap.entries
+        .iter()
+        .map(|entry| entry.on_current_lane(&lane))
+        .collect();
+    assert_eq!(on_lane, [true, false, true]);
+}
