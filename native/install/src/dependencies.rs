@@ -6,6 +6,7 @@
 //! and `extractDepsFromLegacy`. The result is what the `dependency-resolver`
 //! aspect data holds after the component loads.
 
+pub mod cache;
 pub mod glob;
 
 pub use detect::definitely_typed;
@@ -16,7 +17,6 @@ pub use versions::valid_component_version;
 mod apply;
 mod apply_late;
 mod builtins;
-mod cache;
 mod component_model;
 mod data;
 mod detect;

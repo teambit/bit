@@ -77,6 +77,8 @@ Each host method is removed once its behavior is ported to Rust.
 
 | `mini-status --json`, `ms -j` | `bit-object-import` status engine, `bit-ignore` | none | any other flag or argument, outside a workspace, a workspace the engine does not own: configured extensions or aspect settings, environments in the generator config, a global `.bitrc.jsonc`, a scope in `.git/bit`, a checked-out lane, more than 4096 components |
 
+| `status --json`, `s -j` | `bit-object-import` workspace engine, `bit-ignore`, `node-semver`'s `npm` module | none | any other flag or argument, outside a workspace, a locale whose collation tailors id characters, the `no-fs-cache` feature in any config layer, a workspace or component the engine does not own (configured extensions, environments other than `teambit.harmony/node`, component-level dependency policies, a scope in `.git/bit`, a lane), files the scanner leaves to JavaScript detectors (such as `.mdx`), unresolved imports, a main file outside the inventory |
+
 `confirm` prompts are asked by the Rust process itself, since it owns the terminal.
 
 Native commands append to the workspace's `command-history` file (in `.bit`,
@@ -96,6 +98,17 @@ The port includes the package's module-level cache. The cache is keyed by the
 pattern alone, so a pattern compiled once as positive stays positive when it
 is later negated, as in Node. Patterns named like `Object.prototype` members,
 such as `constructor`, break the package and are declined.
+
+### Status inputs
+
+`status --json` follows the Node.js glue it replaces (`scopes/harmony/bit/rust-status*.ts`, `rust-client-capture.ts`, `rust-fresh-dependencies.ts`). The engine reads the workspace, the models and the dependency caches. The CLI computes what Node computed:
+
+- **Dependency policy.** The Node environment's policy, the workspace policy and the root `package.json`, merged as `statusPolicy` merges them.
+- **Semver facts.** npm `semver`'s `valid`, `validRange` and `coerce`, from the `npm` module of pnpm's `node-semver` fork, a port of semver 7.7.1 tested against the package's own output.
+- **Issues.** The six issue classes status can report, formatted like `IssuesList.toObjectIncludeDataAsString()`, with cycles found by Tarjan's algorithm.
+- **Fresh detection.** The default dev-file patterns, as `minimatch` 3.0.5 matches them; the core aspect packages from `scopes/harmony/bit/core-aspect-ids.json`; the bundled TypeScript version, read from the Node.js CLI's install. Node's built-in module list comes from the Node.js CLI's own Node. It is asked once per binary and cached in `<BIT_GLOBALS_DIR>/native-cli`.
+- **Dependency cache.** Fresh detections are written with `cacache`'s format once the command has validated them, after the invalidation check `FsCache` runs.
+- **Ordering.** Result rows are sorted like `localeCompare` sorts them under the root collation.
 
 ## Versions
 

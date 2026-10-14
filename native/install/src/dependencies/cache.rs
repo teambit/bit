@@ -77,24 +77,27 @@ pub fn disabled() -> bool {
 /// Store the detection of `component` the way `saveDependenciesDataInCache` does,
 /// so the TypeScript loader reads it back.
 pub fn write(scope: &Scope, component: &WorkspaceComponent, detected: &Detected) -> io::Result<()> {
-    let cache = scope.dependency_cache();
-    let data = format::serialize(detected).to_string();
-    let integrity = put_content(&cache, data.as_bytes())?;
+    put(&scope.dependency_cache(), &key(component), &format::serialize(detected).to_string())
+}
+
+/// `cacache.put(cache, key, data, { metadata: { timestamp } })`: the content
+/// under its digest and an index entry appended to the key's bucket.
+pub fn put(cache: &Path, key: &str, data: &str) -> io::Result<()> {
+    let integrity = put_content(cache, data.as_bytes())?;
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map_err(io::Error::other)?
         .as_millis();
     let entry = json!({
-        "key": key(component),
+        "key": key,
         "integrity": integrity,
         "time": now,
         "size": data.len(),
         "metadata": { "timestamp": now },
     })
     .to_string();
-    let bucket =
-        segmented(&cache.join("index-v5"), &hex(&Sha256::digest(key(component).as_bytes())));
-    fs::create_dir_all(bucket.parent().unwrap_or(&cache))?;
+    let bucket = segmented(&cache.join("index-v5"), &hex(&Sha256::digest(key.as_bytes())));
+    fs::create_dir_all(bucket.parent().unwrap_or(cache))?;
     let mut file = fs::OpenOptions::new()
         .create(true)
         .append(true)

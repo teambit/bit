@@ -26,10 +26,12 @@ pnpm-tarball = { git = "https://github.com/pnpm/pnpm", rev = "343f3c4198b43dce5e
 pnpm-workspace = { git = "https://github.com/pnpm/pnpm", rev = "343f3c4198b43dce5e58bc7de9927cb96aed59fc" }
 
 # Repeats pnpm's own `[patch.crates-io]` at the same commit: a git dependency
-# does not inherit its workspace's patches.
+# does not inherit its workspace's patches. `node-semver` is one commit ahead
+# of pnpm's pin: it adds the `npm` module (npm semver's strict functions,
+# pnpm/node-semver-rs#2) and leaves the rest of the crate unchanged.
 [patch.crates-io]
 tar = { git = "https://github.com/pnpm/pnpm", rev = "343f3c4198b43dce5e58bc7de9927cb96aed59fc" }
-node-semver = { git = "https://github.com/pnpm/node-semver-rs", rev = "3d74d6b7f4de1de2006cf2f7663aac09de65b1f6" }
+node-semver = { git = "https://github.com/pnpm/node-semver-rs", rev = "3ce53c0ed346c6d897f7c656b9f9c504ceddfc3d" }
 
 [workspace.lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(dylint_lib, values("perfectionist"))'] }

@@ -1,0 +1,148 @@
+//! `statusExtensions(version, target)`: the core aspects configured on the
+//! stored version, with bitmap configuration applied, for components that
+//! only use the built-in Node environment.
+
+use super::super::js::{array, decline, nullish, object, truthy};
+use serde_json::{Map, Value, json};
+use std::io;
+
+const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
+const DEPRECATION: &str = "teambit.component/deprecation";
+const CORES: [&str; 10] = [
+    "teambit.envs/envs",
+    RESOLVER,
+    "teambit.component/dev-files",
+    "teambit.semantics/schema",
+    "teambit.pkg/pkg",
+    "teambit.preview/preview",
+    "teambit.compositions/compositions",
+    "teambit.docs/docs",
+    DEPRECATION,
+    "teambit.pipelines/builder",
+];
+
+pub fn status_extensions(version: Option<&Value>, target: &Value) -> io::Result<Vec<Value>> {
+    let stored = array(version.and_then(|stored| stored.get("extensions")), "extensions")?;
+    if stored
+        .iter()
+        .any(|extension| truthy(extension.get("extensionId")) || truthy(extension.get("legacyId")))
+    {
+        return Err(decline("status model extension dependency"));
+    }
+    if !array(target.get("mergedConfigNames"), "merged configuration names")?.is_empty() {
+        return Err(decline("status merged configuration"));
+    }
+    if target.get("bitmapConfig").is_some() {
+        return Err(decline("status recovery bitmap configuration"));
+    }
+    let mut extensions = Vec::new();
+    for extension in selected(stored, target) {
+        let name = extension
+            .get("name")
+            .and_then(Value::as_str)
+            .unwrap_or_default();
+        if extensions
+            .iter()
+            .any(|known: &Value| known["name"] == name)
+        {
+            continue;
+        }
+        extensions.push(model_extension(extension, name)?);
+    }
+    apply_component_config(&mut extensions, target)?;
+    Ok(extensions)
+}
+
+fn is_specific(extension: &Value) -> bool {
+    extension
+        .get("config")
+        .and_then(|config| config.get("__specific"))
+        == Some(&Value::Bool(true))
+}
+
+/// The component's own (`__specific`) entries first; without propagation, only them.
+fn selected<'v>(stored: &'v [Value], target: &Value) -> Vec<&'v Value> {
+    let config = target.get("config");
+    let specific = stored.iter().filter(|extension| is_specific(extension));
+    if truthy(config) && !truthy(config.and_then(|config| config.get("propagate"))) {
+        return specific.collect();
+    }
+    specific
+        .chain(
+            stored
+                .iter()
+                .filter(|extension| !is_specific(extension)),
+        )
+        .collect()
+}
+
+fn model_extension(extension: &Value, name: &str) -> io::Result<Value> {
+    if !CORES.contains(&name) {
+        return Err(decline("status configured model extension"));
+    }
+    let stored_config = nullish(extension.get("config"));
+    let mut config = match stored_config {
+        None => Map::new(),
+        Some(config) => object(config)?.clone(),
+    };
+    config.remove("__specific");
+    validate_config(name, &config)?;
+    if name == "teambit.envs/envs" {
+        let env = extension
+            .get("data")
+            .and_then(|data| data.get("id"));
+        if env.and_then(Value::as_str) != Some("teambit.harmony/node") {
+            return Err(decline("status nondefault environment"));
+        }
+    }
+    let config = stored_config
+        .cloned()
+        .unwrap_or_else(|| json!({}));
+    Ok(json!({ "name": name, "config": config }))
+}
+
+fn validate_config(name: &str, config: &Map<String, Value>) -> io::Result<()> {
+    let deprecation_config = config
+        .iter()
+        .all(|(key, value)| key == "deprecate" && value.is_boolean());
+    if name == DEPRECATION && !deprecation_config {
+        return Err(decline("status unsupported deprecation configuration"));
+    }
+    if name != RESOLVER && name != DEPRECATION && !config.is_empty() {
+        return Err(decline("status configured core extension"));
+    }
+    if name == RESOLVER && config.keys().any(|key| key != "policy") {
+        return Err(decline("status resolver configuration"));
+    }
+    Ok(())
+}
+
+/// `target.config.extensions`: only resolver configuration, marked specific.
+fn apply_component_config(extensions: &mut Vec<Value>, target: &Value) -> io::Result<()> {
+    let configured = nullish(
+        target
+            .get("config")
+            .and_then(|config| config.get("extensions")),
+    );
+    let Some(configured) = configured else { return Ok(()) };
+    for (name, config) in object(configured)? {
+        let config = config
+            .as_object()
+            .filter(|_| name == RESOLVER);
+        let config = config.ok_or_else(|| decline("status component extension"))?;
+        if config.keys().any(|key| key != "policy") {
+            return Err(decline("status component extension"));
+        }
+        let mut specific = config.clone();
+        specific.insert("__specific".into(), Value::Bool(true));
+        let extension = json!({ "name": name, "config": specific });
+        match extensions
+            .iter()
+            .position(|known| known["name"] == *name)
+        {
+            Some(index) => extensions[index] = extension,
+            None => extensions.insert(0, extension),
+        }
+    }
+    Ok(())
+}

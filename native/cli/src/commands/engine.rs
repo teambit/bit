@@ -9,7 +9,7 @@ use std::{io, thread};
 const MAX_REQUEST: usize = 4 * 1024 * 1024;
 const MAX_RESPONSE: usize = 32 * 1024 * 1024;
 
-pub struct Engine {
+pub(crate) struct Engine {
     session: WorkspaceSession,
     next_id: u32,
 }
@@ -54,7 +54,11 @@ impl Engine {
         let failed = response.failed.is_some_and(|failed| !failed.is_null() && failed != false);
         let skipped = response.skipped.is_some_and(|skipped| !skipped.is_empty());
         if response.version != 1 || response.id != self.next_id || failed || skipped {
-            return Err(io::Error::other("status native request declined"));
+            let kind = input
+                .get("kind")
+                .and_then(Value::as_str)
+                .unwrap_or("request");
+            return Err(io::Error::other(format!("the engine declined {kind}")));
         }
         serde_json::from_value(response.data).map_err(io::Error::other)
     }

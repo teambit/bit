@@ -4,12 +4,11 @@
 //! own (configured extensions, global `.bitrc.jsonc`, more than 4096
 //! components) and every other flag decline to the Node.js CLI.
 
-mod engine;
-mod rebase;
-
+use super::{
+    engine::Engine,
+    inventory::{Inventory, Options},
+};
 use crate::{commands::Command, history::History, native::Outcome, workspace};
-use bit_ignore::{Ignore, Rule};
-use engine::Engine;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::{
@@ -22,27 +21,6 @@ use std::{
 
 pub const COMMAND: Command = Command { name: "mini-status", aliases: &["ms"], run };
 
-/// `ALWAYS_IGNORE_LIST` of `@teambit/legacy.constants`.
-const ALWAYS_IGNORE: &[&str] = &[
-    "**/.DS_Store",
-    "**/.env",
-    "**/.env.local",
-    "**/.env.**.local",
-    "**/component.json",
-    "**/node_modules/**",
-];
-/// `BIT_GENERATED_IGNORE_LIST`; `IGNORE_LIST` is both lists.
-const BIT_GENERATED_IGNORE: &[&str] = &["package.json", "**/package-lock.json", "**/yarn.lock"];
-/// `IGNORE_ROOT_ONLY_LIST`.
-const IGNORE_ROOT_ONLY: &[&str] = &[
-    "tsconfig.json",
-    ".eslintrc.json",
-    ".prettierrc.cjs",
-    ".oxlintrc.json",
-    ".oxlintrc.jsonc",
-    "oxlint.config.ts",
-    "oxlint.config.js",
-];
 const MAX_COMPONENTS: usize = 4096;
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
@@ -84,25 +62,10 @@ pub struct Summary {
 }
 
 #[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
 struct Plan {
     count: usize,
-    patterns: Vec<String>,
-    track_all_files: bool,
-    ignored_files: Vec<String>,
-}
-
-#[derive(Deserialize)]
-struct Scan {
-    token: u64,
-    nested: Vec<Nested>,
-    own: Vec<String>,
-}
-
-#[derive(Deserialize)]
-struct Nested {
-    directory: String,
-    patterns: Vec<String>,
+    #[serde(flatten)]
+    options: Options,
 }
 
 /// `readRustMiniStatus`: prepare, then scan and finish each component, then
@@ -113,72 +76,12 @@ fn summarize(root: &Path, home: &Path) -> io::Result<Option<Summary>> {
     if plan.count > MAX_COMPONENTS {
         return Ok(None);
     }
-    let lists = Lists::new(plan.track_all_files);
-    let root_ignore = root_ignore(&plan, &lists)?;
+    let inventory = Inventory::new(&plan.options)?;
     for _ in 0..plan.count {
-        finish_component(&mut engine, &root_ignore, &lists)?;
+        let _: Value = inventory.scan(&mut engine, json!({"kind": "statusScan"}), "statusFinish")?;
     }
     let summary: Summary = engine.request(&json!({"kind": "statusComplete"}))?;
     Ok(valid(&summary, plan.count).then_some(summary))
-}
-
-/// Bit's own ignore lists, as `trackAllFiles` selects them.
-struct Lists {
-    /// `ALWAYS_IGNORE_LIST`, or `IGNORE_LIST` without `trackAllFiles`.
-    hard: Vec<&'static str>,
-    ignored_root: &'static [&'static str],
-}
-
-impl Lists {
-    fn new(track_all_files: bool) -> Self {
-        if track_all_files {
-            return Self { hard: ALWAYS_IGNORE.to_vec(), ignored_root: &[] };
-        }
-        let hard = ALWAYS_IGNORE
-            .iter()
-            .chain(BIT_GENERATED_IGNORE)
-            .copied()
-            .collect();
-        Self { hard, ignored_root: IGNORE_ROOT_ONLY }
-    }
-}
-
-/// The workspace's own patterns, Bit's list, then `ignoredFiles`.
-fn root_ignore(plan: &Plan, lists: &Lists) -> io::Result<Ignore> {
-    let patterns = plan.patterns.iter().map(String::as_str);
-    let ignored_files = plan.ignored_files.iter().map(String::as_str);
-    let mut ignore = Ignore::new();
-    ignore
-        .add(
-            patterns
-                .chain(lists.hard.iter().copied())
-                .chain(ignored_files),
-        )
-        .map_err(io::Error::other)?;
-    Ok(ignore)
-}
-
-/// Scan the next component, then finish it with its nested ignore files.
-fn finish_component(engine: &mut Engine, root_ignore: &Ignore, lists: &Lists) -> io::Result<()> {
-    let scan: Scan =
-        engine.request(&json!({"kind": "statusScan", "rootPolicy": policy(root_ignore.rules())}))?;
-    let nested: Vec<String> = scan.nested
-        .iter()
-        .flat_map(|row| row.patterns.iter().map(|pattern| rebase::pattern(pattern, &row.directory)))
-        .collect();
-    // Compiled in the Node.js glue's order: the regex cache is shared.
-    let combined = compile(Some(root_ignore), &nested)?;
-    let hard = compile(None, &lists.hard)?;
-    let own = compile(None, &scan.own)?;
-    let _: Value = engine.request(&json!({
-        "kind": "statusFinish",
-        "token": scan.token,
-        "combined": policy(combined.rules()),
-        "hard": policy(hard.rules()),
-        "own": policy(own.rules()),
-        "ignoredRoot": lists.ignored_root,
-    }))?;
-    Ok(())
 }
 
 /// `validSummary`.
@@ -192,22 +95,4 @@ fn valid(summary: &Summary, count: usize) -> bool {
     ids_valid(&summary.modified)
         && ids_valid(&summary.new_comps)
         && summary.comp_with_issues.is_empty()
-}
-
-/// `ignore().add(base).add(patterns)`.
-fn compile(base: Option<&Ignore>, patterns: &[impl AsRef<str>]) -> io::Result<Ignore> {
-    let mut ignore = Ignore::new();
-    if let Some(base) = base {
-        ignore.add_ignore(base);
-    }
-    ignore
-        .add(patterns.iter().map(AsRef::as_ref))
-        .map_err(io::Error::other)?;
-    Ok(ignore)
-}
-
-/// `captureRustInventoryPolicy(ignore)` of a fresh instance: its rules and
-/// its empty match cache.
-fn policy(rules: &[Rule]) -> Value {
-    json!({ "rules": rules, "cache": [] })
 }
