@@ -62,6 +62,9 @@ enum Request {
     CommandPrepare(command::input::Prepare),
     CommandInboundPrepare(command::inbound::Prepare),
     CommandInboundApply(command::inbound::Apply),
+    CommandOutboundPrepare(command::outbound::Prepare),
+    CommandOutboundApply(command::outbound::Apply),
+    CommandOutboundFinalize(command::outbound::Finalize),
     CommandTagPrepare(command::resolve::Prepare),
     CommandTagPlan(command::resolve::Plan),
     CommandTagFinalize(command::resolve::Finalize),
@@ -242,6 +245,15 @@ fn owned_command(
         }
         Request::CommandInboundApply(input) => {
             pool.install(|| command::inbound::apply(&input, &mut snapshots.command))
+        }
+        Request::CommandOutboundPrepare(input) => {
+            pool.install(|| command::outbound::prepare(&input, &mut snapshots.command))
+        }
+        Request::CommandOutboundApply(input) => {
+            pool.install(|| command::outbound::apply(&input, &mut snapshots.command))
+        }
+        Request::CommandOutboundFinalize(input) => {
+            pool.install(|| command::outbound::finalize(&input, &mut snapshots.command))
         }
         Request::CommandPlan(input) => command::plan(input, snapshots, pool),
         Request::CommandPolicyPrepare(input) => {

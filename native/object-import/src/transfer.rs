@@ -17,7 +17,7 @@ mod session;
 mod transaction;
 
 mod header;
-mod object;
+pub(crate) mod object;
 #[cfg(test)]
 mod tests;
 

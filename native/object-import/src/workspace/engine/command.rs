@@ -1,5 +1,6 @@
 pub(super) mod inbound;
 pub(super) mod input;
+pub(super) mod outbound;
 pub(super) mod policy;
 pub(super) mod recovery;
 pub(super) mod resolve;
@@ -43,6 +44,7 @@ pub(crate) struct State {
     recovery: Option<recovery::Retained>,
     resolve: Option<resolve::Retained>,
     inbound: Option<inbound::Retained>,
+    outbound: Option<outbound::Retained>,
 }
 struct Record {
     request: Prepare,

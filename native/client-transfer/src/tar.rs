@@ -23,6 +23,53 @@ pub struct ObjectItem {
     pub scope: Option<String>,
 }
 
+/// Frame an outbound object list without exposing object bodies to Node.
+pub fn pack(items: &[ObjectItem], max_bytes: usize) -> io::Result<Vec<u8>> {
+    if items.len() > MAX_OBJECTS || max_bytes > MAX_ARCHIVE_BYTES {
+        return Err(invalid("remote push object bounds"));
+    }
+    let mut builder = ::tar::Builder::new(Vec::new());
+    let mut total = 0usize;
+    for item in items {
+        let name = outbound_name(item)?;
+        total = total
+            .checked_add(item.compressed.len())
+            .ok_or_else(|| invalid("remote push archive bounds"))?;
+        if total > max_bytes {
+            return Err(invalid("remote push archive bounds"));
+        }
+        let mut header = ::tar::Header::new_gnu();
+        header.set_size(item.compressed.len() as u64);
+        header.set_mode(0o644);
+        header.set_cksum();
+        builder.append_data(&mut header, name, item.compressed.as_slice())?;
+    }
+    builder.finish()?;
+    let bytes = builder.into_inner()?;
+    if bytes.len() > max_bytes {
+        return Err(invalid("remote push archive bounds"));
+    }
+    Ok(bytes)
+}
+
+fn outbound_name(item: &ObjectItem) -> io::Result<String> {
+    if !is_hash(&item.hash) || item.compressed.len() > MAX_OBJECT_BYTES {
+        return Err(invalid("remote push object identity or bytes"));
+    }
+    match &item.scope {
+        Some(scope)
+            if !scope.is_empty()
+                && scope
+                    .bytes()
+                    .all(|byte| byte.is_ascii_alphanumeric() || b"._-".contains(&byte)) =>
+        {
+            Ok(format!("{scope}/{}", item.hash))
+        }
+        None => Ok(item.hash.clone()),
+        _ => Err(invalid("remote push scope")),
+    }
+}
+
 /// Parse a complete fetch response.
 pub fn read(bytes: &[u8]) -> io::Result<Vec<ObjectItem>> {
     read_bounded(bytes, MAX_ARCHIVE_BYTES)

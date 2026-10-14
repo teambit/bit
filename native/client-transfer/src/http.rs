@@ -51,6 +51,25 @@ pub struct Network {
 }
 
 impl Network {
+    /// POST compressed objects to a remote pending directory. Validation and
+    /// persistence are separate server actions, preserving export recovery.
+    pub async fn push(
+        &self,
+        url: &str,
+        client_id: &str,
+        archive: Vec<u8>,
+    ) -> io::Result<Vec<String>> {
+        let endpoint = format!("{url}/api/scope/put");
+        let options = json!({"clientId":client_id}).to_string();
+        let response = self.send(|| {
+            self.headers(self.client.post(&endpoint), "write")
+                .header("push-options", &options)
+                .body(archive.clone())
+        })
+        .await?;
+        let response = throw_for_status(response).await?;
+        response.json().await.map_err(io::Error::other)
+    }
     /// `token` is the `--token` flag, which wins over `user.token`.
     pub fn new(
         global: &GlobalConfig,

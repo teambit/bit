@@ -22,7 +22,7 @@ pub(super) fn name(item: &Descriptor) -> io::Result<String> {
     }
 }
 
-pub(super) fn read(
+pub(crate) fn read(
     directory: &Path,
     item: &Descriptor,
     maximum: usize,
@@ -49,7 +49,7 @@ pub(super) fn read(
     Ok((body, size, kind))
 }
 
-pub(super) fn repository(directory: &Path, hash: [u8; 20], maximum: usize) -> io::Result<Vec<u8>> {
+pub(crate) fn repository(directory: &Path, hash: [u8; 20], maximum: usize) -> io::Result<Vec<u8>> {
     let identity = crate::validate::hexadecimal(&hash);
     let path = directory
         .join(&identity[..2])
@@ -67,7 +67,7 @@ pub(super) fn repository(directory: &Path, hash: [u8; 20], maximum: usize) -> io
     Ok(bytes)
 }
 
-pub(super) fn metadata(bytes: &[u8], hash: [u8; 20]) -> io::Result<serde_json::Value> {
+pub(crate) fn metadata(bytes: &[u8], hash: [u8; 20]) -> io::Result<serde_json::Value> {
     let inflated =
         crate::metadata::inflate(bytes).ok_or_else(|| invalid("unsupported transfer object"))?;
     let (header, body) =

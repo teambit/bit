@@ -76,10 +76,13 @@ async function initApp(additionalAspects?: Aspect[]) {
     if (
       !additionalAspects?.length &&
       process.env.BIT_RUST_CLIENT_VCS === 'on' &&
-      (['checkout', 'U', 'merge', 'snap', 'tag', 't', 'fetch', 'import'].includes(process.argv[2]) ||
+      (['checkout', 'U', 'merge', 'snap', 'tag', 't', 'fetch', 'import', 'export', 'e'].includes(process.argv[2]) ||
         (process.argv[2] === 'lane' && ['merge', 'merge-abort'].includes(process.argv[3])))
     ) {
-      if (['fetch', 'import'].includes(process.argv[2])) {
+      if (['export', 'e'].includes(process.argv[2])) {
+        const { runRustWorkspaceOutbound } = await import('./rust-workspace-outbound');
+        if (await runRustWorkspaceOutbound()) return;
+      } else if (['fetch', 'import'].includes(process.argv[2])) {
         const { runRustWorkspaceInbound } = await import('./rust-workspace-inbound');
         if (await runRustWorkspaceInbound()) return;
       } else {

@@ -6,7 +6,10 @@ const originalLoad = Module._load;
 let ordinal = 0;
 Module._load = function (request, parent, ...args) {
   const value = originalLoad.call(this, request, parent, ...args);
-  if (!['crypto', 'node:crypto'].includes(request) || !/[\\/]export\.main\.runtime\.js$/.test(parent?.filename || ''))
+  if (
+    !['crypto', 'node:crypto'].includes(request) ||
+    !/[\\/](?:export\.main\.runtime|rust-workspace-outbound)\.(?:js|ts)$/.test(parent?.filename || '')
+  )
     return value;
   return {
     ...value,
