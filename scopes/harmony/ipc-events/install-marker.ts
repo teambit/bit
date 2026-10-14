@@ -1,18 +1,18 @@
 import path from 'path';
 import fs from 'fs-extra';
 
-export const INSTALL_MARKER_FILENAME = 'install-in-progress.json';
-
 /**
  * an install that runs longer than this is assumed to be hung (or its marker left behind by a process whose pid
  * got reused), so other processes stop waiting for it.
  */
 export const INSTALL_MARKER_MAX_AGE_MS = 30 * 60 * 1000;
 
+const POLL_MS = 2000;
+
 export type InstallMarker = { pid: number; startedAt: number };
 
 export function getInstallMarkerPath(scopePath: string): string {
-  return path.join(scopePath, INSTALL_MARKER_FILENAME);
+  return path.join(scopePath, 'install-in-progress.json');
 }
 
 export async function writeInstallMarker(scopePath: string): Promise<void> {
@@ -38,15 +38,31 @@ export async function removeInstallMarker(scopePath: string): Promise<void> {
  */
 export async function getInstallRunningElsewhere(
   scopePath: string,
-  now = Date.now(),
   isAlive: (pid: number) => boolean = isProcessAlive
 ): Promise<InstallMarker | undefined> {
   const marker = await readInstallMarker(scopePath);
   if (!marker) return undefined;
   if (marker.pid === process.pid) return undefined; // the in-process install is tracked by workspace.inInstallContext
-  if (now - marker.startedAt > INSTALL_MARKER_MAX_AGE_MS) return undefined;
+  if (Date.now() - marker.startedAt > INSTALL_MARKER_MAX_AGE_MS) return undefined;
   if (!isAlive(marker.pid)) return undefined;
   return marker;
+}
+
+/**
+ * resolves once no install runs in another process. returns the marker of the install it waited for, if any.
+ */
+export async function waitForInstallRunningElsewhere(
+  scopePath: string,
+  pollMs = POLL_MS,
+  isAlive?: (pid: number) => boolean
+): Promise<InstallMarker | undefined> {
+  const waitedFor = await getInstallRunningElsewhere(scopePath, isAlive);
+  let running = waitedFor;
+  while (running) {
+    await new Promise((resolve) => setTimeout(resolve, pollMs));
+    running = await getInstallRunningElsewhere(scopePath, isAlive);
+  }
+  return waitedFor;
 }
 
 async function readInstallMarker(scopePath: string): Promise<InstallMarker | undefined> {
@@ -59,7 +75,7 @@ async function readInstallMarker(scopePath: string): Promise<InstallMarker | und
   }
 }
 
-export function isProcessAlive(pid: number): boolean {
+function isProcessAlive(pid: number): boolean {
   try {
     process.kill(pid, 0);
     return true;

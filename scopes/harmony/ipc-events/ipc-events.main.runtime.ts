@@ -10,7 +10,12 @@ import path from 'path';
 import fs from 'fs-extra';
 import { IpcEventsAspect } from './ipc-events.aspect';
 import type { InstallMarker } from './install-marker';
-import { getInstallRunningElsewhere, removeInstallMarker, writeInstallMarker } from './install-marker';
+import {
+  getInstallRunningElsewhere,
+  removeInstallMarker,
+  waitForInstallRunningElsewhere,
+  writeInstallMarker,
+} from './install-marker';
 
 type EventName = 'onPostInstall' | 'onPostObjectsPersist' | 'onNotifySSE';
 
@@ -73,12 +78,14 @@ export class IpcEventsMain {
     await this.publishIpcEvent('onNotifySSE', { event, data });
   }
 
+  private installWait?: Promise<InstallMarker | undefined>;
+
   /**
-   * an install replaces node_modules, including the injected copies of workspace components that the compiler writes
-   * dists into. a long-running process (e.g. "bit server --compile", "bit watch") that compiles meanwhile writes into
-   * directories the package manager is deleting, which breaks the install. the marker lets those processes hold off
-   * compiling until the install is over. (unlike the "onPostInstall" event, it doesn't depend on the install
-   * succeeding: a marker whose process is gone is ignored).
+   * an install replaces node_modules, including the injected copies of the workspace components that the compiler
+   * writes dists into. a long-running process (e.g. "bit server --compile", "bit watch") that compiles meanwhile writes
+   * into dirs the package manager is deleting, and the install fails (ENOTEMPTY). the install marks itself, so these
+   * processes can wait for it. unlike the "onPostInstall" event, this doesn't depend on the install succeeding: a
+   * marker whose process is gone is ignored.
    */
   async markInstallStarted() {
     await writeInstallMarker(this.scope.path);
@@ -90,6 +97,16 @@ export class IpcEventsMain {
 
   async getInstallRunningElsewhere(): Promise<InstallMarker | undefined> {
     return getInstallRunningElsewhere(this.scope.path);
+  }
+
+  /**
+   * resolves once no install runs in another process. concurrent callers share a single wait.
+   */
+  async waitForInstallRunningElsewhere(): Promise<InstallMarker | undefined> {
+    this.installWait ??= waitForInstallRunningElsewhere(this.scope.path).finally(() => {
+      this.installWait = undefined;
+    });
+    return this.installWait;
   }
 
   get eventsDir() {

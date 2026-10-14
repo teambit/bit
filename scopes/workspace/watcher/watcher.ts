@@ -285,6 +285,7 @@ export class Watcher {
   }
 
   async watch() {
+    await this.waitForInstallRunningElsewhere();
     await this.setRootDirs();
     const componentIds = Object.values(this.rootDirs);
     await this.watcherMain.triggerOnPreWatch(componentIds, this.options);
@@ -687,6 +688,8 @@ export class Watcher {
       }
       this.changedFilesPerComponent[compIdStr] = [filePath];
       await this.sleep(DEBOUNCE_WAIT_MS);
+      // files changed meanwhile keep piling up in changedFilesPerComponent, so they're handled in one go afterwards
+      await this.waitForInstallRunningElsewhere();
       const files = this.changedFilesPerComponent[compIdStr];
       delete this.changedFilesPerComponent[compIdStr];
 
@@ -703,6 +706,18 @@ export class Watcher {
       this.logger.clearStatusLine();
       return { results: [], files: [filePath], failureMsg: err.message };
     }
+  }
+
+  /**
+   * an install in another process may be replacing node_modules, and the on-change subscribers (e.g. the compiler)
+   * write into it. see IpcEventsMain.markInstallStarted().
+   */
+  private async waitForInstallRunningElsewhere() {
+    const { ipcEvents } = this.watcherMain;
+    const runningInstall = await ipcEvents.getInstallRunningElsewhere();
+    if (!runningInstall) return;
+    this.logger.setStatusLine(`waiting for the install running in process ${runningInstall.pid} to finish`);
+    await ipcEvents.waitForInstallRunningElsewhere();
   }
 
   private async sleep(ms: number) {

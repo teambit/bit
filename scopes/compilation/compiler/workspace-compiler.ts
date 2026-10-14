@@ -374,22 +374,11 @@ ${this.compileErrors.map(formatError).join('\n')}`);
   }
 }
 
-/** how often to check whether the install that postponed a compilation is over */
-const POSTPONED_COMPILATION_POLL_MS = 2000;
-
 type TypeGeneratorParamsPerEnv = { envId: string; compParams: TypeGeneratorCompParams[]; typeCompiler: Compiler };
 
 export class WorkspaceCompiler {
   private componentsBeingProcessedInOnAspectLoadFail = new Set<string>();
   private envsBeingRestored = new Set<string>();
-
-  /** components whose compilation was postponed because another process was installing (see compileOnInstallEnd) */
-  private postponedCompilations = new Map<
-    string,
-    { component: Component; removedFiles: Set<string>; watchOpts: WatchOptions }
-  >();
-
-  private postponedCompilationsTimer?: ReturnType<typeof setTimeout>;
 
   constructor(
     private workspace: Workspace,
@@ -450,17 +439,6 @@ export class WorkspaceCompiler {
         const id = component.id;
         const idStr = id.toString();
 
-        // an install in another process may be replacing node_modules right now, which is likely why the aspect
-        // failed to load. compiling would write into dirs the package manager is deleting. once the install is done,
-        // the "onPostInstall" event clears the caches and the aspect is loaded (and compiled if needed) again.
-        const runningInstall = await this.getInstallRunningElsewhere();
-        if (runningInstall) {
-          this.logger.debug(
-            `onAspectLoadFail: skipping compilation of ${idStr} - an install is running in process ${runningInstall.pid}`
-          );
-          return false;
-        }
-
         // compiling can only fix a workspace component whose dists are missing or stale. when the
         // failed aspect is not in the workspace (e.g. an env that used to be a core aspect,
         // resolved to its pinned version but not installed yet), the cascade below imports the
@@ -480,6 +458,16 @@ export class WorkspaceCompiler {
         if (this.componentsBeingProcessedInOnAspectLoadFail.has(idStr)) {
           this.logger.debug(
             `onAspectLoadFail: skipping ${idStr} as it's already being processed (preventing infinite loop)`
+          );
+          return false;
+        }
+
+        // an install in another process may be replacing node_modules (likely why the aspect failed to load), and
+        // compiling would write into dirs the package manager is deleting. a later load of the aspect tries again.
+        const runningInstall = await this.watcher.ipcEvents.getInstallRunningElsewhere();
+        if (runningInstall) {
+          this.logger.debug(
+            `onAspectLoadFail: skipping compilation of ${idStr} - an install is running in process ${runningInstall.pid}`
           );
           return false;
         }
@@ -527,8 +515,6 @@ export class WorkspaceCompiler {
     watchOpts: WatchOptions
   ): Promise<SerializableResults | void> {
     if (!watchOpts.compile) return undefined;
-    const runningInstall = await this.getInstallRunningElsewhere();
-    if (runningInstall) return this.postponeCompilation(component, removedFiles, watchOpts, runningInstall.pid);
     // when files are removed, we need to remove their dists and the old symlinks, otherwise, it has
     // symlinks to non-exist files and the dist has stale files.
     // don't delete the entire dist dir here. other processes (e.g. a webpack dev-server) may read it meanwhile and
@@ -552,74 +538,6 @@ export class WorkspaceCompiler {
         return formatCompileResults(buildResults, watchOpts.verbose);
       },
     };
-  }
-
-  /**
-   * the compiler writes dists into the injected copies of the components inside node_modules. while another process
-   * runs "bit install", the package manager may be deleting these very dirs, and writing into them fails the install
-   * (ENOTEMPTY). so the compilation is postponed and runs once the install is over.
-   */
-  private postponeCompilation(
-    component: Component,
-    removedFiles: string[],
-    watchOpts: WatchOptions,
-    installPid: number
-  ): SerializableResults {
-    const idStr = component.id.toString();
-    const prevRemovedFiles = this.postponedCompilations.get(idStr)?.removedFiles || [];
-    this.postponedCompilations.set(idStr, {
-      component,
-      removedFiles: new Set([...prevRemovedFiles, ...removedFiles]),
-      watchOpts,
-    });
-    this.scheduleCompileOnInstallEnd();
-    const msg = `${idStr}: compilation postponed until the install running in process ${installPid} is done`;
-    this.logger.debug(msg);
-    return {
-      results: [],
-      toString() {
-        return chalk.yellow(msg);
-      },
-    };
-  }
-
-  private scheduleCompileOnInstallEnd() {
-    if (this.postponedCompilationsTimer) return;
-    this.postponedCompilationsTimer = setTimeout(() => {
-      this.postponedCompilationsTimer = undefined;
-      this.compileOnInstallEnd().catch((err) => {
-        this.logger.error(`failed compiling the postponed components: ${err.message}`, err);
-      });
-    }, POSTPONED_COMPILATION_POLL_MS);
-    // don't keep a short-lived process alive just for this
-    this.postponedCompilationsTimer.unref?.();
-  }
-
-  /**
-   * polls rather than waiting for the "onPostInstall" event, which a failed or killed install never sends.
-   * getInstallRunningElsewhere() stops reporting such an install once its process is gone.
-   */
-  async compileOnInstallEnd() {
-    if (!this.postponedCompilations.size) return;
-    if (await this.getInstallRunningElsewhere()) {
-      this.scheduleCompileOnInstallEnd();
-      return;
-    }
-    const postponed = [...this.postponedCompilations.values()];
-    this.postponedCompilations.clear();
-    await mapSeries(postponed, async ({ component, removedFiles, watchOpts }) => {
-      const results = await this.onComponentChange(component, [], [...removedFiles], watchOpts);
-      if (results) this.logger.console(results.toString());
-    });
-  }
-
-  private async getInstallRunningElsewhere() {
-    try {
-      return await this.watcher?.ipcEvents?.getInstallRunningElsewhere();
-    } catch (err: any) {
-      this.logger.debug(`failed checking whether an install is running: ${err.message}`);
-      return undefined;
-    }
   }
 
   async onPreWatch(componentIds: ComponentID[], watchOpts: WatchOptions) {
