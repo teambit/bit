@@ -18,7 +18,15 @@ const metadata = spawnSync('cargo', ['metadata', '--format-version', '1', '--loc
 if (metadata.status !== 0) process.exit(metadata.status ?? 1)
 const restorer = JSON.parse(metadata.stdout).packages.find((pkg) => pkg.name === 'pnpm-deps-restorer')
 if (restorer == null) throw new Error('pnpm-deps-restorer is not in the native dependency graph')
-const loader = path.join(path.dirname(restorer.manifest_path), 'src', 'cas-loader.mjs.inc')
+const crateDir = path.dirname(restorer.manifest_path)
+const loader = path.join(crateDir, 'src', 'cas-loader.mjs.inc')
+if (!fs.existsSync(loader) && fs.lstatSync(crateDir).isSymbolicLink()) {
+  // `pnpm install` vendors crates as links into pnpm's shared store. Copy this one
+  // into the checkout first, so the stub never lands in the store.
+  const source = fs.realpathSync(crateDir)
+  fs.rmSync(crateDir)
+  fs.cpSync(source, crateDir, { recursive: true })
+}
 if (!fs.existsSync(loader)) {
   fs.writeFileSync(loader, "throw new Error('bit does not support the pnpm CAS store loader')\n")
 }

@@ -1,0 +1,5 @@
+# >>> pnpm-managed cargo sources >>>
+[[include]]
+path = "../.pnpm/crates/config.toml"
+optional = true
+# <<< pnpm-managed cargo sources <<<

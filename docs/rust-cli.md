@@ -48,9 +48,44 @@ goes first on `PATH`, as bvm's wrapper does.
 To try the binary against a checkout:
 
 ```sh
-cd native && cargo build -p bit-cli
+cd native && pnpm run build:debug
 BIT_NODE_CLI=$PWD/../bin/bit.js ./target/debug/bit status
 ```
+
+## Setup
+
+`native/` is a pnpm project with Cargo support (`cargo.enabled` in its
+`pnpm-workspace.yaml`), so the only prerequisite is pnpm 12.11 or later:
+
+```sh
+cd native
+pnpm install          # the Rust toolchain rust-toolchain.toml names, and the crates
+pnpm run build        # target/release/bit (build:debug for target/debug/bit)
+```
+
+`pnpm install` downloads the toolchain once per machine into pnpm's store,
+verified against the Rust release signing key, and links it into
+`native/.pnpm/rust`. It also vendors the crates into `native/.pnpm/crates`,
+which `native/.cargo/config.toml` points Cargo at. `pnpm run` puts the linked
+toolchain first on `PATH`, so building and testing need neither rustup nor a
+system Rust.
+`devEngines` in `native/package.json` pins the pnpm and Node.js versions, and
+pnpm downloads them when they are missing.
+
+| Script                      | Runs                                                    |
+| --------------------------- | ------------------------------------------------------- |
+| `pnpm run build`            | `cargo build --release -p bit-cli`                      |
+| `pnpm run build:debug`      | `cargo build -p bit-cli`                                |
+| `pnpm run test`             | `cargo test --workspace`                                |
+| `pnpm run lint`             | `cargo clippy --workspace --all-targets -- -D warnings` |
+| `pnpm run doc`              | `cargo doc --workspace --no-deps`                       |
+| `pnpm run fmt`, `fmt:check` | pnpm's pinned rustfmt over the workspace                |
+
+Each Cargo script first runs `prepare-engine`, which writes a file that pnpm's
+pinned engine crates expect but do not commit, into a local copy of that crate,
+never into pnpm's store. Two checks still need rustup: `fmt` and `fmt:check`
+build pnpm's pinned rustfmt fork with a dated nightly, and the perfectionist
+lints (`cargo dylint`) use the nightly toolchain `cargo-dylint` installs.
 
 ## The JavaScript host
 
