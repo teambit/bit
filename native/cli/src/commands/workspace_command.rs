@@ -257,7 +257,7 @@ fn semver_values(to: Option<&str>, context: &Value) -> io::Result<Vec<String>> {
 }
 
 /// `capture.commit()`, then `commandApply`.
-fn commit(planned: &mut Planned, root: &Path) -> io::Result<()> {
+pub(super) fn commit(planned: &mut Planned, root: &Path) -> io::Result<()> {
     capture::commit(&mut planned.engine, root, &planned.context, &planned.capture)?;
     let applied: Value = planned.engine.request(&json!({
         "kind": planned.apply,

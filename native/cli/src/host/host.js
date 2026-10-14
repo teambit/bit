@@ -7,8 +7,8 @@
 //   node -e <this script> <@teambit/bit dir> <Node.js CLI entry> <workspace root>
 //
 // One JSON request per stdin line, `{id, method, params}`; one JSON response per stdout line,
-// `{id, result}` or `{id, error}`. Everything the aspects print goes to stderr, so stdout stays
-// the protocol stream.
+// `{id, result}` or `{id, error}`. Aspect output normally goes to stderr so stdout stays
+// the protocol stream. `afterInstall` returns its stdout to Rust for the command's stdout.
 
 const fs = require('fs');
 const path = require('path');
@@ -18,7 +18,16 @@ const { createRequire } = require('module');
 const [bitDir, entry, root] = process.argv.slice(-3);
 const bitRequire = createRequire(path.join(bitDir, 'package.json'));
 const respond = process.stdout.write.bind(process.stdout);
-process.stdout.write = (chunk, encoding, callback) => process.stderr.write(chunk, encoding, callback);
+let capturedStdout = null;
+process.stdout.write = (chunk, encoding, callback) => {
+  if (capturedStdout) {
+    capturedStdout.push(Buffer.isBuffer(chunk) ? chunk.toString(typeof encoding === 'string' ? encoding : undefined) : chunk);
+    if (typeof encoding === 'function') encoding();
+    if (typeof callback === 'function') callback();
+    return true;
+  }
+  return process.stderr.write(chunk, encoding, callback);
+};
 
 const BIT_ASPECT_ID = 'teambit.harmony/bit';
 let harmony;
@@ -66,9 +75,15 @@ async function handle(line) {
     return;
   }
   try {
+    if (request.method === 'afterInstall') capturedStdout = [];
     const result = await handler(request.params ?? {});
-    respond(`${JSON.stringify({ id: request.id, result: result ?? null })}\n`);
+    const output = capturedStdout?.join('');
+    capturedStdout = null;
+    const value = request.method === 'afterInstall' ? { value: result ?? null, stdout: output } : result ?? null;
+    respond(`${JSON.stringify({ id: request.id, result: value })}\n`);
   } catch (error) {
+    if (capturedStdout) process.stderr.write(capturedStdout.join(''));
+    capturedStdout = null;
     respond(`${JSON.stringify({ id: request.id, error: error?.message ?? String(error) })}\n`);
   }
 }

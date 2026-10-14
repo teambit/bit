@@ -266,7 +266,7 @@ integration that loaded it into the Node.js CLI:
 ## Known differences
 
 - Workspaces configured with the yarn package manager decline to the Node.js CLI, because yarn is a JavaScript package manager.
-- Against a released Node.js CLI (bit 2.2.94), the installed files are identical, but some progress lines differ: the compile step's status and success lines come from the host process on stderr instead of stdout, the pre-install import prints one more line (`import 0 components with their dependencies (if missing)`) and can count its imported objects differently, and pnpm's throttled progress lines vary. These are tracked with the other install gaps in #123.
+- Against a released Node.js CLI (bit 2.2.94), the installed files are identical, but some progress lines differ: the pre-install import prints one more line (`import 0 components with their dependencies (if missing)`) and can count its imported objects differently, and pnpm's throttled progress lines vary. These are tracked with the other install gaps in #123.
 
 ## CI
 

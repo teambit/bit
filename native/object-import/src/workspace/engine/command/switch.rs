@@ -33,6 +33,7 @@ pub(super) fn context(
     let mut selection = LaneSelection::load(request)?;
     let mut context = selection.metadata(request, pool)?;
     prepare::extend_models(request, pool, &mut context, Some(&selection.imported))?;
+    selection.remove_without_main_head(&mut context)?;
     if selection.current.is_main() && staged_main(&request.root, &context)? {
         return Err(invalid("switch staged main components require export or reset"));
     }
@@ -63,6 +64,31 @@ fn validate_options(request: &Prepare) -> io::Result<()> {
 }
 
 impl LaneSelection {
+    fn remove_without_main_head(&self, context: &mut Value) -> io::Result<()> {
+        if !self.destination.is_main() {
+            return Ok(());
+        }
+        let targets = context["targets"].as_array().ok_or_else(|| invalid("switch targets"))?;
+        let keep = targets
+            .iter()
+            .map(|target| {
+                let identity =
+                    target["identity"].as_str().ok_or_else(|| invalid("switch identity"))?;
+                Ok(!self.lane_only.contains(identity)
+                    || repository::model(context, identity)?
+                        .is_some_and(|model| model["head"].as_str().is_some()))
+            })
+            .collect::<io::Result<Vec<_>>>()?;
+        let retained: Vec<Value> = targets
+            .iter()
+            .zip(keep)
+            .filter(|(_, keep)| *keep)
+            .map(|(target, _)| target.clone())
+            .collect();
+        context["targets"] = json!(retained);
+        Ok(())
+    }
+
     fn load(request: &Prepare) -> io::Result<Self> {
         let bitmap = config::document(&request.root.join(".bitmap"))?;
         let lane_only = lane_only(&bitmap)?;
@@ -111,16 +137,17 @@ impl LaneSelection {
             history: false,
         };
         let settings = config::configuration_for_command(&request.root, true)?;
-        let visible = super::lane_context::visibility::targets(&self.bitmap, &settings)?;
+        let destination_heads = entries(self.lane.as_ref())?
+            .into_iter()
+            .map(|entry| entry.identity)
+            .collect::<HashSet<_>>();
+        let visible = super::lane_context::visibility::switch_targets(
+            &self.bitmap,
+            &settings,
+            self.destination.is_main(),
+            &destination_heads,
+        )?;
         let mut context = status_context::metadata_with_targets(&input, pool, &settings, visible)?;
-        if self.destination.is_main() {
-            context["targets"]
-                .as_array_mut()
-                .ok_or_else(|| invalid("switch targets"))?
-                .retain(|target| {
-                    !self.lane_only.contains(target["identity"].as_str().unwrap_or_default())
-                });
-        }
         let heads = validate_membership(&context, self)?;
         let (additions, added_targets, selected) =
             self.additions(&request.root, &context, &settings)?;

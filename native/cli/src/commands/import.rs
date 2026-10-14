@@ -3,7 +3,6 @@
 //! first, and an import that writes components installs them afterwards
 //! unless `-x` is given.
 
-mod installation;
 mod options;
 mod patterns;
 mod report;
@@ -11,6 +10,7 @@ mod report;
 use super::{
     color::Chalk,
     engine::Engine,
+    installation,
     status::cache::cache_root,
     workspace_command::{self, NodeCli, progress::Progress, results::Report},
 };
@@ -117,7 +117,7 @@ fn render(
     }
     if let Some(installer) = installer {
         let ids = planned.receipt.ids.clone();
-        if let Err(error) = installer.install(root, options, &ids) {
+        if let Err(error) = installer.install(root, options.skip_write_config_files, &ids) {
             output.failure(&format!("installation failed with the following error: {error}"));
             planned.report =
                 planned.receipt.import_report(planned.chalk, Some(&error.to_string()))?;

@@ -1,4 +1,4 @@
-use super::{Update, identity, invalid};
+use super::{super::repository, Update, identity, invalid};
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
 
@@ -6,6 +6,43 @@ pub(super) fn on_lane(context: &Value) -> bool {
     context["lane"]["currentId"]["name"]
         .as_str()
         .is_some_and(|name| name != "main")
+}
+
+/// Switching to main clears lane-only visibility when the component has a
+/// main head. Other lanes preserve the tracked lane-only designation.
+pub(super) fn switch_visibility(
+    entries: &mut [Value],
+    context: &Value,
+    name: &str,
+) -> io::Result<()> {
+    let lane_only = context["lane"]["switchLaneOnly"]
+        .as_array()
+        .ok_or_else(|| invalid("switch lane-only identities"))?;
+    for entry in entries {
+        let component = identity(entry)?;
+        let fields = entry.as_object_mut().ok_or_else(|| invalid("switch bitmap entry"))?;
+        fields.shift_remove("isAvailableOnCurrentLane");
+        fields.shift_remove("onLanesOnly");
+        let has_main_head = name == "main"
+            && repository::model(context, &component)?
+                .is_some_and(|model| model["head"].as_str().is_some());
+        if has_main_head
+            || !lane_only
+                .iter()
+                .any(|value| value == &component)
+        {
+            continue;
+        }
+        let on_destination =
+            name != "main" && context["lane"]["switchLaneHeads"].get(&component).is_some();
+        if on_destination {
+            fields.insert("onLanesOnly".into(), Value::Bool(true));
+            fields.insert("isAvailableOnCurrentLane".into(), Value::Bool(true));
+        } else {
+            fields.insert("isAvailableOnCurrentLane".into(), Value::Bool(false));
+        }
+    }
+    Ok(())
 }
 
 // Consumer.getNotExportedIds considers only the current lane's available bitmap

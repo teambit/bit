@@ -6,7 +6,7 @@ use crate::command_import::{
     lane::{Entry, entries},
 };
 use serde_json::{Value, json};
-use std::io;
+use std::{collections::HashSet, io};
 
 pub(in crate::workspace::engine::command) fn identity_bitmap(
     bitmap: &Value,
@@ -44,6 +44,37 @@ pub(in crate::workspace::engine::command) fn targets(
         clear_visibility(row)?;
     }
     config::context_bitmap_targets(&Value::Object(visible), settings)
+}
+
+/// A lane switch also selects hidden bitmap entries when the destination
+/// carries them. Switching to main considers every tracked entry, then drops
+/// lane-only entries without a main head after the models have been loaded.
+pub(in crate::workspace::engine::command) fn switch_targets(
+    bitmap: &Value,
+    settings: &Value,
+    main: bool,
+    destination_heads: &HashSet<String>,
+) -> io::Result<Vec<Value>> {
+    let mut selected = bitmap
+        .as_object()
+        .ok_or_else(|| invalid("switch bitmap"))?
+        .clone();
+    selected.remove("_bit_lane");
+    selected.retain(|key, row| {
+        if key == "$schema-version" || row["isAvailableOnCurrentLane"] != false {
+            return true;
+        }
+        let identity = effective_scope(row)
+            .zip(row["name"].as_str())
+            .map(|(scope, name)| format!("{scope}/{name}"));
+        main || identity.is_some_and(|identity| destination_heads.contains(&identity))
+    });
+    for (key, row) in &mut selected {
+        if key != "$schema-version" {
+            clear_visibility(row)?;
+        }
+    }
+    config::context_bitmap_targets(&Value::Object(selected), settings)
 }
 
 pub(super) fn inactive_targets(

@@ -2,6 +2,8 @@
 pub(super) use export::prepare_export_scopes;
 mod export;
 mod lane;
+#[cfg(test)]
+mod switch_tests;
 use crate::workspace::engine::invalid;
 use serde_json::{Map, Value};
 use std::{
@@ -33,28 +35,7 @@ impl Prepared {
         let scope = id["scope"].as_str().ok_or_else(|| invalid("switch lane scope"))?;
         let bitmap = crate::recovery::jsonc::parse(&self.output)?;
         let mut entries = rows(&bitmap)?;
-        let lane_only = context["lane"]["switchLaneOnly"]
-            .as_array()
-            .ok_or_else(|| invalid("switch lane-only identities"))?;
-        for entry in &mut entries {
-            let identity = identity(entry)?;
-            let fields = entry.as_object_mut().ok_or_else(|| invalid("switch bitmap entry"))?;
-            fields.shift_remove("isAvailableOnCurrentLane");
-            fields.shift_remove("onLanesOnly");
-            if lane_only
-                .iter()
-                .any(|value| value == &identity)
-            {
-                let on_destination =
-                    name != "main" && context["lane"]["switchLaneHeads"].get(&identity).is_some();
-                if on_destination {
-                    fields.insert("onLanesOnly".into(), Value::Bool(true));
-                    fields.insert("isAvailableOnCurrentLane".into(), Value::Bool(true));
-                } else {
-                    fields.insert("isAvailableOnCurrentLane".into(), Value::Bool(false));
-                }
-            }
-        }
+        lane::switch_visibility(&mut entries, context, name)?;
         let header = (name != "main").then(|| {
             serde_json::json!({"id":{"name":name,"scope":scope},
             "exported":context["lane"]["switchExported"] == true})

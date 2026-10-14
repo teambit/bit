@@ -11,6 +11,7 @@ fn reports_an_empty_switch() {
             verbose: false,
             force_ours: false,
             force_theirs: false,
+            skip_install: true,
         },
         Chalk::new(false),
     )
@@ -34,6 +35,7 @@ fn reports_fetched_head() {
             verbose: false,
             force_ours: false,
             force_theirs: false,
+            skip_install: true,
         },
         Chalk::new(false),
     )

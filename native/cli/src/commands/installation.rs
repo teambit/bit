@@ -2,7 +2,6 @@
 //! `installPackagesGracefully` runs, through the native installer and the
 //! JavaScript host. The compile `compileGracefully` repeats runs inside it.
 
-use super::options::Options;
 use crate::{
     commands::{
         install::{self, Input, Terminal},
@@ -49,7 +48,12 @@ impl Installer {
 
     /// `InstallMain.install(undefined, { dedupe, import: false, writeConfigFiles,
     /// dependenciesGraph })` for the imported `ids`.
-    pub fn install(self, root: &Path, options: &Options, ids: &[String]) -> io::Result<()> {
+    pub fn install(
+        self,
+        root: &Path,
+        skip_write_config_files: bool,
+        ids: &[String],
+    ) -> io::Result<()> {
         let dependencies_graph = if deps_graph_enabled(root)? {
             let ids: Vec<(String, String)> = ids
                 .iter()
@@ -65,7 +69,7 @@ impl Installer {
         let options = InstallOptions {
             programmatic: true,
             skip_import: true,
-            skip_write_config_files: options.skip_write_config_files,
+            skip_write_config_files,
             dependencies_graph,
             ..InstallOptions::default()
         };

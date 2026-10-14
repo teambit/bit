@@ -1,4 +1,21 @@
-use super::{inactive_targets, json, targets};
+use super::{inactive_targets, json, switch_targets, targets};
+use std::collections::HashSet;
+
+#[test]
+fn switch_reselects_tracked_hidden_components_only_on_their_destination() {
+    let row = |name: &str, available| json!({"name":name,"scope":"scope","version":"1.0.0","rootDir":name,"mainFile":"index.js","isAvailableOnCurrentLane":available,"onLanesOnly":true});
+    let bitmap = json!({"$schema-version":"17.0.0","active":row("active",true),"returning":row("returning",false),"unrelated":row("unrelated",false)});
+    let heads = HashSet::from(["scope/returning".to_string()]);
+    let lane = switch_targets(&bitmap, &json!({}), false, &heads).unwrap();
+    let identities: Vec<_> = lane
+        .iter()
+        .map(|row| row["identity"].as_str().unwrap())
+        .collect();
+    assert_eq!(identities, ["scope/active", "scope/returning"]);
+    let main = switch_targets(&bitmap, &json!({}), true, &HashSet::new()).unwrap();
+    assert_eq!(main.len(), 3);
+    assert_eq!(bitmap["returning"]["isAvailableOnCurrentLane"], false);
+}
 #[test]
 fn active_and_selected_inactive_bitmap_metadata_are_separate() {
     let row = |name: &str, available| json!({"name":name,"scope":"scope","version":"1.0.0","rootDir":name,"mainFile":"index.js","isAvailableOnCurrentLane":available,"onLanesOnly":true});

@@ -9,6 +9,7 @@ mod export;
 mod ids;
 mod import;
 mod install;
+mod installation;
 mod inventory;
 mod lane;
 mod list;

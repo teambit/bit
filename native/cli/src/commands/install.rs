@@ -251,7 +251,16 @@ impl bit_install::Host for JsHost {
 
     async fn after_install(&self, request: AfterInstall) -> io::Result<AfterInstallResult> {
         let request = serde_json::to_value(request).map_err(io::Error::other)?;
-        self.call("afterInstall", request).await
+        let mut response: Value = self.call("afterInstall", request).await?;
+        let output = response["stdout"]
+            .as_str()
+            .ok_or_else(|| io::Error::other("JavaScript host afterInstall stdout"))?;
+        if !output.is_empty() {
+            let mut stdout = io::stdout().lock();
+            stdout.write_all(output.as_bytes())?;
+            stdout.flush()?;
+        }
+        serde_json::from_value(response["value"].take()).map_err(io::Error::other)
     }
 
     /// The terminal is this process's, so the question is asked here.

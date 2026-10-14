@@ -1,17 +1,23 @@
-//! Native `bit switch <lane> -x` through the workspace
+//! Native `bit switch <lane>` through the workspace
 //! command's prepare, plan, capture and apply lifecycle.
 
 mod options;
 mod report;
+#[cfg(test)]
+mod tests;
 
 use super::{
+    color::Chalk,
+    installation::Installer,
     status::js::{array, decline, text},
-    workspace_command::{self, Planned, Request, progress::Progress, results::Report},
+    workspace_command::{
+        self, Planned, Request, format::Formatter, progress::Progress, results::Report,
+    },
 };
 use crate::{commands::Command, native::Outcome, workspace};
 use bit_install::output::Output;
 use serde_json::Value;
-use std::{env, ffi::OsString, io};
+use std::{env, ffi::OsString, io, path::Path};
 
 pub const COMMAND: Command = Command { name: "switch", aliases: &[], run };
 
@@ -25,25 +31,68 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".to_string()));
     };
+    let installer = match start_installer(&root, &argv, options.skip_install) {
+        Ok(installer) => installer,
+        Err(error) => return Ok(Outcome::Declined(format!("switch installation: {error}"))),
+    };
     let prepared = match prepare(&root, args, &options) {
         Ok(prepared) => prepared,
         Err(error) => return Ok(Outcome::Declined(format!("switch: {error}"))),
     };
+    execute(&root, args, &options, prepared, installer)
+}
+
+fn start_installer(root: &Path, argv: &[&str], skip: bool) -> io::Result<Option<Installer>> {
+    if skip { Ok(None) } else { Installer::start(root, argv).map(Some) }
+}
+
+fn execute(
+    root: &Path,
+    args: &[OsString],
+    options: &options::Options,
+    prepared: PreparedSwitch,
+    installer: Option<Installer>,
+) -> io::Result<Outcome> {
     let needs_checkout_progress = options.skip_fetch || !prepared.checkout_import_present();
-    workspace_command::execute(
-        &root,
-        args,
-        "switch",
-        prepared.planned,
-        &prepared.report,
-        |output| {
-            render_progress(
-                output,
-                &prepared.imports,
-                needs_checkout_progress,
-                prepared.import_count,
-            );
-        },
+    if let Some(installer) = installer {
+        return workspace_command::execute_then(root, args, "switch", |output| {
+            install_and_report(root, args, output, prepared, needs_checkout_progress, installer)
+        });
+    }
+    workspace_command::execute(root, args, "switch", prepared.planned, &prepared.report, |output| {
+        render_progress(output, &prepared.imports, needs_checkout_progress, prepared.import_count);
+    })
+}
+
+fn install_and_report(
+    root: &Path,
+    args: &[OsString],
+    output: &Output,
+    mut prepared: PreparedSwitch,
+    checkout_progress: bool,
+    installer: Installer,
+) -> io::Result<Report> {
+    render_progress(output, &prepared.imports, checkout_progress, prepared.import_count);
+    workspace_command::commit(&mut prepared.planned, root)?;
+    if !prepared.install_ids.is_empty()
+        && let Err(error) = installer.install(root, false, &prepared.install_ids)
+    {
+        output.failure(&format!("installation failed with the following error: {error}"));
+        let formatter = Formatter::new(Chalk::detect(args));
+        prepared.report.data = Formatter::join(&[
+            prepared.report.data,
+            installation_error(&formatter, &error.to_string()),
+        ]);
+    }
+    Ok(prepared.report)
+}
+
+fn installation_error(formatter: &Formatter, error: &str) -> String {
+    format!(
+        "{} {}\nThe following error was thrown by the package manager:\n{}\nUse \"bit install\" to complete the installation, remove the imported components using \"bit remove <comp id>\" or remove the missing dependencies from their source code",
+        formatter.error_symbol(),
+        formatter.title("Installation Error"),
+        formatter.chalk.red(error),
     )
 }
 
@@ -63,6 +112,7 @@ struct PreparedSwitch {
     report: Report,
     import_count: u64,
     imports: Vec<RemoteImport>,
+    install_ids: Vec<String>,
 }
 
 impl PreparedSwitch {
@@ -99,7 +149,24 @@ fn prepare(
         checkout.components = import_count;
         checkout.objects = 0;
     }
-    Ok(PreparedSwitch { planned, report, import_count, imports })
+    let install_ids = install_ids(&planned.plan["result"])?;
+    Ok(PreparedSwitch { planned, report, import_count, imports, install_ids })
+}
+
+fn install_ids(result: &Value) -> io::Result<Vec<String>> {
+    let mut ids = array(result.get("components"), "switch components")?
+        .iter()
+        .map(|row| text(row.get("id")).map(str::to_string))
+        .collect::<io::Result<Vec<_>>>()?;
+    ids.extend(
+        array(result.get("addedComponents"), "switch added components")?
+            .iter()
+            .map(|id| text(Some(id)).map(str::to_string))
+            .collect::<io::Result<Vec<_>>>()?,
+    );
+    ids.sort();
+    ids.dedup();
+    Ok(ids)
 }
 
 struct RemoteImport {

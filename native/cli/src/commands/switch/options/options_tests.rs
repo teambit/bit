@@ -7,7 +7,9 @@ fn accepts_complete_switches_without_dependency_installation() {
     assert!(!parse(&["s/dev", "-x"]).unwrap().skip_fetch);
     assert!(parse(&["s/dev", "--skip-fetch", "-x"]).unwrap().skip_fetch);
     assert!(parse(&["main", "-x", "--force-theirs"]).unwrap().force_theirs);
-    assert!(parse(&["s/dev", "--skip-fetch"]).is_none());
+    assert!(!parse(&["s/dev", "--skip-fetch"]).unwrap().skip_install);
+    assert!(parse(&["s/dev", "--skip-fetch", "-x"]).unwrap().skip_install);
+    assert_eq!(parse(&["main"]).unwrap().request()["skipDependencyInstallation"], true);
     assert!(parse(&["s/dev", "--skip-fetch", "-x", "--branch"]).is_none());
     assert!(parse(&["s/dev", "--skip-fetch", "-x", "--pattern", "foo"]).is_none());
     assert!(parse(&["s/dev", "--skip-fetch", "-x", "-x"]).is_none());

@@ -1,5 +1,5 @@
-//! A narrow grammar for complete switches with dependency installation
-//! disabled. Merge strategies, aliases and partial switches stay with Node.
+//! A narrow grammar for complete switches. Merge strategies, aliases and
+//! partial switches stay with Node.
 
 use serde_json::{Value, json};
 
@@ -10,6 +10,7 @@ pub struct Options {
     pub verbose: bool,
     pub force_ours: bool,
     pub force_theirs: bool,
+    pub skip_install: bool,
 }
 
 pub fn parse(args: &[&str]) -> Option<Options> {
@@ -59,15 +60,13 @@ impl Parsed {
     }
 
     fn finish(self) -> Option<Options> {
-        if !self.skip_install {
-            return None;
-        }
         Some(Options {
             lane: self.lane?,
             skip_fetch: self.skip_fetch,
             verbose: self.verbose,
             force_ours: self.force_ours,
             force_theirs: self.force_theirs,
+            skip_install: self.skip_install,
         })
     }
 }
@@ -91,6 +90,7 @@ impl Options {
     pub fn request(&self) -> Value {
         json!({
             "lane": {"name": self.lane, "skipFetch": self.skip_fetch},
+            // The native CLI performs installation after committing the VCS plan.
             "skipDependencyInstallation": true,
             "verbose": self.verbose,
             "forceOurs": self.force_ours,
