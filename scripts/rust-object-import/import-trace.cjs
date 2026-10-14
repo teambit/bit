@@ -83,6 +83,8 @@ const metrics = {
       'commandSnapPlan',
       'commandSnapFinalize',
       'commandSnapApply',
+      'commandInboundPrepare',
+      'commandInboundApply',
       'dependencyPolicyCached',
       'dependencyGraph',
       'dependencyDetectFresh',
@@ -566,6 +568,7 @@ function observeWorkspaceTransport(child) {
             'BWS1:commandResolveApply',
             'BWS1:commandSnapApply',
             'BWS1:commandTagApply',
+            'BWS1:commandInboundApply',
           ].includes(magic) &&
           response.data?.applied === true &&
           !response.failed

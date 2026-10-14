@@ -4,8 +4,7 @@
 //! lookup for scopes no remote is configured for. Like pnpm's one-shot
 //! pnpmfile hooks, it runs in the Node.js that runs Bit.
 
-use super::objects::invalid;
-use crate::model::GlobalConfig;
+use crate::{GlobalConfig, invalid};
 use serde_json::Value;
 use std::{
     io,

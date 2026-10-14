@@ -1,8 +1,8 @@
 //! The `http(s)` remote transport (`scopes/scope/network/http/http.ts`): `POST <url>/api/scope/fetch`
 //! with a tar response, and symphony GraphQL for hub scope resolution.
 
-use super::{fetch::FetchOptions, objects::invalid, tar::ObjectItem};
-use crate::model::GlobalConfig;
+use crate::{GlobalConfig, fetch::FetchOptions, invalid, tar::ObjectItem};
+use futures_util::StreamExt;
 use reqwest::{Certificate, Client, NoProxy, Proxy, RequestBuilder, Response};
 use serde_json::{Value, json};
 use std::{fs, io, time::Duration};
@@ -106,6 +106,18 @@ impl Network {
         ids: &[String],
         options: &FetchOptions,
     ) -> io::Result<Vec<ObjectItem>> {
+        self.fetch_bounded(url, ids, options, super::tar::MAX_ARCHIVE_BYTES).await
+    }
+
+    /// Use a tighter response ceiling for workspace commands that retain the
+    /// remote objects until a separate publication step.
+    pub async fn fetch_bounded(
+        &self,
+        url: &str,
+        ids: &[String],
+        options: &FetchOptions,
+        max_bytes: usize,
+    ) -> io::Result<Vec<ObjectItem>> {
         let endpoint = format!("{url}/api/scope/fetch");
         let body = json!({ "ids": ids, "fetchOptions": options });
         let response = self.send(|| {
@@ -114,8 +126,16 @@ impl Network {
         })
         .await?;
         let response = throw_for_status(response).await?;
-        let bytes = response.bytes().await.map_err(|error| network_error(&error))?;
-        super::tar::read(&bytes)
+        let mut stream = response.bytes_stream();
+        let mut bytes = Vec::new();
+        while let Some(chunk) = stream.next().await {
+            let chunk = chunk.map_err(|error| network_error(&error))?;
+            if chunk.len() > max_bytes.saturating_sub(bytes.len()) {
+                return Err(invalid("remote fetch archive exceeds bounds"));
+            }
+            bytes.extend_from_slice(&chunk);
+        }
+        super::tar::read_bounded(&bytes, max_bytes)
     }
 
     /// Retry network failures (not HTTP error statuses), like `retry(_fetch)`.

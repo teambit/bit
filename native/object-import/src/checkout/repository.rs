@@ -137,7 +137,7 @@ thread_local! {
         chunk: vec![0; 64 * 1024].into_boxed_slice(),
     });
 }
-fn inflate(compressed: &[u8], maximum: usize) -> io::Result<Vec<u8>> {
+pub(crate) fn inflate(compressed: &[u8], maximum: usize) -> io::Result<Vec<u8>> {
     inflate_with(compressed, maximum, None)
 }
 fn inflate_with(compressed: &[u8], maximum: usize, budget: Option<&Budget>) -> io::Result<Vec<u8>> {

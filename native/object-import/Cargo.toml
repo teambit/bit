@@ -6,7 +6,9 @@ publish = false
 
 [dependencies]
 bit-dependency-scanner = { path = "../dependency-scanner" }
+bit-client-transfer = { path = "../client-transfer" }
 flate2 = { version = "1.1", default-features = false, features = ["zlib-rs"] }
+futures-util = "0.3"
 sha1 = "0.10"
 sha2 = "0.10"
 base64 = "0.22"
@@ -15,6 +17,7 @@ ryu-js = "=1.0.3"
 regress = "=0.12.0"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
+tokio = { version = "1", features = ["rt-multi-thread", "sync", "time"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 xattr = "1.6.1"

@@ -25,10 +25,24 @@ pub(super) struct Object {
 #[derive(Default)]
 pub(super) struct Capture {
     proofs: HashMap<PathBuf, Option<[u8; 32]>>,
+    virtual_files: HashMap<PathBuf, Vec<u8>>,
+    virtual_bytes: usize,
     bytes: usize,
     raw_bytes: usize,
 }
 impl Capture {
+    pub(super) fn virtual_file(&mut self, path: PathBuf, bytes: Vec<u8>) -> io::Result<()> {
+        if self.virtual_files.len() >= MAX_RECORDS
+            || bytes.len() > MAX_BYTES.saturating_sub(self.virtual_bytes)
+        {
+            return Err(invalid("virtual import byte or object limit"));
+        }
+        self.virtual_bytes += bytes.len();
+        if self.virtual_files.insert(path, bytes).is_some() {
+            return Err(invalid("duplicate virtual import object"));
+        }
+        Ok(())
+    }
     pub(super) fn accept_restored(
         &mut self,
         path: &Path,
@@ -45,8 +59,17 @@ impl Capture {
         if self.proofs.len() >= MAX_RECORDS {
             return Err(invalid("import proof limit"));
         }
-        let bytes = read(path, MAX_BYTES.saturating_sub(self.bytes))?;
-        self.bytes += bytes.as_ref().map_or(0, Vec::len);
+        let known_virtual = self.virtual_files.contains_key(path) && self.proofs.contains_key(path);
+        let bytes = match self.virtual_files.get(path) {
+            Some(bytes) if known_virtual || bytes.len() <= MAX_BYTES.saturating_sub(self.bytes) => {
+                Some(bytes.clone())
+            }
+            Some(_) => return Err(invalid("virtual import read budget")),
+            None => read(path, MAX_BYTES.saturating_sub(self.bytes))?,
+        };
+        if !known_virtual {
+            self.bytes += bytes.as_ref().map_or(0, Vec::len);
+        }
         let hash = bytes
             .as_ref()
             .map(|bytes| Sha256::digest(bytes).into());
@@ -73,11 +96,17 @@ impl Capture {
             .join(&hash[..2])
             .join(&hash[2..]);
         let Some(bytes) = self.read(&path)? else { return Ok(None) };
-        let mut total = 0;
-        let raw = repository::read(directory, identity, 32 * 1024 * 1024, &mut total)?;
+        let raw = if self.virtual_files.contains_key(&path) {
+            repository::inflate(&bytes, 32 * 1024 * 1024)?
+        } else {
+            let mut total = 0;
+            repository::read(directory, identity, 32 * 1024 * 1024, &mut total)?
+        };
         // The repository reader opens the object independently; prove it still
         // corresponds to the bytes retained for later publication.
-        if read(&path, MAX_BYTES)?.as_ref() != Some(&bytes) {
+        if !self.virtual_files.contains_key(&path)
+            && read(&path, MAX_BYTES)?.as_ref() != Some(&bytes)
+        {
             return Err(invalid("import object changed during capture"));
         }
         self.raw_bytes += raw.len();
@@ -107,6 +136,20 @@ impl Capture {
         directory: &Path,
         hashes: &[String],
     ) -> io::Result<Vec<(String, Object)>> {
+        if hashes
+            .iter()
+            .any(|hash| {
+                let path = directory
+                    .join(&hash[..2])
+                    .join(&hash[2..]);
+                self.virtual_files.contains_key(&path)
+            })
+        {
+            return hashes
+                .iter()
+                .map(|hash| self.virtual_source(directory, hash))
+                .collect();
+        }
         use rayon::prelude::*;
         let raw = crate::read_budget::Budget::new(MAX_BYTES.saturating_sub(self.raw_bytes));
         let packed = crate::read_budget::Budget::new(MAX_BYTES.saturating_sub(self.bytes));
@@ -123,34 +166,50 @@ impl Capture {
             .collect::<io::Result<Vec<_>>>()?;
         let mut result = Vec::with_capacity(records.len());
         for (hash, record) in records {
-            self.raw_bytes += record.inflated_size;
-            self.bytes += record.compressed.len();
-            let path = directory
-                .join(&hash[..2])
-                .join(&hash[2..]);
-            let digest = Some(<[u8; 32]>::from(Sha256::digest(&record.compressed)));
-            if self.proofs
-                .insert(path, digest)
-                .is_some_and(|previous| previous != digest)
-            {
-                return Err(invalid("import Source changed during capture"));
-            }
-            result.push((
-                hash,
-                Object {
-                    kind: "Source".into(),
-                    bytes: record.compressed,
-                    value: None,
-                    source: Some(record.body),
-                    inflated_size: record.inflated_size,
-                },
-            ));
+            result.push(self.retain_source(directory, hash, record)?);
         }
         Ok(result)
+    }
+    fn virtual_source(&mut self, directory: &Path, hash: &str) -> io::Result<(String, Object)> {
+        self.object(directory, hash, "Source")?
+            .map(|record| (hash.to_owned(), record))
+            .ok_or_else(|| invalid("import virtual Source missing"))
+    }
+    fn retain_source(
+        &mut self,
+        directory: &Path,
+        hash: String,
+        record: repository::SourceRecord,
+    ) -> io::Result<(String, Object)> {
+        self.raw_bytes += record.inflated_size;
+        self.bytes += record.compressed.len();
+        let path = directory
+            .join(&hash[..2])
+            .join(&hash[2..]);
+        let digest = Some(<[u8; 32]>::from(Sha256::digest(&record.compressed)));
+        if self.proofs
+            .insert(path, digest)
+            .is_some_and(|previous| previous != digest)
+        {
+            return Err(invalid("import Source changed during capture"));
+        }
+        Ok((
+            hash,
+            Object {
+                kind: "Source".into(),
+                bytes: record.compressed,
+                value: None,
+                source: Some(record.body),
+                inflated_size: record.inflated_size,
+            },
+        ))
     }
     pub(super) fn validate(&self) -> io::Result<()> {
         let mut total: usize = 0;
         for (path, expected) in &self.proofs {
+            if self.virtual_files.contains_key(path) {
+                continue;
+            }
             let bytes = read(path, MAX_BYTES.saturating_sub(total))?;
             total += bytes.as_ref().map_or(0, Vec::len);
             if bytes

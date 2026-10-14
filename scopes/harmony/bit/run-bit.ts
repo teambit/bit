@@ -76,11 +76,16 @@ async function initApp(additionalAspects?: Aspect[]) {
     if (
       !additionalAspects?.length &&
       process.env.BIT_RUST_CLIENT_VCS === 'on' &&
-      (['checkout', 'U', 'merge', 'snap', 'tag', 't'].includes(process.argv[2]) ||
+      (['checkout', 'U', 'merge', 'snap', 'tag', 't', 'fetch', 'import'].includes(process.argv[2]) ||
         (process.argv[2] === 'lane' && ['merge', 'merge-abort'].includes(process.argv[3])))
     ) {
-      const { runRustWorkspaceCommand } = await import('./rust-workspace-command');
-      if (await runRustWorkspaceCommand()) return;
+      if (['fetch', 'import'].includes(process.argv[2])) {
+        const { runRustWorkspaceInbound } = await import('./rust-workspace-inbound');
+        if (await runRustWorkspaceInbound()) return;
+      } else {
+        const { runRustWorkspaceCommand } = await import('./rust-workspace-command');
+        if (await runRustWorkspaceCommand()) return;
+      }
     }
     const { runCLI } = await import('./load-bit');
     await runCLI(additionalAspects);

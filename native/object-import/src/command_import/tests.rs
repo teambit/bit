@@ -1,5 +1,6 @@
 use super::{
-    Object, Overlay, PreparedImport, Target, history, object_hash, prepare, prepare_cached, publish,
+    Object, Overlay, PreparedImport, Target, VirtualRemote, history, object_hash, prepare,
+    prepare_cached, prepare_with_virtual, publish,
 };
 use serde_json::{Value, json};
 use std::{
@@ -121,6 +122,19 @@ fn file_refresh_is_staged_and_validated_before_publication() {
     );
 }
 #[test]
+fn fresh_workspace_without_index_prepares_read_only_and_creates_index_on_commit() {
+    let fixture = Fixture::new();
+    let head = "f".repeat(40);
+    fixture.model(&head);
+    fs::remove_file(fixture.root.join(".bit/index.json")).unwrap();
+    let Some(plan) = fixture.imported() else { return };
+    assert!(!fixture.root.join(".bit/index.json").exists());
+    plan.commit().unwrap();
+    let index: Value =
+        serde_json::from_slice(&fs::read(fixture.root.join(".bit/index.json")).unwrap()).unwrap();
+    assert_eq!(index["components"][0]["id"], json!({"scope":"remote.scope","name":"alpha"}));
+}
+#[test]
 fn commits_remote_history_and_local_mutable_objects_then_refs() {
     let fixture = Fixture::new();
     let head = "b".repeat(40);
@@ -144,6 +158,49 @@ fn commits_remote_history_and_local_mutable_objects_then_refs() {
     .unwrap();
     assert_eq!(refs[0]["head"], head);
     assert_eq!(fs::read(&fixture.global).unwrap(), b"{}");
+}
+#[test]
+fn virtual_http_history_never_publishes_synthetic_remote_directory() {
+    let fixture = Fixture::new();
+    let head = "a".repeat(40);
+    fixture.model(&head);
+    let virtual_path = fixture.root.join(".bit/.rust-inbound-virtual/remote.scope");
+    let objects = tree(&fixture.remote.join("objects"))
+        .into_iter()
+        .map(|(path, bytes)| {
+            let shard = path
+                .parent()
+                .unwrap()
+                .file_name()
+                .unwrap()
+                .to_str()
+                .unwrap();
+            let suffix = path
+                .file_name()
+                .unwrap()
+                .to_str()
+                .unwrap();
+            (format!("{shard}{suffix}"), bytes)
+        })
+        .collect();
+    let plan = prepare_with_virtual(
+        &fixture.root,
+        &fixture.global,
+        &[Fixture::target()],
+        &[VirtualRemote { scope: "remote.scope".into(), path: virtual_path.clone(), objects }],
+    )
+    .unwrap();
+    assert!(!virtual_path.exists());
+    plan.commit().unwrap();
+    assert!(!virtual_path.exists());
+    let history = history::identity("remote.scope/alpha");
+    assert!(
+        fixture.root
+            .join(".bit/objects")
+            .join(&history[..2])
+            .join(&history[2..])
+            .exists(),
+    );
 }
 #[test]
 fn unexported_bitmap_requires_no_remote_resolution_or_global_config_creation() {

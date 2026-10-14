@@ -3,7 +3,9 @@
 pub(crate) mod lane;
 #[cfg(test)]
 pub(crate) mod tests;
-pub(crate) use prepare::{prepare, prepare_cached, prepare_lane};
+pub(crate) use prepare::{
+    VirtualRemote, prepare, prepare_cached, prepare_lane, prepare_with_virtual,
+};
 mod capture;
 mod history;
 mod merge;
@@ -108,6 +110,7 @@ impl PreparedImport {
 
 struct Environment {
     local_directory: PathBuf,
+    remote_overrides: HashMap<String, PathBuf>,
     global_remotes: Option<PathBuf>,
     missing_global_remotes: Option<PathBuf>,
     remotes: Value,
@@ -129,6 +132,38 @@ struct Writes {
     lane_histories: Vec<Value>,
 }
 impl PreparedImport {
+    pub(crate) fn virtual_remote(
+        &mut self,
+        scope: &str,
+        path: PathBuf,
+        objects: &[(String, Vec<u8>)],
+    ) -> io::Result<()> {
+        if scope.is_empty() || objects.len() > 16384 {
+            return Err(invalid("virtual import remote bounds"));
+        }
+        if path.try_exists()? || self.environment.remote_overrides.contains_key(scope) {
+            return Err(invalid("virtual import remote collision"));
+        }
+        self.capture.virtual_file(
+            path.join("scope.json"),
+            serde_json::to_vec(&serde_json::json!({"name":scope})).map_err(io::Error::other)?,
+        )?;
+        let mut inflated_total = 0usize;
+        for (hash, compressed) in objects {
+            inflated_total += validate_virtual_object(hash, compressed)?;
+            if inflated_total > 96 * 1024 * 1024 {
+                return Err(invalid("virtual import inflated byte limit"));
+            }
+            self.capture.virtual_file(
+                path.join("objects")
+                    .join(&hash[..2])
+                    .join(&hash[2..]),
+                compressed.clone(),
+            )?;
+        }
+        self.environment.remote_overrides.insert(scope.to_owned(), path);
+        Ok(())
+    }
     pub(crate) fn validate(&self) -> io::Result<()> {
         if self.writes.index_changed {
             crate::store::Store::new(self.environment.local_directory.clone(), None)?
@@ -136,6 +171,38 @@ impl PreparedImport {
         }
         self.capture.validate()
     }
+}
+fn validate_virtual_object(hash: &str, compressed: &[u8]) -> io::Result<usize> {
+    crate::merge_history::hash(hash)?;
+    let raw = crate::checkout::repository::inflate(compressed, 32 * 1024 * 1024)?;
+    let kind = raw
+        .split(|byte| *byte == b' ')
+        .next()
+        .and_then(|kind| std::str::from_utf8(kind).ok())
+        .ok_or_else(|| invalid("virtual import object header"))?;
+    if !matches!(
+        kind,
+        "Source"
+            | "ScopeMeta"
+            | "Version"
+            | "VersionHistory"
+            | "Component"
+            | "Lane"
+            | "LaneHistory",
+    ) {
+        return Err(invalid("virtual import object kind"));
+    }
+    let (_, body) =
+        crate::checkout::repository::split(&raw, crate::merge_history::hash(hash)?, kind)?;
+    if kind == "Source" {
+        use sha1::{Digest, Sha1};
+        if crate::validate::hexadecimal(&Sha1::digest(body)) != *hash {
+            return Err(invalid("virtual import Source identity"));
+        }
+    } else {
+        let _: Value = serde_json::from_slice(body).map_err(io::Error::other)?;
+    }
+    Ok(raw.len())
 }
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)

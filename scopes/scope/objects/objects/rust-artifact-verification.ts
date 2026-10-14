@@ -82,7 +82,13 @@ export function verifyPackagedFiles(files: File[]): boolean {
       const bytes = fs.readFileSync(file.filename);
       if (bytes.length > file.limit || digest(bytes) !== file.sha256) return false;
     }
-    // Do not cache a successful hash if a file changed during verification.
+    // Some filesystems expose unchanged metadata for a same-length rewrite.
+    // Read the contents again before remembering the verification result.
+    if (stamps(files) !== before) return false;
+    for (const file of files) {
+      const bytes = fs.readFileSync(file.filename);
+      if (bytes.length > file.limit || digest(bytes) !== file.sha256) return false;
+    }
     if (stamps(files) !== before) return false;
     remember(cache, fingerprint);
   }

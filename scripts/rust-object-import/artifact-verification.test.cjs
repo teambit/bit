@@ -60,14 +60,14 @@ function fixture(t) {
 
 test('a fresh process reuses successful unchanged verification and rehashes restored content', posix, (t) => {
   const f = fixture(t);
-  assert.deepEqual(f.run(), { matches: true, reads: 1 });
+  assert.deepEqual(f.run(), { matches: true, reads: 2 });
   assert.deepEqual(f.run(), { matches: true, reads: 0 });
   const stat = fs.statSync(f.filename);
   fs.writeFileSync(f.filename, Buffer.alloc(f.bytes.length, 120));
   fs.utimesSync(f.filename, stat.atime, stat.mtime);
   assert.equal(f.run().matches, false, 'restoring mtime cannot hide content changes');
   fs.writeFileSync(f.filename, f.bytes);
-  assert.deepEqual(f.run(), { matches: true, reads: 1 });
+  assert.deepEqual(f.run(), { matches: true, reads: 2 });
   assert.deepEqual(f.run(), { matches: true, reads: 0 });
 });
 
@@ -77,7 +77,7 @@ test('replacement, digest changes, size mismatches and redirects invalidate veri
   const replacement = path.join(f.directory, 'replacement');
   fs.writeFileSync(replacement, f.bytes);
   fs.renameSync(replacement, f.filename);
-  assert.deepEqual(f.run(), { matches: true, reads: 1 });
+  assert.deepEqual(f.run(), { matches: true, reads: 2 });
   f.files[0].sha256 = 'a'.repeat(64);
   assert.equal(f.run().matches, false);
   f.files[0].sha256 = createHash('sha256').update(f.bytes).digest('hex');
@@ -113,7 +113,7 @@ for (const change of [
       fs.rmSync(f.globals, { recursive: true });
       fs.writeFileSync(f.globals, 'not a directory');
     }
-    assert.deepEqual(f.run(), { matches: true, reads: 1 });
+    assert.deepEqual(f.run(), { matches: true, reads: 2 });
     fs.writeFileSync(f.filename, Buffer.alloc(f.bytes.length, 120));
     assert.equal(f.run().matches, false);
   });
@@ -134,6 +134,39 @@ test('files changed while being hashed are never remembered', (t) => {
     assert.equal(verifyPackagedFiles(f.files), false);
   } finally {
     fs.readFileSync = original;
+    if (previous === undefined) delete process.env.BIT_GLOBALS_DIR;
+    else process.env.BIT_GLOBALS_DIR = previous;
+  }
+  assert.equal(f.run().matches, false);
+});
+
+test('a same-length rewrite is rejected even when metadata stamps do not change', (t) => {
+  const f = fixture(t);
+  const { verifyPackagedFiles } = require(path.join(f.directory, 'verify.cjs'));
+  const originalRead = fs.readFileSync;
+  const originalStat = fs.lstatSync;
+  const unchanged = originalStat.call(fs, f.filename, { bigint: true });
+  let changed = false;
+  fs.lstatSync = function (filename, ...args) {
+    if (filename === f.filename) return unchanged;
+    return originalStat.call(this, filename, ...args);
+  };
+  fs.readFileSync = function (filename, ...args) {
+    const value = originalRead.call(this, filename, ...args);
+    if (filename === f.filename && !changed) {
+      changed = true;
+      fs.writeFileSync(filename, Buffer.alloc(f.bytes.length, 120));
+    }
+    return value;
+  };
+  const previous = process.env.BIT_GLOBALS_DIR;
+  process.env.BIT_GLOBALS_DIR = f.globals;
+  try {
+    assert.equal(verifyPackagedFiles(f.files), false);
+    assert.equal(changed, true);
+  } finally {
+    fs.readFileSync = originalRead;
+    fs.lstatSync = originalStat;
     if (previous === undefined) delete process.env.BIT_GLOBALS_DIR;
     else process.env.BIT_GLOBALS_DIR = previous;
   }

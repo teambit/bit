@@ -1,7 +1,6 @@
 //! Remote scope resolution (`getScopeRemotes` and the hub `remoteResolver`).
 
-use super::{http::Network, objects::invalid, resolver::Resolver};
-use crate::model::GlobalConfig;
+use crate::{GlobalConfig, http::Network, invalid, resolver::Resolver};
 use indexmap::IndexMap;
 use serde_json::{Value, json};
 use std::{
@@ -129,6 +128,7 @@ impl Remotes {
 }
 
 /// `ScopeNotFoundOrDenied`.
+#[must_use]
 pub fn not_found_or_denied(scope: &str) -> io::Error {
     io::Error::new(
         io::ErrorKind::NotFound,
@@ -138,7 +138,7 @@ pub fn not_found_or_denied(scope: &str) -> io::Error {
     )
 }
 
-pub(crate) fn global_remotes(dir: &Path) -> io::Result<IndexMap<String, String>> {
+pub fn global_remotes(dir: &Path) -> io::Result<IndexMap<String, String>> {
     match fs::read(dir.join(GLOBAL_REMOTES)) {
         Ok(bytes) => Ok(serde_json::from_slice::<IndexMap<String, Value>>(&bytes)
             .map_err(|_| invalid("invalid global-remotes.json"))?

@@ -1,5 +1,5 @@
 use super::Resolver;
-use crate::model::GlobalConfig;
+use crate::GlobalConfig;
 use serde_json::json;
 use std::{fs, path::PathBuf};
 use tempfile::TempDir;

@@ -6,6 +6,7 @@ publish = false
 
 [dependencies]
 bit-dependency-scanner = { path = "../dependency-scanner" }
+bit-client-transfer = { path = "../client-transfer" }
 bit-object-import = { path = "../object-import" }
 pnpm-config = { workspace = true }
 pnpm-default-reporter = { workspace = true }

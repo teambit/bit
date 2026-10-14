@@ -49,6 +49,10 @@ pub(super) fn raw_remote(
     if let Some(path) = plan.environment.missing_global_remotes.take() {
         plan.environment.global_remotes = Some(path);
     }
+    if let Some(directory) = plan.environment.remote_overrides.get(name).cloned() {
+        validate_virtual(plan, &directory, name)?;
+        return Ok(directory.join("objects"));
+    }
     let host = remotes[name]
         .as_str()
         .ok_or_else(|| invalid("import unmapped remote requires canonical resolver"))?;
@@ -68,6 +72,20 @@ pub(super) fn raw_remote(
     }
     validate_config(plan, &directory)?;
     Ok(directory.join("objects"))
+}
+
+fn validate_virtual(
+    plan: &mut PreparedImport,
+    directory: &std::path::Path,
+    name: &str,
+) -> io::Result<()> {
+    let scope = plan.capture
+        .json(&directory.join("scope.json"))?
+        .ok_or_else(|| invalid("virtual remote scope absent"))?;
+    if scope["name"] != name {
+        return Err(invalid("virtual remote scope mismatch"));
+    }
+    Ok(())
 }
 
 fn validate_config(plan: &mut PreparedImport, directory: &std::path::Path) -> io::Result<()> {

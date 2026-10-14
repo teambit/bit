@@ -18,10 +18,28 @@ pub(crate) fn prepare(
     global_remotes_file: &Path,
     targets: &[Target],
 ) -> io::Result<PreparedImport> {
+    prepare_with_virtual(root, global_remotes_file, targets, &[])
+}
+
+pub(crate) struct VirtualRemote {
+    pub(crate) scope: String,
+    pub(crate) path: std::path::PathBuf,
+    pub(crate) objects: Vec<(String, Vec<u8>)>,
+}
+
+pub(crate) fn prepare_with_virtual(
+    root: &Path,
+    global_remotes_file: &Path,
+    targets: &[Target],
+    virtual_remotes: &[VirtualRemote],
+) -> io::Result<PreparedImport> {
     if !root.is_absolute() || !global_remotes_file.is_absolute() || targets.len() > 4096 {
         return Err(invalid("import command bounds"));
     }
     let (mut plan, scope) = empty(root, false)?;
+    for remote in virtual_remotes {
+        plan.virtual_remote(&remote.scope, remote.path.clone(), &remote.objects)?;
+    }
     let scoped: Vec<_> = targets
         .iter()
         .filter(|target| target.scope.is_some())
@@ -111,7 +129,7 @@ fn empty(root: &Path, allow_lane: bool) -> io::Result<(PreparedImport, Value)> {
     let name = scope["name"].as_str().ok_or_else(|| invalid("import local name"))?;
     let index = capture
         .json(&root.join(".bit/index.json"))?
-        .ok_or_else(|| invalid("import index"))?;
+        .unwrap_or_else(|| json!({"components":[],"lanes":[]}));
     let plan = PreparedImport {
         overlay: Overlay::default(),
         progress: Vec::new(),
@@ -119,6 +137,7 @@ fn empty(root: &Path, allow_lane: bool) -> io::Result<(PreparedImport, Value)> {
         capture,
         environment: super::Environment {
             local_directory: root.join(".bit/objects"),
+            remote_overrides: HashMap::new(),
             global_remotes: None,
             missing_global_remotes: None,
             remotes: json!({}),

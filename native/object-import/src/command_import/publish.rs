@@ -85,6 +85,14 @@ impl PreparedImport {
     }
     fn publish_remote_history(&self) -> io::Result<()> {
         for (directory, hash, value) in &self.writes.remote_objects {
+            if self.environment.remote_overrides
+                .values()
+                .any(|path| directory == &path.join("objects"))
+            {
+                // An HTTP remote is a retained in-memory stream, not a writable
+                // scope. Its merged history is already staged for local commit.
+                continue;
+            }
             let store = Store::new(directory.clone(), None)?;
             mutable_store::persist_serialized(
                 &store,

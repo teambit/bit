@@ -9,7 +9,7 @@ type ImportProgress = {
 };
 
 /** Validate the entire receipt before any visible command or filesystem effects. */
-export function commandProgress(value: any, operation: 'checkout' | 'merge' | 'recovery' | 'snap' | 'tag') {
+export function commandProgress(value: any, operation: 'checkout' | 'merge' | 'recovery' | 'snap' | 'tag' | 'inbound') {
   if (value === undefined) return async () => {};
   if (!Number.isSafeInteger(value.bitmapCount) || value.bitmapCount < 0 || !Array.isArray(value.imports))
     throw new Error('native command progress receipt');

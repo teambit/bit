@@ -346,6 +346,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "bit-client-transfer"
+version = "0.1.0"
+dependencies = [
+ "futures-util",
+ "indexmap",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tar",
+ "tempfile",
+ "tokio",
+]
+
+[[package]]
 name = "bit-dependency-scanner"
 version = "0.1.0"
 dependencies = [
@@ -376,6 +390,7 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
+ "bit-client-transfer",
  "bit-dependency-scanner",
  "bit-object-import",
  "flate2",
@@ -422,8 +437,10 @@ name = "bit-object-import"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
+ "bit-client-transfer",
  "bit-dependency-scanner",
  "flate2",
+ "futures-util",
  "rayon",
  "regress",
  "ryu-js",
@@ -431,6 +448,7 @@ dependencies = [
  "serde_json",
  "sha1",
  "sha2",
+ "tokio",
  "xattr",
 ]
 
