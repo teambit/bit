@@ -205,6 +205,7 @@ export function ComponentPreview({
   const finalHeight = !fullContentHeight && targetHeight < containerHeight ? containerHeight : targetHeight;
   const defaultLegacyHeight = forceHeight || 5000;
   const legacyIframeHeight = (iframeHeight || 0) > 400 ? iframeHeight : defaultLegacyHeight;
+  const isWaitingForSize = width === 0 && isScaling && !fullContentHeight && !forceVisible;
 
   return (
     <div ref={containerRef} className={classNames(styles.preview, className)} style={{ height: forceHeight }}>
@@ -216,7 +217,10 @@ export function ComponentPreview({
           ...style,
           height: forceHeight || (isScaling ? finalHeight + innerBottomPadding : legacyIframeHeight),
           width: isScaling ? targetWidth : legacyCurrentWidth,
-          visibility: width === 0 && isScaling && !fullContentHeight && !forceVisible ? 'hidden' : undefined,
+          // hide with opacity, not visibility. chrome stops rendering a cross-site iframe with visibility: hidden,
+          // so its ResizeObserver never fires and the size report this waits for never arrives.
+          opacity: isWaitingForSize ? 0 : undefined,
+          pointerEvents: isWaitingForSize ? 'none' : undefined,
           transform: fullContentHeight ? '' : computePreviewScale(width || 1280, containerWidth || 1280),
           border: 0,
           transformOrigin: 'top left',
