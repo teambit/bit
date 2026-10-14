@@ -79,12 +79,18 @@ pnpm downloads them when they are missing.
 
 | Script                      | Runs                                                    |
 | --------------------------- | ------------------------------------------------------- |
-| `pnpm run build`            | `cargo build --release -p bit-cli`                      |
+| `pnpm run build`            | `cargo build --release -p bit-cli` (thin LTO)           |
+| `pnpm run build:dist`       | `cargo build --profile dist -p bit-cli` (fat LTO)       |
 | `pnpm run build:debug`      | `cargo build -p bit-cli`                                |
 | `pnpm run test`             | `cargo test --workspace`                                |
 | `pnpm run lint`             | `cargo clippy --workspace --all-targets -- -D warnings` |
 | `pnpm run doc`              | `cargo doc --workspace --no-deps`                       |
 | `pnpm run fmt`, `fmt:check` | pnpm's pinned rustfmt over the workspace                |
+
+`build` uses thin LTO so an optimized rebuild stays fast. Binaries that are
+shipped (bvm packages, release assets) must come from `build:dist`, which
+writes `target/dist/bit` with fat LTO and one codegen unit: about 20% smaller
+and a few percent faster, but a rebuild takes minutes and over 4 GB of memory.
 
 Each Cargo script first runs `prepare-engine`, which writes a file that pnpm's
 pinned engine crates expect but do not commit, into a local copy of that crate,

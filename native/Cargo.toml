@@ -106,8 +106,16 @@ redundant_feature_names = "warn"
 wildcard_dependencies = "warn"
 
 
-# Match pnpm's cross-crate release optimization for the packaged native helpers.
+# Local optimized builds (`pnpm run build`). Thin LTO keeps a rebuild after an
+# edit around 20 s instead of over 3 minutes with fat LTO, and the binary is
+# within a few percent as fast.
 [profile.release]
+lto = "thin"
+strip = "symbols"
+
+# Release binaries (`pnpm run build:dist`). Matches pnpm's cross-crate release
+# optimization: smaller and slightly faster, but slow to build.
+[profile.dist]
+inherits = "release"
 lto = "fat"
 codegen-units = 1
-strip = "symbols"
