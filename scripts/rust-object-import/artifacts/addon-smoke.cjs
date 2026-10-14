@@ -13,7 +13,8 @@ function frame(magic, id, input) {
 }
 (async () => {
   const [addon, executable, directory] = process.argv.slice(2);
-  const { WorkspaceEngine, ImportStreamEngine } = require(addon);
+  const { WorkspaceEngine, ImportStreamEngine, install } = require(addon);
+  assert.equal(typeof install, 'function', 'workspace addon has no install export');
   const filename = path.join(directory, 'addon-source.txt');
   fs.writeFileSync(filename, '\ufeffstandalone addon\r\n');
   const inputs = [1, 2].map((id) => frame('BWS1', id, { kind: 'read', files: [filename], binary: true, retain: true }));

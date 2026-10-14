@@ -291,20 +291,20 @@ test('artifact sidecars reject redirects and oversize files', { skip: process.pl
 
 
 test('optional workspace addon is bound to exact bytes, target, ABI and build provenance', () => {
-  const { addonBuildCommand, addonRustFlags } = require('./contract.cjs');
+  const { addonBuildCommand, addonRustFlags, addonPostBuild } = require('./contract.cjs');
   const members = fixture();
   const manifest = JSON.parse(members['manifest.json']);
   const addon = Buffer.from(members['bit-object-import']);
   members['bit-workspace.node'] = addon;
   manifest.addon = {name:'bit-workspace.node', bytes:addon.length, sha256:sha256(addon), napiVersion:8,
-    buildCommand:addonBuildCommand(manifest.target), rustFlags:addonRustFlags(manifest.target), minimumGlibc:'2.17'};
+    buildCommand:addonBuildCommand(manifest.target), rustFlags:addonRustFlags(manifest.target), postBuild:addonPostBuild(manifest.target), minimumGlibc:'2.17'};
   members['manifest.json'] = Buffer.from(JSON.stringify(manifest));
   assert.deepEqual(verifyMembers(decode(encode(members))), manifest);
   for (const edit of [
     value => { value.napiVersion = 9; }, value => { value.bytes++; },
     value => { value.sha256 = '0'.repeat(64); }, value => { value.name = '../addon.node'; },
     value => { value.buildCommand.pop(); }, value => { value.rustFlags = '-C target-cpu=native'; },
-    value => { value.minimumGlibc = '2.1'; },
+    value => { value.minimumGlibc = '2.1'; }, value => { value.postBuild = [['strip', '{addon}']]; },
   ]) {
     const changed = structuredClone(manifest); edit(changed.addon);
     assert.throws(() => verifyMembers({...members, 'manifest.json':Buffer.from(JSON.stringify(changed))}));
@@ -313,4 +313,14 @@ test('optional workspace addon is bound to exact bytes, target, ABI and build pr
   assert.throws(() => verifyMembers(missing));
   addon[18] ^= 1;
   assert.throws(() => verifyMembers(members));
+});
+
+test('Apple addons are stripped by Apple strip and re-signed, other targets by rustc', () => {
+  const { addonRustFlags, addonPostBuild } = require('./contract.cjs');
+  for (const target of ['aarch64-apple-darwin', 'x86_64-apple-darwin']) {
+    assert.equal(addonRustFlags(target), '-C strip=none');
+    assert.deepEqual(addonPostBuild(target).map(([program]) => program), ['xcrun', 'codesign']);
+  }
+  assert.deepEqual(addonPostBuild('x86_64-unknown-linux-gnu'), []);
+  assert.equal(addonRustFlags('x86_64-unknown-linux-gnu'), '');
 });

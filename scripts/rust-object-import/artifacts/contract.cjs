@@ -40,7 +40,22 @@ const addonLibrary = (target) =>
       ? 'libbit_workspace_napi.dylib'
       : 'libbit_workspace_napi.so';
 const addonBuildCommand = (target) => [...buildCommand(target).slice(0, 6), 'bit-workspace-napi', '--target', target];
-const addonRustFlags = (target) => (target.endsWith('-musl') ? '-C target-feature=-crt-static -C linker=cc' : '');
+// rustc strips Apple dylibs with LLVM objcopy, which leaves the LINKEDIT string pool at an
+// offset that current dyld rejects ("mis-aligned LINKEDIT string pool"), so the addon would not
+// load. Apple targets build unstripped and are stripped with Apple's `strip`, then re-signed ad hoc.
+const addonRustFlags = (target) =>
+  target.endsWith('-musl')
+    ? '-C target-feature=-crt-static -C linker=cc'
+    : targets[target].os === 'darwin'
+      ? '-C strip=none'
+      : '';
+const addonPostBuild = (target) =>
+  targets[target].os === 'darwin'
+    ? [
+        ['xcrun', 'strip', '-x', '{addon}'],
+        ['codesign', '--sign', '-', '--force', '{addon}'],
+      ]
+    : [];
 function verifyAddon(members, manifest) {
   const addon = members[addonName],
     target = manifest.target;
@@ -53,6 +68,7 @@ function verifyAddon(members, manifest) {
     napiVersion: 8,
     buildCommand: addonBuildCommand(target),
     rustFlags: addonRustFlags(target),
+    postBuild: addonPostBuild(target),
   };
   if (target.endsWith('-gnu')) expected.minimumGlibc = minimumGlibc(addon);
   assert.deepEqual(manifest.addon, expected, 'workspace addon metadata mismatch');
@@ -189,6 +205,7 @@ module.exports = {
   addonLibrary,
   addonBuildCommand,
   addonRustFlags,
+  addonPostBuild,
   buildCommand,
   sourceIdentity,
   verifyBinary,

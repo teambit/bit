@@ -14,6 +14,7 @@ const {
   addonLibrary,
   addonBuildCommand,
   addonRustFlags,
+  addonPostBuild,
   buildCommand,
   verifyBinary,
   verifyMembers,
@@ -82,6 +83,12 @@ function packageHelper(directory, target) {
   });
   assert.equal(sourceIdentity(), identity, 'native sources changed during addon build');
   const addonPath = path.join(cargoTarget, target, 'release', addonLibrary(target));
+  for (const [program, ...args] of addonPostBuild(target)) {
+    execFileSync(program, args.map((arg) => (arg === '{addon}' ? addonPath : arg)), {
+      stdio: ['ignore', 'ignore', 'inherit'],
+    });
+  }
+  assertAddonLoads(addonPath, target);
   const addonStat = fs.lstatSync(addonPath);
   assert.ok(addonStat.isFile() && addonStat.size <= 64 * 1024 * 1024, 'invalid workspace addon');
   const addon = fs.readFileSync(addonPath);
@@ -120,6 +127,7 @@ function packageHelper(directory, target) {
       napiVersion: 8,
       buildCommand: addonBuild,
       rustFlags: addonRustFlags(target),
+    postBuild: addonPostBuild(target),
       ...(target.endsWith('-gnu') ? { minimumGlibc: minimumGlibc(addon) } : {}),
     },
     license: { name: 'LICENSE', sha256: sha256(license) },
@@ -156,3 +164,25 @@ if (require.main === module) {
   console.log(packageHelper(args[1], args[3]));
 }
 module.exports = { packageHelper };
+
+/**
+ * Load the addon when it was built for this machine, so a binary the platform loader rejects
+ * (for example a misaligned Mach-O string pool) fails the build instead of shipping.
+ */
+function assertAddonLoads(addonPath, target) {
+  const { os, arch } = targets[target];
+  if (os !== process.platform || arch !== process.arch) return;
+  const glibc = process.report.getReport().header.glibcVersionRuntime !== undefined;
+  if (os === 'linux' && target.endsWith('-musl') === glibc) return;
+  const copy = path.join(fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'bit-addon-')), 'bit-workspace.node');
+  fs.copyFileSync(addonPath, copy);
+  try {
+    execFileSync(process.execPath, ['-e', `
+      const module = { exports: {} };
+      process.dlopen(module, ${JSON.stringify(copy)});
+      if (typeof module.exports.install !== 'function') throw new Error('addon has no install export');
+    `], { stdio: ['ignore', 'ignore', 'inherit'] });
+  } finally {
+    fs.rmSync(path.dirname(copy), { recursive: true, force: true });
+  }
+}
