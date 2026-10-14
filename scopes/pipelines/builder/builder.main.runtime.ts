@@ -149,36 +149,24 @@ export class BuilderMain {
     const allTasksResults: TaskResults[] = [];
     const { throwOnError, forceDeploy, disableTagAndSnapPipelines, isSnap, populateArtifactsFrom, loose } = options;
     if (populateArtifactsFrom) isolateOptions.populateArtifactsFrom = populateArtifactsFrom;
-    const runDeployPipeline = forceDeploy || !disableTagAndSnapPipelines;
-    const filterTasks = Boolean(builderOptions.tasks?.length && !populateArtifactsFrom);
-    if (filterTasks) {
-      const deployPipeline = isSnap ? 'snap' : 'tag';
-      this.throwIfNoTaskMatchesFilter(
-        components,
-        builderOptions.tasks as string[],
-        runDeployPipeline ? deployPipeline : undefined
-      );
-    }
-    const builderOptionsWithFilter: BuilderServiceOptions = filterTasks
-      ? { ...builderOptions, allowNoMatchingTasks: true }
-      : builderOptions;
+    const deployPipeline = isSnap ? 'snap' : 'tag';
     const buildEnvsExecutionResults = await this.build(
       components,
       { emptyRootDir: true, ...isolateOptions },
       {
-        ...builderOptionsWithFilter,
+        ...builderOptions,
         // even when build is skipped (in case of tag-from-scope), the pre-build/post-build and teambit.harmony/aspect tasks are needed
         tasks: populateArtifactsFrom ? [Extensions.aspect] : builderOptions.tasks,
       },
-      { ignoreIssues: '*' }
+      { ignoreIssues: '*', deployPipeline: forceDeploy || !disableTagAndSnapPipelines ? deployPipeline : undefined }
     );
     if (throwOnError && !forceDeploy) buildEnvsExecutionResults.throwErrorsIfExist(loose);
     allTasksResults.push(...buildEnvsExecutionResults.tasksResults);
     pipeResults.push(buildEnvsExecutionResults);
 
-    if (forceDeploy || (runDeployPipeline && !buildEnvsExecutionResults?.hasErrors(loose))) {
+    if (forceDeploy || (!disableTagAndSnapPipelines && !buildEnvsExecutionResults?.hasErrors(loose))) {
       const builderOptionsForTagSnap: BuilderServiceOptions = {
-        ...builderOptionsWithFilter,
+        ...builderOptions,
         seedersOnly: isolateOptions.seedersOnly,
         previousTasksResults: buildEnvsExecutionResults?.tasksResults,
       };
@@ -425,9 +413,25 @@ export class BuilderMain {
     components: Component[],
     isolateOptions?: IsolateComponentsOptions,
     builderOptions?: BuilderServiceOptions,
-    extraOptions?: { includeTag?: boolean; includeSnap?: boolean; ignoreIssues?: string }
+    extraOptions?: {
+      includeTag?: boolean;
+      includeSnap?: boolean;
+      ignoreIssues?: string;
+      /**
+       * the tag/snap pipeline the caller runs after this build. the "tasks" filter applies to it as well, so
+       * it's validated against both pipelines.
+       */
+      deployPipeline?: 'tag' | 'snap';
+    }
   ): Promise<TaskResultsList> {
     await this.throwForVariousIssues(components, extraOptions?.ignoreIssues);
+    const tasks = builderOptions?.tasks;
+    if (tasks?.length) {
+      let deployPipeline = extraOptions?.deployPipeline;
+      if (extraOptions?.includeTag) deployPipeline = 'tag';
+      if (extraOptions?.includeSnap) deployPipeline = 'snap';
+      this.throwIfNoTaskMatchesFilter(components, tasks, deployPipeline);
+    }
     const ids = components.map((c) => c.id);
     const capsulesBaseDir = this.buildService.getComponentsCapsulesBaseDir();
     const baseIsolateOpts = {
@@ -439,13 +443,6 @@ export class BuilderMain {
       ...isolateOptions,
     };
 
-    const includeDeployPipeline = extraOptions?.includeSnap || extraOptions?.includeTag;
-    const tasksFilter = builderOptions?.tasks;
-    const validateTasksAcrossPipelines = Boolean(includeDeployPipeline && tasksFilter?.length);
-    if (validateTasksAcrossPipelines) {
-      this.throwIfNoTaskMatchesFilter(components, tasksFilter as string[], extraOptions?.includeSnap ? 'snap' : 'tag');
-    }
-
     const network = await this.isolator.isolateComponents(ids, mergedIsolateOpts, this.scope.legacyScope);
     const envs = await this.envs.createEnvironment(network.graphCapsules.getAllComponents());
     const builderServiceOptions: BuilderServiceOptions = {
@@ -453,7 +450,6 @@ export class BuilderMain {
       originalSeeders: ids,
       capsulesBaseDir,
       ...builderOptions,
-      ...(validateTasksAcrossPipelines ? { allowNoMatchingTasks: true } : {}),
     };
     this.logger.consoleTitle(`Total ${components.length} components to build`);
     const buildResult: TaskResultsList = await envs.runOnce(this.buildService, builderServiceOptions);
@@ -487,24 +483,20 @@ export class BuilderMain {
   }
 
   /**
-   * validate a "tasks" filter upfront when it spans the build pipeline and a tag/snap pipeline: the filter
-   * may legitimately match only one of them, so each pipeline runs with "allowNoMatchingTasks", and a
-   * typo would otherwise silently run nothing.
+   * the "tasks" filter is validated here, once, rather than per pipeline: it may legitimately match only
+   * one of the pipelines that run (e.g. a build task when the snap pipeline runs as well).
    */
   private throwIfNoTaskMatchesFilter(components: Component[], tasks: string[], deployPipeline?: 'tag' | 'snap') {
-    const deployService = { tag: this.tagService, snap: this.snapService };
+    const services = [this.buildService];
+    if (deployPipeline) services.push(deployPipeline === 'snap' ? this.snapService : this.tagService);
     const envsById = new Map(components.map((component) => this.envs.getEnv(component)).map((env) => [env.id, env]));
-    const allTaskIds = new Set<string>();
-    envsById.forEach((env) => {
-      this.buildService.getCurrentPipeTasks(env).forEach((taskId) => allTaskIds.add(taskId));
-      if (deployPipeline) {
-        deployService[deployPipeline].getCurrentPipeTasks(env).forEach((taskId) => allTaskIds.add(taskId));
-      }
-    });
-    const hasMatch = [...allTaskIds].some((taskId) => isTaskInFilter(BuildTaskHelper.deserializeId(taskId), tasks));
-    if (!hasMatch) {
+    const allTasks = [...envsById.values()].flatMap((env) =>
+      services.flatMap((service) => service.getCurrentPipeline(env))
+    );
+    if (allTasks.length && !allTasks.some((task) => isTaskInFilter(task, tasks))) {
+      const availableTasks = [...new Set(allTasks.map((task) => BuildTaskHelper.serializeId(task)))].sort();
       throw new BitError(
-        `no tasks found matching the specified filter: "${tasks.join(', ')}". Available tasks: ${[...allTaskIds].sort().join(', ')}`
+        `no tasks found matching the specified filter: "${tasks.join(', ')}". Available tasks: ${availableTasks.join(', ')}`
       );
     }
   }

@@ -35,11 +35,6 @@ export type BuilderServiceOptions = {
   seedersOnly?: boolean;
   originalSeeders?: ComponentID[];
   tasks?: string[];
-  /**
-   * when the "tasks" filter spans several pipelines (e.g. build + snap), a pipeline with no matching task
-   * runs nothing instead of throwing. the caller is responsible for validating the filter upfront.
-   */
-  allowNoMatchingTasks?: boolean;
   skipTests?: boolean;
   skipTasks?: string[];
   previousTasksResults?: TaskResults[];
@@ -112,8 +107,7 @@ export class BuilderService implements EnvService<BuildServiceResults, string> {
       this.pipeNameOnEnv,
       options.tasks,
       options.skipTests,
-      options.skipTasks,
-      options.allowNoMatchingTasks
+      options.skipTasks
     );
     tasksQueue.validate();
     this.logger.info(`going to run tasks in the following order:\n${tasksQueue.toString()}`);
@@ -224,14 +218,11 @@ export class BuilderService implements EnvService<BuildServiceResults, string> {
     return 'run `bit build --list-tasks <component-id>` to see the tasks list for the pipelines: build, tag and snap';
   }
 
-  private getTasksNamesByPipeFunc(env: EnvDefinition, pipeFuncName: PipeFunctionNames): string[] {
-    const tasksQueue = calculatePipelineOrder(this.taskSlot, [env], pipeFuncName).map(({ task }) =>
-      BuildTaskHelper.serializeId(task)
-    );
-    return tasksQueue;
+  getCurrentPipeline(env: EnvDefinition): BuildTask[] {
+    return calculatePipelineOrder(this.taskSlot, [env], this.pipeNameOnEnv).map(({ task }) => task);
   }
 
-  getCurrentPipeTasks(env: EnvDefinition) {
-    return this.getTasksNamesByPipeFunc(env, this.pipeNameOnEnv);
+  getCurrentPipeTasks(env: EnvDefinition): string[] {
+    return this.getCurrentPipeline(env).map((task) => BuildTaskHelper.serializeId(task));
   }
 }

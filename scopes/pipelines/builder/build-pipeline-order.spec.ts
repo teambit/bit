@@ -8,8 +8,8 @@ const appTask = task('teambit.harmony/application', 'build_application');
 const emptySlot = { values: () => [] } as any;
 const envs = [{ id: 'my-env', env: { getBuildPipe: () => [compileTask, appTask] } }] as any;
 
-const queuedTaskNames = (tasks: string[] = [], skipTasks: string[] = [], allowNoMatchingTasks = false) =>
-  calculatePipelineOrder(emptySlot, envs, 'getBuildPipe', tasks, false, skipTasks, allowNoMatchingTasks).map(
+const queuedTaskNames = (tasks: string[] = [], skipTasks: string[] = []) =>
+  calculatePipelineOrder(emptySlot, envs, 'getBuildPipe', tasks, false, skipTasks).map(
     ({ task: queuedTask }) => queuedTask.name
   );
 
@@ -32,11 +32,9 @@ describe('build-pipeline-order', () => {
     it('skips tasks by the full task-id', () => {
       expect(queuedTaskNames([], ['teambit.harmony/application:build_application'])).to.deep.equal(['TSCompiler']);
     });
-    it('throws when no task matches the filter', () => {
-      expect(() => queuedTaskNames(['non-exist'])).to.throw('no tasks found matching the specified filter');
-    });
-    it('returns an empty queue instead of throwing when allowNoMatchingTasks is set', () => {
-      expect(queuedTaskNames(['non-exist'], [], true)).to.deep.equal([]);
+    it('returns an empty queue when no task matches the filter', () => {
+      // the filter may target another pipeline. BuilderMain.build() validates it across the pipelines
+      expect(queuedTaskNames(['non-exist'])).to.deep.equal([]);
     });
   });
 });

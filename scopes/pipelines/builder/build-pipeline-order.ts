@@ -49,8 +49,7 @@ export function calculatePipelineOrder(
   pipeNameOnEnv: PipeFunctionNames,
   tasks: string[] = [],
   skipTests = false,
-  skipTasks: string[] = [],
-  allowNoMatchingTasks = false
+  skipTasks: string[] = []
 ): TasksQueue {
   const graphs: TasksLocationGraph[] = [];
   const locations: Location[] = ['start', 'middle', 'end']; // the order is important here!
@@ -76,13 +75,9 @@ export function calculatePipelineOrder(
   let tasksQueue = new TasksQueue();
   locations.forEach((location) => addTasksToGraph(tasksQueue, dataPerLocation, location));
   if (tasks.length) {
-    const originalLength = tasksQueue.length;
+    // a filter may match none of the tasks of this pipeline (e.g. a build task while running the snap
+    // pipeline). BuilderMain.build() validates the filter against all the pipelines that run.
     tasksQueue = new TasksQueue(...tasksQueue.filter(({ task }) => isTaskInFilter(task, tasks)));
-    if (tasksQueue.length === 0 && originalLength > 0 && !allowNoMatchingTasks) {
-      throw new Error(
-        `Pipeline error - no tasks found matching the specified filter: "${tasks.join(', ')}". Available tasks: ${getAvailableTaskNames(flattenedPipeline).join(', ')}`
-      );
-    }
   }
   if (skipTests) {
     tasksQueue = new TasksQueue(...tasksQueue.filter(({ task }) => task.aspectId !== Extensions.tester));
@@ -102,15 +97,6 @@ export function calculatePipelineOrder(
 export function isTaskInFilter(task: { aspectId: string; name: string }, filter: string[]): boolean {
   const taskId = BuildTaskHelper.serializeId(task);
   return filter.some((entry) => entry === task.name || entry === task.aspectId || entry === taskId);
-}
-
-function getAvailableTaskNames(tasks: BuildTask[]): string[] {
-  const uniqueTaskNames = new Set<string>();
-  tasks.forEach((task) => {
-    uniqueTaskNames.add(task.name);
-    uniqueTaskNames.add(task.aspectId);
-  });
-  return Array.from(uniqueTaskNames).sort();
 }
 
 function addTasksToGraph(tasksQueue: TasksQueue, dataPerLocation: DataPerLocation[], location: Location) {
