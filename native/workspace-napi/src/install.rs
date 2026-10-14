@@ -38,8 +38,9 @@ pub type HostCallback = ThreadsafeFunction<
 pub type OutputCallback = ThreadsafeFunction<String, (), String, Status, false>;
 
 /// Result of [`install`] and [`install_with_options`]: `{ outcome: "installed",
-/// components, oldNonLoadedEnvs }`, `{ outcome: "help" }`, or `{ outcome: "unsupported" }`
-/// for workspaces the TypeScript command installs.
+/// components, oldNonLoadedEnvs }`, `{ outcome: "help" }`, `{ outcome: "unsupported" }`
+/// for workspaces the TypeScript command installs, or `{ outcome: "skipped" }` when
+/// external package manager mode wrote `package.json` instead.
 #[napi]
 pub async fn install(
     argv: Vec<String>,
@@ -128,6 +129,7 @@ fn result(outcome: Outcome) -> Value {
         }),
         Outcome::Help => json!({ "outcome": "help" }),
         Outcome::Unsupported => json!({ "outcome": "unsupported" }),
+        Outcome::Skipped => json!({ "outcome": "skipped" }),
     }
 }
 
@@ -163,6 +165,14 @@ impl Host for JsHost {
 
     async fn dependency_policies(&self, extension_ids: &[String]) -> io::Result<Option<Value>> {
         self.call("dependencyPolicies", json!({ "extensionIds": extension_ids })).await
+    }
+
+    async fn detect_dependencies(
+        &self,
+        env_id: &str,
+        files: &[String],
+    ) -> io::Result<Option<Value>> {
+        self.call("detectDependencies", json!({ "envId": env_id, "files": files })).await
     }
 
     async fn app_types(&self) -> io::Result<Vec<String>> {

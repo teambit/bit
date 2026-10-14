@@ -423,6 +423,7 @@ dependencies = [
  "regress",
  "reqwest",
  "ryu-js",
+ "same-file",
  "serde",
  "serde_json",
  "sha1",

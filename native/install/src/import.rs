@@ -119,7 +119,13 @@ fn connect(
     global: &GlobalConfig,
     info: &HostInfo,
 ) -> io::Result<(Remotes, Network)> {
-    let resolver = Resolver::configured(scope_json, info.node_path.clone(), local_scope, global);
+    let resolver = Resolver::configured(
+        scope_json,
+        info.node_path.clone(),
+        info.bit_dir.clone(),
+        local_scope,
+        global,
+    );
     let remotes =
         Remotes::load(scope_json, &info.global_config_dir, global)?.with_resolver(resolver);
     let network =

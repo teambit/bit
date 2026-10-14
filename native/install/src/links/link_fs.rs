@@ -143,7 +143,7 @@ fn real_path_is(dest: &Path, src: &Path) -> bool {
 /// `realpathSync` returns a plain one, so both sides are canonicalized.
 #[cfg(windows)]
 fn real_path_is(dest: &Path, src: &Path) -> bool {
-    same_file(src, dest)
+    matches!((fs::canonicalize(src), fs::canonicalize(dest)), (Ok(src), Ok(dest)) if src == dest)
 }
 
 /// `isDestLinkedCorrectly`: the same file (a hard link, or a link resolving to it), or a link
@@ -161,11 +161,12 @@ fn same_file(src: &Path, dest: &Path) -> bool {
     }
 }
 
-/// Without a stable file index, Windows compares resolved paths: this recognizes symlinks and
-/// junctions, not a hard link of `src`.
+/// Node's `stat` `ino` and `dev` on Windows are the file index and the volume serial number,
+/// which `same-file` compares through open handles. Like `stat`, the handles follow symlinks
+/// and junctions, so a hard link of `src` and a link resolving to it are both recognized.
 #[cfg(windows)]
 fn same_file(src: &Path, dest: &Path) -> bool {
-    matches!((fs::canonicalize(src), fs::canonicalize(dest)), (Ok(src), Ok(dest)) if src == dest)
+    same_file::is_same_file(src, dest).unwrap_or(false)
 }
 
 /// `symlink()` with `avoidHardLink`: `symlink-dir` on unix; on Windows a true symlink

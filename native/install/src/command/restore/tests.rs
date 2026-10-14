@@ -1,8 +1,25 @@
 use super::{
+    explicit,
     graph::merge,
     peers::{split_peer_ids, without_peer_suffix},
 };
+use crate::options::InstallOptions;
 use serde_json::json;
+
+#[test]
+fn an_explicit_graph_is_restored_best_effort_unless_restore_is_set() {
+    assert_eq!(explicit(&InstallOptions::default()), None);
+    let serialized = graph(json!({}), json!([]));
+    let options = InstallOptions {
+        dependencies_graph: Some(serialized.clone()),
+        ..InstallOptions::default()
+    };
+    let input = explicit(&options).expect("explicit graph");
+    assert_eq!(input.graph, serialized);
+    assert!(!input.fail_on_error);
+    let strict = InstallOptions { restore: true, ..options };
+    assert!(explicit(&strict).expect("explicit graph").fail_on_error);
+}
 
 #[expect(clippy::needless_pass_by_value, reason = "test fixtures read best as json! literals")]
 fn graph(packages: serde_json::Value, edges: serde_json::Value) -> serde_json::Value {

@@ -573,7 +573,7 @@ jobs:
             echo 'the guard did not fail the TypeScript fallback'
             exit 1
           fi
-      - name: Run the install e2e suites through the native installer
+      - name: Run the install and programmatic-install e2e suites through the native installer
         env:
           BIT_NATIVE_INSTALL_ADDON: ${{ github.workspace }}/native/target/debug/bit-workspace.node
           BIT_NATIVE_INSTALL_REQUIRE: 'on'
@@ -581,7 +581,7 @@ jobs:
           MOCHA_FILE: junit/e2e-test-results.xml
         run: |
           mkdir -p junit
-          npm run mocha-circleci -- e2e/harmony/install.e2e.ts e2e/harmony/install-and-compile.e2e.ts e2e/harmony/install-missing-dependencies.e2e.ts e2e/harmony/dependencies/allow-scripts.e2e.ts e2e/harmony/root-components.e2e.ts
+          npm run mocha-circleci -- e2e/harmony/install.e2e.ts e2e/harmony/install-and-compile.e2e.ts e2e/harmony/install-missing-dependencies.e2e.ts e2e/harmony/dependencies/allow-scripts.e2e.ts e2e/harmony/root-components.e2e.ts e2e/commands/import.e2e.ts
       - name: Upload test results and logs
         if: always()
         uses: actions/upload-artifact@v4

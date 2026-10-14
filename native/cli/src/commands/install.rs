@@ -45,6 +45,11 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         }
         Ok(Installed::Help) => Ok(Outcome::Declined("--help".to_string())),
         Ok(Installed::Unsupported) => Ok(Outcome::Declined("unsupported workspace".to_string())),
+        // `bit install` always asks before leaving external package manager mode.
+        Ok(Installed::Skipped) => {
+            history.end(true);
+            Ok(Outcome::Exit(ExitCode::SUCCESS))
+        }
         Err(error) => {
             history.end(false);
             eprintln!("{}", terminal.red(&error.to_string()));
@@ -207,6 +212,14 @@ impl bit_install::Host for JsHost {
 
     async fn dependency_policies(&self, extension_ids: &[String]) -> io::Result<Option<Value>> {
         self.call("dependencyPolicies", json!({ "extensionIds": extension_ids })).await
+    }
+
+    async fn detect_dependencies(
+        &self,
+        env_id: &str,
+        files: &[String],
+    ) -> io::Result<Option<Value>> {
+        self.call("detectDependencies", json!({ "envId": env_id, "files": files })).await
     }
 
     async fn app_types(&self) -> io::Result<Vec<String>> {

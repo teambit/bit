@@ -267,6 +267,37 @@ fn versions_come_from_component_policy_then_workspace_policy() {
 }
 
 #[test]
+fn copy_peer_to_runtime_options_choose_which_manifests_copy_peers() {
+    let mut fixture = Fixture::new(vec![component("org.ui", "button", Some("1.0.0"), NODE)]);
+    fixture.options.dedupe = false;
+    fixture.workspace = vec![entry("react", "^18.2.0", Lifecycle::Peer)];
+    fixture.deps(
+        0,
+        ComponentDependencies {
+            packages: vec![package("react", "^18.0.0", Lifecycle::Peer)],
+            ..Default::default()
+        },
+    );
+    let defaults = fixture.run();
+    assert_eq!(field(manifest(&defaults, ROOT), "dependencies"), json!({ "react": "^18.2.0" }));
+    assert_eq!(field(manifest(&defaults, "/ws/button"), "dependencies"), json!({}));
+    // `InstallMain.install({ copyPeerToRuntimeOnRoot: false, copyPeerToRuntimeOnComponents: true })`.
+    let options: crate::options::InstallOptions = serde_json::from_value(json!({
+        "copyPeerToRuntimeOnRoot": false,
+        "copyPeerToRuntimeOnComponents": true,
+    }))
+    .unwrap();
+    fixture.options = fixture.options.clone().with_copy_peer_to_runtime(&options);
+    let swapped = fixture.run();
+    let root = manifest(&swapped, ROOT);
+    assert_eq!(field(root, "dependencies"), json!({}));
+    assert_eq!(field(root, "peerDependencies"), json!({ "react": "^18.2.0" }));
+    let button = manifest(&swapped, "/ws/button");
+    assert_eq!(field(button, "dependencies"), json!({ "react": "^18.2.0" }));
+    assert_eq!(field(button, "peerDependencies"), json!({ "react": "^18.2.0" }));
+}
+
+#[test]
 fn optional_dependencies_and_peer_meta() {
     let mut fixture = Fixture::new(vec![component("org.ui", "button", Some("1.0.0"), NODE)]);
     fixture.options.dedupe = false;
@@ -615,4 +646,97 @@ fn hash_ignores_the_dependency_type() {
         },
     );
     assert_ne!(runtime, manifests_hash(&fixture.run().plan));
+}
+
+#[test]
+fn legacy_env_peers_keep_only_used_ones_without_include_all_env_peers() {
+    let mut used = component("org.ui", "a", Some("1.0.0"), "org.envs/env@1.0.0");
+    used.config.insert(
+        "teambit.dependencies/dependency-resolver".into(),
+        json!({ "policy": { "peerDependencies": { "graphql": "^16.0.0", "vitest": "-" } } }),
+    );
+    let mut fixture = Fixture::new(vec![used]);
+    fixture.options.resolve_env_peers_from_root = false;
+    fixture.options.include_all_env_peers = false;
+    fixture.options.dedupe = false;
+    fixture.envs.insert(
+        "org.envs/env@1.0.0".into(),
+        env_policy(vec![
+            env_peer("react", "^18.0.0"),
+            env_peer("react-dom", "^18.0.0"),
+            env_peer("graphql", "16.8.0"),
+            env_peer("vitest", "1.0.0"),
+            env_peer("jest", "29.0.0"),
+        ]),
+    );
+    fixture.deps(
+        0,
+        ComponentDependencies {
+            packages: vec![package("react", "^18.2.0", Lifecycle::Peer)],
+            ..Default::default()
+        },
+    );
+    let outcome = fixture.run();
+    // `react` is used, `graphql` is in the component policy, `react-dom` follows
+    // `react`; the removed `vitest` and the unused `jest` stay out.
+    assert_eq!(
+        field(manifest(&outcome, "/ws/a"), "dependencies"),
+        json!({ "react": "^18.0.0", "react-dom": "^18.0.0", "graphql": "16.8.0" }),
+    );
+}
+
+#[test]
+fn package_json_dependencies_are_the_root_manifest_before_links() {
+    let mut fixture =
+        Fixture::new(vec![component("org.ui", "a", Some("1.0.0"), "org.envs/env@1.0.0")]);
+    fixture.options = ManifestOptions::for_package_json(
+        &fixture.config,
+        Path::new(ROOT).join("node_modules/.bit_roots"),
+    );
+    fixture.workspace = vec![
+        entry("lodash", "^4.17.0", Lifecycle::Runtime),
+        entry("react", "^18.2.0", Lifecycle::Peer),
+    ];
+    fixture.envs.insert(
+        "org.envs/env@1.0.0".into(),
+        env_policy(vec![env_peer("typescript", "5.0.0")]),
+    );
+    fixture.deps(
+        0,
+        ComponentDependencies {
+            packages: vec![
+                package("chalk", "4.1.0", Lifecycle::Runtime),
+                package("jest", "29.0.0", Lifecycle::Dev),
+                package("lodash", "^4.17.1", Lifecycle::Runtime),
+            ],
+            ..Default::default()
+        },
+    );
+    fixture.linked = map(&[("@teambit/bit", "link:/bit")]);
+    let env_packages = IndexMap::new();
+    let input = ManifestInput {
+        root: Path::new(ROOT),
+        components: &fixture.components,
+        dependencies: &fixture.dependencies,
+        policies: Policies { workspace: &fixture.workspace, envs: &fixture.envs },
+        config: &fixture.config,
+        options: &fixture.options,
+        context: ManifestContext {
+            linked_root_deps: &fixture.linked,
+            remote_filter: None,
+            core_aspects: &[],
+            apps: &[],
+            env_packages: &env_packages,
+        },
+    };
+    let written = super::package_json_dependencies(&input).expect("dependencies");
+    // `{ ...devDependencies, ...dependencies }` of `toJson()`: no peers copied, no env
+    // peers, no linked dependencies.
+    let names: Vec<&str> = written.dependencies
+        .keys()
+        .map(String::as_str)
+        .collect();
+    assert_eq!(names, ["jest", "chalk", "lodash"]);
+    assert_eq!(written.dependencies["lodash"], "^4.17.0");
+    assert!(written.warnings.is_empty());
 }

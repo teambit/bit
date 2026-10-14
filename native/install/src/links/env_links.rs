@@ -25,20 +25,23 @@ pub struct EnvLinks {
 
 /// The links of every component whose merged policy has `resolveFromEnv` entries,
 /// keyed by package name in component and policy order. Callers add them only when
-/// root components are off (`linkDepsResolvedFromEnv`).
+/// root components are off (`linkDepsResolvedFromEnv`). `env_packages` names the
+/// packages of envs that are neither core nor workspace components, by env id
+/// without version.
 #[must_use]
 pub fn resolved_from_env_links(
     root: &Path,
     info: &HostInfo,
     components: &[WorkspaceComponent],
     dependencies: &IndexMap<String, ComponentDependencies>,
+    env_packages: &IndexMap<String, String>,
 ) -> EnvLinks {
     let mut result = EnvLinks::default();
     for component in components {
         let Some(data) = dependencies.get(&component.id.to_string_without_version()) else {
             continue;
         };
-        let env_dir = env_dir(root, info, components, &component.env_id);
+        let env_dir = env_dir(root, info, components, env_packages, &component.env_id);
         for entry in data.policy.iter().filter(|entry| entry.resolve_from_env) {
             match resolve_module_dir(&env_dir, &entry.name) {
                 Some(from) => {
@@ -56,11 +59,13 @@ pub fn resolved_from_env_links(
 }
 
 /// The env's `aspectPath`: a core env's directory in the running bit, otherwise its
-/// package in the workspace `node_modules` (`getComponentPackagePath`).
+/// package in the workspace `node_modules` (`getComponentPackagePath`), named as the
+/// workspace component or the env's package is.
 fn env_dir(
     root: &Path,
     info: &HostInfo,
     components: &[WorkspaceComponent],
+    env_packages: &IndexMap<String, String>,
     env_id: &str,
 ) -> PathBuf {
     let bare = split_version(env_id).0;
@@ -73,10 +78,9 @@ fn env_dir(
     let package = components
         .iter()
         .find(|component| component.id.to_string_without_version() == bare)
-        .map_or_else(
-            || default_package_name(&component_id(bare)),
-            |component| component.package_name.clone(),
-        );
+        .map(|component| component.package_name.clone())
+        .or_else(|| env_packages.get(bare).cloned())
+        .unwrap_or_else(|| default_package_name(&component_id(bare)));
     root.join("node_modules").join(package)
 }
 

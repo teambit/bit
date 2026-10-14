@@ -4,6 +4,7 @@
 
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::io;
 
 /// Parsed `bit install` flags. Field docs name the CLI flag; the last fields
@@ -65,6 +66,14 @@ pub struct InstallOptions {
     pub skip_prune: bool,
     /// `optimizeReportForNonTerminal`: the package manager appends output lines.
     pub append_only: bool,
+    /// `copyPeerToRuntimeOnRoot`; unset means `true`.
+    pub copy_peer_to_runtime_on_root: Option<bool>,
+    /// `copyPeerToRuntimeOnComponents`
+    pub copy_peer_to_runtime_on_components: bool,
+    /// `dependenciesGraph`: a serialized `DependenciesGraph` the caller already
+    /// merged (`bit import` writing components); the lockfile is restored from it
+    /// before installing, best-effort unless `restore` is set.
+    pub dependencies_graph: Option<Value>,
 }
 
 /// What adding a package already in the workspace policy does
@@ -82,14 +91,14 @@ pub enum ExistingEntries {
 }
 
 impl InstallOptions {
-    /// The lifecycle new packages are added with: `peer` for `--add-missing-peers`.
+    /// The lifecycle new packages (and missing deps and peers) are added with:
+    /// `lifecycleType || 'runtime'` (`_addPackages`). `bit install --add-missing-peers`
+    /// sets the lifecycle to `peer` while parsing, as `install.cmd.tsx` does;
+    /// `InstallMain.install` called with `addMissingPeers` alone adds them as runtime
+    /// dependencies.
     #[must_use]
     pub fn lifecycle(&self) -> &str {
-        if self.add_missing_peers {
-            "peer"
-        } else {
-            self.lifecycle_type.as_deref().unwrap_or("runtime")
-        }
+        self.lifecycle_type.as_deref().unwrap_or("runtime")
     }
 }
 
@@ -133,7 +142,17 @@ pub fn parse(argv: &[String]) -> io::Result<Parsed> {
         apply(&mut options, &mut scripts, flag.key, value)?;
     }
     options.allow_scripts = scripts.finish();
+    options.lifecycle_type = cli_lifecycle(&options);
     Ok(Parsed::Install(Box::new(options)))
+}
+
+/// `lifecycleType: options.addMissingPeers ? 'peer' : options.type`.
+fn cli_lifecycle(options: &InstallOptions) -> Option<String> {
+    if options.add_missing_peers {
+        Some("peer".to_string())
+    } else {
+        options.lifecycle_type.clone()
+    }
 }
 
 /// A switch takes only an inline `=value`; a value flag also takes the next

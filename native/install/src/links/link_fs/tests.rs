@@ -1,4 +1,4 @@
-use super::{LinkKind, create_link_or_symlink, may_link_target, remove_path};
+use super::{LinkKind, create_link_or_symlink, linked_correctly, may_link_target, remove_path};
 use std::fs;
 
 #[cfg(unix)]
@@ -53,4 +53,18 @@ fn may_link_target_refuses_real_directories_unless_installed_locally() {
     assert!(may_link_target(&dir.path().join("missing"), false));
     assert!(!may_link_target(dir.path(), false));
     assert!(may_link_target(dir.path(), true));
+}
+
+#[test]
+fn a_hard_link_of_the_source_is_linked_correctly() {
+    let dir = tempfile::tempdir().unwrap();
+    let src = dir.path().join("src.json");
+    let other = dir.path().join("other.json");
+    fs::write(&src, "{}").unwrap();
+    fs::write(&other, "{}").unwrap();
+    let dest = dir.path().join("dest.json");
+    fs::hard_link(&src, &dest).unwrap();
+    assert!(linked_correctly(&src, &dest));
+    assert!(!linked_correctly(&other, &dest));
+    assert!(!linked_correctly(&src, &dir.path().join("missing.json")));
 }

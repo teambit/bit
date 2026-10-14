@@ -6,6 +6,7 @@ import { GLOBAL_CONFIG, GLOBAL_REMOTES } from '@teambit/legacy.constants';
 import { getBitVersion } from '@teambit/bit.get-bit-version';
 import { loader } from '@teambit/legacy.loader';
 import { currentDateAndTimeToFileName } from '@teambit/legacy.consumer/dist/bitmap-history-file-id.js';
+import { getAspectDir } from '@teambit/aspect-loader/dist/core-aspects.js';
 import { withRustClientRequest } from './rust-client-capture';
 import { commandProgress } from './rust-workspace-command-progress';
 import { parseRustWorkspaceInbound, type RustWorkspaceInboundOptions } from './rust-workspace-inbound-options';
@@ -29,6 +30,7 @@ export async function readRustWorkspaceInbound(
           globalRemotesFile: path.join(GLOBAL_CONFIG, GLOBAL_REMOTES),
           globalConfigDir: GLOBAL_CONFIG,
           nodeExecutable: process.execPath,
+          bitDir: getAspectDir('teambit.harmony/bit'),
           bitVersion: getBitVersion(),
           bitmapHistoryFileId: options.objectsOnly ? undefined : currentDateAndTimeToFileName(),
           operation: options.operation,

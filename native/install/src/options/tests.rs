@@ -47,7 +47,41 @@ fn disallow_scripts_wins() {
 #[test]
 fn add_missing_peers_installs_peers() {
     assert_eq!(options(&["install", "--add-missing-peers"]).lifecycle(), "peer");
+    assert_eq!(options(&["install", "--add-missing-peers", "-t", "runtime"]).lifecycle(), "peer");
     assert_eq!(options(&["install"]).lifecycle(), "runtime");
+}
+
+#[test]
+fn programmatic_missing_peers_follow_the_lifecycle_type() {
+    // `InstallMain.install({ addMissingPeers: true })`: `_addPackages` uses
+    // `lifecycleType || 'runtime'`.
+    let runtime: InstallOptions = serde_json::from_value(
+        serde_json::json!({ "addMissingPeers": true, "programmatic": true }),
+    )
+    .unwrap();
+    assert_eq!(runtime.lifecycle(), "runtime");
+    let peer: InstallOptions = serde_json::from_value(
+        serde_json::json!({ "addMissingPeers": true, "lifecycleType": "peer" }),
+    )
+    .unwrap();
+    assert_eq!(peer.lifecycle(), "peer");
+}
+
+#[test]
+fn programmatic_manifest_and_graph_options() {
+    let defaults: InstallOptions = serde_json::from_value(serde_json::json!({})).unwrap();
+    assert_eq!(defaults.copy_peer_to_runtime_on_root, None);
+    assert!(!defaults.copy_peer_to_runtime_on_components);
+    assert_eq!(defaults.dependencies_graph, None);
+    let parsed: InstallOptions = serde_json::from_value(serde_json::json!({
+        "copyPeerToRuntimeOnRoot": false,
+        "copyPeerToRuntimeOnComponents": true,
+        "dependenciesGraph": { "schemaVersion": "2.0", "packages": {}, "edges": [] },
+    }))
+    .unwrap();
+    assert_eq!(parsed.copy_peer_to_runtime_on_root, Some(false));
+    assert!(parsed.copy_peer_to_runtime_on_components);
+    assert_eq!(parsed.dependencies_graph.unwrap()["schemaVersion"], "2.0");
 }
 
 #[test]

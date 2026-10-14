@@ -2,7 +2,7 @@
 //! the model's `bindingPrefix`. Objects are zlib-deflated files at
 //! `<scope>/objects/<2 hex>/<38 hex>` holding `<type> <hash> <size>\0<json>`.
 
-use super::component_package_name;
+use super::{ENV_OF_ENVS, component_package_name};
 use crate::{config::aspect_id_without_version, model::ComponentId};
 use flate2::read::ZlibDecoder;
 use serde_json::{Map, Value};
@@ -57,6 +57,13 @@ impl ModelData {
             .any(|file| file == "env.jsonc" || file == "env.json")
     }
 
+    /// The component's own env is `teambit.envs/env`: an env loaded as an env plugin
+    /// (`*.bit-env.*`), not as an aspect with a provider.
+    #[must_use]
+    pub fn uses_env_of_envs(&self) -> bool {
+        self.extensions.iter().any(uses_env_of_envs)
+    }
+
     /// `getPackageName`: the `dependency-resolver` data's `packageName`,
     /// otherwise `componentIdToPackageName` from the model's `bindingPrefix`
     /// and the Version's `teambit.pkg/pkg` config.
@@ -104,6 +111,25 @@ fn extension_name(extension: &Value) -> Option<&str> {
                 .and_then(Value::as_str)
         })
         .map(aspect_id_without_version)
+}
+
+/// The extension configures `teambit.envs/env`, or `teambit.envs/envs` sets it as env.
+fn uses_env_of_envs(extension: &Value) -> bool {
+    let name = extension
+        .get("name")
+        .or_else(|| {
+            extension
+                .get("extensionId")
+                .and_then(|id| id.get("name"))
+        })
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    aspect_id_without_version(name) == ENV_OF_ENVS
+        || (name == ENVS_ASPECT
+            && [extension.get("config"), extension.get("data")]
+                .into_iter()
+                .flatten()
+                .any(|data| data.get("env").and_then(Value::as_str) == Some(ENV_OF_ENVS)))
 }
 
 /// Reads models and Versions from a scope's `objects` directory.
@@ -160,6 +186,21 @@ impl ScopeObjects {
         let Some(scope) = id.scope.as_deref() else { return Ok(None) };
         let model = self.read(&sha1_hex(&format!("{scope}/{}", id.name)))?;
         self.model_data(model.as_ref(), id.version.as_deref())
+    }
+
+    /// [`Self::component_or_head`] of a configured id, `scope/name` with an optional
+    /// `@version`; `None` for an id without a scope.
+    pub fn aspect(&self, id: &str) -> io::Result<Option<ModelData>> {
+        let (bare, version) = id
+            .split_once('@')
+            .map_or((id, None), |(bare, version)| (bare, Some(version)));
+        let Some((scope, name)) = bare.split_once('/') else { return Ok(None) };
+        self.component_or_head(&ComponentId {
+            scope: Some(scope.to_owned()),
+            default_scope: None,
+            name: name.to_owned(),
+            version: version.map(str::to_owned),
+        })
     }
 
     fn model_data(

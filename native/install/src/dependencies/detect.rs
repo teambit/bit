@@ -50,8 +50,14 @@ fn file_tree(
     let mut tree = FileTree::default();
     let component = subject.component;
     let is_core = workspace.is_core_aspect(&component.id);
-    for specifier in scan::specifiers(&component.dir.join(file))? {
-        let resolved = match resolver.resolve(component, file, &specifier)? {
+    let custom = subject.custom.get(file);
+    let specifiers = match custom {
+        Some(custom) => custom.specifiers.clone(),
+        None => scan::specifiers(&component.dir.join(file))?,
+    };
+    let typescript = custom.is_some_and(|custom| custom.typescript);
+    for specifier in specifiers {
+        let resolved = match resolver.resolve_from(component, file, &specifier, typescript)? {
             Resolved::CoreAspect(_) if is_core => {
                 resolver.package(&component.dir, &super::resolve::package_name(&specifier))?
             }

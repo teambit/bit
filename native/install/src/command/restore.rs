@@ -6,7 +6,7 @@ mod graph;
 mod peers;
 
 use super::{calculate::Calculated, session::Session};
-use crate::{engine::RestoreInput, output::Style, policy::scope::Scope};
+use crate::{engine::RestoreInput, options::InstallOptions, output::Style, policy::scope::Scope};
 use serde_json::Value;
 use std::io;
 
@@ -16,12 +16,16 @@ const NEEDS_ROOT_COMPONENTS: &str = r#"--restore requires "rootComponents: true"
 const NO_GRAPH: &str = "--restore was requested but no workspace component has a stored dependency graph. Falling back to a regular install.";
 
 /// The graph to restore the lockfile from, or `None` (with the canonical warning)
-/// for a regular install.
+/// for a regular install. A graph the caller passed (`dependenciesGraph`) comes first,
+/// as in `resolveDependenciesGraph`.
 pub fn input(
     session: &Session<'_>,
     has_root_components: bool,
     calculated: &Calculated,
 ) -> io::Result<Option<RestoreInput>> {
+    if let Some(graph) = explicit(session.options) {
+        return Ok(Some(graph));
+    }
     if !session.options.restore {
         return Ok(None);
     }
@@ -52,6 +56,15 @@ pub fn input(
         return Ok(None);
     };
     Ok(Some(RestoreInput { graph, fail_on_error: true }))
+}
+
+/// `options.dependenciesGraph` (`bit import` writing components passes the merged
+/// graphs of the imported components). The engine restores it like the stored graphs,
+/// only with root components (`dependenciesGraphToLockfile`), and a failure fails the
+/// install only with `restoreFromDependenciesGraph` (`failOnDependenciesGraphError`).
+fn explicit(options: &InstallOptions) -> Option<RestoreInput> {
+    let graph = options.dependencies_graph.clone()?;
+    Some(RestoreInput { graph, fail_on_error: options.restore })
 }
 
 /// `formatWarningSummary`.

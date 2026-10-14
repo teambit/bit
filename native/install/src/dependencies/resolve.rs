@@ -88,8 +88,20 @@ impl<'a> Resolver<'a> {
         file: &str,
         specifier: &str,
     ) -> io::Result<Resolved> {
+        self.resolve_from(component, file, specifier, false)
+    }
+
+    /// [`Self::resolve`], with `typescript` forcing the TypeScript lookup of a
+    /// relative import whatever the extension of `file` (a registered detector's).
+    pub fn resolve_from(
+        &mut self,
+        component: &WorkspaceComponent,
+        file: &str,
+        specifier: &str,
+        typescript: bool,
+    ) -> io::Result<Resolved> {
         if specifier.starts_with('.') || specifier.starts_with('/') {
-            return Ok(self.relative(component, file, specifier));
+            return Ok(self.relative(component, file, specifier, typescript));
         }
         if builtins::is_builtin(specifier) || specifier.starts_with('#') || specifier.contains(':')
         {
@@ -124,13 +136,20 @@ impl<'a> Resolver<'a> {
         }))
     }
 
-    fn relative(&self, component: &WorkspaceComponent, file: &str, specifier: &str) -> Resolved {
+    fn relative(
+        &self,
+        component: &WorkspaceComponent,
+        file: &str,
+        specifier: &str,
+        typescript: bool,
+    ) -> Resolved {
         let origin = component.dir.join(file);
         let base = origin.parent().unwrap_or(&component.dir);
-        let typescript = origin
-            .extension()
-            .and_then(|extension| extension.to_str())
-            .is_some_and(|extension| TYPESCRIPT_ORIGINS.contains(&extension));
+        let typescript = typescript
+            || origin
+                .extension()
+                .and_then(|extension| extension.to_str())
+                .is_some_and(|extension| TYPESCRIPT_ORIGINS.contains(&extension));
         let Some(target) = find_file(&normalize(&base.join(specifier)), typescript) else {
             return Resolved::MissingFile(specifier.to_owned());
         };

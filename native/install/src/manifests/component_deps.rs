@@ -251,8 +251,11 @@ fn component_deps(
     let (runtime_root, dev_root) = missing_roots(deps, &before, root);
     let env_peers = if input.options.resolve_env_peers_from_root {
         DependencyMap::new()
-    } else {
+    } else if input.options.include_all_env_peers {
         env_peers::legacy_env_peers(component, deps, input)
+    } else {
+        let all = env_peers::legacy_env_peers(component, deps, input);
+        env_peers::used_env_peers(&all, component, &before)
     };
     let dependencies =
         spread(&[&env_peers, &runtime_root, &additional, object.get(Field::Dependencies)]);

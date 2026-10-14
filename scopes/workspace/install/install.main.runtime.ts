@@ -265,8 +265,6 @@ export class InstallMain {
     packages: string[] | undefined,
     options: WorkspaceInstallOptions | undefined
   ): Promise<ComponentMap<string> | undefined> {
-    const configPath = path.join(this.workspace.path, 'workspace.jsonc');
-    const configBefore = await fs.readFile(configPath, 'utf8').catch(() => undefined);
     this.workspace.inInstallContext = true;
     this.workspace.inInstallAfterPmContext = false;
     let result: NativeInstallResult | undefined;
@@ -277,6 +275,7 @@ export class InstallMain {
           envs: this.envs,
           app: this.app,
           aspectLoader: this.aspectLoader,
+          dependencyResolver: this.dependencyResolver,
           logger: this.logger,
           afterInstall: (request) => this.nativeAfterInstall(request),
         },
@@ -288,11 +287,13 @@ export class InstallMain {
       this.workspace.inInstallAfterPmContext = false;
     }
     if (!result) return undefined;
+    // external package manager mode: the dependencies went to package.json, as
+    // writeDependenciesToPackageJson does, and nothing was installed.
+    if (result.skipped) return new ComponentMap(new Map());
     this.oldNonLoadedEnvs = result.oldNonLoadedEnvs;
     // the native installer edits workspace.jsonc on disk (added packages, allowScripts, leaving
     // external package manager mode); a later persistConfig must not write the stale copy back.
-    const configAfter = await fs.readFile(configPath, 'utf8').catch(() => undefined);
-    if (configAfter !== configBefore) await this.workspace.triggerOnWorkspaceConfigChange();
+    if (result.configChanged) await this.workspace.triggerOnWorkspaceConfigChange();
     // the native installer already wrote the onPostInstall event file (publishIpcEvent).
     await this.workspace.clearCache();
     return this.getComponentsDirectory([]);

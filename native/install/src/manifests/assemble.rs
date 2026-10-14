@@ -81,7 +81,7 @@ pub(super) fn root_manifest(
 ) -> Manifest {
     let mut manifest =
         root.to_manifest("workspace", "1.0.0", input.options.copy_peer_to_runtime_on_root);
-    if !input.options.resolve_env_peers_from_root {
+    if !input.options.root_env_peers {
         return manifest;
     }
     let mut dependencies = manifest_field(&manifest, "dependencies");

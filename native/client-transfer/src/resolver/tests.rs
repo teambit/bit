@@ -19,7 +19,7 @@ fn resolver(dir: &TempDir, body: &str, token: Option<&str>) -> Resolver {
         global.insert("user.token".into(), json!(token));
     }
     let scope_json = json!({ "name": "local", "resolverPath": path.display().to_string() });
-    Resolver::configured(&scope_json, PathBuf::new(), "local", &global).unwrap()
+    Resolver::configured(&scope_json, PathBuf::new(), PathBuf::new(), "local", &global).unwrap()
 }
 
 #[test]
@@ -28,7 +28,10 @@ fn only_a_configured_resolver_path_is_used() {
     for scope_json in
         [json!({ "name": "local" }), json!({ "resolverPath": "" }), json!({ "resolverPath": null })]
     {
-        assert!(Resolver::configured(&scope_json, PathBuf::new(), "local", &global).is_none());
+        assert!(
+            Resolver::configured(&scope_json, PathBuf::new(), PathBuf::new(), "local", &global)
+                .is_none(),
+        );
     }
 }
 
@@ -59,4 +62,32 @@ fn a_rejection_or_a_broken_module_is_the_error() {
         .block_on(resolver(&dir, broken, None).resolve("remote"))
         .unwrap_err();
     assert!(error.to_string().contains("SyntaxError"), "{error}");
+}
+
+#[test]
+fn a_relative_path_resolves_from_the_remote_resolver_module_of_bit() {
+    let dir = TempDir::new().unwrap();
+    let bit_dir = dir.path().join("node_modules/@teambit/bit");
+    let remotes = dir.path().join("node_modules/@teambit/scope.remotes");
+    fs::create_dir_all(&bit_dir).unwrap();
+    fs::create_dir_all(remotes.join("dist/remote-resolver")).unwrap();
+    fs::write(
+        remotes.join("package.json"),
+        r#"{"name":"@teambit/scope.remotes","main":"dist/index.js"}"#,
+    )
+    .unwrap();
+    fs::write(remotes.join("dist/index.js"), "").unwrap();
+    fs::write(
+        remotes.join("dist/resolver.js"),
+        "module.exports = (scope) => Promise.resolve(`file:///from-bit/${scope}`);",
+    )
+    .unwrap();
+    let scope_json = json!({ "name": "local", "resolverPath": "../resolver.js" });
+    let global = GlobalConfig::default();
+    let resolver =
+        Resolver::configured(&scope_json, PathBuf::new(), bit_dir, "local", &global).unwrap();
+    let url = runtime()
+        .block_on(resolver.resolve("remote"))
+        .unwrap();
+    assert_eq!(url, "file:///from-bit/remote");
 }

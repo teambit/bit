@@ -49,6 +49,9 @@ tokio = { version = "1", features = ["rt-multi-thread", "sync", "fs", "time"] }
 # `fs.symlinkSync(..., 'junction')`. Already in the graph through `pnpm-fs`.
 [target.'cfg(windows)'.dependencies]
 junction = "2.1"
+# File identity (volume serial and file index) for `isDestLinkedCorrectly`, as Node's
+# `stat` reports it. Already in the graph through `walkdir`.
+same-file = "1"
 
 [dev-dependencies]
 pretty_assertions = "1"

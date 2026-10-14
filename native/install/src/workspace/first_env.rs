@@ -4,12 +4,11 @@
 //! component's env. An aspect that is not in the workspace is read from the
 //! scope at its configured version, or at its head without one.
 
-use super::{DEFAULT_ENV, ENV_OF_ENVS, aspects::CORE_ENVS, scope_model::ScopeObjects};
+use super::{DEFAULT_ENV, aspects::CORE_ENVS, scope_model::ScopeObjects};
 use crate::{
     config::{ENVS_ASPECT, aspect_id_without_version},
-    model::{ComponentId, WorkspaceComponent},
+    model::WorkspaceComponent,
 };
-use serde_json::Value;
 use std::io;
 
 /// Set the env of components whose env comes from an env aspect configured on them.
@@ -73,37 +72,8 @@ fn is_env_component(id: &str, envs: &[(String, bool)], objects: &ScopeObjects) -
     {
         return Ok(*is_env);
     }
-    let (name, version) = without
-        .split_once('/')
-        .map_or((without, None), |(scope, name)| (name, Some(scope)));
-    let Some(scope) = version else { return Ok(false) };
-    let component_id = ComponentId {
-        scope: Some(scope.to_owned()),
-        default_scope: None,
-        name: name.to_owned(),
-        version: id.split_once('@').map(|(_, version)| version.to_owned()),
-    };
-    let Some(model) = objects.component_or_head(&component_id)? else { return Ok(false) };
-    Ok(model.has_env_manifest() || model.extensions.iter().any(uses_env_env))
-}
-
-/// The Version's extensions configure `teambit.envs/env`, or `teambit.envs/envs` sets it as env.
-fn uses_env_env(extension: &Value) -> bool {
-    let name = extension
-        .get("name")
-        .or_else(|| {
-            extension
-                .get("extensionId")
-                .and_then(|id| id.get("name"))
-        })
-        .and_then(Value::as_str)
-        .unwrap_or_default();
-    aspect_id_without_version(name) == ENV_OF_ENVS
-        || (name == ENVS_ASPECT
-            && [extension.get("config"), extension.get("data")]
-                .into_iter()
-                .flatten()
-                .any(|data| data.get("env").and_then(Value::as_str) == Some(ENV_OF_ENVS)))
+    let Some(model) = objects.aspect(id)? else { return Ok(false) };
+    Ok(model.has_env_manifest() || model.uses_env_of_envs())
 }
 
 #[cfg(test)]

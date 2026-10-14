@@ -39,6 +39,10 @@ pub(in crate::workspace::engine) struct Prepare {
 struct Transport {
     global_config_dir: PathBuf,
     node_executable: PathBuf,
+    /// The `@teambit/bit` package dir: a `resolverPath` resolves from its
+    /// `@teambit/scope.remotes`, as in Bit.
+    #[serde(default)]
+    bit_dir: PathBuf,
     bit_version: String,
     #[serde(default)]
     token: Option<String>,

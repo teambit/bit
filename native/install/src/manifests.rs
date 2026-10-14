@@ -22,6 +22,7 @@ use crate::{
         ComponentDependencies, DependencyMap, EnvPolicy, InstallPlan, Manifest, PolicyEntry,
         Project, WorkspaceComponent,
     },
+    options::InstallOptions,
 };
 use component_deps::RootPolicy;
 use deps::Field;
@@ -84,12 +85,27 @@ pub struct RemoteFilter {
 
 /// The install options that shape manifests.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
+#[cfg_attr(
+    dylint_lib = "perfectionist",
+    expect(
+        perfectionist::too_many_struct_fields,
+        reason = "One field per option of `getComponentManifests` and `toJson`."
+    )
+)]
 pub struct ManifestOptions {
     /// `!--skip-dedupe`; ignored with root components.
     pub dedupe: bool,
     pub copy_peer_to_runtime_on_root: bool,
     pub copy_peer_to_runtime_on_components: bool,
+    /// `resolveEnvPeersFromRoot` of the manifest factory: env peers go to the root
+    /// instead of every component.
     pub resolve_env_peers_from_root: bool,
+    /// `WorkspaceManifest.toJson({ resolveEnvPeersFromRoot })`: the root manifest
+    /// gets the env peers as defaults.
+    pub root_env_peers: bool,
+    /// `includeAllEnvPeers`: without `resolveEnvPeersFromRoot`, every env peer is
+    /// injected into the component, not only those it uses.
+    pub include_all_env_peers: bool,
     pub force_env_peers_to_root: bool,
     pub has_root_components: bool,
     pub node_linker: String,
@@ -106,16 +122,45 @@ impl ManifestOptions {
         root_components_dir: PathBuf,
     ) -> Self {
         let has_root_components = config.has_root_components();
+        let resolve_env_peers_from_root = config.resolve_env_peers_from_root();
         ManifestOptions {
             dedupe: !has_root_components && dedupe,
             copy_peer_to_runtime_on_root: true,
             copy_peer_to_runtime_on_components: false,
-            resolve_env_peers_from_root: config.resolve_env_peers_from_root(),
+            resolve_env_peers_from_root,
+            root_env_peers: resolve_env_peers_from_root,
+            include_all_env_peers: true,
             force_env_peers_to_root: config.force_env_peers_to_root.unwrap_or(false),
             has_root_components,
             node_linker: config.node_linker().to_string(),
             root_components_dir,
         }
+    }
+
+    /// The options of `writeDependenciesToPackageJson`: `_getComponentsManifests` with
+    /// `{ dedupe: true, includeAllEnvPeers: false }` only, so the root copies no peers,
+    /// gets no env peers, and no `nodeLinker` turns on `referenceLocalPackages`.
+    #[must_use]
+    pub fn for_package_json(
+        config: &DependencyResolverConfig,
+        root_components_dir: PathBuf,
+    ) -> Self {
+        ManifestOptions {
+            copy_peer_to_runtime_on_root: false,
+            root_env_peers: false,
+            include_all_env_peers: false,
+            node_linker: String::new(),
+            ..Self::new(config, true, root_components_dir)
+        }
+    }
+
+    /// `copyPeerToRuntimeOnRoot` (default `true`) and `copyPeerToRuntimeOnComponents`
+    /// (default `false`) of `InstallMain.install`'s options.
+    #[must_use]
+    pub fn with_copy_peer_to_runtime(mut self, options: &InstallOptions) -> Self {
+        self.copy_peer_to_runtime_on_root = options.copy_peer_to_runtime_on_root.unwrap_or(true);
+        self.copy_peer_to_runtime_on_components = options.copy_peer_to_runtime_on_components;
+        self
     }
 
     /// `referenceLocalPackages`: root components with the isolated linker.
@@ -256,6 +301,36 @@ pub fn plan(input: &ManifestInput<'_>) -> io::Result<ManifestOutcome> {
         messages: env_root.messages,
         has_missing_local_components,
         root_dirs,
+    })
+}
+
+/// What `writeDependenciesToPackageJson` writes to the root `package.json`.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub struct PackageJsonDependencies {
+    /// The root manifest's `{ ...devDependencies, ...dependencies }`.
+    pub dependencies: DependencyMap,
+    /// `logger.consoleWarning` lines (conflicting env peers).
+    pub warnings: Vec<String>,
+    /// `logger.console` lines (the peer conflict hint).
+    pub messages: Vec<String>,
+}
+
+/// The root manifest of `getComponentManifests`, before `installComponents` merges the
+/// linked dependencies into it, as `writeDependenciesToPackageJson` reads it.
+pub fn package_json_dependencies(input: &ManifestInput<'_>) -> io::Result<PackageJsonDependencies> {
+    let env_root = if input.options.resolve_env_peers_from_root {
+        env_root::merge(input)
+    } else {
+        env_root::EnvRoot::default()
+    };
+    let deduped = deduped_for(input, &root_policy(input))?;
+    let manifest = assemble::root_manifest(input, &deduped.root, &env_root);
+    let mut dependencies = deps::manifest_field(&manifest, "devDependencies");
+    dependencies.extend(deps::manifest_field(&manifest, "dependencies"));
+    Ok(PackageJsonDependencies {
+        dependencies,
+        warnings: env_root.warnings,
+        messages: env_root.messages,
     })
 }
 

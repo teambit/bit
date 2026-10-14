@@ -135,7 +135,8 @@ fn quoted(text: &str) -> Option<String> {
     (!specifier.is_empty() && !specifier.contains(['\n', '$'])).then(|| specifier.to_owned())
 }
 
-fn dedupe(found: Vec<String>) -> Vec<String> {
+/// `found` without repeated specifiers, keeping the first occurrence.
+pub fn dedupe(found: Vec<String>) -> Vec<String> {
     let mut result: Vec<String> = Vec::with_capacity(found.len());
     for specifier in found {
         if !result.contains(&specifier) {

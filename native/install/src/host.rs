@@ -114,6 +114,22 @@ pub trait Host: Send + Sync {
         Ok(None)
     }
 
+    /// What custom detectors find in `files` (absolute paths) of a component of `env_id`
+    /// (`detectWithCustomDetectors` of `@teambit/dependency-resolver`): per file the first
+    /// env detector (`getDepDetectors()`) supporting it, else the first detector an aspect
+    /// registered (`registerDetector`) that Rust does not replicate. The result is
+    /// `{ "<file>": { dependencies, typescript } }` for the claimed files only, `typescript`
+    /// marking a registered detector, whose imports `filing-cabinet` resolves through
+    /// `lookupTypeScript`. `None` when neither kind of detector exists.
+    async fn detect_dependencies(
+        &self,
+        env_id: &str,
+        files: &[String],
+    ) -> io::Result<Option<Value>> {
+        let _ = (env_id, files);
+        Ok(None)
+    }
+
     /// `package.json` props of an env: `{ props, modifiesPackageJson }`, where
     /// `props` is the env's `getPackageJsonProps()` and `modifiesPackageJson`
     /// tells whether it implements `modifyPackageJson()`.

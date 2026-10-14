@@ -78,6 +78,7 @@ const handlers = {
   envPolicy: ({ envId }) => envPolicy(envId),
   devPatterns: ({ envId }) => devPatterns(envId),
   dependencyPolicies: ({ extensionIds }) => dependencyPolicies(extensionIds),
+  detectDependencies: ({ envId, files }) => detectDependencies(envId, files),
   appTypes,
   packageJsonProps: ({ envId }) => packageJsonProps(envId),
   transformPackageJson: ({ component, manifest }) => transformPackageJson(component, manifest),
@@ -201,6 +202,16 @@ async function dependencyPolicies(extensionIds) {
   const workspace = loaded.get('teambit.workspace/workspace');
   await workspace.loadAspects(extensionIds, false, undefined, { throwOnError: false, hideMissingModuleError: true });
   return loaded.get('teambit.dependencies/dependency-resolver').policiesRegistry.toArray();
+}
+
+/**
+ * The import specifiers custom detectors find in `files`: the env's `getDepDetectors()`, then
+ * the detectors aspects registered (`registerDetector`); `null` when there are none.
+ */
+async function detectDependencies(envId, files) {
+  const env = await loadEnv(envId);
+  const { detectWithCustomDetectors } = bitRequire('@teambit/dependency-resolver/dist/custom-detectors.js');
+  return detectWithCustomDetectors(env?.getDepDetectors?.(), files);
 }
 
 async function appTypes() {

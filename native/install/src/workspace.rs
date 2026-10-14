@@ -9,6 +9,7 @@
 
 pub use aspects::{AspectEntry, CORE_ENVS, DEFAULT_ENV};
 pub use bitmap::{BITMAP, Bitmap, BitmapEntry, LaneFlags, LaneInfo, WORKSPACE_ROOT_DIR};
+pub use env_packages::external_env_packages;
 pub use env_type::aspect_env_ids;
 pub use files::{
     ALWAYS_IGNORE_LIST, BIT_GENERATED_IGNORE_LIST, FileRules, IGNORE_ROOT_ONLY_LIST,
@@ -21,6 +22,7 @@ pub use variants::{VariantConfig, by_root_dir_and_name};
 
 mod aspects;
 mod bitmap;
+mod env_packages;
 mod env_type;
 mod files;
 mod first_env;

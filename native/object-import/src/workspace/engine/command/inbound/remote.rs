@@ -23,8 +23,13 @@ pub(super) fn objects(input: &Prepare, targets: &[Target]) -> io::Result<Vec<Vir
         .map_err(io::Error::other)?;
     let local = scope["name"].as_str().ok_or_else(|| invalid("inbound local scope"))?;
     let global = global_config(input)?;
-    let resolver =
-        Resolver::configured(&scope, input.transport.node_executable.clone(), local, &global);
+    let resolver = Resolver::configured(
+        &scope,
+        input.transport.node_executable.clone(),
+        input.transport.bit_dir.clone(),
+        local,
+        &global,
+    );
     let remotes =
         Remotes::load(&scope, &input.transport.global_config_dir, &global)?.with_resolver(resolver);
     let network = Network::new(

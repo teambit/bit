@@ -37,6 +37,9 @@ pub enum Outcome {
     /// The workspace uses a JavaScript package manager (yarn): the TypeScript
     /// command installs it.
     Unsupported,
+    /// External package manager mode without `externalPrompt`: the dependencies
+    /// were written to the root `package.json` and nothing was installed.
+    Skipped,
 }
 
 /// Run `bit install` with `argv` (starting at the command name) in the
@@ -80,8 +83,13 @@ pub async fn run_with_options(
 
 async fn install(session: &Session<'_>) -> io::Result<Outcome> {
     let options = session.options;
-    let Some((loaded, packages)) = begin(session).await? else {
-        return Ok(Outcome::Unsupported);
+    let (loaded, packages) = match begin(session).await? {
+        Begin::Unsupported => return Ok(Outcome::Unsupported),
+        Begin::External(loaded) => {
+            external::write_dependencies(session, &loaded).await?;
+            return Ok(Outcome::Skipped);
+        }
+        Begin::Install(loaded, packages) => (*loaded, packages),
     };
     let mut loaded = Box::pin(prepare(session, loaded, &packages)).await?;
     if !options.skip_import {
@@ -114,21 +122,34 @@ async fn install(session: &Session<'_>) -> io::Result<Outcome> {
     }))
 }
 
-/// Load the workspace and take the command over: `None` when the TypeScript
-/// path installs it. `bit install` prints the runner and "Resolving..." lines
-/// and resolves component ids among the packages; `InstallMain.install` does not.
-async fn begin(session: &Session<'_>) -> io::Result<Option<(Loaded, Vec<String>)>> {
+/// How the command goes on once the workspace is loaded.
+enum Begin {
+    /// The TypeScript path installs it.
+    Unsupported,
+    /// `writeDependenciesToPackageJson` instead of installing.
+    External(Box<Loaded>),
+    /// Install, adding these packages first.
+    Install(Box<Loaded>, Vec<String>),
+}
+
+/// Load the workspace and take the command over. `bit install` prints the runner
+/// and "Resolving..." lines and resolves component ids among the packages;
+/// `InstallMain.install` does not.
+async fn begin(session: &Session<'_>) -> io::Result<Begin> {
     let options = session.options;
     if options.update_existing {
         session.output.warning(UPDATE_EXISTING);
     }
     let mut loaded = Loaded::load(session)?;
-    if loaded.uses_yarn() || declines_external_mode(options, &loaded) {
-        return Ok(None);
+    if loaded.uses_yarn() {
+        return Ok(Begin::Unsupported);
+    }
+    if writes_package_json(options, &loaded) {
+        return Ok(Begin::External(Box::new(loaded)));
     }
     if options.programmatic {
         resolve_cloud_username(session, &mut loaded).await;
-        return Ok(Some((loaded, options.packages.clone())));
+        return Ok(Begin::Install(Box::new(loaded), options.packages.clone()));
     }
     // `CommandRunner.determineConsoleWritingDuringCommand`, once the command is ours.
     session.output.status(r#"running command "install"..."#);
@@ -136,12 +157,12 @@ async fn begin(session: &Session<'_>) -> io::Result<Option<(Loaded, Vec<String>)
     resolve_cloud_username(session, &mut loaded).await;
     let name = session.output.paint(Style::Cyan, &loaded.workspace_name(&session.root));
     session.output.console(&format!("Resolving component dependencies for workspace: '{name}'"));
-    Ok(Some((loaded, packages)))
+    Ok(Begin::Install(Box::new(loaded), packages))
 }
 
 /// Without `showExternalPackageManagerPrompt`, `InstallMain.install` writes the
-/// dependencies to `package.json` instead of installing: the TypeScript path does that.
-fn declines_external_mode(options: &InstallOptions, loaded: &Loaded) -> bool {
+/// dependencies to `package.json` instead of installing.
+fn writes_package_json(options: &InstallOptions, loaded: &Loaded) -> bool {
     !options.external_prompt
         && loaded.config.dependency_resolver.external_package_manager == Some(true)
 }
@@ -179,7 +200,8 @@ async fn prepare(
     Ok(loaded)
 }
 
-/// `--add-missing-peers`: the root's missing peers join the workspace policy.
+/// `--add-missing-peers`: the root's missing peers join the workspace policy, as peers
+/// from the command line and with the given lifecycle from `InstallMain.install`.
 async fn add_missing_peers(session: &Session<'_>, loaded: Loaded) -> io::Result<Loaded> {
     let calculated = calculate::calculate(session, &loaded, &DependencyMap::default()).await?;
     let plan = &calculated.outcome.plan;
@@ -193,7 +215,8 @@ async fn add_missing_peers(session: &Session<'_>, loaded: Loaded) -> io::Result<
         .iter()
         .map(|(name, range)| format!("{name}@{range}"))
         .collect();
-    packages::add(session, &loaded, &packages, "peer").await?;
+    // `_addPackages(missingPeerPackages, options)`: `lifecycleType || 'runtime'`.
+    packages::add(session, &loaded, &packages, session.options.lifecycle()).await?;
     Loaded::load(session)
 }
 

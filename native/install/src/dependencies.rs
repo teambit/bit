@@ -20,6 +20,7 @@ mod builtins;
 mod component_model;
 mod data;
 mod detect;
+mod detectors;
 mod dev_files;
 mod list;
 mod resolve;
@@ -37,6 +38,7 @@ use crate::{
 };
 use component_model::ComponentModel;
 use data::Detected;
+use detectors::{CustomDetection, Detectors};
 use dev_files::EnvPatterns;
 use indexmap::IndexMap;
 use resolve::Resolver;
@@ -140,11 +142,13 @@ pub struct Subject<'a> {
     pub dev_files: Vec<String>,
     /// The env policy of the component itself, when it is an env with an `env.jsonc`.
     pub own_env: Option<EnvPolicy>,
+    /// The files a custom detector supports, with what it found.
+    pub custom: IndexMap<String, CustomDetection>,
 }
 
 /// The dependency data of every component, keyed by component id without version.
-/// `host` serves the env hooks implemented in JavaScript: dev patterns, and
-/// `getDependencies()` of env components without an `env.jsonc`.
+/// `host` serves the env hooks implemented in JavaScript: dev patterns, custom
+/// detectors, and `getDependencies()` of env components without an `env.jsonc`.
 pub async fn compute(
     root: &Path,
     components: &[WorkspaceComponent],
@@ -168,15 +172,21 @@ pub async fn compute(
         .map_err(io::Error::other)?;
     let mut resolver = Resolver::new(root, components, &options.core_aspects);
     let mut env_patterns = EnvPatterns::new(&reader, host, &options.dev_patterns);
+    let mut detectors = Detectors::new(host, &options.core_aspects);
     let mut result = IndexMap::new();
     for component in components {
-        let subject = subject(component, scope.as_ref(), &reader, &mut env_patterns, host).await?;
-        let env_policy = env_policies
-            .get(&component.env_id)
-            .cloned()
-            .unwrap_or_default();
-        let context =
-            Context { workspace: &workspace, scope: scope.as_ref(), pool: &pool, env_policy };
+        let mut subject =
+            subject(component, scope.as_ref(), &reader, &mut env_patterns, host).await?;
+        subject.custom = detectors.get(component).await?;
+        let context = Context {
+            workspace: &workspace,
+            scope: scope.as_ref(),
+            pool: &pool,
+            env_policy: env_policies
+                .get(&component.env_id)
+                .cloned()
+                .unwrap_or_default(),
+        };
         let dependencies = one(&context, &subject, &mut resolver)?;
         result.insert(component.id.to_string_without_version(), dependencies);
     }
@@ -212,7 +222,13 @@ async fn subject<'a>(
         }
         _ => None,
     };
-    Ok(Subject { component, model: ComponentModel::new(model), dev_files, own_env })
+    Ok(Subject {
+        component,
+        model: ComponentModel::new(model),
+        dev_files,
+        own_env,
+        custom: IndexMap::new(),
+    })
 }
 
 /// `getEnvPolicyFromEnvId` for the component itself: its `env.jsonc` policy, else
@@ -301,7 +317,12 @@ fn detected(
         return Ok(Detected::default());
     }
     let cache = context.workspace.options.use_cache && !cache::disabled();
+    // The cache entry is keyed by the component id and checked against file times, as
+    // in TypeScript; detector output is not part of it, so an entry written without the
+    // detectors (by an earlier native install) would be stale. A component a custom
+    // detector applies to is therefore always detected; its fresh entry is still written.
     if cache
+        && subject.custom.is_empty()
         && let Some(scope) = context.scope
         && let Some(cached) = cache::read(scope, subject.component, context.pool)?
     {

@@ -57,7 +57,7 @@ fn links_the_package_the_workspace_env_resolves() {
     let not_from_env = entry("lodash", "4.0.0", Lifecycle::Runtime);
     let deps = dependencies("acme/ui/button", vec![from_env("react"), not_from_env]);
     let EnvLinks { links, messages } =
-        resolved_from_env_links(&root, &HostInfo::default(), &[ui], &deps);
+        resolved_from_env_links(&root, &HostInfo::default(), &[ui], &deps, &IndexMap::new());
     assert_eq!(
         links.into_iter().collect::<Vec<_>>(),
         [("react".to_owned(), format!("link:{}", store.join("react").display()))],
@@ -83,7 +83,8 @@ fn a_core_env_resolves_from_its_directory_in_bit() {
     let workspace = root.join("ws");
     let ui = component(&workspace, "acme", "ui", "teambit.react/react");
     let deps = dependencies("acme/ui", vec![from_env("react-dom")]);
-    let EnvLinks { links, .. } = resolved_from_env_links(&workspace, &info, &[ui], &deps);
+    let EnvLinks { links, .. } =
+        resolved_from_env_links(&workspace, &info, &[ui], &deps, &IndexMap::new());
     assert_eq!(links["react-dom"], format!("link:{}", bit.join("react-dom").display()));
 }
 
@@ -95,7 +96,7 @@ fn reports_what_the_env_cannot_resolve() {
     let ui = component(&root, "acme", "ui", "acme/my-env");
     let deps = dependencies("acme/ui", vec![from_env("missing")]);
     let EnvLinks { links, messages } =
-        resolved_from_env_links(&root, &HostInfo::default(), &[ui], &deps);
+        resolved_from_env_links(&root, &HostInfo::default(), &[ui], &deps, &IndexMap::new());
     assert!(links.is_empty());
     assert_eq!(
         messages,
@@ -103,6 +104,26 @@ fn reports_what_the_env_cannot_resolve() {
             "could not resolve missing from env directory {}",
             root.join("node_modules/@acme/my-env").display(),
         )],
+    );
+}
+
+/// An external env published under a custom `teambit.pkg/pkg` name is installed,
+/// and resolves, under that name.
+#[test]
+fn an_external_env_resolves_from_its_custom_package_name() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = fs::canonicalize(dir.path()).unwrap();
+    package(&root.join("node_modules/custom-my-env"));
+    package(&root.join("node_modules/custom-my-env/node_modules/react"));
+    let ui = component(&root, "acme", "ui", "acme/my-env@1.0.0");
+    let deps = dependencies("acme/ui", vec![from_env("react")]);
+    let env_packages = IndexMap::from([("acme/my-env".to_owned(), "custom-my-env".to_owned())]);
+    let EnvLinks { links, messages } =
+        resolved_from_env_links(&root, &HostInfo::default(), &[ui], &deps, &env_packages);
+    assert!(messages.is_empty());
+    assert_eq!(
+        links["react"],
+        format!("link:{}", root.join("node_modules/custom-my-env/node_modules/react").display()),
     );
 }
 

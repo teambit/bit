@@ -6,6 +6,7 @@ use crate::{
     host::{CoreAspect, Host},
     model::{PolicyEntry, WorkspaceComponent},
     policy::is_core_env,
+    workspace::ScopeObjects,
 };
 use serde_json::Value;
 use std::io;
@@ -16,16 +17,20 @@ pub type Registration = (String, Value);
 /// The aspects Bit treats as core besides the manifest's core aspects.
 const RESERVED: [&str; 2] = ["teambit.harmony/bit", "teambit.harmony/config"];
 
+/// The env of env plugins (`*.bit-env.*`), which are not loaded through a provider.
+const ENV_OF_ENVS: &str = "teambit.envs/env";
+
 /// The registrations of the aspects the components configure. Core aspects never
-/// register a dependency policy, and an env contributes its policy through
-/// `getDependencies()`, so only the remaining configured aspects can, and the host is
-/// asked only when a component configures one.
+/// register a dependency policy, so only the remaining configured aspects can, and the
+/// host is asked only when a component configures one. `objects` tells whether an env
+/// that is not in the workspace is an env plugin.
 pub async fn registry(
     components: &[WorkspaceComponent],
     core_aspects: &[CoreAspect],
+    objects: &ScopeObjects,
     host: &dyn Host,
 ) -> io::Result<Vec<Registration>> {
-    let candidates = candidates(components, core_aspects);
+    let candidates = candidates(components, core_aspects, objects)?;
     if candidates.is_empty() {
         return Ok(Vec::new());
     }
@@ -35,20 +40,70 @@ pub async fn registry(
     Ok(parse(&registry))
 }
 
-/// Configured extension ids that are neither core aspects nor the component's env.
-#[must_use]
-pub fn candidates(components: &[WorkspaceComponent], core_aspects: &[CoreAspect]) -> Vec<String> {
+/// Configured extension ids that are not core aspects and whose loading may run a
+/// provider. The component's env is one unless it is an env plugin: an env aspect's
+/// provider can call `registerDependenciesPolicies` too, and the registration applies
+/// to the components that configure the env.
+pub fn candidates(
+    components: &[WorkspaceComponent],
+    core_aspects: &[CoreAspect],
+    objects: &ScopeObjects,
+) -> io::Result<Vec<String>> {
     let mut ids: Vec<String> = Vec::new();
     for component in components {
-        let env = super::split_version(&component.env_id).0;
         for id in component.config.keys() {
-            let bare = super::split_version(id).0;
-            if !is_core(bare, core_aspects) && bare != env && !ids.contains(id) {
+            if !ids.contains(id) && may_register(id, component, components, core_aspects, objects)?
+            {
                 ids.push(id.clone());
             }
         }
     }
-    ids
+    Ok(ids)
+}
+
+/// A configured id that is not a core aspect, nor the component's env when that is
+/// an env plugin.
+fn may_register(
+    id: &str,
+    component: &WorkspaceComponent,
+    components: &[WorkspaceComponent],
+    core_aspects: &[CoreAspect],
+    objects: &ScopeObjects,
+) -> io::Result<bool> {
+    let bare = super::split_version(id).0;
+    if is_core(bare, core_aspects) {
+        return Ok(false);
+    }
+    if bare != super::split_version(&component.env_id).0 {
+        return Ok(true);
+    }
+    Ok(!is_env_plugin(id, components, objects)?)
+}
+
+/// The env's own env is `teambit.envs/env`: a workspace env by its loaded env, any
+/// other by its scope objects. An env the scope does not hold is loaded to find out.
+fn is_env_plugin(
+    env_id: &str,
+    components: &[WorkspaceComponent],
+    objects: &ScopeObjects,
+) -> io::Result<bool> {
+    let bare = super::split_version(env_id).0;
+    if let Some(env) = components
+        .iter()
+        .find(|component| component.id.to_string_without_version() == bare)
+    {
+        return Ok(super::split_version(&env.env_id).0 == ENV_OF_ENVS);
+    }
+    Ok(objects.aspect(env_id)?.is_some_and(|model| model.uses_env_of_envs()))
+}
+
+/// The component configures an extension id that is not a core aspect. On a core env,
+/// that is the same as [`candidates`] being non-empty, without classifying the env.
+#[must_use]
+pub fn configures_non_core(component: &WorkspaceComponent, core_aspects: &[CoreAspect]) -> bool {
+    component.config
+        .keys()
+        .any(|id| !is_core(super::split_version(id).0, core_aspects))
 }
 
 fn is_core(id: &str, core_aspects: &[CoreAspect]) -> bool {

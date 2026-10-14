@@ -3,6 +3,10 @@
 //! `(scopeName, thisScopeName, token) => Promise<url>`; it replaces the hub
 //! lookup for scopes no remote is configured for. Like pnpm's one-shot
 //! pnpmfile hooks, it runs in the Node.js that runs Bit.
+//!
+//! Bit `require`s the path from `remote-resolver.js` of `@teambit/scope.remotes`,
+//! so a relative path or a package name resolves from that module, not from the
+//! current directory.
 
 use crate::{GlobalConfig, invalid};
 use serde_json::Value;
@@ -15,10 +19,20 @@ use std::{
 /// `CFG_USER_TOKEN_KEY`: the resolver gets the configured token, not `--token`.
 const CFG_USER_TOKEN: &str = "user.token";
 
-/// Calls the module and prints the URL its promise resolves to.
+/// `remote-resolver.js` relative to the main module of `@teambit/scope.remotes`.
+const RESOLVER_MODULE: &str = "remote-resolver/remote-resolver.js";
+
+/// Calls the module and prints the URL its promise resolves to. Without an
+/// installed `@teambit/scope.remotes` (no bit directory), it resolves from the
+/// current directory.
 const SCRIPT: &str = "\
-const [path, scope, thisScope, token] = process.argv.slice(1);\
-Promise.resolve(require(path)(scope, thisScope || undefined, token || undefined)).then(\
+const [path, scope, thisScope, token, bitDir, module] = process.argv.slice(1);\
+let load = require;\
+if (bitDir) try {\
+const main = require.resolve('@teambit/scope.remotes', { paths: [bitDir] });\
+load = require('module').createRequire(require('path').join(require('path').dirname(main), module));\
+} catch {}\
+Promise.resolve(load(path)(scope, thisScope || undefined, token || undefined)).then(\
 (url) => process.stdout.write(String(url)),\
 (error) => { process.stderr.write(String((error && error.message) || error)); process.exit(1); });";
 
@@ -27,6 +41,8 @@ Promise.resolve(require(path)(scope, thisScope || undefined, token || undefined)
 pub struct Resolver {
     pub path: String,
     pub node: PathBuf,
+    /// The `@teambit/bit` package dir, where `@teambit/scope.remotes` resolves from.
+    pub bit_dir: PathBuf,
     /// `thisScope.name`.
     pub this_scope: String,
     pub token: Option<String>,
@@ -38,6 +54,7 @@ impl Resolver {
     pub fn configured(
         scope_json: &Value,
         node: PathBuf,
+        bit_dir: PathBuf,
         this_scope: &str,
         global: &GlobalConfig,
     ) -> Option<Self> {
@@ -48,7 +65,13 @@ impl Resolver {
             .get(CFG_USER_TOKEN)
             .and_then(Value::as_str)
             .map(str::to_string);
-        Some(Self { path: path.to_string(), node, this_scope: this_scope.to_string(), token })
+        Some(Self {
+            path: path.to_string(),
+            node,
+            bit_dir,
+            this_scope: this_scope.to_string(),
+            token,
+        })
     }
 
     /// `resolverFunction(scopeName, thisScope.name, token)`.
@@ -67,6 +90,8 @@ impl Resolver {
         let output = Command::new(node)
             .args(["-e", SCRIPT, &self.path, scope, &self.this_scope])
             .arg(self.token.as_deref().unwrap_or_default())
+            .arg(&self.bit_dir)
+            .arg(RESOLVER_MODULE)
             .stdin(Stdio::null())
             .output()?;
         if !output.status.success() {

@@ -4,7 +4,7 @@ use super::{
     default_package_name, definitely_typed, detect,
     dev_files::{self, EnvDevPatterns},
     glob::{match_patterns, matches},
-    resolve::Resolver,
+    resolve::{Resolved, Resolver},
     scan::lexical,
     specifier_package_name, valid_component_version,
 };
@@ -119,6 +119,7 @@ fn detect_only(root: &Path, components: &[WorkspaceComponent], index: usize) -> 
         model: super::component_model::ComponentModel::new(None),
         dev_files: Vec::new(),
         own_env: None,
+        custom: IndexMap::new(),
     };
     let mut resolver = Resolver::new(root, components, &[]);
     detect::detect(&workspace, &subject, &mut resolver).expect("detect")
@@ -528,4 +529,184 @@ async fn detection_is_cached_in_bit_format_unless_it_has_issues() {
         cache::read(&scope, &components[1], &pool).expect("read").is_none(),
         "a missing package blocks the cache",
     );
+}
+
+/// A host whose `acme/envs/vue` env has detectors: `*.vue` files and `custom.ts`
+/// (whatever its content, as a detector replaces the built-in detective). Files of
+/// other envs are claimed only through a registered `*.svelte` detector.
+#[derive(Default)]
+struct DetectorHost {
+    calls: std::sync::Mutex<Vec<(String, usize)>>,
+}
+
+#[async_trait]
+impl Host for DetectorHost {
+    async fn env_policy(&self, _env_id: &str) -> io::Result<Option<Value>> {
+        Ok(None)
+    }
+    async fn app_types(&self) -> io::Result<Vec<String>> {
+        Ok(Vec::new())
+    }
+    async fn detect_dependencies(
+        &self,
+        env_id: &str,
+        files: &[String],
+    ) -> io::Result<Option<Value>> {
+        self.calls
+            .lock()
+            .expect("calls")
+            .push((env_id.to_owned(), files.len()));
+        let mut found = serde_json::Map::new();
+        for file in files {
+            if env_id == "acme/envs/vue" && file.ends_with(".vue") {
+                found.insert(
+                    file.clone(),
+                    json!({"dependencies": ["vue", "./helper", "vue", "fs"], "typescript": false}),
+                );
+            } else if env_id == "acme/envs/vue" && file.ends_with("custom.ts") {
+                found.insert(file.clone(), json!({"dependencies": {"preact": true}}));
+            } else if file.ends_with(".svelte") {
+                found.insert(
+                    file.clone(),
+                    json!({"dependencies": ["svelte", "./util.js"], "typescript": true}),
+                );
+            }
+        }
+        Ok((env_id == "acme/envs/vue" || !found.is_empty()).then_some(Value::Object(found)))
+    }
+    async fn package_json_props(&self, _env_id: &str) -> io::Result<Value> {
+        Ok(Value::Null)
+    }
+    async fn transform_package_json(&self, _component: &str, manifest: Value) -> io::Result<Value> {
+        Ok(manifest)
+    }
+    async fn after_install(&self, _request: AfterInstall) -> io::Result<AfterInstallResult> {
+        Ok(AfterInstallResult::default())
+    }
+    async fn confirm(&self, _question: &str) -> io::Result<bool> {
+        Ok(false)
+    }
+}
+
+/// `acme/ui/widget` of the `acme/envs/vue` env: `widget.vue` (a custom detector),
+/// `custom.ts` (a custom detector replacing the built-in one) and `index.ts` (built-in).
+fn vue_fixture(root: &Path) -> WorkspaceComponent {
+    let mut widget = component(root, "acme/ui/widget@1.0.0", "acme/envs/vue@1.0.0");
+    widget.files =
+        vec!["widget.vue".into(), "custom.ts".into(), "index.ts".into(), "helper.ts".into()];
+    write(&widget.dir.join("widget.vue"), "<script>import 'ignored-by-the-detector';</script>\n");
+    write(&widget.dir.join("custom.ts"), "import _ from 'lodash';\n");
+    write(&widget.dir.join("index.ts"), "import _ from 'lodash';\n");
+    write(&widget.dir.join("helper.ts"), "export const helper = 1;\n");
+    package(root, "vue", &json!({"name": "vue", "version": "3.4.0"}));
+    package(root, "preact", &json!({"name": "preact", "version": "10.19.0"}));
+    package(root, "lodash", &json!({"name": "lodash", "version": "4.17.21"}));
+    widget
+}
+
+fn vue_packages() -> Vec<(String, String)> {
+    vec![
+        ("vue".into(), "3.4.0".into()),
+        ("preact".into(), "10.19.0".into()),
+        ("lodash".into(), "4.17.21".into()),
+    ]
+}
+
+#[tokio::test]
+async fn env_detectors_replace_the_built_in_detection_of_the_files_they_support() {
+    let temp = tempfile::tempdir().expect("tempdir");
+    let root = temp.path();
+    let widget = vue_fixture(root);
+    let host = DetectorHost::default();
+    let result =
+        run_with(root, &[widget], &IndexMap::new(), &DependencyOptions::default(), &host).await;
+    let widget = &result["acme/ui/widget"];
+    // `custom.ts` contributes preact (not its lodash import), `index.ts` lodash, `widget.vue`
+    // vue; `./helper` is the component's own file and `fs` a built-in.
+    assert_eq!(packages(widget, Lifecycle::Runtime), vue_packages());
+    assert!(widget.missing_packages.runtime.is_empty());
+    assert_eq!(
+        *host.calls.lock().expect("calls"),
+        vec![("acme/envs/vue".to_owned(), 4)],
+        "the env id is asked without its version, with every file",
+    );
+}
+
+#[tokio::test]
+async fn detectors_are_asked_only_for_components_that_can_have_them() {
+    let temp = tempfile::tempdir().expect("tempdir");
+    let root = temp.path();
+    let mut plain = component(root, "acme/plain@1.0.0", "teambit.harmony/node");
+    plain.files = vec!["index.ts".into()];
+    write(&plain.dir.join("index.ts"), "export const x = 1;\n");
+    let mut aspect = component(root, "acme/with-aspect@1.0.0", "teambit.react/react");
+    aspect.files = vec!["index.svelte".into(), "util.ts".into()];
+    aspect.config.insert("acme/aspects/svelte".into(), json!({}));
+    write(&aspect.dir.join("index.svelte"), "");
+    write(&aspect.dir.join("util.ts"), "export const util = 1;\n");
+    package(root, "svelte", &json!({"name": "svelte", "version": "4.2.0"}));
+    let mut first = component(root, "acme/first@1.0.0", "acme/envs/no-detectors");
+    first.files = vec!["index.ts".into()];
+    write(&first.dir.join("index.ts"), "export const x = 1;\n");
+    let mut second = component(root, "acme/second@1.0.0", "acme/envs/no-detectors@2.0.0");
+    second.files = vec!["index.ts".into()];
+    write(&second.dir.join("index.ts"), "export const x = 1;\n");
+    let host = DetectorHost::default();
+    let components = [plain, aspect, first, second];
+    let result =
+        run_with(root, &components, &IndexMap::new(), &DependencyOptions::default(), &host).await;
+    assert_eq!(
+        *host.calls.lock().expect("calls"),
+        vec![("teambit.react/react".to_owned(), 2), ("acme/envs/no-detectors".to_owned(), 1)],
+        "a core env without non-core aspects is never asked; an env without detectors once",
+    );
+    assert_eq!(
+        packages(&result["acme/with-aspect"], Lifecycle::Runtime),
+        vec![("svelte".into(), "4.2.0".into())],
+    );
+}
+
+#[test]
+fn a_registered_detector_resolves_relative_imports_through_typescript() {
+    let temp = tempfile::tempdir().expect("tempdir");
+    let root = temp.path();
+    let mut svelte = component(root, "acme/svelte@1.0.0", "teambit.harmony/node");
+    svelte.files = vec!["index.svelte".into(), "util.ts".into()];
+    write(&svelte.dir.join("util.ts"), "export const util = 1;\n");
+    let components = [svelte];
+    let mut resolver = Resolver::new(root, &components, &[]);
+    let mut resolve = |typescript| {
+        resolver
+            .resolve_from(&components[0], "index.svelte", "./util.js", typescript)
+            .expect("resolve")
+    };
+    assert_eq!(resolve(true), Resolved::Internal);
+    assert_eq!(resolve(false), Resolved::MissingFile("./util.js".into()));
+}
+
+#[tokio::test]
+async fn a_cache_entry_written_without_detectors_is_not_used() {
+    let temp = tempfile::tempdir().expect("tempdir");
+    let root = temp.path();
+    fs::create_dir_all(root.join(".bit/objects")).expect("scope");
+    let components = [vue_fixture(root)];
+    let options = DependencyOptions { use_cache: true, ..DependencyOptions::default() };
+    // An install that did not apply detectors cached the built-in detection.
+    let before =
+        run_with(root, &components, &IndexMap::new(), &options, &TestHost::default()).await;
+    assert_eq!(
+        packages(&before["acme/ui/widget"], Lifecycle::Runtime),
+        vec![("lodash".into(), "4.17.21".into())],
+    );
+    let after =
+        run_with(root, &components, &IndexMap::new(), &options, &DetectorHost::default()).await;
+    assert_eq!(packages(&after["acme/ui/widget"], Lifecycle::Runtime), vue_packages());
+    // The fresh detection replaces the entry, for the TypeScript loader.
+    let scope = Scope::find(root).expect("scope");
+    let pool = rayon::ThreadPoolBuilder::new()
+        .num_threads(1)
+        .build()
+        .expect("pool");
+    let cached = cache::read(&scope, &components[0], &pool).expect("read").expect("cached");
+    assert!(cached.packages[0].contains_key("vue"));
 }
