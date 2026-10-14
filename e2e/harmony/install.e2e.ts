@@ -401,3 +401,69 @@ describe('repeat install with nothing changed', function () {
     expect(secondInstallOutput).to.include('Already up to date');
   });
 });
+
+describe('install when the package manager re-creates the injected copy of a workspace env', function () {
+  this.timeout(0);
+  let helper: Helper;
+  before(() => {
+    helper = new Helper();
+    helper.scopeHelper.setWorkspaceWithRemoteScope();
+    helper.extensions.workspaceJsonc.setPackageManager('teambit.dependencies/pnpm');
+    helper.extensions.workspaceJsonc.addKeyValToDependencyResolver('rootComponents', true);
+    helper.extensions.workspaceJsonc.addKeyValToWorkspace('resolveEnvsFromRoots', true);
+    // the generated tsconfig.json of each component has an "extends" relative to the workspace, which is
+    // invalid from inside an injected copy under node_modules/.pnpm.
+    helper.extensions.workspaceJsonc.addKeyVal('teambit.workspace/workspace-config-files', {
+      enableWorkspaceConfigWrite: true,
+    });
+    helper.command.install('@teambit/typescript.typescript-compiler@3.0.0 @teambit/compiler');
+
+    const tsconfig = {
+      compilerOptions: {
+        target: 'es2019',
+        module: 'nodenext',
+        moduleResolution: 'nodenext',
+        declaration: true,
+        sourceMap: true,
+        skipLibCheck: true,
+        esModuleInterop: true,
+        outDir: './dist',
+      },
+      exclude: ['artifacts', 'public', 'dist', 'node_modules'],
+    };
+    // the env resolves its tsconfig relative to its compiled file, i.e. inside "dist" of its injected copy.
+    // it depends on comp1, which uses this env, so a failure to load the env compiles comp1 with it.
+    const envCode = `import { TypescriptCompiler } from '@teambit/typescript.typescript-compiler';
+import { compName } from '@${helper.scopes.remote}/comp1';
+
+export class MyEnv {
+  name = compName;
+
+  compiler() {
+    return TypescriptCompiler.from({
+      tsconfig: require.resolve('./config/tsconfig.json'),
+    });
+  }
+}
+
+export default new MyEnv();
+`;
+    helper.fs.outputFile('comp1/index.ts', `export const compName = 'my-env';`);
+    helper.fs.outputFile('my-env/my-env.bit-env.ts', envCode);
+    helper.fs.outputFile('my-env/index.ts', `export { MyEnv } from './my-env.bit-env';`);
+    helper.fs.outputFile('my-env/config/tsconfig.json', JSON.stringify(tsconfig, null, 2));
+    helper.command.addComponent('comp1');
+    helper.command.addComponent('my-env');
+    helper.command.setEnv('my-env', 'teambit.envs/env');
+    helper.command.install();
+    // the next install loads my-env, then the package manager re-creates its package dir with the sources only,
+    // so the loaded instance holds a tsconfig path into a "dist" that no longer exists.
+    helper.command.setEnv('comp1', 'my-env');
+  });
+  after(() => {
+    helper.scopeHelper.destroy();
+  });
+  it('should restore the env files before compiling with it', () => {
+    expect(() => helper.command.install()).to.not.throw();
+  });
+});
