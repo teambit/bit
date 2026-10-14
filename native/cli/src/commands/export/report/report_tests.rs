@@ -23,6 +23,8 @@ fn reads_the_prepared_transfers() {
     let mut empty = value;
     empty["componentCount"] = json!(0);
     assert!(super::prepared(&empty).is_err(), "nothingToExport must match the count");
+    empty["lane"] = json!("s/study");
+    assert!(super::prepared(&empty).is_ok(), "an empty lane still has objects to export");
 }
 
 #[test]
@@ -45,4 +47,19 @@ fn reports_the_exported_components() {
         "exported components (2)\n  exported the following component(s)\n   \u{203A} s/a\n   \u{203A} s/b",
     );
     assert_eq!(format(&receipt(&[], &[]), chalk), "nothing to export");
+}
+
+#[test]
+fn reports_an_exported_lane_with_and_without_new_versions() {
+    let chalk = Chalk::new(false);
+    let mut one = receipt(&["s/a"], &["s/a@123"]);
+    one["exportedLanes"] = json!(["s/study"]);
+    assert!(published(&one, "outbound-1").is_ok());
+    assert_eq!(
+        format(&one, chalk),
+        "exported components (1)\n  exported the lane s/study and the following component(s)\n   \u{203A} s/a",
+    );
+    let mut empty = receipt(&[], &[]);
+    empty["exportedLanes"] = json!(["s/study"]);
+    assert_eq!(format(&empty, chalk), "exported lane (1)\n   \u{203A} s/study");
 }

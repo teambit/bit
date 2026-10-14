@@ -186,7 +186,7 @@ fn load_model(root: &Path, row: &Value) -> io::Result<Value> {
     let hash = row["hash"].as_str().ok_or_else(|| invalid("outbound index hash"))?;
     read_object(&root.join(".bit/objects"), hash, "Component")
 }
-fn read_object(dir: &Path, hash: &str, kind: &str) -> io::Result<Value> {
+pub(super) fn read_object(dir: &Path, hash: &str, kind: &str) -> io::Result<Value> {
     let parsed = crate::merge_history::hash(hash)?;
     let compressed = transfer::object::repository(dir, parsed, MAX_BYTES)?;
     let raw = crate::checkout::repository::inflate(&compressed, MAX_BYTES)?;
@@ -287,7 +287,7 @@ fn parents(dir: &Path, hash: &str) -> io::Result<Value> {
     }
     Ok(version["parents"].clone())
 }
-fn clear_and_mark_exported(
+pub(super) fn clear_and_mark_exported(
     model: &mut Value,
     scope: &str,
     host: &str,
@@ -308,14 +308,14 @@ fn clear_and_mark_exported(
     }
     Ok(())
 }
-fn encode(hash: &str, kind: &str, value: &Value) -> io::Result<Vec<u8>> {
+pub(super) fn encode(hash: &str, kind: &str, value: &Value) -> io::Result<Vec<u8>> {
     crate::merge_history::hash(hash)?;
     let body = serde_json::to_string(value).map_err(io::Error::other)?;
     let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
     write!(encoder, "{kind} {hash} {}\0{body}", body.encode_utf16().count())?;
     encoder.finish()
 }
-fn collect(
+pub(super) fn collect(
     dir: &Path,
     model_hash: &str,
     model: &[u8],

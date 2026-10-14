@@ -1,6 +1,6 @@
 //! The engine's outbound receipts and
-//! `ExportCmd.report` for the exports that run natively: components only,
-//! without lanes, ejecting or ripple jobs.
+//! `ExportCmd.report` for the exports that run natively: components and lanes,
+//! without ejecting or ripple jobs.
 
 use crate::commands::{
     color::Chalk,
@@ -32,6 +32,11 @@ pub(super) fn prepared(value: &Value) -> io::Result<Prepared> {
         .as_u64()
         .and_then(|count| usize::try_from(count).ok())
         .ok_or_else(|| decline("native outbound component count"))?;
+    let lane = match value.get("lane") {
+        Some(Value::String(lane)) if !lane.is_empty() && lane.contains('/') => Some(lane.clone()),
+        Some(Value::Null) | None => None,
+        _ => return Err(decline("native outbound lane identity")),
+    };
     let scopes = array(value.get("scopes"), "scopes")?
         .iter()
         .map(|scope| text(Some(scope)).map(str::to_string))
@@ -41,7 +46,7 @@ pub(super) fn prepared(value: &Value) -> io::Result<Prepared> {
         || token.is_empty()
         || counts.len() != scopes.len()
         || scopes.iter().any(String::is_empty)
-        || nothing_to_export != (count == 0)
+        || nothing_to_export != (count == 0 && lane.is_none())
     {
         return Err(decline("native outbound prepare receipt"));
     }
@@ -75,10 +80,21 @@ pub(super) fn published(value: &Value, token: &str) -> io::Result<Value> {
     }
     // `nonExistOnBitMap` and `missingScope` have sections the native report
     // does not render; the engine reports neither.
-    for field in ["exportedLanes", "rippleJobUrls", "nonExistOnBitMap", "missingScope"] {
+    for field in ["rippleJobUrls", "nonExistOnBitMap", "missingScope"] {
         if !array(value.get(field), field)?.is_empty() {
             return Err(decline("native outbound unsupported receipt"));
         }
+    }
+    let lanes = array(value.get("exportedLanes"), "exported lanes")?;
+    if lanes.len() > 1
+        || lanes
+            .iter()
+            .any(|lane| {
+                lane.as_str()
+                    .is_none_or(|lane| lane.is_empty() || !lane.contains('/'))
+            })
+    {
+        return Err(decline("native outbound lane receipt"));
     }
     remote_ids(value)?;
     Ok(value.clone())
@@ -117,7 +133,7 @@ fn remote_ids(value: &Value) -> io::Result<()> {
     Ok(())
 }
 
-/// `ExportCmd.report` without lanes, ejecting, ripple jobs or `--verbose`.
+/// `ExportCmd.report` without ejecting, ripple jobs or `--verbose`.
 /// The receipt is a validated one (`published`).
 pub(super) fn format(receipt: &Value, chalk: Chalk) -> String {
     let ids = |field: &str| -> Vec<&str> {
@@ -130,16 +146,26 @@ pub(super) fn format(receipt: &Value, chalk: Chalk) -> String {
     };
     let components = ids("componentsIds");
     let removed = ids("removedIds");
+    let lane = ids("exportedLanes").first().copied();
     if components.is_empty() {
-        return chalk.yellow("nothing to export");
+        return lane.map_or_else(
+            || chalk.yellow("nothing to export"),
+            |lane| {
+                Formatter::new(chalk)
+                    .section("exported lane", "", &[Formatter::new(chalk).item(&chalk.bold(lane))])
+            },
+        );
     }
     let format = Formatter::new(chalk);
     let items: Vec<String> = components
         .iter()
         .map(|id| format.item(&chalk.bold(id)))
         .collect();
-    let exported =
-        format.section("exported components", "exported the following component(s)", &items);
+    let description = lane.map_or_else(
+        || "exported the following component(s)".to_string(),
+        |lane| format!("exported the lane {} and the following component(s)", chalk.bold(lane)),
+    );
+    let exported = format.section("exported components", &description, &items);
     let removed: Vec<String> = removed
         .iter()
         .map(|id| Formatter::item_with(id, &format.warn_symbol()))
