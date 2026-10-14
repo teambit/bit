@@ -3,6 +3,8 @@ use serde_json::json;
 
 #[test]
 fn lane_merges_with_their_options() {
+    assert!(!parse(&["dev", "--no-snap"]).unwrap().skip_install);
+    assert!(!parse(&["dev"]).unwrap().skip_install);
     let options = parse(&["dev", "remote/two", "-x", "--no-squash", "-r", "theirs"]).unwrap();
     assert_eq!(
         options.request(),
@@ -21,8 +23,7 @@ fn lane_merges_with_their_options() {
 #[test]
 fn other_lane_merges_are_left_to_node() {
     for args in [
-        &["dev"][..],
-        &["dev", "-x", "--squash", "--no-squash"],
+        &["dev", "-x", "--squash", "--no-squash"][..],
         &["dev", "-x", "--manual", "-r", "ours"],
         &["dev", "-x", "--no-auto-snap", "-m", "x"],
         &["dev", "-x", "--include-deps"],

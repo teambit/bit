@@ -100,6 +100,20 @@ impl Installer {
         } else {
             None
         };
+        self.run(root, skip_write_config_files, dependencies_graph)
+    }
+
+    /// Merge calls `InstallMain.install` without a supplied dependency graph.
+    pub fn install_merge(self, root: &Path) -> io::Result<()> {
+        self.run(root, false, None)
+    }
+
+    fn run(
+        self,
+        root: &Path,
+        skip_write_config_files: bool,
+        dependencies_graph: Option<Value>,
+    ) -> io::Result<()> {
         let options = InstallOptions {
             programmatic: true,
             skip_import: true,

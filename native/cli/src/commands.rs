@@ -16,6 +16,7 @@ mod list;
 mod merge;
 mod mini_status;
 mod patterns;
+mod recovery;
 mod snap;
 mod status;
 mod switch;

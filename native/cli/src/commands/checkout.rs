@@ -1,8 +1,8 @@
 //! Native `bit checkout <to> [component-pattern]`, a workspace command
 //! (`workspace_command`) with the checkout options and report.
 
-mod options;
-mod report;
+pub(super) mod options;
+pub(super) mod report;
 
 use super::{
     color::Chalk,

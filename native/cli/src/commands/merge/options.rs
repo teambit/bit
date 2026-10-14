@@ -11,6 +11,7 @@ pub struct Options {
     pub no_snap: bool,
     pub message: Option<String>,
     pub verbose: bool,
+    pub skip_install: bool,
 }
 
 const BOOLEAN: [&str; 4] = ["--skip-dependency-installation", "--manual", "--verbose", "--no-snap"];
@@ -68,8 +69,7 @@ fn build(flags: &[(&str, Value)], positionals: &[&str]) -> Option<Options> {
     let flag = |name: &str| get(name) == Some(&Value::Bool(true));
     let resolve = get("--auto-merge-resolve").and_then(Value::as_str);
     let message = get("--message").and_then(Value::as_str);
-    let invalid = !flag("--skip-dependency-installation")
-        || (flag("--manual") && resolve.is_some())
+    let invalid = (flag("--manual") && resolve.is_some())
         || (flag("--no-snap") && message.is_some())
         || positionals.len() > 1;
     if invalid {
@@ -90,6 +90,7 @@ fn build(flags: &[(&str, Value)], positionals: &[&str]) -> Option<Options> {
         no_snap: flag("--no-snap"),
         message: message.map(str::to_string),
         verbose: flag("--verbose"),
+        skip_install: flag("--skip-dependency-installation"),
     })
 }
 

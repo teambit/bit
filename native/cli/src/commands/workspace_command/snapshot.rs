@@ -137,6 +137,7 @@ impl Steps<'_> {
             verify: true,
             reset: true,
             cache_versions: cache_versions(plan.get("dependencyCacheVersions"), targets)?,
+            ..Default::default()
         };
         let capture =
             capture::capture_with(self.engine, self.root, self.home, context, targets, options)?;

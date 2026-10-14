@@ -5,6 +5,7 @@
 
 pub(super) mod report;
 
+pub(super) mod install;
 mod options;
 mod resolve;
 
@@ -25,6 +26,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     if let Some(resolve) = resolve::parse(&argv[1..]) {
         return resolve::run(args, &resolve);
     }
+    if let Some(abort) = super::recovery::parse_component(&argv[1..]) {
+        return super::recovery::run(args, &abort);
+    }
     let Some(options) = options::parse(&argv[1..]) else {
         return Ok(Outcome::Declined("outside the native merge grammar".to_string()));
     };
@@ -34,6 +38,10 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     if force_local_build(&root) {
         return Ok(Outcome::Declined("force_local_build may be set".to_string()));
     }
+    let installer = match install::start(&root, &argv, options.skip_install) {
+        Ok(installer) => installer,
+        Err(error) => return Ok(Outcome::Declined(format!("merge installation: {error}"))),
+    };
     let request =
         Request { operation: "merge", options: options.request(), to: None, verify_fresh: true };
     let prepared = workspace_command::plan(&root, &request)
@@ -47,11 +55,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Ok(prepared) => prepared,
         Err(error) => return Ok(Outcome::Declined(format!("merge: {error}"))),
     };
-    workspace_command::execute(&root, args, "merge", planned, &report, |output| {
-        if let Some(progress) = &progress {
-            progress.render_merge(output);
-        }
-    })
+    install::execute(&root, args, planned, report, progress.as_ref(), installer)
 }
 
 /// `getConfigBoolean('force_local_build')` may be true: any mention declines.

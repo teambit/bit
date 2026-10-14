@@ -271,7 +271,7 @@ impl bit_install::Host for JsHost {
 }
 
 /// The `yesno` package: repeat until a yes or no answer; end of input is no.
-fn confirm(question: &str) -> io::Result<bool> {
+pub(super) fn confirm(question: &str) -> io::Result<bool> {
     let stdin = io::stdin();
     loop {
         print!("{question} ");

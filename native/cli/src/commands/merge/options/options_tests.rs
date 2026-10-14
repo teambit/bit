@@ -7,11 +7,12 @@ fn accepts_the_native_subset() {
     assert_eq!(parse(&["one", "-x", "-r", "theirs"]).unwrap().strategy.as_deref(), Some("theirs"));
     assert_eq!(parse(&["**", "-x", "--manual"]).unwrap().pattern.as_deref(), Some("**"));
     assert_eq!(parse(&["-x", "-m", "msg"]).unwrap().message.as_deref(), Some("msg"));
+    assert!(!parse(&["--no-snap"]).unwrap().skip_install);
+    assert!(!parse(&[]).unwrap().skip_install);
 }
 
 #[test]
 fn rejects_everything_else() {
-    assert!(parse(&["--no-snap"]).is_none(), "without -x an install follows");
     assert!(parse(&["-x", "--no-snap", "-m", "msg"]).is_none());
     assert!(parse(&["-x", "--manual", "-r", "ours"]).is_none());
     assert!(parse(&["-x", "-r", "mine"]).is_none());

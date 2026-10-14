@@ -134,6 +134,7 @@ fn remove_workspace_package(importer: &mut Value, name: &str, own: bool) {
 
 /// `filterLockfileByImporters(lockfile, ids)` with the default options.
 fn filter(lockfile: Value, ids: Vec<String>) -> io::Result<Map<String, Value>> {
+    let snapshot_order = snapshot_order(&lockfile, &ids);
     let lockfile: Lockfile =
         serde_json::from_value(lockfile).map_err(|error| decline(format!("lockfile: {error}")))?;
     let options = FilterByImportersOptions {
@@ -149,10 +150,100 @@ fn filter(lockfile: Value, ids: Vec<String>) -> io::Result<Map<String, Value>> {
     let filtered = lockfile
         .filter_by_importers(ids, &options)
         .map_err(|error| decline(format!("lockfile: {error}")))?;
-    match serde_json::to_value(filtered).map_err(io::Error::other)? {
-        Value::Object(map) => Ok(map),
-        _ => Err(decline("lockfile shape")),
+    let Value::Object(mut map) = serde_json::to_value(filtered).map_err(io::Error::other)? else {
+        return Err(decline("lockfile shape"));
+    };
+    reorder_entries(
+        &mut map,
+        "packages",
+        snapshot_order
+            .iter()
+            .map(|id| pnpm_deps_path::remove_suffix(id).to_string()),
+    );
+    reorder_entries(&mut map, "snapshots", snapshot_order.into_iter());
+    Ok(map)
+}
+
+fn reorder_entries(map: &mut Map<String, Value>, field: &str, order: impl Iterator<Item = String>) {
+    let Some(Value::Object(entries)) = map.get_mut(field) else { return };
+    let mut ordered = Map::new();
+    for id in order {
+        if let Some(value) = entries.shift_remove(&id) {
+            ordered.insert(id, value);
+        }
     }
+    ordered.extend(std::mem::take(entries));
+    *entries = ordered;
+}
+
+/// pnpm's `lockfileWalker` visits importer dependencies in dev, runtime,
+/// optional order, marking each sibling before descending into its children.
+fn snapshot_order(lockfile: &Value, importers: &[String]) -> Vec<String> {
+    let snapshots = &lockfile["snapshots"];
+    let mut roots = Vec::new();
+    for importer in importers {
+        let entry = &lockfile["importers"][importer.as_str()];
+        roots.extend(importer_children(entry));
+    }
+    walk_snapshots(snapshots, roots)
+}
+
+fn importer_children(entry: &Value) -> Vec<String> {
+    ["devDependencies", "dependencies", "optionalDependencies"]
+        .into_iter()
+        .flat_map(|field| {
+            entry[field]
+                .as_object()
+                .into_iter()
+                .flat_map(|deps| deps.iter())
+        })
+        .filter_map(|(name, reference)| {
+            reference["version"]
+                .as_str()
+                .and_then(|version| convert::ref_to_relative(version, name))
+        })
+        .collect()
+}
+
+fn walk_snapshots(snapshots: &Value, roots: Vec<String>) -> Vec<String> {
+    let mut visited = HashSet::new();
+    let mut order = Vec::new();
+    let mut pending = vec![snapshot_siblings(snapshots, roots, &mut visited).into_iter()];
+    while let Some(siblings) = pending.last_mut() {
+        let Some(id) = siblings.next() else {
+            pending.pop();
+            continue;
+        };
+        order.push(id.clone());
+        let children = snapshot_children(&snapshots[&id]);
+        pending.push(snapshot_siblings(snapshots, children, &mut visited).into_iter());
+    }
+    order
+}
+
+fn snapshot_children(snapshot: &Value) -> Vec<String> {
+    ["dependencies", "optionalDependencies"]
+        .into_iter()
+        .flat_map(|field| {
+            snapshot[field]
+                .as_object()
+                .into_iter()
+                .flat_map(|deps| deps.iter())
+        })
+        .filter_map(|(name, reference)| {
+            reference.as_str().and_then(|reference| convert::ref_to_relative(reference, name))
+        })
+        .collect()
+}
+
+fn snapshot_siblings(
+    snapshots: &Value,
+    ids: Vec<String>,
+    visited: &mut HashSet<String>,
+) -> Vec<String> {
+    ids.into_iter()
+        .filter(|id| visited.insert(id.clone()) && snapshots.get(id).is_some())
+        .collect()
 }
 
 #[cfg(test)]

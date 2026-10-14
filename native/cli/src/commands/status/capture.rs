@@ -90,6 +90,8 @@ pub struct CaptureOptions {
     pub reset: bool,
     /// `dependencyCacheVersions`, by identity.
     pub cache_versions: HashMap<String, String>,
+    /// Recovery reset may prove a changed file from hashes when source parsing fails.
+    pub incomplete_reset: bool,
 }
 
 impl Capture {
@@ -149,6 +151,7 @@ pub fn capture_with(
             inventory: &inventory,
             facts: &mut facts,
             verify,
+            incomplete_reset: capture_options.incomplete_reset,
         };
         scan.target(target, &mut captured)?;
     }
@@ -164,6 +167,7 @@ struct Scan<'s> {
     /// Loaded on the first fresh detection: it may run Node once.
     facts: &'s mut Option<fresh::Facts>,
     verify: bool,
+    incomplete_reset: bool,
 }
 
 impl Scan<'_> {
@@ -182,7 +186,21 @@ impl Scan<'_> {
             self.cached(target, directory, &files, &policy)?
         };
         if dependencies.get("needsDetection") == Some(&Value::Bool(true)) {
-            let (detected, pending) = self.detect(target, &files, &policy)?;
+            let (detected, pending) = match self.detect(target, &files, &policy) {
+                Ok(value) => value,
+                Err(error)
+                    if self.incomplete_reset
+                        && error
+                            .to_string()
+                            .contains(
+                                "dependency graph extraction requires canonical fallback",
+                            ) =>
+                {
+                    record_incomplete_reset(target, directory, &files, captured)?;
+                    return Ok(());
+                }
+                Err(error) => return Err(error),
+            };
             dependencies = detected;
             captured.cache.pending.push(pending);
         } else if self.verify {
@@ -314,6 +332,24 @@ fn record(
             .cloned()
             .unwrap_or(Value::Null),
     });
+    Ok(())
+}
+
+fn record_incomplete_reset(
+    target: &Value,
+    directory: &str,
+    files: &[String],
+    captured: &mut Capture,
+) -> io::Result<()> {
+    let main_file = text(target.get("mainFile"))?;
+    captured.captured.push(json!({
+        "identity": target["identity"],
+        "version": target["version"],
+        "directory": directory,
+        "files": files,
+        "current": { "mainFile": main_file },
+        "peerDependencies": [],
+    }));
     Ok(())
 }
 

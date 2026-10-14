@@ -9,6 +9,7 @@ pub struct Options {
     pub strategy: Option<String>,
     pub message: Option<String>,
     pub verbose: bool,
+    pub skip_install: bool,
     /// The boolean flags, as given.
     flags: Vec<String>,
 }
@@ -33,8 +34,7 @@ pub fn parse(args: &[&str]) -> Option<Options> {
     let read = read(args)?;
     let [name, rest @ ..] = read.positionals.as_slice() else { return None };
     let pattern = read.pattern(rest)?;
-    if !read.has("--skip-dependency-installation") || !lane_name(name) || read.conflicting(pattern)
-    {
+    if !lane_name(name) || read.conflicting(pattern) {
         return None;
     }
     let strategy =
@@ -48,6 +48,7 @@ pub fn parse(args: &[&str]) -> Option<Options> {
         strategy: strategy.map(str::to_string),
         message: read.value("--message").map(str::to_string),
         verbose: read.has("--verbose"),
+        skip_install: read.has("--skip-dependency-installation"),
         flags: read.flags.clone(),
     })
 }

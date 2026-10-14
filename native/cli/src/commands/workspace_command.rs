@@ -241,7 +241,7 @@ pub fn execute_then(
 }
 
 /// `[options.to ?? '', ...model versions, ...orphaned versions]`.
-fn semver_values(to: Option<&str>, context: &Value) -> io::Result<Vec<String>> {
+pub(super) fn semver_values(to: Option<&str>, context: &Value) -> io::Result<Vec<String>> {
     let mut values = vec![to.unwrap_or_default().to_string()];
     for model in array(context.get("models"), "models")? {
         for field in ["versions", "orphanedVersions"] {
