@@ -52,6 +52,8 @@ export type SchemaConfig = {
   disabled?: boolean;
 };
 
+const getDefaultSchemas = () => Object.values(Schemas);
+
 /**
  * extension for extracting component schemas.
  */
@@ -495,7 +497,7 @@ export class SchemaMain {
       scope.registerOnCompAspectReCalc(async () => schema.calcSchemaData());
     }
     // register all default schema classes
-    schema.registerSchemaClasses(() => Object.values(Schemas));
+    schema.registerSchemaClasses(getDefaultSchemas);
 
     return schema;
   }

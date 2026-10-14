@@ -1930,9 +1930,6 @@ importers:
       read-pkg-up:
         specifier: 7.0.1
         version: 7.0.1
-      reflect-metadata:
-        specifier: 0.1.13
-        version: 0.1.13
       regenerator-runtime:
         specifier: 0.13.7
         version: 0.13.7
@@ -2186,6 +2183,9 @@ importers:
       '@types/react-router-dom':
         specifier: 5.3.3
         version: 5.3.3
+      reflect-metadata:
+        specifier: 0.1.13
+        version: 0.1.13
 
   components/bit/get-bit-version:
     dependencies:
@@ -19919,6 +19919,9 @@ importers:
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
+      reflect-metadata:
+        specifier: 0.1.13
+        version: 0.1.13
 
   scopes/harmony/bit:
     dependencies:
