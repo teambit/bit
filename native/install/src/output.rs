@@ -120,11 +120,17 @@ impl Output {
         format!("\u{1b}[{open}m{nested}\u{1b}[{close}m")
     }
 
-    /// `logger.setStatusLine(text)`: restart the loader with `text`.
+    /// `logger.setStatusLine(text)`: restart the loader with `text`; not on CI.
     pub fn status(&self, text: &str) {
         if self.ci {
             return;
         }
+        self.restart(text);
+    }
+
+    /// `loader.setTextAndRestart(text)`, which shows on CI too (the
+    /// `running command` line of `CommandRunner`).
+    pub fn restart(&self, text: &str) {
         self.stop();
         if !self.loader() {
             return;

@@ -212,7 +212,7 @@ pub fn execute_with(
     let chalk = Chalk::detect(args);
     let history = History::start(root, args);
     let output = loader_output(chalk);
-    output.status(&format!(r#"running command "{command}"..."#));
+    output.restart(&format!(r#"running command "{command}"..."#));
     if let Err(error) = work(&output) {
         output.stop();
         history.end(false);
@@ -292,7 +292,9 @@ fn loader_output(chalk: Chalk) -> Output {
         let _ = stdout.write_all(text.as_bytes());
         let _ = stdout.flush();
     });
-    Output::new(chalk.enabled(), interactive, !disabled, sink)
+    // `logger.setStatusLine` prints nothing while `process.env.CI` is set.
+    let ci = env::var_os("CI").is_some_and(|ci| !ci.is_empty());
+    Output::new(chalk.enabled(), interactive, !disabled, sink).with_ci(ci)
 }
 
 /// `runReportHandler`: the report and a newline; details are kept for `bit details`.

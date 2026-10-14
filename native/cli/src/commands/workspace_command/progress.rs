@@ -263,7 +263,8 @@ fn render_import(output: &Output, row: &Import) {
         .as_ref()
         .map_or_else(String::new, |reason| format!(" {reason}"));
     let message = format!("importing {ids}{reason}");
-    output.status(&message);
+    // `ObjectsFetcher` starts the loader itself, so its lines show on CI too.
+    output.restart(&message);
     if std::env::var_os("CI").is_none() {
         for downloaded in (100..=row.objects).step_by(100) {
             output.status(&format!("{message}. downloaded {downloaded} objects."));
@@ -274,7 +275,7 @@ fn render_import(output: &Output, row: &Import) {
     } else {
         format!("{} objects", row.objects)
     };
-    output.status(&format!("successfully imported {imported}{reason}"));
+    output.restart(&format!("successfully imported {imported}{reason}"));
 }
 
 /// `id.replace(/@[^@]+$/, '')`.

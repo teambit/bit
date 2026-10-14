@@ -75,10 +75,11 @@ fn declined(output: &Output, reason: &str) {
 fn other_flags_decline() {
     let dir = workspace();
     let root = dir.path().join("ws");
-    assert_eq!(stdout(&bit(&dir, &root, &["status"], &[])), r#"["status"]"#);
-    let output = bit(&dir, &root, &["s", "--json", "--strict"], &[]);
-    assert_eq!(stdout(&output), r#"["s","--json","--strict"]"#);
-    declined(&output, "only `--json`");
+    for args in [&["s", "--json", "--strict"][..], &["status", "--quick"], &["status", "-c"]] {
+        let output = bit(&dir, &root, args, &[]);
+        assert_eq!(stdout(&output), serde_json::to_string(args).unwrap());
+        declined(&output, "flags outside the native `status` grammar");
+    }
 }
 
 #[test]
@@ -121,12 +122,15 @@ fn configured_extensions_decline() {
 }
 
 /// Without the declines above, the fixture reaches fresh detection, which
-/// needs the Node.js CLI's package: the stub has none.
+/// needs the Node.js CLI's package: the stub has none. The report declines
+/// before printing anything, like `--json`.
 #[test]
 fn fresh_detection_needs_the_node_cli_package() {
     let dir = workspace();
     let root = dir.path().join("ws");
-    let output = bit(&dir, &root, &["status", "--json"], &[]);
-    assert_eq!(stdout(&output), r#"["status","--json"]"#);
-    declined(&output, "needs the Node.js CLI's own Node");
+    for args in [&["status", "--json"][..], &["status"], &["s", "-w", "--strict"]] {
+        let output = bit(&dir, &root, args, &[]);
+        assert_eq!(stdout(&output), serde_json::to_string(args).unwrap());
+        declined(&output, "needs the Node.js CLI's own Node");
+    }
 }

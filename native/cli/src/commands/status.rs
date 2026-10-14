@@ -2,6 +2,7 @@
 //! `captureRustClientCurrent` in the Node.js glue: the workspace engine of
 //! `bit-object-import` reads the workspace, models and dependency caches;
 //! this module computes the policy, ignore and semver inputs Node computed.
+//! Without `--json`, `report` formats the same result like `StatusCmd.report`.
 //!
 //! It runs only on a warm dependency cache. A component whose dependencies
 //! need fresh detection, an invalidated cache, the `no-fs-cache` feature,
@@ -18,8 +19,9 @@ pub(super) mod js;
 pub(super) mod policy;
 
 pub(super) mod collate;
+mod report;
 
-use super::engine::Engine;
+use super::{color::Chalk, engine::Engine, workspace_command};
 use crate::{commands::Command, history::History, native::Outcome, workspace};
 use issues::Component;
 use js::{array, decline, text};
@@ -34,10 +36,24 @@ use std::{
 
 pub const COMMAND: Command = Command { name: "status", aliases: &["s"], run };
 
-fn run(args: &[OsString]) -> io::Result<Outcome> {
-    if !matches!(args, [_, flag] if flag == "--json" || flag == "-j") {
-        return Ok(Outcome::Declined("only `--json` runs natively".to_string()));
+/// `--json`, or the report with its flags.
+enum Mode {
+    Json,
+    Report(report::Flags),
+}
+
+fn mode(args: &[OsString]) -> Option<Mode> {
+    if matches!(args, [_, flag] if flag == "--json" || flag == "-j") {
+        return Some(Mode::Json);
     }
+    let arguments = workspace_command::utf8_args(args)?;
+    report::parse(&arguments[1..]).map(Mode::Report)
+}
+
+fn run(args: &[OsString]) -> io::Result<Outcome> {
+    let Some(mode) = mode(args) else {
+        return Ok(Outcome::Declined("flags outside the native `status` grammar".to_string()));
+    };
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".to_string()));
     };
@@ -45,11 +61,19 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         return Ok(Outcome::Declined("the locale may collate ids differently".to_string()));
     }
     let home = env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).unwrap_or_default();
-    let result = match read(&root, Path::new(&home)) {
-        Ok(result) => result,
+    match mode {
+        Mode::Json => json_status(&root, Path::new(&home), args),
+        Mode::Report(flags) => report_status(&root, Path::new(&home), args, &flags),
+    }
+}
+
+/// `bit status --json`.
+fn json_status(root: &Path, home: &Path, args: &[OsString]) -> io::Result<Outcome> {
+    let result = match read(root, home, |_, _| Ok(())) {
+        Ok((result, ())) => result,
         Err(error) => return Ok(Outcome::Declined(format!("status: {error}"))),
     };
-    let history = History::start(&root, args);
+    let history = History::start(root, args);
     let mut stdout = io::stdout().lock();
     stdout.write_all(serde_json::to_string_pretty(&result)?.as_bytes())?;
     stdout.flush()?;
@@ -57,8 +81,45 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
-/// `readRustStatus`: the status result, after its history plans are committed.
-fn read(root: &Path, home: &Path) -> io::Result<Value> {
+/// `StatusCmd.report`: the loader's lines, then the formatted status.
+fn report_status(
+    root: &Path,
+    home: &Path,
+    args: &[OsString],
+    flags: &report::Flags,
+) -> io::Result<Outcome> {
+    let chalk = Chalk::detect(args);
+    let read = read(root, home, |result, context| {
+        let output = report::report(result, context, flags, chalk)?;
+        let loaded = array(context.get("targets"), "targets")?.len();
+        let modified = !array(result.get("modifiedComponents"), "modified")?.is_empty();
+        Ok((output, loaded, modified))
+    });
+    let (output, loaded, modified) = match read {
+        Ok((_, prepared)) => prepared,
+        Err(error) => return Ok(Outcome::Declined(format!("status: {error}"))),
+    };
+    let report =
+        workspace_command::results::Report { data: output.data, code: output.code, details: None };
+    workspace_command::execute_with(root, args, "status", &report, |loader| {
+        loader.status("fetching status");
+        // `getMany` of the workspace: listing, new and modified components,
+        // and the auto-tag check once a component is modified.
+        let loads = if loaded == 0 { 0 } else { 3 + usize::from(modified) };
+        for _ in 0..loads {
+            loader.status(&format!("loading {loaded} component(s)"));
+        }
+        Ok(())
+    })
+}
+
+/// `readRustStatus`: the status result, after its history plans are
+/// committed. `prepare` runs on the result and the context before the commit.
+fn read<Prepared>(
+    root: &Path,
+    home: &Path,
+    prepare: impl FnOnce(&Value, &Value) -> io::Result<Prepared>,
+) -> io::Result<(Value, Prepared)> {
     if cache::no_fs_cache(root) {
         return Err(decline("no-fs-cache may be enabled"));
     }
@@ -89,8 +150,9 @@ fn read(root: &Path, home: &Path) -> io::Result<Value> {
         "semver": semver,
     }))?;
     sort_rows(&mut result)?;
+    let prepared = prepare(&result, &context)?;
     capture::commit(&mut engine, root, &context, &capture)?;
-    Ok(result)
+    Ok((result, prepared))
 }
 
 /// The rows `statusResult` reports, one per bitmap target.
