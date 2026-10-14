@@ -107,12 +107,27 @@ pub(in crate::workspace::engine) fn prepare(
     Ok((count, receipt))
 }
 
-/// Public `fetch <scope>/<lane> --lanes` for configured file scopes. The
+/// Public `fetch <scope>/<lane> --lanes` for configured scopes. The
 /// existing lane importer owns component closure and remote refs without
 /// publishing the Lane object into the local index.
 fn prepare_lanes(input: &Prepare, state: &mut State) -> io::Result<(usize, Value)> {
-    let mut import = command_import::prepare_lane(&input.root, &input.global_remotes_file)?;
-    let targets = fetch_lane_targets(&mut import, &input.ids[0])?;
+    let (scope, name) = input.ids[0].split_once('/').ok_or_else(|| invalid("inbound lane ID"))?;
+    let id = lane::Id { scope: scope.to_owned(), name: name.to_owned() };
+    id.validate()?;
+    if id.is_main() {
+        return Err(invalid("inbound main lane requires canonical fetch"));
+    }
+    let virtual_remote = remote::lane_objects(input, &id)?;
+    let mut import = if let Some((ref remote, _)) = virtual_remote {
+        command_import::prepare_lane_with_virtual(&input.root, &input.global_remotes_file, remote)?
+    } else {
+        command_import::prepare_lane(&input.root, &input.global_remotes_file)?
+    };
+    let targets = fetch_lane_targets(
+        &mut import,
+        &id,
+        virtual_remote.as_ref().map(|(_, hash)| hash.as_str()),
+    )?;
     append_lane_dependency_progress(&input.root, &mut import, &targets)?;
     state.sequence = state.sequence.wrapping_add(1);
     let token = format!("inbound-{}", state.sequence);
@@ -125,18 +140,13 @@ fn prepare_lanes(input: &Prepare, state: &mut State) -> io::Result<(usize, Value
 
 fn fetch_lane_targets(
     import: &mut command_import::PreparedImport,
-    text: &str,
+    id: &lane::Id,
+    hash: Option<&str>,
 ) -> io::Result<Vec<Target>> {
-    let (scope, name) = text.split_once('/').ok_or_else(|| invalid("inbound lane ID"))?;
-    let id = lane::Id { scope: scope.to_owned(), name: name.to_owned() };
-    id.validate()?;
-    if id.is_main() {
-        return Err(invalid("inbound main lane requires canonical fetch"));
-    }
-    let record = import.fetch_lane_contents(&id)?;
+    let record = import.fetch_lane_contents_at_hash(id, hash)?;
     import.retain_remote_lane_refs(&record)?;
     if let Some(progress) = import.progress.last_mut() {
-        progress.reason = Some(format!("of their latest on lane {scope}/{name}"));
+        progress.reason = Some(format!("of their latest on lane {}/{}", id.scope, id.name));
     }
     lane::entries(&record.value)?
         .into_iter()

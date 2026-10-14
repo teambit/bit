@@ -28,13 +28,11 @@ const scenarios = [
     name: 'fetch-lane-selected',
     args: ['fetch', 'qualification.alpha/feature', '--lanes'],
     fresh: true,
-    fileOnly: true,
   },
   {
     name: 'fetch-lane-repeat',
     args: ['fetch', 'qualification.alpha/feature', '--lanes'],
     fresh: true,
-    fileOnly: true,
     setup: 'prefetched-lane',
     allowsNoObjects: true,
   },
@@ -338,7 +336,6 @@ async function run(cli, helper, reportFile, options = {}) {
       const remotes = transport === 'http' ? httpRemotes : fileRemotes;
       for (const mode of modes) {
         for (const scenario of selected) {
-          if (scenario.fileOnly && transport !== 'file') continue;
           const directory = path.join(temporary, `${transport}-${mode}-${scenario.name}`);
           const beforeBase = await cloneInboundScenario(producer, directory, scenario, remotes, runCommand);
           const before = { ...beforeBase, ...(await captureStorage(cli, directory, beforeBase)) };

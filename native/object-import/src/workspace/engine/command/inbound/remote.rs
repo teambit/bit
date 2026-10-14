@@ -1,5 +1,6 @@
 //! Bounded HTTP scope acquisition. File scopes stay in the deferred importer.
 use super::{Prepare, Target, VirtualRemote, identity, invalid};
+use crate::command_import::lane;
 use bit_client_transfer::{
     GlobalConfig,
     fetch::{self, FetchOptions},
@@ -18,7 +19,28 @@ use std::{
 
 const MAX_INBOUND_BYTES: usize = 96 * 1024 * 1024;
 
-pub(super) fn objects(input: &Prepare, targets: &[Target]) -> io::Result<Vec<VirtualRemote>> {
+/// Retain an HTTP lane and its component closure before the import owner
+/// publishes anything. File remotes continue through the deferred importer.
+pub(super) fn lane_objects(
+    input: &Prepare,
+    id: &lane::Id,
+) -> io::Result<Option<(VirtualRemote, String)>> {
+    id.validate()?;
+    let (remotes, network, _, _) = connection(input)?;
+    let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
+    runtime.block_on(async {
+        let Remote::Http(url) = remotes.resolve(&id.scope, &network).await? else {
+            return Ok(None);
+        };
+        let (items, hash) = fetch_lane(&network, &url, id).await?;
+        let (mut remotes, _) =
+            collect((Vec::new(), 0), &input.root, id.scope.clone(), Some(items))?;
+        let remote = remotes.pop().ok_or_else(|| invalid("inbound lane remote"))?;
+        Ok(Some((remote, hash)))
+    })
+}
+
+fn connection(input: &Prepare) -> io::Result<(Remotes, Network, GlobalConfig, String)> {
     let scope: Value = serde_json::from_slice(&fs::read(input.root.join(".bit/scope.json"))?)
         .map_err(io::Error::other)?;
     let local = scope["name"].as_str().ok_or_else(|| invalid("inbound local scope"))?;
@@ -38,7 +60,70 @@ pub(super) fn objects(input: &Prepare, targets: &[Target]) -> io::Result<Vec<Vir
         Some(local),
         input.transport.token.as_deref(),
     )?;
-    let groups = group_targets(targets, local)?;
+    Ok((remotes, network, global, local.to_owned()))
+}
+
+async fn fetch_lane(
+    network: &Network,
+    url: &str,
+    id: &lane::Id,
+) -> io::Result<(Vec<ObjectItem>, String)> {
+    let lane_id = format!("{}/{}", id.scope, id.name);
+    let mut items = network.fetch_bounded(
+        url,
+        std::slice::from_ref(&lane_id),
+        &FetchOptions::lanes(),
+        MAX_INBOUND_BYTES,
+    )
+    .await?;
+    let (hash, components) = lane_targets(id, &items)?;
+    if !components.is_empty() {
+        let mut more = network.fetch_bounded(
+            url,
+            &components,
+            &FetchOptions::with_dependencies(Some(lane_id), false),
+            MAX_INBOUND_BYTES,
+        )
+        .await?;
+        items.append(&mut more);
+    }
+    Ok((items, hash))
+}
+
+fn lane_targets(id: &lane::Id, items: &[ObjectItem]) -> io::Result<(String, Vec<String>)> {
+    let mut selected = None;
+    for item in items {
+        let raw = crate::checkout::repository::inflate(&item.compressed, 32 * 1024 * 1024)?;
+        if !raw.starts_with(b"Lane ") {
+            continue;
+        }
+        let (_, body) = crate::checkout::repository::split(
+            &raw,
+            crate::merge_history::hash(&item.hash)?,
+            "Lane",
+        )?;
+        let value: Value = serde_json::from_slice(body).map_err(io::Error::other)?;
+        if value["scope"] != id.scope || value["name"] != id.name || selected.is_some() {
+            return Err(invalid("inbound HTTP Lane identity"));
+        }
+        let entries = lane::entries(&value)?;
+        if entries.len() > 4096 {
+            return Err(invalid("inbound HTTP Lane component limit"));
+        }
+        selected = Some((
+            item.hash.clone(),
+            entries
+                .into_iter()
+                .map(|entry| format!("{}@{}", entry.identity, entry.head))
+                .collect(),
+        ));
+    }
+    selected.ok_or_else(|| invalid("inbound HTTP Lane missing"))
+}
+
+pub(super) fn objects(input: &Prepare, targets: &[Target]) -> io::Result<Vec<VirtualRemote>> {
+    let (remotes, network, global, local) = connection(input)?;
+    let groups = group_targets(targets, &local)?;
     let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
     runtime.block_on(fetch_groups(
         input,

@@ -82,11 +82,9 @@ async function benchmark(cli, helper, reportFile, options = {}) {
     'qualified artifacts differ from timed inputs'
   );
   const required = new Set(
-    scenarios.flatMap(({ name, fileOnly }) =>
+    scenarios.flatMap(({ name }) =>
       ['file', 'http'].flatMap((transport) =>
-        fileOnly && transport !== 'file'
-          ? []
-          : ['node', 'native', 'missing-helper', 'crashed-helper'].map((mode) => `${transport}/${mode}/${name}`)
+        ['node', 'native', 'missing-helper', 'crashed-helper'].map((mode) => `${transport}/${mode}/${name}`)
       )
     )
   );
@@ -168,7 +166,6 @@ async function benchmark(cli, helper, reportFile, options = {}) {
       return env;
     }
     for (const scenario of scenarios) {
-      if (scenario.fileOnly && transport !== 'file') continue;
       const durations = { node: [], native: [] };
       for (let round = -1; round < rounds; round += 1) {
         const order = round % 2 === 0 ? ['node', 'native'] : ['native', 'node'];

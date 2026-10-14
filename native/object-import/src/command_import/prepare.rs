@@ -171,6 +171,16 @@ pub(crate) fn prepare_lane(root: &Path, global_remotes_file: &Path) -> io::Resul
     configure_cached(&mut plan, root, global_remotes_file)?;
     Ok(plan)
 }
+pub(crate) fn prepare_lane_with_virtual(
+    root: &Path,
+    global_remotes_file: &Path,
+    remote: &VirtualRemote,
+) -> io::Result<PreparedImport> {
+    let mut plan = prepare_lane(root, global_remotes_file)?;
+    plan.virtual_remote(&remote.scope, remote.path.clone(), &remote.objects)?;
+    plan.validate()?;
+    Ok(plan)
+}
 fn configure_cached(
     plan: &mut PreparedImport,
     root: &Path,

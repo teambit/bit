@@ -88,10 +88,22 @@ impl PreparedImport {
     }
     /// Capture a remote Lane and its component closure without publishing either.
     pub(crate) fn fetch_lane_contents(&mut self, id: &Id) -> io::Result<Record> {
+        self.fetch_lane_contents_at_hash(id, None)
+    }
+    pub(crate) fn fetch_lane_contents_at_hash(
+        &mut self,
+        id: &Id,
+        supplied_hash: Option<&str>,
+    ) -> io::Result<Record> {
         id.validate()?;
         let remotes = self.environment.remotes.clone();
         let directory = remote(self, &remotes, &id.scope)?;
-        let hash = remote_lane_hash(self, &directory, id)?;
+        let hash = if let Some(hash) = supplied_hash {
+            crate::merge_history::hash(hash)?;
+            hash.to_owned()
+        } else {
+            remote_lane_hash(self, &directory, id)?
+        };
         let record = self.capture
             .object(&directory, &hash, "Lane")?
             .ok_or_else(|| invalid("remote Lane missing"))?;
