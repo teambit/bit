@@ -87,6 +87,7 @@ pub(in crate::workspace::engine::command) fn prepare(
         let hash = allocation["hash"].as_str().unwrap();
         let mut version = metadata::version(input, receipt, message)?;
         sources::prepare(root, input, hash, &mut version, &mut objects, &mut proofs, &budget)?;
+        sources::dependencies_graph(allocation, &mut version, &mut objects)?;
         objects.push(metadata::object("Version", Some(hash), version.clone())?);
         objects.push(metadata::object("Component", None, metadata::snapshot_model(input, hash)?)?);
         versions.push(json!({"identity":input.identity,"hash":hash,"version":version}));

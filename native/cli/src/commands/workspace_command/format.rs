@@ -17,6 +17,11 @@ impl Formatter {
     }
 
     /// `warnSymbol`.
+    /// `errorSymbol`.
+    pub fn error_symbol(&self) -> String {
+        self.chalk.red("\u{2716}")
+    }
+
     pub fn warn_symbol(&self) -> String {
         self.chalk.yellow("\u{26A0}")
     }

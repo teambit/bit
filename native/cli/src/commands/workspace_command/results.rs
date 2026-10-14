@@ -2,6 +2,8 @@
 //! (`hydrateRustWorkspaceCommand`), and the `merge-output` helpers of
 //! `@teambit/component.modules.merge-helper` that checkout and merge share.
 
+mod snaps;
+
 use super::format::Formatter;
 use crate::commands::{
     color::Chalk,
@@ -93,6 +95,10 @@ pub struct Results {
     pub removed: Vec<Id>,
     pub added: Vec<Id>,
     pub conflicts: bool,
+    /// `mergeSnapResults`.
+    pub snaps: Option<snaps::Snaps>,
+    /// `mergeSnapError`.
+    pub snap_error: Option<snaps::SnapError>,
 }
 
 /// `hydrateRustWorkspaceCommand`: the engine's result, validated.
@@ -103,9 +109,6 @@ pub fn hydrate(value: &Value) -> io::Result<Results> {
         .any(|key| !RESULT_KEYS.contains(&key.as_str()))
     {
         return Err(decline("native command report shape"));
-    }
-    if map.contains_key("mergeSnapResults") || map.contains_key("mergeSnapError") {
-        return Err(decline("native checkout report with merge snapshots"));
     }
     let version = match map.get("version") {
         None => None,
@@ -129,10 +132,12 @@ pub fn hydrate(value: &Value) -> io::Result<Results> {
         removed: ids(map.get("removedComponents"))?,
         added: ids(map.get("addedComponents"))?,
         conflicts,
+        snaps: snaps::snaps(map.get("mergeSnapResults"))?,
+        snap_error: snaps::snap_error(map.get("mergeSnapError"))?,
     })
 }
 
-fn rows(value: Option<&Value>) -> io::Result<&[Value]> {
+pub(super) fn rows(value: Option<&Value>) -> io::Result<&[Value]> {
     let rows = array(value, "native command report rows")?;
     if rows.len() > 4096 {
         return Err(decline("native command report rows"));
@@ -178,6 +183,11 @@ fn skipped(row: &Value) -> io::Result<(Id, String)> {
 }
 
 impl Results {
+    /// `Total Snapped`: the snapped and auto-snapped components.
+    pub fn snapped_count(&self) -> usize {
+        self.snaps.as_ref().map_or(0, snaps::Snaps::count)
+    }
+
     /// `applyVersionReport(components, addName, showVersion)`.
     pub fn apply_version_report(
         &self,

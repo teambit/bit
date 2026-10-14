@@ -14,6 +14,11 @@ use std::io;
 /// `formatRustWorkspaceCommand(result, options)` for checkout.
 pub fn format(result: &Value, options: &Options, chalk: Chalk) -> io::Result<Report> {
     let results = hydrate(result)?;
+    if results.snaps.is_some() || results.snap_error.is_some() {
+        return Err(crate::commands::status::js::decline(
+            "native checkout report with merge snapshots",
+        ));
+    }
     let report = Checkout { results: &results, options, format: Formatter::new(chalk) };
     let skipped = !results.skipped.is_empty() && options.report_all() && !options.verbose;
     let data = report.build(&report.skipped_minimal());

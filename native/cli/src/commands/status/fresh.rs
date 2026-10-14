@@ -30,6 +30,7 @@ const CORE_ASPECT_IDS: &str =
     include_str!("../../../../../scopes/harmony/bit/core-aspect-ids.json");
 
 /// A detection whose cache entry is written once the whole command succeeded.
+#[derive(Clone)]
 pub struct Pending {
     identity: String,
     raw_data: String,
@@ -53,6 +54,11 @@ impl Pending {
             cacheable,
             read_set: read_set.clone(),
         })
+    }
+
+    /// The same entry under another identity.
+    pub fn renamed(&self, identity: String) -> Self {
+        Self { identity, ..self.clone() }
     }
 
     /// `<id>@<version>`.
@@ -188,7 +194,7 @@ impl Detection<'_> {
 pub fn commit(
     engine: &mut Engine,
     root: &Path,
-    pending: &[&Pending],
+    pending: &[Pending],
     reset: bool,
 ) -> io::Result<()> {
     for entry in pending {

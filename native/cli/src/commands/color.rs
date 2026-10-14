@@ -16,6 +16,7 @@ const GREEN: Style = Style("\u{1b}[32m", "\u{1b}[39m");
 const YELLOW: Style = Style("\u{1b}[33m", "\u{1b}[39m");
 const CYAN: Style = Style("\u{1b}[36m", "\u{1b}[39m");
 const WHITE: Style = Style("\u{1b}[37m", "\u{1b}[39m");
+const UNDERLINE: Style = Style("\u{1b}[4m", "\u{1b}[24m");
 const BOLD: Style = Style("\u{1b}[1m", "\u{1b}[22m");
 const DIM: Style = Style("\u{1b}[2m", "\u{1b}[22m");
 
@@ -65,6 +66,10 @@ impl Chalk {
 
     pub fn bold(self, text: &str) -> String {
         self.apply(&[BOLD], text)
+    }
+
+    pub fn underline(self, text: &str) -> String {
+        self.apply(&[UNDERLINE], text)
     }
 
     /// `chalk.bold.white`.

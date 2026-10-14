@@ -15,6 +15,7 @@ const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 const SPACE: &str = "          ";
 
 /// One captured component: its full identity and its detection results.
+#[derive(Clone)]
 pub struct Component {
     pub identity: String,
     pub package_name: String,

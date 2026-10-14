@@ -13,12 +13,14 @@ pub mod results;
 
 mod defaults;
 mod policy;
+mod snapshot;
 
 use super::{
     color::Chalk,
     engine::Engine,
     status::{
-        cache, capture,
+        cache,
+        capture::{self, Capture},
         fresh::dependency_grammar,
         grammar,
         js::{array, decline, object, text, truthy},
@@ -68,14 +70,8 @@ pub fn plan(root: &Path, request: &Request<'_>) -> io::Result<Planned> {
     let home = home();
     let mut engine = Engine::new()?;
     let (token, context, targets) = prepare(&mut engine, root, &home, request)?;
-    let mut capture = capture::capture_verified(
-        &mut engine,
-        root,
-        &home,
-        &context,
-        &targets,
-        request.verify_fresh,
-    )?;
+    let verified = capture::CaptureOptions { verify: request.verify_fresh, ..Default::default() };
+    let capture = capture::capture_with(&mut engine, root, &home, &context, &targets, verified)?;
     let semver = grammar::snapshot(semver_values(request.to, &context)?.iter().map(String::as_str))
         .ok_or_else(|| decline("semver grammar limits"))?;
     let mut plan: Value = engine.request(&json!({
@@ -88,20 +84,51 @@ pub fn plan(root: &Path, request: &Request<'_>) -> io::Result<Planned> {
     if plan.get("token").and_then(Value::as_str) != Some(token.as_str()) {
         return Err(decline("command plan token"));
     }
-    if plan.get("policyPreparation").is_some() && request.operation == "merge" {
-        let steps = policy::Steps {
-            engine: &mut engine,
-            root,
-            home: &home,
-            token: &token,
-            context: &context,
-        };
-        let prepared = steps.prepare(plan, &capture)?;
-        plan = prepared.plan;
-        capture.replacements = prepared.caches;
-    }
-    accept_plan(&plan)?;
+    let mut steps =
+        Steps { engine: &mut engine, root, home: &home, token: &token, context: &context };
+    let capture = steps.stages(&mut plan, capture, request)?;
     Ok(Planned { engine, token, context, capture, plan })
+}
+
+/// What the steps after `commandPlan` share.
+struct Steps<'s> {
+    engine: &'s mut Engine,
+    root: &'s Path,
+    home: &'s Path,
+    token: &'s str,
+    context: &'s Value,
+}
+
+impl Steps<'_> {
+    /// The policy and snapshot steps the plan asks for; a lane step declines.
+    fn stages(
+        &mut self,
+        plan: &mut Value,
+        capture: Capture,
+        request: &Request<'_>,
+    ) -> io::Result<Capture> {
+        let mut caches = Vec::new();
+        if plan.get("policyPreparation").is_some() {
+            if request.operation != "merge" {
+                return Err(decline("the plan needs the policyPreparation step"));
+            }
+            let prepared = self.prepare_policy(plan.take(), &capture)?;
+            *plan = prepared.plan;
+            caches = prepared.caches;
+        }
+        let snap_failed = plan.get("snapFailed") == Some(&Value::Bool(true));
+        let mut capture = if plan.get("needsSnap").is_some() || snap_failed {
+            self.prepare_snapshot(plan, &caches, request)?
+        } else {
+            capture
+        };
+        if plan.get("lanePreparation").is_some() {
+            return Err(decline("the plan needs the lanePreparation step"));
+        }
+        capture.cache.replacements = caches;
+        capture.cache.replacements_only = snap_failed;
+        Ok(capture)
+    }
 }
 
 /// The user's home directory, as Node's `os.homedir()` reads it.
@@ -169,21 +196,6 @@ pub fn execute(
     print(report, command)?;
     history.end(report.code == 0);
     Ok(Outcome::Exit(ExitCode::from(u8::try_from(report.code).unwrap_or(1))))
-}
-
-/// A plan that applies without a snapshot or lane step.
-fn accept_plan(plan: &Value) -> io::Result<()> {
-    let staged = ["policyPreparation", "needsSnap", "lanePreparation"];
-    if let Some(key) = staged
-        .iter()
-        .find(|key| plan.get(**key).is_some())
-    {
-        return Err(decline(format!("the plan needs the {key} step")));
-    }
-    if truthy(plan.get("snapFailed")) {
-        return Err(decline("the plan needs the snapFailed step"));
-    }
-    Ok(())
 }
 
 /// `[options.to ?? '', ...model versions, ...orphaned versions]`.

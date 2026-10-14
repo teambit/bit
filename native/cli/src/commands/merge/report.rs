@@ -1,7 +1,8 @@
 //! The merge report: `mergeReport` of `@teambit/merging`, with the fields
 //! the glue forwards for `bit merge` (`MergeCmd`'s projection): components,
-//! skipped components, the version and `verbose`. Removed components and
-//! unresolved conflicts are not forwarded, so their sections stay empty.
+//! skipped components, the version, the snapshot results and `verbose`.
+//! Removed components and unresolved conflicts are not forwarded, so their
+//! sections stay empty.
 
 use super::options::Options;
 use crate::commands::{
@@ -44,6 +45,7 @@ impl Merge<'_> {
             self.success(),
             self.skipped_removed(),
             skipped.to_string(),
+            self.snaps(),
             self.summary(),
         ])
     }
@@ -107,6 +109,16 @@ impl Merge<'_> {
         self.format.section("merge skipped", "", &items)
     }
 
+    /// `getSnapsOutput`.
+    fn snaps(&self) -> String {
+        if let Some(error) = &self.results.snap_error {
+            return error.section(&self.format);
+        }
+        self.results.snaps
+            .as_ref()
+            .map_or_else(String::new, |snaps| snaps.section(&self.format))
+    }
+
     /// `getSummary`.
     fn summary(&self) -> String {
         let bold = |text: &str| self.chalk().bold(text);
@@ -116,7 +128,7 @@ impl Merge<'_> {
             self.format.title("Merge Summary"),
             bold(&self.results.components.len().to_string()),
             bold(&self.results.skipped.len().to_string()),
-            bold("0"),
+            bold(&self.results.snapped_count().to_string()),
             bold("0"),
             bold("none"),
         )

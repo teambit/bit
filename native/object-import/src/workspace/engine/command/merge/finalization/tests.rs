@@ -301,3 +301,37 @@ fn tag_package_and_staged_config_use_semver_while_staged_snaps_use_object_hash()
     assert_eq!(bytes(".bit/staged-snaps"), hash.as_bytes());
     assert!(!directory.0.join(".bit/staged-snaps").exists());
 }
+#[cfg(unix)]
+#[test]
+fn env_root_packages_linked_into_the_pnpm_store_are_written_through_the_link() {
+    let directory = Directory::create().unwrap();
+    let root = &directory.0;
+    let store = root.join("node_modules/.pnpm/@scope+alpha@file+alpha/node_modules/@scope/alpha");
+    fs::create_dir_all(&store).unwrap();
+    let link = root.join("node_modules/.bit_roots/teambit.harmony_node/node_modules/@scope/alpha");
+    fs::create_dir_all(link.parent().unwrap()).unwrap();
+    std::os::unix::fs::symlink(
+        "../../../../.pnpm/@scope+alpha@file+alpha/node_modules/@scope/alpha",
+        &link,
+    )
+    .unwrap();
+    let mut output = super::Prepared {
+        proofs: Vec::new(),
+        writes: Vec::new(),
+        links: Vec::new(),
+        copies: Vec::new(),
+    };
+    let resolved = super::packages::injected(root, &link, &mut output).unwrap();
+    assert_eq!(
+        resolved,
+        root.join("node_modules/.pnpm").join("@scope+alpha@file+alpha/node_modules/@scope/alpha"),
+    );
+    assert_eq!(output.proofs.len(), 1);
+    let plain = root.join("node_modules/@scope/alpha");
+    assert_eq!(super::packages::injected(root, &plain, &mut output).unwrap(), plain);
+    let outside =
+        root.join("node_modules/.bit_roots/teambit.harmony_node/node_modules/@scope/beta");
+    std::os::unix::fs::symlink(root.join("alpha"), &outside).unwrap();
+    fs::create_dir_all(root.join("alpha")).unwrap();
+    assert!(super::packages::injected(root, &outside, &mut output).is_err());
+}

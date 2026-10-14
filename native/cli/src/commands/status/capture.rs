@@ -21,22 +21,76 @@ pub struct Capture {
     pub captured: Vec<Value>,
     pub comparisons: Vec<Value>,
     pub components: Vec<Component>,
+    /// `retainDependencyState`: each target's dependency state, by identity.
+    pub dependency_states: HashMap<String, Value>,
+    /// What the commit writes to the dependency cache.
+    pub cache: CacheWrites,
+}
+
+/// The dependency cache entries a capture's commit writes.
+#[derive(Default)]
+pub struct CacheWrites {
     /// Fresh detections whose cache entries are written on commit.
     pending: Vec<fresh::Pending>,
     /// `dependencyCacheNeedsInvalidation`: every nested component is detected
     /// afresh and the whole cache is replaced on commit.
     reset: bool,
-    /// `retainDependencyState`: each target's dependency state, by identity.
-    pub dependency_states: HashMap<String, Value>,
     /// Cache entries the command computed for a projected version; they
     /// replace the pending entries of the same component.
     pub replacements: Vec<fresh::Pending>,
+    /// Only the replacements are written: a merge whose snap failed.
+    pub replacements_only: bool,
+    /// `dependencyCacheVersions`: the version a pending entry is written under.
+    versions: HashMap<String, String>,
+}
+
+impl CacheWrites {
+    fn is_empty(&self) -> bool {
+        self.pending.is_empty() && self.replacements.is_empty() && !self.reset
+    }
+
+    /// The pending entries under their written versions, unless replaced,
+    /// then the replacements.
+    fn entries(&self) -> Vec<fresh::Pending> {
+        let replaced: Vec<&str> = self.replacements
+            .iter()
+            .map(|entry| base_identity(entry.identity()))
+            .collect();
+        let pending = self.pending
+            .iter()
+            .filter(|_| !self.replacements_only)
+            .map(|entry| {
+                let identity = base_identity(entry.identity());
+                self.versions
+                    .get(identity)
+                    .map_or_else(
+                        || entry.clone(),
+                        |version| entry.renamed(format!("{identity}@{version}")),
+                    )
+            });
+        pending
+            .filter(|entry| !replaced.contains(&base_identity(entry.identity())))
+            .chain(self.replacements.iter().cloned())
+            .collect()
+    }
+}
+
+/// The `captureOptions` of the write commands.
+#[derive(Default)]
+pub struct CaptureOptions {
+    /// `verifyFreshDependencies`: cached dependencies are detected again,
+    /// and any difference declines.
+    pub verify: bool,
+    /// `resetDependencyCache`: the whole cache is replaced on commit.
+    pub reset: bool,
+    /// `dependencyCacheVersions`, by identity.
+    pub cache_versions: HashMap<String, String>,
 }
 
 impl Capture {
     /// `capture.dependencyReadSet`: the read sets of every fresh detection.
     pub fn dependency_read_set(&self) -> Vec<Value> {
-        self.pending
+        self.cache.pending
             .iter()
             .flat_map(|entry| entry.read_set().iter().cloned())
             .collect()
@@ -52,31 +106,33 @@ pub fn capture(
     context: &Value,
     targets: &[Value],
 ) -> io::Result<Capture> {
-    capture_verified(engine, root, home, context, targets, false)
+    capture_with(engine, root, home, context, targets, CaptureOptions::default())
 }
 
-/// `captureRustClientCurrent` with `verifyFreshDependencies`: with `verify`,
-/// cached dependencies are detected again, and any difference declines.
-pub fn capture_verified(
+/// `captureRustClientCurrent` with the write commands' `captureOptions`.
+pub fn capture_with(
     engine: &mut Engine,
     root: &Path,
     home: &Path,
     context: &Value,
     targets: &[Value],
-    verify: bool,
+    capture_options: CaptureOptions,
 ) -> io::Result<Capture> {
     let options: Options =
         serde_json::from_value(context["options"].clone()).map_err(io::Error::other)?;
     let inventory = Inventory::new(&options)?;
-    let reset = !targets.is_empty() && cache::needs_invalidation(root)?;
+    let reset = !targets.is_empty() && (capture_options.reset || cache::needs_invalidation(root)?);
+    let verify = capture_options.verify;
     let mut captured = Capture {
         captured: Vec::new(),
         comparisons: Vec::new(),
         components: Vec::new(),
-        pending: Vec::new(),
-        reset,
         dependency_states: HashMap::new(),
-        replacements: Vec::new(),
+        cache: CacheWrites {
+            reset,
+            versions: capture_options.cache_versions,
+            ..CacheWrites::default()
+        },
     };
     let mut facts = None;
     for target in targets {
@@ -115,7 +171,7 @@ impl Scan<'_> {
         if !main_file.is_some_and(|main| files.iter().any(|file| file == main)) {
             return Err(decline("status main file not captured"));
         }
-        let mut dependencies = if captured.reset && directory != "." {
+        let mut dependencies = if captured.cache.reset && directory != "." {
             json!({ "needsDetection": true })
         } else {
             self.cached(target, directory, &files, &policy)?
@@ -123,11 +179,11 @@ impl Scan<'_> {
         if dependencies.get("needsDetection") == Some(&Value::Bool(true)) {
             let (detected, pending) = self.detect(target, &files, &policy)?;
             dependencies = detected;
-            captured.pending.push(pending);
+            captured.cache.pending.push(pending);
         } else if self.verify {
             let (detected, pending) = self.verified(target, &files, &policy, &dependencies)?;
             dependencies = detected;
-            captured.pending.push(pending);
+            captured.cache.pending.push(pending);
         }
         record(target, directory, &files, &policy, &dependencies, captured)
     }
@@ -324,17 +380,9 @@ pub fn commit(
             return Err(decline("status history changed"));
         }
     }
-    if !capture.pending.is_empty() || !capture.replacements.is_empty() || capture.reset {
-        let replaced: Vec<&str> = capture.replacements
-            .iter()
-            .map(|entry| base_identity(entry.identity()))
-            .collect();
-        let entries: Vec<&fresh::Pending> = capture.pending
-            .iter()
-            .filter(|entry| !replaced.contains(&base_identity(entry.identity())))
-            .chain(&capture.replacements)
-            .collect();
-        fresh::commit(engine, root, &entries, capture.reset)?;
+    if !capture.cache.is_empty() {
+        let entries = capture.cache.entries();
+        fresh::commit(engine, root, &entries, capture.cache.reset)?;
     }
     if plans.is_empty() {
         return Ok(());

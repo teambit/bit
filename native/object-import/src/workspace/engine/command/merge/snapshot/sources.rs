@@ -75,6 +75,25 @@ fn edges(
     );
     Ok(())
 }
+/// The snap's `DependenciesGraph`, which the client computed from the
+/// lockfile: stored as a Source the Version refers to.
+pub(super) fn dependencies_graph(
+    allocation: &Value,
+    version: &mut Value,
+    objects: &mut Vec<Value>,
+) -> io::Result<()> {
+    let Some(graph) = allocation.get("dependenciesGraph") else { return Ok(()) };
+    let graph = graph.as_str().ok_or_else(|| invalid("command snap dependencies graph"))?;
+    if graph.len() > 16 * 1024 * 1024 {
+        return Err(invalid("command snap dependencies graph budget"));
+    }
+    let identity = digest(graph.as_bytes());
+    version["dependenciesGraphRef"] = json!(identity);
+    objects.push(
+        json!({"type":"Source","hash":identity,"body":crate::validate::hexadecimal(graph.as_bytes())}),
+    );
+    Ok(())
+}
 fn digest(bytes: &[u8]) -> String {
     crate::validate::hexadecimal(&Sha1::digest(bytes))
 }

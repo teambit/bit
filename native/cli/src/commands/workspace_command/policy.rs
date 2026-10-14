@@ -3,19 +3,16 @@
 //! built-in Node environment's defaults and, for the merged files, a fresh
 //! dependency detection, before it plans the merged metadata.
 
-use super::defaults;
-use crate::commands::{
-    engine::Engine,
-    status::{
-        capture::{self, Capture},
-        fresh::{Detection, Facts, Pending},
-        grammar,
-        js::{array, decline, object, text, truthy},
-        policy::{self, Policy},
-    },
+use super::{Steps, defaults};
+use crate::commands::status::{
+    capture::{self, Capture},
+    fresh::{Detection, Facts, Pending},
+    grammar,
+    js::{array, decline, object, text, truthy},
+    policy::{self, Policy},
 };
 use serde_json::{Value, json};
-use std::{io, path::Path};
+use std::io;
 
 /// What the policy steps add to the plan.
 pub struct Prepared {
@@ -24,24 +21,15 @@ pub struct Prepared {
     pub caches: Vec<Pending>,
 }
 
-/// One workspace command's policy steps.
-pub struct Steps<'s> {
-    pub engine: &'s mut Engine,
-    pub root: &'s Path,
-    pub home: &'s Path,
-    pub token: &'s str,
-    pub context: &'s Value,
-}
-
 impl Steps<'_> {
-    /// `prepareRustCommandPolicy(prepared, plan, dependencyStates)`; the plan
-    /// no longer asks for the policy step.
-    pub fn prepare(self, mut plan: Value, capture: &Capture) -> io::Result<Prepared> {
+    /// `prepareRustCommandPolicy(prepared, plan, dependencyStates)`.
+    pub(super) fn prepare_policy(
+        &mut self,
+        mut plan: Value,
+        capture: &Capture,
+    ) -> io::Result<Prepared> {
         let original = original_context(self.context)?;
-        let preparation = plan
-            .as_object_mut()
-            .and_then(|plan| plan.remove("policyPreparation"));
-        let rows = targets(&preparation.unwrap_or_default()["targets"], &original)?;
+        let rows = targets(&plan["policyPreparation"]["targets"], &original)?;
         let components = rows
             .iter()
             .map(|row| policy_component(row, &original, capture))
@@ -72,7 +60,7 @@ impl Steps<'_> {
     /// `commandDependencyDetect` and `commandDependencyComplete` for the
     /// projected targets.
     fn dependencies(
-        mut self,
+        &mut self,
         preparation: &Value,
         original: &Value,
         rows: &[Value],

@@ -1,6 +1,9 @@
 use super::{Input, Prepared, invalid, json, pretty, proof};
 use serde_json::{Value, json as value};
-use std::{fs, io, path::Path};
+use std::{
+    fs, io,
+    path::{Path, PathBuf},
+};
 
 const PACKAGE_FIELDS: &[&str] = &[
     "name",
@@ -121,10 +124,14 @@ fn root_copies(
         if entry.file_name().to_str() != Some("teambit.harmony_node") {
             return Err(invalid("merge custom env root"));
         }
-        let package = entry
-            .path()
-            .join("node_modules")
-            .join(name);
+        let package = injected(
+            root,
+            &entry
+                .path()
+                .join("node_modules")
+                .join(name),
+            output,
+        )?;
         if proof::read(&package.join("package.json"), &mut output.proofs)?.is_none() {
             return Err(invalid("merge env package missing"));
         }
@@ -147,6 +154,22 @@ fn root_copies(
         }
     }
     Ok(())
+}
+/// An env root's component package: `bit install` links it to the
+/// injected copy in the pnpm store, which is written through the link.
+pub(super) fn injected(root: &Path, package: &Path, output: &mut Prepared) -> io::Result<PathBuf> {
+    match fs::symlink_metadata(package) {
+        Ok(metadata) if metadata.is_symlink() => {
+            let store = root.join("node_modules/.pnpm");
+            let real = fs::canonicalize(package)?;
+            let relative = real
+                .strip_prefix(fs::canonicalize(&store)?)
+                .map_err(|_| invalid("merge env package outside the store"))?;
+            output.proofs.push(proof::metadata(package, Some(&fs::metadata(package)?))?);
+            Ok(store.join(relative))
+        }
+        _ => Ok(package.to_path_buf()),
+    }
 }
 fn ordinary(root: &Path, path: &Path, output: &mut Prepared) -> io::Result<()> {
     let relative = path.strip_prefix(root).map_err(io::Error::other)?;

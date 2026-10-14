@@ -60,3 +60,25 @@ fn pending_root_replacement_keeps_reachable_historical_root_distinct() {
     assert_eq!(rows[1]["target"], old);
     assert_eq!(rows[2]["source"], old);
 }
+
+#[test]
+fn dependencies_graph_is_stored_as_a_source_the_version_refers_to() {
+    let graph = r#"{"schemaVersion":"2.0","packages":{},"edges":[{"id":".","neighbours":[]}]}"#;
+    let mut version = serde_json::json!({"files":[]});
+    let mut objects = Vec::new();
+    super::dependencies_graph(
+        &serde_json::json!({"identity":"s/a","hash":"h"}),
+        &mut version,
+        &mut objects,
+    )
+    .unwrap();
+    assert!(version.get("dependenciesGraphRef").is_none() && objects.is_empty());
+    let allocation = serde_json::json!({"identity":"s/a","hash":"h","dependenciesGraph":graph});
+    super::dependencies_graph(&allocation, &mut version, &mut objects).unwrap();
+    let hash = super::digest(graph.as_bytes());
+    assert_eq!(version["dependenciesGraphRef"], hash);
+    assert_eq!(objects[0]["hash"], hash);
+    assert_eq!(objects[0]["type"], "Source");
+    let invalid = serde_json::json!({"identity":"s/a","hash":"h","dependenciesGraph":1});
+    assert!(super::dependencies_graph(&invalid, &mut version, &mut objects).is_err());
+}

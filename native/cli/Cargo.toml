@@ -12,12 +12,16 @@ path = "src/main.rs"
 [dependencies]
 bit-ignore = { path = "../ignore" }
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
+getrandom = "0.3"
 bit-install = { path = "../install" }
 bit-object-import = { path = "../object-import" }
 node-semver = "2"
 regress = "=0.12.0"
+reqwest = { version = "0.13", default-features = false, features = ["json", "rustls"] }
 async-trait = "0.1"
+pnpm-deps-path = { workspace = true }
 pnpm-diagnostics = { workspace = true }
+pnpm-lockfile = { workspace = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 sha1 = "0.10"
