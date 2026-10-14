@@ -35,6 +35,11 @@ export type BuilderServiceOptions = {
   seedersOnly?: boolean;
   originalSeeders?: ComponentID[];
   tasks?: string[];
+  /**
+   * when the "tasks" filter spans several pipelines (e.g. build + snap), a pipeline with no matching task
+   * runs nothing instead of throwing. the caller is responsible for validating the filter upfront.
+   */
+  allowNoMatchingTasks?: boolean;
   skipTests?: boolean;
   skipTasks?: string[];
   previousTasksResults?: TaskResults[];
@@ -107,7 +112,8 @@ export class BuilderService implements EnvService<BuildServiceResults, string> {
       this.pipeNameOnEnv,
       options.tasks,
       options.skipTests,
-      options.skipTasks
+      options.skipTasks,
+      options.allowNoMatchingTasks
     );
     tasksQueue.validate();
     this.logger.info(`going to run tasks in the following order:\n${tasksQueue.toString()}`);
