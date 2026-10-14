@@ -1,4 +1,4 @@
-use super::requested;
+use super::{requested, staged_head};
 use serde_json::{Value, json};
 
 fn staged(scope: &str, name: &str, hash: &str) -> (Value, Value) {
@@ -38,4 +38,18 @@ fn scoped_id_wins_over_name_containing_slash() {
     let chosen = requested(&["scope.one/one".to_owned()], rows.clone()).unwrap();
     assert_eq!(chosen[0].0["id"]["scope"], "scope.one");
     assert!(requested(&["scope.one/missing".to_owned()], rows).is_err());
+}
+
+#[test]
+fn a_staged_tag_or_snap_is_the_exported_head() {
+    let hash = "cccccccccccccccccccccccccccccccccccccccc";
+    let tag = json!({"head":hash,"versions":{"1.0.0":hash},"state":{"versions":{"1.0.0":{"local":true}}}});
+    assert_eq!(staged_head(&tag).unwrap(), ("1.0.0".to_owned(), hash.to_owned()));
+    let snap = json!({"head":hash,"versions":{},"state":{"versions":{(hash):{"local":true}}}});
+    assert_eq!(staged_head(&snap).unwrap(), (hash.to_owned(), hash.to_owned()));
+    let older =
+        json!({"head":"d".repeat(40),"versions":{},"state":{"versions":{(hash):{"local":true}}}});
+    assert!(staged_head(&older).is_err(), "a local snap that is not the head");
+    let unknown = json!({"head":hash,"versions":{},"state":{"versions":{"2.0.0":{"local":true}}}});
+    assert!(staged_head(&unknown).is_err(), "a tag without a Version ref");
 }

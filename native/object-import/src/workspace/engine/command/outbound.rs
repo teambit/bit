@@ -179,7 +179,9 @@ fn prepare_receipt(token: &str, count: usize, pending: &[Pending]) -> Value {
         .map(|batch| batch.objects.len())
         .sum::<usize>();
     json!({"token":token,"owner":"rust","nothingToExport":count == 0,
+        "componentCount":count,
         "scopes":pending.iter().map(|batch| &batch.scope).collect::<Vec<_>>(),
+        "scopeObjectCounts":pending.iter().map(|batch| batch.objects.len()).collect::<Vec<_>>(),
         "fileRemote":pending.iter().any(|batch| batch.host.starts_with("file://")),
         "objectCount":object_count})
 }

@@ -5,6 +5,7 @@ mod checkout;
 mod color;
 mod diff;
 mod engine;
+mod export;
 mod ids;
 mod import;
 mod install;
@@ -32,6 +33,7 @@ pub struct Command {
 pub const COMMANDS: &[Command] = &[
     checkout::COMMAND,
     diff::COMMAND,
+    export::COMMAND,
     import::FETCH,
     import::IMPORT,
     install::COMMAND,

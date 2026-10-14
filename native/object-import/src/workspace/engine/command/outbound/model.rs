@@ -207,9 +207,13 @@ fn staged_head(model: &Value) -> io::Result<(String, String)> {
     if local.len() != 1 {
         return Err(invalid("outbound multiple local versions"));
     }
-    let hash = model["versions"][local[0].0]
-        .as_str()
-        .ok_or_else(|| invalid("outbound local Version ref"))?;
+    // A tag names its Version through `versions`; a snap is its own hash.
+    let key = local[0].0.as_str();
+    let hash = match model["versions"][key].as_str() {
+        Some(hash) => hash,
+        None if crate::merge_history::hash(key).is_ok() => key,
+        None => return Err(invalid("outbound local Version ref")),
+    };
     if model["head"] != hash {
         return Err(invalid("outbound non-head local Version"));
     }
