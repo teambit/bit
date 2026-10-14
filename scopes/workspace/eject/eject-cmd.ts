@@ -8,6 +8,7 @@ export class EjectCmd implements Command {
   name = 'eject <component-pattern>';
   description = 'remove component from workspace and install it as npm package';
   extendedDescription = `converts workspace components to external npm packages by removing them from .bitmap and installing via package manager.
+the packages are added to the workspace dependencies in workspace.jsonc. to untrack components without that, use "bit remove".
 by default removes component files from workspace. use --keep-files to preserve source code while converting to package dependency.
 useful for components that no longer need active development in current workspace.`;
   helpUrl = 'reference/components/exporting-components#ejecting-components';

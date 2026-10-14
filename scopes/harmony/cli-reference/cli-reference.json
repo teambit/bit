@@ -2920,7 +2920,7 @@
       ]
     ],
     "description": "remove component from workspace and install it as npm package",
-    "extendedDescription": "converts workspace components to external npm packages by removing them from .bitmap and installing via package manager.\nby default removes component files from workspace. use --keep-files to preserve source code while converting to package dependency.\nuseful for components that no longer need active development in current workspace.",
+    "extendedDescription": "converts workspace components to external npm packages by removing them from .bitmap and installing via package manager.\nthe packages are added to the workspace dependencies in workspace.jsonc. to untrack components without that, use \"bit remove\".\nby default removes component files from workspace. use --keep-files to preserve source code while converting to package dependency.\nuseful for components that no longer need active development in current workspace.",
     "group": "dependencies",
     "private": false,
     "arguments": [
