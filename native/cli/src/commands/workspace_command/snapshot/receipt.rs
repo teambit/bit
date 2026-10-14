@@ -27,28 +27,37 @@ use std::{
 const CLOUD_TIMEOUT: Duration = Duration::from_secs(30);
 
 /// The receipt for snapping `identities`.
-/// `graphs` holds each identity's serialized dependency graph, if any.
-pub fn snapshot(
-    root: &Path,
-    identities: &[String],
-    graphs: &[Option<String>],
-    context: &Value,
-) -> io::Result<Value> {
+/// The components a snap writes: identities, new hashes and dependency graphs.
+pub struct Snapped<'s> {
+    pub identities: &'s [String],
+    pub hashes: &'s [String],
+    pub graphs: &'s [Option<String>],
+}
+
+/// `count` new snap hashes, allocated before the dependency graphs that
+/// name them.
+pub fn new_snap_hashes(count: usize) -> io::Result<Vec<String>> {
+    (0..count).map(|_| new_snap_hash()).collect()
+}
+
+/// The receipt for the snapped components.
+pub fn snapshot(root: &Path, snapped: &Snapped<'_>, context: &Value) -> io::Result<Value> {
     if truthy(context["lane"].get("shouldSquash")) {
         return Err(decline("command snapshot squash log"));
     }
     let user = User::load(root)?;
-    let versions: Vec<Value> = identities
+    let versions: Vec<Value> = snapped.identities
         .iter()
-        .zip(graphs)
-        .map(|(identity, graph)| {
-            let mut version = json!({ "identity": identity, "hash": new_snap_hash()? });
+        .zip(snapped.hashes)
+        .zip(snapped.graphs)
+        .map(|((identity, hash), graph)| {
+            let mut version = json!({ "identity": identity, "hash": hash });
             if let Some(graph) = graph {
                 version["dependenciesGraph"] = json!(graph);
             }
-            Ok(version)
+            version
         })
-        .collect::<io::Result<_>>()?;
+        .collect();
     let mut receipt = json!({
         "versions": versions,
         "log": user.log(),

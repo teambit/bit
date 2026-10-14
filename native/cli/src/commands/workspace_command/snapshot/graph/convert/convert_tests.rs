@@ -1,4 +1,7 @@
-use super::{convert, ref_to_relative};
+use super::{
+    super::replacer::{Replacer, WorkspaceComponent},
+    convert, ref_to_relative,
+};
 use serde_json::{Value, json};
 
 #[test]
@@ -12,6 +15,16 @@ fn references_resolve_like_ref_to_relative() {
         Some("a@1.0.0(react@18.0.0)"),
     );
     assert_eq!(ref_to_relative("file:comps/one", "a").as_deref(), Some("a@file:comps/one"));
+}
+
+const HASH: &str = "0123456789abcdef0123456789abcdef01234567";
+
+fn replacer() -> Replacer {
+    Replacer::new(&[
+        WorkspaceComponent { package_name: "@s/one", identity: "s/one", version: Some(HASH) },
+        WorkspaceComponent { package_name: "@s/two", identity: "s/two", version: Some("1.0.0") },
+    ])
+    .unwrap()
 }
 
 fn lockfile() -> serde_json::Map<String, Value> {
@@ -42,7 +55,7 @@ fn lockfile() -> serde_json::Map<String, Value> {
 
 #[test]
 fn a_component_under_an_environment_root() {
-    let graph = convert(lockfile(), "comps/one", Some("roots"), "@s/one").unwrap();
+    let graph = convert(lockfile(), "comps/one", Some("roots"), "@s/one", &replacer()).unwrap();
     let expected = json!({
         "schemaVersion": "2.0",
         "packages": {
@@ -72,7 +85,7 @@ fn a_component_under_an_environment_root() {
 
 #[test]
 fn a_component_without_an_environment_root_uses_its_importer() {
-    let graph = convert(lockfile(), "comps/one", None, "@s/one").unwrap();
+    let graph = convert(lockfile(), "comps/one", None, "@s/one", &replacer()).unwrap();
     let root = graph["edges"]
         .as_array()
         .unwrap()
@@ -83,5 +96,47 @@ fn a_component_without_an_environment_root_uses_its_importer() {
         root["neighbours"],
         json!([{ "name": "dev", "specifier": "^1.0.0", "id": "dev@1.0.0", "lifecycle": "dev", "optional": false }]),
     );
-    assert!(graph["packages"].get("@s/one@file:comps/one").is_some());
+    let one = format!("@s/one@0.0.0-{HASH}");
+    assert_eq!(graph["packages"][&one], json!({ "component": { "name": "one", "scope": "s" } }));
+}
+
+#[test]
+fn workspace_components_are_named_by_version_and_unknown_file_packages_dropped() {
+    let mut lockfile = lockfile();
+    let importer = json!({ "dependencies": {
+        "@s/two": { "specifier": "*", "version": "file:comps/two" },
+        "local": { "specifier": "file:../local", "version": "file:../local" },
+    } });
+    lockfile["importers"]["comps/one"] = importer;
+    lockfile["packages"]["@s/two@file:comps/two"] =
+        json!({ "resolution": { "type": "directory", "directory": "comps/two" } });
+    lockfile["packages"]["local@file:../local"] =
+        json!({ "resolution": { "type": "directory", "directory": "../local" } });
+    lockfile["snapshots"]["@s/two@file:comps/two"] = json!({ "dependencies": { "dep": "2.0.0" } });
+    lockfile["snapshots"]["local@file:../local"] = json!({ "dependencies": { "dep": "2.0.0" } });
+    let graph = convert(lockfile, "comps/one", None, "@s/one", &replacer()).unwrap();
+    assert_eq!(
+        graph["packages"]["@s/two@1.0.0"],
+        json!({ "component": { "name": "two", "scope": "s" } }),
+    );
+    assert!(graph["packages"].get("local@file:../local").is_none());
+    let edges = graph["edges"].as_array().unwrap();
+    assert!(
+        edges
+            .iter()
+            .any(|edge| edge["id"] == "@s/two@1.0.0"),
+    );
+    assert!(
+        edges
+            .iter()
+            .all(|edge| edge["id"] != "local@file:../local"),
+    );
+    let root = edges.last().unwrap();
+    let ids: Vec<&str> = root["neighbours"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(|n| n["id"].as_str())
+        .collect();
+    assert_eq!(ids, ["@s/two@1.0.0"]);
 }

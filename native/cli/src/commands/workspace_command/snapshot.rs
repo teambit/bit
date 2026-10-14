@@ -47,8 +47,11 @@ impl Steps<'_> {
         }
         issues::validate(self.root, &context, &capture.components, plan)?;
         if !snap_failed {
-            let graphs = self.graphs(&needs_snap, &capture)?;
-            let receipt = receipt::snapshot(self.root, &needs_snap, &graphs, self.context)?;
+            let hashes = receipt::new_snap_hashes(needs_snap.len())?;
+            let graphs = self.graphs(&needs_snap, &hashes, &capture)?;
+            let snapped =
+                receipt::Snapped { identities: &needs_snap, hashes: &hashes, graphs: &graphs };
+            let receipt = receipt::snapshot(self.root, &snapped, self.context)?;
             let finalized: Value = self.engine.request(&json!({
                 "kind": "commandFinalize",
                 "token": self.token,
@@ -64,7 +67,12 @@ impl Steps<'_> {
     }
 
     /// The dependency graph of each component the merge snaps.
-    fn graphs(&self, needs_snap: &[String], capture: &Capture) -> io::Result<Vec<Option<String>>> {
+    fn graphs(
+        &self,
+        needs_snap: &[String],
+        hashes: &[String],
+        capture: &Capture,
+    ) -> io::Result<Vec<Option<String>>> {
         let targets = array(self.context.get("targets"), "targets")?;
         let snapped = needs_snap
             .iter()
@@ -73,21 +81,12 @@ impl Steps<'_> {
                     .iter()
                     .find(|target| target.get("identity").and_then(Value::as_str) == Some(identity))
                     .ok_or_else(|| decline("command snapshot target"))?;
-                let component = capture.components
-                    .iter()
-                    .find(|component| without_version(&component.identity) == identity)
-                    .ok_or_else(|| decline("command snapshot component"))?;
-                Ok(graph::Snapped {
-                    directory: text(target.get("directory"))?,
-                    package_name: &component.package_name,
-                })
+                let directory = text(target.get("directory"))?;
+                Ok(graph::Snapped { directory, package_name: package_name(capture, identity)? })
             })
             .collect::<io::Result<Vec<_>>>()?;
-        let packages = capture.components
-            .iter()
-            .map(|component| component.package_name.as_str())
-            .collect();
-        graph::graphs(self.root, &snapped, &packages)
+        let components = workspace_components(targets, needs_snap, hashes, capture)?;
+        graph::graphs(self.root, &snapped, &components)
     }
 
     /// The context with the lane's inactive targets the merge activated.
@@ -147,6 +146,52 @@ impl Steps<'_> {
         }
         Ok(capture)
     }
+}
+
+/// `componentIdByPkgName`: the snapped components under their new hashes,
+/// then the others under their workspace versions.
+fn workspace_components<'c>(
+    targets: &'c [Value],
+    needs_snap: &'c [String],
+    hashes: &'c [String],
+    capture: &'c Capture,
+) -> io::Result<Vec<graph::WorkspaceComponent<'c>>> {
+    let mut components = needs_snap
+        .iter()
+        .zip(hashes)
+        .map(|(identity, hash)| {
+            let package_name = package_name(capture, identity)?;
+            Ok(graph::WorkspaceComponent { package_name, identity, version: Some(hash) })
+        })
+        .collect::<io::Result<Vec<_>>>()?;
+    for target in targets {
+        let identity = text(target.get("identity"))?;
+        if needs_snap
+            .iter()
+            .any(|snapped| snapped == identity)
+        {
+            continue;
+        }
+        let version = target
+            .get("version")
+            .and_then(Value::as_str)
+            .filter(|version| !version.is_empty());
+        components.push(graph::WorkspaceComponent {
+            package_name: package_name(capture, identity)?,
+            identity,
+            version,
+        });
+    }
+    Ok(components)
+}
+
+/// The package name of a captured component.
+fn package_name<'c>(capture: &'c Capture, identity: &str) -> io::Result<&'c str> {
+    capture.components
+        .iter()
+        .find(|component| without_version(&component.identity) == identity)
+        .map(|component| component.package_name.as_str())
+        .ok_or_else(|| decline("command snapshot component"))
 }
 
 /// `plan.needsSnap`: the identities to snap, absent when the snap failed.

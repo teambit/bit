@@ -4,11 +4,14 @@
 //! snap stores beside its Version (`dependenciesGraphRef`).
 //!
 //! The lockfile is read and filtered by pnpm's own `pnpm-lockfile` crate,
-//! the code `@pnpm/napi` runs for the Node.js CLI. A graph that refers to
-//! a workspace component would need that component's new version: those
-//! decline.
+//! the code `@pnpm/napi` runs for the Node.js CLI.
+
+pub use replacer::WorkspaceComponent;
 
 mod convert;
+mod replacer;
+
+use replacer::Replacer;
 
 use crate::commands::status::js::decline;
 use bit_install::config::WorkspaceConfig;
@@ -31,7 +34,7 @@ pub struct Snapped<'s> {
 pub fn graphs(
     root: &Path,
     snapped: &[Snapped<'_>],
-    workspace_packages: &HashSet<&str>,
+    components: &[WorkspaceComponent<'_>],
 ) -> io::Result<Vec<Option<String>>> {
     if cfg!(windows) {
         return Err(decline("dependency graph importer paths on Windows"));
@@ -52,9 +55,10 @@ pub fn graphs(
     if lockfile.get("importers").is_none_or(Value::is_null) {
         return Ok(vec![None; snapped.len()]);
     }
+    let workspace = Replacer::new(components)?;
     snapped
         .iter()
-        .map(|component| graph(&lockfile, component, workspace_packages))
+        .map(|component| graph(&lockfile, component, &workspace))
         .collect()
 }
 
@@ -63,7 +67,7 @@ pub fn graphs(
 fn graph(
     lockfile: &Value,
     component: &Snapped<'_>,
-    workspace_packages: &HashSet<&str>,
+    workspace: &Replacer,
 ) -> io::Result<Option<String>> {
     let importers = &lockfile["importers"];
     let importer = if component.directory.is_empty() { "." } else { component.directory };
@@ -75,15 +79,11 @@ fn graph(
     if has_root && ROOT_DIR != importer {
         ids.push(ROOT_DIR.to_string());
     }
-    let narrowed = narrow(lockfile, &ids, importer, component, workspace_packages);
+    let narrowed = narrow(lockfile, &ids, importer, component, workspace);
     let partial = filter(narrowed, ids)?;
     let root_dir = has_root.then_some(ROOT_DIR);
-    let graph = convert::convert(partial, importer, root_dir, component.package_name)?;
-    let text = serde_json::to_string(&graph).map_err(io::Error::other)?;
-    if text.contains("@file:") || convert::names_workspace_package(&graph, workspace_packages) {
-        return Err(decline("dependency graph with workspace components"));
-    }
-    Ok(Some(text))
+    let graph = convert::convert(partial, importer, root_dir, component.package_name, workspace)?;
+    serde_json::to_string(&graph).map(Some).map_err(io::Error::other)
 }
 
 /// The lockfile without the other workspace packages in `ids`' importers.
@@ -92,14 +92,14 @@ fn narrow(
     ids: &[String],
     importer: &str,
     component: &Snapped<'_>,
-    workspace_packages: &HashSet<&str>,
+    workspace: &Replacer,
 ) -> Value {
     let mut narrowed = lockfile.clone();
     for id in ids {
         let entry = &mut narrowed["importers"][id.as_str()];
-        for name in workspace_packages
-            .iter()
-            .filter(|name| **name != component.package_name)
+        for name in workspace
+            .package_names()
+            .filter(|name| *name != component.package_name)
         {
             remove_workspace_package(entry, name, id == importer);
         }

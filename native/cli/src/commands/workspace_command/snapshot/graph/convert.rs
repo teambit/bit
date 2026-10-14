@@ -1,9 +1,9 @@
 //! `convertLockfileToGraph` (`lockfile-deps-graph-converter.ts`): a
 //! component's filtered lockfile as Bit's `DependenciesGraph`, serialized
-//! the way `DependenciesGraph.serialize()` writes it. Workspace components
-//! never reach here (see the parent module), so no `file:` version is
-//! rewritten.
+//! the way `DependenciesGraph.serialize()` writes it, with workspace
+//! components named by their versions.
 
+use super::replacer::Replacer;
 use crate::commands::status::js::decline;
 use serde_json::{Map, Value, json};
 use std::{collections::HashSet, io};
@@ -32,6 +32,7 @@ pub fn convert(
     importer: &str,
     root_dir: Option<&str>,
     package: &str,
+    replacer: &Replacer,
 ) -> io::Result<Value> {
     let mut lockfile = Value::Object(lockfile);
     let direct = match root_dir {
@@ -40,8 +41,11 @@ pub fn convert(
     };
     let mut graph = Map::new();
     graph.insert("schemaVersion".into(), json!(SCHEMA_VERSION));
-    graph.insert("packages".into(), Value::Object(packages(&lockfile)?));
-    graph.insert("edges".into(), Value::Array(edges(&lockfile, &direct)));
+    let mut packages = packages(&lockfile, replacer)?;
+    let mut edges = edges(&lockfile, direct, replacer);
+    drop_orphan_file_packages(&mut packages, &mut edges);
+    graph.insert("packages".into(), Value::Object(packages));
+    graph.insert("edges".into(), Value::Array(edges));
     if let Some(checksum) = lockfile
         .get("pnpmfileChecksum")
         .filter(|value| !value.is_null())
@@ -167,54 +171,62 @@ fn importer_neighbours(deps: &Value, lifecycle: &str, optional: bool) -> io::Res
 }
 
 /// `buildEdges`: each snapshot with dependencies or a suffix, then the root edge.
-fn edges(lockfile: &Value, direct: &[Value]) -> Vec<Value> {
-    let mut edges = Vec::new();
-    for (dep_path, snapshot) in lockfile
+fn edges(lockfile: &Value, mut direct: Vec<Value>, replacer: &Replacer) -> Vec<Value> {
+    let snapshots = lockfile
         .get("snapshots")
         .and_then(Value::as_object)
         .into_iter()
-        .flatten()
-    {
-        let neighbours = snapshot_neighbours(snapshot);
-        let pkg_id = pnpm_deps_path::remove_suffix(dep_path);
-        let mut edge = Map::new();
-        edge.insert("id".into(), json!(dep_path));
-        edge.insert("neighbours".into(), Value::Array(neighbours.clone()));
-        let mut attr = Map::new();
-        if pkg_id != dep_path {
-            attr.insert("pkgId".into(), json!(pkg_id));
-        }
-        if let Some(peers) = snapshot
-            .get("transitivePeerDependencies")
-            .filter(|peers| !peers.is_null())
-        {
-            attr.insert("transitivePeerDependencies".into(), peers.clone());
-        }
-        if !attr.is_empty() {
-            edge.insert("attr".into(), Value::Object(attr));
-        }
-        if !neighbours.is_empty() || pkg_id != dep_path {
-            edges.push(Value::Object(edge));
+        .flatten();
+    let mut edges: Vec<Value> =
+        snapshots.filter_map(|(dep_path, snapshot)| edge(dep_path, snapshot, replacer)).collect();
+    for dependency in &mut direct {
+        if let Some(id) = dependency["id"].as_str() {
+            dependency["id"] = json!(replacer.replace(id));
         }
     }
     edges.push(json!({ "id": ROOT_EDGE_ID, "neighbours": direct }));
     edges
 }
 
+/// One snapshot's edge: `None` without dependencies or a suffix.
+fn edge(dep_path: &str, snapshot: &Value, replacer: &Replacer) -> Option<Value> {
+    let neighbours = snapshot_neighbours(snapshot, replacer);
+    let id = replacer.replace(dep_path);
+    let pkg_id = pnpm_deps_path::remove_suffix(&id).to_string();
+    if neighbours.is_empty() && pkg_id == id {
+        return None;
+    }
+    let mut attr = Map::new();
+    if pkg_id != id {
+        attr.insert("pkgId".into(), json!(pkg_id));
+    }
+    if let Some(peers) = snapshot
+        .get("transitivePeerDependencies")
+        .filter(|peers| !peers.is_null())
+    {
+        attr.insert("transitivePeerDependencies".into(), peers.clone());
+    }
+    let mut edge = json!({ "id": id, "neighbours": neighbours });
+    if !attr.is_empty() {
+        edge["attr"] = Value::Object(attr);
+    }
+    Some(edge)
+}
+
 /// `extractDependenciesFromSnapshot`.
-fn snapshot_neighbours(snapshot: &Value) -> Vec<Value> {
+fn snapshot_neighbours(snapshot: &Value, replacer: &Replacer) -> Vec<Value> {
     let mut neighbours = Vec::new();
     for (field, optional) in [("dependencies", false), ("optionalDependencies", true)] {
-        for (name, reference) in snapshot
+        let deps = snapshot
             .get(field)
             .and_then(Value::as_object)
             .into_iter()
-            .flatten()
-        {
+            .flatten();
+        for (name, reference) in deps {
             if let Some(id) =
                 reference.as_str().and_then(|reference| ref_to_relative(reference, name))
             {
-                neighbours.push(json!({ "id": id, "optional": optional }));
+                neighbours.push(json!({ "id": replacer.replace(&id), "optional": optional }));
             }
         }
     }
@@ -222,7 +234,7 @@ fn snapshot_neighbours(snapshot: &Value) -> Vec<Value> {
 }
 
 /// `buildPackages`: the picked fields; a directory resolution is dropped.
-fn packages(lockfile: &Value) -> io::Result<Map<String, Value>> {
+fn packages(lockfile: &Value, replacer: &Replacer) -> io::Result<Map<String, Value>> {
     let requiring_build: HashSet<&str> = lockfile
         .get("bit")
         .and_then(|bit| bit.get("depsRequiringBuild"))
@@ -232,42 +244,92 @@ fn packages(lockfile: &Value) -> io::Result<Map<String, Value>> {
         .filter_map(Value::as_str)
         .collect();
     let mut packages = Map::new();
-    for (pkg_id, package) in lockfile
+    let entries = lockfile
         .get("packages")
         .and_then(Value::as_object)
         .into_iter()
-        .flatten()
-    {
-        let mut picked = Map::new();
-        for field in PACKAGE_FIELDS {
-            if let Some(value) = package.get(field) {
-                picked.insert(field.into(), value.clone());
-            }
-        }
-        let resolution =
-            picked.get("resolution").ok_or_else(|| decline("lockfile package resolution"))?;
-        if resolution.get("type").and_then(Value::as_str) == Some("directory") {
-            picked.shift_remove("resolution");
+        .flatten();
+    for (pkg_id, package) in entries {
+        let mut picked = pick(package)?;
+        let id = replacer.replace(pkg_id);
+        if let Some((name, scope)) = package_name(&id).and_then(|name| replacer.component(name)) {
+            picked.insert("component".into(), json!({ "name": name, "scope": scope }));
         }
         if requiring_build.contains(pkg_id.as_str()) {
             picked.insert("requiresBuild".into(), json!(true));
         }
-        packages.insert(pkg_id.clone(), Value::Object(picked));
+        packages.insert(id, Value::Object(picked));
     }
     Ok(packages)
 }
 
-/// Whether a graph package is a workspace component's package, which
-/// `buildPackages` would mark with the component id.
-pub fn names_workspace_package(graph: &Value, workspace_packages: &HashSet<&str>) -> bool {
-    graph["packages"]
-        .as_object()
-        .is_some_and(|packages| {
-            packages
-                .keys()
-                .any(|pkg_id| {
-                    package_name(pkg_id).is_some_and(|name| workspace_packages.contains(name))
-                })
+/// `pick(pkg, PACKAGE_FIELDS)`, without a directory resolution.
+fn pick(package: &Value) -> io::Result<Map<String, Value>> {
+    let mut picked = Map::new();
+    for field in PACKAGE_FIELDS {
+        if let Some(value) = package.get(field) {
+            picked.insert(field.into(), value.clone());
+        }
+    }
+    let resolution =
+        picked.get("resolution").ok_or_else(|| decline("lockfile package resolution"))?;
+    if resolution.get("type").and_then(Value::as_str) == Some("directory") {
+        picked.shift_remove("resolution");
+    }
+    Ok(picked)
+}
+
+/// `dropOrphanFilePkgs`: a directory package left with its `file:`
+/// version is a workspace package the graph cannot name; it and every edge
+/// to it are dropped.
+fn drop_orphan_file_packages(packages: &mut Map<String, Value>, edges: &mut Vec<Value>) {
+    let mut orphans: Vec<String> = packages
+        .keys()
+        .filter(|id| is_file_package(id))
+        .cloned()
+        .collect();
+    for edge in edges.iter() {
+        let id = edge["id"].as_str().unwrap_or_default();
+        let pkg_id = edge["attr"]["pkgId"].as_str().unwrap_or(id);
+        if is_file_package(pkg_id) || is_file_package(id) {
+            orphans.push(pkg_id.to_string());
+            orphans.push(id.to_string());
+        }
+    }
+    if orphans.is_empty() {
+        return;
+    }
+    for id in &orphans {
+        packages.shift_remove(id);
+    }
+    let orphan = |id: &Value| {
+        id.as_str()
+            .is_some_and(|id| {
+                orphans
+                    .iter()
+                    .any(|orphan| orphan == id)
+            })
+    };
+    edges.retain(|edge| {
+        !orphan(&edge["id"])
+            && !orphan(
+                edge["attr"]
+                    .get("pkgId")
+                    .unwrap_or_else(|| &edge["id"]),
+            )
+    });
+    for edge in edges.iter_mut() {
+        if let Some(neighbours) = edge["neighbours"].as_array_mut() {
+            neighbours.retain(|neighbour| !orphan(&neighbour["id"]));
+        }
+    }
+}
+
+/// `dp.parse(pkgId).nonSemverVersion?.startsWith('file:')`.
+fn is_file_package(pkg_id: &str) -> bool {
+    package_name(pkg_id)
+        .is_some_and(|name| {
+            pnpm_deps_path::remove_suffix(pkg_id)[name.len() + 1..].starts_with("file:")
         })
 }
 
