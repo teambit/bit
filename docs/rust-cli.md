@@ -254,3 +254,6 @@ addon and spawned helpers, behind `BIT_RUST_*` and `BIT_NATIVE_INSTALL` flags.
 That integration is removed: the crates are libraries of this CLI, and nothing
 outside `native/`, the `Rust` workflow and these docs belongs to the Rust CLI.
 The Node.js CLI is unchanged, so it is the complete fallback for every command.
+`scripts/rust/check-scope.sh` keeps it that way: the `Rust scope` workflow fails a
+change outside those paths, or one that brings back the napi addon or a helper
+binary. Agents working in `native/` follow `native/AGENTS.md`.
