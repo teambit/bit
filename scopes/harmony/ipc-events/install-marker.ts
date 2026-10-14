@@ -17,7 +17,11 @@ export function getInstallMarkerPath(scopePath: string): string {
 
 export async function writeInstallMarker(scopePath: string): Promise<void> {
   const marker: InstallMarker = { pid: process.pid, startedAt: Date.now() };
-  await fs.outputJson(getInstallMarkerPath(scopePath), marker);
+  const markerPath = getInstallMarkerPath(scopePath);
+  // write-then-rename, so a reader never sees a half-written marker (which it would take as "no install")
+  const tmpPath = `${markerPath}.${process.pid}.tmp`;
+  await fs.outputJson(tmpPath, marker);
+  await fs.rename(tmpPath, markerPath);
 }
 
 /**
@@ -71,7 +75,7 @@ async function readInstallMarker(scopePath: string): Promise<InstallMarker | und
     if (typeof marker?.pid !== 'number' || typeof marker?.startedAt !== 'number') return undefined;
     return marker;
   } catch {
-    return undefined; // missing, or half-written by the installing process
+    return undefined; // missing, or not written by bit
   }
 }
 

@@ -663,7 +663,10 @@ export class Watcher {
     try {
       if (filePath.endsWith(BIT_MAP)) {
         this.bitMapChangesInProgress = true;
-        const buildResults = await this.watchQueue.add(() => this.handleBitmapChanges());
+        const buildResults = await this.watchQueue.add(async () => {
+          await this.waitForInstallRunningElsewhere(); // a .bitmap change may add components, which get compiled
+          return this.handleBitmapChanges();
+        });
         this.bitMapChangesInProgress = false;
         this.logger.clearStatusLine();
         return { results: buildResults, files: [filePath] };
@@ -693,7 +696,11 @@ export class Watcher {
       const files = this.changedFilesPerComponent[compIdStr];
       delete this.changedFilesPerComponent[compIdStr];
 
-      const buildResults = await this.watchQueue.add(() => this.triggerCompChanges(componentId, files));
+      const buildResults = await this.watchQueue.add(async () => {
+        // an install may have started while this job waited in the queue
+        await this.waitForInstallRunningElsewhere();
+        return this.triggerCompChanges(componentId, files);
+      });
       const failureMsg = buildResults.length
         ? undefined
         : `files ${files.join(', ')} are inside the component ${compIdStr} but configured to be ignored`;
