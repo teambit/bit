@@ -74,6 +74,27 @@ describe('ComponentConfigMerger', () => {
     });
   });
 
+  describe('env set specifically on "other" (e.g. "bit env set" on main) while the current lane kept the old env', () => {
+    // the merged env must stay specific to the component. otherwise, once merged, it's saved as non-specific and
+    // workspace variants take precedence over it.
+    let mergedConfig: Record<string, any>;
+    before(() => {
+      const oldEnv = 'other-scope.envs/old-env';
+      const newEnv = 'other-scope.envs/new-env';
+      const base = new ExtensionDataList(envsEntry(oldEnv), envAspectEntry(`${oldEnv}@1.0.0`));
+      const current = new ExtensionDataList(envsEntry(oldEnv), envAspectEntry(`${oldEnv}@1.0.0`));
+      const otherEnvsEntry = new ExtensionDataEntry(undefined, undefined, EnvsAspect.id, {
+        env: newEnv,
+        __specific: true,
+      });
+      const other = new ExtensionDataList(otherEnvsEntry, envAspectEntry(`${newEnv}@1.0.0`));
+      mergedConfig = mergeEnvConfig(current, base, other, []);
+    });
+    it('should keep the merged env specific', () => {
+      expect(mergedConfig[EnvsAspect.id]).to.deep.equal({ env: 'other-scope.envs/new-env@1.0.0', __specific: true });
+    });
+  });
+
   describe('current lane deliberately switched to a workspace env', () => {
     // The lane changed its env (base !== current) to a workspace component. That's a deliberate choice for
     // this lane, so a differing env on "other" must NOT override it.

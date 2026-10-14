@@ -14,7 +14,7 @@ import { ConfigMergeResult } from './config-merge-result';
 
 export type GenericConfigOrRemoved = Record<string, any> | '-';
 
-type EnvData = { id: string; version?: string; config?: GenericConfigOrRemoved };
+type EnvData = { id: string; version?: string; config?: GenericConfigOrRemoved; specific?: boolean };
 
 type SerializedDependencyWithPolicy = SerializedDependency & { policy?: string; packageName?: string };
 
@@ -106,7 +106,8 @@ export class ComponentConfigMerger {
       const otherExt = this.otherAspects.findExtension(id, true);
       if (otherExt) {
         // try to 3-way-merge
-        return this.mergePerStrategy({ id, currentExt, otherExt, baseExt });
+        const result = this.mergePerStrategy({ id, currentExt, otherExt, baseExt });
+        return id === DependencyResolverAspect.id ? result : this.keepSpecificOfOther(result, isSpecific(otherExt));
       }
       // exist in current but not in other
       if (baseExt) {
@@ -141,7 +142,7 @@ export class ComponentConfigMerger {
         return { id, conflict: { currentConfig: '-', otherConfig: this.getConfig(otherExt) } };
       }
       // exist in other but not in current and base, so it got created on other.
-      return { id, mergedConfig: this.getConfig(otherExt) };
+      return this.keepSpecificOfOther({ id, mergedConfig: this.getConfig(otherExt) }, isSpecific(otherExt));
     });
     const envResult = this.envStrategy();
     this.logger.debug(`*** end config-merger for ${this.compIdStr} ***\n`);
@@ -166,7 +167,7 @@ export class ComponentConfigMerger {
     const currentEnv = getEnvId(this.currentAspects);
     this.currentEnv = { id: currentEnv };
     const otherEnv = getEnvId(this.otherAspects);
-    this.otherEnv = { id: otherEnv };
+    this.otherEnv = { id: otherEnv, specific: isSpecific(this.otherAspects.findCoreExtension(EnvsAspect.id)) };
     const baseEnv = this.baseAspects ? getEnvId(this.baseAspects) : undefined;
     if (baseEnv) this.baseEnv = { id: baseEnv };
 
@@ -253,11 +254,27 @@ export class ComponentConfigMerger {
         !baseEnvStr || (baseEnvStr !== envStr(this.currentEnv) && baseEnvStr !== envStr(this.otherEnv));
       if (isConflictShape) {
         return semver.gt(this.otherEnv.version, this.currentEnv.version)
-          ? { id: EnvsAspect.id, mergedConfig: { env: envStr(this.otherEnv) } }
+          ? this.keepSpecificOfOther(
+              { id: EnvsAspect.id, mergedConfig: { env: envStr(this.otherEnv) } },
+              this.otherEnv.specific
+            )
           : null;
       }
     }
-    return this.basicConfigMerge(mergeStrategyParams);
+    return this.keepSpecificOfOther(this.basicConfigMerge(mergeStrategyParams), this.otherEnv.specific);
+  }
+
+  /**
+   * a merged config (not a conflict) is the config of "other". when it's set there specifically on the component (e.g.
+   * by "bit env set"), keep it specific, so it keeps taking precedence over workspace variants after the merge.
+   * (the flag is ignored when comparing the configs, see getConfig()).
+   */
+  private keepSpecificOfOther(
+    result: MergeStrategyResult | null,
+    isOtherSpecific?: boolean
+  ): MergeStrategyResult | null {
+    if (!isOtherSpecific || !result?.mergedConfig || result.mergedConfig === '-') return result;
+    return { ...result, mergedConfig: { ...result.mergedConfig, __specific: true } };
   }
 
   private areConfigsEqual(configA: GenericConfigOrRemoved, configB: GenericConfigOrRemoved) {
@@ -693,4 +710,8 @@ export class ComponentConfigMerger {
     if (!config.policy) return [];
     return VariantPolicy.fromConfigObject(config.policy).entries;
   }
+}
+
+function isSpecific(ext?: ExtensionDataEntry): boolean {
+  return Boolean(ext && ext.rawConfig !== '-' && ext.rawConfig?.__specific);
 }

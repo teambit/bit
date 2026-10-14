@@ -245,7 +245,9 @@ export class ApplyOverrides {
   }
 
   private async loadAutoDetectOverrides() {
-    this.autoDetectOverrides = await this.workspace?.getAutoDetectOverrides(
+    // outside a workspace, they're calculated by the caller (if at all) and set before this runs
+    if (!this.workspace) return;
+    this.autoDetectOverrides = await this.workspace.getAutoDetectOverrides(
       this.component.extensions,
       this.component.id,
       this.component.files,

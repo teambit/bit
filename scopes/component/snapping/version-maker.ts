@@ -143,6 +143,8 @@ export class VersionMaker {
     const autoTagData = await this.getAutoTagData(idsToTag);
     const autoTagComponents = autoTagData.map((autoTagItem) => autoTagItem.component);
     const autoTagComponentsFiltered = autoTagComponents.filter((c) => !idsToTag.has(c.id));
+    // a component that is tagged explicitly is not reported as auto-tagged (the scope flow may find it as both)
+    const autoTagDataFiltered = autoTagData.filter((autoTagItem) => !idsToTag.has(autoTagItem.component.id));
     const autoTagIds = ComponentIdList.fromArray(autoTagComponentsFiltered.map((autoTag) => autoTag.id));
 
     // Validate component issues for auto-tag components
@@ -174,7 +176,7 @@ export class VersionMaker {
       this.consumer.updateNextVersionOnBitmap(this.allComponentsToTag, this.params.preReleaseId);
       return {
         taggedComponents: componentsToTag,
-        autoTaggedResults: autoTagData,
+        autoTaggedResults: autoTagDataFiltered,
         dependentsWithPinnedDeps,
         publishedPackages: [],
         stagedConfig,
@@ -278,7 +280,7 @@ export class VersionMaker {
 
     return {
       taggedComponents: componentsToTag,
-      autoTaggedResults: autoTagData,
+      autoTaggedResults: autoTagDataFiltered,
       dependentsWithPinnedDeps,
       publishedPackages,
       stagedConfig,

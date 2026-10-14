@@ -15,7 +15,7 @@ import type { Workspace, AutoTagResult } from '@teambit/workspace';
 import { WorkspaceAspect, OutsideWorkspaceError } from '@teambit/workspace';
 import type { ReleaseType } from 'semver';
 import semver from 'semver';
-import { compact, difference, uniq } from 'lodash';
+import { compact, difference, isEmpty, pickBy, uniq } from 'lodash';
 import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { findWorkspaceRootMap } from '@teambit/workspace-root';
 import type { BuildStatus } from '@teambit/legacy.constants';
@@ -40,7 +40,9 @@ import type { Repository, Lane, ModelComponent, DepEdge, DepEdgeType, Log, AddVe
 import { BitObject, Ref, Version } from '@teambit/objects';
 import type { Component, ConsumerComponent } from '@teambit/component';
 import type { DependencyResolverMain, VariantPolicyConfigArr } from '@teambit/dependency-resolver';
-import { DependencyResolverAspect } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, VariantPolicy } from '@teambit/dependency-resolver';
+import type { DependenciesOverridesData } from '@teambit/legacy.consumer-config';
+import { ComponentOverrides } from '@teambit/legacy.consumer-config';
 import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy.extension-data';
 import type { BuilderMain, LegacyOnTagResult } from '@teambit/builder';
 import { BuilderAspect } from '@teambit/builder';
@@ -379,6 +381,47 @@ export class SnappingMain {
     return autoDeps;
   }
 
+  /**
+   * re-calculate the dependencies policy of the component and its overrides from its config and env, the same way a
+   * workspace calculates them when it loads a component, rather than keeping the ones of the version it was loaded from.
+   * returns the overrides of the auto-detected dependencies (versions only, see ApplyOverrides.autoDetectOverrides),
+   * which include the deps of the merge-config, same as workspace.getAutoDetectOverrides().
+   */
+  private async recalcDependenciesPolicy(
+    component: Component,
+    mergeConfigAutoDeps?: VariantPolicyConfigArr
+  ): Promise<DependenciesOverridesData> {
+    const legacyComponent: ConsumerComponent = component.state._consumer;
+    const { extensions } = legacyComponent;
+    const depResolverExt = extensions.findCoreExtension(DependencyResolverAspect.id);
+    const calcPolicy = async (): Promise<VariantPolicy> => {
+      if (await this.dependencyResolver.canCalcEnvPolicy(extensions)) {
+        return this.dependencyResolver.mergeVariantPolicies(
+          extensions,
+          component.id,
+          legacyComponent.files,
+          legacyComponent.dependencies.get()
+        );
+      }
+      // the env defines its policy in code and is not loaded. it's loaded when it changed (see loadAspectOnlyForIds),
+      // so it didn't, and its part of the stored policy is still valid. re-calculate only the component's own config.
+      this.logger.debug(`recalcDependenciesPolicy, using the stored env policy of ${component.id.toString()}`);
+      const storedEnvPolicy = VariantPolicy.parse(depResolverExt?.data.policy || []).filter(
+        (entry) => entry.source !== 'config'
+      );
+      const configPolicy = depResolverExt?.config.policy
+        ? VariantPolicy.fromConfigObject(depResolverExt.config.policy, { source: 'config' })
+        : VariantPolicy.getEmpty();
+      return VariantPolicy.mergePolices([storedEnvPolicy, configPolicy]);
+    };
+    const policy = await calcPolicy();
+    // the "source" of each dependency in the dependency-resolver data is determined by this policy
+    if (depResolverExt) depResolverExt.data.policy = policy.serialize();
+    legacyComponent.overrides = new ComponentOverrides(pickBy(policy.toLegacyDepsOverrides(), (val) => !isEmpty(val)));
+    const mergeConfigPolicy = VariantPolicy.fromConfigObject(mergeConfigAutoDeps || {}, { source: 'auto' });
+    return VariantPolicy.mergePolices([policy, mergeConfigPolicy]).toLegacyAutoDetectOverrides();
+  }
+
   async snapFromScope(
     snapDataPerCompRaw: SnapDataPerCompRaw[],
     params: {
@@ -390,6 +433,9 @@ export class SnappingMain {
       // in case of merging lanes, the component files are updated in-memory
       updatedLegacyComponents?: ConsumerComponent[];
       loadAspectOnlyForIds?: ComponentIdList; // if undefined, load aspects for all components
+      // re-calculate the dependencies policy/overrides from the config and env, like a workspace does on load, instead
+      // of keeping the ones stored in the snapped version. needed when the config was merged from another lane/main.
+      recalcDependencies?: boolean;
     } & Partial<BasicTagParams>
   ): Promise<SnapFromScopeResults> {
     if (this.workspace) {
@@ -502,10 +548,18 @@ export class SnappingMain {
 
     const components = [...existingComponents, ...newComponents];
 
+    const autoDepsPerComp = new Map<Component, VariantPolicyConfigArr | undefined>();
     // this must be done before we load component aspects later on, because this updated deps may update aspects.
     await pMapSeries(components, async (component) => {
       const snapData = getSnapData(component.id);
       const autoDeps = await this.addAspectsFromConfigObject(component, snapData.aspects);
+      if (params.recalcDependencies) {
+        // the dependencies are added once the aspects are loaded, see below. only update the versions of aspects that
+        // are part of the snap (e.g. an env merged into the lane), so the correct versions get loaded.
+        autoDepsPerComp.set(component, autoDeps);
+        await this.UpdateDepsAspectsSaveIntoDepsResolver(component, snapData.dependencies);
+        return;
+      }
       // adds explicitly defined dependencies and dependencies from envs/aspects (overrides)
       await addDeps(component, snapData, this.scope, this.deps, this.dependencyResolver, this, autoDeps);
     });
@@ -538,6 +592,26 @@ export class SnappingMain {
       : components;
 
     await this.scope.loadManyCompsAspects(compsToLoadAspects);
+
+    if (params.recalcDependencies) {
+      // the config (and with it, the env) may differ from the one stored in the version the components were loaded
+      // from. now that the env is loaded, the dependencies are calculated according to it.
+      await pMapSeries(components, async (component) => {
+        const autoDeps = autoDepsPerComp.get(component);
+        const autoDetectOverrides = await this.recalcDependenciesPolicy(component, autoDeps);
+        const snapData = getSnapData(component.id);
+        await addDeps(
+          component,
+          snapData,
+          this.scope,
+          this.deps,
+          this.dependencyResolver,
+          this,
+          autoDeps,
+          autoDetectOverrides
+        );
+      });
+    }
 
     // this is similar to what happens in the workspace. the "onLoad" is running and populating the "data" of the aspects.
     await pMapSeries(compsToLoadAspects, async (comp) => this.scope.executeOnCompAspectReCalcSlot(comp));

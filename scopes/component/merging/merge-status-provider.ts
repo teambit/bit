@@ -20,6 +20,7 @@ import type { ComponentMergeStatus, ComponentMergeStatusBeforeMergeAttempt } fro
 import type { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { BuilderAspect } from '@teambit/builder';
+import { mergeDependencies } from './merge-dependencies';
 
 export type MergeStatusProviderOptions = {
   resolveUnrelated?: MergeStrategy;
@@ -169,6 +170,10 @@ other:   ${otherLaneHead.toString()}`);
       currentLabel,
       baseComponent,
     });
+    // a workspace re-detects the dependencies from the merged files. a bare scope can't, it merges the resolved ones.
+    const dependenciesMergeResult = this.workspace
+      ? undefined
+      : mergeDependencies(baseComponent, currentComponent, otherComponent, this.options.mergeStrategy);
     return {
       currentComponent,
       id,
@@ -176,6 +181,7 @@ other:   ${otherLaneHead.toString()}`);
       divergeData,
       configMergeResult,
       dataMergeResult,
+      dependenciesMergeResult,
     };
   }
 
