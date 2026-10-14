@@ -21,13 +21,35 @@ pub struct MissingFile {
     pub is_dev: bool,
 }
 
-/// `allDependencies`, `allPackagesDependencies`, the missing-packages issue and
+/// One file of an `UntrackedDependencies` issue entry.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct UntrackedFile {
+    /// Relative to the workspace root.
+    pub relative_path: String,
+    /// Another file of the component imports it too.
+    pub existing: bool,
+}
+
+/// One `UntrackedDependencies` issue entry: the untracked files one file imports.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub struct Untracked {
+    pub nested: bool,
+    pub files: Vec<UntrackedFile>,
+}
+
+/// `allDependencies`, `allPackagesDependencies`, the detection issues and
 /// `coreAspects`, each field array indexed by `overrides::field_index`.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Detected {
     pub components: [Vec<LegacyDependency>; 3],
     pub packages: FieldMaps,
+    /// `MissingPackagesDependenciesOnFs`.
     pub missing: Vec<MissingFile>,
+    /// `MissingDependenciesOnFs`: importing file → the relative specifiers that
+    /// name no file.
+    pub missing_files: IndexMap<String, Vec<String>>,
+    /// `UntrackedDependencies`: importing file → files no component tracks.
+    pub untracked: IndexMap<String, Untracked>,
     pub core_aspects: Vec<String>,
 }
 
@@ -45,7 +67,10 @@ impl Detected {
             detected.packages[index] =
                 string_map(&data["allPackagesDependencies"][PACKAGE_FIELDS[index]]);
         }
-        detected.missing = missing_from_issues(&data["issues"]);
+        let issues = &data["issues"];
+        detected.missing = missing_from_issues(issues);
+        detected.missing_files = missing_files_from_issues(issues);
+        detected.untracked = untracked_from_issues(issues);
         detected.core_aspects = data["coreAspects"]
             .as_array()
             .map(|aspects| {
@@ -56,6 +81,15 @@ impl Detected {
             })
             .unwrap_or_default();
         detected
+    }
+
+    /// Whether Bit would not cache this data (`shouldBlockSavingInCache`): every
+    /// detection issue is a cache blocker.
+    #[must_use]
+    pub fn blocks_cache(&self) -> bool {
+        !self.missing.is_empty()
+            || !self.missing_files.is_empty()
+            || !self.untracked.is_empty()
     }
 
     /// All missing package names, in issue order and without duplicates.
@@ -124,24 +158,29 @@ pub fn string_map(value: &Value) -> IndexMap<String, String> {
         .unwrap_or_default()
 }
 
-/// The `MissingPackagesDependenciesOnFs` entries of a serialized `IssuesList`
+/// The deserialized `data` of one issue of a serialized `IssuesList`
 /// (`[{ type, data: "<json>" }]`).
-fn missing_from_issues(issues: &Value) -> Vec<MissingFile> {
+fn issue_data(issues: &Value, kind: &str) -> Value {
     let Some(issue) = issues
         .as_array()
         .and_then(|issues| {
             issues
                 .iter()
-                .find(|issue| issue["type"] == "MissingPackagesDependenciesOnFs")
+                .find(|issue| issue["type"] == kind)
         })
     else {
-        return Vec::new();
+        return Value::Null;
     };
-    let data = match &issue["data"] {
+    match &issue["data"] {
         Value::String(text) => serde_json::from_str(text).unwrap_or(Value::Null),
         other => other.clone(),
-    };
-    data.as_array()
+    }
+}
+
+/// The `MissingPackagesDependenciesOnFs` entries of a serialized `IssuesList`.
+fn missing_from_issues(issues: &Value) -> Vec<MissingFile> {
+    issue_data(issues, "MissingPackagesDependenciesOnFs")
+        .as_array()
         .map(|entries| {
             entries
                 .iter()
@@ -156,6 +195,51 @@ fn missing_from_issues(issues: &Value) -> Vec<MissingFile> {
                 .collect()
         })
         .unwrap_or_default()
+}
+
+/// The `MissingDependenciesOnFs` entries: `{ file: [specifier] }`.
+fn missing_files_from_issues(issues: &Value) -> IndexMap<String, Vec<String>> {
+    issue_data(issues, "MissingDependenciesOnFs")
+        .as_object()
+        .map(|entries| {
+            entries
+                .iter()
+                .map(|(file, specifiers)| (file.clone(), string_list(specifiers)))
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+/// The `UntrackedDependencies` entries: `{ file: { nested, untrackedFiles } }`.
+fn untracked_from_issues(issues: &Value) -> IndexMap<String, Untracked> {
+    issue_data(issues, "UntrackedDependencies")
+        .as_object()
+        .map(|entries| {
+            entries
+                .iter()
+                .map(|(file, entry)| (file.clone(), untracked_entry(entry)))
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+fn untracked_entry(entry: &Value) -> Untracked {
+    let files = entry["untrackedFiles"]
+        .as_array()
+        .map(|files| {
+            files
+                .iter()
+                .map(|file| UntrackedFile {
+                    relative_path: file["relativePath"]
+                        .as_str()
+                        .unwrap_or_default()
+                        .to_owned(),
+                    existing: file["existing"].as_bool().unwrap_or(false),
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    Untracked { nested: entry["nested"].as_bool().unwrap_or(false), files }
 }
 
 fn string_list(value: &Value) -> Vec<String> {

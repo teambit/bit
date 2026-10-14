@@ -7,6 +7,7 @@ pub(crate) mod remotes;
 
 pub use bitmap::{Bitmap, Id, LaneId};
 pub use fetch::FetchOptions;
+pub use lane::local_update_dependents;
 pub use objects::Repo;
 pub use tar::ObjectItem;
 
@@ -54,7 +55,7 @@ pub async fn import_current_objects(
     output.status("importing missing objects");
     output.status(IMPORTING);
     let started = Instant::now();
-    let summary = import(root, scope_dir, global, info).await?;
+    let summary = import(root, scope_dir, global, info, output).await?;
     output.success(IMPORTING, Some(started));
     Ok(summary)
 }
@@ -64,6 +65,7 @@ async fn import(
     scope_dir: &Path,
     global: &GlobalConfig,
     info: &HostInfo,
+    output: &Output,
 ) -> io::Result<ImportSummary> {
     let bitmap = bitmap::read(root)?;
     let scope_json = read_scope_json(scope_dir)?;
@@ -72,8 +74,10 @@ async fn import(
         .unwrap_or_default()
         .to_string();
     let remotes = Remotes::load(&scope_json, &info.global_config_dir, global)?;
-    let network = Network::new(global, &info.bit_version, Some(&local_scope))?;
-    let fetcher = Fetcher { remotes: &remotes, network: &network };
+    let network =
+        Network::new(global, &info.bit_version, Some(&local_scope), info.token.as_deref())?;
+    let fetcher =
+        Fetcher { remotes: &remotes, network: &network, concurrency: fetch::concurrency(global) };
     let repo = Repo::new(scope_dir);
     let remote_lane = match &bitmap.lane {
         Some(lane) => lane::fetch_remote_lane(&fetcher, lane).await?,
@@ -88,10 +92,11 @@ async fn import(
         fetcher: &fetcher,
         local_scope: &local_scope,
         lane: remote_lane.as_ref(),
+        output: Some(output),
     };
     let written = importer.import(&ids).await?;
     if let Some(lane) = &remote_lane {
-        lane::save_lane_if_missing(&repo, lane)?;
+        lane::merge_and_save(&repo, lane, &lane::Identity::from_config(global))?;
     }
     Ok(ImportSummary { components: written.components.len(), objects: written.objects })
 }

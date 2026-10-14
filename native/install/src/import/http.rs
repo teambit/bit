@@ -51,16 +51,22 @@ pub struct Network {
 }
 
 impl Network {
+    /// `token` is the `--token` flag, which wins over `user.token`.
     pub fn new(
         global: &GlobalConfig,
         client_version: &str,
         local_scope: Option<&str>,
+        token: Option<&str>,
     ) -> io::Result<Self> {
-        let builder = proxy(Client::builder().connect_timeout(Duration::from_mins(1)), global)?;
+        let builder = sockets(Client::builder(), global)?;
+        let builder = proxy(builder, global)?;
         let client = tls(builder, global)?.build().map_err(io::Error::other)?;
         Ok(Self {
             client,
-            token: config_str(global, CFG_USER_TOKEN).map(str::to_string),
+            token: token
+                .filter(|token| !token.is_empty())
+                .or_else(|| config_str(global, CFG_USER_TOKEN))
+                .map(str::to_string),
             client_version: client_version.to_string(),
             local_scope: local_scope.map(str::to_string),
             retry: Retry::from_config(global),
@@ -185,6 +191,29 @@ fn unexpected(message: &str) -> io::Error {
 
 fn network_error(error: &reqwest::Error) -> io::Error {
     unexpected(&error.to_string())
+}
+
+/// `Http.getNetworkConfig()` socket settings: `network.fetch_timeout` (default
+/// 60000 ms, the whole request), `network.local_address` and
+/// `network.max_sockets` (default 15, the agent's per-host socket pool).
+fn sockets(
+    builder: reqwest::ClientBuilder,
+    global: &GlobalConfig,
+) -> io::Result<reqwest::ClientBuilder> {
+    let number = |key: &str| config_str(global, key).and_then(|value| value.parse::<u64>().ok());
+    let timeout = number("network.fetch_timeout").unwrap_or(60_000);
+    let max_sockets = usize::try_from(number("network.max_sockets").unwrap_or(15)).unwrap_or(15);
+    let mut builder = builder
+        .connect_timeout(Duration::from_mins(1))
+        .timeout(Duration::from_millis(timeout))
+        .pool_max_idle_per_host(max_sockets.max(1));
+    if let Some(address) = config_str(global, "network.local_address") {
+        let address: std::net::IpAddr = address
+            .parse()
+            .map_err(|_| invalid(&format!("invalid network.local_address: {address}")))?;
+        builder = builder.local_address(address);
+    }
+    Ok(builder)
 }
 
 /// `Http.getProxyConfig()`: `proxy`, `https_proxy` (falls back to `proxy`), `proxy.no_proxy`.

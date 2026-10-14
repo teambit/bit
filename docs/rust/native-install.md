@@ -141,3 +141,12 @@ These install e2e suites pass on the native path:
 - Aspect-type envs come from a fixed list of core aspect envs.
 - Aspect-registered dependency policy slots and custom env dependency detectors are not applied.
 - Workspaces configured with the yarn package manager use the TypeScript command, because yarn is a JavaScript package manager.
+
+## CI
+
+The PR e2e jobs never provision the addon, so they run the TypeScript command. The
+`Native install e2e` job of `rust-dependency-scanner.yml` builds the addon, points
+`BIT_NATIVE_INSTALL_ADDON` at it, and runs the install e2e suites with
+`BIT_NATIVE_INSTALL_REQUIRE=on`. With that variable, a missing or unusable addon is an
+error instead of a fallback, so the job cannot pass on the TypeScript command by accident.
+Workspaces the native command declines on purpose (yarn) still fall back.

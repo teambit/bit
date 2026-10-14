@@ -6,8 +6,11 @@ use super::{
     remotes::{Remote, Remotes},
     tar::ObjectItem,
 };
+use crate::model::GlobalConfig;
+use futures_util::{StreamExt, stream};
 use indexmap::IndexMap;
 use serde::Serialize;
+use serde_json::Value;
 use std::io;
 
 /// `CURRENT_FETCH_SCHEMA`.
@@ -117,28 +120,54 @@ impl FetchOptions {
     }
 }
 
+/// `CONCURRENT_FETCH_LIMIT`.
+const DEFAULT_CONCURRENCY: usize = 15;
+
+/// `concurrentFetchLimit()`: `concurrency.fetch` from the bit config, else 15.
+#[must_use]
+pub fn concurrency(global: &GlobalConfig) -> usize {
+    global
+        .get("concurrency.fetch")
+        .and_then(|value| match value {
+            Value::Number(number) => number.as_u64(),
+            Value::String(text) => text.parse().ok(),
+            _ => None,
+        })
+        .and_then(|limit| usize::try_from(limit).ok())
+        .filter(|limit| *limit > 0)
+        .unwrap_or(DEFAULT_CONCURRENCY)
+}
+
 /// Fetches through the right transport for each remote scope.
 pub struct Fetcher<'a> {
     pub remotes: &'a Remotes,
     pub network: &'a Network,
+    /// How many remotes are fetched at the same time (`concurrentFetchLimit`).
+    pub concurrency: usize,
 }
 
 /// The objects each remote returned, keyed by the remote scope name.
 pub type PerRemote = IndexMap<String, Vec<ObjectItem>>;
 
 impl Fetcher<'_> {
-    /// Fetch `ids` grouped by remote scope. A scope that is not found is skipped
-    /// (`throwOnUnavailableScope` is off for these imports); network failures
-    /// of all remotes are reported together.
+    /// Fetch `ids` grouped by remote scope, `concurrency` remotes at a time
+    /// (`pMapPool`), keeping the groups' order. A scope that is not found is
+    /// skipped (`throwOnUnavailableScope` is off for these imports); network
+    /// failures of all remotes are reported together.
     pub async fn fetch(
         &self,
         grouped: &IndexMap<String, Vec<String>>,
         options: &FetchOptions,
     ) -> io::Result<PerRemote> {
+        let fetched: Vec<(&String, io::Result<Vec<ObjectItem>>)> = stream::iter(grouped)
+            .map(|(scope, ids)| async move { (scope, self.fetch_one(scope, ids, options).await) })
+            .buffered(self.concurrency.max(1))
+            .collect()
+            .await;
         let mut results = PerRemote::new();
         let mut failed = Vec::new();
-        for (scope, ids) in grouped {
-            match self.fetch_one(scope, ids, options).await {
+        for (scope, result) in fetched {
+            match result {
                 Ok(items) => {
                     results.insert(scope.clone(), items);
                 }

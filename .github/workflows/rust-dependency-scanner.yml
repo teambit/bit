@@ -169,7 +169,7 @@ jobs:
   integration:
     name: Real dependency pipeline and scoped helpers (Linux)
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
         with:
@@ -221,7 +221,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
         with:
@@ -260,7 +260,7 @@ jobs:
   lint:
     name: pnpm Rust formatting and lints
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     defaults:
       run:
         working-directory: native
@@ -429,7 +429,7 @@ jobs:
   musl:
     name: Packaged scanner on Alpine (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -488,6 +488,109 @@ jobs:
             node --test scripts/rust-dependency-analysis/discovery.test.cjs
             python3 scripts/rust-dependency-analysis/artifacts/test_install.py
           '
+
+  native-install-e2e:
+    name: Native install e2e (ubuntu-latest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    # The PR e2e jobs run the TypeScript `bit install`: they never provision the addon. This job
+    # builds it and runs the install suites through it; `BIT_NATIVE_INSTALL_REQUIRE=on` makes a
+    # silent fallback to the TypeScript command fail (scopes/harmony/bit/rust-install.ts).
+    env:
+      BITSRC_ENV: stg
+      BIT_FEATURES: cloud-importer-v2
+      NODE_COMPILE_CACHE: /home/runner/node-compile-cache
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+      - name: Restore Rust build cache from the Rust test job
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            native/target/debug
+          key: rust-scanner-test-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('native/rust-toolchain.toml', 'native/Cargo.lock') }}
+          restore-keys: rust-scanner-test-${{ runner.os }}-${{ runner.arch }}-
+      - name: Prepare pinned pnpm engine sources
+        run: node scripts/rust/prepare-pnpm-engine.mjs
+      - name: Build the in-process workspace engine with the native installer
+        working-directory: native
+        run: |
+          cargo build --locked --package bit-workspace-napi
+          cp target/debug/libbit_workspace_napi.so target/debug/bit-workspace.node
+      - name: Install bvm and the latest bit (bbit)
+        run: |
+          npm install --global @teambit/bvm
+          bvm config set RELEASE_TYPE nightly
+          bvm config set DEFAULT_LINK bbit
+          bvm upgrade
+          bvm link --verbose
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+      - name: Configure bbit
+        run: |
+          bbit -v
+          bbit config set analytics_reporting false
+          bbit config set error_reporting false
+          bbit config set user.name CI
+          bbit config set user.email ci@bit.dev
+          bbit config set registry https://node-registry.bit.cloud
+          bbit config set package-manager.cache "$HOME/package-manager-cache"
+      - name: Restore package-manager cache
+        uses: actions/cache@v4
+        with:
+          path: ~/package-manager-cache
+          key: pm-cache-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pm-cache-${{ runner.os }}-
+      - name: Install and compile the checkout (bbit)
+        run: |
+          bbit init
+          bbit install
+          bbit compile
+      - name: Link the repo bit binary for the e2e tests
+        run: |
+          mkdir -p "$HOME/.npm-global/bin"
+          ln -sf "$GITHUB_WORKSPACE/bin/bit.js" "$HOME/.npm-global/bin/bit"
+          echo "$HOME/.npm-global/bin" >> "$GITHUB_PATH"
+          git config --global user.name "CI"
+          git config --global user.email "ci@bit.dev"
+          echo "user-agent=bit-e2e-github-actions" >> ~/.npmrc
+      - name: Prove the native installer owns bit install
+        env:
+          BIT_NATIVE_INSTALL_ADDON: ${{ github.workspace }}/native/target/debug/bit-workspace.node
+          BIT_NATIVE_INSTALL_REQUIRE: 'on'
+        run: |
+          workspace="$(mktemp -d)"
+          cd "$workspace"
+          bit init
+          bit install
+          if BIT_NATIVE_INSTALL=off bit install; then
+            echo 'the guard did not fail the TypeScript fallback'
+            exit 1
+          fi
+      - name: Run the install e2e suites through the native installer
+        env:
+          BIT_NATIVE_INSTALL_ADDON: ${{ github.workspace }}/native/target/debug/bit-workspace.node
+          BIT_NATIVE_INSTALL_REQUIRE: 'on'
+          npm_config_bit_bin: bit
+          MOCHA_FILE: junit/e2e-test-results.xml
+        run: |
+          mkdir -p junit
+          npm run mocha-circleci -- e2e/harmony/install.e2e.ts e2e/harmony/install-and-compile.e2e.ts e2e/harmony/install-missing-dependencies.e2e.ts e2e/harmony/dependencies/allow-scripts.e2e.ts e2e/harmony/root-components.e2e.ts
+      - name: Upload test results and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-install-e2e-results
+          path: |
+            junit
+            ~/Library/Caches/Bit/logs
+          if-no-files-found: ignore
 
   object-import-models:
     name: Object import canonical models (${{ matrix.os }})

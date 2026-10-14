@@ -143,12 +143,12 @@ impl Rewriter<'_> {
         format!("{package}{}", create_peer_suffix(&rewritten))
     }
 
-    /// `getBestCompatiblePeer`.
+    /// `getBestCompatiblePeer`: `semver.satisfies(version, range, { includePrerelease: true })`.
     fn best_compatible(&self, name: &str, range: &str) -> Option<String> {
         self.versions
             .get(name)?
             .iter()
-            .find(|version| semver::satisfies(version, range))
+            .find(|version| semver::satisfies_including_prerelease(version, range))
             .cloned()
     }
 }

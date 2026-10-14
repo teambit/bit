@@ -7,6 +7,9 @@
 //! `readPackage` hooks implemented natively instead of through a JavaScript
 //! callback.
 
+pub use cloud_user::{
+    LOOKUP_TIMEOUT as CLOUD_LOOKUP_TIMEOUT, apply_cloud_username, cloud_username,
+};
 pub use error::EngineError;
 pub use network::{NetworkSettings, ProxySettings, RetrySettings, TlsSettings};
 pub use peers::missing_peers;
@@ -19,6 +22,7 @@ pub use run::install;
 pub use scripts::ScriptPolicy;
 pub use settings::{EnvVars, settings};
 
+mod cloud_user;
 mod config_overlay;
 mod error;
 mod hooks;
@@ -73,6 +77,10 @@ pub struct RegistrySettings {
     /// `Authorization` header values keyed by nerf-darted registry URI, plus
     /// `""` for the default registry (`buildAuthHeaderByUri`).
     pub auth_header_by_uri: IndexMap<String, String>,
+    /// The user agent is Bit's `bit user/<username>` (no `userAgent` in the
+    /// pnpm config cascade); the cloud username replaces the global
+    /// `user.name` once it is known (`apply_cloud_username`).
+    pub cloud_user_agent: bool,
     pub proxy: ProxySettings,
     pub network: NetworkSettings,
 }

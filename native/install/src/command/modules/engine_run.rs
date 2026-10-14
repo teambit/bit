@@ -12,7 +12,6 @@ use crate::{
 use indexmap::IndexMap;
 use std::{io, time::Instant};
 
-const DEDUPING: &str = "deduping dependencies for installation";
 const PRE_SUBSCRIBERS: &str = "running pre install subscribers";
 const RUNNING: &str = "running package installation using pnpm";
 const POST_SUBSCRIBERS: &str = "running post install subscribers";
@@ -31,8 +30,6 @@ pub async fn run(
     restore: Option<&RestoreInput>,
 ) -> io::Result<EngineResult> {
     let output = &session.output;
-    output.status(DEDUPING);
-    output.success(DEDUPING, None);
     output.status(PRE_SUBSCRIBERS);
     output.success(PRE_SUBSCRIBERS, None);
     output.status(RUNNING);

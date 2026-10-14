@@ -4,8 +4,8 @@
 
 use super::session::{Loaded, Session};
 use crate::{
-    dependencies::{self, DependencyOptions, default_package_name, glob},
-    import::remotes::global_remotes,
+    dependencies::{self, DependencyOptions, DevPatternConfig, default_package_name, glob},
+    import::{self, remotes::global_remotes},
     manifests::{
         self, ManifestContext, ManifestInput, ManifestOptions, ManifestOutcome, Policies,
         RemoteFilter,
@@ -15,10 +15,14 @@ use crate::{
         WorkspaceComponent,
     },
     policy::{self, is_core_env, split_version},
+    workspace::ScopeObjects,
 };
 use indexmap::IndexMap;
 use serde_json::Value;
 use std::io;
+
+/// `getWorkspaceManifest`'s status line around the manifest creation.
+const DEDUPING: &str = "deduping dependencies for installation";
 
 /// One calculation of what to install.
 pub struct Calculated {
@@ -46,6 +50,12 @@ pub async fn calculate(
     loaded: &Loaded,
     linked_root_deps: &DependencyMap,
 ) -> io::Result<Calculated> {
+    // The TypeScript command loads the components twice before the manifests:
+    // `linkCodemods` right after the root links, then `getComponentsDirectory`
+    // in `_getComponentsManifests`. The native linker runs after this
+    // calculation and loads nothing, so both lines belong here.
+    session.loading(loaded);
+    session.loading(loaded);
     let components = loaded.components();
     let env_policies = policy::load_env_policies(&session.root, &components, session.host).await?;
     let workspace_policy = workspace_policy(loaded)?;
@@ -56,10 +66,13 @@ pub async fn calculate(
         &env_policies,
         loaded.workspace.root_package_json.as_ref(),
         &dependency_options(session, loaded, &components)?,
+        session.host,
     )
     .await?;
     let apps = apps(session, loaded, &components).await?;
-    let root_policy = root_policy(session, loaded, workspace_policy);
+    let root_policy = root_policy(session, loaded, workspace_policy)?;
+    // `getWorkspaceManifest` announces the manifest creation (`createFromComponents`).
+    session.output.status(DEDUPING);
     let outcome = plan(
         session,
         loaded,
@@ -72,6 +85,11 @@ pub async fn calculate(
             apps: &apps,
         },
     )?;
+    session.output.success(DEDUPING, None);
+    // The component loads the TypeScript command performs while it finishes
+    // the manifests of the engine run.
+    session.loading(loaded);
+    session.loading(loaded);
     Ok(Calculated { components, env_policies, dependencies, outcome })
 }
 
@@ -126,12 +144,14 @@ fn workspace_policy(loaded: &Loaded) -> io::Result<Vec<PolicyEntry>> {
 
 /// `addConfiguredAspectsToWorkspacePolicy` and `addConfiguredGeneratorEnvsToWorkspacePolicy`:
 /// aspects and envs configured in `workspace.jsonc` but not in the workspace are installed
-/// at the root (`skipIfExisting`).
+/// at the root (`skipIfExisting`), under the package name their scope objects record
+/// (`getPackageName`), or the default name when the scope does not hold them.
 fn root_policy(
     session: &Session<'_>,
     loaded: &Loaded,
     mut policy: Vec<PolicyEntry>,
-) -> Vec<PolicyEntry> {
+) -> io::Result<Vec<PolicyEntry>> {
+    let objects = ScopeObjects::new(&loaded.workspace.scope_path);
     let aspects = loaded.config.user_aspect_ids(&session.core_ids());
     let envs = loaded.config.generator_envs
         .iter()
@@ -143,7 +163,8 @@ fn root_policy(
         if in_workspace(loaded, &component_id) {
             continue;
         }
-        let package = default_package_name(&component_id);
+        let package = stored_package_name(&objects, &component_id, version)?
+            .unwrap_or_else(|| default_package_name(&component_id));
         if policy
             .iter()
             .any(|entry| entry.name == package)
@@ -163,7 +184,19 @@ fn root_policy(
             source: None,
         });
     }
-    policy
+    Ok(policy)
+}
+
+/// The package name the scope records for `id` at `version` (its head without one).
+fn stored_package_name(
+    objects: &ScopeObjects,
+    id: &ComponentId,
+    version: Option<&str>,
+) -> io::Result<Option<String>> {
+    let versioned = ComponentId { version: version.map(str::to_owned), ..id.clone() };
+    Ok(objects
+        .component_or_head(&versioned)?
+        .map(|model| model.package_name(id)))
 }
 
 fn in_workspace(loaded: &Loaded, id: &ComponentId) -> bool {
@@ -199,9 +232,31 @@ fn dependency_options(
     Ok(DependencyOptions {
         core_aspects: session.info.core_aspects.clone(),
         merge_config,
-        update_dependents: Vec::new(),
+        update_dependents: update_dependents(loaded)?,
         use_cache: true,
+        dev_patterns: DevPatternConfig::from_aspects(&|id| loaded.config.aspect(id).cloned()),
     })
+}
+
+/// `getIdFromUpdateDependentsOnLane`: the current lane's hidden dependents, with
+/// their lane versions.
+fn update_dependents(loaded: &Loaded) -> io::Result<Vec<ComponentId>> {
+    let Some(lane) = &loaded.workspace.lane else { return Ok(Vec::new()) };
+    let lane_id = import::LaneId {
+        scope: lane.scope.clone(),
+        name: lane.name.clone(),
+        exported: lane.exported,
+    };
+    let repo = import::Repo::new(&loaded.workspace.scope_path);
+    Ok(import::local_update_dependents(&repo, &lane_id)?
+        .into_iter()
+        .map(|id| ComponentId {
+            scope: Some(id.scope),
+            default_scope: None,
+            name: id.name,
+            version: id.version,
+        })
+        .collect())
 }
 
 /// App components (ids without version): only root components install apps separately.

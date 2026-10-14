@@ -9,18 +9,17 @@ import { BitError } from '@teambit/bit-error';
  * implement in JavaScript.
  */
 export async function runRustInstall(): Promise<boolean> {
-  if (process.env.BIT_NATIVE_INSTALL === 'off') return false;
+  if (process.env.BIT_NATIVE_INSTALL === 'off') return required('BIT_NATIVE_INSTALL=off disables it');
   const addon = resolveNativeInstallAddon();
-  if (!addon) return false;
+  if (!addon) return required('no native addon is available');
   // eslint-disable-next-line global-require, import/no-dynamic-require
   const binding = require(addon) as { install?: NativeInstall };
-  if (typeof binding.install !== 'function') return false;
+  if (typeof binding.install !== 'function') return required(`${addon} has no install export`);
   const { logger } = await import('@teambit/legacy.logger');
   const root = findWorkspaceRoot(process.cwd());
-  if (root) {
-    logger.commandHistoryBasePath = path.join(root, '.bit');
-    logger.writeCommandHistoryStart();
-  }
+  if (root) logger.commandHistoryBasePath = path.join(root, '.bit');
+  // the "started" history line is written once the native path owns the command: a help or
+  // yarn outcome falls back to the CLI parser, which writes its own line.
   const host = new InstallHost(root ?? process.cwd());
   const { prepareBuildScriptsPath } = await import('@teambit/pnpm/dist/build-scripts-path.js');
   prepareBuildScriptsPath();
@@ -29,19 +28,33 @@ export async function runRustInstall(): Promise<boolean> {
     result = await binding.install(
       process.argv.slice(2),
       process.cwd(),
-      JSON.stringify(await hostInfo()),
+      JSON.stringify(await hostInfo(root)),
       (method, payload) => host.serve(method, payload),
       (text) => {
         process.stdout.write(text);
       }
     );
   } catch (error: any) {
+    logger.writeCommandHistoryStart();
     throw new BitError(error?.message ?? String(error));
   }
   const { outcome } = JSON.parse(result) as { outcome: 'installed' | 'help' | 'unsupported' };
   if (outcome !== 'installed') return false;
+  logger.writeCommandHistoryStart();
   await logger.exitAfterFlush(0, 'install');
   return true;
+}
+
+/**
+ * `BIT_NATIVE_INSTALL_REQUIRE=on` turns the deployment fallback (no usable addon) into an error,
+ * so CI that qualifies the native command cannot pass on the TypeScript command by accident.
+ * Workspaces the native command declines on purpose (yarn) still fall back.
+ */
+function required(reason: string): false {
+  if (process.env.BIT_NATIVE_INSTALL_REQUIRE === 'on') {
+    throw new BitError(`native bit install is required (BIT_NATIVE_INSTALL_REQUIRE=on) but ${reason}`);
+  }
+  return false;
 }
 
 type NativeInstall = (
@@ -74,7 +87,7 @@ function findWorkspaceRoot(cwd: string): string | undefined {
   return dir;
 }
 
-async function hostInfo() {
+async function hostInfo(root: string | undefined) {
   const [{ GLOBAL_CONFIG }, { getBitVersion }, { findCurrentBvmDir }, coreAspects, { currentDateAndTimeToFileName }] =
     await Promise.all([
       import('@teambit/legacy.constants'),
@@ -83,6 +96,17 @@ async function hostInfo() {
       import('./rust-install-core-aspects'),
       import('@teambit/legacy.consumer/dist/bitmap-history-file-id.js'),
     ]);
+  // the virtual-store directories this process loaded modules from (require.cache plus the
+  // recorded ESM loads) must survive the prune, as pnpmPruneModules leaves them alone.
+  let loadedVirtualStoreDirs: string[] = [];
+  if (root) {
+    try {
+      const { loadedVirtualStoreDirNames } = await import('@teambit/pnpm/dist/preserve-loaded-virtual-store-dirs.js');
+      loadedVirtualStoreDirs = [...loadedVirtualStoreDirNames(path.join(root, 'node_modules', '.pnpm'))];
+    } catch {
+      loadedVirtualStoreDirs = [];
+    }
+  }
   const chalk = (await import('chalk')).default;
   const { shouldDisableLoader } = await import('@teambit/legacy.logger');
   return {
@@ -96,7 +120,19 @@ async function hostInfo() {
     loader: !shouldDisableLoader,
     nonInteractive: process.argv.includes('--json'),
     fileId: currentDateAndTimeToFileName(),
+    loadedVirtualStoreDirs,
+    token: tokenFlag(process.argv.slice(3)) ?? null,
   };
+}
+
+/** The global `--token` flag, which `CommandRunner` copies to `globalFlags.token` on the TypeScript path. */
+function tokenFlag(args: string[]): string | undefined {
+  for (let i = 0; i < args.length; i += 1) {
+    if (args[i] === '--') return undefined;
+    if (args[i].startsWith('--token=')) return args[i].slice('--token='.length);
+    if (args[i] === '--token' && args[i + 1] !== undefined && !args[i + 1].startsWith('-')) return args[i + 1];
+  }
+  return undefined;
 }
 
 /** Serves the callbacks components and aspects implement in JavaScript. */
@@ -111,6 +147,8 @@ class InstallHost {
         return JSON.stringify(await this.envPolicy(input.envId));
       case 'appTypes':
         return JSON.stringify(await this.appTypes());
+      case 'devPatterns':
+        return JSON.stringify(await this.devPatterns(input.envId));
       case 'packageJsonProps':
         return JSON.stringify(await this.packageJsonProps(input.envId));
       case 'transformPackageJson':
@@ -132,6 +170,24 @@ class InstallHost {
     const env = await this.env(envId);
     const policy = await env?.getDependencies?.();
     return policy ?? null;
+  }
+
+  /**
+   * The dev-file patterns an env implements in JavaScript (`getDevPatterns`,
+   * `getTestsDevPatterns`, `getDocsDevPatterns`, `getCompositionsDevPatterns`), each
+   * `null` when the env does not implement it; `null` when the env cannot be loaded.
+   */
+  private async devPatterns(envId: string) {
+    if (envId === 'teambit.harmony/node') return { devPatterns: null, tests: null, docs: null, compositions: null };
+    const env = await this.env(envId);
+    if (!env) return null;
+    const call = async (method: string) => (typeof env[method] === 'function' ? await env[method]() : null);
+    return {
+      devPatterns: await call('getDevPatterns'),
+      tests: await call('getTestsDevPatterns'),
+      docs: await call('getDocsDevPatterns'),
+      compositions: await call('getCompositionsDevPatterns'),
+    };
   }
 
   private async appTypes(): Promise<string[]> {

@@ -148,6 +148,22 @@ impl Repo {
         write_atomic(&self.object_path(hash)?, compressed)
     }
 
+    /// `getHashFromIndex(IndexType.lanes, ...)`: the object hash of the lane
+    /// `scope/name`, `None` when the index does not list it.
+    pub fn lane_hash(&self, scope: &str, name: &str) -> io::Result<Option<String>> {
+        let index = read_index(&self.root.join("index.json"))?;
+        Ok(index["lanes"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .find(|row| {
+                row["id"]["scope"].as_str() == Some(scope)
+                    && row["id"]["name"].as_str() == Some(name)
+            })
+            .and_then(|row| row["hash"].as_str())
+            .map(str::to_owned))
+    }
+
     /// Append Component and Lane rows that `index.json` does not list yet
     /// (`ScopeIndex.addMany`), keeping existing rows and their order.
     pub fn index_add(&self, rows: &[IndexRow]) -> io::Result<()> {
@@ -280,14 +296,19 @@ fn add_row(index: &mut Value, row: &IndexRow) -> bool {
         index[key] = json!([]);
     }
     let Some(rows) = index[key].as_array_mut() else { return false };
-    if rows
-        .iter()
-        .any(|existing| existing["hash"].as_str() == Some(hash.as_str()))
-    {
-        return false;
+    let Some(existing) = rows
+        .iter_mut()
+        .find(|existing| existing["hash"].as_str() == Some(hash.as_str()))
+    else {
+        rows.push(entry);
+        return true;
+    };
+    // `ScopeIndex.addOne`: a lane found by hash takes the new id (`bit lane rename`).
+    if key == "lanes" && existing["id"] != entry["id"] {
+        existing["id"] = entry["id"].clone();
+        return true;
     }
-    rows.push(entry);
-    true
+    false
 }
 
 /// Write via a temporary sibling and rename, creating parent directories.

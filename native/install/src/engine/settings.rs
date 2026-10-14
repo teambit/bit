@@ -67,6 +67,7 @@ fn registry_settings(
     Ok(RegistrySettings {
         auth_header_by_uri: registries.auth_header_by_uri(),
         registries,
+        cloud_user_agent: !base.explicit_settings.contains_key("userAgent"),
         proxy: network::proxy(base, config, global),
         network: network::network(base, config, global)?,
     })

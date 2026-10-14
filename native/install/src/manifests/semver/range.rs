@@ -125,12 +125,19 @@ impl Range {
 
     /// `range.test(version)`.
     pub(crate) fn test(&self, version: &SemVer) -> bool {
-        self.set.iter().any(|comps| test_set(comps, version))
+        self.set.iter().any(|comps| test_set(comps, version, false))
     }
 
     /// `range.test(versionString)`: an invalid version never satisfies.
     pub(crate) fn test_str(&self, version: &str) -> bool {
         SemVer::parse(version).is_ok_and(|version| self.test(&version))
+    }
+
+    /// `range.test(versionString)` with `includePrerelease`: a prerelease
+    /// satisfies any comparator set it fits, not only one naming its tuple.
+    pub(crate) fn test_str_including_prerelease(&self, version: &str) -> bool {
+        SemVer::parse(version)
+            .is_ok_and(|version| self.set.iter().any(|comps| test_set(comps, &version, true)))
     }
 
     /// `range.intersects(other)` of semver 6.
@@ -175,14 +182,14 @@ pub(crate) fn is_satisfiable(comparators: &[Comparator]) -> io::Result<bool> {
     Ok(true)
 }
 
-fn test_set(comparators: &[Comparator], version: &SemVer) -> bool {
+fn test_set(comparators: &[Comparator], version: &SemVer, include_prerelease: bool) -> bool {
     if !comparators
         .iter()
         .all(|comp| comp.test(version))
     {
         return false;
     }
-    if version.prerelease.is_empty() {
+    if version.prerelease.is_empty() || include_prerelease {
         return true;
     }
     comparators

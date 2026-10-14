@@ -8,9 +8,10 @@ use super::{
     objects::{IndexRow, Parsed, RemoteRef, Repo, compress_json, invalid, parse},
     tar::ObjectItem,
 };
+use crate::output::Output;
 use indexmap::IndexMap;
 use serde_json::Value;
-use std::{collections::BTreeSet, io};
+use std::{cell::Cell, collections::BTreeSet, io};
 
 /// `DEFAULT_LANE`.
 pub const MAIN: &str = "main";
@@ -26,14 +27,48 @@ pub struct Written {
 /// The Component objects received for one component, per remote.
 type Received = IndexMap<String, Vec<(String, Value)>>;
 
+/// `showProgress`: every 100 objects handed to the write queue restart the
+/// loader with `<importing ...>. downloaded N objects.` (skipped on CI).
+pub struct Progress<'a> {
+    output: &'a Output,
+    message: String,
+    added: Cell<usize>,
+}
+
+impl<'a> Progress<'a> {
+    /// `None` when `CI` is set, as `showProgress` prints nothing there.
+    #[must_use]
+    pub fn new(output: &'a Output, message: &str) -> Option<Self> {
+        if std::env::var_os("CI").is_some_and(|value| !value.is_empty()) {
+            return None;
+        }
+        Some(Self { output, message: message.to_string(), added: Cell::new(0) })
+    }
+
+    fn added(&self) {
+        let added = self.added.get() + 1;
+        self.added.set(added);
+        if added.is_multiple_of(100) {
+            self.output.status(&format!("{}. downloaded {added} objects.", self.message));
+        }
+    }
+}
+
 /// Persist every remote's objects, then merge and write the components.
-pub fn persist(repo: &Repo, fetched: &PerRemote) -> io::Result<Written> {
+pub fn persist(
+    repo: &Repo,
+    fetched: &PerRemote,
+    progress: Option<&Progress<'_>>,
+) -> io::Result<Written> {
     let mut received = Received::new();
     let mut written = Written::default();
     for (remote, items) in fetched {
         for item in items {
             if write_object(repo, remote, item, &mut received)? {
                 written.objects += 1;
+            }
+            if let Some(progress) = progress {
+                progress.added();
             }
         }
     }

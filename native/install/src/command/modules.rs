@@ -47,12 +47,20 @@ pub async fn install(session: &Session<'_>, mut loaded: Loaded) -> io::Result<In
     let has_root_components = loaded.config.dependency_resolver.has_root_components();
     let restore = restore::input(session, has_root_components, &calculated)?;
     prepare_directories(&loaded, &calculated)?;
+    // `_installModulesProfiled` loads the component directory map before the engine runs.
+    session.loading(&loaded);
     let context = CycleContext { loaded: &loaded, links: &links, restore: restore.as_ref() };
     let old_non_loaded_envs = run_cycles(session, &context, &mut calculated).await?;
     linking::sync_core_aspects(session, &loaded, &calculated)?;
     if !session.options.lockfile_only {
-        // A failed prune never fails the installation.
-        let _ = engine::prune_modules(&session.root, &HashSet::new());
+        // A failed prune never fails the installation. Directories the host
+        // process loaded modules from stay (`loadedVirtualStoreDirNames`).
+        let loaded_dirs: HashSet<String> = session.info
+            .loaded_virtual_store_dirs
+            .iter()
+            .cloned()
+            .collect();
+        let _ = engine::prune_modules(&session.root, &loaded_dirs);
     }
     Ok(Installed { components: calculated.components.len(), old_non_loaded_envs })
 }
@@ -69,6 +77,8 @@ async fn run_cycles(
     for cycle in 1..=MAX_CYCLES {
         let has_missing_local_components = calculated.outcome.has_missing_local_components;
         let result = engine_run::run(session, loaded, calculated, restore).await?;
+        // `linkCodemods` loads the components it links.
+        session.loading(loaded);
         linking::link_components(session, loaded, calculated).await?;
         linking::sync_core_aspects(session, loaded, calculated)?;
         let old_non_loaded_envs = calculated.non_loaded_envs();

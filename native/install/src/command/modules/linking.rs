@@ -8,12 +8,14 @@ use super::super::{
 use crate::{
     links::{self, ComponentLinkOptions, LinkOptions},
     model::DependencyMap,
+    workspace::{ScopeObjects, aspect_env_ids},
 };
 use std::{io, time::Instant};
 
 const LINKING: &str = "linking components";
 
-/// Envs of type `aspect`, whose components export their types.
+/// Core envs of type `aspect`; the stored env descriptors of the components
+/// add the custom ones (`isUsingAspectEnv`).
 const ASPECT_ENVS: [&str; 3] = [
     "teambit.harmony/aspect",
     "teambit.harmony/envs/core-aspect-env",
@@ -22,6 +24,8 @@ const ASPECT_ENVS: [&str; 3] = [
 
 /// The `link:` dependencies of the root manifest (`calculateLinkedDeps`).
 pub fn root_links(session: &Session<'_>, loaded: &Loaded) -> io::Result<DependencyMap> {
+    // `calculateLinks` loads the components (`getComponentsDirectory`) first.
+    session.loading(loaded);
     session.output.status(LINKING);
     let started = Instant::now();
     let config = &loaded.config.dependency_resolver;
@@ -57,10 +61,11 @@ pub async fn link_components(
     let config = &loaded.config.dependency_resolver;
     let root_components_dir = loaded.config.root_components_path(&session.root);
     let cloud_domain = loaded.effective.cloud_domain();
-    let aspect_env_ids: Vec<String> = ASPECT_ENVS
-        .iter()
-        .map(ToString::to_string)
-        .collect();
+    let aspect_env_ids = aspect_env_ids(
+        &calculated.components,
+        &ScopeObjects::new(&loaded.workspace.scope_path),
+        &ASPECT_ENVS,
+    )?;
     let options = ComponentLinkOptions {
         has_root_components: config.has_root_components(),
         root_components_dir: &root_components_dir,

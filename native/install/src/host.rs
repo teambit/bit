@@ -42,6 +42,14 @@ pub struct HostInfo {
     /// `currentDateAndTimeToFileName()` at command start: names the
     /// `workspace.jsonc` backup in local time.
     pub file_id: String,
+    /// `node_modules/.pnpm` directory names the host process loaded modules
+    /// from (`loadedVirtualStoreDirNames`): never pruned by this install.
+    #[serde(default)]
+    pub loaded_virtual_store_dirs: Vec<String>,
+    /// `--token`: the bearer token for remote requests, over `user.token`
+    /// (`globalFlags.token` in `Http.getToken`).
+    #[serde(default)]
+    pub token: Option<String>,
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -83,6 +91,16 @@ pub trait Host: Send + Sync {
 
     /// File patterns of registered application types, used to find apps.
     async fn app_types(&self) -> io::Result<Vec<String>>;
+
+    /// Dev-file patterns an env implements in JavaScript:
+    /// `{ devPatterns, tests, docs, compositions }`, the env's `getDevPatterns()`,
+    /// `getTestsDevPatterns()`, `getDocsDevPatterns()` and `getCompositionsDevPatterns()`
+    /// (each `null` when the env does not implement it). `None` when the env
+    /// cannot be loaded.
+    async fn dev_patterns(&self, env_id: &str) -> io::Result<Option<Value>> {
+        let _ = env_id;
+        Ok(None)
+    }
 
     /// `package.json` props of an env: `{ props, modifiesPackageJson }`, where
     /// `props` is the env's `getPackageJsonProps()` and `modifiesPackageJson`

@@ -72,3 +72,20 @@ fn rewrites_peer_providers_to_the_best_compatible_version() {
     assert_eq!(ids, [".", "plugin@1.0.0(host@2.1.0)"]);
     assert_eq!(base["edges"][1]["neighbours"][0]["id"], "host@2.1.0");
 }
+
+#[test]
+fn best_compatible_peer_includes_prereleases_like_typescript() {
+    let mut base = graph(
+        json!({ "plugin@1.0.0": { "peerDependencies": { "host": "^2.0.0" } }, "host@2.0.0": {} }),
+        json!([
+            { "id": ".", "neighbours": [{ "id": "plugin@1.0.0(host@2.0.0)", "name": "plugin" }] },
+            { "id": "plugin@1.0.0(host@2.0.0)", "attr": { "pkgId": "plugin@1.0.0" }, "neighbours": [{ "id": "host@2.0.0" }] }
+        ]),
+    );
+    let incoming = graph(
+        json!({ "host@2.1.0-beta.1": {} }),
+        json!([{ "id": ".", "neighbours": [{ "id": "host@2.1.0-beta.1", "name": "host" }] }]),
+    );
+    merge(&mut base, &incoming);
+    assert_eq!(base["edges"][1]["id"], "plugin@1.0.0(host@2.1.0-beta.1)");
+}

@@ -2,7 +2,7 @@
 
 use super::{
     Subject, Workspace,
-    data::{Detected, LegacyDependency, MissingFile},
+    data::{Detected, LegacyDependency, MissingFile, Untracked, UntrackedFile},
     resolve::{Resolved, ResolvedComponent, Resolver},
     scan,
     versions::valid_component_version,
@@ -12,7 +12,7 @@ use crate::{
     policy::overrides::field_index,
 };
 use indexmap::IndexMap;
-use std::io;
+use std::{io, path::Path};
 
 /// One file's classified imports (a `DependenciesTree` entry).
 #[derive(Default)]
@@ -21,6 +21,8 @@ struct FileTree {
     components: Vec<ResolvedComponent>,
     relative: Vec<ComponentId>,
     missing: Vec<String>,
+    missing_files: Vec<String>,
+    untracked: Vec<String>,
     core_aspects: Vec<String>,
 }
 
@@ -74,6 +76,16 @@ fn classify(tree: &mut FileTree, resolved: Resolved) {
                 tree.missing.push(name);
             }
         }
+        Resolved::MissingFile(specifier) => {
+            if !tree.missing_files.contains(&specifier) {
+                tree.missing_files.push(specifier);
+            }
+        }
+        Resolved::Untracked(path) => {
+            if !tree.untracked.contains(&path) {
+                tree.untracked.push(path);
+            }
+        }
     }
 }
 
@@ -99,6 +111,7 @@ fn populate(
         }
         None => true,
     });
+    add_missing_files(subject, detected, file, &tree.missing_files);
     packages(workspace, subject, detected, file, &tree, is_dev);
     if !tree.missing.is_empty() {
         add_missing(detected, file, &tree.missing, is_dev);
@@ -108,6 +121,88 @@ fn populate(
     }
     for id in tree.relative {
         add_relative(subject, detected, id, is_dev);
+    }
+    add_untracked(detected, file, &tree.untracked);
+}
+
+/// `processMissingFiles`: a relative import naming no file is an issue, unless it
+/// names a component file by another extension (`./x.js` for `x.ts`, which the
+/// dists will provide).
+fn add_missing_files(
+    subject: &Subject<'_>,
+    detected: &mut Detected,
+    file: &str,
+    missing: &[String],
+) {
+    let origin = Path::new(file);
+    let base = origin.parent().unwrap_or_else(|| Path::new(""));
+    let component_files: Vec<String> = subject.component.files
+        .iter()
+        .map(|file| without_extension(Path::new(file)))
+        .collect();
+    let issues: Vec<String> = missing
+        .iter()
+        .filter(|specifier| {
+            let target = Path::new(specifier.as_str());
+            if target.extension().is_none() {
+                return true;
+            }
+            let relative = without_extension(&normalize_relative(&base.join(target)));
+            !component_files.contains(&relative)
+        })
+        .cloned()
+        .collect();
+    if !issues.is_empty() {
+        detected.missing_files
+            .entry(file.to_owned())
+            .or_default()
+            .extend(issues);
+    }
+}
+
+/// `removeFileExtension` of a `/`-separated path.
+fn without_extension(path: &Path) -> String {
+    path.with_extension("")
+        .to_string_lossy()
+        .replace('\\', "/")
+}
+
+/// Resolve `.` and `..` of a relative path without touching the filesystem.
+fn normalize_relative(path: &Path) -> std::path::PathBuf {
+    let mut result = std::path::PathBuf::new();
+    for part in path.components() {
+        match part {
+            std::path::Component::ParentDir => {
+                if !result.pop() {
+                    result.push("..");
+                }
+            }
+            std::path::Component::CurDir => {}
+            other => result.push(other),
+        }
+    }
+    result
+}
+
+/// `_pushToUntrackDependenciesIssues`: a file imported by more than one file of the
+/// component is marked `existing` on every entry.
+fn add_untracked(detected: &mut Detected, file: &str, untracked: &[String]) {
+    for path in untracked {
+        let mut existing = false;
+        for entry in detected.untracked.values_mut() {
+            for found in entry.files
+                .iter_mut()
+                .filter(|found| &found.relative_path == path)
+            {
+                found.existing = true;
+                existing = true;
+            }
+        }
+        detected.untracked
+            .entry(file.to_owned())
+            .or_insert_with(|| Untracked { nested: false, files: Vec::new() })
+            .files
+            .push(UntrackedFile { relative_path: path.clone(), existing });
     }
 }
 

@@ -1,6 +1,8 @@
 //! `findFirstEnv` of `calculateEnvId`: without an env in `teambit.envs/envs`, the
 //! first configured aspect that is an env component — one with an `env.jsonc` or
-//! whose own env is `teambit.envs/env` — is the component's env.
+//! `env.json` (`hasEnvManifest`) or whose own env is `teambit.envs/env` — is the
+//! component's env. An aspect that is not in the workspace is read from the
+//! scope at its configured version, or at its head without one.
 
 use super::{DEFAULT_ENV, ENV_OF_ENVS, aspects::CORE_ENVS, scope_model::ScopeObjects};
 use crate::{
@@ -81,8 +83,8 @@ fn is_env_component(id: &str, envs: &[(String, bool)], objects: &ScopeObjects) -
         name: name.to_owned(),
         version: id.split_once('@').map(|(_, version)| version.to_owned()),
     };
-    let Some(model) = objects.component(&component_id)? else { return Ok(false) };
-    Ok(model.extensions.iter().any(uses_env_env))
+    let Some(model) = objects.component_or_head(&component_id)? else { return Ok(false) };
+    Ok(model.has_env_manifest() || model.extensions.iter().any(uses_env_env))
 }
 
 /// The Version's extensions configure `teambit.envs/env`, or `teambit.envs/envs` sets it as env.

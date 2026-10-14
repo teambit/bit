@@ -1,5 +1,10 @@
 //! Resolution of one import specifier, as the dependency tree builder and
 //! `resolvePackageData` classify it: a file, a package, a component package or missing.
+//!
+//! Relative imports follow Bit's `filing-cabinet` lookups: TypeScript origins try
+//! TypeScript's module resolution first (`.ts`, `.tsx`, `.d.ts`, a `.js` import
+//! naming a `.ts` file, directory `index` files), then the `CommonJS` lookup;
+//! other origins use the `CommonJS` lookup, `resolve.sync` with Bit's extension list.
 
 use super::{builtins, data::id_from_object};
 use crate::{
@@ -13,10 +18,15 @@ use std::{
     path::{Component, Path, PathBuf},
 };
 
-const EXTENSIONS: [&str; 14] = [
-    "ts", "tsx", "js", "jsx", "mjs", "cjs", "mts", "cts", "json", "scss", "sass", "less", "css",
-    "mdx",
+/// `resolveExtensions` of `lookup-typescript`, in lookup order.
+const COMMONJS_EXTENSIONS: [&str; 15] = [
+    "js", "json", "cjs", "mjs", "jsx", "ts", "tsx", "cts", "mts", "d.ts", "css", "scss", "sass",
+    "styl", "less",
 ];
+/// What `ts.resolveModuleName` tries for a relative import.
+const TYPESCRIPT_EXTENSIONS: [&str; 3] = ["ts", "tsx", "d.ts"];
+/// Origin files `filing-cabinet` resolves through TypeScript.
+const TYPESCRIPT_ORIGINS: [&str; 6] = ["ts", "tsx", "cts", "mts", "md", "mdx"];
 
 /// The classification of one specifier.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -27,6 +37,11 @@ pub enum Resolved {
     Internal,
     /// A file of another workspace component (a relative cross-component import).
     OtherComponent(ComponentId),
+    /// A relative import naming no file (`MissingDependenciesOnFs`): the specifier.
+    MissingFile(String),
+    /// A relative import of a file no component tracks (`UntrackedDependencies`):
+    /// the path relative to the workspace root.
+    Untracked(String),
     /// A package that is a Bit core aspect: its aspect id.
     CoreAspect(String),
     /// A plain package and its concrete version.
@@ -50,6 +65,7 @@ pub struct ResolvedComponent {
 
 /// Resolves specifiers of the components of one workspace, caching `package.json` reads.
 pub struct Resolver<'a> {
+    pub root: &'a Path,
     pub components: &'a [WorkspaceComponent],
     pub core_aspects: &'a [CoreAspect],
     manifests: HashMap<PathBuf, Option<Value>>,
@@ -57,8 +73,12 @@ pub struct Resolver<'a> {
 
 impl<'a> Resolver<'a> {
     #[must_use]
-    pub fn new(components: &'a [WorkspaceComponent], core_aspects: &'a [CoreAspect]) -> Self {
-        Self { components, core_aspects, manifests: HashMap::new() }
+    pub fn new(
+        root: &'a Path,
+        components: &'a [WorkspaceComponent],
+        core_aspects: &'a [CoreAspect],
+    ) -> Self {
+        Self { root, components, core_aspects, manifests: HashMap::new() }
     }
 
     /// Classify `specifier` imported from `file` (relative to the component dir).
@@ -107,17 +127,24 @@ impl<'a> Resolver<'a> {
     fn relative(&self, component: &WorkspaceComponent, file: &str, specifier: &str) -> Resolved {
         let origin = component.dir.join(file);
         let base = origin.parent().unwrap_or(&component.dir);
-        let Some(target) = find_file(&normalize(&base.join(specifier))) else {
-            return Resolved::Ignored;
+        let typescript = origin
+            .extension()
+            .and_then(|extension| extension.to_str())
+            .is_some_and(|extension| TYPESCRIPT_ORIGINS.contains(&extension));
+        let Some(target) = find_file(&normalize(&base.join(specifier)), typescript) else {
+            return Resolved::MissingFile(specifier.to_owned());
         };
-        if target.starts_with(&component.dir) {
-            return Resolved::Internal;
-        }
-        self.components
+        // The owner is the deepest component containing the file (`getComponentIdByPath`);
+        // the workspace-root component (`rootDir "."`) owns no other component's files.
+        let owner = self.components
             .iter()
             .filter(|other| target.starts_with(&other.dir) && other.root_dir != ".")
-            .max_by_key(|other| other.dir.as_os_str().len())
-            .map_or(Resolved::Ignored, |other| Resolved::OtherComponent(other.id.clone()))
+            .max_by_key(|other| other.dir.as_os_str().len());
+        match owner {
+            Some(owner) if owner.id == component.id => Resolved::Internal,
+            Some(owner) => Resolved::OtherComponent(owner.id.clone()),
+            None => Resolved::Untracked(workspace_relative(self.root, &target)),
+        }
     }
 
     /// `resolvePackagePath` from the component dir, then `resolvePackageData`.
@@ -239,24 +266,68 @@ pub fn package_name(specifier: &str) -> String {
     }
 }
 
-fn find_file(target: &Path) -> Option<PathBuf> {
+/// `path.relative(workspace, file)`, `/`-separated; a file outside the workspace
+/// keeps its `..` prefix.
+fn workspace_relative(root: &Path, target: &Path) -> String {
+    let mut ancestor = root;
+    let mut up = PathBuf::new();
+    while !target.starts_with(ancestor) {
+        let Some(parent) = ancestor.parent() else { break };
+        up.push("..");
+        ancestor = parent;
+    }
+    let relative = up.join(target.strip_prefix(ancestor).unwrap_or(target));
+    relative.to_string_lossy().replace('\\', "/")
+}
+
+/// The file a relative specifier names, or `None` when it is missing.
+fn find_file(target: &Path, typescript: bool) -> Option<PathBuf> {
     if target.is_file() {
         return Some(target.to_path_buf());
     }
-    let stem = strip_script_extension(target);
-    let with_extension = |base: &Path| {
-        EXTENSIONS
-            .iter()
-            .map(|extension| PathBuf::from(format!("{}.{extension}", base.display())))
-            .find(|candidate| candidate.is_file())
-    };
-    with_extension(target)
-        .or_else(|| stem.as_deref().and_then(with_extension))
-        .or_else(|| with_extension(&target.join("index")))
-        .or_else(|| target.is_dir().then(|| target.to_path_buf()))
+    if typescript && let Some(found) = typescript_lookup(target) {
+        return Some(found);
+    }
+    commonjs_lookup(target)
 }
 
-/// `./file.js` may name `./file.ts`.
+/// `ts.resolveModuleName`: `./x` and `./x.js` name `x.ts`/`x.tsx`/`x.d.ts`, a
+/// directory its `index` file.
+fn typescript_lookup(target: &Path) -> Option<PathBuf> {
+    let stem = strip_script_extension(target);
+    let stem = stem.as_deref().unwrap_or(target);
+    with_extensions(stem, &TYPESCRIPT_EXTENSIONS)
+        .or_else(|| with_extensions(&target.join("index"), &TYPESCRIPT_EXTENSIONS))
+}
+
+/// `resolve.sync` with Bit's `resolveExtensions`: the file with an extension
+/// appended, else a directory's `package.json` `main`, else its `index` file.
+fn commonjs_lookup(target: &Path) -> Option<PathBuf> {
+    if let Some(found) = with_extensions(target, &COMMONJS_EXTENSIONS) {
+        return Some(found);
+    }
+    if !target.is_dir() {
+        return None;
+    }
+    package_main(target)
+        .and_then(|main| find_file(&normalize(&target.join(main)), false))
+        .or_else(|| with_extensions(&target.join("index"), &COMMONJS_EXTENSIONS))
+}
+
+fn package_main(directory: &Path) -> Option<String> {
+    let bytes = fs::read(directory.join("package.json")).ok()?;
+    let manifest: Value = serde_json::from_slice(&bytes).ok()?;
+    manifest["main"].as_str().map(str::to_owned)
+}
+
+fn with_extensions(base: &Path, extensions: &[&str]) -> Option<PathBuf> {
+    extensions
+        .iter()
+        .map(|extension| PathBuf::from(format!("{}.{extension}", base.display())))
+        .find(|candidate| candidate.is_file())
+}
+
+/// `./file.js` may name `./file.ts` (TypeScript's extension substitution).
 fn strip_script_extension(target: &Path) -> Option<PathBuf> {
     let extension = target.extension()?.to_str()?;
     ["js", "jsx", "mjs", "cjs"]

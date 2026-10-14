@@ -1,10 +1,18 @@
 //! The workspace's current remote lane (`workspace.getCurrentRemoteLane()` and
-//! `ScopeComponentsImporter.importLanes`).
+//! `ScopeComponentsImporter.importLanes`), and its merge into the local lane.
+
+pub(crate) mod object;
+
+pub use history::Identity;
+pub use merge::merge_and_save;
+
+mod history;
+mod merge;
 
 use super::{
     bitmap::{Id, LaneId},
     fetch::{FetchOptions, Fetcher},
-    objects::{IndexRow, RemoteRef, Repo, parse},
+    objects::{RemoteRef, Repo, parse},
 };
 use indexmap::IndexMap;
 use serde_json::Value;
@@ -60,6 +68,21 @@ impl RemoteLane {
     }
 }
 
+/// `updateDependents` of the lane object stored in the local scope
+/// (`workspace.getCurrentLaneObject()`): the dependents Ripple CI cascaded onto
+/// the lane, which version resolution prefers over the model. Main has no lane
+/// object; a lane the scope does not hold yet has no dependents.
+pub fn local_update_dependents(repo: &Repo, lane: &LaneId) -> io::Result<Vec<Id>> {
+    let Some(hash) = repo.lane_hash(&lane.scope, &lane.name)? else { return Ok(Vec::new()) };
+    let Some(object) = repo.read_json(&hash)? else { return Ok(Vec::new()) };
+    Ok(object["updateDependents"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|id| Id::parse(id.as_str()?).ok())
+        .collect())
+}
+
 /// Fetch the lane `.bitmap` points at. A lane that was never exported may not
 /// exist on its remote; that is not an error.
 pub async fn fetch_remote_lane(
@@ -95,18 +118,4 @@ pub fn sync_remote_refs(repo: &Repo, lane: &RemoteLane) -> io::Result<()> {
         .filter_map(|id| Some(RemoteRef { head: id.version?, scope: id.scope, name: id.name }))
         .collect();
     repo.add_remote_refs(&lane.id.scope, &lane.id.name, &refs)
-}
-
-/// Store the remote lane object when the scope has none yet. A local lane
-/// object that already exists is kept as is.
-pub fn save_lane_if_missing(repo: &Repo, lane: &RemoteLane) -> io::Result<()> {
-    if repo.exists(&lane.hash) {
-        return Ok(());
-    }
-    repo.write_raw(&lane.hash, &lane.compressed)?;
-    repo.index_add(&[IndexRow::Lane {
-        scope: lane.id.scope.clone(),
-        name: lane.id.name.clone(),
-        hash: lane.hash.clone(),
-    }])
 }

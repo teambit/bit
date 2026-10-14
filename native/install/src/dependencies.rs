@@ -9,6 +9,7 @@
 pub mod glob;
 
 pub use detect::definitely_typed;
+pub use dev_files::DevPatternConfig;
 pub use resolve::package_name as specifier_package_name;
 pub use versions::valid_component_version;
 
@@ -19,6 +20,7 @@ mod cache;
 mod component_model;
 mod data;
 mod detect;
+mod dev_files;
 mod list;
 mod resolve;
 mod scan;
@@ -27,7 +29,7 @@ mod tests;
 mod versions;
 
 use crate::{
-    host::CoreAspect,
+    host::{CoreAspect, Host},
     model::{
         ComponentDependencies, ComponentId, EnvPolicy, Manifest, PolicyEntry, WorkspaceComponent,
     },
@@ -35,10 +37,20 @@ use crate::{
 };
 use component_model::ComponentModel;
 use data::Detected;
+use dev_files::EnvPatterns;
 use indexmap::IndexMap;
 use resolve::Resolver;
 use serde_json::Value;
 use std::{io, path::Path};
+
+/// Envs whose components may implement `getDependencies()` without an `env.jsonc`
+/// (`getEnvDefinitionById` knows them once loaded as aspects).
+const ASPECT_ENVS: [&str; 4] = [
+    "teambit.envs/env",
+    "teambit.harmony/aspect",
+    "teambit.harmony/envs/core-aspect-env",
+    "teambit.harmony/envs/core-aspect-env-jest",
+];
 
 /// Default dev-file patterns of the tester, compositions and docs aspects.
 pub const DEFAULT_DEV_PATTERNS: [&str; 4] = [
@@ -57,8 +69,10 @@ pub struct DependencyOptions {
     pub merge_config: IndexMap<String, Value>,
     /// `updateDependents` of the current lane.
     pub update_dependents: Vec<ComponentId>,
-    /// Read Bit's dependency cache when it is fresh.
+    /// Read Bit's dependency cache when it is fresh, and write it after a detection.
     pub use_cache: bool,
+    /// The workspace configuration of the dev-pattern registrars.
+    pub dev_patterns: DevPatternConfig,
 }
 
 /// Workspace-wide inputs shared by every component.
@@ -127,6 +141,8 @@ pub struct Subject<'a> {
 }
 
 /// The dependency data of every component, keyed by component id without version.
+/// `host` serves the env hooks implemented in JavaScript: dev patterns, and
+/// `getDependencies()` of env components without an `env.jsonc`.
 pub async fn compute(
     root: &Path,
     components: &[WorkspaceComponent],
@@ -134,6 +150,7 @@ pub async fn compute(
     env_policies: &IndexMap<String, EnvPolicy>,
     root_package_json: Option<&Manifest>,
     options: &DependencyOptions,
+    host: &dyn Host,
 ) -> io::Result<IndexMap<String, ComponentDependencies>> {
     let workspace = Workspace {
         components,
@@ -147,10 +164,11 @@ pub async fn compute(
         .num_threads(2)
         .build()
         .map_err(io::Error::other)?;
-    let mut resolver = Resolver::new(components, &options.core_aspects);
+    let mut resolver = Resolver::new(root, components, &options.core_aspects);
+    let mut env_patterns = EnvPatterns::new(&reader, host, &options.dev_patterns);
     let mut result = IndexMap::new();
     for component in components {
-        let subject = subject(component, scope.as_ref(), &reader)?;
+        let subject = subject(component, scope.as_ref(), &reader, &mut env_patterns, host).await?;
         let env_policy = env_policies
             .get(&component.env_id)
             .cloned()
@@ -170,11 +188,19 @@ struct Context<'a> {
     env_policy: EnvPolicy,
 }
 
-fn subject<'a>(
+async fn subject<'a>(
     component: &'a WorkspaceComponent,
     scope: Option<&Scope>,
     reader: &EnvJsoncReader<'_>,
+    env_patterns: &mut EnvPatterns<'_>,
+    host: &dyn Host,
 ) -> io::Result<Subject<'a>> {
+    let own_env = own_env(component, reader, host).await?;
+    let patterns = env_patterns.get(&component.env_id).await?;
+    let dev_files = dev_files::dev_files(
+        component,
+        &dev_files::dev_patterns(component, env_patterns.config, &patterns),
+    );
     let version = component.id.version
         .as_deref()
         .filter(|version| !version.is_empty());
@@ -184,63 +210,40 @@ fn subject<'a>(
         }
         _ => None,
     };
-    let own_manifest = if has_env_jsonc(component) {
-        reader.resolved(&component.id.to_string_without_version())?
-    } else {
-        None
-    };
-    let own_env = own_manifest
-        .as_ref()
-        .and_then(|manifest| manifest.get("policy"))
-        .filter(|policy| policy.is_object())
-        .map(|policy| policy::env::from_config(policy, false))
-        .transpose()?;
-    let env_manifest =
-        if is_core_env(&component.env_id) { None } else { reader.resolved(&component.env_id)? };
-    let dev_files = dev_files(component, env_manifest.as_ref());
     Ok(Subject { component, model: ComponentModel::new(model), dev_files, own_env })
+}
+
+/// `getEnvPolicyFromEnvId` for the component itself: its `env.jsonc` policy, else
+/// its `getDependencies()` when it is an env (a user env is never a core env, so
+/// legacy `peerDependencies` do not become its own peers).
+async fn own_env(
+    component: &WorkspaceComponent,
+    reader: &EnvJsoncReader<'_>,
+    host: &dyn Host,
+) -> io::Result<Option<EnvPolicy>> {
+    if has_env_jsonc(component) {
+        let manifest = reader.resolved(&component.id.to_string_without_version())?;
+        return manifest
+            .as_ref()
+            .and_then(|manifest| manifest.get("policy"))
+            .filter(|policy| policy.is_object())
+            .map(|policy| policy::env::from_config(policy, false))
+            .transpose();
+    }
+    let aspect_env = ASPECT_ENVS.contains(&policy::split_version(&component.env_id).0);
+    if !component.is_env && !aspect_env {
+        return Ok(None);
+    }
+    let Some(config) = host.env_policy(&component.id.to_string_without_version()).await? else {
+        return Ok(None);
+    };
+    policy::env::from_config(&config, false).map(Some)
 }
 
 fn has_env_jsonc(component: &WorkspaceComponent) -> bool {
     component.files
         .iter()
         .any(|file| file == "env.jsonc" || file == "env.json")
-}
-
-/// `computeDevFiles`: files matching the configured, registered and env patterns.
-fn dev_files(component: &WorkspaceComponent, env_manifest: Option<&Value>) -> Vec<String> {
-    let mut patterns: Vec<String> = DEFAULT_DEV_PATTERNS
-        .iter()
-        .map(|pattern| (*pattern).to_owned())
-        .collect();
-    let configured = component.config
-        .get("teambit.component/dev-files")
-        .and_then(|config| config.get("devFilePatterns"));
-    patterns.extend(strings(configured));
-    if let Some(env_patterns) = env_manifest.and_then(|manifest| manifest.get("patterns")) {
-        match env_patterns {
-            Value::Object(groups) => groups
-                .values()
-                .for_each(|group| patterns.extend(strings(Some(group)))),
-            other => patterns.extend(strings(Some(other))),
-        }
-    }
-    component.files
-        .iter()
-        .filter(|file| glob::match_patterns(file, &patterns))
-        .cloned()
-        .collect()
-}
-
-fn strings(value: Option<&Value>) -> Vec<String> {
-    match value {
-        Some(Value::Array(items)) => items
-            .iter()
-            .filter_map(|item| item.as_str().map(str::to_owned))
-            .collect(),
-        Some(Value::String(text)) => vec![text.clone()],
-        _ => Vec::new(),
-    }
 }
 
 /// Detection, overrides, versions and the final list of one component.
@@ -290,11 +293,20 @@ fn detected(
     if subject.component.root_dir == "." {
         return Ok(Detected::default());
     }
-    if context.workspace.options.use_cache
+    let cache = context.workspace.options.use_cache && !cache::disabled();
+    if cache
         && let Some(scope) = context.scope
         && let Some(cached) = cache::read(scope, subject.component, context.pool)?
     {
         return Ok(cached);
     }
-    detect::detect(context.workspace, subject, resolver)
+    let detected = detect::detect(context.workspace, subject, resolver)?;
+    // Like `DependenciesLoader`, a failed cache write never fails the load.
+    if cache
+        && !detected.blocks_cache()
+        && let Some(scope) = context.scope
+    {
+        let _ = cache::write(scope, subject.component, &detected);
+    }
+    Ok(detected)
 }

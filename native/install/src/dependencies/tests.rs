@@ -1,23 +1,31 @@
 use super::{
-    DEFAULT_DEV_PATTERNS, DependencyOptions, compute, default_package_name, definitely_typed,
+    DEFAULT_DEV_PATTERNS, DependencyOptions, DevPatternConfig, Subject, Workspace, cache, compute,
+    data::Detected,
+    default_package_name, definitely_typed, detect,
+    dev_files::{self, EnvDevPatterns},
     glob::{match_patterns, matches},
+    resolve::Resolver,
     scan::lexical,
     specifier_package_name, valid_component_version,
 };
 use crate::{
+    host::{AfterInstall, AfterInstallResult, Host},
     model::{
         ComponentDependencies, ComponentId, EnvPolicy, Lifecycle, PackageDependency, PolicyEntry,
         WorkspaceComponent,
     },
     policy::{
+        self,
         entries::entry,
-        tests::{component, store_version},
+        scope::Scope,
+        tests::{TestHost, component, store_version},
     },
 };
+use async_trait::async_trait;
 use indexmap::IndexMap;
 use pretty_assertions::assert_eq;
 use serde_json::{Value, json};
-use std::{fs, path::Path};
+use std::{fs, io, path::Path};
 
 fn write(path: &Path, contents: &str) {
     fs::create_dir_all(path.parent().expect("parent")).expect("dir");
@@ -82,9 +90,68 @@ async fn run(
     components: &[WorkspaceComponent],
     envs: &IndexMap<String, EnvPolicy>,
 ) -> IndexMap<String, ComponentDependencies> {
-    compute(root, components, &workspace_policy(), envs, None, &DependencyOptions::default())
+    run_with(root, components, envs, &DependencyOptions::default(), &TestHost::default()).await
+}
+
+async fn run_with(
+    root: &Path,
+    components: &[WorkspaceComponent],
+    envs: &IndexMap<String, EnvPolicy>,
+    options: &DependencyOptions,
+    host: &dyn Host,
+) -> IndexMap<String, ComponentDependencies> {
+    compute(root, components, &workspace_policy(), envs, None, options, host)
         .await
         .expect("compute")
+}
+
+/// Detect one component's files without overrides, to inspect the issues.
+fn detect_only(root: &Path, components: &[WorkspaceComponent], index: usize) -> Detected {
+    let options = DependencyOptions::default();
+    let workspace = Workspace {
+        components,
+        manifest: policy::workspace_manifest(&workspace_policy()),
+        root_package_json: None,
+        options: &options,
+    };
+    let subject = Subject {
+        component: &components[index],
+        model: super::component_model::ComponentModel::new(None),
+        dev_files: Vec::new(),
+        own_env: None,
+    };
+    let mut resolver = Resolver::new(root, components, &[]);
+    detect::detect(&workspace, &subject, &mut resolver).expect("detect")
+}
+
+/// A host whose env implements the dev-pattern hooks.
+struct PatternHost;
+
+#[async_trait]
+impl Host for PatternHost {
+    async fn env_policy(&self, _env_id: &str) -> io::Result<Option<Value>> {
+        Ok(None)
+    }
+    async fn app_types(&self) -> io::Result<Vec<String>> {
+        Ok(Vec::new())
+    }
+    async fn dev_patterns(&self, env_id: &str) -> io::Result<Option<Value>> {
+        Ok((env_id == "acme/envs/custom").then(|| {
+            json!({ "devPatterns": ["**/*.story.*"], "tests": ["**/*.unit.ts"], "docs": null, "compositions": null })
+        }))
+    }
+    async fn package_json_props(&self, _env_id: &str) -> io::Result<Value> {
+        Ok(Value::Null)
+    }
+    async fn transform_package_json(&self, _component: &str, manifest: Value) -> io::Result<Value> {
+        Ok(manifest)
+    }
+    async fn after_install(&self, _request: AfterInstall) -> io::Result<AfterInstallResult> {
+        Ok(AfterInstallResult::default())
+    }
+    async fn confirm(&self, _question: &str) -> io::Result<bool> {
+        Ok(false)
+    }
 }
 
 #[tokio::test]
@@ -263,4 +330,202 @@ fn component_versions_and_package_names() {
     };
     assert_eq!(default_package_name(&id("teambit.react", "ui/button")), "@teambit/react.ui.button");
     assert_eq!(default_package_name(&id("acme", "button")), "@acme/button");
+}
+
+#[test]
+fn relative_imports_follow_filing_cabinet_and_report_file_issues() {
+    let temp = tempfile::tempdir().expect("tempdir");
+    let root = temp.path();
+    let mut button = component(root, "acme/ui/button", "teambit.harmony/node");
+    button.files = vec![
+        "index.ts".into(),
+        "utils.ts".into(),
+        "lib/index.tsx".into(),
+        "gen.ts".into(),
+        "legacy.js".into(),
+    ];
+    write(
+        &button.dir.join("index.ts"),
+        "import './utils.js';\nimport './lib';\nimport './missing';\nimport '../../shared/helper';\nimport '../card/card';\n",
+    );
+    write(&button.dir.join("utils.ts"), "export const x = 1;\n");
+    write(&button.dir.join("lib/index.tsx"), "export const y = 1;\n");
+    write(&button.dir.join("gen.ts"), "export const g = 1;\n");
+    write(&button.dir.join("legacy.js"), "require('./gen.js');\nrequire('../../shared/helper');\n");
+    write(&root.join("shared/helper.ts"), "export const h = 1;\n");
+    let mut card = component(root, "acme/ui/card@1.0.0", "teambit.harmony/node");
+    card.files = vec!["card.ts".into()];
+    write(&card.dir.join("card.ts"), "export const c = 1;\n");
+    let components = vec![button, card];
+    let detected = detect_only(root, &components, 0);
+    assert_eq!(
+        detected.missing_files,
+        IndexMap::from([("index.ts".to_owned(), vec!["./missing".to_owned()])]),
+    );
+    let untracked: Vec<(String, Vec<(String, bool)>)> = detected.untracked
+        .iter()
+        .map(|(file, entry)| {
+            (
+                file.clone(),
+                entry.files
+                    .iter()
+                    .map(|f| (f.relative_path.clone(), f.existing))
+                    .collect(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        untracked,
+        vec![
+            ("index.ts".to_owned(), vec![("shared/helper.ts".to_owned(), true)]),
+            ("legacy.js".to_owned(), vec![("shared/helper.ts".to_owned(), true)]),
+        ],
+    );
+    assert!(detected.blocks_cache());
+    assert_eq!(
+        detected.components[0]
+            .iter()
+            .map(|dependency| dependency.id.name.clone())
+            .collect::<Vec<_>>(),
+        vec!["ui/card".to_owned()],
+    );
+}
+
+#[tokio::test]
+async fn dev_patterns_compose_config_hooks_and_env_patterns() {
+    let temp = tempfile::tempdir().expect("tempdir");
+    let root = temp.path();
+    let mut button = component(root, "acme/ui/button", "acme/envs/custom");
+    button.files = vec![
+        "index.ts".into(),
+        "a.unit.ts".into(),
+        "b.spec.ts".into(),
+        "c.story.tsx".into(),
+        "d.docs.mdx".into(),
+    ];
+    button.config.insert(
+        "teambit.component/dev-files".into(),
+        json!({"devFilePatterns": ["**/*.mock.ts"]}),
+    );
+    for file in &button.files {
+        write(&button.dir.join(file), "import 'left-pad';\n");
+    }
+    let mut custom = component(root, "acme/envs/custom", "teambit.envs/env");
+    custom.files = vec!["index.ts".into()];
+    custom.is_env = true;
+    write(&custom.dir.join("index.ts"), "export const env = 1;\n");
+    let components = vec![button, custom];
+    let options = DependencyOptions {
+        dev_patterns: DevPatternConfig::from_aspects(&|id| {
+            (id == "teambit.defender/tester").then(|| json!({"patterns": ["**/*.spec.ts"]}))
+        }),
+        ..DependencyOptions::default()
+    };
+    let result = run_with(root, &components, &IndexMap::new(), &options, &PatternHost).await;
+    assert!(
+        packages(&result["acme/ui/button"], Lifecycle::Dev).is_empty(),
+        "left-pad is missing, so no dev package is recorded",
+    );
+    let missing = &result["acme/ui/button"].missing_packages;
+    assert_eq!(
+        missing.runtime,
+        vec!["left-pad".to_owned()],
+        "index.ts and b.spec.ts are regular files: the env's getTestsDevPatterns replaced the tester config",
+    );
+    assert_eq!(
+        missing.dev,
+        vec!["left-pad".to_owned()],
+        "a.unit.ts, c.story.tsx and d.docs.mdx are dev files",
+    );
+    let env = EnvDevPatterns {
+        patterns: Some(json!({"tests": ["**/*.t.ts"], "custom": ["**/*.x.ts"]})),
+        tests: None,
+        docs: Some(vec!["**/*.d.ts".to_owned()]),
+        compositions: None,
+    };
+    let patterns = dev_files::dev_patterns(&components[0], &options.dev_patterns, &env);
+    assert_eq!(patterns["config"], vec!["**/*.mock.ts".to_owned()]);
+    assert_eq!(
+        patterns["teambit.defender/tester"],
+        vec!["**/*.spec.ts".to_owned(), "**/*.t.ts".to_owned()],
+    );
+    assert_eq!(
+        patterns["teambit.docs/docs"],
+        vec!["**/*.d.ts".to_owned(), "**/*.docs.*".to_owned()],
+    );
+    assert_eq!(patterns["acme/envs/custom"], vec!["**/*.x.ts".to_owned()]);
+}
+
+#[tokio::test]
+async fn env_component_without_manifest_gets_its_own_peers_from_the_host() {
+    let temp = tempfile::tempdir().expect("tempdir");
+    let root = temp.path();
+    let mut env = component(root, "acme/envs/aspect-env", "teambit.harmony/aspect");
+    env.files = vec!["index.ts".into()];
+    write(&env.dir.join("index.ts"), "export const env = 1;\n");
+    let mut host = TestHost::default();
+    host.policies.insert(
+        "acme/envs/aspect-env".into(),
+        json!({"peers": [{"name": "react", "version": "17.0.2", "supportedRange": "^17.0.0"}]}),
+    );
+    let result =
+        run_with(root, &[env], &IndexMap::new(), &DependencyOptions::default(), &host).await;
+    assert_eq!(
+        packages(&result["acme/envs/aspect-env"], Lifecycle::Runtime),
+        vec![("react".into(), "17.0.2".into())],
+    );
+    assert_eq!(*host.calls.lock().expect("calls"), vec!["acme/envs/aspect-env".to_owned()]);
+}
+
+#[tokio::test]
+async fn detection_is_cached_in_bit_format_unless_it_has_issues() {
+    let temp = tempfile::tempdir().expect("tempdir");
+    let root = temp.path();
+    fs::create_dir_all(root.join(".bit/objects")).expect("scope");
+    let mut button = component(root, "acme/ui/button@1.0.0", "teambit.harmony/node");
+    button.files = vec!["index.ts".into()];
+    write(&button.dir.join("index.ts"), "import _ from 'lodash';\nimport React from 'react';\n");
+    package(root, "lodash", &json!({"name": "lodash", "version": "4.17.21"}));
+    package(root, "react", &json!({"name": "react", "version": "18.2.0"}));
+    let mut broken = component(root, "acme/ui/broken@1.0.0", "teambit.harmony/node");
+    broken.files = vec!["index.ts".into()];
+    write(&broken.dir.join("index.ts"), "import 'nowhere';\n");
+    let components = vec![button, broken];
+    let options = DependencyOptions { use_cache: true, ..DependencyOptions::default() };
+    run_with(root, &components, &IndexMap::new(), &options, &TestHost::default()).await;
+    let scope = Scope::find(root).expect("scope");
+    let pool = rayon::ThreadPoolBuilder::new()
+        .num_threads(1)
+        .build()
+        .expect("pool");
+    let cached = cache::read(&scope, &components[0], &pool).expect("read").expect("cached");
+    assert_eq!(cached, detect_only(root, &components, 0));
+    let entry =
+        bit_object_import::read_dependency_cache(&scope.dependency_cache(), "acme/ui/button@1.0.0")
+            .expect("entry")
+            .expect("entry");
+    let data: Value = serde_json::from_str(entry["data"].as_str().expect("data")).expect("json");
+    assert_eq!(
+        data.as_object()
+            .expect("object")
+            .keys()
+            .cloned()
+            .collect::<Vec<_>>(),
+        [
+            "allPackagesDependencies",
+            "coreAspects",
+            "issues",
+            "allDependencies",
+            "overridesDependencies"
+        ],
+    );
+    assert_eq!(
+        data["allPackagesDependencies"]["packageDependencies"],
+        json!({"lodash": "4.17.21", "react": "18.2.0"}),
+    );
+    assert!(entry["timestamp"].as_f64().is_some());
+    assert!(
+        cache::read(&scope, &components[1], &pool).expect("read").is_none(),
+        "a missing package blocks the cache",
+    );
 }

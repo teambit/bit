@@ -1,4 +1,4 @@
-use super::{coerce, gt, satisfies, valid_range};
+use super::{coerce, gt, satisfies, satisfies_including_prerelease, valid_range};
 use serde_json::Value;
 
 /// Outputs of npm's `semver` 7.7.1 and `semver-range-intersect` 0.3.1, generated
@@ -29,6 +29,15 @@ fn satisfies_matches_semver_7() {
             "satisfies({version}, {range})",
         );
     }
+}
+
+#[test]
+fn include_prerelease_admits_prereleases_of_other_tuples() {
+    assert!(!satisfies("2.1.0-beta.1", "^2.0.0"));
+    assert!(satisfies_including_prerelease("2.1.0-beta.1", "^2.0.0"));
+    assert!(!satisfies_including_prerelease("3.0.0-beta.1", "^2.0.0"));
+    assert!(satisfies_including_prerelease("2.0.0", "^2.0.0"));
+    assert!(!satisfies_including_prerelease("not a version", "^2.0.0"));
 }
 
 #[test]

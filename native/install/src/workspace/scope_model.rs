@@ -2,9 +2,10 @@
 //! the model's `bindingPrefix`. Objects are zlib-deflated files at
 //! `<scope>/objects/<2 hex>/<38 hex>` holding `<type> <hash> <size>\0<json>`.
 
-use crate::model::ComponentId;
+use super::component_package_name;
+use crate::{config::aspect_id_without_version, model::ComponentId};
 use flate2::read::ZlibDecoder;
-use serde_json::Value;
+use serde_json::{Map, Value};
 use sha1::{Digest, Sha1};
 use std::{
     fmt::Write as _,
@@ -16,12 +17,93 @@ use std::{
 /// Objects larger than this are not read (no Version or model gets close).
 const MAX_OBJECT_BYTES: u64 = 64 * 1024 * 1024;
 
+const ENVS_ASPECT: &str = "teambit.envs/envs";
+const DEPENDENCY_RESOLVER_ASPECT: &str = "teambit.dependencies/dependency-resolver";
+
 /// What install needs from a component's scope objects.
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct ModelData {
     pub binding_prefix: Option<String>,
     /// The Version's `extensions` array, as stored.
     pub extensions: Vec<Value>,
+    /// The Version's files (`relativePath`), as `hasEnvManifest` reads them.
+    pub files: Vec<String>,
+}
+
+impl ModelData {
+    /// The `teambit.envs/envs` data of the Version, where the env descriptor
+    /// (`type`, `id`) is stored at tag time.
+    fn envs_data(&self) -> Option<&Value> {
+        self.extensions
+            .iter()
+            .find(|extension| extension_name(extension) == Some(ENVS_ASPECT))
+            .and_then(|extension| extension.get("data"))
+    }
+
+    /// `isUsingAspectEnv`: the env descriptor's type is `aspect`.
+    #[must_use]
+    pub fn uses_aspect_env(&self) -> bool {
+        self.envs_data()
+            .and_then(|data| data.get("type"))
+            .and_then(Value::as_str)
+            == Some("aspect")
+    }
+
+    /// `hasEnvManifest`: the Version ships an `env.jsonc` or `env.json`.
+    #[must_use]
+    pub fn has_env_manifest(&self) -> bool {
+        self.files
+            .iter()
+            .any(|file| file == "env.jsonc" || file == "env.json")
+    }
+
+    /// `getPackageName`: the `dependency-resolver` data's `packageName`,
+    /// otherwise `componentIdToPackageName` from the model's `bindingPrefix`
+    /// and the Version's `teambit.pkg/pkg` config.
+    #[must_use]
+    pub fn package_name(&self, id: &ComponentId) -> String {
+        let stored = self.extensions
+            .iter()
+            .find(|extension| extension_name(extension) == Some(DEPENDENCY_RESOLVER_ASPECT))
+            .and_then(|extension| {
+                extension
+                    .get("data")?
+                    .get("packageName")?
+                    .as_str()
+            });
+        if let Some(name) = stored.filter(|name| !name.is_empty()) {
+            return name.to_owned();
+        }
+        let aspects: Map<String, Value> = self.extensions
+            .iter()
+            .filter_map(|extension| {
+                let name = extension_name(extension)?;
+                Some((
+                    name.to_owned(),
+                    extension
+                        .get("config")
+                        .cloned()
+                        .unwrap_or(Value::Null),
+                ))
+            })
+            .collect();
+        component_package_name(id, self.binding_prefix.as_deref(), &aspects)
+    }
+}
+
+/// The aspect id of a stored extension: `name` for core aspects, the
+/// serialized `extensionId` otherwise, without the version.
+fn extension_name(extension: &Value) -> Option<&str> {
+    extension
+        .get("name")
+        .and_then(Value::as_str)
+        .or_else(|| {
+            extension
+                .get("extensionId")?
+                .get("name")
+                .and_then(Value::as_str)
+        })
+        .map(aspect_id_without_version)
 }
 
 /// Reads models and Versions from a scope's `objects` directory.
@@ -69,25 +151,28 @@ impl ScopeObjects {
             return Ok(None);
         };
         let model = self.read(&sha1_hex(&format!("{scope}/{}", id.name)))?;
+        self.model_data(model.as_ref(), Some(version))
+    }
+
+    /// Like [`Self::component`], but an id without a version reads the model's
+    /// head (how `importAndGetMany` loads a configured aspect or env at `*`).
+    pub fn component_or_head(&self, id: &ComponentId) -> io::Result<Option<ModelData>> {
+        let Some(scope) = id.scope.as_deref() else { return Ok(None) };
+        let model = self.read(&sha1_hex(&format!("{scope}/{}", id.name)))?;
+        self.model_data(model.as_ref(), id.version.as_deref())
+    }
+
+    fn model_data(
+        &self,
+        model: Option<&Value>,
+        version: Option<&str>,
+    ) -> io::Result<Option<ModelData>> {
         let binding_prefix = model
             .as_ref()
             .and_then(|model| model.get("bindingPrefix"))
             .and_then(Value::as_str)
             .map(str::to_owned);
-        let version_hash = if is_hash(version) {
-            Some(version.to_owned())
-        } else {
-            model
-                .as_ref()
-                .and_then(|model| {
-                    model
-                        .get("versions")?
-                        .get(version)?
-                        .as_str()
-                        .map(str::to_owned)
-                })
-        };
-        let version = match version_hash {
+        let version = match version_hash(model, version) {
             Some(hash) => self.read(&hash)?,
             None => None,
         };
@@ -100,7 +185,36 @@ impl ScopeObjects {
             .and_then(Value::as_array)
             .cloned()
             .unwrap_or_default();
-        Ok(Some(ModelData { binding_prefix, extensions }))
+        let files = version
+            .as_ref()
+            .and_then(|version| version.get("files"))
+            .and_then(Value::as_array)
+            .into_iter()
+            .flatten()
+            .filter_map(|file| {
+                file.get("relativePath")?
+                    .as_str()
+                    .map(str::to_owned)
+            })
+            .collect();
+        Ok(Some(ModelData { binding_prefix, extensions, files }))
+    }
+}
+
+/// The Version hash of `version`: a snap hash as is, a tag through the model's
+/// `versions`, and the model `head` when no version is given.
+fn version_hash(model: Option<&Value>, version: Option<&str>) -> Option<String> {
+    match version {
+        Some(version) if is_hash(version) => Some(version.to_owned()),
+        Some(version) => model?
+            .get("versions")?
+            .get(version)?
+            .as_str()
+            .map(str::to_owned),
+        None => model?
+            .get("head")?
+            .as_str()
+            .map(str::to_owned),
     }
 }
 
@@ -117,3 +231,6 @@ pub fn sha1_hex(text: &str) -> String {
 fn corrupt(path: &Path) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, format!("corrupted scope object {}", path.display()))
 }
+
+#[cfg(test)]
+mod tests;

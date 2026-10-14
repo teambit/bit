@@ -10,13 +10,13 @@ mod summary;
 mod workspace_jsonc;
 
 use crate::{
-    Host, HostInfo,
+    Host, HostInfo, engine,
     model::DependencyMap,
     options::{self, Parsed},
     output::{Output, Sink, Style},
 };
 use session::{Loaded, Session};
-use std::{fs, io, path::Path, time::Instant};
+use std::{fs, io, path::Path, sync::OnceLock, time::Instant};
 
 const UPDATE_EXISTING: &str = r#"--update-existing is deprecated, please omit it. "bit install" will update existing dependencies by default"#;
 
@@ -57,6 +57,7 @@ pub async fn run(
         host,
         output: Output::new(info.color, info.columns.is_some(), info.loader, sink),
         started: Instant::now(),
+        cloud_username: OnceLock::new(),
     };
     Box::pin(install(&session)).await
 }
@@ -70,6 +71,9 @@ async fn install(session: &Session<'_>) -> io::Result<Outcome> {
     if loaded.uses_yarn() {
         return Ok(Outcome::Unsupported);
     }
+    // `CommandRunner.determineConsoleWritingDuringCommand`, once the command is ours.
+    session.output.status(r#"running command "install"..."#);
+    resolve_cloud_username(session, &mut loaded).await;
     let packages = packages::validate(&options.packages, &loaded)?;
     let name = session.output.paint(Style::Cyan, &loaded.workspace_name(&session.root));
     session.output.console(&format!("Resolving component dependencies for workspace: '{name}'"));
@@ -97,6 +101,19 @@ async fn install(session: &Session<'_>) -> io::Result<Outcome> {
     );
     session.output.print(&report);
     Ok(Outcome::Installed(InstallSummary { components: installed.components }))
+}
+
+/// `PnpmPackageManager.getNetworkConfig`: the user agent names the cloud user.
+/// Looked up once, before the first engine call; later reloads reuse it.
+async fn resolve_cloud_username(session: &Session<'_>, loaded: &mut Loaded) {
+    if !loaded.engine.registry.cloud_user_agent {
+        return;
+    }
+    let username = engine::cloud_username(&loaded.global, engine::CLOUD_LOOKUP_TIMEOUT).await;
+    if let Some(username) = &username {
+        engine::apply_cloud_username(&mut loaded.engine, username);
+    }
+    let _ = session.cloud_username.set(username);
 }
 
 /// External package manager mode, then `bit install <packages>` and `--add-missing-peers`.

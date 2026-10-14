@@ -13,6 +13,7 @@ use crate::{
 use std::{
     io,
     path::{Path, PathBuf},
+    sync::OnceLock,
     time::Instant,
 };
 
@@ -30,9 +31,19 @@ pub struct Session<'a> {
     pub host: &'a dyn Host,
     pub output: Output,
     pub started: Instant,
+    /// The Bit Cloud username, looked up once per command (`PnpmPackageManager.username`):
+    /// `None` inside means the lookup ran and the install stays `anonymous`.
+    pub cloud_username: OnceLock<Option<String>>,
 }
 
 impl Session<'_> {
+    /// `workspace.list()` as the component loader announces it: every
+    /// bitmap component, the workspace-root component included.
+    pub fn loading(&self, loaded: &Loaded) {
+        let count = loaded.workspace.active().count();
+        self.output.status(&format!("loading {count} component(s)"));
+    }
+
     /// Bit's core aspect ids, `teambit.harmony/bit` included.
     pub fn core_ids(&self) -> Vec<String> {
         self.info.core_aspects
@@ -70,13 +81,16 @@ impl Loaded {
         let effective = EffectiveConfig::new(&stored, &scope.config, &config.config_store);
         // `configGetter`: environment, workspace, scope, then the global config.
         let global = effective.merged();
-        let engine = engine::settings(
+        let mut engine = engine::settings(
             &session.root,
             &config.dependency_resolver,
             &global,
             session.info,
             &EnvVars::from_process(),
         )?;
+        if let Some(Some(username)) = session.cloud_username.get() {
+            engine::apply_cloud_username(&mut engine, username);
+        }
         Ok(Self { config, global, effective, workspace, engine })
     }
 
