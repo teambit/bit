@@ -144,6 +144,39 @@ fn prepare_preimage(root: &Path, scopes: &[String]) -> io::Result<Preimage> {
 }
 
 impl Prepared {
+    pub(super) fn resume_acknowledgement(
+        &mut self,
+        selected: &[(String, String, String)],
+        exported_ids: &[String],
+    ) -> io::Result<()> {
+        let selected_ids = selected
+            .iter()
+            .map(|(scope, name, version)| format!("{scope}/{name}@{version}"))
+            .collect::<HashSet<_>>();
+        if selected_ids != self.expected_ids {
+            return Err(invalid("outbound resume selection changed"));
+        }
+        let acknowledged = exported_ids
+            .iter()
+            .cloned()
+            .collect::<HashSet<_>>();
+        if acknowledged.len() != exported_ids.len() || !acknowledged.is_subset(&selected_ids) {
+            return Err(invalid("outbound resume acknowledgement"));
+        }
+        let promotions = selected
+            .iter()
+            .filter(|(scope, name, version)| {
+                acknowledged.contains(&format!("{scope}/{name}@{version}"))
+            })
+            .map(|(scope, name, _)| (scope.clone(), name.clone()))
+            .collect::<Vec<_>>();
+        self.bitmap.select_export_promotions(&promotions)?;
+        self.output.staged_config =
+            prepare_staged_config_ids(&self.preimage.staged_config, &promotions)?;
+        self.expected_ids = acknowledged;
+        Ok(())
+    }
+
     pub(super) fn stage_history(&self) -> io::Result<()> {
         let store = Store::new(self.root.join(".bit/objects"), None)?;
         for item in &self.components {
@@ -221,6 +254,17 @@ impl Prepared {
 }
 
 fn prepare_staged_config(bytes: &[u8], selected: &[Selected]) -> io::Result<Vec<u8>> {
+    let identities = selected
+        .iter()
+        .map(|item| (item.scope.clone(), item.name.clone()))
+        .collect::<Vec<_>>();
+    prepare_staged_config_ids(bytes, &identities)
+}
+
+fn prepare_staged_config_ids(bytes: &[u8], selected: &[(String, String)]) -> io::Result<Vec<u8>> {
+    if selected.is_empty() {
+        return Ok(bytes.to_vec());
+    }
     let mut rows: Vec<Value> = serde_json::from_slice(bytes)?;
     if rows.len() > 4096 {
         return Err(invalid("outbound staged configuration bounds"));
@@ -229,9 +273,9 @@ fn prepare_staged_config(bytes: &[u8], selected: &[Selected]) -> io::Result<Vec<
     rows.retain(|row| {
         let matched = selected
             .iter()
-            .find(|item| row["id"]["scope"] == item.scope && row["id"]["name"] == item.name);
-        if let Some(item) = matched {
-            found.insert(format!("{}/{}", item.scope, item.name));
+            .find(|(scope, name)| row["id"]["scope"] == *scope && row["id"]["name"] == *name);
+        if let Some((scope, name)) = matched {
+            found.insert(format!("{scope}/{name}"));
             false
         } else {
             true

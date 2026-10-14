@@ -111,7 +111,7 @@ fn check_client_id(client: &str) -> io::Result<()> {
         || client.is_empty()
         || !client
             .bytes()
-            .all(|byte| byte.is_ascii_alphanumeric() || b"._-".contains(&byte))
+            .all(|byte| byte.is_ascii_alphanumeric() || b"_-".contains(&byte))
     {
         return Err(invalid("outbound client id"));
     }
@@ -240,7 +240,8 @@ fn network(retained: &Retained) -> io::Result<Network> {
             Err(error) if error.kind() == io::ErrorKind::NotFound => GlobalConfig::new(),
             Err(error) => return Err(error),
         };
-    let local: Value = serde_json::from_slice(&fs::read(retained.root.join(".bit/scope.json"))?)?;
+    let local: Value =
+        serde_json::from_slice(&fs::read(retained.network.root.join(".bit/scope.json"))?)?;
     let local_name = local["name"].as_str().ok_or_else(|| invalid("outbound local scope"))?;
     Network::new(
         &config,

@@ -24,7 +24,8 @@ const scenarios = [
   { name: 'validate-failure', args: ['export', '--origin-directly'], native: true, fails: true, httpOnly: true },
   { name: 'validate-failure-two-scopes', args: ['export', '--origin-directly'], native: true, fails: true, httpOnly: true, setup: 'two-scopes', multiScope: true },
   { name: 'persist-failure-second', args: ['export', '--origin-directly'], native: true, fails: true, httpOnly: true, setup: 'two-scopes', multiScope: true },
-  { name: 'resume-after-persist-failure', args: ['export', '--origin-directly', '--resume'], native: false, httpOnly: true, setup: 'resumable' },
+  { name: 'resume-after-persist-failure', args: ['export', '--origin-directly', '--resume'], native: true, httpOnly: true, setup: 'resumable' },
+  { name: 'resume-validate-failure', args: ['export', '--origin-directly', '--resume'], native: true, fails: true, httpOnly: true, setup: 'resumable' },
   { name: 'lane-export-fallback', args: ['export', '--origin-directly', '--json'], native: false, setup: 'lane' },
   ...(typeof process.getgid === 'function'
     ? [{ name: 'file-group-fallback', args: ['export', '--origin-directly'], native: false, fileOnly: true, setup: 'group' }]
@@ -396,7 +397,7 @@ async function run(cli, helper, reportFile, options = {}) {
                     path: target,
                     failPersist:
                       (scenario.name === 'persist-failure' && name === 'qualification.alpha') ||
-                      (scenario.name === 'resume-after-persist-failure' && name === 'qualification.alpha') ||
+                      (['resume-after-persist-failure', 'resume-validate-failure'].includes(scenario.name) && name === 'qualification.alpha') ||
                       (scenario.name === 'persist-failure-second' && name === 'qualification.beta'),
                     failValidate:
                       ['validate-failure', 'validate-failure-two-scopes'].includes(scenario.name) &&
@@ -419,7 +420,10 @@ async function run(cli, helper, reportFile, options = {}) {
             args = [...scenario.args, ...exportIds];
             const ready = ipc(server, (value) => value.configured);
             server.send({
-              configure: Object.fromEntries(Object.entries(remotes).map(([name, target]) => [name, { path: target }])),
+              configure: Object.fromEntries(Object.entries(remotes).map(([name, target]) => [name, {
+                path: target,
+                failValidate: scenario.name === 'resume-validate-failure' && name === 'qualification.alpha',
+              }])),
             });
             await ready;
           }
@@ -524,6 +528,11 @@ async function run(cli, helper, reportFile, options = {}) {
             assert.ok(Object.keys(before.remotes['qualification.alpha'].pending).length > 0, 'resume must start with pending objects');
             assert.deepEqual(alpha.pending, {}, 'resume must clear pending objects after persistence');
           }
+          if (scenario.name === 'resume-validate-failure') {
+            assert.deepEqual(after.local, before.local, 'failed resume validation must preserve local workspace');
+            assert.deepEqual(alpha.pending, before.remotes['qualification.alpha'].pending, 'failed resume validation must retain pending objects');
+            assert.equal(alpha.index, before.remotes['qualification.alpha'].index, 'failed resume validation must not persist remote index');
+          }
           let events;
           if (server && transport === 'http') {
             const received = ipc(server, (value) => value.events);
@@ -562,6 +571,8 @@ async function run(cli, helper, reportFile, options = {}) {
               assert.deepEqual(actions['qualification.beta'].slice(0, 3), ['put', 'ExportValidate', 'ExportPersist']);
               assert.ok(actions['qualification.beta'].slice(3).every((action) => action === 'ExportPersist'));
             }
+            if (scenario.name === 'resume-validate-failure')
+              assert.deepEqual(remoteActions(events)['qualification.alpha'], ['ExportValidate']);
           }
           let recovery;
           if (scenario.name === 'persist-failure-second') {
@@ -572,8 +583,14 @@ async function run(cli, helper, reportFile, options = {}) {
               configure: Object.fromEntries(Object.entries(remotes).map(([name, target]) => [name, { path: target }])),
             });
             await ready;
-            const resume = await command(directory, ['export', '--origin-directly', '--resume', ...exportIds], 'node');
-            assert.equal(resume.code, 0, `canonical resume after ${mode} partial failure: ${resume.stderr || resume.stdout}`);
+            const recoveryTrace = mode === 'native' ? path.join(directory, 'resume-trace.json') : undefined;
+            const resume = await command(directory, ['export', '--origin-directly', '--resume', ...exportIds], mode, recoveryTrace);
+            assert.equal(resume.code, 0, `${mode} resume after partial failure: ${resume.stderr || resume.stdout}`);
+            if (recoveryTrace) {
+              const recoveryDiagnostics = JSON.parse(await fs.readFile(recoveryTrace, 'utf8'));
+              for (const kind of ['commandOutboundPrepare', 'commandOutboundApply', 'commandOutboundFinalize'])
+                assert.equal(recoveryDiagnostics.workspace[kind].frames, 1, `partial resume ${kind} must be Rust-owned`);
+            }
             const resumed = {
               local: await snapshot(cli, directory, true),
               remotes: await snapshotRemotes(remotes),

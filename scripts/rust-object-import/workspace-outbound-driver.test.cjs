@@ -28,6 +28,9 @@ test('outbound parser admits staged, scoped, and unique short-name export', () =
     originDirectly: false,
   });
   assert.deepEqual(parse(['export', 'alpha']), { ids: ['alpha'], originDirectly: false });
+  assert.deepEqual(parse(['export', '--origin-directly', '--resume', '1800000000000-abcdef1234567890']), {
+    ids: [], originDirectly: true, resume: '1800000000000-abcdef1234567890',
+  });
   for (const args of [
     ['export', '*'],
     ['export', '--json'],
@@ -37,6 +40,8 @@ test('outbound parser admits staged, scoped, and unique short-name export', () =
     ['export', '--ignore-missing-artifacts'],
     ['export', '--eject'],
     ['export', '--resume'],
+    ['export', '--resume', '../escape'],
+    ['export', '--resume', 'one', '--resume', 'two'],
   ])
     assert.equal(parse(args), undefined, args.join(' '));
 });
@@ -160,4 +165,23 @@ test('registered persist hook declines file transfer before commit while HTTP re
     'commandOutboundApply',
     'commandOutboundFinalize',
   ]);
+});
+
+test('resume keeps the supplied export ID in the retained Rust request', async (t) => {
+  const capture = load('rust-client-capture');
+  const original = capture.withRustClientRequest;
+  t.after(() => { capture.withRustClientRequest = original; });
+  const exportId = '1800000000000-abcdef1234567890';
+  capture.withRustClientRequest = async (callback) => callback(async (input) => {
+    if (input.kind === 'commandOutboundPrepare') {
+      assert.equal(input.clientId, exportId);
+      assert.equal(input.options.resume, exportId);
+      return { token: 'resume', owner: 'rust', nothingToExport: false, scopes: ['qualification.alpha'], fileRemote: false };
+    }
+    if (input.kind === 'commandOutboundApply')
+      return { token: 'resume', owner: 'rust', pending: true, scopes: ['qualification.alpha'], clientId: exportId, objectCount: 1 };
+    return { ...receipt, token: 'resume' };
+  });
+  const { readRustWorkspaceOutbound: read } = load('rust-workspace-outbound');
+  assert.equal(typeof await read('/workspace', '/home', { ...options, resume: exportId }), 'string');
 });

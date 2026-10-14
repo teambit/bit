@@ -21,7 +21,7 @@ export async function readRustWorkspaceOutbound(
   let committing = false;
   return withRustClientRequest(
     async (request) => {
-      const clientId = `${Date.now()}-${crypto.randomBytes(8).toString('hex')}`;
+      const clientId = options.resume || `${Date.now()}-${crypto.randomBytes(8).toString('hex')}`;
       const prepared = await request({
         kind: 'commandOutboundPrepare',
         root,
@@ -36,7 +36,7 @@ export async function readRustWorkspaceOutbound(
         exportDate: Date.now().toString(),
         operation: 'export',
         ids: options.ids,
-        options: { originDirectly: options.originDirectly },
+        options: { originDirectly: options.originDirectly, resume: options.resume },
       });
       if (
         !prepared ||

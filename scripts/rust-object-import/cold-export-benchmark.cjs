@@ -169,10 +169,13 @@ async function benchmark(cli, helper, reportFile, options = {}) {
     rows: [],
     medians: [],
   };
+  const available = timedScenarios.filter((scenario) =>
+    !(scenario.httpOnly && transport !== 'http') && !(scenario.fileOnly && transport !== 'file')
+  );
   const selected = options.scenarios
-    ? timedScenarios.filter((scenario) => options.scenarios.includes(scenario.name))
-    : timedScenarios;
-  assert.equal(selected.length, options.scenarios?.length || timedScenarios.length);
+    ? available.filter((scenario) => options.scenarios.includes(scenario.name))
+    : available;
+  assert.equal(selected.length, options.scenarios?.length || available.length);
   try {
     await fs.mkdir(path.dirname(reportFile), { recursive: true });
     for (const scenario of selected) {
@@ -192,18 +195,35 @@ async function benchmark(cli, helper, reportFile, options = {}) {
           if (server) {
             const ready = ipc(server, (value) => value.configured);
             server.send({
-              configure: Object.fromEntries(Object.entries(remotes).map(([name, target]) => [name, { path: target }])),
+              configure: Object.fromEntries(Object.entries(remotes).map(([name, target]) => [name, {
+                path: target,
+                failPersist: scenario.setup === 'resumable' && name === 'qualification.alpha',
+              }])),
             });
             await ready;
           }
           const directory = path.join(root, `${scenario.name}-${round}-${mode}`);
           await cloneExportScenario(producer, directory, scenario, urls, command);
+          let args = scenario.args;
+          if (scenario.setup === 'resumable') {
+            const initial = await command(directory, ['export', '--origin-directly'], 'node');
+            assert.notEqual(initial.code, 0, 'resume benchmark setup must leave pending objects');
+            const pending = await snapshotRemote(remotes['qualification.alpha']);
+            const exportIds = new Set(Object.keys(pending.pending).map((name) => name.split('/')[0]));
+            assert.equal(exportIds.size, 1, 'resume benchmark setup must retain one export ID');
+            args = [...scenario.args, ...exportIds];
+            const ready = ipc(server, (value) => value.configured);
+            server.send({
+              configure: Object.fromEntries(Object.entries(remotes).map(([name, target]) => [name, { path: target }])),
+            });
+            await ready;
+          }
           const before = {
             local: await snapshot(cli, directory, true),
             remote: await snapshotRemote(remotes['qualification.alpha']),
             ...(scenario.multiScope ? { secondRemote: await snapshotRemote(remotes['qualification.beta']) } : {}),
           };
-          const result = await command(directory, scenario.args, mode);
+          const result = await command(directory, args, mode);
           assert.equal(result.signal, null, `${scenario.name}/${round}/${mode}: signal`);
           assert.equal(result.code, 0, `${scenario.name}/${round}/${mode}: ${result.stderr || result.stdout}`);
           const after = {

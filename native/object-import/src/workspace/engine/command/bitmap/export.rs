@@ -26,6 +26,18 @@ pub(in crate::workspace::engine::command) fn prepare_export_scopes(
     Ok(Prepared { root: root.to_owned(), original, output, changed })
 }
 
+impl Prepared {
+    /// Resume may acknowledge only scopes that still had pending objects. Keep
+    /// the original bitmap preimage while narrowing the rows to promote.
+    pub(in crate::workspace::engine::command) fn select_export_promotions(
+        &mut self,
+        components: &[(String, String)],
+    ) -> io::Result<()> {
+        *self = prepare_export_scopes(&self.root, self.original.clone(), components)?;
+        Ok(())
+    }
+}
+
 fn promote_export_row(row: &mut Value, scope: &str, name: &str) -> io::Result<bool> {
     if row["name"] != name {
         return Err(invalid("export bitmap lifecycle"));

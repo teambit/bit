@@ -1,6 +1,7 @@
 export type RustWorkspaceOutboundOptions = {
   ids: string[];
   originDirectly: boolean;
+  resume?: string;
 };
 
 /** Select ordinary scoped exports; Rust performs the final workspace/remote preflight. */
@@ -8,10 +9,16 @@ export function parseRustWorkspaceOutbound(args: string[]): RustWorkspaceOutboun
   if (args[0] !== 'export' && args[0] !== 'e') return undefined;
   const ids: string[] = [];
   let originDirectly = false;
-  for (const arg of args.slice(1)) {
+  let resume: string | undefined;
+  for (let index = 1; index < args.length; index++) {
+    const arg = args[index];
     if (arg === '--origin-directly') {
       if (originDirectly) return undefined;
       originDirectly = true;
+    } else if (arg === '--resume') {
+      const clientId = args[++index];
+      if (resume || !clientId || clientId.length > 128 || !/^[a-zA-Z0-9_-]+$/.test(clientId)) return undefined;
+      resume = clientId;
     } else if (arg.startsWith('-')) {
       return undefined;
     } else {
@@ -27,5 +34,5 @@ export function parseRustWorkspaceOutbound(args: string[]): RustWorkspaceOutboun
       ids.push(arg);
     }
   }
-  return { ids, originDirectly };
+  return { ids, originDirectly, ...(resume ? { resume } : {}) };
 }
