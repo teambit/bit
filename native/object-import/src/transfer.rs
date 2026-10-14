@@ -1,5 +1,6 @@
 //! Owned compressed transfer collection, tar framing and remote acknowledgement policy.
 pub(crate) mod collection;
+pub(crate) mod object;
 pub(crate) use session::State;
 
 use std::{
@@ -17,7 +18,6 @@ mod session;
 mod transaction;
 
 mod header;
-pub(crate) mod object;
 #[cfg(test)]
 mod tests;
 

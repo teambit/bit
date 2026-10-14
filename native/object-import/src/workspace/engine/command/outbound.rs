@@ -62,15 +62,23 @@ pub(in crate::workspace::engine) struct Finalize {
 pub(super) struct Retained {
     token: String,
     root: PathBuf,
+    pending: Pending,
+    network: NetworkConfig,
+    publication: Option<publication::Prepared>,
+    transferred: bool,
+}
+
+struct Pending {
     scope: Option<String>,
-    remote_host: Option<String>,
+    host: Option<String>,
     client_id: String,
+    objects: Vec<ObjectItem>,
+}
+
+struct NetworkConfig {
     global_config_dir: PathBuf,
     bit_version: String,
     auth_token: Option<String>,
-    objects: Vec<ObjectItem>,
-    publication: Option<publication::Prepared>,
-    transferred: bool,
 }
 
 pub(in crate::workspace::engine) fn prepare(
@@ -96,13 +104,17 @@ pub(in crate::workspace::engine) fn prepare(
     state.outbound = Some(Retained {
         token,
         root: input.root.clone(),
-        scope,
-        remote_host,
-        client_id: input.transport.client_id.clone(),
-        global_config_dir: input.transport.global_config_dir.clone(),
-        bit_version: input.transport.bit_version.clone(),
-        auth_token: input.transport.token.clone(),
-        objects,
+        pending: Pending {
+            scope,
+            host: remote_host,
+            client_id: input.transport.client_id.clone(),
+            objects,
+        },
+        network: NetworkConfig {
+            global_config_dir: input.transport.global_config_dir.clone(),
+            bit_version: input.transport.bit_version.clone(),
+            auth_token: input.transport.token.clone(),
+        },
         publication,
         transferred: false,
     });
@@ -115,22 +127,32 @@ fn objects(selected: &[model::Selected]) -> io::Result<Vec<ObjectItem>> {
     let mut bytes = 0usize;
     for component in selected {
         for object in &component.objects {
-            match seen.get(&object.hash) {
-                Some(previous) if previous == &object.compressed => continue,
-                Some(_) => return Err(invalid("outbound conflicting object bytes")),
-                None => {}
-            }
-            bytes = bytes
-                .checked_add(object.compressed.len())
-                .ok_or_else(|| invalid("outbound object budget"))?;
-            if bytes > 32 * 1024 * 1024 || objects.len() >= 4096 {
-                return Err(invalid("outbound object budget"));
-            }
-            seen.insert(object.hash.clone(), object.compressed.clone());
-            objects.push(object.clone());
+            append_object(&mut objects, &mut seen, &mut bytes, object)?;
         }
     }
     Ok(objects)
+}
+
+fn append_object(
+    objects: &mut Vec<ObjectItem>,
+    seen: &mut HashMap<String, Vec<u8>>,
+    bytes: &mut usize,
+    object: &ObjectItem,
+) -> io::Result<()> {
+    match seen.get(&object.hash) {
+        Some(previous) if previous == &object.compressed => return Ok(()),
+        Some(_) => return Err(invalid("outbound conflicting object bytes")),
+        None => {}
+    }
+    *bytes = bytes
+        .checked_add(object.compressed.len())
+        .ok_or_else(|| invalid("outbound object budget"))?;
+    if *bytes > 32 * 1024 * 1024 || objects.len() >= 4096 {
+        return Err(invalid("outbound object budget"));
+    }
+    seen.insert(object.hash.clone(), object.compressed.clone());
+    objects.push(object.clone());
+    Ok(())
 }
 
 pub(in crate::workspace::engine) fn apply(
@@ -141,19 +163,19 @@ pub(in crate::workspace::engine) fn apply(
     if retained.token != input.token || retained.transferred {
         return Err(invalid("outbound owner token"));
     }
-    let pending = retained.scope.is_some();
+    let pending = retained.pending.scope.is_some();
     if let Some(plan) = &retained.publication {
         plan.stage_history()?;
     }
-    if let (Some(scope), Some(host)) = (&retained.scope, &retained.remote_host) {
+    if let (Some(scope), Some(host)) = (&retained.pending.scope, &retained.pending.host) {
         remote::push(retained, scope, host)?;
     }
     retained.transferred = true;
     Ok((
-        retained.objects.len(),
+        retained.pending.objects.len(),
         json!({"token":retained.token,"owner":"rust",
-        "scope":retained.scope,"remoteHost":retained.remote_host,
-        "clientId":retained.client_id,"objectCount":retained.objects.len(),"pending":pending}),
+        "scope":retained.pending.scope,"remoteHost":retained.pending.host,
+        "clientId":retained.pending.client_id,"objectCount":retained.pending.objects.len(),"pending":pending}),
     ))
 }
 

@@ -17,14 +17,28 @@ const MAX_BYTES: usize = 32 * 1024 * 1024;
 pub(super) struct Selected {
     pub(super) scope: String,
     pub(super) name: String,
-    pub(super) model_hash: String,
-    pub(super) model_before: Vec<u8>,
-    pub(super) model_after: Vec<u8>,
-    pub(super) history_hash: String,
-    pub(super) history: Vec<u8>,
+    pub(super) model: ModelBytes,
+    pub(super) history: HistoryBytes,
     pub(super) head: String,
     pub(super) version: String,
     pub(super) objects: Vec<ObjectItem>,
+}
+
+pub(super) struct ModelBytes {
+    pub(super) hash: String,
+    pub(super) before: Vec<u8>,
+    pub(super) after: Vec<u8>,
+}
+
+pub(super) struct HistoryBytes {
+    pub(super) hash: String,
+    pub(super) bytes: Vec<u8>,
+}
+
+struct Identity {
+    scope: String,
+    name: String,
+    model_hash: String,
 }
 
 pub(super) fn select(input: &Prepare) -> io::Result<Vec<Selected>> {
@@ -102,6 +116,34 @@ fn requested(input: &Prepare, staged: Vec<(Value, Value)>) -> io::Result<Vec<(Va
 
 fn select_one(input: &Prepare, row: &Value, mut model: Value) -> io::Result<Selected> {
     let root = &input.root;
+    let identity = identity(row, &model)?;
+    let (version_name, head) = staged_head(&model)?;
+    let objects_dir = root.join(".bit/objects");
+    let model_before = transfer::object::repository(
+        &objects_dir,
+        crate::merge_history::hash(&identity.model_hash)?,
+        MAX_BYTES,
+    )?;
+    let history_hash = crate::validate::hexadecimal(&Sha1::digest(
+        format!("{}/{}:VersionHistory", identity.scope, identity.name).as_bytes(),
+    ));
+    let history = history(&objects_dir, &identity.scope, &identity.name, &head, &history_hash)?;
+    let host = super::remote::configured_host(input, &identity.scope)?;
+    clear_and_mark_exported(&mut model, &identity.scope, &host, &input.transport.export_date)?;
+    let model_after = encode(&identity.model_hash, "Component", &model)?;
+    let objects = collect(&objects_dir, &identity.model_hash, &model_after, &head)?;
+    Ok(Selected {
+        scope: identity.scope,
+        name: identity.name,
+        model: ModelBytes { hash: identity.model_hash, before: model_before, after: model_after },
+        history: HistoryBytes { hash: history_hash, bytes: history },
+        head,
+        version: version_name,
+        objects,
+    })
+}
+
+fn identity(row: &Value, model: &Value) -> io::Result<Identity> {
     let scope = row["id"]["scope"]
         .as_str()
         .ok_or_else(|| invalid("outbound scope"))?
@@ -117,33 +159,7 @@ fn select_one(input: &Prepare, row: &Value, mut model: Value) -> io::Result<Sele
         .as_str()
         .ok_or_else(|| invalid("outbound model hash"))?
         .to_owned();
-    let (version_name, head) = staged_head(&model)?;
-    let objects_dir = root.join(".bit/objects");
-    let model_before = transfer::object::repository(
-        &objects_dir,
-        crate::merge_history::hash(&model_hash)?,
-        MAX_BYTES,
-    )?;
-    let history_hash = crate::validate::hexadecimal(&Sha1::digest(
-        format!("{scope}/{name}:VersionHistory").as_bytes(),
-    ));
-    let history = history(&objects_dir, &scope, &name, &head, &history_hash)?;
-    let host = super::remote::configured_host(input, &scope)?;
-    clear_and_mark_exported(&mut model, &scope, &host, &input.transport.export_date)?;
-    let model_after = encode(&model_hash, "Component", &model)?;
-    let objects = collect(&objects_dir, &model_hash, &model_after, &history_hash, &history, &head)?;
-    Ok(Selected {
-        scope,
-        name,
-        model_hash,
-        model_before,
-        model_after,
-        history_hash,
-        history,
-        head,
-        version: version_name,
-        objects,
-    })
+    Ok(Identity { scope, name, model_hash })
 }
 
 fn load_model(root: &Path, row: &Value) -> io::Result<Value> {
@@ -252,14 +268,7 @@ fn encode(hash: &str, kind: &str, value: &Value) -> io::Result<Vec<u8>> {
     write!(encoder, "{kind} {hash} {}\0{body}", body.encode_utf16().count())?;
     encoder.finish()
 }
-fn collect(
-    dir: &Path,
-    model_hash: &str,
-    model: &[u8],
-    history_hash: &str,
-    history: &[u8],
-    head: &str,
-) -> io::Result<Vec<ObjectItem>> {
+fn collect(dir: &Path, model_hash: &str, model: &[u8], head: &str) -> io::Result<Vec<ObjectItem>> {
     let versions = [collection::Version {
         hash: crate::merge_history::hash(head)?,
         locally_changed: true,
@@ -274,7 +283,7 @@ fn collect(
     )?;
     let mut objects =
         vec![ObjectItem { hash: model_hash.to_owned(), compressed: model.to_vec(), scope: None }];
-    let mut budget = model.len() + history.len();
+    let mut budget = model.len();
     for descriptor in descriptors {
         if matches!(descriptor.body, Body::Metadata(_)) {
             return Err(invalid("outbound inline object"));
@@ -291,10 +300,5 @@ fn collect(
     if budget > MAX_BYTES || objects.len() > 4095 {
         return Err(invalid("outbound object budget"));
     }
-    objects.push(ObjectItem {
-        hash: history_hash.to_owned(),
-        compressed: history.to_vec(),
-        scope: None,
-    });
     Ok(objects)
 }

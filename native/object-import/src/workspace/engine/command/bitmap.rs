@@ -1,4 +1,6 @@
 //! Validated bitmap publication and history for workspace commands.
+pub(super) use export::prepare_export_scopes;
+mod export;
 mod lane;
 use crate::workspace::engine::invalid;
 use serde_json::{Map, Value};
@@ -46,9 +48,8 @@ impl Prepared {
                 .iter_mut()
                 .find(|entry| identity(entry).ok().as_ref() == Some(id))
                 .ok_or_else(|| invalid("command lane-only identity absent"))?;
-            let fields = entry
-                .as_object_mut()
-                .ok_or_else(|| invalid("command lane-only bitmap entry"))?;
+            let fields =
+                entry.as_object_mut().ok_or_else(|| invalid("command lane-only bitmap entry"))?;
             fields.insert("onLanesOnly".into(), Value::Bool(true));
             fields.insert("isAvailableOnCurrentLane".into(), Value::Bool(true));
         }
@@ -112,42 +113,6 @@ pub(super) fn prepare_bytes(
     Ok(Prepared { root: root.to_owned(), original, output, changed })
 }
 /// Promote every selected export row in one bitmap write and one history entry.
-pub(super) fn prepare_export_scopes(
-    root: &Path,
-    original: Vec<u8>,
-    components: &[(String, String)],
-) -> io::Result<Prepared> {
-    let mut bitmap = crate::recovery::jsonc::parse(&original)?;
-    let rows = bitmap
-        .as_object_mut()
-        .ok_or_else(|| invalid("export bitmap object"))?;
-    let mut seen = HashSet::new();
-    let mut changed = false;
-    for (scope, name) in components {
-        if !seen.insert(format!("{scope}/{name}")) {
-            return Err(invalid("export duplicate bitmap identity"));
-        }
-        let row = rows
-            .get_mut(name)
-            .ok_or_else(|| invalid("export bitmap row"))?;
-        if row["name"] != *name {
-            return Err(invalid("export bitmap lifecycle"));
-        }
-        if row["scope"] == "" && row["defaultScope"] == *scope {
-            let fields = row
-                .as_object_mut()
-                .ok_or_else(|| invalid("export bitmap entry"))?;
-            fields.insert("scope".into(), Value::String(scope.to_owned()));
-            fields.shift_remove("defaultScope");
-            changed = true;
-        } else if row["scope"] != *scope || !row["defaultScope"].is_null() {
-            return Err(invalid("export bitmap lifecycle"));
-        }
-    }
-    let output =
-        if changed { crate::inspection::render_bitmap(&bitmap)? } else { original.clone() };
-    Ok(Prepared { root: root.to_owned(), original, output, changed })
-}
 fn validate_updates(original: &[u8], updates: &[Update]) -> io::Result<()> {
     let mut identities = HashSet::new();
     if updates
@@ -162,30 +127,21 @@ fn validate_updates(original: &[u8], updates: &[Update]) -> io::Result<()> {
     Ok(())
 }
 fn rows(bitmap: &Value) -> io::Result<Vec<Value>> {
-    let entries = bitmap
-        .as_object()
-        .ok_or_else(|| invalid("command bitmap object"))?;
-    if bitmap["$schema-version"]
-        .as_str()
-        .is_none()
-    {
+    let entries = bitmap.as_object().ok_or_else(|| invalid("command bitmap object"))?;
+    if bitmap["$schema-version"].as_str().is_none() {
         return Err(invalid("command bitmap schema requires canonical migration"));
     }
     let mut rows = Vec::new();
     for (key, entry) in entries {
         if !matches!(key.as_str(), "$schema-version" | "_bit_lane") {
-            entry["name"]
-                .as_str()
-                .ok_or_else(|| invalid("command bitmap component name"))?;
+            entry["name"].as_str().ok_or_else(|| invalid("command bitmap component name"))?;
             rows.push(entry.clone());
         }
     }
     Ok(rows)
 }
 fn identity(entry: &Value) -> io::Result<String> {
-    let name = entry["name"]
-        .as_str()
-        .ok_or_else(|| invalid("command bitmap name"))?;
+    let name = entry["name"].as_str().ok_or_else(|| invalid("command bitmap name"))?;
     let scope = entry["scope"]
         .as_str()
         .filter(|scope| !scope.is_empty())
@@ -224,9 +180,7 @@ fn apply_update(entry: &mut Value, context: &Value, update: &Update) -> io::Resu
     crate::checkout::plan::relative_path(&update.main_file)?;
     entry["version"] = Value::String(tag(context, &update.identity, &update.version)?);
     entry["mainFile"] = Value::String(update.main_file.clone());
-    let entry = entry
-        .as_object_mut()
-        .ok_or_else(|| invalid("command bitmap entry"))?;
+    let entry = entry.as_object_mut().ok_or_else(|| invalid("command bitmap entry"))?;
     if lane::on_lane(context) {
         entry.insert("isAvailableOnCurrentLane".into(), Value::Bool(true));
     } else {
@@ -238,25 +192,16 @@ fn apply_update(entry: &mut Value, context: &Value, update: &Update) -> io::Resu
 fn render_rows(rows: Vec<Value>, schema: &Value, lane: Option<Value>) -> io::Result<Vec<u8>> {
     let mut names = HashMap::<String, usize>::new();
     for entry in &rows {
-        let name = entry["name"]
-            .as_str()
-            .ok_or_else(|| invalid("command bitmap name"))?;
-        *names
-            .entry(name.to_owned())
-            .or_default() += 1;
+        let name = entry["name"].as_str().ok_or_else(|| invalid("command bitmap name"))?;
+        *names.entry(name.to_owned()).or_default() += 1;
     }
     let mut keyed = Vec::new();
     for entry in rows {
-        let name = entry["name"]
-            .as_str()
-            .ok_or_else(|| invalid("command bitmap name"))?;
+        let name = entry["name"].as_str().ok_or_else(|| invalid("command bitmap name"))?;
         let key = if names[name] > 1 { identity(&entry)? } else { name.to_owned() };
         keyed.push((key, plain(&entry)?));
     }
-    keyed.sort_by(|(left, _), (right, _)| {
-        left.encode_utf16()
-            .cmp(right.encode_utf16())
-    });
+    keyed.sort_by(|(left, _), (right, _)| left.encode_utf16().cmp(right.encode_utf16()));
     let mut output = Map::new();
     for (key, entry) in keyed {
         if output.insert(key, entry).is_some() {
@@ -309,9 +254,7 @@ fn included(entry: &Value, key: &str, value: &Value) -> bool {
 fn clean_value(key: &str, value: &Value) -> io::Result<Value> {
     let mut value = value.clone();
     if key == "config" {
-        let config = value
-            .as_object_mut()
-            .ok_or_else(|| invalid("command bitmap config"))?;
+        let config = value.as_object_mut().ok_or_else(|| invalid("command bitmap config"))?;
         for aspect in config.values_mut() {
             if let Some(aspect) = aspect.as_object_mut() {
                 aspect.shift_remove("__specific");
@@ -324,20 +267,14 @@ fn tag(context: &Value, identity: &str, version: &str) -> io::Result<String> {
     if crate::merge_history::hash(version).is_err() {
         return Ok(version.to_owned());
     }
-    let models = context["models"]
-        .as_array()
-        .ok_or_else(|| invalid("command bitmap models"))?;
+    let models = context["models"].as_array().ok_or_else(|| invalid("command bitmap models"))?;
     let model = models
         .iter()
         .find(|model| {
             format!(
                 "{}/{}",
-                model["scope"]
-                    .as_str()
-                    .unwrap_or_default(),
-                model["name"]
-                    .as_str()
-                    .unwrap_or_default(),
+                model["scope"].as_str().unwrap_or_default(),
+                model["name"].as_str().unwrap_or_default(),
             ) == identity
         })
         .ok_or_else(|| invalid("command bitmap model"))?;
@@ -358,12 +295,9 @@ fn tag(context: &Value, identity: &str, version: &str) -> io::Result<String> {
 pub(super) fn validate_history_file_id(file_id: &str) -> io::Result<()> {
     if file_id.len() > 32
         || file_id.split('-').count() != 6
-        || file_id.split('-').any(|part| {
-            part.is_empty()
-                || !part
-                    .bytes()
-                    .all(|byte| byte.is_ascii_digit())
-        })
+        || file_id
+            .split('-')
+            .any(|part| part.is_empty() || !part.bytes().all(|byte| byte.is_ascii_digit()))
     {
         return Err(invalid("command bitmap history receipt"));
     }
@@ -389,10 +323,7 @@ impl Prepared {
             let mut metadata = fs::OpenOptions::new()
                 .create(true)
                 .append(true)
-                .open(
-                    self.root
-                        .join(".bit/bitmap-history-metadata.txt"),
-                )?;
+                .open(self.root.join(".bit/bitmap-history-metadata.txt"))?;
             writeln!(metadata, "{file_id} {reason}")?;
             metadata.sync_all()
         })();

@@ -5,6 +5,7 @@ pub(crate) mod diff;
 pub(crate) mod inventory;
 pub(crate) mod read_dependency_cache;
 
+mod command_request;
 mod dependency_graph;
 mod read;
 mod read_raw;
@@ -231,7 +232,7 @@ fn owned(
         Request::CommandRecoveryApply(input) => {
             pool.install(|| command::recovery::apply(&input, &mut snapshots.command))
         }
-        request => owned_command(request, snapshots, pool),
+        request => command_request::dispatch(request, snapshots, pool),
     }
 }
 fn owned_command(
@@ -240,21 +241,6 @@ fn owned_command(
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
     match request {
-        Request::CommandInboundPrepare(input) => {
-            pool.install(|| command::inbound::prepare(&input, &mut snapshots.command))
-        }
-        Request::CommandInboundApply(input) => {
-            pool.install(|| command::inbound::apply(&input, &mut snapshots.command))
-        }
-        Request::CommandOutboundPrepare(input) => {
-            pool.install(|| command::outbound::prepare(&input, &mut snapshots.command))
-        }
-        Request::CommandOutboundApply(input) => {
-            pool.install(|| command::outbound::apply(&input, &mut snapshots.command))
-        }
-        Request::CommandOutboundFinalize(input) => {
-            pool.install(|| command::outbound::finalize(&input, &mut snapshots.command))
-        }
         Request::CommandPlan(input) => command::plan(input, snapshots, pool),
         Request::CommandPolicyPrepare(input) => {
             pool.install(|| command::policy::prepare(input, &mut snapshots.command))

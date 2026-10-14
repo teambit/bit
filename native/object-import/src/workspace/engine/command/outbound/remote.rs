@@ -48,16 +48,18 @@ fn check_file_remote(path: &Path, scope: &str) -> io::Result<()> {
 }
 
 pub(super) fn push(retained: &Retained, scope: &str, host: &str) -> io::Result<()> {
-    if retained.client_id.len() > 128
-        || retained.client_id.is_empty()
-        || !retained.client_id
+    if retained.pending.client_id.len() > 128
+        || retained.pending.client_id.is_empty()
+        || !retained.pending.client_id
             .bytes()
             .all(|byte| byte.is_ascii_alphanumeric() || b"._-".contains(&byte))
     {
         return Err(invalid("outbound client id"));
     }
     match Remote::from_host(host)? {
-        Remote::File(path) => push_file(&path, scope, &retained.client_id, &retained.objects),
+        Remote::File(path) => {
+            push_file(&path, scope, &retained.pending.client_id, &retained.pending.objects)
+        }
         Remote::Http(url) => push_http(retained, scope, &url),
     }
 }
@@ -108,22 +110,23 @@ fn write_pending(pending: &Path, objects: &[tar::ObjectItem]) -> io::Result<()> 
 }
 
 fn push_http(retained: &Retained, _scope: &str, url: &str) -> io::Result<()> {
-    let archive = tar::pack(&retained.objects, MAX_BYTES)?;
-    let config: GlobalConfig = match fs::read(retained.global_config_dir.join("config.json")) {
-        Ok(bytes) => serde_json::from_slice(&bytes)?,
-        Err(error) if error.kind() == io::ErrorKind::NotFound => GlobalConfig::new(),
-        Err(error) => return Err(error),
-    };
+    let archive = tar::pack(&retained.pending.objects, MAX_BYTES)?;
+    let config: GlobalConfig =
+        match fs::read(retained.network.global_config_dir.join("config.json")) {
+            Ok(bytes) => serde_json::from_slice(&bytes)?,
+            Err(error) if error.kind() == io::ErrorKind::NotFound => GlobalConfig::new(),
+            Err(error) => return Err(error),
+        };
     let local: Value = serde_json::from_slice(&fs::read(retained.root.join(".bit/scope.json"))?)?;
     let local_name = local["name"].as_str().ok_or_else(|| invalid("outbound local scope"))?;
     let network = Network::new(
         &config,
-        &retained.bit_version,
+        &retained.network.bit_version,
         Some(local_name),
-        retained.auth_token.as_deref(),
+        retained.network.auth_token.as_deref(),
     )?;
     let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
-    let result = runtime.block_on(network.push(url, &retained.client_id, archive))?;
+    let result = runtime.block_on(network.push(url, &retained.pending.client_id, archive))?;
     if !result.is_empty() {
         return Err(invalid("outbound unexpected push result"));
     }

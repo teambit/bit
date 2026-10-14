@@ -43,9 +43,38 @@ pub(super) fn prepare(input: &Prepare, selected: &[Selected], host: &str) -> io:
     if host.is_empty() {
         return Err(invalid("outbound remote host"));
     }
-    let first = selected
-        .first()
-        .ok_or_else(|| invalid("outbound empty publication"))?;
+    let first = validate_selected(selected)?;
+    let bitmap = prepare_bitmap(input, selected)?;
+    let preimage = prepare_preimage(&input.root, &first.scope)?;
+    let output = Output {
+        refs: prepare_refs(preimage.refs.as_deref(), &first.scope, selected)?,
+        staged_config: prepare_staged_config(&preimage.staged_config, selected)?,
+    };
+    let expected_ids = expected_ids(selected)?;
+    let components = selected
+        .iter()
+        .map(|item| Component {
+            model_hash: item.model.hash.clone(),
+            model_before: item.model.before.clone(),
+            model_after: item.model.after.clone(),
+            history_hash: item.history.hash.clone(),
+            history: item.history.bytes.clone(),
+        })
+        .collect();
+    Ok(Prepared {
+        root: input.root.clone(),
+        scope: first.scope.clone(),
+        components,
+        preimage,
+        output,
+        bitmap,
+        file_id: input.transport.bitmap_history_file_id.clone(),
+        expected_ids,
+    })
+}
+
+fn validate_selected(selected: &[Selected]) -> io::Result<&Selected> {
+    let first = selected.first().ok_or_else(|| invalid("outbound empty publication"))?;
     if selected.len() > 4096
         || selected
             .iter()
@@ -53,64 +82,45 @@ pub(super) fn prepare(input: &Prepare, selected: &[Selected], host: &str) -> io:
     {
         return Err(invalid("outbound multiple remote scopes"));
     }
-    let index_before = fs::read(input.root.join(".bit/index.json"))?;
-    let bitmap_before = fs::read(input.root.join(".bitmap"))?;
+    Ok(first)
+}
+
+fn expected_ids(selected: &[Selected]) -> io::Result<HashSet<String>> {
+    let ids = selected
+        .iter()
+        .map(|item| format!("{}/{}@{}", item.scope, item.name, item.version))
+        .collect::<HashSet<_>>();
+    if ids.len() != selected.len() {
+        return Err(invalid("outbound duplicate component"));
+    }
+    Ok(ids)
+}
+
+fn prepare_bitmap(
+    input: &Prepare,
+    selected: &[Selected],
+) -> io::Result<super::super::bitmap::Prepared> {
+    let original = fs::read(input.root.join(".bitmap"))?;
     let identities = selected
         .iter()
         .map(|item| (item.scope.clone(), item.name.clone()))
         .collect::<Vec<_>>();
-    let bitmap =
-        super::super::bitmap::prepare_export_scopes(&input.root, bitmap_before, &identities)?;
-    let refs = refs_path(&input.root, &first.scope);
-    let refs_before = read_optional(&refs)?;
-    let refs_after = prepare_refs(refs_before.as_deref(), &first.scope, selected)?;
-    let staged_before = read_optional(&input.root.join(".bit/staged-snaps"))?;
-    if staged_before
+    super::super::bitmap::prepare_export_scopes(&input.root, original, &identities)
+}
+
+fn prepare_preimage(root: &Path, scope: &str) -> io::Result<Preimage> {
+    let staged = read_optional(&root.join(".bit/staged-snaps"))?;
+    if staged
         .as_ref()
         .is_some_and(|bytes| bytes.len() > 4 * 1024 * 1024)
     {
         return Err(invalid("outbound staged snap bounds"));
     }
-    let staged_config_before = fs::read(
-        input
-            .root
-            .join(".bit/staged-config/main.json"),
-    )?;
-    let staged_config_after = prepare_staged_config(&staged_config_before, selected)?;
-    let expected_ids = selected
-        .iter()
-        .map(|item| format!("{}/{}@{}", item.scope, item.name, item.version))
-        .collect::<HashSet<_>>();
-    if expected_ids.len() != selected.len() {
-        return Err(invalid("outbound duplicate component"));
-    }
-    let components = selected
-        .iter()
-        .map(|item| Component {
-            model_hash: item.model_hash.clone(),
-            model_before: item.model_before.clone(),
-            model_after: item.model_after.clone(),
-            history_hash: item.history_hash.clone(),
-            history: item.history.clone(),
-        })
-        .collect();
-    Ok(Prepared {
-        root: input.root.clone(),
-        scope: first.scope.clone(),
-        components,
-        preimage: Preimage {
-            index: index_before,
-            refs: refs_before,
-            staged: staged_before,
-            staged_config: staged_config_before,
-        },
-        output: Output { refs: refs_after, staged_config: staged_config_after },
-        bitmap,
-        file_id: input
-            .transport
-            .bitmap_history_file_id
-            .clone(),
-        expected_ids,
+    Ok(Preimage {
+        index: fs::read(root.join(".bit/index.json"))?,
+        refs: read_optional(&refs_path(root, scope))?,
+        staged,
+        staged_config: fs::read(root.join(".bit/staged-config/main.json"))?,
     })
 }
 
@@ -124,6 +134,12 @@ impl Prepared {
     }
 
     pub(super) fn commit(self, exported_ids: &[String]) -> io::Result<()> {
+        self.validate_acknowledgement(exported_ids)?;
+        self.validate_preimage()?;
+        self.publish()
+    }
+
+    fn validate_acknowledgement(&self, exported_ids: &[String]) -> io::Result<()> {
         if exported_ids.len() != self.expected_ids.len()
             || exported_ids
                 .iter()
@@ -136,12 +152,15 @@ impl Prepared {
         {
             return Err(invalid("outbound remote acknowledgement"));
         }
+        Ok(())
+    }
+
+    fn validate_preimage(&self) -> io::Result<()> {
         if fs::read(self.root.join(".bit/index.json"))? != self.preimage.index {
             return Err(invalid("outbound local index changed"));
         }
         for item in &self.components {
-            let object = self
-                .root
+            let object = self.root
                 .join(".bit/objects")
                 .join(&item.model_hash[..2])
                 .join(&item.model_hash[2..]);
@@ -151,31 +170,28 @@ impl Prepared {
         }
         self.bitmap.validate()?;
         if read_optional(&self.root.join(".bit/staged-snaps"))? != self.preimage.staged
-            || fs::read(
-                self.root
-                    .join(".bit/staged-config/main.json"),
-            )? != self.preimage.staged_config
-            || read_optional(&refs_path(&self.root, &self.scope))? != self.preimage.refs
+            || fs::read(self.root.join(".bit/staged-config/main.json"))?
+                != self.preimage.staged_config
+            || read_optional(&refs_path(&self.root, &self.scope))?
+                != self.preimage.refs
         {
             return Err(invalid("outbound staged or remote state changed"));
         }
+        Ok(())
+    }
+
+    fn publish(self) -> io::Result<()> {
         let store = Store::new(self.root.join(".bit/objects"), None)?;
         for item in &self.components {
             store.write(&item.model_hash, &item.model_after)?;
             store.write(&item.history_hash, &item.history)?;
         }
         write_refs(&refs_path(&self.root, &self.scope), &self.output.refs)?;
-        fs::write(
-            self.root
-                .join(".bit/staged-config/main.json"),
-            self.output.staged_config,
-        )?;
+        fs::write(self.root.join(".bit/staged-config/main.json"), self.output.staged_config)?;
         if self.preimage.staged.is_some() {
             fs::remove_file(self.root.join(".bit/staged-snaps"))?;
         }
-        let _ = self
-            .bitmap
-            .commit(&self.file_id, "export")?;
+        let _ = self.bitmap.commit(&self.file_id, "export")?;
         Ok(())
     }
 }
@@ -244,10 +260,7 @@ fn refs_path(root: &Path, scope: &str) -> PathBuf {
         .join("main")
 }
 fn write_refs(path: &Path, bytes: &[u8]) -> io::Result<()> {
-    fs::create_dir_all(
-        path.parent()
-            .ok_or_else(|| invalid("outbound refs parent"))?,
-    )?;
+    fs::create_dir_all(path.parent().ok_or_else(|| invalid("outbound refs parent"))?)?;
     let mut file = fs::OpenOptions::new()
         .write(true)
         .create(true)
