@@ -65,7 +65,7 @@ impl Network {
         let response = throw_for_action_status(response).await?;
         response.json().await.map_err(|_| {
             invalid(&format!(
-                "fatal: failed parsing http json response, please make sure the response is a valid json object. url: {endpoint}"
+                "fatal: failed parsing http json response, please make sure the response is a valid json object. url: {endpoint}",
             ))
         })
     }

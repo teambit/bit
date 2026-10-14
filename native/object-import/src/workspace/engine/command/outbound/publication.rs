@@ -251,27 +251,30 @@ fn prepare_refs(before: Option<&[u8]>, scope: &str, selected: &[Selected]) -> io
     if rows.len() > 4096 {
         return Err(invalid("outbound remote refs bounds"));
     }
-    for item in selected {
-        if item.scope != scope {
-            continue;
-        }
-        let matches = rows
-            .iter()
-            .enumerate()
-            .filter(|(_, row)| row["id"]["scope"] == scope && row["id"]["name"] == item.name)
-            .map(|(index, _)| index)
-            .collect::<Vec<_>>();
-        if matches.len() > 1 {
-            return Err(invalid("outbound duplicate remote ref"));
-        }
-        let value = json!({"id":{"scope":scope,"name":item.name},"head":item.head});
-        if let Some(index) = matches.first() {
-            rows[*index] = value;
-        } else {
-            rows.push(value);
-        }
+    for item in selected
+        .iter()
+        .filter(|item| item.scope == scope)
+    {
+        set_ref(&mut rows, scope, item)?;
     }
     serde_json::to_vec_pretty(&rows).map_err(io::Error::other)
+}
+
+/// The remote ref of `item`, replaced or added.
+fn set_ref(rows: &mut Vec<Value>, scope: &str, item: &Selected) -> io::Result<()> {
+    let matches: Vec<usize> = rows
+        .iter()
+        .enumerate()
+        .filter(|(_, row)| row["id"]["scope"] == scope && row["id"]["name"] == item.name)
+        .map(|(index, _)| index)
+        .collect();
+    let value = json!({"id":{"scope":scope,"name":item.name},"head":item.head});
+    match matches.as_slice() {
+        [] => rows.push(value),
+        [index] => rows[*index] = value,
+        _ => return Err(invalid("outbound duplicate remote ref")),
+    }
+    Ok(())
 }
 
 fn read_optional(path: &Path) -> io::Result<Option<Vec<u8>>> {
@@ -298,46 +301,4 @@ fn write_refs(path: &Path, bytes: &[u8]) -> io::Result<()> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::workspace::engine::command::outbound::model::{HistoryBytes, ModelBytes};
-
-    fn selected(scope: &str, name: &str, head: &str) -> Selected {
-        Selected {
-            scope: scope.to_owned(),
-            name: name.to_owned(),
-            model: ModelBytes {
-                hash: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".to_owned(),
-                before: Vec::new(),
-                after: Vec::new(),
-            },
-            history: HistoryBytes {
-                hash: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb".to_owned(),
-                bytes: Vec::new(),
-            },
-            head: head.to_owned(),
-            version: "1.0.0".to_owned(),
-            objects: Vec::new(),
-        }
-    }
-
-    #[test]
-    fn prepares_remote_refs_independently_per_scope() {
-        let selected = [selected("scope.one", "one", "111"), selected("scope.two", "two", "222")];
-        let first: Vec<Value> =
-            serde_json::from_slice(&prepare_refs(None, "scope.one", &selected).unwrap()).unwrap();
-        let second: Vec<Value> =
-            serde_json::from_slice(&prepare_refs(None, "scope.two", &selected).unwrap()).unwrap();
-        assert_eq!(first, vec![json!({"id":{"scope":"scope.one","name":"one"},"head":"111"})]);
-        assert_eq!(second, vec![json!({"id":{"scope":"scope.two","name":"two"},"head":"222"})]);
-    }
-
-    #[test]
-    fn validates_host_for_every_selected_scope() {
-        let selected = [selected("scope.one", "one", "111"), selected("scope.two", "two", "222")];
-        let mut hosts = HashMap::from([("scope.one".to_owned(), "file:///one".to_owned())]);
-        assert!(validate_selected(&selected, &hosts).is_err());
-        hosts.insert("scope.two".to_owned(), "file:///two".to_owned());
-        assert_eq!(validate_selected(&selected, &hosts).unwrap(), ["scope.one", "scope.two"]);
-    }
-}
+mod tests;

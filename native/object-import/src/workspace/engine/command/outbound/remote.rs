@@ -199,30 +199,21 @@ impl Actions {
     ) -> io::Result<Vec<String>> {
         let mut last = None;
         for _ in 0..3 {
-            match self.action(
+            let persisted = self.action(
                 retained,
                 pending,
                 "ExportPersist",
                 &json!({"clientId":retained.client_id}),
-            ) {
-                Ok(Value::Array(ids)) => {
-                    return ids
-                        .into_iter()
-                        .map(|id| {
-                            id.as_str()
-                                .map(str::to_owned)
-                                .ok_or_else(|| invalid("outbound persisted identities"))
-                        })
-                        .collect();
-                }
-                Ok(_) => last = Some(invalid("outbound persisted identities")),
+            );
+            match persisted.and_then(persisted_ids) {
+                Ok(ids) => return Ok(ids),
                 Err(error) => last = Some(error),
             }
         }
         Err(io::Error::other(format!(
             "outbound persist failed: {}: {}",
             pending.scope,
-            last.ok_or_else(|| invalid("outbound persist attempts"))?
+            last.ok_or_else(|| invalid("outbound persist attempts"))?,
         )))
     }
 
@@ -257,4 +248,16 @@ fn network(retained: &Retained) -> io::Result<Network> {
         Some(local_name),
         retained.network.auth_token.as_deref(),
     )
+}
+
+/// The ids an `ExportPersist` action answered with.
+fn persisted_ids(value: Value) -> io::Result<Vec<String>> {
+    let Value::Array(ids) = value else { return Err(invalid("outbound persisted identities")) };
+    ids.into_iter()
+        .map(|id| {
+            id.as_str()
+                .map(str::to_owned)
+                .ok_or_else(|| invalid("outbound persisted identities"))
+        })
+        .collect()
 }

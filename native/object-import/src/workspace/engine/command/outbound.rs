@@ -66,8 +66,8 @@ pub(super) struct Retained {
     selected_order: HashMap<String, usize>,
     network: NetworkConfig,
     publication: Option<publication::Prepared>,
-    transferred: bool,
-    exported_ids: Vec<String>,
+    /// The ids the remotes persisted, once the objects are transferred.
+    transferred: Option<Vec<String>>,
 }
 
 struct Pending {
@@ -99,69 +99,85 @@ pub(in crate::workspace::engine) fn prepare(
         .collect();
     state.sequence = state.sequence.wrapping_add(1);
     let token = format!("outbound-{}", state.sequence);
-    let mut hosts = HashMap::new();
-    for item in &selected {
-        if !hosts.contains_key(&item.scope) {
-            hosts.insert(item.scope.clone(), remote::host(input, &item.scope)?);
-        }
-    }
+    let hosts = hosts(input, &selected)?;
     let publication = if selected.is_empty() {
         None
     } else {
         Some(publication::prepare(input, &selected, &hosts)?)
     };
-    let mut grouped: Vec<(String, Vec<model::Selected>)> = Vec::new();
-    let mut group_indices = HashMap::new();
-    for item in selected {
-        let index = if let Some(index) = group_indices.get(&item.scope) {
-            *index
-        } else {
-            let index = grouped.len();
-            group_indices.insert(item.scope.clone(), index);
-            grouped.push((item.scope.clone(), Vec::new()));
-            index
-        };
-        grouped[index].1.push(item);
-    }
-    let pending = grouped
-        .into_iter()
-        .map(|(scope, selected)| {
-            Ok(Pending {
-                host: hosts
-                    .get(&scope)
-                    .ok_or_else(|| invalid("outbound remote host"))?
-                    .clone(),
-                scope,
-                objects: objects(&selected)?,
-            })
-        })
-        .collect::<io::Result<Vec<_>>>()?;
-    let object_count = pending
-        .iter()
-        .map(|batch| batch.objects.len())
-        .sum::<usize>();
-    let receipt = json!({"token":token,"owner":"rust","nothingToExport":count == 0,
-        "scopes":pending.iter().map(|batch| &batch.scope).collect::<Vec<_>>(),
-        "fileRemote":pending.iter().any(|batch| batch.host.starts_with("file://")),
-        "objectCount":object_count});
+    let pending = batches(selected, &hosts)?;
+    let receipt = prepare_receipt(&token, count, &pending);
     state.outbound = Some(Retained {
         token,
         root: input.root.clone(),
         client_id: input.transport.client_id.clone(),
         pending,
         selected_order,
-        network: NetworkConfig {
-            global_config_dir: input.transport.global_config_dir.clone(),
-            node_executable: input.transport.node_executable.clone(),
-            bit_dir: input.transport.bit_dir.clone(),
-            bit_version: input.transport.bit_version.clone(),
-            auth_token: input.transport.token.clone(),
-        },
+        network: network(input),
         publication,
-        transferred: false,
-        exported_ids: Vec::new(),
+        transferred: None,
     });
     Ok((count, receipt))
+}
+
+/// Each selected scope's remote host.
+fn hosts(input: &Prepare, selected: &[model::Selected]) -> io::Result<HashMap<String, String>> {
+    let mut hosts = HashMap::new();
+    for item in selected {
+        if !hosts.contains_key(&item.scope) {
+            hosts.insert(item.scope.clone(), remote::host(input, &item.scope)?);
+        }
+    }
+    Ok(hosts)
+}
+
+/// The selected components grouped by scope, in first-seen order, with
+/// their objects.
+fn batches(
+    selected: Vec<model::Selected>,
+    hosts: &HashMap<String, String>,
+) -> io::Result<Vec<Pending>> {
+    let mut grouped: Vec<(String, Vec<model::Selected>)> = Vec::new();
+    for item in selected {
+        match grouped
+            .iter_mut()
+            .find(|(scope, _)| *scope == item.scope)
+        {
+            Some((_, items)) => items.push(item),
+            None => grouped.push((item.scope.clone(), vec![item])),
+        }
+    }
+    grouped
+        .into_iter()
+        .map(|(scope, selected)| {
+            let host = hosts
+                .get(&scope)
+                .ok_or_else(|| invalid("outbound remote host"))?
+                .clone();
+            Ok(Pending { host, scope, objects: objects(&selected)? })
+        })
+        .collect()
+}
+
+fn prepare_receipt(token: &str, count: usize, pending: &[Pending]) -> Value {
+    let object_count = pending
+        .iter()
+        .map(|batch| batch.objects.len())
+        .sum::<usize>();
+    json!({"token":token,"owner":"rust","nothingToExport":count == 0,
+        "scopes":pending.iter().map(|batch| &batch.scope).collect::<Vec<_>>(),
+        "fileRemote":pending.iter().any(|batch| batch.host.starts_with("file://")),
+        "objectCount":object_count})
+}
+
+fn network(input: &Prepare) -> NetworkConfig {
+    NetworkConfig {
+        global_config_dir: input.transport.global_config_dir.clone(),
+        node_executable: input.transport.node_executable.clone(),
+        bit_dir: input.transport.bit_dir.clone(),
+        bit_version: input.transport.bit_version.clone(),
+        auth_token: input.transport.token.clone(),
+    }
 }
 
 fn objects(selected: &[model::Selected]) -> io::Result<Vec<ObjectItem>> {
@@ -203,7 +219,7 @@ pub(in crate::workspace::engine) fn apply(
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
     let retained = state.outbound.as_mut().ok_or_else(|| invalid("outbound owner missing"))?;
-    if retained.token != input.token || retained.transferred {
+    if retained.token != input.token || retained.transferred.is_some() {
         return Err(invalid("outbound owner token"));
     }
     let pending = !retained.pending.is_empty();
@@ -211,28 +227,48 @@ pub(in crate::workspace::engine) fn apply(
         plan.stage_history()?;
     }
     let mut actions = remote::Actions::new(retained)?;
+    push_and_validate(retained, &mut actions)?;
+    let exported_ids = persist(retained, &mut actions)?;
+    retained.transferred = Some(exported_ids);
+    let objects = retained.pending
+        .iter()
+        .map(|batch| batch.objects.len())
+        .sum::<usize>();
+    Ok((
+        objects,
+        json!({"token":retained.token,"owner":"rust",
+        "scopes":retained.pending.iter().map(|batch| &batch.scope).collect::<Vec<_>>(),
+        "clientId":retained.client_id,"objectCount":objects,"pending":pending}),
+    ))
+}
+
+/// Push every batch, then validate them all; a failure cleans the pushed
+/// pending objects.
+fn push_and_validate(retained: &Retained, actions: &mut remote::Actions) -> io::Result<()> {
     for (pushed, batch) in retained.pending.iter().enumerate() {
         if let Err(error) = remote::push(retained, batch) {
-            for prior in &retained.pending[..pushed] {
-                let _ = actions.cleanup(retained, prior);
-            }
+            cleanup(retained, actions, &retained.pending[..pushed]);
             return Err(error);
         }
     }
-    let mut validation_error = None;
-    for batch in &retained.pending {
-        if let Err(error) = actions.validate(retained, batch)
-            && validation_error.is_none()
-        {
-            validation_error = Some(error);
-        }
+    // Every batch is validated; the first failure is reported.
+    let errors: Vec<io::Error> = retained.pending
+        .iter()
+        .filter_map(|batch| actions.validate(retained, batch).err())
+        .collect();
+    let Some(error) = errors.into_iter().next() else { return Ok(()) };
+    cleanup(retained, actions, &retained.pending);
+    Err(io::Error::new(error.kind(), format!("outbound validate failed: {error}")))
+}
+
+fn cleanup(retained: &Retained, actions: &mut remote::Actions, batches: &[Pending]) {
+    for batch in batches {
+        let _ = actions.cleanup(retained, batch);
     }
-    if let Some(error) = validation_error {
-        for pushed in &retained.pending {
-            let _ = actions.cleanup(retained, pushed);
-        }
-        return Err(io::Error::new(error.kind(), format!("outbound validate failed: {error}")));
-    }
+}
+
+/// Persist every batch: the remote ids, in selection order.
+fn persist(retained: &Retained, actions: &mut remote::Actions) -> io::Result<Vec<String>> {
     let mut exported_ids = Vec::new();
     for batch in &retained.pending {
         exported_ids.extend(actions.persist(retained, batch)?);
@@ -244,17 +280,7 @@ pub(in crate::workspace::engine) fn apply(
             .copied()
             .unwrap_or(usize::MAX)
     });
-    retained.exported_ids = exported_ids;
-    retained.transferred = true;
-    Ok((
-        retained.pending
-            .iter()
-            .map(|batch| batch.objects.len())
-            .sum(),
-        json!({"token":retained.token,"owner":"rust",
-        "scopes":retained.pending.iter().map(|batch| &batch.scope).collect::<Vec<_>>(),
-        "clientId":retained.client_id,"objectCount":retained.pending.iter().map(|batch| batch.objects.len()).sum::<usize>(),"pending":pending}),
-    ))
+    Ok(exported_ids)
 }
 
 pub(in crate::workspace::engine) fn finalize(
@@ -262,15 +288,15 @@ pub(in crate::workspace::engine) fn finalize(
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
     let retained = state.outbound.take().ok_or_else(|| invalid("outbound owner missing"))?;
-    if retained.token != input.token || !retained.transferred {
+    let Some(exported_ids) = retained.transferred.filter(|_| retained.token == input.token) else {
         return Err(invalid("outbound owner token"));
-    }
+    };
     if let Some(plan) = retained.publication {
-        plan.commit(&retained.exported_ids)?;
-    } else if !retained.exported_ids.is_empty() {
+        plan.commit(&exported_ids)?;
+    } else if !exported_ids.is_empty() {
         return Err(invalid("outbound unexpected remote ids"));
     }
-    let components = retained.exported_ids
+    let components = exported_ids
         .iter()
         .map(|id| {
             id.rsplit_once('@')
@@ -281,7 +307,7 @@ pub(in crate::workspace::engine) fn finalize(
     Ok((
         components.len(),
         json!({"token":retained.token,"owner":"rust","applied":true,
-        "componentsIds":components,"newIdsOnRemote":retained.exported_ids,
+        "componentsIds":components,"newIdsOnRemote":exported_ids,
         "nonExistOnBitMap":[],"removedIds":[],"missingScope":[],
         "exportedLanes":[],"rippleJobUrls":[]}),
     ))
