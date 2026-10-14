@@ -1,4 +1,4 @@
-use super::{Versions, pattern_ids, validate_preparation};
+use super::{Kind, Versions, pattern_ids, validate_preparation};
 use serde_json::json;
 
 #[test]
@@ -30,9 +30,17 @@ fn versions_are_collected_from_nested_versions_and_identities() {
 fn preparations_must_select_known_targets() {
     let targets = json!([{ "identity": "s/a" }]);
     let ok = json!({ "token": "t", "context": { "targets": targets }, "targets": targets, "selectedIds": ["s/a"] });
-    assert!(validate_preparation(&ok).is_ok());
+    assert!(validate_preparation(&ok, Kind::Snap).is_ok());
     let unknown = json!({ "token": "t", "context": { "targets": targets }, "targets": targets, "selectedIds": ["s/b"] });
-    assert!(validate_preparation(&unknown).is_err());
+    assert!(validate_preparation(&unknown, Kind::Snap).is_err());
     let different = json!({ "token": "t", "context": { "targets": [] }, "targets": targets, "selectedIds": [] });
-    assert!(validate_preparation(&different).is_err());
+    assert!(validate_preparation(&different, Kind::Snap).is_err());
+}
+
+#[test]
+fn a_resolve_needs_components_in_merge_state() {
+    let targets = json!([{ "identity": "s/a" }]);
+    let none = json!({ "token": "t", "context": { "targets": targets }, "targets": targets, "selectedIds": [] });
+    assert!(validate_preparation(&none, Kind::Snap).is_ok());
+    assert!(validate_preparation(&none, Kind::Resolve).is_err());
 }

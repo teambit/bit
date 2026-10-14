@@ -24,11 +24,14 @@ use crate::commands::{
 use serde_json::{Value, json};
 use std::{collections::HashSet, io, path::Path};
 
-/// `bit snap` or `bit tag`: the engine's `commandSnap*` or `commandTag*`.
+/// `bit snap`, `bit tag` or `bit merge --resolve`: the engine's
+/// `commandSnap*`, `commandTag*` or `commandResolve*`.
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Kind {
     Snap,
     Tag,
+    /// `bit merge --resolve`: snaps the components in merge state.
+    Resolve,
 }
 
 impl Kind {
@@ -36,6 +39,7 @@ impl Kind {
         match self {
             Self::Snap => format!("commandSnap{step}"),
             Self::Tag => format!("commandTag{step}"),
+            Self::Resolve => format!("commandResolve{step}"),
         }
     }
 }
@@ -46,6 +50,8 @@ pub enum Selection<'r> {
     Snap { pattern: Option<&'r str>, unmerged: bool },
     /// `bit tag [patterns...]`: the tag options, the patterns and `--ver`.
     Tag { tag_options: Value, patterns: &'r [String], exact_version: Option<&'r str> },
+    /// `bit merge [component-pattern] --resolve`.
+    Resolve { pattern: Option<&'r str> },
 }
 
 /// What a resolve command asks for.
@@ -65,7 +71,7 @@ pub fn plan(root: &Path, request: &ResolveRequest<'_>) -> io::Result<Planned> {
     let mut session = Session::prepare(root, request)?;
     let plan = session.plan(request)?;
     let needs_snap = array(plan.get("needsSnap"), "needs snap")?;
-    if plan.get("noop") == Some(&Value::Bool(true)) {
+    if plan.get("noop") == Some(&Value::Bool(true)) && request.kind != Kind::Resolve {
         if !plan["result"].is_null() || !needs_snap.is_empty() {
             return Err(decline("native snap noop receipt"));
         }
@@ -73,6 +79,7 @@ pub fn plan(root: &Path, request: &ResolveRequest<'_>) -> io::Result<Planned> {
     }
     let needs_snap = identities(needs_snap)?;
     let plan = session.finalize(&plan, &needs_snap)?;
+    // Resolve captured with a reset cache already.
     session.capture.cache.force_reset();
     Ok(session.planned(plan))
 }
@@ -104,11 +111,12 @@ impl<'r> Session<'r> {
             prepare["tagOptions"] = tag_options.clone();
         }
         let prepared: Value = engine.request(&prepare)?;
-        validate_preparation(&prepared)?;
+        validate_preparation(&prepared, request.kind)?;
         let token = text(prepared.get("token"))?.to_string();
         let context = prepared["context"].clone();
         let targets = array(prepared.get("targets"), "targets")?;
-        let verify = CaptureOptions { verify: true, ..CaptureOptions::default() };
+        let reset = request.kind == Kind::Resolve;
+        let verify = CaptureOptions { verify: true, reset, ..CaptureOptions::default() };
         let capture = capture::capture_with(&mut engine, root, &home, &context, targets, verify)?;
         Ok(Self { root, kind: request.kind, engine, token, context, capture })
     }
@@ -124,6 +132,11 @@ impl<'r> Session<'r> {
             "components": component_receipts(&self.context, &self.capture)?,
         });
         match &request.selection {
+            Selection::Resolve { pattern } => {
+                if let Some(ids) = pattern_ids(&self.context, *pattern)? {
+                    plan_request["selectedIds"] = json!(ids);
+                }
+            }
             Selection::Snap { pattern, unmerged } => {
                 if !unmerged && let Some(ids) = pattern_ids(&self.context, *pattern)? {
                     plan_request["selectedIds"] = json!(ids);
@@ -169,6 +182,7 @@ impl<'r> Session<'r> {
         let apply = match self.kind {
             Kind::Snap => "commandSnapApply",
             Kind::Tag => "commandTagApply",
+            Kind::Resolve => "commandResolveApply",
         };
         let Self { engine, token, context, capture, .. } = self;
         Planned { engine, token, context, capture, plan, apply }
@@ -185,7 +199,7 @@ fn check_token(receipt: &Value, token: &str) -> io::Result<()> {
 
 /// `validatePreparation`: the context's targets are the targets, and the
 /// selected ids are distinct targets.
-fn validate_preparation(prepared: &Value) -> io::Result<()> {
+fn validate_preparation(prepared: &Value, kind: Kind) -> io::Result<()> {
     let targets = prepared.get("targets").and_then(Value::as_array);
     let selected = prepared.get("selectedIds").and_then(Value::as_array);
     let (Some(targets), Some(selected)) = (targets, selected) else {
@@ -195,6 +209,7 @@ fn validate_preparation(prepared: &Value) -> io::Result<()> {
         || !truthy(prepared.get("context"))
         || targets.len() > 4096
         || selected.len() > 4096
+        || (kind == Kind::Resolve && selected.is_empty())
     {
         return Err(decline("resolve preparation receipt"));
     }
@@ -431,7 +446,7 @@ impl Resolved<'_> {
         let hashes = receipt::new_snap_hashes(needs_snap.len())?;
         // The graphs name a snap by its hash and a tag by its version.
         let versions = match kind {
-            Kind::Snap => hashes.clone(),
+            Kind::Snap | Kind::Resolve => hashes.clone(),
             Kind::Tag => tag::planned_versions(&plan["result"], needs_snap)?,
         };
         let graphs = graphs(self.root, self.context, needs_snap, &versions, self.capture)?;

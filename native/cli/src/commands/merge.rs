@@ -1,10 +1,11 @@
 //! Native `bit merge [component-pattern] -x`, a workspace command
-//! (`workspace_command`) with the merge options and report. Merges that
-//! snap (the default without `--no-snap`) and the `forceLocalBuild` config
-//! are left to the Node.js CLI for now.
+//! (`workspace_command`) with the merge options and report, and
+//! `bit merge --resolve` (`resolve`). The `forceLocalBuild` config is left
+//! to the Node.js CLI.
 
 mod options;
 mod report;
+mod resolve;
 
 use super::{
     color::Chalk,
@@ -20,6 +21,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("arguments are not UTF-8".to_string()));
     };
+    if let Some(resolve) = resolve::parse(&argv[1..]) {
+        return resolve::run(args, &resolve);
+    }
     let Some(options) = options::parse(&argv[1..]) else {
         return Ok(Outcome::Declined("outside the native merge grammar".to_string()));
     };
