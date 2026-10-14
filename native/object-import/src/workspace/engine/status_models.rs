@@ -7,6 +7,7 @@ pub(super) mod workspace_diff;
 mod history;
 mod history_population;
 mod index;
+mod lane;
 mod remotes;
 mod semantic;
 
@@ -31,6 +32,8 @@ pub(super) struct Request {
     include_heads: bool,
     #[serde(default)]
     stage_history: bool,
+    #[serde(default)]
+    current_lane_id: Option<String>,
 }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -79,7 +82,6 @@ fn load_overlay(
     if request.targets.len() > 4096 {
         return Err(invalid("status model target limit"));
     }
-    let items = index::read(&request.root)?;
     let directory = request.root.join(".bit/objects");
     let reader = Reader {
         directory: &directory,
@@ -87,26 +89,50 @@ fn load_overlay(
         raw: Budget::new(32 * 1024 * 1024),
         packed: Budget::new(32 * 1024 * 1024),
     };
-    let mut models = pool.install(|| {
-        items
-            .par_iter()
-            .map(|item| index::model(&reader, item))
-            .collect::<io::Result<Vec<_>>>()
-    })?;
+    let lane = request.current_lane_id
+        .as_deref()
+        .map(|id| lane::read(&request.root, &reader, id))
+        .transpose()?
+        .flatten();
+    let mut models = indexed_models(&reader, &request.root, pool)?;
     replace_models(&mut models, overlay);
-    let mut references = versions::references(&models, &request.targets)?;
-    if request.include_heads {
-        versions::include_heads(&models, &mut references)?;
-    }
+    let references = selected_references(request, &models, lane.as_ref())?;
     let versions = versions::read(&reader, &references, pool)?;
     let semantics = stored_semantics(&versions, pool, stored_hashes)?;
     let (histories, pending_history) = if request.history {
-        let (histories, pending) = history::read(&reader, &models, request, pool)?;
+        let (histories, pending) = history::read(&reader, &models, request, lane.as_ref(), pool)?;
         (Some(histories), pending)
     } else {
         (None, Vec::new())
     };
     Ok(Snapshot { models, versions, semantics, histories, pending_history })
+}
+fn indexed_models(
+    reader: &Reader<'_>,
+    root: &Path,
+    pool: &rayon::ThreadPool,
+) -> io::Result<Vec<Value>> {
+    let items = index::read(root)?;
+    pool.install(|| {
+        items
+            .par_iter()
+            .map(|item| index::model(reader, item))
+            .collect()
+    })
+}
+fn selected_references(
+    request: &Request,
+    models: &[Value],
+    lane: Option<&lane::Lane>,
+) -> io::Result<Vec<String>> {
+    let mut references = versions::references(models, &request.targets)?;
+    if request.include_heads {
+        versions::include_heads(models, &mut references)?;
+        if let Some(lane) = lane {
+            versions::include_lane_heads(&lane.heads, &mut references)?;
+        }
+    }
+    Ok(references)
 }
 fn replace_models(models: &mut Vec<Value>, overlay: Option<&crate::command_import::Overlay>) {
     let Some(overlay) = overlay else {

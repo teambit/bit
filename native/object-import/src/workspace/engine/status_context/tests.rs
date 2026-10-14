@@ -96,3 +96,27 @@ fn metadata_budget_and_non_json_packages_decline() {
     fs::write(fixture.0.join("alpha/package.json"), vec![b' '; 1024 * 1024 + 1]).unwrap();
     assert!(fixture.context().is_err());
 }
+
+#[test]
+fn lane_header_sets_current_lane_without_becoming_component_target() {
+    let fixture = Fixture::new();
+    let bitmap = json!({"$schema-version":"17.0.0",
+        "alpha":{"name":"alpha","scope":"","version":"","rootDir":"alpha","mainFile":"index.js"},
+        "_bit_lane":{"id":{"scope":"test.scope","name":"study"},"exported":false}});
+    fs::write(fixture.0.join(".bitmap"), serde_json::to_vec(&bitmap).unwrap()).unwrap();
+    let pool = rayon::ThreadPoolBuilder::new()
+        .num_threads(2)
+        .build()
+        .unwrap();
+    let request = Request { root: fixture.0.clone(), home: fixture.0.join("home"), history: false };
+    let value = super::metadata(&request, &pool).unwrap();
+    assert_eq!(value["currentLaneId"], "test.scope/study");
+    assert_eq!(
+        value["targets"]
+            .as_array()
+            .unwrap()
+            .len(),
+        1,
+    );
+    assert_eq!(value["targets"][0]["identity"], "test.scope/alpha");
+}

@@ -1,4 +1,4 @@
-use super::{Reader, Request, history_population, invalid, remotes, versions};
+use super::{Reader, Request, history_population, invalid, lane::Lane, remotes, versions};
 use rayon::prelude::*;
 use serde_json::{Value, json};
 use std::{collections::HashMap, fs::File, io, path::Path};
@@ -7,10 +7,11 @@ pub(super) fn read(
     reader: &Reader<'_>,
     models: &[Value],
     request: &Request,
+    lane: Option<&Lane>,
     pool: &rayon::ThreadPool,
 ) -> io::Result<(Vec<Value>, Vec<Value>)> {
     ordinary_merge_state(&request.root)?;
-    let proofs = remote_proofs(&request.root, models)?;
+    let proofs = remote_proofs(&request.root, models, lane)?;
     let remotes = remotes::read(&request.root, models)?;
     let targets: HashMap<_, _> = request.targets
         .iter()
@@ -19,7 +20,7 @@ pub(super) fn read(
     let results = pool.install(|| {
         models
             .par_iter()
-            .map(|model| compare(reader, model, &targets, &remotes, request.stage_history))
+            .map(|model| compare(reader, model, &targets, &remotes, lane, request.stage_history))
             .collect::<io::Result<Vec<_>>>()
     })?;
     let (histories, pending): (Vec<_>, Vec<_>) = results.into_iter().unzip();
@@ -40,6 +41,7 @@ fn compare(
     model: &Value,
     targets: &HashMap<&str, &str>,
     remotes: &HashMap<String, String>,
+    lane: Option<&Lane>,
     stage: bool,
 ) -> io::Result<(Value, Option<Value>)> {
     let identity = format!(
@@ -53,6 +55,9 @@ fn compare(
         .filter(|value| !value.is_null())
         .map(|value| value.as_str().ok_or_else(|| invalid("status model head")))
         .transpose()?;
+    if let Some(lane) = lane.filter(|lane| lane.heads.contains_key(&identity)) {
+        return compare_lane(reader, model, targets, lane, stage, &identity, [head, remote]);
+    }
     let workspace = targets
         .get(identity.as_str())
         .filter(|version| !version.is_empty())
@@ -62,6 +67,40 @@ fn compare(
     // a detached workspace version was passed as the source head.
     let source = if remote.is_some() { workspace.as_deref().or(head) } else { head };
     distances(reader, model, &identity, [source, head, remote], stage)
+}
+
+fn compare_lane(
+    reader: &Reader<'_>,
+    model: &Value,
+    targets: &HashMap<&str, &str>,
+    lane: &Lane,
+    stage: bool,
+    identity: &str,
+    main: [Option<&str>; 2],
+) -> io::Result<(Value, Option<Value>)> {
+    let [head, remote] = main;
+    let lane_head = lane.heads.get(identity).ok_or_else(|| invalid("status lane head"))?;
+    let lane_remote = lane.remotes
+        .get(identity)
+        .map(String::as_str)
+        .or(remote)
+        .or(head);
+    let workspace = targets
+        .get(identity)
+        .filter(|version| !version.is_empty())
+        .map(|version| versions::reference(model, version))
+        .transpose()?;
+    if workspace
+        .as_deref()
+        .is_some_and(|version| version != lane_head)
+    {
+        return Err(invalid("status lane bitmap head mismatch"));
+    }
+    let (mut result, pending) =
+        distances(reader, model, identity, [Some(lane_head), Some(lane_head), lane_remote], stage)?;
+    result["laneHead"] = json!(lane_head);
+    result["mainHead"] = json!(head);
+    Ok((result, pending))
 }
 
 fn distances(
@@ -107,7 +146,7 @@ fn ordinary_merge_state(root: &Path) -> io::Result<()> {
     Ok(())
 }
 
-fn remote_proofs(root: &Path, models: &[Value]) -> io::Result<Vec<Value>> {
+fn remote_proofs(root: &Path, models: &[Value], lane: Option<&Lane>) -> io::Result<Vec<Value>> {
     let mut proofs = Vec::new();
     let mut seen = std::collections::HashSet::new();
     for model in models {
@@ -121,6 +160,15 @@ fn remote_proofs(root: &Path, models: &[Value]) -> io::Result<Vec<Value>> {
                 &mut proofs,
             )?;
         }
+    }
+    if let Some(lane) = lane {
+        super::super::dependency_graph::proof::read(
+            &root
+                .join(".bit/refs/remotes")
+                .join(&lane.scope)
+                .join(&lane.name),
+            &mut proofs,
+        )?;
     }
     proofs
         .into_iter()

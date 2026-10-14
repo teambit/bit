@@ -71,6 +71,7 @@ fn index_versions(versions: &[(String, Value)]) -> HashMap<&str, &Value> {
 
 fn model_request(request: &Request) -> super::Request {
     super::Request {
+        current_lane_id: None,
         root: request.root.clone(),
         targets: request.targets
             .iter()

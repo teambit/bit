@@ -85,5 +85,19 @@ pub(super) fn include_heads(models: &[Value], references: &mut Vec<String>) -> i
     Ok(())
 }
 
+pub(super) fn include_lane_heads(
+    heads: &std::collections::HashMap<String, String>,
+    references: &mut Vec<String>,
+) -> io::Result<()> {
+    let mut seen: HashSet<_> = references.iter().cloned().collect();
+    for head in heads.values() {
+        crate::merge_history::hash(head)?;
+        if seen.insert(head.clone()) {
+            references.push(head.clone());
+        }
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests;

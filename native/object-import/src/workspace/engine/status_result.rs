@@ -57,8 +57,8 @@ fn current(output: &mut Value, target: &Target) {
 }
 fn empty(lane: &str) -> Value {
     let mut output = json!({});
-    // These sections are empty only inside statusContext's guarded main-lane domain:
-    // no removals, local-only, soft tags, merge state, lanes or workspace issues.
+    // Complex lane states still decline during context loading. These sections
+    // are empty for ordinary current lanes as well as the main lane.
     for field in [
         "newComponents",
         "modifiedComponents",
@@ -95,7 +95,7 @@ fn push(output: &mut Value, field: &str, value: Value) {
         .push(value);
 }
 fn validate(request: &Request) -> io::Result<()> {
-    if !request.current_lane_id.ends_with("/main")
+    if request.current_lane_id.split_once('/').is_none()
         || request.targets.len() > 4096
         || request.models.len() > 4096
         || request.histories.len() != request.models.len()

@@ -32,6 +32,7 @@ pub(super) fn read(request: &Request, pool: &rayon::ThreadPool) -> io::Result<(u
     let targets = output["targets"].as_array().ok_or_else(|| invalid("status targets"))?;
     let model_request =
         serde_json::from_value(json!({"root":request.root,"history":request.history,"stageHistory":true,"includeHeads":true,
+        "currentLaneId":output["currentLaneId"],
         "targets":targets.iter().map(|target| json!({"identity":target["identity"],
             "version":target["version"]})).collect::<Vec<_>>()}))
         .map_err(io::Error::other)?;
@@ -50,7 +51,7 @@ pub(super) fn read(request: &Request, pool: &rayon::ThreadPool) -> io::Result<(u
 }
 
 pub(super) fn metadata(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Value> {
-    let settings = config::configuration(&request.root)?;
+    let settings = config::configuration_for_command(&request.root, true)?;
     let targets = config::context_targets(&request.root, &settings)?;
     metadata_with_targets(request, pool, &settings, targets)
 }
@@ -89,9 +90,53 @@ fn metadata_projected(
     output["workspace"] = config::document(&request.root.join("workspace.jsonc"))?;
     output["scope"] = metadata::optional(&request.root.join(".bit/scope.json"), &budget)?;
     metadata::scope(&output["scope"])?;
+    let bitmap = config::document(&request.root.join(".bitmap"))?;
+    output["currentLaneId"] = lane_id(&bitmap, &output["scope"])?;
     output["packageJson"] = metadata::optional(&request.root.join("package.json"), &budget)?;
     output["targets"] = Value::Array(targets);
     Ok(output)
+}
+
+fn lane_id(bitmap: &Value, scope: &Value) -> io::Result<Value> {
+    let Some(header) = bitmap.get("_bit_lane") else {
+        let name = scope["name"].as_str().ok_or_else(|| invalid("status scope name"))?;
+        return Ok(json!(format!("{name}/main")));
+    };
+    let fields = header.as_object().ok_or_else(|| invalid("status lane header"))?;
+    if fields
+        .keys()
+        .any(|key| !matches!(key.as_str(), "id" | "exported"))
+        || header
+            .get("exported")
+            .is_some_and(|value| !value.is_boolean())
+    {
+        return Err(invalid("status lane header"));
+    }
+    let id = header["id"].as_object().ok_or_else(|| invalid("status lane identity"))?;
+    if id.len() != 2 || !id.contains_key("scope") || !id.contains_key("name") {
+        return Err(invalid("status lane identity"));
+    }
+    let lane_scope = header["id"]["scope"]
+        .as_str()
+        .filter(|text| !text.is_empty())
+        .ok_or_else(|| invalid("status lane scope"))?;
+    let name = header["id"]["name"]
+        .as_str()
+        .filter(|text| !text.is_empty() && *text != "main")
+        .ok_or_else(|| invalid("status lane name"))?;
+    if [lane_scope, name]
+        .iter()
+        .any(|part| {
+            *part == "."
+                || *part == ".."
+                || !part
+                    .bytes()
+                    .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b'-'))
+        })
+    {
+        return Err(invalid("status lane path"));
+    }
+    Ok(json!(format!("{lane_scope}/{name}")))
 }
 
 #[cfg(test)]

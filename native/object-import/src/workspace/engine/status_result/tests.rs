@@ -63,3 +63,23 @@ fn missing_grammar_and_unrelated_histories_decline() {
     input["histories"][0]["merge"]["noCommon"] = json!(true);
     assert!(read(&serde_json::from_value(input).unwrap()).is_err());
 }
+
+#[test]
+fn current_lane_stages_only_lane_heads_and_keeps_main_components_clean() {
+    let mut input = fixture();
+    input["currentLaneId"] = json!("scope/study");
+    input["targets"][0]["version"] = json!("ccc");
+    input["histories"][0]["laneHead"] = json!("ccc");
+    input["histories"][0]["mainHead"] = json!("aaa");
+    input["histories"][0]["status"]["sourceOnly"] = json!(["ccc"]);
+    input["histories"][0]["merge"]["sourceOnly"] = json!(["ccc"]);
+    input["semver"]["ccc"] = json!({});
+    let output = result(input.clone());
+    assert_eq!(output["currentLaneId"], "scope/study");
+    assert_eq!(output["stagedComponents"], json!([{"id":"scope/alpha","versions":["ccc"]}]));
+    assert_eq!(output["snappedComponents"], json!([]));
+    assert_eq!(output["outdatedComponents"], json!([]));
+    input["histories"][0]["status"]["sourceOnly"] = json!([]);
+    input["histories"][0]["merge"]["sourceOnly"] = json!([]);
+    assert_eq!(result(input)["stagedComponents"], json!([]));
+}

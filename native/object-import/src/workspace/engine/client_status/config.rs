@@ -136,28 +136,40 @@ pub(super) fn targets(root: &Path, config: &Value) -> io::Result<Vec<Target>> {
 }
 fn bitmap_targets(bitmap: &Value, config: &Value) -> io::Result<Vec<Target>> {
     let entries = bitmap.as_object().ok_or_else(|| invalid("status bitmap"))?;
-    if bitmap["$schema-version"] != "17.0.0" || entries.len() > 4097 {
+    let metadata_rows = 1 + usize::from(entries.contains_key("_bit_lane"));
+    if bitmap["$schema-version"] != "17.0.0" || entries.len() > 4096 + metadata_rows {
         return Err(invalid("status bitmap schema or count"));
     }
     let mut roots = HashSet::new();
     let mut ids = HashSet::new();
     let mut targets = Vec::new();
     for (key, value) in entries {
-        if key == "$schema-version" {
+        if key == "$schema-version" || key == "_bit_lane" {
             continue;
         }
-        // Object.keys puts integer-like property names first; decline those
-        // legacy aliases until the command uses the shared JS property ordering.
-        if key.parse::<u32>().is_ok() {
-            return Err(invalid("status numeric bitmap alias"));
-        }
-        let target = target(value, config)?;
-        if !roots.insert(target.directory.clone()) || !ids.insert(target.id.clone()) {
-            return Err(invalid("status duplicate component"));
-        }
-        targets.push(target);
+        insert_target(key, value, config, &mut roots, &mut ids, &mut targets)?;
     }
     Ok(targets)
+}
+fn insert_target(
+    key: &str,
+    value: &Value,
+    config: &Value,
+    roots: &mut HashSet<String>,
+    ids: &mut HashSet<String>,
+    targets: &mut Vec<Target>,
+) -> io::Result<()> {
+    // Object.keys puts integer-like property names first; decline those
+    // legacy aliases until the command uses the shared JS property ordering.
+    if key.parse::<u32>().is_ok() {
+        return Err(invalid("status numeric bitmap alias"));
+    }
+    let target = target(value, config)?;
+    if !roots.insert(target.directory.clone()) || !ids.insert(target.id.clone()) {
+        return Err(invalid("status duplicate component"));
+    }
+    targets.push(target);
+    Ok(())
 }
 fn target(value: &Value, config: &Value) -> io::Result<Target> {
     let entry = value.as_object().ok_or_else(|| invalid("status bitmap entry"))?;
@@ -308,7 +320,7 @@ pub(in crate::workspace::engine) fn context_bitmap_targets(
         .zip(
             entries
                 .iter()
-                .filter(|(key, _)| key.as_str() != "$schema-version"),
+                .filter(|(key, _)| !matches!(key.as_str(), "$schema-version" | "_bit_lane")),
         )
         .map(|(target, (_, entry))| {
             json!({"identity":target.id,"directory":target.directory,

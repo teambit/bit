@@ -2,11 +2,10 @@
 //! `formatStatusOutput` of `status-formatter.ts`, over the result the native
 //! status computes for `--json`.
 //!
-//! The native status runs on main only, so the lane sections are empty. A
-//! result with sections the native status leaves to Node (invalid, removed,
+//! A result with sections the native status leaves to Node (invalid, removed,
 //! soft-tagged or local-only components, import pending) declines, and so
-//! does an issue whose data Node colors (`UntrackedDependencies`) when
-//! stdout has colors.
+//! does a forked lane or an issue whose data Node colors
+//! (`UntrackedDependencies`) when stdout has colors.
 
 mod item;
 mod render;
@@ -150,12 +149,16 @@ pub(super) fn report(
         String::new()
     };
     let workspace_issues = status.workspace_issues()?;
-    let data = if auto_tag.is_empty() {
+    let mut data = if auto_tag.is_empty() {
         status.joined(&sections, &warnings, &troubleshooting, &workspace_issues)
     } else {
         let summary = status.collapsed(&auto_tag)?;
         status.rendered(&sections, &summary, [&warnings, &troubleshooting], &workspace_issues)
     };
+    if let Some(lane) = status.lane()? {
+        data.push_str("\n\ncurrent lane ");
+        data.push_str(&status.format.chalk.bold(lane));
+    }
     Ok(Output { data, code: status.code() })
 }
 
@@ -167,7 +170,7 @@ fn supported(result: &Value, chalk: Chalk) -> io::Result<()> {
         }
     }
     let lane = text(result.get("currentLaneId"))?;
-    if !lane.ends_with("/main") || !result["forkedLaneId"].is_null() {
+    if lane.split_once('/').is_none() || !result["forkedLaneId"].is_null() {
         return Err(decline("status report lane"));
     }
     let colored_data = array(result.get("componentsWithIssues"), "issues")?
@@ -206,6 +209,12 @@ fn ids<'r>(result: &'r Value, field: &str) -> io::Result<Vec<&'r str>> {
 }
 
 impl<'r> Status<'r> {
+    /// The active non-main lane printed after the workspace issues.
+    fn lane(&self) -> io::Result<Option<&'r str>> {
+        let lane = text(self.result.get("currentLaneId"))?;
+        Ok((!lane.ends_with("/main")).then_some(lane))
+    }
+
     fn new(
         result: &'r Value,
         context: &'r Value,

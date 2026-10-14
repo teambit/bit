@@ -29,6 +29,7 @@ pub(in crate::workspace::engine) fn read(
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
     let input = super::Request {
+        current_lane_id: None,
         root: request.root.clone(),
         targets: request.targets
             .iter()

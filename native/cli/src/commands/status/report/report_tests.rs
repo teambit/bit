@@ -75,6 +75,30 @@ fn reports_a_clean_workspace() {
 }
 
 #[test]
+fn reports_the_current_lane_after_status_sections() {
+    let mut lane = result(&json!({
+        "stagedComponents": [{"id": "remote/one", "versions": ["b".repeat(40)]}],
+    }));
+    lane["currentLaneId"] = json!("remote/study");
+    let output = report(&lane, &context(), &Flags::default(), Chalk::new(false)).unwrap();
+    assert_eq!(
+        output.data,
+        "staged components (1)\n  (use \"bit export\" to push these component versions to the remote scope)\n   › remote/one - 1 snap(s)\n\ncurrent lane remote/study",
+    );
+}
+
+#[test]
+fn reports_a_clean_lane() {
+    let mut lane = result(&json!({}));
+    lane["currentLaneId"] = json!("remote/study");
+    let output = report(&lane, &context(), &Flags::default(), Chalk::new(false)).unwrap();
+    assert_eq!(
+        output.data,
+        "✔ nothing to tag or export (use \"bit create <template> <component>\" to generate a new component)\n\ncurrent lane remote/study",
+    );
+}
+
+#[test]
 fn reports_issues_staged_versions_and_merges() {
     let issues = json!([{"id": "remote/two", "issues": [
         {"type": "MissingManuallyConfiguredPackages", "description": "missing packages", "solution": r#"run "bit install""#, "isTagBlocker": true, "dataAsString": "          a, b"},

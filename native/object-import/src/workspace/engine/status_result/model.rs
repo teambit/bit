@@ -38,10 +38,14 @@ fn tracked(
     target: &super::Target,
     semver: &Value,
 ) -> io::Result<()> {
-    let head = model["head"].as_str().ok_or_else(|| invalid("status model missing head"))?;
-    if !tags(model, "versions")?
-        .values()
-        .any(|value| value.as_str() == Some(head))
+    let head = history["laneHead"]
+        .as_str()
+        .or_else(|| model["head"].as_str())
+        .ok_or_else(|| invalid("status model missing head"))?;
+    if history["laneHead"].is_null()
+        && !tags(model, "versions")?
+            .values()
+            .any(|value| value.as_str() == Some(head))
     {
         push(output, "snappedComponents", json!(target.identity));
     }
@@ -93,7 +97,10 @@ fn outdated(
     target: &super::Target,
     semver: &Value,
 ) -> io::Result<()> {
-    let head = model["head"].as_str().ok_or_else(|| invalid("status head"))?;
+    let head = history["laneHead"]
+        .as_str()
+        .or_else(|| model["head"].as_str())
+        .ok_or_else(|| invalid("status head"))?;
     let local = label(model, head)?;
     // setDivergeData retains the workspace-source distance established by staging.
     let remote_ahead = !refs(&history["status"], "targetOnly")?.is_empty();
