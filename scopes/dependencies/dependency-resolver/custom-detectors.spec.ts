@@ -31,6 +31,33 @@ describe('detectWithCustomDetectors()', () => {
   it('should return null without any custom detector', async () => {
     expect(await detectWithCustomDetectors(null, [file('index.ts', "import 'a';")], dir)).to.eq(null);
   });
+  it('should leave the registered env.jsonc and MDX detectors to the native scanner', async () => {
+    class EnvJsoncDetector implements DependencyDetector {
+      isSupported({ filename }) {
+        return filename.endsWith('env.jsonc');
+      }
+      detect() {
+        return [];
+      }
+    }
+    class MDXDependencyDetector implements DependencyDetector {
+      isSupported({ ext }) {
+        return ext === '.mdx';
+      }
+      detect() {
+        return ['react'];
+      }
+    }
+    DetectorHook.hooks = [new EnvJsoncDetector(), new MDXDependencyDetector()];
+    expect(await detectWithCustomDetectors(null, [file('docs.mdx', '# hi')], dir)).to.eq(null);
+    class Patched extends MDXDependencyDetector {}
+    DetectorHook.hooks = [new Patched()];
+    expect(await detectWithCustomDetectors(null, [file('docs.mdx', '# hi')], dir)).to.not.eq(null);
+    const overridden = new MDXDependencyDetector();
+    overridden.isSupported = () => true;
+    DetectorHook.hooks = [overridden];
+    expect(await detectWithCustomDetectors(null, [file('docs.mdx', '# hi')], dir)).to.not.eq(null);
+  });
   it('should detect only the files an env detector supports', async () => {
     const vue = file('button.vue', "import x from 'vue';\nimport y from './y';");
     const ts = file('index.ts', "import 'a';");

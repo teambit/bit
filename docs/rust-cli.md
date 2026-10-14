@@ -157,6 +157,26 @@ commit. Delegated commands run whatever Node.js CLI discovery finds. Both are
 shipped together, so they agree. A binary paired with an older Node.js CLI can
 disagree on details the two versions changed in between.
 
+The JavaScript host uses only APIs the Node.js CLI already ships, plus a few
+modules that exist only to serve it:
+
+- `@teambit/node/dist/default-dependency-policy.js` and
+  `@teambit/typescript/dist/cjs-package-json-props.js` hold the default node
+  env's dependency policy and `package.json` props. With them, a workspace on
+  the default env installs without loading Harmony. Specs keep them equal to
+  `NodeEnv.getDependencies()` and `TypescriptMain.getCjsPackageJsonProps()`.
+- `@teambit/dependency-resolver/dist/custom-detectors.js` runs custom
+  dependency detectors for the native scanner.
+
+`hostInfo` checks for these modules first. A Node.js CLI that predates them
+makes native `install` decline before it writes anything, and the Node.js CLI
+runs the install.
+
+The repeat-install skip needs the dist directories and config files
+`afterInstall` wrote. The host computes them itself, the way the compiler's
+`ComponentCompiler.distDirs()` and the install aspect's `tryWriteConfigFiles`
+do, so it works with any Node.js CLI that ships the modules above.
+
 ## Relation to the in-process integration
 
 Earlier work ran Rust inside the Node.js CLI, through the `bit-workspace.node`

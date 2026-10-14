@@ -20,7 +20,7 @@ export type CustomDetection = {
  * The detection precinct's `getDetector` performs before the built-in detectives, for the native
  * installer (docs/rust/native-install.md, `detectDependencies`): per file, the first env detector
  * (`getDepDetectors()`) supporting it, else the first detector aspects registered
- * (`registerDetector`) when one of them is not natively replicated (`canSkipNativeGraphHooks`).
+ * (`registerDetector`) when one of them is not natively replicated (`isNativelyReplicated`).
  * Files no custom detector claims are left out: the native scanner detects them.
  * `directory` is the component dir `filing-cabinet` passes a `dependencyLookup`.
  * `null` when there is no custom detector at all.
@@ -31,7 +31,7 @@ export async function detectWithCustomDetectors(
   directory: string
 ): Promise<Record<string, CustomDetection> | null> {
   const fromEnv = envDetectors ?? [];
-  const registered = !DetectorHook.canSkipNativeGraphHooks('');
+  const registered = DetectorHook.hooks.some((hook) => !isNativelyReplicated(hook));
   if (!fromEnv.length && !registered) return null;
   const hook = new DetectorHook();
   const result: Record<string, CustomDetection> = {};
@@ -61,6 +61,22 @@ export async function detectWithCustomDetectors(
     result[filename] = detection;
   }
   return result;
+}
+
+/** The detectors Bit's own aspects register, which the native scanner replicates. */
+const NATIVE_DETECTORS = new Set(['EnvJsoncDetector', 'MDXDependencyDetector']);
+
+/**
+ * A registered detector the native scanner replicates: an instance of the env.jsonc or the MDX
+ * detector class itself (not a subclass), whose support predicate is not overridden on the instance.
+ */
+function isNativelyReplicated(hook: DependencyDetector): boolean {
+  const prototype = Object.getPrototypeOf(hook);
+  return (
+    NATIVE_DETECTORS.has(prototype?.constructor?.name) &&
+    Object.getPrototypeOf(prototype) === Object.prototype &&
+    !Object.hasOwn(hook, 'isSupported')
+  );
 }
 
 /**

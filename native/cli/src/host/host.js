@@ -91,6 +91,7 @@ const handlers = {
  * merged with the terminal facts it passes in.
  */
 function hostInfo(terminal) {
+  requireHelpers();
   const { GLOBAL_CONFIG } = bitRequire('@teambit/legacy.constants');
   const { getBitVersion } = bitRequire('@teambit/bit.get-bit-version');
   const { findBvmDir } = bitRequire('@teambit/bvm.path/dist/path.js');
@@ -110,6 +111,27 @@ function hostInfo(terminal) {
     fileId: currentDateAndTimeToFileName(),
     path: process.env.PATH,
   };
+}
+
+/**
+ * Modules the callbacks read without loading Harmony: the default node env's constants and the
+ * custom-detector bridge. A Node.js CLI that predates them fails `hostInfo`, so the native
+ * command declines before it writes anything and the Node.js CLI runs the install.
+ */
+const HELPERS = [
+  '@teambit/node/dist/default-dependency-policy.js',
+  '@teambit/typescript/dist/cjs-package-json-props.js',
+  '@teambit/dependency-resolver/dist/custom-detectors.js',
+];
+
+function requireHelpers() {
+  for (const helper of HELPERS) {
+    try {
+      bitRequire.resolve(helper);
+    } catch {
+      throw new Error(`the Node.js CLI does not ship ${helper}`);
+    }
+  }
 }
 
 /** `currentDateAndTimeToFileName()` of `@teambit/legacy.consumer`: local time, no padding. */
@@ -284,10 +306,10 @@ async function afterInstall(request) {
         .get('teambit.compilation/compiler')
         .compileOnWorkspace([], { initiator: CompilationInitiator.Install });
       compiled = results.length;
-      distDirs = cleanDistDirs(results);
+      distDirs = await cleanDistDirs(loaded, results);
       logger.consoleSuccess('compiling components', started);
     }
-    const configFiles = request.writeConfigFiles ? await install.tryWriteConfigFiles(false) : [];
+    const configFiles = request.writeConfigFiles ? await writeConfigFiles(loaded) : [];
     // what native `bit install` snapshots: `null` unless both steps left a complete record.
     const outputs = distDirs && configFiles ? [...distDirs, ...configFiles] : null;
     return { oldNonLoadedEnvs: envs.getFailedToLoadEnvs(), compiled, outputs };
@@ -297,19 +319,75 @@ async function afterInstall(request) {
 }
 
 /**
- * The dist directories of a compilation without errors, which native `bit install` snapshots to
- * skip the next `afterInstall` when nothing changed. `null` when any component failed, or when the
- * compiler does not report its directories.
+ * `tryWriteConfigFiles(false)` of the install aspect, returning the config files it wrote, which
+ * native `bit install` snapshots to skip the next write when nothing changed: `[]` when writing is
+ * disabled, `null` when the write failed or left files bit did not generate.
  */
-function cleanDistDirs(results) {
+async function writeConfigFiles(loaded) {
+  const wsConfigFiles = loaded.get('teambit.workspace/workspace-config-files');
+  if (!wsConfigFiles.isWorkspaceConfigWriteEnabled()) return [];
+  const logger = loaded.get('teambit.harmony/logger').createLogger('teambit.workspace/install');
+  const { err, writeResults } = await wsConfigFiles.writeConfigFiles({
+    clean: true,
+    silent: true,
+    dedupe: true,
+    throw: false,
+  });
+  if (err) {
+    logger.consoleFailure(
+      `failed generating workspace config files, please run "bit ws-config write" manually. error: ${err.message}`
+    );
+    return null;
+  }
+  const skippedWarning = wsConfigFiles.formatSkippedFilesWarning(writeResults?.skippedPaths);
+  // the formatted section already starts with the shared warning symbol, so no need for consoleWarning here.
+  if (skippedWarning) {
+    logger.console(`\n${skippedWarning}`);
+    return null;
+  }
+  return (writeResults?.writersResult ?? []).flatMap((writerResult) => [
+    ...writerResult.realConfigFiles.map((file) => file.writtenRealConfigFile.filePath),
+    ...writerResult.extendingConfigFiles.flatMap((file) => file.extendingConfigFile.filePaths),
+  ]);
+}
+
+/**
+ * The absolute dist directories of a compilation without errors, which native `bit install`
+ * snapshots to skip the next `afterInstall` when nothing changed. `null` when any component failed.
+ */
+async function cleanDistDirs(loaded, results) {
+  if (results.some((result) => result.errors.length)) return null;
+  const workspace = loaded.get('teambit.workspace/workspace');
   const distDirs = [];
-  for (const result of results) {
-    if (result.errors.length) return null;
-    if (result.skipped) continue;
-    if (!result.distDirs) return null;
-    distDirs.push(...result.distDirs);
+  for (const result of results.filter((built) => !built.skipped)) {
+    const dirs = result.distDirs ?? (await componentDistDirs(loaded, result.component));
+    if (!dirs) return null;
+    distDirs.push(...dirs.map((dir) => path.resolve(workspace.path, dir)));
   }
   return distDirs;
+}
+
+/**
+ * `ComponentCompiler.distDirs()` of the compiler aspect, for a compiler that does not report them
+ * on its results: the package directory's dist, then the injected or root-component copies.
+ */
+async function componentDistDirs(loaded, componentId) {
+  const workspace = loaded.get('teambit.workspace/workspace');
+  const component = await workspace.get(await workspace.resolveComponentId(componentId));
+  const compiler = loaded.get('teambit.envs/envs').getEnv(component).env.getCompiler?.();
+  if (!compiler) return null;
+  const compilerRequire = createRequire(bitRequire.resolve('@teambit/compiler'));
+  const { componentIdToPackageName } = compilerRequire('@teambit/pkg.modules.component-package-name');
+  const { readRootComponentsDir } = compilerRequire('@teambit/workspace.root-components');
+  const { DEFAULT_DIST_DIRNAME } = compilerRequire('@teambit/legacy.constants');
+  const packageName = componentIdToPackageName(component.state._consumer);
+  let injectedDirs = await workspace.getInjectedDirs(component);
+  if (!injectedDirs.length) {
+    const rootDirs = await readRootComponentsDir(workspace.rootComponentsPath);
+    injectedDirs = rootDirs.map((rootDir) => path.relative(workspace.path, path.join(rootDir, packageName)));
+  }
+  const distDirName = compiler.getDistDir?.() || DEFAULT_DIST_DIRNAME;
+  return [path.join('node_modules', packageName), ...injectedDirs].map((dir) => path.join(dir, distDirName));
 }
 
 function loadHarmony() {
