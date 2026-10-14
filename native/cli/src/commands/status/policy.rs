@@ -51,7 +51,9 @@ pub fn projected_policy(
     target: &Value,
     projected: Option<&Value>,
 ) -> io::Result<Policy> {
-    if truthy(target.get("resolveConfig")) || target.get("recoveryConfig").is_some() {
+    // `resolvePolicyProjection` changes nothing without a merged configuration.
+    let merged = truthy(target.get("resolveConfig")) && target.get("mergedConfig").is_some();
+    if merged || target.get("recoveryConfig").is_some() {
         return Err(decline("status projected configuration"));
     }
     let identity = text(target.get("identity"))?;

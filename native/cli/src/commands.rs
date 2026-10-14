@@ -10,6 +10,7 @@ mod install;
 mod inventory;
 mod merge;
 mod mini_status;
+mod snap;
 mod status;
 mod workspace_command;
 
@@ -29,6 +30,7 @@ pub const COMMANDS: &[Command] = &[
     install::COMMAND,
     merge::COMMAND,
     mini_status::COMMAND,
+    snap::COMMAND,
     status::COMMAND,
 ];
 

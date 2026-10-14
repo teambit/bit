@@ -10,6 +10,11 @@ use std::{
     path::{Path, PathBuf},
 };
 
+mod cycles;
+mod resolve;
+
+use cycles::cyclic;
+
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 /// `ISSUE_FORMAT_SPACE`.
 const SPACE: &str = "          ";
@@ -30,18 +35,55 @@ pub fn collect(
     context: &Value,
     components: &[Component],
 ) -> io::Result<Option<Vec<Value>>> {
-    let identities: HashSet<&str> = components
+    if !ordinary_model_heads(context)? {
+        return Ok(None);
+    }
+    collect_graph(root, context, components, components)
+}
+
+/// `collectRustStatusIssues` with `resolveIssueHeads`: the dependencies
+/// outside the workspace are the engine's external vertices (`issueGraph`),
+/// and the models' heads are the engine's proofs.
+pub fn collect_resolved(
+    root: &Path,
+    context: &Value,
+    components: &[Component],
+    heads: &Value,
+    issue_graph: Option<&Value>,
+) -> io::Result<Option<Vec<Value>>> {
+    let Some(external) = resolve::external_vertices(components, issue_graph) else {
+        return Ok(None);
+    };
+    if !resolve::ordinary_heads(context, heads) {
+        return Ok(None);
+    }
+    let graph: Vec<Component> = components
+        .iter()
+        .cloned()
+        .chain(external)
+        .collect();
+    collect_graph(root, context, components, &graph)
+}
+
+/// The issues of `components`, whose dependencies are all in `graph`.
+fn collect_graph(
+    root: &Path,
+    context: &Value,
+    components: &[Component],
+    graph: &[Component],
+) -> io::Result<Option<Vec<Value>>> {
+    let identities: HashSet<&str> = graph
         .iter()
         .map(|component| component.identity.as_str())
         .collect();
-    let external = components
+    let outside = components
         .iter()
         .any(|component| {
             component.dependencies
                 .iter()
                 .any(|id| !identities.contains(id.as_str()))
         });
-    if external || !ordinary_model_heads(context)? {
+    if outside {
         return Ok(None);
     }
     let resolver = nullish(
@@ -54,7 +96,7 @@ pub fn collect(
         targets: array(context.get("targets"), "targets")?,
         packages: workspace_packages(context, resolver),
         root_components: truthy(resolver.and_then(|resolver| resolver.get("rootComponents"))),
-        circular: cyclic(components),
+        circular: cyclic(graph),
     };
     components
         .iter()
@@ -165,119 +207,6 @@ fn workspace_packages<'c>(context: &'c Value, resolver: Option<&'c Value>) -> Ha
         keys(policy, &["dependencies", "peerDependencies"]).into_iter().collect();
     packages.extend(keys(package_json, &["dependencies", "devDependencies", "peerDependencies"]));
     packages
-}
-
-/// Components in a dependency cycle, self-dependencies included: the
-/// members of strongly connected components larger than one node.
-fn cyclic(components: &[Component]) -> HashSet<&str> {
-    let index: HashMap<&str, usize> = components
-        .iter()
-        .enumerate()
-        .map(|(position, component)| (component.identity.as_str(), position))
-        .collect();
-    let edges: Vec<Vec<usize>> = components
-        .iter()
-        .map(|component| {
-            component.dependencies
-                .iter()
-                .filter_map(|id| index.get(id.as_str()).copied())
-                .collect()
-        })
-        .collect();
-    let mut tarjan = Tarjan::new(&edges);
-    (0..components.len()).for_each(|node| tarjan.visit(node));
-    tarjan.components
-        .iter()
-        .filter(|scc| scc.len() > 1 || edges[scc[0]].contains(&scc[0]))
-        .flatten()
-        .map(|&node| components[node].identity.as_str())
-        .collect()
-}
-
-struct Tarjan<'e> {
-    edges: &'e [Vec<usize>],
-    index: Vec<Option<usize>>,
-    low: Vec<usize>,
-    on_stack: Vec<bool>,
-    stack: Vec<usize>,
-    next: usize,
-    components: Vec<Vec<usize>>,
-}
-
-impl<'e> Tarjan<'e> {
-    fn new(edges: &'e [Vec<usize>]) -> Self {
-        let size = edges.len();
-        Self {
-            edges,
-            index: vec![None; size],
-            low: vec![0; size],
-            on_stack: vec![false; size],
-            stack: Vec::new(),
-            next: 0,
-            components: Vec::new(),
-        }
-    }
-
-    /// Iterative, so deep dependency chains cannot overflow the stack.
-    fn visit(&mut self, start: usize) {
-        if self.index[start].is_some() {
-            return;
-        }
-        let mut work = vec![(start, 0)];
-        self.open(start);
-        while let Some((node, edge)) = work.pop() {
-            match self.edges[node].get(edge) {
-                Some(&next) => {
-                    work.push((node, edge + 1));
-                    self.follow(node, next, &mut work);
-                }
-                None => self.finish(node, work.last().map(|&(parent, _)| parent)),
-            }
-        }
-    }
-
-    /// The edge `node -> next`: descend into an unvisited node, or lower
-    /// `node`'s link through one still on the stack.
-    fn follow(&mut self, node: usize, next: usize, work: &mut Vec<(usize, usize)>) {
-        match self.index[next] {
-            None => {
-                self.open(next);
-                work.push((next, 0));
-            }
-            Some(index) if self.on_stack[next] => self.low[node] = self.low[node].min(index),
-            Some(_) => {}
-        }
-    }
-
-    /// All of `node`'s edges are done: pass its link up, close its component.
-    fn finish(&mut self, node: usize, parent: Option<usize>) {
-        if let Some(parent) = parent {
-            self.low[parent] = self.low[parent].min(self.low[node]);
-        }
-        if Some(self.low[node]) == self.index[node] {
-            self.close(node);
-        }
-    }
-
-    fn open(&mut self, node: usize) {
-        self.index[node] = Some(self.next);
-        self.low[node] = self.next;
-        self.next += 1;
-        self.stack.push(node);
-        self.on_stack[node] = true;
-    }
-
-    fn close(&mut self, root: usize) {
-        let mut component = Vec::new();
-        while let Some(node) = self.stack.pop() {
-            self.on_stack[node] = false;
-            component.push(node);
-            if node == root {
-                break;
-            }
-        }
-        self.components.push(component);
-    }
 }
 
 /// `runtimeModulePath`: with root components, the component's own root (or

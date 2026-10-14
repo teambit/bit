@@ -335,3 +335,35 @@ fn env_root_packages_linked_into_the_pnpm_store_are_written_through_the_link() {
     fs::create_dir_all(root.join("alpha")).unwrap();
     assert!(super::packages::injected(root, &outside, &mut output).is_err());
 }
+#[test]
+fn a_scope_without_an_index_starts_an_empty_one() {
+    let directory = Directory::create().unwrap();
+    write(
+        &directory.0,
+        ".bitmap",
+        br#"{"alpha":{"scope":"","version":"","rootDir":"alpha","mainFile":"index.js"}}"#,
+    );
+    let version = json!({"files":[]});
+    let mut prepared = super::Prepared {
+        proofs: Vec::new(),
+        writes: Vec::new(),
+        links: Vec::new(),
+        copies: Vec::new(),
+    };
+    let input = Input {
+        identity: "scope/alpha",
+        directory: "",
+        hash: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        semantic_version: None,
+        version: &version,
+    };
+    super::staged::prepare(&directory.0, &[input], &mut prepared).unwrap();
+    let index = directory.0.join(".bit/index.json");
+    let bytes = &prepared.writes
+        .iter()
+        .find(|(path, _)| *path == index)
+        .unwrap()
+        .1;
+    let written: Value = serde_json::from_slice(bytes).unwrap();
+    assert_eq!(written, json!({"components":[],"lanes":[]}));
+}

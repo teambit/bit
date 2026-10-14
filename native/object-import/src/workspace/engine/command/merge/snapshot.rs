@@ -46,6 +46,16 @@ pub(in crate::workspace::engine::command) fn prepare_models(
     prepare_objects(staging, objects)
 }
 
+/// The snap's `DependenciesGraph` from its allocation, as a Source the
+/// Version refers to.
+pub(in crate::workspace::engine::command) fn dependencies_graph(
+    allocation: &Value,
+    version: &mut Value,
+    objects: &mut Vec<Value>,
+) -> io::Result<()> {
+    sources::dependencies_graph(allocation, version, objects)
+}
+
 pub(in crate::workspace::engine::command) fn object(
     kind: &str,
     hash: Option<&str>,

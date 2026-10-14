@@ -18,8 +18,15 @@ struct Id {
     scope: Option<String>,
     name: String,
 }
+/// The scope's component index. A scope that never stored a component has
+/// none, which `ComponentsIndex` reads as empty.
 pub(super) fn read(root: &Path) -> io::Result<Vec<Item>> {
-    let bytes = Budget::new(4 * 1024 * 1024).read(File::open(root.join(".bit/index.json"))?)?;
+    let file = match File::open(root.join(".bit/index.json")) {
+        Ok(file) => file,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(Vec::new()),
+        Err(error) => return Err(error),
+    };
+    let bytes = Budget::new(4 * 1024 * 1024).read(file)?;
     let document: Value = serde_json::from_slice(&bytes).map_err(io::Error::other)?;
     let rows = if document.is_array() { &document } else { &document["components"] };
     let rows = rows.as_array().ok_or_else(|| invalid("status component index"))?;

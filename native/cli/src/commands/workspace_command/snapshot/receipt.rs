@@ -3,10 +3,7 @@
 //! the user's log (`getBasicLog`) and the Node.js CLI's version.
 
 use crate::{
-    commands::status::{
-        cache::cache_root,
-        js::{decline, truthy},
-    },
+    commands::status::{cache::cache_root, js::decline},
     discovery::{self, Target},
 };
 use bit_install::config::{
@@ -40,11 +37,9 @@ pub fn new_snap_hashes(count: usize) -> io::Result<Vec<String>> {
     (0..count).map(|_| new_snap_hash()).collect()
 }
 
-/// The receipt for the snapped components.
-pub fn snapshot(root: &Path, snapped: &Snapped<'_>, context: &Value) -> io::Result<Value> {
-    if truthy(context["lane"].get("shouldSquash")) {
-        return Err(decline("command snapshot squash log"));
-    }
+/// The receipt for the snapped components; `lane_log` adds the lane
+/// history's log (`laneLog`).
+pub fn snapshot(root: &Path, snapped: &Snapped<'_>, lane_log: bool) -> io::Result<Value> {
     let user = User::load(root)?;
     let versions: Vec<Value> = snapped.identities
         .iter()
@@ -64,7 +59,7 @@ pub fn snapshot(root: &Path, snapped: &Snapped<'_>, context: &Value) -> io::Resu
         "batchId": uuid_v4()?,
         "bitVersion": bit_version()?,
     });
-    if truthy(context["lane"].get("current")) {
+    if lane_log {
         receipt["laneLog"] = user.log();
     }
     Ok(receipt)

@@ -45,6 +45,11 @@ pub struct CacheWrites {
 }
 
 impl CacheWrites {
+    /// `forceDependencyCacheReset`: the whole cache is replaced on commit.
+    pub fn force_reset(&mut self) {
+        self.reset = true;
+    }
+
     fn is_empty(&self) -> bool {
         self.pending.is_empty() && self.replacements.is_empty() && !self.reset
     }

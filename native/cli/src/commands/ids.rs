@@ -60,8 +60,13 @@ impl Id {
         Self { version: version.filter(|value| !value.is_empty()), ..self.clone() }
     }
 
+    /// `id.scope`.
+    pub fn scope(&self) -> &str {
+        &self.scope
+    }
+
     /// `hasVersion()`: a version other than `latest`.
-    fn has_version(&self) -> bool {
+    pub fn has_version(&self) -> bool {
         self.version
             .as_deref()
             .is_some_and(|version| version != "latest")

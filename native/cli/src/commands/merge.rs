@@ -49,7 +49,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 /// `getConfigBoolean('force_local_build')` may be true: any mention declines.
-fn force_local_build(root: &Path) -> bool {
+pub(super) fn force_local_build(root: &Path) -> bool {
     let files = [
         root.join("workspace.jsonc"),
         root.join(".bit").join("scope.json"),

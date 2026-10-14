@@ -23,9 +23,13 @@ pub(super) fn prepare(root: &Path, inputs: &[Input<'_>], output: &mut Prepared) 
         config(root, inputs, output)?;
     }
     let index = scope.join("index.json");
-    let bytes = proof::read(&index, &mut output.proofs)?
-        .ok_or_else(|| invalid("merge scope index missing"))?;
-    output.writes.push((index, pretty(&json(&bytes)?, true)?));
+    // A scope that never stored a component has no index yet: `ComponentsIndex`
+    // starts empty and writes it with the first components.
+    let current = match proof::read(&index, &mut output.proofs)? {
+        Some(bytes) => json(&bytes)?,
+        None => value!({"components":[],"lanes":[]}),
+    };
+    output.writes.push((index, pretty(&current, true)?));
     Ok(())
 }
 fn config(root: &Path, inputs: &[Input<'_>], output: &mut Prepared) -> io::Result<()> {

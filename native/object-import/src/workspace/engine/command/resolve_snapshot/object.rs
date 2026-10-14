@@ -28,6 +28,7 @@ pub(super) fn prepare(
         .ok_or_else(|| invalid("resolve allocation absent"))?;
     reconciliation::reconcile(&mut version, material, allocation)?;
     sources::sources(&mut version, material, context.snapshots, objects)?;
+    snapshot::dependencies_graph(allocation, &mut version, objects)?;
     graph::graph(
         context.root,
         &mut version,
@@ -74,6 +75,8 @@ fn metadata(
     let fields = version.as_object_mut().ok_or_else(|| invalid("resolve Version"))?;
     fields.remove("squashed");
     fields.remove("unrelated");
+    // The graph is the snap's own, from the lockfile (`dependenciesGraph`).
+    fields.remove("dependenciesGraphRef");
     empty_builder(&mut version)?;
     origin(&mut version, material, lane)?;
     Ok(version)

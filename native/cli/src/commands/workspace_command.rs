@@ -9,6 +9,7 @@
 
 pub mod format;
 pub mod progress;
+pub mod resolve;
 pub mod results;
 
 mod defaults;
@@ -48,6 +49,9 @@ pub struct Planned {
     capture: capture::Capture,
     /// The engine's plan: `result` and `progress` for the report.
     pub plan: Value,
+    /// The request that applies the plan: `commandApply`, or the resolve
+    /// commands' own.
+    apply: &'static str,
 }
 
 /// What one workspace command asks the engine for.
@@ -87,7 +91,7 @@ pub fn plan(root: &Path, request: &Request<'_>) -> io::Result<Planned> {
     let mut steps =
         Steps { engine: &mut engine, root, home: &home, token: &token, context: &context };
     let capture = steps.stages(&mut plan, capture, request)?;
-    Ok(Planned { engine, token, context, capture, plan })
+    Ok(Planned { engine, token, context, capture, plan, apply: "commandApply" })
 }
 
 /// What the steps after `commandPlan` share.
@@ -218,7 +222,7 @@ fn semver_values(to: Option<&str>, context: &Value) -> io::Result<Vec<String>> {
 fn commit(planned: &mut Planned, root: &Path) -> io::Result<()> {
     capture::commit(&mut planned.engine, root, &planned.context, &planned.capture)?;
     let applied: Value = planned.engine.request(&json!({
-        "kind": "commandApply",
+        "kind": planned.apply,
         "token": planned.token,
         "dependencyReadSet": planned.capture.dependency_read_set(),
         "fileId": file_id(),

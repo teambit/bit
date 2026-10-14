@@ -117,7 +117,9 @@ fn validate_config(name: &str, config: &Map<String, Value>) -> io::Result<()> {
     Ok(())
 }
 
-/// `target.config.extensions`: only resolver configuration, marked specific.
+/// `target.config.extensions`: resolver configuration, marked specific. A
+/// resolve command (`resolveConfig`) also keeps empty core entries, and
+/// lists the configured aspects before the inherited ones.
 fn apply_component_config(extensions: &mut Vec<Value>, target: &Value) -> io::Result<()> {
     let configured = nullish(
         target
@@ -125,12 +127,12 @@ fn apply_component_config(extensions: &mut Vec<Value>, target: &Value) -> io::Re
             .and_then(|config| config.get("extensions")),
     );
     let Some(configured) = configured else { return Ok(()) };
-    for (name, config) in object(configured)? {
-        let config = config
-            .as_object()
-            .filter(|_| name == RESOLVER);
-        let config = config.ok_or_else(|| decline("status component extension"))?;
-        if config.keys().any(|key| key != "policy") {
+    let resolve = target.get("resolveConfig") == Some(&Value::Bool(true));
+    let configured = object(configured)?;
+    for (name, config) in configured {
+        let config = config.as_object().ok_or_else(|| decline("status component extension"))?;
+        let empty_core = resolve && CORES.contains(&name.as_str()) && config.is_empty();
+        if !empty_core && (name != RESOLVER || config.keys().any(|key| key != "policy")) {
             return Err(decline("status component extension"));
         }
         let mut specific = config.clone();
@@ -144,5 +146,23 @@ fn apply_component_config(extensions: &mut Vec<Value>, target: &Value) -> io::Re
             None => extensions.insert(0, extension),
         }
     }
+    if resolve {
+        configured_first(extensions, configured);
+    }
     Ok(())
+}
+
+/// The configured aspects, in configuration order, before the inherited ones.
+fn configured_first(extensions: &mut Vec<Value>, configured: &Map<String, Value>) {
+    let position = |extension: &Value| {
+        configured
+            .keys()
+            .position(|name| extension["name"] == name.as_str())
+    };
+    let (mut first, inherited): (Vec<Value>, Vec<Value>) = extensions
+        .drain(..)
+        .partition(|extension| position(extension).is_some());
+    first.sort_by_key(|extension| position(extension));
+    extensions.extend(first);
+    extensions.extend(inherited);
 }

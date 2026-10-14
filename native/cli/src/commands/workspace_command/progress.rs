@@ -1,4 +1,4 @@
-//! `commandProgress(progress, 'checkout')`: the progress lines Bit's loader
+//! `commandProgress(progress, operation)`: the progress lines Bit's loader
 //! prints while checkout runs. The receipt is validated before anything is
 //! printed or written.
 
@@ -26,47 +26,54 @@ struct Import {
 pub struct Progress {
     bitmap_count: u64,
     imports: Vec<Import>,
-    /// Components loaded per stage, for merge.
+    /// Components loaded per stage, for merge and snap.
     loads: Vec<u64>,
+    /// The imports of the dependencies graph step, for snap.
+    graph_imports: Vec<Import>,
     snap_failed: bool,
 }
 
 impl Progress {
     /// The validated receipt; `None` when the engine reported none.
     pub fn parse(value: Option<&Value>) -> io::Result<Option<Self>> {
+        Self::parse_for(value, false)
+    }
+
+    /// The receipt of a snap: five load stages and graph imports allowed.
+    pub fn parse_snap(value: Option<&Value>) -> io::Result<Option<Self>> {
+        Self::parse_for(value, true)
+    }
+
+    fn parse_for(value: Option<&Value>, snap: bool) -> io::Result<Option<Self>> {
         let Some(value) = value.filter(|value| !value.is_null()) else { return Ok(None) };
         let bitmap_count = value.get("bitmapCount").and_then(Value::as_u64);
         let bitmap_count = bitmap_count.ok_or_else(|| decline("native command progress receipt"))?;
-        let loads = array(value.get("loads"), "loads")?;
-        let loads_valid = loads
-            .iter()
-            .all(|count| {
-                count
-                    .as_u64()
-                    .is_some_and(|count| count <= 4096)
-            });
-        let graph_imports = array(value.get("graphImports"), "graph imports")?;
+        let loads = loads(value, snap)?;
+        let graph_imports = match value.get("graphImports") {
+            None | Some(Value::Null) => &[][..],
+            graph => array(graph, "graph imports")?,
+        };
         let snap_failed = value.get("snapFailed").is_none_or(Value::is_boolean);
-        if loads.len() > 4 || !loads_valid || !graph_imports.is_empty() || !snap_failed {
+        if (!snap && !graph_imports.is_empty()) || !snap_failed {
             return Err(decline("native command progress receipt"));
         }
         let rows = value
             .get("imports")
             .and_then(Value::as_array)
             .ok_or_else(|| decline("native command progress receipt"))?;
-        if rows.len() > 16384 {
+        if rows.len() + graph_imports.len() > 16384 {
             return Err(decline("native command import progress receipt"));
         }
         let imports = rows
             .iter()
             .map(import)
             .collect::<io::Result<_>>()?;
-        let loads = loads
+        let graph_imports = graph_imports
             .iter()
-            .filter_map(Value::as_u64)
-            .collect();
+            .map(import)
+            .collect::<io::Result<_>>()?;
         let snap_failed = value.get("snapFailed") == Some(&Value::Bool(true));
-        Ok(Some(Self { bitmap_count, imports, loads, snap_failed }))
+        Ok(Some(Self { bitmap_count, imports, loads, graph_imports, snap_failed }))
     }
 
     /// Print the lines, as the loader does while merge runs.
@@ -79,6 +86,9 @@ impl Progress {
         }
         if !self.loads.is_empty() && !self.snap_failed {
             output.status("importing missing dependencies...");
+            for row in &self.graph_imports {
+                render_import(output, row);
+            }
             output.status("adding dependencies graph...");
         }
     }
@@ -113,6 +123,20 @@ impl Progress {
             render_import(output, row);
         }
     }
+}
+
+/// The components loaded per stage: four stages, five for a snap.
+fn loads(value: &Value, snap: bool) -> io::Result<Vec<u64>> {
+    let loads = array(value.get("loads"), "loads")?;
+    let counts: Vec<u64> = loads
+        .iter()
+        .filter_map(Value::as_u64)
+        .filter(|count| *count <= 4096)
+        .collect();
+    if counts.len() != loads.len() || loads.len() > if snap { 5 } else { 4 } {
+        return Err(decline("native command progress receipt"));
+    }
+    Ok(counts)
 }
 
 fn import(row: &Value) -> io::Result<Import> {

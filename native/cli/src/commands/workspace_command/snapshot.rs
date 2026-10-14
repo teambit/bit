@@ -5,9 +5,10 @@
 //! snap are checked against the engine's prediction, and the engine writes
 //! the snaps with new hashes and the user's log.
 
+pub(super) mod receipt;
+
 mod graph;
 mod issues;
-mod receipt;
 
 use super::{Request, Steps, defaults::app_file};
 use crate::commands::status::{
@@ -16,7 +17,7 @@ use crate::commands::status::{
     js::{array, decline, text, truthy, without_version},
 };
 use serde_json::{Value, json};
-use std::{collections::HashMap, io};
+use std::{collections::HashMap, io, path::Path};
 
 impl Steps<'_> {
     /// The plan's snapshot step: a new capture, and unless the engine
@@ -47,46 +48,31 @@ impl Steps<'_> {
         }
         issues::validate(self.root, &context, &capture.components, plan)?;
         if !snap_failed {
-            let hashes = receipt::new_snap_hashes(needs_snap.len())?;
-            let graphs = self.graphs(&needs_snap, &hashes, &capture)?;
-            let snapped =
-                receipt::Snapped { identities: &needs_snap, hashes: &hashes, graphs: &graphs };
-            let receipt = receipt::snapshot(self.root, &snapped, self.context)?;
-            let finalized: Value = self.engine.request(&json!({
-                "kind": "commandFinalize",
-                "token": self.token,
-                "snapReceipt": receipt,
-                "dependencyReadSet": capture.dependency_read_set(),
-            }))?;
-            if finalized.get("token").and_then(Value::as_str) != Some(self.token) {
-                return Err(decline("command finalize receipt"));
-            }
-            *plan = finalized;
+            *plan = self.finalize(&needs_snap, &capture)?;
         }
         Ok(capture)
     }
 
-    /// The dependency graph of each component the merge snaps.
-    fn graphs(
-        &self,
-        needs_snap: &[String],
-        hashes: &[String],
-        capture: &Capture,
-    ) -> io::Result<Vec<Option<String>>> {
-        let targets = array(self.context.get("targets"), "targets")?;
-        let snapped = needs_snap
-            .iter()
-            .map(|identity| {
-                let target = targets
-                    .iter()
-                    .find(|target| target.get("identity").and_then(Value::as_str) == Some(identity))
-                    .ok_or_else(|| decline("command snapshot target"))?;
-                let directory = text(target.get("directory"))?;
-                Ok(graph::Snapped { directory, package_name: package_name(capture, identity)? })
-            })
-            .collect::<io::Result<Vec<_>>>()?;
-        let components = workspace_components(targets, needs_snap, hashes, capture)?;
-        graph::graphs(self.root, &snapped, &components)
+    /// `commandSnapshotReceipt` and `commandFinalize`: the finalized plan.
+    fn finalize(&mut self, needs_snap: &[String], capture: &Capture) -> io::Result<Value> {
+        if truthy(self.context["lane"].get("shouldSquash")) {
+            return Err(decline("command snapshot squash log"));
+        }
+        let hashes = receipt::new_snap_hashes(needs_snap.len())?;
+        let graphs = graphs(self.root, self.context, needs_snap, &hashes, capture)?;
+        let snapped = receipt::Snapped { identities: needs_snap, hashes: &hashes, graphs: &graphs };
+        let lane_log = truthy(self.context["lane"].get("current"));
+        let receipt = receipt::snapshot(self.root, &snapped, lane_log)?;
+        let finalized: Value = self.engine.request(&json!({
+            "kind": "commandFinalize",
+            "token": self.token,
+            "snapReceipt": receipt,
+            "dependencyReadSet": capture.dependency_read_set(),
+        }))?;
+        if finalized.get("token").and_then(Value::as_str) != Some(self.token) {
+            return Err(decline("command finalize receipt"));
+        }
+        Ok(finalized)
     }
 
     /// The context with the lane's inactive targets the merge activated.
@@ -146,6 +132,30 @@ impl Steps<'_> {
         }
         Ok(capture)
     }
+}
+
+/// The dependency graph of each component the snap writes.
+pub(super) fn graphs(
+    root: &Path,
+    context: &Value,
+    needs_snap: &[String],
+    hashes: &[String],
+    capture: &Capture,
+) -> io::Result<Vec<Option<String>>> {
+    let targets = array(context.get("targets"), "targets")?;
+    let snapped = needs_snap
+        .iter()
+        .map(|identity| {
+            let target = targets
+                .iter()
+                .find(|target| target.get("identity").and_then(Value::as_str) == Some(identity))
+                .ok_or_else(|| decline("command snapshot target"))?;
+            let directory = text(target.get("directory"))?;
+            Ok(graph::Snapped { directory, package_name: package_name(capture, identity)? })
+        })
+        .collect::<io::Result<Vec<_>>>()?;
+    let components = workspace_components(targets, needs_snap, hashes, capture)?;
+    graph::graphs(root, &snapped, &components)
 }
 
 /// `componentIdByPkgName`: the snapped components under their new hashes,
