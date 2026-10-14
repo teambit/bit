@@ -10,7 +10,7 @@ fn imports_without_installing_and_fetches() {
     assert_eq!(fetch.request()["components"], true);
     let lanes = parse(&["fetch", "s/feature", "--lanes"]).unwrap();
     assert_eq!(lanes.request()["lanes"], true);
-    assert!(parse(&["fetch", "s/feature", "s/other", "--lanes"]).is_none());
+    assert_eq!(parse(&["fetch", "s/feature", "s/other", "--lanes"]).unwrap().ids.len(), 2);
 }
 
 #[test]

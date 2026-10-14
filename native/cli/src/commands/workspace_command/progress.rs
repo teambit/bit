@@ -121,17 +121,31 @@ impl Progress {
     /// Workspace lane fetch leaves the dependency result as its final loader
     /// status after the command-level success line.
     pub fn render_lane_fetch_tail(&self, output: &Output) {
-        if let Some(row) = self.imports.last()
-            && !row.ids.is_empty()
-            && let Some(reason) = &row.reason
-        {
-            let count = if row.components > 0 {
-                format!("{} components", row.components)
-            } else {
-                format!("{} objects", row.objects)
-            };
-            output.success(&format!("successfully imported {count} {reason}"), None);
+        render_lane_tail(self.imports.last(), output);
+    }
+
+    pub fn render_lane_groups(
+        &self,
+        output: &Output,
+        groups: &[usize],
+        started: Instant,
+    ) -> io::Result<()> {
+        if groups.iter().sum::<usize>() != self.imports.len() {
+            return Err(decline("native inbound lane groups"));
         }
+        output.status("fetching objects...");
+        let mut offset = 0;
+        for &count in groups {
+            output.status("importing components");
+            output.status("importing components");
+            for row in &self.imports[offset..offset + count] {
+                render_import(output, row);
+            }
+            output.success("importing components", Some(started));
+            render_lane_tail(self.imports[offset..offset + count].last(), output);
+            offset += count;
+        }
+        Ok(())
     }
 
     /// Print the lines, as the loader does while checkout runs.
@@ -163,6 +177,20 @@ impl Progress {
         {
             render_import(output, row);
         }
+    }
+}
+
+fn render_lane_tail(row: Option<&Import>, output: &Output) {
+    if let Some(row) = row
+        && !row.ids.is_empty()
+        && let Some(reason) = &row.reason
+    {
+        let count = if row.components > 0 {
+            format!("{} components", row.components)
+        } else {
+            format!("{} objects", row.objects)
+        };
+        output.success(&format!("successfully imported {count} {reason}"), None);
     }
 }
 

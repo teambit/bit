@@ -52,7 +52,7 @@ fn fetch(ids: Vec<String>, flags: &[&str]) -> Option<Options> {
         .iter()
         .any(|flag| !allowed.contains(flag))
         || components + lanes != 1
-        || (lanes == 1 && (ids.len() != 1 || flags.contains(&"--all-history")))
+        || (lanes == 1 && (ids.is_empty() || ids.len() > 32 || flags.contains(&"--all-history")))
     {
         return None;
     }

@@ -174,10 +174,12 @@ pub(crate) fn prepare_lane(root: &Path, global_remotes_file: &Path) -> io::Resul
 pub(crate) fn prepare_lane_with_virtual(
     root: &Path,
     global_remotes_file: &Path,
-    remote: &VirtualRemote,
+    remotes: &[VirtualRemote],
 ) -> io::Result<PreparedImport> {
     let mut plan = prepare_lane(root, global_remotes_file)?;
-    plan.virtual_remote(&remote.scope, remote.path.clone(), &remote.objects)?;
+    for remote in remotes {
+        plan.virtual_remote(&remote.scope, remote.path.clone(), &remote.objects)?;
+    }
     plan.validate()?;
     Ok(plan)
 }

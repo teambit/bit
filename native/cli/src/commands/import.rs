@@ -13,6 +13,7 @@ use super::{
     workspace_command::{self, NodeCli, progress::Progress, results::Report},
 };
 use crate::{commands::Command, native::Outcome, workspace};
+use bit_install::output::Output;
 use serde_json::{Value, json};
 use std::{env, ffi::OsString, io, path::Path, time::Instant};
 
@@ -34,22 +35,42 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Err(error) => return Ok(Outcome::Declined(format!("{}: {error}", options.operation))),
     };
     let report = Report { data: planned.report.clone(), code: 0, details: None };
-    let fetch = options.operation == "fetch";
-    let with_ids = !options.ids.is_empty();
     workspace_command::execute_with(&root, args, options.operation, &report, |output| {
         let started = Instant::now();
         planned.apply()?;
-        if let Some(progress) = &planned.progress {
-            progress.render_inbound(output, fetch, with_ids);
-        }
-        output.success("importing components", Some(started));
-        if options.lanes
-            && let Some(progress) = &planned.progress
-        {
-            progress.render_lane_fetch_tail(output);
-        }
-        Ok(())
+        render(&planned, &options, output, started)
     })
+}
+
+fn render(
+    planned: &Planned,
+    options: &options::Options,
+    output: &Output,
+    started: Instant,
+) -> io::Result<()> {
+    if let Some(groups) = planned.prepared["laneGroups"].as_array() {
+        let counts = groups
+            .iter()
+            .map(Value::as_u64)
+            .map(|value| value.map(|count| count as usize))
+            .collect::<Option<Vec<_>>>()
+            .ok_or_else(|| io::Error::other("native inbound lane groups"))?;
+        planned.progress
+            .as_ref()
+            .ok_or_else(|| io::Error::other("native inbound progress"))?
+            .render_lane_groups(output, &counts, started)?;
+        return Ok(());
+    }
+    if let Some(progress) = &planned.progress {
+        progress.render_inbound(output, options.operation == "fetch", !options.ids.is_empty());
+    }
+    output.success("importing components", Some(started));
+    if options.lanes
+        && let Some(progress) = &planned.progress
+    {
+        progress.render_lane_fetch_tail(output);
+    }
+    Ok(())
 }
 
 /// The engine's prepared import and what it prints.
@@ -70,6 +91,7 @@ impl Planned {
             return Err(io::Error::other("native inbound lane receipt"));
         }
         let receipt = report::validate(&prepared)?;
+        validate_lane_groups(&prepared, options)?;
         let report = if options.operation == "fetch" {
             receipt.fetch_report(chalk)?
         } else {
@@ -90,6 +112,7 @@ impl Planned {
         let published = report::validate(&applied)?;
         let same = applied["token"] == self.prepared["token"]
             && applied["laneFetch"] == self.prepared["laneFetch"]
+            && applied["laneGroups"] == self.prepared["laneGroups"]
             && published.ids == self.receipt.ids
             && applied["importDetails"] == self.prepared["importDetails"];
         if !same {
@@ -97,6 +120,39 @@ impl Planned {
         }
         Ok(())
     }
+}
+
+fn validate_lane_groups(prepared: &Value, options: &options::Options) -> io::Result<()> {
+    let Some(groups) = prepared.get("laneGroups") else {
+        if options.lanes && options.ids.len() > 1 {
+            return Err(io::Error::other("native inbound lane groups"));
+        }
+        return Ok(());
+    };
+    let rows = prepared["progress"]
+        .as_array()
+        .ok_or_else(|| io::Error::other("native inbound progress"))?;
+    let counts = groups.as_array().ok_or_else(|| io::Error::other("native inbound lane groups"))?;
+    if !options.lanes
+        || counts.len() != options.ids.len()
+        || counts.len() < 2
+        || counts.len() > 32
+        || counts
+            .iter()
+            .any(|count| {
+                count
+                    .as_u64()
+                    .is_none_or(|count| count == 0)
+            })
+        || counts
+            .iter()
+            .filter_map(Value::as_u64)
+            .sum::<u64>()
+            != rows.len() as u64
+    {
+        return Err(io::Error::other("native inbound lane groups"));
+    }
+    Ok(())
 }
 
 /// `commandInboundPrepare`: the engine fetches, and plans the writes.

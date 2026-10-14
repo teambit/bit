@@ -44,13 +44,14 @@ pub fn validate(value: &Value) -> io::Result<Receipt> {
     {
         return Err(decline("native inbound receipt"));
     }
-    let (ids, imported) = imported_ids(rows)?;
+    let multi_lane = value["laneFetch"] == true && value["laneGroups"].is_array();
+    let (ids, imported) = imported_ids(rows, multi_lane)?;
     let mut seen = HashSet::new();
     let details = details
         .iter()
         .map(|row| {
             let detail = details_row(row)?;
-            if !imported.contains(&detail.id) || !seen.insert(detail.id.clone()) {
+            if !imported.contains(&detail.id) || (!seen.insert(detail.id.clone()) && !multi_lane) {
                 return Err(decline("native inbound details"));
             }
             Ok(detail)
@@ -60,7 +61,7 @@ pub fn validate(value: &Value) -> io::Result<Receipt> {
 }
 
 /// Versioned ids, distinct without their versions.
-fn imported_ids(rows: &[Value]) -> io::Result<(Vec<String>, HashSet<String>)> {
+fn imported_ids(rows: &[Value], multi_lane: bool) -> io::Result<(Vec<String>, HashSet<String>)> {
     let mut imported = HashSet::new();
     let mut ids = Vec::new();
     for row in rows {
@@ -69,7 +70,7 @@ fn imported_ids(rows: &[Value]) -> io::Result<(Vec<String>, HashSet<String>)> {
         if text.len() > 4096
             || !text.contains('@')
             || !id.has_version()
-            || !imported.insert(id.without_version())
+            || (!imported.insert(id.without_version()) && !multi_lane)
         {
             return Err(decline("native inbound identity"));
         }

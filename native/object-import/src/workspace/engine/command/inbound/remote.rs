@@ -1,6 +1,6 @@
 //! Bounded HTTP scope acquisition. File scopes stay in the deferred importer.
-use super::{Prepare, Target, VirtualRemote, identity, invalid};
-use crate::command_import::lane;
+use super::{Prepare, Target, identity, invalid};
+use crate::command_import::{VirtualRemote, lane};
 use bit_client_transfer::{
     GlobalConfig,
     fetch::{self, FetchOptions},
