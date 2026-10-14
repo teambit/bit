@@ -135,15 +135,7 @@ fn receive_closure(
     if visited.len() > 4096 {
         return Err(invalid("lane import closure budget"));
     }
-    let incoming = read_model(plan, directory, target)?
-        .ok_or_else(|| invalid("lane remote component missing"))?;
-    let hash = super::version_ref(&incoming, &target.version)?;
-    plan.progress
-        .last_mut()
-        .unwrap()
-        .ids
-        .push(key);
-    receive(plan, directory, target, &incoming, &hash, true)?;
+    let hash = receive_counted(plan, directory, target, key)?;
     let version =
         super::read_version(plan, &hash)?.ok_or_else(|| invalid("lane fetched Version absent"))?;
     for dependency in version["flattenedDependencies"]
@@ -151,22 +143,54 @@ fn receive_closure(
         .ok_or_else(|| invalid("lane flattened dependencies"))?
     {
         let target = super::dependencies::dependency_target(dependency)?;
-        let directory_local = plan.environment.local_directory.clone();
-        let model = read_model(plan, &directory_local, &target)?;
-        let reference = model
-            .as_ref()
-            .map(|model| super::version_ref(model, &target.version))
-            .transpose()?;
-        let local = reference
-            .as_ref()
-            .map(|hash| super::read_version(plan, hash))
-            .transpose()?
-            .flatten();
-        if local.is_none() {
+        if !local_version(plan, &target)? {
             receive_closure(plan, directory, &target, visited)?;
         }
     }
     Ok(())
+}
+
+/// Receive one Version of the lane. `importMany` re-fetches a version it has
+/// locally only while it is not built, once per process
+/// (`cacheUnBuiltIds`), and the remote returns nothing for a version it was
+/// given: such a version is not counted as imported.
+fn receive_counted(
+    plan: &mut PreparedImport,
+    directory: &Path,
+    target: &Target,
+    key: String,
+) -> io::Result<String> {
+    let incoming = read_model(plan, directory, target)?
+        .ok_or_else(|| invalid("lane remote component missing"))?;
+    let hash = super::version_ref(&incoming, &target.version)?;
+    let present = local_version(plan, target)?;
+    let row = plan.progress.last_mut().unwrap();
+    row.ids.push(key.clone());
+    let counted = (row.components.clone(), row.objects.clone());
+    if present {
+        plan.cache.unbuilt.insert(key);
+    }
+    receive(plan, directory, target, &incoming, &hash, true)?;
+    if present {
+        let row = plan.progress.last_mut().unwrap();
+        (row.components, row.objects) = counted;
+    }
+    Ok(hash)
+}
+
+/// Whether the local scope has the target's Version.
+fn local_version(plan: &mut PreparedImport, target: &Target) -> io::Result<bool> {
+    let local = plan.environment.local_directory.clone();
+    let model = read_model(plan, &local, target)?;
+    let reference = model
+        .as_ref()
+        .map(|model| super::version_ref(model, &target.version))
+        .transpose()?;
+    Ok(reference
+        .map(|hash| super::read_version(plan, &hash))
+        .transpose()?
+        .flatten()
+        .is_some())
 }
 
 impl PreparedImport {

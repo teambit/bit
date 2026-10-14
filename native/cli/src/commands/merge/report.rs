@@ -1,15 +1,14 @@
-//! The merge report: `mergeReport` of `@teambit/merging`, with the fields
-//! the glue forwards for `bit merge` (`MergeCmd`'s projection): components,
-//! skipped components, the version, the snapshot results and `verbose`.
-//! Removed components and unresolved conflicts are not forwarded, so their
-//! sections stay empty.
+//! The merge report: `mergeReport` of `@teambit/merging`. For `bit merge`
+//! the glue forwards `MergeCmd`'s projection: components, skipped
+//! components, the version, the snapshot results and `verbose`, so the
+//! removed and conflict sections stay empty. `bit lane merge` forwards the
+//! whole result (`MergeLaneCmd`).
 
-use super::options::Options;
 use crate::commands::{
     color::Chalk,
     workspace_command::{
         format::Formatter,
-        results::{Report, Results, hydrate},
+        results::{Report, Results, hydrate, listed},
     },
 };
 use serde_json::Value;
@@ -18,11 +17,19 @@ use std::io;
 /// `compHasBeenRemovedMsg`.
 const REMOVED: &str = "component has been removed";
 
-pub fn format(result: &Value, options: &Options, chalk: Chalk) -> io::Result<Report> {
+/// Which result the report sees.
+#[derive(Clone, Copy)]
+pub struct Mode {
+    pub verbose: bool,
+    /// The whole result of a lane merge.
+    pub lane: bool,
+}
+
+pub fn format(result: &Value, mode: Mode, chalk: Chalk) -> io::Result<Report> {
     let results = hydrate(result)?;
-    let report = Merge { results: &results, options, format: Formatter::new(chalk) };
+    let report = Merge { results: &results, mode, format: Formatter::new(chalk) };
     let others = report.other_skipped();
-    let hidden = !others.is_empty() && !options.verbose;
+    let hidden = !others.is_empty() && !mode.verbose;
     let detailed = report.join(&report.skipped_detailed());
     if !hidden {
         return Ok(Report { data: detailed, code: 0, details: None });
@@ -34,7 +41,7 @@ pub fn format(result: &Value, options: &Options, chalk: Chalk) -> io::Result<Rep
 
 struct Merge<'r> {
     results: &'r Results,
-    options: &'r Options,
+    mode: Mode,
     format: Formatter,
 }
 
@@ -45,7 +52,9 @@ impl Merge<'_> {
             self.success(),
             self.skipped_removed(),
             skipped.to_string(),
+            self.removed(),
             self.snaps(),
+            self.conflict_summary(),
             self.summary(),
         ])
     }
@@ -119,18 +128,50 @@ impl Merge<'_> {
             .map_or_else(String::new, |snaps| snaps.section(&self.format))
     }
 
+    /// `getRemovedOutput(removedComponents)`.
+    fn removed(&self) -> String {
+        if !self.mode.lane {
+            return String::new();
+        }
+        listed(&self.format, "removed components", &self.results.removed)
+    }
+
+    /// Whether the merge left unresolved conflicts the report shows.
+    fn with_conflicts(&self) -> bool {
+        self.mode.lane && !self.results.components.is_empty() && self.results.conflicts
+    }
+
+    /// `getConflictSummary`.
+    fn conflict_summary(&self) -> String {
+        if !self.with_conflicts() {
+            return String::new();
+        }
+        let title = self.format.title(&format!(
+            "{} files with conflicts summary",
+            self.format.warn_symbol(),
+        ));
+        let hint = self.format.hint(
+            "merge process not completed due to the conflicts above. fix conflicts manually and then run \"bit install\".\nonce ready, snap/tag the components to complete the merge.",
+        );
+        format!("{title}\n{}\n\n{hint}", self.results.conflict_lines(self.chalk()).join("\n"))
+    }
+
     /// `getSummary`.
     fn summary(&self) -> String {
         let bold = |text: &str| self.chalk().bold(text);
-        let _ = self.options;
+        let removed = if self.mode.lane { self.results.removed.len() } else { 0 };
+        let conflicted =
+            if self.with_conflicts() { self.results.conflict_lines(self.chalk()).len() } else { 0 };
+        let conflicts =
+            if conflicted == 0 { "none".to_string() } else { format!("{conflicted} components") };
         format!(
             "{}\nTotal Merged: {}\nTotal Unchanged: {}\nTotal Snapped: {}\nTotal Removed: {}\nConflicts: {}",
             self.format.title("Merge Summary"),
             bold(&self.results.components.len().to_string()),
             bold(&self.results.skipped.len().to_string()),
             bold(&self.results.snapped_count().to_string()),
-            bold("0"),
-            bold("none"),
+            bold(&removed.to_string()),
+            bold(&conflicts),
         )
     }
 }

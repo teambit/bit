@@ -9,6 +9,7 @@ mod ids;
 mod import;
 mod install;
 mod inventory;
+mod lane;
 mod merge;
 mod mini_status;
 mod patterns;
@@ -33,6 +34,7 @@ pub const COMMANDS: &[Command] = &[
     import::FETCH,
     import::IMPORT,
     install::COMMAND,
+    lane::COMMAND,
     merge::COMMAND,
     mini_status::COMMAND,
     snap::COMMAND,

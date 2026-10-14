@@ -16,6 +16,7 @@ pub mod versions;
 pub use snapshot::receipt::NodeCli;
 
 mod defaults;
+mod lane;
 mod policy;
 mod snapshot;
 
@@ -81,13 +82,18 @@ pub fn plan(root: &Path, request: &Request<'_>) -> io::Result<Planned> {
     let capture = capture::capture_with(&mut engine, root, &home, &context, &targets, verified)?;
     let semver = grammar::snapshot(semver_values(request.to, &context)?.iter().map(String::as_str))
         .ok_or_else(|| decline("semver grammar limits"))?;
-    let mut plan: Value = engine.request(&json!({
+    let mut plan_request = json!({
         "kind": "commandPlan",
         "token": token,
         "current": capture.captured,
         "dependencyReadSet": capture.dependency_read_set(),
         "semver": semver,
-    }))?;
+    });
+    lane::validate(&request.options, &context)?;
+    if let Some(ids) = lane::pattern_ids(&request.options, &context)? {
+        plan_request["lanePatternIds"] = json!(ids);
+    }
+    let mut plan: Value = engine.request(&plan_request)?;
     if plan.get("token").and_then(Value::as_str) != Some(token.as_str()) {
         return Err(decline("command plan token"));
     }
@@ -129,8 +135,8 @@ impl Steps<'_> {
         } else {
             capture
         };
-        if plan.get("lanePreparation").is_some() {
-            return Err(decline("the plan needs the lanePreparation step"));
+        if let Some(preparation) = plan.get("lanePreparation").cloned() {
+            self.finalize_lane(plan, &preparation)?;
         }
         capture.cache.replacements = caches;
         capture.cache.replacements_only = snap_failed;

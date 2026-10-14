@@ -3,8 +3,9 @@
 //! `bit merge --resolve` (`resolve`). The `forceLocalBuild` config is left
 //! to the Node.js CLI.
 
+pub(super) mod report;
+
 mod options;
-mod report;
 mod resolve;
 
 use super::{
@@ -37,7 +38,8 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Request { operation: "merge", options: options.request(), to: None, verify_fresh: true };
     let prepared = workspace_command::plan(&root, &request)
         .and_then(|planned| {
-            let report = report::format(&planned.plan["result"], &options, Chalk::detect(args))?;
+            let mode = report::Mode { verbose: options.verbose, lane: false };
+            let report = report::format(&planned.plan["result"], mode, Chalk::detect(args))?;
             let progress = Progress::parse(planned.plan.get("progress"))?;
             Ok((planned, report, progress))
         });

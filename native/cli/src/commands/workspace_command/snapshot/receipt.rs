@@ -66,7 +66,7 @@ pub fn snapshot(root: &Path, snapped: &Snapped<'_>, lane_log: bool) -> io::Resul
 }
 
 /// `getIdentity()`: the user's name and email.
-struct User {
+pub struct User {
     username: Option<String>,
     email: Option<String>,
 }
@@ -74,7 +74,7 @@ struct User {
 impl User {
     /// `getBitCloudUsername() || getConfig('user.name')` and
     /// `getConfig('user.email')`, the git config being the last layer.
-    fn load(root: &Path) -> io::Result<Self> {
+    pub fn load(root: &Path) -> io::Result<Self> {
         let global = load_global_config(&cache_root().join("config"))?;
         let scope = ScopeJson::load(&scope_path(root))?;
         let workspace = WorkspaceConfig::load(root)?;
@@ -99,7 +99,7 @@ impl User {
     }
 
     /// `getBasicLog()`: `undefined` fields are left out, as `JSON.stringify` does.
-    fn log(&self) -> Value {
+    pub fn log(&self) -> Value {
         let mut log = Map::new();
         if let Some(username) = &self.username {
             log.insert("username".into(), json!(username));
@@ -185,7 +185,7 @@ fn hex(bytes: &[u8]) -> String {
 }
 
 /// `uuid.v4()`.
-fn uuid_v4() -> io::Result<String> {
+pub fn uuid_v4() -> io::Result<String> {
     let mut bytes = [0_u8; 16];
     getrandom::fill(&mut bytes).map_err(|error| io::Error::other(error.to_string()))?;
     bytes[6] = (bytes[6] & 0x0f) | 0x40;
