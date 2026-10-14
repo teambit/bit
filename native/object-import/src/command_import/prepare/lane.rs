@@ -82,6 +82,20 @@ impl PreparedImport {
             let Some(head) = model["head"].as_str() else { continue };
             let progress = self.progress.last_mut().ok_or_else(|| invalid("lane main progress"))?;
             progress.objects.insert(super::super::object_hash(scope));
+            let local = self.environment.local_directory.clone();
+            if super::read_model(self, &local, &target)?
+                .as_ref()
+                .is_some_and(|stored| stored["head"] == head)
+                && super::read_version(self, head)?.is_some()
+            {
+                self.progress
+                    .last_mut()
+                    .unwrap()
+                    .components
+                    .insert(identity.clone());
+                super::transfer::record_remote_head(self, &target, &model)?;
+                continue;
+            }
             receive(self, &directory, &target, &model, head, true)?;
         }
         self.validate()
@@ -179,6 +193,9 @@ fn receive_counted(
     let row = plan.progress.last_mut().unwrap();
     row.ids.push(key.clone());
     let counted = (row.components.clone(), row.objects.clone());
+    if present && plan.cache.switch_existing_versions {
+        return Ok(hash);
+    }
     if present {
         plan.cache.unbuilt.insert(key);
     }

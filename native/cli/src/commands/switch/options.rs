@@ -1,11 +1,12 @@
-//! A deliberately narrow grammar for switching to local lane state. Remote
-//! fetches, merge strategies and partial switches stay with the Node CLI.
+//! A narrow grammar for complete switches with dependency installation
+//! disabled. Merge strategies, aliases and partial switches stay with Node.
 
 use serde_json::{Value, json};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Options {
     pub lane: String,
+    pub skip_fetch: bool,
     pub verbose: bool,
     pub force_ours: bool,
     pub force_theirs: bool,
@@ -58,11 +59,12 @@ impl Parsed {
     }
 
     fn finish(self) -> Option<Options> {
-        if !self.skip_fetch || !self.skip_install {
+        if !self.skip_install {
             return None;
         }
         Some(Options {
             lane: self.lane?,
+            skip_fetch: self.skip_fetch,
             verbose: self.verbose,
             force_ours: self.force_ours,
             force_theirs: self.force_theirs,
@@ -88,7 +90,7 @@ fn lane_char(byte: u8) -> bool {
 impl Options {
     pub fn request(&self) -> Value {
         json!({
-            "lane": {"name": self.lane, "skipFetch": true},
+            "lane": {"name": self.lane, "skipFetch": self.skip_fetch},
             "skipDependencyInstallation": true,
             "verbose": self.verbose,
             "forceOurs": self.force_ours,

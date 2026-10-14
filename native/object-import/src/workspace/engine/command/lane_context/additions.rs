@@ -1,12 +1,12 @@
 use super::{invalid, visibility::effective_scope};
 use crate::command_import::PreparedImport;
 use serde_json::{Value, json};
-use std::io;
+use std::{io, path::Path};
 
 #[cfg(test)]
 mod tests;
 
-pub(super) fn prepare(
+pub(in crate::workspace::engine::command) fn prepare(
     imported: &mut PreparedImport,
     bitmap: &Value,
     settings: &Value,
@@ -24,7 +24,62 @@ pub(super) fn prepare(
     }
     Ok(additions)
 }
-pub(super) fn targets(additions: &[Value], selected: &[Value]) -> Vec<Value> {
+
+/// A switch can bring a lane-only component into a workspace whose existing
+/// component owns the parent of the default directory. `ComponentWriter` moves
+/// the incoming directory's overlapping prefix aside (`alpha/gamma` becomes
+/// `alpha_1/gamma`) before writing. Resolve that case before retaining a plan.
+pub(in crate::workspace::engine::command) fn prepare_switch(
+    imported: &mut PreparedImport,
+    root: &Path,
+    bitmap: &Value,
+    settings: &Value,
+    selected: &[Value],
+) -> io::Result<Vec<Value>> {
+    let rows = bitmap.as_object().ok_or_else(|| invalid("switch destination bitmap"))?;
+    let mut additions = Vec::new();
+    for target in selected {
+        let mut addition = prepare_one(imported, rows, settings, target)?;
+        relocate_nested(&mut addition, &rows.values().chain(additions.iter()))?;
+        validate_overlap(&addition, rows.values().chain(additions.iter()))?;
+        let directory =
+            addition["rootDir"].as_str().ok_or_else(|| invalid("switch destination"))?;
+        if root.join(directory).try_exists()? {
+            return Err(invalid("switch occupied destination requires canonical writer"));
+        }
+        additions.push(addition);
+    }
+    Ok(additions)
+}
+
+fn relocate_nested<'a>(
+    addition: &mut Value,
+    rows: &(impl Iterator<Item = &'a Value> + Clone),
+) -> io::Result<()> {
+    let directory = addition["rootDir"].as_str().ok_or_else(|| invalid("switch destination"))?;
+    let parent = (*rows)
+        .clone()
+        .filter_map(|row| row["rootDir"].as_str())
+        .find(|root| directory.starts_with(&format!("{root}/")));
+    let Some(parent) = parent else { return Ok(()) };
+    let suffix = directory
+        .strip_prefix(parent)
+        .ok_or_else(|| invalid("switch destination prefix"))?
+        .to_owned();
+    for index in 1..=4096 {
+        let candidate = format!("{parent}_{index}{suffix}");
+        crate::checkout::plan::relative_path(&candidate)?;
+        addition["rootDir"] = json!(candidate);
+        if validate_overlap(addition, (*rows).clone()).is_ok() {
+            return Ok(());
+        }
+    }
+    Err(invalid("switch destination collision budget"))
+}
+pub(in crate::workspace::engine::command) fn targets(
+    additions: &[Value],
+    selected: &[Value],
+) -> Vec<Value> {
     additions.iter().filter_map(|addition| {
         let identity = format!("{}/{}", addition["scope"].as_str()?, addition["name"].as_str()?);
         selected.iter().find(|target| target["identity"] == identity && target["currentIdPresent"] == false && target["bitmapPresent"] == false)?;

@@ -99,10 +99,14 @@ fn receive_history(
         .insert(hash.clone());
     let old = plan.capture.object(&local, &hash, "VersionHistory")?;
     let merged = history::merge(old.as_ref(), &incoming_history)?;
-    plan.overlay.objects.insert(
-        hash.clone(),
-        super::super::publish::object(&hash, "VersionHistory", merged)?,
-    );
+    let object = if !changed && merged == incoming_history {
+        plan.capture
+            .object(directory, &hash, "VersionHistory")?
+            .ok_or_else(|| invalid("import remote VersionHistory missing"))?
+    } else {
+        super::super::publish::object(&hash, "VersionHistory", merged)?
+    };
+    plan.overlay.objects.insert(hash, object);
     Ok(())
 }
 fn receive_sources(plan: &mut PreparedImport, directory: &Path, version: &Value) -> io::Result<()> {

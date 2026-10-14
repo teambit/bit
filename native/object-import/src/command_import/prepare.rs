@@ -149,6 +149,7 @@ fn empty(root: &Path, allow_lane: bool) -> io::Result<(PreparedImport, Value)> {
             index,
             index_changed: false,
             lane_histories: Vec::new(),
+            switch_tracking: None,
         },
     };
     Ok((plan, scope))

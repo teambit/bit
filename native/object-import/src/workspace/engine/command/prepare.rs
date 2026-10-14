@@ -95,7 +95,7 @@ pub(super) fn extend_models(
         .collect::<Vec<_>>();
     extend_lane_targets(context, &mut model_targets);
     let models = serde_json::from_value(json!({
-        "root":request.root,"history":false,"includeHeads":true,
+        "root":request.root,"history":false,"includeHeads":request.operation != Operation::Switch,
         "targets":model_targets,
     }))
     .map_err(io::Error::other)?;

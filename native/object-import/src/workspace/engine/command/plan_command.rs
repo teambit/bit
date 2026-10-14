@@ -29,7 +29,7 @@ pub(super) fn run(
             pool,
         ),
         input::Operation::Switch => {
-            planning::checkout(&mut record, input.current, &input.semver, snapshots, pool)
+            super::switch::plan(&mut record, input.current, &input.semver, snapshots, pool)
         }
     })?;
     if record.request.operation == input::Operation::Switch {
@@ -52,7 +52,7 @@ pub(super) fn run(
 fn plan_output(record: &Record, planned: &planning::Planned) -> io::Result<Value> {
     let mut output = json!({"token":record.token,"result":planned.result,"progress":record.repository.progress()});
     if record.request.operation == input::Operation::Switch {
-        output["switchImportCount"] = json!(super::switch::import_count(
+        output["switchImportCount"] = json!(super::switch::progress::import_count(
             &record.request.root,
             &record.context,
             &record.targets

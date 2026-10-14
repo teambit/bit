@@ -206,7 +206,7 @@ fn failure(result: &mut Value, target: &Value, selected: &Value) -> io::Result<(
         }));
     Ok(())
 }
-fn prepare_one(
+pub(super) fn prepare_one(
     record: &mut Record,
     plan: &mut Planned,
     index: usize,

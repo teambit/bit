@@ -50,6 +50,38 @@ impl Id {
 }
 
 impl PreparedImport {
+    pub(crate) fn switch_existing_versions(&mut self) {
+        self.cache.switch_existing_versions = true;
+    }
+    /// Stage the local alias Node records when a remote switch first tracks a
+    /// lane. The scope file is captured with the fetched objects and written
+    /// by the same import owner before the workspace bitmap is published.
+    pub(crate) fn stage_switch_tracking(&mut self, id: &Id) -> io::Result<()> {
+        id.validate()?;
+        if id.is_main() {
+            return Ok(());
+        }
+        let path = self.environment.local_directory
+            .parent()
+            .ok_or_else(|| invalid("switch scope directory"))?
+            .join("scope.json");
+        let mut scope = self.capture
+            .json(&path)?
+            .ok_or_else(|| invalid("switch scope configuration missing"))?;
+        if scope.get("lanes").is_none() {
+            scope["lanes"] = serde_json::json!({"current":"main","tracking":[],"new":[]});
+        }
+        if !append_switch_tracking(&mut scope, id)? {
+            return Ok(());
+        }
+        let mut output = Vec::new();
+        let formatter = serde_json::ser::PrettyFormatter::with_indent(b"    ");
+        let mut serializer = serde_json::Serializer::with_formatter(&mut output, formatter);
+        scope.serialize(&mut serializer).map_err(io::Error::other)?;
+        self.writes.switch_tracking = Some(output);
+        Ok(())
+    }
+
     /// Publish the remote lane's refs without adding its Lane object to the
     /// local index. Public workspace fetch keeps only these refs.
     pub(crate) fn retain_remote_lane_refs(&mut self, record: &Record) -> io::Result<()> {
@@ -222,6 +254,32 @@ impl PreparedImport {
             .is_some_and(|rows| rows.iter().any(|name| name == &id.name));
         Ok(Some(Record { hash, value, is_new }))
     }
+}
+
+fn append_switch_tracking(scope: &mut Value, id: &Id) -> io::Result<bool> {
+    let tracking = scope["lanes"]["tracking"]
+        .as_array_mut()
+        .ok_or_else(|| invalid("switch lane tracking configuration"))?;
+    if tracking.len() >= 4096 {
+        return Err(invalid("switch lane tracking budget"));
+    }
+    if tracking
+        .iter()
+        .any(|row| row["remoteLane"] == id.name && row["remoteScope"] == id.scope)
+    {
+        return Ok(false);
+    }
+    if let Some(existing) = tracking
+        .iter()
+        .find(|row| row["localLane"] == id.name)
+        && (existing["remoteLane"] != id.name || existing["remoteScope"] != id.scope)
+    {
+        return Err(invalid("switch lane alias already tracks another remote"));
+    }
+    tracking.push(
+        serde_json::json!({"localLane":id.name,"remoteLane":id.name,"remoteScope":id.scope}),
+    );
+    Ok(true)
 }
 
 fn resolve_local(name: &str, scope: &Value, index: &Value) -> io::Result<Id> {

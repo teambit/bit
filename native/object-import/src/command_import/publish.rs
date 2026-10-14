@@ -53,6 +53,12 @@ impl PreparedImport {
             bytes.push(b'\n');
             store.write_index(&bytes)?;
         }
+        if let Some(bytes) = &self.writes.switch_tracking {
+            let scope = self.environment.local_directory
+                .parent()
+                .ok_or_else(|| invalid("switch scope directory"))?;
+            write_file(&scope.join("scope.json"), bytes)?;
+        }
         self.publish_refs()?;
         if let Some(path) = &self.environment.global_remotes {
             write_file(path, b"{}")?;

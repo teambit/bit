@@ -16,8 +16,6 @@ pub fn format(result: &Value, options: &Options, chalk: Chalk) -> io::Result<Rep
     let results = hydrate(result)?;
     if results.snaps.is_some()
         || results.snap_error.is_some()
-        || !results.removed.is_empty()
-        || !results.added.is_empty()
         || results.conflicts
         || results.version.is_some()
     {
@@ -54,8 +52,9 @@ fn build(results: &Results, options: &Options, formatter: &Formatter, minimal: b
     let success = if results.components.is_empty() {
         format!("No components have been changed.\n{lane_success}")
     } else {
+        let head = if options.skip_fetch { "local head" } else { "head" };
         let title = formatter.success_summary(&format!(
-            "successfully switched {} components to the local head of lane {}",
+            "successfully switched {} components to the {head} of lane {}",
             results.components.len(),
             options.lane,
         ));

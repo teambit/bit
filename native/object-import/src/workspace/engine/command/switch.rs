@@ -1,9 +1,13 @@
 //! Local, ordinary lane switches reuse checkout capture, transition and bitmap publication.
 //! Resolve the complete target set before the command retains a writable plan.
-use super::{input::Prepare, invalid, prepare, repository};
+pub(super) mod progress;
+use super::{Record, capture, input::Prepare, invalid, planning, prepare, repository};
 use crate::{
     command_import,
-    workspace::engine::{client_status::config, status_context},
+    workspace::{
+        engine::{client_status::config, status_context},
+        snapshots,
+    },
 };
 use serde_json::{Value, json};
 use std::{
@@ -26,7 +30,7 @@ pub(super) fn context(
     pool: &rayon::ThreadPool,
 ) -> io::Result<(Value, Option<command_import::PreparedImport>)> {
     validate_options(request)?;
-    let selection = LaneSelection::load(request)?;
+    let mut selection = LaneSelection::load(request)?;
     let mut context = selection.metadata(request, pool)?;
     prepare::extend_models(request, pool, &mut context, Some(&selection.imported))?;
     if selection.current.is_main() && staged_main(&request.root, &context)? {
@@ -44,8 +48,7 @@ fn validate_options(request: &Prepare) -> io::Result<()> {
         || request.options.message.is_some()
         || request.options.all
         || request.options.no_snap;
-    let lane = !options.skip_fetch
-        || options.workspace_only
+    let lane = options.workspace_only
         || options.include_deps
         || options.exclude_non_lane_comps
         || options.no_auto_snap;
@@ -53,7 +56,7 @@ fn validate_options(request: &Prepare) -> io::Result<()> {
     if checkout || lane || merge {
         return Err(invalid("switch requires canonical lane options"));
     }
-    if options.name.contains('/') && options.name != "main" {
+    if options.skip_fetch && options.name.contains('/') && options.name != "main" {
         return Err(invalid("switch accepts a local lane name"));
     }
     Ok(())
@@ -70,14 +73,38 @@ impl LaneSelection {
         if current == destination {
             return Err(invalid("already checked out to requested lane"));
         }
-        let lane = imported.load_lane(&destination)?;
+        if !request.options.lane.as_ref().unwrap().skip_fetch {
+            let settings = config::configuration_for_command(&request.root, true)?;
+            let visible = super::lane_context::visibility::targets(&bitmap, &settings)?;
+            let identities = visible
+                .iter()
+                .map(|target| {
+                    target["identity"]
+                        .as_str()
+                        .ok_or_else(|| invalid("switch main refresh identity"))
+                        .map(str::to_owned)
+                })
+                .collect::<io::Result<Vec<_>>>()?;
+            imported.refresh_lane_main(&identities)?;
+            imported.switch_existing_versions();
+        }
+        let lane = imported.resolve_other_lane(
+            &destination,
+            request.options.lane.as_ref().unwrap().skip_fetch,
+        )?;
+        if !request.options.lane.as_ref().unwrap().skip_fetch && imported.fetched_lane().is_some() {
+            if !imported.lane_import_histories().is_empty() {
+                return Err(invalid("switch fetched lane history requires canonical handling"));
+            }
+            imported.stage_switch_tracking(&destination)?;
+        }
         let current_lane = imported.load_lane(&current)?;
         validate_lane(&destination, lane.as_ref())?;
         validate_lane(&current, current_lane.as_ref())?;
         Ok(Self { imported, bitmap, current, destination, lane, current_lane, lane_only })
     }
 
-    fn metadata(&self, request: &Prepare, pool: &rayon::ThreadPool) -> io::Result<Value> {
+    fn metadata(&mut self, request: &Prepare, pool: &rayon::ThreadPool) -> io::Result<Value> {
         let input = status_context::Request {
             root: request.root.clone(),
             home: request.home.clone(),
@@ -95,10 +122,55 @@ impl LaneSelection {
                 });
         }
         let heads = validate_membership(&context, self)?;
+        let (additions, added_targets, selected) =
+            self.additions(&request.root, &context, &settings)?;
         context["lane"] = json!({"currentId":self.current,"switchId":self.destination,
             "switchExported":self.lane.as_ref().is_some_and(|record| !record.is_new),
-            "switchLaneOnly":self.lane_only,"switchLaneHeads":heads});
+            "switchFetched":self.imported.fetched_lane().is_some(),
+            "switchLaneOnly":self.lane_only,"switchLaneHeads":heads,
+            "additions":additions,"addedTargets":added_targets,"targets":selected});
         Ok(context)
+    }
+
+    fn additions(
+        &mut self,
+        root: &std::path::Path,
+        context: &Value,
+        settings: &Value,
+    ) -> io::Result<(Vec<Value>, Vec<Value>, Vec<Value>)> {
+        let tracked = context["targets"]
+            .as_array()
+            .ok_or_else(|| invalid("switch targets"))?
+            .iter()
+            .filter_map(|target| target["identity"].as_str())
+            .collect::<HashSet<_>>();
+        let selected = entries(self.lane.as_ref())?
+            .into_iter()
+            .filter(|entry| {
+                !tracked.contains(entry.identity.as_str())
+                    && !self.lane_only.contains(&entry.identity)
+            })
+            .map(|entry| {
+                json!({"identity":entry.identity,"head":entry.head,"visible":false,"hidden":false,
+                "currentIdPresent":false,"bitmapPresent":false})
+            })
+            .collect::<Vec<_>>();
+        let identity_bitmap =
+            super::lane_context::visibility::identity_bitmap(&self.bitmap, settings)?;
+        let additions = super::lane_context::additions::prepare_switch(
+            &mut self.imported,
+            root,
+            &identity_bitmap,
+            settings,
+            &selected,
+        )?;
+        for row in &selected {
+            let identity =
+                row["identity"].as_str().ok_or_else(|| invalid("switch addition identity"))?;
+            self.lane_only.insert(identity.to_owned());
+        }
+        let targets = super::lane_context::additions::targets(&additions, &selected);
+        Ok((additions, targets, selected))
     }
 }
 
@@ -162,12 +234,12 @@ fn validate_membership(
         if entry.hidden {
             return Err(invalid("switch hidden lane component requires canonical handling"));
         }
+    }
+    for entry in &current_heads {
         if !tracked.contains(entry.identity.as_str())
             && !selection.lane_only.contains(&entry.identity)
         {
-            return Err(invalid(
-                "switch lane component addition/removal requires canonical handling",
-            ));
+            return Err(invalid("switch current lane component absent from bitmap"));
         }
     }
     Ok(lane_heads
@@ -214,6 +286,33 @@ fn target_version(context: &Value, target: &Value) -> io::Result<String> {
     Ok(super::selection::versions::label(&model, head))
 }
 
+pub(super) fn plan(
+    record: &mut Record,
+    current: Vec<Value>,
+    semver: &Value,
+    snapshots: &mut snapshots::State,
+    pool: &rayon::ThreadPool,
+) -> io::Result<planning::Planned> {
+    let mut planned = planning::checkout(record, current, semver, snapshots, pool)?;
+    let additions = record.context["lane"]["additions"]
+        .as_array()
+        .ok_or_else(|| invalid("switch additions"))?
+        .clone();
+    for destination in &additions {
+        let scope =
+            destination["scope"].as_str().ok_or_else(|| invalid("switch addition scope"))?;
+        let name = destination["name"].as_str().ok_or_else(|| invalid("switch addition name"))?;
+        let head =
+            destination["version"].as_str().ok_or_else(|| invalid("switch addition head"))?;
+        let identity = format!("{scope}/{name}");
+        planned.captured.push(capture::addition(&identity, destination)?);
+        let selected = json!({"kind":"target","version":head,"merge":false});
+        let index = planned.captured.len() - 1;
+        planning::prepare_one(record, &mut planned, index, &selected, snapshots)?;
+    }
+    Ok(planned)
+}
+
 fn staged_main(root: &std::path::Path, context: &Value) -> io::Result<bool> {
     let bytes = match std::fs::read(root.join(".bit/staged-snaps")) {
         Ok(bytes) => bytes,
@@ -242,33 +341,6 @@ fn model_staged(model: &Value, staged: &HashSet<&str>) -> bool {
         .any(|hash| staged.contains(hash))
 }
 
-pub(super) fn import_count(
-    root: &std::path::Path,
-    context: &Value,
-    targets: &[Value],
-) -> io::Result<usize> {
-    if context["lane"]["switchId"]["name"] == "main" {
-        return Ok(targets.len());
-    }
-    let staged = match std::fs::read_to_string(root.join(".bit/staged-snaps")) {
-        Ok(value) => value,
-        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(targets.len()),
-        Err(error) => return Err(error),
-    };
-    let local = staged
-        .lines()
-        .map(str::trim)
-        .collect::<HashSet<_>>();
-    Ok(targets
-        .iter()
-        .filter(|target| {
-            let identity = target["identity"].as_str().unwrap_or_default();
-            let version = target["switchVersion"].as_str().unwrap_or_default();
-            context["lane"]["switchLaneHeads"].get(identity).is_none() || !local.contains(version)
-        })
-        .count())
-}
-
 pub(super) fn append_skipped(
     context: &Value,
     targets: &[Value],
@@ -287,6 +359,12 @@ pub(super) fn append_skipped(
         if targets
             .iter()
             .any(|target| target["identity"] == identity)
+            || context["lane"]["addedTargets"]
+                .as_array()
+                .is_some_and(|rows| {
+                    rows.iter()
+                        .any(|row| row["identity"] == identity)
+                })
         {
             continue;
         }

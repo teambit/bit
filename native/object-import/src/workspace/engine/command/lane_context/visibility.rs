@@ -8,7 +8,10 @@ use crate::command_import::{
 use serde_json::{Value, json};
 use std::io;
 
-pub(super) fn identity_bitmap(bitmap: &Value, settings: &Value) -> io::Result<Value> {
+pub(in crate::workspace::engine::command) fn identity_bitmap(
+    bitmap: &Value,
+    settings: &Value,
+) -> io::Result<Value> {
     let mut projected = bitmap.clone();
     for row in projected
         .as_object_mut()

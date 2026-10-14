@@ -1,10 +1,12 @@
 use super::parse;
 
 #[test]
-fn accepts_only_local_full_switches() {
+fn accepts_complete_switches_without_dependency_installation() {
     assert_eq!(parse(&["s/dev", "--skip-fetch", "-x"]).unwrap().lane, "s/dev");
     assert_eq!(parse(&["--skip-fetch", "main", "-x"]).unwrap().lane, "main");
-    assert!(parse(&["s/dev", "-x"]).is_none());
+    assert!(!parse(&["s/dev", "-x"]).unwrap().skip_fetch);
+    assert!(parse(&["s/dev", "--skip-fetch", "-x"]).unwrap().skip_fetch);
+    assert!(parse(&["main", "-x", "--force-theirs"]).unwrap().force_theirs);
     assert!(parse(&["s/dev", "--skip-fetch"]).is_none());
     assert!(parse(&["s/dev", "--skip-fetch", "-x", "--branch"]).is_none());
     assert!(parse(&["s/dev", "--skip-fetch", "-x", "--pattern", "foo"]).is_none());
