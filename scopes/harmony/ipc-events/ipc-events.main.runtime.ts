@@ -9,6 +9,13 @@ import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import path from 'path';
 import fs from 'fs-extra';
 import { IpcEventsAspect } from './ipc-events.aspect';
+import type { InstallMarker } from './install-marker';
+import {
+  getInstallRunningElsewhere,
+  removeInstallMarker,
+  waitForInstallRunningElsewhere,
+  writeInstallMarker,
+} from './install-marker';
 
 type EventName = 'onPostInstall' | 'onPostObjectsPersist' | 'onNotifySSE';
 
@@ -69,6 +76,37 @@ export class IpcEventsMain {
    */
   async publishIpcOnNotifySseEvent(event: string, data?: Record<string, any>) {
     await this.publishIpcEvent('onNotifySSE', { event, data });
+  }
+
+  private installWait?: Promise<InstallMarker | undefined>;
+
+  /**
+   * an install replaces node_modules, including the injected copies of the workspace components that the compiler
+   * writes dists into. a long-running process (e.g. "bit server --compile", "bit watch") that compiles meanwhile writes
+   * into dirs the package manager is deleting, and the install fails (ENOTEMPTY). the install marks itself, so these
+   * processes can wait for it. unlike the "onPostInstall" event, this doesn't depend on the install succeeding: a
+   * marker whose process is gone is ignored.
+   */
+  async markInstallStarted() {
+    await writeInstallMarker(this.scope.path);
+  }
+
+  async markInstallEnded() {
+    await removeInstallMarker(this.scope.path);
+  }
+
+  async getInstallRunningElsewhere(): Promise<InstallMarker | undefined> {
+    return getInstallRunningElsewhere(this.scope.path);
+  }
+
+  /**
+   * resolves once no install runs in another process. concurrent callers share a single wait.
+   */
+  async waitForInstallRunningElsewhere(): Promise<InstallMarker | undefined> {
+    this.installWait ??= waitForInstallRunningElsewhere(this.scope.path).finally(() => {
+      this.installWait = undefined;
+    });
+    return this.installWait;
   }
 
   get eventsDir() {

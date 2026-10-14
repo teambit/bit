@@ -462,6 +462,16 @@ export class WorkspaceCompiler {
           return false;
         }
 
+        // an install in another process may be replacing node_modules (likely why the aspect failed to load), and
+        // compiling would write into dirs the package manager is deleting. a later load of the aspect tries again.
+        const runningInstall = await this.watcher.ipcEvents.getInstallRunningElsewhere();
+        if (runningInstall) {
+          this.logger.debug(
+            `onAspectLoadFail: skipping compilation of ${idStr} - an install is running in process ${runningInstall.pid}`
+          );
+          return false;
+        }
+
         this.componentsBeingProcessedInOnAspectLoadFail.add(idStr);
         try {
           const { graph, successors } = await this.getEnvDepsGraph(id);

@@ -14,9 +14,11 @@ import { ComponentCompiler, WorkspaceCompiler } from './workspace-compiler';
 function createCompiler({
   workspace = {},
   envs = {},
+  installRunningElsewhere,
 }: {
   workspace?: Record<string, any>;
   envs?: Record<string, any>;
+  installRunningElsewhere?: { pid: number };
 }) {
   const workspaceStub = {
     registerOnComponentChange: () => {},
@@ -34,7 +36,10 @@ function createCompiler({
     { registerPreStart: () => {} } as any, // ui
     { debug: () => {} } as any, // logger
     {} as any, // dependencyResolver
-    { registerOnPreWatch: () => {} } as any // watcher
+    {
+      registerOnPreWatch: () => {},
+      ipcEvents: { getInstallRunningElsewhere: async () => installRunningElsewhere },
+    } as any // watcher
   );
 }
 
@@ -45,8 +50,11 @@ describe('WorkspaceCompiler.onAspectLoadFail', () => {
    * the compilation itself is replaced by a recorder - it needs a workspace on the filesystem, and
    * what is under test is only whether it is triggered at all.
    */
-  function createCompilerRecordingCompilation(isWorkspaceComponent: boolean) {
-    const compiler = createCompiler({ workspace: { hasId: () => isWorkspaceComponent } });
+  function createCompilerRecordingCompilation(
+    isWorkspaceComponent: boolean,
+    installRunningElsewhere?: { pid: number }
+  ) {
+    const compiler = createCompiler({ workspace: { hasId: () => isWorkspaceComponent }, installRunningElsewhere });
     const compiled: string[][] = [];
     compiler.getEnvDepsGraph = async () => ({ graph: undefined as unknown as CompIdGraph, successors: [] });
     compiler.compileComponents = async (ids) => {
@@ -82,6 +90,13 @@ describe('WorkspaceCompiler.onAspectLoadFail', () => {
   it('should not compile on an error that compiling cannot fix', async () => {
     const { compiler, compiled } = createCompilerRecordingCompilation(true);
     const err = Object.assign(new Error('socket hang up'), { code: 'ECONNRESET' });
+    expect(await compiler.onAspectLoadFail(err, aspect)).to.be.false;
+    expect(compiled).to.be.empty;
+  });
+
+  it('should not compile while another process is installing', async () => {
+    const { compiler, compiled } = createCompilerRecordingCompilation(true, { pid: 12345 });
+    const err = Object.assign(new Error('Cannot find module'), { code: 'MODULE_NOT_FOUND' });
     expect(await compiler.onAspectLoadFail(err, aspect)).to.be.false;
     expect(compiled).to.be.empty;
   });
