@@ -1,5 +1,6 @@
 import { IpcEventsAspect } from './ipc-events.aspect';
 
 export type { IpcEventsMain } from './ipc-events.main.runtime';
+export type { InstallMarker } from './install-marker';
 export default IpcEventsAspect;
 export { IpcEventsAspect };

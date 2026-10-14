@@ -9,6 +9,8 @@ import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import path from 'path';
 import fs from 'fs-extra';
 import { IpcEventsAspect } from './ipc-events.aspect';
+import type { InstallMarker } from './install-marker';
+import { getInstallRunningElsewhere, removeInstallMarker, writeInstallMarker } from './install-marker';
 
 type EventName = 'onPostInstall' | 'onPostObjectsPersist' | 'onNotifySSE';
 
@@ -69,6 +71,25 @@ export class IpcEventsMain {
    */
   async publishIpcOnNotifySseEvent(event: string, data?: Record<string, any>) {
     await this.publishIpcEvent('onNotifySSE', { event, data });
+  }
+
+  /**
+   * an install replaces node_modules, including the injected copies of workspace components that the compiler writes
+   * dists into. a long-running process (e.g. "bit server --compile", "bit watch") that compiles meanwhile writes into
+   * directories the package manager is deleting, which breaks the install. the marker lets those processes hold off
+   * compiling until the install is over. (unlike the "onPostInstall" event, it doesn't depend on the install
+   * succeeding: a marker whose process is gone is ignored).
+   */
+  async markInstallStarted() {
+    await writeInstallMarker(this.scope.path);
+  }
+
+  async markInstallEnded() {
+    await removeInstallMarker(this.scope.path);
+  }
+
+  async getInstallRunningElsewhere(): Promise<InstallMarker | undefined> {
+    return getInstallRunningElsewhere(this.scope.path);
   }
 
   get eventsDir() {

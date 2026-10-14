@@ -14,9 +14,11 @@ import { ComponentCompiler, WorkspaceCompiler } from './workspace-compiler';
 function createCompiler({
   workspace = {},
   envs = {},
+  watcher = {},
 }: {
   workspace?: Record<string, any>;
   envs?: Record<string, any>;
+  watcher?: Record<string, any>;
 }) {
   const workspaceStub = {
     registerOnComponentChange: () => {},
@@ -32,9 +34,9 @@ function createCompiler({
     {} as any, // pubsub
     undefined as any, // aspectLoader. when absent, the constructor skips its listener registration
     { registerPreStart: () => {} } as any, // ui
-    { debug: () => {} } as any, // logger
+    { debug: () => {}, console: () => {} } as any, // logger
     {} as any, // dependencyResolver
-    { registerOnPreWatch: () => {} } as any // watcher
+    { registerOnPreWatch: () => {}, ...watcher } as any // watcher
   );
 }
 
@@ -45,8 +47,11 @@ describe('WorkspaceCompiler.onAspectLoadFail', () => {
    * the compilation itself is replaced by a recorder - it needs a workspace on the filesystem, and
    * what is under test is only whether it is triggered at all.
    */
-  function createCompilerRecordingCompilation(isWorkspaceComponent: boolean) {
-    const compiler = createCompiler({ workspace: { hasId: () => isWorkspaceComponent } });
+  function createCompilerRecordingCompilation(isWorkspaceComponent: boolean, installPidElsewhere?: number) {
+    const compiler = createCompiler({
+      workspace: { hasId: () => isWorkspaceComponent },
+      watcher: installRunningElsewhere(installPidElsewhere),
+    });
     const compiled: string[][] = [];
     compiler.getEnvDepsGraph = async () => ({ graph: undefined as unknown as CompIdGraph, successors: [] });
     compiler.compileComponents = async (ids) => {
@@ -84,6 +89,70 @@ describe('WorkspaceCompiler.onAspectLoadFail', () => {
     const err = Object.assign(new Error('socket hang up'), { code: 'ECONNRESET' });
     expect(await compiler.onAspectLoadFail(err, aspect)).to.be.false;
     expect(compiled).to.be.empty;
+  });
+
+  it('should not compile while another process is installing', async () => {
+    const { compiler, compiled } = createCompilerRecordingCompilation(true, 12345);
+    const err = Object.assign(new Error('Cannot find module'), { code: 'MODULE_NOT_FOUND' });
+    expect(await compiler.onAspectLoadFail(err, aspect)).to.be.false;
+    expect(compiled).to.be.empty;
+  });
+});
+
+/**
+ * a watcher stub whose ipc-events report an install running in another process, as long as `pid` is set.
+ * returning an object lets a test end the install by setting `pid` to undefined.
+ */
+function installRunningElsewhere(pid?: number) {
+  const state = { pid };
+  return {
+    state,
+    ipcEvents: {
+      getInstallRunningElsewhere: async () => (state.pid ? { pid: state.pid, startedAt: Date.now() } : undefined),
+    },
+  };
+}
+
+describe('WorkspaceCompiler.onComponentChange while another process is installing', () => {
+  const component = { id: ComponentID.fromString('my-org.my-scope/my-comp') } as Component;
+  const watchOpts = { compile: true };
+
+  function createCompilerRecordingCompilation() {
+    const watcher = installRunningElsewhere(12345);
+    const compiler = createCompiler({ watcher });
+    const compiled: string[][] = [];
+    compiler.compileComponents = async (ids) => {
+      compiled.push(ids as string[]);
+      return [];
+    };
+    return { compiler, compiled, installState: watcher.state };
+  }
+
+  it('should postpone the compilation and run it once the install is over', async () => {
+    const { compiler, compiled, installState } = createCompilerRecordingCompilation();
+    const results = await compiler.onComponentChange(component, [], [], watchOpts);
+    expect(results?.toString()).to.include('postponed');
+    expect(compiled).to.be.empty;
+
+    // the install is still running - nothing is compiled yet
+    await compiler.compileOnInstallEnd();
+    expect(compiled).to.be.empty;
+
+    // the install is over (finished, or its process is gone) - the postponed compilation runs, once
+    installState.pid = undefined;
+    await compiler.compileOnInstallEnd();
+    expect(compiled).to.deep.equal([['my-org.my-scope/my-comp']]);
+    await compiler.compileOnInstallEnd();
+    expect(compiled).to.have.lengthOf(1);
+  });
+
+  it('should compile a component that changed several times during the install only once', async () => {
+    const { compiler, compiled, installState } = createCompilerRecordingCompilation();
+    await compiler.onComponentChange(component, [], [], watchOpts);
+    await compiler.onComponentChange(component, [], [], watchOpts);
+    installState.pid = undefined;
+    await compiler.compileOnInstallEnd();
+    expect(compiled).to.deep.equal([['my-org.my-scope/my-comp']]);
   });
 });
 

@@ -146,6 +146,9 @@ export class InstallMain {
 
   private oldNonLoadedEnvs: string[] = [];
 
+  /** nesting depth of _installModules, so the install marker is written once and removed by the outermost call */
+  private runningInstalls = 0;
+
   constructor(
     private dependencyResolver: DependencyResolverMain,
 
@@ -383,13 +386,35 @@ export class InstallMain {
     this.workspace.inInstallContext = true;
     this.workspace.inInstallAfterPmContext = false;
     this.logger.profile('install.total');
+    await this.markInstallStarted();
     try {
       return await this._installModulesProfiled(options);
     } finally {
+      await this.markInstallEnded();
       this.logger.profile('install.total');
       this.workspace.inInstallContext = prevInInstallContext;
       this.workspace.inInstallAfterPmContext = prevInInstallAfterPmContext;
     }
+  }
+
+  /**
+   * lets other bit processes of this workspace (e.g. "bit server --compile") know an install is running, so they
+   * don't compile into the node_modules dirs the package manager is replacing. nested installs share one marker.
+   */
+  private async markInstallStarted() {
+    this.runningInstalls += 1;
+    if (this.runningInstalls > 1) return;
+    await this.ipcEvents.markInstallStarted().catch((err) => {
+      this.logger.debug(`failed to write the install marker: ${err.message}`);
+    });
+  }
+
+  private async markInstallEnded() {
+    this.runningInstalls -= 1;
+    if (this.runningInstalls > 0) return;
+    await this.ipcEvents.markInstallEnded().catch((err) => {
+      this.logger.debug(`failed to remove the install marker: ${err.message}`);
+    });
   }
 
   private async _installModulesProfiled(options?: ModulesInstallOptions): Promise<ComponentMap<string>> {
