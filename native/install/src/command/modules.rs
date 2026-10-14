@@ -134,7 +134,9 @@ async fn after_install(
         let started = Instant::now();
         if let Some(restores) = compile_stamp::check(stamp, &inputs)? {
             compile_stamp::restore(&restores)?;
-            // What the compile step prints, without loading Harmony to compile the same files.
+            // What the compile step prints (`setStatusLine`, then `consoleSuccess`),
+            // without loading Harmony to compile the same files.
+            session.output.status(COMPILING);
             session.output.success(COMPILING, Some(started));
             return Ok(());
         }
@@ -148,7 +150,7 @@ async fn after_install(
     Ok(())
 }
 
-/// `logger.consoleSuccess('compiling components', started)` of the compile step.
+/// The status and success line of the compile step.
 const COMPILING: &str = "compiling components";
 
 /// The `afterInstall` step may be skipped: a command-line install that compiles and
