@@ -8,8 +8,10 @@ mod engine;
 mod ids;
 mod install;
 mod inventory;
+mod merge;
 mod mini_status;
 mod status;
+mod workspace_command;
 
 use crate::native::Outcome;
 use std::{ffi::OsString, io};
@@ -21,8 +23,14 @@ pub struct Command {
     pub run: fn(&[OsString]) -> io::Result<Outcome>,
 }
 
-pub const COMMANDS: &[Command] =
-    &[checkout::COMMAND, diff::COMMAND, install::COMMAND, mini_status::COMMAND, status::COMMAND];
+pub const COMMANDS: &[Command] = &[
+    checkout::COMMAND,
+    diff::COMMAND,
+    install::COMMAND,
+    merge::COMMAND,
+    mini_status::COMMAND,
+    status::COMMAND,
+];
 
 pub fn find(name: &str) -> Option<&'static Command> {
     COMMANDS

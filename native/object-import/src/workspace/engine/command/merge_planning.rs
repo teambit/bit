@@ -229,12 +229,14 @@ fn prepare_materials(
     snapshots: &snapshots::State,
 ) -> io::Result<()> {
     let directory = scratch::Directory::create()?;
+    // Each body snapshots into its own empty directory.
     let requests = selected
         .iter()
         .enumerate()
         .filter(|(_, selected)| selected.action == Action::Merge)
         .map(|(index, selected)| {
-            body(record, selected, &planned.captured[index], &directory.0, index).request()
+            let own = directory.child(index)?;
+            body(record, selected, &planned.captured[index], &own, index).request()
         })
         .collect::<io::Result<Vec<_>>>()?;
     let plans = state.prepare_bodies(requests, snapshots, record.repository.overlay())?;
@@ -245,7 +247,8 @@ fn prepare_materials(
         .filter(|(_, selected)| selected.action == Action::Merge)
         .zip(plans)
     {
-        add_material(record, planned, &mut prepared, selected, index, &directory.0, &plan)?;
+        let own = directory.0.join(index.to_string());
+        add_material(record, planned, &mut prepared, selected, index, &own, &plan)?;
     }
     prepare_lane_targets(record, &mut prepared, selected)?;
     fast_forward::prepare(record, planned, &mut prepared, selected, snapshots)?;

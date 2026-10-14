@@ -26,3 +26,12 @@ fn rejects_everything_else() {
     assert!(parse(&["head", "a", "b", "-x"]).is_none());
     assert!(parse(&["head", "-x", "--json"]).is_none());
 }
+
+#[test]
+fn head_and_latest_without_a_pattern_report_as_all() {
+    assert!(parse(&["head", "-x"]).unwrap().report_all());
+    assert!(parse(&["latest", "-x"]).unwrap().report_all());
+    assert!(!parse(&["head", "one", "-x"]).unwrap().report_all());
+    assert!(!parse(&["0.0.1", "one", "-x"]).unwrap().report_all());
+    assert!(parse(&["0.0.1", "-x", "--all"]).unwrap().report_all());
+}

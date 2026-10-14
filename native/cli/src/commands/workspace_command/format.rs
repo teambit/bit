@@ -23,7 +23,12 @@ impl Formatter {
 
     /// `formatItem(text)`: indented, with the dim bullet.
     pub fn item(&self, text: &str) -> String {
-        format!("   {} {text}", self.chalk.dim("\u{203A}"))
+        Self::item_with(text, &self.chalk.dim("\u{203A}"))
+    }
+
+    /// `formatItem(text, symbol)`.
+    pub fn item_with(text: &str, symbol: &str) -> String {
+        format!("   {symbol} {text}")
     }
 
     /// `formatSection(title, description, items)`.

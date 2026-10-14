@@ -27,8 +27,43 @@ fn names() -> &'static [Regex] {
     })
 }
 
+/// The default dev pattern groups, in `NAMES` order.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Group {
+    /// `defaultTestPatterns()`: `*.spec.*` and `*.test.*`.
+    Tests,
+    /// `defaultDocsPatterns()`.
+    Docs,
+    /// `defaultCompositionsPatterns()`.
+    Compositions,
+}
+
+impl Group {
+    fn names(self) -> &'static [Regex] {
+        let all = names();
+        match self {
+            Self::Tests => &all[0..2],
+            Self::Docs => &all[2..3],
+            Self::Compositions => &all[3..4],
+        }
+    }
+}
+
+/// `files.filter(file => matchPatterns(file, group))`.
+pub fn group_files(files: &[String], group: Group) -> Vec<String> {
+    files
+        .iter()
+        .filter(|file| matches(file, group.names()))
+        .cloned()
+        .collect()
+}
+
 /// `file` is a relative path with `/` separators.
 pub fn is_dev_file(file: &str) -> bool {
+    matches(file, names())
+}
+
+fn matches(file: &str, regexes: &[Regex]) -> bool {
     let normalized = if cfg!(windows) { file.replace('\\', "/") } else { file.to_string() };
     let mut segments: Vec<&str> = normalized.split('/').collect();
     // `matchOne` accepts one trailing empty segment once the pattern is consumed.
@@ -42,7 +77,7 @@ pub fn is_dev_file(file: &str) -> bool {
     {
         return false;
     }
-    names()
+    regexes
         .iter()
         .any(|regex| regex.find(name).is_some())
 }

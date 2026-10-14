@@ -5,7 +5,7 @@
 //! running Node's built-in modules, the bundled TypeScript version and the
 //! core aspect packages.
 
-mod dev_files;
+pub mod dev_files;
 mod node;
 
 use super::{
@@ -38,6 +38,28 @@ pub struct Pending {
 }
 
 impl Pending {
+    /// A `dependencyCaches` entry of the engine.
+    pub fn from_cache(cache: &Value) -> io::Result<Self> {
+        let raw_data = cache.get("rawData").and_then(Value::as_str);
+        let cacheable = cache.get("cacheable").and_then(Value::as_bool);
+        let read_set = cache.get("readSet").filter(|read_set| read_set.is_array());
+        let (Some(raw_data), Some(cacheable), Some(read_set)) = (raw_data, cacheable, read_set)
+        else {
+            return Err(decline("command dependency cache receipt"));
+        };
+        Ok(Self {
+            identity: text(cache.get("identity"))?.to_string(),
+            raw_data: raw_data.to_string(),
+            cacheable,
+            read_set: read_set.clone(),
+        })
+    }
+
+    /// `<id>@<version>`.
+    pub fn identity(&self) -> &str {
+        &self.identity
+    }
+
     /// The files the detection read, which the engine checks again before writing.
     pub fn read_set(&self) -> &[Value] {
         self.read_set
@@ -139,7 +161,7 @@ impl Detection<'_> {
     }
 
     /// `freshDependencyDetection(context, files, policy)`.
-    fn detection(&self, files: &[String], policy: &Policy) -> io::Result<Value> {
+    pub fn detection(&self, files: &[String], policy: &Policy) -> io::Result<Value> {
         let workspace = &policy.input["policies"]["workspacePolicy"];
         let field = |name: &str| {
             workspace
@@ -166,7 +188,7 @@ impl Detection<'_> {
 pub fn commit(
     engine: &mut Engine,
     root: &Path,
-    pending: &[Pending],
+    pending: &[&Pending],
     reset: bool,
 ) -> io::Result<()> {
     for entry in pending {

@@ -31,7 +31,7 @@ pnpm-workspace = { git = "https://github.com/pnpm/pnpm", rev = "343f3c4198b43dce
 # pnpm/node-semver-rs#2) and leaves the rest of the crate unchanged.
 [patch.crates-io]
 tar = { git = "https://github.com/pnpm/pnpm", rev = "343f3c4198b43dce5e58bc7de9927cb96aed59fc" }
-node-semver = { git = "https://github.com/pnpm/node-semver-rs", rev = "dc122b566e35a91910c4d6f11bebe5e4d8f075e1" }
+node-semver = { git = "https://github.com/pnpm/node-semver-rs", rev = "aa94acb21a1cd4321fd789ff14598dd410cde2d9" }
 
 [workspace.lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(dylint_lib, values("perfectionist"))'] }

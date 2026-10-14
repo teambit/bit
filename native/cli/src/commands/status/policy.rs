@@ -40,12 +40,24 @@ pub struct Policy {
 
 /// `statusPolicy(context, target)`.
 pub fn status_policy(context: &Value, target: &Value) -> io::Result<Policy> {
+    projected_policy(context, target, None)
+}
+
+/// `statusPolicy(context, target, projectedVersion)`: with a projected
+/// version (a merge's incoming or fast-forwarded version) in place of the
+/// stored one.
+pub fn projected_policy(
+    context: &Value,
+    target: &Value,
+    projected: Option<&Value>,
+) -> io::Result<Policy> {
     if truthy(target.get("resolveConfig")) || target.get("recoveryConfig").is_some() {
         return Err(decline("status projected configuration"));
     }
     let identity = text(target.get("identity"))?;
     let model = model_of(context, identity);
-    let version = stored_version(context, target, model)?;
+    let version =
+        stored_version(context, target, model, projected.filter(|version| !version.is_null()))?;
     validate_harmony_version(version)?;
     let extensions = extensions::status_extensions(version, target)?;
     reject_component_policy(&extensions)?;
@@ -101,6 +113,7 @@ fn stored_version<'c>(
     context: &'c Value,
     target: &Value,
     model: Option<&'c Value>,
+    projected: Option<&'c Value>,
 ) -> io::Result<Option<&'c Value>> {
     let tagged = target
         .get("version")
@@ -109,8 +122,11 @@ fn stored_version<'c>(
     match (tagged, model) {
         (Some(_), None) => return Err(decline("status pending import")),
         (None, Some(_)) => return Err(decline("status bitmap normalization required")),
-        (None, None) => return Ok(None),
+        (None, None) => return Ok(projected),
         (Some(_), Some(_)) => {}
+    }
+    if projected.is_some() {
+        return Ok(projected);
     }
     let tag = tagged.unwrap_or_default();
     let reference = if is_hash(tag) {

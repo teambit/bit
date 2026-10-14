@@ -26,6 +26,9 @@ struct Import {
 pub struct Progress {
     bitmap_count: u64,
     imports: Vec<Import>,
+    /// Components loaded per stage, for merge.
+    loads: Vec<u64>,
+    snap_failed: bool,
 }
 
 impl Progress {
@@ -58,11 +61,30 @@ impl Progress {
             .iter()
             .map(import)
             .collect::<io::Result<_>>()?;
-        Ok(Some(Self { bitmap_count, imports }))
+        let loads = loads
+            .iter()
+            .filter_map(Value::as_u64)
+            .collect();
+        let snap_failed = value.get("snapFailed") == Some(&Value::Bool(true));
+        Ok(Some(Self { bitmap_count, imports, loads, snap_failed }))
+    }
+
+    /// Print the lines, as the loader does while merge runs.
+    pub fn render_merge(&self, output: &Output) {
+        for row in &self.imports {
+            render_import(output, row);
+        }
+        for count in &self.loads {
+            output.status(&format!("loading {count} component(s)"));
+        }
+        if !self.loads.is_empty() && !self.snap_failed {
+            output.status("importing missing dependencies...");
+            output.status("adding dependencies graph...");
+        }
     }
 
     /// Print the lines, as the loader does while checkout runs.
-    pub fn render(&self, output: &Output) {
+    pub fn render_checkout(&self, output: &Output) {
         output.status("switching component version...");
         output.status("importing components");
         let started = Instant::now();

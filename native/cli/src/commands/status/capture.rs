@@ -13,7 +13,7 @@ use crate::commands::{
     inventory::{Inventory, Options},
 };
 use serde_json::{Value, json};
-use std::{io, path::Path};
+use std::{collections::HashMap, io, path::Path};
 
 pub struct Capture {
     /// Every selected target: identity, version, directory, files, current
@@ -26,6 +26,11 @@ pub struct Capture {
     /// `dependencyCacheNeedsInvalidation`: every nested component is detected
     /// afresh and the whole cache is replaced on commit.
     reset: bool,
+    /// `retainDependencyState`: each target's dependency state, by identity.
+    pub dependency_states: HashMap<String, Value>,
+    /// Cache entries the command computed for a projected version; they
+    /// replace the pending entries of the same component.
+    pub replacements: Vec<fresh::Pending>,
 }
 
 impl Capture {
@@ -47,6 +52,19 @@ pub fn capture(
     context: &Value,
     targets: &[Value],
 ) -> io::Result<Capture> {
+    capture_verified(engine, root, home, context, targets, false)
+}
+
+/// `captureRustClientCurrent` with `verifyFreshDependencies`: with `verify`,
+/// cached dependencies are detected again, and any difference declines.
+pub fn capture_verified(
+    engine: &mut Engine,
+    root: &Path,
+    home: &Path,
+    context: &Value,
+    targets: &[Value],
+    verify: bool,
+) -> io::Result<Capture> {
     let options: Options =
         serde_json::from_value(context["options"].clone()).map_err(io::Error::other)?;
     let inventory = Inventory::new(&options)?;
@@ -57,6 +75,8 @@ pub fn capture(
         components: Vec::new(),
         pending: Vec::new(),
         reset,
+        dependency_states: HashMap::new(),
+        replacements: Vec::new(),
     };
     let mut facts = None;
     for target in targets {
@@ -67,6 +87,7 @@ pub fn capture(
             context,
             inventory: &inventory,
             facts: &mut facts,
+            verify,
         };
         scan.target(target, &mut captured)?;
     }
@@ -81,6 +102,7 @@ struct Scan<'s> {
     inventory: &'s Inventory,
     /// Loaded on the first fresh detection: it may run Node once.
     facts: &'s mut Option<fresh::Facts>,
+    verify: bool,
 }
 
 impl Scan<'_> {
@@ -102,8 +124,32 @@ impl Scan<'_> {
             let (detected, pending) = self.detect(target, &files, &policy)?;
             dependencies = detected;
             captured.pending.push(pending);
+        } else if self.verify {
+            let (detected, pending) = self.verified(target, &files, &policy, &dependencies)?;
+            dependencies = detected;
+            captured.pending.push(pending);
         }
         record(target, directory, &files, &policy, &dependencies, captured)
+    }
+
+    /// `verifyFreshDependencies`: the cached dependencies detected again;
+    /// any difference in metadata or issues declines.
+    fn verified(
+        &mut self,
+        target: &Value,
+        files: &[String],
+        policy: &policy::Policy,
+        cached: &Value,
+    ) -> io::Result<(Value, fresh::Pending)> {
+        let (detected, pending) = self.detect(target, files, policy)?;
+        let current = |deps: &Value| {
+            policy::current_metadata(target, policy, deps).map(|meta| meta.to_string())
+        };
+        let issues = |deps: &Value| deps.get("issues").map(Value::to_string);
+        if current(&detected)? != current(cached)? || issues(&detected) != issues(cached) {
+            return Err(decline("cached dependencies differ from a fresh detection"));
+        }
+        Ok((detected, pending))
     }
 
     /// `dependencyPolicyCached`.
@@ -188,6 +234,10 @@ fn record(
         "files": files,
         "current": current,
     });
+    captured.dependency_states.insert(
+        text(target.get("identity"))?.to_string(),
+        dependencies["state"].clone(),
+    );
     let mut row = entry.clone();
     row["peerDependencies"] = json!(peer_identities(dependencies)?);
     captured.captured.push(row);
@@ -250,6 +300,13 @@ fn dependency_identities(dependencies: &Value) -> io::Result<Vec<String>> {
     Ok(identities)
 }
 
+/// The identity without its `@version`.
+fn base_identity(identity: &str) -> &str {
+    identity
+        .rfind('@')
+        .map_or(identity, |separator| &identity[..separator])
+}
+
 /// `capture.commit()`: staged histories validated, dependency caches written,
 /// then the histories written.
 pub fn commit(
@@ -267,8 +324,17 @@ pub fn commit(
             return Err(decline("status history changed"));
         }
     }
-    if !capture.pending.is_empty() || capture.reset {
-        fresh::commit(engine, root, &capture.pending, capture.reset)?;
+    if !capture.pending.is_empty() || !capture.replacements.is_empty() || capture.reset {
+        let replaced: Vec<&str> = capture.replacements
+            .iter()
+            .map(|entry| base_identity(entry.identity()))
+            .collect();
+        let entries: Vec<&fresh::Pending> = capture.pending
+            .iter()
+            .filter(|entry| !replaced.contains(&base_identity(entry.identity())))
+            .chain(&capture.replacements)
+            .collect();
+        fresh::commit(engine, root, &entries, capture.reset)?;
     }
     if plans.is_empty() {
         return Ok(());
