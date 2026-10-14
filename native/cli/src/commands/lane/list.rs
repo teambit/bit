@@ -1,8 +1,8 @@
-//! Native `bit lane list` and `bit lane list --json` (`LaneListCmd`): the
+//! Native lane inspection (`list`, `current`, `show`): the
 //! lanes of the local scope (`getLanes({ showDefaultLane: true })`), then
 //! main with the workspace's components.
 //!
-//! `--details`, `--remote`, `--merged`, `--not-merged`, lanes Node would
+//! `--remote`, `--merged`, `--not-merged`, lanes Node would
 //! migrate to the schema that records deleted components, and lanes with a
 //! readme component or update-dependents run on the Node.js CLI.
 
@@ -32,22 +32,22 @@ use std::{
 const DELETED_DATA_SCHEMA: &str = "1.0.0";
 
 /// A lane's data, as `serializeLaneData` writes it.
-struct LaneData {
+pub(super) struct LaneData {
     /// `{ name, scope }`.
-    id: Value,
-    alias: Option<String>,
-    components: Vec<Value>,
+    pub(super) id: Value,
+    pub(super) alias: Option<String>,
+    pub(super) components: Vec<Value>,
     /// The Lane's `log` and hash; absent for main.
-    lane: Option<(Value, String)>,
+    pub(super) lane: Option<(Value, String)>,
 }
 
 impl LaneData {
-    fn is_main(&self) -> bool {
+    pub(super) fn is_main(&self) -> bool {
         self.lane.is_none()
     }
 
     /// `laneIdStr`: main's name, or `scope/name` with a differing alias.
-    fn label(&self) -> String {
+    pub(super) fn label(&self) -> String {
         let name = self.id["name"].as_str().unwrap_or_default();
         if self.is_main() {
             return name.to_string();
@@ -59,7 +59,7 @@ impl LaneData {
         }
     }
 
-    fn json(&self) -> Value {
+    pub(super) fn json(&self) -> Value {
         let mut data = Map::new();
         data.insert("name".into(), self.id["name"].clone());
         let remote = self.lane
@@ -89,9 +89,13 @@ impl LaneData {
 
 /// `args` starts after `list`.
 pub(super) fn run(args: &[OsString], list_args: &[&str]) -> io::Result<Outcome> {
-    let json = match list_args {
-        [] => false,
-        ["--json" | "-j"] => true,
+    let (json, details) = match list_args {
+        [] => (false, false),
+        ["--json" | "-j"] => (true, false),
+        ["--details" | "-d"] => (false, true),
+        ["--details" | "-d", "--json" | "-j"] | ["--json" | "-j", "--details" | "-d"] => {
+            (true, true)
+        }
         _ => {
             return Ok(Outcome::Declined("lane list flags outside the native grammar".to_string()));
         }
@@ -116,8 +120,11 @@ pub(super) fn run(args: &[OsString], list_args: &[&str]) -> io::Result<Outcome> 
         history.end(true);
         return Ok(Outcome::Exit(ExitCode::SUCCESS));
     }
-    let report =
-        Report { data: report(&lanes, &current.0, Chalk::detect(args)), code: 0, details: None };
+    let report = Report {
+        data: report(&lanes, &current.0, Chalk::detect(args), details),
+        code: 0,
+        details: None,
+    };
     workspace_command::execute_with(&root, args, "list", &report, |_| Ok(()))
 }
 
@@ -146,8 +153,8 @@ impl Tracking {
 
 /// The lanes then main, and the current lane's id with
 /// `getCurrentLaneNameOrAlias()`.
-fn read(root: &Path) -> io::Result<(Vec<LaneData>, (Value, String))> {
-    let scope: Value = serde_json::from_slice(&fs::read(root.join(".bit/scope.json"))?)?;
+pub(super) fn read(root: &Path) -> io::Result<(Vec<LaneData>, (Value, String))> {
+    let scope = scope(root)?;
     let tracking = Tracking::read(&scope);
     let bitmap = bitmap::read(root)?;
     let mut engine = Engine::new()?;
@@ -164,11 +171,26 @@ fn read(root: &Path) -> io::Result<(Vec<LaneData>, (Value, String))> {
         lane: None,
     });
     let current = bitmap.lane.unwrap_or(main_id);
+    Ok((lanes, with_alias(current, &tracking)?))
+}
+
+fn scope(root: &Path) -> io::Result<Value> {
+    serde_json::from_slice(&fs::read(root.join(".bit/scope.json"))?).map_err(io::Error::from)
+}
+
+pub(super) fn read_current(root: &Path) -> io::Result<(Value, String)> {
+    let scope = scope(root)?;
+    let current =
+        bitmap::read(root)?.lane.unwrap_or_else(|| json!({"name":"main","scope":scope["name"]}));
+    with_alias(current, &Tracking::read(&scope))
+}
+
+fn with_alias(current: Value, tracking: &Tracking) -> io::Result<(Value, String)> {
     let name = text(current.get("name"))?;
     let alias = tracking
         .alias(name, text(current.get("scope"))?)
         .unwrap_or_else(|| name.to_string());
-    Ok((lanes, (current, alias)))
+    Ok((current, alias))
 }
 
 /// A lane of the index: its id, alias and components that are not deleted.
@@ -248,12 +270,29 @@ fn main_components(
     Ok(components)
 }
 
-/// `LaneListCmd.report` without `--details`.
-fn report(lanes: &[LaneData], current: &Value, chalk: Chalk) -> String {
+/// `LaneListCmd.report` for compact and detailed lane lists.
+fn report(lanes: &[LaneData], current: &Value, chalk: Chalk, details: bool) -> String {
     let format = Formatter::new(chalk);
     let current_lane = lanes
         .iter()
         .find(|lane| lane.id == *current);
+    let current_output = report_current(current_lane, current, chalk, details, &format);
+    let others = report_others(lanes, current, chalk, details, &format);
+    let hints = if details {
+        "use --merged and --not-merged to see which of the lanes is fully merged\nswitch lanes using 'bit switch <name>'. create lanes using 'bit lane create <name>'"
+    } else {
+        "use 'bit lane list --details' or 'bit lane show <lane-name>' for more info\nswitch lanes using 'bit switch <name>'. create lanes using 'bit lane create <name>'"
+    };
+    Formatter::join(&[current_output, others, format.hint(hints)])
+}
+
+fn report_current(
+    current_lane: Option<&LaneData>,
+    current: &Value,
+    chalk: Chalk,
+    details: bool,
+    format: &Formatter,
+) -> String {
     // A current lane missing from the index: `laneIdStr` without an alias.
     let current_label = current_lane.map_or_else(
         || {
@@ -262,10 +301,32 @@ fn report(lanes: &[LaneData], current: &Value, chalk: Chalk) -> String {
         },
         LaneData::label,
     );
+    let current_output = format!("current lane - {}", chalk.green(&current_label));
+    if !details || current_lane.is_none() {
+        return current_output;
+    }
+    let components = current_lane.map(|lane| components_report(lane, format)).unwrap_or_default();
+    format!("{current_output}\n{components}")
+}
+
+fn report_others(
+    lanes: &[LaneData],
+    current: &Value,
+    chalk: Chalk,
+    details: bool,
+    format: &Formatter,
+) -> String {
     let items: Vec<String> = lanes
         .iter()
         .filter(|lane| lane.id != *current)
         .map(|lane| {
+            if details {
+                return format!(
+                    "> {}\n{}",
+                    chalk.bold(&lane.label()),
+                    components_report(lane, format),
+                );
+            }
             format.item(&format!(
                 "{} ({} components)",
                 chalk.green(&lane.label()),
@@ -273,12 +334,21 @@ fn report(lanes: &[LaneData], current: &Value, chalk: Chalk) -> String {
             ))
         })
         .collect();
-    let hints = "use 'bit lane list --details' or 'bit lane show <lane-name>' for more info\nswitch lanes using 'bit switch <name>'. create lanes using 'bit lane create <name>'";
-    Formatter::join(&[
-        format!("current lane - {}", chalk.green(&current_label)),
-        format.section("available lanes", "", &items),
-        format.hint(hints),
-    ])
+    if details { items.join("\n\n") } else { format.section("available lanes", "", &items) }
+}
+
+pub(super) fn components_report(lane: &LaneData, format: &Formatter) -> String {
+    let items: Vec<_> = lane.components
+        .iter()
+        .map(|component| {
+            format.item(&format!(
+                "{} - {}",
+                component["id"].as_str().unwrap_or_default(),
+                component["head"].as_str().unwrap_or_default(),
+            ))
+        })
+        .collect();
+    format.section("components", "", &items)
 }
 
 #[cfg(test)]

@@ -3,8 +3,10 @@
 //! merge report; and `bit lane list` (`list`). Other `bit lane` commands are
 //! left to the Node.js CLI.
 
+mod current;
 mod list;
 mod options;
+mod show;
 
 use super::{
     color::Chalk,
@@ -20,12 +22,16 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("arguments are not UTF-8".to_string()));
     };
-    if argv.get(1) == Some(&"list") {
-        return list::run(args, &argv[2..]);
+    match argv.get(1).copied() {
+        Some("list") => list::run(args, &argv[2..]),
+        Some("current") => current::current(args, &argv[2..]),
+        Some("show") => show::show(args, &argv[2..]),
+        Some("merge") => merge(args, &argv),
+        _ => Ok(Outcome::Declined("a lane command outside the native grammar".to_string())),
     }
-    if argv.get(1) != Some(&"merge") {
-        return Ok(Outcome::Declined("a lane command other than merge or list".to_string()));
-    }
+}
+
+fn merge(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     let Some(options) = options::parse(&argv[2..]) else {
         return Ok(Outcome::Declined("outside the native lane merge grammar".to_string()));
     };
