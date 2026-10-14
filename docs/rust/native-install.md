@@ -33,6 +33,11 @@ Everything else is Rust:
 
 ## Entry point
 
+The Rust `bit` CLI (`native/cli`, see [the Rust CLI](../rust-cli.md)) runs the
+command in process and serves the host callbacks with its embedded JavaScript
+host. The in-process route below is the earlier integration and is superseded.
+
+
 `scopes/harmony/bit/run-bit.ts` routes `bit install`/`bit in` to
 `scopes/harmony/bit/rust-install.ts` before Harmony is bootstrapped. That
 module:

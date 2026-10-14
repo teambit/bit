@@ -326,6 +326,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "bit-cli"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "bit-install",
+ "pnpm-diagnostics",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tokio",
+ "windows-sys 0.61.2",
+]
+
+[[package]]
 name = "bit-dependency-scanner"
 version = "0.1.0"
 dependencies = [
