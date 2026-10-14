@@ -7,7 +7,7 @@ use std::{fs, io, path::Path};
 
 /// A component of the bitmap.
 #[derive(Debug, PartialEq, Eq)]
-pub(super) struct Entry {
+pub(in crate::commands) struct Entry {
     /// `scope/name`, with the default scope for a component not exported.
     pub identity: String,
     /// Whether the id has its own scope (`hasScope()`).
@@ -28,12 +28,12 @@ impl Entry {
 
 /// The bitmap: its entries, in order, and the current lane's id
 /// (`_bit_lane.id`), absent on main.
-pub(super) struct Bitmap {
+pub(in crate::commands) struct Bitmap {
     pub entries: Vec<Entry>,
     pub lane: Option<Value>,
 }
 
-pub(super) fn read(root: &Path) -> io::Result<Bitmap> {
+pub(in crate::commands) fn read(root: &Path) -> io::Result<Bitmap> {
     let text = fs::read_to_string(root.join(".bitmap"))?;
     let document = bit_install::jsonc::parse(&text).map_err(|_| decline("bitmap syntax"))?;
     let document = document.as_object().ok_or_else(|| decline("bitmap"))?;

@@ -68,6 +68,50 @@ pub(in crate::workspace::engine) fn read(
     Ok((rows.len(), json!({ "components": rows, "laneComponents": lane_components })))
 }
 
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(in crate::workspace::engine) struct Lanes {
+    root: PathBuf,
+}
+
+/// `laneList`: each lane of the index (`listLanes`), in its order, with the
+/// hash it is indexed by and its Lane object.
+pub(in crate::workspace::engine) fn lanes(request: &Lanes) -> io::Result<(usize, Value)> {
+    super::super::path(&request.root)?;
+    let index = read_index(&request.root)?;
+    let directory = request.root.join(".bit/objects");
+    let reader = Reader {
+        directory: &directory,
+        overlay: None,
+        raw: Budget::new(32 * 1024 * 1024),
+        packed: Budget::new(32 * 1024 * 1024),
+    };
+    let rows = index["lanes"]
+        .as_array()
+        .map_or(&[][..], Vec::as_slice);
+    if rows.len() > 4096 {
+        return Err(invalid("list lane count"));
+    }
+    let lanes = rows
+        .iter()
+        .map(|row| {
+            let hash = row["hash"].as_str().ok_or_else(|| invalid("list lane hash"))?;
+            Ok(json!({ "hash": hash, "lane": reader.read(hash, "Lane")? }))
+        })
+        .collect::<io::Result<Vec<_>>>()?;
+    Ok((lanes.len(), json!({ "lanes": lanes })))
+}
+
+/// `.bit/index.json`, empty when the scope has none.
+fn read_index(root: &Path) -> io::Result<Value> {
+    let file = match File::open(root.join(".bit/index.json")) {
+        Ok(file) => file,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(json!({})),
+        Err(error) => return Err(error),
+    };
+    serde_json::from_slice(&Budget::new(4 * 1024 * 1024).read(file)?).map_err(io::Error::other)
+}
+
 /// The visible components of the current lane and their heads
 /// (`lane.getComponentHead`). The lane must be in the index.
 fn lane_heads(
@@ -75,10 +119,7 @@ fn lane_heads(
     reader: &Reader<'_>,
     lane: &LaneId,
 ) -> io::Result<HashMap<String, String>> {
-    let index: Value = serde_json::from_slice(
-        &Budget::new(4 * 1024 * 1024).read(File::open(root.join(".bit/index.json"))?)?,
-    )
-    .map_err(io::Error::other)?;
+    let index = read_index(root)?;
     let row = index["lanes"]
         .as_array()
         .into_iter()

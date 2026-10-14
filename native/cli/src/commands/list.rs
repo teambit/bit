@@ -7,7 +7,7 @@
 //! A remote scope, `--outdated`, `--include-deleted`, and ids or namespaces
 //! this module cannot match like Node run on the Node.js CLI.
 
-mod bitmap;
+pub(in crate::commands) mod bitmap;
 mod table;
 
 use super::{color::Chalk, engine::Engine, status::collate, workspace_command};

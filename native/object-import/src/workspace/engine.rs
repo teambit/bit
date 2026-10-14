@@ -93,6 +93,7 @@ enum Request {
     StatusResult(status_result::Request),
     StatusModels(status_models::Request),
     ScopeList(status_models::list::Request),
+    LaneList(status_models::list::Lanes),
     StatusCompare(status_models::comparison::Request),
     WorkspaceDiff(status_models::workspace_diff::Request),
     StatusPrepare(client_status::Prepare),
@@ -291,6 +292,7 @@ fn apply(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value
         Request::StatusResult(request) => status_result::read(&request),
         Request::StatusModels(request) => status_models::read(&request, pool),
         Request::ScopeList(request) => status_models::list::read(&request, pool),
+        Request::LaneList(request) => status_models::list::lanes(&request),
         Request::StatusCompare(request) => status_models::comparison::read(&request, pool),
         Request::WorkspaceDiff(request) => status_models::workspace_diff::read(&request, pool),
         Request::Scan { root, exclude_dirs, workspace_root } => {

@@ -1,7 +1,9 @@
 //! Native `bit lane merge <lane> [pattern] -x`: a merge workspace command
 //! (`workspace_command`) with the lane options, the lane step, and the whole
-//! merge report. Other `bit lane` commands are left to the Node.js CLI.
+//! merge report; and `bit lane list` (`list`). Other `bit lane` commands are
+//! left to the Node.js CLI.
 
+mod list;
 mod options;
 
 use super::{
@@ -18,8 +20,11 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("arguments are not UTF-8".to_string()));
     };
+    if argv.get(1) == Some(&"list") {
+        return list::run(args, &argv[2..]);
+    }
     if argv.get(1) != Some(&"merge") {
-        return Ok(Outcome::Declined("a lane command other than merge".to_string()));
+        return Ok(Outcome::Declined("a lane command other than merge or list".to_string()));
     }
     let Some(options) = options::parse(&argv[2..]) else {
         return Ok(Outcome::Declined("outside the native lane merge grammar".to_string()));
