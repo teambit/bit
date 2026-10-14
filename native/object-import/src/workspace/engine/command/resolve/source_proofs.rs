@@ -1,0 +1,38 @@
+use super::super::{capture::Captured, invalid, proof};
+use crate::workspace::snapshots;
+use serde_json::Value;
+use std::{io, path::Path};
+
+pub(super) fn capture(
+    current: &[Captured],
+    snapshots: &snapshots::State,
+) -> io::Result<Vec<proof::Proof>> {
+    current
+        .iter()
+        .flat_map(|component| {
+            component.files
+                .as_array()
+                .into_iter()
+                .flatten()
+        })
+        .map(|file| retain(file, snapshots))
+        .collect()
+}
+fn retain(file: &Value, snapshots: &snapshots::State) -> io::Result<proof::Proof> {
+    let path = Path::new(file["path"].as_str().ok_or_else(|| invalid("resolve source path"))?);
+    let token = file["readToken"].as_u64().ok_or_else(|| invalid("resolve retained token"))?;
+    let raw = file["rawHash"].as_str().ok_or_else(|| invalid("resolve retained hash"))?;
+    let observed =
+        snapshots.get(token, path, raw).ok_or_else(|| invalid("resolve retained source"))?;
+    let mut bytes = Vec::new();
+    if observed.raw_bytes == observed.contents.len() + 3 {
+        bytes.extend_from_slice(&[239, 187, 191]);
+    }
+    bytes.extend_from_slice(&observed.contents);
+    if crate::workspace::engine::hash(&bytes) != raw {
+        return Err(invalid("resolve retained source integrity"));
+    }
+    Ok(proof::content(path, &bytes))
+}
+#[cfg(test)]
+mod tests;

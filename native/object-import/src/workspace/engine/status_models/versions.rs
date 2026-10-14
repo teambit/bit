@@ -31,7 +31,7 @@ pub(super) fn references(models: &[Value], targets: &[Target]) -> io::Result<Vec
     }
     Ok(references)
 }
-pub(super) fn reference(model: &Value, version: &str) -> io::Result<String> {
+pub(in crate::workspace::engine) fn reference(model: &Value, version: &str) -> io::Result<String> {
     if crate::merge_history::hash(version).is_ok() {
         return Ok(version.to_owned());
     }

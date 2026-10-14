@@ -1,3 +1,4 @@
+import { ordinaryResolveIssueHeads } from './rust-workspace-resolve-heads';
 import fs from 'fs';
 import path from 'path';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
@@ -13,10 +14,20 @@ type Component = {
 
 /** Built-in issue formatting at the cold default-Node boundary. Unknown graph
  * vertices retain canonical loading, including external deprecation/removal. */
-export async function collectRustStatusIssues(root: string, context: any, components: Component[]) {
+export async function collectRustStatusIssues(
+  root: string,
+  context: any,
+  components: Component[],
+  resolveIssueHeads?: any
+) {
   const ids = new Set(components.map((component) => component.identity));
   if (components.some((component) => component.dependencies.some((id) => !ids.has(id)))) return undefined;
-  if (!ordinaryModelHeads(context)) return undefined;
+  if (
+    !(resolveIssueHeads === undefined
+      ? ordinaryModelHeads(context)
+      : ordinaryResolveIssueHeads(context, resolveIssueHeads))
+  )
+    return undefined;
   const graph = new Graph(
     components.map((component) => new Node(component.identity, true)),
     components.flatMap((component) =>

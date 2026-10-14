@@ -48,6 +48,39 @@ pub(in crate::workspace::engine::command) fn prepare(
     Ok(prepared)
 }
 impl Prepared {
+    /// Ordinary resolve regenerates each visible package from its current `ConsumerComponent`.
+    /// Its license label follows the new Version's license, not the old package manifest.
+    pub(in crate::workspace::engine::command) fn resolve_licenses(
+        &mut self,
+        root: &Path,
+        inputs: &[Input<'_>],
+    ) -> io::Result<()> {
+        for input in inputs
+            .iter()
+            .filter(|input| !input.directory.is_empty())
+        {
+            let package = packages::package_name(input.version)?;
+            let path = root
+                .join("node_modules")
+                .join(package)
+                .join("package.json");
+            let row = self.writes
+                .iter_mut()
+                .find(|(destination, _)| *destination == path)
+                .ok_or_else(|| invalid("resolve generated package write"))?;
+            let mut manifest = json(&row.1)?;
+            manifest["license"] = Value::String(
+                if has_license(&input.version["license"]) {
+                    "SEE LICENSE IN LICENSE"
+                } else {
+                    "SEE LICENSE IN UNLICENSED"
+                }
+                .into(),
+            );
+            row.1 = pretty(&manifest, true)?;
+        }
+        Ok(())
+    }
     pub(in crate::workspace::engine::command) fn imported_index(
         &mut self,
         root: &Path,
@@ -87,6 +120,14 @@ impl Prepared {
             fs::write(path, bytes)?;
         }
         Ok(())
+    }
+}
+fn has_license(value: &Value) -> bool {
+    match value {
+        Value::String(text) => !text.is_empty(),
+        Value::Array(rows) => !rows.is_empty(),
+        Value::Object(fields) => !fields.is_empty(),
+        _ => false,
     }
 }
 fn json(bytes: &[u8]) -> io::Result<Value> {

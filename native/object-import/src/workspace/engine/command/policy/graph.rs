@@ -124,3 +124,10 @@ fn pending_root(identity: &str) -> io::Result<Value> {
         json!({"scope":scope,"name":name,"version":super::super::merge::snapshot::PENDING_GRAPH_VERSION}),
     )
 }
+
+pub(in crate::workspace::engine::command) fn validate_saved(
+    version: &Value,
+    repository: &mut Repository,
+) -> io::Result<()> {
+    previous::validate(version, repository)
+}

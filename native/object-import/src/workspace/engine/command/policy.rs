@@ -1,8 +1,8 @@
 pub(in crate::workspace::engine) mod dependencies;
+pub(super) mod graph;
+pub(super) mod projection;
 
 mod config;
-mod graph;
-mod projection;
 #[cfg(test)]
 mod tests;
 

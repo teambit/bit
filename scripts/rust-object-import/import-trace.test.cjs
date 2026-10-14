@@ -674,3 +674,31 @@ test('recovery restoration records its own accepted receipt without claiming app
     assert.equal(metrics.workspace.commandApply.applied || 0, 0);
   }
 });
+
+test('resolve publication requires an accepted applied receipt, not merely a response', (t) => {
+  for (const failed of [false, true]) {
+    const files = fixture(t);
+    const helper = path.join(files.directory, 'resolve-helper.cjs');
+    fs.writeFileSync(
+      helper,
+      `process.stdin.once('data', () => {
+      process.stdout.write(JSON.stringify({version:1,id:1,completed:0,skipped:[],failed:${failed},data:{applied:true,postPersistNotifications:1}})+'\\n');process.stdin.resume();});`
+    );
+    const metrics = execute(
+      files,
+      `
+      const child=require('node:child_process').spawn(process.execPath,[${JSON.stringify(helper)}]);
+      const body=Buffer.from(JSON.stringify({kind:'commandResolveApply',token:'retained'}));
+      const frame=Buffer.alloc(12+body.length);frame.write('BWS1');frame.writeUInt32BE(1,4);
+      frame.writeUInt32BE(body.length,8);body.copy(frame,12);
+      child.stdout.once('data',()=>child.stdin.end());child.stdin.write(frame);
+    `,
+      { BIT_IMPORT_TRACE_PROTOCOL_ONLY: '1' }
+    );
+    assert.equal(metrics.workspace.commandResolveApply.applied || 0, failed ? 0 : 1);
+    assert.equal(metrics.workspace.commandResolveApply.failed, failed ? 1 : 0);
+    assert.equal(metrics.postPersistNotifications, failed ? 0 : 1);
+    assert.equal(metrics.workspace.commandApply.applied || 0, 0);
+    assert.equal(metrics.workspace.commandRecoveryApply.applied || 0, 0);
+  }
+});

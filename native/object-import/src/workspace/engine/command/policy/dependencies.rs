@@ -348,7 +348,10 @@ fn project(
     Ok(())
 }
 
-fn component(entry: &Value, changed: &HashSet<String>) -> io::Result<Value> {
+pub(in crate::workspace::engine::command) fn component(
+    entry: &Value,
+    changed: &HashSet<String>,
+) -> io::Result<Value> {
     let identity =
         entry["identity"].as_str().ok_or_else(|| invalid("command dependency identity"))?;
     let (base, version) =

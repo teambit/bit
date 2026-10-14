@@ -9,5 +9,9 @@ Module._load = function (request, parent, ...args) {
     assert.equal(typeof value.runRustWorkspaceCommand, 'function');
     return { ...value, runRustWorkspaceCommand: async () => false };
   }
+  if (/[\\/]rust-workspace-resolve(?:\.js)?$/.test(request)) {
+    assert.equal(typeof value.runRustWorkspaceResolve, 'function');
+    return { ...value, runRustWorkspaceResolve: async () => false };
+  }
   return value;
 };

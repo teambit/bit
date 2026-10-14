@@ -1,4 +1,4 @@
-mod bitmap;
+pub(super) mod bitmap;
 mod context;
 mod lane;
 mod publication;
@@ -82,7 +82,7 @@ pub(in crate::workspace::engine) fn prepare(
     state: &mut State,
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
-    if state.record.is_some() || state.recovery.is_some() {
+    if state.record.is_some() || state.recovery.is_some() || state.resolve.is_some() {
         return Err(invalid("command owner already active"));
     }
     let retained = context::prepare(request, state, pool)?;

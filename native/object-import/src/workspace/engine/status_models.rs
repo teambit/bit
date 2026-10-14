@@ -1,5 +1,6 @@
 pub(super) mod comparison;
 pub(super) mod harmony;
+pub(super) mod versions;
 pub(super) mod workspace_diff;
 
 mod history;
@@ -7,7 +8,6 @@ mod history_population;
 mod index;
 mod remotes;
 mod semantic;
-mod versions;
 
 use super::invalid;
 use crate::{checkout::repository, read_budget::Budget};

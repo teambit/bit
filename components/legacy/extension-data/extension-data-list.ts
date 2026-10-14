@@ -1,3 +1,4 @@
+import { extractAutoDependencyPolicy } from './extract-auto-dependency-policy';
 import {
   registerRustTransferClass,
   registerRustSnapshotTransactionClass,
@@ -156,29 +157,7 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
    */
   extractAutoDepsFromConfig(): VariantPolicyConfigArr | undefined {
     const policy = this.findCoreExtension(DependencyResolverAspect.id)?.config.policy;
-    if (!policy) return;
-
-    const autoDepsObj: VariantPolicyConfigArr = {};
-    ['dependencies', 'devDependencies', 'peerDependencies'].forEach((key) => {
-      if (!policy[key]) return;
-      // this is only relevant when it is saved as an array. otherwise, it's always force: true.
-      if (!Array.isArray(policy[key])) return;
-
-      autoDepsObj[key] = policy[key].filter((dep) => !dep.force);
-      policy[key] = policy[key].filter((dep) => dep.force);
-
-      if (!policy[key].length) {
-        delete policy[key];
-        return;
-      }
-      // convert to object
-      policy[key] = policy[key].reduce((acc, current) => {
-        acc[current.name] = current.version;
-        return acc;
-      }, {});
-    });
-
-    return autoDepsObj;
+    return extractAutoDependencyPolicy(policy);
   }
 
   static fromConfigObject(obj: { [extensionId: string]: any } = {}): ExtensionDataList {

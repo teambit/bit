@@ -1,3 +1,4 @@
+import { resolvePolicyProjection } from './rust-workspace-resolve-config';
 import semver from 'semver';
 import { getNodeDependencyPolicy } from '@teambit/node/dist/default-dependency-policy.js';
 import { EnvPolicy } from '@teambit/dependency-resolver/dist/policy/env-policy/env-policy.js';
@@ -84,7 +85,8 @@ export function statusPolicy(context: any, target: any, projectedVersion?: any) 
   const reference = /^[a-f\d]{40}$/i.test(target.version)
     ? target.version
     : (model?.orphanedVersions?.[target.version] ?? model?.versions?.[target.version]);
-  const version = projectedVersion ?? context.versions.find(([hash]) => hash === reference)?.[1];
+  let version = projectedVersion ?? context.versions.find(([hash]) => hash === reference)?.[1];
+  ({ target, version } = resolvePolicyProjection(target, version));
   validateHarmonyVersion(version);
   if (target.version && !version) throw new Error('status version absent');
   const extensions = statusExtensions(version, target);
@@ -275,7 +277,7 @@ function statusExtensions(version: any, target: any) {
     });
   for (const [name, config] of Object.entries(target.config?.extensions ?? {})) {
     const emptyRecoveryCore =
-      target.recoveryConfig === true &&
+      (target.recoveryConfig === true || target.resolveConfig === true) &&
       cores.has(name) &&
       config &&
       typeof config === 'object' &&
@@ -296,11 +298,12 @@ function statusExtensions(version: any, target: any) {
     if (index < 0) extensions.unshift(extension);
     else extensions[index] = extension;
   }
-  if (target.recoveryConfig === true) {
-    const names = Object.keys(target.config?.extensions ?? {});
+  if (target.recoveryConfig === true || target.resolveConfig === true) {
+    const names = Object.keys(target.config?.extensions ?? {}).filter((name) => !merged.has(name));
+    const mergedEntries = extensions.filter((extension) => merged.has(extension.name));
     const configured = names.map((name) => extensions.find((extension) => extension.name === name)!);
-    const inherited = extensions.filter((extension) => !names.includes(extension.name));
-    extensions.splice(0, extensions.length, ...configured, ...inherited);
+    const inherited = extensions.filter((extension) => !names.includes(extension.name) && !merged.has(extension.name));
+    extensions.splice(0, extensions.length, ...mergedEntries, ...configured, ...inherited);
   }
   if (target.bitmapConfig !== undefined) {
     const bitmap = target.bitmapConfig;

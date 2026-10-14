@@ -44,7 +44,7 @@ pub(super) fn prepare(
     }
     Ok(())
 }
-fn package_name(version: &Value) -> io::Result<&str> {
+pub(super) fn package_name(version: &Value) -> io::Result<&str> {
     let name = version["extensions"]
         .as_array()
         .and_then(|rows| {

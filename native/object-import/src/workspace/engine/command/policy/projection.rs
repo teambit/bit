@@ -20,7 +20,7 @@ pub(super) const CORES: &[&str] = &[
 
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub(super) struct Defaults {
+pub(in crate::workspace::engine::command) struct Defaults {
     pub(super) env: Value,
     pub(super) policy_entries: Vec<Value>,
     pub(super) component_range_prefix: Option<String>,
@@ -29,7 +29,7 @@ pub(super) struct Defaults {
     pub(super) slot_data: Vec<Value>,
 }
 
-pub(super) fn extensions(
+pub(in crate::workspace::engine::command) fn extensions(
     stored: &Value,
     configs: &Value,
     state: &Value,

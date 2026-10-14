@@ -2,7 +2,9 @@ use super::super::invalid;
 use serde_json::Value;
 use std::{collections::HashMap, io};
 
-pub(super) fn project(bitmap: &Value) -> io::Result<(Value, HashMap<String, Value>)> {
+pub(in crate::workspace::engine::command) fn project(
+    bitmap: &Value,
+) -> io::Result<(Value, HashMap<String, Value>)> {
     let mut projected = bitmap.clone();
     let mut configs = HashMap::new();
     for (key, row) in projected.as_object_mut().ok_or_else(|| invalid("recovery bitmap"))? {

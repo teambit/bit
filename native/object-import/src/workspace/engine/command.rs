@@ -1,6 +1,7 @@
 pub(super) mod input;
 pub(super) mod policy;
 pub(super) mod recovery;
+pub(super) mod resolve;
 
 mod apply_command;
 mod bitmap;
@@ -22,6 +23,8 @@ mod prepare;
 mod repository;
 mod reset;
 mod reset_config;
+mod resolve_publication;
+mod resolve_snapshot;
 mod scratch;
 mod selection;
 mod setup;
@@ -37,6 +40,7 @@ pub(crate) struct State {
     sequence: u64,
     record: Option<Record>,
     recovery: Option<recovery::Retained>,
+    resolve: Option<resolve::Retained>,
 }
 struct Record {
     request: Prepare,

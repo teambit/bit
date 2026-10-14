@@ -71,6 +71,10 @@ const metrics = {
       'commandRecoveryPlan',
       'commandRecoveryRestore',
       'commandRecoveryApply',
+      'commandResolvePrepare',
+      'commandResolvePlan',
+      'commandResolveFinalize',
+      'commandResolveApply',
       'dependencyPolicyCached',
       'dependencyGraph',
       'dependencyDetectFresh',
@@ -548,7 +552,7 @@ function observeWorkspaceTransport(child) {
           metric.restored = (metric.restored || 0) + 1;
         }
         if (
-          ['BWS1:commandApply', 'BWS1:commandRecoveryApply'].includes(magic) &&
+          ['BWS1:commandApply', 'BWS1:commandRecoveryApply', 'BWS1:commandResolveApply'].includes(magic) &&
           response.data?.applied === true &&
           !response.failed
         ) {

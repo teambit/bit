@@ -10,7 +10,7 @@ pub(super) fn run(
     state: &mut State,
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
-    if state.record.is_some() || state.recovery.is_some() {
+    if state.record.is_some() || state.recovery.is_some() || state.resolve.is_some() {
         return Err(invalid("command owner already active"));
     }
     let mut proofs = Vec::new();
@@ -88,7 +88,7 @@ pub(super) fn validate_licenses(
     Ok(())
 }
 
-fn component_controls(
+pub(super) fn component_controls(
     request: &Prepare,
     context: &Value,
     proofs: &mut Vec<proof::Proof>,

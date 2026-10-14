@@ -59,6 +59,10 @@ enum Request {
         request: Value,
     },
     CommandPrepare(command::input::Prepare),
+    CommandResolvePrepare(command::resolve::Prepare),
+    CommandResolvePlan(command::resolve::Plan),
+    CommandResolveFinalize(command::resolve::Finalize),
+    CommandResolveApply(command::resolve::Apply),
     CommandRecoveryPrepare(command::recovery::Prepare),
     CommandRecoveryPlan(command::recovery::Plan),
     CommandRecoveryApply(command::recovery::Apply),
@@ -178,6 +182,18 @@ fn owned(
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
     match request {
+        Request::CommandResolvePrepare(input) => {
+            pool.install(|| command::resolve::prepare(&input, &mut snapshots.command, pool))
+        }
+        Request::CommandResolvePlan(input) => {
+            pool.install(|| command::resolve::plan(input, snapshots, pool))
+        }
+        Request::CommandResolveFinalize(input) => {
+            pool.install(|| command::resolve::finalize(input, snapshots))
+        }
+        Request::CommandResolveApply(input) => {
+            pool.install(|| command::resolve::apply(&input, &mut snapshots.command))
+        }
         Request::CommandRecoveryPrepare(input) => {
             pool.install(|| command::recovery::prepare(&input, &mut snapshots.command, pool))
         }
