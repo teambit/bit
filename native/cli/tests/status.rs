@@ -134,3 +134,28 @@ fn fresh_detection_needs_the_node_cli_package() {
         declined(&output, "needs the Node.js CLI's own Node");
     }
 }
+
+/// Without the trace, a declined native command warns on stderr that it runs
+/// on the Node.js CLI; stdout stays the Node.js CLI's own.
+#[test]
+fn a_declined_command_warns_that_it_runs_on_node() {
+    let dir = workspace();
+    let root = dir.path().join("ws");
+    let untraced = [("BIT_NATIVE_TRACE", "0")];
+    let output = bit(&dir, &root, &["status", "--lanes"], &untraced);
+    assert_eq!(stdout(&output), r#"["status","--lanes"]"#);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(
+        stderr.trim_end(),
+        "\u{26A0} bit-native: `status` runs on the Node.js CLI: flags outside the native `status` grammar",
+    );
+    let quiet = bit(
+        &dir,
+        &root,
+        &["status", "--lanes"],
+        &[("BIT_NATIVE_TRACE", "0"), ("BIT_NATIVE_QUIET", "1")],
+    );
+    assert!(quiet.stderr.is_empty(), "{}", String::from_utf8_lossy(&quiet.stderr));
+    let help = bit(&dir, &root, &["status", "--help"], &untraced);
+    assert!(help.stderr.is_empty(), "{}", String::from_utf8_lossy(&help.stderr));
+}

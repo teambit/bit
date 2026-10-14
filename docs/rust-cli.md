@@ -14,7 +14,11 @@ The plan and milestones are tracked in
    aliases included.
 2. A command in the table in `native/cli/src/commands.rs` runs natively.
 3. A native command may decline its input, for example `--help`, a directory
-   outside a workspace, or a yarn workspace. A declined command is delegated.
+   outside a workspace, or a yarn workspace. A declined command is delegated,
+   and a warning on stderr names the command and the reason:
+   ``⚠ bit-native: `status` runs on the Node.js CLI: <reason>``. Stdout stays
+   the Node.js CLI's own. `--help` and `BIT_NATIVE_TRACE` (which prints the
+   reason anyway) do not warn.
 4. Everything else is delegated.
 
 On Unix, delegation replaces the process image, so the Node.js CLI keeps the
@@ -25,6 +29,7 @@ The Rust process ignores Ctrl-C and exits with the child's exit code.
 | -------------------- | ---------------------------------------------------------------------------------------- |
 | `BIT_NATIVE=off`     | Delegate every command. Use it for A/B comparisons and bisecting.                        |
 | `BIT_NATIVE_TRACE=1` | Print every dispatch decision and the delegated command line to stderr.                  |
+| `BIT_NATIVE_QUIET=1` | Do not warn when a native command falls back to the Node.js CLI.                         |
 | `BIT_NODE_CLI`       | Path of the Node.js CLI entry: `@teambit/bit`'s `bin/bit`, or a checkout's `bin/bit.js`. |
 | `BIT_NODE_BINARY`    | The Node that runs the entry.                                                            |
 
