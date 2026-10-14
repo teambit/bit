@@ -220,6 +220,8 @@ export function ComponentPreview({
         {...rest}
         sandbox={sandbox || undefined}
         ref={currentRef}
+        // keep the invisible iframe out of the tab order, the accessibility tree and pointer events
+        inert={isWaitingForSize}
         style={{
           ...style,
           height: forceHeight || (isScaling ? finalHeight : legacyIframeHeight),
@@ -227,7 +229,6 @@ export function ComponentPreview({
           // hide with opacity, not visibility. chrome stops rendering a cross-site iframe with visibility: hidden,
           // so its ResizeObserver never fires and the size report this waits for never arrives.
           opacity: isWaitingForSize ? 0 : undefined,
-          pointerEvents: isWaitingForSize ? 'none' : undefined,
           transform: fullContentHeight ? '' : computePreviewScale(width || 1280, containerWidth || 1280),
           border: 0,
           transformOrigin: 'top left',
