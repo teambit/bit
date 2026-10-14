@@ -5,6 +5,7 @@ pub mod env;
 pub mod load;
 pub mod overrides;
 pub mod scope;
+pub mod slots;
 #[cfg(test)]
 pub(crate) mod tests;
 
@@ -36,14 +37,15 @@ pub fn workspace_policy(
 }
 
 /// The merged policy of a component (`mergeVariantPolicies`): its env's policy, the
-/// env's policy for itself when the component is an env, then the component's own
-/// `dependency-resolver` config policy. Aspect-registered policies
-/// (`registerDependenciesPolicies`) have no native counterpart and are not applied.
+/// env's policy for itself when the component is an env, the policies of the aspects
+/// it configures (`registerDependenciesPolicies`), then the component's own
+/// `dependency-resolver` config policy.
 #[must_use]
 pub fn component_policy(
     component: &WorkspaceComponent,
     env_policy: &EnvPolicy,
     own_env_policy: Option<&EnvPolicy>,
+    registry: &[slots::Registration],
 ) -> Vec<PolicyEntry> {
     let config = component.config
         .get(DEPENDENCY_RESOLVER)
@@ -56,7 +58,8 @@ pub fn component_policy(
         })
         .unwrap_or_default();
     let own = own_env_policy.map(|policy| policy.self_policy.clone()).unwrap_or_default();
-    merge(vec![env_policy.component.clone(), own, Vec::new(), config])
+    let slots = slots::component_slots(component, registry);
+    merge(vec![env_policy.component.clone(), own, slots, config])
 }
 
 /// `toManifest()` of a workspace policy: `[dependencies, peerDependencies]` with

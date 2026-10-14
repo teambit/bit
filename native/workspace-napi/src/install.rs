@@ -14,7 +14,7 @@
 )]
 
 use async_trait::async_trait;
-use bit_install::{AfterInstall, AfterInstallResult, Host, HostInfo, Outcome};
+use bit_install::{AfterInstall, AfterInstallResult, Host, HostInfo, InstallOptions, Outcome};
 use napi::{
     Status,
     bindgen_prelude::{FnArgs, Promise},
@@ -37,8 +37,9 @@ pub type HostCallback = ThreadsafeFunction<
 /// `(text) => void`, written to `process.stdout` by the caller.
 pub type OutputCallback = ThreadsafeFunction<String, (), String, Status, false>;
 
-/// Result of [`install`]: `{ outcome: "installed", components }`, `{ outcome: "help" }`,
-/// or `{ outcome: "unsupported" }` for workspaces the TypeScript command installs.
+/// Result of [`install`] and [`install_with_options`]: `{ outcome: "installed",
+/// components, oldNonLoadedEnvs }`, `{ outcome: "help" }`, or `{ outcome: "unsupported" }`
+/// for workspaces the TypeScript command installs.
 #[napi]
 pub async fn install(
     argv: Vec<String>,
@@ -47,21 +48,52 @@ pub async fn install(
     host: HostCallback,
     output: OutputCallback,
 ) -> napi::Result<String> {
-    let info: HostInfo = serde_json::from_str(&host_info).map_err(failure)?;
+    spawn(Request::Argv(argv), cwd, &host_info, host, output).await
+}
+
+/// `InstallMain.install` called by another command: `options` is a JSON
+/// `InstallOptions` (the `bit install` flags plus `programmatic`, `externalPrompt`,
+/// `existingEntries`, `skipPrune` and `appendOnly`).
+#[napi]
+pub async fn install_with_options(
+    options: String,
+    cwd: String,
+    host_info: String,
+    host: HostCallback,
+    output: OutputCallback,
+) -> napi::Result<String> {
+    let options: InstallOptions = serde_json::from_str(&options).map_err(failure)?;
+    spawn(Request::Options(Box::new(options)), cwd, &host_info, host, output).await
+}
+
+/// What to install: `bit install` argv, or options parsed by the caller.
+enum Request {
+    Argv(Vec<String>),
+    Options(Box<InstallOptions>),
+}
+
+async fn spawn(
+    request: Request,
+    cwd: String,
+    host_info: &str,
+    host: HostCallback,
+    output: OutputCallback,
+) -> napi::Result<String> {
+    let info: HostInfo = serde_json::from_str(host_info).map_err(failure)?;
     let (sender, receiver) = tokio::sync::oneshot::channel();
     std::thread::Builder::new()
         .name("bit-install".to_string())
         // The engine's synchronous call chain overflows a default stack on some platforms.
         .stack_size(32 * 1024 * 1024)
         .spawn(move || {
-            let _ = sender.send(run_blocking(&argv, &cwd, &info, host, output));
+            let _ = sender.send(run_blocking(&request, &cwd, &info, host, output));
         })
         .map_err(failure)?;
     receiver.await.map_err(|_| failure("bit install thread panicked"))?
 }
 
 fn run_blocking(
-    argv: &[String],
+    request: &Request,
     cwd: &str,
     info: &HostInfo,
     host: HostCallback,
@@ -76,17 +108,27 @@ fn run_blocking(
         output.call(text.to_string(), ThreadsafeFunctionCallMode::Blocking);
     });
     let host = JsHost { callback: host };
-    let outcome = runtime
-        .block_on(bit_install::run(&PathBuf::from(cwd), argv, info, &host, sink))
-        .map_err(failure)?;
-    let result = match outcome {
-        Outcome::Installed(summary) => {
-            json!({ "outcome": "installed", "components": summary.components })
+    let cwd = PathBuf::from(cwd);
+    let outcome = match request {
+        Request::Argv(argv) => runtime.block_on(bit_install::run(&cwd, argv, info, &host, sink)),
+        Request::Options(options) => {
+            runtime.block_on(bit_install::run_with_options(&cwd, options, info, &host, sink))
         }
+    }
+    .map_err(failure)?;
+    Ok(result(outcome).to_string())
+}
+
+fn result(outcome: Outcome) -> Value {
+    match outcome {
+        Outcome::Installed(summary) => json!({
+            "outcome": "installed",
+            "components": summary.components,
+            "oldNonLoadedEnvs": summary.old_non_loaded_envs,
+        }),
         Outcome::Help => json!({ "outcome": "help" }),
         Outcome::Unsupported => json!({ "outcome": "unsupported" }),
-    };
-    Ok(result.to_string())
+    }
 }
 
 struct JsHost {
@@ -113,6 +155,14 @@ impl JsHost {
 impl Host for JsHost {
     async fn env_policy(&self, env_id: &str) -> io::Result<Option<Value>> {
         self.call("envPolicy", json!({ "envId": env_id })).await
+    }
+
+    async fn dev_patterns(&self, env_id: &str) -> io::Result<Option<Value>> {
+        self.call("devPatterns", json!({ "envId": env_id })).await
+    }
+
+    async fn dependency_policies(&self, extension_ids: &[String]) -> io::Result<Option<Value>> {
+        self.call("dependencyPolicies", json!({ "extensionIds": extension_ids })).await
     }
 
     async fn app_types(&self) -> io::Result<Vec<String>> {

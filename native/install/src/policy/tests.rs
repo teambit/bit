@@ -239,7 +239,7 @@ fn component_policy_merges_env_and_config() {
         ],
         ..EnvPolicy::default()
     };
-    let policy = component_policy(&subject, &env, None);
+    let policy = component_policy(&subject, &env, None, &[]);
     let lodash = policy
         .iter()
         .find(|entry| entry.name == "lodash")

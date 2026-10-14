@@ -2,9 +2,10 @@
 //! `createLinkOrSymlink`, `symlink-dir` and `hardLinkDirectory`.
 
 use std::{
-    ffi::OsString,
     fs, io,
-    path::{Component, Path, PathBuf},
+    path::{Path, PathBuf},
+    thread,
+    time::Duration,
 };
 
 /// How [`create_link_or_symlink`] links a path (`avoidHardLink` in TypeScript).
@@ -48,6 +49,11 @@ fn remove_dir_link(path: &Path, error: io::Error) -> io::Result<()> {
     if cfg!(windows) { fs::remove_dir(path) } else { Err(error) }
 }
 
+/// `EEXIST_MAX_ATTEMPTS` in `createLinkOrSymlink`.
+const LINK_ATTEMPTS: u32 = 5;
+/// `EEXIST_RETRY_DELAY_MS`, multiplied by the attempt number.
+const LINK_RETRY_DELAY: Duration = Duration::from_millis(50);
+
 /// `createLinkOrSymlink`: replace `dest` with a link to `src`.
 pub(super) fn create_link_or_symlink(
     src: &Path,
@@ -62,19 +68,57 @@ pub(super) fn create_link_or_symlink(
     if let Some(parent) = dest.parent() {
         fs::create_dir_all(parent)?;
     }
-    let linked = match kind {
-        LinkKind::Symlink => symlink_absolute(src, dest),
-        LinkKind::HardLinkOrSymlink => hard_link_or_symlink(src, dest),
-    };
-    linked.or_else(|error| link_failure(src, dest, &error))
+    link_retrying_on_exists(src, dest, kind).or_else(|error| link_failure(src, dest, &error))
+}
+
+/// `writeLinkRetryingOnEexist`: a just-removed `dest` can still exist (on Windows a file
+/// another process holds open stays "delete pending"), so `EEXIST` is retried a few times.
+fn link_retrying_on_exists(src: &Path, dest: &Path, kind: LinkKind) -> io::Result<()> {
+    let mut attempt = 1;
+    loop {
+        let error = match write_link(src, dest, kind) {
+            Ok(()) => return Ok(()),
+            Err(error) => error,
+        };
+        let retry = error.kind() == io::ErrorKind::AlreadyExists && attempt < LINK_ATTEMPTS;
+        if !retry || linked_correctly(src, dest) {
+            return Err(error);
+        }
+        thread::sleep(LINK_RETRY_DELAY * attempt);
+        if linked_correctly(src, dest) {
+            return Ok(());
+        }
+        remove_locked(dest)?;
+        attempt += 1;
+    }
+}
+
+/// The removal between attempts: a path still locked by another process is retried next time.
+fn remove_locked(dest: &Path) -> io::Result<()> {
+    match remove_path(dest) {
+        Err(error) if locked(&error) => Ok(()),
+        other => other,
+    }
+}
+
+fn locked(error: &io::Error) -> bool {
+    matches!(error.kind(), io::ErrorKind::PermissionDenied | io::ErrorKind::ResourceBusy)
+}
+
+fn write_link(src: &Path, dest: &Path, kind: LinkKind) -> io::Result<()> {
+    match kind {
+        LinkKind::Symlink => symlink_or_link(src, dest),
+        LinkKind::HardLinkOrSymlink => link(src, dest),
+    }
 }
 
 fn link_failure(src: &Path, dest: &Path, error: &io::Error) -> io::Result<()> {
-    if error.kind() == io::ErrorKind::AlreadyExists && points_to(dest, src) {
+    if error.kind() == io::ErrorKind::AlreadyExists && linked_correctly(src, dest) {
         return Ok(());
     }
+    let copy = if cfg!(windows) { " (or maybe copy)" } else { "" };
     let message = format!(
-        "failed to generate a symlink.\nSymlink from: {}, to: {} failed.\nOriginal error: {error}",
+        "failed to generate a symlink.\nSymlink{copy} from: {}, to: {} failed.\nOriginal error: {error}",
         src.display(),
         dest.display(),
     );
@@ -86,83 +130,129 @@ fn points_to(dest: &Path, src: &Path) -> bool {
     if !dest.exists() {
         return false;
     }
-    fs::canonicalize(dest).is_ok_and(|real| real == src)
-        || fs::read_link(dest).is_ok_and(|target| target == src)
+    real_path_is(dest, src) || fs::read_link(dest).is_ok_and(|target| target == src)
 }
 
-fn hard_link_or_symlink(src: &Path, dest: &Path) -> io::Result<()> {
-    if src.is_dir() {
-        return symlink_absolute(src, dest);
+/// `fs.realpathSync(dest) === src`.
+#[cfg(unix)]
+fn real_path_is(dest: &Path, src: &Path) -> bool {
+    fs::canonicalize(dest).is_ok_and(|real| real == src)
+}
+
+/// Rust's `canonicalize` returns a verbatim (`\\?\`) path with long names, where Node's
+/// `realpathSync` returns a plain one, so both sides are canonicalized.
+#[cfg(windows)]
+fn real_path_is(dest: &Path, src: &Path) -> bool {
+    same_file(src, dest)
+}
+
+/// `isDestLinkedCorrectly`: the same file (a hard link, or a link resolving to it), or a link
+/// whose text is `src`.
+fn linked_correctly(src: &Path, dest: &Path) -> bool {
+    same_file(src, dest) || fs::read_link(dest).is_ok_and(|target| target == src)
+}
+
+#[cfg(unix)]
+fn same_file(src: &Path, dest: &Path) -> bool {
+    use std::os::unix::fs::MetadataExt;
+    match (fs::metadata(src), fs::metadata(dest)) {
+        (Ok(src), Ok(dest)) => src.ino() != 0 && src.ino() == dest.ino() && src.dev() == dest.dev(),
+        _ => false,
     }
+}
+
+/// Without a stable file index, Windows compares resolved paths: this recognizes symlinks and
+/// junctions, not a hard link of `src`.
+#[cfg(windows)]
+fn same_file(src: &Path, dest: &Path) -> bool {
+    matches!((fs::canonicalize(src), fs::canonicalize(dest)), (Ok(src), Ok(dest)) if src == dest)
+}
+
+/// `symlink()` with `avoidHardLink`: `symlink-dir` on unix; on Windows a true symlink
+/// (`noJunction`), falling back to [`link`] when the user may not create symlinks.
+fn symlink_or_link(src: &Path, dest: &Path) -> io::Result<()> {
+    if cfg!(windows) {
+        return true_symlink(src, dest).or_else(|_| link(src, dest));
+    }
+    true_symlink(src, dest)
+}
+
+/// `link()`: a hard link; a directory (`EPERM`) or a cross-device link gets a junction, which
+/// on unix is a plain symlink. A relative `src` is relative to `dest`'s directory.
+fn link(src: &Path, dest: &Path) -> io::Result<()> {
     match fs::hard_link(src, dest) {
         Ok(()) => Ok(()),
-        Err(error) if hard_link_unsupported(&error) => symlink_absolute(src, dest),
+        Err(error) if junction_fallback(&error) || src.is_dir() => junction(src, dest),
         Err(error) if error.kind() == io::ErrorKind::NotFound && src.is_relative() => {
-            symlink_absolute(src, dest)
+            relative_to_dest(src, dest)
         }
         Err(error) => Err(error),
     }
 }
 
-fn hard_link_unsupported(error: &io::Error) -> bool {
+fn junction_fallback(error: &io::Error) -> bool {
     matches!(error.kind(), io::ErrorKind::PermissionDenied | io::ErrorKind::CrossesDevices)
 }
 
-/// `symlink-dir`: a symlink relative to the link's directory.
-pub(super) fn symlink_relative(src: &Path, dest: &Path) -> io::Result<()> {
-    if cfg!(windows) {
-        return symlink_absolute(src, dest);
+/// The `ENOENT` branch of `link()`: Windows links the path resolved against `dest`'s
+/// directory; unix symlinks the relative path as given.
+fn relative_to_dest(src: &Path, dest: &Path) -> io::Result<()> {
+    if !cfg!(windows) {
+        return true_symlink(src, dest);
     }
-    let parent = dest.parent().unwrap_or_else(|| Path::new(""));
-    platform_symlink(&relative_path(parent, src), dest, src.is_dir())
+    let absolute = dest
+        .parent()
+        .unwrap_or_else(|| Path::new(""))
+        .join(src);
+    match fs::hard_link(&absolute, dest) {
+        Err(error) if junction_fallback(&error) => junction(src, dest),
+        other => other,
+    }
 }
 
-fn symlink_absolute(src: &Path, dest: &Path) -> io::Result<()> {
-    platform_symlink(src, dest, src.is_dir())
+/// `symlink-dir` without `noJunction`: a true symlink to `src` as given; on Windows a junction
+/// when symlinks are not permitted.
+pub(super) fn symlink_dir(src: &Path, dest: &Path) -> io::Result<()> {
+    match true_symlink(src, dest) {
+        Err(error) if cfg!(windows) && error.kind() == io::ErrorKind::PermissionDenied => {
+            junction(src, dest)
+        }
+        other => other,
+    }
 }
 
 #[cfg(unix)]
-fn platform_symlink(target: &Path, link: &Path, _is_dir: bool) -> io::Result<()> {
+fn true_symlink(target: &Path, link: &Path) -> io::Result<()> {
     std::os::unix::fs::symlink(target, link)
 }
 
+/// `fs.symlinkSync` without a type: Node picks a directory symlink when the target is a directory.
 #[cfg(windows)]
-fn platform_symlink(target: &Path, link: &Path, is_dir: bool) -> io::Result<()> {
-    if is_dir {
+fn true_symlink(target: &Path, link: &Path) -> io::Result<()> {
+    let resolved = link
+        .parent()
+        .unwrap_or_else(|| Path::new(""))
+        .join(target);
+    if resolved.is_dir() {
         std::os::windows::fs::symlink_dir(target, link)
     } else {
-        std::os::windows::fs::symlink_file(target, link).or_else(|_| fs::hard_link(target, link))
+        std::os::windows::fs::symlink_file(target, link)
     }
 }
 
-/// The path from directory `from` to `to`, both absolute (`path.relative`).
-pub(super) fn relative_path(from: &Path, to: &Path) -> PathBuf {
-    let from = normalize(from);
-    let to = normalize(to);
-    let common = from
-        .iter()
-        .zip(&to)
-        .take_while(|(left, right)| left == right)
-        .count();
-    let ups = from.len() - common;
-    let mut relative: PathBuf = std::iter::repeat_n(OsString::from(".."), ups).collect();
-    relative.extend(&to[common..]);
-    relative
+#[cfg(unix)]
+fn junction(target: &Path, link: &Path) -> io::Result<()> {
+    true_symlink(target, link)
 }
 
-/// Lexical `.`/`..` resolution, as `path.resolve` does.
-fn normalize(path: &Path) -> Vec<OsString> {
-    let mut parts: Vec<OsString> = Vec::new();
-    for component in path.components() {
-        match component {
-            Component::CurDir => {}
-            Component::ParentDir => {
-                parts.pop();
-            }
-            other => parts.push(other.as_os_str().to_owned()),
-        }
-    }
-    parts
+/// `fs.symlinkSync(target, link, 'junction')`: Node resolves the target to an absolute path.
+#[cfg(windows)]
+fn junction(target: &Path, link: &Path) -> io::Result<()> {
+    let absolute = link
+        .parent()
+        .unwrap_or_else(|| Path::new(""))
+        .join(target);
+    junction::create(absolute, link)
 }
 
 /// `hardLinkDirectory`: hard link every file under `src` (except `node_modules`) into each of
@@ -219,7 +309,7 @@ fn symlink_each(source: &Path, targets: &[PathBuf]) -> io::Result<()> {
         // before any entry that would have created the destination.
         fs::create_dir_all(target.parent().unwrap_or_else(|| Path::new("")))?;
         remove_path(target)?;
-        symlink_relative(source, target)?;
+        symlink_dir(source, target)?;
     }
     Ok(())
 }

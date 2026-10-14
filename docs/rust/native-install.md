@@ -55,8 +55,50 @@ module:
 - the core aspect package list.
 
 `BIT_NATIVE_INSTALL=off` routes the command to the previous TypeScript
-implementation. The TypeScript implementation stays in place for programmatic
-installs from other commands.
+implementation.
+
+## Programmatic installs
+
+Other commands install through `InstallMain.install` (`bit import`, `bit new`,
+`bit fork`, `bit rename`, `bit merge`, `bit clone`, `bit lane import`, `bit eject`,
+generators creating components, the IDE API). Those calls also run on the native
+installer: `scopes/workspace/install/native-install.ts` calls the addon's
+`installWithOptions` with the options as JSON, and the running Harmony instance
+serves the host callbacks. `afterInstall` runs the TypeScript cycle body on the
+loaded aspects (global virtual store bridge, `setOldNonLoadedEnvs`, env reloads,
+compile, config files) without loading Harmony again.
+
+In programmatic mode the native installer prints neither the command's runner
+line, its "Resolving component dependencies" line nor the summary, and does not
+resolve component ids among the packages, as `InstallMain.install` does not. It
+returns the old non-loaded envs (`getOldNonLoadedEnvs`). The TypeScript side then
+reloads `workspace.jsonc` when the native installer changed it
+(`triggerOnWorkspaceConfigChange`), clears the workspace cache and returns the
+component directory map. The native installer writes the `onPostInstall` event,
+so it is not published again.
+
+| `WorkspaceInstallOptions` | Native |
+| --- | --- |
+| `lifecycleType`, `savePrefix`, `updateAll`, `addMissingDeps`, `skipUnavailable`, `recurringInstall`, `lockfileOnly`, `restoreFromDependenciesGraph`, `allowScripts`, `skipPrune` | same option |
+| `dedupe` | `skipDedupe: !dedupe` (unset means no dedupe, as in TypeScript) |
+| `import` | `skipImport: !import` (unset means no import) |
+| `compile`, `writeConfigFiles`, `includeOptionalDeps` | skipped only when `false` |
+| `updateExisting`, `skipIfExisting` | `existingEntries`: `skip`, else `update`, else `fail` (`EntryAlreadyExist`) |
+| `optimizeReportForNonTerminal` | `appendOnly` reporter |
+| `showExternalPackageManagerPrompt` | `externalPrompt`; without it, external package manager mode keeps the TypeScript path (it writes `package.json` instead of installing) |
+| `dependenciesGraph` (explicit graph) | TypeScript path |
+| `copyPeerToRuntimeOnRoot: false`, `copyPeerToRuntimeOnComponents: true` | TypeScript path |
+| `addMissingPeers` without `lifecycleType: 'peer'` | TypeScript path (TypeScript adds them as runtime dependencies) |
+
+Workspaces using yarn, `BIT_NATIVE_INSTALL=off` and a missing addon also keep the
+TypeScript implementation; `BIT_NATIVE_INSTALL_REQUIRE=on` turns the last two into
+errors.
+
+Output follows Bit's logger. The native installer prints status and success
+lines while Bit's loader exists, and console lines without a loader only when
+`logger.shouldWriteToConsole` is on. Like `PnpmPackageManager.install`, it turns
+the loader on after the package manager, and status lines are not shown on CI
+(`logger.setStatusLine`).
 
 ## Crate layout (`native/install/src`)
 
@@ -119,6 +161,28 @@ The engine's `readPackage` hooks are implemented natively and report the
 `pnpmfileChecksum` that Bit's TypeScript integration intended (`bit-1`).
 Lockfiles therefore stay compatible between both implementations.
 
+## Pre-install import
+
+The import requests what `importCurrentObjects` requests, and nothing more:
+
+- No artifacts: `ObjectFetcher` sends `includeArtifacts: false`, and the
+  objects-only import never calls `importAllArtifactsFromLane`.
+- No `LaneHistory` objects: the lane object comes from
+  `getCurrentRemoteLane()`, which fetches with the default
+  `includeLaneHistory = false`. The local lane's history is still updated when
+  the fetched lane is merged into it, as `saveLane` does.
+- No parent traversal (`collectParents`): the import does not pass
+  `allHistory`.
+- With `BIT_FETCH_INCOMPLETE_VERSION_HISTORY` set, components whose local
+  `VersionHistory` is incomplete since the requested version are fetched again,
+  and complete histories record the version in `graphCompleteRefs`.
+
+A `resolverPath` in `scope.json` names a JavaScript module that resolves scopes
+with no configured remote, instead of the hub. The module runs in the Node.js
+that runs Bit, as a one-shot process, and gets the scope name, the workspace
+scope name and the configured `user.token`. `require` resolves a relative
+path from the current directory, where Bit resolves it from its own module.
+
 ## Validation
 
 The same templates were installed with the TypeScript command (`BIT_NATIVE_INSTALL=off`) and natively:
@@ -139,12 +203,11 @@ These install e2e suites pass on the native path:
 
 ## Known differences
 
-- Harmony's `loading N component(s)` and the importer's per-100-objects progress lines are not printed.
-- Lane `updateDependents` are not yet used for version resolution.
-- Configured user aspects and generator envs use the default package name. A custom `teambit.pkg/pkg` name is not applied.
-- `resolveFromEnv` policy links are not supported.
-- Aspect-type envs come from a fixed list of core aspect envs.
-- Aspect-registered dependency policy slots and custom env dependency detectors are not applied.
+- Custom env dependency detectors (`getDepDetectors`) are not applied; detection uses the built-in JavaScript/TypeScript, style and MDX extraction.
+- Dependency policies an env registers in its own provider are not collected: the host is asked for registered policies only when a component configures a non-env, non-core extension.
+- `resolveFromEnv` links of an external env use the env's default package name; a custom `teambit.pkg/pkg` name is not applied there.
+- A relative `resolverPath` resolves from the current directory, not from Bit's module directory.
+- On Windows, a destination that is a hard link of its source is not recognized as already linked.
 - Workspaces configured with the yarn package manager use the TypeScript command, because yarn is a JavaScript package manager.
 
 ## CI

@@ -1,6 +1,6 @@
 //! Remote scope resolution (`getScopeRemotes` and the hub `remoteResolver`).
 
-use super::{http::Network, objects::invalid};
+use super::{http::Network, objects::invalid, resolver::Resolver};
 use crate::model::GlobalConfig;
 use indexmap::IndexMap;
 use serde_json::{Value, json};
@@ -50,6 +50,8 @@ impl Remote {
 pub struct Remotes {
     hosts: IndexMap<String, String>,
     symphony: String,
+    /// `scope.json` `resolverPath`: replaces the hub lookup.
+    resolver: Option<Resolver>,
     resolved: Mutex<HashMap<String, Remote>>,
 }
 
@@ -67,7 +69,19 @@ impl Remotes {
                 }
             }
         }
-        Ok(Self { hosts, symphony: symphony_url(global), resolved: Mutex::default() })
+        Ok(Self {
+            hosts,
+            symphony: symphony_url(global),
+            resolver: None,
+            resolved: Mutex::default(),
+        })
+    }
+
+    /// Resolve scopes without a configured remote through `resolver` instead of the hub.
+    #[must_use]
+    pub fn with_resolver(mut self, resolver: Option<Resolver>) -> Self {
+        self.resolver = resolver;
+        self
     }
 
     /// `Remotes.resolve`.
@@ -82,7 +96,10 @@ impl Remotes {
         {
             return Ok(remote.clone());
         }
-        let remote = self.resolve_from_hub(scope, network).await?;
+        let remote = match &self.resolver {
+            Some(resolver) => Remote::from_host(&resolver.resolve(scope).await?)?,
+            None => self.resolve_from_hub(scope, network).await?,
+        };
         self.resolved
             .lock()
             .map_err(|_| invalid("remotes poisoned"))?

@@ -76,6 +76,8 @@ async function handle(line) {
 const handlers = {
   hostInfo,
   envPolicy: ({ envId }) => envPolicy(envId),
+  devPatterns: ({ envId }) => devPatterns(envId),
+  dependencyPolicies: ({ extensionIds }) => dependencyPolicies(extensionIds),
   appTypes,
   packageJsonProps: ({ envId }) => packageJsonProps(envId),
   transformPackageJson: ({ component, manifest }) => transformPackageJson(component, manifest),
@@ -173,6 +175,34 @@ async function envPolicy(envId) {
   return policy ?? null;
 }
 
+/**
+ * The env's dev-file pattern methods, each `null` when the env does not implement it.
+ * The node env implements none of them.
+ */
+async function devPatterns(envId) {
+  if (envId === 'teambit.harmony/node') return { devPatterns: null, tests: null, docs: null, compositions: null };
+  const env = await loadEnv(envId);
+  if (!env) return null;
+  const call = async (method) => (typeof env[method] === 'function' ? await env[method]() : null);
+  return {
+    devPatterns: await call('getDevPatterns'),
+    tests: await call('getTestsDevPatterns'),
+    docs: await call('getDocsDevPatterns'),
+    compositions: await call('getCompositionsDevPatterns'),
+  };
+}
+
+/**
+ * The dependency policies aspects registered (`registerDependenciesPolicies`), as
+ * `[[registrar, policy], ...]`, once the aspects the components configure are loaded.
+ */
+async function dependencyPolicies(extensionIds) {
+  const loaded = await loadHarmony();
+  const workspace = loaded.get('teambit.workspace/workspace');
+  await workspace.loadAspects(extensionIds, false, undefined, { throwOnError: false, hideMissingModuleError: true });
+  return loaded.get('teambit.dependencies/dependency-resolver').policiesRegistry.toArray();
+}
+
 async function appTypes() {
   return (await loadHarmony()).get('teambit.harmony/application').getAppPatterns();
 }
@@ -213,8 +243,9 @@ async function loadEnv(envId) {
 /** Compile and write config files with the canonical JavaScript aspects. */
 async function afterInstall(request) {
   const loaded = await loadHarmony();
-  const { shouldDisableLoader } = bitRequire('@teambit/legacy.logger');
-  if (!shouldDisableLoader) bitRequire('@teambit/legacy.loader').loader.on();
+  // `PnpmPackageManager.install` turns the logger on after the package manager, so the
+  // compile step reports through Bit's loader even when the command runs without one.
+  bitRequire('@teambit/legacy.loader').loader.on();
   const workspace = loaded.get('teambit.workspace/workspace');
   const install = loaded.get('teambit.workspace/install');
   const envs = loaded.get('teambit.envs/envs');

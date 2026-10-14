@@ -9,6 +9,7 @@ use super::{
     bitmap::Id,
     fetch::{FetchOptions, Fetcher},
     fs_remote::resolve_version,
+    history,
     lane::RemoteLane,
     objects::{Repo, component_hash},
     persist::{MAIN, Progress, Written, persist},
@@ -33,6 +34,9 @@ pub struct Importer<'a> {
     pub lane: Option<&'a RemoteLane>,
     /// Where the `ObjectFetcher` loader messages go; `None` keeps the import silent.
     pub output: Option<&'a Output>,
+    /// `BIT_FETCH_INCOMPLETE_VERSION_HISTORY`: also fetch components whose local
+    /// `VersionHistory` is incomplete since the requested version.
+    pub refetch_incomplete_history: bool,
 }
 
 impl Importer<'_> {
@@ -48,7 +52,14 @@ impl Importer<'_> {
             "import {} components with their dependencies (if missing)",
             ids.len(),
         ));
-        let (missing, unbuilt) = self.missing_versions(&externals)?;
+        let (mut missing, unbuilt) = self.missing_versions(&externals)?;
+        if self.refetch_incomplete_history {
+            for id in history::incomplete(self.repo, &externals)? {
+                if !missing.contains(&id) {
+                    missing.push(id);
+                }
+            }
+        }
         let only_if_built = !missing.is_empty()
             && missing
                 .iter()

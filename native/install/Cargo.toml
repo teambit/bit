@@ -44,6 +44,11 @@ sha2 = "0.10"
 tar = "0.4"
 tokio = { version = "1", features = ["rt-multi-thread", "sync", "fs", "time"] }
 
+# Junctions for directories when Windows refuses a symlink, as Node's
+# `fs.symlinkSync(..., 'junction')`. Already in the graph through `pnpm-fs`.
+[target.'cfg(windows)'.dependencies]
+junction = "2.1"
+
 [dev-dependencies]
 pretty_assertions = "1"
 tempfile = "3"

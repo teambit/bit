@@ -12,7 +12,7 @@ mod workspace_jsonc;
 use crate::{
     Host, HostInfo, engine,
     model::DependencyMap,
-    options::{self, Parsed},
+    options::{self, InstallOptions, Parsed},
     output::{Output, Sink, Style},
 };
 use session::{Loaded, Session};
@@ -24,6 +24,8 @@ const UPDATE_EXISTING: &str = r#"--update-existing is deprecated, please omit it
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct InstallSummary {
     pub components: usize,
+    /// Legacy envs whose dependency policy is still unknown (`getOldNonLoadedEnvs`).
+    pub old_non_loaded_envs: Vec<String>,
 }
 
 /// The result of one `bit install` invocation.
@@ -50,12 +52,26 @@ pub async fn run(
         Parsed::Help => return Ok(Outcome::Help),
         Parsed::Install(options) => options,
     };
+    run_with_options(cwd, &options, info, host, sink).await
+}
+
+/// Install with already-parsed options: `bit install` after argv parsing, or
+/// `InstallMain.install` called by another command (`options.programmatic`).
+pub async fn run_with_options(
+    cwd: &Path,
+    options: &InstallOptions,
+    info: &HostInfo,
+    host: &dyn Host,
+    sink: Sink,
+) -> io::Result<Outcome> {
     let session = Session {
         root: session::find_root(cwd)?,
-        options: &options,
+        options,
         info,
         host,
-        output: Output::new(info.color, info.columns.is_some(), info.loader, sink),
+        output: Output::new(info.color, info.columns.is_some(), info.loader, sink)
+            .with_console(info.write_to_console.unwrap_or(info.loader))
+            .with_ci(std::env::var_os("CI").is_some_and(|ci| !ci.is_empty())),
         started: Instant::now(),
         cloud_username: OnceLock::new(),
     };
@@ -64,20 +80,10 @@ pub async fn run(
 
 async fn install(session: &Session<'_>) -> io::Result<Outcome> {
     let options = session.options;
-    if options.update_existing {
-        session.output.warning(UPDATE_EXISTING);
-    }
-    let mut loaded = Loaded::load(session)?;
-    if loaded.uses_yarn() {
+    let Some((loaded, packages)) = begin(session).await? else {
         return Ok(Outcome::Unsupported);
-    }
-    // `CommandRunner.determineConsoleWritingDuringCommand`, once the command is ours.
-    session.output.status(r#"running command "install"..."#);
-    resolve_cloud_username(session, &mut loaded).await;
-    let packages = packages::validate(&options.packages, &loaded)?;
-    let name = session.output.paint(Style::Cyan, &loaded.workspace_name(&session.root));
-    session.output.console(&format!("Resolving component dependencies for workspace: '{name}'"));
-    loaded = Box::pin(prepare(session, loaded, &packages)).await?;
+    };
+    let mut loaded = Box::pin(prepare(session, loaded, &packages)).await?;
     if !options.skip_import {
         crate::import::import_current_objects(
             &session.root,
@@ -92,15 +98,52 @@ async fn install(session: &Session<'_>) -> io::Result<Outcome> {
     let scope_path = loaded.workspace.scope_path.clone();
     let installed = Box::pin(modules::install(session, loaded)).await?;
     publish_post_install_event(&scope_path)?;
-    let report = summary::format(
-        &session.output,
-        installed.components,
-        session.started.elapsed(),
-        options.recurring_install,
-        &installed.old_non_loaded_envs,
-    );
-    session.output.print(&report);
-    Ok(Outcome::Installed(InstallSummary { components: installed.components }))
+    if !options.programmatic {
+        let report = summary::format(
+            &session.output,
+            installed.components,
+            session.started.elapsed(),
+            options.recurring_install,
+            &installed.old_non_loaded_envs,
+        );
+        session.output.print(&report);
+    }
+    Ok(Outcome::Installed(InstallSummary {
+        components: installed.components,
+        old_non_loaded_envs: installed.old_non_loaded_envs,
+    }))
+}
+
+/// Load the workspace and take the command over: `None` when the TypeScript
+/// path installs it. `bit install` prints the runner and "Resolving..." lines
+/// and resolves component ids among the packages; `InstallMain.install` does not.
+async fn begin(session: &Session<'_>) -> io::Result<Option<(Loaded, Vec<String>)>> {
+    let options = session.options;
+    if options.update_existing {
+        session.output.warning(UPDATE_EXISTING);
+    }
+    let mut loaded = Loaded::load(session)?;
+    if loaded.uses_yarn() || declines_external_mode(options, &loaded) {
+        return Ok(None);
+    }
+    if options.programmatic {
+        resolve_cloud_username(session, &mut loaded).await;
+        return Ok(Some((loaded, options.packages.clone())));
+    }
+    // `CommandRunner.determineConsoleWritingDuringCommand`, once the command is ours.
+    session.output.status(r#"running command "install"..."#);
+    let packages = packages::validate(&options.packages, &loaded)?;
+    resolve_cloud_username(session, &mut loaded).await;
+    let name = session.output.paint(Style::Cyan, &loaded.workspace_name(&session.root));
+    session.output.console(&format!("Resolving component dependencies for workspace: '{name}'"));
+    Ok(Some((loaded, packages)))
+}
+
+/// Without `showExternalPackageManagerPrompt`, `InstallMain.install` writes the
+/// dependencies to `package.json` instead of installing: the TypeScript path does that.
+fn declines_external_mode(options: &InstallOptions, loaded: &Loaded) -> bool {
+    !options.external_prompt
+        && loaded.config.dependency_resolver.external_package_manager == Some(true)
 }
 
 /// `PnpmPackageManager.getNetworkConfig`: the user agent names the cloud user.

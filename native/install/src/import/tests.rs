@@ -687,3 +687,27 @@ fn socket_settings_come_from_the_network_config() {
         .expect("an invalid local address is rejected");
     assert_eq!(error.to_string(), "invalid network.local_address: not-an-ip");
 }
+
+#[test]
+fn scopes_without_a_remote_are_resolved_by_the_configured_resolver() {
+    let (fixture, comp1) = fixture(false, &["comp1"]);
+    let parent = fixture.root.parent().unwrap();
+    let resolver = parent.join("resolver.js");
+    let remote = parent.join("remote");
+    let body = format!("module.exports = () => Promise.resolve('file://{}');", remote.display());
+    fs::write(&resolver, body).unwrap();
+    let scope_json = json!({ "name": "ws-local", "resolverPath": resolver.display().to_string() });
+    fs::write(fixture.scope_dir.join("scope.json"), scope_json.to_string()).unwrap();
+    let (summary, _) = run_import(&fixture);
+    assert!(Repo::new(&fixture.scope_dir).exists(&comp1));
+    assert_eq!(summary.components, 2);
+}
+
+#[test]
+fn lane_objects_are_fetched_without_their_history_like_bit_install() {
+    let options = serde_json::to_value(FetchOptions::lanes()).unwrap();
+    assert_eq!(options["type"], json!("lane"));
+    assert_eq!(options["includeLaneHistory"], json!(false));
+    assert_eq!(options["includeArtifacts"], json!(false));
+    assert_eq!(options["collectParents"], json!(false));
+}

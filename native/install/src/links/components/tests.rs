@@ -85,6 +85,16 @@ fn run(
     host: &FakeHost,
     roots: bool,
 ) -> super::LinkResult {
+    run_with(root, components, host, roots, false)
+}
+
+fn run_with(
+    root: &Path,
+    components: &[WorkspaceComponent],
+    host: &FakeHost,
+    roots: bool,
+    windows: bool,
+) -> super::LinkResult {
     let dependencies = IndexMap::new();
     let root_components_dir: PathBuf = root.join("node_modules/.bit_roots");
     let options = ComponentLinkOptions {
@@ -92,7 +102,7 @@ fn run(
         root_components_dir: &root_components_dir,
         dependencies: &dependencies,
         cloud_domain: "bit.cloud",
-        windows: false,
+        windows,
         aspect_env_ids: &[],
     };
     let runtime = tokio::runtime::Builder::new_current_thread().build().unwrap();
@@ -174,4 +184,48 @@ fn injected_copies_and_root_components_share_the_package() {
     let bit_root = root.join("node_modules/.bit_roots/env/node_modules/@org/scope.foo");
     assert_eq!(ino(&generated), ino(&bit_root.join("package.json")));
     assert_eq!(fs::read_to_string(bit_root.join("index.ts")).unwrap(), "index.ts");
+}
+
+/// The Windows layout (`IS_WINDOWS` in `NodeModuleLinker`): the component directory is linked
+/// as `_src` and `types` points into it. The flag, not the host OS, selects it.
+#[test]
+fn windows_layout_links_the_source_dir_as_src_and_types_it() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    let foo = component(root, "foo", &["index.ts", "lib/util.ts"]);
+    write_sources(&foo);
+    run_with(root, std::slice::from_ref(&foo), &FakeHost::default(), false, true);
+    let package_dir = root.join("node_modules/@org/scope.foo");
+    let source = package_dir.join("_src");
+    assert_eq!(fs::canonicalize(&source).unwrap(), fs::canonicalize(&foo.dir).unwrap());
+    assert_eq!(fs::read_to_string(source.join("lib/util.ts")).unwrap(), "lib/util.ts");
+    assert_eq!(fs::read_to_string(package_dir.join("lib/util.ts")).unwrap(), "lib/util.ts");
+    let manifest: Value =
+        serde_json::from_str(&fs::read_to_string(package_dir.join("package.json")).unwrap())
+            .unwrap();
+    assert_eq!(manifest["types"], json!("_src/index.ts"));
+}
+
+/// pnpm links an injected workspace package as a junction on Windows; linking replaces it
+/// with a real directory of per-file links.
+#[cfg(windows)]
+#[test]
+fn replaces_the_engine_junction_with_a_linked_package() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    let foo = component(root, "foo", &["index.ts"]);
+    write_sources(&foo);
+    let package_dir = root.join("node_modules/@org/scope.foo");
+    fs::create_dir_all(package_dir.parent().unwrap()).unwrap();
+    junction::create(&foo.dir, &package_dir).unwrap();
+    run_with(root, std::slice::from_ref(&foo), &FakeHost::default(), false, true);
+    assert!(
+        !fs::symlink_metadata(&package_dir)
+            .unwrap()
+            .file_type()
+            .is_symlink(),
+    );
+    assert!(package_dir.join("package.json").is_file());
+    assert!(foo.dir.join("index.ts").is_file(), "the junction target is untouched");
+    assert!(!foo.dir.join("package.json").exists());
 }

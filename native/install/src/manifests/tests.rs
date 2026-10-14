@@ -81,6 +81,7 @@ pub(super) fn entry(name: &str, version: &str, lifecycle: Lifecycle) -> PolicyEn
         workspace_singleton: false,
         r#override: false,
         source: None,
+        resolve_from_env: false,
     }
 }
 

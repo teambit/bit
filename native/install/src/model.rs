@@ -93,6 +93,10 @@ pub struct PolicyEntry {
     /// `env-own`, `config`, `slots`, `env`, `workspace`, ...
     #[serde(default)]
     pub source: Option<String>,
+    /// `{ version, resolveFromEnv: true }`: the dependency is linked from the
+    /// component's env (`getResolvedFromEnv`).
+    #[serde(default)]
+    pub resolve_from_env: bool,
 }
 
 /// One package dependency of a component after overrides and versions apply.

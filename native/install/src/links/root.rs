@@ -35,10 +35,9 @@ impl Default for LinkOptions {
 
 /// `calculateLinkedDeps`: `{ package: "link:<abs dir>" }` for `@teambit/bit`, the core aspects
 /// the workspace does not author, `@teambit/harmony` and `@teambit/legacy`. The entries go into
-/// the root manifest, so the engine creates the links.
-///
-/// Dependencies a component policy resolves from its env (`resolveFromEnv`) are not linked: no
-/// native policy carries that flag.
+/// the root manifest, so the engine creates the links. The dependencies component policies
+/// resolve from their env (`resolveFromEnv`) need the merged policies and are added by
+/// [`super::resolved_from_env_links`] once those are known.
 pub fn linked_root_deps(
     root: &Path,
     info: &HostInfo,
@@ -248,7 +247,7 @@ fn core_aspect_link(
     may_link_target(&target, has_local_installation).then(|| aspect.dir.clone())
 }
 
-fn bvm_or(info: &HostInfo, package: &CoreAspect) -> PathBuf {
+pub(super) fn bvm_or(info: &HostInfo, package: &CoreAspect) -> PathBuf {
     bvm_package(info, &package.package_name).unwrap_or_else(|| package.dir.clone())
 }
 
@@ -301,7 +300,7 @@ fn hoisted_store(root: &Path) -> PathBuf {
     root.join("node_modules").join(".pnpm")
 }
 
-fn link_value(path: &Path) -> String {
+pub(super) fn link_value(path: &Path) -> String {
     format!("{LINK_PREFIX}{}", path.display())
 }
 

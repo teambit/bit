@@ -82,6 +82,8 @@ import {
 import type { UnpublishedSnapDependency } from './exceptions';
 import { InstallAspect } from './install.aspect';
 import { pickOutdatedPkgs } from './pick-outdated-pkgs';
+import type { AfterInstallRequest, AfterInstallResult, NativeInstallResult } from './native-install';
+import { runNativeInstall } from './native-install';
 import { LinkCommand } from './link';
 import InstallCmd from './install.cmd';
 import UninstallCmd from './uninstall.cmd';
@@ -184,6 +186,8 @@ export class InstallMain {
    * @memberof Workspace
    */
   async install(packages?: string[], options?: WorkspaceInstallOptions): Promise<ComponentMap<string>> {
+    const installedNatively = await this.installNatively(packages, options);
+    if (installedNatively) return installedNatively;
     // Check if external package manager mode is enabled
     const workspaceConfig = this.workspace.getWorkspaceConfig();
     const depResolverExtConfig = workspaceConfig.extensions.findExtension('teambit.dependencies/dependency-resolver');
@@ -251,6 +255,80 @@ export class InstallMain {
     await this.ipcEvents.publishIpcEvent('onPostInstall');
 
     return res;
+  }
+
+  /**
+   * Run the installation on the native installer (`native-install.ts`), serving its JavaScript
+   * callbacks from this Harmony instance. `undefined` leaves it to the TypeScript implementation.
+   */
+  private async installNatively(
+    packages: string[] | undefined,
+    options: WorkspaceInstallOptions | undefined
+  ): Promise<ComponentMap<string> | undefined> {
+    const configPath = path.join(this.workspace.path, 'workspace.jsonc');
+    const configBefore = await fs.readFile(configPath, 'utf8').catch(() => undefined);
+    this.workspace.inInstallContext = true;
+    this.workspace.inInstallAfterPmContext = false;
+    let result: NativeInstallResult | undefined;
+    try {
+      result = await runNativeInstall(
+        {
+          workspace: this.workspace,
+          envs: this.envs,
+          app: this.app,
+          aspectLoader: this.aspectLoader,
+          logger: this.logger,
+          afterInstall: (request) => this.nativeAfterInstall(request),
+        },
+        packages,
+        options
+      );
+    } finally {
+      this.workspace.inInstallContext = false;
+      this.workspace.inInstallAfterPmContext = false;
+    }
+    if (!result) return undefined;
+    this.oldNonLoadedEnvs = result.oldNonLoadedEnvs;
+    // the native installer edits workspace.jsonc on disk (added packages, allowScripts, leaving
+    // external package manager mode); a later persistConfig must not write the stale copy back.
+    const configAfter = await fs.readFile(configPath, 'utf8').catch(() => undefined);
+    if (configAfter !== configBefore) await this.workspace.triggerOnWorkspaceConfigChange();
+    // the native installer already wrote the onPostInstall event file (publishIpcEvent).
+    await this.workspace.clearCache();
+    return this.getComponentsDirectory([]);
+  }
+
+  /**
+   * One TypeScript install cycle after the package manager, for the native installer: the
+   * global-virtual-store bridge, env reloads, compile and workspace config files.
+   */
+  private async nativeAfterInstall(request: AfterInstallRequest): Promise<AfterInstallResult> {
+    this.workspace.inInstallAfterPmContext = true;
+    if (this.dependencyResolver.enableGlobalVirtualStore()) {
+      ensureHoistedDependencyResolution(this.workspace.path);
+    }
+    const oldNonLoadedEnvs = this.setOldNonLoadedEnvs();
+    await this.reloadMovedEnvs();
+    await this.reloadNonLoadedEnvs();
+    const shouldClearCacheOnInstall = this.shouldClearCacheOnInstall();
+    let cacheCleared = false;
+    let compiled = 0;
+    if (request.compile) {
+      const compileStartTime = process.hrtime();
+      const compileOutputMessage = `compiling components`;
+      this.logger.setStatusLine(compileOutputMessage);
+      if (shouldClearCacheOnInstall) {
+        await this.workspace.clearCache();
+        cacheCleared = true;
+      }
+      const results = await this.compiler.compileOnWorkspace([], { initiator: CompilationInitiator.Install });
+      compiled = results.length;
+      this.logger.consoleSuccess(compileOutputMessage, compileStartTime);
+    }
+    if (request.writeConfigFiles) {
+      await this.tryWriteConfigFiles(!cacheCleared && shouldClearCacheOnInstall);
+    }
+    return { oldNonLoadedEnvs, compiled };
   }
 
   async writeDependenciesToPackageJson(): Promise<void> {

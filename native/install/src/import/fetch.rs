@@ -107,7 +107,9 @@ impl FetchOptions {
         }
     }
 
-    /// `importLanes`: lane objects.
+    /// `importLanes`: lane objects. `bit install` reaches it through
+    /// `workspace.getCurrentRemoteLane()`, which keeps the default
+    /// `includeLaneHistory = false`, so no `LaneHistory` is fetched.
     #[must_use]
     pub fn lanes() -> Self {
         Self {

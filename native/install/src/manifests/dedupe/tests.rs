@@ -249,6 +249,7 @@ fn policy(name: &str, version: &str, lifecycle: Lifecycle, preserve: Option<bool
         workspace_singleton: false,
         r#override: false,
         source: None,
+        resolve_from_env: false,
     }
 }
 

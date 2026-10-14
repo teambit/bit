@@ -35,8 +35,12 @@ pub struct HostInfo {
     pub columns: Option<u32>,
     pub color: bool,
     /// Bit's loader is on (`BIT_DISABLE_SPINNER` unset). Without it, status and
-    /// success lines are not printed at all, only plain console messages.
+    /// success lines are not printed until the package manager step turns it on.
     pub loader: bool,
+    /// `logger.shouldWriteToConsole`: console lines print while the loader is off.
+    /// Unset, it follows `loader`, as `CommandRunner` sets both together.
+    #[serde(default)]
+    pub write_to_console: Option<bool>,
     /// The process runs with `--json`/non-interactive output.
     pub non_interactive: bool,
     /// `currentDateAndTimeToFileName()` at command start: names the
@@ -99,6 +103,14 @@ pub trait Host: Send + Sync {
     /// cannot be loaded.
     async fn dev_patterns(&self, env_id: &str) -> io::Result<Option<Value>> {
         let _ = env_id;
+        Ok(None)
+    }
+
+    /// The dependency policies aspects registered (`registerDependenciesPolicies`),
+    /// as `[[registrar, policy], ...]`, after loading `extension_ids`: the aspects the
+    /// components configure that may register one. `None` when the host cannot load them.
+    async fn dependency_policies(&self, extension_ids: &[String]) -> io::Result<Option<Value>> {
+        let _ = extension_ids;
         Ok(None)
     }
 

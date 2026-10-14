@@ -49,7 +49,13 @@ pub type Sink = Arc<dyn Fn(&str) + Send + Sync>;
 pub struct Output {
     color: bool,
     tty: bool,
-    loader: bool,
+    /// Bit's loader exists (`loader.isStarted`): status and success lines print.
+    /// The package manager step turns it on (`logger.on()` in `PnpmPackageManager`).
+    loader: AtomicBool,
+    /// `logger.shouldWriteToConsole`: console lines print while the loader is off.
+    write_to_console: bool,
+    /// `process.env.CI`: `logger.setStatusLine` prints nothing.
+    ci: bool,
     sink: Sink,
     state: Arc<Mutex<Spinner>>,
     spinning: Arc<AtomicBool>,
@@ -68,11 +74,37 @@ impl Output {
         Self {
             color,
             tty,
-            loader,
+            loader: AtomicBool::new(loader),
+            write_to_console: true,
+            ci: false,
             sink,
             state: Arc::default(),
             spinning: Arc::new(AtomicBool::new(false)),
         }
+    }
+
+    /// `logger.shouldWriteToConsole`: whether console lines print while the
+    /// loader is off. `CommandRunner` turns it off together with the loader.
+    #[must_use]
+    pub fn with_console(mut self, write_to_console: bool) -> Self {
+        self.write_to_console = write_to_console;
+        self
+    }
+
+    /// Running on CI (`process.env.CI` set): status lines are not shown.
+    #[must_use]
+    pub fn with_ci(mut self, ci: bool) -> Self {
+        self.ci = ci;
+        self
+    }
+
+    /// `logger.on()`: from now on status and success lines print.
+    pub fn loader_on(&self) {
+        self.loader.store(true, Ordering::SeqCst);
+    }
+
+    fn loader(&self) -> bool {
+        self.loader.load(Ordering::SeqCst)
     }
 
     /// `chalk.<style>(text)`; plain text when colors are off.
@@ -90,8 +122,11 @@ impl Output {
 
     /// `logger.setStatusLine(text)`: restart the loader with `text`.
     pub fn status(&self, text: &str) {
+        if self.ci {
+            return;
+        }
         self.stop();
-        if !self.loader {
+        if !self.loader() {
             return;
         }
         lock(&self.state).text = text.to_string();
@@ -111,12 +146,12 @@ impl Output {
         });
     }
 
-    /// `logger.console(message)` while the loader is on: persist `message`
-    /// without a symbol.
+    /// `logger.console(message)`: persisted without a symbol while the loader
+    /// is on, printed when only console writing is on, dropped otherwise.
     pub fn console(&self, message: &str) {
-        if self.loader {
+        if self.loader() {
             self.persist(" ", message);
-        } else {
+        } else if self.write_to_console {
             self.print(message);
         }
     }
@@ -174,7 +209,7 @@ impl Output {
 
     fn persist(&self, symbol: &str, text: &str) {
         self.stop();
-        if !self.loader {
+        if !self.loader() {
             return;
         }
         self.line(&format!("{symbol} {text}"));

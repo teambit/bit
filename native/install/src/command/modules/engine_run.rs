@@ -45,6 +45,9 @@ pub async fn run(
     let result = engine::install(&calculated.outcome.plan, &loaded.engine, &options)
         .await
         .map_err(|error| enrich(error, calculated, output))?;
+    // `PnpmPackageManager.install` turns the logger back on after the engine,
+    // which starts Bit's loader even when the command runs without one.
+    output.loader_on();
     output.success(&format!("done {RUNNING}"), Some(started));
     output.status(POST_SUBSCRIBERS);
     output.success(POST_SUBSCRIBERS, None);

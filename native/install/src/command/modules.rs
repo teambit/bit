@@ -52,7 +52,7 @@ pub async fn install(session: &Session<'_>, mut loaded: Loaded) -> io::Result<In
     let context = CycleContext { loaded: &loaded, links: &links, restore: restore.as_ref() };
     let old_non_loaded_envs = run_cycles(session, &context, &mut calculated).await?;
     linking::sync_core_aspects(session, &loaded, &calculated)?;
-    if !session.options.lockfile_only {
+    if !session.options.lockfile_only && !session.options.skip_prune {
         // A failed prune never fails the installation. Directories the host
         // process loaded modules from stay (`loadedVirtualStoreDirNames`).
         let loaded_dirs: HashSet<String> = session.info

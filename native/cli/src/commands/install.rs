@@ -201,6 +201,14 @@ impl bit_install::Host for JsHost {
         self.call("envPolicy", json!({ "envId": env_id })).await
     }
 
+    async fn dev_patterns(&self, env_id: &str) -> io::Result<Option<Value>> {
+        self.call("devPatterns", json!({ "envId": env_id })).await
+    }
+
+    async fn dependency_policies(&self, extension_ids: &[String]) -> io::Result<Option<Value>> {
+        self.call("dependencyPolicies", json!({ "extensionIds": extension_ids })).await
+    }
+
     async fn app_types(&self) -> io::Result<Vec<String>> {
         self.call("appTypes", json!({})).await
     }

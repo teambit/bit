@@ -59,16 +59,21 @@ pub async fn calculate(
     let components = loaded.components();
     let env_policies = policy::load_env_policies(&session.root, &components, session.host).await?;
     let workspace_policy = workspace_policy(loaded)?;
+    let mut options = dependency_options(session, loaded, &components)?;
+    options.policy_slots =
+        policy::slots::registry(&components, &session.info.core_aspects, session.host).await?;
     let dependencies = dependencies::compute(
         &session.root,
         &components,
         &workspace_policy,
         &env_policies,
         loaded.workspace.root_package_json.as_ref(),
-        &dependency_options(session, loaded, &components)?,
+        &options,
         session.host,
     )
     .await?;
+    let linked_root_deps =
+        &with_env_links(session, loaded, linked_root_deps, &components, &dependencies);
     let apps = apps(session, loaded, &components).await?;
     let root_policy = root_policy(session, loaded, workspace_policy)?;
     // `getWorkspaceManifest` announces the manifest creation (`createFromComponents`).
@@ -91,6 +96,31 @@ pub async fn calculate(
     session.loading(loaded);
     session.loading(loaded);
     Ok(Calculated { components, env_policies, dependencies, outcome })
+}
+
+/// `linkDepsResolvedFromEnv`: off with root components.
+fn with_env_links(
+    session: &Session<'_>,
+    loaded: &Loaded,
+    linked_root_deps: &DependencyMap,
+    components: &[WorkspaceComponent],
+    dependencies: &IndexMap<String, ComponentDependencies>,
+) -> DependencyMap {
+    let mut links = linked_root_deps.clone();
+    if loaded.config.dependency_resolver.has_root_components() {
+        return links;
+    }
+    let env_links = crate::links::resolved_from_env_links(
+        &session.root,
+        session.info,
+        components,
+        dependencies,
+    );
+    for message in &env_links.messages {
+        session.output.console(message);
+    }
+    links.extend(env_links.links);
+    links
 }
 
 struct Inputs<'a> {
@@ -182,6 +212,7 @@ fn root_policy(
             workspace_singleton: false,
             r#override: false,
             source: None,
+            resolve_from_env: false,
         });
     }
     Ok(policy)
@@ -235,6 +266,7 @@ fn dependency_options(
         update_dependents: update_dependents(loaded)?,
         use_cache: true,
         dev_patterns: DevPatternConfig::from_aspects(&|id| loaded.config.aspect(id).cloned()),
+        policy_slots: Vec::new(),
     })
 }
 

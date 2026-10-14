@@ -6,9 +6,10 @@ use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use std::io;
 
-/// Parsed `bit install` flags. Field docs name the CLI flag.
+/// Parsed `bit install` flags. Field docs name the CLI flag; the last fields
+/// carry `WorkspaceInstallOptions` that only programmatic installs set.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", default)]
 #[cfg_attr(
     dylint_lib = "perfectionist",
     expect(perfectionist::too_many_struct_fields, reason = "One field per `bit install` flag.")
@@ -52,6 +53,32 @@ pub struct InstallOptions {
     pub package_manager_args: Vec<String>,
     /// `--log [level]`
     pub log: Option<String>,
+    /// `InstallMain.install` called by another command rather than `bit install`:
+    /// the command's own lines (runner, "Resolving...", summary) are not printed.
+    pub programmatic: bool,
+    /// `showExternalPackageManagerPrompt`: ask before leaving external package
+    /// manager mode. `bit install` always asks.
+    pub external_prompt: bool,
+    /// `updateExisting` / `skipIfExisting` for packages added to the workspace policy.
+    pub existing_entries: ExistingEntries,
+    /// `skipPrune`
+    pub skip_prune: bool,
+    /// `optimizeReportForNonTerminal`: the package manager appends output lines.
+    pub append_only: bool,
+}
+
+/// What adding a package already in the workspace policy does
+/// (`WorkspacePolicy.add` options).
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ExistingEntries {
+    /// `updateExisting`: the new entry replaces it. `bit install` always updates.
+    #[default]
+    Update,
+    /// `skipIfExisting`: the existing entry stays.
+    Skip,
+    /// Neither: `EntryAlreadyExist`.
+    Fail,
 }
 
 impl InstallOptions {
@@ -84,7 +111,8 @@ pub fn parse(argv: &[String]) -> io::Result<Parsed> {
     if !COMMANDS.contains(&command.as_str()) {
         return Err(invalid(&format!("not an install command: {command}")));
     }
-    let mut options = InstallOptions::default();
+    // `install.cmd.tsx` always asks before leaving external package manager mode.
+    let mut options = InstallOptions { external_prompt: true, ..InstallOptions::default() };
     let mut scripts = Scripts::default();
     let mut args = rest.iter().peekable();
     while let Some(arg) = args.next() {

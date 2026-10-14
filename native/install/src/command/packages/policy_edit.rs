@@ -4,7 +4,7 @@ use super::super::{
     session::{Loaded, Session},
     workspace_jsonc,
 };
-use crate::{config::DEPENDENCY_RESOLVER_ASPECT, jsonc::Document};
+use crate::{config::DEPENDENCY_RESOLVER_ASPECT, jsonc::Document, options::ExistingEntries};
 use indexmap::IndexMap;
 use serde_json::{Map, Value, json};
 use std::io;
@@ -23,13 +23,14 @@ pub fn add_to_root_policy(
 ) -> io::Result<()> {
     let field = usize::from(lifecycle == "peer");
     let mut policy = config_entries(&loaded.config.dependency_resolver.policy);
-    // `remove()` returns a new policy without changing this one, so an existing
-    // entry stays and the added one, written later, wins in `toConfigObject`.
-    policy.extend(
-        entries
-            .iter()
-            .map(|(name, version)| (field, name.clone(), json!(version))),
-    );
+    for (name, version) in entries {
+        if !admits(&policy, name, session.options.existing_entries)? {
+            continue;
+        }
+        // `remove()` returns a new policy without changing this one, so an existing
+        // entry stays and the added one, written later, wins in `toConfigObject`.
+        policy.push((field, name.clone(), json!(version)));
+    }
     let fields = to_config_object(&policy);
     workspace_jsonc::edit(
         &session.root,
@@ -38,6 +39,24 @@ pub fn add_to_root_policy(
         "install",
         |document| update_config_policy(document, &fields),
     )
+}
+
+/// `WorkspacePolicy.add`: an entry with the same name in any lifecycle is
+/// updated, kept, or an error.
+fn admits(policy: &[Entry], name: &str, existing: ExistingEntries) -> io::Result<bool> {
+    if !policy
+        .iter()
+        .any(|(_, entry_name, _)| entry_name == name)
+    {
+        return Ok(true);
+    }
+    match existing {
+        ExistingEntries::Update => Ok(true),
+        ExistingEntries::Skip => Ok(false),
+        ExistingEntries::Fail => Err(io::Error::other(format!(
+            "policy entry with {name} already exists, use install -u | --update-existing to update the entry",
+        ))),
+    }
 }
 
 /// `WorkspacePolicyFactory.fromConfigObject`: runtime entries, then peers; values

@@ -1,4 +1,4 @@
-use super::{InstallOptions, Parsed, parse};
+use super::{ExistingEntries, InstallOptions, Parsed, parse};
 use indexmap::IndexMap;
 
 fn options(args: &[&str]) -> InstallOptions {
@@ -75,4 +75,24 @@ fn switches_take_a_following_boolean() {
     assert!(parsed.skip_compile);
     assert!(!parsed.skip_import);
     assert_eq!(parsed.packages, ["lodash"]);
+}
+
+#[test]
+fn the_command_asks_before_leaving_external_mode() {
+    let parsed = options(&["install"]);
+    assert!(parsed.external_prompt);
+    assert!(!parsed.programmatic);
+    assert_eq!(parsed.existing_entries, ExistingEntries::Update);
+}
+
+#[test]
+fn programmatic_options_deserialize_from_partial_json() {
+    let parsed: InstallOptions = serde_json::from_str(
+        r#"{ "programmatic": true, "skipImport": true, "existingEntries": "skip", "skipPrune": true }"#,
+    )
+    .unwrap();
+    assert!(parsed.programmatic && parsed.skip_import && parsed.skip_prune);
+    assert_eq!(parsed.existing_entries, ExistingEntries::Skip);
+    assert!(!parsed.external_prompt);
+    assert!(parsed.packages.is_empty());
 }

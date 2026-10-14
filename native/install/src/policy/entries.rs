@@ -33,6 +33,7 @@ pub fn entry(name: &str, version: &str, lifecycle: Lifecycle) -> PolicyEntry {
         workspace_singleton: false,
         r#override: false,
         source: None,
+        resolve_from_env: false,
     }
 }
 
@@ -151,7 +152,8 @@ fn array_entry(
     })
 }
 
-/// `createVariantPolicyEntry` for a string or `{ version, optional, workspaceSingleton, override }` value.
+/// `createVariantPolicyEntry` for a string or
+/// `{ version, resolveFromEnv, optional, workspaceSingleton, override }` value.
 #[must_use]
 pub fn value_entry(name: &str, value: &Value, lifecycle: Lifecycle) -> Option<PolicyEntry> {
     match value {
@@ -163,6 +165,7 @@ pub fn value_entry(name: &str, value: &Value, lifecycle: Lifecycle) -> Option<Po
                 optional: flag("optional"),
                 workspace_singleton: flag("workspaceSingleton"),
                 r#override: flag("override"),
+                resolve_from_env: flag("resolveFromEnv"),
                 ..entry(name, &version, lifecycle)
             })
         }

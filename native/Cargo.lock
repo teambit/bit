@@ -381,6 +381,7 @@ dependencies = [
  "futures-util",
  "getrandom 0.3.4",
  "indexmap",
+ "junction 2.1.0",
  "miette 7.6.0",
  "node-semver",
  "pnpm-config",

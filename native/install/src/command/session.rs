@@ -91,6 +91,10 @@ impl Loaded {
         if let Some(Some(username)) = session.cloud_username.get() {
             engine::apply_cloud_username(&mut engine, username);
         }
+        // `reportOptions.appendOnly = optimizeReportForNonTerminal`.
+        if let Some(reporter) = engine.reporter.as_mut() {
+            reporter.append_only |= session.options.append_only;
+        }
         Ok(Self { config, global, effective, workspace, engine })
     }
 

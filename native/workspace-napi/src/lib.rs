@@ -1,5 +1,5 @@
 pub use inspection::WorkspaceInspectionSnapshot;
-pub use install::install;
+pub use install::{install, install_with_options};
 pub use stream::ImportStreamEngine;
 
 mod inspection;

@@ -73,6 +73,8 @@ pub struct DependencyOptions {
     pub use_cache: bool,
     /// The workspace configuration of the dev-pattern registrars.
     pub dev_patterns: DevPatternConfig,
+    /// Dependency policies aspects registered (`registerDependenciesPolicies`).
+    pub policy_slots: Vec<crate::policy::slots::Registration>,
 }
 
 /// Workspace-wide inputs shared by every component.
@@ -254,7 +256,12 @@ fn one(
 ) -> io::Result<ComponentDependencies> {
     let workspace = context.workspace;
     let component = subject.component;
-    let policy = policy::component_policy(component, &context.env_policy, subject.own_env.as_ref());
+    let policy = policy::component_policy(
+        component,
+        &context.env_policy,
+        subject.own_env.as_ref(),
+        &workspace.options.policy_slots,
+    );
     let merge_config = workspace.options.merge_config
         .get(&component.id.to_string_without_version())
         .map(|data| {

@@ -15,11 +15,13 @@ mod bitmap;
 mod component;
 mod fetch;
 mod fs_remote;
+mod history;
 mod http;
 mod lane;
 mod objects;
 mod persist;
 mod plan;
+mod resolver;
 mod tar;
 
 use crate::{host::HostInfo, model::GlobalConfig, output::Output};
@@ -28,6 +30,7 @@ use http::Network;
 use lane::RemoteLane;
 use plan::Importer;
 use remotes::Remotes;
+use resolver::Resolver;
 use serde_json::Value;
 use std::{fs, io, path::Path, time::Instant};
 
@@ -73,9 +76,7 @@ async fn import(
         .as_str()
         .unwrap_or_default()
         .to_string();
-    let remotes = Remotes::load(&scope_json, &info.global_config_dir, global)?;
-    let network =
-        Network::new(global, &info.bit_version, Some(&local_scope), info.token.as_deref())?;
+    let (remotes, network) = connect(&scope_json, &local_scope, global, info)?;
     let fetcher =
         Fetcher { remotes: &remotes, network: &network, concurrency: fetch::concurrency(global) };
     let repo = Repo::new(scope_dir);
@@ -93,12 +94,29 @@ async fn import(
         local_scope: &local_scope,
         lane: remote_lane.as_ref(),
         output: Some(output),
+        refetch_incomplete_history: history::refetch_requested(),
     };
     let written = importer.import(&ids).await?;
     if let Some(lane) = &remote_lane {
         lane::merge_and_save(&repo, lane, &lane::Identity::from_config(global))?;
     }
     Ok(ImportSummary { components: written.components.len(), objects: written.objects })
+}
+
+/// The remotes the workspace scope knows (with its custom resolver) and the
+/// HTTP client that reaches them.
+fn connect(
+    scope_json: &Value,
+    local_scope: &str,
+    global: &GlobalConfig,
+    info: &HostInfo,
+) -> io::Result<(Remotes, Network)> {
+    let resolver = Resolver::configured(scope_json, info.node_path.clone(), local_scope, global);
+    let remotes =
+        Remotes::load(scope_json, &info.global_config_dir, global)?.with_resolver(resolver);
+    let network =
+        Network::new(global, &info.bit_version, Some(local_scope), info.token.as_deref())?;
+    Ok((remotes, network))
 }
 
 /// `getIdsToImportFromBitmap()` on main; on a lane, the lane ids (with hidden

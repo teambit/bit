@@ -9,12 +9,14 @@
 //! workspace authoring the core aspects needs.
 
 pub use components::{ComponentLinkOptions, ComponentLinks, FileLink, LinkResult, link_components};
+pub use env_links::{EnvLinks, resolved_from_env_links};
 pub use root::{
     LinkOptions, link_core_aspects_to_hoisted_store, linked_root_deps,
     sync_core_aspect_links_for_envs,
 };
 
 mod components;
+mod env_links;
 mod link_fs;
 mod package_json;
 mod root;
