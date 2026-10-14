@@ -1,4 +1,4 @@
-use super::{Budget, capture, digest};
+use super::{super::PENDING_GRAPH_VERSION, Budget, capture, digest, rekey};
 use rayon::ThreadPoolBuilder;
 use serde_json::json;
 use std::fs;
@@ -43,4 +43,20 @@ fn parallel_sources_preserve_order_hashes_and_share_one_allocation_budget() {
             .install(|| capture(&version, &files, &Budget::new(400)))
             .is_err(),
     );
+}
+
+#[test]
+fn pending_root_replacement_keeps_reachable_historical_root_distinct() {
+    let pending = json!({"scope":"scope","name":"a","version":PENDING_GRAPH_VERSION});
+    let old = json!({"scope":"scope","name":"a","version":"old"});
+    let dependency = json!({"scope":"scope","name":"b","version":"b"});
+    let mut rows = vec![
+        json!({"source":pending,"target":dependency,"type":"prod"}),
+        json!({"source":dependency,"target":old,"type":"prod"}),
+        json!({"source":old,"target":dependency,"type":"prod"}),
+    ];
+    rekey(&mut rows, "scope/a", "new");
+    assert_eq!(rows[0]["source"]["version"], "new");
+    assert_eq!(rows[1]["target"], old);
+    assert_eq!(rows[2]["source"], old);
 }

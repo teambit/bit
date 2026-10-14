@@ -34,6 +34,23 @@ export async function planFreshDependencyCache(root: string): Promise<FreshDepen
 
 export type FreshDependencyCache = { identity: string; rawData: string; cacheable: boolean; readSet: any[] };
 
+export function freshDependencyDetection(context: any, files: string[], policy: any) {
+  const patterns = [defaultTestPatterns(), defaultDocsPatterns(), defaultCompositionsPatterns()].map(splitPatterns);
+  const devFiles = files.filter((file) =>
+    patterns.some(({ includePatterns, excludePatterns }) => matchPatterns(file, includePatterns, excludePatterns))
+  );
+  return {
+    graph: { home: homedir(), ...nativeDependencyGrammar() },
+    devFiles,
+    modelPackages: policy.modelPackages,
+    workspacePolicy: ['dependencies', 'devDependencies', 'peerDependencies'].map(
+      (field) => policy.input.policies.workspacePolicy[field] ?? {}
+    ),
+    corePackages: getAllCoreAspectsIds().map(getCoreAspectPackageName),
+    workspaceComponents: context.targets.map(fullIdentity),
+  };
+}
+
 /** Only the built-in Node environment and unconfigured core slots reach this boundary. */
 export async function readFreshDependencies(
   root: string,
@@ -44,29 +61,13 @@ export async function readFreshDependencies(
   request: NativeClientRequest
 ): Promise<{ dependencies: any; cache: FreshDependencyCache }> {
   const componentRoot = path.join(root, target.directory);
-  const patterns = [defaultTestPatterns(), defaultDocsPatterns(), defaultCompositionsPatterns()].map(splitPatterns);
-  const devFiles = files.filter((file) =>
-    patterns.some(({ includePatterns, excludePatterns }) => matchPatterns(file, includePatterns, excludePatterns))
-  );
   const capture = await request({
     kind: 'dependencyDetectFresh',
     root,
     componentRoot,
     identity: fullIdentity(target),
     files: files.map((file) => path.join(componentRoot, file)),
-    detection: {
-      graph: {
-        home: homedir(),
-        ...nativeDependencyGrammar(),
-      },
-      devFiles,
-      modelPackages: policy.modelPackages,
-      workspacePolicy: ['dependencies', 'devDependencies', 'peerDependencies'].map(
-        (field) => policy.input.policies.workspacePolicy[field] ?? {}
-      ),
-      corePackages: getAllCoreAspectsIds().map(getCoreAspectPackageName),
-      workspaceComponents: context.targets.map(fullIdentity),
-    },
+    detection: freshDependencyDetection(context, files, policy),
   });
   const { grammarInputs, ...receipt } = capture;
   const dependencies = await request({

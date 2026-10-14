@@ -11,6 +11,7 @@ import { snapshotSemverGrammar } from '@teambit/pkg.modules.semver-helper';
 import { withRustClientRequest, captureRustClientCurrent } from './rust-client-capture';
 import { parseRustWorkspaceCommand, type RustWorkspaceCommandOptions } from './rust-workspace-command-options';
 import { formatRustWorkspaceCommand } from './rust-workspace-command-report';
+import type { FreshDependencyCache } from './rust-fresh-dependencies';
 
 export async function readRustWorkspaceCommand(
   root: string,
@@ -38,6 +39,7 @@ export async function readRustWorkspaceCommand(
       if (typeof prepared.token !== 'string' || !prepared.context) return undefined;
       let capture = await captureRustClientCurrent(root, prepared.context, request, prepared.targets, {
         verifyFreshDependencies: operation === 'merge',
+        retainDependencyState: operation === 'merge',
       });
       if (!capture) return undefined;
       const semver = snapshotSemverGrammar([
@@ -56,17 +58,30 @@ export async function readRustWorkspaceCommand(
         semver,
       });
       if (plan.token !== prepared.token || !capture.fresh()) return undefined;
-      if (plan.needsSnap !== undefined) {
+      let dependencyCaches: FreshDependencyCache[] = [];
+      if (plan.policyPreparation !== undefined) {
+        if (operation !== 'merge') return undefined;
+        const { prepareRustCommandPolicy } = await import('./rust-workspace-command-policy');
+        const projected = await prepareRustCommandPolicy(prepared, plan, capture.dependencyStates, request);
+        plan = projected.plan;
+        dependencyCaches = projected.dependencyCaches;
+        if (!capture.fresh()) return undefined;
+      }
+      const snapFailed = plan.snapFailed === true;
+      if (snapFailed && (plan.needsSnap !== undefined || !plan.result?.mergeSnapError)) return undefined;
+      if (plan.needsSnap !== undefined || snapFailed) {
         if (
-          !Array.isArray(plan.needsSnap) ||
-          plan.needsSnap.length > 4096 ||
+          (!snapFailed && !Array.isArray(plan.needsSnap)) ||
+          (plan.needsSnap?.length ?? 0) > 4096 ||
           options.operation !== 'merge' ||
           options.noSnap
         )
           return undefined;
-        if (plan.needsSnap.some((identity) => typeof identity !== 'string' || identity.length > 4096)) return undefined;
-        // Canonical snapping loads every workspace component before calculating auto-tags.
-        // Replace the selected-only cache plan so a staged global reset executes once.
+        if ((plan.needsSnap ?? []).some((identity) => typeof identity !== 'string' || identity.length > 4096))
+          return undefined;
+        // App eligibility covers the whole workspace before canonical cache reset.
+        // Failed issue checks repopulate only the divergent targets' staged caches.
+        if (snapFailed && !dependencyCaches.length) return undefined;
         const allCapture = await captureRustClientCurrent(root, prepared.context, request, undefined, {
           verifyFreshDependencies: true,
           resetDependencyCache: true,
@@ -80,10 +95,12 @@ export async function readRustWorkspaceCommand(
         )
           return undefined;
         const changed = new Set([
-          ...plan.needsSnap,
+          ...(plan.needsSnap ?? []),
           ...(plan.dependencyCacheVersions ?? []).map((target) => target.identity),
+          ...dependencyCaches.map((entry) => entry.identity.slice(0, entry.identity.lastIndexOf('@'))),
         ]);
         if (
+          !snapFailed &&
           allCapture.captured.some((component) =>
             [...component.current.dependencies, ...component.current.devDependencies].some((dependency) =>
               changed.has(`${dependency.id.scope}/${dependency.id.name}`)
@@ -92,30 +109,38 @@ export async function readRustWorkspaceCommand(
         )
           return undefined;
         capture = allCapture;
-        const { newSnapHash, newSnapBatchId } = await import('@teambit/snapping/dist/new-snap-hash.js');
-        const { getBasicLog } = await import('@teambit/harmony.modules.get-basic-log');
-        const { getBitVersion } = await import('@teambit/bit.get-bit-version');
-        const bitVersion = getBitVersion();
-        const batchId = newSnapBatchId();
-        const versions = plan.needsSnap.map((identity) => ({ identity, hash: newSnapHash() }));
-        const log = await getBasicLog();
-        plan = await request({
-          kind: 'commandFinalize',
-          token: prepared.token,
-          snapReceipt: { versions, log, batchId, bitVersion },
-          dependencyReadSet: capture.dependencyReadSet,
-        });
-        if (plan.token !== prepared.token || !capture.fresh()) return undefined;
+        const { validateRustCommandIssues } = await import('./rust-workspace-command-issues');
+        await validateRustCommandIssues(root, prepared.context, capture.components, plan);
+        // Reject unsupported presentation receipts before allocating snapshot identities.
+        formatRustWorkspaceCommand(plan.result, options);
+        commandProgress(plan.progress, options.operation);
+        if (!snapFailed) {
+          const { newSnapHash, newSnapBatchId } = await import('@teambit/snapping/dist/new-snap-hash.js');
+          const { getBasicLog } = await import('@teambit/harmony.modules.get-basic-log');
+          const { getBitVersion } = await import('@teambit/bit.get-bit-version');
+          const bitVersion = getBitVersion();
+          const batchId = newSnapBatchId();
+          const versions = plan.needsSnap.map((identity) => ({ identity, hash: newSnapHash() }));
+          const log = await getBasicLog();
+          plan = await request({
+            kind: 'commandFinalize',
+            token: prepared.token,
+            snapReceipt: { versions, log, batchId, bitVersion },
+            dependencyReadSet: capture.dependencyReadSet,
+          });
+          if (plan.token !== prepared.token || !capture.fresh()) return undefined;
+        }
       }
       // Resolve every presentation dependency and validate metadata before durable changes.
       const report = formatRustWorkspaceCommand(plan.result, options);
       const progress = commandProgress(plan.progress, options.operation);
       committing = true;
       await beforeCommit?.(report, progress);
-      await capture.commit();
+      await capture.commit(dependencyCaches, snapFailed);
       const applied = await request({
         kind: 'commandApply',
         token: prepared.token,
+        dependencyReadSet: capture.dependencyReadSet,
         fileId: currentDateAndTimeToFileName(),
       });
       if (applied.applied !== true) throw new Error('native command apply receipt');

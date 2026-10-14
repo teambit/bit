@@ -46,7 +46,7 @@ fn node_candidate(
     if !directory_only && let Some(found) = load_file(file, typed, budget)? {
         return Ok(Some(found));
     }
-    if !budget.metadata(file)?.is_some_and(|metadata| metadata.is_dir()) {
+    if !budget.metadata(file)?.is_some_and(super::source_overlay::Metadata::is_dir) {
         return Ok(None);
     }
     if package && let Some(found) = load_package(file, typed, budget)? {

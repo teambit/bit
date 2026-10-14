@@ -1,4 +1,5 @@
 pub(super) mod input;
+pub(super) mod policy;
 
 mod apply_command;
 mod bitmap;
@@ -65,6 +66,8 @@ pub(super) struct Plan {
 pub(super) struct Apply {
     token: String,
     file_id: String,
+    #[serde(default)]
+    dependency_read_set: Vec<proof::Proof>,
 }
 pub(super) fn plan(
     input: Plan,

@@ -1,4 +1,8 @@
-use super::{dependency_graph::proof, invalid, path};
+use super::{
+    dependency_graph::proof,
+    invalid, path,
+    source_overlay::{Metadata, SourceOverlay},
+};
 use rayon::prelude::*;
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -84,6 +88,7 @@ pub(super) struct Budget {
     operations: AtomicUsize,
     bytes: AtomicUsize,
     proofs: Option<Mutex<Vec<proof::Proof>>>,
+    overlay: Option<SourceOverlay>,
 }
 impl Budget {
     pub(super) fn new() -> Self {
@@ -94,7 +99,49 @@ impl Budget {
             operations: AtomicUsize::new(0),
             bytes: AtomicUsize::new(0),
             proofs: enabled.then(|| Mutex::new(Vec::new())),
+            overlay: None,
         }
+    }
+    pub(super) fn overlay(view: &SourceOverlay) -> io::Result<Self> {
+        Ok(Self {
+            operations: AtomicUsize::new(0),
+            bytes: AtomicUsize::new(0),
+            proofs: Some(Mutex::new(view.proofs()?)),
+            overlay: Some(view.clone()),
+        })
+    }
+    pub(super) fn read_source(&self, file: &Path) -> io::Result<Option<Vec<u8>>> {
+        if let Some(view) = &self.overlay {
+            let mut proofs = Vec::new();
+            let bytes = view.read(file, &mut proofs)?;
+            for proof in proofs {
+                self.record(proof)?;
+            }
+            return Ok(bytes);
+        }
+        let mut bytes = Vec::new();
+        let source = match fs::File::open(file) {
+            Ok(source) => source,
+            Err(error)
+                if matches!(
+                    error.kind(),
+                    io::ErrorKind::NotFound | io::ErrorKind::NotADirectory,
+                ) =>
+            {
+                return Ok(None);
+            }
+            Err(error) => return Err(error),
+        };
+        source
+            .take(1024 * 1024 + 1)
+            .read_to_end(&mut bytes)?;
+        if bytes.len() > 1024 * 1024 {
+            return Err(invalid("dependency source read limit"));
+        }
+        if self.proofs.is_some() {
+            self.record(proof::content(file, &bytes))?;
+        }
+        Ok(Some(bytes))
     }
     pub(super) fn proofs(&self) -> io::Result<Vec<proof::Proof>> {
         self.proofs
@@ -104,7 +151,7 @@ impl Budget {
                 |proofs| {
                     proofs
                         .lock()
-                        .map(|proofs| proofs.clone())
+                        .map(|proofs| proof::unique(proofs.clone()))
                         .map_err(|_| invalid("dependency proof lock"))
                 },
             )
@@ -118,9 +165,17 @@ impl Budget {
         }
         Ok(())
     }
-    pub(super) fn metadata(&self, file: &Path) -> io::Result<Option<fs::Metadata>> {
+    pub(super) fn metadata(&self, file: &Path) -> io::Result<Option<Metadata>> {
         if self.operations.fetch_add(1, Ordering::Relaxed) >= 16384 {
             return Err(invalid("dependency resolution filesystem limit"));
+        }
+        if let Some(view) = &self.overlay {
+            let mut proofs = Vec::new();
+            let metadata = view.metadata(file, &mut proofs)?;
+            for proof in proofs {
+                self.record(proof)?;
+            }
+            return Ok(metadata);
         }
         let metadata = match fs::metadata(file) {
             Ok(metadata) => Ok(Some(metadata)),
@@ -137,7 +192,7 @@ impl Budget {
         if self.proofs.is_some() {
             self.record(proof::metadata(file, metadata.as_ref())?)?;
         }
-        Ok(metadata)
+        Ok(metadata.as_ref().map(Metadata::disk))
     }
     pub(super) fn package(&self, file: &Path) -> io::Result<Option<Value>> {
         let Some(metadata) = self.metadata(file)? else {
@@ -146,17 +201,12 @@ impl Budget {
         if !metadata.is_file() || metadata.len() > 1024 * 1024 {
             return Err(invalid("dependency package file limit"));
         }
-        let mut bytes = Vec::new();
-        fs::File::open(file)?
-            .take(1024 * 1024 + 1)
-            .read_to_end(&mut bytes)?;
+        let bytes =
+            self.read_source(file)?.ok_or_else(|| invalid("dependency package disappeared"))?;
         if bytes.len() > 1024 * 1024
             || self.bytes.fetch_add(bytes.len(), Ordering::Relaxed) + bytes.len() > 8 * 1024 * 1024
         {
             return Err(invalid("dependency package read limit"));
-        }
-        if self.proofs.is_some() {
-            self.record(proof::content(file, &bytes))?;
         }
         let source = std::str::from_utf8(&bytes).map_err(|_| invalid("dependency package UTF-8"))?;
         serde_json::from_str(source)
@@ -213,7 +263,7 @@ fn home_lookup(
 
 fn package_candidate(file: &Path, budget: &Budget) -> io::Result<Option<PathBuf>> {
     if let Some(parent) = file.parent()
-        && budget.metadata(parent)?.is_some_and(|metadata| metadata.is_dir())
+        && budget.metadata(parent)?.is_some_and(super::source_overlay::Metadata::is_dir)
     {
         return candidate(file, budget, 0);
     }

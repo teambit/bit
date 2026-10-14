@@ -1,4 +1,5 @@
 import ts from 'typescript';
+import { getCjsPackageJsonProps } from './cjs-package-json-props';
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
 import type { CLIMain } from '@teambit/cli';
@@ -316,10 +317,7 @@ export class TypescriptMain {
    * :TODO @gilad why do we need this DSL? can't I just get the args here.
    */
   getCjsPackageJsonProps(): PackageJsonProps {
-    return {
-      main: 'dist/{main}.js',
-      types: '{main}.ts',
-    };
+    return getCjsPackageJsonProps();
   }
 
   /**

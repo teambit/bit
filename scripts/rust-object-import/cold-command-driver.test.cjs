@@ -175,17 +175,69 @@ test('cold driver validates the complete plan before writes and propagates failu
   const events = [];
   let failure;
   let invalidReport = false;
+  let needsSnap = false;
+  let invalidProgress = false;
+  let captures = 0;
+  let failedSnap = false;
+  let issueFailure = false;
+  const issuesModule = load('rust-workspace-command-issues');
+  const originalIssueCheck = issuesModule.validateRustCommandIssues;
+  issuesModule.validateRustCommandIssues = async () => {
+    if (issueFailure) throw new Error('command unsupported snapshot issue: CircularDependencies');
+  };
+  const captureInputs = [];
+  const dependencyReadSet = [{ path: '/retained-dependency', sha256: 'a'.repeat(64) }];
+  const failedTarget = { identity: 'qualification.policy/component', version: '1.0.0' };
+  const unrelatedTarget = { identity: 'qualification.policy/unrelated', version: '1.0.0' };
+  const cacheRows = [{ identity: 'qualification.policy/component@1.0.0', rawData: '{}', cacheable: true, readSet: [] }];
+  const policyModule = load('rust-workspace-command-policy');
+  const originalPolicy = policyModule.prepareRustCommandPolicy;
+  policyModule.prepareRustCommandPolicy = async (_prepared, plan) => ({
+    plan: {
+      ...plan,
+      snapFailed: true,
+      result: {
+        components: [],
+        failedComponents: [],
+        mergeSnapError: {
+          kind: 'componentsHaveIssues',
+          components: [
+            {
+              id: 'qualification.policy/component@1.0.0',
+              issues: [{ type: 'MissingManuallyConfiguredPackages', data: JSON.stringify(['missing-package']) }],
+            },
+          ],
+        },
+      },
+    },
+    dependencyCaches: cacheRows,
+  });
+  const snap = installed('@teambit/snapping/dist/new-snap-hash.js');
+  const originalHash = snap.newSnapHash;
+  const originalBatch = snap.newSnapBatchId;
+  snap.newSnapHash = () => {
+    events.push('allocate snap hash');
+    return 'a'.repeat(40);
+  };
+  snap.newSnapBatchId = () => {
+    events.push('allocate snap batch');
+    return 'batch';
+  };
   require(addon).WorkspaceEngine = class {
     async request(frame) {
       const input = JSON.parse(frame.subarray(12));
       events.push(input.kind);
+      if (input.kind === 'commandApply') assert.deepEqual(input.dependencyReadSet, dependencyReadSet);
       if (failure === input.kind) throw new Error(`failure at ${failure}`);
       const data =
         input.kind === 'commandPrepare'
-          ? { token: 'retained', context: { models: [] }, targets: [] }
+          ? { token: 'retained', context: { models: [], targets: [failedTarget, unrelatedTarget] }, targets: [] }
           : input.kind === 'commandPlan'
             ? {
                 token: 'retained',
+                ...(needsSnap ? { needsSnap: ['scope/component'] } : {}),
+                ...(failedSnap ? { policyPreparation: { targets: [] } } : {}),
+                ...(invalidProgress ? { progress: { unsupported: true } } : {}),
                 result: invalidReport ? { invalid: true } : { components: [], failedComponents: [] },
               }
             : { applied: true };
@@ -195,15 +247,28 @@ test('cold driver validates the complete plan before writes and propagates failu
       events.push('close');
     }
   };
-  capture.captureRustClientCurrent = async () => ({
-    captured: [],
-    fresh: () => true,
-    commit: async () => {
-      events.push('cache/history commit');
-      if (failure === 'commit') throw new Error('cache commit failure');
-    },
-  });
+  capture.captureRustClientCurrent = async (...args) => {
+    captureInputs.push(args);
+    captures++;
+    return {
+      captured: [],
+      dependencyReadSet,
+      fresh: () => true,
+      commit: async (rows, replacementsOnly) => {
+        if (failedSnap) {
+          assert.equal(rows, cacheRows);
+          assert.equal(replacementsOnly, true);
+        }
+        events.push('cache/history commit');
+        if (failure === 'commit') throw new Error('cache commit failure');
+      },
+    };
+  };
   t.after(() => {
+    issuesModule.validateRustCommandIssues = originalIssueCheck;
+    policyModule.prepareRustCommandPolicy = originalPolicy;
+    snap.newSnapHash = originalHash;
+    snap.newSnapBatchId = originalBatch;
     discovery.resolveRustObjectImportExecutable = originalExecutable;
     discovery.resolveRustWorkspaceAddon = originalAddon;
     capture.captureRustClientCurrent = originalCapture;
@@ -229,6 +294,22 @@ test('cold driver validates the complete plan before writes and propagates failu
   events.length = 0;
   assert.equal(await run(), undefined, 'unknown report data must decline before any writes');
   assert.deepEqual(events, ['commandPrepare', 'commandPlan', 'close']);
+  needsSnap = true;
+  for (const receipt of ['report', 'progress']) {
+    invalidReport = receipt === 'report';
+    invalidProgress = receipt === 'progress';
+    events.length = 0;
+    captures = 0;
+    assert.equal(await run(), undefined, `invalid ${receipt} declines before snapshot identity allocation`);
+    assert.equal(captures, 2, 'complete workspace capture was validated before rejecting presentation');
+    assert.deepEqual(
+      events,
+      ['commandPrepare', 'commandPlan', 'close'],
+      'no UUID, finalize, cache/history or apply effects'
+    );
+  }
+  needsSnap = false;
+  invalidProgress = false;
   invalidReport = false;
   for (const phase of ['beforeCommit', 'commit', 'commandApply']) {
     failure = phase;
@@ -248,4 +329,207 @@ test('cold driver validates the complete plan before writes and propagates failu
     'commandApply',
     'close',
   ]);
+  failedSnap = true;
+  events.length = 0;
+  captureInputs.length = 0;
+  assert.ok(await run(), 'a failed snap still applies the retained merge result');
+  assert.equal(captureInputs[1][3], undefined, 'all workspace targets are checked before a failed snap commits');
+  assert.equal(captureInputs[1][4].resetDependencyCache, true);
+  assert.deepEqual(
+    events,
+    ['commandPrepare', 'commandPlan', 'beforeCommit', 'cache/history commit', 'commandApply', 'close'],
+    'failed snap publishes merge and caches without allocating IDs or finalizing'
+  );
+  issueFailure = true;
+  events.length = 0;
+  assert.equal(await run(), undefined, 'an extra projected cycle declines the failed-snap path');
+  assert.deepEqual(
+    events,
+    ['commandPrepare', 'commandPlan', 'close'],
+    'issue rejection precedes UUIDs and every publication boundary'
+  );
+});
+
+test('manual native merge report matches actual MergeCmd projection and enum hydration', async () => {
+  const { formatRustWorkspaceCommand } = load('rust-workspace-command-report');
+  const { MergeCmd, mergeReport } = installed('@teambit/merging/dist/merge-cmd.js');
+  const { ComponentID } = installed('@teambit/component-id');
+  const { FileStatus } = installed('@teambit/component.modules.merge-helper/dist/merge-version.js');
+  const wire = {
+    components: [{ id: 'qualification.policy/component@1.0.0', filesStatus: { 'index.js': 'manual' } }],
+    failedComponents: [],
+    leftUnresolvedConflicts: true,
+    removedComponents: ['qualification.policy/removed@1.0.0'],
+  };
+  const canonical = {
+    ...wire,
+    components: [{ id: ComponentID.fromString(wire.components[0].id), filesStatus: { 'index.js': FileStatus.manual } }],
+    removedComponents: wire.removedComponents.map((id) => ComponentID.fromString(id)),
+  };
+  for (const verbose of [false, true]) {
+    const command = new MergeCmd({ merge: async () => canonical }, { getConfigBoolean: () => false });
+    const expected = await command.report(['qualification.policy/component'], {
+      manual: true,
+      skipDependencyInstallation: true,
+      verbose,
+    });
+    const options = {
+      ...parseRustWorkspaceCommand(['merge', 'qualification.policy/component', '-x', '--manual']),
+      verbose,
+    };
+    assert.deepEqual(formatRustWorkspaceCommand(wire, options), expected);
+    assert.notDeepEqual(
+      expected,
+      mergeReport({ ...canonical, verbose }),
+      'MergeCmd deliberately selects only public fields'
+    );
+  }
+});
+
+test('native failed-snap issue receipts match canonical ComponentsHaveIssues and reject malformed data', async () => {
+  const { formatRustWorkspaceCommand } = load('rust-workspace-command-report');
+  const { MergeCmd } = installed('@teambit/merging/dist/merge-cmd.js');
+  const { ComponentID } = installed('@teambit/component-id');
+  const { IssuesList } = installed('@teambit/component-issues');
+  const { ComponentsHaveIssues } = installed('@teambit/builder/dist/exceptions/components-have-issues.js');
+  const issues = [
+    { type: 'MissingManuallyConfiguredPackages', data: JSON.stringify(['missing-package', '@scope/other']) },
+  ];
+  const identity = 'qualification.policy/component@1.0.0';
+  const wire = {
+    components: [],
+    failedComponents: [],
+    mergeSnapError: {
+      kind: 'componentsHaveIssues',
+      components: [{ id: identity, issues }],
+    },
+  };
+  const canonical = {
+    ...wire,
+    mergeSnapError: new ComponentsHaveIssues([
+      { id: ComponentID.fromString(identity), issues: IssuesList.deserialize(issues) },
+    ]),
+  };
+  const command = new MergeCmd({ merge: async () => canonical }, { getConfigBoolean: () => false });
+  const expected = await command.report([identity], { skipDependencyInstallation: true });
+  const options = parseRustWorkspaceCommand(['merge', identity.split('@')[0], '-x']);
+  assert.deepEqual(formatRustWorkspaceCommand(wire, options), expected);
+  for (const invalid of [
+    { kind: 'unknown', components: [] },
+    { kind: 'componentsHaveIssues', components: [] },
+    { kind: 'componentsHaveIssues', components: [{ id: identity, issues: [] }] },
+    ...['null', '[]', '[1]', 'invalid json'].map((data) => ({
+      kind: 'componentsHaveIssues',
+      components: [{ id: identity, issues: [{ type: 'MissingManuallyConfiguredPackages', data }] }],
+    })),
+    {
+      kind: 'componentsHaveIssues',
+      components: [{ id: identity, issues: [{ type: 'CustomIssue', data: '["package"]' }] }],
+    },
+  ])
+    assert.throws(() => formatRustWorkspaceCommand({ ...wire, mergeSnapError: invalid }, options));
+});
+
+test('failed-snap cache commit drops other captured entries after checking the full workspace', async (t) => {
+  const capture = load('rust-client-capture');
+  const fresh = load('rust-fresh-dependencies');
+  const policy = load('rust-status-policy');
+  const inventory = installed('@teambit/legacy.bit-map/dist/rust-inventory-policy.js');
+  const originals = [];
+  const replace = (module, key, value) => {
+    originals.push([module, key, module[key]]);
+    module[key] = value;
+  };
+  t.after(() => originals.reverse().forEach(([module, key, value]) => (module[key] = value)));
+  const detected = [];
+  const committed = [];
+  replace(inventory, 'captureRustInventoryPolicy', () => ({ policy: {}, fresh: () => true }));
+  replace(policy, 'statusPolicy', () => ({ input: {}, packageName: '@scope/component' }));
+  replace(policy, 'currentStatusMetadata', () => ({}));
+  replace(fresh, 'planFreshDependencyCache', async () => ({ reset: true }));
+  replace(fresh, 'readFreshDependencies', async (_root, _context, target) => {
+    detected.push(target.identity);
+    return {
+      cache: { identity: `${target.identity}@1.0.0`, rawData: target.identity, readSet: [] },
+      dependencies: { state: { entries: [], components: [[], [], []] }, issues: [] },
+    };
+  });
+  replace(fresh, 'commitFreshDependencies', async (plan, entries) => committed.push({ plan, entries }));
+  const targets = ['scope/divergent', 'scope/unrelated'].map((identity, index) => ({
+    identity,
+    version: '1.0.0',
+    directory: `component-${index}`,
+    mainFile: 'index.js',
+  }));
+  const context = { targets, options: { patterns: [], ignoredFiles: [], trackAllFiles: false } };
+  const captured = await capture.captureRustClientCurrent('/workspace', context, async ({ kind }) => {
+    if (kind === 'inventoryBegin') return { token: 'scan', nested: [], own: [] };
+    if (kind === 'inventoryFinish') return { files: [{ relativePath: 'index.js' }] };
+    throw new Error(`unexpected native request ${kind}`);
+  });
+  assert.deepEqual(
+    detected,
+    targets.map((target) => target.identity),
+    'every workspace component is checked'
+  );
+  const replacement = { identity: 'scope/divergent@1.0.0', rawData: 'post-merge', readSet: [] };
+  await captured.commit([replacement], true);
+  assert.deepEqual(committed[0], { plan: { reset: true }, entries: [replacement] });
+  await captured.commit([replacement]);
+  assert.deepEqual(
+    committed[1].entries.map((entry) => entry.identity),
+    ['scope/unrelated@1.0.0', 'scope/divergent@1.0.0'],
+    'successful snap still preserves other captured cache rows'
+  );
+});
+
+test('projected snapshot blockers include new cycles and duplicate workspace packages', async (t) => {
+  const { validateRustCommandIssues } = load('rust-workspace-command-issues');
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'bit-command-issues-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const components = ['alpha', 'beta'].map((name) => ({
+    identity: `test.scope/${name}@1.0.0`,
+    packageName: `@test/scope.${name}`,
+    dependencies: name === 'beta' ? ['test.scope/alpha@1.0.0'] : [],
+    issues: [],
+  }));
+  for (const component of components)
+    await fs.mkdir(path.join(root, 'node_modules', component.packageName, 'dist'), { recursive: true });
+  const context = {
+    workspace: {},
+    packageJson: {},
+    models: [],
+    versions: [],
+    targets: components.map((component) => ({ identity: component.identity.split('@')[0], directory: 'component' })),
+  };
+  const selected = components[0];
+  const plan = {
+    needsSnap: ['test.scope/alpha'],
+    policyPreparation: { targets: [{ identity: 'test.scope/alpha', fastForward: false }] },
+    issueTargets: [selected],
+  };
+  await validateRustCommandIssues(root, context, components, plan);
+  const circular = { ...selected, dependencies: ['test.scope/beta@1.0.0'] };
+  await assert.rejects(
+    validateRustCommandIssues(root, context, components, { ...plan, issueTargets: [circular] }),
+    /snapshot issue/
+  );
+  const duplicate = { ...context, packageJson: { dependencies: { [selected.packageName]: '1.0.0' } } };
+  await assert.rejects(validateRustCommandIssues(root, duplicate, components, plan), /snapshot issue/);
+  const issue = { type: 'MissingManuallyConfiguredPackages', data: JSON.stringify(['missing-package']) };
+  const failed = {
+    ...plan,
+    snapFailed: true,
+    issueTargets: [{ ...selected, issues: [issue] }],
+    result: { mergeSnapError: { components: [{ id: selected.identity, issues: [issue] }] } },
+  };
+  await validateRustCommandIssues(root, context, components, failed);
+  await assert.rejects(
+    validateRustCommandIssues(root, context, components, {
+      ...failed,
+      issueTargets: [{ ...circular, issues: [issue] }],
+    }),
+    /snapshot issue/,
+    'matching manual issue must not conceal an additional projected cycle'
+  );
 });

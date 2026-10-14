@@ -1,4 +1,4 @@
-use super::{PathMap, Request, Row, invalid};
+use super::{super::resolve_dependencies::Budget, PathMap, Request, Row, invalid};
 use serde_json::{Map, Value, json};
 use std::{collections::HashMap, io};
 
@@ -20,13 +20,21 @@ struct Replay {
     scanned: Vec<String>,
     receipts: Receipts,
 }
-pub(super) fn finish(request: &Request, rows: &HashMap<String, Row>) -> io::Result<Value> {
+pub(super) fn finish(
+    request: &Request,
+    rows: &HashMap<String, Row>,
+    budget: &Budget,
+) -> io::Result<Value> {
     let mut replay =
         Replay { visited: request.visited.clone().unwrap_or_default(), ..Replay::default() };
     let mut tree = Map::new();
     for root in &request.files {
         let root = root.to_str().ok_or_else(|| invalid("dependency graph root encoding"))?;
-        if tree.contains_key(root) || !std::path::Path::new(root).exists() {
+        if tree.contains_key(root)
+            || budget
+                .metadata(std::path::Path::new(root))?
+                .is_none()
+        {
             continue;
         }
         if request.visited.is_none() {

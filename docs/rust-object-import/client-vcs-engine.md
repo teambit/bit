@@ -8,6 +8,51 @@ merges, and fetch/push orchestration. TypeScript adapts Harmony extensions,
 canonical component class metadata, installation/build tooling and presentation.
 Work is grouped into substantial operation-level PRs.
 
+## Cold merge configuration and dependency ownership
+
+Supported main-branch merges now retain their planned file contents inside the
+Rust command owner while configuration merging and dependency analysis run.
+`commandPolicyPrepare`, `commandDependencyDetect` and
+`commandDependencyComplete` extend the existing prepare/plan/finalize/apply
+lifecycle. These phases finish before snapshot IDs are allocated or workspace
+changes are published.
+
+The retained source overlay exposes added, changed and removed files at their
+original logical paths. The shared dependency scanner and resolver read that
+overlay, including newly added roots and relative imports, without sending
+Source bodies through Node. Disk reads and retained source ranges have separate
+freshness proofs; the command validates both before publication. Independent
+capture and proof work uses the bounded native worker pool.
+
+TypeScript supplies canonical semver decisions and built-in Node environment
+metadata through pure helpers shared with the normal runtimes. Rust merges
+configuration, detects the resulting dependency graph, projects dependency
+metadata and raw caches, builds snapshot graphs, and updates generated package
+dependency sections. Component policy ordering and merged-configuration
+precedence follow the canonical resolver. Native snapshot graphs preserve
+historical identities when a dependency cycle returns to the previous version
+of the component being snapped.
+
+The lifecycle also preserves a merge whose automatic snapshot fails because of
+missing manually configured packages. It retains the merged files and pending
+merge state, performs the canonical dependency-cache reset and selected reload,
+and renders the canonical issue error without allocating a snapshot. Manual
+conflicts retain conflict markers; the ours strategy preserves current files.
+Unsupported callbacks, application components and unsupported policy or issue
+shapes decline before publication so the canonical command can handle them.
+Lane command ownership remains a separate boundary.
+
+`cold-command-qualification.cjs` compares public output and durable state in
+canonical, native, missing-helper and crashed-helper modes. Its native trace
+checks actual command application and absence of Node model loading or Source
+body bridging. Changed imports, added source files, runtime-to-dev transitions,
+forced component policy, a late unsupported callback and a duplicate-package
+snapshot blocker are covered alongside the existing checkout and merge cases.
+`merge-transaction-qualification.cjs`
+also checks the older main-conflict fixtures, including failed autosnaps.
+Performance claims require separately frozen release artifacts and complete
+command measurements; passing these correctness checks alone is insufficient.
+
 ## Checkout repository and workspace operation
 
 This chunk starts from merged #72. `BIT_RUST_CLIENT_VCS=on` enables native

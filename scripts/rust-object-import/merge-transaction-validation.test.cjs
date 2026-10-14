@@ -301,3 +301,27 @@ test('whole dependency graph sessions remain separate from the single merge tran
   trace.workspaceFrames.find((frame) => frame.kind === 'mergeStatusReceipt').helperId = 2;
   assert.throws(() => validateMergeTransactionDiagnostics(trace, scenario), /more than one merge owner/);
 });
+
+test('cold main requires accepted publication, ordered phases, one owner and no legacy models', () => {
+  const kinds = ['commandPrepare', 'commandPlan', 'commandPolicyPrepare', 'commandDependencyDetect', 'commandDependencyComplete', 'commandApply'];
+  const trace = {
+    loadedCommandModels: [],
+    workspaceFrames: kinds.map((kind) => ({magic:'BWS1',kind,helperId:7,receipt:{completed:1,failed:false,applied:kind === 'commandApply'}})),
+    workspace: Object.fromEntries(kinds.map((kind) => [kind,{completed:1,failed:0,sourceBodyBytes:0,...(kind === 'commandApply' ? {applied:1} : {})}])),
+  };
+  const scenario = {name:'component-main-ours'};
+  validateMergeTransactionDiagnostics(trace, scenario);
+  for (const corrupt of [
+    (value) => { value.workspaceFrames.at(-1).receipt.applied = false; },
+    (value) => { value.workspaceFrames[2].helperId = 8; },
+    (value) => { value.workspaceFrames[3].receipt.failed = true; },
+    (value) => { value.workspaceFrames[4].receipt.completed = 0; },
+    (value) => { value.workspace.commandPlan.sourceBodyBytes = 1; },
+    (value) => { value.loadedCommandModels.push('version.js'); },
+  ]) {
+    const changed = structuredClone(trace);
+    corrupt(changed);
+    assert.throws(() => validateMergeTransactionDiagnostics(changed, scenario));
+  }
+  assert.throws(() => validateMergeTransactionDiagnostics(trace, {name:'lane-manual-abort'}));
+});

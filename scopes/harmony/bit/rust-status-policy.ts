@@ -1,5 +1,7 @@
 import semver from 'semver';
 import { getNodeDependencyPolicy } from '@teambit/node/dist/default-dependency-policy.js';
+import { EnvPolicy } from '@teambit/dependency-resolver/dist/policy/env-policy/env-policy.js';
+import { VariantPolicy } from '@teambit/dependency-resolver/dist/policy/variant-policy/variant-policy.js';
 
 const resolver = 'teambit.dependencies/dependency-resolver';
 const fields = ['dependencies', 'devDependencies', 'peerDependencies'];
@@ -72,23 +74,38 @@ function validateHarmonyVersion(version: any) {
 }
 
 /** Construct only the built-in Node environment policy; configured runtimes fall back before output. */
-export function statusPolicy(context: any, target: any) {
+export function statusPolicy(context: any, target: any, projectedVersion?: any) {
   const model = context.models.find((item) => `${item.scope}/${item.name}` === target.identity);
   if (target.version && !model) throw new Error('status pending import');
   if (!target.version && model) throw new Error('status bitmap normalization required');
   const reference = /^[a-f\d]{40}$/i.test(target.version)
     ? target.version
     : (model?.orphanedVersions?.[target.version] ?? model?.versions?.[target.version]);
-  const version = context.versions.find(([hash]) => hash === reference)?.[1];
+  const version = projectedVersion ?? context.versions.find(([hash]) => hash === reference)?.[1];
   validateHarmonyVersion(version);
   if (target.version && !version) throw new Error('status version absent');
   const extensions = statusExtensions(version, target);
   const componentPolicy = extensions.find((extension) => extension.name === resolver)?.config.policy ?? {};
   if (Object.keys(componentPolicy).some((key) => !fields.includes(key))) throw new Error('status component policy');
   const node = getNodeDependencyPolicy();
-  const manual = fields.map((field) => map(node[field]));
+  let manual = fields.map((field) => map(node[field]));
   const automatic = [{}, {}, Object.fromEntries((node.peers ?? []).map((peer) => [peer.name, peer.supportedRange]))];
-  fields.forEach((field, index) => Object.assign(manual[index], map(componentPolicy[field])));
+  fields.forEach((field, index) => Object.assign(manual[index], componentPolicyMap(componentPolicy[field])));
+  if (Object.keys(componentPolicy).length) {
+    const configured = VariantPolicy.mergePolices([
+      EnvPolicy.fromConfigObject(node),
+      VariantPolicy.fromConfigObject(componentPolicy, { source: 'config' }),
+    ]).toLegacyDepsOverrides();
+    manual = fields.map((field, index) => {
+      const value = map(configured[field]);
+      if (
+        Object.keys(value).length !== Object.keys(manual[index]).length ||
+        Object.entries(manual[index]).some(([name, range]) => value[name] !== range)
+      )
+        throw new Error('status cross-lifecycle policy');
+      return value;
+    });
+  }
   const overrides = Object.fromEntries(
     fields.flatMap((field, index) => (Object.keys(manual[index]).length ? [[field, manual[index]]] : []))
   );
@@ -103,6 +120,11 @@ export function statusPolicy(context: any, target: any) {
   const forcedNames = manual.flatMap((field) => Object.keys(field));
   if (new Set(forcedNames).size !== forcedNames.length) throw new Error('status cross-lifecycle policy');
   for (const name of forcedNames) delete automatic[2][name];
+  const mergePolicy = target.autoDetectMergePolicy ?? [{}, {}, {}];
+  if (!Array.isArray(mergePolicy) || mergePolicy.length !== fields.length)
+    throw new Error('command automatic merge policy');
+  const merge = mergePolicy.map(map);
+  automatic.forEach((policy, index) => Object.assign(policy, merge[index]));
   const modelEntries = (version?.dependencies ?? []).map((dep) => ({
     identity: identity(dep.id),
     packageName: dep.packageName ?? null,
@@ -135,7 +157,7 @@ export function statusPolicy(context: any, target: any) {
       extensions: [],
       grammar: {},
       prefix: resolverData?.componentRangePrefix ?? null,
-      merge: [{}, {}, {}],
+      merge,
     },
   };
   input.resolution.grammar = dependencyGrammar(input);
@@ -149,6 +171,27 @@ export function statusPolicy(context: any, target: any) {
     bindingPrefix: model?.bindingPrefix || `@${target.identity.split('.')[0].split('/')[0]}`,
     packageName: packageName(target.identity, model?.bindingPrefix),
   };
+}
+
+function componentPolicyMap(value: any): Record<string, string> {
+  if (!Array.isArray(value)) return map(value);
+  if (value.length > 4096) throw new Error('status component policy limit');
+  const result: Record<string, string> = {};
+  for (const entry of value) {
+    if (
+      !entry ||
+      typeof entry.name !== 'string' ||
+      typeof entry.version !== 'string' ||
+      entry.force !== true ||
+      (entry.hidden !== undefined && entry.hidden !== false) ||
+      (entry.optional !== undefined && entry.optional !== false) ||
+      Object.keys(entry).some((key) => !['name', 'version', 'force', 'hidden', 'optional'].includes(key)) ||
+      Object.hasOwn(result, entry.name)
+    )
+      throw new Error('status component policy requires canonical resolution');
+    Object.defineProperty(result, entry.name, { value: entry.version, enumerable: true, configurable: true });
+  }
+  return result;
 }
 export function currentStatusMetadata(target: any, policy: any, output: any) {
   const dependencies = output.state.components.map((indices) =>
@@ -188,13 +231,25 @@ function statusExtensions(version: any, target: any) {
   const storedExtensions = version?.extensions ?? [];
   if (storedExtensions.some((extension) => extension.extensionId || extension.legacyId))
     throw new Error('status model extension dependency');
+  const mergedNames = target.mergedConfigNames ?? [];
+  if (
+    !Array.isArray(mergedNames) ||
+    mergedNames.some((name) => typeof name !== 'string' || !cores.has(name)) ||
+    new Set(mergedNames).size !== mergedNames.length
+  )
+    throw new Error('command merged configuration names');
+  const merged = new Set(mergedNames);
+  const modelExtensions = merged.size
+    ? storedExtensions.filter((extension) => !merged.has(extension.name))
+    : storedExtensions;
   const selectedExtensions =
     target.config && !target.config.propagate
-      ? storedExtensions.filter((extension) => extension.config?.__specific === true)
+      ? modelExtensions.filter((extension) => extension.config?.__specific === true)
       : [
-          ...storedExtensions.filter((extension) => extension.config?.__specific === true),
-          ...storedExtensions.filter((extension) => extension.config?.__specific !== true),
+          ...modelExtensions.filter((extension) => extension.config?.__specific === true),
+          ...modelExtensions.filter((extension) => extension.config?.__specific !== true),
         ];
+  selectedExtensions.unshift(...storedExtensions.filter((extension) => merged.has(extension.name)));
   const extensions = selectedExtensions
     .filter((extension, index) => selectedExtensions.findIndex((other) => other.name === extension.name) === index)
     .map((extension) => {
@@ -218,10 +273,15 @@ function statusExtensions(version: any, target: any) {
       Object.keys(config).some((key) => key !== 'policy')
     )
       throw new Error('status component extension');
+    if (merged.has(name)) continue;
     const index = extensions.findIndex((extension) => extension.name === name);
     const extension = { name, config: { ...config, __specific: true } };
     if (index < 0) extensions.unshift(extension);
     else extensions[index] = extension;
   }
-  return extensions;
+  if (!merged.size) return extensions;
+  return [
+    ...extensions.filter((extension) => merged.has(extension.name)),
+    ...extensions.filter((extension) => !merged.has(extension.name)),
+  ];
 }

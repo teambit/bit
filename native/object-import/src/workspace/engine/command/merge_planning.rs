@@ -1,5 +1,6 @@
 mod fast_forward;
 mod lifecycle;
+mod policy_rows;
 mod preflight;
 use super::{
     super::{dependency_graph::proof, invalid, status_models::comparison},
@@ -14,8 +15,9 @@ use serde_json::{Value, json};
 use std::{io, path::Path};
 
 pub(super) struct Prepared {
+    pub(super) policy: Option<super::policy::Prepared>,
     state: merge::State,
-    materials: Vec<merge::Prepared>,
+    pub(super) materials: Vec<merge::Prepared>,
     unmerged: Value,
     proofs: Vec<proof::Proof>,
     pending: Vec<Pending>,
@@ -237,6 +239,7 @@ fn prepare_materials(
         .collect::<io::Result<Vec<_>>>()?;
     let plans = state.prepare_bodies(requests)?;
     let mut prepared = Prepared {
+        policy: Some(super::policy::Prepared::new()),
         state,
         materials: Vec::new(),
         unmerged: json!([]),
@@ -254,7 +257,11 @@ fn prepare_materials(
         add_material(record, planned, &mut prepared, selected, index, &directory.0, &plan)?;
     }
     fast_forward::prepare(record, planned, &mut prepared, selected, snapshots)?;
-    preflight::validate(record, &mut prepared, &planned.materials, &planned.captured)?;
+    policy_rows::fast_forward(&mut prepared, planned)?;
+    if prepared.materials.is_empty() {
+        prepared.policy = None;
+        preflight::validate(record, &mut prepared, &planned.materials, &planned.captured)?;
+    }
     planned.directories.push(directory);
     planned.merge = Some(prepared);
     Ok(())
@@ -310,22 +317,27 @@ fn add_material(
     plan: &Value,
 ) -> io::Result<()> {
     let current = &planned.captured[index];
-    if plan["hasConflicts"] == true && record.request.options.strategy.as_deref() == Some("ours") {
-        return Err(invalid("command ours conflict lifecycle"));
-    }
+
     let material =
         prepared.state.prepare_result(&body(record, selected, current, directory, index), plan)?;
+    policy_rows::divergent(prepared, selected, current, &material)?;
     retain_snapshot(record, prepared, selected, current, &material)?;
     planned.result["components"]
         .as_array_mut()
         .unwrap()
         .push(material.output.clone());
-    if material.has_conflicts {
+    if material.has_conflicts() {
         planned.result["leftUnresolvedConflicts"] = json!(true);
     }
     let mut unmerged = json!({"id":{"name":selected.model["name"],"scope":selected.model["scope"]},"head":selected.remote,
         "laneId":{"scope":selected.model["scope"],"name":"main"},"shouldSquash":false,"mergedConfig":{}});
-    if material.has_conflicts {
+    if material.no_write() {
+        unmerged
+            .as_object_mut()
+            .unwrap()
+            .remove("mergedConfig");
+    }
+    if material.has_conflicts() {
         unmerged["unmergedPaths"] = json!(material.conflict_paths);
     }
     prepared.unmerged
@@ -342,16 +354,9 @@ fn retain_snapshot(
     current: &capture::Captured,
     material: &merge::Prepared,
 ) -> io::Result<()> {
-    if record.request.options.no_snap || material.has_conflicts {
+    if record.request.options.no_snap || material.has_conflicts() {
         return Ok(());
     }
-    prepared.proofs.extend(super::merge_dependency_guard::verify(
-        &record.request.root,
-        &record.request.home,
-        current,
-        &material.files,
-        &record.request.dependency_grammar,
-    )?);
     prepared.pending.push(Pending {
         identity: current.target.identity.clone(),
         directory: current.target.directory.clone(),

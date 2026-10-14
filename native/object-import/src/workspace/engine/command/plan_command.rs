@@ -40,6 +40,10 @@ pub(super) fn run(
 }
 
 fn snap_receipt(output: &mut Value, planned: &planning::Planned) -> io::Result<()> {
+    if let Some(policy) = planned.merge.as_ref().and_then(|merge| merge.policy.as_ref()) {
+        output["policyPreparation"] = policy.receipt();
+        return Ok(());
+    }
     if let Some(identities) = planned.merge.as_ref().and_then(merge_planning::Prepared::needs_snap)
     {
         output["needsSnap"] = json!(identities);

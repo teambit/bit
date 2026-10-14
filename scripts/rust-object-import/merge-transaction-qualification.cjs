@@ -15,7 +15,8 @@ function validateAddonTransports(diagnostics, scenario) {
   assert.ok(diagnostics.workspaceFrames.every((item) => item.backend === 'addon'), 'addon proof used a child workspace transport');
   assert.ok(Array.isArray(diagnostics.importFrames), 'addon proof omitted import transport observations');
   assert.ok(diagnostics.importFrames.every((item) => item.backend === 'addon'), 'addon proof used a child import transport');
-  if (['hidden-main-into-lane','component-main-theirs','main-fast-forward'].includes(scenario))
+  const coldImport = scenario === 'component-main-theirs' && diagnostics.workspace?.commandApply?.applied > 0;
+  if (!coldImport && ['hidden-main-into-lane','component-main-theirs','main-fast-forward'].includes(scenario))
     assert.ok(diagnostics.importFrames.some((item) => item.magic === 'BTI2'), 'addon proof omitted progressive archive imports');
 }
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');

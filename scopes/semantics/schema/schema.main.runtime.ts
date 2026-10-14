@@ -1,4 +1,5 @@
 import type { CLIMain } from '@teambit/cli';
+import { DEFAULT_SCHEMA_DISABLED } from './default-load-data';
 import { MainRuntime } from '@teambit/harmony.modules.runtimes';
 import { CLIAspect } from '@teambit/cli';
 import type { Component, ComponentMain } from '@teambit/component';
@@ -460,7 +461,7 @@ export class SchemaMain {
 
   static defaultConfig = {
     defaultParser: 'teambit.typescript/typescript',
-    disabled: false,
+    disabled: DEFAULT_SCHEMA_DISABLED,
   };
 
   static async provider(

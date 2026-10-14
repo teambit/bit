@@ -6,6 +6,7 @@ const graphFrame = (frame) =>
 // Genuine error prefixes are added only from retained command traces; fallback-only is never sufficient.
 function validateMergeTransactionDiagnostics(trace, scenario, options = {}) {
   const frames = trace.workspaceFrames || [];
+  if (validateColdMain(trace, scenario, frames)) return;
   if (options.fileStatuses && ['component-main-theirs', 'main-fast-forward', 'lane-bom-crlf'].includes(scenario.name)) {
     const status = trace.workspace?.fileStatus;
     assert.ok(
@@ -273,3 +274,26 @@ function validateMergeTransactionDiagnostics(trace, scenario, options = {}) {
   }
 }
 module.exports = { validateMergeTransactionDiagnostics };
+
+function validateColdMain(trace, scenario, frames) {
+  if (!trace.workspace?.commandApply?.applied) return false;
+  assert.ok(['component-main-ours', 'component-main-theirs', 'component-main-manual'].includes(scenario.name), 'unexpected cold main scenario');
+  const commands = frames.filter((frame) => frame.magic === 'BWS1' && String(frame.kind).startsWith('command'));
+  const expected = ['commandPrepare', 'commandPlan', 'commandPolicyPrepare'];
+  if (scenario.name !== 'component-main-manual') expected.push('commandDependencyDetect', 'commandDependencyComplete');
+  expected.push('commandApply');
+  assert.deepEqual(commands.map((frame) => frame.kind), expected, 'cold main phase order');
+  const owner = commands[0]?.helperId;
+  assert.notEqual(owner, undefined, 'cold main physical owner');
+  assert.ok(frames.every((frame) => frame.helperId === owner), 'cold main replacement helper');
+  for (const frame of commands) {
+    assert.equal(frame.receipt?.failed, false, 'cold main accepted phase receipt');
+    assert.ok(frame.receipt.completed > 0, 'cold main completed phase');
+    assert.equal(trace.workspace[frame.kind].sourceBodyBytes, 0, 'cold main Source bridge');
+    assert.equal(trace.workspace[frame.kind].failed, 0, 'cold main failed phase');
+  }
+  for (const metric of Object.values(trace.workspace)) assert.equal(metric.sourceBodyBytes ?? 0, 0, 'cold main Source bridge');
+  assert.equal(commands.at(-1).receipt.applied, true, 'cold main accepted publication');
+  assert.deepEqual(trace.loadedCommandModels, [], 'cold main loaded legacy models');
+  return true;
+}

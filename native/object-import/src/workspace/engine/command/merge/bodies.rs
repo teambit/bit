@@ -22,14 +22,32 @@ pub(in crate::workspace::engine::command) struct BodyInput<'a> {
     pub(in crate::workspace::engine::command) options: &'a Options,
 }
 pub(in crate::workspace::engine::command) struct Prepared {
+    conflict: Conflict,
     pub(in crate::workspace::engine::command) output: Value,
     pub(in crate::workspace::engine::command) version: Value,
     pub(in crate::workspace::engine::command) version_name: String,
     pub(in crate::workspace::engine::command) files: Vec<Value>,
-    pub(in crate::workspace::engine::command) has_conflicts: bool,
     pub(in crate::workspace::engine::command) conflict_paths: Vec<String>,
     request: Value,
     removals: Vec<PathBuf>,
+}
+
+enum Conflict {
+    Resolved,
+    Ours,
+    Manual,
+}
+impl Conflict {
+    fn from_plan(input: &BodyInput<'_>, plan: &Value) -> Self {
+        if plan["hasConflicts"] != true {
+            return Self::Resolved;
+        }
+        match input.options.strategy.as_deref() {
+            Some("ours") => Self::Ours,
+            Some("manual") => Self::Manual,
+            _ => Self::Resolved,
+        }
+    }
 }
 
 impl BodyInput<'_> {
@@ -50,7 +68,7 @@ impl BodyInput<'_> {
                 "base":manifest(&self.sides[0])?,"target":manifest(&self.sides[2])?,
                 "current":current.iter().map(|file| json!({"relativePath":file["relativePath"],"workspace":{
                     "path":file["path"],"rawHash":file["rawHash"],"snapshotHash":file["snapshotHash"]}})).collect::<Vec<_>>(),
-                "labels":{"current":self.current.target.version,"other":self.sides[2].hash},
+                "labels":{"current":format!("{} (current)",self.current.target.version),"other":format!("{} (incoming)",self.sides[2].hash)},
             }),
         )
     }
@@ -85,6 +103,13 @@ impl State {
 }
 
 impl Prepared {
+    pub(in crate::workspace::engine::command) fn no_write(&self) -> bool {
+        matches!(self.conflict, Conflict::Ours)
+    }
+    pub(in crate::workspace::engine::command) fn has_conflicts(&self) -> bool {
+        matches!(self.conflict, Conflict::Manual)
+    }
+
     fn new(
         input: &BodyInput<'_>,
         plan: &Value,
@@ -92,20 +117,7 @@ impl Prepared {
         removals: &Value,
     ) -> io::Result<Self> {
         let files = output_files(applied)?;
-        let statuses = removals["filesStatus"]
-            .as_array()
-            .ok_or_else(|| invalid("command merge statuses"))?
-            .iter()
-            .map(|row| {
-                Ok((
-                    row["relativePath"]
-                        .as_str()
-                        .ok_or_else(|| invalid("command merge status path"))?
-                        .to_owned(),
-                    row["status"].clone(),
-                ))
-            })
-            .collect::<io::Result<serde_json::Map<_, _>>>()?;
+        let statuses = file_statuses(removals)?;
         let destinations = files.iter().map(|file| json!({"planIndex":file["planIndex"],
             "path":input.root.join(&input.current.target.directory).join(file["relativePath"].as_str().unwrap_or_default()),"overwrite":true,"eol":"auto"})).collect::<Vec<_>>();
         let removals = removals["removals"]
@@ -120,13 +132,12 @@ impl Prepared {
             })
             .collect::<io::Result<_>>()?;
         Ok(Self {
+            conflict: Conflict::from_plan(input, plan),
             output: json!({"id":format!("{}@{}",input.current.target.identity,input.current.target.version),"filesStatus":statuses}),
             version: current_version(input)?,
             version_name: input.current.target.version.clone(),
             files,
             conflict_paths: conflict_paths(input, plan)?,
-            has_conflicts: plan["hasConflicts"] == true
-                && input.options.strategy.as_deref() == Some("manual"),
             request: json!({"planToken":plan["token"],"files":destinations}),
             removals,
         })
@@ -146,6 +157,9 @@ impl Prepared {
         Ok(())
     }
     pub(in crate::workspace::engine::command) fn remove(&self) -> io::Result<()> {
+        if self.no_write() {
+            return Ok(());
+        }
         for path in &self.removals {
             match fs::remove_file(path) {
                 Ok(()) => {}
@@ -156,6 +170,9 @@ impl Prepared {
         Ok(())
     }
     pub(in crate::workspace::engine::command) fn write(&self, state: &mut State) -> io::Result<()> {
+        if self.no_write() {
+            return Ok(());
+        }
         state.materialize(self.request.clone())
     }
 }
@@ -287,33 +304,30 @@ fn current_version(input: &BodyInput<'_>) -> io::Result<Value> {
 }
 
 pub(super) fn metadata_guard(projected: &[Value]) -> io::Result<()> {
-    // The initial native autosnap domain changes sources, not component policy.
-    // Dependency topology is independently re-detected from retained merged files.
-    for field in [
-        "mainFile",
-        "bindingPrefix",
-        "docs",
-        "packageDependencies",
-        "devPackageDependencies",
-        "peerPackageDependencies",
-        "overrides",
-        "packageJsonChangedProps",
-        "extensions",
-    ] {
+    for field in ["mainFile", "bindingPrefix", "docs", "packageJsonChangedProps"] {
         if projected
             .iter()
             .any(|side| side[field] != projected[1][field])
         {
-            return Err(invalid("command merge metadata change requires canonical policy merge"));
+            return Err(invalid("command unsupported non-policy metadata change"));
         }
-    }
-    for field in ["dependencies", "devDependencies"] {
-        for side in projected {
-            equivalent_dependencies(&side[field], &projected[1][field])?;
-        }
-    }
-    if !projected[1]["docs"].as_array().is_some_and(Vec::is_empty) {
-        return Err(invalid("command merge documentation projection"));
     }
     Ok(())
+}
+
+fn file_statuses(removals: &Value) -> io::Result<serde_json::Map<String, Value>> {
+    removals["filesStatus"]
+        .as_array()
+        .ok_or_else(|| invalid("command merge statuses"))?
+        .iter()
+        .map(|row| {
+            Ok((
+                row["relativePath"]
+                    .as_str()
+                    .ok_or_else(|| invalid("command merge status path"))?
+                    .to_owned(),
+                row["status"].clone(),
+            ))
+        })
+        .collect::<io::Result<serde_json::Map<_, _>>>()
 }

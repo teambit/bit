@@ -5,14 +5,13 @@ import type { TsConfigTransformer, TypescriptMain } from '@teambit/typescript';
 import type { ReactMain } from '@teambit/react';
 import type { Tester } from '@teambit/tester';
 import type { BuildTask } from '@teambit/builder';
-import type { PreviewStrategyName } from '@teambit/preview';
-import { COMPONENT_PREVIEW_STRATEGY_NAME } from '@teambit/preview';
 import type { SchemaExtractor } from '@teambit/schema';
 import type { TsConfigSourceFile } from 'typescript';
 import { join } from 'path';
 import { getNodeDependencyPolicy } from './default-dependency-policy';
+import { NODE_ENV_ICON, getNodeEnvDescriptor, getNodePreviewConfig } from './default-load-data';
 
-export const NodeEnvType = 'node';
+export { NodeEnvType } from './default-load-data';
 
 type GetBuildPipeModifiers = PipeServiceModifiersMap & {
   tsModifier?: PipeServiceModifier;
@@ -24,7 +23,7 @@ export class NodeEnv implements DependenciesEnv, PackageEnv {
     protected reactAspect: ReactMain
   ) {}
 
-  icon = 'https://static.bit.dev/extensions-icons/nodejs.svg';
+  icon = NODE_ENV_ICON;
 
   getDependencies(): EnvPolicyConfigObject {
     return getNodeDependencyPolicy();
@@ -54,10 +53,7 @@ export class NodeEnv implements DependenciesEnv, PackageEnv {
   }
 
   getPreviewConfig() {
-    return {
-      strategyName: COMPONENT_PREVIEW_STRATEGY_NAME as PreviewStrategyName,
-      splitComponentBundle: false,
-    };
+    return getNodePreviewConfig();
   }
 
   getPackageJsonProps() {
@@ -73,8 +69,6 @@ export class NodeEnv implements DependenciesEnv, PackageEnv {
   }
 
   async __getDescriptor() {
-    return {
-      type: NodeEnvType,
-    };
+    return getNodeEnvDescriptor();
   }
 }

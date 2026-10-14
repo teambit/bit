@@ -1,4 +1,5 @@
 use super::{Request as Initial, finalize, invalid, packages_on_disk, versions};
+use crate::workspace::engine::source_overlay::SourceOverlay;
 use serde::Deserialize;
 use serde_json::{Map, Value, json};
 use std::{collections::HashSet, io, path::PathBuf};
@@ -28,13 +29,30 @@ pub(in crate::workspace::engine) fn apply(
     request: &Request,
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
+    apply_view(request, pool, None)
+}
+pub(in crate::workspace::engine) fn apply_overlay(
+    request: &Request,
+    pool: &rayon::ThreadPool,
+    overlay: &SourceOverlay,
+) -> io::Result<(usize, Value)> {
+    apply_view(request, pool, Some(overlay))
+}
+fn apply_view(
+    request: &Request,
+    pool: &rayon::ThreadPool,
+    overlay: Option<&SourceOverlay>,
+) -> io::Result<(usize, Value)> {
     let (_, initial) = super::apply(&request.initial)?;
     let mut finish = finish_request(request, &initial)?;
     let names = package_names(&finish)?;
     let package_request = serde_json::from_value(json!({"root":request.root,
         "componentRoot":request.component_root,"names":names}))
     .map_err(io::Error::other)?;
-    let (_, packages) = packages_on_disk::read(&package_request, pool)?;
+    let (_, packages) = match overlay {
+        Some(view) => packages_on_disk::read_overlay(&package_request, pool, view)?,
+        None => packages_on_disk::read(&package_request, pool)?,
+    };
     finish["resolved"] = packages["resolved"].clone();
     let (_, mut output) =
         finalize::apply(&serde_json::from_value(finish).map_err(io::Error::other)?)?;
@@ -43,6 +61,9 @@ pub(in crate::workspace::engine) fn apply(
     output["extensions"] = selected["extensions"].clone();
     output["removed"] = initial["removed"].clone();
     output["detectedMissing"] = initial["missing"].clone();
+    if overlay.is_some() {
+        output["readSet"] = packages["readSet"].clone();
+    }
     Ok((1, output))
 }
 

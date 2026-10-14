@@ -11,6 +11,7 @@ mod read_raw;
 mod resolve_dependencies;
 mod resolve_typescript;
 mod scan;
+mod source_overlay;
 mod status;
 mod status_context;
 mod status_history;
@@ -59,6 +60,9 @@ enum Request {
     },
     CommandPrepare(command::input::Prepare),
     CommandPlan(command::Plan),
+    CommandPolicyPrepare(command::policy::Prepare),
+    CommandDependencyDetect(command::policy::dependencies::Detect),
+    CommandDependencyComplete(command::policy::dependencies::Complete),
     CommandApply(command::Apply),
     CommandFinalize(command::Finalize),
     StatusContext(status_context::Request),
@@ -170,6 +174,15 @@ fn owned(
 ) -> io::Result<(usize, Value)> {
     match request {
         Request::CommandPlan(input) => command::plan(input, snapshots, pool),
+        Request::CommandPolicyPrepare(input) => {
+            pool.install(|| command::policy::prepare(input, &mut snapshots.command))
+        }
+        Request::CommandDependencyDetect(input) => pool.install(|| {
+            command::policy::dependencies::detect(input, &mut snapshots.command, pool)
+        }),
+        Request::CommandDependencyComplete(input) => pool.install(|| {
+            command::policy::dependencies::complete(input, &mut snapshots.command, pool)
+        }),
         Request::CommandFinalize(input) => {
             pool.install(|| command::finalize(&input, &mut snapshots.command))
         }

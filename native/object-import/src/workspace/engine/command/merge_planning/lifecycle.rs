@@ -2,6 +2,32 @@ use super::{super::bitmap, Finalized, Prepared, Record, invalid, merge, proof};
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
 impl Prepared {
+    pub(in crate::workspace::engine::command) fn validate_policy_final(
+        &mut self,
+        record: &Record,
+        targets: &[super::super::materialization::Prepared],
+        captured: &[super::super::capture::Captured],
+    ) -> io::Result<()> {
+        super::preflight::validate(record, self, targets, captured)
+    }
+
+    pub(in crate::workspace::engine::command) fn apply_policy_configs(&mut self) -> io::Result<()> {
+        let policy = self.policy.as_ref().ok_or_else(|| invalid("command policy missing"))?;
+        for (index, row) in policy.rows
+            .iter()
+            .filter(|row| !row.fast_forward)
+            .enumerate()
+        {
+            self.materials[index].version = row.projected.clone();
+            if !row.ours_conflict {
+                self.unmerged[index]["mergedConfig"] = row.merged.clone();
+            }
+        }
+        Ok(())
+    }
+    pub(in crate::workspace::engine::command) fn cancel_snap(&mut self) {
+        self.pending.clear();
+    }
     pub(in crate::workspace::engine::command) fn needs_snap(&self) -> Option<Vec<String>> {
         if self.pending.is_empty() || self.finalized.is_some() {
             None
@@ -19,6 +45,7 @@ impl Prepared {
     ) -> io::Result<Vec<bitmap::Update>> {
         self.materials
             .iter()
+            .filter(|material| !material.no_write())
             .map(|material| {
                 let (identity, _) = material.output["id"]
                     .as_str()
@@ -42,6 +69,9 @@ impl Prepared {
         staging: &Path,
         receipt: &Value,
     ) -> io::Result<Value> {
+        if let Some(policy) = &self.policy {
+            policy.validate(true)?;
+        }
         if self.needs_snap().is_none() {
             return Err(invalid("command unexpected snap receipt"));
         }
@@ -61,6 +91,17 @@ impl Prepared {
             .unwrap_or("");
         let snapshot =
             merge::snapshot::prepare(&record.request.root, staging, &inputs, receipt, message)?;
+        let files = self.prepare_packages(record, &snapshot)?;
+        let results = json!({"snappedComponents":snapshot.versions.iter().map(|version|
+            json!({"id":format!("{}@{}",version["identity"].as_str().unwrap(),version["hash"].as_str().unwrap())})).collect::<Vec<_>>(),"autoSnappedResults":[]});
+        self.finalized = Some(Finalized { snapshot, files });
+        Ok(results)
+    }
+    fn prepare_packages(
+        &self,
+        record: &Record,
+        snapshot: &merge::snapshot::Snapshot,
+    ) -> io::Result<merge::finalization::Prepared> {
         let inputs = self.pending
             .iter()
             .zip(&snapshot.versions)
@@ -76,11 +117,7 @@ impl Prepared {
             })
             .collect::<io::Result<Vec<_>>>()?;
         let roots = record.context["workspace"]["teambit.dependencies/dependency-resolver"]["rootComponents"].as_bool().unwrap_or(false);
-        let files = merge::finalization::prepare(&record.request.root, &inputs, roots)?;
-        let results = json!({"snappedComponents":snapshot.versions.iter().map(|version|
-            json!({"id":format!("{}@{}",version["identity"].as_str().unwrap(),version["hash"].as_str().unwrap())})).collect::<Vec<_>>(),"autoSnappedResults":[]});
-        self.finalized = Some(Finalized { snapshot, files });
-        Ok(results)
+        merge::finalization::prepare(&record.request.root, &inputs, roots)
     }
     pub(in crate::workspace::engine::command) fn snap_updates(
         &self,
@@ -132,6 +169,9 @@ impl Prepared {
     }
 
     pub(in crate::workspace::engine::command) fn validate(&self, root: &Path) -> io::Result<()> {
+        if let Some(policy) = &self.policy {
+            policy.validate(!self.pending.is_empty())?;
+        }
         if self.needs_snap().is_some() {
             return Err(invalid("command snap receipt required before apply"));
         }

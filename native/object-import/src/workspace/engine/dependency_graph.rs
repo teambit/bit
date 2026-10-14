@@ -5,13 +5,13 @@ mod scan;
 mod tests;
 mod validate;
 
-use super::{invalid, resolve_dependencies::Budget};
+use super::{invalid, resolve_dependencies::Budget, source_overlay::SourceOverlay};
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{
     collections::{HashMap, HashSet},
-    fs, io,
+    io,
     path::{Path, PathBuf},
 };
 
@@ -50,7 +50,6 @@ struct Row {
     path_map: PathMap,
     registered: Vec<String>,
     detector_scanned: bool,
-    source_hash: String,
 }
 
 pub(super) fn apply(request: &Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value)> {
@@ -61,6 +60,21 @@ pub(super) fn capture(
     pool: &rayon::ThreadPool,
     proof: bool,
 ) -> io::Result<(usize, Value)> {
+    capture_view(request, pool, proof, None)
+}
+pub(super) fn capture_overlay(
+    request: &Request,
+    pool: &rayon::ThreadPool,
+    overlay: &SourceOverlay,
+) -> io::Result<(usize, Value)> {
+    capture_view(request, pool, true, Some(overlay))
+}
+fn capture_view(
+    request: &Request,
+    pool: &rayon::ThreadPool,
+    proof: bool,
+    overlay: Option<&SourceOverlay>,
+) -> io::Result<(usize, Value)> {
     validate::validate(request)?;
     let builtins: HashSet<_> = request.builtins
         .iter()
@@ -69,11 +83,11 @@ pub(super) fn capture(
     let mut pending = request.files.clone();
     let mut capture = Capture::default();
     let mut rows = HashMap::new();
-    let scan_budget = scan::ScanBudget::new(proof);
-    let resolver_budget = Budget::capture(proof);
+    let scan_budget = scan::ScanBudget::default();
+    let resolver_budget = overlay.map_or_else(|| Ok(Budget::capture(proof)), Budget::overlay)?;
     // Each frontier work-steals across files; replay preserves canonical callback order.
     while !pending.is_empty() {
-        let batch = capture.batch(request, &mut pending)?;
+        let batch = capture.batch(request, &mut pending, &resolver_budget)?;
         let scanned = pool.install(|| {
             batch
                 .par_iter()
@@ -83,9 +97,9 @@ pub(super) fn capture(
         retain(scanned, &mut rows, &mut pending);
     }
     let count = rows.len();
-    let mut output = replay::finish(request, &rows)?;
+    let mut output = replay::finish(request, &rows, &resolver_budget)?;
     if proof {
-        output["readSet"] = proof::rows(&rows, resolver_budget.proofs()?)?;
+        output["readSet"] = proof::rows(resolver_budget.proofs()?)?;
     }
     Ok((count, output))
 }
@@ -96,7 +110,12 @@ struct Capture {
     bytes: u64,
 }
 impl Capture {
-    fn batch(&mut self, request: &Request, pending: &mut Vec<PathBuf>) -> io::Result<Vec<PathBuf>> {
+    fn batch(
+        &mut self,
+        request: &Request,
+        pending: &mut Vec<PathBuf>,
+        budget: &Budget,
+    ) -> io::Result<Vec<PathBuf>> {
         let mut batch = Vec::new();
         for file in pending.drain(..) {
             let name = file.to_str().ok_or_else(|| invalid("dependency graph path encoding"))?;
@@ -110,18 +129,14 @@ impl Capture {
             if self.seen.len() > MAX_FILES {
                 return Err(invalid("dependency graph file budget"));
             }
-            if self.reserve(&file)? {
+            if self.reserve(&file, budget)? {
                 batch.push(file);
             }
         }
         Ok(batch)
     }
-    fn reserve(&mut self, file: &Path) -> io::Result<bool> {
-        let metadata = match fs::metadata(file) {
-            Ok(value) => value,
-            Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(false),
-            Err(error) => return Err(error),
-        };
+    fn reserve(&mut self, file: &Path, budget: &Budget) -> io::Result<bool> {
+        let Some(metadata) = budget.metadata(file)? else { return Ok(false) };
         self.bytes += metadata.len();
         if !metadata.is_file() || self.bytes > MAX_BYTES {
             return Err(invalid("dependency graph source budget"));

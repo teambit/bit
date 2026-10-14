@@ -15,5 +15,5 @@ test('public cold checkout and main merge preserve canonical output, state and f
     report: path.join(directory, 'report.json'),
     allowUnmarkedCli: true,
   });
-  assert.equal(result.runs.length, 80, 'all twenty scenarios exercise all four modes');
+  assert.equal(result.runs.length, 100, 'all twenty-five scenarios exercise all four modes');
 });

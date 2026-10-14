@@ -52,7 +52,7 @@ fn optional_dependency_package_name_does_not_change_policy() {
 }
 
 #[test]
-fn mixed_harmony_schemas_allow_only_unchanged_component_policy() {
+fn mixed_harmony_schemas_allow_policy_projection_but_guard_other_metadata() {
     use crate::workspace::engine::status_models::harmony;
     let old = json!({"schema":"1.0.0","mainFile":"index.js","docs":[]});
     let mut new = old.clone();
@@ -65,5 +65,7 @@ fn mixed_harmony_schemas_allow_only_unchanged_component_policy() {
     ];
     assert!(super::bodies::metadata_guard(&sides).is_ok());
     sides[2]["packageDependencies"] = json!({"changed":"1.0.0"});
+    assert!(super::bodies::metadata_guard(&sides).is_ok());
+    sides[2]["mainFile"] = json!("changed.js");
     assert!(super::bodies::metadata_guard(&sides).is_err());
 }

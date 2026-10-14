@@ -1,3 +1,4 @@
+use crate::workspace::engine::source_overlay::SourceOverlay;
 mod detected;
 mod issues;
 
@@ -55,13 +56,30 @@ pub(in crate::workspace::engine) fn complete(
     request: &Complete,
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
+    complete_view(request, pool, None)
+}
+pub(in crate::workspace::engine) fn complete_overlay(
+    request: &Complete,
+    pool: &rayon::ThreadPool,
+    overlay: &SourceOverlay,
+) -> io::Result<(usize, Value)> {
+    complete_view(request, pool, Some(overlay))
+}
+fn complete_view(
+    request: &Complete,
+    pool: &rayon::ThreadPool,
+    overlay: Option<&SourceOverlay>,
+) -> io::Result<(usize, Value)> {
     let mut initial = detected::initial(&request.detected, &request.finish)?;
     initial["policies"] = request.policies.clone();
     let input =
         serde_json::from_value(json!({"root":request.root,"componentRoot":request.component_root,
         "initial":initial,"finish":request.finish,"resolution":request.resolution}))
         .map_err(io::Error::other)?;
-    let (_, mut output) = pipeline::apply(&input, pool)?;
+    let (_, mut output) = match overlay {
+        Some(view) => pipeline::apply_overlay(&input, pool, view)?,
+        None => pipeline::apply(&input, pool)?,
+    };
     output["issues"] = issues::apply(&request.detected["issues"], &output)?;
     Ok((1, output))
 }

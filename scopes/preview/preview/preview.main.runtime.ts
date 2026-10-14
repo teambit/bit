@@ -1,4 +1,5 @@
 import { ArtifactFactory, BuilderAspect } from '@teambit/builder';
+import { CORE_ENV_PREVIEW_CAPABILITIES, coreEnvDoesScaling } from './core-env-preview-data';
 import type { BuilderMain } from '@teambit/builder';
 import type { Asset, BundlerMain } from '@teambit/bundler';
 import { BundlerAspect } from '@teambit/bundler';
@@ -311,7 +312,7 @@ export class PreviewMain {
 
   private async calculateIncludeOnlyOverview(component: Component): Promise<boolean> {
     if (this.envs.isUsingCoreEnv(component)) {
-      return true;
+      return CORE_ENV_PREVIEW_CAPABILITIES.onlyOverview;
     }
     const envComponent = await this.envs.getEnvComponent(component);
     return this.doesEnvIncludesOnlyOverview(envComponent);
@@ -319,7 +320,7 @@ export class PreviewMain {
 
   private async calculateUseNameParam(component: Component): Promise<boolean> {
     if (this.envs.isUsingCoreEnv(component)) {
-      return true;
+      return CORE_ENV_PREVIEW_CAPABILITIES.useNameParam;
     }
     const envComponent = await this.envs.getEnvComponent(component);
     return this.doesEnvUseNameParam(envComponent);
@@ -563,10 +564,7 @@ export class PreviewMain {
       // If the component is new, no point to check the is bundle with env (there is no artifacts so it will for sure return false)
       // If it's new, and we are here, it means that we already use a version of the env that support scaling
       const isNew = await component.isNew();
-      if (isNew) {
-        return true;
-      }
-      return isBundledWithEnv === false;
+      return coreEnvDoesScaling(isNew, isBundledWithEnv);
     }
     // For envs that bundled with the env return true always
     if (isBundledWithEnv) {

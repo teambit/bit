@@ -7,6 +7,7 @@ use std::fs;
 fn empty_merge_still_invokes_repository_persistence_notification() {
     let root = scratch::Directory::create().unwrap();
     let mut prepared = Prepared {
+        policy: None,
         state: merge::State::new(0).unwrap(),
         materials: Vec::new(),
         unmerged: json!([]),

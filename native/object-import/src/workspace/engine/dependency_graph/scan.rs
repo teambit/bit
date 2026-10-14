@@ -7,8 +7,7 @@ use super::{
 };
 use std::{
     collections::HashSet,
-    fs,
-    io::{self, Read},
+    io,
     path::Path,
     sync::atomic::{AtomicUsize, Ordering},
 };
@@ -17,14 +16,8 @@ use std::{
 pub(super) struct ScanBudget {
     source_bytes: AtomicUsize,
     output_bytes: AtomicUsize,
-    proof: bool,
 }
 
-impl ScanBudget {
-    pub(super) fn new(proof: bool) -> Self {
-        Self { proof, ..Self::default() }
-    }
-}
 pub(super) fn scan(
     request: &Request,
     file: &Path,
@@ -38,8 +31,7 @@ pub(super) fn scan(
         .and_then(|value| value.to_str())
         .map(|value| format!(".{value}"))
         .unwrap_or_default();
-    let bytes = read(file, &scan_budget.source_bytes)?;
-    let source_hash = if scan_budget.proof { super::proof::hash(&bytes) } else { String::new() };
+    let bytes = read(file, &scan_budget.source_bytes, budget)?;
     let detector_scanned =
         !bytes.starts_with(b"// @bit-no-check") && !bytes.starts_with(b"/* @bit-no-check");
     if !request.detector_extensions.contains(&extension) {
@@ -47,7 +39,6 @@ pub(super) fn scan(
             path_map: PathMap { file: filename.to_owned(), dependencies: Vec::new() },
             registered: Vec::new(),
             detector_scanned,
-            source_hash,
         });
     }
     let ts = matches!(extension.as_str(), ".ts" | ".tsx" | ".mts" | ".cts");
@@ -60,16 +51,14 @@ pub(super) fn scan(
     let resolver = Resolver { parent, home: request.home.as_deref(), budget, ts };
     let mut row = resolver.row(filename, dependencies, builtins)?;
     row.detector_scanned = detector_scanned;
-    row.source_hash = source_hash;
     Ok(row)
 }
 
-fn read(file: &Path, budget: &AtomicUsize) -> io::Result<Vec<u8>> {
+fn read(file: &Path, budget: &AtomicUsize, resolver: &Budget) -> io::Result<Vec<u8>> {
     // Account actual reads rather than trusting metadata across concurrent edits.
-    let mut bytes = Vec::new();
-    fs::File::open(file)?
-        .take(1024 * 1024 + 1)
-        .read_to_end(&mut bytes)?;
+    let bytes = resolver
+        .read_source(file)?
+        .ok_or_else(|| invalid("dependency graph source disappeared"))?;
     if bytes.len() > 1024 * 1024
         || budget.fetch_add(bytes.len(), Ordering::Relaxed) + bytes.len() > MAX_BYTES as usize
     {
@@ -112,7 +101,6 @@ impl Resolver<'_> {
             path_map: PathMap { file: filename.to_owned(), dependencies: Vec::new() },
             registered: Vec::new(),
             detector_scanned: true,
-            source_hash: String::new(),
         };
         for dependency in dependencies {
             if builtins.contains(dependency.as_str())
@@ -140,7 +128,10 @@ impl Resolver<'_> {
         .ok_or_else(|| {
             invalid("dependency graph unresolved dependency requires canonical fallback")
         })?;
-        if !Path::new(&resolved).exists() {
+        if !self.budget
+            .metadata(Path::new(&resolved))?
+            .is_some_and(super::super::source_overlay::Metadata::is_file)
+        {
             return Err(invalid("dependency graph resolution disappeared"));
         }
         Ok(Dependency {

@@ -1,3 +1,4 @@
+use crate::workspace::engine::source_overlay::SourceOverlay;
 mod metadata;
 
 use super::invalid;
@@ -25,8 +26,22 @@ pub(in crate::workspace::engine) fn read(
     request: &Request,
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
+    read_view(request, pool, None)
+}
+pub(in crate::workspace::engine) fn read_overlay(
+    request: &Request,
+    pool: &rayon::ThreadPool,
+    overlay: &SourceOverlay,
+) -> io::Result<(usize, Value)> {
+    read_view(request, pool, Some(overlay))
+}
+fn read_view(
+    request: &Request,
+    pool: &rayon::ThreadPool,
+    overlay: Option<&SourceOverlay>,
+) -> io::Result<(usize, Value)> {
     validate(request)?;
-    let budget = Budget::new();
+    let budget = overlay.map_or_else(|| Ok(Budget::new()), Budget::overlay)?;
     let dependent = OnceLock::new();
     let rows = pool.install(|| {
         request.names
@@ -35,7 +50,11 @@ pub(in crate::workspace::engine) fn read(
             .collect::<io::Result<Vec<_>>>()
     })?;
     let resolved: Map<_, _> = rows.into_iter().flatten().collect();
-    Ok((resolved.len(), json!({"resolved":resolved})))
+    let mut output = json!({"resolved":resolved});
+    if overlay.is_some() {
+        output["readSet"] = serde_json::to_value(budget.proofs()?).map_err(io::Error::other)?;
+    }
+    Ok((resolved.len(), output))
 }
 fn resolve(
     request: &Request,

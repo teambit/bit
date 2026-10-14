@@ -7,6 +7,8 @@ export function commandProgress(value: any, operation: 'checkout' | 'merge') {
   if (value === undefined) return async () => {};
   if (!Number.isSafeInteger(value.bitmapCount) || value.bitmapCount < 0 || !Array.isArray(value.imports))
     throw new Error('native command progress receipt');
+  if (value.snapFailed !== undefined && typeof value.snapFailed !== 'boolean')
+    throw new Error('native command snap progress state');
   const loads: number[] = value.loads ?? [];
   if (
     !Array.isArray(loads) ||
@@ -41,7 +43,7 @@ export function commandProgress(value: any, operation: 'checkout' | 'merge') {
     if (operation !== 'checkout') {
       rows.forEach(renderImport);
       for (const count of loads) loader.start(`loading ${count} component(s)`);
-      if (loads.length) {
+      if (loads.length && !value.snapFailed) {
         loader.start('importing missing dependencies...');
         loader.start('adding dependencies graph...');
       }

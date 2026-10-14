@@ -213,6 +213,58 @@ async function createFixture(cli, temporary, { extraFiles = 0 } = {}) {
   command(author, ['export', '--ignore-missing-artifacts']);
   const remoteThree = path.join(temporary, 'remote-three');
   await fs.cp(remote, remoteThree, { recursive: true });
+  // Canonically produced incoming graphs exercise post-merge detection against
+  // retained added/deleted files, rather than the pre-merge workspace on disk.
+  await write(author, 'component/support.js', 'exports.value = 7;\n');
+  await write(author, 'component/support.ts', 'export const typed = 9;\n');
+  await write(author, 'component/load-support.js', "module.exports = require('./support').value;\n");
+  await write(
+    author,
+    'component/fresh.test.ts',
+    "import dependency from '@qualification/command.dependency';\nexport const test = dependency;\n"
+  );
+  await write(author, 'component/fresh.spec.js', 'exports.test = 1;\n');
+  await write(
+    author,
+    'component/index.js',
+    "const dependency = require('@qualification/command.dependency');\nexports.first = 'four';\nexports.stable = 1;\nexports.last = 'one';\nexports.dependency = dependency;\n"
+  );
+  tag(author, '1.0.3', 'component');
+  command(author, ['export', '--ignore-missing-artifacts']);
+  const remoteAddedFiles = path.join(temporary, 'remote-added-files');
+  await fs.cp(remote, remoteAddedFiles, { recursive: true });
+  await fs.rm(path.join(author, 'component/fresh.spec.js'));
+  await fs.rm(path.join(author, 'component/added.js'));
+  await write(
+    author,
+    'component/index.js',
+    "const dependency = require('./support').value;\nexports.first = 'five';\nexports.stable = 1;\nexports.last = 'one';\nexports.dependency = dependency;\n"
+  );
+  tag(author, '1.0.4', 'component');
+  command(author, ['export', '--ignore-missing-artifacts']);
+  const remoteDevDependency = path.join(temporary, 'remote-dev-dependency');
+  await fs.cp(remote, remoteDevDependency, { recursive: true });
+  await write(author, 'peer/unsupported.docs.js', 'module.exports = {};\n');
+  tag(author, '1.0.3', 'peer');
+  command(author, ['export', '--ignore-missing-artifacts']);
+  const remoteUnsupportedCallbacks = path.join(temporary, 'remote-unsupported-callbacks');
+  await fs.cp(remote, remoteUnsupportedCallbacks, { recursive: true });
+  await write(
+    author,
+    'component/component.json',
+    JSON.stringify({
+      componentId: { scope: scopeName, name: 'component', version: '1.0.4' },
+      extensions: {
+        'teambit.dependencies/dependency-resolver': {
+          policy: { devDependencies: [{ name: '@types/node', version: '^22.10.5', force: true }] },
+        },
+      },
+    })
+  );
+  tag(author, '1.0.5', 'component');
+  command(author, ['export', '--ignore-missing-artifacts']);
+  const remotePolicy = path.join(temporary, 'remote-policy');
+  await fs.cp(remote, remotePolicy, { recursive: true });
   const bitmap = load('comment-json').parse(await fs.readFile(path.join(consumer, '.bitmap'), 'utf8'));
   const roots = Object.entries(bitmap)
     .filter(([, entry]) => entry?.rootDir)
@@ -322,6 +374,10 @@ async function createFixture(cli, temporary, { extraFiles = 0 } = {}) {
     remoteTwo,
     remoteThree,
     remoteGraph,
+    remoteAddedFiles,
+    remoteDevDependency,
+    remoteUnsupportedCallbacks,
+    remotePolicy,
     scopeName,
     id,
     dependencyId,

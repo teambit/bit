@@ -23,6 +23,7 @@ import type { ReactEnv, ReactMain, UseTypescriptModifiers } from '@teambit/react
 import { ReactAspect } from '@teambit/react';
 import { NodeAspect } from './node.aspect';
 import { NodeEnv } from './node.env';
+import { NODE_ENV_ICON } from './default-load-data';
 import { getTemplates } from './node.templates';
 import { getStarters } from './node.starters';
 import { NodeAppType } from './node.app-type';
@@ -39,7 +40,7 @@ export class NodeMain {
   ) {}
 
   icon() {
-    return 'https://static.bit.dev/extensions-icons/nodejs.svg';
+    return NODE_ENV_ICON;
   }
 
   /**

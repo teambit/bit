@@ -48,6 +48,19 @@ impl Repository {
         self.values.insert(key, value.clone());
         Ok(value)
     }
+    pub(super) fn source_json(&mut self, reference: &str) -> io::Result<Value> {
+        crate::merge_history::hash(reference)?;
+        if let Some(source) = self.imported
+            .as_ref()
+            .and_then(|imported| imported.overlay.source(reference))
+        {
+            if source.len() > 4 * 1024 * 1024 {
+                return Err(super::super::invalid("command graph source byte budget"));
+            }
+            return serde_json::from_slice(source).map_err(io::Error::other);
+        }
+        self.read(reference, "Source")
+    }
     pub(super) fn validate(&self) -> io::Result<()> {
         if let Some(imported) = &self.imported {
             imported.validate()?;

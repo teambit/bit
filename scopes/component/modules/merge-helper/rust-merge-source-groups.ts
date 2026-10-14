@@ -43,7 +43,7 @@ export type MergeSourceObservation = {
 const sourceBufferEquals = Buffer.prototype.equals;
 const sourceBufferFrom = Buffer.from;
 
-/** Logical public loads retain their original concurrency and completion order; only bytes come from verified capsules. */
+/** Logical public loads retain their concurrency; result order follows each canonical stage. */
 export async function observeRustMergeSourceGroups(
   repository: Repository,
   capsules: HistorySourceCapsule[],
@@ -128,11 +128,10 @@ export async function observeRustMergeSourceGroups(
             remember(constructed, model, file);
           }
           sources.set(entry.row, { other: other.source, otherContents: other.body, file });
-          order.push(entry.row);
         }
       })
     );
-    if (group.stage === 'modified') order.push(...group.loads.map((entry) => entry.row));
+    order.push(...group.loads.map((entry) => entry.row));
   }
   return {
     sources,

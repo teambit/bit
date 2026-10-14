@@ -3,15 +3,20 @@ use super::{
     packages::{Package, Reader},
     wire::{ComponentVersion, Detect},
 };
+use crate::workspace::engine::source_overlay::SourceOverlay;
 use serde_json::{Map, Value, json};
 use std::{io, path::Path};
 
-pub(super) fn project(request: &Detect, graph: &Value) -> io::Result<Value> {
+pub(super) fn project(
+    request: &Detect,
+    graph: &Value,
+    overlay: Option<&SourceOverlay>,
+) -> io::Result<Value> {
     let proofs = serde_json::from_value(graph["readSet"].clone()).map_err(io::Error::other)?;
     let mut projection = Projection {
         request,
         graph,
-        reader: Reader::new(&request.component_root, proofs)?,
+        reader: Reader::new(&request.component_root, proofs, overlay)?,
         dependencies: Default::default(),
         packages: Default::default(),
         versions: Vec::new(),

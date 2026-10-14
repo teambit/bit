@@ -3,6 +3,8 @@ import type { ApplyVersionResults } from '@teambit/component.modules.merge-helpe
 import { FileStatus } from '@teambit/component.modules.merge-helper/dist/merge-version.js';
 import { checkoutOutput } from '@teambit/checkout/dist/checkout-output.js';
 import { mergeReport } from '@teambit/merging/dist/merge-report.js';
+import { IssuesList } from '@teambit/component-issues';
+import { ComponentsHaveIssues } from '@teambit/builder/dist/exceptions/components-have-issues.js';
 import type { RustWorkspaceCommandOptions } from './rust-workspace-command-options';
 
 function record(value: any, keys: string[]) {
@@ -36,6 +38,7 @@ export function formatRustWorkspaceCommand(value: any, options: RustWorkspaceCom
     'addedComponents',
     'leftUnresolvedConflicts',
     'mergeSnapResults',
+    'mergeSnapError',
   ]);
   if (value.version !== undefined && typeof value.version !== 'string')
     throw new Error('native command report version');
@@ -86,7 +89,37 @@ export function formatRustWorkspaceCommand(value: any, options: RustWorkspaceCom
       }) as any,
     };
   }
-  if (options.operation === 'merge') return mergeReport(result);
+  if (value.mergeSnapError !== undefined) {
+    record(value.mergeSnapError, ['kind', 'components']);
+    if (value.mergeSnapError.kind !== 'componentsHaveIssues') throw new Error('native command snap error kind');
+    const components = rows(value.mergeSnapError.components).map((component) => {
+      record(component, ['id', 'issues']);
+      const issues = rows(component.issues);
+      if (!issues.length) throw new Error('native command snap issues absent');
+      for (const issue of issues) {
+        record(issue, ['type', 'data']);
+        if (issue.type !== 'MissingManuallyConfiguredPackages' || typeof issue.data !== 'string')
+          throw new Error('native command snap issue type');
+        const packages = JSON.parse(issue.data);
+        if (!Array.isArray(packages) || !packages.length || packages.some((name) => typeof name !== 'string'))
+          throw new Error('native command snap issue packages');
+      }
+      return { id: id(component.id), issues: IssuesList.deserialize(issues) };
+    });
+    if (!components.length) throw new Error('native command snap error components absent');
+    result.mergeSnapError = new ComponentsHaveIssues(components as any);
+  }
+  if (options.operation === 'merge') {
+    // Match MergeCmd's public report projection, including its manual-conflict output.
+    return mergeReport({
+      components: result.components,
+      failedComponents: result.failedComponents,
+      version: result.version,
+      mergeSnapResults: result.mergeSnapResults,
+      mergeSnapError: result.mergeSnapError,
+      verbose: result.verbose,
+    });
+  }
   return checkoutOutput(result, {
     head: options.to === 'head',
     latest: options.to === 'latest',

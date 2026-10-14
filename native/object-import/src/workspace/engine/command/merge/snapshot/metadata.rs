@@ -22,10 +22,12 @@ pub(super) fn receipt(value: &Value, inputs: &[Input<'_>]) -> io::Result<()> {
 }
 pub(super) fn version(input: &Input<'_>, receipt: &Value, message: &str) -> io::Result<Value> {
     let mut version = current_schema(&input.material.version)?;
-    version
-        .as_object_mut()
-        .ok_or_else(|| invalid("command snap Version"))?
-        .remove("flattenedEdges");
+    if version.get("flattenedEdgesRef").is_some() {
+        version
+            .as_object_mut()
+            .ok_or_else(|| invalid("command snap Version"))?
+            .remove("flattenedEdges");
+    }
     for field in ["squashed", "unrelated", "hidden", "dependenciesGraphRef"] {
         version
             .as_object_mut()

@@ -62,20 +62,14 @@ fn edges(
     if rows.len() > 16384 {
         return Err(invalid("command snap flattened graph budget"));
     }
-    for row in rows {
-        let source = &mut row["source"];
-        if format!(
-            "{}/{}",
-            source["scope"].as_str().unwrap_or_default(),
-            source["name"].as_str().unwrap_or_default(),
-        ) == input.identity
-        {
-            source["version"] = json!(hash);
-        }
-    }
+    rekey(rows, input.identity, hash);
     let body = serde_json::to_vec(&graph).map_err(io::Error::other)?;
     let identity = digest(&body);
     version["flattenedEdgesRef"] = json!(identity);
+    version
+        .as_object_mut()
+        .unwrap()
+        .remove("flattenedEdges");
     objects.push(
         json!({"type":"Source","hash":identity,"body":crate::validate::hexadecimal(&body)}),
     );
@@ -113,6 +107,9 @@ fn source(version: &Value, file: &Value, budget: &Budget) -> io::Result<(Value, 
 }
 
 fn read_graph(root: &Path, version: &Value, proofs: &mut Vec<proof::Proof>) -> io::Result<Value> {
+    if let Some(graph) = version.get("flattenedEdges") {
+        return Ok(graph.clone());
+    }
     let old = version["flattenedEdgesRef"]
         .as_str()
         .ok_or_else(|| invalid("command snap flattened graph"))?;
@@ -133,4 +130,22 @@ fn read_graph(root: &Path, version: &Value, proofs: &mut Vec<proof::Proof>) -> i
     )?;
     proof::verify(&proofs[proofs.len() - 1..])?;
     serde_json::from_slice(&bytes).map_err(io::Error::other)
+}
+
+fn rekey(rows: &mut [Value], identity: &str, hash: &str) {
+    let pending = rows
+        .iter()
+        .any(|row| row["source"]["version"] == super::PENDING_GRAPH_VERSION);
+    for row in rows {
+        let source = &mut row["source"];
+        if format!(
+            "{}/{}",
+            source["scope"].as_str().unwrap_or_default(),
+            source["name"].as_str().unwrap_or_default(),
+        ) == identity
+            && (!pending || source["version"] == super::PENDING_GRAPH_VERSION)
+        {
+            source["version"] = json!(hash);
+        }
+    }
 }

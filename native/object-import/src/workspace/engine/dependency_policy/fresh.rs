@@ -12,6 +12,7 @@ use crate::workspace::engine::{
     dependency_graph::{self, proof},
     path,
     resolve_dependencies::normalize,
+    source_overlay::SourceOverlay,
 };
 use serde_json::{Value, json};
 use std::io;
@@ -19,6 +20,20 @@ use std::io;
 pub(in crate::workspace::engine) fn detect(
     request: &Detect,
     pool: &rayon::ThreadPool,
+) -> io::Result<(usize, Value)> {
+    detect_view(request, pool, None)
+}
+pub(in crate::workspace::engine) fn detect_overlay(
+    request: &Detect,
+    pool: &rayon::ThreadPool,
+    overlay: &SourceOverlay,
+) -> io::Result<(usize, Value)> {
+    detect_view(request, pool, Some(overlay))
+}
+fn detect_view(
+    request: &Detect,
+    pool: &rayon::ThreadPool,
+    overlay: Option<&SourceOverlay>,
 ) -> io::Result<(usize, Value)> {
     validate(request)?;
     validate_packages(request)?;
@@ -36,22 +51,42 @@ pub(in crate::workspace::engine) fn detect(
         }
     }
     let graph = serde_json::from_value(graph).map_err(io::Error::other)?;
-    let (_, mut captured) = dependency_graph::capture(&graph, pool, true)?;
+    let (_, mut captured) = match overlay {
+        Some(view) => dependency_graph::capture_overlay(&graph, pool, view)?,
+        None => dependency_graph::capture(&graph, pool, true)?,
+    };
     let mut source_proofs: Vec<proof::Proof> =
         serde_json::from_value(captured["readSet"].clone()).map_err(io::Error::other)?;
     controls.append(&mut source_proofs);
     captured["readSet"] = serde_json::to_value(controls).map_err(io::Error::other)?;
-    project::project(request, &captured).map(|value| (request.files.len(), value))
+    project::project(request, &captured, overlay).map(|value| (request.files.len(), value))
 }
 pub(in crate::workspace::engine) fn apply(
     request: &Complete,
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
+    apply_view(request, pool, None)
+}
+pub(in crate::workspace::engine) fn apply_overlay(
+    request: &Complete,
+    pool: &rayon::ThreadPool,
+    overlay: &SourceOverlay,
+) -> io::Result<(usize, Value)> {
+    apply_view(request, pool, Some(overlay))
+}
+fn apply_view(
+    request: &Complete,
+    pool: &rayon::ThreadPool,
+    overlay: Option<&SourceOverlay>,
+) -> io::Result<(usize, Value)> {
     pool.install(|| proof::verify(&request.capture.read_set))?;
     let detected = complete::detected(request)?;
     let input = serde_json::from_value(json!({"root":request.root,"componentRoot":request.component_root,
         "detected":detected,"policies":request.policies,"finish":request.finish,"resolution":request.resolution})).map_err(io::Error::other)?;
-    let (_, mut output) = cached::complete(&input, pool)?;
+    let (_, mut output) = match overlay {
+        Some(view) => cached::complete_overlay(&input, pool, view)?,
+        None => cached::complete(&input, pool)?,
+    };
     output["rawData"] = Value::String(serde_json::to_string(&detected).map_err(io::Error::other)?);
     output["cacheable"] = json!(request.root != request.component_root);
     Ok((1, output))

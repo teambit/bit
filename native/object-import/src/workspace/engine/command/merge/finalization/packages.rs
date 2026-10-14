@@ -79,14 +79,12 @@ fn validate_package(input: &Input<'_>, package: &Value, name: &str) -> io::Resul
     {
         return Err(invalid("merge custom package metadata"));
     }
-    for field in ["dependencies", "devDependencies", "peerDependencies"] {
-        let version_field = match field {
-            "dependencies" => "packageDependencies",
-            "devDependencies" => "devPackageDependencies",
-            _ => "peerPackageDependencies",
-        };
-        if package[field] != input.version[version_field] {
-            return Err(invalid("merge generated package policy mismatch"));
+    for field in ["optionalDependencies", "peerDependenciesMeta"] {
+        if package
+            .get(field)
+            .is_some_and(|value| !value.as_object().is_some_and(serde_json::Map::is_empty))
+        {
+            return Err(invalid("merge optional generated package policy"));
         }
     }
     Ok(())
@@ -180,6 +178,13 @@ fn manifest(
         .ok_or_else(|| invalid("merge generated package missing"))?;
     let mut package = json(&bytes)?;
     validate_package(input, &package, name)?;
+    for (field, version_field) in [
+        ("dependencies", "packageDependencies"),
+        ("devDependencies", "devPackageDependencies"),
+        ("peerDependencies", "peerPackageDependencies"),
+    ] {
+        package[field] = input.version[version_field].clone();
+    }
     let version = format!("0.0.0-{}", input.hash);
     package["version"] = value!(version);
     package["componentId"]["version"] = value!(input.hash);

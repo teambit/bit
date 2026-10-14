@@ -9,6 +9,16 @@ const { observe } = require('./workspace-inspection-body-read.cjs');
 const { sourceIdentity } = require('./artifacts/contract.cjs');
 const { createRequire } = require('node:module');
 
+function versionObjects(state) {
+  return Object.entries(state.objects).flatMap(([hash, hex]) => {
+    const bytes = Buffer.from(hex, 'hex');
+    const separator = bytes.indexOf(0);
+    return bytes.subarray(0, separator).toString().startsWith('Version ')
+      ? [[hash, JSON.parse(bytes.subarray(separator + 1).toString())]]
+      : [];
+  });
+}
+
 async function binding(cli, helper, allowUnmarkedCli = false) {
   const sha256 = async (filename) =>
     createHash('sha256')
@@ -122,14 +132,16 @@ async function runQualification(cli, helper, options = {}) {
     const bytes = await fs.readFile(options.proof);
     const proof = JSON.parse(bytes);
     assert.equal(proof.qualified, true);
-    assert.equal(proof.runs.length, 80, 'all twenty scenarios need four-mode qualification');
+    assert.equal(proof.runs.length, 100, 'all twenty-five scenarios need four-mode qualification');
     assert.deepEqual(proof.binding, bound, 'measure exactly the qualified source, CLI, binaries and harness');
     assert.deepEqual(proof.endBinding, bound);
     assert.deepEqual(proof.dimensions, dimensions);
     for (const run of proof.runs.filter(
       (run) =>
         run.mode === 'native' &&
-        !['checkout-divergent-head', 'main-mixed-changed-graph-fallback'].includes(run.scenario)
+        !['checkout-divergent-head', 'main-last-target-callback-fallback', 'main-duplicate-package-fallback'].includes(
+          run.scenario
+        )
     )) {
       assert.deepEqual(run.trace.loadedCommandModels, []);
       assert.equal(run.trace.workspace.commandApply.applied, 1);
@@ -140,12 +152,12 @@ async function runQualification(cli, helper, options = {}) {
       const auditBytes = await fs.readFile(options.wrapperProof);
       const audit = JSON.parse(auditBytes);
       assert.equal(audit.wrapperAudit, true);
-      assert.equal(audit.runs.length, 36);
+      assert.equal(audit.runs.length, 44);
       assert.deepEqual(audit.binding, bound);
       assert.deepEqual(audit.endBinding, bound);
       assert.deepEqual(audit.dimensions, dimensions);
       Object.assign(wrapperEligibility, audit.wrapperEligibility);
-      assert.equal(Object.keys(wrapperEligibility).length, 18);
+      assert.equal(Object.keys(wrapperEligibility).length, 22);
       wrapperAuditSha256 = createHash('sha256').update(auditBytes).digest('hex');
     }
   }
@@ -176,6 +188,16 @@ async function runQualification(cli, helper, options = {}) {
       importRemote: true,
     },
     { name: 'main-divergent-auto-snap', args: ['merge', fixture.id, skip], diverge: true, importRemote: true },
+    {
+      name: 'main-duplicate-package-fallback',
+      args: ['merge', fixture.id, skip],
+      diverge: true,
+      importRemote: true,
+      duplicatePackage: true,
+      snapFailed: true,
+      fallback: true,
+      latePreparationFallback: true,
+    },
     { name: 'main-fast-forward', args: ['merge', fixture.id, skip], importRemote: true, fastForward: fixture.id },
     {
       name: 'main-fast-forward-cached-target',
@@ -202,14 +224,45 @@ async function runQualification(cli, helper, options = {}) {
       fastForward: fixture.peerId,
     },
     {
-      name: 'main-mixed-changed-graph-fallback',
+      name: 'main-mixed-changed-graph',
       args: ['merge', '**', skip],
       remote: 'remoteGraph',
       diverge: true,
       importRemote: true,
       fastForward: fixture.peerId,
       incomingVersion: '1.0.2',
+    },
+    {
+      name: 'main-added-source-graph',
+      args: ['merge', fixture.id, skip],
+      remote: 'remoteAddedFiles',
+      diverge: true,
+      importRemote: true,
+    },
+    {
+      name: 'main-runtime-to-dev-graph',
+      args: ['merge', fixture.id, skip],
+      remote: 'remoteDevDependency',
+      diverge: true,
+      importRemote: true,
+    },
+    {
+      name: 'main-forced-component-policy',
+      args: ['merge', fixture.id, skip],
+      remote: 'remotePolicy',
+      diverge: true,
+      importRemote: true,
+    },
+    {
+      name: 'main-last-target-callback-fallback',
+      args: ['merge', '**', skip],
+      remote: 'remoteUnsupportedCallbacks',
+      diverge: true,
+      importRemote: true,
+      fastForward: fixture.peerId,
+      incomingVersion: '1.0.3',
       fallback: true,
+      latePreparationFallback: true,
     },
     {
       name: 'main-bare-divergent-only',
@@ -255,6 +308,12 @@ async function runQualification(cli, helper, options = {}) {
       fixture.tag(prepared, '2.0.0', fixture.id);
     }
     if (scenario.importRemote) fixture.command(prepared, ['import', '--objects']);
+    if (scenario.duplicatePackage) {
+      const filename = path.join(prepared, 'package.json');
+      const value = JSON.parse(await fs.readFile(filename, 'utf8'));
+      value.dependencies = { ...value.dependencies, '@qualification/command.component': '1.0.0' };
+      await fs.writeFile(filename, JSON.stringify(value, null, 2));
+    }
     if (scenario.fastForward) await fixture.stageFastForward(prepared, scenario.fastForward, scenario.incomingVersion);
     if (scenario.harmony1) await fixture.stageHarmony1(prepared, fixture.id);
     if (scenario.advancedRemote) await replace(fixture.remoteThree, fixture.remote);
@@ -334,6 +393,15 @@ async function runQualification(cli, helper, options = {}) {
       if (options.report)
         await fs.writeFile(`${options.report}.${scenario.name}.${mode}${suffix}.json`, JSON.stringify(row, null, 2));
       assert.equal(output.code === 0, !scenario.failure, `${scenario.name}: expected command exit status`);
+      if (scenario.snapFailed) {
+        assert.match(output.stdout, /tracked component added as a package/);
+        assert.match(output.stdout, /Total Snapped: 0/);
+        assert.equal(
+          versionObjects(after).filter(([hash]) => !before.objects[hash]).length,
+          0,
+          'blocked snap must not create a Version'
+        );
+      }
       if (systemTrace) {
         const sources = [before, after].flatMap((state) =>
           Object.entries(state.roots).flatMap(([root, files]) =>
@@ -349,7 +417,8 @@ async function runQualification(cli, helper, options = {}) {
         if (options.report)
           await fs.writeFile(`${options.report}.${scenario.name}.${mode}.json`, JSON.stringify(row, null, 2));
         if (scenario.args[0] === 'merge') {
-          const expectedNotifications = scenario.diverge && !scenario.args.includes('--no-snap') ? 2 : 1;
+          const expectedNotifications =
+            scenario.diverge && !scenario.snapFailed && !scenario.args.includes('--no-snap') ? 2 : 1;
           assert.equal(row.trace.postPersistNotifications, expectedNotifications, 'canonical persistence hook intent');
         }
         if (mode !== 'native' && mode !== 'wrapper') {
@@ -376,9 +445,30 @@ async function runQualification(cli, helper, options = {}) {
             `${scenario.name}: actual native command owner`
           );
           assert.equal(row.trace.workspace.commandApply.applied, 1, 'one successful retained command apply receipt');
-          for (const kind of ['commandPrepare', 'commandPlan', 'commandFinalize', 'commandApply'])
+          for (const kind of [
+            'commandPrepare',
+            'commandPlan',
+            'commandPolicyPrepare',
+            'commandDependencyDetect',
+            'commandDependencyComplete',
+            'commandFinalize',
+            'commandApply',
+          ])
             assert.equal(row.trace.workspace[kind].sourceBodyBytes, 0, `${kind}: no Source bytes cross Node`);
         }
+      }
+      if (mode === 'native' && scenario.latePreparationFallback) {
+        assert.ok(row.trace.workspace.commandPlan.completed > 0, 'supported plan precedes last callback rejection');
+        assert.equal(
+          row.trace.workspace.commandFinalize.frames,
+          0,
+          'unsupported callbacks must decline before snap IDs/finalization'
+        );
+        assert.equal(
+          row.trace.workspace.commandApply.frames,
+          0,
+          'unsupported callbacks must decline before publication'
+        );
       }
       if (scenario.args[0] === 'merge' && after.events.onPostObjectsPersist)
         assert.deepEqual(after.events.onPostObjectsPersist, { bytes: '' }, 'canonical persistence event payload');
@@ -441,15 +531,27 @@ async function runQualification(cli, helper, options = {}) {
           undefined,
           'snap clears unrelated dependency cache'
         );
+      if (['main-added-source-graph', 'main-runtime-to-dev-graph'].includes(scenario.name)) {
+        const created = versionObjects(after).filter(([hash]) => !before.objects[hash]);
+        assert.equal(created.length, 1, 'changed graph creates exactly one merge snap');
+        const version = created[0][1];
+        const devOnly = scenario.name === 'main-runtime-to-dev-graph';
+        assert.equal(version.dependencies.length, devOnly ? 0 : 1, 'resolved runtime lifecycle');
+        assert.equal(version.devDependencies.length, devOnly ? 1 : 0, 'resolved development lifecycle');
+        const dev = version.extensions.find((extension) => extension.name === 'teambit.component/dev-files');
+        assert.deepEqual(
+          dev.data.devFiles['teambit.defender/tester'],
+          devOnly ? ['fresh.test.ts'] : ['fresh.spec.js', 'fresh.test.ts']
+        );
+        for (const filename of ['support.js', 'support.ts', 'load-support.js', 'fresh.test.ts'])
+          assert.ok(
+            version.files.some((file) => file.relativePath === filename),
+            `retained added file ${filename}`
+          );
+        for (const [hash] of versionObjects(before))
+          assert.equal(after.objects[hash], before.objects[hash], 'changed graph preserves historical Version bytes');
+      }
       if (scenario.harmony1) {
-        const versionObjects = (state) =>
-          Object.entries(state.objects).flatMap(([hash, hex]) => {
-            const bytes = Buffer.from(hex, 'hex');
-            const separator = bytes.indexOf(0);
-            return bytes.subarray(0, separator).toString().startsWith('Version ')
-              ? [[hash, JSON.parse(bytes.subarray(separator + 1).toString())]]
-              : [];
-          });
         for (const [hash] of versionObjects(before))
           assert.equal(after.objects[hash], before.objects[hash], 'historical Version bytes remain immutable');
         const created = versionObjects(after).filter(([hash]) => !before.objects[hash]);
@@ -485,7 +587,11 @@ async function runQualification(cli, helper, options = {}) {
       ? {
           proofSha256,
           measurement: true,
-          qualificationOnlyScenarios: ['checkout-divergent-head', 'main-mixed-changed-graph-fallback'],
+          qualificationOnlyScenarios: [
+            'checkout-divergent-head',
+            'main-last-target-callback-fallback',
+            'main-duplicate-package-fallback',
+          ],
         }
       : {}),
     runs,

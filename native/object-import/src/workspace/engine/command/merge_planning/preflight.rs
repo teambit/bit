@@ -25,7 +25,9 @@ pub(super) fn validate(
             .and_then(|id| id.rsplit_once('@'))
             .ok_or_else(|| invalid("command fast-forward identity"))?
             .0;
-        prepared.proofs.extend(cache_guard::verify(record, captured, target, identity)?);
+        if !prepared.policy.as_ref().is_some_and(|policy| policy.dependencies_ready) {
+            prepared.proofs.extend(cache_guard::verify(record, captured, target, identity)?);
+        }
         identities.insert(identity);
     }
     for row in

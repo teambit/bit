@@ -1,4 +1,5 @@
 use super::{invalid, proof};
+use crate::workspace::engine::source_overlay::SourceOverlay;
 use serde_json::Value;
 use std::{
     collections::HashMap,
@@ -20,10 +21,21 @@ pub(super) struct Reader {
     dependent: Option<String>,
     packages: HashMap<PathBuf, Package>,
     bytes: usize,
+    overlay: Option<SourceOverlay>,
 }
 impl Reader {
-    pub(super) fn new(root: &Path, proofs: Vec<proof::Proof>) -> io::Result<Self> {
-        let mut reader = Self { proofs, dependent: None, packages: HashMap::new(), bytes: 0 };
+    pub(super) fn new(
+        root: &Path,
+        proofs: Vec<proof::Proof>,
+        overlay: Option<&SourceOverlay>,
+    ) -> io::Result<Self> {
+        let mut reader = Self {
+            proofs,
+            dependent: None,
+            packages: HashMap::new(),
+            bytes: 0,
+            overlay: overlay.cloned(),
+        };
         for directory in root.ancestors() {
             if let Some(package) = reader.json(&directory.join("package.json"))? {
                 reader.dependent = dependent(&package)?;
@@ -33,7 +45,11 @@ impl Reader {
         Ok(reader)
     }
     fn json(&mut self, file: &Path) -> io::Result<Option<Value>> {
-        let Some(bytes) = proof::read(file, &mut self.proofs)? else { return Ok(None) };
+        let bytes = match &self.overlay {
+            Some(view) => view.read(file, &mut self.proofs)?,
+            None => proof::read(file, &mut self.proofs)?,
+        };
+        let Some(bytes) = bytes else { return Ok(None) };
         self.bytes += bytes.len();
         if self.bytes > 32 * 1024 * 1024 {
             return Err(invalid("fresh package byte budget"));
@@ -93,7 +109,12 @@ impl Reader {
         ) {
             return Ok(());
         }
-        if proof::probe(&package.directory.join("dist"), &mut self.proofs)? {
+        let dist = package.directory.join("dist");
+        let exists = match &self.overlay {
+            Some(view) => view.metadata(&dist, &mut self.proofs)?.is_some(),
+            None => proof::probe(&dist, &mut self.proofs)?,
+        };
+        if exists {
             return Err(invalid("fresh component non-main import"));
         }
         Ok(())

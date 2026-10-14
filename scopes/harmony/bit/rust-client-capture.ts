@@ -24,6 +24,7 @@ type CaptureOptions = {
   verifyFreshDependencies?: boolean;
   resetDependencyCache?: boolean;
   dependencyCacheVersions?: { identity: string; version: string }[];
+  retainDependencyState?: boolean;
 };
 
 function cacheVersionUpdates(targets: any[], options: CaptureOptions) {
@@ -110,6 +111,7 @@ export async function captureRustClientCurrent(
   const captured: any[] = [];
   const components: any[] = [];
   const pending: FreshDependencyCache[] = [];
+  const dependencyStates = new Map<string, any>();
   const cachePlan = targets.length
     ? await (await import('./rust-fresh-dependencies')).planFreshDependencyCache(root)
     : undefined;
@@ -173,8 +175,10 @@ export async function captureRustClientCurrent(
       )
         return undefined;
       pending.push(fresh.cache);
+      dependencies = fresh.dependencies;
     }
     const current = currentStatusMetadata(target, policy, dependencies);
+    if (captureOptions.retainDependencyState) dependencyStates.set(target.identity, dependencies.state);
     const entry = {
       identity: target.identity,
       version: target.version,
@@ -197,12 +201,13 @@ export async function captureRustClientCurrent(
     });
   }
   return {
+    dependencyStates,
     comparisons,
     dependencyReadSet: pending.flatMap((entry) => entry.readSet),
     captured,
     components,
     fresh: () => rootPolicy.fresh(),
-    commit: async () => {
+    commit: async (replacements: FreshDependencyCache[] = [], replacementsOnly = false) => {
       if (!rootPolicy.fresh()) throw new Error('status inventory policy changed');
       const plans = context.pendingHistory ?? [];
       if (!Array.isArray(plans)) throw new Error('status history plans');
@@ -210,15 +215,24 @@ export async function captureRustClientCurrent(
         const validated = await request({ kind: 'statusHistoryValidate', root, plans });
         if (validated.fresh !== true) throw new Error('status history changed');
       }
-      if (cachePlan && (pending.length || cachePlan.reset)) {
+      if (cachePlan && (pending.length || replacements.length || cachePlan.reset)) {
         const { commitFreshDependencies } = await import('./rust-fresh-dependencies');
-        const entries = pending.map((entry) => {
-          const separator = entry.identity.lastIndexOf('@');
-          const identity = separator < 0 ? entry.identity : entry.identity.slice(0, separator);
-          const version = cacheVersions.get(identity);
-          return version ? { ...entry, identity: `${identity}@${version}` } : entry;
-        });
-        await commitFreshDependencies(cachePlan, entries, request);
+        const baseIdentity = (identity: string) => {
+          const separator = identity.lastIndexOf('@');
+          return separator < 0 ? identity : identity.slice(0, separator);
+        };
+        const replaced = new Set(replacements.map((entry) => baseIdentity(entry.identity)));
+        const entries = pending
+          .filter((entry) => {
+            return !replacementsOnly && !replaced.has(baseIdentity(entry.identity));
+          })
+          .map((entry) => {
+            const separator = entry.identity.lastIndexOf('@');
+            const identity = separator < 0 ? entry.identity : entry.identity.slice(0, separator);
+            const version = cacheVersions.get(identity);
+            return version ? { ...entry, identity: `${identity}@${version}` } : entry;
+          });
+        await commitFreshDependencies(cachePlan, [...entries, ...replacements], request);
       }
       if (plans.length) {
         const committed = await request({ kind: 'statusHistoryCommit', root, plans });

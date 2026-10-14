@@ -1,18 +1,17 @@
-use super::{Row, invalid};
+use super::invalid;
 use crate::workspace::engine::path;
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::{
-    collections::HashMap,
     fs,
-    io::{self, Read},
+    io::{self, Read, Seek, SeekFrom},
     path::{Path, PathBuf},
     sync::atomic::{AtomicUsize, Ordering},
 };
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Proof {
     pub(in crate::workspace::engine) path: PathBuf,
@@ -21,8 +20,16 @@ pub(in crate::workspace::engine) struct Proof {
     exists: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     metadata: Option<Metadata>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    range: Option<Range>,
 }
-#[derive(Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Range {
+    offset: u64,
+    length: u64,
+}
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Metadata {
     kind: String,
@@ -66,6 +73,9 @@ pub(in crate::workspace::engine) fn verify(proofs: &[Proof]) -> io::Result<()> {
 }
 fn verify_one(proof: &Proof) -> io::Result<usize> {
     path(&proof.path)?;
+    if let Some(range) = &proof.range {
+        return verify_range(proof, range);
+    }
     if let Some(expected) = &proof.metadata {
         return verify_metadata(proof, expected);
     }
@@ -108,10 +118,17 @@ pub(in crate::workspace::engine) fn metadata(
         hash: None,
         exists: None,
         metadata: Some(Metadata::capture(file, value)?),
+        range: None,
     })
 }
 pub(in crate::workspace::engine) fn content(file: &Path, bytes: &[u8]) -> Proof {
-    Proof { path: file.to_path_buf(), hash: Some(hash(bytes)), exists: None, metadata: None }
+    Proof {
+        path: file.to_path_buf(),
+        hash: Some(hash(bytes)),
+        exists: None,
+        metadata: None,
+        range: None,
+    }
 }
 pub(in crate::workspace::engine) fn read(
     file: &Path,
@@ -127,6 +144,7 @@ pub(in crate::workspace::engine) fn read(
         hash: content.as_ref().map(|data| hash(data)),
         exists: None,
         metadata: None,
+        range: None,
     });
     Ok(content)
 }
@@ -152,16 +170,7 @@ fn contents(file: &Path) -> io::Result<Option<Vec<u8>>> {
 pub(super) fn hash(bytes: &[u8]) -> String {
     format!("{:x}", Sha256::digest(bytes))
 }
-pub(super) fn rows(rows: &HashMap<String, Row>, mut proofs: Vec<Proof>) -> io::Result<Value> {
-    proofs.extend(
-        rows.values()
-            .map(|row| Proof {
-                path: PathBuf::from(&row.path_map.file),
-                hash: Some(row.source_hash.clone()),
-                exists: None,
-                metadata: None,
-            }),
-    );
+pub(super) fn rows(mut proofs: Vec<Proof>) -> io::Result<Value> {
     proofs.sort_by(|left, right| left.path.cmp(&right.path));
     serde_json::to_value(proofs).map_err(io::Error::other)
 }
@@ -180,6 +189,39 @@ pub(in crate::workspace::engine) fn probe(
         hash: None,
         exists: Some(exists),
         metadata: None,
+        range: None,
     });
     Ok(exists)
+}
+
+pub(in crate::workspace::engine) fn range(file: &Path, offset: u64, bytes: &[u8]) -> Proof {
+    Proof {
+        path: file.to_path_buf(),
+        hash: Some(hash(bytes)),
+        exists: None,
+        metadata: None,
+        range: Some(Range { offset, length: bytes.len() as u64 }),
+    }
+}
+fn verify_range(proof: &Proof, range: &Range) -> io::Result<usize> {
+    if range.length > 1024 * 1024 || proof.exists.is_some() || proof.metadata.is_some() {
+        return Err(invalid("dependency range proof"));
+    }
+    range.offset.checked_add(range.length).ok_or_else(|| invalid("dependency range overflow"))?;
+    let mut file = fs::File::open(&proof.path)?;
+    file.seek(SeekFrom::Start(range.offset))?;
+    let mut bytes = Vec::new();
+    file.take(range.length).read_to_end(&mut bytes)?;
+    if bytes.len() as u64 != range.length || Some(hash(&bytes)) != proof.hash {
+        return Err(invalid("dependency retained source changed"));
+    }
+    Ok(bytes.len())
+}
+
+pub(in crate::workspace::engine) fn unique(proofs: Vec<Proof>) -> Vec<Proof> {
+    let mut seen = std::collections::HashSet::new();
+    proofs
+        .into_iter()
+        .filter(|proof| seen.insert(proof.clone()))
+        .collect()
 }

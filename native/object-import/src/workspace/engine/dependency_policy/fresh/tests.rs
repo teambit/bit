@@ -130,3 +130,44 @@ fn resolution_proof_rejects_retargeted_link_with_identical_manifest() {
     std::os::unix::fs::symlink(fixture.0.join("second"), &link).unwrap();
     assert!(proof::verify(&read_set).is_err());
 }
+#[test]
+fn retained_sources_project_the_same_raw_data_as_the_post_write_workspace() {
+    let fixture = Fixture::new();
+    fixture.write("comp/index.ts", "import './removed';");
+    fixture.write("comp/removed.ts", "export const old = 1;");
+    fixture.write(
+        "node_modules/pkg/package.json",
+        r#"{"name":"pkg","version":"3.1.0","main":"index.js"}"#,
+    );
+    fixture.write("node_modules/pkg/index.js", "module.exports = 1;");
+    let mut overlay =
+        crate::workspace::engine::source_overlay::SourceOverlay::new(&fixture.0).unwrap();
+    let images = [("index.ts", "import './index.spec';"), ("index.spec.ts", "import 'pkg';")];
+    for (name, body) in images {
+        let spool = fixture.0.join(format!("{name}.spool"));
+        fs::write(&spool, body).unwrap();
+        overlay.insert_source(&fixture.0.join("comp").join(name), &json!({"spoolPath":spool,"bytes":body.len(),"spoolHash":crate::workspace::engine::hash(body.as_bytes())})).unwrap();
+    }
+    overlay
+        .remove(&fixture.0.join("comp/removed.ts"))
+        .unwrap();
+    let overlay = overlay.seal().unwrap();
+    let input = fixture.request(&["index.ts", "index.spec.ts"]);
+    let request = serde_json::from_value(input.clone()).unwrap();
+    let pool = rayon::ThreadPoolBuilder::new()
+        .num_threads(2)
+        .build()
+        .unwrap();
+    let (_, projected) = super::detect_overlay(&request, &pool, &overlay).unwrap();
+    let proofs: Vec<proof::Proof> = serde_json::from_value(projected["readSet"].clone()).unwrap();
+    proof::verify(&proofs).unwrap();
+    for (name, body) in images {
+        fixture.write(&format!("comp/{name}"), body);
+    }
+    fs::remove_file(fixture.0.join("comp/removed.ts")).unwrap();
+    let actual = Fixture::run(input).unwrap();
+    for field in ["detected", "componentVersions", "grammarInputs"] {
+        assert_eq!(projected[field], actual[field], "{field}");
+    }
+    assert!(proof::verify(&proofs).is_err());
+}

@@ -6,11 +6,14 @@ use std::io;
 
 pub(super) fn run(input: &Apply, state: &mut State) -> io::Result<(usize, Value)> {
     bitmap::validate_history_file_id(&input.file_id)?;
+    proof::verify(&input.dependency_read_set)?;
     let mut record = state.record.take().ok_or_else(|| invalid("command owner absent"))?;
     if record.token != input.token {
         return Err(invalid("command apply token"));
     }
     let mut prepared = record.planned.take().ok_or_else(|| invalid("command not planned"))?;
+    record.proofs.extend(input.dependency_read_set.iter().cloned());
+    record.proofs = proof::unique(record.proofs);
     validate(&record, &prepared)?;
     record.repository.commit_import()?;
     prepared.plan.history.commit(&record.request.root)?;
