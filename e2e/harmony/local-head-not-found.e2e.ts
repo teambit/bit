@@ -70,6 +70,32 @@ describe('local head Version object is missing from scope', function () {
       expect(objectPath).to.be.a.file();
     });
   });
+  describe('the head Version object is missing locally and the remote head has moved on since', () => {
+    // fetching the missing Version updates the local component object to the newer remote head, which is not fetched.
+    // the component must be loaded in the version it was resolved to, not in the newer head.
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(1, false);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      const authorWorkspace = helper.scopeHelper.cloneWorkspace();
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponent('comp1', '--objects');
+      const head = helper.command.getHead(`${helper.scopes.remote}/comp1`);
+      helper.fs.deleteObject(helper.general.getHashPathOfObject(head));
+      const consumerWorkspace = helper.scopeHelper.cloneWorkspace();
+      helper.scopeHelper.getClonedWorkspace(authorWorkspace);
+      helper.fixtures.populateComponents(1, false, 'v2');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.scopeHelper.getClonedWorkspace(consumerWorkspace);
+    });
+    it('should load the version it fetched rather than fail on the newer head', () => {
+      const output = helper.command.showComponent(`${helper.scopes.remote}/comp1`);
+      expect(output).to.have.string('comp1@0.0.1');
+    });
+  });
   describe('bit envs with a component on a core env', () => {
     before(() => {
       helper.scopeHelper.reInitWorkspace();

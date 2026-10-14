@@ -78,4 +78,37 @@ describe('EnvsMain', function () {
       expect(envs.getFailedToLoadEnvs()).to.include(envId);
     });
   });
+
+  describe('an env.jsonc that "extends" another env, with no resolver registered (e.g. in a bare scope)', () => {
+    const parentId = 'some-scope/envs/parent-env';
+    const parentEnv = {
+      id: ComponentID.fromString(`${parentId}@1.0.0`),
+      state: { aspects: { get: (aspectId: string) => (aspectId === EnvsAspect.id ? { data: {} } : undefined) } },
+      filesystem: { files: [{ relative: 'env.jsonc', contents: Buffer.from('{ "policy": {} }') }] },
+    } as unknown as Component;
+    // the extending env depends on the parent env, which determines the version to load
+    const envExtendsDeps = [{ id: ComponentID.fromString(`${parentId}@1.0.0`), packageName: '@some-scope/parent-env' }];
+    const loadedIds: string[] = [];
+    let result: Record<string, any>;
+    before(async () => {
+      const { getAllRegisteredEnvJsoncResolvers, getEnvComponentByEnvId } = envs;
+      envs.getAllRegisteredEnvJsoncResolvers = () => [];
+      envs.getEnvComponentByEnvId = async (envId: string) => {
+        loadedIds.push(envId);
+        return parentEnv;
+      };
+      try {
+        result = await envs.recursivelyMergeWithParentManifest({ extends: parentId }, envExtendsDeps as any);
+      } finally {
+        envs.getAllRegisteredEnvJsoncResolvers = getAllRegisteredEnvJsoncResolvers;
+        envs.getEnvComponentByEnvId = getEnvComponentByEnvId;
+      }
+    });
+    it('should load the parent env from the component host, in the version the extending env depends on', () => {
+      expect(loadedIds).to.deep.equal([`${parentId}@1.0.0`]);
+    });
+    it('should merge the parent manifest and drop the "extends"', () => {
+      expect(result).to.not.have.property('extends');
+    });
+  });
 });
