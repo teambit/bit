@@ -5,6 +5,7 @@ import { checkoutOutput } from '@teambit/checkout/dist/checkout-output.js';
 import { mergeReport } from '@teambit/merging/dist/merge-report.js';
 import { IssuesList } from '@teambit/component-issues';
 import { ComponentsHaveIssues } from '@teambit/builder/dist/exceptions/components-have-issues.js';
+import { joinSections } from '@teambit/cli/dist/output-formatter.js';
 import type { RustWorkspaceCommandOptions } from './rust-workspace-command-options';
 
 function record(value: any, keys: string[]) {
@@ -110,6 +111,16 @@ export function formatRustWorkspaceCommand(value: any, options: RustWorkspaceCom
     result.mergeSnapError = new ComponentsHaveIssues(components as any);
   }
   if (options.operation === 'merge') {
+    // MergeLaneCmd forwards the full result, including manual conflict and removal reporting.
+    if (options.lane) {
+      const report = mergeReport(result);
+      if (typeof report === 'string') return joinSections([report]);
+      return {
+        data: joinSections([report.data]),
+        code: report.code,
+        details: report.details ? joinSections([report.details]) : undefined,
+      };
+    }
     // Match MergeCmd's public report projection, including its manual-conflict output.
     return mergeReport({
       components: result.components,

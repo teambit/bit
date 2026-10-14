@@ -2,7 +2,7 @@ pub(super) mod finalization;
 pub(super) mod snapshot;
 
 pub(super) use bodies::{BodyInput, Prepared, VersionSide, equivalent_dependencies};
-pub(super) use status::Input;
+pub(super) use status::{Input, SelectionOptions};
 
 mod bodies;
 mod status;
@@ -35,7 +35,12 @@ impl State {
         self.advance(None)?;
         Ok(output)
     }
-    pub(super) fn prepare_bodies(&mut self, inputs: Vec<Value>) -> io::Result<Vec<Value>> {
+    pub(super) fn prepare_bodies(
+        &mut self,
+        inputs: Vec<Value>,
+        snapshots: &crate::workspace::snapshots::State,
+        overlay: Option<&crate::command_import::Overlay>,
+    ) -> io::Result<Vec<Value>> {
         if self.journal["directive"]["phase"] != "importGap" {
             return Err(invalid("command merge status incomplete"));
         }
@@ -43,15 +48,24 @@ impl State {
         let mut output = Vec::with_capacity(inputs.len());
         for mut input in inputs {
             input["token"] = self.owner().clone();
-            output.push(crate::merge_transaction::apply("mergePrepare", input, &mut self.native)?);
+            output.push(crate::merge_transaction::prepare_with_overlay(
+                input,
+                &mut self.native,
+                Some(snapshots),
+                overlay,
+            )?);
         }
         self.advance(None)?;
         self.advance(None)?;
         Ok(output)
     }
-    pub(super) fn apply(&mut self, mut input: Value) -> io::Result<Value> {
+    pub(super) fn apply(
+        &mut self,
+        mut input: Value,
+        overlay: Option<&crate::command_import::Overlay>,
+    ) -> io::Result<Value> {
         input["token"] = self.owner().clone();
-        crate::merge_transaction::apply("mergeApply", input, &mut self.native)
+        crate::merge_transaction::apply_with_overlay(&input, &mut self.native, overlay)
     }
     pub(super) fn materialize(&mut self, mut input: Value) -> io::Result<()> {
         input["token"] = self.owner().clone();

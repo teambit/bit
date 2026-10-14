@@ -99,11 +99,11 @@ function tail(version: Version): Record<string, unknown> {
   if (version.squashed) {
     fields.squashed = {
       previousParents: version.squashed.previousParents,
-      laneId: version.squashed.laneId.toString(),
+      laneId: version.squashed.laneId,
     };
   }
   if (version.unrelated) {
-    fields.unrelated = { head: version.unrelated.head, laneId: version.unrelated.laneId.toString() };
+    fields.unrelated = { head: version.unrelated.head, laneId: version.unrelated.laneId };
   }
   return fields;
 }

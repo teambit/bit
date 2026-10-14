@@ -1,3 +1,4 @@
+mod reload;
 use super::{
     super::{capture::Captured, input::Options},
     State, invalid,
@@ -19,15 +20,22 @@ pub(in crate::workspace::engine::command) struct BodyInput<'a> {
     pub(in crate::workspace::engine::command) index: usize,
     pub(in crate::workspace::engine::command) current: &'a Captured,
     pub(in crate::workspace::engine::command) sides: [VersionSide<'a>; 3], // base, current, incoming
+    pub(in crate::workspace::engine::command) lane: Option<&'a Value>,
+    pub(in crate::workspace::engine::command) overlay: Option<&'a crate::command_import::Overlay>,
     pub(in crate::workspace::engine::command) options: &'a Options,
 }
 pub(in crate::workspace::engine::command) struct Prepared {
     conflict: Conflict,
+    pub(in crate::workspace::engine::command) hidden: bool,
     pub(in crate::workspace::engine::command) output: Value,
     pub(in crate::workspace::engine::command) version: Value,
     pub(in crate::workspace::engine::command) version_name: String,
     pub(in crate::workspace::engine::command) files: Vec<Value>,
     pub(in crate::workspace::engine::command) conflict_paths: Vec<String>,
+    destinations: Destinations,
+}
+
+struct Destinations {
     request: Value,
     removals: Vec<PathBuf>,
 }
@@ -51,6 +59,28 @@ impl Conflict {
 }
 
 impl BodyInput<'_> {
+    fn labels(&self) -> io::Result<Value> {
+        let name = |lane: &Value, field: &str| -> io::Result<String> {
+            if lane[field].is_null() {
+                return Ok("main".into());
+            }
+            let value = &lane[field]["value"];
+            let scope = value["scope"].as_str().ok_or_else(|| invalid("merge label lane scope"))?;
+            let name = value["name"].as_str().ok_or_else(|| invalid("merge label lane name"))?;
+            Ok(format!("{scope}/{name}"))
+        };
+        let (current, incoming) = if let Some(lane) = self.lane {
+            (name(lane, "current")?, name(lane, "other")?)
+        } else {
+            ("main".into(), "main".into())
+        };
+        let same = current == incoming;
+        Ok(
+            json!({"current":format!("{} ({})",self.current.target.version,if same {"current"} else {&current}),
+            "other":format!("{} ({})",self.sides[2].hash,if same {"incoming"} else {&incoming})}),
+        )
+    }
+
     fn metadata_guard(&self) -> io::Result<()> {
         let projected = self.sides
             .iter()
@@ -67,8 +97,8 @@ impl BodyInput<'_> {
             json!({"index":self.index,"objectsDirectory":self.root.join(".bit/objects"),"snapshotDirectory":self.directory,
                 "base":manifest(&self.sides[0])?,"target":manifest(&self.sides[2])?,
                 "current":current.iter().map(|file| json!({"relativePath":file["relativePath"],"workspace":{
-                    "path":file["path"],"rawHash":file["rawHash"],"snapshotHash":file["snapshotHash"]}})).collect::<Vec<_>>(),
-                "labels":{"current":format!("{} (current)",self.current.target.version),"other":format!("{} (incoming)",self.sides[2].hash)},
+                    "path":file["path"],"rawHash":file["rawHash"],"snapshotHash":file["snapshotHash"],"readToken":file["readToken"]}})).collect::<Vec<_>>(),
+                "labels":self.labels()?,
             }),
         )
     }
@@ -88,7 +118,7 @@ impl State {
         } else {
             &input.sides[1]
         };
-        let applied = self.apply(json!({"planToken":plan["token"],"target":manifest(target)?,"strategy":input.options.strategy}))?;
+        let applied = self.apply(json!({"planToken":plan["token"],"target":manifest(target)?,"strategy":input.options.strategy}), input.overlay)?;
         if applied.get("deferredError").is_some() {
             return Err(invalid("command merge deferred apply failure"));
         }
@@ -130,37 +160,45 @@ impl Prepared {
                     .map(PathBuf::from)
                     .ok_or_else(|| invalid("command merge removal path"))
             })
-            .collect::<io::Result<_>>()?;
+            .collect::<io::Result<Vec<_>>>()?;
+        let files = reload::files(input, plan, files, &removals)?;
         Ok(Self {
             conflict: Conflict::from_plan(input, plan),
+            hidden: input.current.hidden,
             output: json!({"id":format!("{}@{}",input.current.target.identity,input.current.target.version),"filesStatus":statuses}),
             version: current_version(input)?,
             version_name: input.current.target.version.clone(),
             files,
             conflict_paths: conflict_paths(input, plan)?,
-            request: json!({"planToken":plan["token"],"files":destinations}),
-            removals,
+            destinations: Destinations {
+                request: json!({"planToken":plan["token"],"files":destinations}),
+                removals,
+            },
         })
     }
     pub(in crate::workspace::engine::command) fn validate(&self, root: &Path) -> io::Result<()> {
-        for row in
-            self.request["files"].as_array().ok_or_else(|| invalid("merge destination files"))?
+        if self.hidden {
+            return Ok(());
+        }
+        for row in self.destinations.request["files"]
+            .as_array()
+            .ok_or_else(|| invalid("merge destination files"))?
         {
             validate_path(
                 root,
                 Path::new(row["path"].as_str().ok_or_else(|| invalid("merge destination path"))?),
             )?;
         }
-        for path in &self.removals {
+        for path in &self.destinations.removals {
             validate_path(root, path)?;
         }
         Ok(())
     }
     pub(in crate::workspace::engine::command) fn remove(&self) -> io::Result<()> {
-        if self.no_write() {
+        if self.hidden || self.no_write() {
             return Ok(());
         }
-        for path in &self.removals {
+        for path in &self.destinations.removals {
             match fs::remove_file(path) {
                 Ok(()) => {}
                 Err(error) if error.kind() == io::ErrorKind::NotFound => {}
@@ -170,10 +208,10 @@ impl Prepared {
         Ok(())
     }
     pub(in crate::workspace::engine::command) fn write(&self, state: &mut State) -> io::Result<()> {
-        if self.no_write() {
+        if self.hidden || self.no_write() {
             return Ok(());
         }
-        state.materialize(self.request.clone())
+        state.materialize(self.destinations.request.clone())
     }
 }
 

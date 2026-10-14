@@ -3,6 +3,8 @@ pub(in crate::workspace::engine) mod dependencies;
 mod config;
 mod graph;
 mod projection;
+#[cfg(test)]
+mod tests;
 
 use super::{Record, invalid};
 use serde::Deserialize;
@@ -146,6 +148,7 @@ fn workspace_ids(record: &Record) -> io::Result<Value> {
 
 fn projected_context(policy: &Prepared, record: &Record) -> io::Result<Value> {
     let mut context = record.context.clone();
+    activate_inactive(policy, &mut context)?;
     for target in
         context["targets"].as_array_mut().ok_or_else(|| invalid("command context targets"))?
     {
@@ -157,6 +160,40 @@ fn projected_context(policy: &Prepared, record: &Record) -> io::Result<Value> {
         }
     }
     Ok(context)
+}
+
+pub(super) fn workspace_count(context: &Value, policy: Option<&Prepared>) -> io::Result<usize> {
+    let mut context = context.clone();
+    if let Some(policy) = policy {
+        activate_inactive(policy, &mut context)?;
+    }
+    Ok(projection::array(&context["targets"])?.len())
+}
+
+fn activate_inactive(policy: &Prepared, context: &mut Value) -> io::Result<()> {
+    let inactive = ["inactiveTargets", "addedTargets"]
+        .into_iter()
+        .flat_map(|key| {
+            context["lane"][key]
+                .as_array()
+                .cloned()
+                .unwrap_or_default()
+        })
+        .collect::<Vec<_>>();
+    let targets =
+        context["targets"].as_array_mut().ok_or_else(|| invalid("command context targets"))?;
+    for target in inactive {
+        if policy.rows
+            .iter()
+            .any(|row| row.identity == target["identity"] && !row.ours_conflict)
+            && !targets
+                .iter()
+                .any(|current| current["identity"] == target["identity"])
+        {
+            targets.push(target);
+        }
+    }
+    Ok(())
 }
 
 fn projected_targets(policy: &Prepared, context: &Value) -> io::Result<Vec<Value>> {

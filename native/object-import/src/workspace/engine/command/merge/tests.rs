@@ -2,6 +2,10 @@ use super::{Input, State};
 use serde_json::{Value, json};
 
 fn select(distance: &Value, modified: bool) -> Value {
+    select_options(distance, modified, false)
+}
+
+fn select_options(distance: &Value, modified: bool, target_as_diverged: bool) -> Value {
     let mut state = State::new(1).unwrap();
     let target = json!({"identity":"scope/alpha","version":"1.0.0"});
     let model = json!({"head":"a".repeat(40)});
@@ -13,7 +17,8 @@ fn select(distance: &Value, modified: bool) -> Value {
             model: Some(&model),
             incoming: &version,
             current: &version,
-            modified,
+            options: super::SelectionOptions { modified, target_as_diverged },
+            lane: None,
             distance,
         })
         .unwrap()
@@ -68,4 +73,13 @@ fn mixed_harmony_schemas_allow_policy_projection_but_guard_other_metadata() {
     assert!(super::bodies::metadata_guard(&sides).is_ok());
     sides[2]["mainFile"] = json!("changed.js");
     assert!(super::bodies::metadata_guard(&sides).is_err());
+}
+
+#[test]
+fn lane_no_snap_keeps_fast_forward_pending_when_a_common_version_exists() {
+    let distance = json!({"sourceOnly":[],"targetOnly":["b".repeat(40)],"common":"a".repeat(40),"noCommon":false});
+    assert_eq!(select_options(&distance, false, true)["action"], "merge");
+    assert_eq!(select_options(&distance, false, false)["action"], "target");
+    let no_common = json!({"sourceOnly":[],"targetOnly":["b".repeat(40)],"noCommon":false});
+    assert_eq!(select_options(&no_common, false, true)["action"], "target");
 }

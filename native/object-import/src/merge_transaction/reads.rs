@@ -50,17 +50,25 @@ impl Trace {
     }
 }
 pub(crate) fn source(hash: [u8; 20], record: &SourceRecord) -> io::Result<()> {
+    source_parts(hash, &record.body, record.compressed.len(), record.inflated_size)
+}
+pub(crate) fn source_parts(
+    hash: [u8; 20],
+    body: &[u8],
+    compressed_size: usize,
+    inflated_size: usize,
+) -> io::Result<()> {
     ACTIVE.with(|active| {
         let mut active = active.borrow_mut();
         let Some(trace) = active.as_mut() else {
             return Ok(());
         };
         trace.source_reads += 1;
-        trace.source_bytes += record.body.len();
+        trace.source_bytes += body.len();
         let hash = crate::validate::hexadecimal(&hash);
         if !trace.records.contains_key(&hash) {
-            trace.compressed += record.compressed.len();
-            trace.retained_bytes += record.body.len();
+            trace.compressed += compressed_size;
+            trace.retained_bytes += body.len();
             if trace.compressed > 32 * 1024 * 1024
                 || trace.retained_bytes > 32 * 1024 * 1024
                 || trace.records.len() >= 4096
@@ -69,11 +77,7 @@ pub(crate) fn source(hash: [u8; 20], record: &SourceRecord) -> io::Result<()> {
             }
             trace.records.insert(
                 hash,
-                Receipt {
-                    body: record.body.clone(),
-                    compressed_size: record.compressed.len(),
-                    inflated_size: record.inflated_size,
-                },
+                Receipt { body: body.to_vec(), compressed_size, inflated_size },
             );
         }
         Ok(())

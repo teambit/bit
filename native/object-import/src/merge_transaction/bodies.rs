@@ -1,3 +1,5 @@
+#[cfg(test)]
+mod tests;
 use super::{cache, invalid, journal, reads};
 use serde_json::{Value, json};
 use std::{collections::HashMap, io, path::PathBuf};
@@ -19,9 +21,18 @@ struct Binding {
 impl State {
     pub(super) fn prepare(
         &mut self,
+        input: Value,
+        owners: &journal::State,
+        snapshots: Option<&crate::workspace::snapshots::State>,
+    ) -> io::Result<Value> {
+        self.prepare_overlay(input, owners, snapshots, None)
+    }
+    pub(super) fn prepare_overlay(
+        &mut self,
         mut input: Value,
         owners: &journal::State,
         snapshots: Option<&crate::workspace::snapshots::State>,
+        overlay: Option<&crate::command_import::Overlay>,
     ) -> io::Result<Value> {
         let owner = text(&input, "token")?.to_owned();
         let index = input["index"]
@@ -32,7 +43,7 @@ impl State {
         let directory = PathBuf::from(text(&input, "snapshotDirectory")?);
         let objects = PathBuf::from(text(&input, "objectsDirectory")?);
         translate_current(&mut input, &directory)?;
-        let mut response = prepare_response(&input, &mut self.checkout, snapshots)?;
+        let mut response = prepare_response(&input, &mut self.checkout, snapshots, overlay)?;
         let token = text(&response, "token")?.to_owned();
         response["ownerToken"] = json!(owner);
         response["index"] = json!(index);
@@ -65,11 +76,20 @@ impl State {
         Ok((binding, token))
     }
     pub(super) fn apply(&mut self, input: &Value, owners: &journal::State) -> io::Result<Value> {
+        self.apply_overlay(input, owners, None)
+    }
+    pub(super) fn apply_overlay(
+        &mut self,
+        input: &Value,
+        owners: &journal::State,
+        overlay: Option<&crate::command_import::Overlay>,
+    ) -> io::Result<Value> {
         let (binding, token) = self.binding(input, owners)?;
         let scope = reads::Scope::begin();
-        let manifest = crate::checkout_transition::retarget(
+        let manifest = crate::checkout_transition::retarget_with_overlay(
             json!({"token":token,"target":input["target"],"objectsDirectory":binding.objects,"snapshotDirectory":binding.directory,"knownBodies":input["knownBodies"]}),
             &mut self.checkout,
+            overlay,
         )?;
         let mut response = crate::checkout_transition::apply(
             "checkoutApply",
@@ -213,13 +233,18 @@ fn prepare_response(
     input: &Value,
     state: &mut crate::checkout_transition::State,
     snapshots: Option<&crate::workspace::snapshots::State>,
+    overlay: Option<&crate::command_import::Overlay>,
 ) -> io::Result<Value> {
     let scope = reads::Scope::begin();
-    let mut response = match snapshots {
-        Some(snapshots) => {
-            crate::checkout_transition::prepare_with_workspace(input, state, snapshots)?
+    let mut response = if let Some(overlay) = overlay {
+        crate::checkout_transition::prepare_with_overlay(input, state, snapshots, overlay)?
+    } else {
+        match snapshots {
+            Some(snapshots) => {
+                crate::checkout_transition::prepare_with_workspace(input, state, snapshots)?
+            }
+            None => crate::checkout_transition::apply("checkoutPrepare", input.clone(), state)?,
         }
-        None => crate::checkout_transition::apply("checkoutPrepare", input.clone(), state)?,
     };
     if let Err(error) = cache::receipts(input, &mut response, scope.finish()) {
         crate::checkout_transition::apply(

@@ -64,6 +64,7 @@ const metrics = {
       'commandPolicyPrepare',
       'commandDependencyDetect',
       'commandDependencyComplete',
+      'commandLaneFinalize',
       'commandFinalize',
       'commandApply',
       'dependencyPolicyCached',
@@ -518,6 +519,9 @@ function observeWorkspaceTransport(child) {
               completed: response.completed || 0,
               failed: Boolean(response.failed),
               applied: response.data?.applied === true,
+              ...(magic === 'BWS1:commandFinalize'
+                ? { snapped: response.data?.result?.mergeSnapResults?.snappedComponents?.length || 0 }
+                : {}),
             };
           metric.responseBytes = (metric.responseBytes || 0) + newline + 1;
           if (magic.startsWith('BWS1:command')) metric.sourceBodyBytes += commandSourceBodyBytes(response.data);

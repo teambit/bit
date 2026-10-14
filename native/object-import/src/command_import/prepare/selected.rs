@@ -75,10 +75,13 @@ impl PreparedImport {
         self.prepare_versions_with_reason(targets, None)
     }
     pub(crate) fn prepare_merge_gap(&mut self, targets: &[Target]) -> io::Result<()> {
-        self.prepare_versions_with_reason(
-            targets,
-            Some("for getting the common-snap between main and main"),
-        )
+        let reason = self.cache.lane_reason
+            .clone()
+            .unwrap_or_else(|| "for getting the common-snap between main and main".into());
+        self.prepare_versions_with_reason(targets, Some(&reason))
+    }
+    pub(crate) fn prepare_lane_pattern_versions(&mut self, targets: &[Target]) -> io::Result<()> {
+        self.prepare_versions_with_reason(targets, Some("import all history of given patterns components to check whether they have dependencies on the lane"))
     }
     fn prepare_versions_with_reason(
         &mut self,
@@ -93,9 +96,14 @@ impl PreparedImport {
             ..Default::default()
         });
         for target in targets {
-            if target.scope.is_none()
-                || target.scope.as_deref() == Some(self.environment.local_scope.as_str())
-            {
+            if target.scope.is_none() {
+                continue;
+            }
+            let remote_scope = self.cache.lane_sources
+                .get(&identity(target)?)
+                .cloned()
+                .or_else(|| target.scope.clone());
+            if remote_scope.as_deref() == Some(self.environment.local_scope.as_str()) {
                 continue;
             }
             if let Some(path) = self.environment.missing_global_remotes.take() {
@@ -108,12 +116,12 @@ impl PreparedImport {
             let directory = remote(
                 self,
                 &remotes,
-                target.scope.as_deref().ok_or_else(|| invalid("import selected scope"))?,
+                remote_scope.as_deref().ok_or_else(|| invalid("import selected scope"))?,
             )?;
             let row =
                 self.progress.last_mut().ok_or_else(|| invalid("import selected progress"))?;
             row.ids.push(format!("{}@{}", identity(target)?, target.version));
-            row.objects.insert(object_hash(target.scope.as_deref().unwrap_or_default()));
+            row.objects.insert(object_hash(remote_scope.as_deref().unwrap_or_default()));
             let incoming = read_model(self, &directory, target)?
                 .ok_or_else(|| invalid("import selected component missing"))?;
             let hash = version_ref(&incoming, &target.version)?;

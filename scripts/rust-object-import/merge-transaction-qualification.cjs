@@ -11,13 +11,23 @@ const fixtureModule = require('./merge-transaction-fixture.cjs');
 const { validateMergeTransactionDiagnostics } = require('./merge-transaction-validation.cjs');
 const { comparableMergeStdout, comparableVersionHistory } = require('./merge-transaction-report.cjs');
 const { pairedEntries, measuredCommand } = require('./merge-history-measurement.cjs');
+const { observe } = require('./workspace-inspection-body-read.cjs');
 function validateAddonTransports(diagnostics, scenario) {
-  assert.ok(diagnostics.workspaceFrames.every((item) => item.backend === 'addon'), 'addon proof used a child workspace transport');
+  assert.ok(
+    diagnostics.workspaceFrames.every((item) => item.backend === 'addon'),
+    'addon proof used a child workspace transport'
+  );
   assert.ok(Array.isArray(diagnostics.importFrames), 'addon proof omitted import transport observations');
-  assert.ok(diagnostics.importFrames.every((item) => item.backend === 'addon'), 'addon proof used a child import transport');
-  const coldImport = scenario === 'component-main-theirs' && diagnostics.workspace?.commandApply?.applied > 0;
-  if (!coldImport && ['hidden-main-into-lane','component-main-theirs','main-fast-forward'].includes(scenario))
-    assert.ok(diagnostics.importFrames.some((item) => item.magic === 'BTI2'), 'addon proof omitted progressive archive imports');
+  assert.ok(
+    diagnostics.importFrames.every((item) => item.backend === 'addon'),
+    'addon proof used a child import transport'
+  );
+  const coldImport = diagnostics.workspace?.commandApply?.applied > 0;
+  if (!coldImport && ['hidden-main-into-lane', 'component-main-theirs', 'main-fast-forward'].includes(scenario))
+    assert.ok(
+      diagnostics.importFrames.some((item) => item.magic === 'BTI2'),
+      'addon proof omitted progressive archive imports'
+    );
 }
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
 
@@ -68,7 +78,8 @@ function comparable(state, concurrentHistory = false) {
   return { ...state, index };
 }
 
-function comparableStage(stage) {
+function comparableStage(stage, exact = false) {
+  if (exact) return stage;
   const scenario = fixtureModule.scenarios.find((item) => item.name === stage.scenario);
   const concurrentFileRows =
     scenario &&
@@ -103,6 +114,38 @@ function validateMeasurementProof(proof, expected) {
     );
 }
 
+function qualificationScenarios(scenarios, options) {
+  const domain = options.scenarioDomain || 'all';
+  assert.ok(['all', 'lane'].includes(domain), 'unknown qualification scenario domain');
+  if (domain === 'lane') assert.equal(options.coldLane, true, 'lane domain requires cold ownership checks');
+  return scenarios.filter(
+    (item) =>
+      (domain !== 'lane' || item.target !== 'component') &&
+      (!item.coldOnly || options.coldLane) &&
+      (!options.scenarios || options.scenarios.includes(item.name))
+  );
+}
+
+function commandBackend(mode, nodeBaseline, executable, fault) {
+  const wrapper = Boolean(fault) || (mode === 'node' && nodeBaseline === 'native-wrapper');
+  return {
+    wrapper,
+    env: {
+      BIT_RUST_CLIENT_VCS: mode === 'node' && nodeBaseline !== 'native-wrapper' ? 'off' : 'on',
+      BIT_RUST_OBJECT_IMPORT: mode === 'node' && nodeBaseline === 'javascript' ? 'off' : executable,
+      BIT_COLD_COMMAND_WRAPPER_BASELINE: wrapper ? '1' : '',
+    },
+  };
+}
+
+function validateWrapperBaseline(diagnostics) {
+  assert.ok(Array.isArray(diagnostics.workspaceFrames), 'wrapper proof must include workspace observations');
+  assert.ok(
+    !diagnostics.workspaceFrames.some((frame) => String(frame.kind).startsWith('command')),
+    'prior wrapper baseline must bypass the cold command owner'
+  );
+}
+
 function measurementEntries() {
   return pairedEntries(3).filter((entry) => !entry.fallback);
 }
@@ -117,6 +160,10 @@ function timedScenarios(scenarios) {
 
 async function runQualification(cli, helper, options = {}) {
   cli = path.resolve(cli);
+  const capture = (directory, roots) =>
+    options.coldLane
+      ? require('./cold-lane-state.cjs').captureColdLane(cli, directory)
+      : fixtureModule.capture(directory, roots);
   helper = path.resolve(helper);
   assert.ok(cli.startsWith(os.tmpdir() + path.sep), 'physically compiled private CLI required');
   if (options.canonicalSmoke)
@@ -125,6 +172,7 @@ async function runQualification(cli, helper, options = {}) {
     assert.equal(options.measure, true, 'diagnostics-off requires proof-bound measurement');
   if (options.measure) {
     assert.equal(options.canonicalSmoke, undefined);
+    assert.equal(options.diagnostic, undefined);
     assert.equal(options.diagnostics, false);
     assert.equal(
       options.scenarios,
@@ -135,22 +183,26 @@ async function runQualification(cli, helper, options = {}) {
     assert.equal(options.rounds || 3, 3, 'one warmup and three retained pairs required');
   }
   const nodeBaseline = options.nodeBaseline || 'object-helper';
-  assert.ok(['object-helper', 'javascript'].includes(nodeBaseline), 'unknown Node baseline');
+  assert.ok(['object-helper', 'javascript', 'native-wrapper'].includes(nodeBaseline), 'unknown Node baseline');
+  if (nodeBaseline === 'native-wrapper') assert.equal(options.coldLane, true, 'wrapper baseline requires cold corpus');
   const fixtureDimensions = {
     nodeBaseline,
+    ...(options.scenarioDomain === 'lane' ? { scenarioDomain: 'lane' } : {}),
+    ...(options.coldLane ? { coldLane: true, exactComparison: true } : {}),
     sourceBodies: true,
     fileStatuses: true,
     repositorySourcePlans: true,
     extraFiles: options.extraFiles || 0,
-    scenarios: fixtureModule.scenarios
-      .filter((item) => !options.scenarios || options.scenarios.includes(item.name))
-      .map((item) => item.name),
+    ...(options.installedEnv ? { installedEnv: true } : {}),
+    scenarios: qualificationScenarios(fixtureModule.scenarios, options).map((item) => item.name),
   };
   const repository = path.resolve(__dirname, '../..');
   const marker = JSON.parse(await fs.readFile(path.join(cli, '.bit-object-import-build.json')));
   const helperSha256 = hash(await fs.readFile(helper));
   const addonLoad = createRequire(path.join(cli, 'package.json'));
-  const discovery = addonLoad(path.join(path.dirname(addonLoad.resolve('@teambit/objects')), 'objects/rust-object-discovery.js'));
+  const discovery = addonLoad(
+    path.join(path.dirname(addonLoad.resolve('@teambit/objects')), 'objects/rust-object-discovery.js')
+  );
   const addon = discovery.resolveRustWorkspaceAddon
     ? discovery.resolveRustWorkspaceAddon(helper)
     : process.env.BIT_TEST_WORKSPACE_ADDON;
@@ -159,6 +211,7 @@ async function runQualification(cli, helper, options = {}) {
   const names = await localRuntimeDependencies([
     'merge-transaction-qualification.cjs',
     'merge-transaction-measure.cjs',
+    'cold-lane-measure.cjs',
     'merge-history-measurement.cjs',
     '../rust-dependency-analysis/process-tree-memory.cjs',
     '../rust-dependency-analysis/process-tree-memory-control.cjs',
@@ -166,6 +219,7 @@ async function runQualification(cli, helper, options = {}) {
     'merge-transaction-validation.cjs',
     'merge-transaction-determinism.cjs',
     'merge-transaction-fault.cjs',
+    'cold-command-wrapper-baseline.cjs',
     'merge-transaction-measure.cjs',
     'history-reset-determinism.cjs',
     'checkout-transition-fixture.cjs',
@@ -200,13 +254,19 @@ async function runQualification(cli, helper, options = {}) {
         assert.equal(hash(await fs.readFile(stage.artifact)), stage.sha256);
         if (stage.faultArtifact)
           assert.equal(hash(await fs.readFile(stage.faultArtifact.artifact)), stage.faultArtifact.sha256);
-        if (run.mode === 'native') {
+        if (run.mode === 'native' || (run.mode === 'node' && nodeBaseline === 'native-wrapper')) {
           assert.ok(stage.diagnostics, 'proof must retain Native acceptance for every route');
           if (addon) validateAddonTransports(stage.diagnostics, stage.scenario);
+          if (run.mode === 'node') validateWrapperBaseline(stage.diagnostics);
           validateMergeTransactionDiagnostics(
             stage.diagnostics,
             fixtureModule.scenarios.find((scenario) => scenario.name === stage.scenario),
-            { sourceBodies: true, fileStatuses: true, repositorySourcePlans: true }
+            {
+              sourceBodies: true,
+              fileStatuses: true,
+              repositorySourcePlans: true,
+              coldLane: options.coldLane && run.mode === 'native',
+            }
           );
         }
       }
@@ -214,7 +274,7 @@ async function runQualification(cli, helper, options = {}) {
   }
   async function verify() {
     assert.deepEqual(JSON.parse(await fs.readFile(path.join(cli, '.bit-object-import-build.json'))), marker);
-    if (!options.canonicalSmoke)
+    if (!options.canonicalSmoke && !options.diagnostic)
       for (const [name, expected] of Object.entries(marker.sourceSha256))
         assert.equal(hash(await fs.readFile(path.join(repository, name))), expected, name);
     for (const item of marker.compiledModules)
@@ -232,7 +292,7 @@ async function runQualification(cli, helper, options = {}) {
             assert.equal(hash(await fs.readFile(stage.faultArtifact.artifact)), stage.faultArtifact.sha256);
         }
     }
-    if (!options.canonicalSmoke) assert.equal(sourceIdentity(repository), nativeSourceDigest);
+    if (!options.canonicalSmoke && !options.diagnostic) assert.equal(sourceIdentity(repository), nativeSourceDigest);
   }
   await verify();
   const temporary = await fs.mkdtemp(path.join(options.scratch || os.tmpdir(), 'bit-merge-transaction-'));
@@ -277,23 +337,34 @@ async function runQualification(cli, helper, options = {}) {
         : mode === 'crashed-helper'
           ? process.execPath
           : helper;
+    const backend = commandBackend(mode, nodeBaseline, executable, fault);
     const nodeArgs = [
       '--require',
-      path.join(__dirname, 'merge-transaction-determinism.cjs'),
+      path.join(
+        __dirname,
+        options.coldLane ? 'checkout-transition-determinism.cjs' : 'merge-transaction-determinism.cjs'
+      ),
       ...(args[0] === '__api' ? args.slice(1) : [path.join(cli, 'bin/bit.js'), ...args]),
     ];
     if (trace) nodeArgs.unshift('--require', path.join(__dirname, 'import-trace.cjs'));
-    if (fault) nodeArgs.unshift('--require', path.join(__dirname, 'merge-transaction-fault.cjs'));
+    if (fault) {
+      // These faults target legacy journal frames; the cold owner has separate
+      // phase-boundary tests and never emits those legacy frames.
+      nodeArgs.unshift('--require', path.join(__dirname, 'merge-transaction-fault.cjs'));
+    }
+    if (backend.wrapper) nodeArgs.unshift('--require', path.join(__dirname, 'cold-command-wrapper-baseline.cjs'));
     const commandEnv = {
       ...env,
-      BIT_RUST_CLIENT_VCS: mode === 'node' ? 'off' : 'on',
-      BIT_RUST_OBJECT_IMPORT: mode === 'node' && nodeBaseline === 'javascript' ? 'off' : executable,
+      ...backend.env,
       BIT_CHECKOUT_TRANSITION_QUALIFICATION_SEED: hash(args.join('\0')),
       BIT_CHECKOUT_TRANSITION_QUALIFICATION_CLOCK: String(clock),
       BIT_CHECKOUT_TRANSITION_DISPLAY_DURATION: 'deterministic',
-      ...(trace ? { BIT_IMPORT_TRACE: trace, BIT_IMPORT_TRACE_PROTOCOL_ONLY: '1', BIT_IMPORT_TRACE_WORKSPACE_ADDON: addon } : {}),
+      ...(trace
+        ? { BIT_IMPORT_TRACE: trace, BIT_IMPORT_TRACE_PROTOCOL_ONLY: '1', BIT_IMPORT_TRACE_WORKSPACE_ADDON: addon }
+        : {}),
       ...(fault
         ? {
+            BIT_COLD_COMMAND_WRAPPER_BASELINE: '1',
             BIT_MERGE_TRANSACTION_FAULT_CLI: cli,
             BIT_MERGE_TRANSACTION_FAULT_REPORT: fault.report,
             BIT_MERGE_TRANSACTION_FAULT_KIND: fault.kind,
@@ -313,7 +384,22 @@ async function runQualification(cli, helper, options = {}) {
       return { code: 0, signal: null, ...measured.result };
     }
     return new Promise((resolve, reject) => {
-      const child = cp.spawn(process.execPath, nodeArgs, {
+      const systemTrace = trace && options.coldLane && mode === 'native' && !fault && process.platform === 'linux';
+      const observedArgs = systemTrace
+        ? [
+            '-f',
+            '-yy',
+            '-s',
+            '32',
+            '-e',
+            'trace=execve,clone,clone3,prctl,read,pread64',
+            '-o',
+            `${trace}.strace`,
+            process.execPath,
+            ...nodeArgs,
+          ]
+        : nodeArgs;
+      const child = cp.spawn(systemTrace ? 'strace' : process.execPath, observedArgs, {
         cwd: directory,
         stdio: ['ignore', 'pipe', 'pipe'],
         env: commandEnv,
@@ -363,13 +449,24 @@ async function runQualification(cli, helper, options = {}) {
     '--safe-mode',
   ]);
   await successful(baseline, ['link']);
+  if (options.installedEnv) {
+    for (const [name, version] of [
+      ['@types/jest', '26.0.20'],
+      ['@types/node', '22.10.5'],
+    ]) {
+      const target = path.join(baseline, 'node_modules', name);
+      await fs.mkdir(target, { recursive: true });
+      await fs.writeFile(path.join(target, 'package.json'), JSON.stringify({ name, version, types: 'index.d.ts' }));
+      await fs.writeFile(path.join(target, 'index.d.ts'), 'export {};\n');
+    }
+  }
   const bitmap = load('comment-json').parse(await fs.readFile(path.join(baseline, '.bitmap'), 'utf8'));
   const roots = ['component', 'dependency'].map(
     (name) => Object.values(bitmap).find((entry) => entry?.name === name)?.rootDir
   );
   assert.ok(roots.every(Boolean), 'both imported roots required');
 
-  const baselineState = await fixtureModule.capture(baseline, roots);
+  const baselineState = await capture(baseline, roots);
   const sourceInventory = (state) =>
     Object.entries(state.roots)
       .flatMap(([root, files]) =>
@@ -382,9 +479,7 @@ async function runQualification(cli, helper, options = {}) {
   const actualWorkspaceSourceFiles = workspaceSourceFiles.length;
   assert.ok(actualWorkspaceSourceFiles > 0, 'real captured workspace Sources required');
   const baselineSourceBytesSha256 = hash(JSON.stringify(baselineState.roots));
-  const scenarios = fixtureModule.scenarios.filter(
-    (item) => !options.scenarios || options.scenarios.includes(item.name)
-  );
+  const scenarios = qualificationScenarios(fixtureModule.scenarios, options);
   if (priorProof) {
     assert.equal(actualWorkspaceSourceFiles, priorProof.actualWorkspaceSourceFiles);
     assert.deepEqual(workspaceSourceFiles, priorProof.workspaceSourceFiles);
@@ -427,7 +522,7 @@ async function runQualification(cli, helper, options = {}) {
           command,
           cli
         );
-      const before = await fixtureModule.capture(directory, roots);
+      const before = await capture(directory, roots);
       if (scenario.built) fixtureModule.assertBuiltArtifacts(before);
       if (scenario.hidden || scenario.unrelated) {
         /* The actual hidden route imports only the visible leaf; inventory is reported per stage. */
@@ -437,10 +532,10 @@ async function runQualification(cli, helper, options = {}) {
           actualWorkspaceSourceFiles,
           'component branch has exact fixture Source count'
         );
-      else if (scenario.topology !== 'deletion')
+      else if (!['deletion', 'inactive-addition'].includes(scenario.topology))
         assert.deepEqual(sourceInventory(before), workspaceSourceFiles, 'scenario Source scale');
       const tracePath =
-        mode === 'native' && options.diagnostics !== false
+        (mode === 'native' || (mode === 'node' && nodeBaseline === 'native-wrapper')) && options.diagnostics !== false
           ? path.join(temporary, `${scenario.name}.trace.json`)
           : undefined;
       const faultPath = scenario.fault ? path.join(temporary, `${mode}-${scenario.name}.fault.json`) : undefined;
@@ -456,13 +551,53 @@ async function runQualification(cli, helper, options = {}) {
       assert.equal(result.signal, null);
       assert.equal(result.code, scenario.error || scenario.canonicalError ? 1 : 0, result.stderr || result.stdout);
       if (scenario.errorText) assert.match(result.stdout + result.stderr, new RegExp(scenario.errorText));
+      if (
+        options.installedEnv &&
+        ['clean', 'addition'].includes(scenario.topology) &&
+        !scenario.noSnap &&
+        !scenario.noAutoSnap &&
+        !scenario.detachHead
+      ) {
+        assert.match(result.stdout, /Total Snapped: [1-9][0-9]*/, 'installed-env fixture must actually snap');
+      }
+      if (scenario.noSnap || scenario.noAutoSnap)
+        assert.match(result.stdout, /Total Snapped: 0/, 'explicit deferred snap must remain deferred');
       if (scenario.fault && mode === 'native') {
         const triggered = JSON.parse(await fs.readFile(faultPath));
         assert.equal(triggered.kind, scenario.fault.kind, 'actual configured receipt loss must trigger');
         if (scenario.fault.phase) assert.equal(triggered.phase, scenario.fault.phase);
         assert.equal(triggered.acknowledgedByHelper, true);
       }
-      const after = await fixtureModule.capture(directory, roots);
+      const after = await capture(directory, roots);
+      if (scenario.topology === 'addition') {
+        assert.ok(
+          !Object.keys(before.roots).some((root) => root.endsWith('/new-component')),
+          'new component must be absent before merge'
+        );
+        assert.equal(
+          after.roots['checkout/new-component']?.['index.js']?.bytes,
+          Buffer.from('export default "new lane component";\n').toString('hex'),
+          'incoming new component must materialize canonical Source bytes at default directory'
+        );
+      }
+      if (scenario.topology === 'inactive-addition') {
+        const entry = (state) =>
+          Object.values(addonLoad('comment-json').parse(Buffer.from(state.bitmap, 'hex').toString())).find(
+            (row) => row?.name === 'new-component'
+          );
+        assert.equal(
+          entry(before)?.isAvailableOnCurrentLane,
+          false,
+          'public lane switch must retain inactive bitmap row'
+        );
+        assert.ok(entry(after), 'incoming inactive component remains tracked');
+        assert.notEqual(entry(after).isAvailableOnCurrentLane, false, 'merge makes incoming component available');
+        assert.equal(
+          after.roots['new-component']?.['index.js']?.bytes,
+          Buffer.from('export default "new lane component";\n').toString('hex'),
+          'inactive incoming Source body'
+        );
+      }
       if (scenario.resolveUnrelated === 'ours')
         assert.deepEqual(after.roots, before.roots, 'unrelated ours preserves actual current workspace bytes');
       if (scenario.built) fixtureModule.assertBuiltArtifacts(after);
@@ -476,7 +611,7 @@ async function runQualification(cli, helper, options = {}) {
           mode
         );
         assert.equal(result.code, 0, result.stderr || result.stdout);
-        abort = { result, state: await fixtureModule.capture(directory, roots) };
+        abort = { result, state: await capture(directory, roots) };
         assert.deepEqual(abort.state.roots, before.roots, 'public abort restores actual working files');
         assert.equal(abort.state.bitmap, before.bitmap, 'public abort restores bitmap exactly');
       }
@@ -498,8 +633,8 @@ async function runQualification(cli, helper, options = {}) {
       if (mode === 'node') canonical.set(scenario.name, stage);
       else if (!options.measure)
         assert.deepEqual(
-          comparableStage(stage),
-          comparableStage(canonical.get(scenario.name)),
+          comparableStage(stage, options.coldLane),
+          comparableStage(canonical.get(scenario.name), options.coldLane),
           `${mode}/${scenario.name}: raw state and canonical report fields`
         );
       if (options.measure) {
@@ -509,7 +644,7 @@ async function runQualification(cli, helper, options = {}) {
         matched.set(key, pair);
         if (pair.node && pair.native) {
           const other = JSON.parse(await fs.readFile(pair[mode === 'node' ? 'native' : 'node']));
-          assert.deepEqual(comparableStage(stage), comparableStage(other), key);
+          assert.deepEqual(comparableStage(stage, options.coldLane), comparableStage(other, options.coldLane), key);
         }
       }
       const diagnostics = tracePath ? JSON.parse(await fs.readFile(tracePath)) : undefined;
@@ -518,8 +653,21 @@ async function runQualification(cli, helper, options = {}) {
           sourceBodies: true,
           fileStatuses: true,
           repositorySourcePlans: true,
+          coldLane: options.coldLane && mode === 'native',
         });
       if (diagnostics && addon) validateAddonTransports(diagnostics, scenario.name);
+      if (diagnostics && mode === 'node' && nodeBaseline === 'native-wrapper') validateWrapperBaseline(diagnostics);
+      let bodyObservation;
+      if (tracePath && options.coldLane && mode === 'native' && !scenario.fault && process.platform === 'linux') {
+        const sources = [before, after].flatMap((state) =>
+          Object.entries(state.roots).flatMap(([root, files]) =>
+            Object.keys(files).map((file) => path.join(directory, root, file))
+          )
+        );
+        bodyObservation = await observe(`${tracePath}.strace`, sources);
+        if (!scenario.error && !scenario.canonicalError && !scenario.promptCancellation && !scenario.canonicalFallback)
+          assert.equal(bodyObservation.bytes, 0, `${scenario.name}: Node must not read workspace Source bytes`);
+      }
       const faultArtifact =
         scenario.fault && mode === 'native'
           ? { artifact: faultPath, sha256: hash(await fs.readFile(faultPath)) }
@@ -527,6 +675,7 @@ async function runQualification(cli, helper, options = {}) {
       stages.push({
         scenario: scenario.name,
         ...(faultArtifact ? { faultArtifact } : {}),
+        ...(bodyObservation ? { bodyObservation } : {}),
         artifact,
         sha256: hash(bytes),
         outputSha256: hash(JSON.stringify(result)),
@@ -556,9 +705,11 @@ async function runQualification(cli, helper, options = {}) {
       );
   }
   const report = {
-    qualified: !options.canonicalSmoke,
-    comparison:
-      'Raw artifacts retained; repository index entries, adjacent concurrent added/updated CLI rows, and complete VersionHistory rows in main-into-lane-clean are compared as multisets; all other output and state remain exact',
+    qualified: !options.canonicalSmoke && !options.diagnostic,
+    ...(options.diagnostic ? { diagnostic: true, endNativeSourceDigest: sourceIdentity(repository) } : {}),
+    comparison: options.coldLane
+      ? 'Exact command output and captured workspace/scope state; no ordering normalization'
+      : 'Raw artifacts retained; repository index entries, adjacent concurrent added/updated CLI rows, and complete VersionHistory rows in main-into-lane-clean are compared as multisets; all other output and state remain exact',
     nodeBaseline,
     proofSha256,
     measurementScope: options.measure
@@ -587,7 +738,11 @@ async function runQualification(cli, helper, options = {}) {
     bindings,
     modeCoverage: modes,
     nativeExpectations: Object.fromEntries(
-      scenarios.map((scenario) => [scenario.name, scenario.nativeExpectation || 'owned-merge-transaction'])
+      scenarios.map((scenario) => [
+        scenario.name,
+        scenario.nativeExpectation ||
+          (scenario.fault ? 'legacy-wrapper-injected-journal-fault' : 'owned-merge-transaction'),
+      ])
     ),
     fixtureDimensions,
     runs,
@@ -603,6 +758,9 @@ module.exports = {
   supportsMeasurement: true,
   validateMeasurementProof,
   measurementEntries,
+  qualificationScenarios,
+  commandBackend,
+  validateWrapperBaseline,
   timedScenarios,
 };
 if (require.main === module)

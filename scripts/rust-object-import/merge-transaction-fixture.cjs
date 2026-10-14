@@ -6,6 +6,36 @@ const history = require('./history-query-fixture.cjs');
 
 // Every topology is built by public disposable lane/snap commands after genuine import.
 const scenarios = [
+  {
+    name: 'lane-clean-squash-message',
+    coldOnly: true,
+    target: 'lane',
+    topology: 'clean',
+    squash: true,
+    message: 'explicit lane squash title',
+    untimed: true,
+  },
+  {
+    name: 'lane-clean-no-snap-message',
+    coldOnly: true,
+    target: 'lane',
+    topology: 'clean',
+    noSnap: true,
+    message: 'deferred lane merge title',
+    untimed: true,
+  },
+  { name: 'lane-new-component', coldOnly: true, target: 'lane', topology: 'addition', untimed: true },
+  { name: 'main-new-component', coldOnly: true, target: 'main', topology: 'addition', untimed: true },
+  {
+    name: 'lane-new-component-no-auto-snap',
+    coldOnly: true,
+    target: 'lane',
+    topology: 'addition',
+    noAutoSnap: true,
+    untimed: true,
+  },
+  { name: 'lane-inactive-component', coldOnly: true, target: 'lane', topology: 'inactive-addition', untimed: true },
+  { name: 'main-inactive-component', coldOnly: true, target: 'main', topology: 'inactive-addition', untimed: true },
   { name: 'lane-delete-diverged', target: 'lane', topology: 'delete-diverged', untimed: true },
   {
     name: 'lane-delete-conflict-theirs',
@@ -45,6 +75,7 @@ const scenarios = [
     topology: 'unrelated',
     unrelated: true,
     resolveUnrelated: 'ours',
+    canonicalFallback: 'unrelated-history resolution remains canonical',
     untimed: true,
   },
   {
@@ -53,11 +84,19 @@ const scenarios = [
     topology: 'unrelated',
     unrelated: true,
     resolveUnrelated: 'theirs',
+    canonicalFallback: 'unrelated-history resolution remains canonical',
     untimed: true,
   },
   { name: 'lane-clean-no-auto-snap', target: 'lane', topology: 'clean', noAutoSnap: true, untimed: true },
   { name: 'main-clean-no-squash', target: 'main', topology: 'clean', noSquash: true, untimed: true },
-  { name: 'main-clean-detach-head', target: 'main', topology: 'clean', detachHead: true, untimed: true },
+  {
+    name: 'main-clean-detach-head',
+    target: 'main',
+    topology: 'clean',
+    detachHead: true,
+    untimed: true,
+    canonicalFallback: 'detach-head remains canonical',
+  },
   { name: 'lane-fast-forward-no-snap', target: 'lane', topology: 'fast-forward', noSnap: true, untimed: true },
   { name: 'lane-built-artifacts', target: 'lane', topology: 'clean', built: true, untimed: true },
   {
@@ -177,7 +216,30 @@ async function prepareScenario(directory, scenario, roots, fixture, command, cli
     await fs.writeFile(path.join(roots.dependencyRoot, 'index.js'), 'export default "main-born dependency snap";\n');
     await run([...snapArgs([fixture.dependencyId], 'main-born dependency outside incoming lane'), '--unmodified']);
   }
-  await run(['lane', 'create', 'incoming', '--scope', 'qualification.destination']);
+  const beforeAddition = `${directory}-before-addition`;
+  if (scenario.topology === 'addition') {
+    // Preserve a real consumer from before the incoming author creates the new
+    // component. Restoring it after export models another existing consumer;
+    // no bitmap/model rows are synthesized or removed by the fixture.
+    await fs.rm(beforeAddition, { recursive: true, force: true });
+    await fs.cp(directory, beforeAddition, { recursive: true, verbatimSymlinks: true });
+  }
+  await run([
+    'lane',
+    'create',
+    'incoming',
+    '--scope',
+    ['addition', 'inactive-addition'].includes(scenario.topology)
+      ? 'qualification.checkout'
+      : 'qualification.destination',
+  ]);
+  if (['addition', 'inactive-addition'].includes(scenario.topology)) {
+    const addedRoot = path.join(directory, 'new-component');
+    await fs.mkdir(addedRoot, { recursive: true });
+    await fs.writeFile(path.join(addedRoot, 'index.js'), 'export default "new lane component";\n');
+    await run(['add', 'new-component', '--id', 'new-component', '--scope', 'qualification.checkout']);
+    await run(snapArgs(['new-component'], 'incoming new component'));
+  }
   if (scenario.topology === 'binary')
     await fs.writeFile(path.join(root, 'binary.bin'), Buffer.from([0, 250, 13, 10, 129]));
   else if (['deletion', 'delete-diverged', 'delete-conflict'].includes(scenario.topology))
@@ -198,7 +260,11 @@ async function prepareScenario(directory, scenario, roots, fixture, command, cli
       ...snapArgs([fixture.id], 'merge transaction incoming'),
       ...(scenario.built ? ['--build', '--skip-tests'] : []),
     ]);
-  await run(['switch', 'main', '--skip-fetch', '--skip-dependency-installation']);
+  if (scenario.topology === 'addition') {
+    await run(['export']);
+    await fs.rm(directory, { recursive: true, force: true });
+    await fs.cp(beforeAddition, directory, { recursive: true, verbatimSymlinks: true });
+  } else await run(['switch', 'main', '--skip-fetch', '--skip-dependency-installation']);
   if (scenario.target === 'lane') await run(['lane', 'create', 'destination', '--scope', 'qualification.destination']);
   if (scenario.topology !== 'fast-forward' && scenario.topology !== 'deletion') {
     if (scenario.topology === 'delete-conflict')
@@ -224,12 +290,23 @@ function commandFor(scenario, fixture) {
   const args =
     scenario.target === 'component'
       ? ['merge', fixture.id, '--skip-dependency-installation']
-      : ['lane', 'merge', scenario.target === 'main-into-lane' ? 'main' : 'incoming', '--skip-dependency-installation'];
+      : [
+          'lane',
+          'merge',
+          scenario.target === 'main-into-lane'
+            ? 'main'
+            : ['addition', 'inactive-addition'].includes(scenario.topology)
+              ? 'qualification.checkout/incoming'
+              : 'incoming',
+          '--skip-dependency-installation',
+        ];
   if (scenario.strategy) args.push('--auto-merge-resolve', scenario.strategy);
   if (scenario.pattern) args.push('--pattern', fixture.id);
   if (scenario.includeDeps) args.push('--include-deps');
   if (scenario.hidden) args.push('--no-squash');
   if (scenario.noSquash) args.push('--no-squash');
+  if (scenario.squash) args.push('--squash');
+  if (scenario.message) args.push('--message', scenario.message);
   if (scenario.noAutoSnap) args.push('--no-auto-snap');
   if (scenario.noSnap) args.push('--no-snap');
   if (scenario.detachHead) args.push('--detach-head');

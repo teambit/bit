@@ -86,6 +86,8 @@ const files = [
   'scopes/harmony/bit/rust-workspace-command.ts',
   'scopes/harmony/bit/rust-workspace-command-report.ts',
   'scopes/harmony/bit/rust-workspace-command-options.ts',
+  'scopes/harmony/bit/rust-workspace-lane-options.ts',
+  'scopes/harmony/bit/rust-workspace-command-lane.ts',
   'scopes/component/checkout/checkout-cmd.ts',
   'scopes/component/checkout/checkout-output.ts',
   'scopes/component/merging/merge-cmd.ts',
@@ -322,12 +324,14 @@ const files = [
   'scopes/scope/objects/index.ts',
   'scopes/scope/objects/models/version-history.ts',
   'scopes/scope/objects/models/lane-history.ts',
+  'scopes/scope/objects/models/new-lane-history-key.ts',
   'scopes/scope/objects/models/detach-heads.ts',
   'scopes/scope/objects/models/version-history.spec.ts',
   'components/legacy/scope/component-ops/scope-components-importer.ts',
   'components/legacy/scope/component-ops/model-components-merger.ts',
   'components/legacy/scope/component-ops/multiple-component-merger.ts',
   'scopes/scope/scope/scope.main.runtime.ts',
+  'scopes/scope/scope/component-id-patterns.ts',
 ];
 for (const file of files) fs.copyFileSync(path.join(root, file), path.join(target, file));
 const output = fs.openSync(path.join(target, '.bit-object-import-compile.json'), 'w');
@@ -480,6 +484,8 @@ const modules = [
   'bit/dist/rust-workspace-command.js',
   'bit/dist/rust-workspace-command-report.js',
   'bit/dist/rust-workspace-command-options.js',
+  'bit/dist/rust-workspace-lane-options.js',
+  'bit/dist/rust-workspace-command-lane.js',
   'checkout/dist/checkout-cmd.js',
   'checkout/dist/checkout-output.js',
   'merging/dist/merge-cmd.js',
@@ -700,11 +706,13 @@ const modules = [
   'objects/dist/index.js',
   'objects/dist/models/version-history.js',
   'objects/dist/models/lane-history.js',
+  'objects/dist/models/new-lane-history-key.js',
   'objects/dist/models/detach-heads.js',
   'legacy.scope/dist/component-ops/scope-components-importer.js',
   'legacy.scope/dist/component-ops/model-components-merger.js',
   'legacy.scope/dist/component-ops/multiple-component-merger.js',
   'scope/dist/scope.main.runtime.js',
+  'scope/dist/component-id-patterns.js',
 ];
 const provenance = {
   schemaVersion: 1,

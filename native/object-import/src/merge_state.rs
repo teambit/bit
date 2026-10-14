@@ -400,3 +400,8 @@ fn transfer_request(request: Request, state: &mut crate::transfer::State) -> io:
         _ => Err(invalid("invalid transfer operation")),
     }
 }
+
+/// Reuse the canonical squash decision for retained command-owned Versions.
+pub(crate) fn squash_policy(value: Value) -> io::Result<Value> {
+    squash::policy(&serde_json::from_value(value).map_err(io::Error::other)?)
+}

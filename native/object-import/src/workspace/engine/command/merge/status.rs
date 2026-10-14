@@ -8,8 +8,13 @@ pub(in crate::workspace::engine::command) struct Input<'a> {
     pub(in crate::workspace::engine::command) model: Option<&'a Value>,
     pub(in crate::workspace::engine::command) incoming: &'a Value,
     pub(in crate::workspace::engine::command) current: &'a Value,
-    pub(in crate::workspace::engine::command) modified: bool,
+    pub(in crate::workspace::engine::command) options: SelectionOptions,
+    pub(in crate::workspace::engine::command) lane: Option<&'a Value>,
     pub(in crate::workspace::engine::command) distance: &'a Value,
+}
+pub(in crate::workspace::engine::command) struct SelectionOptions {
+    pub(in crate::workspace::engine::command) modified: bool,
+    pub(in crate::workspace::engine::command) target_as_diverged: bool,
 }
 pub(super) fn select(
     input: &Input<'_>,
@@ -52,19 +57,23 @@ fn observation(input: &Input<'_>, observe: &str) -> io::Result<Value> {
         "model" => Ok(json!({"present":input.model.is_some()})),
         "unmerged" => Ok(json!({"present":false})),
         "incoming" => Ok(
-            json!({"removed":removed(input.incoming)?,"onLane":false,"bitmapPresent":true,"currentLanePresent":false}),
+            json!({"removed":removed(input.incoming)?,"onLane":input.lane.and_then(|lane| lane["targets"].as_array()).and_then(|rows| rows.iter().find(|row| row["identity"] == input.target["identity"])).is_some_and(|target| matches!(target["currentSource"].as_str(),Some("visible" | "hidden"))),"bitmapPresent":input.target["bitmapPresent"] != false,"currentLanePresent":input.lane.is_some_and(|lane| !lane["current"].is_null())}),
         ),
-        "currentId" => Ok(json!({"present":true})),
+        "currentId" => Ok(
+            json!({"present":input.lane.and_then(|lane| lane["targets"].as_array()).and_then(|rows| rows.iter().find(|row| row["identity"] == input.target["identity"])).is_none_or(|target| target["currentIdPresent"] == true)}),
+        ),
         "locallyRemoved" => Ok(json!({"removed":false})),
         "current" => Ok(json!({"removed":removed(input.current)?})),
-        "modified" if input.modified => Ok(json!({"type":"code","ignoreConfigChanges":false})),
+        "modified" if input.options.modified => {
+            Ok(json!({"type":"code","ignoreConfigChanges":false}))
+        }
         "modified" => Ok(json!({"type":null,"ignoreConfigChanges":false})),
-        "divergence" => divergence(input.distance),
+        "divergence" => divergence(input.distance, input.options.target_as_diverged),
         _ => Err(invalid("command merge unsupported removal/history state")),
     }
 }
 
-fn divergence(distance: &Value) -> io::Result<Value> {
+fn divergence(distance: &Value, target_as_diverged: bool) -> io::Result<Value> {
     if distance["noCommon"] == true {
         return Err(invalid("command merge unrelated history"));
     }
@@ -76,7 +85,7 @@ fn divergence(distance: &Value) -> io::Result<Value> {
         .ok_or_else(|| invalid("command merge target distance"))?;
     Ok(json!({"error":null,"detachHead":false,"common":distance["common"],
         "sourceAhead":!source.is_empty(),"targetAhead":!target.is_empty(),"diverged":!source.is_empty()&&!target.is_empty(),
-        "handleTargetAheadAsDiverged":false,"resolveUnrelated":null}))
+        "handleTargetAheadAsDiverged":target_as_diverged,"resolveUnrelated":null}))
 }
 
 fn removed(version: &Value) -> io::Result<bool> {

@@ -54,3 +54,36 @@ fn status_lookup_keeps_first_current_path_and_target_order() {
         ],
     );
 }
+
+#[test]
+fn imported_retarget_verifies_private_manifest_even_when_sources_are_retained() {
+    use flate2::{Compression, write::ZlibEncoder};
+    use std::io::Write;
+    let plan = retained_plan();
+    let hash = plan.bodies[0].hash.clone();
+    let reference = "b".repeat(40);
+    let version = json!({"files":[{"relativePath":"a","file":hash}]});
+    let serialized = serde_json::to_vec(&version).unwrap();
+    let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
+    write!(encoder, "Version {reference} {}\0", serialized.len()).unwrap();
+    encoder.write_all(&serialized).unwrap();
+    let overlay = crate::command_import::tests::test_overlay(vec![(
+        reference.clone(),
+        "Version".into(),
+        encoder.finish().unwrap(),
+        Some(version),
+    )]);
+    let mut request = super::Request {
+        token: "unused".into(),
+        objects_directory: std::env::temp_dir().join("no-published-lane-objects"),
+        snapshot_directory: std::env::temp_dir(),
+        target: wire::Version { hash: reference, files: vec![target("a", &hash)] },
+        known_bodies: Some(plan.bodies.len()),
+    };
+    assert_eq!(
+        super::load(&request, 0, &plan, Some(&overlay)).unwrap(),
+        vec![b"retained".to_vec()],
+    );
+    request.target.files[0].relative_path = "tampered".into();
+    assert!(super::load(&request, 0, &plan, Some(&overlay)).is_err());
+}

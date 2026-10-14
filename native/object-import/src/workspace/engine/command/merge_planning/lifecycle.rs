@@ -2,6 +2,35 @@ use super::{super::bitmap, Finalized, Prepared, Record, invalid, merge, proof};
 use serde_json::{Value, json};
 use std::{fs, io, path::Path};
 impl Prepared {
+    pub(in crate::workspace::engine::command) fn snapshot_versions(&self) -> &[Value] {
+        self.finalized
+            .as_ref()
+            .map_or(&[], |finalized| finalized.snapshot.versions.as_slice())
+    }
+    pub(in crate::workspace::engine::command) fn lane_receipt(&self) -> Option<Value> {
+        self.publication.lane.as_ref().map(super::super::lane_publication::Prepared::receipt)
+    }
+    pub(in crate::workspace::engine::command) fn rebased(&self) -> Vec<(String, String, Value)> {
+        self.publication.lane
+            .as_ref()
+            .map_or_else(Vec::new, super::super::lane_publication::Prepared::rebased)
+    }
+    pub(in crate::workspace::engine::command) fn finalize_lane(
+        &mut self,
+        staging: &Path,
+        receipt: &Value,
+    ) -> io::Result<Vec<(String, Value)>> {
+        self.publication.lane
+            .as_mut()
+            .ok_or_else(|| invalid("command lane missing"))?
+            .finalize(staging, receipt)
+    }
+    pub(in crate::workspace::engine::command) fn commit_recovery(&self) -> io::Result<()> {
+        if let Some(lane) = &self.publication.lane {
+            lane.commit_recovery()?;
+        }
+        Ok(())
+    }
     pub(in crate::workspace::engine::command) fn validate_policy_final(
         &mut self,
         record: &Record,
@@ -13,11 +42,8 @@ impl Prepared {
 
     pub(in crate::workspace::engine::command) fn apply_policy_configs(&mut self) -> io::Result<()> {
         let policy = self.policy.as_ref().ok_or_else(|| invalid("command policy missing"))?;
-        for (index, row) in policy.rows
-            .iter()
-            .filter(|row| !row.fast_forward)
-            .enumerate()
-        {
+        for row in policy.rows.iter().filter(|row| !row.fast_forward) {
+            let index = policy_material(&self.pending, &self.materials, &row.identity)?;
             self.materials[index].version = row.projected.clone();
             if !row.ours_conflict {
                 self.unmerged[index]["mergedConfig"] = row.merged.clone();
@@ -45,7 +71,7 @@ impl Prepared {
     ) -> io::Result<Vec<bitmap::Update>> {
         self.materials
             .iter()
-            .filter(|material| !material.no_write())
+            .filter(|material| !material.hidden && !material.no_write())
             .map(|material| {
                 let (identity, _) = material.output["id"]
                     .as_str()
@@ -83,6 +109,7 @@ impl Prepared {
                 model: &input.model,
                 material,
                 remote: &input.remote,
+                lane: record.context.get("lane"),
             })
             .collect::<Vec<_>>();
         let message = record.request.options.message
@@ -92,6 +119,9 @@ impl Prepared {
         let snapshot =
             merge::snapshot::prepare(&record.request.root, staging, &inputs, receipt, message)?;
         let files = self.prepare_packages(record, &snapshot)?;
+        if let Some(lane) = &mut self.publication.lane {
+            lane.finalize_snap(staging, &snapshot.versions, receipt, message)?;
+        }
         let results = json!({"snappedComponents":snapshot.versions.iter().map(|version|
             json!({"id":format!("{}@{}",version["identity"].as_str().unwrap(),version["hash"].as_str().unwrap())})).collect::<Vec<_>>(),"autoSnappedResults":[]});
         self.finalized = Some(Finalized { snapshot, files });
@@ -117,7 +147,9 @@ impl Prepared {
             })
             .collect::<io::Result<Vec<_>>>()?;
         let roots = record.context["workspace"]["teambit.dependencies/dependency-resolver"]["rootComponents"].as_bool().unwrap_or(false);
-        merge::finalization::prepare(&record.request.root, &inputs, roots)
+        let mut prepared = merge::finalization::prepare(&record.request.root, &inputs, roots)?;
+        prepared.imported_index(&record.request.root, record.repository.imported_index())?;
+        Ok(prepared)
     }
     pub(in crate::workspace::engine::command) fn snap_updates(
         &self,
@@ -126,6 +158,13 @@ impl Prepared {
             &self.finalized.as_ref().ok_or_else(|| invalid("command snap not finalized"))?.snapshot;
         snapshot.versions
             .iter()
+            .filter(|version| {
+                self.pending
+                    .iter()
+                    .any(|pending| {
+                        !pending.directory.is_empty() && version["identity"] == pending.identity
+                    })
+            })
             .map(|version| {
                 Ok(bitmap::Update {
                     identity: version["identity"]
@@ -145,12 +184,15 @@ impl Prepared {
             })
             .collect()
     }
-    pub(in crate::workspace::engine::command) fn finish_snap(
+    pub(in crate::workspace::engine::command) fn persist_first(
         &mut self,
         root: &Path,
     ) -> io::Result<usize> {
-        if let Some(models) = &mut self.fast_forward {
+        if let Some(models) = &mut self.publication.fast_forward {
             models.commit(root)?;
+        }
+        if let Some(lane) = &mut self.publication.lane {
+            lane.commit_first(root)?;
         }
         if !self.materials.is_empty() {
             fs::write(
@@ -158,9 +200,18 @@ impl Prepared {
                 serde_json::to_vec_pretty(&self.unmerged).map_err(io::Error::other)?,
             )?;
         }
-        let mut notifications = super::super::apply_command::notify(root);
+        Ok(super::super::apply_command::notify(root))
+    }
+    pub(in crate::workspace::engine::command) fn finish_snap(
+        &mut self,
+        root: &Path,
+    ) -> io::Result<usize> {
+        let mut notifications = 0;
         if let Some(finalized) = &mut self.finalized {
             finalized.snapshot.commit(root)?;
+            if let Some(lane) = &mut self.publication.lane {
+                lane.commit_second(root)?;
+            }
             notifications += super::super::apply_command::notify(root);
             finalized.files.commit()?;
             fs::write(root.join(".bit/unmerged.json"), b"[]")?;
@@ -176,7 +227,10 @@ impl Prepared {
             return Err(invalid("command snap receipt required before apply"));
         }
         proof::verify(&self.proofs)?;
-        if let Some(models) = &self.fast_forward {
+        if let Some(lane) = &self.publication.lane {
+            lane.validate()?;
+        }
+        if let Some(models) = &self.publication.fast_forward {
             models.validate()?;
         }
         if let Some(finalized) = &self.finalized {
@@ -212,3 +266,24 @@ impl Prepared {
 
 #[cfg(test)]
 mod tests;
+
+fn policy_material(
+    pending: &[super::Pending],
+    materials: &[merge::Prepared],
+    identity: &str,
+) -> io::Result<usize> {
+    pending
+        .iter()
+        .position(|row| row.identity == identity)
+        .or_else(|| {
+            materials
+                .iter()
+                .position(|material| {
+                    material.output["id"]
+                        .as_str()
+                        .and_then(|id| id.rsplit_once('@'))
+                        .is_some_and(|(id, _)| id == identity)
+                })
+        })
+        .ok_or_else(|| invalid("command policy material absent"))
+}

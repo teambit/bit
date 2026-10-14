@@ -57,3 +57,31 @@ fn issue_projection_uses_final_native_state_in_lifecycle_order() {
         }),
     );
 }
+
+#[test]
+fn fixed_fast_forward_dependency_is_not_a_pending_snapshot_cascade() {
+    let rows = [cascade_row("scope/ff", true), cascade_row("scope/snapshot", false)];
+    let pending = super::snapshot_identities(&rows);
+    let dependency = json!({"identity":"scope/ff@2.0.0","packageName":"@scope/ff"});
+    assert_eq!(super::component(&dependency, &pending).unwrap()["id"]["version"], "2.0.0");
+    assert!(super::component(&json!({"identity":"scope/snapshot@1.0.0"}), &pending).is_err());
+}
+
+fn cascade_row(identity: &str, fast_forward: bool) -> super::super::Row {
+    super::super::Row {
+        identity: identity.into(),
+        baseline: super::super::Baseline {
+            directory: String::new(),
+            version: String::new(),
+            current: serde_json::Value::Null,
+            versions: [serde_json::Value::Null, serde_json::Value::Null, serde_json::Value::Null],
+            package_name: String::new(),
+        },
+        files: Vec::new(),
+        merged: json!({}),
+        projected: serde_json::Value::Null,
+        ours_conflict: false,
+        fast_forward,
+        detected: None,
+    }
+}

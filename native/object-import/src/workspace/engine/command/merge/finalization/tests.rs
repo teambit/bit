@@ -72,3 +72,94 @@ fn existing_links_remain_eligible_and_do_not_get_replaced_during_preparation() {
     assert_eq!(fs::read_link(link).unwrap(), source);
     assert!(!directory.0.join(".bit/staged-snaps").exists());
 }
+
+#[test]
+fn lane_snapshot_stages_current_lane_config_and_validates_its_original_bytes() {
+    let (directory, version) = fixture();
+    let path = directory.0.join(".bitmap");
+    let mut bitmap: Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+    bitmap["_bit_lane"] = json!({"id":{"scope":"scope","name":"feature"},"exported":true});
+    fs::write(path, serde_json::to_vec(&bitmap).unwrap()).unwrap();
+    write(&directory.0, ".bit/staged-config/main.json", b"[]");
+    write(&directory.0, ".bit/staged-config/scope/feature.json", b"[]");
+    let mut prepared = super::Prepared {
+        proofs: Vec::new(),
+        writes: Vec::new(),
+        links: Vec::new(),
+        copies: Vec::new(),
+    };
+    super::staged::prepare(
+        &directory.0,
+        &[Input {
+            identity: "scope/alpha",
+            directory: "alpha",
+            hash: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            version: &version,
+        }],
+        &mut prepared,
+    )
+    .unwrap();
+    let config = directory.0.join(".bit/staged-config/scope/feature.json");
+    let bytes = &prepared.writes
+        .iter()
+        .find(|(path, _)| *path == config)
+        .unwrap()
+        .1;
+    let rows: Value = serde_json::from_slice(bytes).unwrap();
+    assert_eq!(rows[0]["id"]["version"], "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+    assert!(
+        !prepared.writes
+            .iter()
+            .any(|(path, _)| *path == directory.0.join(".bit/staged-config/main.json")),
+    );
+    assert_eq!(fs::read(&config).unwrap(), b"[]");
+    prepared.validate().unwrap();
+    fs::write(config, b"[{}]").unwrap();
+    assert!(prepared.validate().is_err());
+}
+
+#[test]
+fn scope_only_snapshot_stages_hashes_without_workspace_config_or_package_writes() {
+    let (directory, version) = fixture();
+    let prepared = prepare(
+        &directory.0,
+        &[Input {
+            identity: "scope/hidden",
+            directory: "",
+            hash: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            version: &version,
+        }],
+        false,
+    )
+    .unwrap();
+    assert_eq!(prepared.writes.len(), 2);
+    assert!(
+        prepared.writes
+            .iter()
+            .all(|(path, _)| path == &directory.0.join(".bit/staged-snaps")
+                || path == &directory.0.join(".bit/index.json")),
+    );
+    assert!(prepared.links.is_empty());
+    assert!(prepared.copies.is_empty());
+    assert!(!directory.0.join(".bit/staged-config").exists());
+}
+
+#[test]
+fn snapshot_finalization_keeps_planned_import_index_entries_and_original_freshness_proof() {
+    let (directory, _) = fixture();
+    let mut planned = prepare(&directory.0, &[], false).unwrap();
+    let imported = json!({"components":[{"id":{"scope":"scope","name":"new"},"hash":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}],"lanes":[{"id":{"scope":"scope","name":"incoming"},"hash":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}]});
+    planned
+        .imported_index(&directory.0, Some(&imported))
+        .unwrap();
+    planned.validate().unwrap();
+    assert_eq!(
+        fs::read(directory.0.join(".bit/index.json")).unwrap(),
+        b"{\"components\":[],\"lanes\":[]}",
+    );
+    planned.commit().unwrap();
+    let persisted: Value =
+        serde_json::from_slice(&fs::read(directory.0.join(".bit/index.json")).unwrap()).unwrap();
+    assert_eq!(persisted, imported);
+    assert!(planned.validate().is_err());
+}

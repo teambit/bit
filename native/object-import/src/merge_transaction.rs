@@ -90,3 +90,19 @@ fn policy(kind: &str, input: &Value, state: &journal::State) -> io::Result<Value
         _ => Err(invalid("unsupported merge transaction policy")),
     }
 }
+
+pub(crate) fn prepare_with_overlay(
+    input: Value,
+    state: &mut State,
+    snapshots: Option<&crate::workspace::snapshots::State>,
+    overlay: Option<&crate::command_import::Overlay>,
+) -> io::Result<Value> {
+    state.bodies.prepare_overlay(input, &state.journal, snapshots, overlay)
+}
+pub(crate) fn apply_with_overlay(
+    input: &Value,
+    state: &mut State,
+    overlay: Option<&crate::command_import::Overlay>,
+) -> io::Result<Value> {
+    state.bodies.apply_overlay(input, &state.journal, overlay)
+}

@@ -3,6 +3,20 @@ use crate::js_json::Value as Js;
 use serde_json::{Value, json};
 
 #[test]
+fn diverged_squash_records_per_component_main_scope() {
+    let model = json!({"scope":"component.scope"});
+    let mut lane = json!({"otherId":{"scope":"workspace.scope","name":"main"}});
+    assert_eq!(
+        metadata::squash_lane(&model, &lane).unwrap(),
+        json!({"scope":"component.scope","name":"main"}),
+    );
+    assert_eq!(lane["otherId"]["scope"], "workspace.scope");
+    assert!(metadata::squash_lane(&json!({}), &lane).is_err());
+    lane["otherId"]["name"] = json!("incoming");
+    assert_eq!(metadata::squash_lane(&model, &lane).unwrap(), lane["otherId"]);
+}
+
+#[test]
 fn autosnap_upgrades_harmony_version_schema_without_rewriting_original() {
     let original = json!({"schema":"1.0.0","files":[],"log":{"date":"1","message":"initial"},"extensions":[],"flattenedDependencies":["scope/dep@1.0.0"]});
     let projected = metadata::current_schema(&original).unwrap();
@@ -83,4 +97,20 @@ fn snapshot_and_fast_forward_share_canonical_local_state_mutation() {
             );
         }
     }
+}
+
+#[test]
+fn main_merge_message_uses_component_scope_in_cross_scope_lane_workspace() {
+    let model = json!({"scope":"component.scope"});
+    let mut lane = json!({"otherId":{"scope":"workspace.scope","name":"main"}});
+    assert_eq!(
+        metadata::message_text(&model, Some(&lane), "").unwrap(),
+        "merge component.scope/main",
+    );
+    lane["otherId"]["name"] = json!("feature");
+    assert_eq!(
+        metadata::message_text(&model, Some(&lane), "").unwrap(),
+        "merge workspace.scope/feature",
+    );
+    assert_eq!(metadata::message_text(&model, Some(&lane), "custom").unwrap(), "custom");
 }

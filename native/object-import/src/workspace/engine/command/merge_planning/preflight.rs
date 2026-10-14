@@ -14,7 +14,7 @@ pub(super) fn validate(
     if prepared.pending.len() != prepared.materials.len() {
         return Err(invalid("command mixed merge conflict autosnap"));
     }
-    let mut identities = prepared.pending
+    let identities = prepared.pending
         .iter()
         .map(|input| input.identity.as_str())
         .collect::<HashSet<_>>();
@@ -28,7 +28,6 @@ pub(super) fn validate(
         if !prepared.policy.as_ref().is_some_and(|policy| policy.dependencies_ready) {
             prepared.proofs.extend(cache_guard::verify(record, captured, target, identity)?);
         }
-        identities.insert(identity);
     }
     for row in
         record.context["versions"].as_array().ok_or_else(|| invalid("command merge versions"))?
@@ -43,6 +42,7 @@ pub(super) fn validate(
             model: &input.model,
             material,
             remote: &input.remote,
+            lane: record.context.get("lane"),
         })
         .collect::<Vec<_>>();
     let versions = merge::snapshot::preflight(&record.request.root, &snapshots)?;

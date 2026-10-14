@@ -51,7 +51,7 @@ pub(super) fn prepare(
         "checkoutApply",
         json!({
             "token":plan["token"],"strategy":input.options.strategy,"forceOurs":input.options.force_ours,
-            "currentExists":true,"tracked":true,"workspaceRoot":false,
+            "currentExists":!input.current.added,"tracked":!input.current.added,"workspaceRoot":false,
         }),
         state,
     )?;

@@ -39,6 +39,8 @@ fn empty_checkout_target_declines_before_reading_or_materializing_sources() {
     let root = Path::new("/unused-empty-command-root");
     let repository = Repository::new(root, None);
     let captured = Captured {
+        added: false,
+        hidden: false,
         target: serde_json::from_value(json!({"identity":"scope/alpha","version":"1.0.0",
             "directory":"alpha","files":["index.js"],"current":{"mainFile":"index.js"}}))
         .unwrap(),

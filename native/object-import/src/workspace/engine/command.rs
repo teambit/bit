@@ -6,6 +6,11 @@ mod bitmap;
 mod capture;
 mod finalize_command;
 mod history;
+mod lane_context;
+mod lane_finalize;
+mod lane_publication;
+mod lane_referenced;
+mod lane_selection;
 mod materialization;
 mod merge;
 mod merge_dependency_guard;
@@ -57,6 +62,8 @@ pub(super) fn prepare(
 pub(super) struct Plan {
     token: String,
     current: Vec<Value>,
+    #[serde(default)]
+    lane_pattern_ids: Option<Vec<String>>,
     semver: Value,
     #[serde(default)]
     dependency_read_set: Vec<proof::Proof>,
@@ -91,4 +98,14 @@ pub(super) struct Finalize {
 }
 pub(super) fn finalize(input: &Finalize, state: &mut State) -> io::Result<(usize, Value)> {
     finalize_command::run(input, state)
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(super) struct LaneFinalize {
+    token: String,
+    lane_receipt: Value,
+}
+pub(super) fn finalize_lane(input: &LaneFinalize, state: &mut State) -> io::Result<(usize, Value)> {
+    lane_finalize::run(input, state)
 }

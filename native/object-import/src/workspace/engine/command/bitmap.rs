@@ -1,4 +1,5 @@
-//! Final bitmap publication for already-tracked main-lane components.
+//! Validated bitmap publication and history for workspace commands.
+mod lane;
 use crate::workspace::engine::invalid;
 use serde_json::{Map, Value};
 use std::{
@@ -20,8 +21,13 @@ pub(super) struct Prepared {
     output: Vec<u8>,
     changed: bool,
 }
-pub(super) fn prepare(root: &Path, context: &Value, updates: &[Update]) -> io::Result<Prepared> {
-    prepare_bytes(root, fs::read(root.join(".bitmap"))?, context, updates)
+pub(super) fn prepare_changes(
+    root: &Path,
+    context: &Value,
+    updates: &[Update],
+    removed: &[String],
+) -> io::Result<Prepared> {
+    prepare_bytes(root, fs::read(root.join(".bitmap"))?, context, updates, removed)
 }
 pub(super) fn prepare_after(
     previous: &Prepared,
@@ -29,19 +35,22 @@ pub(super) fn prepare_after(
     updates: &[Update],
 ) -> io::Result<Prepared> {
     let original = if previous.changed { &previous.output } else { &previous.original };
-    prepare_bytes(&previous.root, original.clone(), context, updates)
+    prepare_bytes(&previous.root, original.clone(), context, updates, &[])
 }
 fn prepare_bytes(
     root: &Path,
     original: Vec<u8>,
     context: &Value,
     updates: &[Update],
+    removed: &[String],
 ) -> io::Result<Prepared> {
     validate_updates(&original, updates)?;
     let bitmap = crate::recovery::jsonc::parse(&original)?;
-    let (names, mut rows) = rows(&bitmap)?;
-    let changed = apply_updates(&mut rows, context, updates)?;
-    let output = render_rows(rows, &names, &bitmap["$schema-version"])?;
+    let header = lane::header(context, &bitmap)?;
+    let mut rows = rows(&bitmap)?;
+    let membership_changed = lane::membership(&mut rows, context, updates, removed)?;
+    let changed = apply_updates(&mut rows, context, updates)? || membership_changed;
+    let output = render_rows(rows, &bitmap["$schema-version"], header)?;
     Ok(Prepared { root: root.to_owned(), original, output, changed })
 }
 fn validate_updates(original: &[u8], updates: &[Update]) -> io::Result<()> {
@@ -57,25 +66,19 @@ fn validate_updates(original: &[u8], updates: &[Update]) -> io::Result<()> {
     }
     Ok(())
 }
-fn rows(bitmap: &Value) -> io::Result<(HashMap<String, usize>, Vec<Value>)> {
+fn rows(bitmap: &Value) -> io::Result<Vec<Value>> {
     let entries = bitmap.as_object().ok_or_else(|| invalid("command bitmap object"))?;
     if bitmap["$schema-version"].as_str().is_none() {
         return Err(invalid("command bitmap schema requires canonical migration"));
     }
-    if entries.contains_key("_bit_lane") {
-        return Err(invalid("command bitmap lane"));
-    }
-    let mut names = HashMap::<String, usize>::new();
     let mut rows = Vec::new();
     for (key, entry) in entries {
-        if key != "$schema-version" {
-            let name =
-                entry["name"].as_str().ok_or_else(|| invalid("command bitmap component name"))?;
-            *names.entry(name.to_owned()).or_default() += 1;
+        if !matches!(key.as_str(), "$schema-version" | "_bit_lane") {
+            entry["name"].as_str().ok_or_else(|| invalid("command bitmap component name"))?;
             rows.push(entry.clone());
         }
     }
-    Ok((names, rows))
+    Ok(rows)
 }
 fn identity(entry: &Value) -> io::Result<String> {
     let name = entry["name"].as_str().ok_or_else(|| invalid("command bitmap name"))?;
@@ -113,19 +116,25 @@ fn apply_update(entry: &mut Value, context: &Value, update: &Update) -> io::Resu
         }
         return Ok(changed);
     }
+    lane::promote_inactive_scope(entry, context, update)?;
     crate::checkout::plan::relative_path(&update.main_file)?;
     entry["version"] = Value::String(tag(context, &update.identity, &update.version)?);
     entry["mainFile"] = Value::String(update.main_file.clone());
     let entry = entry.as_object_mut().ok_or_else(|| invalid("command bitmap entry"))?;
-    entry.shift_remove("isAvailableOnCurrentLane");
-    entry.shift_remove("onLanesOnly");
+    if lane::on_lane(context) {
+        entry.insert("isAvailableOnCurrentLane".into(), Value::Bool(true));
+    } else {
+        entry.shift_remove("isAvailableOnCurrentLane");
+        entry.shift_remove("onLanesOnly");
+    }
     Ok(true)
 }
-fn render_rows(
-    rows: Vec<Value>,
-    names: &HashMap<String, usize>,
-    schema: &Value,
-) -> io::Result<Vec<u8>> {
+fn render_rows(rows: Vec<Value>, schema: &Value, lane: Option<Value>) -> io::Result<Vec<u8>> {
+    let mut names = HashMap::<String, usize>::new();
+    for entry in &rows {
+        let name = entry["name"].as_str().ok_or_else(|| invalid("command bitmap name"))?;
+        *names.entry(name.to_owned()).or_default() += 1;
+    }
     let mut keyed = Vec::new();
     for entry in rows {
         let name = entry["name"].as_str().ok_or_else(|| invalid("command bitmap name"))?;
@@ -140,6 +149,9 @@ fn render_rows(
         }
     }
     output.insert("$schema-version".into(), schema.clone());
+    if let Some(lane) = lane {
+        output.insert("_bit_lane".into(), lane);
+    }
     crate::inspection::render_bitmap(&Value::Object(output))
 }
 fn plain(entry: &Value) -> io::Result<Value> {
@@ -268,5 +280,7 @@ impl Prepared {
     }
 }
 
+#[cfg(test)]
+mod lane_tests;
 #[cfg(test)]
 mod tests;

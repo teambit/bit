@@ -1,9 +1,15 @@
+pub(super) use addition::capture as addition;
+pub(super) use hidden::from_model;
+mod addition;
+mod hidden;
 use super::super::{invalid, read, status_models::comparison};
 use crate::workspace::snapshots;
 use serde_json::{Value, json};
 use std::{collections::HashSet, io, path::Path};
 
 pub(super) struct Captured {
+    pub(super) hidden: bool,
+    pub(super) added: bool,
     pub(super) target: comparison::Target,
     pub(super) metadata: Value,
     pub(super) files: Value,
@@ -39,8 +45,19 @@ pub(super) fn all(
             files.push(json!({"relativePath":file,"path":observed.path,"rawHash":observed.hash,
                 "snapshotHash":observed.snapshot_hash,"readToken":token,"protected":false}));
         }
-        Ok(Captured { target, metadata: Value::Array(metadata), files: Value::Array(files) })
+        Ok(Captured { added: false, hidden: false, target, metadata: Value::Array(metadata), files: Value::Array(files) })
     }).collect()
+}
+pub(super) fn lane_visibility(captured: &mut [Captured], context: &Value) -> io::Result<()> {
+    let Some(rows) = context["lane"]["targets"].as_array() else { return Ok(()) };
+    for component in captured {
+        let row = rows
+            .iter()
+            .find(|row| row["identity"] == component.target.identity)
+            .ok_or_else(|| invalid("captured component outside lane selection"))?;
+        component.hidden = row["hidden"] == true;
+    }
+    Ok(())
 }
 fn targets(inputs: Vec<Value>) -> io::Result<Vec<comparison::Target>> {
     let mut seen = HashSet::new();

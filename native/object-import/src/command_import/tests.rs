@@ -315,16 +315,18 @@ fn cached_external_gap_initializes_remotes_even_without_object_fetch() {
 pub(crate) fn test_overlay(objects: Vec<(String, String, Vec<u8>, Option<Value>)>) -> Overlay {
     let mut overlay = Overlay::default();
     for (hash, kind, bytes, value) in objects {
+        let mut inflated_size = 0;
         let source = (kind == "Source").then(|| {
             use std::io::Read;
             let mut raw = Vec::new();
             flate2::read::ZlibDecoder::new(bytes.as_slice()).read_to_end(&mut raw).unwrap();
+            inflated_size = raw.len();
             raw.splitn(2, |byte| *byte == 0)
                 .nth(1)
                 .unwrap()
                 .to_vec()
         });
-        overlay.objects.insert(hash, Object { kind, bytes, value, source });
+        overlay.objects.insert(hash, Object { kind, bytes, value, source, inflated_size });
     }
     overlay
 }
@@ -438,4 +440,124 @@ fn repeated_fetch_counts_cached_sources_and_preserves_existing_ref_inode() {
         "canonical outputFile preserves existing hard links",
     );
     assert_eq!(serde_json::from_slice::<Value>(&bytes).unwrap()[0]["head"], head);
+}
+
+#[test]
+fn lane_referenced_import_fetches_only_missing_same_scope_snap_sources() {
+    let fixture = Fixture::new();
+    let snap = "8".repeat(40);
+    let existing = "9".repeat(40);
+    let source = "referenced source";
+    let source_hash = object_hash(source);
+    let mut encoder = flate2::write::ZlibEncoder::new(Vec::new(), flate2::Compression::default());
+    write!(encoder, "Source {source_hash} {}\0{source}", source.len()).unwrap();
+    crate::store::Store::new(fixture.remote.join("objects"), None)
+        .unwrap()
+        .write(&source_hash, &encoder.finish().unwrap())
+        .unwrap();
+    let version = json!({"files":[{"file":source_hash}],"flattenedEdgesRef":source_hash,
+        "parents":["7".repeat(40)],"extensions":[{"name":"teambit.pipelines/builder","data":{"artifacts":[{"files":[{"file":"6".repeat(40)}]}]}}]});
+    Fixture::write(&fixture.remote.join("objects"), &snap, "Version", version);
+    Fixture::write(
+        &fixture.root.join(".bit/objects"),
+        &existing,
+        "Version",
+        json!({"files":[{"file":"5".repeat(40)}]}),
+    );
+    let before = tree(fixture.root.parent().unwrap());
+    let mut imported = super::prepare_lane(&fixture.root, &fixture.global).unwrap();
+    let heads = [(
+        "remote.scope/alpha".into(),
+        json!({"flattenedDependencies":[
+        {"scope":"remote.scope","name":"dep","version":snap},
+        {"scope":"remote.scope","name":"duplicate","version":snap},
+        {"scope":"remote.scope","name":"existing","version":existing},
+        {"scope":"remote.scope","name":"tagged","version":"1.0.0"},
+        {"scope":"other.scope","name":"foreign","version":"4".repeat(40)}]}),
+    )];
+    imported.prepare_lane_referenced("remote.scope", &heads).unwrap();
+    assert_eq!(imported.progress.len(), 2);
+    assert_eq!(imported.progress[0].ids, vec![snap.clone()]);
+    assert_eq!(imported.progress[1].ids, vec![source_hash.clone()]);
+    assert!(
+        imported.progress
+            .iter()
+            .all(|row| row.object_request && row.reason.is_none()),
+    );
+    assert!(
+        imported.overlay
+            .read(&snap, "Version")
+            .unwrap()
+            .is_some(),
+    );
+    assert_eq!(imported.overlay.source(&source_hash), Some(source.as_bytes()));
+    assert_eq!(tree(fixture.root.parent().unwrap()), before);
+    imported.prepare_lane_referenced("remote.scope", &heads).unwrap();
+    assert_eq!(imported.progress.len(), 2);
+}
+
+#[test]
+fn lane_main_refresh_counts_headless_requested_components_separately_from_imports() {
+    let fixture = Fixture::new();
+    fixture.model(&"a".repeat(40));
+    Fixture::write(
+        &fixture.remote.join("objects"),
+        &object_hash("remote.scope/new"),
+        "Component",
+        json!({"name":"new","scope":"remote.scope","versions":{},"lang":"javascript","deprecated":false,"bindingPrefix":"@remote","remotes":[],"schema":"1.0.0"}),
+    );
+    let mut plan = prepare_cached(&fixture.root, &fixture.global).unwrap();
+    if fixture
+        .index_action(|| {
+            plan.refresh_lane_main(&["remote.scope/alpha".into(), "remote.scope/new".into()])
+        })
+        .is_none()
+    {
+        return;
+    }
+    let progress = plan.progress.last().unwrap();
+    assert_eq!(progress.ids, vec!["remote.scope/alpha@latest", "remote.scope/new@latest"]);
+    assert_eq!(progress.components.len(), 1);
+    assert!(
+        !fixture.root
+            .join(".bit/objects")
+            .join(&object_hash("remote.scope/alpha")[..2])
+            .exists(),
+    );
+}
+
+#[test]
+fn local_new_lane_common_snap_fetches_from_component_home_scope() {
+    let fixture = Fixture::new();
+    let head = "a".repeat(40);
+    fixture.model(&head);
+    let mut plan = prepare_cached(&fixture.root, &fixture.global).unwrap();
+    let current = super::lane::Id { scope: "local.scope".into(), name: "main".into() };
+    let other = super::lane::Id { scope: "local.scope".into(), name: "new-lane".into() };
+    let lane = super::lane::Record {
+        hash: "b".repeat(40),
+        value: json!({"components":[{"id":{"scope":"remote.scope","name":"alpha"},"head":head}],"updateDependents":[]}),
+        is_new: true,
+    };
+    plan.lane_gap_source(&current, &other, Some(&lane), true)
+        .unwrap();
+    if fixture
+        .index_action(|| plan.prepare_merge_gap(&[Fixture::target()]))
+        .is_none()
+    {
+        return;
+    }
+    let progress = plan.progress.last().unwrap();
+    assert_eq!(progress.ids, vec!["remote.scope/alpha@1.0.0"]);
+    assert_eq!(progress.components.len(), 1);
+    assert_eq!(
+        progress.reason.as_deref(),
+        Some("for getting the common-snap between main and local.scope/new-lane"),
+    );
+    assert!(
+        plan.overlay
+            .read(&head, "Version")
+            .unwrap()
+            .is_some(),
+    );
 }

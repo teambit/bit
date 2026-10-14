@@ -1,3 +1,4 @@
+import { splitComponentPatterns, matchComponentPatterns } from './component-id-patterns';
 import mapSeries from 'p-map-series';
 import path from 'path';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
@@ -1091,19 +1092,13 @@ export class ScopeMain implements ComponentFactory {
     throwForNoMatch = true,
     filterByStateFunc?: (state: any, poolIds: ComponentID[]) => Promise<ComponentID[]>
   ) {
-    const patterns = pattern.split(',').map((p) => p.trim());
-
-    if (patterns.every((p) => p.startsWith('!'))) {
-      // otherwise it'll never match anything. don't use ".push()". it must be the first item in the array.
-      patterns.unshift('**');
-    }
+    const patterns = splitComponentPatterns(pattern);
     const [statePatterns, nonStatePatterns] = partition(patterns, (p) => p.startsWith('$') || p.includes(' AND '));
-    const nonStatePatternsNoVer = nonStatePatterns.map((p) => p.split('@')[0]); // no need for the version
     const idsMap: { [id: string]: ComponentID } = Object.fromEntries(
       ids.map((id) => [id.toStringWithoutVersion(), id])
     );
-    const idsFiltered = nonStatePatternsNoVer.length
-      ? multimatch(Object.keys(idsMap), nonStatePatternsNoVer).map((idStr) => idsMap[idStr])
+    const idsFiltered = nonStatePatterns.length
+      ? matchComponentPatterns(Object.keys(idsMap), nonStatePatterns).map((idStr) => idsMap[idStr])
       : [];
 
     const idsStateFiltered = await mapSeries(statePatterns, async (statePattern) => {

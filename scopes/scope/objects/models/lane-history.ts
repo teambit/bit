@@ -1,4 +1,4 @@
-import { v4 } from 'uuid';
+import { newLaneHistoryKey } from './new-lane-history-key';
 import { getStringifyArgs } from '@teambit/legacy.utils';
 import { getBasicLog } from '@teambit/harmony.modules.get-basic-log';
 import { BitObject } from '../objects';
@@ -91,7 +91,7 @@ export class LaneHistory extends BitObject {
     // post-PR entry that legitimately had no hidden entries (drop current hidden) from a legacy
     // pre-PR entry that never recorded the field at all (leave current hidden alone).
     const updateDependents = (laneObj.updateDependents || []).map((id) => id.toString());
-    this.history[historyKey || v4()] = {
+    this.history[historyKey || newLaneHistoryKey()] = {
       log,
       components,
       ...(deleted.length && { deleted }),

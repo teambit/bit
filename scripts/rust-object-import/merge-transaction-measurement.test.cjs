@@ -89,3 +89,40 @@ test('whole command entries exclude fallback timing and alternate three retained
     ['log', 'json']
   );
 });
+
+test('lane measurement domain is fixed independently of diagnostic route subsets', () => {
+  const { qualificationScenarios } = require('./merge-transaction-qualification.cjs');
+  const scenarios = [
+    { name: 'component', target: 'component' },
+    { name: 'lane', target: 'lane' },
+    { name: 'main', target: 'main' },
+    { name: 'edge', target: 'lane', coldOnly: true },
+  ];
+  assert.deepEqual(
+    qualificationScenarios(scenarios, {}).map((row) => row.name),
+    ['component', 'lane', 'main']
+  );
+  assert.deepEqual(
+    qualificationScenarios(scenarios, { coldLane: true, scenarioDomain: 'lane' }).map((row) => row.name),
+    ['lane', 'main', 'edge']
+  );
+  assert.throws(() => qualificationScenarios(scenarios, { scenarioDomain: 'lane' }), /cold ownership/);
+  assert.throws(() => qualificationScenarios(scenarios, { scenarioDomain: 'chosen' }), /unknown/);
+});
+
+test('wrapper baseline enables native kernels while bypassing only the cold owner', () => {
+  const { commandBackend, validateWrapperBaseline } = require('./merge-transaction-qualification.cjs');
+  assert.deepEqual(commandBackend('node', 'native-wrapper', 'helper'), {
+    wrapper: true,
+    env: { BIT_RUST_CLIENT_VCS: 'on', BIT_RUST_OBJECT_IMPORT: 'helper', BIT_COLD_COMMAND_WRAPPER_BASELINE: '1' },
+  });
+  assert.equal(commandBackend('node', 'javascript', 'helper').env.BIT_RUST_OBJECT_IMPORT, 'off');
+  assert.equal(commandBackend('native', 'native-wrapper', 'helper').wrapper, false);
+  assert.equal(commandBackend('missing-helper', 'native-wrapper', 'absent').env.BIT_RUST_OBJECT_IMPORT, 'absent');
+  assert.equal(commandBackend('node', 'javascript', 'helper', {}).env.BIT_RUST_CLIENT_VCS, 'off');
+  assert.equal(commandBackend('node', 'javascript', 'helper', {}).env.BIT_RUST_OBJECT_IMPORT, 'off');
+  assert.equal(commandBackend('native', 'javascript', 'helper', {}).wrapper, true);
+  validateWrapperBaseline({ workspaceFrames: [{ kind: 'dependencyPolicy' }] });
+  for (const kind of ['commandPrepare', 'commandPolicyPrepare', 'commandDependencyDetect', 'commandDependencyComplete'])
+    assert.throws(() => validateWrapperBaseline({ workspaceFrames: [{ kind }] }), /bypass/);
+});

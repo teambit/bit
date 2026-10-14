@@ -46,9 +46,21 @@ export async function prepareRustCommandPolicy(
   dependencyStates: Map<string, any>,
   request: NativeClientRequest
 ): Promise<{ plan: any; dependencyCaches: FreshDependencyCache[] }> {
-  const original = prepared.context;
+  const original = {
+    ...prepared.context,
+    targets: [
+      ...prepared.context.targets,
+      ...(prepared.context.lane?.inactiveTargets ?? []),
+      ...(prepared.context.lane?.addedTargets ?? []),
+    ],
+  };
   const rows = targets(plan.policyPreparation.targets, original);
   const components = rows.map((row) => {
+    if (
+      prepared.context.lane?.addedTargets?.some((target: any) => target.identity === row.identity) &&
+      !row.fastForward
+    )
+      throw new Error('command new component policy requires incoming projection');
     const target = original.targets.find((entry) => entry.identity === row.identity);
     const policy = statusPolicy(original, target, row.fastForward ? row.otherVersion : undefined);
     const defaultNode = commandDefaultNodeReceipt(target, policy, row.files);

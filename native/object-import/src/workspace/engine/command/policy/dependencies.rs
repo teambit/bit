@@ -143,10 +143,7 @@ fn complete_rows(
     }
     let overlay =
         policy.overlay.as_ref().ok_or_else(|| invalid("command dependency overlay absent"))?;
-    let changed = policy.rows
-        .iter()
-        .map(|row| row.identity.clone())
-        .collect::<HashSet<_>>();
+    let changed = snapshot_identities(&policy.rows);
     for row in &policy.rows {
         let files = row.files
             .iter()
@@ -171,6 +168,13 @@ fn complete_rows(
         .collect::<HashSet<_>>();
     policy.dependencies_ready = true;
     Ok(Completion { caches, issue_targets, issues, visible })
+}
+
+fn snapshot_identities(rows: &[super::Row]) -> HashSet<String> {
+    rows.iter()
+        .filter(|row| !row.fast_forward)
+        .map(|row| row.identity.clone())
+        .collect()
 }
 
 fn complete_plan(
@@ -210,7 +214,7 @@ fn complete_plan(
         result["snapFailed"] = json!(true);
         let mut progress = record.repository.progress();
         progress["loads"] =
-            json!([projection::array(&record.context["targets"])?.len(), visible.len()]);
+            json!([super::workspace_count(&record.context, merge.policy.as_ref())?, visible.len()]);
         progress["snapFailed"] = json!(true);
         result["progress"] = progress;
     }

@@ -65,3 +65,38 @@ fn dependency_serialization_preserves_component_first_deduplication_and_canonica
     unsupported["entries"][0]["packageName"] = Value::Null;
     assert!(dependencies(&unsupported, &[]).is_err());
 }
+
+#[test]
+fn passive_deprecation_preserves_config_without_adding_a_default_callback_slot() {
+    let stored =
+        json!([{"name":"teambit.component/deprecation","config":{"deprecate":true},"data":{}}]);
+    let state = json!({"entries":[],"components":[[],[],[]],"packages":[{},{},{}]});
+    let output = extensions(&stored, &stored, &state, &defaults(), "@scope/component").unwrap();
+    assert_eq!(output[0], stored[0]);
+    assert_eq!(super::CORES.len(), 8);
+    assert_eq!(super::configuration_cores().len(), 10);
+    assert!(super::entries(&stored).is_ok());
+    let ranged = json!([{"name":"teambit.component/deprecation","config":{"range":"*"}}]);
+    assert!(super::entries(&ranged).is_err());
+    let mut invalid_defaults = defaults();
+    invalid_defaults.slot_data.push(
+        json!({"id":"teambit.component/deprecation","data":{},"undefinedKeys":[]}),
+    );
+    assert!(extensions(&stored, &stored, &state, &invalid_defaults, "@scope/component").is_err());
+}
+
+#[test]
+fn stored_builder_artifacts_are_passive_metadata_not_a_load_callback() {
+    let stored = json!([{"name":"teambit.pipelines/builder","config":{},"data":{"artifacts":[{"files":[{"relativePath":"dist/index.js","file":"a".repeat(40)}]}]}}]);
+    let state = json!({"entries":[],"components":[[],[],[]],"packages":[{},{},{}]});
+    let output = extensions(&stored, &stored, &state, &defaults(), "@scope/component").unwrap();
+    assert_eq!(output[0], stored[0]);
+    assert!(super::entries(&stored).is_ok());
+    let configured = json!([{"name":"teambit.pipelines/builder","config":{"pipeline":"custom"}}]);
+    assert!(super::entries(&configured).is_err());
+    let mut callbacks = defaults();
+    callbacks.slot_data.push(
+        json!({"id":"teambit.pipelines/builder","data":{},"undefinedKeys":[]}),
+    );
+    assert!(extensions(&stored, &stored, &state, &callbacks, "@scope/component").is_err());
+}

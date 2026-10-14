@@ -480,3 +480,47 @@ test('metadata validation uses the flag and method captured before asynchronous 
     await assert.rejects(fs.access(repository.objectPath(value.hash())), { code: 'ENOENT' });
   }
 });
+
+test('native Version serialization preserves canonical squashed and unrelated LaneId objects', async (t) => {
+  const repository = await fixture(t);
+  const { LaneId } = installed('@teambit/lane-id');
+  for (const [index, kind] of ['squashed', 'unrelated'].entries()) {
+    const value = version(String(index + 1));
+    const laneId = LaneId.from('incoming', 'qualification.destination');
+    value[kind] =
+      kind === 'squashed'
+        ? { previousParents: [new Ref('c'.repeat(40))], laneId }
+        : { head: new Ref('d'.repeat(40)), laneId };
+    const canonical = value.serialize();
+    await tx.withRustSnapshotTransaction(async () => {
+      const result = await store.persistPreparedRustSnapshotObjects(repository, [value], undefined, null);
+      assert.equal(result?.completed, 1, `${kind} must use the actual native writer`);
+    });
+    const actual = zlib.inflateSync(await fs.readFile(repository.objectPath(value.hash())));
+    assert.deepEqual(actual, canonical, `${kind} must match full canonical Version bytes`);
+    const body = JSON.parse(actual.subarray(actual.indexOf(0) + 1));
+    assert.deepEqual(body[kind].laneId, { scope: 'qualification.destination', name: 'incoming' });
+  }
+});
+
+test('native Version LaneId projection declines accessors without invoking them', () => {
+  const { LaneId } = installed('@teambit/lane-id');
+  const adapter = moduleAt('rust-snapshot-version');
+  for (const kind of ['squashed', 'unrelated']) {
+    const value = version();
+    const laneId = Object.create(LaneId.prototype);
+    let calls = 0;
+    Object.defineProperty(laneId, 'name', {
+      get() {
+        calls++;
+        throw new Error('unowned getter');
+      },
+    });
+    value[kind] =
+      kind === 'squashed'
+        ? { previousParents: [new Ref('c'.repeat(40))], laneId }
+        : { head: new Ref('d'.repeat(40)), laneId };
+    assert.equal(adapter.prepareRustSnapshotVersion(value), undefined);
+    assert.equal(calls, 0);
+  }
+});

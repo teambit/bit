@@ -1,5 +1,8 @@
+import { parseRustLaneCommand, type RustWorkspaceLaneOptions } from './rust-workspace-lane-options';
+
 export type RustWorkspaceCommandOptions = {
   operation: 'checkout' | 'merge';
+  lane?: RustWorkspaceLaneOptions;
   to?: string;
   pattern?: string;
   all?: boolean;
@@ -14,6 +17,7 @@ export type RustWorkspaceCommandOptions = {
 
 /** Only an unambiguous subset of the public CLI grammar reaches native planning. */
 export function parseRustWorkspaceCommand(args: string[]): RustWorkspaceCommandOptions | undefined {
+  if (args[0] === 'lane' && args[1] === 'merge') return parseRustLaneCommand(args.slice(2));
   const command = args[0];
   if (!['checkout', 'U', 'merge'].includes(command)) return undefined;
   const operation = command === 'merge' ? 'merge' : 'checkout';
@@ -62,8 +66,7 @@ export function parseRustWorkspaceCommand(args: string[]): RustWorkspaceCommandO
     return undefined;
   if (flags['--all'] && (to === 'head' || to === 'latest')) return undefined;
   const pattern = positionals[0];
-  if (pattern && !(operation === 'merge' && pattern === '**') && !/^[a-z0-9_./-]+$/.test(pattern))
-    return undefined;
+  if (pattern && !(operation === 'merge' && pattern === '**') && !/^[a-z0-9_./-]+$/.test(pattern)) return undefined;
   return {
     operation,
     to,

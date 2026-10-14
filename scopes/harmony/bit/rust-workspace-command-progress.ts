@@ -1,6 +1,6 @@
 import { loader } from '@teambit/legacy.loader';
 
-type ImportProgress = { reason: string | null; ids: string[]; components: number; objects: number };
+type ImportProgress = { reason: string | null; ids: string[]; components: number; objects: number; objectRequest?: boolean };
 
 /** Validate the entire receipt before any visible command or filesystem effects. */
 export function commandProgress(value: any, operation: 'checkout' | 'merge') {
@@ -21,13 +21,8 @@ export function commandProgress(value: any, operation: 'checkout' | 'merge') {
     rows.length > 16384 ||
     rows.some(
       (row) =>
-        ![
-          null,
-          'of their latest on main',
-          'for getting missing versions and dependencies',
-          'for getting the common-snap between main and main',
-          'for making sure the new components are really new and are not out-of-sync',
-        ].includes(row.reason) ||
+        !importReason(row.reason) ||
+        (row.objectRequest !== undefined && typeof row.objectRequest !== 'boolean') ||
         !Array.isArray(row.ids) ||
         row.ids.length > 16384 ||
         row.ids.some((id) => typeof id !== 'string' || id.length > 4096) ||
@@ -74,7 +69,9 @@ export function commandProgress(value: any, operation: 'checkout' | 'merge') {
 function renderImport(row: ImportProgress) {
   if (!row.ids.length) return;
   const count = new Set(row.ids.map((id) => id.replace(/@[^@]+$/, ''))).size;
-  const ids = count === row.ids.length ? `${count} components` : `${count} components, ${row.ids.length} versions`;
+  const ids = row.objectRequest
+    ? `${row.ids.length} objects`
+    : count === row.ids.length ? `${count} components` : `${count} components, ${row.ids.length} versions`;
   const reason = row.reason ? ` ${row.reason}` : '';
   const message = `importing ${ids}${reason}`;
   loader.start(message);
@@ -83,4 +80,19 @@ function renderImport(row: ImportProgress) {
       loader.start(`${message}. downloaded ${downloaded} objects.`);
   const imported = row.components ? `${row.components} components` : `${row.objects} objects`;
   loader.start(`successfully imported ${imported}${reason}`);
+}
+
+function importReason(reason: unknown): boolean {
+  if ([
+    null,
+    'of their latest on main',
+    'for getting missing versions and dependencies',
+    'for making sure the new components are really new and are not out-of-sync',
+    'import all history of given patterns components to check whether they have dependencies on the lane',
+  ].includes(reason as string | null)) return true;
+  if (typeof reason !== 'string' || reason.length > 4096) return false;
+  return /^for fetching lane [^/\s]+\/[^/\s]+$/.test(reason) ||
+    /^for getting the common-snap between [^\s]+ and [^\s]+$/.test(reason) ||
+    /^for filling the gap between the common-snap and the head of [^/\s]+\/[^/\s]+$/.test(reason) ||
+    /^to get all artifacts for \d+ components from lane [^/\s]+\/[^/\s]+$/.test(reason);
 }

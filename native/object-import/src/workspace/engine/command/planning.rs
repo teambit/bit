@@ -210,6 +210,7 @@ fn prepare_one(
 pub(super) fn validate_sources(plan: &Planned) -> io::Result<()> {
     let files = plan.captured
         .iter()
+        .filter(|captured| !captured.hidden || !captured.target.directory.is_empty())
         .flat_map(|captured| {
             captured.files
                 .as_array()

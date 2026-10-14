@@ -57,6 +57,32 @@ impl State {
         self.values.insert(identity.to_owned(), value);
         Ok(())
     }
+    pub(super) fn rebase(&mut self, versions: &[(String, String, Value)]) -> io::Result<()> {
+        for (identity, hash, version) in versions {
+            let Some(history) = self.values.get_mut(identity) else {
+                continue;
+            };
+            let rows = history["versions"]
+                .as_array_mut()
+                .ok_or_else(|| invalid("command history versions"))?;
+            if let Some(row) = rows
+                .iter_mut()
+                .find(|row| row["hash"] == *hash)
+            {
+                row["parents"] = version["parents"].clone();
+                row["squashed"] = version["squashed"]["previousParents"].clone();
+                if version["unrelated"].is_null() {
+                    row.as_object_mut()
+                        .unwrap()
+                        .remove("unrelated");
+                } else {
+                    row["unrelated"] = version["unrelated"]["head"].clone();
+                }
+                self.changed.insert(identity.clone());
+            }
+        }
+        Ok(())
+    }
     pub(super) fn commit(&self, root: &Path) -> io::Result<()> {
         let plans = self.changed
             .iter()

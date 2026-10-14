@@ -13,7 +13,7 @@ pub(super) fn merge(
     let input = json!({"compIdStr":identity,"current":projection::entries(current)?,
         "base":projection::entries(&versions[0]["extensions"])?,
         "other":projection::entries(&versions[2]["extensions"])?,
-        "coreNames":projection::CORES,"workspaceIds":workspace,"otherLaneIds":[],
+        "coreNames":projection::configuration_cores(),"workspaceIds":workspace,"otherLaneIds":[],
         "strategy":strategy,"currentLabel":"current","otherLabel":"incoming",
         "semver":semver,"shouldMergeAspectsData":false});
     let result = crate::config_merge::apply("configComponent", &input)?;

@@ -1,12 +1,16 @@
 //! Apply the same import decisions used by the canonical mutable-object writer.
+#[cfg(test)]
+mod tests;
 use super::invalid;
 use serde_json::{Value, json};
 use std::io;
 
 pub(super) fn model(existing: Option<&Value>, incoming: &Value) -> io::Result<Value> {
-    validate_model(incoming)?;
-    let Some(existing) = existing else { return Ok(incoming.clone()) };
-    validate_model(existing)?;
+    let incoming = parsed_model(incoming)?;
+    let incoming = &incoming;
+    let Some(existing) = existing else { return canonical(incoming) };
+    let existing = parsed_model(existing)?;
+    let existing = &existing;
     if existing["name"] != incoming["name"] || existing["scope"] != incoming["scope"] {
         return Err(invalid("import model identity mismatch"));
     }
@@ -149,6 +153,20 @@ fn canonical(value: &Value) -> io::Result<Value> {
     }
     Ok(result)
 }
+fn parsed_model(value: &Value) -> io::Result<Value> {
+    let mut result = value.clone();
+    if (result["schema"].is_null() || result["schema"] == "")
+        && result["head"]
+            .as_str()
+            .is_some_and(|head| !head.is_empty())
+    {
+        crate::merge_history::hash(result["head"].as_str().unwrap())?;
+        result["schema"] = json!("1.0.0");
+    }
+    validate_model(&result)?;
+    Ok(result)
+}
+
 fn validate_model(value: &Value) -> io::Result<()> {
     if value["name"].as_str().is_none()
         || value["scope"].as_str().is_none()

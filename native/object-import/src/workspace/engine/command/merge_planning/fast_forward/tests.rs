@@ -73,6 +73,8 @@ fn gap_import_refreshes_fast_forward_metadata_without_retargeting_cached_head() 
         model: json!({"head":old}),
         remote: cached.clone(),
         current_hash: old.clone(),
+        current_head: old.clone(),
+        distance: serde_json::Value::Null,
         versions: [serde_json::Value::Null, serde_json::Value::Null, serde_json::Value::Null],
         base: old.clone(),
         action: Action::Target,

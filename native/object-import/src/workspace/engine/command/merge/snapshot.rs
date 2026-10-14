@@ -13,6 +13,7 @@ pub(in crate::workspace::engine::command) struct Input<'a> {
     pub model: &'a Value,
     pub material: &'a Prepared,
     pub remote: &'a str,
+    pub lane: Option<&'a Value>,
 }
 pub(in crate::workspace::engine::command) struct Snapshot {
     state: crate::snapshot_transaction::State,
@@ -42,6 +43,22 @@ pub(in crate::workspace::engine::command) fn prepare_models(
         .into_iter()
         .map(|model| metadata::object("Component", None, model))
         .collect::<io::Result<Vec<_>>>()?;
+    prepare_objects(staging, objects)
+}
+
+pub(in crate::workspace::engine::command) fn object(
+    kind: &str,
+    hash: Option<&str>,
+    fields: Value,
+) -> io::Result<Value> {
+    metadata::object(kind, hash, fields)
+}
+
+pub(in crate::workspace::engine::command) fn prepare_objects(
+    staging: &Path,
+    objects: Vec<Value>,
+) -> io::Result<Snapshot> {
+    let objects = Value::Array(objects);
     let mut state = crate::snapshot_transaction::State::default();
     let result = crate::snapshot_transaction::apply(
         "snapshotSerialize",
@@ -71,7 +88,7 @@ pub(in crate::workspace::engine::command) fn prepare(
         let mut version = metadata::version(input, receipt, message)?;
         sources::prepare(root, input, hash, &mut version, &mut objects, &mut proofs, &budget)?;
         objects.push(metadata::object("Version", Some(hash), version.clone())?);
-        objects.push(metadata::object("Component", None, metadata::model(input.model, hash)?)?);
+        objects.push(metadata::object("Component", None, metadata::snapshot_model(input, hash)?)?);
         versions.push(json!({"identity":input.identity,"hash":hash,"version":version}));
     }
     let mut seen = HashSet::new();
@@ -118,7 +135,7 @@ pub(in crate::workspace::engine::command) fn preflight(
     for input in inputs {
         metadata::independent(input, inputs)?;
         metadata::no_application_files(&input.material.files)?;
-        let hash = input.model["head"].as_str().ok_or_else(|| invalid("snap preflight head"))?;
+        let hash = preflight_head(input)?;
         crate::merge_history::hash(hash)?;
         let mut version = input.material.version.clone();
         let start = objects.len();
@@ -129,22 +146,38 @@ pub(in crate::workspace::engine::command) fn preflight(
             .map(|value| value.len() / 2)
             .sum::<usize>();
         bytes += serialized_size("Version", Some(hash), version.clone())? + 4096;
-        bytes += serialized_size("Component", None, metadata::model(input.model, hash)?)?;
+        bytes += serialized_size("Component", None, metadata::snapshot_model(input, hash)?)?;
         versions.push(version);
-        bytes += input.material.files
-            .iter()
-            .map(|file| file["source"]["bytes"].as_u64().unwrap_or(u64::MAX))
-            .try_fold(0_usize, |bytes, value| {
-                bytes
-                    .checked_add(usize::try_from(value).map_err(io::Error::other)?)
-                    .ok_or_else(|| invalid("snap preflight size"))
-            })?;
+        bytes += source_size(input)?;
         if bytes > 32 * 1024 * 1024 || objects.len() + inputs.len() * 2 > 4096 {
             return Err(invalid("snap preflight budget"));
         }
     }
     proof::verify(&proofs)?;
     Ok(versions)
+}
+
+fn preflight_head<'a>(input: &'a Input<'_>) -> io::Result<&'a str> {
+    input.lane
+        .and_then(|lane| lane["targets"].as_array())
+        .and_then(|rows| {
+            rows.iter()
+                .find(|row| row["identity"] == input.identity)
+        })
+        .map_or(&input.model["head"], |target| &target["currentHead"])
+        .as_str()
+        .ok_or_else(|| invalid("snap preflight head"))
+}
+
+fn source_size(input: &Input<'_>) -> io::Result<usize> {
+    input.material.files
+        .iter()
+        .map(|file| file["source"]["bytes"].as_u64().unwrap_or(u64::MAX))
+        .try_fold(0_usize, |bytes, value| {
+            bytes
+                .checked_add(usize::try_from(value).map_err(io::Error::other)?)
+                .ok_or_else(|| invalid("snap preflight size"))
+        })
 }
 
 fn serialized_size(kind: &str, hash: Option<&str>, value: Value) -> io::Result<usize> {

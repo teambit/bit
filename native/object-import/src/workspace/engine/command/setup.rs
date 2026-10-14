@@ -1,3 +1,5 @@
+#[cfg(test)]
+mod tests;
 use super::{
     Record, State, history, input::Prepare, invalid, merge_planning, prepare, proof, repository,
 };
@@ -24,6 +26,7 @@ pub(super) fn run(
     }
     let (context, imported) = prepare::context(&request, pool)?;
     component_controls(&request, &context, &mut proofs)?;
+    super::lane_context::validate_additions(&request.root, &context, &mut proofs)?;
     let targets = prepare::selected(&request, &context)?;
     proof::verify(&proofs)?;
     state.sequence =
@@ -67,7 +70,11 @@ fn validate_license(scope: &str, repository: &mut repository::Repository) -> io:
 fn validate_licenses(context: &Value, repository: &mut repository::Repository) -> io::Result<()> {
     let mut scopes = std::collections::HashSet::new();
     scopes.insert(context["scope"]["name"].as_str().ok_or_else(|| invalid("command scope name"))?);
-    for target in context["targets"].as_array().ok_or_else(|| invalid("command target scopes"))? {
+    let visible = context["targets"].as_array().ok_or_else(|| invalid("command target scopes"))?;
+    let lane = context["lane"]["targets"]
+        .as_array()
+        .map_or(&[][..], Vec::as_slice);
+    for target in visible.iter().chain(lane) {
         let identity =
             target["identity"].as_str().ok_or_else(|| invalid("command target identity"))?;
         scopes.insert(identity.split_once('/').ok_or_else(|| invalid("command scoped target"))?.0);
@@ -83,7 +90,16 @@ fn component_controls(
     context: &Value,
     proofs: &mut Vec<proof::Proof>,
 ) -> io::Result<()> {
-    for target in context["targets"].as_array().ok_or_else(|| invalid("command control targets"))? {
+    let active = context["targets"].as_array().ok_or_else(|| invalid("command control targets"))?;
+    let additional = ["inactiveTargets", "addedTargets"]
+        .into_iter()
+        .flat_map(|field| {
+            context["lane"][field]
+                .as_array()
+                .into_iter()
+                .flatten()
+        });
+    for target in active.iter().chain(additional) {
         let directory =
             target["directory"].as_str().ok_or_else(|| invalid("command control directory"))?;
         for (name, key) in [("component.json", "config"), ("package.json", "packageJson")] {

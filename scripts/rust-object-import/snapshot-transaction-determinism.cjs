@@ -10,7 +10,7 @@ const originalLoad = Module._load;
 let ordinal = 0;
 Module._load = function (request, parent, ...args) {
   const value = originalLoad.call(this, request, parent, ...args);
-  if (request !== 'uuid' || !/[\\/]((version-maker)|(new-snap-hash)|(version)|(lane)|(lane-history))\.js$/.test(parent?.filename || ''))
+  if (request !== 'uuid' || !/[\\/]((version-maker)|(new-snap-hash)|(version)|(lane)|(lane-history)|(new-lane-history-key))\.js$/.test(parent?.filename || ''))
     return value;
   return {
     ...value,

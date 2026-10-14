@@ -1,9 +1,12 @@
 mod fast_forward;
+mod lane_filter;
 mod lifecycle;
+mod loading;
+mod pending;
 mod policy_rows;
 mod preflight;
 use super::{
-    super::{dependency_graph::proof, invalid, status_models::comparison},
+    super::{dependency_graph::proof, invalid},
     Record, capture, history,
     input::{Operation, Prepare},
     merge, planning,
@@ -16,12 +19,16 @@ use std::{io, path::Path};
 
 pub(super) struct Prepared {
     pub(super) policy: Option<super::policy::Prepared>,
+    publication: Publication,
     state: merge::State,
     pub(super) materials: Vec<merge::Prepared>,
     unmerged: Value,
     proofs: Vec<proof::Proof>,
     pending: Vec<Pending>,
     finalized: Option<Finalized>,
+}
+struct Publication {
+    lane: Option<super::lane_publication::Prepared>,
     fast_forward: Option<merge::snapshot::Snapshot>,
 }
 struct Pending {
@@ -42,7 +49,10 @@ pub(super) fn select_targets(
     repository: &mut Repository,
     history: &mut history::State,
 ) -> io::Result<Vec<Value>> {
-    if request.operation != Operation::Merge || request.options.pattern.is_some() {
+    if request.operation != Operation::Merge
+        || request.options.pattern.is_some()
+        || request.options.lane.is_some()
+    {
         return Ok(targets);
     }
     let mut selected = Vec::new();
@@ -72,11 +82,13 @@ pub(super) fn select_targets(
 pub(super) fn plan(
     record: &mut Record,
     current: Vec<Value>,
+    lane_pattern: Option<&[String]>,
     snapshots: &mut snapshots::State,
     pool: &rayon::ThreadPool,
 ) -> io::Result<planning::Planned> {
     planning::validate_current(record, &current)?;
-    let captured = capture::all(&record.request.root, current, snapshots, pool)?;
+    let mut captured = capture::all(&record.request.root, current, snapshots, pool)?;
+    capture::lane_visibility(&mut captured, &record.context)?;
     let mut planned = planning::Planned {
         captured,
         transitions: checkout_transition::State::default(),
@@ -86,12 +98,17 @@ pub(super) fn plan(
         result: json!({"components":[],"failedComponents":[],"removedComponents":[]}),
         merge: None,
     };
+    lane_filter::capture_hidden(record, &mut planned, snapshots)?;
+    lane_filter::capture_additions(record, &mut planned)?;
+    lane_filter::validate_captures(record, &planned)?;
     let mut state = merge::State::new(planned.captured.len())?;
     let mut selected = Vec::new();
     for index in 0..planned.captured.len() {
         selected.push(select(record, &mut planned, &mut state, index)?);
     }
-    prepare_materials(record, &mut planned, state, &mut selected, snapshots)?;
+    import_gap(record, &mut selected)?;
+    lane_filter::apply(record, &mut planned, &mut selected, lane_pattern)?;
+    prepare_materials(record, &mut planned, state, &selected, snapshots)?;
     Ok(planned)
 }
 
@@ -99,9 +116,11 @@ struct Selected {
     model: Value,
     remote: String,
     current_hash: String,
+    current_head: String,
     versions: [Value; 3],
     base: String,
     action: Action,
+    distance: Value,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -118,30 +137,30 @@ fn select(
     index: usize,
 ) -> io::Result<Selected> {
     let captured = &planned.captured[index];
-    let mut selected = load_selected(record, captured)?;
+    let mut selected = loading::load_selected(record, captured)?;
     let distance = planned.history.distance(
         &record.request.root,
         &captured.target.identity,
         &selected.model,
-        [selected.model["head"].as_str(), Some(&selected.remote)],
+        [
+            (!selected.current_head.is_empty()).then_some(selected.current_head.as_str()),
+            Some(&selected.remote),
+        ],
         &mut record.repository,
     )?;
-    let modified = comparison::compare(
-        &captured.target,
-        &captured.metadata,
-        &selected.versions[1],
-    )?["modified"]
-        == true;
-    let mut target = record.targets[index].clone();
+    selected.distance = distance.clone();
+    let mut target = record.targets.iter().find(|target| target["identity"] == captured.target.identity).cloned().unwrap_or_else(|| json!({"identity":captured.target.identity,"version":captured.target.version,"hidden":captured.hidden}));
     target["version"] = json!(selected.remote);
+    target["bitmapPresent"] = json!(!captured.added && !captured.target.directory.is_empty());
     let outcome = state.select(&merge::Input {
         index,
         target: &target,
         model: Some(&selected.model),
         incoming: &selected.versions[2],
         current: &selected.versions[1],
-        modified,
+        options: loading::options(record, captured, &selected)?,
         distance: &distance,
+        lane: record.context.get("lane"),
     })?;
     apply_selection(
         &mut selected,
@@ -150,29 +169,8 @@ fn select(
         &captured.target.identity,
         &mut planned.result,
     )?;
+    selected.distance["importGap"] = json!(selected.action != Action::Unchanged);
     Ok(selected)
-}
-fn load_selected(record: &mut Record, captured: &capture::Captured) -> io::Result<Selected> {
-    let identity = &captured.target.identity;
-    let model =
-        model(&record.context, identity)?.ok_or_else(|| invalid("command merge missing model"))?;
-    if record.repository.read(&super::super::hash(identity.as_bytes()), "Component")? != model {
-        return Err(invalid("command merge model changed"));
-    }
-    let remote = record.repository
-        .remote_head(identity)?
-        .ok_or_else(|| invalid("command merge missing remote head"))?;
-    let current_hash = selection::versions::reference(&model, &captured.target.version)?;
-    let current = record.repository.read(&current_hash, "Version")?;
-    let incoming = record.repository.read(&remote, "Version")?;
-    Ok(Selected {
-        model,
-        remote,
-        current_hash,
-        versions: [Value::Null, current, incoming],
-        base: String::new(),
-        action: Action::Unchanged,
-    })
 }
 fn apply_selection(
     selected: &mut Selected,
@@ -193,10 +191,11 @@ fn apply_selection(
         Some("target") => Action::Target,
         _ => return Err(invalid("command merge requires canonical transition")),
     };
-    distance["common"]
-        .as_str()
-        .ok_or_else(|| invalid("command merge common version"))?
-        .clone_into(&mut selected.base);
+    if let Some(common) = distance["common"].as_str() {
+        selected.base = common.into();
+    } else if selected.action == Action::Merge {
+        return Err(invalid("command merge common version"));
+    }
     Ok(())
 }
 
@@ -213,6 +212,8 @@ fn body<'a>(
         index,
         current,
         options: &record.request.options,
+        overlay: record.repository.overlay(),
+        lane: record.context.get("lane"),
         sides: [
             merge::VersionSide { hash: &selected.base, value: &selected.versions[0] },
             merge::VersionSide { hash: &selected.current_hash, value: &selected.versions[1] },
@@ -224,10 +225,9 @@ fn prepare_materials(
     record: &mut Record,
     planned: &mut planning::Planned,
     mut state: merge::State,
-    selected: &mut [Selected],
+    selected: &[Selected],
     snapshots: &snapshots::State,
 ) -> io::Result<()> {
-    import_gap(record, selected)?;
     let directory = scratch::Directory::create()?;
     let requests = selected
         .iter()
@@ -237,17 +237,8 @@ fn prepare_materials(
             body(record, selected, &planned.captured[index], &directory.0, index).request()
         })
         .collect::<io::Result<Vec<_>>>()?;
-    let plans = state.prepare_bodies(requests)?;
-    let mut prepared = Prepared {
-        policy: Some(super::policy::Prepared::new()),
-        state,
-        materials: Vec::new(),
-        unmerged: json!([]),
-        proofs: Vec::new(),
-        pending: Vec::new(),
-        finalized: None,
-        fast_forward: None,
-    };
+    let plans = state.prepare_bodies(requests, snapshots, record.repository.overlay())?;
+    let mut prepared = empty_plan(record, state)?;
     for ((index, selected), plan) in selected
         .iter()
         .enumerate()
@@ -256,9 +247,13 @@ fn prepare_materials(
     {
         add_material(record, planned, &mut prepared, selected, index, &directory.0, &plan)?;
     }
+    prepare_lane_targets(record, &mut prepared, selected)?;
     fast_forward::prepare(record, planned, &mut prepared, selected, snapshots)?;
-    policy_rows::fast_forward(&mut prepared, planned)?;
-    if prepared.materials.is_empty() {
+    policy_rows::fast_forward(&mut prepared, planned, &record.context)?;
+    if prepared.policy.as_ref().is_some_and(|policy| policy.rows.is_empty()) {
+        prepared.policy = None;
+    }
+    if prepared.materials.is_empty() || prepared.policy.is_none() {
         prepared.policy = None;
         preflight::validate(record, &mut prepared, &planned.materials, &planned.captured)?;
     }
@@ -266,21 +261,55 @@ fn prepare_materials(
     planned.merge = Some(prepared);
     Ok(())
 }
+fn empty_plan(record: &mut Record, state: merge::State) -> io::Result<Prepared> {
+    Ok(Prepared {
+        publication: Publication {
+            lane: super::lane_publication::Prepared::prepare(record)?,
+            fast_forward: None,
+        },
+        policy: Some(super::policy::Prepared::new()),
+        state,
+        materials: Vec::new(),
+        unmerged: json!([]),
+        proofs: Vec::new(),
+        pending: Vec::new(),
+        finalized: None,
+    })
+}
+
+fn prepare_lane_targets(
+    record: &mut Record,
+    prepared: &mut Prepared,
+    selected: &[Selected],
+) -> io::Result<()> {
+    if let Some(lane) = &mut prepared.publication.lane {
+        for selected in selected
+            .iter()
+            .filter(|selected| selected.action == Action::Target)
+        {
+            lane.plan_squash(
+                &selected.remote,
+                &selected.versions[2],
+                &selected.model,
+                &selected.distance,
+                record.request.options.message.as_deref(),
+                &mut record.repository,
+            )?;
+        }
+    }
+    if record.request.options.lane.is_some() {
+        record.repository.prepare_lane_artifacts(
+            &selected
+                .iter()
+                .map(|row| row.remote.clone())
+                .collect::<Vec<_>>(),
+        )?;
+    }
+    Ok(())
+}
+
 fn import_gap(record: &mut Record, selected: &mut [Selected]) -> io::Result<()> {
-    let gap = selected
-        .iter()
-        .filter(|selected| selected.action != Action::Unchanged)
-        .map(|selected| {
-            Ok(crate::command_import::Target {
-                scope: selected.model["scope"].as_str().map(str::to_owned),
-                name: selected.model["name"]
-                    .as_str()
-                    .ok_or_else(|| invalid("command merge name"))?
-                    .to_owned(),
-                version: selected.base.clone(),
-            })
-        })
-        .collect::<io::Result<Vec<_>>>()?;
+    let gap = lane_filter::gap_targets(record.context.get("lane"), selected)?;
     record.repository.prepare_merge_gap(&gap)?;
     for selected in selected
         .iter_mut()
@@ -293,7 +322,9 @@ fn import_gap(record: &mut Record, selected: &mut [Selected]) -> io::Result<()> 
         );
         let model = record.repository.read(&super::super::hash(identity.as_bytes()), "Component")?;
         refresh_model(selected, model)?;
-        selected.versions[0] = record.repository.read(&selected.base, "Version")?;
+        if !selected.base.is_empty() {
+            selected.versions[0] = record.repository.read(&selected.base, "Version")?;
+        }
     }
     Ok(())
 }
@@ -318,9 +349,13 @@ fn add_material(
 ) -> io::Result<()> {
     let current = &planned.captured[index];
 
-    let material =
+    let mut material =
         prepared.state.prepare_result(&body(record, selected, current, directory, index), plan)?;
-    policy_rows::divergent(prepared, selected, current, &material)?;
+    if current.hidden {
+        lane_filter::prepare_hidden_metadata(current, &selected.versions, &mut material.version)?;
+    } else {
+        policy_rows::divergent(prepared, selected, current, &material)?;
+    }
     retain_snapshot(record, prepared, selected, current, &material)?;
     planned.result["components"]
         .as_array_mut()
@@ -329,21 +364,15 @@ fn add_material(
     if material.has_conflicts() {
         planned.result["leftUnresolvedConflicts"] = json!(true);
     }
-    let mut unmerged = json!({"id":{"name":selected.model["name"],"scope":selected.model["scope"]},"head":selected.remote,
-        "laneId":{"scope":selected.model["scope"],"name":"main"},"shouldSquash":false,"mergedConfig":{}});
-    if material.no_write() {
-        unmerged
-            .as_object_mut()
-            .unwrap()
-            .remove("mergedConfig");
-    }
-    if material.has_conflicts() {
-        unmerged["unmergedPaths"] = json!(material.conflict_paths);
-    }
     prepared.unmerged
         .as_array_mut()
         .unwrap()
-        .push(unmerged);
+        .push(pending::entry(
+            &selected.model,
+            &selected.remote,
+            record.context.get("lane"),
+            &material,
+        ));
     prepared.materials.push(material);
     Ok(())
 }
@@ -354,7 +383,10 @@ fn retain_snapshot(
     current: &capture::Captured,
     material: &merge::Prepared,
 ) -> io::Result<()> {
-    if record.request.options.no_snap || material.has_conflicts() {
+    if record.request.options.no_snap
+        || record.request.options.lane.as_ref().is_some_and(|lane| lane.no_auto_snap)
+        || material.has_conflicts()
+    {
         return Ok(());
     }
     prepared.pending.push(Pending {

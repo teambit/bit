@@ -65,6 +65,7 @@ enum Request {
     CommandDependencyComplete(command::policy::dependencies::Complete),
     CommandApply(command::Apply),
     CommandFinalize(command::Finalize),
+    CommandLaneFinalize(command::LaneFinalize),
     StatusContext(status_context::Request),
     StatusResult(status_result::Request),
     StatusModels(status_models::Request),
@@ -183,6 +184,9 @@ fn owned(
         Request::CommandDependencyComplete(input) => pool.install(|| {
             command::policy::dependencies::complete(input, &mut snapshots.command, pool)
         }),
+        Request::CommandLaneFinalize(input) => {
+            pool.install(|| command::finalize_lane(&input, &mut snapshots.command))
+        }
         Request::CommandFinalize(input) => {
             pool.install(|| command::finalize(&input, &mut snapshots.command))
         }

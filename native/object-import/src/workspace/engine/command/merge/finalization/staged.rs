@@ -16,7 +16,12 @@ pub(super) fn prepare(root: &Path, inputs: &[Input<'_>], output: &mut Prepared) 
     };
     hashes.extend(inputs.iter().map(|input| input.hash.to_owned()));
     output.writes.push((staged, hashes.join("\n").into_bytes()));
-    config(root, inputs, output)?;
+    if inputs
+        .iter()
+        .any(|input| !input.directory.is_empty())
+    {
+        config(root, inputs, output)?;
+    }
     let index = scope.join("index.json");
     let bytes = proof::read(&index, &mut output.proofs)?
         .ok_or_else(|| invalid("merge scope index missing"))?;
@@ -24,15 +29,29 @@ pub(super) fn prepare(root: &Path, inputs: &[Input<'_>], output: &mut Prepared) 
     Ok(())
 }
 fn config(root: &Path, inputs: &[Input<'_>], output: &mut Prepared) -> io::Result<()> {
-    let path = root.join(".bit/staged-config/main.json");
+    let bitmap = proof::read(&root.join(".bitmap"), &mut output.proofs)?
+        .ok_or_else(|| invalid("merge bitmap missing"))?;
+    let bitmap = crate::recovery::jsonc::parse(&bitmap)?;
+    let identity = if let Some(lane) = bitmap.get("_bit_lane") {
+        let scope =
+            lane["id"]["scope"].as_str().ok_or_else(|| invalid("merge staged lane scope"))?;
+        let name = lane["id"]["name"].as_str().ok_or_else(|| invalid("merge staged lane name"))?;
+        format!("{scope}/{name}")
+    } else {
+        "main".to_owned()
+    };
+    crate::checkout::plan::relative_path(&identity)?;
+    let path = root
+        .join(".bit/staged-config")
+        .join(format!("{identity}.json"));
     let mut rows = proof::read(&path, &mut output.proofs)?
         .map(|bytes| json(&bytes))
         .transpose()?
         .unwrap_or_else(|| value!([]));
-    let bitmap = proof::read(&root.join(".bitmap"), &mut output.proofs)?
-        .ok_or_else(|| invalid("merge bitmap missing"))?;
-    let bitmap = crate::recovery::jsonc::parse(&bitmap)?;
-    for input in inputs {
+    for input in inputs
+        .iter()
+        .filter(|input| !input.directory.is_empty())
+    {
         update(&mut rows, &bitmap, input)?;
     }
     output.writes.push((path, pretty(&rows, false)?));

@@ -14,6 +14,14 @@ pub(super) fn context(
     pool: &rayon::ThreadPool,
 ) -> io::Result<(Value, Option<command_import::PreparedImport>)> {
     validate(request)?;
+    if request.options.lane.is_some() {
+        if request.operation != Operation::Merge {
+            return Err(invalid("lane checkout unsupported"));
+        }
+        let (mut context, imported) = super::lane_context::prepare(request, pool)?;
+        extend_models(request, pool, &mut context, imported.as_ref())?;
+        return Ok((context, imported));
+    }
     let input = status_context::Request {
         root: request.root.clone(),
         home: request.home.clone(),
@@ -74,11 +82,18 @@ fn extend_models(
     imported: Option<&command_import::PreparedImport>,
 ) -> io::Result<()> {
     let targets = context["targets"].as_array().ok_or_else(|| invalid("command targets"))?;
+    let mut model_targets = targets
+        .iter()
+        .map(|target| {
+            json!({
+                "identity":target["identity"],"version":target["version"],
+            })
+        })
+        .collect::<Vec<_>>();
+    extend_lane_targets(context, &mut model_targets);
     let models = serde_json::from_value(json!({
         "root":request.root,"history":false,"includeHeads":true,
-        "targets":targets.iter().map(|target| json!({
-            "identity":target["identity"],"version":target["version"],
-        })).collect::<Vec<_>>(),
+        "targets":model_targets,
     }))
     .map_err(io::Error::other)?;
     let (_, models) = match imported {
@@ -148,6 +163,10 @@ fn import_targets(request: &Prepare) -> io::Result<Vec<command_import::Target>> 
 pub(super) fn selected(request: &Prepare, context: &Value) -> io::Result<Vec<Value>> {
     let targets = context["targets"].as_array().ok_or_else(|| invalid("command targets"))?;
     validate_roots(targets)?;
+    if request.options.lane.is_some() {
+        return lane_selected(context, targets);
+    }
+
     if let Some(pattern) = &request.options.pattern {
         if request.options.all {
             return Err(invalid("command ambiguous selection"));
@@ -166,6 +185,24 @@ pub(super) fn selected(request: &Prepare, context: &Value) -> io::Result<Vec<Val
         return Err(invalid("command checkout requires selection"));
     }
     Ok(targets.clone())
+}
+
+fn lane_selected(context: &Value, targets: &[Value]) -> io::Result<Vec<Value>> {
+    let selected =
+        context["lane"]["targets"].as_array().ok_or_else(|| invalid("command lane selection"))?;
+    let mut pool = targets.to_vec();
+    if let Some(inactive) = context["lane"]["inactiveTargets"].as_array() {
+        pool.extend(inactive.iter().cloned());
+    }
+    validate_roots(&pool)?;
+    Ok(pool
+        .into_iter()
+        .filter(|target| {
+            selected
+                .iter()
+                .any(|row| row["identity"] == target["identity"])
+        })
+        .collect())
 }
 
 fn validate_roots(targets: &[Value]) -> io::Result<()> {
@@ -218,4 +255,25 @@ fn matches_identity(target: &Value, pattern: &str) -> bool {
                     .split_once('/')
                     .is_some_and(|(_, name)| name == pattern)
         })
+}
+
+fn extend_lane_targets(context: &Value, model_targets: &mut Vec<Value>) {
+    if let Some(rows) = context["lane"]["inactiveTargets"].as_array() {
+        model_targets.extend(
+            rows.iter()
+                .map(|row| json!({"identity":row["identity"],"version":row["version"]})),
+        );
+    }
+    let Some(rows) = context["lane"]["targets"].as_array() else { return };
+    for row in rows {
+        for version in ["head", "currentHead", "mainHead"]
+            .into_iter()
+            .filter_map(|field| row[field].as_str())
+        {
+            let target = json!({"identity":row["identity"],"version":version});
+            if !model_targets.contains(&target) {
+                model_targets.push(target);
+            }
+        }
+    }
 }

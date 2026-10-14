@@ -1,8 +1,9 @@
 //! A retained, read-only checkout refresh plan. The command owner decides when
 //! an eligible command may publish it; planning never writes to either scope.
+pub(crate) mod lane;
 #[cfg(test)]
 pub(crate) mod tests;
-pub(crate) use prepare::{prepare, prepare_cached};
+pub(crate) use prepare::{prepare, prepare_cached, prepare_lane};
 mod capture;
 mod history;
 mod merge;
@@ -24,6 +25,7 @@ pub(crate) struct Target {
 pub(crate) struct Overlay {
     objects: HashMap<String, Object>,
     pub(crate) remote_refs: HashMap<String, Value>,
+    lane_refs: HashMap<(String, String), Value>,
 }
 impl Overlay {
     pub(crate) fn read(&self, hash: &str, kind: &str) -> io::Result<Option<&Value>> {
@@ -39,6 +41,16 @@ impl Overlay {
     }
     pub(crate) fn source(&self, hash: &str) -> Option<&[u8]> {
         self.objects.get(hash).and_then(|record| record.source.as_deref())
+    }
+    pub(crate) fn trace_source(&self, hash: &str) -> io::Result<()> {
+        let record = self.objects.get(hash).ok_or_else(|| invalid("import Source receipt"))?;
+        let body = record.source.as_deref().ok_or_else(|| invalid("import Source body"))?;
+        crate::merge_transaction::reads::source_parts(
+            crate::merge_history::hash(hash)?,
+            body,
+            record.bytes.len(),
+            record.inflated_size,
+        )
     }
     pub(crate) fn models(&self) -> Vec<&Value> {
         self.objects
@@ -61,6 +73,7 @@ impl Overlay {
 }
 #[derive(Default)]
 pub(crate) struct Progress {
+    pub(crate) object_request: bool,
     pub(crate) reason: Option<String>,
     pub(crate) ids: Vec<String>,
     pub(crate) components: std::collections::HashSet<String>,
@@ -75,6 +88,12 @@ pub(crate) struct PreparedImport {
     cache: Cache,
     writes: Writes,
 }
+impl PreparedImport {
+    pub(crate) fn planned_index(&self) -> &Value {
+        &self.writes.index
+    }
+}
+
 struct Environment {
     local_directory: PathBuf,
     global_remotes: Option<PathBuf>,
@@ -87,11 +106,15 @@ struct Cache {
     staged: String,
     only_if_built: bool,
     unbuilt: std::collections::HashSet<String>,
+    lane_sources: HashMap<String, String>,
+    lane_reason: Option<String>,
+    fetched_lane: Option<lane::Record>,
 }
 struct Writes {
     remote_objects: Vec<(PathBuf, String, Value)>,
     index: Value,
     index_changed: bool,
+    lane_histories: Vec<Value>,
 }
 impl PreparedImport {
     pub(crate) fn validate(&self) -> io::Result<()> {

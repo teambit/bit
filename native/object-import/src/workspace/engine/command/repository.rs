@@ -48,6 +48,41 @@ impl Repository {
         self.values.insert(key, value.clone());
         Ok(value)
     }
+    pub(super) fn source_batch(&mut self, references: &[String]) -> io::Result<Vec<Vec<u8>>> {
+        use rayon::prelude::*;
+        if references.len() > 4096 || self.proofs.len() + references.len() > 16384 {
+            return Err(super::super::invalid("hidden Source batch budget"));
+        }
+        let records = references
+            .par_iter()
+            .map(|reference| {
+                let hash = crate::merge_history::hash(reference)?;
+                if let Some(source) = self.imported
+                    .as_ref()
+                    .and_then(|imported| imported.overlay.source(reference))
+                {
+                    self.raw.reserve(source.len())?;
+                    return Ok((source.to_vec(), None));
+                }
+                let record =
+                    repository::read_source_shared(&self.directory, hash, &self.raw, &self.packed)?;
+                let path = self.directory
+                    .join(&reference[..2])
+                    .join(&reference[2..]);
+                Ok((record.body, Some(proof::content(&path, &record.compressed))))
+            })
+            .collect::<io::Result<Vec<_>>>()?;
+        let start = self.proofs.len();
+        let mut contents = Vec::with_capacity(records.len());
+        for (bytes, receipt) in records {
+            if let Some(receipt) = receipt {
+                self.proofs.push(receipt);
+            }
+            contents.push(bytes);
+        }
+        proof::verify(&self.proofs[start..])?;
+        Ok(contents)
+    }
     pub(super) fn source_json(&mut self, reference: &str) -> io::Result<Value> {
         crate::merge_history::hash(reference)?;
         if let Some(source) = self.imported
@@ -136,13 +171,74 @@ impl Repository {
         }
         Ok(())
     }
+    pub(super) fn prepare_lane_pattern_versions(
+        &mut self,
+        targets: &[command_import::Target],
+    ) -> io::Result<()> {
+        if let Some(imported) = &mut self.imported {
+            imported.prepare_lane_pattern_versions(targets)?;
+        }
+        Ok(())
+    }
+    pub(super) fn prepare_lane_artifacts(&mut self, versions: &[String]) -> io::Result<()> {
+        self.imported
+            .as_mut()
+            .ok_or_else(|| super::super::invalid("lane import owner absent"))?
+            .prepare_lane_artifacts(versions)
+    }
+    pub(super) fn prepare_lane_squash_messages(
+        &mut self,
+        scope: &str,
+        hashes: &[String],
+    ) -> io::Result<()> {
+        self.prepare_lane_objects(scope, hashes, "Version", None)
+    }
+    pub(super) fn prepare_lane_objects(
+        &mut self,
+        scope: &str,
+        hashes: &[String],
+        kind: &str,
+        reason: Option<&str>,
+    ) -> io::Result<()> {
+        self.imported
+            .as_mut()
+            .ok_or_else(|| super::super::invalid("lane import owner absent"))?
+            .prepare_lane_objects(scope, hashes, kind, reason)
+    }
+    pub(super) fn prepare_lane_referenced(
+        &mut self,
+        scope: &str,
+        heads: &[(String, Value)],
+    ) -> io::Result<()> {
+        self.imported
+            .as_mut()
+            .ok_or_else(|| super::super::invalid("lane import owner absent"))?
+            .prepare_lane_referenced(scope, heads)
+    }
+    pub(super) fn imported_index(&self) -> Option<&Value> {
+        self.imported.as_ref().map(command_import::PreparedImport::planned_index)
+    }
     pub(super) fn progress(&self) -> Value {
         let Some(imported) = &self.imported else {
             return serde_json::json!({"bitmapCount":0,"imports":[]});
         };
         serde_json::json!({"bitmapCount":imported.bitmap_count,"imports":imported.progress.iter().map(|progress| {
-            serde_json::json!({"reason":progress.reason,"ids":progress.ids,"components":progress.components.len(),"objects":progress.objects.len()})
+            let mut row = serde_json::json!({"reason":progress.reason,"ids":progress.ids,"components":progress.components.len(),"objects":progress.objects.len()});
+            if progress.object_request { row["objectRequest"] = serde_json::json!(true); }
+            row
         }).collect::<Vec<_>>()})
+    }
+    pub(super) fn complete_lane_histories(
+        &mut self,
+        histories: Vec<(String, Value)>,
+    ) -> io::Result<()> {
+        if let Some(imported) = &mut self.imported {
+            imported.complete_lane_histories(histories)
+        } else if histories.is_empty() {
+            Ok(())
+        } else {
+            Err(super::super::invalid("command lane import owner missing"))
+        }
     }
     pub(super) fn commit_import(&self) -> io::Result<()> {
         if let Some(imported) = &self.imported {

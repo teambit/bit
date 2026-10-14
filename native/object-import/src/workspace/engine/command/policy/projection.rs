@@ -3,6 +3,9 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
 
+pub(super) const DEPRECATION: &str = "teambit.component/deprecation";
+const BUILDER: &str = "teambit.pipelines/builder";
+
 pub(super) const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 pub(super) const CORES: &[&str] = &[
     "teambit.envs/envs",
@@ -136,10 +139,46 @@ pub(super) fn entries(extensions: &Value) -> io::Result<Value> {
 
 fn core(entry: &Value) -> io::Result<&str> {
     let name = entry["name"].as_str().ok_or_else(|| invalid("command aspect identity"))?;
-    if !CORES.contains(&name) {
+    if name == DEPRECATION {
+        passive_deprecation(&entry["config"])?;
+    } else if name == BUILDER {
+        passive_builder(&entry["config"])?;
+    } else if !CORES.contains(&name) {
         return Err(invalid("command custom aspect"));
     }
     Ok(name)
+}
+
+fn passive_builder(config: &Value) -> io::Result<()> {
+    let fields = config.as_object().ok_or_else(|| invalid("command builder configuration"))?;
+    if fields
+        .iter()
+        .any(|(name, value)| name != "__specific" || !value.is_boolean())
+    {
+        return Err(invalid("command unsupported builder configuration"));
+    }
+    Ok(())
+}
+
+fn passive_deprecation(config: &Value) -> io::Result<()> {
+    let fields = config.as_object().ok_or_else(|| invalid("command deprecation configuration"))?;
+    if fields
+        .iter()
+        .any(|(name, value)| {
+            !matches!(name.as_str(), "deprecate" | "__specific") || !value.is_boolean()
+        })
+    {
+        return Err(invalid("command unsupported deprecation configuration"));
+    }
+    Ok(())
+}
+
+pub(super) fn configuration_cores() -> Vec<&'static str> {
+    CORES
+        .iter()
+        .copied()
+        .chain([DEPRECATION, BUILDER])
+        .collect()
 }
 
 fn component_dependency(entry: &Value, lifecycle: &str) -> io::Result<Value> {

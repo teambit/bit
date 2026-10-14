@@ -11,7 +11,11 @@ struct Request {
     target: wire::Version,
     known_bodies: Option<usize>,
 }
-pub(super) fn apply(input: Value, state: &mut plan::State) -> io::Result<Value> {
+pub(super) fn apply_with_overlay(
+    input: Value,
+    state: &mut plan::State,
+    overlay: Option<&crate::command_import::Overlay>,
+) -> io::Result<Value> {
     let request: Request = serde_json::from_value(input).map_err(io::Error::other)?;
     if !request.objects_directory.is_absolute() || request.target.files.len() > 4096 {
         return Err(invalid("merge retarget bounds"));
@@ -26,7 +30,7 @@ pub(super) fn apply(input: Value, state: &mut plan::State) -> io::Result<Value> 
         .sum::<usize>();
     let previous =
         state.plans.get(&request.token).ok_or_else(|| invalid("stale merge template plan"))?;
-    let contents = load(&request, retained, previous)?;
+    let contents = load(&request, retained, previous, overlay)?;
     let plan =
         state.plans.get_mut(&request.token).ok_or_else(|| invalid("stale merge template plan"))?;
     let directory = request.snapshot_directory;
@@ -89,7 +93,12 @@ fn additions(
     }
     (indices, added)
 }
-fn load(request: &Request, retained: usize, previous: &plan::Plan) -> io::Result<Vec<Vec<u8>>> {
+fn load(
+    request: &Request,
+    retained: usize,
+    previous: &plan::Plan,
+    overlay: Option<&crate::command_import::Overlay>,
+) -> io::Result<Vec<Vec<u8>>> {
     if request.known_bodies.is_some_and(|count| count != previous.bodies.len()) {
         return Err(invalid("merge retained body prefix mismatch"));
     }
@@ -105,11 +114,11 @@ fn load(request: &Request, retained: usize, previous: &plan::Plan) -> io::Result
     {
         // Public target cloning has already observed its Sources. Reuse verified
         // operation-owned bytes while still checking the complete Version manifest.
-        crate::checkout::plan::verify_manifest(
+        prepare::sources::verify(
             &request.objects_directory,
-            &request.target.hash,
-            &serde_json::to_value(&request.target.files).map_err(io::Error::other)?,
+            &request.target,
             &mut compressed,
+            overlay,
         )?;
         return request.target.files
             .iter()
@@ -123,7 +132,13 @@ fn load(request: &Request, retained: usize, previous: &plan::Plan) -> io::Result
             })
             .collect();
     }
-    prepare::sources::load(&request.objects_directory, &request.target, &mut total, &mut compressed)
+    prepare::sources::load_with_overlay(
+        &request.objects_directory,
+        &request.target,
+        &mut total,
+        &mut compressed,
+        overlay,
+    )
 }
 fn check_budget(body_count: usize, retained: usize, added: &[plan::Body]) -> io::Result<()> {
     if body_count + added.len() > 4096

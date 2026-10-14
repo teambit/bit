@@ -18,17 +18,19 @@ pub(super) fn run(input: &Finalize, state: &mut State) -> io::Result<(usize, Val
     prepared.plan.result["mergeSnapResults"] =
         merge.finalize(&record, &directory.0, &input.snap_receipt)?;
     let updates = merge.snap_updates()?;
+    let count = super::policy::workspace_count(&record.context, merge.policy.as_ref())?;
     prepared.snap_bitmap =
         Some(bitmap::prepare_after(&prepared.bitmap, &record.context, &updates)?);
     prepared.plan.directories.push(directory);
+    super::lane_referenced::prepare(&mut record, &prepared.plan)?;
     record.repository.validate()?;
     proof::verify(&record.proofs)?;
     let mut progress = record.repository.progress();
-    let count = record.context["targets"]
-        .as_array()
-        .ok_or_else(|| invalid("command workspace targets"))?
-        .len();
-    progress["loads"] = json!([count, updates.len(), count, count]);
+    progress["loads"] = if record.request.options.lane.is_some() && updates.is_empty() {
+        json!([count])
+    } else {
+        json!([count, updates.len(), count, count])
+    };
     let output = json!({"token":record.token,"result":prepared.plan.result,"progress":progress});
     record.planned = Some(prepared);
     state.record = Some(record);

@@ -21,9 +21,13 @@ pub(super) fn run(
         input::Operation::Checkout => {
             planning::checkout(&mut record, input.current, &input.semver, snapshots, pool)
         }
-        input::Operation::Merge => {
-            merge_planning::plan(&mut record, input.current, snapshots, pool)
-        }
+        input::Operation::Merge => merge_planning::plan(
+            &mut record,
+            input.current,
+            input.lane_pattern_ids.as_deref(),
+            snapshots,
+            pool,
+        ),
     })?;
     let bitmap = prepare_bitmap(&record, &planned)?;
     for material in &planned.materials {
@@ -33,6 +37,9 @@ pub(super) fn run(
     proof::verify(&record.proofs)?;
     let mut output = json!({"token":record.token,"result":planned.result,"progress":record.repository.progress()});
     snap_receipt(&mut output, &planned)?;
+    if let Some(receipt) = planned.merge.as_ref().and_then(merge_planning::Prepared::lane_receipt) {
+        output["lanePreparation"] = receipt;
+    }
     let count = planned.result["components"].as_array().map_or(0, Vec::len);
     record.planned = Some(PreparedPlan { plan: planned, bitmap, snap_bitmap: None });
     snapshots.command.record = Some(record);
@@ -85,7 +92,7 @@ fn prepare_bitmap(record: &Record, planned: &planning::Planned) -> io::Result<bi
     if let Some(merge) = &planned.merge {
         updates.extend(merge.bitmap_updates()?);
     }
-    bitmap::prepare(&record.request.root, &record.context, &updates)
+    bitmap::prepare_changes(&record.request.root, &record.context, &updates, &[])
 }
 
 fn bitmap_update(

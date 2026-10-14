@@ -71,6 +71,7 @@ pub(in crate::checkout_transition::prepare) fn body(
             return Err(invalid("checkout overlay raw limit"));
         }
         charge(overlay, hash, compressed)?;
+        overlay.trace_source(hash)?;
         bytes.to_vec()
     } else {
         crate::checkout::repository::source(directory, identity, remaining, compressed)?

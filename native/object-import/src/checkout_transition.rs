@@ -73,10 +73,6 @@ fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
 }
 
-pub(crate) fn retarget(input: Value, state: &mut State) -> io::Result<Value> {
-    retarget::apply(input, &mut state.plans)
-}
-
 pub(crate) fn order(
     token: &str,
     order: &[usize],
@@ -105,4 +101,12 @@ pub(crate) fn order(
         .collect::<io::Result<Vec<_>>>()?;
     plan.merge_rows = rows;
     if indexed { Ok(json!({"rowIndices":order})) } else { Ok(json!({"mergeRows":plan.merge_rows})) }
+}
+
+pub(crate) fn retarget_with_overlay(
+    input: Value,
+    state: &mut State,
+    overlay: Option<&crate::command_import::Overlay>,
+) -> io::Result<Value> {
+    retarget::apply_with_overlay(input, &mut state.plans, overlay)
 }

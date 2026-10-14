@@ -9,6 +9,12 @@ use std::{
 };
 
 pub(in crate::workspace::engine) fn configuration(root: &Path) -> io::Result<Value> {
+    configuration_for_command(root, false)
+}
+pub(in crate::workspace::engine) fn configuration_for_command(
+    root: &Path,
+    lane: bool,
+) -> io::Result<Value> {
     let config = document(&root.join("workspace.jsonc"))?;
     let object = config.as_object().ok_or_else(|| invalid("status workspace configuration"))?;
     if object
@@ -29,7 +35,7 @@ pub(in crate::workspace::engine) fn configuration(root: &Path) -> io::Result<Val
     let workspace = workspace_settings(&config)?;
     extensions(&config)?;
     let scope = document(&root.join(".bit/scope.json"))?;
-    if scope["lanes"]["current"] != "main" || scope.get("license").is_some() {
+    if (!lane && scope["lanes"]["current"] != "main") || scope.get("license").is_some() {
         return Err(invalid("status non-main scope"));
     }
     if !fs::symlink_metadata(root.join(".bit/objects"))?.is_dir() {
@@ -282,7 +288,13 @@ pub(in crate::workspace::engine) fn context_targets(
     config: &Value,
 ) -> io::Result<Vec<Value>> {
     let bitmap = document(&root.join(".bitmap"))?;
-    let targets = bitmap_targets(&bitmap, config)?;
+    context_bitmap_targets(&bitmap, config)
+}
+pub(in crate::workspace::engine) fn context_bitmap_targets(
+    bitmap: &Value,
+    config: &Value,
+) -> io::Result<Vec<Value>> {
+    let targets = bitmap_targets(bitmap, config)?;
     let entries = bitmap.as_object().ok_or_else(|| invalid("status bitmap"))?;
     Ok(targets
         .into_iter()

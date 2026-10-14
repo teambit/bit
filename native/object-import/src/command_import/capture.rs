@@ -20,6 +20,7 @@ pub(super) struct Object {
     pub(super) bytes: Vec<u8>,
     pub(super) value: Option<Value>,
     pub(super) source: Option<Vec<u8>>,
+    pub(super) inflated_size: usize,
 }
 #[derive(Default)]
 pub(super) struct Capture {
@@ -86,6 +87,7 @@ impl Capture {
             bytes,
             value,
             source: (kind == "Source").then(|| body.to_vec()),
+            inflated_size: raw.len(),
         }))
     }
     pub(super) fn sources(
@@ -128,6 +130,7 @@ impl Capture {
                     bytes: record.compressed,
                     value: None,
                     source: Some(record.body),
+                    inflated_size: record.inflated_size,
                 },
             ));
         }

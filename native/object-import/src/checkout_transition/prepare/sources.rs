@@ -7,14 +7,6 @@ use rayon::prelude::*;
 use std::{io, path::Path};
 const MAX_BYTES: usize = 32 * 1024 * 1024;
 type Source = ([u8; 20], repository::SourceRecord);
-pub(in crate::checkout_transition) fn load(
-    directory: &Path,
-    version: &wire::Version,
-    total: &mut usize,
-    compressed: &mut usize,
-) -> io::Result<Vec<Vec<u8>>> {
-    load_with_overlay(directory, version, total, compressed, None)
-}
 pub(in crate::checkout_transition) fn load_with_overlay(
     directory: &Path,
     version: &wire::Version,
@@ -135,4 +127,13 @@ pub(super) fn selected(
         .iter()
         .map(|needed| if *needed { bodies.next() } else { None })
         .collect())
+}
+
+pub(in crate::checkout_transition) fn verify(
+    directory: &Path,
+    version: &wire::Version,
+    compressed: &mut usize,
+    overlay: Option<&crate::command_import::Overlay>,
+) -> io::Result<()> {
+    overlay::verify(directory, version, compressed, overlay)
 }

@@ -2,19 +2,39 @@ use super::{PreparedImport, invalid, object_hash};
 use serde_json::{Value, json};
 use std::{io, path::PathBuf};
 pub(super) fn settings(value: &Value) -> io::Result<()> {
+    settings_for_lane(value, false)
+}
+pub(in crate::command_import) fn settings_for_lane(
+    value: &Value,
+    allow_lane: bool,
+) -> io::Result<()> {
     let fields = value.as_object().ok_or_else(|| invalid("import scope settings"))?;
     if fields
         .keys()
         .any(|key| !matches!(key.as_str(), "name" | "remotes" | "version" | "lanes" | "groupName"))
-        || value["lanes"]["current"]
-            .as_str()
-            .is_some_and(|lane| lane != "main")
+        || (!allow_lane
+            && value["lanes"]["current"]
+                .as_str()
+                .is_some_and(|lane| lane != "main"))
     {
         return Err(invalid("import scope needs canonical configuration"));
     }
     Ok(())
 }
 pub(super) fn remote(
+    plan: &mut PreparedImport,
+    remotes: &Value,
+    name: &str,
+) -> io::Result<PathBuf> {
+    let directory = raw_remote(plan, remotes, name)?;
+    let hash = object_hash(name);
+    plan.overlay.objects.insert(
+        hash.clone(),
+        super::super::publish::object(&hash, "ScopeMeta", json!({"name":name}))?,
+    );
+    Ok(directory)
+}
+pub(super) fn raw_remote(
     plan: &mut PreparedImport,
     remotes: &Value,
     name: &str,
@@ -47,11 +67,6 @@ pub(super) fn remote(
         return Err(invalid("import remote scope mismatch"));
     }
     validate_config(plan, &directory)?;
-    let hash = object_hash(name);
-    plan.overlay.objects.insert(
-        hash.clone(),
-        super::super::publish::object(&hash, "ScopeMeta", json!({"name":name}))?,
-    );
     Ok(directory.join("objects"))
 }
 

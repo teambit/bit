@@ -1,10 +1,13 @@
-use super::{Update, prepare, prepare_after, validate_history_file_id};
-use serde_json::json;
+use super::{Prepared, Update, prepare_after, prepare_changes, validate_history_file_id};
+use serde_json::{Value, json};
 use std::{
-    fs,
-    path::PathBuf,
+    fs, io,
+    path::{Path, PathBuf},
     sync::atomic::{AtomicUsize, Ordering},
 };
+fn prepare(root: &Path, context: &Value, updates: &[Update]) -> io::Result<Prepared> {
+    prepare_changes(root, context, updates, &[])
+}
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 struct Fixture(PathBuf);
 impl Fixture {

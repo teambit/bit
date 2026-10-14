@@ -35,22 +35,21 @@ pub(super) fn version(input: &Input<'_>, receipt: &Value, message: &str) -> io::
             .remove(field);
     }
     version["log"] = receipt["log"].clone();
-    version["log"]["message"] = json!(if message.is_empty() {
-        format!(
-            "merge {}/main",
-            input.model["scope"].as_str().ok_or_else(|| invalid("merge model scope"))?
-        )
-    } else {
-        message.to_owned()
-    });
-    version["parents"] = json!([input.model["head"], input.remote]);
+    version["log"]["message"] = json!(message_text(input.model, input.lane, message)?);
+    let parent = input.lane
+        .and_then(|lane| lane["targets"].as_array())
+        .and_then(|rows| {
+            rows.iter()
+                .find(|row| row["identity"] == input.identity)
+        })
+        .map_or(&input.model["head"], |target| &target["currentHead"]);
+    version["parents"] = json!([parent, input.remote]);
     version["batchId"] = receipt["batchId"].clone();
     version["bitVersion"] = receipt["bitVersion"].clone();
     version["buildStatus"] = json!("pending");
     version["modified"] = json!([]);
-    let (scope, name) =
-        input.identity.split_once('/').ok_or_else(|| invalid("merge snap identity"))?;
-    version["origin"] = json!({"id":{"scope":scope,"name":name}});
+    apply_squash(input, receipt, &mut version)?;
+    apply_origin(input, &mut version)?;
     let extensions =
         version["extensions"].as_array_mut().ok_or_else(|| invalid("command snap extensions"))?;
     for extension in extensions {
@@ -60,11 +59,87 @@ pub(super) fn version(input: &Input<'_>, receipt: &Value, message: &str) -> io::
     }
     Ok(version)
 }
+pub(super) fn message_text(
+    model: &Value,
+    lane: Option<&Value>,
+    message: &str,
+) -> io::Result<String> {
+    Ok(if message.is_empty() {
+        if let Some(lane) = lane.filter(|lane| lane["otherId"]["name"] != "main") {
+            format!(
+                "merge {}/{}",
+                lane["otherId"]["scope"].as_str().ok_or_else(|| invalid("merge lane scope"))?,
+                lane["otherId"]["name"].as_str().ok_or_else(|| invalid("merge lane name"))?,
+            )
+        } else {
+            format!(
+                "merge {}/main",
+                model["scope"].as_str().ok_or_else(|| invalid("merge model scope"))?,
+            )
+        }
+    } else {
+        message.to_owned()
+    })
+}
+
+fn apply_origin(input: &Input<'_>, version: &mut Value) -> io::Result<()> {
+    let (scope, name) =
+        input.identity.split_once('/').ok_or_else(|| invalid("merge snap identity"))?;
+    version["origin"] = json!({"id":{"scope":scope,"name":name}});
+    if let Some(lane) = input.lane.filter(|lane| !lane["current"].is_null()) {
+        version["origin"]["lane"] = lane["currentId"].clone();
+        version["origin"]["lane"]["hash"] = lane["current"]["hash"].clone();
+    }
+    Ok(())
+}
+
+fn apply_squash(input: &Input<'_>, receipt: &Value, version: &mut Value) -> io::Result<()> {
+    let Some(lane) = input.lane.filter(|lane| lane["shouldSquash"] == true) else {
+        return Ok(());
+    };
+    let allocation = receipt["versions"]
+        .as_array()
+        .and_then(|rows| {
+            rows.iter()
+                .find(|row| row["identity"] == input.identity)
+        })
+        .ok_or_else(|| invalid("lane squash allocation"))?;
+    let log = allocation["squashLog"].as_object().ok_or_else(|| invalid("lane squash log"))?;
+    if log
+        .get("date")
+        .and_then(Value::as_str)
+        .is_none()
+    {
+        return Err(invalid("lane squash log date"));
+    }
+    version["squashed"] =
+        json!({"previousParents":version["parents"],"laneId":squash_lane(input.model, lane)?});
+    version["parents"] = json!([version["parents"][0]]);
+    version["modified"] = json!([log]);
+    Ok(())
+}
+
+pub(super) fn squash_lane(model: &Value, lane: &Value) -> io::Result<Value> {
+    let mut id = lane["otherId"].clone();
+    if id["name"] == "main" {
+        id["scope"] = json!(model["scope"].as_str().ok_or_else(|| invalid("merge model scope"))?);
+    }
+    Ok(id)
+}
+
 pub(super) fn current_schema(value: &Value) -> io::Result<Value> {
     let mut version = crate::workspace::engine::status_models::harmony::project(value)?;
     version["schema"] = json!("2.0.0");
     Ok(version)
 }
+pub(super) fn snapshot_model(input: &Input<'_>, head: &str) -> io::Result<Value> {
+    if input.lane.is_some_and(|lane| !lane["current"].is_null()) {
+        Ok(input.model.clone())
+    } else {
+        model(input.model, head)
+    }
+}
+
 // ModelComponent.setHead followed by markVersionAsLocal preserves existing row
 // metadata, but replaces the whole state when it has no versions member.
 pub(super) fn model(input: &Value, head: &str) -> io::Result<Value> {
@@ -100,7 +175,7 @@ pub(super) fn object(kind: &str, hash: Option<&str>, mut fields: Value) -> io::R
         {
             extension["rawConfig"] = extension["config"].clone();
         }
-    } else {
+    } else if kind == "Component" {
         fields["scopesList"] = fields["remotes"].clone();
         if fields.get("detachedHeads").is_none() {
             fields["detachedHeads"] = json!({"heads":[],"deleted":[]});

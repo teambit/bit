@@ -34,7 +34,10 @@ pub(in crate::workspace::engine::command) fn prepare(
     let mut prepared =
         Prepared { proofs: Vec::new(), writes: Vec::new(), links: Vec::new(), copies: Vec::new() };
     staged::prepare(root, inputs, &mut prepared)?;
-    for input in inputs {
+    for input in inputs
+        .iter()
+        .filter(|input| !input.directory.is_empty())
+    {
         packages::prepare(root, input, root_components, &mut prepared)?;
     }
     #[cfg(not(unix))]
@@ -45,6 +48,21 @@ pub(in crate::workspace::engine::command) fn prepare(
     Ok(prepared)
 }
 impl Prepared {
+    pub(in crate::workspace::engine::command) fn imported_index(
+        &mut self,
+        root: &Path,
+        index: Option<&Value>,
+    ) -> io::Result<()> {
+        if let Some(index) = index {
+            let destination = root.join(".bit/index.json");
+            let row = self.writes
+                .iter_mut()
+                .find(|(path, _)| *path == destination)
+                .ok_or_else(|| invalid("merge staged index missing"))?;
+            row.1 = pretty(index, true)?;
+        }
+        Ok(())
+    }
     pub(in crate::workspace::engine::command) fn validate(&self) -> io::Result<()> {
         proof::verify(&self.proofs)
     }

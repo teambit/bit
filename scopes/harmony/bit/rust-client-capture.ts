@@ -207,15 +207,21 @@ export async function captureRustClientCurrent(
     captured,
     components,
     fresh: () => rootPolicy.fresh(),
-    commit: async (replacements: FreshDependencyCache[] = [], replacementsOnly = false) => {
+    commit: async (
+      replacements: FreshDependencyCache[] = [],
+      replacementsOnly = false,
+      retainedIdentities?: ReadonlySet<string>,
+      skipDependencyCache = false
+    ) => {
       if (!rootPolicy.fresh()) throw new Error('status inventory policy changed');
+      if (skipDependencyCache && replacements.length) throw new Error('scope-only command has workspace caches');
       const plans = context.pendingHistory ?? [];
       if (!Array.isArray(plans)) throw new Error('status history plans');
       if (plans.length) {
         const validated = await request({ kind: 'statusHistoryValidate', root, plans });
         if (validated.fresh !== true) throw new Error('status history changed');
       }
-      if (cachePlan && (pending.length || replacements.length || cachePlan.reset)) {
+      if (!skipDependencyCache && cachePlan && (pending.length || replacements.length || cachePlan.reset)) {
         const { commitFreshDependencies } = await import('./rust-fresh-dependencies');
         const baseIdentity = (identity: string) => {
           const separator = identity.lastIndexOf('@');
@@ -223,15 +229,17 @@ export async function captureRustClientCurrent(
         };
         const replaced = new Set(replacements.map((entry) => baseIdentity(entry.identity)));
         const entries = pending
-          .filter((entry) => {
-            return !replacementsOnly && !replaced.has(baseIdentity(entry.identity));
-          })
           .map((entry) => {
             const separator = entry.identity.lastIndexOf('@');
             const identity = separator < 0 ? entry.identity : entry.identity.slice(0, separator);
             const version = cacheVersions.get(identity);
             return version ? { ...entry, identity: `${identity}@${version}` } : entry;
-          });
+          })
+          .filter(
+            (entry) =>
+              (!replacementsOnly || retainedIdentities?.has(entry.identity)) &&
+              !replaced.has(baseIdentity(entry.identity))
+          );
         await commitFreshDependencies(cachePlan, [...entries, ...replacements], request);
       }
       if (plans.length) {

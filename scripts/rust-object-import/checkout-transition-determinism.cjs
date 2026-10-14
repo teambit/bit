@@ -34,7 +34,9 @@ Module._load = function (request, parent, ...args) {
     return () => '0ms';
   if (
     request !== 'uuid' ||
-    !/[\\/]((version-maker)|(new-snap-hash)|(version)|(lane)|(lane-history))\.js$/.test(parent?.filename || '')
+    !/[\\/]((version-maker)|(new-snap-hash)|(version)|(lane)|(lane-history)|(new-lane-history-key))\.js$/.test(
+      parent?.filename || ''
+    )
   )
     return value;
   return {
@@ -42,7 +44,11 @@ Module._load = function (request, parent, ...args) {
     v4: () => {
       // Disposable comparison Versions must not change the identities of persisted snaps.
       // Both command implementations use the same durable scalar helpers and stream.
-      const stream = /[\\/]((version-maker)|(new-snap-hash))\.js$/.test(parent?.filename || '') ? 'snap' : 'model';
+      const stream = /[\\/]new-lane-history-key\.js$/.test(parent?.filename || '')
+        ? 'lane-history'
+        : /[\\/]((version-maker)|(new-snap-hash))\.js$/.test(parent?.filename || '')
+          ? 'snap'
+          : 'model';
       const ordinal = ordinals.get(stream) || 0;
       ordinals.set(stream, ordinal + 1);
       const bytes = createHash('sha256').update(`${seed}:${stream}:${ordinal}`).digest('hex').slice(0, 32);

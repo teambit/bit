@@ -16,14 +16,32 @@ pub(super) fn prepare(
 ) -> io::Result<()> {
     let mut models = Vec::new();
     for (index, selected) in selected.iter().enumerate() {
-        if selected.action == Action::Target {
-            add_material(record, planned, selected, index, snapshots)?;
+        if selected.action != Action::Target {
+            continue;
+        }
+        if planned.captured[index].hidden && !prepared.pending.is_empty() {
+            return Err(invalid("hidden fast-forward with snapshot reload requires native policy"));
+        }
+        add_material(record, planned, selected, index, snapshots)?;
+        if let Some(lane) = &mut prepared.publication.lane {
+            lane.update(&planned.captured[index].target.identity, &selected.remote, false)?;
+        }
+        if record.context["lane"]["current"].is_null() {
             models.push(model(&selected.model, &selected.remote)?);
         }
     }
+    persist_models(planned, prepared, models)
+}
+
+fn persist_models(
+    planned: &mut planning::Planned,
+    prepared: &mut Prepared,
+    models: Vec<serde_json::Value>,
+) -> io::Result<()> {
     if !models.is_empty() {
         let directory = scratch::Directory::create()?;
-        prepared.fast_forward = Some(merge::snapshot::prepare_models(&directory.0, models)?);
+        prepared.publication.fast_forward =
+            Some(merge::snapshot::prepare_models(&directory.0, models)?);
         planned.directories.push(directory);
     }
     Ok(())
@@ -58,7 +76,9 @@ fn add_material(
         .as_array_mut()
         .ok_or_else(|| invalid("command fast-forward results"))?
         .push(material.output.clone());
-    planned.materials.push(material);
+    if !planned.captured[index].hidden {
+        planned.materials.push(material);
+    }
     planned.directories.push(directory);
     Ok(())
 }

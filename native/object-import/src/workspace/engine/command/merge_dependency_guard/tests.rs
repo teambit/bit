@@ -15,6 +15,8 @@ fn retained_fast_forward_sources_preserve_imports_and_detect_stale_capture() {
     let original = b"module.exports = 1;";
     fs::write(&current_path, original).unwrap();
     let current = crate::workspace::engine::command::capture::Captured {
+        added: false,
+        hidden: false,
         target: serde_json::from_value(json!({"identity":"scope/peer","version":"1.0.0",
             "directory":"component","files":["index.js"],"current":{}}))
         .unwrap(),

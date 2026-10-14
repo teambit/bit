@@ -52,6 +52,14 @@ pub(super) fn read(request: &Request, pool: &rayon::ThreadPool) -> io::Result<(u
 pub(super) fn metadata(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Value> {
     let settings = config::configuration(&request.root)?;
     let targets = config::context_targets(&request.root, &settings)?;
+    metadata_with_targets(request, pool, &settings, targets)
+}
+pub(super) fn metadata_with_targets(
+    request: &Request,
+    pool: &rayon::ThreadPool,
+    settings: &Value,
+    targets: Vec<Value>,
+) -> io::Result<Value> {
     let budget = Budget::new(8 * 1024 * 1024);
     let targets = pool.install(|| {
         targets
@@ -60,8 +68,7 @@ pub(super) fn metadata(request: &Request, pool: &rayon::ThreadPool) -> io::Resul
             .collect::<io::Result<Vec<_>>>()
     })?;
     let mut output = json!({});
-    output["options"] =
-        config::options(&settings, &super::inventory::patterns::own(&request.root)?);
+    output["options"] = config::options(settings, &super::inventory::patterns::own(&request.root)?);
     output["workspace"] = config::document(&request.root.join("workspace.jsonc"))?;
     output["scope"] = metadata::optional(&request.root.join(".bit/scope.json"), &budget)?;
     metadata::scope(&output["scope"])?;

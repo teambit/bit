@@ -1,6 +1,6 @@
 use super::{Capture, Overlay, PreparedImport, Target, history, invalid, merge, object_hash};
 use dependencies::{closure, only_unbuilt_requests};
-use remote::{remote, settings};
+use remote::remote;
 use serde_json::{Value, json};
 use std::{
     collections::{HashMap, HashSet},
@@ -9,6 +9,7 @@ use std::{
 };
 use transfer::receive;
 mod dependencies;
+mod lane;
 mod remote;
 mod selected;
 mod transfer;
@@ -20,7 +21,7 @@ pub(crate) fn prepare(
     if !root.is_absolute() || !global_remotes_file.is_absolute() || targets.len() > 4096 {
         return Err(invalid("import command bounds"));
     }
-    let (mut plan, scope) = empty(root)?;
+    let (mut plan, scope) = empty(root, false)?;
     let scoped: Vec<_> = targets
         .iter()
         .filter(|target| target.scope.is_some())
@@ -101,12 +102,12 @@ fn refresh_all(plan: &mut PreparedImport, scoped: &[&Target], remotes: &Value) -
     }
     Ok(())
 }
-fn empty(root: &Path) -> io::Result<(PreparedImport, Value)> {
+fn empty(root: &Path, allow_lane: bool) -> io::Result<(PreparedImport, Value)> {
     let mut capture = Capture::default();
     let scope = capture
         .json(&root.join(".bit/scope.json"))?
         .ok_or_else(|| invalid("import local scope"))?;
-    settings(&scope)?;
+    remote::settings_for_lane(&scope, allow_lane)?;
     let name = scope["name"].as_str().ok_or_else(|| invalid("import local name"))?;
     let index = capture
         .json(&root.join(".bit/index.json"))?
@@ -124,7 +125,12 @@ fn empty(root: &Path) -> io::Result<(PreparedImport, Value)> {
             local_scope: name.to_owned(),
         },
         cache: super::Cache::default(),
-        writes: super::Writes { remote_objects: Vec::new(), index, index_changed: false },
+        writes: super::Writes {
+            remote_objects: Vec::new(),
+            index,
+            index_changed: false,
+            lane_histories: Vec::new(),
+        },
     };
     Ok((plan, scope))
 }
@@ -135,6 +141,22 @@ pub(crate) fn prepare_cached(
     global_remotes_file: &Path,
 ) -> io::Result<PreparedImport> {
     let mut plan = prepare(root, global_remotes_file, &[])?;
+    configure_cached(&mut plan, root, global_remotes_file)?;
+    Ok(plan)
+}
+pub(crate) fn prepare_lane(root: &Path, global_remotes_file: &Path) -> io::Result<PreparedImport> {
+    if !root.is_absolute() || !global_remotes_file.is_absolute() {
+        return Err(invalid("lane import absolute paths"));
+    }
+    let (mut plan, _) = empty(root, true)?;
+    configure_cached(&mut plan, root, global_remotes_file)?;
+    Ok(plan)
+}
+fn configure_cached(
+    plan: &mut PreparedImport,
+    root: &Path,
+    global_remotes_file: &Path,
+) -> io::Result<()> {
     let scope = plan.capture
         .json(&root.join(".bit/scope.json"))?
         .ok_or_else(|| invalid("import local scope"))?;
@@ -153,7 +175,7 @@ pub(crate) fn prepare_cached(
         .unwrap_or_default();
     plan.cache.staged = String::from_utf8(staged).map_err(io::Error::other)?;
     plan.validate()?;
-    Ok(plan)
+    Ok(())
 }
 fn identity(target: &Target) -> io::Result<String> {
     let scope = target.scope.as_deref().ok_or_else(|| invalid("import unscoped target"))?;

@@ -25,8 +25,28 @@ pub(super) struct Options {
     pub(super) pattern: Option<String>,
     pub(super) strategy: Option<String>,
     pub(super) message: Option<String>,
+    pub(super) lane: Option<LaneOptions>,
     #[serde(flatten)]
     flags: Flags,
+}
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(super) struct LaneOptions {
+    pub(super) name: String,
+    #[serde(default)]
+    pub(super) no_auto_snap: bool,
+    #[serde(default)]
+    pub(super) no_squash: bool,
+    #[serde(default)]
+    pub(super) squash: bool,
+    #[serde(default)]
+    pub(super) skip_fetch: bool,
+    #[serde(default)]
+    pub(super) include_deps: bool,
+    #[serde(default)]
+    pub(super) workspace_only: bool,
+    #[serde(default)]
+    pub(super) exclude_non_lane_comps: bool,
 }
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]

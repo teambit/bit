@@ -3,6 +3,7 @@ import { getNodeDependencyPolicy } from '@teambit/node/dist/default-dependency-p
 import { EnvPolicy } from '@teambit/dependency-resolver/dist/policy/env-policy/env-policy.js';
 import { VariantPolicy } from '@teambit/dependency-resolver/dist/policy/variant-policy/variant-policy.js';
 
+const deprecation = 'teambit.component/deprecation';
 const resolver = 'teambit.dependencies/dependency-resolver';
 const fields = ['dependencies', 'devDependencies', 'peerDependencies'];
 const cores = new Set([
@@ -14,6 +15,8 @@ const cores = new Set([
   'teambit.preview/preview',
   'teambit.compositions/compositions',
   'teambit.docs/docs',
+  deprecation,
+  'teambit.pipelines/builder',
 ]);
 export function fullIdentity(target: any): string {
   return target.identity + (target.version ? `@${target.version}` : '');
@@ -257,7 +260,12 @@ function statusExtensions(version: any, target: any) {
         throw new Error('status configured model extension');
       const config = { ...extension.config };
       delete config.__specific;
-      if (extension.name !== resolver && Object.keys(config).length)
+      if (
+        extension.name === deprecation &&
+        Object.entries(config).some(([name, value]) => name !== 'deprecate' || typeof value !== 'boolean')
+      )
+        throw new Error('status unsupported deprecation configuration');
+      if (extension.name !== resolver && extension.name !== deprecation && Object.keys(config).length)
         throw new Error('status configured core extension');
       if (extension.name === resolver && Object.keys(config).some((key) => key !== 'policy'))
         throw new Error('status resolver configuration');

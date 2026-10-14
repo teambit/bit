@@ -50,24 +50,31 @@ fn publish_sources(plan: &mut planning::Planned) -> io::Result<()> {
     }
     Ok(())
 }
-fn reason(record: &Record, plan: &planning::Planned) -> String {
+fn reason(record: &Record, plan: &planning::Planned) -> io::Result<String> {
     if record.request.operation == input::Operation::Merge {
-        return "merge".to_owned();
+        // ComponentWriter persists the changed bitmap before the later lane-specific
+        // write, which is already clean and therefore creates no history entry.
+        return Ok("merge".to_owned());
     }
     if plan.materials.iter().all(|material| material.keep_ours) {
-        return format!(
+        return Ok(format!(
             "checkout ({})",
             record.request.options.pattern.as_deref().unwrap_or("undefined"),
-        );
+        ));
     }
-    "checkout".to_owned()
+    Ok("checkout".to_owned())
 }
 fn publish_bitmap(
     prepared: &mut PreparedPlan,
     record: &Record,
     file_id: &str,
 ) -> io::Result<(Option<String>, usize)> {
-    let mut warning = prepared.bitmap.commit(file_id, &reason(record, &prepared.plan))?;
+    let reason = reason(record, &prepared.plan)?;
+    let first = match &mut prepared.plan.merge {
+        Some(merge) => merge.persist_first(&record.request.root)?,
+        None => 0,
+    };
+    let mut warning = prepared.bitmap.commit(file_id, &reason)?;
     let notifications = match &mut prepared.plan.merge {
         Some(merge) => merge.finish_snap(&record.request.root)?,
         None => 0,
@@ -81,7 +88,10 @@ fn publish_bitmap(
             .commit(file_id, &format!("merge-snap (message: {message})"))?
             .or(warning);
     }
-    Ok((warning, notifications))
+    if let Some(merge) = &prepared.plan.merge {
+        merge.commit_recovery()?;
+    }
+    Ok((warning, first + notifications))
 }
 // Canonical Repository.persist invokes its hook without awaiting completion. Native
 // publication records each invocation and performs the same best-effort notification.

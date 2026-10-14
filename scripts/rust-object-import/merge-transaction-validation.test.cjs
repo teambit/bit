@@ -309,7 +309,7 @@ test('cold main requires accepted publication, ordered phases, one owner and no 
     workspaceFrames: kinds.map((kind) => ({magic:'BWS1',kind,helperId:7,receipt:{completed:1,failed:false,applied:kind === 'commandApply'}})),
     workspace: Object.fromEntries(kinds.map((kind) => [kind,{completed:1,failed:0,sourceBodyBytes:0,...(kind === 'commandApply' ? {applied:1} : {})}])),
   };
-  const scenario = {name:'component-main-ours'};
+  const scenario = {name:'component-main-ours', target:'component'};
   validateMergeTransactionDiagnostics(trace, scenario);
   for (const corrupt of [
     (value) => { value.workspaceFrames.at(-1).receipt.applied = false; },

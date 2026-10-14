@@ -2,7 +2,11 @@ use super::{Prepared, Selected, capture, invalid, merge, planning};
 use serde_json::{Value, json};
 use std::io;
 
-pub(super) fn fast_forward(prepared: &mut Prepared, planned: &planning::Planned) -> io::Result<()> {
+pub(super) fn fast_forward(
+    prepared: &mut Prepared,
+    planned: &planning::Planned,
+    context: &Value,
+) -> io::Result<()> {
     if prepared.pending.is_empty() {
         return Ok(());
     }
@@ -16,9 +20,36 @@ pub(super) fn fast_forward(prepared: &mut Prepared, planned: &planning::Planned)
             .iter()
             .find(|row| row.target.identity == identity)
             .ok_or_else(|| invalid("command FF current"))?;
-        append_fast_forward(prepared, material, current, identity)?;
+        let prefix = binding_prefix(current, context)?;
+        append_fast_forward(prepared, material, current, identity, &prefix)?;
     }
     Ok(())
+}
+
+fn binding_prefix(current: &capture::Captured, context: &Value) -> io::Result<String> {
+    if !current.added {
+        return current.target.current["bindingPrefix"]
+            .as_str()
+            .map(str::to_owned)
+            .ok_or_else(|| invalid("command FF prefix"));
+    }
+    let model = super::super::repository::model(context, &current.target.identity)?
+        .ok_or_else(|| invalid("command FF model"))?;
+    Ok(model["bindingPrefix"]
+        .as_str()
+        .filter(|prefix| !prefix.is_empty())
+        .map_or_else(
+            || {
+                format!(
+                    "@{}",
+                    current.target.identity
+                        .split(['.', '/'])
+                        .next()
+                        .unwrap(),
+                )
+            },
+            str::to_owned,
+        ))
 }
 
 fn append_fast_forward(
@@ -26,10 +57,8 @@ fn append_fast_forward(
     material: &super::super::materialization::Prepared,
     current: &capture::Captured,
     identity: &str,
+    prefix: &str,
 ) -> io::Result<()> {
-    let prefix = current.target.current["bindingPrefix"]
-        .as_str()
-        .ok_or_else(|| invalid("command FF prefix"))?;
     prepared.policy
         .as_mut()
         .unwrap()

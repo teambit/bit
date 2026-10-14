@@ -12,7 +12,13 @@ pub(super) fn object(hash: &str, kind: &str, value: Value) -> io::Result<Object>
     let serialized = serialized(hash, kind, &value)?;
     let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
     encoder.write_all(&serialized)?;
-    Ok(Object { kind: kind.to_owned(), bytes: encoder.finish()?, value: Some(value), source: None })
+    Ok(Object {
+        kind: kind.to_owned(),
+        bytes: encoder.finish()?,
+        value: Some(value),
+        source: None,
+        inflated_size: serialized.len(),
+    })
 }
 fn serialized(hash: &str, kind: &str, value: &Value) -> io::Result<Vec<u8>> {
     crate::merge_history::hash(hash)?;
@@ -24,11 +30,16 @@ fn serialized(hash: &str, kind: &str, value: &Value) -> io::Result<Vec<u8>> {
 impl PreparedImport {
     pub(crate) fn commit(&self) -> io::Result<()> {
         self.validate()?;
+        if !self.writes.lane_histories.is_empty() {
+            return Err(invalid("import LaneHistory scalar receipts pending"));
+        }
         // File-remote fetching populates history on that remote before exposing
         // its stream. Keep those writes ahead of corresponding local imports.
         self.publish_remote_history()?;
         let store = Store::new(self.environment.local_directory.clone(), None)?;
-        for kind in ["Source", "ScopeMeta", "Version", "VersionHistory", "Component"] {
+        for kind in
+            ["Source", "ScopeMeta", "Version", "VersionHistory", "Component", "Lane", "LaneHistory"]
+        {
             for (hash, record) in &self.overlay.objects {
                 if record.kind == kind {
                     store.write(hash, &record.bytes)?;
@@ -42,6 +53,13 @@ impl PreparedImport {
             bytes.push(b'\n');
             store.write_index(&bytes)?;
         }
+        self.publish_refs()?;
+        if let Some(path) = &self.environment.global_remotes {
+            write_file(path, b"{}")?;
+        }
+        Ok(())
+    }
+    fn publish_refs(&self) -> io::Result<()> {
         let scope = self.environment.local_directory
             .parent()
             .ok_or_else(|| invalid("import local scope"))?;
@@ -54,8 +72,14 @@ impl PreparedImport {
                 &serde_json::to_vec_pretty(rows).map_err(io::Error::other)?,
             )?;
         }
-        if let Some(path) = &self.environment.global_remotes {
-            write_file(path, b"{}")?;
+        for ((remote, lane), rows) in &self.overlay.lane_refs {
+            write_file(
+                &scope
+                    .join("refs/remotes")
+                    .join(remote)
+                    .join(lane),
+                &serde_json::to_vec_pretty(rows).map_err(io::Error::other)?,
+            )?;
         }
         Ok(())
     }

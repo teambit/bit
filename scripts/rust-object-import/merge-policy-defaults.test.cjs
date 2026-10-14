@@ -11,6 +11,23 @@ const { commandDefaultNodeReceipt } =
     ? installed('@teambit/bit/dist/rust-workspace-command-defaults.js')
     : source('scopes/harmony/bit/rust-workspace-command-defaults.ts');
 
+test('stored builder metadata adds no default callback and configured pipelines still decline', () => {
+  const { statusPolicy } =
+    process.env.BIT_TEST_COMMAND_COMPILED === '1'
+      ? installed('@teambit/bit/dist/rust-status-policy.js')
+      : source('scopes/harmony/bit/rust-status-policy.ts');
+  const builder = 'teambit.pipelines/builder';
+  const target = { identity: 'qualification.policy/component', mergedConfigNames: [builder] };
+  const context = { models: [], versions: [], workspace: {}, targets: [target] };
+  const projected = { schema: '2.0.0', extensions: [{ name: builder, config: {}, data: { artifacts: [] } }] };
+  const policy = statusPolicy(context, target, projected);
+  assert.deepEqual(policy.extensions, [{ name: builder, config: {} }]);
+  const receipt = commandDefaultNodeReceipt(target, policy, ['index.js']);
+  assert.ok(receipt.slotData.every((slot) => slot.id !== builder));
+  projected.extensions[0].config = { pipeline: 'custom' };
+  assert.throws(() => statusPolicy(context, target, projected), /configured core extension/);
+});
+
 // Invoke the actual Harmony workspace in a separate process, so its component
 // cache cannot conceal a changed file/configuration between differential cases.
 test('default Node receipts match actual fresh and tagged Consumer load callbacks', async (t) => {

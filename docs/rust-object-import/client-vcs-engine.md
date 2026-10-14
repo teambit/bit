@@ -40,7 +40,12 @@ and renders the canonical issue error without allocating a snapshot. Manual
 conflicts retain conflict markers; the ours strategy preserves current files.
 Unsupported callbacks, application components and unsupported policy or issue
 shapes decline before publication so the canonical command can handle them.
-Lane command ownership remains a separate boundary.
+Lane command ownership has its own context and import boundary, reusing the
+retained merge and dependency phases. Supported `lane merge -x` commands also
+enter the native owner before workspace loading; lane-specific publication
+covers history, bitmap membership and recovery backups. See
+[native lane command ownership](../rust/client-native-lane-command.md) for the
+remaining fallback boundaries, cache lifecycle and qualification contract.
 
 `cold-command-qualification.cjs` compares public output and durable state in
 canonical, native, missing-helper and crashed-helper modes. Its native trace
