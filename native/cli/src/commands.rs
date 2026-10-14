@@ -1,6 +1,7 @@
 //! The commands implemented in Rust. A command is looked up by its name or
 //! one of its aliases, exactly as the Node.js CLI spells them.
 
+mod diff;
 mod engine;
 mod install;
 mod inventory;
@@ -17,7 +18,8 @@ pub struct Command {
     pub run: fn(&[OsString]) -> io::Result<Outcome>,
 }
 
-pub const COMMANDS: &[Command] = &[install::COMMAND, mini_status::COMMAND, status::COMMAND];
+pub const COMMANDS: &[Command] =
+    &[diff::COMMAND, install::COMMAND, mini_status::COMMAND, status::COMMAND];
 
 pub fn find(name: &str) -> Option<&'static Command> {
     COMMANDS

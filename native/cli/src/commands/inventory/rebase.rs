@@ -40,7 +40,7 @@ pub fn join_linux(parts: &[&str]) -> String {
 }
 
 /// `path.posix.normalize`.
-fn normalize(path: &str) -> String {
+pub fn normalize(path: &str) -> String {
     if path.is_empty() {
         return ".".to_string();
     }

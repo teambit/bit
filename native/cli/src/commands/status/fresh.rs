@@ -103,7 +103,7 @@ impl Detection<'_> {
             .unwrap_or(Value::Null);
         let mut request = json!({ "kind": "dependencyPolicyDetected", "root": self.root,
             "componentRoot": component_root, "capture": receipt });
-        super::spread(&mut request, &policy.input)?;
+        super::capture::spread(&mut request, &policy.input)?;
         request["resolution"]["grammar"] =
             grammar::dependency(&json!([policy.input, grammar_inputs]));
         let dependencies: Value = engine.request(&request)?;

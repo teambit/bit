@@ -79,6 +79,8 @@ Each host method is removed once its behavior is ported to Rust.
 
 | `status --json`, `s -j` | `bit-object-import` workspace engine, `bit-ignore`, `node-semver`'s `npm` module | none | any other flag or argument, outside a workspace, a locale whose collation tailors id characters, the `no-fs-cache` feature in any config layer, a workspace or component the engine does not own (configured extensions, environments other than `teambit.harmony/node`, component-level dependency policies, a scope in `.git/bit`, a lane), files the scanner leaves to JavaScript detectors (such as `.mdx`), unresolved imports, a main file outside the inventory |
 
+| `diff --json`, `diff <component> --json` | the status capture, the engine's `workspaceDiff` | none | other arguments (versions, flags), patterns outside `[a-z0-9_./-]` or matching other than one component, a configured `git_path`, a tagged component whose model has no head, a dependency change neither side has a version for, a stored custom package name, Windows, and everything `status --json` declines |
+
 `confirm` prompts are asked by the Rust process itself, since it owns the terminal.
 
 Native commands append to the workspace's `command-history` file (in `.bit`,
@@ -109,6 +111,17 @@ such as `constructor`, break the package and are declined.
 - **Fresh detection.** The default dev-file patterns, as `minimatch` 3.0.5 matches them; the core aspect packages from `scopes/harmony/bit/core-aspect-ids.json`; the bundled TypeScript version, read from the Node.js CLI's install. Node's built-in module list comes from the Node.js CLI's own Node. It is asked once per binary and cached in `<BIT_GLOBALS_DIR>/native-cli`.
 - **Dependency cache.** Fresh detections are written with `cacache`'s format once the command has validated them, after the invalidation check `FsCache` runs.
 - **Ordering.** Result rows are sorted like `localeCompare` sorts them under the root collation.
+
+### Diff output
+
+`diff --json` follows `rust-diff.ts` and `rust-diff-metadata.ts`, and formats like `@teambit/legacy.component-diff`:
+
+- **File diffs.** The engine runs `git diff`. The CLI relabels the headers like `formatFileDiff`, including JavaScript's `$` replacement patterns in file names.
+- **Metadata.** `diffMetadata` is ported field by field. That covers `object-diff` and `array-difference` for the printable fields, `ComponentID` equality for dependencies, and npm `semver` loose comparison through `node-semver`'s `npm` module. Extension configurations are written to temporary files and compared with `git diff --no-index --color`, as `getOneFileDiff` does.
+- **Colors.** Metadata text is colored like chalk 4.1.2 when `supports-color` 7.2.0 would color stdout: flags such as `--no-color`, `FORCE_COLOR`, a terminal, `TERM`, CI variables.
+- **File order.** A component's files are listed in `globby`'s order: directories breadth first, each directory's entries in byte order, as libuv sorts them. Node lists directories unsorted on Windows, so diff declines there.
+
+The Node.js CLI reports rows in a varying order, since components are processed concurrently. The native order is the bitmap's.
 
 ## Versions
 

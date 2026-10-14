@@ -2,6 +2,8 @@
 //! command: Bit's ignore lists and the workspace's patterns compiled with
 //! `bit-ignore`, and the scan/finish requests of the workspace engine.
 
+pub use rebase::normalize;
+
 mod rebase;
 
 use super::engine::Engine;
