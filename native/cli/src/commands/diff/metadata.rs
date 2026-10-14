@@ -5,10 +5,9 @@
 pub use side::{Component, Side};
 
 mod dependencies;
-mod ids;
 mod side;
 
-use super::{color::Chalk, files};
+use super::{super::color::Chalk, files};
 use crate::commands::status::js::{decline, text, truthy};
 use serde_json::{Value, json};
 use side::PACKAGE_FIELDS;

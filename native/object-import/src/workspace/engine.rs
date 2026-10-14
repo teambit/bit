@@ -131,6 +131,9 @@ struct Response {
     failed: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     data: Option<Value>,
+    /// Why a request failed, for diagnostics; callers decide on `failed`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    error: Option<String>,
 }
 struct Output(Vec<u8>);
 impl Write for Output {
@@ -173,8 +176,9 @@ pub(crate) fn serve(
             skipped: Vec::new(),
             failed: false,
             data: Some(data),
+            error: None,
         },
-        Err(_) => failure(id),
+        Err(error) => Response { error: Some(error.to_string()), ..failure(id) },
     };
     let mut output = Output(Vec::new());
     if serde_json::to_writer(&mut output, &response).is_err() {
@@ -270,7 +274,15 @@ fn owned_command(
     }
 }
 fn failure(id: u32) -> Response {
-    Response { version: 1, id, completed: 0, skipped: Vec::new(), failed: true, data: None }
+    Response {
+        version: 1,
+        id,
+        completed: 0,
+        skipped: Vec::new(),
+        failed: true,
+        data: None,
+        error: None,
+    }
 }
 fn apply(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value)> {
     match request {

@@ -11,6 +11,7 @@ path = "src/main.rs"
 
 [dependencies]
 bit-ignore = { path = "../ignore" }
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
 bit-install = { path = "../install" }
 bit-object-import = { path = "../object-import" }
 node-semver = "2"

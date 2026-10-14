@@ -237,7 +237,7 @@ fn lock(state: &Mutex<Spinner>) -> std::sync::MutexGuard<'_, Spinner> {
     state.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
 }
 
-/// `pretty-time` with its default precision: the largest whole unit only.
+/// `pretty-time` with its default precision: the largest unit, rounded.
 #[must_use]
 pub fn pretty_time(duration: Duration) -> String {
     const UNITS: [(&str, u128); 6] = [
@@ -253,7 +253,7 @@ pub fn pretty_time(duration: Duration) -> String {
         .iter()
         .find(|(_, size)| nanos >= *size)
         .unwrap_or(&UNITS[5]);
-    format!("{}{unit}", nanos / size)
+    format!("{}{unit}", (nanos + size / 2) / size)
 }
 
 #[cfg(test)]

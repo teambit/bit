@@ -7,6 +7,18 @@ use std::{
     io::{self, IsTerminal},
 };
 
+/// An `ansi-styles` pair: open and close codes.
+#[derive(Debug, Clone, Copy)]
+struct Style(&'static str, &'static str);
+
+const RED: Style = Style("\u{1b}[31m", "\u{1b}[39m");
+const GREEN: Style = Style("\u{1b}[32m", "\u{1b}[39m");
+const YELLOW: Style = Style("\u{1b}[33m", "\u{1b}[39m");
+const CYAN: Style = Style("\u{1b}[36m", "\u{1b}[39m");
+const WHITE: Style = Style("\u{1b}[37m", "\u{1b}[39m");
+const BOLD: Style = Style("\u{1b}[1m", "\u{1b}[22m");
+const DIM: Style = Style("\u{1b}[2m", "\u{1b}[22m");
+
 #[derive(Debug, Clone, Copy)]
 pub struct Chalk {
     enabled: bool,
@@ -23,30 +35,67 @@ impl Chalk {
         Self { enabled }
     }
 
+    pub const fn enabled(self) -> bool {
+        self.enabled
+    }
+
     pub fn red(self, text: &str) -> String {
-        self.apply("\u{1b}[31m", "\u{1b}[39m", text)
+        self.apply(&[RED], text)
     }
 
     pub fn green(self, text: &str) -> String {
-        self.apply("\u{1b}[32m", "\u{1b}[39m", text)
+        self.apply(&[GREEN], text)
+    }
+
+    pub fn yellow(self, text: &str) -> String {
+        self.apply(&[YELLOW], text)
+    }
+
+    pub fn cyan(self, text: &str) -> String {
+        self.apply(&[CYAN], text)
+    }
+
+    pub fn white(self, text: &str) -> String {
+        self.apply(&[WHITE], text)
+    }
+
+    pub fn dim(self, text: &str) -> String {
+        self.apply(&[DIM], text)
     }
 
     pub fn bold(self, text: &str) -> String {
-        self.apply("\u{1b}[1m", "\u{1b}[22m", text)
+        self.apply(&[BOLD], text)
     }
 
-    /// `applyStyle`: reopen after any existing close code, close and reopen
+    /// `chalk.bold.white`.
+    pub fn bold_white(self, text: &str) -> String {
+        self.apply(&[BOLD, WHITE], text)
+    }
+
+    /// `applyStyle` for a chain of styles, outermost first: reopen each style
+    /// after its existing close codes (innermost first), close and reopen
     /// around every line break.
-    fn apply(self, open: &str, close: &str, text: &str) -> String {
+    fn apply(self, styles: &[Style], text: &str) -> String {
         if !self.enabled || text.is_empty() {
             return text.to_string();
         }
+        let open: String = styles
+            .iter()
+            .map(|style| style.0)
+            .collect();
+        let close: String = styles
+            .iter()
+            .rev()
+            .map(|style| style.1)
+            .collect();
         let mut text = text.to_string();
         if text.contains('\u{1b}') {
-            text = text.replace(close, &format!("{close}{open}"));
+            for style in styles.iter().rev() {
+                text = text.replace(style.1, &format!("{}{}", style.1, style.0));
+            }
         }
         if text.contains('\n') {
-            text = encase_line_breaks(&text, close, open);
+            text = encase_line_breaks(&text, &close, &open);
         }
         format!("{open}{text}{close}")
     }

@@ -72,7 +72,7 @@ impl Id {
     }
 
     /// `id.toString()`.
-    fn display(&self) -> String {
+    pub fn display(&self) -> String {
         match self.version.as_deref().filter(|_| self.has_version()) {
             Some(version) => format!("{}@{version}", self.without_version()),
             None => self.without_version(),

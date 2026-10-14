@@ -81,6 +81,8 @@ Each host method is removed once its behavior is ported to Rust.
 
 | `diff --json`, `diff <component> --json` | the status capture, the engine's `workspaceDiff` | none | other arguments (versions, flags), patterns outside `[a-z0-9_./-]` or matching other than one component, a configured `git_path`, a tagged component whose model has no head, a dependency change neither side has a version for, a stored custom package name, Windows, and everything `status --json` declines |
 
+| `checkout <to> [pattern] -x`, `U` | the engine's `commandPrepare`, `commandPlan` and `commandApply`, the status capture | none | without `-x` (an install follows), `--all` with `head` or `latest`, `main`, other flags, a version outside `head`, `latest`, `reset`, `head~N`, a snap hash or a semver tag, an unresolved conflict without `--auto-merge-resolve` or `--manual` (the Node.js CLI prompts), a binary conflict, a plan that needs a policy projection, snapshot or lane step, unexported components, and everything `status --json` declines |
+
 `confirm` prompts are asked by the Rust process itself, since it owns the terminal.
 
 Native commands append to the workspace's `command-history` file (in `.bit`,
@@ -122,6 +124,14 @@ such as `constructor`, break the package and are declined.
 - **File order.** A component's files are listed in `globby`'s order: directories breadth first, each directory's entries in byte order, as libuv sorts them. Node lists directories unsorted on Windows, so diff declines there.
 
 The Node.js CLI reports rows in a varying order, since components are processed concurrently. The native order is the bitmap's.
+
+### Write commands
+
+Write commands keep two phases. Until the commit starts, any failure declines, and the Node.js CLI runs the command from scratch. That covers an engine decline, a report that cannot be formatted and a progress receipt that does not validate. After the commit starts, failures belong to the command. They are printed in red on stderr, the command history records them, and the exit code is 1, as the Node.js CLI's error handler does.
+
+`checkout` prints Bit's loader lines on stdout like `ora` 5.4.1 off a terminal (`- <text>`, `✔ <text>`), with timings in `pretty-time`'s format. The report is ported from `checkoutOutput` and the `merge-output` helpers. Details hidden behind `bit details` are written to `<BIT_GLOBALS_DIR>/last-command-details` as `CommandRunner` writes them.
+
+When an engine request fails, the engine now returns the reason, and `BIT_NATIVE_TRACE=1` prints it with the decline.
 
 ## Versions
 

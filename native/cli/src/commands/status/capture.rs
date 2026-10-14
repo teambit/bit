@@ -28,6 +28,16 @@ pub struct Capture {
     reset: bool,
 }
 
+impl Capture {
+    /// `capture.dependencyReadSet`: the read sets of every fresh detection.
+    pub fn dependency_read_set(&self) -> Vec<Value> {
+        self.pending
+            .iter()
+            .flat_map(|entry| entry.read_set().iter().cloned())
+            .collect()
+    }
+}
+
 /// `captureRustClientCurrent(root, context, request, targets)`: each selected
 /// component's files and dependencies, from the cache or detected afresh.
 pub fn capture(

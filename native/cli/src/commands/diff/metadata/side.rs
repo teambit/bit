@@ -1,7 +1,9 @@
 //! One side of the metadata comparison: `rustDiffMetadata` of the Node.js glue.
 
-use super::ids::Id;
-use crate::commands::status::js::{array, decline, object, text, truthy};
+use crate::commands::{
+    ids::Id,
+    status::js::{array, decline, object, text, truthy},
+};
 use serde_json::{Map, Value, json};
 use std::{cmp::Ordering, io};
 

@@ -24,6 +24,8 @@ struct Response {
     skipped: Option<Vec<Value>>,
     #[serde(default)]
     data: Value,
+    #[serde(default)]
+    error: Option<String>,
 }
 
 impl Engine {
@@ -58,7 +60,8 @@ impl Engine {
                 .get("kind")
                 .and_then(Value::as_str)
                 .unwrap_or("request");
-            return Err(io::Error::other(format!("the engine declined {kind}")));
+            let reason = response.error.map_or_else(String::new, |error| format!(": {error}"));
+            return Err(io::Error::other(format!("the engine declined {kind}{reason}")));
         }
         serde_json::from_value(response.data).map_err(io::Error::other)
     }

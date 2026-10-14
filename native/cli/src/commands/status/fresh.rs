@@ -37,6 +37,15 @@ pub struct Pending {
     read_set: Value,
 }
 
+impl Pending {
+    /// The files the detection read, which the engine checks again before writing.
+    pub fn read_set(&self) -> &[Value] {
+        self.read_set
+            .as_array()
+            .map_or(&[], Vec::as_slice)
+    }
+}
+
 /// Facts about the Node.js CLI that are the same for every component.
 pub struct Facts {
     graph: Value,
@@ -45,13 +54,8 @@ pub struct Facts {
 
 impl Facts {
     pub fn new(home: &Path) -> io::Result<Self> {
-        let node = node::Node::find()?;
-        let graph = json!({
-            "home": home,
-            "builtins": node.builtins()?,
-            "detectorExtensions": DETECTOR_EXTENSIONS,
-            "typescript": node.typescript_version()?.as_deref() == Some(TYPESCRIPT),
-        });
+        let mut graph = dependency_grammar()?;
+        graph["home"] = json!(home);
         let ids: Vec<String> = serde_json::from_str(CORE_ASPECT_IDS).map_err(io::Error::other)?;
         let core_packages = ids
             .iter()
@@ -59,6 +63,18 @@ impl Facts {
             .collect();
         Ok(Self { graph, core_packages })
     }
+}
+
+/// `nativeDependencyGrammar()`: the running Node's built-in modules, the
+/// detector extensions and whether the bundled TypeScript is the one the
+/// engine reproduces.
+pub fn dependency_grammar() -> io::Result<Value> {
+    let node = node::Node::find()?;
+    Ok(json!({
+        "builtins": node.builtins()?,
+        "detectorExtensions": DETECTOR_EXTENSIONS,
+        "typescript": node.typescript_version()?.as_deref() == Some(TYPESCRIPT),
+    }))
 }
 
 /// `getCoreAspectPackageName`: `teambit.x/a/b` is `@teambit/a.b`.

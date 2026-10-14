@@ -1,7 +1,10 @@
 //! The dependency sections of `diffMetadata`: `packageDependenciesOutput`,
 //! `componentDependenciesOutput` and `formatDepsDiffAsPlainText`.
 
-use super::{super::color::Chalk, Labels, ids::Id};
+use super::{
+    super::super::{color::Chalk, ids::Id},
+    Labels,
+};
 use crate::commands::status::js::{decline, text};
 use node_semver::npm;
 use serde_json::{Map, Value};

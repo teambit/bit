@@ -1,4 +1,5 @@
-use super::{ids::Id, prettify};
+use super::prettify;
+use crate::commands::ids::Id;
 
 #[test]
 fn prettifies_field_names() {

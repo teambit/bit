@@ -333,6 +333,7 @@ dependencies = [
  "bit-ignore",
  "bit-install",
  "bit-object-import",
+ "chrono",
  "node-semver",
  "pnpm-diagnostics",
  "regress",

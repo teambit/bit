@@ -7,11 +7,11 @@
 //! patterns the glue did not resolve, and everything the status capture
 //! declines run on the Node.js CLI.
 
-mod color;
 mod files;
 mod metadata;
 
 use super::{
+    color::Chalk,
     engine::Engine,
     inventory,
     status::{
@@ -21,7 +21,6 @@ use super::{
     },
 };
 use crate::{commands::Command, history::History, native::Outcome, workspace};
-use color::Chalk;
 use serde_json::{Value, json};
 use std::{
     env,
