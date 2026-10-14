@@ -13,9 +13,6 @@ import { computePreviewScale } from './compute-preview-scale';
 import { useIframeContentHeight } from './use-iframe-content-height';
 import styles from './preview.module.scss';
 
-// safety cap for a reported preview height, so a runaway report can't blow the iframe up
-const MAX_PREVIEW_HEIGHT = 20000;
-
 export type OnPreviewLoadProps = { height?: string; width?: string };
 // omitting 'referrerPolicy' because of an TS error during build. Re-include when needed
 export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFrameElement>, 'src' | 'referrerPolicy'> {
@@ -123,9 +120,6 @@ export function ComponentPreview({
   const isScaling = component.preview?.isScaling;
   const currentRef = isScaling ? iframeRef : heightIframeRef;
   const [forceVisible, setForceVisible] = useState(false);
-  // consecutive reports where the height jumped to 2x the iframe or more (content sized in viewport units)
-  const heightJumpCountRef = useRef(0);
-  const heightFrozenRef = useRef(false);
   // @ts-ignore (https://github.com/frenic/csstype/issues/156)
   // const height = iframeHeight || style?.height;
   usePubSubIframe(pubsub ? currentRef : undefined);
@@ -180,20 +174,9 @@ export function ComponentPreview({
           if (message.type === 'preview-size') {
             // disable this for now until we figure out how to correctly calculate the height
             // const previewHeight = component.preview?.onlyOverview ? message.data.height - 150 : message.data.height;
-            const { width: reportedWidth, height: reportedHeight } = message.data;
-            const currentIframeHeight = iframeRef.current?.offsetHeight || 0;
-            // an early report sent before layout. the hidden iframe won't report again, so show it to get a real size
-            if (reportedWidth === 0) setForceVisible(true);
-            setWidth(reportedWidth);
-
-            const isHeightJump = currentIframeHeight > 0 && reportedHeight >= currentIframeHeight * 2;
-            heightJumpCountRef.current = isHeightJump ? heightJumpCountRef.current + 1 : 0;
-            if (heightJumpCountRef.current >= 2) heightFrozenRef.current = true;
-            // content filling the iframe (e.g. min-height: 100vh) reports the iframe's own height. following it
-            // would add innerBottomPadding on every report
-            const isOwnHeight = Math.abs(reportedHeight - currentIframeHeight) <= innerBottomPadding + 1;
+            setWidth(message.data.width);
             // setHeight(previewHeight);
-            if (!heightFrozenRef.current && !isOwnHeight) setHeight(Math.min(reportedHeight, MAX_PREVIEW_HEIGHT));
+            setHeight(message.data.height);
           }
           onLoad && event && onLoad(event, { height: message.data.height, width: message.data.width });
         },
@@ -212,16 +195,9 @@ export function ComponentPreview({
 
   const targetParams = viewport === null ? baseParams : paramsWithViewport;
   const url = toPreviewUrl(component, previewName, isScaling ? targetParams : baseParams, includeEnv);
-
-  // a new preview in the same iframe starts sizing from scratch
-  useEffect(() => {
-    heightJumpCountRef.current = 0;
-    heightFrozenRef.current = false;
-  }, [url]);
   // const currentHeight = fullContentHeight ? '100%' : height || 1024;
   const containerWidth = containerRef.current?.offsetWidth || 0;
-  // the container wraps the iframe and its bottom padding. drop the padding so it isn't added back on every render
-  const containerHeight = Math.max((containerRef.current?.offsetHeight || 0) - innerBottomPadding, 0);
+  const containerHeight = containerRef.current?.offsetHeight || 0;
   const currentWidth = fullContentHeight ? '100%' : width || 1280;
   const legacyCurrentWidth = '100%';
   const targetWidth = typeof currentWidth === 'string' ? currentWidth : Math.max(currentWidth, containerWidth);
