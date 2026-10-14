@@ -108,7 +108,7 @@ fn extensions(config: &Value) -> io::Result<()> {
         ("teambit.generator/generator", &["envs"][..]),
         (
             "teambit.dependencies/dependency-resolver",
-            &["policy", "allowScripts", "rootComponents"][..],
+            &["policy", "allowScripts", "rootComponents", "linkCoreAspects"][..],
         ),
         ("teambit.workspace/workspace-config-files", &["enableWorkspaceConfigWrite"][..]),
     ] {
@@ -121,6 +121,14 @@ fn extensions(config: &Value) -> io::Result<()> {
                 return Err(invalid("status aspect settings require Harmony"));
             }
         }
+    }
+    // `bit install <package>` writes the default, `true`; linking core aspects
+    // differently is left to Harmony.
+    if config["teambit.dependencies/dependency-resolver"]
+        .get("linkCoreAspects")
+        .is_some_and(|link| link != true)
+    {
+        return Err(invalid("status unlinked core aspects require Harmony"));
     }
     if let Some(envs) = config["teambit.generator/generator"].get("envs")
         && !envs.as_array().is_some_and(Vec::is_empty)
@@ -328,3 +336,6 @@ pub(in crate::workspace::engine) fn context_bitmap_targets(
         })
         .collect())
 }
+
+#[cfg(test)]
+mod tests;
