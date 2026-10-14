@@ -14,6 +14,23 @@ import { useIframeContentHeight } from './use-iframe-content-height';
 import styles from './preview.module.scss';
 
 export type OnPreviewLoadProps = { height?: string; width?: string };
+
+type HeightReport = { iframeHeight: number; height: number };
+type ViewportSizedContent = { slope: number; offset: number };
+
+/**
+ * detects content sized in viewport units (e.g. sections of 100vh). its height is `slope * iframeHeight + offset`,
+ * so with a slope of 1 or more every resize of the iframe makes it taller again and it never fits.
+ * requires three reports in a row, each grown after the iframe grew, that fit the same line.
+ */
+function detectViewportSizedContent([first, second, third]: HeightReport[]): ViewportSizedContent | undefined {
+  if (!first || !second || !third) return undefined;
+  if (second.iframeHeight <= first.iframeHeight || third.iframeHeight <= second.iframeHeight) return undefined;
+  const slope = (second.height - first.height) / (second.iframeHeight - first.iframeHeight);
+  const nextSlope = (third.height - second.height) / (third.iframeHeight - second.iframeHeight);
+  if (slope < 1 || Math.abs(slope - nextSlope) > slope * 0.01) return undefined;
+  return { slope: nextSlope, offset: third.height - nextSlope * third.iframeHeight };
+}
 // omitting 'referrerPolicy' because of an TS error during build. Re-include when needed
 export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFrameElement>, 'src' | 'referrerPolicy'> {
   /**
@@ -120,6 +137,26 @@ export function ComponentPreview({
   const isScaling = component.preview?.isScaling;
   const currentRef = isScaling ? iframeRef : heightIframeRef;
   const [forceVisible, setForceVisible] = useState(false);
+  const heightReportsRef = useRef<HeightReport[]>([]);
+  const viewportSizedContentRef = useRef<ViewportSizedContent | undefined>(undefined);
+
+  /**
+   * the iframe height to apply for a size report, or undefined to keep the current one.
+   */
+  const heightForReport = (report: HeightReport): number | undefined => {
+    const viewportSized = viewportSizedContentRef.current;
+    const expectedHeight = viewportSized && viewportSized.slope * report.iframeHeight + viewportSized.offset;
+    // the same viewport-sized content reporting the iframe's own height back. following it would grow it again
+    if (expectedHeight !== undefined && Math.abs(report.height - expectedHeight) <= 2) return undefined;
+    viewportSizedContentRef.current = undefined;
+    const reports = [...heightReportsRef.current, report].slice(-3);
+    heightReportsRef.current = reports;
+    const detected = detectViewportSizedContent(reports);
+    if (!detected) return report.height;
+    viewportSizedContentRef.current = detected;
+    // go back to the height the iframe had before it started growing with its content
+    return reports[0].iframeHeight;
+  };
   // @ts-ignore (https://github.com/frenic/csstype/issues/156)
   // const height = iframeHeight || style?.height;
   usePubSubIframe(pubsub ? currentRef : undefined);
@@ -176,7 +213,11 @@ export function ComponentPreview({
             // const previewHeight = component.preview?.onlyOverview ? message.data.height - 150 : message.data.height;
             setWidth(message.data.width);
             // setHeight(previewHeight);
-            setHeight(message.data.height);
+            const nextHeight = heightForReport({
+              iframeHeight: iframeRef.current?.offsetHeight || 0,
+              height: message.data.height,
+            });
+            if (nextHeight !== undefined) setHeight(nextHeight);
           }
           onLoad && event && onLoad(event, { height: message.data.height, width: message.data.width });
         },
@@ -195,6 +236,12 @@ export function ComponentPreview({
 
   const targetParams = viewport === null ? baseParams : paramsWithViewport;
   const url = toPreviewUrl(component, previewName, isScaling ? targetParams : baseParams, includeEnv);
+
+  // a new preview in the same iframe is measured from scratch
+  useEffect(() => {
+    heightReportsRef.current = [];
+    viewportSizedContentRef.current = undefined;
+  }, [url]);
   // the bottom padding goes on the wrapper, outside the iframe. inside the iframe it would grow the viewport,
   // which content sized to the viewport (e.g. min-height: 100vh) reports back as new height on every report.
   const bottomPadding = isScaling && !forceHeight ? innerBottomPadding : 0;
