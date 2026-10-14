@@ -33,34 +33,31 @@ Wall time comes from the parent process. CPU (user plus sys) and peak RSS come f
 
 - timings
 - pnpm's throttled progress redraws
-- lines the measured native build did not print yet: the importer's per-phase status lines, Harmony's `loading N component(s)`, and the command runner's `running command "install"...`. Later commits on the same branch print all of them; the measurements predate that change.
+- transient status lines whose presence depends on what is loaded: the importer's per-phase status lines, Harmony's `loading N component(s)` (a skipped `afterInstall` loads no components), and the command runner's `running command "install"...`.
 
 ## Machine
 
 - Apple M1 Max (10 cores), 64 GB, macOS 27.0.1
 - Node 22.22.0
-- CLI compiled from `rust-install-followups` at 77d56b529
+- CLI compiled from `rust-install-afterinstall-restore` (the repeat-install skip with content-identified outputs)
 - The addon was built with `cargo build --release -p bit-workspace-napi` (fat LTO, `codegen-units = 1`) and `strip = "none"`. The stripped release dylib does not load on this macOS (`mis-aligned LINKEDIT string pool`), because rustc's `rust-objcopy` strip step misaligns it.
 
 ## Results
 
 | Workspace | Scenario | TS wall ms (min–max) | Native wall ms (min–max) | Wall ratio | TS CPU ms | Native CPU ms | CPU ratio | TS peak RSS MB | Native peak RSS MB | RSS ratio | Output matched |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| small | cold | 3143 (2985–3270) | 2304 (2279–2396) | 0.733 | 2110 | 1710 | 0.810 | 321 | 313 | 0.974 | yes |
-| small | repeat | 2205 (2171–2489) | 1427 (1413–1462) | 0.647 | 1720 | 1410 | 0.820 | 308 | 300 | 0.973 | yes |
-| small | add | 2398 (2332–2608) | 1581 (1564–1651) | 0.660 | 1810 | 1470 | 0.812 | 309 | 302 | 0.979 | yes |
-| small | cold, no compile/config | 2691 (2591–3043) | 1579 (1476–2274) | 0.587 | 1740 | 880 | 0.506 | 266 | 161 | 0.603 | yes |
-| medium | cold | 5600 (5163–6094) | 4449 (4269–5139) | 0.794 | 4990 | 3820 | 0.766 | 383 | 344 | 0.899 | yes |
-| medium | repeat | 3556 (3398–5112) | 2767 (2596–2852) | 0.778 | 3750 | 3450 | 0.920 | 353 | 343 | 0.973 | yes |
-| medium | add | 3709 (3501–8792) | 2829 (2683–3396) | 0.763 | 3880 | 3410 | 0.879 | 357 | 346 | 0.969 | yes |
-| medium | cold, no compile/config | 4545 (4148–4785) | 2797 (2317–3112) | 0.615 | 3850 | 1340 | 0.348 | 316 | 175 | 0.552 | yes |
+| small | cold | 3030 (3015–3057) | 2486 (2382–2717) | 0.820 | 2100 | 1780 | 0.848 | 319 | 315 | 0.985 | yes |
+| small | repeat | 2211 (2189–2481) | 964 (944–999) | 0.436 | 1740 | 750 | 0.431 | 307 | 159 | 0.517 | yes |
+| small | add | 2316 (2308–2369) | 1716 (1687–1890) | 0.741 | 1770 | 1510 | 0.853 | 308 | 304 | 0.987 | yes |
+| small | cold, no compile/config | 2702 (2617–3219) | 1615 (1548–2015) | 0.598 | 1740 | 930 | 0.534 | 265 | 162 | 0.610 | yes |
+| medium | cold | 5137 (4885–5428) | 4790 (4700–4854) | 0.932 | 4670 | 3860 | 0.827 | 392 | 355 | 0.905 | yes |
+| medium | repeat | 3365 (3331–3527) | 1244 (1215–1263) | 0.370 | 3650 | 1240 | 0.340 | 355 | 174 | 0.490 | yes |
+| medium | add | 3472 (3447–3570) | 2798 (2777–2859) | 0.806 | 3670 | 3340 | 0.910 | 358 | 350 | 0.979 | yes |
+| medium | cold, no compile/config | 4327 (4256–5212) | 2711 (2650–2933) | 0.627 | 3650 | 1500 | 0.411 | 316 | 175 | 0.554 | yes |
 
 ## Observations
 
-- **Native is faster in every scenario**, by 21–35% in wall time for a full install.
-- **The JavaScript `afterInstall` step accounts for most of what native still spends.** It loads Harmony, the workspace and the envs, then compiles. Compare cold with and without compile:
-  - Native: about 0.7 s (small) and 1.65 s (medium).
-  - TypeScript: about 0.45 s and 1.05 s, because Harmony is already loaded there.
-- **Without compile and config files, native skips Harmony entirely.** It uses 35–51% of the TypeScript CPU and about 55–60% of its peak RSS.
-- **Peak RSS of a full native install is set by the Harmony load in `afterInstall`,** which is why it is close to TypeScript's.
-- **Native `repeat` and `add` stay above 1.4 s on the small workspace.** About half of that is `afterInstall`, which took about 0.7 s in the cold scenario. A repeat install that skips `afterInstall` when nothing changed would be the next win.
+- **A repeat install that changed nothing skips `afterInstall`** (see [Repeat installs skip `afterInstall`](native-install.md#repeat-installs-skip-afterinstall)). It takes 37–44% of the TypeScript wall time, and about half its peak RSS, because Harmony is not loaded. The previous measurement, which ran `afterInstall` every time, took 1427 ms (small) and 2767 ms (medium). Now the same installs take 964 ms and 1244 ms.
+- **Native is faster in every scenario.** A cold install or an added package still runs `afterInstall` and takes 7–26% less wall time than TypeScript.
+- **In those scenarios, the JavaScript `afterInstall` step accounts for most of what native still spends.** It loads Harmony, the workspace and the envs, then compiles. Without compile and config files, native skips Harmony entirely. It then uses 41–53% of the TypeScript CPU and about 55–61% of its peak RSS.
+- **The peak RSS of a cold native install is set by the Harmony load in `afterInstall`,** which is why it is close to TypeScript's.
