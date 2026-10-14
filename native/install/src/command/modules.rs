@@ -132,7 +132,8 @@ async fn after_install(
     };
     if let Some(stamp) = &stamp {
         let started = Instant::now();
-        if compile_stamp::is_fresh(stamp, &inputs)? {
+        if let Some(restores) = compile_stamp::check(stamp, &inputs)? {
+            compile_stamp::restore(&restores)?;
             // What the compile step prints, without loading Harmony to compile the same files.
             session.output.success(COMPILING, Some(started));
             return Ok(());

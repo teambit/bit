@@ -195,10 +195,19 @@ including injected directories) and the config files. Rust then writes a stamp t
   `pnpm-lock.yaml`, and the size and modification time of every file under each
   component directory except `node_modules`. The component loader also picks up files
   `.bitmap` does not list, so directories are walked, not the `.bitmap` file lists.
-- **an output snapshot:** the size and modification time of every file in those paths.
+- **an output snapshot:** the size, modification time and SHA-256 of every file in
+  those paths.
 
-The next install skips the step only when both still match. Any source, config or
-package change, and any removed or edited output, runs it again.
+The next install skips the step only when the fingerprint matches and every output
+is intact. A file whose modification time moved is re-hashed, and it is intact when its
+content is the same.
+
+There is one exception. The install engine re-syncs the injected copies of workspace
+packages (`node_modules/.pnpm/<pkg>@file+<dir>`) from the component directory, which
+drops their dist on every install. Compiling writes the same bytes there again. So a
+missing or changed output is copied back from an intact output with the same content
+(the package's own dist) before the step is skipped. Any other source, config or
+package change, and any output that cannot be restored that way, runs the step.
 
 The step always runs:
 

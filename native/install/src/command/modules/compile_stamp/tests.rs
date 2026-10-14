@@ -1,4 +1,4 @@
-use super::{Inputs, has_external_links, is_fresh, path, remove, write};
+use super::{Inputs, Restore, check, has_external_links, path, remove, restore, write};
 use crate::model::{ComponentId, Project, WorkspaceComponent};
 use serde_json::{Map, json};
 use std::{
@@ -64,7 +64,9 @@ impl Fixture {
     }
 
     fn fresh(&self) -> bool {
-        is_fresh(&self.stamp, &self.inputs("1.0.0")).unwrap()
+        check(&self.stamp, &self.inputs("1.0.0"))
+            .unwrap()
+            .is_some_and(|restores| restores.is_empty())
     }
 
     fn component_dir(&self) -> &Path {
@@ -105,7 +107,7 @@ fn changed_configuration_lockfile_or_bit_version_is_stale() {
         assert!(!fixture.fresh(), "{file}");
     }
     let fixture = Fixture::new();
-    assert!(!is_fresh(&fixture.stamp, &fixture.inputs("1.0.1")).unwrap());
+    assert!(check(&fixture.stamp, &fixture.inputs("1.0.1")).unwrap().is_none());
 }
 
 #[test]
@@ -129,6 +131,17 @@ fn a_removed_or_edited_config_file_is_stale() {
     let fixture = Fixture::new();
     fs::write(&fixture.config, r#"{ "compilerOptions": {} }"#).unwrap();
     assert!(!fixture.fresh());
+}
+
+#[test]
+fn a_dist_rewritten_with_the_same_content_is_fresh() {
+    let fixture = Fixture::new();
+    let file = fixture.dist.join("index.js");
+    std::thread::sleep(std::time::Duration::from_millis(10));
+    fs::write(&file, "exports.foo = 1;").unwrap();
+    assert!(fixture.fresh(), "an install re-syncs injected copies with the same bytes");
+    fs::write(&file, "exports.foo = 2;").unwrap();
+    assert!(!fixture.fresh(), "same size, other content");
 }
 
 #[test]
@@ -160,4 +173,35 @@ fn only_links_outside_the_workspace_components_and_bit_are_external() {
     assert!(external(json!({ "shared": "link:../shared" })));
     assert!(external(json!({ "shared": "file:./packages/shared" })));
     assert!(external(json!({ "escape": "link:./comps/foo/../../../shared" })));
+}
+
+#[test]
+fn an_injected_dist_dropped_by_the_install_is_restored_from_the_package_dist() {
+    let fixture = Fixture::new();
+    let injected = fixture.root.join(
+        "node_modules/.pnpm/@org+scope.foo@file+comps+foo/node_modules/@org/scope.foo/dist",
+    );
+    fs::create_dir_all(&injected).unwrap();
+    fs::copy(fixture.dist.join("index.js"), injected.join("index.js")).unwrap();
+    let outputs = vec![fixture.dist.clone(), injected.clone(), fixture.config.clone()];
+    write(&fixture.stamp, &fixture.inputs("1.0.0"), outputs).unwrap();
+    fs::remove_dir_all(&injected).unwrap();
+    let restores = check(&fixture.stamp, &fixture.inputs("1.0.0")).unwrap().unwrap();
+    assert_eq!(
+        restores,
+        vec![Restore { from: fixture.dist.join("index.js"), to: injected.join("index.js") }],
+    );
+    restore(&restores).unwrap();
+    assert_eq!(fs::read_to_string(injected.join("index.js")).unwrap(), "exports.foo = 1;");
+    assert!(
+        check(&fixture.stamp, &fixture.inputs("1.0.0"))
+            .unwrap()
+            .is_some_and(|restores| restores.is_empty()),
+    );
+    fs::remove_dir_all(&injected).unwrap();
+    fs::remove_dir_all(&fixture.dist).unwrap();
+    assert!(
+        check(&fixture.stamp, &fixture.inputs("1.0.0")).unwrap().is_none(),
+        "without an intact copy the step runs",
+    );
 }
