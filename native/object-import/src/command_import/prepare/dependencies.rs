@@ -1,6 +1,6 @@
 use super::{
     PreparedImport, Target, identity, invalid, object_hash, read_model, read_version, receive,
-    remote, version_ref,
+    remote, transfer::receive_dependency, version_ref,
 };
 use serde_json::Value;
 use std::{collections::HashSet, io};
@@ -27,22 +27,55 @@ pub(super) fn closure(
     let dependencies = version["flattenedDependencies"]
         .as_array()
         .ok_or_else(|| invalid("import flattened dependencies"))?;
+    let source = model
+        .as_ref()
+        .and_then(|model| model["scope"].as_str())
+        .map(str::to_owned);
     for dependency in dependencies {
-        let target = dependency_target(dependency)?;
-        // Cached dependent transports can supply third-party mutable models from
-        // a nonorigin scope. That policy needs a separate canonical graph receipt.
-        if target.scope != Some(scope.to_owned())
-            && target.scope
-                != model
-                    .as_ref()
-                    .and_then(|model| model["scope"].as_str())
-                    .map(str::to_owned)
-        {
-            return Err(invalid("import cross-origin dependency transport"));
+        let dependency = dependency_target(dependency)?;
+        if dependency.scope.as_deref() == Some(scope) || dependency.scope == source {
+            closure(plan, &dependency, scope, staged, remotes, visited)?;
+            continue;
         }
-        closure(plan, &target, scope, staged, remotes, visited)?;
+        // `flattenedDependencies` is already transitive, so a cached
+        // dependency's own dependencies are not walked again.
+        let source = source.as_deref().ok_or_else(|| invalid("import dependent scope"))?;
+        cached(plan, &dependency, source, remotes, visited)?;
     }
     Ok(())
+}
+
+/// A dependency of another scope, as the dependent's remote serves it with
+/// its dependencies (`getExternalMany` without `withoutDependencies`): taken
+/// from that remote's cache and merged as not from its origin. A version the
+/// local scope already has is kept.
+fn cached(
+    plan: &mut PreparedImport,
+    target: &Target,
+    source: &str,
+    remotes: &Value,
+    visited: &mut HashSet<String>,
+) -> io::Result<()> {
+    let identity = identity(target)?;
+    if !visited.insert(format!("{identity}@{}", target.version)) {
+        return Ok(());
+    }
+    let local = plan.environment.local_directory.clone();
+    let present = read_model(plan, &local, target)?
+        .as_ref()
+        .and_then(|model| version_ref(model, &target.version).ok())
+        .map(|hash| read_version(plan, &hash))
+        .transpose()?
+        .flatten()
+        .is_some();
+    if present {
+        return Ok(());
+    }
+    let directory = remote(plan, remotes, source)?;
+    let incoming = read_model(plan, &directory, target)?
+        .ok_or_else(|| invalid("import cached dependency model absent"))?;
+    let hash = version_ref(&incoming, &target.version)?;
+    receive_dependency(plan, &directory, target, &incoming, &hash)
 }
 fn load(
     plan: &mut PreparedImport,

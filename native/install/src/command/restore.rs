@@ -74,6 +74,25 @@ fn warn(session: &Session<'_>, message: &str) {
     output.console(&format!("{symbol} {}", output.paint(Style::Yellow, message)));
 }
 
+/// `getDependenciesGraphByComponentIds` with the feature toggle on: the stored
+/// graphs of `ids` (`<scope>/<name>`, version) merged into one, or `None` when
+/// none of them has one. `bit import` passes it as `dependenciesGraph`.
+pub fn stored_graphs(
+    root: &std::path::Path,
+    ids: &[(String, String)],
+) -> io::Result<Option<Value>> {
+    let Some(scope) = Scope::find(root) else { return Ok(None) };
+    let mut merged: Option<Value> = None;
+    for (id, version) in ids {
+        let Some(stored) = stored_graph(&scope, id, Some(version))? else { continue };
+        match &mut merged {
+            None => merged = Some(stored),
+            Some(graph) => graph::merge(graph, &stored),
+        }
+    }
+    Ok(merged)
+}
+
 /// `getDependenciesGraphByComponentId`: the Version's `dependenciesGraphRef` Source,
 /// when its schema is supported and it is not empty.
 fn stored_graph(scope: &Scope, id: &str, version: Option<&str>) -> io::Result<Option<Value>> {

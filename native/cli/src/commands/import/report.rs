@@ -123,8 +123,13 @@ impl Receipt {
             .ok_or_else(|| decline("missing details"))
     }
 
-    /// `ImportCmd.report`.
-    pub fn import_report(&self, chalk: Chalk) -> io::Result<String> {
+    /// `ImportCmd.report`; `installation_error` is the message the
+    /// installation after the write failed with.
+    pub fn import_report(
+        &self,
+        chalk: Chalk,
+        installation_error: Option<&str>,
+    ) -> io::Result<String> {
         if self.ids.is_empty() {
             return Ok(chalk.yellow("nothing to import"));
         }
@@ -151,7 +156,8 @@ impl Receipt {
         };
         let imported = format.section("imported components", "", &items);
         let summary = format.success_summary(&format!("{prefix}{up_to_date}"));
-        Ok(Formatter::join(&[imported, self.removed(&format), summary]))
+        let installation = installation_error_output(&format, installation_error);
+        Ok(Formatter::join(&[imported, self.removed(&format), installation, summary]))
     }
 
     /// `getRemovedWarning`.
@@ -185,6 +191,19 @@ impl Receipt {
         }
         Ok(lines.join("\n"))
     }
+}
+
+/// `installationErrorOutput`.
+fn installation_error_output(format: &Formatter, message: Option<&str>) -> String {
+    let Some(message) = message else { return String::new() };
+    let title = format!("{} {}", format.error_symbol(), format.title("Installation Error"));
+    [
+        title.as_str(),
+        "The following error was thrown by the package manager:",
+        &format.chalk.red(message),
+        r#"Use "bit install" to complete the installation, remove the imported components using "bit remove <comp id>" or remove the missing dependencies from their source code"#,
+    ]
+    .join("\n")
 }
 
 /// `formatPlainComponentItemWithVersions` of the import command; `None` for

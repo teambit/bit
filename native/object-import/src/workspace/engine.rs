@@ -62,6 +62,7 @@ enum Request {
     },
     CommandPrepare(command::input::Prepare),
     CommandInboundPrepare(command::inbound::Prepare),
+    CommandInboundList(command::inbound::List),
     CommandInboundApply(command::inbound::Apply),
     CommandOutboundPrepare(command::outbound::Prepare),
     CommandOutboundApply(command::outbound::Apply),

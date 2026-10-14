@@ -11,8 +11,10 @@ use std::{
     path::{Path, PathBuf},
 };
 
-const MAX_BYTES: usize = 96 * 1024 * 1024;
-const MAX_RECORDS: usize = 16384;
+/// The bytes one import holds in memory: retained objects, and separately
+/// their inflated bodies. A pattern import of a whole scope reaches hundreds of MiB.
+pub(super) const MAX_BYTES: usize = 1024 * 1024 * 1024;
+const MAX_RECORDS: usize = 131_072;
 
 #[derive(Clone)]
 pub(super) struct Object {

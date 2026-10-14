@@ -6,7 +6,7 @@ use serde_json::{Value, json};
 use std::{
     collections::BTreeMap,
     fs,
-    io::{self, Write},
+    io::Write,
     path::{Path, PathBuf},
     sync::atomic::{AtomicUsize, Ordering},
 };
@@ -35,29 +35,8 @@ impl Fixture {
             .unwrap();
         Self { root, remote, global }
     }
-    fn index_action<Output>(&self, action: impl FnOnce() -> io::Result<Output>) -> Option<Output> {
-        let before = tree(self.root.parent().unwrap());
-        let result = action();
-        if cfg!(target_os = "linux") {
-            Some(result.unwrap())
-        } else {
-            assert!(
-                result
-                    .err()
-                    .unwrap()
-                    .to_string()
-                    .contains("index ACL preservation"),
-            );
-            assert_eq!(
-                tree(self.root.parent().unwrap()),
-                before,
-                "unsupported index publication must leave every remote/local file unchanged",
-            );
-            None
-        }
-    }
-    fn imported(&self) -> Option<PreparedImport> {
-        self.index_action(|| prepare(&self.root, &self.global, &[Self::target()]))
+    fn imported(&self) -> PreparedImport {
+        prepare(&self.root, &self.global, &[Self::target()]).unwrap()
     }
     fn write(directory: &Path, hash: &str, kind: &str, value: Value) {
         let object = publish::object(hash, kind, value).unwrap();
@@ -92,9 +71,7 @@ fn file_refresh_is_staged_and_validated_before_publication() {
     let fixture = Fixture::new();
     let head = "a".repeat(40);
     fixture.model(&head);
-    let Some(plan) = fixture.imported() else {
-        return;
-    };
+    let plan = fixture.imported();
     assert!(
         plan.overlay
             .read(&head, "Version")
@@ -127,7 +104,7 @@ fn fresh_workspace_without_index_prepares_read_only_and_creates_index_on_commit(
     let head = "f".repeat(40);
     fixture.model(&head);
     fs::remove_file(fixture.root.join(".bit/index.json")).unwrap();
-    let Some(plan) = fixture.imported() else { return };
+    let plan = fixture.imported();
     assert!(!fixture.root.join(".bit/index.json").exists());
     plan.commit().unwrap();
     let index: Value =
@@ -139,9 +116,7 @@ fn commits_remote_history_and_local_mutable_objects_then_refs() {
     let fixture = Fixture::new();
     let head = "b".repeat(40);
     fixture.model(&head);
-    let Some(plan) = fixture.imported() else {
-        return;
-    };
+    let plan = fixture.imported();
     plan.commit().unwrap();
     let history = history::identity("remote.scope/alpha");
     for directory in [fixture.remote.join("objects"), fixture.root.join(".bit/objects")] {
@@ -220,9 +195,7 @@ fn equal_remote_head_still_copies_scope_meta_without_populating_remote_history()
     let fixture = Fixture::new();
     let head = "c".repeat(40);
     fixture.model(&head);
-    let Some(plan) = fixture.imported() else {
-        return;
-    };
+    let plan = fixture.imported();
     plan.commit().unwrap();
     let history = history::identity("remote.scope/alpha");
     let remote_history = fixture.remote
@@ -230,9 +203,7 @@ fn equal_remote_head_still_copies_scope_meta_without_populating_remote_history()
         .join(&history[..2])
         .join(&history[2..]);
     fs::remove_file(&remote_history).unwrap();
-    let Some(plan) = fixture.imported() else {
-        return;
-    };
+    let plan = fixture.imported();
     assert!(plan.writes.remote_objects.is_empty());
     assert_eq!(plan.progress[0].components.len(), 0);
     assert_eq!(plan.progress[0].objects.len(), 1);
@@ -270,13 +241,8 @@ fn main_merge_gap_keeps_selection_cached_then_records_fetched_origin_head() {
     assert!(plan.overlay.models().is_empty());
     assert!(plan.progress.is_empty());
     assert!(!fixture.global.exists());
-    if fixture
-        .index_action(|| plan.prepare_merge_gap(&[Fixture::target()]))
-        .is_none()
-    {
-        assert!(plan.commit().is_err());
-        return;
-    }
+    plan.prepare_merge_gap(&[Fixture::target()])
+        .unwrap();
     assert_eq!(
         plan.progress[0].reason.as_deref(),
         Some("for getting the common-snap between main and main"),
@@ -325,13 +291,8 @@ fn unexported_head_sync_is_noop_for_own_scope_and_fetches_explicit_file_origin()
     assert!(!fixture.global.exists());
     let head = "f".repeat(40);
     fixture.model(&head);
-    if fixture
-        .index_action(|| plan.sync_unexported(&fixture.global, &[Fixture::target()]))
-        .is_none()
-    {
-        assert!(plan.commit().is_err());
-        return;
-    }
+    plan.sync_unexported(&fixture.global, &[Fixture::target()])
+        .unwrap();
     assert_eq!(
         plan.progress[0].reason.as_deref(),
         Some("for making sure the new components are really new and are not out-of-sync"),
@@ -348,9 +309,7 @@ fn cached_external_gap_initializes_remotes_even_without_object_fetch() {
     let fixture = Fixture::new();
     let head = "1".repeat(40);
     fixture.model(&head);
-    let Some(plan) = fixture.imported() else {
-        return;
-    };
+    let plan = fixture.imported();
     plan.commit().unwrap();
     fs::remove_file(&fixture.global).unwrap();
     Fixture::write(
@@ -564,14 +523,8 @@ fn lane_main_refresh_counts_headless_requested_components_separately_from_import
         json!({"name":"new","scope":"remote.scope","versions":{},"lang":"javascript","deprecated":false,"bindingPrefix":"@remote","remotes":[],"schema":"1.0.0"}),
     );
     let mut plan = prepare_cached(&fixture.root, &fixture.global).unwrap();
-    if fixture
-        .index_action(|| {
-            plan.refresh_lane_main(&["remote.scope/alpha".into(), "remote.scope/new".into()])
-        })
-        .is_none()
-    {
-        return;
-    }
+    plan.refresh_lane_main(&["remote.scope/alpha".into(), "remote.scope/new".into()])
+        .unwrap();
     let progress = plan.progress.last().unwrap();
     assert_eq!(progress.ids, vec!["remote.scope/alpha@latest", "remote.scope/new@latest"]);
     assert_eq!(progress.components.len(), 1);
@@ -598,12 +551,8 @@ fn local_new_lane_common_snap_fetches_from_component_home_scope() {
     };
     plan.lane_gap_source(&current, &other, Some(&lane), true)
         .unwrap();
-    if fixture
-        .index_action(|| plan.prepare_merge_gap(&[Fixture::target()]))
-        .is_none()
-    {
-        return;
-    }
+    plan.prepare_merge_gap(&[Fixture::target()])
+        .unwrap();
     let progress = plan.progress.last().unwrap();
     assert_eq!(progress.ids, vec!["remote.scope/alpha@1.0.0"]);
     assert_eq!(progress.components.len(), 1);

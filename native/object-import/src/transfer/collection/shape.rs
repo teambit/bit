@@ -3,6 +3,10 @@ use std::io;
 
 use crate::transfer::{MAX_OBJECTS, invalid};
 
+/// The entries one Version array may hold. A large app's `flattenedDependencies`
+/// lists thousands of components.
+const MAX_VERSION_ARRAY: usize = 65_536;
+
 pub(super) fn eligible(value: &Value) -> io::Result<Value> {
     prepare(value, true)
 }
@@ -61,7 +65,7 @@ fn flattened(value: &Value, clean: &mut Value) -> io::Result<()> {
 fn array<'a>(value: &'a Value, field: &str) -> io::Result<Option<&'a Vec<Value>>> {
     let Some(value) = value.get(field) else { return Ok(None) };
     let items = value.as_array().ok_or_else(|| invalid("unsupported Version array"))?;
-    if items.len() > MAX_OBJECTS {
+    if items.len() > MAX_VERSION_ARRAY {
         return Err(invalid("Version array limit"));
     }
     Ok(Some(items))

@@ -5,7 +5,14 @@ use super::invalid;
 use serde_json::{Value, json};
 use std::io;
 
-pub(super) fn model(existing: Option<&Value>, incoming: &Value) -> io::Result<Value> {
+/// `mergeOne(incoming, isIncomingFromOrigin, existing)`. A model a remote
+/// serves from its cache of a dependent's dependencies is not from its origin:
+/// its tags become orphaned versions and its head is not taken.
+pub(super) fn model_from(
+    existing: Option<&Value>,
+    incoming: &Value,
+    origin: bool,
+) -> io::Result<Value> {
     let incoming = parsed_model(incoming)?;
     let incoming = &incoming;
     let Some(existing) = existing else { return canonical(incoming) };
@@ -20,13 +27,14 @@ pub(super) fn model(existing: Option<&Value>, incoming: &Value) -> io::Result<Va
     {
         return canonical(incoming);
     }
-    let MergePlan { plan, tags, heads, deleted, local } = plan(existing, incoming)?;
+    let MergePlan { plan, tags, heads, deleted, local } = plan(existing, incoming, origin)?;
     let mut result = existing.clone();
     if result.get("orphanedVersions").is_none() {
         result["orphanedVersions"] = json!({});
     }
     apply_tags(&mut result, &tags, &plan)?;
-    if local.is_empty()
+    if origin
+        && local.is_empty()
         && incoming["head"]
             .as_str()
             .is_some_and(|head| !head.is_empty())
@@ -49,7 +57,7 @@ struct MergePlan {
     deleted: [Vec<String>; 2],
     local: Vec<String>,
 }
-fn plan(existing: &Value, incoming: &Value) -> io::Result<MergePlan> {
+fn plan(existing: &Value, incoming: &Value, origin: bool) -> io::Result<MergePlan> {
     let local: Vec<_> = existing["state"]["versions"]
         .as_object()
         .into_iter()
@@ -70,7 +78,7 @@ fn plan(existing: &Value, incoming: &Value) -> io::Result<MergePlan> {
     ];
     let plan =
         crate::operation::plan(json!({"kind":"component","existing":tags[0],"incoming":tags[1],
-        "orphaned":tags[2],"local":local,"origin":true,"heads":heads,"deleted":deleted}))?;
+        "orphaned":tags[2],"local":local,"origin":origin,"heads":heads,"deleted":deleted}))?;
     if plan["conflicts"]
         .as_array()
         .is_none_or(|items| !items.is_empty())

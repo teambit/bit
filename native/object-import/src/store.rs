@@ -73,15 +73,15 @@ impl Store {
 
     /// Validate platform support and the existing index without publishing anything.
     pub(crate) fn validate_index_write(&self) -> io::Result<()> {
+        let scope = self.directory.parent().ok_or_else(|| io::Error::other("missing scope"))?;
         #[cfg(target_os = "linux")]
         {
-            let scope = self.directory.parent().ok_or_else(|| io::Error::other("missing scope"))?;
             open_index(&scope.join("index.json"))?;
             Ok(())
         }
         #[cfg(not(target_os = "linux"))]
         {
-            Err(io::Error::other("index ACL preservation is supported on Linux"))
+            in_place_target(&scope.join("index.json"))
         }
     }
 
@@ -107,7 +107,7 @@ impl Store {
         }
         #[cfg(not(target_os = "linux"))]
         {
-            let _path = path;
+            let _ = path;
             Err(io::Error::other("metadata preservation is supported on Linux"))
         }
     }
@@ -143,10 +143,18 @@ impl Store {
             drop(file);
             fs::rename(temporary, path)
         }
+        // `fs.writeJson`: written in place, so the file keeps its owner, mode,
+        // ACL and extended attributes, as with the Node.js CLI.
         #[cfg(not(target_os = "linux"))]
         {
-            let _arguments = (path, temporary, contents);
-            Err(io::Error::other("index ACL preservation is supported on Linux"))
+            let _ = temporary;
+            in_place_target(path)?;
+            let mut file = OpenOptions::new()
+                .write(true)
+                .create(true)
+                .truncate(true)
+                .open(path)?;
+            file.write_all(contents)
         }
     }
 
@@ -241,6 +249,20 @@ fn apply_metadata(
 #[cfg(test)]
 mod tests;
 
+/// An index written in place: a regular file with one link and no set-id
+/// bits, as `open_index` requires on Linux, or none yet.
+#[cfg(not(target_os = "linux"))]
+fn in_place_target(path: &Path) -> io::Result<()> {
+    match fs::symlink_metadata(path) {
+        Ok(metadata) if !metadata.is_file() || !canonical_links(&metadata) => {
+            Err(io::Error::other("non-canonical index file"))
+        }
+        Ok(_) => Ok(()),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
+        Err(error) => Err(error),
+    }
+}
+
 #[cfg(target_os = "linux")]
 fn open_index(path: &Path) -> io::Result<Option<fs::File>> {
     use std::os::unix::fs::MetadataExt;
@@ -297,4 +319,15 @@ fn check_index_metadata(file: &fs::File, existing: Option<&fs::Metadata>) -> io:
         return Err(io::Error::other("index metadata could not be preserved"));
     }
     Ok(())
+}
+
+#[cfg(all(unix, not(target_os = "linux")))]
+fn canonical_links(metadata: &fs::Metadata) -> bool {
+    use std::os::unix::fs::MetadataExt;
+    metadata.nlink() == 1 && metadata.mode() & 0o6000 == 0
+}
+
+#[cfg(not(unix))]
+fn canonical_links(_metadata: &fs::Metadata) -> bool {
+    true
 }

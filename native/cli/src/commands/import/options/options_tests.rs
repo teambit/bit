@@ -14,9 +14,23 @@ fn imports_without_installing_and_fetches() {
 }
 
 #[test]
+fn imports_that_install_and_wildcard_patterns() {
+    let import = parse(&["import", "s/a"]).unwrap();
+    assert!(import.installs());
+    let patterns =
+        parse(&["import", "s.org/**", "--include-deprecated", "--skip-write-config-files"])
+            .unwrap();
+    assert_eq!(patterns.wildcards(), ["s.org/**"]);
+    assert!(patterns.include_deprecated && patterns.skip_write_config_files);
+    assert!(!parse(&["import", "s/a", "-x"]).unwrap().installs());
+}
+
+#[test]
 fn installing_imports_and_other_flags_are_left_to_node() {
     for args in [
-        &["import", "s/a"][..],
+        &["import", "**"][..],
+        &["import", "*/button"],
+        &["import", "@s/*"],
         &["import", "s/a", "--merge", "-x"],
         &["import", "s/a", "-x", "--skip-dependency-installation"],
         &["fetch", "s/a"],

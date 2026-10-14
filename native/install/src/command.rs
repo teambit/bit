@@ -1,5 +1,7 @@
 //! `bit install` orchestration: `install.cmd.tsx` and `InstallMain.install`.
 
+pub use restore::stored_graphs;
+
 mod calculate;
 mod external;
 mod modules;

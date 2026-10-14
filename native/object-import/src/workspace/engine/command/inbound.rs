@@ -8,11 +8,11 @@ use super::{
 use crate::command_import::{self, Target};
 use serde::Deserialize;
 use serde_json::{Value, json};
-use sha1::Digest;
 use std::{
     io,
     path::{Path, PathBuf},
 };
+mod details;
 mod lanes;
 mod remote;
 mod write;
@@ -37,7 +37,7 @@ pub(in crate::workspace::engine) struct Prepare {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct Transport {
+pub(in crate::workspace::engine) struct Transport {
     global_config_dir: PathBuf,
     node_executable: PathBuf,
     /// The `@teambit/bit` package dir: a `resolverPath` resolves from its
@@ -58,6 +58,18 @@ struct Options {
     skip_dependency_installation: bool,
     lanes: bool,
     components: bool,
+}
+
+/// `commandInboundList`: the remote listings of wildcard patterns, before
+/// `commandInboundPrepare` imports the selected ids.
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(in crate::workspace::engine) struct List {
+    root: PathBuf,
+    /// `<scope>/<namespaces with wildcards>`.
+    patterns: Vec<String>,
+    #[serde(flatten)]
+    transport: Transport,
 }
 
 #[derive(Deserialize)]
@@ -118,7 +130,7 @@ fn receipt(
         .iter()
         .map(|target| imported_identity(target, import))
         .collect::<io::Result<Vec<_>>>()?;
-    let details = details(root, targets, import)?;
+    let details = details::details(root, targets, import)?;
     let progress = import.progress
         .iter()
         .map(|row| {
@@ -133,6 +145,31 @@ fn receipt(
         "token":token,"owner":"rust","importedIds":imported_ids,
         "importDetails":details,"progress":progress,
     }))
+}
+
+/// Each pattern with the components its remote lists, in the remote's order.
+pub(in crate::workspace::engine) fn list(input: &List) -> io::Result<(usize, Value)> {
+    for path in [&input.root, &input.transport.global_config_dir] {
+        super::super::path(path)?;
+    }
+    if !input.transport.node_executable.is_absolute()
+        || input.transport.bit_version.is_empty()
+        || input.patterns.is_empty()
+        || input.patterns.len() > 4096
+    {
+        return Err(invalid("inbound list requires canonical lifecycle"));
+    }
+    let lists = remote::list(input)?
+        .into_iter()
+        .map(|(pattern, listed)| {
+            let components = listed
+                .iter()
+                .map(|component| json!({"id":component.id(),"deprecated":component.deprecated}))
+                .collect::<Vec<_>>();
+            json!({"pattern":pattern,"components":components})
+        })
+        .collect::<Vec<_>>();
+    Ok((lists.len(), json!({ "lists": lists })))
 }
 
 pub(in crate::workspace::engine) fn apply(
@@ -189,13 +226,14 @@ fn valid_operation(input: &Prepare) -> bool {
         _ => false,
     }
 }
+/// Objects-only imports write no bitmap history. A write keeps one; the caller
+/// installs dependencies after publication unless they are skipped.
 fn valid_write_mode(input: &Prepare) -> bool {
     if input.options.objects_only {
         !input.options.skip_dependency_installation
             && input.bitmap_history_file_id.is_none()
     } else {
-        input.options.skip_dependency_installation
-            && input.bitmap_history_file_id.is_some()
+        input.bitmap_history_file_id.is_some()
     }
 }
 
@@ -259,67 +297,9 @@ fn imported_identity(
         .find(|model| model["scope"] == scope && model["name"] == target.name)
         .ok_or_else(|| invalid("inbound imported model"))?;
     let version = if target.version == "latest" {
-        head_as_tag_or_hash(model)?
+        details::head_as_tag_or_hash(model)?
     } else {
         target.version.clone()
     };
     Ok(format!("{scope}/{}@{version}", target.name))
-}
-
-fn head_as_tag_or_hash(model: &Value) -> io::Result<String> {
-    let head = model["head"].as_str().ok_or_else(|| invalid("inbound model head"))?;
-    Ok(model["versions"]
-        .as_object()
-        .and_then(|versions| {
-            versions
-                .iter()
-                .rev()
-                .find(|(_, hash)| hash.as_str() == Some(head))
-        })
-        .map_or_else(|| head.to_owned(), |(tag, _)| tag.clone()))
-}
-
-fn details(
-    root: &Path,
-    targets: &[Target],
-    imported: &command_import::PreparedImport,
-) -> io::Result<Vec<Value>> {
-    let models = imported.overlay.models();
-    targets.iter().map(|target| {
-        let scope = target.scope.as_deref().ok_or_else(|| invalid("inbound scope"))?;
-        let model = models.iter().copied().find(|model| model["scope"] == scope && model["name"] == target.name)
-            .ok_or_else(|| invalid("inbound imported model absent"))?;
-        let id = format!("{scope}/{}", target.name);
-        let versions = model["versions"].as_object().ok_or_else(|| invalid("inbound versions"))?;
-        let previous = previous_versions(root, scope, &target.name)?;
-        let added = versions.keys().filter(|key| !previous.contains(*key)).cloned().collect::<Vec<_>>();
-        let status = if added.is_empty() { "up to date" } else if previous.is_empty() { "added" } else { "updated" };
-        let head = head_as_tag_or_hash(model)?;
-        let latest = added.contains(&head).then_some(head);
-        Ok(json!({"id":id,"versions":added,"latestVersion":latest,"status":status,
-            "filesStatus":null,"missingDeps":[],"deprecated":model["deprecated"] == true,"removed":false}))
-    }).collect()
-}
-
-fn previous_versions(root: &Path, scope: &str, name: &str) -> io::Result<Vec<String>> {
-    let hash =
-        crate::validate::hexadecimal(&sha1::Sha1::digest(format!("{scope}/{name}").as_bytes()));
-    let directory = root.join(".bit/objects");
-    let mut total = 0;
-    let raw = match crate::checkout::repository::read(
-        &directory,
-        crate::merge_history::hash(&hash)?,
-        32 * 1024 * 1024,
-        &mut total,
-    ) {
-        Ok(raw) => raw,
-        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(Vec::new()),
-        Err(error) => return Err(error),
-    };
-    let (_, body) =
-        crate::checkout::repository::split(&raw, crate::merge_history::hash(&hash)?, "Component")?;
-    let model: Value = serde_json::from_slice(body).map_err(io::Error::other)?;
-    Ok(model["versions"]
-        .as_object()
-        .map_or_else(Vec::new, |versions| versions.keys().cloned().collect()))
 }

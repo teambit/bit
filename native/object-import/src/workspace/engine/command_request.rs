@@ -13,6 +13,7 @@ pub(super) fn dispatch(
         Request::CommandInboundPrepare(input) => {
             pool.install(|| command::inbound::prepare(&input, &mut snapshots.command))
         }
+        Request::CommandInboundList(input) => pool.install(|| command::inbound::list(&input)),
         Request::CommandInboundApply(input) => {
             pool.install(|| command::inbound::apply(&input, &mut snapshots.command))
         }

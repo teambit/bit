@@ -1,5 +1,6 @@
 //! The `http(s)` remote transport (`scopes/scope/network/http/http.ts`): `POST <url>/api/scope/fetch`
-//! with a tar response, and symphony GraphQL for hub scope resolution.
+//! with a tar response, `POST <url>/graphql` for the remote scope's component list, and
+//! symphony GraphQL for hub scope resolution.
 
 use crate::{GlobalConfig, fetch::FetchOptions, invalid, tar::ObjectItem};
 use futures_util::StreamExt;
@@ -8,6 +9,51 @@ use serde_json::{Value, json};
 use std::{fs, io, time::Duration};
 
 const CFG_USER_TOKEN: &str = "user.token";
+/// `@pnpm/node-fetch`'s default. bit.cloud's edge answers requests without
+/// a `User-Agent` with a 403 challenge page.
+const USER_AGENT: &str = "node-fetch";
+
+/// The query `listBackwardCompatible` sends.
+const LIST_QUERY: &str = "query list($namespaces: [String!]) { scope { components(namespaces: $namespaces) { id { scope version name } deprecation { isDeprecate } } } }";
+
+/// One component of a remote `list`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Listed {
+    pub scope: String,
+    pub name: String,
+    pub version: Option<String>,
+    pub deprecated: bool,
+}
+
+impl Listed {
+    fn parse(component: &Value) -> io::Result<Self> {
+        let id = &component["id"];
+        let text = |key: &str| {
+            id[key]
+                .as_str()
+                .filter(|text| !text.is_empty())
+                .map(str::to_string)
+        };
+        let (Some(scope), Some(name)) = (text("scope"), text("name")) else {
+            return Err(invalid("remote list component id"));
+        };
+        Ok(Self {
+            scope,
+            name,
+            version: text("version"),
+            deprecated: component["deprecation"]["isDeprecate"] == true,
+        })
+    }
+
+    /// `ComponentID.toString()`.
+    #[must_use]
+    pub fn id(&self) -> String {
+        match &self.version {
+            Some(version) => format!("{}/{}@{version}", self.scope, self.name),
+            None => format!("{}/{}", self.scope, self.name),
+        }
+    }
+}
 
 /// `Http.getNetworkConfig()` retry defaults.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -96,7 +142,7 @@ impl Network {
         local_scope: Option<&str>,
         token: Option<&str>,
     ) -> io::Result<Self> {
-        let builder = sockets(Client::builder(), global)?;
+        let builder = sockets(Client::builder().user_agent(USER_AGENT), global)?;
         let builder = proxy(builder, global)?;
         let client = tls(builder, global)?.build().map_err(io::Error::other)?;
         Ok(Self {
@@ -174,6 +220,35 @@ impl Network {
             bytes.extend_from_slice(&chunk);
         }
         super::tar::read_bounded(&bytes, max_bytes)
+    }
+
+    /// `Http.list()` without deleted components (`listBackwardCompatible`): the
+    /// remote scope's components whose names match `namespaces`, matched by the
+    /// remote, with their head versions and deprecation.
+    pub async fn list(&self, url: &str, namespaces: Option<&str>) -> io::Result<Vec<Listed>> {
+        let body = json!({
+            "query": LIST_QUERY,
+            "variables": { "namespaces": namespaces.map(|namespaces| [namespaces]) },
+        });
+        let endpoint = format!("{url}/graphql");
+        let response = self.send(|| {
+            self.headers(self.client.post(&endpoint), "read")
+                .json(&body)
+        })
+        .await?;
+        let response = throw_for_status(response).await?;
+        let parsed: Value = response.json().await.map_err(|_| {
+            invalid(&format!("fatal: failed parsing http json response, please make sure the response is a valid json object. url: {endpoint}"))
+        })?;
+        if let Some(message) = parsed["errors"][0]["message"].as_str() {
+            return Err(io::Error::other(message.to_string()));
+        }
+        parsed["data"]["scope"]["components"]
+            .as_array()
+            .ok_or_else(|| invalid("remote list response"))?
+            .iter()
+            .map(Listed::parse)
+            .collect()
     }
 
     /// Retry network failures (not HTTP error statuses), like `retry(_fetch)`.
@@ -352,3 +427,5 @@ fn config_str<'a>(global: &'a GlobalConfig, key: &str) -> Option<&'a str> {
 
 #[cfg(test)]
 mod action_tests;
+#[cfg(test)]
+mod list_tests;

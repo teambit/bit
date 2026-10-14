@@ -12,6 +12,31 @@ pub(super) fn receive(
     hash: &str,
     include_history: bool,
 ) -> io::Result<()> {
+    receive_from(plan, directory, target, incoming, hash, include_history, true)
+}
+
+/// `receive` of a model that arrived from `directory` as a cached dependency
+/// of a component of another scope (`mergeOne` with `isIncomingFromOrigin`
+/// false): no remote head is recorded for it.
+pub(super) fn receive_dependency(
+    plan: &mut PreparedImport,
+    directory: &Path,
+    target: &Target,
+    incoming: &Value,
+    hash: &str,
+) -> io::Result<()> {
+    receive_from(plan, directory, target, incoming, hash, false, false)
+}
+
+fn receive_from(
+    plan: &mut PreparedImport,
+    directory: &Path,
+    target: &Target,
+    incoming: &Value,
+    hash: &str,
+    include_history: bool,
+    origin: bool,
+) -> io::Result<()> {
     let local = plan.environment.local_directory.clone();
     let row = plan.progress.last_mut().ok_or_else(|| invalid("import progress phase"))?;
     row.components.insert(identity(target)?);
@@ -39,14 +64,16 @@ pub(super) fn receive(
         receive_history(plan, directory, incoming, hash)?;
     }
     let old = read_model(plan, &local, target)?;
-    let value = merge::model(old.as_ref(), incoming)?;
+    let value = merge::model_from(old.as_ref(), incoming, origin)?;
     let hash = object_hash(&identity(target)?);
     plan.overlay.objects.insert(
         hash.clone(),
         super::super::publish::object(&hash, "Component", value)?,
     );
     update_index(plan, target, &hash)?;
-    record_remote_head(plan, target, incoming)?;
+    if origin {
+        record_remote_head(plan, target, incoming)?;
+    }
     Ok(())
 }
 fn receive_history(

@@ -152,7 +152,7 @@ impl PreparedImport {
         let mut inflated_total = 0usize;
         for (hash, compressed) in objects {
             inflated_total += validate_virtual_object(hash, compressed)?;
-            if inflated_total > 96 * 1024 * 1024 {
+            if inflated_total > capture::MAX_BYTES {
                 return Err(invalid("virtual import inflated byte limit"));
             }
             self.capture.virtual_file(

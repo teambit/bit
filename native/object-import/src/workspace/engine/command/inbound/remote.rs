@@ -1,10 +1,11 @@
-//! Bounded HTTP scope acquisition. File scopes stay in the deferred importer.
-use super::{Prepare, Target, identity, invalid};
+//! Bounded HTTP scope acquisition and listing. File scopes stay in the
+//! deferred importer.
+use super::{List, Prepare, Target, Transport, identity, invalid};
 use crate::command_import::{VirtualRemote, lane};
 use bit_client_transfer::{
     GlobalConfig,
     fetch::{self, FetchOptions},
-    http::Network,
+    http::{Listed, Network},
     remotes::{Remote, Remotes},
     resolver::Resolver,
     tar::ObjectItem,
@@ -17,7 +18,10 @@ use std::{
     path::Path,
 };
 
-const MAX_INBOUND_BYTES: usize = 96 * 1024 * 1024;
+/// The compressed bytes one import may retain until publication: one archive's limit.
+const MAX_INBOUND_BYTES: usize = bit_client_transfer::tar::MAX_ARCHIVE_BYTES;
+/// The objects retained from one remote scope.
+const MAX_INBOUND_OBJECTS: usize = 16384;
 
 /// Retain an HTTP lane and its component closure before the import owner
 /// publishes anything. File remotes continue through the deferred importer.
@@ -41,26 +45,51 @@ pub(super) fn lane_objects(
 }
 
 fn connection(input: &Prepare) -> io::Result<(Remotes, Network, GlobalConfig, String)> {
-    let scope: Value = serde_json::from_slice(&fs::read(input.root.join(".bit/scope.json"))?)
-        .map_err(io::Error::other)?;
+    connect(&input.root, &input.transport)
+}
+
+fn connect(
+    root: &Path,
+    transport: &Transport,
+) -> io::Result<(Remotes, Network, GlobalConfig, String)> {
+    let scope: Value =
+        serde_json::from_slice(&fs::read(root.join(".bit/scope.json"))?).map_err(io::Error::other)?;
     let local = scope["name"].as_str().ok_or_else(|| invalid("inbound local scope"))?;
-    let global = global_config(input)?;
+    let global = global_config(transport)?;
     let resolver = Resolver::configured(
         &scope,
-        input.transport.node_executable.clone(),
-        input.transport.bit_dir.clone(),
+        transport.node_executable.clone(),
+        transport.bit_dir.clone(),
         local,
         &global,
     );
     let remotes =
-        Remotes::load(&scope, &input.transport.global_config_dir, &global)?.with_resolver(resolver);
-    let network = Network::new(
-        &global,
-        &input.transport.bit_version,
-        Some(local),
-        input.transport.token.as_deref(),
-    )?;
+        Remotes::load(&scope, &transport.global_config_dir, &global)?.with_resolver(resolver);
+    let network =
+        Network::new(&global, &transport.bit_version, Some(local), transport.token.as_deref())?;
     Ok((remotes, network, global, local.to_owned()))
+}
+
+/// `Lister.remoteList` for each pattern: the components of `<scope>` whose
+/// names match the rest of the pattern, as the HTTP remote matches them.
+/// File remotes list on the client and are left to the Node.js CLI.
+pub(super) fn list(input: &List) -> io::Result<Vec<(String, Vec<Listed>)>> {
+    let (remotes, network, _, _) = connect(&input.root, &input.transport)?;
+    let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
+    runtime.block_on(async {
+        let mut lists = Vec::with_capacity(input.patterns.len());
+        for pattern in &input.patterns {
+            let (scope, namespaces) = pattern
+                .split_once('/')
+                .filter(|(scope, _)| !scope.is_empty())
+                .ok_or_else(|| invalid("inbound list pattern"))?;
+            let Remote::Http(url) = remotes.resolve(scope, &network).await? else {
+                return Err(invalid("inbound list of a file remote"));
+            };
+            lists.push((pattern.clone(), network.list(&url, Some(namespaces)).await?));
+        }
+        Ok(lists)
+    })
 }
 
 async fn fetch_lane(
@@ -134,8 +163,8 @@ pub(super) fn objects(input: &Prepare, targets: &[Target]) -> io::Result<Vec<Vir
     ))
 }
 
-fn global_config(input: &Prepare) -> io::Result<GlobalConfig> {
-    match fs::read(input.transport.global_config_dir.join("config.json")) {
+fn global_config(transport: &Transport) -> io::Result<GlobalConfig> {
+    match fs::read(transport.global_config_dir.join("config.json")) {
         Ok(bytes) => serde_json::from_slice(&bytes).map_err(io::Error::other),
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(GlobalConfig::new()),
         Err(error) => Err(error),
@@ -200,7 +229,7 @@ fn collect(
         total = total
             .checked_add(item.compressed.len())
             .ok_or_else(|| invalid("inbound remote object bounds"))?;
-        if total > MAX_INBOUND_BYTES || objects.len() >= 16384 {
+        if total > MAX_INBOUND_BYTES || objects.len() >= MAX_INBOUND_OBJECTS {
             return Err(invalid("inbound remote object bounds"));
         }
         match objects.entry(item.hash) {

@@ -208,18 +208,34 @@ pub fn execute_with(
     report: &Report,
     work: impl FnOnce(&Output) -> io::Result<()>,
 ) -> io::Result<Outcome> {
+    execute_then(root, args, command, |output| {
+        work(output)?;
+        Ok(Report { data: report.data.clone(), code: report.code, details: report.details.clone() })
+    })
+}
+
+/// [`execute_with`] for a command whose report depends on its work.
+pub fn execute_then(
+    root: &Path,
+    args: &[OsString],
+    command: &str,
+    work: impl FnOnce(&Output) -> io::Result<Report>,
+) -> io::Result<Outcome> {
     let chalk = Chalk::detect(args);
     let history = History::start(root, args);
     let output = loader_output(chalk);
     output.restart(&format!(r#"running command "{command}"..."#));
-    if let Err(error) = work(&output) {
-        output.stop();
-        history.end(false);
-        eprintln!("{}", chalk.red(&error.to_string()));
-        return Ok(Outcome::Exit(ExitCode::FAILURE));
-    }
+    let report = match work(&output) {
+        Ok(report) => report,
+        Err(error) => {
+            output.stop();
+            history.end(false);
+            eprintln!("{}", chalk.red(&error.to_string()));
+            return Ok(Outcome::Exit(ExitCode::FAILURE));
+        }
+    };
     output.stop();
-    print(report, command)?;
+    print(&report, command)?;
     history.end(report.code == 0);
     Ok(Outcome::Exit(ExitCode::from(u8::try_from(report.code).unwrap_or(1))))
 }

@@ -104,11 +104,15 @@ impl Progress {
         if with_ids {
             output.status("importing components");
         }
+        // `importMany` is called with the ids the latest-heads import requested.
+        let requested = self.imports
+            .iter()
+            .find(|row| row.reason.as_deref() == Some(REASONS[0]));
         for row in &self.imports {
             if row.reason.as_deref() == Some(REASONS[1]) {
                 output.status(&format!(
                     "import {} components with their dependencies (if missing)",
-                    row.ids.len(),
+                    requested.unwrap_or(row).ids.len(),
                 ));
                 if row.components == 0 {
                     continue;

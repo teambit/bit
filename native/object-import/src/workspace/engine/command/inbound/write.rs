@@ -5,12 +5,15 @@ use super::{Target, config, invalid};
 use crate::command_import::PreparedImport;
 use serde_json::{Map, Value, json};
 use std::{
-    collections::HashSet,
+    collections::{HashMap, HashSet},
     fs::{self, OpenOptions},
     io::{self, Write},
     path::{Path, PathBuf},
     time::{SystemTime, UNIX_EPOCH},
 };
+
+/// The component file bytes one import holds until publication.
+const MAX_WRITTEN_BYTES: usize = 512 * 1024 * 1024;
 
 pub(super) struct Prepared {
     root: PathBuf,
@@ -33,30 +36,52 @@ pub(super) fn prepare(
     file_id: Option<&str>,
 ) -> io::Result<Prepared> {
     let history = prepare_history(root, file_id)?;
-    let settings = config::configuration(root)?;
-    let template = settings["defaultDirectory"]
-        .as_str()
-        .ok_or_else(|| invalid("inbound workspace default directory"))?;
+    let template = default_directory(root)?;
     let bitmap_before = fs::read(root.join(".bitmap"))?;
     let mut bitmap = crate::recovery::jsonc::parse(&bitmap_before)?;
     let rows = bitmap.as_object_mut().ok_or_else(|| invalid("inbound bitmap object"))?;
     let schema = bitmap_schema(rows)?;
-    let mut files = Vec::new();
-    let mut directories = HashSet::new();
-    for target in targets {
-        files.extend(prepare_target(root, template, target, import, rows, &mut directories)?);
-    }
+    let directories = directories::assign(&template, targets, rows)?;
+    let files = prepare_targets(root, targets, directories, import, rows)?;
+    // `sortObjectByKeys`: `Object.keys(...).sort()`, by UTF-16 code units.
+    rows.sort_keys();
     rows.insert("$schema-version".into(), schema);
-    if files
-        .iter()
-        .map(|(_, bytes)| bytes.len())
-        .sum::<usize>()
-        > 32 * 1024 * 1024
-    {
-        return Err(invalid("inbound workspace materialization bytes"));
-    }
     let bitmap_after = crate::inspection::render_bitmap(&bitmap)?;
     Ok(Prepared { root: root.to_owned(), bitmap_before, bitmap_after, files, history })
+}
+
+fn default_directory(root: &Path) -> io::Result<String> {
+    config::configuration(root)?["defaultDirectory"]
+        .as_str()
+        .map(str::to_owned)
+        .ok_or_else(|| invalid("inbound workspace default directory"))
+}
+
+/// Every target's files in its directory, bounded by [`MAX_WRITTEN_BYTES`].
+fn prepare_targets(
+    root: &Path,
+    targets: &[Target],
+    directories: Vec<String>,
+    import: &PreparedImport,
+    rows: &mut Map<String, Value>,
+) -> io::Result<Vec<(PathBuf, Vec<u8>)>> {
+    let policy = policy::workspace_policy(root)?;
+    let mut files = Vec::new();
+    let mut written = HashSet::new();
+    for (target, directory) in targets.iter().zip(directories) {
+        if !written.insert(directory.clone()) {
+            return Err(invalid("inbound workspace destination occupied"));
+        }
+        files.extend(prepare_target(root, &directory, target, import, rows, &policy)?);
+    }
+    let bytes = files
+        .iter()
+        .map(|(_, bytes)| bytes.len())
+        .sum::<usize>();
+    if bytes > MAX_WRITTEN_BYTES {
+        return Err(invalid("inbound workspace materialization bytes"));
+    }
+    Ok(files)
 }
 
 fn prepare_history(root: &Path, file_id: Option<&str>) -> io::Result<History> {
@@ -89,11 +114,11 @@ fn bitmap_schema(rows: &mut Map<String, Value>) -> io::Result<Value> {
 
 fn prepare_target(
     root: &Path,
-    template: &str,
+    directory: &str,
     target: &Target,
     import: &PreparedImport,
     rows: &mut Map<String, Value>,
-    directories: &mut HashSet<String>,
+    policy: &HashMap<String, String>,
 ) -> io::Result<Vec<(PathBuf, Vec<u8>)>> {
     let scope = target.scope.as_deref().ok_or_else(|| invalid("inbound workspace scope"))?;
     unique_name(rows, &target.name)?;
@@ -107,14 +132,14 @@ fn prepare_target(
         .read(&hash, "Version")?
         .ok_or_else(|| invalid("inbound imported Version"))?;
     crate::history_query::validate_version(version)?;
+    policy::reject_update(version, policy)?;
     let main = version["mainFile"].as_str().ok_or_else(|| invalid("inbound main file"))?;
     crate::checkout::plan::relative_path(main)?;
-    let directory = directory(template, scope, &target.name)?;
-    if !directories.insert(directory.clone()) || root.join(&directory).try_exists()? {
+    if root.join(directory).try_exists()? {
         return Err(invalid("inbound workspace destination occupied"));
     }
-    safe_destination(root, &root.join(&directory))?;
-    let files = target_files(root, &directory, version, main, import)?;
+    safe_destination(root, &root.join(directory))?;
+    let files = target_files(root, directory, version, main, import)?;
     rows.insert(
         target.name.clone(),
         json!({"name":target.name,"scope":scope,
@@ -123,6 +148,7 @@ fn prepare_target(
     Ok(files)
 }
 
+/// `getWorkspacePolicyFromConfig()`: each root policy entry's version.
 fn target_files(
     root: &Path,
     directory: &str,
@@ -352,21 +378,8 @@ fn version(model: &Value, requested: &str) -> io::Result<(String, String)> {
     Ok((name, hash.to_owned()))
 }
 
-fn directory(template: &str, scope: &str, name: &str) -> io::Result<String> {
-    let (owner, short) = scope
-        .rsplit_once('.')
-        .unwrap_or(("", scope));
-    let path = template
-        .replace("{scopeId}", scope)
-        .replace("{scope}", short)
-        .replace("{owner}", owner)
-        .replace("{name}", name);
-    if path.contains('{') || path.contains('}') || path == "." {
-        return Err(invalid("inbound unsupported workspace directory template"));
-    }
-    crate::checkout::plan::relative_path(&path)?;
-    Ok(path)
-}
+mod directories;
+mod policy;
 
 #[cfg(test)]
 mod tests;

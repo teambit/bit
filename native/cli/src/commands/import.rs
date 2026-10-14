@@ -1,9 +1,11 @@
-//! Native `bit import` and `bit fetch` for the forms that only bring
-//! objects (`fetch -c`, `import -o`, `import` without ids) or write the
-//! components without installing (`import <ids> -x`): the engine fetches,
-//! writes and reports (`commandInbound*`).
+//! Native `bit import` and `bit fetch`: the engine fetches, writes and
+//! reports (`commandInbound*`). Wildcard patterns are listed on their remotes
+//! first, and an import that writes components installs them afterwards
+//! unless `-x` is given.
 
+mod installation;
 mod options;
+mod patterns;
 mod report;
 
 use super::{
@@ -30,23 +32,67 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".to_string()));
     };
-    let mut planned = match Planned::plan(&root, &options, Chalk::detect(args)) {
+    let installer = match start_installer(&root, &options, &argv) {
+        Ok(installer) => installer,
+        Err(error) => return Ok(Outcome::Declined(format!("import: {error}"))),
+    };
+    let chalk = Chalk::detect(args);
+    let selection = match patterns::select(&root, &options) {
+        Ok(selection) => selection,
+        Err(error) => return Ok(Outcome::Declined(format!("{}: {error}", options.operation))),
+    };
+    if selection.ids.is_empty() && !options.ids.is_empty() {
+        return workspace_command::execute_then(&root, args, options.operation, |output| {
+            render_selection(&options, &selection, output);
+            Ok(Report { data: chalk.yellow("nothing to import"), code: 0, details: None })
+        });
+    }
+    let mut planned = match Planned::plan(&root, &options, &selection.ids, chalk) {
         Ok(planned) => planned,
         Err(error) => return Ok(Outcome::Declined(format!("{}: {error}", options.operation))),
     };
-    let report = Report { data: planned.report.clone(), code: 0, details: None };
-    workspace_command::execute_with(&root, args, options.operation, &report, |output| {
+    workspace_command::execute_then(&root, args, options.operation, |output| {
         let started = Instant::now();
+        render_selection(&options, &selection, output);
         planned.apply()?;
-        render(&planned, &options, output, started)
+        render(&mut planned, &options, output, started, installer, &root)?;
+        Ok(Report { data: planned.report.clone(), code: 0, details: None })
     })
 }
 
+/// The installation's host, for an import that installs.
+fn start_installer(
+    root: &Path,
+    options: &options::Options,
+    argv: &[&str],
+) -> io::Result<Option<installation::Installer>> {
+    if !options.installs() {
+        return Ok(None);
+    }
+    installation::Installer::start(root, argv).map(Some)
+}
+
+/// `listing remote components` per pattern, then `NoIdMatchWildcard` warnings.
+fn render_selection(options: &options::Options, selection: &patterns::Selection, output: &Output) {
+    if options.wildcards().is_empty() {
+        return;
+    }
+    output.status("importing components");
+    for _ in options.wildcards() {
+        output.status("listing remote components");
+    }
+    for warning in &selection.warnings {
+        output.warning(warning);
+    }
+}
+
 fn render(
-    planned: &Planned,
+    planned: &mut Planned,
     options: &options::Options,
     output: &Output,
     started: Instant,
+    installer: Option<installation::Installer>,
+    root: &Path,
 ) -> io::Result<()> {
     if let Some(groups) = planned.prepared["laneGroups"].as_array() {
         let counts = groups
@@ -62,7 +108,20 @@ fn render(
         return Ok(());
     }
     if let Some(progress) = &planned.progress {
-        progress.render_inbound(output, options.operation == "fetch", !options.ids.is_empty());
+        // The wildcard listing already printed the first `importing components`.
+        if options.wildcards().is_empty() {
+            progress.render_inbound(output, options.operation == "fetch", !options.ids.is_empty());
+        } else {
+            progress.render_inbound(output, false, false);
+        }
+    }
+    if let Some(installer) = installer {
+        let ids = planned.receipt.ids.clone();
+        if let Err(error) = installer.install(root, options, &ids) {
+            output.failure(&format!("installation failed with the following error: {error}"));
+            planned.report =
+                planned.receipt.import_report(planned.chalk, Some(&error.to_string()))?;
+        }
     }
     output.success("importing components", Some(started));
     if options.lanes
@@ -80,11 +139,17 @@ struct Planned {
     receipt: report::Receipt,
     report: String,
     progress: Option<Progress>,
+    chalk: Chalk,
 }
 
 impl Planned {
-    fn plan(root: &Path, options: &options::Options, chalk: Chalk) -> io::Result<Self> {
-        let (engine, prepared) = prepare(root, options)?;
+    fn plan(
+        root: &Path,
+        options: &options::Options,
+        ids: &[String],
+        chalk: Chalk,
+    ) -> io::Result<Self> {
+        let (engine, prepared) = prepare(root, options, ids)?;
         if prepared["laneFetch"] == true && !options.lanes
             || prepared["laneFetch"] != true && options.lanes
         {
@@ -95,11 +160,11 @@ impl Planned {
         let report = if options.operation == "fetch" {
             receipt.fetch_report(chalk)?
         } else {
-            receipt.import_report(chalk)?
+            receipt.import_report(chalk, None)?
         };
         let rows = json!({ "bitmapCount": 0, "imports": prepared["progress"], "loads": [] });
         let progress = Progress::parse(Some(&rows))?;
-        Ok(Self { engine, prepared, receipt, report, progress })
+        Ok(Self { engine, prepared, receipt, report, progress, chalk })
     }
 
     /// `commandInboundApply`: the publication must be the planned one.
@@ -156,7 +221,7 @@ fn validate_lane_groups(prepared: &Value, options: &options::Options) -> io::Res
 }
 
 /// `commandInboundPrepare`: the engine fetches, and plans the writes.
-fn prepare(root: &Path, options: &options::Options) -> io::Result<(Engine, Value)> {
+fn prepare(root: &Path, options: &options::Options, ids: &[String]) -> io::Result<(Engine, Value)> {
     let cli = NodeCli::find()?;
     let config = cache_root().join("config");
     let mut request = json!({
@@ -169,7 +234,7 @@ fn prepare(root: &Path, options: &options::Options) -> io::Result<(Engine, Value
         "bitDir": cli.bit_dir,
         "bitVersion": cli.version,
         "operation": options.operation,
-        "ids": options.ids,
+        "ids": ids,
         "options": options.request(),
     });
     if !options.objects_only {

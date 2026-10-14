@@ -54,7 +54,9 @@ impl Host {
             Some(session) => session,
             None => guard.insert(self.start()?),
         };
+        let started = std::time::Instant::now();
         let result = session.call(method, params);
+        trace::log(format!("host {method} took {} ms", started.elapsed().as_millis()));
         if result.is_err() {
             guard.take();
         }

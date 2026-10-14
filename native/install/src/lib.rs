@@ -17,6 +17,6 @@ pub mod output;
 pub mod policy;
 pub mod workspace;
 
-pub use command::{InstallSummary, Outcome, run, run_with_options};
+pub use command::{InstallSummary, Outcome, run, run_with_options, stored_graphs};
 pub use host::{AfterInstall, AfterInstallResult, DetectRequest, Host, HostInfo};
 pub use options::{ExistingEntries, InstallOptions};

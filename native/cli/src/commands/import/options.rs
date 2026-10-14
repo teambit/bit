@@ -1,5 +1,5 @@
-//! The native import grammar: `bit fetch -c <ids...>` and the `bit import`
-//! forms that write no component files or install nothing.
+//! The native import grammar: `bit fetch -c <ids...>` and `bit import`
+//! with ids or wildcard patterns, with or without installing.
 
 use serde_json::{Value, json};
 
@@ -12,6 +12,10 @@ pub struct Options {
     pub all_history: bool,
     pub skip_dependency_installation: bool,
     pub lanes: bool,
+    /// `--skip-write-config-files`
+    pub skip_write_config_files: bool,
+    /// `--include-deprecated`: wildcard patterns keep deprecated components.
+    pub include_deprecated: bool,
 }
 
 /// `args` starts with the command name.
@@ -64,13 +68,23 @@ fn fetch(ids: Vec<String>, flags: &[&str]) -> Option<Options> {
         all_history,
         skip_dependency_installation: false,
         lanes: lanes == 1,
+        skip_write_config_files: false,
+        include_deprecated: false,
     })
 }
 
-/// `bit import`: objects only, or without installing.
+/// `bit import`: objects only, or the components written and installed.
 fn import(ids: Vec<String>, flags: &[&str]) -> Option<Options> {
     let has = |flag: &str| flags.contains(&flag);
-    let allowed = ["--objects", "-o", "--all-history", "--skip-dependency-installation", "-x"];
+    let allowed = [
+        "--objects",
+        "-o",
+        "--all-history",
+        "--skip-dependency-installation",
+        "-x",
+        "--skip-write-config-files",
+        "--include-deprecated",
+    ];
     let both =
         (has("--objects") && has("-o")) || (has("--skip-dependency-installation") && has("-x"));
     if flags
@@ -80,11 +94,14 @@ fn import(ids: Vec<String>, flags: &[&str]) -> Option<Options> {
     {
         return None;
     }
-    let objects_only = ids.is_empty() || has("--objects") || has("-o");
-    let skip_dependency_installation = has("--skip-dependency-installation") || has("-x");
-    if !objects_only && !skip_dependency_installation {
+    if ids
+        .iter()
+        .any(|id| has_wildcard(id) && !valid_pattern(id))
+    {
         return None;
     }
+    let objects_only = ids.is_empty() || has("--objects") || has("-o");
+    let skip_dependency_installation = has("--skip-dependency-installation") || has("-x");
     let all_history = has("--all-history");
     Some(Options {
         operation: "import",
@@ -93,10 +110,38 @@ fn import(ids: Vec<String>, flags: &[&str]) -> Option<Options> {
         all_history,
         skip_dependency_installation,
         lanes: false,
+        skip_write_config_files: has("--skip-write-config-files"),
+        include_deprecated: has("--include-deprecated"),
     })
 }
 
+/// `hasWildcard`.
+pub fn has_wildcard(id: &str) -> bool {
+    id.contains('*')
+}
+
+/// `<scope>/<namespaces with wildcards>`: `getRemoteCompIdsByWildcards`
+/// needs the scope written out.
+fn valid_pattern(id: &str) -> bool {
+    id.split_once('/')
+        .is_some_and(|(scope, rest)| !scope.is_empty() && !scope.contains('*') && !rest.is_empty())
+        && !id.starts_with('@')
+}
+
 impl Options {
+    /// Whether the components are written and then installed.
+    pub const fn installs(&self) -> bool {
+        !self.objects_only && !self.skip_dependency_installation
+    }
+
+    /// The wildcard patterns, listed on their remotes before importing.
+    pub fn wildcards(&self) -> Vec<&String> {
+        self.ids
+            .iter()
+            .filter(|id| has_wildcard(id))
+            .collect()
+    }
+
     /// The `options` of `commandInboundPrepare`.
     pub fn request(&self) -> Value {
         json!({

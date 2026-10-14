@@ -1,4 +1,4 @@
-use super::{History, Prepared, safe_destination, unique_name};
+use super::{History, Prepared, Target, safe_destination, unique_name};
 use serde_json::json;
 use std::{
     fs,
@@ -77,4 +77,43 @@ fn symlinked_parent_is_rejected_before_workspace_write() {
     symlink(std::env::temp_dir(), root.join("linked")).unwrap();
     assert!(safe_destination(&root, &root.join("linked/component/index.js")).is_err());
     fs::remove_dir_all(root).unwrap();
+}
+
+fn targets(ids: &[(&str, &str)]) -> Vec<Target> {
+    ids.iter()
+        .map(|(scope, name)| Target {
+            scope: Some((*scope).to_owned()),
+            name: (*name).to_owned(),
+            version: "latest".to_owned(),
+        })
+        .collect()
+}
+
+fn owned(directories: &[&str]) -> Vec<String> {
+    directories
+        .iter()
+        .map(|directory| (*directory).to_owned())
+        .collect()
+}
+
+#[test]
+fn a_parent_directory_moves_aside_for_its_child() {
+    let mut directories = owned(&["bar", "bar/foo"]);
+    super::directories::fix_dirs_if_nested(&mut directories, &[]);
+    assert_eq!(directories, ["bar_1", "bar/foo"]);
+}
+
+#[test]
+fn nested_directories_avoid_existing_components() {
+    let mut directories = owned(&["foo", "comp1/foo"]);
+    super::directories::fix_dirs_if_nested(&mut directories, &owned(&["foo/bar", "comp1"]));
+    assert_eq!(directories, ["foo_1", "comp1_1/foo"]);
+}
+
+#[test]
+fn equal_directories_move_under_their_owner() {
+    let targets = targets(&[("org1.ui", "button"), ("org2.ui", "button")]);
+    let mut directories = owned(&["ui/button", "ui/button"]);
+    super::directories::fix_dirs_if_equal(&targets, &mut directories);
+    assert_eq!(directories, ["org1/ui/button", "org2/ui/button"]);
 }

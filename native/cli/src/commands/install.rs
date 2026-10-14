@@ -40,7 +40,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Err(error) => return Ok(Outcome::Declined(format!("JavaScript host: {error}"))),
     };
     let history = History::start(&root, args);
-    match run_install(cwd, argv, info, host)? {
+    match run_install(cwd, Input::Argv(argv), info, host)? {
         Ok(Installed::Installed(_)) => {
             history.end(true);
             Ok(Outcome::Exit(ExitCode::SUCCESS))
@@ -101,7 +101,8 @@ fn utf8(args: &[OsString]) -> Option<Vec<String>> {
 
 /// The host computes everything `HostInfo` needs from Node and adds the PATH
 /// the engine's lifecycle scripts must see; the terminal facts are ours.
-fn host_info(host: &Host, terminal: &Terminal) -> io::Result<HostInfo> {
+/// It sets `PATH`, so it runs before this process starts any thread.
+pub(super) fn host_info(host: &Host, terminal: &Terminal) -> io::Result<HostInfo> {
     let mut facts = host.call("hostInfo", &terminal.json())?;
     if let Some(Value::String(path)) = facts.get_mut("path").map(Value::take) {
         // SAFETY: no thread of this process exists yet; the runtime starts after.
@@ -110,10 +111,17 @@ fn host_info(host: &Host, terminal: &Terminal) -> io::Result<HostInfo> {
     serde_json::from_value(facts).map_err(io::Error::other)
 }
 
+/// What the install runs with: `bit install`'s arguments, or the options another
+/// command passes to `InstallMain.install`.
+pub(super) enum Input {
+    Argv(Vec<String>),
+    Options(Box<bit_install::InstallOptions>),
+}
+
 /// As `@pnpm/napi` runs its engine: a 32 MiB stack thread with its own runtime.
-fn run_install(
+pub(super) fn run_install(
     cwd: PathBuf,
-    argv: Vec<String>,
+    input: Input,
     info: HostInfo,
     host: Arc<Host>,
 ) -> io::Result<io::Result<Installed>> {
@@ -127,20 +135,28 @@ fn run_install(
                 let _ = stdout.write_all(text.as_bytes());
                 let _ = stdout.flush();
             });
-            Ok(runtime.block_on(bit_install::run(&cwd, &argv, &info, &JsHost(host), sink)))
+            let host = JsHost(host);
+            Ok(runtime.block_on(async {
+                match &input {
+                    Input::Argv(argv) => bit_install::run(&cwd, argv, &info, &host, sink).await,
+                    Input::Options(options) => {
+                        bit_install::run_with_options(&cwd, options, &info, &host, sink).await
+                    }
+                }
+            }))
         })?;
     worker.join().map_err(|_| io::Error::other("bit install panicked"))?
 }
 
-struct Terminal {
-    color: bool,
+pub(super) struct Terminal {
+    pub color: bool,
     tty: bool,
     loader: bool,
     non_interactive: bool,
 }
 
 impl Terminal {
-    fn detect(argv: &[String]) -> Self {
+    pub fn detect(argv: &[String]) -> Self {
         let tty = io::stdout().is_terminal();
         Self {
             color: color_enabled(tty),

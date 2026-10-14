@@ -27,11 +27,15 @@ pub(super) fn remote(
     name: &str,
 ) -> io::Result<PathBuf> {
     let directory = raw_remote(plan, remotes, name)?;
-    let hash = object_hash(name);
-    plan.overlay.objects.insert(
-        hash.clone(),
-        super::super::publish::object(&hash, "ScopeMeta", json!({"name":name}))?,
-    );
+    // A file remote's ScopeMeta travels with its objects; an HTTP response
+    // (a virtual remote) carries none.
+    if !plan.environment.remote_overrides.contains_key(name) {
+        let hash = object_hash(name);
+        plan.overlay.objects.insert(
+            hash.clone(),
+            super::super::publish::object(&hash, "ScopeMeta", json!({"name":name}))?,
+        );
+    }
     Ok(directory)
 }
 pub(super) fn raw_remote(
