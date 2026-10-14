@@ -24,6 +24,45 @@ pub(super) struct Prepared {
     changed: bool,
 }
 impl Prepared {
+    /// `switch` changes the active lane even when every component was skipped.
+    /// Re-render from the prepared bytes so component updates and the lane header
+    /// are published in the same bitmap history entry.
+    pub(super) fn switch_lane(&mut self, context: &Value) -> io::Result<()> {
+        let id = &context["lane"]["switchId"];
+        let name = id["name"].as_str().ok_or_else(|| invalid("switch lane name"))?;
+        let scope = id["scope"].as_str().ok_or_else(|| invalid("switch lane scope"))?;
+        let bitmap = crate::recovery::jsonc::parse(&self.output)?;
+        let mut entries = rows(&bitmap)?;
+        let lane_only = context["lane"]["switchLaneOnly"]
+            .as_array()
+            .ok_or_else(|| invalid("switch lane-only identities"))?;
+        for entry in &mut entries {
+            let identity = identity(entry)?;
+            let fields = entry.as_object_mut().ok_or_else(|| invalid("switch bitmap entry"))?;
+            fields.shift_remove("isAvailableOnCurrentLane");
+            fields.shift_remove("onLanesOnly");
+            if lane_only
+                .iter()
+                .any(|value| value == &identity)
+            {
+                let on_destination =
+                    name != "main" && context["lane"]["switchLaneHeads"].get(&identity).is_some();
+                if on_destination {
+                    fields.insert("onLanesOnly".into(), Value::Bool(true));
+                    fields.insert("isAvailableOnCurrentLane".into(), Value::Bool(true));
+                } else {
+                    fields.insert("isAvailableOnCurrentLane".into(), Value::Bool(false));
+                }
+            }
+        }
+        let header = (name != "main").then(|| {
+            serde_json::json!({"id":{"name":name,"scope":scope},
+            "exported":context["lane"]["switchExported"] == true})
+        });
+        self.output = render_rows(entries, &bitmap["$schema-version"], header)?;
+        self.changed = self.output != self.original;
+        Ok(())
+    }
     /// A first snapshot on a lane makes a newly tracked component lane-only.
     /// Keep the staged bitmap bytes as the input to this transformation.
     pub(super) fn mark_lane_new(

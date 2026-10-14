@@ -56,6 +56,9 @@ fn reason(record: &Record, plan: &planning::Planned) -> io::Result<String> {
         // write, which is already clean and therefore creates no history entry.
         return Ok("merge".to_owned());
     }
+    if record.request.operation == input::Operation::Switch {
+        return Ok("switch".to_owned());
+    }
     if plan.materials.iter().all(|material| material.keep_ours) {
         return Ok(format!(
             "checkout ({})",

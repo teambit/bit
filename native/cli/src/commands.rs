@@ -17,6 +17,7 @@ mod mini_status;
 mod patterns;
 mod snap;
 mod status;
+mod switch;
 mod tag;
 mod workspace_command;
 
@@ -43,6 +44,7 @@ pub const COMMANDS: &[Command] = &[
     mini_status::COMMAND,
     snap::COMMAND,
     status::COMMAND,
+    switch::COMMAND,
     tag::COMMAND,
 ];
 

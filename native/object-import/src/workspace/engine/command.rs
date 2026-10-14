@@ -30,6 +30,7 @@ mod resolve_snapshot;
 mod scratch;
 mod selection;
 mod setup;
+mod switch;
 
 use super::{dependency_graph::proof, invalid};
 use input::Prepare;

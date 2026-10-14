@@ -17,6 +17,7 @@ pub(in crate::workspace::engine) struct Prepare {
 pub(super) enum Operation {
     Checkout,
     Merge,
+    Switch,
 }
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

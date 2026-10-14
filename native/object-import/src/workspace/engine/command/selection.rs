@@ -52,7 +52,7 @@ pub(super) fn select(
 }
 
 fn begin(options: &Options, selection: &Selection<'_>) -> io::Result<Value> {
-    let to = options.to.as_deref().ok_or_else(|| invalid("command checkout target"))?;
+    let to = options.to.as_deref().unwrap_or("head");
     let identity = selection.target["identity"]
         .as_str()
         .ok_or_else(|| invalid("command checkout identity"))?;
@@ -69,7 +69,7 @@ fn begin(options: &Options, selection: &Selection<'_>) -> io::Result<Value> {
         "model":selection.model.map(|model|json!({"hasMainHead":model["head"].is_string()})),
         "options":{"reset":to=="reset","head":to=="head","main":to=="main","latest":to=="latest",
             "forceOurs":options.force_ours,"forceTheirs":options.force_theirs,"revert":false,"loadStash":false,
-            "ancestor":ancestor,"version":exact.then_some(to),"versionPerId":null},
+            "ancestor":ancestor,"version":exact.then_some(to),"versionPerId":selection.target.get("switchVersion").map(|_|json!({}))},
     }))
 }
 

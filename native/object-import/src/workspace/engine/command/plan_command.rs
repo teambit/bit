@@ -17,7 +17,7 @@ pub(super) fn run(
     proof::verify(&input.dependency_read_set)?;
     record.proofs.extend(input.dependency_read_set);
     validate_versions(&mut record)?;
-    let planned = pool.install(|| match record.request.operation {
+    let mut planned = pool.install(|| match record.request.operation {
         input::Operation::Checkout => {
             planning::checkout(&mut record, input.current, &input.semver, snapshots, pool)
         }
@@ -28,23 +28,41 @@ pub(super) fn run(
             snapshots,
             pool,
         ),
+        input::Operation::Switch => {
+            planning::checkout(&mut record, input.current, &input.semver, snapshots, pool)
+        }
     })?;
+    if record.request.operation == input::Operation::Switch {
+        super::switch::append_skipped(&record.context, &record.targets, &mut planned.result)?;
+    }
     let bitmap = prepare_bitmap(&record, &planned)?;
     for material in &planned.materials {
         materialization::validate(material, &record.request.root)?;
     }
     record.repository.validate()?;
     proof::verify(&record.proofs)?;
-    let mut output = json!({"token":record.token,"result":planned.result,"progress":record.repository.progress()});
-    snap_receipt(&mut output, &planned)?;
-    if let Some(receipt) = planned.merge.as_ref().and_then(merge_planning::Prepared::lane_receipt) {
-        output["lanePreparation"] = receipt;
-    }
+    let output = plan_output(&record, &planned)?;
     let count = planned.result["components"].as_array().map_or(0, Vec::len);
     record.planned =
         Some(PreparedPlan { plan: planned, bitmap, snap_bitmap: None, reset_config: None });
     snapshots.command.record = Some(record);
     Ok((count, output))
+}
+
+fn plan_output(record: &Record, planned: &planning::Planned) -> io::Result<Value> {
+    let mut output = json!({"token":record.token,"result":planned.result,"progress":record.repository.progress()});
+    if record.request.operation == input::Operation::Switch {
+        output["switchImportCount"] = json!(super::switch::import_count(
+            &record.request.root,
+            &record.context,
+            &record.targets
+        )?);
+    }
+    snap_receipt(&mut output, planned)?;
+    if let Some(receipt) = planned.merge.as_ref().and_then(merge_planning::Prepared::lane_receipt) {
+        output["lanePreparation"] = receipt;
+    }
+    Ok(output)
 }
 
 fn snap_receipt(output: &mut Value, planned: &planning::Planned) -> io::Result<()> {
@@ -101,7 +119,12 @@ pub(super) fn prepare_bitmap_bytes(
     if let Some(merge) = &planned.merge {
         updates.extend(merge.bitmap_updates()?);
     }
-    bitmap::prepare_bytes(&record.request.root, original, &record.context, &updates, &[])
+    let mut bitmap =
+        bitmap::prepare_bytes(&record.request.root, original, &record.context, &updates, &[])?;
+    if record.request.operation == input::Operation::Switch {
+        bitmap.switch_lane(&record.context)?;
+    }
+    Ok(bitmap)
 }
 
 fn bitmap_update(

@@ -2,7 +2,7 @@ mod history_replay;
 mod reset_comparison;
 use super::{
     super::{invalid, status_models::comparison},
-    Record, capture, history, materialization, repository, scratch, selection,
+    Record, capture, history, input, materialization, repository, scratch, selection,
 };
 use crate::{checkout_transition, command_import, workspace::snapshots};
 use serde_json::{Value, json};
@@ -127,7 +127,11 @@ fn select(
 ) -> io::Result<Value> {
     let identity = &captured.target.identity;
     let model = repository::model(&record.context, identity)?;
-    let remote = record.repository.remote_head(identity)?;
+    let remote = if record.request.operation == input::Operation::Switch {
+        None
+    } else {
+        record.repository.remote_head(identity)?
+    };
     let (modified, pending) = modification(
         record,
         captured,
@@ -149,14 +153,16 @@ fn select(
         &mut record.repository,
         state,
     )?;
-    history_replay::replay(
-        record,
-        identity,
-        model.as_ref(),
-        remote.as_deref(),
-        &selected,
-        histories,
-    )?;
+    if record.request.operation != input::Operation::Switch {
+        history_replay::replay(
+            record,
+            identity,
+            model.as_ref(),
+            remote.as_deref(),
+            &selected,
+            histories,
+        )?;
+    }
     Ok(selected)
 }
 fn import_selected(record: &mut Record, selections: &[Value]) -> io::Result<()> {
@@ -338,6 +344,9 @@ fn modification(
     recovery_reset: bool,
 ) -> io::Result<(bool, bool)> {
     let identity = &captured.target.identity;
+    if record.request.operation == input::Operation::Switch {
+        return switch_modification(record, captured, model);
+    }
     let mut staged = histories.clone();
     let Some(model) = model else {
         if recovery_reset && reset_comparison::incomplete(&captured.target.current) {
@@ -368,4 +377,17 @@ fn modification(
         !distance["sourceOnly"].as_array().is_some_and(Vec::is_empty)
             && !distance["targetOnly"].as_array().is_some_and(Vec::is_empty),
     ))
+}
+
+fn switch_modification(
+    record: &mut Record,
+    captured: &capture::Captured,
+    model: Option<&Value>,
+) -> io::Result<(bool, bool)> {
+    let model = model.ok_or_else(|| invalid("switch model missing"))?;
+    let hash = selection::versions::reference(model, &captured.target.version)?;
+    let version = record.repository.read(&hash, "Version")?;
+    let modified =
+        comparison::compare(&captured.target, &captured.metadata, &version)?["modified"] == true;
+    Ok((modified, false))
 }

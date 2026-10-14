@@ -8,6 +8,9 @@ pub(super) fn resolve(
     repository: &mut Repository,
 ) -> io::Result<String> {
     let model = selection.model.ok_or_else(|| invalid("command checkout model"))?;
+    if let Some(version) = selection.target["switchVersion"].as_str() {
+        return Ok(version.to_owned());
+    }
     let to = options.to.as_deref().ok_or_else(|| invalid("command checkout target"))?;
     if to == "reset" {
         return selection.target["version"]

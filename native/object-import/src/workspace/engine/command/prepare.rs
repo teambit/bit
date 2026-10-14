@@ -14,6 +14,9 @@ pub(super) fn context(
     pool: &rayon::ThreadPool,
 ) -> io::Result<(Value, Option<command_import::PreparedImport>)> {
     validate(request)?;
+    if request.operation == Operation::Switch {
+        return super::switch::context(request, pool);
+    }
     if request.options.lane.is_some() {
         if request.operation != Operation::Merge {
             return Err(invalid("lane checkout unsupported"));
@@ -34,7 +37,7 @@ pub(super) fn context(
             &request.global_remotes_file,
             &import_targets(request)?,
         )?),
-        Operation::Merge => {
+        Operation::Merge | Operation::Switch => {
             Some(command_import::prepare_cached(&request.root, &request.global_remotes_file)?)
         }
     };
@@ -163,6 +166,9 @@ fn import_targets(request: &Prepare) -> io::Result<Vec<command_import::Target>> 
 pub(super) fn selected(request: &Prepare, context: &Value) -> io::Result<Vec<Value>> {
     let targets = context["targets"].as_array().ok_or_else(|| invalid("command targets"))?;
     validate_roots(targets)?;
+    if request.operation == Operation::Switch {
+        return Ok(targets.clone());
+    }
     if request.options.lane.is_some() {
         return lane_selected(context, targets);
     }
