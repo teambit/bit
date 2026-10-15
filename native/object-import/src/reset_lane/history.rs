@@ -24,13 +24,7 @@ fn project_history(objects: &Path, identity: &str, current: &str) -> io::Result<
     let versions = history["versions"]
         .as_array_mut()
         .ok_or_else(|| invalid("lane reset VersionHistory versions"))?;
-    if !versions
-        .iter()
-        .any(|row| row["hash"] == current)
-    {
-        let version = outbound::read_object(objects, current, "Version")?;
-        versions.push(json!({"hash":current,"parents":version["parents"]}));
-    }
+    append_missing_ancestors(objects, versions, current)?;
     if new {
         Ok(ObjectChange {
             hash: hash.clone(),
@@ -40,6 +34,39 @@ fn project_history(objects: &Path, identity: &str, current: &str) -> io::Result<
     } else {
         changed(objects, &hash, "VersionHistory", &history)
     }
+}
+
+fn append_missing_ancestors(
+    objects: &Path,
+    versions: &mut Vec<Value>,
+    current: &str,
+) -> io::Result<()> {
+    let mut current = current.to_owned();
+    let mut seen = HashSet::new();
+    while !versions
+        .iter()
+        .any(|entry| entry["hash"] == current)
+    {
+        if !seen.insert(current.clone()) || seen.len() > 4096 {
+            return Err(invalid("lane reset VersionHistory cycle"));
+        }
+        let version = outbound::read_object(objects, &current, "Version")?;
+        let parents =
+            version["parents"].as_array().ok_or_else(|| invalid("lane history parents"))?;
+        versions.push(json!({"hash":current,"parents":parents}));
+        match parents.as_slice() {
+            [] => break,
+            [parent] => {
+                parent
+                    .as_str()
+                    .ok_or_else(|| invalid("lane history parent"))?
+                    .clone_into(&mut current);
+                crate::merge_history::hash(&current)?;
+            }
+            _ => return Err(invalid("lane history merge parents")),
+        }
+    }
+    Ok(())
 }
 
 pub(super) fn pending_histories(

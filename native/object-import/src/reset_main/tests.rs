@@ -91,6 +91,16 @@ fn object(root: &Path, hash: &str, kind: &str, value: &Value) {
 #[test]
 fn reset_head_rewrites_model_and_bitmap_and_refuses_a_stale_plan() {
     let fixture = Fixture::new(false);
+    fs::create_dir_all(fixture.root.join(".bit/staged-config")).expect("staged directory");
+    fs::write(
+        fixture.root.join(".bit/staged-config/main.json"),
+        serde_json::to_vec(&json!([{
+            "id":{"scope":"scope","name":"alpha","version":"1.0.1"},
+            "config":{"teambit.component/deprecation":{"deprecate":true,"__specific":true}},
+        }]))
+        .expect("staged config"),
+    )
+    .expect("write staged config");
     let plan = Plan::prepare(&fixture.root, "scope/alpha", true, false).expect("plan");
     let stale = Plan::prepare(&fixture.root, "scope/alpha", true, false).expect("stale plan");
     assert_eq!(plan.selection.labels, ["1.0.1"]);
@@ -104,6 +114,15 @@ fn reset_head_rewrites_model_and_bitmap_and_refuses_a_stale_plan() {
         crate::recovery::jsonc::parse(&fs::read(fixture.root.join(".bitmap")).expect("bitmap"))
             .expect("parse bitmap");
     assert_eq!(bitmap["alpha"]["version"], "1.0.0");
+    assert_eq!(
+        bitmap["alpha"]["config"],
+        json!({"teambit.component/deprecation":{"deprecate":true}}),
+    );
+    let history_hash = hash("scope/alpha:VersionHistory");
+    let history =
+        outbound::read_object(&fixture.root.join(".bit/objects"), &history_hash, "VersionHistory")
+            .expect("history");
+    assert_eq!(history["versions"][0]["hash"], "2222222222222222222222222222222222222222");
     assert!(stale.commit("2026-10-15-7-17-1").is_err());
 }
 

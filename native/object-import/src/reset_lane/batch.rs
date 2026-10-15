@@ -228,6 +228,8 @@ fn project_bitmap(root: &Path, items: &[Plan]) -> io::Result<(Vec<u8>, Vec<u8>)>
         let row = rows[&key].as_object_mut().ok_or_else(|| invalid("lane batch bitmap row"))?;
         row.insert("version".into(), Value::String(item.bitmap.version.clone()));
         row.shift_remove("nextVersion");
+        let single = crate::recovery::jsonc::parse(&item.bitmap.after)?;
+        crate::reset_config::restore(row, single[&key].get("config").cloned());
         if item.index.is_some() {
             row.shift_remove("onLanesOnly");
             row.shift_remove("isAvailableOnCurrentLane");

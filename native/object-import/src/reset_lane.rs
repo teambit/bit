@@ -62,6 +62,7 @@ struct BitmapState {
     lane_scope: String,
     lane_name: String,
     exported: bool,
+    staged_config: Option<Value>,
 }
 
 impl BitmapState {
@@ -86,7 +87,9 @@ impl BitmapState {
         {
             return Err(invalid("lane reset unavailable component"));
         }
-        Ok(Self { before, document, key, lane_scope, lane_name, exported })
+        let staged_config =
+            crate::reset_config::read(root, Some((&lane_scope, &lane_name)), scope, name)?;
+        Ok(Self { before, document, key, lane_scope, lane_name, exported, staged_config })
     }
 
     fn validate_head(&self, head: &str) -> io::Result<()> {
@@ -112,6 +115,7 @@ impl BitmapState {
             .ok_or_else(|| invalid("lane reset bitmap row"))?;
         row.insert("version".into(), Value::String(version.clone()));
         row.shift_remove("nextVersion");
+        crate::reset_config::restore(row, self.staged_config.clone());
         if version.is_empty()
             && model["versions"].as_object().is_some_and(serde_json::Map::is_empty)
         {
