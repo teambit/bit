@@ -265,6 +265,8 @@ fn exists(path: &Path) -> io::Result<bool> {
 enum Issue {
     MissingManual,
     MissingPackages,
+    MissingDependencies,
+    ImportFromDirectory,
     MissingLinks,
     MissingDists,
     Duplicate,
@@ -276,6 +278,8 @@ impl Issue {
         Ok(match name {
             "MissingManuallyConfiguredPackages" => Self::MissingManual,
             "MissingPackagesDependenciesOnFs" => Self::MissingPackages,
+            "MissingDependenciesOnFs" => Self::MissingDependencies,
+            "ImportFromDirectory" => Self::ImportFromDirectory,
             "MissingLinksFromNodeModulesToSrc" => Self::MissingLinks,
             "MissingDists" => Self::MissingDists,
             "DuplicateComponentAndPackage" => Self::Duplicate,
@@ -287,16 +291,34 @@ impl Issue {
     /// `type`, `description`, `solution` and `isTagBlocker` of the issue class.
     const fn class(self) -> (&'static str, &'static str, &'static str, bool) {
         match self {
-            Self::MissingManual => (
-                "MissingManuallyConfiguredPackages",
-                "missing packages that were manually set",
-                r#"run "bit install""#,
-                true,
-            ),
             Self::MissingPackages => (
                 "MissingPackagesDependenciesOnFs",
                 "missing packages or links from node_modules to the source",
                 r#"run "bit install --add-missing-deps" to fix both issues"#,
+                true,
+            ),
+            Self::MissingDependencies => (
+                "MissingDependenciesOnFs",
+                "non-existing dependency files",
+                "make sure all files exists on your workspace",
+                true,
+            ),
+            Self::ImportFromDirectory => (
+                "ImportFromDirectory",
+                "relative import from a directory",
+                "change the import statement to a specific file",
+                false,
+            ),
+            _ => self.legacy_class(),
+        }
+    }
+
+    const fn legacy_class(self) -> (&'static str, &'static str, &'static str, bool) {
+        match self {
+            Self::MissingManual => (
+                "MissingManuallyConfiguredPackages",
+                "missing packages that were manually set",
+                r#"run "bit install""#,
                 true,
             ),
             Self::MissingLinks => (
@@ -318,6 +340,7 @@ impl Issue {
                 "run `bit deps circular` to get the component-ids participating in the circular",
                 true,
             ),
+            _ => unreachable!(),
         }
     }
 
@@ -354,6 +377,14 @@ impl Issue {
                         Ok(format!("{SPACE}{file} -> {}", list_or_text(packages)?))
                     });
                 Ok(rows.collect::<io::Result<Vec<_>>>()?.join("\n"))
+            }
+            Self::MissingDependencies | Self::ImportFromDirectory => {
+                let files = data.as_object().ok_or_else(|| decline("status issue file data"))?;
+                files
+                    .iter()
+                    .map(|(file, items)| Ok(format!("{SPACE}{file} -> {}", list_or_text(items)?)))
+                    .collect::<io::Result<Vec<_>>>()
+                    .map(|rows| rows.join("\n"))
             }
             // `Object.keys(true)` is empty.
             Self::MissingLinks | Self::MissingDists | Self::Circular => match data {

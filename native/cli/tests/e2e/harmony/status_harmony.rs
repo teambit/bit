@@ -4,6 +4,38 @@ use crate::{
     helper::{FOO_FIXTURE, Helper, len, parse, strip_ansi},
     known_failure::Native,
 };
+use std::ffi::OsStr;
+
+/// Compare the complete status report on fresh copies of one workspace.
+fn status_json_parity(helper: &Helper) {
+    let copy = helper.clone_workspace();
+    let native = helper.native_run("status --json");
+    helper.get_cloned_workspace(&copy);
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "status --json",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(!node.native, "{}", node.trace);
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(parse(&native.stdout), parse(&node.stdout));
+}
+
+fn status_text_parity(helper: &Helper) {
+    let copy = helper.clone_workspace();
+    let native = helper.native_run("status");
+    helper.get_cloned_workspace(&copy);
+    let node = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "status",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(!node.native, "{}", node.trace);
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(native.stdout, node.stdout);
+}
 
 /// The standard e2e root aspects allow native status and diff.
 #[test]
@@ -123,30 +155,89 @@ fn a_dynamic_import_is_not_a_missing_package() {
     assert!(!output.contains(STATUS_FAILURE_MSG), "{output}");
 }
 
-/// What native `bit status` still leaves to the Node.js CLI: a dependency it cannot
-/// resolve, an import from a directory, and a tracked component directory that is gone.
-/// `bit show` runs on the Node.js CLI.
+/// main filename is not index and dists are missing › should not show an issue of
+/// missing-packages
+#[test]
+fn a_linked_package_is_not_missing() {
+    let helper = Helper::new();
+    helper.re_init_workspace_with(false);
+    helper.output_file("comp1/comp1.ts", "require('@my-scope/comp2');");
+    helper.output_file("comp2/comp2.ts", "");
+    helper.run("add comp1");
+    helper.run("add comp2");
+    helper.run("link");
+    status_json_parity(&helper);
+    let issues = helper.status_issues_or_known().native();
+    assert!(!issues.contains(&"MissingPackagesDependenciesOnFs".into()), "{issues:?}");
+}
+
+/// A package absent from `node_modules` is reported as a missing dependency.
+#[test]
+fn an_uninstalled_package_is_a_missing_dependency() {
+    let helper = Helper::new();
+    helper.re_init_workspace();
+    helper.output_file("bar/foo.js", "require('missing-example-package');");
+    helper.add_component_bar_foo();
+    status_json_parity(&helper);
+    status_text_parity(&helper);
+    let issues = helper.status_issues_or_known().native();
+    assert!(issues.contains(&"MissingPackagesDependenciesOnFs".into()), "{issues:?}");
+}
+
+/// when a component is created and added without its dependencies › Should show missing
+/// dependencies
+#[test]
+fn missing_dependency_files_are_shown() {
+    let helper = Helper::new();
+    helper.re_init_workspace();
+    let comp1 = r#"require("./comp2");require("./comp3");require("./comp4");require("./comp5");require("./comp6");"#;
+    helper.output_file("comp1/comp1.js", comp1);
+    helper.output_file("comp2/comp2.js", r#"require("./comp4");require("./comp5");"#);
+    for name in ["comp3", "comp4", "comp6"] {
+        helper.output_file(&format!("{name}/{name}.js"), "");
+    }
+    helper.output_file("comp5/comp5.js", r#"require("./comp6");"#);
+    helper.run("add comp1 -i comp1");
+    helper.run("add comp5 -i comp5");
+    status_json_parity(&helper);
+    status_text_parity(&helper);
+    let output = helper.native_or_known("status").native().stdout;
+    let indented = [format!("{ISSUE_INDENT}comp1.js"), format!("{ISSUE_INDENT}comp5.js")];
+    let expected = [
+        "non-existing dependency files",
+        "comp1 ... issues found",
+        "comp1.js -> ./comp2, ./comp3, ./comp4, ./comp5, ./comp6",
+        "comp5.js -> ./comp6",
+        "comp5 ... issues found",
+        &indented[0],
+        &indented[1],
+    ];
+    for expected in expected {
+        assert!(output.contains(expected), "{expected:?} in {output}");
+    }
+}
+
+/// import from the index file › should show an `ImportFromDirectory` issue
+#[test]
+fn importing_the_index_directory_is_an_issue() {
+    let helper = Helper::new();
+    helper.re_init_workspace();
+    helper.output_file("comp1/index.ts", "export { hello } from './foo';");
+    helper.output_file("comp1/foo.ts", "export const hello = 'world';");
+    helper.output_file("comp1/bar.ts", "import { hello } from '.';");
+    helper.run("add comp1");
+    status_json_parity(&helper);
+    status_text_parity(&helper);
+    let issues = helper.status_issues_or_known().native();
+    assert!(issues.contains(&"ImportFromDirectory".into()), "{issues:?}");
+}
+
+/// Remaining known fallbacks: a deleted tracked directory and `bit show`.
 mod known_failures {
-    use super::ISSUE_INDENT;
     use crate::{
         allow_known_failure,
         helper::{Helper, len, parse},
     };
-
-    /// main filename is not index and dists are missing › should not show an issue of
-    /// missing-packages
-    #[test]
-    fn a_linked_package_is_not_missing() {
-        let helper = Helper::new();
-        helper.re_init_workspace_with(false);
-        helper.output_file("comp1/comp1.ts", "require('@my-scope/comp2');");
-        helper.output_file("comp2/comp2.ts", "");
-        helper.run("add comp1");
-        helper.run("add comp2");
-        helper.run("link");
-        let issues = allow_known_failure!(helper.status_issues_or_known());
-        assert!(!issues.contains(&"MissingPackagesDependenciesOnFs".into()), "{issues:?}");
-    }
 
     /// components that imports itself › should not add itself as a dependency
     #[test]
@@ -174,49 +265,5 @@ mod known_failures {
         helper.delete_path("comp2");
         helper.append_file("comp1/index.js", "\n");
         allow_known_failure!(helper.native_output_or_known("status"));
-    }
-
-    /// when a component is created and added without its dependencies › Should show missing
-    /// dependencies
-    #[test]
-    fn missing_dependency_files_are_shown() {
-        let helper = Helper::new();
-        helper.re_init_workspace();
-        let comp1 = r#"require("./comp2");require("./comp3");require("./comp4");require("./comp5");require("./comp6");"#;
-        helper.output_file("comp1/comp1.js", comp1);
-        helper.output_file("comp2/comp2.js", r#"require("./comp4");require("./comp5");"#);
-        for name in ["comp3", "comp4", "comp6"] {
-            helper.output_file(&format!("{name}/{name}.js"), "");
-        }
-        helper.output_file("comp5/comp5.js", r#"require("./comp6");"#);
-        helper.run("add comp1 -i comp1");
-        helper.run("add comp5 -i comp5");
-        let output = allow_known_failure!(helper.native_or_known("status")).stdout;
-        let indented = [format!("{ISSUE_INDENT}comp1.js"), format!("{ISSUE_INDENT}comp5.js")];
-        let expected = [
-            "non-existing dependency files",
-            "comp1 ... issues found",
-            "comp1.js -> ./comp2, ./comp3, ./comp4, ./comp5, ./comp6",
-            "comp5.js -> ./comp6",
-            "comp5 ... issues found",
-            &indented[0],
-            &indented[1],
-        ];
-        for expected in expected {
-            assert!(output.contains(expected), "{expected:?} in {output}");
-        }
-    }
-
-    /// import from the index file › should show an `ImportFromDirectory` issue
-    #[test]
-    fn importing_the_index_directory_is_an_issue() {
-        let helper = Helper::new();
-        helper.re_init_workspace();
-        helper.output_file("comp1/index.ts", "export { hello } from './foo';");
-        helper.output_file("comp1/foo.ts", "export const hello = 'world';");
-        helper.output_file("comp1/bar.ts", "import { hello } from '.';");
-        helper.run("add comp1");
-        let issues = allow_known_failure!(helper.status_issues_or_known());
-        assert!(issues.contains(&"ImportFromDirectory".into()), "{issues:?}");
     }
 }

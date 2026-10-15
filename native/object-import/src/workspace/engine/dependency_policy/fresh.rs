@@ -88,7 +88,14 @@ fn apply_view(
         None => cached::complete(&input, pool)?,
     };
     output["rawData"] = Value::String(serde_json::to_string(&detected).map_err(io::Error::other)?);
-    output["cacheable"] = json!(request.root != request.component_root);
+    let blocking_issue = detected["issues"]
+        .as_array()
+        .is_some_and(|issues| {
+            issues
+                .iter()
+                .any(|issue| issue["type"] != "ImportFromDirectory")
+        });
+    output["cacheable"] = json!(request.root != request.component_root && !blocking_issue);
     Ok((1, output))
 }
 fn validate(request: &Detect) -> io::Result<()> {

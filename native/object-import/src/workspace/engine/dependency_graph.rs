@@ -61,6 +61,8 @@ struct PathMap {
 }
 struct Row {
     path_map: PathMap,
+    missing: Vec<String>,
+    missing_packages: Vec<String>,
     registered: Vec<String>,
     detector_scanned: bool,
 }

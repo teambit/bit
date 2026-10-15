@@ -50,5 +50,8 @@ fn cached_row(file: &str, cached: &Value) -> io::Result<()> {
     if let Some(missing) = cached.get("missing") {
         let _: Vec<String> = serde_json::from_value(missing.clone()).map_err(io::Error::other)?;
     }
+    if let Some(missing) = cached.get("missingPackages") {
+        let _: Vec<String> = serde_json::from_value(missing.clone()).map_err(io::Error::other)?;
+    }
     Ok(())
 }
