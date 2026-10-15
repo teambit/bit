@@ -6,6 +6,22 @@ use crate::{
 use serde_json::{Value, json};
 use std::io;
 
+#[derive(Default)]
+struct Additions {
+    names: Vec<String>,
+    destinations: Vec<Value>,
+    targets: Vec<Value>,
+    tracked: Vec<Value>,
+    prospective: Vec<Value>,
+}
+
+struct Candidates<'a> {
+    selected: std::collections::HashSet<String>,
+    tracked: std::collections::HashSet<String>,
+    targets: &'a [Value],
+    workspace_only: bool,
+}
+
 pub(super) fn attach(
     request: &Prepare,
     context: &mut Value,
@@ -33,15 +49,15 @@ pub(super) fn attach(
         return Err(invalid("checkout fetched lane history requires canonical handling"));
     }
     context["lane"] = json!({"currentId":current_id,"current":current});
-    let (new_from_lane, additions, added_targets) = if request.options.to.as_deref() == Some("head")
-    {
+    let additions = if request.options.to.as_deref() == Some("head") {
         additions(request, context, imported, &bitmap, &current)?
     } else {
-        (Vec::new(), Vec::new(), Vec::new())
+        Additions::default()
     };
-    context["lane"]["newFromLane"] = json!(new_from_lane);
-    context["lane"]["additions"] = json!(additions);
-    context["lane"]["addedTargets"] = json!(added_targets);
+    context["lane"]["newFromLane"] = json!(additions.names);
+    context["lane"]["additions"] = json!(additions.destinations);
+    context["lane"]["addedTargets"] = json!(additions.targets);
+    context["lane"]["trackedTargets"] = json!(additions.tracked);
     Ok(())
 }
 
@@ -51,43 +67,69 @@ fn additions(
     imported: &mut command_import::PreparedImport,
     bitmap: &Value,
     current: &command_import::lane::Record,
-) -> io::Result<(Vec<String>, Vec<Value>, Vec<Value>)> {
+) -> io::Result<Additions> {
     let selected = selected(request, context)?
         .into_iter()
         .filter_map(|target| target["identity"].as_str().map(str::to_owned))
         .collect::<std::collections::HashSet<_>>();
     let settings = config::configuration_for_command(&request.root, true)?;
     let bitmap = super::super::lane_context::visibility::identity_bitmap(bitmap, &settings)?;
-    let tracked = bitmap_identities(&bitmap)?;
-    let mut prospective = Vec::new();
-    let mut names = Vec::new();
+    let candidates = Candidates {
+        selected,
+        tracked: bitmap_identities(&bitmap)?,
+        targets: context["targets"].as_array().ok_or_else(|| invalid("checkout targets"))?,
+        workspace_only: request.options.workspace_only,
+    };
+    let mut result = Additions::default();
     for entry in command_import::lane::entries(&current.value)? {
-        if selected.contains(&entry.identity) || entry.hidden {
-            continue;
-        }
-        let version = imported.lane_version(&entry.head)?;
-        if super::super::selection::removed(&version)? {
-            continue;
-        }
-        names.push(format!("{}@{}", entry.identity, entry.head));
-        if !request.options.workspace_only && tracked.contains(&entry.identity) {
-            return Err(invalid("checkout lane tracked addition requires canonical writer"));
-        }
-        prospective.push(json!({"identity":entry.identity,"head":entry.head,
-            "visible":false,"hidden":false,"currentIdPresent":false,"bitmapPresent":false}));
+        collect_candidate(&entry, imported, &candidates, &mut result)?;
     }
     if request.options.workspace_only {
-        return Ok((names, Vec::new(), Vec::new()));
+        return Ok(result);
     }
-    let additions = super::super::lane_context::additions::prepare_switch(
+    result.destinations = super::super::lane_context::additions::prepare_switch(
         imported,
         &request.root,
         &bitmap,
         &settings,
-        &prospective,
+        &result.prospective,
     )?;
-    let targets = super::super::lane_context::additions::targets(&additions, &prospective);
-    Ok((names, additions, targets))
+    result.targets =
+        super::super::lane_context::additions::targets(&result.destinations, &result.prospective);
+    Ok(result)
+}
+
+fn collect_candidate(
+    entry: &command_import::lane::Entry,
+    imported: &mut command_import::PreparedImport,
+    candidates: &Candidates<'_>,
+    result: &mut Additions,
+) -> io::Result<()> {
+    if candidates.selected.contains(&entry.identity) || entry.hidden {
+        return Ok(());
+    }
+    let version = imported.lane_version(&entry.head)?;
+    if super::super::selection::removed(&version)? {
+        return Ok(());
+    }
+    result.names.push(format!("{}@{}", entry.identity, entry.head));
+    if candidates.workspace_only {
+        return Ok(());
+    }
+    if candidates.tracked.contains(&entry.identity) {
+        let target = candidates.targets
+            .iter()
+            .find(|row| row["identity"] == entry.identity)
+            .ok_or_else(|| invalid("checkout inactive lane row requires canonical writer"))?;
+        if target["version"] != entry.head {
+            return Err(invalid("checkout tracked lane version requires canonical writer"));
+        }
+        result.tracked.push(target.clone());
+        return Ok(());
+    }
+    result.prospective.push(json!({"identity":entry.identity,"head":entry.head,
+        "visible":false,"hidden":false,"currentIdPresent":false,"bitmapPresent":false}));
+    Ok(())
 }
 
 pub(super) fn bitmap_identities(bitmap: &Value) -> io::Result<std::collections::HashSet<String>> {
