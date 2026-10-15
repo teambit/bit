@@ -105,7 +105,7 @@ fn validate_finalization(
         record.context["workspace"]["teambit.dependencies/dependency-resolver"]["rootComponents"]
             .as_bool()
             .unwrap_or(false);
-    merge::finalization::prepare(&record.request.root, &inputs, roots)?;
+    merge::finalization::prepare(&record.request.root, &inputs, roots, &[])?;
     Ok(())
 }
 

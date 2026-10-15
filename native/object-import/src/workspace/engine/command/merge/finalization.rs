@@ -29,6 +29,7 @@ pub(in crate::workspace::engine::command) fn prepare(
     root: &Path,
     inputs: &[Input<'_>],
     root_components: bool,
+    skip_packages: &[String],
 ) -> io::Result<Prepared> {
     if inputs.len() > 4096 {
         return Err(invalid("merge finalization component budget"));
@@ -38,7 +39,12 @@ pub(in crate::workspace::engine::command) fn prepare(
     staged::prepare(root, inputs, &mut prepared)?;
     for input in inputs
         .iter()
-        .filter(|input| !input.directory.is_empty())
+        .filter(|input| {
+            !input.directory.is_empty()
+                && !skip_packages
+                    .iter()
+                    .any(|id| id == input.identity)
+        })
     {
         packages::prepare(root, input, root_components, &mut prepared)?;
     }
@@ -64,10 +70,16 @@ impl Prepared {
         &mut self,
         root: &Path,
         inputs: &[Input<'_>],
+        skip_packages: &[String],
     ) -> io::Result<()> {
         for input in inputs
             .iter()
-            .filter(|input| !input.directory.is_empty())
+            .filter(|input| {
+                !input.directory.is_empty()
+                    && !skip_packages
+                        .iter()
+                        .any(|id| id == input.identity)
+            })
         {
             let package = packages::package_name(input.version)?;
             let path = root

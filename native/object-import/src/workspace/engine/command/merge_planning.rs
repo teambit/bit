@@ -259,7 +259,11 @@ fn prepare_materials(
     }
     prepare_lane_targets(record, &mut prepared, selected)?;
     fast_forward::prepare(record, planned, &mut prepared, selected, snapshots)?;
-    removal::prepare(planned, &mut prepared, selected)?;
+    if !record.request.options.no_snap
+        && !record.request.options.lane.as_ref().is_some_and(|lane| lane.no_auto_snap)
+    {
+        removal::prepare(planned, &mut prepared, selected)?;
+    }
     policy_rows::fast_forward(&mut prepared, planned, &record.context)?;
     if prepared.policy.as_ref().is_some_and(|policy| policy.rows.is_empty()) {
         prepared.policy = None;

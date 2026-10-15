@@ -29,6 +29,19 @@ pub(super) struct Material {
     pub participation: Participation,
 }
 
+pub(super) fn is_removed(version: &Value) -> bool {
+    version["extensions"]
+        .as_array()
+        .is_some_and(|entries| {
+            entries
+                .iter()
+                .any(|entry| {
+                    entry["name"] == "teambit.component/remove"
+                        && entry["config"]["removed"] == true
+                })
+        })
+}
+
 /// The previous object ref and the semantic alias planned for its successor.
 pub(super) struct VersionState {
     pub current_head: String,

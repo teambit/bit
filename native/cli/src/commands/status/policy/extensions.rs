@@ -23,6 +23,26 @@ const CORES: [&str; 11] = [
     "teambit.pipelines/builder",
 ];
 
+/// Pending dependency and custom configuration need canonical projection.
+/// A soft-removal flag can be applied to the core extension here.
+pub(super) fn pending_merge_config(target: &Value) -> bool {
+    if !truthy(target.get("resolveConfig")) {
+        return false;
+    }
+    let Some(config) = target.get("mergedConfig") else { return false };
+    let Some(entries) = config.as_object() else { return true };
+    entries
+        .iter()
+        .any(|(name, value)| {
+            name != REMOVAL
+                || value
+                    .as_object()
+                    .is_none_or(|removal| {
+                        removal.len() != 1 || removal.get("removed") != Some(&Value::Bool(true))
+                    })
+        })
+}
+
 pub fn status_extensions(version: Option<&Value>, target: &Value) -> io::Result<Vec<Value>> {
     let stored = array(version.and_then(|stored| stored.get("extensions")), "extensions")?;
     if stored
@@ -55,7 +75,24 @@ pub fn status_extensions(version: Option<&Value>, target: &Value) -> io::Result<
         extensions.push(model_extension(extension, name)?);
     }
     apply_component_config(&mut extensions, target)?;
+    apply_merged_removal(&mut extensions, target);
     Ok(extensions)
+}
+
+fn apply_merged_removal(extensions: &mut Vec<Value>, target: &Value) {
+    if target.get("resolveConfig") != Some(&Value::Bool(true))
+        || target["mergedConfig"][REMOVAL]["removed"] != true
+    {
+        return;
+    }
+    let removal = json!({"name": REMOVAL, "config": {"removed": true}});
+    match extensions
+        .iter()
+        .position(|entry| entry["name"] == REMOVAL)
+    {
+        Some(index) => extensions[index] = removal,
+        None => extensions.push(removal),
+    }
 }
 
 fn is_specific(extension: &Value) -> bool {

@@ -234,14 +234,15 @@ fn validate_pending_config(config: &Value) -> io::Result<()> {
         return Err(invalid("resolve merged configuration"));
     }
     for (name, value) in config.as_object().unwrap() {
-        if name != "teambit.dependencies/dependency-resolver"
-            || !value.is_object()
-            || value
+        let dependency_policy = name == "teambit.dependencies/dependency-resolver"
+            && value
                 .as_object()
-                .unwrap()
-                .keys()
-                .any(|key| key != "policy")
-        {
+                .is_some_and(|row| row.keys().all(|key| key == "policy"));
+        let removal = name == "teambit.component/remove"
+            && value
+                .as_object()
+                .is_some_and(|row| row.len() == 1 && row.get("removed") == Some(&json!(true)));
+        if !dependency_policy && !removal {
             return Err(invalid("resolve custom merged configuration"));
         }
     }
