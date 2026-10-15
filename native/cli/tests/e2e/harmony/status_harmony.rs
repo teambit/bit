@@ -232,7 +232,44 @@ fn importing_the_index_directory_is_an_issue() {
     assert!(issues.contains(&"ImportFromDirectory".into()), "{issues:?}");
 }
 
-/// Remaining known fallbacks: a deleted tracked directory and `bit show`.
+/// A tracked component whose directory was deleted still appears in status.
+#[test]
+fn a_deleted_dependency_directory_does_not_throw() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(2, true, "");
+    helper.tag_without_build("", "");
+    helper.run("export");
+    helper.delete_path("comp2");
+    helper.append_file("comp1/index.js", "\n");
+    status_json_parity(&helper);
+    status_text_parity(&helper);
+}
+
+#[test]
+fn an_empty_tracked_directory_is_an_invalid_component() {
+    let helper = Helper::new();
+    helper.re_init_workspace();
+    helper.output_file("bar/foo.js", "module.exports = 1;");
+    helper.add_component_bar_foo();
+    helper.delete_path("bar/foo.js");
+    status_json_parity(&helper);
+    status_text_parity(&helper);
+}
+
+#[test]
+fn a_removed_main_file_with_other_files_is_an_invalid_component() {
+    let helper = Helper::new();
+    helper.re_init_workspace();
+    helper.output_file("bar/foo.js", "module.exports = 1;");
+    helper.add_component_bar_foo();
+    helper.delete_path("bar/foo.js");
+    helper.output_file("bar/other.js", "module.exports = 2;");
+    status_json_parity(&helper);
+    status_text_parity(&helper);
+}
+
+/// Remaining known fallback: `bit show`.
 mod known_failures {
     use crate::{
         allow_known_failure,
@@ -251,19 +288,5 @@ mod known_failures {
         helper.run("link");
         let show = allow_known_failure!(helper.native_output_or_known("show bar --json --legacy"));
         assert_eq!(len(&parse(&show)["dependencies"]), 0);
-    }
-
-    /// deleting a dependency from the filesystem when the record is still in bitmap › bit
-    /// status should not throw
-    #[test]
-    fn a_deleted_dependency_directory_does_not_throw() {
-        let helper = Helper::new();
-        helper.set_workspace_with_remote_scope();
-        helper.populate_components(2, true, "");
-        helper.tag_without_build("", "");
-        helper.run("export");
-        helper.delete_path("comp2");
-        helper.append_file("comp1/index.js", "\n");
-        allow_known_failure!(helper.native_output_or_known("status"));
     }
 }

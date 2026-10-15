@@ -16,15 +16,13 @@ pub(super) fn pending(request: &Request) -> io::Result<Value> {
     let ordered: Vec<_> = request.targets
         .iter()
         .filter(|target| {
-            !changed
-                .iter()
-                .any(|other| other.identity == target.identity)
+            target.invalid.is_none()
+                && !changed
+                    .iter()
+                    .any(|other| other.identity == target.identity)
         })
         .chain(changed.iter().copied())
         .collect();
-    if ordered.iter().any(|target| target.invalid.is_some()) {
-        return Err(invalid("status autotag needs invalid component loading"));
-    }
     let components: Vec<_> = ordered
         .iter()
         .map(|target| row(target))

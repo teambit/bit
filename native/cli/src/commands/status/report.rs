@@ -2,7 +2,7 @@
 //! `formatStatusOutput` of `status-formatter.ts`, over the result the native
 //! status computes for `--json`.
 //!
-//! A result with sections the native status leaves to Node (invalid, removed,
+//! A result with sections the native status leaves to Node (removed,
 //! soft-tagged or local-only components, import pending) declines, and so
 //! does a forked lane or an issue whose data Node colors
 //! (`UntrackedDependencies`) when stdout has colors.
@@ -33,8 +33,7 @@ const TITLE_ONLY: [&str; 5] = [
     "MergeConfigHasConflict",
 ];
 /// Result sections the native status leaves empty; any row declines.
-const UNSUPPORTED: [&str; 10] = [
-    "invalidComponents",
+const UNSUPPORTED: [&str; 9] = [
     "importPendingComponents",
     "locallySoftRemoved",
     "remotelySoftRemoved",
@@ -293,7 +292,30 @@ impl<'r> Status<'r> {
             format.section("staged components", STAGED, &self.staged()?),
             format.section("components pending auto-tag", AUTO_TAG, &auto_tag),
             format.section("components with issues", WITH_ISSUES, &self.with_issues_items()),
+            format.section(
+                "invalid components",
+                "these components failed to load",
+                &self.invalid_components()?,
+            ),
         ])
+    }
+
+    fn invalid_components(&self) -> io::Result<Vec<String>> {
+        let mut items = array(self.result.get("invalidComponents"), "invalid")?
+            .iter()
+            .map(|row| {
+                let identity = text(row.get("id"))?;
+                let label = match row["error"]["name"].as_str() {
+                    Some("ComponentNotFoundInPath") => r#"component files were deleted (use "bit remove [component_id]") or moved (use "bit move <old-dir> <new-dir>"). to restore use "bit checkout reset [component_id]""#,
+                    Some("MainFileRemoved") => r#"main-file was removed (use "bit add" with "--main" and "--id" flags to add a main file)"#,
+                    _ => return Err(decline("status report invalid component type")),
+                };
+                let text = format!("{} ... {}", self.format.chalk.cyan(identity), self.format.chalk.yellow(label));
+                Ok(Formatter::item_with(&text, &self.format.warn_symbol()))
+            })
+            .collect::<io::Result<Vec<_>>>()?;
+        items.sort_by(|left, right| utf16_order(left, right));
+        Ok(items)
     }
 
     /// A section of ids, each formatted with the version its id has.

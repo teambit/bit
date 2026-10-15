@@ -2,6 +2,7 @@
 //! workspace commands: each selected component's files and
 //! dependencies, and the commit that writes what the command staged.
 
+mod identities;
 mod missing;
 
 use super::{
@@ -15,6 +16,7 @@ use crate::commands::{
     inventory::{Inventory, Options},
 };
 use bit_install::dependencies::cache::invalidation::{deps_dir, needs_invalidation};
+use identities::{base_identity, dependency_identities, peer_identities};
 use serde_json::{Value, json};
 use std::{collections::HashMap, io, path::Path};
 
@@ -24,6 +26,8 @@ pub struct Capture {
     pub captured: Vec<Value>,
     pub comparisons: Vec<Value>,
     pub components: Vec<Component>,
+    /// Bitmap targets whose directory is absent from the workspace.
+    pub invalid: HashMap<String, Value>,
     /// `retainDependencyState`: each target's dependency state, by identity.
     pub dependency_states: HashMap<String, Value>,
     /// What the commit writes to the dependency cache.
@@ -97,6 +101,8 @@ pub struct CaptureOptions {
     pub incomplete_reset: bool,
     /// A missing tracked directory is an empty current tree for `checkout reset`.
     pub missing_checkout_reset: bool,
+    /// Status reports a missing tracked directory as an invalid component.
+    pub missing_status_invalid: bool,
 }
 
 impl Capture {
@@ -139,11 +145,13 @@ pub fn capture_with(
         verify: capture_options.verify,
         incomplete_reset: capture_options.incomplete_reset,
         missing_checkout_reset: capture_options.missing_checkout_reset,
+        missing_status_invalid: capture_options.missing_status_invalid,
     };
     let mut captured = Capture {
         captured: Vec::new(),
         comparisons: Vec::new(),
         components: Vec::new(),
+        invalid: HashMap::new(),
         dependency_states: HashMap::new(),
         cache: CacheWrites {
             reset,
@@ -183,6 +191,7 @@ struct ScanBehavior {
     verify: bool,
     incomplete_reset: bool,
     missing_checkout_reset: bool,
+    missing_status_invalid: bool,
 }
 
 impl Scan<'_> {
@@ -190,6 +199,11 @@ impl Scan<'_> {
     fn target(mut self, target: &Value, captured: &mut Capture) -> io::Result<()> {
         let policy = policy::status_policy(self.context, target)?;
         let directory = text(target.get("directory"))?;
+        if self.behavior.missing_status_invalid
+            && missing::status_invalid(self.root, target, directory, captured)?
+        {
+            return Ok(());
+        }
         if missing::capture(
             self.root,
             self.behavior.missing_checkout_reset,
@@ -200,6 +214,11 @@ impl Scan<'_> {
             return Ok(());
         }
         let files = self.files(directory)?;
+        if self.behavior.missing_status_invalid
+            && missing::status_invalid_files(self.root, target, directory, &files, captured)?
+        {
+            return Ok(());
+        }
         if missing::main_file(
             self.root,
             self.behavior.missing_checkout_reset,
@@ -387,48 +406,6 @@ pub fn spread(request: &mut Value, input: &Value) -> io::Result<()> {
         request.insert(key.clone(), value.clone());
     }
     Ok(())
-}
-
-/// The identities of the peer lifecycle.
-fn peer_identities(dependencies: &Value) -> io::Result<Vec<String>> {
-    let state = &dependencies["state"];
-    let entries = array(state.get("entries"), "dependency entries")?;
-    let lifecycles = array(state.get("components"), "dependency lifecycles")?;
-    let peers = array(lifecycles.get(2), "peer dependencies")?;
-    peers
-        .iter()
-        .map(|index| {
-            let entry = index
-                .as_u64()
-                .and_then(|index| entries.get(index as usize));
-            let entry = entry.ok_or_else(|| decline("status dependency entry"))?;
-            text(entry.get("identity")).map(str::to_string)
-        })
-        .collect()
-}
-
-/// Every dependency identity, in lifecycle order.
-fn dependency_identities(dependencies: &Value) -> io::Result<Vec<String>> {
-    let state = &dependencies["state"];
-    let entries = array(state.get("entries"), "dependency entries")?;
-    let mut identities = Vec::new();
-    for indices in array(state.get("components"), "dependency lifecycles")? {
-        for index in array(Some(indices), "dependency indices")? {
-            let entry = index
-                .as_u64()
-                .and_then(|index| entries.get(index as usize));
-            let entry = entry.ok_or_else(|| decline("status dependency entry"))?;
-            identities.push(text(entry.get("identity"))?.to_string());
-        }
-    }
-    Ok(identities)
-}
-
-/// The identity without its `@version`.
-fn base_identity(identity: &str) -> &str {
-    identity
-        .rfind('@')
-        .map_or(identity, |separator| &identity[..separator])
 }
 
 /// `capture.commit()`: staged histories validated, dependency caches written,
