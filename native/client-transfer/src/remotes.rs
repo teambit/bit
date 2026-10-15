@@ -7,13 +7,16 @@ use std::{
     collections::HashMap,
     fs, io,
     path::{Path, PathBuf},
-    sync::Mutex,
+    sync::{LazyLock, Mutex},
 };
 
 /// [`GLOBAL_REMOTES`] in `GLOBAL_CONFIG`.
 const GLOBAL_REMOTES: &str = "global-remotes.json";
 const CFG_CLOUD_DOMAIN: &str = "cloud_domain";
 const CFG_SYMPHONY_URL: &str = "symphony_url";
+
+/// The remotes this process resolved, by [`Remotes::cache_key`].
+static RESOLVED: LazyLock<Mutex<HashMap<String, Remote>>> = LazyLock::new(Mutex::default);
 const DEFAULT_CLOUD_DOMAIN: &str = "bit.cloud";
 
 /// Where a remote scope lives.
@@ -51,7 +54,6 @@ pub struct Remotes {
     symphony: String,
     /// `scope.json` `resolverPath`: replaces the hub lookup.
     resolver: Option<Resolver>,
-    resolved: Mutex<HashMap<String, Remote>>,
 }
 
 impl Remotes {
@@ -68,12 +70,7 @@ impl Remotes {
                 }
             }
         }
-        Ok(Self {
-            hosts,
-            symphony: symphony_url(global),
-            resolver: None,
-            resolved: Mutex::default(),
-        })
+        Ok(Self { hosts, symphony: symphony_url(global), resolver: None })
     }
 
     /// Resolve scopes without a configured remote through `resolver` instead of the hub.
@@ -88,10 +85,11 @@ impl Remotes {
         if let Some(host) = self.hosts.get(scope) {
             return Remote::from_host(host);
         }
-        if let Some(remote) = self.resolved
+        let key = self.cache_key(scope);
+        if let Some(remote) = RESOLVED
             .lock()
             .map_err(|_| invalid("remotes poisoned"))?
-            .get(scope)
+            .get(&key)
         {
             return Ok(remote.clone());
         }
@@ -99,11 +97,19 @@ impl Remotes {
             Some(resolver) => Remote::from_host(&resolver.resolve(scope).await?)?,
             None => self.resolve_from_hub(scope, network).await?,
         };
-        self.resolved
+        RESOLVED
             .lock()
             .map_err(|_| invalid("remotes poisoned"))?
-            .insert(scope.to_string(), remote.clone());
+            .insert(key, remote.clone());
         Ok(remote)
+    }
+
+    /// One resolution per scope, hub and resolver for the whole process: a command
+    /// builds a `Remotes` per step (`bit import` lists, then fetches).
+    fn cache_key(&self, scope: &str) -> String {
+        let resolver =
+            self.resolver.as_ref().map_or("", |resolver| resolver.path.as_str());
+        format!("{}\0{resolver}\0{scope}", self.symphony)
     }
 
     /// `hubResolver`: ask symphony for the scope's API url.

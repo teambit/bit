@@ -5,8 +5,11 @@
 //!    checkout's `bin/bit.js`.
 //! 2. The entry beside this executable: `<dir>/../node_modules/@teambit/bit/bin/bit`,
 //!    the bvm layout once bvm ships this binary as `bin/bit`.
-//! 3. bvm's default link: `<bvm>/links/<link>/node_modules/@teambit/bit/bin/bit`.
-//! 4. A `bit` on `PATH` that is not this executable: bvm's wrapper script.
+//! 3. The checkout this executable was built in: `<checkout>/bin/bit.js` for an
+//!    executable at `<checkout>/native/target/<profile>/bit`, when the checkout has its
+//!    dependencies installed. A local build pairs with the Node.js CLI of its own commit.
+//! 4. bvm's default link: `<bvm>/links/<link>/node_modules/@teambit/bit/bin/bit`.
+//! 5. A `bit` on `PATH` that is not this executable: bvm's wrapper script.
 //!
 //! The entry runs with `BIT_NODE_BINARY`, else the newest Node bvm installed
 //! beside the entry, else `node` from `PATH`.
@@ -46,6 +49,7 @@ pub struct NodeCli {
 pub enum Source {
     Env,
     BesideExecutable,
+    Checkout,
     BvmLink,
 }
 
@@ -74,6 +78,7 @@ pub fn find() -> io::Result<Target> {
 pub fn find_in(environment: &Environment) -> io::Result<Target> {
     let cli = from_env(environment)
         .or_else(|| beside_executable(environment))
+        .or_else(|| in_checkout(environment))
         .or_else(|| bvm_link(environment));
     if let Some(cli) = cli {
         return Ok(Target::Entry(cli));
@@ -119,6 +124,23 @@ fn beside_executable(environment: &Environment) -> Option<NodeCli> {
         .parent()?
         .join(ENTRY_IN_PACKAGE);
     entry.is_file().then(|| node_cli(entry, Source::BesideExecutable, environment))
+}
+
+fn in_checkout(environment: &Environment) -> Option<NodeCli> {
+    let target = environment.executable
+        .as_ref()?
+        .parent()?
+        .parent()?;
+    let native = target.parent()?;
+    if target.file_name()? != "target" || native.file_name()? != "native" {
+        return None;
+    }
+    let entry = native
+        .parent()?
+        .join("bin")
+        .join("bit.js");
+    let installed = entry.is_file() && bit_dir(&entry).is_some();
+    installed.then(|| node_cli(entry, Source::Checkout, environment))
 }
 
 fn bvm_link(environment: &Environment) -> Option<NodeCli> {

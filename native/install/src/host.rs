@@ -139,6 +139,14 @@ pub trait Host: Send + Sync {
         Ok(None)
     }
 
+    /// Load `aspect_ids` in one pass, as the workspace loads the aspects its components
+    /// configure together (`loadComponentsExtensions`), so the env and aspect requests
+    /// that follow find them loaded instead of loading each on its own.
+    async fn load_aspects(&self, aspect_ids: &[String]) -> io::Result<()> {
+        let _ = aspect_ids;
+        Ok(())
+    }
+
     /// The dependency policies aspects registered (`registerDependenciesPolicies`),
     /// as `[[registrar, policy], ...]`, after loading `extension_ids`: the aspects the
     /// components configure that may register one. `None` when the host cannot load them.

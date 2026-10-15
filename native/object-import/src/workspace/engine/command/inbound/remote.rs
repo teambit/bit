@@ -1,5 +1,7 @@
 //! Bounded HTTP scope acquisition and listing. File scopes stay in the
 //! deferred importer.
+
+mod missing;
 use super::{List, Prepare, RemoteLog, Target, Transport, identity, invalid};
 use crate::{
     command_import::{VirtualRemote, lane},
@@ -229,7 +231,9 @@ async fn fetch_groups(
     limit: usize,
 ) -> io::Result<Vec<VirtualRemote>> {
     let (remotes, _) = stream::iter(groups)
-        .map(|(scope, ids)| fetch_one(scope, ids, input.options.all_history, remotes, network))
+        .map(|(scope, ids)| {
+            fetch_one(&input.root, scope, ids, input.options.all_history, remotes, network)
+        })
         .buffered(limit)
         .try_fold((Vec::new(), 0usize), |retained, (scope, items)| async move {
             collect(retained, &input.root, scope, items)
@@ -239,6 +243,7 @@ async fn fetch_groups(
 }
 
 async fn fetch_one(
+    root: &Path,
     scope: String,
     ids: Vec<String>,
     all_history: bool,
@@ -247,10 +252,33 @@ async fn fetch_one(
 ) -> io::Result<(String, Option<Vec<ObjectItem>>)> {
     let remote = remotes.resolve(&scope, network).await?;
     let Remote::Http(url) = remote else { return Ok((scope, None)) };
-    let mut options = FetchOptions::with_dependencies(None, false);
-    options.traversal.collect_parents = all_history;
-    let items = network.fetch_bounded(&url, &ids, &options, MAX_INBOUND_BYTES).await?;
-    Ok((scope, Some(items)))
+    if all_history {
+        let mut options = FetchOptions::with_dependencies(None, false);
+        options.traversal.collect_parents = true;
+        let items = network.fetch_bounded(&url, &ids, &options, MAX_INBOUND_BYTES).await?;
+        return Ok((scope, Some(items)));
+    }
+    Ok((scope, Some(fetch_in_two_steps(root, &url, &ids, network).await?)))
+}
+
+/// `importWithoutDeps`, then `importMany` for the components whose dependencies are
+/// still missing. One request with every component's dependencies makes the remote
+/// walk all their graphs before it streams anything.
+async fn fetch_in_two_steps(
+    root: &Path,
+    url: &str,
+    ids: &[String],
+    network: &Network,
+) -> io::Result<Vec<ObjectItem>> {
+    let mut items =
+        network.fetch_bounded(url, ids, &FetchOptions::latest(None, false), MAX_INBOUND_BYTES)
+            .await?;
+    let requests = missing::requests(&items, ids, root);
+    if !requests.is_empty() {
+        let options = FetchOptions::with_dependencies(None, false);
+        items.extend(network.fetch_bounded(url, &requests, &options, MAX_INBOUND_BYTES).await?);
+    }
+    Ok(items)
 }
 
 fn collect(

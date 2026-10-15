@@ -1,0 +1,123 @@
+//! `findMissingExternalsRecursively` with `preferDependencyGraph`, over what a fetch
+//! without dependencies returned: the requested components to fetch again with their
+//! dependencies, as `importMany` does after `importWithoutDeps`.
+
+use crate::{checkout::repository, merge_history, validate::hexadecimal};
+use bit_client_transfer::tar::ObjectItem;
+use serde_json::Value;
+use sha1::Digest;
+use std::{collections::HashMap, path::Path};
+
+/// The objects one request returned, then the workspace's own.
+struct Objects<'a> {
+    fetched: HashMap<&'a str, &'a [u8]>,
+    local: &'a Path,
+}
+
+/// The requested `ids` whose Version has no dependency graph and whose flattened
+/// dependencies are not all present and built. An object that cannot be read counts as
+/// missing, so the second request can only fetch more than needed.
+pub(super) fn requests(items: &[ObjectItem], ids: &[String], root: &Path) -> Vec<String> {
+    let objects = Objects {
+        fetched: items
+            .iter()
+            .map(|item| (item.hash.as_str(), item.compressed.as_slice()))
+            .collect(),
+        local: &root.join(".bit/objects"),
+    };
+    ids.iter()
+        .filter(|id| objects.misses_dependencies(id))
+        .cloned()
+        .collect()
+}
+
+impl Objects<'_> {
+    fn misses_dependencies(&self, id: &str) -> bool {
+        let Some(version) = self.version(id) else { return true };
+        if self.has_edges(&version) {
+            return false;
+        }
+        let Some(dependencies) = version["flattenedDependencies"].as_array() else { return true };
+        dependencies
+            .iter()
+            .any(|dependency| !self.built(dependency))
+    }
+
+    /// `sources.getMany(flattenedDependencies, reFetchUnBuiltVersion)`: the dependency's
+    /// Version exists and is built.
+    fn built(&self, dependency: &Value) -> bool {
+        dependency_id(dependency)
+            .and_then(|id| self.version(&id))
+            .is_some_and(|version| {
+                matches!(version["buildStatus"].as_str(), Some("succeed" | "skipped"))
+            })
+    }
+
+    /// The Version `scope/name[@version]` names: the head for `latest` or no version.
+    fn version(&self, id: &str) -> Option<Value> {
+        let (identity, version) = id
+            .rsplit_once('@')
+            .map_or((id, None), |(identity, version)| (identity, Some(version)));
+        let model_hash = hexadecimal(&sha1::Sha1::digest(identity.as_bytes()));
+        let model = self.object(&model_hash, "Component")?;
+        let hash = match version {
+            None | Some("latest") => model["head"].as_str()?.to_owned(),
+            Some(version) if merge_history::hash(version).is_ok() => version.to_owned(),
+            Some(version) => model["versions"][version].as_str()?.to_owned(),
+        };
+        self.object(&hash, "Version")
+    }
+
+    /// `getFlattenedEdges` is not empty.
+    fn has_edges(&self, version: &Value) -> bool {
+        if version["flattenedEdges"]
+            .as_array()
+            .is_some_and(|edges| !edges.is_empty())
+        {
+            return true;
+        }
+        version["flattenedEdgesRef"]
+            .as_str()
+            .and_then(|hash| self.body(hash, "Source"))
+            .and_then(|body| serde_json::from_slice::<Value>(&body).ok())
+            .and_then(|edges| {
+                edges
+                    .as_array()
+                    .map(|edges| !edges.is_empty())
+            })
+            .unwrap_or(false)
+    }
+
+    fn object(&self, hash: &str, kind: &str) -> Option<Value> {
+        serde_json::from_slice(&self.body(hash, kind)?).ok()
+    }
+
+    /// The body of the `kind` object `hash`, fetched or local.
+    fn body(&self, hash: &str, kind: &str) -> Option<Vec<u8>> {
+        let identity = merge_history::hash(hash).ok()?;
+        let raw = match self.fetched.get(hash) {
+            Some(compressed) => repository::inflate(compressed, LIMIT).ok()?,
+            None => repository::read(self.local, identity, LIMIT, &mut 0).ok()?,
+        };
+        let (_, body) = repository::split(&raw, identity, kind).ok()?;
+        Some(body.to_vec())
+    }
+}
+
+const LIMIT: usize = 32 * 1024 * 1024;
+
+/// `scope/name@version` of a flattened dependency.
+fn dependency_id(value: &Value) -> Option<String> {
+    if let Some(text) = value.as_str() {
+        return Some(text.to_owned());
+    }
+    Some(format!(
+        "{}/{}@{}",
+        value["scope"].as_str()?,
+        value["name"].as_str()?,
+        value["version"].as_str()?,
+    ))
+}
+
+#[cfg(test)]
+mod tests;

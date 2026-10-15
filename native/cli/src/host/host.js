@@ -93,6 +93,7 @@ const handlers = {
   envPolicy: ({ envId }) => envPolicy(envId),
   registeredEnvPolicy: ({ envId, aspectIds }) => registeredEnvPolicy(envId, aspectIds),
   devPatterns: ({ envId }) => devPatterns(envId),
+  loadAspects: ({ aspectIds }) => loadAspects(aspectIds),
   dependencyPolicies: ({ extensionIds }) => dependencyPolicies(extensionIds),
   detectDependencies: ({ envId, files, componentDir, aspectIds }) =>
     detectDependencies(envId, files, componentDir, aspectIds),
@@ -243,6 +244,21 @@ async function devPatterns(envId) {
     compositions: await call('getCompositionsDevPatterns'),
   };
 }
+
+/**
+ * Load the aspects the components configure in one pass, as `loadComponentsExtensions` does,
+ * so `envPolicy` and `dependencyPolicies` find them loaded.
+ */
+async function loadAspects(aspectIds) {
+  const ids = aspectIds.filter((id) => !preloadedAspects.has(id));
+  if (!ids.length) return null;
+  ids.forEach((id) => preloadedAspects.add(id));
+  const workspace = (await loadHarmony()).get('teambit.workspace/workspace');
+  await workspace.loadAspects(ids, false, undefined, { throwOnError: false, hideMissingModuleError: true });
+  return null;
+}
+
+const preloadedAspects = new Set();
 
 /**
  * The dependency policies aspects registered (`registerDependenciesPolicies`), as

@@ -144,10 +144,11 @@ async fn resolve(
     loaded: &Loaded,
     components: &[WorkspaceComponent],
 ) -> io::Result<Resolved> {
+    let objects = ScopeObjects::new(&loaded.workspace.scope_path);
+    preload_aspects(session, components, &objects).await?;
     let env_policies = policy::load_env_policies(&session.root, components, session.host).await?;
     let workspace_policy = workspace_policy(loaded)?;
     let mut options = dependency_options(session, loaded, components)?;
-    let objects = ScopeObjects::new(&loaded.workspace.scope_path);
     options.policy_slots =
         policy::slots::registry(components, &session.info.core_aspects, &objects, session.host)
             .await?;
@@ -162,6 +163,25 @@ async fn resolve(
     )
     .await?;
     Ok(Resolved { env_policies, workspace_policy, dependencies })
+}
+
+/// The aspects the host loads for the env policies and the policy slots, loaded in one
+/// pass first: one at a time, each load resolves the aspect graph again.
+async fn preload_aspects(
+    session: &Session<'_>,
+    components: &[WorkspaceComponent],
+    objects: &ScopeObjects,
+) -> io::Result<()> {
+    let mut ids = policy::slots::candidates(components, &session.info.core_aspects, objects)?;
+    for env in policy::load::host_loaded_envs(&session.root, components)? {
+        if !ids.contains(&env) {
+            ids.push(env);
+        }
+    }
+    if ids.len() > 1 {
+        session.host.load_aspects(&ids).await?;
+    }
+    Ok(())
 }
 
 /// `linkDepsResolvedFromEnv` (off with root components), and the external env packages
