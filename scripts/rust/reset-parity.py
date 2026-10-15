@@ -55,6 +55,9 @@ def main():
     parser.add_argument("--config-lane-id", help="lane component with staged config")
     parser.add_argument("--soft-deleted-lane-source", type=Path,
                         help="lane with a snapped soft-deleted component absent from bitmap")
+    parser.add_argument("--missing-remote-lane-source", type=Path,
+                        help="exported lane whose remote ref omits an existing main component")
+    parser.add_argument("--missing-remote-lane-id", help="component omitted from that remote ref")
     args = parser.parse_args()
     cases = [
         ("all local tags", args.source, [args.plain], False),
@@ -147,6 +150,19 @@ def main():
             ("lane batch restores soft-deleted bitmap", args.soft_deleted_lane_source,
              ["--silent"], True),
             ("lane batch head restores soft-deleted bitmap", args.soft_deleted_lane_source,
+             ["--head", "--silent"], True),
+        ])
+    if bool(args.missing_remote_lane_source) != bool(args.missing_remote_lane_id):
+        parser.error("--missing-remote-lane-source and --missing-remote-lane-id must be given together")
+    if args.missing_remote_lane_source:
+        cases.extend([
+            ("missing remote ref explicit full", args.missing_remote_lane_source,
+             [args.missing_remote_lane_id], True),
+            ("missing remote ref explicit head", args.missing_remote_lane_source,
+             [args.missing_remote_lane_id, "--head"], True),
+            ("missing remote ref batch full", args.missing_remote_lane_source,
+             ["--silent"], True),
+            ("missing remote ref batch heads", args.missing_remote_lane_source,
              ["--head", "--silent"], True),
         ])
     environment = os.environ.copy()

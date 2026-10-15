@@ -48,19 +48,11 @@ pub(super) fn exported_head(
     bitmap: &BitmapState,
     scope: &str,
     name: &str,
-    model: &Value,
 ) -> io::Result<Option<String>> {
     if !bitmap.exported {
         return Ok(None);
     }
-    let remote = remote_head(root, &bitmap.lane_scope, &bitmap.lane_name, scope, name)?;
-    if remote.is_none()
-        && (!model["versions"].as_object().is_some_and(serde_json::Map::is_empty)
-            || model["head"].is_string())
-    {
-        return Err(invalid("lane reset exported head absent"));
-    }
-    Ok(remote)
+    remote_head(root, &bitmap.lane_scope, &bitmap.lane_name, scope, name)
 }
 
 pub(super) fn reached_boundary(repository: &Repository, next: Option<&str>) -> io::Result<bool> {

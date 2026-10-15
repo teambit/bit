@@ -187,7 +187,7 @@ impl Repository {
             .ok_or_else(|| invalid("lane reset head"))?
             .to_owned();
         crate::merge_history::hash(&current)?;
-        let remote_head = exported_head(root, bitmap, scope, name, &model)?;
+        let remote_head = exported_head(root, bitmap, scope, name)?;
         Ok(Self {
             objects,
             lane_scope: bitmap.lane_scope.clone(),
