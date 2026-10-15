@@ -3,7 +3,7 @@ use super::{
     packages::{Package, Reader},
     wire::{ComponentVersion, Detect},
 };
-use crate::workspace::engine::source_overlay::SourceOverlay;
+use crate::workspace::engine::{resolve_dependencies::normalize, source_overlay::SourceOverlay};
 use serde_json::{Map, Value, json};
 use std::{io, path::Path};
 
@@ -21,6 +21,7 @@ pub(super) fn project(
         packages: Default::default(),
         versions: Vec::new(),
         grammar: Vec::new(),
+        issues: IssueData::default(),
     };
     for file in &request.files {
         projection.file(file)?;
@@ -35,6 +36,13 @@ struct Projection<'a> {
     packages: [Map<String, Value>; 3],
     versions: Vec<ComponentVersion>,
     grammar: Vec<String>,
+    issues: IssueData,
+}
+#[derive(Default)]
+struct IssueData {
+    missing_files: Map<String, Value>,
+    directory_imports: Map<String, Value>,
+    missing_packages: Vec<Value>,
 }
 impl Projection<'_> {
     fn file(&mut self, file: &Path) -> io::Result<()> {
@@ -58,6 +66,8 @@ impl Projection<'_> {
         for edge in edges {
             self.edge(path, edge, &mut packages, &mut components)?;
         }
+        self.missing(path, &relative)?;
+        self.missing_packages(path, &relative, field, &mut packages)?;
         self.packages(&relative, field, packages)?;
         for (package, edge) in components {
             self.component(package, &edge, field)?;
@@ -88,7 +98,7 @@ impl Projection<'_> {
         }
         Ok(())
     }
-    fn relative(&self, origin: &str, edge: &str) -> io::Result<()> {
+    fn relative(&mut self, origin: &str, edge: &str) -> io::Result<()> {
         if origin == edge {
             return Ok(());
         }
@@ -113,7 +123,83 @@ impl Projection<'_> {
         let source =
             dependency["importSource"].as_str().ok_or_else(|| invalid("fresh relative import"))?;
         if source == "." || source.ends_with("/..") {
-            return Err(invalid("fresh import from directory"));
+            let file = self.relative_name(origin)?;
+            self.issues.directory_imports
+                .entry(file)
+                .or_insert_with(|| json!([]))
+                .as_array_mut()
+                .ok_or_else(|| invalid("fresh directory issue"))?
+                .push(json!(source));
+        }
+        Ok(())
+    }
+    fn relative_name(&self, origin: &str) -> io::Result<String> {
+        Ok(Path::new(origin)
+            .strip_prefix(&self.request.component_root)
+            .map_err(io::Error::other)?
+            .to_str()
+            .ok_or_else(|| invalid("fresh issue path encoding"))?
+            .replace(std::path::MAIN_SEPARATOR, "/"))
+    }
+    fn missing(&mut self, origin: &str, relative: &str) -> io::Result<()> {
+        let Some(specifiers) = self.graph["missing"][origin].as_array() else { return Ok(()) };
+        let base = Path::new(origin).parent().ok_or_else(|| invalid("fresh missing origin"))?;
+        let missing = specifiers
+            .iter()
+            .map(|specifier| {
+                let name = specifier.as_str().ok_or_else(|| invalid("fresh missing specifier"))?;
+                if !name.starts_with('.') {
+                    return Err(invalid("fresh missing package requires canonical fallback"));
+                }
+                let candidate = normalize(&base.join(name)).with_extension("");
+                let same_file_different_extension = Path::new(name).extension().is_some()
+                    && self.request.files
+                        .iter()
+                        .any(|file| file.with_extension("") == candidate);
+                Ok((!same_file_different_extension).then(|| name.to_owned()))
+            })
+            .collect::<io::Result<Vec<_>>>()?;
+        let missing: Vec<_> = missing.into_iter().flatten().collect();
+        if !missing.is_empty() {
+            self.issues.missing_files.insert(relative.to_owned(), json!(missing));
+        }
+        Ok(())
+    }
+    fn missing_packages(
+        &mut self,
+        origin: &str,
+        relative: &str,
+        field: usize,
+        packages: &mut Map<String, Value>,
+    ) -> io::Result<()> {
+        let Some(names) = self.graph["missingPackages"][origin].as_array() else {
+            return Ok(());
+        };
+        let mut missing = Vec::new();
+        for name in names {
+            let name = name.as_str().ok_or_else(|| invalid("fresh missing package name"))?;
+            if let Some(version) = self.request.detection.model_packages[0]
+                .get(name)
+                .or_else(|| self.request.detection.model_packages[1].get(name))
+            {
+                packages.insert(name.to_owned(), version.clone());
+            } else if self.request.detection.workspace_policy
+                .iter()
+                .any(|policy| policy.contains_key(name))
+            {
+                return Err(invalid(
+                    "fresh missing workspace policy package requires canonical fallback",
+                ));
+            } else {
+                missing.push(name.to_owned());
+            }
+        }
+        if !missing.is_empty() {
+            self.issues.missing_packages.push(json!({
+                "filePath":relative,
+                "missingPackages":missing,
+                "isDevFile":field == 1,
+            }));
         }
         Ok(())
     }
@@ -218,11 +304,25 @@ impl Projection<'_> {
         Ok(base)
     }
     fn finish(self) -> io::Result<Value> {
-        let detected = json!({"allPackagesDependencies":{"packageDependencies":self.packages[0],"devPackageDependencies":self.packages[1],"peerPackageDependencies":self.packages[2]},"coreAspects":[],"issues":[],"allDependencies":{"dependencies":self.dependencies[0],"devDependencies":self.dependencies[1],"peerDependencies":self.dependencies[2]},"overridesDependencies":{"manuallyRemovedDependencies":{},"manuallyAddedDependencies":{},"missingPackageDependencies":[]}});
+        let mut issues = Vec::new();
+        if !self.issues.directory_imports.is_empty() {
+            issues.push(serialized_issue("ImportFromDirectory", &self.issues.directory_imports)?);
+        }
+        if !self.issues.missing_files.is_empty() {
+            issues.push(serialized_issue("MissingDependenciesOnFs", &self.issues.missing_files)?);
+        }
+        if !self.issues.missing_packages.is_empty() {
+            issues.push(json!({"type":"MissingPackagesDependenciesOnFs",
+                "data":serde_json::to_string(&self.issues.missing_packages).map_err(io::Error::other)?}));
+        }
+        let detected = json!({"allPackagesDependencies":{"packageDependencies":self.packages[0],"devPackageDependencies":self.packages[1],"peerPackageDependencies":self.packages[2]},"coreAspects":[],"issues":issues,"allDependencies":{"dependencies":self.dependencies[0],"devDependencies":self.dependencies[1],"peerDependencies":self.dependencies[2]},"overridesDependencies":{"manuallyRemovedDependencies":{},"manuallyAddedDependencies":{},"missingPackageDependencies":[]}});
         Ok(
             json!({"identity":self.request.identity,"detected":detected,"componentVersions":self.versions,"grammarInputs":self.grammar,"readSet":self.reader.proofs}),
         )
     }
+}
+fn serialized_issue(kind: &str, data: &Map<String, Value>) -> io::Result<Value> {
+    Ok(json!({"type":kind,"data":serde_json::to_string(&data).map_err(io::Error::other)?}))
 }
 fn identity(id: &Value) -> io::Result<String> {
     let scope = id["scope"]

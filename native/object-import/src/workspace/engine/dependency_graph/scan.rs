@@ -37,6 +37,8 @@ pub(super) fn scan(
     if !request.detector_extensions.contains(&extension) {
         return Ok(Row {
             path_map: PathMap { file: filename.to_owned(), dependencies: Vec::new() },
+            missing: Vec::new(),
+            missing_packages: Vec::new(),
             registered: Vec::new(),
             detector_scanned,
         });
@@ -99,45 +101,74 @@ impl Resolver<'_> {
     ) -> io::Result<Row> {
         let mut row = Row {
             path_map: PathMap { file: filename.to_owned(), dependencies: Vec::new() },
+            missing: Vec::new(),
+            missing_packages: Vec::new(),
             registered: Vec::new(),
             detector_scanned: true,
         };
         for dependency in dependencies {
-            if builtins.contains(dependency.as_str())
-                || dependency.starts_with("http://")
-                || dependency.starts_with("https://")
+            if !builtins.contains(dependency.as_str())
+                && !dependency.starts_with("http://")
+                && !dependency.starts_with("https://")
             {
-                continue;
-            }
-            row.path_map.dependencies.push(self.resolve(&dependency)?);
-            if !self.ts || !dependency.starts_with('.') {
-                row.registered.push(filename.to_owned());
+                self.classify(&dependency, filename, &mut row)?;
             }
         }
         Ok(row)
     }
 
-    fn resolve(&self, dependency: &str) -> io::Result<Dependency> {
+    fn classify(&self, dependency: &str, filename: &str, row: &mut Row) -> io::Result<()> {
+        if let Some(found) = self.resolve(dependency)? {
+            row.path_map.dependencies.push(found);
+        } else if dependency.starts_with('.') {
+            row.missing.push(dependency.to_owned());
+        } else {
+            let package = package_name(dependency)?;
+            if !row.missing_packages.contains(&package) {
+                row.missing_packages.push(package);
+            }
+        }
+        if !self.ts || !dependency.starts_with('.') {
+            row.registered.push(filename.to_owned());
+        }
+        Ok(())
+    }
+
+    fn resolve(&self, dependency: &str) -> io::Result<Option<Dependency>> {
         let resolved = resolve_one(
             dependency,
             self.parent,
             self.home,
             self.budget,
             if self.ts { "typescript5.9" } else { "commonjs" },
-        )?
-        .ok_or_else(|| {
-            invalid("dependency graph unresolved dependency requires canonical fallback")
-        })?;
+        )?;
+        let Some(resolved) = resolved else { return Ok(None) };
         if !self.budget
             .metadata(Path::new(&resolved))?
             .is_some_and(super::super::source_overlay::Metadata::is_file)
         {
             return Err(invalid("dependency graph resolution disappeared"));
         }
-        Ok(Dependency {
+        Ok(Some(Dependency {
             import_source: dependency.to_owned(),
             resolved_dep: resolved,
             import_specifiers: None,
-        })
+        }))
     }
+}
+
+fn package_name(specifier: &str) -> io::Result<String> {
+    let parts: Vec<_> = specifier.split('/').collect();
+    let name = if specifier.starts_with('@') {
+        if parts.len() < 2 {
+            return Err(invalid("dependency scoped package name"));
+        }
+        format!("{}/{}", parts[0], parts[1])
+    } else {
+        parts[0].to_owned()
+    };
+    if name.is_empty() || name.contains('\\') {
+        return Err(invalid("dependency package name"));
+    }
+    Ok(name)
 }

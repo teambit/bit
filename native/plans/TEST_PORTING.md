@@ -3424,7 +3424,7 @@ The rest follow as their commands are ported.
 
 ### `e2e/harmony/status-harmony.e2e.ts`
 
-- [x] `e2e/harmony/status-harmony.e2e.ts:24` status command on Harmony › main filename is not index and dists are missing › should not show an issue of missing-packages — `harmony::status_harmony::known_failures::a_linked_package_is_not_missing` (known failure)
+- [x] `e2e/harmony/status-harmony.e2e.ts:24` status command on Harmony › main filename is not index and dists are missing › should not show an issue of missing-packages — `harmony::status_harmony::a_linked_package_is_not_missing`
 - [x] `e2e/harmony/status-harmony.e2e.ts:40` status command on Harmony › dists dir is deleted after caching the components › should show an issue of missing-dists — `harmony::status_harmony::deleted_dists_after_the_cache_are_missing`
 - [x] `e2e/harmony/status-harmony.e2e.ts:43` status command on Harmony › dists dir is deleted after caching the components › should exit with non zero exit-code if --strict flag is used — `harmony::status_harmony::deleted_dists_after_the_cache_are_missing`
 - [x] `e2e/harmony/status-harmony.e2e.ts:63` status command on Harmony › package dir is deleted from node-modules › should show an issue of missing-links-from-node-modules-to-src — `harmony::status_harmony::a_deleted_package_dir_is_a_missing_link`
@@ -3433,9 +3433,9 @@ The rest follow as their commands are ported.
 - [x] `e2e/harmony/status-harmony.e2e.ts:101` status command on Harmony › status --quick flag › should show new and modified components — `harmony::status_harmony::quick_status_shows_new_and_modified`
 - [x] `e2e/harmony/status-harmony.e2e.ts:109` status command on Harmony › status --quick flag › should return new and modified in json format — `harmony::status_harmony::quick_status_json_lists_new_and_modified`
 - [x] `e2e/harmony/status-harmony.e2e.ts:125` status command on Harmony › deleting a dependency from the filesystem when the record is still in bitmap › bit status should not throw — `harmony::status_harmony::known_failures::a_deleted_dependency_directory_does_not_throw` (known failure)
-- [x] `e2e/harmony/status-harmony.e2e.ts:146` status command on Harmony › when a component is created and added without its dependencies › Should show missing dependencies — `harmony::status_harmony::known_failures::missing_dependency_files_are_shown` (known failure)
+- [x] `e2e/harmony/status-harmony.e2e.ts:146` status command on Harmony › when a component is created and added without its dependencies › Should show missing dependencies — `harmony::status_harmony::missing_dependency_files_are_shown`
 - [x] `e2e/harmony/status-harmony.e2e.ts:165` status command on Harmony › dynamic import › status should not show the component as missing packages — `harmony::status_harmony::a_dynamic_import_is_not_a_missing_package`
-- [x] `e2e/harmony/status-harmony.e2e.ts:178` status command on Harmony › import from the index file › should show an ImportFromDirectory issue — `harmony::status_harmony::known_failures::importing_the_index_directory_is_an_issue` (known failure)
+- [x] `e2e/harmony/status-harmony.e2e.ts:178` status command on Harmony › import from the index file › should show an ImportFromDirectory issue — `harmony::status_harmony::importing_the_index_directory_is_an_issue`
 
 ### `e2e/harmony/tag-harmony.e2e.ts`
 

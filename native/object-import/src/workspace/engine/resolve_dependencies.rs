@@ -332,15 +332,39 @@ fn load_directory(file: &Path, budget: &Budget, depth: usize) -> io::Result<Opti
     if depth > 32 {
         return Err(invalid("dependency package nesting limit"));
     }
-    if let Some(main) = package_main(
-        budget
-            .package(&file.join("package.json"))?
-            .as_ref(),
-    )? && let Some(found) = candidate(&normalize(&file.join(main)), budget, depth + 1)?
+    let package = budget.package(&file.join("package.json"))?;
+    if let Some(main) = package_main(package.as_ref())?
+        && let Some(found) = candidate(&normalize(&file.join(main)), budget, depth + 1)?
+    {
+        return Ok(Some(found));
+    }
+    // `bit link` writes a local package whose `main` points at an unbuilt
+    // dist, while `source` names the component file that is present.
+    if let Some(source) = local_source(package.as_ref())?
+        && let Some(found) = candidate(&normalize(&file.join(source)), budget, depth + 1)?
     {
         return Ok(Some(found));
     }
     load_file(&file.join("index"), budget)
+}
+fn local_source(package: Option<&Value>) -> io::Result<Option<&str>> {
+    let Some(package) = package.filter(|package| {
+        package["_bit_local"] == true && package["componentId"].is_object()
+    }) else {
+        return Ok(None);
+    };
+    let Some(source) = package.get("source") else { return Ok(None) };
+    let source = source.as_str().ok_or_else(|| invalid("dependency local source type"))?;
+    let path = Path::new(source);
+    if source.is_empty()
+        || path.is_absolute()
+        || path
+            .components()
+            .any(|part| !matches!(part, Component::Normal(_)))
+    {
+        return Err(invalid("dependency local source path"));
+    }
+    Ok(Some(source))
 }
 fn package_main(package: Option<&Value>) -> io::Result<Option<String>> {
     let Some(main) = package
