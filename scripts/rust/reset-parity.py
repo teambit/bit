@@ -38,6 +38,7 @@ def main():
         ("all local tags", [args.plain]),
         ("latest local tag", [args.plain, "--head"]),
         ("detached head", [args.detached, "--head", "--force"]),
+        ("all tags with detached head", [args.detached, "--force"]),
     ]
     environment = os.environ.copy()
     environment.update(CI="1", BIT_DISABLE_SPINNER="true", BIT_NODE_CLI=str(args.entry.resolve()),
