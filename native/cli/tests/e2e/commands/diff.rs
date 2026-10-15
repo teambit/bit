@@ -1,8 +1,7 @@
 //! `e2e/commands/diff.e2e.ts`.
 
-/// Native `bit diff` declines a workspace configuring an aspect at its root (`status
-/// configured extensions require Harmony`), as every e2e workspace does
-/// (`reInitWorkspace`), and mutually exclusive flags are outside its grammar.
+/// Native `bit diff` still declines some unresolved component identities, missing
+/// versions and flag combinations covered by these cases.
 mod known_failures {
     use crate::{
         allow_known_failure,

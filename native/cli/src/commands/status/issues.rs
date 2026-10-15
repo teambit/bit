@@ -12,6 +12,9 @@ use std::{
 mod cycles;
 mod resolve;
 
+#[cfg(test)]
+mod tests;
+
 use cycles::cyclic;
 
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
@@ -96,6 +99,13 @@ fn collect_graph(
         packages: workspace_packages(context, resolver),
         root_components: truthy(resolver.and_then(|resolver| resolver.get("rootComponents"))),
         circular: cyclic(graph),
+        ignore_manual: context["workspace"]["teambit.component/issues"]["ignoreIssues"]
+            .as_array()
+            .is_some_and(|issues| {
+                issues
+                    .iter()
+                    .any(|issue| issue == "MissingManuallyConfiguredPackages")
+            }),
     };
     components
         .iter()
@@ -111,6 +121,7 @@ struct Checks<'c> {
     packages: HashSet<&'c str>,
     root_components: bool,
     circular: HashSet<&'c str>,
+    ignore_manual: bool,
 }
 
 impl Checks<'_> {
@@ -123,6 +134,9 @@ impl Checks<'_> {
             .ok_or_else(|| decline("status issue target missing"))?;
         let nested = text(target.get("directory"))? != ".";
         let mut issues = deserialize(&component.issues)?;
+        if self.ignore_manual {
+            issues.retain(|(kind, _)| *kind != Issue::MissingManual);
+        }
         let linked = self.root
             .join("node_modules")
             .join(&component.package_name)
