@@ -1,4 +1,4 @@
-use super::{Chalk, Options, linear_parents, normalize, paint, parse, render};
+use super::{Chalk, Options, linear_parents, normalize, ordered_parents, paint, parse, render};
 use serde_json::json;
 
 #[test]
@@ -34,4 +34,19 @@ fn normalizes_a_version_log_and_renders_the_default_report() {
 fn parents_view_delegates_when_a_hidden_parent_is_missing() {
     let head = json!({"hash":"aaaaaaaaa","parents":["bbbbbbbbb"]});
     assert!(!linear_parents(&[head]));
+}
+
+#[test]
+fn parents_view_follows_history_edges_even_when_dates_are_out_of_order() {
+    let logs = [
+        json!({"hash":"bbbbbbbbb","parents":["aaaaaaaaa"]}),
+        json!({"hash":"aaaaaaaaa","parents":[]}),
+        json!({"hash":"ccccccccc","parents":["bbbbbbbbb"]}),
+    ];
+    let ordered = ordered_parents(&logs).unwrap();
+    let hashes: Vec<_> = ordered
+        .iter()
+        .map(|row| row["hash"].as_str().unwrap())
+        .collect();
+    assert_eq!(hashes, ["ccccccccc", "bbbbbbbbb", "aaaaaaaaa"]);
 }

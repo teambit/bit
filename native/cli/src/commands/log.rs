@@ -92,9 +92,6 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 
 fn read(root: &Path, options: &Options<'_>) -> io::Result<Vec<Value>> {
     let bitmap = bitmap::read(root)?;
-    if bitmap.lane.is_some() {
-        return Err(decline("current lane requires lane-aware log"));
-    }
     let id = options.id.ok_or_else(|| decline("log id"))?;
     let id = id.split_once('@').map_or(id, |(name, _)| name);
     let matches: Vec<_> = bitmap.entries
@@ -119,6 +116,7 @@ fn read(root: &Path, options: &Options<'_>) -> io::Result<Vec<Value>> {
     let mut engine = Engine::new()?;
     let result: Value = engine.request(&json!({
         "kind":"componentLog", "root":root, "identity":target.identity,
+        "lane":bitmap.lane,
     }))?;
     let rows = array(result.get("versions"), "component log versions")?;
     let mut raw = rows.to_vec();
@@ -263,11 +261,10 @@ fn paint(row: &Value, chalk: Chalk) -> io::Result<String> {
 }
 
 fn parents_report(logs: &[Value], chalk: Chalk) -> io::Result<Vec<String>> {
-    let mut rows = logs.to_vec();
-    rows.reverse();
-    if !linear_parents(&rows) {
+    if !linear_parents(logs) {
         return Err(decline("log merge or filtered parent graph"));
     }
+    let rows = ordered_parents(logs)?;
     rows.iter()
         .map(|row| {
             let parents = array(row.get("parents"), "log parents")?;
@@ -285,6 +282,45 @@ fn parents_report(logs: &[Value], chalk: Chalk) -> io::Result<Vec<String>> {
             ))
         })
         .collect()
+}
+
+fn ordered_parents(logs: &[Value]) -> io::Result<Vec<&Value>> {
+    let parents: HashSet<&str> = logs
+        .iter()
+        .filter_map(|row| row["parents"].as_array())
+        .flatten()
+        .filter_map(Value::as_str)
+        .collect();
+    let mut heads = logs
+        .iter()
+        .filter(|row| {
+            row["hash"]
+                .as_str()
+                .is_some_and(|hash| !parents.contains(hash))
+        });
+    let mut current = heads.next();
+    if heads.next().is_some() || (current.is_none() && !logs.is_empty()) {
+        return Err(decline("log disconnected parent graph"));
+    }
+    let mut rows = Vec::with_capacity(logs.len());
+    while let Some(row) = current {
+        rows.push(row);
+        current = row["parents"]
+            .as_array()
+            .and_then(|parents| parents.first())
+            .and_then(Value::as_str)
+            .and_then(|parent| {
+                logs.iter()
+                    .find(|row| row["hash"] == parent)
+            });
+        if rows.len() > logs.len() {
+            return Err(decline("log cyclic parent graph"));
+        }
+    }
+    if rows.len() != logs.len() {
+        return Err(decline("log disconnected parent graph"));
+    }
+    Ok(rows)
 }
 
 fn linear_parents(rows: &[Value]) -> bool {
