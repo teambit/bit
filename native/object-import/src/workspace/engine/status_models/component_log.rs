@@ -1,7 +1,7 @@
 //! Local `bit log` history: validated model and Version reads, following parents from main's head.
 
-use super::{Request as ModelsRequest, invalid, load};
-use crate::{merge_history, read_version};
+use super::{Reader, Request as ModelsRequest, invalid, lane, load};
+use crate::{merge_history, read_budget::Budget, read_version};
 use rayon::ThreadPool;
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -16,6 +16,15 @@ use std::{
 pub(in crate::workspace::engine) struct Request {
     root: PathBuf,
     identity: String,
+    #[serde(default)]
+    lane: Option<LaneId>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct LaneId {
+    scope: String,
+    name: String,
 }
 
 pub(in crate::workspace::engine) fn read(
@@ -23,12 +32,46 @@ pub(in crate::workspace::engine) fn read(
     pool: &ThreadPool,
 ) -> io::Result<(usize, Value)> {
     let model = model(request, pool)?;
-    let Some(head) = model["head"].as_str() else {
+    let main = model["head"].as_str();
+    let lane = lane_head(request)?;
+    let Some(head) = lane.as_deref().or(main) else {
         return Ok((0, json!({"versions":[]})));
     };
     merge_history::hash(head)?;
-    let output = traverse(&request.root, head, &tags(&model)?)?;
+    let main_refs = if lane.is_some() {
+        main.map(|head| traverse(&request.root, head, &tags(&model)?, None))
+            .transpose()?
+            .unwrap_or_default()
+            .into_iter()
+            .filter_map(|row| row["hash"].as_str().map(str::to_owned))
+            .collect::<HashSet<_>>()
+    } else {
+        HashSet::new()
+    };
+    let output = traverse(&request.root, head, &tags(&model)?, lane.as_ref().map(|_| &main_refs))?;
+    if main.is_some_and(|head| {
+        lane.is_some()
+            && !output
+                .iter()
+                .any(|row| row["hash"] == head)
+    }) {
+        return Err(invalid("component log diverged lane history"));
+    }
     Ok((output.len(), json!({"versions":output})))
+}
+
+fn lane_head(request: &Request) -> io::Result<Option<String>> {
+    let Some(id) = &request.lane else { return Ok(None) };
+    let directory = request.root.join(".bit/objects");
+    let reader = Reader {
+        directory: &directory,
+        overlay: None,
+        raw: Budget::new(32 * 1024 * 1024),
+        packed: Budget::new(32 * 1024 * 1024),
+    };
+    let name = format!("{}/{}", id.scope, id.name);
+    Ok(lane::read(&request.root, &reader, &name)?
+        .and_then(|lane| lane.heads.get(&request.identity).cloned()))
 }
 
 fn model(request: &Request, pool: &ThreadPool) -> io::Result<Value> {
@@ -64,6 +107,7 @@ fn traverse(
     root: &std::path::Path,
     head: &str,
     tags: &HashMap<String, String>,
+    main_refs: Option<&HashSet<String>>,
 ) -> io::Result<Vec<Value>> {
     let directory = root.join(".bit/objects");
     let mut reader = read_version::Reader::query(&directory)?;
@@ -78,7 +122,10 @@ fn traverse(
             return Err(invalid("component log history limit"));
         }
         let version = reader.read(&reference)?;
-        let (row, parents) = row(&reference, &version, tags)?;
+        let (mut row, parents) = row(&reference, &version, tags)?;
+        if let Some(main_refs) = main_refs {
+            row["onLane"] = json!(!main_refs.contains(&reference));
+        }
         queue.extend(parents);
         output.push(row);
     }
