@@ -2,12 +2,27 @@ use super::{super::Row, invalid, projection};
 use serde_json::{Value, json};
 use std::io;
 
-pub(super) fn capture(row: &Row, value: &Value, output: &mut Vec<Value>) -> io::Result<()> {
-    let issues = projection::array(value)?;
+/// The merged component's tag blockers, without the issue types `ignored` names
+/// (`throwForComponentIssues` removes them before checking).
+pub(super) fn capture(
+    row: &Row,
+    value: &Value,
+    ignored: &[String],
+    output: &mut Vec<Value>,
+) -> io::Result<()> {
+    let issues: Vec<Value> = projection::array(value)?
+        .iter()
+        .filter(|issue| {
+            !issue["type"]
+                .as_str()
+                .is_some_and(|kind| ignored.iter().any(|name| name == kind))
+        })
+        .cloned()
+        .collect();
     if issues.is_empty() {
         return Ok(());
     }
-    for issue in issues {
+    for issue in &issues {
         if issue["type"] != "MissingManuallyConfiguredPackages" {
             return Err(invalid("command unsupported merged dependency issue"));
         }

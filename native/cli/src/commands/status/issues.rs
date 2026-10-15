@@ -12,9 +12,13 @@ use std::{
 mod cycles;
 mod resolve;
 
+#[cfg(test)]
+mod tests;
+
 use cycles::cyclic;
 
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
+const ISSUES: &str = "teambit.component/issues";
 /// `ISSUE_FORMAT_SPACE`.
 const SPACE: &str = "          ";
 
@@ -96,6 +100,7 @@ fn collect_graph(
         packages: workspace_packages(context, resolver),
         root_components: truthy(resolver.and_then(|resolver| resolver.get("rootComponents"))),
         circular: cyclic(graph),
+        ignored: ignored(context)?,
     };
     components
         .iter()
@@ -111,6 +116,8 @@ struct Checks<'c> {
     packages: HashSet<&'c str>,
     root_components: bool,
     circular: HashSet<&'c str>,
+    /// The issue types `removeIgnoredIssuesFromComponents` removes.
+    ignored: HashSet<&'c str>,
 }
 
 impl Checks<'_> {
@@ -122,7 +129,7 @@ impl Checks<'_> {
             .find(|row| row.get("identity").and_then(Value::as_str) == Some(identity))
             .ok_or_else(|| decline("status issue target missing"))?;
         let nested = text(target.get("directory"))? != ".";
-        let mut issues = deserialize(&component.issues)?;
+        let mut issues = deserialize(&component.issues, &self.ignored)?;
         let linked = self.root
             .join("node_modules")
             .join(&component.package_name)
@@ -142,10 +149,29 @@ impl Checks<'_> {
         }
         let issues = issues
             .iter()
+            .filter(|(kind, _)| !self.ignored.contains(kind.class().0))
             .map(|(kind, data)| kind.to_object(data))
             .collect::<io::Result<Vec<_>>>()?;
         Ok(json!({ "id": identity, "issues": issues }))
     }
+}
+
+/// `getIssuesToIgnoreGlobally`: `ignoreIssues` of `teambit.component/issues` in the
+/// `workspace.jsonc` the context carries, which the engine validated.
+fn ignored(context: &Value) -> io::Result<HashSet<&str>> {
+    let workspace = context
+        .get("workspace")
+        .ok_or_else(|| decline("status issues without the workspace configuration"))?;
+    let Some(names) = workspace
+        .get(ISSUES)
+        .and_then(|issues| issues.get("ignoreIssues"))
+    else {
+        return Ok(HashSet::new());
+    };
+    array(Some(names), "ignoreIssues")?
+        .iter()
+        .map(|name| text(Some(name)))
+        .collect()
 }
 
 /// `ordinaryModelHeads`: no deprecated model, no head that is deprecated or removed.
@@ -356,10 +382,16 @@ fn list_or_text(value: &Value) -> io::Result<String> {
     }
 }
 
-/// `IssuesList.deserialize`: `[{ type, data: JSON string }]`.
-fn deserialize(value: &Value) -> io::Result<Vec<(Issue, Value)>> {
+/// `IssuesList.deserialize`: `[{ type, data: JSON string }]`, without the
+/// `ignored` types.
+fn deserialize(value: &Value, ignored: &HashSet<&str>) -> io::Result<Vec<(Issue, Value)>> {
     let Some(rows) = value.as_array() else { return Ok(Vec::new()) };
     rows.iter()
+        .filter(|row| {
+            !row.get("type")
+                .and_then(Value::as_str)
+                .is_some_and(|kind| ignored.contains(kind))
+        })
         .map(|row| {
             let kind = Issue::parse(text(row.get("type"))?)?;
             let data = serde_json::from_str(text(row.get("data"))?).map_err(io::Error::other)?;

@@ -33,11 +33,7 @@ pub(super) fn context(
     };
     let mut context = checkout_lane::metadata(request, &input, pool)?;
     let mut imported = match request.operation {
-        Operation::Checkout => Some(command_import::prepare(
-            &request.root,
-            &request.global_remotes_file,
-            &import_targets(request)?,
-        )?),
+        Operation::Checkout => Some(prepare_checkout_import(request, &context)?),
         Operation::Merge | Operation::Switch => {
             Some(command_import::prepare_cached(&request.root, &request.global_remotes_file)?)
         }
@@ -54,6 +50,28 @@ pub(super) fn context(
     checkout_lane::attach(request, &mut context, imported.as_mut(), pool)?;
     extend_models(request, pool, &mut context, imported.as_ref())?;
     Ok((context, imported))
+}
+fn prepare_checkout_import(
+    request: &Prepare,
+    context: &Value,
+) -> io::Result<command_import::PreparedImport> {
+    let targets = import_targets(request)?;
+    let local_target = request.options.to
+        .as_deref()
+        .is_some_and(|to| {
+            request.options.revert && to == "main"
+                || !matches!(to, "head" | "latest" | "main") && !to.starts_with("head~")
+        });
+    if local_target {
+        let cached = command_import::prepare_cached(&request.root, &request.global_remotes_file)?;
+        let default_scope = context["workspace"]["teambit.workspace/workspace"]["defaultScope"]
+            .as_str()
+            .ok_or_else(|| invalid("command default scope"))?;
+        if cached.all_external_targets_unmapped(&targets, default_scope) {
+            return Ok(cached);
+        }
+    }
+    command_import::prepare(&request.root, &request.global_remotes_file, &targets)
 }
 fn unexported_targets(
     request: &Prepare,

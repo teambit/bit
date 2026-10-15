@@ -120,3 +120,20 @@ fn unsupported_configuration_and_incomplete_plans_cannot_publish() {
     fs::write(fixture.0.join("workspace.jsonc"), br#"{"custom.scope/hook":{}}"#).unwrap();
     assert!(fixture.prepare(&mut state).is_err());
 }
+
+#[test]
+fn root_aspect_variants_are_accepted_without_allowing_unknown_configuration() {
+    let fixture = Fixture::new();
+    let mut config = json!({
+        "teambit.workspace/workspace":{"defaultScope":"test.scope"},
+        "teambit.preview/preview":{"disabled":true},
+        "teambit.component/issues":{"ignoreIssues":["MissingManuallyConfiguredPackages"]},
+    });
+    assert!(super::config::configuration_value(&fixture.0, &config, false).is_ok());
+    config["teambit.preview/preview"]["disabled"] = json!(false);
+    assert!(super::config::configuration_value(&fixture.0, &config, false).is_ok());
+    config["teambit.component/issues"]["ignoreIssues"] = json!(["MissingDists"]);
+    assert!(super::config::configuration_value(&fixture.0, &config, false).is_ok());
+    config["teambit.component/issues"]["ignoreIssues"] = json!(["NoSuchIssue"]);
+    assert!(super::config::configuration_value(&fixture.0, &config, false).is_err());
+}

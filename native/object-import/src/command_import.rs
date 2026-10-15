@@ -92,6 +92,23 @@ pub(crate) struct PreparedImport {
     writes: Writes,
 }
 impl PreparedImport {
+    pub(crate) fn all_external_targets_unmapped(
+        &self,
+        targets: &[Target],
+        default_scope: &str,
+    ) -> bool {
+        let mut external = targets
+            .iter()
+            .map(|target| target.scope.as_deref().unwrap_or(default_scope))
+            .filter(|scope| *scope != self.environment.local_scope.as_str());
+        external
+            .next()
+            .is_some_and(|first| {
+                self.environment.remotes.get(first).is_none()
+                    && external.all(|scope| self.environment.remotes.get(scope).is_none())
+            })
+    }
+
     pub(crate) fn recovery_staged(&mut self, bytes: Option<&[u8]>) -> io::Result<()> {
         self.cache.staged =
             String::from_utf8(bytes.unwrap_or_default().to_vec()).map_err(io::Error::other)?;

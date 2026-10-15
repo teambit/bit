@@ -1,7 +1,7 @@
 name: Rust
 
-# The Rust CLI (`native/`): formatting, Clippy, the perfectionist lints, rustdoc
-# and the workspace tests on every platform the CLI targets.
+# The Rust CLI (`native/`): formatting, Clippy, the perfectionist lints, rustdoc,
+# the workspace tests on every platform the CLI targets, and the ported e2e cases.
 on:
   push:
     branches: [master, rust-workspace-materialization]
@@ -69,7 +69,7 @@ jobs:
       - name: Prepare pinned pnpm engine sources
         run: node ../scripts/rust/prepare-pnpm-engine.mjs
       - name: Check Clippy
-        run: cargo clippy --locked --workspace --all-targets -- -D warnings
+        run: cargo clippy --locked --workspace --all-targets --features bit-cli/e2e -- -D warnings
       - name: Install pnpm's Dylint version
         run: |
           if ! cargo dylint --version 2>/dev/null | grep -Fxq 'cargo-dylint 6.0.4' || ! command -v dylint-link >/dev/null; then
@@ -78,11 +78,13 @@ jobs:
       - name: Check perfectionist
         env:
           RUSTFLAGS: '-D warnings'
-        run: cargo dylint --all -- --all-targets --workspace
+        run: cargo dylint --all -- --all-targets --workspace --features bit-cli/e2e
       - name: Check Rust documentation
         env:
           RUSTDOCFLAGS: '-D warnings'
         run: cargo doc --locked --workspace --no-deps
+      - name: Check that the e2e porting plan lists every e2e case
+        run: node ../scripts/rust/e2e-port-plan.mjs --check
 
   test:
     name: Rust tests (${{ matrix.os }})
@@ -117,3 +119,53 @@ jobs:
         run: node ../scripts/rust/prepare-pnpm-engine.mjs
       - name: Test the workspace
         run: cargo test --locked --workspace
+
+  e2e:
+    # The e2e cases ported to the native CLI (native/plans/TEST_PORTING.md), with the
+    # released Node.js CLI that cli/tests/e2e/bit-version names behind it.
+    name: Ported e2e cases
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: native
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Read the pinned Node.js CLI version
+        id: bit
+        run: echo "version=$(tr -d '[:space:]' < cli/tests/e2e/bit-version)" >> "$GITHUB_OUTPUT"
+      - name: Cache dependencies and build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            native/target/debug
+          key: rust-e2e-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('native/rust-toolchain.toml', 'native/Cargo.lock') }}
+          restore-keys: rust-e2e-${{ runner.os }}-${{ runner.arch }}-
+      - name: Cache the Node.js CLI
+        id: bvm-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.bvm/versions/${{ steps.bit.outputs.version }}
+          key: bvm-bit-${{ runner.os }}-${{ runner.arch }}-${{ steps.bit.outputs.version }}
+      - name: Install pinned Rust
+        run: rustup show
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+      - name: Install the Node.js CLI
+        if: steps.bvm-cache.outputs.cache-hit != 'true'
+        # Outside native/, whose package.json pins pnpm as the package manager.
+        working-directory: ${{ runner.temp }}
+        env:
+          BIT_VERSION: ${{ steps.bit.outputs.version }}
+        run: |
+          npx -y @teambit/bvm@3.1.4 config set RELEASE_TYPE nightly
+          npx -y @teambit/bvm@3.1.4 install "$BIT_VERSION" --skip-update-path
+      - name: Prepare pinned pnpm engine sources
+        run: node ../scripts/rust/prepare-pnpm-engine.mjs
+      - name: Run the ported e2e cases
+        run: cargo test --locked -p bit-cli --features e2e --test e2e

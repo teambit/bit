@@ -9,6 +9,15 @@ description = "The bit command line: commands implemented in Rust run in process
 name = "bit"
 path = "src/main.rs"
 
+[features]
+# The ported e2e cases (`tests/e2e`), which need the Node.js CLI of `tests/e2e/bit-version`.
+e2e = []
+
+[[test]]
+name = "e2e"
+path = "tests/e2e/main.rs"
+required-features = ["e2e"]
+
 [dependencies]
 diff = "0.1.13"
 bit-ignore = { path = "../ignore" }
