@@ -596,6 +596,9 @@ function applyComponentIdNames(trees: DependentsTree[]): void {
   trees.forEach(rename);
 }
 
+/** The lockfile fields that say what its resolutions were resolved with. */
+const RESOLUTION_CONTEXT_KEYS = ['pnpmfileChecksum', 'settings', 'overrides'] as const;
+
 // Merge a graph-derived lockfile into an existing wanted lockfile. The graph lockfile is
 // authoritative for keys it contains (a re-imported component can change the resolution
 // of its own deps), but must not erase packages, snapshots, or importer entries that are
@@ -642,10 +645,25 @@ export function mergeGraphLockfileIntoExisting(existing: LockfileFile, graph: Lo
     snapshots: mergeEntryRecords(existing.snapshots, graph.snapshots),
   };
   // The merged lockfile mixes resolutions from both sides, so it can only
-  // claim the readPackage hooks checksum both were resolved with. Otherwise
-  // drop it, and pnpm resolves again instead of trusting the mix.
-  if (existing.pnpmfileChecksum !== graph.pnpmfileChecksum) {
-    delete merged.pnpmfileChecksum;
+  // claim the readPackage hooks checksum, the resolution settings and the
+  // overrides both were resolved with. Otherwise drop them, and pnpm resolves
+  // again instead of trusting the mix. A side that adds no resolutions (an
+  // empty or link-only one) mixes nothing in, so the other side's values stand.
+  if (!hasResolutions(existing)) {
+    for (const key of RESOLUTION_CONTEXT_KEYS) {
+      if (graph[key] == null) delete merged[key];
+      else merged[key] = graph[key] as any;
+    }
+  } else if (hasResolutions(graph)) {
+    if (existing.pnpmfileChecksum !== graph.pnpmfileChecksum) {
+      delete merged.pnpmfileChecksum;
+    }
+    if (!sameRecords(existing.settings, graph.settings)) {
+      delete merged.settings;
+    }
+    if (!sameRecords(existing.overrides, graph.overrides)) {
+      delete merged.overrides;
+    }
   }
   if (existingBit || graphBit) {
     (merged as LockfileFile & { bit?: Record<string, unknown> }).bit = {
@@ -656,6 +674,16 @@ export function mergeGraphLockfileIntoExisting(existing: LockfileFile, graph: Lo
   }
   pruneUnreachableLockfileEntries(merged);
   return merged;
+}
+
+function hasResolutions(lockfile: LockfileFile): boolean {
+  return Object.keys(lockfile.packages ?? {}).length > 0 || Object.keys(lockfile.snapshots ?? {}).length > 0;
+}
+
+function sameRecords(record1?: object, record2?: object): boolean {
+  if (record1 == null || record2 == null) return record1 === record2;
+  const keys = new Set([...Object.keys(record1), ...Object.keys(record2)]);
+  return [...keys].every((key) => record1[key] === record2[key]);
 }
 
 function mergeEntryRecords<T extends object>(

@@ -5,6 +5,7 @@ import { readdirSync, existsSync } from 'fs-extra';
 import { Graph, Node, Edge } from '@teambit/graph.cleargraph';
 import { reportLoadFailure } from '@teambit/harmony.modules.load-trace';
 import { recordLoadedEsmFile } from './record-loaded-esm-file';
+import { replaceNeverLoadedAspects } from './replace-never-loaded-aspects';
 import { ComponentID } from '@teambit/component-id';
 import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy.constants';
 import { MainRuntime } from '@teambit/harmony.modules.runtimes';
@@ -756,6 +757,10 @@ export class AspectLoaderMain {
         return nodesUniq.map((n) => n.attr);
       };
       const relevantManifests = getOnlyDeclaredDependenciesManifests();
+      const replacedIds = replaceNeverLoadedAspects(this.harmony, relevantManifests);
+      if (replacedIds.length) {
+        this.logger.debug(`loadExtensionsByManifests, replaced never-loaded aspects: ${replacedIds.join(', ')}`);
+      }
       // @ts-ignore TODO: fix this
       await this.harmony.load(relevantManifests);
     } catch (e: any) {

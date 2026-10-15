@@ -31,6 +31,7 @@ import pMap from 'p-map';
 import { validateVersion } from '@teambit/pkg.modules.semver-helper';
 import { concurrentComponentsLimit } from '@teambit/harmony.modules.concurrency';
 import { getLogForSquash } from '@teambit/harmony.modules.get-basic-log';
+import { FLATTENED_DEPS_IN_SOURCE, isFeatureEnabled } from '@teambit/harmony.modules.feature-toggle';
 import type { ConfigStoreMain } from '@teambit/config-store';
 import { ConfigStoreAspect } from '@teambit/config-store';
 import type { ScopeMain } from '@teambit/scope';
@@ -73,7 +74,7 @@ import { LaneNotFound } from '@teambit/legacy.scope-api';
 import { createLaneInScope } from '@teambit/lanes.modules.create-lane';
 import type { RemoveMain } from '@teambit/remove';
 import { RemoveAspect } from '@teambit/remove';
-import type { BasicTagParams, BasicTagSnapParams, VersionMakerParams } from './version-maker';
+import type { BasicTagParams, BasicTagSnapParams, DependentWithPinnedDeps, VersionMakerParams } from './version-maker';
 import { VersionMaker, updateVersions } from './version-maker';
 import type { SlotRegistry } from '@teambit/harmony';
 import { Slot } from '@teambit/harmony';
@@ -137,6 +138,7 @@ export type BasicTagResults = {
   warnings: string[];
   newComponents: ComponentIdList;
   removedComponents?: ComponentIdList;
+  dependentsWithPinnedDeps?: DependentWithPinnedDeps[];
   totalComponentsCount?: number; // total count of all components tagged/snapped (including auto-tagged)
   /**
    * the workspace-root component that joined the batch because it was new or modified, at its new
@@ -308,6 +310,7 @@ export class SnappingMain {
     const {
       taggedComponents,
       autoTaggedResults,
+      dependentsWithPinnedDeps,
       publishedPackages,
       stagedConfig,
       removedComponents,
@@ -317,6 +320,7 @@ export class SnappingMain {
     const tagResults = {
       taggedComponents,
       autoTaggedResults,
+      dependentsWithPinnedDeps,
       isSoftTag: soft,
       publishedPackages,
       warnings,
@@ -656,12 +660,19 @@ export class SnappingMain {
       ignoreIssues,
       autoAddedWorkspaceRoot,
     };
-    const { taggedComponents, autoTaggedResults, stagedConfig, removedComponents, totalComponentsCount } =
-      await this.makeVersion(idsToSnap, components, makeVersionParams);
+    const {
+      taggedComponents,
+      autoTaggedResults,
+      dependentsWithPinnedDeps,
+      stagedConfig,
+      removedComponents,
+      totalComponentsCount,
+    } = await this.makeVersion(idsToSnap, components, makeVersionParams);
 
     const snapResults: Partial<SnapResults> = {
       snappedComponents: taggedComponents,
       autoSnappedResults: autoTaggedResults,
+      dependentsWithPinnedDeps,
       newComponents,
       removedComponents,
       totalComponentsCount,
@@ -1216,6 +1227,10 @@ another option, in case this dependency is not in main yet is to remove all refe
       id: { scope: source.scope || (source.defaultScope as string), name: source.name },
       lane: lane ? { scope: lane.scope, name: lane.name, hash: lane.hash().toString() } : undefined,
     };
+    if (isFeatureEnabled(FLATTENED_DEPS_IN_SOURCE)) {
+      const flattenedDependencies = version.moveFlattenedDependenciesToSource();
+      if (flattenedDependencies) objectRepo.add(flattenedDependencies);
+    }
     objectRepo.add(version);
     if (flattenedEdges) this.objectsRepo.add(flattenedEdges);
     if (dependenciesGraph) this.objectsRepo.add(dependenciesGraph);

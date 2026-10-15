@@ -333,7 +333,8 @@ export async function collectGarbage(thisScope: Scope, opts: GarbageCollectorOpt
       refsWhiteList.add(version.hash().hash);
       const refs = version.refsWithOptions(false, true);
       refs.forEach((ref) => refsWhiteList.add(ref.hash));
-      version.flattenedDependencies.forEach((dep) => {
+      const flattenedDependencies = await version.loadFlattenedDependencies(repo);
+      flattenedDependencies.forEach((dep) => {
         const depStr = dep.toString();
         if (allFlattenedDeps.has(depStr)) return;
         allFlattenedDeps.add(depStr);

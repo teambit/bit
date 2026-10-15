@@ -76,6 +76,12 @@ export const DEPS_GRAPH = 'deps-graph';
 export const DISABLE_CAPSULE_OPTIMIZATION = 'disable-capsule-optimization';
 
 /**
+ * save the flattened dependencies of new versions in a separate object, instead of inside the Version object.
+ * bit reads both formats. it's not the default yet, because older bit versions can't read this format.
+ */
+export const FLATTENED_DEPS_IN_SOURCE = 'flattened-deps-in-source';
+
+/**
  * Allow `bit delete --hard` to run without an interactive confirmation (e.g. in CI scripts and
  * e2e tests). Without this feature enabled, hard-delete must be confirmed by a human in an
  * interactive terminal: `--silent` doesn't skip its prompt, and non-interactive sessions

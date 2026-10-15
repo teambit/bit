@@ -331,7 +331,7 @@ Flags: --json, --list, --save [filePath], --archive [filePath], --include-node-m
 
 remove component from workspace and install it as npm package
 
-converts workspace components to external npm packages by removing them from .bitmap and installing via package manager. by default removes component files from workspace. use --keep-files to preserve source code while converting to package dependency. useful for components that no longer need active development in current workspace.
+converts workspace components to external npm packages by removing them from .bitmap and installing via package manager. the packages are added to the workspace dependencies in workspace.jsonc. to untrack components without that, use "bit remove". by default removes component files from workspace. use --keep-files to preserve source code while converting to package dependency. useful for components that no longer need active development in current workspace.
 Flags: --force, --skip-dependency-installation, --json, --keep-files
 
 ## bit eject-conf <pattern>
