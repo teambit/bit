@@ -14,6 +14,7 @@ use super::{
     workspace_command::{self, Request, progress::Progress},
 };
 use crate::{commands::Command, native::Outcome, workspace};
+use serde_json::Value;
 use std::{env, ffi::OsString, io};
 
 pub const COMMAND: Command = Command { name: "lane", aliases: &["l"], run };
@@ -53,15 +54,49 @@ fn merge(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     let request =
         Request { operation: "merge", options: options.request(), to: None, verify_fresh: true };
     let mode = report::Mode { verbose: options.verbose, lane: true };
-    let prepared = workspace_command::plan(&root, &request)
-        .and_then(|planned| {
-            let report = report::format(&planned.plan["result"], mode, Chalk::detect(args))?;
-            let progress = Progress::parse(planned.plan.get("progress"))?;
-            Ok((planned, report, progress))
-        });
-    let (planned, report, progress) = match prepared {
+    let planned = if installer.is_some() && !options.no_snap() {
+        let mut no_snap = options.request();
+        no_snap["noSnap"] = Value::Bool(true);
+        no_snap
+            .as_object_mut()
+            .unwrap()
+            .remove("message");
+        let no_snap_request =
+            Request { operation: "merge", options: no_snap, to: None, verify_fresh: true };
+        std::thread::scope(|scope| {
+            let preview = scope.spawn(|| workspace_command::plan_snapshot_preview(&root, &request));
+            let materialized = workspace_command::plan_internal_no_snap(&root, &no_snap_request);
+            let preview = preview
+                .join()
+                .map_err(|_| io::Error::other("merge snapshot preview thread panicked"))??;
+            Ok::<_, io::Error>((preview, Some(materialized?)))
+        })
+    } else {
+        workspace_command::plan(&root, &request).map(|planned| (planned, None))
+    };
+    let prepared = planned.and_then(|(planned, materialized)| {
+        let report = report::format(&planned.plan["result"], mode, Chalk::detect(args))?;
+        let progress = Progress::parse(planned.plan.get("progress"))?;
+        Ok((planned, materialized, report, progress))
+    });
+    let (planned, materialized, report, progress) = match prepared {
         Ok(prepared) => prepared,
         Err(error) => return Ok(Outcome::Declined(format!("lane merge: {error}"))),
     };
+    if installer.is_some() && !options.no_snap() && planned.plan.get("needsSnap").is_some() {
+        return install::execute_snapping(
+            &root,
+            args,
+            install::Snapping {
+                options: options.request(),
+                message: options.message.as_deref(),
+                mode,
+                planned: &planned,
+                progress: progress.as_ref(),
+                installer,
+                materialized,
+            },
+        );
+    }
     install::execute(&root, args, planned, report, progress.as_ref(), installer)
 }

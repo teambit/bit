@@ -20,12 +20,14 @@ fn lane_patterns_match_the_lane_targets() {
 #[test]
 fn squashing_without_snaps_is_left_to_node() {
     let squash = json!({ "lane": { "shouldSquash": true } });
-    assert!(validate(&json!({ "lane": {}, "noSnap": true }), &squash).is_err());
-    assert!(validate(&json!({ "lane": {}, "noSnap": false }), &squash).is_ok());
+    assert!(validate(&json!({ "lane": {}, "noSnap": true }), &squash, false).is_err());
+    assert!(validate(&json!({ "lane": {}, "noSnap": true }), &squash, true).is_ok());
+    assert!(validate(&json!({ "lane": {}, "noSnap": false }), &squash, false).is_ok());
     assert!(
         validate(
             &json!({ "lane": {}, "noSnap": true }),
-            &json!({ "lane": { "shouldSquash": false } })
+            &json!({ "lane": { "shouldSquash": false } }),
+            false,
         )
         .is_ok(),
     );

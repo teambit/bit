@@ -1,4 +1,4 @@
-use super::{Kind, Versions, pattern_ids, validate_preparation};
+use super::{Kind, Versions, pattern_ids, squash_logs, validate_preparation};
 use serde_json::json;
 
 #[test]
@@ -43,4 +43,26 @@ fn a_resolve_needs_components_in_merge_state() {
     let none = json!({ "token": "t", "context": { "targets": targets }, "targets": targets, "selectedIds": [] });
     assert!(validate_preparation(&none, Kind::Snap).is_ok());
     assert!(validate_preparation(&none, Kind::Resolve).is_err());
+}
+
+#[test]
+fn squash_logs_attach_only_to_the_resolved_lane_component() {
+    let mut receipt = json!({
+        "log": {"message":"", "date":"123"},
+        "versions": [{"identity":"s/a"},{"identity":"s/b"}]
+    });
+    let rows = [json!({"identity":"s/b","laneId":{"scope":"s","name":"feature"}})];
+    squash_logs(&mut receipt, &rows).unwrap();
+    assert!(receipt["versions"][0].get("squashLog").is_none());
+    assert_eq!(
+        receipt["versions"][1]["squashLog"]["message"],
+        "squashed during merge from s/feature",
+    );
+    assert!(
+        squash_logs(
+            &mut receipt,
+            &[json!({"identity":"s/c","laneId":{"scope":"s","name":"feature"}})]
+        )
+        .is_err(),
+    );
 }

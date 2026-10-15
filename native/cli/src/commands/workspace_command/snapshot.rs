@@ -26,6 +26,7 @@ impl Steps<'_> {
         plan: &mut Value,
         caches: &[Pending],
         request: &Request<'_>,
+        preview: bool,
     ) -> io::Result<Capture> {
         let snap_failed = plan.get("snapFailed") == Some(&Value::Bool(true));
         let needs_snap = needs_snap(plan, snap_failed)?;
@@ -47,7 +48,7 @@ impl Steps<'_> {
         {
             self.finalize_lane(plan, &preparation)?;
         }
-        if !snap_failed {
+        if !snap_failed && !preview {
             *plan = self.finalize(&needs_snap, &capture)?;
         }
         Ok(capture)

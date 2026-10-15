@@ -167,6 +167,10 @@ impl Options {
             .any(|known| known == flag)
     }
 
+    pub fn no_snap(&self) -> bool {
+        self.has("--no-snap")
+    }
+
     /// The engine's command options without `operation`, as `JSON.stringify`
     /// writes them.
     pub fn request(&self) -> Value {

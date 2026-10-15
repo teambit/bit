@@ -430,8 +430,7 @@ impl Resolved<'_> {
         Ok(())
     }
 
-    /// `resolveSnapshotReceipt` with the dependency graphs: squashing
-    /// declines.
+    /// `resolveSnapshotReceipt` with the dependency graphs and lane squash logs.
     fn receipt(&self, kind: Kind, needs_snap: &[String], plan: &Value) -> io::Result<Value> {
         let preparation = &plan["scalarPreparation"];
         let lane_history = preparation.get("laneHistory").and_then(Value::as_bool);
@@ -439,7 +438,7 @@ impl Resolved<'_> {
         let (Some(lane_history), Some(squash)) = (lane_history, squash) else {
             return Err(decline("resolve snapshot scalar preparation"));
         };
-        if !squash.is_empty() || (kind == Kind::Tag && lane_history) {
+        if (!squash.is_empty() && kind != Kind::Resolve) || (kind == Kind::Tag && lane_history) {
             return Err(decline("resolve snapshot squash or lane log"));
         }
         let hashes = receipt::new_snap_hashes(needs_snap.len())?;
@@ -450,8 +449,40 @@ impl Resolved<'_> {
         };
         let graphs = graphs(self.root, self.context, needs_snap, &versions, self.capture)?;
         let snapped = receipt::Snapped { identities: needs_snap, hashes: &hashes, graphs: &graphs };
-        receipt::snapshot(self.root, &snapped, lane_history)
+        let mut receipt = receipt::snapshot(self.root, &snapped, lane_history)?;
+        squash_logs(&mut receipt, squash)?;
+        Ok(receipt)
     }
+}
+
+/// `getLogForSquash` for every merged component the resolve snaps.
+fn squash_logs(receipt: &mut Value, rows: &[Value]) -> io::Result<()> {
+    let mut seen = HashSet::new();
+    for row in rows {
+        let identity = text(row.get("identity"))?;
+        let lane = &row["laneId"];
+        let scope = text(lane.get("scope"))?;
+        let name = text(lane.get("name"))?;
+        let versions = array(receipt.get("versions"), "resolve receipt versions")?;
+        if !seen.insert(identity)
+            || identity.is_empty()
+            || scope.is_empty()
+            || name.is_empty()
+            || !versions
+                .iter()
+                .any(|version| version["identity"] == identity)
+        {
+            return Err(decline("resolve snapshot squash receipt"));
+        }
+        let mut log = receipt["log"].clone();
+        log["message"] = json!(format!("squashed during merge from {scope}/{name}"));
+        for version in receipt["versions"].as_array_mut().unwrap() {
+            if version["identity"] == identity {
+                version["squashLog"] = log.clone();
+            }
+        }
+    }
+    Ok(())
 }
 
 #[cfg(test)]

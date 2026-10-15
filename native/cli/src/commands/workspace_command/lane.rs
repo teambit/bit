@@ -14,9 +14,16 @@ use std::io;
 /// A lane merge with `--no-snap` that squashes: Node treats the components
 /// the lane is ahead on as diverged, then fails to squash them
 /// (`unable to squash, the componentFromModel is missing`).
-pub fn validate(options: &Value, context: &Value) -> io::Result<()> {
+pub fn validate(
+    options: &Value,
+    context: &Value,
+    internal_materialization: bool,
+) -> io::Result<()> {
     let squash = context["lane"].get("shouldSquash") == Some(&Value::Bool(true));
-    if options.get("lane").is_some() && options.get("noSnap") == Some(&Value::Bool(true)) && squash
+    if options.get("lane").is_some()
+        && options.get("noSnap") == Some(&Value::Bool(true))
+        && squash
+        && !internal_materialization
     {
         return Err(decline("a squashing lane merge without snaps"));
     }

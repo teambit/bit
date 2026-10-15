@@ -55,6 +55,21 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Ok(prepared) => prepared,
         Err(error) => return Ok(Outcome::Declined(format!("merge: {error}"))),
     };
+    if installer.is_some() && planned.plan["result"]["mergeSnapResults"].is_object() {
+        return install::execute_snapping(
+            &root,
+            args,
+            install::Snapping {
+                options: options.request(),
+                message: options.message.as_deref(),
+                mode: report::Mode { verbose: options.verbose, lane: false },
+                planned: &planned,
+                progress: progress.as_ref(),
+                installer,
+                materialized: None,
+            },
+        );
+    }
     install::execute(&root, args, planned, report, progress.as_ref(), installer)
 }
 
