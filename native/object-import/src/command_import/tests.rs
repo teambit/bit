@@ -392,6 +392,7 @@ fn cached_gap_without_index_changes_publishes_global_config_on_every_platform() 
     assert_eq!(tree(fixture.root.parent().unwrap()), expected);
 }
 
+#[cfg(unix)]
 #[test]
 fn unsupported_index_metadata_declines_before_remote_or_local_publication() {
     let fixture = Fixture::new();
