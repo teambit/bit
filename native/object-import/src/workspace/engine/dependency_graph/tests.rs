@@ -126,7 +126,13 @@ fn resolves_unbuilt_local_component_package_from_its_source() {
         .unwrap();
     assert_eq!(
         output["tree"][fixture.0.join("a.js").to_str().unwrap()][0],
-        json!(fixture.0.join("node_modules/@my-scope/comp2/comp2.ts")),
+        json!(
+            fixture.0
+                .join("node_modules")
+                .join("@my-scope")
+                .join("comp2")
+                .join("comp2.ts")
+        ),
     );
     fixture.write("node_modules/@my-scope/comp2/package.json", r#"{"name":"@my-scope/comp2","_bit_local":true,"componentId":{"scope":"my-scope","name":"comp2"},"source":"../outside.ts"}"#);
     assert!(
