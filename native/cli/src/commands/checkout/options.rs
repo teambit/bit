@@ -8,13 +8,19 @@ use serde_json::{Map, Value, json};
 pub struct Options {
     pub to: String,
     pub pattern: Option<String>,
+    pub revert: bool,
     pub all: bool,
     /// `--auto-merge-resolve <ours|theirs|manual>`, or `--manual`.
     pub strategy: Option<String>,
-    pub force_ours: bool,
-    pub force_theirs: bool,
+    force: Force,
     pub verbose: bool,
     pub skip_install: bool,
+}
+
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+struct Force {
+    ours: bool,
+    theirs: bool,
 }
 
 const BOOLEAN: [&str; 6] = [
@@ -83,13 +89,55 @@ fn build(flags: &Map<String, Value>, positionals: &[&str]) -> Option<Options> {
     Some(Options {
         to: (*to).to_string(),
         pattern: pattern.map(str::to_string),
+        revert: false,
         all: flag("--all"),
         strategy: strategy.map(str::to_string),
-        force_ours: flag("--force-ours"),
-        force_theirs: flag("--force-theirs"),
+        force: Force { ours: flag("--force-ours"), theirs: flag("--force-theirs") },
         verbose: flag("--verbose"),
         skip_install: flag("--skip-dependency-installation"),
     })
+}
+
+/// `bit revert <component-pattern> <main|version>` has the reverse positional
+/// order of checkout and only the two options accepted by the Node command.
+pub fn parse_revert(args: &[&str]) -> Option<Options> {
+    let (positionals, verbose, skip_install) = revert_arguments(args)?;
+    let [pattern, to] = positionals.as_slice() else { return None };
+    if (*pattern != "**" && !pattern.chars().all(pattern_char))
+        || !(to == &"main" || valid_revert_version(to))
+    {
+        return None;
+    }
+    Some(Options {
+        to: (*to).to_owned(),
+        pattern: Some((*pattern).to_owned()),
+        revert: true,
+        verbose,
+        skip_install,
+        ..Options::default()
+    })
+}
+
+fn revert_arguments<'a>(args: &[&'a str]) -> Option<(Vec<&'a str>, bool, bool)> {
+    let mut positionals = Vec::new();
+    let mut verbose = false;
+    let mut skip_install = false;
+    for arg in args {
+        match *arg {
+            "-v" | "--verbose" if !verbose => verbose = true,
+            "-x" | "--skip-dependency-installation" if !skip_install => skip_install = true,
+            value if !value.starts_with('-') => positionals.push(value),
+            _ => return None,
+        }
+    }
+    Some((positionals, verbose, skip_install))
+}
+
+fn valid_revert_version(to: &str) -> bool {
+    if matches!(to, "head" | "latest" | "reset") || to.starts_with("head~") {
+        return false;
+    }
+    valid_to(to)
 }
 
 /// The merge strategy: `None` when invalid, `Some(None)` when not given.
@@ -169,9 +217,10 @@ impl Options {
         if let Some(strategy) = &self.strategy {
             options["strategy"] = json!(strategy);
         }
-        options["forceOurs"] = json!(self.force_ours);
-        options["forceTheirs"] = json!(self.force_theirs);
+        options["forceOurs"] = json!(self.force.ours);
+        options["forceTheirs"] = json!(self.force.theirs);
         options["noSnap"] = json!(false);
+        options["revert"] = json!(self.revert);
         options["verbose"] = json!(self.verbose);
         // The native CLI installs after committing the VCS plan.
         options["skipDependencyInstallation"] = json!(true);

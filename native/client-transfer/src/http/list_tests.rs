@@ -95,3 +95,63 @@ fn a_list_error_is_reported() {
     server.join().unwrap();
     assert_eq!(error.to_string(), "access denied");
 }
+
+#[test]
+fn reads_remote_log_without_changing_the_graphql_projection() {
+    let (url, server) = serve_once(
+        r#"{"data":{"scope":{"getLogs":[{"message":"first\nsecond","username":null,"email":"author@example.com","date":"1800000000000","hash":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","tag":null}]}}}"#,
+    );
+    let network = Network::new(&GlobalConfig::new(), "1.0.0", Some("local"), None).unwrap();
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+    let rows = runtime
+        .block_on(network.log(&url, "acme.ui/button"))
+        .unwrap();
+    let request = server.join().unwrap();
+    assert!(request.starts_with("POST /graphql "), "{request}");
+    assert!(request.to_ascii_lowercase().contains("x-verb: read\r\n"), "{request}");
+    assert!(request.contains(r#""variables":{"id":"acme.ui/button"}"#), "{request}");
+    assert_eq!(rows[0]["message"], "first\nsecond");
+    assert!(rows[0]["username"].is_null());
+    assert_eq!(rows[0]["date"], "1800000000000");
+}
+
+#[test]
+fn remote_log_rejects_graphql_errors_before_rendering() {
+    let (url, server) =
+        serve_once(r#"{"errors":[{"message":"access denied"}],"data":{"scope":null}}"#);
+    let network = Network::new(&GlobalConfig::new(), "1.0.0", None, None).unwrap();
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+    assert_eq!(
+        runtime
+            .block_on(network.log(&url, "acme.ui/button"))
+            .unwrap_err()
+            .to_string(),
+        "access denied",
+    );
+    server.join().unwrap();
+}
+
+#[test]
+fn remote_log_rejects_an_oversized_response() {
+    let body = format!(r#"{{"padding":"{}"}}"#, "x".repeat(8 * 1024 * 1024));
+    let (url, server) = serve_once(Box::leak(body.into_boxed_str()));
+    let network = Network::new(&GlobalConfig::new(), "1.0.0", None, None).unwrap();
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+    assert_eq!(
+        runtime
+            .block_on(network.log(&url, "acme.ui/button"))
+            .unwrap_err()
+            .to_string(),
+        "remote log exceeds bounds",
+    );
+    server.join().unwrap();
+}

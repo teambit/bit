@@ -136,6 +136,7 @@ pub(super) fn extend_models(
     Ok(())
 }
 fn validate(request: &Prepare) -> io::Result<()> {
+    validate_revert(request)?;
     for path in [&request.root, &request.home, &request.global_remotes_file] {
         super::super::path(path)?;
     }
@@ -155,6 +156,23 @@ fn validate(request: &Prepare) -> io::Result<()> {
     if unmerged.try_exists()? && !config::document(&unmerged)?.as_array().is_some_and(Vec::is_empty)
     {
         return Err(invalid("command unresolved merge state"));
+    }
+    Ok(())
+}
+
+fn validate_revert(request: &Prepare) -> io::Result<()> {
+    if request.options.revert
+        && (request.operation != Operation::Checkout
+            || request.options.pattern.is_none()
+            || request.options.all
+            || !request.options.to
+                .as_deref()
+                .is_some_and(|to| {
+                    to == "main"
+                        || (!matches!(to, "head" | "latest" | "reset") && !to.starts_with("head~"))
+                }))
+    {
+        return Err(invalid("command revert requires a selected version"));
     }
     Ok(())
 }
@@ -218,7 +236,10 @@ fn selected_pattern(request: &Prepare, targets: &[Value], pattern: &str) -> io::
     }
     // Canonical multimatch treats ** as all scoped IDs. An explicit pattern
     // also selects fast-forward targets, unlike bare merge's divergent set.
-    if request.operation == Operation::Merge && pattern == "**" && !targets.is_empty() {
+    if (request.operation == Operation::Merge || request.options.revert)
+        && pattern == "**"
+        && !targets.is_empty()
+    {
         return Ok(targets.to_vec());
     }
     select_pattern(targets, pattern)

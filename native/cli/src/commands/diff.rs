@@ -6,7 +6,7 @@
 //! patterns this module does not resolve, and everything the status capture
 //! declines run on the Node.js CLI.
 
-mod files;
+pub(super) mod files;
 mod metadata;
 mod options;
 mod parent;

@@ -1,12 +1,18 @@
-//! Local `bit log`: validated Version history from Rust, with the Node CLI's report and JSON views.
-//! Remote history, lanes, missing objects and unusual graph or metadata forms delegate before output.
+//! `bit log`: validated local Version history and HTTP remote history in Rust,
+//! with the Node CLI's report and JSON views. Missing objects and unusual
+//! graph or metadata forms delegate before output.
+
+pub(super) use table::table;
 
 use super::{
     color::Chalk,
     engine::Engine,
     list::bitmap,
-    status::js::{array, decline, text},
-    workspace_command::{self, results::Report},
+    status::{
+        cache::cache_root,
+        js::{array, decline, text},
+    },
+    workspace_command::{self, NodeCli, results::Report},
 };
 use crate::{commands::Command, history::History, native::Outcome, workspace};
 use chrono::{DateTime, Local};
@@ -18,10 +24,10 @@ use std::{
     path::Path,
     process::ExitCode,
 };
-use unicode_width::UnicodeWidthStr;
-
-mod topology;
 use topology::ordered_parents;
+
+mod table;
+mod topology;
 
 pub const COMMAND: Command = Command { name: "log", aliases: &[], run };
 
@@ -34,6 +40,7 @@ struct Options<'a> {
     full_hash: bool,
     full_message: bool,
     show_hidden: bool,
+    remote: bool,
 }
 
 fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
@@ -46,7 +53,7 @@ fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
             "-f" | "--full-hash" => &mut options.full_hash,
             "-m" | "--full-message" => &mut options.full_message,
             "--show-hidden" => &mut options.show_hidden,
-            "-r" | "--remote" => return None,
+            "-r" | "--remote" => &mut options.remote,
             id if !id.starts_with('-') && options.id.is_none() => {
                 options.id = Some(id);
                 continue;
@@ -68,10 +75,15 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = parse(&argv[1..]) else {
         return Ok(Outcome::Declined("outside the native log grammar".into()));
     };
-    let Some(root) = workspace::root(&env::current_dir()?) else {
+    let root = workspace::root(&env::current_dir()?);
+    if root.is_none() && !options.remote {
         return Ok(Outcome::Declined("not inside a workspace".into()));
-    };
-    let logs = match read(&root, &options) {
+    }
+    let logs = match if options.remote {
+        read_remote(root.as_deref(), &options)
+    } else {
+        read(root.as_deref().unwrap(), &options)
+    } {
         Ok(logs) => logs,
         Err(error) => return Ok(Outcome::Declined(format!("log: {error}"))),
     };
@@ -80,16 +92,51 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Ok(output) => output,
         Err(error) => return Ok(Outcome::Declined(format!("log report: {error}"))),
     };
+    emit(args, root.as_deref(), &output, &options)
+}
+
+fn emit(
+    args: &[OsString],
+    root: Option<&Path>,
+    output: &Value,
+    options: &Options<'_>,
+) -> io::Result<Outcome> {
     if options.json {
-        let history = History::start(&root, args);
+        let history = root.map(|root| History::start(root, args));
         let mut stdout = io::stdout().lock();
         stdout.write_all(serde_json::to_string_pretty(&output)?.as_bytes())?;
         stdout.flush()?;
-        history.end(true);
+        if let Some(history) = history {
+            history.end(true);
+        }
         return Ok(Outcome::Exit(ExitCode::SUCCESS));
     }
-    let report = Report { data: text(Some(&output))?.to_string(), code: 0, details: None };
-    workspace_command::execute_with(&root, args, "log", &report, |_| Ok(()))
+    let report = Report { data: text(Some(output))?.to_string(), code: 0, details: None };
+    if let Some(root) = root {
+        workspace_command::execute_with(root, args, "log", &report, |_| Ok(()))
+    } else {
+        writeln!(io::stdout().lock(), "{}", report.data)?;
+        Ok(Outcome::Exit(ExitCode::SUCCESS))
+    }
+}
+
+fn read_remote(root: Option<&Path>, options: &Options<'_>) -> io::Result<Vec<Value>> {
+    let id = options.id.ok_or_else(|| decline("remote log id"))?;
+    let cli = NodeCli::find()?;
+    let response: Value = Engine::new()?
+        .request(&json!({
+            "kind": "remoteComponentLog",
+            "root": root,
+            "identity": id,
+            "globalConfigDir": cache_root().join("config"),
+            "nodeExecutable": cli.node,
+            "bitDir": cli.bit_dir,
+            "bitVersion": cli.version,
+        }))?;
+    if options.parents && response["parentsAvailable"] != true {
+        return Err(decline("remote HTTP history has no parents"));
+    }
+    Ok(array(response.get("logs"), "remote component logs")?.to_vec())
 }
 
 fn read(root: &Path, options: &Options<'_>) -> io::Result<Vec<Value>> {
@@ -133,7 +180,7 @@ fn read(root: &Path, options: &Options<'_>) -> io::Result<Vec<Value>> {
     Ok(logs)
 }
 
-fn normalize(row: &Value) -> io::Result<Value> {
+pub(super) fn normalize(row: &Value) -> io::Result<Value> {
     let raw = row["log"].as_object().ok_or_else(|| decline("component log metadata"))?;
     let mut normalized = Map::new();
     for (key, value) in raw {
@@ -171,7 +218,7 @@ fn normalize(row: &Value) -> io::Result<Value> {
     Ok(Value::Object(normalized))
 }
 
-fn raw_date_order(left: &Value, right: &Value) -> std::cmp::Ordering {
+pub(super) fn raw_date_order(left: &Value, right: &Value) -> std::cmp::Ordering {
     let millis = |row: &Value| {
         row["log"]["date"]
             .as_str()
@@ -185,7 +232,7 @@ fn raw_date_order(left: &Value, right: &Value) -> std::cmp::Ordering {
 
 fn render(logs: &[Value], options: &Options<'_>, chalk: Chalk) -> io::Result<Value> {
     let mut logs = logs.to_vec();
-    if options.one_line || options.parents {
+    if !options.remote && (options.one_line || options.parents) {
         shorten(&mut logs, options)?;
     }
     if options.parents {
@@ -249,9 +296,23 @@ fn paint(row: &Value, chalk: Chalk) -> io::Result<String> {
         return Err(decline("log removal or deprecation"));
     }
     let mut output = format!("{}\n", chalk.yellow(&title));
-    let username = text(row.get("username"))?;
-    let email = text(row.get("email"))?;
-    output.push_str(&chalk.white(&format!("author: {username} <{email}>\n")));
+    let username = row
+        .get("username")
+        .and_then(Value::as_str)
+        .filter(|username| !username.is_empty());
+    let email = row
+        .get("email")
+        .and_then(Value::as_str)
+        .filter(|email| !email.is_empty());
+    let author = match (username, email) {
+        (Some(username), Some(email)) => Some(format!("author: {username} <{email}>\n")),
+        (Some(username), None) => Some(format!("author: {username}\n")),
+        (None, Some(email)) => Some(format!("author: <{email}>\n")),
+        (None, None) => None,
+    };
+    if let Some(author) = author {
+        output.push_str(&chalk.white(&author));
+    }
     if let Some(date) = row.get("date").and_then(Value::as_str) {
         output.push_str(&chalk.white(&format!("date: {date}\n")));
     }
@@ -301,32 +362,7 @@ fn one_line(logs: &[Value]) -> io::Result<String> {
                 .collect()
         })
         .collect();
-    let widths: Vec<usize> = (0..fields.len())
-        .map(|index| {
-            rows.iter()
-                .map(|row| UnicodeWidthStr::width(row[index]))
-                .max()
-                .unwrap_or(0)
-        })
-        .collect();
-    let lines: Vec<String> = rows
-        .iter()
-        .map(|row| {
-            row.iter()
-                .enumerate()
-                .map(|(index, field)| {
-                    let padding =
-                        " ".repeat(widths[index].saturating_sub(UnicodeWidthStr::width(*field)));
-                    if index + 1 == fields.len() {
-                        format!("{field}{padding}")
-                    } else {
-                        format!("{field}{padding} ")
-                    }
-                })
-                .collect::<String>()
-        })
-        .collect();
-    Ok(lines.join("\n"))
+    Ok(table(&rows))
 }
 
 #[cfg(test)]
