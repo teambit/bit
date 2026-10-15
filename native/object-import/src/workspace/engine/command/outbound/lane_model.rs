@@ -87,7 +87,11 @@ fn current_identity(input: &Prepare) -> io::Result<Option<(String, String)>> {
     let Some(current) = bitmap.get("_bit_lane") else {
         return Ok(None);
     };
-    if !input.ids.is_empty() || input.options.resume.is_some() {
+    if !input.ids.is_empty()
+        || input.options.resume.is_some()
+        || input.options.all
+        || input.options.all_versions
+    {
         return Err(invalid("outbound lane explicit ids or resume"));
     }
     let scope = current["id"]["scope"]

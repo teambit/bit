@@ -33,6 +33,8 @@ pub const COMMAND: Command = Command { name: "export", aliases: &["e"], run };
 
 struct Options {
     ids: Vec<String>,
+    all: bool,
+    all_versions: bool,
     origin_directly: bool,
     fork_lane_new_scope: bool,
     resume: Option<String>,
@@ -42,25 +44,55 @@ struct Options {
 fn parse(args: &[&str]) -> Option<Options> {
     let mut options = Options {
         ids: Vec::new(),
+        all: false,
+        all_versions: false,
         origin_directly: false,
         fork_lane_new_scope: false,
         resume: None,
     };
     let mut args = args.iter().copied();
     while let Some(arg) = args.next() {
+        if set_boolean_flag(&mut options, arg) {
+            continue;
+        }
         match arg {
-            "--origin-directly" if !options.origin_directly => options.origin_directly = true,
-            "--fork-lane-new-scope" if !options.fork_lane_new_scope => {
-                options.fork_lane_new_scope = true;
-            }
             "--resume" if options.resume.is_none() => {
                 options.resume = Some(resume_id(&mut args)?);
+            }
+            pattern if valid_scope_wildcard(pattern) && options.ids.len() < 4096 => {
+                options.ids.push(pattern.to_owned());
             }
             id if valid_id(id) && options.ids.len() < 4096 => options.ids.push(id.to_owned()),
             _ => return None,
         }
     }
     Some(options)
+}
+
+fn set_boolean_flag(options: &mut Options, arg: &str) -> bool {
+    let slot = match arg {
+        "--all" => &mut options.all,
+        "--all-versions" => &mut options.all_versions,
+        "--origin-directly" => &mut options.origin_directly,
+        "--fork-lane-new-scope" => &mut options.fork_lane_new_scope,
+        _ => return false,
+    };
+    if *slot {
+        return false;
+    }
+    *slot = true;
+    true
+}
+
+fn valid_scope_wildcard(pattern: &str) -> bool {
+    pattern
+        .strip_suffix("/*")
+        .is_some_and(|scope| {
+            !scope.is_empty()
+                && scope
+                    .bytes()
+                    .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'-' | b'.'))
+        })
 }
 
 fn resume_id<'a>(args: &mut impl Iterator<Item = &'a str>) -> Option<String> {
@@ -240,6 +272,8 @@ fn prepare(engine: &mut Engine, root: &Path, options: &Options) -> io::Result<re
         "ids": options.ids,
         "options": {
             "originDirectly": options.origin_directly,
+            "all": options.all,
+            "allVersions": options.all_versions,
             "forkLaneNewScope": options.fork_lane_new_scope,
             "resume": options.resume,
         },

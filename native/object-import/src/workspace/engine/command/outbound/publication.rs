@@ -53,8 +53,14 @@ pub(super) fn prepare(
             Ok((scope.clone(), prepare_refs(before.as_deref(), scope, selected)?))
         })
         .collect::<io::Result<BTreeMap<_, _>>>()?;
-    let output =
-        Output { refs, staged_config: prepare_staged_config(&preimage.staged_config, selected)? };
+    let output = Output {
+        refs,
+        staged_config: prepare_staged_config(
+            &preimage.staged_config,
+            selected,
+            !(input.options.all || input.options.all_versions),
+        )?,
+    };
     let expected_ids = expected_ids(selected)?;
     let components = selected
         .iter()
@@ -181,7 +187,7 @@ impl Prepared {
             .collect::<Vec<_>>();
         self.bitmap.select_export_promotions(&promotions)?;
         self.output.staged_config =
-            prepare_staged_config_ids(&self.preimage.staged_config, &promotions)?;
+            prepare_staged_config_ids(&self.preimage.staged_config, &promotions, true)?;
         self.expected_ids = acknowledged;
         Ok(())
     }
@@ -262,15 +268,19 @@ impl Prepared {
     }
 }
 
-fn prepare_staged_config(bytes: &[u8], selected: &[Selected]) -> io::Result<Vec<u8>> {
+fn prepare_staged_config(bytes: &[u8], selected: &[Selected], strict: bool) -> io::Result<Vec<u8>> {
     let identities = selected
         .iter()
         .map(|item| (item.scope.clone(), item.name.clone()))
         .collect::<Vec<_>>();
-    prepare_staged_config_ids(bytes, &identities)
+    prepare_staged_config_ids(bytes, &identities, strict)
 }
 
-fn prepare_staged_config_ids(bytes: &[u8], selected: &[(String, String)]) -> io::Result<Vec<u8>> {
+fn prepare_staged_config_ids(
+    bytes: &[u8],
+    selected: &[(String, String)],
+    strict: bool,
+) -> io::Result<Vec<u8>> {
     if selected.is_empty() {
         return Ok(bytes.to_vec());
     }
@@ -290,7 +300,7 @@ fn prepare_staged_config_ids(bytes: &[u8], selected: &[(String, String)]) -> io:
             true
         }
     });
-    if found.len() != selected.len() {
+    if strict && found.len() != selected.len() {
         return Err(invalid("outbound staged configuration lifecycle"));
     }
     serde_json::to_vec_pretty(&rows).map_err(io::Error::other)

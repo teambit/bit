@@ -1,5 +1,7 @@
 //! Select staged, already-scoped main-lane components and freeze their
 //! compressed object closure before any remote side effect.
+mod all_versions;
+
 use super::{Prepare, invalid};
 use crate::transfer::{self, Body, collection};
 use bit_client_transfer::tar::ObjectItem;
@@ -54,14 +56,24 @@ pub(super) fn select(input: &Prepare) -> io::Result<Vec<Selected>> {
         return Err(invalid("outbound lane index"));
     }
     let rows = index["components"].as_array().ok_or_else(|| invalid("outbound index"))?;
-    let staged = staged_rows(root, rows)?;
-    let selected = requested(&input.ids, staged)?;
+    let candidates = if input.options.all || input.options.all_versions {
+        all_rows(root, rows)?
+    } else {
+        staged_rows(root, rows)?
+    };
+    let selected = requested(&input.ids, candidates)?;
     let mut components = Vec::new();
     for (row, model) in selected {
         let component = select_one(input, &row, model)?;
         components.push(component);
     }
     Ok(components)
+}
+
+fn all_rows(root: &Path, rows: &[Value]) -> io::Result<Vec<(Value, Value)>> {
+    rows.iter()
+        .map(|row| Ok((row.clone(), load_model(root, row)?)))
+        .collect()
 }
 
 fn staged_rows(root: &Path, rows: &[Value]) -> io::Result<Vec<(Value, Value)>> {
@@ -81,6 +93,10 @@ fn requested(ids: &[String], staged: Vec<(Value, Value)>) -> io::Result<Vec<(Val
     }
     let mut chosen: Vec<(Value, Value)> = Vec::new();
     for id in ids {
+        if let Some(scope) = scope_pattern(id, &staged) {
+            add_scope(&mut chosen, &staged, scope);
+            continue;
+        }
         let component = find_requested(&staged, id)?;
         if chosen
             .iter()
@@ -91,6 +107,31 @@ fn requested(ids: &[String], staged: Vec<(Value, Value)>) -> io::Result<Vec<(Val
         chosen.push(component.clone());
     }
     Ok(chosen)
+}
+
+fn add_scope(chosen: &mut Vec<(Value, Value)>, candidates: &[(Value, Value)], scope: &str) {
+    for component in candidates
+        .iter()
+        .filter(|(row, _)| row["id"]["scope"] == scope)
+    {
+        if !chosen
+            .iter()
+            .any(|(row, _)| row["hash"] == component.0["hash"])
+        {
+            chosen.push(component.clone());
+        }
+    }
+}
+
+fn scope_pattern<'a>(id: &'a str, candidates: &[(Value, Value)]) -> Option<&'a str> {
+    let scope = id.strip_suffix("/*").unwrap_or(id);
+    if scope.is_empty() || scope.contains('/') {
+        return None;
+    }
+    candidates
+        .iter()
+        .any(|(row, _)| row["id"]["scope"] == scope)
+        .then_some(scope)
 }
 
 /// The staged component `id` (`<identity>[@<version>]`) names, by its full
@@ -135,8 +176,12 @@ fn find_requested<'s>(staged: &'s [(Value, Value)], id: &str) -> io::Result<&'s 
 fn select_one(input: &Prepare, row: &Value, mut model: Value) -> io::Result<Selected> {
     let root = &input.root;
     let identity = identity(row, &model)?;
-    let staged = staged(&model)?;
     let objects_dir = root.join(".bit/objects");
+    let staged = if input.options.all || input.options.all_versions {
+        all_versions::select(&model, &objects_dir)?
+    } else {
+        staged(&model)?
+    };
     let model_before = transfer::object::repository(
         &objects_dir,
         crate::merge_history::hash(&identity.model_hash)?,

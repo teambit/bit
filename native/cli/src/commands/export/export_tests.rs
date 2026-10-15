@@ -6,6 +6,8 @@ fn parses_the_native_flags() {
     assert!(
         empty.ids.is_empty()
             && !empty.origin_directly
+            && !empty.all
+            && !empty.all_versions
             && !empty.fork_lane_new_scope
             && empty.resume.is_none(),
     );
@@ -13,6 +15,8 @@ fn parses_the_native_flags() {
         "s/a@1.0.0",
         "s/b",
         "--origin-directly",
+        "--all",
+        "--all-versions",
         "--fork-lane-new-scope",
         "--resume",
         "client-1",
@@ -20,12 +24,14 @@ fn parses_the_native_flags() {
     .unwrap();
     assert_eq!(selected.ids, ["s/a@1.0.0", "s/b"]);
     assert!(selected.origin_directly);
+    assert!(selected.all && selected.all_versions);
     assert!(selected.fork_lane_new_scope);
     assert_eq!(selected.resume.as_deref(), Some("client-1"));
     for args in [
         &["--resume"][..],
         &["--resume", "bad:id"],
-        &["--all"],
+        &["--all", "--all"],
+        &["--all-versions", "--all-versions"],
         &["-e"],
         &["s/a", "--origin-directly", "--origin-directly"],
         &["--fork-lane-new-scope", "--fork-lane-new-scope"],

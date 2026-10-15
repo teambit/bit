@@ -52,6 +52,10 @@ struct Options {
     #[serde(rename = "originDirectly")]
     _origin_directly: bool,
     #[serde(default)]
+    all: bool,
+    #[serde(default)]
+    all_versions: bool,
+    #[serde(default)]
     fork_lane_new_scope: bool,
     resume: Option<String>,
 }
@@ -141,6 +145,9 @@ pub(in crate::workspace::engine) fn prepare(
 fn plan_main(input: &Prepare) -> io::Result<Plan> {
     if input.options.fork_lane_new_scope {
         return Err(invalid("outbound fork-lane-new-scope on main"));
+    }
+    if input.options.resume.is_some() && (input.options.all || input.options.all_versions) {
+        return Err(invalid("outbound all-versions resume"));
     }
     let selected = model::select(input)?;
     let resume = resume_context(input, &selected)?;

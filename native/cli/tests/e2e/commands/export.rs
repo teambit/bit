@@ -3,6 +3,86 @@
 use crate::helper::{Helper, config, parse, setup};
 use std::{ffi::OsStr, fs, path::Path};
 
+#[test]
+fn all_reexports_an_existing_component_like_node() {
+    let helper = exported_to_a_recreated_remote();
+    assert_reexport(&helper, "", "--all");
+}
+
+#[test]
+fn all_exports_to_a_recreated_remote() {
+    let helper = exported_to_a_recreated_remote();
+    let remote = &helper.scopes.remote;
+    assert_reexport(&helper, &format!("{remote} {remote}/*"), "--all");
+}
+
+#[test]
+fn all_versions_exports_to_a_recreated_remote() {
+    let helper = exported_to_a_recreated_remote();
+    let remote = &helper.scopes.remote;
+    assert_reexport(&helper, &format!("{remote} {remote}/*"), "--all-versions");
+}
+
+#[test]
+fn all_versions_reexports_full_history_like_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("// v1");
+    helper.add_component_bar_foo();
+    helper.run("tag bar/foo --message first");
+    helper.run("export");
+    helper.create_component_bar_foo("// v2");
+    helper.run("tag bar/foo --message second");
+    helper.run("export");
+    helper.re_init_remote_scope();
+    if let Some(destination) = std::env::var_os("BIT_NATIVE_EXPORT_ALL_BENCH_FIXTURE") {
+        let destination = std::path::PathBuf::from(destination);
+        assert!(!destination.exists());
+        fs::create_dir_all(&destination).unwrap();
+        setup::copy_dir(&helper.scopes.local_path, &destination.join("workspace"));
+        setup::copy_dir(&helper.scopes.remote_path, &destination.join("remote"));
+    }
+    assert_reexport(&helper, "", "--all-versions");
+}
+
+fn assert_reexport(helper: &Helper, ids: &str, flag: &str) {
+    let remote_before = helper.clone_remote_scope();
+    let node_root = helper.clone_workspace();
+    let command = format!("export {ids} {flag}");
+    let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{}", node.stderr);
+    let node_remote = helper.clone_remote_scope();
+    helper.restore_remote_scope(&remote_before);
+    let native = helper.native_run(&command);
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(
+        parse(&fs::read_to_string(helper.scopes.remote_path.join("index.json")).unwrap()),
+        parse(&fs::read_to_string(node_remote.join("index.json")).unwrap()),
+    );
+    assert_eq!(object_names(&helper.scopes.remote_path), object_names(&node_remote));
+    for path in [".bitmap", ".bit/index.json", ".bit/scope.json"] {
+        let native_bytes = fs::read_to_string(helper.scopes.local_path.join(path)).unwrap();
+        let node_bytes = fs::read_to_string(node_root.join(path)).unwrap();
+        let native_json = if path == ".bitmap" {
+            parse(&native_bytes[native_bytes.find('{').unwrap()..])
+        } else {
+            parse(&native_bytes)
+        };
+        let node_json = if path == ".bitmap" {
+            parse(&node_bytes[node_bytes.find('{').unwrap()..])
+        } else {
+            parse(&node_bytes)
+        };
+        assert_eq!(native_json, node_json, "{path}");
+    }
+    let node_status =
+        Helper::cmd_in_with(&node_root, "status --json", &[("BIT_NATIVE", OsStr::new("off"))]);
+    let native_status = helper.native_run("status --json");
+    assert_eq!(parse(&native_status.stdout), parse(&node_status.stdout));
+}
+
 fn object_names(scope: &Path) -> Vec<String> {
     let mut names = Vec::new();
     for prefix in fs::read_dir(scope.join("objects")).unwrap() {
@@ -366,15 +446,14 @@ fn a_recreated_remote_has_nothing_to_export() {
 }
 
 /// Native `bit export` declines an empty workspace (`commandOutboundPrepare: No such file or
-/// directory`), `export <ids>` (`outbound requested component is not staged`), `--all`,
-/// `--all-versions` and a remote init with `--shared` (`outbound file remote group ownership
+/// directory`), `export <ids>` (`outbound requested component is not staged`),
+/// and a remote init with `--shared` (`outbound file remote group ownership
 /// requires canonical export`); native `bit import` declines the e2e workspace (`status
 /// configured extensions require Harmony`).
 mod known_failures {
-    use super::exported_to_a_recreated_remote;
     use crate::{
         allow_known_failure,
-        helper::{FOO_FIXTURE, Helper, len, parse},
+        helper::{FOO_FIXTURE, Helper},
         known_failure::KnownResult,
     };
     use std::fs;
@@ -521,29 +600,6 @@ mod known_failures {
         let helper = tagged_for_shared_remote(group.trim());
         let output = allow_known_failure!(helper.native_output_or_known("export"));
         assert!(output.contains("exported components (1)"), "{output}");
-    }
-
-    fn exports_all_with(flag: &str) {
-        let helper = exported_to_a_recreated_remote();
-        let remote = &helper.scopes.remote;
-        let export = format!("export {remote} {remote}/* {flag}");
-        allow_known_failure!(helper.native_output_or_known(&export));
-        let list = parse(&helper.run(&format!("list {remote} --json")));
-        assert_eq!(len(&list), 1);
-    }
-
-    /// export after re-creating the remote › export with --all flag › should export them
-    /// successfully
-    #[test]
-    fn all_exports_to_a_recreated_remote() {
-        exports_all_with("--all");
-    }
-
-    /// export after re-creating the remote › export with --all-versions flag › should export
-    /// them successfully
-    #[test]
-    fn all_versions_exports_to_a_recreated_remote() {
-        exports_all_with("--all-versions");
     }
 
     /// re-export using the component name without the scope name › should not show the
