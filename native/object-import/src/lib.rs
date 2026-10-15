@@ -1,7 +1,9 @@
 #![cfg_attr(dylint_lib = "perfectionist", feature(register_tool))]
 #![cfg_attr(dylint_lib = "perfectionist", register_tool(perfectionist))]
 
+pub mod reset_lane;
 pub mod reset_main;
+pub mod reset_never_exported;
 pub mod reset_soft;
 
 /// Native import merge decisions (`kind: component | version | versionHistory | ...`).
