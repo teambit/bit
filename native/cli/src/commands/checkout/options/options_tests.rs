@@ -4,7 +4,9 @@ use super::parse;
 fn accepts_the_native_subset() {
     let options = parse(&["0.0.1", "one", "-x"]).unwrap();
     assert_eq!((options.to.as_str(), options.pattern.as_deref()), ("0.0.1", Some("one")));
-    assert!(parse(&["head", "--skip-dependency-installation", "--all"]).is_none());
+    assert!(parse(&["head", "--skip-dependency-installation", "--all"]).unwrap().all);
+    assert!(parse(&["latest", "--all"]).unwrap().all);
+    assert!(parse(&["head", "one", "--all"]).is_none());
     assert!(parse(&["reset", "-x", "-a"]).unwrap().all);
     assert_eq!(parse(&["head", "-x", "-r", "theirs"]).unwrap().strategy.as_deref(), Some("theirs"));
     assert_eq!(parse(&["head", "-x", "--manual"]).unwrap().strategy.as_deref(), Some("manual"));

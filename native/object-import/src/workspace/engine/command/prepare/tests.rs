@@ -44,3 +44,29 @@ fn lane_selected_inactive_capture_does_not_expand_active_context() {
     overlapping["lane"]["inactiveTargets"][0]["directory"] = json!("active/child");
     assert!(selected(&input, &overlapping).is_err());
 }
+
+#[test]
+fn checkout_head_without_a_pattern_selects_only_current_lane_components() {
+    let context = json!({"targets":[
+        {"identity":"scope/main-only","directory":"main-only"},
+        {"identity":"scope/on-lane","directory":"on-lane"},
+    ],"lane":{"current":{"value":{"components":[
+        {"id":{"scope":"scope","name":"on-lane"},"head":"a".repeat(40)}
+    ]}}}});
+    let head: Prepare = serde_json::from_value(json!({"root":"/workspace","home":"/home",
+        "globalRemotesFile":"/remotes","operation":"checkout",
+        "options":{"to":"head","all":true,"skipDependencyInstallation":true}}))
+    .unwrap();
+    assert_eq!(selected(&head, &context).unwrap(), vec![context["targets"][1].clone()]);
+    let latest: Prepare = serde_json::from_value(json!({"root":"/workspace","home":"/home",
+        "globalRemotesFile":"/remotes","operation":"checkout",
+        "options":{"to":"latest","all":true,"skipDependencyInstallation":true}}))
+    .unwrap();
+    assert_eq!(
+        selected(&latest, &context).unwrap(),
+        context["targets"]
+            .as_array()
+            .unwrap()
+            .clone(),
+    );
+}

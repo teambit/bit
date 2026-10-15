@@ -148,6 +148,7 @@ fn select(
             modified,
             merge_pending: pending,
             remote_head: remote.as_deref(),
+            lane_head: lane_head(&record.context, identity),
             semver,
         },
         &mut record.repository,
@@ -164,6 +165,14 @@ fn select(
         )?;
     }
     Ok(selected)
+}
+fn lane_head<'a>(context: &'a Value, identity: &str) -> Option<&'a str> {
+    let (scope, name) = identity.split_once('/')?;
+    context["lane"]["current"]["value"]["components"]
+        .as_array()?
+        .iter()
+        .find(|row| row["id"]["scope"] == scope && row["id"]["name"] == name)
+        .and_then(|row| row["head"].as_str())
 }
 fn import_selected(record: &mut Record, selections: &[Value]) -> io::Result<()> {
     let targets = record.targets
