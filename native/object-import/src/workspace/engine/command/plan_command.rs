@@ -121,6 +121,13 @@ pub(super) fn prepare_bitmap_bytes(
         .iter()
         .map(|material| bitmap_update(record, material))
         .collect::<io::Result<Vec<_>>>()?;
+    if let Some(tracked) = record.context["lane"]["trackedTargets"].as_array() {
+        updates.retain(|update| {
+            !tracked
+                .iter()
+                .any(|row| row["identity"] == update.identity)
+        });
+    }
     if let Some(merge) = &planned.merge {
         updates.extend(merge.bitmap_updates()?);
     }

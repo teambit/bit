@@ -24,7 +24,7 @@ pub(super) fn run(
     let (context, imported) = prepare::context(&request, pool)?;
     component_controls(&request, &context, &mut proofs)?;
     super::lane_context::validate_additions(&request.root, &context, &mut proofs)?;
-    let targets = prepare::selected(&request, &context)?;
+    let targets = checkout_targets(&request, &context)?;
     proof::verify(&proofs)?;
     state.sequence =
         state.sequence.checked_add(1).ok_or_else(|| invalid("command sequence limit"))?;
@@ -47,6 +47,17 @@ pub(super) fn run(
         history,
     });
     Ok((count, output))
+}
+
+fn checkout_targets(request: &Prepare, context: &Value) -> io::Result<Vec<Value>> {
+    let mut targets = prepare::selected(request, context)?;
+    if request.operation == Operation::Checkout
+        && request.options.to.as_deref() == Some("head")
+        && let Some(tracked) = context["lane"]["trackedTargets"].as_array()
+    {
+        targets.extend(tracked.iter().cloned());
+    }
+    Ok(targets)
 }
 
 fn preparation_proofs(request: &Prepare) -> io::Result<Vec<proof::Proof>> {

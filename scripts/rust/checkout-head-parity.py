@@ -80,12 +80,19 @@ def stable_report(stdout):
 
 
 def compare(name, source, args, node, rust, entry, stage, added, expect_added,
-            expect_native, install=False):
+            expect_native, install=False, dirty_file=None):
     observed = {}
     for label, binary in (("node", node), ("rust", rust)):
         workspace = stage / f"{name}-{label}"
         shutil.copytree(source, workspace, symlinks=True)
+        if dirty_file:
+            dirty_path = workspace / dirty_file
+            if not dirty_path.is_file() or not dirty_path.resolve().is_relative_to(workspace.resolve()):
+                raise AssertionError(f"{name}: invalid dirty file {dirty_file}; stage {stage}")
+            dirty_path.write_bytes(dirty_path.read_bytes() + b"\n// dirty workspace edit\n")
         output = run(binary, workspace, args, entry, stage / f"{name}-{label}-globals")
+        if dirty_file and (workspace / dirty_file).read_bytes().endswith(b"// dirty workspace edit\n"):
+            raise AssertionError(f"{name}: {label} did not reset {dirty_file}; stage {stage}")
         if added is not None and bitmap_has(workspace, added) != expect_added:
             raise AssertionError(f"{name}: unexpected bitmap visibility for {added} "
                                  f"in {label}; stage {stage}")
@@ -132,12 +139,16 @@ def main():
                         help="lane with multiple tracked components for an exact-ID checkout")
     parser.add_argument("--selected-component",
                         help="one tracked component in --selected-source")
+    parser.add_argument("--selected-dirty-file", type=Path,
+                        help="tracked file in --selected-source outside --selected-component")
     args = parser.parse_args()
     for source in (args.source, args.removed_source, args.selected_source):
         if source and not (source / ".bitmap").is_file():
             parser.error(f"missing source bitmap: {source}")
     if bool(args.selected_source) != bool(args.selected_component):
         parser.error("--selected-source and --selected-component are required together")
+    if args.selected_dirty_file and not args.selected_source:
+        parser.error("--selected-dirty-file requires --selected-source")
     if bitmap_has(args.source, args.added):
         parser.error(f"--added component is already in source bitmap: {args.added}")
     print(f"source sha256: {fingerprint(args.source)}")
@@ -163,10 +174,15 @@ def main():
             ]
         if args.selected_source:
             cases.append(("selected-id-other-tracked-lane-components", args.selected_source,
-                          ["head", args.selected_component, "-x"], None, False, False))
+                          ["head", args.selected_component, "-x"], None, False, True))
         for name, source, command, added, expect_added, expect_native in cases:
             compare(name, source, command, args.node, args.rust, args.entry, stage,
                     added, expect_added, expect_native, name == "add-absent-install")
+        if args.selected_dirty_file:
+            compare("selected-id-dirty-other-tracked-component", args.selected_source,
+                    ["head", args.selected_component, "-x"], args.node, args.rust,
+                    args.entry, stage, None, False, True,
+                    dirty_file=args.selected_dirty_file)
 
 
 if __name__ == "__main__":

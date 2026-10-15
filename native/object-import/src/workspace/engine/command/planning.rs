@@ -1,4 +1,5 @@
 mod checkout_lane;
+mod checkout_select;
 mod history_replay;
 mod reset_comparison;
 use super::{
@@ -60,7 +61,7 @@ fn checkout_captured(
     };
     let mut selections = Vec::new();
     for (index, captured) in plan.captured.iter().enumerate() {
-        selections.push(select(
+        selections.push(checkout_select::select(
             record,
             index,
             captured,
@@ -123,56 +124,6 @@ fn validate_current_inner(
         return Err(invalid("command workspace policy update requires planner"));
     }
     Ok(())
-}
-fn select(
-    record: &mut Record,
-    index: usize,
-    captured: &capture::Captured,
-    semver: &Value,
-    histories: &mut history::State,
-    state: &mut checkout_transition::State,
-    recovery_reset: bool,
-) -> io::Result<Value> {
-    let identity = &captured.target.identity;
-    let model = repository::model(&record.context, identity)?;
-    let remote = if record.request.operation == input::Operation::Switch {
-        None
-    } else {
-        record.repository.remote_head(identity)?
-    };
-    let (modified, pending) = modification(
-        record,
-        captured,
-        model.as_ref(),
-        remote.as_deref(),
-        histories,
-        recovery_reset,
-    )?;
-    let selected = selection::select(
-        &record.request.options,
-        &selection::Selection {
-            target: &record.targets[index],
-            model: model.as_ref(),
-            modified,
-            merge_pending: pending,
-            remote_head: remote.as_deref(),
-            lane_head: lane_head(&record.context, identity),
-            semver,
-        },
-        &mut record.repository,
-        state,
-    )?;
-    if record.request.operation != input::Operation::Switch {
-        history_replay::replay(
-            record,
-            identity,
-            model.as_ref(),
-            remote.as_deref(),
-            &selected,
-            histories,
-        )?;
-    }
-    Ok(selected)
 }
 fn lane_head<'a>(context: &'a Value, identity: &str) -> Option<&'a str> {
     let (scope, name) = identity.split_once('/')?;
