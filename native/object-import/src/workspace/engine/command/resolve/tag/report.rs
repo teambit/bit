@@ -22,7 +22,7 @@ pub(in super::super) fn report(
     }
     Ok(json!({"taggedComponents":tagged,"autoTaggedResults":autos,
         "newComponents":materials.iter().filter(|material| material.version_state.current_head.is_empty() && material.participation.selected).map(|material| &material.identity).collect::<Vec<_>>(),
-        "isSoftTag":false,"warnings":warnings(retained, semver, selected, materials)?,"totalComponentsCount":materials.len()}))
+        "isSoftTag":retained.tag.as_ref().is_some_and(|options| options.soft),"warnings":warnings(retained, semver, selected, materials)?,"totalComponentsCount":materials.len()}))
 }
 
 fn versioned(id: &str, materials: &[Material]) -> io::Result<String> {

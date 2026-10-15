@@ -1,4 +1,4 @@
-use super::parse;
+use super::{Mode, parse};
 use serde_json::json;
 
 #[test]
@@ -31,13 +31,16 @@ fn release_types_and_versions() {
     assert_eq!(parse(&["--pre-release"]).unwrap().release.pre_release_id, None);
     assert_eq!(parse(&["-v", "v1.2.3"]).unwrap().release.exact_version.as_deref(), Some("1.2.3"));
     assert_eq!(parse(&["--increment-by", "3"]).unwrap().release.increment_by, 3);
+    assert_eq!(parse(&["--soft"]).unwrap().mode, Mode::Soft);
+    assert_eq!(parse(&["--persist=skip-build"]).unwrap().mode, Mode::Persist);
 }
 
 #[test]
 fn invalid_or_canonical_flags_are_left_to_node() {
     for args in [
         &["--build"][..],
-        &["--soft"],
+        &["--persist"],
+        &["--soft", "--persist=skip-build"],
         &["--minor", "--major"],
         &["--prerelease-id", "beta"],
         &["--increment", "huge"],

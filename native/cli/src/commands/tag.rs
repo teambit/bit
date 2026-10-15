@@ -6,11 +6,12 @@ mod options;
 use super::{
     color::Chalk,
     merge::force_local_build,
-    workspace_command::{self, progress::Progress, resolve, versions},
+    workspace_command::{self, Planned, progress::Progress, resolve, results::Report, versions},
 };
 use crate::{commands::Command, native::Outcome, workspace};
 use bit_install::output::Output;
-use std::{env, ffi::OsString, io};
+use options::{Mode, Options};
+use std::{env, ffi::OsString, io, path::Path};
 
 pub const COMMAND: Command = Command { name: "tag", aliases: &["t"], run };
 
@@ -37,6 +38,23 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     if force_local_build(&root) {
         return Ok(Outcome::Declined("force_local_build may be set".to_string()));
     }
+    let prepared = plan_tag(&root, args, &options);
+    let (planned, report, progress) = match prepared {
+        Ok(prepared) => prepared,
+        Err(error) => return Ok(Outcome::Declined(format!("tag: {error}"))),
+    };
+    let warn = options.message.is_none() && options.mode != Mode::Persist;
+    workspace_command::execute(&root, args, "tag", planned, &report, |output| {
+        warnings(output, warn, options.mode == Mode::Soft);
+        render_progress(output, progress.as_ref(), &options.mode);
+    })
+}
+
+fn plan_tag(
+    root: &Path,
+    args: &[OsString],
+    options: &Options,
+) -> io::Result<(Planned, Report, Option<Progress>)> {
     let request = resolve::ResolveRequest {
         kind: resolve::Kind::Tag,
         options: options.request(),
@@ -46,31 +64,34 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             exact_version: options.release.exact_version.as_deref(),
         },
     };
-    let prepared = resolve::plan(&root, &request)
-        .and_then(|planned| {
-            let report =
-                versions::format(&planned.plan["result"], Chalk::detect(args), &versions::TAG)?;
-            let progress = Progress::parse_snap(planned.plan.get("progress"))?;
-            Ok((planned, report, progress))
-        });
-    let (planned, report, progress) = match prepared {
-        Ok(prepared) => prepared,
-        Err(error) => return Ok(Outcome::Declined(format!("tag: {error}"))),
+    let planned = resolve::plan(root, &request)?;
+    let labels = match options.mode {
+        Mode::Soft => &versions::SOFT_TAG,
+        Mode::Persist => &versions::PERSIST_TAG,
+        Mode::Ordinary => &versions::TAG,
     };
-    let warn = options.message.is_none();
-    workspace_command::execute(&root, args, "tag", planned, &report, |output| {
-        warnings(output, warn);
-        if let Some(progress) = &progress {
+    let report = versions::format(&planned.plan["result"], Chalk::detect(args), labels)?;
+    let progress = Progress::parse_snap(planned.plan.get("progress"))?;
+    Ok((planned, report, progress))
+}
+
+fn render_progress(output: &Output, progress: Option<&Progress>, mode: &Mode) {
+    if let Some(progress) = progress {
+        if *mode == Mode::Soft {
+            progress.render_soft_tag(output);
+        } else {
             progress.render_merge(output);
         }
-    })
+    }
 }
 
 /// What `bit tag` prints before the progress lines.
-fn warnings(output: &Output, without_message: bool) {
+fn warnings(output: &Output, without_message: bool, soft: bool) {
     if without_message {
         output.warning(MESSAGE_WARNING);
     }
-    output.warning(REMOTE_BUILD_WARNING);
+    if !soft {
+        output.warning(REMOTE_BUILD_WARNING);
+    }
     output.status("determine components to tag...");
 }

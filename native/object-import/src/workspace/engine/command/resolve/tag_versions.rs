@@ -1,15 +1,16 @@
 //! Compute semantic identities before allocating any Version object hashes.
 use super::super::{invalid, resolve_snapshot::Material};
 use serde_json::{Value, json};
-use std::io;
+use std::{collections::HashMap, io};
 
 pub(super) fn plan(
     materials: &mut [Material],
     params: &Value,
     entered: &Value,
     semver: &Value,
+    next: &HashMap<String, &Value>,
 ) -> io::Result<()> {
-    if params["soft"] == true || params["persist"] == true || params["hasTagData"] == true {
+    if params["hasTagData"] == true {
         return Err(invalid("tag requires ordinary version planning"));
     }
     let components = materials
@@ -18,9 +19,14 @@ pub(super) fn plan(
             let tags = material.model["versions"]
                 .as_object()
                 .ok_or_else(|| invalid("tag model versions"))?;
+            let pending = next
+                .get(&material.identity)
+                .copied()
+                .unwrap_or(&Value::Null);
             Ok(json!({"versions":tags.keys().collect::<Vec<_>>(),
             "isAutoTag":material.participation.automatic && !material.participation.selected,
-            "isAutoAddedRoot":false,"enteredVersion":entered.get(&material.identity)}))
+            "isAutoAddedRoot":false,"enteredVersion":entered.get(&material.identity),
+            "nextVersion":pending["version"],"nextPreRelease":pending["preRelease"]}))
         })
         .collect::<io::Result<Vec<_>>>()?;
     let output = crate::snapshot_transaction::apply(
@@ -40,7 +46,7 @@ pub(super) fn plan(
                 .to_owned(),
         );
     }
-    ranges::update(materials)
+    if params["soft"] == true { Ok(()) } else { ranges::update(materials) }
 }
 
 mod ranges;

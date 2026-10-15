@@ -2,6 +2,7 @@
 pub(super) use export::prepare_export_scopes;
 mod export;
 mod lane;
+mod soft;
 #[cfg(test)]
 mod switch_tests;
 use crate::workspace::engine::invalid;

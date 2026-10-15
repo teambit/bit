@@ -1,5 +1,5 @@
 //! The native tag grammar, with `validateOptions` of `@teambit/snapping`:
-//! ordinary persisted tags only. Editor, build, soft and publish flags stay
+//! ordinary and soft tags. Editor, build and publish flags stay
 //! with the Node.js CLI.
 
 use serde_json::{Map, Value, json};
@@ -7,8 +7,16 @@ use serde_json::{Map, Value, json};
 const RELEASE_TYPES: [&str; 7] =
     ["major", "premajor", "minor", "preminor", "patch", "prepatch", "prerelease"];
 const PRE_RELEASE_TYPES: [&str; 4] = ["prepatch", "prerelease", "preminor", "premajor"];
-const BOOLEANS: [&str; 7] =
-    ["--unmodified", "--unmerged", "--snapped", "--skip-auto-tag", "--patch", "--minor", "--major"];
+const BOOLEANS: [&str; 8] = [
+    "--unmodified",
+    "--unmerged",
+    "--snapped",
+    "--skip-auto-tag",
+    "--patch",
+    "--minor",
+    "--major",
+    "--soft",
+];
 const STRINGS: [&str; 6] = [
     "--message",
     "--ver",
@@ -27,6 +35,15 @@ pub struct Options {
     pub release: Release,
     pub snapped: bool,
     pub skip_auto_tag: bool,
+    pub mode: Mode,
+}
+
+#[derive(Debug, Default, PartialEq, Eq)]
+pub enum Mode {
+    #[default]
+    Ordinary,
+    Soft,
+    Persist,
 }
 
 /// How the versions are bumped: `validateOptions`' release types,
@@ -65,27 +82,32 @@ fn read(args: &[&str]) -> Option<Flags> {
             flags.patterns.push(pattern(argument)?.to_string());
             continue;
         }
-        if flags.values.contains_key(argument) {
+        let key = if argument == "--persist=skip-build" { "--persist" } else { argument };
+        if flags.values.contains_key(key) {
             return None;
         }
         let next = args
             .get(index)
             .copied()
             .filter(|value| !value.starts_with('-'));
-        let value = if BOOLEANS.contains(&argument) {
-            json!(true)
-        } else if STRINGS.contains(&argument) {
-            index += 1;
-            json!(next?)
-        } else if argument == "--pre-release" {
-            index += usize::from(next.is_some());
-            next.map_or(json!(true), |value| json!(value))
-        } else {
-            return None;
-        };
-        flags.values.insert(argument.to_string(), value);
+        let (value, consume_next) = option_value(argument, next)?;
+        index += usize::from(consume_next);
+        flags.values.insert(key.to_string(), value);
     }
     Some(flags)
+}
+
+fn option_value(argument: &str, next: Option<&str>) -> Option<(Value, bool)> {
+    if BOOLEANS.contains(&argument) || argument == "--persist=skip-build" {
+        return Some((json!(true), false));
+    }
+    if STRINGS.contains(&argument) {
+        return Some((json!(next?), true));
+    }
+    if argument == "--pre-release" {
+        return Some((next.map_or(json!(true), |value| json!(value)), next.is_some()));
+    }
+    None
 }
 
 fn alias(argument: &str) -> &str {
@@ -112,6 +134,9 @@ fn pattern(text: &str) -> Option<&str> {
 
 /// `validateOptions`, and the increment and exact version checks.
 fn validate(flags: &Flags) -> Option<Options> {
+    if flags.flag("--soft") && flags.flag("--persist") {
+        return None;
+    }
     Some(Options {
         message: flags.string("--message").map(str::to_string),
         unmodified: flags.flag("--unmodified"),
@@ -120,6 +145,13 @@ fn validate(flags: &Flags) -> Option<Options> {
         release: release(flags)?,
         snapped: flags.flag("--snapped"),
         skip_auto_tag: flags.flag("--skip-auto-tag"),
+        mode: if flags.flag("--soft") {
+            Mode::Soft
+        } else if flags.flag("--persist") {
+            Mode::Persist
+        } else {
+            Mode::Ordinary
+        },
     })
 }
 
@@ -220,6 +252,12 @@ impl Options {
         }
         options["snapped"] = json!(self.snapped);
         options["skipAutoTag"] = json!(self.skip_auto_tag);
+        if self.mode == Mode::Soft {
+            options["soft"] = json!(true);
+        }
+        if self.mode == Mode::Persist {
+            options["persist"] = json!(true);
+        }
         options
     }
 }

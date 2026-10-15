@@ -35,7 +35,9 @@ pub(super) fn prepare(
     if retained.tag.is_some() {
         super::tag::versions(retained, &input, &mut materials)?;
     }
-    preflight(retained, &mut materials, snapshots)?;
+    if !retained.tag.as_ref().is_some_and(|options| options.soft) {
+        preflight(retained, &mut materials, snapshots)?;
+    }
     let issue_graph = super::issue_graph::capture(
         &input.components,
         &input.current,
@@ -210,6 +212,9 @@ fn progress(retained: &Retained, selected: usize, auto_loaded: bool) -> Value {
     let mut output = json!({"bitmapCount":count,"imports":[]});
     if let Some(options) = &retained.snap {
         if !auto_loaded {
+            loads.pop();
+        }
+        if retained.tag.as_ref().is_some_and(|tag| tag.persist) {
             loads.pop();
         }
         // Tag loads the pending workspace set even with --unmerged; snap skips it.

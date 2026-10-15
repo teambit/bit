@@ -13,6 +13,13 @@ mod report;
 
 #[derive(Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(
+    dylint_lib = "perfectionist",
+    expect(
+        perfectionist::too_many_struct_fields,
+        reason = "The commandTagPrepare wire schema keeps release and mode flags flat for strict deserialization"
+    )
+)]
 pub(super) struct Options {
     pub patterns: Vec<String>,
     pub release_type: String,
@@ -24,6 +31,10 @@ pub(super) struct Options {
     pub snapped: bool,
     #[serde(default)]
     pub skip_auto_tag: bool,
+    #[serde(default)]
+    pub soft: bool,
+    #[serde(default)]
+    pub persist: bool,
 }
 
 pub(super) fn select(
@@ -35,6 +46,9 @@ pub(super) fn select(
         .as_ref()
         .ok_or_else(|| invalid("tag options absent"))?
         .clone();
+    if options.persist {
+        return select_persist(retained, &options, input);
+    }
     let snap = retained.snap
         .as_ref()
         .ok_or_else(|| invalid("tag snapshot options"))?
@@ -61,6 +75,23 @@ pub(super) fn select(
             .map(Selection::unique);
     }
     Ok(Selection::unique(candidates))
+}
+
+fn select_persist(retained: &Retained, options: &Options, input: &Plan) -> io::Result<Selection> {
+    if !options.patterns.is_empty() || options.snapped || input.tag_selections.is_some() {
+        return Err(invalid("tag persist selection"));
+    }
+    let selected = retained.record.targets
+        .iter()
+        .filter(|target| target["softTagged"] == true)
+        .map(|target| {
+            target["identity"]
+                .as_str()
+                .ok_or_else(|| invalid("tag persist identity"))
+                .map(str::to_owned)
+        })
+        .collect::<io::Result<Vec<_>>>()?;
+    Ok(Selection::unique(selected))
 }
 
 fn append_pending(
@@ -198,7 +229,7 @@ pub(super) fn versions(
     let options = retained.tag.as_ref().ok_or_else(|| invalid("tag options absent"))?;
     let params = json!({"releaseType":options.release_type,"autoTagReleaseType":options.auto_tag_release_type,
         "incrementBy":options.increment_by,"exactVersion":options.exact_version,"preReleaseId":options.pre_release_id,
-        "soft":false,"persist":false,"hasTagData":false});
+        "soft":options.soft,"persist":options.persist,"hasTagData":false});
     let mut entered = serde_json::Map::new();
     for row in input.tag_selections.as_deref().unwrap_or_default() {
         let id = row["identity"].as_str().ok_or_else(|| invalid("tag selected identity"))?;
@@ -206,7 +237,15 @@ pub(super) fn versions(
             entered.insert(id.into(), row["version"].clone());
         }
     }
-    super::tag_versions::plan(materials, &params, &Value::Object(entered), &input.semver)
+    let next = retained.record.targets
+        .iter()
+        .filter_map(|target| {
+            target["identity"]
+                .as_str()
+                .map(|identity| (identity.to_owned(), &target["nextVersion"]))
+        })
+        .collect();
+    super::tag_versions::plan(materials, &params, &Value::Object(entered), &input.semver, &next)
 }
 
 #[cfg(test)]
