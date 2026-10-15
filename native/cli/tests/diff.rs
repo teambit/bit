@@ -74,7 +74,7 @@ fn other_arguments_decline() {
     let root = dir.path().join("ws");
     declined(&bit(&dir, &root, &["diff"], &[]), r#"["diff"]"#, "needs the Node.js CLI's own Node");
     let output = bit(&dir, &root, &["diff", "alpha", "0.0.1", "--json"], &[]);
-    declined(&output, r#"["diff","alpha","0.0.1","--json"]"#, "outside the native diff grammar");
+    declined(&output, r#"["diff","alpha","0.0.1","--json"]"#, "needs the Node.js CLI's own Node");
 }
 
 #[cfg(not(windows))]
