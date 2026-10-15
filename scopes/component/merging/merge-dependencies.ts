@@ -45,8 +45,12 @@ export function mergeDependencies(
       )
     );
   // all the persisted data is compared (e.g. the import paths and the version range), not only the id, so a change of
-  // any of them on one side is not lost
-  const isSameDep = (a: Dependency, b: Dependency) => isEqual(a.serialize(), b.serialize());
+  // any of them on one side is not lost. (no methods are called, a loaded component has the dependencies as plain objects)
+  const isSameDep = (a: Dependency, b: Dependency) =>
+    a.id.isEqual(b.id) &&
+    a.packageName === b.packageName &&
+    a.versionRange === b.versionRange &&
+    isEqual(a.relativePaths, b.relativePaths);
   const mergedCompDeps = mergeEntries(
     componentDeps(base),
     componentDeps(current),

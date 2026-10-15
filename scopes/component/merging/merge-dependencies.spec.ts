@@ -11,8 +11,11 @@ type SnapshotInput = {
   devPkgs?: Record<string, string>;
 };
 
+// a component loaded from the scope has its dependencies as plain objects (see Dependencies.getClone())
+const asLoaded = (deps: Dependency[]) => new Dependencies(deps.map((dep) => Dependency.getClone(dep) as Dependency));
+
 const toDeps = (ids: string[] = []) =>
-  new Dependencies(
+  asLoaded(
     ids.map((id) => {
       const compId = ComponentID.fromString(id);
       return new Dependency(compId, [], `@my-scope/${compId.fullName}`);
@@ -116,9 +119,7 @@ describe('mergeDependencies', () => {
       importSpecifiers: [],
     });
     const depWithPaths = (paths: string[]) =>
-      new Dependencies([
-        new Dependency(ComponentID.fromString('my-scope/b@0.0.1'), paths.map(relativePath), '@my-scope/b'),
-      ]);
+      asLoaded([new Dependency(ComponentID.fromString('my-scope/b@0.0.1'), paths.map(relativePath), '@my-scope/b')]);
     const base = { ...snapshot({}), dependencies: depWithPaths(['a.ts']) };
     const current = { ...snapshot({}), dependencies: depWithPaths(['a.ts']) };
     const other = { ...snapshot({}), dependencies: depWithPaths(['a.ts', 'b.ts']) };
@@ -129,7 +130,7 @@ describe('mergeDependencies', () => {
   });
   describe('a peer component dependency whose version range changed on other only', () => {
     const peerWithRange = (range: string) =>
-      new Dependencies([new Dependency(ComponentID.fromString('my-scope/b@1.0.0'), [], '@my-scope/b', range)]);
+      asLoaded([new Dependency(ComponentID.fromString('my-scope/b@1.0.0'), [], '@my-scope/b', range)]);
     const base = { ...snapshot({}), peerDependencies: peerWithRange('^1.0.0') };
     const current = { ...snapshot({}), peerDependencies: peerWithRange('^1.0.0') };
     const other = { ...snapshot({}), peerDependencies: peerWithRange('^1.0.0 || ^2.0.0') };

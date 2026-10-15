@@ -396,9 +396,10 @@ export class SnappingMain {
     const depResolverExt = extensions.findCoreExtension(DependencyResolverAspect.id);
     // an env that defines its policy in code is loaded only when it changed: a changed env is a changed (or missing)
     // extension, which mergeExtensionsData() reports as a data conflict (see loadAspectOnlyForIds). when it's not
-    // loaded, it didn't change, so the env part of the stored policy is still valid.
+    // loaded, it didn't change, so the env part of the stored policy is still valid. (the other parts, such as the
+    // policies of aspects and the config, are calculated by mergeVariantPolicies() from the current config)
     const storedEnvPolicy = VariantPolicy.parse(depResolverExt?.data.policy || []).filter(
-      (entry) => entry.source !== 'config'
+      (entry) => entry.source === 'env'
     );
     const policy = await this.dependencyResolver.mergeVariantPolicies(
       extensions,
