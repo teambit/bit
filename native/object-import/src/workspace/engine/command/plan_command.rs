@@ -119,8 +119,10 @@ pub(super) fn prepare_bitmap_bytes(
     if let Some(merge) = &planned.merge {
         updates.extend(merge.bitmap_updates()?);
     }
+    let removed =
+        planned.merge.as_ref().map_or_else(Vec::new, super::merge_planning::Prepared::removed_ids);
     let mut bitmap =
-        bitmap::prepare_bytes(&record.request.root, original, &record.context, &updates, &[])?;
+        bitmap::prepare_bytes(&record.request.root, original, &record.context, &updates, &removed)?;
     if record.request.operation == input::Operation::Switch {
         bitmap.switch_lane(&record.context)?;
     }

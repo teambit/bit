@@ -26,7 +26,7 @@ pub const COMMAND: Command = Command { name: "merge", aliases: &[], run };
         perfectionist::excessive_cognitive_complexity,
         perfectionist::overly_long_function,
         perfectionist::too_many_local_bindings,
-        reason = "Existing CLI orchestration is retained until its operation is decomposed"
+        reason = "The merge CLI retains its existing orchestration while the engine owns VCS planning"
     )
 )]
 fn run(args: &[OsString]) -> io::Result<Outcome> {
@@ -84,6 +84,12 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Ok(prepared) => prepared,
         Err(error) => return Ok(Outcome::Declined(format!("merge: {error}"))),
     };
+    if planned.plan["result"]["removedComponents"]
+        .as_array()
+        .is_some_and(|rows| !rows.is_empty())
+    {
+        return Ok(Outcome::Declined("removed component merge".to_string()));
+    }
     if !options.no_snap
         && (planned.plan.get("needsSnap").is_some()
             || planned.plan["result"]["mergeSnapResults"].is_object())

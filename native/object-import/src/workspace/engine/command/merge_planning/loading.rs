@@ -1,4 +1,4 @@
-use super::{Action, Record, Selected, capture, invalid, model, selection};
+use super::{Action, Record, Selected, capture, invalid, lane_filter, model, selection};
 use serde_json::Value;
 use std::io;
 
@@ -78,4 +78,35 @@ pub(super) fn options(
         target_as_diverged: record.request.options.lane.is_some()
             && record.request.options.no_snap,
     })
+}
+
+pub(super) fn import_gap(record: &mut Record, selected: &mut [Selected]) -> io::Result<()> {
+    let gap = lane_filter::gap_targets(record.context.get("lane"), selected)?;
+    record.repository.prepare_merge_gap(&gap)?;
+    for selected in selected
+        .iter_mut()
+        .filter(|selected| selected.action != Action::Unchanged)
+    {
+        let identity = format!(
+            "{}/{}",
+            selected.model["scope"].as_str().unwrap_or_default(),
+            selected.model["name"].as_str().unwrap_or_default(),
+        );
+        let model =
+            record.repository.read(&super::super::super::hash(identity.as_bytes()), "Component")?;
+        refresh_model(selected, model)?;
+        if !selected.base.is_empty() {
+            selected.versions[0] = record.repository.read(&selected.base, "Version")?;
+        }
+    }
+    Ok(())
+}
+pub(super) fn refresh_model(selected: &mut Selected, model: Value) -> io::Result<()> {
+    if selected.action == Action::Merge && model["head"] != selected.model["head"] {
+        return Err(invalid("command merge local head changed during gap import"));
+    }
+    // Import can advance a fast-forward model, but never changes the cached target
+    // selected before fetching the common snap.
+    selected.model = model;
+    Ok(())
 }

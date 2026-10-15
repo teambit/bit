@@ -90,7 +90,7 @@ pub(super) fn publish(
     validate_after_restore(record, prepared)?;
     record.repository.commit_import()?;
     prepared.plan.history.commit(&record.request.root)?;
-    apply_command::publish_sources(&mut prepared.plan)?;
+    apply_command::publish_sources(&mut prepared.plan, &record.request.root)?;
     if let Some(configuration) = &prepared.reset_config {
         configuration.commit()?;
     }

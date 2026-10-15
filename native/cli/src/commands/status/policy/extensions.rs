@@ -8,7 +8,8 @@ use std::io;
 
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 const DEPRECATION: &str = "teambit.component/deprecation";
-const CORES: [&str; 10] = [
+const REMOVAL: &str = "teambit.component/remove";
+const CORES: [&str; 11] = [
     "teambit.envs/envs",
     RESOLVER,
     "teambit.component/dev-files",
@@ -18,6 +19,7 @@ const CORES: [&str; 10] = [
     "teambit.compositions/compositions",
     "teambit.docs/docs",
     DEPRECATION,
+    REMOVAL,
     "teambit.pipelines/builder",
 ];
 
@@ -29,7 +31,10 @@ pub fn status_extensions(version: Option<&Value>, target: &Value) -> io::Result<
     {
         return Err(decline("status model extension dependency"));
     }
-    if !array(target.get("mergedConfigNames"), "merged configuration names")?.is_empty() {
+    if array(target.get("mergedConfigNames"), "merged configuration names")?
+        .iter()
+        .any(|name| name.as_str() != Some(REMOVAL))
+    {
         return Err(decline("status merged configuration"));
     }
     if target.get("bitmapConfig").is_some() {
@@ -108,11 +113,27 @@ fn validate_config(name: &str, config: &Map<String, Value>) -> io::Result<()> {
     if name == DEPRECATION && !deprecation_config {
         return Err(decline("status unsupported deprecation configuration"));
     }
-    if name != RESOLVER && name != DEPRECATION && !config.is_empty() {
+    if name == REMOVAL {
+        validate_removal_config(config)?;
+    }
+    if name != RESOLVER && name != DEPRECATION && name != REMOVAL && !config.is_empty() {
         return Err(decline("status configured core extension"));
     }
     if name == RESOLVER && config.keys().any(|key| key != "policy") {
         return Err(decline("status resolver configuration"));
+    }
+    Ok(())
+}
+
+fn validate_removal_config(config: &Map<String, Value>) -> io::Result<()> {
+    if config.get("removed") != Some(&Value::Bool(true))
+        || config
+            .iter()
+            .any(|(key, value)| {
+                !matches!(key.as_str(), "removed" | "removeOnMain") || !value.is_boolean()
+            })
+    {
+        return Err(decline("status unsupported removal configuration"));
     }
     Ok(())
 }

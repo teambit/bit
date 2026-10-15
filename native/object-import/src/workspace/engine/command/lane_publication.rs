@@ -179,6 +179,22 @@ impl Prepared {
         if !self.finalized {
             return Err(invalid("lane receipt required before snap"));
         }
+        self.update_snap_entries(versions)?;
+        let hash =
+            self.context["current"]["hash"].as_str().ok_or_else(|| invalid("command lane hash"))?;
+        let log = json!({"historyKey":receipt["batchId"],"log":receipt["laneLog"]});
+        let message =
+            if message.is_empty() { "snap".to_owned() } else { format!("snap ({message})") };
+        self.history = objects::history(&self.current, hash, self.history.clone(), &log, &message)?;
+        let lane_staging = staging.join("lane-snapshot");
+        fs::create_dir(&lane_staging)?;
+        self.second = Some(snapshot::prepare_objects(
+            &lane_staging,
+            objects::serializable(hash, &self.current, &self.history)?,
+        )?);
+        Ok(())
+    }
+    fn update_snap_entries(&mut self, versions: &[Value]) -> io::Result<()> {
         for version in versions {
             let identity =
                 version["identity"].as_str().ok_or_else(|| invalid("lane snap identity"))?;
@@ -195,20 +211,18 @@ impl Prepared {
                 identity,
                 head,
                 target["bitmapPresent"] != true,
+                version["version"]["extensions"]
+                    .as_array()
+                    .is_some_and(|extensions| {
+                        extensions
+                            .iter()
+                            .any(|extension| {
+                                extension["name"] == "teambit.component/remove"
+                                    && extension["config"]["removed"] == true
+                            })
+                    }),
             )?;
         }
-        let hash =
-            self.context["current"]["hash"].as_str().ok_or_else(|| invalid("command lane hash"))?;
-        let log = json!({"historyKey":receipt["batchId"],"log":receipt["laneLog"]});
-        let message =
-            if message.is_empty() { "snap".to_owned() } else { format!("snap ({message})") };
-        self.history = objects::history(&self.current, hash, self.history.clone(), &log, &message)?;
-        let lane_staging = staging.join("lane-snapshot");
-        fs::create_dir(&lane_staging)?;
-        self.second = Some(snapshot::prepare_objects(
-            &lane_staging,
-            objects::serializable(hash, &self.current, &self.history)?,
-        )?);
         Ok(())
     }
     pub(super) fn validate(&self) -> io::Result<()> {

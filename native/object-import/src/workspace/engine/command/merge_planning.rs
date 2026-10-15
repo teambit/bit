@@ -5,6 +5,7 @@ mod loading;
 mod pending;
 mod policy_rows;
 mod preflight;
+mod removal;
 use super::{
     super::{dependency_graph::proof, invalid},
     Record, capture, history,
@@ -14,6 +15,7 @@ use super::{
     scratch, selection,
 };
 use crate::{checkout_transition, workspace::snapshots};
+use removal::Removed;
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
@@ -30,6 +32,7 @@ pub(super) struct Prepared {
 struct Publication {
     lane: Option<super::lane_publication::Prepared>,
     fast_forward: Option<merge::snapshot::Snapshot>,
+    removed: Vec<Removed>,
 }
 struct Pending {
     identity: String,
@@ -106,8 +109,14 @@ pub(super) fn plan(
     for index in 0..planned.captured.len() {
         selected.push(select(record, &mut planned, &mut state, index)?);
     }
-    import_gap(record, &mut selected)?;
+    loading::import_gap(record, &mut selected)?;
     lane_filter::apply(record, &mut planned, &mut selected, lane_pattern)?;
+    if selected
+        .iter()
+        .any(|row| row.distance["shouldBeRemoved"] == true && row.action != Action::Merge)
+    {
+        return Err(invalid("command removed fast-forward requires canonical transition"));
+    }
     prepare_materials(record, &mut planned, state, &selected, snapshots)?;
     Ok(planned)
 }
@@ -183,9 +192,7 @@ fn apply_selection(
         result["failedComponents"].as_array_mut().unwrap().push(json!({"id":format!("{identity}@{}",selected.remote),"unchangedMessage":outcome["message"],"unchangedLegitimately":true}));
         return Ok(());
     }
-    if outcome["shouldBeRemoved"] == true {
-        return Err(invalid("command merge requires canonical transition"));
-    }
+    selected.distance["shouldBeRemoved"] = outcome["shouldBeRemoved"].clone();
     selected.action = match outcome["action"].as_str() {
         Some("merge") => Action::Merge,
         Some("target") => Action::Target,
@@ -252,6 +259,7 @@ fn prepare_materials(
     }
     prepare_lane_targets(record, &mut prepared, selected)?;
     fast_forward::prepare(record, planned, &mut prepared, selected, snapshots)?;
+    removal::prepare(planned, &mut prepared, selected)?;
     policy_rows::fast_forward(&mut prepared, planned, &record.context)?;
     if prepared.policy.as_ref().is_some_and(|policy| policy.rows.is_empty()) {
         prepared.policy = None;
@@ -269,6 +277,7 @@ fn empty_plan(record: &mut Record, state: merge::State) -> io::Result<Prepared> 
         publication: Publication {
             lane: super::lane_publication::Prepared::prepare(record)?,
             fast_forward: None,
+            removed: Vec::new(),
         },
         policy: Some(super::policy::Prepared::new()),
         state,
@@ -311,36 +320,6 @@ fn prepare_lane_targets(
     Ok(())
 }
 
-fn import_gap(record: &mut Record, selected: &mut [Selected]) -> io::Result<()> {
-    let gap = lane_filter::gap_targets(record.context.get("lane"), selected)?;
-    record.repository.prepare_merge_gap(&gap)?;
-    for selected in selected
-        .iter_mut()
-        .filter(|selected| selected.action != Action::Unchanged)
-    {
-        let identity = format!(
-            "{}/{}",
-            selected.model["scope"].as_str().unwrap_or_default(),
-            selected.model["name"].as_str().unwrap_or_default(),
-        );
-        let model = record.repository.read(&super::super::hash(identity.as_bytes()), "Component")?;
-        refresh_model(selected, model)?;
-        if !selected.base.is_empty() {
-            selected.versions[0] = record.repository.read(&selected.base, "Version")?;
-        }
-    }
-    Ok(())
-}
-fn refresh_model(selected: &mut Selected, model: Value) -> io::Result<()> {
-    if selected.action == Action::Merge && model["head"] != selected.model["head"] {
-        return Err(invalid("command merge local head changed during gap import"));
-    }
-    // Import can advance a fast-forward model, but never changes the cached target
-    // selected before fetching the common snap.
-    selected.model = model;
-    Ok(())
-}
-
 fn add_material(
     record: &Record,
     planned: &mut planning::Planned,
@@ -354,6 +333,11 @@ fn add_material(
 
     let mut material =
         prepared.state.prepare_result(&body(record, selected, current, directory, index), plan)?;
+    if selected.distance["shouldBeRemoved"] == true
+        && (material.has_conflicts() || material.no_write())
+    {
+        return Err(invalid("command unresolved removed merge"));
+    }
     if current.hidden {
         lane_filter::prepare_hidden_metadata(current, &selected.versions, &mut material.version)?;
     } else {
