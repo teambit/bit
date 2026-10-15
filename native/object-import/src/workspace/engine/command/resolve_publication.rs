@@ -252,14 +252,11 @@ pub(super) fn prepare(
         )?;
     }
     bitmap.mark_lane_new(context, &lane_new)?;
-    let mut finalization = finalization::prepare_tag(
-        root,
-        &batch.inputs,
-        true,
-        &batch.removed,
-        &new_tag_ids(materials),
-    )
-    .map_err(|error| io::Error::new(error.kind(), format!("resolve finalization: {error}")))?;
+    let mut finalization =
+        finalization::prepare_publication(root, &batch.inputs, true, &batch.removed)
+            .map_err(|error| {
+                io::Error::new(error.kind(), format!("resolve finalization: {error}"))
+            })?;
     finalization.mark_lane_new(root, &lane_new)?;
     finalization.resolve_licenses(root, &batch.inputs, &batch.removed)?;
     finalization.imported_index(root, imported_index)?;
@@ -296,16 +293,6 @@ pub(super) fn prepare(
     Ok(output)
 }
 
-fn new_tag_ids(materials: &[resolve_snapshot::Material]) -> HashSet<String> {
-    materials
-        .iter()
-        .filter(|material| {
-            material.version_state.current_head.is_empty()
-                && material.version_state.tagged_version.is_some()
-        })
-        .map(|material| material.identity.clone())
-        .collect()
-}
 impl Prepared {
     pub(super) fn validate(&self) -> io::Result<()> {
         self.bitmap.validate()?;

@@ -33,7 +33,7 @@ pub(super) fn prepare(
     let name = package_name(input.version)?;
     let directory = root.join("node_modules").join(name);
     ordinary(root, &directory, output)?;
-    manifest(input, name, &directory, allow_missing, output)?;
+    let created = manifest(input, name, &directory, allow_missing, output)?;
     for file in input.version["files"].as_array().ok_or_else(|| invalid("merge package files"))? {
         let relative =
             file["relativePath"].as_str().ok_or_else(|| invalid("merge package filename"))?;
@@ -42,7 +42,7 @@ pub(super) fn prepare(
             return Err(invalid("merge tracked package manifest"));
         }
         link(root, &root.join(input.directory).join(relative), &directory.join(relative), output)?;
-        if roots && !allow_missing {
+        if roots && !created {
             root_copies(root, name, relative, &root.join(input.directory).join(relative), output)?;
         }
     }
@@ -115,13 +115,7 @@ fn root_copies(
     source: &Path,
     output: &mut Prepared,
 ) -> io::Result<()> {
-    let roots = root.join("node_modules/.bit_roots");
-    ordinary(root, &roots, output)?;
-    let entries = fs::read_dir(&roots)?.collect::<Result<Vec<_>, _>>()?;
-    if entries.len() > 4096 {
-        return Err(invalid("merge env root count"));
-    }
-    for entry in entries {
+    for entry in root_entries(root, output)? {
         if entry.file_name().to_str() != Some("teambit.harmony_node") {
             return Err(invalid("merge custom env root"));
         }
@@ -155,6 +149,20 @@ fn root_copies(
         }
     }
     Ok(())
+}
+
+fn root_entries(root: &Path, output: &mut Prepared) -> io::Result<Vec<fs::DirEntry>> {
+    let roots = root.join("node_modules/.bit_roots");
+    ordinary(root, &roots, output)?;
+    let entries = match fs::read_dir(&roots) {
+        Ok(entries) => entries.collect::<Result<Vec<_>, _>>()?,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(Vec::new()),
+        Err(error) => return Err(error),
+    };
+    if entries.len() > 4096 {
+        return Err(invalid("merge env root count"));
+    }
+    Ok(entries)
 }
 /// An env root's component package: `bit install` links it to the
 /// injected copy in the pnpm store, which is written through the link.
@@ -197,9 +205,10 @@ fn manifest(
     directory: &Path,
     allow_missing: bool,
     output: &mut Prepared,
-) -> io::Result<()> {
+) -> io::Result<bool> {
     let manifest = directory.join("package.json");
     let previous = proof::read(&manifest, &mut output.proofs)?;
+    let created = previous.is_none();
     let mut package = match previous {
         Some(bytes) => json(&bytes)?,
         None if allow_missing => {
@@ -227,10 +236,10 @@ fn manifest(
         package["componentId"]["version"] = value!(component_version);
     }
     output.writes.push((manifest, pretty(&package, true)?));
-    Ok(())
+    Ok(created)
 }
 
-/// `NodeModuleLinker.createPackageJson` for a new component using the default Node env.
+/// `NodeModuleLinker.createPackageJson` for an unlinked component using the default Node env.
 fn generated(input: &Input<'_>, package_name: &str) -> io::Result<Value> {
     let (scope, name) =
         input.identity.split_once('/').ok_or_else(|| invalid("tag package identity"))?;
@@ -238,12 +247,17 @@ fn generated(input: &Input<'_>, package_name: &str) -> io::Result<Value> {
         input.version["mainFile"].as_str().ok_or_else(|| invalid("tag package main file"))?;
     validate_default_env(input.version)?;
     let (main, types) = package_paths(input.version, main_file)?;
-    let version = input.semantic_version.ok_or_else(|| invalid("tag package semantic version"))?;
+    let version =
+        input.semantic_version.map_or_else(|| format!("0.0.0-{}", input.hash), str::to_owned);
+    let component_version = input.semantic_version.unwrap_or(input.hash);
     let mut fields = Map::new();
     fields.insert("name".into(), value!(package_name));
     fields.insert("version".into(), value!(version));
     fields.insert("main".into(), value!(main));
-    fields.insert("componentId".into(), value!({"name":name,"version":version,"scope":scope}));
+    fields.insert(
+        "componentId".into(),
+        value!({"name":name,"version":component_version,"scope":scope}),
+    );
     for (target, source) in [
         ("dependencies", "packageDependencies"),
         ("devDependencies", "devPackageDependencies"),
