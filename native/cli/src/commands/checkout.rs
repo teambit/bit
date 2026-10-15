@@ -46,7 +46,7 @@ fn run_options(
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".to_string()));
     };
-    let installer = match start_installer(&root, argv, options.skip_install) {
+    let installer = match start_installer(&root, argv, options.execution.skip_install) {
         Ok(installer) => installer,
         Err(error) => return Ok(Outcome::Declined(format!("checkout installation: {error}"))),
     };

@@ -1,3 +1,4 @@
+mod checkout_lane;
 mod history_replay;
 mod reset_comparison;
 use super::{
@@ -71,6 +72,12 @@ fn checkout_captured(
     }
     import_selected(record, &selections)?;
     prepare_selections(record, &mut plan, &selections, snapshots)?;
+    if record.request.operation == input::Operation::Checkout
+        && record.request.options.to.as_deref() == Some("head")
+        && record.context.get("lane").is_some()
+    {
+        checkout_lane::prepare(record, &mut plan, snapshots)?;
+    }
     if let Some(to) = record.request.options.to.as_deref()
         && !matches!(to, "head" | "latest" | "reset" | "main")
         && !to.starts_with("head~")
@@ -79,6 +86,7 @@ fn checkout_captured(
     }
     Ok(plan)
 }
+
 pub(super) fn validate_current(record: &Record, current: &[Value]) -> io::Result<()> {
     validate_current_inner(record, current, false)
 }

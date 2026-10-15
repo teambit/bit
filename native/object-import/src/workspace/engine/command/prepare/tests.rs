@@ -1,4 +1,4 @@
-use super::{Prepare, json, selected};
+use super::{Prepare, checkout_lane::bitmap_identities, json, selected, validate};
 
 fn request(pattern: &str) -> Prepare {
     serde_json::from_value(json!({
@@ -69,4 +69,37 @@ fn checkout_head_without_a_pattern_selects_only_current_lane_components() {
             .unwrap()
             .clone(),
     );
+}
+
+#[test]
+fn lane_addition_selection_counts_only_ids_absent_from_entire_bitmap() {
+    let bitmap = json!({
+        "tracked":{"name":"tracked","scope":"scope","rootDir":"tracked"},
+        "removed":{"name":"removed","scope":"scope","rootDir":"removed",
+            "config":{"teambit.component/remove":{"removed":true}}},
+        "inactive":{"name":"inactive","scope":"scope","rootDir":"inactive",
+            "isAvailableOnCurrentLane":false},
+        "local":{"name":"local","scope":"","defaultScope":"scope","rootDir":"local"},
+        "$schema-version":"17.0.0",
+        "_bit_lane":{"id":{"name":"study","scope":"scope"}},
+    });
+    let ids = bitmap_identities(&bitmap).unwrap();
+    assert_eq!(ids.len(), 4);
+    for name in ["tracked", "removed", "inactive", "local"] {
+        assert!(ids.contains(&format!("scope/{name}")));
+    }
+    assert!(!ids.contains("scope/new"));
+}
+
+#[test]
+fn workspace_only_is_exclusive_to_checkout_head() {
+    let request = |operation: &str, to: &str| -> Prepare {
+        serde_json::from_value(json!({"root":"/workspace","home":"/home",
+            "globalRemotesFile":"/remotes","operation":operation,
+            "options":{"to":to,"workspaceOnly":true,"skipDependencyInstallation":true}}))
+        .unwrap()
+    };
+    assert!(validate(&request("checkout", "head")).is_ok());
+    assert!(validate(&request("checkout", "latest")).is_err());
+    assert!(validate(&request("merge", "head")).is_err());
 }

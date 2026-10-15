@@ -13,6 +13,13 @@ pub struct Options {
     /// `--auto-merge-resolve <ours|theirs|manual>`, or `--manual`.
     pub strategy: Option<String>,
     force: Force,
+    pub workspace_only: bool,
+    pub execution: Execution,
+}
+
+/// Rendering and installation after the checkout plan is committed.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub struct Execution {
     pub verbose: bool,
     pub skip_install: bool,
 }
@@ -23,13 +30,14 @@ struct Force {
     theirs: bool,
 }
 
-const BOOLEAN: [&str; 6] = [
+const BOOLEAN: [&str; 7] = [
     "--skip-dependency-installation",
     "--manual",
     "--verbose",
     "--all",
     "--force-ours",
     "--force-theirs",
+    "--workspace-only",
 ];
 
 /// `args` starts after the command name.
@@ -68,6 +76,7 @@ fn alias(arg: &str) -> &str {
         "-r" => "--auto-merge-resolve",
         "-a" => "--all",
         "-v" => "--verbose",
+        "-e" => "--workspace-only",
         _ => arg,
     }
 }
@@ -80,6 +89,9 @@ fn build(flags: &Map<String, Value>, positionals: &[&str]) -> Option<Options> {
         return None;
     }
     let to = positionals.first().filter(|to| valid_to(to))?;
+    if flag("--workspace-only") && *to != "head" {
+        return None;
+    }
     let pattern = positionals.get(1).copied();
     if flag("--all") && pattern.is_some()
         || pattern.is_some_and(|pattern| !pattern.chars().all(pattern_char))
@@ -93,8 +105,11 @@ fn build(flags: &Map<String, Value>, positionals: &[&str]) -> Option<Options> {
         all: flag("--all"),
         strategy: strategy.map(str::to_string),
         force: Force { ours: flag("--force-ours"), theirs: flag("--force-theirs") },
-        verbose: flag("--verbose"),
-        skip_install: flag("--skip-dependency-installation"),
+        workspace_only: flag("--workspace-only"),
+        execution: Execution {
+            verbose: flag("--verbose"),
+            skip_install: flag("--skip-dependency-installation"),
+        },
     })
 }
 
@@ -112,8 +127,7 @@ pub fn parse_revert(args: &[&str]) -> Option<Options> {
         to: (*to).to_owned(),
         pattern: Some((*pattern).to_owned()),
         revert: true,
-        verbose,
-        skip_install,
+        execution: Execution { verbose, skip_install },
         ..Options::default()
     })
 }
@@ -221,7 +235,8 @@ impl Options {
         options["forceTheirs"] = json!(self.force.theirs);
         options["noSnap"] = json!(false);
         options["revert"] = json!(self.revert);
-        options["verbose"] = json!(self.verbose);
+        options["verbose"] = json!(self.execution.verbose);
+        options["workspaceOnly"] = json!(self.workspace_only);
         // The native CLI installs after committing the VCS plan.
         options["skipDependencyInstallation"] = json!(true);
         options

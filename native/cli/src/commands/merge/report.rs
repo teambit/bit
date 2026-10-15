@@ -133,7 +133,7 @@ impl Merge<'_> {
         if !self.mode.lane {
             return String::new();
         }
-        listed(&self.format, "removed components", &self.results.removed)
+        listed(&self.format, "removed components", &self.results.lists.removed)
     }
 
     /// Whether the merge left unresolved conflicts the report shows.
@@ -159,7 +159,7 @@ impl Merge<'_> {
     /// `getSummary`.
     fn summary(&self) -> String {
         let bold = |text: &str| self.chalk().bold(text);
-        let removed = if self.mode.lane { self.results.removed.len() } else { 0 };
+        let removed = if self.mode.lane { self.results.lists.removed.len() } else { 0 };
         let conflicted =
             if self.with_conflicts() { self.results.conflict_lines(self.chalk()).len() } else { 0 };
         let conflicts =

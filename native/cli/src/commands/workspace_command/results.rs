@@ -14,7 +14,7 @@ use std::io;
 
 /// `FILE_CHANGES_CHECKOUT_MSG`.
 pub const FILE_CHANGES: &str = "components with file changes";
-const RESULT_KEYS: [&str; 8] = [
+const RESULT_KEYS: [&str; 10] = [
     "components",
     "failedComponents",
     "version",
@@ -23,6 +23,8 @@ const RESULT_KEYS: [&str; 8] = [
     "leftUnresolvedConflicts",
     "mergeSnapResults",
     "mergeSnapError",
+    "newFromLane",
+    "newFromLaneAdded",
 ];
 
 /// The command's `Report`: what is printed, the exit code, and the details
@@ -91,13 +93,25 @@ pub struct Results {
     /// Components left as they were, with the reason.
     pub skipped: Vec<(Id, String)>,
     pub version: Option<String>,
-    pub removed: Vec<Id>,
-    pub added: Vec<Id>,
+    pub lists: Lists,
     pub conflicts: bool,
     /// `mergeSnapResults`.
     pub snaps: Option<snaps::Snaps>,
     /// `mergeSnapError`.
     pub snap_error: Option<snaps::SnapError>,
+}
+
+/// Component ID lists reported separately from changed file results.
+pub struct Lists {
+    pub removed: Vec<Id>,
+    pub added: Vec<Id>,
+    pub lane: LaneAdditions,
+}
+
+/// `getNewOnLaneOutput`: current-lane components absent from the selection.
+pub struct LaneAdditions {
+    pub ids: Vec<Id>,
+    pub added: bool,
 }
 
 /// The engine's result, validated.
@@ -118,6 +132,11 @@ pub fn hydrate(value: &Value) -> io::Result<Results> {
         Some(Value::Bool(conflicts)) => *conflicts,
         Some(_) => return Err(decline("native command report conflicts")),
     };
+    let new_from_lane_added = match map.get("newFromLaneAdded") {
+        None => false,
+        Some(Value::Bool(added)) => *added,
+        Some(_) => return Err(decline("native command report lane addition")),
+    };
     Ok(Results {
         components: rows(map.get("components"))?
             .iter()
@@ -128,8 +147,11 @@ pub fn hydrate(value: &Value) -> io::Result<Results> {
             .map(skipped)
             .collect::<io::Result<_>>()?,
         version,
-        removed: ids(map.get("removedComponents"))?,
-        added: ids(map.get("addedComponents"))?,
+        lists: Lists {
+            removed: ids(map.get("removedComponents"))?,
+            added: ids(map.get("addedComponents"))?,
+            lane: LaneAdditions { ids: ids(map.get("newFromLane"))?, added: new_from_lane_added },
+        },
         conflicts,
         snaps: snaps::snaps(map.get("mergeSnapResults"))?,
         snap_error: snaps::snap_error(map.get("mergeSnapError"))?,
