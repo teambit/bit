@@ -9,6 +9,8 @@ mod command_request;
 mod dependency_graph;
 mod read;
 mod read_raw;
+#[cfg(test)]
+mod request_tests;
 mod resolve_dependencies;
 mod resolve_typescript;
 mod response;
@@ -135,6 +137,7 @@ enum Request {
         right: String,
     },
 }
+
 #[derive(Serialize)]
 struct Response {
     version: u8,
