@@ -1,4 +1,5 @@
 use super::{Chalk, Options, format};
+use crate::commands::workspace_command::format::expected_success_symbols;
 use serde_json::json;
 
 #[test]
@@ -18,7 +19,9 @@ fn reports_an_empty_switch() {
     .unwrap();
     assert_eq!(
         report.data,
-        "No components have been changed.\n✔ successfully set \"main\" as the active lane",
+        expected_success_symbols(
+            "No components have been changed.\n✔ successfully set \"main\" as the active lane"
+        ),
     );
 }
 
