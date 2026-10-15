@@ -1,6 +1,7 @@
 #![cfg_attr(dylint_lib = "perfectionist", feature(register_tool))]
 #![cfg_attr(dylint_lib = "perfectionist", register_tool(perfectionist))]
 
+pub mod lane_create;
 pub mod reset_lane;
 pub mod reset_main;
 pub mod reset_never_exported;

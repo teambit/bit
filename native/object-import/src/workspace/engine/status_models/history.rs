@@ -169,6 +169,18 @@ fn remote_proofs(root: &Path, models: &[Value], lane: Option<&Lane>) -> io::Resu
                 .join(&lane.name),
             &mut proofs,
         )?;
+        if let Some((scope, name)) = lane.forked_from
+            .as_deref()
+            .and_then(|id| id.split_once('/'))
+        {
+            super::super::dependency_graph::proof::read(
+                &root
+                    .join(".bit/refs/remotes")
+                    .join(scope)
+                    .join(name),
+                &mut proofs,
+            )?;
+        }
     }
     proofs
         .into_iter()

@@ -3,6 +3,7 @@
 //! merge report; and `bit lane list` (`list`). Other `bit lane` commands are
 //! left to the Node.js CLI.
 
+mod create;
 mod current;
 mod list;
 mod options;
@@ -26,6 +27,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     match argv.get(1).copied() {
         Some("list") => list::run(args, &argv[2..]),
         Some("current") => current::current(args, &argv[2..]),
+        Some("create") => create::run(args, &argv[2..]),
         Some("show") => show::show(args, &argv[2..]),
         Some("merge") => merge(args, &argv),
         Some("merge-abort") => super::recovery::parse_lane(&argv[2..])

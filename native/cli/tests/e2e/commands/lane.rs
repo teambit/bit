@@ -1,0 +1,230 @@
+//! Client-side lane creation from a clean main workspace.
+use crate::helper::{Helper, parse};
+use flate2::read::ZlibDecoder;
+use sha1::{Digest, Sha1};
+use std::{ffi::OsStr, fs, io::Read, path::Path};
+
+fn object(root: &Path, hash: &str, kind: &str) -> serde_json::Value {
+    let path = root
+        .join(".bit/objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    let mut bytes = Vec::new();
+    ZlibDecoder::new(fs::File::open(path).unwrap()).read_to_end(&mut bytes).unwrap();
+    assert!(bytes.starts_with(format!("{kind} {hash} ").as_bytes()));
+    parse(
+        std::str::from_utf8(
+            bytes
+                .split(|byte| *byte == 0)
+                .nth(1)
+                .unwrap(),
+        )
+        .unwrap(),
+    )
+}
+
+fn create_case(command: &str) {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    let node_root = helper.clone_workspace();
+    let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{}", node.stderr);
+    let native = helper.native_run(command);
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    for path in [".bitmap", ".bit/scope.json"] {
+        let native = fs::read_to_string(helper.scopes.local_path.join(path)).unwrap();
+        let node = fs::read_to_string(node_root.join(path)).unwrap();
+        let native = parse(&native[native.find('{').unwrap()..]);
+        let node = parse(&node[node.find('{').unwrap()..]);
+        assert_eq!(native, node, "{path}");
+    }
+    let node_index = parse(&fs::read_to_string(node_root.join(".bit/index.json")).unwrap());
+    let native_index =
+        parse(&fs::read_to_string(helper.scopes.local_path.join(".bit/index.json")).unwrap());
+    assert_eq!(
+        native_index["lanes"]
+            .as_array()
+            .unwrap()
+            .len(),
+        1,
+    );
+    assert_eq!(native_index["lanes"][0]["id"], node_index["lanes"][0]["id"]);
+    let native_hash = native_index["lanes"][0]["hash"].as_str().unwrap();
+    let node_hash = node_index["lanes"][0]["hash"].as_str().unwrap();
+    let native_lane = object(&helper.scopes.local_path, native_hash, "Lane");
+    let node_lane = object(&node_root, node_hash, "Lane");
+    for field in ["name", "scope", "components", "schema"] {
+        assert_eq!(native_lane[field], node_lane[field], "Lane.{field}");
+    }
+    let native_history_hash =
+        format!("{:x}", Sha1::digest(format!("{native_hash}:LaneHistory").as_bytes()));
+    let node_history_hash =
+        format!("{:x}", Sha1::digest(format!("{node_hash}:LaneHistory").as_bytes()));
+    let native_history = object(&helper.scopes.local_path, &native_history_hash, "LaneHistory");
+    let node_history = object(&node_root, &node_history_hash, "LaneHistory");
+    assert_eq!(native_history["laneHash"], native_hash);
+    for field in ["name", "scope"] {
+        assert_eq!(native_history[field], node_history[field]);
+    }
+    assert_eq!(
+        native_history["history"]
+            .as_object()
+            .unwrap()
+            .len(),
+        1,
+    );
+    let entry = native_history["history"]
+        .as_object()
+        .unwrap()
+        .values()
+        .next()
+        .unwrap();
+    assert_eq!(entry["log"]["message"], "new lane");
+    assert_eq!(entry["components"], serde_json::json!([]));
+    assert_eq!(entry["updateDependents"], serde_json::json!([]));
+    let node_current = Helper::cmd_in_with(
+        &node_root,
+        "lane current --json",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    let native_current = helper.native_run("lane current --json");
+    assert_eq!(parse(&native_current.stdout), parse(&node_current.stdout));
+    let node_status =
+        Helper::cmd_in_with(&node_root, "status --json", &[("BIT_NATIVE", OsStr::new("off"))]);
+    let native_status = helper.native_run("status --json");
+    assert_eq!(parse(&native_status.stdout), parse(&node_status.stdout));
+}
+
+#[test]
+fn create_from_main_matches_node() {
+    create_case("lane create dev");
+}
+
+#[test]
+fn create_with_scope_and_alias_matches_node() {
+    create_case("lane create dev --scope separate-scope --alias mydev");
+}
+
+#[test]
+fn create_after_export_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("// lane base");
+    helper.add_component_bar_foo();
+    helper.run("tag bar/foo --message base");
+    helper.run("export");
+    let node_root = helper.clone_workspace();
+    let node =
+        Helper::cmd_in_with(&node_root, "lane create dev", &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{}", node.stderr);
+    let native = helper.native_run("lane create dev");
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    let native_index =
+        parse(&fs::read_to_string(helper.scopes.local_path.join(".bit/index.json")).unwrap());
+    let node_index = parse(&fs::read_to_string(node_root.join(".bit/index.json")).unwrap());
+    assert_eq!(native_index["components"], node_index["components"]);
+    assert_eq!(native_index["lanes"][0]["id"], node_index["lanes"][0]["id"]);
+    let native_status = helper.native_run("status --json");
+    let node_status =
+        Helper::cmd_in_with(&node_root, "status --json", &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert_eq!(parse(&native_status.stdout), parse(&node_status.stdout));
+}
+
+#[test]
+fn create_from_an_unexported_lane_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.run("lane create parent");
+    let node_root = helper.clone_workspace();
+    let node =
+        Helper::cmd_in_with(&node_root, "lane create child", &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{}", node.stderr);
+    let native = helper.native_run("lane create child");
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    for path in [".bitmap", ".bit/scope.json"] {
+        let native = fs::read_to_string(helper.scopes.local_path.join(path)).unwrap();
+        let node = fs::read_to_string(node_root.join(path)).unwrap();
+        assert_eq!(
+            parse(&native[native.find('{').unwrap()..]),
+            parse(&node[node.find('{').unwrap()..]),
+        );
+    }
+    let index =
+        parse(&fs::read_to_string(helper.scopes.local_path.join(".bit/index.json")).unwrap());
+    let node_index = parse(&fs::read_to_string(node_root.join(".bit/index.json")).unwrap());
+    assert_eq!(index["lanes"].as_array().unwrap().len(), 2);
+    assert_eq!(index["lanes"][1]["id"], node_index["lanes"][1]["id"]);
+    let hash = index["lanes"][1]["hash"].as_str().unwrap();
+    let lane = object(&helper.scopes.local_path, hash, "Lane");
+    let node_hash = node_index["lanes"][1]["hash"].as_str().unwrap();
+    let node_lane = object(&node_root, node_hash, "Lane");
+    assert_eq!(lane["forkedFrom"], node_lane["forkedFrom"]);
+    assert_eq!(lane["components"], node_lane["components"]);
+}
+
+#[test]
+fn create_from_an_exported_lane_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.run("lane create parent");
+    helper.create_component_bar_foo("// on parent");
+    helper.add_component_bar_foo();
+    helper.run("snap --message parent");
+    helper.run("export");
+    let node_root = helper.clone_workspace();
+    let node =
+        Helper::cmd_in_with(&node_root, "lane create child", &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{}", node.stderr);
+    let native = helper.native_run("lane create child");
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    let index =
+        parse(&fs::read_to_string(helper.scopes.local_path.join(".bit/index.json")).unwrap());
+    let node_index = parse(&fs::read_to_string(node_root.join(".bit/index.json")).unwrap());
+    let hash = index["lanes"][1]["hash"].as_str().unwrap();
+    let node_hash = node_index["lanes"][1]["hash"].as_str().unwrap();
+    let lane = object(&helper.scopes.local_path, hash, "Lane");
+    let node_lane = object(&node_root, node_hash, "Lane");
+    assert_eq!(lane["forkedFrom"], node_lane["forkedFrom"]);
+    assert_eq!(lane["components"], node_lane["components"]);
+    let native_status = helper.native_run("status --json");
+    let node_status =
+        Helper::cmd_in_with(&node_root, "status --json", &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert_eq!(parse(&native_status.stdout), parse(&node_status.stdout));
+}
+
+#[test]
+fn create_cross_scope_fork_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.run("lane create parent");
+    helper.create_component_bar_foo("// on parent");
+    helper.add_component_bar_foo();
+    helper.run("snap --message parent");
+    helper.run("export");
+    let node_root = helper.clone_workspace();
+    let command = "lane create child --scope other-scope --fork-lane-new-scope";
+    let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{}", node.stderr);
+    let native = helper.native_run(command);
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    let index =
+        parse(&fs::read_to_string(helper.scopes.local_path.join(".bit/index.json")).unwrap());
+    let node_index = parse(&fs::read_to_string(node_root.join(".bit/index.json")).unwrap());
+    assert_eq!(index["lanes"][1]["id"], node_index["lanes"][1]["id"]);
+    let hash = index["lanes"][1]["hash"].as_str().unwrap();
+    let node_hash = node_index["lanes"][1]["hash"].as_str().unwrap();
+    let lane = object(&helper.scopes.local_path, hash, "Lane");
+    let node_lane = object(&node_root, node_hash, "Lane");
+    assert_eq!(lane["forkedFrom"], node_lane["forkedFrom"]);
+    assert_eq!(lane["components"], node_lane["components"]);
+    let native_status = helper.native_run("status --json");
+    let node_status =
+        Helper::cmd_in_with(&node_root, "status --json", &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert_eq!(parse(&native_status.stdout), parse(&node_status.stdout));
+}

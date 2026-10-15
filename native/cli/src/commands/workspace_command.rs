@@ -13,6 +13,7 @@ pub mod results;
 pub mod versions;
 
 pub use snapshot::receipt::NodeCli;
+pub(crate) use snapshot::receipt::{User, uuid_v4};
 
 mod defaults;
 mod lane;

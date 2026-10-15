@@ -31,7 +31,7 @@ pub(super) fn read(root: &Path, reader: &Reader<'_>, id: &str) -> io::Result<Opt
             return Err(invalid("status duplicate lane update-dependent"));
         }
     }
-    let remotes = remote(root, scope, name)?;
+    let remotes = remote_with_parent(root, scope, name, forked_from.as_deref())?;
     Ok(Some(Lane {
         scope: scope.to_owned(),
         name: name.to_owned(),
@@ -43,6 +43,21 @@ pub(super) fn read(root: &Path, reader: &Reader<'_>, id: &str) -> io::Result<Opt
         heads,
         remotes,
     }))
+}
+
+fn remote_with_parent(
+    root: &Path,
+    scope: &str,
+    name: &str,
+    forked_from: Option<&str>,
+) -> io::Result<HashMap<String, String>> {
+    let mut remotes = remote(root, scope, name)?;
+    if let Some((parent_scope, parent_name)) = forked_from.and_then(|id| id.split_once('/')) {
+        for (identity, head) in remote(root, parent_scope, parent_name)? {
+            remotes.entry(identity).or_insert(head);
+        }
+    }
+    Ok(remotes)
 }
 
 fn update_dependents(lane: &Value) -> io::Result<Vec<(String, String)>> {
