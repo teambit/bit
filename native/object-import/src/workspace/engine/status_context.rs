@@ -5,7 +5,7 @@ use crate::read_budget::Budget;
 use rayon::prelude::*;
 use serde::Deserialize;
 use serde_json::{Value, json};
-use std::{io, path::PathBuf};
+use std::{collections::HashSet, io, path::PathBuf};
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -29,6 +29,9 @@ pub(super) fn read(request: &Request, pool: &rayon::ThreadPool) -> io::Result<(u
     }
     let proofs = if request.history { controls(request)? } else { Vec::new() };
     let mut output = metadata(request, pool)?;
+    let settings = config::configuration_for_command(&request.root, true)?;
+    let inactive = config::inactive_targets(&request.root, &settings)?;
+    exclude_inactive(&mut output, &inactive)?;
     let targets = output["targets"].as_array().ok_or_else(|| invalid("status targets"))?;
     let model_request =
         serde_json::from_value(json!({"root":request.root,"history":request.history,"stageHistory":true,"includeHeads":true,
@@ -37,6 +40,7 @@ pub(super) fn read(request: &Request, pool: &rayon::ThreadPool) -> io::Result<(u
             "version":target["version"]})).collect::<Vec<_>>()}))
         .map_err(io::Error::other)?;
     let (_, models) = status_models::read(&model_request, pool)?;
+    let unavailable = unavailable_on_main(&output, &models, &inactive)?;
     output
         .as_object_mut()
         .ok_or_else(|| invalid("status context"))?
@@ -46,8 +50,56 @@ pub(super) fn read(request: &Request, pool: &rayon::ThreadPool) -> io::Result<(u
                 .ok_or_else(|| invalid("status models"))?
                 .clone(),
         );
+    output["unavailableOnMain"] = json!(unavailable);
     attach_controls(&mut output, &proofs)?;
     Ok((output["targets"].as_array().map_or(0, Vec::len), output))
+}
+
+fn exclude_inactive(output: &mut Value, inactive: &[(String, bool)]) -> io::Result<()> {
+    let inactive_ids = inactive
+        .iter()
+        .map(|(id, _)| id.as_str())
+        .collect::<HashSet<_>>();
+    output["targets"]
+        .as_array_mut()
+        .ok_or_else(|| invalid("status targets"))?
+        .retain(|target| {
+            !target["identity"]
+                .as_str()
+                .is_some_and(|id| inactive_ids.contains(id))
+        });
+    Ok(())
+}
+
+fn unavailable_on_main(
+    context: &Value,
+    models: &Value,
+    inactive: &[(String, bool)],
+) -> io::Result<Vec<String>> {
+    if !context["currentLaneId"]
+        .as_str()
+        .is_some_and(|id| id.ends_with("/main"))
+    {
+        return Ok(Vec::new());
+    }
+    let heads = models["models"]
+        .as_array()
+        .ok_or_else(|| invalid("status models"))?
+        .iter()
+        .filter(|model| model["head"].is_string())
+        .map(|model| {
+            Ok(format!(
+                "{}/{}",
+                model["scope"].as_str().ok_or_else(|| invalid("status model scope"))?,
+                model["name"].as_str().ok_or_else(|| invalid("status model name"))?,
+            ))
+        })
+        .collect::<io::Result<HashSet<_>>>()?;
+    Ok(inactive
+        .iter()
+        .filter(|(identity, removed)| !removed && heads.contains(identity))
+        .map(|(identity, _)| identity.clone())
+        .collect())
 }
 
 pub(super) fn metadata(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Value> {

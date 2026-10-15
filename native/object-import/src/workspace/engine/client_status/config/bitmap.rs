@@ -9,7 +9,18 @@ pub(in crate::workspace::engine) fn targets(
     config: &Value,
 ) -> io::Result<Vec<Target>> {
     let bitmap = document(&root.join(".bitmap"))?;
-    bitmap_targets(&bitmap, config)
+    let targets = bitmap_targets(&bitmap, config)?;
+    let entries = bitmap.as_object().ok_or_else(|| invalid("status bitmap"))?;
+    Ok(targets
+        .into_iter()
+        .zip(
+            entries
+                .iter()
+                .filter(|(key, _)| !matches!(key.as_str(), "$schema-version" | "_bit_lane")),
+        )
+        .filter(|(_, (_, entry))| entry["isAvailableOnCurrentLane"] != false)
+        .map(|(target, _)| target)
+        .collect())
 }
 fn bitmap_targets(bitmap: &Value, config: &Value) -> io::Result<Vec<Target>> {
     let entries = bitmap.as_object().ok_or_else(|| invalid("status bitmap"))?;
@@ -94,15 +105,28 @@ fn validate_entry(value: &Value) -> io::Result<()> {
                     | "rootDir"
                     | "localOnly"
                     | "nextVersion"
-                    | "config",
+                    | "config"
+                    | "onLanesOnly"
+                    | "isAvailableOnCurrentLane",
             )
         })
     {
         return Err(invalid("status component requires Harmony"));
     }
+    validate_flags(value)?;
+    Ok(())
+}
+
+fn validate_flags(value: &Value) -> io::Result<()> {
     if value
         .get("localOnly")
         .is_some_and(|flag| !flag.is_boolean())
+        || value
+            .get("onLanesOnly")
+            .is_some_and(|flag| !flag.is_boolean())
+        || value
+            .get("isAvailableOnCurrentLane")
+            .is_some_and(|flag| !flag.is_boolean())
         || value
             .get("nextVersion")
             .is_some_and(|next| !next.is_object())
@@ -113,6 +137,28 @@ fn validate_entry(value: &Value) -> io::Result<()> {
         return Err(invalid("status bitmap state"));
     }
     Ok(())
+}
+
+/// Bitmap rows hidden on the current lane, with their removal state.
+pub(in crate::workspace::engine) fn inactive_targets(
+    root: &Path,
+    config: &Value,
+) -> io::Result<Vec<(String, bool)>> {
+    let bitmap = document(&root.join(".bitmap"))?;
+    let targets = bitmap_targets(&bitmap, config)?;
+    let entries = bitmap.as_object().ok_or_else(|| invalid("status bitmap"))?;
+    Ok(targets
+        .into_iter()
+        .zip(
+            entries
+                .iter()
+                .filter(|(key, _)| !matches!(key.as_str(), "$schema-version" | "_bit_lane")),
+        )
+        .filter(|(_, (_, entry))| entry["isAvailableOnCurrentLane"] == false)
+        .map(|(target, (_, entry))| {
+            (target.id, entry["config"]["teambit.component/remove"]["removed"] == true)
+        })
+        .collect())
 }
 fn removal_config(config: &Value) -> bool {
     let Some(aspects) = config.as_object() else { return false };
