@@ -93,9 +93,10 @@ fn lane_addition_selection_counts_only_ids_absent_from_entire_bitmap() {
 
 #[test]
 fn workspace_only_is_exclusive_to_checkout_head() {
+    let root = std::env::temp_dir().join("bit-checkout-workspace-only-test");
     let request = |operation: &str, to: &str| -> Prepare {
-        serde_json::from_value(json!({"root":"/workspace","home":"/home",
-            "globalRemotesFile":"/remotes","operation":operation,
+        serde_json::from_value(json!({"root":root,"home":root.join("home"),
+            "globalRemotesFile":root.join("remotes"),"operation":operation,
             "options":{"to":to,"workspaceOnly":true,"skipDependencyInstallation":true}}))
         .unwrap()
     };
