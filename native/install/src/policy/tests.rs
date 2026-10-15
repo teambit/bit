@@ -2,7 +2,7 @@ use super::{
     DEPENDENCY_RESOLVER, VariantOptions, component_policy, entries,
     entries::{from_variant_config, merge},
     env::{from_config, merge_manifests},
-    load::{host_loaded_envs, is_core_env, load_env_policies, split_version},
+    load::{is_core_env, load_env_policies, split_version},
     overrides::{self, field_index},
     scope::{Scope, is_hash, snap_to_semver},
     workspace_manifest, workspace_policy,
@@ -324,16 +324,6 @@ async fn env_policies_from_workspace_envs_host_and_scope() {
         ..TestHost::default()
     };
     let policies = load_env_policies(root, &components, &host).await.expect("policies");
-    // The envs `bit install` preloads are the non-core ones the host was asked about.
-    let asked: Vec<String> = host.calls
-        .lock()
-        .expect("calls")
-        .iter()
-        .filter(|env| !is_core_env(env))
-        .cloned()
-        .collect();
-    assert_eq!(host_loaded_envs(root, &components).expect("envs"), asked);
-    assert_eq!(asked, ["acme/legacy-env@1.0.0"]);
     let child_policy = &policies["acme/envs/child"];
     assert!(
         child_policy.component

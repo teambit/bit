@@ -236,8 +236,8 @@ impl bit_install::Host for JsHost {
         self.call("devPatterns", json!({ "envId": env_id })).await
     }
 
-    async fn load_aspects(&self, aspect_ids: &[String]) -> io::Result<()> {
-        self.call::<Value>("loadAspects", json!({ "aspectIds": aspect_ids })).await?;
+    async fn prepare_install(&self, aspect_ids: &[String]) -> io::Result<()> {
+        self.call::<Value>("prepareInstall", json!({ "aspectIds": aspect_ids })).await?;
         Ok(())
     }
 

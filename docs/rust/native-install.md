@@ -12,6 +12,7 @@ aspects only when a callback is needed. The callbacks are:
 
 | Callback              | Why it is JavaScript                                                                                                                  |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `prepareInstall`      | Before the package manager, the env requests see only the envs `InstallMain.install`'s component loads register (see below)          |
 | `envPolicy`           | The dependency policy of a core env, or of a legacy env without `env.jsonc`, comes from the env's `getDependencies()`                 |
 | `registeredEnvPolicy` | The same, for a component of an aspect env, only when it is already registered as an env (never loaded as an aspect to find out)      |
 | `dependencyPolicies`  | Aspects and env aspects register dependency policies in their providers (`registerDependenciesPolicies`)                              |
@@ -187,12 +188,32 @@ The engine's `readPackage` hooks are implemented natively and report the
 `pnpmfileChecksum` that Bit's TypeScript integration intended (`bit-1`).
 Lockfiles therefore stay compatible between both implementations.
 
+## Envs before the package manager
+
+`InstallMain.install` computes the manifests from components it loads without
+loading the envs among them as aspects (`getComponentsDirectory` passes
+`loadSeedersAsAspects: false`), and `calculateEnv` resolves an env that is not
+registered to the default env, `teambit.harmony/node`, without a warning in the
+install context. An external env whose policy is in code (no `env.jsonc`) is
+therefore not applied before the package manager, and its components get the
+default env's policy, dev patterns and detectors.
+
+`prepareInstall` reproduces this. The first env or aspect request after it loads
+the workspace aspects the CLI loads on start, then every component the way
+`getComponentsDirectory` does. Until `afterInstall` (which follows the package
+manager, as `reloadNonLoadedEnvs` does), an env request never loads an env: one
+these loads did not register is the default env, and `dependencyPolicies` returns
+the registry without loading the components' extensions (they load with
+`loadExtensions: false`). An install that reaches no such request never loads
+Harmony.
+
 ## Registered dependency policies
 
 Policies registered through `registerDependenciesPolicies` are the slots layer of
 `mergeVariantPolicies`: a component gets the registration whose registrar is, or
 contains, one of the extension ids it configures. Registering runs in an aspect's
-provider, so the host loads the candidate aspects and returns the registry. To
+provider, so the host loads the candidate aspects and returns the registry (after
+the package manager; before it, the registry as the install's loads left it). To
 keep `bit install` from loading Harmony where nothing can register, the
 candidates are the configured extension ids that are not core aspects (core
 aspects and core envs never register one), and the component's env only when it

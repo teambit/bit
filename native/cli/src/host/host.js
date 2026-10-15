@@ -93,7 +93,7 @@ const handlers = {
   envPolicy: ({ envId }) => envPolicy(envId),
   registeredEnvPolicy: ({ envId, aspectIds }) => registeredEnvPolicy(envId, aspectIds),
   devPatterns: ({ envId }) => devPatterns(envId),
-  loadAspects: ({ aspectIds }) => loadAspects(aspectIds),
+  prepareInstall: ({ aspectIds }) => prepareInstall(aspectIds),
   dependencyPolicies: ({ extensionIds }) => dependencyPolicies(extensionIds),
   detectDependencies: ({ envId, files, componentDir, aspectIds }) =>
     detectDependencies(envId, files, componentDir, aspectIds),
@@ -246,28 +246,55 @@ async function devPatterns(envId) {
 }
 
 /**
- * Load the aspects the components configure in one pass, as `loadComponentsExtensions` does,
- * so `envPolicy` and `dependencyPolicies` find them loaded.
+ * Whether the requests run before the package manager of `bit install`: an env is then only
+ * what `prepareInstall` registered, and an unregistered one is the default env, as
+ * `EnvsMain.calculateEnv` resolves it (`skipWarnings` in the install context). `afterInstall`
+ * ends it, as `reloadNonLoadedEnvs` follows the package manager.
  */
-async function loadAspects(aspectIds) {
-  const ids = aspectIds.filter((id) => !preloadedAspects.has(id));
-  if (!ids.length) return null;
-  ids.forEach((id) => preloadedAspects.add(id));
-  const workspace = (await loadHarmony()).get('teambit.workspace/workspace');
-  await workspace.loadAspects(ids, false, undefined, { throwOnError: false, hideMissingModuleError: true });
+let beforePackageManager = false;
+
+/**
+ * Enter the requests before the package manager of `bit install`. The component loads they
+ * depend on run on the first request that needs Harmony (`loadInstallComponents`), so an
+ * install no env or aspect request reaches never loads Harmony.
+ */
+async function prepareInstall(aspectIds) {
+  beforePackageManager = true;
+  pendingInstallLoad = aspectIds ?? [];
   return null;
 }
 
-const preloadedAspects = new Set();
+/** The workspace aspects `prepareInstall` was given, until `loadInstallComponents` ran. */
+let pendingInstallLoad = null;
+
+/**
+ * The component loads `InstallMain.install` performs before the manifests: the workspace aspects
+ * the CLI loads on start, then every workspace component as `getComponentsDirectory` loads them,
+ * without loading the envs among them as aspects (`loadSeedersAsAspects: false`). The envs this
+ * registers, and no other, serve the env requests until `afterInstall`.
+ */
+async function loadInstallComponents() {
+  if (!pendingInstallLoad) return;
+  const aspectIds = pendingInstallLoad;
+  pendingInstallLoad = null;
+  await loadWorkspaceAspects(aspectIds);
+  const workspace = (await loadHarmony()).get('teambit.workspace/workspace');
+  workspace.inInstallContext = true;
+  await workspace.list(undefined, { loadSeedersAsAspects: false });
+}
 
 /**
  * The dependency policies aspects registered (`registerDependenciesPolicies`), as
  * `[[registrar, policy], ...]`, once the aspects the components configure are loaded.
  */
 async function dependencyPolicies(extensionIds) {
+  await loadInstallComponents();
   const loaded = await loadHarmony();
   const workspace = loaded.get('teambit.workspace/workspace');
-  await workspace.loadAspects(extensionIds, false, undefined, { throwOnError: false, hideMissingModuleError: true });
+  // the install loads components without their extensions (`loadExtensions: false`).
+  if (!beforePackageManager) {
+    await workspace.loadAspects(extensionIds, false, undefined, { throwOnError: false, hideMissingModuleError: true });
+  }
   return loaded.get('teambit.dependencies/dependency-resolver').policiesRegistry.toArray();
 }
 
@@ -278,6 +305,7 @@ async function dependencyPolicies(extensionIds) {
  * `loadBit` does not.
  */
 async function detectDependencies(envId, files, componentDir, aspectIds) {
+  await loadInstallComponents();
   await loadWorkspaceAspects(aspectIds);
   const env = await loadEnv(envId);
   return detectWithCustomDetectors(env?.getDepDetectors?.(), files, componentDir);
@@ -289,6 +317,7 @@ async function detectDependencies(envId, files, componentDir, aspectIds) {
  * `envPolicy`, the component is never loaded as an aspect.
  */
 async function registeredEnvPolicy(envId, aspectIds) {
+  await loadInstallComponents();
   await loadWorkspaceAspects(aspectIds);
   const definition = (await loadHarmony()).get('teambit.envs/envs').getEnvDefinitionByStringId(envId);
   const policy = await definition?.env?.getDependencies?.();
@@ -429,9 +458,11 @@ async function transformPackageJson(componentId, manifest) {
 }
 
 async function loadEnv(envId) {
+  await loadInstallComponents();
   const loaded = await loadHarmony();
   const envs = loaded.get('teambit.envs/envs');
   let definition = envs.getEnvDefinitionByStringId(envId);
+  if (!definition && beforePackageManager) return envs.getDefaultEnv().env;
   if (!definition) {
     const workspace = loaded.get('teambit.workspace/workspace');
     await workspace.loadAspects([envId], false, undefined, { throwOnError: false, hideMissingModuleError: true });
@@ -449,6 +480,8 @@ async function afterInstall(request) {
   const workspace = loaded.get('teambit.workspace/workspace');
   const install = loaded.get('teambit.workspace/install');
   const envs = loaded.get('teambit.envs/envs');
+  beforePackageManager = false;
+  pendingInstallLoad = null;
   workspace.inInstallContext = true;
   workspace.inInstallAfterPmContext = true;
   try {

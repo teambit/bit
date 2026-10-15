@@ -66,20 +66,6 @@ pub async fn load_env_policies(
     Ok(policies)
 }
 
-/// The envs of `components` whose policy only the host knows: not core, and without
-/// an `env.jsonc` ([`env_policy`] loads them).
-pub fn host_loaded_envs(root: &Path, components: &[WorkspaceComponent]) -> io::Result<Vec<String>> {
-    let reader = EnvJsoncReader { components, scope: Scope::find(root) };
-    let mut envs: Vec<String> = Vec::new();
-    for component in components {
-        let env_id = &component.env_id;
-        if !envs.contains(env_id) && !is_core_env(env_id) && reader.resolved(env_id)?.is_none() {
-            envs.push(env_id.clone());
-        }
-    }
-    Ok(envs)
-}
-
 /// The policy of one env.
 pub async fn env_policy(
     reader: &EnvJsoncReader<'_>,

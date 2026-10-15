@@ -139,10 +139,11 @@ pub trait Host: Send + Sync {
         Ok(None)
     }
 
-    /// Load `aspect_ids` in one pass, as the workspace loads the aspects its components
-    /// configure together (`loadComponentsExtensions`), so the env and aspect requests
-    /// that follow find them loaded instead of loading each on its own.
-    async fn load_aspects(&self, aspect_ids: &[String]) -> io::Result<()> {
+    /// The component loads `InstallMain.install` performs before the manifests, after
+    /// loading `aspect_ids` (`getNotLoadedConfiguredExtensions`). Until the package manager
+    /// ran (`after_install`), the env requests see only the envs this registered: an env
+    /// it did not register is the default env (`calculateEnv`), and no extension is loaded.
+    async fn prepare_install(&self, aspect_ids: &[String]) -> io::Result<()> {
         let _ = aspect_ids;
         Ok(())
     }
