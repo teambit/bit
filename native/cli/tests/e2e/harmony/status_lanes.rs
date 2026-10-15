@@ -118,8 +118,8 @@ fn pending_updates_from_main_match_node() {
     let hash = format!("{:x}", Sha1::digest(component.as_bytes()));
     let object = format!(".bit/objects/{}/{}", &hash[..2], &hash[2..]);
     assert_eq!(
-        fs::read(node_root.join(&object)).unwrap(),
-        fs::read(helper.scopes.local_path.join(&object)).unwrap(),
+        inflated(&node_root.join(&object)),
+        inflated(&helper.scopes.local_path.join(&object)),
     );
     let node =
         Helper::cmd_in_with(&node_root, "status --lanes", &[("BIT_NATIVE", OsStr::new("off"))]);

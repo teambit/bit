@@ -3,7 +3,7 @@
 use super::{Prepare, invalid, model, remote};
 use crate::transfer;
 use bit_client_transfer::tar::ObjectItem;
-use serde_json::Value;
+use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{
     collections::HashSet,
@@ -107,9 +107,6 @@ fn load_lane(input: &Prepare, scope: &str, name: &str) -> io::Result<Loaded> {
         || lane
             .get("forkedFrom")
             .is_some_and(|value| !value.is_null())
-        || lane["updateDependents"]
-            .as_array()
-            .is_some_and(|rows| !rows.is_empty())
     {
         return Err(invalid("outbound complex lane export"));
     }
@@ -163,8 +160,7 @@ fn select_components(
     name: &str,
     loaded: &Loaded,
 ) -> io::Result<Selection> {
-    let rows =
-        loaded.lane["components"].as_array().ok_or_else(|| invalid("outbound lane components"))?;
+    let rows = lane_entries(&loaded.lane)?;
     if rows.len() > MAX_OBJECTS {
         return Err(invalid("outbound lane component budget"));
     }
@@ -175,7 +171,7 @@ fn select_components(
     let context = ComponentContext { input, loaded, scope, name, host: &host };
     let mut seen_ids = HashSet::new();
     let mut selected = Selection::new();
-    for entry in rows {
+    for entry in &rows {
         let component = ComponentId::parse(entry)?;
         if !seen_ids.insert(component.id.clone()) {
             return Err(invalid("outbound duplicate lane component"));
@@ -194,6 +190,32 @@ fn select_components(
         select_component(&context, &component, row, previous_head, &mut selected)?;
     }
     Ok(selected)
+}
+
+pub(super) fn lane_entries(lane: &Value) -> io::Result<Vec<Value>> {
+    let mut entries = lane["components"]
+        .as_array()
+        .ok_or_else(|| invalid("outbound lane components"))?
+        .clone();
+    let updates = match lane.get("updateDependents") {
+        None | Some(Value::Null) => &[][..],
+        Some(Value::Array(updates)) => updates.as_slice(),
+        Some(_) => return Err(invalid("outbound lane update-dependents")),
+    };
+    for update in updates {
+        let id = update.as_str().ok_or_else(|| invalid("outbound lane update-dependent"))?;
+        let (identity, head) =
+            id.rsplit_once('@').ok_or_else(|| invalid("outbound lane update-dependent id"))?;
+        let (scope, name) = identity
+            .split_once('/')
+            .ok_or_else(|| invalid("outbound lane update-dependent identity"))?;
+        crate::merge_history::hash(head)?;
+        if scope.is_empty() || name.is_empty() {
+            return Err(invalid("outbound lane update-dependent identity"));
+        }
+        entries.push(json!({"id":{"scope":scope,"name":name},"head":head}));
+    }
+    Ok(entries)
 }
 
 struct ComponentId<'a> {

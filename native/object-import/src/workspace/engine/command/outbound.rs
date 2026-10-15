@@ -7,6 +7,7 @@ mod lane_model;
 mod lane_publication;
 mod model;
 mod publication;
+mod publication_state;
 mod receipt;
 mod remote;
 
@@ -82,19 +83,7 @@ struct Pending {
     objects: Vec<ObjectItem>,
 }
 
-enum Publication {
-    Main(publication::Prepared),
-    Lane { prepared: lane_publication::Prepared, name: String },
-}
-
-impl Publication {
-    fn lane_name(&self) -> Option<&str> {
-        match self {
-            Self::Main(_) => None,
-            Self::Lane { name, .. } => Some(name),
-        }
-    }
-}
+use publication_state::Publication;
 
 struct Plan {
     count: usize,
@@ -159,7 +148,7 @@ fn plan_lane(input: &Prepare, lane: lane_model::LaneSelected) -> io::Result<Plan
         count,
         order,
         resume: None,
-        publication: Some(Publication::Lane { prepared, name }),
+        publication: Some(Publication::Lane { prepared: Box::new(prepared), name }),
         pending,
     })
 }
@@ -177,7 +166,7 @@ fn plan_main(input: &Prepare) -> io::Result<Plan> {
     let publication = if selected.is_empty() {
         None
     } else {
-        Some(Publication::Main(publication::prepare(input, &selected, &hosts)?))
+        Some(Publication::Main(Box::new(publication::prepare(input, &selected, &hosts)?)))
     };
     let pending = batches(selected, &hosts)?;
     Ok(Plan { count, order, resume, publication, pending })
@@ -382,6 +371,11 @@ pub(in crate::workspace::engine) fn finalize(
         .as_ref()
         .and_then(Publication::lane_name)
         .map(str::to_owned);
+    let update_ids = retained.publication
+        .as_ref()
+        .map(Publication::update_ids)
+        .unwrap_or_default()
+        .to_vec();
     if let Some(plan) = retained.publication {
         match plan {
             Publication::Main(plan) => plan.commit(&exported_ids)?,
@@ -407,7 +401,7 @@ pub(in crate::workspace::engine) fn finalize(
         json!({"token":retained.token,"owner":"rust","applied":true,
         "componentsIds":components,"newIdsOnRemote":exported_ids,
         "nonExistOnBitMap":[],"removedIds":[],"missingScope":[],
-        "exportedLanes":lane.into_iter().collect::<Vec<_>>(),"rippleJobUrls":[]}),
+        "exportedLanes":lane.into_iter().collect::<Vec<_>>(),"laneUpdateIds":update_ids,"rippleJobUrls":[]}),
     ))
 }
 

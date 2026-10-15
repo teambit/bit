@@ -166,6 +166,17 @@ impl Helper {
         clone
     }
 
+    pub fn clone_remote_scope(&self) -> PathBuf {
+        let clone = self.scopes.e2e_dir.join(format!("{}-remote-clone", random_str()));
+        setup::copy_dir(&self.scopes.remote_path, &clone);
+        clone
+    }
+
+    pub fn restore_remote_scope(&self, clone: &Path) {
+        let _ = fs::remove_dir_all(&self.scopes.remote_path);
+        setup::copy_dir(clone, &self.scopes.remote_path);
+    }
+
     /// `getClonedWorkspace(clone)`.
     pub fn get_cloned_workspace(&self, clone: &Path) {
         let _ = fs::remove_dir_all(&self.scopes.local_path);

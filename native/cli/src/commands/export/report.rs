@@ -73,9 +73,14 @@ pub(super) fn published(value: &Value, token: &str) -> io::Result<Value> {
     {
         return Err(decline("native outbound finalize receipt"));
     }
-    for field in
-        ["componentsIds", "newIdsOnRemote", "nonExistOnBitMap", "removedIds", "missingScope"]
-    {
+    for field in [
+        "componentsIds",
+        "newIdsOnRemote",
+        "nonExistOnBitMap",
+        "removedIds",
+        "missingScope",
+        "laneUpdateIds",
+    ] {
         scoped_ids(value, field)?;
     }
     // `nonExistOnBitMap` and `missingScope` have sections the native report
@@ -97,7 +102,23 @@ pub(super) fn published(value: &Value, token: &str) -> io::Result<Value> {
         return Err(decline("native outbound lane receipt"));
     }
     remote_ids(value)?;
+    update_ids_valid(value)?;
     Ok(value.clone())
+}
+
+fn update_ids_valid(value: &Value) -> io::Result<()> {
+    let components: HashSet<_> = array(value.get("componentsIds"), "components")?
+        .iter()
+        .filter_map(Value::as_str)
+        .collect();
+    if array(value.get("laneUpdateIds"), "lane updates")?
+        .iter()
+        .filter_map(Value::as_str)
+        .any(|id| !components.contains(id))
+    {
+        return Err(decline("native outbound update identity"));
+    }
+    Ok(())
 }
 
 /// A receipt field of at most 4096 ids, each with a scope.
@@ -157,8 +178,31 @@ pub(super) fn format(receipt: &Value, chalk: Chalk) -> String {
         );
     }
     let format = Formatter::new(chalk);
+    let export_sections = export_sections(receipt, &components, lane, &format, chalk);
+    let removed: Vec<String> = removed
+        .iter()
+        .map(|id| Formatter::item_with(id, &format.warn_symbol()))
+        .collect();
+    let removed = format.section("components removed on the remote", "", &removed);
+    Formatter::join(&[export_sections, removed])
+}
+
+fn export_sections(
+    receipt: &Value,
+    components: &[&str],
+    lane: Option<&str>,
+    format: &Formatter,
+    chalk: Chalk,
+) -> String {
+    let update_ids: HashSet<_> = receipt["laneUpdateIds"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(Value::as_str)
+        .collect();
     let items: Vec<String> = components
         .iter()
+        .filter(|id| !update_ids.contains(*id))
         .map(|id| format.item(&chalk.bold(id)))
         .collect();
     let description = lane.map_or_else(
@@ -166,12 +210,21 @@ pub(super) fn format(receipt: &Value, chalk: Chalk) -> String {
         |lane| format!("exported the lane {} and the following component(s)", chalk.bold(lane)),
     );
     let exported = format.section("exported components", &description, &items);
-    let removed: Vec<String> = removed
+    let updates: Vec<String> = components
         .iter()
-        .map(|id| Formatter::item_with(id, &format.warn_symbol()))
+        .filter(|id| update_ids.contains(*id))
+        .map(|id| format.item(&chalk.bold(id)))
         .collect();
-    let removed = format.section("components removed on the remote", "", &removed);
-    Formatter::join(&[exported, removed])
+    let updates = format.section(
+        "exported updates",
+        "impacted dependents pushed to keep the lane consistent (from a 'Snap updates' / local cascade)",
+        &updates,
+    );
+    [exported, updates]
+        .into_iter()
+        .filter(|section| !section.is_empty())
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 #[cfg(test)]

@@ -1,5 +1,8 @@
 //! Publish a persisted lane locally only after the remote acknowledges its heads.
-use super::{Prepare, invalid, lane_model::LaneSelected};
+use super::{
+    Prepare, invalid,
+    lane_model::{self, LaneSelected},
+};
 use crate::store::Store;
 use serde_json::Value;
 use std::{
@@ -17,6 +20,7 @@ pub(super) struct Prepared {
     models: Vec<Model>,
     published: PublishedState,
     staged: Staged,
+    update_ids: Vec<String>,
 }
 
 struct PublishedState {
@@ -55,7 +59,7 @@ struct Refs {
 
 struct Staged {
     snaps: Option<Vec<u8>>,
-    config: Change,
+    config: Option<Change>,
 }
 
 struct Model {
@@ -97,7 +101,33 @@ pub(super) fn prepare(input: &Prepare, selected: &LaneSelected) -> io::Result<Pr
             .collect(),
         published: PublishedState::prepare(root, selected)?,
         staged: prepare_staged(root, &selected.expected_ids)?,
+        update_ids: selected_update_ids(selected)?,
     })
+}
+
+fn selected_update_ids(selected: &LaneSelected) -> io::Result<Vec<String>> {
+    let selected_ids: HashSet<_> = selected.component_ids
+        .iter()
+        .map(String::as_str)
+        .collect();
+    selected.lane["updateDependents"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .map(|value| {
+            let id = value.as_str().ok_or_else(|| invalid("outbound lane update-dependent"))?;
+            let (identity, _) =
+                id.rsplit_once('@').ok_or_else(|| invalid("outbound lane update-dependent id"))?;
+            Ok(selected_ids.contains(identity).then(|| identity.to_owned()))
+        })
+        .collect::<io::Result<Vec<_>>>()
+        .map(|rows| rows.into_iter().flatten().collect())
+}
+
+impl Prepared {
+    pub(super) fn update_ids(&self) -> &[String] {
+        &self.update_ids
+    }
 }
 
 impl PublishedState {
@@ -125,7 +155,7 @@ fn prepare_bitmap(root: &Path, selected: &LaneSelected) -> io::Result<Change> {
     if before.len() > 4 * 1024 * 1024 {
         return Err(invalid("outbound lane bitmap bounds"));
     }
-    let after = export_bitmap(&before, &selected.scope, &selected.name)?;
+    let after = export_bitmap(&before, &selected.scope, &selected.name, &selected.lane)?;
     Ok(Change { before, after })
 }
 
@@ -139,9 +169,7 @@ fn prepare_scope(root: &Path, selected: &LaneSelected) -> io::Result<Change> {
 }
 
 fn prepare_refs(root: &Path, selected: &LaneSelected) -> io::Result<Refs> {
-    let components = selected.lane["components"]
-        .as_array()
-        .ok_or_else(|| invalid("outbound lane publication components"))?;
+    let components = lane_model::lane_entries(&selected.lane)?;
     if components.len() > 4096 {
         return Err(invalid("outbound lane publication bounds"));
     }
@@ -150,7 +178,7 @@ fn prepare_refs(root: &Path, selected: &LaneSelected) -> io::Result<Refs> {
         return Err(invalid("outbound empty lane remote refs require canonical export"));
     }
     let after =
-        if components.is_empty() { None } else { Some(serde_json::to_vec_pretty(components)?) };
+        if components.is_empty() { None } else { Some(serde_json::to_vec_pretty(&components)?) };
     Ok(Refs { before, after })
 }
 
@@ -162,13 +190,18 @@ fn prepare_staged(root: &Path, expected_ids: &[String]) -> io::Result<Staged> {
     {
         return Err(invalid("outbound lane staged snap bounds"));
     }
-    let before = fs::read(root.join(".bit/staged-config/main.json"))?;
+    let before = read_optional(&root.join(".bit/staged-config/main.json"))?;
     let expected = expected_ids
         .iter()
         .cloned()
         .collect::<HashSet<_>>();
-    let after = export_staged_config(&before, &expected)?;
-    Ok(Staged { snaps, config: Change { before, after } })
+    let config = before
+        .map(|before| -> io::Result<Change> {
+            let after = export_staged_config(&before, &expected)?;
+            Ok(Change { before, after })
+        })
+        .transpose()?;
+    Ok(Staged { snaps, config })
 }
 
 impl Prepared {
@@ -210,8 +243,8 @@ impl Prepared {
             && read_optional(&refs_path(root, &self.lane.scope, &self.lane.name))?
                 == self.published.refs.before
             && read_optional(&root.join(".bit/staged-snaps"))? == self.staged.snaps
-            && fs::read(root.join(".bit/staged-config/main.json"))?
-                == self.staged.config.before)
+            && read_optional(&root.join(".bit/staged-config/main.json"))?
+                == self.staged.config.as_ref().map(|config| config.before.clone()))
     }
 
     fn validate_objects(&self) -> io::Result<bool> {
@@ -229,10 +262,9 @@ impl Prepared {
         if let Some(refs) = &self.published.refs.after {
             write(&refs_path(&self.workspace.root, &self.lane.scope, &self.lane.name), refs)?;
         }
-        fs::write(
-            self.workspace.root.join(".bit/staged-config/main.json"),
-            &self.staged.config.after,
-        )?;
+        if let Some(config) = &self.staged.config {
+            fs::write(self.workspace.root.join(".bit/staged-config/main.json"), &config.after)?;
+        }
         if self.staged.snaps.is_some() {
             fs::remove_file(self.workspace.root.join(".bit/staged-snaps"))?;
         }
@@ -260,7 +292,7 @@ impl Prepared {
     }
 }
 
-fn export_bitmap(before: &[u8], scope: &str, name: &str) -> io::Result<Vec<u8>> {
+fn export_bitmap(before: &[u8], scope: &str, name: &str, lane: &Value) -> io::Result<Vec<u8>> {
     let mut bitmap = crate::recovery::jsonc::parse(before)?;
     let header =
         bitmap.get_mut("_bit_lane").ok_or_else(|| invalid("outbound lane bitmap header"))?;
@@ -272,11 +304,27 @@ fn export_bitmap(before: &[u8], scope: &str, name: &str) -> io::Result<Vec<u8>> 
     {
         return Err(invalid("outbound lane bitmap identity"));
     }
-    if header["exported"] == true {
-        return Ok(before.to_vec());
-    }
+    let mut changed = header["exported"] != true;
     header["exported"] = Value::Bool(true);
-    crate::inspection::render_bitmap(&bitmap)
+    let components =
+        lane["components"].as_array().ok_or_else(|| invalid("outbound lane bitmap components"))?;
+    for component in components {
+        let component_scope = component["id"]["scope"]
+            .as_str()
+            .ok_or_else(|| invalid("outbound lane bitmap scope"))?;
+        let component_name =
+            component["id"]["name"].as_str().ok_or_else(|| invalid("outbound lane bitmap name"))?;
+        if let Some(row) = bitmap.get_mut(component_name)
+            && row["scope"] == ""
+        {
+            row["scope"] = Value::String(component_scope.to_owned());
+            row.as_object_mut()
+                .ok_or_else(|| invalid("outbound lane bitmap row"))?
+                .remove("defaultScope");
+            changed = true;
+        }
+    }
+    if changed { crate::inspection::render_bitmap(&bitmap) } else { Ok(before.to_vec()) }
 }
 
 fn export_scope(before: &[u8], name: &str) -> io::Result<Vec<u8>> {

@@ -2283,9 +2283,9 @@ The rest follow as their commands are ported.
 
 ### `e2e/harmony/lanes/lane-export.e2e.ts`
 
-- [ ] `e2e/harmony/lanes/lane-export.e2e.ts:29` bit lane export operations › exporting the lane › should export components on that lane
-- [ ] `e2e/harmony/lanes/lane-export.e2e.ts:33` bit lane export operations › exporting the lane › bit status should show a clean state
-- [ ] `e2e/harmony/lanes/lane-export.e2e.ts:36` bit lane export operations › exporting the lane › should change .bitmap to have the remote lane
+- [x] `e2e/harmony/lanes/lane-export.e2e.ts:29` bit lane export operations › exporting the lane › should export components on that lane — `cli/tests/e2e/commands/export.rs::fresh_lane_component_export_matches_node`
+- [x] `e2e/harmony/lanes/lane-export.e2e.ts:33` bit lane export operations › exporting the lane › bit status should show a clean state — `cli/tests/e2e/commands/export.rs::fresh_lane_component_export_matches_node`
+- [x] `e2e/harmony/lanes/lane-export.e2e.ts:36` bit lane export operations › exporting the lane › should change .bitmap to have the remote lane — `cli/tests/e2e/commands/export.rs::fresh_lane_component_export_matches_node`
 - [ ] `e2e/harmony/lanes/lane-export.e2e.ts:40` bit lane export operations › exporting the lane › bit lane --remote should show the exported lane
 - [ ] `e2e/harmony/lanes/lane-export.e2e.ts:49` bit lane export operations › exporting the lane › importing the component › should not set the onLaneOnly to true as it exists also on main
 - [ ] `e2e/harmony/lanes/lane-export.e2e.ts:73` bit lane export operations › exporting a lane to a different scope than the component scope › bit import in a new workspace should not throw an error
