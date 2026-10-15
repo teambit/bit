@@ -75,9 +75,6 @@ pub struct ResolveRequest<'r> {
 /// `bit snap` and `bit tag` up to the commit:
 /// the plan, and unless there is nothing to do, the finalized versions.
 pub fn plan(root: &Path, request: &ResolveRequest<'_>) -> io::Result<Planned> {
-    if cache::no_fs_cache(root) {
-        return Err(decline("no-fs-cache may be enabled"));
-    }
     let mut session = Session::prepare(root, request)?;
     let plan = session.plan(request)?;
     let needs_snap = array(plan.get("needsSnap"), "needs snap")?;

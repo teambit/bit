@@ -102,9 +102,6 @@ fn plan_with(
     preview_snapshot: bool,
     internal_materialization: bool,
 ) -> io::Result<Planned> {
-    if cache::no_fs_cache(root) {
-        return Err(decline("no-fs-cache may be enabled"));
-    }
     let home = home();
     let mut engine = Engine::new()?;
     let (token, context, targets) = prepare(&mut engine, root, &home, request, preview_snapshot)?;

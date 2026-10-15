@@ -3,11 +3,10 @@
 //! this module computes the policy, ignore and semver inputs Node computed.
 //! Without `--json`, `report` formats the same result like `StatusCmd.report`.
 //!
-//! It runs only on a warm dependency cache. A component whose dependencies
-//! need fresh detection, an invalidated cache, the `no-fs-cache` feature,
-//! component-level dependency policies, other environments and every other
-//! input this module cannot prove declines to the Node.js CLI, which then
-//! writes the cache for the next run.
+//! It reuses valid dependency cache entries or detects dependencies afresh.
+//! With `no-fs-cache` it always detects afresh and writes no cache entries.
+//! Component-level dependency policies, other environments and every other
+//! input this module cannot prove declines to the Node.js CLI.
 
 pub(super) mod cache;
 pub(super) mod capture;
@@ -133,9 +132,6 @@ fn read<Prepared>(
     home: &Path,
     prepare: impl FnOnce(&Value, &Value) -> io::Result<Prepared>,
 ) -> io::Result<(Value, Prepared)> {
-    if cache::no_fs_cache(root) {
-        return Err(decline("no-fs-cache may be enabled"));
-    }
     let mut engine = Engine::new()?;
     let context: Value =
         engine.request(&json!({"kind": "statusContext", "root": root, "home": home}))?;

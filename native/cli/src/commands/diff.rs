@@ -111,8 +111,8 @@ fn read(
     parent: bool,
     chalk: Chalk,
 ) -> io::Result<(Value, usize)> {
-    if cache::no_fs_cache(root) || git_path_configured(root) {
-        return Err(decline("no-fs-cache or a configured git executable"));
+    if git_path_configured(root) {
+        return Err(decline("a configured git executable"));
     }
     let mut engine = Engine::new()?;
     let context: Value = engine.request(&json!({

@@ -152,9 +152,6 @@ impl Prepared {
         )
     )]
     fn plan(root: &Path, options: &Options) -> io::Result<Self> {
-        if cache::no_fs_cache(root) {
-            return Err(decline("no-fs-cache may be enabled"));
-        }
         let home = workspace_command::home();
         let mut engine = Engine::new()?;
         let operation = if options.kind == Kind::Lane { "laneAbort" } else { "componentAbort" };
