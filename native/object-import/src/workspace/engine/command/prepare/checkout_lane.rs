@@ -1,10 +1,10 @@
 use super::{Operation, Prepare, selected};
 use crate::{
     command_import,
-    workspace::engine::{client_status::config, invalid},
+    workspace::engine::{client_status::config, invalid, status_context},
 };
 use serde_json::{Value, json};
-use std::io;
+use std::{collections::HashSet, io, path::Path};
 
 #[derive(Default)]
 struct Additions {
@@ -16,16 +16,36 @@ struct Additions {
 }
 
 struct Candidates<'a> {
+    root: &'a Path,
     selected: std::collections::HashSet<String>,
     tracked: std::collections::HashSet<String>,
     targets: &'a [Value],
+    inactive: &'a [Value],
     workspace_only: bool,
+}
+
+pub(super) fn metadata(
+    request: &Prepare,
+    input: &status_context::Request,
+    pool: &rayon::ThreadPool,
+) -> io::Result<Value> {
+    if request.operation != Operation::Checkout {
+        return status_context::metadata(input, pool);
+    }
+    let bitmap = config::document(&request.root.join(".bitmap"))?;
+    if bitmap.get("_bit_lane").is_none() {
+        return status_context::metadata(input, pool);
+    }
+    let settings = config::configuration_for_command(&request.root, true)?;
+    let visible = super::super::lane_context::visibility::targets(&bitmap, &settings)?;
+    status_context::metadata_with_targets(input, pool, &settings, visible)
 }
 
 pub(super) fn attach(
     request: &Prepare,
     context: &mut Value,
     imported: Option<&mut command_import::PreparedImport>,
+    pool: &rayon::ThreadPool,
 ) -> io::Result<()> {
     if request.operation != Operation::Checkout {
         return Ok(());
@@ -49,6 +69,8 @@ pub(super) fn attach(
         return Err(invalid("checkout fetched lane history requires canonical handling"));
     }
     context["lane"] = json!({"currentId":current_id,"current":current});
+    let inactive = inactive_targets(request, context, &bitmap, &current, pool)?;
+    context["lane"]["inactiveTargets"] = json!(inactive);
     let additions = if request.options.to.as_deref() == Some("head") {
         additions(request, context, imported, &bitmap, &current)?
     } else {
@@ -59,6 +81,44 @@ pub(super) fn attach(
     context["lane"]["addedTargets"] = json!(additions.targets);
     context["lane"]["trackedTargets"] = json!(additions.tracked);
     Ok(())
+}
+
+fn inactive_targets(
+    request: &Prepare,
+    context: &Value,
+    bitmap: &Value,
+    current: &command_import::lane::Record,
+    pool: &rayon::ThreadPool,
+) -> io::Result<Vec<Value>> {
+    let settings = config::configuration_for_command(&request.root, true)?;
+    let heads = command_import::lane::entries(&current.value)?
+        .into_iter()
+        .map(|entry| entry.identity)
+        .collect::<HashSet<_>>();
+    let projected =
+        super::super::lane_context::visibility::switch_targets(bitmap, &settings, false, &heads)?;
+    let active = context["targets"].as_array().ok_or_else(|| invalid("checkout active targets"))?;
+    let selected = projected
+        .into_iter()
+        .filter(|row| {
+            !active
+                .iter()
+                .any(|target| target["identity"] == row["identity"])
+        })
+        .collect::<Vec<_>>();
+    if selected.is_empty() {
+        return Ok(Vec::new());
+    }
+    let input = status_context::Request {
+        root: request.root.clone(),
+        home: request.home.clone(),
+        history: false,
+    };
+    let metadata = status_context::metadata_with_targets(&input, pool, &settings, selected)?;
+    metadata["targets"]
+        .as_array()
+        .cloned()
+        .ok_or_else(|| invalid("checkout inactive targets"))
 }
 
 fn additions(
@@ -75,9 +135,13 @@ fn additions(
     let settings = config::configuration_for_command(&request.root, true)?;
     let bitmap = super::super::lane_context::visibility::identity_bitmap(bitmap, &settings)?;
     let candidates = Candidates {
+        root: &request.root,
         selected,
         tracked: bitmap_identities(&bitmap)?,
         targets: context["targets"].as_array().ok_or_else(|| invalid("checkout targets"))?,
+        inactive: context["lane"]["inactiveTargets"]
+            .as_array()
+            .ok_or_else(|| invalid("checkout inactive targets"))?,
         workspace_only: request.options.workspace_only,
     };
     let mut result = Additions::default();
@@ -119,10 +183,16 @@ fn collect_candidate(
     if candidates.tracked.contains(&entry.identity) {
         let target = candidates.targets
             .iter()
+            .chain(candidates.inactive)
             .find(|row| row["identity"] == entry.identity)
             .ok_or_else(|| invalid("checkout inactive lane row requires canonical writer"))?;
-        if target["version"] != entry.head {
-            return Err(invalid("checkout tracked lane version requires canonical writer"));
+        let directory = target["directory"]
+            .as_str()
+            .ok_or_else(|| invalid("checkout tracked lane directory"))?;
+        if missing_root(&candidates.root.join(directory))? {
+            result.prospective.push(json!({"identity":entry.identity,"head":entry.head,
+                "visible":false,"hidden":false,"currentIdPresent":false,"bitmapPresent":true}));
+            return Ok(());
         }
         result.tracked.push(target.clone());
         return Ok(());
@@ -130,6 +200,14 @@ fn collect_candidate(
     result.prospective.push(json!({"identity":entry.identity,"head":entry.head,
         "visible":false,"hidden":false,"currentIdPresent":false,"bitmapPresent":false}));
     Ok(())
+}
+
+fn missing_root(path: &Path) -> io::Result<bool> {
+    match path.symlink_metadata() {
+        Ok(_) => Ok(false),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(true),
+        Err(error) => Err(error),
+    }
 }
 
 pub(super) fn bitmap_identities(bitmap: &Value) -> io::Result<std::collections::HashSet<String>> {

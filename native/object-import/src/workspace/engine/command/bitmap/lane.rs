@@ -8,6 +8,23 @@ pub(super) fn on_lane(context: &Value) -> bool {
         .is_some_and(|name| name != "main")
 }
 
+/// Checkout rewrites already tracked lane rows without changing their visibility.
+pub(super) fn tracked_checkout(context: &Value, component: &str) -> bool {
+    let tracked = context["lane"]["trackedTargets"]
+        .as_array()
+        .is_some_and(|rows| {
+            rows.iter()
+                .any(|row| row["identity"] == component)
+        });
+    let inactive = context["lane"]["inactiveTargets"]
+        .as_array()
+        .is_some_and(|rows| {
+            rows.iter()
+                .any(|row| row["identity"] == component)
+        });
+    tracked && !inactive
+}
+
 /// Switching to main clears lane-only visibility when the component has a
 /// main head. Other lanes preserve the tracked lane-only designation.
 pub(super) fn switch_visibility(

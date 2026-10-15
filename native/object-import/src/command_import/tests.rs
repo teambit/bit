@@ -2,11 +2,12 @@ use super::{
     Object, Overlay, PreparedImport, Target, VirtualRemote, history, object_hash, prepare,
     prepare_cached, prepare_with_virtual, publish,
 };
+use flate2::{Compression, read::ZlibDecoder, write::ZlibEncoder};
 use serde_json::{Value, json};
 use std::{
     collections::BTreeMap,
     fs,
-    io::Write,
+    io::{Read, Write},
     path::{Path, PathBuf},
     sync::atomic::{AtomicUsize, Ordering},
 };
@@ -223,6 +224,42 @@ fn external_scope_without_mapping_declines_before_any_publication() {
     assert!(prepare(&fixture.root, &fixture.global, &[target]).is_err());
     assert!(!fixture.global.exists());
     assert_eq!(fs::read_dir(fixture.root.join(".bit/objects")).unwrap().count(), 0);
+}
+
+#[test]
+fn equal_component_import_preserves_existing_compressed_bytes() {
+    let fixture = Fixture::new();
+    let head = "c".repeat(40);
+    fixture.model(&head);
+    fixture.imported().commit().unwrap();
+    let hash = object_hash("remote.scope/alpha");
+    let path = fixture.root
+        .join(".bit/objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    let compressed = fs::read(&path).unwrap();
+    let mut inflated = Vec::new();
+    ZlibDecoder::new(compressed.as_slice()).read_to_end(&mut inflated).unwrap();
+    let mut encoder = ZlibEncoder::new(Vec::new(), Compression::none());
+    encoder.write_all(&inflated).unwrap();
+    let existing = encoder.finish().unwrap();
+    fs::write(&path, &existing).unwrap();
+
+    let refs = fixture.root.join(".bit/refs/remotes/remote.scope/main");
+    fs::create_dir_all(refs.parent().unwrap()).unwrap();
+    fs::write(
+        &refs,
+        serde_json::to_vec(&json!([{"id":{"scope":"remote.scope","name":"alpha"},
+        "head":"d".repeat(40)}]))
+        .unwrap(),
+    )
+    .unwrap();
+    let mut plan = prepare_cached(&fixture.root, &fixture.global).unwrap();
+    plan.prepare_merge_gap(&[Fixture::target()])
+        .unwrap();
+    assert!(!plan.overlay.objects.contains_key(&hash));
+    plan.commit().unwrap();
+    assert_eq!(fs::read(path).unwrap(), existing);
 }
 
 #[test]

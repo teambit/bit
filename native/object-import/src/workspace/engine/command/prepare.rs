@@ -31,7 +31,7 @@ pub(super) fn context(
         home: request.home.clone(),
         history: false,
     };
-    let mut context = status_context::metadata(&input, pool)?;
+    let mut context = checkout_lane::metadata(request, &input, pool)?;
     let mut imported = match request.operation {
         Operation::Checkout => Some(prepare_checkout_import(request, &context)?),
         Operation::Merge | Operation::Switch => {
@@ -47,7 +47,7 @@ pub(super) fn context(
                 &unexported_targets(request, &context)?,
             )?;
     }
-    checkout_lane::attach(request, &mut context, imported.as_mut())?;
+    checkout_lane::attach(request, &mut context, imported.as_mut(), pool)?;
     extend_models(request, pool, &mut context, imported.as_ref())?;
     Ok((context, imported))
 }

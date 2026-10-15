@@ -1,6 +1,7 @@
 mod checkout_lane;
 mod checkout_select;
 mod history_replay;
+mod missing_reset;
 mod reset_comparison;
 use super::{
     super::{invalid, status_models::comparison},
@@ -73,6 +74,7 @@ fn checkout_captured(
     }
     import_selected(record, &selections)?;
     prepare_selections(record, &mut plan, &selections, snapshots)?;
+    missing_reset::report_if_applicable(record, &mut plan, recovery_reset)?;
     if record.request.operation == input::Operation::Checkout
         && record.request.options.to.as_deref() == Some("head")
         && record.context.get("lane").is_some()

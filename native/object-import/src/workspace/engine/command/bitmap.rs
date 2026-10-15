@@ -13,6 +13,10 @@ use std::{
     path::{Path, PathBuf},
 };
 
+pub(super) fn active_tracked_checkout(context: &Value, identity: &str) -> bool {
+    lane::tracked_checkout(context, identity)
+}
+
 pub(super) struct Update {
     pub(super) identity: String,
     pub(super) version: String,
@@ -202,7 +206,9 @@ fn apply_update(entry: &mut Value, context: &Value, update: &Update) -> io::Resu
     entry["mainFile"] = Value::String(update.main_file.clone());
     let entry = entry.as_object_mut().ok_or_else(|| invalid("command bitmap entry"))?;
     if lane::on_lane(context) {
-        entry.insert("isAvailableOnCurrentLane".into(), Value::Bool(true));
+        if !lane::tracked_checkout(context, &update.identity) {
+            entry.insert("isAvailableOnCurrentLane".into(), Value::Bool(true));
+        }
     } else {
         entry.shift_remove("isAvailableOnCurrentLane");
         entry.shift_remove("onLanesOnly");
