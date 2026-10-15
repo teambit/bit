@@ -236,6 +236,10 @@ impl bit_install::Host for JsHost {
         self.call("devPatterns", json!({ "envId": env_id })).await
     }
 
+    async fn env_falls_back(&self, env_id: &str) -> io::Result<bool> {
+        self.call("envFallsBack", json!({ "envId": env_id })).await
+    }
+
     async fn prepare_install(&self, aspect_ids: &[String]) -> io::Result<()> {
         self.call::<Value>("prepareInstall", json!({ "aspectIds": aspect_ids })).await?;
         Ok(())

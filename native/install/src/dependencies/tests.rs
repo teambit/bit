@@ -25,7 +25,7 @@ use async_trait::async_trait;
 use indexmap::IndexMap;
 use pretty_assertions::assert_eq;
 use serde_json::{Value, json};
-use std::{fs, io, path::Path};
+use std::{collections::HashMap, fs, io, path::Path};
 
 fn write(path: &Path, contents: &str) {
     fs::create_dir_all(path.parent().expect("parent")).expect("dir");
@@ -230,6 +230,35 @@ async fn env_component_gets_its_own_peers() {
         packages(env, Lifecycle::Runtime),
         vec![("react".into(), "18.3.1".into()), ("vue".into(), "3.0.0".into())],
     );
+}
+
+/// An env defined in code gets its own policy from the host, unless the install did not
+/// register it: `getPoliciesFromEnvForItself` then finds none.
+#[tokio::test]
+async fn an_env_the_install_did_not_register_gets_no_own_policy() {
+    let temp = tempfile::tempdir().expect("tempdir");
+    let root = temp.path();
+    let mut env = component(root, "acme/envs/code-env", "teambit.envs/env");
+    env.files = vec!["index.ts".into()];
+    env.is_env = true;
+    write(&env.dir.join("index.ts"), "export const env = 1;\n");
+    let own = json!({"peers": [{"name": "react", "version": "^19.0.0", "supportedRange": "^19"}]});
+    let mut host = TestHost {
+        policies: HashMap::from([("acme/envs/code-env".to_owned(), own)]),
+        ..TestHost::default()
+    };
+    let options = DependencyOptions::default();
+    let components = [env];
+    let registered = run_with(root, &components, &IndexMap::new(), &options, &host).await;
+    let react = |result: &IndexMap<String, ComponentDependencies>| {
+        packages(&result["acme/envs/code-env"], Lifecycle::Runtime)
+            .into_iter()
+            .any(|(name, _)| name == "react")
+    };
+    assert!(react(&registered), "the registered env's own peers");
+    host.fallen_back.push("acme/envs/code-env".into());
+    let fallen_back = run_with(root, &components, &IndexMap::new(), &options, &host).await;
+    assert!(!react(&fallen_back), "no own policy");
 }
 
 #[tokio::test]

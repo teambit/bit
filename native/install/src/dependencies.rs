@@ -276,6 +276,11 @@ async fn own_env(
         return Ok(None);
     }
     let id = component.id.to_string_without_version();
+    // `getPoliciesFromEnvForItself` finds no policy for an env the install did not
+    // register; the default env it resolves to applies to its components only.
+    if component.is_env && host.env_falls_back(&id).await? {
+        return Ok(None);
+    }
     let config = if component.is_env {
         host.env_policy(&id).await?
     } else {

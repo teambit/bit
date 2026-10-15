@@ -94,6 +94,7 @@ const handlers = {
   registeredEnvPolicy: ({ envId, aspectIds }) => registeredEnvPolicy(envId, aspectIds),
   devPatterns: ({ envId }) => devPatterns(envId),
   prepareInstall: ({ aspectIds }) => prepareInstall(aspectIds),
+  envFallsBack: ({ envId }) => envFallsBack(envId),
   dependencyPolicies: ({ extensionIds }) => dependencyPolicies(extensionIds),
   detectDependencies: ({ envId, files, componentDir, aspectIds }) =>
     detectDependencies(envId, files, componentDir, aspectIds),
@@ -262,6 +263,13 @@ async function prepareInstall(aspectIds) {
   beforePackageManager = true;
   pendingInstallLoad = aspectIds ?? [];
   return null;
+}
+
+/** Whether `envId` is the default env: before the package manager, one not registered. */
+async function envFallsBack(envId) {
+  if (!beforePackageManager) return false;
+  await loadInstallComponents();
+  return !(await loadHarmony()).get('teambit.envs/envs').getEnvDefinitionByStringId(envId);
 }
 
 /** The workspace aspects `prepareInstall` was given, until `loadInstallComponents` ran. */

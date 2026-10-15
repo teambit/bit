@@ -217,6 +217,11 @@ pub struct EnvPolicy {
     /// (`getFailedToLoadEnvs` in TypeScript).
     #[serde(default)]
     pub failed_to_load: bool,
+    /// The env was not registered before the package manager, so this is the default
+    /// env's policy, which its components get (`calculateEnv`); the env's own root has
+    /// no policy (`getEnvPolicyFromEnvId` finds none).
+    #[serde(default)]
+    pub default_env: bool,
 }
 
 /// Bit's global configuration (`bit config`), keyed by the config key

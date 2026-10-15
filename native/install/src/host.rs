@@ -148,6 +148,13 @@ pub trait Host: Send + Sync {
         Ok(())
     }
 
+    /// Whether `env_id` resolves to the default env: before the package manager, an env
+    /// the install's component loads did not register (see `prepare_install`).
+    async fn env_falls_back(&self, env_id: &str) -> io::Result<bool> {
+        let _ = env_id;
+        Ok(false)
+    }
+
     /// The dependency policies aspects registered (`registerDependenciesPolicies`),
     /// as `[[registrar, policy], ...]`, after loading `extension_ids`: the aspects the
     /// components configure that may register one. `None` when the host cannot load them.

@@ -30,7 +30,9 @@ fn env_dependencies(
     env_id: &str,
     workspace_deps: &DependencyMap,
 ) -> DependencyMap {
-    let Some(policy) = input.policies.envs.get(env_id) else { return DependencyMap::new() };
+    let Some(policy) = input.policies.envs.get(env_id).filter(|policy| !policy.default_env) else {
+        return DependencyMap::new();
+    };
     policy.self_policy
         .iter()
         .filter(|entry| entry.force && entry.version != "-")

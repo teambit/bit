@@ -25,10 +25,17 @@ pub struct TestHost {
     pub calls: Mutex<Vec<String>>,
     /// `registered_env_policy` calls, with the workspace aspects sent along.
     pub registered: Mutex<Vec<(String, Vec<String>)>>,
+    /// Envs the install did not register (`env_falls_back`).
+    pub fallen_back: Vec<String>,
 }
 
 #[async_trait]
 impl Host for TestHost {
+    async fn env_falls_back(&self, env_id: &str) -> io::Result<bool> {
+        Ok(self.fallen_back
+            .iter()
+            .any(|env| env == env_id))
+    }
     async fn env_policy(&self, env_id: &str) -> io::Result<Option<Value>> {
         self.calls
             .lock()

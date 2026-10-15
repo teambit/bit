@@ -740,3 +740,32 @@ fn package_json_dependencies_are_the_root_manifest_before_links() {
     assert_eq!(written.dependencies["lodash"], "^4.17.0");
     assert!(written.warnings.is_empty());
 }
+
+/// An env the install did not register: its components get the default env's policy, its
+/// own root none (`getEnvPolicyFromEnvId` finds no policy).
+#[test]
+fn a_root_of_an_env_resolved_to_the_default_env_has_no_env_dependencies() {
+    let mut fixture = Fixture::new(vec![component("org.ui", "lib", None, "org.envs/env@1.0.0")]);
+    fixture.config.root_components = Some(true);
+    fixture.options = ManifestOptions::new(
+        &fixture.config,
+        true,
+        Path::new(ROOT).join("node_modules/.bit_roots"),
+    );
+    let mut forced = env_peer("react", "^19.0.0");
+    forced.force = true;
+    let mut policy = env_policy(vec![forced]);
+    policy.default_env = true;
+    fixture.envs.insert("org.envs/env@1.0.0".into(), policy);
+    let extra = Extra {
+        core_aspects: Vec::new(),
+        apps: Vec::new(),
+        env_packages: [("org.envs/env".to_string(), "@org-envs/env".to_string())].into(),
+    };
+    let outcome = fixture.run_with(&extra);
+    let env_root = manifest(&outcome, "/ws/node_modules/.bit_roots/org.envs_env@1.0.0");
+    assert_eq!(
+        field(env_root, "dependencies"),
+        json!({ "@org-ui/lib": "workspace:*", "@org-envs/env": "1.0.0" }),
+    );
+}
