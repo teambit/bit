@@ -1,6 +1,5 @@
 use super::{SNAP, TAG, format};
-use crate::commands::color::Chalk;
-use crate::commands::workspace_command::format::expected_success_symbols;
+use crate::commands::{color::Chalk, test_support::expected_success_symbols};
 use serde_json::json;
 
 const ONE: &str = "s/a@0123456789abcdef0123456789abcdef01234567";

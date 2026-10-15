@@ -2,12 +2,6 @@
 
 use crate::commands::color::Chalk;
 
-/// Match the platform-specific success symbol used by the Node CLI.
-#[cfg(test)]
-pub fn expected_success_symbols(expected: &str) -> String {
-    if cfg!(windows) { expected.replace('\u{2714}', "\u{2713}") } else { expected.to_owned() }
-}
-
 pub struct Formatter {
     pub chalk: Chalk,
 }

@@ -1,6 +1,5 @@
 use super::{Summary, quick_report, report};
-use crate::commands::color::Chalk;
-use crate::commands::workspace_command::format::expected_success_symbols;
+use crate::commands::{color::Chalk, test_support::expected_success_symbols};
 
 fn summary(modified: &[&str], new_comps: &[&str]) -> Summary {
     Summary {
