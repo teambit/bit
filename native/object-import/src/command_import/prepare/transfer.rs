@@ -65,15 +65,23 @@ fn receive_from(
     }
     let old = read_model(plan, &local, target)?;
     let value = merge::model_from(old.as_ref(), incoming, origin)?;
-    let hash = object_hash(&identity(target)?);
-    plan.overlay.objects.insert(
-        hash.clone(),
-        super::super::publish::object(&hash, "Component", value)?,
-    );
-    update_index(plan, target, &hash)?;
+    stage_model(plan, target, value)?;
     if origin {
         record_remote_head(plan, target, incoming)?;
     }
+    Ok(())
+}
+
+fn stage_model(plan: &mut PreparedImport, target: &Target, value: Value) -> io::Result<()> {
+    let hash = object_hash(&identity(target)?);
+    let existing = plan.capture.object(&plan.environment.local_directory, &hash, "Component")?;
+    if existing.as_ref().and_then(|record| record.value.as_ref()) != Some(&value) {
+        plan.overlay.objects.insert(
+            hash.clone(),
+            super::super::publish::object(&hash, "Component", value)?,
+        );
+    }
+    update_index(plan, target, &hash)?;
     Ok(())
 }
 fn receive_history(
