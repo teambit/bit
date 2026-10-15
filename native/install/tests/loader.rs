@@ -29,6 +29,7 @@ fn one_loader_serves_every_output() {
     restarts_leave_one_spinner(&command, &written);
     a_new_status_replaces_the_other_outputs_spinner(&command, &install, &written);
     off_silences_every_output_until_on(&command, &install, &written);
+    console_lines_wait_for_the_loader(&command, &written);
 }
 
 /// Restarting faster than a frame used to leave one more frame thread each time.
@@ -70,4 +71,17 @@ fn off_silences_every_output_until_on(command: &Output, install: &Output, writte
     install.loader_on();
     command.success("importing components", None);
     assert_eq!(take(written), "\u{1b}[32m✔\u{1b}[39m importing components\n");
+}
+
+fn console_lines_wait_for_the_loader(command: &Output, written: &Mutex<String>) {
+    command.loader_off();
+    take(written);
+    let output = Output::new(false, false, false, command.sink()).with_console(false);
+    output.console("dropped");
+    output.success("dropped", None);
+    assert_eq!(take(written), "");
+    output.loader_on();
+    output.console("plain");
+    output.success("done", None);
+    assert_eq!(take(written), "  plain\n✔ done\n");
 }

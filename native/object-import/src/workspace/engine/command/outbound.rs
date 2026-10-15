@@ -1,6 +1,8 @@
 //! Public outbound export owner. Prepare captures and validates local objects;
 //! Apply transfers compressed objects and owns remote validation/persistence.
 //! Finalize publishes local bookkeeping from the retained acknowledgements.
+pub(crate) use model::{encode as encode_object, read_object};
+
 mod lane_model;
 mod lane_publication;
 mod model;

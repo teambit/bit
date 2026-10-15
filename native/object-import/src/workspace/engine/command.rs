@@ -1,6 +1,6 @@
 pub(super) mod inbound;
 pub(super) mod input;
-pub(super) mod outbound;
+pub(crate) mod outbound;
 pub(super) mod policy;
 pub(super) mod recovery;
 pub(super) mod resolve;
