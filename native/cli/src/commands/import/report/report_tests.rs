@@ -1,6 +1,5 @@
 use super::validate;
-use crate::commands::color::Chalk;
-use crate::commands::workspace_command::format::expected_success_symbols;
+use crate::commands::{color::Chalk, test_support::expected_success_symbols};
 use serde_json::json;
 
 fn receipt(details: &serde_json::Value) -> serde_json::Value {
@@ -44,8 +43,8 @@ fn up_to_date_components_are_counted() {
     assert_eq!(
         report,
         expected_success_symbols(
-            "✔ successfully imported one component, 1 components are up to date"
-        )
+            "✔ successfully imported one component, 1 components are up to date",
+        ),
     );
 }
 

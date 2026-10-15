@@ -1,6 +1,6 @@
 use super::format;
 use crate::commands::{
-    checkout::options::parse, color::Chalk, workspace_command::format::expected_success_symbols,
+    checkout::options::parse, color::Chalk, test_support::expected_success_symbols,
 };
 use serde_json::json;
 
