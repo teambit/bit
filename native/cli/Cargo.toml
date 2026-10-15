@@ -10,6 +10,7 @@ name = "bit"
 path = "src/main.rs"
 
 [dependencies]
+diff = "0.1.13"
 bit-ignore = { path = "../ignore" }
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 getrandom = "0.3"

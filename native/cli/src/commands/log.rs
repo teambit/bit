@@ -133,7 +133,7 @@ fn read(root: &Path, options: &Options<'_>) -> io::Result<Vec<Value>> {
     Ok(logs)
 }
 
-fn normalize(row: &Value) -> io::Result<Value> {
+pub(super) fn normalize(row: &Value) -> io::Result<Value> {
     let raw = row["log"].as_object().ok_or_else(|| decline("component log metadata"))?;
     let mut normalized = Map::new();
     for (key, value) in raw {
@@ -171,7 +171,7 @@ fn normalize(row: &Value) -> io::Result<Value> {
     Ok(Value::Object(normalized))
 }
 
-fn raw_date_order(left: &Value, right: &Value) -> std::cmp::Ordering {
+pub(super) fn raw_date_order(left: &Value, right: &Value) -> std::cmp::Ordering {
     let millis = |row: &Value| {
         row["log"]["date"]
             .as_str()
@@ -301,7 +301,12 @@ fn one_line(logs: &[Value]) -> io::Result<String> {
                 .collect()
         })
         .collect();
-    let widths: Vec<usize> = (0..fields.len())
+    Ok(table(&rows))
+}
+
+pub(super) fn table(rows: &[Vec<&str>]) -> String {
+    let fields = rows.first().map_or(0, Vec::len);
+    let widths: Vec<usize> = (0..fields)
         .map(|index| {
             rows.iter()
                 .map(|row| UnicodeWidthStr::width(row[index]))
@@ -317,7 +322,7 @@ fn one_line(logs: &[Value]) -> io::Result<String> {
                 .map(|(index, field)| {
                     let padding =
                         " ".repeat(widths[index].saturating_sub(UnicodeWidthStr::width(*field)));
-                    if index + 1 == fields.len() {
+                    if index + 1 == fields {
                         format!("{field}{padding}")
                     } else {
                         format!("{field}{padding} ")
@@ -326,7 +331,7 @@ fn one_line(logs: &[Value]) -> io::Result<String> {
                 .collect::<String>()
         })
         .collect();
-    Ok(lines.join("\n"))
+    lines.join("\n")
 }
 
 #[cfg(test)]
