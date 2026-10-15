@@ -1,14 +1,18 @@
-//! Reset linear, unexported lane snapshots without hydrating files through Node.
+//! Reset linear lane snapshots newer than the lane's recorded remote head.
 
 pub use batch::Batch;
 
 mod batch;
 mod dependents;
 mod history;
+mod new_model;
+mod remote;
 #[cfg(test)]
 mod tests;
 
 use history::{lane_history, pending_histories, version_history};
+use new_model::remove_new_model;
+use remote::{exported_head, reached_boundary};
 
 use crate::workspace::engine::command::outbound;
 use serde_json::Value;
@@ -22,6 +26,12 @@ use std::{
 #[derive(Clone, PartialEq)]
 struct ObjectChange {
     hash: String,
+    before: Vec<u8>,
+    after: Option<Vec<u8>>,
+}
+
+#[derive(PartialEq)]
+struct BytesChange {
     before: Vec<u8>,
     after: Vec<u8>,
 }
@@ -41,8 +51,8 @@ pub struct Plan {
     force: bool,
     objects: Vec<ObjectChange>,
     bitmap: BitmapChange,
+    index: Option<BytesChange>,
     selection: Selection,
-    pub labels: Vec<String>,
 }
 
 struct BitmapState {
@@ -51,6 +61,7 @@ struct BitmapState {
     key: String,
     lane_scope: String,
     lane_name: String,
+    exported: bool,
 }
 
 impl BitmapState {
@@ -67,16 +78,15 @@ impl BitmapState {
             .as_str()
             .ok_or_else(|| invalid("lane reset name"))?
             .to_owned();
-        if lane["exported"] != false {
-            return Err(invalid("lane reset exported lane"));
-        }
+        let exported =
+            lane["exported"].as_bool().ok_or_else(|| invalid("lane reset export state"))?;
         let key = bitmap_key(rows, scope, name)?;
         if rows[&key]["config"]["teambit.component/remove"]["removed"] == true
             || rows[&key]["isAvailableOnCurrentLane"] == false
         {
             return Err(invalid("lane reset unavailable component"));
         }
-        Ok(Self { before, document, key, lane_scope, lane_name })
+        Ok(Self { before, document, key, lane_scope, lane_name, exported })
     }
 
     fn validate_head(&self, head: &str) -> io::Result<()> {
@@ -102,6 +112,12 @@ impl BitmapState {
             .ok_or_else(|| invalid("lane reset bitmap row"))?;
         row.insert("version".into(), Value::String(version.clone()));
         row.shift_remove("nextVersion");
+        if version.is_empty()
+            && model["versions"].as_object().is_some_and(serde_json::Map::is_empty)
+        {
+            row.shift_remove("onLanesOnly");
+            row.shift_remove("isAvailableOnCurrentLane");
+        }
         Ok(version)
     }
 
@@ -117,8 +133,19 @@ struct Repository {
     lane_hash: String,
     lane: Value,
     lane_position: usize,
-    current: String,
+    heads: Heads,
     model: Value,
+}
+
+struct Heads {
+    current: String,
+    remote: Option<String>,
+}
+
+impl Heads {
+    fn is_remote(&self, hash: &str) -> bool {
+        self.remote.as_deref() == Some(hash)
+    }
 }
 
 impl Repository {
@@ -143,6 +170,7 @@ impl Repository {
             .ok_or_else(|| invalid("lane reset head"))?
             .to_owned();
         crate::merge_history::hash(&current)?;
+        let remote_head = exported_head(root, bitmap, scope, name, &model)?;
         Ok(Self {
             objects,
             lane_scope: bitmap.lane_scope.clone(),
@@ -150,7 +178,7 @@ impl Repository {
             lane_hash,
             lane,
             lane_position,
-            current,
+            heads: Heads { current, remote: remote_head },
             model,
         })
     }
@@ -188,6 +216,16 @@ struct Selection {
     labels: Vec<String>,
 }
 
+impl Selection {
+    fn new(removed: Vec<String>, next: Option<String>, head_only: bool) -> Self {
+        let mut labels = removed.clone();
+        if !head_only {
+            labels.reverse();
+        }
+        Self { removed, next, labels }
+    }
+}
+
 impl Plan {
     pub fn prepare(root: &Path, identity: &str, head_only: bool, force: bool) -> io::Result<Self> {
         let (scope, name) = identity
@@ -196,25 +234,26 @@ impl Plan {
             .ok_or_else(|| invalid("lane reset identity"))?;
         let mut bitmap = BitmapState::load(root, scope, name)?;
         let mut repository = Repository::load(root, &bitmap, scope, name)?;
-        bitmap.validate_head(&repository.current)?;
+        bitmap.validate_head(&repository.heads.current)?;
         let selection = select(&repository, head_only)?;
         if !force {
             dependents::validate(root, identity, &selection.removed)?;
         }
-        let history = version_history(&repository, identity)?;
-        let lane_history = lane_history(&repository, &selection.removed)?;
-        let pending = pending_histories(
-            &repository.objects,
-            &repository.lane,
-            &HashSet::from([identity.to_owned()]),
-        )?;
-        repository.project_lane(selection.next.as_deref(), head_only)?;
+        let mut objects = project_objects(&mut repository, identity, &selection, head_only)?;
         let bitmap_version = bitmap.project(&repository.model, selection.next.clone())?;
-        let mut objects = vec![history, lane_history, repository.lane_object()?];
-        objects.extend(pending);
         let bitmap_after = bitmap.after()?;
         let bitmap =
             BitmapChange { before: bitmap.before, after: bitmap_after, version: bitmap_version };
+        let index = if selection.next.is_none()
+            && repository.model["versions"].as_object().is_some_and(serde_json::Map::is_empty)
+            && !repository.model["head"].is_string()
+        {
+            let (removed, index) = remove_new_model(root, scope, name)?;
+            objects.push(removed);
+            Some(index)
+        } else {
+            None
+        };
         Ok(Self {
             root: root.to_owned(),
             identity: identity.to_owned(),
@@ -222,9 +261,15 @@ impl Plan {
             force,
             objects,
             bitmap,
-            labels: selection.labels.clone(),
+            index,
             selection,
         })
+    }
+
+    /// Version labels in the order printed by `bit reset`.
+    #[must_use]
+    pub fn labels(&self) -> &[String] {
+        &self.selection.labels
     }
 
     pub fn commit(&self, file_id: &str) -> io::Result<()> {
@@ -233,19 +278,53 @@ impl Plan {
         if self.objects != fresh.objects
             || self.bitmap.before != fresh.bitmap.before
             || self.bitmap.after != fresh.bitmap.after
+            || self.index != fresh.index
         {
             return Err(invalid("lane reset changed during preparation"));
         }
         for object in &self.objects {
-            fs::write(object_path(&self.root.join(".bit/objects"), &object.hash), &object.after)?;
+            let path = object_path(&self.root.join(".bit/objects"), &object.hash);
+            if let Some(after) = &object.after {
+                fs::create_dir_all(
+                    path.parent().ok_or_else(|| invalid("lane reset object path"))?,
+                )?;
+                fs::write(path, after)?;
+            } else {
+                fs::remove_file(path)?;
+            }
+        }
+        if let Some(index) = &self.index {
+            fs::write(self.root.join(".bit/index.json"), &index.after)?;
         }
         crate::reset_main::backup_bitmap(&self.root, file_id)?;
         fs::write(self.root.join(".bitmap"), &self.bitmap.after)
     }
 }
 
+fn project_objects(
+    repository: &mut Repository,
+    identity: &str,
+    selection: &Selection,
+    head_only: bool,
+) -> io::Result<Vec<ObjectChange>> {
+    let history = version_history(repository, identity)?;
+    let lane_history = lane_history(repository, &selection.removed)?;
+    let pending = pending_histories(
+        &repository.objects,
+        &repository.lane,
+        &HashSet::from([identity.to_owned()]),
+    )?;
+    repository.project_lane(selection.next.as_deref(), head_only)?;
+    let mut objects = vec![history, lane_history, repository.lane_object()?];
+    objects.extend(pending);
+    Ok(objects)
+}
+
 fn select(repository: &Repository, head_only: bool) -> io::Result<Selection> {
-    let mut current = repository.current.clone();
+    let mut current = repository.heads.current.clone();
+    if repository.heads.is_remote(&current) {
+        return Err(invalid("lane reset head is exported"));
+    }
     let mut removed = Vec::new();
     let mut seen = HashSet::new();
     loop {
@@ -254,17 +333,8 @@ fn select(repository: &Repository, head_only: bool) -> io::Result<Selection> {
         }
         let next = local_parent(repository, &current)?;
         removed.push(current);
-        let next_on_lane = next
-            .as_ref()
-            .map(|next| repository.is_lane_origin(next))
-            .transpose()?
-            .unwrap_or(false);
-        if head_only || !next_on_lane {
-            let mut labels = removed.clone();
-            if !head_only {
-                labels.reverse();
-            }
-            return Ok(Selection { removed, next, labels });
+        if head_only || reached_boundary(repository, next.as_deref())? {
+            return Ok(Selection::new(removed, next, head_only));
         }
         current = next.ok_or_else(|| invalid("lane reset missing parent"))?;
     }
@@ -303,7 +373,7 @@ fn changed(objects: &Path, hash: &str, kind: &str, value: &Value) -> io::Result<
     Ok(ObjectChange {
         hash: hash.to_owned(),
         before: fs::read(object_path(objects, hash))?,
-        after: outbound::encode_object(hash, kind, value)?,
+        after: Some(outbound::encode_object(hash, kind, value)?),
     })
 }
 
