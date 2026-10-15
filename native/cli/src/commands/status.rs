@@ -18,6 +18,7 @@ pub(super) mod policy;
 
 pub(super) mod collate;
 mod lane_refresh;
+mod loader;
 mod report;
 
 use super::{color::Chalk, engine::Engine, workspace_command};
@@ -117,13 +118,11 @@ fn report_status(
     args: &[OsString],
     flags: &report::Flags,
 ) -> io::Result<Outcome> {
-    let (output, loaded, loads, refresh_count) =
+    let (output, loaded, loads, progress) =
         match read(root, home, flags.lanes, |result, context| {
             prepare_report(result, context, flags, Chalk::detect(args))
         }) {
-            Ok((_, (output, loaded, loads), refresh_count)) => {
-                (output, loaded, loads, refresh_count)
-            }
+            Ok((_, (output, loaded, loads), progress)) => (output, loaded, loads, progress),
             Err(ReadFailure::Declined(error)) => {
                 return Ok(Outcome::Declined(format!("status: {error}")));
             }
@@ -131,19 +130,8 @@ fn report_status(
         };
     let report =
         workspace_command::results::Report { data: output.data, code: output.code, details: None };
-    workspace_command::execute_with(root, args, "status", &report, |loader| {
-        loader.status("fetching status");
-        // `getMany` of the workspace: listing, new and modified components,
-        // and the auto-tag check once a component is modified.
-        for _ in 0..loads {
-            loader.status(&format!("loading {loaded} component(s)"));
-        }
-        if refresh_count > 0 {
-            let reason = "main components of the current lane to check for updates";
-            loader.status(&format!("importing {refresh_count} components {reason}"));
-            loader.status(&format!("successfully imported {refresh_count} components {reason}"));
-        }
-        Ok(())
+    workspace_command::execute_with(root, args, "status", &report, |output| {
+        loader::render(output, loaded, loads, &progress)
     })
 }
 
@@ -184,29 +172,21 @@ fn read<Prepared>(
     home: &Path,
     lanes: bool,
     prepare: impl FnOnce(&Value, &Value) -> io::Result<Prepared>,
-) -> Result<(Value, Prepared, usize), ReadFailure> {
+) -> Result<(Value, Prepared, loader::Progress), ReadFailure> {
     let mut engine = Engine::new()?;
     let context: Value =
         engine.request(&json!({"kind": "statusContext", "root": root, "home": home}))?;
     let (mut result, capture) = local_result(&mut engine, root, home, &context)?;
-    let current_lane_id = text(result.get("currentLaneId"))?.to_owned();
-    let refresh = if lanes && !current_lane_id.ends_with("/main") {
-        lane_refresh::prepare(&mut engine, root, &context, &result, &current_lane_id)?
-    } else {
-        None
-    };
-    if let Some((_, updates, _)) = &refresh {
-        result["pendingUpdatesFromMain"] = updates["pendingUpdatesFromMain"].clone();
-    }
+    let mut refreshes =
+        lane_refresh::Refreshes::prepare(&mut engine, root, &context, &result, lanes)?;
+    refreshes.attach(&mut result, &context);
     result["remotelySoftRemoved"] = json!(capture.remotely_removed);
     sort_rows(&mut result)?;
     let prepared = prepare(&result, &context)?;
     capture::commit(&mut engine, root, &context, &capture).map_err(ReadFailure::Committed)?;
-    let refresh_count = refresh.as_ref().map_or(0, |(_, _, count)| *count);
-    if let Some((token, _, _)) = refresh {
-        super::import::apply_status_refresh(&mut engine, &token).map_err(ReadFailure::Committed)?;
-    }
-    Ok((result, prepared, refresh_count))
+    let progress = refreshes.progress(&context);
+    refreshes.apply(&mut engine).map_err(ReadFailure::Committed)?;
+    Ok((result, prepared, progress))
 }
 
 fn local_result(

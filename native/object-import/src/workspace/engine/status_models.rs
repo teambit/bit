@@ -49,6 +49,8 @@ struct Target {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct Snapshot {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    forked_from: Option<String>,
     models: Vec<Value>,
     versions: Vec<(String, Value)>,
     semantics: Vec<String>,
@@ -110,7 +112,14 @@ fn load_overlay(
     } else {
         (None, Vec::new())
     };
-    Ok(Snapshot { models, versions, semantics, histories, pending_history })
+    Ok(Snapshot {
+        forked_from: lane.and_then(|lane| lane.forked_from),
+        models,
+        versions,
+        semantics,
+        histories,
+        pending_history,
+    })
 }
 fn indexed_models(
     reader: &Reader<'_>,

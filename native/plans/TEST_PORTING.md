@@ -2148,7 +2148,7 @@ The rest follow as their commands are ported.
 
 ### `e2e/harmony/lanes/diverged-from-forked.e2e.ts`
 
-- [ ] `e2e/harmony/lanes/diverged-from-forked.e2e.ts:37` lane-b was forked from lane-a and they are now diverged › bit status should have the diverged component in the updatesFromForked section
+- [x] `e2e/harmony/lanes/diverged-from-forked.e2e.ts:37` lane-b was forked from lane-a and they are now diverged › bit status should have the diverged component in the updatesFromForked section — `cli/tests/e2e/harmony/status_lanes.rs::forked_lane_updates_match_node`
 - [ ] `e2e/harmony/lanes/diverged-from-forked.e2e.ts:42` lane-b was forked from lane-a and they are now diverged › the file added on lane-a should not be on the filesystem while on lane-b
 - [ ] `e2e/harmony/lanes/diverged-from-forked.e2e.ts:52` lane-b was forked from lane-a and they are now diverged › merging lane-a into lane-b › should keep both parents (current lane first, merged lane second) and record no squash data
 - [ ] `e2e/harmony/lanes/diverged-from-forked.e2e.ts:61` lane-b was forked from lane-a and they are now diverged › merging lane-a into lane-b › should write the file that was newly added on lane-a

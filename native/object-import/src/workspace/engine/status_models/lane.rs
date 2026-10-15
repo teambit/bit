@@ -11,6 +11,7 @@ use std::{
 pub(super) struct Lane {
     pub(super) scope: String,
     pub(super) name: String,
+    pub(super) forked_from: Option<String>,
     pub(super) heads: HashMap<String, String>,
     pub(super) remotes: HashMap<String, String>,
 }
@@ -22,6 +23,7 @@ pub(super) fn read(root: &Path, reader: &Reader<'_>, id: &str) -> io::Result<Opt
     }
     let lane = local_object(root, reader, scope, name)?;
     let heads = component_heads(&lane)?;
+    let forked_from = forked_from(&lane)?;
     let remotes = remote(root, scope, name)?;
     if remotes
         .keys()
@@ -29,7 +31,20 @@ pub(super) fn read(root: &Path, reader: &Reader<'_>, id: &str) -> io::Result<Opt
     {
         return Err(invalid("status lane remote component mismatch"));
     }
-    Ok(Some(Lane { scope: scope.to_owned(), name: name.to_owned(), heads, remotes }))
+    Ok(Some(Lane { scope: scope.to_owned(), name: name.to_owned(), forked_from, heads, remotes }))
+}
+
+fn forked_from(lane: &Value) -> io::Result<Option<String>> {
+    let Some(value) = lane
+        .get("forkedFrom")
+        .filter(|value| !value.is_null())
+    else {
+        return Ok(None);
+    };
+    let scope = value["scope"].as_str().ok_or_else(|| invalid("status forked lane scope"))?;
+    let name = value["name"].as_str().ok_or_else(|| invalid("status forked lane name"))?;
+    parse_id(&format!("{scope}/{name}"))?;
+    Ok(Some(format!("{scope}/{name}")))
 }
 
 fn parse_id(id: &str) -> io::Result<(&str, &str)> {
@@ -64,9 +79,6 @@ fn local_object(root: &Path, reader: &Reader<'_>, scope: &str, name: &str) -> io
     let lane = reader.read(hash, "Lane")?;
     if lane["scope"] != scope
         || lane["name"] != name
-        || lane
-            .get("forkedFrom")
-            .is_some_and(|value| !value.is_null())
         || lane["updateDependents"]
             .as_array()
             .is_some_and(|rows| !rows.is_empty())

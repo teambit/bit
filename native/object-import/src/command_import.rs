@@ -70,6 +70,12 @@ impl Overlay {
             .and_then(Value::as_array)
             .map(Vec::as_slice)
     }
+    pub(crate) fn lane_refs(&self, scope: &str, name: &str) -> Option<&[Value]> {
+        self.lane_refs
+            .get(&(scope.to_owned(), name.to_owned()))
+            .and_then(Value::as_array)
+            .map(Vec::as_slice)
+    }
     pub(crate) fn compressed(&self, hash: &str) -> Option<&[u8]> {
         self.objects.get(hash).map(|record| record.bytes.as_slice())
     }
@@ -86,11 +92,22 @@ pub(crate) struct PreparedImport {
     pub(crate) overlay: Overlay,
     pub(crate) progress: Vec<Progress>,
     pub(crate) bitmap_count: usize,
-    pub(crate) main_refresh_count: usize,
+    pub(crate) main_refresh: MainRefresh,
     capture: Capture,
     environment: Environment,
     cache: Cache,
     writes: Writes,
+}
+#[derive(Default)]
+pub(crate) struct MainRefresh {
+    pub(crate) count: usize,
+    pub(crate) objects: usize,
+}
+impl MainRefresh {
+    fn observe(&mut self, model: &Value) {
+        self.count += 1;
+        self.objects += usize::from(model["head"].is_null());
+    }
 }
 impl PreparedImport {
     pub(crate) fn all_external_targets_unmapped(

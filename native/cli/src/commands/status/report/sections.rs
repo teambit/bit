@@ -31,6 +31,7 @@ impl Status<'_> {
                 lane_updates::UPDATES_FROM_MAIN,
                 &self.updates_from_main()?,
             ),
+            self.forked_section()?,
             format.section("components in merge state", DURING_MERGE, &self.during_merge_items()?),
             format.section("local-only components", LOCAL_ONLY, &local_only),
             format.section("new components", NEW, &new),
@@ -38,6 +39,21 @@ impl Status<'_> {
             format.section("snapped components (tag pending)", SNAPPED, &snapped),
             format.section("staged components", STAGED, &self.staged()?),
         ])
+    }
+
+    fn forked_section(&self) -> io::Result<String> {
+        let Some(id) = self.result.get("forkedLaneId").and_then(serde_json::Value::as_str) else {
+            return Ok(String::new());
+        };
+        let (_, name) = id.split_once('/').ok_or_else(|| io::Error::other("forked lane id"))?;
+        let description = format!(
+            "(use \"bit lane merge {id}\" to merge the changes\nuse \"bit fetch {id} --lanes\" to update {name} locally)",
+        );
+        Ok(self.format.section(
+            &format!("updates from {name}"),
+            &description,
+            &self.updates_from_forked()?,
+        ))
     }
 
     fn workspace_sections(&self) -> io::Result<Vec<String>> {

@@ -34,7 +34,7 @@ const TITLE_ONLY: [&str; 5] = [
     "MergeConfigHasConflict",
 ];
 /// Result sections the native status leaves empty; any row declines.
-const UNSUPPORTED: [&str; 2] = ["updatesFromForked", "pendingUpdateDependents"];
+const UNSUPPORTED: [&str; 1] = ["pendingUpdateDependents"];
 
 const OUTDATED: &str = "(use \"bit checkout head\" to merge changes)\n(use \"bit diff [component_id] [new_version]\" to compare changes)\n(use \"bit log [component_id]\" to list all available versions)";
 const PENDING_MERGE: &str = "(use \"bit reset\" to discard local tags/snaps, and bit checkout head to re-merge with the remote.\nalternatively, to keep local tags/snaps history, use \"bit merge [component-id]\")";
@@ -174,10 +174,7 @@ fn supported(result: &Value, chalk: Chalk) -> io::Result<()> {
             return Err(decline("status report section"));
         }
     }
-    let lane = text(result.get("currentLaneId"))?;
-    if lane.split_once('/').is_none() || !result["forkedLaneId"].is_null() {
-        return Err(decline("status report lane"));
-    }
+    lane_supported(result)?;
     let colored_data = array(result.get("componentsWithIssues"), "issues")?
         .iter()
         .flat_map(|row| {
@@ -201,6 +198,24 @@ fn supported(result: &Value, chalk: Chalk) -> io::Result<()> {
     }
     if chalk.enabled() && colored_data {
         return Err(decline("status report colored issue data"));
+    }
+    Ok(())
+}
+
+fn lane_supported(result: &Value) -> io::Result<()> {
+    let lane = text(result.get("currentLaneId"))?;
+    if lane.split_once('/').is_none()
+        || result
+            .get("forkedLaneId")
+            .is_some_and(|id| {
+                !id.is_null()
+                    && id
+                        .as_str()
+                        .and_then(|id| id.split_once('/'))
+                        .is_none()
+            })
+    {
+        return Err(decline("status report lane"));
     }
     Ok(())
 }

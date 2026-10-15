@@ -2,7 +2,7 @@
 
 use super::{Reader, history_population, indexed_models, invalid, lane, replace_models, versions};
 use crate::{command_import::Overlay, read_budget::Budget};
-use rayon::ThreadPool;
+use rayon::{ThreadPool, prelude::*};
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{
@@ -17,6 +17,8 @@ pub(in crate::workspace::engine) struct Request {
     pub(in crate::workspace::engine) root: PathBuf,
     pub(in crate::workspace::engine) token: String,
     current_lane_id: String,
+    #[serde(default)]
+    forked_lane_id: Option<String>,
     targets: Vec<Target>,
     during_merge: Vec<String>,
 }
@@ -44,7 +46,7 @@ pub(in crate::workspace::engine) fn read(
         raw: Budget::new(32 * 1024 * 1024),
         packed: Budget::new(32 * 1024 * 1024),
     };
-    lane::read(&request.root, &reader, &request.current_lane_id)?
+    let current = lane::read(&request.root, &reader, &request.current_lane_id)?
         .ok_or_else(|| invalid("status lane updates require a lane"))?;
     let mut models = indexed_models(&reader, &request.root, pool)?;
     replace_models(&mut models, Some(overlay));
@@ -53,15 +55,90 @@ pub(in crate::workspace::engine) fn read(
         .iter()
         .map(String::as_str)
         .collect::<HashSet<_>>();
-    let pending = request.targets
-        .iter()
-        .map(|target| pending_target(target, &reader, &models, &excluded))
-        .collect::<io::Result<Vec<_>>>()?
+    if request.forked_lane_id.is_some() {
+        return forked_updates(request, overlay, &reader, &models, &current, &excluded, pool);
+    }
+    let pending = pool
+        .install(|| {
+            request.targets
+                .par_iter()
+                .map(|target| pending_target(target, &reader, &models, &excluded))
+                .collect::<io::Result<Vec<_>>>()
+        })?
         .into_iter()
         .flatten()
         .collect::<Vec<_>>();
     let count = pending.len();
     Ok((count, json!({"pendingUpdatesFromMain":pending})))
+}
+
+fn forked_updates(
+    request: &Request,
+    overlay: &Overlay,
+    reader: &Reader<'_>,
+    models: &HashMap<String, &Value>,
+    current: &lane::Lane,
+    excluded: &HashSet<&str>,
+    pool: &ThreadPool,
+) -> io::Result<(usize, Value)> {
+    let forked =
+        request.forked_lane_id.as_deref().ok_or_else(|| invalid("status forked lane id"))?;
+    if current.forked_from.as_deref() != Some(forked) {
+        return Err(invalid("status forked lane identity"));
+    }
+    let (scope, name) = forked.split_once('/').ok_or_else(|| invalid("status forked lane id"))?;
+    let refs = overlay.lane_refs(scope, name).ok_or_else(|| invalid("status forked lane refs"))?;
+    let heads = refs
+        .iter()
+        .map(|row| {
+            let scope =
+                row["id"]["scope"].as_str().ok_or_else(|| invalid("status forked scope"))?;
+            let name = row["id"]["name"].as_str().ok_or_else(|| invalid("status forked name"))?;
+            let head = row["head"].as_str().ok_or_else(|| invalid("status forked head"))?;
+            Ok((format!("{scope}/{name}"), head))
+        })
+        .collect::<io::Result<HashMap<_, _>>>()?;
+    let updates = pool
+        .install(|| {
+            request.targets
+                .par_iter()
+                .map(|target| forked_target(target, reader, models, current, &heads, excluded))
+                .collect::<io::Result<Vec<_>>>()
+        })?
+        .into_iter()
+        .flatten()
+        .collect::<Vec<_>>();
+    Ok((updates.len(), json!({"updatesFromForked":updates,"forkedLaneId":forked})))
+}
+
+fn forked_target(
+    target: &Target,
+    reader: &Reader<'_>,
+    models: &HashMap<String, &Value>,
+    current: &lane::Lane,
+    heads: &HashMap<String, &str>,
+    excluded: &HashSet<&str>,
+) -> io::Result<Option<Value>> {
+    if target.version.is_empty() || excluded.contains(target.identity.as_str()) {
+        return Ok(None);
+    }
+    let (Some(model), Some(source), Some(main)) = (
+        models.get(&target.identity),
+        current.heads.get(&target.identity),
+        heads.get(&target.identity),
+    ) else {
+        return Ok(None);
+    };
+    let (records, _) = history_population::prepare(
+        reader,
+        model,
+        &target.identity,
+        &[Some(source), Some(main)],
+        true,
+    )?;
+    let distance = crate::merge_history::status::distance(&records, Some(source), Some(main))?;
+    let diverge = diverge_data(&distance)?;
+    Ok(diverge.map(|diverge| json!({"id":target.identity,"divergeData":diverge})))
 }
 
 fn model_index(models: &[Value]) -> io::Result<HashMap<String, &Value>> {

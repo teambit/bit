@@ -247,6 +247,24 @@ pub(super) fn prepare_status_refresh(
     prepare_into(engine, root, &options, ids)
 }
 
+pub(super) fn prepare_status_forked_refresh(
+    engine: &mut Engine,
+    root: &Path,
+    lane: &str,
+) -> io::Result<Value> {
+    let options = options::Options {
+        operation: "status",
+        ids: Vec::new(),
+        objects_only: true,
+        all_history: false,
+        skip_dependency_installation: false,
+        lanes: true,
+        skip_write_config_files: false,
+        include_deprecated: false,
+    };
+    prepare_into(engine, root, &options, &[lane.to_owned()])
+}
+
 pub(super) fn apply_status_refresh(engine: &mut Engine, token: &Value) -> io::Result<()> {
     let applied: Value = engine.request(&json!({"kind":"commandInboundApply","token":token}))?;
     if applied["applied"] != true || applied["token"] != *token {

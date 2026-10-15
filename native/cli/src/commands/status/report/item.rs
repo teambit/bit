@@ -12,9 +12,14 @@ impl Status<'_> {
             .map(|identity| self.item((identity, None), false, None, true))
             .collect())
     }
-    pub(super) fn item_with_message(&self, id: &str, message: &str) -> std::io::Result<String> {
+    pub(super) fn item_with_message(
+        &self,
+        id: &str,
+        message: &str,
+        warn: bool,
+    ) -> std::io::Result<String> {
         let chalk = self.format.chalk;
-        let symbol = self.symbol(self.issues_of(id, self.version(id)?), false);
+        let symbol = self.symbol(self.issues_of(id, self.version(id)?), warn);
         let item = Formatter::item_with(&chalk.cyan(id), &symbol);
         Ok(format!("{item} ... {}", chalk.yellow(message)))
     }

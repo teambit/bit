@@ -79,10 +79,6 @@ fn prepare_with_virtual_options(
     }
     plan.environment.remotes = remotes.clone();
     let available = refresh_all(&mut plan, &scoped, &remotes, ignore_missing)?;
-    plan.main_refresh_count = available
-        .iter()
-        .filter(|target| target.scope.as_deref() != Some(plan.environment.local_scope.as_str()))
-        .count();
     prepare_dependencies(&mut plan, root, &available, &remotes)?;
     plan.validate()?;
     Ok(plan)
@@ -137,6 +133,7 @@ fn refresh_all<'a>(
             continue;
         }
         let directory = &directories[remote_name];
+        record_main_refresh(plan, directory, target, ignore_missing)?;
         plan.progress
             .last_mut()
             .unwrap()
@@ -153,6 +150,17 @@ fn refresh_all<'a>(
     }
     Ok(available)
 }
+fn record_main_refresh(
+    plan: &mut PreparedImport,
+    directory: &Path,
+    target: &Target,
+    status: bool,
+) -> io::Result<()> {
+    if status && let Some(model) = read_model(plan, directory, target)? {
+        plan.main_refresh.observe(&model);
+    }
+    Ok(())
+}
 fn empty(root: &Path, allow_lane: bool) -> io::Result<(PreparedImport, Value)> {
     let mut capture = Capture::default();
     let scope = capture
@@ -167,7 +175,7 @@ fn empty(root: &Path, allow_lane: bool) -> io::Result<(PreparedImport, Value)> {
         overlay: Overlay::default(),
         progress: Vec::new(),
         bitmap_count: 0,
-        main_refresh_count: 0,
+        main_refresh: super::MainRefresh::default(),
         capture,
         environment: super::Environment {
             local_directory: root.join(".bit/objects"),
@@ -286,7 +294,7 @@ fn refresh(
         None if ignore_missing => return Ok(false),
         None => return Err(invalid("import remote component missing")),
     };
-    let Some(head) = model["head"].as_str() else { return Ok(true) };
+    let Some(head) = model["head"].as_str() else { return Ok(!ignore_missing) };
     let path = local
         .parent()
         .ok_or_else(|| invalid("import scope directory"))?

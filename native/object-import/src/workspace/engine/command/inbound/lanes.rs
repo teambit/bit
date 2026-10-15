@@ -31,7 +31,11 @@ pub(super) fn prepare(input: &Prepare, state: &mut State) -> io::Result<(usize, 
     let (targets, groups) = receive_lanes(input, &selection.lanes, &mut import)?;
     state.sequence = state.sequence.wrapping_add(1);
     let token = format!("inbound-{}", state.sequence);
-    let mut receipt = receipt(&input.root, &targets, &import, &token)?;
+    let mut receipt = if input.operation == "status" {
+        json!({"token":token,"importedIds":[],"progress":[],"refreshCount":targets.len()})
+    } else {
+        receipt(&input.root, &targets, &import, &token)?
+    };
     receipt["laneFetch"] = json!(true);
     if selection.lanes.len() > 1 {
         receipt["laneGroups"] = json!(groups);

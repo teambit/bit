@@ -124,7 +124,7 @@ pub(in crate::workspace::engine) fn prepare(
     state.sequence = state.sequence.wrapping_add(1);
     let token = format!("inbound-{}", state.sequence);
     let receipt = if input.operation == "status" {
-        json!({"token":token,"importedIds":[],"progress":[],"refreshCount":import.main_refresh_count})
+        json!({"token":token,"importedIds":[],"progress":[],"refreshCount":import.main_refresh.count,"refreshObjects":import.main_refresh.objects})
     } else {
         receipt(&input.root, &targets, &import, &token)?
     };
@@ -274,10 +274,9 @@ fn valid_operation(input: &Prepare) -> bool {
         "import" => !input.options.components,
         "status" => {
             input.options.objects_only
-                && input.options.all_history
                 && !input.options.components
-                && !input.options.lanes
                 && !input.ids.is_empty()
+                && (input.options.all_history != input.options.lanes)
         }
         _ => false,
     }
