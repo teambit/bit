@@ -1,4 +1,5 @@
 import { snapToSemver } from '@teambit/component-package-version';
+import { PLUS_VERSIONS } from '../plus-version';
 import type { Dependency } from '../dependencies';
 import type { VariantPolicy, WorkspacePolicy } from '../policy';
 
@@ -32,7 +33,7 @@ export function updateDependencyVersion(
   if (dependency.getPackageName) {
     const packageName = dependency.getPackageName();
     const variantVersion = variantPolicy?.getDepVersion(packageName, dependency.lifecycle);
-    const specialChars = ['-', '+', '*'];
+    const specialChars: string[] = ['-', '*', ...PLUS_VERSIONS];
     const variantVersionWithoutSpecialChar =
       variantVersion && !specialChars.includes(variantVersion) ? variantVersion : undefined;
     const version =

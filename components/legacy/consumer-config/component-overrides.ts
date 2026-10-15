@@ -143,7 +143,8 @@ export class ComponentOverrides {
     }, {});
   }
   _isValidVersion(ver: string) {
-    return ver !== MANUALLY_ADD_DEPENDENCY && ver !== MANUALLY_REMOVE_DEPENDENCY;
+    // "+", "+^" and "+~" are placeholders for the resolved version, not a version
+    return !ver.startsWith(MANUALLY_ADD_DEPENDENCY) && ver !== MANUALLY_REMOVE_DEPENDENCY;
   }
   getIgnored(field: string): string[] {
     const filtered = pickBy(this.overrides[field] || {}, (dep) => {

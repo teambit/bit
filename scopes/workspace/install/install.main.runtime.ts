@@ -58,6 +58,8 @@ import {
   DependencyResolverAspect,
   ComponentDependency,
   ensureHoistedDependencyResolution,
+  isPlusVersion,
+  resolvePlusVersion,
 } from '@teambit/dependency-resolver';
 import type { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
 import { WorkspaceConfigFilesAspect } from '@teambit/workspace-config-files';
@@ -1167,7 +1169,7 @@ export class InstallMain {
 
   /**
    * Get the env's own peer dependencies from its policy (env.jsonc).
-   * Resolves "+" version placeholders using workspaceDeps.
+   * Resolves "+" (and "+^"/"+~") version placeholders using workspaceDeps.
    */
   private async _getEnvDependencies(
     envId: ComponentID,
@@ -1183,8 +1185,9 @@ export class InstallMain {
           let version = value.version;
           // Resolve "+" version placeholders using workspace dependencies
           // Similar to WorkspaceManifest._resolvePlusVersions
-          if (version === '+') {
-            version = workspaceDeps[dependencyId] || '*';
+          if (isPlusVersion(version)) {
+            const workspaceVersion = workspaceDeps[dependencyId];
+            version = workspaceVersion ? resolvePlusVersion(version, workspaceVersion) : '*';
           }
           return [dependencyId, version];
         })

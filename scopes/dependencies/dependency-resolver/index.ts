@@ -78,6 +78,8 @@ export type { DependencySource, VariantPolicyEntry } from './policy/variant-poli
 export type { OutdatedPkg, CurrentPkg } from './get-all-policy-pkgs';
 export { extendWithComponentsFromDir } from './extend-with-components-from-dir';
 export { isRange } from './manifest/deduping/hoist-dependencies';
+export { isPlusVersion, resolvePlusVersion, PLUS_VERSIONS } from './plus-version';
+export type { PlusVersion } from './plus-version';
 export type { DependencyEnv } from './dependency-env';
 export { DetectorHook, DependencyDetector, FileContext } from './detector-hook';
 export {

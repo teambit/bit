@@ -1,4 +1,6 @@
 import { expect } from 'chai';
+import fs from 'fs-extra';
+import path from 'path';
 import { Helper } from '@teambit/legacy.e2e-helper';
 
 /**
@@ -126,6 +128,98 @@ export default new MyEnv();
       it('bit diff should not show dependency version changes for the env', () => {
         const diff = helper.command.diff(envName);
         expect(diff).to.not.have.string('0.0.1');
+      });
+    });
+  });
+
+  /**
+   * an env.jsonc peer that is a component and is part of the lane, set with a "+" placeholder.
+   * on the lane, it should follow the lane snap. once the lane is merged and released (tagged from a bare scope,
+   * the way bit.cloud releases a change-request), it should follow the new tag, with the "^" prefix.
+   * it also covers a bug where releasing from a bare scope dropped the component peer-dependencies from the
+   * dependency-resolver data, so on main they appeared only in the policy and every new lane showed them as new.
+   */
+  describe('env.jsonc peer with "+^" that is a lane component, merged and released from a bare scope', () => {
+    let comp2PkgName: string;
+    let comp2LaneSnap: string;
+    let comp1DepsOnLane: Record<string, any>[];
+    const getComp2DepData = (deps: Record<string, any>[]) => deps.find((d) => d.packageName === comp2PkgName);
+    before(async () => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      helper.fixtures.populateComponents(2); // comp1 requires comp2
+      helper.env.setEmptyEnv();
+      helper.command.setEnv('comp1', 'empty-env');
+      helper.command.tagAllWithoutBuild();
+      comp2PkgName = helper.general.getPackageNameByCompName('comp2', false);
+      helper.fixtures.generateEnvJsoncFile('empty-env', {
+        policy: { peers: [{ name: comp2PkgName, version: '+', supportedRange: '+^' }] },
+      });
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+
+      helper.command.createLane('dev');
+      helper.fs.appendFile('comp2/index.js', '\n// v2');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      comp2LaneSnap = helper.command.getHeadOfLane('dev', 'comp2');
+      comp1DepsOnLane = helper.command.showDependenciesData('comp1');
+
+      // merge the lane into main, then release it the way bit.cloud does: tag from a bare scope.
+      helper.command.switchLocalLane('main', '-x');
+      helper.command.mergeLane('dev', '-x');
+      helper.command.export();
+      const bareScope = helper.scopeHelper.getNewBareScope('-bare-release');
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, bareScope.scopePath);
+      await helper.snapping.snapFromScope(
+        bareScope.scopePath,
+        ['comp1', 'comp2', 'empty-env'].map((name) => ({
+          componentId: `${helper.scopes.remote}/${name}`,
+          message: 'release',
+        })),
+        { tag: true, push: true, skipLoadingAspects: true }
+      );
+    });
+    it('on the lane, the peer should be the lane snap and keep the "+^" as the range', () => {
+      const comp2Dep = getComp2DepData(comp1DepsOnLane);
+      expect(comp2Dep).to.exist;
+      expect(comp2Dep!.lifecycle).to.equal('peer');
+      expect(comp2Dep!.version).to.equal(comp2LaneSnap);
+      expect(comp2Dep!.versionRange).to.equal('+^');
+    });
+    describe('after the release', () => {
+      let comp2ReleasedVersion: string;
+      before(() => {
+        const comp2Model = helper.command.catComponent(`${helper.scopes.remote}/comp2`, helper.scopes.remotePath);
+        comp2ReleasedVersion = Object.keys(comp2Model.versions).find(
+          (tag) => comp2Model.versions[tag] === comp2Model.head
+        ) as string;
+      });
+      it('should keep the component peer in the dependency-resolver data, pointing to the new tag', () => {
+        const comp1 = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`, helper.scopes.remotePath);
+        const depsResolver = comp1.extensions.find((e) => e.name === 'teambit.dependencies/dependency-resolver');
+        const comp2Dep = getComp2DepData(depsResolver.data.dependencies);
+        expect(comp2Dep, 'the peer was dropped from the dependency-resolver data').to.exist;
+        expect(comp2Dep!.__type).to.equal('component');
+        expect(comp2Dep!.lifecycle).to.equal('peer');
+        expect(comp2Dep!.version).to.equal(comp2ReleasedVersion);
+        expect(comp2Dep!.versionRange).to.equal('+^');
+      });
+      describe('checking out the released versions in the workspace', () => {
+        before(() => {
+          helper.command.import();
+          helper.command.checkoutHead('--all', '-x');
+        });
+        it('should not show any component as modified', () => {
+          helper.command.expectStatusToBeClean();
+        });
+        it('should write the peer with "^" and the new tag into the package.json of the capsule', () => {
+          helper.command.build('comp1');
+          const comp1Capsule = helper.command
+            .capsuleListParsed()
+            .capsules.find((c: string) => c.includes('comp1')) as string;
+          const pkgJson = fs.readJsonSync(path.join(comp1Capsule, 'package.json'));
+          expect(pkgJson.peerDependencies[comp2PkgName]).to.equal(`^${comp2ReleasedVersion}`);
+        });
       });
     });
   });

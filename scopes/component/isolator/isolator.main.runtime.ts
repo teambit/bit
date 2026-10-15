@@ -28,7 +28,7 @@ import type {
   PackageManagerInstallOptions,
   NodeLinker,
 } from '@teambit/dependency-resolver';
-import { DependencyResolverAspect, KEY_NAME_BY_LIFECYCLE_TYPE } from '@teambit/dependency-resolver';
+import { DependencyResolverAspect, KEY_NAME_BY_LIFECYCLE_TYPE, resolvePlusVersion } from '@teambit/dependency-resolver';
 import type { Logger, LoggerMain, LongProcessLogger } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
 import type { ComponentID } from '@teambit/component-id';
@@ -1501,8 +1501,10 @@ export class IsolatorMain {
         const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[dep.lifecycle];
         const entry = dep.toManifest();
         if (entry) {
-          manifest[keyName][entry.packageName] =
-            dep.versionRange && dep.versionRange !== '+' ? dep.versionRange : version;
+          // a "+" range (e.g. "+^" from env.jsonc) follows the version of the dep. see resolvePlusVersion
+          manifest[keyName][entry.packageName] = dep.versionRange
+            ? resolvePlusVersion(dep.versionRange, version)
+            : version;
         }
       });
       await Promise.all(promises);
@@ -1627,7 +1629,10 @@ export class IsolatorMain {
           id: depId,
           isDependency: true,
         });
-        acc[packageName] = versionWithRange || packageDependency;
+        acc[packageName] =
+          versionWithRange && packageDependency
+            ? resolvePlusVersion(versionWithRange, packageDependency)
+            : versionWithRange || packageDependency;
         return acc;
       }, {});
     };

@@ -4,6 +4,7 @@ import type { VariantPolicy } from '../policy';
 import type { ComponentsManifestsMap } from '../types';
 import type { ManifestToJsonOptions, ManifestDependenciesObject } from './manifest';
 import { Manifest } from './manifest';
+import { isPlusVersion, resolvePlusVersion } from '../plus-version';
 
 export interface WorkspaceManifestToJsonOptions extends ManifestToJsonOptions {
   installPeersFromEnvs?: boolean;
@@ -39,7 +40,8 @@ export class WorkspaceManifest extends Manifest {
       manifest.dependencies = manifest.dependencies || {};
       // Env peers are added as defaults — workspace.jsonc policy takes priority across all dep sections
       for (const [pkgName, version] of Object.entries(resolvedPeersManifest)) {
-        const alreadyDefined = manifest.dependencies?.[pkgName] ||
+        const alreadyDefined =
+          manifest.dependencies?.[pkgName] ||
           manifest.devDependencies?.[pkgName] ||
           manifest.peerDependencies?.[pkgName] ||
           manifest.optionalDependencies?.[pkgName];
@@ -53,12 +55,12 @@ export class WorkspaceManifest extends Manifest {
 
   /**
    * Resolves "+" version placeholders in the env peers policy.
-   * The "+" means: use the version from the workspace components (.bitmap or workspace.jsonc).
+   * The "+" (or "+^"/"+~") means: use the version from the workspace components (.bitmap or workspace.jsonc).
    */
   private _resolvePlusVersions(peersManifest: Record<string, string>): Record<string, string> {
     return Object.keys(peersManifest).reduce((acc, pkgName) => {
       const version = peersManifest[pkgName];
-      if (version !== '+') {
+      if (!isPlusVersion(version)) {
         acc[pkgName] = version;
         return acc;
       }
@@ -68,7 +70,7 @@ export class WorkspaceManifest extends Manifest {
         this.dependencies.devDependencies?.[pkgName] ||
         this.dependencies.peerDependencies?.[pkgName];
       // Fallback to '*' if we can't resolve the version
-      acc[pkgName] = foundVersion || '*';
+      acc[pkgName] = foundVersion ? resolvePlusVersion(version, foundVersion) : '*';
       return acc;
     }, {});
   }
