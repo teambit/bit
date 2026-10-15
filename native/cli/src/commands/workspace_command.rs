@@ -108,7 +108,11 @@ fn plan_with(
     let home = home();
     let mut engine = Engine::new()?;
     let (token, context, targets) = prepare(&mut engine, root, &home, request, preview_snapshot)?;
-    let verified = capture::CaptureOptions { verify: request.verify_fresh, ..Default::default() };
+    let verified = capture::CaptureOptions {
+        verify: request.verify_fresh,
+        missing_checkout_reset: request.operation == "checkout" && request.to == Some("reset"),
+        ..Default::default()
+    };
     let capture = capture::capture_with(&mut engine, root, &home, &context, &targets, verified)?;
     let semver = grammar::snapshot(semver_values(request.to, &context)?.iter().map(String::as_str))
         .ok_or_else(|| decline("semver grammar limits"))?;

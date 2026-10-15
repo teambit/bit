@@ -84,7 +84,11 @@ fn prepare(
     let planned = workspace_command::plan(root, &request)?;
     let report = report::format(&planned.plan["result"], options, Chalk::detect(args))?;
     let progress = Progress::parse(planned.plan.get("progress"))?;
-    let ids = installation::component_ids(&planned.plan["result"])?;
+    let ids = if options.to == "reset" {
+        installation::changed_component_ids(&planned.plan["result"])?
+    } else {
+        installation::component_ids(&planned.plan["result"])?
+    };
     let conflicts = planned.plan["result"]["leftUnresolvedConflicts"] == true;
     Ok(PreparedCheckout { planned, report, progress, ids, conflicts, main: options.to == "main" })
 }

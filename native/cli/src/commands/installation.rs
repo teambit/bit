@@ -27,10 +27,7 @@ const YARN: &str = "teambit.dependencies/yarn";
 /// Versions passed to `ComponentWriter.finalizeWrite`: changed components and
 /// newly added lane components, without duplicates.
 pub(super) fn component_ids(result: &Value) -> io::Result<Vec<String>> {
-    let mut ids = array(result.get("components"), "changed components")?
-        .iter()
-        .map(|row| text(row.get("id")).map(str::to_string))
-        .collect::<io::Result<Vec<_>>>()?;
+    let mut ids = changed_component_ids(result)?;
     ids.extend(
         array(result.get("addedComponents"), "added components")?
             .iter()
@@ -48,6 +45,15 @@ pub(super) fn component_ids(result: &Value) -> io::Result<Vec<String>> {
     ids.sort();
     ids.dedup();
     Ok(ids)
+}
+
+/// `checkout reset` installs only genuinely changed components; a restored
+/// directory appears under `addedComponents` but Node skips installation.
+pub(super) fn changed_component_ids(result: &Value) -> io::Result<Vec<String>> {
+    array(result.get("components"), "changed components")?
+        .iter()
+        .map(|row| text(row.get("id")).map(str::to_string))
+        .collect()
 }
 
 pub(super) fn error_report(chalk: Chalk, error: &str) -> String {

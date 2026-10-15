@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Compare current-lane `checkout head` on fresh Node and Rust workspace copies.
+"""Compare `checkout head` and `checkout reset` on fresh Node and Rust workspace copies.
 
 The primary source has a lane component absent from the workspace bitmap.
 For example, switch to a lane with `--workspace-only` before taking the copy.
 The optional removed source has a snapped deleted component absent from bitmap.
+Reset sources have tracked components on the active lane or main. Each reset
+case removes the configured directory or main file from both fresh copies.
 """
 
 import argparse
@@ -80,11 +82,23 @@ def stable_report(stdout):
 
 
 def compare(name, source, args, node, rust, entry, stage, added, expect_added,
-            expect_native, install=False, dirty_file=None):
+            expect_native, install=False, dirty_file=None, missing_dirs=(), missing_files=()):
     observed = {}
     for label, binary in (("node", node), ("rust", rust)):
         workspace = stage / f"{name}-{label}"
         shutil.copytree(source, workspace, symlinks=True)
+        for directory in missing_dirs:
+            missing_path = workspace / directory
+            if (not missing_path.is_dir() or missing_path.is_symlink()
+                    or not missing_path.resolve().is_relative_to(workspace.resolve())):
+                raise AssertionError(f"{name}: invalid missing directory {directory}; stage {stage}")
+            shutil.rmtree(missing_path)
+        for file in missing_files:
+            missing_path = workspace / file
+            if (not missing_path.is_file() or missing_path.is_symlink()
+                    or not missing_path.resolve().is_relative_to(workspace.resolve())):
+                raise AssertionError(f"{name}: invalid missing file {file}; stage {stage}")
+            missing_path.unlink()
         if dirty_file:
             dirty_path = workspace / dirty_file
             if not dirty_path.is_file() or not dirty_path.resolve().is_relative_to(workspace.resolve()):
@@ -147,10 +161,25 @@ def main():
                         help="one tracked component in --selected-source")
     parser.add_argument("--selected-dirty-file", type=Path,
                         help="tracked file in --selected-source outside --selected-component")
+    parser.add_argument("--reset-lane-source", type=Path,
+                        help="lane workspace with tracked components for checkout reset")
+    parser.add_argument("--reset-main-source", type=Path,
+                        help="main workspace with tracked components for checkout reset")
+    parser.add_argument("--reset-component",
+                        help="tracked component selected for checkout reset")
+    parser.add_argument("--reset-missing-dir", type=Path,
+                        help="directory of --reset-component to remove in each copied workspace")
+    parser.add_argument("--reset-second-missing-dir", type=Path,
+                        help="another tracked lane directory to remove for all-component reset")
+    parser.add_argument("--reset-dirty-file", type=Path,
+                        help="tracked file in another component to edit during reset --all")
+    parser.add_argument("--reset-main-file", type=Path,
+                        help="main file to remove from copied reset workspaces")
     args = parser.parse_args()
     for source in (args.source, args.removed_source, args.selected_source,
                    args.selected_old_source, args.selected_inactive_source,
-                   args.selected_inactive_missing_source):
+                   args.selected_inactive_missing_source, args.reset_lane_source,
+                   args.reset_main_source):
         if source and not (source / ".bitmap").is_file():
             parser.error(f"missing source bitmap: {source}")
     if bool(args.selected_source) != bool(args.selected_component):
@@ -160,6 +189,15 @@ def main():
     if (args.selected_old_source or args.selected_inactive_source
             or args.selected_inactive_missing_source) and not args.selected_component:
         parser.error("selected variants require --selected-component")
+    if (args.reset_lane_source or args.reset_main_source) and not (
+            args.reset_component and args.reset_missing_dir):
+        parser.error("reset sources require --reset-component and --reset-missing-dir")
+    if args.reset_second_missing_dir and not args.reset_lane_source:
+        parser.error("--reset-second-missing-dir requires --reset-lane-source")
+    if args.reset_dirty_file and not args.reset_missing_dir:
+        parser.error("--reset-dirty-file requires --reset-missing-dir")
+    if args.reset_main_file and not (args.reset_lane_source or args.reset_main_source):
+        parser.error("--reset-main-file requires a reset source")
     if bitmap_has(args.source, args.added):
         parser.error(f"--added component is already in source bitmap: {args.added}")
     print(f"source sha256: {fingerprint(args.source)}")
@@ -174,6 +212,10 @@ def main():
     if args.selected_inactive_missing_source:
         print("selected inactive missing source sha256: "
               f"{fingerprint(args.selected_inactive_missing_source)}")
+    if args.reset_lane_source:
+        print(f"reset lane source sha256: {fingerprint(args.reset_lane_source)}")
+    if args.reset_main_source:
+        print(f"reset main source sha256: {fingerprint(args.reset_main_source)}")
     with tempfile.TemporaryDirectory(prefix="bit-checkout-head-parity-") as temporary:
         stage = Path(temporary)
         cases = [
@@ -212,6 +254,53 @@ def main():
                     ["head", args.selected_component, "-x"], args.node, args.rust,
                     args.entry, stage, None, False, True,
                     dirty_file=args.selected_dirty_file)
+        for label, source in (("lane", args.reset_lane_source),
+                              ("main", args.reset_main_source)):
+            if not source:
+                continue
+            compare(f"reset-{label}-present", source,
+                    ["reset", args.reset_component, "-x"], args.node, args.rust,
+                    args.entry, stage, None, False, True)
+            for suffix, command in (("selected", ["reset", args.reset_component, "-x"]),
+                                    ("all", ["reset", "-a", "-x"])):
+                compare(f"reset-{label}-missing-{suffix}", source, command,
+                        args.node, args.rust, args.entry, stage, None, False, True,
+                        missing_dirs=(args.reset_missing_dir,))
+            compare(f"reset-{label}-missing-default", source,
+                    ["reset", args.reset_component], args.node, args.rust,
+                    args.entry, stage, None, False, True,
+                    missing_dirs=(args.reset_missing_dir,))
+            if args.reset_main_file:
+                for suffix, command in (("selected", ["reset", args.reset_component, "-x"]),
+                                        ("all", ["reset", "-a", "-x"]),
+                                        ("default", ["reset", args.reset_component])):
+                    compare(f"reset-{label}-missing-main-{suffix}", source, command,
+                            args.node, args.rust, args.entry, stage, None, False, True,
+                            missing_files=(args.reset_main_file,))
+        if args.reset_lane_source:
+            compare("explicit-main-missing-delegates", args.reset_lane_source,
+                    ["main", args.reset_component, "-x"], args.node, args.rust,
+                    args.entry, stage, None, False, False,
+                    missing_dirs=(args.reset_missing_dir,))
+        if args.reset_second_missing_dir:
+            compare("reset-lane-two-missing-all", args.reset_lane_source,
+                    ["reset", "-a", "-x"], args.node, args.rust, args.entry,
+                    stage, None, False, True,
+                    missing_dirs=(args.reset_missing_dir, args.reset_second_missing_dir))
+        if args.reset_dirty_file:
+            for label, source in (("lane", args.reset_lane_source),
+                                  ("main", args.reset_main_source)):
+                if source:
+                    compare(f"reset-{label}-mixed-install", source,
+                            ["reset", "-a"], args.node, args.rust, args.entry,
+                            stage, None, False, True, install=True,
+                            dirty_file=args.reset_dirty_file,
+                            missing_dirs=(args.reset_missing_dir,))
+        if args.selected_old_source and args.reset_component and args.reset_missing_dir:
+            compare("reset-older-bitmap-missing-selected", args.selected_old_source,
+                    ["reset", args.reset_component, "-x"], args.node, args.rust,
+                    args.entry, stage, None, False, True,
+                    missing_dirs=(args.reset_missing_dir,))
 
 
 if __name__ == "__main__":
