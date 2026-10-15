@@ -72,9 +72,9 @@ fn declined(output: &Output, args: &str, reason: &str) {
 fn other_arguments_decline() {
     let dir = workspace();
     let root = dir.path().join("ws");
-    declined(&bit(&dir, &root, &["diff"], &[]), r#"["diff"]"#, "only `diff [component] --json`");
+    declined(&bit(&dir, &root, &["diff"], &[]), r#"["diff"]"#, "needs the Node.js CLI's own Node");
     let output = bit(&dir, &root, &["diff", "alpha", "0.0.1", "--json"], &[]);
-    declined(&output, r#"["diff","alpha","0.0.1","--json"]"#, "only `diff [component] --json`");
+    declined(&output, r#"["diff","alpha","0.0.1","--json"]"#, "outside the native diff grammar");
 }
 
 #[cfg(not(windows))]
