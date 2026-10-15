@@ -1,6 +1,7 @@
 //! `e2e/commands/tag.e2e.ts`.
 
 mod soft;
+mod unlinked;
 
 /// Native `bit tag` declines the e2e workspace (`commandTagPrepare: status configured
 /// extensions require Harmony`) and `--ver` with an invalid version (outside the native tag

@@ -8,7 +8,9 @@ use super::invalid;
 use crate::workspace::engine::dependency_graph::proof;
 use serde_json::Value;
 use std::{
-    fs, io,
+    collections::HashSet,
+    fs,
+    io::{self, Write},
     path::{Path, PathBuf},
 };
 
@@ -24,6 +26,7 @@ pub(in crate::workspace::engine::command) struct Prepared {
     writes: Vec<(PathBuf, Vec<u8>)>,
     links: Vec<(PathBuf, PathBuf)>,
     copies: Vec<(PathBuf, PathBuf)>,
+    package_creates: Vec<PathBuf>,
 }
 pub(in crate::workspace::engine::command) fn prepare(
     root: &Path,
@@ -31,11 +34,36 @@ pub(in crate::workspace::engine::command) fn prepare(
     root_components: bool,
     skip_packages: &[String],
 ) -> io::Result<Prepared> {
+    prepare_with(root, inputs, root_components, skip_packages, &HashSet::new())
+}
+
+pub(in crate::workspace::engine::command) fn prepare_tag(
+    root: &Path,
+    inputs: &[Input<'_>],
+    root_components: bool,
+    skip_packages: &[String],
+    new_components: &HashSet<String>,
+) -> io::Result<Prepared> {
+    prepare_with(root, inputs, root_components, skip_packages, new_components)
+}
+
+fn prepare_with(
+    root: &Path,
+    inputs: &[Input<'_>],
+    root_components: bool,
+    skip_packages: &[String],
+    new_components: &HashSet<String>,
+) -> io::Result<Prepared> {
     if inputs.len() > 4096 {
         return Err(invalid("merge finalization component budget"));
     }
-    let mut prepared =
-        Prepared { proofs: Vec::new(), writes: Vec::new(), links: Vec::new(), copies: Vec::new() };
+    let mut prepared = Prepared {
+        proofs: Vec::new(),
+        writes: Vec::new(),
+        links: Vec::new(),
+        copies: Vec::new(),
+        package_creates: Vec::new(),
+    };
     staged::prepare(root, inputs, &mut prepared)?;
     for input in inputs
         .iter()
@@ -46,7 +74,13 @@ pub(in crate::workspace::engine::command) fn prepare(
                     .any(|id| id == input.identity)
         })
     {
-        packages::prepare(root, input, root_components, &mut prepared)?;
+        packages::prepare(
+            root,
+            input,
+            root_components,
+            new_components.contains(input.identity),
+            &mut prepared,
+        )?;
     }
     #[cfg(not(unix))]
     if !prepared.links.is_empty() {
@@ -168,15 +202,28 @@ impl Prepared {
             }
         }
         for (path, bytes) in &self.writes {
-            fs::create_dir_all(path.parent().ok_or_else(|| invalid("merge metadata parent"))?)?;
-            if path
-                .file_name()
-                .is_some_and(|name| name == "package.json")
-            {
-                metadata::replace(path, bytes)?;
+            self.write(path, bytes)?;
+        }
+        Ok(())
+    }
+    fn write(&self, path: &Path, bytes: &[u8]) -> io::Result<()> {
+        fs::create_dir_all(path.parent().ok_or_else(|| invalid("merge metadata parent"))?)?;
+        if path
+            .file_name()
+            .is_some_and(|name| name == "package.json")
+        {
+            if self.package_creates.contains(&path.to_path_buf()) {
+                let mut file = fs::OpenOptions::new()
+                    .write(true)
+                    .create_new(true)
+                    .open(path)?;
+                file.write_all(bytes)?;
+                file.sync_all()?;
             } else {
-                fs::write(path, bytes)?;
+                metadata::replace(path, bytes)?;
             }
+        } else {
+            fs::write(path, bytes)?;
         }
         Ok(())
     }
