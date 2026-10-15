@@ -5,7 +5,7 @@ use serde_json::json;
 fn normal_tags_take_precedence_over_orphaned_labels() {
     let hash = "a".repeat(40);
     let model = json!({
-        "versions": { "1.0.0": hash },
+        "versions": { "0.9.9": hash, "1.0.0": hash },
         "orphanedVersions": { "0.9.0": hash },
     });
     assert_eq!(

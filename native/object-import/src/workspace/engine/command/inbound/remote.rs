@@ -1,7 +1,10 @@
 //! Bounded HTTP scope acquisition and listing. File scopes stay in the
 //! deferred importer.
-use super::{List, Prepare, Target, Transport, identity, invalid};
-use crate::command_import::{VirtualRemote, lane};
+use super::{List, Prepare, RemoteLog, Target, Transport, identity, invalid};
+use crate::{
+    command_import::{VirtualRemote, lane},
+    workspace::engine::status_models::component_log,
+};
 use bit_client_transfer::{
     GlobalConfig,
     fetch::{self, FetchOptions},
@@ -11,7 +14,7 @@ use bit_client_transfer::{
     tar::ObjectItem,
 };
 use futures_util::{StreamExt, TryStreamExt, stream};
-use serde_json::Value;
+use serde_json::{Value, json};
 use std::{
     collections::{BTreeMap, HashMap},
     fs, io,
@@ -90,6 +93,39 @@ pub(super) fn list(input: &List) -> io::Result<Vec<(String, Vec<Listed>)>> {
         }
         Ok(lists)
     })
+}
+
+pub(super) fn log(input: &RemoteLog) -> io::Result<(usize, Value)> {
+    let (remotes, network) = if let Some(root) = &input.root {
+        let (remotes, network, _, _) = connect(root, &input.transport)?;
+        (remotes, network)
+    } else {
+        let global = global_config(&input.transport)?;
+        let remotes = Remotes::load(&Value::Null, &input.transport.global_config_dir, &global)?;
+        let network = Network::new(
+            &global,
+            &input.transport.bit_version,
+            None,
+            input.transport.token.as_deref(),
+        )?;
+        (remotes, network)
+    };
+    let (scope, name) =
+        input.identity.split_once('/').ok_or_else(|| invalid("remote log identity"))?;
+    if scope.is_empty() || name.is_empty() || name.starts_with('/') || name.contains("..") {
+        return Err(invalid("remote log identity"));
+    }
+    let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
+    let (rows, parents_available) = runtime.block_on(async {
+        let result: io::Result<(Vec<Value>, bool)> = match remotes.resolve(scope, &network).await? {
+            Remote::Http(url) => Ok((network.log(&url, &input.identity).await?, false)),
+            Remote::File(path) => {
+                Ok((component_log::read_file_remote(&path, &input.identity)?, true))
+            }
+        };
+        result
+    })?;
+    Ok((rows.len(), json!({"logs": rows, "parentsAvailable": parents_available})))
 }
 
 async fn fetch_lane(
