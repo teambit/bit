@@ -108,7 +108,7 @@ fn observe(
     }
 }
 
-fn removed(version: &Value) -> io::Result<bool> {
+pub(super) fn removed(version: &Value) -> io::Result<bool> {
     let extensions =
         version["extensions"].as_array().ok_or_else(|| invalid("command Version extensions"))?;
     Ok(extensions

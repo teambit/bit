@@ -83,3 +83,27 @@ fn declines_binary_conflicts_and_illegitimate_failures() {
     let failed = json!({ "failedComponents": [{ "id": "s/a", "unchangedMessage": "x", "unchangedLegitimately": false }] });
     assert!(format(&failed, &options, Chalk::new(false)).is_err());
 }
+
+#[test]
+fn reports_new_lane_components_separately_from_changed_components() {
+    let lane = ["scope/alpha@1234567890123456789012345678901234567890"];
+    let result = json!({
+        "components": [], "failedComponents": [], "newFromLane": lane,
+        "newFromLaneAdded": true,
+    });
+    let options = parse(&["head", "-x"]).unwrap();
+    let report = format(&result, &options, Chalk::new(false)).unwrap();
+    assert!(report.data.contains(
+        "new components from lane (1)\n   › scope/alpha@1234567890123456789012345678901234567890"
+    ));
+    assert!(report.data.contains("Total Changed: 0\nTotal Unchanged: 0\nNew on lane (added): 1"));
+
+    let result = json!({
+        "components": [], "failedComponents": [], "newFromLane": lane,
+        "newFromLaneAdded": false,
+    });
+    let options = parse(&["head", "--workspace-only", "-x"]).unwrap();
+    let report = format(&result, &options, Chalk::new(false)).unwrap();
+    assert!(report.data.contains("new components on lane (not added) (1)\n  omit --workspace-only flag to add them\n   › scope/alpha@1234567890123456789012345678901234567890"));
+    assert!(report.data.contains("New on lane (not added): 1"));
+}

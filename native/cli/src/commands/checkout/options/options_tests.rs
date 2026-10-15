@@ -31,14 +31,19 @@ fn accepts_the_native_subset() {
     assert_eq!(parse(&["head", "-x", "-r", "theirs"]).unwrap().strategy.as_deref(), Some("theirs"));
     assert_eq!(parse(&["head", "-x", "--manual"]).unwrap().strategy.as_deref(), Some("manual"));
     assert!(parse(&["head~2", "-x"]).is_some());
+    assert!(parse(&["head", "-e", "-x"]).unwrap().workspace_only);
+    assert_eq!(
+        parse(&["head", "--workspace-only", "-x"]).unwrap().request()["workspaceOnly"],
+        true,
+    );
     assert!(parse(&["1.0.0-rc.1+build", "-x"]).is_some());
     assert!(parse(&[&"a".repeat(40), "-x"]).is_some());
 }
 
 #[test]
 fn rejects_everything_else() {
-    assert!(!parse(&["head"]).unwrap().skip_install);
-    assert!(parse(&["head", "-x"]).unwrap().skip_install);
+    assert!(!parse(&["head"]).unwrap().execution.skip_install);
+    assert!(parse(&["head", "-x"]).unwrap().execution.skip_install);
     assert!(parse(&["head", "-x", "-x"]).is_none());
     assert!(parse(&["head", "-x", "--manual", "-r", "ours"]).is_none());
     assert!(parse(&["head", "-x", "-r", "mine"]).is_none());
@@ -48,6 +53,9 @@ fn rejects_everything_else() {
     assert!(parse(&["head", "One", "-x"]).is_none());
     assert!(parse(&["head", "a", "b", "-x"]).is_none());
     assert!(parse(&["head", "-x", "--json"]).is_none());
+    assert!(parse(&["reset", "-x", "-e"]).is_none());
+    assert!(parse(&["latest", "-x", "--workspace-only"]).is_none());
+    assert!(parse(&["head", "-e", "--workspace-only"]).is_none());
 }
 
 #[test]

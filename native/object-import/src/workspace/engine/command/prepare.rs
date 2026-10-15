@@ -1,3 +1,4 @@
+mod checkout_lane;
 use super::input::{Operation, Prepare};
 use crate::{
     command_import,
@@ -50,29 +51,9 @@ pub(super) fn context(
                 &unexported_targets(request, &context)?,
             )?;
     }
-    attach_checkout_lane(request, &mut context, imported.as_mut())?;
+    checkout_lane::attach(request, &mut context, imported.as_mut())?;
     extend_models(request, pool, &mut context, imported.as_ref())?;
     Ok((context, imported))
-}
-fn attach_checkout_lane(
-    request: &Prepare,
-    context: &mut Value,
-    imported: Option<&mut command_import::PreparedImport>,
-) -> io::Result<()> {
-    if request.operation != Operation::Checkout {
-        return Ok(());
-    }
-    let bitmap = config::document(&request.root.join(".bitmap"))?;
-    if bitmap.get("_bit_lane").is_none() {
-        return Ok(());
-    }
-    let current_id = super::lane_context::current_id(&bitmap, &context["scope"])?;
-    let current = imported
-        .ok_or_else(|| invalid("checkout lane import owner"))?
-        .load_lane(&current_id)?
-        .ok_or_else(|| invalid("checkout current Lane absent"))?;
-    context["lane"] = json!({"currentId":current_id,"current":current});
-    Ok(())
 }
 fn unexported_targets(
     request: &Prepare,
@@ -140,16 +121,7 @@ fn validate(request: &Prepare) -> io::Result<()> {
     for path in [&request.root, &request.home, &request.global_remotes_file] {
         super::super::path(path)?;
     }
-    let contradictory_forces = request.options.force_ours && request.options.force_theirs;
-    if !request.options.skip_dependency_installation
-        || contradictory_forces
-        || request.options.strategy
-            .as_deref()
-            .is_some_and(|value| !matches!(value, "ours" | "theirs" | "manual"))
-        || request.home.join(".bitrc.jsonc").try_exists()?
-        || request.root.join(".bitTmp").try_exists()?
-        || request.root.join("merge-conflict").try_exists()?
-    {
+    if invalid_lifecycle_options(request)? {
         return Err(invalid("command requires canonical lifecycle"));
     }
     let unmerged = request.root.join(".bit/unmerged.json");
@@ -158,6 +130,24 @@ fn validate(request: &Prepare) -> io::Result<()> {
         return Err(invalid("command unresolved merge state"));
     }
     Ok(())
+}
+
+fn invalid_lifecycle_options(request: &Prepare) -> io::Result<bool> {
+    let options = &request.options;
+    let invalid_strategy = options.strategy
+        .as_deref()
+        .is_some_and(|value| !matches!(value, "ours" | "theirs" | "manual"));
+    let invalid_workspace_only = options.workspace_only
+        && (request.operation != Operation::Checkout || options.to.as_deref() != Some("head"));
+    let conflicting_forces = options.force_ours && options.force_theirs;
+    let interrupted = request.root.join(".bitTmp").try_exists()?
+        || request.root.join("merge-conflict").try_exists()?;
+    Ok(!options.skip_dependency_installation
+        || invalid_workspace_only
+        || conflicting_forces
+        || invalid_strategy
+        || request.home.join(".bitrc.jsonc").try_exists()?
+        || interrupted)
 }
 
 fn validate_revert(request: &Prepare) -> io::Result<()> {
@@ -334,11 +324,13 @@ fn matches_identity(target: &Value, pattern: &str) -> bool {
 }
 
 fn extend_lane_targets(context: &Value, model_targets: &mut Vec<Value>) {
-    if let Some(rows) = context["lane"]["inactiveTargets"].as_array() {
-        model_targets.extend(
-            rows.iter()
-                .map(|row| json!({"identity":row["identity"],"version":row["version"]})),
-        );
+    for field in ["inactiveTargets", "addedTargets"] {
+        if let Some(rows) = context["lane"][field].as_array() {
+            model_targets.extend(
+                rows.iter()
+                    .map(|row| json!({"identity":row["identity"],"version":row["version"]})),
+            );
+        }
     }
     let Some(rows) = context["lane"]["targets"].as_array() else { return };
     for row in rows {

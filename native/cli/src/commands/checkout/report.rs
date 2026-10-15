@@ -20,7 +20,9 @@ pub fn format(result: &Value, options: &Options, chalk: Chalk) -> io::Result<Rep
         ));
     }
     let report = Checkout { results: &results, options, format: Formatter::new(chalk) };
-    let skipped = !results.skipped.is_empty() && options.report_all() && !options.verbose;
+    let skipped = !results.skipped.is_empty()
+        && options.report_all()
+        && !options.execution.verbose;
     let data = deprecated_all(options, report.build(&report.skipped_minimal()));
     if !skipped {
         return Ok(Report { data, code: 0, details: None });
@@ -57,8 +59,9 @@ impl Checkout<'_> {
         Formatter::join(&[
             skipped.to_string(),
             self.successful(),
-            listed(&self.format, "removed components", &self.results.removed),
-            listed(&self.format, "added components", &self.results.added),
+            listed(&self.format, "removed components", &self.results.lists.removed),
+            listed(&self.format, "added components", &self.results.lists.added),
+            self.new_on_lane(),
             self.conflict_summary(),
             self.summary(),
         ])
@@ -70,7 +73,7 @@ impl Checkout<'_> {
         if count == 0 {
             return String::new();
         }
-        if self.options.report_all() && !self.options.verbose {
+        if self.options.report_all() && !self.options.execution.verbose {
             return self.format.details_hint(&format!("full list of {count} skipped component(s)"));
         }
         self.skipped_detailed()
@@ -167,11 +170,39 @@ impl Checkout<'_> {
         format!("{title}\n{}\n\n{hint}", self.results.conflict_lines(self.chalk()).join("\n"))
     }
 
+    /// `getNewOnLaneOutput` of `checkoutOutput`.
+    fn new_on_lane(&self) -> String {
+        let items: Vec<String> = self.results.lists.lane.ids
+            .iter()
+            .map(|id| self.format.item(&id.display()))
+            .collect();
+        let title = if self.results.lists.lane.added {
+            "new components from lane"
+        } else {
+            "new components on lane (not added)"
+        };
+        let description = if self.results.lists.lane.added {
+            ""
+        } else {
+            "omit --workspace-only flag to add them"
+        };
+        self.format.section(title, description, &items)
+    }
+
     /// `getSummary`.
     fn summary(&self) -> String {
         let chalk = self.chalk();
+        let new_on_lane = if self.results.lists.lane.ids.is_empty() {
+            String::new()
+        } else {
+            let state = if self.results.lists.lane.added { "added" } else { "not added" };
+            format!(
+                "\nNew on lane ({state}): {}",
+                chalk.bold(&self.results.lists.lane.ids.len().to_string()),
+            )
+        };
         format!(
-            "{}\nTotal Changed: {}\nTotal Unchanged: {}",
+            "{}\nTotal Changed: {}\nTotal Unchanged: {}{new_on_lane}",
             self.format.title("Checkout Summary"),
             chalk.bold(&self.results.components.len().to_string()),
             chalk.bold(&self.results.skipped.len().to_string()),

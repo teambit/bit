@@ -269,3 +269,39 @@ fn canonical_backup_preserves_long_multiline_reasons_verbatim() {
         original,
     );
 }
+
+#[test]
+fn checkout_head_publishes_missing_lane_component_with_existing_header() {
+    let fixture = Fixture::new();
+    let mut original =
+        crate::recovery::jsonc::parse(&fs::read(fixture.0.join(".bitmap")).unwrap()).unwrap();
+    original["_bit_lane"] = json!({"id":{"name":"study","scope":"local.scope"},
+        "exported":false});
+    fs::write(fixture.0.join(".bitmap"), crate::inspection::render_bitmap(&original).unwrap())
+        .unwrap();
+    let hash = "a".repeat(40);
+    let context = json!({"lane":{"currentId":{"name":"study","scope":"local.scope"},
+        "additions":[{"name":"new","scope":"local.scope","version":hash,
+            "mainFile":"index.js","rootDir":"components/new"}]},
+        "models":[{"name":"new","scope":"local.scope","versions":{}}]});
+    let plan = prepare(
+        &fixture.0,
+        &context,
+        &[Update {
+            identity: "local.scope/new".into(),
+            version: hash,
+            main_file: "index.js".into(),
+            keep_ours: false,
+        }],
+    )
+    .unwrap();
+    assert_eq!(
+        fs::read(fixture.0.join(".bitmap")).unwrap(),
+        crate::inspection::render_bitmap(&original).unwrap(),
+    );
+    plan.commit("2026-10-13-1-2-3", "checkout").unwrap();
+    let bitmap =
+        crate::recovery::jsonc::parse(&fs::read(fixture.0.join(".bitmap")).unwrap()).unwrap();
+    assert_eq!(bitmap["new"]["rootDir"], "components/new");
+    assert_eq!(bitmap["_bit_lane"], original["_bit_lane"]);
+}
