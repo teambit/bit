@@ -53,6 +53,8 @@ def main():
     parser.add_argument("--config-lane-source", type=Path,
                         help="lane workspace with a snap that staged bitmap aspect config")
     parser.add_argument("--config-lane-id", help="lane component with staged config")
+    parser.add_argument("--soft-deleted-lane-source", type=Path,
+                        help="lane with a snapped soft-deleted component absent from bitmap")
     args = parser.parse_args()
     cases = [
         ("all local tags", args.source, [args.plain], False),
@@ -139,6 +141,13 @@ def main():
              ["--head", "--silent"], True),
             ("lane staged config batch full", args.config_lane_source,
              ["--silent"], True),
+        ])
+    if args.soft_deleted_lane_source:
+        cases.extend([
+            ("lane batch restores soft-deleted bitmap", args.soft_deleted_lane_source,
+             ["--silent"], True),
+            ("lane batch head restores soft-deleted bitmap", args.soft_deleted_lane_source,
+             ["--head", "--silent"], True),
         ])
     environment = os.environ.copy()
     environment.update(CI="1", BIT_DISABLE_SPINNER="true", BIT_NODE_CLI=str(args.entry.resolve()),
