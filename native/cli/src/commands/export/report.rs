@@ -183,7 +183,12 @@ pub(super) fn format(receipt: &Value, chalk: Chalk) -> String {
         .iter()
         .map(|id| Formatter::item_with(id, &format.warn_symbol()))
         .collect();
-    let removed = format.section("components removed on the remote", "", &removed);
+    let removed_title = if lane.is_some() {
+        "components removed on the remote lane"
+    } else {
+        "components removed on the remote"
+    };
+    let removed = format.section(removed_title, "", &removed);
     Formatter::join(&[export_sections, removed])
 }
 

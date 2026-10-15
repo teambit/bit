@@ -101,12 +101,16 @@ fn load_lane(input: &Prepare, scope: &str, name: &str) -> io::Result<Loaded> {
     if lane["scope"] != scope || lane["name"] != name {
         return Err(invalid("outbound lane identity"));
     }
+    if let Some(parent) = lane
+        .get("forkedFrom")
+        .filter(|value| !value.is_null())
+        && (parent["scope"] != scope || parent["name"].as_str().is_none_or(str::is_empty))
+    {
+        return Err(invalid("outbound cross-scope lane fork"));
+    }
     if lane
         .get("readmeComponent")
         .is_some_and(|value| !value.is_null())
-        || lane
-            .get("forkedFrom")
-            .is_some_and(|value| !value.is_null())
     {
         return Err(invalid("outbound complex lane export"));
     }
@@ -227,9 +231,6 @@ struct ComponentId<'a> {
 
 impl<'a> ComponentId<'a> {
     fn parse(entry: &'a Value) -> io::Result<Self> {
-        if entry["isDeleted"] == true {
-            return Err(invalid("outbound deleted lane component"));
-        }
         let scope = entry["id"]["scope"]
             .as_str()
             .filter(|scope| !scope.is_empty())

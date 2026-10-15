@@ -15,10 +15,12 @@ impl Publication {
         }
     }
 
-    pub(super) fn update_ids(&self) -> &[String] {
+    pub(super) fn receipt_ids(&self) -> (Vec<String>, Vec<String>) {
         match self {
-            Self::Main(_) => &[],
-            Self::Lane { prepared, .. } => prepared.update_ids(),
+            Self::Main(_) => (Vec::new(), Vec::new()),
+            Self::Lane { prepared, .. } => {
+                (prepared.update_ids().to_vec(), prepared.removed_ids().to_vec())
+            }
         }
     }
 }

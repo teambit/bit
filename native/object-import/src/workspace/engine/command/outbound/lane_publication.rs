@@ -1,10 +1,13 @@
 //! Publish a persisted lane locally only after the remote acknowledges its heads.
+mod report;
+
 use super::{
     Prepare, invalid,
     lane_model::{self, LaneSelected},
 };
 use crate::store::Store;
-use serde_json::Value;
+use report::Reported;
+use serde_json::{Value, json};
 use std::{
     collections::HashSet,
     fs,
@@ -20,7 +23,7 @@ pub(super) struct Prepared {
     models: Vec<Model>,
     published: PublishedState,
     staged: Staged,
-    update_ids: Vec<String>,
+    report: Reported,
 }
 
 struct PublishedState {
@@ -101,32 +104,17 @@ pub(super) fn prepare(input: &Prepare, selected: &LaneSelected) -> io::Result<Pr
             .collect(),
         published: PublishedState::prepare(root, selected)?,
         staged: prepare_staged(root, &selected.expected_ids)?,
-        update_ids: selected_update_ids(selected)?,
+        report: Reported::prepare(selected)?,
     })
-}
-
-fn selected_update_ids(selected: &LaneSelected) -> io::Result<Vec<String>> {
-    let selected_ids: HashSet<_> = selected.component_ids
-        .iter()
-        .map(String::as_str)
-        .collect();
-    selected.lane["updateDependents"]
-        .as_array()
-        .into_iter()
-        .flatten()
-        .map(|value| {
-            let id = value.as_str().ok_or_else(|| invalid("outbound lane update-dependent"))?;
-            let (identity, _) =
-                id.rsplit_once('@').ok_or_else(|| invalid("outbound lane update-dependent id"))?;
-            Ok(selected_ids.contains(identity).then(|| identity.to_owned()))
-        })
-        .collect::<io::Result<Vec<_>>>()
-        .map(|rows| rows.into_iter().flatten().collect())
 }
 
 impl Prepared {
     pub(super) fn update_ids(&self) -> &[String] {
-        &self.update_ids
+        &self.report.updates
+    }
+
+    pub(super) fn removed_ids(&self) -> &[String] {
+        &self.report.removed
     }
 }
 
@@ -169,7 +157,10 @@ fn prepare_scope(root: &Path, selected: &LaneSelected) -> io::Result<Change> {
 }
 
 fn prepare_refs(root: &Path, selected: &LaneSelected) -> io::Result<Refs> {
-    let components = lane_model::lane_entries(&selected.lane)?;
+    let components: Vec<Value> = lane_model::lane_entries(&selected.lane)?
+        .iter()
+        .map(|entry| json!({"id":entry["id"],"head":entry["head"]}))
+        .collect();
     if components.len() > 4096 {
         return Err(invalid("outbound lane publication bounds"));
     }

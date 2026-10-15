@@ -371,11 +371,10 @@ pub(in crate::workspace::engine) fn finalize(
         .as_ref()
         .and_then(Publication::lane_name)
         .map(str::to_owned);
-    let update_ids = retained.publication
+    let (update_ids, removed_ids) = retained.publication
         .as_ref()
-        .map(Publication::update_ids)
-        .unwrap_or_default()
-        .to_vec();
+        .map(Publication::receipt_ids)
+        .unwrap_or_default();
     if let Some(plan) = retained.publication {
         match plan {
             Publication::Main(plan) => plan.commit(&exported_ids)?,
@@ -400,7 +399,7 @@ pub(in crate::workspace::engine) fn finalize(
         components.len(),
         json!({"token":retained.token,"owner":"rust","applied":true,
         "componentsIds":components,"newIdsOnRemote":exported_ids,
-        "nonExistOnBitMap":[],"removedIds":[],"missingScope":[],
+        "nonExistOnBitMap":[],"removedIds":removed_ids,"missingScope":[],
         "exportedLanes":lane.into_iter().collect::<Vec<_>>(),"laneUpdateIds":update_ids,"rippleJobUrls":[]}),
     ))
 }

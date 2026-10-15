@@ -4,6 +4,81 @@ use crate::helper::{Helper, parse};
 use std::{ffi::OsStr, fs};
 
 #[test]
+fn forked_lane_export_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("module.exports = () => 'foo';");
+    helper.add_component_bar_foo();
+    helper.run("tag bar/foo --message base");
+    helper.run("export");
+    helper.run("lane create parent");
+    helper.run("snap --unmodified --message parent");
+    helper.run("export");
+    helper.run("lane create child");
+    helper.run("snap --unmodified --message child");
+    let remote_before = helper.clone_remote_scope();
+    let node_root = helper.clone_workspace();
+    let node = Helper::cmd_in_with(&node_root, "export", &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{}", node.stderr);
+    let node_refs =
+        fs::read(node_root.join(format!(".bit/refs/remotes/{}/child", helper.scopes.remote)))
+            .unwrap();
+    helper.restore_remote_scope(&remote_before);
+    let native = helper.native_run("export");
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    let native_refs = fs::read(helper.scopes.local_path.join(format!(
+        ".bit/refs/remotes/{}/child",
+        helper.scopes.remote,
+    )))
+    .unwrap();
+    assert_eq!(native_refs, node_refs);
+    let node_status = Helper::cmd_in_with(
+        &node_root,
+        "status --json --lanes",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    let native_status = helper.native_run("status --json --lanes");
+    assert_eq!(parse(&native_status.stdout), parse(&node_status.stdout));
+}
+
+#[test]
+fn deleted_lane_component_export_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("module.exports = () => 'foo';");
+    helper.add_component_bar_foo();
+    helper.run("tag bar/foo --message base");
+    helper.run("export");
+    helper.run("lane create dev");
+    helper.run("snap --unmodified --message lane");
+    helper.run("export");
+    helper.run("delete bar/foo --silent --lane");
+    helper.run("snap --unmodified --message removal");
+    let remote_before = helper.clone_remote_scope();
+    let node_root = helper.clone_workspace();
+    let node = Helper::cmd_in_with(&node_root, "export", &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{}", node.stderr);
+    let node_refs =
+        fs::read(node_root.join(format!(".bit/refs/remotes/{}/dev", helper.scopes.remote)))
+            .unwrap();
+    helper.restore_remote_scope(&remote_before);
+    let native = helper.native_run("export");
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    let native_refs = fs::read(helper.scopes.local_path.join(format!(
+        ".bit/refs/remotes/{}/dev",
+        helper.scopes.remote,
+    )))
+    .unwrap();
+    assert_eq!(native_refs, node_refs);
+    let node_status =
+        Helper::cmd_in_with(&node_root, "status --json", &[("BIT_NATIVE", OsStr::new("off"))]);
+    let native_status = helper.native_run("status --json");
+    assert_eq!(parse(&native_status.stdout), parse(&node_status.stdout));
+}
+
+#[test]
 fn fresh_lane_component_export_matches_node() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
