@@ -8,7 +8,11 @@ fn empty_merge_still_invokes_repository_persistence_notification() {
     let root = scratch::Directory::create().unwrap();
     let mut prepared = Prepared {
         policy: None,
-        publication: super::super::Publication { lane: None, fast_forward: None },
+        publication: super::super::Publication {
+            lane: None,
+            fast_forward: None,
+            removed: Vec::new(),
+        },
         state: merge::State::new(0).unwrap(),
         materials: Vec::new(),
         unmerged: json!([]),

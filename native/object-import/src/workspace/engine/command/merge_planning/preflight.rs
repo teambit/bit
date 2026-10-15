@@ -88,7 +88,14 @@ fn validate_finalization(
         .zip(versions)
         .map(|(input, version)| merge::finalization::Input {
             identity: &input.identity,
-            directory: &input.directory,
+            directory: if prepared.publication.removed
+                .iter()
+                .any(|row| row.identity == input.identity)
+            {
+                ""
+            } else {
+                &input.directory
+            },
             hash: &input.remote,
             semantic_version: None,
             version,
@@ -98,7 +105,7 @@ fn validate_finalization(
         record.context["workspace"]["teambit.dependencies/dependency-resolver"]["rootComponents"]
             .as_bool()
             .unwrap_or(false);
-    merge::finalization::prepare(&record.request.root, &inputs, roots)?;
+    merge::finalization::prepare(&record.request.root, &inputs, roots, &[])?;
     Ok(())
 }
 

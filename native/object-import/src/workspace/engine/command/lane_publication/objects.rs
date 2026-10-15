@@ -122,6 +122,7 @@ pub(super) fn snapshot_update(
     identity: &str,
     head: &str,
     hidden: bool,
+    removed: bool,
 ) -> io::Result<()> {
     let was_hidden = lane["updateDependents"]
         .as_array()
@@ -156,5 +157,5 @@ pub(super) fn snapshot_update(
                 .remove("updateDependents");
         }
     }
-    update(lane, identity, head, hidden, false)
+    update(lane, identity, head, hidden, removed)
 }

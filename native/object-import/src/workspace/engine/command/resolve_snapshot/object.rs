@@ -64,7 +64,7 @@ fn metadata(
     }
     version["batchId"] = receipt["batchId"].clone();
     version["bitVersion"] = receipt["bitVersion"].clone();
-    version["buildStatus"] = json!("pending");
+    version["buildStatus"] = json!(if super::is_removed(&version) { "skipped" } else { "pending" });
     version["modified"] = json!([]);
     version["parents"] = if material.version_state.current_head.is_empty() {
         json!([])

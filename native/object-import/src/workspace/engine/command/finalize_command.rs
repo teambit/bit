@@ -17,6 +17,9 @@ pub(super) fn run(input: &Finalize, state: &mut State) -> io::Result<(usize, Val
     let merge = prepared.plan.merge.as_mut().ok_or_else(|| invalid("command finalize nonmerge"))?;
     prepared.plan.result["mergeSnapResults"] =
         merge.finalize(&record, &directory.0, &input.snap_receipt)?;
+    if !merge.removed_ids().is_empty() {
+        prepared.plan.result["removedComponents"] = json!(merge.removed_snap_ids()?);
+    }
     let updates = merge.snap_updates()?;
     let count = super::policy::workspace_count(&record.context, merge.policy.as_ref())?;
     prepared.snap_bitmap =

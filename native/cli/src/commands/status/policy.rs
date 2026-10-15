@@ -42,15 +42,6 @@ pub fn status_policy(context: &Value, target: &Value) -> io::Result<Policy> {
     projected_policy(context, target, None)
 }
 
-/// `resolvePolicyProjection` changes nothing without a merged configuration,
-/// or with an empty one; a merged resolver policy is left to Node.
-fn pending_merge_config(target: &Value) -> bool {
-    let empty = target
-        .get("mergedConfig")
-        .is_none_or(|config| config.as_object().is_some_and(serde_json::Map::is_empty));
-    truthy(target.get("resolveConfig")) && !empty
-}
-
 /// `statusPolicy(context, target, projectedVersion)`: with a projected
 /// version (a merge's incoming or fast-forwarded version) in place of the
 /// stored one.
@@ -59,7 +50,7 @@ pub fn projected_policy(
     target: &Value,
     projected: Option<&Value>,
 ) -> io::Result<Policy> {
-    if pending_merge_config(target) || target.get("recoveryConfig").is_some() {
+    if extensions::pending_merge_config(target) || target.get("recoveryConfig").is_some() {
         return Err(decline("status projected configuration"));
     }
     let identity = text(target.get("identity"))?;

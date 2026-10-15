@@ -26,7 +26,7 @@ pub const COMMAND: Command = Command { name: "merge", aliases: &[], run };
         perfectionist::excessive_cognitive_complexity,
         perfectionist::overly_long_function,
         perfectionist::too_many_local_bindings,
-        reason = "Existing CLI orchestration is retained until its operation is decomposed"
+        reason = "The merge CLI retains its existing orchestration while the engine owns VCS planning"
     )
 )]
 fn run(args: &[OsString]) -> io::Result<Outcome> {
@@ -54,7 +54,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     };
     let request =
         Request { operation: "merge", options: options.request(), to: None, verify_fresh: true };
-    let planned = if installer.is_some() && !options.no_snap {
+    let planned = if options.no_snap {
+        workspace_command::plan(&root, &request).map(|planned| (planned, None))
+    } else {
         let mut no_snap = options.request();
         no_snap["noSnap"] = Value::Bool(true);
         no_snap
@@ -71,8 +73,6 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
                 .map_err(|_| io::Error::other("merge snapshot preview thread panicked"))??;
             Ok::<_, io::Error>((preview, Some(materialized?)))
         })
-    } else {
-        workspace_command::plan(&root, &request).map(|planned| (planned, None))
     };
     let prepared = planned.and_then(|(planned, materialized)| {
         let mode = report::Mode { verbose: options.verbose, lane: false };
@@ -84,7 +84,13 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Ok(prepared) => prepared,
         Err(error) => return Ok(Outcome::Declined(format!("merge: {error}"))),
     };
-    if installer.is_some()
+    if planned.plan["result"]["removedComponents"]
+        .as_array()
+        .is_some_and(|rows| !rows.is_empty())
+    {
+        return Ok(Outcome::Declined("removed component merge".to_string()));
+    }
+    if !options.no_snap
         && (planned.plan.get("needsSnap").is_some()
             || planned.plan["result"]["mergeSnapResults"].is_object())
     {

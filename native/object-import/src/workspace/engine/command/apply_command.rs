@@ -2,7 +2,7 @@ use super::{
     Apply, PreparedPlan, Record, State, bitmap, input, invalid, materialization, planning, proof,
 };
 use serde_json::{Value, json};
-use std::io;
+use std::{io, path::Path};
 
 pub(super) fn run(input: &Apply, state: &mut State) -> io::Result<(usize, Value)> {
     bitmap::validate_history_file_id(&input.file_id)?;
@@ -17,7 +17,7 @@ pub(super) fn run(input: &Apply, state: &mut State) -> io::Result<(usize, Value)
     validate(&record, &prepared)?;
     record.repository.commit_import()?;
     prepared.plan.history.commit(&record.request.root)?;
-    publish_sources(&mut prepared.plan)?;
+    publish_sources(&mut prepared.plan, &record.request.root)?;
     let (warning, notifications) = publish_bitmap(&mut prepared, &record, &input.file_id)?;
     let count = prepared.plan.result["components"].as_array().map_or(0, Vec::len);
     Ok((count, json!({"applied":true,"warning":warning,"postPersistNotifications":notifications})))
@@ -35,9 +35,9 @@ fn validate(record: &Record, prepared: &PreparedPlan) -> io::Result<()> {
     }
     Ok(())
 }
-pub(super) fn publish_sources(plan: &mut planning::Planned) -> io::Result<()> {
+pub(super) fn publish_sources(plan: &mut planning::Planned, root: &Path) -> io::Result<()> {
     if let Some(merge) = &plan.merge {
-        merge.remove()?;
+        merge.remove(root)?;
     }
     for material in &plan.materials {
         materialization::remove(material)?;

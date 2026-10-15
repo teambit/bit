@@ -21,6 +21,20 @@ pub(super) fn receipt(value: &Value, inputs: &[Input<'_>]) -> io::Result<()> {
     Ok(())
 }
 pub(super) fn version(input: &Input<'_>, receipt: &Value, message: &str) -> io::Result<Value> {
+    let mut version = base_version(input, receipt, message)?;
+    apply_squash(input, receipt, &mut version)?;
+    apply_origin(input, &mut version)?;
+    let extensions =
+        version["extensions"].as_array_mut().ok_or_else(|| invalid("command snap extensions"))?;
+    for extension in extensions {
+        if extension["name"] == "teambit.pipelines/builder" {
+            extension["data"] = json!({});
+        }
+    }
+    Ok(version)
+}
+
+fn base_version(input: &Input<'_>, receipt: &Value, message: &str) -> io::Result<Value> {
     let mut version = current_schema(&input.material.version)?;
     if version.get("flattenedEdgesRef").is_some() {
         version
@@ -46,18 +60,27 @@ pub(super) fn version(input: &Input<'_>, receipt: &Value, message: &str) -> io::
     version["parents"] = json!([parent, input.remote]);
     version["batchId"] = receipt["batchId"].clone();
     version["bitVersion"] = receipt["bitVersion"].clone();
-    version["buildStatus"] = json!("pending");
+    version["buildStatus"] = json!(build_status(&version));
     version["modified"] = json!([]);
-    apply_squash(input, receipt, &mut version)?;
-    apply_origin(input, &mut version)?;
-    let extensions =
-        version["extensions"].as_array_mut().ok_or_else(|| invalid("command snap extensions"))?;
-    for extension in extensions {
-        if extension["name"] == "teambit.pipelines/builder" {
-            extension["data"] = json!({});
-        }
-    }
     Ok(version)
+}
+
+fn build_status(version: &Value) -> &'static str {
+    if version["extensions"]
+        .as_array()
+        .is_some_and(|extensions| {
+            extensions
+                .iter()
+                .any(|extension| {
+                    extension["name"] == "teambit.component/remove"
+                        && extension["config"]["removed"] == true
+                })
+        })
+    {
+        "skipped"
+    } else {
+        "pending"
+    }
 }
 pub(super) fn message_text(
     model: &Value,

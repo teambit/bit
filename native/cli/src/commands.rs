@@ -13,6 +13,7 @@ mod installation;
 mod inventory;
 mod lane;
 mod list;
+mod log;
 mod merge;
 mod mini_status;
 mod patterns;
@@ -44,6 +45,7 @@ pub const COMMANDS: &[Command] = &[
     install::COMMAND,
     lane::COMMAND,
     list::COMMAND,
+    log::COMMAND,
     merge::COMMAND,
     mini_status::COMMAND,
     snap::COMMAND,
