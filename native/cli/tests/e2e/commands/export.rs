@@ -1,7 +1,101 @@
 //! `e2e/commands/export.e2e.ts`.
 
-use crate::helper::{Helper, config, parse, setup};
+use crate::helper::{FOO_FIXTURE, Helper, config, parse, setup};
+use serde_json::Value;
 use std::{ffi::OsStr, fs, path::Path};
+
+#[test]
+fn selected_staged_export_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("// selected");
+    helper.add_component_bar_foo();
+    helper.run("tag bar/foo --message selected");
+    if let Some(destination) = std::env::var_os("BIT_NATIVE_EXPORT_SELECTED_BENCH_FIXTURE") {
+        let destination = std::path::PathBuf::from(destination);
+        assert!(!destination.exists());
+        fs::create_dir_all(&destination).unwrap();
+        setup::copy_dir(&helper.scopes.local_path, &destination.join("workspace"));
+        setup::copy_dir(&helper.scopes.remote_path, &destination.join("remote"));
+    }
+    let remote_before = helper.clone_remote_scope();
+    let node_root = helper.clone_workspace();
+    let node =
+        Helper::cmd_in_with(&node_root, "export bar/foo", &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{}", node.stderr);
+    let node_remote = helper.clone_remote_scope();
+    helper.restore_remote_scope(&remote_before);
+    let native = helper.native_run("export bar/foo");
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(
+        remote_index_by_identity(&helper.scopes.remote_path),
+        remote_index_by_identity(&node_remote),
+    );
+    assert_eq!(object_names(&helper.scopes.remote_path), object_names(&node_remote));
+    for path in [".bitmap", ".bit/index.json", ".bit/scope.json"] {
+        let native_bytes = fs::read_to_string(helper.scopes.local_path.join(path)).unwrap();
+        let node_bytes = fs::read_to_string(node_root.join(path)).unwrap();
+        let native_json = if path == ".bitmap" {
+            parse(&native_bytes[native_bytes.find('{').unwrap()..])
+        } else {
+            parse(&native_bytes)
+        };
+        let node_json = if path == ".bitmap" {
+            parse(&node_bytes[node_bytes.find('{').unwrap()..])
+        } else {
+            parse(&node_bytes)
+        };
+        assert_eq!(native_json, node_json, "{path}");
+    }
+    let node_status =
+        Helper::cmd_in_with(&node_root, "status --json", &[("BIT_NATIVE", OsStr::new("off"))]);
+    let native_status = helper.native_run("status --json");
+    assert_eq!(parse(&native_status.stdout), parse(&node_status.stdout));
+}
+
+#[test]
+fn multiple_selected_components_match_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(2, true, "");
+    helper.tag_without_build("", "");
+    let remote_before = helper.clone_remote_scope();
+    let node_root = helper.clone_workspace();
+    let command = "export comp1 comp2";
+    let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{}", node.stderr);
+    let node_remote = helper.clone_remote_scope();
+    helper.restore_remote_scope(&remote_before);
+    let native = helper.native_run(command);
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(
+        remote_index_by_identity(&helper.scopes.remote_path),
+        remote_index_by_identity(&node_remote),
+    );
+    assert_eq!(object_names(&helper.scopes.remote_path), object_names(&node_remote));
+}
+
+#[test]
+fn selected_scoped_version_matches_node() {
+    let helper = tagged_bar_foo();
+    let remote_before = helper.clone_remote_scope();
+    let node_root = helper.clone_workspace();
+    let command = format!("export {}/bar/foo@0.0.1", helper.scopes.remote);
+    let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{}", node.stderr);
+    let node_remote = helper.clone_remote_scope();
+    helper.restore_remote_scope(&remote_before);
+    let native = helper.native_run(&command);
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(
+        remote_index_by_identity(&helper.scopes.remote_path),
+        remote_index_by_identity(&node_remote),
+    );
+    assert_eq!(object_names(&helper.scopes.remote_path), object_names(&node_remote));
+}
 
 #[test]
 fn all_reexports_an_existing_component_like_node() {
@@ -58,8 +152,8 @@ fn assert_reexport(helper: &Helper, ids: &str, flag: &str) {
     assert_eq!(native.stdout, node.stdout);
     assert_eq!(native.stderr, node.stderr);
     assert_eq!(
-        parse(&fs::read_to_string(helper.scopes.remote_path.join("index.json")).unwrap()),
-        parse(&fs::read_to_string(node_remote.join("index.json")).unwrap()),
+        remote_index_by_identity(&helper.scopes.remote_path),
+        remote_index_by_identity(&node_remote),
     );
     assert_eq!(object_names(&helper.scopes.remote_path), object_names(&node_remote));
     for path in [".bitmap", ".bit/index.json", ".bit/scope.json"] {
@@ -81,6 +175,25 @@ fn assert_reexport(helper: &Helper, ids: &str, flag: &str) {
         Helper::cmd_in_with(&node_root, "status --json", &[("BIT_NATIVE", OsStr::new("off"))]);
     let native_status = helper.native_run("status --json");
     assert_eq!(parse(&native_status.stdout), parse(&node_status.stdout));
+}
+
+/// Node may persist independent Component index rows in either completion order.
+fn remote_index_by_identity(scope: &Path) -> Value {
+    let mut index = parse(&fs::read_to_string(scope.join("index.json")).unwrap());
+    index["components"]
+        .as_array_mut()
+        .unwrap()
+        .sort_by(|a, b| {
+            a["id"]["scope"]
+                .as_str()
+                .cmp(&b["id"]["scope"].as_str())
+                .then_with(|| {
+                    a["id"]["name"]
+                        .as_str()
+                        .cmp(&b["id"]["name"].as_str())
+                })
+        });
+    index
 }
 
 fn object_names(scope: &Path) -> Vec<String> {
@@ -166,10 +279,7 @@ fn cross_scope_forked_lane_export_matches_node() {
     let native = helper.native_run("export --fork-lane-new-scope");
     assert_eq!(native.stdout, node.stdout);
     assert_eq!(native.stderr, node.stderr);
-    assert_eq!(
-        parse(&fs::read_to_string(fork_remote.join("index.json")).unwrap()),
-        parse(&fs::read_to_string(node_remote.join("index.json")).unwrap()),
-    );
+    assert_eq!(remote_index_by_identity(&fork_remote), remote_index_by_identity(&node_remote));
     assert_eq!(object_names(&fork_remote), object_names(&node_remote));
     for path in [
         ".bitmap".to_owned(),
@@ -304,8 +414,8 @@ fn fresh_lane_component_export_matches_node() {
     assert_eq!(native.stdout, node.stdout);
     assert_eq!(native.stderr, node.stderr);
     assert_eq!(
-        parse(&fs::read_to_string(helper.scopes.remote_path.join("index.json")).unwrap()),
-        parse(&fs::read_to_string(node_remote.join("index.json")).unwrap()),
+        remote_index_by_identity(&helper.scopes.remote_path),
+        remote_index_by_identity(&node_remote),
     );
     for path in [
         ".bitmap".to_owned(),
@@ -445,35 +555,78 @@ fn a_recreated_remote_has_nothing_to_export() {
     assert!(output.contains("nothing to export"), "{output}");
 }
 
+fn tagged_bar_foo() -> Helper {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo(FOO_FIXTURE);
+    helper.add_component_bar_foo();
+    helper.tag_component_bar_foo();
+    helper
+}
+
+fn export_ids(helper: &Helper, ids: &str) -> String {
+    let output = helper.native(&format!("export {ids}"));
+    assert!(!output.contains("nothing to export"), "{output}");
+    output
+}
+
+#[test]
+fn multiple_versions_are_exported() {
+    let helper = tagged_bar_foo();
+    export_ids(&helper, "bar/foo");
+    helper.tag_without_build("bar/foo", "--unmodified");
+    export_ids(&helper, "bar/foo");
+    let output = helper.run(&format!("list {}", helper.scopes.remote));
+    assert!(output.contains("found 1 components"), "{output}");
+    assert!(output.contains("bar/foo"), "{output}");
+    assert!(output.contains('2'), "{output}");
+}
+
+#[test]
+fn an_imported_component_is_exported_twice() {
+    let helper = tagged_bar_foo();
+    helper.run("export bar/foo");
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    let remote = &helper.scopes.remote;
+    helper.run(&format!("import {remote}/bar/foo --path components/bar/foo"));
+    helper.output_file("components/bar/foo/foo.js", r#"console.log("got foo v2")"#);
+    helper.tag_component_bar_foo();
+    export_ids(&helper, "bar/foo");
+    helper.output_file("components/bar/foo/foo.js", r#"console.log("got foo v3")"#);
+    helper.tag_component_bar_foo();
+    export_ids(&helper, "bar/foo");
+    let output = helper.run(&format!("list {remote} --ids"));
+    assert!(output.contains(&format!("{remote}/bar/foo@0.0.3")), "{output}");
+}
+
+#[test]
+fn reexporting_by_name_without_scope() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo(FOO_FIXTURE);
+    helper.add_component_bar_foo();
+    helper.tag_without_build("", "");
+    helper.run("export");
+    helper.tag_without_build("bar/foo", "--unmodified");
+    helper.run("export");
+    helper.tag_without_build("bar/foo", "--unmodified");
+    let output = export_ids(&helper, "bar/foo");
+    assert!(output.contains("exported components (1)"), "{output}");
+}
+
 /// Native `bit export` declines an empty workspace (`commandOutboundPrepare: No such file or
-/// directory`), `export <ids>` (`outbound requested component is not staged`),
+/// directory`), an unchanged `export <id>` (`outbound requested component is not staged`),
 /// and a remote init with `--shared` (`outbound file remote group ownership
 /// requires canonical export`); native `bit import` declines the e2e workspace (`status
 /// configured extensions require Harmony`).
 mod known_failures {
+    use super::tagged_bar_foo;
     use crate::{
         allow_known_failure,
         helper::{FOO_FIXTURE, Helper},
-        known_failure::KnownResult,
     };
     use std::fs;
-
-    /// `exportIds(ids)`, natively: something must be exported.
-    fn export_ids(helper: &Helper, ids: &str) -> KnownResult<String> {
-        let output = helper.native_output_or_known(&format!("export {ids}"))?;
-        assert!(!output.contains("nothing to export"), "{output}");
-        Ok(output)
-    }
-
-    /// A tagged `bar/foo` in a workspace with a remote scope.
-    fn tagged_bar_foo() -> Helper {
-        let helper = Helper::new();
-        helper.set_workspace_with_remote_scope();
-        helper.create_component_bar_foo(FOO_FIXTURE);
-        helper.add_component_bar_foo();
-        helper.tag_component_bar_foo();
-        helper
-    }
 
     /// with no components to export › should print nothing to export
     #[test]
@@ -482,39 +635,6 @@ mod known_failures {
         helper.set_workspace_with_remote_scope();
         let output = allow_known_failure!(helper.native_output_or_known("export"));
         assert!(output.contains("nothing to export"), "{output}");
-    }
-
-    /// with multiple versions › should export it with no errors
-    #[test]
-    fn multiple_versions_are_exported() {
-        let helper = tagged_bar_foo();
-        allow_known_failure!(export_ids(&helper, "bar/foo"));
-        helper.tag_without_build("bar/foo", "--unmodified");
-        allow_known_failure!(export_ids(&helper, "bar/foo"));
-        let output = helper.run(&format!("list {}", helper.scopes.remote));
-        assert!(output.contains("found 1 components"), "{output}");
-        assert!(output.contains("bar/foo"), "{output}");
-        assert!(output.contains('2'), "{output}");
-    }
-
-    /// imported (v1), exported (v2) and then exported again (v3) › should export it with no
-    /// errors
-    #[test]
-    fn an_imported_component_is_exported_twice() {
-        let helper = tagged_bar_foo();
-        helper.run("export bar/foo");
-        helper.re_init_workspace();
-        helper.add_remote_scope();
-        let remote = &helper.scopes.remote;
-        helper.run(&format!("import {remote}/bar/foo --path components/bar/foo"));
-        helper.output_file("components/bar/foo/foo.js", r#"console.log("got foo v2")"#);
-        helper.tag_component_bar_foo();
-        allow_known_failure!(export_ids(&helper, "bar/foo"));
-        helper.output_file("components/bar/foo/foo.js", r#"console.log("got foo v3")"#);
-        helper.tag_component_bar_foo();
-        allow_known_failure!(export_ids(&helper, "bar/foo"));
-        let output = helper.run(&format!("list {remote} --ids"));
-        assert!(output.contains(&format!("{remote}/bar/foo@0.0.3")), "{output}");
     }
 
     /// with a PNG file › should export it with no errors; after importing the file › the
@@ -599,23 +719,6 @@ mod known_failures {
         let group = String::from_utf8(group.stdout).unwrap();
         let helper = tagged_for_shared_remote(group.trim());
         let output = allow_known_failure!(helper.native_output_or_known("export"));
-        assert!(output.contains("exported components (1)"), "{output}");
-    }
-
-    /// re-export using the component name without the scope name › should not show the
-    /// "fork" prompt
-    #[test]
-    fn reexporting_by_name_without_scope() {
-        let helper = Helper::new();
-        helper.set_workspace_with_remote_scope();
-        helper.create_component_bar_foo(FOO_FIXTURE);
-        helper.add_component_bar_foo();
-        helper.tag_without_build("", "");
-        helper.run("export");
-        helper.tag_without_build("bar/foo", "--unmodified");
-        helper.run("export");
-        helper.tag_without_build("bar/foo", "--unmodified");
-        let output = allow_known_failure!(export_ids(&helper, "bar/foo"));
         assert!(output.contains("exported components (1)"), "{output}");
     }
 }

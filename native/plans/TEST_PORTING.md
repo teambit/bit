@@ -200,8 +200,8 @@ The rest follow as their commands are ported.
 ### `e2e/commands/export.e2e.ts`
 
 - [x] `e2e/commands/export.e2e.ts:27` bit export command › with no components to export › should print nothing to export — `commands::export::known_failures::nothing_to_export` (known failure)
-- [x] `e2e/commands/export.e2e.ts:42` bit export command › with multiple versions › should export it with no errors — `commands::export::known_failures::multiple_versions_are_exported` (known failure)
-- [x] `e2e/commands/export.e2e.ts:69` bit export command › imported (v1), exported (v2) and then exported again (v3) › should export it with no errors — `commands::export::known_failures::an_imported_component_is_exported_twice` (known failure)
+- [x] `e2e/commands/export.e2e.ts:42` bit export command › with multiple versions › should export it with no errors — `commands::export::multiple_versions_are_exported`
+- [x] `e2e/commands/export.e2e.ts:69` bit export command › imported (v1), exported (v2) and then exported again (v3) › should export it with no errors — `commands::export::an_imported_component_is_exported_twice`
 - [x] `e2e/commands/export.e2e.ts:90` bit export command › with a PNG file › should export it with no errors — `commands::export::known_failures::a_png_file_keeps_its_size` (known failure)
 - [x] `e2e/commands/export.e2e.ts:99` bit export command › with a PNG file › after importing the file › the size of the binary file should not be changed — `commands::export::known_failures::a_png_file_keeps_its_size` (known failure)
 - [x] `e2e/commands/export.e2e.ts:117` bit export command › export a component, do not modify it and export again to the same scope › should not export the component — `commands::export::known_failures::an_unmodified_component_is_not_exported_again` (known failure)
@@ -213,7 +213,7 @@ The rest follow as their commands are ported.
 - [x] `e2e/commands/export.e2e.ts:203` bit export command › export after re-creating the remote › export without any flag › should show a message that nothing to export — `commands::export::a_recreated_remote_has_nothing_to_export`
 - [x] `e2e/commands/export.e2e.ts:213` bit export command › export after re-creating the remote › export with --all flag › should export them successfully — `commands::export::all_exports_to_a_recreated_remote`
 - [x] `e2e/commands/export.e2e.ts:223` bit export command › export after re-creating the remote › export with --all-versions flag › should export them successfully — `commands::export::all_versions_exports_to_a_recreated_remote`
-- [x] `e2e/commands/export.e2e.ts:243` bit export command › re-export using the component name without the scope name › should not show the "fork" prompt — `commands::export::known_failures::reexporting_by_name_without_scope` (known failure)
+- [x] `e2e/commands/export.e2e.ts:243` bit export command › re-export using the component name without the scope name › should not show the "fork" prompt — `commands::export::reexporting_by_name_without_scope`
 
 ### `e2e/commands/import-all.e2e.ts`
 

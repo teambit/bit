@@ -159,6 +159,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 /// a remote that failed to persist.
 struct Exported {
     count: usize,
+    selected_ids: bool,
     pending: bool,
     /// Each scope and the number of objects pushed to it.
     transfers: Vec<(String, usize)>,
@@ -171,10 +172,16 @@ struct Exported {
 impl Exported {
     /// `exportMany`'s status lines (`exportPendingComponents` without ids).
     fn progress(&self, output: &Output) {
-        output.status("loading components");
         let candidates =
             self.fork_history.as_ref().map_or(self.count, |history| history.candidate_count);
-        output.status(if candidates > 1 { "exporting components" } else { "exporting component" });
+        let exporting = if candidates > 1 { "exporting components" } else { "exporting component" };
+        if self.selected_ids {
+            output.status("exporting component");
+            output.status(&format!("loading {} component(s)", self.count));
+        } else {
+            output.status("loading components");
+            output.status(exporting);
+        }
         if !self.pending {
             return;
         }
@@ -211,6 +218,7 @@ fn export(root: &Path, options: &Options) -> io::Result<Exported> {
     let token = prepared.token.clone();
     let mut exported = Exported {
         count: prepared.count,
+        selected_ids: !(options.ids.is_empty() || options.all || options.all_versions),
         pending: !prepared.nothing_to_export,
         transfers: prepared.transfers,
         persisted: prepared.scopes.clone(),

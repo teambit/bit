@@ -144,8 +144,8 @@ fn find_requested<'s>(staged: &'s [(Value, Value)], id: &str) -> io::Result<&'s 
         version.is_none_or(|version| model["versions"][version].as_str() == model["head"].as_str())
     };
     // A slash can mean either a scope separator or part of a component
-    // name. Without bitmap resolution, only slash-free unscoped aliases
-    // are unambiguous; the other form stays on the canonical path.
+    // name. Prefer an exact scoped identity, then accept an unscoped name
+    // only when the candidate set makes it unambiguous.
     let scoped = staged
         .iter()
         .find(|(row, model)| {
@@ -158,14 +158,10 @@ fn find_requested<'s>(staged: &'s [(Value, Value)], id: &str) -> io::Result<&'s 
     if let Some(scoped) = scoped {
         return Ok(scoped);
     }
-    let unscoped: Vec<&(Value, Value)> = if identity.contains('/') {
-        Vec::new()
-    } else {
-        staged
-            .iter()
-            .filter(|(row, model)| row["id"]["name"] == identity && matching_version(model))
-            .collect()
-    };
+    let unscoped: Vec<&(Value, Value)> = staged
+        .iter()
+        .filter(|(row, model)| row["id"]["name"] == identity && matching_version(model))
+        .collect();
     match unscoped.as_slice() {
         [component] => Ok(component),
         [] => Err(invalid("outbound requested component is not staged")),
