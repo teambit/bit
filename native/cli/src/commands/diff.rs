@@ -9,6 +9,8 @@
 mod files;
 mod metadata;
 mod options;
+mod parent;
+mod progress;
 mod report;
 mod result_files;
 
@@ -65,6 +67,7 @@ fn run_workspace(
         options.pattern.as_deref(),
         options.versions.from.as_deref(),
         options.versions.to.as_deref(),
+        options.versions.parent,
         Chalk::detect(args),
     ) {
         Ok(result) => result,
@@ -93,45 +96,8 @@ fn run_report(
     let data = report::format(result, Chalk::detect(args), options)?;
     let report = Report { data, code: 0, details: None };
     workspace_command::execute_with(root, args, "diff", &report, |output| {
-        render_progress(output, options, result, loaded);
+        progress::render_progress(output, root, options, result, loaded);
         Ok(())
-    })
-}
-
-fn render_progress(
-    output: &bit_install::output::Output,
-    options: &options::Options,
-    result: &Value,
-    loaded: usize,
-) {
-    if loaded > 0 {
-        output.status(&format!("loading {loaded} component(s)"));
-    }
-    if options.versions.from.is_some() {
-        let qualifier = if multi_version_import(options, result) { ", 2 versions" } else { "" };
-        output.status(&format!("importing {loaded} components{qualifier} to show diff"));
-        output.status(&format!("successfully imported {loaded} components to show diff"));
-    }
-    if options.pattern.is_none()
-        && let Some(rows) = result.as_array()
-        && !rows.is_empty()
-    {
-        output.status(&format!("loading {} component(s)", rows.len()));
-    }
-}
-
-fn multi_version_import(options: &options::Options, result: &Value) -> bool {
-    let (Some(from), Some(to)) = (&options.versions.from, &options.versions.to) else {
-        return false;
-    };
-    if from == to {
-        return false;
-    }
-    let current = result[0]["_fullId"]
-        .as_str()
-        .and_then(|id| id.rsplit_once('@'));
-    current.is_some_and(|(_, version)| {
-        version.len() != 40 || !version.bytes().all(|byte| byte.is_ascii_hexdigit())
     })
 }
 
@@ -142,6 +108,7 @@ fn read(
     pattern: Option<&str>,
     from_version: Option<&str>,
     to_version: Option<&str>,
+    parent: bool,
     chalk: Chalk,
 ) -> io::Result<(Value, usize)> {
     if cache::no_fs_cache(root) || git_path_configured(root) {
@@ -156,6 +123,20 @@ fn read(
     let selected = select(targets, pattern)?;
     let loaded = selected.len();
     let capture = capture::capture(&mut engine, root, home, &context, &selected)?;
+    if parent {
+        let output = parent::read(parent::Request {
+            engine: &mut engine,
+            root,
+            context: &context,
+            capture: &capture,
+            selected: &selected,
+            pattern,
+            requested_version: from_version,
+            chalk,
+        })?;
+        capture::commit(&mut engine, root, &context, &capture)?;
+        return Ok((Value::Array(output), loaded));
+    }
     let result =
         comparison(&mut engine, root, pattern, &selected, &capture, from_version, to_version)?;
     let output = rows(&result, pattern.is_some())?

@@ -24,6 +24,8 @@ pub(in crate::workspace::engine) struct Request {
     to_version: String,
     git_executable: String,
     color: bool,
+    #[serde(default)]
+    no_parent: bool,
 }
 
 pub(in crate::workspace::engine) fn read(
@@ -34,7 +36,7 @@ pub(in crate::workspace::engine) fn read(
     let files = compare_files(request, pool, &from, &to)?;
     Ok((
         1,
-        json!({"identity":request.identity,"model":from,"current":to,"files":files,"modified":true}),
+        json!({"identity":request.identity,"model":if request.no_parent { Value::Null } else { from },"current":to,"files":files,"modified":true}),
     ))
 }
 
@@ -42,13 +44,7 @@ fn load_pair(request: &Request, pool: &ThreadPool) -> io::Result<(Value, Value)>
     let snapshot = load(
         &ModelsRequest {
             root: request.root.clone(),
-            targets: [request.from_version.as_str(), request.to_version.as_str()]
-                .into_iter()
-                .map(|version| Target {
-                    identity: request.identity.clone(),
-                    version: version.to_string(),
-                })
-                .collect(),
+            targets: target_versions(request),
             history: false,
             include_heads: false,
             stage_history: false,
@@ -64,15 +60,27 @@ fn load_pair(request: &Request, pool: &ThreadPool) -> io::Result<(Value, Value)>
         .find(|model| model["scope"] == scope && model["name"] == name)
         .ok_or_else(|| invalid("version diff model absent"))?;
     let reference = |version| versions::reference(model, version);
-    let from_ref = reference(&request.from_version)?;
     let to_ref = reference(&request.to_version)?;
     let index: HashMap<&str, &Value> = snapshot.versions
         .iter()
         .map(|(reference, value)| (reference.as_str(), value))
         .collect();
-    let from = index.get(from_ref.as_str()).ok_or_else(|| invalid("version diff from absent"))?;
     let to = index.get(to_ref.as_str()).ok_or_else(|| invalid("version diff to absent"))?;
-    Ok(((*from).clone(), (*to).clone()))
+    let from = if request.no_parent {
+        json!({"files":[]})
+    } else {
+        let from_ref = reference(&request.from_version)?;
+        (*index.get(from_ref.as_str()).ok_or_else(|| invalid("version diff from absent"))?).clone()
+    };
+    Ok((from, (*to).clone()))
+}
+
+fn target_versions(request: &Request) -> Vec<Target> {
+    [request.from_version.as_str(), request.to_version.as_str()]
+        .into_iter()
+        .filter(|version| !request.no_parent || *version == request.to_version.as_str())
+        .map(|version| Target { identity: request.identity.clone(), version: version.to_string() })
+        .collect()
 }
 
 fn compare_files(

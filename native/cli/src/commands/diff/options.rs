@@ -14,6 +14,7 @@ pub(super) struct Options {
 
 #[derive(Default)]
 pub(super) struct Range {
+    pub parent: bool,
     pub from: Option<String>,
     pub to: Option<String>,
 }
@@ -25,12 +26,17 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
         index += 1;
         parse_arg(&mut options, arg, args, &mut index)?;
     }
-    if options.configs_only && (options.files_only || !options.files.is_empty())
-        || options.name_only && options.stat
+    if invalid_output(&options)
+        || options.versions.parent && options.versions.to.is_some()
     {
         return None;
     }
     Some(options)
+}
+
+fn invalid_output(options: &Options) -> bool {
+    options.configs_only && (options.files_only || !options.files.is_empty())
+        || options.name_only && options.stat
 }
 
 fn parse_arg(options: &mut Options, arg: &str, args: &[&str], index: &mut usize) -> Option<()> {
@@ -68,6 +74,7 @@ fn set_boolean(options: &mut Options, flag: &str) -> bool {
         "--configs-only" => &mut options.configs_only,
         "--name-only" => &mut options.name_only,
         "--stat" => &mut options.stat,
+        "-p" | "--parent" => &mut options.versions.parent,
         _ => return false,
     };
     if *field {

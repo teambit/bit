@@ -10,6 +10,8 @@ fn accepts_workspace_diff_output_modes() {
     assert_eq!(parse(&["one", "0.0.1"]).unwrap().versions.from.as_deref(), Some("0.0.1"));
     let to_version = parse(&["one", "0.0.1", "0.0.2"]).unwrap().versions.to;
     assert_eq!(to_version.as_deref(), Some("0.0.2"));
+    assert!(parse(&["one", "--parent"]).unwrap().versions.parent);
+    assert!(parse(&["one", "1.0.0", "-p"]).unwrap().versions.parent);
 }
 
 #[test]
@@ -19,7 +21,7 @@ fn rejects_ambiguous_or_unimplemented_inputs() {
         &["--files-only", "--configs-only"],
         &["--file", "a", "--configs-only"],
         &["--name-only", "--stat"],
-        &["--parent"],
+        &["one", "1.0.0", "2.0.0", "--parent"],
         &["--file"],
     ] {
         assert!(parse(args).is_none(), "{args:?}");
