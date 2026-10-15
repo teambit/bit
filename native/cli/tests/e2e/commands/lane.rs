@@ -98,6 +98,156 @@ fn create_case(command: &str) {
 }
 
 #[test]
+fn local_history_reports_match_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.run("lane create dev");
+    let node_root = helper.clone_workspace();
+    let history = object(
+        &helper.scopes.local_path,
+        &{
+            let index = parse(
+                &fs::read_to_string(helper.scopes.local_path.join(".bit/index.json")).unwrap(),
+            );
+            let lane_hash = index["lanes"][0]["hash"].as_str().unwrap();
+            format!("{:x}", Sha1::digest(format!("{lane_hash}:LaneHistory").as_bytes()))
+        },
+        "LaneHistory",
+    );
+    let id = history["history"]
+        .as_object()
+        .unwrap()
+        .keys()
+        .next()
+        .unwrap();
+    for command in [
+        "lane history".to_string(),
+        "lane history --json".to_string(),
+        format!("lane history --id {id}"),
+        format!("lane history --id {id} --json"),
+    ] {
+        let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+        assert!(node.status.success(), "{command}: {}", node.stderr);
+        let native = helper.native_run(&command);
+        assert_eq!(native.status.code(), node.status.code(), "{command}");
+        assert_eq!(native.stdout, node.stdout, "{command}");
+        assert_eq!(native.stderr, node.stderr, "{command}");
+    }
+}
+
+#[test]
+fn local_alias_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.run("lane create dev");
+    let node_root = helper.clone_workspace();
+    let command = "lane alias dev work";
+    let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{}", node.stderr);
+    let native = helper.native_run(command);
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    let native_config =
+        parse(&fs::read_to_string(helper.scopes.local_path.join(".bit/scope.json")).unwrap());
+    let node_config = parse(&fs::read_to_string(node_root.join(".bit/scope.json")).unwrap());
+    assert_eq!(native_config, node_config);
+    for command in ["lane current --json", "lane list --json", "lane show work --json"] {
+        let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+        let native = helper.native_run(command);
+        assert_eq!(native.stdout, node.stdout, "{command}");
+    }
+}
+
+fn metadata_change_case(command: &str, with_component: bool) {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.run("lane create dev");
+    if with_component {
+        helper.create_component_bar_foo("// lane component");
+        helper.add_component_bar_foo();
+        helper.run("snap --message on-lane");
+    }
+    let node_root = helper.clone_workspace();
+    let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{command}: {}", node.stderr);
+    let native = helper.native_run(command);
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    for path in [".bitmap", ".bit/scope.json", ".bit/index.json"] {
+        let native = fs::read_to_string(helper.scopes.local_path.join(path)).unwrap();
+        let node = fs::read_to_string(node_root.join(path)).unwrap();
+        assert_eq!(
+            parse(&native[native.find('{').unwrap()..]),
+            parse(&node[node.find('{').unwrap()..]),
+            "{path}",
+        );
+    }
+    let index =
+        parse(&fs::read_to_string(helper.scopes.local_path.join(".bit/index.json")).unwrap());
+    let lane_hash = index["lanes"][0]["hash"].as_str().unwrap();
+    let history_hash = format!("{:x}", Sha1::digest(format!("{lane_hash}:LaneHistory").as_bytes()));
+    let native_lane = object(&helper.scopes.local_path, lane_hash, "Lane");
+    let node_lane = object(&node_root, lane_hash, "Lane");
+    assert_eq!(native_lane, node_lane);
+    let native_history = object(&helper.scopes.local_path, &history_hash, "LaneHistory");
+    let node_history = object(&node_root, &history_hash, "LaneHistory");
+    assert_eq!(native_history["name"], node_history["name"]);
+    assert_eq!(native_history["scope"], node_history["scope"]);
+    assert_eq!(
+        native_history["history"]
+            .as_object()
+            .unwrap()
+            .len(),
+        node_history["history"]
+            .as_object()
+            .unwrap()
+            .len(),
+    );
+    let native_last = native_history["history"]
+        .as_object()
+        .unwrap()
+        .values()
+        .next_back()
+        .unwrap();
+    let node_last = node_history["history"]
+        .as_object()
+        .unwrap()
+        .values()
+        .next_back()
+        .unwrap();
+    assert_eq!(native_last["log"]["message"], node_last["log"]["message"]);
+    assert_eq!(native_last["components"], node_last["components"]);
+    assert_eq!(native_last["updateDependents"], node_last["updateDependents"]);
+    for command in ["lane current --json", "lane list --json"] {
+        let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+        let native = helper.native_run(command);
+        assert_eq!(parse(&native.stdout), parse(&node.stdout), "{command}");
+    }
+}
+
+#[test]
+fn local_rename_matches_node() {
+    metadata_change_case("lane rename renamed", false);
+}
+
+#[test]
+fn local_scope_change_matches_node() {
+    metadata_change_case("lane change-scope another-scope", false);
+}
+
+#[test]
+fn local_rename_with_component_matches_node() {
+    metadata_change_case("lane rename renamed", true);
+}
+
+#[test]
+fn local_scope_change_with_component_matches_node() {
+    metadata_change_case("lane change-scope another-scope", true);
+}
+
+#[test]
 fn create_from_main_matches_node() {
     create_case("lane create dev");
 }

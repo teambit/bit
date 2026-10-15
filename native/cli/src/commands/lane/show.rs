@@ -56,7 +56,7 @@ fn parse<'a>(args: &[&'a str]) -> Option<(Option<&'a str>, bool)> {
     Some((name, json))
 }
 
-fn find<'a>(lanes: &'a [LaneData], target: &str) -> Option<&'a LaneData> {
+pub(super) fn find<'a>(lanes: &'a [LaneData], target: &str) -> Option<&'a LaneData> {
     let matches: Vec<_> = lanes
         .iter()
         .filter(|lane| {
