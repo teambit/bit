@@ -18,6 +18,19 @@ use std::{
 const MAX_FILES: usize = 4096;
 const MAX_BYTES: u64 = 64 * 1024 * 1024;
 
+pub(super) fn scan_request(
+    request: &Value,
+    pool: &rayon::ThreadPool,
+) -> io::Result<(usize, Value)> {
+    let input = serde_json::to_string(request).map_err(io::Error::other)?;
+    let output = bit_dependency_scanner::scan_request(&input, pool).map_err(io::Error::other)?;
+    let count = output["files"]
+        .as_array()
+        .ok_or_else(|| invalid("dependency scan declined"))?
+        .len();
+    Ok((count, output))
+}
+
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Request {

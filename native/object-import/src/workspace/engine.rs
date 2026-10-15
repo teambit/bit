@@ -356,7 +356,7 @@ fn dependencies(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize
         }
         Request::DependencyResolve(request) => resolve_dependencies::resolve(&request, pool),
         Request::DependencyGraph(request) => dependency_graph::apply(&request, pool),
-        Request::DependencyScan { request } => dependency_scan(&request, pool),
+        Request::DependencyScan { request } => dependency_graph::scan_request(&request, pool),
         Request::StatusPrepare(_)
         | Request::StatusScan(_)
         | Request::StatusFinish(_)
@@ -366,15 +366,6 @@ fn dependencies(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize
         | Request::InventoryCancel { .. } => Err(invalid("inventory operation requires an owner")),
         _ => Err(invalid("unsupported dependency operation")),
     }
-}
-fn dependency_scan(request: &Value, pool: &rayon::ThreadPool) -> io::Result<(usize, Value)> {
-    let input = serde_json::to_string(request).map_err(io::Error::other)?;
-    let output = bit_dependency_scanner::scan_request(&input, pool).map_err(io::Error::other)?;
-    let count = output["files"]
-        .as_array()
-        .ok_or_else(|| invalid("dependency scan declined"))?
-        .len();
-    Ok((count, output))
 }
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
