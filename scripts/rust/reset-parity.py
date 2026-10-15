@@ -33,22 +33,33 @@ def main():
         parser.add_argument(f"--{name}", type=Path, required=True)
     parser.add_argument("--plain", required=True, help="component with a linear local tag history")
     parser.add_argument("--detached", required=True, help="component with a detached local head")
+    parser.add_argument("--soft-source", type=Path, help="workspace with a pending nextVersion")
+    parser.add_argument("--soft-id", help="full scope/name of that soft-tagged component")
     args = parser.parse_args()
     cases = [
-        ("all local tags", [args.plain]),
-        ("latest local tag", [args.plain, "--head"]),
-        ("detached head", [args.detached, "--head", "--force"]),
-        ("all tags with detached head", [args.detached, "--force"]),
+        ("all local tags", args.source, [args.plain]),
+        ("latest local tag", args.source, [args.plain, "--head"]),
+        ("detached head", args.source, [args.detached, "--head", "--force"]),
+        ("all tags with detached head", args.source, [args.detached, "--force"]),
+        ("all components", args.source, ["--silent"]),
+        ("all latest heads", args.source, ["--head", "--silent"]),
     ]
+    if bool(args.soft_source) != bool(args.soft_id):
+        parser.error("--soft-source and --soft-id must be given together")
+    if args.soft_source:
+        cases.extend([
+            ("one soft tag", args.soft_source, [args.soft_id, "--soft"]),
+            ("all soft tags", args.soft_source, ["--soft", "--silent"]),
+        ])
     environment = os.environ.copy()
     environment.update(CI="1", BIT_DISABLE_SPINNER="true", BIT_NODE_CLI=str(args.entry.resolve()),
                        BIT_NATIVE_TRACE="1")
     with tempfile.TemporaryDirectory(prefix="bit-reset-parity-") as stage:
-        for index, (name, command) in enumerate(cases):
+        for index, (name, source, command) in enumerate(cases):
             outputs = []
             for label, binary in (("node", args.node), ("rust", args.rust)):
                 directory = Path(stage) / f"{index}-{label}"
-                shutil.copytree(args.source, directory, symlinks=True)
+                shutil.copytree(source, directory, symlinks=True)
                 outputs.append(run(binary, directory, command, environment))
             (node, node_state), (rust, rust_state) = outputs
             if node.returncode != rust.returncode or node.stdout != rust.stdout or node_state != rust_state:
