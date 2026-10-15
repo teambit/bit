@@ -108,7 +108,7 @@ fn deprecated(
 }
 
 /// A local object of the workspace scope, or `None` when it is absent.
-fn local_object(root: &Path, hash: &str, kind: &str) -> io::Result<Option<Value>> {
+pub(super) fn local_object(root: &Path, hash: &str, kind: &str) -> io::Result<Option<Value>> {
     let identity = crate::merge_history::hash(hash)?;
     let mut total = 0;
     let raw = match crate::checkout::repository::read(

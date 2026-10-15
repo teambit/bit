@@ -1,11 +1,11 @@
 //! `e2e/commands/import.e2e.ts`.
 
 use crate::{
-    helper::{FOO_FIXTURE, Helper, Run, parse},
+    helper::{FOO_FIXTURE, Helper, Run, parse, setup},
     known_failure::{KnownResult, Native},
 };
 use serde_json::Value;
-use std::{fs, path::Path};
+use std::{ffi::OsStr, fs, path::Path};
 
 /// `importComponent(id)`: `bit import <remote>/<id>`, when it runs natively.
 fn import(helper: &Helper, id: &str) -> KnownResult<String> {
@@ -142,6 +142,110 @@ fn a_stand_alone_component_is_imported() {
     }
     assert!(!output.contains("updated"), "{output}");
     assert!(read_bitmap(&helper).get("global/simple").is_some());
+}
+
+#[test]
+fn a_clean_imported_component_updates_like_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("module.exports = () => 'first';");
+    helper.add_component_bar_foo();
+    helper.tag_without_build("bar/foo", "");
+    helper.run("export");
+    let source = helper.clone_workspace();
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    helper.run(&format!("import {}/bar/foo -x", helper.scopes.remote));
+    fs::write(source.join("bar/foo.js"), "module.exports = () => 'second';").unwrap();
+    for command in ["tag bar/foo --message second", "export"] {
+        let run = Helper::cmd_in_with(&source, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+        assert!(run.status.success(), "{command}: {}", combined(&run));
+    }
+    if let Some(destination) = std::env::var_os("BIT_NATIVE_IMPORT_UPDATE_BENCH_FIXTURE") {
+        let destination = std::path::PathBuf::from(destination);
+        assert!(!destination.exists());
+        fs::create_dir_all(&destination).unwrap();
+        setup::copy_dir(&helper.scopes.local_path, &destination.join("workspace"));
+        setup::copy_dir(&helper.scopes.remote_path, &destination.join("remote"));
+    }
+    let node_root = helper.clone_workspace();
+    let command = format!("import {}/bar/foo -x", helper.scopes.remote);
+    let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{}", combined(&node));
+    let native = helper.native_run(&command);
+    assert!(native.native, "{}", native.trace);
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(without_progress_timing(&native.stdout), without_progress_timing(&node.stdout));
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(
+        fs::read(helper.scopes.local_path.join(".bitmap")).unwrap(),
+        fs::read(node_root.join(".bitmap")).unwrap(),
+    );
+    let component = format!("{}/bar/foo/foo.js", helper.scopes.remote);
+    assert_eq!(
+        fs::read(helper.scopes.local_path.join(&component)).unwrap(),
+        fs::read(node_root.join(&component)).unwrap(),
+    );
+}
+
+fn without_progress_timing(output: &str) -> String {
+    output
+        .lines()
+        .map(|line| {
+            if line.starts_with("✔ importing components (completed in ") {
+                "✔ importing components (completed)"
+            } else {
+                line
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+#[test]
+fn a_clean_import_updates_added_and_deleted_files_like_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("module.exports = () => 'first';");
+    helper.output_file("bar/old.js", "module.exports = 'old';");
+    helper.run("add bar -i bar/foo -m bar/foo.js");
+    helper.tag_without_build("bar/foo", "");
+    helper.run("export");
+    let source = helper.clone_workspace();
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    helper.run(&format!("import {}/bar/foo -x", helper.scopes.remote));
+    fs::remove_file(source.join("bar/old.js")).unwrap();
+    fs::write(source.join("bar/new.js"), "module.exports = 'new';").unwrap();
+    fs::write(source.join("bar/foo.js"), "module.exports = () => 'second';").unwrap();
+    for command in ["tag bar/foo --message second", "export"] {
+        let run = Helper::cmd_in_with(&source, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+        assert!(run.status.success(), "{command}: {}", combined(&run));
+    }
+    let node_root = helper.clone_workspace();
+    let command = format!("import {}/bar/foo -x", helper.scopes.remote);
+    let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{}", combined(&node));
+    let native = helper.native_run(&command);
+    assert!(native.native, "{}", native.trace);
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(without_progress_timing(&native.stdout), without_progress_timing(&node.stdout));
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(
+        fs::read(helper.scopes.local_path.join(".bitmap")).unwrap(),
+        fs::read(node_root.join(".bitmap")).unwrap(),
+    );
+    let component = format!("{}/bar/foo", helper.scopes.remote);
+    for file in ["foo.js", "new.js"] {
+        assert_eq!(
+            fs::read(helper.scopes.local_path.join(&component).join(file)).unwrap(),
+            fs::read(node_root.join(&component).join(file)).unwrap(),
+        );
+    }
+    assert_eq!(
+        fs::read(helper.scopes.local_path.join(&component).join("old.js")).unwrap(),
+        fs::read(node_root.join(&component).join("old.js")).unwrap(),
+    );
 }
 
 /// stand alone component (without dependencies) › with multiple files located in different

@@ -1,4 +1,6 @@
-use super::{History, Prepared, Target, safe_destination, unique_name};
+use super::{
+    History, Prepared, Replacement, Target, WorkspaceFiles, safe_destination, unique_name,
+};
 use serde_json::json;
 use std::{
     fs,
@@ -38,7 +40,13 @@ fn writer_rolls_back_partial_files_when_later_destination_conflicts() {
         root: root.clone(),
         bitmap_before: b"before".to_vec(),
         bitmap_after: b"after".to_vec(),
-        files: vec![(root.join("a"), b"first".to_vec()), (root.join("a/b"), b"second".to_vec())],
+        changes: WorkspaceFiles {
+            additions: vec![
+                (root.join("a"), b"first".to_vec()),
+                (root.join("a/b"), b"second".to_vec()),
+            ],
+            ..WorkspaceFiles::default()
+        },
         history: history(&root),
     };
     assert!(plan.commit().is_err());
@@ -54,7 +62,7 @@ fn bitmap_replacement_preserves_old_bytes_in_history() {
         root: root.clone(),
         bitmap_before: b"before".to_vec(),
         bitmap_after: b"after".to_vec(),
-        files: Vec::new(),
+        changes: WorkspaceFiles::default(),
         history: history(&root),
     };
     plan.commit().unwrap();
@@ -67,6 +75,39 @@ fn bitmap_replacement_preserves_old_bytes_in_history() {
         fs::read(root.join(".bit/bitmap-history-metadata.txt")).unwrap(),
         b"2026-1-2-3-4-5 import\n",
     );
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn writer_restores_an_existing_file_after_a_later_replacement_fails() {
+    let root = root();
+    let file = root.join("existing.js");
+    fs::write(root.join(".bitmap"), b"before").unwrap();
+    fs::write(&file, b"original").unwrap();
+    let plan = Prepared {
+        root: root.clone(),
+        bitmap_before: b"before".to_vec(),
+        bitmap_after: b"after".to_vec(),
+        changes: WorkspaceFiles {
+            replacements: vec![
+                Replacement {
+                    path: file.clone(),
+                    before: b"original".to_vec(),
+                    after: b"first".to_vec(),
+                },
+                Replacement {
+                    path: file.clone(),
+                    before: b"original".to_vec(),
+                    after: b"second".to_vec(),
+                },
+            ],
+            ..WorkspaceFiles::default()
+        },
+        history: history(&root),
+    };
+    assert!(plan.commit().is_err());
+    assert_eq!(fs::read(&file).unwrap(), b"original");
+    assert_eq!(fs::read(root.join(".bitmap")).unwrap(), b"before");
     fs::remove_dir_all(root).unwrap();
 }
 #[cfg(unix)]

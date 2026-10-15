@@ -1,4 +1,4 @@
-//! Retained workspace writes for a new, explicitly selected component. Every
+//! Retained workspace writes for new and clean existing components. Every
 //! Source and destination is checked during Prepare; publication happens after
 //! the object transaction succeeds.
 use super::{Target, config, invalid};
@@ -6,10 +6,8 @@ use crate::command_import::PreparedImport;
 use serde_json::{Map, Value, json};
 use std::{
     collections::{HashMap, HashSet},
-    fs::{self, OpenOptions},
-    io::{self, Write},
+    fs, io,
     path::{Path, PathBuf},
-    time::{SystemTime, UNIX_EPOCH},
 };
 
 /// The component file bytes one import holds until publication.
@@ -19,8 +17,18 @@ pub(super) struct Prepared {
     root: PathBuf,
     bitmap_before: Vec<u8>,
     bitmap_after: Vec<u8>,
-    files: Vec<(PathBuf, Vec<u8>)>,
+    changes: WorkspaceFiles,
     history: History,
+}
+#[derive(Default)]
+struct WorkspaceFiles {
+    additions: Vec<(PathBuf, Vec<u8>)>,
+    replacements: Vec<Replacement>,
+}
+struct Replacement {
+    path: PathBuf,
+    before: Vec<u8>,
+    after: Vec<u8>,
 }
 struct History {
     backup: PathBuf,
@@ -41,13 +49,12 @@ pub(super) fn prepare(
     let mut bitmap = crate::recovery::jsonc::parse(&bitmap_before)?;
     let rows = bitmap.as_object_mut().ok_or_else(|| invalid("inbound bitmap object"))?;
     let schema = bitmap_schema(rows)?;
-    let directories = directories::assign(&template, targets, rows)?;
-    let files = prepare_targets(root, targets, directories, import, rows)?;
+    let changes = prepare_targets(root, targets, &template, import, rows)?;
     // `sortObjectByKeys`: `Object.keys(...).sort()`, by UTF-16 code units.
     rows.sort_keys();
     rows.insert("$schema-version".into(), schema);
     let bitmap_after = crate::inspection::render_bitmap(&bitmap)?;
-    Ok(Prepared { root: root.to_owned(), bitmap_before, bitmap_after, files, history })
+    Ok(Prepared { root: root.to_owned(), bitmap_before, bitmap_after, changes, history })
 }
 
 fn default_directory(root: &Path) -> io::Result<String> {
@@ -61,27 +68,94 @@ fn default_directory(root: &Path) -> io::Result<String> {
 fn prepare_targets(
     root: &Path,
     targets: &[Target],
-    directories: Vec<String>,
+    template: &str,
     import: &PreparedImport,
     rows: &mut Map<String, Value>,
-) -> io::Result<Vec<(PathBuf, Vec<u8>)>> {
+) -> io::Result<WorkspaceFiles> {
     let policy = policy::workspace_policy(root)?;
-    let mut files = Vec::new();
+    let context = Planning { root, imported: import, policy: &policy };
+    let new = targets
+        .iter()
+        .filter(|target| {
+            !rows
+                .values()
+                .any(|row| row["name"] == target.name)
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+    let mut directories = directories::assign(template, &new, rows)?.into_iter();
+    let mut changes = WorkspaceFiles::default();
     let mut written = HashSet::new();
-    for (target, directory) in targets.iter().zip(directories) {
-        if !written.insert(directory.clone()) {
-            return Err(invalid("inbound workspace destination occupied"));
-        }
-        files.extend(prepare_target(root, &directory, target, import, rows, &policy)?);
+    for target in targets {
+        plan_target(&context, target, &mut directories, rows, &mut changes, &mut written)?;
     }
-    let bytes = files
+    let bytes = changes.additions
         .iter()
         .map(|(_, bytes)| bytes.len())
-        .sum::<usize>();
+        .sum::<usize>()
+        + changes.replacements
+            .iter()
+            .map(|replacement| replacement.after.len())
+            .sum::<usize>();
     if bytes > MAX_WRITTEN_BYTES {
         return Err(invalid("inbound workspace materialization bytes"));
     }
-    Ok(files)
+    Ok(changes)
+}
+
+struct Planning<'a> {
+    root: &'a Path,
+    imported: &'a PreparedImport,
+    policy: &'a HashMap<String, String>,
+}
+
+fn plan_target(
+    context: &Planning<'_>,
+    target: &Target,
+    directories: &mut impl Iterator<Item = String>,
+    rows: &mut Map<String, Value>,
+    changes: &mut WorkspaceFiles,
+    written: &mut HashSet<String>,
+) -> io::Result<()> {
+    let existing = rows
+        .values()
+        .find(|row| row["name"] == target.name)
+        .cloned();
+    let directory = if let Some(row) = &existing {
+        row["rootDir"]
+            .as_str()
+            .ok_or_else(|| invalid("inbound existing root directory"))?
+            .to_owned()
+    } else {
+        directories.next().ok_or_else(|| invalid("inbound new root directory"))?
+    };
+    if !written.insert(directory.clone()) {
+        return Err(invalid("inbound workspace destination occupied"));
+    }
+    if let Some(row) = existing {
+        existing::prepare(
+            &existing::Input {
+                root: context.root,
+                directory: &directory,
+                target,
+                imported: context.imported,
+                row: &row,
+                policy: context.policy,
+            },
+            rows,
+            changes,
+        )
+    } else {
+        changes.additions.extend(prepare_target(
+            context.root,
+            &directory,
+            target,
+            context.imported,
+            rows,
+            context.policy,
+        )?);
+        Ok(())
+    }
 }
 
 fn prepare_history(root: &Path, file_id: Option<&str>) -> io::Result<History> {
@@ -182,152 +256,6 @@ fn target_files(
     Ok(files)
 }
 
-impl Prepared {
-    pub(super) fn commit(self) -> io::Result<()> {
-        self.check_bitmap("before publication")?;
-        self.history.check(&self.root)?;
-        for (path, _) in &self.files {
-            safe_destination(&self.root, path)?;
-        }
-        let created_dirs = self.missing_directories()?;
-        let mut written = Vec::new();
-        let mut history_published = false;
-        let result = (|| {
-            self.publish_files(&mut written)?;
-            self.check_bitmap("during publication")?;
-            self.history.publish(&self.root, &self.bitmap_before)?;
-            history_published = true;
-            self.publish_bitmap()
-        })();
-        if result.is_err() {
-            if history_published {
-                self.history.rollback();
-            }
-            rollback_files(written, created_dirs);
-        }
-        result
-    }
-
-    fn check_bitmap(&self, stage: &str) -> io::Result<()> {
-        if fs::read(self.root.join(".bitmap"))? != self.bitmap_before {
-            return Err(invalid(&format!("inbound bitmap changed {stage}")));
-        }
-        Ok(())
-    }
-
-    fn missing_directories(&self) -> io::Result<HashSet<PathBuf>> {
-        let mut dirs = HashSet::new();
-        for (path, _) in &self.files {
-            let mut parent = path.parent().ok_or_else(|| invalid("inbound destination parent"))?;
-            while parent != self.root && !parent.exists() {
-                dirs.insert(parent.to_owned());
-                parent = parent.parent().ok_or_else(|| invalid("inbound destination ancestor"))?;
-            }
-        }
-        Ok(dirs)
-    }
-
-    fn publish_files(&self, written: &mut Vec<PathBuf>) -> io::Result<()> {
-        for (path, body) in &self.files {
-            safe_destination(&self.root, path)?;
-            fs::create_dir_all(
-                path.parent().ok_or_else(|| invalid("inbound destination parent"))?,
-            )?;
-            let mut file = OpenOptions::new()
-                .write(true)
-                .create_new(true)
-                .open(path)?;
-            written.push(path.clone());
-            file.write_all(body)?;
-        }
-        Ok(())
-    }
-
-    fn publish_bitmap(&self) -> io::Result<()> {
-        let stamp = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .map_err(io::Error::other)?
-            .as_nanos();
-        let temp = self.root.join(format!(".bitmap.rust-inbound-{}-{stamp}", std::process::id()));
-        let mut file = OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(&temp)?;
-        let publish = file.write_all(&self.bitmap_after).and_then(|()| file.sync_all());
-        drop(file);
-        let publish = publish.and_then(|()| fs::rename(&temp, self.root.join(".bitmap")));
-        if publish.is_err() {
-            let _ = fs::remove_file(&temp);
-        }
-        publish
-    }
-}
-
-fn rollback_files(written: Vec<PathBuf>, created_dirs: HashSet<PathBuf>) {
-    for path in written.into_iter().rev() {
-        let _ = fs::remove_file(path);
-    }
-    let mut directories = created_dirs.into_iter().collect::<Vec<_>>();
-    directories.sort_by_key(|path| std::cmp::Reverse(path.components().count()));
-    for path in directories {
-        let _ = fs::remove_dir(path);
-    }
-}
-
-impl History {
-    fn check(&self, root: &Path) -> io::Result<()> {
-        safe_destination(root, &self.backup)?;
-        let current = match fs::read(&self.metadata) {
-            Ok(bytes) => Some(bytes),
-            Err(error) if error.kind() == io::ErrorKind::NotFound => None,
-            Err(error) => return Err(error),
-        };
-        if current != self.metadata_before
-            || current.is_some() && !fs::symlink_metadata(&self.metadata)?.is_file()
-        {
-            return Err(invalid("inbound bitmap history changed"));
-        }
-        Ok(())
-    }
-    fn publish(&self, root: &Path, original: &[u8]) -> io::Result<()> {
-        self.check(root)?;
-        fs::create_dir_all(
-            self.backup.parent().ok_or_else(|| invalid("inbound history directory"))?,
-        )?;
-        let result = (|| {
-            let mut backup = OpenOptions::new()
-                .write(true)
-                .create_new(true)
-                .open(&self.backup)?;
-            backup.write_all(original)?;
-            let mut metadata = OpenOptions::new()
-                .append(true)
-                .create(true)
-                .open(&self.metadata)?;
-            writeln!(metadata, "{} import", self.file_id)?;
-            metadata.sync_all()
-        })();
-        if result.is_err() {
-            self.rollback();
-        }
-        result
-    }
-    fn rollback(&self) {
-        let _ = fs::remove_file(&self.backup);
-        match &self.metadata_before {
-            Some(bytes) => {
-                let _ = fs::write(&self.metadata, bytes);
-            }
-            None => {
-                let _ = fs::remove_file(&self.metadata);
-            }
-        }
-        if let Some(directory) = self.backup.parent() {
-            let _ = fs::remove_dir(directory);
-        }
-    }
-}
-
 fn safe_destination(root: &Path, path: &Path) -> io::Result<()> {
     let relative = path.strip_prefix(root).map_err(io::Error::other)?;
     let mut current = root.to_owned();
@@ -379,7 +307,9 @@ fn version(model: &Value, requested: &str) -> io::Result<(String, String)> {
 }
 
 mod directories;
+mod existing;
 mod policy;
+mod publication;
 
 #[cfg(test)]
 mod tests;
