@@ -3,7 +3,7 @@
 //! Finalize publishes local bookkeeping from the retained acknowledgements.
 mod lane_model;
 mod lane_publication;
-mod model;
+pub(crate) mod model;
 mod publication;
 mod receipt;
 mod remote;

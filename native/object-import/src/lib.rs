@@ -6,6 +6,7 @@ pub use operation::plan as plan_import_operation;
 /// Bit's JSONC reader (comments and trailing commas), used for `.bitmap`.
 pub use recovery::jsonc::parse as parse_jsonc;
 pub use session::WorkspaceSession;
+pub mod reset_main;
 pub use workspace::engine::read_dependency_cache::{
     cache_stale as dependency_cache_stale, read_cache as read_dependency_cache,
 };
