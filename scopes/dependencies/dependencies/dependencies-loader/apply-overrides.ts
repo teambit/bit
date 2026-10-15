@@ -295,8 +295,7 @@ export class ApplyOverrides {
     versionRange: string,
     depField: string
   ): { componentId?: ComponentID; packageName?: string; versionRange?: string } {
-    const packageData = this._resolvePackageData(dependency);
-    if (!packageData && !this.consumer) {
+    if (!this.consumer) {
       // a scope has no node_modules to resolve the package from. if it's a component dependency, use it. otherwise, a
       // forced component dependency (e.g. an env's own peer, which is a runtime dep of the env) is added as a package
       // and then dropped in favor of the component dependency, which may be in a different field.
@@ -307,12 +306,14 @@ export class ApplyOverrides {
         return { componentId: compDep.id, packageName: dependency, versionRange: range };
       }
     }
+    const packageData = this._resolvePackageData(dependency);
     return { componentId: packageData?.componentId, packageName: packageData?.name, versionRange };
   }
 
   private findComponentDepByPackageName(packageName: string): Dependency | undefined {
     const { dependencies, devDependencies, peerDependencies } = this.allDependencies;
-    return [...dependencies, ...devDependencies, ...peerDependencies].find((dep) => dep.packageName === packageName);
+    const isMatch = (dep: Dependency) => dep.packageName === packageName;
+    return dependencies.find(isMatch) || devDependencies.find(isMatch) || peerDependencies.find(isMatch);
   }
 
   getDependenciesToAddManually(

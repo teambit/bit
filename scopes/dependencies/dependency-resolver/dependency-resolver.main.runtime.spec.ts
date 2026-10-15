@@ -5,17 +5,18 @@ import { ComponentID } from '@teambit/component';
 import path from 'path';
 import { Http } from '@teambit/scope.network';
 import { DependencyResolverMain } from './dependency-resolver.main.runtime';
+import { VariantPolicy } from './policy';
 
 const logger = {
   debug: () => {},
 };
 
-function createDependencyResolverMain() {
+function createDependencyResolverMain(envs: Record<string, any> = {}) {
   return new DependencyResolverMain(
     {} as any,
     {} as any,
     {} as any,
-    {} as any,
+    envs as any,
     logger as any,
     {} as any,
     {} as any,
@@ -49,6 +50,28 @@ describe('DepenendencyResolverMain.validateAspectData()', () => {
         ],
       } as any)
     ).to.equal(undefined);
+  });
+});
+
+describe('DependencyResolverMain.getComponentEnvPolicyFromExtension()', () => {
+  const envId = 'some-scope/envs/code-env@1.0.0';
+  // an env that defines its policy in code (no env.jsonc). when it's not loaded, the env definition is the default env.
+  const createWithEnv = (envDefinitionId: string) =>
+    createDependencyResolverMain({
+      calculateEnvIdFromExtensions: async () => envId,
+      isCoreEnv: () => false,
+      getEnvComponentByEnvId: async () => ({}),
+      getOrCalculateEnvManifest: async () => undefined,
+      calculateEnvFromExtensions: async () => ({ id: envDefinitionId, env: {} }),
+    });
+  const storedPolicy = VariantPolicy.fromConfigObject({ dependencies: { 'some-pkg': '1.0.0' } }, { source: 'env' });
+  it('should return the given policy when the env is not loaded', async () => {
+    const depResolver = createWithEnv('teambit.harmony/node');
+    expect(await depResolver.getComponentEnvPolicyFromExtension({} as any, storedPolicy)).to.equal(storedPolicy);
+  });
+  it('should return the policy of the env when it is loaded', async () => {
+    const depResolver = createWithEnv(envId);
+    expect(await depResolver.getComponentEnvPolicyFromExtension({} as any, storedPolicy)).to.not.equal(storedPolicy);
   });
 });
 

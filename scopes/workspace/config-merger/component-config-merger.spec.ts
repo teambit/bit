@@ -10,7 +10,8 @@ const noopLogger = { debug() {}, trace() {} } as unknown as Logger;
 
 // A core-style teambit.envs/envs entry (matched by `name`, so it works without the runtime
 // core-extensions registry being populated — as is the case in an isolated component test).
-const envsEntry = (env: string) => new ExtensionDataEntry(undefined, undefined, EnvsAspect.id, { env }, {});
+const envsEntry = (env: string, extraConfig: Record<string, any> = {}) =>
+  new ExtensionDataEntry(undefined, undefined, EnvsAspect.id, { env, ...extraConfig }, {});
 // The separate env-aspect entry that carries the resolved version (`id@version`). As stored in a committed
 // version, teambit.envs/envs.config.env holds the id WITHOUT a version; the version lives only here.
 const envAspectEntry = (idWithVersion: string) =>
@@ -83,11 +84,7 @@ describe('ComponentConfigMerger', () => {
       const newEnv = 'other-scope.envs/new-env';
       const base = new ExtensionDataList(envsEntry(oldEnv), envAspectEntry(`${oldEnv}@1.0.0`));
       const current = new ExtensionDataList(envsEntry(oldEnv), envAspectEntry(`${oldEnv}@1.0.0`));
-      const otherEnvsEntry = new ExtensionDataEntry(undefined, undefined, EnvsAspect.id, {
-        env: newEnv,
-        __specific: true,
-      });
-      const other = new ExtensionDataList(otherEnvsEntry, envAspectEntry(`${newEnv}@1.0.0`));
+      const other = new ExtensionDataList(envsEntry(newEnv, { __specific: true }), envAspectEntry(`${newEnv}@1.0.0`));
       mergedConfig = mergeEnvConfig(current, base, other, []);
     });
     it('should keep the merged env specific', () => {

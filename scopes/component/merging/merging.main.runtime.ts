@@ -44,8 +44,7 @@ import { MergeCmd } from './merge-cmd';
 import { MergingAspect } from './merging.aspect';
 import type { DataMergeResult, MergeStatusProviderOptions } from './merge-status-provider';
 import { MergeStatusProvider } from './merge-status-provider';
-import type { MergedDependencies } from './merge-dependencies';
-import { applyMergedDependencies } from './merge-dependencies';
+import type { DependenciesSnapshot } from './merge-dependencies';
 import type {
   MergeStrategy,
   MergeResultsThreeWay,
@@ -79,7 +78,7 @@ export type ComponentMergeStatus = ComponentStatusBase & {
   resolvedUnrelated?: ResolveUnrelatedData;
   configMergeResult?: ConfigMergeResult;
   dataMergeResult?: DataMergeResult;
-  dependenciesMergeResult?: MergedDependencies; // populated on a bare scope only. see mergeDependencies()
+  dependenciesMergeResult?: DependenciesSnapshot; // populated on a bare scope only. see mergeDependencies()
 };
 
 export type ComponentMergeStatusBeforeMergeAttempt = ComponentStatusBase & {
@@ -491,7 +490,7 @@ export class MergingMain {
     currentLane?: Lane;
     resolvedUnrelated?: ResolveUnrelatedData;
     configMergeResult?: ConfigMergeResult;
-    dependenciesMergeResult?: MergedDependencies;
+    dependenciesMergeResult?: DependenciesSnapshot;
     detachHead?: boolean;
     shouldSquash?: boolean;
   }): Promise<ApplyVersionWithComps> {
@@ -650,7 +649,7 @@ export class MergingMain {
       currentLane,
     }: {
       currentComponent?: ConsumerComponent | null; // set when legacyComponent was loaded from the same version
-      dependenciesMergeResult?: MergedDependencies;
+      dependenciesMergeResult?: DependenciesSnapshot;
       currentLane?: Lane;
     }
   ) {
@@ -663,27 +662,20 @@ export class MergingMain {
     }
     if (!dependenciesMergeResult) return;
     // a dependency on a component of the current lane gets the lane's version, same as a workspace gets it from .bitmap
-    const laneVersions = new Map<string, string>();
+    // (or from the lane's hidden updateDependents, see updateDependenciesVersions)
     if (currentLane) {
-      const legacyScope = this.scope.legacyScope;
-      const compDeps = [
-        ...dependenciesMergeResult.dependencies,
-        ...dependenciesMergeResult.devDependencies,
-        ...dependenciesMergeResult.peerDependencies,
-      ];
+      const { dependencies, devDependencies, peerDependencies } = dependenciesMergeResult;
+      const compDeps = [...dependencies.get(), ...devDependencies.get(), ...peerDependencies.get()];
       await Promise.all(
         compDeps.map(async (dep) => {
-          const onLane = currentLane.getComponent(dep.id);
+          const onLane = currentLane.getComponent(dep.id) || currentLane.getUpdateDependentAsLaneComponent(dep.id);
           if (!onLane) return;
-          const modelComponent = await legacyScope.getModelComponentIfExist(dep.id.changeVersion(undefined));
-          const version = modelComponent?.getTagOfRefIfExists(onLane.head) || onLane.head.toString();
-          laneVersions.set(dep.id.toStringWithoutVersion(), version);
+          const modelComponent = await this.scope.legacyScope.getModelComponentIfExist(dep.id.changeVersion(undefined));
+          dep.id = dep.id.changeVersion(modelComponent?.getTagOfRefIfExists(onLane.head) || onLane.head.toString());
         })
       );
     }
-    applyMergedDependencies(legacyComponent, dependenciesMergeResult, (depId) =>
-      laneVersions.get(depId.toStringWithoutVersion())
-    );
+    Object.assign(legacyComponent, dependenciesMergeResult);
   }
 
   private async abortMerge(pattern: string): Promise<ApplyVersionResults> {

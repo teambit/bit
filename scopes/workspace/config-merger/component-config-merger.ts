@@ -14,7 +14,7 @@ import { ConfigMergeResult } from './config-merge-result';
 
 export type GenericConfigOrRemoved = Record<string, any> | '-';
 
-type EnvData = { id: string; version?: string; config?: GenericConfigOrRemoved; specific?: boolean };
+type EnvData = { id: string; version?: string; config?: GenericConfigOrRemoved };
 
 type SerializedDependencyWithPolicy = SerializedDependency & { policy?: string; packageName?: string };
 
@@ -144,7 +144,10 @@ export class ComponentConfigMerger {
       // exist in other but not in current and base, so it got created on other.
       return this.keepSpecificOfOther({ id, mergedConfig: this.getConfig(otherExt) }, isSpecific(otherExt));
     });
-    const envResult = this.envStrategy();
+    const envResult = this.keepSpecificOfOther(
+      this.envStrategy(),
+      isSpecific(this.otherAspects.findCoreExtension(EnvsAspect.id))
+    );
     this.logger.debug(`*** end config-merger for ${this.compIdStr} ***\n`);
     return new ConfigMergeResult(
       this.compIdStr,
@@ -167,7 +170,7 @@ export class ComponentConfigMerger {
     const currentEnv = getEnvId(this.currentAspects);
     this.currentEnv = { id: currentEnv };
     const otherEnv = getEnvId(this.otherAspects);
-    this.otherEnv = { id: otherEnv, specific: isSpecific(this.otherAspects.findCoreExtension(EnvsAspect.id)) };
+    this.otherEnv = { id: otherEnv };
     const baseEnv = this.baseAspects ? getEnvId(this.baseAspects) : undefined;
     if (baseEnv) this.baseEnv = { id: baseEnv };
 
@@ -254,14 +257,11 @@ export class ComponentConfigMerger {
         !baseEnvStr || (baseEnvStr !== envStr(this.currentEnv) && baseEnvStr !== envStr(this.otherEnv));
       if (isConflictShape) {
         return semver.gt(this.otherEnv.version, this.currentEnv.version)
-          ? this.keepSpecificOfOther(
-              { id: EnvsAspect.id, mergedConfig: { env: envStr(this.otherEnv) } },
-              this.otherEnv.specific
-            )
+          ? { id: EnvsAspect.id, mergedConfig: { env: envStr(this.otherEnv) } }
           : null;
       }
     }
-    return this.keepSpecificOfOther(this.basicConfigMerge(mergeStrategyParams), this.otherEnv.specific);
+    return this.basicConfigMerge(mergeStrategyParams);
   }
 
   /**

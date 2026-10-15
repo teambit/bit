@@ -1215,7 +1215,14 @@ export class DependencyResolverMain {
   //   return this.getComponentEnvPolicyFromEnv(env.env);
   // }
 
-  async getComponentEnvPolicyFromExtension(configuredExtensions: ExtensionDataList): Promise<EnvPolicy> {
+  /**
+   * an env that defines its policy in code (no env.jsonc) has to be loaded, otherwise its env definition falls back to
+   * the default env. `envPolicyIfNotLoaded` is returned in this case, rather than the default env's policy.
+   */
+  async getComponentEnvPolicyFromExtension(
+    configuredExtensions: ExtensionDataList,
+    envPolicyIfNotLoaded?: VariantPolicy
+  ): Promise<EnvPolicy | VariantPolicy> {
     const envId = await this.envs.calculateEnvIdFromExtensions(configuredExtensions);
     if (this.envs.isCoreEnv(envId)) {
       const env = await this.envs.calculateEnvFromExtensions(configuredExtensions);
@@ -1225,26 +1232,9 @@ export class DependencyResolverMain {
     const fromFile = await this.getEnvPolicyFromFile(envId);
     if (fromFile) return fromFile;
     const env = await this.envs.calculateEnvFromExtensions(configuredExtensions);
+    const isLoaded = ComponentID.fromString(env.id).isEqualWithoutVersion(ComponentID.fromString(envId));
+    if (!isLoaded && envPolicyIfNotLoaded) return envPolicyIfNotLoaded;
     return this.getComponentEnvPolicyFromEnv(env.env, { envId });
-  }
-
-  /**
-   * whether the env part of the policy (see `mergeVariantPolicies`) can be calculated for these extensions without
-   * loading the env first. it can for a core env, an env that is already loaded, and an env with env.jsonc (the policy is
-   * read from the file). otherwise, the env defines its dependencies in code and has to be loaded, because without it,
-   * the policy silently falls back to the default env's policy.
-   */
-  async canCalcEnvPolicy(configuredExtensions: ExtensionDataList): Promise<boolean> {
-    const envId = await this.envs.calculateEnvIdFromExtensions(configuredExtensions);
-    const envDef = await this.envs.calculateEnvFromExtensions(configuredExtensions);
-    const withoutVersion = (id: string) => ComponentID.fromString(id).toStringWithoutVersion();
-    if (withoutVersion(envDef.id) === withoutVersion(envId)) return true;
-    try {
-      return Boolean(await this.getEnvPolicyFromFile(envId));
-    } catch (err: any) {
-      this.logger.debug(`canCalcEnvPolicy, failed getting the policy of "${envId}" from its env.jsonc`, err);
-      return false;
-    }
   }
 
   async getEnvPolicyFromEnvId(
@@ -1405,11 +1395,12 @@ export class DependencyResolverMain {
     configuredExtensions: ExtensionDataList,
     id: ComponentID,
     legacyFiles?: SourceFile[],
-    envExtendsDeps?: LegacyDependency[]
+    envExtendsDeps?: LegacyDependency[],
+    envPolicyIfNotLoaded?: VariantPolicy // see getComponentEnvPolicyFromExtension()
   ): Promise<VariantPolicy> {
     let policiesFromSlots: VariantPolicy = VariantPolicy.getEmpty();
     let policiesFromConfig: VariantPolicy = VariantPolicy.getEmpty();
-    const policiesFromEnv: VariantPolicy = await this.getComponentEnvPolicyFromExtension(configuredExtensions);
+    const policiesFromEnv = await this.getComponentEnvPolicyFromExtension(configuredExtensions, envPolicyIfNotLoaded);
     const configuredIds = configuredExtensions.ids;
     const policiesTuples = this.policiesRegistry.toArray();
     configuredIds.forEach((extId) => {

@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { ComponentID } from '@teambit/component-id';
 import { Dependencies, Dependency } from '@teambit/legacy.consumer-component';
 import type { DependenciesSnapshot } from './merge-dependencies';
-import { applyMergedDependencies, mergeDependencies } from './merge-dependencies';
+import { mergeDependencies } from './merge-dependencies';
 
 type SnapshotInput = {
   comps?: string[]; // runtime component deps, e.g. "my-scope/b@0.0.1"
@@ -30,7 +30,7 @@ function snapshot({ comps, devComps, pkgs, devPkgs }: SnapshotInput): Dependenci
   };
 }
 
-const idsOf = (deps: Dependency[]) => deps.map((dep) => dep.id.toString());
+const idsOf = (deps: Dependencies) => deps.get().map((dep) => dep.id.toString());
 
 describe('mergeDependencies', () => {
   describe('packages', () => {
@@ -89,26 +89,42 @@ describe('mergeDependencies', () => {
       expect(idsOf(merged.dependencies)).to.have.members(['my-scope/a@0.0.1', 'my-scope/e@0.0.2', 'my-scope/f@0.0.1']);
     });
     it('should keep the package-name of the dependencies', () => {
-      const f = merged.dependencies.find((dep) => dep.id.fullName === 'f');
+      const f = merged.dependencies.get().find((dep) => dep.id.fullName === 'f');
       expect(f?.packageName).to.equal('@my-scope/f');
     });
-    it('should not mutate the dependencies of the inputs', () => {
-      applyMergedDependencies(snapshot({}), merged, () => '1.0.0');
-      expect(idsOf(other.dependencies.get())).to.include('my-scope/e@0.0.2');
+    it('should return copies of the dependencies of the inputs', () => {
+      const e = merged.dependencies.get().find((dep) => dep.id.fullName === 'e');
+      expect(other.dependencies.get()).to.not.include(e);
     });
   });
-});
-
-describe('applyMergedDependencies', () => {
-  it('should override the version of the component dependencies resolved by the callback', () => {
-    const base = snapshot({ comps: ['my-scope/b@0.0.1'] });
-    const current = snapshot({ comps: ['my-scope/b@0.0.1'] });
-    // other (main) imports a lane component, b, that it has on a different version
-    const other = snapshot({ comps: ['my-scope/b@0.0.2', 'my-scope/main-only@0.0.3'] });
+  describe('a dependency that moved to another field on one side and changed its version on the other side', () => {
+    const base = snapshot({ comps: ['my-scope/b@0.0.1'], pkgs: { chai: '4.0.0' } });
+    const current = snapshot({ comps: ['my-scope/b@0.0.2'], pkgs: { chai: '4.1.0' } });
+    const other = snapshot({ devComps: ['my-scope/b@0.0.1'], devPkgs: { chai: '4.0.0' } });
     const merged = mergeDependencies(base, current, other, 'manual');
-    const target = snapshot({ pkgs: { stale: '1.0.0' } });
-    applyMergedDependencies(target, merged, (id) => (id.fullName === 'b' ? 'lane-head' : undefined));
-    expect(idsOf(target.dependencies.get())).to.have.members(['my-scope/b@lane-head', 'my-scope/main-only@0.0.3']);
-    expect(target.packageDependencies).to.deep.equal({});
+    it('should keep it in one field only', () => {
+      expect(idsOf(merged.dependencies)).to.deep.equal(['my-scope/b@0.0.2']);
+      expect(idsOf(merged.devDependencies)).to.deep.equal([]);
+      expect(merged.packageDependencies).to.deep.equal({ chai: '4.1.0' });
+      expect(merged.devPackageDependencies).to.deep.equal({});
+    });
+  });
+  describe('a component dependency that other imports from another file too', () => {
+    const relativePath = (sourceRelativePath: string) => ({
+      sourceRelativePath,
+      destinationRelativePath: 'index.ts',
+      importSpecifiers: [],
+    });
+    const depWithPaths = (paths: string[]) =>
+      new Dependencies([
+        new Dependency(ComponentID.fromString('my-scope/b@0.0.1'), paths.map(relativePath), '@my-scope/b'),
+      ]);
+    const base = { ...snapshot({}), dependencies: depWithPaths(['a.ts']) };
+    const current = { ...snapshot({}), dependencies: depWithPaths(['a.ts']) };
+    const other = { ...snapshot({}), dependencies: depWithPaths(['a.ts', 'b.ts']) };
+    it('should take the import paths of other', () => {
+      const [merged] = mergeDependencies(base, current, other, 'manual').dependencies.get();
+      expect(merged.relativePaths.map((paths) => paths.sourceRelativePath)).to.deep.equal(['a.ts', 'b.ts']);
+    });
   });
 });

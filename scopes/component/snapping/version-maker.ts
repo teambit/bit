@@ -140,12 +140,12 @@ export class VersionMaker {
     this.allWorkspaceComps = this.workspace ? await this.workspace.list() : undefined;
     const componentsToTag = this.getUniqCompsToTag();
     const idsToTag = ComponentIdList.fromArray(componentsToTag.map((c) => c.id));
-    const autoTagData = await this.getAutoTagData(idsToTag);
+    // a component that is tagged explicitly is not auto-tagged too (the scope flow may find it as both)
+    const autoTagData = (await this.getAutoTagData(idsToTag)).filter(
+      (autoTagItem) => !idsToTag.has(autoTagItem.component.id)
+    );
     const autoTagComponents = autoTagData.map((autoTagItem) => autoTagItem.component);
-    const autoTagComponentsFiltered = autoTagComponents.filter((c) => !idsToTag.has(c.id));
-    // a component that is tagged explicitly is not reported as auto-tagged (the scope flow may find it as both)
-    const autoTagDataFiltered = autoTagData.filter((autoTagItem) => !idsToTag.has(autoTagItem.component.id));
-    const autoTagIds = ComponentIdList.fromArray(autoTagComponentsFiltered.map((autoTag) => autoTag.id));
+    const autoTagIds = ComponentIdList.fromArray(autoTagComponents.map((autoTag) => autoTag.id));
 
     // Validate component issues for auto-tag components
     if (this.allWorkspaceComps && autoTagIds.length) {
@@ -154,7 +154,7 @@ export class VersionMaker {
     }
 
     await this.triggerOnPreSnap(autoTagIds);
-    this.allComponentsToTag = [...componentsToTag, ...autoTagComponentsFiltered];
+    this.allComponentsToTag = [...componentsToTag, ...autoTagComponents];
     await this.parseVersionsFile(idsToTag, autoTagIds);
     const messagePerId = await this.getMessagePerId(idsToTag, autoTagIds);
     await this.checkForNewerVersions();
@@ -176,7 +176,7 @@ export class VersionMaker {
       this.consumer.updateNextVersionOnBitmap(this.allComponentsToTag, this.params.preReleaseId);
       return {
         taggedComponents: componentsToTag,
-        autoTaggedResults: autoTagDataFiltered,
+        autoTaggedResults: autoTagData,
         dependentsWithPinnedDeps,
         publishedPackages: [],
         stagedConfig,
@@ -280,7 +280,7 @@ export class VersionMaker {
 
     return {
       taggedComponents: componentsToTag,
-      autoTaggedResults: autoTagDataFiltered,
+      autoTaggedResults: autoTagData,
       dependentsWithPinnedDeps,
       publishedPackages,
       stagedConfig,
