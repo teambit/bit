@@ -74,6 +74,20 @@ pub(in crate::workspace::engine) struct List {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(in crate::workspace::engine) struct RemoteLog {
+    #[serde(default)]
+    root: Option<PathBuf>,
+    identity: String,
+    #[serde(flatten)]
+    transport: Transport,
+}
+
+pub(in crate::workspace::engine) fn remote_log(input: &RemoteLog) -> io::Result<(usize, Value)> {
+    remote::log(input)
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Apply {
     token: String,
 }

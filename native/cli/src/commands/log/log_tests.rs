@@ -2,12 +2,40 @@ use super::{Chalk, Options, normalize, ordered_parents, paint, parse, render};
 use serde_json::json;
 
 #[test]
-fn parses_local_history_views_and_delegates_remote_flags() {
+fn parses_local_and_remote_history_views() {
     let options = parse(&["alpha", "--one-line", "--full-hash"]).unwrap();
     assert_eq!(options.id, Some("alpha"));
     assert!(options.one_line && options.full_hash);
-    assert!(parse(&["alpha", "--remote"]).is_none());
+    assert!(parse(&["acme.ui/alpha", "--remote"]).unwrap().remote);
     assert!(parse(&["alpha", "beta"]).is_none());
+}
+
+#[test]
+fn remote_rows_keep_full_hash_and_message_in_one_line_output() {
+    let rows = [json!({
+        "message":"first\nsecond", "username":null, "email":"a@example.com",
+        "date":"1800000000000", "hash":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "tag":null,
+    })];
+    let options = Options { remote: true, one_line: true, ..Options::default() };
+    let report = render(&rows, &options, Chalk::new(false)).unwrap();
+    let report = report.as_str().unwrap();
+    assert!(report.contains("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
+    assert!(report.contains("first \n"));
+    assert!(report.contains("second"));
+    let options = Options { remote: true, ..Options::default() };
+    let report = render(&rows, &options, Chalk::new(false)).unwrap();
+    assert!(
+        report
+            .as_str()
+            .unwrap()
+            .contains("author: <a@example.com>"),
+    );
+    assert!(
+        report
+            .as_str()
+            .unwrap()
+            .contains("date: 1800000000000"),
+    );
 }
 
 #[test]

@@ -1,6 +1,6 @@
 //! Bounded HTTP scope acquisition and listing. File scopes stay in the
 //! deferred importer.
-use super::{List, Prepare, Target, Transport, identity, invalid};
+use super::{List, Prepare, RemoteLog, Target, Transport, identity, invalid};
 use crate::command_import::{VirtualRemote, lane};
 use bit_client_transfer::{
     GlobalConfig,
@@ -11,7 +11,7 @@ use bit_client_transfer::{
     tar::ObjectItem,
 };
 use futures_util::{StreamExt, TryStreamExt, stream};
-use serde_json::Value;
+use serde_json::{Value, json};
 use std::{
     collections::{BTreeMap, HashMap},
     fs, io,
@@ -90,6 +90,36 @@ pub(super) fn list(input: &List) -> io::Result<Vec<(String, Vec<Listed>)>> {
         }
         Ok(lists)
     })
+}
+
+pub(super) fn log(input: &RemoteLog) -> io::Result<(usize, Value)> {
+    let (remotes, network) = if let Some(root) = &input.root {
+        let (remotes, network, _, _) = connect(root, &input.transport)?;
+        (remotes, network)
+    } else {
+        let global = global_config(&input.transport)?;
+        let remotes = Remotes::load(&Value::Null, &input.transport.global_config_dir, &global)?;
+        let network = Network::new(
+            &global,
+            &input.transport.bit_version,
+            None,
+            input.transport.token.as_deref(),
+        )?;
+        (remotes, network)
+    };
+    let (scope, name) =
+        input.identity.split_once('/').ok_or_else(|| invalid("remote log identity"))?;
+    if scope.is_empty() || name.is_empty() || name.starts_with('/') || name.contains("..") {
+        return Err(invalid("remote log identity"));
+    }
+    let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
+    let rows = runtime.block_on(async {
+        let Remote::Http(url) = remotes.resolve(scope, &network).await? else {
+            return Err(invalid("remote log file scope"));
+        };
+        network.log(&url, &input.identity).await
+    })?;
+    Ok((rows.len(), json!({"logs": rows})))
 }
 
 async fn fetch_lane(
