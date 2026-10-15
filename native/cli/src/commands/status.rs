@@ -17,6 +17,7 @@ pub(super) mod js;
 pub(super) mod policy;
 
 pub(super) mod collate;
+mod lane_refresh;
 mod report;
 
 use super::{color::Chalk, engine::Engine, workspace_command};
@@ -36,15 +37,15 @@ pub const COMMAND: Command = Command { name: "status", aliases: &["s"], run };
 
 /// `--json`, or the report with its flags.
 enum Mode {
-    Json,
+    Json(bool),
     Report(report::Flags),
     /// `--quick`, with `--json` or not.
     Quick(bool),
 }
 
 fn mode(args: &[OsString]) -> Option<Mode> {
-    if matches!(args, [_, flag] if flag == "--json" || flag == "-j") {
-        return Some(Mode::Json);
+    if let Some(lanes) = json_mode(args) {
+        return Some(Mode::Json(lanes));
     }
     let json = |flag: &OsString| flag == "--json" || flag == "-j";
     match args {
@@ -60,6 +61,19 @@ fn mode(args: &[OsString]) -> Option<Mode> {
     report::parse(&arguments[1..]).map(Mode::Report)
 }
 
+fn json_mode(args: &[OsString]) -> Option<bool> {
+    let json = |flag: &OsString| flag == "--json" || flag == "-j";
+    match args {
+        [_, flag] if json(flag) => Some(false),
+        [_, first, second]
+            if (json(first) && second == "--lanes") || (first == "--lanes" && json(second)) =>
+        {
+            Some(true)
+        }
+        _ => None,
+    }
+}
+
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(mode) = mode(args) else {
         return Ok(Outcome::Declined("flags outside the native `status` grammar".to_string()));
@@ -72,7 +86,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
     let home = env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).unwrap_or_default();
     match mode {
-        Mode::Json => json_status(&root, Path::new(&home), args),
+        Mode::Json(lanes) => json_status(&root, Path::new(&home), args, lanes),
         Mode::Report(flags) => report_status(&root, Path::new(&home), args, &flags),
         // `statusMini`: the file changes only.
         Mode::Quick(json) => super::mini_status::quick(args, json),
@@ -80,10 +94,13 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 /// `bit status --json`.
-fn json_status(root: &Path, home: &Path, args: &[OsString]) -> io::Result<Outcome> {
-    let result = match read(root, home, |_, _| Ok(())) {
-        Ok((result, ())) => result,
-        Err(error) => return Ok(Outcome::Declined(format!("status: {error}"))),
+fn json_status(root: &Path, home: &Path, args: &[OsString], lanes: bool) -> io::Result<Outcome> {
+    let result = match read(root, home, lanes, |_, _| Ok(())) {
+        Ok((result, (), _)) => result,
+        Err(ReadFailure::Declined(error)) => {
+            return Ok(Outcome::Declined(format!("status: {error}")));
+        }
+        Err(ReadFailure::Committed(error)) => return Err(error),
     };
     let history = History::start(root, args);
     let mut stdout = io::stdout().lock();
@@ -100,24 +117,18 @@ fn report_status(
     args: &[OsString],
     flags: &report::Flags,
 ) -> io::Result<Outcome> {
-    let chalk = Chalk::detect(args);
-    let read = read(root, home, |result, context| {
-        let output = report::report(result, context, flags, chalk)?;
-        let loaded = array(context.get("targets"), "targets")?
-            .iter()
-            .filter(|target| target["locallyRemoved"] != true)
-            .count();
-        let loads = if loaded == 0 {
-            0
-        } else {
-            3 + usize::from(!array(result.get("modifiedComponents"), "modified")?.is_empty())
+    let (output, loaded, loads, refresh_count) =
+        match read(root, home, flags.lanes, |result, context| {
+            prepare_report(result, context, flags, Chalk::detect(args))
+        }) {
+            Ok((_, (output, loaded, loads), refresh_count)) => {
+                (output, loaded, loads, refresh_count)
+            }
+            Err(ReadFailure::Declined(error)) => {
+                return Ok(Outcome::Declined(format!("status: {error}")));
+            }
+            Err(ReadFailure::Committed(error)) => return Err(error),
         };
-        Ok((output, loaded, loads))
-    });
-    let (output, loaded, loads) = match read {
-        Ok((_, prepared)) => prepared,
-        Err(error) => return Ok(Outcome::Declined(format!("status: {error}"))),
-    };
     let report =
         workspace_command::results::Report { data: output.data, code: output.code, details: None };
     workspace_command::execute_with(root, args, "status", &report, |loader| {
@@ -127,33 +138,95 @@ fn report_status(
         for _ in 0..loads {
             loader.status(&format!("loading {loaded} component(s)"));
         }
+        if refresh_count > 0 {
+            let reason = "main components of the current lane to check for updates";
+            loader.status(&format!("importing {refresh_count} components {reason}"));
+            loader.status(&format!("successfully imported {refresh_count} components {reason}"));
+        }
         Ok(())
     })
 }
 
+fn prepare_report(
+    result: &Value,
+    context: &Value,
+    flags: &report::Flags,
+    chalk: Chalk,
+) -> io::Result<(report::Output, usize, usize)> {
+    let output = report::report(result, context, flags, chalk)?;
+    let loaded = array(context.get("targets"), "targets")?
+        .iter()
+        .filter(|target| target["locallyRemoved"] != true)
+        .count();
+    let loads = if loaded == 0 {
+        0
+    } else {
+        3 + usize::from(!array(result.get("modifiedComponents"), "modified")?.is_empty())
+    };
+    Ok((output, loaded, loads))
+}
+
 /// The status result, after its history plans are
 /// committed. `prepare` runs on the result and the context before the commit.
+enum ReadFailure {
+    Declined(io::Error),
+    Committed(io::Error),
+}
+
+impl From<io::Error> for ReadFailure {
+    fn from(error: io::Error) -> Self {
+        Self::Declined(error)
+    }
+}
+
 fn read<Prepared>(
     root: &Path,
     home: &Path,
+    lanes: bool,
     prepare: impl FnOnce(&Value, &Value) -> io::Result<Prepared>,
-) -> io::Result<(Value, Prepared)> {
+) -> Result<(Value, Prepared, usize), ReadFailure> {
     let mut engine = Engine::new()?;
     let context: Value =
         engine.request(&json!({"kind": "statusContext", "root": root, "home": home}))?;
-    let capture = status_capture(&mut engine, root, home, &context)?;
+    let (mut result, capture) = local_result(&mut engine, root, home, &context)?;
+    let current_lane_id = text(result.get("currentLaneId"))?.to_owned();
+    let refresh = if lanes && !current_lane_id.ends_with("/main") {
+        lane_refresh::prepare(&mut engine, root, &context, &result, &current_lane_id)?
+    } else {
+        None
+    };
+    if let Some((_, updates, _)) = &refresh {
+        result["pendingUpdatesFromMain"] = updates["pendingUpdatesFromMain"].clone();
+    }
+    result["remotelySoftRemoved"] = json!(capture.remotely_removed);
+    sort_rows(&mut result)?;
+    let prepared = prepare(&result, &context)?;
+    capture::commit(&mut engine, root, &context, &capture).map_err(ReadFailure::Committed)?;
+    let refresh_count = refresh.as_ref().map_or(0, |(_, _, count)| *count);
+    if let Some((token, _, _)) = refresh {
+        super::import::apply_status_refresh(&mut engine, &token).map_err(ReadFailure::Committed)?;
+    }
+    Ok((result, prepared, refresh_count))
+}
+
+fn local_result(
+    engine: &mut Engine,
+    root: &Path,
+    home: &Path,
+    context: &Value,
+) -> io::Result<(Value, capture::Capture)> {
+    let capture = status_capture(engine, root, home, context)?;
     let compared: Value = engine.request(
         &json!({"kind": "statusCompare", "root": root, "targets": capture.comparisons}),
     )?;
-    let issues =
-        issues::collect(root, &context, &active_components(&context, &capture.components)?)?
-            .ok_or_else(|| decline("status issues need canonical loading"))?;
+    let issues = issues::collect(root, context, &active_components(context, &capture.components)?)?
+        .ok_or_else(|| decline("status issues need canonical loading"))?;
     let targets =
-        result_targets(&context, &capture.components, &capture.invalid, &compared, &issues)?;
-    let semver = grammar::snapshot(semver_values(&context, &targets)?.iter().map(String::as_str))
+        result_targets(context, &capture.components, &capture.invalid, &compared, &issues)?;
+    let semver = grammar::snapshot(semver_values(context, &targets)?.iter().map(String::as_str))
         .ok_or_else(|| decline("status semver grammar limits"))?;
-    let current_lane_id = current_lane_id(&context)?;
-    let mut result: Value = engine.request(&json!({
+    let current_lane_id = current_lane_id(context)?;
+    let result: Value = engine.request(&json!({
         "kind": "statusResult",
         "currentLaneId": current_lane_id,
         "targets": targets,
@@ -162,11 +235,7 @@ fn read<Prepared>(
         "semver": semver,
         "unavailableOnMain": context["unavailableOnMain"],
     }))?;
-    result["remotelySoftRemoved"] = json!(capture.remotely_removed);
-    sort_rows(&mut result)?;
-    let prepared = prepare(&result, &context)?;
-    capture::commit(&mut engine, root, &context, &capture)?;
-    Ok((result, prepared))
+    Ok((result, capture))
 }
 
 fn active_components(

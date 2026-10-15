@@ -75,7 +75,7 @@ fn declined(output: &Output, reason: &str) {
 fn other_flags_decline() {
     let dir = workspace();
     let root = dir.path().join("ws");
-    for args in [&["s", "--json", "--strict"][..], &["status", "--lanes"], &["status", "-c"]] {
+    for args in [&["s", "--json", "--strict"][..], &["status", "--bogus"], &["status", "-c"]] {
         let output = bit(&dir, &root, args, &[]);
         assert_eq!(stdout(&output), serde_json::to_string(args).unwrap());
         declined(&output, "flags outside the native `status` grammar");
@@ -133,8 +133,8 @@ fn a_declined_command_warns_that_it_runs_on_node() {
     let dir = workspace();
     let root = dir.path().join("ws");
     let untraced = [("BIT_NATIVE_TRACE", "0")];
-    let output = bit(&dir, &root, &["status", "--lanes"], &untraced);
-    assert_eq!(stdout(&output), r#"["status","--lanes"]"#);
+    let output = bit(&dir, &root, &["status", "--bogus"], &untraced);
+    assert_eq!(stdout(&output), r#"["status","--bogus"]"#);
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert_eq!(
         stderr.trim_end(),
@@ -143,7 +143,7 @@ fn a_declined_command_warns_that_it_runs_on_node() {
     let quiet = bit(
         &dir,
         &root,
-        &["status", "--lanes"],
+        &["status", "--bogus"],
         &[("BIT_NATIVE_TRACE", "0"), ("BIT_NATIVE_QUIET", "1")],
     );
     assert!(quiet.stderr.is_empty(), "{}", String::from_utf8_lossy(&quiet.stderr));

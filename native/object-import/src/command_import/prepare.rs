@@ -33,6 +33,26 @@ pub(crate) fn prepare_with_virtual(
     targets: &[Target],
     virtual_remotes: &[VirtualRemote],
 ) -> io::Result<PreparedImport> {
+    prepare_with_virtual_options(root, global_remotes_file, targets, virtual_remotes, false)
+}
+
+/// `status --lanes` ignores a component that has never been exported to main.
+pub(crate) fn prepare_status_with_virtual(
+    root: &Path,
+    global_remotes_file: &Path,
+    targets: &[Target],
+    virtual_remotes: &[VirtualRemote],
+) -> io::Result<PreparedImport> {
+    prepare_with_virtual_options(root, global_remotes_file, targets, virtual_remotes, true)
+}
+
+fn prepare_with_virtual_options(
+    root: &Path,
+    global_remotes_file: &Path,
+    targets: &[Target],
+    virtual_remotes: &[VirtualRemote],
+    ignore_missing: bool,
+) -> io::Result<PreparedImport> {
     if !root.is_absolute() || !global_remotes_file.is_absolute() || targets.len() > 4096 {
         return Err(invalid("import command bounds"));
     }
@@ -58,8 +78,12 @@ pub(crate) fn prepare_with_virtual(
         remotes_map.extend(local.clone());
     }
     plan.environment.remotes = remotes.clone();
-    refresh_all(&mut plan, &scoped, &remotes)?;
-    prepare_dependencies(&mut plan, root, &scoped, &remotes)?;
+    let available = refresh_all(&mut plan, &scoped, &remotes, ignore_missing)?;
+    plan.main_refresh_count = available
+        .iter()
+        .filter(|target| target.scope.as_deref() != Some(plan.environment.local_scope.as_str()))
+        .count();
+    prepare_dependencies(&mut plan, root, &available, &remotes)?;
     plan.validate()?;
     Ok(plan)
 }
@@ -86,11 +110,18 @@ fn prepare_dependencies(
     }
     Ok(())
 }
-fn refresh_all(plan: &mut PreparedImport, scoped: &[&Target], remotes: &Value) -> io::Result<()> {
+fn refresh_all<'a>(
+    plan: &mut PreparedImport,
+    scoped: &[&'a Target],
+    remotes: &Value,
+    ignore_missing: bool,
+) -> io::Result<Vec<&'a Target>> {
     let mut directories = HashMap::new();
+    let mut available = Vec::new();
     for target in scoped {
         let remote_name = target.scope.as_deref().ok_or_else(|| invalid("import scope"))?;
         if remote_name == plan.environment.local_scope {
+            available.push(*target);
             continue;
         }
         let directory = remote(plan, remotes, remote_name)?;
@@ -116,9 +147,11 @@ fn refresh_all(plan: &mut PreparedImport, scoped: &[&Target], remotes: &Value) -
             .unwrap()
             .objects
             .insert(object_hash(remote_name));
-        refresh(plan, target, directory)?;
+        if refresh(plan, target, directory, ignore_missing)? {
+            available.push(*target);
+        }
     }
-    Ok(())
+    Ok(available)
 }
 fn empty(root: &Path, allow_lane: bool) -> io::Result<(PreparedImport, Value)> {
     let mut capture = Capture::default();
@@ -134,6 +167,7 @@ fn empty(root: &Path, allow_lane: bool) -> io::Result<(PreparedImport, Value)> {
         overlay: Overlay::default(),
         progress: Vec::new(),
         bitmap_count: 0,
+        main_refresh_count: 0,
         capture,
         environment: super::Environment {
             local_directory: root.join(".bit/objects"),
@@ -239,12 +273,20 @@ fn read_model(
     }
     Ok(value)
 }
-fn refresh(plan: &mut PreparedImport, target: &Target, directory: &Path) -> io::Result<()> {
+fn refresh(
+    plan: &mut PreparedImport,
+    target: &Target,
+    directory: &Path,
+    ignore_missing: bool,
+) -> io::Result<bool> {
     let local = plan.environment.local_directory.clone();
     let scope = target.scope.as_deref().ok_or_else(|| invalid("import scope"))?;
-    let model = read_model(plan, directory, target)?
-        .ok_or_else(|| invalid("import remote component missing"))?;
-    let Some(head) = model["head"].as_str() else { return Ok(()) };
+    let model = match read_model(plan, directory, target)? {
+        Some(model) => model,
+        None if ignore_missing => return Ok(false),
+        None => return Err(invalid("import remote component missing")),
+    };
+    let Some(head) = model["head"].as_str() else { return Ok(true) };
     let path = local
         .parent()
         .ok_or_else(|| invalid("import scope directory"))?
@@ -264,9 +306,19 @@ fn refresh(plan: &mut PreparedImport, target: &Target, directory: &Path) -> io::
         && plan.capture.object(&local, stop, "Version")?.is_some()
         && stop == head
     {
-        return Ok(());
+        return Ok(true);
     }
     receive(plan, directory, target, &model, head, true)?;
+    update_main_ref(plan, target, scope, head, rows)?;
+    Ok(true)
+}
+fn update_main_ref(
+    plan: &mut PreparedImport,
+    target: &Target,
+    scope: &str,
+    head: &str,
+    rows: Value,
+) -> io::Result<()> {
     let rows = plan.overlay.remote_refs.entry(scope.to_owned()).or_insert(rows);
     let entries = rows.as_array_mut().ok_or_else(|| invalid("import refs rows"))?;
     if let Some(row) = entries

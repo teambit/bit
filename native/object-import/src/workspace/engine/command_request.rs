@@ -17,6 +17,9 @@ pub(super) fn dispatch(
         Request::CommandInboundApply(input) => {
             pool.install(|| command::inbound::apply(&input, &mut snapshots.command))
         }
+        Request::StatusLaneUpdates(input) => {
+            pool.install(|| command::inbound::lane_updates(&input, &snapshots.command, pool))
+        }
         Request::CommandOutboundPrepare(input) => {
             pool.install(|| command::outbound::prepare(&input, &mut snapshots.command))
         }

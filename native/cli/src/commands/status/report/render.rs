@@ -75,7 +75,7 @@ impl Status<'_> {
             .enumerate()
             .map(|(index, section)| {
                 // The auto-tag section follows unavailable-on-main.
-                if index == 10 && !section.is_empty() && !self.flags.expand {
+                if index == 11 && !section.is_empty() && !self.flags.expand {
                     summary.to_string()
                 } else {
                     section.clone()

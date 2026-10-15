@@ -66,6 +66,7 @@ enum Request {
     CommandInboundPrepare(command::inbound::Prepare),
     CommandInboundList(command::inbound::List),
     CommandInboundApply(command::inbound::Apply),
+    StatusLaneUpdates(status_models::lane_updates::Request),
     CommandOutboundPrepare(command::outbound::Prepare),
     CommandOutboundApply(command::outbound::Apply),
     CommandOutboundFinalize(command::outbound::Finalize),

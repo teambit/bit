@@ -222,6 +222,45 @@ fn validate_lane_groups(prepared: &Value, options: &options::Options) -> io::Res
 
 /// `commandInboundPrepare`: the engine fetches, and plans the writes.
 fn prepare(root: &Path, options: &options::Options, ids: &[String]) -> io::Result<(Engine, Value)> {
+    let mut engine = Engine::new()?;
+    let prepared = prepare_into(&mut engine, root, options, ids)?;
+    Ok((engine, prepared))
+}
+
+/// Retain a main-component refresh for `status --lanes` until its complete
+/// report has passed preflight. The same inbound transfer serves `bit fetch`.
+pub(super) fn prepare_status_refresh(
+    engine: &mut Engine,
+    root: &Path,
+    ids: &[String],
+) -> io::Result<Value> {
+    let options = options::Options {
+        operation: "status",
+        ids: Vec::new(),
+        objects_only: true,
+        all_history: true,
+        skip_dependency_installation: false,
+        lanes: false,
+        skip_write_config_files: false,
+        include_deprecated: false,
+    };
+    prepare_into(engine, root, &options, ids)
+}
+
+pub(super) fn apply_status_refresh(engine: &mut Engine, token: &Value) -> io::Result<()> {
+    let applied: Value = engine.request(&json!({"kind":"commandInboundApply","token":token}))?;
+    if applied["applied"] != true || applied["token"] != *token {
+        return Err(io::Error::other("status main refresh publication"));
+    }
+    Ok(())
+}
+
+fn prepare_into(
+    engine: &mut Engine,
+    root: &Path,
+    options: &options::Options,
+    ids: &[String],
+) -> io::Result<Value> {
     let cli = NodeCli::find()?;
     let config = cache_root().join("config");
     let mut request = json!({
@@ -240,7 +279,5 @@ fn prepare(root: &Path, options: &options::Options, ids: &[String]) -> io::Resul
     if !options.objects_only {
         request["bitmapHistoryFileId"] = json!(workspace_command::file_id());
     }
-    let mut engine = Engine::new()?;
-    let prepared: Value = engine.request(&request)?;
-    Ok((engine, prepared))
+    engine.request(&request)
 }

@@ -110,12 +110,7 @@ pub(in crate::workspace::engine) fn prepare(
     }
     let targets = targets(input)?;
     let virtual_remotes = remote::objects(input, &targets)?;
-    let import = command_import::prepare_with_virtual(
-        &input.root,
-        &input.global_remotes_file,
-        &targets,
-        &virtual_remotes,
-    )?;
+    let import = prepare_import(input, &targets, &virtual_remotes)?;
     let workspace = if input.options.objects_only {
         None
     } else {
@@ -128,10 +123,36 @@ pub(in crate::workspace::engine) fn prepare(
     };
     state.sequence = state.sequence.wrapping_add(1);
     let token = format!("inbound-{}", state.sequence);
-    let receipt = receipt(&input.root, &targets, &import, &token)?;
+    let receipt = if input.operation == "status" {
+        json!({"token":token,"importedIds":[],"progress":[],"refreshCount":import.main_refresh_count})
+    } else {
+        receipt(&input.root, &targets, &import, &token)?
+    };
     let count = targets.len();
     state.inbound = Some(Retained { token, receipt: receipt.clone(), import, workspace });
     Ok((count, receipt))
+}
+
+fn prepare_import(
+    input: &Prepare,
+    targets: &[Target],
+    virtual_remotes: &[command_import::VirtualRemote],
+) -> io::Result<command_import::PreparedImport> {
+    if input.operation == "status" {
+        command_import::prepare_status_with_virtual(
+            &input.root,
+            &input.global_remotes_file,
+            targets,
+            virtual_remotes,
+        )
+    } else {
+        command_import::prepare_with_virtual(
+            &input.root,
+            &input.global_remotes_file,
+            targets,
+            virtual_remotes,
+        )
+    }
 }
 
 fn receipt(
@@ -204,6 +225,20 @@ pub(in crate::workspace::engine) fn apply(
     Ok((count, receipt))
 }
 
+/// Compare the current lane with main using the retained remote import before
+/// publishing it. The status command can still decline without changing scope.
+pub(in crate::workspace::engine) fn lane_updates(
+    input: &super::super::status_models::lane_updates::Request,
+    state: &State,
+    pool: &rayon::ThreadPool,
+) -> io::Result<(usize, Value)> {
+    let retained = state.inbound.as_ref().ok_or_else(|| invalid("status inbound owner missing"))?;
+    if input.token != retained.token {
+        return Err(invalid("status inbound owner token"));
+    }
+    super::super::status_models::lane_updates::read(input, &retained.import.overlay, pool)
+}
+
 fn validate(input: &Prepare) -> io::Result<()> {
     for path in
         [&input.root, &input.home, &input.global_remotes_file, &input.transport.global_config_dir]
@@ -237,6 +272,13 @@ fn valid_operation(input: &Prepare) -> bool {
                 && input.options.objects_only
         }
         "import" => !input.options.components,
+        "status" => {
+            input.options.objects_only
+                && input.options.all_history
+                && !input.options.components
+                && !input.options.lanes
+                && !input.ids.is_empty()
+        }
         _ => false,
     }
 }

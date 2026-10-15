@@ -5,7 +5,7 @@ pub(crate) mod lane;
 pub(crate) mod tests;
 pub(crate) use prepare::{
     VirtualRemote, prepare, prepare_cached, prepare_lane, prepare_lane_with_virtual,
-    prepare_with_virtual,
+    prepare_status_with_virtual, prepare_with_virtual,
 };
 mod capture;
 mod history;
@@ -86,6 +86,7 @@ pub(crate) struct PreparedImport {
     pub(crate) overlay: Overlay,
     pub(crate) progress: Vec<Progress>,
     pub(crate) bitmap_count: usize,
+    pub(crate) main_refresh_count: usize,
     capture: Capture,
     environment: Environment,
     cache: Cache,

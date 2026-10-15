@@ -6,6 +6,18 @@ use crate::commands::workspace_command::format::Formatter;
 use serde_json::Value;
 
 impl Status<'_> {
+    pub(super) fn during_merge_items(&self) -> std::io::Result<Vec<String>> {
+        Ok(super::ids(self.result, "componentsDuringMergeState")?
+            .iter()
+            .map(|identity| self.item((identity, None), false, None, true))
+            .collect())
+    }
+    pub(super) fn item_with_message(&self, id: &str, message: &str) -> std::io::Result<String> {
+        let chalk = self.format.chalk;
+        let symbol = self.symbol(self.issues_of(id, self.version(id)?), false);
+        let item = Formatter::item_with(&chalk.cyan(id), &symbol);
+        Ok(format!("{item} ... {}", chalk.yellow(message)))
+    }
     /// `format(id, showIssues, undefined, localVersions, true, defaultSym)`:
     /// no status message and nothing soft-tagged. `warn` is the default symbol.
     pub(super) fn item(

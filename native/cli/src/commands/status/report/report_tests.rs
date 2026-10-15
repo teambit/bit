@@ -8,6 +8,7 @@ fn parses_the_report_flags() {
     assert_eq!(
         parse(&["-w", "--verbose", "--strict", "--fail-on-error", "--expand"]),
         Some(Flags {
+            lanes: false,
             verbose: true,
             warnings: true,
             strict: true,
@@ -15,7 +16,8 @@ fn parses_the_report_flags() {
             expand: true
         }),
     );
-    for args in [&["-c"][..], &["--quick"], &["--lanes"], &["-w", "--warnings"], &["-j", "-w"]] {
+    assert_eq!(parse(&["--lanes"]), Some(Flags { lanes: true, ..Flags::default() }));
+    for args in [&["-c"][..], &["--quick"], &["-w", "--warnings"], &["-j", "-w"]] {
         assert_eq!(parse(args), None, "{args:?}");
     }
 }

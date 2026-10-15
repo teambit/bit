@@ -2,6 +2,7 @@ pub(super) mod comparison;
 pub(super) mod component_log;
 pub(super) mod file_history;
 pub(super) mod harmony;
+pub(in crate::workspace::engine) mod lane_updates;
 pub(super) mod list;
 pub(super) mod parent_diff;
 pub(super) mod version_diff;
