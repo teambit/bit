@@ -1,5 +1,5 @@
 use super::{Chalk, Options, format};
-use crate::commands::workspace_command::format::expected_success_symbols;
+use crate::commands::test_support::expected_success_symbols;
 use serde_json::json;
 
 #[test]
