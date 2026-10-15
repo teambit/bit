@@ -1,5 +1,7 @@
 use super::format;
-use crate::commands::{checkout::options::parse, color::Chalk};
+use crate::commands::{
+    checkout::options::parse, color::Chalk, workspace_command::format::expected_success_symbols,
+};
 use serde_json::json;
 
 /// What `checkoutOutput` prints for one switched component, without colors.
@@ -14,7 +16,9 @@ fn reports_one_switched_component() {
     let report = format(&result, &options, Chalk::new(false)).unwrap();
     assert_eq!(
         report.data,
-        "\u{2714} successfully switched my.scope/one to version 0.0.1\n\ncomponents with file changes\n\nupdated index.ts \n\nCheckout Summary\nTotal Changed: 1\nTotal Unchanged: 0",
+        expected_success_symbols(
+            "\u{2714} successfully switched my.scope/one to version 0.0.1\n\ncomponents with file changes\n\nupdated index.ts \n\nCheckout Summary\nTotal Changed: 1\nTotal Unchanged: 0"
+        ),
     );
     assert!(report.details.is_none());
 }
