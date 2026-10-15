@@ -2,6 +2,8 @@
 //! workspace commands: each selected component's files and
 //! dependencies, and the commit that writes what the command staged.
 
+mod missing;
+
 use super::{
     fresh,
     issues::Component,
@@ -93,6 +95,8 @@ pub struct CaptureOptions {
     pub cache_versions: HashMap<String, String>,
     /// Recovery reset may prove a changed file from hashes when source parsing fails.
     pub incomplete_reset: bool,
+    /// A missing tracked directory is an empty current tree for `checkout reset`.
+    pub missing_checkout_reset: bool,
 }
 
 impl Capture {
@@ -131,7 +135,11 @@ pub fn capture_with(
     let inventory = Inventory::new(&options)?;
     let reset = !targets.is_empty()
         && (capture_options.reset || needs_invalidation(root, &deps_dir(root))?);
-    let verify = capture_options.verify;
+    let behavior = ScanBehavior {
+        verify: capture_options.verify,
+        incomplete_reset: capture_options.incomplete_reset,
+        missing_checkout_reset: capture_options.missing_checkout_reset,
+    };
     let mut captured = Capture {
         captured: Vec::new(),
         comparisons: Vec::new(),
@@ -152,8 +160,7 @@ pub fn capture_with(
             context,
             inventory: &inventory,
             facts: &mut facts,
-            verify,
-            incomplete_reset: capture_options.incomplete_reset,
+            behavior,
         };
         scan.target(target, &mut captured)?;
     }
@@ -168,8 +175,14 @@ struct Scan<'s> {
     inventory: &'s Inventory,
     /// Loaded on the first fresh detection: it may run Node once.
     facts: &'s mut Option<fresh::Facts>,
+    behavior: ScanBehavior,
+}
+
+#[derive(Clone, Copy)]
+struct ScanBehavior {
     verify: bool,
     incomplete_reset: bool,
+    missing_checkout_reset: bool,
 }
 
 impl Scan<'_> {
@@ -177,40 +190,70 @@ impl Scan<'_> {
     fn target(mut self, target: &Value, captured: &mut Capture) -> io::Result<()> {
         let policy = policy::status_policy(self.context, target)?;
         let directory = text(target.get("directory"))?;
-        let files = self.files(directory)?;
-        let main_file = target.get("mainFile").and_then(Value::as_str);
-        if !main_file.is_some_and(|main| files.iter().any(|file| file == main)) {
-            return Err(decline("status main file not captured"));
+        if missing::capture(
+            self.root,
+            self.behavior.missing_checkout_reset,
+            target,
+            directory,
+            captured,
+        )? {
+            return Ok(());
         }
+        let files = self.files(directory)?;
+        if missing::main_file(
+            self.root,
+            self.behavior.missing_checkout_reset,
+            target,
+            directory,
+            &files,
+            captured,
+        )? {
+            return Ok(());
+        }
+        let Some(dependencies) = self.dependencies(target, directory, &files, &policy, captured)?
+        else {
+            return Ok(());
+        };
+        record(target, directory, &files, &policy, &dependencies, captured)
+    }
+
+    fn dependencies(
+        &mut self,
+        target: &Value,
+        directory: &str,
+        files: &[String],
+        policy: &policy::Policy,
+        captured: &mut Capture,
+    ) -> io::Result<Option<Value>> {
         let mut dependencies = if captured.cache.reset && directory != "." {
             json!({ "needsDetection": true })
         } else {
-            self.cached(target, directory, &files, &policy)?
+            self.cached(target, directory, files, policy)?
         };
         if dependencies.get("needsDetection") == Some(&Value::Bool(true)) {
-            let (detected, pending) = match self.detect(target, &files, &policy) {
+            let (detected, pending) = match self.detect(target, files, policy) {
                 Ok(value) => value,
                 Err(error)
-                    if self.incomplete_reset
+                    if self.behavior.incomplete_reset
                         && error
                             .to_string()
                             .contains(
                                 "dependency graph extraction requires canonical fallback",
                             ) =>
                 {
-                    record_incomplete_reset(target, directory, &files, captured)?;
-                    return Ok(());
+                    missing::record_incomplete(target, directory, files, captured)?;
+                    return Ok(None);
                 }
                 Err(error) => return Err(error),
             };
             dependencies = detected;
             captured.cache.pending.push(pending);
-        } else if self.verify {
-            let (detected, pending) = self.verified(target, &files, &policy, &dependencies)?;
+        } else if self.behavior.verify {
+            let (detected, pending) = self.verified(target, files, policy, &dependencies)?;
             dependencies = detected;
             captured.cache.pending.push(pending);
         }
-        record(target, directory, &files, &policy, &dependencies, captured)
+        Ok(Some(dependencies))
     }
 
     /// `verifyFreshDependencies`: the cached dependencies detected again;
@@ -334,24 +377,6 @@ fn record(
             .cloned()
             .unwrap_or(Value::Null),
     });
-    Ok(())
-}
-
-fn record_incomplete_reset(
-    target: &Value,
-    directory: &str,
-    files: &[String],
-    captured: &mut Capture,
-) -> io::Result<()> {
-    let main_file = text(target.get("mainFile"))?;
-    captured.captured.push(json!({
-        "identity": target["identity"],
-        "version": target["version"],
-        "directory": directory,
-        "files": files,
-        "current": { "mainFile": main_file },
-        "peerDependencies": [],
-    }));
     Ok(())
 }
 
