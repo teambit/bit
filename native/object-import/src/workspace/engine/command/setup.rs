@@ -22,17 +22,7 @@ pub(super) fn run(
     if state.record.is_some() || state.recovery.is_some() || state.resolve.is_some() {
         return Err(invalid("command owner already active"));
     }
-    let mut proofs = Vec::new();
-    for name in [
-        ".bitmap",
-        "workspace.jsonc",
-        "package.json",
-        ".bit/scope.json",
-        ".bit/index.json",
-        ".bit/unmerged.json",
-    ] {
-        proof::read(&request.root.join(name), &mut proofs)?;
-    }
+    let mut proofs = preparation_proofs(&request)?;
     let (context, imported) = prepare::context(&request, pool)?;
     component_controls(&request, &context, &mut proofs)?;
     super::lane_context::validate_additions(&request.root, &context, &mut proofs)?;
@@ -59,6 +49,21 @@ pub(super) fn run(
         history,
     });
     Ok((count, output))
+}
+
+fn preparation_proofs(request: &Prepare) -> io::Result<Vec<proof::Proof>> {
+    let mut proofs = Vec::new();
+    for name in [
+        ".bitmap",
+        "workspace.jsonc",
+        "package.json",
+        ".bit/scope.json",
+        ".bit/index.json",
+        ".bit/unmerged.json",
+    ] {
+        proof::read(&request.root.join(name), &mut proofs)?;
+    }
+    Ok(proofs)
 }
 
 fn validate_license(scope: &str, repository: &mut repository::Repository) -> io::Result<()> {
