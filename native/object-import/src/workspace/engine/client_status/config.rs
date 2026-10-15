@@ -33,7 +33,9 @@ pub(in crate::workspace::engine) fn configuration_value(
                     | "teambit.workspace/workspace"
                     | "teambit.generator/generator"
                     | "teambit.dependencies/dependency-resolver"
-                    | "teambit.workspace/workspace-config-files",
+                    | "teambit.workspace/workspace-config-files"
+                    | "teambit.preview/preview"
+                    | "teambit.component/issues",
             )
         })
     {
@@ -41,6 +43,7 @@ pub(in crate::workspace::engine) fn configuration_value(
     }
     let workspace = workspace_settings(config)?;
     extensions(config)?;
+    e2e_root_aspects(config)?;
     let scope = document(&root.join(".bit/scope.json"))?;
     if (!lane && scope["lanes"]["current"] != "main") || scope.get("license").is_some() {
         return Err(invalid("status non-main scope"));
@@ -49,6 +52,21 @@ pub(in crate::workspace::engine) fn configuration_value(
         return Err(invalid("status object directory"));
     }
     Ok(workspace)
+}
+
+fn e2e_root_aspects(config: &Value) -> io::Result<()> {
+    for (name, supported) in [
+        ("teambit.preview/preview", json!({"disabled":true})),
+        ("teambit.component/issues", json!({"ignoreIssues":["MissingManuallyConfiguredPackages"]})),
+    ] {
+        if config
+            .get(name)
+            .is_some_and(|value| value != &supported)
+        {
+            return Err(invalid("status root aspect configuration requires Harmony"));
+        }
+    }
+    Ok(())
 }
 
 fn workspace_settings(config: &Value) -> io::Result<Value> {

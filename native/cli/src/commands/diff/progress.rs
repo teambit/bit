@@ -56,16 +56,14 @@ fn foreign_tagged_target(root: &Path, result: &Value) -> bool {
 }
 
 fn multi_version_import(options: &options::Options, result: &Value) -> bool {
-    let (Some(from), Some(to)) = (&options.versions.from, &options.versions.to) else {
+    let Some(from) = &options.versions.from else {
         return false;
     };
-    if from == to {
-        return false;
-    }
     let current = result[0]["_fullId"]
         .as_str()
         .and_then(|id| id.rsplit_once('@'));
     current.is_some_and(|(_, version)| {
-        version.len() != 40 || !version.bytes().all(|byte| byte.is_ascii_hexdigit())
+        let to = options.versions.to.as_deref().unwrap_or(version);
+        from != to && (version.len() != 40 || !version.bytes().all(|byte| byte.is_ascii_hexdigit()))
     })
 }

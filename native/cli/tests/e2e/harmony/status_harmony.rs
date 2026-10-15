@@ -1,9 +1,23 @@
 //! `e2e/harmony/status-harmony.e2e.ts`.
 
-/// Native `bit status` declines a workspace configuring an aspect at its root (`status
-/// configured extensions require Harmony`), and every e2e workspace configures
-/// `teambit.preview/preview` and `teambit.component/issues` (`reInitWorkspace`).
-/// `bit show` runs on the Node.js CLI.
+use crate::helper::{FOO_FIXTURE, Helper, len, parse, strip_ansi};
+
+/// The standard e2e root aspects allow native status and diff.
+#[test]
+fn standard_root_aspects_run_status_and_diff_natively() {
+    let helper = Helper::new();
+    helper.re_init_workspace();
+    helper.create_component_bar_foo(FOO_FIXTURE);
+    helper.add_component_bar_foo();
+
+    let status = parse(&helper.native("status --json"));
+    assert_eq!(len(&status["newComponents"]), 1);
+    let diff = strip_ansi(&helper.native("diff bar/foo"));
+    assert!(diff.contains(&format!("+{FOO_FIXTURE}")), "{diff}");
+}
+
+/// Native status still declines some dependency graphs, missing inventories and issue
+/// shapes covered by these cases. `bit show` runs on the Node.js CLI.
 mod known_failures {
     use crate::{
         allow_known_failure,
