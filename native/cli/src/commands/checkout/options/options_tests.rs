@@ -1,4 +1,24 @@
-use super::parse;
+use super::{parse, parse_revert};
+
+#[test]
+fn revert_accepts_only_its_positional_order_and_options() {
+    let options = parse_revert(&["scope/one", "0.0.1", "-x"]).unwrap();
+    assert!(options.revert);
+    assert_eq!(options.pattern.as_deref(), Some("scope/one"));
+    assert_eq!(options.to, "0.0.1");
+    assert_eq!(options.request()["revert"], true);
+    assert!(parse_revert(&["scope/one", "main", "--verbose"]).is_some());
+    assert!(parse_revert(&["**", "main"]).is_some());
+    for args in [
+        vec!["scope/one", "head"],
+        vec!["scope/one", "reset"],
+        vec!["scope/one", "head~1"],
+        vec!["scope/one", "0.0.1", "--all"],
+        vec!["0.0.1", "scope/one"],
+    ] {
+        assert!(parse_revert(&args).is_none(), "{args:?}");
+    }
+}
 
 #[test]
 fn accepts_the_native_subset() {

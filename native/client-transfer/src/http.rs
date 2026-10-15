@@ -429,3 +429,4 @@ fn config_str<'a>(global: &'a GlobalConfig, key: &str) -> Option<&'a str> {
 mod action_tests;
 #[cfg(test)]
 mod list_tests;
+mod log;

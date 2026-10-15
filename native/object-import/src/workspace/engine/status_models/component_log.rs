@@ -5,10 +5,11 @@ use crate::{merge_history, read_budget::Budget, read_version};
 use rayon::ThreadPool;
 use serde::Deserialize;
 use serde_json::{Value, json};
+use sha1::{Digest, Sha1};
 use std::{
     collections::{HashMap, HashSet, VecDeque},
-    io,
-    path::PathBuf,
+    fs, io,
+    path::{Path, PathBuf},
 };
 
 #[derive(Deserialize)]
@@ -39,7 +40,7 @@ pub(in crate::workspace::engine) fn read(
     };
     merge_history::hash(head)?;
     let main_refs = if lane.is_some() {
-        main.map(|head| traverse(&request.root, head, &tags(&model)?, None))
+        main.map(|head| traverse(&request.root.join(".bit/objects"), head, &tags(&model)?, None))
             .transpose()?
             .unwrap_or_default()
             .into_iter()
@@ -48,7 +49,12 @@ pub(in crate::workspace::engine) fn read(
     } else {
         HashSet::new()
     };
-    let output = traverse(&request.root, head, &tags(&model)?, lane.as_ref().map(|_| &main_refs))?;
+    let output = traverse(
+        &request.root.join(".bit/objects"),
+        head,
+        &tags(&model)?,
+        lane.as_ref().map(|_| &main_refs),
+    )?;
     if main.is_some_and(|head| {
         lane.is_some()
             && !output
@@ -104,13 +110,12 @@ fn model(request: &Request, pool: &ThreadPool) -> io::Result<Value> {
 }
 
 fn traverse(
-    root: &std::path::Path,
+    directory: &Path,
     head: &str,
     tags: &HashMap<String, String>,
     main_refs: Option<&HashSet<String>>,
 ) -> io::Result<Vec<Value>> {
-    let directory = root.join(".bit/objects");
-    let mut reader = read_version::Reader::query(&directory)?;
+    let mut reader = read_version::Reader::query(directory)?;
     let mut queue = VecDeque::from([head.to_string()]);
     let mut seen = HashSet::new();
     let mut output = Vec::new();
@@ -190,6 +195,90 @@ fn has_control_aspect(version: &Value) -> bool {
         })
 }
 
+/// Read the same validated Component and Version objects from a configured
+/// bare `file://` scope. A missing Component has an empty history in Bit.
+pub(in crate::workspace::engine) fn read_file_remote(
+    path: &Path,
+    identity: &str,
+) -> io::Result<Vec<Value>> {
+    let (scope, name) =
+        identity.split_once('/').ok_or_else(|| invalid("file remote log identity"))?;
+    if !path.is_absolute() || !fs::metadata(path)?.is_dir() {
+        return Err(invalid("file remote log scope path"));
+    }
+    let scope_file = fs::File::open(path.join("scope.json"))?;
+    let config: Value = serde_json::from_slice(&Budget::new(1024 * 1024).read(scope_file)?)?;
+    if config["name"] != scope {
+        return Err(invalid("file remote log scope name"));
+    }
+    if config["lanes"]["current"]
+        .as_str()
+        .is_some_and(|current| current != "main")
+    {
+        return Err(invalid("file remote log active lane"));
+    }
+    let directory = path.join("objects");
+    let reader = Reader {
+        directory: &directory,
+        overlay: None,
+        raw: Budget::new(32 * 1024 * 1024),
+        packed: Budget::new(32 * 1024 * 1024),
+    };
+    let hash = crate::validate::hexadecimal(&Sha1::digest(identity.as_bytes()));
+    let model = match reader.read(&hash, "Component") {
+        Ok(model) => model,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(Vec::new()),
+        Err(error) => return Err(error),
+    };
+    if model["scope"] != scope || model["name"] != name {
+        return Err(invalid("file remote log model identity"));
+    }
+    let Some(head) = model["head"].as_str() else { return Ok(Vec::new()) };
+    let mut rows = traverse(&directory, head, &tags(&model)?, None)?;
+    rows.sort_by(file_date_order);
+    rows.iter()
+        .map(file_remote_row)
+        .collect()
+}
+
+fn file_remote_row(row: &Value) -> io::Result<Value> {
+    let mut log = row["log"]
+        .as_object()
+        .ok_or_else(|| invalid("file remote log metadata"))?
+        .clone();
+    for key in ["username", "email"] {
+        if log
+            .get(key)
+            .and_then(Value::as_str)
+            .is_none_or(str::is_empty)
+        {
+            log.insert(key.into(), json!("unknown"));
+        }
+    }
+    if let Some(tag) = row.get("tag") {
+        log.insert("tag".into(), tag.clone());
+    }
+    for key in ["hash", "parents", "onLane", "deleted"] {
+        log.insert(key.into(), row[key].clone());
+    }
+    if let Some(hidden) = row.get("hidden") {
+        log.insert("hidden".into(), hidden.clone());
+    }
+    Ok(Value::Object(log))
+}
+
+fn file_date_order(left: &Value, right: &Value) -> std::cmp::Ordering {
+    let millis = |row: &Value| {
+        row["log"]["date"]
+            .as_str()
+            .and_then(|date| date.parse::<i64>().ok())
+    };
+    match (millis(left), millis(right)) {
+        (Some(left), Some(right)) => left.cmp(&right),
+        _ => std::cmp::Ordering::Equal,
+    }
+}
+
 fn tags(model: &Value) -> io::Result<HashMap<String, String>> {
     let mut tags = HashMap::new();
     for field in ["versions", "orphanedVersions"] {
@@ -203,10 +292,18 @@ fn tags(model: &Value) -> io::Result<HashMap<String, String>> {
         for (tag, reference) in versions {
             let reference = reference.as_str().ok_or_else(|| invalid("component log tag ref"))?;
             merge_history::hash(reference)?;
-            tags.entry(reference.to_string()).or_insert_with(|| tag.clone());
+            insert_tag(&mut tags, reference, tag, field == "versions");
         }
     }
     Ok(tags)
+}
+
+fn insert_tag(tags: &mut HashMap<String, String>, reference: &str, tag: &str, ordinary: bool) {
+    if ordinary {
+        tags.insert(reference.to_string(), tag.to_string());
+    } else {
+        tags.entry(reference.to_string()).or_insert_with(|| tag.to_string());
+    }
 }
 
 #[cfg(test)]
