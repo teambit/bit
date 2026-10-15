@@ -15,10 +15,17 @@ pub(super) fn commit(plan: &Plan, file_id: &str) -> io::Result<()> {
         plan.input.head_only,
         plan.input.force,
     )?;
-    if fresh.object != plan.object || fresh.bitmap != plan.bitmap || fresh.index != plan.index {
+    if fresh.object != plan.object
+        || fresh.bitmap != plan.bitmap
+        || fresh.index != plan.index
+        || fresh.history != plan.history
+    {
         return Err(invalid("reset workspace changed during preparation"));
     }
     write_object(&plan.input.root, &plan.object)?;
+    if let Some(history) = &plan.history {
+        write_object(&plan.input.root, history)?;
+    }
     if let Some(index) = &plan.index {
         fs::write(plan.input.root.join(".bit/index.json"), &index.after)?;
     }
@@ -28,7 +35,12 @@ pub(super) fn commit(plan: &Plan, file_id: &str) -> io::Result<()> {
 
 pub(super) fn write_object(root: &Path, object: &ObjectChange) -> io::Result<()> {
     let path = object_path(root, &object.hash);
-    if let Some(bytes) = &object.after { fs::write(path, bytes) } else { fs::remove_file(path) }
+    if let Some(bytes) = &object.after {
+        fs::create_dir_all(path.parent().ok_or_else(|| invalid("reset object path"))?)?;
+        fs::write(path, bytes)
+    } else {
+        fs::remove_file(path)
+    }
 }
 
 pub(crate) fn backup_bitmap(root: &Path, file_id: &str) -> io::Result<()> {

@@ -33,6 +33,7 @@ mod protocol;
 mod read_budget;
 mod read_version;
 mod recovery;
+mod reset_config;
 mod session;
 mod snapshot;
 mod snapshot_projection;

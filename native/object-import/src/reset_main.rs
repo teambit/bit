@@ -8,6 +8,7 @@ pub use selection::Selection;
 mod batch;
 mod bitmap;
 mod dependents;
+mod history;
 mod publication;
 mod repository;
 mod selection;
@@ -48,6 +49,7 @@ pub struct Plan {
     object: ObjectChange,
     bitmap: BytesChange,
     index: Option<BytesChange>,
+    history: Option<ObjectChange>,
     pub selection: Selection,
 }
 
@@ -71,11 +73,12 @@ impl Plan {
             )?;
         }
         let version = selection.bitmap_version(&repository.component);
+        let history = history::pending(root, identity, &repository.component)?;
         let bitmap = bitmap.project(version)?;
         let (object, index) = repository.project(&selection)?;
         let input =
             Input { root: root.to_owned(), identity: identity.to_owned(), head_only, force };
-        Ok(Self { input, object, bitmap, index, selection })
+        Ok(Self { input, object, bitmap, index, history, selection })
     }
 
     pub fn commit(&self, file_id: &str) -> io::Result<()> {

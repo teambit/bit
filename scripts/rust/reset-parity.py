@@ -47,6 +47,12 @@ def main():
     parser.add_argument("--exported-new-source", type=Path,
                         help="exported lane with a new component without a remote ref")
     parser.add_argument("--exported-new-id", help="new component on the exported lane")
+    parser.add_argument("--config-main-source", type=Path,
+                        help="main workspace with a snap that staged bitmap aspect config")
+    parser.add_argument("--config-main-id", help="main component with staged config")
+    parser.add_argument("--config-lane-source", type=Path,
+                        help="lane workspace with a snap that staged bitmap aspect config")
+    parser.add_argument("--config-lane-id", help="lane component with staged config")
     args = parser.parse_args()
     cases = [
         ("all local tags", args.source, [args.plain], False),
@@ -107,6 +113,32 @@ def main():
              ["--silent"], True),
             ("exported lane batch heads with new component", args.exported_new_source,
              ["--head", "--silent"], True),
+        ])
+    if bool(args.config_main_source) != bool(args.config_main_id):
+        parser.error("--config-main-source and --config-main-id must be given together")
+    if args.config_main_source:
+        cases.extend([
+            ("main staged config head", args.config_main_source,
+             [args.config_main_id, "--head"], True),
+            ("main staged config full", args.config_main_source,
+             [args.config_main_id], True),
+            ("main staged config batch head", args.config_main_source,
+             ["--head", "--silent"], True),
+            ("main staged config batch full", args.config_main_source,
+             ["--silent"], True),
+        ])
+    if bool(args.config_lane_source) != bool(args.config_lane_id):
+        parser.error("--config-lane-source and --config-lane-id must be given together")
+    if args.config_lane_source:
+        cases.extend([
+            ("lane staged config head", args.config_lane_source,
+             [args.config_lane_id, "--head"], True),
+            ("lane staged config full", args.config_lane_source,
+             [args.config_lane_id], True),
+            ("lane staged config batch head", args.config_lane_source,
+             ["--head", "--silent"], True),
+            ("lane staged config batch full", args.config_lane_source,
+             ["--silent"], True),
         ])
     environment = os.environ.copy()
     environment.update(CI="1", BIT_DISABLE_SPINNER="true", BIT_NODE_CLI=str(args.entry.resolve()),

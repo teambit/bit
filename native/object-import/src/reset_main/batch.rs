@@ -46,11 +46,22 @@ impl Batch {
                     .iter()
                     .map(|item| &item.object)
                     .collect::<Vec<_>>()
+            || self.items
+                .iter()
+                .map(|item| &item.history)
+                .collect::<Vec<_>>()
+                != fresh.items
+                    .iter()
+                    .map(|item| &item.history)
+                    .collect::<Vec<_>>()
         {
             return Err(invalid("reset batch changed during preparation"));
         }
         for item in &self.items {
             super::publication::write_object(&self.root, &item.object)?;
+            if let Some(history) = &item.history {
+                super::publication::write_object(&self.root, history)?;
+            }
         }
         if let Some(index) = &self.index {
             fs::write(self.root.join(".bit/index.json"), &index.after)?;
@@ -110,6 +121,7 @@ fn apply_bitmap(document: &mut Value, item: &Plan) -> io::Result<()> {
     let row = fields[&key].as_object_mut().ok_or_else(|| invalid("reset batch row"))?;
     row.insert("version".into(), Value::String(version.to_owned()));
     row.shift_remove("nextVersion");
+    crate::reset_config::restore(row, single[&key].get("config").cloned());
     Ok(())
 }
 
