@@ -78,12 +78,28 @@ fn extensions(
         .keys()
         .filter_map(|key| extension_id(workspace, key))
         .map(|id| {
-            let id = versions::resolve(workspace, subject, inputs, &id, Lifecycle::Dev, None)
-                .unwrap_or(id);
+            let id = resolve_extension_id(workspace, subject, inputs, id);
             let package_name = workspace.package_name(&id);
             component(id, package_name, Lifecycle::Dev, true)
         })
         .collect()
+}
+
+/// `resolveExtensionsList`: a workspace component's `.bitmap` id, else the configured
+/// version, which a dependency of the component on another version does not change.
+fn resolve_extension_id(
+    workspace: &Workspace<'_>,
+    subject: &Subject<'_>,
+    inputs: &VersionInputs<'_>,
+    id: ComponentId,
+) -> ComponentId {
+    if let Some(local) = workspace.bitmap_id(&id) {
+        return local.clone();
+    }
+    if id.version.is_some() {
+        return id;
+    }
+    versions::resolve(workspace, subject, inputs, &id, Lifecycle::Dev, None).unwrap_or(id)
 }
 
 fn extension_id(workspace: &Workspace<'_>, key: &str) -> Option<ComponentId> {

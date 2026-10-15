@@ -309,6 +309,51 @@ async fn extensions_are_dev_component_dependencies() {
     );
 }
 
+/// `workers/landing-pages-proxy` of dot-cloud: an aspect configured at one version and
+/// imported at another, not installed yet.
+#[tokio::test]
+async fn an_extension_keeps_its_configured_version() {
+    let temp = tempfile::tempdir().expect("tempdir");
+    let root = temp.path();
+    let mut proxy = component(root, "acme/proxy@1.0.0", "teambit.harmony/node");
+    proxy.files = vec!["index.ts".into()];
+    write(&proxy.dir.join("index.ts"), "import { x } from '@acme/aspects.worker';\n");
+    proxy.config.insert("acme/aspects/worker@0.0.19".into(), json!({}));
+    let worker = |version: &str, lifecycle: &str, is_extension: bool| {
+        json!({
+            "id": format!("acme/aspects/worker@{version}"), "version": version,
+            "__type": "component", "lifecycle": lifecycle, "isExtension": is_extension,
+            "componentId": {"scope": "acme", "name": "aspects/worker", "version": version},
+            "packageName": "@acme/aspects.worker",
+        })
+    };
+    let dependencies = [worker("0.0.23", "runtime", false), worker("0.0.19", "dev", true)];
+    store_version(
+        root,
+        "acme/proxy",
+        "1.0.0",
+        &json!({
+            "dependencies": [{"id": {"scope": "acme", "name": "aspects/worker", "version": "0.0.23"}, "relativePaths": []}],
+            "extensions": [{"name": "teambit.dependencies/dependency-resolver", "data": {"dependencies": dependencies}}],
+        }),
+    );
+    let result = run(root, &[proxy], &IndexMap::new()).await;
+    let workers: Vec<_> = result["acme/proxy"].components
+        .iter()
+        .map(|dependency| {
+            (dependency.id.version.clone(), dependency.lifecycle, dependency.is_extension)
+        })
+        .collect();
+    assert_eq!(
+        workers,
+        vec![
+            (Some("0.0.19".to_owned()), Lifecycle::Dev, true),
+            (Some("0.0.23".to_owned()), Lifecycle::Runtime, false),
+            (Some("0.0.19".to_owned()), Lifecycle::Dev, true),
+        ],
+    );
+}
+
 #[test]
 fn dev_file_globs() {
     let patterns: Vec<String> = DEFAULT_DEV_PATTERNS
