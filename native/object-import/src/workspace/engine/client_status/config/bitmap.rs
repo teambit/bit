@@ -218,6 +218,7 @@ pub(in crate::workspace::engine) fn context_bitmap_targets(
         .map(|(target, (_, entry))| {
             json!({"identity":target.id,"directory":target.directory,
             "version":target.version,"mainFile":entry["mainFile"],
+            "scoped":entry["scope"].as_str().is_some_and(|scope| !scope.is_empty()),
             "localOnly":entry["localOnly"] == true,
             "softTagged":entry.get("nextVersion").is_some_and(|value| !value.is_null()),
             "locallyRemoved":entry["config"]["teambit.component/remove"]["removed"] == true})

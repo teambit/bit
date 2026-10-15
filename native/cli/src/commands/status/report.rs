@@ -2,9 +2,7 @@
 //! `formatStatusOutput` of `status-formatter.ts`, over the result the native
 //! status computes for `--json`.
 //!
-//! A result with sections the native status leaves to Node (remote removal,
-//! import pending) declines, and so
-//! does a forked lane or an issue whose data Node colors
+//! Unsupported lane sections, a forked lane, or an issue whose data Node colors
 //! (`UntrackedDependencies`) when stdout has colors.
 
 mod item;
@@ -21,6 +19,7 @@ const FAILURE: &str = "issues found";
 const WARNINGS: &str = "warnings found";
 /// `statusWorkspaceIsCleanMsg`.
 const CLEAN: &str = r#"nothing to tag or export (use "bit create <template> <component>" to generate a new component)"#;
+const IMPORT_PENDING: &str = r#"your workspace has outdated objects. please use "bit import" to pull the latest objects from the remote scope."#;
 /// `TROUBLESHOOTING_MESSAGE`, before it is colored.
 const TROUBLESHOOTING: &str =
     "learn more about Bit components: https://bit.dev/reference/components/component-anatomy";
@@ -33,14 +32,8 @@ const TITLE_ONLY: [&str; 5] = [
     "MergeConfigHasConflict",
 ];
 /// Result sections the native status leaves empty; any row declines.
-const UNSUPPORTED: [&str; 6] = [
-    "importPendingComponents",
-    "remotelySoftRemoved",
-    "pendingUpdatesFromMain",
-    "updatesFromForked",
-    "unavailableOnMain",
-    "pendingUpdateDependents",
-];
+const UNSUPPORTED: [&str; 4] =
+    ["pendingUpdatesFromMain", "updatesFromForked", "unavailableOnMain", "pendingUpdateDependents"];
 
 const OUTDATED: &str = "(use \"bit checkout head\" to merge changes)\n(use \"bit diff [component_id] [new_version]\" to compare changes)\n(use \"bit log [component_id]\" to list all available versions)";
 const PENDING_MERGE: &str = "(use \"bit reset\" to discard local tags/snaps, and bit checkout head to re-merge with the remote.\nalternatively, to keep local tags/snaps history, use \"bit merge [component-id]\")";
@@ -54,6 +47,7 @@ const AUTO_TAG: &str = "(these will be auto-tagged when their modified dependenc
 const LOCAL_ONLY: &str = "(these components are excluded from tag/snap/export commands)";
 const SOFT_TAGGED: &str = r#"(use "bit tag --persist" to complete the tag)"#;
 const LOCALLY_REMOVED: &str = r#"(tag/snap and export the components to update the deletion to the remote. to undo deletion, run "bit recover")"#;
+const REMOTELY_REMOVED: &str = r#"(use "bit remove" to remove them from the workspace. use "bit recover" to undo the deletion)"#;
 
 /// The `StatusFlags` the report takes.
 #[derive(Debug, Default, PartialEq, Eq)]
@@ -162,6 +156,9 @@ pub(super) fn report(
     if let Some(lane) = status.lane()? {
         data.push_str("\n\ncurrent lane ");
         data.push_str(&status.format.chalk.bold(lane));
+    }
+    if !ids(result, "importPendingComponents")?.is_empty() {
+        data = format!("{IMPORT_PENDING}\n{data}");
     }
     Ok(Output { data, code: status.code() })
 }
@@ -289,6 +286,8 @@ impl<'r> Status<'r> {
         let auto_tag = self.listed("autoTagPendingComponents", |identity| self.version(identity))?;
         let local_only = self.listed("localOnly", |identity| self.version(identity))?;
         let locally_removed = self.listed("locallySoftRemoved", |identity| self.version(identity))?;
+        let remotely_removed =
+            self.listed("remotelySoftRemoved", |identity| self.version(identity))?;
         let soft_tagged = self.soft_tagged
             .iter()
             .map(|identity| Ok(self.item_without_soft_tag((identity, self.version(identity)?))))
@@ -315,6 +314,7 @@ impl<'r> Status<'r> {
                 &self.invalid_components()?,
             ),
             format.section("soft-removed components locally", LOCALLY_REMOVED, &locally_removed),
+            format.section("components deleted on the remote", REMOTELY_REMOVED, &remotely_removed),
         ])
     }
 
@@ -326,6 +326,7 @@ impl<'r> Status<'r> {
                 let label = match row["error"]["name"].as_str() {
                     Some("ComponentNotFoundInPath") => r#"component files were deleted (use "bit remove [component_id]") or moved (use "bit move <old-dir> <new-dir>"). to restore use "bit checkout reset [component_id]""#,
                     Some("MainFileRemoved") => r#"main-file was removed (use "bit add" with "--main" and "--id" flags to add a main file)"#,
+                    Some("ComponentsPendingImport") => r#"component objects are missing from the scope (use "bit import [component_id] --objects" to get them back)"#,
                     _ => return Err(decline("status report invalid component type")),
                 };
                 let text = format!("{} ... {}", self.format.chalk.cyan(identity), self.format.chalk.yellow(label));

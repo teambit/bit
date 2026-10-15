@@ -5,6 +5,7 @@
 mod bitmap;
 mod identities;
 mod missing;
+mod target;
 
 use super::{
     cache, fresh,
@@ -27,6 +28,8 @@ pub struct Capture {
     pub captured: Vec<Value>,
     pub comparisons: Vec<Value>,
     pub components: Vec<Component>,
+    /// Workspace components whose current model version is removed remotely.
+    pub remotely_removed: Vec<String>,
     /// Bitmap targets whose directory is absent from the workspace.
     pub invalid: HashMap<String, Value>,
     /// `retainDependencyState`: each target's dependency state, by identity.
@@ -165,6 +168,7 @@ pub fn capture_with(
         captured: Vec::new(),
         comparisons: Vec::new(),
         components: Vec::new(),
+        remotely_removed: Vec::new(),
         invalid: HashMap::new(),
         dependency_states: HashMap::new(),
         cache: CacheWrites {
@@ -210,50 +214,6 @@ struct ScanBehavior {
 }
 
 impl Scan<'_> {
-    /// One target: its policy, its files, its dependencies.
-    fn target(mut self, target: &Value, captured: &mut Capture) -> io::Result<()> {
-        if self.behavior.missing_status_invalid && missing::status_removed(target, captured)? {
-            return Ok(());
-        }
-        let policy = policy::status_policy(self.context, target)?;
-        let directory = text(target.get("directory"))?;
-        if self.behavior.missing_status_invalid
-            && missing::status_invalid(self.root, target, directory, captured)?
-        {
-            return Ok(());
-        }
-        if missing::capture(
-            self.root,
-            self.behavior.missing_checkout_reset,
-            target,
-            directory,
-            captured,
-        )? {
-            return Ok(());
-        }
-        let files = self.files(directory)?;
-        if self.behavior.missing_status_invalid
-            && missing::status_invalid_files(self.root, target, directory, &files, captured)?
-        {
-            return Ok(());
-        }
-        if missing::main_file(
-            self.root,
-            self.behavior.missing_checkout_reset,
-            target,
-            directory,
-            &files,
-            captured,
-        )? {
-            return Ok(());
-        }
-        let Some(dependencies) = self.dependencies(target, directory, &files, &policy, captured)?
-        else {
-            return Ok(());
-        };
-        record(target, directory, &files, &policy, &dependencies, captured)
-    }
-
     fn dependencies(
         &mut self,
         target: &Value,

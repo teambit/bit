@@ -55,6 +55,9 @@ pub(super) fn read(request: &Request) -> io::Result<(usize, Value)> {
 }
 fn current(output: &mut Value, target: &Target) {
     if let Some(error) = &target.invalid {
+        if error["name"] == "ComponentsPendingImport" {
+            push(output, "importPendingComponents", json!(target.identity));
+        }
         push(output, "invalidComponents", json!({"id":target.identity,"error":error}));
         return;
     }
@@ -157,7 +160,13 @@ fn models(request: &Request) -> io::Result<()> {
     }
     if request.targets
         .iter()
-        .any(|target| !target.version.is_empty() && !known.contains(&target.identity))
+        .any(|target| {
+            !target.version.is_empty()
+                && !known.contains(&target.identity)
+                && target.invalid
+                    .as_ref()
+                    .is_none_or(|error| error["name"] != "ComponentsPendingImport")
+        })
     {
         return Err(invalid("status missing imported model requires canonical errors"));
     }

@@ -161,6 +161,7 @@ fn read<Prepared>(
         "histories": context["histories"],
         "semver": semver,
     }))?;
+    result["remotelySoftRemoved"] = json!(capture.remotely_removed);
     sort_rows(&mut result)?;
     let prepared = prepare(&result, &context)?;
     capture::commit(&mut engine, root, &context, &capture)?;

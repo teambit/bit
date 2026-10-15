@@ -35,7 +35,7 @@ pub struct Component {
 }
 
 /// `None` where the native status declines: a dependency outside
-/// the workspace, or a model whose head is deprecated or removed.
+/// the workspace, or a model whose head is deprecated.
 pub fn collect(
     root: &Path,
     context: &Value,
@@ -181,7 +181,7 @@ fn ignored(context: &Value) -> io::Result<HashSet<&str>> {
         .collect()
 }
 
-/// `ordinaryModelHeads`: no deprecated model, no head that is deprecated or removed.
+/// `ordinaryModelHeads`: no deprecated model or unsupported head extension.
 fn ordinary_model_heads(context: &Value) -> io::Result<bool> {
     let versions: HashMap<&str, &Value> = array(context.get("versions"), "versions")?
         .iter()
@@ -213,7 +213,7 @@ fn ordinary_model_heads(context: &Value) -> io::Result<bool> {
                     .any(|extension| {
                         matches!(
                             extension.get("name").and_then(Value::as_str),
-                            Some("teambit.component/deprecation" | "teambit.component/remove"),
+                            Some("teambit.component/deprecation"),
                         )
                     })
             })
