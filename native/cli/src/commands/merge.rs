@@ -45,7 +45,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     };
     let request =
         Request { operation: "merge", options: options.request(), to: None, verify_fresh: true };
-    let planned = if installer.is_some() && !options.no_snap {
+    let planned = if options.no_snap {
+        workspace_command::plan(&root, &request).map(|planned| (planned, None))
+    } else {
         let mut no_snap = options.request();
         no_snap["noSnap"] = Value::Bool(true);
         no_snap
@@ -62,8 +64,6 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
                 .map_err(|_| io::Error::other("merge snapshot preview thread panicked"))??;
             Ok::<_, io::Error>((preview, Some(materialized?)))
         })
-    } else {
-        workspace_command::plan(&root, &request).map(|planned| (planned, None))
     };
     let prepared = planned.and_then(|(planned, materialized)| {
         let mode = report::Mode { verbose: options.verbose, lane: false };
@@ -75,7 +75,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Ok(prepared) => prepared,
         Err(error) => return Ok(Outcome::Declined(format!("merge: {error}"))),
     };
-    if installer.is_some()
+    if !options.no_snap
         && (planned.plan.get("needsSnap").is_some()
             || planned.plan["result"]["mergeSnapResults"].is_object())
     {

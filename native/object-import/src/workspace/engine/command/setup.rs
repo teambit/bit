@@ -13,9 +13,7 @@ pub(super) fn run(
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
     if request.internal_snapshot_preview
-        && (request.operation != Operation::Merge
-            || request.options.no_snap
-            || request.options.lane.is_some())
+        && (request.operation != Operation::Merge || request.options.no_snap)
     {
         return Err(invalid("command snapshot preview options"));
     }

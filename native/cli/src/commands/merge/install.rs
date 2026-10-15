@@ -87,7 +87,6 @@ pub(in crate::commands) fn execute_snapping(
         installer,
         materialized,
     } = snapping;
-    let Some(installer) = installer else { return Err(decline("merge snap installer")) };
     let (expected, mut materialized) =
         match prepare_snapping(root, args, options, mode, planned, materialized) {
             Ok(prepared) => prepared,
@@ -98,7 +97,9 @@ pub(in crate::commands) fn execute_snapping(
     workspace_command::execute_then(root, args, "merge", |output| {
         render_progress(output, progress);
         workspace_command::commit(&mut materialized, root)?;
-        if let Err(error) = installer.install_merge(root) {
+        if let Some(installer) = installer
+            && let Err(error) = installer.install_merge(root)
+        {
             output.failure(&format!(
                 "failed installing packages, see the log for full stacktrace. error: {error}",
             ));
