@@ -24,21 +24,34 @@ fn row(fast_forward: bool) -> Row {
 }
 
 #[test]
+fn an_ignored_issue_does_not_block_the_snap() {
+    let issues = json!([
+        {"type":"MissingManuallyConfiguredPackages","data":r#"["@types/node"]"#},
+        {"type":"OtherIssue","data":"[]"},
+    ]);
+    let ignored = ["MissingManuallyConfiguredPackages".into(), "OtherIssue".into()];
+    let mut output = Vec::new();
+    capture_issues(&row(false), &issues, &ignored, &mut output).unwrap();
+    assert!(output.is_empty());
+}
+
+#[test]
 fn snap_issue_receipt_preserves_visible_identity_and_serialized_packages() {
     let issues = json!([{"type":"MissingManuallyConfiguredPackages","data":r#"["@types/node","@types/jest"]"#}]);
     let mut output = Vec::new();
-    capture_issues(&row(true), &issues, &mut output).unwrap();
+    capture_issues(&row(true), &issues, &[], &mut output).unwrap();
     assert!(output.is_empty());
-    capture_issues(&row(false), &issues, &mut output).unwrap();
+    capture_issues(&row(false), &issues, &[], &mut output).unwrap();
     assert_eq!(output, vec![json!({"id":"scope/component@1.0.0","issues":issues})]);
     assert!(
-        capture_issues(&row(false), &json!([{"type":"OtherIssue","data":"[]"}]), &mut output)
+        capture_issues(&row(false), &json!([{"type":"OtherIssue","data":"[]"}]), &[], &mut output)
             .is_err(),
     );
     assert!(
         capture_issues(
             &row(false),
             &json!([{"type":"MissingManuallyConfiguredPackages","data":"{}"}]),
+            &[],
             &mut output
         )
         .is_err(),

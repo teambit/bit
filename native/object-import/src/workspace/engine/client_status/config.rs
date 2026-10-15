@@ -8,6 +8,38 @@ use std::{
     path::Path,
 };
 
+const PREVIEW: &str = "teambit.preview/preview";
+const ISSUES: &str = "teambit.component/issues";
+
+/// The keys of `IssuesClasses` (`@teambit/component-issues`).
+const ISSUE_CLASSES: [&str; 25] = [
+    "MissingPackagesDependenciesOnFs",
+    "MissingManuallyConfiguredPackages",
+    "UntrackedDependencies",
+    "ResolveErrors",
+    "RelativeComponents",
+    "RelativeComponentsAuthored",
+    "ParseErrors",
+    "MissingDists",
+    "LegacyInsideHarmony",
+    "MissingDependenciesOnFs",
+    "ImportNonMainFiles",
+    "MultipleEnvs",
+    "MissingLinksFromNodeModulesToSrc",
+    "CircularDependencies",
+    "DuplicateComponentAndPackage",
+    "MergeConfigHasConflict",
+    "NonLoadedEnv",
+    "ExternalEnvWithoutVersion",
+    "RemovedDependencies",
+    "RemovedEnv",
+    "DeprecatedDependencies",
+    "SelfReference",
+    "ImportFromDirectory",
+    "LoadFailures",
+    "PinnedDependencies",
+];
+
 pub(in crate::workspace::engine) fn configuration(root: &Path) -> io::Result<Value> {
     configuration_for_command(root, false)
 }
@@ -34,8 +66,8 @@ pub(in crate::workspace::engine) fn configuration_value(
                     | "teambit.generator/generator"
                     | "teambit.dependencies/dependency-resolver"
                     | "teambit.workspace/workspace-config-files"
-                    | "teambit.preview/preview"
-                    | "teambit.component/issues",
+                    | PREVIEW
+                    | ISSUES,
             )
         })
     {
@@ -43,7 +75,6 @@ pub(in crate::workspace::engine) fn configuration_value(
     }
     let workspace = workspace_settings(config)?;
     extensions(config)?;
-    e2e_root_aspects(config)?;
     let scope = document(&root.join(".bit/scope.json"))?;
     if (!lane && scope["lanes"]["current"] != "main") || scope.get("license").is_some() {
         return Err(invalid("status non-main scope"));
@@ -52,21 +83,6 @@ pub(in crate::workspace::engine) fn configuration_value(
         return Err(invalid("status object directory"));
     }
     Ok(workspace)
-}
-
-fn e2e_root_aspects(config: &Value) -> io::Result<()> {
-    for (name, supported) in [
-        ("teambit.preview/preview", json!({"disabled":true})),
-        ("teambit.component/issues", json!({"ignoreIssues":["MissingManuallyConfiguredPackages"]})),
-    ] {
-        if config
-            .get(name)
-            .is_some_and(|value| value != &supported)
-        {
-            return Err(invalid("status root aspect configuration requires Harmony"));
-        }
-    }
-    Ok(())
 }
 
 fn workspace_settings(config: &Value) -> io::Result<Value> {
@@ -129,6 +145,8 @@ fn extensions(config: &Value) -> io::Result<()> {
             &["policy", "allowScripts", "rootComponents", "linkCoreAspects"][..],
         ),
         ("teambit.workspace/workspace-config-files", &["enableWorkspaceConfigWrite"][..]),
+        (PREVIEW, &["disabled"][..]),
+        (ISSUES, &["ignoreIssues"][..]),
     ] {
         if let Some(value) = config.get(name) {
             let fields = value.as_object().ok_or_else(|| invalid("status aspect settings"))?;
@@ -153,7 +171,37 @@ fn extensions(config: &Value) -> io::Result<()> {
     {
         return Err(invalid("status configured environments require Harmony"));
     }
+    // Only previews and builds read the preview settings.
+    if config[PREVIEW]
+        .get("disabled")
+        .is_some_and(|disabled| !disabled.is_boolean())
+    {
+        return Err(invalid("status preview settings require Harmony"));
+    }
+    ignored_issues(config)?;
     Ok(())
+}
+
+/// `IssuesMain.getIssuesToIgnoreGlobally`: the issue types `ignoreIssues` of
+/// `teambit.component/issues` removes from every component. A name outside
+/// `IssuesClasses` makes the Node.js CLI throw `NonExistIssueError`, so it declines.
+pub(in crate::workspace::engine) fn ignored_issues(config: &Value) -> io::Result<Vec<String>> {
+    let Some(names) = config[ISSUES].get("ignoreIssues") else {
+        return Ok(Vec::new());
+    };
+    let names = names.as_array().ok_or_else(|| invalid("status ignoreIssues"))?;
+    names
+        .iter()
+        .map(|name| match name.as_str() {
+            Some(name) if ISSUE_CLASSES.contains(&name) => Ok(name.to_string()),
+            _ => Err(invalid("status unknown ignored issue requires Harmony")),
+        })
+        .collect()
+}
+
+/// [`ignored_issues`] of the workspace at `root`.
+pub(in crate::workspace::engine) fn ignored_issues_at(root: &Path) -> io::Result<Vec<String>> {
+    ignored_issues(&document(&root.join("workspace.jsonc"))?)
 }
 
 pub(super) fn targets(root: &Path, config: &Value) -> io::Result<Vec<Target>> {

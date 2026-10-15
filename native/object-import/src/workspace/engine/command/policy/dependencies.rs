@@ -4,7 +4,10 @@ use super::{
     super::{Record, State, invalid, planning},
     projection,
 };
-use crate::workspace::engine::{dependency_policy::fresh, source_overlay::SourceOverlay};
+use crate::workspace::engine::{
+    client_status::config::ignored_issues_at, dependency_policy::fresh,
+    source_overlay::SourceOverlay,
+};
 use issues::capture as capture_issues;
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -238,7 +241,8 @@ fn complete_row(
     let request = serde_json::from_value(json!({"root":record.request.root,"componentRoot":record.request.root.join(&row.baseline.directory),
             "capture":capture,"policies":receipt.policies,"finish":receipt.finish,"resolution":receipt.resolution})).map_err(io::Error::other)?;
     let (_, output) = fresh::apply_overlay(&request, pool, overlay)?;
-    capture_issues(row, &output["issues"], issues)?;
+    let ignored = ignored_issues_at(&record.request.root)?;
+    capture_issues(row, &output["issues"], &ignored, issues)?;
     project(row, &output["state"], &receipt.default_node, changed)?;
     row.projected["overrides"] = overrides(&receipt.finish["manual"])?;
     super::graph::project(row, &mut record.repository)?;

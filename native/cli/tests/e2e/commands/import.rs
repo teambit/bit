@@ -1,132 +1,186 @@
 //! `e2e/commands/import.e2e.ts`.
 
-/// Native `bit import` declines every case here: an e2e workspace configures aspects at
-/// its root (`status configured extensions require Harmony`), an occupied or linked
-/// destination, the list of a file remote (`*`), and flags outside its grammar
-/// (`--dependencies*`, `-p`, `--merge`).
+use crate::{
+    helper::{FOO_FIXTURE, Helper, Run, parse},
+    known_failure::{KnownResult, Native},
+};
+use serde_json::Value;
+use std::{fs, path::Path};
+
+/// `importComponent(id)`: `bit import <remote>/<id>`, when it runs natively.
+fn import(helper: &Helper, id: &str) -> KnownResult<String> {
+    helper.native_output_or_known(&format!("import {}/{id}", helper.scopes.remote))
+}
+
+/// `runWithTryCatch`: stdout and stderr of a run that may fail.
+fn combined(run: &Run) -> String {
+    format!("{}{}", run.stdout, run.stderr)
+}
+
+/// `bitMap.read()`: `.bitmap` without its header comment.
+fn read_bitmap(helper: &Helper) -> Value {
+    let text = fs::read_to_string(helper.scopes.local_path.join(".bitmap")).unwrap();
+    // The header comment holds no line starting with `{`.
+    let body = text
+        .find("\n{")
+        .map_or(text.as_str(), |start| &text[start..]);
+    parse(body)
+}
+
+/// `bitMap.expectToHaveId(name, version)`, or `expectNotToHaveId(name)` without a version.
+fn expect_id(helper: &Helper, name: &str, version: Option<&str>) {
+    let bitmap = read_bitmap(helper);
+    match version {
+        Some(version) => assert_eq!(bitmap[name]["version"], version, "{name} in {bitmap}"),
+        None => assert!(bitmap.get(name).is_none(), "{name} in {bitmap}"),
+    }
+}
+
+/// `fs.getConsumerFiles()`: the workspace's `.js` and `.ts` files, relative.
+fn consumer_files(helper: &Helper) -> Vec<String> {
+    let mut files = Vec::new();
+    collect_files(&helper.scopes.local_path, &helper.scopes.local_path, &mut files);
+    files
+}
+
+fn collect_files(root: &Path, dir: &Path, files: &mut Vec<String>) {
+    for entry in fs::read_dir(dir).unwrap().flatten() {
+        let path = entry.path();
+        let kind = entry.file_type().unwrap();
+        if kind.is_dir() {
+            collect_files(root, &path, files);
+        } else if path
+            .extension()
+            .is_some_and(|ext| ext == "js" || ext == "ts")
+        {
+            let relative = path.strip_prefix(root).unwrap();
+            files.push(relative.to_string_lossy().replace('\\', "/"));
+        }
+    }
+}
+
+/// `workspaceJsonc.setComponentsDir(dir)`. The workspace's `workspace.jsonc` is plain JSON
+/// once `reInitWorkspace` rewrote it.
+fn set_components_dir(helper: &Helper, dir: &str) {
+    let path = helper.scopes.local_path.join("workspace.jsonc");
+    let mut config = parse(&fs::read_to_string(&path).unwrap());
+    config["teambit.workspace/workspace"]["defaultDirectory"] = Value::String(dir.into());
+    fs::write(path, serde_json::to_string_pretty(&config).unwrap()).unwrap();
+}
+
+/// A new workspace with the remote holding `global/simple@0.0.1`.
+fn exported_simple() -> Helper {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.output_file("global/simple.js", FOO_FIXTURE);
+    helper.run("add global -i global/simple");
+    helper.tag_without_build("global/simple", "");
+    helper.run("export global/simple");
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    helper
+}
+
+/// The default directory of `global/simple`.
+fn simple_dir(helper: &Helper) -> std::path::PathBuf {
+    helper.scopes.local_path.join(&helper.scopes.remote).join("global/simple")
+}
+
+/// The imported `bar/foo` modified locally, with the clone to come back to.
+fn modified_bar_foo() -> (Helper, std::path::PathBuf) {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo(FOO_FIXTURE);
+    helper.add_component_bar_foo();
+    helper.tag_without_build("", "");
+    helper.run("export");
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    helper.run(&format!("import {}/bar/foo", helper.scopes.remote));
+    let remote = helper.scopes.remote.clone();
+    let v2 = "module.exports = function foo() { return 'got foo v2'; };";
+    helper.output_file(&format!("{remote}/bar/foo/foo.js"), v2);
+    let app = format!("const barFoo = require('./{remote}/bar/foo'); console.log(barFoo());");
+    helper.output_file("app.js", &app);
+    let clone = helper.clone_workspace();
+    (helper, clone)
+}
+
+/// comp1 → comp2 → comp3 → comp4 exported, then comp2 (and comp1) tagged 0.0.2.
+fn chain() -> Helper {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(4, true, "");
+    helper.tag_without_build("", "");
+    helper.run("export");
+    let comp2 = format!(
+        "const comp3 = require('@{}/comp3');\nmodule.exports = () => 'comp2-v2 and ' + comp3();",
+        helper.scopes.remote,
+    );
+    helper.output_file("comp2/index.js", &comp2);
+    helper.tag_without_build("comp2", "");
+    helper.run("export");
+    helper
+}
+
+/// Imports `id` with `flags` into a new workspace, when the import runs natively.
+fn import_chain(helper: &Helper, id: &str, flags: &str) -> KnownResult<String> {
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    helper.native_output_or_known(&format!("import {}/{id} {flags}", helper.scopes.remote))
+}
+
+/// stand alone component (without dependencies) › should display a successful message;
+/// should indicate that the imported component is new; should add the component into
+/// bit.map file
+#[test]
+fn a_stand_alone_component_is_imported() {
+    let helper = exported_simple();
+    let output = import(&helper, "global/simple").native();
+    for expected in ["successfully imported one component", "global/simple", "0.0.1", "added"] {
+        assert!(output.contains(expected), "{expected} in {output}");
+    }
+    assert!(!output.contains("updated"), "{output}");
+    assert!(read_bitmap(&helper).get("global/simple").is_some());
+}
+
+/// stand alone component (without dependencies) › with multiple files located in different
+/// directories › should write the internal files according to their relative paths
+#[test]
+fn files_keep_their_relative_paths() {
+    let helper = exported_simple();
+    helper.output_file("src/imprel.js", FOO_FIXTURE);
+    helper.output_file("src/imprel.spec.js", FOO_FIXTURE);
+    helper.output_file("src/utils/myUtil.js", FOO_FIXTURE);
+    helper.run("add src -m src/imprel.js -i imprel/imprel");
+    helper.tag_without_build("imprel/imprel", "");
+    helper.run("export imprel/imprel");
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    let output = import(&helper, "imprel/imprel").native();
+    assert!(output.contains("successfully imported one component"), "{output}");
+    assert!(output.contains("imprel/imprel"), "{output}");
+    let root = helper.scopes.local_path.join(&helper.scopes.remote).join("imprel/imprel");
+    for file in ["imprel.js", "imprel.spec.js", "utils/myUtil.js"] {
+        assert!(root.join(file).is_file(), "{file}");
+    }
+}
+
+/// What native `bit import` still leaves to the Node.js CLI: a destination directory
+/// that exists or a component already in the workspace, a `defaultDirectory` template,
+/// `-p`, `--merge`, `--dependencies` and `--dependencies-depth`, and a wildcard over a
+/// file remote.
 mod known_failures {
+    use super::{
+        chain, combined, consumer_files, expect_id, exported_simple, import, import_chain,
+        modified_bar_foo, read_bitmap, set_components_dir, simple_dir,
+    };
     use crate::{
         allow_known_failure,
-        helper::{FOO_FIXTURE, Helper, Run, len, parse},
-        known_failure::KnownResult,
+        helper::{FOO_FIXTURE, Helper, len, parse},
     };
-    use serde_json::Value;
-    use std::{fs, path::Path};
 
-    /// `importComponent(id)`: `bit import <remote>/<id>`, when it runs natively.
-    fn import(helper: &Helper, id: &str) -> KnownResult<String> {
-        helper.native_output_or_known(&format!("import {}/{id}", helper.scopes.remote))
-    }
-
-    /// `runWithTryCatch`: stdout and stderr of a run that may fail.
-    fn combined(run: &Run) -> String {
-        format!("{}{}", run.stdout, run.stderr)
-    }
-
-    /// `bitMap.read()`: `.bitmap` without its header comment.
-    fn read_bitmap(helper: &Helper) -> Value {
-        let text = fs::read_to_string(helper.scopes.local_path.join(".bitmap")).unwrap();
-        // The header comment holds no line starting with `{`.
-        let body = text
-            .find("\n{")
-            .map_or(text.as_str(), |start| &text[start..]);
-        parse(body)
-    }
-
-    /// `bitMap.expectToHaveId(name, version)`, or `expectNotToHaveId(name)` without a version.
-    fn expect_id(helper: &Helper, name: &str, version: Option<&str>) {
-        let bitmap = read_bitmap(helper);
-        match version {
-            Some(version) => assert_eq!(bitmap[name]["version"], version, "{name} in {bitmap}"),
-            None => assert!(bitmap.get(name).is_none(), "{name} in {bitmap}"),
-        }
-    }
-
-    /// `fs.getConsumerFiles()`: the workspace's `.js` and `.ts` files, relative.
-    fn consumer_files(helper: &Helper) -> Vec<String> {
-        let mut files = Vec::new();
-        collect_files(&helper.scopes.local_path, &helper.scopes.local_path, &mut files);
-        files
-    }
-
-    fn collect_files(root: &Path, dir: &Path, files: &mut Vec<String>) {
-        for entry in fs::read_dir(dir).unwrap().flatten() {
-            let path = entry.path();
-            let kind = entry.file_type().unwrap();
-            if kind.is_dir() {
-                collect_files(root, &path, files);
-            } else if path
-                .extension()
-                .is_some_and(|ext| ext == "js" || ext == "ts")
-            {
-                let relative = path.strip_prefix(root).unwrap();
-                files.push(relative.to_string_lossy().replace('\\', "/"));
-            }
-        }
-    }
-
-    /// `workspaceJsonc.setComponentsDir(dir)`. The workspace's `workspace.jsonc` is plain JSON
-    /// once `reInitWorkspace` rewrote it.
-    fn set_components_dir(helper: &Helper, dir: &str) {
-        let path = helper.scopes.local_path.join("workspace.jsonc");
-        let mut config = parse(&fs::read_to_string(&path).unwrap());
-        config["teambit.workspace/workspace"]["defaultDirectory"] = Value::String(dir.into());
-        fs::write(path, serde_json::to_string_pretty(&config).unwrap()).unwrap();
-    }
-
-    /// A new workspace with the remote holding `global/simple@0.0.1`.
-    fn exported_simple() -> Helper {
-        let helper = Helper::new();
-        helper.set_workspace_with_remote_scope();
-        helper.output_file("global/simple.js", FOO_FIXTURE);
-        helper.run("add global -i global/simple");
-        helper.tag_without_build("global/simple", "");
-        helper.run("export global/simple");
-        helper.re_init_workspace();
-        helper.add_remote_scope();
-        helper
-    }
-
-    /// The default directory of `global/simple`.
-    fn simple_dir(helper: &Helper) -> std::path::PathBuf {
-        helper.scopes.local_path.join(&helper.scopes.remote).join("global/simple")
-    }
-
-    /// stand alone component (without dependencies) › should display a successful message;
-    /// should indicate that the imported component is new; should add the component into
-    /// bit.map file
-    #[test]
-    fn a_stand_alone_component_is_imported() {
-        let helper = exported_simple();
-        let output = allow_known_failure!(import(&helper, "global/simple"));
-        for expected in ["successfully imported one component", "global/simple", "0.0.1", "added"] {
-            assert!(output.contains(expected), "{expected} in {output}");
-        }
-        assert!(!output.contains("updated"), "{output}");
-        assert!(read_bitmap(&helper).get("global/simple").is_some());
-    }
-
-    /// stand alone component (without dependencies) › with multiple files located in different
-    /// directories › should write the internal files according to their relative paths
-    #[test]
-    fn files_keep_their_relative_paths() {
-        let helper = exported_simple();
-        helper.output_file("src/imprel.js", FOO_FIXTURE);
-        helper.output_file("src/imprel.spec.js", FOO_FIXTURE);
-        helper.output_file("src/utils/myUtil.js", FOO_FIXTURE);
-        helper.run("add src -m src/imprel.js -i imprel/imprel");
-        helper.tag_without_build("imprel/imprel", "");
-        helper.run("export imprel/imprel");
-        helper.re_init_workspace();
-        helper.add_remote_scope();
-        let output = allow_known_failure!(import(&helper, "imprel/imprel"));
-        assert!(output.contains("successfully imported one component"), "{output}");
-        assert!(output.contains("imprel/imprel"), "{output}");
-        let root = helper.scopes.local_path.join(&helper.scopes.remote).join("imprel/imprel");
-        for file in ["imprel.js", "imprel.spec.js", "utils/myUtil.js"] {
-            assert!(root.join(file).is_file(), "{file}");
-        }
-    }
+    use std::fs;
 
     /// stand alone component (without dependencies) › when the default component directory
     /// already exist › when the destination is an existing empty directory › should write the
@@ -291,26 +345,6 @@ mod known_failures {
         );
     }
 
-    /// The imported `bar/foo` modified locally, with the clone to come back to.
-    fn modified_bar_foo() -> (Helper, std::path::PathBuf) {
-        let helper = Helper::new();
-        helper.set_workspace_with_remote_scope();
-        helper.create_component_bar_foo(FOO_FIXTURE);
-        helper.add_component_bar_foo();
-        helper.tag_without_build("", "");
-        helper.run("export");
-        helper.re_init_workspace();
-        helper.add_remote_scope();
-        helper.run(&format!("import {}/bar/foo", helper.scopes.remote));
-        let remote = helper.scopes.remote.clone();
-        let v2 = "module.exports = function foo() { return 'got foo v2'; };";
-        helper.output_file(&format!("{remote}/bar/foo/foo.js"), v2);
-        let app = format!("const barFoo = require('./{remote}/bar/foo'); console.log(barFoo());");
-        helper.output_file("app.js", &app);
-        let clone = helper.clone_workspace();
-        (helper, clone)
-    }
-
     /// import a component when the local version is modified › without --override flag › should
     /// display a warning saying it was unable to import; with --override flag › should display a
     /// successful message
@@ -389,30 +423,6 @@ mod known_failures {
         }
         let list = parse(&helper.native("list --local-scope --json"));
         assert_eq!(len(&list), 3);
-    }
-
-    /// comp1 → comp2 → comp3 → comp4 exported, then comp2 (and comp1) tagged 0.0.2.
-    fn chain() -> Helper {
-        let helper = Helper::new();
-        helper.set_workspace_with_remote_scope();
-        helper.populate_components(4, true, "");
-        helper.tag_without_build("", "");
-        helper.run("export");
-        let comp2 = format!(
-            "const comp3 = require('@{}/comp3');\nmodule.exports = () => 'comp2-v2 and ' + comp3();",
-            helper.scopes.remote,
-        );
-        helper.output_file("comp2/index.js", &comp2);
-        helper.tag_without_build("comp2", "");
-        helper.run("export");
-        helper
-    }
-
-    /// Imports `id` with `flags` into a new workspace, when the import runs natively.
-    fn import_chain(helper: &Helper, id: &str, flags: &str) -> KnownResult<String> {
-        helper.re_init_workspace();
-        helper.add_remote_scope();
-        helper.native_output_or_known(&format!("import {}/{id} {flags}", helper.scopes.remote))
     }
 
     /// import with --dependencies-depth (chain: comp1 -> comp2 -> comp3 -> comp4) ›

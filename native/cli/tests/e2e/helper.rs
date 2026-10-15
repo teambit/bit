@@ -246,7 +246,13 @@ impl Helper {
 
 /// `run` when it ran natively, else the [`KnownFailure`].
 pub fn known(run: Run) -> KnownResult<Run> {
-    if run.native || on_node() { Ok(run) } else { Err(KnownFailure { reason: run.trace }) }
+    if run.native || on_node() {
+        Ok(run)
+    } else if env_flag("BIT_E2E_NO_KNOWN_FAILURES") {
+        panic!("still runs on the Node.js CLI:\n{}", run.trace)
+    } else {
+        Err(KnownFailure { reason: run.trace })
+    }
 }
 
 /// `removeChalkCharacters`: the text without ANSI escape sequences.
@@ -266,7 +272,11 @@ pub fn strip_ansi(text: &str) -> String {
 /// `BIT_E2E_ON_NODE=1`: a command the Node.js CLI runs counts as native, so every case,
 /// known failures included, checks its assertions against the Node.js CLI.
 fn on_node() -> bool {
-    std::env::var_os("BIT_E2E_ON_NODE").is_some_and(|value| value == "1")
+    env_flag("BIT_E2E_ON_NODE")
+}
+
+fn env_flag(name: &str) -> bool {
+    std::env::var_os(name).is_some_and(|value| value == "1")
 }
 
 /// `copyWorkspaceTemplate`: the template with the workspace and scope named after `target`.

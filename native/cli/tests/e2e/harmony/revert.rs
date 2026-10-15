@@ -1,6 +1,6 @@
 //! `e2e/harmony/revert.e2e.ts`.
 
-use crate::helper::Helper;
+use crate::{helper::Helper, known_failure::Native};
 use serde_json::Value;
 use std::fs;
 
@@ -27,10 +27,30 @@ fn tagged_twice() -> (Helper, std::path::PathBuf) {
     (helper, before_revert)
 }
 
-/// Native `revert` declines every e2e workspace: it configures aspects at its root
-/// (`status configured extensions require Harmony`, see `status_harmony.rs`).
+/// revert from lane to main › should change the code according to main; should keep the
+/// versions intact
+#[test]
+fn revert_from_a_lane_to_main() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(2, true, "");
+    helper.run("tag");
+    helper.run("export");
+    helper.run("lane create lane-a");
+    helper.populate_components(2, true, "version2");
+    helper.run("snap");
+    helper.run("export");
+    helper.native_output_or_known(r#"revert "**" main"#).native();
+    for comp in ["comp1", "comp2"] {
+        assert!(!read_file(&helper, &format!("{comp}/index.js")).contains("version2"));
+        assert_ne!(read_bitmap(&helper)[comp]["version"], "0.0.1");
+    }
+}
+
+/// Native `bit revert` declines a target whose remote scope the workspace does not
+/// map (`import unmapped remote requires canonical resolver`).
 mod known_failures {
-    use super::{Helper, read_bitmap, read_file, tagged_twice};
+    use super::{read_bitmap, read_file, tagged_twice};
     use crate::allow_known_failure;
 
     /// basic revert › should change the code to the specified version; should keep the
@@ -55,25 +75,5 @@ mod known_failures {
         let content = read_file(&helper, "comp1/index.js");
         assert!(!content.contains("version2"), "{content}");
         assert!(!content.contains("version3"), "{content}");
-    }
-
-    /// revert from lane to main › should change the code according to main; should keep the
-    /// versions intact
-    #[test]
-    fn revert_from_a_lane_to_main() {
-        let helper = Helper::new();
-        helper.set_workspace_with_remote_scope();
-        helper.populate_components(2, true, "");
-        helper.run("tag");
-        helper.run("export");
-        helper.run("lane create lane-a");
-        helper.populate_components(2, true, "version2");
-        helper.run("snap");
-        helper.run("export");
-        allow_known_failure!(helper.native_output_or_known(r#"revert "**" main"#));
-        for comp in ["comp1", "comp2"] {
-            assert!(!read_file(&helper, &format!("{comp}/index.js")).contains("version2"));
-            assert_ne!(read_bitmap(&helper)[comp]["version"], "0.0.1");
-        }
     }
 }
