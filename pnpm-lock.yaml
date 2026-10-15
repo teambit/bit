@@ -26796,6 +26796,9 @@ importers:
       '@teambit/ui-foundation.ui.tree.drawer':
         specifier: ^1.0.0
         version: 1.0.0(react-dom@19.2.7)(react@19.2.7)
+      '@teambit/workspace.root-components':
+        specifier: ^1.0.1
+        version: 1.0.1
       '@testing-library/react':
         specifier: ^14.3.1
         version: 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -87229,6 +87232,7 @@ snapshots:
       '@teambit/component-descriptor': file:scopes/component/component-descriptor(chai@4.3.0)
       '@teambit/component-id': 1.2.5
       '@teambit/component-issues': file:components/component-issues
+      '@teambit/component-package-version': file:scopes/component/component-package-version
       '@teambit/component-version': 1.0.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/component.ui.component-drawer': file:components/ui/component-drawer(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(chai@4.3.0)(react-router-dom@6.30.4)(react@18.3.1)(supports-color@9.4.0)
@@ -87287,6 +87291,7 @@ snapshots:
       '@teambit/workspace.hooks.use-url-change-broadcaster': file:components/hooks/use-url-change-broadcaster(@testing-library/dom@10.4.1)(react-router-dom@6.30.4)(react@18.3.1)
       '@teambit/workspace.modules.match-pattern': file:scopes/workspace/modules/match-pattern
       '@teambit/workspace.modules.node-modules-linker': file:scopes/workspace/modules/node-modules-linker(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/workspace.root-components': 1.0.1
       '@teambit/workspace.ui.preserve-workspace-mode': file:components/ui/preserve-workspace-mode(@testing-library/dom@10.4.1)(react-router-dom@6.30.4)(react@18.3.1)
       '@teambit/workspace.ui.use-workspace-mode': file:components/ui/use-workspace-mode(@testing-library/dom@10.4.1)(react-router-dom@6.30.4)(react@18.3.1)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@18.3.1)
@@ -87334,6 +87339,7 @@ snapshots:
       '@teambit/component-descriptor': file:scopes/component/component-descriptor(chai@4.3.0)
       '@teambit/component-id': 1.2.5
       '@teambit/component-issues': file:components/component-issues
+      '@teambit/component-package-version': file:scopes/component/component-package-version
       '@teambit/component-version': 1.0.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/component.ui.component-drawer': file:components/ui/component-drawer(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(chai@4.3.0)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
@@ -87392,6 +87398,7 @@ snapshots:
       '@teambit/workspace.hooks.use-url-change-broadcaster': file:components/hooks/use-url-change-broadcaster(@testing-library/dom@10.4.1)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/workspace.modules.match-pattern': file:scopes/workspace/modules/match-pattern
       '@teambit/workspace.modules.node-modules-linker': file:scopes/workspace/modules/node-modules-linker(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/workspace.root-components': 1.0.1
       '@teambit/workspace.ui.preserve-workspace-mode': file:components/ui/preserve-workspace-mode(@testing-library/dom@10.4.1)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/workspace.ui.use-workspace-mode': file:components/ui/use-workspace-mode(@testing-library/dom@10.4.1)(react-router-dom@6.30.4)(react@19.2.7)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -87439,6 +87446,7 @@ snapshots:
       '@teambit/component-descriptor': file:scopes/component/component-descriptor(chai@5.2.1)
       '@teambit/component-id': 1.2.5
       '@teambit/component-issues': file:components/component-issues
+      '@teambit/component-package-version': file:scopes/component/component-package-version
       '@teambit/component-version': 1.0.4
       '@teambit/component.sources': file:scopes/component/sources(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/component.ui.component-drawer': file:components/ui/component-drawer(@apollo/client@3.12.11)(@teambit/base-react.navigation.link@2.0.33)(@testing-library/dom@10.4.1)(chai@5.2.1)(react-router-dom@6.30.4)(react@19.2.7)(supports-color@9.4.0)
@@ -87497,6 +87505,7 @@ snapshots:
       '@teambit/workspace.hooks.use-url-change-broadcaster': file:components/hooks/use-url-change-broadcaster(@testing-library/dom@10.4.1)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/workspace.modules.match-pattern': file:scopes/workspace/modules/match-pattern
       '@teambit/workspace.modules.node-modules-linker': file:scopes/workspace/modules/node-modules-linker(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/workspace.root-components': 1.0.1
       '@teambit/workspace.ui.preserve-workspace-mode': file:components/ui/preserve-workspace-mode(@testing-library/dom@10.4.1)(react-router-dom@6.30.4)(react@19.2.7)
       '@teambit/workspace.ui.use-workspace-mode': file:components/ui/use-workspace-mode(@testing-library/dom@10.4.1)(react-router-dom@6.30.4)(react@19.2.7)
       '@testing-library/react': 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
