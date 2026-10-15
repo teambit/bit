@@ -1,0 +1,20 @@
+[package]
+name = "bit-client-transfer"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+indexmap = { version = "2", features = ["serde"] }
+futures-util = "0.3"
+reqwest = { version = "0.13", default-features = false, features = ["gzip", "json", "rustls", "stream"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+tar = "0.4"
+tokio = { version = "1", features = ["rt-multi-thread", "sync", "time"] }
+
+[dev-dependencies]
+tempfile = "3"
+
+[lints]
+workspace = true

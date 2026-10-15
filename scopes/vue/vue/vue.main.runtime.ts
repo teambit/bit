@@ -3,6 +3,8 @@ import { SchemaAspect } from '@teambit/schema';
 import { VueAspect } from './vue.aspect';
 import { VueSchema } from './vue.schema';
 
+const getVueSchemas = () => [VueSchema];
+
 export class VueMain {
   static slots = [];
   // define your aspect dependencies here.
@@ -12,7 +14,7 @@ export class VueMain {
   static runtime = MainRuntime;
 
   static async provider([schemaMain]) {
-    if (schemaMain) schemaMain.registerSchemaClasses(() => [VueSchema]);
+    if (schemaMain) schemaMain.registerSchemaClasses(getVueSchemas);
     return new VueMain();
   }
 }

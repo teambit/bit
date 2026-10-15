@@ -14,6 +14,7 @@ export type {
   ResolveAspectsOptions,
   FilterAspectsOptions,
   LoadAspectsOptions,
+  GetGraphIdsOpts,
 } from './component-factory';
 export type { AspectList } from './aspect-list';
 export { AspectEntry, AspectData, ResolveComponentIdFunc } from './aspect-entry';
@@ -39,7 +40,13 @@ export { componentFields, componentIdFields, componentOverviewFields } from './u
 export type { NavPlugin, ConsumePlugin, MenuNavProps } from './ui/menu';
 export { CollapsibleMenuNav, ComponentMenu, VersionRelatedDropdowns } from './ui/menu';
 export type { RegisteredComponentRoute, ComponentUrlParams } from './component.route';
-export type { ComponentModelProps, DeprecationInfo, RegularCompDescriptor } from './ui/component-model';
+export type {
+  ComponentModelProps,
+  DeprecationInfo,
+  RegularCompDescriptor,
+  ComponentPreviewSize,
+  ComponentPreviewSizedFile,
+} from './ui/component-model';
 export { ComponentModel } from './ui/component-model';
 export { TopBarNav } from './ui/top-bar-nav';
 export type { ShowFragment, ShowRow, ShowJSONRow } from './show';

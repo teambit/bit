@@ -51,6 +51,10 @@ import type { DebugDependencies } from './dependencies-loader/auto-detect-deps';
 import { DependentsCmd } from './dependents-cmd';
 import type { Logger, LoggerMain } from '@teambit/logger';
 import { LoggerAspect } from '@teambit/logger';
+import type { Component } from '@teambit/component';
+import type { IssuesMain } from '@teambit/issues';
+import { IssuesAspect } from '@teambit/issues';
+import { IssuesClasses } from '@teambit/component-issues';
 
 export type RemoveDependencyResult = { id: ComponentID; removedPackages: string[] };
 export type SetDependenciesResult = { changedComps: string[]; addedPackages: Record<string, string> };
@@ -273,6 +277,24 @@ export class DependenciesMain {
     return compact(results);
   }
 
+  /**
+   * add an issue for dependencies on workspace components whose version is set in the config (e.g. "bit deps set").
+   * such a dependency doesn't follow the workspace version of the component, e.g. it's not auto-tagged with it.
+   * it's not a tag blocker, it's there to make it visible, because often a version is set this way when not needed.
+   */
+  async addPinnedDependenciesIssues(components: Component[], issuesToIgnore: string[]) {
+    if (issuesToIgnore.includes(IssuesClasses.PinnedDependencies.name)) return;
+    components.forEach((component) => {
+      const consumerComponent: ConsumerComponent = component.state._consumer;
+      const pinned = consumerComponent.getDependenciesWithVersionFromConfig((id) =>
+        this.workspace.hasId(id, { ignoreVersion: true })
+      );
+      // the component can be reused from the cache, so remove an issue that was added when it had pinned dependencies
+      if (pinned.length) component.state.issues.getOrCreate(IssuesClasses.PinnedDependencies).data = pinned;
+      else component.state.issues.delete(IssuesClasses.PinnedDependencies);
+    });
+  }
+
   async reset(componentPattern: string): Promise<ComponentID[]> {
     const compIds = await this.workspace.idsByPattern(componentPattern);
     await pMapSeries(compIds, async (compId) => {
@@ -308,7 +330,7 @@ export class DependenciesMain {
    */
   async getCircularDependencies(includeDeps?: boolean): Promise<string[][]> {
     if (!this.workspace) throw new OutsideWorkspaceError();
-    const graph = await this.graph.getGraphIds();
+    const graph = await this.graph.getGraphIds(undefined, { excludeOutdatedEdgesOfModified: true });
     const cycles = graph.findCycles(undefined, includeDeps);
     // append the first component to the end to make the circular visible in the output
     cycles.forEach((cycle) => cycle.push(cycle[0]));
@@ -699,11 +721,12 @@ export class DependenciesMain {
     ScopeAspect,
     GraphAspect,
     LoggerAspect,
+    IssuesAspect,
   ];
 
   static runtime = MainRuntime;
 
-  static async provider([cli, workspace, depsResolver, devFiles, aspectLoader, scope, graph, loggerMain]: [
+  static async provider([cli, workspace, depsResolver, devFiles, aspectLoader, scope, graph, loggerMain, issues]: [
     CLIMain,
     Workspace,
     DependencyResolverMain,
@@ -712,6 +735,7 @@ export class DependenciesMain {
     ScopeMain,
     GraphMain,
     LoggerMain,
+    IssuesMain,
   ]) {
     const logger = loggerMain.createLogger(DependenciesAspect.id);
     const depsMain = new DependenciesMain(workspace, scope, depsResolver, devFiles, aspectLoader, graph, logger);
@@ -739,6 +763,7 @@ export class DependenciesMain {
     );
 
     ComponentLoader.loadDeps = depsMain.loadDependencies.bind(depsMain);
+    if (workspace) issues.registerAddComponentsIssues(depsMain.addPinnedDependenciesIssues.bind(depsMain));
 
     return depsMain;
   }

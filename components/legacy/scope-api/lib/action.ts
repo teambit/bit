@@ -18,6 +18,16 @@ type ExternalAction = { name: string; execute: Function };
 
 export class ExternalActions {
   static externalActions: ExternalAction[] = [];
+
+  /**
+   * an action registered again under the same name replaces the previous one. each harmony load registers its
+   * actions, and a process that loads harmony more than once must run the actions of the latest load.
+   */
+  static register(externalAction: ExternalAction) {
+    const index = this.externalActions.findIndex((existing) => existing.name === externalAction.name);
+    if (index === -1) this.externalActions.push(externalAction);
+    else this.externalActions[index] = externalAction;
+  }
 }
 
 export async function action(

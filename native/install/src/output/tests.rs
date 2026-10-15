@@ -1,0 +1,64 @@
+use super::{Output, Sink, Style, pretty_time};
+use std::{
+    sync::{Arc, Mutex},
+    time::Duration,
+};
+
+fn recorder() -> (Sink, Arc<Mutex<String>>) {
+    let written = Arc::new(Mutex::new(String::new()));
+    let target = Arc::clone(&written);
+    (Arc::new(move |text: &str| target.lock().unwrap().push_str(text)), written)
+}
+
+#[test]
+fn pretty_time_uses_the_largest_whole_unit() {
+    assert_eq!(pretty_time(Duration::from_millis(5)), "5ms");
+    assert_eq!(pretty_time(Duration::from_nanos(523_456_789)), "523ms");
+    assert_eq!(pretty_time(Duration::from_millis(1_234)), "1s");
+    assert_eq!(pretty_time(Duration::from_millis(75_500)), "1m");
+    assert_eq!(pretty_time(Duration::from_secs(3_700)), "1h");
+}
+
+#[test]
+fn paints_only_with_colors() {
+    let (sink, _) = recorder();
+    assert_eq!(Output::new(false, false, true, Arc::clone(&sink)).paint(Style::Cyan, "x"), "x");
+    assert_eq!(
+        Output::new(true, false, true, sink).paint(Style::Cyan, "x"),
+        "\u{1b}[36mx\u{1b}[39m",
+    );
+}
+
+#[test]
+fn writes_like_ora_without_a_tty() {
+    let (sink, written) = recorder();
+    let output = Output::new(false, false, true, sink);
+    output.status("importing missing objects");
+    output.console("plain");
+    output.success("done", None);
+    output.warning("careful");
+    output.failure("broken");
+    assert_eq!(
+        *written.lock().unwrap(),
+        "- importing missing objects\n  plain\n✔ done\n⚠ careful\n✖ broken\n",
+    );
+}
+
+#[test]
+fn without_a_loader_only_console_messages_print() {
+    let (sink, written) = recorder();
+    let output = Output::new(false, false, false, sink);
+    output.status("importing missing objects");
+    output.console("plain");
+    output.success("done", None);
+    assert_eq!(*written.lock().unwrap(), "plain\n");
+}
+
+#[test]
+fn status_lines_are_not_shown_on_ci() {
+    let (sink, written) = recorder();
+    let output = Output::new(false, false, true, sink).with_ci(true);
+    output.status("loading 1 component(s)");
+    output.success("done", None);
+    assert_eq!(*written.lock().unwrap(), "✔ done\n");
+}

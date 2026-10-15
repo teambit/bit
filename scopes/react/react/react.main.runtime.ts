@@ -109,6 +109,8 @@ export type UsePrettierModifiers = {
   transformers: PrettierConfigTransformer[];
 };
 
+const getReactSchemas = () => [ReactSchema];
+
 export class ReactMain {
   constructor(
     /**
@@ -479,7 +481,7 @@ export class ReactMain {
     }
 
     if (application) application.registerAppType(appType);
-    if (schemaMain) schemaMain.registerSchemaClasses(() => [ReactSchema]);
+    if (schemaMain) schemaMain.registerSchemaClasses(getReactSchemas);
     if (tsAspect) tsAspect.registerApiTransformer([new ReactAPITransformer()]);
 
     return react;
