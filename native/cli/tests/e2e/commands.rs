@@ -6,4 +6,5 @@ mod import;
 mod import_all;
 mod list;
 mod reset;
+mod snap;
 mod tag;

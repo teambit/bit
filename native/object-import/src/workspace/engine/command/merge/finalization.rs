@@ -8,7 +8,6 @@ use super::invalid;
 use crate::workspace::engine::dependency_graph::proof;
 use serde_json::Value;
 use std::{
-    collections::HashSet,
     fs,
     io::{self, Write},
     path::{Path, PathBuf},
@@ -34,17 +33,16 @@ pub(in crate::workspace::engine::command) fn prepare(
     root_components: bool,
     skip_packages: &[String],
 ) -> io::Result<Prepared> {
-    prepare_with(root, inputs, root_components, skip_packages, &HashSet::new())
+    prepare_with(root, inputs, root_components, skip_packages, false)
 }
 
-pub(in crate::workspace::engine::command) fn prepare_tag(
+pub(in crate::workspace::engine::command) fn prepare_publication(
     root: &Path,
     inputs: &[Input<'_>],
     root_components: bool,
     skip_packages: &[String],
-    new_components: &HashSet<String>,
 ) -> io::Result<Prepared> {
-    prepare_with(root, inputs, root_components, skip_packages, new_components)
+    prepare_with(root, inputs, root_components, skip_packages, true)
 }
 
 fn prepare_with(
@@ -52,7 +50,7 @@ fn prepare_with(
     inputs: &[Input<'_>],
     root_components: bool,
     skip_packages: &[String],
-    new_components: &HashSet<String>,
+    allow_missing_packages: bool,
 ) -> io::Result<Prepared> {
     if inputs.len() > 4096 {
         return Err(invalid("merge finalization component budget"));
@@ -74,13 +72,7 @@ fn prepare_with(
                     .any(|id| id == input.identity)
         })
     {
-        packages::prepare(
-            root,
-            input,
-            root_components,
-            new_components.contains(input.identity),
-            &mut prepared,
-        )?;
+        packages::prepare(root, input, root_components, allow_missing_packages, &mut prepared)?;
     }
     #[cfg(not(unix))]
     if !prepared.links.is_empty() {
