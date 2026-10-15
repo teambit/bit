@@ -107,6 +107,37 @@ fn entry_beside_executable_uses_newest_bvm_node() {
 }
 
 #[test]
+fn a_local_build_runs_the_node_cli_of_its_checkout() {
+    let dir = TempDir::new().unwrap();
+    let checkout = dir.path().join("bit");
+    write(&checkout.join("bin/bit.js"), "");
+    write(
+        &checkout.join("node_modules/@teambit/bit/package.json"),
+        r#"{ "name": "@teambit/bit" }"#,
+    );
+    let bvm = bvm(dir.path(), &["22.22.0"]);
+    let environment = Environment {
+        executable: Some(checkout.join("native/target/release/bit")),
+        bvm_dir: Some(bvm.clone()),
+        ..Environment::default()
+    };
+    let cli = entry(find_in(&environment).unwrap());
+    assert_eq!(cli.source, Source::Checkout);
+    assert_eq!(cli.entry, checkout.join("bin/bit.js"));
+    assert_eq!(cli.bit_dir, Some(checkout.join("node_modules/@teambit/bit")));
+    // Without installed dependencies the checkout cannot run: bvm's link serves.
+    fs::remove_dir_all(checkout.join("node_modules")).unwrap();
+    assert_eq!(entry(find_in(&environment).unwrap()).source, Source::BvmLink);
+    // Built elsewhere, the executable has no checkout.
+    let elsewhere = Environment {
+        executable: Some(dir.path().join("target/release/bit")),
+        bvm_dir: Some(bvm),
+        ..Environment::default()
+    };
+    assert_eq!(entry(find_in(&elsewhere).unwrap()).source, Source::BvmLink);
+}
+
+#[test]
 fn bvm_default_link_reports_the_link_directory() {
     let dir = TempDir::new().unwrap();
     let bvm = bvm(dir.path(), &["22.22.0"]);

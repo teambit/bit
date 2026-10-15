@@ -41,10 +41,14 @@ first match wins:
 1. `BIT_NODE_CLI`.
 2. `../node_modules/@teambit/bit/bin/bit` relative to the executable's
    directory. This is the bvm layout once bvm ships this binary as `bin/bit`.
-3. bvm's default link, `<bvm>/links/<DEFAULT_LINK>/node_modules/@teambit/bit/bin/bit`.
+3. The checkout the executable was built in: `<checkout>/bin/bit.js` when the
+   executable is `<checkout>/native/target/<profile>/bit` and the checkout's
+   dependencies are installed. A local build then runs with the Node.js CLI of its
+   own commit, which its native commands reproduce (see [Versions](#versions)).
+4. bvm's default link, `<bvm>/links/<DEFAULT_LINK>/node_modules/@teambit/bit/bin/bit`.
    The bvm directory is `BVM_GLOBALS_DIR`, else `%LOCALAPPDATA%\.bvm` on
    Windows, else `~/.bvm`.
-4. A `bit` on `PATH` that is not this executable, typically bvm's wrapper script.
+5. A `bit` on `PATH` that is not this executable, typically bvm's wrapper script.
 
 The entry runs with `BIT_NODE_BINARY`, else the newest Node in the bvm
 directory the entry lives in, else `node` from `PATH`. That Node's directory
