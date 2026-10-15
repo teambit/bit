@@ -77,15 +77,16 @@ system Rust.
 `devEngines` in `native/package.json` pins the pnpm and Node.js versions, and
 pnpm downloads them when they are missing.
 
-| Script                      | Runs                                                    |
-| --------------------------- | ------------------------------------------------------- |
-| `pnpm run build`            | `cargo build --release -p bit-cli` (thin LTO)           |
-| `pnpm run build:dist`       | `cargo build --profile dist -p bit-cli` (fat LTO)       |
-| `pnpm run build:debug`      | `cargo build -p bit-cli`                                |
-| `pnpm run test`             | `cargo test --workspace`                                |
-| `pnpm run lint`             | `cargo clippy --workspace --all-targets -- -D warnings` |
-| `pnpm run doc`              | `cargo doc --workspace --no-deps`                       |
-| `pnpm run fmt`, `fmt:check` | pnpm's pinned rustfmt over the workspace                |
+| Script                      | Runs                                                                        |
+| --------------------------- | --------------------------------------------------------------------------- |
+| `pnpm run build`            | `cargo build --release -p bit-cli` (thin LTO)                               |
+| `pnpm run build:dist`       | `cargo build --profile dist -p bit-cli` (fat LTO)                           |
+| `pnpm run build:debug`      | `cargo build -p bit-cli`                                                    |
+| `pnpm run test`             | `cargo test --workspace`                                                    |
+| `pnpm run test:e2e`         | the ported e2e cases: `cargo test -p bit-cli --features e2e --test e2e`     |
+| `pnpm run lint`             | `cargo clippy --workspace --all-targets --features bit-cli/e2e -- -D warnings` |
+| `pnpm run doc`              | `cargo doc --workspace --no-deps`                                           |
+| `pnpm run fmt`, `fmt:check` | pnpm's pinned rustfmt over the workspace                                    |
 
 `build` uses thin LTO so an optimized rebuild stays fast. Binaries that are
 shipped (bvm packages, release assets) must come from `build:dist`, which
@@ -97,6 +98,11 @@ pinned engine crates expect but do not commit, into a local copy of that crate,
 never into pnpm's store. Two checks still need rustup: `fmt` and `fmt:check`
 build pnpm's pinned rustfmt fork with a dated nightly, and the perfectionist
 lints (`cargo dylint`) use the nightly toolchain `cargo-dylint` installs.
+
+`test:e2e` runs the cases of the Node.js CLI's e2e suite ported to the native CLI
+([`native/plans/TEST_PORTING.md`](../native/plans/TEST_PORTING.md) tracks them).
+They run the `bit` binary against the released Node.js CLI that
+`native/cli/tests/e2e/bit-version` names, which `bvm install <version>` provides.
 
 ## The JavaScript host
 

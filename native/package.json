@@ -20,7 +20,8 @@
     "build:dist": "pnpm run prepare-engine && cargo build --locked --profile dist -p bit-cli",
     "build:debug": "pnpm run prepare-engine && cargo build --locked -p bit-cli",
     "test": "pnpm run prepare-engine && cargo test --locked --workspace",
-    "lint": "pnpm run prepare-engine && cargo clippy --locked --workspace --all-targets -- -D warnings",
+    "test:e2e": "pnpm run prepare-engine && cargo test --locked -p bit-cli --features e2e --test e2e",
+    "lint": "pnpm run prepare-engine && cargo clippy --locked --workspace --all-targets --features bit-cli/e2e -- -D warnings",
     "doc": "pnpm run prepare-engine && cargo doc --locked --workspace --no-deps",
     "fmt": "node ../scripts/rust/rustfmt.mjs --all",
     "fmt:check": "node ../scripts/rust/rustfmt.mjs --all -- --check"
