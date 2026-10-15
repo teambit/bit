@@ -1501,7 +1501,6 @@ export class IsolatorMain {
         const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[dep.lifecycle];
         const entry = dep.toManifest();
         if (entry) {
-          // a "+" range (e.g. "+^" from env.jsonc) follows the version of the dep. see resolvePlusVersion
           manifest[keyName][entry.packageName] = dep.versionRange
             ? resolvePlusVersion(dep.versionRange, version)
             : version;
@@ -1629,10 +1628,9 @@ export class IsolatorMain {
           id: depId,
           isDependency: true,
         });
-        acc[packageName] =
-          versionWithRange && packageDependency
-            ? resolvePlusVersion(versionWithRange, packageDependency)
-            : versionWithRange || packageDependency;
+        acc[packageName] = versionWithRange
+          ? resolvePlusVersion(versionWithRange, packageDependency, versionWithRange)
+          : packageDependency;
         return acc;
       }, {});
     };

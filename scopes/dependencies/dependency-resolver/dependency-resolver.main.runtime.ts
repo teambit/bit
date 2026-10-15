@@ -36,7 +36,7 @@ import {
 import { ExtensionDataList } from '@teambit/legacy.extension-data';
 import { componentIdToPackageName } from '@teambit/pkg.modules.component-package-name';
 import { DetectorHook } from './detector-hook';
-import { PLUS_VERSIONS } from './plus-version';
+import { isPlusVersion } from './plus-version';
 import type { ProxyConfig, NetworkConfig } from '@teambit/scope.network';
 import { Http } from '@teambit/scope.network';
 import type { Dependency as LegacyDependency } from '@teambit/legacy.consumer-component';
@@ -1556,7 +1556,6 @@ export class DependencyResolverMain {
     });
     data.policy?.forEach((policy) => {
       const policyVersion = policy.value.version;
-      const allowedSpecialChars: string[] = ['-', ...PLUS_VERSIONS];
       if (policyVersion === '*') {
         // this is only valid for packages, not for components.
         const isComp = data.dependencies.find(
@@ -1568,7 +1567,8 @@ as an alternative, you can use "+" to keep the same version installed in the wor
       }
       const isVersionValid = Boolean(
         this.isValidVersionSpecifier(policyVersion) ||
-          allowedSpecialChars.includes(policyVersion) ||
+          policyVersion === '-' ||
+          isPlusVersion(policyVersion) ||
           allowedPrefixes.some((prefix) => policyVersion.startsWith(prefix))
       );
       if (isVersionValid) return;

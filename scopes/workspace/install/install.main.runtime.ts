@@ -58,7 +58,6 @@ import {
   DependencyResolverAspect,
   ComponentDependency,
   ensureHoistedDependencyResolution,
-  isPlusVersion,
   resolvePlusVersion,
 } from '@teambit/dependency-resolver';
 import type { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
@@ -1182,14 +1181,8 @@ export class InstallMain {
       policy.selfPolicy.entries
         .filter(({ force, value }) => force && value.version !== '-')
         .map(({ dependencyId, value }) => {
-          let version = value.version;
           // Resolve "+" version placeholders using workspace dependencies
-          // Similar to WorkspaceManifest._resolvePlusVersions
-          if (isPlusVersion(version)) {
-            const workspaceVersion = workspaceDeps[dependencyId];
-            version = workspaceVersion ? resolvePlusVersion(version, workspaceVersion) : '*';
-          }
-          return [dependencyId, version];
+          return [dependencyId, resolvePlusVersion(value.version, workspaceDeps[dependencyId])];
         })
     );
   }

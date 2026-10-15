@@ -560,7 +560,7 @@ export class WorkspaceManifestFactory {
       const found = currentDeps.findByPkgNameOrCompId(name);
       // If not found, use '*' as fallback
       // Use snapToSemver to convert raw hash versions to valid semver format (0.0.0-{hash})
-      return [name, found?.version ? resolvePlusVersion(version, snapToSemver(found.version)) : '*'];
+      return [name, resolvePlusVersion(version, found?.version && snapToSemver(found.version))];
     });
     return fromPairs(resolved);
   }

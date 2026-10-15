@@ -1227,7 +1227,7 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
 
   private addDepsInfoFromDepsResolver(dependencies: Dependencies, extensions: ExtensionDataList): Dependency[] {
     const cloned = dependencies.getClone();
-    const depsResolverData = extensions.find((ext) => ext.name === 'teambit.dependencies/dependency-resolver');
+    const depsResolverData = extensions.findCoreExtension(Extensions.dependencyResolver);
     if (!depsResolverData) return cloned;
     cloned.forEach((dependency) => {
       if (dependency.packageName) return;
@@ -1248,17 +1248,21 @@ bit import ${this.id()}@${resolvedVersion} --objects --all-history`
    * what happens when a lane is merged and released on the remote.
    */
   private getPeerDepsFromDepsResolver(version: Version, extensions: ExtensionDataList): Dependency[] {
-    const depsResolverData = extensions.find((ext) => ext.name === 'teambit.dependencies/dependency-resolver');
-    const entries: Array<Record<string, any>> = depsResolverData?.data?.dependencies || [];
-    const nonPeerIds = version.getAllDependenciesIds();
-    return entries
-      .filter((entry) => entry.__type === 'component' && entry.lifecycle === 'peer' && entry.componentId)
+    const entries: Array<Record<string, any>> =
+      extensions.findCoreExtension(Extensions.dependencyResolver)?.data?.dependencies || [];
+    const peerEntries = entries.filter(
+      (entry) => entry.__type === 'component' && entry.lifecycle === 'peer' && entry.componentId
+    );
+    if (!peerEntries.length) return [];
+    const runtimeAndDevDeps = [...version.dependencies.get(), ...version.devDependencies.get()];
+    const isRuntimeOrDevDep = (id: ComponentID) => runtimeAndDevDeps.some((dep) => dep.id.isEqualWithoutVersion(id));
+    return peerEntries
       .map((entry) => {
         const id =
           entry.componentId instanceof ComponentID ? entry.componentId : ComponentID.fromObject(entry.componentId);
         return new Dependency(id, [], entry.packageName, entry.versionRange);
       })
-      .filter((dependency) => !nonPeerIds.hasWithoutVersion(dependency.id));
+      .filter((dependency) => !isRuntimeOrDevDep(dependency.id));
   }
 
   // @todo: make sure it doesn't have the same ref twice, once as a version and once as a head

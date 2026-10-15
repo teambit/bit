@@ -70,7 +70,7 @@ export class WorkspaceManifest extends Manifest {
         this.dependencies.devDependencies?.[pkgName] ||
         this.dependencies.peerDependencies?.[pkgName];
       // Fallback to '*' if we can't resolve the version
-      acc[pkgName] = foundVersion ? resolvePlusVersion(version, foundVersion) : '*';
+      acc[pkgName] = resolvePlusVersion(version, foundVersion);
       return acc;
     }, {});
   }

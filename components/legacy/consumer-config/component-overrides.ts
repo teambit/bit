@@ -1,7 +1,7 @@
 import { pickBy, keys, isEmpty, cloneDeep, get, merge } from 'lodash';
 import type { ComponentID } from '@teambit/component-id';
 import {
-  MANUALLY_ADD_DEPENDENCY,
+  PLUS_VERSIONS,
   MANUALLY_REMOVE_DEPENDENCY,
   OVERRIDE_COMPONENT_PREFIX,
   DEPENDENCIES_FIELDS,
@@ -143,8 +143,7 @@ export class ComponentOverrides {
     }, {});
   }
   _isValidVersion(ver: string) {
-    // "+", "+^" and "+~" are placeholders for the resolved version, not a version
-    return !ver.startsWith(MANUALLY_ADD_DEPENDENCY) && ver !== MANUALLY_REMOVE_DEPENDENCY;
+    return !PLUS_VERSIONS.includes(ver) && ver !== MANUALLY_REMOVE_DEPENDENCY;
   }
   getIgnored(field: string): string[] {
     const filtered = pickBy(this.overrides[field] || {}, (dep) => {

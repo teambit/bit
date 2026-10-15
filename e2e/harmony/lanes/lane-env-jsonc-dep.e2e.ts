@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
+import { Extensions } from '@teambit/legacy.constants';
 import { Helper } from '@teambit/legacy.e2e-helper';
 
 /**
@@ -180,29 +181,27 @@ export default new MyEnv();
       );
     });
     it('on the lane, the peer should be the lane snap and keep the "+^" as the range', () => {
-      const comp2Dep = getComp2DepData(comp1DepsOnLane);
-      expect(comp2Dep).to.exist;
-      expect(comp2Dep!.lifecycle).to.equal('peer');
-      expect(comp2Dep!.version).to.equal(comp2LaneSnap);
-      expect(comp2Dep!.versionRange).to.equal('+^');
+      expect(getComp2DepData(comp1DepsOnLane)).to.include({
+        lifecycle: 'peer',
+        version: comp2LaneSnap,
+        versionRange: '+^',
+      });
     });
     describe('after the release', () => {
-      let comp2ReleasedVersion: string;
-      before(() => {
-        const comp2Model = helper.command.catComponent(`${helper.scopes.remote}/comp2`, helper.scopes.remotePath);
-        comp2ReleasedVersion = Object.keys(comp2Model.versions).find(
-          (tag) => comp2Model.versions[tag] === comp2Model.head
-        ) as string;
-      });
+      // comp2 was tagged once (0.0.1) before the lane, so the release tags it as 0.0.2
+      const comp2ReleasedVersion = '0.0.2';
       it('should keep the component peer in the dependency-resolver data, pointing to the new tag', () => {
-        const comp1 = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`, helper.scopes.remotePath);
-        const depsResolver = comp1.extensions.find((e) => e.name === 'teambit.dependencies/dependency-resolver');
-        const comp2Dep = getComp2DepData(depsResolver.data.dependencies);
-        expect(comp2Dep, 'the peer was dropped from the dependency-resolver data').to.exist;
-        expect(comp2Dep!.__type).to.equal('component');
-        expect(comp2Dep!.lifecycle).to.equal('peer');
-        expect(comp2Dep!.version).to.equal(comp2ReleasedVersion);
-        expect(comp2Dep!.versionRange).to.equal('+^');
+        const depsResolverData = helper.command.getAspectsDataFromId(
+          `${helper.scopes.remote}/comp1`,
+          Extensions.dependencyResolver,
+          helper.scopes.remotePath
+        );
+        expect(getComp2DepData(depsResolverData.dependencies), 'the peer was dropped').to.include({
+          __type: 'component',
+          lifecycle: 'peer',
+          version: comp2ReleasedVersion,
+          versionRange: '+^',
+        });
       });
       describe('checking out the released versions in the workspace', () => {
         before(() => {
@@ -216,7 +215,7 @@ export default new MyEnv();
           helper.command.build('comp1');
           const comp1Capsule = helper.command
             .capsuleListParsed()
-            .capsules.find((c: string) => c.includes('comp1')) as string;
+            .capsules.find((capsule: string) => capsule.includes('comp1')) as string;
           const pkgJson = fs.readJsonSync(path.join(comp1Capsule, 'package.json'));
           expect(pkgJson.peerDependencies[comp2PkgName]).to.equal(`^${comp2ReleasedVersion}`);
         });

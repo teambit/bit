@@ -39,6 +39,11 @@ describe('resolvePlusVersion()', () => {
     expect(resolvePlusVersion('+~', `0.0.0-${snap}`)).to.equal(`0.0.0-${snap}`);
     expect(resolvePlusVersion('+', snap)).to.equal(snap);
   });
+  it('should return the fallback when the version was not resolved', () => {
+    expect(resolvePlusVersion('+^', undefined)).to.equal('*');
+    expect(resolvePlusVersion('+', undefined, '+')).to.equal('+');
+    expect(resolvePlusVersion('1.0.0', undefined)).to.equal('1.0.0');
+  });
   it('should not add a prefix to a resolved value that is already a range', () => {
     expect(resolvePlusVersion('+^', '^2.0.0')).to.equal('^2.0.0');
     expect(resolvePlusVersion('+^', '*')).to.equal('*');
