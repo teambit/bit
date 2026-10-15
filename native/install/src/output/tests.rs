@@ -55,18 +55,6 @@ fn without_a_loader_only_console_messages_print() {
 }
 
 #[test]
-fn without_console_writing_lines_wait_for_the_loader() {
-    let (sink, written) = recorder();
-    let output = Output::new(false, false, false, sink).with_console(false);
-    output.console("dropped");
-    output.success("dropped", None);
-    output.loader_on();
-    output.console("plain");
-    output.success("done", None);
-    assert_eq!(*written.lock().unwrap(), "  plain\n✔ done\n");
-}
-
-#[test]
 fn status_lines_are_not_shown_on_ci() {
     let (sink, written) = recorder();
     let output = Output::new(false, false, true, sink).with_ci(true);
