@@ -43,6 +43,24 @@ fn moves_skipped_components_to_details() {
 }
 
 #[test]
+fn warns_for_deprecated_explicit_all_on_head_and_latest() {
+    let result = json!({ "components": [], "failedComponents": [] });
+    for target in ["head", "latest"] {
+        let options = parse(&[target, "-x", "--all"]).unwrap();
+        let report = format(&result, &options, Chalk::new(false)).unwrap();
+        assert!(
+            report.data.starts_with(&format!(
+                "  \"--all\" is deprecated for \"bit checkout {target}\", please omit it.\n"
+            )),
+            "{}",
+            report.data,
+        );
+    }
+    let options = parse(&["head", "-x"]).unwrap();
+    assert!(!format(&result, &options, Chalk::new(false)).unwrap().data.contains("deprecated"));
+}
+
+#[test]
 fn declines_binary_conflicts_and_illegitimate_failures() {
     let options = parse(&["head", "-x"]).unwrap();
     let binary =

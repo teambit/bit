@@ -24,11 +24,6 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = options::parse(&argv[1..]) else {
         return Ok(Outcome::Declined("outside the native checkout grammar".to_string()));
     };
-    // Harmony imports nothing for `main` where the engine reports a version
-    // import, so the progress lines would differ.
-    if options.to == "main" {
-        return Ok(Outcome::Declined("checkout main progress".to_string()));
-    }
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".to_string()));
     };
@@ -53,6 +48,7 @@ struct PreparedCheckout {
     progress: Option<Progress>,
     ids: Vec<String>,
     conflicts: bool,
+    main: bool,
 }
 
 fn prepare(
@@ -71,7 +67,7 @@ fn prepare(
     let progress = Progress::parse(planned.plan.get("progress"))?;
     let ids = installation::component_ids(&planned.plan["result"])?;
     let conflicts = planned.plan["result"]["leftUnresolvedConflicts"] == true;
-    Ok(PreparedCheckout { planned, report, progress, ids, conflicts })
+    Ok(PreparedCheckout { planned, report, progress, ids, conflicts, main: options.to == "main" })
 }
 
 fn execute(
@@ -92,7 +88,7 @@ fn execute(
         prepared.planned,
         &prepared.report,
         |output| {
-            render_progress(output, prepared.progress.as_ref());
+            render_progress(output, prepared.progress.as_ref(), prepared.main);
         },
     )
 }
@@ -104,7 +100,7 @@ fn install_and_report(
     mut prepared: PreparedCheckout,
     installer: Installer,
 ) -> io::Result<Report> {
-    render_progress(output, prepared.progress.as_ref());
+    render_progress(output, prepared.progress.as_ref(), prepared.main);
     workspace_command::commit(&mut prepared.planned, root)?;
     if !prepared.conflicts
         && !prepared.ids.is_empty()
@@ -119,8 +115,8 @@ fn install_and_report(
     Ok(prepared.report)
 }
 
-fn render_progress(output: &Output, progress: Option<&Progress>) {
+fn render_progress(output: &Output, progress: Option<&Progress>, main: bool) {
     if let Some(progress) = progress {
-        progress.render_checkout(output);
+        progress.render_checkout_with(output, main);
     }
 }

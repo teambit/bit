@@ -154,6 +154,12 @@ impl Progress {
 
     /// Print the lines, as the loader does while checkout runs.
     pub fn render_checkout(&self, output: &Output) {
+        self.render_checkout_with(output, false);
+    }
+
+    /// `checkout main` has already imported its target objects during the
+    /// initial latest-on-main fetch; Harmony does not print the second import.
+    pub fn render_checkout_with(&self, output: &Output, main: bool) {
         output.status("switching component version...");
         output.status("importing components");
         let started = Instant::now();
@@ -177,7 +183,9 @@ impl Progress {
         output.success("importing components", Some(started));
         for row in self.imports
             .iter()
-            .filter(|row| row.reason.is_none() || row.reason.as_deref() == Some(REASONS[2]))
+            .filter(|row| {
+                !main && (row.reason.is_none() || row.reason.as_deref() == Some(REASONS[2]))
+            })
         {
             render_import(output, row);
         }

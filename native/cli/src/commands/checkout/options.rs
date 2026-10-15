@@ -75,8 +75,9 @@ fn build(flags: &Map<String, Value>, positionals: &[&str]) -> Option<Options> {
     }
     let to = positionals.first().filter(|to| valid_to(to))?;
     let pattern = positionals.get(1).copied();
-    let all_heads = flag("--all") && matches!(*to, "head" | "latest");
-    if all_heads || pattern.is_some_and(|pattern| !pattern.chars().all(pattern_char)) {
+    if flag("--all") && pattern.is_some()
+        || pattern.is_some_and(|pattern| !pattern.chars().all(pattern_char))
+    {
         return None;
     }
     Some(Options {
