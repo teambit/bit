@@ -71,6 +71,10 @@ Parity is checked against a released Node.js CLI, not against this repository's 
   changed-component lists is not deterministic.
 - Oracle tests that run the Node.js CLI's own functions are opt-in:
   `BIT_TEST_SNAPSHOT_CLI=<@teambit/bit installation> cargo test`.
+- The e2e suite's cases are ported to `cli/tests/e2e/` following
+  [plans/TEST_PORTING.md](plans/TEST_PORTING.md): read it before porting a case or changing a
+  native command an e2e case covers, and tick its boxes as cases land. `pnpm run test:e2e`
+  runs them against the Node.js CLI that `cli/tests/e2e/bit-version` names.
 
 ### Tests
 
@@ -104,10 +108,12 @@ Run from `native/` before every commit:
 
 ```sh
 node ../scripts/rust/rustfmt.mjs --all -- --check   # pnpm's pinned formatter (write: without `-- --check`)
-cargo clippy --locked --workspace --all-targets -- -D warnings
-RUSTFLAGS='-D warnings' cargo dylint --all -- --all-targets --workspace   # perfectionist lints
+cargo clippy --locked --workspace --all-targets --features bit-cli/e2e -- -D warnings
+RUSTFLAGS='-D warnings' cargo dylint --all -- --all-targets --workspace --features bit-cli/e2e   # perfectionist lints
 RUSTDOCFLAGS='-D warnings' cargo doc --locked --workspace --no-deps
 cargo test --locked --workspace --no-fail-fast
+cargo test --locked -p bit-cli --features e2e --test e2e   # the ported e2e cases
+node ../scripts/rust/e2e-port-plan.mjs --check             # the plan lists every e2e case
 ```
 
 `node ../scripts/rust/prepare-pnpm-engine.mjs` prepares pnpm's engine sources once (CI runs it
