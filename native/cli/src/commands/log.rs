@@ -1,6 +1,6 @@
 //! `bit log`: validated local Version history and HTTP remote history in Rust,
-//! with the Node CLI's report and JSON views. File remotes, missing objects
-//! and unusual graph or metadata forms delegate before output.
+//! with the Node CLI's report and JSON views. Missing objects and unusual
+//! graph or metadata forms delegate before output.
 
 pub(super) use table::table;
 
@@ -121,11 +121,6 @@ fn emit(
 }
 
 fn read_remote(root: Option<&Path>, options: &Options<'_>) -> io::Result<Vec<Value>> {
-    // The GraphQL projection has no parent hashes. Node's --parents view cannot
-    // build its graph from those rows either.
-    if options.parents {
-        return Err(decline("remote history has no parents"));
-    }
     let id = options.id.ok_or_else(|| decline("remote log id"))?;
     let cli = NodeCli::find()?;
     let response: Value = Engine::new()?
@@ -138,6 +133,9 @@ fn read_remote(root: Option<&Path>, options: &Options<'_>) -> io::Result<Vec<Val
             "bitDir": cli.bit_dir,
             "bitVersion": cli.version,
         }))?;
+    if options.parents && response["parentsAvailable"] != true {
+        return Err(decline("remote HTTP history has no parents"));
+    }
     Ok(array(response.get("logs"), "remote component logs")?.to_vec())
 }
 

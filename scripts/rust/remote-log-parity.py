@@ -24,6 +24,7 @@ ROWS = [
 ]
 VARIANTS = [(), ("--json",), ("--one-line",), ("--one-line", "--json"),
             ("--full-hash", "--full-message"), ("--show-hidden",)]
+FILE_VARIANTS = [*VARIANTS, ("--parents",), ("--parents", "--json")]
 
 
 class Scope(BaseHTTPRequestHandler):
@@ -49,6 +50,7 @@ def main():
     parser.add_argument("--entry", type=Path, required=True)
     parser.add_argument("--node", type=Path, required=True)
     parser.add_argument("--rust", type=Path, required=True)
+    parser.add_argument("--file-id", help="component id in --source for file:// remote parity")
     args = parser.parse_args()
     if not (args.source / ".bitmap").is_file():
         parser.error("--source must be a Bit workspace")
@@ -62,29 +64,39 @@ def main():
             shutil.copytree(args.source, workspace, symlinks=True)
             config = stage / "globals" / "config"
             config.mkdir(parents=True)
-            (config / "global-remotes.json").write_text(
-                json.dumps({"acme.ui": f"http://127.0.0.1:{server.server_port}"})
-            )
+            remotes = {"acme.ui": f"http://127.0.0.1:{server.server_port}"}
+            cases = [("acme.ui/button", VARIANTS)]
+            if args.file_id:
+                scope_name = args.file_id.split("/", 1)[0]
+                scope = stage / "file-scope"
+                shutil.copytree(args.source / ".bit", scope, symlinks=True)
+                stored_name = json.loads((scope / "scope.json").read_text())["name"]
+                if stored_name != scope_name:
+                    parser.error("--file-id scope does not match --source")
+                remotes[scope_name] = scope.as_uri()
+                cases.append((args.file_id, FILE_VARIANTS))
+            (config / "global-remotes.json").write_text(json.dumps(remotes))
             environment = os.environ.copy()
             environment.update({"CI": "1", "BIT_DISABLE_SPINNER": "true",
                                 "BIT_GLOBALS_DIR": str(stage / "globals"),
                                 "BIT_NODE_CLI": str(args.entry.resolve())})
             for cwd in (stage, workspace):
-                for flags in VARIANTS:
-                    outputs = []
-                    for binary in (args.node, args.rust):
-                        result = subprocess.run(
-                            [str(binary.resolve()), "log", "acme.ui/button", "--remote", *flags],
-                            cwd=cwd, env={**environment, "BIT_NATIVE_TRACE": "1"},
-                            capture_output=True, text=True, timeout=45, check=False,
-                        )
-                        outputs.append(result)
-                    node, rust = outputs
-                    if (node.returncode, node.stdout) != (rust.returncode, rust.stdout):
-                        raise AssertionError(f"{cwd.name} {flags}: Node {node.stdout!r}; Rust {rust.stdout!r}")
-                    if "running `log` natively" not in rust.stderr or "declined" in rust.stderr:
-                        raise AssertionError(f"{cwd.name} {flags}: native route missing: {rust.stderr}")
-                    print(f"{cwd.name} {' '.join(flags) or 'default'}: equal")
+                for component_id, variants in cases:
+                    for flags in variants:
+                        outputs = []
+                        for binary in (args.node, args.rust):
+                            result = subprocess.run(
+                                [str(binary.resolve()), "log", component_id, "--remote", *flags],
+                                cwd=cwd, env={**environment, "BIT_NATIVE_TRACE": "1"},
+                                capture_output=True, text=True, timeout=45, check=False,
+                            )
+                            outputs.append(result)
+                        node, rust = outputs
+                        if (node.returncode, node.stdout) != (rust.returncode, rust.stdout):
+                            raise AssertionError(f"{cwd.name} {component_id} {flags}: Node {node.stdout!r}; Rust {rust.stdout!r}")
+                        if "running `log` natively" not in rust.stderr or "declined" in rust.stderr:
+                            raise AssertionError(f"{cwd.name} {component_id} {flags}: native route missing: {rust.stderr}")
+                        print(f"{cwd.name} {component_id} {' '.join(flags) or 'default'}: equal")
     finally:
         server.shutdown()
         thread.join()

@@ -1,7 +1,10 @@
 //! Bounded HTTP scope acquisition and listing. File scopes stay in the
 //! deferred importer.
 use super::{List, Prepare, RemoteLog, Target, Transport, identity, invalid};
-use crate::command_import::{VirtualRemote, lane};
+use crate::{
+    command_import::{VirtualRemote, lane},
+    workspace::engine::status_models::component_log,
+};
 use bit_client_transfer::{
     GlobalConfig,
     fetch::{self, FetchOptions},
@@ -113,13 +116,16 @@ pub(super) fn log(input: &RemoteLog) -> io::Result<(usize, Value)> {
         return Err(invalid("remote log identity"));
     }
     let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
-    let rows = runtime.block_on(async {
-        let Remote::Http(url) = remotes.resolve(scope, &network).await? else {
-            return Err(invalid("remote log file scope"));
+    let (rows, parents_available) = runtime.block_on(async {
+        let result: io::Result<(Vec<Value>, bool)> = match remotes.resolve(scope, &network).await? {
+            Remote::Http(url) => Ok((network.log(&url, &input.identity).await?, false)),
+            Remote::File(path) => {
+                Ok((component_log::read_file_remote(&path, &input.identity)?, true))
+            }
         };
-        network.log(&url, &input.identity).await
+        result
     })?;
-    Ok((rows.len(), json!({"logs": rows})))
+    Ok((rows.len(), json!({"logs": rows, "parentsAvailable": parents_available})))
 }
 
 async fn fetch_lane(
