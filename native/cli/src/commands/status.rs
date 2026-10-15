@@ -139,14 +139,14 @@ fn read<Prepared>(
     let mut engine = Engine::new()?;
     let context: Value =
         engine.request(&json!({"kind": "statusContext", "root": root, "home": home}))?;
-    let targets = array(context.get("targets"), "targets")?;
-    let capture = capture::capture(&mut engine, root, home, &context, targets)?;
+    let capture = status_capture(&mut engine, root, home, &context)?;
     let compared: Value = engine.request(
         &json!({"kind": "statusCompare", "root": root, "targets": capture.comparisons}),
     )?;
     let issues = issues::collect(root, &context, &capture.components)?
         .ok_or_else(|| decline("status issues need canonical loading"))?;
-    let targets = result_targets(&context, &capture.components, &compared, &issues)?;
+    let targets =
+        result_targets(&context, &capture.components, &capture.invalid, &compared, &issues)?;
     let semver = grammar::snapshot(semver_values(&context, &targets)?.iter().map(String::as_str))
         .ok_or_else(|| decline("status semver grammar limits"))?;
     let current_lane_id = if let Some(id) = context.get("currentLaneId") {
@@ -173,10 +173,28 @@ fn read<Prepared>(
     Ok((result, prepared))
 }
 
+fn status_capture(
+    engine: &mut Engine,
+    root: &Path,
+    home: &Path,
+    context: &Value,
+) -> io::Result<capture::Capture> {
+    let targets = array(context.get("targets"), "targets")?;
+    capture::capture_with(
+        engine,
+        root,
+        home,
+        context,
+        targets,
+        capture::CaptureOptions { missing_status_invalid: true, ..Default::default() },
+    )
+}
+
 /// The rows `statusResult` reports, one per bitmap target.
 fn result_targets(
     context: &Value,
     components: &[Component],
+    invalid: &std::collections::HashMap<String, Value>,
     compared: &Value,
     issues: &[Value],
 ) -> io::Result<Vec<Value>> {
@@ -197,13 +215,20 @@ fn result_targets(
                 .iter()
                 .find(|row| row["id"] == *identity)
                 .map_or_else(|| json!([]), |row| row["issues"].clone());
-            Ok(json!({
+            let mut row = json!({
                 "identity": identity,
                 "version": target["version"],
                 "modified": modified,
                 "dependencies": component.dependencies,
                 "issues": issues,
-            }))
+            });
+            if let Some(error) = identity
+                .as_str()
+                .and_then(|id| invalid.get(id))
+            {
+                row["invalid"] = error.clone();
+            }
+            Ok(row)
         })
         .collect()
 }

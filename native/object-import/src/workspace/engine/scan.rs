@@ -19,7 +19,9 @@ pub(super) fn scan(
     excluded: &[PathBuf],
     workspace_root: bool,
 ) -> io::Result<Vec<String>> {
-    validate(root, excluded)?;
+    if !validate(root, excluded, workspace_root)? {
+        return Ok(Vec::new());
+    }
     let mut scan = Scan {
         root,
         excluded,
@@ -39,16 +41,18 @@ pub(super) fn scan(
     scan.paths.sort_by(|left, right| left.encode_utf16().cmp(right.encode_utf16()));
     Ok(scan.paths)
 }
-fn validate(root: &Path, excluded: &[PathBuf]) -> io::Result<()> {
+fn validate(root: &Path, excluded: &[PathBuf], workspace_root: bool) -> io::Result<bool> {
     path(root)?;
     count(excluded.len())?;
     for directory in excluded {
         path(directory)?;
     }
-    if !fs::symlink_metadata(root)?.is_dir() {
-        return Err(invalid("workspace scan root type"));
+    match fs::symlink_metadata(root) {
+        Ok(metadata) if metadata.is_dir() => Ok(true),
+        Err(error) if error.kind() == io::ErrorKind::NotFound && !workspace_root => Ok(false),
+        Ok(_) => Err(invalid("workspace scan root type")),
+        Err(error) => Err(error),
     }
-    Ok(())
 }
 impl Scan<'_> {
     fn entry(&mut self, entry: &fs::DirEntry) -> io::Result<()> {
