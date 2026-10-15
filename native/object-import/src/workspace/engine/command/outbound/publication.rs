@@ -10,6 +10,7 @@ use std::{
 };
 
 struct Component {
+    unchanged: bool,
     model_hash: String,
     model_before: Vec<u8>,
     model_after: Vec<u8>,
@@ -65,6 +66,7 @@ pub(super) fn prepare(
     let components = selected
         .iter()
         .map(|item| Component {
+            unchanged: item.labels.is_empty(),
             model_hash: item.model.hash.clone(),
             model_before: item.model.before.clone(),
             model_after: item.model.after.clone(),
@@ -133,6 +135,7 @@ fn prepare_bitmap(
     let original = fs::read(input.root.join(".bitmap"))?;
     let identities = selected
         .iter()
+        .filter(|item| !item.labels.is_empty())
         .map(|item| (item.scope.clone(), item.name.clone()))
         .collect::<Vec<_>>();
     super::super::bitmap::prepare_export_scopes(&input.root, original, &identities)
@@ -194,7 +197,7 @@ impl Prepared {
 
     pub(super) fn stage_history(&self) -> io::Result<()> {
         let store = Store::new(self.root.join(".bit/objects"), None)?;
-        for item in &self.components {
+        for item in self.components.iter().filter(|item| !item.unchanged) {
             store.write(&item.history_hash, &item.history)?;
         }
         Ok(())
@@ -252,7 +255,7 @@ impl Prepared {
 
     fn publish(self) -> io::Result<()> {
         let store = Store::new(self.root.join(".bit/objects"), None)?;
-        for item in &self.components {
+        for item in self.components.iter().filter(|item| !item.unchanged) {
             store.write(&item.model_hash, &item.model_after)?;
             store.write(&item.history_hash, &item.history)?;
         }
@@ -271,6 +274,7 @@ impl Prepared {
 fn prepare_staged_config(bytes: &[u8], selected: &[Selected], strict: bool) -> io::Result<Vec<u8>> {
     let identities = selected
         .iter()
+        .filter(|item| !item.labels.is_empty())
         .map(|item| (item.scope.clone(), item.name.clone()))
         .collect::<Vec<_>>();
     prepare_staged_config_ids(bytes, &identities, strict)

@@ -1,6 +1,7 @@
-//! Select staged, already-scoped main-lane components and freeze their
-//! compressed object closure before any remote side effect.
+//! Select already-scoped main-lane components and freeze their compressed
+//! object closure, or a zero-object repeat export, before remote side effects.
 mod all_versions;
+mod repeat;
 
 use super::{Prepare, invalid};
 use crate::transfer::{self, Body, collection};
@@ -56,12 +57,14 @@ pub(super) fn select(input: &Prepare) -> io::Result<Vec<Selected>> {
         return Err(invalid("outbound lane index"));
     }
     let rows = index["components"].as_array().ok_or_else(|| invalid("outbound index"))?;
-    let candidates = if input.options.all || input.options.all_versions {
-        all_rows(root, rows)?
-    } else {
-        staged_rows(root, rows)?
-    };
-    let selected = requested(&input.ids, candidates)?;
+    let candidates =
+        if input.options.all || input.options.all_versions || !input.ids.is_empty() {
+            all_rows(root, rows)?
+        } else {
+            staged_rows(root, rows)?
+        };
+    let selected =
+        requested(&input.ids, candidates, input.options.all || input.options.all_versions)?;
     let mut components = Vec::new();
     for (row, model) in selected {
         let component = select_one(input, &row, model)?;
@@ -87,14 +90,18 @@ fn staged_rows(root: &Path, rows: &[Value]) -> io::Result<Vec<(Value, Value)>> {
     Ok(staged)
 }
 
-fn requested(ids: &[String], staged: Vec<(Value, Value)>) -> io::Result<Vec<(Value, Value)>> {
+fn requested(
+    ids: &[String],
+    staged: Vec<(Value, Value)>,
+    all_versions: bool,
+) -> io::Result<Vec<(Value, Value)>> {
     if ids.is_empty() {
         return Ok(staged);
     }
     let mut chosen: Vec<(Value, Value)> = Vec::new();
     for id in ids {
         if let Some(scope) = scope_pattern(id, &staged) {
-            add_scope(&mut chosen, &staged, scope);
+            add_scope(&mut chosen, &staged, scope, all_versions);
             continue;
         }
         let component = find_requested(&staged, id)?;
@@ -109,10 +116,15 @@ fn requested(ids: &[String], staged: Vec<(Value, Value)>) -> io::Result<Vec<(Val
     Ok(chosen)
 }
 
-fn add_scope(chosen: &mut Vec<(Value, Value)>, candidates: &[(Value, Value)], scope: &str) {
+fn add_scope(
+    chosen: &mut Vec<(Value, Value)>,
+    candidates: &[(Value, Value)],
+    scope: &str,
+    all_versions: bool,
+) {
     for component in candidates
         .iter()
-        .filter(|(row, _)| row["id"]["scope"] == scope)
+        .filter(|(row, model)| row["id"]["scope"] == scope && (all_versions || has_staged(model)))
     {
         if !chosen
             .iter()
@@ -173,11 +185,7 @@ fn select_one(input: &Prepare, row: &Value, mut model: Value) -> io::Result<Sele
     let root = &input.root;
     let identity = identity(row, &model)?;
     let objects_dir = root.join(".bit/objects");
-    let staged = if input.options.all || input.options.all_versions {
-        all_versions::select(&model, &objects_dir)?
-    } else {
-        staged(&model)?
-    };
+    let staged = select_versions(input, &model, &objects_dir)?;
     let model_before = transfer::object::repository(
         &objects_dir,
         crate::merge_history::hash(&identity.model_hash)?,
@@ -189,9 +197,14 @@ fn select_one(input: &Prepare, row: &Value, mut model: Value) -> io::Result<Sele
     let history =
         history(&objects_dir, &identity.scope, &identity.name, &staged.hashes, &history_hash)?;
     let host = super::remote::configured_host(input, &identity.scope)?;
-    clear_and_mark_exported(&mut model, &identity.scope, &host, &input.transport.export_date)?;
-    let model_after = encode(&identity.model_hash, "Component", &model)?;
-    let objects = collect(&objects_dir, &identity.model_hash, &model_after, &staged.hashes)?;
+    let (model_after, objects) = if staged.hashes.is_empty() {
+        (model_before.clone(), Vec::new())
+    } else {
+        clear_and_mark_exported(&mut model, &identity.scope, &host, &input.transport.export_date)?;
+        let model_after = encode(&identity.model_hash, "Component", &model)?;
+        let objects = collect(&objects_dir, &identity.model_hash, &model_after, &staged.hashes)?;
+        (model_after, objects)
+    };
     Ok(Selected {
         scope: identity.scope,
         name: identity.name,
@@ -202,6 +215,17 @@ fn select_one(input: &Prepare, row: &Value, mut model: Value) -> io::Result<Sele
         labels: staged.labels,
         objects,
     })
+}
+
+fn select_versions(input: &Prepare, model: &Value, objects_dir: &Path) -> io::Result<Staged> {
+    let staged = if input.options.all || input.options.all_versions {
+        all_versions::select(model, objects_dir)?
+    } else if has_staged(model) {
+        staged(model)?
+    } else {
+        repeat::select(model)?
+    };
+    Ok(staged)
 }
 
 fn identity(row: &Value, model: &Value) -> io::Result<Identity> {

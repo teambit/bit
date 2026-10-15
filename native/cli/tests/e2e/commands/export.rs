@@ -55,6 +55,89 @@ fn selected_staged_export_matches_node() {
 }
 
 #[test]
+fn selected_unmodified_component_matches_node() {
+    let helper = tagged_bar_foo();
+    helper.run("export bar/foo");
+    if let Some(destination) = std::env::var_os("BIT_NATIVE_EXPORT_REPEAT_BENCH_FIXTURE") {
+        let destination = std::path::PathBuf::from(destination);
+        assert!(!destination.exists());
+        fs::create_dir_all(&destination).unwrap();
+        setup::copy_dir(&helper.scopes.local_path, &destination.join("workspace"));
+        setup::copy_dir(&helper.scopes.remote_path, &destination.join("remote"));
+    }
+    let remote_before = helper.clone_remote_scope();
+    let node_root = helper.clone_workspace();
+    let node =
+        Helper::cmd_in_with(&node_root, "export bar/foo", &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{}", node.stderr);
+    let node_remote = helper.clone_remote_scope();
+    helper.restore_remote_scope(&remote_before);
+    let native = helper.native_run("export bar/foo");
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(
+        remote_index_by_identity(&helper.scopes.remote_path),
+        remote_index_by_identity(&node_remote),
+    );
+    assert_eq!(object_names(&helper.scopes.remote_path), object_names(&node_remote));
+    for path in [".bitmap", ".bit/index.json", ".bit/scope.json"] {
+        let native_bytes = fs::read_to_string(helper.scopes.local_path.join(path)).unwrap();
+        let node_bytes = fs::read_to_string(node_root.join(path)).unwrap();
+        let native_json = if path == ".bitmap" {
+            parse(&native_bytes[native_bytes.find('{').unwrap()..])
+        } else {
+            parse(&native_bytes)
+        };
+        let node_json = if path == ".bitmap" {
+            parse(&node_bytes[node_bytes.find('{').unwrap()..])
+        } else {
+            parse(&node_bytes)
+        };
+        assert_eq!(native_json, node_json, "{path}");
+    }
+    let node_status =
+        Helper::cmd_in_with(&node_root, "status --json", &[("BIT_NATIVE", OsStr::new("off"))]);
+    let native_status = helper.native_run("status --json");
+    assert_eq!(parse(&native_status.stdout), parse(&node_status.stdout));
+}
+
+#[test]
+fn mixed_staged_and_unmodified_selection_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(2, true, "");
+    helper.tag_without_build("", "");
+    helper.run("export comp2");
+    let remote_before = helper.clone_remote_scope();
+    let node_root = helper.clone_workspace();
+    let command = "export comp2 comp1";
+    let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{}", node.stderr);
+    let node_remote = helper.clone_remote_scope();
+    helper.restore_remote_scope(&remote_before);
+    let native = helper.native_run(command);
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(
+        remote_index_by_identity(&helper.scopes.remote_path),
+        remote_index_by_identity(&node_remote),
+    );
+    assert_eq!(object_names(&helper.scopes.remote_path), object_names(&node_remote));
+}
+
+#[test]
+fn selected_unmodified_export_to_recreated_remote_matches_node() {
+    let helper = exported_to_a_recreated_remote();
+    let node_root = helper.clone_workspace();
+    let node =
+        Helper::cmd_in_with(&node_root, "export comp1", &[("BIT_NATIVE", OsStr::new("off"))]);
+    let native = helper.native_run("export comp1");
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+}
+
+#[test]
 fn multiple_selected_components_match_node() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
@@ -616,12 +699,10 @@ fn reexporting_by_name_without_scope() {
 }
 
 /// Native `bit export` declines an empty workspace (`commandOutboundPrepare: No such file or
-/// directory`), an unchanged `export <id>` (`outbound requested component is not staged`),
-/// and a remote init with `--shared` (`outbound file remote group ownership
+/// directory`), and a remote init with `--shared` (`outbound file remote group ownership
 /// requires canonical export`); native `bit import` declines the e2e workspace (`status
 /// configured extensions require Harmony`).
 mod known_failures {
-    use super::tagged_bar_foo;
     use crate::{
         allow_known_failure,
         helper::{FOO_FIXTURE, Helper},
@@ -658,16 +739,6 @@ mod known_failures {
         let import = format!("import {remote}/bar/foo");
         allow_known_failure!(helper.native_output_or_known(&import));
         assert_eq!(fs::metadata(&png).unwrap().len(), size);
-    }
-
-    /// export a component, do not modify it and export again to the same scope › should not
-    /// export the component
-    #[test]
-    fn an_unmodified_component_is_not_exported_again() {
-        let helper = tagged_bar_foo();
-        helper.run("export bar/foo");
-        let output = allow_known_failure!(helper.native_output_or_known("export bar/foo"));
-        assert!(output.contains("nothing to export"), "{output}");
     }
 
     /// `bit init --bare --shared <group>` as the remote scope.
