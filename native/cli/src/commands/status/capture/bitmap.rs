@@ -1,6 +1,19 @@
 //! Bitmap states that need the canonical capture for write commands.
 
+use super::{Capture, missing, text};
 use serde_json::Value;
+use std::io;
+
+pub(super) fn capture_special(
+    context: &Value,
+    target: &Value,
+    captured: &mut Capture,
+) -> io::Result<bool> {
+    if missing::status_removed(target, captured)? {
+        return Ok(true);
+    }
+    missing::status_pending(context, target, captured)
+}
 
 pub(super) fn has_special_state(targets: &[Value]) -> bool {
     targets
@@ -10,4 +23,23 @@ pub(super) fn has_special_state(targets: &[Value]) -> bool {
                 || target["softTagged"] == true
                 || target["locallyRemoved"] == true
         })
+}
+
+pub(super) fn record_remote(
+    enabled: bool,
+    target: &Value,
+    extensions: &[Value],
+    captured: &mut Capture,
+) -> io::Result<()> {
+    if enabled
+        && extensions
+            .iter()
+            .any(|extension| {
+                extension["name"] == "teambit.component/remove"
+                    && extension["config"]["removed"] == true
+            })
+    {
+        captured.remotely_removed.push(text(target.get("identity"))?.to_string());
+    }
+    Ok(())
 }

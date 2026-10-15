@@ -17,6 +17,36 @@ pub(super) fn status_removed(target: &Value, captured: &mut Capture) -> io::Resu
     Ok(true)
 }
 
+pub(super) fn status_pending(
+    context: &Value,
+    target: &Value,
+    captured: &mut Capture,
+) -> io::Result<bool> {
+    if target["scoped"] != true || target["version"].as_str().is_none_or(str::is_empty) {
+        return Ok(false);
+    }
+    let identity = text(target.get("identity"))?;
+    let models = context["models"].as_array().ok_or_else(|| decline("status models"))?;
+    if models
+        .iter()
+        .any(|model| {
+            let (Some(scope), Some(name)) = (model["scope"].as_str(), model["name"].as_str())
+            else {
+                return false;
+            };
+            format!("{scope}/{name}") == identity
+        })
+    {
+        return Ok(false);
+    }
+    record_status_invalid(
+        target,
+        json!({"isUserError":true,"name":"ComponentsPendingImport"}),
+        captured,
+    )?;
+    Ok(true)
+}
+
 pub(super) fn capture(
     root: &Path,
     enabled: bool,

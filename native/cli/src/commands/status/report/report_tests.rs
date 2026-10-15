@@ -158,6 +158,6 @@ fn collapses_auto_tag_pending_components() {
 
 #[test]
 fn declines_sections_left_to_node() {
-    let fields = json!({"remotelySoftRemoved": ["remote/one"]});
+    let fields = json!({"pendingUpdatesFromMain": ["remote/one"]});
     assert!(report(&result(&fields), &context(), &Flags::default(), Chalk::new(false)).is_err());
 }

@@ -2,9 +2,9 @@
 //! directory holding the local workspace and the remote scopes, and runs `bit` from
 //! `native/` with the Node.js CLI behind it.
 
+pub(crate) mod config;
 pub use fixtures::FOO_FIXTURE;
 
-mod config;
 mod fixtures;
 mod setup;
 

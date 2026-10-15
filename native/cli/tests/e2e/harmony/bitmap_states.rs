@@ -1,6 +1,6 @@
 //! Status sections derived from durable bitmap state.
 
-use crate::helper::{FOO_FIXTURE, Helper, parse};
+use crate::helper::{FOO_FIXTURE, Helper, config, parse};
 use std::ffi::OsStr;
 
 fn parity(helper: &Helper) -> serde_json::Value {
@@ -89,6 +89,57 @@ fn a_dependent_reports_issues_after_its_dependency_is_soft_removed() {
             .as_array()
             .unwrap()
             .is_empty(),
+    );
+    text_parity(&helper);
+}
+
+#[test]
+fn a_scoped_component_without_local_objects_is_pending_import() {
+    let helper = Helper::new();
+    helper.re_init_workspace_with(false);
+    helper.create_component_bar_foo(FOO_FIXTURE);
+    helper.add_component_bar_foo();
+    let bitmap_path = helper.scopes.local_path.join(".bitmap");
+    let mut bitmap = config::read_jsonc(&bitmap_path);
+    let entry = bitmap
+        .as_object_mut()
+        .unwrap()
+        .iter_mut()
+        .find(|(key, _)| *key != "$schema-version")
+        .unwrap()
+        .1;
+    entry["scope"] = serde_json::json!("my-scope");
+    entry["version"] = serde_json::json!("0.0.1");
+    config::write_json(&bitmap_path, &bitmap, b"    ");
+
+    let status = parity(&helper);
+    assert_eq!(status["importPendingComponents"], serde_json::json!(["my-scope/bar/foo"]));
+    assert_eq!(status["invalidComponents"][0]["error"]["name"], "ComponentsPendingImport");
+    text_parity(&helper);
+}
+
+#[test]
+fn an_imported_component_deleted_on_the_remote_is_reported() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(2, true, "");
+    helper.tag_without_build("", "");
+    helper.run("export");
+    helper.run("delete comp2 --silent");
+    helper.output_file("comp1/index.js", "");
+    helper.tag_without_build("", "");
+    helper.run("export");
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    helper.run(&format!("import {}/comp2 -x", helper.scopes.remote));
+
+    let status = parity(&helper);
+    assert_eq!(
+        status["remotelySoftRemoved"]
+            .as_array()
+            .unwrap()
+            .len(),
+        1,
     );
     text_parity(&helper);
 }
