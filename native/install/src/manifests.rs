@@ -12,6 +12,7 @@ mod dedupe;
 mod deps;
 mod env_root;
 mod intersect;
+mod load_order;
 mod root_components;
 mod versions;
 

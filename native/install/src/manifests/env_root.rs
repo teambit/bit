@@ -33,7 +33,7 @@ pub(super) struct EnvRoot {
 
 fn collect(input: &ManifestInput<'_>) -> IndexMap<String, PeerVersions> {
     let mut peers: IndexMap<String, PeerVersions> = IndexMap::new();
-    for component in input.components {
+    for component in super::load_order::load_order(input.components) {
         let Some(policy) = input.policies.envs.get(&component.env_id) else { continue };
         let env = without_version(&component.env_id).to_string();
         for entry in &policy.self_policy {
