@@ -3,6 +3,7 @@
 pub use batch::Batch;
 
 mod batch;
+mod bitmap;
 mod dependents;
 mod history;
 mod new_model;
@@ -10,6 +11,7 @@ mod remote;
 #[cfg(test)]
 mod tests;
 
+use bitmap::bitmap_key;
 use history::{lane_history, pending_histories, version_history};
 use new_model::remove_new_model;
 use remote::{exported_head, reached_boundary};
@@ -63,12 +65,13 @@ struct BitmapState {
     lane_name: String,
     exported: bool,
     staged_config: Option<Value>,
+    restored: bool,
 }
 
 impl BitmapState {
     fn load(root: &Path, scope: &str, name: &str) -> io::Result<Self> {
         let before = fs::read(root.join(".bitmap"))?;
-        let document = crate::recovery::jsonc::parse(&before)?;
+        let mut document = crate::recovery::jsonc::parse(&before)?;
         let rows = document.as_object().ok_or_else(|| invalid("lane reset bitmap"))?;
         let lane = &rows["_bit_lane"];
         let lane_scope = lane["id"]["scope"]
@@ -81,7 +84,17 @@ impl BitmapState {
             .to_owned();
         let exported =
             lane["exported"].as_bool().ok_or_else(|| invalid("lane reset export state"))?;
-        let key = bitmap_key(rows, scope, name)?;
+        let (key, restored) = if let Ok(key) = bitmap_key(rows, scope, name) {
+            (key, false)
+        } else {
+            let restored =
+                crate::reset_config::removed_lane_row(root, &lane_scope, &lane_name, scope, name)?
+                    .ok_or_else(|| invalid("lane reset bitmap identity absent"))?;
+            let rows = document.as_object_mut().ok_or_else(|| invalid("lane reset bitmap"))?;
+            bitmap::insert(rows, name, restored)?;
+            (bitmap_key(rows, scope, name)?, true)
+        };
+        let rows = document.as_object().ok_or_else(|| invalid("lane reset bitmap"))?;
         if rows[&key]["config"]["teambit.component/remove"]["removed"] == true
             || rows[&key]["isAvailableOnCurrentLane"] == false
         {
@@ -89,11 +102,11 @@ impl BitmapState {
         }
         let staged_config =
             crate::reset_config::read(root, Some((&lane_scope, &lane_name)), scope, name)?;
-        Ok(Self { before, document, key, lane_scope, lane_name, exported, staged_config })
+        Ok(Self { before, document, key, lane_scope, lane_name, exported, staged_config, restored })
     }
 
     fn validate_head(&self, head: &str) -> io::Result<()> {
-        if self.document[&self.key]["version"] != head {
+        if !self.restored && self.document[&self.key]["version"] != head {
             return Err(invalid("lane reset bitmap head mismatch"));
         }
         Ok(())
@@ -174,7 +187,7 @@ impl Repository {
             .ok_or_else(|| invalid("lane reset head"))?
             .to_owned();
         crate::merge_history::hash(&current)?;
-        let remote_head = exported_head(root, bitmap, scope, name, &model)?;
+        let remote_head = exported_head(root, bitmap, scope, name)?;
         Ok(Self {
             objects,
             lane_scope: bitmap.lane_scope.clone(),
@@ -379,27 +392,6 @@ fn changed(objects: &Path, hash: &str, kind: &str, value: &Value) -> io::Result<
         before: fs::read(object_path(objects, hash))?,
         after: Some(outbound::encode_object(hash, kind, value)?),
     })
-}
-
-fn bitmap_key(
-    rows: &serde_json::Map<String, Value>,
-    scope: &str,
-    name: &str,
-) -> io::Result<String> {
-    let mut found = None;
-    for (key, row) in rows {
-        if key.starts_with('$') || key == "_bit_lane" || !row.is_object() {
-            continue;
-        }
-        let row_scope = row["scope"]
-            .as_str()
-            .filter(|scope| !scope.is_empty())
-            .or_else(|| row["defaultScope"].as_str());
-        if row_scope == Some(scope) && row["name"] == name && found.replace(key.clone()).is_some() {
-            return Err(invalid("lane reset ambiguous bitmap identity"));
-        }
-    }
-    found.ok_or_else(|| invalid("lane reset bitmap identity absent"))
 }
 
 fn indexed_hash(index: &Value, section: &str, scope: &str, name: &str) -> io::Result<String> {

@@ -4,7 +4,7 @@
 mod tests;
 
 use super::{
-    BytesChange, ObjectChange, Plan, bitmap_key, changed, history::batch_ids, indexed_hash,
+    BytesChange, ObjectChange, Plan, bitmap, bitmap_key, changed, history::batch_ids, indexed_hash,
     invalid, is_lane_origin, object_path, outbound, pending_histories, remote::remote_head,
     unique_position,
 };
@@ -224,11 +224,19 @@ fn project_bitmap(root: &Path, items: &[Plan]) -> io::Result<(Vec<u8>, Vec<u8>)>
         let (scope, name) =
             item.identity.split_once('/').ok_or_else(|| invalid("lane batch identity"))?;
         let rows = bitmap.as_object_mut().ok_or_else(|| invalid("lane batch bitmap"))?;
-        let key = bitmap_key(rows, scope, name)?;
+        let single = crate::recovery::jsonc::parse(&item.bitmap.after)?;
+        let key = if let Ok(key) = bitmap_key(rows, scope, name) {
+            key
+        } else {
+            let single_rows =
+                single.as_object().ok_or_else(|| invalid("lane batch projected bitmap"))?;
+            let single_key = bitmap_key(single_rows, scope, name)?;
+            bitmap::insert(rows, &single_key, single[&single_key].clone())?;
+            bitmap_key(rows, scope, name)?
+        };
         let row = rows[&key].as_object_mut().ok_or_else(|| invalid("lane batch bitmap row"))?;
         row.insert("version".into(), Value::String(item.bitmap.version.clone()));
         row.shift_remove("nextVersion");
-        let single = crate::recovery::jsonc::parse(&item.bitmap.after)?;
         crate::reset_config::restore(row, single[&key].get("config").cloned());
         if item.index.is_some() {
             row.shift_remove("onLanesOnly");

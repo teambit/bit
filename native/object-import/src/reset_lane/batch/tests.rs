@@ -196,5 +196,68 @@ fn publishes_two_lane_resets_once_and_checks_external_dependents() {
     assert_eq!(bitmap["gamma"]["version"], "");
     assert!(bitmap["gamma"].get("onLanesOnly").is_none());
     assert!(bitmap["gamma"].get("isAvailableOnCurrentLane").is_none());
+    let removed = "6666666666666666666666666666666666666666";
+    object(
+        &root,
+        removed,
+        "Version",
+        &json!({"parents":[mains[0]],
+        "origin":{"lane":{"scope":"scope","name":"work","hash":lane_hash}},
+        "batchId":"batch-removed"}),
+    );
+    object(
+        &root,
+        &lane_hash,
+        "Lane",
+        &json!({"name":"work","scope":"scope",
+        "components":[{"id":{"scope":"scope","name":"alpha"},"head":removed}]}),
+    );
+    object(
+        &root,
+        &history_hash,
+        "LaneHistory",
+        &json!({"name":"work","scope":"scope",
+        "laneHash":lane_hash,"history":{"batch-removed":{"components":[format!("scope/alpha@{removed}")]}}}),
+    );
+    fs::write(
+        root.join(".bit/refs/remotes/scope/work"),
+        serde_json::to_vec(&json!([{"id":{"scope":"scope","name":"alpha"},"head":mains[0]}]))
+            .expect("remote head"),
+    )
+    .expect("write remote head");
+    let mut bitmap =
+        crate::recovery::jsonc::parse(&fs::read(root.join(".bitmap")).expect("bitmap"))
+            .expect("parse bitmap");
+    bitmap
+        .as_object_mut()
+        .expect("bitmap rows")
+        .shift_remove("alpha");
+    fs::write(root.join(".bitmap"), crate::inspection::render_bitmap(&bitmap).expect("bitmap"))
+        .expect("write bitmap");
+    fs::create_dir_all(root.join(".bit/staged-config/scope")).expect("staged directory");
+    fs::write(
+        root.join(".bit/staged-config/scope/work.json"),
+        serde_json::to_vec(&json!([{"id":{"scope":"scope","name":"alpha","version":removed},
+            "componentMapObject":{"mainFile":"index.js","rootDir":"alpha",
+                "isAvailableOnCurrentLane":true},
+            "config":{"teambit.component/remove":{"removed":true,"__specific":true}}}]))
+        .expect("staged config"),
+    )
+    .expect("write staged config");
+    Batch::prepare(&root, false)
+        .expect("removed component batch")
+        .commit("2026-10-15-9-0-4")
+        .expect("removed component commit");
+    let bitmap = crate::recovery::jsonc::parse(&fs::read(root.join(".bitmap")).expect("bitmap"))
+        .expect("parse bitmap");
+    assert_eq!(bitmap["alpha"]["version"], "1.0.0");
+    assert_eq!(bitmap["alpha"]["config"], json!({"teambit.component/remove":{"removed":true}}));
+    let keys = bitmap
+        .as_object()
+        .expect("bitmap rows")
+        .keys()
+        .map(String::as_str)
+        .collect::<Vec<_>>();
+    assert_eq!(keys[..2], ["alpha", "beta"]);
     fs::remove_dir_all(root).expect("remove fixture");
 }

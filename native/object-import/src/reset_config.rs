@@ -39,6 +39,42 @@ pub(crate) fn read(
         .transpose()
 }
 
+pub(crate) fn removed_lane_row(
+    root: &Path,
+    lane_scope: &str,
+    lane_name: &str,
+    scope: &str,
+    name: &str,
+) -> io::Result<Option<Value>> {
+    let path = file(root, Some((lane_scope, lane_name)))?;
+    let bytes = fs::read(path)?;
+    let rows: Value = serde_json::from_slice(&bytes)?;
+    let rows = rows.as_array().ok_or_else(|| invalid("reset removed staged rows"))?;
+    let staged = rows
+        .iter()
+        .find(|row| row["id"]["scope"] == scope && row["id"]["name"] == name);
+    let Some(staged) =
+        staged.filter(|row| row["config"]["teambit.component/remove"]["removed"] == true)
+    else {
+        return Ok(None);
+    };
+    let map =
+        staged["componentMapObject"].as_object().ok_or_else(|| invalid("reset removed map"))?;
+    let main_file = map
+        .get("mainFile")
+        .and_then(Value::as_str)
+        .ok_or_else(|| invalid("reset removed main file"))?;
+    let root_dir = map
+        .get("rootDir")
+        .and_then(Value::as_str)
+        .ok_or_else(|| invalid("reset removed root dir"))?;
+    let version =
+        staged["id"]["version"].as_str().ok_or_else(|| invalid("reset removed version"))?;
+    Ok(Some(serde_json::json!({
+        "name":name,"scope":scope,"version":version,"mainFile":main_file,"rootDir":root_dir,
+    })))
+}
+
 pub(crate) fn restore(row: &mut Map<String, Value>, config: Option<Value>) {
     if !row.contains_key("config")
         && let Some(config) = config

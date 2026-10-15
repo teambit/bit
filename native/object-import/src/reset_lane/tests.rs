@@ -121,6 +121,11 @@ fn resets_linear_lane_snaps_and_refuses_stale_publication() {
     let exported = Plan::prepare(&root, identity, false, true).expect("exported plan");
     assert_eq!(exported.labels(), [second]);
     assert_eq!(exported.selection.next.as_deref(), Some(first));
+    fs::write(root.join(".bit/refs/remotes/scope/work"), b"[]")
+        .expect("remove exported component ref");
+    let without_remote = Plan::prepare(&root, identity, false, true).expect("plan without ref");
+    assert_eq!(without_remote.labels(), [first, second]);
+    assert_eq!(without_remote.selection.next.as_deref(), Some(main));
     fs::write(root.join(".bitmap"), bitmap_before).expect("restore unexported bitmap");
     let plan = Plan::prepare(&root, identity, false, true).expect("plan");
     let stale = Plan::prepare(&root, identity, false, true).expect("stale plan");
