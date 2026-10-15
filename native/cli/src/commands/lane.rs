@@ -37,6 +37,14 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
 }
 
+#[cfg_attr(
+    dylint_lib = "perfectionist",
+    expect(
+        perfectionist::overly_long_function,
+        perfectionist::too_many_local_bindings,
+        reason = "Existing CLI orchestration is retained until its operation is decomposed"
+    )
+)]
 fn merge(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     let Some(options) = options::parse(&argv[2..]) else {
         return Ok(Outcome::Declined("outside the native lane merge grammar".to_string()));

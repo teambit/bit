@@ -20,6 +20,15 @@ use std::{env, ffi::OsString, fs, io, path::Path};
 
 pub const COMMAND: Command = Command { name: "merge", aliases: &[], run };
 
+#[cfg_attr(
+    dylint_lib = "perfectionist",
+    expect(
+        perfectionist::excessive_cognitive_complexity,
+        perfectionist::overly_long_function,
+        perfectionist::too_many_local_bindings,
+        reason = "Existing CLI orchestration is retained until its operation is decomposed"
+    )
+)]
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("arguments are not UTF-8".to_string()));

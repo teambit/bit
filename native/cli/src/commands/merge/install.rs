@@ -73,6 +73,14 @@ pub(in crate::commands) struct Snapping<'a> {
     pub materialized: Option<Planned>,
 }
 
+#[cfg_attr(
+    dylint_lib = "perfectionist",
+    expect(
+        perfectionist::overly_long_function,
+        perfectionist::too_many_local_bindings,
+        reason = "Existing CLI orchestration is retained until its operation is decomposed"
+    )
+)]
 pub(in crate::commands) fn execute_snapping(
     root: &Path,
     args: &[OsString],
@@ -145,6 +153,13 @@ pub(in crate::commands) fn execute_snapping(
 }
 
 /// Both plans must describe the same merge before any workspace write.
+#[cfg_attr(
+    dylint_lib = "perfectionist",
+    expect(
+        perfectionist::overly_long_function,
+        reason = "Existing CLI orchestration is retained until its operation is decomposed"
+    )
+)]
 fn prepare_snapping(
     root: &Path,
     args: &[OsString],

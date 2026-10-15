@@ -1,3 +1,10 @@
+#![cfg_attr(
+    dylint_lib = "perfectionist",
+    expect(
+        perfectionist::overly_long_file,
+        reason = "Existing CLI orchestration is retained until its operation is decomposed"
+    )
+)]
 //! The resolve commands, `bit snap`, `bit tag` and `bit merge --resolve`,
 //! planned by the engine's `command{Snap,Tag,Resolve}*` requests on top of
 //! the status capture and the snapshot receipt merges use.

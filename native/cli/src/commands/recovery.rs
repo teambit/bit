@@ -47,6 +47,13 @@ pub(super) fn parse_lane(args: &[&str]) -> Option<Options> {
     parse(args, Kind::Lane)
 }
 
+#[cfg_attr(
+    dylint_lib = "perfectionist",
+    expect(
+        perfectionist::excessive_cognitive_complexity,
+        reason = "Existing CLI orchestration is retained until its operation is decomposed"
+    )
+)]
 fn parse(args: &[&str], kind: Kind) -> Option<Options> {
     let mut pattern = None;
     let mut abort = false;
@@ -82,6 +89,13 @@ fn valid_pattern(pattern: &str) -> bool {
             })
 }
 
+#[cfg_attr(
+    dylint_lib = "perfectionist",
+    expect(
+        perfectionist::excessive_cognitive_complexity,
+        reason = "Existing CLI orchestration is retained until its operation is decomposed"
+    )
+)]
 pub(super) fn run(args: &[OsString], options: &Options) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("arguments are not UTF-8".to_string()));
@@ -129,6 +143,14 @@ struct Prepared {
 }
 
 impl Prepared {
+    #[cfg_attr(
+        dylint_lib = "perfectionist",
+        expect(
+            perfectionist::overly_long_function,
+            perfectionist::too_many_local_bindings,
+            reason = "Existing CLI orchestration is retained until its operation is decomposed"
+        )
+    )]
     fn plan(root: &Path, options: &Options) -> io::Result<Self> {
         if cache::no_fs_cache(root) {
             return Err(decline("no-fs-cache may be enabled"));
@@ -313,6 +335,13 @@ fn format_component(result: &Value, chalk: Chalk) -> io::Result<Report> {
     Ok(Report { data: format.section("merge aborted", "", &items), code: 0, details: None })
 }
 
+#[cfg_attr(
+    dylint_lib = "perfectionist",
+    expect(
+        perfectionist::too_many_local_bindings,
+        reason = "Existing CLI orchestration is retained until its operation is decomposed"
+    )
+)]
 fn format_lane(result: &Value, chalk: Chalk) -> io::Result<Report> {
     let map = object(result)?;
     let items = array(map.get("restoredItems"), "restored items")?;
