@@ -694,7 +694,8 @@ fn scopes_without_a_remote_are_resolved_by_the_configured_resolver() {
     let parent = fixture.root.parent().unwrap();
     let resolver = parent.join("resolver.js");
     let remote = parent.join("remote");
-    let body = format!("module.exports = () => Promise.resolve('file://{}');", remote.display());
+    let remote_path = remote.to_string_lossy().replace('\\', "/");
+    let body = format!("module.exports = () => Promise.resolve('file://{remote_path}');");
     fs::write(&resolver, body).unwrap();
     let scope_json = json!({ "name": "ws-local", "resolverPath": resolver.display().to_string() });
     fs::write(fixture.scope_dir.join("scope.json"), scope_json.to_string()).unwrap();
