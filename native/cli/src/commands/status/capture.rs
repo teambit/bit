@@ -3,7 +3,7 @@
 //! dependencies, and the commit that writes what the command staged.
 
 use super::{
-    cache, fresh,
+    fresh,
     issues::Component,
     js::{self, array, decline, full_identity, text},
     policy,
@@ -12,6 +12,7 @@ use crate::commands::{
     engine::Engine,
     inventory::{Inventory, Options},
 };
+use bit_install::dependencies::cache::invalidation::{deps_dir, needs_invalidation};
 use serde_json::{Value, json};
 use std::{collections::HashMap, io, path::Path};
 
@@ -128,7 +129,8 @@ pub fn capture_with(
     let options: Options =
         serde_json::from_value(context["options"].clone()).map_err(io::Error::other)?;
     let inventory = Inventory::new(&options)?;
-    let reset = !targets.is_empty() && (capture_options.reset || cache::needs_invalidation(root)?);
+    let reset = !targets.is_empty()
+        && (capture_options.reset || needs_invalidation(root, &deps_dir(root))?);
     let verify = capture_options.verify;
     let mut captured = Capture {
         captured: Vec::new(),

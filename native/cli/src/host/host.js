@@ -91,6 +91,7 @@ async function handle(line) {
 const handlers = {
   hostInfo,
   envPolicy: ({ envId }) => envPolicy(envId),
+  registeredEnvPolicy: ({ envId, aspectIds }) => registeredEnvPolicy(envId, aspectIds),
   devPatterns: ({ envId }) => devPatterns(envId),
   dependencyPolicies: ({ extensionIds }) => dependencyPolicies(extensionIds),
   detectDependencies: ({ envId, files, componentDir, aspectIds }) =>
@@ -261,12 +262,31 @@ async function dependencyPolicies(extensionIds) {
  * `loadBit` does not.
  */
 async function detectDependencies(envId, files, componentDir, aspectIds) {
-  if (aspectIds?.length) {
-    const workspace = (await loadHarmony()).get('teambit.workspace/workspace');
-    await workspace.loadAspects(aspectIds, false, undefined, { throwOnError: false, hideMissingModuleError: true });
-  }
+  await loadWorkspaceAspects(aspectIds);
   const env = await loadEnv(envId);
   return detectWithCustomDetectors(env?.getDepDetectors?.(), files, componentDir);
+}
+
+/**
+ * `getEnvPolicyFromEnvId` of a component that is not known to be an env: `getDependencies()`
+ * when the envs aspect already registered it, once the workspace aspects are loaded. Unlike
+ * `envPolicy`, the component is never loaded as an aspect.
+ */
+async function registeredEnvPolicy(envId, aspectIds) {
+  await loadWorkspaceAspects(aspectIds);
+  const definition = (await loadHarmony()).get('teambit.envs/envs').getEnvDefinitionByStringId(envId);
+  const policy = await definition?.env?.getDependencies?.();
+  return policy ?? null;
+}
+
+let workspaceAspectsLoaded = false;
+
+/** The workspace aspects the CLI loads on start (`getNotLoadedConfiguredExtensions`), once. */
+async function loadWorkspaceAspects(aspectIds) {
+  if (workspaceAspectsLoaded || !aspectIds?.length) return;
+  workspaceAspectsLoaded = true;
+  const workspace = (await loadHarmony()).get('teambit.workspace/workspace');
+  await workspace.loadAspects(aspectIds, false, undefined, { throwOnError: false, hideMissingModuleError: true });
 }
 
 /**

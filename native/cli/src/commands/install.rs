@@ -224,6 +224,14 @@ impl bit_install::Host for JsHost {
         self.call("envPolicy", json!({ "envId": env_id })).await
     }
 
+    async fn registered_env_policy(
+        &self,
+        env_id: &str,
+        aspect_ids: &[String],
+    ) -> io::Result<Option<Value>> {
+        self.call("registeredEnvPolicy", json!({ "envId": env_id, "aspectIds": aspect_ids })).await
+    }
+
     async fn dev_patterns(&self, env_id: &str) -> io::Result<Option<Value>> {
         self.call("devPatterns", json!({ "envId": env_id })).await
     }

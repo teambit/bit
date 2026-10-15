@@ -168,6 +168,7 @@ pub async fn compute(
         options,
     };
     let scope = Scope::find(root);
+    invalidate_cache(root, scope.as_ref(), options)?;
     let reader = EnvJsoncReader { components, scope: scope.clone() };
     let pool = rayon::ThreadPoolBuilder::new()
         .num_threads(2)
@@ -179,7 +180,7 @@ pub async fn compute(
     let mut result = IndexMap::new();
     for component in components {
         let mut subject =
-            subject(component, scope.as_ref(), &reader, &mut env_patterns, host).await?;
+            subject(component, scope.as_ref(), &reader, &mut env_patterns, options, host).await?;
         subject.custom = detectors.get(component).await?;
         let context = Context {
             workspace: &workspace,
@@ -196,6 +197,21 @@ pub async fn compute(
     Ok(result)
 }
 
+/// `ComponentLoader.invalidateDependenciesCache`, before the components load.
+fn invalidate_cache(
+    root: &Path,
+    scope: Option<&Scope>,
+    options: &DependencyOptions,
+) -> io::Result<()> {
+    if options.use_cache
+        && !cache::disabled()
+        && let Some(scope) = scope
+    {
+        cache::invalidation::invalidate(root, &scope.dependency_cache())?;
+    }
+    Ok(())
+}
+
 struct Context<'a> {
     workspace: &'a Workspace<'a>,
     scope: Option<&'a Scope>,
@@ -208,9 +224,10 @@ async fn subject<'a>(
     scope: Option<&Scope>,
     reader: &EnvJsoncReader<'_>,
     env_patterns: &mut EnvPatterns<'_>,
+    options: &DependencyOptions,
     host: &dyn Host,
 ) -> io::Result<Subject<'a>> {
-    let own_env = own_env(component, reader, host).await?;
+    let own_env = own_env(component, reader, &options.workspace_aspects, host).await?;
     let patterns = env_patterns.get(&component.env_id).await?;
     let dev_files = dev_files::dev_files(
         component,
@@ -236,10 +253,13 @@ async fn subject<'a>(
 
 /// `getEnvPolicyFromEnvId` for the component itself: its `env.jsonc` policy, else
 /// its `getDependencies()` when it is an env (a user env is never a core env, so
-/// legacy `peerDependencies` do not become its own peers).
+/// legacy `peerDependencies` do not become its own peers). A component of an aspect
+/// env is an env only when it is registered as one: `getEnvDefinitionById` does not
+/// load it, and loading an aspect that is not an env costs seconds.
 async fn own_env(
     component: &WorkspaceComponent,
     reader: &EnvJsoncReader<'_>,
+    workspace_aspects: &[String],
     host: &dyn Host,
 ) -> io::Result<Option<EnvPolicy>> {
     if has_env_jsonc(component) {
@@ -255,7 +275,13 @@ async fn own_env(
     if !component.is_env && !aspect_env {
         return Ok(None);
     }
-    let Some(config) = host.env_policy(&component.id.to_string_without_version()).await? else {
+    let id = component.id.to_string_without_version();
+    let config = if component.is_env {
+        host.env_policy(&id).await?
+    } else {
+        host.registered_env_policy(&id, workspace_aspects).await?
+    };
+    let Some(config) = config else {
         return Ok(None);
     };
     policy::env::from_config(&config, false).map(Some)

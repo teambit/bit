@@ -4,8 +4,8 @@
 
 use std::{
     sync::{
-        Arc, Mutex,
-        atomic::{AtomicBool, Ordering},
+        Arc, LazyLock, Mutex,
+        atomic::{AtomicBool, AtomicU8, Ordering},
     },
     thread,
     time::{Duration, Instant},
@@ -57,15 +57,31 @@ pub struct Output {
     /// `process.env.CI`: `logger.setStatusLine` prints nothing.
     ci: bool,
     sink: Sink,
-    state: Arc<Mutex<Spinner>>,
-    spinning: Arc<AtomicBool>,
 }
+
+/// Bit's single `loader`: every `Output` of the process drives it, so a command that
+/// installs (`import`, `checkout`) and its installation never animate two spinners, and
+/// the package manager step stops whichever is spinning.
+static LOADER: LazyLock<Mutex<Spinner>> = LazyLock::new(Mutex::default);
+
+/// `logger.off()` and `logger.on()` switch that one loader for every `Output`: until
+/// either runs, each `Output` follows whether its command started a loader.
+static SWITCHED: AtomicU8 = AtomicU8::new(UNSWITCHED);
+const UNSWITCHED: u8 = 0;
+const SWITCHED_ON: u8 = 1;
+const SWITCHED_OFF: u8 = 2;
 
 #[derive(Default)]
 struct Spinner {
     text: String,
     frame: usize,
+    /// The spinner line is on screen, written to `sink`.
     drawn: bool,
+    /// Bumped by every start: a frame thread of an earlier start exits.
+    generation: u64,
+    spinning: bool,
+    color: bool,
+    sink: Option<Sink>,
 }
 
 impl Output {
@@ -78,8 +94,6 @@ impl Output {
             write_to_console: true,
             ci: false,
             sink,
-            state: Arc::default(),
-            spinning: Arc::new(AtomicBool::new(false)),
         }
     }
 
@@ -98,13 +112,26 @@ impl Output {
         self
     }
 
-    /// `logger.on()`: from now on status and success lines print.
+    /// `logger.on()`: from now on status and success lines print, for every `Output`.
     pub fn loader_on(&self) {
         self.loader.store(true, Ordering::SeqCst);
+        SWITCHED.store(SWITCHED_ON, Ordering::SeqCst);
+    }
+
+    /// `logger.off()` before the package manager writes its own output: the loader
+    /// stops, and status and success lines are dropped until `loader_on`, for every
+    /// `Output`. A failed installation leaves it off.
+    pub fn loader_off(&self) {
+        self.stop();
+        SWITCHED.store(SWITCHED_OFF, Ordering::SeqCst);
     }
 
     fn loader(&self) -> bool {
-        self.loader.load(Ordering::SeqCst)
+        match SWITCHED.load(Ordering::SeqCst) {
+            SWITCHED_ON => true,
+            SWITCHED_OFF => false,
+            _ => self.loader.load(Ordering::SeqCst),
+        }
     }
 
     /// `chalk.<style>(text)`; plain text when colors are off.
@@ -135,18 +162,21 @@ impl Output {
         if !self.loader() {
             return;
         }
-        lock(&self.state).text = text.to_string();
         if !self.tty {
             self.line(&format!("- {text}"));
             return;
         }
-        self.spinning.store(true, Ordering::SeqCst);
-        let state = Arc::clone(&self.state);
-        let spinning = Arc::clone(&self.spinning);
-        let sink = Arc::clone(&self.sink);
+        let generation = {
+            let mut spinner = lock();
+            spinner.text = text.to_string();
+            spinner.generation += 1;
+            spinner.spinning = true;
+            spinner.color = self.color;
+            spinner.sink = Some(Arc::clone(&self.sink));
+            spinner.generation
+        };
         thread::spawn(move || {
-            while spinning.load(Ordering::SeqCst) {
-                render(&mut lock(&state), &sink);
+            while render(&mut lock(), generation) {
                 thread::sleep(FRAME_INTERVAL);
             }
         });
@@ -181,13 +211,15 @@ impl Output {
         self.persist(&self.symbol('✖', Style::Red), message);
     }
 
-    /// `logger.off()` before the package manager writes its own output.
+    /// Stop the spinner and clear its line (`loader.stop()`).
     pub fn stop(&self) {
-        self.spinning.store(false, Ordering::SeqCst);
-        let mut state = lock(&self.state);
-        if state.drawn {
-            (self.sink)("\r\u{1b}[2K");
-            state.drawn = false;
+        let mut spinner = lock();
+        spinner.spinning = false;
+        if spinner.drawn {
+            if let Some(sink) = &spinner.sink {
+                sink("\r\u{1b}[2K");
+            }
+            spinner.drawn = false;
         }
     }
 
@@ -232,15 +264,24 @@ impl Drop for Output {
     }
 }
 
-fn render(state: &mut Spinner, sink: &Sink) {
-    let frame = FRAMES[state.frame % FRAMES.len()];
-    state.frame += 1;
-    sink(&format!("\r\u{1b}[2K{frame} {}", state.text));
-    state.drawn = true;
+/// Draw the next frame of the start `generation`; `false` once it stopped or restarted.
+fn render(spinner: &mut Spinner, generation: u64) -> bool {
+    if !spinner.spinning || spinner.generation != generation {
+        return false;
+    }
+    let Some(sink) = spinner.sink.clone() else { return false };
+    let frame = FRAMES[spinner.frame % FRAMES.len()];
+    spinner.frame += 1;
+    // ora's default spinner color.
+    let frame =
+        if spinner.color { format!("\u{1b}[36m{frame}\u{1b}[39m") } else { frame.to_string() };
+    sink(&format!("\r\u{1b}[2K{frame} {}", spinner.text));
+    spinner.drawn = true;
+    true
 }
 
-fn lock(state: &Mutex<Spinner>) -> std::sync::MutexGuard<'_, Spinner> {
-    state.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+fn lock() -> std::sync::MutexGuard<'static, Spinner> {
+    LOADER.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
 }
 
 /// `pretty-time` with its default precision: the largest unit, rounded.

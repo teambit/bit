@@ -1,0 +1,33 @@
+name: Rust scope
+
+# The integration branch may change only the Rust CLI's paths compared with
+# teambit/bit master, so it stays mergeable without touching the Node.js CLI
+# (scripts/rust/check-scope.sh). No path filter: a change anywhere is checked.
+on:
+  push:
+    branches: [rust-workspace-materialization]
+  pull_request:
+    branches: [rust-workspace-materialization]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rust-scope-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  scope:
+    name: Rust CLI stays inside its paths
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Fetch teambit/bit master
+        run: git fetch --no-tags https://github.com/teambit/bit.git master:refs/remotes/upstream/master
+      - name: Check the changed paths
+        run: bash scripts/rust/check-scope.sh refs/remotes/upstream/master

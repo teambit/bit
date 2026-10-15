@@ -21,7 +21,10 @@ use std::{collections::HashMap, fs, io, io::Write, path::Path, sync::Mutex};
 #[derive(Default)]
 pub struct TestHost {
     pub policies: HashMap<String, Value>,
+    /// `env_policy` calls: envs loaded to read their policy.
     pub calls: Mutex<Vec<String>>,
+    /// `registered_env_policy` calls, with the workspace aspects sent along.
+    pub registered: Mutex<Vec<(String, Vec<String>)>>,
 }
 
 #[async_trait]
@@ -31,6 +34,17 @@ impl Host for TestHost {
             .lock()
             .expect("calls")
             .push(env_id.to_owned());
+        Ok(self.policies.get(env_id).cloned())
+    }
+    async fn registered_env_policy(
+        &self,
+        env_id: &str,
+        aspect_ids: &[String],
+    ) -> io::Result<Option<Value>> {
+        self.registered
+            .lock()
+            .expect("registered")
+            .push((env_id.to_owned(), aspect_ids.to_vec()));
         Ok(self.policies.get(env_id).cloned())
     }
     async fn app_types(&self) -> io::Result<Vec<String>> {

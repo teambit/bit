@@ -461,21 +461,39 @@ async fn dev_patterns_compose_config_hooks_and_env_patterns() {
 async fn env_component_without_manifest_gets_its_own_peers_from_the_host() {
     let temp = tempfile::tempdir().expect("tempdir");
     let root = temp.path();
-    let mut env = component(root, "acme/envs/aspect-env", "teambit.harmony/aspect");
-    env.files = vec!["index.ts".into()];
-    write(&env.dir.join("index.ts"), "export const env = 1;\n");
+    let mut components = Vec::new();
+    for (id, env_id) in [
+        ("acme/envs/aspect-env", "teambit.harmony/aspect"),
+        ("acme/envs/env-env", "teambit.envs/env"),
+    ] {
+        let mut env = component(root, id, env_id);
+        env.files = vec!["index.ts".into()];
+        env.is_env = env_id == "teambit.envs/env";
+        write(&env.dir.join("index.ts"), "export const env = 1;\n");
+        components.push(env);
+    }
     let mut host = TestHost::default();
-    host.policies.insert(
-        "acme/envs/aspect-env".into(),
-        json!({"peers": [{"name": "react", "version": "17.0.2", "supportedRange": "^17.0.0"}]}),
-    );
-    let result =
-        run_with(root, &[env], &IndexMap::new(), &DependencyOptions::default(), &host).await;
+    let react =
+        json!({"peers": [{"name": "react", "version": "17.0.2", "supportedRange": "^17.0.0"}]});
+    host.policies.insert("acme/envs/aspect-env".into(), react.clone());
+    host.policies.insert("acme/envs/env-env".into(), react);
+    let options = DependencyOptions {
+        workspace_aspects: vec!["acme/aspects/tools@1.0.0".into()],
+        ..DependencyOptions::default()
+    };
+    let result = run_with(root, &components, &IndexMap::new(), &options, &host).await;
+    for id in ["acme/envs/aspect-env", "acme/envs/env-env"] {
+        assert_eq!(
+            packages(&result[id], Lifecycle::Runtime),
+            vec![("react".into(), "17.0.2".into())],
+        );
+    }
+    assert_eq!(*host.calls.lock().expect("calls"), vec!["acme/envs/env-env".to_owned()]);
     assert_eq!(
-        packages(&result["acme/envs/aspect-env"], Lifecycle::Runtime),
-        vec![("react".into(), "17.0.2".into())],
+        *host.registered.lock().expect("registered"),
+        vec![("acme/envs/aspect-env".to_owned(), vec!["acme/aspects/tools@1.0.0".to_owned()])],
+        "a component of an aspect env is looked up among the registered envs, not loaded",
     );
-    assert_eq!(*host.calls.lock().expect("calls"), vec!["acme/envs/aspect-env".to_owned()]);
 }
 
 #[tokio::test]
@@ -831,4 +849,44 @@ async fn a_cache_entry_written_without_detectors_is_not_used() {
         .expect("pool");
     let cached = cache::read(&scope, &components[0], &pool).expect("read").expect("cached");
     assert!(cached.packages[0].contains_key("vue"));
+}
+
+#[tokio::test]
+async fn a_cache_older_than_a_workspace_change_is_not_read() {
+    let temp = tempfile::tempdir().expect("tempdir");
+    let root = temp.path();
+    fs::create_dir_all(root.join(".bit/objects")).expect("scope");
+    let mut button = component(root, "acme/ui/button@1.0.0", "teambit.harmony/node");
+    button.files = vec!["index.ts".into()];
+    write(&button.dir.join("index.ts"), "import _ from 'lodash';\n");
+    package(root, "lodash", &json!({"name": "lodash", "version": "4.17.21"}));
+    let components = vec![button];
+    let options = DependencyOptions { use_cache: true, ..DependencyOptions::default() };
+    let host = TestHost::default();
+    run_with(root, &components, &IndexMap::new(), &options, &host).await;
+    // An entry the detection would not produce: reading it shows in the result.
+    let cache_dir = Scope::find(root).expect("scope").dependency_cache();
+    let entry = bit_object_import::read_dependency_cache(&cache_dir, "acme/ui/button@1.0.0")
+        .expect("entry")
+        .expect("entry");
+    let planted = entry["data"]
+        .as_str()
+        .expect("data")
+        .replace(r#""lodash":"4.17.21""#, r#""lodash":"9.9.9""#);
+    cache::put(&cache_dir, "acme/ui/button@1.0.0", &planted).expect("put");
+    let lodash = |result: &IndexMap<String, ComponentDependencies>| {
+        packages(&result["acme/ui/button"], Lifecycle::Runtime)
+    };
+    let cached = run_with(root, &components, &IndexMap::new(), &options, &host).await;
+    assert_eq!(lodash(&cached), vec![("lodash".into(), "9.9.9".into())], "the entry is read");
+    let later = std::time::SystemTime::now() + std::time::Duration::from_hours(1);
+    fs::write(root.join(".bitmap"), "{}").expect("bitmap");
+    fs::File::options()
+        .write(true)
+        .open(root.join(".bitmap"))
+        .expect("open")
+        .set_modified(later)
+        .expect("mtime");
+    let detected = run_with(root, &components, &IndexMap::new(), &options, &host).await;
+    assert_eq!(lodash(&detected), vec![("lodash".into(), "4.17.21".into())]);
 }
