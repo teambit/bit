@@ -1,10 +1,33 @@
 //! How `formatStatusOutput` and `renderSections` put the sections together.
 
-use super::{AUTO_TAG, CLEAN, Status, ids};
+use super::{AUTO_TAG, CLEAN, Status, array, ids};
 use crate::commands::{status::js::decline, workspace_command::format::Formatter};
+use serde_json::Value;
 use std::io;
 
 impl Status<'_> {
+    /// `pending merge`: the uncommon snaps on each side.
+    pub(super) fn pending_merge(&self) -> io::Result<Vec<String>> {
+        ids(self.result, "mergePendingComponents")?
+            .iter()
+            .map(|identity| {
+                let history = self
+                    .models.histories
+                    .iter()
+                    .find(|row| row["identity"] == *identity)
+                    .ok_or_else(|| decline("status report history"))?;
+                let count = |side: &str| array(history["merge"].get(side), "merge distance").map(<[Value]>::len);
+                let text = format!(
+                    "{} local and remote have diverged and have {} (source) and {} (target) uncommon snaps respectively",
+                    self.format.chalk.cyan(identity),
+                    count("sourceOnly")?,
+                    count("targetOnly")?,
+                );
+                Ok(Formatter::item_with(&text, &self.format.warn_symbol()))
+            })
+            .collect()
+    }
+
     /// `getWorkspaceIssuesOutput()`.
     pub(super) fn workspace_issues(&self) -> io::Result<String> {
         let issues = ids(self.result, "workspaceIssues")?;
@@ -51,8 +74,8 @@ impl Status<'_> {
             .iter()
             .enumerate()
             .map(|(index, section)| {
-                // The auto-tag section is the eighth.
-                if index == 7 && !section.is_empty() && !self.flags.expand {
+                // The auto-tag section follows the soft-tagged section.
+                if index == 9 && !section.is_empty() && !self.flags.expand {
                     summary.to_string()
                 } else {
                     section.clone()

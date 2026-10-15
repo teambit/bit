@@ -103,11 +103,18 @@ fn report_status(
     let chalk = Chalk::detect(args);
     let read = read(root, home, |result, context| {
         let output = report::report(result, context, flags, chalk)?;
-        let loaded = array(context.get("targets"), "targets")?.len();
-        let modified = !array(result.get("modifiedComponents"), "modified")?.is_empty();
-        Ok((output, loaded, modified))
+        let loaded = array(context.get("targets"), "targets")?
+            .iter()
+            .filter(|target| target["locallyRemoved"] != true)
+            .count();
+        let loads = if loaded == 0 {
+            0
+        } else {
+            3 + usize::from(!array(result.get("modifiedComponents"), "modified")?.is_empty())
+        };
+        Ok((output, loaded, loads))
     });
-    let (output, loaded, modified) = match read {
+    let (output, loaded, loads) = match read {
         Ok((_, prepared)) => prepared,
         Err(error) => return Ok(Outcome::Declined(format!("status: {error}"))),
     };
@@ -117,7 +124,6 @@ fn report_status(
         loader.status("fetching status");
         // `getMany` of the workspace: listing, new and modified components,
         // and the auto-tag check once a component is modified.
-        let loads = if loaded == 0 { 0 } else { 3 + usize::from(modified) };
         for _ in 0..loads {
             loader.status(&format!("loading {loaded} component(s)"));
         }
@@ -139,22 +145,14 @@ fn read<Prepared>(
     let compared: Value = engine.request(
         &json!({"kind": "statusCompare", "root": root, "targets": capture.comparisons}),
     )?;
-    let issues = issues::collect(root, &context, &capture.components)?
-        .ok_or_else(|| decline("status issues need canonical loading"))?;
+    let issues =
+        issues::collect(root, &context, &active_components(&context, &capture.components)?)?
+            .ok_or_else(|| decline("status issues need canonical loading"))?;
     let targets =
         result_targets(&context, &capture.components, &capture.invalid, &compared, &issues)?;
     let semver = grammar::snapshot(semver_values(&context, &targets)?.iter().map(String::as_str))
         .ok_or_else(|| decline("status semver grammar limits"))?;
-    let current_lane_id = if let Some(id) = context.get("currentLaneId") {
-        text(Some(id))?.to_string()
-    } else {
-        let scope = text(
-            context
-                .get("scope")
-                .and_then(|scope| scope.get("name")),
-        )?;
-        format!("{scope}/main")
-    };
+    let current_lane_id = current_lane_id(&context)?;
     let mut result: Value = engine.request(&json!({
         "kind": "statusResult",
         "currentLaneId": current_lane_id,
@@ -167,6 +165,30 @@ fn read<Prepared>(
     let prepared = prepare(&result, &context)?;
     capture::commit(&mut engine, root, &context, &capture)?;
     Ok((result, prepared))
+}
+
+fn active_components(
+    context: &Value,
+    components: &[issues::Component],
+) -> io::Result<Vec<issues::Component>> {
+    Ok(array(context.get("targets"), "targets")?
+        .iter()
+        .zip(components)
+        .filter(|(target, _)| target["locallyRemoved"] != true)
+        .map(|(_, component)| component.clone())
+        .collect())
+}
+
+fn current_lane_id(context: &Value) -> io::Result<String> {
+    if let Some(id) = context.get("currentLaneId") {
+        return Ok(text(Some(id))?.to_string());
+    }
+    let scope = text(
+        context
+            .get("scope")
+            .and_then(|scope| scope.get("name")),
+    )?;
+    Ok(format!("{scope}/main"))
 }
 
 fn status_capture(
@@ -217,6 +239,11 @@ fn result_targets(
                 "modified": modified,
                 "dependencies": component.dependencies,
                 "issues": issues,
+                "bitmapState": {
+                    "localOnly": target["localOnly"],
+                    "softTagged": target["softTagged"],
+                    "locallyRemoved": target["locallyRemoved"],
+                },
             });
             if let Some(error) = identity
                 .as_str()
