@@ -9,6 +9,8 @@ mod command_request;
 mod dependency_graph;
 mod read;
 mod read_raw;
+#[cfg(test)]
+mod request_tests;
 mod resolve_dependencies;
 mod resolve_typescript;
 mod response;
@@ -99,6 +101,7 @@ enum Request {
     WorkspaceDiff(status_models::workspace_diff::Request),
     VersionDiff(status_models::version_diff::Request),
     VersionParentChain(status_models::parent_diff::Request),
+    ComponentLog(status_models::component_log::Request),
     StatusPrepare(client_status::Prepare),
     StatusScan(client_status::Scan),
     StatusFinish(client_status::Finish),
@@ -134,6 +137,7 @@ enum Request {
         right: String,
     },
 }
+
 #[derive(Serialize)]
 struct Response {
     version: u8,
@@ -300,6 +304,7 @@ fn apply(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value
         Request::WorkspaceDiff(request) => status_models::workspace_diff::read(&request, pool),
         Request::VersionDiff(request) => status_models::version_diff::read(&request, pool),
         Request::VersionParentChain(request) => status_models::parent_diff::read(&request, pool),
+        Request::ComponentLog(request) => status_models::component_log::read(&request, pool),
         Request::Scan { root, exclude_dirs, workspace_root } => {
             let paths = scan::scan(&root, &exclude_dirs, workspace_root)?;
             Ok((paths.len(), json!({"paths":paths})))
@@ -351,7 +356,7 @@ fn dependencies(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize
         }
         Request::DependencyResolve(request) => resolve_dependencies::resolve(&request, pool),
         Request::DependencyGraph(request) => dependency_graph::apply(&request, pool),
-        Request::DependencyScan { request } => dependency_scan(&request, pool),
+        Request::DependencyScan { request } => dependency_graph::scan_request(&request, pool),
         Request::StatusPrepare(_)
         | Request::StatusScan(_)
         | Request::StatusFinish(_)
@@ -361,15 +366,6 @@ fn dependencies(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize
         | Request::InventoryCancel { .. } => Err(invalid("inventory operation requires an owner")),
         _ => Err(invalid("unsupported dependency operation")),
     }
-}
-fn dependency_scan(request: &Value, pool: &rayon::ThreadPool) -> io::Result<(usize, Value)> {
-    let input = serde_json::to_string(request).map_err(io::Error::other)?;
-    let output = bit_dependency_scanner::scan_request(&input, pool).map_err(io::Error::other)?;
-    let count = output["files"]
-        .as_array()
-        .ok_or_else(|| invalid("dependency scan declined"))?
-        .len();
-    Ok((count, output))
 }
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
