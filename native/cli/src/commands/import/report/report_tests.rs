@@ -1,5 +1,6 @@
 use super::validate;
 use crate::commands::color::Chalk;
+use crate::commands::workspace_command::format::expected_success_symbols;
 use serde_json::json;
 
 fn receipt(details: &serde_json::Value) -> serde_json::Value {
@@ -17,7 +18,9 @@ fn imported_components_are_listed_with_their_versions() {
         .unwrap();
     assert_eq!(
         report,
-        "imported components (1)\n   › added s/a currently used version 0.0.1 (latest)\n\n✔ successfully imported one component",
+        expected_success_symbols(
+            "imported components (1)\n   › added s/a currently used version 0.0.1 (latest)\n\n✔ successfully imported one component"
+        ),
     );
     let fetched = validate(&added)
         .unwrap()
@@ -38,7 +41,12 @@ fn up_to_date_components_are_counted() {
         .unwrap()
         .import_report(Chalk::new(false), None)
         .unwrap();
-    assert_eq!(report, "✔ successfully imported one component, 1 components are up to date");
+    assert_eq!(
+        report,
+        expected_success_symbols(
+            "✔ successfully imported one component, 1 components are up to date"
+        )
+    );
 }
 
 #[test]
@@ -71,6 +79,8 @@ fn an_installation_error_precedes_the_summary() {
         .unwrap();
     assert_eq!(
         report,
-        "imported components (1)\n   \u{203A} added s/a currently used version 0.0.2 (latest)\n\n\u{2716} Installation Error\nThe following error was thrown by the package manager:\nboom\nUse \"bit install\" to complete the installation, remove the imported components using \"bit remove <comp id>\" or remove the missing dependencies from their source code\n\n\u{2714} successfully imported one component",
+        expected_success_symbols(
+            "imported components (1)\n   \u{203A} added s/a currently used version 0.0.2 (latest)\n\n\u{2716} Installation Error\nThe following error was thrown by the package manager:\nboom\nUse \"bit install\" to complete the installation, remove the imported components using \"bit remove <comp id>\" or remove the missing dependencies from their source code\n\n\u{2714} successfully imported one component"
+        ),
     );
 }
