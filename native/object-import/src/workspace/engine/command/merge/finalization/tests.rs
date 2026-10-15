@@ -87,6 +87,7 @@ fn lane_snapshot_stages_current_lane_config_and_validates_its_original_bytes() {
     write(&directory.0, ".bit/staged-config/main.json", b"[]");
     write(&directory.0, ".bit/staged-config/scope/feature.json", b"[]");
     let mut prepared = super::Prepared {
+        package_creates: Vec::new(),
         proofs: Vec::new(),
         writes: Vec::new(),
         links: Vec::new(),
@@ -148,6 +149,7 @@ fn existing_lane_only_marker_is_retained_in_staged_configuration() {
     bitmap["alpha"]["onLanesOnly"] = json!(true);
     fs::write(bitmap_path, serde_json::to_vec(&bitmap).unwrap()).unwrap();
     let mut prepared = super::Prepared {
+        package_creates: Vec::new(),
         proofs: Vec::new(),
         writes: Vec::new(),
         links: Vec::new(),
@@ -321,6 +323,7 @@ fn env_root_packages_linked_into_the_pnpm_store_are_written_through_the_link() {
     )
     .unwrap();
     let mut output = super::Prepared {
+        package_creates: Vec::new(),
         proofs: Vec::new(),
         writes: Vec::new(),
         links: Vec::new(),
@@ -350,6 +353,7 @@ fn a_scope_without_an_index_starts_an_empty_one() {
     );
     let version = json!({"files":[]});
     let mut prepared = super::Prepared {
+        package_creates: Vec::new(),
         proofs: Vec::new(),
         writes: Vec::new(),
         links: Vec::new(),
