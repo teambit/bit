@@ -52,6 +52,7 @@ pub fn shared() -> &'static Shared {
 /// A process leaves its directory behind, so runs from hours ago are removed.
 fn runs_dir() -> PathBuf {
     let dir = env::temp_dir().join("bit-native-e2e");
+    assert_outside_pnpm_workspace(&dir);
     for entry in fs::read_dir(&dir)
         .into_iter()
         .flatten()
@@ -73,6 +74,20 @@ fn runs_dir() -> PathBuf {
 }
 
 const STALE_RUN: std::time::Duration = std::time::Duration::from_hours(6);
+
+/// A workspace without a `package.json` (`bit init --no-package-json`) installs into the
+/// nearest `pnpm-workspace.yaml` above it, so a case under one would write outside its
+/// directory.
+fn assert_outside_pnpm_workspace(dir: &Path) {
+    let workspace = dir
+        .ancestors()
+        .find(|ancestor| ancestor.join("pnpm-workspace.yaml").is_file());
+    assert!(
+        workspace.is_none(),
+        "the e2e cases would install into the pnpm workspace at {}: point TMPDIR outside it",
+        workspace.unwrap_or(dir).display(),
+    );
+}
 
 /// `BIT_E2E_NODE_CLI`, else the bvm installation of [`BIT_VERSION`].
 fn node_cli() -> PathBuf {

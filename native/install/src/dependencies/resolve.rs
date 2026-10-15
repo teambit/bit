@@ -33,6 +33,10 @@ const DEFAULT_LOOKUPS: [&str; 14] = [
     "mdx",
 ];
 
+/// `teambit.harmony/bit` and its package: a core aspect to `processCoreAspects`
+/// (`getCoreAspectsPackagesAndIds`), though the install never links it.
+const BIT_ASPECT: (&str, &str) = ("teambit.harmony/bit", "@teambit/bit");
+
 /// The classification of one specifier.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Resolved {
@@ -119,11 +123,10 @@ impl<'a> Resolver<'a> {
         {
             return Ok(Resolved::CoreAspect(aspect.id.clone()));
         }
-        let resolved = self.package(&component.dir, &name)?;
-        if matches!(resolved, Resolved::Missing(_)) {
-            return Ok(self.unlinked(&name).unwrap_or(resolved));
-        }
-        Ok(resolved)
+        Ok(match self.package(&component.dir, &name)? {
+            Resolved::Missing(_) if let Some(unlinked) = self.unlinked(&name) => unlinked,
+            resolved => bit_aspect(resolved),
+        })
     }
 
     /// A workspace component whose package is not linked into `node_modules` yet
@@ -262,7 +265,7 @@ impl<'a> Resolver<'a> {
         }
         Ok(match from_manifest(&manifest, &name) {
             Resolved::Missing(_) => Resolved::Ignored,
-            other => other,
+            other => bit_aspect(other),
         })
     }
 
@@ -311,6 +314,16 @@ impl<'a> Resolver<'a> {
 
 /// `resolvePackageData` of a found `package.json`: a component, a package with its
 /// version, or missing (`name` is the specifier's package name).
+/// The `@teambit/bit` component package as its core aspect; any other resolution as is.
+fn bit_aspect(resolved: Resolved) -> Resolved {
+    match resolved {
+        Resolved::Component(found) if found.package_name == BIT_ASPECT.1 => {
+            Resolved::CoreAspect(BIT_ASPECT.0.to_owned())
+        }
+        other => other,
+    }
+}
+
 fn from_manifest(manifest: &Value, name: &str) -> Resolved {
     let Some(package_name) = manifest["name"]
         .as_str()

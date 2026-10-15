@@ -964,3 +964,28 @@ async fn a_cache_older_than_a_workspace_change_is_not_read() {
     let detected = run_with(root, &components, &IndexMap::new(), &options, &host).await;
     assert_eq!(lodash(&detected), vec![("lodash".into(), "4.17.21".into())]);
 }
+
+#[test]
+fn the_bit_component_package_is_the_bit_core_aspect() {
+    let temp = tempfile::tempdir().expect("tempdir");
+    let root = &temp.path().join("workspace");
+    let mut app = component(root, "acme/app@1.0.0", "teambit.harmony/node");
+    app.files = vec!["index.ts".into()];
+    let components = [app];
+    let resolve = |manifest: &Value| {
+        // Above the workspace, where `resolvePackagePath` still finds it.
+        package(temp.path(), "@teambit/bit", manifest);
+        Resolver::new(root, &components, &[])
+            .resolve(&components[0], "index.ts", "@teambit/bit")
+            .expect("resolve")
+    };
+    assert_eq!(
+        resolve(&json!({"name": "@teambit/bit", "version": "2.2.94"})),
+        Resolved::Package { name: "@teambit/bit".into(), version: "2.2.94".into() },
+    );
+    let component_id = json!({"scope": "teambit.harmony", "name": "bit", "version": "2.2.94"});
+    assert_eq!(
+        resolve(&json!({"name": "@teambit/bit", "version": "2.2.94", "componentId": component_id})),
+        Resolved::CoreAspect("teambit.harmony/bit".into()),
+    );
+}

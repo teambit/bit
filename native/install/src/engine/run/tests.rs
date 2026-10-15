@@ -30,6 +30,10 @@ fn workspace_settings(root: &Path) -> EngineSettings {
     settings.store.store_dir = root.join(".store");
     settings.store.cache_dir = root.join(".cache");
     settings.reporter = None;
+    // The root has no `package.json`, so a `pnpm-workspace.yaml` above the temp dir
+    // would take it in and the install would write there.
+    settings.base.workspace_dir = Some(root.to_path_buf());
+    settings.base.modules_dir = root.join("node_modules");
     settings
 }
 
