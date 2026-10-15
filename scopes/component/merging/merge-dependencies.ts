@@ -44,8 +44,9 @@ export function mergeDependencies(
         snapshot[field].get().map((dep) => [dep.id.toStringWithoutVersion(), { field, value: dep }] as const)
       )
     );
-  // the import paths are compared as well, so an import that other added to an existing dependency is not lost
-  const isSameDep = (a: Dependency, b: Dependency) => a.id.isEqual(b.id) && isEqual(a.relativePaths, b.relativePaths);
+  // all the persisted data is compared (e.g. the import paths and the version range), not only the id, so a change of
+  // any of them on one side is not lost
+  const isSameDep = (a: Dependency, b: Dependency) => isEqual(a.serialize(), b.serialize());
   const mergedCompDeps = mergeEntries(
     componentDeps(base),
     componentDeps(current),

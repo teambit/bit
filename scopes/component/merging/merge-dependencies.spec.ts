@@ -127,4 +127,15 @@ describe('mergeDependencies', () => {
       expect(merged.relativePaths.map((paths) => paths.sourceRelativePath)).to.deep.equal(['a.ts', 'b.ts']);
     });
   });
+  describe('a peer component dependency whose version range changed on other only', () => {
+    const peerWithRange = (range: string) =>
+      new Dependencies([new Dependency(ComponentID.fromString('my-scope/b@1.0.0'), [], '@my-scope/b', range)]);
+    const base = { ...snapshot({}), peerDependencies: peerWithRange('^1.0.0') };
+    const current = { ...snapshot({}), peerDependencies: peerWithRange('^1.0.0') };
+    const other = { ...snapshot({}), peerDependencies: peerWithRange('^1.0.0 || ^2.0.0') };
+    it('should take the version range of other', () => {
+      const [merged] = mergeDependencies(base, current, other, 'manual').peerDependencies.get();
+      expect(merged.versionRange).to.equal('^1.0.0 || ^2.0.0');
+    });
+  });
 });
