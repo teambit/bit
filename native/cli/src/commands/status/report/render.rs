@@ -74,8 +74,8 @@ impl Status<'_> {
             .iter()
             .enumerate()
             .map(|(index, section)| {
-                // The auto-tag section follows the soft-tagged section.
-                if index == 9 && !section.is_empty() && !self.flags.expand {
+                // The auto-tag section follows unavailable-on-main.
+                if index == 10 && !section.is_empty() && !self.flags.expand {
                     summary.to_string()
                 } else {
                     section.clone()

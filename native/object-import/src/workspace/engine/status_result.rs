@@ -16,6 +16,8 @@ pub(super) struct Request {
     models: Vec<Value>,
     histories: Vec<Value>,
     semver: Value,
+    #[serde(default)]
+    unavailable_on_main: Vec<String>,
 }
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -44,6 +46,7 @@ struct BitmapState {
 pub(super) fn read(request: &Request) -> io::Result<(usize, Value)> {
     validate(request)?;
     let mut output = empty(&request.current_lane_id);
+    output["unavailableOnMain"] = json!(request.unavailable_on_main);
     for target in &request.targets {
         current(&mut output, target);
     }

@@ -32,8 +32,8 @@ const TITLE_ONLY: [&str; 5] = [
     "MergeConfigHasConflict",
 ];
 /// Result sections the native status leaves empty; any row declines.
-const UNSUPPORTED: [&str; 4] =
-    ["pendingUpdatesFromMain", "updatesFromForked", "unavailableOnMain", "pendingUpdateDependents"];
+const UNSUPPORTED: [&str; 3] =
+    ["pendingUpdatesFromMain", "updatesFromForked", "pendingUpdateDependents"];
 
 const OUTDATED: &str = "(use \"bit checkout head\" to merge changes)\n(use \"bit diff [component_id] [new_version]\" to compare changes)\n(use \"bit log [component_id]\" to list all available versions)";
 const PENDING_MERGE: &str = "(use \"bit reset\" to discard local tags/snaps, and bit checkout head to re-merge with the remote.\nalternatively, to keep local tags/snaps history, use \"bit merge [component-id]\")";
@@ -46,6 +46,7 @@ const WITH_ISSUES: &str = "(fix the issues according to the suggested solution)"
 const AUTO_TAG: &str = "(these will be auto-tagged when their modified dependencies are tagged)";
 const LOCAL_ONLY: &str = "(these components are excluded from tag/snap/export commands)";
 const SOFT_TAGGED: &str = r#"(use "bit tag --persist" to complete the tag)"#;
+const UNAVAILABLE_ON_MAIN: &str = r#"(use "bit checkout head" to make them available)"#;
 const LOCALLY_REMOVED: &str = r#"(tag/snap and export the components to update the deletion to the remote. to undo deletion, run "bit recover")"#;
 const REMOTELY_REMOVED: &str = r#"(use "bit remove" to remove them from the workspace. use "bit recover" to undo the deletion)"#;
 
@@ -288,10 +289,6 @@ impl<'r> Status<'r> {
         let locally_removed = self.listed("locallySoftRemoved", |identity| self.version(identity))?;
         let remotely_removed =
             self.listed("remotelySoftRemoved", |identity| self.version(identity))?;
-        let soft_tagged = self.soft_tagged
-            .iter()
-            .map(|identity| Ok(self.item_without_soft_tag((identity, self.version(identity)?))))
-            .collect::<io::Result<Vec<_>>>()?;
         let during_merge: Vec<String> = ids(self.result, "componentsDuringMergeState")?
             .iter()
             .map(|identity| self.item((identity, None), false, None, true))
@@ -305,7 +302,12 @@ impl<'r> Status<'r> {
             format.section("modified components", MODIFIED, &modified),
             format.section("snapped components (tag pending)", SNAPPED, &snapped),
             format.section("staged components", STAGED, &self.staged()?),
-            format.section("soft-tagged components", SOFT_TAGGED, &soft_tagged),
+            format.section("soft-tagged components", SOFT_TAGGED, &self.soft_tagged_items()?),
+            format.section(
+                "components unavailable on main",
+                UNAVAILABLE_ON_MAIN,
+                &self.unavailable_on_main()?,
+            ),
             format.section("components pending auto-tag", AUTO_TAG, &auto_tag),
             format.section("components with issues", WITH_ISSUES, &self.with_issues_items()),
             format.section(
@@ -316,6 +318,20 @@ impl<'r> Status<'r> {
             format.section("soft-removed components locally", LOCALLY_REMOVED, &locally_removed),
             format.section("components deleted on the remote", REMOTELY_REMOVED, &remotely_removed),
         ])
+    }
+
+    fn unavailable_on_main(&self) -> io::Result<Vec<String>> {
+        Ok(ids(self.result, "unavailableOnMain")?
+            .iter()
+            .map(|identity| self.item((identity, None), false, None, true))
+            .collect())
+    }
+
+    fn soft_tagged_items(&self) -> io::Result<Vec<String>> {
+        self.soft_tagged
+            .iter()
+            .map(|identity| Ok(self.item_without_soft_tag((identity, self.version(identity)?))))
+            .collect()
     }
 
     fn invalid_components(&self) -> io::Result<Vec<String>> {

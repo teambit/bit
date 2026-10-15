@@ -160,6 +160,7 @@ fn read<Prepared>(
         "models": context["models"],
         "histories": context["histories"],
         "semver": semver,
+        "unavailableOnMain": context["unavailableOnMain"],
     }))?;
     result["remotelySoftRemoved"] = json!(capture.remotely_removed);
     sort_rows(&mut result)?;

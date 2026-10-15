@@ -179,7 +179,7 @@ such as `constructor`, break the package and are declined.
 - **Fresh detection.** The default dev-file patterns, as `minimatch` 3.0.5 matches them; the core aspect packages from `scopes/harmony/bit/core-aspect-ids.json`; the bundled TypeScript version, read from the Node.js CLI's install. Node's built-in module list comes from the Node.js CLI's own Node. It is asked once per binary and cached in `<BIT_GLOBALS_DIR>/native-cli`.
 - **Dependency cache.** Fresh detections are written with `cacache`'s format once the command has validated them, after the invalidation check `FsCache` runs.
 - **Ordering.** Result rows are sorted like `localeCompare` sorts them under the root collation.
-- **Current lane.** The engine uses the lane's component heads for version comparisons and its remote refs for staged status. Components outside the lane keep their main heads. Empty, unexported and exported ordinary lanes are supported; lanes with fork, update-dependent or removed-component metadata delegate to the Node.js CLI.
+- **Current lane.** The engine uses the lane's component heads for version comparisons and its remote refs for staged status. Components outside the lane keep their main heads. Bitmap rows unavailable on the current lane are excluded from ordinary and quick status; on main, rows with a model head appear under `unavailableOnMain` in JSON and text status. Empty, unexported and exported ordinary lanes are supported; lanes with fork, update-dependent or removed-component metadata delegate to the Node.js CLI.
 
 ### Diff output
 
