@@ -79,11 +79,11 @@ pub(super) fn prepare(input: &Prepare, selected: &LaneSelected) -> io::Result<Pr
     if selected.lane["scope"] != selected.scope || selected.lane["name"] != selected.name {
         return Err(invalid("outbound lane publication identity"));
     }
-    let expected_ids = selected.expected_ids
+    let expected_ids = selected.components.expected_ids
         .iter()
         .cloned()
         .collect::<HashSet<_>>();
-    if expected_ids.len() != selected.expected_ids.len() {
+    if expected_ids.len() != selected.components.expected_ids.len() {
         return Err(invalid("outbound lane publication acknowledgement"));
     }
     Ok(Prepared {
@@ -94,7 +94,7 @@ pub(super) fn prepare(input: &Prepare, selected: &LaneSelected) -> io::Result<Pr
         lane: Lane { scope: selected.scope.clone(), name: selected.name.clone() },
         expected_ids,
         objects: prepare_objects(root, selected)?,
-        models: selected.models
+        models: selected.components.models
             .iter()
             .map(|model| Model {
                 hash: model.hash.clone(),
@@ -103,7 +103,7 @@ pub(super) fn prepare(input: &Prepare, selected: &LaneSelected) -> io::Result<Pr
             })
             .collect(),
         published: PublishedState::prepare(root, selected)?,
-        staged: prepare_staged(root, &selected.expected_ids)?,
+        staged: prepare_staged(root, &selected.components.expected_ids)?,
         report: Reported::prepare(selected)?,
     })
 }

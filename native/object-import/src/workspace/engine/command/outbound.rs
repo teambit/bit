@@ -4,6 +4,7 @@
 pub(crate) use model::{encode as encode_object, read_object};
 
 mod lane_model;
+mod lane_plan;
 mod lane_publication;
 mod model;
 mod publication;
@@ -50,6 +51,8 @@ struct Transport {
 struct Options {
     #[serde(rename = "originDirectly")]
     _origin_directly: bool,
+    #[serde(default)]
+    fork_lane_new_scope: bool,
     resume: Option<String>,
 }
 
@@ -91,6 +94,7 @@ struct Plan {
     resume: Option<ResumeContext>,
     publication: Option<Publication>,
     pending: Vec<Pending>,
+    fork_history: Option<lane_model::ForkHistory>,
 }
 
 struct ResumeContext {
@@ -113,13 +117,14 @@ pub(in crate::workspace::engine) fn prepare(
     state.outbound = None;
     validate(input)?;
     let plan = match lane_model::select(input)? {
-        Some(lane) => plan_lane(input, lane)?,
+        Some(lane) => lane_plan::prepare(input, lane)?,
         None => plan_main(input)?,
     };
     state.sequence = state.sequence.wrapping_add(1);
     let token = format!("outbound-{}", state.sequence);
     let lane = plan.publication.as_ref().and_then(Publication::lane_name);
-    let receipt = receipt::prepare(&token, plan.count, &plan.pending, lane);
+    let receipt =
+        receipt::prepare(&token, plan.count, &plan.pending, lane, plan.fork_history.as_ref());
     state.outbound = Some(Retained {
         token,
         client_id: input.transport.client_id.clone(),
@@ -133,27 +138,10 @@ pub(in crate::workspace::engine) fn prepare(
     Ok((plan.count, receipt))
 }
 
-fn plan_lane(input: &Prepare, lane: lane_model::LaneSelected) -> io::Result<Plan> {
-    let host = remote::host(input, &lane.scope)?;
-    let prepared = lane_publication::prepare(input, &lane)?;
-    let order = lane.component_ids
-        .iter()
-        .enumerate()
-        .map(|(index, id)| (id.clone(), index))
-        .collect();
-    let name = format!("{}/{}", lane.scope, lane.name);
-    let count = lane.component_ids.len();
-    let pending = vec![Pending { scope: lane.scope, host, objects: lane.objects }];
-    Ok(Plan {
-        count,
-        order,
-        resume: None,
-        publication: Some(Publication::Lane { prepared: Box::new(prepared), name }),
-        pending,
-    })
-}
-
 fn plan_main(input: &Prepare) -> io::Result<Plan> {
+    if input.options.fork_lane_new_scope {
+        return Err(invalid("outbound fork-lane-new-scope on main"));
+    }
     let selected = model::select(input)?;
     let resume = resume_context(input, &selected)?;
     let count = selected.len();
@@ -169,7 +157,7 @@ fn plan_main(input: &Prepare) -> io::Result<Plan> {
         Some(Publication::Main(Box::new(publication::prepare(input, &selected, &hosts)?)))
     };
     let pending = batches(selected, &hosts)?;
-    Ok(Plan { count, order, resume, publication, pending })
+    Ok(Plan { count, order, resume, publication, pending, fork_history: None })
 }
 
 /// What a resumed export acknowledges: the selected heads, so each

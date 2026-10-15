@@ -3,10 +3,10 @@
 //! `native/` with the Node.js CLI behind it.
 
 pub(crate) mod config;
+pub(crate) mod setup;
 pub use fixtures::FOO_FIXTURE;
 
 mod fixtures;
-mod setup;
 
 use crate::known_failure::{KnownFailure, KnownResult};
 use serde_json::{Value, json};
@@ -167,14 +167,22 @@ impl Helper {
     }
 
     pub fn clone_remote_scope(&self) -> PathBuf {
+        self.clone_remote_at(&self.scopes.remote_path)
+    }
+
+    pub fn clone_remote_at(&self, remote: &Path) -> PathBuf {
         let clone = self.scopes.e2e_dir.join(format!("{}-remote-clone", random_str()));
-        setup::copy_dir(&self.scopes.remote_path, &clone);
+        setup::copy_dir(remote, &clone);
         clone
     }
 
     pub fn restore_remote_scope(&self, clone: &Path) {
-        let _ = fs::remove_dir_all(&self.scopes.remote_path);
-        setup::copy_dir(clone, &self.scopes.remote_path);
+        Self::restore_remote_at(&self.scopes.remote_path, clone);
+    }
+
+    pub fn restore_remote_at(remote: &Path, clone: &Path) {
+        let _ = fs::remove_dir_all(remote);
+        setup::copy_dir(clone, remote);
     }
 
     /// `getClonedWorkspace(clone)`.

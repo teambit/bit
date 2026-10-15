@@ -46,6 +46,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", type=Path, required=True)
     parser.add_argument("--remote", type=Path, required=True)
+    parser.add_argument("--remote-name", help="name of --remote when several remotes are configured")
+    parser.add_argument("--additional-remote", action="append", default=[], metavar="NAME=PATH")
+    parser.add_argument("--command-arg", action="append", default=[], help="extra bit export argument")
     parser.add_argument("--node-cli", type=Path, required=True)
     parser.add_argument("--rust", type=Path, required=True)
     parser.add_argument("--home", type=Path)
@@ -57,6 +60,18 @@ def main() -> None:
 
     source = args.source.resolve()
     remote_source = args.remote.resolve()
+    configured = json.loads((source / ".bit/scope.json").read_text()).get("remotes", {})
+    primary_name = args.remote_name or (next(iter(configured)) if len(configured) == 1 else None)
+    if primary_name is None or primary_name not in configured:
+        parser.error("--remote-name must identify the primary configured remote")
+    remote_sources = {primary_name: remote_source}
+    for additional in args.additional_remote:
+        name, separator, path = additional.partition("=")
+        if not separator or not name or name in remote_sources or "/" in name:
+            parser.error("--additional-remote must be a distinct NAME=PATH")
+        remote_sources[name] = Path(path).resolve()
+    if set(remote_sources) != set(configured):
+        parser.error("provide a source for every configured remote")
     rust = args.rust.resolve()
     node_cli = args.node_cli.resolve()
     stage = Path(tempfile.mkdtemp(prefix="bit-native-export-bench-"))
@@ -70,17 +85,27 @@ def main() -> None:
             globals_dir = case / "globals"
             home = case / "home"
             shutil.copytree(source, workspace, symlinks=True)
-            shutil.copytree(remote_source, remote, symlinks=True)
+            remote_paths = {
+                name: remote if name == primary_name else case / f"remote-{name}"
+                for name in remote_sources
+            }
+            for name, remote_path in remote_paths.items():
+                shutil.copytree(remote_sources[name], remote_path, symlinks=True)
             copy_optional(args.globals, globals_dir)
             copy_optional(args.home, home)
             scope_file = workspace / ".bit/scope.json"
             scope = json.loads(scope_file.read_text())
             remotes = scope.get("remotes", {})
-            if len(remotes) != 1:
-                parser.error("the workspace must configure exactly one file remote")
-            remote_name = next(iter(remotes))
-            remotes[remote_name] = remote.as_uri()
+            for name, remote_path in remote_paths.items():
+                remotes[name] = remote_path.as_uri()
             scope_file.write_text(json.dumps(scope, indent=4))
+            for remote_path in remote_paths.values():
+                remote_scope_file = remote_path / "scope.json"
+                remote_scope = json.loads(remote_scope_file.read_text())
+                for name in remote_scope.get("remotes") or {}:
+                    if name in remote_paths:
+                        remote_scope["remotes"][name] = remote_paths[name].as_uri()
+                remote_scope_file.write_text(json.dumps(remote_scope, indent=4))
 
             environment = os.environ.copy()
             for key in ("BIT_NATIVE", "BIT_NATIVE_QUIET", "BIT_FEATURES", "CI"):
@@ -96,7 +121,7 @@ def main() -> None:
                 environment["BIT_NATIVE"] = "off"
             started = time.perf_counter()
             result = subprocess.run(
-                [str(rust), "export"], cwd=workspace, env=environment,
+                [str(rust), "export", *args.command_arg], cwd=workspace, env=environment,
                 text=True, capture_output=True, check=False,
             )
             elapsed_ms = round((time.perf_counter() - started) * 1000, 3)
@@ -116,8 +141,12 @@ def main() -> None:
     if outputs["node"] != outputs["rust"]:
         raise RuntimeError(f"Node and Rust stdout differ; inspect {stage}")
     report = {
-        "command": "bit export", "source_sha256": fingerprint(source),
+        "command": " ".join(["bit", "export", *args.command_arg]), "source_sha256": fingerprint(source),
         "remote_sha256": fingerprint(remote_source),
+        "additional_remote_sha256": {
+            name: fingerprint(path)
+            for name, path in remote_sources.items() if name != primary_name
+        },
         "node_cli": str(node_cli), "rust": str(rust),
         "runs_ms": samples,
         "median_ms": {key: round(statistics.median(times), 3) for key, times in samples.items()},

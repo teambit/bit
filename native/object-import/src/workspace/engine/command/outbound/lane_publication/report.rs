@@ -19,7 +19,7 @@ impl Reported {
                 let scope = row["id"]["scope"].as_str()?;
                 let name = row["id"]["name"].as_str()?;
                 let identity = format!("{scope}/{name}");
-                selected.component_ids.contains(&identity).then_some(identity)
+                selected.components.ids.contains(&identity).then_some(identity)
             })
             .collect();
         Ok(Self { updates: selected_update_ids(selected)?, removed })
@@ -27,7 +27,7 @@ impl Reported {
 }
 
 fn selected_update_ids(selected: &LaneSelected) -> io::Result<Vec<String>> {
-    let selected_ids: HashSet<_> = selected.component_ids
+    let selected_ids: HashSet<_> = selected.components.ids
         .iter()
         .map(String::as_str)
         .collect();

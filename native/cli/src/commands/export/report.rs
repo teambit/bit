@@ -19,6 +19,18 @@ pub(super) struct Prepared {
     pub scopes: Vec<String>,
     /// Each scope and the objects pushed to it.
     pub transfers: Vec<(String, usize)>,
+    pub fork_history: Option<ForkHistory>,
+}
+
+pub(super) struct ForkHistory {
+    pub parent: String,
+    pub external_count: usize,
+    pub candidate_count: usize,
+}
+
+struct Transfers {
+    scopes: Vec<String>,
+    items: Vec<(String, usize)>,
 }
 
 /// The prepared export, which must own a token, name its scopes and count
@@ -37,17 +49,31 @@ pub(super) fn prepared(value: &Value) -> io::Result<Prepared> {
         Some(Value::Null) | None => None,
         _ => return Err(decline("native outbound lane identity")),
     };
+    let transfers = parse_transfers(value)?;
+    if value["owner"] != "rust"
+        || token.is_empty()
+        || nothing_to_export != (count == 0 && lane.is_none())
+    {
+        return Err(decline("native outbound prepare receipt"));
+    }
+    let fork_history = parse_fork_history(value.get("forkHistory"), count)?;
+    Ok(Prepared {
+        token: token.to_string(),
+        nothing_to_export,
+        count,
+        scopes: transfers.scopes,
+        transfers: transfers.items,
+        fork_history,
+    })
+}
+
+fn parse_transfers(value: &Value) -> io::Result<Transfers> {
     let scopes = array(value.get("scopes"), "scopes")?
         .iter()
         .map(|scope| text(Some(scope)).map(str::to_string))
         .collect::<io::Result<Vec<_>>>()?;
     let counts = array(value.get("scopeObjectCounts"), "object counts")?;
-    if value["owner"] != "rust"
-        || token.is_empty()
-        || counts.len() != scopes.len()
-        || scopes.iter().any(String::is_empty)
-        || nothing_to_export != (count == 0 && lane.is_none())
-    {
+    if counts.len() != scopes.len() || scopes.iter().any(String::is_empty) {
         return Err(decline("native outbound prepare receipt"));
     }
     let transfers = scopes
@@ -61,7 +87,34 @@ pub(super) fn prepared(value: &Value) -> io::Result<Prepared> {
             Ok((scope.clone(), objects))
         })
         .collect::<io::Result<_>>()?;
-    Ok(Prepared { token: token.to_string(), nothing_to_export, count, scopes, transfers })
+    Ok(Transfers { scopes, items: transfers })
+}
+
+fn parse_fork_history(value: Option<&Value>, count: usize) -> io::Result<Option<ForkHistory>> {
+    let parsed = match value {
+        None | Some(Value::Null) => None,
+        Some(Value::Object(history)) => {
+            let parent = text(history.get("parent"))?;
+            let external_count = history
+                .get("externalCount")
+                .and_then(Value::as_u64)
+                .and_then(|count| usize::try_from(count).ok())
+                .filter(|external| *external <= count)
+                .ok_or_else(|| decline("native outbound fork history count"))?;
+            let candidate_count = history
+                .get("candidateCount")
+                .and_then(Value::as_u64)
+                .and_then(|count| usize::try_from(count).ok())
+                .filter(|candidates| *candidates <= 4096 && *candidates >= count)
+                .ok_or_else(|| decline("native outbound fork candidates"))?;
+            if !parent.contains('/') {
+                return Err(decline("native outbound fork history parent"));
+            }
+            Some(ForkHistory { parent: parent.to_owned(), external_count, candidate_count })
+        }
+        Some(_) => return Err(decline("native outbound fork history")),
+    };
+    Ok(parsed)
 }
 
 /// `commandOutboundFinalize`'s receipt, validated.

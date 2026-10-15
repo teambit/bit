@@ -1,7 +1,135 @@
 //! `e2e/commands/export.e2e.ts`.
 
-use crate::helper::{Helper, parse};
-use std::{ffi::OsStr, fs};
+use crate::helper::{Helper, config, parse, setup};
+use std::{ffi::OsStr, fs, path::Path};
+
+fn object_names(scope: &Path) -> Vec<String> {
+    let mut names = Vec::new();
+    for prefix in fs::read_dir(scope.join("objects")).unwrap() {
+        let prefix = prefix.unwrap();
+        for object in fs::read_dir(prefix.path()).unwrap() {
+            let object = object.unwrap();
+            names.push(format!(
+                "{}/{}",
+                prefix.file_name().to_string_lossy(),
+                object.file_name().to_string_lossy(),
+            ));
+        }
+    }
+    names.sort();
+    names
+}
+
+#[test]
+fn cross_scope_forked_lane_export_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    let fork_scope = format!("{}-fork", helper.scopes.remote);
+    let fork_remote = helper.scopes.e2e_dir.join(&fork_scope);
+    fs::create_dir_all(&fork_remote).unwrap();
+    let init =
+        Helper::cmd_in_with(&fork_remote, "init --bare", &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(init.status.success(), "{}", init.stderr);
+    config::update_scope_json(&fork_remote.join("scope.json"), |scope| {
+        scope["remotes"][&helper.scopes.remote] =
+            serde_json::json!(format!("file://{}", helper.scopes.remote_path.display()));
+    });
+    config::update_scope_json(&helper.scopes.local_path.join(".bit/scope.json"), |scope| {
+        scope["remotes"][&fork_scope] =
+            serde_json::json!(format!("file://{}", fork_remote.display()));
+    });
+    helper.populate_components(2, true, "");
+    helper.run("tag");
+    helper.run("export");
+    helper.run("lane create parent");
+    helper.run("snap --unmodified --message parent");
+    helper.run("export");
+    helper.run(&format!("lane create child --scope {fork_scope} --fork-lane-new-scope"));
+    helper.run("snap comp1 --unmodified --message child");
+    if let Some(destination) = std::env::var_os("BIT_NATIVE_EXPORT_BENCH_FIXTURE") {
+        let destination = std::path::PathBuf::from(destination);
+        assert!(!destination.exists());
+        fs::create_dir_all(&destination).unwrap();
+        setup::copy_dir(&helper.scopes.local_path, &destination.join("workspace"));
+        setup::copy_dir(&helper.scopes.remote_path, &destination.join("parent-remote"));
+        setup::copy_dir(&fork_remote, &destination.join("fork-remote"));
+    }
+    let remote_before = helper.clone_remote_at(&fork_remote);
+    let node_root = helper.clone_workspace();
+    let node_ci_root = helper.clone_workspace();
+    let rust_ci_root = helper.clone_workspace();
+    let node_ci = Helper::cmd_in_with(
+        &node_ci_root,
+        "export --fork-lane-new-scope",
+        &[("BIT_NATIVE", OsStr::new("off")), ("CI", OsStr::new("1"))],
+    );
+    assert!(node_ci.status.success(), "{}", node_ci.stderr);
+    Helper::restore_remote_at(&fork_remote, &remote_before);
+    let rust_ci = Helper::cmd_in_with(
+        &rust_ci_root,
+        "export --fork-lane-new-scope",
+        &[("CI", OsStr::new("1"))],
+    );
+    assert!(rust_ci.native, "{}", rust_ci.trace);
+    assert_eq!(rust_ci.status.code(), node_ci.status.code());
+    assert_eq!(rust_ci.stdout, node_ci.stdout);
+    assert_eq!(rust_ci.stderr, node_ci.stderr);
+    Helper::restore_remote_at(&fork_remote, &remote_before);
+    let node = Helper::cmd_in_with(
+        &node_root,
+        "export --fork-lane-new-scope",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(node.status.success(), "{}", node.stderr);
+    let node_remote = helper.clone_remote_at(&fork_remote);
+    Helper::restore_remote_at(&fork_remote, &remote_before);
+    let native = helper.native_run("export --fork-lane-new-scope");
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(
+        parse(&fs::read_to_string(fork_remote.join("index.json")).unwrap()),
+        parse(&fs::read_to_string(node_remote.join("index.json")).unwrap()),
+    );
+    assert_eq!(object_names(&fork_remote), object_names(&node_remote));
+    for path in [
+        ".bitmap".to_owned(),
+        ".bit/scope.json".to_owned(),
+        ".bit/index.json".to_owned(),
+        format!(".bit/refs/remotes/{fork_scope}/child"),
+    ] {
+        let native_bytes = fs::read_to_string(helper.scopes.local_path.join(&path)).unwrap();
+        let node_bytes = fs::read_to_string(node_root.join(&path)).unwrap();
+        let native_json = if path == ".bitmap" {
+            parse(&native_bytes[native_bytes.find('{').unwrap()..])
+        } else {
+            parse(&native_bytes)
+        };
+        let node_json = if path == ".bitmap" {
+            parse(&node_bytes[node_bytes.find('{').unwrap()..])
+        } else {
+            parse(&node_bytes)
+        };
+        assert_eq!(native_json, node_json, "{path}");
+    }
+    let node_status = Helper::cmd_in_with(
+        &node_root,
+        "status --json --lanes",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    let native_status = helper.native_run("status --json --lanes");
+    assert_eq!(parse(&native_status.stdout), parse(&node_status.stdout));
+    let remote_before_repeat = helper.clone_remote_at(&fork_remote);
+    let node_repeat = Helper::cmd_in_with(
+        &node_root,
+        "export --fork-lane-new-scope",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    Helper::restore_remote_at(&fork_remote, &remote_before_repeat);
+    let native_repeat = helper.native_run("export --fork-lane-new-scope");
+    assert_eq!(native_repeat.status.code(), node_repeat.status.code());
+    assert_eq!(native_repeat.stdout, node_repeat.stdout);
+    assert_eq!(native_repeat.stderr, node_repeat.stderr);
+}
 
 #[test]
 fn forked_lane_export_matches_node() {

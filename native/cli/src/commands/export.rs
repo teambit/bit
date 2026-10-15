@@ -6,7 +6,7 @@
 //!
 //! The remotes change only when they persist the objects. A failure before
 //! that leaves them as they were (the pushed objects are cleaned), so the
-//! command declines and the Node.js CLI exports and reports. Lanes and
+//! command declines and the Node.js CLI exports and reports. Unconfigured
 //! bit.cloud (hub) remotes run on the Node.js CLI.
 
 mod report;
@@ -34,28 +34,38 @@ pub const COMMAND: Command = Command { name: "export", aliases: &["e"], run };
 struct Options {
     ids: Vec<String>,
     origin_directly: bool,
+    fork_lane_new_scope: bool,
     resume: Option<String>,
 }
 
 /// The same bounded, explicit export grammar as the production JS adapter.
 fn parse(args: &[&str]) -> Option<Options> {
-    let mut options = Options { ids: Vec::new(), origin_directly: false, resume: None };
+    let mut options = Options {
+        ids: Vec::new(),
+        origin_directly: false,
+        fork_lane_new_scope: false,
+        resume: None,
+    };
     let mut args = args.iter().copied();
     while let Some(arg) = args.next() {
         match arg {
             "--origin-directly" if !options.origin_directly => options.origin_directly = true,
+            "--fork-lane-new-scope" if !options.fork_lane_new_scope => {
+                options.fork_lane_new_scope = true;
+            }
             "--resume" if options.resume.is_none() => {
-                let client_id = args.next()?;
-                if !valid_client_id(client_id) {
-                    return None;
-                }
-                options.resume = Some(client_id.to_owned());
+                options.resume = Some(resume_id(&mut args)?);
             }
             id if valid_id(id) && options.ids.len() < 4096 => options.ids.push(id.to_owned()),
             _ => return None,
         }
     }
     Some(options)
+}
+
+fn resume_id<'a>(args: &mut impl Iterator<Item = &'a str>) -> Option<String> {
+    let client_id = args.next()?;
+    valid_client_id(client_id).then(|| client_id.to_owned())
 }
 
 fn valid_client_id(id: &str) -> bool {
@@ -122,6 +132,7 @@ struct Exported {
     transfers: Vec<(String, usize)>,
     /// The scopes persisted, the last one the failed one on failure.
     persisted: Vec<String>,
+    fork_history: Option<report::ForkHistory>,
     result: Result<Value, String>,
 }
 
@@ -129,7 +140,9 @@ impl Exported {
     /// `exportMany`'s status lines (`exportPendingComponents` without ids).
     fn progress(&self, output: &Output) {
         output.status("loading components");
-        output.status(if self.count > 1 { "exporting components" } else { "exporting component" });
+        let candidates =
+            self.fork_history.as_ref().map_or(self.count, |history| history.candidate_count);
+        output.status(if candidates > 1 { "exporting components" } else { "exporting component" });
         if !self.pending {
             return;
         }
@@ -137,6 +150,18 @@ impl Exported {
             output.status(&format!(r#"transferring {objects} objects to the remote "{scope}"..."#));
         }
         output.restart("verifying that objects can be merged on the remotes...");
+        if let Some(history) = &self.fork_history
+            && history.external_count > 0
+            && self.result.is_ok()
+        {
+            let reason =
+                format!("fetching version-history from forked-from lane {}", history.parent);
+            output.restart(&format!("importing {} components {reason}", history.external_count));
+            output.restart(&format!(
+                "successfully imported {} components {reason}",
+                history.external_count,
+            ));
+        }
         for scope in &self.persisted {
             output.restart(&format!(r#"persisting data on the remote "{scope}"..."#));
         }
@@ -157,6 +182,7 @@ fn export(root: &Path, options: &Options) -> io::Result<Exported> {
         pending: !prepared.nothing_to_export,
         transfers: prepared.transfers,
         persisted: prepared.scopes.clone(),
+        fork_history: prepared.fork_history,
         result: Err(String::new()),
     };
     match engine.request::<Value>(&json!({"kind": "commandOutboundApply", "token": token})) {
@@ -212,7 +238,11 @@ fn prepare(engine: &mut Engine, root: &Path, options: &Options) -> io::Result<re
         "exportDate": now_ms().to_string(),
         "operation": "export",
         "ids": options.ids,
-        "options": { "originDirectly": options.origin_directly, "resume": options.resume },
+        "options": {
+            "originDirectly": options.origin_directly,
+            "forkLaneNewScope": options.fork_lane_new_scope,
+            "resume": options.resume,
+        },
     }))?;
     report::prepared(&prepared)
 }
