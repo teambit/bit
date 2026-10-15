@@ -95,15 +95,8 @@ fn merge(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     if planned.plan["result"]["removedComponents"]
         .as_array()
         .is_some_and(|rows| !rows.is_empty())
+        && installer.is_none()
     {
-        if options.no_snap()
-            || options.request()["lane"]["noAutoSnap"] == true
-            || installer.is_some()
-        {
-            return Ok(Outcome::Declined(
-                "removed lane merge requires direct native snap".to_string(),
-            ));
-        }
         let (direct, direct_report, direct_progress) =
             match workspace_command::plan(&root, &request)
                 .and_then(|direct| {
@@ -112,7 +105,9 @@ fn merge(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
                     Ok((direct, report, progress))
                 }) {
                 Ok(direct) => direct,
-                Err(error) => return Ok(Outcome::Declined(format!("removed lane merge: {error}"))),
+                Err(error) => {
+                    return Ok(Outcome::Declined(format!("removed lane merge: {error}")));
+                }
             };
         return workspace_command::execute(
             &root,

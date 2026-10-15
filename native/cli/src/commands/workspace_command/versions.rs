@@ -17,7 +17,7 @@ pub struct Labels {
     /// `autoSnappedResults` or `autoTaggedResults`.
     automatic: &'static str,
     /// The other keys a result may carry.
-    others: [&'static str; 3],
+    others: &'static [&'static str],
     /// `NOTHING_TO_SNAP_MSG` or `NOTHING_TO_TAG_MSG`.
     nothing: &'static str,
     /// `AUTO_SNAPPED_MSG` or `AUTO_TAGGED_MSG`.
@@ -33,7 +33,7 @@ pub struct Labels {
 pub const SNAP: Labels = Labels {
     versioned: "snappedComponents",
     automatic: "autoSnappedResults",
-    others: ["newComponents", "laneName", "totalComponentsCount"],
+    others: &["newComponents", "removedComponents", "laneName", "totalComponentsCount"],
     nothing: "nothing to snap",
     dependents: "auto-snapped dependents",
     verb: "snapped",
@@ -44,7 +44,7 @@ pub const SNAP: Labels = Labels {
 pub const TAG: Labels = Labels {
     versioned: "taggedComponents",
     automatic: "autoTaggedResults",
-    others: ["newComponents", "warnings", "totalComponentsCount"],
+    others: &["newComponents", "warnings", "totalComponentsCount"],
     nothing: "nothing to tag",
     dependents: "auto-tagged dependents",
     verb: "tagged",
@@ -57,6 +57,7 @@ struct Versioned<'l> {
     labels: &'l Labels,
     selected: Vec<Id>,
     added: Vec<Id>,
+    removed: Vec<Id>,
     /// Each automatic component and the components that triggered it.
     automatic: Vec<(Id, Vec<Id>)>,
     lane: Option<String>,
@@ -77,6 +78,7 @@ fn hydrate<'l>(value: &Value, labels: &'l Labels) -> io::Result<Versioned<'l>> {
     let total = header(map, labels)?;
     let selected = versions(ids(map.get(labels.versioned))?, labels)?;
     let added = ids(map.get("newComponents"))?;
+    let removed = if labels.tag { Vec::new() } else { ids(map.get("removedComponents"))? };
     let selected_names: HashSet<String> = selected
         .iter()
         .map(Id::without_version)
@@ -84,6 +86,9 @@ fn hydrate<'l>(value: &Value, labels: &'l Labels) -> io::Result<Versioned<'l>> {
     if added
         .iter()
         .any(|id| !selected_names.contains(&id.without_version()))
+        || removed
+            .iter()
+            .any(|id| !selected_names.contains(&id.without_version()))
     {
         return Err(decline("native snap new components"));
     }
@@ -96,7 +101,8 @@ fn hydrate<'l>(value: &Value, labels: &'l Labels) -> io::Result<Versioned<'l>> {
         .get("laneName")
         .and_then(Value::as_str)
         .map(str::to_string);
-    let versioned = Versioned { labels, selected, added, automatic, lane, warnings, total };
+    let versioned =
+        Versioned { labels, selected, added, removed, automatic, lane, warnings, total };
     versioned.validate_overlaps()?;
     Ok(versioned)
 }
@@ -239,6 +245,10 @@ impl Versioned<'_> {
             .iter()
             .map(Id::without_version)
             .collect();
+        let removed: HashSet<String> = self.removed
+            .iter()
+            .map(Id::without_version)
+            .collect();
         let item = |id: &Id| {
             if detailed {
                 self.detailed(format, id)
@@ -248,12 +258,18 @@ impl Versioned<'_> {
         };
         let (new, changed): (Vec<&Id>, Vec<&Id>) = self.selected
             .iter()
+            .filter(|id| !removed.contains(&id.without_version()))
             .partition(|id| added.contains(&id.without_version()));
         let new: Vec<String> = new.into_iter().map(item).collect();
         let changed: Vec<String> = changed.into_iter().map(item).collect();
+        let removed: Vec<String> = self.removed
+            .iter()
+            .map(|id| Formatter::item_with(&id.without_version(), &format.warn_symbol()))
+            .collect();
         vec![
             format.section("new components", "first version for components", &new),
             format.section("changed components", "components that got a version bump", &changed),
+            format.section("removed components", "", &removed),
         ]
     }
 

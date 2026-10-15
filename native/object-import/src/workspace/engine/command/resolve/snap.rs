@@ -136,7 +136,7 @@ pub(super) fn report(
         )
     });
     Ok(
-        serde_json::json!({"snappedComponents":selected,"newComponents":materials.iter().filter(|material| material.version_state.current_head.is_empty() && material.participation.selected).map(|material|material.identity.clone()).collect::<Vec<_>>(),"autoSnappedResults":automatic,"laneName":lane_name,"totalComponentsCount":materials.len()}),
+        serde_json::json!({"snappedComponents":selected,"newComponents":materials.iter().filter(|material| material.version_state.current_head.is_empty() && material.participation.selected).map(|material|material.identity.clone()).collect::<Vec<_>>(),"removedComponents":materials.iter().filter(|material| !material.hidden && material.participation.selected && super::super::resolve_snapshot::is_removed(&material.version)).map(|material|material.identity.clone()).collect::<Vec<_>>(),"autoSnappedResults":automatic,"laneName":lane_name,"totalComponentsCount":materials.len()}),
     )
 }
 

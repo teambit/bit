@@ -38,6 +38,7 @@ fn new_links_are_planned_without_writes_or_declined_before_writes_on_non_unix() 
             version: &version,
         }],
         false,
+        &[],
     );
     if cfg!(unix) {
         assert_eq!(result.unwrap().links.len(), 1);
@@ -68,6 +69,7 @@ fn existing_links_remain_eligible_and_do_not_get_replaced_during_preparation() {
             version: &version,
         }],
         false,
+        &[],
     )
     .unwrap();
     assert!(prepared.links.is_empty());
@@ -188,6 +190,7 @@ fn scope_only_snapshot_stages_hashes_without_workspace_config_or_package_writes(
             version: &version,
         }],
         false,
+        &[],
     )
     .unwrap();
     assert_eq!(prepared.writes.len(), 2);
@@ -205,7 +208,7 @@ fn scope_only_snapshot_stages_hashes_without_workspace_config_or_package_writes(
 #[test]
 fn snapshot_finalization_keeps_planned_import_index_entries_and_original_freshness_proof() {
     let (directory, _) = fixture();
-    let mut planned = prepare(&directory.0, &[], false).unwrap();
+    let mut planned = prepare(&directory.0, &[], false, &[]).unwrap();
     let imported = json!({"components":[{"id":{"scope":"scope","name":"new"},"hash":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}],"lanes":[{"id":{"scope":"scope","name":"incoming"},"hash":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}]});
     planned
         .imported_index(&directory.0, Some(&imported))
@@ -243,6 +246,7 @@ fn package_component_id_preserves_existing_order_and_serializes_first_snapshot_i
                 version: &version,
             }],
             false,
+            &[],
         )
         .unwrap();
         let (_, bytes) = prepared.writes
@@ -283,6 +287,7 @@ fn tag_package_and_staged_config_use_semver_while_staged_snaps_use_object_hash()
             version: &version,
         }],
         false,
+        &[],
     )
     .unwrap();
     let bytes = |relative: &str| {

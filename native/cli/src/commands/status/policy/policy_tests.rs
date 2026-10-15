@@ -19,3 +19,21 @@ fn removed_merge_config_is_visible_to_dependency_projection() {
     let custom = json!({"mergedConfigNames":["custom/aspect"]});
     assert!(super::extensions::status_extensions(Some(&version), &custom).is_err());
 }
+
+#[test]
+fn pending_soft_removal_is_projected_but_other_merge_config_stays_canonical() {
+    let target =
+        json!({"resolveConfig":true,"mergedConfig":{"teambit.component/remove":{"removed":true}}});
+    assert!(!super::extensions::pending_merge_config(&target));
+    let projected =
+        super::extensions::status_extensions(Some(&json!({"extensions":[]})), &target).unwrap();
+    assert_eq!(
+        projected,
+        vec![json!({"name":"teambit.component/remove","config":{"removed":true}})],
+    );
+    let custom =
+        json!({"resolveConfig":true,"mergedConfig":{"teambit.component/remove":{"removed":false}}});
+    assert!(super::extensions::pending_merge_config(&custom));
+    let dependency = json!({"resolveConfig":true,"mergedConfig":{"teambit.dependencies/dependency-resolver":{"policy":{}}}});
+    assert!(super::extensions::pending_merge_config(&dependency));
+}

@@ -15,6 +15,8 @@ pub(super) struct Prepared {
     pending_bytes: Option<Vec<u8>>,
     proofs: Vec<proof::Proof>,
     reason: String,
+    removed_root: PathBuf,
+    removed: Vec<PathBuf>,
 }
 
 /// Exercise every filesystem publication domain before requesting snapshot scalars.
@@ -87,8 +89,18 @@ struct Batch<'a> {
     identities: HashSet<&'a str>,
     updates: Vec<bitmap::Update>,
     inputs: Vec<finalization::Input<'a>>,
+    removed: Vec<String>,
+    removed_paths: Vec<PathBuf>,
 }
 
+#[cfg_attr(
+    dylint_lib = "perfectionist",
+    expect(
+        perfectionist::excessive_cognitive_complexity,
+        perfectionist::overly_long_function,
+        reason = "The publication batch checks selected and removed components together before any workspace write"
+    )
+)]
 fn batch<'a>(
     context: &'a Value,
     materials: &'a [resolve_snapshot::Material],
@@ -97,7 +109,13 @@ fn batch<'a>(
     if materials.len() != versions.len() || materials.is_empty() {
         return Err(invalid("resolve publication count"));
     }
-    let mut output = Batch { identities: HashSet::new(), updates: Vec::new(), inputs: Vec::new() };
+    let mut output = Batch {
+        identities: HashSet::new(),
+        updates: Vec::new(),
+        inputs: Vec::new(),
+        removed: Vec::new(),
+        removed_paths: Vec::new(),
+    };
     for (material, version) in materials.iter().zip(versions) {
         if version["identity"] != material.identity
             || !output.identities.insert(material.identity.as_str())
@@ -107,7 +125,14 @@ fn batch<'a>(
         let hash = version["hash"].as_str().ok_or_else(|| invalid("resolve publication hash"))?;
         crate::merge_history::hash(hash)?;
         let directory = directory(context, material)?;
-        if !material.hidden {
+        if !material.hidden && resolve_snapshot::is_removed(&version["version"]) {
+            crate::checkout::plan::relative_path(directory)?;
+            if directory == "." || directory.is_empty() {
+                return Err(invalid("resolve removed directory"));
+            }
+            output.removed.push(material.identity.clone());
+            output.removed_paths.push(PathBuf::from(directory));
+        } else if !material.hidden {
             output.updates.push(bitmap_update(
                 material,
                 version,
@@ -196,6 +221,13 @@ fn lane_new_ids(context: &Value, materials: &[resolve_snapshot::Material]) -> Ve
         .collect()
 }
 
+#[cfg_attr(
+    dylint_lib = "perfectionist",
+    expect(
+        perfectionist::overly_long_function,
+        reason = "The resolution publication prepares bitmap, staged objects, and source removal as one validated transaction"
+    )
+)]
 pub(super) fn prepare(
     root: &Path,
     context: &Value,
@@ -208,11 +240,13 @@ pub(super) fn prepare(
     let batch = batch(context, materials, versions)?;
     let lane_new = lane_new_ids(context, materials);
     let original = fs::read(root.join(".bitmap"))?;
-    let mut bitmap = bitmap::prepare_bytes(root, original, context, &batch.updates, &[])?;
+    let mut bitmap = bitmap::prepare_bytes(root, original, context, &batch.updates, &batch.removed)
+        .map_err(|error| io::Error::new(error.kind(), format!("resolve bitmap: {error}")))?;
     bitmap.mark_lane_new(context, &lane_new)?;
-    let mut finalization = finalization::prepare(root, &batch.inputs, true)?;
+    let mut finalization = finalization::prepare(root, &batch.inputs, true, &batch.removed)
+        .map_err(|error| io::Error::new(error.kind(), format!("resolve finalization: {error}")))?;
     finalization.mark_lane_new(root, &lane_new)?;
-    finalization.resolve_licenses(root, &batch.inputs)?;
+    finalization.resolve_licenses(root, &batch.inputs, &batch.removed)?;
     finalization.imported_index(root, imported_index)?;
     finalization.snapshot_index(
         root,
@@ -240,6 +274,8 @@ pub(super) fn prepare(
                 .iter()
                 .any(|material| material.version_state.tagged_version.is_some()),
         ),
+        removed_root: root.to_path_buf(),
+        removed: batch.removed_paths,
     };
     output.validate()?;
     Ok(output)
@@ -248,12 +284,25 @@ impl Prepared {
     pub(super) fn validate(&self) -> io::Result<()> {
         self.bitmap.validate()?;
         self.finalization.validate()?;
+        for directory in &self.removed {
+            let mut path = self.removed_root.clone();
+            for segment in directory.components() {
+                path.push(segment);
+                let metadata = fs::symlink_metadata(&path)?;
+                if !metadata.is_dir() || metadata.file_type().is_symlink() {
+                    return Err(invalid("resolve removed directory is not ordinary"));
+                }
+            }
+        }
         proof::verify(&self.proofs)
     }
     pub(super) fn commit(&self, file_id: &str) -> io::Result<()> {
         self.validate()?;
         bitmap::validate_history_file_id(file_id)?;
         self.finalization.commit()?;
+        for directory in &self.removed {
+            fs::remove_dir_all(self.removed_root.join(directory))?;
+        }
         let backup = self.bitmap.commit(file_id, &self.reason)?;
         if backup.is_some() {
             return Err(invalid("resolve bitmap history backup"));
