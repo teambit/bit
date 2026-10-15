@@ -21,6 +21,11 @@ pub(super) fn resolve(
     if to == "main" {
         return head(model).map(str::to_owned);
     }
+    if matches!(to, "head" | "latest")
+        && let Some(head) = selection.lane_head
+    {
+        return Ok(head.to_owned());
+    }
     if let Some(count) = to.strip_prefix("head~") {
         return ancestor(model, count.parse().map_err(io::Error::other)?, repository);
     }

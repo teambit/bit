@@ -45,10 +45,19 @@ fn lane_history_keeps_deleted_and_hidden_buckets_separate_and_preserves_previous
 fn snapshot_promotes_bitmap_component_without_leaving_a_hidden_duplicate() {
     let mut lane =
         json!({"components":[],"updateDependents":[format!("scope/alpha@{}","a".repeat(40))]});
-    objects::snapshot_update(&mut lane, "scope/alpha", &"b".repeat(40), false).unwrap();
+    objects::snapshot_update(&mut lane, "scope/alpha", &"b".repeat(40), false, false).unwrap();
     assert!(lane.get("updateDependents").is_none());
     assert_eq!(lane["components"][0]["head"], "b".repeat(40));
     assert!(lane.get("overrideUpdateDependents").is_none());
+}
+
+#[test]
+fn removed_snapshot_marks_the_lane_component_deleted() {
+    let mut lane =
+        json!({"components":[{"id":{"scope":"scope","name":"alpha"},"head":"a".repeat(40)}]});
+    objects::snapshot_update(&mut lane, "scope/alpha", &"b".repeat(40), false, true).unwrap();
+    assert_eq!(lane["components"][0]["head"], "b".repeat(40));
+    assert_eq!(lane["components"][0]["isDeleted"], true);
 }
 
 #[test]

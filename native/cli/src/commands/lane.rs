@@ -40,9 +40,10 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 #[cfg_attr(
     dylint_lib = "perfectionist",
     expect(
+        perfectionist::excessive_cognitive_complexity,
         perfectionist::overly_long_function,
         perfectionist::too_many_local_bindings,
-        reason = "Existing CLI orchestration is retained until its operation is decomposed"
+        reason = "The lane merge CLI coordinates preview, materialization, and direct removal snapshots"
     )
 )]
 fn merge(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
@@ -62,7 +63,9 @@ fn merge(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     let request =
         Request { operation: "merge", options: options.request(), to: None, verify_fresh: true };
     let mode = report::Mode { verbose: options.verbose, lane: true };
-    let planned = if installer.is_some() && !options.no_snap() {
+    let planned = if options.no_snap() {
+        workspace_command::plan(&root, &request).map(|planned| (planned, None))
+    } else {
         let mut no_snap = options.request();
         no_snap["noSnap"] = Value::Bool(true);
         no_snap
@@ -79,8 +82,6 @@ fn merge(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
                 .map_err(|_| io::Error::other("merge snapshot preview thread panicked"))??;
             Ok::<_, io::Error>((preview, Some(materialized?)))
         })
-    } else {
-        workspace_command::plan(&root, &request).map(|planned| (planned, None))
     };
     let prepared = planned.and_then(|(planned, materialized)| {
         let report = report::format(&planned.plan["result"], mode, Chalk::detect(args))?;
@@ -91,7 +92,37 @@ fn merge(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
         Ok(prepared) => prepared,
         Err(error) => return Ok(Outcome::Declined(format!("lane merge: {error}"))),
     };
-    if installer.is_some() && !options.no_snap() && planned.plan.get("needsSnap").is_some() {
+    if planned.plan["result"]["removedComponents"]
+        .as_array()
+        .is_some_and(|rows| !rows.is_empty())
+        && installer.is_none()
+    {
+        let (direct, direct_report, direct_progress) =
+            match workspace_command::plan(&root, &request)
+                .and_then(|direct| {
+                    let report = report::format(&direct.plan["result"], mode, Chalk::detect(args))?;
+                    let progress = Progress::parse(direct.plan.get("progress"))?;
+                    Ok((direct, report, progress))
+                }) {
+                Ok(direct) => direct,
+                Err(error) => {
+                    return Ok(Outcome::Declined(format!("removed lane merge: {error}")));
+                }
+            };
+        return workspace_command::execute(
+            &root,
+            args,
+            "merge",
+            direct,
+            &direct_report,
+            |output| {
+                if let Some(progress) = &direct_progress {
+                    progress.render_merge(output);
+                }
+            },
+        );
+    }
+    if !options.no_snap() && planned.plan.get("needsSnap").is_some() {
         return install::execute_snapping(
             &root,
             args,

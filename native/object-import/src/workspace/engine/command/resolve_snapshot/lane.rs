@@ -23,7 +23,13 @@ pub(super) fn lane_objects(
         .zip(receipt["versions"].as_array().unwrap())
     {
         let next = allocation["hash"].as_str().unwrap();
-        update(&mut value, &material.identity, next, material.hidden)?;
+        update(
+            &mut value,
+            &material.identity,
+            next,
+            material.hidden,
+            super::is_removed(&material.version),
+        )?;
     }
     let history = history(&value, hash, receipt, repository)?;
     objects.push(snapshot::object("Lane", Some(hash), value)?);
@@ -31,7 +37,13 @@ pub(super) fn lane_objects(
     Ok(())
 }
 
-fn update(lane: &mut Value, identity: &str, head: &str, hidden: bool) -> io::Result<()> {
+fn update(
+    lane: &mut Value,
+    identity: &str,
+    head: &str,
+    hidden: bool,
+    removed: bool,
+) -> io::Result<()> {
     let (scope, name) = identity.split_once('/').ok_or_else(|| invalid("resolve lane identity"))?;
     let visible =
         lane["components"].as_array().ok_or_else(|| invalid("resolve lane components"))?;
@@ -47,7 +59,7 @@ fn update(lane: &mut Value, identity: &str, head: &str, hidden: bool) -> io::Res
     if hidden {
         update_hidden(lane, identity, head, index, already_hidden)
     } else {
-        update_visible(lane, scope, name, head, index, already_hidden)
+        update_visible(lane, scope, name, head, index, already_hidden, removed)
     }
 }
 
@@ -108,11 +120,15 @@ fn update_visible(
     head: &str,
     index: Option<usize>,
     already_hidden: bool,
+    removed: bool,
 ) -> io::Result<()> {
     if already_hidden {
         remove_hidden(lane, &format!("{scope}/{name}"))?;
     }
-    let entry = json!({"id":{"scope":scope,"name":name},"head":head});
+    let mut entry = json!({"id":{"scope":scope,"name":name},"head":head});
+    if removed {
+        entry["isDeleted"] = json!(true);
+    }
     if let Some(index) = index {
         lane["components"][index] = entry;
     } else {

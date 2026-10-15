@@ -14,6 +14,7 @@ fn skipped(to: &str, model: Option<&Value>, version: &str, semver: &Value) -> Va
         modified: false,
         merge_pending: false,
         remote_head: None,
+        lane_head: None,
         semver,
     };
     select(
@@ -55,6 +56,30 @@ fn latest_uses_semver_grammar_and_excludes_orphaned_tags() {
 }
 
 #[test]
+fn latest_on_a_lane_uses_the_lane_head_instead_of_a_main_tag() {
+    let main = "a".repeat(40);
+    let lane = "b".repeat(40);
+    let model = json!({"head":main,"versions":{"2.0.0":main}});
+    let target = json!({"identity":"scope/alpha","version":lane});
+    let selection = Selection {
+        target: &target,
+        model: Some(&model),
+        modified: false,
+        merge_pending: false,
+        remote_head: None,
+        lane_head: Some(&lane),
+        semver: &Value::Null,
+    };
+    let resolved = super::versions::resolve(
+        &options("latest"),
+        &selection,
+        &mut Repository::new(Path::new("/unused"), None),
+    )
+    .unwrap();
+    assert_eq!(resolved, lane);
+}
+
+#[test]
 fn head_names_use_last_regular_tag_before_orphaned_tag() {
     let hash = "a".repeat(40);
     let model = json!({"head":hash,"versions":{"1.0.0":hash,"2.0.0":hash},"orphanedVersions":{"3.0.0":hash}});
@@ -81,6 +106,7 @@ fn divergent_head_resolves_remote_before_rejecting_merge_pending() {
         modified: false,
         merge_pending: true,
         remote_head: Some(&remote),
+        lane_head: None,
         semver: &Value::Null,
     };
     let selected = select(

@@ -74,7 +74,7 @@ fn passive_deprecation_preserves_config_without_adding_a_default_callback_slot()
     let output = extensions(&stored, &stored, &state, &defaults(), "@scope/component").unwrap();
     assert_eq!(output[0], stored[0]);
     assert_eq!(super::CORES.len(), 8);
-    assert_eq!(super::configuration_cores().len(), 10);
+    assert_eq!(super::configuration_cores().len(), 11);
     assert!(super::entries(&stored).is_ok());
     let ranged = json!([{"name":"teambit.component/deprecation","config":{"range":"*"}}]);
     assert!(super::entries(&ranged).is_err());
@@ -83,6 +83,15 @@ fn passive_deprecation_preserves_config_without_adding_a_default_callback_slot()
         json!({"id":"teambit.component/deprecation","data":{},"undefinedKeys":[]}),
     );
     assert!(extensions(&stored, &stored, &state, &invalid_defaults, "@scope/component").is_err());
+}
+
+#[test]
+fn removal_aspect_requires_a_supported_soft_remove_configuration() {
+    let removed = json!([{"name":"teambit.component/remove","config":{"removed":true},"data":{}}]);
+    assert!(super::entries(&removed).is_ok());
+    let unsupported =
+        json!([{"name":"teambit.component/remove","config":{"removed":false},"data":{}}]);
+    assert!(super::entries(&unsupported).is_err());
 }
 
 #[test]

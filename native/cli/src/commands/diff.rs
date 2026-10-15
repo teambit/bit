@@ -1,4 +1,4 @@
-//! Native `bit diff --json` and `bit diff <component> --json`: the shared
+//! Native workspace `bit diff` and `bit diff <component>`: the shared
 //! status capture, the workspace engine's `workspaceDiff`, and the file and
 //! metadata formatting of `@teambit/legacy.component-diff`.
 //!
@@ -8,6 +8,11 @@
 
 mod files;
 mod metadata;
+mod options;
+mod parent;
+mod progress;
+mod report;
+mod result_files;
 
 use super::{
     color::Chalk,
@@ -18,6 +23,7 @@ use super::{
         capture::{self, Capture},
         js::{array, decline, text, truthy},
     },
+    workspace_command::{self, results::Report},
 };
 use crate::{commands::Command, history::History, native::Outcome, workspace};
 use serde_json::{Value, json};
@@ -33,20 +39,11 @@ use std::{
 pub const COMMAND: Command = Command { name: "diff", aliases: &[], run };
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
-    let flag = args
-        .last()
-        .is_some_and(|flag| flag == "--json" || flag == "-j");
-    if !flag || !matches!(args.len(), 2 | 3) {
-        return Ok(Outcome::Declined("only `diff [component] --json` runs natively".to_string()));
-    }
-    let pattern = match args
-        .get(1)
-        .filter(|_| args.len() == 3)
-        .map(|arg| arg.to_str())
-    {
-        None => None,
-        Some(Some(pattern)) => Some(pattern),
-        Some(None) => return Ok(Outcome::Declined("the pattern is not UTF-8".to_string())),
+    let Some(argv) = workspace_command::utf8_args(args) else {
+        return Ok(Outcome::Declined("the arguments are not UTF-8".to_string()));
+    };
+    let Some(options) = options::parse(&argv[1..]) else {
+        return Ok(Outcome::Declined("outside the native diff grammar".to_string()));
     };
     if cfg!(windows) {
         // Node.js lists directories in the file system's order there, not sorted.
@@ -55,12 +52,33 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".to_string()));
     };
+    run_workspace(&root, args, &options)
+}
+
+fn run_workspace(
+    root: &Path,
+    args: &[OsString],
+    options: &options::Options,
+) -> io::Result<Outcome> {
     let home = env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).unwrap_or_default();
-    let result = match read(&root, Path::new(&home), pattern, Chalk::detect(args)) {
+    let (result, loaded) = match read(
+        root,
+        Path::new(&home),
+        options.pattern.as_deref(),
+        options.versions.from.as_deref(),
+        options.versions.to.as_deref(),
+        options.versions.parent,
+        Chalk::detect(args),
+    ) {
         Ok(result) => result,
         Err(error) => return Ok(Outcome::Declined(format!("diff: {error}"))),
     };
-    let history = History::start(&root, args);
+    let mut result = report::filtered(&result, options)?;
+    if !options.json {
+        return run_report(root, args, options, &result, loaded);
+    }
+    report::json(&mut result)?;
+    let history = History::start(root, args);
     let mut stdout = io::stdout().lock();
     stdout.write_all(serde_json::to_string_pretty(&result)?.as_bytes())?;
     stdout.flush()?;
@@ -68,8 +86,31 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
+fn run_report(
+    root: &Path,
+    args: &[OsString],
+    options: &options::Options,
+    result: &Value,
+    loaded: usize,
+) -> io::Result<Outcome> {
+    let data = report::format(result, Chalk::detect(args), options)?;
+    let report = Report { data, code: 0, details: None };
+    workspace_command::execute_with(root, args, "diff", &report, |output| {
+        progress::render_progress(output, root, options, result, loaded);
+        Ok(())
+    })
+}
+
 /// The diff of the selected components.
-fn read(root: &Path, home: &Path, pattern: Option<&str>, chalk: Chalk) -> io::Result<Value> {
+fn read(
+    root: &Path,
+    home: &Path,
+    pattern: Option<&str>,
+    from_version: Option<&str>,
+    to_version: Option<&str>,
+    parent: bool,
+    chalk: Chalk,
+) -> io::Result<(Value, usize)> {
     if cache::no_fs_cache(root) || git_path_configured(root) {
         return Err(decline("no-fs-cache or a configured git executable"));
     }
@@ -78,35 +119,81 @@ fn read(root: &Path, home: &Path, pattern: Option<&str>, chalk: Chalk) -> io::Re
         "kind": "statusContext", "root": root, "home": home, "history": pattern.is_none(),
     }))?;
     let targets = array(context.get("targets"), "targets")?;
+    validate_models(&context, targets)?;
+    let selected = select(targets, pattern)?;
+    let loaded = selected.len();
+    let capture = capture::capture(&mut engine, root, home, &context, &selected)?;
+    if parent {
+        let output = parent::read(parent::Request {
+            engine: &mut engine,
+            root,
+            context: &context,
+            capture: &capture,
+            selected: &selected,
+            pattern,
+            requested_version: from_version,
+            chalk,
+        })?;
+        capture::commit(&mut engine, root, &context, &capture)?;
+        return Ok((Value::Array(output), loaded));
+    }
+    let result =
+        comparison(&mut engine, root, pattern, &selected, &capture, from_version, to_version)?;
+    let output = rows(&result, pattern.is_some())?
+        .into_iter()
+        .map(|row| one(&context, &capture, row, chalk, from_version, to_version))
+        .collect::<io::Result<Vec<_>>>()?;
+    capture::commit(&mut engine, root, &context, &capture)?;
+    Ok((Value::Array(output), loaded))
+}
+
+fn validate_models(context: &Value, targets: &[Value]) -> io::Result<()> {
     if targets
         .iter()
         .any(|target| {
             truthy(target.get("version"))
-                && model(&context, target).is_none_or(|stored| !truthy(stored.get("head")))
+                && model(context, target).is_none_or(|stored| !truthy(stored.get("head")))
         })
     {
         return Err(decline("a tagged component without a model head"));
     }
-    let selected = select(targets, pattern)?;
-    let capture = capture::capture(&mut engine, root, home, &context, &selected)?;
+    Ok(())
+}
+
+fn comparison(
+    engine: &mut Engine,
+    root: &Path,
+    pattern: Option<&str>,
+    selected: &[Value],
+    capture: &Capture,
+    from_version: Option<&str>,
+    to_version: Option<&str>,
+) -> io::Result<Value> {
+    if let Some(to_version) = to_version {
+        let from_version = from_version.ok_or_else(|| decline("diff target version absent"))?;
+        let identity = selected
+            .first()
+            .and_then(|target| target["identity"].as_str())
+            .ok_or_else(|| decline("diff target identity"))?;
+        let row: Value = engine.request(&json!({
+            "kind":"versionDiff","root":root,"identity":identity,
+            "fromVersion":from_version,"toVersion":to_version,
+            "gitExecutable":"git","color":true,
+        }))?;
+        return Ok(json!({"comparisons":[row]}));
+    }
     let request: Vec<Value> = capture.captured
         .iter()
-        .map(diff_target)
+        .map(|row| diff_target(row, from_version))
         .collect::<io::Result<_>>()?;
-    let result: Value = engine.request(&json!({
+    engine.request(&json!({
         "kind": "workspaceDiff",
         "root": root,
         "targets": request,
         "gitExecutable": "git",
         "color": true,
         "modifiedOnly": pattern.is_none(),
-    }))?;
-    let output = rows(&result, pattern.is_some())?
-        .into_iter()
-        .map(|row| one(&context, &capture, row, chalk))
-        .collect::<io::Result<Vec<_>>>()?;
-    capture::commit(&mut engine, root, &context, &capture)?;
-    Ok(Value::Array(output))
+    }))
 }
 
 /// `getConfig('git_path')` may be set: any mention in a config layer declines.
@@ -185,10 +272,13 @@ fn matching(targets: &[Value], keep: impl Fn(&Value) -> bool) -> Vec<Value> {
 
 /// A captured row as `workspaceDiff` takes it: without its peers, files in
 /// the order the Node.js CLI's `globby` scan lists them.
-fn diff_target(row: &Value) -> io::Result<Value> {
+fn diff_target(row: &Value, from_version: Option<&str>) -> io::Result<Value> {
     let mut row = row.clone();
     let object = row.as_object_mut().ok_or_else(|| decline("diff target"))?;
     object.remove("peerDependencies");
+    if let Some(version) = from_version {
+        object.insert("version".into(), json!(version));
+    }
     let mut files: Vec<String> = array(object.get("files"), "files")?
         .iter()
         .map(|file| text(Some(file)).map(str::to_string))
@@ -235,8 +325,21 @@ fn rows(result: &Value, all: bool) -> io::Result<Vec<&Value>> {
     Ok(new.chain(modified).collect())
 }
 
+struct Versions<'a> {
+    left: &'a str,
+    right: &'a str,
+    historical: bool,
+}
+
 /// One `DiffJson` row.
-fn one(context: &Value, capture: &Capture, row: &Value, chalk: Chalk) -> io::Result<Value> {
+fn one(
+    context: &Value,
+    capture: &Capture,
+    row: &Value,
+    chalk: Chalk,
+    from_version: Option<&str>,
+    to_version: Option<&str>,
+) -> io::Result<Value> {
     let identity = text(row.get("identity"))?;
     let target = capture.captured
         .iter()
@@ -246,16 +349,22 @@ fn one(context: &Value, capture: &Capture, row: &Value, chalk: Chalk) -> io::Res
         .get("version")
         .and_then(Value::as_str)
         .filter(|value| !value.is_empty());
-    let files_diff = files_diff(row, version.unwrap_or("latest"))?;
+    let versions = Versions {
+        left: from_version.unwrap_or_else(|| version.unwrap_or("latest")),
+        right: to_version.unwrap_or_else(|| version.unwrap_or("latest")),
+        historical: to_version.is_some(),
+    };
+    let files_diff = result_files::files_diff(row, versions.left, versions.right)?;
     let fields_diff = match row
         .get("model")
         .filter(|stored| truthy(Some(stored)))
     {
         None => None,
-        Some(stored) => fields_diff(context, capture, target, stored, row, chalk)?,
+        Some(stored) => fields_diff(context, capture, target, stored, row, chalk, &versions)?,
     };
     let mut output = json!({
         "id": identity,
+        "_fullId": version.map_or_else(|| identity.to_string(), |version| format!("{identity}@{version}")),
         "hasDiff": !files_diff.is_empty() || fields_diff.is_some(),
         "filesDiff": files_diff,
     });
@@ -273,6 +382,7 @@ fn fields_diff(
     stored: &Value,
     row: &Value,
     chalk: Chalk,
+    versions: &Versions<'_>,
 ) -> io::Result<Option<Vec<Value>>> {
     let identity = text(row.get("identity"))?;
     let component = capture.components
@@ -284,41 +394,19 @@ fn fields_diff(
         model: model(context, target),
         package_name: &component.package_name,
     };
-    let peers = array(target.get("peerDependencies"), "peer dependencies")?;
-    let left = side.side(stored, &[], false)?;
-    let right = side.side(&row["current"], peers, true)?;
+    let peers = if versions.historical {
+        array(row["current"].get("peerDependencies"), "peer dependencies")?
+    } else {
+        array(target.get("peerDependencies"), "peer dependencies")?
+    };
+    let left_peers = if versions.historical {
+        array(stored.get("peerDependencies"), "peer dependencies")?
+    } else {
+        &[]
+    };
+    let left = side.side(stored, left_peers, false)?.with_version(versions.left);
+    let right = side
+        .side(&row["current"], peers, !versions.historical)?
+        .with_version(versions.right);
     metadata::diff(&left, &right, chalk)
-}
-
-/// `filesDiff`: every file whose formatted diff is not empty.
-fn files_diff(row: &Value, version: &str) -> io::Result<Vec<Value>> {
-    let mut output = Vec::new();
-    for file in array(row.get("files"), "diff files")? {
-        if truthy(file.get("same")) {
-            continue;
-        }
-        let path = text(file.get("relativePath"))?;
-        let raw = text(file.get("rawDiff"))?;
-        let raw = raw
-            .strip_suffix('\n')
-            .map_or(raw, |raw| raw.strip_suffix('\r').unwrap_or(raw));
-        let diff = files::format(
-            raw,
-            &format!("{version} original"),
-            &format!("{version} modified"),
-            path,
-        );
-        if diff.is_empty() {
-            continue;
-        }
-        let status = if truthy(file.get("fromEmpty")) {
-            "NEW"
-        } else if truthy(file.get("toEmpty")) {
-            "DELETED"
-        } else {
-            "MODIFIED"
-        };
-        output.push(json!({ "filePath": path, "status": status, "diffOutput": diff }));
-    }
-    Ok(output)
 }

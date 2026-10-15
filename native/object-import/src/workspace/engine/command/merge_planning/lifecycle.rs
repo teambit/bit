@@ -71,7 +71,9 @@ impl Prepared {
     ) -> io::Result<Vec<bitmap::Update>> {
         self.materials
             .iter()
-            .filter(|material| !material.hidden && !material.no_write())
+            .filter(|material| {
+                !material.hidden && !material.no_write() && !self.is_removed(&material.output)
+            })
             .map(|material| {
                 let (identity, _) = material.output["id"]
                     .as_str()
@@ -86,6 +88,42 @@ impl Prepared {
                         .to_owned(),
                     keep_ours: false,
                 })
+            })
+            .collect()
+    }
+    fn is_removed(&self, output: &Value) -> bool {
+        output["id"]
+            .as_str()
+            .and_then(|id| id.rsplit_once('@'))
+            .is_some_and(|(identity, _)| {
+                self.publication.removed
+                    .iter()
+                    .any(|row| row.identity == identity)
+            })
+    }
+    pub(in crate::workspace::engine::command) fn removed_ids(&self) -> Vec<String> {
+        self.publication.removed
+            .iter()
+            .map(|row| row.identity.clone())
+            .collect()
+    }
+    pub(in crate::workspace::engine::command) fn removed_snap_ids(
+        &self,
+    ) -> io::Result<Vec<String>> {
+        let versions = &self.finalized
+            .as_ref()
+            .ok_or_else(|| invalid("command removed snap absent"))?
+            .snapshot
+            .versions;
+        self.publication.removed
+            .iter()
+            .map(|row| {
+                let hash = versions
+                    .iter()
+                    .find(|version| version["identity"] == row.identity)
+                    .and_then(|version| version["hash"].as_str())
+                    .ok_or_else(|| invalid("command removed snap reference"))?;
+                Ok(format!("{}@{hash}", row.identity))
             })
             .collect()
     }
@@ -138,7 +176,14 @@ impl Prepared {
             .map(|(input, version)| {
                 Ok(merge::finalization::Input {
                     identity: &input.identity,
-                    directory: &input.directory,
+                    directory: if self.publication.removed
+                        .iter()
+                        .any(|row| row.identity == input.identity)
+                    {
+                        ""
+                    } else {
+                        &input.directory
+                    },
                     hash: version["hash"]
                         .as_str()
                         .ok_or_else(|| invalid("command snap final reference"))?,
@@ -148,7 +193,7 @@ impl Prepared {
             })
             .collect::<io::Result<Vec<_>>>()?;
         let roots = record.context["workspace"]["teambit.dependencies/dependency-resolver"]["rootComponents"].as_bool().unwrap_or(false);
-        let mut prepared = merge::finalization::prepare(&record.request.root, &inputs, roots)?;
+        let mut prepared = merge::finalization::prepare(&record.request.root, &inputs, roots, &[])?;
         prepared.imported_index(&record.request.root, record.repository.imported_index())?;
         Ok(prepared)
     }
@@ -160,11 +205,14 @@ impl Prepared {
         snapshot.versions
             .iter()
             .filter(|version| {
-                self.pending
+                !self.publication.removed
                     .iter()
-                    .any(|pending| {
-                        !pending.directory.is_empty() && version["identity"] == pending.identity
-                    })
+                    .any(|row| version["identity"] == row.identity)
+                    && self.pending
+                        .iter()
+                        .any(|pending| {
+                            !pending.directory.is_empty() && version["identity"] == pending.identity
+                        })
             })
             .map(|version| {
                 Ok(bitmap::Update {
@@ -238,6 +286,14 @@ impl Prepared {
             finalized.snapshot.validate()?;
             finalized.files.validate()?;
         }
+        self.validate_materials(root)?;
+        super::removal::validate(root, &self.publication.removed)?;
+        if root.join(".bit/unmerged.json").is_symlink() {
+            return Err(invalid("command unmerged symlink"));
+        }
+        Ok(())
+    }
+    fn validate_materials(&self, root: &Path) -> io::Result<()> {
         for material in &self.materials {
             material.validate(root)?;
             for file in &material.files {
@@ -246,20 +302,21 @@ impl Prepared {
                 crate::checkout::plan::relative_path(path)?;
             }
         }
-        if root.join(".bit/unmerged.json").is_symlink() {
-            return Err(invalid("command unmerged symlink"));
-        }
         Ok(())
     }
-    pub(in crate::workspace::engine::command) fn remove(&self) -> io::Result<()> {
+    pub(in crate::workspace::engine::command) fn remove(&self, root: &Path) -> io::Result<()> {
         for material in &self.materials {
-            material.remove()?;
+            if !self.is_removed(&material.output) {
+                material.remove()?;
+            }
         }
-        Ok(())
+        super::removal::remove(root, &self.publication.removed)
     }
     pub(in crate::workspace::engine::command) fn write(&mut self) -> io::Result<()> {
         for material in &self.materials {
-            material.write(&mut self.state)?;
+            if !self.is_removed(&material.output) {
+                material.write(&mut self.state)?;
+            }
         }
         Ok(())
     }

@@ -4,6 +4,7 @@ use serde_json::{Value, json};
 use std::{collections::HashSet, io};
 
 pub(super) const DEPRECATION: &str = "teambit.component/deprecation";
+pub(super) const REMOVAL: &str = "teambit.component/remove";
 const BUILDER: &str = "teambit.pipelines/builder";
 
 pub(super) const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
@@ -141,6 +142,8 @@ fn core(entry: &Value) -> io::Result<&str> {
     let name = entry["name"].as_str().ok_or_else(|| invalid("command aspect identity"))?;
     if name == DEPRECATION {
         passive_deprecation(&entry["config"])?;
+    } else if name == REMOVAL {
+        passive_removal(&entry["config"])?;
     } else if name == BUILDER {
         passive_builder(&entry["config"])?;
     } else if !CORES.contains(&name) {
@@ -173,11 +176,26 @@ fn passive_deprecation(config: &Value) -> io::Result<()> {
     Ok(())
 }
 
+fn passive_removal(config: &Value) -> io::Result<()> {
+    let fields = config.as_object().ok_or_else(|| invalid("command removal configuration"))?;
+    if fields
+        .iter()
+        .any(|(name, value)| {
+            !matches!(name.as_str(), "removed" | "removeOnMain" | "__specific")
+                || !value.is_boolean()
+        })
+        || fields.get("removed") != Some(&Value::Bool(true))
+    {
+        return Err(invalid("command unsupported removal configuration"));
+    }
+    Ok(())
+}
+
 pub(super) fn configuration_cores() -> Vec<&'static str> {
     CORES
         .iter()
         .copied()
-        .chain([DEPRECATION, BUILDER])
+        .chain([DEPRECATION, BUILDER, REMOVAL])
         .collect()
 }
 

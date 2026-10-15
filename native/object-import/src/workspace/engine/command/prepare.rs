@@ -50,8 +50,29 @@ pub(super) fn context(
                 &unexported_targets(request, &context)?,
             )?;
     }
+    attach_checkout_lane(request, &mut context, imported.as_mut())?;
     extend_models(request, pool, &mut context, imported.as_ref())?;
     Ok((context, imported))
+}
+fn attach_checkout_lane(
+    request: &Prepare,
+    context: &mut Value,
+    imported: Option<&mut command_import::PreparedImport>,
+) -> io::Result<()> {
+    if request.operation != Operation::Checkout {
+        return Ok(());
+    }
+    let bitmap = config::document(&request.root.join(".bitmap"))?;
+    if bitmap.get("_bit_lane").is_none() {
+        return Ok(());
+    }
+    let current_id = super::lane_context::current_id(&bitmap, &context["scope"])?;
+    let current = imported
+        .ok_or_else(|| invalid("checkout lane import owner"))?
+        .load_lane(&current_id)?
+        .ok_or_else(|| invalid("checkout current Lane absent"))?;
+    context["lane"] = json!({"currentId":current_id,"current":current});
+    Ok(())
 }
 fn unexported_targets(
     request: &Prepare,
@@ -143,7 +164,7 @@ fn import_targets(request: &Prepare) -> io::Result<Vec<command_import::Target>> 
         .as_object()
         .ok_or_else(|| invalid("command bitmap"))?
         .iter()
-        .filter(|(key, _)| key.as_str() != "$schema-version")
+        .filter(|(key, _)| !matches!(key.as_str(), "$schema-version" | "_bit_lane"))
         .map(|(_, value)| {
             Ok(command_import::Target {
                 scope: value["scope"]
@@ -174,15 +195,7 @@ pub(super) fn selected(request: &Prepare, context: &Value) -> io::Result<Vec<Val
     }
 
     if let Some(pattern) = &request.options.pattern {
-        if request.options.all {
-            return Err(invalid("command ambiguous selection"));
-        }
-        // Canonical multimatch treats ** as all scoped IDs. An explicit pattern
-        // also selects fast-forward targets, unlike bare merge's divergent set.
-        if request.operation == Operation::Merge && pattern == "**" && !targets.is_empty() {
-            return Ok(targets.clone());
-        }
-        return select_pattern(targets, pattern);
+        return selected_pattern(request, targets, pattern);
     }
     if request.operation == Operation::Checkout
         && !request.options.all
@@ -190,7 +203,43 @@ pub(super) fn selected(request: &Prepare, context: &Value) -> io::Result<Vec<Val
     {
         return Err(invalid("command checkout requires selection"));
     }
+    if request.operation == Operation::Checkout
+        && request.options.to.as_deref() == Some("head")
+        && !context["lane"]["current"].is_null()
+    {
+        return selected_checkout_lane_heads(context, targets);
+    }
     Ok(targets.clone())
+}
+
+fn selected_pattern(request: &Prepare, targets: &[Value], pattern: &str) -> io::Result<Vec<Value>> {
+    if request.options.all {
+        return Err(invalid("command ambiguous selection"));
+    }
+    // Canonical multimatch treats ** as all scoped IDs. An explicit pattern
+    // also selects fast-forward targets, unlike bare merge's divergent set.
+    if request.operation == Operation::Merge && pattern == "**" && !targets.is_empty() {
+        return Ok(targets.to_vec());
+    }
+    select_pattern(targets, pattern)
+}
+
+fn selected_checkout_lane_heads(context: &Value, targets: &[Value]) -> io::Result<Vec<Value>> {
+    let entries = command_import::lane::entries(&context["lane"]["current"]["value"])?;
+    let heads = entries
+        .into_iter()
+        .filter(|entry| !entry.hidden)
+        .map(|entry| entry.identity)
+        .collect::<std::collections::HashSet<_>>();
+    Ok(targets
+        .iter()
+        .filter(|target| {
+            target["identity"]
+                .as_str()
+                .is_some_and(|id| heads.contains(id))
+        })
+        .cloned()
+        .collect())
 }
 
 fn lane_selected(context: &Value, targets: &[Value]) -> io::Result<Vec<Value>> {

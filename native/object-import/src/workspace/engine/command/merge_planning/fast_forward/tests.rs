@@ -65,7 +65,7 @@ fn fast_forward_replaces_state_without_versions_and_keeps_orphan_tag_precedence(
 
 #[test]
 fn gap_import_refreshes_fast_forward_metadata_without_retargeting_cached_head() {
-    use super::super::{Action, Selected, refresh_model};
+    use super::super::{Action, Selected, loading::refresh_model};
     let old = "a".repeat(40);
     let cached = "b".repeat(40);
     let latest = "c".repeat(40);

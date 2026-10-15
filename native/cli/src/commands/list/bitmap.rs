@@ -14,6 +14,7 @@ pub(in crate::commands) struct Entry {
     pub has_scope: bool,
     pub version: Option<String>,
     pub root_dir: String,
+    pub staged_deprecation: bool,
     removed: bool,
     available: bool,
 }
@@ -78,6 +79,7 @@ fn entry(value: &Value) -> io::Result<Entry> {
     };
     let root_dir = text("rootDir").ok_or_else(|| decline("bitmap root dir"))?;
     let removed = value["config"]["teambit.component/remove"]["removed"] == true;
+    let staged_deprecation = value["config"]["teambit.component/deprecation"].is_object();
     let available = value["isAvailableOnCurrentLane"] != false;
     if !matches!(value["version"], Value::String(_) | Value::Null) {
         return Err(decline("bitmap entry version"));
@@ -87,6 +89,7 @@ fn entry(value: &Value) -> io::Result<Entry> {
         has_scope,
         version: text("version").map(str::to_string),
         root_dir: root_dir.to_string(),
+        staged_deprecation,
         removed,
         available,
     })

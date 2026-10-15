@@ -13,6 +13,7 @@ pub(super) struct Selection<'a> {
     pub(super) modified: bool,
     pub(super) merge_pending: bool,
     pub(super) remote_head: Option<&'a str>,
+    pub(super) lane_head: Option<&'a str>,
     pub(super) semver: &'a Value,
 }
 

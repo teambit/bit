@@ -21,12 +21,23 @@ pub fn format(result: &Value, options: &Options, chalk: Chalk) -> io::Result<Rep
     }
     let report = Checkout { results: &results, options, format: Formatter::new(chalk) };
     let skipped = !results.skipped.is_empty() && options.report_all() && !options.verbose;
-    let data = report.build(&report.skipped_minimal());
+    let data = deprecated_all(options, report.build(&report.skipped_minimal()));
     if !skipped {
         return Ok(Report { data, code: 0, details: None });
     }
-    let details = report.build(&report.skipped_detailed());
+    let details = deprecated_all(options, report.build(&report.skipped_detailed()));
     Ok(Report { data, code: 0, details: Some(details) })
+}
+
+fn deprecated_all(options: &Options, report: String) -> String {
+    if options.all && matches!(options.to.as_str(), "head" | "latest") {
+        format!(
+            "  \"--all\" is deprecated for \"bit checkout {}\", please omit it.\n{report}",
+            options.to,
+        )
+    } else {
+        report
+    }
 }
 
 /// `checkoutOutput(results, props)`.

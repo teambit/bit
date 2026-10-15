@@ -12,7 +12,7 @@ use crate::{
 };
 use bit_install::output::Output;
 use serde_json::{Value, json};
-use std::{ffi::OsString, io, path::Path};
+use std::{collections::HashMap, ffi::OsString, io, path::Path};
 
 use super::report;
 
@@ -95,7 +95,6 @@ pub(in crate::commands) fn execute_snapping(
         installer,
         materialized,
     } = snapping;
-    let Some(installer) = installer else { return Err(decline("merge snap installer")) };
     let (expected, mut materialized) =
         match prepare_snapping(root, args, options, mode, planned, materialized) {
             Ok(prepared) => prepared,
@@ -106,7 +105,9 @@ pub(in crate::commands) fn execute_snapping(
     workspace_command::execute_then(root, args, "merge", |output| {
         render_progress(output, progress);
         workspace_command::commit(&mut materialized, root)?;
-        if let Err(error) = installer.install_merge(root) {
+        if let Some(installer) = installer
+            && let Err(error) = installer.install_merge(root)
+        {
             output.failure(&format!(
                 "failed installing packages, see the log for full stacktrace. error: {error}",
             ));
@@ -131,6 +132,11 @@ pub(in crate::commands) fn execute_snapping(
             array(resolve.plan.get("autoSnappedResults"), "merge auto snaps")?.to_vec();
         workspace_command::commit(&mut resolve, root)?;
         let bitmap = bitmap::read(root)?;
+        let allocations = array(resolve.plan.get("allocatedVersions"), "merge allocations")?;
+        let mut allocated = HashMap::new();
+        for row in allocations {
+            allocated.insert(text(row.get("identity"))?, text(row.get("hash"))?);
+        }
         let snapped = expected
             .iter()
             .map(|identity| {
@@ -138,11 +144,13 @@ pub(in crate::commands) fn execute_snapping(
                     .iter()
                     .find(|entry| &entry.identity == identity)
                     .and_then(|entry| entry.version.as_deref())
+                    .or_else(|| allocated.get(identity.as_str()).copied())
                     .ok_or_else(|| decline("merge snap bitmap version"))?;
                 Ok(json!({ "id": format!("{identity}@{version}") }))
             })
             .collect::<io::Result<Vec<Value>>>()?;
         let mut result = materialized.plan["result"].clone();
+        result["removedComponents"] = planned.plan["result"]["removedComponents"].clone();
         result["mergeSnapResults"] = json!({
             "snappedComponents": snapped,
             "autoSnappedResults": auto_snapped,
@@ -191,7 +199,6 @@ fn prepare_snapping(
         || (result["mergeSnapResults"].is_object()
             && !array(result["mergeSnapResults"].get("autoSnappedResults"), "merge auto snaps")?
                 .is_empty())
-        || !array(result.get("removedComponents"), "merge removed components")?.is_empty()
     {
         return Err(decline("merge snap requires a single-stage merge"));
     }
@@ -210,6 +217,7 @@ fn prepare_snapping(
         .as_object_mut()
         .unwrap()
         .remove("mergeSnapResults");
+    before_snap["removedComponents"] = json!([]);
     if materialized.plan["result"] != before_snap {
         return Err(decline("merge no-snap plan differs before installation"));
     }

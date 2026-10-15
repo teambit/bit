@@ -174,6 +174,7 @@ impl<'r> Session<'r> {
         let resolved = Resolved { root: self.root, context: &self.context, capture: &self.capture };
         resolved.validate_issues(needs_snap, plan.get("issueGraph"))?;
         let receipt = resolved.receipt(self.kind, needs_snap, plan)?;
+        let allocated_versions = (self.kind == Kind::Resolve).then(|| receipt["versions"].clone());
         let auto_snapped =
             if self.kind == Kind::Resolve { Some(auto_snap_report(plan, &receipt)?) } else { None };
         let finalized: Value = self.engine.request(&json!({
@@ -190,6 +191,9 @@ impl<'r> Session<'r> {
         let mut result = json!({ "result": finalized["result"], "progress": progress });
         if let Some(auto_snapped) = auto_snapped {
             result["autoSnappedResults"] = json!(auto_snapped);
+        }
+        if let Some(allocated_versions) = allocated_versions {
+            result["allocatedVersions"] = allocated_versions;
         }
         Ok(result)
     }

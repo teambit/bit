@@ -23,6 +23,13 @@ pub struct Side {
     pub(super) configs: Map<String, Value>,
 }
 
+impl Side {
+    pub fn with_version(mut self, version: &str) -> Self {
+        self.version = version.to_string();
+        self
+    }
+}
+
 /// What both sides share.
 pub struct Component<'c> {
     pub target: &'c Value,
