@@ -15,7 +15,7 @@ use std::{
     fmt::Write,
     fs,
     path::{Path, PathBuf},
-    process::ExitStatus,
+    process::{Command, ExitStatus},
 };
 use tempfile::TempDir;
 
@@ -56,6 +56,41 @@ fn random_str() -> String {
 }
 
 impl Helper {
+    /// Seed a remote lane's hidden `updateDependents` through the released CLI.
+    pub fn seed_hidden_update_dependent(&self, component_id: &str, lane_id: &str) {
+        let shared = setup::shared();
+        let seed = self.scopes.e2e_dir.join(format!("{}-seed", random_str()));
+        setup::copy_dir(&shared.bare_scope_template, &seed);
+        config::update_scope_json(&seed.join("scope.json"), |scope| {
+            scope.insert(
+                "name".into(),
+                json!(
+                    seed.file_name()
+                        .unwrap()
+                        .to_string_lossy()
+                ),
+            );
+            let mut remotes = serde_json::Map::new();
+            remotes.insert(
+                self.scopes.remote.clone(),
+                json!(format!("file://{}", self.scopes.remote_path.display())),
+            );
+            scope.insert("remotes".into(), Value::Object(remotes));
+        });
+        let output = Command::new("node")
+            .arg(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/e2e/helper/snap_from_scope.js"))
+            .arg(&shared.node_cli)
+            .arg(&seed)
+            .arg(component_id)
+            .arg(lane_id)
+            .env("HOME", shared.root.join("home"))
+            .env("USERPROFILE", shared.root.join("home"))
+            .env("BIT_GLOBALS_DIR", shared.root.join("globals"))
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
+    }
+
     pub fn new() -> Self {
         let shared = setup::shared();
         let dir = tempfile::Builder::new()

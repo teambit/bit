@@ -12,6 +12,7 @@ pub(super) struct Lane {
     pub(super) scope: String,
     pub(super) name: String,
     pub(super) forked_from: Option<String>,
+    pub(super) update_dependents: Vec<String>,
     pub(super) heads: HashMap<String, String>,
     pub(super) remotes: HashMap<String, String>,
 }
@@ -22,16 +23,52 @@ pub(super) fn read(root: &Path, reader: &Reader<'_>, id: &str) -> io::Result<Opt
         return Ok(None);
     }
     let lane = local_object(root, reader, scope, name)?;
-    let heads = component_heads(&lane)?;
+    let mut heads = component_heads(&lane)?;
     let forked_from = forked_from(&lane)?;
-    let remotes = remote(root, scope, name)?;
-    if remotes
-        .keys()
-        .any(|key| !heads.contains_key(key))
-    {
-        return Err(invalid("status lane remote component mismatch"));
+    let update_dependents = update_dependents(&lane)?;
+    for (identity, hash) in &update_dependents {
+        if heads.insert(identity.clone(), hash.clone()).is_some() {
+            return Err(invalid("status duplicate lane update-dependent"));
+        }
     }
-    Ok(Some(Lane { scope: scope.to_owned(), name: name.to_owned(), forked_from, heads, remotes }))
+    let remotes = remote(root, scope, name)?;
+    Ok(Some(Lane {
+        scope: scope.to_owned(),
+        name: name.to_owned(),
+        forked_from,
+        update_dependents: update_dependents
+            .into_iter()
+            .map(|(identity, _)| identity)
+            .collect(),
+        heads,
+        remotes,
+    }))
+}
+
+fn update_dependents(lane: &Value) -> io::Result<Vec<(String, String)>> {
+    let Some(value) = lane
+        .get("updateDependents")
+        .filter(|value| !value.is_null())
+    else {
+        return Ok(Vec::new());
+    };
+    let rows = value.as_array().ok_or_else(|| invalid("status lane update-dependents"))?;
+    if rows.len() > 4096 {
+        return Err(invalid("status lane update-dependent count"));
+    }
+    let mut seen = HashSet::new();
+    rows.iter()
+        .map(|row| {
+            let row = row.as_str().ok_or_else(|| invalid("status lane update-dependent"))?;
+            let (identity, hash) =
+                row.rsplit_once('@').ok_or_else(|| invalid("status lane update-dependent id"))?;
+            crate::merge_history::hash(hash)?;
+            if identity.split_once('/').is_none() || !seen.insert(identity) {
+                return Err(invalid("status lane update-dependent identity"));
+            }
+            Ok((identity.to_owned(), hash.to_owned()))
+        })
+        .collect()
 }
 
 fn forked_from(lane: &Value) -> io::Result<Option<String>> {
@@ -77,12 +114,7 @@ fn local_object(root: &Path, reader: &Reader<'_>, scope: &str, name: &str) -> io
         .ok_or_else(|| invalid("status current lane missing"))?;
     let hash = row["hash"].as_str().ok_or_else(|| invalid("status lane hash"))?;
     let lane = reader.read(hash, "Lane")?;
-    if lane["scope"] != scope
-        || lane["name"] != name
-        || lane["updateDependents"]
-            .as_array()
-            .is_some_and(|rows| !rows.is_empty())
-    {
+    if lane["scope"] != scope || lane["name"] != name {
         return Err(invalid("status complex lane requires canonical loading"));
     }
     Ok(lane)
@@ -96,9 +128,6 @@ fn component_heads(lane: &Value) -> io::Result<HashMap<String, String>> {
     }
     let mut heads = HashMap::new();
     for row in components {
-        if row["isDeleted"] == true || row["isRemoved"] == true || row["isHidden"] == true {
-            return Err(invalid("status removed lane component requires canonical loading"));
-        }
         let component_scope = row["id"]["scope"]
             .as_str()
             .filter(|scope| !scope.is_empty())
@@ -109,10 +138,11 @@ fn component_heads(lane: &Value) -> io::Result<HashMap<String, String>> {
             .ok_or_else(|| invalid("status lane component name"))?;
         let head = row["head"].as_str().ok_or_else(|| invalid("status lane component head"))?;
         crate::merge_history::hash(head)?;
-        if heads
-            .insert(format!("{component_scope}/{component_name}"), head.to_owned())
-            .is_some()
-        {
+        let identity = format!("{component_scope}/{component_name}");
+        if row["isDeleted"] == true || row["isRemoved"] == true || row["isHidden"] == true {
+            continue;
+        }
+        if heads.insert(identity, head.to_owned()).is_some() {
             return Err(invalid("status duplicate lane component"));
         }
     }

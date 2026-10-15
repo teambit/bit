@@ -12,6 +12,21 @@ fn inflated(path: &Path) -> Vec<u8> {
     body
 }
 
+fn assert_status_variants(helper: &Helper) {
+    let node_root = helper.clone_workspace();
+    for command in ["status --json", "status --lanes --json", "status", "status --lanes"] {
+        let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+        let native = helper.native_run(command);
+        assert_eq!(native.status.code(), node.status.code());
+        if command.contains("--json") {
+            assert_eq!(parse(&native.stdout), parse(&node.stdout));
+        } else {
+            assert_eq!(native.stdout, node.stdout, "{command}");
+            assert_eq!(native.stderr, node.stderr);
+        }
+    }
+}
+
 #[test]
 fn unavailable_on_main_matches_node() {
     let helper = Helper::new();
@@ -288,4 +303,64 @@ fn forked_lane_and_main_updates_match_node() {
     assert_eq!(native.status.code(), node.status.code());
     assert_eq!(native.stdout, node.stdout);
     assert_eq!(native.stderr, node.stderr);
+}
+
+#[test]
+fn soft_removed_component_on_lane_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo(FOO_FIXTURE);
+    helper.add_component_bar_foo();
+    helper.output_file("other/index.js", "module.exports = () => 'other';");
+    helper.run("add other");
+    helper.run("tag bar/foo --message first");
+    helper.run("tag other --message first");
+    helper.run("export");
+    helper.run("lane create dev");
+    helper.run("snap --unmodified --message lane");
+    helper.run("export");
+    helper.run("delete bar/foo --silent --lane");
+    assert_status_variants(&helper);
+    helper.run("snap --unmodified --message removal");
+    helper.run("export");
+    assert_status_variants(&helper);
+    helper.run("remove other --silent");
+    assert_status_variants(&helper);
+}
+
+#[test]
+fn hidden_update_dependent_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(2, true, "");
+    helper.run("tag");
+    helper.run("export");
+    helper.run("lane create dev");
+    helper.run("snap comp2 --skip-auto-snap --unmodified --message lane");
+    helper.run("export");
+    helper.seed_hidden_update_dependent(
+        &format!("{}/comp1", helper.scopes.remote),
+        &format!("{}/dev", helper.scopes.remote),
+    );
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    helper.run(&format!("lane import {}/dev -x", helper.scopes.remote));
+    helper.run(&format!("import {}/comp2 -x", helper.scopes.remote));
+    helper.output_file(
+        &format!("{}/comp2/index.js", helper.scopes.remote),
+        "module.exports = () => 'comp2-v2';",
+    );
+    helper.run("snap --message update");
+    let node_root = helper.clone_workspace();
+    let node =
+        Helper::cmd_in_with(&node_root, "status --json", &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(
+        !parse(&node.stdout)["pendingUpdateDependents"]
+            .as_array()
+            .unwrap()
+            .is_empty(),
+    );
+    assert_status_variants(&helper);
+    helper.run("export");
+    assert_status_variants(&helper);
 }

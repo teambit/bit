@@ -1,6 +1,6 @@
 //! How `formatStatusOutput` and `renderSections` put the sections together.
 
-use super::{AUTO_TAG, CLEAN, Status, array, ids};
+use super::{CLEAN, Status, array, ids};
 use crate::commands::{status::js::decline, workspace_command::format::Formatter};
 use serde_json::Value;
 use std::io;
@@ -66,7 +66,8 @@ impl Status<'_> {
     pub(super) fn rendered(
         &self,
         sections: &[String],
-        summary: &str,
+        auto_summary: &str,
+        dependent_summary: &str,
         suffixes: [&str; 2],
         workspace_issues: &str,
     ) -> String {
@@ -75,8 +76,10 @@ impl Status<'_> {
             .enumerate()
             .map(|(index, section)| {
                 // The auto-tag section follows unavailable-on-main.
-                if index == 12 && !section.is_empty() && !self.flags.expand {
-                    summary.to_string()
+                if index == 10 && !section.is_empty() && !self.flags.expand {
+                    dependent_summary.to_string()
+                } else if index == 13 && !section.is_empty() && !self.flags.expand {
+                    auto_summary.to_string()
                 } else {
                     section.clone()
                 }
@@ -93,7 +96,7 @@ impl Status<'_> {
     }
 
     /// `buildCollapsibleSummary` of the auto-tag section.
-    pub(super) fn collapsed(&self, ids: &[&str]) -> io::Result<String> {
+    pub(super) fn collapsed(&self, ids: &[&str], title: &str, desc: &str) -> io::Result<String> {
         let chalk = self.format.chalk;
         let counts = scope_counts(ids)?;
         let mut shown: Vec<String> = counts
@@ -104,8 +107,8 @@ impl Status<'_> {
         if counts.len() > 4 {
             shown.push(format!("+ {} more scopes", counts.len() - 4));
         }
-        let title = self.format.title(&format!("components pending auto-tag ({})", ids.len()));
-        let description = chalk.dim(&format!("  {AUTO_TAG}"));
+        let title = self.format.title(&format!("{title} ({})", ids.len()));
+        let description = chalk.dim(&format!("  {desc}"));
         let hint = chalk.dim("\u{2014} use --expand to list");
         Ok(format!("{title}\n{description}\n   {}  {hint}", shown.join(" \u{b7} ")))
     }

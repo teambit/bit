@@ -18,6 +18,8 @@ pub(super) struct Request {
     semver: Value,
     #[serde(default)]
     unavailable_on_main: Vec<String>,
+    #[serde(default)]
+    update_dependents: Vec<String>,
 }
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -84,8 +86,7 @@ fn current(output: &mut Value, target: &Target) {
 }
 fn empty(lane: &str) -> Value {
     let mut output = json!({});
-    // Complex lane states still decline during context loading. These sections
-    // are empty for ordinary current lanes as well as the main lane.
+    // Populate every status section; lane-specific rows are filled later.
     for field in [
         "newComponents",
         "modifiedComponents",

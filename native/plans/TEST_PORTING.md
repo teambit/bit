@@ -2064,7 +2064,7 @@ The rest follow as their commands are ported.
 - [ ] `e2e/harmony/lanes/bit-remove-on-lanes.e2e.ts:30` bit lane command › remove components when on a lane › as an intermediate step, make sure the snapped components are part of the lane
 - [ ] `e2e/harmony/lanes/bit-remove-on-lanes.e2e.ts:39` bit lane command › remove components when on a lane › removing a component that has no dependents › should remove the component from .bitmap
 - [ ] `e2e/harmony/lanes/bit-remove-on-lanes.e2e.ts:43` bit lane command › remove components when on a lane › removing a component that has no dependents › should delete the files from the filesystem
-- [ ] `e2e/harmony/lanes/bit-remove-on-lanes.e2e.ts:61` bit lane command › soft remove on lane › bit status should be clean
+- [x] `e2e/harmony/lanes/bit-remove-on-lanes.e2e.ts:61` bit lane command › soft remove on lane › bit status should be clean — `cli/tests/e2e/harmony/status_lanes.rs::soft_removed_component_on_lane_matches_node`
 - [ ] `e2e/harmony/lanes/bit-remove-on-lanes.e2e.ts:70` bit lane command › soft remove on lane › merge a lane with removed component to main › should not merge the removed component
 - [ ] `e2e/harmony/lanes/bit-remove-on-lanes.e2e.ts:75` bit lane command › soft remove on lane › merge a lane with removed component to main › should explain why it was not merged
 - [ ] `e2e/harmony/lanes/bit-remove-on-lanes.e2e.ts:85` bit lane command › soft remove on lane › importing the lane to a new workspace › should not bring the removed components

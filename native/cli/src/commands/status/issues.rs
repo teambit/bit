@@ -183,6 +183,9 @@ fn ignored(context: &Value) -> io::Result<HashSet<&str>> {
 
 /// `ordinaryModelHeads`: no deprecated model or unsupported head extension.
 fn ordinary_model_heads(context: &Value) -> io::Result<bool> {
+    let on_lane = context["currentLaneId"]
+        .as_str()
+        .is_some_and(|id| !id.ends_with("/main"));
     let versions: HashMap<&str, &Value> = array(context.get("versions"), "versions")?
         .iter()
         .filter_map(|row| Some((row.get(0)?.as_str()?, row.get(1)?)))
@@ -204,7 +207,7 @@ fn ordinary_model_heads(context: &Value) -> io::Result<bool> {
                 .as_str()
                 .and_then(|head| versions.get(head))
             else {
-                return false;
+                return on_lane;
             };
             let extensions = version.get("extensions").and_then(Value::as_array);
             !extensions.is_some_and(|extensions| {

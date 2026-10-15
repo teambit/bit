@@ -214,6 +214,7 @@ fn local_result(
         "histories": context["histories"],
         "semver": semver,
         "unavailableOnMain": context["unavailableOnMain"],
+        "updateDependents": context["updateDependents"],
     }))?;
     Ok((result, capture))
 }

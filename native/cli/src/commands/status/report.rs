@@ -33,9 +33,6 @@ const TITLE_ONLY: [&str; 5] = [
     "LegacyInsideHarmony",
     "MergeConfigHasConflict",
 ];
-/// Result sections the native status leaves empty; any row declines.
-const UNSUPPORTED: [&str; 1] = ["pendingUpdateDependents"];
-
 const OUTDATED: &str = "(use \"bit checkout head\" to merge changes)\n(use \"bit diff [component_id] [new_version]\" to compare changes)\n(use \"bit log [component_id]\" to list all available versions)";
 const PENDING_MERGE: &str = "(use \"bit reset\" to discard local tags/snaps, and bit checkout head to re-merge with the remote.\nalternatively, to keep local tags/snaps history, use \"bit merge [component-id]\")";
 const DURING_MERGE: &str = "(use \"bit snap/tag [--unmerged]\" to complete the merge process.\nto cancel the merge operation, use either \"bit lane merge-abort\" (for prior \"bit lane merge\" command)\nor use \"bit merge [component-id] --abort\" (for prior \"bit merge\" command)";
@@ -137,7 +134,6 @@ pub(super) fn report(
     supported(result, chalk)?;
     let status = Status::new(result, context, flags, chalk)?;
     let sections = status.sections()?;
-    let auto_tag = ids(result, "autoTagPendingComponents")?;
     let printed = status.printed_issues();
     let warnings_filtered = printed < status.with_issues.len();
     let warnings = if warnings_filtered {
@@ -151,12 +147,7 @@ pub(super) fn report(
         String::new()
     };
     let workspace_issues = status.workspace_issues()?;
-    let mut data = if auto_tag.is_empty() {
-        status.joined(&sections, &warnings, &troubleshooting, &workspace_issues)
-    } else {
-        let summary = status.collapsed(&auto_tag)?;
-        status.rendered(&sections, &summary, [&warnings, &troubleshooting], &workspace_issues)
-    };
+    let mut data = render_data(&status, &sections, &warnings, &troubleshooting, &workspace_issues)?;
     if let Some(lane) = status.lane()? {
         data.push_str("\n\ncurrent lane ");
         data.push_str(&status.format.chalk.bold(lane));
@@ -167,13 +158,36 @@ pub(super) fn report(
     Ok(Output { data, code: status.code() })
 }
 
+fn render_data(
+    status: &Status<'_>,
+    sections: &[String],
+    warnings: &str,
+    troubleshooting: &str,
+    workspace_issues: &str,
+) -> io::Result<String> {
+    let auto_tag = ids(status.result, "autoTagPendingComponents")?;
+    let update_dependents = ids(status.result, "pendingUpdateDependents")?;
+    if auto_tag.is_empty() && update_dependents.is_empty() {
+        Ok(status.joined(sections, warnings, troubleshooting, workspace_issues))
+    } else {
+        let auto_summary = status.collapsed(&auto_tag, "components pending auto-tag", AUTO_TAG)?;
+        let dependent_summary = status.collapsed(
+            &update_dependents,
+            "pending update-dependents",
+            "(impacted dependents that will be pushed on next export — from local cascade or 'Snap updates')",
+        )?;
+        Ok(status.rendered(
+            sections,
+            &auto_summary,
+            &dependent_summary,
+            [warnings, troubleshooting],
+            workspace_issues,
+        ))
+    }
+}
+
 /// The sections the native report renders.
 fn supported(result: &Value, chalk: Chalk) -> io::Result<()> {
-    for field in UNSUPPORTED {
-        if !array(result.get(field), field)?.is_empty() {
-            return Err(decline("status report section"));
-        }
-    }
     lane_supported(result)?;
     let colored_data = array(result.get("componentsWithIssues"), "issues")?
         .iter()

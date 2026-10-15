@@ -51,6 +51,7 @@ struct Target {
 pub(super) struct Snapshot {
     #[serde(skip_serializing_if = "Option::is_none")]
     forked_from: Option<String>,
+    update_dependents: Vec<String>,
     models: Vec<Value>,
     versions: Vec<(String, Value)>,
     semantics: Vec<String>,
@@ -113,7 +114,8 @@ fn load_overlay(
         (None, Vec::new())
     };
     Ok(Snapshot {
-        forked_from: lane.and_then(|lane| lane.forked_from),
+        forked_from: lane.as_ref().and_then(|lane| lane.forked_from.clone()),
+        update_dependents: lane.map_or_else(Vec::new, |lane| lane.update_dependents),
         models,
         versions,
         semantics,
@@ -141,9 +143,10 @@ fn selected_references(
 ) -> io::Result<Vec<String>> {
     let mut references = versions::references(models, &request.targets)?;
     if request.include_heads {
-        versions::include_heads(models, &mut references)?;
         if let Some(lane) = lane {
             versions::include_lane_heads(&lane.heads, &mut references)?;
+        } else {
+            versions::include_heads(models, &mut references)?;
         }
     }
     Ok(references)
@@ -194,7 +197,10 @@ impl Reader<'_> {
             return Ok(value.clone());
         }
         let hash = crate::merge_history::hash(reference)?;
-        let bytes = repository::read_shared(self.directory, hash, &self.raw, &self.packed)?;
+        let bytes = repository::read_shared(self.directory, hash, &self.raw, &self.packed)
+            .map_err(|error| {
+                io::Error::new(error.kind(), format!("status {kind} {reference}: {error}"))
+            })?;
         let (size, body) = repository::split(&bytes, hash, kind)?;
         size.parse::<usize>().map_err(|_| invalid("status model header size"))?;
         serde_json::from_slice(body).map_err(io::Error::other)

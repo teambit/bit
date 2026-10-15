@@ -38,7 +38,19 @@ impl Status<'_> {
             format.section("modified components", MODIFIED, &modified),
             format.section("snapped components (tag pending)", SNAPPED, &snapped),
             format.section("staged components", STAGED, &self.staged()?),
+            format.section(
+                "pending update-dependents",
+                "(impacted dependents that will be pushed on next export — from local cascade or 'Snap updates')",
+                &self.pending_update_dependents()?,
+            ),
         ])
+    }
+
+    fn pending_update_dependents(&self) -> io::Result<Vec<String>> {
+        Ok(super::ids(self.result, "pendingUpdateDependents")?
+            .iter()
+            .map(|identity| self.item((identity, None), false, None, false))
+            .collect())
     }
 
     fn forked_section(&self) -> io::Result<String> {

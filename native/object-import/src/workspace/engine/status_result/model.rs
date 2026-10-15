@@ -21,15 +21,23 @@ pub(super) fn append(output: &mut Value, model: &Value, request: &Request) -> io
     if target.is_some_and(|target| target.version.is_empty()) {
         return Err(invalid("status out of sync bitmap requires canonical persistence"));
     }
-    let staged = if target.is_some() { !source.is_empty() } else { local(model) };
+    let staged =
+        is_staged(model, target.is_some(), request.update_dependents.contains(&identity), source);
     if staged {
-        let labels = local_labels(model, history)?;
-        push(output, "stagedComponents", json!({"id":identity,"versions":labels}));
+        if request.update_dependents.contains(&identity) {
+            push(output, "pendingUpdateDependents", json!(identity));
+        } else {
+            let labels = local_labels(model, history)?;
+            push(output, "stagedComponents", json!({"id":identity,"versions":labels}));
+        }
     }
     if let Some(target) = target {
         tracked(output, model, history, target, &request.semver)?;
     }
     Ok(())
+}
+fn is_staged(model: &Value, tracked: bool, hidden: bool, source: &[Value]) -> bool {
+    if tracked || hidden { !source.is_empty() } else { local(model) }
 }
 fn tracked(
     output: &mut Value,

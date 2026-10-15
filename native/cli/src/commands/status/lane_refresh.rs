@@ -116,9 +116,10 @@ fn main_targets(context: &Value) -> io::Result<Vec<Value>> {
     Ok(array(context.get("targets"), "targets")?
         .iter()
         .filter(|target| {
-            target["version"]
-                .as_str()
-                .is_some_and(|version| !version.is_empty())
+            target["locallyRemoved"] != true
+                && target["version"]
+                    .as_str()
+                    .is_some_and(|version| !version.is_empty())
                 && target["identity"]
                     .as_str()
                     .is_some_and(|id| known.contains(id))
