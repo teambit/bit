@@ -19,9 +19,6 @@ use std::{env, ffi::OsString, io, path::Path};
 pub(super) const COMMAND: Command = Command { name: "log-file", aliases: &[], run };
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
-    if cfg!(windows) {
-        return Ok(Outcome::Declined("log-file Windows output is not qualified".into()));
-    }
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("log-file arguments are not UTF-8".into()));
     };

@@ -36,7 +36,8 @@ pub(super) fn read(root: &Path, input: &str) -> io::Result<(String, Vec<Value>)>
 }
 
 fn target(root: &Path, input: &str) -> io::Result<(String, String, Option<Value>)> {
-    let requested = input.strip_prefix("./").unwrap_or(input);
+    let normalized = if cfg!(windows) { input.replace('\\', "/") } else { input.to_string() };
+    let requested = normalized.strip_prefix("./").unwrap_or(&normalized);
     let path = Path::new(requested);
     if requested.is_empty()
         || requested.contains('\\')
