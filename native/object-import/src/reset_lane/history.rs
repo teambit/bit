@@ -5,13 +5,19 @@ use serde_json::{Value, json};
 use std::{collections::HashSet, io, path::Path};
 
 pub(super) fn version_history(repository: &Repository, identity: &str) -> io::Result<ObjectChange> {
-    project_history(&repository.objects, identity, &repository.current)
+    project_history(&repository.objects, identity, &repository.heads.current)
 }
 
 fn project_history(objects: &Path, identity: &str, current: &str) -> io::Result<ObjectChange> {
     let (scope, name) = identity.split_once('/').ok_or_else(|| invalid("lane history identity"))?;
     let hash = object_hash(&format!("{identity}:VersionHistory"));
-    let mut history = outbound::read_object(objects, &hash, "VersionHistory")?;
+    let (mut history, new) = match outbound::read_object(objects, &hash, "VersionHistory") {
+        Ok(history) => (history, false),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => {
+            (json!({"name":name,"scope":scope,"versions":[],"graphCompleteRefs":[]}), true)
+        }
+        Err(error) => return Err(error),
+    };
     if history["scope"] != scope || history["name"] != name {
         return Err(invalid("lane reset VersionHistory identity"));
     }
@@ -25,7 +31,15 @@ fn project_history(objects: &Path, identity: &str, current: &str) -> io::Result<
         let version = outbound::read_object(objects, current, "Version")?;
         versions.push(json!({"hash":current,"parents":version["parents"]}));
     }
-    changed(objects, &hash, "VersionHistory", &history)
+    if new {
+        Ok(ObjectChange {
+            hash: hash.clone(),
+            before: Vec::new(),
+            after: Some(outbound::encode_object(&hash, "VersionHistory", &history)?),
+        })
+    } else {
+        changed(objects, &hash, "VersionHistory", &history)
+    }
 }
 
 pub(super) fn pending_histories(
@@ -56,7 +70,13 @@ fn pending_history(
     }
     let current = row["head"].as_str().ok_or_else(|| invalid("lane pending head"))?;
     let hash = object_hash(&format!("{identity}:VersionHistory"));
-    let history = outbound::read_object(objects, &hash, "VersionHistory")?;
+    let history = match outbound::read_object(objects, &hash, "VersionHistory") {
+        Ok(history) => history,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => {
+            return project_history(objects, &identity, current).map(Some);
+        }
+        Err(error) => return Err(error),
+    };
     let versions =
         history["versions"].as_array().ok_or_else(|| invalid("lane pending versions"))?;
     if versions

@@ -127,5 +127,74 @@ fn publishes_two_lane_resets_once_and_checks_external_dependents() {
     assert_eq!(bitmap["alpha"]["version"], "1.0.0");
     assert_eq!(bitmap["beta"]["version"], "1.0.0");
     assert!(stale.commit("2026-10-15-9-0-2").is_err());
+    let newcomer = "5555555555555555555555555555555555555555";
+    let newcomer_hash = object_hash("scope/gamma");
+    object(
+        &root,
+        &newcomer_hash,
+        "Component",
+        &json!({"name":"gamma","scope":"scope","versions":{}}),
+    );
+    object(
+        &root,
+        newcomer,
+        "Version",
+        &json!({"parents":[],"origin":{"lane":{"scope":"scope","name":"work","hash":lane_hash}},
+            "batchId":"batch-gamma"}),
+    );
+    object(
+        &root,
+        &lane_hash,
+        "Lane",
+        &json!({"name":"work","scope":"scope","components":[
+            {"id":{"scope":"scope","name":"gamma"},"head":newcomer}]}),
+    );
+    object(
+        &root,
+        &history_hash,
+        "LaneHistory",
+        &json!({"name":"work","scope":"scope","laneHash":lane_hash,
+            "history":{"batch-gamma":{"components":[format!("scope/gamma@{newcomer}")]}}}),
+    );
+    let mut index: Value =
+        serde_json::from_slice(&fs::read(root.join(".bit/index.json")).expect("index"))
+            .expect("parse index");
+    index["components"]
+        .as_array_mut()
+        .expect("components")
+        .push(json!({"id":{"scope":"scope","name":"gamma"},"hash":newcomer_hash}));
+    fs::write(root.join(".bit/index.json"), serde_json::to_vec_pretty(&index).expect("index"))
+        .expect("write index");
+    let mut bitmap =
+        crate::recovery::jsonc::parse(&fs::read(root.join(".bitmap")).expect("bitmap"))
+            .expect("parse bitmap");
+    bitmap["gamma"] = json!({"name":"gamma","scope":"","defaultScope":"scope",
+        "version":newcomer,"mainFile":"index.js","rootDir":"gamma",
+        "onLanesOnly":true,"isAvailableOnCurrentLane":true});
+    bitmap["_bit_lane"]["exported"] = json!(true);
+    fs::write(root.join(".bitmap"), crate::inspection::render_bitmap(&bitmap).expect("bitmap"))
+        .expect("write bitmap");
+    fs::create_dir_all(root.join(".bit/refs/remotes/scope")).expect("refs directory");
+    fs::write(root.join(".bit/refs/remotes/scope/work"), b"[]").expect("refs");
+    Batch::prepare(&root, false)
+        .expect("new component batch")
+        .commit("2026-10-15-9-0-3")
+        .expect("new component commit");
+    assert!(!object_path(&root.join(".bit/objects"), &newcomer_hash).exists());
+    let index: Value =
+        serde_json::from_slice(&fs::read(root.join(".bit/index.json")).expect("index"))
+            .expect("parse index");
+    assert_eq!(
+        index["components"]
+            .as_array()
+            .expect("components")
+            .len(),
+        2,
+    );
+    let bitmap = crate::recovery::jsonc::parse(&fs::read(root.join(".bitmap")).expect("bitmap"))
+        .expect("parse bitmap");
+    assert_eq!(bitmap["gamma"]["version"], "");
+    assert!(bitmap["gamma"].get("onLanesOnly").is_none());
+    assert!(bitmap["gamma"].get("isAvailableOnCurrentLane").is_none());
     fs::remove_dir_all(root).expect("remove fixture");
 }

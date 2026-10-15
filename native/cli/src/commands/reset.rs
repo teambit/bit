@@ -163,7 +163,7 @@ fn run_lane(
         Ok(plan) => plan,
         Err(error) => return Ok(Outcome::Declined(format!("lane reset: {error}"))),
     };
-    let report = report(args, identity, &plan.labels);
+    let report = report(args, identity, plan.labels());
     workspace_command::execute_with(root, args, "reset", &report, |_| {
         plan.commit(&workspace_command::file_id())
     })

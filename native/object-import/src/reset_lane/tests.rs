@@ -103,9 +103,28 @@ fn resets_linear_lane_snaps_and_refuses_stale_publication() {
         .expect("render"),
     )
     .expect("write bitmap");
+    let bitmap_before = fs::read(root.join(".bitmap")).expect("bitmap before export");
+    fs::create_dir_all(root.join(".bit/refs/remotes/scope")).expect("remote refs directory");
+    fs::write(
+        root.join(".bit/refs/remotes/scope/work"),
+        serde_json::to_vec(&json!([{"id":{"scope":"scope","name":"alpha"},"head":first}]))
+            .expect("remote refs"),
+    )
+    .expect("write remote refs");
+    let mut exported_bitmap = crate::recovery::jsonc::parse(&bitmap_before).expect("parse bitmap");
+    exported_bitmap["_bit_lane"]["exported"] = json!(true);
+    fs::write(
+        root.join(".bitmap"),
+        crate::inspection::render_bitmap(&exported_bitmap).expect("render exported bitmap"),
+    )
+    .expect("write exported bitmap");
+    let exported = Plan::prepare(&root, identity, false, true).expect("exported plan");
+    assert_eq!(exported.labels(), [second]);
+    assert_eq!(exported.selection.next.as_deref(), Some(first));
+    fs::write(root.join(".bitmap"), bitmap_before).expect("restore unexported bitmap");
     let plan = Plan::prepare(&root, identity, false, true).expect("plan");
     let stale = Plan::prepare(&root, identity, false, true).expect("stale plan");
-    assert_eq!(plan.labels, vec![first, second]);
+    assert_eq!(plan.labels(), [first, second]);
     plan.commit("2026-10-15-8-30-1").expect("commit");
     let lane = outbound::read_object(&root.join(".bit/objects"), &lane_hash, "Lane").expect("lane");
     assert_eq!(lane["components"], json!([]));

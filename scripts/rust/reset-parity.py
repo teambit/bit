@@ -41,6 +41,12 @@ def main():
     parser.add_argument("--lane-id", help="component with the two local lane snaps")
     parser.add_argument("--lane-batch-source", type=Path, help="lane with two locally snapped components")
     parser.add_argument("--lane-batch-id", help="one component on the batch lane")
+    parser.add_argument("--exported-lane-source", type=Path,
+                        help="exported lane with two newer local snaps per component")
+    parser.add_argument("--exported-lane-id", help="one component on the exported lane")
+    parser.add_argument("--exported-new-source", type=Path,
+                        help="exported lane with a new component without a remote ref")
+    parser.add_argument("--exported-new-id", help="new component on the exported lane")
     args = parser.parse_args()
     cases = [
         ("all local tags", args.source, [args.plain], False),
@@ -75,6 +81,32 @@ def main():
             ("lane batch heads", args.lane_batch_source, ["--head", "--silent"], True),
             ("lane batch explicit", args.lane_batch_source, [args.lane_batch_id], True),
             ("lane batch explicit head", args.lane_batch_source, [args.lane_batch_id, "--head"], True),
+        ])
+    if bool(args.exported_lane_source) != bool(args.exported_lane_id):
+        parser.error("--exported-lane-source and --exported-lane-id must be given together")
+    if args.exported_lane_source:
+        cases.extend([
+            ("exported lane latest", args.exported_lane_source,
+             [args.exported_lane_id, "--head"], True),
+            ("exported lane local tail", args.exported_lane_source,
+             [args.exported_lane_id], True),
+            ("exported lane batch latest", args.exported_lane_source,
+             ["--head", "--silent"], True),
+            ("exported lane batch local tail", args.exported_lane_source,
+             ["--silent"], True),
+        ])
+    if bool(args.exported_new_source) != bool(args.exported_new_id):
+        parser.error("--exported-new-source and --exported-new-id must be given together")
+    if args.exported_new_source:
+        cases.extend([
+            ("exported lane new component", args.exported_new_source,
+             [args.exported_new_id], True),
+            ("exported lane new component head", args.exported_new_source,
+             [args.exported_new_id, "--head"], True),
+            ("exported lane batch with new component", args.exported_new_source,
+             ["--silent"], True),
+            ("exported lane batch heads with new component", args.exported_new_source,
+             ["--head", "--silent"], True),
         ])
     environment = os.environ.copy()
     environment.update(CI="1", BIT_DISABLE_SPINNER="true", BIT_NODE_CLI=str(args.entry.resolve()),
