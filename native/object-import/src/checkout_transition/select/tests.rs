@@ -58,6 +58,24 @@ fn current_version_is_observed_after_resolution_and_drives_merge() {
     let output = receipt(&mut state, &output, &json!({"removed":false,"hasBitmap":true}));
     assert_eq!(output["directive"], json!({"kind":"target","version":"2.0.0","merge":true}));
 }
+
+#[test]
+fn revert_replaces_modified_files_without_planning_a_merge() {
+    let mut state = State::default();
+    let mut request = input(false);
+    request["options"]["revert"] = json!(true);
+    request["options"]["version"] = json!("0.0.1");
+    let output = state.begin(&request).expect("begin");
+    let output = receipt(&mut state, &output, &json!(false));
+    let output = receipt(&mut state, &output, &json!("0.0.1"));
+    assert_eq!(output["directive"]["observation"], "hasVersion");
+    let output = receipt(&mut state, &output, &json!(true));
+    let output = receipt(&mut state, &output, &json!({"value":"1.0.0","hasBitmap":true}));
+    let output = receipt(&mut state, &output, &json!(false));
+    let output = receipt(&mut state, &output, &json!({"modified":true,"isRemoved":false}));
+    let output = receipt(&mut state, &output, &json!({"removed":false,"hasBitmap":true}));
+    assert_eq!(output["directive"], json!({"kind":"target","version":"0.0.1","merge":false}));
+}
 #[test]
 fn unresolved_target_does_not_advance_or_repeat_earlier_observations() {
     let mut state = State::default();

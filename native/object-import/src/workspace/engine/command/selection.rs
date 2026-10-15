@@ -69,7 +69,7 @@ fn begin(options: &Options, selection: &Selection<'_>) -> io::Result<Value> {
             "idWithoutVersion":identity,"componentVersion":version,"hasBitmap":true,"currentExists":true,"isRemoved":false},
         "model":selection.model.map(|model|json!({"hasMainHead":model["head"].is_string()})),
         "options":{"reset":to=="reset","head":to=="head","main":to=="main","latest":to=="latest",
-            "forceOurs":options.force_ours,"forceTheirs":options.force_theirs,"revert":false,"loadStash":false,
+            "forceOurs":options.force_ours,"forceTheirs":options.force_theirs,"revert":options.revert,"loadStash":false,
             "ancestor":ancestor,"version":exact.then_some(to),"versionPerId":selection.target.get("switchVersion").map(|_|json!({}))},
     }))
 }

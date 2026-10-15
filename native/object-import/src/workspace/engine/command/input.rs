@@ -62,6 +62,8 @@ pub(super) struct Flags {
     pub(super) force_theirs: bool,
     #[serde(default)]
     pub(super) no_snap: bool,
+    #[serde(default)]
+    pub(super) revert: bool,
     #[serde(default, rename = "verbose")]
     _verbose: bool,
     pub(super) skip_dependency_installation: bool,
