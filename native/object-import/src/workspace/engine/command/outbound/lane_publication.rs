@@ -18,12 +18,18 @@ use std::{
 pub(super) struct Prepared {
     workspace: Workspace,
     lane: Lane,
-    expected_ids: HashSet<String>,
+    acknowledgement: Acknowledgement,
     objects: Objects,
     models: Vec<Model>,
     published: PublishedState,
     staged: Staged,
     report: Reported,
+}
+
+struct Acknowledgement {
+    expected: HashSet<String>,
+    /// Exhaustive exports may resend versions that the remote already knows.
+    allow_subset: bool,
 }
 
 struct PublishedState {
@@ -92,7 +98,10 @@ pub(super) fn prepare(input: &Prepare, selected: &LaneSelected) -> io::Result<Pr
             file_id: input.transport.bitmap_history_file_id.clone(),
         },
         lane: Lane { scope: selected.scope.clone(), name: selected.name.clone() },
-        expected_ids,
+        acknowledgement: Acknowledgement {
+            expected: expected_ids,
+            allow_subset: input.options.all || input.options.all_versions,
+        },
         objects: prepare_objects(root, selected)?,
         models: selected.components.models
             .iter()
@@ -197,13 +206,7 @@ fn prepare_staged(root: &Path, expected_ids: &[String]) -> io::Result<Staged> {
 
 impl Prepared {
     pub(super) fn commit(self, exported_ids: &[String]) -> io::Result<()> {
-        let acknowledged = exported_ids
-            .iter()
-            .cloned()
-            .collect::<HashSet<_>>();
-        if acknowledged.len() != exported_ids.len() || acknowledged != self.expected_ids {
-            return Err(invalid("outbound lane remote acknowledgement"));
-        }
+        self.acknowledgement.validate(exported_ids)?;
         self.validate()?;
         self.publish()
     }
@@ -280,6 +283,22 @@ impl Prepared {
             .open(self.workspace.root.join(".bit/bitmap-history-metadata.txt"))?;
         writeln!(metadata, "{} export", self.workspace.file_id)?;
         metadata.sync_all()
+    }
+}
+
+impl Acknowledgement {
+    fn validate(&self, exported_ids: &[String]) -> io::Result<()> {
+        let acknowledged = exported_ids
+            .iter()
+            .cloned()
+            .collect::<HashSet<_>>();
+        if acknowledged.len() != exported_ids.len()
+            || !acknowledged.is_subset(&self.expected)
+            || (!self.allow_subset && acknowledged != self.expected)
+        {
+            return Err(invalid("outbound lane remote acknowledgement"));
+        }
+        Ok(())
     }
 }
 

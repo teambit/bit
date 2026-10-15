@@ -1,6 +1,8 @@
 //! Freeze the ordinary current lane, its component models, and the local
 //! Version closure before the export transaction starts.
 use super::{Prepare, invalid, model, remote};
+mod exhaustive;
+mod staged;
 use crate::transfer;
 use bit_client_transfer::tar::ObjectItem;
 use serde_json::{Value, json};
@@ -87,11 +89,7 @@ fn current_identity(input: &Prepare) -> io::Result<Option<(String, String)>> {
     let Some(current) = bitmap.get("_bit_lane") else {
         return Ok(None);
     };
-    if !input.ids.is_empty()
-        || input.options.resume.is_some()
-        || input.options.all
-        || input.options.all_versions
-    {
+    if !input.ids.is_empty() || input.options.resume.is_some() {
         return Err(invalid("outbound lane explicit ids or resume"));
     }
     let scope = current["id"]["scope"]
@@ -143,7 +141,8 @@ fn load_lane(input: &Prepare, scope: &str, name: &str) -> io::Result<Loaded> {
     let history_hash =
         crate::validate::hexadecimal(&Sha1::digest(format!("{hash}:LaneHistory").as_bytes()));
     let history = model::read_object(&dir, &history_hash, "LaneHistory")?;
-    if history["scope"] != scope || history["name"] != name || history["laneHash"] != hash {
+    // LaneHistory keeps its original name/scope after a local rename or scope change.
+    if history["laneHash"] != hash {
         return Err(invalid("outbound LaneHistory identity"));
     }
     Ok(Loaded { index, lane, hash, history_hash, dir, forked_from })
@@ -216,10 +215,7 @@ fn select_components(
     name: &str,
     loaded: &Loaded,
 ) -> io::Result<Selection> {
-    let rows = lane_entries(&loaded.lane)?;
-    if rows.len() > MAX_OBJECTS {
-        return Err(invalid("outbound lane component budget"));
-    }
+    let (rows, exhaustive) = selection_rows(input, loaded)?;
     let component_rows =
         loaded.index["components"].as_array().ok_or_else(|| invalid("outbound component index"))?;
     let remote_heads = remote_heads(&input.root, scope, name)?;
@@ -236,16 +232,29 @@ fn select_components(
             .iter()
             .find(|row| component.matches(row))
             .and_then(|row| row["head"].as_str());
-        if previous_head == Some(component.head) {
+        if !exhaustive && previous_head == Some(component.head) {
             continue;
         }
         let row = component_rows
             .iter()
             .find(|row| component.matches(row))
             .ok_or_else(|| invalid("outbound lane component model missing"))?;
-        select_component(&context, &component, row, previous_head, &mut selected)?;
+        select_component(&context, &component, row, previous_head, exhaustive, &mut selected)?;
     }
     Ok(selected)
+}
+
+fn selection_rows(input: &Prepare, loaded: &Loaded) -> io::Result<(Vec<Value>, bool)> {
+    let mut rows = lane_entries(&loaded.lane)?;
+    let exhaustive = input.options.all || input.options.all_versions;
+    if exhaustive {
+        let extra = exhaustive::workspace_entries(input, loaded, &rows)?;
+        rows.extend(extra);
+    }
+    if rows.len() > MAX_OBJECTS {
+        return Err(invalid("outbound lane component budget"));
+    }
+    Ok((rows, exhaustive))
 }
 
 pub(super) fn lane_entries(lane: &Value) -> io::Result<Vec<Value>> {
@@ -313,6 +322,7 @@ fn select_component(
     id: &ComponentId<'_>,
     row: &Value,
     previous_head: Option<&str>,
+    exhaustive: bool,
     selected: &mut Selection,
 ) -> io::Result<()> {
     let hash = row["hash"].as_str().ok_or_else(|| invalid("outbound component model hash"))?;
@@ -329,7 +339,11 @@ fn select_component(
         &context.input.transport.export_date,
     )?;
     let after = model::encode(hash, "Component", &component)?;
-    let versions = lane_versions(dir, id.head, previous_head, context.scope, context.name)?;
+    let versions = if exhaustive {
+        exhaustive::all_lane_versions(dir, id.head, component["head"].as_str())?
+    } else {
+        staged::lane_versions(dir, id.head, previous_head, context.scope, context.name)?
+    };
     selected.expected_ids.extend(
         versions
             .iter()
@@ -360,61 +374,6 @@ fn remote_heads(root: &Path, scope: &str, name: &str) -> io::Result<Vec<Value>> 
 
 fn read_compressed(dir: &Path, hash: &str) -> io::Result<Vec<u8>> {
     transfer::object::repository(dir, crate::merge_history::hash(hash)?, MAX_BYTES)
-}
-
-/// Keep the lane head and any preceding snaps made on this lane. A main-lane
-/// parent is already on the component's home scope and does not need sending.
-fn lane_versions(
-    dir: &Path,
-    head: &str,
-    previous_head: Option<&str>,
-    scope: &str,
-    name: &str,
-) -> io::Result<Vec<String>> {
-    let mut output = Vec::new();
-    let mut pending = vec![head.to_owned()];
-    let mut seen = HashSet::new();
-    while let Some(hash) = pending.pop() {
-        if !seen.insert(hash.clone()) || Some(hash.as_str()) == previous_head {
-            continue;
-        }
-        if seen.len() > MAX_OBJECTS {
-            return Err(invalid("outbound lane version budget"));
-        }
-        if let Some(parents) = selected_parents(dir, &hash, head, scope, name)? {
-            output.push(hash);
-            pending.extend(parents.into_iter().rev());
-        }
-    }
-    output.reverse();
-    Ok(output)
-}
-
-fn selected_parents(
-    dir: &Path,
-    hash: &str,
-    head: &str,
-    scope: &str,
-    name: &str,
-) -> io::Result<Option<Vec<String>>> {
-    let version = model::read_object(dir, hash, "Version")?;
-    if version["unrelated"] == true || version["squashed"] == true {
-        return Err(invalid("outbound rewritten lane history"));
-    }
-    let origin = &version["origin"]["lane"];
-    if hash != head && (origin["scope"] != scope || origin["name"] != name) {
-        return Ok(None);
-    }
-    let parents = version["parents"].as_array().ok_or_else(|| invalid("outbound lane parents"))?;
-    parents
-        .iter()
-        .map(|parent| {
-            let hash = parent.as_str().ok_or_else(|| invalid("outbound lane parent"))?;
-            crate::merge_history::hash(hash)?;
-            Ok(hash.to_owned())
-        })
-        .collect::<io::Result<Vec<_>>>()
-        .map(Some)
 }
 
 #[cfg(test)]

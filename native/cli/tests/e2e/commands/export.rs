@@ -443,6 +443,129 @@ fn forked_lane_export_matches_node() {
     assert_eq!(parse(&native_status.stdout), parse(&node_status.stdout));
 }
 
+fn lane_full_history_case(command: &str, with_lane_snap: bool) {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("module.exports = () => 'foo';");
+    helper.add_component_bar_foo();
+    helper.run("tag bar/foo --message base");
+    helper.run("export");
+    helper.run("lane create dev");
+    if with_lane_snap {
+        helper.run("snap --unmodified --message lane-first");
+        helper.run("snap --unmodified --message lane-second");
+    }
+    if let Some(destination) = std::env::var_os("BIT_NATIVE_EXPORT_LANE_ALL_BENCH_FIXTURE") {
+        let destination = std::path::PathBuf::from(destination);
+        assert!(!destination.exists());
+        fs::create_dir_all(&destination).unwrap();
+        setup::copy_dir(&helper.scopes.local_path, &destination.join("workspace"));
+        setup::copy_dir(&helper.scopes.remote_path, &destination.join("remote"));
+    }
+    assert_full_lane_export(&helper, command);
+}
+
+fn assert_full_lane_export(helper: &Helper, command: &str) {
+    let remote_before = helper.clone_remote_scope();
+    let node_root = helper.clone_workspace();
+    let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{command}: {}", node.stderr);
+    let node_remote = helper.clone_remote_scope();
+    helper.restore_remote_scope(&remote_before);
+    let native = helper.native_run(command);
+    assert!(native.native, "{command}: {}", native.trace);
+    assert_eq!(
+        native.status.code(),
+        node.status.code(),
+        "native stdout: {}\nnative stderr: {}\ntrace: {}\nnode stdout: {}\nnode stderr: {}",
+        native.stdout,
+        native.stderr,
+        native.trace,
+        node.stdout,
+        node.stderr,
+    );
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(
+        remote_index_by_identity(&helper.scopes.remote_path),
+        remote_index_by_identity(&node_remote),
+    );
+    assert_eq!(object_names(&helper.scopes.remote_path), object_names(&node_remote));
+    for path in [".bitmap", ".bit/index.json", ".bit/scope.json"] {
+        let native_bytes = fs::read_to_string(helper.scopes.local_path.join(path)).unwrap();
+        let node_bytes = fs::read_to_string(node_root.join(path)).unwrap();
+        let native_json = parse(&native_bytes[native_bytes.find('{').unwrap()..]);
+        let node_json = parse(&node_bytes[node_bytes.find('{').unwrap()..]);
+        assert_eq!(native_json, node_json, "{path}");
+    }
+}
+
+#[test]
+fn all_lanes_with_inherited_main_component_match_node() {
+    lane_full_history_case("export --all", false);
+}
+
+#[test]
+fn all_versions_on_lane_match_node() {
+    lane_full_history_case("export --all-versions", true);
+}
+
+#[test]
+fn all_versions_repeats_an_exported_lane_like_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("module.exports = () => 'foo';");
+    helper.add_component_bar_foo();
+    helper.run("tag bar/foo --message base");
+    helper.run("export");
+    helper.run("lane create dev");
+    helper.run("snap --unmodified --message lane");
+    helper.run("export");
+    assert_full_lane_export(&helper, "export --all-versions");
+}
+
+#[test]
+fn all_exports_a_renamed_lane_like_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("module.exports = () => 'foo';");
+    helper.add_component_bar_foo();
+    helper.run("tag bar/foo --message base");
+    helper.run("export");
+    helper.run("lane create dev");
+    helper.run("snap --unmodified --message lane");
+    helper.run("lane rename renamed");
+    assert_full_lane_export(&helper, "export --all");
+}
+
+#[test]
+fn ordinary_export_after_lane_rename_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("module.exports = () => 'foo';");
+    helper.add_component_bar_foo();
+    helper.run("lane create dev");
+    helper.run("snap --message lane");
+    helper.run("lane rename renamed");
+    assert_full_lane_export(&helper, "export");
+}
+
+#[test]
+fn all_exports_lane_and_inherited_main_components_like_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("module.exports = () => 'foo';");
+    helper.add_component_bar_foo();
+    helper.output_file("baz/qux.js", "module.exports = () => 'qux';");
+    helper.run("add baz -i baz/qux");
+    helper.run("tag --message base");
+    helper.run("export");
+    helper.run("lane create dev");
+    helper.create_component_bar_foo("module.exports = () => 'lane foo';");
+    helper.run("snap --message lane");
+    assert_full_lane_export(&helper, "export --all");
+}
+
 #[test]
 fn deleted_lane_component_export_matches_node() {
     let helper = Helper::new();
