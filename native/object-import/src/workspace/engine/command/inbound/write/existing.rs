@@ -1,10 +1,10 @@
-//! Materialize a newer remote Version over a clean imported workspace component.
+//! Materialize a remote Version over an imported workspace component.
 use super::{
     super::details, Replacement, Target, WorkspaceFiles, invalid, policy, safe_destination, version,
 };
 use crate::{checkout, command_import::PreparedImport};
 use serde_json::{Map, Value};
-use std::{collections::HashMap, fs, io, path::Path};
+use std::{borrow::Cow, collections::HashMap, fs, io, path::Path};
 
 pub(super) struct Input<'a> {
     pub(super) root: &'a Path,
@@ -13,6 +13,7 @@ pub(super) struct Input<'a> {
     pub(super) imported: &'a PreparedImport,
     pub(super) row: &'a Value,
     pub(super) policy: &'a HashMap<String, String>,
+    pub(super) override_existing: bool,
 }
 
 pub(super) fn prepare(
@@ -22,10 +23,15 @@ pub(super) fn prepare(
 ) -> io::Result<()> {
     checkout::plan::relative_path(input.directory)?;
     let model = imported_model(input, rows)?;
-    let (old, hash, name) = versions(input, model)?;
-    let new = input.imported.overlay
-        .read(&hash, "Version")?
-        .ok_or_else(|| invalid("inbound existing imported Version"))?;
+    let (old, hash, name) = versions(input, model.as_ref())?;
+    let local;
+    let new = if let Some(version) = input.imported.overlay.read(&hash, "Version")? {
+        version
+    } else {
+        local = details::local_object(input.root, &hash, "Version")?
+            .ok_or_else(|| invalid("inbound existing Version"))?;
+        &local
+    };
     let main = validate_new(input, new)?;
     plan_files(input, &old, new, changes)?;
     let bitmap =
@@ -35,16 +41,15 @@ pub(super) fn prepare(
     Ok(())
 }
 
-fn imported_model<'a>(input: &'a Input<'_>, rows: &Map<String, Value>) -> io::Result<&'a Value> {
+fn imported_model<'a>(
+    input: &'a Input<'_>,
+    rows: &Map<String, Value>,
+) -> io::Result<Cow<'a, Value>> {
     let scope = input.target.scope.as_deref().ok_or_else(|| invalid("inbound existing scope"))?;
     if input.row["scope"] != scope || rows.get(&input.target.name) != Some(input.row) {
         return Err(invalid("inbound existing workspace identity"));
     }
-    input.imported.overlay
-        .models()
-        .into_iter()
-        .find(|model| model["scope"] == scope && model["name"] == input.target.name)
-        .ok_or_else(|| invalid("inbound existing imported model"))
+    details::model(input.root, input.imported, scope, &input.target.name)
 }
 
 fn versions(input: &Input<'_>, model: &Value) -> io::Result<(Value, String, String)> {
@@ -54,9 +59,6 @@ fn versions(input: &Input<'_>, model: &Value) -> io::Result<(Value, String, Stri
     let old = details::local_object(input.root, &current_hash, "Version")?
         .ok_or_else(|| invalid("inbound existing local Version"))?;
     let (new_name, new_hash) = version(model, &input.target.version)?;
-    if current_hash == new_hash {
-        return Err(invalid("inbound existing version unchanged"));
-    }
     Ok((old, new_hash, new_name))
 }
 
@@ -96,11 +98,16 @@ fn plan_old(
             &mut compressed,
         )?;
         let expected = checkout::eol::auto(old_source);
-        check(input.root, &path, &expected)?;
+        let before = if input.override_existing {
+            current_body(input.root, &path)?
+        } else {
+            check(input.root, &path, &expected)?;
+            expected
+        };
         if let Some(new_hash) = new_files.get(relative) {
-            let after = new_source(input.imported, new_hash)?;
-            if expected != after {
-                changes.replacements.push(Replacement { path, before: expected, after });
+            let after = new_source(input, new_hash)?;
+            if before != after {
+                changes.replacements.push(Replacement { path, before, after });
             }
         }
         // ComponentWriter leaves files removed by the new Version in the workspace.
@@ -120,15 +127,33 @@ fn plan_new(
         }
         let path = input.root.join(input.directory).join(relative);
         safe_destination(input.root, &path)?;
-        changes.additions.push((path, new_source(input.imported, hash)?));
+        changes.additions.push((path, new_source(input, hash)?));
     }
     Ok(())
 }
 
-fn new_source(imported: &PreparedImport, hash: &str) -> io::Result<Vec<u8>> {
-    let source =
-        imported.overlay.source(hash).ok_or_else(|| invalid("inbound existing imported Source"))?;
-    Ok(checkout::eol::auto(source.to_vec()))
+fn new_source(input: &Input<'_>, hash: &str) -> io::Result<Vec<u8>> {
+    if let Some(source) = input.imported.overlay.source(hash) {
+        return Ok(checkout::eol::auto(source.to_vec()));
+    }
+    let mut compressed = 0;
+    let source = checkout::repository::source(
+        &input.root.join(".bit/objects"),
+        crate::merge_history::hash(hash)?,
+        32 * 1024 * 1024,
+        &mut compressed,
+    )?;
+    Ok(checkout::eol::auto(source))
+}
+
+fn current_body(root: &Path, path: &Path) -> io::Result<Vec<u8>> {
+    let metadata = fs::symlink_metadata(path)?;
+    if !metadata.is_file() || metadata.len() > super::MAX_WRITTEN_BYTES as u64 {
+        return Err(invalid("inbound override workspace file type or size"));
+    }
+    let body = fs::read(path)?;
+    check(root, path, &body)?;
+    Ok(body)
 }
 
 fn files(version: &Value) -> io::Result<HashMap<String, String>> {

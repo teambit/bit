@@ -3,7 +3,32 @@ use super::{Target, invalid};
 use crate::command_import;
 use serde_json::{Value, json};
 use sha1::Digest;
-use std::{io, path::Path};
+use std::{borrow::Cow, io, path::Path};
+
+/// The remote model when transferred, or the validated local model when the
+/// remote reports this component is already up to date.
+pub(super) fn model<'a>(
+    root: &Path,
+    imported: &'a command_import::PreparedImport,
+    scope: &str,
+    name: &str,
+) -> io::Result<Cow<'a, Value>> {
+    if let Some(model) = imported.overlay
+        .models()
+        .into_iter()
+        .find(|model| model["scope"] == scope && model["name"] == name)
+    {
+        return Ok(Cow::Borrowed(model));
+    }
+    let hash =
+        crate::validate::hexadecimal(&sha1::Sha1::digest(format!("{scope}/{name}").as_bytes()));
+    let model = local_object(root, &hash, "Component")?
+        .ok_or_else(|| invalid("inbound existing local model"))?;
+    if model["scope"] != scope || model["name"] != name {
+        return Err(invalid("inbound existing local model identity"));
+    }
+    Ok(Cow::Owned(model))
+}
 
 pub(super) fn head_as_tag_or_hash(model: &Value) -> io::Result<String> {
     let head = model["head"].as_str().ok_or_else(|| invalid("inbound model head"))?;
@@ -25,17 +50,12 @@ pub(super) fn details(
     targets: &[Target],
     imported: &command_import::PreparedImport,
 ) -> io::Result<Vec<Value>> {
-    let models = imported.overlay.models();
     targets
         .iter()
         .map(|target| {
             let scope = target.scope.as_deref().ok_or_else(|| invalid("inbound scope"))?;
-            let model = models
-                .iter()
-                .copied()
-                .find(|model| model["scope"] == scope && model["name"] == target.name)
-                .ok_or_else(|| invalid("inbound imported model absent"))?;
-            detail(root, scope, target, model, imported)
+            let model = model(root, imported, scope, &target.name)?;
+            detail(root, scope, target, model.as_ref(), imported)
         })
         .collect()
 }

@@ -3,7 +3,7 @@ use super::parse;
 #[test]
 fn imports_without_installing_and_fetches() {
     let import = parse(&["import", "s/a", "-x"]).unwrap();
-    assert!(!import.objects_only && import.skip_dependency_installation);
+    assert!(!import.objects_only && import.write.skip_dependency_installation);
     assert!(parse(&["import"]).unwrap().objects_only);
     assert!(parse(&["import", "s/a", "-o"]).unwrap().objects_only);
     let fetch = parse(&["fetch", "-c", "s/a"]).unwrap();
@@ -23,6 +23,20 @@ fn imports_that_install_and_wildcard_patterns() {
     assert_eq!(patterns.wildcards(), ["s.org/**"]);
     assert!(patterns.include_deprecated && patterns.skip_write_config_files);
     assert!(!parse(&["import", "s/a", "-x"]).unwrap().installs());
+}
+
+#[test]
+fn override_requires_an_explicit_component_write() {
+    let options = parse(&["import", "s/a", "--override", "-x"]).unwrap();
+    assert!(options.write.override_existing);
+    assert_eq!(options.request()["overrideExisting"], true);
+    for args in [
+        &["import", "--override"][..],
+        &["import", "s/a", "--override", "-o"],
+        &["import", "s/**", "--override"],
+    ] {
+        assert!(parse(args).is_none(), "{args:?}");
+    }
 }
 
 #[test]

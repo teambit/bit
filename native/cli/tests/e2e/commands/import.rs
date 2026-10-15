@@ -248,6 +248,82 @@ fn a_clean_import_updates_added_and_deleted_files_like_node() {
     );
 }
 
+#[test]
+fn a_locally_modified_import_is_overridden_like_node() {
+    let (helper, _) = modified_bar_foo();
+    if let Some(destination) = std::env::var_os("BIT_NATIVE_IMPORT_OVERRIDE_BENCH_FIXTURE") {
+        let destination = std::path::PathBuf::from(destination);
+        assert!(!destination.exists());
+        fs::create_dir_all(&destination).unwrap();
+        setup::copy_dir(&helper.scopes.local_path, &destination.join("workspace"));
+        setup::copy_dir(&helper.scopes.remote_path, &destination.join("remote"));
+    }
+    assert_override_import_matches_node(&helper);
+}
+
+#[test]
+fn a_locally_modified_import_updates_to_a_newer_version_like_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("module.exports = () => 'first';");
+    helper.add_component_bar_foo();
+    helper.tag_without_build("bar/foo", "");
+    helper.run("export");
+    let source = helper.clone_workspace();
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    helper.run(&format!("import {}/bar/foo -x", helper.scopes.remote));
+    helper.output_file(&format!("{}/bar/foo/foo.js", helper.scopes.remote), "local edit");
+    fs::write(source.join("bar/foo.js"), "module.exports = () => 'second';").unwrap();
+    for command in ["tag bar/foo --message second", "export"] {
+        let run = Helper::cmd_in_with(&source, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+        assert!(run.status.success(), "{command}: {}", combined(&run));
+    }
+    assert_override_import_matches_node(&helper);
+}
+
+#[test]
+fn a_clean_reimport_is_up_to_date_like_node() {
+    let helper = exported_simple();
+    let command = format!("import {}/global/simple -x", helper.scopes.remote);
+    helper.run(&command);
+    // Bitmap history names have one-second resolution.
+    std::thread::sleep(std::time::Duration::from_millis(1100));
+    let node_root = helper.clone_workspace();
+    let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{}", combined(&node));
+    let native = helper.native_run(&command);
+    assert!(native.native, "{}", native.trace);
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(without_progress_timing(&native.stdout), without_progress_timing(&node.stdout));
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(
+        fs::read(helper.scopes.local_path.join(".bitmap")).unwrap(),
+        fs::read(node_root.join(".bitmap")).unwrap(),
+    );
+}
+
+fn assert_override_import_matches_node(helper: &Helper) {
+    let node_root = helper.clone_workspace();
+    let command = format!("import {}/bar/foo --override -x", helper.scopes.remote);
+    let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{}", combined(&node));
+    let native = helper.native_run(&command);
+    assert!(native.native, "{}", native.trace);
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(without_progress_timing(&native.stdout), without_progress_timing(&node.stdout));
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(
+        fs::read(helper.scopes.local_path.join(".bitmap")).unwrap(),
+        fs::read(node_root.join(".bitmap")).unwrap(),
+    );
+    let component = format!("{}/bar/foo/foo.js", helper.scopes.remote);
+    assert_eq!(
+        fs::read(helper.scopes.local_path.join(&component)).unwrap(),
+        fs::read(node_root.join(&component)).unwrap(),
+    );
+}
+
 /// stand alone component (without dependencies) › with multiple files located in different
 /// directories › should write the internal files according to their relative paths
 #[test]
@@ -270,10 +346,9 @@ fn files_keep_their_relative_paths() {
     }
 }
 
-/// What native `bit import` still leaves to the Node.js CLI: a destination directory
-/// that exists or a component already in the workspace, a `defaultDirectory` template,
-/// `-p`, `--merge`, `--dependencies` and `--dependencies-depth`, and a wildcard over a
-/// file remote.
+/// What native `bit import` still leaves to the Node.js CLI: occupied destinations,
+/// authored components, locally changed files without `--override`, a custom
+/// `defaultDirectory`, `-p`, `--merge`, dependency flags, and file-remote wildcards.
 mod known_failures {
     use super::{
         chain, combined, consumer_files, expect_id, exported_simple, import, import_chain,

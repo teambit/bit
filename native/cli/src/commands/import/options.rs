@@ -10,12 +10,18 @@ pub struct Options {
     pub ids: Vec<String>,
     pub objects_only: bool,
     pub all_history: bool,
-    pub skip_dependency_installation: bool,
+    pub write: WriteOptions,
     pub lanes: bool,
     /// `--skip-write-config-files`
     pub skip_write_config_files: bool,
     /// `--include-deprecated`: wildcard patterns keep deprecated components.
     pub include_deprecated: bool,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct WriteOptions {
+    pub skip_dependency_installation: bool,
+    pub override_existing: bool,
 }
 
 /// `args` starts with the command name.
@@ -66,7 +72,7 @@ fn fetch(ids: Vec<String>, flags: &[&str]) -> Option<Options> {
         ids,
         objects_only: true,
         all_history,
-        skip_dependency_installation: false,
+        write: WriteOptions { skip_dependency_installation: false, override_existing: false },
         lanes: lanes == 1,
         skip_write_config_files: false,
         include_deprecated: false,
@@ -76,6 +82,33 @@ fn fetch(ids: Vec<String>, flags: &[&str]) -> Option<Options> {
 /// `bit import`: objects only, or the components written and installed.
 fn import(ids: Vec<String>, flags: &[&str]) -> Option<Options> {
     let has = |flag: &str| flags.contains(&flag);
+    if !valid_import_flags(flags)
+        || ids
+            .iter()
+            .any(|id| has_wildcard(id) && !valid_pattern(id))
+    {
+        return None;
+    }
+    let objects_only = ids.is_empty() || has("--objects") || has("-o");
+    if has("--override") && (objects_only || ids.iter().any(|id| has_wildcard(id))) {
+        return None;
+    }
+    Some(Options {
+        operation: "import",
+        ids,
+        objects_only,
+        all_history: has("--all-history"),
+        write: WriteOptions {
+            skip_dependency_installation: has("--skip-dependency-installation") || has("-x"),
+            override_existing: has("--override"),
+        },
+        lanes: false,
+        skip_write_config_files: has("--skip-write-config-files"),
+        include_deprecated: has("--include-deprecated"),
+    })
+}
+
+fn valid_import_flags(flags: &[&str]) -> bool {
     let allowed = [
         "--objects",
         "-o",
@@ -84,35 +117,15 @@ fn import(ids: Vec<String>, flags: &[&str]) -> Option<Options> {
         "-x",
         "--skip-write-config-files",
         "--include-deprecated",
+        "--override",
     ];
+    let has = |flag: &str| flags.contains(&flag);
     let both =
         (has("--objects") && has("-o")) || (has("--skip-dependency-installation") && has("-x"));
-    if flags
-        .iter()
-        .any(|flag| !allowed.contains(flag))
-        || both
-    {
-        return None;
-    }
-    if ids
-        .iter()
-        .any(|id| has_wildcard(id) && !valid_pattern(id))
-    {
-        return None;
-    }
-    let objects_only = ids.is_empty() || has("--objects") || has("-o");
-    let skip_dependency_installation = has("--skip-dependency-installation") || has("-x");
-    let all_history = has("--all-history");
-    Some(Options {
-        operation: "import",
-        ids,
-        objects_only,
-        all_history,
-        skip_dependency_installation,
-        lanes: false,
-        skip_write_config_files: has("--skip-write-config-files"),
-        include_deprecated: has("--include-deprecated"),
-    })
+    !both
+        && flags
+            .iter()
+            .all(|flag| allowed.contains(flag))
 }
 
 /// `hasWildcard`.
@@ -131,7 +144,7 @@ fn valid_pattern(id: &str) -> bool {
 impl Options {
     /// Whether the components are written and then installed.
     pub const fn installs(&self) -> bool {
-        !self.objects_only && !self.skip_dependency_installation
+        !self.objects_only && !self.write.skip_dependency_installation
     }
 
     /// The wildcard patterns, listed on their remotes before importing.
@@ -148,7 +161,8 @@ impl Options {
             "objectsOnly": self.objects_only,
             "allHistory": self.all_history,
             "fromOriginalScope": false,
-            "skipDependencyInstallation": self.skip_dependency_installation,
+            "skipDependencyInstallation": self.write.skip_dependency_installation,
+            "overrideExisting": self.write.override_existing,
             "lanes": self.lanes,
             "components": self.operation == "fetch" && !self.lanes,
         })

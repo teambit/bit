@@ -56,6 +56,8 @@ struct Options {
     all_history: bool,
     from_original_scope: bool,
     skip_dependency_installation: bool,
+    #[serde(default)]
+    override_existing: bool,
     lanes: bool,
     components: bool,
 }
@@ -119,6 +121,7 @@ pub(in crate::workspace::engine) fn prepare(
             &targets,
             &import,
             input.bitmap_history_file_id.as_deref(),
+            input.options.override_existing,
         )?)
     };
     state.sequence = state.sequence.wrapping_add(1);
@@ -163,7 +166,7 @@ fn receipt(
 ) -> io::Result<Value> {
     let imported_ids = targets
         .iter()
-        .map(|target| imported_identity(target, import))
+        .map(|target| imported_identity(root, target, import))
         .collect::<io::Result<Vec<_>>>()?;
     let details = details::details(root, targets, import)?;
     let progress = import.progress
@@ -254,6 +257,7 @@ fn validate(input: &Prepare) -> io::Result<()> {
     if input.options.from_original_scope || !valid_operation(input) {
         return Err(invalid("inbound command requires canonical lifecycle"));
     }
+    validate_override(input)?;
     if input.options.lanes
         && (input.ids.is_empty() || input.ids.len() > 32 || input.options.all_history)
     {
@@ -261,6 +265,16 @@ fn validate(input: &Prepare) -> io::Result<()> {
     }
     if !valid_write_mode(input) || input.root.join(".bitTmp").try_exists()? {
         return Err(invalid("inbound command requires canonical lifecycle"));
+    }
+    Ok(())
+}
+fn validate_override(input: &Prepare) -> io::Result<()> {
+    if input.options.override_existing
+        && (input.operation != "import"
+            || input.options.objects_only
+            || input.ids.is_empty())
+    {
+        return Err(invalid("inbound override requires explicit workspace import"));
     }
     Ok(())
 }
@@ -342,17 +356,14 @@ fn identity(target: &Target) -> io::Result<String> {
 }
 
 fn imported_identity(
+    root: &Path,
     target: &Target,
     imported: &command_import::PreparedImport,
 ) -> io::Result<String> {
     let scope = target.scope.as_deref().ok_or_else(|| invalid("inbound target scope"))?;
-    let model = imported.overlay
-        .models()
-        .into_iter()
-        .find(|model| model["scope"] == scope && model["name"] == target.name)
-        .ok_or_else(|| invalid("inbound imported model"))?;
+    let model = details::model(root, imported, scope, &target.name)?;
     let version = if target.version == "latest" {
-        details::head_as_tag_or_hash(model)?
+        details::head_as_tag_or_hash(model.as_ref())?
     } else {
         target.version.clone()
     };

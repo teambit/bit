@@ -42,6 +42,7 @@ pub(super) fn prepare(
     targets: &[Target],
     import: &PreparedImport,
     file_id: Option<&str>,
+    override_existing: bool,
 ) -> io::Result<Prepared> {
     let history = prepare_history(root, file_id)?;
     let template = default_directory(root)?;
@@ -49,7 +50,7 @@ pub(super) fn prepare(
     let mut bitmap = crate::recovery::jsonc::parse(&bitmap_before)?;
     let rows = bitmap.as_object_mut().ok_or_else(|| invalid("inbound bitmap object"))?;
     let schema = bitmap_schema(rows)?;
-    let changes = prepare_targets(root, targets, &template, import, rows)?;
+    let changes = prepare_targets(root, targets, &template, import, rows, override_existing)?;
     // `sortObjectByKeys`: `Object.keys(...).sort()`, by UTF-16 code units.
     rows.sort_keys();
     rows.insert("$schema-version".into(), schema);
@@ -71,9 +72,10 @@ fn prepare_targets(
     template: &str,
     import: &PreparedImport,
     rows: &mut Map<String, Value>,
+    override_existing: bool,
 ) -> io::Result<WorkspaceFiles> {
     let policy = policy::workspace_policy(root)?;
-    let context = Planning { root, imported: import, policy: &policy };
+    let context = Planning { root, imported: import, policy: &policy, override_existing };
     let new = targets
         .iter()
         .filter(|target| {
@@ -107,6 +109,7 @@ struct Planning<'a> {
     root: &'a Path,
     imported: &'a PreparedImport,
     policy: &'a HashMap<String, String>,
+    override_existing: bool,
 }
 
 fn plan_target(
@@ -141,6 +144,7 @@ fn plan_target(
                 imported: context.imported,
                 row: &row,
                 policy: context.policy,
+                override_existing: context.override_existing,
             },
             rows,
             changes,

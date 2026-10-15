@@ -239,7 +239,10 @@ pub(super) fn prepare_status_refresh(
         ids: Vec::new(),
         objects_only: true,
         all_history: true,
-        skip_dependency_installation: false,
+        write: options::WriteOptions {
+            skip_dependency_installation: false,
+            override_existing: false,
+        },
         lanes: false,
         skip_write_config_files: false,
         include_deprecated: false,
@@ -257,7 +260,10 @@ pub(super) fn prepare_status_forked_refresh(
         ids: Vec::new(),
         objects_only: true,
         all_history: false,
-        skip_dependency_installation: false,
+        write: options::WriteOptions {
+            skip_dependency_installation: false,
+            override_existing: false,
+        },
         lanes: true,
         skip_write_config_files: false,
         include_deprecated: false,
