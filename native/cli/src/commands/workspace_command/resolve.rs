@@ -21,7 +21,11 @@ use crate::commands::{
     },
 };
 use serde_json::{Value, json};
-use std::{collections::HashSet, io, path::Path};
+use std::{
+    collections::{HashMap, HashSet},
+    io,
+    path::Path,
+};
 
 /// `bit snap`, `bit tag` or `bit merge --resolve`: the engine's
 /// `commandSnap*`, `commandTag*` or `commandResolve*`.
@@ -163,6 +167,8 @@ impl<'r> Session<'r> {
         let resolved = Resolved { root: self.root, context: &self.context, capture: &self.capture };
         resolved.validate_issues(needs_snap, plan.get("issueGraph"))?;
         let receipt = resolved.receipt(self.kind, needs_snap, plan)?;
+        let auto_snapped =
+            if self.kind == Kind::Resolve { Some(auto_snap_report(plan, &receipt)?) } else { None };
         let finalized: Value = self.engine.request(&json!({
             "kind": self.kind.request("Finalize"),
             "token": self.token,
@@ -174,7 +180,11 @@ impl<'r> Session<'r> {
             .get("progress")
             .filter(|progress| !progress.is_null());
         let progress = progress.unwrap_or_else(|| &plan["progress"]);
-        Ok(json!({ "result": finalized["result"], "progress": progress }))
+        let mut result = json!({ "result": finalized["result"], "progress": progress });
+        if let Some(auto_snapped) = auto_snapped {
+            result["autoSnappedResults"] = json!(auto_snapped);
+        }
+        Ok(result)
     }
 
     fn planned(self, plan: Value) -> Planned {
@@ -194,6 +204,48 @@ fn check_token(receipt: &Value, token: &str) -> io::Result<()> {
     } else {
         Err(decline("resolve token"))
     }
+}
+
+/// The automatic dependents from the resolve plan, with hashes allocated in
+/// the same receipt that the engine commits. This is for the enclosing merge
+/// report; the standalone `merge --resolve` result keeps its Node shape.
+fn auto_snap_report(plan: &Value, receipt: &Value) -> io::Result<Vec<Value>> {
+    let versions = array(receipt.get("versions"), "resolve receipt versions")?;
+    let hashes = versions
+        .iter()
+        .map(|version| Ok((text(version.get("identity"))?, text(version.get("hash"))?)))
+        .collect::<io::Result<HashMap<_, _>>>()?;
+    if hashes.len() != versions.len() {
+        return Err(decline("resolve automatic snap identities"));
+    }
+    let selected = array(plan["result"].get("resolvedComponents"), "resolved components")?
+        .iter()
+        .map(|row| text(row.get("id")))
+        .collect::<io::Result<HashSet<_>>>()?;
+    let mut seen = HashSet::new();
+    array(plan.get("autoSnapResults"), "resolve automatic snaps")?
+        .iter()
+        .map(|row| {
+            let identity = text(row.get("id"))?;
+            let hash =
+                hashes.get(identity).ok_or_else(|| decline("resolve automatic snap hash"))?;
+            let triggered = array(row.get("triggeredBy"), "resolve automatic triggers")?
+                .iter()
+                .map(|id| text(Some(id)).map(str::to_string))
+                .collect::<io::Result<Vec<_>>>()?;
+            if identity.is_empty()
+                || selected.contains(identity)
+                || !seen.insert(identity)
+                || triggered.is_empty()
+            {
+                return Err(decline("resolve automatic snap report"));
+            }
+            Ok(json!({
+                "component": { "id": format!("{identity}@{hash}") },
+                "triggeredBy": triggered,
+            }))
+        })
+        .collect()
 }
 
 /// `validatePreparation`: the context's targets are the targets, and the

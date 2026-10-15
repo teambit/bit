@@ -29,11 +29,7 @@ pub(super) fn validate(
             prepared.proofs.extend(cache_guard::verify(record, captured, target, identity)?);
         }
     }
-    for row in
-        record.context["versions"].as_array().ok_or_else(|| invalid("command merge versions"))?
-    {
-        reject_dependents(&row[1], &identities)?;
-    }
+    validate_dependents(record, &identities)?;
     let snapshots = prepared.pending
         .iter()
         .zip(&prepared.materials)
@@ -50,6 +46,18 @@ pub(super) fn validate(
 }
 
 mod cache_guard;
+
+fn validate_dependents(record: &Record, identities: &HashSet<&str>) -> io::Result<()> {
+    if record.request.internal_snapshot_preview {
+        return Ok(());
+    }
+    for row in
+        record.context["versions"].as_array().ok_or_else(|| invalid("command merge versions"))?
+    {
+        reject_dependents(&row[1], identities)?;
+    }
+    Ok(())
+}
 
 fn reject_dependents(version: &Value, identities: &HashSet<&str>) -> io::Result<()> {
     for field in ["dependencies", "devDependencies"] {

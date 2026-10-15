@@ -1,4 +1,4 @@
-use super::{Kind, Versions, pattern_ids, squash_logs, validate_preparation};
+use super::{Kind, Versions, auto_snap_report, pattern_ids, squash_logs, validate_preparation};
 use serde_json::json;
 
 #[test]
@@ -65,4 +65,28 @@ fn squash_logs_attach_only_to_the_resolved_lane_component() {
         )
         .is_err(),
     );
+}
+
+#[test]
+fn automatic_merge_dependents_use_the_resolve_receipt_hash() {
+    let plan = json!({
+        "result": {"resolvedComponents":[{"id":"s/merged"}]},
+        "autoSnapResults":[{"id":"s/dependent","triggeredBy":["s/merged@old"]}]
+    });
+    let receipt = json!({"versions":[
+        {"identity":"s/merged","hash":"new-merged"},
+        {"identity":"s/dependent","hash":"new-dependent"}
+    ]});
+    assert_eq!(
+        auto_snap_report(&plan, &receipt).unwrap(),
+        vec![json!({
+            "component":{"id":"s/dependent@new-dependent"},
+            "triggeredBy":["s/merged@old"]
+        })],
+    );
+    let unknown = json!({
+        "result": {"resolvedComponents":[{"id":"s/merged"}]},
+        "autoSnapResults":[{"id":"s/absent","triggeredBy":["s/merged@old"]}]
+    });
+    assert!(auto_snap_report(&unknown, &receipt).is_err());
 }

@@ -119,6 +119,8 @@ pub(in crate::commands) fn execute_snapping(
         if resolved != expected {
             return Err(decline("merge snap selection changed after installation"));
         }
+        let auto_snapped =
+            array(resolve.plan.get("autoSnappedResults"), "merge auto snaps")?.to_vec();
         workspace_command::commit(&mut resolve, root)?;
         let bitmap = bitmap::read(root)?;
         let snapped = expected
@@ -135,7 +137,7 @@ pub(in crate::commands) fn execute_snapping(
         let mut result = materialized.plan["result"].clone();
         result["mergeSnapResults"] = json!({
             "snappedComponents": snapped,
-            "autoSnappedResults": [],
+            "autoSnappedResults": auto_snapped,
         });
         report::format(&result, mode, Chalk::detect(args))
     })

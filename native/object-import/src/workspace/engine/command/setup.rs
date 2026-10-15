@@ -1,7 +1,9 @@
 #[cfg(test)]
 mod tests;
 use super::{
-    Record, State, history, input::Prepare, invalid, merge_planning, prepare, proof, repository,
+    Record, State, history,
+    input::{Operation, Prepare},
+    invalid, merge_planning, prepare, proof, repository,
 };
 use serde_json::{Value, json};
 use std::io;
@@ -10,6 +12,13 @@ pub(super) fn run(
     state: &mut State,
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
+    if request.internal_snapshot_preview
+        && (request.operation != Operation::Merge
+            || request.options.no_snap
+            || request.options.lane.is_some())
+    {
+        return Err(invalid("command snapshot preview options"));
+    }
     if state.record.is_some() || state.recovery.is_some() || state.resolve.is_some() {
         return Err(invalid("command owner already active"));
     }

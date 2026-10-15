@@ -8,6 +8,8 @@ pub(in crate::workspace::engine) struct Prepare {
     pub(super) home: PathBuf,
     pub(super) global_remotes_file: PathBuf,
     pub(super) operation: Operation,
+    #[serde(default)]
+    pub(super) internal_snapshot_preview: bool,
     pub(super) options: Options,
     #[serde(default)]
     pub(super) dependency_grammar: serde_json::Value,

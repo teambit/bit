@@ -107,7 +107,7 @@ fn plan_with(
     }
     let home = home();
     let mut engine = Engine::new()?;
-    let (token, context, targets) = prepare(&mut engine, root, &home, request)?;
+    let (token, context, targets) = prepare(&mut engine, root, &home, request, preview_snapshot)?;
     let verified = capture::CaptureOptions { verify: request.verify_fresh, ..Default::default() };
     let capture = capture::capture_with(&mut engine, root, &home, &context, &targets, verified)?;
     let semver = grammar::snapshot(semver_values(request.to, &context)?.iter().map(String::as_str))
@@ -188,12 +188,14 @@ fn prepare(
     root: &Path,
     home: &Path,
     request: &Request<'_>,
+    preview_snapshot: bool,
 ) -> io::Result<(String, Value, Vec<Value>)> {
     let prepared: Value = engine.request(&json!({
         "kind": "commandPrepare",
         "root": root,
         "home": home,
         "operation": request.operation,
+        "internalSnapshotPreview": preview_snapshot && request.options.get("lane").is_none(),
         "dependencyGrammar": dependency_grammar()?,
         "options": request.options,
         "globalRemotesFile": cache::cache_root().join("config").join("global-remotes.json"),

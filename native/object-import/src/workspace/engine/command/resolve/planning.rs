@@ -45,6 +45,9 @@ pub(super) fn prepare(
     retain_proofs(retained, input.dependency_read_set)?;
     let result = report(retained, &input.semver, &selected, &materials, &automatic)?;
     let mut output = response(retained, &selected, &materials, &result, (auto_loaded, load_count));
+    if retained.snap.is_none() && retained.tag.is_none() {
+        output["autoSnapResults"] = json!(automatic);
+    }
     output["issueGraph"] = issue_graph;
     retained.selected = selected;
     retained.materials = materials;
