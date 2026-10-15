@@ -490,9 +490,8 @@ export class BuilderMain {
     const services = [this.buildService];
     if (deployPipeline) services.push(deployPipeline === 'snap' ? this.snapService : this.tagService);
     const envsById = new Map(components.map((component) => this.envs.getEnv(component)).map((env) => [env.id, env]));
-    const allTasks = [...envsById.values()].flatMap((env) =>
-      services.flatMap((service) => service.getCurrentPipeline(env))
-    );
+    const envs = [...envsById.values()];
+    const allTasks = services.flatMap((service) => service.getCurrentPipeline(envs));
     if (allTasks.length && !allTasks.some((task) => isTaskInFilter(task, tasks))) {
       const availableTasks = [...new Set(allTasks.map((task) => BuildTaskHelper.serializeId(task)))].sort();
       throw new BitError(
