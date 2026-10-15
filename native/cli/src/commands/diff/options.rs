@@ -3,12 +3,19 @@
 #[derive(Default)]
 pub(super) struct Options {
     pub pattern: Option<String>,
+    pub versions: Range,
     pub json: bool,
     pub files_only: bool,
     pub configs_only: bool,
     pub name_only: bool,
     pub stat: bool,
     pub files: Vec<String>,
+}
+
+#[derive(Default)]
+pub(super) struct Range {
+    pub from: Option<String>,
+    pub to: Option<String>,
 }
 
 pub(super) fn parse(args: &[&str]) -> Option<Options> {
@@ -32,7 +39,13 @@ fn parse_arg(options: &mut Options, arg: &str, args: &[&str], index: &mut usize)
         *index += 1;
     } else if arg.starts_with('-') {
         set_boolean(options, arg).then_some(())?;
-    } else if options.pattern.replace(arg.to_string()).is_some() {
+    } else if options.pattern.is_none() {
+        options.pattern = Some(arg.to_string());
+    } else if options.versions.from.is_none() {
+        options.versions.from = Some(arg.to_string());
+    } else if options.versions.to.is_none() {
+        options.versions.to = Some(arg.to_string());
+    } else {
         return None;
     }
     Some(())
