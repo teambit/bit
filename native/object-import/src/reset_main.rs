@@ -1,8 +1,11 @@
 //! Main-lane `bit reset`: select local Version history, project the scope
 //! object and bitmap changes, then publish only after a fresh validation.
 
+pub use batch::Batch;
+pub(crate) use publication::{backup_bitmap, validate_file_id};
 pub use selection::Selection;
 
+mod batch;
 mod bitmap;
 mod dependents;
 mod publication;

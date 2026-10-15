@@ -40,7 +40,7 @@ impl Bitmap {
     }
 }
 
-fn find_key(
+pub(super) fn find_key(
     fields: &serde_json::Map<String, Value>,
     scope: &str,
     name: &str,

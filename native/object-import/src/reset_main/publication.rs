@@ -1,9 +1,10 @@
 //! Revalidate the prepared reset and publish its Component, index and bitmap.
 
-use super::{Plan, invalid, repository::object_path};
+use super::{ObjectChange, Plan, invalid, repository::object_path};
 use std::{
     fs,
     io::{self, Write},
+    path::Path,
 };
 
 pub(super) fn commit(plan: &Plan, file_id: &str) -> io::Result<()> {
@@ -17,35 +18,31 @@ pub(super) fn commit(plan: &Plan, file_id: &str) -> io::Result<()> {
     if fresh.object != plan.object || fresh.bitmap != plan.bitmap || fresh.index != plan.index {
         return Err(invalid("reset workspace changed during preparation"));
     }
-    write_object(plan)?;
+    write_object(&plan.input.root, &plan.object)?;
     if let Some(index) = &plan.index {
         fs::write(plan.input.root.join(".bit/index.json"), &index.after)?;
     }
-    backup_bitmap(plan, file_id)?;
+    backup_bitmap(&plan.input.root, file_id)?;
     fs::write(plan.input.root.join(".bitmap"), &plan.bitmap.after)
 }
 
-fn write_object(plan: &Plan) -> io::Result<()> {
-    let path = object_path(&plan.input.root, &plan.object.hash);
-    if let Some(bytes) = &plan.object.after {
-        fs::write(path, bytes)
-    } else {
-        fs::remove_file(path)
-    }
+pub(super) fn write_object(root: &Path, object: &ObjectChange) -> io::Result<()> {
+    let path = object_path(root, &object.hash);
+    if let Some(bytes) = &object.after { fs::write(path, bytes) } else { fs::remove_file(path) }
 }
 
-fn backup_bitmap(plan: &Plan, file_id: &str) -> io::Result<()> {
-    let directory = plan.input.root.join(".bit/bitmap-history");
+pub(crate) fn backup_bitmap(root: &Path, file_id: &str) -> io::Result<()> {
+    let directory = root.join(".bit/bitmap-history");
     fs::create_dir_all(&directory)?;
-    fs::copy(plan.input.root.join(".bitmap"), directory.join(format!(".bitmap-{file_id}")))?;
+    fs::copy(root.join(".bitmap"), directory.join(format!(".bitmap-{file_id}")))?;
     let mut metadata = fs::OpenOptions::new()
         .create(true)
         .append(true)
-        .open(plan.input.root.join(".bit/bitmap-history-metadata.txt"))?;
+        .open(root.join(".bit/bitmap-history-metadata.txt"))?;
     writeln!(metadata, "{file_id} reset")
 }
 
-fn validate_file_id(file_id: &str) -> io::Result<()> {
+pub(crate) fn validate_file_id(file_id: &str) -> io::Result<()> {
     if file_id.len() > 32
         || file_id.split('-').count() != 6
         || file_id

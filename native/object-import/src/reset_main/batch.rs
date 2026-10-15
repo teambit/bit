@@ -1,0 +1,133 @@
+//! One publication for `bit reset --silent` across staged main-lane Components.
+
+use super::{BytesChange, Plan, bitmap::find_key, invalid, outbound};
+use serde_json::Value;
+use std::{
+    fs, io,
+    path::{Path, PathBuf},
+};
+
+pub struct Batch {
+    root: PathBuf,
+    head_only: bool,
+    items: Vec<Plan>,
+    bitmap: BytesChange,
+    index: Option<BytesChange>,
+}
+
+impl Batch {
+    pub fn prepare(root: &Path, head_only: bool) -> io::Result<Self> {
+        let ids = candidates(root)?;
+        let items = ids
+            .iter()
+            .map(|id| Plan::prepare(root, id, head_only, true))
+            .collect::<io::Result<Vec<_>>>()?;
+        let bitmap = project_bitmap(root, &items)?;
+        let index = project_index(root, &items)?;
+        Ok(Self { root: root.to_owned(), head_only, items, bitmap, index })
+    }
+
+    pub fn results(&self) -> impl Iterator<Item = (&str, &[String])> {
+        self.items
+            .iter()
+            .map(|item| (item.input.identity.as_str(), item.selection.labels.as_slice()))
+    }
+
+    pub fn commit(&self, file_id: &str) -> io::Result<()> {
+        super::validate_file_id(file_id)?;
+        let fresh = Self::prepare(&self.root, self.head_only)?;
+        if self.bitmap != fresh.bitmap
+            || self.index != fresh.index
+            || self.items
+                .iter()
+                .map(|item| &item.object)
+                .collect::<Vec<_>>()
+                != fresh.items
+                    .iter()
+                    .map(|item| &item.object)
+                    .collect::<Vec<_>>()
+        {
+            return Err(invalid("reset batch changed during preparation"));
+        }
+        for item in &self.items {
+            super::publication::write_object(&self.root, &item.object)?;
+        }
+        if let Some(index) = &self.index {
+            fs::write(self.root.join(".bit/index.json"), &index.after)?;
+        }
+        super::backup_bitmap(&self.root, file_id)?;
+        fs::write(self.root.join(".bitmap"), &self.bitmap.after)
+    }
+}
+
+fn candidates(root: &Path) -> io::Result<Vec<String>> {
+    let index: Value = serde_json::from_slice(&fs::read(root.join(".bit/index.json"))?)?;
+    let rows = index["components"].as_array().ok_or_else(|| invalid("reset batch index"))?;
+    let mut selected = Vec::new();
+    for row in rows {
+        let hash = row["hash"].as_str().ok_or_else(|| invalid("reset batch model hash"))?;
+        let model = outbound::read_object(&root.join(".bit/objects"), hash, "Component")?;
+        if model["state"]["versions"]
+            .as_object()
+            .is_some_and(|state| {
+                state
+                    .values()
+                    .any(|version| version["local"] == true)
+            })
+        {
+            selected.push(identity(row)?);
+        }
+    }
+    if selected.is_empty() {
+        return Err(invalid("no components found to reset"));
+    }
+    Ok(selected)
+}
+
+fn identity(row: &Value) -> io::Result<String> {
+    let scope = row["id"]["scope"].as_str().ok_or_else(|| invalid("reset batch scope"))?;
+    let name = row["id"]["name"].as_str().ok_or_else(|| invalid("reset batch name"))?;
+    Ok(format!("{scope}/{name}"))
+}
+
+fn project_bitmap(root: &Path, items: &[Plan]) -> io::Result<BytesChange> {
+    let before = fs::read(root.join(".bitmap"))?;
+    let mut document = crate::recovery::jsonc::parse(&before)?;
+    for item in items {
+        apply_bitmap(&mut document, item)?;
+    }
+    let after = crate::inspection::render_bitmap(&document)?;
+    Ok(BytesChange { before, after })
+}
+
+fn apply_bitmap(document: &mut Value, item: &Plan) -> io::Result<()> {
+    let (scope, name) =
+        item.input.identity.split_once('/').ok_or_else(|| invalid("reset batch identity"))?;
+    let fields = document.as_object_mut().ok_or_else(|| invalid("reset batch bitmap"))?;
+    let key = find_key(fields, scope, name)?;
+    let single = crate::recovery::jsonc::parse(&item.bitmap.after)?;
+    let version = single[&key]["version"].as_str().ok_or_else(|| invalid("reset batch version"))?;
+    let row = fields[&key].as_object_mut().ok_or_else(|| invalid("reset batch row"))?;
+    row.insert("version".into(), Value::String(version.to_owned()));
+    row.shift_remove("nextVersion");
+    Ok(())
+}
+
+fn project_index(root: &Path, items: &[Plan]) -> io::Result<Option<BytesChange>> {
+    if items.iter().all(|item| item.index.is_none()) {
+        return Ok(None);
+    }
+    let before = fs::read(root.join(".bit/index.json"))?;
+    let mut index: Value = serde_json::from_slice(&before)?;
+    let rows = index["components"].as_array_mut().ok_or_else(|| invalid("reset batch index"))?;
+    for item in items.iter().filter(|item| item.index.is_some()) {
+        let position = rows
+            .iter()
+            .position(|row| row["hash"] == item.object.hash)
+            .ok_or_else(|| invalid("reset batch model absent"))?;
+        rows.remove(position);
+    }
+    let mut after = serde_json::to_vec_pretty(&index)?;
+    after.push(b'\n');
+    Ok(Some(BytesChange { before, after }))
+}

@@ -2,6 +2,7 @@
 #![cfg_attr(dylint_lib = "perfectionist", register_tool(perfectionist))]
 
 pub mod reset_main;
+pub mod reset_soft;
 
 /// Native import merge decisions (`kind: component | version | versionHistory | ...`).
 pub use operation::plan as plan_import_operation;

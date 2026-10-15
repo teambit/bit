@@ -1,4 +1,4 @@
-use super::{Plan, outbound, repository::object_path};
+use super::{Batch, Plan, outbound, repository::object_path};
 use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{
@@ -116,4 +116,42 @@ fn dependency_guard_declines_before_any_write_and_force_can_reset() {
     let plan = Plan::prepare(&fixture.root, "scope/alpha", true, true).expect("forced plan");
     plan.commit("2026-10-15-7-17-2").expect("forced commit");
     assert_ne!(fs::read(fixture.root.join(".bitmap")).expect("bitmap"), before);
+}
+
+#[test]
+fn batch_resets_two_components_in_one_bitmap_and_index_publication() {
+    let fixture = Fixture::new(true);
+    let beta = hash("scope/beta");
+    let mut model = outbound::read_object(&fixture.root.join(".bit/objects"), &beta, "Component")
+        .expect("beta model");
+    model["state"] = json!({"versions":{"1.0.0":{"local":true}}});
+    object(&fixture.root, &beta, "Component", &model);
+    let mut bitmap =
+        crate::recovery::jsonc::parse(&fs::read(fixture.root.join(".bitmap")).expect("bitmap"))
+            .expect("parse bitmap");
+    bitmap["beta"] = json!({
+        "name":"beta","scope":"","version":"1.0.0","defaultScope":"scope",
+        "mainFile":"index.js","rootDir":"beta",
+    });
+    fs::write(
+        fixture.root.join(".bitmap"),
+        crate::inspection::render_bitmap(&bitmap).expect("render"),
+    )
+    .expect("write bitmap");
+    let batch = Batch::prepare(&fixture.root, false).expect("batch");
+    let stale = Batch::prepare(&fixture.root, false).expect("stale batch");
+    assert_eq!(batch.results().count(), 2);
+    batch.commit("2026-10-15-7-17-3").expect("commit batch");
+    let index: Value =
+        serde_json::from_slice(&fs::read(fixture.root.join(".bit/index.json")).expect("index"))
+            .expect("parse index");
+    assert_eq!(index["components"], json!([]));
+    let bitmap =
+        crate::recovery::jsonc::parse(&fs::read(fixture.root.join(".bitmap")).expect("bitmap"))
+            .expect("parse bitmap");
+    assert_eq!(bitmap["alpha"]["version"], "");
+    assert_eq!(bitmap["beta"]["version"], "");
+    assert!(!object_path(&fixture.root, &fixture.alpha).exists());
+    assert!(!object_path(&fixture.root, &beta).exists());
+    assert!(stale.commit("2026-10-15-7-17-4").is_err());
 }
