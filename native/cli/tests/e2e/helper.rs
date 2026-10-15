@@ -11,6 +11,7 @@ mod setup;
 use crate::known_failure::{KnownFailure, KnownResult};
 use serde_json::{Value, json};
 use std::{
+    ffi::OsStr,
     fmt::Write,
     fs,
     path::{Path, PathBuf},
@@ -142,8 +143,14 @@ impl Helper {
     }
 
     pub fn cmd_in(cwd: &Path, line: &str) -> Run {
+        Self::cmd_in_with(cwd, line, &[])
+    }
+
+    /// `bit <line>` in `cwd` with `env` on top of the case environment.
+    pub fn cmd_in_with(cwd: &Path, line: &str, env: &[(&str, &OsStr)]) -> Run {
         let output = setup::bit_command(setup::shared(), cwd)
             .args(split_args(line))
+            .envs(env.iter().copied())
             .output()
             .unwrap();
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -180,8 +187,19 @@ impl Helper {
 
     /// `bit <line>` when it runs natively, else the [`KnownFailure`].
     pub fn native_or_known(&self, line: &str) -> KnownResult<Run> {
-        let run = self.cmd(line);
-        if run.native || on_node() { Ok(run) } else { Err(KnownFailure { reason: run.trace }) }
+        known(self.cmd(line))
+    }
+
+    /// A global config of the case's own, the shared one with `key` set (`bit config set`),
+    /// for `BIT_GLOBALS_DIR`: the shared one serves every case running in parallel.
+    pub fn own_global_config(&self, key: &str, value: &str) -> PathBuf {
+        let globals = self.scopes.e2e_dir.join("globals");
+        fs::create_dir_all(globals.join("config")).unwrap();
+        let shared = setup::shared().root.join("globals/config/config.json");
+        let mut config: Value = serde_json::from_slice(&fs::read(shared).unwrap()).unwrap();
+        config[key] = Value::String(value.into());
+        fs::write(globals.join("config/config.json"), config.to_string()).unwrap();
+        globals
     }
 
     /// `bit <line>` when it runs natively and succeeds: its stdout.
@@ -224,6 +242,25 @@ impl Helper {
             fs::remove_file(path).unwrap();
         }
     }
+}
+
+/// `run` when it ran natively, else the [`KnownFailure`].
+pub fn known(run: Run) -> KnownResult<Run> {
+    if run.native || on_node() { Ok(run) } else { Err(KnownFailure { reason: run.trace }) }
+}
+
+/// `removeChalkCharacters`: the text without ANSI escape sequences.
+pub fn strip_ansi(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut chars = text.chars();
+    while let Some(char) = chars.next() {
+        if char == '\u{1b}' {
+            chars.by_ref().find(char::is_ascii_alphabetic);
+        } else {
+            out.push(char);
+        }
+    }
+    out
 }
 
 /// `BIT_E2E_ON_NODE=1`: a command the Node.js CLI runs counts as native, so every case,

@@ -37,6 +37,9 @@ command a case checks must run natively:
   case returns there while the command declines, and asserts once it runs natively. List
   them with `cargo test -p bit-cli --features e2e --test e2e known_failures -- --list`.
 - When a port lands, its cases move out of `known_failures`.
+- A case whose command runs natively but behaves differently from the Node.js CLI is a
+  parity bug: it lives in a `parity_bugs` module with `#[ignore = "<what differs>"]` until
+  the native command is fixed, and its note in the list below says `parity bug`.
 
 ## Test the tests
 
@@ -48,8 +51,8 @@ command a case checks must run natively:
 
 ## Marking progress
 
-- `[x]` ported, natively or as a known failure; the note names the Rust test, and says
-  `known failure` while it is one.
+- `[x]` ported, natively, as a known failure or as a parity bug; the note names the Rust
+  test, and says `known failure` or `parity bug` while it is one.
 - `[-]` will not be ported; the note says why (for example, a case about the Node.js
   process itself).
 - `[ ]` not ported yet.
@@ -134,134 +137,134 @@ The rest follow as their commands are ported.
 
 ### `e2e/commands/diff.e2e.ts`
 
-- [ ] `e2e/commands/diff.e2e.ts:30` bit diff command › for non existing component › show an error saying the component was not found
-- [ ] `e2e/commands/diff.e2e.ts:37` bit diff command › when there are no modified components › show an error saying that there are no modified components
-- [ ] `e2e/commands/diff.e2e.ts:47` bit diff command › after the component was created › diff should show that all files were added
-- [ ] `e2e/commands/diff.e2e.ts:56` bit diff command › after the component was created › after the component was tagged › should still indicate that there is no diff for that component
-- [ ] `e2e/commands/diff.e2e.ts:67` bit diff command › after the component was created › after the component was tagged › and component was modified › should show a success message
-- [ ] `e2e/commands/diff.e2e.ts:70` bit diff command › after the component was created › after the component was tagged › and component was modified › should indicate the original files with ---
-- [ ] `e2e/commands/diff.e2e.ts:73` bit diff command › after the component was created › after the component was tagged › and component was modified › should indicate the modified files with +++
-- [ ] `e2e/commands/diff.e2e.ts:76` bit diff command › after the component was created › after the component was tagged › and component was modified › should show the deleted part with leading - (minus sign)
-- [ ] `e2e/commands/diff.e2e.ts:79` bit diff command › after the component was created › after the component was tagged › and component was modified › should show the added part with leading + (plus sign)
-- [ ] `e2e/commands/diff.e2e.ts:82` bit diff command › after the component was created › after the component was tagged › and component was modified › should show a success message also when running from an inner directory
-- [ ] `e2e/commands/diff.e2e.ts:93` bit diff command › after the component was created › after the component was tagged › and component was modified › when git path is configured incorrectly › should throw an error GitNotFound
-- [ ] `e2e/commands/diff.e2e.ts:121` bit diff command › when there are several modified components and non modified components › running bit diff with no ids › should show diff for all modified components
-- [ ] `e2e/commands/diff.e2e.ts:127` bit diff command › when there are several modified components and non modified components › running bit diff with no ids › should not show non modified components
-- [ ] `e2e/commands/diff.e2e.ts:136` bit diff command › when there are several modified components and non modified components › running bit diff with multiple ids › should not show diff for non modified components
-- [ ] `e2e/commands/diff.e2e.ts:139` bit diff command › when there are several modified components and non modified components › running bit diff with multiple ids › should mention the components with no diff
-- [ ] `e2e/commands/diff.e2e.ts:158` bit diff command › when a file is deleted and another is added › should indicate the deleted files as deleted
-- [ ] `e2e/commands/diff.e2e.ts:164` bit diff command › when a file is deleted and another is added › should indicate the added files as added
-- [ ] `e2e/commands/diff.e2e.ts:172` bit diff command › when a file is deleted and another is added › other fields diff › should indicate that the mainFile was changed
-- [ ] `e2e/commands/diff.e2e.ts:178` bit diff command › when a file is deleted and another is added › other fields diff › should indicate that the files array were changed
-- [ ] `e2e/commands/diff.e2e.ts:190` bit diff command › when a file is deleted and another is added › running bit diff between the previous version and the last version › should indicate the deleted files as deleted
-- [ ] `e2e/commands/diff.e2e.ts:195` bit diff command › when a file is deleted and another is added › running bit diff between the previous version and the last version › should indicate the added files as added
-- [ ] `e2e/commands/diff.e2e.ts:202` bit diff command › when a file is deleted and another is added › running bit diff between the previous version and the last version › other fields diff › should indicate that the mainFile was changed
-- [ ] `e2e/commands/diff.e2e.ts:208` bit diff command › when a file is deleted and another is added › running bit diff between the previous version and the last version › other fields diff › should indicate that the files array were changed
-- [ ] `e2e/commands/diff.e2e.ts:215` bit diff command › when a file is deleted and another is added › running bit diff between the previous version and the last version › should have the same output as running diff of the previous version
-- [ ] `e2e/commands/diff.e2e.ts:233` bit diff command › component with multiple versions › diff between a non-exist version and current version › should throw an VersionNotFound error
-- [ ] `e2e/commands/diff.e2e.ts:244` bit diff command › component with multiple versions › diff between an earlier version and current version › should show the earlier version with leading - (minus sign)
-- [ ] `e2e/commands/diff.e2e.ts:248` bit diff command › component with multiple versions › diff between an earlier version and current version › should show the current version with leading + (plus sign)
-- [ ] `e2e/commands/diff.e2e.ts:258` bit diff command › component with multiple versions › diff between two different versions › should show the first version with leading - (minus sign)
-- [ ] `e2e/commands/diff.e2e.ts:262` bit diff command › component with multiple versions › diff between two different versions › should show the second version with leading + (plus sign)
-- [ ] `e2e/commands/diff.e2e.ts:286` bit diff command › ai-agent output flags › --name-only › should print the component header once
-- [ ] `e2e/commands/diff.e2e.ts:290` bit diff command › ai-agent output flags › --name-only › should list changed files with a status letter and path
-- [ ] `e2e/commands/diff.e2e.ts:293` bit diff command › ai-agent output flags › --name-only › should not include the unified diff body
-- [ ] `e2e/commands/diff.e2e.ts:303` bit diff command › ai-agent output flags › --stat › should include the changed file with +N -M counts
-- [ ] `e2e/commands/diff.e2e.ts:306` bit diff command › ai-agent output flags › --stat › should not include the unified diff body
-- [ ] `e2e/commands/diff.e2e.ts:315` bit diff command › ai-agent output flags › --file <path> › should include the matching file diff
-- [ ] `e2e/commands/diff.e2e.ts:318` bit diff command › ai-agent output flags › --file <path> › should not include fields diff (implies --files-only)
-- [ ] `e2e/commands/diff.e2e.ts:328` bit diff command › ai-agent output flags › --files-only › should include file diffs
-- [ ] `e2e/commands/diff.e2e.ts:331` bit diff command › ai-agent output flags › --files-only › should drop fields diff
-- [ ] `e2e/commands/diff.e2e.ts:341` bit diff command › ai-agent output flags › --configs-only › should include fields diff
-- [ ] `e2e/commands/diff.e2e.ts:344` bit diff command › ai-agent output flags › --configs-only › should drop file-content diffs
-- [ ] `e2e/commands/diff.e2e.ts:354` bit diff command › ai-agent output flags › --json › should return an array with one entry per matching component
-- [ ] `e2e/commands/diff.e2e.ts:358` bit diff command › ai-agent output flags › --json › should expose id, hasDiff, filesDiff, fieldsDiff
-- [ ] `e2e/commands/diff.e2e.ts:363` bit diff command › ai-agent output flags › --json › should include diffOutput in each filesDiff entry by default
-- [ ] `e2e/commands/diff.e2e.ts:373` bit diff command › ai-agent output flags › --json --name-only › should omit diffOutput from filesDiff entries
-- [ ] `e2e/commands/diff.e2e.ts:385` bit diff command › ai-agent output flags › --json --stat › should include additions/deletions and omit diffOutput
-- [ ] `e2e/commands/diff.e2e.ts:392` bit diff command › ai-agent output flags › mutually exclusive flags › --files-only + --configs-only should error
-- [ ] `e2e/commands/diff.e2e.ts:396` bit diff command › ai-agent output flags › mutually exclusive flags › --name-only + --stat should error
-- [ ] `e2e/commands/diff.e2e.ts:400` bit diff command › ai-agent output flags › mutually exclusive flags › --configs-only + --file should error
-- [ ] `e2e/commands/diff.e2e.ts:424` bit diff command › diff with --parent flag › when the version is a tag › should show the diff between the tag and its parent tag
-- [ ] `e2e/commands/diff.e2e.ts:433` bit diff command › diff with --parent flag › when the parent is a snap › should show the diff between the snap and its parent snap
-- [ ] `e2e/commands/diff.e2e.ts:442` bit diff command › diff with --parent flag › when no version is specified › should show the diff between the current version and its parent
-- [ ] `e2e/commands/diff.e2e.ts:451` bit diff command › diff with --parent flag › when the version is the first version › should show all files as added
-- [ ] `e2e/commands/diff.e2e.ts:461` bit diff command › diff with --parent flag › when two versions are specified along with --parent › should throw an error
-- [ ] `e2e/commands/diff.e2e.ts:472` bit diff command › diff with --parent flag › when the parent has identical content (e.g. a tag created on top of a squashed merge-snap) › should skip identical ancestors and diff against the first ancestor with different content
-- [ ] `e2e/commands/diff.e2e.ts:489` bit diff command › diff with --parent flag › when the parent is a tag with identical content (a legit tag with no changes) › should show no diff rather than walking further up the history
-- [ ] `e2e/commands/diff.e2e.ts:498` bit diff command › diff with --parent flag › when the component is soft-deleted in the workspace › should still compare the stored versions rather than showing the files as deleted
-- [ ] `e2e/commands/diff.e2e.ts:514` bit diff command › diff with --parent flag › when the only ancestor is a snap with identical content › should treat the version as having no parent and show all files as added
+- [x] `e2e/commands/diff.e2e.ts:30` bit diff command › for non existing component › show an error saying the component was not found — `commands::diff::known_failures::a_missing_component_is_not_found` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:37` bit diff command › when there are no modified components › show an error saying that there are no modified components — `commands::diff::known_failures::no_modified_components` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:47` bit diff command › after the component was created › diff should show that all files were added — `commands::diff::known_failures::a_new_component_shows_all_files_added` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:56` bit diff command › after the component was created › after the component was tagged › should still indicate that there is no diff for that component — `commands::diff::known_failures::a_tagged_component_has_no_diff` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:67` bit diff command › after the component was created › after the component was tagged › and component was modified › should show a success message — `commands::diff::known_failures::a_modified_component_shows_its_diff` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:70` bit diff command › after the component was created › after the component was tagged › and component was modified › should indicate the original files with --- — `commands::diff::known_failures::a_modified_component_shows_its_diff` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:73` bit diff command › after the component was created › after the component was tagged › and component was modified › should indicate the modified files with +++ — `commands::diff::known_failures::a_modified_component_shows_its_diff` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:76` bit diff command › after the component was created › after the component was tagged › and component was modified › should show the deleted part with leading - (minus sign) — `commands::diff::known_failures::a_modified_component_shows_its_diff` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:79` bit diff command › after the component was created › after the component was tagged › and component was modified › should show the added part with leading + (plus sign) — `commands::diff::known_failures::a_modified_component_shows_its_diff` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:82` bit diff command › after the component was created › after the component was tagged › and component was modified › should show a success message also when running from an inner directory — `commands::diff::known_failures::the_diff_runs_from_an_inner_directory` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:93` bit diff command › after the component was created › after the component was tagged › and component was modified › when git path is configured incorrectly › should throw an error GitNotFound — `commands::diff::known_failures::a_wrong_git_path_fails` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:121` bit diff command › when there are several modified components and non modified components › running bit diff with no ids › should show diff for all modified components — `commands::diff::known_failures::a_diff_without_ids_shows_the_modified_components` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:127` bit diff command › when there are several modified components and non modified components › running bit diff with no ids › should not show non modified components — `commands::diff::known_failures::a_diff_without_ids_shows_the_modified_components` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:136` bit diff command › when there are several modified components and non modified components › running bit diff with multiple ids › should not show diff for non modified components — `commands::diff::known_failures::a_diff_of_several_ids_mentions_the_unmodified` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:139` bit diff command › when there are several modified components and non modified components › running bit diff with multiple ids › should mention the components with no diff — `commands::diff::known_failures::a_diff_of_several_ids_mentions_the_unmodified` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:158` bit diff command › when a file is deleted and another is added › should indicate the deleted files as deleted — `commands::diff::known_failures::a_replaced_file_is_deleted_and_added` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:164` bit diff command › when a file is deleted and another is added › should indicate the added files as added — `commands::diff::known_failures::a_replaced_file_is_deleted_and_added` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:172` bit diff command › when a file is deleted and another is added › other fields diff › should indicate that the mainFile was changed — `commands::diff::known_failures::a_replaced_file_is_deleted_and_added` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:178` bit diff command › when a file is deleted and another is added › other fields diff › should indicate that the files array were changed — `commands::diff::known_failures::a_replaced_file_is_deleted_and_added` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:190` bit diff command › when a file is deleted and another is added › running bit diff between the previous version and the last version › should indicate the deleted files as deleted — `commands::diff::known_failures::a_diff_between_versions_shows_the_replaced_file` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:195` bit diff command › when a file is deleted and another is added › running bit diff between the previous version and the last version › should indicate the added files as added — `commands::diff::known_failures::a_diff_between_versions_shows_the_replaced_file` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:202` bit diff command › when a file is deleted and another is added › running bit diff between the previous version and the last version › other fields diff › should indicate that the mainFile was changed — `commands::diff::known_failures::a_diff_between_versions_shows_the_replaced_file` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:208` bit diff command › when a file is deleted and another is added › running bit diff between the previous version and the last version › other fields diff › should indicate that the files array were changed — `commands::diff::known_failures::a_diff_between_versions_shows_the_replaced_file` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:215` bit diff command › when a file is deleted and another is added › running bit diff between the previous version and the last version › should have the same output as running diff of the previous version — `commands::diff::known_failures::a_diff_between_versions_shows_the_replaced_file` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:233` bit diff command › component with multiple versions › diff between a non-exist version and current version › should throw an VersionNotFound error — `commands::diff::known_failures::a_missing_version_is_not_found` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:244` bit diff command › component with multiple versions › diff between an earlier version and current version › should show the earlier version with leading - (minus sign) — `commands::diff::known_failures::a_diff_from_an_earlier_version` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:248` bit diff command › component with multiple versions › diff between an earlier version and current version › should show the current version with leading + (plus sign) — `commands::diff::known_failures::a_diff_from_an_earlier_version` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:258` bit diff command › component with multiple versions › diff between two different versions › should show the first version with leading - (minus sign) — `commands::diff::known_failures::a_diff_between_two_versions` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:262` bit diff command › component with multiple versions › diff between two different versions › should show the second version with leading + (plus sign) — `commands::diff::known_failures::a_diff_between_two_versions` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:286` bit diff command › ai-agent output flags › --name-only › should print the component header once — `commands::diff::known_failures::name_only_lists_the_changed_files` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:290` bit diff command › ai-agent output flags › --name-only › should list changed files with a status letter and path — `commands::diff::known_failures::name_only_lists_the_changed_files` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:293` bit diff command › ai-agent output flags › --name-only › should not include the unified diff body — `commands::diff::known_failures::name_only_lists_the_changed_files` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:303` bit diff command › ai-agent output flags › --stat › should include the changed file with +N -M counts — `commands::diff::known_failures::stat_counts_the_changed_lines` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:306` bit diff command › ai-agent output flags › --stat › should not include the unified diff body — `commands::diff::known_failures::stat_counts_the_changed_lines` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:315` bit diff command › ai-agent output flags › --file <path> › should include the matching file diff — `commands::diff::known_failures::file_shows_one_file_without_fields` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:318` bit diff command › ai-agent output flags › --file <path> › should not include fields diff (implies --files-only) — `commands::diff::known_failures::file_shows_one_file_without_fields` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:328` bit diff command › ai-agent output flags › --files-only › should include file diffs — `commands::diff::known_failures::files_only_drops_the_fields` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:331` bit diff command › ai-agent output flags › --files-only › should drop fields diff — `commands::diff::known_failures::files_only_drops_the_fields` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:341` bit diff command › ai-agent output flags › --configs-only › should include fields diff — `commands::diff::known_failures::configs_only_drops_the_files` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:344` bit diff command › ai-agent output flags › --configs-only › should drop file-content diffs — `commands::diff::known_failures::configs_only_drops_the_files` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:354` bit diff command › ai-agent output flags › --json › should return an array with one entry per matching component — `commands::diff::known_failures::json_lists_the_component_diff` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:358` bit diff command › ai-agent output flags › --json › should expose id, hasDiff, filesDiff, fieldsDiff — `commands::diff::known_failures::json_lists_the_component_diff` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:363` bit diff command › ai-agent output flags › --json › should include diffOutput in each filesDiff entry by default — `commands::diff::known_failures::json_lists_the_component_diff` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:373` bit diff command › ai-agent output flags › --json --name-only › should omit diffOutput from filesDiff entries — `commands::diff::known_failures::json_name_only_omits_the_diff_output` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:385` bit diff command › ai-agent output flags › --json --stat › should include additions/deletions and omit diffOutput — `commands::diff::known_failures::json_stat_counts_without_the_diff_output` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:392` bit diff command › ai-agent output flags › mutually exclusive flags › --files-only + --configs-only should error — `commands::diff::known_failures::exclusive_flags_fail` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:396` bit diff command › ai-agent output flags › mutually exclusive flags › --name-only + --stat should error — `commands::diff::known_failures::exclusive_flags_fail` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:400` bit diff command › ai-agent output flags › mutually exclusive flags › --configs-only + --file should error — `commands::diff::known_failures::exclusive_flags_fail` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:424` bit diff command › diff with --parent flag › when the version is a tag › should show the diff between the tag and its parent tag — `commands::diff::known_failures::parent_diffs_against_the_parent_version` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:433` bit diff command › diff with --parent flag › when the parent is a snap › should show the diff between the snap and its parent snap — `commands::diff::known_failures::parent_diffs_against_the_parent_version` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:442` bit diff command › diff with --parent flag › when no version is specified › should show the diff between the current version and its parent — `commands::diff::known_failures::parent_diffs_against_the_parent_version` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:451` bit diff command › diff with --parent flag › when the version is the first version › should show all files as added — `commands::diff::known_failures::parent_of_the_first_version_adds_everything` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:461` bit diff command › diff with --parent flag › when two versions are specified along with --parent › should throw an error — `commands::diff::known_failures::parent_of_the_first_version_adds_everything` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:472` bit diff command › diff with --parent flag › when the parent has identical content (e.g. a tag created on top of a squashed merge-snap) › should skip identical ancestors and diff against the first ancestor with different content — `commands::diff::known_failures::parent_skips_identical_snaps_but_not_tags` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:489` bit diff command › diff with --parent flag › when the parent is a tag with identical content (a legit tag with no changes) › should show no diff rather than walking further up the history — `commands::diff::known_failures::parent_skips_identical_snaps_but_not_tags` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:498` bit diff command › diff with --parent flag › when the component is soft-deleted in the workspace › should still compare the stored versions rather than showing the files as deleted — `commands::diff::known_failures::parent_of_a_soft_deleted_component` (known failure)
+- [x] `e2e/commands/diff.e2e.ts:514` bit diff command › diff with --parent flag › when the only ancestor is a snap with identical content › should treat the version as having no parent and show all files as added — `commands::diff::known_failures::parent_of_a_tag_over_an_identical_snap` (known failure)
 
 ### `e2e/commands/export.e2e.ts`
 
-- [ ] `e2e/commands/export.e2e.ts:27` bit export command › with no components to export › should print nothing to export
-- [ ] `e2e/commands/export.e2e.ts:42` bit export command › with multiple versions › should export it with no errors
-- [ ] `e2e/commands/export.e2e.ts:69` bit export command › imported (v1), exported (v2) and then exported again (v3) › should export it with no errors
-- [ ] `e2e/commands/export.e2e.ts:90` bit export command › with a PNG file › should export it with no errors
-- [ ] `e2e/commands/export.e2e.ts:99` bit export command › with a PNG file › after importing the file › the size of the binary file should not be changed
-- [ ] `e2e/commands/export.e2e.ts:117` bit export command › export a component, do not modify it and export again to the same scope › should not export the component
-- [ ] `e2e/commands/export.e2e.ts:132` bit export command › export a component when the checked out version is not the latest › .bitmap should keep the current version and do not update to the latest version
-- [ ] `e2e/commands/export.e2e.ts:136` bit export command › export a component when the checked out version is not the latest › bit show should display the component with the current version, not the latest
-- [ ] `e2e/commands/export.e2e.ts:141` bit export command › export a component when the checked out version is not the latest › the file content should not be changed
-- [ ] `e2e/commands/export.e2e.ts:166` bit export command › applying permissions on the remote scope when was init with shared flag › when the group name does not exist › should throw an error indicating that the group does not exist (unless it is Windows)
-- [ ] `e2e/commands/export.e2e.ts:187` bit export command › applying permissions on the remote scope when was init with shared flag › when the group exists and the current user has permission to that group › should export the component successfully and change the owner to that group
-- [ ] `e2e/commands/export.e2e.ts:203` bit export command › export after re-creating the remote › export without any flag › should show a message that nothing to export
-- [ ] `e2e/commands/export.e2e.ts:213` bit export command › export after re-creating the remote › export with --all flag › should export them successfully
-- [ ] `e2e/commands/export.e2e.ts:223` bit export command › export after re-creating the remote › export with --all-versions flag › should export them successfully
-- [ ] `e2e/commands/export.e2e.ts:243` bit export command › re-export using the component name without the scope name › should not show the "fork" prompt
+- [x] `e2e/commands/export.e2e.ts:27` bit export command › with no components to export › should print nothing to export — `commands::export::known_failures::nothing_to_export` (known failure)
+- [x] `e2e/commands/export.e2e.ts:42` bit export command › with multiple versions › should export it with no errors — `commands::export::known_failures::multiple_versions_are_exported` (known failure)
+- [x] `e2e/commands/export.e2e.ts:69` bit export command › imported (v1), exported (v2) and then exported again (v3) › should export it with no errors — `commands::export::known_failures::an_imported_component_is_exported_twice` (known failure)
+- [x] `e2e/commands/export.e2e.ts:90` bit export command › with a PNG file › should export it with no errors — `commands::export::known_failures::a_png_file_keeps_its_size` (known failure)
+- [x] `e2e/commands/export.e2e.ts:99` bit export command › with a PNG file › after importing the file › the size of the binary file should not be changed — `commands::export::known_failures::a_png_file_keeps_its_size` (known failure)
+- [x] `e2e/commands/export.e2e.ts:117` bit export command › export a component, do not modify it and export again to the same scope › should not export the component — `commands::export::known_failures::an_unmodified_component_is_not_exported_again` (known failure)
+- [x] `e2e/commands/export.e2e.ts:132` bit export command › export a component when the checked out version is not the latest › .bitmap should keep the current version and do not update to the latest version — `commands::export::exporting_an_older_checked_out_version_keeps_it`
+- [x] `e2e/commands/export.e2e.ts:136` bit export command › export a component when the checked out version is not the latest › bit show should display the component with the current version, not the latest — `commands::export::exporting_an_older_checked_out_version_keeps_it`
+- [x] `e2e/commands/export.e2e.ts:141` bit export command › export a component when the checked out version is not the latest › the file content should not be changed — `commands::export::exporting_an_older_checked_out_version_keeps_it`
+- [x] `e2e/commands/export.e2e.ts:166` bit export command › applying permissions on the remote scope when was init with shared flag › when the group name does not exist › should throw an error indicating that the group does not exist (unless it is Windows) — `commands::export::known_failures::a_missing_shared_group_fails_the_export` (known failure)
+- [x] `e2e/commands/export.e2e.ts:187` bit export command › applying permissions on the remote scope when was init with shared flag › when the group exists and the current user has permission to that group › should export the component successfully and change the owner to that group — `commands::export::known_failures::an_existing_shared_group_owns_the_export` (known failure)
+- [x] `e2e/commands/export.e2e.ts:203` bit export command › export after re-creating the remote › export without any flag › should show a message that nothing to export — `commands::export::a_recreated_remote_has_nothing_to_export`
+- [x] `e2e/commands/export.e2e.ts:213` bit export command › export after re-creating the remote › export with --all flag › should export them successfully — `commands::export::known_failures::all_exports_to_a_recreated_remote` (known failure)
+- [x] `e2e/commands/export.e2e.ts:223` bit export command › export after re-creating the remote › export with --all-versions flag › should export them successfully — `commands::export::known_failures::all_versions_exports_to_a_recreated_remote` (known failure)
+- [x] `e2e/commands/export.e2e.ts:243` bit export command › re-export using the component name without the scope name › should not show the "fork" prompt — `commands::export::known_failures::reexporting_by_name_without_scope` (known failure)
 
 ### `e2e/commands/import-all.e2e.ts`
 
-- [ ] `e2e/commands/import-all.e2e.ts:26` bit import command with no ids › with a component in bit.map and --merge flag › should throw an error and suggest using bit checkout reset
-- [ ] `e2e/commands/import-all.e2e.ts:53` bit import command with no ids › with components in bit.map when they are modified locally › without any flag › should not display a warning saying it was unable to import
-- [ ] `e2e/commands/import-all.e2e.ts:56` bit import command with no ids › with components in bit.map when they are modified locally › without any flag › should display a successful message
-- [ ] `e2e/commands/import-all.e2e.ts:64` bit import command with no ids › with components in bit.map when they are modified locally › with --override flag › should throw an error and suggest using bit checkout reset
-- [ ] `e2e/commands/import-all.e2e.ts:74` bit import command with no ids › with components in bit.map when they are modified locally › with --merge=manual flag › should display a successful message
-- [ ] `e2e/commands/import-all.e2e.ts:77` bit import command with no ids › with components in bit.map when they are modified locally › with --merge=manual flag › should show them as modified
-- [ ] `e2e/commands/import-all.e2e.ts:89` bit import command with no ids › with components in bit.map when they are modified locally › after tagging › should display a successful message
-- [ ] `e2e/commands/import-all.e2e.ts:107` bit import command with no ids › with an AUTHORED component which was only tagged but not exported › should not try to import that component as it was not exported yet
+- [x] `e2e/commands/import-all.e2e.ts:26` bit import command with no ids › with a component in bit.map and --merge flag › should throw an error and suggest using bit checkout reset — `commands::import_all::known_failures::merge_without_objects_suggests_checkout_reset` (known failure)
+- [x] `e2e/commands/import-all.e2e.ts:53` bit import command with no ids › with components in bit.map when they are modified locally › without any flag › should not display a warning saying it was unable to import — `commands::import_all::known_failures::import_without_ids_imports_objects` (known failure)
+- [x] `e2e/commands/import-all.e2e.ts:56` bit import command with no ids › with components in bit.map when they are modified locally › without any flag › should display a successful message — `commands::import_all::known_failures::import_without_ids_imports_objects` (known failure)
+- [x] `e2e/commands/import-all.e2e.ts:64` bit import command with no ids › with components in bit.map when they are modified locally › with --override flag › should throw an error and suggest using bit checkout reset — `commands::import_all::known_failures::override_suggests_checkout_reset` (known failure)
+- [x] `e2e/commands/import-all.e2e.ts:74` bit import command with no ids › with components in bit.map when they are modified locally › with --merge=manual flag › should display a successful message — `commands::import_all::known_failures::manual_merge_keeps_the_modification` (known failure)
+- [x] `e2e/commands/import-all.e2e.ts:77` bit import command with no ids › with components in bit.map when they are modified locally › with --merge=manual flag › should show them as modified — `commands::import_all::known_failures::manual_merge_keeps_the_modification` (known failure)
+- [x] `e2e/commands/import-all.e2e.ts:89` bit import command with no ids › with components in bit.map when they are modified locally › after tagging › should display a successful message — `commands::import_all::known_failures::manual_merge_after_a_local_tag` (known failure)
+- [x] `e2e/commands/import-all.e2e.ts:107` bit import command with no ids › with an AUTHORED component which was only tagged but not exported › should not try to import that component as it was not exported yet — `commands::import_all::known_failures::an_unexported_component_is_not_imported` (known failure)
 
 ### `e2e/commands/import.e2e.ts`
 
-- [ ] `e2e/commands/import.e2e.ts:37` bit import › stand alone component (without dependencies) › should display a successful message
-- [ ] `e2e/commands/import.e2e.ts:42` bit import › stand alone component (without dependencies) › should indicate that the imported component is new
-- [ ] `e2e/commands/import.e2e.ts:46` bit import › stand alone component (without dependencies) › should add the component into bit.map file
-- [ ] `e2e/commands/import.e2e.ts:67` bit import › stand alone component (without dependencies) › with multiple files located in different directories › should write the internal files according to their relative paths
-- [ ] `e2e/commands/import.e2e.ts:92` bit import › stand alone component (without dependencies) › when the default component directory already exist › when the destination is an existing empty directory › should write the component to the specified path
-- [ ] `e2e/commands/import.e2e.ts:106` bit import › stand alone component (without dependencies) › when the default component directory already exist › when the destination directory is not empty › should not import the component
-- [ ] `e2e/commands/import.e2e.ts:109` bit import › stand alone component (without dependencies) › when the default component directory already exist › when the destination directory is not empty › should not delete the existing file
-- [ ] `e2e/commands/import.e2e.ts:112` bit import › stand alone component (without dependencies) › when the default component directory already exist › when the destination directory is not empty › should throw an error
-- [ ] `e2e/commands/import.e2e.ts:115` bit import › stand alone component (without dependencies) › when the default component directory already exist › when the destination directory is not empty › should import successfully if the --override flag is used
-- [ ] `e2e/commands/import.e2e.ts:128` bit import › stand alone component (without dependencies) › when the default component directory already exist › when the destination is a file › should not import the component
-- [ ] `e2e/commands/import.e2e.ts:131` bit import › stand alone component (without dependencies) › when the default component directory already exist › when the destination is a file › should not delete the existing file
-- [ ] `e2e/commands/import.e2e.ts:134` bit import › stand alone component (without dependencies) › when the default component directory already exist › when the destination is a file › should throw an error
-- [ ] `e2e/commands/import.e2e.ts:137` bit import › stand alone component (without dependencies) › when the default component directory already exist › when the destination is a file › should throw an error also when the --override flag is used
-- [ ] `e2e/commands/import.e2e.ts:156` bit import › stand alone component (without dependencies) › with a specific path, using -p flag › as imported › when the destination is a non-exist directory › should write the component to the specified path
-- [ ] `e2e/commands/import.e2e.ts:172` bit import › stand alone component (without dependencies) › re-import after deleting the component physically › should import the component successfully
-- [ ] `e2e/commands/import.e2e.ts:186` bit import › stand alone component (without dependencies) › import component with custom dsl as destination dir for import › when the DSL is valid › should import the component successfully
-- [ ] `e2e/commands/import.e2e.ts:189` bit import › stand alone component (without dependencies) › import component with custom dsl as destination dir for import › when the DSL is valid › should import the component into new dir structure according to dsl
-- [ ] `e2e/commands/import.e2e.ts:194` bit import › stand alone component (without dependencies) › import component with custom dsl as destination dir for import › when the DSL is valid › bitmap should contain component with correct rootDir according to dsl
-- [ ] `e2e/commands/import.e2e.ts:209` bit import › stand alone component (without dependencies) › import component with custom dsl as destination dir for import › when the DSL has invalid parameters › should throw an error saying it has an invalid parameter
-- [ ] `e2e/commands/import.e2e.ts:234` bit import › with an existing component in bit.map (as author) › should write the component to the paths specified in bit.map
-- [ ] `e2e/commands/import.e2e.ts:238` bit import › with an existing component in bit.map (as author) › should not remove the originallySharedDir (because it is an AUTHORED component)
-- [ ] `e2e/commands/import.e2e.ts:241` bit import › with an existing component in bit.map (as author) › should not write any file into components directory
-- [ ] `e2e/commands/import.e2e.ts:251` bit import › with an existing component in bit.map (as author) › importing the component again › should not create an "undefined" package on node_modules
-- [ ] `e2e/commands/import.e2e.ts:285` bit import › import a component when the local version is modified › without --override flag › should display a warning saying it was unable to import
-- [ ] `e2e/commands/import.e2e.ts:294` bit import › import a component when the local version is modified › with --override flag › should display a successful message
-- [ ] `e2e/commands/import.e2e.ts:304` bit import › import a component when the local version is modified › with --merge=manual › should display a successful message
-- [ ] `e2e/commands/import.e2e.ts:313` bit import › import a component when the local version is modified › re-import a component after tagging the component › should import successfully
-- [ ] `e2e/commands/import.e2e.ts:339` bit import › importing a component when it has a local tag › as imported › should not remove the local version
-- [ ] `e2e/commands/import.e2e.ts:346` bit import › importing a component when it has a local tag › as imported › should not override the local component
-- [ ] `e2e/commands/import.e2e.ts:359` bit import › importing a component when it has a local tag › as imported › importing a specific version › should not throw an error saying the component was not found
-- [ ] `e2e/commands/import.e2e.ts:379` bit import › import with wildcards › import the entire scope › should import all components from the remote scope
-- [ ] `e2e/commands/import.e2e.ts:384` bit import › import with wildcards › import the entire scope › bit ls should show that all components from the remote scope were imported
-- [ ] `e2e/commands/import.e2e.ts:412` bit import › import with --dependencies-depth (chain: comp1 -> comp2 -> comp3 -> comp4) › --dependencies-depth 1 › should import only the direct dep at the version comp1 references (comp2@0.0.1)
-- [ ] `e2e/commands/import.e2e.ts:425` bit import › import with --dependencies-depth (chain: comp1 -> comp2 -> comp3 -> comp4) › --dependencies-depth 2 › should import direct deps and their direct deps (comp2, comp3) but not deeper
-- [ ] `e2e/commands/import.e2e.ts:438` bit import › import with --dependencies-depth (chain: comp1 -> comp2 -> comp3 -> comp4) › --dependencies-depth with versionless input › should resolve the root to head (comp1@0.0.2) and import its direct dep at the referenced version (comp2@0.0.2)
-- [ ] `e2e/commands/import.e2e.ts:451` bit import › import with --dependencies-depth (chain: comp1 -> comp2 -> comp3 -> comp4) › --dependencies-head --dependencies-depth 1 › should import the direct dep at head (comp2@0.0.2), not the version comp1@0.0.1 references
-- [ ] `e2e/commands/import.e2e.ts:464` bit import › import with --dependencies-depth (chain: comp1 -> comp2 -> comp3 -> comp4) › --dependencies without depth › should import all transitive dependencies
-- [ ] `e2e/commands/import.e2e.ts:476` bit import › import with --dependencies-depth (chain: comp1 -> comp2 -> comp3 -> comp4) › validation errors › should error when --dependencies-depth is used without --dependencies/--dependencies-head
-- [ ] `e2e/commands/import.e2e.ts:483` bit import › import with --dependencies-depth (chain: comp1 -> comp2 -> comp3 -> comp4) › validation errors › should error when --dependencies-depth is not a positive integer
+- [x] `e2e/commands/import.e2e.ts:37` bit import › stand alone component (without dependencies) › should display a successful message — `commands::import::known_failures::a_stand_alone_component_is_imported` (known failure)
+- [x] `e2e/commands/import.e2e.ts:42` bit import › stand alone component (without dependencies) › should indicate that the imported component is new — `commands::import::known_failures::a_stand_alone_component_is_imported` (known failure)
+- [x] `e2e/commands/import.e2e.ts:46` bit import › stand alone component (without dependencies) › should add the component into bit.map file — `commands::import::known_failures::a_stand_alone_component_is_imported` (known failure)
+- [x] `e2e/commands/import.e2e.ts:67` bit import › stand alone component (without dependencies) › with multiple files located in different directories › should write the internal files according to their relative paths — `commands::import::known_failures::files_keep_their_relative_paths` (known failure)
+- [x] `e2e/commands/import.e2e.ts:92` bit import › stand alone component (without dependencies) › when the default component directory already exist › when the destination is an existing empty directory › should write the component to the specified path — `commands::import::known_failures::an_existing_empty_directory_is_written` (known failure)
+- [x] `e2e/commands/import.e2e.ts:106` bit import › stand alone component (without dependencies) › when the default component directory already exist › when the destination directory is not empty › should not import the component — `commands::import::known_failures::a_non_empty_directory_is_not_overwritten` (known failure)
+- [x] `e2e/commands/import.e2e.ts:109` bit import › stand alone component (without dependencies) › when the default component directory already exist › when the destination directory is not empty › should not delete the existing file — `commands::import::known_failures::a_non_empty_directory_is_not_overwritten` (known failure)
+- [x] `e2e/commands/import.e2e.ts:112` bit import › stand alone component (without dependencies) › when the default component directory already exist › when the destination directory is not empty › should throw an error — `commands::import::known_failures::a_non_empty_directory_is_not_overwritten` (known failure)
+- [x] `e2e/commands/import.e2e.ts:115` bit import › stand alone component (without dependencies) › when the default component directory already exist › when the destination directory is not empty › should import successfully if the --override flag is used — `commands::import::known_failures::a_non_empty_directory_is_not_overwritten` (known failure)
+- [x] `e2e/commands/import.e2e.ts:128` bit import › stand alone component (without dependencies) › when the default component directory already exist › when the destination is a file › should not import the component — `commands::import::known_failures::a_file_at_the_directory_is_not_overwritten` (known failure)
+- [x] `e2e/commands/import.e2e.ts:131` bit import › stand alone component (without dependencies) › when the default component directory already exist › when the destination is a file › should not delete the existing file — `commands::import::known_failures::a_file_at_the_directory_is_not_overwritten` (known failure)
+- [x] `e2e/commands/import.e2e.ts:134` bit import › stand alone component (without dependencies) › when the default component directory already exist › when the destination is a file › should throw an error — `commands::import::known_failures::a_file_at_the_directory_is_not_overwritten` (known failure)
+- [x] `e2e/commands/import.e2e.ts:137` bit import › stand alone component (without dependencies) › when the default component directory already exist › when the destination is a file › should throw an error also when the --override flag is used — `commands::import::known_failures::a_file_at_the_directory_is_not_overwritten` (known failure)
+- [x] `e2e/commands/import.e2e.ts:156` bit import › stand alone component (without dependencies) › with a specific path, using -p flag › as imported › when the destination is a non-exist directory › should write the component to the specified path — `commands::import::known_failures::the_path_flag_sets_the_directory` (known failure)
+- [x] `e2e/commands/import.e2e.ts:172` bit import › stand alone component (without dependencies) › re-import after deleting the component physically › should import the component successfully — `commands::import::known_failures::a_physically_deleted_component_is_imported_again` (known failure)
+- [x] `e2e/commands/import.e2e.ts:186` bit import › stand alone component (without dependencies) › import component with custom dsl as destination dir for import › when the DSL is valid › should import the component successfully — `commands::import::known_failures::a_valid_default_directory_dsl_places_the_component` (known failure)
+- [x] `e2e/commands/import.e2e.ts:189` bit import › stand alone component (without dependencies) › import component with custom dsl as destination dir for import › when the DSL is valid › should import the component into new dir structure according to dsl — `commands::import::known_failures::a_valid_default_directory_dsl_places_the_component` (known failure)
+- [x] `e2e/commands/import.e2e.ts:194` bit import › stand alone component (without dependencies) › import component with custom dsl as destination dir for import › when the DSL is valid › bitmap should contain component with correct rootDir according to dsl — `commands::import::known_failures::a_valid_default_directory_dsl_places_the_component` (known failure)
+- [x] `e2e/commands/import.e2e.ts:209` bit import › stand alone component (without dependencies) › import component with custom dsl as destination dir for import › when the DSL has invalid parameters › should throw an error saying it has an invalid parameter — `commands::import::known_failures::an_invalid_default_directory_dsl_fails` (known failure)
+- [x] `e2e/commands/import.e2e.ts:234` bit import › with an existing component in bit.map (as author) › should write the component to the paths specified in bit.map — `commands::import::known_failures::an_authored_component_keeps_its_bitmap_paths` (known failure)
+- [x] `e2e/commands/import.e2e.ts:238` bit import › with an existing component in bit.map (as author) › should not remove the originallySharedDir (because it is an AUTHORED component) — `commands::import::known_failures::an_authored_component_keeps_its_bitmap_paths` (known failure)
+- [x] `e2e/commands/import.e2e.ts:241` bit import › with an existing component in bit.map (as author) › should not write any file into components directory — `commands::import::known_failures::an_authored_component_keeps_its_bitmap_paths` (known failure)
+- [x] `e2e/commands/import.e2e.ts:251` bit import › with an existing component in bit.map (as author) › importing the component again › should not create an "undefined" package on node_modules — `commands::import::known_failures::an_authored_component_keeps_its_bitmap_paths` (known failure)
+- [x] `e2e/commands/import.e2e.ts:285` bit import › import a component when the local version is modified › without --override flag › should display a warning saying it was unable to import — `commands::import::known_failures::a_modified_component_needs_override` (known failure)
+- [x] `e2e/commands/import.e2e.ts:294` bit import › import a component when the local version is modified › with --override flag › should display a successful message — `commands::import::known_failures::a_modified_component_needs_override` (known failure)
+- [x] `e2e/commands/import.e2e.ts:304` bit import › import a component when the local version is modified › with --merge=manual › should display a successful message — `commands::import::known_failures::a_modified_component_merges_manually` (known failure)
+- [x] `e2e/commands/import.e2e.ts:313` bit import › import a component when the local version is modified › re-import a component after tagging the component › should import successfully — `commands::import::known_failures::a_tagged_modification_is_imported_again` (known failure)
+- [x] `e2e/commands/import.e2e.ts:339` bit import › importing a component when it has a local tag › as imported › should not remove the local version — `commands::import::known_failures::a_local_tag_survives_an_import` (known failure)
+- [x] `e2e/commands/import.e2e.ts:346` bit import › importing a component when it has a local tag › as imported › should not override the local component — `commands::import::known_failures::a_local_tag_survives_an_import` (known failure)
+- [x] `e2e/commands/import.e2e.ts:359` bit import › importing a component when it has a local tag › as imported › importing a specific version › should not throw an error saying the component was not found — `commands::import::known_failures::a_local_tag_survives_an_import` (known failure)
+- [x] `e2e/commands/import.e2e.ts:379` bit import › import with wildcards › import the entire scope › should import all components from the remote scope — `commands::import::known_failures::a_wildcard_imports_the_whole_scope` (known failure)
+- [x] `e2e/commands/import.e2e.ts:384` bit import › import with wildcards › import the entire scope › bit ls should show that all components from the remote scope were imported — `commands::import::known_failures::a_wildcard_imports_the_whole_scope` (known failure)
+- [x] `e2e/commands/import.e2e.ts:412` bit import › import with --dependencies-depth (chain: comp1 -> comp2 -> comp3 -> comp4) › --dependencies-depth 1 › should import only the direct dep at the version comp1 references (comp2@0.0.1) — `commands::import::known_failures::dependencies_depth_limits_the_import` (known failure)
+- [x] `e2e/commands/import.e2e.ts:425` bit import › import with --dependencies-depth (chain: comp1 -> comp2 -> comp3 -> comp4) › --dependencies-depth 2 › should import direct deps and their direct deps (comp2, comp3) but not deeper — `commands::import::known_failures::dependencies_depth_limits_the_import` (known failure)
+- [x] `e2e/commands/import.e2e.ts:438` bit import › import with --dependencies-depth (chain: comp1 -> comp2 -> comp3 -> comp4) › --dependencies-depth with versionless input › should resolve the root to head (comp1@0.0.2) and import its direct dep at the referenced version (comp2@0.0.2) — `commands::import::known_failures::dependencies_depth_resolves_heads` (known failure)
+- [x] `e2e/commands/import.e2e.ts:451` bit import › import with --dependencies-depth (chain: comp1 -> comp2 -> comp3 -> comp4) › --dependencies-head --dependencies-depth 1 › should import the direct dep at head (comp2@0.0.2), not the version comp1@0.0.1 references — `commands::import::known_failures::dependencies_depth_resolves_heads` (known failure)
+- [x] `e2e/commands/import.e2e.ts:464` bit import › import with --dependencies-depth (chain: comp1 -> comp2 -> comp3 -> comp4) › --dependencies without depth › should import all transitive dependencies — `commands::import::known_failures::dependencies_imports_the_whole_chain` (known failure)
+- [x] `e2e/commands/import.e2e.ts:476` bit import › import with --dependencies-depth (chain: comp1 -> comp2 -> comp3 -> comp4) › validation errors › should error when --dependencies-depth is used without --dependencies/--dependencies-head — `commands::import::known_failures::dependencies_depth_is_validated` (known failure)
+- [x] `e2e/commands/import.e2e.ts:483` bit import › import with --dependencies-depth (chain: comp1 -> comp2 -> comp3 -> comp4) › validation errors › should error when --dependencies-depth is not a positive integer — `commands::import::known_failures::dependencies_depth_is_validated` (known failure)
 - [ ] `e2e/commands/import.e2e.ts:524` bit import › external package manager mode › should write dependencies to package.json
 - [ ] `e2e/commands/import.e2e.ts:528` bit import › external package manager mode › should not run installation
 
@@ -408,34 +411,34 @@ The rest follow as their commands are ported.
 
 ### `e2e/commands/reset.e2e.ts`
 
-- [ ] `e2e/commands/reset.e2e.ts:29` bit reset command › untag single component › with one version › should delete the entire component from the model
-- [ ] `e2e/commands/reset.e2e.ts:44` bit reset command › untag single component › with multiple versions when specifying the version › should delete only the specified tag
-- [ ] `e2e/commands/reset.e2e.ts:51` bit reset command › untag single component › with multiple versions when specifying the version › should delete the specified version from the "state" attribute
-- [ ] `e2e/commands/reset.e2e.ts:58` bit reset command › untag single component › with multiple versions when specifying the version › bit show should work
-- [ ] `e2e/commands/reset.e2e.ts:62` bit reset command › untag single component › with multiple versions when specifying the version › bit status should show the component as staged
-- [ ] `e2e/commands/reset.e2e.ts:78` bit reset command › untag single component › with multiple versions when not specifying the version › and all versions are local › should delete the entire component from the model
-- [ ] `e2e/commands/reset.e2e.ts:99` bit reset command › untag single component › when some versions are exported, some are local › untagging without version › should delete only the local tag and leave the exported tag
-- [ ] `e2e/commands/reset.e2e.ts:109` bit reset command › untag single component › when tagging non-existing component › should show an descriptive error
-- [ ] `e2e/commands/reset.e2e.ts:137` bit reset command › untag multiple components (--all flag) › without specifying a version › should display a descriptive successful message
-- [ ] `e2e/commands/reset.e2e.ts:140` bit reset command › untag multiple components (--all flag) › without specifying a version › should remove only local components from the model
-- [ ] `e2e/commands/reset.e2e.ts:153` bit reset command › untag multiple components (--all flag) › with --head › should display a descriptive successful message
-- [ ] `e2e/commands/reset.e2e.ts:156` bit reset command › untag multiple components (--all flag) › with --head › should remove only the specified version from the model
-- [ ] `e2e/commands/reset.e2e.ts:186` bit reset command › components with dependencies › untag only the dependency › without force flag › should throw a descriptive error
-- [ ] `e2e/commands/reset.e2e.ts:197` bit reset command › components with dependencies › untag only the dependency › with force flag › should untag successfully
-- [ ] `e2e/commands/reset.e2e.ts:215` bit reset command › components with dependencies › untag only the dependency › after exporting the component and tagging the scope › should show an error
-- [ ] `e2e/commands/reset.e2e.ts:226` bit reset command › components with dependencies › untag all components › when all components have only local versions › should remove all the components because it does not leave a damaged component without dependency
-- [ ] `e2e/commands/reset.e2e.ts:238` bit reset command › components with dependencies › untag only the dependent › should untag successfully the dependent
-- [ ] `e2e/commands/reset.e2e.ts:242` bit reset command › components with dependencies › untag only the dependent › should leave the dependency intact
-- [ ] `e2e/commands/reset.e2e.ts:265` bit reset command › components with dependencies › after import and tagging › untag using the id without scope-name › should untag successfully
-- [ ] `e2e/commands/reset.e2e.ts:277` bit reset command › components with dependencies › after import and tagging › modify, tag and then untag all › should show the component as modified
-- [ ] `e2e/commands/reset.e2e.ts:297` bit reset command › components with config in the .bitmap file › bit reset should leave the config as they were before the tag
-- [ ] `e2e/commands/reset.e2e.ts:301` bit reset command › components with config in the .bitmap file › bit export should remove the entries form the staged-config file
-- [ ] `e2e/commands/reset.e2e.ts:318` bit reset command › components with env config after multiple snaps › when env is not changed between snaps › bit reset should restore the env config that was set before the first snap
-- [ ] `e2e/commands/reset.e2e.ts:333` bit reset command › components with env config after multiple snaps › when env is changed between snaps › bit reset should keep the latest env config (not revert to the first snap env)
-- [ ] `e2e/commands/reset.e2e.ts:348` bit reset command › components with env config after multiple snaps › when a different config (deps) is changed between snaps but env stays the same › bit reset should restore both the env and the deps config
-- [ ] `e2e/commands/reset.e2e.ts:377` bit reset command › when checked out to a non-head version with detach-head functionality › expect .bitmap to point to the same version as it was before the reset, and not the latest
-- [ ] `e2e/commands/reset.e2e.ts:381` bit reset command › when checked out to a non-head version with detach-head functionality › should not show the component as modified
-- [ ] `e2e/commands/reset.e2e.ts:385` bit reset command › when checked out to a non-head version with detach-head functionality › should clear the detached head
+- [x] `e2e/commands/reset.e2e.ts:29` bit reset command › untag single component › with one version › should delete the entire component from the model — `commands::reset::known_failures::reset_head_of_a_single_version_deletes_the_component` (known failure)
+- [x] `e2e/commands/reset.e2e.ts:44` bit reset command › untag single component › with multiple versions when specifying the version › should delete only the specified tag — `commands::reset::known_failures::reset_head_deletes_only_the_head_tag` (known failure)
+- [x] `e2e/commands/reset.e2e.ts:51` bit reset command › untag single component › with multiple versions when specifying the version › should delete the specified version from the "state" attribute — `commands::reset::known_failures::reset_head_deletes_only_the_head_tag` (known failure)
+- [x] `e2e/commands/reset.e2e.ts:58` bit reset command › untag single component › with multiple versions when specifying the version › bit show should work — `commands::reset::known_failures::reset_head_deletes_only_the_head_tag` (known failure)
+- [x] `e2e/commands/reset.e2e.ts:62` bit reset command › untag single component › with multiple versions when specifying the version › bit status should show the component as staged — `commands::reset::known_failures::reset_head_deletes_only_the_head_tag` (known failure)
+- [x] `e2e/commands/reset.e2e.ts:78` bit reset command › untag single component › with multiple versions when not specifying the version › and all versions are local › should delete the entire component from the model — `commands::reset::known_failures::reset_of_local_versions_deletes_the_component` (known failure)
+- [x] `e2e/commands/reset.e2e.ts:99` bit reset command › untag single component › when some versions are exported, some are local › untagging without version › should delete only the local tag and leave the exported tag — `commands::reset::known_failures::reset_keeps_the_exported_tag` (known failure)
+- [x] `e2e/commands/reset.e2e.ts:109` bit reset command › untag single component › when tagging non-existing component › should show an descriptive error — `commands::reset::known_failures::reset_of_a_missing_component_fails` (known failure)
+- [x] `e2e/commands/reset.e2e.ts:137` bit reset command › untag multiple components (--all flag) › without specifying a version › should display a descriptive successful message — `commands::reset::reset_all_removes_only_local_components`
+- [x] `e2e/commands/reset.e2e.ts:140` bit reset command › untag multiple components (--all flag) › without specifying a version › should remove only local components from the model — `commands::reset::reset_all_removes_only_local_components`
+- [x] `e2e/commands/reset.e2e.ts:153` bit reset command › untag multiple components (--all flag) › with --head › should display a descriptive successful message — `commands::reset::reset_all_head_removes_only_the_head`
+- [x] `e2e/commands/reset.e2e.ts:156` bit reset command › untag multiple components (--all flag) › with --head › should remove only the specified version from the model — `commands::reset::reset_all_head_removes_only_the_head`
+- [x] `e2e/commands/reset.e2e.ts:186` bit reset command › components with dependencies › untag only the dependency › without force flag › should throw a descriptive error — `commands::reset::known_failures::reset_of_a_dependency_needs_force` (known failure)
+- [x] `e2e/commands/reset.e2e.ts:197` bit reset command › components with dependencies › untag only the dependency › with force flag › should untag successfully — `commands::reset::known_failures::reset_of_a_dependency_needs_force` (known failure)
+- [x] `e2e/commands/reset.e2e.ts:215` bit reset command › components with dependencies › untag only the dependency › after exporting the component and tagging the scope › should show an error — `commands::reset::known_failures::reset_of_an_exported_dependency_fails` (known failure)
+- [x] `e2e/commands/reset.e2e.ts:226` bit reset command › components with dependencies › untag all components › when all components have only local versions › should remove all the components because it does not leave a damaged component without dependency — `commands::reset::reset_all_of_local_dependencies_removes_all`
+- [x] `e2e/commands/reset.e2e.ts:238` bit reset command › components with dependencies › untag only the dependent › should untag successfully the dependent — `commands::reset::known_failures::reset_of_the_dependent_keeps_the_dependency` (known failure)
+- [x] `e2e/commands/reset.e2e.ts:242` bit reset command › components with dependencies › untag only the dependent › should leave the dependency intact — `commands::reset::known_failures::reset_of_the_dependent_keeps_the_dependency` (known failure)
+- [x] `e2e/commands/reset.e2e.ts:265` bit reset command › components with dependencies › after import and tagging › untag using the id without scope-name › should untag successfully — `commands::reset::known_failures::reset_by_an_id_without_scope` (known failure)
+- [x] `e2e/commands/reset.e2e.ts:277` bit reset command › components with dependencies › after import and tagging › modify, tag and then untag all › should show the component as modified — `commands::reset::reset_all_keeps_the_modification`
+- [x] `e2e/commands/reset.e2e.ts:297` bit reset command › components with config in the .bitmap file › bit reset should leave the config as they were before the tag — `commands::reset::reset_keeps_the_bitmap_config`
+- [x] `e2e/commands/reset.e2e.ts:301` bit reset command › components with config in the .bitmap file › bit export should remove the entries form the staged-config file — `commands::reset::reset_keeps_the_bitmap_config`
+- [x] `e2e/commands/reset.e2e.ts:318` bit reset command › components with env config after multiple snaps › when env is not changed between snaps › bit reset should restore the env config that was set before the first snap — `commands::reset::reset_restores_the_env_of_the_first_snap`
+- [x] `e2e/commands/reset.e2e.ts:333` bit reset command › components with env config after multiple snaps › when env is changed between snaps › bit reset should keep the latest env config (not revert to the first snap env) — `commands::reset::reset_keeps_the_latest_env`
+- [x] `e2e/commands/reset.e2e.ts:348` bit reset command › components with env config after multiple snaps › when a different config (deps) is changed between snaps but env stays the same › bit reset should restore both the env and the deps config — `commands::reset::reset_restores_the_env_after_a_deps_change`
+- [x] `e2e/commands/reset.e2e.ts:377` bit reset command › when checked out to a non-head version with detach-head functionality › expect .bitmap to point to the same version as it was before the reset, and not the latest — `commands::reset::known_failures::reset_of_a_detached_head` (known failure)
+- [x] `e2e/commands/reset.e2e.ts:381` bit reset command › when checked out to a non-head version with detach-head functionality › should not show the component as modified — `commands::reset::known_failures::reset_of_a_detached_head` (known failure)
+- [x] `e2e/commands/reset.e2e.ts:385` bit reset command › when checked out to a non-head version with detach-head functionality › should clear the detached head — `commands::reset::known_failures::reset_of_a_detached_head` (known failure)
 
 ### `e2e/commands/search.e2e.ts`
 
@@ -447,21 +450,21 @@ The rest follow as their commands are ported.
 
 ### `e2e/commands/tag.e2e.ts`
 
-- [ ] `e2e/commands/tag.e2e.ts:35` bit tag command › tag component with invalid mainFile in bitmap › should not tag the component
-- [ ] `e2e/commands/tag.e2e.ts:52` bit tag command › semver flags › tag specific component › Should not allow invalid semver
-- [ ] `e2e/commands/tag.e2e.ts:61` bit tag command › semver flags › tag specific component › Should increment the patch version when no version type specified
-- [ ] `e2e/commands/tag.e2e.ts:65` bit tag command › semver flags › tag specific component › Should increment the patch version when --patch flag specified
-- [ ] `e2e/commands/tag.e2e.ts:69` bit tag command › semver flags › tag specific component › Should increment the minor version when --minor flag specified
-- [ ] `e2e/commands/tag.e2e.ts:73` bit tag command › semver flags › tag specific component › Should increment the major version when --major flag specified
-- [ ] `e2e/commands/tag.e2e.ts:77` bit tag command › semver flags › tag specific component › Should set the exact version when specified on new component
-- [ ] `e2e/commands/tag.e2e.ts:83` bit tag command › semver flags › tag specific component › Should increment patch version of dependent when using other flag on tag dependency
-- [ ] `e2e/commands/tag.e2e.ts:109` bit tag command › semver flags › tag specific component › Should throw error when the version already exists
-- [ ] `e2e/commands/tag.e2e.ts:124` bit tag command › with removed file/files › Should not let you tag with a non-existing dependency
-- [ ] `e2e/commands/tag.e2e.ts:148` bit tag command › with Windows end-of-line characters › should write the file to the model with Linux EOL characters
-- [ ] `e2e/commands/tag.e2e.ts:164` bit tag command › tag a component without its dependencies › should show a descriptive error message
-- [ ] `e2e/commands/tag.e2e.ts:174` bit tag command › tag with an empty string › should not throw an error
-- [ ] `e2e/commands/tag.e2e.ts:199` bit tag command › component count display when new component depends on existing tagged component › should correctly display 2 components tagged, not 3
-- [ ] `e2e/commands/tag.e2e.ts:234` bit tag command › tag component with auto-tag should validate component issues › should throw an error about component issues, not about relativePaths in Version object
+- [x] `e2e/commands/tag.e2e.ts:35` bit tag command › tag component with invalid mainFile in bitmap › should not tag the component — `commands::tag::known_failures::an_invalid_main_file_is_not_tagged` (known failure)
+- [x] `e2e/commands/tag.e2e.ts:52` bit tag command › semver flags › tag specific component › Should not allow invalid semver — `commands::tag::known_failures::release_type_flags_bump_the_version` (known failure)
+- [x] `e2e/commands/tag.e2e.ts:61` bit tag command › semver flags › tag specific component › Should increment the patch version when no version type specified — `commands::tag::known_failures::release_type_flags_bump_the_version` (known failure)
+- [x] `e2e/commands/tag.e2e.ts:65` bit tag command › semver flags › tag specific component › Should increment the patch version when --patch flag specified — `commands::tag::known_failures::release_type_flags_bump_the_version` (known failure)
+- [x] `e2e/commands/tag.e2e.ts:69` bit tag command › semver flags › tag specific component › Should increment the minor version when --minor flag specified — `commands::tag::known_failures::release_type_flags_bump_the_version` (known failure)
+- [x] `e2e/commands/tag.e2e.ts:73` bit tag command › semver flags › tag specific component › Should increment the major version when --major flag specified — `commands::tag::known_failures::release_type_flags_bump_the_version` (known failure)
+- [x] `e2e/commands/tag.e2e.ts:77` bit tag command › semver flags › tag specific component › Should set the exact version when specified on new component — `commands::tag::known_failures::an_exact_version_tags_a_new_component` (known failure)
+- [x] `e2e/commands/tag.e2e.ts:83` bit tag command › semver flags › tag specific component › Should increment patch version of dependent when using other flag on tag dependency — `commands::tag::known_failures::a_dependent_gets_a_patch_bump` (known failure)
+- [x] `e2e/commands/tag.e2e.ts:109` bit tag command › semver flags › tag specific component › Should throw error when the version already exists — `commands::tag::known_failures::an_existing_version_is_not_tagged_again` (known failure)
+- [x] `e2e/commands/tag.e2e.ts:124` bit tag command › with removed file/files › Should not let you tag with a non-existing dependency — `commands::tag::known_failures::a_missing_dependency_file_blocks_the_tag` (known failure)
+- [x] `e2e/commands/tag.e2e.ts:148` bit tag command › with Windows end-of-line characters › should write the file to the model with Linux EOL characters — `commands::tag::known_failures::windows_line_endings_are_stored_as_linux` (known failure)
+- [x] `e2e/commands/tag.e2e.ts:164` bit tag command › tag a component without its dependencies › should show a descriptive error message — `commands::tag::known_failures::a_dependency_left_out_of_the_tag_is_explained` (known failure)
+- [x] `e2e/commands/tag.e2e.ts:174` bit tag command › tag with an empty string › should not throw an error — `commands::tag::known_failures::an_empty_message_tags` (known failure)
+- [x] `e2e/commands/tag.e2e.ts:199` bit tag command › component count display when new component depends on existing tagged component › should correctly display 2 components tagged, not 3 — `commands::tag::known_failures::a_new_dependent_is_counted_once` (known failure)
+- [x] `e2e/commands/tag.e2e.ts:234` bit tag command › tag component with auto-tag should validate component issues › should throw an error about component issues, not about relativePaths in Version object — `commands::tag::known_failures::an_auto_tagged_dependent_is_validated` (known failure)
 
 ### `e2e/commands/watch.e2e.ts`
 
@@ -2861,7 +2864,7 @@ The rest follow as their commands are ported.
 
 ### `e2e/harmony/log.e2e.ts`
 
-- [ ] `e2e/harmony/log.e2e.ts:17` log › logging with global --log flag › should log successfully
+- [x] `e2e/harmony/log.e2e.ts:17` log › logging with global --log flag › should log successfully — `harmony::log::known_failures::the_global_log_flag_logs` (known failure)
 
 ### `e2e/harmony/merge-config.e2e.ts`
 
@@ -3204,11 +3207,11 @@ The rest follow as their commands are ported.
 
 ### `e2e/harmony/revert.e2e.ts`
 
-- [ ] `e2e/harmony/revert.e2e.ts:24` bit revert command › basic revert › should change the code to the specified version
-- [ ] `e2e/harmony/revert.e2e.ts:28` bit revert command › basic revert › should keep the version in .bitmap intact
-- [ ] `e2e/harmony/revert.e2e.ts:38` bit revert command › basic revert › when the component is modified › should still change the code to the specified version
-- [ ] `e2e/harmony/revert.e2e.ts:58` bit revert command › revert from lane to main › should change the code according to main
-- [ ] `e2e/harmony/revert.e2e.ts:64` bit revert command › revert from lane to main › should keep the versions intact
+- [x] `e2e/harmony/revert.e2e.ts:24` bit revert command › basic revert › should change the code to the specified version — `harmony::revert::known_failures::revert_changes_the_code_and_keeps_the_version` (known failure)
+- [x] `e2e/harmony/revert.e2e.ts:28` bit revert command › basic revert › should keep the version in .bitmap intact — `harmony::revert::known_failures::revert_changes_the_code_and_keeps_the_version` (known failure)
+- [x] `e2e/harmony/revert.e2e.ts:38` bit revert command › basic revert › when the component is modified › should still change the code to the specified version — `harmony::revert::known_failures::revert_overrides_a_modified_component` (known failure)
+- [x] `e2e/harmony/revert.e2e.ts:58` bit revert command › revert from lane to main › should change the code according to main — `harmony::revert::known_failures::revert_from_a_lane_to_main` (known failure)
+- [x] `e2e/harmony/revert.e2e.ts:64` bit revert command › revert from lane to main › should keep the versions intact — `harmony::revert::known_failures::revert_from_a_lane_to_main` (known failure)
 
 ### `e2e/harmony/root-components.e2e.ts`
 
