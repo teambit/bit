@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import sinon from 'sinon';
 import { loadAspect } from '@teambit/harmony.testing.load-aspect';
 import type { WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
 import { mockWorkspace, destroyWorkspace } from '@teambit/workspace.testing.mock-workspace';
@@ -83,29 +84,23 @@ describe('EnvsMain', function () {
     const parentId = 'some-scope/envs/parent-env';
     const parentEnv = {
       id: ComponentID.fromString(`${parentId}@1.0.0`),
-      state: { aspects: { get: (aspectId: string) => (aspectId === EnvsAspect.id ? { data: {} } : undefined) } },
+      state: {
+        aspects: { get: (aspectId: string) => (aspectId === EnvsAspect.id ? { data: {} } : undefined) },
+        _consumer: { dependencies: { dependencies: [] } },
+      },
       filesystem: { files: [{ relative: 'env.jsonc', contents: Buffer.from('{ "policy": {} }') }] },
     } as unknown as Component;
-    // the extending env depends on the parent env, which determines the version to load
-    const envExtendsDeps = [{ id: ComponentID.fromString(`${parentId}@1.0.0`), packageName: '@some-scope/parent-env' }];
-    const loadedIds: string[] = [];
+    let getEnvComponentStub: sinon.SinonStub;
     let result: Record<string, any>;
     before(async () => {
-      const { getAllRegisteredEnvJsoncResolvers, getEnvComponentByEnvId } = envs;
-      envs.getAllRegisteredEnvJsoncResolvers = () => [];
-      envs.getEnvComponentByEnvId = async (envId: string) => {
-        loadedIds.push(envId);
-        return parentEnv;
-      };
-      try {
-        result = await envs.recursivelyMergeWithParentManifest({ extends: parentId }, envExtendsDeps as any);
-      } finally {
-        envs.getAllRegisteredEnvJsoncResolvers = getAllRegisteredEnvJsoncResolvers;
-        envs.getEnvComponentByEnvId = getEnvComponentByEnvId;
-      }
+      sinon.stub(envs, 'getAllRegisteredEnvJsoncResolvers').returns([]);
+      getEnvComponentStub = sinon.stub(envs, 'getEnvComponentByEnvId').resolves(parentEnv);
+      // the extending env depends on the parent env, which determines the version to load
+      result = await envs.recursivelyMergeWithParentManifest({ extends: parentId }, [{ id: parentEnv.id }] as any);
     });
+    after(() => sinon.restore());
     it('should load the parent env from the component host, in the version the extending env depends on', () => {
-      expect(loadedIds).to.deep.equal([`${parentId}@1.0.0`]);
+      expect(getEnvComponentStub.calledOnceWithExactly(`${parentId}@1.0.0`)).to.be.true;
     });
     it('should merge the parent manifest and drop the "extends"', () => {
       expect(result).to.not.have.property('extends');

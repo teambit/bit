@@ -26,6 +26,7 @@ import { head, uniq } from 'lodash';
 import type { WorkerMain } from '@teambit/worker';
 import { WorkerAspect } from '@teambit/worker';
 import { ComponentID } from '@teambit/component-id';
+import { BitId } from '@teambit/legacy-bit-id';
 import { AsyncLocalStorage } from 'async_hooks';
 import type { EnvService } from './services';
 import type { Environment } from './environment';
@@ -434,8 +435,7 @@ export class EnvsMain {
    * the version is taken from the dependencies of the extending env, as `envId` normally has no version.
    */
   getParentEnvIdToLoad(envId: string, envExtendsDeps: LegacyDependency[] = []): string {
-    const splitted = envId.split('@');
-    const envIdWithoutVersion = envId.startsWith('@') ? `@${splitted[1]}` : splitted[0];
+    const envIdWithoutVersion = BitId.getStringWithoutVersion(envId);
     const foundEnv = envExtendsDeps.find(
       (dep) => dep.id.toStringWithoutVersion() === envIdWithoutVersion || dep.packageName === envIdWithoutVersion
     );
@@ -447,7 +447,12 @@ export class EnvsMain {
   private async resolveEnvManifestFromHost(envId: string, envExtendsDeps?: LegacyDependency[]): Promise<EnvJsonc> {
     if (this.isCoreEnv(envId)) return {};
     const envComponent = await this.getEnvComponentByEnvId(this.getParentEnvIdToLoad(envId, envExtendsDeps));
-    const envManifest = this.getEnvManifest(envComponent) || (await this.calculateEnvManifest(envComponent));
+    // the parent's own dependencies determine the version of its parent, if it "extends" another env too
+    const envManifest = await this.getOrCalculateEnvManifest(
+      envComponent,
+      undefined,
+      envComponent.state._consumer.dependencies.dependencies
+    );
     if (!envManifest) throw new BitError(`unable to find env.jsonc file in ${envId}`);
     return envManifest;
   }
