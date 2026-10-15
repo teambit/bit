@@ -27,7 +27,9 @@ fn imported_components_are_listed_with_their_versions() {
         .unwrap();
     assert_eq!(
         fetched,
-        "✔ fetched 1 component(s)\n- added s/a new versions: 0.0.1, currently used version 0.0.1  ",
+        expected_success_symbols(
+            "✔ fetched 1 component(s)\n- added s/a new versions: 0.0.1, currently used version 0.0.1  "
+        ),
     );
 }
 
