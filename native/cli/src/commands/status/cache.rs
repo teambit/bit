@@ -1,5 +1,6 @@
-//! The `no-fs-cache` feature, under which native commands decline, and Bit's cache
-//! root. `dependencyCacheNeedsInvalidation` lives with the dependency cache, in
+//! The `no-fs-cache` feature, which makes the native capture detect dependencies
+//! afresh without cache writes, and Bit's cache root.
+//! `dependencyCacheNeedsInvalidation` lives with the dependency cache in
 //! `bit_install::dependencies::cache::invalidation`.
 
 use std::{

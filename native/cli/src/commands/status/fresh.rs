@@ -195,6 +195,7 @@ pub fn commit(
     root: &Path,
     pending: &[Pending],
     reset: bool,
+    write_cache: bool,
 ) -> io::Result<()> {
     for entry in pending {
         let validation: Value =
@@ -202,6 +203,9 @@ pub fn commit(
         if validation.get("fresh") != Some(&Value::Bool(true)) {
             return Err(decline("status fresh dependencies changed"));
         }
+    }
+    if !write_cache {
+        return Ok(());
     }
     let cache = root
         .join(".bit")

@@ -6,7 +6,7 @@ mod identities;
 mod missing;
 
 use super::{
-    fresh,
+    cache, fresh,
     issues::Component,
     js::{self, array, decline, full_identity, text},
     policy,
@@ -49,6 +49,8 @@ pub struct CacheWrites {
     pub replacements_only: bool,
     /// `dependencyCacheVersions`: the version a pending entry is written under.
     versions: HashMap<String, String>,
+    /// Validate fresh reads, but never read from or write to the FS dependency cache.
+    no_fs_cache: bool,
 }
 
 impl CacheWrites {
@@ -139,7 +141,9 @@ pub fn capture_with(
     let options: Options =
         serde_json::from_value(context["options"].clone()).map_err(io::Error::other)?;
     let inventory = Inventory::new(&options)?;
-    let reset = !targets.is_empty()
+    let no_fs_cache = cache::no_fs_cache(root);
+    let reset = !no_fs_cache
+        && !targets.is_empty()
         && (capture_options.reset || needs_invalidation(root, &deps_dir(root))?);
     let behavior = ScanBehavior {
         verify: capture_options.verify,
@@ -155,6 +159,7 @@ pub fn capture_with(
         dependency_states: HashMap::new(),
         cache: CacheWrites {
             reset,
+            no_fs_cache,
             versions: capture_options.cache_versions,
             ..CacheWrites::default()
         },
@@ -244,11 +249,12 @@ impl Scan<'_> {
         policy: &policy::Policy,
         captured: &mut Capture,
     ) -> io::Result<Option<Value>> {
-        let mut dependencies = if captured.cache.reset && directory != "." {
-            json!({ "needsDetection": true })
-        } else {
-            self.cached(target, directory, files, policy)?
-        };
+        let mut dependencies =
+            if captured.cache.no_fs_cache || (captured.cache.reset && directory != ".") {
+                json!({ "needsDetection": true })
+            } else {
+                self.cached(target, directory, files, policy)?
+            };
         if dependencies.get("needsDetection") == Some(&Value::Bool(true)) {
             let (detected, pending) = match self.detect(target, files, policy) {
                 Ok(value) => value,
@@ -427,7 +433,7 @@ pub fn commit(
     }
     if !capture.cache.is_empty() {
         let entries = capture.cache.entries();
-        fresh::commit(engine, root, &entries, capture.cache.reset)?;
+        fresh::commit(engine, root, &entries, capture.cache.reset, !capture.cache.no_fs_cache)?;
     }
     if plans.is_empty() {
         return Ok(());

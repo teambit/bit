@@ -100,15 +100,6 @@ fn locales_with_tailored_collation_decline() {
 }
 
 #[test]
-fn the_no_fs_cache_feature_declines() {
-    let dir = workspace();
-    let root = dir.path().join("ws");
-    let output = bit(&dir, &root, &["status", "--json"], &[("BIT_FEATURES", "a, no-fs-cache")]);
-    assert_eq!(stdout(&output), r#"["status","--json"]"#);
-    declined(&output, "no-fs-cache");
-}
-
-#[test]
 fn configured_extensions_decline() {
     let dir = workspace();
     let root = dir.path().join("ws");
