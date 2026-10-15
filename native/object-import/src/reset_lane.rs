@@ -1,10 +1,17 @@
 //! Reset linear, unexported lane snapshots without hydrating files through Node.
 
+pub use batch::Batch;
+
+mod batch;
+mod dependents;
+mod history;
 #[cfg(test)]
 mod tests;
 
+use history::{lane_history, pending_histories, version_history};
+
 use crate::workspace::engine::command::outbound;
-use serde_json::{Value, json};
+use serde_json::Value;
 use sha1::{Digest, Sha1};
 use std::{
     collections::HashSet,
@@ -12,11 +19,17 @@ use std::{
     path::{Path, PathBuf},
 };
 
-#[derive(PartialEq)]
+#[derive(Clone, PartialEq)]
 struct ObjectChange {
     hash: String,
     before: Vec<u8>,
     after: Vec<u8>,
+}
+
+struct BitmapChange {
+    before: Vec<u8>,
+    after: Vec<u8>,
+    version: String,
 }
 
 /// A fully prepared explicit lane reset. Unsupported graph and lane states
@@ -25,9 +38,10 @@ pub struct Plan {
     root: PathBuf,
     identity: String,
     head_only: bool,
+    force: bool,
     objects: Vec<ObjectChange>,
-    bitmap_before: Vec<u8>,
-    bitmap_after: Vec<u8>,
+    bitmap: BitmapChange,
+    selection: Selection,
     pub labels: Vec<String>,
 }
 
@@ -72,7 +86,7 @@ impl BitmapState {
         Ok(())
     }
 
-    fn project(&mut self, model: &Value, next: Option<String>) -> io::Result<()> {
+    fn project(&mut self, model: &Value, next: Option<String>) -> io::Result<String> {
         let version = next.map_or_else(String::new, |hash| {
             model["versions"]
                 .as_object()
@@ -86,9 +100,9 @@ impl BitmapState {
         let row = self.document[&self.key]
             .as_object_mut()
             .ok_or_else(|| invalid("lane reset bitmap row"))?;
-        row.insert("version".into(), Value::String(version));
+        row.insert("version".into(), Value::String(version.clone()));
         row.shift_remove("nextVersion");
-        Ok(())
+        Ok(version)
     }
 
     fn after(&self) -> io::Result<Vec<u8>> {
@@ -141,7 +155,7 @@ impl Repository {
         })
     }
 
-    fn project_lane(&mut self, next: Option<&str>) -> io::Result<()> {
+    fn project_lane(&mut self, next: Option<&str>, head_only: bool) -> io::Result<()> {
         let next_on_lane = next
             .map(|next| self.is_lane_origin(next))
             .transpose()?
@@ -149,7 +163,7 @@ impl Repository {
         let rows = self.lane["components"]
             .as_array_mut()
             .ok_or_else(|| invalid("lane reset Lane components"))?;
-        if next_on_lane {
+        if next_on_lane || (head_only && next.is_some()) {
             rows[self.lane_position]["head"] =
                 Value::String(next.ok_or_else(|| invalid("lane reset parent"))?.to_owned());
         } else {
@@ -167,6 +181,7 @@ impl Repository {
     }
 }
 
+#[derive(Clone)]
 struct Selection {
     removed: Vec<String>,
     next: Option<String>,
@@ -174,7 +189,7 @@ struct Selection {
 }
 
 impl Plan {
-    pub fn prepare(root: &Path, identity: &str, head_only: bool) -> io::Result<Self> {
+    pub fn prepare(root: &Path, identity: &str, head_only: bool, force: bool) -> io::Result<Self> {
         let (scope, name) = identity
             .split_once('/')
             .filter(|(scope, name)| !scope.is_empty() && !name.is_empty())
@@ -183,29 +198,41 @@ impl Plan {
         let mut repository = Repository::load(root, &bitmap, scope, name)?;
         bitmap.validate_head(&repository.current)?;
         let selection = select(&repository, head_only)?;
+        if !force {
+            dependents::validate(root, identity, &selection.removed)?;
+        }
         let history = version_history(&repository, identity)?;
         let lane_history = lane_history(&repository, &selection.removed)?;
-        repository.project_lane(selection.next.as_deref())?;
-        bitmap.project(&repository.model, selection.next)?;
-        let objects = vec![history, lane_history, repository.lane_object()?];
+        let pending = pending_histories(
+            &repository.objects,
+            &repository.lane,
+            &HashSet::from([identity.to_owned()]),
+        )?;
+        repository.project_lane(selection.next.as_deref(), head_only)?;
+        let bitmap_version = bitmap.project(&repository.model, selection.next.clone())?;
+        let mut objects = vec![history, lane_history, repository.lane_object()?];
+        objects.extend(pending);
         let bitmap_after = bitmap.after()?;
+        let bitmap =
+            BitmapChange { before: bitmap.before, after: bitmap_after, version: bitmap_version };
         Ok(Self {
             root: root.to_owned(),
             identity: identity.to_owned(),
             head_only,
+            force,
             objects,
-            bitmap_before: bitmap.before,
-            bitmap_after,
-            labels: selection.labels,
+            bitmap,
+            labels: selection.labels.clone(),
+            selection,
         })
     }
 
     pub fn commit(&self, file_id: &str) -> io::Result<()> {
         crate::reset_main::validate_file_id(file_id)?;
-        let fresh = Self::prepare(&self.root, &self.identity, self.head_only)?;
+        let fresh = Self::prepare(&self.root, &self.identity, self.head_only, self.force)?;
         if self.objects != fresh.objects
-            || self.bitmap_before != fresh.bitmap_before
-            || self.bitmap_after != fresh.bitmap_after
+            || self.bitmap.before != fresh.bitmap.before
+            || self.bitmap.after != fresh.bitmap.after
         {
             return Err(invalid("lane reset changed during preparation"));
         }
@@ -213,7 +240,7 @@ impl Plan {
             fs::write(object_path(&self.root.join(".bit/objects"), &object.hash), &object.after)?;
         }
         crate::reset_main::backup_bitmap(&self.root, file_id)?;
-        fs::write(self.root.join(".bitmap"), &self.bitmap_after)
+        fs::write(self.root.join(".bitmap"), &self.bitmap.after)
     }
 }
 
@@ -257,59 +284,6 @@ fn local_parent(repository: &Repository, hash: &str) -> io::Result<Option<String
             .ok_or_else(|| invalid("lane reset parent")),
         _ => Err(invalid("lane reset merge parents")),
     }
-}
-
-fn version_history(repository: &Repository, identity: &str) -> io::Result<ObjectChange> {
-    let hash = object_hash(&format!("{identity}:VersionHistory"));
-    let mut history = outbound::read_object(&repository.objects, &hash, "VersionHistory")?;
-    if history["scope"] != repository.model["scope"] || history["name"] != repository.model["name"]
-    {
-        return Err(invalid("lane reset VersionHistory identity"));
-    }
-    let versions = history["versions"]
-        .as_array_mut()
-        .ok_or_else(|| invalid("lane reset VersionHistory versions"))?;
-    if !versions
-        .iter()
-        .any(|row| row["hash"] == repository.current)
-    {
-        let version = outbound::read_object(&repository.objects, &repository.current, "Version")?;
-        versions.push(json!({"hash":repository.current,"parents":version["parents"]}));
-    }
-    changed(&repository.objects, &hash, "VersionHistory", &history)
-}
-
-fn lane_history(repository: &Repository, removed: &[String]) -> io::Result<ObjectChange> {
-    let hash = object_hash(&format!("{}:LaneHistory", repository.lane_hash));
-    let mut history = outbound::read_object(&repository.objects, &hash, "LaneHistory")?;
-    if history["laneHash"] != repository.lane_hash
-        || history["scope"] != repository.lane_scope
-        || history["name"] != repository.lane_name
-    {
-        return Err(invalid("lane reset LaneHistory identity"));
-    }
-    let batches = batch_ids(&repository.objects, removed)?;
-    let entries =
-        history["history"].as_object_mut().ok_or_else(|| invalid("lane reset history entries"))?;
-    for batch in batches {
-        if entries.shift_remove(&batch).is_none() {
-            return Err(invalid("lane reset history batch absent"));
-        }
-    }
-    changed(&repository.objects, &hash, "LaneHistory", &history)
-}
-
-fn batch_ids(objects: &Path, removed: &[String]) -> io::Result<HashSet<String>> {
-    removed
-        .iter()
-        .map(|hash| {
-            let version = outbound::read_object(objects, hash, "Version")?;
-            version["batchId"]
-                .as_str()
-                .map(str::to_owned)
-                .ok_or_else(|| invalid("lane reset batch id"))
-        })
-        .collect()
 }
 
 fn is_lane_origin(

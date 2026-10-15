@@ -103,8 +103,8 @@ fn resets_linear_lane_snaps_and_refuses_stale_publication() {
         .expect("render"),
     )
     .expect("write bitmap");
-    let plan = Plan::prepare(&root, identity, false).expect("plan");
-    let stale = Plan::prepare(&root, identity, false).expect("stale plan");
+    let plan = Plan::prepare(&root, identity, false, true).expect("plan");
+    let stale = Plan::prepare(&root, identity, false, true).expect("stale plan");
     assert_eq!(plan.labels, vec![first, second]);
     plan.commit("2026-10-15-8-30-1").expect("commit");
     let lane = outbound::read_object(&root.join(".bit/objects"), &lane_hash, "Lane").expect("lane");

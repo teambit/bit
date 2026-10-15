@@ -39,6 +39,8 @@ def main():
     parser.add_argument("--soft-id", help="full scope/name of that soft-tagged component")
     parser.add_argument("--lane-source", type=Path, help="unexported lane with two local snaps")
     parser.add_argument("--lane-id", help="component with the two local lane snaps")
+    parser.add_argument("--lane-batch-source", type=Path, help="lane with two locally snapped components")
+    parser.add_argument("--lane-batch-id", help="one component on the batch lane")
     args = parser.parse_args()
     cases = [
         ("all local tags", args.source, [args.plain], False),
@@ -62,6 +64,17 @@ def main():
         cases.extend([
             ("lane latest snap", args.lane_source, [args.lane_id, "--head", "--force"], True),
             ("lane all snaps", args.lane_source, [args.lane_id, "--force"], True),
+            ("lane latest without force", args.lane_source, [args.lane_id, "--head"], True),
+            ("lane all without force", args.lane_source, [args.lane_id], True),
+        ])
+    if bool(args.lane_batch_source) != bool(args.lane_batch_id):
+        parser.error("--lane-batch-source and --lane-batch-id must be given together")
+    if args.lane_batch_source:
+        cases.extend([
+            ("lane batch all", args.lane_batch_source, ["--silent"], True),
+            ("lane batch heads", args.lane_batch_source, ["--head", "--silent"], True),
+            ("lane batch explicit", args.lane_batch_source, [args.lane_batch_id], True),
+            ("lane batch explicit head", args.lane_batch_source, [args.lane_batch_id, "--head"], True),
         ])
     environment = os.environ.copy()
     environment.update(CI="1", BIT_DISABLE_SPINNER="true", BIT_NODE_CLI=str(args.entry.resolve()),

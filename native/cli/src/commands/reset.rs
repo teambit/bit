@@ -7,7 +7,7 @@ use super::{
 };
 use crate::{commands::Command, native::Outcome, workspace};
 use bit_object_import::{
-    reset_lane::Plan as LanePlan,
+    reset_lane::{Batch as LaneBatch, Plan as LanePlan},
     reset_main::{Batch, Plan},
     reset_never_exported::Plan as NeverPlan,
     reset_soft::Plan as SoftPlan,
@@ -104,10 +104,7 @@ fn route_hard(args: &[OsString], root: &Path, options: &Options<'_>) -> io::Resu
         Err(error) => return Ok(Outcome::Declined(format!("reset identity: {error}"))),
     };
     if on_lane {
-        if !options.force {
-            return Ok(Outcome::Declined("lane reset dependency guard".into()));
-        }
-        return run_lane(args, root, &identity, options.head);
+        return run_lane(args, root, &identity, options.head, options.force);
     }
     run_main(args, root, &identity, options.head, options.force)
 }
@@ -160,8 +157,9 @@ fn run_lane(
     root: &Path,
     identity: &str,
     head_only: bool,
+    force: bool,
 ) -> io::Result<Outcome> {
-    let plan = match LanePlan::prepare(root, identity, head_only) {
+    let plan = match LanePlan::prepare(root, identity, head_only, force) {
         Ok(plan) => plan,
         Err(error) => return Ok(Outcome::Declined(format!("lane reset: {error}"))),
     };
@@ -172,9 +170,42 @@ fn run_lane(
 }
 
 fn run_batch(args: &[OsString], root: &Path, head_only: bool) -> io::Result<Outcome> {
+    if bitmap::read(root)?.lane.is_some() {
+        return run_lane_batch(args, root, head_only);
+    }
     let batch = match Batch::prepare(root, head_only) {
         Ok(batch) => batch,
         Err(error) => return Ok(Outcome::Declined(format!("reset batch: {error}"))),
+    };
+    let formatter = Formatter::new(Chalk::detect(args));
+    let items: Vec<_> = batch
+        .results()
+        .map(|(identity, labels)| {
+            formatter.item(&format!(
+                "{} - version(s): {}",
+                formatter.chalk.cyan(identity),
+                labels.join(", "),
+            ))
+        })
+        .collect();
+    let count = items.len();
+    let report = Report {
+        data: Formatter::join(&[
+            formatter.section("reset components", "", &items),
+            formatter.success_summary(&format!("{count} component(s) reset successfully")),
+        ]),
+        code: 0,
+        details: None,
+    };
+    workspace_command::execute_with(root, args, "reset", &report, |_| {
+        batch.commit(&workspace_command::file_id())
+    })
+}
+
+fn run_lane_batch(args: &[OsString], root: &Path, head_only: bool) -> io::Result<Outcome> {
+    let batch = match LaneBatch::prepare(root, head_only) {
+        Ok(batch) => batch,
+        Err(error) => return Ok(Outcome::Declined(format!("lane reset batch: {error}"))),
     };
     let formatter = Formatter::new(Chalk::detect(args));
     let items: Vec<_> = batch
