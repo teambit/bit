@@ -125,7 +125,11 @@ pub(super) fn prepare_bitmap_bytes(
         updates.retain(|update| {
             !tracked
                 .iter()
-                .any(|row| row["identity"] == update.identity)
+                .any(|row| {
+                    row["identity"] == update.identity
+                        && row["version"] == update.version
+                        && bitmap::active_tracked_checkout(&record.context, &update.identity)
+                })
         });
     }
     if let Some(merge) = &planned.merge {

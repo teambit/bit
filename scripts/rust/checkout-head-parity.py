@@ -137,18 +137,29 @@ def main():
                         help="current-lane source with a snapped removed component")
     parser.add_argument("--selected-source", type=Path,
                         help="lane with multiple tracked components for an exact-ID checkout")
+    parser.add_argument("--selected-old-source", type=Path,
+                        help="selected-source variant with another tracked row at an older version")
+    parser.add_argument("--selected-inactive-source", type=Path,
+                        help="selected-source variant with an unavailable tracked row")
+    parser.add_argument("--selected-inactive-missing-source", type=Path,
+                        help="selected-inactive-source variant with the unavailable directory missing")
     parser.add_argument("--selected-component",
                         help="one tracked component in --selected-source")
     parser.add_argument("--selected-dirty-file", type=Path,
                         help="tracked file in --selected-source outside --selected-component")
     args = parser.parse_args()
-    for source in (args.source, args.removed_source, args.selected_source):
+    for source in (args.source, args.removed_source, args.selected_source,
+                   args.selected_old_source, args.selected_inactive_source,
+                   args.selected_inactive_missing_source):
         if source and not (source / ".bitmap").is_file():
             parser.error(f"missing source bitmap: {source}")
     if bool(args.selected_source) != bool(args.selected_component):
         parser.error("--selected-source and --selected-component are required together")
     if args.selected_dirty_file and not args.selected_source:
         parser.error("--selected-dirty-file requires --selected-source")
+    if (args.selected_old_source or args.selected_inactive_source
+            or args.selected_inactive_missing_source) and not args.selected_component:
+        parser.error("selected variants require --selected-component")
     if bitmap_has(args.source, args.added):
         parser.error(f"--added component is already in source bitmap: {args.added}")
     print(f"source sha256: {fingerprint(args.source)}")
@@ -156,6 +167,13 @@ def main():
         print(f"removed source sha256: {fingerprint(args.removed_source)}")
     if args.selected_source:
         print(f"selected source sha256: {fingerprint(args.selected_source)}")
+    if args.selected_old_source:
+        print(f"selected old source sha256: {fingerprint(args.selected_old_source)}")
+    if args.selected_inactive_source:
+        print(f"selected inactive source sha256: {fingerprint(args.selected_inactive_source)}")
+    if args.selected_inactive_missing_source:
+        print("selected inactive missing source sha256: "
+              f"{fingerprint(args.selected_inactive_missing_source)}")
     with tempfile.TemporaryDirectory(prefix="bit-checkout-head-parity-") as temporary:
         stage = Path(temporary)
         cases = [
@@ -174,6 +192,17 @@ def main():
             ]
         if args.selected_source:
             cases.append(("selected-id-other-tracked-lane-components", args.selected_source,
+                          ["head", args.selected_component, "-x"], None, False, True))
+        if args.selected_old_source:
+            cases.append(("selected-id-older-tracked-lane-component", args.selected_old_source,
+                          ["head", args.selected_component, "-x"], None, False, True))
+        if args.selected_inactive_source:
+            cases.append(("selected-id-inactive-tracked-lane-component",
+                          args.selected_inactive_source,
+                          ["head", args.selected_component, "-x"], None, False, True))
+        if args.selected_inactive_missing_source:
+            cases.append(("selected-id-inactive-missing-lane-component",
+                          args.selected_inactive_missing_source,
                           ["head", args.selected_component, "-x"], None, False, True))
         for name, source, command, added, expect_added, expect_native in cases:
             compare(name, source, command, args.node, args.rust, args.entry, stage,

@@ -60,7 +60,8 @@ fn tracked_head(record: &Record, captured: &capture::Captured) -> Option<Value> 
             .as_array()?
             .iter()
             .any(|row| row["identity"] == captured.target.identity);
-    tracked.then(|| json!({"kind":"target","version":captured.target.version,"merge":false}))
+    let head = tracked.then(|| super::lane_head(&record.context, &captured.target.identity))??;
+    Some(json!({"kind":"target","version":head,"merge":false}))
 }
 
 fn remote_head(record: &mut Record, identity: &str) -> io::Result<Option<String>> {
