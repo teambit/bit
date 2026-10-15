@@ -447,12 +447,15 @@ export class EnvsMain {
   private async resolveEnvManifestFromHost(envId: string, envExtendsDeps?: LegacyDependency[]): Promise<EnvJsonc> {
     if (this.isCoreEnv(envId)) return {};
     const envComponent = await this.getEnvComponentByEnvId(this.getParentEnvIdToLoad(envId, envExtendsDeps));
-    // the parent's own dependencies determine the version of its parent, if it "extends" another env too
-    const envManifest = await this.getOrCalculateEnvManifest(
-      envComponent,
-      undefined,
-      envComponent.state._consumer.dependencies.dependencies
-    );
+    // the parent's own dependencies determine the version of its parent, if it "extends" another env too. unlike
+    // getOrCalculateEnvManifest, don't retry without them on failure, which would load another version of that env.
+    const envManifest =
+      this.getEnvManifest(envComponent) ||
+      (await this.calculateEnvManifest(
+        envComponent,
+        undefined,
+        envComponent.state._consumer.dependencies.dependencies
+      ));
     if (!envManifest) throw new BitError(`unable to find env.jsonc file in ${envId}`);
     return envManifest;
   }

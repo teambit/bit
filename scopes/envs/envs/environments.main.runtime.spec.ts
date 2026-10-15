@@ -24,6 +24,20 @@ function mockComponentWithUnregisteredEnv(componentId: string, envId: string): C
   } as unknown as Component;
 }
 
+/**
+ * an env component with the given env.jsonc and no resolved env.jsonc stored, so it's calculated on load.
+ */
+function mockEnvComponent(envId: string, envJsonc: string, dependencies: Array<{ id: ComponentID }> = []): Component {
+  return {
+    id: ComponentID.fromString(envId),
+    state: {
+      aspects: { get: (aspectId: string) => (aspectId === EnvsAspect.id ? { data: {} } : undefined) },
+      _consumer: { dependencies: { dependencies } },
+    },
+    filesystem: { files: [{ relative: 'env.jsonc', contents: Buffer.from(envJsonc) }] },
+  } as unknown as Component;
+}
+
 describe('EnvsMain', function () {
   this.timeout(0);
   let workspaceData: WorkspaceData;
@@ -82,14 +96,7 @@ describe('EnvsMain', function () {
 
   describe('an env.jsonc that "extends" another env, with no resolver registered (e.g. in a bare scope)', () => {
     const parentId = 'some-scope/envs/parent-env';
-    const parentEnv = {
-      id: ComponentID.fromString(`${parentId}@1.0.0`),
-      state: {
-        aspects: { get: (aspectId: string) => (aspectId === EnvsAspect.id ? { data: {} } : undefined) },
-        _consumer: { dependencies: { dependencies: [] } },
-      },
-      filesystem: { files: [{ relative: 'env.jsonc', contents: Buffer.from('{ "policy": {} }') }] },
-    } as unknown as Component;
+    const parentEnv = mockEnvComponent(`${parentId}@1.0.0`, '{ "policy": {} }');
     let getEnvComponentStub: sinon.SinonStub;
     let result: Record<string, any>;
     before(async () => {
@@ -104,6 +111,32 @@ describe('EnvsMain', function () {
     });
     it('should merge the parent manifest and drop the "extends"', () => {
       expect(result).to.not.have.property('extends');
+    });
+  });
+
+  describe('a parent env that "extends" an env whose pinned version cannot be loaded, with no resolver registered', () => {
+    const parentId = 'some-scope/envs/parent-env';
+    const grandparentId = 'some-scope/envs/grandparent-env';
+    const parentEnv = mockEnvComponent(`${parentId}@1.0.0`, `{ "extends": "${grandparentId}" }`, [
+      { id: ComponentID.fromString(`${grandparentId}@1.0.0`) },
+    ]);
+    before(() => {
+      sinon.stub(envs, 'getAllRegisteredEnvJsoncResolvers').returns([]);
+      const getEnvComponentStub = sinon.stub(envs, 'getEnvComponentByEnvId');
+      getEnvComponentStub.withArgs(`${parentId}@1.0.0`).resolves(parentEnv);
+      getEnvComponentStub.withArgs(`${grandparentId}@1.0.0`).rejects(new Error('version 1.0.0 not found'));
+      getEnvComponentStub
+        .withArgs(grandparentId)
+        .resolves(mockEnvComponent(`${grandparentId}@2.0.0`, '{ "policy": {} }'));
+    });
+    after(() => sinon.restore());
+    it('should fail rather than load another version of that env', async () => {
+      try {
+        await envs.recursivelyMergeWithParentManifest({ extends: parentId }, [{ id: parentEnv.id }] as any);
+        expect.fail('should have thrown');
+      } catch (err: any) {
+        expect(err.message).to.equal('version 1.0.0 not found');
+      }
     });
   });
 });
