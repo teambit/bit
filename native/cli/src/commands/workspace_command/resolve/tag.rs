@@ -90,6 +90,18 @@ pub fn entered_versions(selections: Option<&Value>) -> Vec<String> {
         .collect()
 }
 
+/// Exact versions recorded by `tag --soft` enter the same semantic grammar as `--ver`.
+pub fn pending_versions(context: &Value) -> Vec<String> {
+    context["targets"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|target| target["nextVersion"]["version"].as_str())
+        .filter(|version| node_semver::npm::valid(version).is_some())
+        .map(str::to_owned)
+        .collect()
+}
+
 /// Each component's new version, from the plan's tagged and auto-tagged ids.
 pub fn planned_versions(result: &Value, identities: &[String]) -> io::Result<Vec<String>> {
     let automatic = array(result.get("autoTaggedResults"), "auto-tagged components")?

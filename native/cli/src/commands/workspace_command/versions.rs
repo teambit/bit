@@ -52,6 +52,39 @@ pub const TAG: Labels = Labels {
     tag: true,
 };
 
+pub const SOFT_TAG: Labels = Labels {
+    versioned: "taggedComponents",
+    automatic: "autoTaggedResults",
+    others: &["newComponents", "warnings", "totalComponentsCount"],
+    nothing: "nothing to tag",
+    dependents: "auto-tagged dependents",
+    verb: "soft-tagged",
+    explanation: "(use \"bit tag --persist\" to persist the soft-tagged changes as a fully tagged version)\n(use \"bit reset --soft\" to remove the soft-tags)",
+    tag: true,
+};
+
+pub const PERSIST_TAG: Labels = Labels { nothing: "no soft-tag found", ..TAG };
+
+impl Labels {
+    fn soft(&self) -> bool {
+        self.verb == "soft-tagged"
+    }
+    fn section(&self, new: bool) -> (&'static str, &'static str) {
+        match (self.soft(), new) {
+            (true, true) => (
+                "soft-tagged new components",
+                "set to be tagged with first version for components when persisted",
+            ),
+            (true, false) => (
+                "soft-tagged changed components",
+                "components that are set to get a version bump when persisted",
+            ),
+            (false, true) => ("new components", "first version for components"),
+            (false, false) => ("changed components", "components that got a version bump"),
+        }
+    }
+}
+
 /// The engine's result, validated.
 struct Versioned<'l> {
     labels: &'l Labels,
@@ -116,7 +149,7 @@ fn header(map: &serde_json::Map<String, Value>, labels: &Labels) -> io::Result<u
             || (labels.tag && key == "isSoftTag")
     };
     let lane = map.get("laneName").unwrap_or(&Value::Null);
-    let soft = labels.tag && map.get("isSoftTag") != Some(&Value::Bool(false));
+    let soft = labels.tag && map.get("isSoftTag") != Some(&Value::Bool(labels.soft()));
     if map.keys().any(|key| !known(key)) || !(lane.is_null() || lane.is_string()) || soft {
         return Err(decline("native snap report"));
     }
@@ -134,7 +167,7 @@ fn versions(ids: Vec<Id>, labels: &Labels) -> io::Result<Vec<Id>> {
             .as_deref()
             .is_some_and(|version| node_semver::npm::valid(version).is_some())
     };
-    if labels.tag && !ids.iter().all(semver) {
+    if labels.tag && !labels.soft() && !ids.iter().all(semver) {
         return Err(decline("native tag version"));
     }
     Ok(ids)
@@ -266,9 +299,11 @@ impl Versioned<'_> {
             .iter()
             .map(|id| Formatter::item_with(&id.without_version(), &format.warn_symbol()))
             .collect();
+        let (new_title, new_desc) = self.labels.section(true);
+        let (changed_title, changed_desc) = self.labels.section(false);
         vec![
-            format.section("new components", "first version for components", &new),
-            format.section("changed components", "components that got a version bump", &changed),
+            format.section(new_title, new_desc, &new),
+            format.section(changed_title, changed_desc, &changed),
             format.section("removed components", "", &removed),
         ]
     }
@@ -342,7 +377,12 @@ impl Versioned<'_> {
             "{} component(s) {}{lane}",
             self.total, self.labels.verb,
         ));
-        format!("{summary}\n{}", format.hint(self.labels.explanation))
+        let explanation = format.hint(self.labels.explanation);
+        if self.labels.soft() {
+            format!("{summary}\n{explanation}\n{}", format.chalk.bold("keep in mind that this is a soft-tag (changes recorded to be tagged), to persist the changes use --persist flag"))
+        } else {
+            format!("{summary}\n{explanation}")
+        }
     }
 }
 

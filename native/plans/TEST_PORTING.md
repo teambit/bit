@@ -3447,15 +3447,15 @@ The rest follow as their commands are ported.
 - [ ] `e2e/harmony/tag-harmony.e2e.ts:71` tag components on Harmony › tag on Harmony › should not show the dependency with an older version
 - [ ] `e2e/harmony/tag-harmony.e2e.ts:77` tag components on Harmony › tag on Harmony › should not save the build data twice
 - [ ] `e2e/harmony/tag-harmony.e2e.ts:88` tag components on Harmony › tag on Harmony › auto-tag › should save the artifacts/dists to the auto-tagged components
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:103` tag components on Harmony › soft tag › should add a property of nextVersion in .bitmap file
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:111` tag components on Harmony › soft tag › bit status should show the new components as soft tagged
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:119` tag components on Harmony › soft tag › tagging with --persist flag › should tag and remove the nextVersion property in .bitmap file
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:128` tag components on Harmony › soft tag › tagging with --persist flag › bit status should not show as soft-tagged
+- [x] `e2e/harmony/tag-harmony.e2e.ts:103` tag components on Harmony › soft tag › should add a property of nextVersion in .bitmap file — `commands::tag::soft::soft_tag_then_persist_matches_node`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:111` tag components on Harmony › soft tag › bit status should show the new components as soft tagged — `commands::tag::soft::soft_tag_then_persist_matches_node`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:119` tag components on Harmony › soft tag › tagging with --persist flag › should tag and remove the nextVersion property in .bitmap file — `commands::tag::soft::soft_tag_then_persist_matches_node`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:128` tag components on Harmony › soft tag › tagging with --persist flag › bit status should not show as soft-tagged — `commands::tag::soft::soft_tag_then_persist_matches_node`
 - [ ] `e2e/harmony/tag-harmony.e2e.ts:137` tag components on Harmony › soft tag › tagging with --persist flag › modify a component that has dependents and soft-tag it › should save the nextVersion data into potential auto-tag bitmap entries
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:148` tag components on Harmony › soft tag › soft tag with specific version and message › should save the version and the message into the .bitmap file
+- [x] `e2e/harmony/tag-harmony.e2e.ts:148` tag components on Harmony › soft tag › soft tag with specific version and message › should save the version and the message into the .bitmap file — `commands::tag::soft::exact_soft_tag_then_persist_matches_node`
 - [ ] `e2e/harmony/tag-harmony.e2e.ts:164` tag components on Harmony › soft tag › soft tag with specific version attached to a component-id › should save the version into the .bitmap file
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:177` tag components on Harmony › soft tag › soft tag after soft tag › should show the output according to the new soft-tag
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:181` tag components on Harmony › soft tag › soft tag after soft tag › should save the version and the message into the .bitmap file
+- [x] `e2e/harmony/tag-harmony.e2e.ts:177` tag components on Harmony › soft tag › soft tag after soft tag › should show the output according to the new soft-tag — `commands::tag::soft::repeated_soft_tag_replaces_pending_version_and_message`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:181` tag components on Harmony › soft tag › soft tag after soft tag › should save the version and the message into the .bitmap file — `commands::tag::soft::repeated_soft_tag_replaces_pending_version_and_message`
 - [ ] `e2e/harmony/tag-harmony.e2e.ts:194` tag components on Harmony › soft tag › untag › should remove the nextVersion from the .bitmap file
 - [ ] `e2e/harmony/tag-harmony.e2e.ts:218` tag components on Harmony › tag scope › without version › should bump each component by patch
 - [ ] `e2e/harmony/tag-harmony.e2e.ts:230` tag components on Harmony › tag scope › without version and --minor flag › should bump each component by patch
@@ -3479,7 +3479,7 @@ The rest follow as their commands are ported.
 - [ ] `e2e/harmony/tag-harmony.e2e.ts:464` tag components on Harmony › invalid pre-release after normal tag › should throw an error
 - [ ] `e2e/harmony/tag-harmony.e2e.ts:467` tag components on Harmony › invalid pre-release after normal tag › should not create a new version
 - [ ] `e2e/harmony/tag-harmony.e2e.ts:473` tag components on Harmony › invalid pre-release after normal tag › should update package.json on the workspace with the new tag
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:488` tag components on Harmony › soft-tag pre-release › should save the pre-release name in the .bitmap file
+- [x] `e2e/harmony/tag-harmony.e2e.ts:488` tag components on Harmony › soft-tag pre-release › should save the pre-release name in the .bitmap file — `commands::tag::soft::soft_prerelease_matches_node_and_persist_delegates`
 - [ ] `e2e/harmony/tag-harmony.e2e.ts:498` tag components on Harmony › soft-tag pre-release › persist the soft-tag › should use the data in the .bitmap file and tag as a pre-release version
 - [ ] `e2e/harmony/tag-harmony.e2e.ts:511` tag components on Harmony › soft tag --minor with auto-tag › should not bump the auto-tagged with minor but with patch
 - [ ] `e2e/harmony/tag-harmony.e2e.ts:529` tag components on Harmony › with tiny cache › should not throw

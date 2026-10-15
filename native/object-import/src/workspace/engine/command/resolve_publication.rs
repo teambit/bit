@@ -242,6 +242,15 @@ pub(super) fn prepare(
     let original = fs::read(root.join(".bitmap"))?;
     let mut bitmap = bitmap::prepare_bytes(root, original, context, &batch.updates, &batch.removed)
         .map_err(|error| io::Error::new(error.kind(), format!("resolve bitmap: {error}")))?;
+    if materials.iter().any(|material| material.version_state.tagged_version.is_some()) {
+        bitmap.clear_next_versions(
+            context,
+            &batch.updates
+                .iter()
+                .map(|update| update.identity.clone())
+                .collect::<Vec<_>>(),
+        )?;
+    }
     bitmap.mark_lane_new(context, &lane_new)?;
     let mut finalization = finalization::prepare(root, &batch.inputs, true, &batch.removed)
         .map_err(|error| io::Error::new(error.kind(), format!("resolve finalization: {error}")))?;

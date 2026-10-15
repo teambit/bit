@@ -1,14 +1,15 @@
 use super::{
-    super::{invalid, proof, resolve_publication, resolve_snapshot, scratch},
+    super::{bitmap, invalid, proof, resolve_publication, resolve_snapshot, scratch},
     Apply, Finalize, Retained,
 };
 use crate::workspace::snapshots;
 use serde_json::{Value, json};
-use std::io;
+use std::{fs, io};
 
 pub(super) enum Phase {
     Pending,
     Noop,
+    Soft(bitmap::Prepared),
     Prepared(Box<Prepared>),
 }
 
@@ -34,6 +35,9 @@ pub(super) fn finalize(
     let mut receipt = input.snap_receipt;
     receipt["log"]["message"] =
         json!(retained.record.request.options.message.as_deref().unwrap_or_default());
+    if retained.tag.as_ref().is_some_and(|options| options.soft) {
+        return finalize_soft(retained, &receipt);
+    }
     let lane = lane_current(&retained.record.context);
     let directory = scratch::Directory::create()?;
     let snapshot = resolve_snapshot::prepare(
@@ -59,6 +63,35 @@ pub(super) fn finalize(
     }
     retained.finalized =
         Phase::Prepared(Box::new(Prepared { _directory: directory, snapshot, publication }));
+    Ok(json!({"token":retained.record.token,"result":retained.result}))
+}
+
+fn finalize_soft(retained: &mut Retained, receipt: &Value) -> io::Result<Value> {
+    let versions = retained.materials
+        .iter()
+        .map(|material| {
+            material.version_state.tagged_version
+                .as_ref()
+                .map(|version| (material.identity.clone(), version.clone()))
+                .ok_or_else(|| invalid("soft tag planned version"))
+        })
+        .collect::<io::Result<Vec<_>>>()?;
+    let root = &retained.record.request.root;
+    let mut bitmap = bitmap::prepare_bytes(
+        root,
+        fs::read(root.join(".bitmap"))?,
+        &retained.record.context,
+        &[],
+        &[],
+    )?;
+    bitmap.soft_tag(
+        &retained.record.context,
+        &versions,
+        &receipt["log"],
+        retained.tag.as_ref().and_then(|options| options.pre_release_id.as_deref()),
+    )?;
+    bitmap.validate()?;
+    retained.finalized = Phase::Soft(bitmap);
     Ok(json!({"token":retained.record.token,"result":retained.result}))
 }
 
@@ -112,6 +145,19 @@ pub(super) fn apply(input: &Apply, retained: &mut Retained) -> io::Result<Value>
     validate(retained)?;
     if matches!(retained.finalized, Phase::Noop) && retained.snap.is_some() {
         return Ok(json!({"applied":true,"result":null,"postPersistNotifications":0}));
+    }
+    if let Phase::Soft(bitmap) = &retained.finalized {
+        bitmap.commit(
+            &input.file_id,
+            &format!(
+                "tag (message: {})",
+                retained.record.request.options.message
+                    .as_deref()
+                    .filter(|message| !message.is_empty())
+                    .unwrap_or("N/A"),
+            ),
+        )?;
+        return Ok(json!({"applied":true,"result":retained.result,"postPersistNotifications":0}));
     }
     let Phase::Prepared(prepared) = &mut retained.finalized else {
         return Err(invalid("resolve incomplete finalization"));

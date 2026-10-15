@@ -101,7 +101,6 @@ fn metadata(
     }
     let settings = config::configuration_for_command(&request.root, true)?;
     let (structural, configs) = recovery::bitmap::project(&bitmap)?;
-    let targets = super::super::lane_context::visibility::targets(&structural, &settings)?;
     let mut context = status_context::metadata_for_recovery(
         &status_context::Request {
             root: request.root.clone(),
@@ -110,8 +109,11 @@ fn metadata(
         },
         pool,
         &settings,
-        targets,
+        super::super::lane_context::visibility::targets(&structural, &settings)?,
     )?;
+    if request.tag_options.as_ref().is_some_and(|options| options.persist) {
+        bind_next_versions(&bitmap, &mut context)?;
+    }
     for target in context["targets"].as_array_mut().ok_or_else(|| invalid("resolve targets"))? {
         if let Some(config) = target["directory"]
             .as_str()
@@ -122,6 +124,21 @@ fn metadata(
     }
     let imported = load_lane(request, &bitmap, &mut context)?;
     Ok((context, imported))
+}
+
+fn bind_next_versions(bitmap: &Value, context: &mut Value) -> io::Result<()> {
+    let entries = bitmap.as_object().ok_or_else(|| invalid("tag persist bitmap"))?;
+    for target in context["targets"].as_array_mut().ok_or_else(|| invalid("tag persist targets"))? {
+        let directory =
+            target["directory"].as_str().ok_or_else(|| invalid("tag persist directory"))?;
+        let next = entries
+            .values()
+            .find(|entry| entry["rootDir"] == directory)
+            .map(|entry| &entry["nextVersion"])
+            .ok_or_else(|| invalid("tag persist bitmap entry"))?;
+        target["nextVersion"] = next.clone();
+    }
+    Ok(())
 }
 
 fn validate_request(request: &Prepare) -> io::Result<()> {

@@ -24,7 +24,8 @@ fn selected_major_and_automatic_patch_keep_separate_semantic_allocations() {
     ];
     let params = json!({"releaseType":"major","incrementBy":1,"soft":false,"persist":false,"hasTagData":false});
     let grammar = json!({"1.2.3":{"canonicalText":"1.2.3","version":{"major":1,"minor":2,"patch":3,"prerelease":[]}}});
-    plan(&mut materials, &params, &json!({}), &grammar).unwrap();
+    plan(&mut materials, &params, &json!({}), &grammar, &std::collections::HashMap::default())
+        .unwrap();
     assert_eq!(materials[0].version_state.tagged_version.as_deref(), Some("2.0.0"));
     assert_eq!(materials[1].version_state.tagged_version.as_deref(), Some("1.2.4"));
     assert_eq!(materials[2].version_state.tagged_version.as_deref(), Some("1.0.0"));
@@ -36,7 +37,10 @@ fn existing_exact_tag_declines_before_any_semantic_assignment() {
     let mut materials = [material("scope/selected", false, &json!({"1.2.3":"a"}))];
     let params = json!({"releaseType":"patch","incrementBy":1,"exactVersion":"1.2.3","soft":false,"persist":false,"hasTagData":false});
     let grammar = json!({"1.2.3":{"canonicalText":"1.2.3","version":{"major":1,"minor":2,"patch":3,"prerelease":[]}}});
-    assert!(plan(&mut materials, &params, &json!({}), &grammar).is_err());
+    assert!(
+        plan(&mut materials, &params, &json!({}), &grammar, &std::collections::HashMap::default())
+            .is_err(),
+    );
     assert!(materials[0].version_state.tagged_version.is_none());
 }
 
@@ -45,7 +49,7 @@ fn selected_automatic_report_overlap_keeps_selected_increment() {
     let mut linked = material("scope/new", true, &json!({}));
     linked.participation.selected = true;
     let mut materials = [linked, material("scope/automatic", true, &json!({}))];
-    plan(&mut materials, &json!({"releaseType":"major","autoTagReleaseType":"minor","incrementBy":1,"soft":false,"persist":false,"hasTagData":false}), &json!({}), &json!({})).unwrap();
+    plan(&mut materials, &json!({"releaseType":"major","autoTagReleaseType":"minor","incrementBy":1,"soft":false,"persist":false,"hasTagData":false}), &json!({}), &json!({}), &std::collections::HashMap::default()).unwrap();
     assert_eq!(materials[0].version_state.tagged_version.as_deref(), Some("1.0.0"));
     assert_eq!(materials[1].version_state.tagged_version.as_deref(), Some("0.1.0"));
 }
@@ -57,7 +61,7 @@ fn tag_ranges_rewrite_only_same_batch_direct_dependencies() {
         "dependencies":[{"id":{"scope":"scope","name":"leaf","version":"1.0.0"},"versionRange":"^1.0.0"},{"id":{"scope":"scope","name":"outside","version":"1.0.0"},"versionRange":"^1.0.0"}]});
     let mut materials = [material("scope/leaf", false, &json!({"1.0.0":"a"})), parent];
     let grammar = json!({"1.0.0":{"canonicalText":"1.0.0","version":{"major":1,"minor":0,"patch":0,"prerelease":[]}}});
-    plan(&mut materials, &json!({"releaseType":"major","incrementBy":1,"soft":false,"persist":false,"hasTagData":false}), &json!({}), &grammar).unwrap();
+    plan(&mut materials, &json!({"releaseType":"major","incrementBy":1,"soft":false,"persist":false,"hasTagData":false}), &json!({}), &grammar, &std::collections::HashMap::default()).unwrap();
     assert_eq!(materials[1].version["dependencies"][0]["versionRange"], "~2.0.0");
     assert_eq!(materials[1].version["dependencies"][1]["versionRange"], "^1.0.0");
     assert_eq!(

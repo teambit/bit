@@ -93,6 +93,16 @@ impl Progress {
         }
     }
 
+    /// Soft tags load component state but do not import dependencies or create a graph.
+    pub fn render_soft_tag(&self, output: &Output) {
+        for row in &self.imports {
+            render_import(output, row);
+        }
+        for count in &self.loads {
+            output.status(&format!("loading {count} component(s)"));
+        }
+    }
+
     /// Print the lines of `bit import` and `bit fetch` (`importer`): the
     /// latest heads, then the missing versions, which `importMany` fetches
     /// only when components are missing.
