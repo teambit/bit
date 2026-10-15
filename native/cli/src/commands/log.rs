@@ -12,7 +12,6 @@ use crate::{commands::Command, history::History, native::Outcome, workspace};
 use chrono::{DateTime, Local};
 use serde_json::{Map, Value, json};
 use std::{
-    collections::HashSet,
     env,
     ffi::OsString,
     io::{self, Write},
@@ -20,6 +19,9 @@ use std::{
     process::ExitCode,
 };
 use unicode_width::UnicodeWidthStr;
+
+mod topology;
+use topology::ordered_parents;
 
 pub const COMMAND: Command = Command { name: "log", aliases: &[], run };
 
@@ -261,9 +263,6 @@ fn paint(row: &Value, chalk: Chalk) -> io::Result<String> {
 }
 
 fn parents_report(logs: &[Value], chalk: Chalk) -> io::Result<Vec<String>> {
-    if !linear_parents(logs) {
-        return Err(decline("log merge or filtered parent graph"));
-    }
     let rows = ordered_parents(logs)?;
     rows.iter()
         .map(|row| {
@@ -271,7 +270,14 @@ fn parents_report(logs: &[Value], chalk: Chalk) -> io::Result<Vec<String>> {
             let parents = if parents.is_empty() {
                 "<N/A>".to_string()
             } else {
-                format!("Parent(s): {}", text(parents.first())?)
+                format!(
+                    "Parent(s): {}",
+                    parents
+                        .iter()
+                        .map(|parent| text(Some(parent)))
+                        .collect::<io::Result<Vec<_>>>()?
+                        .join(", "),
+                )
             };
             Ok(format!(
                 "{} {} {} {}, {parents}",
@@ -282,63 +288,6 @@ fn parents_report(logs: &[Value], chalk: Chalk) -> io::Result<Vec<String>> {
             ))
         })
         .collect()
-}
-
-fn ordered_parents(logs: &[Value]) -> io::Result<Vec<&Value>> {
-    let parents: HashSet<&str> = logs
-        .iter()
-        .filter_map(|row| row["parents"].as_array())
-        .flatten()
-        .filter_map(Value::as_str)
-        .collect();
-    let mut heads = logs
-        .iter()
-        .filter(|row| {
-            row["hash"]
-                .as_str()
-                .is_some_and(|hash| !parents.contains(hash))
-        });
-    let mut current = heads.next();
-    if heads.next().is_some() || (current.is_none() && !logs.is_empty()) {
-        return Err(decline("log disconnected parent graph"));
-    }
-    let mut rows = Vec::with_capacity(logs.len());
-    while let Some(row) = current {
-        rows.push(row);
-        current = row["parents"]
-            .as_array()
-            .and_then(|parents| parents.first())
-            .and_then(Value::as_str)
-            .and_then(|parent| {
-                logs.iter()
-                    .find(|row| row["hash"] == parent)
-            });
-        if rows.len() > logs.len() {
-            return Err(decline("log cyclic parent graph"));
-        }
-    }
-    if rows.len() != logs.len() {
-        return Err(decline("log disconnected parent graph"));
-    }
-    Ok(rows)
-}
-
-fn linear_parents(rows: &[Value]) -> bool {
-    let visible: HashSet<&str> = rows
-        .iter()
-        .filter_map(|row| row["hash"].as_str())
-        .collect();
-    rows.iter()
-        .all(|row| {
-            let Some(parents) = row["parents"].as_array() else { return false };
-            parents.len() <= 1 && parents.iter().all(|parent| covered_parent(parent, &visible))
-        })
-}
-
-fn covered_parent(parent: &Value, visible: &HashSet<&str>) -> bool {
-    parent
-        .as_str()
-        .is_some_and(|parent| visible.contains(parent))
 }
 
 fn one_line(logs: &[Value]) -> io::Result<String> {
