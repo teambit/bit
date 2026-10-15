@@ -122,7 +122,7 @@ fn unsupported_configuration_and_incomplete_plans_cannot_publish() {
 }
 
 #[test]
-fn standard_e2e_root_aspects_are_accepted_without_allowing_custom_configuration() {
+fn root_aspect_variants_are_accepted_without_allowing_unknown_configuration() {
     let fixture = Fixture::new();
     let mut config = json!({
         "teambit.workspace/workspace":{"defaultScope":"test.scope"},
@@ -131,8 +131,9 @@ fn standard_e2e_root_aspects_are_accepted_without_allowing_custom_configuration(
     });
     assert!(super::config::configuration_value(&fixture.0, &config, false).is_ok());
     config["teambit.preview/preview"]["disabled"] = json!(false);
-    assert!(super::config::configuration_value(&fixture.0, &config, false).is_err());
-    config["teambit.preview/preview"]["disabled"] = json!(true);
+    assert!(super::config::configuration_value(&fixture.0, &config, false).is_ok());
     config["teambit.component/issues"]["ignoreIssues"] = json!(["MissingDists"]);
+    assert!(super::config::configuration_value(&fixture.0, &config, false).is_ok());
+    config["teambit.component/issues"]["ignoreIssues"] = json!(["NoSuchIssue"]);
     assert!(super::config::configuration_value(&fixture.0, &config, false).is_err());
 }
