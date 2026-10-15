@@ -99,6 +99,7 @@ enum Request {
     WorkspaceDiff(status_models::workspace_diff::Request),
     VersionDiff(status_models::version_diff::Request),
     VersionParentChain(status_models::parent_diff::Request),
+    ComponentLog(status_models::component_log::Request),
     StatusPrepare(client_status::Prepare),
     StatusScan(client_status::Scan),
     StatusFinish(client_status::Finish),
@@ -300,6 +301,7 @@ fn apply(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value
         Request::WorkspaceDiff(request) => status_models::workspace_diff::read(&request, pool),
         Request::VersionDiff(request) => status_models::version_diff::read(&request, pool),
         Request::VersionParentChain(request) => status_models::parent_diff::read(&request, pool),
+        Request::ComponentLog(request) => status_models::component_log::read(&request, pool),
         Request::Scan { root, exclude_dirs, workspace_root } => {
             let paths = scan::scan(&root, &exclude_dirs, workspace_root)?;
             Ok((paths.len(), json!({"paths":paths})))

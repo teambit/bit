@@ -346,6 +346,7 @@ dependencies = [
  "sha1",
  "tempfile",
  "tokio",
+ "unicode-width 0.2.2",
  "windows-sys 0.61.2",
 ]
 
