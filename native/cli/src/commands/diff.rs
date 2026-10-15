@@ -1,4 +1,4 @@
-//! Native `bit diff --json` and `bit diff <component> --json`: the shared
+//! Native workspace `bit diff` and `bit diff <component>`: the shared
 //! status capture, the workspace engine's `workspaceDiff`, and the file and
 //! metadata formatting of `@teambit/legacy.component-diff`.
 //!
@@ -8,6 +8,8 @@
 
 mod files;
 mod metadata;
+mod options;
+mod report;
 
 use super::{
     color::Chalk,
@@ -18,6 +20,7 @@ use super::{
         capture::{self, Capture},
         js::{array, decline, text, truthy},
     },
+    workspace_command::{self, results::Report},
 };
 use crate::{commands::Command, history::History, native::Outcome, workspace};
 use serde_json::{Value, json};
@@ -33,20 +36,11 @@ use std::{
 pub const COMMAND: Command = Command { name: "diff", aliases: &[], run };
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
-    let flag = args
-        .last()
-        .is_some_and(|flag| flag == "--json" || flag == "-j");
-    if !flag || !matches!(args.len(), 2 | 3) {
-        return Ok(Outcome::Declined("only `diff [component] --json` runs natively".to_string()));
-    }
-    let pattern = match args
-        .get(1)
-        .filter(|_| args.len() == 3)
-        .map(|arg| arg.to_str())
-    {
-        None => None,
-        Some(Some(pattern)) => Some(pattern),
-        Some(None) => return Ok(Outcome::Declined("the pattern is not UTF-8".to_string())),
+    let Some(argv) = workspace_command::utf8_args(args) else {
+        return Ok(Outcome::Declined("the arguments are not UTF-8".to_string()));
+    };
+    let Some(options) = options::parse(&argv[1..]) else {
+        return Ok(Outcome::Declined("outside the native diff grammar".to_string()));
     };
     if cfg!(windows) {
         // Node.js lists directories in the file system's order there, not sorted.
@@ -55,12 +49,26 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".to_string()));
     };
+    run_workspace(&root, args, &options)
+}
+
+fn run_workspace(
+    root: &Path,
+    args: &[OsString],
+    options: &options::Options,
+) -> io::Result<Outcome> {
     let home = env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).unwrap_or_default();
-    let result = match read(&root, Path::new(&home), pattern, Chalk::detect(args)) {
-        Ok(result) => result,
-        Err(error) => return Ok(Outcome::Declined(format!("diff: {error}"))),
-    };
-    let history = History::start(&root, args);
+    let (result, loaded) =
+        match read(root, Path::new(&home), options.pattern.as_deref(), Chalk::detect(args)) {
+            Ok(result) => result,
+            Err(error) => return Ok(Outcome::Declined(format!("diff: {error}"))),
+        };
+    let mut result = report::filtered(&result, options)?;
+    if !options.json {
+        return run_report(root, args, options, &result, loaded);
+    }
+    report::json(&mut result)?;
+    let history = History::start(root, args);
     let mut stdout = io::stdout().lock();
     stdout.write_all(serde_json::to_string_pretty(&result)?.as_bytes())?;
     stdout.flush()?;
@@ -68,8 +76,36 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
+fn run_report(
+    root: &Path,
+    args: &[OsString],
+    options: &options::Options,
+    result: &Value,
+    loaded: usize,
+) -> io::Result<Outcome> {
+    let data = report::format(result, Chalk::detect(args), options)?;
+    let report = Report { data, code: 0, details: None };
+    workspace_command::execute_with(root, args, "diff", &report, |output| {
+        if loaded > 0 {
+            output.status(&format!("loading {loaded} component(s)"));
+        }
+        if options.pattern.is_none()
+            && let Some(rows) = result.as_array()
+            && !rows.is_empty()
+        {
+            output.status(&format!("loading {} component(s)", rows.len()));
+        }
+        Ok(())
+    })
+}
+
 /// The diff of the selected components.
-fn read(root: &Path, home: &Path, pattern: Option<&str>, chalk: Chalk) -> io::Result<Value> {
+fn read(
+    root: &Path,
+    home: &Path,
+    pattern: Option<&str>,
+    chalk: Chalk,
+) -> io::Result<(Value, usize)> {
     if cache::no_fs_cache(root) || git_path_configured(root) {
         return Err(decline("no-fs-cache or a configured git executable"));
     }
@@ -88,6 +124,7 @@ fn read(root: &Path, home: &Path, pattern: Option<&str>, chalk: Chalk) -> io::Re
         return Err(decline("a tagged component without a model head"));
     }
     let selected = select(targets, pattern)?;
+    let loaded = selected.len();
     let capture = capture::capture(&mut engine, root, home, &context, &selected)?;
     let request: Vec<Value> = capture.captured
         .iter()
@@ -106,7 +143,7 @@ fn read(root: &Path, home: &Path, pattern: Option<&str>, chalk: Chalk) -> io::Re
         .map(|row| one(&context, &capture, row, chalk))
         .collect::<io::Result<Vec<_>>>()?;
     capture::commit(&mut engine, root, &context, &capture)?;
-    Ok(Value::Array(output))
+    Ok((Value::Array(output), loaded))
 }
 
 /// `getConfig('git_path')` may be set: any mention in a config layer declines.
@@ -256,6 +293,7 @@ fn one(context: &Value, capture: &Capture, row: &Value, chalk: Chalk) -> io::Res
     };
     let mut output = json!({
         "id": identity,
+        "_fullId": version.map_or_else(|| identity.to_string(), |version| format!("{identity}@{version}")),
         "hasDiff": !files_diff.is_empty() || fields_diff.is_some(),
         "filesDiff": files_diff,
     });
