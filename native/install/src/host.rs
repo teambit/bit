@@ -113,6 +113,19 @@ pub trait Host: Send + Sync {
     /// `None` when the env cannot be loaded.
     async fn env_policy(&self, env_id: &str) -> io::Result<Option<Value>>;
 
+    /// `getDependencies()` of `env_id` when it is already registered as an env, after
+    /// loading `aspect_ids` (`getNotLoadedConfiguredExtensions`, which the CLI loads on
+    /// start): `getEnvDefinitionById` of `getEnvPolicyFromEnvId`, which never loads the
+    /// component as an aspect. `None` when it is not a registered env.
+    async fn registered_env_policy(
+        &self,
+        env_id: &str,
+        aspect_ids: &[String],
+    ) -> io::Result<Option<Value>> {
+        let _ = aspect_ids;
+        self.env_policy(env_id).await
+    }
+
     /// File patterns of registered application types, used to find apps.
     async fn app_types(&self) -> io::Result<Vec<String>>;
 

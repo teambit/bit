@@ -6,6 +6,8 @@
 //! `index-v5/<sha256(key)>` as `\n<sha1(json)>\t<json>`, and the content lives at
 //! `content-v2/sha512/<hex digest>`.
 
+pub mod invalidation;
+
 mod format;
 
 use super::data::Detected;

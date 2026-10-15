@@ -33,7 +33,8 @@ pub async fn run(
     output.status(PRE_SUBSCRIBERS);
     output.success(PRE_SUBSCRIBERS, None);
     output.status(RUNNING);
-    output.stop();
+    // `PnpmPackageManager.install` turns the logger off for the package manager's output.
+    output.loader_off();
     let started = Instant::now();
     let options = EngineInstallOptions {
         update_all: session.options.update,

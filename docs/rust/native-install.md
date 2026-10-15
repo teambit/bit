@@ -10,14 +10,15 @@ JavaScript. The engine asks for these **host callbacks** while it runs; the Rust
 CLI serves them from its embedded host script, which loads the Node.js CLI's
 aspects only when a callback is needed. The callbacks are:
 
-| Callback             | Why it is JavaScript                                                                                                                  |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `envPolicy`          | The dependency policy of a core env, or of a legacy env without `env.jsonc`, comes from the env's `getDependencies()`                 |
-| `dependencyPolicies` | Aspects and env aspects register dependency policies in their providers (`registerDependenciesPolicies`)                              |
-| `appTypes`           | Aspects register application types (file patterns)                                                                                    |
-| `detectDependencies` | Custom dependency detectors: the env's `getDepDetectors()` (or `detectors()`) and the detectors aspects register (`registerDetector`) |
-| `packageJsonProps`   | Envs and aspects transform the generated `node_modules/<pkg>/package.json`                                                            |
-| `afterInstall`       | Compilation (env compilers) and workspace config files (env config writers)                                                           |
+| Callback              | Why it is JavaScript                                                                                                                  |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `envPolicy`           | The dependency policy of a core env, or of a legacy env without `env.jsonc`, comes from the env's `getDependencies()`                 |
+| `registeredEnvPolicy` | The same, for a component of an aspect env, only when it is already registered as an env (never loaded as an aspect to find out)      |
+| `dependencyPolicies`  | Aspects and env aspects register dependency policies in their providers (`registerDependenciesPolicies`)                              |
+| `appTypes`            | Aspects register application types (file patterns)                                                                                    |
+| `detectDependencies`  | Custom dependency detectors: the env's `getDepDetectors()` (or `detectors()`) and the detectors aspects register (`registerDetector`) |
+| `packageJsonProps`    | Envs and aspects transform the generated `node_modules/<pkg>/package.json`                                                            |
+| `afterInstall`        | Compilation (env compilers) and workspace config files (env config writers)                                                           |
 
 Everything else is Rust:
 
