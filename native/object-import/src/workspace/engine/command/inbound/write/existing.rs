@@ -90,29 +90,66 @@ fn plan_old(
 ) -> io::Result<()> {
     let mut compressed = 0;
     for (relative, old_hash) in old_files {
-        let path = input.root.join(input.directory).join(relative);
-        let old_source = checkout::repository::source(
-            &input.root.join(".bit/objects"),
-            crate::merge_history::hash(old_hash)?,
-            32 * 1024 * 1024,
+        plan_old_file(
+            input,
+            relative,
+            old_hash,
+            new_files.get(relative),
+            changes,
             &mut compressed,
         )?;
-        let expected = checkout::eol::auto(old_source);
-        let before = if input.override_existing {
-            current_body(input.root, &path)?
-        } else {
-            check(input.root, &path, &expected)?;
-            expected
-        };
-        if let Some(new_hash) = new_files.get(relative) {
-            let after = new_source(input, new_hash)?;
-            if before != after {
-                changes.replacements.push(Replacement { path, before, after });
-            }
-        }
-        // ComponentWriter leaves files removed by the new Version in the workspace.
     }
     Ok(())
+}
+
+fn plan_old_file(
+    input: &Input<'_>,
+    relative: &str,
+    old_hash: &str,
+    new_hash: Option<&String>,
+    changes: &mut WorkspaceFiles,
+    compressed: &mut usize,
+) -> io::Result<()> {
+    let path = input.root.join(input.directory).join(relative);
+    let old_source = checkout::repository::source(
+        &input.root.join(".bit/objects"),
+        crate::merge_history::hash(old_hash)?,
+        32 * 1024 * 1024,
+        compressed,
+    )?;
+    let expected = checkout::eol::auto(old_source);
+    let before = current_or_missing(input, &path, expected)?;
+    if let Some(hash) = new_hash {
+        let after = new_source(input, hash)?;
+        match before {
+            Some(before) if before != after => {
+                changes.replacements.push(Replacement { path, before, after });
+            }
+            None => changes.additions.push((path, after)),
+            Some(_) => {}
+        }
+    }
+    // ComponentWriter leaves files removed by the new Version in the workspace.
+    Ok(())
+}
+
+fn current_or_missing(
+    input: &Input<'_>,
+    path: &Path,
+    expected: Vec<u8>,
+) -> io::Result<Option<Vec<u8>>> {
+    match fs::symlink_metadata(path) {
+        Ok(_) if input.override_existing => current_body(input.root, path).map(Some),
+        Ok(_) => {
+            check(input.root, path, &expected)?;
+            Ok(Some(expected))
+        }
+        Err(error) if error.kind() == io::ErrorKind::NotFound => {
+            safe_destination(input.root, path)?;
+            Ok(None)
+        }
+        Err(error) => Err(error),
+    }
 }
 
 fn plan_new(

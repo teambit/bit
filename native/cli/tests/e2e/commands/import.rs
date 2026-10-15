@@ -303,6 +303,117 @@ fn a_clean_reimport_is_up_to_date_like_node() {
     );
 }
 
+#[test]
+fn a_physically_deleted_import_is_restored_like_node() {
+    let helper = exported_simple();
+    let command = format!("import {}/global/simple -x", helper.scopes.remote);
+    helper.run(&command);
+    std::thread::sleep(std::time::Duration::from_millis(1100));
+    fs::remove_dir_all(simple_dir(&helper)).unwrap();
+    let node_root = helper.clone_workspace();
+    let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{}", combined(&node));
+    let native = helper.native_run(&command);
+    assert!(native.native, "{}", native.trace);
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(without_progress_timing(&native.stdout), without_progress_timing(&node.stdout));
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(
+        fs::read(helper.scopes.local_path.join(".bitmap")).unwrap(),
+        fs::read(node_root.join(".bitmap")).unwrap(),
+    );
+    let relative = format!("{}/global/simple/simple.js", helper.scopes.remote);
+    assert_eq!(
+        fs::read(helper.scopes.local_path.join(&relative)).unwrap(),
+        fs::read(node_root.join(&relative)).unwrap(),
+    );
+}
+
+#[test]
+fn an_existing_empty_import_directory_matches_node() {
+    let helper = exported_simple();
+    fs::create_dir_all(simple_dir(&helper)).unwrap();
+    assert_new_destination_matches_node(&helper, false);
+}
+
+#[test]
+fn an_occupied_import_directory_with_override_matches_node() {
+    let helper = exported_simple();
+    let extra = simple_dir(&helper).join("my-file.js");
+    fs::create_dir_all(extra.parent().unwrap()).unwrap();
+    fs::write(&extra, "console.log()").unwrap();
+    assert_new_destination_matches_node(&helper, true);
+    assert_eq!(fs::read(extra).unwrap(), b"console.log()");
+}
+
+fn assert_new_destination_matches_node(helper: &Helper, override_existing: bool) {
+    let node_root = helper.clone_workspace();
+    let flag = if override_existing { " --override" } else { "" };
+    let command = format!("import {}/global/simple -x{flag}", helper.scopes.remote);
+    let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{}", combined(&node));
+    let native = helper.native_run(&command);
+    assert!(native.native, "{}", native.trace);
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(without_progress_timing(&native.stdout), without_progress_timing(&node.stdout));
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(
+        fs::read(helper.scopes.local_path.join(".bitmap")).unwrap(),
+        fs::read(node_root.join(".bitmap")).unwrap(),
+    );
+    let relative = format!("{}/global/simple/simple.js", helper.scopes.remote);
+    assert_eq!(
+        fs::read(helper.scopes.local_path.join(&relative)).unwrap(),
+        fs::read(node_root.join(&relative)).unwrap(),
+    );
+}
+
+#[test]
+fn the_path_option_materializes_a_new_component_like_node() {
+    let helper = exported_simple();
+    let node_root = helper.clone_workspace();
+    let command = format!("import {}/global/simple -p my-custom-location -x", helper.scopes.remote);
+    let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{}", combined(&node));
+    let native = helper.native_run(&command);
+    assert!(native.native, "{}", native.trace);
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(without_progress_timing(&native.stdout), without_progress_timing(&node.stdout));
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(
+        fs::read(helper.scopes.local_path.join(".bitmap")).unwrap(),
+        fs::read(node_root.join(".bitmap")).unwrap(),
+    );
+    assert_eq!(
+        fs::read(helper.scopes.local_path.join("my-custom-location/simple.js")).unwrap(),
+        fs::read(node_root.join("my-custom-location/simple.js")).unwrap(),
+    );
+}
+
+#[test]
+fn a_custom_directory_template_materializes_like_node() {
+    let helper = exported_simple();
+    set_components_dir(&helper, "{scope}/-{name}-");
+    let node_root = helper.clone_workspace();
+    let command = format!("import {}/global/simple -x", helper.scopes.remote);
+    let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{}", combined(&node));
+    let native = helper.native_run(&command);
+    assert!(native.native, "{}", native.trace);
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(without_progress_timing(&native.stdout), without_progress_timing(&node.stdout));
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(
+        fs::read(helper.scopes.local_path.join(".bitmap")).unwrap(),
+        fs::read(node_root.join(".bitmap")).unwrap(),
+    );
+    let relative = format!("{}/-global/simple-/simple.js", helper.scopes.remote);
+    assert_eq!(
+        fs::read(helper.scopes.local_path.join(&relative)).unwrap(),
+        fs::read(node_root.join(&relative)).unwrap(),
+    );
+}
+
 fn assert_override_import_matches_node(helper: &Helper) {
     let node_root = helper.clone_workspace();
     let command = format!("import {}/bar/foo --override -x", helper.scopes.remote);
@@ -346,9 +457,9 @@ fn files_keep_their_relative_paths() {
     }
 }
 
-/// What native `bit import` still leaves to the Node.js CLI: occupied destinations,
-/// authored components, locally changed files without `--override`, a custom
-/// `defaultDirectory`, `-p`, `--merge`, dependency flags, and file-remote wildcards.
+/// Source-suite cases that may still delegate when installation or unsupported
+/// component layouts are involved: authored components, merges, dependency flags,
+/// and file-remote wildcards.
 mod known_failures {
     use super::{
         chain, combined, consumer_files, expect_id, exported_simple, import, import_chain,

@@ -12,6 +12,13 @@ impl Prepared {
     pub(in super::super) fn commit(self) -> io::Result<()> {
         self.check_bitmap("before publication")?;
         self.history.check(&self.root)?;
+        for directory in &self.changes.empty_directories {
+            if !fs::symlink_metadata(directory)?.is_dir()
+                || fs::read_dir(directory)?.next().is_some()
+            {
+                return Err(invalid("inbound workspace destination changed"));
+            }
+        }
         for (path, _) in &self.changes.additions {
             safe_destination(&self.root, path)?;
         }

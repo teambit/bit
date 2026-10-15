@@ -242,6 +242,7 @@ pub(super) fn prepare_status_refresh(
         write: options::WriteOptions {
             skip_dependency_installation: false,
             override_existing: false,
+            path: None,
         },
         lanes: false,
         skip_write_config_files: false,
@@ -263,6 +264,7 @@ pub(super) fn prepare_status_forked_refresh(
         write: options::WriteOptions {
             skip_dependency_installation: false,
             override_existing: false,
+            path: None,
         },
         lanes: true,
         skip_write_config_files: false,

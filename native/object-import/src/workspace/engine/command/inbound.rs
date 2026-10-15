@@ -58,6 +58,8 @@ struct Options {
     skip_dependency_installation: bool,
     #[serde(default)]
     override_existing: bool,
+    #[serde(default)]
+    path: Option<String>,
     lanes: bool,
     components: bool,
 }
@@ -121,7 +123,10 @@ pub(in crate::workspace::engine) fn prepare(
             &targets,
             &import,
             input.bitmap_history_file_id.as_deref(),
-            input.options.override_existing,
+            write::Options {
+                override_existing: input.options.override_existing,
+                path: input.options.path.as_deref(),
+            },
         )?)
     };
     state.sequence = state.sequence.wrapping_add(1);
@@ -275,6 +280,13 @@ fn validate_override(input: &Prepare) -> io::Result<()> {
             || input.ids.is_empty())
     {
         return Err(invalid("inbound override requires explicit workspace import"));
+    }
+    if input.options.path.is_some()
+        && (input.operation != "import"
+            || input.options.objects_only
+            || input.ids.len() != 1)
+    {
+        return Err(invalid("inbound path requires one explicit workspace import"));
     }
     Ok(())
 }

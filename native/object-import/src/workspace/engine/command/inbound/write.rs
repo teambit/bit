@@ -20,10 +20,16 @@ pub(super) struct Prepared {
     changes: WorkspaceFiles,
     history: History,
 }
+#[derive(Clone, Copy)]
+pub(super) struct Options<'a> {
+    pub(super) override_existing: bool,
+    pub(super) path: Option<&'a str>,
+}
 #[derive(Default)]
 struct WorkspaceFiles {
     additions: Vec<(PathBuf, Vec<u8>)>,
     replacements: Vec<Replacement>,
+    empty_directories: Vec<PathBuf>,
 }
 struct Replacement {
     path: PathBuf,
@@ -42,7 +48,7 @@ pub(super) fn prepare(
     targets: &[Target],
     import: &PreparedImport,
     file_id: Option<&str>,
-    override_existing: bool,
+    options: Options<'_>,
 ) -> io::Result<Prepared> {
     let history = prepare_history(root, file_id)?;
     let template = default_directory(root)?;
@@ -50,7 +56,7 @@ pub(super) fn prepare(
     let mut bitmap = crate::recovery::jsonc::parse(&bitmap_before)?;
     let rows = bitmap.as_object_mut().ok_or_else(|| invalid("inbound bitmap object"))?;
     let schema = bitmap_schema(rows)?;
-    let changes = prepare_targets(root, targets, &template, import, rows, override_existing)?;
+    let changes = prepare_targets(root, targets, &template, import, rows, options)?;
     // `sortObjectByKeys`: `Object.keys(...).sort()`, by UTF-16 code units.
     rows.sort_keys();
     rows.insert("$schema-version".into(), schema);
@@ -72,20 +78,16 @@ fn prepare_targets(
     template: &str,
     import: &PreparedImport,
     rows: &mut Map<String, Value>,
-    override_existing: bool,
+    options: Options<'_>,
 ) -> io::Result<WorkspaceFiles> {
     let policy = policy::workspace_policy(root)?;
-    let context = Planning { root, imported: import, policy: &policy, override_existing };
-    let new = targets
-        .iter()
-        .filter(|target| {
-            !rows
-                .values()
-                .any(|row| row["name"] == target.name)
-        })
-        .cloned()
-        .collect::<Vec<_>>();
-    let mut directories = directories::assign(template, &new, rows)?.into_iter();
+    let context = Planning {
+        root,
+        imported: import,
+        policy: &policy,
+        override_existing: options.override_existing,
+    };
+    let mut directories = target_directories(template, targets, rows, options.path)?.into_iter();
     let mut changes = WorkspaceFiles::default();
     let mut written = HashSet::new();
     for target in targets {
@@ -103,6 +105,32 @@ fn prepare_targets(
         return Err(invalid("inbound workspace materialization bytes"));
     }
     Ok(changes)
+}
+
+fn target_directories(
+    template: &str,
+    targets: &[Target],
+    rows: &Map<String, Value>,
+    path: Option<&str>,
+) -> io::Result<Vec<String>> {
+    let new = targets
+        .iter()
+        .filter(|target| {
+            !rows
+                .values()
+                .any(|row| row["name"] == target.name)
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+    if let Some(path) = path {
+        if targets.len() != 1 || new.len() != 1 {
+            return Err(invalid("inbound path requires a new component"));
+        }
+        crate::checkout::plan::relative_path(path)?;
+        Ok(vec![path.to_owned()])
+    } else {
+        directories::assign(template, &new, rows)
+    }
 }
 
 struct Planning<'a> {
@@ -150,16 +178,29 @@ fn plan_target(
             changes,
         )
     } else {
-        changes.additions.extend(prepare_target(
-            context.root,
-            &directory,
-            target,
-            context.imported,
-            rows,
-            context.policy,
-        )?);
-        Ok(())
+        plan_new_target(context, target, &directory, rows, changes)
     }
+}
+
+fn plan_new_target(
+    context: &Planning<'_>,
+    target: &Target,
+    directory: &str,
+    rows: &mut Map<String, Value>,
+    changes: &mut WorkspaceFiles,
+) -> io::Result<()> {
+    if let Some(empty) = new_directory(context.root, directory, context.override_existing)? {
+        changes.empty_directories.push(empty);
+    }
+    changes.additions.extend(prepare_target(
+        context.root,
+        directory,
+        target,
+        context.imported,
+        rows,
+        context.policy,
+    )?);
+    Ok(())
 }
 
 fn prepare_history(root: &Path, file_id: Option<&str>) -> io::Result<History> {
@@ -213,10 +254,6 @@ fn prepare_target(
     policy::reject_update(version, policy)?;
     let main = version["mainFile"].as_str().ok_or_else(|| invalid("inbound main file"))?;
     crate::checkout::plan::relative_path(main)?;
-    if root.join(directory).try_exists()? {
-        return Err(invalid("inbound workspace destination occupied"));
-    }
-    safe_destination(root, &root.join(directory))?;
     let files = target_files(root, directory, version, main, import)?;
     rows.insert(
         target.name.clone(),
@@ -224,6 +261,32 @@ fn prepare_target(
         "version":version_name,"mainFile":main,"rootDir":directory}),
     );
     Ok(files)
+}
+
+fn new_directory(
+    root: &Path,
+    directory: &str,
+    override_existing: bool,
+) -> io::Result<Option<PathBuf>> {
+    crate::checkout::plan::relative_path(directory)?;
+    let path = root.join(directory);
+    match fs::symlink_metadata(&path) {
+        Err(error) if error.kind() == io::ErrorKind::NotFound => {
+            safe_destination(root, &path)?;
+            Ok(None)
+        }
+        Ok(metadata) if metadata.is_dir() && !metadata.file_type().is_symlink() => {
+            if override_existing {
+                Ok(None)
+            } else if fs::read_dir(&path)?.next().is_none() {
+                Ok(Some(path))
+            } else {
+                Err(invalid("inbound workspace destination occupied"))
+            }
+        }
+        Ok(_) => Err(invalid("inbound workspace destination occupied or linked")),
+        Err(error) => Err(error),
+    }
 }
 
 /// `getWorkspacePolicyFromConfig()`: each root policy entry's version.

@@ -22,6 +22,7 @@ pub struct Options {
 pub struct WriteOptions {
     pub skip_dependency_installation: bool,
     pub override_existing: bool,
+    pub path: Option<String>,
 }
 
 /// `args` starts with the command name.
@@ -31,8 +32,34 @@ pub fn parse(args: &[&str]) -> Option<Options> {
         "import" => "import",
         _ => return None,
     };
-    let (ids, flags) = split(&args[1..])?;
-    if operation == "fetch" { fetch(ids, &flags) } else { import(ids, &flags) }
+    if operation == "fetch" {
+        let (ids, flags) = split(&args[1..])?;
+        fetch(ids, &flags)
+    } else {
+        let (args, path) = take_path(&args[1..])?;
+        let (ids, flags) = split(&args)?;
+        import(ids, &flags, path)
+    }
+}
+
+fn take_path<'a>(args: &[&'a str]) -> Option<(Vec<&'a str>, Option<String>)> {
+    let mut remaining = Vec::with_capacity(args.len());
+    let mut path = None;
+    let mut position = 0;
+    while position < args.len() {
+        if args[position] == "-p" || args[position] == "--path" {
+            let value = *args.get(position + 1)?;
+            if path.is_some() || value.is_empty() || value.starts_with('-') || value.len() > 4096 {
+                return None;
+            }
+            path = Some(value.to_owned());
+            position += 2;
+        } else {
+            remaining.push(args[position]);
+            position += 1;
+        }
+    }
+    Some((remaining, path))
 }
 
 /// The ids and the distinct flags.
@@ -72,7 +99,11 @@ fn fetch(ids: Vec<String>, flags: &[&str]) -> Option<Options> {
         ids,
         objects_only: true,
         all_history,
-        write: WriteOptions { skip_dependency_installation: false, override_existing: false },
+        write: WriteOptions {
+            skip_dependency_installation: false,
+            override_existing: false,
+            path: None,
+        },
         lanes: lanes == 1,
         skip_write_config_files: false,
         include_deprecated: false,
@@ -80,7 +111,7 @@ fn fetch(ids: Vec<String>, flags: &[&str]) -> Option<Options> {
 }
 
 /// `bit import`: objects only, or the components written and installed.
-fn import(ids: Vec<String>, flags: &[&str]) -> Option<Options> {
+fn import(ids: Vec<String>, flags: &[&str], path: Option<String>) -> Option<Options> {
     let has = |flag: &str| flags.contains(&flag);
     if !valid_import_flags(flags)
         || ids
@@ -93,6 +124,9 @@ fn import(ids: Vec<String>, flags: &[&str]) -> Option<Options> {
     if has("--override") && (objects_only || ids.iter().any(|id| has_wildcard(id))) {
         return None;
     }
+    if !valid_path(path.as_deref(), &ids, objects_only) {
+        return None;
+    }
     Some(Options {
         operation: "import",
         ids,
@@ -101,11 +135,16 @@ fn import(ids: Vec<String>, flags: &[&str]) -> Option<Options> {
         write: WriteOptions {
             skip_dependency_installation: has("--skip-dependency-installation") || has("-x"),
             override_existing: has("--override"),
+            path,
         },
         lanes: false,
         skip_write_config_files: has("--skip-write-config-files"),
         include_deprecated: has("--include-deprecated"),
     })
+}
+
+fn valid_path(path: Option<&str>, ids: &[String], objects_only: bool) -> bool {
+    path.is_none() || !objects_only && ids.len() == 1 && !has_wildcard(&ids[0])
 }
 
 fn valid_import_flags(flags: &[&str]) -> bool {
@@ -163,6 +202,7 @@ impl Options {
             "fromOriginalScope": false,
             "skipDependencyInstallation": self.write.skip_dependency_installation,
             "overrideExisting": self.write.override_existing,
+            "path": self.write.path,
             "lanes": self.lanes,
             "components": self.operation == "fetch" && !self.lanes,
         })

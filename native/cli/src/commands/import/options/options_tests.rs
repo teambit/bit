@@ -40,6 +40,26 @@ fn override_requires_an_explicit_component_write() {
 }
 
 #[test]
+fn path_requires_one_explicit_component_write() {
+    let options = parse(&["import", "s/a", "-p", "my-custom-location", "-x"]).unwrap();
+    assert_eq!(options.write.path.as_deref(), Some("my-custom-location"));
+    assert_eq!(options.request()["path"], "my-custom-location");
+    assert_eq!(
+        parse(&["import", "--path", "my-location", "s/a"]).unwrap().write.path.as_deref(),
+        Some("my-location"),
+    );
+    for args in [
+        &["import", "-p", "location"][..],
+        &["import", "s/a", "s/b", "-p", "location"],
+        &["import", "s/*", "-p", "location"],
+        &["import", "s/a", "-p"],
+        &["import", "s/a", "-p", "location", "--path", "other"],
+    ] {
+        assert!(parse(args).is_none(), "{args:?}");
+    }
+}
+
+#[test]
 fn installing_imports_and_other_flags_are_left_to_node() {
     for args in [
         &["import", "**"][..],
