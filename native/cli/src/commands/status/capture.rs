@@ -2,6 +2,7 @@
 //! workspace commands: each selected component's files and
 //! dependencies, and the commit that writes what the command staged.
 
+mod bitmap;
 mod identities;
 mod missing;
 
@@ -107,6 +108,17 @@ pub struct CaptureOptions {
     pub missing_status_invalid: bool,
 }
 
+impl CaptureOptions {
+    fn scan_behavior(&self) -> ScanBehavior {
+        ScanBehavior {
+            verify: self.verify,
+            incomplete_reset: self.incomplete_reset,
+            missing_checkout_reset: self.missing_checkout_reset,
+            missing_status_invalid: self.missing_status_invalid,
+        }
+    }
+}
+
 impl Capture {
     /// `capture.dependencyReadSet`: the read sets of every fresh detection.
     pub fn dependency_read_set(&self) -> Vec<Value> {
@@ -138,6 +150,9 @@ pub fn capture_with(
     targets: &[Value],
     capture_options: CaptureOptions,
 ) -> io::Result<Capture> {
+    if !capture_options.missing_status_invalid && bitmap::has_special_state(targets) {
+        return Err(decline("bitmap state requires the canonical workspace command"));
+    }
     let options: Options =
         serde_json::from_value(context["options"].clone()).map_err(io::Error::other)?;
     let inventory = Inventory::new(&options)?;
@@ -145,12 +160,7 @@ pub fn capture_with(
     let reset = !no_fs_cache
         && !targets.is_empty()
         && (capture_options.reset || needs_invalidation(root, &deps_dir(root))?);
-    let behavior = ScanBehavior {
-        verify: capture_options.verify,
-        incomplete_reset: capture_options.incomplete_reset,
-        missing_checkout_reset: capture_options.missing_checkout_reset,
-        missing_status_invalid: capture_options.missing_status_invalid,
-    };
+    let behavior = capture_options.scan_behavior();
     let mut captured = Capture {
         captured: Vec::new(),
         comparisons: Vec::new(),
@@ -202,6 +212,9 @@ struct ScanBehavior {
 impl Scan<'_> {
     /// One target: its policy, its files, its dependencies.
     fn target(mut self, target: &Value, captured: &mut Capture) -> io::Result<()> {
+        if self.behavior.missing_status_invalid && missing::status_removed(target, captured)? {
+            return Ok(());
+        }
         let policy = policy::status_policy(self.context, target)?;
         let directory = text(target.get("directory"))?;
         if self.behavior.missing_status_invalid

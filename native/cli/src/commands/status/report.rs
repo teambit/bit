@@ -2,8 +2,8 @@
 //! `formatStatusOutput` of `status-formatter.ts`, over the result the native
 //! status computes for `--json`.
 //!
-//! A result with sections the native status leaves to Node (removed,
-//! soft-tagged or local-only components, import pending) declines, and so
+//! A result with sections the native status leaves to Node (remote removal,
+//! import pending) declines, and so
 //! does a forked lane or an issue whose data Node colors
 //! (`UntrackedDependencies`) when stdout has colors.
 
@@ -33,12 +33,9 @@ const TITLE_ONLY: [&str; 5] = [
     "MergeConfigHasConflict",
 ];
 /// Result sections the native status leaves empty; any row declines.
-const UNSUPPORTED: [&str; 9] = [
+const UNSUPPORTED: [&str; 6] = [
     "importPendingComponents",
-    "locallySoftRemoved",
     "remotelySoftRemoved",
-    "softTaggedComponents",
-    "localOnly",
     "pendingUpdatesFromMain",
     "updatesFromForked",
     "unavailableOnMain",
@@ -54,6 +51,9 @@ const SNAPPED: &str = r#"(use "bit tag" or "bit tag --snapped" to lock a semver 
 const STAGED: &str = r#"(use "bit export" to push these component versions to the remote scope)"#;
 const WITH_ISSUES: &str = "(fix the issues according to the suggested solution)";
 const AUTO_TAG: &str = "(these will be auto-tagged when their modified dependencies are tagged)";
+const LOCAL_ONLY: &str = "(these components are excluded from tag/snap/export commands)";
+const SOFT_TAGGED: &str = r#"(use "bit tag --persist" to complete the tag)"#;
+const LOCALLY_REMOVED: &str = r#"(tag/snap and export the components to update the deletion to the remote. to undo deletion, run "bit recover")"#;
 
 /// The `StatusFlags` the report takes.
 #[derive(Debug, Default, PartialEq, Eq)]
@@ -115,13 +115,18 @@ struct Status<'r> {
     format: Formatter,
     flags: &'r Flags,
     with_issues: Vec<WithIssues<'r>>,
+    soft_tagged: Vec<&'r str>,
+    models: ModelFacts<'r>,
+    troubleshooting: std::cell::Cell<bool>,
+}
+
+struct ModelFacts<'r> {
     /// Each bitmap target's version, `None` for a new component.
     versions: HashMap<&'r str, Option<&'r str>>,
     /// Each model's head.
     heads: HashMap<String, &'r str>,
     /// `merge` distances of the histories.
     histories: &'r [Value],
-    troubleshooting: std::cell::Cell<bool>,
 }
 
 /// `formatStatusOutput` and the collapsing of `StatusCmd.report`.
@@ -241,9 +246,12 @@ impl<'r> Status<'r> {
             format: Formatter::new(chalk),
             flags,
             with_issues: Vec::new(),
-            versions,
-            heads,
-            histories: array(context.get("histories"), "histories")?,
+            soft_tagged: ids(result, "softTaggedComponents")?,
+            models: ModelFacts {
+                versions,
+                heads,
+                histories: array(context.get("histories"), "histories")?,
+            },
             troubleshooting: std::cell::Cell::new(false),
         };
         for row in array(result.get("componentsWithIssues"), "issues")? {
@@ -257,7 +265,7 @@ impl<'r> Status<'r> {
 
     /// The bitmap version of a workspace component.
     fn version(&self, identity: &str) -> io::Result<Option<&'r str>> {
-        self.versions
+        self.models.versions
             .get(identity)
             .copied()
             .ok_or_else(|| decline("status report target"))
@@ -275,9 +283,16 @@ impl<'r> Status<'r> {
         let format = &self.format;
         let new = self.new_components()?;
         let modified = self.listed("modifiedComponents", |identity| self.version(identity))?;
-        let snapped =
-            self.listed("snappedComponents", |identity| Ok(self.heads.get(identity).copied()))?;
+        let snapped = self.listed("snappedComponents", |identity| {
+            Ok(self.models.heads.get(identity).copied())
+        })?;
         let auto_tag = self.listed("autoTagPendingComponents", |identity| self.version(identity))?;
+        let local_only = self.listed("localOnly", |identity| self.version(identity))?;
+        let locally_removed = self.listed("locallySoftRemoved", |identity| self.version(identity))?;
+        let soft_tagged = self.soft_tagged
+            .iter()
+            .map(|identity| Ok(self.item_without_soft_tag((identity, self.version(identity)?))))
+            .collect::<io::Result<Vec<_>>>()?;
         let during_merge: Vec<String> = ids(self.result, "componentsDuringMergeState")?
             .iter()
             .map(|identity| self.item((identity, None), false, None, true))
@@ -286,10 +301,12 @@ impl<'r> Status<'r> {
             format.section("pending updates", OUTDATED, &self.outdated()?),
             format.section("pending merge", PENDING_MERGE, &self.pending_merge()?),
             format.section("components in merge state", DURING_MERGE, &during_merge),
+            format.section("local-only components", LOCAL_ONLY, &local_only),
             format.section("new components", NEW, &new),
             format.section("modified components", MODIFIED, &modified),
             format.section("snapped components (tag pending)", SNAPPED, &snapped),
             format.section("staged components", STAGED, &self.staged()?),
+            format.section("soft-tagged components", SOFT_TAGGED, &soft_tagged),
             format.section("components pending auto-tag", AUTO_TAG, &auto_tag),
             format.section("components with issues", WITH_ISSUES, &self.with_issues_items()),
             format.section(
@@ -297,6 +314,7 @@ impl<'r> Status<'r> {
                 "these components failed to load",
                 &self.invalid_components()?,
             ),
+            format.section("soft-removed components locally", LOCALLY_REMOVED, &locally_removed),
         ])
     }
 
@@ -372,28 +390,6 @@ impl<'r> Status<'r> {
                     .map_or_else(String::new, |latest| format!(" latest: {latest}"));
                 let text =
                     format!("{} current: {current} head: {head}{latest}", chalk.cyan(identity));
-                Ok(Formatter::item_with(&text, &self.format.warn_symbol()))
-            })
-            .collect()
-    }
-
-    /// `pending merge`: the uncommon snaps on each side.
-    fn pending_merge(&self) -> io::Result<Vec<String>> {
-        ids(self.result, "mergePendingComponents")?
-            .iter()
-            .map(|identity| {
-                let history = self
-                    .histories
-                    .iter()
-                    .find(|row| row["identity"] == *identity)
-                    .ok_or_else(|| decline("status report history"))?;
-                let count = |side: &str| array(history["merge"].get(side), "merge distance").map(<[Value]>::len);
-                let text = format!(
-                    "{} local and remote have diverged and have {} (source) and {} (target) uncommon snaps respectively",
-                    self.format.chalk.cyan(identity),
-                    count("sourceOnly")?,
-                    count("targetOnly")?,
-                );
                 Ok(Formatter::item_with(&text, &self.format.warn_symbol()))
             })
             .collect()

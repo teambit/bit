@@ -10,7 +10,7 @@ use std::{io, path::PathBuf};
 pub(crate) struct State {
     plan: Option<Plan>,
 }
-struct Target {
+pub(in crate::workspace::engine) struct Target {
     id: String,
     directory: String,
     version: String,

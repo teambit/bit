@@ -4,6 +4,19 @@ use super::{Capture, Component, decline, full_identity, text};
 use serde_json::{Value, json};
 use std::{io, path::Path};
 
+pub(super) fn status_removed(target: &Value, captured: &mut Capture) -> io::Result<bool> {
+    if target["locallyRemoved"] != true {
+        return Ok(false);
+    }
+    captured.components.push(Component {
+        identity: full_identity(target)?,
+        package_name: String::new(),
+        dependencies: Vec::new(),
+        issues: Value::Null,
+    });
+    Ok(true)
+}
+
 pub(super) fn capture(
     root: &Path,
     enabled: bool,

@@ -15,6 +15,21 @@ impl Status<'_> {
         local: Option<&[String]>,
         warn: bool,
     ) -> String {
+        self.item_with_soft_tag(id, show_issues, local, warn, true)
+    }
+
+    pub(super) fn item_without_soft_tag(&self, id: (&str, Option<&str>)) -> String {
+        self.item_with_soft_tag(id, false, None, false, false)
+    }
+
+    fn item_with_soft_tag(
+        &self,
+        id: (&str, Option<&str>),
+        show_issues: bool,
+        local: Option<&[String]>,
+        warn: bool,
+        show_soft_tag: bool,
+    ) -> String {
         let chalk = self.format.chalk;
         let with_issues = self.issues_of(id.0, id.1);
         let mut formatted =
@@ -22,16 +37,29 @@ impl Status<'_> {
         if let Some(local) = local {
             formatted.push_str(&self.local_versions(local));
         }
+        let soft_tagged = show_soft_tag && self.soft_tagged.contains(&id.0);
         let Some(with_issues) = with_issues else {
+            if soft_tagged {
+                formatted.push_str(&chalk.green(" (soft-tagged)"));
+            }
             return formatted;
         };
-        let label =
-            if with_issues.tag_blocker() { chalk.red(FAILURE) } else { chalk.yellow(WARNINGS) };
+        let label = self.issue_label(with_issues, soft_tagged);
         if !show_issues {
             return format!("{formatted} ... {label}");
         }
         self.troubleshooting.set(true);
         format!("{formatted} ... {label}{}", self.issues_text(with_issues.issues))
+    }
+
+    fn issue_label(&self, with_issues: &WithIssues<'_>, soft_tagged: bool) -> String {
+        let label = if with_issues.tag_blocker() { FAILURE } else { WARNINGS };
+        let label = if soft_tagged { format!("{label} (soft-tagged)") } else { label.to_string() };
+        if with_issues.tag_blocker() {
+            self.format.chalk.red(&label)
+        } else {
+            self.format.chalk.yellow(&label)
+        }
     }
 
     /// `getSymbol()`: the issues' symbol, or the default one.

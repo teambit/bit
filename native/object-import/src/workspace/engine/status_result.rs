@@ -26,7 +26,19 @@ struct Target {
     issues: Vec<Value>,
     dependencies: Vec<String>,
     #[serde(default)]
+    bitmap_state: BitmapState,
+    #[serde(default)]
     invalid: Option<Value>,
+}
+#[derive(Default, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct BitmapState {
+    #[serde(default)]
+    local_only: bool,
+    #[serde(default)]
+    soft_tagged: bool,
+    #[serde(default)]
+    locally_removed: bool,
 }
 
 pub(super) fn read(request: &Request) -> io::Result<(usize, Value)> {
@@ -53,6 +65,15 @@ fn current(output: &mut Value, target: &Target) {
     }
     if !target.issues.is_empty() {
         push(output, "componentsWithIssues", json!({"id":target.identity,"issues":target.issues}));
+    }
+    if target.bitmap_state.local_only {
+        push(output, "localOnly", json!(target.identity));
+    }
+    if target.bitmap_state.soft_tagged {
+        push(output, "softTaggedComponents", json!(target.identity));
+    }
+    if target.bitmap_state.locally_removed {
+        push(output, "locallySoftRemoved", json!(target.identity));
     }
 }
 fn empty(lane: &str) -> Value {

@@ -10,12 +10,15 @@ use std::{
 };
 
 mod cycles;
+mod format;
+mod removed;
 mod resolve;
 
 #[cfg(test)]
 mod tests;
 
 use cycles::cyclic;
+use format::{join, list_or_text};
 
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 const ISSUES: &str = "teambit.component/issues";
@@ -147,6 +150,10 @@ impl Checks<'_> {
         if self.circular.contains(component.identity.as_str()) {
             set(&mut issues, Issue::Circular, json!(true));
         }
+        let removed = self.removed_dependencies(component, &issues)?;
+        if !removed.is_empty() {
+            set(&mut issues, Issue::RemovedDependencies, json!(removed));
+        }
         let issues = issues
             .iter()
             .filter(|(kind, _)| !self.ignored.contains(kind.class().0))
@@ -271,6 +278,7 @@ enum Issue {
     MissingDists,
     Duplicate,
     Circular,
+    RemovedDependencies,
 }
 
 impl Issue {
@@ -284,6 +292,7 @@ impl Issue {
             "MissingDists" => Self::MissingDists,
             "DuplicateComponentAndPackage" => Self::Duplicate,
             "CircularDependencies" => Self::Circular,
+            "RemovedDependencies" => Self::RemovedDependencies,
             _ => return Err(decline(format!("status issue type {name}"))),
         })
     }
@@ -340,6 +349,12 @@ impl Issue {
                 "run `bit deps circular` to get the component-ids participating in the circular",
                 true,
             ),
+            Self::RemovedDependencies => (
+                "RemovedDependencies",
+                "dependencies used in the code were deleted",
+                r#"if the dependencies are no longer needed, remove them from the code. otherwise, to get it installed from main run "bit install <missing dep>". to undo the delete, run "bit recover""#,
+                true,
+            ),
             _ => unreachable!(),
         }
     }
@@ -364,7 +379,9 @@ impl Issue {
     /// `issue.dataToString()`.
     fn data_to_string(self, data: &Value) -> io::Result<String> {
         match self {
-            Self::MissingManual => Ok(format!("{SPACE}{}", join(data)?)),
+            Self::MissingManual | Self::RemovedDependencies => {
+                Ok(format!("{SPACE}{}", join(data)?))
+            }
             Self::Duplicate => Ok(format!("{SPACE}{}", text(Some(data))?)),
             Self::MissingPackages => {
                 let rows = array(Some(data), "missing packages")?
@@ -392,24 +409,6 @@ impl Issue {
                 _ => Err(decline("status issue data")),
             },
         }
-    }
-}
-
-/// `array.join(', ')` of strings.
-fn join(data: &Value) -> io::Result<String> {
-    let items = array(Some(data), "issue data")?;
-    let items = items
-        .iter()
-        .map(|item| text(Some(item)))
-        .collect::<io::Result<Vec<_>>>()?;
-    Ok(items.join(", "))
-}
-
-/// `componentIssueToString`: arrays joined, strings as they are.
-fn list_or_text(value: &Value) -> io::Result<String> {
-    match value {
-        Value::String(text) => Ok(text.clone()),
-        _ => join(value),
     }
 }
 
