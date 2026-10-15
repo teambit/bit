@@ -108,7 +108,8 @@ impl Checkout<'_> {
         };
         let version = version.unwrap_or_else(|| "undefined".to_string());
         let title = format!(
-            "successfully switched {} to version {}",
+            "successfully {} {} to version {}",
+            if self.options.revert { "reverted" } else { "switched" },
             chalk.bold(&id.without_version()),
             chalk.bold(&version),
         );
@@ -136,7 +137,11 @@ impl Checkout<'_> {
             let version = self.results.version.as_deref().unwrap_or("undefined");
             format!("version {}", self.chalk().bold(version))
         };
-        let title = format!("successfully switched {} components to {target}", components.len());
+        let title = format!(
+            "successfully {} {} components to {target}",
+            if self.options.revert { "reverted" } else { "switched" },
+            components.len(),
+        );
         join_lines(&[
             self.format.success_summary(&title),
             self.results.apply_version_report(&self.format, true, self.to("head")),

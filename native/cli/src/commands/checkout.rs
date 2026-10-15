@@ -16,6 +16,7 @@ use bit_install::output::Output;
 use std::{env, ffi::OsString, io, path::Path};
 
 pub const COMMAND: Command = Command { name: "checkout", aliases: &["U"], run };
+pub const REVERT: Command = Command { name: "revert", aliases: &[], run: run_revert };
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
@@ -24,18 +25,36 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = options::parse(&argv[1..]) else {
         return Ok(Outcome::Declined("outside the native checkout grammar".to_string()));
     };
+    run_options(args, &argv, &options)
+}
+
+fn run_revert(args: &[OsString]) -> io::Result<Outcome> {
+    let Some(argv) = workspace_command::utf8_args(args) else {
+        return Ok(Outcome::Declined("arguments are not UTF-8".to_string()));
+    };
+    let Some(options) = options::parse_revert(&argv[1..]) else {
+        return Ok(Outcome::Declined("outside the native revert grammar".to_string()));
+    };
+    run_options(args, &argv, &options)
+}
+
+fn run_options(
+    args: &[OsString],
+    argv: &[&str],
+    options: &options::Options,
+) -> io::Result<Outcome> {
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".to_string()));
     };
-    let installer = match start_installer(&root, &argv, options.skip_install) {
+    let installer = match start_installer(&root, argv, options.skip_install) {
         Ok(installer) => installer,
         Err(error) => return Ok(Outcome::Declined(format!("checkout installation: {error}"))),
     };
-    let prepared = match prepare(&root, args, &options) {
+    let prepared = match prepare(&root, args, options) {
         Ok(prepared) => prepared,
         Err(error) => return Ok(Outcome::Declined(format!("checkout: {error}"))),
     };
-    execute(&root, args, prepared, installer)
+    execute(&root, args, if options.revert { "revert" } else { "checkout" }, prepared, installer)
 }
 
 fn start_installer(root: &Path, argv: &[&str], skip: bool) -> io::Result<Option<Installer>> {
@@ -73,24 +92,18 @@ fn prepare(
 fn execute(
     root: &Path,
     args: &[OsString],
+    command: &str,
     prepared: PreparedCheckout,
     installer: Option<Installer>,
 ) -> io::Result<Outcome> {
     if let Some(installer) = installer {
-        return workspace_command::execute_then(root, args, "checkout", |output| {
+        return workspace_command::execute_then(root, args, command, |output| {
             install_and_report(root, args, output, prepared, installer)
         });
     }
-    workspace_command::execute(
-        root,
-        args,
-        "checkout",
-        prepared.planned,
-        &prepared.report,
-        |output| {
-            render_progress(output, prepared.progress.as_ref(), prepared.main);
-        },
-    )
+    workspace_command::execute(root, args, command, prepared.planned, &prepared.report, |output| {
+        render_progress(output, prepared.progress.as_ref(), prepared.main);
+    })
 }
 
 fn install_and_report(

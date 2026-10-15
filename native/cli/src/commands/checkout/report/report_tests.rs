@@ -1,6 +1,8 @@
 use super::format;
 use crate::commands::{
-    checkout::options::parse, color::Chalk, test_support::expected_success_symbols,
+    checkout::options::{parse, parse_revert},
+    color::Chalk,
+    test_support::expected_success_symbols,
 };
 use serde_json::json;
 
@@ -21,6 +23,18 @@ fn reports_one_switched_component() {
         ),
     );
     assert!(report.details.is_none());
+}
+
+#[test]
+fn reports_reverted_files_with_original_checkout_summary() {
+    let options = parse_revert(&["my.scope/one", "0.0.1", "-x"]).unwrap();
+    let result = json!({
+        "components": [{"id":"my.scope/one@0.0.1","filesStatus":{"index.ts":"updated"}}],
+        "failedComponents":[],"version":"0.0.1"
+    });
+    let report = format(&result, &options, Chalk::new(false)).unwrap();
+    assert!(report.data.contains("successfully reverted my.scope/one to version 0.0.1"));
+    assert!(report.data.contains("Checkout Summary"));
 }
 
 /// `--all` without `--verbose` hides the skipped list behind `bit details`.

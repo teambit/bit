@@ -39,6 +39,7 @@ pub struct Command {
 
 pub const COMMANDS: &[Command] = &[
     checkout::COMMAND,
+    checkout::REVERT,
     file_history::BLAME,
     diff::COMMAND,
     export::COMMAND,

@@ -112,6 +112,11 @@ pub(super) fn prepare_bitmap_bytes(
     planned: &planning::Planned,
     original: Vec<u8>,
 ) -> io::Result<bitmap::Prepared> {
+    if record.request.options.revert {
+        // Revert writes the selected Version's files while retaining every
+        // bitmap field, including the current component version and main file.
+        return bitmap::prepare_bytes(&record.request.root, original, &record.context, &[], &[]);
+    }
     let mut updates = planned.materials
         .iter()
         .map(|material| bitmap_update(record, material))
