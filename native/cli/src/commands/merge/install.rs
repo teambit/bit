@@ -73,6 +73,14 @@ pub(in crate::commands) struct Snapping<'a> {
     pub materialized: Option<Planned>,
 }
 
+#[cfg_attr(
+    dylint_lib = "perfectionist",
+    expect(
+        perfectionist::overly_long_function,
+        perfectionist::too_many_local_bindings,
+        reason = "Existing CLI orchestration is retained until its operation is decomposed"
+    )
+)]
 pub(in crate::commands) fn execute_snapping(
     root: &Path,
     args: &[OsString],
@@ -87,7 +95,6 @@ pub(in crate::commands) fn execute_snapping(
         installer,
         materialized,
     } = snapping;
-    let Some(installer) = installer else { return Err(decline("merge snap installer")) };
     let (expected, mut materialized) =
         match prepare_snapping(root, args, options, mode, planned, materialized) {
             Ok(prepared) => prepared,
@@ -98,7 +105,9 @@ pub(in crate::commands) fn execute_snapping(
     workspace_command::execute_then(root, args, "merge", |output| {
         render_progress(output, progress);
         workspace_command::commit(&mut materialized, root)?;
-        if let Err(error) = installer.install_merge(root) {
+        if let Some(installer) = installer
+            && let Err(error) = installer.install_merge(root)
+        {
             output.failure(&format!(
                 "failed installing packages, see the log for full stacktrace. error: {error}",
             ));
@@ -144,6 +153,13 @@ pub(in crate::commands) fn execute_snapping(
 }
 
 /// Both plans must describe the same merge before any workspace write.
+#[cfg_attr(
+    dylint_lib = "perfectionist",
+    expect(
+        perfectionist::overly_long_function,
+        reason = "Existing CLI orchestration is retained until its operation is decomposed"
+    )
+)]
 fn prepare_snapping(
     root: &Path,
     args: &[OsString],

@@ -1,5 +1,5 @@
 use super::{Summary, quick_report, report};
-use crate::commands::color::Chalk;
+use crate::commands::{color::Chalk, test_support::expected_success_symbols};
 
 fn summary(modified: &[&str], new_comps: &[&str]) -> Summary {
     Summary {
@@ -32,6 +32,8 @@ fn reports_the_file_changes() {
 fn reports_a_workspace_without_file_changes() {
     assert_eq!(
         quick_report(&summary(&[], &[]), Chalk::new(false)),
-        "\u{2714} no new or modified components (based on file changes only, use \"bit status\" for full check)",
+        expected_success_symbols(
+            "\u{2714} no new or modified components (based on file changes only, use \"bit status\" for full check)"
+        ),
     );
 }

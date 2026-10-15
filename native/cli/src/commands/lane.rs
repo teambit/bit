@@ -37,6 +37,14 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
 }
 
+#[cfg_attr(
+    dylint_lib = "perfectionist",
+    expect(
+        perfectionist::overly_long_function,
+        perfectionist::too_many_local_bindings,
+        reason = "Existing CLI orchestration is retained until its operation is decomposed"
+    )
+)]
 fn merge(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     let Some(options) = options::parse(&argv[2..]) else {
         return Ok(Outcome::Declined("outside the native lane merge grammar".to_string()));
@@ -54,7 +62,9 @@ fn merge(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
     let request =
         Request { operation: "merge", options: options.request(), to: None, verify_fresh: true };
     let mode = report::Mode { verbose: options.verbose, lane: true };
-    let planned = if installer.is_some() && !options.no_snap() {
+    let planned = if options.no_snap() {
+        workspace_command::plan(&root, &request).map(|planned| (planned, None))
+    } else {
         let mut no_snap = options.request();
         no_snap["noSnap"] = Value::Bool(true);
         no_snap
@@ -71,8 +81,6 @@ fn merge(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
                 .map_err(|_| io::Error::other("merge snapshot preview thread panicked"))??;
             Ok::<_, io::Error>((preview, Some(materialized?)))
         })
-    } else {
-        workspace_command::plan(&root, &request).map(|planned| (planned, None))
     };
     let prepared = planned.and_then(|(planned, materialized)| {
         let report = report::format(&planned.plan["result"], mode, Chalk::detect(args))?;
@@ -83,7 +91,7 @@ fn merge(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
         Ok(prepared) => prepared,
         Err(error) => return Ok(Outcome::Declined(format!("lane merge: {error}"))),
     };
-    if installer.is_some() && !options.no_snap() && planned.plan.get("needsSnap").is_some() {
+    if !options.no_snap() && planned.plan.get("needsSnap").is_some() {
         return install::execute_snapping(
             &root,
             args,

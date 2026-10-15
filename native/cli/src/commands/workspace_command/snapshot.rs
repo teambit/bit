@@ -37,13 +37,10 @@ impl Steps<'_> {
         }
         let context = self.snapshot_context(caches)?;
         let capture = self.snapshot_capture(&context, plan)?;
-        // The mainline install-before-snap path resolves after materialization,
-        // and that resolver computes the dependent cascade. Direct merge snaps
-        // and lane merges retain the guard until their cascades are qualified.
-        if !snap_failed
-            && (!preview || request.options.get("lane").is_some())
-            && depends_on(&capture, &needs_snap)
-        {
+        // The install-before-snap path resolves after materialization, and
+        // that resolver computes the dependent cascade. A non-preview
+        // commandFinalize writes only the selected seeds.
+        if !snap_failed && !preview && depends_on(&capture, &needs_snap) {
             return Err(decline("command snapshot dependents"));
         }
         issues::validate(self.root, &context, &capture.components, plan)?;

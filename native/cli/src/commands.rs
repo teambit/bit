@@ -21,6 +21,8 @@ mod snap;
 mod status;
 mod switch;
 mod tag;
+#[cfg(test)]
+mod test_support;
 mod workspace_command;
 
 use crate::native::Outcome;

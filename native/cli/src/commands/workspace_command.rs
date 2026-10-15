@@ -195,7 +195,7 @@ fn prepare(
         "root": root,
         "home": home,
         "operation": request.operation,
-        "internalSnapshotPreview": preview_snapshot && request.options.get("lane").is_none(),
+        "internalSnapshotPreview": preview_snapshot,
         "dependencyGrammar": dependency_grammar()?,
         "options": request.options,
         "globalRemotesFile": cache::cache_root().join("config").join("global-remotes.json"),

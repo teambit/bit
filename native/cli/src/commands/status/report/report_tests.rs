@@ -1,5 +1,5 @@
 use super::{Flags, parse, report};
-use crate::commands::color::Chalk;
+use crate::commands::{color::Chalk, test_support::expected_success_symbols};
 use serde_json::{Value, json};
 
 #[test]
@@ -69,7 +69,9 @@ fn reports_a_clean_workspace() {
         report(&result(&json!({})), &context(), &Flags::default(), Chalk::new(false)).unwrap();
     assert_eq!(
         output.data,
-        "\u{2714} nothing to tag or export (use \"bit create <template> <component>\" to generate a new component)",
+        expected_success_symbols(
+            "\u{2714} nothing to tag or export (use \"bit create <template> <component>\" to generate a new component)"
+        ),
     );
     assert_eq!(output.code, 0);
 }
@@ -94,7 +96,9 @@ fn reports_a_clean_lane() {
     let output = report(&lane, &context(), &Flags::default(), Chalk::new(false)).unwrap();
     assert_eq!(
         output.data,
-        "✔ nothing to tag or export (use \"bit create <template> <component>\" to generate a new component)\n\ncurrent lane remote/study",
+        expected_success_symbols(
+            "✔ nothing to tag or export (use \"bit create <template> <component>\" to generate a new component)\n\ncurrent lane remote/study"
+        ),
     );
 }
 
