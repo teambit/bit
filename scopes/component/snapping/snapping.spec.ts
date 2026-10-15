@@ -151,6 +151,46 @@ describe('Snapping aspect', function () {
       await destroyWorkspace(workspaceData);
     });
   });
+  describe('snap from scope with changed files', () => {
+    let workspaceData: WorkspaceData;
+    let versionObj: Version;
+    before(async () => {
+      workspaceData = mockWorkspace();
+      const { workspacePath } = workspaceData;
+      await mockComponents(workspacePath);
+      const harmony = await loadManyAspects([SnappingAspect, ExportAspect], workspacePath);
+      const snapping = harmony.get<SnappingMain>(SnappingAspect.id);
+      await snapping.snap({ pattern: 'comp1', build: false, message: 'first snap' });
+      const exportMain = harmony.get<ExportMain>(ExportAspect.id);
+      await exportMain.export();
+
+      const bareScope = mockBareScope(workspaceData.remoteScopePath, 'bare-for-snap');
+      const harmonyBareScope = await loadManyAspects([SnappingAspect, ScopeAspect], bareScope.scopePath);
+      const snappingScope = harmonyBareScope.get<SnappingMain>(SnappingAspect.id);
+      const content = `/**\n * returns the greeting.\n */\nexport function greet() {\n  return 'hello';\n}\n`;
+      const results = await snappingScope.snapFromScope(
+        [
+          {
+            componentId: `${workspaceData.remoteScopeName}/comp1`,
+            message: 'snap from scope',
+            files: [{ path: 'index.js', content }],
+          },
+        ],
+        {}
+      );
+      const scope = harmonyBareScope.get<ScopeMain>(ScopeAspect.id);
+      versionObj = (await scope.legacyScope.objects.load(Ref.from(results.snappedIds[0].version))) as Version;
+    });
+    it('should parse the docs from the new files, as a workspace does', () => {
+      const docs = versionObj.docs || [];
+      expect(docs).to.have.lengthOf(1);
+      expect(docs[0].description).to.equal('returns the greeting.');
+      expect(docs[0].filePath).to.equal('index.js');
+    });
+    after(async () => {
+      await destroyWorkspace(workspaceData);
+    });
+  });
   describe('batchId', () => {
     let workspaceData: WorkspaceData | undefined;
     after(async () => {
