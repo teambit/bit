@@ -364,7 +364,7 @@ describe('package and capsule generation identity', () => {
     });
     it('should throw an error when --tasks does not match any available tasks', () => {
       const output = helper.general.runWithTryCatch('bit build --tasks non-existent-task');
-      expect(output).to.have.string('Pipeline error - no tasks found matching the specified filter');
+      expect(output).to.have.string('no tasks found matching the specified filter');
       expect(output).to.have.string('non-existent-task');
       expect(output).to.have.string('Available tasks:');
     });
