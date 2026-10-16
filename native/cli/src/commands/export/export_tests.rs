@@ -8,6 +8,7 @@ fn parses_the_native_flags() {
             && !empty.origin_directly
             && !empty.all
             && !empty.all_versions
+            && !empty.head_only
             && !empty.fork_lane_new_scope
             && empty.resume.is_none(),
     );
@@ -25,6 +26,8 @@ fn parses_the_native_flags() {
     assert_eq!(selected.ids, ["s/a@1.0.0", "s/b"]);
     assert!(selected.origin_directly);
     assert!(selected.all && selected.all_versions);
+    assert!(!selected.head_only);
+    assert!(parse(&["--head-only"]).unwrap().head_only);
     assert!(selected.fork_lane_new_scope);
     assert_eq!(selected.resume.as_deref(), Some("client-1"));
     for args in [
@@ -32,6 +35,11 @@ fn parses_the_native_flags() {
         &["--resume", "bad:id"],
         &["--all", "--all"],
         &["--all-versions", "--all-versions"],
+        &["--head-only", "--head-only"],
+        &["--head-only", "--all"],
+        &["--head-only", "--all-versions"],
+        &["--head-only", "--fork-lane-new-scope"],
+        &["--head-only", "--resume", "client-1"],
         &["-e"],
         &["s/a", "--origin-directly", "--origin-directly"],
         &["--fork-lane-new-scope", "--fork-lane-new-scope"],

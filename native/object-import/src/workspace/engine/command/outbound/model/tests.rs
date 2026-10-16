@@ -1,4 +1,4 @@
-use super::{requested, staged as staged_versions};
+use super::{requested, selection::staged as staged_versions};
 use serde_json::{Value, json};
 
 fn staged(scope: &str, name: &str, hash: &str) -> (Value, Value) {

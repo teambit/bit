@@ -35,6 +35,7 @@ struct Options {
     ids: Vec<String>,
     all: bool,
     all_versions: bool,
+    head_only: bool,
     origin_directly: bool,
     fork_lane_new_scope: bool,
     resume: Option<String>,
@@ -46,6 +47,7 @@ fn parse(args: &[&str]) -> Option<Options> {
         ids: Vec::new(),
         all: false,
         all_versions: false,
+        head_only: false,
         origin_directly: false,
         fork_lane_new_scope: false,
         resume: None,
@@ -66,13 +68,22 @@ fn parse(args: &[&str]) -> Option<Options> {
             _ => return None,
         }
     }
-    Some(options)
+    valid_combination(&options).then_some(options)
+}
+
+fn valid_combination(options: &Options) -> bool {
+    !options.head_only
+        || !(options.all
+            || options.all_versions
+            || options.fork_lane_new_scope
+            || options.resume.is_some())
 }
 
 fn set_boolean_flag(options: &mut Options, arg: &str) -> bool {
     let slot = match arg {
         "--all" => &mut options.all,
         "--all-versions" => &mut options.all_versions,
+        "--head-only" => &mut options.head_only,
         "--origin-directly" => &mut options.origin_directly,
         "--fork-lane-new-scope" => &mut options.fork_lane_new_scope,
         _ => return false,
@@ -282,6 +293,7 @@ fn prepare(engine: &mut Engine, root: &Path, options: &Options) -> io::Result<re
             "originDirectly": options.origin_directly,
             "all": options.all,
             "allVersions": options.all_versions,
+            "headOnly": options.head_only,
             "forkLaneNewScope": options.fork_lane_new_scope,
             "resume": options.resume,
         },

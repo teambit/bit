@@ -232,7 +232,7 @@ fn select_components(
             .iter()
             .find(|row| component.matches(row))
             .and_then(|row| row["head"].as_str());
-        if !exhaustive && previous_head == Some(component.head) {
+        if (!exhaustive || input.options.head_only) && previous_head == Some(component.head) {
             continue;
         }
         let row = component_rows
@@ -246,7 +246,8 @@ fn select_components(
 
 fn selection_rows(input: &Prepare, loaded: &Loaded) -> io::Result<(Vec<Value>, bool)> {
     let mut rows = lane_entries(&loaded.lane)?;
-    let exhaustive = input.options.all || input.options.all_versions;
+    let exhaustive =
+        input.options.all || input.options.all_versions || input.options.head_only;
     if exhaustive {
         let extra = exhaustive::workspace_entries(input, loaded, &rows)?;
         rows.extend(extra);
@@ -339,7 +340,9 @@ fn select_component(
         &context.input.transport.export_date,
     )?;
     let after = model::encode(hash, "Component", &component)?;
-    let versions = if exhaustive {
+    let versions = if context.input.options.head_only {
+        vec![id.head.to_owned()]
+    } else if exhaustive {
         exhaustive::all_lane_versions(dir, id.head, component["head"].as_str())?
     } else {
         staged::lane_versions(dir, id.head, previous_head, context.scope, context.name)?

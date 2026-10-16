@@ -2,6 +2,8 @@
 //! object closure, or a zero-object repeat export, before remote side effects.
 mod all_versions;
 mod repeat;
+mod selection;
+use selection::{Staged, has_staged, select_versions};
 
 use super::{Prepare, invalid};
 use crate::transfer::{self, Body, collection};
@@ -57,14 +59,20 @@ pub(super) fn select(input: &Prepare) -> io::Result<Vec<Selected>> {
         return Err(invalid("outbound lane index"));
     }
     let rows = index["components"].as_array().ok_or_else(|| invalid("outbound index"))?;
-    let candidates =
-        if input.options.all || input.options.all_versions || !input.ids.is_empty() {
-            all_rows(root, rows)?
-        } else {
-            staged_rows(root, rows)?
-        };
-    let selected =
-        requested(&input.ids, candidates, input.options.all || input.options.all_versions)?;
+    let candidates = if input.options.all
+        || input.options.all_versions
+        || input.options.head_only
+        || !input.ids.is_empty()
+    {
+        all_rows(root, rows)?
+    } else {
+        staged_rows(root, rows)?
+    };
+    let selected = requested(
+        &input.ids,
+        candidates,
+        input.options.all || input.options.all_versions || input.options.head_only,
+    )?;
     let mut components = Vec::new();
     for (row, model) in selected {
         let component = select_one(input, &row, model)?;
@@ -217,17 +225,6 @@ fn select_one(input: &Prepare, row: &Value, mut model: Value) -> io::Result<Sele
     })
 }
 
-fn select_versions(input: &Prepare, model: &Value, objects_dir: &Path) -> io::Result<Staged> {
-    let staged = if input.options.all || input.options.all_versions {
-        all_versions::select(model, objects_dir)?
-    } else if has_staged(model) {
-        staged(model)?
-    } else {
-        repeat::select(model)?
-    };
-    Ok(staged)
-}
-
 fn identity(row: &Value, model: &Value) -> io::Result<Identity> {
     let scope = row["id"]["scope"]
         .as_str()
@@ -258,54 +255,6 @@ pub(crate) fn read_object(dir: &Path, hash: &str, kind: &str) -> io::Result<Valu
     let (_, body) = crate::checkout::repository::split(&raw, parsed, kind)?;
     serde_json::from_slice(body).map_err(io::Error::other)
 }
-fn has_staged(model: &Value) -> bool {
-    model["state"]["versions"]
-        .as_object()
-        .is_some_and(|rows| {
-            rows.values()
-                .any(|row| row["local"] == true)
-        })
-}
-/// The local versions of a staged model: the head's version name, the head,
-/// and every local Version (the head among them).
-struct Staged {
-    version: String,
-    head: String,
-    hashes: Vec<String>,
-    labels: Vec<String>,
-}
-
-fn staged(model: &Value) -> io::Result<Staged> {
-    let rows =
-        model["state"]["versions"].as_object().ok_or_else(|| invalid("outbound local versions"))?;
-    let head = model["head"].as_str().ok_or_else(|| invalid("outbound non-head local Version"))?;
-    crate::merge_history::hash(head)?;
-    let mut version = None;
-    let mut hashes = Vec::new();
-    let mut labels = Vec::new();
-    for (key, _) in rows
-        .iter()
-        .filter(|(_, row)| row["local"] == true)
-    {
-        // A tag names its Version through `versions`; a snap is its own hash.
-        let hash = match model["versions"][key].as_str() {
-            Some(hash) => hash,
-            None if crate::merge_history::hash(key).is_ok() => key,
-            None => return Err(invalid("outbound local Version ref")),
-        };
-        crate::merge_history::hash(hash)?;
-        if hash == head {
-            version = Some(key.clone());
-        }
-        if !hashes.iter().any(|known| known == hash) {
-            hashes.push(hash.to_owned());
-        }
-        labels.push(key.clone());
-    }
-    let version = version.ok_or_else(|| invalid("outbound non-head local Version"))?;
-    Ok(Staged { version, head: head.to_owned(), hashes, labels })
-}
-
 fn history(
     dir: &Path,
     scope: &str,

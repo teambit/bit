@@ -56,6 +56,8 @@ struct Options {
     #[serde(default)]
     all_versions: bool,
     #[serde(default)]
+    head_only: bool,
+    #[serde(default)]
     fork_lane_new_scope: bool,
     resume: Option<String>,
 }

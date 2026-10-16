@@ -100,7 +100,9 @@ pub(super) fn prepare(input: &Prepare, selected: &LaneSelected) -> io::Result<Pr
         lane: Lane { scope: selected.scope.clone(), name: selected.name.clone() },
         acknowledgement: Acknowledgement {
             expected: expected_ids,
-            allow_subset: input.options.all || input.options.all_versions,
+            allow_subset: input.options.all
+                || input.options.all_versions
+                || input.options.head_only,
         },
         objects: prepare_objects(root, selected)?,
         models: selected.components.models

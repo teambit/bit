@@ -5,6 +5,129 @@ use serde_json::Value;
 use std::{ffi::OsStr, fs, path::Path};
 
 #[test]
+fn head_only_main_export_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("module.exports = () => 'head';");
+    helper.add_component_bar_foo();
+    helper.run("tag bar/foo --message first");
+    let before = helper.clone_remote_scope();
+    let node_root = helper.clone_workspace();
+    let command = "export --head-only";
+    let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{}", node.stderr);
+    let node_remote = helper.clone_remote_scope();
+    helper.restore_remote_scope(&before);
+    let native = helper.native_run(command);
+    assert_eq!(native.status.code(), node.status.code(), "native: {native:?}; node: {node:?}");
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(
+        remote_index_by_identity(&helper.scopes.remote_path),
+        remote_index_by_identity(&node_remote),
+    );
+    assert_eq!(object_names(&helper.scopes.remote_path), object_names(&node_remote));
+    assert_eq!(
+        parse(&fs::read_to_string(helper.scopes.local_path.join(".bit/index.json")).unwrap()),
+        parse(&fs::read_to_string(node_root.join(".bit/index.json")).unwrap()),
+    );
+    helper.create_component_bar_foo("module.exports = () => 'second';");
+    helper.run("tag bar/foo --message second");
+    assert_head_only_main_export(&helper);
+}
+
+fn assert_head_only_main_export(helper: &Helper) {
+    let before = helper.clone_remote_scope();
+    let node_root = helper.clone_workspace();
+    let command = "export --head-only";
+    let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{}", node.stderr);
+    let node_remote = helper.clone_remote_scope();
+    helper.restore_remote_scope(&before);
+    let native = helper.native_run(command);
+    assert_eq!(native.status.code(), node.status.code(), "native: {native:?}; node: {node:?}");
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(
+        remote_index_by_identity(&helper.scopes.remote_path),
+        remote_index_by_identity(&node_remote),
+    );
+    assert_eq!(object_names(&helper.scopes.remote_path), object_names(&node_remote));
+}
+
+#[test]
+fn head_only_lane_reexport_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("module.exports = () => 'head';");
+    helper.add_component_bar_foo();
+    helper.run("tag bar/foo --message base");
+    helper.run("export");
+    helper.run("lane create dev");
+    helper.run("snap --unmodified --message lane");
+    helper.run("export");
+    let before = helper.clone_remote_scope();
+    let node_root = helper.clone_workspace();
+    let command = "export --head-only";
+    let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{}", node.stderr);
+    let node_remote = helper.clone_remote_scope();
+    helper.restore_remote_scope(&before);
+    let native = helper.native_run(command);
+    assert_eq!(native.status.code(), node.status.code(), "native: {native:?}; node: {node:?}");
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(
+        remote_index_by_identity(&helper.scopes.remote_path),
+        remote_index_by_identity(&node_remote),
+    );
+    assert_eq!(object_names(&helper.scopes.remote_path), object_names(&node_remote));
+}
+
+#[test]
+fn head_only_lane_first_and_advanced_export_match_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("module.exports = () => 'head';");
+    helper.add_component_bar_foo();
+    helper.run("tag bar/foo --message base");
+    helper.run("export");
+    helper.run("lane create dev");
+    helper.run("snap --unmodified --message first");
+    if let Some(destination) = std::env::var_os("BIT_NATIVE_EXPORT_HEAD_ONLY_BENCH_FIXTURE") {
+        let destination = std::path::PathBuf::from(destination);
+        assert!(!destination.exists());
+        fs::create_dir_all(&destination).unwrap();
+        setup::copy_dir(&helper.scopes.local_path, &destination.join("workspace"));
+        setup::copy_dir(&helper.scopes.remote_path, &destination.join("remote"));
+        setup::copy_dir(&setup::shared().root.join("home"), &destination.join("home"));
+        setup::copy_dir(&setup::shared().root.join("globals"), &destination.join("globals"));
+    }
+    assert_head_only_lane_export(&helper);
+    helper.run("snap --unmodified --message second");
+    assert_head_only_lane_export(&helper);
+}
+
+fn assert_head_only_lane_export(helper: &Helper) {
+    let before = helper.clone_remote_scope();
+    let node_root = helper.clone_workspace();
+    let command = "export --head-only";
+    let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{}", node.stderr);
+    let node_remote = helper.clone_remote_scope();
+    helper.restore_remote_scope(&before);
+    let native = helper.native_run(command);
+    assert_eq!(native.status.code(), node.status.code(), "native: {native:?}; node: {node:?}");
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(
+        remote_index_by_identity(&helper.scopes.remote_path),
+        remote_index_by_identity(&node_remote),
+    );
+    assert_eq!(object_names(&helper.scopes.remote_path), object_names(&node_remote));
+}
+
+#[test]
 fn selected_staged_export_matches_node() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
