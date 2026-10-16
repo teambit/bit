@@ -56785,6 +56785,7 @@ snapshots:
       '@teambit/legacy.consumer-component': file:components/legacy/consumer-component(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/legacy.scope': file:components/legacy/scope(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/legacy.scope-api': file:components/legacy/scope-api(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/scope.remotes': file:components/scope/remotes(graphql@15.8.0)
       '@teambit/toolbox.crypto.sha1': file:components/crypto/sha1
       '@teambit/toolbox.promise.map-pool': file:scopes/toolbox/promise/map-pool
       '@teambit/toolbox.string.random': file:scopes/toolbox/string/random
@@ -56822,6 +56823,7 @@ snapshots:
       '@teambit/legacy.consumer-component': file:components/legacy/consumer-component(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/legacy.scope': file:components/legacy/scope(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/legacy.scope-api': file:components/legacy/scope-api(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/scope.remotes': file:components/scope/remotes(graphql@15.8.0)
       '@teambit/toolbox.crypto.sha1': file:components/crypto/sha1
       '@teambit/toolbox.promise.map-pool': file:scopes/toolbox/promise/map-pool
       '@teambit/toolbox.string.random': file:scopes/toolbox/string/random

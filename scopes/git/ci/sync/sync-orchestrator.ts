@@ -1,6 +1,7 @@
 import { formatTitle, formatWarningSummary } from '@teambit/cli';
 import * as path from 'path';
 import { BitError } from '@teambit/bit-error';
+import { listScopesByOwner } from '@teambit/scope.remotes';
 import type { Logger } from '@teambit/logger';
 import type { Workspace } from '@teambit/workspace';
 import type { LanesMain } from '@teambit/lanes';
@@ -8,9 +9,8 @@ import type { CheckoutMain } from '@teambit/checkout';
 import { CiAspect } from '../ci.aspect';
 import type { CiMain, CiWorkspaceConfig } from '../ci.main.runtime';
 import { git } from '../git';
-import type { CiSyncConfig } from './sync-config';
+import type { CiSyncConfig, LaneTarget } from './sync-config';
 import {
-  branchToLaneName,
   laneNameToBranch,
   parseLaneTarget,
   resolveSyncConfig,
@@ -21,6 +21,8 @@ import { HALT_SUMMARY_PREFIX, REFUSED_SUMMARY_PREFIX, LaneSyncExecutor } from '.
 import { MainSyncExecutor } from './main-sync-executor';
 import { selectGitHostProvider } from './git-host-provider';
 import { gitRepoRoot, isNonContentPath, listRemoteBranches } from './git-ops';
+import { discoverLaneTargets, displayTarget, targetForBranch } from './lane-discovery';
+import { readBranchLanePointer } from './sync-state';
 import { deriveOwnerRepo, renderInitChecklist, scaffoldWorkflowFiles } from './init-scaffold';
 
 /**
@@ -168,11 +170,10 @@ export class SyncOrchestrator {
       if (!laneName) return `branch ${branch} does not map to a valid lane name; nothing to do`;
       const skipReason = this.laneNotSyncableReason(laneName, cfg, mainLaneName, defaultBranch);
       if (skipReason) return `${skipReason} (branch ${branch})`;
-      // A branch name carries no scope, so this path can only resolve the lane against `defaultScope`;
-      // resolving a foreign-hosted lane to the wrong scope is safe (no-op, never a deletion).
-      return this.summarizeSync([
-        await laneSync.syncLane({ hostScope: defaultScope, name: laneName }, { dryRun: opts.dryRun }),
-      ]);
+      // A branch name carries no scope; its committed `.bitmap` lane pointer does, so a branch that
+      // mirrors a foreign-hosted lane is reconciled against that lane, not a same-named `defaultScope` one.
+      const target = await this.resolveBranchTarget(laneSync, branch, laneName, defaultScope);
+      return this.summarizeSync([await laneSync.syncLane(target, { dryRun: opts.dryRun })]);
     }
 
     if (opts.lane) {
@@ -187,19 +188,17 @@ export class SyncOrchestrator {
     // `--all` (also the no-arguments default): every mapped lane, then the main scope. Sequential on
     // purpose — the lanes share one workspace and one git checkout.
     const lines: string[] = [];
-    const { lanes: lanesToSync, errors } = await this.listLanesToSync(cfg, mainLaneName, defaultBranch);
+    const { targets, errors } = await this.listLanesToSync(cfg, mainLaneName, defaultBranch, laneSync);
     lines.push(...errors);
     this.deps.logger.console(
       formatTitle(
-        `Reconciling ${lanesToSync.length} mapped lane(s) of ${defaultScope}` +
-          `${lanesToSync.length ? `: ${lanesToSync.join(', ')}` : ''}`
+        `Reconciling ${targets.length} mapped lane(s) of ${defaultScope}` +
+          `${targets.length ? `: ${targets.map((target) => displayTarget(target, defaultScope)).join(', ')}` : ''}`
       )
     );
-    for (const laneName of lanesToSync) {
-      // Every enumerated target is hosted on `defaultScope` by construction; foreign-hosted lanes are
-      // explicit-target only.
+    for (const target of targets) {
       // oxlint-disable-next-line no-await-in-loop
-      lines.push(await laneSync.syncLane({ hostScope: defaultScope, name: laneName }, { dryRun: opts.dryRun }));
+      lines.push(await laneSync.syncLane(target, { dryRun: opts.dryRun }));
     }
     lines.push(await mainSync.syncMain({ dryRun: opts.dryRun }));
     return this.summarizeSync(lines);
@@ -296,73 +295,67 @@ export class SyncOrchestrator {
   }
 
   /**
-   * The lane names to reconcile on an `--all` run (sorted), plus one HALTED line per enumeration
-   * failure. The list is the union of the remote's lanes AND the lane-mapped branches on `origin` —
-   * a lane deleted on bit.cloud is gone from the first source, and only the branch side can make
-   * `close-pr` fire for it. An enumeration failure is reported rather than thrown, so the half that
-   * did enumerate is still reconciled while the run exits non-zero.
+   * The lanes to reconcile on an `--all` run, plus one HALTED line per enumeration failure — see
+   * `discoverLaneTargets`. This wires its I/O: the remote lane lists, bit.cloud's scope list for
+   * wildcard `laneScopes`, and the branches of `origin` with their committed `.bitmap` lane pointers.
    */
   private async listLanesToSync(
     cfg: Required<CiSyncConfig>,
     mainLaneName: string,
-    defaultBranch: string
-  ): Promise<{ lanes: string[]; errors: string[] }> {
+    defaultBranch: string,
+    laneSync: LaneSyncExecutor
+  ): Promise<{ targets: LaneTarget[]; errors: string[] }> {
     if (!cfg.lanes.length) {
       this.deps.logger.console(
         formatWarningSummary('sync.lanes is empty — lane mirroring is disabled, reconciling the main scope only')
       );
-      return { lanes: [], errors: [] };
+      return { targets: [], errors: [] };
     }
-    const errors: string[] = [];
-    const names = new Set<string>();
-    const remote = this.deps.workspace.defaultScope;
+    const defaultScope = this.deps.workspace.defaultScope;
+    // The pointers are read off `origin/<branch>`; the lanes reuse this fetch. A failed fetch only
+    // degrades resolution to `defaultScope` (the previous behavior) — the executor fetches, and
+    // reports, again on its own.
+    let fetched: Promise<boolean> | undefined;
+    const ensureFetched = () => {
+      fetched ??= laneSync
+        .fetchOnce()
+        .then(() => true)
+        .catch((e: any) => {
+          this.deps.logger.debug(`bit ci sync: fetching origin before enumeration failed: ${e?.message || e}`);
+          return false;
+        });
+      return fetched;
+    };
+    return discoverLaneTargets(
+      {
+        listScopeLanes: (scope) => this.deps.lanes.getLanes({ remote: scope }),
+        listOwnerScopes: listScopesByOwner,
+        listBranches: listRemoteBranches,
+        readBranchPointer: async (branch) =>
+          (await ensureFetched()) ? readBranchLanePointer(branch, defaultScope).catch(() => undefined) : undefined,
+        warn: (message) => this.deps.logger.console(formatWarningSummary(message)),
+        debug: (message) => this.deps.logger.debug(message),
+      },
+      { cfg, defaultScope, defaultBranch, mainLaneName }
+    );
+  }
 
-    try {
-      const lanes = await this.deps.lanes.getLanes({ remote });
-      lanes.forEach((lane) => {
-        const name = lane.id?.name ?? lane.name;
-        if (name) names.add(name);
-      });
-    } catch (e: any) {
-      const msg = e?.toString() ?? '';
-      // A scope with no lanes at all: the remote answers "not found" rather than an empty list.
-      if (msg.includes('was not found') || msg.includes('not found')) {
-        this.deps.logger.console(
-          formatWarningSummary(`No lanes found on ${remote} — reconciling lane-mapped branches and the main scope only`)
-        );
-      } else {
-        errors.push(`${HALT_SUMMARY_PREFIX} lanes -> could not list the lanes of ${remote}: ${msg}`);
-      }
-    }
-
-    try {
-      for (const branch of await listRemoteBranches()) {
-        // Reconciled by the main-scope path, never as lanes — under the default `branchPrefix: ''`
-        // they would otherwise resolve to the bogus lanes "main" / "bit-sync/main".
-        if (branch === defaultBranch || branch === cfg.mainSyncBranch) continue;
-        // Ordinary developer branches are skipped at debug level, never as a summary line.
-        const laneName = syncableLaneNameForBranch(branch, cfg);
-        if (!laneName) {
-          this.deps.logger.debug(
-            `bit ci sync: branch "${branch}" does not map to a name any lane could have ` +
-              `(mapped to "${branchToLaneName(branch, cfg) ?? '<not lane-mapped>'}") — skipping it`
-          );
-          continue;
-        }
-        names.add(laneName);
-      }
-    } catch (e: any) {
-      errors.push(
-        `${HALT_SUMMARY_PREFIX} lanes -> could not list the branches of "origin", so a lane deleted on ` +
-          `bit.cloud may have kept an orphan branch and an open PR: ${e?.message || e}`
-      );
-    }
-
-    const lanes = [...names]
-      .filter((name) => name !== mainLaneName)
-      .filter((name) => shouldSyncLane(name, cfg))
-      .sort();
-    return { lanes, errors };
+  /**
+   * The lane `--branch <branch>` reconciles: the one its committed `.bitmap` points at when that pointer
+   * names this lane, else the same-named lane on `defaultScope`. A failed fetch or read falls back to
+   * `defaultScope` — the executor fetches (and reports) again on its own.
+   */
+  private async resolveBranchTarget(
+    laneSync: LaneSyncExecutor,
+    branch: string,
+    laneName: string,
+    defaultScope: string
+  ): Promise<LaneTarget> {
+    const pointer = await laneSync
+      .fetchOnce()
+      .then(() => readBranchLanePointer(branch, defaultScope))
+      .catch(() => undefined);
+    return targetForBranch(laneName, pointer, defaultScope);
   }
 
   /**
