@@ -1,6 +1,6 @@
 //! Bounded scope acquisition and listing across HTTP and file remotes.
 mod file_list;
-use super::{List, Prepare, RemoteLog, Target, Transport, identity, invalid};
+use super::{List, Prepare, RemoteLog, Target, Transport, config, identity, invalid};
 use crate::{
     command_import::{VirtualRemote, lane},
     workspace::engine::status_models::component_log,
@@ -80,20 +80,87 @@ pub(super) fn list(input: &List) -> io::Result<Vec<(String, Vec<Listed>)>> {
     let (remotes, network, _, _) = connect(&input.root, &input.transport)?;
     let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
     runtime.block_on(async {
+        let lane_rows = listed_lane(input, &remotes, &network).await?;
         let mut lists = Vec::with_capacity(input.patterns.len());
         for pattern in &input.patterns {
-            let (scope, namespaces) = pattern
-                .split_once('/')
-                .filter(|(scope, _)| !scope.is_empty())
-                .ok_or_else(|| invalid("inbound list pattern"))?;
-            let listed = match remotes.resolve(scope, &network).await? {
-                Remote::Http(url) => network.list(&url, Some(namespaces)).await?,
-                Remote::File(path) => file_list::list(&path, scope, namespaces)?,
-            };
-            lists.push((pattern.clone(), listed));
+            lists.push(
+                list_pattern(pattern, input.lane_only, &lane_rows, &remotes, &network).await?,
+            );
         }
         Ok(lists)
     })
+}
+
+async fn listed_lane(
+    input: &List,
+    remotes: &Remotes,
+    network: &Network,
+) -> io::Result<Vec<Listed>> {
+    let Some(id) = active_lane(&input.root)? else {
+        if input.lane_only {
+            return Err(invalid("inbound lane-only needs an active lane"));
+        }
+        return Ok(Vec::new());
+    };
+    let Remote::File(path) = remotes.resolve(&id.scope, network).await? else {
+        return Err(invalid("inbound HTTP lane wildcard listing"));
+    };
+    file_list::lane(&path, &id)
+}
+
+async fn list_pattern(
+    pattern: &str,
+    lane_only: bool,
+    lane_rows: &[Listed],
+    remotes: &Remotes,
+    network: &Network,
+) -> io::Result<(String, Vec<Listed>)> {
+    let (scope, namespaces) = pattern
+        .split_once('/')
+        .filter(|(scope, _)| !scope.is_empty())
+        .ok_or_else(|| invalid("inbound list pattern"))?;
+    let matcher = file_list::matcher(scope, namespaces)?;
+    let mut listed = lane_rows
+        .iter()
+        .filter(|entry| {
+            matcher
+                .find(&format!("{}/{}", entry.scope, entry.name))
+                .is_some()
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+    if !lane_only {
+        let main = match remotes.resolve(scope, network).await? {
+            Remote::Http(url) => network.list(&url, Some(namespaces)).await?,
+            Remote::File(path) => file_list::list(&path, scope, namespaces)?,
+        };
+        let mut seen = listed
+            .iter()
+            .map(|entry| format!("{}/{}", entry.scope, entry.name))
+            .collect::<std::collections::HashSet<_>>();
+        listed.extend(
+            main.into_iter()
+                .filter(|entry| seen.insert(format!("{}/{}", entry.scope, entry.name))),
+        );
+    }
+    Ok((pattern.to_owned(), listed))
+}
+
+pub(super) fn active_lane(root: &Path) -> io::Result<Option<lane::Id>> {
+    let bitmap = config::document(&root.join(".bitmap"))?;
+    let Some(row) = bitmap.get("_bit_lane") else { return Ok(None) };
+    let id = lane::Id {
+        scope: row["id"]["scope"]
+            .as_str()
+            .unwrap_or_default()
+            .to_owned(),
+        name: row["id"]["name"]
+            .as_str()
+            .unwrap_or_default()
+            .to_owned(),
+    };
+    id.validate()?;
+    Ok(Some(id))
 }
 
 pub(super) fn log(input: &RemoteLog) -> io::Result<(usize, Value)> {

@@ -15,7 +15,7 @@ pub struct Options {
     /// `--skip-write-config-files`
     pub skip_write_config_files: bool,
     /// `--include-deprecated`: wildcard patterns keep deprecated components.
-    pub include_deprecated: bool,
+    pub selection: SelectionOptions,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -25,6 +25,12 @@ pub struct WriteOptions {
     pub path: Option<String>,
     pub merge_strategy: Option<String>,
     pub dependencies: DependencyOptions,
+}
+
+#[derive(Debug, Default, PartialEq, Eq)]
+pub struct SelectionOptions {
+    pub include_deprecated: bool,
+    pub lane_only: bool,
 }
 
 #[derive(Debug, Default, PartialEq, Eq)]
@@ -141,7 +147,7 @@ fn fetch(ids: Vec<String>, flags: &[&str]) -> Option<Options> {
         },
         lanes: lanes == 1,
         skip_write_config_files: false,
-        include_deprecated: false,
+        selection: SelectionOptions::default(),
     })
 }
 
@@ -187,12 +193,16 @@ fn import(
         },
         lanes: false,
         skip_write_config_files: has("--skip-write-config-files"),
-        include_deprecated: has("--include-deprecated"),
+        selection: SelectionOptions {
+            include_deprecated: has("--include-deprecated"),
+            lane_only: has("--lane-only"),
+        },
     })
 }
 
 fn valid_import_args(flags: &[&str], ids: &[String]) -> bool {
     valid_import_flags(flags)
+        && (!flags.contains(&"--lane-only") || ids.iter().any(|id| has_wildcard(id)))
         && !ids
             .iter()
             .any(|id| has_wildcard(id) && !valid_pattern(id))
@@ -260,6 +270,7 @@ fn valid_import_flags(flags: &[&str]) -> bool {
         "--override",
         "--dependencies",
         "--dependencies-head",
+        "--lane-only",
     ];
     let has = |flag: &str| flags.contains(&flag);
     let both =

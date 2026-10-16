@@ -397,7 +397,7 @@ fn component_identity(value: &Value) -> io::Result<String> {
     }
     Ok(format!("{scope}/{name}"))
 }
-pub(super) fn validate_value(id: &Id, value: &Value) -> io::Result<()> {
+pub(crate) fn validate_value(id: &Id, value: &Value) -> io::Result<()> {
     if value["scope"] != id.scope || value["name"] != id.name {
         return Err(invalid("command lane object identity"));
     }

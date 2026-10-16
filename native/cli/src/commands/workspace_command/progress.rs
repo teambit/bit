@@ -113,11 +113,14 @@ impl Progress {
         with_ids: bool,
         wildcard: bool,
         prefetch: Option<usize>,
+        on_lane: bool,
     ) {
         if fetch {
             output.status("fetching objects...");
         }
-        output.status("importing components");
+        if !on_lane {
+            output.status("importing components");
+        }
         if with_ids {
             output.status("importing components");
         }
@@ -132,7 +135,12 @@ impl Progress {
         // `importMany` is called with the ids the latest-heads import requested.
         let requested = self.imports
             .iter()
-            .find(|row| row.reason.as_deref() == Some(REASONS[0]));
+            .find(|row| {
+                row.reason.as_deref() == Some(REASONS[0])
+                    || row.reason
+                        .as_deref()
+                        .is_some_and(|reason| reason.starts_with("of their latest on lane "))
+            });
         for row in &self.imports {
             if row.reason.as_deref() == Some(REASONS[1]) {
                 output.status(&format!(

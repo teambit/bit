@@ -88,7 +88,11 @@ fn detail(
         (false, true) => "added",
         (false, false) => "updated",
     };
-    let head = head_as_tag_or_hash(model)?;
+    let head = if model["head"].is_null() && crate::merge_history::hash(&target.version).is_ok() {
+        target.version.clone()
+    } else {
+        head_as_tag_or_hash(model)?
+    };
     let latest = added.contains(&head).then_some(head);
     let files_status = conflicts.map(|paths| {
         paths

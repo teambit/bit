@@ -82,8 +82,10 @@ fn render_selection(options: &options::Options, selection: &patterns::Selection,
         return;
     }
     output.status("importing components");
-    for _ in options.wildcards() {
-        output.status("listing remote components");
+    if !options.selection.lane_only {
+        for _ in options.wildcards() {
+            output.status("listing remote components");
+        }
     }
     for warning in &selection.warnings {
         output.warning(warning);
@@ -143,6 +145,7 @@ fn render_progress(planned: &Planned, options: &options::Options, output: &Outpu
                             .iter()
                             .any(|id| !id.contains('@'))),
                 options.write.dependencies.depth.map(|_| planned.prefetch_count),
+                planned.prepared["currentLane"].is_string(),
             );
         } else {
             progress.render_inbound(
@@ -151,6 +154,7 @@ fn render_progress(planned: &Planned, options: &options::Options, output: &Outpu
                 false,
                 true,
                 options.write.dependencies.depth.map(|_| planned.prefetch_count),
+                planned.prepared["currentLane"].is_string(),
             );
         }
     }
@@ -273,7 +277,7 @@ pub(super) fn prepare_status_refresh(
         },
         lanes: false,
         skip_write_config_files: false,
-        include_deprecated: false,
+        selection: options::SelectionOptions::default(),
     };
     prepare_into(engine, root, &options, ids)
 }
@@ -297,7 +301,7 @@ pub(super) fn prepare_status_forked_refresh(
         },
         lanes: true,
         skip_write_config_files: false,
-        include_deprecated: false,
+        selection: options::SelectionOptions::default(),
     };
     prepare_into(engine, root, &options, &[lane.to_owned()])
 }

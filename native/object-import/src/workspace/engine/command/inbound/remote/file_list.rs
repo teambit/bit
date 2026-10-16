@@ -1,6 +1,6 @@
 //! `Fs.list` / `ComponentsList.listLocalScope` for a configured bare file scope.
 use super::{Listed, invalid};
-use crate::{checkout::repository, read_budget::Budget};
+use crate::{checkout::repository, command_import::lane, read_budget::Budget};
 use regress::Regex;
 use serde_json::Value;
 use sha1::{Digest, Sha1};
@@ -55,7 +55,7 @@ fn collect(path: &Path, scope: &str, pattern: &Regex, rows: &[Value]) -> io::Res
     Ok(listed)
 }
 
-fn matcher(scope: &str, namespaces: &str) -> io::Result<Regex> {
+pub(super) fn matcher(scope: &str, namespaces: &str) -> io::Result<Regex> {
     if namespaces.is_empty() || namespaces.len() > 4096 {
         return Err(invalid("inbound file pattern"));
     }
@@ -65,6 +65,64 @@ fn matcher(scope: &str, namespaces: &str) -> io::Result<Regex> {
         format!("{scope}/{namespaces}")
     };
     Regex::new(&format!("^{}$", full.replace('*', ".*"))).map_err(io::Error::other)
+}
+
+pub(super) fn lane(path: &Path, id: &lane::Id) -> io::Result<Vec<Listed>> {
+    let hash = lane_hash(path, id)?;
+    let mut compressed = 0;
+    let value = object(path, &hash, "Lane", &mut compressed)?;
+    lane::validate_value(id, &value)?;
+    let mut listed = Vec::new();
+    for entry in lane::entries(&value)?.into_iter().filter(|entry| !entry.hidden) {
+        if let Some(row) = lane_component(path, &entry, &mut compressed)? {
+            listed.push(row);
+        }
+    }
+    Ok(listed)
+}
+
+fn lane_hash(path: &Path, id: &lane::Id) -> io::Result<String> {
+    let index: Value = serde_json::from_slice(
+        &Budget::new(4 * 1024 * 1024).read(File::open(path.join("index.json"))?)?,
+    )?;
+    let rows = index["lanes"].as_array().ok_or_else(|| invalid("inbound file lane index"))?;
+    let matching = rows
+        .iter()
+        .filter(|row| row["id"]["scope"] == id.scope && row["id"]["name"] == id.name)
+        .collect::<Vec<_>>();
+    if matching.len() != 1 {
+        return Err(invalid("inbound file lane identity"));
+    }
+    matching[0]["hash"]
+        .as_str()
+        .map(str::to_owned)
+        .ok_or_else(|| invalid("inbound file lane hash"))
+}
+
+fn lane_component(
+    path: &Path,
+    entry: &lane::Entry,
+    compressed: &mut usize,
+) -> io::Result<Option<Listed>> {
+    let (scope, name) =
+        entry.identity.split_once('/').ok_or_else(|| invalid("inbound file lane component"))?;
+    let version = object(path, &entry.head, "Version", compressed)?;
+    crate::history_query::validate_version(&version)?;
+    if extension(&version, "teambit.component/remove", "removed") {
+        return Ok(None);
+    }
+    let model_hash = crate::validate::hexadecimal(&Sha1::digest(entry.identity.as_bytes()));
+    let model = object(path, &model_hash, "Component", compressed)?;
+    if model["scope"] != scope || model["name"] != name {
+        return Err(invalid("inbound file lane model identity"));
+    }
+    Ok(Some(Listed {
+        scope: scope.to_owned(),
+        name: name.to_owned(),
+        version: Some(entry.head.clone()),
+        deprecated: model["deprecated"] == true
+            || extension(&version, "teambit.component/deprecation", "deprecate"),
+    }))
 }
 
 fn indexed(row: &Value, scope: &str, seen: &mut HashSet<String>) -> io::Result<(String, String)> {

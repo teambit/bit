@@ -14,6 +14,7 @@ use std::{
 };
 mod dependencies;
 mod details;
+mod lane_workspace;
 mod lanes;
 mod progress;
 mod remote;
@@ -97,6 +98,8 @@ pub(in crate::workspace::engine) struct List {
     root: PathBuf,
     /// `<scope>/<namespaces with wildcards>`.
     patterns: Vec<String>,
+    #[serde(default)]
+    lane_only: bool,
     #[serde(flatten)]
     transport: Transport,
 }
@@ -148,7 +151,7 @@ pub(in crate::workspace::engine) fn prepare(
     let workspace = prepare_workspace(input, &targets, &import)?;
     state.sequence = state.sequence.wrapping_add(1);
     let token = format!("inbound-{}", state.sequence);
-    let receipt = if input.operation == "status" {
+    let mut receipt = if input.operation == "status" {
         json!({"token":token,"importedIds":[],"progress":[],"refreshCount":import.main_refresh.count,"refreshObjects":import.main_refresh.objects})
     } else {
         let prefetched = if input.options.dependencies.dependencies_depth.is_some() {
@@ -169,6 +172,9 @@ pub(in crate::workspace::engine) fn prepare(
             &token,
         )?
     };
+    if let Some(lane) = remote::active_lane(&input.root)? {
+        receipt["currentLane"] = json!(format!("{}/{}", lane.scope, lane.name));
+    }
     let count = targets.len();
     state.inbound = Some(Retained { token, receipt: receipt.clone(), import, workspace });
     Ok((count, receipt))
@@ -178,6 +184,11 @@ fn prepare_targets(
     input: &Prepare,
     roots: &[Target],
 ) -> io::Result<(Vec<Target>, command_import::PreparedImport)> {
+    if input.operation == "import"
+        && let Some(lane) = remote::active_lane(&input.root)?
+    {
+        return lane_workspace::prepare(input, roots, &lane);
+    }
     let virtual_remotes = remote::objects(input, roots)?;
     let initial = prepare_import(input, roots, &virtual_remotes)?;
     let targets = dependencies::expand(input, roots, &initial)?;

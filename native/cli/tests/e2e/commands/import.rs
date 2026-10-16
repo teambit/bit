@@ -783,6 +783,124 @@ fn imported_dependency_traversal_matches_node() {
     }
 }
 
+#[test]
+fn lane_wildcard_selection_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo(FOO_FIXTURE);
+    helper.add_component_bar_foo();
+    helper.tag_without_build("", "");
+    helper.run("export");
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    helper.run("lane create dev");
+    helper.populate_components(1, false, "");
+    helper.run("snap --message lane");
+    helper.run("export");
+    std::thread::sleep(std::time::Duration::from_millis(1100));
+    if let Some(destination) = std::env::var_os("BIT_NATIVE_IMPORT_LANE_FIXTURE") {
+        let destination = std::path::PathBuf::from(destination);
+        assert!(!destination.exists());
+        fs::create_dir_all(&destination).unwrap();
+        setup::copy_dir(&helper.scopes.local_path, &destination.join("workspace"));
+        setup::copy_dir(&helper.scopes.remote_path, &destination.join("remote"));
+    }
+    let baseline = helper.clone_workspace();
+    for (pattern, flags) in [("**", "-x"), ("**", "--lane-only -x"), ("comp1", "-x")] {
+        helper.get_cloned_workspace(&baseline);
+        let node_root = helper.clone_workspace();
+        let command = format!("import {}/{pattern} {flags}", helper.scopes.remote);
+        let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+        assert!(node.status.success(), "{command}: {}", combined(&node));
+        let native = helper.native_run(&command);
+        assert!(native.native, "{command}: {}", native.trace);
+        assert_eq!(native.status.code(), node.status.code(), "{command}");
+        assert_eq!(
+            without_progress_timing(&native.stdout),
+            without_progress_timing(&node.stdout),
+            "{command}",
+        );
+        assert_eq!(native.stderr, node.stderr, "{command}");
+        assert_eq!(
+            fs::read(helper.scopes.local_path.join(".bitmap")).unwrap(),
+            fs::read(node_root.join(".bitmap")).unwrap(),
+            "{command}",
+        );
+    }
+}
+
+#[test]
+fn changed_remote_lane_head_declines_before_writes() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo(FOO_FIXTURE);
+    helper.add_component_bar_foo();
+    helper.tag_without_build("", "");
+    helper.run("export");
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    helper.run("lane create dev");
+    helper.populate_components(1, false, "");
+    helper.run("snap --message first");
+    helper.run("export");
+    let baseline = helper.clone_workspace();
+    helper.append_file("comp1/index.js", "\n// second lane snap");
+    helper.run("snap --message second");
+    helper.run("export");
+    std::thread::sleep(std::time::Duration::from_millis(1100));
+    helper.get_cloned_workspace(&baseline);
+    let node_root = helper.clone_workspace();
+    let command = format!("import {}/** -x", helper.scopes.remote);
+    let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(!node.status.success(), "{command}: {}", combined(&node));
+    let native = helper.cmd(&command);
+    assert!(!native.native, "{command}: {}", native.trace);
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(
+        fs::read(helper.scopes.local_path.join(".bitmap")).unwrap(),
+        fs::read(node_root.join(".bitmap")).unwrap(),
+    );
+    assert_eq!(
+        fs::read(helper.scopes.local_path.join("comp1/index.js")).unwrap(),
+        fs::read(node_root.join("comp1/index.js")).unwrap(),
+    );
+}
+
+#[test]
+fn lane_wildcard_imports_missing_lane_component_like_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo(FOO_FIXTURE);
+    helper.add_component_bar_foo();
+    helper.tag_without_build("", "");
+    helper.run("export");
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    helper.run("lane create dev");
+    helper.populate_components(1, false, "");
+    helper.run("snap --message first");
+    helper.run("export");
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    helper.run("lane create dev");
+    std::thread::sleep(std::time::Duration::from_millis(1100));
+    let node_root = helper.clone_workspace();
+    let command = format!("import {}/** --lane-only -x", helper.scopes.remote);
+    let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{command}: {}", combined(&node));
+    let native = helper.native_run(&command);
+    assert!(native.native, "{command}: {}", native.trace);
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(without_progress_timing(&native.stdout), without_progress_timing(&node.stdout));
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(
+        fs::read_to_string(helper.scopes.local_path.join(".bitmap")).unwrap(),
+        fs::read_to_string(node_root.join(".bitmap")).unwrap(),
+    );
+}
+
 /// Source-suite cases that may still delegate when installation or unsupported
 /// component layouts are involved: authored components, some merge layouts,
 /// and dependency traversal flags.

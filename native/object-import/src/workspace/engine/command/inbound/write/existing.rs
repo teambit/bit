@@ -45,6 +45,32 @@ pub(super) fn prepare(
         rows.get_mut(&input.target.name).ok_or_else(|| invalid("inbound existing bitmap"))?;
     bitmap["version"] = Value::String(name);
     bitmap["mainFile"] = Value::String(main.to_owned());
+    reorder_lane(bitmap)?;
+    Ok(())
+}
+
+fn reorder_lane(bitmap: &mut Value) -> io::Result<()> {
+    if bitmap.get("onLanesOnly").is_some() || bitmap.get("isAvailableOnCurrentLane").is_some() {
+        let old = bitmap.as_object().ok_or_else(|| invalid("inbound lane bitmap row"))?;
+        let mut reordered = Map::new();
+        for key in [
+            "name",
+            "scope",
+            "version",
+            "mainFile",
+            "rootDir",
+            "onLanesOnly",
+            "isAvailableOnCurrentLane",
+        ] {
+            if let Some(value) = old.get(key) {
+                reordered.insert(key.to_owned(), value.clone());
+            }
+        }
+        if reordered.len() != old.len() {
+            return Err(invalid("inbound lane bitmap row fields"));
+        }
+        *bitmap = Value::Object(reordered);
+    }
     Ok(())
 }
 

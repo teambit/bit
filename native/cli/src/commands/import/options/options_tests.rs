@@ -21,7 +21,7 @@ fn imports_that_install_and_wildcard_patterns() {
         parse(&["import", "s.org/**", "--include-deprecated", "--skip-write-config-files"])
             .unwrap();
     assert_eq!(patterns.wildcards(), ["s.org/**"]);
-    assert!(patterns.include_deprecated && patterns.skip_write_config_files);
+    assert!(patterns.selection.include_deprecated && patterns.skip_write_config_files);
     assert!(!parse(&["import", "s/a", "-x"]).unwrap().installs());
 }
 

@@ -26,6 +26,7 @@ pub struct Details {
 pub struct Receipt {
     pub ids: Vec<String>,
     details: Vec<Details>,
+    on_lane: bool,
 }
 
 /// The engine's inbound receipt, validated.
@@ -58,7 +59,8 @@ pub fn validate(value: &Value) -> io::Result<Receipt> {
             Ok(detail)
         })
         .collect::<io::Result<_>>()?;
-    Ok(Receipt { ids, details })
+    let on_lane = value.get("currentLane").is_some_and(Value::is_string);
+    Ok(Receipt { ids, details, on_lane })
 }
 
 /// Versioned ids, distinct without their versions.
@@ -173,7 +175,10 @@ impl Receipt {
         let up_to_date = if up_to_date == 0 {
             String::new()
         } else {
-            format!(", {up_to_date} components are up to date")
+            format!(
+                ", {up_to_date} components are up to date{}",
+                if self.on_lane { " on the lane" } else { "" },
+            )
         };
         let imported = format.section("imported components", "", &items);
         let summary = format.success_summary(&format!("{prefix}{up_to_date}"));

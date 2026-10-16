@@ -32,14 +32,14 @@ pub fn select(root: &Path, options: &Options) -> io::Result<Selection> {
     if !collate::root_locale() {
         return Err(decline("a locale whose collation tailors id characters"));
     }
-    let lists = list(root, &wildcards)?;
+    let lists = list(root, &wildcards, options.selection.lane_only)?;
     let mut lists = lists.iter();
     let mut selection = Selection { ids: Vec::new(), warnings: Vec::new() };
     let mut seen = HashSet::new();
     for pattern in &options.ids {
         let ids = if has_wildcard(pattern) {
             let list = lists.next().ok_or_else(|| decline("remote lists"))?;
-            listed(pattern, list, options.include_deprecated)?
+            listed(pattern, list, options.selection.include_deprecated)?
         } else {
             vec![pattern.clone()]
         };
@@ -67,7 +67,7 @@ fn listed(pattern: &str, list: &Value, include_deprecated: bool) -> io::Result<V
 }
 
 /// `commandInboundList`: each pattern with the components its remote lists.
-fn list(root: &Path, patterns: &[&String]) -> io::Result<Vec<Value>> {
+fn list(root: &Path, patterns: &[&String], lane_only: bool) -> io::Result<Vec<Value>> {
     let cli = NodeCli::find()?;
     let listed: Value = Engine::new()?
         .request(&json!({
@@ -78,6 +78,7 @@ fn list(root: &Path, patterns: &[&String]) -> io::Result<Vec<Value>> {
             "bitDir": cli.bit_dir,
             "bitVersion": cli.version,
             "patterns": patterns,
+            "laneOnly": lane_only,
         }))?;
     let lists = array(listed.get("lists"), "remote lists")?.to_vec();
     if lists.len() != patterns.len() {

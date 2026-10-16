@@ -58,11 +58,14 @@ pub(super) fn prepare(
     let bitmap_before = fs::read(root.join(".bitmap"))?;
     let mut bitmap = crate::recovery::jsonc::parse(&bitmap_before)?;
     let rows = bitmap.as_object_mut().ok_or_else(|| invalid("inbound bitmap object"))?;
-    let schema = bitmap_schema(rows)?;
+    let (schema, lane) = metadata::bitmap_metadata(rows)?;
     let changes = prepare_targets(root, targets, &template, import, rows, options)?;
     // `sortObjectByKeys`: `Object.keys(...).sort()`, by UTF-16 code units.
     rows.sort_keys();
     rows.insert("$schema-version".into(), schema);
+    if let Some(lane) = lane {
+        rows.insert("_bit_lane".into(), lane);
+    }
     let bitmap_after = crate::inspection::render_bitmap(&bitmap)?;
     Ok(Prepared { root: root.to_owned(), bitmap_before, bitmap_after, changes, history })
 }
@@ -249,15 +252,6 @@ fn prepare_history(root: &Path, file_id: Option<&str>) -> io::Result<History> {
     Ok(History { backup, metadata, metadata_before, file_id: file_id.to_owned() })
 }
 
-fn bitmap_schema(rows: &mut Map<String, Value>) -> io::Result<Value> {
-    if rows.get("$schema-version").and_then(Value::as_str) != Some("17.0.0")
-        || rows.contains_key("_bit_lane")
-    {
-        return Err(invalid("inbound workspace bitmap lifecycle"));
-    }
-    rows.shift_remove("$schema-version").ok_or_else(|| invalid("inbound bitmap schema"))
-}
-
 fn prepare_target(
     root: &Path,
     directory: &str,
@@ -401,6 +395,7 @@ pub(super) fn version(model: &Value, requested: &str) -> io::Result<(String, Str
 
 mod directories;
 mod existing;
+mod metadata;
 mod policy;
 mod publication;
 
