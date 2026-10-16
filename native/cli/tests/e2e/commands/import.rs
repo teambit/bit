@@ -649,9 +649,91 @@ fn files_keep_their_relative_paths() {
     }
 }
 
+#[test]
+fn a_file_remote_wildcard_import_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(3, true, "");
+    helper.tag_without_build("", "");
+    helper.run("export");
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    if let Some(destination) = std::env::var_os("BIT_NATIVE_IMPORT_WILDCARD_FIXTURE") {
+        let destination = std::path::PathBuf::from(destination);
+        assert!(!destination.exists());
+        fs::create_dir_all(&destination).unwrap();
+        setup::copy_dir(&helper.scopes.local_path, &destination.join("workspace"));
+        setup::copy_dir(&helper.scopes.remote_path, &destination.join("remote"));
+    }
+    let node_root = helper.clone_workspace();
+    let command = format!("import {}/* -x", helper.scopes.remote);
+    let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{}", combined(&node));
+    let native = helper.native_run(&command);
+    assert!(native.native, "{}", native.trace);
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(without_progress_timing(&native.stdout), without_progress_timing(&node.stdout));
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(
+        fs::read(helper.scopes.local_path.join(".bitmap")).unwrap(),
+        fs::read(node_root.join(".bitmap")).unwrap(),
+    );
+    for name in ["comp1", "comp2", "comp3"] {
+        let relative = format!("{}/{name}/index.js", helper.scopes.remote);
+        assert_eq!(
+            fs::read(helper.scopes.local_path.join(&relative)).unwrap(),
+            fs::read(node_root.join(&relative)).unwrap(),
+            "{name}",
+        );
+    }
+}
+
+#[test]
+fn file_remote_wildcards_filter_and_report_empty_matches_like_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(3, true, "");
+    helper.tag_without_build("", "");
+    helper.run("export");
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    let baseline = helper.clone_workspace();
+    for (pattern, expected) in [("comp[12]*", 2), ("missing*", 0)] {
+        helper.get_cloned_workspace(&baseline);
+        let node_root = helper.clone_workspace();
+        let command = format!("import {}/{pattern} -x", helper.scopes.remote);
+        let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+        assert!(node.status.success(), "{pattern}: {}", combined(&node));
+        let native = helper.native_run(&command);
+        assert!(native.native, "{pattern}: {}", native.trace);
+        assert_eq!(native.status.code(), node.status.code(), "{pattern}");
+        assert_eq!(
+            without_progress_timing(&native.stdout),
+            without_progress_timing(&node.stdout),
+            "{pattern}",
+        );
+        assert_eq!(native.stderr, node.stderr, "{pattern}");
+        assert_eq!(
+            fs::read(helper.scopes.local_path.join(".bitmap")).unwrap(),
+            fs::read(node_root.join(".bitmap")).unwrap(),
+            "{pattern}",
+        );
+        for number in 1..=3 {
+            let relative = format!("{}/comp{number}/index.js", helper.scopes.remote);
+            let native_file = helper.scopes.local_path.join(&relative);
+            let node_file = node_root.join(&relative);
+            assert_eq!(native_file.exists(), node_file.exists(), "{pattern}: {relative}");
+            assert_eq!(native_file.exists(), number <= expected, "{pattern}: {relative}");
+            if native_file.exists() {
+                assert_eq!(fs::read(native_file).unwrap(), fs::read(node_file).unwrap());
+            }
+        }
+    }
+}
+
 /// Source-suite cases that may still delegate when installation or unsupported
-/// component layouts are involved: authored components, merges, dependency flags,
-/// and file-remote wildcards.
+/// component layouts are involved: authored components, some merge layouts,
+/// and dependency traversal flags.
 mod known_failures {
     use super::{
         chain, combined, consumer_files, expect_id, exported_simple, import, import_chain,
@@ -660,6 +742,7 @@ mod known_failures {
     use crate::{
         allow_known_failure,
         helper::{FOO_FIXTURE, Helper, len, parse},
+        known_failure::Native,
     };
 
     use std::fs;
@@ -899,7 +982,7 @@ mod known_failures {
         helper.run("export");
         helper.re_init_workspace();
         helper.add_remote_scope();
-        let output = allow_known_failure!(import(&helper, "*"));
+        let output = import(&helper, "*").native();
         for comp in ["comp1", "comp2", "comp3"] {
             assert!(output.contains(comp), "{comp} in {output}");
         }

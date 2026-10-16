@@ -43,7 +43,11 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     };
     if selection.ids.is_empty() && !options.ids.is_empty() {
         return workspace_command::execute_then(&root, args, options.operation, |output| {
+            let started = Instant::now();
             render_selection(&options, &selection, output);
+            output.status("importing components");
+            output.status("import 0 components with their dependencies (if missing)");
+            output.success("importing components", Some(started));
             Ok(Report { data: chalk.yellow("nothing to import"), code: 0, details: None })
         });
     }
@@ -110,9 +114,14 @@ fn render(
     if let Some(progress) = &planned.progress {
         // The wildcard listing already printed the first `importing components`.
         if options.wildcards().is_empty() {
-            progress.render_inbound(output, options.operation == "fetch", !options.ids.is_empty());
+            progress.render_inbound(
+                output,
+                options.operation == "fetch",
+                !options.ids.is_empty(),
+                false,
+            );
         } else {
-            progress.render_inbound(output, false, false);
+            progress.render_inbound(output, false, false, true);
         }
     }
     if let Some(installer) = installer {

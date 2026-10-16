@@ -106,7 +106,7 @@ impl Progress {
     /// Print the lines of `bit import` and `bit fetch` (`importer`): the
     /// latest heads, then the missing versions, which `importMany` fetches
     /// only when components are missing.
-    pub fn render_inbound(&self, output: &Output, fetch: bool, with_ids: bool) {
+    pub fn render_inbound(&self, output: &Output, fetch: bool, with_ids: bool, wildcard: bool) {
         if fetch {
             output.status("fetching objects...");
         }
@@ -124,7 +124,7 @@ impl Progress {
                     "import {} components with their dependencies (if missing)",
                     requested.unwrap_or(row).ids.len(),
                 ));
-                if row.components == 0 {
+                if row.components == 0 && !(wildcard && row.objects > 0) {
                     continue;
                 }
             }

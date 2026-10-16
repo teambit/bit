@@ -1,5 +1,5 @@
-//! Bounded HTTP scope acquisition and listing. File scopes stay in the
-//! deferred importer.
+//! Bounded scope acquisition and listing across HTTP and file remotes.
+mod file_list;
 use super::{List, Prepare, RemoteLog, Target, Transport, identity, invalid};
 use crate::{
     command_import::{VirtualRemote, lane},
@@ -86,10 +86,11 @@ pub(super) fn list(input: &List) -> io::Result<Vec<(String, Vec<Listed>)>> {
                 .split_once('/')
                 .filter(|(scope, _)| !scope.is_empty())
                 .ok_or_else(|| invalid("inbound list pattern"))?;
-            let Remote::Http(url) = remotes.resolve(scope, &network).await? else {
-                return Err(invalid("inbound list of a file remote"));
+            let listed = match remotes.resolve(scope, &network).await? {
+                Remote::Http(url) => network.list(&url, Some(namespaces)).await?,
+                Remote::File(path) => file_list::list(&path, scope, namespaces)?,
             };
-            lists.push((pattern.clone(), network.list(&url, Some(namespaces)).await?));
+            lists.push((pattern.clone(), listed));
         }
         Ok(lists)
     })
