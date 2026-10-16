@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare complete Node and Rust imports on copies of one workspace and file remote."""
+"""Compare complete Node and Rust imports on copies of one workspace and remote."""
 
 import argparse
 import hashlib
@@ -48,6 +48,7 @@ def main() -> None:
     parser.add_argument("--source", type=Path, required=True)
     parser.add_argument("--remote", type=Path, required=True)
     parser.add_argument("--remote-name", help="name of --remote when several remotes are configured")
+    parser.add_argument("--remote-url", help="running HTTP scope serving --remote; defaults to file:// copies")
     parser.add_argument("--additional-remote", action="append", default=[], metavar="NAME=PATH")
     parser.add_argument("--command-arg", action="append", default=[], help="bit import argument")
     parser.add_argument("--node-cli", type=Path, required=True)
@@ -98,7 +99,7 @@ def main() -> None:
             scope = json.loads(scope_file.read_text())
             remotes = scope.get("remotes", {})
             for name, remote_path in remote_paths.items():
-                remotes[name] = remote_path.as_uri()
+                remotes[name] = args.remote_url if name == primary_name and args.remote_url else remote_path.as_uri()
             scope_file.write_text(json.dumps(scope, indent=4))
             for remote_path in remote_paths.values():
                 remote_scope_file = remote_path / "scope.json"
@@ -152,6 +153,7 @@ def main() -> None:
             for name, path in remote_sources.items() if name != primary_name
         },
         "node_cli": str(node_cli), "rust": str(rust),
+        "remote_url": args.remote_url,
         "runs_ms": samples,
         "median_ms": {key: round(statistics.median(times), 3) for key, times in samples.items()},
         "stdout_sha256": hashlib.sha256(outputs["node"].encode()).hexdigest(),

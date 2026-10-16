@@ -1,5 +1,8 @@
 //! Bounded scope acquisition and listing across HTTP and file remotes.
 mod file_list;
+mod lane_list;
+#[cfg(test)]
+mod tests;
 use super::{List, Prepare, RemoteLog, Target, Transport, config, identity, invalid};
 use crate::{
     command_import::{VirtualRemote, lane},
@@ -102,10 +105,18 @@ async fn listed_lane(
         }
         return Ok(Vec::new());
     };
-    let Remote::File(path) = remotes.resolve(&id.scope, network).await? else {
-        return Err(invalid("inbound HTTP lane wildcard listing"));
-    };
-    file_list::lane(&path, &id)
+    match remotes.resolve(&id.scope, network).await? {
+        Remote::File(path) => file_list::lane(&path, &id),
+        Remote::Http(url) => http_lane(network, &url, &id).await,
+    }
+}
+
+async fn http_lane(network: &Network, url: &str, id: &lane::Id) -> io::Result<Vec<Listed>> {
+    let lane_id = format!("{}/{}", id.scope, id.name);
+    let items =
+        network.fetch_bounded(url, &[lane_id], &FetchOptions::lanes(), MAX_INBOUND_BYTES).await?;
+    let (_, entries) = remote_lane(id, &items)?;
+    lane_list::visible(entries)
 }
 
 async fn list_pattern(
@@ -224,6 +235,17 @@ async fn fetch_lane(
 }
 
 fn lane_targets(id: &lane::Id, items: &[ObjectItem]) -> io::Result<(String, Vec<String>)> {
+    let (hash, entries) = remote_lane(id, items)?;
+    Ok((
+        hash,
+        entries
+            .into_iter()
+            .map(|entry| format!("{}@{}", entry.identity, entry.head))
+            .collect(),
+    ))
+}
+
+fn remote_lane(id: &lane::Id, items: &[ObjectItem]) -> io::Result<(String, Vec<lane::Entry>)> {
     let mut selected = None;
     for item in items {
         let raw = crate::checkout::repository::inflate(&item.compressed, 32 * 1024 * 1024)?;
@@ -239,19 +261,28 @@ fn lane_targets(id: &lane::Id, items: &[ObjectItem]) -> io::Result<(String, Vec<
         if value["scope"] != id.scope || value["name"] != id.name || selected.is_some() {
             return Err(invalid("inbound HTTP Lane identity"));
         }
+        lane::validate_value(id, &value)?;
         let entries = lane::entries(&value)?;
         if entries.len() > 4096 {
             return Err(invalid("inbound HTTP Lane component limit"));
         }
-        selected = Some((
-            item.hash.clone(),
-            entries
-                .into_iter()
-                .map(|entry| format!("{}@{}", entry.identity, entry.head))
-                .collect(),
-        ));
+        selected = Some((item.hash.clone(), entries));
     }
     selected.ok_or_else(|| invalid("inbound HTTP Lane missing"))
+}
+
+pub(super) fn lane_entries(
+    remote: &VirtualRemote,
+    hash: &str,
+    id: &lane::Id,
+) -> io::Result<Vec<lane::Entry>> {
+    let compressed = remote.objects
+        .iter()
+        .find(|(item_hash, _)| item_hash == hash)
+        .map(|(_, bytes)| bytes.clone())
+        .ok_or_else(|| invalid("inbound HTTP Lane capture"))?;
+    let item = ObjectItem { hash: hash.to_owned(), compressed, scope: None };
+    remote_lane(id, &[item]).map(|(_, entries)| entries)
 }
 
 pub(super) fn objects(input: &Prepare, targets: &[Target]) -> io::Result<Vec<VirtualRemote>> {

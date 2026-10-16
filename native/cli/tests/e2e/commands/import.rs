@@ -1,11 +1,28 @@
 //! `e2e/commands/import.e2e.ts`.
 
 use crate::{
-    helper::{FOO_FIXTURE, Helper, Run, parse, setup},
+    helper::{FOO_FIXTURE, Helper, Run, config, parse, setup},
     known_failure::{KnownResult, Native},
 };
 use serde_json::Value;
-use std::{ffi::OsStr, fs, path::Path};
+use std::{
+    ffi::OsStr,
+    fs,
+    net::{TcpListener, TcpStream},
+    path::Path,
+    process::{Child, Stdio},
+    thread,
+    time::Duration,
+};
+
+struct ScopeServer(Child);
+
+impl Drop for ScopeServer {
+    fn drop(&mut self) {
+        let _ = self.0.kill();
+        let _ = self.0.wait();
+    }
+}
 
 /// `importComponent(id)`: `bit import <remote>/<id>`, when it runs natively.
 fn import(helper: &Helper, id: &str) -> KnownResult<String> {
@@ -836,6 +853,127 @@ fn lane_wildcard_selection_matches_node() {
             "{command}",
         );
     }
+}
+
+#[test]
+fn http_lane_wildcard_import_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo(FOO_FIXTURE);
+    helper.add_component_bar_foo();
+    helper.tag_without_build("", "");
+    helper.run("export");
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    helper.run("lane create dev");
+    helper.populate_components(1, false, "");
+    helper.run("snap --message lane");
+    helper.run("export");
+
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let port = listener.local_addr().unwrap().port();
+    drop(listener);
+    let server = setup::bit_command(setup::shared(), &helper.scopes.remote_path)
+        .args([
+            "start",
+            "--port",
+            &port.to_string(),
+            "--skip-ui-build",
+            "--no-browser",
+            "--skip-compilation",
+        ])
+        .env("BIT_NATIVE", "off")
+        .env("CI", "1")
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+        .unwrap();
+    let mut server = ScopeServer(server);
+    let ready = (0..300).any(|_| {
+        if server.0.try_wait().unwrap().is_some() {
+            return false;
+        }
+        if TcpStream::connect(("127.0.0.1", port)).is_ok() {
+            return true;
+        }
+        thread::sleep(Duration::from_millis(100));
+        false
+    });
+    assert!(ready, "the released CLI did not start its HTTP scope server");
+    config::update_scope_json(&helper.scopes.local_path.join(".bit/scope.json"), |scope| {
+        scope["remotes"][&helper.scopes.remote] = Value::String(format!("http://127.0.0.1:{port}"));
+    });
+    let baseline = helper.clone_workspace();
+    for flag in ["-x", "--lane-only -x"] {
+        helper.get_cloned_workspace(&baseline);
+        let node_root = helper.clone_workspace();
+        let command = format!("import {}/** {flag}", helper.scopes.remote);
+        let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+        assert!(node.status.success(), "{command}: {}", combined(&node));
+        let native = helper.native_run(&command);
+        assert!(native.native, "{command}: {}", native.trace);
+        assert_eq!(native.status.code(), node.status.code(), "{command}");
+        assert_eq!(
+            without_progress_timing(&native.stdout),
+            without_progress_timing(&node.stdout),
+            "{command}",
+        );
+        assert_eq!(native.stderr, node.stderr, "{command}");
+        assert_eq!(
+            fs::read(helper.scopes.local_path.join(".bitmap")).unwrap(),
+            fs::read(node_root.join(".bitmap")).unwrap(),
+            "{command}",
+        );
+        let relative = format!("{}/bar/foo/foo.js", helper.scopes.remote);
+        let native_file = helper.scopes.local_path.join(&relative);
+        let node_file = node_root.join(&relative);
+        assert_eq!(native_file.exists(), node_file.exists(), "{command}");
+        if native_file.exists() {
+            assert_eq!(fs::read(native_file).unwrap(), fs::read(node_file).unwrap(), "{command}");
+        }
+    }
+}
+
+#[test]
+fn deprecated_lane_component_stays_in_lane_only_wildcard() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.run("lane create dev");
+    helper.populate_components(1, false, "");
+    helper.run("snap --message first");
+    helper.run("export");
+    helper.run("deprecate comp1");
+    helper.run("snap --message deprecated");
+    helper.run("export");
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    helper.run("lane create dev");
+    let node_root = helper.clone_workspace();
+    let command = format!("import {}/** --lane-only -x", helper.scopes.remote);
+    let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{command}: {}", combined(&node));
+    let native = helper.native_run(&command);
+    assert!(native.native, "{command}: {}", native.trace);
+    assert_eq!(native.status.code(), node.status.code(), "{command}");
+    assert_eq!(
+        without_progress_timing(&native.stdout),
+        without_progress_timing(&node.stdout),
+        "{command}",
+    );
+    assert_eq!(native.stderr, node.stderr, "{command}");
+    assert_eq!(
+        fs::read(helper.scopes.local_path.join(".bitmap")).unwrap(),
+        fs::read(node_root.join(".bitmap")).unwrap(),
+        "{command}",
+    );
+    let bitmap = read_bitmap(&helper);
+    let root_dir = bitmap["comp1"]["rootDir"].as_str().expect("imported comp1 directory");
+    assert_eq!(
+        fs::read(helper.scopes.local_path.join(root_dir).join("index.js")).unwrap(),
+        fs::read(node_root.join(root_dir).join("index.js")).unwrap(),
+        "{command}",
+    );
 }
 
 #[test]

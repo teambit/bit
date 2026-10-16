@@ -1,5 +1,5 @@
 //! `Fs.list` / `ComponentsList.listLocalScope` for a configured bare file scope.
-use super::{Listed, invalid};
+use super::{Listed, invalid, lane_list};
 use crate::{checkout::repository, command_import::lane, read_budget::Budget};
 use regress::Regex;
 use serde_json::Value;
@@ -72,13 +72,7 @@ pub(super) fn lane(path: &Path, id: &lane::Id) -> io::Result<Vec<Listed>> {
     let mut compressed = 0;
     let value = object(path, &hash, "Lane", &mut compressed)?;
     lane::validate_value(id, &value)?;
-    let mut listed = Vec::new();
-    for entry in lane::entries(&value)?.into_iter().filter(|entry| !entry.hidden) {
-        if let Some(row) = lane_component(path, &entry, &mut compressed)? {
-            listed.push(row);
-        }
-    }
-    Ok(listed)
+    lane_list::visible(lane::entries(&value)?)
 }
 
 fn lane_hash(path: &Path, id: &lane::Id) -> io::Result<String> {
@@ -97,32 +91,6 @@ fn lane_hash(path: &Path, id: &lane::Id) -> io::Result<String> {
         .as_str()
         .map(str::to_owned)
         .ok_or_else(|| invalid("inbound file lane hash"))
-}
-
-fn lane_component(
-    path: &Path,
-    entry: &lane::Entry,
-    compressed: &mut usize,
-) -> io::Result<Option<Listed>> {
-    let (scope, name) =
-        entry.identity.split_once('/').ok_or_else(|| invalid("inbound file lane component"))?;
-    let version = object(path, &entry.head, "Version", compressed)?;
-    crate::history_query::validate_version(&version)?;
-    if extension(&version, "teambit.component/remove", "removed") {
-        return Ok(None);
-    }
-    let model_hash = crate::validate::hexadecimal(&Sha1::digest(entry.identity.as_bytes()));
-    let model = object(path, &model_hash, "Component", compressed)?;
-    if model["scope"] != scope || model["name"] != name {
-        return Err(invalid("inbound file lane model identity"));
-    }
-    Ok(Some(Listed {
-        scope: scope.to_owned(),
-        name: name.to_owned(),
-        version: Some(entry.head.clone()),
-        deprecated: model["deprecated"] == true
-            || extension(&version, "teambit.component/deprecation", "deprecate"),
-    }))
 }
 
 fn indexed(row: &Value, scope: &str, seen: &mut HashSet<String>) -> io::Result<(String, String)> {

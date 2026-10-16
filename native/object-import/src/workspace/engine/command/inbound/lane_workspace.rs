@@ -1,6 +1,6 @@
 //! Import visible current-lane heads and main-only selections in one retained transfer.
-use super::{Prepare, Target, config, identity, invalid, remote};
-use crate::command_import::{self, PreparedImport, Progress, lane};
+use super::{Prepare, Target, config, identity, invalid, lanes, remote};
+use crate::command_import::{self, PreparedImport, Progress, VirtualRemote, lane};
 use std::{collections::HashMap, io};
 
 pub(super) fn prepare(
@@ -14,38 +14,85 @@ pub(super) fn prepare(
     {
         return Err(invalid("inbound lane workspace import mode"));
     }
-    let (mut import, record) = open_lane(input, id)?;
-    let visible = lane::entries(&record.value)?
+    match remote::lane_objects(input, id)? {
+        Some((remote, hash)) => prepare_http(input, roots, id, remote, &hash),
+        None => prepare_file(input, roots, id),
+    }
+}
+
+fn prepare_file(
+    input: &Prepare,
+    roots: &[Target],
+    id: &lane::Id,
+) -> io::Result<(Vec<Target>, PreparedImport)> {
+    let mut import = command_import::prepare_lane(&input.root, &input.global_remotes_file)?;
+    let record = import.fetch_lane_contents_at_hash(id, None)?;
+    let choice = choose(input, roots, lane::entries(&record.value)?)?;
+    import.retain_remote_lane_refs(&record)?;
+    finish(import, choice, id)
+}
+
+fn prepare_http(
+    input: &Prepare,
+    roots: &[Target],
+    id: &lane::Id,
+    remote_lane: VirtualRemote,
+    hash: &str,
+) -> io::Result<(Vec<Target>, PreparedImport)> {
+    let choice = choose(input, roots, remote::lane_entries(&remote_lane, hash, id)?)?;
+    let main_targets = choice.selected
+        .iter()
+        .filter(|target| {
+            target.scope
+                .as_deref()
+                .is_some_and(|scope| choice.main.contains(&format!("{scope}/{}", target.name)))
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+    let mut remotes = HashMap::new();
+    lanes::merge_remote(&mut remotes, remote_lane)?;
+    for remote in remote::objects(input, &main_targets)? {
+        lanes::merge_remote(&mut remotes, remote)?;
+    }
+    lanes::validate_virtual_bounds(&remotes)?;
+    let remotes = remotes.into_values().collect::<Vec<_>>();
+    let mut import = command_import::prepare_lane_with_virtual(
+        &input.root,
+        &input.global_remotes_file,
+        &remotes,
+    )?;
+    let record = import.fetch_lane_contents_at_hash(id, Some(hash))?;
+    import.retain_remote_lane_refs(&record)?;
+    finish(import, choice, id)
+}
+
+struct Choice {
+    selected: Vec<Target>,
+    main: Vec<String>,
+    changed: usize,
+}
+
+fn choose(input: &Prepare, roots: &[Target], entries: Vec<lane::Entry>) -> io::Result<Choice> {
+    let visible = entries
         .into_iter()
         .filter(|entry| !entry.hidden)
         .map(|entry| (entry.identity, entry.head))
         .collect::<HashMap<_, _>>();
     let bitmap = config::document(&input.root.join(".bitmap"))?;
     let (selected, main, changed) = select(input, roots, &visible, &bitmap)?;
-    if !main.is_empty() {
-        import.refresh_lane_main(&main)?;
-    }
-    progress(&mut import, &selected, &main, id, changed)?;
-    Ok((selected, import))
+    Ok(Choice { selected, main, changed })
 }
 
-fn open_lane(input: &Prepare, id: &lane::Id) -> io::Result<(PreparedImport, lane::Record)> {
-    let fetched = remote::lane_objects(input, id)?;
-    let (mut import, hash) = if let Some((remote, hash)) = fetched {
-        (
-            command_import::prepare_lane_with_virtual(
-                &input.root,
-                &input.global_remotes_file,
-                &[remote],
-            )?,
-            Some(hash),
-        )
-    } else {
-        (command_import::prepare_lane(&input.root, &input.global_remotes_file)?, None)
-    };
-    let record = import.fetch_lane_contents_at_hash(id, hash.as_deref())?;
-    import.retain_remote_lane_refs(&record)?;
-    Ok((import, record))
+fn finish(
+    mut import: PreparedImport,
+    choice: Choice,
+    id: &lane::Id,
+) -> io::Result<(Vec<Target>, PreparedImport)> {
+    if !choice.main.is_empty() {
+        import.refresh_lane_main(&choice.main)?;
+    }
+    progress(&mut import, &choice.selected, &choice.main, id, choice.changed)?;
+    Ok((choice.selected, import))
 }
 
 fn select(

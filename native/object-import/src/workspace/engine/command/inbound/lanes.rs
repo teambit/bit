@@ -81,7 +81,7 @@ fn parse_id(text: &str, seen: &mut HashSet<String>) -> io::Result<lane::Id> {
     Ok(id)
 }
 
-fn merge_remote(
+pub(super) fn merge_remote(
     remotes: &mut HashMap<String, VirtualRemote>,
     remote: VirtualRemote,
 ) -> io::Result<()> {
@@ -105,7 +105,7 @@ fn merge_remote(
     Ok(())
 }
 
-fn validate_virtual_bounds(remotes: &HashMap<String, VirtualRemote>) -> io::Result<()> {
+pub(super) fn validate_virtual_bounds(remotes: &HashMap<String, VirtualRemote>) -> io::Result<()> {
     let mut virtual_bytes = 0usize;
     for remote in remotes.values() {
         for (_, bytes) in &remote.objects {
