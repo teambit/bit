@@ -23,6 +23,88 @@ impl Drop for RemoteScopeServer {
 }
 
 #[test]
+fn lane_import_on_main_and_same_lane_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("module.exports = () => 'foo';");
+    helper.add_component_bar_foo();
+    helper.run("tag bar/foo --message base");
+    helper.run("export");
+    helper.run("lane create dev");
+    helper.run("snap --unmodified --message lane");
+    helper.run("export");
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    let command = format!("lane import {}/dev -x", helper.scopes.remote);
+    let node_root = helper.clone_workspace();
+    let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    let native = helper.native_run(&command);
+    assert!(native.native, "{}", native.trace);
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    assert!(node.status.success());
+    let repeat_node =
+        Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    let repeat_native = helper.native_run(&command);
+    assert!(repeat_native.native, "{}", repeat_native.trace);
+    assert_eq!(repeat_native.status.code(), repeat_node.status.code());
+    assert_eq!(repeat_native.stdout, repeat_node.stdout);
+    assert_eq!(repeat_native.stderr, repeat_node.stderr);
+    let node_lanes =
+        Helper::cmd_in_with(&node_root, "lane list --json", &[("BIT_NATIVE", OsStr::new("off"))]);
+    let native_lanes = helper.native_run("lane list --json");
+    assert_eq!(parse(&native_lanes.stdout), parse(&node_lanes.stdout));
+}
+
+#[test]
+fn lane_import_from_another_lane_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("module.exports = () => 'foo';");
+    helper.add_component_bar_foo();
+    helper.run("tag bar/foo --message base");
+    helper.run("export");
+    helper.run("lane create dev");
+    helper.run("snap --unmodified --message lane");
+    helper.run("export");
+    let producer = helper.clone_workspace();
+    helper.run("switch main -x");
+    helper.run("lane create other");
+    fs::write(producer.join("bar/foo.js"), "module.exports = () => 'advanced';").unwrap();
+    for command in ["snap bar/foo --message advance", "export"] {
+        let result = Helper::cmd_in_with(&producer, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+        assert!(result.status.success(), "{command}: {} {}", result.stdout, result.stderr);
+    }
+    let node_root = helper.clone_workspace();
+    let native_file = fs::read(helper.scopes.local_path.join("bar/foo.js")).unwrap();
+    let native_bitmap = fs::read(helper.scopes.local_path.join(".bitmap")).unwrap();
+    let command = format!("lane import {}/dev -x", helper.scopes.remote);
+    let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    let native = helper.native_run(&command);
+    assert!(native.native, "{}", native.trace);
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    assert!(native.status.success());
+    assert_eq!(fs::read(helper.scopes.local_path.join("bar/foo.js")).unwrap(), native_file);
+    assert_eq!(fs::read(node_root.join("bar/foo.js")).unwrap(), native_file);
+    assert_eq!(fs::read(helper.scopes.local_path.join(".bitmap")).unwrap(), native_bitmap);
+    assert_eq!(fs::read(node_root.join(".bitmap")).unwrap(), native_bitmap);
+    let node_lanes =
+        Helper::cmd_in_with(&node_root, "lane list --json", &[("BIT_NATIVE", OsStr::new("off"))]);
+    let native_lanes = helper.native_run("lane list --json");
+    assert_eq!(parse(&native_lanes.stdout), parse(&node_lanes.stdout));
+    let node_current = Helper::cmd_in_with(
+        &node_root,
+        "lane current --json",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    let native_current = helper.native_run("lane current --json");
+    assert_eq!(parse(&native_current.stdout), parse(&node_current.stdout));
+}
+
+#[test]
 fn http_remote_lane_inspection_matches_node() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
@@ -99,6 +181,14 @@ fn http_remote_lane_inspection_matches_node() {
         assert_eq!(native.stdout, node.stdout, "{command}");
         assert_eq!(native.stderr, node.stderr, "{command}");
     }
+    let node_root = helper.clone_workspace();
+    let command = format!("lane import {}/dev -x", helper.scopes.remote);
+    let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    let native = helper.native_run(&command);
+    assert!(native.native, "{}", native.trace);
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
 }
 
 #[test]

@@ -28,18 +28,37 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(options) = options::parse(&argv[1..]) else {
         return Ok(Outcome::Declined("outside the native switch grammar".to_string()));
     };
+    run_options(args, &argv, &options, false)
+}
+
+pub(super) fn lane_import(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
+    let Some(options) = options::parse(&argv[2..]) else {
+        return Ok(Outcome::Declined("outside the native lane import grammar".into()));
+    };
+    if options.skip_fetch || options.verbose {
+        return Ok(Outcome::Declined("outside the native lane import grammar".into()));
+    }
+    run_options(args, argv, &options, true)
+}
+
+fn run_options(
+    args: &[OsString],
+    argv: &[&str],
+    options: &options::Options,
+    lane_import: bool,
+) -> io::Result<Outcome> {
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".to_string()));
     };
-    let installer = match start_installer(&root, &argv, options.skip_install) {
+    let installer = match start_installer(&root, argv, options.skip_install) {
         Ok(installer) => installer,
         Err(error) => return Ok(Outcome::Declined(format!("switch installation: {error}"))),
     };
-    let prepared = match prepare(&root, args, &options) {
+    let prepared = match prepare(&root, args, options) {
         Ok(prepared) => prepared,
         Err(error) => return Ok(Outcome::Declined(format!("switch: {error}"))),
     };
-    execute(&root, args, &options, prepared, installer)
+    execute(&root, args, options, prepared, installer, lane_import)
 }
 
 fn start_installer(root: &Path, argv: &[&str], skip: bool) -> io::Result<Option<Installer>> {
@@ -52,15 +71,31 @@ fn execute(
     options: &options::Options,
     prepared: PreparedSwitch,
     installer: Option<Installer>,
+    lane_import: bool,
 ) -> io::Result<Outcome> {
     let needs_checkout_progress = options.skip_fetch || !prepared.checkout_import_present();
+    let command = if lane_import { "import" } else { "switch" };
     if let Some(installer) = installer {
-        return workspace_command::execute_then(root, args, "switch", |output| {
-            install_and_report(root, args, output, prepared, needs_checkout_progress, installer)
+        return workspace_command::execute_then(root, args, command, |output| {
+            install_and_report(
+                root,
+                args,
+                output,
+                prepared,
+                needs_checkout_progress,
+                installer,
+                lane_import,
+            )
         });
     }
-    workspace_command::execute(root, args, "switch", prepared.planned, &prepared.report, |output| {
-        render_progress(output, &prepared.imports, needs_checkout_progress, prepared.import_count);
+    workspace_command::execute(root, args, command, prepared.planned, &prepared.report, |output| {
+        render_progress(
+            output,
+            &prepared.imports,
+            needs_checkout_progress,
+            prepared.import_count,
+            lane_import,
+        );
     })
 }
 
@@ -71,8 +106,15 @@ fn install_and_report(
     mut prepared: PreparedSwitch,
     checkout_progress: bool,
     installer: Installer,
+    lane_import: bool,
 ) -> io::Result<Report> {
-    render_progress(output, &prepared.imports, checkout_progress, prepared.import_count);
+    render_progress(
+        output,
+        &prepared.imports,
+        checkout_progress,
+        prepared.import_count,
+        lane_import,
+    );
     workspace_command::commit(&mut prepared.planned, root)?;
     if !prepared.install_ids.is_empty()
         && let Err(error) = installer.install(root, false, &prepared.install_ids)
@@ -87,7 +129,16 @@ fn install_and_report(
     Ok(prepared.report)
 }
 
-fn render_progress(output: &Output, imports: &[RemoteImport], checkout: bool, count: u64) {
+fn render_progress(
+    output: &Output,
+    imports: &[RemoteImport],
+    checkout: bool,
+    count: u64,
+    lane_import: bool,
+) {
+    if lane_import {
+        output.restart("switching lanes");
+    }
     for import in imports {
         if import.requested > 0 {
             import.render(output);

@@ -44,6 +44,9 @@ pub(super) fn prepare(input: &Prepare, state: &mut State) -> io::Result<(usize, 
         )?
     };
     receipt["laneFetch"] = json!(true);
+    if input.operation == "laneImport" {
+        receipt["laneImport"] = json!(true);
+    }
     if selection.lanes.len() > 1 {
         receipt["laneGroups"] = json!(groups);
     }
@@ -135,7 +138,8 @@ fn receive_lanes(
     let mut groups = Vec::new();
     for (id, hash) in lanes {
         let start = import.progress.len();
-        let lane_targets = fetch_lane_targets(import, id, hash.as_deref())?;
+        let lane_targets =
+            fetch_lane_targets(import, id, hash.as_deref(), input.operation == "laneImport")?;
         append_lane_dependency_progress(&input.root, import, &lane_targets)?;
         groups.push(import.progress.len() - start);
         targets.extend(lane_targets);
@@ -147,11 +151,17 @@ fn fetch_lane_targets(
     import: &mut command_import::PreparedImport,
     id: &lane::Id,
     hash: Option<&str>,
+    publish: bool,
 ) -> io::Result<Vec<Target>> {
     let record = import.fetch_lane_contents_at_hash(id, hash)?;
-    import.retain_remote_lane_refs(&record)?;
+    if publish {
+        import.publish_imported_lane(id, &record)?;
+    } else {
+        import.retain_remote_lane_refs(&record)?;
+    }
     if let Some(progress) = import.progress.last_mut() {
-        progress.reason = Some(format!("of their latest on lane {}/{}", id.scope, id.name));
+        let reason = if publish { "for fetching lane" } else { "of their latest on lane" };
+        progress.reason = Some(format!("{reason} {}/{}", id.scope, id.name));
     }
     lane::entries(&record.value)?
         .into_iter()

@@ -306,6 +306,31 @@ pub(super) fn prepare_status_forked_refresh(
     prepare_into(engine, root, &options, &[lane.to_owned()])
 }
 
+/// Fetch and publish one remote Lane without materializing workspace files.
+pub(super) fn prepare_lane_import(
+    engine: &mut Engine,
+    root: &Path,
+    lane: &str,
+) -> io::Result<Value> {
+    let options = options::Options {
+        operation: "laneImport",
+        ids: Vec::new(),
+        objects_only: true,
+        all_history: false,
+        write: options::WriteOptions {
+            skip_dependency_installation: false,
+            override_existing: false,
+            path: None,
+            merge_strategy: None,
+            dependencies: options::DependencyOptions::default(),
+        },
+        lanes: true,
+        skip_write_config_files: false,
+        selection: options::SelectionOptions::default(),
+    };
+    prepare_into(engine, root, &options, &[lane.to_owned()])
+}
+
 pub(super) fn apply_status_refresh(engine: &mut Engine, token: &Value) -> io::Result<()> {
     let applied: Value = engine.request(&json!({"kind":"commandInboundApply","token":token}))?;
     if applied["applied"] != true || applied["token"] != *token {

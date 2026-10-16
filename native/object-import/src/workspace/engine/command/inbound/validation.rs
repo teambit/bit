@@ -20,13 +20,20 @@ pub(super) fn validate(input: &Prepare) -> io::Result<()> {
     validate_override(input)?;
     validate_merge(input)?;
     validate_dependencies(input)?;
+    validate_lane_ids(input)?;
+    if !valid_write_mode(input) || input.root.join(".bitTmp").try_exists()? {
+        return Err(invalid("inbound command requires canonical lifecycle"));
+    }
+    Ok(())
+}
+fn validate_lane_ids(input: &Prepare) -> io::Result<()> {
     if input.options.lanes
         && (input.ids.is_empty() || input.ids.len() > 32 || input.options.all_history)
     {
         return Err(invalid("inbound lanes require explicit IDs"));
     }
-    if !valid_write_mode(input) || input.root.join(".bitTmp").try_exists()? {
-        return Err(invalid("inbound command requires canonical lifecycle"));
+    if input.operation == "laneImport" && input.ids.len() != 1 {
+        return Err(invalid("lane import requires one lane"));
     }
     Ok(())
 }
@@ -91,6 +98,9 @@ fn valid_operation(input: &Prepare) -> bool {
                 && input.options.objects_only
         }
         "import" => !input.options.components,
+        "laneImport" => {
+            input.options.lanes && input.options.objects_only && !input.options.components
+        }
         "status" => {
             input.options.objects_only
                 && !input.options.components
