@@ -2478,20 +2478,7 @@ the following envs are used in this workspace: ${uniq(availableEnvs).join(', ')}
   async resolveEnvManifest(envId: string, envExtendsDeps: LegacyDependency[] = []): Promise<EnvJsonc> {
     if (this.aspectLoader.isCoreEnv(envId)) return {};
 
-    const splitted = envId.split('@');
-    const envIdWithVersion = envId.startsWith('@') ? `@${splitted[1]}` : splitted[0];
-    const foundEnv = envExtendsDeps.find(
-      (dep) => dep.id.toStringWithoutVersion() === envIdWithVersion || dep.packageName === envIdWithVersion
-    );
-    let id = envId;
-    if (foundEnv?.id) {
-      if (foundEnv.id.version.includes('-new')) {
-        id = foundEnv.id.toStringWithoutVersion();
-      } else {
-        id = foundEnv.id.toString();
-      }
-    }
-
+    const id = this.envs.getParentEnvIdToLoad(envId, envExtendsDeps);
     const resolvedEnvComponentId = await this.resolveComponentId(id);
 
     // We need to load the env component with the slot and extensions to get the env manifest of the parent

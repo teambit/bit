@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import sinon from 'sinon';
 import { loadAspect } from '@teambit/harmony.testing.load-aspect';
 import type { WorkspaceData } from '@teambit/workspace.testing.mock-workspace';
 import { mockWorkspace, destroyWorkspace } from '@teambit/workspace.testing.mock-workspace';
@@ -20,6 +21,20 @@ function mockComponentWithUnregisteredEnv(componentId: string, envId: string): C
         entries: [{ id: ComponentID.fromString(envId) }],
       },
     },
+  } as unknown as Component;
+}
+
+/**
+ * an env component with the given env.jsonc and no resolved env.jsonc stored, so it's calculated on load.
+ */
+function mockEnvComponent(envId: string, envJsonc: string, dependencies: Array<{ id: ComponentID }> = []): Component {
+  return {
+    id: ComponentID.fromString(envId),
+    state: {
+      aspects: { get: (aspectId: string) => (aspectId === EnvsAspect.id ? { data: {} } : undefined) },
+      _consumer: { dependencies: { dependencies } },
+    },
+    filesystem: { files: [{ relative: 'env.jsonc', contents: Buffer.from(envJsonc) }] },
   } as unknown as Component;
 }
 
@@ -76,6 +91,52 @@ describe('EnvsMain', function () {
       }
       envs.calculateEnv(component);
       expect(envs.getFailedToLoadEnvs()).to.include(envId);
+    });
+  });
+
+  describe('an env.jsonc that "extends" another env, with no resolver registered (e.g. in a bare scope)', () => {
+    const parentId = 'some-scope/envs/parent-env';
+    const parentEnv = mockEnvComponent(`${parentId}@1.0.0`, '{ "policy": {} }');
+    let getEnvComponentStub: sinon.SinonStub;
+    let result: Record<string, any>;
+    before(async () => {
+      sinon.stub(envs, 'getAllRegisteredEnvJsoncResolvers').returns([]);
+      getEnvComponentStub = sinon.stub(envs, 'getEnvComponentByEnvId').resolves(parentEnv);
+      // the extending env depends on the parent env, which determines the version to load
+      result = await envs.recursivelyMergeWithParentManifest({ extends: parentId }, [{ id: parentEnv.id }] as any);
+    });
+    after(() => sinon.restore());
+    it('should load the parent env from the component host, in the version the extending env depends on', () => {
+      expect(getEnvComponentStub.calledOnceWithExactly(`${parentId}@1.0.0`)).to.be.true;
+    });
+    it('should merge the parent manifest and drop the "extends"', () => {
+      expect(result).to.not.have.property('extends');
+    });
+  });
+
+  describe('a parent env that "extends" an env whose pinned version cannot be loaded, with no resolver registered', () => {
+    const parentId = 'some-scope/envs/parent-env';
+    const grandparentId = 'some-scope/envs/grandparent-env';
+    const parentEnv = mockEnvComponent(`${parentId}@1.0.0`, `{ "extends": "${grandparentId}" }`, [
+      { id: ComponentID.fromString(`${grandparentId}@1.0.0`) },
+    ]);
+    before(() => {
+      sinon.stub(envs, 'getAllRegisteredEnvJsoncResolvers').returns([]);
+      const getEnvComponentStub = sinon.stub(envs, 'getEnvComponentByEnvId');
+      getEnvComponentStub.withArgs(`${parentId}@1.0.0`).resolves(parentEnv);
+      getEnvComponentStub.withArgs(`${grandparentId}@1.0.0`).rejects(new Error('version 1.0.0 not found'));
+      getEnvComponentStub
+        .withArgs(grandparentId)
+        .resolves(mockEnvComponent(`${grandparentId}@2.0.0`, '{ "policy": {} }'));
+    });
+    after(() => sinon.restore());
+    it('should fail rather than load another version of that env', async () => {
+      try {
+        await envs.recursivelyMergeWithParentManifest({ extends: parentId }, [{ id: parentEnv.id }] as any);
+        expect.fail('should have thrown');
+      } catch (err: any) {
+        expect(err.message).to.equal('version 1.0.0 not found');
+      }
     });
   });
 });
