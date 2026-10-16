@@ -5,6 +5,74 @@ use sha1::{Digest, Sha1};
 use std::{ffi::OsStr, fs, io::Read, path::Path};
 
 #[test]
+fn configured_file_remote_lane_inspection_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("module.exports = () => 'foo';");
+    helper.add_component_bar_foo();
+    helper.run("tag bar/foo --message base");
+    helper.run("export");
+    helper.run("lane create dev");
+    helper.run("snap --unmodified --message lane");
+    helper.run("export");
+    let remote = &helper.scopes.remote;
+    for command in [
+        format!("lane list --remote {remote} --json"),
+        format!("lane list --remote {remote} --details"),
+        "lane show dev --remote --json".to_owned(),
+    ] {
+        let node = Helper::cmd_in_with(
+            &helper.scopes.local_path,
+            &command,
+            &[("BIT_NATIVE", OsStr::new("off"))],
+        );
+        let native = helper.native_run(&command);
+        assert!(native.native, "{command}: {}", native.trace);
+        assert_eq!(native.status.code(), node.status.code(), "{command}");
+        assert_eq!(native.stdout, node.stdout, "{command}");
+        assert_eq!(native.stderr, node.stderr, "{command}");
+    }
+    helper.run("switch main -x");
+    for command in [
+        format!("lane list --remote {remote}"),
+        format!("lane list --remote {remote} --details"),
+        format!("lane list --remote {remote} --json"),
+        format!("lane list --remote {remote} --merged"),
+        format!("lane list --remote {remote} --not-merged --json"),
+        "lane show dev --remote".to_owned(),
+        format!("lane show {remote}/dev --remote --json"),
+    ] {
+        let node = Helper::cmd_in_with(
+            &helper.scopes.local_path,
+            &command,
+            &[("BIT_NATIVE", OsStr::new("off"))],
+        );
+        let native = helper.native_run(&command);
+        assert!(native.native, "{command}: {}", native.trace);
+        assert_eq!(native.status.code(), node.status.code(), "{command}");
+        assert_eq!(native.stdout, node.stdout, "{command}");
+        assert_eq!(native.stderr, node.stderr, "{command}");
+    }
+    helper.run("lane merge dev -x");
+    helper.run("export");
+    for command in [
+        format!("lane list --remote {remote} --merged --json"),
+        format!("lane list --remote {remote} --not-merged"),
+    ] {
+        let node = Helper::cmd_in_with(
+            &helper.scopes.local_path,
+            &command,
+            &[("BIT_NATIVE", OsStr::new("off"))],
+        );
+        let native = helper.native_run(&command);
+        assert!(native.native, "{command}: {}", native.trace);
+        assert_eq!(native.status.code(), node.status.code(), "{command}");
+        assert_eq!(native.stdout, node.stdout, "{command}");
+        assert_eq!(native.stderr, node.stderr, "{command}");
+    }
+}
+
+#[test]
 fn lane_inspection_keeps_hidden_update_dependents_out_of_visible_components() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

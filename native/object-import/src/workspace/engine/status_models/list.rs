@@ -6,6 +6,7 @@
 
 use super::{Reader, index, invalid};
 use crate::read_budget::Budget;
+use bit_client_transfer::remotes::Remote;
 use rayon::prelude::*;
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -74,14 +75,27 @@ pub(in crate::workspace::engine) struct Lanes {
     root: PathBuf,
     #[serde(default)]
     merge_data: bool,
+    #[serde(default)]
+    remote_scope: Option<String>,
+    #[serde(default)]
+    global_remotes_file: Option<PathBuf>,
 }
 
 /// `laneList`: each lane of the index (`listLanes`), in its order, with the
 /// hash it is indexed by and its Lane object.
 pub(in crate::workspace::engine) fn lanes(request: &Lanes) -> io::Result<(usize, Value)> {
     super::super::path(&request.root)?;
-    let index = read_index(&request.root)?;
-    let directory = request.root.join(".bit/objects");
+    let remote = request.remote_scope
+        .as_deref()
+        .map(|scope| remote_repository(request, scope))
+        .transpose()?;
+    let index = match &remote {
+        Some(path) => read_bare_index(path)?,
+        None => read_index(&request.root)?,
+    };
+    let directory = remote
+        .as_ref()
+        .map_or_else(|| request.root.join(".bit/objects"), |path| path.join("objects"));
     let reader = Reader {
         directory: &directory,
         overlay: None,
@@ -107,6 +121,44 @@ pub(in crate::workspace::engine) fn lanes(request: &Lanes) -> io::Result<(usize,
         })
         .collect::<io::Result<Vec<_>>>()?;
     Ok((lanes.len(), json!({ "lanes": lanes })))
+}
+
+fn remote_repository(request: &Lanes, scope: &str) -> io::Result<PathBuf> {
+    if scope.is_empty() || scope.contains('/') || scope == "." || scope == ".." {
+        return Err(invalid("list remote scope"));
+    }
+    let local = read_json_file(&request.root.join(".bit/scope.json"))?;
+    let host = local["remotes"][scope]
+        .as_str()
+        .map(str::to_owned)
+        .or_else(|| {
+            let path = request.global_remotes_file.as_ref()?;
+            let global = read_json_file(path).ok()?;
+            global[scope].as_str().map(str::to_owned)
+        })
+        .ok_or_else(|| invalid("list unconfigured remote"))?;
+    let Remote::File(path) = Remote::from_host(&host)? else {
+        return Err(invalid("list HTTP remote requires canonical adapter"));
+    };
+    super::super::path(&path)?;
+    let config = read_json_file(&path.join("scope.json"))?;
+    if config["name"] != scope {
+        return Err(invalid("list remote identity"));
+    }
+    Ok(path)
+}
+
+fn read_bare_index(root: &Path) -> io::Result<Value> {
+    let index = read_json_file(&root.join("index.json"))?;
+    if !index["lanes"].is_array() || !index["components"].is_array() {
+        return Err(invalid("list remote index"));
+    }
+    Ok(index)
+}
+
+fn read_json_file(path: &Path) -> io::Result<Value> {
+    serde_json::from_slice(&Budget::new(4 * 1024 * 1024).read(File::open(path)?)?)
+        .map_err(io::Error::other)
 }
 
 /// `Lane.isFullyMerged`: every visible lane head is in its component's

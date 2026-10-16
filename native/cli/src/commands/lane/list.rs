@@ -2,10 +2,11 @@
 //! lanes of the local scope (`getLanes({ showDefaultLane: true })`), then
 //! main with the workspace's components.
 //!
-//! `--remote` and lanes Node would
-//! migrate to the schema that records deleted components run on the Node.js CLI.
+//! HTTP remotes and lanes Node would migrate to the schema that records
+//! deleted components run on the Node.js CLI.
 
 pub(super) use metadata::components_report;
+pub(super) use remote::read as read_remote;
 
 use crate::{
     commands::{
@@ -30,12 +31,15 @@ use std::{
     process::ExitCode,
 };
 
+mod merged;
 mod metadata;
+mod remote;
 
 /// The schema of lanes that record their deleted components.
 const DELETED_DATA_SCHEMA: &str = "1.0.0";
 
 /// A lane's data, as `serializeLaneData` writes it.
+#[derive(Clone)]
 pub(super) struct LaneData {
     /// `{ name, scope }`.
     pub(super) id: Value,
@@ -102,13 +106,17 @@ impl LaneData {
 
 /// `args` starts after `list`.
 pub(super) fn run(args: &[OsString], list_args: &[&str]) -> io::Result<Outcome> {
-    let Some((json, details, merged)) = parse(list_args) else {
+    let Some((json, details, merged, remote)) = parse(list_args) else {
         return Ok(Outcome::Declined("lane list flags outside the native grammar".to_string()));
     };
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".to_string()));
     };
-    let (lanes, current) = match read_with_merge(&root, merged.is_some()) {
+    let read = match remote {
+        Some(scope) => remote::read(&root, scope, merged.is_some()),
+        None => read_with_merge(&root, merged.is_some()),
+    };
+    let (lanes, current) = match read {
         Ok(read) => read,
         Err(error) => return Ok(Outcome::Declined(format!("lane list: {error}"))),
     };
@@ -117,8 +125,11 @@ pub(super) fn run(args: &[OsString], list_args: &[&str]) -> io::Result<Outcome> 
     }
     let report = Report {
         data: match merged {
-            Some(only_merged) => report_merged(&lanes, only_merged, Chalk::detect(args)),
-            None => report(&lanes, &current.0, Chalk::detect(args), details),
+            Some(only_merged) => merged::report(&lanes, only_merged, Chalk::detect(args)),
+            None => match remote {
+                Some(_) => remote::report(&lanes, &current.0, Chalk::detect(args), details),
+                None => report(&lanes, &current.0, Chalk::detect(args), details),
+            },
         },
         code: 0,
         details: None,
@@ -145,38 +156,25 @@ fn emit_json(
     Ok(Outcome::Exit(ExitCode::SUCCESS))
 }
 
-fn parse(args: &[&str]) -> Option<(bool, bool, Option<bool>)> {
-    let (mut json, mut details, mut merged) = (false, false, None);
-    for arg in args {
-        match *arg {
+fn parse<'a>(args: &[&'a str]) -> Option<(bool, bool, Option<bool>, Option<&'a str>)> {
+    let (mut json, mut details, mut merged, mut remote) = (false, false, None, None);
+    let mut args = args.iter().copied();
+    while let Some(arg) = args.next() {
+        match arg {
             "--json" | "-j" if !json => json = true,
             "--details" | "-d" if !details => details = true,
             "--merged" if merged.is_none() => merged = Some(true),
             "--not-merged" if merged.is_none() => merged = Some(false),
+            "--remote" | "-r" if remote.is_none() => remote = Some(remote_name(args.next())?),
             _ => return None,
         }
     }
-    Some((json, details, merged))
+    Some((json, details, merged, remote))
 }
 
-fn report_merged(lanes: &[LaneData], merged: bool, chalk: Chalk) -> String {
-    let format = Formatter::new(chalk);
-    let selected = lanes
-        .iter()
-        .filter(|lane| {
-            lane.is_merged == Some(merged) || !merged && lane.is_merged.is_none()
-        });
-    let items = selected
-        .map(|lane| format.item(lane.id["name"].as_str().unwrap_or_default()))
-        .collect::<Vec<_>>();
-    if items.is_empty() {
-        return format.hint(if merged {
-            "none of the lanes is merged"
-        } else {
-            "all lanes are merged"
-        });
-    }
-    format.section(if merged { "merged lanes" } else { "unmerged lanes" }, "", &items)
+fn remote_name(name: Option<&str>) -> Option<&str> {
+    name.map(str::trim)
+        .filter(|name| !name.is_empty() && !name.starts_with('-'))
 }
 
 /// The lanes `scope.json` tracks: `localLane` per remote lane.
