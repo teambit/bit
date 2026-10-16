@@ -1237,6 +1237,22 @@ export class DependencyResolverMain {
     return this.getComponentEnvPolicyFromEnv(env.env, { envId });
   }
 
+  /**
+   * when the env of the component is one of the given components and it has an env.jsonc, returns the policy of that
+   * env.jsonc. e.g. an env that is snapped along with the component, whose files (merged in memory) are not the stored
+   * ones that getComponentEnvPolicyFromExtension() reads.
+   */
+  async getEnvPolicyFromComponents(
+    configuredExtensions: ExtensionDataList,
+    components: Component[]
+  ): Promise<EnvPolicy | undefined> {
+    const envId = ComponentID.fromString(await this.envs.calculateEnvIdFromExtensions(configuredExtensions));
+    const envComponent = components.find((component) => component.id.isEqualWithoutVersion(envId));
+    if (!envComponent) return undefined;
+    const legacyEnv: LegacyComponent = envComponent.state._consumer;
+    return this.getEnvPolicyFromFile(envComponent.id.toString(), legacyEnv.files, legacyEnv.dependencies.get());
+  }
+
   async getEnvPolicyFromEnvId(
     id: ComponentID,
     legacyFiles?: SourceFile[],
@@ -1396,11 +1412,11 @@ export class DependencyResolverMain {
     id: ComponentID,
     legacyFiles?: SourceFile[],
     envExtendsDeps?: LegacyDependency[],
-    envPolicyIfNotLoaded?: VariantPolicy // see getComponentEnvPolicyFromExtension()
+    envPolicy?: EnvPolicy | VariantPolicy // the policy of the component's env, when the caller already calculated it
   ): Promise<VariantPolicy> {
     let policiesFromSlots: VariantPolicy = VariantPolicy.getEmpty();
     let policiesFromConfig: VariantPolicy = VariantPolicy.getEmpty();
-    const policiesFromEnv = await this.getComponentEnvPolicyFromExtension(configuredExtensions, envPolicyIfNotLoaded);
+    const policiesFromEnv = envPolicy ?? (await this.getComponentEnvPolicyFromExtension(configuredExtensions));
     const configuredIds = configuredExtensions.ids;
     const policiesTuples = this.policiesRegistry.toArray();
     configuredIds.forEach((extId) => {

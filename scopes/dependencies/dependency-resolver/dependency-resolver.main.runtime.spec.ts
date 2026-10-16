@@ -75,6 +75,34 @@ describe('DependencyResolverMain.getComponentEnvPolicyFromExtension()', () => {
   });
 });
 
+describe('DependencyResolverMain.getEnvPolicyFromComponents()', () => {
+  // the env of the component is stored as 1.0.0, while its files in memory (e.g. merged) are of another version
+  const envFiles = [{ basename: 'env.jsonc' }];
+  const createEnvComponent = (files: Array<{ basename: string }>) => ({
+    id: ComponentID.fromString('some-scope/envs/jsonc-env@2.0.0'),
+    state: { _consumer: { files, dependencies: { get: () => [] } } },
+  });
+  const depResolver = createDependencyResolverMain({
+    calculateEnvIdFromExtensions: async () => 'some-scope/envs/jsonc-env@1.0.0',
+    isCoreEnv: () => false,
+    // the env.jsonc is read from the given files, not from the stored env
+    calculateEnvManifest: async (_envComponent, legacyFiles) =>
+      legacyFiles === envFiles ? { policy: { dev: [{ name: 'some-pkg', version: '2.0.0' }] } } : undefined,
+  });
+  it('should return the policy of the env.jsonc of the env component in memory', async () => {
+    const policy = await depResolver.getEnvPolicyFromComponents({} as any, [createEnvComponent(envFiles) as any]);
+    expect(policy?.find('some-pkg')?.value.version).to.equal('2.0.0');
+  });
+  it('should return undefined when the env is not one of the given components', async () => {
+    const otherComponent = { ...createEnvComponent(envFiles), id: ComponentID.fromString('some-scope/other@1.0.0') };
+    expect(await depResolver.getEnvPolicyFromComponents({} as any, [otherComponent as any])).to.equal(undefined);
+  });
+  it('should return undefined when the env component has no env.jsonc', async () => {
+    const envComponent = createEnvComponent([{ basename: 'index.ts' }]);
+    expect(await depResolver.getEnvPolicyFromComponents({} as any, [envComponent as any])).to.equal(undefined);
+  });
+});
+
 describe('DepenendencyResolverMain.isValidVersionSpecifier()', () => {
   const depResolver = createDependencyResolverMain();
   for (const spec of [

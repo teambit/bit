@@ -385,13 +385,15 @@ export class SnappingMain {
   /**
    * re-calculate the dependencies policy of the component and its overrides from its config and env, the same way a
    * workspace calculates them when it loads a component, rather than keeping the ones of the version it was loaded from.
-   * returns the overrides of the auto-detected dependencies (versions only, see ApplyOverrides.autoDetectOverrides),
-   * which include the deps of the merge-config, same as workspace.getAutoDetectOverrides().
+   * returns the policy and the overrides of the auto-detected dependencies (versions only, see
+   * ApplyOverrides.autoDetectOverrides), which include the deps of the merge-config, same as
+   * workspace.getAutoDetectOverrides().
    */
   private async recalcDependenciesPolicy(
     component: Component,
+    componentsInSnap: Component[],
     mergeConfigAutoDeps?: VariantPolicyConfigArr
-  ): Promise<DependenciesOverridesData> {
+  ): Promise<{ policy: VariantPolicy; autoDetectOverrides: DependenciesOverridesData }> {
     const legacyComponent: ConsumerComponent = component.state._consumer;
     const { extensions } = legacyComponent;
     const depResolverExt = extensions.findCoreExtension(DependencyResolverAspect.id);
@@ -402,18 +404,24 @@ export class SnappingMain {
     const storedEnvPolicy = VariantPolicy.parse(depResolverExt?.data.policy || []).filter(
       (entry) => entry.source === 'env'
     );
+    // an env.jsonc env that is snapped along (e.g. merged as well) has its policy in its new files, like a workspace
+    // that loads the env from its files. otherwise, the policy is read from the stored version of the env.
+    const envPolicy =
+      (await this.dependencyResolver.getEnvPolicyFromComponents(extensions, componentsInSnap)) ??
+      (await this.dependencyResolver.getComponentEnvPolicyFromExtension(extensions, storedEnvPolicy));
     const policy = await this.dependencyResolver.mergeVariantPolicies(
       extensions,
       component.id,
       legacyComponent.files,
       legacyComponent.dependencies.get(),
-      storedEnvPolicy
+      envPolicy
     );
     // the "source" of each dependency in the dependency-resolver data is determined by this policy
     if (depResolverExt) depResolverExt.data.policy = policy.serialize();
     legacyComponent.overrides = new ComponentOverrides(pickBy(policy.toLegacyDepsOverrides(), (val) => !isEmpty(val)));
     const mergeConfigPolicy = VariantPolicy.fromConfigObject(mergeConfigAutoDeps || {}, { source: 'auto' });
-    return VariantPolicy.mergePolices([policy, mergeConfigPolicy]).toLegacyAutoDetectOverrides();
+    const autoDetectOverrides = VariantPolicy.mergePolices([policy, mergeConfigPolicy]).toLegacyAutoDetectOverrides();
+    return { policy, autoDetectOverrides };
   }
 
   async snapFromScope(
@@ -614,17 +622,25 @@ export class SnappingMain {
 
     await this.scope.loadManyCompsAspects(compsToLoadAspects);
 
+    const policyPerComp = new Map<Component, VariantPolicy>();
     if (params.recalcDependencies) {
       // the config (and with it, the env) may differ from the one stored in the version the components were loaded
       // from. now that the env is loaded, the dependencies are calculated according to it.
       await pMapSeries(components, async (component) => {
-        const autoDetectOverrides = await this.recalcDependenciesPolicy(component, autoDepsPerComp.get(component));
+        const { policy, autoDetectOverrides } = await this.recalcDependenciesPolicy(
+          component,
+          components,
+          autoDepsPerComp.get(component)
+        );
+        policyPerComp.set(component, policy);
         await addDepsToComp(component, autoDetectOverrides);
       });
     }
 
     // this is similar to what happens in the workspace. the "onLoad" is running and populating the "data" of the aspects.
-    await pMapSeries(compsToLoadAspects, async (comp) => this.scope.executeOnCompAspectReCalcSlot(comp));
+    await pMapSeries(compsToLoadAspects, async (comp) =>
+      this.scope.executeOnCompAspectReCalcSlot(comp, policyPerComp.get(comp))
+    );
 
     const ids = ComponentIdList.fromArray(allCompIds);
     const shouldTag = Boolean(params.tag);

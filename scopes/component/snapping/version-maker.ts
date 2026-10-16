@@ -516,7 +516,9 @@ export class VersionMaker {
     if (Object.keys(dependentsMap).length === 0) return [];
     const allDependentsIds = ComponentIdList.uniqFromArray(Object.values(dependentsMap).flat());
     const allDependents = await this.legacyScope.getManyConsumerComponents(allDependentsIds);
-    return allDependents.map((dependent) => {
+    // a component that was removed from the lane is not snapped again, same as in a workspace, where it's not loaded
+    const notRemovedDependents = allDependents.filter((dependent) => !dependent.isRemoved());
+    return notRemovedDependents.map((dependent) => {
       const triggeredByIds = Object.keys(dependentsMap).filter((id) => dependentsMap[id].has(dependent.id));
       const triggeredBy = ComponentIdList.fromStringArray(triggeredByIds);
       return { component: dependent, triggeredBy };
