@@ -219,6 +219,28 @@ fn local_result(
     Ok((result, capture))
 }
 
+/// Inspect a staged component for local removal without committing status caches.
+pub(super) fn clean_staged_component(root: &Path, identity: &str) -> io::Result<bool> {
+    let home = env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).unwrap_or_default();
+    let mut engine = Engine::new()?;
+    let context: Value = engine.request(&json!({
+        "kind": "statusContext",
+        "root": root,
+        "home": Path::new(&home),
+    }))?;
+    let (result, _) = local_result(&mut engine, root, Path::new(&home), &context)?;
+    let staged = array(result.get("stagedComponents"), "staged")?;
+    let modified = array(result.get("modifiedComponents"), "modified")?;
+    let invalid = array(result.get("invalidComponents"), "invalid")?;
+    Ok(staged
+        .iter()
+        .any(|row| row["id"] == identity)
+        && !modified
+            .iter()
+            .any(|row| row == identity)
+        && invalid.is_empty())
+}
+
 fn active_components(
     context: &Value,
     components: &[issues::Component],

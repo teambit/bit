@@ -1,5 +1,7 @@
-//! Untrack a new, unversioned component with the same bitmap and file
-//! lifecycle as local `bit remove`.
+//! Untrack a workspace component with the bitmap and file lifecycle of
+//! local `bit remove`.
+
+pub mod versioned;
 
 use crate::{inspection, recovery};
 use serde_json::Value;
@@ -16,13 +18,23 @@ pub struct Plan {
     package: PathBuf,
     identity: String,
     main_exists: bool,
+    version: Option<String>,
 }
 
 impl Plan {
     pub fn prepare(root: &Path, name: &str, keep_files: bool) -> io::Result<Self> {
+        Self::prepare_with(root, name, keep_files, false)
+    }
+
+    fn prepare_with(
+        root: &Path,
+        name: &str,
+        keep_files: bool,
+        versioned: bool,
+    ) -> io::Result<Self> {
         let bitmap_before = fs::read(root.join(".bitmap"))?;
         let mut bitmap = recovery::jsonc::parse(&bitmap_before)?;
-        let selected = select(root, &bitmap, name, keep_files)?;
+        let selected = select(root, &bitmap, name, keep_files, versioned)?;
         let rows = bitmap.as_object_mut().ok_or_else(|| invalid("component bitmap"))?;
         rows.shift_remove(&selected.key);
         let bitmap_after = inspection::render_bitmap(&bitmap)?;
@@ -34,6 +46,7 @@ impl Plan {
             package: selected.package,
             identity: selected.identity,
             main_exists: selected.main_exists,
+            version: selected.version,
         })
     }
 
@@ -48,6 +61,11 @@ impl Plan {
     }
 
     pub fn commit(&self, file_id: &str) -> io::Result<()> {
+        self.validate_before_commit(file_id)?;
+        self.apply(file_id)
+    }
+
+    fn validate_before_commit(&self, file_id: &str) -> io::Result<()> {
         if fs::read(self.root.join(".bitmap"))? != self.bitmap_before {
             return Err(invalid("component bitmap changed before removal"));
         }
@@ -58,6 +76,10 @@ impl Plan {
         if self.package.try_exists()? {
             validate_directory(&self.package)?;
         }
+        Ok(())
+    }
+
+    fn apply(&self, file_id: &str) -> io::Result<()> {
         if let Some(path) = &self.files {
             fs::remove_dir_all(path)?;
         }
@@ -75,9 +97,16 @@ struct Selected {
     files: Option<PathBuf>,
     package: PathBuf,
     main_exists: bool,
+    version: Option<String>,
 }
 
-fn select(root: &Path, bitmap: &Value, name: &str, keep_files: bool) -> io::Result<Selected> {
+fn select(
+    root: &Path,
+    bitmap: &Value,
+    name: &str,
+    keep_files: bool,
+    versioned: bool,
+) -> io::Result<Selected> {
     if !bitmap["_bit_lane"].is_null() {
         return Err(invalid("component removal on a lane"));
     }
@@ -86,10 +115,18 @@ fn select(root: &Path, bitmap: &Value, name: &str, keep_files: bool) -> io::Resu
         .iter()
         .find(|(key, _)| *key == name)
         .ok_or_else(|| invalid("component not tracked"))?;
-    let (component_name, scope) = new_row(key, row)?;
+    let (component_name, scope) = new_row(key, row, versioned)?;
+    let version = versioned.then(|| {
+        row["version"]
+            .as_str()
+            .unwrap_or_default()
+            .to_owned()
+    });
     let identity = format!("{scope}/{component_name}");
     validate_workspace_config(root, &identity)?;
-    validate_no_model(root, scope, component_name)?;
+    if !versioned {
+        validate_no_model(root, scope, component_name)?;
+    }
     let root_dir = row["rootDir"].as_str().ok_or_else(|| invalid("component root"))?;
     let main_file = row["mainFile"].as_str().ok_or_else(|| invalid("component main file"))?;
     if !safe_relative(Path::new(main_file)) {
@@ -104,14 +141,20 @@ fn select(root: &Path, bitmap: &Value, name: &str, keep_files: bool) -> io::Resu
     if package.try_exists()? {
         validate_directory(&package)?;
     }
-    Ok(Selected { key: key.clone(), identity, files, package, main_exists })
+    Ok(Selected { key: key.clone(), identity, files, package, main_exists, version })
 }
 
-fn new_row<'a>(key: &str, row: &'a Value) -> io::Result<(&'a str, &'a str)> {
+fn new_row<'a>(key: &str, row: &'a Value, versioned: bool) -> io::Result<(&'a str, &'a str)> {
     let name = row["name"].as_str().ok_or_else(|| invalid("component name"))?;
     let scope = row["defaultScope"].as_str().ok_or_else(|| invalid("component scope"))?;
     let identity = key == name && valid_name(name) && valid_scope(scope);
-    let unpublished = row["scope"].as_str().is_some_and(str::is_empty) && row["version"] == "";
+    let local = row["scope"].as_str().is_some_and(str::is_empty);
+    let version = row["version"].as_str();
+    let supported = if versioned {
+        version.is_some_and(|value| !value.is_empty())
+    } else {
+        version == Some("")
+    };
     let allowed = ["name", "scope", "version", "defaultScope", "mainFile", "rootDir"];
     let shape = row
         .as_object()
@@ -120,8 +163,8 @@ fn new_row<'a>(key: &str, row: &'a Value) -> io::Result<(&'a str, &'a str)> {
                 .keys()
                 .all(|field| allowed.contains(&field.as_str()))
         });
-    if !identity || !unpublished || !shape {
-        return Err(invalid("component is not a clean new component"));
+    if !identity || !local || !supported || !shape {
+        return Err(invalid("component is outside the supported local state"));
     }
     Ok((name, scope))
 }
