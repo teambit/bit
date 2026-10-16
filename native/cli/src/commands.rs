@@ -19,6 +19,7 @@ mod log;
 mod merge;
 mod mini_status;
 mod patterns;
+mod recover;
 mod recovery;
 mod remove;
 mod reset;
@@ -56,6 +57,7 @@ pub const COMMANDS: &[Command] = &[
     log::COMMAND,
     merge::COMMAND,
     mini_status::COMMAND,
+    recover::COMMAND,
     remove::COMMAND,
     reset::COMMAND,
     snap::COMMAND,

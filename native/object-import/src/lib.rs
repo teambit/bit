@@ -2,6 +2,7 @@
 #![cfg_attr(dylint_lib = "perfectionist", register_tool(perfectionist))]
 
 pub mod component_delete;
+pub mod component_recover;
 pub mod component_remove;
 pub mod lane_create;
 pub mod lane_history;
