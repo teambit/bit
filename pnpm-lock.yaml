@@ -23915,6 +23915,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
+      chai:
+        specifier: 5.2.1
+        version: 5.2.1
       chalk:
         specifier: 4.1.2
         version: 4.1.2
@@ -34810,6 +34813,7 @@ packages:
   '@teambit/scope@file:scopes/scope/scope':
     resolution: {directory: scopes/scope/scope, type: directory}
     peerDependencies:
+      chai: 5.2.1
       react: 19.2.7
       react-router-dom: ^6.30.1
 
@@ -81308,6 +81312,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 4.3.0
       chalk: 4.1.2
       chokidar: 3.6.0
       classnames: 2.5.1
@@ -81327,7 +81332,6 @@ snapshots:
       - '@teambit/base-react.navigation.link'
       - '@testing-library/dom'
       - '@types/chai'
-      - chai
       - domexception
       - graphql
       - supports-color
@@ -81399,6 +81403,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 4.3.0
       chalk: 4.1.2
       chokidar: 3.6.0
       classnames: 2.5.1
@@ -81418,7 +81423,6 @@ snapshots:
       - '@teambit/base-react.navigation.link'
       - '@testing-library/dom'
       - '@types/chai'
-      - chai
       - domexception
       - graphql
       - supports-color
@@ -81490,6 +81494,7 @@ snapshots:
       '@types/node': 22.10.5
       '@types/react': 19.2.18
       '@types/react-dom': 19.2.4(@types/react@19.2.18)
+      chai: 5.2.1
       chalk: 4.1.2
       chokidar: 3.6.0
       classnames: 2.5.1
@@ -81509,7 +81514,6 @@ snapshots:
       - '@teambit/base-react.navigation.link'
       - '@testing-library/dom'
       - '@types/chai'
-      - chai
       - domexception
       - graphql
       - supports-color
