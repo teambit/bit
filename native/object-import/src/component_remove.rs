@@ -21,20 +21,22 @@ pub struct Plan {
     version: Option<String>,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum RowKind {
+    New,
+    Staged,
+    Imported,
+}
+
 impl Plan {
     pub fn prepare(root: &Path, name: &str, keep_files: bool) -> io::Result<Self> {
-        Self::prepare_with(root, name, keep_files, false)
+        Self::prepare_with(root, name, keep_files, RowKind::New)
     }
 
-    fn prepare_with(
-        root: &Path,
-        name: &str,
-        keep_files: bool,
-        versioned: bool,
-    ) -> io::Result<Self> {
+    fn prepare_with(root: &Path, name: &str, keep_files: bool, kind: RowKind) -> io::Result<Self> {
         let bitmap_before = fs::read(root.join(".bitmap"))?;
         let mut bitmap = recovery::jsonc::parse(&bitmap_before)?;
-        let selected = select(root, &bitmap, name, keep_files, versioned)?;
+        let selected = select(root, &bitmap, name, keep_files, kind)?;
         let rows = bitmap.as_object_mut().ok_or_else(|| invalid("component bitmap"))?;
         rows.shift_remove(&selected.key);
         let bitmap_after = inspection::render_bitmap(&bitmap)?;
@@ -105,18 +107,14 @@ fn select(
     bitmap: &Value,
     name: &str,
     keep_files: bool,
-    versioned: bool,
+    kind: RowKind,
 ) -> io::Result<Selected> {
     if !bitmap["_bit_lane"].is_null() {
         return Err(invalid("component removal on a lane"));
     }
-    let rows = bitmap.as_object().ok_or_else(|| invalid("component bitmap"))?;
-    let (key, row) = rows
-        .iter()
-        .find(|(key, _)| *key == name)
-        .ok_or_else(|| invalid("component not tracked"))?;
-    let (component_name, scope) = new_row(key, row, versioned)?;
-    let version = versioned.then(|| {
+    let (key, row) = find_row(bitmap, name, kind)?;
+    let (component_name, scope) = supported_row(key, row, kind)?;
+    let version = (kind != RowKind::New).then(|| {
         row["version"]
             .as_str()
             .unwrap_or_default()
@@ -124,9 +122,45 @@ fn select(
     });
     let identity = format!("{scope}/{component_name}");
     validate_workspace_config(root, &identity)?;
-    if !versioned {
+    if kind == RowKind::New {
         validate_no_model(root, scope, component_name)?;
     }
+    let (main_exists, files) = component_files(root, bitmap, key, row, keep_files)?;
+    let package = package(root, scope, component_name)?;
+    if package.try_exists()? {
+        validate_directory(&package)?;
+    }
+    Ok(Selected { key: key.clone(), identity, files, package, main_exists, version })
+}
+
+fn find_row<'a>(
+    bitmap: &'a Value,
+    name: &str,
+    kind: RowKind,
+) -> io::Result<(&'a String, &'a Value)> {
+    bitmap
+        .as_object()
+        .ok_or_else(|| invalid("component bitmap"))?
+        .iter()
+        .find(|(key, row)| {
+            *key == name
+                || (kind == RowKind::Imported
+                    && name
+                        .split_once('/')
+                        .is_some_and(|(scope, component)| {
+                            *key == component && row["scope"] == scope
+                        }))
+        })
+        .ok_or_else(|| invalid("component not tracked"))
+}
+
+fn component_files(
+    root: &Path,
+    bitmap: &Value,
+    key: &str,
+    row: &Value,
+    keep_files: bool,
+) -> io::Result<(bool, Option<PathBuf>)> {
     let root_dir = row["rootDir"].as_str().ok_or_else(|| invalid("component root"))?;
     let main_file = row["mainFile"].as_str().ok_or_else(|| invalid("component main file"))?;
     if !safe_relative(Path::new(main_file)) {
@@ -136,24 +170,26 @@ fn select(
         .join(root_dir)
         .join(main_file)
         .is_file();
-    let files = files(root, rows, key, root_dir, keep_files)?;
-    let package = package(root, scope, component_name)?;
-    if package.try_exists()? {
-        validate_directory(&package)?;
-    }
-    Ok(Selected { key: key.clone(), identity, files, package, main_exists, version })
+    let rows = bitmap.as_object().ok_or_else(|| invalid("component bitmap"))?;
+    Ok((main_exists, files(root, rows, key, root_dir, keep_files)?))
 }
 
-fn new_row<'a>(key: &str, row: &'a Value, versioned: bool) -> io::Result<(&'a str, &'a str)> {
+fn supported_row<'a>(key: &str, row: &'a Value, kind: RowKind) -> io::Result<(&'a str, &'a str)> {
     let name = row["name"].as_str().ok_or_else(|| invalid("component name"))?;
-    let scope = row["defaultScope"].as_str().ok_or_else(|| invalid("component scope"))?;
+    let scope = row[if kind == RowKind::Imported { "scope" } else { "defaultScope" }]
+        .as_str()
+        .ok_or_else(|| invalid("component scope"))?;
     let identity = key == name && valid_name(name) && valid_scope(scope);
-    let local = row["scope"].as_str().is_some_and(str::is_empty);
-    let version = row["version"].as_str();
-    let supported = if versioned {
-        version.is_some_and(|value| !value.is_empty())
+    let local = if kind == RowKind::Imported {
+        row["scope"] == scope && row.get("defaultScope").is_none()
     } else {
+        row["scope"].as_str().is_some_and(str::is_empty)
+    };
+    let version = row["version"].as_str();
+    let supported = if kind == RowKind::New {
         version == Some("")
+    } else {
+        version.is_some_and(|value| !value.is_empty())
     };
     let allowed = ["name", "scope", "version", "defaultScope", "mainFile", "rootDir"];
     let shape = row

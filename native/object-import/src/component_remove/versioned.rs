@@ -1,6 +1,6 @@
-//! Forced local removal of a single staged, tagged Component.
+//! Local removal of a staged tagged or imported Component.
 
-use super::{Plan, invalid, validate_ancestors};
+use super::{Plan, RowKind, invalid, validate_ancestors};
 use crate::workspace::engine::command::outbound;
 use serde_json::Value;
 use std::{
@@ -11,7 +11,7 @@ use std::{
 pub struct VersionedPlan {
     workspace: Plan,
     index: Change,
-    staged: Change,
+    staged: Option<Change>,
     objects: Vec<Change>,
 }
 
@@ -21,9 +21,26 @@ struct Change {
     after: Option<Vec<u8>>,
 }
 
+struct ModelSelection<'a> {
+    scope: &'a str,
+    name: &'a str,
+    version: &'a str,
+    staged_version: Option<&'a str>,
+    model_hash: &'a str,
+    kind: RowKind,
+}
+
 impl VersionedPlan {
     pub fn prepare(root: &Path, name: &str, keep_files: bool) -> io::Result<Self> {
-        let workspace = Plan::prepare_with(root, name, keep_files, true)?;
+        Self::prepare_kind(root, name, keep_files, RowKind::Staged)
+    }
+
+    pub fn prepare_imported(root: &Path, name: &str, keep_files: bool) -> io::Result<Self> {
+        Self::prepare_kind(root, name, keep_files, RowKind::Imported)
+    }
+
+    fn prepare_kind(root: &Path, name: &str, keep_files: bool, kind: RowKind) -> io::Result<Self> {
+        let workspace = Plan::prepare_with(root, name, keep_files, kind)?;
         if !workspace.main_exists {
             return Err(invalid("tagged component main file is missing"));
         }
@@ -35,9 +52,24 @@ impl VersionedPlan {
             return Err(invalid("component is listed in package dependencies"));
         }
         let (index, model_hash) = index_change(root, scope, component_name)?;
-        let (staged, staged_version) = staged_change(root, scope, component_name)?;
-        let objects =
-            object_changes(root, scope, component_name, version, &staged_version, &model_hash)?;
+        let (staged, staged_version) = if kind == RowKind::Staged {
+            let (change, version) = staged_change(root, scope, component_name)?;
+            (Some(change), Some(version))
+        } else {
+            validate_no_staged(root, scope, component_name)?;
+            (None, None)
+        };
+        let objects = object_changes(
+            root,
+            &ModelSelection {
+                scope,
+                name: component_name,
+                version,
+                staged_version: staged_version.as_deref(),
+                model_hash: &model_hash,
+                kind,
+            },
+        )?;
         Ok(Self { workspace, index, staged, objects })
     }
 
@@ -48,9 +80,8 @@ impl VersionedPlan {
 
     pub fn commit(&self, file_id: &str) -> io::Result<()> {
         self.workspace.validate_before_commit(file_id)?;
-        for change in std::iter::once(&self.index)
-            .chain(std::iter::once(&self.staged))
-            .chain(self.objects.iter())
+        for change in
+            std::iter::once(&self.index).chain(self.staged.iter()).chain(self.objects.iter())
         {
             regular_file(&self.workspace.root, &change.path)?;
             if fs::read(&change.path)? != change.before {
@@ -70,10 +101,12 @@ impl VersionedPlan {
             &self.index.path,
             self.index.after.as_ref().ok_or_else(|| invalid("scope index"))?,
         )?;
-        fs::write(
-            &self.staged.path,
-            self.staged.after.as_ref().ok_or_else(|| invalid("staged config"))?,
-        )?;
+        if let Some(staged) = &self.staged {
+            fs::write(
+                &staged.path,
+                staged.after.as_ref().ok_or_else(|| invalid("staged config"))?,
+            )?;
+        }
         self.workspace.apply(file_id)
     }
 }
@@ -130,47 +163,10 @@ fn unique_position(rows: &[Value], scope: &str, name: &str) -> io::Result<usize>
     Ok(position)
 }
 
-fn object_changes(
-    root: &Path,
-    scope: &str,
-    name: &str,
-    version: &str,
-    staged_version: &str,
-    model_hash: &str,
-) -> io::Result<Vec<Change>> {
+fn object_changes(root: &Path, selection: &ModelSelection<'_>) -> io::Result<Vec<Change>> {
     let dir = root.join(".bit/objects");
-    let model = outbound::read_object(&dir, model_hash, "Component")?;
-    let versions = model["versions"].as_object().ok_or_else(|| invalid("Component versions"))?;
-    if model["scope"] != scope
-        || model["name"] != name
-        || versions.is_empty()
-        || versions.len() > 32
-        || model.get("orphanedVersions").is_some()
-        || !versions.contains_key(staged_version)
-    {
-        return Err(invalid("unsupported tagged Component model"));
-    }
-    let head_hash = versions
-        .get(version)
-        .and_then(Value::as_str)
-        .ok_or_else(|| invalid("tagged version ref"))?;
-    if model["head"] != head_hash {
-        return Err(invalid("tagged Component head"));
-    }
-    let mut hashes = vec![model_hash.to_owned()];
-    for (label, value) in versions {
-        let hash = value.as_str().ok_or_else(|| invalid("tagged version ref"))?;
-        crate::merge_history::hash(hash)?;
-        if model["state"]["versions"][label]["local"] != true
-            || hashes
-                .iter()
-                .any(|current| current == hash)
-        {
-            return Err(invalid("tagged version is not local and unique"));
-        }
-        let _version = outbound::read_object(&dir, hash, "Version")?;
-        hashes.push(hash.to_owned());
-    }
+    let model = outbound::read_object(&dir, selection.model_hash, "Component")?;
+    let hashes = model_hashes(&dir, &model, selection)?;
     let mut changes = Vec::new();
     for hash in hashes {
         let path = dir.join(&hash[..2]).join(&hash[2..]);
@@ -178,6 +174,46 @@ fn object_changes(
         changes.push(Change { before: fs::read(&path)?, path, after: None });
     }
     Ok(changes)
+}
+
+fn model_hashes(
+    dir: &Path,
+    model: &Value,
+    selection: &ModelSelection<'_>,
+) -> io::Result<Vec<String>> {
+    let versions = model["versions"].as_object().ok_or_else(|| invalid("Component versions"))?;
+    if model["scope"] != selection.scope
+        || model["name"] != selection.name
+        || versions.is_empty()
+        || versions.len() > 32
+        || model.get("orphanedVersions").is_some()
+        || selection.staged_version.is_some_and(|version| !versions.contains_key(version))
+    {
+        return Err(invalid("unsupported tagged Component model"));
+    }
+    let head_hash = versions
+        .get(selection.version)
+        .and_then(Value::as_str)
+        .ok_or_else(|| invalid("tagged version ref"))?;
+    if model["head"] != head_hash {
+        return Err(invalid("tagged Component head"));
+    }
+    let mut hashes = vec![selection.model_hash.to_owned()];
+    for (label, value) in versions {
+        let hash = value.as_str().ok_or_else(|| invalid("tagged version ref"))?;
+        crate::merge_history::hash(hash)?;
+        let local = model["state"]["versions"][label]["local"] == true;
+        if local != (selection.kind == RowKind::Staged)
+            || hashes
+                .iter()
+                .any(|current| current == hash)
+        {
+            return Err(invalid("version state or identity is unsupported"));
+        }
+        let _version = outbound::read_object(dir, hash, "Version")?;
+        hashes.push(hash.to_owned());
+    }
+    Ok(hashes)
 }
 
 fn staged_change(root: &Path, scope: &str, name: &str) -> io::Result<(Change, String)> {
@@ -195,6 +231,23 @@ fn staged_change(root: &Path, scope: &str, name: &str) -> io::Result<(Change, St
     rows.remove(position);
     let after = serde_json::to_vec_pretty(&staged)?;
     Ok((Change { path, before, after: Some(after) }, staged_version))
+}
+
+fn validate_no_staged(root: &Path, scope: &str, name: &str) -> io::Result<()> {
+    let path = root.join(".bit/staged-config/main.json");
+    if !path.try_exists()? {
+        return Ok(());
+    }
+    regular_file(root, &path)?;
+    let value: Value = serde_json::from_slice(&fs::read(path)?)?;
+    let rows = value.as_array().ok_or_else(|| invalid("staged component config"))?;
+    if rows
+        .iter()
+        .any(|row| row["id"]["scope"] == scope && row["id"]["name"] == name)
+    {
+        return Err(invalid("imported component has staged config"));
+    }
+    Ok(())
 }
 
 fn regular_file(root: &Path, path: &Path) -> io::Result<()> {

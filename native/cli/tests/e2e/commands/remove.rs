@@ -281,3 +281,118 @@ fn modified_tagged_component_delegates_without_force() {
         );
     }
 }
+
+#[test]
+fn clean_imported_removal_matches_node_with_force_and_keep_files() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("module.exports = 'new';");
+    helper.add_component_bar_foo();
+    helper.tag_without_build("bar/foo", "");
+    helper.run("export");
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    helper.run(&format!("import {}/bar/foo -x", helper.scopes.remote));
+    let root = &helper.scopes.local_path;
+    let index: serde_json::Value =
+        serde_json::from_slice(&fs::read(root.join(".bit/index.json")).unwrap()).unwrap();
+    let model_hash = index["components"][0]["hash"].as_str().unwrap();
+    let model_wire: String =
+        serde_json::from_str(&helper.run(&format!("cat-object {model_hash} -s"))).unwrap();
+    let model: serde_json::Value = serde_json::from_str(&model_wire).unwrap();
+    let version_hash = model["versions"]["0.0.1"].as_str().unwrap();
+    let baseline = helper.clone_workspace();
+    for suffix in ["", " --force", " --keep-files"] {
+        helper.get_cloned_workspace(&baseline);
+        let node_root = helper.clone_workspace();
+        let command = format!("remove {}/bar/foo --silent{suffix}", helper.scopes.remote);
+        let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+        let native = helper.native_run(&command);
+        assert!(native.native, "{}", native.trace);
+        assert_eq!(native.status.code(), node.status.code());
+        assert_eq!(native.stdout, node.stdout);
+        assert_eq!(native.stderr, node.stderr);
+        assert!(native.status.success());
+        for path in [".bitmap", ".bit/index.json"] {
+            assert_eq!(
+                fs::read(root.join(path)).unwrap(),
+                fs::read(node_root.join(path)).unwrap(),
+                "{path}",
+            );
+        }
+        for hash in [model_hash, version_hash] {
+            let object = format!(".bit/objects/{}/{}", &hash[..2], &hash[2..]);
+            assert_eq!(root.join(&object).exists(), node_root.join(&object).exists());
+        }
+        let files = format!("{}/bar/foo/foo.js", helper.scopes.remote);
+        assert_eq!(root.join(&files).exists(), node_root.join(&files).exists());
+    }
+}
+
+#[test]
+fn imported_package_removal_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("module.exports = 'new';");
+    helper.add_component_bar_foo();
+    helper.tag_without_build("bar/foo", "");
+    helper.run("export");
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    helper.run(&format!("import {}/bar/foo", helper.scopes.remote));
+    let root = &helper.scopes.local_path;
+    let package = format!("node_modules/@{}/bar.foo", helper.scopes.remote);
+    assert!(root.join(&package).exists());
+    let node_root = helper.clone_workspace();
+    let command = format!("remove {}/bar/foo --silent", helper.scopes.remote);
+    let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    let native = helper.native_run(&command);
+    assert!(native.native, "{}", native.trace);
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    assert!(native.status.success());
+    assert_eq!(root.join(&package).exists(), node_root.join(&package).exists());
+    for path in [".bitmap", ".bit/index.json"] {
+        assert_eq!(
+            fs::read(root.join(path)).unwrap(),
+            fs::read(node_root.join(path)).unwrap(),
+            "{path}",
+        );
+    }
+}
+
+#[test]
+fn modified_imported_component_delegates_unless_forced() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("module.exports = 'new';");
+    helper.add_component_bar_foo();
+    helper.tag_without_build("bar/foo", "");
+    helper.run("export");
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    helper.run(&format!("import {}/bar/foo -x", helper.scopes.remote));
+    let files = format!("{}/bar/foo/foo.js", helper.scopes.remote);
+    helper.output_file(&files, "module.exports = 'changed';");
+    let baseline = helper.clone_workspace();
+    for (suffix, native_expected) in [("", false), (" --force", true)] {
+        helper.get_cloned_workspace(&baseline);
+        let node_root = helper.clone_workspace();
+        let command = format!("remove {}/bar/foo --silent{suffix}", helper.scopes.remote);
+        let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+        let actual = helper.cmd(&command);
+        assert_eq!(actual.native, native_expected, "{}", actual.trace);
+        assert_eq!(actual.status.code(), node.status.code());
+        assert_eq!(actual.stdout, node.stdout);
+        assert_eq!(actual.stderr, node.stderr);
+        for path in [".bitmap", ".bit/index.json"] {
+            assert_eq!(
+                fs::read(helper.scopes.local_path.join(path)).unwrap(),
+                fs::read(node_root.join(path)).unwrap(),
+                "{path}",
+            );
+        }
+        assert_eq!(helper.scopes.local_path.join(&files).exists(), node_root.join(&files).exists());
+    }
+}

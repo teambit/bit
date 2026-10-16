@@ -221,6 +221,18 @@ fn local_result(
 
 /// Inspect a staged component for local removal without committing status caches.
 pub(super) fn clean_staged_component(root: &Path, identity: &str) -> io::Result<bool> {
+    clean_component_for_remove(root, identity, true)
+}
+
+pub(super) fn clean_imported_component(root: &Path, identity: &str) -> io::Result<bool> {
+    clean_component_for_remove(root, identity, false)
+}
+
+fn clean_component_for_remove(
+    root: &Path,
+    identity: &str,
+    staged_required: bool,
+) -> io::Result<bool> {
     let home = env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).unwrap_or_default();
     let mut engine = Engine::new()?;
     let context: Value = engine.request(&json!({
@@ -232,9 +244,10 @@ pub(super) fn clean_staged_component(root: &Path, identity: &str) -> io::Result<
     let staged = array(result.get("stagedComponents"), "staged")?;
     let modified = array(result.get("modifiedComponents"), "modified")?;
     let invalid = array(result.get("invalidComponents"), "invalid")?;
-    Ok(staged
+    Ok((staged
         .iter()
         .any(|row| row["id"] == identity)
+        == staged_required)
         && !modified
             .iter()
             .any(|row| row == identity)

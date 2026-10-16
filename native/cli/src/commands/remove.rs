@@ -54,17 +54,25 @@ fn prepare(
     force: bool,
 ) -> io::Result<Removal> {
     if force {
-        return VersionedPlan::prepare(root, name, keep_files).map(Removal::Versioned);
+        return VersionedPlan::prepare(root, name, keep_files)
+            .or_else(|_| VersionedPlan::prepare_imported(root, name, keep_files))
+            .map(Removal::Versioned);
     }
     if let Ok(plan) = Plan::prepare(root, name, keep_files) {
         return Ok(Removal::New(plan));
     }
-    let plan = VersionedPlan::prepare(root, name, keep_files)?;
-    if !status::clean_staged_component(root, plan.identity())? {
+    if let Ok(plan) = VersionedPlan::prepare(root, name, keep_files) {
+        if status::clean_staged_component(root, plan.identity())? {
+            return Ok(Removal::Versioned(plan));
+        }
         return Err(io::Error::new(
             io::ErrorKind::InvalidInput,
             "tagged component is not clean and staged",
         ));
+    }
+    let plan = VersionedPlan::prepare_imported(root, name, keep_files)?;
+    if !status::clean_imported_component(root, plan.identity())? {
+        return Err(io::Error::new(io::ErrorKind::InvalidInput, "imported component is modified"));
     }
     Ok(Removal::Versioned(plan))
 }
