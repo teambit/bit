@@ -1,5 +1,10 @@
 //! Native main-lane `bit reset <component>` for a linear local history.
 
+mod reports;
+mod selection;
+
+use reports::{report, soft_report};
+
 use super::{
     color::Chalk,
     list::bitmap,
@@ -23,6 +28,7 @@ struct Options<'a> {
     soft: bool,
     silent: bool,
     never_exported: bool,
+    selected: Option<selection::Selected>,
 }
 
 fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
@@ -38,30 +44,67 @@ fn parse<'a>(args: &[&'a str]) -> Option<Options<'a>> {
             "--force" | "-f" if !force => force = true,
             "--soft" if !soft => soft = true,
             "--never-exported" if !never_exported => never_exported = true,
-            "--silent" | "-s" if !silent => silent = true,
-            arg if !arg.starts_with('-')
-                && pattern.is_none()
-                && !arg.contains(['*', '?', '{', '}']) =>
-            {
+            "--silent" | "-s" | "--all" | "-a" if !silent => silent = true,
+            arg if !arg.starts_with('-') && pattern.is_none() && arg.len() <= 4096 => {
                 pattern = Some(arg);
             }
             _ => return None,
         }
     }
-    Some(Options { pattern, head, force, soft, silent, never_exported })
+    Some(Options { pattern, head, force, soft, silent, never_exported, selected: None })
 }
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("reset arguments are not UTF-8".into()));
     };
-    let Some(options) = parse(&argv[1..]) else {
+    let Some(mut options) = parse(&argv[1..]) else {
         return Ok(Outcome::Declined("outside the native reset grammar".into()));
     };
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".into()));
     };
-    dispatch(args, &root, &options)
+    let mut startup = super::status::autosync::Startup::default();
+    if let Some(pattern) = options.pattern.filter(|pattern| selection::stateful(pattern)) {
+        match selection::states(&root, pattern, &mut startup) {
+            Ok(selected) => options.selected = Some(selected),
+            Err(error) => return selection_failure(args, &root, &startup, error),
+        }
+    }
+    run_prepared(args, &root, &options, &startup)
+}
+
+fn run_prepared(
+    args: &[OsString],
+    root: &Path,
+    options: &Options<'_>,
+    startup: &super::status::autosync::Startup,
+) -> io::Result<Outcome> {
+    workspace_command::checkout_lifecycle::before(startup)?;
+    match dispatch(args, root, options)? {
+        Outcome::Declined(reason) if startup.committed => {
+            workspace_command::execute_then(root, args, "reset", |output| {
+                if let Some(selected) = &options.selected {
+                    selected.render(output);
+                }
+                Err(io::Error::other(reason))
+            })
+        }
+        outcome => Ok(outcome),
+    }
+}
+
+fn selection_failure(
+    args: &[OsString],
+    root: &Path,
+    startup: &super::status::autosync::Startup,
+    error: io::Error,
+) -> io::Result<Outcome> {
+    if startup.committed {
+        workspace_command::checkout_lifecycle::failure(root, args, "reset", startup, error)
+    } else {
+        Ok(Outcome::Declined(format!("reset selection: {error}")))
+    }
 }
 
 fn dispatch(args: &[OsString], root: &Path, options: &Options<'_>) -> io::Result<Outcome> {
@@ -86,10 +129,10 @@ fn route_never_exported(
 }
 
 fn route_soft(args: &[OsString], root: &Path, options: &Options<'_>) -> io::Result<Outcome> {
-    if options.head || options.force || (options.pattern.is_none() && !options.silent) {
+    if options.head || (options.pattern.is_none() && !options.silent) {
         return Ok(Outcome::Declined("outside the native soft reset grammar".into()));
     }
-    run_soft(args, root, options.pattern)
+    run_soft(args, root, options)
 }
 
 fn route_hard(args: &[OsString], root: &Path, options: &Options<'_>) -> io::Result<Outcome> {
@@ -97,8 +140,20 @@ fn route_hard(args: &[OsString], root: &Path, options: &Options<'_>) -> io::Resu
         if !options.silent {
             return Ok(Outcome::Declined("reset all components requires confirmation".into()));
         }
-        return run_batch(args, root, options.head);
+        return run_batch(args, root, options.head, None, true);
     };
+    if selection::complex(pattern) {
+        let selected = match options.selected
+            .clone()
+            .map_or_else(
+                || selection::identities(root, pattern).map(selection::Selected::ordinary),
+                Ok,
+            ) {
+            Ok(selected) => selected,
+            Err(error) => return Ok(Outcome::Declined(format!("reset selection: {error}"))),
+        };
+        return run_batch(args, root, options.head, Some(&selected), options.force);
+    }
     let (identity, on_lane) = match identity(root, pattern) {
         Ok(identity) => identity,
         Err(error) => return Ok(Outcome::Declined(format!("reset identity: {error}"))),
@@ -169,11 +224,20 @@ fn run_lane(
     })
 }
 
-fn run_batch(args: &[OsString], root: &Path, head_only: bool) -> io::Result<Outcome> {
+fn run_batch(
+    args: &[OsString],
+    root: &Path,
+    head_only: bool,
+    selected: Option<&selection::Selected>,
+    force: bool,
+) -> io::Result<Outcome> {
     if bitmap::read(root)?.lane.is_some() {
-        return run_lane_batch(args, root, head_only);
+        return run_lane_batch(args, root, head_only, selected, force);
     }
-    let batch = match Batch::prepare(root, head_only) {
+    let batch = match selected.map_or_else(
+        || Batch::prepare(root, head_only),
+        |ids| Batch::prepare_selected(root, &ids.identities, head_only, force),
+    ) {
         Ok(batch) => batch,
         Err(error) => return Ok(Outcome::Declined(format!("reset batch: {error}"))),
     };
@@ -197,13 +261,26 @@ fn run_batch(args: &[OsString], root: &Path, head_only: bool) -> io::Result<Outc
         code: 0,
         details: None,
     };
-    workspace_command::execute_with(root, args, "reset", &report, |_| {
+    workspace_command::execute_with(root, args, "reset", &report, |output| {
+        if let Some(selected) = selected {
+            selected.render(output);
+            selected.verify()?;
+        }
         batch.commit(&workspace_command::file_id())
     })
 }
 
-fn run_lane_batch(args: &[OsString], root: &Path, head_only: bool) -> io::Result<Outcome> {
-    let batch = match LaneBatch::prepare(root, head_only) {
+fn run_lane_batch(
+    args: &[OsString],
+    root: &Path,
+    head_only: bool,
+    selected: Option<&selection::Selected>,
+    force: bool,
+) -> io::Result<Outcome> {
+    let batch = match selected.map_or_else(
+        || LaneBatch::prepare(root, head_only),
+        |ids| LaneBatch::prepare_selected(root, &ids.identities, head_only, force),
+    ) {
         Ok(batch) => batch,
         Err(error) => return Ok(Outcome::Declined(format!("lane reset batch: {error}"))),
     };
@@ -227,47 +304,48 @@ fn run_lane_batch(args: &[OsString], root: &Path, head_only: bool) -> io::Result
         code: 0,
         details: None,
     };
-    workspace_command::execute_with(root, args, "reset", &report, |_| {
+    workspace_command::execute_with(root, args, "reset", &report, |output| {
+        if let Some(selected) = selected {
+            selected.render(output);
+            selected.verify()?;
+        }
         batch.commit(&workspace_command::file_id())
     })
 }
 
-fn run_soft(args: &[OsString], root: &Path, pattern: Option<&str>) -> io::Result<Outcome> {
-    let plan = match SoftPlan::prepare(root, pattern) {
+fn run_soft(args: &[OsString], root: &Path, options: &Options<'_>) -> io::Result<Outcome> {
+    let selected = match options.selected
+        .clone()
+        .map(Ok)
+        .or_else(|| {
+            options.pattern
+                .filter(|pattern| selection::complex(pattern))
+                .map(|pattern| {
+                    selection::identities(root, pattern).map(selection::Selected::ordinary)
+                })
+        })
+        .transpose()
+    {
+        Ok(selected) => selected,
+        Err(error) => return Ok(Outcome::Declined(format!("soft reset selection: {error}"))),
+    };
+    let plan = match selected
+        .as_ref()
+        .map_or_else(
+            || SoftPlan::prepare(root, options.pattern),
+            |ids| SoftPlan::prepare_selected(root, &ids.identities),
+        ) {
         Ok(plan) => plan,
         Err(error) => return Ok(Outcome::Declined(format!("soft reset: {error}"))),
     };
     let report = soft_report(args, &plan);
-    workspace_command::execute_with(root, args, "reset", &report, |_| {
+    workspace_command::execute_with(root, args, "reset", &report, |output| {
+        if let Some(selected) = &selected {
+            selected.render(output);
+            selected.verify()?;
+        }
         plan.commit(&workspace_command::file_id())
     })
-}
-
-fn soft_report(args: &[OsString], plan: &SoftPlan) -> Report {
-    let formatter = Formatter::new(Chalk::detect(args));
-    let items: Vec<_> = plan.entries
-        .iter()
-        .map(|entry| {
-            formatter.item(&format!(
-                "{} - version(s): {}",
-                formatter.chalk.cyan(&entry.identity),
-                entry.version,
-            ))
-        })
-        .collect();
-    let count = items.len();
-    Report {
-        data: Formatter::join(&[
-            formatter.section(
-                "soft-untagged components",
-                "soft-untagged versions are no longer candidates for tagging",
-                &items,
-            ),
-            formatter.success_summary(&format!("{count} component(s) soft-untagged successfully")),
-        ]),
-        code: 0,
-        details: None,
-    }
 }
 
 fn identity(root: &Path, pattern: &str) -> io::Result<(String, bool)> {
@@ -284,25 +362,8 @@ fn identity(root: &Path, pattern: &str) -> io::Result<(String, bool)> {
     if matched.len() != 1 {
         return Err(io::Error::other("reset identity absent or ambiguous"));
     }
-    if !matched[0].on_current_lane(&[]) || matched[0].staged_deprecation {
+    if !matched[0].on_current_lane_including_removed(&[]) || matched[0].staged_deprecation {
         return Err(io::Error::other("reset component unavailable on main"));
     }
     Ok((matched[0].identity.clone(), bitmap.lane.is_some()))
-}
-
-fn report(args: &[OsString], identity: &str, labels: &[String]) -> Report {
-    let formatter = Formatter::new(Chalk::detect(args));
-    let item = formatter.item(&format!(
-        "{} - version(s): {}",
-        formatter.chalk.cyan(identity),
-        labels.join(", "),
-    ));
-    Report {
-        data: Formatter::join(&[
-            formatter.section("reset components", "", &[item]),
-            formatter.success_summary("1 component(s) reset successfully"),
-        ]),
-        code: 0,
-        details: None,
-    }
 }

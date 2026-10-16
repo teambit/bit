@@ -9,6 +9,7 @@ bit-dependency-scanner = { path = "../dependency-scanner" }
 bit-client-transfer = { path = "../client-transfer" }
 flate2 = { version = "1.1", default-features = false, features = ["zlib-rs"] }
 futures-util = "0.3"
+indexmap = { version = "2", features = ["serde"] }
 sha1 = "0.10"
 sha2 = "0.10"
 base64 = "0.22"
@@ -26,6 +27,10 @@ xattr = "1.6.1"
 [target.'cfg(windows)'.dependencies]
 junction = "2.1"
 same-file = "1"
+winapi-util = "0.1"
+
+[dev-dependencies]
+pretty_assertions = "1"
 
 [lints]
 workspace = true

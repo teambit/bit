@@ -77,7 +77,11 @@ fn imported_retarget_verifies_private_manifest_even_when_sources_are_retained() 
         token: "unused".into(),
         objects_directory: std::env::temp_dir().join("no-published-lane-objects"),
         snapshot_directory: std::env::temp_dir(),
-        target: wire::Version { hash: reference, files: vec![target("a", &hash)] },
+        target: wire::Version {
+            hash: reference,
+            files: vec![target("a", &hash)],
+            proof_files: None,
+        },
         known_bodies: Some(plan.bodies.len()),
     };
     assert_eq!(

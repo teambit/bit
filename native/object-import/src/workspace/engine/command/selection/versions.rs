@@ -37,6 +37,13 @@ pub(super) fn resolve(
     if matches!(to, "head" | "latest") {
         return recent(selection, repository);
     }
+    explicit(model, to, repository)
+}
+
+fn explicit(model: &Value, to: &str, repository: &mut Repository) -> io::Result<String> {
+    if short(to) && has(model, to, repository)? {
+        return repository.resolve_short(to);
+    }
     Ok(to.to_owned())
 }
 
@@ -120,7 +127,7 @@ pub(super) fn has(model: &Value, version: &str, repository: &mut Repository) -> 
     {
         return Ok(true);
     }
-    if crate::merge_history::hash(version).is_err() {
+    if crate::merge_history::hash(version).is_err() && !short(version) {
         return Ok(false);
     }
     let Some(head) = model["head"].as_str() else {
@@ -131,7 +138,11 @@ pub(super) fn has(model: &Value, version: &str, repository: &mut Repository) -> 
         .as_array()
         .is_some_and(|rows| {
             rows.iter()
-                .any(|row| row["hash"] == version)
+                .any(|row| {
+                    row["hash"]
+                        .as_str()
+                        .is_some_and(|hash| hash.starts_with(version))
+                })
         }))
 }
 
@@ -195,4 +206,8 @@ fn records(heads: &[&str], repository: &mut Repository) -> io::Result<Value> {
         rows.push(json!({"hash":hash,"parents":parents}));
     }
     Ok(Value::Array(rows))
+}
+
+fn short(version: &str) -> bool {
+    (3..40).contains(&version.len()) && version.bytes().all(|byte| byte.is_ascii_hexdigit())
 }

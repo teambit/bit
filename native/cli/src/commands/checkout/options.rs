@@ -28,9 +28,10 @@ pub struct Execution {
 struct Force {
     ours: bool,
     theirs: bool,
+    include_new_from_scope: bool,
 }
 
-const BOOLEAN: [&str; 7] = [
+const BOOLEAN: [&str; 8] = [
     "--skip-dependency-installation",
     "--manual",
     "--verbose",
@@ -38,6 +39,7 @@ const BOOLEAN: [&str; 7] = [
     "--force-ours",
     "--force-theirs",
     "--workspace-only",
+    "--include-new-from-scope",
 ];
 
 /// `args` starts after the command name.
@@ -89,12 +91,11 @@ fn build(flags: &Map<String, Value>, positionals: &[&str]) -> Option<Options> {
         return None;
     }
     let to = positionals.first().filter(|to| valid_to(to))?;
-    if flag("--workspace-only") && *to != "head" {
+    if (flag("--workspace-only") || flag("--include-new-from-scope")) && *to != "head" {
         return None;
     }
     let pattern = positionals.get(1).copied();
-    if flag("--all") && pattern.is_some()
-        || pattern.is_some_and(|pattern| !pattern.chars().all(pattern_char))
+    if flag("--all") && pattern.is_some() || pattern.is_some_and(|pattern| !valid_pattern(pattern))
     {
         return None;
     }
@@ -104,7 +105,11 @@ fn build(flags: &Map<String, Value>, positionals: &[&str]) -> Option<Options> {
         revert: false,
         all: flag("--all"),
         strategy: strategy.map(str::to_string),
-        force: Force { ours: flag("--force-ours"), theirs: flag("--force-theirs") },
+        force: Force {
+            ours: flag("--force-ours"),
+            theirs: flag("--force-theirs"),
+            include_new_from_scope: flag("--include-new-from-scope"),
+        },
         workspace_only: flag("--workspace-only"),
         execution: Execution {
             verbose: flag("--verbose"),
@@ -118,9 +123,7 @@ fn build(flags: &Map<String, Value>, positionals: &[&str]) -> Option<Options> {
 pub fn parse_revert(args: &[&str]) -> Option<Options> {
     let (positionals, verbose, skip_install) = revert_arguments(args)?;
     let [pattern, to] = positionals.as_slice() else { return None };
-    if (*pattern != "**" && !pattern.chars().all(pattern_char))
-        || !(to == &"main" || valid_revert_version(to))
-    {
+    if !valid_pattern(pattern) || !(to == &"main" || valid_revert_version(to)) {
         return None;
     }
     Some(Options {
@@ -158,7 +161,7 @@ fn valid_revert_version(to: &str) -> bool {
 fn strategy(flags: &Map<String, Value>) -> Option<Option<&str>> {
     let manual = flags.get("--manual") == Some(&Value::Bool(true));
     let resolve = flags.get("--auto-merge-resolve").and_then(Value::as_str);
-    if manual && resolve.is_some() {
+    if resolve.is_some_and(|strategy| !matches!(strategy, "ours" | "theirs" | "manual")) {
         return None;
     }
     let strategy = if manual { Some("manual") } else { resolve };
@@ -168,9 +171,9 @@ fn strategy(flags: &Map<String, Value>) -> Option<Option<&str>> {
     Some(strategy)
 }
 
-/// `[a-z0-9_./-]`.
-fn pattern_char(character: char) -> bool {
-    character.is_ascii_lowercase() || character.is_ascii_digit() || "_./-".contains(character)
+/// Component pattern syntax is evaluated against the authoritative workspace pool.
+fn valid_pattern(pattern: &str) -> bool {
+    !pattern.is_empty() && pattern.len() <= 4096 && !pattern.chars().any(char::is_control)
 }
 
 /// `head`, `latest`, `reset`, `main`, `head~N`, a snap hash or a semver tag.
@@ -181,11 +184,7 @@ fn valid_to(to: &str) -> bool {
     if let Some(steps) = to.strip_prefix("head~") {
         return !steps.is_empty() && steps.bytes().all(|byte| byte.is_ascii_digit());
     }
-    if to.len() == 40
-        && to
-            .bytes()
-            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
-    {
+    if (3..=40).contains(&to.len()) && to.bytes().all(|byte| byte.is_ascii_hexdigit()) {
         return true;
     }
     valid_tag(to)
@@ -237,6 +236,7 @@ impl Options {
         options["revert"] = json!(self.revert);
         options["verbose"] = json!(self.execution.verbose);
         options["workspaceOnly"] = json!(self.workspace_only);
+        options["includeNewFromScope"] = json!(self.force.include_new_from_scope);
         // The native CLI installs after committing the VCS plan.
         options["skipDependencyInstallation"] = json!(true);
         options

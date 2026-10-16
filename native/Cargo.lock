@@ -449,8 +449,10 @@ dependencies = [
  "bit-dependency-scanner",
  "flate2",
  "futures-util",
+ "indexmap",
  "junction 2.1.0",
  "node-semver",
+ "pretty_assertions",
  "rayon",
  "regress",
  "ryu-js",
@@ -460,6 +462,7 @@ dependencies = [
  "sha1",
  "sha2",
  "tokio",
+ "winapi-util",
  "xattr",
 ]
 

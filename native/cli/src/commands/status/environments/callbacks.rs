@@ -16,6 +16,7 @@ pub(super) fn load(
     capture: &mut Capture,
     status: bool,
     snapshot: bool,
+    checkout: bool,
 ) -> io::Result<bool> {
     capture.cache.retain_callback_startup(&host.take_stdout());
     let core = core_ids()?;
@@ -34,7 +35,7 @@ pub(super) fn load(
     let directory = tempfile::Builder::new().prefix("bit-native-callback-").tempdir()?;
     let rows = host.call(
         "statusLoadCallbacks",
-        &json!({"components":components,"status":status,"snapshot":snapshot,"directory":directory.path()}),
+        &json!({"components":components,"status":status,"snapshot":snapshot,"checkout":checkout,"directory":directory.path()}),
     )?;
     capture.cache.retain_callback_directory(directory);
     capture.cache.retain_callback_stdout(rows["stdout"].as_str().unwrap_or_default());
@@ -52,7 +53,7 @@ fn component_rows(capture: &Capture, context: &Value) -> io::Result<Vec<Value>> 
     capture.captured.iter().map(|row| {
         let identity = text(row.get("identity"))?;
         let issues = capture.components.iter().find(|component|component.identity.split('@').next() == Some(identity)).map_or_else(||json!([]), |component|component.issues.clone());
-        Ok(json!({"identity":identity,"version":row["version"],"directory":row["directory"],"files":row["files"],"current":row["current"],"issues":issues,"scoped":array(context.get("targets"),"callback targets")?.iter().find(|target|target["identity"]==identity).map(|target|target["scoped"].clone()),"scope":scope_metadata(context,identity)?}))
+        Ok(json!({"identity":identity,"version":row["version"],"directory":row["directory"],"files":row["files"],"current":row["current"],"issues":issues,"scoped":array(context.get("targets"),"callback targets")?.iter().find(|target|target["identity"]==identity).map(|target|target["scoped"].clone()),"scope":scope_metadata(context,identity)?,"dependencyCacheMiss":capture.environment_facts["checkoutCacheMisses"][identity]}))
     }).collect()
 }
 

@@ -23,7 +23,12 @@ impl Entry {
     /// `isIdOnCurrentLane`: not removed, and available on the lane or one of
     /// its components. On main, `lane` is empty.
     pub fn on_current_lane(&self, lane: &[String]) -> bool {
-        !self.removed && (self.available || lane.contains(&self.identity))
+        !self.removed && self.on_current_lane_including_removed(lane)
+    }
+
+    /// `idsByPattern` with `includeDeleted`: availability still follows the lane.
+    pub fn on_current_lane_including_removed(&self, lane: &[String]) -> bool {
+        self.available || lane.contains(&self.identity)
     }
 }
 

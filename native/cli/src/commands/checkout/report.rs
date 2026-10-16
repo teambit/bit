@@ -1,4 +1,5 @@
 //! The checkout report: `checkoutOutput` of `@teambit/checkout`.
+mod policy;
 
 use super::options::Options;
 use crate::commands::{
@@ -19,7 +20,12 @@ pub fn format(result: &Value, options: &Options, chalk: Chalk) -> io::Result<Rep
             "native checkout report with merge snapshots",
         ));
     }
-    let report = Checkout { results: &results, options, format: Formatter::new(chalk) };
+    let report = Checkout {
+        results: &results,
+        options,
+        format: Formatter::new(chalk),
+        policy: policy::format(result.get("workspaceConfigUpdateResult"), chalk)?,
+    };
     let skipped = !results.skipped.is_empty()
         && options.report_all()
         && !options.execution.verbose;
@@ -47,6 +53,7 @@ struct Checkout<'r> {
     results: &'r Results,
     options: &'r Options,
     format: Formatter,
+    policy: (String, String),
 }
 
 impl Checkout<'_> {
@@ -57,11 +64,14 @@ impl Checkout<'_> {
     /// `buildOutput(notCheckedOutSection)`.
     fn build(&self, skipped: &str) -> String {
         Formatter::join(&[
+            self.policy.0.clone(),
             skipped.to_string(),
             self.successful(),
             listed(&self.format, "removed components", &self.results.lists.removed),
             listed(&self.format, "added components", &self.results.lists.added),
             self.new_on_lane(),
+            self.new_from_scope(),
+            self.policy.1.clone(),
             self.conflict_summary(),
             self.summary(),
         ])
@@ -189,6 +199,14 @@ impl Checkout<'_> {
         self.format.section(title, description, &items)
     }
 
+    fn new_from_scope(&self) -> String {
+        let items = self.results.lists.scope
+            .iter()
+            .map(|id| self.format.item(&id.display()))
+            .collect::<Vec<_>>();
+        self.format.section("new components from scope", "", &items)
+    }
+
     /// `getSummary`.
     fn summary(&self) -> String {
         let chalk = self.chalk();
@@ -201,8 +219,16 @@ impl Checkout<'_> {
                 chalk.bold(&self.results.lists.lane.ids.len().to_string()),
             )
         };
+        let new_from_scope = if self.results.lists.scope.is_empty() {
+            String::new()
+        } else {
+            format!(
+                "\nNew from scope (imported): {}",
+                chalk.bold(&self.results.lists.scope.len().to_string()),
+            )
+        };
         format!(
-            "{}\nTotal Changed: {}\nTotal Unchanged: {}{new_on_lane}",
+            "{}\nTotal Changed: {}\nTotal Unchanged: {}{new_on_lane}{new_from_scope}",
             self.format.title("Checkout Summary"),
             chalk.bold(&self.results.components.len().to_string()),
             chalk.bold(&self.results.skipped.len().to_string()),

@@ -29,6 +29,7 @@ pub(in crate::commands) struct Environments {
     snapshot: bool,
     snapshot_build: bool,
     snapshot_loads: Vec<Value>,
+    checkout: bool,
 }
 impl Environments {
     pub(super) fn new() -> Self {
@@ -38,6 +39,7 @@ impl Environments {
             snapshot: false,
             snapshot_build: false,
             snapshot_loads: Vec::new(),
+            checkout: false,
         }
     }
 
@@ -49,6 +51,15 @@ impl Environments {
 
     pub(super) fn is_snapshot(&self) -> bool {
         self.snapshot
+    }
+
+    pub(in crate::commands) fn for_checkout(mut self) -> Self {
+        self.checkout = true;
+        self
+    }
+
+    pub(super) fn is_checkout(&self) -> bool {
+        self.checkout
     }
 
     pub(in crate::commands) fn with_issue_facts(mut self, enabled: bool) -> Self {
@@ -83,6 +94,28 @@ impl Environments {
         self.host.as_ref().ok_or_else(|| decline("environment host"))
     }
 
+    pub(in crate::commands) fn failure(&self, error: io::Error) -> io::Error {
+        if !self.checkout
+            || error
+                .get_ref()
+                .is_some_and(
+                    <dyn std::error::Error + Send + Sync>::is::<
+                        crate::host::callback_error::CallbackError,
+                    >,
+                )
+        {
+            return error;
+        }
+        match &self.host {
+            Some(host) => crate::host::callback_error::CallbackError::wrap(
+                error,
+                host.take_stdout(),
+                String::new(),
+            ),
+            None => error,
+        }
+    }
+
     pub(super) fn callbacks(
         &mut self,
         context: &Value,
@@ -90,7 +123,22 @@ impl Environments {
         status: bool,
     ) -> io::Result<()> {
         if let Some(host) = &self.host {
-            callbacks::load(host, context, capture, status, self.snapshot)?;
+            if let Err(error) =
+                callbacks::load(host, context, capture, status, self.snapshot, self.checkout)
+            {
+                if !self.checkout {
+                    return Err(error);
+                }
+                return Err(crate::host::callback_error::CallbackError::wrap(
+                    error,
+                    super::capture::callback_startup_stdout(capture),
+                    format!(
+                        "{}{}",
+                        super::capture::callback_load_stdout(capture),
+                        host.take_stdout(),
+                    ),
+                ));
+            }
             capture.cache.retain_callback_host(self.host.take());
         }
         Ok(())
@@ -104,7 +152,11 @@ impl Environments {
         )
     }
 
-    fn require_native_write_for(root: &Path, context: &Value, targets: &[Value]) -> io::Result<()> {
+    pub(in crate::commands) fn require_native_write_for(
+        root: &Path,
+        context: &Value,
+        targets: &[Value],
+    ) -> io::Result<()> {
         let core = core_ids()?;
         let aspects = root_aspects(context, &core);
         for target in targets {

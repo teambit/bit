@@ -9,7 +9,9 @@ pub use status_context::configuration::effective as effective_workspace_configur
 
 mod command_request;
 mod dependency_graph;
+mod owned;
 mod read;
+use owned::owned_command;
 mod read_raw;
 #[cfg(test)]
 mod request_tests;
@@ -68,7 +70,11 @@ enum Request {
     DependencyScan {
         request: Value,
     },
+    ReadSetValidate {
+        proofs: Vec<dependency_graph::proof::Proof>,
+    },
     CommandPrepare(command::input::Prepare),
+    CommandCheckoutSelect(command::checkout_pattern::Request),
     CommandInboundPrepare(command::inbound::Prepare),
     CommandInboundList(command::inbound::List),
     CommandInboundApply(command::inbound::Apply),
@@ -102,6 +108,7 @@ enum Request {
     CommandRecoveryApply(command::recovery::Apply),
     CommandRecoveryRestore(command::recovery::Restore),
     CommandPlan(command::Plan),
+    CommandCheckoutPolicyComplete(command::checkout_policy::Complete),
     CommandPolicyPrepare(command::policy::Prepare),
     CommandDependencyDetect(command::policy::dependencies::Detect),
     CommandDependencyComplete(command::policy::dependencies::Complete),
@@ -170,6 +177,8 @@ struct Response {
     /// Why a request failed, for diagnostics; callers decide on `failed`.
     #[serde(skip_serializing_if = "Option::is_none")]
     error: Option<String>,
+    #[serde(rename = "canonicalError", skip_serializing_if = "Option::is_none")]
+    canonical_error: Option<bool>,
 }
 use response::Output;
 
@@ -201,13 +210,13 @@ pub(crate) fn serve(
             failed: false,
             data: Some(data),
             error: None,
+            canonical_error: None,
         },
-        Err(error) => {
-            if std::env::var_os("BIT_RUST_INBOUND_DIAGNOSTIC").is_some() {
-                eprintln!("native inbound diagnostic: {error}");
-            }
-            Response { error: Some(error.to_string()), ..failure(id) }
-        }
+        Err(error) => Response {
+            error: Some(error.to_string()),
+            canonical_error: response::is_canonical(&error).then_some(true),
+            ..failure(id)
+        },
     };
     let mut output = Output(Vec::new());
     if serde_json::to_writer(&mut output, &response).is_err() {
@@ -264,44 +273,6 @@ fn owned(
         request => command_request::dispatch(request, snapshots, pool),
     }
 }
-fn owned_command(
-    request: Request,
-    snapshots: &mut super::snapshots::State,
-    pool: &rayon::ThreadPool,
-) -> io::Result<(usize, Value)> {
-    match request {
-        Request::CommandPlan(input) => command::plan(input, snapshots, pool),
-        Request::CommandPolicyPrepare(input) => {
-            pool.install(|| command::policy::prepare(input, &mut snapshots.command))
-        }
-        Request::CommandDependencyDetect(input) => pool.install(|| {
-            command::policy::dependencies::detect(input, &mut snapshots.command, pool)
-        }),
-        Request::CommandDependencyComplete(input) => pool.install(|| {
-            command::policy::dependencies::complete(input, &mut snapshots.command, pool)
-        }),
-        Request::CommandLaneFinalize(input) => {
-            pool.install(|| command::finalize_lane(&input, &mut snapshots.command))
-        }
-        Request::CommandFinalize(input) => {
-            pool.install(|| command::finalize(&input, &mut snapshots.command))
-        }
-        Request::CommandApply(input) => {
-            pool.install(|| command::apply(&input, &mut snapshots.command))
-        }
-        Request::CommandPrepare(input) => {
-            pool.install(|| command::prepare(input, &mut snapshots.command, pool))
-        }
-        Request::StatusPrepare(input) => client_status::prepare(input, &mut snapshots.status),
-        Request::StatusScan(input) => client_status::scan(&input, &mut snapshots.status, pool),
-        Request::StatusFinish(input) => client_status::finish(&input, &mut snapshots.status, pool),
-        Request::StatusComplete => client_status::complete(&mut snapshots.status),
-        Request::InventoryBegin(input) => inventory::begin(input, &mut snapshots.inventory, pool),
-        Request::InventoryFinish(input) => inventory::finish(input, &mut snapshots.inventory, pool),
-        Request::InventoryCancel { token } => inventory::cancel(token, &mut snapshots.inventory),
-        request => apply(request, pool),
-    }
-}
 fn failure(id: u32) -> Response {
     Response {
         version: 1,
@@ -311,6 +282,7 @@ fn failure(id: u32) -> Response {
         failed: true,
         data: None,
         error: None,
+        canonical_error: None,
     }
 }
 fn apply(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value)> {

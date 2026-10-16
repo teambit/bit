@@ -108,6 +108,12 @@ impl PreparedImport {
     pub(crate) fn prepare_lane_pattern_versions(&mut self, targets: &[Target]) -> io::Result<()> {
         self.prepare_versions_with_reason(targets, Some("import all history of given patterns components to check whether they have dependencies on the lane"))
     }
+    pub(crate) fn prepare_scope_additions(&mut self, targets: &[Target]) -> io::Result<()> {
+        self.prepare_versions_with_reason(
+            targets,
+            Some("to import new components from the defaultScope"),
+        )
+    }
     fn prepare_versions_with_reason(
         &mut self,
         targets: &[Target],
@@ -165,6 +171,11 @@ impl PreparedImport {
             .map(|hash| read_version(self, hash))
             .transpose()?
             .flatten();
+        // The preceding switch refresh primes the published importer's cache.
+        // Its subsequent cached checkout import keeps an available pending Version.
+        if self.cache.switch_existing_versions && version.is_some() {
+            return Ok(true);
+        }
         let first_unbuilt = version
             .as_ref()
             .is_some_and(|version| {

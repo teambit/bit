@@ -1,4 +1,4 @@
-use super::{all, read, snapshots};
+use super::{all, all_for_checkout, read, snapshots};
 use serde_json::json;
 use std::{fs, path::PathBuf};
 
@@ -116,4 +116,26 @@ fn callback_sources_are_retained_at_private_paths_without_materializing_the_work
     }
     assert_eq!(fs::read(fixture.0.join("component/index.js")).unwrap(), b"original disk source");
     assert!(!fixture.0.join("component/generated.js").exists());
+}
+
+#[test]
+fn checkout_captures_workspace_root_and_protects_the_live_bitmap() {
+    let fixture = Fixture::new();
+    let bitmap = br#"{"$schema-version":"17.0.0"}"#;
+    fs::write(fixture.0.join(".bitmap"), bitmap).unwrap();
+    fs::write(fixture.0.join("README.md"), b"root source").unwrap();
+    let input = json!({"identity":"scope/root","version":"1.0.0","directory":".",
+        "files":[".bitmap","README.md"],"current":{"mainFile":"README.md"}});
+    let pool = rayon::ThreadPoolBuilder::new()
+        .num_threads(2)
+        .build()
+        .unwrap();
+    let mut state = snapshots::State::default();
+    assert!(all(&fixture.0, vec![input.clone()], &mut state, &pool).is_err());
+    let captured = all_for_checkout(&fixture.0, vec![input], &mut state, &pool).unwrap();
+    let files = captured[0].files.as_array().unwrap();
+    assert_eq!(files[0]["relativePath"], ".bitmap");
+    assert_eq!(files[0]["protected"], true);
+    assert!(files[0].get("bitmapSource").is_none());
+    assert_eq!(files[1]["protected"], false);
 }

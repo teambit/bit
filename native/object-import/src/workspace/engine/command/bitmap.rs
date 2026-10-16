@@ -327,13 +327,13 @@ impl Prepared {
         }
         validate_history_file_id(file_id)?;
         let backup = (|| -> io::Result<()> {
-            let directory = self.root.join(".bit/bitmap-history");
+            let directory = crate::scope_path(&self.root).join("bitmap-history");
             fs::create_dir_all(&directory)?;
             fs::copy(self.root.join(".bitmap"), directory.join(format!(".bitmap-{file_id}")))?;
             let mut metadata = fs::OpenOptions::new()
                 .create(true)
                 .append(true)
-                .open(self.root.join(".bit/bitmap-history-metadata.txt"))?;
+                .open(crate::scope_path(&self.root).join("bitmap-history-metadata.txt"))?;
             writeln!(metadata, "{file_id} {reason}")?;
             metadata.sync_all()
         })();

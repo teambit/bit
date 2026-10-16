@@ -25,6 +25,8 @@ const cliArguments = JSON.parse(process.env.BIT_NATIVE_HOST_ARGUMENTS ?? '[]');
 const readonlyStatus = ['status', 's', 'diff', 'd'].includes(cliArguments[0]);
 const snapshotCommandName = cliArguments[0] === 't' ? 'tag' : cliArguments[0];
 const snapshotCommand = ['snap', 'tag'].includes(snapshotCommandName);
+const checkoutCommand = ['checkout', 'U', 'revert', 'switch'].includes(cliArguments[0]) || (cliArguments[0] === 'lane' && cliArguments[1] === 'import');
+const bufferedCommand = snapshotCommand || checkoutCommand;
 process.argv = [process.execPath, entry, ...cliArguments];
 require(path.join(bitDir, 'dist', 'hook-require.js'));
 const bitRequire = createRequire(path.join(bitDir, 'package.json'));
@@ -86,7 +88,7 @@ async function handle(line) {
     return;
   }
   try {
-    if (request.method === 'afterInstall' || readonlyStatus || snapshotCommand) capturedStdout = [];
+    if (request.method === 'afterInstall' || readonlyStatus || bufferedCommand) capturedStdout = [];
     const result = await handler(request.params ?? {});
     const output = capturedStdout?.join('');
     capturedStdout = null;
@@ -94,9 +96,9 @@ async function handle(line) {
     respond(`${JSON.stringify({ id: request.id, result: value, stdout: ['afterInstall', 'statusLoadCallbacks', 'statusIssueCallbacks', 'snapshotPreSnap', 'snapshotEditor', 'snapshotBuild', 'registryPublished', 'snapshotPackageManifests'].includes(request.method) ? undefined : output })}\n`);
   } catch (error) {
     const output = capturedStdout?.join('');
-    if (output && !snapshotCommand) process.stderr.write(output);
+    if (output && !bufferedCommand) process.stderr.write(output);
     capturedStdout = null;
-    respond(`${JSON.stringify({ id: request.id, error:error?.message??String(error), stdout:snapshotCommand?output:undefined })}\n`);
+    respond(`${JSON.stringify({ id: request.id, error:error?.message??String(error), stdout:bufferedCommand?output:undefined })}\n`);
   }
 }
 
@@ -284,7 +286,7 @@ async function devPatterns(envId) {
  */
 const snapshotPrimedAspects=new Set();
 function snapshotFreshAspects(ids) {
-  if(!snapshotCommand)return ids;
+  if(!bufferedCommand)return ids;
   return ids.filter((id)=>{const key=id.split('@')[0];if(snapshotPrimedAspects.has(key))return false;snapshotPrimedAspects.add(key);return true;});
 }
 
@@ -294,7 +296,7 @@ async function dependencyPolicies(extensionIds, bootstrap) {
   const workspace = loaded.get('teambit.workspace/workspace');
   captureBootstrapProgress(workspace);
   extensionIds=snapshotFreshAspects(extensionIds);
-  snapshotBootstrapProgress = bootstrap === true && cliArguments[0] === 'tag';
+  snapshotBootstrapProgress = bootstrap === true && ['tag', 'checkout'].includes(cliArguments[0]);
   try {
     if(extensionIds.length) await workspace.loadAspects(extensionIds, false, undefined, { ...workspaceAspectOptions(workspace), throwOnError: false, hideMissingModuleError: true });
   } finally {snapshotBootstrapProgress = false;}
@@ -302,7 +304,7 @@ async function dependencyPolicies(extensionIds, bootstrap) {
 }
 
 function workspaceAspectOptions(workspace) {
-  return readonlyStatus || snapshotCommand ? { runSubscribers: false, skipDeps: !workspace.config.autoLoadAspectsDeps } : {};
+  return readonlyStatus || bufferedCommand ? { runSubscribers: false, skipDeps: !workspace.config.autoLoadAspectsDeps } : {};
 }
 
 let snapshotLoads=[];
@@ -313,7 +315,7 @@ function captureBootstrapProgress(workspace) {
   logger.__nativeCaptured = true;
   logger.__nativeSetStatusLine = logger.setStatusLine;
   let loadingDepth=0;
-  if(snapshotCommand) {
+  if(bufferedCommand) {
     const getMany=workspace.componentLoader.getMany;
     workspace.componentLoader.getMany=async function(...args) {
       loadingDepth++;
@@ -701,7 +703,7 @@ async function hydrateStatusComponent(row) {
   return component;
 }
 
-async function statusLoadCallbacks({ components, directory, snapshot }) {
+async function statusLoadCallbacks({ components, directory, snapshot, checkout }) {
   const loaded = await loadHarmony();
   const workspace = loaded.get('teambit.workspace/workspace');
   const envs = loaded.get('teambit.envs/envs');
@@ -715,13 +717,13 @@ async function statusLoadCallbacks({ components, directory, snapshot }) {
     statusComponents.push(component);
     // DependencyLoader's DevFiles adapter hydrates a separate Harmony class before
     // the actual workspace load. Workspace-root explicitly skips source detection.
-    if (snapshot && row.directory !== '.') await statusApplyLoadCallbacks(await hydrateStatusComponent(row), { workspace, envs, resolver });
+    if ((snapshot || (checkout && row.dependencyCacheMiss)) && row.directory !== '.') await statusApplyLoadCallbacks(await hydrateStatusComponent(row), { workspace, envs, resolver });
     await statusApplyLoadCallbacks(component, { workspace, envs, resolver });
   }
   if (snapshot) loadOutput.push(capturedStdout?.slice(outputStart).join('') ?? '');
   outputStart = capturedStdout?.length ?? 0;
   // Canonical modification checks reload tagged consumers, retaining in-memory SourceFile mutations.
-  for (const row of components.filter((row) => snapshot || row.version)) {
+  for (const row of components.filter((row) => !checkout && (snapshot || row.version))) {
     const component = statusComponents.find((component) => component.id.toStringWithoutVersion() === row.identity);
     // DependencyLoader's DevFiles adapter hydrates a separate Harmony class before
     // the actual workspace load. Workspace-root explicitly skips source detection.

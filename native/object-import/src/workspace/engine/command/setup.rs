@@ -30,11 +30,12 @@ pub(super) fn run(
         state.sequence.checked_add(1).ok_or_else(|| invalid("command sequence limit"))?;
     let token = super::super::hash(format!("{}:{}", std::process::id(), state.sequence).as_bytes());
     let mut repository = repository::Repository::new(&request.root, imported);
-    validate_licenses(&context, &mut repository)?;
+    prepare_licenses(&request, &context, &mut repository)?;
     let mut history = history::State::default();
     let targets =
         merge_planning::select_targets(&request, &context, targets, &mut repository, &mut history)?;
-    let output = json!({"token":token,"context":context,"targets":targets});
+    let output =
+        json!({"token":token,"context":context,"targets":targets,"progress":repository.progress()});
     let count = targets.len();
     state.record = Some(Record {
         request,
@@ -47,6 +48,21 @@ pub(super) fn run(
         history,
     });
     Ok((count, output))
+}
+
+fn prepare_licenses(
+    request: &Prepare,
+    context: &Value,
+    repository: &mut repository::Repository,
+) -> io::Result<()> {
+    if request.operation == Operation::Merge {
+        validate_licenses(context, repository)?;
+    } else {
+        for scope in license_scopes(context)? {
+            repository.prepare_checkout_license(scope)?;
+        }
+    }
+    Ok(())
 }
 
 fn checkout_targets(request: &Prepare, context: &Value) -> io::Result<Vec<Value>> {
@@ -70,8 +86,15 @@ fn preparation_proofs(request: &Prepare) -> io::Result<Vec<proof::Proof>> {
         ".bit/index.json",
         ".bit/unmerged.json",
     ] {
-        proof::read(&request.root.join(name), &mut proofs)?;
+        let path = name
+            .strip_prefix(".bit/")
+            .map_or_else(
+                || request.root.join(name),
+                |name| crate::scope_path(&request.root).join(name),
+            );
+        proof::read(&path, &mut proofs)?;
     }
+    proof::read(&request.home.join(".bitrc.jsonc"), &mut proofs)?;
     Ok(proofs)
 }
 
@@ -94,21 +117,28 @@ pub(super) fn validate_licenses(
     context: &Value,
     repository: &mut repository::Repository,
 ) -> io::Result<()> {
+    for scope in license_scopes(context)? {
+        validate_license(scope, repository)?;
+    }
+    Ok(())
+}
+
+fn license_scopes(context: &Value) -> io::Result<std::collections::HashSet<&str>> {
     let mut scopes = std::collections::HashSet::new();
     scopes.insert(context["scope"]["name"].as_str().ok_or_else(|| invalid("command scope name"))?);
     let visible = context["targets"].as_array().ok_or_else(|| invalid("command target scopes"))?;
     let lane = context["lane"]["targets"]
         .as_array()
         .map_or(&[][..], Vec::as_slice);
-    for target in visible.iter().chain(lane) {
+    let scope = context["scopeAddedTargets"]
+        .as_array()
+        .map_or(&[][..], Vec::as_slice);
+    for target in visible.iter().chain(lane).chain(scope) {
         let identity =
             target["identity"].as_str().ok_or_else(|| invalid("command target identity"))?;
         scopes.insert(identity.split_once('/').ok_or_else(|| invalid("command scoped target"))?.0);
     }
-    for scope in scopes {
-        validate_license(scope, repository)?;
-    }
-    Ok(())
+    Ok(scopes)
 }
 
 pub(super) fn component_controls(
@@ -125,7 +155,14 @@ pub(super) fn component_controls(
                 .into_iter()
                 .flatten()
         });
-    for target in active.iter().chain(additional) {
+    let scope_added = context["scopeAddedTargets"]
+        .as_array()
+        .map_or(&[][..], Vec::as_slice);
+    for target in active
+        .iter()
+        .chain(additional)
+        .chain(scope_added)
+    {
         let directory =
             target["directory"].as_str().ok_or_else(|| invalid("command control directory"))?;
         for (name, key) in [("component.json", "config"), ("package.json", "packageJson")] {

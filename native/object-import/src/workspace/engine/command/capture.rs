@@ -33,6 +33,23 @@ pub(super) fn all_for_snapshot(
     all_with(root, inputs, snapshots, pool, true)
 }
 
+pub(super) fn all_for_checkout(
+    root: &Path,
+    inputs: Vec<Value>,
+    snapshots: &mut snapshots::State,
+    pool: &rayon::ThreadPool,
+) -> io::Result<Vec<Captured>> {
+    let mut captured = all_with(root, inputs, snapshots, pool, true)?;
+    for target in &mut captured {
+        for file in target.files.as_array_mut().ok_or_else(|| invalid("checkout files"))? {
+            file.as_object_mut()
+                .ok_or_else(|| invalid("checkout source"))?
+                .remove("bitmapSource");
+        }
+    }
+    Ok(captured)
+}
+
 fn all_with(
     root: &Path,
     inputs: Vec<Value>,
@@ -58,6 +75,7 @@ fn all_with(
                 "snapshotHash":observed.snapshot_hash,"readToken":token,"protected":false});
             if target.directory == "." && file == ".bitmap" {
                 source["bitmapSource"] = json!(true);
+                source["protected"] = json!(true);
             }
             files.push(source);
         }

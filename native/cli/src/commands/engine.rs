@@ -26,6 +26,8 @@ struct Response {
     data: Value,
     #[serde(default)]
     error: Option<String>,
+    #[serde(rename = "canonicalError")]
+    canonical_error: Option<bool>,
 }
 
 impl Engine {
@@ -56,6 +58,11 @@ impl Engine {
         let failed = response.failed.is_some_and(|failed| !failed.is_null() && failed != false);
         let skipped = response.skipped.is_some_and(|skipped| !skipped.is_empty());
         if response.version != 1 || response.id != self.next_id || failed || skipped {
+            if response.canonical_error == Some(true)
+                && let Some(message) = response.error
+            {
+                return Err(io::Error::other(CanonicalError(message)));
+            }
             let kind = input
                 .get("kind")
                 .and_then(Value::as_str)
@@ -65,4 +72,26 @@ impl Engine {
         }
         serde_json::from_value(response.data).map_err(io::Error::other)
     }
+}
+
+#[derive(Debug)]
+struct CanonicalError(String);
+impl std::fmt::Display for CanonicalError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(formatter)
+    }
+}
+impl std::error::Error for CanonicalError {}
+
+pub(super) fn is_canonical(error: &io::Error) -> bool {
+    let mut cause = error
+        .get_ref()
+        .map(|error| error as &dyn std::error::Error);
+    while let Some(error) = cause {
+        if error.is::<CanonicalError>() {
+            return true;
+        }
+        cause = error.source();
+    }
+    false
 }

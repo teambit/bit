@@ -51,7 +51,7 @@ fn read_context_with(
     if Environments::require_native_write_for(root, &context, &selected).is_err() {
         startup.committed = true;
     }
-    environments.bootstrap(root, &context, &selected)?;
+    bootstrap_owned(&mut environments, root, &context, &selected, startup)?;
     if let Some(build) = snapshot
         && (build || super::snapshot::configured(engine, root, &context)?)
     {
@@ -61,9 +61,31 @@ fn read_context_with(
             .call("dependencyPolicies", &json!({"extensionIds":[]}))?;
     }
     if environments.host.is_some() {
-        context = engine.request(&request)?;
+        context = engine
+            .request(&request)
+            .inspect_err(|_error| {
+                if let Some(host) = &environments.host {
+                    startup.stdout.push_str(&host.take_stdout());
+                }
+            })?;
     }
     Ok((context, environments))
+}
+
+fn bootstrap_owned(
+    environments: &mut Environments,
+    root: &Path,
+    context: &Value,
+    targets: &[Value],
+    startup: &mut crate::commands::status::autosync::Startup,
+) -> io::Result<()> {
+    environments
+        .bootstrap(root, context, targets)
+        .inspect_err(|_error| {
+            if let Some(host) = &environments.host {
+                startup.stdout.push_str(&host.take_stdout());
+            }
+        })
 }
 
 impl Environments {

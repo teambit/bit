@@ -6,7 +6,7 @@ pub use callbacks::{
     callback_issue_stdout, callback_load_stdout, callback_startup_stdout, issue_callbacks,
     workspace_issues,
 };
-pub use commit::commit;
+pub use commit::{commit, commit_checkout_dependencies};
 pub use snapshot::{
     snapshot_build, snapshot_data, snapshot_editor, snapshot_package_manifests, snapshot_pre_snap,
     snapshot_registry, snapshot_required, snapshot_workspace_issues,
@@ -15,6 +15,7 @@ pub use snapshot::{
 mod bitmap;
 mod callbacks;
 mod commit;
+mod dependencies;
 mod identities;
 mod missing;
 mod order;
@@ -177,21 +178,32 @@ pub fn capture_with(
     targets: &[Value],
     mut capture_options: CaptureOptions,
 ) -> io::Result<Capture> {
+    let mut environments = capture_options.environments.take().unwrap_or_else(Environments::new);
+    capture_environment(engine, root, home, context, targets, capture_options, &mut environments)
+        .map_err(|error| environments.failure(error))
+}
+
+fn capture_environment(
+    engine: &mut Engine,
+    root: &Path,
+    home: &Path,
+    context: &Value,
+    targets: &[Value],
+    capture_options: CaptureOptions,
+    environments: &mut Environments,
+) -> io::Result<Capture> {
     capture_options.validate_targets(targets)?;
     let context = policy::pending_context(root, context)?;
-    let snapshot = capture_options.environments.as_ref().is_some_and(Environments::is_snapshot);
-    if !snapshot && !capture_options.missing_status_invalid && !capture_options.allow_special_states
-    {
-        Environments::require_native_write(root, &context)?;
-    }
-    let mut environments = capture_options.environments.take().unwrap_or_else(Environments::new);
+    let snapshot = environments.is_snapshot();
+    let checkout = environments.is_checkout();
+    validate_write(root, &context, &capture_options, environments)?;
     let context = environments.context_for(root, &context, targets)?;
     let context = &context;
     let options: Options =
         serde_json::from_value(context["options"].clone()).map_err(io::Error::other)?;
     let inventory = Inventory::new(&options)?;
     let mut behavior = capture_options.scan_behavior();
-    behavior.callbacks |= snapshot;
+    behavior.callbacks |= snapshot || checkout;
     let mut captured = initialize(root, context, !targets.is_empty(), capture_options)?;
     let mut facts = None;
     for target in targets {
@@ -202,7 +214,7 @@ pub fn capture_with(
             context,
             inventory: &inventory,
             facts: &mut facts,
-            environments: &mut environments,
+            environments,
             behavior,
         };
         scan.target(target, &mut captured)?;
@@ -214,6 +226,22 @@ pub fn capture_with(
         environments.callbacks(context, &mut captured, behavior.missing_status_invalid)?;
     }
     Ok(captured)
+}
+
+fn validate_write(
+    root: &Path,
+    context: &Value,
+    options: &CaptureOptions,
+    environments: &Environments,
+) -> io::Result<()> {
+    if !environments.is_snapshot()
+        && !environments.is_checkout()
+        && !options.missing_status_invalid
+        && !options.allow_special_states
+    {
+        Environments::require_native_write(root, context)?;
+    }
+    Ok(())
 }
 
 fn initialize(
@@ -230,7 +258,11 @@ fn initialize(
         captured: Vec::new(),
         comparisons: Vec::new(),
         components: Vec::new(),
-        environment_facts: context["environmentFacts"].clone(),
+        environment_facts: {
+            let mut facts = context["environmentFacts"].clone();
+            facts["checkoutCacheMisses"] = json!({});
+            facts
+        },
         remotely_removed: Vec::new(),
         invalid: HashMap::new(),
         dependency_states: HashMap::new(),
@@ -269,114 +301,6 @@ struct ScanBehavior {
 }
 
 impl Scan<'_> {
-    fn dependencies(
-        &mut self,
-        target: &Value,
-        directory: &str,
-        files: &[String],
-        policy: &policy::Policy,
-        captured: &mut Capture,
-    ) -> io::Result<Option<Value>> {
-        let mut dependencies = if captured.cache.no_fs_cache
-            || (captured.cache.reset && directory != ".")
-            || !self.context["environmentFacts"][text(target.get("identity"))?].is_null()
-        {
-            json!({ "needsDetection": true })
-        } else {
-            self.cached(target, directory, files, policy)?
-        };
-        if dependencies.get("needsDetection") == Some(&Value::Bool(true)) {
-            let (detected, pending) = match self.detect(target, files, policy) {
-                Ok(value) => value,
-                Err(error)
-                    if self.behavior.incomplete_reset
-                        && error
-                            .to_string()
-                            .contains(
-                                "dependency graph extraction requires canonical fallback",
-                            ) =>
-                {
-                    missing::record_incomplete(target, directory, files, captured)?;
-                    return Ok(None);
-                }
-                Err(error) => return Err(error),
-            };
-            dependencies = detected;
-            captured.cache.pending.push(pending);
-        } else if self.behavior.verify {
-            let (detected, pending) = self.verified(target, files, policy, &dependencies)?;
-            dependencies = detected;
-            captured.cache.pending.push(pending);
-        }
-        Ok(Some(dependencies))
-    }
-
-    /// `verifyFreshDependencies`: the cached dependencies detected again;
-    /// any difference in metadata or issues declines.
-    fn verified(
-        &mut self,
-        target: &Value,
-        files: &[String],
-        policy: &policy::Policy,
-        cached: &Value,
-    ) -> io::Result<(Value, fresh::Pending)> {
-        let (detected, pending) = self.detect(target, files, policy)?;
-        let current = |deps: &Value| {
-            policy::current_metadata(target, policy, deps).map(|meta| meta.to_string())
-        };
-        let issues = |deps: &Value| deps.get("issues").map(Value::to_string);
-        if current(&detected)? != current(cached)? || issues(&detected) != issues(cached) {
-            return Err(decline("cached dependencies differ from a fresh detection"));
-        }
-        Ok((detected, pending))
-    }
-
-    /// `dependencyPolicyCached`.
-    fn cached(
-        &mut self,
-        target: &Value,
-        directory: &str,
-        files: &[String],
-        policy: &policy::Policy,
-    ) -> io::Result<Value> {
-        let component_root = self.root.join(directory);
-        let mut request = json!({
-            "kind": "dependencyPolicyCached",
-            "root": self.root,
-            "componentRoot": component_root,
-            "identity": full_identity(target)?,
-            "files": files.iter().map(|file| component_root.join(file)).collect::<Vec<_>>(),
-        });
-        spread(&mut request, &policy.input)?;
-        self.engine.request(&request)
-    }
-
-    /// `readFreshDependencies`.
-    fn detect(
-        &mut self,
-        target: &Value,
-        files: &[String],
-        policy: &policy::Policy,
-    ) -> io::Result<(Value, fresh::Pending)> {
-        if self.facts.is_none() {
-            *self.facts = Some(fresh::Facts::new(self.home)?);
-        }
-        let facts = self.facts.as_ref().ok_or_else(|| decline("status facts"))?;
-        let detection = fresh::Detection { root: self.root, context: self.context, facts };
-        let custom = self.environments.detectors(self.root, self.context, target, files)?;
-        match detection.read_with_detectors(self.engine, target, files, policy, custom.clone()) {
-            Err(error)
-                if error
-                    .to_string()
-                    .contains("dependency graph extraction requires canonical fallback") =>
-            {
-                let custom = self.environments.parser(self.root, target, files, &custom)?;
-                detection.read_with_detectors(self.engine, target, files, policy, custom)
-            }
-            result => result,
-        }
-    }
-
     /// The component's files, relative to its directory.
     fn files(&mut self, directory: &str) -> io::Result<Vec<String>> {
         let others: Vec<_> = if directory == "." {

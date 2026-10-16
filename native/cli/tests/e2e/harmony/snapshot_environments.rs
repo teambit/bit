@@ -87,6 +87,7 @@ class Hook {
   workspace.registerOnComponentLoad((component)=>{
    if(component.id.fullName!=='bar/foo')return;
    console.log('fixture component load');
+   if(fs.existsSync(workspace.path+'/checkout-load-fails')) {fs.appendFileSync(workspace.path+'/checkout-load-count','x');throw new Error('fixture checkout load rejected');}
    const file=component.state._consumer.files.find((file)=>file.relative==='foo.js');
    file.contents=Buffer.concat([file.contents,Buffer.from('\n// in-memory snapshot onLoad\n')]);
    return {snapshotAdapter:'loaded'};
@@ -106,7 +107,7 @@ class Hook {
 }
 module.exports={default:Hook};";
 
-fn callback_workspace(fail: bool) -> Helper {
+pub(super) fn callback_workspace(fail: bool) -> Helper {
     let helper = workspace();
     let id = format!("{}/callbacks/hook", helper.scopes.remote);
     let source = HOOK

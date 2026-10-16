@@ -20,7 +20,7 @@ pub(in crate::workspace::engine::command) fn import_count(
             .map(serde_json::Map::len)
             .ok_or_else(|| invalid("switch fetched head count"));
     }
-    let staged = match std::fs::read_to_string(root.join(".bit/staged-snaps")) {
+    let staged = match std::fs::read_to_string(crate::scope_path(root).join("staged-snaps")) {
         Ok(value) => value,
         Err(error) if error.kind() == io::ErrorKind::NotFound => {
             return Ok(targets.len() + additions);

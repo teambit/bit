@@ -1,3 +1,5 @@
+#[cfg(windows)]
+mod windows;
 use super::invalid;
 use std::{
     fs::{self, OpenOptions},
@@ -19,6 +21,16 @@ pub(crate) fn commit(path: &Path, contents: &str) -> io::Result<()> {
     file.set_len(0)?;
     file.write_all(contents.as_bytes())
 }
+/// Check the same held-file identity rules as `commit` before a larger plan
+/// starts publishing unrelated files. Opening here never truncates the file.
+pub(crate) fn validate_existing(path: &Path) -> io::Result<()> {
+    let metadata = fs::symlink_metadata(path)?;
+    if !metadata.is_file() {
+        return Err(invalid("unsupported merge state file"));
+    }
+    drop(existing_file(path, &metadata)?);
+    Ok(())
+}
 fn open(path: &Path, existing: Option<&fs::Metadata>) -> io::Result<fs::File> {
     let Some(metadata) = existing else {
         fs::create_dir_all(path.parent().ok_or_else(|| invalid("missing merge state parent"))?)?;
@@ -27,7 +39,18 @@ fn open(path: &Path, existing: Option<&fs::Metadata>) -> io::Result<fs::File> {
             .create_new(true)
             .open(path);
     };
-    if !metadata.is_file() || !single_link(metadata) {
+    if !metadata.is_file() {
+        return Err(invalid("unsupported merge state file"));
+    }
+    existing_file(path, metadata)
+}
+#[cfg(windows)]
+fn existing_file(path: &Path, _metadata: &fs::Metadata) -> io::Result<fs::File> {
+    windows::open(path)
+}
+#[cfg(not(windows))]
+fn existing_file(path: &Path, metadata: &fs::Metadata) -> io::Result<fs::File> {
+    if !single_link(metadata) {
         return Err(invalid("unsupported merge state file"));
     }
     let file = OpenOptions::new().write(true).open(path)?;
@@ -36,6 +59,7 @@ fn open(path: &Path, existing: Option<&fs::Metadata>) -> io::Result<fs::File> {
     }
     Ok(file)
 }
+#[cfg(not(windows))]
 fn single_link(metadata: &fs::Metadata) -> bool {
     #[cfg(unix)]
     {
@@ -48,6 +72,7 @@ fn single_link(metadata: &fs::Metadata) -> bool {
         false
     }
 }
+#[cfg(not(windows))]
 fn same_file(before: &fs::Metadata, after: &fs::Metadata) -> bool {
     #[cfg(unix)]
     {

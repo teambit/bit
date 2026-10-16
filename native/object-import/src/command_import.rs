@@ -32,6 +32,9 @@ pub(crate) struct Overlay {
     lane_refs: HashMap<(String, String), Value>,
 }
 impl Overlay {
+    pub(crate) fn object_references(&self) -> impl Iterator<Item = &str> {
+        self.objects.keys().map(String::as_str)
+    }
     pub(crate) fn read(&self, hash: &str, kind: &str) -> io::Result<Option<&Value>> {
         self.objects
             .get(hash)

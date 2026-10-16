@@ -1,11 +1,11 @@
 use super::{
-    Plan, PreparedPlan, Record, bitmap, input, invalid, materialization, merge_planning, planning,
-    proof,
+    Plan, PreparedPlan, Record, bitmap, checkout_policy, input, invalid, materialization,
+    merge_planning, planning, proof,
 };
 use serde_json::{Value, json};
 use std::io;
 pub(super) fn run(
-    input: Plan,
+    input: &Plan,
     snapshots: &mut crate::workspace::snapshots::State,
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
@@ -15,23 +15,9 @@ pub(super) fn run(
         return Err(invalid("command plan token"));
     }
     proof::verify(&input.dependency_read_set)?;
-    record.proofs.extend(input.dependency_read_set);
+    record.proofs.extend(input.dependency_read_set.iter().cloned());
     validate_versions(&mut record)?;
-    let mut planned = pool.install(|| match record.request.operation {
-        input::Operation::Checkout => {
-            planning::checkout(&mut record, input.current, &input.semver, snapshots, pool)
-        }
-        input::Operation::Merge => merge_planning::plan(
-            &mut record,
-            input.current,
-            input.lane_pattern_ids.as_deref(),
-            snapshots,
-            pool,
-        ),
-        input::Operation::Switch => {
-            super::switch::plan(&mut record, input.current, &input.semver, snapshots, pool)
-        }
-    })?;
+    let mut planned = plan_operation(&mut record, input, snapshots, pool)?;
     if record.request.operation == input::Operation::Switch {
         super::switch::append_skipped(&record.context, &record.targets, &mut planned.result)?;
     }
@@ -43,10 +29,74 @@ pub(super) fn run(
     proof::verify(&record.proofs)?;
     let output = plan_output(&record, &planned)?;
     let count = planned.result["components"].as_array().map_or(0, Vec::len);
-    record.planned =
-        Some(PreparedPlan { plan: planned, bitmap, snap_bitmap: None, reset_config: None });
+    let checkout_policy = prepare_checkout_policy(&record, &planned, &output)?;
+    let configuration = match record.request.operation {
+        input::Operation::Checkout | input::Operation::Switch => {
+            Some(super::reset_config::checkout(&record, &planned)?)
+        }
+        input::Operation::Merge => None,
+    };
+    record.planned = Some(PreparedPlan {
+        plan: planned,
+        bitmap,
+        snap_bitmap: None,
+        reset_config: configuration,
+        checkout_policy,
+    });
     snapshots.command.record = Some(record);
     Ok((count, output))
+}
+
+fn plan_operation(
+    record: &mut Record,
+    input: &Plan,
+    snapshots: &mut crate::workspace::snapshots::State,
+    pool: &rayon::ThreadPool,
+) -> io::Result<planning::Planned> {
+    pool.install(|| match record.request.operation {
+        input::Operation::Checkout => {
+            planning::checkout(record, input.current.clone(), &input.semver, snapshots, pool)
+        }
+        input::Operation::Merge => merge_planning::plan(
+            record,
+            input.current.clone(),
+            input.lane_pattern_ids.as_deref(),
+            snapshots,
+            pool,
+        ),
+        input::Operation::Switch => {
+            super::switch::plan(record, input.current.clone(), &input.semver, snapshots, pool)
+        }
+    })
+}
+
+fn prepare_checkout_policy(
+    record: &Record,
+    planned: &planning::Planned,
+    output: &Value,
+) -> io::Result<Option<checkout_policy::Prepared>> {
+    let Some(receipt) = output.get("checkoutPolicyPreparation") else { return Ok(None) };
+    let root = record.targets
+        .iter()
+        .find(|target| target["directory"] == ".");
+    if let Some(root) = root
+        && planned.materials
+            .iter()
+            .any(|material| {
+                material.output["id"]
+                    .as_str()
+                    .is_some_and(|id| {
+                        id.rsplit_once('@')
+                            .is_some_and(|(identity, _)| root["identity"] == identity)
+                    })
+                    && material.files
+                        .iter()
+                        .any(|file| file["relativePath"] == "workspace.jsonc")
+            })
+    {
+        return Err(invalid("command workspace config materialization overlaps policy"));
+    }
+    checkout_policy::Prepared::new(&record.request.root, receipt.clone()).map(Some)
 }
 
 fn plan_output(record: &Record, planned: &planning::Planned) -> io::Result<Value> {
@@ -59,6 +109,15 @@ fn plan_output(record: &Record, planned: &planning::Planned) -> io::Result<Value
         )?);
     }
     snap_receipt(&mut output, planned)?;
+    if record.request.operation == input::Operation::Checkout
+        && let Some(receipt) = checkout_policy::receipt(
+            &record.context,
+            &planned.materials,
+            record.request.options.strategy.as_deref(),
+        )?
+    {
+        output["checkoutPolicyPreparation"] = receipt;
+    }
     if let Some(receipt) = planned.merge.as_ref().and_then(merge_planning::Prepared::lane_receipt) {
         output["lanePreparation"] = receipt;
     }

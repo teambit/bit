@@ -7,11 +7,12 @@ use bit_install::output::Output;
 use serde_json::Value;
 use std::{collections::HashSet, io, time::Instant};
 
-const REASONS: [&str; 4] = [
+const REASONS: [&str; 5] = [
     "of their latest on main",
     "for getting missing versions and dependencies",
     "for making sure the new components are really new and are not out-of-sync",
     "import all history of given patterns components to check whether they have dependencies on the lane",
+    "to import new components from the defaultScope",
 ];
 
 /// One import the engine ran: why, which ids, and how much it fetched.
@@ -190,13 +191,17 @@ impl Progress {
 
     /// Print the lines, as the loader does while checkout runs.
     pub fn render_checkout(&self, output: &Output) {
-        self.render_checkout_with(output, false);
+        self.render_checkout_with(output, false, false);
     }
 
     /// `checkout main` has already imported its target objects during the
     /// initial latest-on-main fetch; Harmony does not print the second import.
-    pub fn render_checkout_with(&self, output: &Output, main: bool) {
-        output.status("switching component version...");
+    pub fn render_checkout_with(&self, output: &Output, main: bool, revert: bool) {
+        output.status(if revert {
+            "reverting components..."
+        } else {
+            "switching component version..."
+        });
         output.status("importing components");
         let started = Instant::now();
         let fetching = [REASONS[0], REASONS[1]];
@@ -217,10 +222,18 @@ impl Progress {
             render_import(output, row);
         }
         output.success("importing components", Some(started));
+        for count in &self.loads {
+            output.status(&format!("loading {count} component(s)"));
+        }
+
         for row in self.imports
             .iter()
             .filter(|row| {
-                !main && (row.reason.is_none() || row.reason.as_deref() == Some(REASONS[2]))
+                !main
+                    && (row.reason.is_none()
+                        || row.reason
+                            .as_deref()
+                            .is_some_and(|reason| [REASONS[2], REASONS[4]].contains(&reason)))
             })
         {
             render_import(output, row);

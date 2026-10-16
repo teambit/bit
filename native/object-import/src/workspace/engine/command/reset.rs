@@ -45,8 +45,13 @@ pub(super) fn plan(
         })
         .collect::<io::Result<Vec<_>>>()?;
     bitmap.clear_config(&record.context, &identities)?;
-    let prepared =
-        PreparedPlan { plan, bitmap, snap_bitmap: None, reset_config: Some(configuration) };
+    let prepared = PreparedPlan {
+        plan,
+        bitmap,
+        snap_bitmap: None,
+        reset_config: Some(configuration),
+        checkout_policy: None,
+    };
     validate(record, &prepared)?;
     Ok(prepared)
 }

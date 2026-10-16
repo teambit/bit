@@ -227,9 +227,22 @@ fn absolute_node(node: &Path) -> Option<PathBuf> {
         return Some(node.to_path_buf());
     }
     let path = std::env::var_os("PATH")?;
-    std::env::split_paths(&path)
-        .map(|dir| dir.join(node))
-        .find(|candidate| candidate.is_file())
+    node_in_paths(node, std::env::split_paths(&path), cfg!(windows))
+}
+
+fn node_in_paths(
+    node: &Path,
+    mut paths: impl Iterator<Item = PathBuf>,
+    windows: bool,
+) -> Option<PathBuf> {
+    paths.find_map(|directory| {
+        let candidate = directory.join(node);
+        if candidate.is_file() {
+            return Some(candidate);
+        }
+        let executable = candidate.with_extension("exe");
+        (windows && node.extension().is_none() && executable.is_file()).then_some(executable)
+    })
 }
 
 /// `getBitVersion()`: the version of the `@teambit/bit` package the Node.js

@@ -370,7 +370,7 @@ fn hidden_entry(row: &Value) -> io::Result<Entry> {
     crate::merge_history::hash(&head)?;
     Ok(Entry { identity, head, hidden: true })
 }
-fn component_identity(value: &Value) -> io::Result<String> {
+pub(crate) fn component_identity(value: &Value) -> io::Result<String> {
     let scope = text(value, "scope")?;
     let name = text(value, "name")?;
     if scope.is_empty()

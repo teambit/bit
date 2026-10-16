@@ -11,7 +11,24 @@ pub(super) fn verify(
     overlay: Option<&Overlay>,
 ) -> io::Result<()> {
     crate::merge_history::hash(&version.hash)?;
-    let expected = serde_json::to_value(&version.files).map_err(io::Error::other)?;
+    let proof = version.proof_files.as_deref().unwrap_or(&version.files);
+    if version.proof_files.is_some()
+        && version.files
+            .iter()
+            .any(|file| {
+                !proof
+                    .iter()
+                    .any(|source| {
+                        source.relative_path == file.relative_path
+                            && source.hash == file.hash
+                            && source.name == file.name
+                            && source.test == file.test
+                    })
+            })
+    {
+        return Err(invalid("checkout selected manifest differs from proof"));
+    }
+    let expected = serde_json::to_value(proof).map_err(io::Error::other)?;
     if let Some(overlay) = overlay
         && let Some(value) = overlay.read(&version.hash, "Version")?
     {

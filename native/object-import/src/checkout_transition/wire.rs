@@ -17,6 +17,8 @@ pub(super) struct Prepare {
 pub(super) struct Version {
     pub(super) hash: String,
     pub(super) files: Vec<Manifest>,
+    #[serde(rename = "proofFiles")]
+    pub(super) proof_files: Option<Vec<Manifest>>,
 }
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

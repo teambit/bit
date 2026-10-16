@@ -4,6 +4,8 @@
 //! implement in JavaScript goes through it; the script reaches those through
 //! the modules the published `@teambit/bit` package ships.
 
+pub(crate) mod callback_error;
+
 use crate::{delegate, discovery::NodeCli, trace};
 use serde::Deserialize;
 use serde_json::{Value, json};

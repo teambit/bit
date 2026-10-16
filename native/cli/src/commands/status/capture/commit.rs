@@ -42,3 +42,16 @@ pub fn commit(
     }
     Ok(())
 }
+
+/// `DependencyLoader` saves successful reads before checkout validates merge conflicts.
+pub fn commit_checkout_dependencies(
+    engine: &mut Engine,
+    root: &Path,
+    capture: &Capture,
+) -> io::Result<()> {
+    if capture.cache.callbacks.host.is_some() && !capture.cache.is_empty() {
+        let entries = capture.cache.entries();
+        fresh::commit(engine, root, &entries, capture.cache.reset, !capture.cache.no_fs_cache)?;
+    }
+    Ok(())
+}

@@ -123,7 +123,7 @@ pub(super) fn populate(
         .find(|value| value["hash"] == head)
         .ok_or_else(|| invalid("command history head"))?;
     let result = crate::history_query::populate::begin(json!({
-        "objectsDirectory":root.join(".bit/objects"),"head":head,"headExists":false,"exitWhenFind":true,
+        "objectsDirectory":crate::scope_path(root).join("objects"),"head":head,"headExists":false,"exitWhenFind":true,
         "existing":existing,"headData":head_data,"overlays":overlays,
     }))?;
     if result["complete"] != true {

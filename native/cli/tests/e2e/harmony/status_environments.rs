@@ -35,9 +35,11 @@ fn parity(helper: &Helper, command: &str) -> Value {
     assert_eq!(
         native.status.code(),
         node.status.code(),
-        "{command}: {} {}",
+        "{command}: native stdout: {}\nnative stderr: {}\nNode stdout: {}\nNode stderr: {}",
         native.stdout,
         native.stderr,
+        node.stdout,
+        node.stderr,
     );
     assert_eq!(stderr(&native.stderr), stderr(&node.stderr), "{command}");
     let (native_prefix, native_json) = json_output(&native.stdout);
@@ -67,7 +69,15 @@ fn text_parity(helper: &Helper, command: &str, color: &str) {
         command,
         &[("FORCE_COLOR", OsStr::new(color)), ("BIT_NATIVE", OsStr::new("off"))],
     );
-    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(
+        native.status.code(),
+        node.status.code(),
+        "{command} color={color}: native stdout: {}\nnative stderr: {}\nNode stdout: {}\nNode stderr: {}",
+        native.stdout,
+        native.stderr,
+        node.stdout,
+        node.stderr,
+    );
     assert_eq!(stderr(&native.stderr), stderr(&node.stderr));
     assert_eq!(native.stdout, node.stdout, "{command} color={color}");
 }
@@ -180,7 +190,16 @@ fn stderr(stderr: &str) -> String {
 
 const CUSTOM_CALLBACK_SOURCE: &str = r#"const { WorkspaceAspect } = require('@teambit/workspace');
 const { IssuesAspect } = require('@teambit/issues');
-const { IssuesClasses } = require('@teambit/component-issues');
+// Use the workspace's actual released IssuesList class, without adding a remote Bit dependency.
+function parseIssue(component) {
+  const issues = component.state.issues;
+  let issue = issues.getIssueByName('ParseErrors');
+  if (!issue) {
+    issue = issues.constructor.deserialize([{type:'ParseErrors',data:'{}'}]).getIssueByName('ParseErrors');
+    issues.add(issue);
+  }
+  return issue;
+}
 class CallbackAspect {
   static dependencies = [WorkspaceAspect, IssuesAspect];
   static async provider([workspace, issues]) {
@@ -188,7 +207,7 @@ class CallbackAspect {
     workspace.registerOnComponentLoad((component) => {
       if (component.id.fullName !== 'bar/foo') return;
       console.log('callback component load');
-      component.state.issues.getOrCreate(IssuesClasses.ParseErrors).formatSolution = () => 'callback dynamic solution';
+      parseIssue(component).formatSolution = () => 'callback dynamic solution';
       const source = component.state._consumer.files.find((file) => file.relative === 'foo.js');
       source.contents = Buffer.concat([source.contents, Buffer.from('\n// callback transformed source\n')]);
       const generated = source.clone();
@@ -205,7 +224,7 @@ class CallbackAspect {
         const aspect = component.state.aspects.get('__ASPECT__');
         if (aspect?.data.adapterProof === 'hydrated-source-and-state') {
           console.log('callback component issues');
-          const issue = component.state.issues.getOrCreate(IssuesClasses.ParseErrors);
+          const issue = parseIssue(component);
           issue.data = {'callback.js':'custom issue callback'};
 
         }
@@ -228,18 +247,6 @@ fn callback_workspace() -> Helper {
     helper.run("add custom-hook -i callbacks/hook");
     set_env(&helper, "callbacks/hook", "teambit.harmony/aspect");
     helper.run("link");
-    let module = crate::helper::setup::shared().node_cli
-        .parent()
-        .unwrap()
-        .parent()
-        .unwrap()
-        .parent()
-        .unwrap()
-        .join("component-issues/dist/index.js");
-    helper.output_file(
-        "node_modules/@teambit/component-issues/package.json",
-        &json!({"name":"@teambit/component-issues","version":"1.0.0","main":module}).to_string(),
-    );
     helper.output_file("custom-hook/dist/index.js", &source);
     helper.output_file(&format!("node_modules/.bit_roots/teambit.harmony_aspect/node_modules/@{}/callbacks.hook/dist/index.js", helper.scopes.remote), &source);
     crate::helper::config::set_workspace_key(&helper.scopes.local_path, &id, json!({}));

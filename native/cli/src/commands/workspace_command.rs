@@ -6,6 +6,7 @@
 //! CLI. After it starts, failures are the command's own, reported as the
 //! Node.js CLI reports them.
 
+pub(super) mod checkout_lifecycle;
 pub mod format;
 pub mod progress;
 pub mod resolve;
@@ -15,9 +16,13 @@ pub mod versions;
 pub use snapshot::receipt::NodeCli;
 pub(crate) use snapshot::receipt::{User, uuid_v4};
 
+mod checkout_policy;
+mod checkout_scope;
+mod checkout_selection;
 mod defaults;
 mod lane;
 mod policy;
+mod preparation;
 mod snapshot;
 
 use super::{
@@ -72,7 +77,16 @@ pub struct Request<'r> {
 
 /// `commandPrepare`, the capture and `commandPlan`.
 pub fn plan(root: &Path, request: &Request<'_>) -> io::Result<Planned> {
-    plan_with(root, request, false, false)
+    plan_with(root, request, false, false, None)
+}
+
+/// Provider startup and component callbacks precede checkout's authoritative read set.
+pub fn plan_with_startup(
+    root: &Path,
+    request: &Request<'_>,
+    startup: &mut super::status::autosync::Startup,
+) -> io::Result<Planned> {
+    plan_with(root, request, false, false, Some(startup))
 }
 
 /// Validate a merge's snapshot step without allocating or serializing the
@@ -82,7 +96,7 @@ pub fn plan_snapshot_preview(root: &Path, request: &Request<'_>) -> io::Result<P
     if request.operation != "merge" {
         return Err(decline("snapshot preview operation"));
     }
-    plan_with(root, request, true, false)
+    plan_with(root, request, true, false, None)
 }
 
 /// The materialization half of a default lane merge that will install and
@@ -94,7 +108,7 @@ pub fn plan_internal_no_snap(root: &Path, request: &Request<'_>) -> io::Result<P
     {
         return Err(decline("internal lane materialization options"));
     }
-    plan_with(root, request, false, true)
+    plan_with(root, request, false, true, None)
 }
 
 fn plan_with(
@@ -102,16 +116,16 @@ fn plan_with(
     request: &Request<'_>,
     preview_snapshot: bool,
     internal_materialization: bool,
+    startup: Option<&mut super::status::autosync::Startup>,
 ) -> io::Result<Planned> {
-    let home = home();
-    let mut engine = Engine::new()?;
-    let (token, context, targets) = prepare(&mut engine, root, &home, request, preview_snapshot)?;
-    let verified = capture::CaptureOptions {
-        verify: request.verify_fresh,
-        missing_checkout_reset: request.operation == "checkout" && request.to == Some("reset"),
-        ..Default::default()
-    };
-    let capture = capture::capture_with(&mut engine, root, &home, &context, &targets, verified)?;
+    let preparation::Prepared {
+        mut engine,
+        home,
+        token,
+        context,
+        capture,
+        selector_loads,
+    } = preparation::capture(root, request, preview_snapshot, startup)?;
     let semver = grammar::snapshot(semver_values(request.to, &context)?.iter().map(String::as_str))
         .ok_or_else(|| decline("semver grammar limits"))?;
     let mut plan_request = json!({
@@ -126,6 +140,9 @@ fn plan_with(
         plan_request["lanePatternIds"] = json!(ids);
     }
     let mut plan: Value = engine.request(&plan_request)?;
+    if !selector_loads.is_empty() {
+        plan["progress"]["loads"] = json!(selector_loads);
+    }
     if plan.get("token").and_then(Value::as_str) != Some(token.as_str()) {
         return Err(decline("command plan token"));
     }
@@ -153,6 +170,7 @@ impl Steps<'_> {
         request: &Request<'_>,
         preview_snapshot: bool,
     ) -> io::Result<Capture> {
+        self.checkout_policy(plan)?;
         let mut caches = Vec::new();
         if plan.get("policyPreparation").is_some() {
             if request.operation != "merge" {
@@ -192,14 +210,20 @@ fn prepare(
     request: &Request<'_>,
     preview_snapshot: bool,
 ) -> io::Result<(String, Value, Vec<Value>)> {
+    let mut options = request.options.clone();
+    if options["includeNewFromScope"] == true {
+        options["scopeCandidates"] =
+            json!(checkout_scope::candidates(engine, root, home, request)?);
+    }
     let prepared: Value = engine.request(&json!({
         "kind": "commandPrepare",
         "root": root,
         "home": home,
         "operation": request.operation,
         "internalSnapshotPreview": preview_snapshot,
+        "deferCheckoutPattern": checkout_selection::deferred(request),
         "dependencyGrammar": dependency_grammar()?,
-        "options": request.options,
+        "options": options,
         "globalRemotesFile": cache::cache_root().join("config").join("global-remotes.json"),
     }))?;
     let token = text(prepared.get("token"))?.to_string();
@@ -207,7 +231,8 @@ fn prepare(
         .get("context")
         .filter(|context| truthy(Some(context)))
         .cloned();
-    let context = context.ok_or_else(|| decline("command context"))?;
+    let mut context = context.ok_or_else(|| decline("command context"))?;
+    context["commandProgress"] = prepared["progress"].clone();
     let targets = array(prepared.get("targets"), "command targets")?.to_vec();
     Ok((token, context, targets))
 }
@@ -262,7 +287,12 @@ pub fn execute_then(
     let output = loader_output(chalk);
     output.restart(&format!(r#"running command "{command}"..."#));
     let report = match work(&output) {
-        Ok(report) => report,
+        Ok(report) => {
+            if matches!(command, "checkout" | "revert" | "switch" | "import") {
+                super::status::cleanup_temporary(root)?;
+            }
+            report
+        }
         Err(error) => {
             output.stop();
             history.end(false);

@@ -77,7 +77,7 @@ fn checkout_reset_keeps_the_mapped_remote_refresh() {
     helper.create_component_bar_foo(FOO_FIXTURE);
     helper.add_component_bar_foo();
     helper.tag_component_bar_foo();
-    helper.run("export bar/foo");
+    crate::helper::remote::publish(&helper);
     helper.create_component_bar_foo("module.exports = 'edited';");
 
     let node_workspace = checkout_like_node(&helper, "checkout reset bar/foo -x");

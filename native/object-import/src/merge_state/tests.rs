@@ -217,3 +217,27 @@ fn object_unrelated_parent_and_priority_over_squash() {
     assert_eq!(output["data"]["mode"], "unrelated");
     assert_eq!(output["data"]["unrelated"]["head"], hash_value('d'));
 }
+
+#[cfg(windows)]
+#[test]
+fn windows_overwrite_preserves_file_identity_and_rejects_links_before_truncation() {
+    let root = std::env::temp_dir().join(format!("bit-merge-state-windows-{}", std::process::id()));
+    std::fs::create_dir_all(&root).unwrap();
+    let path = root.join("state.json");
+    std::fs::write(&path, b"old").unwrap();
+    let original = std::fs::File::open(&path).unwrap();
+    let before = winapi_util::file::information(&original).unwrap();
+    write::commit(&path, "new").unwrap();
+    let after = winapi_util::file::information(&std::fs::File::open(&path).unwrap()).unwrap();
+    assert_eq!(before.volume_serial_number(), after.volume_serial_number());
+    assert_eq!(before.file_index(), after.file_index());
+    let link = root.join("link.json");
+    std::os::windows::fs::symlink_file(&path, &link).unwrap();
+    assert!(write::commit(&link, "bad").is_err());
+    let hard = root.join("hard.json");
+    std::fs::hard_link(&path, &hard).unwrap();
+    assert!(write::commit(&path, "bad").is_err());
+    assert_eq!(std::fs::read(&path).unwrap(), b"new");
+    assert_eq!(std::fs::read(&hard).unwrap(), b"new");
+    std::fs::remove_dir_all(root).unwrap();
+}

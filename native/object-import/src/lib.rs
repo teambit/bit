@@ -4,6 +4,7 @@
 pub mod component_delete;
 pub mod component_recover;
 pub mod component_remove;
+pub mod jsonc;
 pub mod lane_create;
 pub mod lane_history;
 pub mod lane_manage;

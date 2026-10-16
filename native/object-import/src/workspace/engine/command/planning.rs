@@ -1,4 +1,5 @@
 mod checkout_lane;
+mod checkout_scope;
 mod checkout_select;
 mod history_replay;
 mod missing_reset;
@@ -50,7 +51,7 @@ fn checkout_captured(
     pool: &rayon::ThreadPool,
     recovery_reset: bool,
 ) -> io::Result<Planned> {
-    let captured = capture::all(&record.request.root, current, snapshots, pool)?;
+    let captured = capture::all_for_checkout(&record.request.root, current, snapshots, pool)?;
     let mut plan = Planned {
         captured,
         transitions: checkout_transition::State::default(),
@@ -81,6 +82,7 @@ fn checkout_captured(
     {
         checkout_lane::prepare(record, &mut plan, snapshots)?;
     }
+    checkout_scope::prepare_if_enabled(record, &mut plan, snapshots)?;
     if let Some(to) = record.request.options.to.as_deref()
         && !matches!(to, "head" | "latest" | "reset" | "main")
         && !to.starts_with("head~")
@@ -110,20 +112,7 @@ fn validate_current_inner(
         }
         if recovery_reset {
             super::reset_config::validate_target(target)?;
-        } else if !target["config"].is_null() {
-            return Err(invalid("command component configuration write"));
         }
-    }
-    let policy = &record.context["workspace"]["teambit.dependencies/dependency-resolver"]["policy"];
-    if policy
-        .as_object()
-        .is_some_and(|fields| {
-            fields
-                .values()
-                .any(|value| !value.as_object().is_some_and(serde_json::Map::is_empty))
-        })
-    {
-        return Err(invalid("command workspace policy update requires planner"));
     }
     Ok(())
 }

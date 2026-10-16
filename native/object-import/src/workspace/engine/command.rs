@@ -6,6 +6,9 @@ pub(super) mod recovery;
 pub(super) mod repository;
 pub(super) mod resolve;
 
+pub(super) mod checkout_pattern;
+pub(super) mod checkout_policy;
+
 mod apply_command;
 mod bitmap;
 mod capture;
@@ -62,6 +65,7 @@ struct PreparedPlan {
     bitmap: bitmap::Prepared,
     snap_bitmap: Option<bitmap::Prepared>,
     reset_config: Option<reset_config::Prepared>,
+    checkout_policy: Option<checkout_policy::Prepared>,
 }
 pub(super) fn prepare(
     request: Prepare,
@@ -91,7 +95,7 @@ pub(super) struct Apply {
     dependency_read_set: Vec<proof::Proof>,
 }
 pub(super) fn plan(
-    input: Plan,
+    input: &Plan,
     snapshots: &mut crate::workspace::snapshots::State,
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {

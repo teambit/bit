@@ -18,6 +18,7 @@ pub struct Entry {
 pub struct Plan {
     root: PathBuf,
     pattern: Option<String>,
+    selected: Option<Vec<String>>,
     before: Vec<u8>,
     after: Vec<u8>,
     pub entries: Vec<Entry>,
@@ -25,6 +26,18 @@ pub struct Plan {
 
 impl Plan {
     pub fn prepare(root: &Path, pattern: Option<&str>) -> io::Result<Self> {
+        Self::prepare_with(root, pattern, None)
+    }
+
+    pub fn prepare_selected(root: &Path, identities: &[String]) -> io::Result<Self> {
+        Self::prepare_with(root, None, Some(identities.to_vec()))
+    }
+
+    fn prepare_with(
+        root: &Path,
+        pattern: Option<&str>,
+        selected: Option<Vec<String>>,
+    ) -> io::Result<Self> {
         let before = fs::read(root.join(".bitmap"))?;
         let mut bitmap = crate::recovery::jsonc::parse(&before)?;
         let rows = bitmap.as_object_mut().ok_or_else(|| invalid("soft reset bitmap"))?;
@@ -35,11 +48,12 @@ impl Plan {
         {
             return Err(invalid("soft reset bitmap schema"));
         }
-        let entries = select(rows, pattern)?;
+        let entries = select(rows, pattern, selected.as_deref())?;
         let after = crate::inspection::render_bitmap(&bitmap)?;
         Ok(Self {
             root: root.to_owned(),
             pattern: pattern.map(str::to_owned),
+            selected,
             before,
             after,
             entries,
@@ -47,7 +61,8 @@ impl Plan {
     }
 
     pub fn commit(&self, file_id: &str) -> io::Result<()> {
-        let current = Self::prepare(&self.root, self.pattern.as_deref())?;
+        let current =
+            Self::prepare_with(&self.root, self.pattern.as_deref(), self.selected.clone())?;
         if current.before != self.before || current.after != self.after {
             return Err(invalid("soft reset bitmap changed"));
         }
@@ -60,6 +75,7 @@ impl Plan {
 fn select(
     rows: &mut serde_json::Map<String, Value>,
     pattern: Option<&str>,
+    selected: Option<&[String]>,
 ) -> io::Result<Vec<Entry>> {
     let mut found = Vec::new();
     for (key, row) in rows.iter_mut() {
@@ -68,7 +84,7 @@ fn select(
         }
         let Some(version) = row["nextVersion"]["version"].as_str() else { continue };
         let identity = identity(row)?;
-        if pattern.is_some_and(|pattern| pattern != identity) {
+        if !matches(&identity, pattern, selected) {
             continue;
         }
         found.push(Entry { identity, version: version.to_owned() });
@@ -76,7 +92,7 @@ fn select(
             .ok_or_else(|| invalid("soft reset bitmap row"))?
             .shift_remove("nextVersion");
     }
-    if pattern.is_some() && found.len() != 1 {
+    if invalid_selection_count(pattern, selected, found.len()) {
         return Err(invalid("soft reset identity absent or ambiguous"));
     }
     Ok(found)
@@ -94,4 +110,17 @@ fn identity(row: &Value) -> io::Result<String> {
 
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
+}
+
+fn matches(identity: &str, pattern: Option<&str>, selected: Option<&[String]>) -> bool {
+    pattern.is_none_or(|pattern| pattern == identity)
+        && selected.is_none_or(|ids| ids.iter().any(|id| id == identity))
+}
+
+fn invalid_selection_count(
+    pattern: Option<&str>,
+    selected: Option<&[String]>,
+    count: usize,
+) -> bool {
+    (pattern.is_some() && count != 1) || (selected.is_some() && count == 0)
 }

@@ -50,8 +50,18 @@ fn run_options(
         Ok(installer) => installer,
         Err(error) => return Ok(Outcome::Declined(format!("checkout installation: {error}"))),
     };
-    let prepared = match prepare(&root, args, options) {
+    let mut startup = super::status::autosync::Startup::default();
+    let prepared = match prepare(&root, args, options, &mut startup) {
         Ok(prepared) => prepared,
+        Err(error) if startup.committed || super::engine::is_canonical(&error) => {
+            return workspace_command::checkout_lifecycle::failure(
+                &root,
+                args,
+                if options.revert { "revert" } else { "checkout" },
+                &startup,
+                error,
+            );
+        }
         Err(error) => return Ok(Outcome::Declined(format!("checkout: {error}"))),
     };
     execute(&root, args, if options.revert { "revert" } else { "checkout" }, prepared, installer)
@@ -62,18 +72,21 @@ fn start_installer(root: &Path, argv: &[&str], skip: bool) -> io::Result<Option<
 }
 
 struct PreparedCheckout {
+    startup: super::status::autosync::Startup,
     planned: Planned,
     report: Report,
     progress: Option<Progress>,
     ids: Vec<String>,
     conflicts: bool,
     main: bool,
+    revert: bool,
 }
 
 fn prepare(
     root: &Path,
     args: &[OsString],
     options: &options::Options,
+    startup: &mut super::status::autosync::Startup,
 ) -> io::Result<PreparedCheckout> {
     let request = Request {
         operation: "checkout",
@@ -81,7 +94,7 @@ fn prepare(
         to: Some(&options.to),
         verify_fresh: false,
     };
-    let planned = workspace_command::plan(root, &request)?;
+    let planned = workspace_command::plan_with_startup(root, &request, startup)?;
     let report = report::format(&planned.plan["result"], options, Chalk::detect(args))?;
     let progress = Progress::parse(planned.plan.get("progress"))?;
     let ids = if options.to == "reset" {
@@ -90,7 +103,16 @@ fn prepare(
         installation::component_ids(&planned.plan["result"])?
     };
     let conflicts = planned.plan["result"]["leftUnresolvedConflicts"] == true;
-    Ok(PreparedCheckout { planned, report, progress, ids, conflicts, main: options.to == "main" })
+    Ok(PreparedCheckout {
+        startup: std::mem::take(startup),
+        planned,
+        report,
+        progress,
+        ids,
+        conflicts,
+        main: options.to == "main",
+        revert: options.revert,
+    })
 }
 
 fn execute(
@@ -100,13 +122,15 @@ fn execute(
     prepared: PreparedCheckout,
     installer: Option<Installer>,
 ) -> io::Result<Outcome> {
+    workspace_command::checkout_lifecycle::before(&prepared.startup)?;
     if let Some(installer) = installer {
         return workspace_command::execute_then(root, args, command, |output| {
             install_and_report(root, args, output, prepared, installer)
         });
     }
     workspace_command::execute(root, args, command, prepared.planned, &prepared.report, |output| {
-        render_progress(output, prepared.progress.as_ref(), prepared.main);
+        render_progress(output, prepared.progress.as_ref(), prepared.main, prepared.revert);
+        workspace_command::checkout_lifecycle::loaded(&prepared.startup);
     })
 }
 
@@ -117,7 +141,8 @@ fn install_and_report(
     mut prepared: PreparedCheckout,
     installer: Installer,
 ) -> io::Result<Report> {
-    render_progress(output, prepared.progress.as_ref(), prepared.main);
+    render_progress(output, prepared.progress.as_ref(), prepared.main, prepared.revert);
+    workspace_command::checkout_lifecycle::loaded(&prepared.startup);
     workspace_command::commit(&mut prepared.planned, root)?;
     if !prepared.conflicts
         && !prepared.ids.is_empty()
@@ -132,8 +157,8 @@ fn install_and_report(
     Ok(prepared.report)
 }
 
-fn render_progress(output: &Output, progress: Option<&Progress>, main: bool) {
+fn render_progress(output: &Output, progress: Option<&Progress>, main: bool, revert: bool) {
     if let Some(progress) = progress {
-        progress.render_checkout_with(output, main);
+        progress.render_checkout_with(output, main, revert);
     }
 }

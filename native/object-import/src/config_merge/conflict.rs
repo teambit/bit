@@ -100,6 +100,30 @@ fn read(path: &Path) -> io::Result<String> {
     }
     Ok(String::from_utf8_lossy(&contents).into_owned())
 }
+pub(super) fn render(contents: &str, conflicts: &Value) -> io::Result<String> {
+    if contents.len() > MAX_BYTES {
+        return Err(invalid("config input budget"));
+    }
+    let mut other = contents.to_owned();
+    for field in ["dependencies", "peerDependencies"] {
+        if conflicts[field].is_null() {
+            continue;
+        }
+        for entry in array(conflicts, field)? {
+            replace(&mut other, entry)?;
+        }
+    }
+    let directory = Directory::new()?;
+    let paths = [directory.0.join("current"), directory.0.join("base"), directory.0.join("other")];
+    fs::write(&paths[0], contents)?;
+    fs::write(&paths[1], "")?;
+    fs::write(&paths[2], other)?;
+    let result = crate::merge_history::merge::git::config_conflict(paths)?;
+    if result.len() > MAX_BYTES {
+        return Err(invalid("config output budget"));
+    }
+    Ok(result)
+}
 fn replace(contents: &mut String, entry: &Value) -> io::Result<()> {
     let name = text(entry, "name")?;
     let version = text(entry, "version")?;

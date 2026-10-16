@@ -1,4 +1,5 @@
 mod checkout_lane;
+mod checkout_scope;
 use super::input::{Operation, Prepare};
 use crate::{
     command_import,
@@ -48,6 +49,7 @@ pub(super) fn context(
             )?;
     }
     checkout_lane::attach(request, &mut context, imported.as_mut(), pool)?;
+    checkout_scope::attach(request, &mut context, imported.as_mut())?;
     extend_models(request, pool, &mut context, imported.as_ref())?;
     Ok((context, imported))
 }
@@ -136,13 +138,18 @@ pub(super) fn extend_models(
 }
 fn validate(request: &Prepare) -> io::Result<()> {
     validate_revert(request)?;
+    if request.defer_checkout_pattern
+        && (request.operation != Operation::Checkout || request.options.pattern.is_none())
+    {
+        return Err(invalid("command deferred checkout selection"));
+    }
     for path in [&request.root, &request.home, &request.global_remotes_file] {
         super::super::path(path)?;
     }
     if invalid_lifecycle_options(request)? {
         return Err(invalid("command requires canonical lifecycle"));
     }
-    let unmerged = request.root.join(".bit/unmerged.json");
+    let unmerged = crate::scope_path(&request.root).join("unmerged.json");
     if unmerged.try_exists()? && !config::document(&unmerged)?.as_array().is_some_and(Vec::is_empty)
     {
         return Err(invalid("command unresolved merge state"));
@@ -158,13 +165,16 @@ fn invalid_lifecycle_options(request: &Prepare) -> io::Result<bool> {
     let invalid_workspace_only = options.workspace_only
         && (request.operation != Operation::Checkout || options.to.as_deref() != Some("head"));
     let conflicting_forces = options.force_ours && options.force_theirs;
-    let interrupted = request.root.join(".bitTmp").try_exists()?
+    let interrupted = (!matches!(request.operation, Operation::Checkout | Operation::Switch)
+        && request.root.join(".bitTmp").try_exists()?)
         || request.root.join("merge-conflict").try_exists()?;
     Ok(!options.skip_dependency_installation
+        || options.include_new_from_scope
+            && (request.operation != Operation::Checkout || options.to.as_deref() != Some("head"))
+        || !options.include_new_from_scope && !options.scope_candidates.is_empty()
         || invalid_workspace_only
         || conflicting_forces
         || invalid_strategy
-        || request.home.join(".bitrc.jsonc").try_exists()?
         || interrupted)
 }
 
@@ -186,7 +196,7 @@ fn validate_revert(request: &Prepare) -> io::Result<()> {
 }
 fn import_targets(request: &Prepare) -> io::Result<Vec<command_import::Target>> {
     let bitmap = config::document(&request.root.join(".bitmap"))?;
-    bitmap
+    let targets: Vec<command_import::Target> = bitmap
         .as_object()
         .ok_or_else(|| invalid("command bitmap"))?
         .iter()
@@ -207,7 +217,8 @@ fn import_targets(request: &Prepare) -> io::Result<Vec<command_import::Target>> 
                     .to_owned(),
             })
         })
-        .collect()
+        .collect::<io::Result<_>>()?;
+    Ok(targets)
 }
 
 pub(super) fn selected(request: &Prepare, context: &Value) -> io::Result<Vec<Value>> {
@@ -220,6 +231,9 @@ pub(super) fn selected(request: &Prepare, context: &Value) -> io::Result<Vec<Val
         return lane_selected(context, targets);
     }
 
+    if request.defer_checkout_pattern {
+        return Ok(targets.clone());
+    }
     if let Some(pattern) = &request.options.pattern {
         return selected_pattern(request, targets, pattern);
     }
@@ -297,10 +311,18 @@ fn validate_roots(targets: &[Value]) -> io::Result<()> {
     roots.sort_unstable_by(|left, right| {
         std::path::Path::new(left).cmp(std::path::Path::new(right))
     });
-    if roots.contains(&".")
-        || roots
-            .windows(2)
-            .any(|pair| std::path::Path::new(pair[1]).starts_with(pair[0]))
+    if roots
+        .iter()
+        .filter(|root| **root == ".")
+        .count()
+        > 1
+    {
+        return Err(invalid("command duplicate workspace root"));
+    }
+    roots.retain(|root| *root != ".");
+    if roots
+        .windows(2)
+        .any(|pair| std::path::Path::new(pair[1]).starts_with(pair[0]))
     {
         return Err(invalid("command nested component roots"));
     }
@@ -342,6 +364,7 @@ fn matches_identity(target: &Value, pattern: &str) -> bool {
 }
 
 fn extend_lane_targets(context: &Value, model_targets: &mut Vec<Value>) {
+    checkout_scope::extend_model_targets(context, model_targets);
     for field in ["inactiveTargets", "addedTargets"] {
         if let Some(rows) = context["lane"][field].as_array() {
             model_targets.extend(

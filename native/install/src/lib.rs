@@ -8,7 +8,6 @@ pub mod dependencies;
 pub mod engine;
 pub mod host;
 pub mod import;
-pub mod jsonc;
 pub mod links;
 pub mod manifests;
 pub mod model;
@@ -17,6 +16,7 @@ pub mod output;
 pub mod policy;
 pub mod workspace;
 
+pub use bit_object_import::jsonc;
 pub use command::{InstallSummary, Outcome, run, run_with_options, stored_graphs};
 pub use host::{AfterInstall, AfterInstallResult, DetectRequest, Host, HostInfo};
 pub use options::{ExistingEntries, InstallOptions};
