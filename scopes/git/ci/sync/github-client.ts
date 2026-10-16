@@ -67,6 +67,8 @@ export function gitHubApiUrl(host?: string): GitHubApiUrl {
   if (!protocols.includes(api.protocol)) {
     return refuse(`GITHUB_API_URL "${apiUrl}" is not ${protocols.map((p) => p.slice(0, -1)).join(' or ')}`);
   }
+  // the base is a path prefix: `/repos/...` appended after a query or fragment would never reach the API
+  if (api.search || api.hash) return refuse(`GITHUB_API_URL "${apiUrl}" carries a query or fragment`);
   return { url: apiUrl.replace(/\/+$/, '') };
 }
 

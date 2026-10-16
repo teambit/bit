@@ -603,6 +603,18 @@ describe('GitHub Enterprise Server', () => {
       expect(gitHubApiUrl('ghe.corp.example')).to.not.have.property('url');
     });
 
+    it('refuses a GITHUB_API_URL with a query or fragment, which would swallow the request path', () => {
+      ['https://ghe.corp.example/api/v3?x=1', 'https://ghe.corp.example/api/v3#frag'].forEach((apiUrl) => {
+        process.env.GITHUB_API_URL = apiUrl;
+        const result = gitHubApiUrl('ghe.corp.example');
+        expect(result, apiUrl).to.not.have.property('url');
+        expect((result as { error: string }).error, apiUrl)
+          .to.contain(apiUrl)
+          .and.contain('query or fragment');
+        expect(GitHubClient.fromEnv('git@ghe.corp.example:acme/store.git'), apiUrl).to.equal(undefined);
+      });
+    });
+
     it('drops a trailing slash from GITHUB_API_URL', () => {
       process.env.GITHUB_API_URL = `${GHES_API}/`;
       expect(gitHubApiUrl()).to.deep.equal({ url: GHES_API });
