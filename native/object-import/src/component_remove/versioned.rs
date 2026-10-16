@@ -1,5 +1,8 @@
 //! Local removal of a staged tagged or imported Component.
 
+mod history;
+use history::plan as lane_history;
+
 use super::{Plan, RowKind, invalid, validate_ancestors};
 use crate::workspace::engine::command::outbound;
 use serde_json::Value;
@@ -13,6 +16,14 @@ pub struct VersionedPlan {
     index: Change,
     staged: Option<Change>,
     objects: Vec<Change>,
+    lane: Option<Change>,
+    history: Option<HistoryState>,
+}
+
+struct HistoryState {
+    path: PathBuf,
+    before: Option<Vec<u8>>,
+    after: Option<Vec<u8>>,
 }
 
 struct Change {
@@ -32,14 +43,29 @@ struct ModelSelection<'a> {
 
 impl VersionedPlan {
     pub fn prepare(root: &Path, name: &str, keep_files: bool) -> io::Result<Self> {
-        Self::prepare_kind(root, name, keep_files, RowKind::Staged)
+        Self::prepare_kind(root, name, keep_files, RowKind::Staged, false)
     }
 
     pub fn prepare_imported(root: &Path, name: &str, keep_files: bool) -> io::Result<Self> {
-        Self::prepare_kind(root, name, keep_files, RowKind::Imported)
+        Self::prepare_kind(root, name, keep_files, RowKind::Imported, false)
     }
 
-    fn prepare_kind(root: &Path, name: &str, keep_files: bool, kind: RowKind) -> io::Result<Self> {
+    pub fn prepare_lane_snap(
+        root: &Path,
+        name: &str,
+        keep_files: bool,
+        status_checked: bool,
+    ) -> io::Result<Self> {
+        Self::prepare_kind(root, name, keep_files, RowKind::LaneSnap, status_checked)
+    }
+
+    fn prepare_kind(
+        root: &Path,
+        name: &str,
+        keep_files: bool,
+        kind: RowKind,
+        status_checked: bool,
+    ) -> io::Result<Self> {
         let workspace = Plan::prepare_with(root, name, keep_files, kind)?;
         if !workspace.main_exists {
             return Err(invalid("tagged component main file is missing"));
@@ -51,14 +77,9 @@ impl VersionedPlan {
         if manifest_references_package(root, &workspace.package)? {
             return Err(invalid("component is listed in package dependencies"));
         }
-        let (index, model_hash) = index_change(root, scope, component_name)?;
-        let (staged, staged_version) = if kind == RowKind::Staged {
-            let (change, version) = staged_change(root, scope, component_name)?;
-            (Some(change), Some(version))
-        } else {
-            validate_no_staged(root, scope, component_name)?;
-            (None, None)
-        };
+        let (index, model_hash) = index_change(root, scope, component_name, kind)?;
+        let (staged, staged_version) =
+            staged_selection(root, scope, component_name, kind, workspace.lane.as_ref())?;
         let objects = object_changes(
             root,
             &ModelSelection {
@@ -70,7 +91,14 @@ impl VersionedPlan {
                 kind,
             },
         )?;
-        Ok(Self { workspace, index, staged, objects })
+        let lane = workspace.lane
+            .as_ref()
+            .map(|lane| lane_change(lane, scope, component_name))
+            .transpose()?;
+        let history = (kind == RowKind::LaneSnap && status_checked)
+            .then(|| lane_history(root, scope, component_name, version))
+            .transpose()?;
+        Ok(Self { workspace, index, staged, objects, lane, history })
     }
 
     #[must_use]
@@ -78,16 +106,37 @@ impl VersionedPlan {
         self.workspace.identity()
     }
 
+    #[must_use]
+    pub fn removed_from_lane(&self) -> bool {
+        self.lane.is_some()
+    }
+
     pub fn commit(&self, file_id: &str) -> io::Result<()> {
+        self.validate_before_commit(file_id)?;
+        self.remove_objects()?;
+        self.write_updates()?;
+        self.workspace.apply(file_id)
+    }
+
+    fn validate_before_commit(&self, file_id: &str) -> io::Result<()> {
         self.workspace.validate_before_commit(file_id)?;
-        for change in
-            std::iter::once(&self.index).chain(self.staged.iter()).chain(self.objects.iter())
+        for change in std::iter::once(&self.index)
+            .chain(self.staged.iter())
+            .chain(self.objects.iter())
+            .chain(self.lane.iter())
         {
             regular_file(&self.workspace.root, &change.path)?;
             if fs::read(&change.path)? != change.before {
                 return Err(invalid("tagged component model changed before removal"));
             }
         }
+        if let Some(history) = &self.history {
+            history::validate(&self.workspace.root, history)?;
+        }
+        Ok(())
+    }
+
+    fn remove_objects(&self) -> io::Result<()> {
         for object in &self.objects {
             fs::remove_file(&object.path)?;
             let parent = object.path.parent().ok_or_else(|| invalid("object directory"))?;
@@ -97,6 +146,10 @@ impl VersionedPlan {
                 Err(error) => return Err(error),
             }
         }
+        Ok(())
+    }
+
+    fn write_updates(&self) -> io::Result<()> {
         fs::write(
             &self.index.path,
             self.index.after.as_ref().ok_or_else(|| invalid("scope index"))?,
@@ -107,8 +160,39 @@ impl VersionedPlan {
                 staged.after.as_ref().ok_or_else(|| invalid("staged config"))?,
             )?;
         }
-        self.workspace.apply(file_id)
+        if let Some(lane) = &self.lane {
+            fs::write(&lane.path, lane.after.as_ref().ok_or_else(|| invalid("lane object"))?)?;
+        }
+        if let Some(history) = &self.history {
+            history::write(history)?;
+        }
+        Ok(())
     }
+}
+
+fn staged_selection(
+    root: &Path,
+    scope: &str,
+    name: &str,
+    kind: RowKind,
+    lane: Option<&super::Lane>,
+) -> io::Result<(Option<Change>, Option<String>)> {
+    if !matches!(kind, RowKind::Staged | RowKind::LaneSnap) {
+        validate_no_staged(root, scope, name)?;
+        return Ok((None, None));
+    }
+    let (change, staged_version) = staged_change(root, scope, name, lane)?;
+    Ok((Some(change), Some(staged_version)))
+}
+
+fn lane_change(lane: &super::Lane, scope: &str, name: &str) -> io::Result<Change> {
+    let mut value = lane.value.clone();
+    let components =
+        value["components"].as_array_mut().ok_or_else(|| invalid("lane components"))?;
+    let position = unique_position(components, scope, name)?;
+    components.remove(position);
+    let after = outbound::encode_object(&lane.hash, "Lane", &value)?;
+    Ok(Change { path: lane.path.clone(), before: lane.before.clone(), after: Some(after) })
 }
 
 fn manifest_references_package(root: &Path, package_path: &Path) -> io::Result<bool> {
@@ -122,16 +206,29 @@ fn manifest_references_package(root: &Path, package_path: &Path) -> io::Result<b
     Ok(manifest.try_exists()? && fs::read_to_string(manifest)?.contains(&dependency))
 }
 
-fn index_change(root: &Path, scope: &str, name: &str) -> io::Result<(Change, String)> {
+fn index_change(
+    root: &Path,
+    scope: &str,
+    name: &str,
+    kind: RowKind,
+) -> io::Result<(Change, String)> {
     let path = root.join(".bit/index.json");
     regular_file(root, &path)?;
     let before = fs::read(&path)?;
     let mut index: Value = serde_json::from_slice(&before)?;
-    if index["lanes"]
-        .as_array()
-        .is_none_or(|lanes| !lanes.is_empty())
+    if kind != RowKind::LaneSnap
+        && index["lanes"]
+            .as_array()
+            .is_none_or(|lanes| !lanes.is_empty())
     {
         return Err(invalid("tagged component has indexed lanes"));
+    }
+    if kind == RowKind::LaneSnap
+        && index["lanes"]
+            .as_array()
+            .is_none_or(|lanes| lanes.len() != 1)
+    {
+        return Err(invalid("lane component has other indexed lanes"));
     }
     let rows = index["components"].as_array_mut().ok_or_else(|| invalid("scope components"))?;
     let position = unique_position(rows, scope, name)?;
@@ -182,6 +279,9 @@ fn model_hashes(
     selection: &ModelSelection<'_>,
 ) -> io::Result<Vec<String>> {
     let versions = model["versions"].as_object().ok_or_else(|| invalid("Component versions"))?;
+    if selection.kind == RowKind::LaneSnap {
+        return lane_model_hashes(dir, model, selection);
+    }
     if model["scope"] != selection.scope
         || model["name"] != selection.name
         || versions.is_empty()
@@ -216,8 +316,44 @@ fn model_hashes(
     Ok(hashes)
 }
 
-fn staged_change(root: &Path, scope: &str, name: &str) -> io::Result<(Change, String)> {
-    let path = root.join(".bit/staged-config/main.json");
+fn lane_model_hashes(
+    dir: &Path,
+    model: &Value,
+    selection: &ModelSelection<'_>,
+) -> io::Result<Vec<String>> {
+    if model["scope"] != selection.scope
+        || model["name"] != selection.name
+        || model["versions"]
+            .as_object()
+            .is_none_or(|versions| !versions.is_empty())
+        || !model["head"].is_null()
+    {
+        return Err(invalid("unsupported lane Component model"));
+    }
+    let ancestry = history::ancestry(dir, selection.version)?;
+    if selection.staged_version.is_none_or(|staged| {
+        !ancestry
+            .iter()
+            .any(|version| version["hash"] == staged)
+    }) {
+        return Err(invalid("lane staged version is outside snap ancestry"));
+    }
+    Ok(vec![selection.model_hash.to_owned()])
+}
+
+fn staged_change(
+    root: &Path,
+    scope: &str,
+    name: &str,
+    lane: Option<&super::Lane>,
+) -> io::Result<(Change, String)> {
+    let path = if let Some(lane) = lane {
+        root.join(".bit/staged-config")
+            .join(&lane.scope)
+            .join(format!("{}.json", lane.name))
+    } else {
+        root.join(".bit/staged-config/main.json")
+    };
     regular_file(root, &path)?;
     let before = fs::read(&path)?;
     let mut staged: Value = serde_json::from_slice(&before)?;

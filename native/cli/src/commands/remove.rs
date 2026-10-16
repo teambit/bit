@@ -6,8 +6,8 @@ use super::{
     workspace_command::{self, format::Formatter, results::Report},
 };
 use crate::{commands::Command, native::Outcome, workspace};
-use bit_object_import::component_remove::{Plan, versioned::VersionedPlan};
-use std::{env, ffi::OsString, io};
+use bit_object_import::component_remove::{Plan, VersionedPlan};
+use std::{env, ffi::OsString, fmt::Write, io};
 
 pub const COMMAND: Command = Command { name: "remove", aliases: &["rm"], run };
 
@@ -26,15 +26,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Err(error) => return Ok(Outcome::Declined(format!("remove: {error}"))),
     };
     let format = Formatter::new(Chalk::detect(args));
-    let report = Report {
-        data: format!(
-            "{}\n{}",
-            format.success_summary("successfully removed components from the local workspace"),
-            format.item(plan.identity()),
-        ),
-        code: 0,
-        details: None,
-    };
+    let report = Report { data: report_data(&format, &plan)?, code: 0, details: None };
     let file_id = workspace_command::file_id();
     workspace_command::execute_with(&root, args, "remove", &report, |output| {
         for status in ["removing components", "removing components", "loading 1 component(s)"] {
@@ -47,6 +39,24 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     })
 }
 
+fn report_data(format: &Formatter, plan: &Removal) -> io::Result<String> {
+    let mut data = format!(
+        "{}\n{}",
+        format.success_summary("successfully removed components from the local workspace"),
+        format.item(plan.identity()),
+    );
+    if plan.removed_from_lane() {
+        write!(
+            data,
+            "\n\n{}\n{}",
+            format.success_summary("successfully removed components from the local lane"),
+            format.item(plan.identity()),
+        )
+        .map_err(io::Error::other)?;
+    }
+    Ok(data)
+}
+
 fn prepare(
     root: &std::path::Path,
     name: &str,
@@ -56,30 +66,40 @@ fn prepare(
     if force {
         return VersionedPlan::prepare(root, name, keep_files)
             .or_else(|_| VersionedPlan::prepare_imported(root, name, keep_files))
-            .map(Removal::Versioned);
+            .or_else(|_| VersionedPlan::prepare_lane_snap(root, name, keep_files, false))
+            .map(|plan| Removal::Versioned(Box::new(plan)));
     }
     if let Ok(plan) = Plan::prepare(root, name, keep_files) {
-        return Ok(Removal::New(plan));
+        return Ok(Removal::New(Box::new(plan)));
     }
     if let Ok(plan) = VersionedPlan::prepare(root, name, keep_files) {
         if status::clean_staged_component(root, plan.identity())? {
-            return Ok(Removal::Versioned(plan));
+            return Ok(Removal::Versioned(Box::new(plan)));
         }
         return Err(io::Error::new(
             io::ErrorKind::InvalidInput,
             "tagged component is not clean and staged",
         ));
     }
-    let plan = VersionedPlan::prepare_imported(root, name, keep_files)?;
-    if !status::clean_imported_component(root, plan.identity())? {
-        return Err(io::Error::new(io::ErrorKind::InvalidInput, "imported component is modified"));
+    if let Ok(plan) = VersionedPlan::prepare_imported(root, name, keep_files) {
+        if !status::clean_imported_component(root, plan.identity())? {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "imported component is modified",
+            ));
+        }
+        return Ok(Removal::Versioned(Box::new(plan)));
     }
-    Ok(Removal::Versioned(plan))
+    let plan = VersionedPlan::prepare_lane_snap(root, name, keep_files, true)?;
+    if !status::clean_staged_component(root, plan.identity())? {
+        return Err(io::Error::new(io::ErrorKind::InvalidInput, "lane component is modified"));
+    }
+    Ok(Removal::Versioned(Box::new(plan)))
 }
 
 enum Removal {
-    New(Plan),
-    Versioned(VersionedPlan),
+    New(Box<Plan>),
+    Versioned(Box<VersionedPlan>),
 }
 
 impl Removal {
@@ -92,6 +112,10 @@ impl Removal {
 
     fn second_load(&self) -> bool {
         matches!(self, Self::New(plan) if plan.main_exists())
+    }
+
+    fn removed_from_lane(&self) -> bool {
+        matches!(self, Self::Versioned(plan) if plan.removed_from_lane())
     }
 
     fn commit(&self, file_id: &str) -> io::Result<()> {

@@ -1,9 +1,15 @@
 //! Untrack a workspace component with the bitmap and file lifecycle of
 //! local `bit remove`.
 
-pub mod versioned;
+pub use versioned::VersionedPlan;
+
+mod lane;
+mod row;
+mod versioned;
 
 use crate::{inspection, recovery};
+use lane::{Lane, select_lane};
+use row::supported_row;
 use serde_json::Value;
 use std::{
     fs, io,
@@ -12,13 +18,18 @@ use std::{
 
 pub struct Plan {
     root: PathBuf,
-    bitmap_before: Vec<u8>,
-    bitmap_after: Vec<u8>,
+    bitmap: BitmapChange,
     files: Option<PathBuf>,
     package: PathBuf,
     identity: String,
     main_exists: bool,
     version: Option<String>,
+    lane: Option<Lane>,
+}
+
+struct BitmapChange {
+    before: Vec<u8>,
+    after: Vec<u8>,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -26,6 +37,7 @@ enum RowKind {
     New,
     Staged,
     Imported,
+    LaneSnap,
 }
 
 impl Plan {
@@ -42,13 +54,13 @@ impl Plan {
         let bitmap_after = inspection::render_bitmap(&bitmap)?;
         Ok(Self {
             root: root.to_owned(),
-            bitmap_before,
-            bitmap_after,
+            bitmap: BitmapChange { before: bitmap_before, after: bitmap_after },
             files: selected.files,
             package: selected.package,
             identity: selected.identity,
             main_exists: selected.main_exists,
             version: selected.version,
+            lane: selected.lane,
         })
     }
 
@@ -68,8 +80,13 @@ impl Plan {
     }
 
     fn validate_before_commit(&self, file_id: &str) -> io::Result<()> {
-        if fs::read(self.root.join(".bitmap"))? != self.bitmap_before {
+        if fs::read(self.root.join(".bitmap"))? != self.bitmap.before {
             return Err(invalid("component bitmap changed before removal"));
+        }
+        if let Some(lane) = &self.lane
+            && fs::read(&lane.path)? != lane.before
+        {
+            return Err(invalid("current lane changed before removal"));
         }
         validate_file_id(file_id)?;
         if let Some(path) = &self.files {
@@ -89,7 +106,7 @@ impl Plan {
             fs::remove_dir_all(&self.package)?;
         }
         backup_bitmap(&self.root, file_id)?;
-        fs::write(self.root.join(".bitmap"), &self.bitmap_after)
+        fs::write(self.root.join(".bitmap"), &self.bitmap.after)
     }
 }
 
@@ -100,6 +117,7 @@ struct Selected {
     package: PathBuf,
     main_exists: bool,
     version: Option<String>,
+    lane: Option<Lane>,
 }
 
 fn select(
@@ -109,11 +127,19 @@ fn select(
     keep_files: bool,
     kind: RowKind,
 ) -> io::Result<Selected> {
-    if !bitmap["_bit_lane"].is_null() {
-        return Err(invalid("component removal on a lane"));
-    }
     let (key, row) = find_row(bitmap, name, kind)?;
     let (component_name, scope) = supported_row(key, row, kind)?;
+    let lane = if bitmap["_bit_lane"].is_null() {
+        if kind == RowKind::LaneSnap {
+            return Err(invalid("component is not on a lane"));
+        }
+        None
+    } else {
+        if !matches!(kind, RowKind::New | RowKind::LaneSnap) {
+            return Err(invalid("component removal on a lane"));
+        }
+        Some(select_lane(root, bitmap, scope, component_name, row, kind)?)
+    };
     let version = (kind != RowKind::New).then(|| {
         row["version"]
             .as_str()
@@ -130,7 +156,7 @@ fn select(
     if package.try_exists()? {
         validate_directory(&package)?;
     }
-    Ok(Selected { key: key.clone(), identity, files, package, main_exists, version })
+    Ok(Selected { key: key.clone(), identity, files, package, main_exists, version, lane })
 }
 
 fn find_row<'a>(
@@ -172,37 +198,6 @@ fn component_files(
         .is_file();
     let rows = bitmap.as_object().ok_or_else(|| invalid("component bitmap"))?;
     Ok((main_exists, files(root, rows, key, root_dir, keep_files)?))
-}
-
-fn supported_row<'a>(key: &str, row: &'a Value, kind: RowKind) -> io::Result<(&'a str, &'a str)> {
-    let name = row["name"].as_str().ok_or_else(|| invalid("component name"))?;
-    let scope = row[if kind == RowKind::Imported { "scope" } else { "defaultScope" }]
-        .as_str()
-        .ok_or_else(|| invalid("component scope"))?;
-    let identity = key == name && valid_name(name) && valid_scope(scope);
-    let local = if kind == RowKind::Imported {
-        row["scope"] == scope && row.get("defaultScope").is_none()
-    } else {
-        row["scope"].as_str().is_some_and(str::is_empty)
-    };
-    let version = row["version"].as_str();
-    let supported = if kind == RowKind::New {
-        version == Some("")
-    } else {
-        version.is_some_and(|value| !value.is_empty())
-    };
-    let allowed = ["name", "scope", "version", "defaultScope", "mainFile", "rootDir"];
-    let shape = row
-        .as_object()
-        .is_some_and(|fields| {
-            fields
-                .keys()
-                .all(|field| allowed.contains(&field.as_str()))
-        });
-    if !identity || !local || !supported || !shape {
-        return Err(invalid("component is outside the supported local state"));
-    }
-    Ok((name, scope))
 }
 
 fn validate_workspace_config(root: &Path, identity: &str) -> io::Result<()> {
@@ -271,7 +266,7 @@ fn validate_no_overlap(
     relative: &Path,
 ) -> io::Result<()> {
     for (other_key, other) in rows {
-        if other_key == key || other_key.starts_with('$') {
+        if other_key == key || other_key.starts_with('$') || other_key == "_bit_lane" {
             continue;
         }
         let Some(other) = other["rootDir"].as_str() else {
