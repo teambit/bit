@@ -57,6 +57,8 @@ export class ScopeAspectsLoader {
 ids: ${ids.join(', ')}
 needed-for: ${neededFor || '<unknown>'}`);
     const grouped = await this.groupAspectIdsByEnvOfTheList(ids, lane);
+    // the envs are loaded (into harmony) before the other aspects, so the versions they pick win over the versions that
+    // the other aspects pin, even in the same level. this way, the other aspects use the instances that already exist.
     const versionsPicker = new AspectVersionsPicker(ids);
     this.logger.info(`${loggerPrefix} getManifestsAndLoadAspects for grouped.envs, total ${grouped.envs?.length || 0}`);
     const envsManifestsIds = await this.getManifestsAndLoadAspects(
