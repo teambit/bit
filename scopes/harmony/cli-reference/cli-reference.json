@@ -1998,7 +1998,7 @@
       [
         "",
         "tasks <string>",
-        "build the specified task(s) only. for multiple tasks, separate by a comma and wrap with quotes.\nspecify the task-name (e.g. \"TypescriptCompiler\") or the task-aspect-id (e.g. teambit.compilation/compiler)"
+        "build the specified task(s) only. for multiple tasks, separate by a comma and wrap with quotes.\nspecify the task-name (e.g. \"TypescriptCompiler\"), the task-aspect-id (e.g. teambit.compilation/compiler)\nor the full task-id as shown by --list-tasks (e.g. teambit.compilation/compiler:TypescriptCompiler)"
       ],
       [
         "",
@@ -2023,7 +2023,7 @@
       [
         "",
         "skip-tasks <string>",
-        "skip the given tasks. for multiple tasks, separate by a comma and wrap with quotes.\n  specify the task-name (e.g. \"TypescriptCompiler\") or the task-aspect-id (e.g. teambit.compilation/compiler)"
+        "skip the given tasks. for multiple tasks, separate by a comma and wrap with quotes.\n  specify the task-name (e.g. \"TypescriptCompiler\"), the task-aspect-id (e.g. teambit.compilation/compiler)\n  or the full task-id as shown by --list-tasks (e.g. teambit.compilation/compiler:TypescriptCompiler)"
       ],
       [
         "",
@@ -2043,7 +2043,7 @@
       [
         "i",
         "ignore-issues <issues>",
-        "ignore component issues (shown in \"bit status\" as \"issues found\"), issues to ignore:\n[MissingPackagesDependenciesOnFs, MissingManuallyConfiguredPackages, UntrackedDependencies, ResolveErrors, RelativeComponents, RelativeComponentsAuthored, ParseErrors, MissingDists, LegacyInsideHarmony, MissingDependenciesOnFs, ImportNonMainFiles, MultipleEnvs, MissingLinksFromNodeModulesToSrc, CircularDependencies, DuplicateComponentAndPackage, MergeConfigHasConflict, NonLoadedEnv, ExternalEnvWithoutVersion, RemovedDependencies, RemovedEnv, DeprecatedDependencies, SelfReference, ImportFromDirectory, LoadFailures]\nto ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify \"*\"."
+        "ignore component issues (shown in \"bit status\" as \"issues found\"), issues to ignore:\n[MissingPackagesDependenciesOnFs, MissingManuallyConfiguredPackages, UntrackedDependencies, ResolveErrors, RelativeComponents, RelativeComponentsAuthored, ParseErrors, MissingDists, LegacyInsideHarmony, MissingDependenciesOnFs, ImportNonMainFiles, MultipleEnvs, MissingLinksFromNodeModulesToSrc, CircularDependencies, DuplicateComponentAndPackage, MergeConfigHasConflict, NonLoadedEnv, ExternalEnvWithoutVersion, RemovedDependencies, RemovedEnv, DeprecatedDependencies, SelfReference, ImportFromDirectory, LoadFailures, PinnedDependencies]\nto ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify \"*\"."
       ]
     ],
     "description": "run build pipeline tasks in isolated environments",
@@ -2920,7 +2920,7 @@
       ]
     ],
     "description": "remove component from workspace and install it as npm package",
-    "extendedDescription": "converts workspace components to external npm packages by removing them from .bitmap and installing via package manager.\nby default removes component files from workspace. use --keep-files to preserve source code while converting to package dependency.\nuseful for components that no longer need active development in current workspace.",
+    "extendedDescription": "converts workspace components to external npm packages by removing them from .bitmap and installing via package manager.\nthe packages are added to the workspace dependencies in workspace.jsonc. to untrack components without that, use \"bit remove\".\nby default removes component files from workspace. use --keep-files to preserve source code while converting to package dependency.\nuseful for components that no longer need active development in current workspace.",
     "group": "dependencies",
     "private": false,
     "arguments": [
@@ -3500,7 +3500,7 @@
       [
         "i",
         "ignore-issues <issues>",
-        "ignore component issues (shown in \"bit status\" as \"issues found\"), issues to ignore:\n[MissingPackagesDependenciesOnFs, MissingManuallyConfiguredPackages, UntrackedDependencies, ResolveErrors, RelativeComponents, RelativeComponentsAuthored, ParseErrors, MissingDists, LegacyInsideHarmony, MissingDependenciesOnFs, ImportNonMainFiles, MultipleEnvs, MissingLinksFromNodeModulesToSrc, CircularDependencies, DuplicateComponentAndPackage, MergeConfigHasConflict, NonLoadedEnv, ExternalEnvWithoutVersion, RemovedDependencies, RemovedEnv, DeprecatedDependencies, SelfReference, ImportFromDirectory, LoadFailures]\nto ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify \"*\"."
+        "ignore component issues (shown in \"bit status\" as \"issues found\"), issues to ignore:\n[MissingPackagesDependenciesOnFs, MissingManuallyConfiguredPackages, UntrackedDependencies, ResolveErrors, RelativeComponents, RelativeComponentsAuthored, ParseErrors, MissingDists, LegacyInsideHarmony, MissingDependenciesOnFs, ImportNonMainFiles, MultipleEnvs, MissingLinksFromNodeModulesToSrc, CircularDependencies, DuplicateComponentAndPackage, MergeConfigHasConflict, NonLoadedEnv, ExternalEnvWithoutVersion, RemovedDependencies, RemovedEnv, DeprecatedDependencies, SelfReference, ImportFromDirectory, LoadFailures, PinnedDependencies]\nto ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify \"*\"."
       ],
       [
         "I",
@@ -3618,7 +3618,7 @@
       [
         "i",
         "ignore-issues <issues>",
-        "ignore component issues (shown in \"bit status\" as \"issues found\"), issues to ignore:\n[MissingPackagesDependenciesOnFs, MissingManuallyConfiguredPackages, UntrackedDependencies, ResolveErrors, RelativeComponents, RelativeComponentsAuthored, ParseErrors, MissingDists, LegacyInsideHarmony, MissingDependenciesOnFs, ImportNonMainFiles, MultipleEnvs, MissingLinksFromNodeModulesToSrc, CircularDependencies, DuplicateComponentAndPackage, MergeConfigHasConflict, NonLoadedEnv, ExternalEnvWithoutVersion, RemovedDependencies, RemovedEnv, DeprecatedDependencies, SelfReference, ImportFromDirectory, LoadFailures]\nto ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify \"*\"."
+        "ignore component issues (shown in \"bit status\" as \"issues found\"), issues to ignore:\n[MissingPackagesDependenciesOnFs, MissingManuallyConfiguredPackages, UntrackedDependencies, ResolveErrors, RelativeComponents, RelativeComponentsAuthored, ParseErrors, MissingDists, LegacyInsideHarmony, MissingDependenciesOnFs, ImportNonMainFiles, MultipleEnvs, MissingLinksFromNodeModulesToSrc, CircularDependencies, DuplicateComponentAndPackage, MergeConfigHasConflict, NonLoadedEnv, ExternalEnvWithoutVersion, RemovedDependencies, RemovedEnv, DeprecatedDependencies, SelfReference, ImportFromDirectory, LoadFailures, PinnedDependencies]\nto ignore multiple issues, separate them by a comma and wrap with quotes. to ignore all issues, specify \"*\"."
       ],
       [
         "",

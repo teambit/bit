@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { parseGitHubRepo, isGitHubRemote } from './github-client';
+import { parseGitHubRepo, isGitHubRemote, gitHubApiUrl, remoteHost } from './github-client';
 
 /**
  * `bit ci sync --init` — pure scaffolding logic, unit-testable without a live workspace/git checkout.
@@ -273,6 +273,8 @@ export function scaffoldWorkflowFiles(workspaceDir: string, defaultBranch: strin
 export interface OwnerRepo {
   owner: string;
   repo: string;
+  /** The remote's host — github.com or the GITHUB_SERVER_URL one — which picks the API the checklist names. */
+  host: string;
 }
 
 /**
@@ -283,10 +285,11 @@ export interface OwnerRepo {
 export function deriveOwnerRepo(remoteUrl: string | undefined): OwnerRepo | undefined {
   if (!remoteUrl || !isGitHubRemote(remoteUrl)) return undefined;
   const ownerSlashRepo = parseGitHubRepo(remoteUrl);
-  if (!ownerSlashRepo) return undefined;
+  const host = remoteHost(remoteUrl);
+  if (!ownerSlashRepo || !host) return undefined;
   const [owner, repo] = ownerSlashRepo.split('/');
   if (!owner || !repo) return undefined;
-  return { owner, repo };
+  return { owner, repo, host };
 }
 
 /**
@@ -302,7 +305,8 @@ const WEBHOOK_PAYLOAD_TEMPLATE =
  */
 export function renderInitChecklist(ownerRepo: OwnerRepo | undefined): string {
   const repoSegment = ownerRepo ? `${ownerRepo.owner}/${ownerRepo.repo}` : '<owner>/<repo>';
-  const dispatchUrl = `https://api.github.com/repos/${repoSegment}/dispatches`;
+  const api = gitHubApiUrl(ownerRepo?.host);
+  const dispatchUrl = `${'error' in api ? '<GitHub API URL>' : api.url}/repos/${repoSegment}/dispatches`;
   return [
     '',
     'Remaining manual steps (bit ci sync --init only scaffolds files -- these need a human):',
@@ -322,6 +326,7 @@ export function renderInitChecklist(ownerRepo: OwnerRepo | undefined): string {
     '3. bit.cloud webhook -- create ONE webhook (org Settings > Webhooks) on the "Components > Export',
     '   succeeded" event:',
     `   URL:     ${dispatchUrl}`,
+    ...('error' in api ? [`            (${api.error})`] : []),
     '   Headers: Authorization: Bearer <PAT>',
     '            Accept: application/vnd.github+json',
     '   Custom payload template:',
