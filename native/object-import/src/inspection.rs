@@ -1,4 +1,7 @@
-pub(crate) use bitmap::{normalize as normalize_bitmap, render as render_bitmap};
+pub(crate) use bitmap::{
+    component_row, normalize as normalize_bitmap, render as render_bitmap,
+    render_workspace as render_workspace_bitmap,
+};
 pub(crate) use compare::modified as compare_owned;
 pub(crate) use modified::modified;
 

@@ -1,6 +1,7 @@
 //! Untrack a workspace component with the bitmap and file lifecycle of
 //! local `bit remove`.
 
+pub(crate) use lane::Lane;
 pub use versioned::VersionedPlan;
 
 mod lane;
@@ -8,7 +9,7 @@ mod row;
 mod versioned;
 
 use crate::{inspection, recovery};
-use lane::{Lane, select_lane};
+use lane::select_lane;
 use row::supported_row;
 use serde_json::Value;
 use std::{
@@ -38,6 +39,7 @@ pub(crate) enum RowKind {
     Staged,
     Imported,
     LaneSnap,
+    ExportedLane,
 }
 
 impl Plan {
@@ -117,7 +119,7 @@ pub(crate) struct Selected {
     pub(crate) package: PathBuf,
     pub(crate) main_exists: bool,
     pub(crate) version: Option<String>,
-    lane: Option<Lane>,
+    pub(crate) lane: Option<Lane>,
 }
 
 pub(crate) fn select(
@@ -130,12 +132,12 @@ pub(crate) fn select(
     let (key, row) = find_row(bitmap, name, kind)?;
     let (component_name, scope) = supported_row(key, row, kind)?;
     let lane = if bitmap["_bit_lane"].is_null() {
-        if kind == RowKind::LaneSnap {
+        if matches!(kind, RowKind::LaneSnap | RowKind::ExportedLane) {
             return Err(invalid("component is not on a lane"));
         }
         None
     } else {
-        if !matches!(kind, RowKind::New | RowKind::LaneSnap) {
+        if !matches!(kind, RowKind::New | RowKind::LaneSnap | RowKind::ExportedLane) {
             return Err(invalid("component removal on a lane"));
         }
         Some(select_lane(root, bitmap, scope, component_name, row, kind)?)
@@ -170,7 +172,7 @@ fn find_row<'a>(
         .iter()
         .find(|(key, row)| {
             *key == name
-                || (kind == RowKind::Imported
+                || (matches!(kind, RowKind::Imported | RowKind::ExportedLane)
                     && name
                         .split_once('/')
                         .is_some_and(|(scope, component)| {

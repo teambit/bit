@@ -10,11 +10,15 @@ pub(super) fn supported_row<'a>(
     kind: RowKind,
 ) -> io::Result<(&'a str, &'a str)> {
     let name = row["name"].as_str().ok_or_else(|| invalid("component name"))?;
-    let scope = row[if kind == RowKind::Imported { "scope" } else { "defaultScope" }]
-        .as_str()
-        .ok_or_else(|| invalid("component scope"))?;
+    let scope = row[if matches!(kind, RowKind::Imported | RowKind::ExportedLane) {
+        "scope"
+    } else {
+        "defaultScope"
+    }]
+    .as_str()
+    .ok_or_else(|| invalid("component scope"))?;
     let identity = key == name && valid_name(name) && valid_scope(scope);
-    let local = if kind == RowKind::Imported {
+    let local = if matches!(kind, RowKind::Imported | RowKind::ExportedLane) {
         row["scope"] == scope && row.get("defaultScope").is_none()
     } else {
         row["scope"].as_str().is_some_and(str::is_empty)
@@ -49,10 +53,13 @@ fn supported_row_shape(row: &Value, kind: RowKind) -> bool {
                 .keys()
                 .all(|field| allowed.contains(&field.as_str()))
         });
-    let lane_fields = if kind == RowKind::LaneSnap {
-        row["onLanesOnly"] == true && row["isAvailableOnCurrentLane"] == true
-    } else {
-        row.get("onLanesOnly").is_none() && row.get("isAvailableOnCurrentLane").is_none()
+    let lane_only = row["onLanesOnly"] == true && row["isAvailableOnCurrentLane"] == true;
+    let ordinary =
+        row.get("onLanesOnly").is_none() && row.get("isAvailableOnCurrentLane").is_none();
+    let lane_fields = match kind {
+        RowKind::LaneSnap => lane_only,
+        RowKind::ExportedLane => lane_only || ordinary,
+        _ => ordinary,
     };
     shape && lane_fields
 }

@@ -1,4 +1,4 @@
-//! Plan the local bitmap and file effects of `bit delete --silent` on main.
+//! Plan the local bitmap and file effects of `bit delete --silent` on main or an exported lane.
 
 use crate::{component_remove, inspection, recovery, workspace::engine::command::outbound};
 use component_remove::{RowKind, backup_bitmap, select, validate_directory, validate_file_id};
@@ -31,8 +31,7 @@ struct BitmapChange {
 
 struct RepositorySnapshot {
     index_before: Vec<u8>,
-    model: FrozenObject,
-    version: FrozenObject,
+    objects: Vec<FrozenObject>,
 }
 
 struct FrozenObject {
@@ -42,12 +41,19 @@ struct FrozenObject {
 
 impl Plan {
     pub fn prepare(root: &Path, name: &str, scope: Scope) -> io::Result<Self> {
+        Self::prepare_with(root, name, scope, false)
+    }
+
+    pub fn prepare_lane(root: &Path, name: &str, scope: Scope) -> io::Result<Self> {
+        Self::prepare_with(root, name, scope, true)
+    }
+
+    fn prepare_with(root: &Path, name: &str, scope: Scope, lane: bool) -> io::Result<Self> {
         validate_scope(root, &scope)?;
         let before = fs::read(root.join(".bitmap"))?;
         let mut bitmap = recovery::jsonc::parse(&before)?;
         let entire = matches!(scope, Scope::Entire);
-        let selected = select(root, &bitmap, name, !entire, RowKind::Staged)
-            .or_else(|_| select(root, &bitmap, name, !entire, RowKind::Imported))?;
+        let selected = select_target(root, &bitmap, name, &scope, lane)?;
         if !selected.main_exists {
             return Err(invalid("component main file is missing"));
         }
@@ -57,7 +63,11 @@ impl Plan {
         {
             return Err(invalid("snap selection is outside the tracked head"));
         }
-        let repository = model_state(root, &selected.identity, version)?;
+        let repository = if let Some(lane) = &selected.lane {
+            lane_state(root, lane, version)?
+        } else {
+            model_state(root, &selected.identity, version)?
+        };
         let after = project_bitmap(&mut bitmap, &selected.key, scope)?;
         Ok(Self {
             root: root.to_owned(),
@@ -99,7 +109,7 @@ impl Plan {
         {
             return Err(invalid("component workspace changed before deletion"));
         }
-        for object in [&self.repository.model, &self.repository.version] {
+        for object in &self.repository.objects {
             if fs::read(&object.path)? != object.before {
                 return Err(invalid("component object changed before deletion"));
             }
@@ -114,6 +124,40 @@ impl Plan {
     }
 }
 
+fn select_target(
+    root: &Path,
+    bitmap: &Value,
+    name: &str,
+    scope: &Scope,
+    lane: bool,
+) -> io::Result<component_remove::Selected> {
+    let keep_files = !matches!(scope, Scope::Entire);
+    if !lane {
+        return select(root, bitmap, name, keep_files, RowKind::Staged)
+            .or_else(|_| select(root, bitmap, name, keep_files, RowKind::Imported));
+    }
+    if matches!(scope, Scope::Range(_)) {
+        return Err(invalid("range selection is not supported on a lane"));
+    }
+    if !keep_files {
+        ensure_isolated_lane_component(bitmap)?;
+    }
+    select(root, bitmap, name, keep_files, RowKind::ExportedLane)
+}
+
+fn ensure_isolated_lane_component(bitmap: &Value) -> io::Result<()> {
+    let rows = bitmap.as_object().ok_or_else(|| invalid("component bitmap"))?;
+    if rows
+        .keys()
+        .filter(|key| !key.starts_with('$') && *key != "_bit_lane")
+        .count()
+        != 1
+    {
+        return Err(invalid("lane dependency policy needs the Node CLI"));
+    }
+    Ok(())
+}
+
 fn project_bitmap(bitmap: &mut Value, key: &str, scope: Scope) -> io::Result<Vec<u8>> {
     let config = match scope {
         Scope::Entire => json!({"teambit.component/remove":{"removed":true}}),
@@ -121,7 +165,7 @@ fn project_bitmap(bitmap: &mut Value, key: &str, scope: Scope) -> io::Result<Vec
         Scope::Snaps(snaps) => json!({"teambit.component/remove":{"removed":false,"snaps":snaps}}),
     };
     bitmap[key]["config"] = config;
-    inspection::render_bitmap(bitmap)
+    inspection::render_workspace_bitmap(bitmap)
 }
 
 fn validate_scope(root: &Path, scope: &Scope) -> io::Result<()> {
@@ -171,7 +215,23 @@ fn model_state(root: &Path, identity: &str, version: &str) -> io::Result<Reposit
     crate::merge_history::hash(hash)?;
     let version_object = freeze(root, hash)?;
     let _value = outbound::read_object(&root.join(".bit/objects"), hash, "Version")?;
-    Ok(RepositorySnapshot { index_before, model, version: version_object })
+    Ok(RepositorySnapshot { index_before, objects: vec![model, version_object] })
+}
+
+fn lane_state(
+    root: &Path,
+    lane: &component_remove::Lane,
+    version: &str,
+) -> io::Result<RepositorySnapshot> {
+    let index_before = fs::read(root.join(".bit/index.json"))?;
+    let stored_lane = freeze(root, &lane.hash)?;
+    if stored_lane.before != lane.before || index_before != lane.index_before {
+        return Err(invalid("current lane changed during selection"));
+    }
+    crate::merge_history::hash(version)?;
+    let version_object = freeze(root, version)?;
+    let _value = outbound::read_object(&root.join(".bit/objects"), version, "Version")?;
+    Ok(RepositorySnapshot { index_before, objects: vec![stored_lane, version_object] })
 }
 
 fn freeze(root: &Path, hash: &str) -> io::Result<FrozenObject> {

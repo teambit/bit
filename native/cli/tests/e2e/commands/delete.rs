@@ -148,3 +148,236 @@ fn unexported_lane_delete_delegates_untouched() {
         fs::read(node_root.join(".bitmap")).unwrap(),
     );
 }
+
+pub(super) fn exported_lane_setup(helper: &Helper, extra_snap: bool) {
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("module.exports = 'base';");
+    helper.add_component_bar_foo();
+    helper.tag_without_build("bar/foo", "");
+    helper.run("export");
+    helper.run("lane create dev");
+    helper.run("snap --unmodified --message lane");
+    helper.run("export");
+    if extra_snap {
+        fs::write(helper.scopes.local_path.join("bar/foo.js"), "module.exports = 'second';")
+            .unwrap();
+        helper.run("snap --message second");
+        helper.run("export");
+    }
+}
+
+fn exported_lane_case(helper: &Helper, command: &str, extra_snap: bool) {
+    exported_lane_setup(helper, extra_snap);
+    compare_exported_lane(helper, command);
+}
+
+fn compare_exported_lane(helper: &Helper, command: &str) {
+    let baseline = helper.clone_workspace();
+    let remote = helper.clone_remote_scope();
+    helper.get_cloned_workspace(&baseline);
+    let root = &helper.scopes.local_path;
+    let node_root = helper.clone_workspace();
+    helper.restore_remote_scope(&remote);
+    let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    helper.restore_remote_scope(&remote);
+    let native = helper.native_run(command);
+    assert!(native.native, "{}", native.trace);
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    assert!(native.status.success());
+    for path in [".bitmap", ".bit/index.json"] {
+        assert_eq!(
+            fs::read(root.join(path)).unwrap(),
+            fs::read(node_root.join(path)).unwrap(),
+            "{path}",
+        );
+    }
+    assert_eq!(scope_objects(root), scope_objects(&node_root));
+    assert_eq!(root.join("bar/foo.js").exists(), node_root.join("bar/foo.js").exists());
+    let package = format!("node_modules/@{}/bar.foo", helper.scopes.remote);
+    assert_eq!(root.join(&package).exists(), node_root.join(&package).exists());
+    let bitmap_before = fs::read(baseline.join(".bitmap")).unwrap();
+    for workspace in [root, &node_root] {
+        let metadata =
+            fs::read_to_string(workspace.join(".bit/bitmap-history-metadata.txt")).unwrap();
+        let receipt = metadata.lines().last().unwrap();
+        let file_id = receipt.strip_suffix(" delete").unwrap();
+        assert_eq!(
+            fs::read(
+                workspace
+                    .join(".bit/bitmap-history")
+                    .join(format!(".bitmap-{file_id}"))
+            )
+            .unwrap(),
+            bitmap_before,
+        );
+    }
+}
+
+#[test]
+fn exported_lane_component_delete_matches_node() {
+    let helper = Helper::new();
+    exported_lane_case(&helper, "delete bar/foo --lane --silent", false);
+}
+
+#[test]
+fn exported_lane_snap_selection_delete_matches_node() {
+    let helper = Helper::new();
+    exported_lane_setup(&helper, false);
+    let bitmap = fs::read_to_string(helper.scopes.local_path.join(".bitmap")).unwrap();
+    let version = bitmap
+        .lines()
+        .find(|line| line.trim().starts_with(r#""version":"#))
+        .unwrap()
+        .split('"')
+        .nth(3)
+        .unwrap();
+    let command = format!("delete bar/foo --lane --silent --snaps {version}");
+    let baseline = helper.clone_workspace();
+    let remote = helper.clone_remote_scope();
+    let node_root = helper.clone_workspace();
+    helper.restore_remote_scope(&remote);
+    let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    helper.get_cloned_workspace(&baseline);
+    helper.restore_remote_scope(&remote);
+    let native = helper.native_run(&command);
+    assert!(native.native, "{}", native.trace);
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    assert!(native.status.success());
+    let root = &helper.scopes.local_path;
+    assert_eq!(
+        fs::read(root.join(".bitmap")).unwrap(),
+        fs::read(node_root.join(".bitmap")).unwrap(),
+    );
+    assert_eq!(
+        fs::read(root.join(".bit/index.json")).unwrap(),
+        fs::read(node_root.join(".bit/index.json")).unwrap(),
+    );
+    assert_eq!(scope_objects(root), scope_objects(&node_root));
+    assert_eq!(
+        fs::read(root.join("bar/foo.js")).unwrap(),
+        fs::read(node_root.join("bar/foo.js")).unwrap(),
+    );
+}
+
+#[test]
+fn exported_lane_multiple_snaps_delete_matches_node() {
+    let helper = Helper::new();
+    exported_lane_case(&helper, "delete bar/foo --lane --silent", true);
+}
+
+#[test]
+fn exported_lane_with_another_component_delegates_before_deletion() {
+    let helper = Helper::new();
+    exported_lane_setup(&helper, false);
+    helper.output_file(
+        "baz/qux.js",
+        &format!("module.exports = require('@{}/bar.foo');", helper.scopes.remote),
+    );
+    helper.run("add baz -i baz/qux");
+    let node_root = helper.clone_workspace();
+    let remote = helper.clone_remote_scope();
+    let command = "delete bar/foo --lane --silent";
+    helper.restore_remote_scope(&remote);
+    let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    helper.restore_remote_scope(&remote);
+    let actual = helper.cmd(command);
+    assert!(!actual.native, "{}", actual.trace);
+    assert!(actual.trace.contains("lane dependency policy needs the Node CLI"), "{}", actual.trace);
+    assert_eq!(actual.status.code(), node.status.code());
+    assert_eq!(actual.stdout, node.stdout);
+    assert_eq!(actual.stderr, node.stderr);
+    for path in [".bitmap", ".bit/index.json", "workspace.jsonc", "baz/qux.js"] {
+        assert_eq!(
+            fs::read(helper.scopes.local_path.join(path)).unwrap(),
+            fs::read(node_root.join(path)).unwrap(),
+            "{path}",
+        );
+    }
+    assert_eq!(scope_objects(&helper.scopes.local_path), scope_objects(&node_root));
+}
+
+#[test]
+fn exported_lane_delete_and_recover_reject_changed_index_before_writes() {
+    use bit_object_import::{
+        component_delete::{Plan as DeletePlan, Scope},
+        component_recover::Plan as RecoverPlan,
+    };
+    let helper = Helper::new();
+    exported_lane_setup(&helper, true);
+    let root = &helper.scopes.local_path;
+    let index = fs::read(root.join(".bit/index.json")).unwrap();
+    let bitmap = fs::read(root.join(".bitmap")).unwrap();
+    let source = fs::read(root.join("bar/foo.js")).unwrap();
+    let history = fs::read(root.join(".bit/bitmap-history-metadata.txt")).unwrap();
+    let delete = DeletePlan::prepare_lane(root, "bar/foo", Scope::Entire).unwrap();
+    let mut changed = index.clone();
+    changed.push(b'\n');
+    fs::write(root.join(".bit/index.json"), &changed).unwrap();
+    assert!(delete.commit("2026-10-16-10-00-00").is_err());
+    assert_eq!(fs::read(root.join(".bitmap")).unwrap(), bitmap);
+    assert_eq!(fs::read(root.join("bar/foo.js")).unwrap(), source);
+    assert_eq!(fs::read(root.join(".bit/bitmap-history-metadata.txt")).unwrap(), history);
+    fs::write(root.join(".bit/index.json"), &index).unwrap();
+    helper.native_run("delete bar/foo --lane --silent");
+    let bitmap = fs::read(root.join(".bitmap")).unwrap();
+    let history = fs::read(root.join(".bit/bitmap-history-metadata.txt")).unwrap();
+    let recover = RecoverPlan::prepare(root, "bar/foo").unwrap();
+    fs::write(root.join(".bit/index.json"), &changed).unwrap();
+    assert!(recover.commit("2026-10-16-10-00-01").is_err());
+    assert_eq!(fs::read(root.join(".bitmap")).unwrap(), bitmap);
+    assert!(!root.join("bar/foo.js").exists());
+    assert_eq!(fs::read(root.join(".bit/bitmap-history-metadata.txt")).unwrap(), history);
+}
+
+pub(super) fn exported_lane_only_setup(helper: &Helper) {
+    helper.set_workspace_with_remote_scope();
+    helper.run("lane create dev");
+    helper.create_component_bar_foo("module.exports = 'lane only';");
+    helper.add_component_bar_foo();
+    helper.run("snap --message lane");
+    helper.run("export");
+}
+
+#[test]
+fn exported_lane_only_component_delete_matches_node() {
+    let helper = Helper::new();
+    exported_lane_only_setup(&helper);
+    compare_exported_lane(&helper, "delete bar/foo --lane --silent");
+}
+
+#[test]
+fn exported_lane_delete_and_recover_ci_output_matches_node() {
+    let helper = Helper::new();
+    exported_lane_setup(&helper, false);
+    let node_root = helper.clone_workspace();
+    let remote = helper.clone_remote_scope();
+    for command in ["delete bar/foo --lane --silent", "recover bar/foo"] {
+        helper.restore_remote_scope(&remote);
+        let node = Helper::cmd_in_with(
+            &node_root,
+            command,
+            &[("BIT_NATIVE", OsStr::new("off")), ("CI", OsStr::new("1"))],
+        );
+        helper.restore_remote_scope(&remote);
+        let native =
+            Helper::cmd_in_with(&helper.scopes.local_path, command, &[("CI", OsStr::new("1"))]);
+        assert!(native.native, "{}", native.trace);
+        assert!(native.status.success());
+        assert_eq!(native.status.code(), node.status.code());
+        assert_eq!(native.stdout, node.stdout);
+        assert_eq!(native.stderr, node.stderr);
+        assert_eq!(
+            fs::read(helper.scopes.local_path.join(".bitmap")).unwrap(),
+            fs::read(node_root.join(".bitmap")).unwrap(),
+        );
+        assert_eq!(scope_objects(&helper.scopes.local_path), scope_objects(&node_root));
+        assert_eq!(
+            fs::read(helper.scopes.local_path.join("bar/foo.js")).ok(),
+            fs::read(node_root.join("bar/foo.js")).ok(),
+        );
+    }
+}

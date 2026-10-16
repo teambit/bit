@@ -4,11 +4,23 @@ use super::remove::scope_objects;
 use crate::helper::Helper;
 use std::{ffi::OsStr, fs};
 
-fn compare_result(helper: &Helper, baseline: &std::path::Path, command: &str, files: &str) {
+fn compare_result(
+    helper: &Helper,
+    baseline: &std::path::Path,
+    command: &str,
+    files: &str,
+    remote: Option<&std::path::Path>,
+) {
     helper.get_cloned_workspace(baseline);
     let root = &helper.scopes.local_path;
     let node_root = helper.clone_workspace();
+    if let Some(remote) = remote {
+        helper.restore_remote_scope(remote);
+    }
     let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    if let Some(remote) = remote {
+        helper.restore_remote_scope(remote);
+    }
     let native = helper.native_run(command);
     assert!(native.native, "{}", native.trace);
     assert_eq!(native.status.code(), node.status.code());
@@ -50,7 +62,7 @@ fn tagged_component_recovery_matches_node() {
     helper.tag_without_build("bar/foo", "");
     helper.run("delete bar/foo --silent");
     let baseline = helper.clone_workspace();
-    compare_result(&helper, &baseline, "recover bar/foo", "bar/foo.js");
+    compare_result(&helper, &baseline, "recover bar/foo", "bar/foo.js", None);
 }
 
 #[test]
@@ -68,7 +80,7 @@ fn imported_component_recovery_matches_node() {
     let baseline = helper.clone_workspace();
     let command = format!("recover {}/bar/foo", helper.scopes.remote);
     let files = format!("{}/bar/foo/foo.js", helper.scopes.remote);
-    compare_result(&helper, &baseline, &command, &files);
+    compare_result(&helper, &baseline, &command, &files, None);
 }
 
 #[test]
@@ -80,7 +92,7 @@ fn ranged_component_recovery_matches_node() {
     helper.tag_without_build("bar/foo", "");
     helper.run("delete bar/foo --silent --range ^0.0.1");
     let baseline = helper.clone_workspace();
-    compare_result(&helper, &baseline, "recover bar/foo -x", "bar/foo.js");
+    compare_result(&helper, &baseline, "recover bar/foo -x", "bar/foo.js", None);
 }
 
 #[test]
@@ -100,7 +112,7 @@ fn snap_selection_recovery_matches_node() {
         .unwrap();
     helper.run(&format!("delete bar/foo --silent --snaps {version}"));
     let baseline = helper.clone_workspace();
-    compare_result(&helper, &baseline, "recover bar/foo -x", "bar/foo.js");
+    compare_result(&helper, &baseline, "recover bar/foo -x", "bar/foo.js", None);
 }
 
 #[test]
@@ -175,4 +187,46 @@ fn ci_recovery_matches_node() {
         fs::read(helper.scopes.local_path.join(".bitmap")).unwrap(),
         fs::read(node_root.join(".bitmap")).unwrap(),
     );
+}
+
+fn exported_lane_recovery_case(selected_snap: bool) {
+    let helper = Helper::new();
+    super::delete::exported_lane_setup(&helper, false);
+    let bitmap = fs::read_to_string(helper.scopes.local_path.join(".bitmap")).unwrap();
+    let version = bitmap
+        .lines()
+        .find(|line| line.trim().starts_with(r#""version":"#))
+        .unwrap()
+        .split('"')
+        .nth(3)
+        .unwrap();
+    let command = if selected_snap {
+        format!("delete bar/foo --lane --silent --snaps {version}")
+    } else {
+        "delete bar/foo --lane --silent".to_owned()
+    };
+    helper.run(&command);
+    let baseline = helper.clone_workspace();
+    let remote = helper.clone_remote_scope();
+    compare_result(&helper, &baseline, "recover bar/foo", "bar/foo.js", Some(&remote));
+}
+
+#[test]
+fn exported_lane_component_recovery_matches_node() {
+    exported_lane_recovery_case(false);
+}
+
+#[test]
+fn exported_lane_snap_selection_recovery_matches_node() {
+    exported_lane_recovery_case(true);
+}
+
+#[test]
+fn exported_lane_only_component_recovery_matches_node() {
+    let helper = Helper::new();
+    super::delete::exported_lane_only_setup(&helper);
+    helper.native_run("delete bar/foo --lane --silent");
+    let baseline = helper.clone_workspace();
+    let remote = helper.clone_remote_scope();
+    compare_result(&helper, &baseline, "recover bar/foo", "bar/foo.js", Some(&remote));
 }

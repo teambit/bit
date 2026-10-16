@@ -1,4 +1,4 @@
-//! Native mainline soft deletion of a tracked component.
+//! Native soft deletion of a tracked mainline or exported-lane component.
 
 use super::{
     color::Chalk,
@@ -14,13 +14,17 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(argv) = workspace_command::utf8_args(args) else {
         return Ok(Outcome::Declined("arguments are not UTF-8".into()));
     };
-    let Some((name, scope)) = parse(&argv[1..]) else {
+    let Some((name, scope, lane)) = parse(&argv[1..]) else {
         return Ok(Outcome::Declined("outside the native delete grammar".into()));
     };
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".into()));
     };
-    let plan = match Plan::prepare(&root, name, scope) {
+    let plan = match if lane {
+        Plan::prepare_lane(&root, name, scope)
+    } else {
+        Plan::prepare(&root, name, scope)
+    } {
         Ok(plan) => plan,
         Err(error) => return Ok(Outcome::Declined(format!("delete: {error}"))),
     };
@@ -46,6 +50,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 struct Parsed<'a> {
     name: Option<&'a str>,
     silent: bool,
+    lane: bool,
     modifier: Option<(&'a str, &'a str)>,
 }
 
@@ -53,6 +58,7 @@ impl<'a> Parsed<'a> {
     fn add(&mut self, arg: &'a str, rest: &mut impl Iterator<Item = &'a str>) -> Option<()> {
         match arg {
             "-s" | "--silent" if !self.silent => self.silent = true,
+            "--lane" if !self.lane => self.lane = true,
             "--range" | "--snaps" if self.modifier.is_none() => {
                 self.modifier = Some((arg, rest.next()?));
             }
@@ -63,13 +69,13 @@ impl<'a> Parsed<'a> {
     }
 }
 
-fn parse<'a>(args: &[&'a str]) -> Option<(&'a str, Scope)> {
+fn parse<'a>(args: &[&'a str]) -> Option<(&'a str, Scope, bool)> {
     let mut parsed = Parsed::default();
     let mut iter = args.iter().copied();
     while let Some(arg) = iter.next() {
         parsed.add(arg, &mut iter)?;
     }
-    parsed.silent.then_some((parsed.name?, selection(parsed.modifier)))
+    parsed.silent.then_some((parsed.name?, selection(parsed.modifier), parsed.lane))
 }
 
 fn selection(modifier: Option<(&str, &str)>) -> Scope {

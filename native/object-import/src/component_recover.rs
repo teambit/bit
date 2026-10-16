@@ -1,8 +1,8 @@
-//! Restore a locally soft-deleted mainline component from verified scope Sources.
+//! Restore a locally soft-deleted component from verified scope Sources and its main or lane head.
 
 use crate::{
     checkout::repository,
-    component_remove::{RowKind, backup_bitmap, select, validate_file_id},
+    component_remove::{Lane, RowKind, backup_bitmap, select, validate_file_id},
     inspection, merge_history, recovery,
     workspace::engine::command::outbound,
 };
@@ -31,8 +31,7 @@ struct Bitmap {
 }
 struct Repository {
     index: Vec<u8>,
-    model: Object,
-    version: Object,
+    objects: Vec<Object>,
     sources: Vec<Object>,
 }
 struct Object {
@@ -50,6 +49,7 @@ struct Selection {
     directory: PathBuf,
     main_file: PathBuf,
     restore_files: bool,
+    lane: Option<Lane>,
 }
 impl Plan {
     pub fn prepare(root: &Path, name: &str) -> io::Result<Self> {
@@ -61,7 +61,7 @@ impl Plan {
             .as_object_mut()
             .ok_or_else(|| invalid("bitmap row"))?
             .remove("config");
-        let after = inspection::render_bitmap(&bitmap)?;
+        let after = inspection::render_workspace_bitmap(&bitmap)?;
         Ok(Self {
             root: root.to_owned(),
             bitmap: Bitmap { before, after },
@@ -97,7 +97,7 @@ impl Plan {
         {
             return Err(invalid("component workspace changed before recovery"));
         }
-        for object in [&self.repository.model, &self.repository.version] {
+        for object in &self.repository.objects {
             if fs::read(&object.path)? != object.before {
                 return Err(invalid("component object changed before recovery"));
             }
@@ -147,7 +147,8 @@ fn select_component(root: &Path, bitmap: &Value, name: &str) -> io::Result<Selec
         .ok_or_else(|| invalid("bitmap row"))?
         .remove("config");
     let selected = select(root, &selectable, name, true, RowKind::Staged)
-        .or_else(|_| select(root, &selectable, name, true, RowKind::Imported))?;
+        .or_else(|_| select(root, &selectable, name, true, RowKind::Imported))
+        .or_else(|_| select(root, &selectable, name, true, RowKind::ExportedLane))?;
     if selected.main_exists == restore_files {
         return Err(invalid("component source state is outside local recovery"));
     }
@@ -161,10 +162,18 @@ fn select_component(root: &Path, bitmap: &Value, name: &str) -> io::Result<Selec
     let version = selected.version.ok_or_else(|| invalid("component version"))?;
     let main_file =
         directory.join(row["mainFile"].as_str().ok_or_else(|| invalid("component main file"))?);
-    Ok(Selection { key, identity: selected.identity, version, directory, main_file, restore_files })
+    Ok(Selection {
+        key,
+        identity: selected.identity,
+        version,
+        directory,
+        main_file,
+        restore_files,
+        lane: selected.lane,
+    })
 }
 fn prepare_files(root: &Path, selected: &Selection) -> io::Result<(Repository, Vec<SourceFile>)> {
-    let (mut repository, manifest) = read_repository(root, &selected.identity, &selected.version)?;
+    let (mut repository, manifest) = read_repository(root, selected)?;
     let (files, sources) = source_files(root, &selected.directory, &manifest)?;
     repository.sources = sources;
     if !files
@@ -195,16 +204,31 @@ fn tracked_key(bitmap: &Value, name: &str) -> io::Result<String> {
     }
     Ok(matches[0].0.clone())
 }
-fn read_repository(root: &Path, identity: &str, version: &str) -> io::Result<(Repository, Value)> {
-    let (scope, name) = identity.split_once('/').ok_or_else(|| invalid("component identity"))?;
+fn read_repository(root: &Path, selected: &Selection) -> io::Result<(Repository, Value)> {
+    let (scope, name) =
+        selected.identity.split_once('/').ok_or_else(|| invalid("component identity"))?;
     let (index, model, model_value) = read_model(root, scope, name)?;
-    let version_hash = model_value["versions"][version]
-        .as_str()
-        .or_else(|| (model_value["head"] == version).then_some(version))
-        .ok_or_else(|| invalid("component version is not in model"))?;
+    let version_hash = if selected.lane.is_some() {
+        selected.version.as_str()
+    } else {
+        model_value["versions"][&selected.version]
+            .as_str()
+            .or_else(|| {
+                (model_value["head"] == selected.version).then_some(selected.version.as_str())
+            })
+            .ok_or_else(|| invalid("component version is not in model"))?
+    };
     let version_object = frozen(root, version_hash)?;
     let manifest = outbound::read_object(&root.join(".bit/objects"), version_hash, "Version")?;
-    Ok((Repository { index, model, version: version_object, sources: Vec::new() }, manifest))
+    let mut objects = vec![model, version_object];
+    if let Some(lane) = &selected.lane {
+        let object = frozen(root, &lane.hash)?;
+        if object.before != lane.before || index != lane.index_before {
+            return Err(invalid("current lane changed during recovery"));
+        }
+        objects.push(object);
+    }
+    Ok((Repository { index, objects, sources: Vec::new() }, manifest))
 }
 fn read_model(root: &Path, scope: &str, name: &str) -> io::Result<(Vec<u8>, Object, Value)> {
     let index = fs::read(root.join(".bit/index.json"))?;

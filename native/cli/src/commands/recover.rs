@@ -1,4 +1,4 @@
-//! Restore a locally soft-deleted mainline component from its local scope.
+//! Restore a locally soft-deleted mainline or exported-lane component from its local scope.
 
 use super::{
     color::Chalk,

@@ -226,7 +226,7 @@ fn render_rows(rows: Vec<Value>, schema: &Value, lane: Option<Value>) -> io::Res
     for entry in rows {
         let name = entry["name"].as_str().ok_or_else(|| invalid("command bitmap name"))?;
         let key = if names[name] > 1 { identity(&entry)? } else { name.to_owned() };
-        keyed.push((key, plain(&entry)?));
+        keyed.push((key, crate::inspection::component_row(&entry)?));
     }
     keyed.sort_by(|(left, _), (right, _)| left.encode_utf16().cmp(right.encode_utf16()));
     let mut output = Map::new();
@@ -240,55 +240,6 @@ fn render_rows(rows: Vec<Value>, schema: &Value, lane: Option<Value>) -> io::Res
         output.insert("_bit_lane".into(), lane);
     }
     crate::inspection::render_bitmap(&Value::Object(output))
-}
-fn plain(entry: &Value) -> io::Result<Value> {
-    let mut result = Map::new();
-    for key in [
-        "name",
-        "scope",
-        "version",
-        "defaultScope",
-        "mainFile",
-        "rootDir",
-        "wrapDir",
-        "exported",
-        "onLanesOnly",
-        "isAvailableOnCurrentLane",
-        "nextVersion",
-        "localOnly",
-        "config",
-    ] {
-        let Some(value) = entry
-            .get(key)
-            .filter(|value| !value.is_null())
-        else {
-            continue;
-        };
-        if !included(entry, key, value) {
-            continue;
-        }
-        let value = clean_value(key, value)?;
-        result.insert(key.into(), value);
-    }
-    Ok(Value::Object(result))
-}
-fn included(entry: &Value, key: &str, value: &Value) -> bool {
-    if matches!(key, "onLanesOnly" | "localOnly") && value == false {
-        return false;
-    }
-    !(key == "isAvailableOnCurrentLane" && value == true && entry["onLanesOnly"] != true)
-}
-fn clean_value(key: &str, value: &Value) -> io::Result<Value> {
-    let mut value = value.clone();
-    if key == "config" {
-        let config = value.as_object_mut().ok_or_else(|| invalid("command bitmap config"))?;
-        for aspect in config.values_mut() {
-            if let Some(aspect) = aspect.as_object_mut() {
-                aspect.shift_remove("__specific");
-            }
-        }
-    }
-    Ok(value)
 }
 fn tag(context: &Value, identity: &str, version: &str) -> io::Result<String> {
     if crate::merge_history::hash(version).is_err() {

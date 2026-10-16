@@ -1,4 +1,4 @@
-//! Validate the active unexported lane before local component removal.
+//! Validate the active lane and its component head before local file operations.
 
 use super::{RowKind, invalid, valid_name, valid_scope};
 use crate::workspace::engine::command::outbound;
@@ -8,12 +8,13 @@ use std::{
     path::{Path, PathBuf},
 };
 
-pub(super) struct Lane {
+pub(crate) struct Lane {
     pub(super) scope: String,
     pub(super) name: String,
-    pub(super) hash: String,
+    pub(crate) hash: String,
     pub(super) path: PathBuf,
-    pub(super) before: Vec<u8>,
+    pub(crate) before: Vec<u8>,
+    pub(crate) index_before: Vec<u8>,
     pub(super) value: Value,
 }
 
@@ -28,7 +29,7 @@ pub(super) fn select_lane(
     let id = &bitmap["_bit_lane"]["id"];
     let lane_scope = id["scope"].as_str().ok_or_else(|| invalid("current lane scope"))?;
     let lane_name = id["name"].as_str().ok_or_else(|| invalid("current lane name"))?;
-    if bitmap["_bit_lane"]["exported"] != false
+    if bitmap["_bit_lane"]["exported"] != (kind == RowKind::ExportedLane)
         || !valid_scope(lane_scope)
         || !valid_name(lane_name)
         || lane_name.contains('/')
@@ -41,7 +42,8 @@ pub(super) fn select_lane(
 }
 
 fn read_lane(root: &Path, id: &Value, scope: &str, name: &str) -> io::Result<Lane> {
-    let index: Value = serde_json::from_slice(&fs::read(root.join(".bit/index.json"))?)?;
+    let index_before = fs::read(root.join(".bit/index.json"))?;
+    let index: Value = serde_json::from_slice(&index_before)?;
     let rows = index["lanes"].as_array().ok_or_else(|| invalid("lane index"))?;
     let matches: Vec<_> = rows
         .iter()
@@ -61,7 +63,15 @@ fn read_lane(root: &Path, id: &Value, scope: &str, name: &str) -> io::Result<Lan
     if value["scope"] != scope || value["name"] != name {
         return Err(invalid("current lane object identity"));
     }
-    Ok(Lane { scope: scope.into(), name: name.into(), hash: hash.into(), path, before, value })
+    Ok(Lane {
+        scope: scope.into(),
+        name: name.into(),
+        hash: hash.into(),
+        path,
+        before,
+        index_before,
+        value,
+    })
 }
 
 fn validate_component(
@@ -79,7 +89,7 @@ fn validate_component(
     if kind == RowKind::New && !matching.is_empty() {
         return Err(invalid("new component is already on lane"));
     }
-    if kind == RowKind::LaneSnap
+    if matches!(kind, RowKind::LaneSnap | RowKind::ExportedLane)
         && (matching.len() != 1 || matching[0]["head"] != component["version"])
     {
         return Err(invalid("lane head differs from workspace version"));
