@@ -1,6 +1,7 @@
 #![cfg_attr(dylint_lib = "perfectionist", feature(register_tool))]
 #![cfg_attr(dylint_lib = "perfectionist", register_tool(perfectionist))]
 
+pub mod component_remove;
 pub mod lane_create;
 pub mod lane_history;
 pub mod lane_manage;

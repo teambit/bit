@@ -1,0 +1,317 @@
+//! Untrack a new, unversioned component with the same bitmap and file
+//! lifecycle as local `bit remove`.
+
+use crate::{inspection, recovery};
+use serde_json::Value;
+use std::{
+    fs, io,
+    path::{Component, Path, PathBuf},
+};
+
+pub struct Plan {
+    root: PathBuf,
+    bitmap_before: Vec<u8>,
+    bitmap_after: Vec<u8>,
+    files: Option<PathBuf>,
+    package: PathBuf,
+    identity: String,
+    main_exists: bool,
+}
+
+impl Plan {
+    pub fn prepare(root: &Path, name: &str, keep_files: bool) -> io::Result<Self> {
+        let bitmap_before = fs::read(root.join(".bitmap"))?;
+        let mut bitmap = recovery::jsonc::parse(&bitmap_before)?;
+        let selected = select(root, &bitmap, name, keep_files)?;
+        let rows = bitmap.as_object_mut().ok_or_else(|| invalid("component bitmap"))?;
+        rows.shift_remove(&selected.key);
+        let bitmap_after = inspection::render_bitmap(&bitmap)?;
+        Ok(Self {
+            root: root.to_owned(),
+            bitmap_before,
+            bitmap_after,
+            files: selected.files,
+            package: selected.package,
+            identity: selected.identity,
+            main_exists: selected.main_exists,
+        })
+    }
+
+    #[must_use]
+    pub fn identity(&self) -> &str {
+        &self.identity
+    }
+
+    #[must_use]
+    pub fn main_exists(&self) -> bool {
+        self.main_exists
+    }
+
+    pub fn commit(&self, file_id: &str) -> io::Result<()> {
+        if fs::read(self.root.join(".bitmap"))? != self.bitmap_before {
+            return Err(invalid("component bitmap changed before removal"));
+        }
+        validate_file_id(file_id)?;
+        if let Some(path) = &self.files {
+            validate_directory(path)?;
+        }
+        if self.package.try_exists()? {
+            validate_directory(&self.package)?;
+        }
+        if let Some(path) = &self.files {
+            fs::remove_dir_all(path)?;
+        }
+        if self.package.try_exists()? {
+            fs::remove_dir_all(&self.package)?;
+        }
+        backup_bitmap(&self.root, file_id)?;
+        fs::write(self.root.join(".bitmap"), &self.bitmap_after)
+    }
+}
+
+struct Selected {
+    key: String,
+    identity: String,
+    files: Option<PathBuf>,
+    package: PathBuf,
+    main_exists: bool,
+}
+
+fn select(root: &Path, bitmap: &Value, name: &str, keep_files: bool) -> io::Result<Selected> {
+    if !bitmap["_bit_lane"].is_null() {
+        return Err(invalid("component removal on a lane"));
+    }
+    let rows = bitmap.as_object().ok_or_else(|| invalid("component bitmap"))?;
+    let (key, row) = rows
+        .iter()
+        .find(|(key, _)| *key == name)
+        .ok_or_else(|| invalid("component not tracked"))?;
+    let (component_name, scope) = new_row(key, row)?;
+    let identity = format!("{scope}/{component_name}");
+    validate_workspace_config(root, &identity)?;
+    validate_no_model(root, scope, component_name)?;
+    let root_dir = row["rootDir"].as_str().ok_or_else(|| invalid("component root"))?;
+    let main_file = row["mainFile"].as_str().ok_or_else(|| invalid("component main file"))?;
+    if !safe_relative(Path::new(main_file)) {
+        return Err(invalid("component main file"));
+    }
+    let main_exists = root
+        .join(root_dir)
+        .join(main_file)
+        .is_file();
+    let files = files(root, rows, key, root_dir, keep_files)?;
+    let package = package(root, scope, component_name)?;
+    if package.try_exists()? {
+        validate_directory(&package)?;
+    }
+    Ok(Selected { key: key.clone(), identity, files, package, main_exists })
+}
+
+fn new_row<'a>(key: &str, row: &'a Value) -> io::Result<(&'a str, &'a str)> {
+    let name = row["name"].as_str().ok_or_else(|| invalid("component name"))?;
+    let scope = row["defaultScope"].as_str().ok_or_else(|| invalid("component scope"))?;
+    let identity = key == name && valid_name(name) && valid_scope(scope);
+    let unpublished = row["scope"].as_str().is_some_and(str::is_empty) && row["version"] == "";
+    let allowed = ["name", "scope", "version", "defaultScope", "mainFile", "rootDir"];
+    let shape = row
+        .as_object()
+        .is_some_and(|fields| {
+            fields
+                .keys()
+                .all(|field| allowed.contains(&field.as_str()))
+        });
+    if !identity || !unpublished || !shape {
+        return Err(invalid("component is not a clean new component"));
+    }
+    Ok((name, scope))
+}
+
+fn validate_workspace_config(root: &Path, identity: &str) -> io::Result<()> {
+    let path = root.join("workspace.jsonc");
+    if path.try_exists()? && fs::read_to_string(path)?.contains(identity) {
+        return Err(invalid("component has workspace configuration"));
+    }
+    Ok(())
+}
+
+fn validate_no_model(root: &Path, scope: &str, name: &str) -> io::Result<()> {
+    let path = root.join(".bit/index.json");
+    if !path.try_exists()? {
+        return Ok(());
+    }
+    let index: Value = serde_json::from_slice(&fs::read(path)?)?;
+    let Some(rows) = index["components"].as_array() else { return Err(invalid("component index")) };
+    if rows
+        .iter()
+        .any(|component| component["id"]["scope"] == scope && component["id"]["name"] == name)
+    {
+        return Err(invalid("component already has a local model"));
+    }
+    Ok(())
+}
+
+fn files(
+    root: &Path,
+    rows: &serde_json::Map<String, Value>,
+    key: &str,
+    directory: &str,
+    keep: bool,
+) -> io::Result<Option<PathBuf>> {
+    let relative = Path::new(directory);
+    validate_component_root(relative)?;
+    validate_no_overlap(rows, key, relative)?;
+    if keep {
+        return Ok(None);
+    }
+    let path = root.join(relative);
+    validate_ancestors(root, relative)?;
+    validate_directory(&path)?;
+    Ok(Some(path))
+}
+
+fn validate_component_root(relative: &Path) -> io::Result<()> {
+    if relative == Path::new(".") {
+        return Err(invalid("workspace root component"));
+    }
+    if !safe_relative(relative)
+        || relative
+            .components()
+            .next()
+            .is_some_and(|part| {
+                matches!(part.as_os_str().to_str(), Some(".bit" | ".git" | "node_modules"))
+            })
+    {
+        return Err(invalid("component root is outside the workspace"));
+    }
+    Ok(())
+}
+
+fn validate_no_overlap(
+    rows: &serde_json::Map<String, Value>,
+    key: &str,
+    relative: &Path,
+) -> io::Result<()> {
+    for (other_key, other) in rows {
+        if other_key == key || other_key.starts_with('$') {
+            continue;
+        }
+        let Some(other) = other["rootDir"].as_str() else {
+            return Err(invalid("another component has no root"));
+        };
+        let other = Path::new(other);
+        if !safe_relative(other) || other.starts_with(relative) || relative.starts_with(other) {
+            return Err(invalid("component root overlaps another component"));
+        }
+    }
+    Ok(())
+}
+
+fn package(root: &Path, scope: &str, name: &str) -> io::Result<PathBuf> {
+    let (owner, rest) = scope
+        .split_once('.')
+        .map_or((scope, ""), |(owner, rest)| (owner, rest));
+    let filename = if rest.is_empty() {
+        name.replace('/', ".")
+    } else {
+        format!("{}.{}", rest, name.replace('/', "."))
+    };
+    let package = root
+        .join("node_modules")
+        .join(format!("@{owner}"))
+        .join(filename);
+    if !package.starts_with(root.join("node_modules")) {
+        return Err(invalid("component package path"));
+    }
+    validate_ancestors(
+        root,
+        package.strip_prefix(root).map_err(|_| invalid("component package path"))?,
+    )?;
+    Ok(package)
+}
+
+fn validate_ancestors(root: &Path, relative: &Path) -> io::Result<()> {
+    let mut path = root.to_owned();
+    for part in relative.components() {
+        if !matches!(part, Component::Normal(_)) {
+            return Err(invalid("component path is outside the workspace"));
+        }
+        path.push(part);
+        match fs::symlink_metadata(&path) {
+            Ok(metadata) if metadata.file_type().is_dir() && !metadata.file_type().is_symlink() => {
+            }
+            Ok(_) => return Err(invalid("component path is not a directory")),
+            Err(error) if error.kind() == io::ErrorKind::NotFound => {}
+            Err(error) => return Err(error),
+        }
+    }
+    Ok(())
+}
+
+fn safe_relative(path: &Path) -> bool {
+    !path.as_os_str().is_empty()
+        && path
+            .components()
+            .all(|component| matches!(component, Component::Normal(_)))
+}
+
+fn valid_name(name: &str) -> bool {
+    !name.is_empty()
+        && name
+            .split('/')
+            .all(|part| {
+                !part.is_empty()
+                    && part
+                        .bytes()
+                        .all(|byte| {
+                            byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'-' | b'_')
+                        })
+            })
+}
+
+fn valid_scope(scope: &str) -> bool {
+    !scope.is_empty()
+        && scope
+            .split('.')
+            .all(|part| {
+                !part.is_empty()
+                    && part
+                        .bytes()
+                        .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_'))
+            })
+}
+
+fn validate_directory(path: &Path) -> io::Result<()> {
+    let kind = fs::symlink_metadata(path)?.file_type();
+    if !kind.is_dir() || kind.is_symlink() {
+        return Err(invalid("component path is not a directory"));
+    }
+    Ok(())
+}
+
+fn validate_file_id(value: &str) -> io::Result<()> {
+    if value.len() > 32
+        || value.split('-').count() != 6
+        || value
+            .split('-')
+            .any(|part| part.is_empty() || !part.bytes().all(|byte| byte.is_ascii_digit()))
+    {
+        return Err(invalid("component bitmap history receipt"));
+    }
+    Ok(())
+}
+
+fn backup_bitmap(root: &Path, file_id: &str) -> io::Result<()> {
+    use std::io::Write;
+    let directory = root.join(".bit/bitmap-history");
+    fs::create_dir_all(&directory)?;
+    fs::copy(root.join(".bitmap"), directory.join(format!(".bitmap-{file_id}")))?;
+    let mut metadata = fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(root.join(".bit/bitmap-history-metadata.txt"))?;
+    writeln!(metadata, "{file_id} remove")
+}
+
+fn invalid(message: &str) -> io::Error {
+    io::Error::new(io::ErrorKind::InvalidInput, message)
+}
