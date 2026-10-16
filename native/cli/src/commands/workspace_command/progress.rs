@@ -128,10 +128,10 @@ impl Progress {
             output.restart(&format!("importing {count} components"));
             output.restart(&format!("successfully imported {count} components"));
         }
-        self.render_inbound_rows(output, wildcard);
+        self.render_inbound_rows(output, wildcard, on_lane);
     }
 
-    fn render_inbound_rows(&self, output: &Output, wildcard: bool) {
+    fn render_inbound_rows(&self, output: &Output, wildcard: bool, on_lane: bool) {
         // `importMany` is called with the ids the latest-heads import requested.
         let requested = self.imports
             .iter()
@@ -147,7 +147,7 @@ impl Progress {
                     "import {} components with their dependencies (if missing)",
                     requested.unwrap_or(row).ids.len(),
                 ));
-                if row.components == 0 && !(wildcard && row.objects > 0) {
+                if row.components == 0 && !((wildcard || on_lane) && row.objects > 0) {
                     continue;
                 }
             }

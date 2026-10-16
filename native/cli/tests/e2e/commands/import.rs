@@ -665,26 +665,35 @@ fn a_file_remote_wildcard_import_matches_node() {
         setup::copy_dir(&helper.scopes.local_path, &destination.join("workspace"));
         setup::copy_dir(&helper.scopes.remote_path, &destination.join("remote"));
     }
-    let node_root = helper.clone_workspace();
-    let command = format!("import {}/* -x", helper.scopes.remote);
-    let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
-    assert!(node.status.success(), "{}", combined(&node));
-    let native = helper.native_run(&command);
-    assert!(native.native, "{}", native.trace);
-    assert_eq!(native.status.code(), node.status.code());
-    assert_eq!(without_progress_timing(&native.stdout), without_progress_timing(&node.stdout));
-    assert_eq!(native.stderr, node.stderr);
-    assert_eq!(
-        fs::read(helper.scopes.local_path.join(".bitmap")).unwrap(),
-        fs::read(node_root.join(".bitmap")).unwrap(),
-    );
-    for name in ["comp1", "comp2", "comp3"] {
-        let relative = format!("{}/{name}/index.js", helper.scopes.remote);
+    let baseline = helper.clone_workspace();
+    for flag in ["", "--merge=ours", "--merge=theirs", "--merge=manual", "--override"] {
+        helper.get_cloned_workspace(&baseline);
+        let node_root = helper.clone_workspace();
+        let command = format!("import {}/* -x {flag}", helper.scopes.remote);
+        let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+        assert!(node.status.success(), "{command}: {}", combined(&node));
+        let native = helper.native_run(&command);
+        assert!(native.native, "{command}: {}", native.trace);
+        assert_eq!(native.status.code(), node.status.code(), "{command}");
         assert_eq!(
-            fs::read(helper.scopes.local_path.join(&relative)).unwrap(),
-            fs::read(node_root.join(&relative)).unwrap(),
-            "{name}",
+            without_progress_timing(&native.stdout),
+            without_progress_timing(&node.stdout),
+            "{command}",
         );
+        assert_eq!(native.stderr, node.stderr, "{command}");
+        assert_eq!(
+            fs::read(helper.scopes.local_path.join(".bitmap")).unwrap(),
+            fs::read(node_root.join(".bitmap")).unwrap(),
+            "{command}",
+        );
+        for name in ["comp1", "comp2", "comp3"] {
+            let relative = format!("{}/{name}/index.js", helper.scopes.remote);
+            assert_eq!(
+                fs::read(helper.scopes.local_path.join(&relative)).unwrap(),
+                fs::read(node_root.join(&relative)).unwrap(),
+                "{command}: {name}",
+            );
+        }
     }
 }
 
@@ -830,7 +839,7 @@ fn lane_wildcard_selection_matches_node() {
 }
 
 #[test]
-fn changed_remote_lane_head_declines_before_writes() {
+fn changed_remote_lane_head_merges_or_declines_like_node() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo(FOO_FIXTURE);
@@ -847,6 +856,13 @@ fn changed_remote_lane_head_declines_before_writes() {
     helper.append_file("comp1/index.js", "\n// second lane snap");
     helper.run("snap --message second");
     helper.run("export");
+    if let Some(destination) = std::env::var_os("BIT_NATIVE_IMPORT_LANE_UPDATE_FIXTURE") {
+        let destination = std::path::PathBuf::from(destination);
+        assert!(!destination.exists());
+        fs::create_dir_all(&destination).unwrap();
+        setup::copy_dir(&baseline, &destination.join("workspace"));
+        setup::copy_dir(&helper.scopes.remote_path, &destination.join("remote"));
+    }
     std::thread::sleep(std::time::Duration::from_millis(1100));
     helper.get_cloned_workspace(&baseline);
     let node_root = helper.clone_workspace();
@@ -866,6 +882,48 @@ fn changed_remote_lane_head_declines_before_writes() {
         fs::read(helper.scopes.local_path.join("comp1/index.js")).unwrap(),
         fs::read(node_root.join("comp1/index.js")).unwrap(),
     );
+    for (pattern, flag, edited) in [
+        ("**", "--merge=ours", false),
+        ("**", "--merge=theirs", false),
+        ("**", "--merge=manual", false),
+        ("**", "--override", false),
+        ("**", "--merge=ours", true),
+        ("**", "--merge=theirs", true),
+        ("**", "--merge=manual", true),
+        ("**", "--override", true),
+        ("comp1", "--merge=ours", true),
+        ("comp1", "--merge=theirs", true),
+        ("comp1", "--merge=manual", true),
+        ("comp1", "--override", true),
+    ] {
+        helper.get_cloned_workspace(&baseline);
+        if edited {
+            helper.append_file("comp1/index.js", "\n// local edit");
+        }
+        let node_root = helper.clone_workspace();
+        let command = format!("import {}/{pattern} -x {flag}", helper.scopes.remote);
+        let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+        assert!(node.status.success(), "{command}: {}", combined(&node));
+        let native = helper.native_run(&command);
+        assert!(native.native, "{command}: {}", native.trace);
+        assert_eq!(native.status.code(), node.status.code(), "{command}");
+        assert_eq!(
+            without_progress_timing(&native.stdout),
+            without_progress_timing(&node.stdout),
+            "{command}",
+        );
+        assert_eq!(native.stderr, node.stderr, "{command}");
+        assert_eq!(
+            fs::read(helper.scopes.local_path.join(".bitmap")).unwrap(),
+            fs::read(node_root.join(".bitmap")).unwrap(),
+            "{command}",
+        );
+        assert_eq!(
+            fs::read(helper.scopes.local_path.join("comp1/index.js")).unwrap(),
+            fs::read(node_root.join("comp1/index.js")).unwrap(),
+            "{command}",
+        );
+    }
 }
 
 #[test]

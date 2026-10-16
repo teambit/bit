@@ -53,7 +53,7 @@ fn validate_merge(input: &Prepare) -> io::Result<()> {
     };
     if input.operation != "import"
         || input.options.objects_only
-        || input.ids.len() != 1
+        || input.ids.is_empty()
         || input.options.resolution.override_existing
         || !matches!(strategy, "manual" | "ours" | "theirs")
     {

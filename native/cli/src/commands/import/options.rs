@@ -218,7 +218,7 @@ fn valid_import_mode(
 ) -> bool {
     valid_dependencies(dependencies, ids, objects_only, override_existing, merge_strategy, path)
         && valid_merge_mode(merge_strategy, ids, objects_only, override_existing)
-        && (!override_existing || (!objects_only && !ids.iter().any(|id| has_wildcard(id))))
+        && (!override_existing || !objects_only)
         && valid_path(path, ids, objects_only)
 }
 
@@ -250,8 +250,7 @@ fn valid_merge_mode(
     objects_only: bool,
     override_existing: bool,
 ) -> bool {
-    strategy.is_none()
-        || !objects_only && ids.len() == 1 && !has_wildcard(&ids[0]) && !override_existing
+    strategy.is_none() || !objects_only && ids.len() == 1 && !override_existing
 }
 
 fn valid_path(path: Option<&str>, ids: &[String], objects_only: bool) -> bool {

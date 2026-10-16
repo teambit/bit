@@ -26,17 +26,14 @@ fn imports_that_install_and_wildcard_patterns() {
 }
 
 #[test]
-fn override_requires_an_explicit_component_write() {
+fn override_requires_a_component_write() {
     let options = parse(&["import", "s/a", "--override", "-x"]).unwrap();
     assert!(options.write.override_existing);
     assert_eq!(options.request()["overrideExisting"], true);
-    for args in [
-        &["import", "--override"][..],
-        &["import", "s/a", "--override", "-o"],
-        &["import", "s/**", "--override"],
-    ] {
+    for args in [&["import", "--override"][..], &["import", "s/a", "--override", "-o"]] {
         assert!(parse(args).is_none(), "{args:?}");
     }
+    assert!(parse(&["import", "s/**", "--override", "-x"]).is_some());
 }
 
 #[test]
@@ -60,7 +57,7 @@ fn path_requires_one_explicit_component_write() {
 }
 
 #[test]
-fn merge_requires_one_explicit_component_write() {
+fn merge_requires_one_component_write() {
     for strategy in ["manual", "ours", "theirs"] {
         let flag = format!("--merge={strategy}");
         let options = parse(&["import", "s/a", &flag, "-x"]).unwrap();
@@ -70,13 +67,13 @@ fn merge_requires_one_explicit_component_write() {
         &["import", "--merge=manual"][..],
         &["import", "s/a", "--merge=manual", "-o"],
         &["import", "s/a", "s/b", "--merge=manual"],
-        &["import", "s/*", "--merge=manual"],
         &["import", "s/a", "--merge=manual", "--override"],
         &["import", "s/a", "--merge=invalid"],
         &["import", "s/a", "--merge=manual", "--merge=ours"],
     ] {
         assert!(parse(args).is_none(), "{args:?}");
     }
+    assert!(parse(&["import", "s/*", "--merge=manual", "-x"]).is_some());
 }
 
 #[test]

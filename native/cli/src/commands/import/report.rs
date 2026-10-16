@@ -242,7 +242,11 @@ fn import_item(format: &Formatter, id: &Id, details: &Details) -> Option<String>
         String::new()
     };
     let removed = if details.removed { chalk.red("deleted") } else { String::new() };
-    if details.status == "up to date" && deprecated.is_empty() && removed.is_empty() {
+    if details.status == "up to date"
+        && deprecated.is_empty()
+        && removed.is_empty()
+        && details.conflicts.is_empty()
+    {
         return None;
     }
     let symbol = if details.removed {

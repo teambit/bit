@@ -21,11 +21,11 @@ pub(super) fn prepare(
         .map(|entry| (entry.identity, entry.head))
         .collect::<HashMap<_, _>>();
     let bitmap = config::document(&input.root.join(".bitmap"))?;
-    let (selected, main) = select(roots, &visible, &bitmap)?;
+    let (selected, main, changed) = select(input, roots, &visible, &bitmap)?;
     if !main.is_empty() {
         import.refresh_lane_main(&main)?;
     }
-    progress(&mut import, &selected, &main, id)?;
+    progress(&mut import, &selected, &main, id, changed)?;
     Ok((selected, import))
 }
 
@@ -49,12 +49,15 @@ fn open_lane(input: &Prepare, id: &lane::Id) -> io::Result<(PreparedImport, lane
 }
 
 fn select(
+    input: &Prepare,
     roots: &[Target],
     visible: &HashMap<String, String>,
     bitmap: &serde_json::Value,
-) -> io::Result<(Vec<Target>, Vec<String>)> {
+) -> io::Result<(Vec<Target>, Vec<String>, usize)> {
     let mut selected = Vec::new();
+    let mut main_targets = Vec::new();
     let mut main = Vec::new();
+    let mut changed = 0;
     for root in roots {
         let mut target = root.clone();
         let scope = root.scope.as_deref().ok_or_else(|| invalid("inbound lane target scope"))?;
@@ -62,19 +65,25 @@ fn select(
         if let Some(head) = visible.get(&key)
             && (target.version == "latest" || target.version == *head)
         {
-            if bitmap
+            let head_changed = bitmap
                 .get(&target.name)
-                .is_some_and(|row| row["version"] != *head)
+                .is_some_and(|row| row["version"] != *head);
+            if head_changed
+                && !input.options.resolution.override_existing
+                && input.options.resolution.merge_strategy.is_none()
             {
                 return Err(invalid("inbound lane head update needs canonical conflict handling"));
             }
+            changed += usize::from(head_changed);
             target.version.clone_from(head);
+            selected.push(target);
         } else {
             main.push(key);
+            main_targets.push(target);
         }
-        selected.push(target);
     }
-    Ok((selected, main))
+    selected.extend(main_targets);
+    Ok((selected, main, changed))
 }
 
 fn progress(
@@ -82,8 +91,12 @@ fn progress(
     selected: &[Target],
     main: &[String],
     id: &lane::Id,
+    changed: usize,
 ) -> io::Result<()> {
-    let lane_count = import.progress.first().map_or(0, |row| row.components.len());
+    let lane_count = import.progress
+        .first()
+        .map_or(0, |row| row.components.len())
+        .max(changed);
     let main_count = import.progress.last().map_or(0, |row| row.components.len())
         * usize::from(!main.is_empty());
     let latest = latest_row(selected, id, lane_count + main_count)?;
