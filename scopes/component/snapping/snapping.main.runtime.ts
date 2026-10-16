@@ -1408,7 +1408,11 @@ another option, in case this dependency is not in main yet is to remove all refe
     const updatedIds = ComponentIdList.fromArray([...currentBitIds, ...dependencies]);
     const componentIdStr = component.id.toString();
     const legacyComponent: ConsumerComponent = component.state._consumer;
-    const deps = [...legacyComponent.dependencies.get(), ...legacyComponent.devDependencies.get()];
+    const deps = [
+      ...legacyComponent.dependencies.get(),
+      ...legacyComponent.devDependencies.get(),
+      ...legacyComponent.peerDependencies.get(),
+    ];
     const dependenciesList = this.dependencyResolver.getDependencies(component);
     deps.forEach((dep) => {
       const updatedBitId = updatedIds.searchWithoutVersion(dep.id);

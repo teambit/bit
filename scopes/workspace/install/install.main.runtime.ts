@@ -58,6 +58,7 @@ import {
   DependencyResolverAspect,
   ComponentDependency,
   ensureHoistedDependencyResolution,
+  isPlusVersion,
   resolvePlusVersion,
 } from '@teambit/dependency-resolver';
 import type { WorkspaceConfigFilesMain } from '@teambit/workspace-config-files';
@@ -1314,7 +1315,8 @@ export class InstallMain {
             const depEntry = deps.find(({ name }) => name === pkg.name);
             if (depEntry) {
               depEntry.version = pkg.latestRange;
-              if (field === 'peers' && depEntry.supportedRange) {
+              // a plus supportedRange follows the version, so it doesn't need to be widened.
+              if (field === 'peers' && depEntry.supportedRange && !isPlusVersion(depEntry.supportedRange)) {
                 if (!semver.intersects(pkg.latestRange, depEntry.supportedRange)) {
                   depEntry.supportedRange = `${depEntry.supportedRange} || ${pkg.latestRange}`;
                 }

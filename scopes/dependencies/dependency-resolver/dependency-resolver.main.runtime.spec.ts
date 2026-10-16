@@ -616,3 +616,40 @@ describe('DepenendencyResolverMain.getComponentEnvPolicyFromEnv()', () => {
     }
   });
 });
+
+describe('DepenendencyResolverMain.getEnvJsoncPolicyPkgs()', () => {
+  it('should not return env.jsonc entries with a plus version, as they follow the workspace version', () => {
+    const depResolver = new DependencyResolverMain(
+      {} as any,
+      {} as any,
+      {} as any,
+      { isEnv: () => true } as any,
+      logger as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any
+    );
+    const envJsonc = {
+      policy: {
+        peers: [
+          { name: 'plus-pkg', version: '+', supportedRange: '+^' },
+          { name: 'plus-caret-pkg', version: '+^', supportedRange: '+^' },
+          { name: 'fixed-pkg', version: '1.0.0', supportedRange: '^1.0.0' },
+        ],
+        runtime: [{ name: 'plus-runtime-pkg', version: '+~' }],
+      },
+    };
+    const component = {
+      id: ComponentID.fromString('scope/my-env'),
+      filesystem: { files: [{ relative: 'env.jsonc', contents: Buffer.from(JSON.stringify(envJsonc)) }] },
+    };
+    const pkgs = depResolver.getEnvJsoncPolicyPkgs([component as any]);
+    expect(pkgs.map((pkg) => pkg.name)).to.deep.equal(['fixed-pkg']);
+  });
+});

@@ -1720,6 +1720,8 @@ as an alternative, you can use "+" to keep the same version installed in the wor
       for (const { field, targetField } of policies) {
         const deps: EnvJsoncPolicyEntry[] = envJsonc.policy?.[field] || [];
         for (const dep of deps) {
+          // a plus version follows the version resolved in the workspace, so there is nothing to update.
+          if (isPlusVersion(dep.version)) continue;
           pkgs.push({
             name: dep.name,
             currentRange: dep.version,

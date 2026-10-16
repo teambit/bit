@@ -720,7 +720,7 @@ export class ApplyOverrides {
       // a package has no separate version and range, so a "+" placeholder is resolved here.
       // a component dep keeps it in the versionRange, and it's resolved when generating the package.json
       this.allPackagesDependencies[key][pkgName] = isPlusVersion(pkgVal)
-        ? resolvePlusVersion(pkgVal, this.resolveEnvPeerDepVersion(pkgName))
+        ? resolvePlusVersion(pkgVal, this.resolveEnvPeerDepVersion(pkgName, true))
         : pkgVal;
     }
 
@@ -777,14 +777,20 @@ export class ApplyOverrides {
    * strategy should be: .bitmap, workspace.jsonc, then model.
    * it's not in .bitmap, otherwise, it was linked and `_resolvePackageData` would have found it.
    * so either, it's in the workspace.jsonc or in the model.
+   * @param preferWorkspacePolicy check the workspace.jsonc before what's installed. needed for a package that the
+   * component gets with a plus version. what's installed for the component was installed according to the version it
+   * had before, so it doesn't follow an upgrade in the workspace.jsonc (e.g. by "bit update").
    */
-  private resolveEnvPeerDepVersion(pkgName: string): string {
+  private resolveEnvPeerDepVersion(pkgName: string, preferWorkspacePolicy = false): string {
+    const wsPolicy = this.depsResolver.getWorkspacePolicyManifest();
+    const wsVersion = wsPolicy?.dependencies?.[pkgName] || wsPolicy?.peerDependencies?.[pkgName];
+    if (preferWorkspacePolicy && wsVersion) {
+      return wsVersion;
+    }
     const resolved = this._resolvePackageData(pkgName);
     if (resolved && resolved.concreteVersion) {
       return resolved.concreteVersion;
     }
-    const wsPolicy = this.depsResolver.getWorkspacePolicyManifest();
-    const wsVersion = wsPolicy?.dependencies?.[pkgName] || wsPolicy?.peerDependencies?.[pkgName];
     if (wsVersion) {
       return wsVersion;
     }
