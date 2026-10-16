@@ -282,6 +282,30 @@ pub(super) fn prepare_status_refresh(
     prepare_into(engine, root, &options, ids)
 }
 
+pub(super) fn prepare_diff_refresh(
+    engine: &mut Engine,
+    root: &Path,
+    ids: &[String],
+) -> io::Result<Value> {
+    let options = options::Options {
+        operation: "diff",
+        ids: Vec::new(),
+        objects_only: true,
+        all_history: false,
+        write: options::WriteOptions {
+            skip_dependency_installation: false,
+            override_existing: false,
+            path: None,
+            merge_strategy: None,
+            dependencies: options::DependencyOptions::default(),
+        },
+        lanes: false,
+        skip_write_config_files: false,
+        selection: options::SelectionOptions::default(),
+    };
+    prepare_into(engine, root, &options, ids)
+}
+
 pub(super) fn prepare_status_forked_refresh(
     engine: &mut Engine,
     root: &Path,

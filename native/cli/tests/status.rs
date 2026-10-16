@@ -75,7 +75,7 @@ fn declined(output: &Output, reason: &str) {
 fn other_flags_decline() {
     let dir = workspace();
     let root = dir.path().join("ws");
-    for args in [&["s", "--json", "--strict"][..], &["status", "--bogus"], &["status", "-c"]] {
+    for args in [&["status", "--bogus"][..], &["status", "--unsupported"]] {
         let output = bit(&dir, &root, args, &[]);
         assert_eq!(stdout(&output), serde_json::to_string(args).unwrap());
         declined(&output, "flags outside the native `status` grammar");
@@ -91,16 +91,16 @@ fn outside_a_workspace_declines() {
 }
 
 #[test]
-fn locales_with_tailored_collation_decline() {
+fn tailored_locales_reach_the_runtime_facts_adapter() {
     let dir = workspace();
     let root = dir.path().join("ws");
     let output = bit(&dir, &root, &["status", "-j"], &[("LC_ALL", "da_DK.UTF-8")]);
     assert_eq!(stdout(&output), r#"["status","-j"]"#);
-    declined(&output, "locale");
+    declined(&output, "needs the Node.js CLI's own Node");
 }
 
 #[test]
-fn configured_extensions_decline() {
+fn bootstrap_errors_do_not_retry_custom_aspects_on_the_node_cli() {
     let dir = workspace();
     let root = dir.path().join("ws");
     write(
@@ -108,8 +108,11 @@ fn configured_extensions_decline() {
         r#"{ "teambit.workspace/workspace": { "defaultScope": "my.scope" }, "my.org/aspect": {} }"#,
     );
     let output = bit(&dir, &root, &["status", "--json"], &[]);
-    assert_eq!(stdout(&output), r#"["status","--json"]"#);
-    declined(&output, "statusContext");
+    assert!(!output.status.success());
+    assert!(stdout(&output).is_empty());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("does not belong to an @teambit/bit package"), "{stderr}");
+    assert!(!stderr.contains("delegating"), "{stderr}");
 }
 
 /// Without the declines above, the fixture reaches fresh detection, which
@@ -119,7 +122,12 @@ fn configured_extensions_decline() {
 fn fresh_detection_needs_the_node_cli_package() {
     let dir = workspace();
     let root = dir.path().join("ws");
-    for args in [&["status", "--json"][..], &["status"], &["s", "-w", "--strict"]] {
+    for args in [
+        &["status", "--json"][..],
+        &["status"],
+        &["s", "-w", "--strict"],
+        &["status", "--json", "-c", "--strict"],
+    ] {
         let output = bit(&dir, &root, args, &[]);
         assert_eq!(stdout(&output), serde_json::to_string(args).unwrap());
         declined(&output, "needs the Node.js CLI's own Node");

@@ -132,7 +132,7 @@ fn validate_flags(value: &Value) -> io::Result<()> {
             .is_some_and(|next| !next.is_object())
         || value
             .get("config")
-            .is_some_and(|config| !removal_config(config))
+            .is_some_and(|config| !component_config(config))
     {
         return Err(invalid("status bitmap state"));
     }
@@ -160,16 +160,67 @@ pub(in crate::workspace::engine) fn inactive_targets(
         })
         .collect())
 }
-fn removal_config(config: &Value) -> bool {
-    let Some(aspects) = config.as_object() else { return false };
-    if aspects.is_empty() {
+fn component_config(config: &Value) -> bool {
+    config
+        .as_object()
+        .is_some_and(|aspects| aspects.iter().all(|(name, value)| aspect_config(name, value)))
+}
+
+fn aspect_config(name: &str, value: &Value) -> bool {
+    let Some(fields) = value.as_object() else { return value == "-" };
+    match name {
+        "teambit.dependencies/dependency-resolver" => true,
+        "teambit.component/deprecation" => fields
+            .iter()
+            .all(|(key, value)| match key.as_str() {
+                "deprecate" => value.is_boolean(),
+                "range" => value.is_string() || value.is_null(),
+                "newId" => replacement_id(value),
+                _ => false,
+            }),
+        "teambit.component/remove" => fields.len() == 1 && value["removed"].is_boolean(),
+        "teambit.envs/envs" => fields.len() == 1 && value["env"].is_string(),
+        "teambit.component/dev-files" => fields
+            .keys()
+            .all(|key| key == "devFilePatterns"),
+        "teambit.component/issues" => {
+            fields
+                .keys()
+                .all(|key| key == "ignoreIssues")
+                && value["ignoreIssues"]
+                    .as_array()
+                    .is_some_and(|names| names.iter().all(Value::is_string))
+        }
+        "teambit.component/internalize" => {
+            fields
+                .keys()
+                .all(|key| key == "internal")
+                && value["internal"].is_boolean()
+        }
+        "teambit.pkg/pkg" => fields
+            .keys()
+            .all(|key| key == "packageJson"),
+        _ => true,
+    }
+}
+fn replacement_id(value: &Value) -> bool {
+    if value.is_null() || value == "" {
         return true;
     }
-    aspects.len() == 1
-        && aspects["teambit.component/remove"]
-            .as_object()
-            .is_some_and(|removal| removal.len() == 1 && removal["removed"].is_boolean())
+    value
+        .as_object()
+        .is_some_and(|id| {
+            id.get("name")
+                .and_then(Value::as_str)
+                .is_some_and(|name| !name.is_empty())
+                && id
+                    .iter()
+                    .all(|(key, value)| {
+                        matches!(key.as_str(), "scope" | "name" | "version") && value.is_string()
+                    })
+        })
 }
+
 pub(super) fn identifier(value: &str, slash: bool) -> io::Result<()> {
     if value.is_empty()
         || value.len() > 1024
@@ -267,6 +318,7 @@ pub(in crate::workspace::engine) fn context_bitmap_targets(
             "scoped":entry["scope"].as_str().is_some_and(|scope| !scope.is_empty()),
             "localOnly":entry["localOnly"] == true,
             "softTagged":entry.get("nextVersion").is_some_and(|value| !value.is_null()),
+            "componentConfig":entry.get("config").cloned().unwrap_or(Value::Null),
             "locallyRemoved":entry["config"]["teambit.component/remove"]["removed"] == true})
         })
         .collect())

@@ -101,6 +101,13 @@ fn valid_operation(input: &Prepare) -> bool {
         "laneImport" => {
             input.options.lanes && input.options.objects_only && !input.options.components
         }
+        "diff" => {
+            input.options.objects_only
+                && !input.options.components
+                && !input.options.lanes
+                && !input.options.all_history
+                && !input.ids.is_empty()
+        }
         "status" => {
             input.options.objects_only
                 && !input.options.components

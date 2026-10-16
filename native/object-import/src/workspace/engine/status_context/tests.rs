@@ -71,10 +71,10 @@ fn current_component_policy_is_reread_without_harmony() {
 }
 
 #[test]
-fn lifecycle_and_custom_provider_require_canonical_route() {
+fn temporary_output_is_not_source_and_invalid_component_configuration_declines() {
     let fixture = Fixture::new();
     fs::create_dir(fixture.0.join(".bitTmp")).unwrap();
-    assert!(fixture.context().is_err());
+    assert!(fixture.context().is_ok());
     fs::remove_dir(fixture.0.join(".bitTmp")).unwrap();
     fs::write(
         fixture.0.join("alpha/component.json"),
@@ -85,7 +85,7 @@ fn lifecycle_and_custom_provider_require_canonical_route() {
     fs::remove_file(fixture.0.join("alpha/component.json")).unwrap();
     assert!(fixture.context().is_ok());
     fs::write(fixture.0.join("merge-conflict"), b"conflict").unwrap();
-    assert!(fixture.context().is_err());
+    assert!(fixture.context().is_ok());
 }
 
 #[test]
@@ -119,4 +119,17 @@ fn lane_header_sets_current_lane_without_becoming_component_target() {
         1,
     );
     assert_eq!(value["targets"][0]["identity"], "test.scope/alpha");
+}
+
+#[test]
+fn control_proofs_cover_changed_and_new_component_configuration() {
+    for file in ["workspace.jsonc", ".bitmap", "alpha/component.json"] {
+        let fixture = Fixture::new();
+        let context = fixture.context().unwrap();
+        let proofs: Vec<super::proof::Proof> =
+            serde_json::from_value(context["controlReadSet"].clone()).unwrap();
+        super::proof::verify(&proofs).unwrap();
+        fs::write(fixture.0.join(file), b"{}").unwrap();
+        assert!(super::proof::verify(&proofs).is_err(), "{file}");
+    }
 }

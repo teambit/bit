@@ -40,7 +40,7 @@ pub(in crate::workspace::engine) fn read(
 ) -> io::Result<(usize, Value)> {
     super::super::path(&request.root)?;
     let items = index::read(&request.root)?;
-    let directory = request.root.join(".bit/objects");
+    let directory = crate::scope_path(&request.root).join("objects");
     let reader = Reader {
         directory: &directory,
         overlay: None,
@@ -96,7 +96,10 @@ pub(in crate::workspace::engine) fn lanes(request: &Lanes) -> io::Result<(usize,
     };
     let directory = remote
         .as_ref()
-        .map_or_else(|| request.root.join(".bit/objects"), |path| path.join("objects"));
+        .map_or_else(
+            || crate::scope_path(&request.root).join("objects"),
+            |path| path.join("objects"),
+        );
     let reader = Reader {
         directory: &directory,
         overlay: None,
@@ -146,7 +149,7 @@ pub(super) fn configured_remote(
     if scope.is_empty() || scope.contains('/') || scope == "." || scope == ".." {
         return Err(invalid("list remote scope"));
     }
-    let local = read_json_file(&root.join(".bit/scope.json"))?;
+    let local = read_json_file(&crate::scope_path(root).join("scope.json"))?;
     let host = local["remotes"][scope]
         .as_str()
         .map(str::to_owned)
@@ -225,7 +228,7 @@ fn head_contains(reader: &Reader<'_>, main_head: &str, lane_head: &str) -> io::R
 
 /// `.bit/index.json`, empty when the scope has none.
 fn read_index(root: &Path) -> io::Result<Value> {
-    let file = match File::open(root.join(".bit/index.json")) {
+    let file = match File::open(crate::scope_path(root).join("index.json")) {
         Ok(file) => file,
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(json!({})),
         Err(error) => return Err(error),

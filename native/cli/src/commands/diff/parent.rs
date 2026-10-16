@@ -72,8 +72,9 @@ fn one_parent(
     version: &str,
     chalk: Chalk,
 ) -> io::Result<Value> {
+    let token = super::import_token(capture);
     let chain: Value = engine.request(&json!({
-        "kind":"versionParentChain","root":root,"identity":identity,"targetVersion":version,
+        "kind":"versionParentChain","root":root,"identity":identity,"targetVersion":version,"importToken":token,
     }))?;
     for parent in array(chain.get("parents"), "parent chain")? {
         if parent["hidden"] == true {
@@ -83,14 +84,14 @@ fn one_parent(
             .as_str()
             .or_else(|| parent["reference"].as_str())
             .ok_or_else(|| decline("parent diff reference"))?;
-        let row = compare(engine, root, identity, label, version, false)?;
+        let row = compare(engine, root, identity, label, version, false, token)?;
         let rendered = one(context, capture, &row, chalk, Some(label), Some(version))?;
         if parent["tag"].is_string() || parent["sameFiles"] == false || rendered["hasDiff"] == true
         {
             return Ok(rendered);
         }
     }
-    let row = compare(engine, root, identity, "no parent", version, true)?;
+    let row = compare(engine, root, identity, "no parent", version, true, token)?;
     one(context, capture, &row, chalk, Some("no parent"), Some(version))
 }
 
@@ -101,10 +102,11 @@ fn compare(
     from: &str,
     to: &str,
     no_parent: bool,
+    token: Option<&Value>,
 ) -> io::Result<Value> {
     engine.request(&json!({
         "kind":"versionDiff","root":root,"identity":identity,
-        "fromVersion":from,"toVersion":to,"noParent":no_parent,
-        "gitExecutable":"git","color":true,
+        "fromVersion":from,"toVersion":to,"noParent":no_parent,"importToken":token,
+        "gitExecutable":super::git::executable(root)?,"color":true,
     }))
 }

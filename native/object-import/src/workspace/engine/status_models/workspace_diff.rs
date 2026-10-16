@@ -11,6 +11,8 @@ use std::{collections::HashMap, io, path::PathBuf};
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Request {
+    #[serde(default)]
+    pub(in crate::workspace::engine) import_token: Option<String>,
     root: PathBuf,
     targets: Vec<comparison::Target>,
     git_executable: String,
@@ -23,8 +25,16 @@ pub(in crate::workspace::engine) fn read(
     request: &Request,
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
+    read_overlay(request, pool, None)
+}
+
+pub(in crate::workspace::engine) fn read_overlay(
+    request: &Request,
+    pool: &rayon::ThreadPool,
+    overlay: Option<&crate::command_import::Overlay>,
+) -> io::Result<(usize, Value)> {
     let input = model_request(request);
-    let snapshot = super::load(&input, pool, false)?;
+    let snapshot = super::load_overlay(&input, pool, false, overlay)?;
     let captured = capture::all(request, pool)?;
     let budgets = source_budgets(&captured)?;
     let models = index_models(&snapshot.models);
@@ -35,7 +45,7 @@ pub(in crate::workspace::engine) fn read(
             .zip(captured.into_par_iter())
             .map(|(target, sources)| {
                 let model = selected(target, &models, &versions)?;
-                one(request, target, sources, model, &budgets)
+                one(request, target, sources, model, &budgets, overlay)
             })
             .collect::<io::Result<Vec<_>>>()
     })?;
@@ -130,6 +140,7 @@ fn one(
     sources: Vec<capture::File>,
     model: Option<&Value>,
     budgets: &Budgets,
+    overlay: Option<&crate::command_import::Overlay>,
 ) -> io::Result<Value> {
     let metadata = Value::Array(
         sources
@@ -146,7 +157,7 @@ fn one(
     let files = if request.modified_only && modified == false {
         Vec::new()
     } else {
-        files::read(request, sources, model, budgets)?
+        files::read(request, sources, model, budgets, overlay)?
     };
     Ok(
         json!({"identity":target.identity,"modified":modified,"model":model,"current":current,"files":files}),

@@ -12,10 +12,11 @@ pub(super) fn read(
     current: Vec<File>,
     model: Option<&Value>,
     budgets: &Budgets,
+    overlay: Option<&crate::command_import::Overlay>,
 ) -> io::Result<Vec<Value>> {
     let (order, mut current) = current_sources(current)?;
     let models = model_files(model)?;
-    let bodies = model_sources(request, models, (&budgets.raw, &budgets.packed))?;
+    let bodies = model_sources(request, models, (&budgets.raw, &budgets.packed), overlay)?;
     let mut files = Vec::new();
     for (file, body) in models.iter().zip(bodies) {
         let path = file["relativePath"].as_str().expect("validated model path");
@@ -69,15 +70,21 @@ fn model_sources(
     request: &Request,
     files: &[Value],
     budgets: (&Budget, &Budget),
+    overlay: Option<&crate::command_import::Overlay>,
 ) -> io::Result<Vec<Vec<u8>>> {
     files
         .par_iter()
         .map(|file| {
             let reference =
                 file["file"].as_str().ok_or_else(|| invalid("workspace diff source reference"))?;
+            if let Some(source) = overlay.and_then(|overlay| overlay.source(reference)) {
+                budgets.0.reserve(source.len())?;
+                overlay.expect("source belongs to overlay").trace_source(reference)?;
+                return Ok(source.to_vec());
+            }
             let reference = crate::merge_history::hash(reference)?;
             let source = repository::read_source_shared(
-                &request.root.join(".bit/objects"),
+                &crate::scope_path(&request.root).join("objects"),
                 reference,
                 budgets.0,
                 budgets.1,

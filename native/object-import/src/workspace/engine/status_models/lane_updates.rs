@@ -39,7 +39,7 @@ pub(in crate::workspace::engine) fn read(
     if request.targets.len() > 4096 || request.during_merge.len() > 4096 {
         return Err(invalid("status lane updates target limit"));
     }
-    let directory = request.root.join(".bit/objects");
+    let directory = crate::scope_path(&request.root).join("objects");
     let reader = Reader {
         directory: &directory,
         overlay: Some(overlay),

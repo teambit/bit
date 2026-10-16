@@ -1,6 +1,8 @@
 //! Retained public inbound transfer. Prepare performs remote I/O and validates
 //! the complete import without touching the user's repository; Apply publishes.
 
+pub(in crate::workspace::engine) mod autosync;
+
 use super::{
     super::{client_status::config, invalid},
     State,
@@ -151,7 +153,7 @@ pub(in crate::workspace::engine) fn prepare(
     let workspace = prepare_workspace(input, &targets, &import)?;
     state.sequence = state.sequence.wrapping_add(1);
     let token = format!("inbound-{}", state.sequence);
-    let mut receipt = if input.operation == "status" {
+    let mut receipt = if matches!(input.operation.as_str(), "status" | "diff") {
         json!({"token":token,"importedIds":[],"progress":[],"refreshCount":import.main_refresh.count,"refreshObjects":import.main_refresh.objects})
     } else {
         let prefetched = if input.options.dependencies.dependencies_depth.is_some() {
@@ -228,6 +230,15 @@ fn prepare_import(
     targets: &[Target],
     virtual_remotes: &[command_import::VirtualRemote],
 ) -> io::Result<command_import::PreparedImport> {
+    if input.operation == "diff" {
+        let mut imported = command_import::prepare_lane_with_virtual(
+            &input.root,
+            &input.global_remotes_file,
+            virtual_remotes,
+        )?;
+        imported.prepare_diff_versions(targets)?;
+        return Ok(imported);
+    }
     if input.operation == "status" {
         command_import::prepare_status_with_virtual(
             &input.root,
@@ -389,4 +400,18 @@ fn imported_identity(
         target.version.clone()
     };
     Ok(format!("{scope}/{}@{version}", target.name))
+}
+
+/// The validated, unpublished object view retained by an inbound command.
+pub(in crate::workspace::engine) fn overlay<'a>(
+    state: &'a State,
+    token: Option<&str>,
+) -> io::Result<Option<&'a command_import::Overlay>> {
+    let Some(token) = token else { return Ok(None) };
+    let retained = state.inbound.as_ref().ok_or_else(|| invalid("diff inbound owner missing"))?;
+    if token != retained.token {
+        return Err(invalid("diff inbound owner token"));
+    }
+    retained.import.validate()?;
+    Ok(Some(&retained.import.overlay))
 }

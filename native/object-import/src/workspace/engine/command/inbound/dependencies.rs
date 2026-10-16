@@ -168,7 +168,7 @@ fn edges(input: &Prepare, imported: &PreparedImport, version: &Value) -> io::Res
         } else {
             let mut compressed = 0;
             crate::checkout::repository::source(
-                &input.root.join(".bit/objects"),
+                &crate::scope_path(&input.root).join("objects"),
                 crate::merge_history::hash(hash)?,
                 32 * 1024 * 1024,
                 &mut compressed,

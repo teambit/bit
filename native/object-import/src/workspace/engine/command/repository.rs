@@ -7,7 +7,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-pub(super) struct Repository {
+pub(in crate::workspace::engine) struct Repository {
     directory: PathBuf,
     imported: Option<command_import::PreparedImport>,
     raw: Budget,
@@ -16,9 +16,12 @@ pub(super) struct Repository {
     proofs: Vec<proof::Proof>,
 }
 impl Repository {
-    pub(super) fn new(root: &Path, imported: Option<command_import::PreparedImport>) -> Self {
+    pub(in crate::workspace::engine) fn new(
+        root: &Path,
+        imported: Option<command_import::PreparedImport>,
+    ) -> Self {
         Self {
-            directory: root.join(".bit/objects"),
+            directory: crate::scope_path(root).join("objects"),
             imported,
             raw: Budget::new(32 * 1024 * 1024),
             packed: Budget::new(32 * 1024 * 1024),
@@ -26,7 +29,11 @@ impl Repository {
             proofs: Vec::new(),
         }
     }
-    pub(super) fn read(&mut self, reference: &str, kind: &str) -> io::Result<Value> {
+    pub(in crate::workspace::engine) fn read(
+        &mut self,
+        reference: &str,
+        kind: &str,
+    ) -> io::Result<Value> {
         let hash = crate::merge_history::hash(reference)?;
         if let Some(imported) = &self.imported
             && let Some(value) = imported.overlay.read(reference, kind)?
@@ -47,6 +54,9 @@ impl Repository {
         proof::verify(&self.proofs[self.proofs.len() - 1..])?;
         self.values.insert(key, value.clone());
         Ok(value)
+    }
+    pub(in crate::workspace::engine) fn read_set(&self) -> &[proof::Proof] {
+        &self.proofs
     }
     pub(super) fn source_batch(&mut self, references: &[String]) -> io::Result<Vec<Vec<u8>>> {
         use rayon::prelude::*;
@@ -83,7 +93,10 @@ impl Repository {
         proof::verify(&self.proofs[start..])?;
         Ok(contents)
     }
-    pub(super) fn source_json(&mut self, reference: &str) -> io::Result<Value> {
+    pub(in crate::workspace::engine) fn source_json(
+        &mut self,
+        reference: &str,
+    ) -> io::Result<Value> {
         crate::merge_history::hash(reference)?;
         if let Some(source) = self.imported
             .as_ref()
@@ -106,7 +119,7 @@ impl Repository {
         }
         Ok(())
     }
-    pub(super) fn validate(&self) -> io::Result<()> {
+    pub(in crate::workspace::engine) fn validate(&self) -> io::Result<()> {
         if let Some(imported) = &self.imported {
             imported.validate()?;
         }

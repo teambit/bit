@@ -90,7 +90,7 @@ fn prepare_dependencies(
     remotes: &Value,
 ) -> io::Result<()> {
     let staged = plan.capture
-        .read(&root.join(".bit/staged-snaps"))?
+        .read(&crate::scope_path(root).join("staged-snaps"))?
         .unwrap_or_default();
     let staged = std::str::from_utf8(&staged).map_err(io::Error::other)?;
     staged.clone_into(&mut plan.cache.staged);
@@ -164,12 +164,12 @@ fn record_main_refresh(
 fn empty(root: &Path, allow_lane: bool) -> io::Result<(PreparedImport, Value)> {
     let mut capture = Capture::default();
     let scope = capture
-        .json(&root.join(".bit/scope.json"))?
+        .json(&crate::scope_path(root).join("scope.json"))?
         .ok_or_else(|| invalid("import local scope"))?;
     remote::settings_for_lane(&scope, allow_lane)?;
     let name = scope["name"].as_str().ok_or_else(|| invalid("import local name"))?;
     let index = capture
-        .json(&root.join(".bit/index.json"))?
+        .json(&crate::scope_path(root).join("index.json"))?
         .unwrap_or_else(|| json!({"components":[],"lanes":[]}));
     let plan = PreparedImport {
         overlay: Overlay::default(),
@@ -178,7 +178,7 @@ fn empty(root: &Path, allow_lane: bool) -> io::Result<(PreparedImport, Value)> {
         main_refresh: super::MainRefresh::default(),
         capture,
         environment: super::Environment {
-            local_directory: root.join(".bit/objects"),
+            local_directory: crate::scope_path(root).join("objects"),
             remote_overrides: HashMap::new(),
             global_remotes: None,
             missing_global_remotes: None,
@@ -232,7 +232,7 @@ fn configure_cached(
     global_remotes_file: &Path,
 ) -> io::Result<()> {
     let scope = plan.capture
-        .json(&root.join(".bit/scope.json"))?
+        .json(&crate::scope_path(root).join("scope.json"))?
         .ok_or_else(|| invalid("import local scope"))?;
     let global = plan.capture.json(global_remotes_file)?;
     if global.is_none() {
@@ -245,7 +245,7 @@ fn configure_cached(
     }
     plan.environment.remotes = remotes;
     let staged = plan.capture
-        .read(&root.join(".bit/staged-snaps"))?
+        .read(&crate::scope_path(root).join("staged-snaps"))?
         .unwrap_or_default();
     plan.cache.staged = String::from_utf8(staged).map_err(io::Error::other)?;
     plan.validate()?;

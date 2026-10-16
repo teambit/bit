@@ -24,7 +24,7 @@ pub fn no_fs_cache(root: &Path) -> bool {
         .any(|name| env::var(name).is_ok_and(|value| mentions(&value)));
     let files = [
         root.join("workspace.jsonc"),
-        root.join(".bit").join("scope.json"),
+        crate::workspace::scope_path(root).join("scope.json"),
         global_config_dir().join("config.json"),
     ];
     from_env

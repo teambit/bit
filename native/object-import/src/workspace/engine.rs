@@ -5,6 +5,8 @@ pub(crate) mod diff;
 pub(crate) mod inventory;
 pub(crate) mod read_dependency_cache;
 
+pub use status_context::configuration::effective as effective_workspace_configuration;
+
 mod command_request;
 mod dependency_graph;
 mod read;
@@ -18,9 +20,11 @@ mod scan;
 mod source_overlay;
 mod status;
 mod status_context;
+mod status_graph;
 mod status_history;
 mod status_models;
 mod status_result;
+mod validation;
 
 use crate::protocol;
 use serde::{Deserialize, Serialize};
@@ -28,8 +32,9 @@ use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{
     io::{self, Read, Write},
-    path::{Path, PathBuf},
+    path::PathBuf,
 };
+use validation::{count, expected_hash, hash, invalid, path};
 
 const MAX_INPUT: usize = 4 * 1024 * 1024;
 const MAX_OUTPUT: usize = 32 * 1024 * 1024;
@@ -66,6 +71,7 @@ enum Request {
     CommandInboundPrepare(command::inbound::Prepare),
     CommandInboundList(command::inbound::List),
     CommandInboundApply(command::inbound::Apply),
+    CommandAutoSyncFinalize(command::inbound::autosync::Request),
     StatusLaneUpdates(status_models::lane_updates::Request),
     CommandOutboundPrepare(command::outbound::Prepare),
     CommandOutboundApply(command::outbound::Apply),
@@ -94,6 +100,7 @@ enum Request {
     CommandFinalize(command::Finalize),
     CommandLaneFinalize(command::LaneFinalize),
     StatusContext(status_context::Request),
+    StatusGraph(status_graph::Request),
     StatusResult(status_result::Request),
     StatusModels(status_models::Request),
     ScopeList(status_models::list::Request),
@@ -300,6 +307,7 @@ fn failure(id: u32) -> Response {
 fn apply(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value)> {
     match request {
         Request::StatusContext(request) => status_context::read(&request, pool),
+        Request::StatusGraph(request) => status_graph::read(&request),
         Request::StatusResult(request) => status_result::read(&request),
         Request::StatusModels(request) => status_models::read(&request, pool),
         Request::ScopeList(request) => status_models::list::read(&request, pool),
@@ -373,37 +381,6 @@ fn dependencies(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize
         | Request::InventoryCancel { .. } => Err(invalid("inventory operation requires an owner")),
         _ => Err(invalid("unsupported dependency operation")),
     }
-}
-fn invalid(message: &str) -> io::Error {
-    io::Error::new(io::ErrorKind::InvalidData, message)
-}
-fn path(path: &Path) -> io::Result<()> {
-    let name = path.to_str().ok_or_else(|| invalid("workspace non-UTF8 path"))?;
-    if !path.is_absolute() || name.len() > 32768 || name.contains('\0') {
-        return Err(invalid("workspace invalid absolute path"));
-    }
-    Ok(())
-}
-fn count(count: usize) -> io::Result<()> {
-    if count > MAX_FILES { Err(invalid("workspace file count limit")) } else { Ok(()) }
-}
-fn hash(bytes: &[u8]) -> String {
-    crate::validate::hexadecimal(&Sha1::digest(bytes))
-}
-fn expected_hash(hash: &str) -> io::Result<[u8; 20]> {
-    if hash.len() != 40
-        || !hash
-            .bytes()
-            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
-    {
-        return Err(invalid("workspace invalid hash"));
-    }
-    let mut output = [0; 20];
-    for (index, byte) in output.iter_mut().enumerate() {
-        *byte = u8::from_str_radix(&hash[index * 2..index * 2 + 2], 16)
-            .map_err(|_| invalid("workspace invalid hash"))?;
-    }
-    Ok(output)
 }
 #[cfg(test)]
 mod tests;

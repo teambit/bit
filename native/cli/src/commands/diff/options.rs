@@ -4,7 +4,14 @@
 pub(super) struct Options {
     pub pattern: Option<String>,
     pub versions: Range,
+    pub output: Output,
+}
+
+#[derive(Default)]
+pub(super) struct Output {
     pub json: bool,
+    pub table: bool,
+    pub verbose: bool,
     pub files_only: bool,
     pub configs_only: bool,
     pub name_only: bool,
@@ -35,13 +42,14 @@ pub(super) fn parse(args: &[&str]) -> Option<Options> {
 }
 
 fn invalid_output(options: &Options) -> bool {
-    options.configs_only && (options.files_only || !options.files.is_empty())
-        || options.name_only && options.stat
+    options.output.configs_only
+        && (options.output.files_only || !options.output.files.is_empty())
+        || options.output.name_only && options.output.stat
 }
 
 fn parse_arg(options: &mut Options, arg: &str, args: &[&str], index: &mut usize) -> Option<()> {
-    if arg == "--file" && options.files.is_empty() {
-        options.files = file_list(args.get(*index)?)?;
+    if arg == "--file" && options.output.files.is_empty() {
+        options.output.files = file_list(args.get(*index)?)?;
         *index += 1;
     } else if arg.starts_with('-') {
         set_boolean(options, arg).then_some(())?;
@@ -69,11 +77,13 @@ fn file_list(value: &str) -> Option<Vec<String>> {
 
 fn set_boolean(options: &mut Options, flag: &str) -> bool {
     let field = match flag {
-        "-j" | "--json" => &mut options.json,
-        "--files-only" => &mut options.files_only,
-        "--configs-only" => &mut options.configs_only,
-        "--name-only" => &mut options.name_only,
-        "--stat" => &mut options.stat,
+        "-j" | "--json" => &mut options.output.json,
+        "--files-only" => &mut options.output.files_only,
+        "--configs-only" => &mut options.output.configs_only,
+        "--name-only" => &mut options.output.name_only,
+        "-v" | "--verbose" => &mut options.output.verbose,
+        "-t" | "--table" => &mut options.output.table,
+        "--stat" => &mut options.output.stat,
         "-p" | "--parent" => &mut options.versions.parent,
         _ => return false,
     };

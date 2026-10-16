@@ -151,7 +151,7 @@ pub(super) fn local_object(root: &Path, hash: &str, kind: &str) -> io::Result<Op
     let identity = crate::merge_history::hash(hash)?;
     let mut total = 0;
     let raw = match crate::checkout::repository::read(
-        &root.join(".bit/objects"),
+        &crate::scope_path(root).join("objects"),
         identity,
         32 * 1024 * 1024,
         &mut total,
@@ -167,7 +167,7 @@ pub(super) fn local_object(root: &Path, hash: &str, kind: &str) -> io::Result<Op
 fn previous_versions(root: &Path, scope: &str, name: &str) -> io::Result<Vec<String>> {
     let hash =
         crate::validate::hexadecimal(&sha1::Sha1::digest(format!("{scope}/{name}").as_bytes()));
-    let directory = root.join(".bit/objects");
+    let directory = crate::scope_path(root).join("objects");
     let mut total = 0;
     let raw = match crate::checkout::repository::read(
         &directory,

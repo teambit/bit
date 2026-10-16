@@ -48,10 +48,8 @@ pub(super) fn prepare(input: Prepare, state: &mut State) -> io::Result<(usize, V
     state.plan = None;
     super::path(&input.root)?;
     super::path(&input.home)?;
-    if input.home.join(".bitrc.jsonc").try_exists()? {
-        return Err(invalid("status global extensions require Harmony"));
-    }
-    let config = config::configuration(&input.root)?;
+    let effective = super::status_context::configuration::effective(&input.root, &input.home)?;
+    let config = config::configuration_value(&input.root, &effective, false)?;
     let targets = config::targets(&input.root, &config)?;
     let patterns = inventory::patterns::own(&input.root)?;
     let mut output = config::options(&config, &patterns);

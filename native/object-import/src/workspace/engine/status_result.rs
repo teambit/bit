@@ -20,6 +20,8 @@ pub(super) struct Request {
     unavailable_on_main: Vec<String>,
     #[serde(default)]
     update_dependents: Vec<String>,
+    #[serde(default)]
+    during_merge: Vec<String>,
 }
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -49,6 +51,7 @@ pub(super) fn read(request: &Request) -> io::Result<(usize, Value)> {
     validate(request)?;
     let mut output = empty(&request.current_lane_id);
     output["unavailableOnMain"] = json!(request.unavailable_on_main);
+    output["componentsDuringMergeState"] = json!(request.during_merge);
     for target in &request.targets {
         current(&mut output, target);
     }

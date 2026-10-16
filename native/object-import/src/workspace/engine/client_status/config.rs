@@ -18,7 +18,7 @@ const PREVIEW: &str = "teambit.preview/preview";
 const ISSUES: &str = "teambit.component/issues";
 
 /// The keys of `IssuesClasses` (`@teambit/component-issues`).
-const ISSUE_CLASSES: [&str; 25] = [
+const ISSUE_CLASSES: [&str; 24] = [
     "MissingPackagesDependenciesOnFs",
     "MissingManuallyConfiguredPackages",
     "UntrackedDependencies",
@@ -43,7 +43,6 @@ const ISSUE_CLASSES: [&str; 25] = [
     "SelfReference",
     "ImportFromDirectory",
     "LoadFailures",
-    "PinnedDependencies",
 ];
 
 pub(in crate::workspace::engine) fn configuration(root: &Path) -> io::Result<Value> {
@@ -72,20 +71,22 @@ pub(in crate::workspace::engine) fn configuration_value(
                     | "teambit.generator/generator"
                     | "teambit.dependencies/dependency-resolver"
                     | "teambit.workspace/workspace-config-files"
+                    | "teambit.workspace/variants"
+                    | "teambit.pkg/pkg"
                     | PREVIEW
                     | ISSUES,
-            )
+            ) && (!key.contains('/') || !config[key].is_object())
         })
     {
         return Err(invalid("status configured extensions require Harmony"));
     }
     let workspace = workspace_settings(config)?;
     extensions(config)?;
-    let scope = document(&root.join(".bit/scope.json"))?;
-    if (!lane && scope["lanes"]["current"] != "main") || scope.get("license").is_some() {
+    let scope = document(&crate::scope_path(root).join("scope.json"))?;
+    if !lane && scope["lanes"]["current"] != "main" {
         return Err(invalid("status non-main scope"));
     }
-    if !fs::symlink_metadata(root.join(".bit/objects"))?.is_dir() {
+    if !fs::symlink_metadata(crate::scope_path(root).join("objects"))?.is_dir() {
         return Err(invalid("status object directory"));
     }
     Ok(workspace)
@@ -103,24 +104,6 @@ fn workspace_settings(config: &Value) -> io::Result<Value> {
             .ok_or_else(|| invalid("status workspace default scope"))?,
         false,
     )?;
-    if workspace
-        .keys()
-        .any(|key| {
-            !matches!(
-                key.as_str(),
-                "name"
-                    | "icon"
-                    | "defaultDirectory"
-                    | "defaultScope"
-                    | "resolveAspectsFromNodeModules"
-                    | "resolveEnvsFromRoots"
-                    | "trackAllFiles"
-                    | "ignoredFiles",
-            )
-        })
-    {
-        return Err(invalid("status unsupported workspace settings"));
-    }
     if workspace
         .get("trackAllFiles")
         .is_some_and(|value| !value.is_boolean())
@@ -144,39 +127,25 @@ fn ignored_files(ignored: Option<&Value>) -> io::Result<()> {
     Ok(())
 }
 fn extensions(config: &Value) -> io::Result<()> {
-    for (name, allowed) in [
-        ("teambit.generator/generator", &["envs"][..]),
-        (
-            "teambit.dependencies/dependency-resolver",
-            &["policy", "allowScripts", "rootComponents", "linkCoreAspects", "savePrefix"][..],
-        ),
-        ("teambit.workspace/workspace-config-files", &["enableWorkspaceConfigWrite"][..]),
-        (PREVIEW, &["disabled"][..]),
-        (ISSUES, &["ignoreIssues"][..]),
-    ] {
-        if let Some(value) = config.get(name) {
-            let fields = value.as_object().ok_or_else(|| invalid("status aspect settings"))?;
-            if fields
-                .keys()
-                .any(|key| !allowed.contains(&key.as_str()))
-            {
-                return Err(invalid("status aspect settings require Harmony"));
-            }
+    for name in
+        ["teambit.generator/generator", "teambit.workspace/workspace-config-files", PREVIEW, ISSUES]
+    {
+        if config
+            .get(name)
+            .is_some_and(|value| !value.is_object())
+        {
+            return Err(invalid("status aspect settings"));
         }
     }
-    // `bit install <package>` writes the default, `true`; linking core aspects
-    // differently is left to Harmony.
-    if config["teambit.dependencies/dependency-resolver"]
-        .get("linkCoreAspects")
-        .is_some_and(|link| link != true)
+    // Resolver installation options do not change read-side dependency policy.
+    // Policy and package resolution are validated by their native readers.
+    if config
+        .get("teambit.dependencies/dependency-resolver")
+        .is_some_and(|resolver| !resolver.is_object())
     {
-        return Err(invalid("status unlinked core aspects require Harmony"));
+        return Err(invalid("status dependency resolver settings"));
     }
-    if let Some(envs) = config["teambit.generator/generator"].get("envs")
-        && !envs.as_array().is_some_and(Vec::is_empty)
-    {
-        return Err(invalid("status configured environments require Harmony"));
-    }
+    configured_environments(config)?;
     // Only previews and builds read the preview settings.
     if config[PREVIEW]
         .get("disabled")
@@ -185,6 +154,17 @@ fn extensions(config: &Value) -> io::Result<()> {
         return Err(invalid("status preview settings require Harmony"));
     }
     ignored_issues(config)?;
+    Ok(())
+}
+
+fn configured_environments(config: &Value) -> io::Result<()> {
+    if let Some(envs) = config["teambit.generator/generator"].get("envs")
+        && !envs
+            .as_array()
+            .is_some_and(|envs| envs.iter().all(Value::is_string))
+    {
+        return Err(invalid("status invalid configured environments"));
+    }
     Ok(())
 }
 

@@ -8,7 +8,7 @@ pub(super) fn files(root: &Path, target: &Target) -> io::Result<Value> {
     if target.version.is_empty() {
         return Ok(json!([]));
     }
-    let directory = root.join(".bit/objects");
+    let directory = crate::scope_path(root).join("objects");
     let hash = Sha1::digest(target.id.as_bytes()).into();
     let mut compressed = 0;
     let object = match repository::read(&directory, hash, 32 * 1024 * 1024, &mut compressed) {

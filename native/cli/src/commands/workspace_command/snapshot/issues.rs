@@ -104,19 +104,11 @@ fn merged(components: &[Component], projected: &[Value]) -> io::Result<Vec<Compo
         {
             return Err(decline("command issue target identity"));
         }
-        let dependencies = array(row.get("dependencies"), "issue target dependencies")?
+        let ignored = components
             .iter()
-            .map(|id| text(Some(id)).map(str::to_string))
-            .collect::<io::Result<_>>()?;
-        let component = Component {
-            identity: identity.to_string(),
-            package_name: text(row.get("packageName"))?.to_string(),
-            dependencies,
-            issues: row
-                .get("issues")
-                .cloned()
-                .unwrap_or(Value::Null),
-        };
+            .find(|component| without_version(&component.identity) == base)
+            .map_or_else(Vec::new, |component| component.ignored.clone());
+        let component = projected_component(row, identity, ignored)?;
         replacements.push((base, component));
     }
     Ok(components
@@ -129,4 +121,21 @@ fn merged(components: &[Component], projected: &[Value]) -> io::Result<Vec<Compo
                 .map_or_else(|| component.clone(), |(_, replacement)| replacement.clone())
         })
         .collect())
+}
+
+fn projected_component(row: &Value, identity: &str, ignored: Vec<String>) -> io::Result<Component> {
+    let dependencies = array(row.get("dependencies"), "issue target dependencies")?
+        .iter()
+        .map(|id| text(Some(id)).map(str::to_string))
+        .collect::<io::Result<_>>()?;
+    Ok(Component {
+        ignored,
+        identity: identity.to_string(),
+        package_name: text(row.get("packageName"))?.to_string(),
+        dependencies,
+        issues: row
+            .get("issues")
+            .cloned()
+            .unwrap_or(Value::Null),
+    })
 }

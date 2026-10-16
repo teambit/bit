@@ -11,22 +11,25 @@ pub(super) struct File {
 
 pub(super) fn all(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Vec<Vec<File>>> {
     let mut paths = Vec::new();
+    let mut bitmaps = HashSet::new();
     let mut identities = HashSet::new();
     for target in &request.targets {
         comparison::capture::validate(target)?;
         if !identities.insert(&target.identity) {
             return Err(invalid("workspace diff duplicate component"));
         }
-        paths.extend(
-            target.files
-                .iter()
-                .map(|file| request.root.join(&target.directory).join(file)),
-        );
+        for file in &target.files {
+            let source = comparison::capture::source_path(&request.root, target, file)?;
+            if target.directory == "." && file == ".bitmap" {
+                bitmaps.insert(source.clone());
+            }
+            paths.push(source);
+        }
     }
-    let bitmap = request.root.join(".bitmap");
-    let captured = read::read_with(&paths, pool, |path, bytes| one(path, bytes, &bitmap))?
-        .into_iter()
-        .collect::<io::Result<Vec<_>>>()?;
+    let captured =
+        read::read_with(&paths, pool, |path, bytes| one(path, bytes, bitmaps.contains(path)))?
+            .into_iter()
+            .collect::<io::Result<Vec<_>>>()?;
     let mut captured = captured.into_iter();
     Ok(request.targets
         .iter()
@@ -44,9 +47,9 @@ pub(super) fn all(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Vec
         .collect())
 }
 
-fn one(path: &Path, bytes: Vec<u8>, bitmap: &Path) -> io::Result<File> {
+fn one(path: &Path, bytes: Vec<u8>, bitmap: bool) -> io::Result<File> {
     let (metadata, contents) = read::canonical(path, bytes);
-    if path == bitmap {
+    if bitmap {
         let normalized = crate::inspection::normalize_bitmap(&contents)?;
         let cost = metadata.raw_bytes.max(normalized.len());
         let (metadata, contents) = read::canonical(path, normalized);

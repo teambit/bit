@@ -5,19 +5,29 @@
 use flate2::read::ZlibDecoder;
 use serde_json::Value;
 use sha1::{Digest, Sha1};
+use sha2::Sha256;
 use std::{
     fs, io,
     io::Read,
     path::{Path, PathBuf},
+    sync::{Arc, Mutex, PoisonError},
 };
 
 const MAX_OBJECT: u64 = 64 * 1024 * 1024;
 
 /// The workspace scope: `.bit`, or `.git/bit` in a git repository.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct Scope {
     path: PathBuf,
+    proofs: Option<Arc<Mutex<Vec<Value>>>>,
 }
+
+impl PartialEq for Scope {
+    fn eq(&self, other: &Self) -> bool {
+        self.path == other.path
+    }
+}
+impl Eq for Scope {}
 
 impl Scope {
     /// The scope of the workspace at `root`, when it has one.
@@ -26,7 +36,28 @@ impl Scope {
         [root.join(".bit"), root.join(".git").join("bit")]
             .into_iter()
             .find(|path| path.join("objects").is_dir() || path.join("scope.json").is_file())
-            .map(|path| Self { path })
+            .map(|path| Self { path, proofs: None })
+    }
+
+    /// Retain content proofs for every scope object read through this handle.
+    #[must_use]
+    pub fn recording(mut self) -> Self {
+        self.proofs = Some(Arc::new(Mutex::new(Vec::new())));
+        self
+    }
+
+    /// Immutable proofs suitable for `dependencyFreshValidate`.
+    #[must_use]
+    pub fn read_set(&self) -> Vec<Value> {
+        self.proofs
+            .as_ref()
+            .map(|proofs| {
+                proofs
+                    .lock()
+                    .unwrap_or_else(PoisonError::into_inner)
+                    .clone()
+            })
+            .unwrap_or_default()
     }
 
     /// The scope directory.
@@ -53,13 +84,16 @@ impl Scope {
             .join("objects")
             .join(&hash[..2])
             .join(&hash[2..]);
-        let compressed = match fs::File::open(&file) {
-            Ok(file) => file,
-            Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
-            Err(error) => return Err(error),
-        };
+        let compressed = compressed(&file)?;
+        if let Some(proofs) = &self.proofs {
+            proofs
+                .lock()
+                .unwrap_or_else(PoisonError::into_inner)
+                .push(proof(&file, compressed.as_deref()));
+        }
+        let Some(compressed) = compressed else { return Ok(None) };
         let mut inflated = Vec::new();
-        ZlibDecoder::new(compressed).take(MAX_OBJECT).read_to_end(&mut inflated)?;
+        ZlibDecoder::new(compressed.as_slice()).take(MAX_OBJECT).read_to_end(&mut inflated)?;
         let split = inflated
             .iter()
             .position(|byte| *byte == 0)
@@ -146,4 +180,32 @@ pub fn hex_sha1(bytes: &[u8]) -> String {
 
 fn invalid(message: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, message)
+}
+
+/// A content proof of a local environment manifest, including its absence.
+pub fn read_proof(path: &Path) -> io::Result<Value> {
+    match fs::read(path) {
+        Ok(bytes) => Ok(proof(path, Some(&bytes))),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(proof(path, None)),
+        Err(error) => Err(error),
+    }
+}
+
+fn proof(path: &Path, bytes: Option<&[u8]>) -> Value {
+    serde_json::json!({"path":path,"hash":bytes.map(|bytes|format!("{:x}",Sha256::digest(bytes)))})
+}
+
+fn compressed(path: &Path) -> io::Result<Option<Vec<u8>>> {
+    let file = match fs::File::open(path) {
+        Ok(file) => file,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
+        Err(error) => return Err(error),
+    };
+    let mut bytes = Vec::new();
+    file.take(MAX_OBJECT + 1)
+        .read_to_end(&mut bytes)?;
+    if bytes.len() as u64 > MAX_OBJECT {
+        return Err(invalid("scope compressed object limit"));
+    }
+    Ok(Some(bytes))
 }

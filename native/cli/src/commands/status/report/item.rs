@@ -2,7 +2,7 @@
 //! symbol, local versions and issues.
 
 use super::{FAILURE, Status, TITLE_ONLY, WARNINGS, WithIssues};
-use crate::commands::workspace_command::format::Formatter;
+use crate::commands::{color::Chalk, workspace_command::format::Formatter};
 use serde_json::Value;
 
 impl Status<'_> {
@@ -118,11 +118,11 @@ impl Status<'_> {
         let output: String = issues
             .iter()
             .map(|issue| {
+                if let Some(output) = issue["__callbackCLI"].as_str() {
+                    return output.to_owned();
+                }
                 let description = issue["description"].as_str().unwrap_or_default();
-                let solution = issue["solution"]
-                    .as_str()
-                    .filter(|solution| !solution.is_empty())
-                    .map_or_else(String::new, |solution| format!(" ({solution})"));
+                let solution = solution(issue);
                 let kind = issue["type"].as_str().unwrap_or_default();
                 let title_only = TITLE_ONLY.contains(&kind);
                 let colon = if title_only { "" } else { ":" };
@@ -131,7 +131,7 @@ impl Status<'_> {
                     return title;
                 }
                 let mut output = title;
-                output.push_str(&chalk.white(issue["dataAsString"].as_str().unwrap_or_default()));
+                output.push_str(&chalk.white(&issue_data(issue, chalk)));
                 output
             })
             .collect();
@@ -142,4 +142,48 @@ impl Status<'_> {
 /// `isHash`: 40 hexadecimal characters.
 fn is_hash(version: &str) -> bool {
     version.len() == 40 && version.bytes().all(|byte| byte.is_ascii_hexdigit())
+}
+
+/// `ExternalEnvWithoutVersion.formatSolution` overrides the static solution.
+fn solution(issue: &Value) -> String {
+    if issue["type"] == "ExternalEnvWithoutVersion" {
+        return format!(
+            r#"(run "bit env set {} {}")"#,
+            issue["data"]["componentId"].as_str().unwrap_or_default(),
+            issue["data"]["envId"].as_str().unwrap_or_default(),
+        );
+    }
+    issue["solution"]
+        .as_str()
+        .filter(|solution| !solution.is_empty())
+        .map_or_else(String::new, |solution| format!(" ({solution})"))
+}
+
+pub(super) fn issue_data(issue: &Value, chalk: Chalk) -> String {
+    if issue["type"] != "UntrackedDependencies" {
+        return issue["dataAsString"]
+            .as_str()
+            .unwrap_or_default()
+            .to_owned();
+    }
+    let Some(data) = issue["data"].as_object() else {
+        return String::new();
+    };
+    data.iter()
+        .map(|(file, row)| {
+            let space = if row["nested"] == true { "            " } else { "          " };
+            let paths = row["untrackedFiles"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .map(|file| {
+                    let path = file["relativePath"].as_str().unwrap_or_default();
+                    if file["existing"] == true { chalk.yellow(path) } else { path.to_owned() }
+                })
+                .collect::<Vec<_>>()
+                .join(", ");
+            format!("{space}{file} -> {paths}")
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
 }

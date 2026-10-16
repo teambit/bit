@@ -1,3 +1,5 @@
+pub(super) mod configuration;
+
 mod metadata;
 
 use super::{client_status::config, dependency_graph::proof, invalid, status_models};
@@ -21,15 +23,13 @@ pub(super) struct Request {
 pub(super) fn read(request: &Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value)> {
     super::path(&request.root)?;
     super::path(&request.home)?;
-    if request.home.join(".bitrc.jsonc").try_exists()?
-        || request.root.join(".bitTmp").try_exists()?
-        || request.root.join("merge-conflict").try_exists()?
-    {
-        return Err(invalid("status context requires canonical lifecycle"));
-    }
-    let proofs = if request.history { controls(request)? } else { Vec::new() };
+    let proofs = controls(request)?;
     let mut output = metadata(request, pool)?;
-    let settings = config::configuration_for_command(&request.root, true)?;
+    let settings = config::configuration_value(
+        &request.root,
+        &configuration::effective(&request.root, &request.home)?,
+        true,
+    )?;
     let inactive = config::inactive_targets(&request.root, &settings)?;
     exclude_inactive(&mut output, &inactive)?;
     let targets = output["targets"].as_array().ok_or_else(|| invalid("status targets"))?;
@@ -103,7 +103,11 @@ fn unavailable_on_main(
 }
 
 pub(super) fn metadata(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Value> {
-    let settings = config::configuration_for_command(&request.root, true)?;
+    let settings = config::configuration_value(
+        &request.root,
+        &configuration::effective(&request.root, &request.home)?,
+        true,
+    )?;
     let targets = config::context_targets(&request.root, &settings)?;
     metadata_with_targets(request, pool, &settings, targets)
 }
@@ -131,6 +135,7 @@ fn metadata_projected(
     recovery: bool,
 ) -> io::Result<Value> {
     let budget = Budget::new(8 * 1024 * 1024);
+    let proofs = component_controls(&request.root, &targets)?;
     let targets = pool.install(|| {
         targets
             .into_par_iter()
@@ -139,14 +144,44 @@ fn metadata_projected(
     })?;
     let mut output = json!({});
     output["options"] = config::options(settings, &super::inventory::patterns::own(&request.root)?);
-    output["workspace"] = config::document(&request.root.join("workspace.jsonc"))?;
-    output["scope"] = metadata::optional(&request.root.join(".bit/scope.json"), &budget)?;
+    output["workspace"] = configuration::effective(&request.root, &request.home)?;
+    output["unmerged"] = unmerged(&request.root)?;
+    output["scope"] =
+        metadata::optional(&crate::scope_path(&request.root).join("scope.json"), &budget)?;
     metadata::scope(&output["scope"])?;
     let bitmap = config::document(&request.root.join(".bitmap"))?;
     output["currentLaneId"] = lane_id(&bitmap, &output["scope"])?;
     output["packageJson"] = metadata::optional(&request.root.join("package.json"), &budget)?;
     output["targets"] = Value::Array(targets);
+    output["controlReadSet"] = serde_json::to_value(&proofs).map_err(io::Error::other)?;
     Ok(output)
+}
+
+fn component_controls(root: &std::path::Path, targets: &[Value]) -> io::Result<Vec<proof::Proof>> {
+    let mut proofs = Vec::new();
+    for target in targets {
+        let directory =
+            target["directory"].as_str().ok_or_else(|| invalid("status control directory"))?;
+        for name in ["component.json", "package.json"] {
+            proof::read(&root.join(directory).join(name), &mut proofs)?;
+        }
+    }
+    Ok(proofs)
+}
+
+fn unmerged(root: &std::path::Path) -> io::Result<Value> {
+    let path = crate::scope_path(root).join("unmerged.json");
+    if !path.try_exists()? {
+        return Ok(json!([]));
+    }
+    let value = config::document(&path)?;
+    if value
+        .as_array()
+        .is_none_or(|rows| rows.len() > 4096)
+    {
+        return Err(invalid("status unmerged entries"));
+    }
+    Ok(value)
 }
 
 fn lane_id(bitmap: &Value, scope: &Value) -> io::Result<Value> {
@@ -200,16 +235,39 @@ fn default_history() -> bool {
 
 fn controls(request: &Request) -> io::Result<Vec<proof::Proof>> {
     let mut proofs = Vec::new();
-    for name in
-        [".bitmap", "workspace.jsonc", ".bit/scope.json", ".bit/index.json", ".bit/unmerged.json"]
-    {
-        proof::read(&request.root.join(name), &mut proofs)?;
+    for name in [
+        ".bitmap",
+        "workspace.jsonc",
+        "package.json",
+        "merge-conflict",
+        ".bit/scope.json",
+        ".bit/index.json",
+        ".bit/unmerged.json",
+    ] {
+        let path = name
+            .strip_prefix(".bit/")
+            .map_or_else(
+                || request.root.join(name),
+                |name| crate::scope_path(&request.root).join(name),
+            );
+        proof::read(&path, &mut proofs)?;
     }
+    proof::read(&request.home.join(".bitrc.jsonc"), &mut proofs)?;
     Ok(proofs)
 }
 fn attach_controls(output: &mut Value, proofs: &[proof::Proof]) -> io::Result<()> {
+    let controls = serde_json::to_value(proofs).map_err(io::Error::other)?;
+    let all =
+        output["controlReadSet"].as_array_mut().ok_or_else(|| invalid("status metadata proofs"))?;
+    all.extend(
+        controls
+            .as_array()
+            .ok_or_else(|| invalid("status control proofs"))?
+            .iter()
+            .cloned(),
+    );
+    let controls = Value::Array(all.clone());
     if let Some(plans) = output["pendingHistory"].as_array_mut() {
-        let controls = serde_json::to_value(proofs).map_err(io::Error::other)?;
         for plan in plans {
             plan["readSet"]
                 .as_array_mut()

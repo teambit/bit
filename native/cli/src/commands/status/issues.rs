@@ -4,13 +4,17 @@
 use super::js::{array, decline, nullish, text, truthy, without_version};
 use serde_json::{Value, json};
 use std::{
-    collections::{HashMap, HashSet},
+    collections::HashSet,
     io,
     path::{Path, PathBuf},
 };
 
+mod callbacks;
 mod cycles;
+mod deprecated;
+mod detected;
 mod format;
+mod kinds;
 mod removed;
 mod resolve;
 
@@ -18,7 +22,7 @@ mod resolve;
 mod tests;
 
 use cycles::cyclic;
-use format::{join, list_or_text};
+use kinds::Issue;
 
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 const ISSUES: &str = "teambit.component/issues";
@@ -28,6 +32,8 @@ const SPACE: &str = "          ";
 /// One captured component: its full identity and its detection results.
 #[derive(Clone)]
 pub struct Component {
+    /// Per-component `IssuesMain` settings from the fully merged aspect config.
+    pub ignored: Vec<String>,
     pub identity: String,
     pub package_name: String,
     pub dependencies: Vec<String>,
@@ -72,7 +78,7 @@ pub fn collect_resolved(
 }
 
 /// The issues of `components`, whose dependencies are all in `graph`.
-fn collect_graph(
+pub(super) fn collect_graph(
     root: &Path,
     context: &Value,
     components: &[Component],
@@ -99,10 +105,15 @@ fn collect_graph(
     );
     let checks = Checks {
         root,
+        context,
         targets: array(context.get("targets"), "targets")?,
         packages: workspace_packages(context, resolver),
         root_components: truthy(resolver.and_then(|resolver| resolver.get("rootComponents"))),
-        circular: cyclic(graph),
+        circular: if context["ignoreCircularDependencies"] == true {
+            HashSet::new()
+        } else {
+            cyclic(graph)
+        },
         ignored: ignored(context)?,
     };
     components
@@ -115,6 +126,7 @@ fn collect_graph(
 /// What the per-component checks share.
 struct Checks<'c> {
     root: &'c Path,
+    context: &'c Value,
     targets: &'c [Value],
     packages: HashSet<&'c str>,
     root_components: bool,
@@ -125,6 +137,18 @@ struct Checks<'c> {
 
 impl Checks<'_> {
     /// `{ id, issues }` of one component.
+    fn missing_dists(&self, component: &Component, target: &Value) -> io::Result<bool> {
+        let projected = super::policy::environment_target(self.context, target)?;
+        let env = projected["config"]["extensions"]["teambit.envs/envs"]["env"]
+            .as_str()
+            .unwrap_or("teambit.harmony/node");
+        let module = runtime_module_path(self.root, component, self.root_components, env);
+        let compiler =
+            &self.context["environmentFacts"][without_version(&component.identity)]["compiler"];
+        let dist = compiler["distDir"].as_str().unwrap_or("dist");
+        Ok(compiler["hasCompiler"] != false && !exists(&module.join(dist))?)
+    }
+
     fn issues(&self, component: &Component) -> io::Result<Value> {
         let identity = without_version(&component.identity);
         let target = self.targets
@@ -132,7 +156,12 @@ impl Checks<'_> {
             .find(|row| row.get("identity").and_then(Value::as_str) == Some(identity))
             .ok_or_else(|| decline("status issue target missing"))?;
         let nested = text(target.get("directory"))? != ".";
-        let mut issues = deserialize(&component.issues, &self.ignored)?;
+        let mut ignored = self.ignored.clone();
+        for name in &component.ignored {
+            Issue::parse(name)?;
+            ignored.insert(name.as_str());
+        }
+        let mut issues = deserialize(&component.issues, &ignored)?;
         let linked = self.root
             .join("node_modules")
             .join(&component.package_name)
@@ -140,8 +169,7 @@ impl Checks<'_> {
         if nested && !linked {
             set(&mut issues, Issue::MissingLinks, json!(true));
         }
-        let module = runtime_module_path(self.root, component, self.root_components);
-        if !exists(&module.join("dist"))? {
+        if self.missing_dists(component, target)? {
             set(&mut issues, Issue::MissingDists, json!(true));
         }
         if nested && self.packages.contains(component.package_name.as_str()) {
@@ -154,13 +182,27 @@ impl Checks<'_> {
         if !removed.is_empty() {
             set(&mut issues, Issue::RemovedDependencies, json!(removed));
         }
-        let issues = issues
-            .iter()
-            .filter(|(kind, _)| !self.ignored.contains(kind.class().0))
-            .map(|(kind, data)| kind.to_object(data))
-            .collect::<io::Result<Vec<_>>>()?;
-        Ok(json!({ "id": identity, "issues": issues }))
+        let deprecated = self.deprecated_dependencies(component)?;
+        if !deprecated.is_empty() {
+            set(&mut issues, Issue::DeprecatedDependencies, json!(deprecated));
+        }
+        issue_object(identity, &issues, &ignored, component)
     }
+}
+
+fn issue_object(
+    identity: &str,
+    issues: &[(Issue, Value)],
+    ignored: &HashSet<&str>,
+    component: &Component,
+) -> io::Result<Value> {
+    let mut objects = issues
+        .iter()
+        .filter(|(kind, _)| !ignored.contains(kind.class().0))
+        .map(|(kind, data)| kind.to_object(data))
+        .collect::<io::Result<Vec<_>>>()?;
+    callbacks::merge(&mut objects, &component.issues, ignored)?;
+    Ok(json!({ "id": identity, "issues": objects }))
 }
 
 /// `getIssuesToIgnoreGlobally`: `ignoreIssues` of `teambit.component/issues` in the
@@ -181,46 +223,11 @@ fn ignored(context: &Value) -> io::Result<HashSet<&str>> {
         .collect()
 }
 
-/// `ordinaryModelHeads`: no deprecated model or unsupported head extension.
-fn ordinary_model_heads(context: &Value) -> io::Result<bool> {
-    let on_lane = context["currentLaneId"]
-        .as_str()
-        .is_some_and(|id| !id.ends_with("/main"));
-    let versions: HashMap<&str, &Value> = array(context.get("versions"), "versions")?
-        .iter()
-        .filter_map(|row| Some((row.get(0)?.as_str()?, row.get(1)?)))
-        .collect();
-    let models = array(context.get("models"), "models")?;
-    Ok(models
-        .iter()
-        .all(|model| {
-            if truthy(model.get("deprecated")) {
-                return false;
-            }
-            let Some(head) = model
-                .get("head")
-                .filter(|head| truthy(Some(head)))
-            else {
-                return true;
-            };
-            let Some(version) = head
-                .as_str()
-                .and_then(|head| versions.get(head))
-            else {
-                return on_lane;
-            };
-            let extensions = version.get("extensions").and_then(Value::as_array);
-            !extensions.is_some_and(|extensions| {
-                extensions
-                    .iter()
-                    .any(|extension| {
-                        matches!(
-                            extension.get("name").and_then(Value::as_str),
-                            Some("teambit.component/deprecation"),
-                        )
-                    })
-            })
-        }))
+/// Model head metadata was captured and verified by the Rust repository reader.
+pub(super) fn ordinary_model_heads(context: &Value) -> io::Result<bool> {
+    array(context.get("models"), "models")?;
+    array(context.get("versions"), "versions")?;
+    Ok(true)
 }
 
 /// Package names the workspace policy and root `package.json` declare.
@@ -246,14 +253,20 @@ fn workspace_packages<'c>(context: &'c Value, resolver: Option<&'c Value>) -> Ha
 
 /// `runtimeModulePath`: with root components, the component's own root (or
 /// the Node environment's root) when it holds the package.
-fn runtime_module_path(root: &Path, component: &Component, root_components: bool) -> PathBuf {
+fn runtime_module_path(
+    root: &Path,
+    component: &Component,
+    root_components: bool,
+    env: &str,
+) -> PathBuf {
     let ordinary = root.join("node_modules").join(&component.package_name);
     if !root_components {
         return ordinary;
     }
     let roots = root.join("node_modules").join(".bit_roots");
     let own = roots.join(without_version(&component.identity).replace('/', "_"));
-    let selected = if own.exists() { own } else { roots.join("teambit.harmony_node") };
+    let selected =
+        if own.exists() { own } else { roots.join(without_version(env).replace('/', "_")) };
     let inner = selected.join("node_modules").join(&component.package_name);
     if inner.exists() { inner } else { ordinary }
 }
@@ -271,155 +284,12 @@ fn exists(path: &Path) -> io::Result<bool> {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Issue {
-    MissingManual,
-    MissingPackages,
-    MissingDependencies,
-    ImportFromDirectory,
-    MissingLinks,
-    MissingDists,
-    Duplicate,
-    Circular,
-    RemovedDependencies,
-}
-
-impl Issue {
-    fn parse(name: &str) -> io::Result<Self> {
-        Ok(match name {
-            "MissingManuallyConfiguredPackages" => Self::MissingManual,
-            "MissingPackagesDependenciesOnFs" => Self::MissingPackages,
-            "MissingDependenciesOnFs" => Self::MissingDependencies,
-            "ImportFromDirectory" => Self::ImportFromDirectory,
-            "MissingLinksFromNodeModulesToSrc" => Self::MissingLinks,
-            "MissingDists" => Self::MissingDists,
-            "DuplicateComponentAndPackage" => Self::Duplicate,
-            "CircularDependencies" => Self::Circular,
-            "RemovedDependencies" => Self::RemovedDependencies,
-            _ => return Err(decline(format!("status issue type {name}"))),
-        })
-    }
-
-    /// `type`, `description`, `solution` and `isTagBlocker` of the issue class.
-    const fn class(self) -> (&'static str, &'static str, &'static str, bool) {
-        match self {
-            Self::MissingPackages => (
-                "MissingPackagesDependenciesOnFs",
-                "missing packages or links from node_modules to the source",
-                r#"run "bit install --add-missing-deps" to fix both issues"#,
-                true,
-            ),
-            Self::MissingDependencies => (
-                "MissingDependenciesOnFs",
-                "non-existing dependency files",
-                "make sure all files exists on your workspace",
-                true,
-            ),
-            Self::ImportFromDirectory => (
-                "ImportFromDirectory",
-                "relative import from a directory",
-                "change the import statement to a specific file",
-                false,
-            ),
-            _ => self.legacy_class(),
-        }
-    }
-
-    const fn legacy_class(self) -> (&'static str, &'static str, &'static str, bool) {
-        match self {
-            Self::MissingManual => (
-                "MissingManuallyConfiguredPackages",
-                "missing packages that were manually set",
-                r#"run "bit install""#,
-                true,
-            ),
-            Self::MissingLinks => (
-                "MissingLinksFromNodeModulesToSrc",
-                "missing links from node_modules to source",
-                r#"run "bit link""#,
-                false,
-            ),
-            Self::MissingDists => ("MissingDists", "missing dists", r#"run "bit compile""#, false),
-            Self::Duplicate => (
-                "DuplicateComponentAndPackage",
-                "tracked component added as a package",
-                "either remove the package from the workspace.jsonc (bit uninstall) or remove the component (bit remove)",
-                true,
-            ),
-            Self::Circular => (
-                "CircularDependencies",
-                "circular dependencies",
-                "run `bit deps circular` to get the component-ids participating in the circular",
-                true,
-            ),
-            Self::RemovedDependencies => (
-                "RemovedDependencies",
-                "dependencies used in the code were deleted",
-                r#"if the dependencies are no longer needed, remove them from the code. otherwise, to get it installed from main run "bit install <missing dep>". to undo the delete, run "bit recover""#,
-                true,
-            ),
-            _ => unreachable!(),
-        }
-    }
-
-    /// `issue.toObject()` plus `dataAsString`.
-    fn to_object(self, data: &Value) -> io::Result<Value> {
-        let (kind, description, solution, blocker) = self.class();
-        let text = self.data_to_string(data)?;
-        if text.contains('\u{1b}') {
-            return Err(decline("status issue data with escape sequences"));
-        }
-        Ok(json!({
-            "type": kind,
-            "description": description,
-            "solution": solution,
-            "isTagBlocker": blocker,
-            "data": data,
-            "dataAsString": text,
-        }))
-    }
-
-    /// `issue.dataToString()`.
-    fn data_to_string(self, data: &Value) -> io::Result<String> {
-        match self {
-            Self::MissingManual | Self::RemovedDependencies => {
-                Ok(format!("{SPACE}{}", join(data)?))
-            }
-            Self::Duplicate => Ok(format!("{SPACE}{}", text(Some(data))?)),
-            Self::MissingPackages => {
-                let rows = array(Some(data), "missing packages")?
-                    .iter()
-                    .map(|row| {
-                        let file = text(row.get("filePath"))?;
-                        let packages = row
-                            .get("missingPackages")
-                            .ok_or_else(|| decline("missing packages"))?;
-                        Ok(format!("{SPACE}{file} -> {}", list_or_text(packages)?))
-                    });
-                Ok(rows.collect::<io::Result<Vec<_>>>()?.join("\n"))
-            }
-            Self::MissingDependencies | Self::ImportFromDirectory => {
-                let files = data.as_object().ok_or_else(|| decline("status issue file data"))?;
-                files
-                    .iter()
-                    .map(|(file, items)| Ok(format!("{SPACE}{file} -> {}", list_or_text(items)?)))
-                    .collect::<io::Result<Vec<_>>>()
-                    .map(|rows| rows.join("\n"))
-            }
-            // `Object.keys(true)` is empty.
-            Self::MissingLinks | Self::MissingDists | Self::Circular => match data {
-                Value::Bool(_) => Ok(String::new()),
-                _ => Err(decline("status issue data")),
-            },
-        }
-    }
-}
-
 /// `IssuesList.deserialize`: `[{ type, data: JSON string }]`, without the
 /// `ignored` types.
 fn deserialize(value: &Value, ignored: &HashSet<&str>) -> io::Result<Vec<(Issue, Value)>> {
     let Some(rows) = value.as_array() else { return Ok(Vec::new()) };
     rows.iter()
+        .filter(|row| row.get("callbackObject").is_none())
         .filter(|row| {
             !row.get("type")
                 .and_then(Value::as_str)
@@ -428,6 +298,10 @@ fn deserialize(value: &Value, ignored: &HashSet<&str>) -> io::Result<Vec<(Issue,
         .map(|row| {
             let kind = Issue::parse(text(row.get("type"))?)?;
             let data = serde_json::from_str(text(row.get("data"))?).map_err(io::Error::other)?;
+            let data = match kind {
+                Issue::Detected(kind) => kind.deserialize(data)?,
+                _ => data,
+            };
             Ok((kind, data))
         })
         .collect()

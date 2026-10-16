@@ -236,10 +236,10 @@ fn plan_new_target(
 fn prepare_history(root: &Path, file_id: Option<&str>) -> io::Result<History> {
     let file_id = file_id.ok_or_else(|| invalid("inbound bitmap history id"))?;
     super::super::bitmap::validate_history_file_id(file_id)?;
-    let backup = root
-        .join(".bit/bitmap-history")
+    let backup = crate::scope_path(root)
+        .join("bitmap-history")
         .join(format!(".bitmap-{file_id}"));
-    let metadata = root.join(".bit/bitmap-history-metadata.txt");
+    let metadata = crate::scope_path(root).join("bitmap-history-metadata.txt");
     safe_destination(root, &backup)?;
     let metadata_before = match fs::read(&metadata) {
         Ok(bytes) => Some(bytes),

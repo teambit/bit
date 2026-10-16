@@ -24,6 +24,7 @@ struct Replay {
 struct Diagnostics {
     missing: Map<String, Value>,
     missing_packages: Map<String, Value>,
+    errors: Map<String, Value>,
 }
 pub(super) fn finish(
     request: &Request,
@@ -117,6 +118,18 @@ impl Replay {
         let value = serde_json::to_value(&row.path_map).map_err(io::Error::other)?;
         self.record(file, value.clone(), true)?;
         let mut cache = json!({"pathMap":value});
+        self.record_diagnostics(row, &mut cache);
+        self.visited.insert(file.clone(), cache.clone());
+        self.added.insert(file.clone(), cache);
+        self.registered.extend(row.registered.iter().cloned());
+        Ok(dependencies)
+    }
+    fn record_diagnostics(&mut self, row: &Row, cache: &mut Value) {
+        let file = &row.path_map.file;
+        if let Some(error) = &row.error {
+            self.diagnostics.errors.insert(file.clone(), error.clone());
+            cache["error"] = error.clone();
+        }
         if !row.missing.is_empty() {
             let missing = json!(row.missing);
             self.diagnostics.missing.insert(file.clone(), missing.clone());
@@ -127,10 +140,6 @@ impl Replay {
             self.diagnostics.missing_packages.insert(file.clone(), missing.clone());
             cache["missingPackages"] = missing;
         }
-        self.visited.insert(file.clone(), cache.clone());
-        self.added.insert(file.clone(), cache);
-        self.registered.extend(row.registered.iter().cloned());
-        Ok(dependencies)
     }
     fn record(&mut self, file: &str, value: Value, fresh: bool) -> io::Result<()> {
         self.receipts.bytes += serde_json::to_vec(&value).map_err(io::Error::other)?.len();
@@ -159,7 +168,7 @@ impl Replay {
             }
         }
         Ok(
-            json!({"tree":tree,"pathMap":self.path_map,"pathMapOrigins":self.receipts.origins,"missing":self.diagnostics.missing,"missingPackages":self.diagnostics.missing_packages,"errors":{},"visited":self.added,"registeredPaths":self.registered,"scannedPaths":self.scanned}),
+            json!({"tree":tree,"pathMap":self.path_map,"pathMapOrigins":self.receipts.origins,"missing":self.diagnostics.missing,"missingPackages":self.diagnostics.missing_packages,"errors":self.diagnostics.errors,"visited":self.added,"registeredPaths":self.registered,"scannedPaths":self.scanned}),
         )
     }
 }

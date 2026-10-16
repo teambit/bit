@@ -232,3 +232,40 @@ fn detector_receipts_exclude_no_check_early_returns() {
         .unwrap();
     assert_eq!(output["scannedPaths"], json!([fixture.0.join("a.js")]));
 }
+
+#[test]
+fn custom_detectors_override_builtin_scanning_with_source_receipts() {
+    use sha1::{Digest, Sha1};
+    let fixture = Fixture::new();
+    fixture.write("widget.vue", "opaque custom format");
+    fixture.write("helper.js", "module.exports = 1;");
+    let file = fixture.0.join("widget.vue");
+    let request: Request = serde_json::from_value(json!({
+        "root":fixture.0,"files":[file],"builtins":[],"detectorExtensions":[".js"],"typescript":true,"includeNpm":true,
+        "custom":{file.to_str().unwrap():{"dependencies":["./helper.js"],"typescript":false,"sourceHash":format!("{:x}",Sha1::digest(b"opaque custom format"))},},
+    })).unwrap();
+    let pool = rayon::ThreadPoolBuilder::new()
+        .num_threads(2)
+        .build()
+        .unwrap();
+    let (_, output) = apply(&request, &pool).unwrap();
+    assert!(
+        output["pathMap"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|row| row["file"] == file.to_string_lossy().as_ref()
+                && row["dependencies"][0]["resolvedDep"]
+                    == fixture.0
+                        .join("helper.js")
+                        .to_string_lossy()
+                        .as_ref()),
+    );
+    fixture.write("widget.vue", "changed after detector callback");
+    assert!(
+        apply(&request, &pool)
+            .unwrap_err()
+            .to_string()
+            .contains("custom detector source changed"),
+    );
+}

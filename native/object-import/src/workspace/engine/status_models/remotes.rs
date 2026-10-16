@@ -33,7 +33,8 @@ fn rows(root: &Path, scope: &str, budget: &Budget) -> io::Result<Vec<Value>> {
         return Err(invalid("status remote scope path"));
     }
     let file = match File::open(
-        root.join(".bit/refs/remotes")
+        crate::scope_path(root)
+            .join("refs/remotes")
             .join(scope)
             .join("main"),
     ) {

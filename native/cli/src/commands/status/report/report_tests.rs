@@ -13,11 +13,13 @@ fn parses_the_report_flags() {
             warnings: true,
             strict: true,
             fail_on_error: true,
-            expand: true
+            expand: true,
+            ignore_circular: false,
         }),
     );
     assert_eq!(parse(&["--lanes"]), Some(Flags { lanes: true, ..Flags::default() }));
-    for args in [&["-c"][..], &["--quick"], &["-w", "--warnings"], &["-j", "-w"]] {
+    assert_eq!(parse(&["-c"]), Some(Flags { ignore_circular: true, ..Flags::default() }));
+    for args in [&["--quick"][..], &["-w", "--warnings"], &["-j", "-w"]] {
         assert_eq!(parse(args), None, "{args:?}");
     }
 }

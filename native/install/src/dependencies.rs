@@ -10,7 +10,7 @@ pub mod cache;
 pub mod glob;
 
 pub use detect::definitely_typed;
-pub use dev_files::DevPatternConfig;
+pub use dev_files::{DevPatternConfig, EnvDevPatterns, dev_files, dev_patterns};
 pub use resolve::package_name as specifier_package_name;
 pub use versions::valid_component_version;
 

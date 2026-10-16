@@ -58,6 +58,7 @@ impl Refreshes {
             main_objects: self.main.as_ref().map_or(0, |(_, _, _, objects)| *objects),
             forked_count: self.forked.as_ref().map_or(0, |(_, _, _, count)| *count),
             forked_id: context["forkedFrom"].as_str().map(str::to_owned),
+            ..Default::default()
         }
     }
 

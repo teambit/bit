@@ -57,6 +57,7 @@ pub(super) struct Flags {
     pub strict: bool,
     pub fail_on_error: bool,
     pub expand: bool,
+    pub ignore_circular: bool,
 }
 
 /// `args` starts after the command name; `None` for other flags.
@@ -64,7 +65,12 @@ pub(super) fn parse(args: &[&str]) -> Option<Flags> {
     let mut flags = Flags::default();
     let mut seen: Vec<&str> = Vec::new();
     for arg in args {
-        let flag = if *arg == "-w" { "--warnings" } else { arg };
+        let flag = match *arg {
+            "-w" => "--warnings",
+            "-l" => "--lanes",
+            "-c" => "--ignore-circular-dependencies",
+            _ => arg,
+        };
         if seen.contains(&flag) {
             return None;
         }
@@ -76,6 +82,7 @@ pub(super) fn parse(args: &[&str]) -> Option<Flags> {
             "--strict" => &mut flags.strict,
             "--fail-on-error" => &mut flags.fail_on_error,
             "--expand" => &mut flags.expand,
+            "--ignore-circular-dependencies" => &mut flags.ignore_circular,
             _ => return None,
         };
         *field = true;
@@ -131,7 +138,7 @@ pub(super) fn report(
     flags: &Flags,
     chalk: Chalk,
 ) -> io::Result<Output> {
-    supported(result, chalk)?;
+    lane_supported(result)?;
     let status = Status::new(result, context, flags, chalk)?;
     let sections = status.sections()?;
     let printed = status.printed_issues();
@@ -156,6 +163,28 @@ pub(super) fn report(
         data = format!("{IMPORT_PENDING}\n{data}");
     }
     Ok(Output { data, code: status.code() })
+}
+
+/// JSON includes the same `dataToString()` colors as the report process.
+pub(super) fn color_issue_data(result: &mut Value, chalk: Chalk) {
+    for component in result["componentsWithIssues"]
+        .as_array_mut()
+        .into_iter()
+        .flatten()
+    {
+        for issue in component["issues"]
+            .as_array_mut()
+            .into_iter()
+            .flatten()
+        {
+            if let Some(object) = issue.as_object_mut() {
+                object.remove("__callbackCLI");
+            }
+            if issue["type"] == "UntrackedDependencies" {
+                issue["dataAsString"] = Value::String(item::issue_data(issue, chalk));
+            }
+        }
+    }
 }
 
 fn render_data(
@@ -184,36 +213,6 @@ fn render_data(
             workspace_issues,
         ))
     }
-}
-
-/// The sections the native report renders.
-fn supported(result: &Value, chalk: Chalk) -> io::Result<()> {
-    lane_supported(result)?;
-    let colored_data = array(result.get("componentsWithIssues"), "issues")?
-        .iter()
-        .flat_map(|row| {
-            row["issues"]
-                .as_array()
-                .into_iter()
-                .flatten()
-        })
-        .any(|issue| issue["type"] == "UntrackedDependencies");
-    let custom_solution = array(result.get("componentsWithIssues"), "issues")?
-        .iter()
-        .flat_map(|row| {
-            row["issues"]
-                .as_array()
-                .into_iter()
-                .flatten()
-        })
-        .any(|issue| issue["type"] == "ExternalEnvWithoutVersion");
-    if custom_solution {
-        return Err(decline("status report issue solution"));
-    }
-    if chalk.enabled() && colored_data {
-        return Err(decline("status report colored issue data"));
-    }
-    Ok(())
 }
 
 fn lane_supported(result: &Value) -> io::Result<()> {

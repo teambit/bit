@@ -49,7 +49,7 @@ impl AspectEntry {
     }
 }
 
-/// Where an aspect list comes from; the order of [`merge`]'s input.
+/// Where an aspect list comes from; the order of the aspect merger's input.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Origin {
     BitmapFile,

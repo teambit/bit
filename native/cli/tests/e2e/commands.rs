@@ -2,6 +2,7 @@
 
 mod delete;
 mod diff;
+mod diff_completion;
 mod export;
 mod import;
 mod import_all;

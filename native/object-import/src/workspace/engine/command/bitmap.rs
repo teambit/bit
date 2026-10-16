@@ -137,6 +137,38 @@ pub(super) fn prepare_bytes(
     let output = render_rows(rows, &bitmap["$schema-version"], header)?;
     Ok(Prepared { root: root.to_owned(), original, output, changed })
 }
+/// Startup reconciliation changes IDs only, preserving the tracked files/config.
+pub(super) fn auto_sync(
+    root: &Path,
+    updates: &[(String, String)],
+) -> io::Result<(Prepared, usize)> {
+    let original = fs::read(root.join(".bitmap"))?;
+    let bitmap = crate::recovery::jsonc::parse(&original)?;
+    let mut entries = rows(&bitmap)?;
+    let mut count = 0;
+    for entry in &mut entries {
+        let current = identity(entry)?;
+        if let Some((_, version)) = updates
+            .iter()
+            .find(|(id, _)| id == &current)
+        {
+            let (scope, _) = current.split_once('/').ok_or_else(|| invalid("auto-sync scope"))?;
+            if entry["version"].as_str() == Some(version) && entry["scope"] == scope {
+                continue;
+            }
+            count += 1;
+            entry
+                .as_object_mut()
+                .ok_or_else(|| invalid("auto-sync bitmap entry"))?
+                .shift_remove("defaultScope");
+            entry["scope"] = Value::String(scope.to_owned());
+            entry["version"] = Value::String(version.clone());
+        }
+    }
+    let output = render_rows(entries, &bitmap["$schema-version"], None)?;
+    Ok((Prepared { root: root.to_owned(), original, output, changed: count > 0 }, count))
+}
+
 /// Promote every selected export row in one bitmap write and one history entry.
 fn validate_updates(original: &[u8], updates: &[Update]) -> io::Result<()> {
     let mut identities = HashSet::new();

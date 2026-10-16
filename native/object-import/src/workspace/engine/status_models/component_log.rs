@@ -40,17 +40,19 @@ pub(in crate::workspace::engine) fn read(
     };
     merge_history::hash(head)?;
     let main_refs = if lane.is_some() {
-        main.map(|head| traverse(&request.root.join(".bit/objects"), head, &tags(&model)?, None))
-            .transpose()?
-            .unwrap_or_default()
-            .into_iter()
-            .filter_map(|row| row["hash"].as_str().map(str::to_owned))
-            .collect::<HashSet<_>>()
+        main.map(|head| {
+            traverse(&crate::scope_path(&request.root).join("objects"), head, &tags(&model)?, None)
+        })
+        .transpose()?
+        .unwrap_or_default()
+        .into_iter()
+        .filter_map(|row| row["hash"].as_str().map(str::to_owned))
+        .collect::<HashSet<_>>()
     } else {
         HashSet::new()
     };
     let output = traverse(
-        &request.root.join(".bit/objects"),
+        &crate::scope_path(&request.root).join("objects"),
         head,
         &tags(&model)?,
         lane.as_ref().map(|_| &main_refs),
@@ -68,7 +70,7 @@ pub(in crate::workspace::engine) fn read(
 
 fn lane_head(request: &Request) -> io::Result<Option<String>> {
     let Some(id) = &request.lane else { return Ok(None) };
-    let directory = request.root.join(".bit/objects");
+    let directory = crate::scope_path(&request.root).join("objects");
     let reader = Reader {
         directory: &directory,
         overlay: None,

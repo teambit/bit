@@ -137,7 +137,7 @@ impl PreparedImport {
         root: &std::path::Path,
         bytes: Option<&[u8]>,
     ) -> io::Result<()> {
-        self.capture.accept_restored(&root.join(".bit/staged-snaps"), bytes)
+        self.capture.accept_restored(&crate::scope_path(root).join("staged-snaps"), bytes)
     }
     pub(crate) fn planned_index(&self) -> &Value {
         &self.writes.index

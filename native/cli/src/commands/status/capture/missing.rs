@@ -9,6 +9,7 @@ pub(super) fn status_removed(target: &Value, captured: &mut Capture) -> io::Resu
         return Ok(false);
     }
     captured.components.push(Component {
+        ignored: Vec::new(),
         identity: full_identity(target)?,
         package_name: String::new(),
         dependencies: Vec::new(),
@@ -108,6 +109,7 @@ fn record_status_invalid(target: &Value, error: Value, captured: &mut Capture) -
     let identity = text(target.get("identity"))?;
     captured.invalid.insert(identity.to_owned(), error);
     captured.components.push(Component {
+        ignored: Vec::new(),
         identity: full_identity(target)?,
         package_name: String::new(),
         dependencies: Vec::new(),

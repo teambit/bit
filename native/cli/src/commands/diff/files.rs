@@ -73,7 +73,7 @@ pub fn diff_texts(left: &str, right: &str) -> io::Result<String> {
         fs::create_dir_all(path.parent().unwrap_or(&dir.0))?;
         fs::write(path, text)?;
     }
-    let output = Command::new("git")
+    let output = Command::new(super::git::executable(&std::env::current_dir()?)?)
         .args(["diff", "--no-index", "--color"])
         .arg(&a)
         .arg(&b)

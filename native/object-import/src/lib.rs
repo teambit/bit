@@ -13,13 +13,18 @@ pub mod reset_main;
 pub mod reset_never_exported;
 pub mod reset_soft;
 
+pub use json_stringify::stringify_json;
 /// Native import merge decisions (`kind: component | version | versionHistory | ...`).
 pub use operation::plan as plan_import_operation;
 /// Bit's JSONC reader (comments and trailing commas), used for `.bitmap`.
 pub use recovery::jsonc::parse as parse_jsonc;
+pub use scope::path as scope_path;
 pub use session::WorkspaceSession;
-pub use workspace::engine::read_dependency_cache::{
-    cache_stale as dependency_cache_stale, read_cache as read_dependency_cache,
+pub use workspace::engine::{
+    effective_workspace_configuration,
+    read_dependency_cache::{
+        cache_stale as dependency_cache_stale, read_cache as read_dependency_cache,
+    },
 };
 
 mod checkout;
@@ -30,6 +35,7 @@ mod history_query;
 mod history_reset;
 mod inspection;
 mod js_json;
+mod json_stringify;
 mod merge_history;
 mod merge_state;
 mod merge_transaction;
@@ -41,6 +47,7 @@ mod read_budget;
 mod read_version;
 mod recovery;
 mod reset_config;
+mod scope;
 mod session;
 mod snapshot;
 mod snapshot_projection;

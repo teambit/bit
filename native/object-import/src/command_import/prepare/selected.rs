@@ -74,6 +74,31 @@ impl PreparedImport {
     pub(crate) fn prepare_versions(&mut self, targets: &[Target]) -> io::Result<()> {
         self.prepare_versions_with_reason(targets, None)
     }
+    pub(crate) fn prepare_diff_versions(&mut self, targets: &[Target]) -> io::Result<()> {
+        self.prepare_versions_with_reason(targets, Some("to show diff"))?;
+        let ids = self.progress
+            .last()
+            .ok_or_else(|| invalid("diff import progress"))?
+            .ids
+            .clone();
+        for scope in targets.iter().filter_map(|target| target.scope.as_deref()) {
+            if self.environment.remote_overrides.contains_key(scope)
+                && ids
+                    .iter()
+                    .any(|id| id.starts_with(&format!("{scope}/")))
+            {
+                let hash = object_hash(scope);
+                self.overlay.objects
+                    .entry(hash.clone())
+                    .or_insert(super::super::publish::object(
+                        &hash,
+                        "ScopeMeta",
+                        json!({"name":scope}),
+                    )?);
+            }
+        }
+        Ok(())
+    }
     pub(crate) fn prepare_merge_gap(&mut self, targets: &[Target]) -> io::Result<()> {
         let reason = self.cache.lane_reason
             .clone()

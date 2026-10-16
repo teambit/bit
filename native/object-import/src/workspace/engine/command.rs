@@ -3,6 +3,7 @@ pub(super) mod input;
 pub(crate) mod outbound;
 pub(super) mod policy;
 pub(super) mod recovery;
+pub(super) mod repository;
 pub(super) mod resolve;
 
 mod apply_command;
@@ -22,7 +23,6 @@ mod merge_planning;
 mod plan_command;
 mod planning;
 mod prepare;
-mod repository;
 mod reset;
 mod reset_config;
 mod resolve_publication;

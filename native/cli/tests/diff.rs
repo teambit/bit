@@ -67,7 +67,6 @@ fn declined(output: &Output, args: &str, reason: &str) {
     assert!(stderr.contains("`diff` declined") && stderr.contains(reason), "{stderr}");
 }
 
-#[cfg(not(windows))]
 #[test]
 fn other_arguments_decline() {
     let dir = workspace();
@@ -77,39 +76,27 @@ fn other_arguments_decline() {
     declined(&output, r#"["diff","alpha","0.0.1","--json"]"#, "needs the Node.js CLI's own Node");
 }
 
-#[cfg(not(windows))]
 #[test]
-fn patterns_outside_the_grammar_decline() {
+fn unresolved_patterns_decline() {
     let dir = workspace();
     let root = dir.path().join("ws");
     let output = bit(&dir, &root, &["diff", "Alpha", "--json"], &[]);
-    declined(&output, r#"["diff","Alpha","--json"]"#, "native grammar");
+    declined(&output, r#"["diff","Alpha","--json"]"#, "exactly one component");
     let output = bit(&dir, &root, &["diff", "missing", "-j"], &[]);
     declined(&output, r#"["diff","missing","-j"]"#, "exactly one component");
 }
 
-#[cfg(not(windows))]
 #[test]
-fn a_configured_git_executable_declines() {
+fn configured_git_reaches_capture_before_the_stub_host_declines() {
     let dir = workspace();
     let root = dir.path().join("ws");
     let output = bit(&dir, &root, &["diff", "--json"], &[("BIT_CONFIG_GIT_PATH", "/opt/git")]);
-    declined(&output, r#"["diff","--json"]"#, "configured git executable");
+    declined(&output, r#"["diff","--json"]"#, "needs the Node.js CLI's own Node");
 }
 
-#[cfg(not(windows))]
 #[test]
 fn outside_a_workspace_declines() {
     let dir = workspace();
     let output = bit(&dir, dir.path(), &["diff", "--json"], &[]);
     declined(&output, r#"["diff","--json"]"#, "not inside a workspace");
-}
-
-#[cfg(windows)]
-#[test]
-fn windows_declines() {
-    let dir = workspace();
-    let root = dir.path().join("ws");
-    let output = bit(&dir, &root, &["diff", "--json"], &[]);
-    declined(&output, r#"["diff","--json"]"#, "Windows directory order");
 }

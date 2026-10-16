@@ -13,5 +13,5 @@ fn context_includes_dependency_heads_once_and_rejects_invalid_heads() {
     .unwrap();
     assert_eq!(references, vec![tracked, dependency]);
     assert!(include_heads(&[json!({"head":"bad"})], &mut Vec::new()).is_err());
-    assert!(include_heads(&[json!({"deprecated":true})], &mut Vec::new()).is_err());
+    assert!(include_heads(&[json!({"deprecated":true})], &mut Vec::new()).is_ok());
 }

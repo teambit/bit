@@ -119,7 +119,8 @@ fn parse_id(id: &str) -> io::Result<(&str, &str)> {
 
 fn local_object(root: &Path, reader: &Reader<'_>, scope: &str, name: &str) -> io::Result<Value> {
     let index: Value = serde_json::from_slice(
-        &Budget::new(4 * 1024 * 1024).read(File::open(root.join(".bit/index.json"))?)?,
+        &Budget::new(4 * 1024 * 1024)
+            .read(File::open(crate::scope_path(root).join("index.json"))?)?,
     )
     .map_err(io::Error::other)?;
     let rows = index["lanes"].as_array().ok_or_else(|| invalid("status lane index"))?;
@@ -165,8 +166,8 @@ fn component_heads(lane: &Value) -> io::Result<HashMap<String, String>> {
 }
 
 fn remote(root: &Path, scope: &str, name: &str) -> io::Result<HashMap<String, String>> {
-    let path = root
-        .join(".bit/refs/remotes")
+    let path = crate::scope_path(root)
+        .join("refs/remotes")
         .join(scope)
         .join(name);
     let file = match File::open(path) {

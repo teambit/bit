@@ -26,6 +26,8 @@ pub(in crate::workspace::engine::command) fn capture(
         added: true,
         hidden: false,
         target: comparison::Target {
+            source_overlays: std::collections::HashMap::new(),
+            source_overlay_root: None,
             identity: identity.into(),
             version: String::new(),
             directory: directory.into(),

@@ -4,9 +4,9 @@ use super::parse;
 fn accepts_workspace_diff_output_modes() {
     let options = parse(&["consumer", "--file", "src/index.js,index.js", "--stat"]).unwrap();
     assert_eq!(options.pattern.as_deref(), Some("consumer"));
-    assert_eq!(options.files, ["src/index.js", "index.js"]);
-    assert!(options.stat);
-    assert!(parse(&["--json", "--name-only"]).unwrap().json);
+    assert_eq!(options.output.files, ["src/index.js", "index.js"]);
+    assert!(options.output.stat);
+    assert!(parse(&["--json", "--name-only"]).unwrap().output.json);
     assert_eq!(parse(&["one", "0.0.1"]).unwrap().versions.from.as_deref(), Some("0.0.1"));
     let to_version = parse(&["one", "0.0.1", "0.0.2"]).unwrap().versions.to;
     assert_eq!(to_version.as_deref(), Some("0.0.2"));

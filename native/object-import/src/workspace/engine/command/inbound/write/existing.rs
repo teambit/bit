@@ -228,7 +228,7 @@ fn old_source(input: &Input<'_>, hash: &str, compressed: &mut usize) -> io::Resu
         return Ok(checkout::eol::auto(source.to_vec()));
     }
     let source = checkout::repository::source(
-        &input.root.join(".bit/objects"),
+        &crate::scope_path(input.root).join("objects"),
         crate::merge_history::hash(hash)?,
         32 * 1024 * 1024,
         compressed,
@@ -283,7 +283,7 @@ fn new_source(input: &Input<'_>, hash: &str) -> io::Result<Vec<u8>> {
     }
     let mut compressed = 0;
     let source = checkout::repository::source(
-        &input.root.join(".bit/objects"),
+        &crate::scope_path(input.root).join("objects"),
         crate::merge_history::hash(hash)?,
         32 * 1024 * 1024,
         &mut compressed,

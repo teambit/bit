@@ -59,7 +59,8 @@ fn connect(
     transport: &Transport,
 ) -> io::Result<(Remotes, Network, GlobalConfig, String)> {
     let scope: Value =
-        serde_json::from_slice(&fs::read(root.join(".bit/scope.json"))?).map_err(io::Error::other)?;
+        serde_json::from_slice(&fs::read(crate::scope_path(root).join("scope.json"))?)
+            .map_err(io::Error::other)?;
     let local = scope["name"].as_str().ok_or_else(|| invalid("inbound local scope"))?;
     let global = global_config(transport)?;
     let resolver = Resolver::configured(
@@ -328,7 +329,16 @@ async fn fetch_groups(
     limit: usize,
 ) -> io::Result<Vec<VirtualRemote>> {
     let (remotes, _) = stream::iter(groups)
-        .map(|(scope, ids)| fetch_one(scope, ids, input.options.all_history, remotes, network))
+        .map(|(scope, ids)| {
+            fetch_one(
+                scope,
+                ids,
+                input.options.all_history,
+                input.operation == "diff",
+                remotes,
+                network,
+            )
+        })
         .buffered(limit)
         .try_fold((Vec::new(), 0usize), |retained, (scope, items)| async move {
             collect(retained, &input.root, scope, items)
@@ -341,12 +351,17 @@ async fn fetch_one(
     scope: String,
     ids: Vec<String>,
     all_history: bool,
+    without_dependencies: bool,
     remotes: &Remotes,
     network: &Network,
 ) -> io::Result<(String, Option<Vec<ObjectItem>>)> {
     let remote = remotes.resolve(&scope, network).await?;
     let Remote::Http(url) = remote else { return Ok((scope, None)) };
-    let mut options = FetchOptions::with_dependencies(None, false);
+    let mut options = if without_dependencies {
+        FetchOptions::without_dependencies(None)
+    } else {
+        FetchOptions::with_dependencies(None, false)
+    };
     options.traversal.collect_parents = all_history;
     let items = network.fetch_bounded(&url, &ids, &options, MAX_INBOUND_BYTES).await?;
     Ok((scope, Some(items)))
@@ -379,7 +394,7 @@ fn collect(
         }
     }
     retained.push(VirtualRemote {
-        path: root.join(".bit/.rust-inbound-virtual").join(&scope),
+        path: crate::scope_path(root).join(".rust-inbound-virtual").join(&scope),
         scope,
         objects: objects.into_iter().collect(),
     });

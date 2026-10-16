@@ -188,8 +188,8 @@ fn append_lane_dependency_progress(
         let Some(version) = import.overlay.read(&target.version, "Version")? else { continue };
         if let Some(graph) = version["flattenedEdgesRef"].as_str() {
             crate::merge_history::hash(graph)?;
-            if !root
-                .join(".bit/objects")
+            if !crate::scope_path(root)
+                .join("objects")
                 .join(&graph[..2])
                 .join(&graph[2..])
                 .try_exists()?

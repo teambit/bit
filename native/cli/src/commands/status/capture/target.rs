@@ -55,10 +55,11 @@ impl Scan<'_> {
         )? {
             return Ok(());
         }
-        let Some(dependencies) = self.dependencies(target, directory, files, policy, captured)?
+        let Some(mut dependencies) = self.dependencies(target, directory, files, policy, captured)?
         else {
             return Ok(());
         };
+        super::super::environments::diagnostics::issues(self.context, target, &mut dependencies)?;
         record(target, directory, files, policy, &dependencies, captured)?;
         bitmap::record_remote(
             self.behavior.missing_status_invalid,

@@ -86,13 +86,17 @@ impl Reader {
         self.packages.insert(directory, package.clone());
         Ok(package)
     }
-    pub(super) fn check_main(&mut self, package: &Package, resolved: &str) -> io::Result<()> {
+    pub(super) fn check_main(
+        &mut self,
+        package: &Package,
+        resolved: &str,
+    ) -> io::Result<Option<String>> {
         let resolved = resolved.replace(std::path::MAIN_SEPARATOR, "/");
         let Some(main) = package.manifest["main"]
             .as_str()
             .filter(|main| !main.is_empty())
         else {
-            return Ok(());
+            return Ok(None);
         };
         if resolved.ends_with(&main.replacen("./", "", 1))
             || resolved
@@ -101,13 +105,13 @@ impl Reader {
                 .unwrap_or(&resolved)
                 .contains("eslintrc")
         {
-            return Ok(());
+            return Ok(None);
         }
         if !matches!(
             Path::new(&resolved).extension().and_then(|ext| ext.to_str()),
             Some("ts" | "tsx" | "js" | "jsx"),
         ) {
-            return Ok(());
+            return Ok(None);
         }
         let dist = package.directory.join("dist");
         let exists = match &self.overlay {
@@ -115,9 +119,15 @@ impl Reader {
             None => proof::probe(&dist, &mut self.proofs)?,
         };
         if exists {
-            return Err(invalid("fresh component non-main import"));
+            return Ok(Some(
+                resolved
+                    .split("node_modules/")
+                    .nth(1)
+                    .unwrap_or(&resolved)
+                    .to_owned(),
+            ));
         }
-        Ok(())
+        Ok(None)
     }
 }
 fn directory(resolved: &str) -> io::Result<PathBuf> {

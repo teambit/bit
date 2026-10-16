@@ -28,7 +28,7 @@ pub(in crate::workspace::engine) fn read(request: &Request) -> io::Result<(usize
     else {
         return Err(invalid("remote lane HTTP request for file scope"));
     };
-    let scope = read_json_file(&request.root.join(".bit/scope.json"))?;
+    let scope = read_json_file(&crate::scope_path(&request.root).join("scope.json"))?;
     let local = scope["name"].as_str().ok_or_else(|| invalid("remote lane local scope"))?;
     let config = request.global_config_dir.join("config.json");
     let global: GlobalConfig = match read_json_file(&config) {

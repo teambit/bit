@@ -38,6 +38,8 @@ pub(in crate::workspace::engine::command) fn from_model(
         added: false,
         hidden: true,
         target: comparison::Target {
+            source_overlays: std::collections::HashMap::new(),
+            source_overlay_root: None,
             identity: identity.into(),
             version: version.into(),
             directory: String::new(),

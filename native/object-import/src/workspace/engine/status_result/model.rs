@@ -32,7 +32,14 @@ pub(super) fn append(output: &mut Value, model: &Value, request: &Request) -> io
         }
     }
     if let Some(target) = target {
-        tracked(output, model, history, target, &request.semver)?;
+        tracked(
+            output,
+            model,
+            history,
+            target,
+            &request.semver,
+            request.during_merge.contains(&identity),
+        )?;
     }
     Ok(())
 }
@@ -45,6 +52,7 @@ fn tracked(
     history: &Value,
     target: &super::Target,
     semver: &Value,
+    during_merge: bool,
 ) -> io::Result<()> {
     let head = history["laneHead"]
         .as_str()
@@ -56,6 +64,9 @@ fn tracked(
             .any(|value| value.as_str() == Some(head))
     {
         push(output, "snappedComponents", json!(target.identity));
+    }
+    if during_merge {
+        return Ok(());
     }
     let distance = &history["merge"];
     if !refs(distance, "sourceOnly")?.is_empty() && !refs(distance, "targetOnly")?.is_empty() {

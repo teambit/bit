@@ -5,6 +5,9 @@ use std::io;
 
 #[derive(Default)]
 pub(super) struct Progress {
+    pub(super) startup_stdout: String,
+    pub(super) load_stdout: String,
+    pub(super) issue_stdout: String,
     pub(super) main_count: usize,
     pub(super) main_objects: usize,
     pub(super) forked_count: usize,
@@ -18,9 +21,16 @@ pub(super) fn render(
     progress: &Progress,
 ) -> io::Result<()> {
     output.status("fetching status");
-    for _ in 0..loads {
+    for index in 0..loads {
         output.status(&format!("loading {loaded} component(s)"));
+        if index == 0 {
+            output.raw(&progress.load_stdout);
+        }
     }
+    if loads == 0 {
+        output.raw(&progress.load_stdout);
+    }
+    output.raw(&progress.issue_stdout);
     if progress.main_count > 0 {
         let reason = "main components of the current lane to check for updates";
         output.status(&format!("importing {} components {reason}", progress.main_count));

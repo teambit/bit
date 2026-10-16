@@ -10,6 +10,8 @@ fn model_only_projection_preserves_resolver_data_and_hydrates_package_names() {
         added: false,
         hidden: true,
         target: Target {
+            source_overlays: std::collections::HashMap::new(),
+            source_overlay_root: None,
             identity: "scope/hidden".into(),
             version: "b".repeat(40),
             directory: String::new(),

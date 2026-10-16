@@ -142,16 +142,16 @@ fn external_rows(receipt: &Value, workspace: &HashSet<&str>) -> Option<HashMap<S
     Some(external)
 }
 
-/// One external vertex: a versioned id outside the workspace, its distinct
+/// One external vertex: a component id outside the workspace, its distinct
 /// dependencies, and a proven absent model.
 fn external_row(row: &Value, workspace: &HashSet<&str>) -> Option<Component> {
-    let identity = row["identity"].as_str().filter(|identity| versioned(identity))?;
+    let identity = row["identity"].as_str().filter(|identity| component_identity(identity))?;
     let dependencies: Vec<String> = row["dependencies"]
         .as_array()?
         .iter()
         .map(|id| {
             id.as_str()
-                .filter(|id| workspace.contains(id) || versioned(id))
+                .filter(|id| workspace.contains(id) || component_identity(id))
                 .map(str::to_string)
         })
         .collect::<Option<_>>()?;
@@ -166,11 +166,16 @@ fn external_row(row: &Value, workspace: &HashSet<&str>) -> Option<Component> {
         return None;
     }
     Some(Component {
+        ignored: Vec::new(),
         identity: identity.to_string(),
         package_name: String::new(),
         dependencies,
         issues: Value::Null,
     })
+}
+
+fn component_identity(value: &str) -> bool {
+    versioned(value) || (!value.contains('@') && versioned(&format!("{value}@latest")))
 }
 
 /// `/^[^@\s]+\/[^@\s]+@[^@\s]+$/`.

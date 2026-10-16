@@ -1,3 +1,5 @@
+mod relative;
+
 use super::{invalid, wire::Complete};
 use serde_json::Value;
 use std::io;
@@ -7,7 +9,10 @@ pub(super) fn detected(request: &Complete) -> io::Result<Value> {
         return Err(invalid("fresh dependency identity receipt"));
     }
     let mut detected = request.capture.detected.clone();
-    if detected["coreAspects"] != serde_json::json!([]) {
+    if !detected["coreAspects"]
+        .as_array()
+        .is_some_and(|ids| ids.len() <= 4096 && ids.iter().all(Value::is_string))
+    {
         return Err(invalid("fresh detection issue boundary"));
     }
     validate_issues(&detected["issues"])?;
@@ -16,26 +21,46 @@ pub(super) fn detected(request: &Complete) -> io::Result<Value> {
 }
 fn validate_issues(value: &Value) -> io::Result<()> {
     let issues = value.as_array().ok_or_else(|| invalid("fresh detection issues"))?;
-    if issues.len() > 3 {
+    if issues.len() > 8 {
         return Err(invalid("fresh detection issue count"));
     }
     for issue in issues {
-        if !matches!(
-            issue["type"].as_str(),
-            Some(
-                "MissingDependenciesOnFs"
-                    | "ImportFromDirectory"
-                    | "MissingPackagesDependenciesOnFs",
-            ),
-        ) {
-            return Err(invalid("fresh detection issue boundary"));
+        validate_issue(issue)?;
+    }
+    Ok(())
+}
+fn validate_issue(issue: &Value) -> io::Result<()> {
+    if !matches!(
+        issue["type"].as_str(),
+        Some(
+            "MissingDependenciesOnFs"
+                | "ImportFromDirectory"
+                | "MissingPackagesDependenciesOnFs"
+                | "ParseErrors"
+                | "UntrackedDependencies"
+                | "RelativeComponentsAuthored"
+                | "SelfReference"
+                | "ImportNonMainFiles",
+        ),
+    ) {
+        return Err(invalid("fresh detection issue boundary"));
+    }
+    let data = issue["data"].as_str().ok_or_else(|| invalid("fresh detection issue data"))?;
+    if matches!(
+        issue["type"].as_str(),
+        Some("UntrackedDependencies" | "RelativeComponentsAuthored"),
+    ) {
+        relative::validate(issue["type"].as_str().expect("matched type"), data)?;
+    } else if issue["type"] == "MissingPackagesDependenciesOnFs" {
+        validate_missing_packages(data)?;
+    } else if matches!(issue["type"].as_str(), Some("ParseErrors" | "SelfReference")) {
+        let entries: serde_json::Map<String, Value> =
+            serde_json::from_str(data).map_err(io::Error::other)?;
+        if entries.len() > 4096 || !entries.values().all(Value::is_string) {
+            return Err(invalid("fresh parse error data"));
         }
-        let data = issue["data"].as_str().ok_or_else(|| invalid("fresh detection issue data"))?;
-        if issue["type"] == "MissingPackagesDependenciesOnFs" {
-            validate_missing_packages(data)?;
-        } else {
-            validate_file_issue(data)?;
-        }
+    } else {
+        validate_file_issue(data)?;
     }
     Ok(())
 }

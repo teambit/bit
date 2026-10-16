@@ -1,19 +1,28 @@
 //! The dependency policy inputs of one component and its status metadata,
-//! for components on the built-in Node environment. Component-level
-//! dependency policies, which need the `EnvPolicy`/`VariantPolicy` merge, and
-//! every pending-configuration projection decline.
+//! with the environment and component `VariantPolicy` precedence used by
+//! the dependency resolver. Pending-configuration projections decline.
 
 pub use metadata::current_metadata;
+pub(super) use pending::context as pending_context;
 
+mod component;
 mod extensions;
 mod metadata;
+mod model;
+mod names;
+mod pending;
+mod projection;
+mod workspace;
 
 use super::{
     grammar,
-    js::{array, assign, decline, full_identity, nullish, object, string_map, text, truthy},
+    js::{array, assign, decline, full_identity, nullish, string_map, text},
 };
+use model::{dependencies, model_of, stored_version, validate_harmony_version};
+use names::{default_prefix, package_name};
 use serde_json::{Map, Value, json};
 use std::io;
+use workspace::{Workspace, read as workspace};
 
 const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 const FIELDS: [&str; 3] = ["dependencies", "devDependencies", "peerDependencies"];
@@ -35,6 +44,30 @@ pub struct Policy {
     pub overrides: Value,
     pub binding_prefix: String,
     pub package_name: String,
+    pub merge_conflict: bool,
+}
+
+impl Policy {
+    pub fn ignored_issues(&self) -> io::Result<Vec<String>> {
+        let config = self.extensions
+            .iter()
+            .find(|entry| entry["name"] == "teambit.component/issues");
+        array(
+            config.and_then(|entry| entry["config"].get("ignoreIssues")),
+            "component ignoreIssues",
+        )?
+        .iter()
+        .map(|value| text(Some(value)).map(str::to_string))
+        .collect()
+    }
+
+    pub fn issues(&self, dependencies: &Value) -> io::Result<Value> {
+        let mut issues = array(dependencies.get("issues"), "dependency issues")?.to_vec();
+        if self.merge_conflict {
+            issues.push(json!({"type":"MergeConfigHasConflict","data":"true"}));
+        }
+        Ok(json!(issues))
+    }
 }
 
 /// `statusPolicy(context, target)`.
@@ -50,7 +83,7 @@ pub fn projected_policy(
     target: &Value,
     projected: Option<&Value>,
 ) -> io::Result<Policy> {
-    if extensions::pending_merge_config(target) || target.get("recoveryConfig").is_some() {
+    if target.get("recoveryConfig").is_some() {
         return Err(decline("status projected configuration"));
     }
     let identity = text(target.get("identity"))?;
@@ -58,14 +91,22 @@ pub fn projected_policy(
     let version =
         stored_version(context, target, model, projected.filter(|version| !version.is_null()))?;
     validate_harmony_version(version)?;
-    let extensions = extensions::status_extensions(version, target)?;
-    reject_component_policy(&extensions)?;
-    let manual = node_manual();
-    let overrides = json!({ "devDependencies": manual[1] });
+    let mut effective = target.clone();
+    effective["projectedExtensions"] = json!(projection::extensions(context, target, version)?);
+    let extensions = extensions::status_extensions(&effective)?;
+    let merged = component::Policy::read(context, target, &extensions)?;
+    let overrides = merged.overrides();
     let workspace = workspace(context)?;
-    let input =
-        Sources { context, target, version, manual: &manual, workspace: &workspace }.input()?;
-    let (binding_prefix, package_name) = names(identity, model);
+    let input = Sources {
+        context,
+        target,
+        version,
+        policy: &merged,
+        extensions: &extensions,
+        workspace: &workspace,
+    }
+    .input()?;
+    let (binding_prefix, package_name) = names(identity, model, &extensions);
     Ok(Policy {
         input,
         extensions,
@@ -73,17 +114,87 @@ pub fn projected_policy(
         overrides,
         binding_prefix,
         package_name,
+        merge_conflict: context["pendingConfigurations"][identity]["conflict"] == true,
     })
 }
 
+/// Effective aspects for environment callbacks, using the same native merge as status.
+pub(in crate::commands) fn environment_target(
+    context: &Value,
+    target: &Value,
+) -> io::Result<Value> {
+    let model = model_of(context, text(target.get("identity"))?);
+    let version =
+        if model.is_some() { stored_version(context, target, model, None)? } else { None };
+    let rows = projection::extensions(context, target, version)?;
+    let environment = rows
+        .iter()
+        .find(|row| row["name"] == "teambit.envs/envs")
+        .and_then(|row| row["config"]["env"].as_str())
+        .map(str::to_string);
+    let mut config = Map::new();
+    for row in rows {
+        let name = row
+            .get("name")
+            .and_then(Value::as_str)
+            .map_or_else(|| extension_identity(&row["extensionId"]), str::to_string);
+        config.insert(name, row["config"].clone());
+    }
+    if let Some(environment) = environment {
+        config
+            .entry("teambit.envs/envs")
+            .or_insert_with(|| json!({}))["env"] = json!(environment);
+    }
+    let mut effective = target.clone();
+    effective["config"] = json!({"extensions":config,"propagate":true});
+    effective
+        .as_object_mut()
+        .ok_or_else(|| decline("status target"))?
+        .remove("componentConfig");
+    Ok(effective)
+}
+
+fn extension_identity(id: &Value) -> String {
+    let version = id["version"]
+        .as_str()
+        .filter(|version| !version.is_empty() && *version != "latest")
+        .map_or_else(String::new, |version| format!("@{version}"));
+    format!(
+        "{}/{}{version}",
+        id["scope"].as_str().unwrap_or_default(),
+        id["name"].as_str().unwrap_or_default(),
+    )
+}
+
 /// `bindingPrefix` and the package name, from the stored prefix when there is one.
-fn names(identity: &str, model: Option<&Value>) -> (String, String) {
+fn names(identity: &str, model: Option<&Value>, extensions: &[Value]) -> (String, String) {
     let stored = model
         .and_then(|model| model.get("bindingPrefix"))
         .and_then(Value::as_str)
         .filter(|prefix| !prefix.is_empty());
     let prefix = stored.map_or_else(|| default_prefix(identity), str::to_string);
-    (prefix, package_name(identity, stored))
+    (prefix, configured_package_name(identity, stored, extensions))
+}
+
+fn configured_package_name(identity: &str, prefix: Option<&str>, extensions: &[Value]) -> String {
+    let Some(pkg) = extensions
+        .iter()
+        .find(|entry| entry["name"] == "teambit.pkg/pkg")
+    else {
+        return package_name(identity, prefix);
+    };
+    let (scope, name) = identity
+        .split_once('/')
+        .unwrap_or(("", identity));
+    let id = bit_install::model::ComponentId {
+        scope: Some(scope.to_string()),
+        default_scope: None,
+        name: name.to_string(),
+        version: None,
+    };
+    let mut aspects = Map::new();
+    aspects.insert("teambit.pkg/pkg".to_string(), pkg["config"].clone());
+    bit_install::workspace::component_package_name(&id, prefix, &aspects)
 }
 
 /// The stored version's package dependencies per lifecycle.
@@ -92,181 +203,29 @@ fn model_packages(version: Option<&Value>) -> io::Result<[Map<String, Value>; 3]
     Ok([field(PACKAGE_FIELDS[0])?, field(PACKAGE_FIELDS[1])?, field(PACKAGE_FIELDS[2])?])
 }
 
-fn model_of<'c>(context: &'c Value, identity: &str) -> Option<&'c Value> {
-    let models = context.get("models").and_then(Value::as_array)?;
-    models
-        .iter()
-        .find(|model| {
-            let part = |key| {
-                model
-                    .get(key)
-                    .and_then(Value::as_str)
-                    .unwrap_or("undefined")
-            };
-            format!("{}/{}", part("scope"), part("name")) == identity
-        })
-}
-
-/// The stored `Version` object the target's bitmap version refers to.
-fn stored_version<'c>(
-    context: &'c Value,
-    target: &Value,
-    model: Option<&'c Value>,
-    projected: Option<&'c Value>,
-) -> io::Result<Option<&'c Value>> {
-    let tagged = target
-        .get("version")
-        .and_then(Value::as_str)
-        .filter(|value| !value.is_empty());
-    match (tagged, model) {
-        (Some(_), None) => return Err(decline("status pending import")),
-        (None, Some(_)) => return Err(decline("status bitmap normalization required")),
-        (None, None) => return Ok(projected),
-        (Some(_), Some(_)) => {}
-    }
-    if projected.is_some() {
-        return Ok(projected);
-    }
-    let tag = tagged.unwrap_or_default();
-    let reference = if is_hash(tag) {
-        Some(Value::String(tag.to_string()))
-    } else {
-        let lookup = |field: &str| {
-            nullish(
-                model
-                    .and_then(|m| m.get(field))
-                    .and_then(|m| m.get(tag)),
-            )
-        };
-        lookup("orphanedVersions").or_else(|| lookup("versions")).cloned()
-    };
-    let versions = array(context.get("versions"), "versions")?;
-    let version = versions
-        .iter()
-        .find(|row| {
-            reference
-                .as_ref()
-                .is_some_and(|reference| row.get(0) == Some(reference))
-        })
-        .and_then(|row| nullish(row.get(1)));
-    version.map(Some).ok_or_else(|| decline("status version absent"))
-}
-
-fn is_hash(text: &str) -> bool {
-    text.len() == 40 && text.bytes().all(|b| b.is_ascii_hexdigit())
-}
-
-/// `validateHarmonyVersion`.
-fn validate_harmony_version(version: Option<&Value>) -> io::Result<()> {
-    let Some(version) = version else { return Ok(()) };
-    if !matches!(version.get("schema").and_then(Value::as_str), Some("1.0.0" | "2.0.0")) {
-        return Err(decline("status legacy component"));
-    }
-    for dependency in dependencies(Some(version))? {
-        let id = dependency.get("id");
-        let part = |key| {
-            id.and_then(|id| id.get(key))
-                .and_then(Value::as_str)
-                .filter(|value| !value.is_empty())
-        };
-        if !truthy(id) || part("scope").is_none() || part("name").is_none() {
-            return Err(decline("status unscoped dependency"));
-        }
-        let paths = dependency.get("relativePaths").and_then(Value::as_array);
-        if paths.is_none_or(|paths| !paths.is_empty()) {
-            return Err(decline("status relative dependency paths"));
-        }
-    }
-    Ok(())
-}
-
-/// `[...(version?.dependencies ?? []), ...(version?.devDependencies ?? [])]`.
-fn dependencies(version: Option<&Value>) -> io::Result<Vec<&Value>> {
-    let field = |name| array(version.and_then(|stored| stored.get(name)), name);
-    Ok(field("dependencies")?
-        .iter()
-        .chain(field("devDependencies")?)
-        .collect())
-}
-
-/// A non-empty component policy needs the canonical `VariantPolicy` merge.
-fn reject_component_policy(extensions: &[Value]) -> io::Result<()> {
-    let resolver = extensions
-        .iter()
-        .find(|extension| extension["name"] == RESOLVER);
-    let Some(policy) = nullish(resolver.and_then(|extension| extension["config"].get("policy")))
-    else {
-        return Ok(());
-    };
-    let policy = object(policy)?;
-    if policy
-        .keys()
-        .any(|key| !FIELDS.contains(&key.as_str()))
-    {
-        return Err(decline("status component policy"));
-    }
-    if !policy.is_empty() {
-        return Err(decline("status component policy requires the canonical merge"));
-    }
-    Ok(())
-}
-
-/// The Node environment's forced (`manual`) policy per lifecycle.
-fn node_manual() -> [Map<String, Value>; 3] {
-    let dev = NODE_DEV_DEPENDENCIES
-        .iter()
-        .map(|(name, range)| ((*name).to_string(), json!(range)))
-        .collect();
-    [Map::new(), dev, Map::new()]
-}
-
-/// The workspace policy merged with the root `package.json`, and the
-/// `package.json` fields themselves.
-struct Workspace {
-    policy: Value,
-    package_json: [Map<String, Value>; 3],
-}
-
-fn workspace(context: &Value) -> io::Result<Workspace> {
-    let resolver = nullish(
-        context
-            .get("workspace")
-            .and_then(|w| w.get(RESOLVER)),
-    );
-    let policy = nullish(resolver.and_then(|r| r.get("policy")));
-    let empty = Value::Object(Map::new());
-    let policy = object(policy.unwrap_or(&empty))?;
-    if policy
-        .keys()
-        .any(|key| !FIELDS.contains(&key.as_str()))
-    {
-        return Err(decline("status workspace policy"));
-    }
-    let package_json = nullish(context.get("packageJson"));
-    let field = |name: &str| string_map(package_json.and_then(|json| json.get(name)));
-    let package_json = [field(FIELDS[0])?, field(FIELDS[1])?, field(FIELDS[2])?];
-    let mut dependencies = string_map(policy.get("dependencies"))?;
-    assign(&mut dependencies, &package_json[1]);
-    assign(&mut dependencies, &package_json[0]);
-    let mut peers = string_map(policy.get("peerDependencies"))?;
-    assign(&mut peers, &package_json[2]);
-    let policy = json!({ "dependencies": dependencies, "peerDependencies": peers });
-    Ok(Workspace { policy, package_json })
-}
-
 /// What `policy.input` is computed from.
 struct Sources<'s> {
     context: &'s Value,
     target: &'s Value,
     version: Option<&'s Value>,
-    manual: &'s [Map<String, Value>; 3],
+    policy: &'s component::Policy,
+    extensions: &'s [Value],
     workspace: &'s Workspace,
 }
 
 impl Sources<'_> {
     /// `policy.input` with its `resolution.grammar`.
     fn input(&self) -> io::Result<Value> {
-        let merge = merge_policy(self.target)?;
+        let mut merge = merge_policy(self.target)?;
+        let identity = text(self.target.get("identity"))?;
+        if let Some(auto) = self.context["pendingConfigurations"][identity].get("auto") {
+            for (field, additions) in merge
+                .iter_mut()
+                .zip(component::automatic(auto)?)
+            {
+                assign(field, &additions);
+            }
+        }
         let mut input = json!({
             "policies": self.policies(&merge)?,
             "finish": self.finish()?,
@@ -281,7 +240,7 @@ impl Sources<'_> {
     }
 
     fn policies(&self, merge: &[Map<String, Value>; 3]) -> io::Result<Value> {
-        let mut automatic = [Map::new(), Map::new(), node_peers(self.manual)];
+        let mut automatic = self.policy.automatic.clone();
         for (policy, merge) in automatic.iter_mut().zip(merge) {
             assign(policy, merge);
         }
@@ -298,11 +257,11 @@ impl Sources<'_> {
 
     fn finish(&self) -> io::Result<Value> {
         Ok(json!({
-            "manual": self.manual,
+            "manual": self.policy.manual,
             "packageJson": self.workspace.package_json,
             "selfIdentity": full_identity(self.target)?,
             "environment": {
-                "policy": {},
+                "policy": self.policy.env_own,
                 "workspace": self.workspace.policy,
                 "modelComponents": model_components(self.version)?,
                 "modelPackages": self.field("packageDependencies")?,
@@ -325,25 +284,12 @@ impl Sources<'_> {
                 "model": model_dependencies(self.version)?,
                 "componentConfig": {},
             },
-            "extensions": [],
+            "extensions": self.extensions.iter().filter_map(|extension| extension.get("extensionId")).map(extension_identity).collect::<Vec<_>>(),
             "grammar": {},
             "prefix": prefix,
             "merge": merge,
         }))
     }
-}
-
-/// The Node environment's peers, minus names its forced policy already sets.
-fn node_peers(manual: &[Map<String, Value>; 3]) -> Map<String, Value> {
-    NODE_PEERS
-        .iter()
-        .filter(|(name, _)| {
-            !manual
-                .iter()
-                .any(|field| field.contains_key(*name))
-        })
-        .map(|(name, range)| ((*name).to_string(), json!(range)))
-        .collect()
 }
 
 /// `target.autoDetectMergePolicy ?? [{}, {}, {}]`.
@@ -400,48 +346,6 @@ fn identity(value: Option<&Value>) -> io::Result<String> {
     };
     let suffix = if version.is_empty() { String::new() } else { format!("@{version}") };
     Ok(format!("{}/{}{suffix}", part("scope")?, part("name")?))
-}
-
-/// `@<owner>` of `owner.scope/name`.
-fn default_prefix(identity: &str) -> String {
-    let owner = identity
-        .split('.')
-        .next()
-        .unwrap_or_default();
-    format!(
-        "@{}",
-        owner
-            .split('/')
-            .next()
-            .unwrap_or_default(),
-    )
-}
-
-/// `packageName(id, storedPrefix)`.
-fn package_name(identity: &str, stored_prefix: Option<&str>) -> String {
-    let scope = identity
-        .split('/')
-        .next()
-        .unwrap_or_default();
-    let prefix = stored_prefix.map_or_else(
-        || {
-            format!(
-                "@{}",
-                scope
-                    .split('.')
-                    .next()
-                    .unwrap_or_default(),
-            )
-        },
-        str::to_string,
-    );
-    let name = identity.replace('/', ".");
-    let owner = format!("{}.", prefix.replacen('@', "", 1));
-    let name = match name.strip_prefix(&owner) {
-        Some(rest) if prefix != "@bit" => rest.to_string(),
-        _ => name,
-    };
-    format!("{prefix}/{name}")
 }
 
 #[cfg(test)]

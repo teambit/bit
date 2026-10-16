@@ -92,10 +92,11 @@ fn load(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Option<Value>
             "issues":[]}),
         ));
     }
-    let input =
-        serde_json::from_value(json!({"cache":request.root.join(".bit/cache/components/deps"),
-        "key":request.identity}))
-        .map_err(io::Error::other)?;
+    let input = serde_json::from_value(
+        json!({"cache":crate::scope_path(&request.root).join("cache/components/deps"),
+        "key":request.identity}),
+    )
+    .map_err(io::Error::other)?;
     let (_, result) = read_dependency_cache::read(&input)?;
     if result["cache"].is_null() {
         return Ok(None);
@@ -131,17 +132,9 @@ fn validate(request: &Request) -> io::Result<()> {
     }
     for file in &request.files {
         path(file)?;
-        if normalize(file) != *file
-            || !file.starts_with(&request.component_root)
-            || file
-                .file_name()
-                .is_some_and(|name| name == "env.jsonc")
-        {
+        if normalize(file) != *file || !file.starts_with(&request.component_root) {
             return Err(invalid("status dependency file boundary or custom environment"));
         }
-    }
-    if request.component_root.join("env.jsonc").try_exists()? {
-        return Err(invalid("status custom environment requires canonical loading"));
     }
     Ok(())
 }

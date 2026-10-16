@@ -2,13 +2,23 @@
 //! workspace commands: each selected component's files and
 //! dependencies, and the commit that writes what the command staged.
 
+pub use callbacks::{
+    callback_issue_stdout, callback_load_stdout, callback_startup_stdout, issue_callbacks,
+    workspace_issues,
+};
+pub use commit::commit;
+
 mod bitmap;
+mod callbacks;
+mod commit;
 mod identities;
 mod missing;
 mod target;
 
 use super::{
-    cache, fresh,
+    cache,
+    environments::Environments,
+    fresh,
     issues::Component,
     js::{self, array, decline, full_identity, text},
     policy,
@@ -28,6 +38,8 @@ pub struct Capture {
     pub captured: Vec<Value>,
     pub comparisons: Vec<Value>,
     pub components: Vec<Component>,
+    /// Environment callbacks used by the native diagnostic checks.
+    pub environment_facts: Value,
     /// Workspace components whose current model version is removed remotely.
     pub remotely_removed: Vec<String>,
     /// Bitmap targets whose directory is absent from the workspace.
@@ -55,6 +67,8 @@ pub struct CacheWrites {
     versions: HashMap<String, String>,
     /// Validate fresh reads, but never read from or write to the FS dependency cache.
     no_fs_cache: bool,
+    environment_reads: Vec<Value>,
+    callbacks: callbacks::Callbacks,
 }
 
 impl CacheWrites {
@@ -96,6 +110,10 @@ impl CacheWrites {
 /// The `captureOptions` of the write commands.
 #[derive(Default)]
 pub struct CaptureOptions {
+    /// A read-only aspect session initialized before the authoritative context snapshot.
+    pub(in crate::commands) environments: Option<Environments>,
+    /// Permit read-only consumers to capture soft-tagged and local-only components normally.
+    pub allow_special_states: bool,
     /// `verifyFreshDependencies`: cached dependencies are detected again,
     /// and any difference declines.
     pub verify: bool,
@@ -115,6 +133,7 @@ impl CaptureOptions {
     fn scan_behavior(&self) -> ScanBehavior {
         ScanBehavior {
             verify: self.verify,
+            callbacks: self.missing_status_invalid || self.allow_special_states,
             incomplete_reset: self.incomplete_reset,
             missing_checkout_reset: self.missing_checkout_reset,
             missing_status_invalid: self.missing_status_invalid,
@@ -128,56 +147,38 @@ impl Capture {
         self.cache.pending
             .iter()
             .flat_map(|entry| entry.read_set().iter().cloned())
+            .chain(self.cache.environment_reads.iter().cloned())
             .collect()
     }
 }
 
-/// `captureRustClientCurrent(root, context, request, targets)`: each selected
-/// component's files and dependencies, from the cache or detected afresh.
-pub fn capture(
-    engine: &mut Engine,
-    root: &Path,
-    home: &Path,
-    context: &Value,
-    targets: &[Value],
-) -> io::Result<Capture> {
-    capture_with(engine, root, home, context, targets, CaptureOptions::default())
-}
-
-/// The capture with the write commands' options.
+/// Capture files and dependencies using the caller's read and cache policy.
 pub fn capture_with(
     engine: &mut Engine,
     root: &Path,
     home: &Path,
     context: &Value,
     targets: &[Value],
-    capture_options: CaptureOptions,
+    mut capture_options: CaptureOptions,
 ) -> io::Result<Capture> {
-    if !capture_options.missing_status_invalid && bitmap::has_special_state(targets) {
+    if !capture_options.missing_status_invalid
+        && !capture_options.allow_special_states
+        && bitmap::has_special_state(targets)
+    {
         return Err(decline("bitmap state requires the canonical workspace command"));
     }
+    let context = policy::pending_context(root, context)?;
+    if !capture_options.missing_status_invalid && !capture_options.allow_special_states {
+        Environments::require_native_write(root, &context)?;
+    }
+    let mut environments = capture_options.environments.take().unwrap_or_else(Environments::new);
+    let context = environments.context_for(root, &context, targets)?;
+    let context = &context;
     let options: Options =
         serde_json::from_value(context["options"].clone()).map_err(io::Error::other)?;
     let inventory = Inventory::new(&options)?;
-    let no_fs_cache = cache::no_fs_cache(root);
-    let reset = !no_fs_cache
-        && !targets.is_empty()
-        && (capture_options.reset || needs_invalidation(root, &deps_dir(root))?);
     let behavior = capture_options.scan_behavior();
-    let mut captured = Capture {
-        captured: Vec::new(),
-        comparisons: Vec::new(),
-        components: Vec::new(),
-        remotely_removed: Vec::new(),
-        invalid: HashMap::new(),
-        dependency_states: HashMap::new(),
-        cache: CacheWrites {
-            reset,
-            no_fs_cache,
-            versions: capture_options.cache_versions,
-            ..CacheWrites::default()
-        },
-    };
+    let mut captured = initialize(root, context, !targets.is_empty(), capture_options)?;
     let mut facts = None;
     for target in targets {
         let scan = Scan {
@@ -187,11 +188,46 @@ pub fn capture_with(
             context,
             inventory: &inventory,
             facts: &mut facts,
+            environments: &mut environments,
             behavior,
         };
         scan.target(target, &mut captured)?;
     }
+    if behavior.callbacks {
+        environments.callbacks(context, &mut captured, behavior.missing_status_invalid)?;
+    }
     Ok(captured)
+}
+
+fn initialize(
+    root: &Path,
+    context: &Value,
+    has_targets: bool,
+    capture_options: CaptureOptions,
+) -> io::Result<Capture> {
+    let no_fs_cache = cache::no_fs_cache(root);
+    let reset = !no_fs_cache
+        && has_targets
+        && (capture_options.reset || needs_invalidation(root, &deps_dir(root))?);
+    Ok(Capture {
+        captured: Vec::new(),
+        comparisons: Vec::new(),
+        components: Vec::new(),
+        environment_facts: context["environmentFacts"].clone(),
+        remotely_removed: Vec::new(),
+        invalid: HashMap::new(),
+        dependency_states: HashMap::new(),
+        cache: CacheWrites {
+            reset,
+            no_fs_cache,
+            versions: capture_options.cache_versions,
+            environment_reads: context["environmentReadSet"]
+                .as_array()
+                .cloned()
+                .unwrap_or_default(),
+            ..CacheWrites::default()
+        },
+    })
 }
 
 struct Scan<'s> {
@@ -203,10 +239,12 @@ struct Scan<'s> {
     /// Loaded on the first fresh detection: it may run Node once.
     facts: &'s mut Option<fresh::Facts>,
     behavior: ScanBehavior,
+    environments: &'s mut Environments,
 }
 
 #[derive(Clone, Copy)]
 struct ScanBehavior {
+    callbacks: bool,
     verify: bool,
     incomplete_reset: bool,
     missing_checkout_reset: bool,
@@ -222,12 +260,14 @@ impl Scan<'_> {
         policy: &policy::Policy,
         captured: &mut Capture,
     ) -> io::Result<Option<Value>> {
-        let mut dependencies =
-            if captured.cache.no_fs_cache || (captured.cache.reset && directory != ".") {
-                json!({ "needsDetection": true })
-            } else {
-                self.cached(target, directory, files, policy)?
-            };
+        let mut dependencies = if captured.cache.no_fs_cache
+            || (captured.cache.reset && directory != ".")
+            || !self.context["environmentFacts"][text(target.get("identity"))?].is_null()
+        {
+            json!({ "needsDetection": true })
+        } else {
+            self.cached(target, directory, files, policy)?
+        };
         if dependencies.get("needsDetection") == Some(&Value::Bool(true)) {
             let (detected, pending) = match self.detect(target, files, policy) {
                 Ok(value) => value,
@@ -306,7 +346,18 @@ impl Scan<'_> {
         }
         let facts = self.facts.as_ref().ok_or_else(|| decline("status facts"))?;
         let detection = fresh::Detection { root: self.root, context: self.context, facts };
-        detection.read(self.engine, target, files, policy)
+        let custom = self.environments.detectors(self.root, self.context, target, files)?;
+        match detection.read_with_detectors(self.engine, target, files, policy, custom.clone()) {
+            Err(error)
+                if error
+                    .to_string()
+                    .contains("dependency graph extraction requires canonical fallback") =>
+            {
+                let custom = self.environments.parser(self.root, target, files, &custom)?;
+                detection.read_with_detectors(self.engine, target, files, policy, custom)
+            }
+            result => result,
+        }
     }
 
     /// The component's files, relative to its directory.
@@ -367,13 +418,11 @@ fn record(
         captured.comparisons.push(entry);
     }
     captured.components.push(Component {
+        ignored: policy.ignored_issues()?,
         identity: full_identity(target)?,
         package_name: policy.package_name.clone(),
         dependencies: dependency_identities(dependencies)?,
-        issues: dependencies
-            .get("issues")
-            .cloned()
-            .unwrap_or(Value::Null),
+        issues: policy.issues(dependencies)?,
     });
     Ok(())
 }
@@ -383,39 +432,6 @@ pub fn spread(request: &mut Value, input: &Value) -> io::Result<()> {
     let request = request.as_object_mut().ok_or_else(|| decline("status request"))?;
     for (key, value) in input.as_object().ok_or_else(|| decline("status policy input"))? {
         request.insert(key.clone(), value.clone());
-    }
-    Ok(())
-}
-
-/// `capture.commit()`: staged histories validated, dependency caches written,
-/// then the histories written.
-pub fn commit(
-    engine: &mut Engine,
-    root: &Path,
-    context: &Value,
-    capture: &Capture,
-) -> io::Result<()> {
-    let plans = array(context.get("pendingHistory"), "history plans")?;
-    if !plans.is_empty() {
-        let validated: Value = engine.request(
-            &json!({"kind": "statusHistoryValidate", "root": root, "plans": plans}),
-        )?;
-        if validated.get("fresh") != Some(&Value::Bool(true)) {
-            return Err(decline("status history changed"));
-        }
-    }
-    if !capture.cache.is_empty() {
-        let entries = capture.cache.entries();
-        fresh::commit(engine, root, &entries, capture.cache.reset, !capture.cache.no_fs_cache)?;
-    }
-    if plans.is_empty() {
-        return Ok(());
-    }
-    let committed: Value =
-        engine.request(&json!({"kind": "statusHistoryCommit", "root": root, "plans": plans}))?;
-    let written = committed.get("written").and_then(Value::as_u64);
-    if written.is_none_or(|written| written > plans.len() as u64) {
-        return Err(decline("status history commit receipt"));
     }
     Ok(())
 }
