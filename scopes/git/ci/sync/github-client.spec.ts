@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { GitHubClient, gitHubApiUrl, isGitHubRemote, parseGitHubRepo } from './github-client';
+import { GitHubClient, GitHubHostProvider, gitHubApiUrl, isGitHubRemote, parseGitHubRepo } from './github-client';
 
 /**
  * A claimed remote the parse then fails on silently degrades the whole run to PR-less mode, so the two
@@ -383,7 +383,7 @@ describe('GitHub Enterprise Server', () => {
     GITHUB_DOT_COM_ENVS.forEach(([name, env]) => {
       it(`talks to api.github.com and claims github.com remotes only (${name})`, async () => {
         Object.assign(process.env, env);
-        expect(gitHubApiUrl()).to.equal('https://api.github.com');
+        expect(gitHubApiUrl()).to.deep.equal({ url: 'https://api.github.com' });
         REMOTES.forEach(([url, repo, isGitHub]) => {
           expect(parseGitHubRepo(url), url).to.equal(repo);
           expect(isGitHubRemote(url), url).to.equal(isGitHub);
@@ -403,6 +403,13 @@ describe('GitHub Enterprise Server', () => {
         expect(calls[0].url).to.equal('https://api.github.com/repos/acme/shop/pulls');
       });
     });
+  });
+
+  it('a github.com repository always talks to api.github.com, whatever GITHUB_API_URL says', () => {
+    process.env.GITHUB_API_URL = 'https://evil.example/api/v3';
+    expect(gitHubApiUrl()).to.deep.equal({ url: 'https://api.github.com' });
+    expect(gitHubApiUrl('github.com')).to.deep.equal({ url: 'https://api.github.com' });
+    expect(GitHubClient.fromEnv('git@github.com:acme/shop.git')?.apiUrl).to.equal('https://api.github.com');
   });
 
   describe('on a GHES runner', () => {
@@ -484,14 +491,88 @@ describe('GitHub Enterprise Server', () => {
 
     it('a github.com remote on a GHES runner still talks to api.github.com', () => {
       expect(GitHubClient.fromEnv('git@github.com:acme/shop.git')?.apiUrl).to.equal('https://api.github.com');
-      expect(gitHubApiUrl('github.com')).to.equal('https://api.github.com');
-      expect(gitHubApiUrl('GHE.corp.example')).to.equal(GHES_API);
-      expect(gitHubApiUrl()).to.equal(GHES_API);
+      expect(gitHubApiUrl('github.com')).to.deep.equal({ url: 'https://api.github.com' });
+      expect(gitHubApiUrl('GHE.corp.example')).to.deep.equal({ url: GHES_API });
+      expect(gitHubApiUrl()).to.deep.equal({ url: GHES_API });
+    });
+
+    it('without GITHUB_API_URL, derives the GHES convention <server origin>/api/v3 — never api.github.com', () => {
+      delete process.env.GITHUB_API_URL;
+      expect(gitHubApiUrl()).to.deep.equal({ url: GHES_API });
+      expect(gitHubApiUrl('ghe.corp.example')).to.deep.equal({ url: GHES_API });
+      expect(GitHubClient.fromEnv('git@ghe.corp.example:acme/store.git')?.apiUrl).to.equal(GHES_API);
+      // the server's protocol and port carry over; its path does not
+      process.env.GITHUB_SERVER_URL = 'http://ghe.corp.example:8080/';
+      expect(gitHubApiUrl('ghe.corp.example')).to.deep.equal({ url: 'http://ghe.corp.example:8080/api/v3' });
+      // github.com is untouched by the enterprise default
+      expect(gitHubApiUrl('github.com')).to.deep.equal({ url: 'https://api.github.com' });
+    });
+
+    it('accepts a GITHUB_API_URL on api.<server host> (GHE.com data residency)', () => {
+      process.env.GITHUB_SERVER_URL = 'https://acme.ghe.com';
+      process.env.GITHUB_API_URL = 'https://api.acme.ghe.com';
+      expect(gitHubApiUrl('acme.ghe.com')).to.deep.equal({ url: 'https://api.acme.ghe.com' });
+      expect(GitHubClient.fromEnv('https://acme.ghe.com/acme/store.git')?.apiUrl).to.equal('https://api.acme.ghe.com');
+    });
+
+    it('refuses a GITHUB_API_URL on another host: no client, a warning naming both values, no request', async () => {
+      const MISMATCHED = [
+        'https://api.github.com',
+        'https://evil.example/api/v3',
+        'https://ghe.corp.example.evil.com/api/v3',
+        'https://api.ghe.corp.example.evil.com',
+        'not a url',
+      ];
+      for (const apiUrl of MISMATCHED) {
+        process.env.GITHUB_API_URL = apiUrl;
+        const result = gitHubApiUrl('ghe.corp.example');
+        expect(result, apiUrl).to.not.have.property('url');
+        expect((result as { error: string }).error, apiUrl)
+          .to.contain(apiUrl)
+          .and.contain(GHES_SERVER);
+
+        const warnings: string[] = [];
+        expect(
+          GitHubClient.fromEnv('git@ghe.corp.example:acme/store.git', (m) => warnings.push(m)),
+          apiUrl
+        ).to.equal(undefined);
+        // a repository from GITHUB_REPOSITORY alone lives on the enterprise instance too
+        process.env.GITHUB_REPOSITORY = 'acme/store';
+        expect(
+          GitHubClient.fromEnv(undefined, (m) => warnings.push(m)),
+          apiUrl
+        ).to.equal(undefined);
+        delete process.env.GITHUB_REPOSITORY;
+        expect(warnings, apiUrl).to.have.lengthOf(2);
+        warnings.forEach((w) => expect(w, apiUrl).to.contain(`"${apiUrl}"`).and.contain(`"${GHES_SERVER}"`));
+
+        // the provider reports "not configured", warns once across retries, and sends nothing
+        const realFetch = globalThis.fetch;
+        const { calls, fetchImpl } = recordingFetch();
+        globalThis.fetch = fetchImpl;
+        const providerWarnings: string[] = [];
+        try {
+          const provider = new GitHubHostProvider((m) => providerWarnings.push(m));
+          expect(provider.isConfigured('git@ghe.corp.example:acme/store.git'), apiUrl).to.equal(false);
+          expect(provider.isConfigured('git@ghe.corp.example:acme/store.git'), apiUrl).to.equal(false);
+          let thrown: unknown;
+          await provider.findPrByBranch('lane-x').catch((e) => {
+            thrown = e;
+          });
+          expect(thrown, apiUrl).to.be.instanceOf(Error);
+        } finally {
+          globalThis.fetch = realFetch;
+        }
+        expect(calls, apiUrl).to.have.lengthOf(0);
+        expect(providerWarnings, apiUrl).to.have.lengthOf(1);
+      }
+      // a github.com remote on the same misconfigured runner is unaffected
+      expect(GitHubClient.fromEnv('git@github.com:acme/shop.git')?.apiUrl).to.equal('https://api.github.com');
     });
 
     it('drops a trailing slash from GITHUB_API_URL', () => {
       process.env.GITHUB_API_URL = `${GHES_API}/`;
-      expect(gitHubApiUrl()).to.equal(GHES_API);
+      expect(gitHubApiUrl()).to.deep.equal({ url: GHES_API });
     });
 
     it('follows pagination on the GHES API, and refuses a next link that leaves it', async () => {

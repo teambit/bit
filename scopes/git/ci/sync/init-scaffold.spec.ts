@@ -11,6 +11,7 @@ import {
   deriveOwnerRepo,
   renderInitChecklist,
 } from './init-scaffold';
+import type { OwnerRepo } from './init-scaffold';
 
 const yamlLoad = (src: string) => YAML.parse(src);
 
@@ -99,10 +100,11 @@ describe('init-scaffold', () => {
   });
 
   describe('deriveOwnerRepo', () => {
-    const REMOTES: Array<[string | undefined, { owner: string; repo: string } | undefined]> = [
-      ['git@github.com:acme/shop.git', { owner: 'acme', repo: 'shop' }],
-      ['https://github.com/acme/shop.git', { owner: 'acme', repo: 'shop' }],
-      ['https://github.com/acme/shop', { owner: 'acme', repo: 'shop' }],
+    const SHOP = { owner: 'acme', repo: 'shop', host: 'github.com' };
+    const REMOTES: Array<[string | undefined, OwnerRepo | undefined]> = [
+      ['git@github.com:acme/shop.git', SHOP],
+      ['https://github.com/acme/shop.git', SHOP],
+      ['https://github.com/acme/shop', SHOP],
       ['https://gitlab.com/acme/shop.git', undefined],
       // a local/bare remote has no host at all
       ['/path/to/bare.git', undefined],
@@ -117,7 +119,7 @@ describe('init-scaffold', () => {
 
   describe('renderInitChecklist', () => {
     it('renders a real dispatch URL when owner/repo were derived, a placeholder when not', () => {
-      const derived = renderInitChecklist({ owner: 'acme', repo: 'shop' });
+      const derived = renderInitChecklist({ owner: 'acme', repo: 'shop', host: 'github.com' });
       expect(derived).to.contain('https://api.github.com/repos/acme/shop/dispatches');
       expect(derived).to.not.contain('<owner>/<repo>');
       expect(renderInitChecklist(undefined)).to.contain('https://api.github.com/repos/<owner>/<repo>/dispatches');
@@ -129,7 +131,7 @@ describe('init-scaffold', () => {
       process.env.GITHUB_SERVER_URL = 'https://ghe.corp.example';
       try {
         const ownerRepo = deriveOwnerRepo('git@ghe.corp.example:acme/store.git');
-        expect(ownerRepo).to.deep.equal({ owner: 'acme', repo: 'store' });
+        expect(ownerRepo).to.deep.equal({ owner: 'acme', repo: 'store', host: 'ghe.corp.example' });
         expect(renderInitChecklist(ownerRepo)).to.contain(
           'https://ghe.corp.example/api/v3/repos/acme/store/dispatches'
         );
@@ -139,6 +141,43 @@ describe('init-scaffold', () => {
         if (saved.server === undefined) delete process.env.GITHUB_SERVER_URL;
         else process.env.GITHUB_SERVER_URL = saved.server;
       }
+    });
+
+    describe('on a GHES-configured runner', () => {
+      const saved: Record<string, string | undefined> = {};
+      beforeEach(() => {
+        saved.api = process.env.GITHUB_API_URL;
+        saved.server = process.env.GITHUB_SERVER_URL;
+        process.env.GITHUB_SERVER_URL = 'https://ghe.corp.example';
+      });
+      afterEach(() => {
+        if (saved.api === undefined) delete process.env.GITHUB_API_URL;
+        else process.env.GITHUB_API_URL = saved.api;
+        if (saved.server === undefined) delete process.env.GITHUB_SERVER_URL;
+        else process.env.GITHUB_SERVER_URL = saved.server;
+      });
+
+      it('names api.github.com for a github.com origin', () => {
+        process.env.GITHUB_API_URL = 'https://ghe.corp.example/api/v3';
+        const checklist = renderInitChecklist(deriveOwnerRepo('git@github.com:acme/shop.git'));
+        expect(checklist).to.contain('https://api.github.com/repos/acme/shop/dispatches');
+        expect(checklist).to.not.contain('ghe.corp.example');
+      });
+
+      it('derives <server>/api/v3 for an enterprise origin when GITHUB_API_URL is unset', () => {
+        delete process.env.GITHUB_API_URL;
+        expect(renderInitChecklist(deriveOwnerRepo('https://ghe.corp.example/acme/store.git'))).to.contain(
+          'https://ghe.corp.example/api/v3/repos/acme/store/dispatches'
+        );
+      });
+
+      it('names no API for an enterprise origin whose GITHUB_API_URL is on another host', () => {
+        process.env.GITHUB_API_URL = 'https://api.github.com';
+        const checklist = renderInitChecklist(deriveOwnerRepo('https://ghe.corp.example/acme/store.git'));
+        expect(checklist).to.contain('<GitHub API URL>/repos/acme/store/dispatches');
+        expect(checklist).to.contain('GITHUB_API_URL "https://api.github.com"');
+        expect(checklist).to.not.contain('https://api.github.com/repos');
+      });
     });
 
     it('always includes the secrets, permissions, webhook and fetch-depth checklist items', () => {

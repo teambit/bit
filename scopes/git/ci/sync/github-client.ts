@@ -3,17 +3,22 @@ import type { GitHostProvider, PrInfo } from './git-host-provider';
 const GITHUB_DOT_COM = 'github.com';
 const GITHUB_DOT_COM_API = 'https://api.github.com';
 
+/** The GitHub instance `GITHUB_SERVER_URL` names, or undefined when it is unset or malformed. */
+function gitHubServerUrl(): URL | undefined {
+  try {
+    if (process.env.GITHUB_SERVER_URL) return new URL(process.env.GITHUB_SERVER_URL);
+  } catch {
+    // a malformed value names no instance
+  }
+  return undefined;
+}
+
 /**
  * The host of the GitHub instance this run belongs to: the one `GITHUB_SERVER_URL` names (Actions sets
  * it on every runner — `https://github.com`, or the GitHub Enterprise Server URL), else github.com.
  */
-function gitHubServerHost(): string {
-  try {
-    if (process.env.GITHUB_SERVER_URL) return new URL(process.env.GITHUB_SERVER_URL).hostname.toLowerCase();
-  } catch {
-    // a malformed value names no instance; fall through to github.com
-  }
-  return GITHUB_DOT_COM;
+export function gitHubServerHost(): string {
+  return gitHubServerUrl()?.hostname.toLowerCase() || GITHUB_DOT_COM;
 }
 
 /** The hosts whose remotes are GitHub's: github.com, plus a GitHub Enterprise Server host. */
@@ -22,19 +27,44 @@ function gitHubHosts(): string[] {
   return serverHost === GITHUB_DOT_COM ? [GITHUB_DOT_COM] : [GITHUB_DOT_COM, serverHost];
 }
 
+/** A resolved REST API base, or why the environment's API cannot be trusted with the repository's token. */
+export type GitHubApiUrl = { url: string } | { error: string };
+
 /**
- * The REST API base for a repository on `host` (the instance's own host when omitted). `GITHUB_API_URL`
- * is the API of the `GITHUB_SERVER_URL` instance — Actions sets it to `https://<host>/api/v3` on GitHub
- * Enterprise Server — so it serves that host only; a github.com repository reached from a GHES runner
- * still talks to api.github.com.
+ * The REST API base for a repository on `host` (the `GITHUB_SERVER_URL` instance's host when omitted).
+ * Every request to it carries that instance's token, so:
+ * - github.com (and any host that is not the enterprise one) is always `https://api.github.com`.
+ * - the enterprise host takes `GITHUB_API_URL` only when it lives on that host or on `api.<host>`
+ *   (GHE.com data residency: `https://<sub>.ghe.com` serves its API at `https://api.<sub>.ghe.com`);
+ *   unset, it is the GHES convention `<GITHUB_SERVER_URL origin>/api/v3`. Any other API is refused —
+ *   never replaced by api.github.com, which must not receive an enterprise token.
  */
-export function gitHubApiUrl(host?: string): string {
-  if (host && host.toLowerCase() !== gitHubServerHost()) return GITHUB_DOT_COM_API;
-  return (process.env.GITHUB_API_URL || GITHUB_DOT_COM_API).replace(/\/+$/, '');
+export function gitHubApiUrl(host?: string): GitHubApiUrl {
+  const serverUrl = gitHubServerUrl();
+  const serverHost = gitHubServerHost();
+  if (!serverUrl || serverHost === GITHUB_DOT_COM || (host && host.toLowerCase() !== serverHost)) {
+    return { url: GITHUB_DOT_COM_API };
+  }
+  const apiUrl = process.env.GITHUB_API_URL;
+  if (!apiUrl) return { url: `${serverUrl.origin}/api/v3` };
+  let apiHost: string | undefined;
+  try {
+    apiHost = new URL(apiUrl).hostname.toLowerCase();
+  } catch {
+    // a malformed value is refused below like any other foreign API
+  }
+  if (apiHost !== serverHost && apiHost !== `api.${serverHost}`) {
+    return {
+      error:
+        `GITHUB_API_URL "${apiUrl}" is not an API of the GITHUB_SERVER_URL instance "${process.env.GITHUB_SERVER_URL}" ` +
+        `(expected a URL on ${serverHost} or api.${serverHost}) — refusing to send that instance's token to it`,
+    };
+  }
+  return { url: apiUrl.replace(/\/+$/, '') };
 }
 
 /** The host a git remote URL points at, lower-cased, or undefined when the URL has no authority. */
-function remoteHost(remoteUrl: string): string | undefined {
+export function remoteHost(remoteUrl: string): string | undefined {
   return remoteUrl
     .trim()
     .match(/^(?:[a-z+]+:\/\/)?(?:[^@/]+@)?([^:/]+)/i)?.[1]
@@ -96,14 +126,17 @@ export class GitHubClient implements GitHostProvider {
   private token: string;
   /** `owner/repo`. Readable so callers (and tests) can see *which* repository a resolved client speaks to. */
   readonly repo: string;
-  /** The REST API base, e.g. `https://api.github.com` or a GitHub Enterprise Server's `https://<host>/api/v3`. */
+  /**
+   * The REST API base, e.g. `https://api.github.com` (the default) or a GitHub Enterprise Server's
+   * `https://<host>/api/v3`; `fromEnv` resolves it for the remote's host.
+   */
   readonly apiUrl: string;
   private fetchImpl: typeof fetch;
 
   constructor(opts: { token: string; repo: string; apiUrl?: string; fetchImpl?: typeof fetch }) {
     this.token = opts.token;
     this.repo = opts.repo;
-    this.apiUrl = opts.apiUrl ?? gitHubApiUrl();
+    this.apiUrl = opts.apiUrl ?? GITHUB_DOT_COM_API;
     this.fetchImpl = opts.fetchImpl ?? fetch;
   }
 
@@ -129,7 +162,13 @@ export class GitHubClient implements GitHostProvider {
           `"${repoFromRemote}" — using "${repoFromRemote}", the repository this run pushes its branches to.`
       );
     }
-    return new GitHubClient({ token, repo, apiUrl: gitHubApiUrl(gitRemoteUrl && remoteHost(gitRemoteUrl)) });
+    // Without a remote, the GITHUB_REPOSITORY repository lives on the GITHUB_SERVER_URL instance.
+    const api = gitHubApiUrl(gitRemoteUrl ? remoteHost(gitRemoteUrl) : undefined);
+    if ('error' in api) {
+      warn(`bit ci sync: ${api.error}. The GitHub provider is not configured.`);
+      return undefined;
+    }
+    return new GitHubClient({ token, repo, apiUrl: api.url });
   }
 
   matchesRemote(remoteUrl: string): boolean {
@@ -267,6 +306,9 @@ export class GitHubHostProvider implements GitHostProvider {
   /** The last `origin` URL seen, so a PR method can still recover `owner/repo` from it. */
   private remoteHint: string | undefined;
 
+  /** Warnings already emitted: an unresolved client is retried on every call, its warning is not. */
+  private warned = new Set<string>();
+
   constructor(private onWarning: WarnFn = noopWarn) {}
 
   matchesRemote(remoteUrl: string): boolean {
@@ -318,9 +360,15 @@ export class GitHubHostProvider implements GitHostProvider {
   }
 
   private resolveClient(remoteUrl?: string): GitHubClient | undefined {
-    if (!this.client) this.client = GitHubClient.fromEnv(remoteUrl ?? this.remoteHint, this.onWarning);
+    if (!this.client) this.client = GitHubClient.fromEnv(remoteUrl ?? this.remoteHint, this.warnOnce);
     return this.client;
   }
+
+  private warnOnce: WarnFn = (message) => {
+    if (this.warned.has(message)) return;
+    this.warned.add(message);
+    this.onWarning(message);
+  };
 
   private requireClient(): GitHubClient {
     const client = this.resolveClient();

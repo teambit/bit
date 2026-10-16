@@ -275,6 +275,9 @@ export class CiMain {
       const { hostname, pathname } = new URL(pullRequestUrl);
       const [, owner, repo, pullSegment, pullNumber] = pathname.split('/');
       if (!owner || !repo || pullSegment !== 'pull' || !pullNumber) return undefined;
+      // an enterprise API the environment can't vouch for gets no token, and no request
+      const api = gitHubApiUrl(hostname);
+      if ('error' in api) return undefined;
 
       const headers: Record<string, string> = {
         Accept: 'application/vnd.github+json',
@@ -285,7 +288,7 @@ export class CiMain {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 5_000);
       try {
-        const response = await fetch(`${gitHubApiUrl(hostname)}/repos/${owner}/${repo}/pulls/${pullNumber}`, {
+        const response = await fetch(`${api.url}/repos/${owner}/${repo}/pulls/${pullNumber}`, {
           headers,
           signal: controller.signal,
         });
