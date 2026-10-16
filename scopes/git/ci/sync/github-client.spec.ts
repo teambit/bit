@@ -570,6 +570,39 @@ describe('GitHub Enterprise Server', () => {
       expect(GitHubClient.fromEnv('git@github.com:acme/shop.git')?.apiUrl).to.equal('https://api.github.com');
     });
 
+    it('never lets an https server hand its token to a plaintext or non-web API', () => {
+      ['http://ghe.corp.example/api/v3', 'http://api.ghe.corp.example', 'ftp://ghe.corp.example/api/v3'].forEach(
+        (apiUrl) => {
+          process.env.GITHUB_API_URL = apiUrl;
+          const result = gitHubApiUrl('ghe.corp.example');
+          expect(result, apiUrl).to.not.have.property('url');
+          expect((result as { error: string }).error, apiUrl)
+            .to.contain(apiUrl)
+            .and.contain('is not https');
+          const warnings: string[] = [];
+          expect(
+            GitHubClient.fromEnv('git@ghe.corp.example:acme/store.git', (m) => warnings.push(m)),
+            apiUrl
+          ).to.equal(undefined);
+          expect(warnings, apiUrl).to.have.lengthOf(1);
+        }
+      );
+    });
+
+    it('lets an http server use an http or https API on its host, but no other protocol', () => {
+      process.env.GITHUB_SERVER_URL = 'http://ghe.corp.example';
+      process.env.GITHUB_API_URL = 'http://ghe.corp.example/api/v3';
+      expect(gitHubApiUrl('ghe.corp.example')).to.deep.equal({ url: 'http://ghe.corp.example/api/v3' });
+      process.env.GITHUB_API_URL = 'https://ghe.corp.example/api/v3';
+      expect(gitHubApiUrl('ghe.corp.example')).to.deep.equal({ url: 'https://ghe.corp.example/api/v3' });
+      process.env.GITHUB_API_URL = 'ftp://ghe.corp.example/api/v3';
+      expect(gitHubApiUrl('ghe.corp.example')).to.not.have.property('url');
+      // a non-web server URL derives no API at all
+      delete process.env.GITHUB_API_URL;
+      process.env.GITHUB_SERVER_URL = 'ftp://ghe.corp.example';
+      expect(gitHubApiUrl('ghe.corp.example')).to.not.have.property('url');
+    });
+
     it('drops a trailing slash from GITHUB_API_URL', () => {
       process.env.GITHUB_API_URL = `${GHES_API}/`;
       expect(gitHubApiUrl()).to.deep.equal({ url: GHES_API });

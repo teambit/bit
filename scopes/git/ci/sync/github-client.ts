@@ -2,6 +2,7 @@ import type { GitHostProvider, PrInfo } from './git-host-provider';
 
 const GITHUB_DOT_COM = 'github.com';
 const GITHUB_DOT_COM_API = 'https://api.github.com';
+const WEB_PROTOCOLS = ['http:', 'https:'];
 
 /** The GitHub instance `GITHUB_SERVER_URL` names, or undefined when it is unset or malformed. */
 function gitHubServerUrl(): URL | undefined {
@@ -36,8 +37,9 @@ export type GitHubApiUrl = { url: string } | { error: string };
  * - github.com (and any host that is not the enterprise one) is always `https://api.github.com`.
  * - the enterprise host takes `GITHUB_API_URL` only when it lives on that host or on `api.<host>`
  *   (GHE.com data residency: `https://<sub>.ghe.com` serves its API at `https://api.<sub>.ghe.com`);
- *   unset, it is the GHES convention `<GITHUB_SERVER_URL origin>/api/v3`. Any other API is refused —
- *   never replaced by api.github.com, which must not receive an enterprise token.
+ *   unset, it is the GHES convention `<GITHUB_SERVER_URL origin>/api/v3`. An https server's API must be
+ *   https too, so the token never travels in plaintext. Any other API is refused — never replaced by
+ *   api.github.com, which must not receive an enterprise token.
  */
 export function gitHubApiUrl(host?: string): GitHubApiUrl {
   const serverUrl = gitHubServerUrl();
@@ -45,20 +47,25 @@ export function gitHubApiUrl(host?: string): GitHubApiUrl {
   if (!serverUrl || serverHost === GITHUB_DOT_COM || (host && host.toLowerCase() !== serverHost)) {
     return { url: GITHUB_DOT_COM_API };
   }
+  const refuse = (reason: string): GitHubApiUrl => ({
+    error: `${reason} — refusing to send the token of the GITHUB_SERVER_URL instance "${process.env.GITHUB_SERVER_URL}" to it`,
+  });
+  if (!WEB_PROTOCOLS.includes(serverUrl.protocol)) return refuse(`GITHUB_SERVER_URL is not an http(s) URL`);
   const apiUrl = process.env.GITHUB_API_URL;
   if (!apiUrl) return { url: `${serverUrl.origin}/api/v3` };
-  let apiHost: string | undefined;
+  let api: URL | undefined;
   try {
-    apiHost = new URL(apiUrl).hostname.toLowerCase();
+    api = new URL(apiUrl);
   } catch {
     // a malformed value is refused below like any other foreign API
   }
-  if (apiHost !== serverHost && apiHost !== `api.${serverHost}`) {
-    return {
-      error:
-        `GITHUB_API_URL "${apiUrl}" is not an API of the GITHUB_SERVER_URL instance "${process.env.GITHUB_SERVER_URL}" ` +
-        `(expected a URL on ${serverHost} or api.${serverHost}) — refusing to send that instance's token to it`,
-    };
+  if (!api || ![serverHost, `api.${serverHost}`].includes(api.hostname.toLowerCase())) {
+    return refuse(`GITHUB_API_URL "${apiUrl}" is not on ${serverHost} or api.${serverHost}`);
+  }
+  // the token travels at least as securely as the server is reached: never in plaintext from an https server
+  const protocols = serverUrl.protocol === 'https:' ? ['https:'] : WEB_PROTOCOLS;
+  if (!protocols.includes(api.protocol)) {
+    return refuse(`GITHUB_API_URL "${apiUrl}" is not ${protocols.map((p) => p.slice(0, -1)).join(' or ')}`);
   }
   return { url: apiUrl.replace(/\/+$/, '') };
 }
