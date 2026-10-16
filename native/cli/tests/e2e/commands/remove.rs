@@ -482,7 +482,7 @@ fn snapped_component_on_lane_removal_matches_node() {
     }
 }
 
-fn scope_objects(
+pub(super) fn scope_objects(
     root: &std::path::Path,
 ) -> std::collections::BTreeMap<std::path::PathBuf, Vec<u8>> {
     let base = root.join(".bit/objects");

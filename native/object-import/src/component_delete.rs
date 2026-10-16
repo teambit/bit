@@ -1,0 +1,191 @@
+//! Plan the local bitmap and file effects of `bit delete --silent` on main.
+
+use crate::{component_remove, inspection, recovery, workspace::engine::command::outbound};
+use component_remove::{RowKind, backup_bitmap, select, validate_directory, validate_file_id};
+use serde_json::{Value, json};
+use std::{
+    fs, io,
+    path::{Path, PathBuf},
+};
+
+pub enum Scope {
+    Entire,
+    Range(String),
+    Snaps(Vec<String>),
+}
+
+pub struct Plan {
+    root: PathBuf,
+    bitmap: BitmapChange,
+    repository: RepositorySnapshot,
+    files: Option<PathBuf>,
+    package: PathBuf,
+    full_id: String,
+    entire: bool,
+}
+
+struct BitmapChange {
+    before: Vec<u8>,
+    after: Vec<u8>,
+}
+
+struct RepositorySnapshot {
+    index_before: Vec<u8>,
+    model: FrozenObject,
+    version: FrozenObject,
+}
+
+struct FrozenObject {
+    path: PathBuf,
+    before: Vec<u8>,
+}
+
+impl Plan {
+    pub fn prepare(root: &Path, name: &str, scope: Scope) -> io::Result<Self> {
+        validate_scope(root, &scope)?;
+        let before = fs::read(root.join(".bitmap"))?;
+        let mut bitmap = recovery::jsonc::parse(&before)?;
+        let entire = matches!(scope, Scope::Entire);
+        let selected = select(root, &bitmap, name, !entire, RowKind::Staged)
+            .or_else(|_| select(root, &bitmap, name, !entire, RowKind::Imported))?;
+        if !selected.main_exists {
+            return Err(invalid("component main file is missing"));
+        }
+        let version = selected.version.as_deref().ok_or_else(|| invalid("component version"))?;
+        if let Scope::Snaps(snaps) = &scope
+            && snaps.iter().any(|snap| snap != version)
+        {
+            return Err(invalid("snap selection is outside the tracked head"));
+        }
+        let repository = model_state(root, &selected.identity, version)?;
+        let after = project_bitmap(&mut bitmap, &selected.key, scope)?;
+        Ok(Self {
+            root: root.to_owned(),
+            bitmap: BitmapChange { before, after },
+            repository,
+            files: selected.files,
+            package: selected.package,
+            full_id: format!("{}@{version}", selected.identity),
+            entire,
+        })
+    }
+
+    #[must_use]
+    pub fn full_id(&self) -> &str {
+        &self.full_id
+    }
+    #[must_use]
+    pub fn entire(&self) -> bool {
+        self.entire
+    }
+
+    pub fn commit(&self, file_id: &str) -> io::Result<()> {
+        self.validate(file_id)?;
+        if self.entire && self.package.try_exists()? {
+            fs::remove_dir_all(&self.package)?;
+        }
+        backup_bitmap(&self.root, file_id, "delete")?;
+        fs::write(self.root.join(".bitmap"), &self.bitmap.after)?;
+        if let Some(path) = &self.files {
+            fs::remove_dir_all(path)?;
+        }
+        Ok(())
+    }
+
+    fn validate(&self, file_id: &str) -> io::Result<()> {
+        validate_file_id(file_id)?;
+        if fs::read(self.root.join(".bitmap"))? != self.bitmap.before
+            || fs::read(self.root.join(".bit/index.json"))? != self.repository.index_before
+        {
+            return Err(invalid("component workspace changed before deletion"));
+        }
+        for object in [&self.repository.model, &self.repository.version] {
+            if fs::read(&object.path)? != object.before {
+                return Err(invalid("component object changed before deletion"));
+            }
+        }
+        if let Some(path) = &self.files {
+            validate_directory(path)?;
+        }
+        if self.entire && self.package.try_exists()? {
+            validate_directory(&self.package)?;
+        }
+        Ok(())
+    }
+}
+
+fn project_bitmap(bitmap: &mut Value, key: &str, scope: Scope) -> io::Result<Vec<u8>> {
+    let config = match scope {
+        Scope::Entire => json!({"teambit.component/remove":{"removed":true}}),
+        Scope::Range(range) => json!({"teambit.component/remove":{"removed":false,"range":range}}),
+        Scope::Snaps(snaps) => json!({"teambit.component/remove":{"removed":false,"snaps":snaps}}),
+    };
+    bitmap[key]["config"] = config;
+    inspection::render_bitmap(bitmap)
+}
+
+fn validate_scope(root: &Path, scope: &Scope) -> io::Result<()> {
+    match scope {
+        Scope::Entire => Ok(()),
+        Scope::Range(range)
+            if !range.is_empty()
+                && range.len() <= 128
+                && range.bytes().all(|byte| byte.is_ascii_graphic()) =>
+        {
+            Ok(())
+        }
+        Scope::Snaps(snaps) if !snaps.is_empty() && snaps.len() <= 32 => {
+            for snap in snaps {
+                crate::merge_history::hash(snap)?;
+                let _version = outbound::read_object(&root.join(".bit/objects"), snap, "Version")?;
+            }
+            Ok(())
+        }
+        _ => Err(invalid("unsupported deletion selection")),
+    }
+}
+
+fn model_state(root: &Path, identity: &str, version: &str) -> io::Result<RepositorySnapshot> {
+    let (scope, name) = identity.split_once('/').ok_or_else(|| invalid("component identity"))?;
+    let index_before = fs::read(root.join(".bit/index.json"))?;
+    let index: Value = serde_json::from_slice(&index_before)?;
+    let rows = index["components"].as_array().ok_or_else(|| invalid("scope index"))?;
+    let matches: Vec<_> = rows
+        .iter()
+        .filter(|row| row["id"]["scope"] == scope && row["id"]["name"] == name)
+        .collect();
+    if matches.len() != 1 || matches[0]["isSymlink"] != false {
+        return Err(invalid("component is not uniquely indexed"));
+    }
+    let model_hash = matches[0]["hash"].as_str().ok_or_else(|| invalid("Component hash"))?;
+    crate::merge_history::hash(model_hash)?;
+    let model = freeze(root, model_hash)?;
+    let value = outbound::read_object(&root.join(".bit/objects"), model_hash, "Component")?;
+    if value["scope"] != scope || value["name"] != name {
+        return Err(invalid("Component model identity"));
+    }
+    let hash = value["versions"][version]
+        .as_str()
+        .or_else(|| (value["head"] == version).then_some(version))
+        .ok_or_else(|| invalid("component version is not in model"))?;
+    crate::merge_history::hash(hash)?;
+    let version_object = freeze(root, hash)?;
+    let _value = outbound::read_object(&root.join(".bit/objects"), hash, "Version")?;
+    Ok(RepositorySnapshot { index_before, model, version: version_object })
+}
+
+fn freeze(root: &Path, hash: &str) -> io::Result<FrozenObject> {
+    let path = root
+        .join(".bit/objects")
+        .join(&hash[..2])
+        .join(&hash[2..]);
+    let kind = fs::symlink_metadata(&path)?.file_type();
+    if !kind.is_file() || kind.is_symlink() {
+        return Err(invalid("component object path"));
+    }
+    Ok(FrozenObject { before: fs::read(&path)?, path })
+}
+
+fn invalid(message: &str) -> io::Error {
+    io::Error::new(io::ErrorKind::InvalidInput, message)
+}

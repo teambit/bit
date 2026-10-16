@@ -33,7 +33,7 @@ struct BitmapChange {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-enum RowKind {
+pub(crate) enum RowKind {
     New,
     Staged,
     Imported,
@@ -105,22 +105,22 @@ impl Plan {
         if self.package.try_exists()? {
             fs::remove_dir_all(&self.package)?;
         }
-        backup_bitmap(&self.root, file_id)?;
+        backup_bitmap(&self.root, file_id, "remove")?;
         fs::write(self.root.join(".bitmap"), &self.bitmap.after)
     }
 }
 
-struct Selected {
-    key: String,
-    identity: String,
-    files: Option<PathBuf>,
-    package: PathBuf,
-    main_exists: bool,
-    version: Option<String>,
+pub(crate) struct Selected {
+    pub(crate) key: String,
+    pub(crate) identity: String,
+    pub(crate) files: Option<PathBuf>,
+    pub(crate) package: PathBuf,
+    pub(crate) main_exists: bool,
+    pub(crate) version: Option<String>,
     lane: Option<Lane>,
 }
 
-fn select(
+pub(crate) fn select(
     root: &Path,
     bitmap: &Value,
     name: &str,
@@ -354,7 +354,7 @@ fn valid_scope(scope: &str) -> bool {
             })
 }
 
-fn validate_directory(path: &Path) -> io::Result<()> {
+pub(crate) fn validate_directory(path: &Path) -> io::Result<()> {
     let kind = fs::symlink_metadata(path)?.file_type();
     if !kind.is_dir() || kind.is_symlink() {
         return Err(invalid("component path is not a directory"));
@@ -362,7 +362,7 @@ fn validate_directory(path: &Path) -> io::Result<()> {
     Ok(())
 }
 
-fn validate_file_id(value: &str) -> io::Result<()> {
+pub(crate) fn validate_file_id(value: &str) -> io::Result<()> {
     if value.len() > 32
         || value.split('-').count() != 6
         || value
@@ -374,7 +374,7 @@ fn validate_file_id(value: &str) -> io::Result<()> {
     Ok(())
 }
 
-fn backup_bitmap(root: &Path, file_id: &str) -> io::Result<()> {
+pub(crate) fn backup_bitmap(root: &Path, file_id: &str, operation: &str) -> io::Result<()> {
     use std::io::Write;
     let directory = root.join(".bit/bitmap-history");
     fs::create_dir_all(&directory)?;
@@ -383,7 +383,7 @@ fn backup_bitmap(root: &Path, file_id: &str) -> io::Result<()> {
         .create(true)
         .append(true)
         .open(root.join(".bit/bitmap-history-metadata.txt"))?;
-    writeln!(metadata, "{file_id} remove")
+    writeln!(metadata, "{file_id} {operation}")
 }
 
 fn invalid(message: &str) -> io::Error {

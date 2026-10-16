@@ -1,5 +1,6 @@
 //! `e2e/commands/`.
 
+mod delete;
 mod diff;
 mod export;
 mod import;

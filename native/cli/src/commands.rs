@@ -3,6 +3,7 @@
 
 mod checkout;
 mod color;
+mod delete;
 mod diff;
 mod engine;
 mod export;
@@ -42,6 +43,7 @@ pub struct Command {
 pub const COMMANDS: &[Command] = &[
     checkout::COMMAND,
     checkout::REVERT,
+    delete::COMMAND,
     file_history::BLAME,
     diff::COMMAND,
     export::COMMAND,
