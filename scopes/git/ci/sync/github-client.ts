@@ -1,17 +1,36 @@
 import type { GitHostProvider, PrInfo } from './git-host-provider';
 
+const GITHUB_DOT_COM = 'github.com';
+const GITHUB_DOT_COM_API = 'https://api.github.com';
+
 /**
- * The `owner/repo` out of a github.com remote URL, anchored to the URL authority. `:digits` is a port
- * only under a scheme; in the scp-like form (`git@github.com:12345/repo`) the colon starts the PATH
- * and an all-digits owner is a legal GitHub username.
+ * The host of the GitHub instance this run belongs to: the one `GITHUB_SERVER_URL` names (Actions sets
+ * it on every runner — `https://github.com`, or the GitHub Enterprise Server URL), else github.com.
  */
-export function parseGitHubRepo(remoteUrl: string): string | undefined {
-  const url = remoteUrl.trim();
-  const hasScheme = /^[a-z+]+:\/\//i.test(url);
-  const match = hasScheme
-    ? url.match(/(?:\/\/|@)github\.com(?::\d+)?\/([^/]+\/[^/]+?)(?:\.git)?$/i)
-    : url.match(/(?:^|@)github\.com[:/]([^/]+\/[^/]+?)(?:\.git)?$/i);
-  return match?.[1];
+function gitHubServerHost(): string {
+  try {
+    if (process.env.GITHUB_SERVER_URL) return new URL(process.env.GITHUB_SERVER_URL).hostname.toLowerCase();
+  } catch {
+    // a malformed value names no instance; fall through to github.com
+  }
+  return GITHUB_DOT_COM;
+}
+
+/** The hosts whose remotes are GitHub's: github.com, plus a GitHub Enterprise Server host. */
+function gitHubHosts(): string[] {
+  const serverHost = gitHubServerHost();
+  return serverHost === GITHUB_DOT_COM ? [GITHUB_DOT_COM] : [GITHUB_DOT_COM, serverHost];
+}
+
+/**
+ * The REST API base for a repository on `host` (the instance's own host when omitted). `GITHUB_API_URL`
+ * is the API of the `GITHUB_SERVER_URL` instance — Actions sets it to `https://<host>/api/v3` on GitHub
+ * Enterprise Server — so it serves that host only; a github.com repository reached from a GHES runner
+ * still talks to api.github.com.
+ */
+export function gitHubApiUrl(host?: string): string {
+  if (host && host.toLowerCase() !== gitHubServerHost()) return GITHUB_DOT_COM_API;
+  return (process.env.GITHUB_API_URL || GITHUB_DOT_COM_API).replace(/\/+$/, '');
 }
 
 /** The host a git remote URL points at, lower-cased, or undefined when the URL has no authority. */
@@ -23,27 +42,44 @@ function remoteHost(remoteUrl: string): string | undefined {
 }
 
 /**
- * Does this remote point at GitHub? A host test only — an unparseable github.com remote is still
- * GitHub's to claim. Host equality, not substring: `github.com` can be a path segment on another host.
+ * The `owner/repo` out of a GitHub remote URL, anchored to the URL authority. `:digits` is a port
+ * only under a scheme; in the scp-like form (`git@github.com:12345/repo`) the colon starts the PATH
+ * and an all-digits owner is a legal GitHub username.
  */
-export function isGitHubRemote(remoteUrl: string): boolean {
-  return remoteHost(remoteUrl) === 'github.com';
+export function parseGitHubRepo(remoteUrl: string): string | undefined {
+  const url = remoteUrl.trim();
+  const host = remoteHost(url);
+  if (!host || !gitHubHosts().includes(host)) return undefined;
+  const hostPattern = host.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const hasScheme = /^[a-z+]+:\/\//i.test(url);
+  const match = hasScheme
+    ? url.match(new RegExp(`(?:\\/\\/|@)${hostPattern}(?::\\d+)?\\/([^/]+\\/[^/]+?)(?:\\.git)?$`, 'i'))
+    : url.match(new RegExp(`(?:^|@)${hostPattern}[:/]([^/]+\\/[^/]+?)(?:\\.git)?$`, 'i'));
+  return match?.[1];
 }
 
-const API = 'https://api.github.com';
+/**
+ * Does this remote point at GitHub — github.com, or the GitHub Enterprise Server host `GITHUB_SERVER_URL`
+ * names? A host test only — an unparseable GitHub remote is still GitHub's to claim. Host equality, not
+ * substring: `github.com` can be a path segment on another host.
+ */
+export function isGitHubRemote(remoteUrl: string): boolean {
+  const host = remoteHost(remoteUrl);
+  return Boolean(host && gitHubHosts().includes(host));
+}
 
 /**
  * The `rel="next"` URL out of a GitHub `Link` response header, or undefined on the last page. The
  * header is response data, and `requestRaw` attaches the bearer token to whatever URL it is handed —
  * so a next link whose origin is not the API's reads as "last page", never as a request target.
  */
-function nextPageUrl(linkHeader: string | null): string | undefined {
+function nextPageUrl(linkHeader: string | null, apiUrl: string): string | undefined {
   if (!linkHeader) return undefined;
   const next = linkHeader.split(',').find((part) => part.includes('rel="next"'));
   const url = next?.match(/<([^>]+)>/)?.[1];
   if (!url) return undefined;
   try {
-    return new URL(url).origin === API ? url : undefined;
+    return new URL(url).origin === new URL(apiUrl).origin ? url : undefined;
   } catch {
     return undefined;
   }
@@ -60,11 +96,14 @@ export class GitHubClient implements GitHostProvider {
   private token: string;
   /** `owner/repo`. Readable so callers (and tests) can see *which* repository a resolved client speaks to. */
   readonly repo: string;
+  /** The REST API base, e.g. `https://api.github.com` or a GitHub Enterprise Server's `https://<host>/api/v3`. */
+  readonly apiUrl: string;
   private fetchImpl: typeof fetch;
 
-  constructor(opts: { token: string; repo: string; fetchImpl?: typeof fetch }) {
+  constructor(opts: { token: string; repo: string; apiUrl?: string; fetchImpl?: typeof fetch }) {
     this.token = opts.token;
     this.repo = opts.repo;
+    this.apiUrl = opts.apiUrl ?? gitHubApiUrl();
     this.fetchImpl = opts.fetchImpl ?? fetch;
   }
 
@@ -90,7 +129,7 @@ export class GitHubClient implements GitHostProvider {
           `"${repoFromRemote}" — using "${repoFromRemote}", the repository this run pushes its branches to.`
       );
     }
-    return new GitHubClient({ token, repo });
+    return new GitHubClient({ token, repo, apiUrl: gitHubApiUrl(gitRemoteUrl && remoteHost(gitRemoteUrl)) });
   }
 
   matchesRemote(remoteUrl: string): boolean {
@@ -104,7 +143,7 @@ export class GitHubClient implements GitHostProvider {
 
   /** `pathOrUrl` may be a path relative to this repo, or an absolute URL (a `Link` header's next page). */
   private async requestRaw(method: string, pathOrUrl: string, body?: unknown): Promise<Response> {
-    const url = /^https?:\/\//i.test(pathOrUrl) ? pathOrUrl : `${API}/repos/${this.repo}${pathOrUrl}`;
+    const url = /^https?:\/\//i.test(pathOrUrl) ? pathOrUrl : `${this.apiUrl}/repos/${this.repo}${pathOrUrl}`;
     const res = await this.fetchImpl(url, {
       method,
       headers: {
@@ -177,7 +216,7 @@ export class GitHubClient implements GitHostProvider {
       const body = (await res.json()) as any[];
       const match = body.find((c: any) => (c.body ?? '').includes(marker));
       if (match) return { id: match.id };
-      next = nextPageUrl(res.headers.get('link'));
+      next = nextPageUrl(res.headers.get('link'), this.apiUrl);
     }
     return next ? 'unknown' : 'absent';
   }
@@ -288,7 +327,7 @@ export class GitHubHostProvider implements GitHostProvider {
     if (!client) {
       throw new Error(
         `the github host provider is not configured: set BIT_GITHUB_TOKEN (or GITHUB_TOKEN), and either ` +
-          `GITHUB_REPOSITORY or a github.com "origin" remote`
+          `GITHUB_REPOSITORY or a GitHub "origin" remote (github.com, or the GITHUB_SERVER_URL host)`
       );
     }
     return client;

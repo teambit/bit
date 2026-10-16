@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { parseGitHubRepo, isGitHubRemote } from './github-client';
+import { parseGitHubRepo, isGitHubRemote, gitHubApiUrl } from './github-client';
 
 /**
  * `bit ci sync --init` — pure scaffolding logic, unit-testable without a live workspace/git checkout.
@@ -302,7 +302,7 @@ const WEBHOOK_PAYLOAD_TEMPLATE =
  */
 export function renderInitChecklist(ownerRepo: OwnerRepo | undefined): string {
   const repoSegment = ownerRepo ? `${ownerRepo.owner}/${ownerRepo.repo}` : '<owner>/<repo>';
-  const dispatchUrl = `https://api.github.com/repos/${repoSegment}/dispatches`;
+  const dispatchUrl = `${gitHubApiUrl()}/repos/${repoSegment}/dispatches`;
   return [
     '',
     'Remaining manual steps (bit ci sync --init only scaffolds files -- these need a human):',

@@ -1,5 +1,6 @@
 import type { Logger } from '@teambit/logger';
 import { git } from './git';
+import { gitHubApiUrl } from './sync/github-client';
 
 /**
  * Utility class for detecting source branch names in CI environments after PR merge.
@@ -120,7 +121,7 @@ export class SourceBranchDetector {
       this.logger.console(`Querying GitHub API for PR info using commit SHA: ${targetCommit.trim()}`);
 
       // Query GitHub API for pull requests associated with this commit
-      const apiUrl = `https://api.github.com/repos/${githubRepository}/commits/${targetCommit.trim()}/pulls`;
+      const apiUrl = `${gitHubApiUrl()}/repos/${githubRepository}/commits/${targetCommit.trim()}/pulls`;
 
       // Try with token first (if available), then without token for public repos
       const githubToken = process.env.GITHUB_TOKEN;

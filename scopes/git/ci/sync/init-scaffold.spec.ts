@@ -123,6 +123,24 @@ describe('init-scaffold', () => {
       expect(renderInitChecklist(undefined)).to.contain('https://api.github.com/repos/<owner>/<repo>/dispatches');
     });
 
+    it('derives the repository and the dispatch URL from a GitHub Enterprise Server remote', () => {
+      const saved = { api: process.env.GITHUB_API_URL, server: process.env.GITHUB_SERVER_URL };
+      process.env.GITHUB_API_URL = 'https://ghe.corp.example/api/v3';
+      process.env.GITHUB_SERVER_URL = 'https://ghe.corp.example';
+      try {
+        const ownerRepo = deriveOwnerRepo('git@ghe.corp.example:acme/store.git');
+        expect(ownerRepo).to.deep.equal({ owner: 'acme', repo: 'store' });
+        expect(renderInitChecklist(ownerRepo)).to.contain(
+          'https://ghe.corp.example/api/v3/repos/acme/store/dispatches'
+        );
+      } finally {
+        if (saved.api === undefined) delete process.env.GITHUB_API_URL;
+        else process.env.GITHUB_API_URL = saved.api;
+        if (saved.server === undefined) delete process.env.GITHUB_SERVER_URL;
+        else process.env.GITHUB_SERVER_URL = saved.server;
+      }
+    });
+
     it('always includes the secrets, permissions, webhook and fetch-depth checklist items', () => {
       const checklist = renderInitChecklist(undefined);
       [
