@@ -1039,6 +1039,310 @@ ${helper.scopes.remote}/comp3: 1.5.0`;
     });
   });
 
+  describe('bit ci merge of a cross-scope lane carrying a NEW component of another scope', () => {
+    // This repository tracks only its own scope's slice of the lane. The lane also carries a
+    // component of ANOTHER scope that never existed on main, so its lane config differs from the
+    // (empty) main config on every aspect — yet it has no .bitmap entry here to restore it into.
+    let mergeOutput: string;
+    let otherScope: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope('-other-scope');
+      otherScope = scopeName;
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
+      setupGitRemote();
+      const defaultBranch = setupComponentsAndInitialCommit(1);
+
+      helper.command.createLane('cross-scope-lane');
+      helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1 on the lane";');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.runCmd('git checkout -b feature/cross-scope');
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "feat: comp1 on the lane"');
+
+      // Another repository adds a NEW component of the other scope, with its own config, to the lane.
+      const devPath = helper.scopeHelper.cloneWorkspace();
+      fs.outputFileSync(path.join(devPath, 'comp2', 'index.js'), 'module.exports = () => "comp2";');
+      helper.command.runCmd('bit add comp2', devPath);
+      helper.command.runCmd(`bit scope set ${otherScope} comp2`, devPath);
+      helper.command.runCmd('bit env set comp2 teambit.harmony/node', devPath);
+      helper.command.runCmd('bit snap --message "comp2 on the lane"', devPath);
+      helper.command.runCmd('bit export', devPath);
+
+      // This repository now sees the whole lane, foreign component included.
+      helper.command.import();
+
+      helper.command.runCmd(`git checkout ${defaultBranch}`);
+      helper.command.runCmd('git merge feature/cross-scope');
+      mergeOutput = helper.command.runCmd('bit ci merge --message "merge cross-scope lane"');
+    });
+    it('should complete successfully', () => {
+      expect(mergeOutput).to.include('Merged PR');
+    });
+    it('should tag and export only the component this workspace tracks', () => {
+      const list = helper.command.listRemoteScopeParsed();
+      const comp1 = list.find((comp) => comp.id.includes('comp1'));
+      expect(comp1?.localVersion).to.equal('0.0.2');
+      expect(helper.fs.readFile('.bitmap')).to.not.include(otherScope);
+    });
+    it('should report the lane component it leaves to the workspace that tracks it', () => {
+      expect(mergeOutput).to.include("Lane carries 1 component(s) this workspace doesn't track");
+    });
+    it('should leave the lane open for the other scope to release its slice', () => {
+      expect(mergeOutput).to.include(`${otherScope}/comp2`);
+      const remoteLanes = helper.command.listRemoteLanesParsed();
+      expect(remoteLanes.lanes).to.have.lengthOf(1);
+    });
+  });
+
+  describe('bit ci merge of a cross-scope lane that changes the config of an EXISTING component of another scope', () => {
+    // The foreign component exists on its scope's main, and the lane changes its env. Its lane
+    // config differs from its main config, but it belongs to another workspace's slice of the lane:
+    // this workspace never writes it into .bitmap, and only releases its own component.
+    let mergeOutput: string;
+    let otherScope: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope('-other-scope');
+      otherScope = scopeName;
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
+      helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
+      setupGitRemote();
+      const defaultBranch = setupComponentsAndInitialCommit(1);
+
+      // Another repository releases comp2 of the other scope to that scope's main.
+      const devPath = helper.scopeHelper.cloneWorkspace();
+      fs.outputFileSync(path.join(devPath, 'comp2', 'index.js'), 'module.exports = () => "comp2";');
+      helper.command.runCmd('bit add comp2', devPath);
+      helper.command.runCmd(`bit scope set ${otherScope} comp2`, devPath);
+      helper.command.runCmd('bit tag --message "comp2 on main"', devPath);
+      helper.command.runCmd('bit export', devPath);
+
+      helper.command.createLane('cross-scope-config-lane');
+      helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1 on the lane";');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.runCmd('git checkout -b feature/cross-scope-config');
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "feat: comp1 on the lane"');
+
+      // The other repository joins the lane and changes comp2's env there.
+      helper.command.runCmd(`bit switch ${helper.scopes.remote}/cross-scope-config-lane -x`, devPath);
+      helper.command.runCmd('bit envs set comp2 teambit.harmony/aspect', devPath);
+      helper.command.runCmd('bit snap --message "comp2 env on the lane"', devPath);
+      helper.command.runCmd('bit export', devPath);
+
+      helper.command.import();
+
+      helper.command.runCmd(`git checkout ${defaultBranch}`);
+      helper.command.runCmd('git merge feature/cross-scope-config');
+      mergeOutput = helper.command.runCmd('bit ci merge --message "merge cross-scope config lane"');
+    });
+    it('should complete successfully', () => {
+      expect(mergeOutput).to.include('Merged PR');
+    });
+    it('should report the lane component it leaves to the workspace that tracks it', () => {
+      expect(mergeOutput).to.include("Lane carries 1 component(s) this workspace doesn't track");
+      expect(mergeOutput).to.include(`${otherScope}/comp2`);
+    });
+    it('should never write the foreign component into .bitmap', () => {
+      expect(helper.fs.readFile('.bitmap')).to.not.include(otherScope);
+    });
+    it('should tag and export only the component this workspace tracks', () => {
+      const comp1 = helper.command.listRemoteScopeParsed().find((comp) => comp.id.includes('comp1'));
+      expect(comp1?.localVersion).to.equal('0.0.2');
+      const comp2 = helper.command.listScopeParsed(otherScope).find((comp) => comp.id.includes('comp2'));
+      expect(comp2?.localVersion).to.equal('0.0.1');
+    });
+    it('status should be clean', () => {
+      helper.command.expectStatusToBeClean();
+    });
+  });
+
+  describe('bit ci merge in a workspace that tracks components of several scopes (e.g. teambit/bit itself)', () => {
+    // The slice is "tracked by this workspace", not "scope === defaultScope": a multi-scope workspace
+    // releases its components of every scope, including restoring their lane config.
+    let mergeOutput: string;
+    let otherScope: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope('-other-scope');
+      otherScope = scopeName;
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
+      helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
+      setupGitRemote();
+
+      helper.fs.outputFile('comp1/index.js', 'module.exports = () => "comp1";');
+      helper.fs.outputFile('comp2/index.js', 'module.exports = () => "comp2";');
+      helper.command.addComponent('comp1');
+      helper.command.addComponent('comp2');
+      helper.command.setScope(otherScope, 'comp2');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.fs.outputFile('.gitignore', 'node_modules/\n.bit/\n');
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "initial commit"');
+      const defaultBranch = helper.command.runCmd('git branch --show-current').trim();
+      helper.command.runCmd(`git push -u origin ${defaultBranch}`);
+
+      // The lane changes the env of a component of EACH scope.
+      helper.command.createLane('multi-scope-lane');
+      helper.command.setEnv('comp1', 'teambit.harmony/aspect');
+      helper.command.setEnv('comp2', 'teambit.harmony/aspect');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.runCmd('git checkout -b feature/multi-scope');
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "feat: env changes on the lane"');
+
+      helper.command.runCmd(`git checkout ${defaultBranch}`);
+      helper.command.runCmd('git merge feature/multi-scope');
+      mergeOutput = helper.command.runCmd('bit ci merge --message "merge multi-scope lane"');
+    });
+    it('should complete successfully without leaving any lane component to another workspace', () => {
+      expect(mergeOutput).to.include('Merged PR');
+      expect(mergeOutput).to.not.include("this workspace doesn't track");
+    });
+    it('should restore the lane config of the components of both scopes', () => {
+      expect(helper.command.showAspectConfig('comp1', 'teambit.envs/envs').config.env).to.equal(
+        'teambit.harmony/aspect'
+      );
+      expect(helper.command.showAspectConfig('comp2', 'teambit.envs/envs').config.env).to.equal(
+        'teambit.harmony/aspect'
+      );
+    });
+    it('should tag and export the components of both scopes', () => {
+      const comp1 = helper.command.listRemoteScopeParsed().find((comp) => comp.id.includes('comp1'));
+      expect(comp1?.localVersion).to.equal('0.0.2');
+      const comp2 = helper.command.listScopeParsed(otherScope).find((comp) => comp.id.includes('comp2'));
+      expect(comp2?.localVersion).to.equal('0.0.2');
+    });
+    it('status should be clean', () => {
+      helper.command.expectStatusToBeClean();
+    });
+  });
+
+  describe('bit ci merge of a cross-scope lane where an own component depends on a NEW component of another scope', () => {
+    // Two mirror repositories, one per scope. The lane (of the other scope) carries comp2 (new, other
+    // scope) and comp1 (this scope), and comp1 depends on comp2. This repository installs comp2 as a
+    // package of its lane snap — faked below the way the registry would install it: version
+    // `0.0.0-<snap>`, `componentId.version` = the snap hash.
+    //
+    // Known behaviour, recorded here (not changed by the slice fix): `bit ci merge` refuses to tag comp1
+    // on main while it depends on comp2's LANE SNAP — a tag on main may not depend on a snap outside
+    // main history. Releasing comp2 from its own repository doesn't unblock it: comp2 was new on the
+    // lane, so its release is a fresh 0.0.1 whose history doesn't include the lane snap. comp1 is
+    // released only once its dependency is moved to comp2's tag (a follow-up change in comp1's repo).
+    let firstMergeError: string;
+    let otherMergeOutput: string;
+    let secondMergeError: string;
+    let otherScope: string;
+    let comp2LaneHead: string;
+    let otherScopePath: string;
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope('-other-scope');
+      otherScope = scopeName;
+      otherScopePath = scopePath;
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
+      helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
+
+      // The other scope's repository: tracks comp2 only, and opens the lane with it.
+      helper.workspaceJsonc.addDefaultScope(otherScope);
+      helper.scopeHelper.addRemoteScope(scopePath);
+      setupGitRemote();
+      helper.fs.outputFile('.gitignore', 'node_modules/\n.bit/\n');
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "initial commit"');
+      const otherDefaultBranch = helper.command.runCmd('git branch --show-current').trim();
+      helper.command.runCmd(`git push -u origin ${otherDefaultBranch}`);
+      helper.command.createLane('dep-lane');
+      helper.fs.outputFile('comp2/index.js', 'module.exports = () => "comp2";');
+      helper.command.addComponent('comp2');
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.runCmd('git checkout -b feature/comp2');
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "feat: comp2 on the lane"');
+      helper.command.runCmd(`git checkout ${otherDefaultBranch}`);
+      helper.command.runCmd('git merge feature/comp2');
+      comp2LaneHead = helper.command.getHeadOfLane('dep-lane', 'comp2');
+      const otherRepoPath = helper.scopeHelper.cloneWorkspace();
+
+      // This scope's repository: tracks comp1 only, on main.
+      helper.scopeHelper.reInitWorkspace();
+      helper.scopeHelper.addRemoteScope();
+      helper.scopeHelper.addRemoteScope(scopePath);
+      setupGitRemote();
+      const defaultBranch = setupComponentsAndInitialCommit(1);
+
+      // It joins the lane and makes comp1 depend on comp2's lane snap.
+      helper.command.runCmd(`bit switch ${otherScope}/dep-lane -x --workspace-only`);
+      const comp2Pkg = `@${otherScope}/comp2`;
+      helper.fs.outputFile(`node_modules/${comp2Pkg}/index.js`, 'module.exports = () => "comp2";');
+      helper.fs.outputFile(
+        `node_modules/${comp2Pkg}/package.json`,
+        JSON.stringify({
+          name: comp2Pkg,
+          version: `0.0.0-${comp2LaneHead}`,
+          main: 'index.js',
+          componentId: { scope: otherScope, name: 'comp2', version: comp2LaneHead },
+        })
+      );
+      helper.fs.outputFile('comp1/index.js', `const comp2 = require('${comp2Pkg}');\nmodule.exports = () => comp2();`);
+      helper.command.snapAllComponentsWithoutBuild();
+      helper.command.export();
+      helper.command.runCmd('git checkout -b feature/comp1');
+      helper.command.runCmd('git add .');
+      helper.command.runCmd('git commit -m "feat: comp1 uses comp2"');
+      helper.command.runCmd(`git checkout ${defaultBranch}`);
+      helper.command.runCmd('git merge feature/comp1');
+
+      // 1. comp1's repository merges first, while comp2 is unreleased (in a copy: a CI re-run starts fresh).
+      const firstRunPath = helper.scopeHelper.cloneWorkspace();
+      firstMergeError = mergeError(firstRunPath);
+      // 2. comp2's repository releases its slice.
+      otherMergeOutput = helper.command.runCmd('bit ci merge --message "merge comp2"', otherRepoPath);
+      // 3. comp1's repository merges again.
+      secondMergeError = mergeError();
+    });
+    function mergeError(cwd?: string): string {
+      try {
+        helper.command.runCmd('bit ci merge --message "merge comp1"', cwd);
+      } catch (err: any) {
+        return err.message;
+      }
+      throw new Error('expected bit ci merge of comp1 to fail');
+    }
+    it('before comp2 is released, bit ci merge of comp1 stops at the tag: main may not depend on a lane snap', () => {
+      expect(firstMergeError).to.include(
+        `it has a dependency ${otherScope}/comp2@${comp2LaneHead} which is not part of main history`
+      );
+      expect(firstMergeError).to.not.include('was not found on your local workspace');
+    });
+    it("comp2's repository releases comp2 only, and keeps the lane open for comp1", () => {
+      expect(otherMergeOutput).to.include('Merged PR');
+      const comp2 = helper.command.listScopeParsed(otherScope).find((comp) => comp.id.includes('comp2'));
+      expect(comp2?.localVersion).to.equal('0.0.1');
+      expect(helper.command.runCmd(`bit lane list --remote ${otherScope} --json`)).to.include('dep-lane');
+    });
+    it("comp2's release does not contain its lane snap in its history", () => {
+      const comp2Tag = helper.command.catComponent(`${otherScope}/comp2@0.0.1`, otherScopePath);
+      expect(comp2Tag.parents ?? []).to.not.include(comp2LaneHead);
+    });
+    it('after comp2 is released, bit ci merge of comp1 still stops at the same check', () => {
+      expect(secondMergeError).to.include(
+        `it has a dependency ${otherScope}/comp2@${comp2LaneHead} which is not part of main history`
+      );
+      const comp1 = helper.command.listRemoteScopeParsed().find((comp) => comp.id.includes('comp1'));
+      expect(comp1?.localVersion).to.equal('0.0.1');
+    });
+  });
+
   describe('bit ci merge after lane import --branch', () => {
     let mergeOutput: string;
     before(() => {
