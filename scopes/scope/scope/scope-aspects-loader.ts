@@ -22,6 +22,7 @@ import type { EnvsMain } from '@teambit/envs';
 import type { NodeLinker } from '@teambit/dependency-resolver';
 import type { ScopeMain } from './scope.main.runtime';
 import type { ConfigStoreMain } from '@teambit/config-store';
+import { AspectVersionsPicker } from './aspect-versions-picker';
 
 type ManifestOrAspect = ExtensionManifest | Aspect;
 
@@ -56,12 +57,25 @@ export class ScopeAspectsLoader {
 ids: ${ids.join(', ')}
 needed-for: ${neededFor || '<unknown>'}`);
     const grouped = await this.groupAspectIdsByEnvOfTheList(ids, lane);
+    const versionsPicker = new AspectVersionsPicker(ids);
     this.logger.info(`${loggerPrefix} getManifestsAndLoadAspects for grouped.envs, total ${grouped.envs?.length || 0}`);
-    const envsManifestsIds = await this.getManifestsAndLoadAspects(grouped.envs, throwOnError, lane, opts);
+    const envsManifestsIds = await this.getManifestsAndLoadAspects(
+      grouped.envs,
+      throwOnError,
+      lane,
+      opts,
+      versionsPicker
+    );
     this.logger.info(
       `${loggerPrefix} getManifestsAndLoadAspects for grouped.other, total ${grouped.other?.length || 0}`
     );
-    const otherManifestsIds = await this.getManifestsAndLoadAspects(grouped.other, throwOnError, lane, opts);
+    const otherManifestsIds = await this.getManifestsAndLoadAspects(
+      grouped.other,
+      throwOnError,
+      lane,
+      opts,
+      versionsPicker
+    );
     this.logger.debug(`${loggerPrefix} finish loading aspects`);
     return envsManifestsIds.concat(otherManifestsIds);
   }
@@ -88,14 +102,16 @@ needed-for: ${neededFor || '<unknown>'}`);
     ids: string[] = [],
     throwOnError = false,
     lane?: Lane,
-    opts?: ScopeLoadAspectsOptions
+    opts?: ScopeLoadAspectsOptions,
+    versionsPicker = new AspectVersionsPicker(ids)
   ): Promise<string[]> {
     const { manifests: scopeManifests, potentialPluginsIds } = await this.getManifestsGraphRecursively(
       ids,
       [],
       throwOnError,
       lane,
-      opts
+      opts,
+      versionsPicker
     );
     await this.aspectLoader.loadExtensionsByManifests(scopeManifests);
     const { manifests: scopePluginsManifests } = await this.getManifestsGraphRecursively(
@@ -103,7 +119,8 @@ needed-for: ${neededFor || '<unknown>'}`);
       [],
       throwOnError,
       lane,
-      opts
+      opts,
+      versionsPicker
     );
     await this.aspectLoader.loadExtensionsByManifests(scopePluginsManifests);
     const allManifests = scopeManifests.concat(scopePluginsManifests);
@@ -119,7 +136,8 @@ needed-for: ${neededFor || '<unknown>'}`);
       packageManagerConfigRootDir?: string;
       workspaceName?: string;
       loadCustomEnvs?: string;
-    } = {}
+    } = {},
+    versionsPicker = new AspectVersionsPicker(ids)
   ): Promise<{ manifests: ManifestOrAspect[]; potentialPluginsIds: string[] }> {
     ids = uniq(ids);
     const optsWithDefaults = { loadCustomEnvs: false, ...opts };
@@ -153,20 +171,36 @@ needed-for: ${neededFor || '<unknown>'}`);
       })
     );
 
-    const depsToLoad: Array<ExtensionManifest | Aspect> = [];
-    await mapSeries(manifests, async (manifest) => {
-      depsToLoad.push(...(manifest.dependencies || []));
+    // pick the versions of all the dependencies of this level before going deeper, so a version that is closer to the
+    // requested aspects wins. the dependencies were resolved by the dependency list of each dependent (see
+    // DependencyResolverMain.onLoadRequireableExtensionSubscriber), and they are clones, so it's safe to change them.
+    const depsOfLevel = manifests.flatMap((manifest) => {
+      const deps: Array<ExtensionManifest | Aspect> = [...(manifest.dependencies || [])];
       // @ts-ignore
-      (manifest._runtimes || []).forEach((runtime) => {
-        depsToLoad.push(...(runtime.dependencies || []));
-      });
-      const depIds = depsToLoad.map((d) => d.id).filter((id) => id) as string[];
+      (manifest._runtimes || []).forEach((runtime) => deps.push(...(runtime.dependencies || [])));
+      const depsWithId = deps.filter((dep) => dep.id);
       this.logger.debug(
-        `getManifestsGraphRecursively, id: ${manifest.id || '<unknown>'}, found ${depIds.length}: ${depIds.join(', ')}`
+        `getManifestsGraphRecursively, id: ${manifest.id || '<unknown>'}, found ${depsWithId.length}: ${depsWithId.map((d) => d.id).join(', ')}`
       );
-      const { manifests: loaded } = await this.getManifestsGraphRecursively(depIds, visited, throwOnError, lane, opts);
-      manifests.push(...loaded);
+      return depsWithId.map((dep) => ({ dependent: manifest.id, dep }));
     });
+    const pickedIds = versionsPicker.pick(depsOfLevel.map(({ dep }) => dep.id as string));
+    depsOfLevel.forEach(({ dependent, dep }, index) => {
+      if (pickedIds[index] === dep.id) return;
+      this.logger.debug(
+        `getManifestsGraphRecursively, ${dependent || '<unknown>'} depends on ${dep.id}, loading ${pickedIds[index]} instead`
+      );
+      dep.id = pickedIds[index];
+    });
+    const { manifests: loaded } = await this.getManifestsGraphRecursively(
+      pickedIds,
+      visited,
+      throwOnError,
+      lane,
+      opts,
+      versionsPicker
+    );
+    manifests.push(...loaded);
 
     return { manifests, potentialPluginsIds };
   }
