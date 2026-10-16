@@ -2,9 +2,10 @@
 //! lanes of the local scope (`getLanes({ showDefaultLane: true })`), then
 //! main with the workspace's components.
 //!
-//! `--remote`, `--merged`, `--not-merged`, lanes Node would
-//! migrate to the schema that records deleted components, and lanes with a
-//! readme component or update-dependents run on the Node.js CLI.
+//! `--remote` and lanes Node would
+//! migrate to the schema that records deleted components run on the Node.js CLI.
+
+pub(super) use metadata::components_report;
 
 use crate::{
     commands::{
@@ -18,6 +19,7 @@ use crate::{
     native::Outcome,
     workspace,
 };
+use metadata::{readme, readme_report, updates};
 use serde_json::{Map, Value, json};
 use std::{
     env,
@@ -28,6 +30,8 @@ use std::{
     process::ExitCode,
 };
 
+mod metadata;
+
 /// The schema of lanes that record their deleted components.
 const DELETED_DATA_SCHEMA: &str = "1.0.0";
 
@@ -37,6 +41,9 @@ pub(super) struct LaneData {
     pub(super) id: Value,
     pub(super) alias: Option<String>,
     pub(super) components: Vec<Value>,
+    pub(super) update_dependents: Option<Vec<Value>>,
+    pub(super) readme_component: Option<Value>,
+    pub(super) is_merged: Option<bool>,
     /// The Lane's `log` and hash; absent for main.
     pub(super) lane: Option<(Value, String)>,
 }
@@ -77,10 +84,16 @@ impl LaneData {
             data.insert("alias".into(), json!(self.alias));
         }
         data.insert("components".into(), json!(self.components));
+        if let Some(updates) = &self.update_dependents {
+            data.insert("updateDependents".into(), json!(updates));
+        }
+        if let Some(readme) = &self.readme_component {
+            data.insert("readmeComponent".into(), readme.clone());
+        }
         if let Some((log, _)) = &self.lane {
             data.insert("log".into(), log.clone());
         }
-        data.insert("isMerged".into(), Value::Null);
+        data.insert("isMerged".into(), json!(self.is_merged));
         let hash = self.lane.as_ref().map_or("", |(_, hash)| hash.as_str());
         data.insert("hash".into(), json!(hash));
         Value::Object(data)
@@ -89,43 +102,81 @@ impl LaneData {
 
 /// `args` starts after `list`.
 pub(super) fn run(args: &[OsString], list_args: &[&str]) -> io::Result<Outcome> {
-    let (json, details) = match list_args {
-        [] => (false, false),
-        ["--json" | "-j"] => (true, false),
-        ["--details" | "-d"] => (false, true),
-        ["--details" | "-d", "--json" | "-j"] | ["--json" | "-j", "--details" | "-d"] => {
-            (true, true)
-        }
-        _ => {
-            return Ok(Outcome::Declined("lane list flags outside the native grammar".to_string()));
-        }
+    let Some((json, details, merged)) = parse(list_args) else {
+        return Ok(Outcome::Declined("lane list flags outside the native grammar".to_string()));
     };
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".to_string()));
     };
-    let (lanes, current) = match read(&root) {
+    let (lanes, current) = match read_with_merge(&root, merged.is_some()) {
         Ok(read) => read,
         Err(error) => return Ok(Outcome::Declined(format!("lane list: {error}"))),
     };
     if json {
-        let history = History::start(&root, args);
-        let data = json!({
-            "lanes": lanes.iter().map(LaneData::json).collect::<Vec<_>>(),
-            "currentLane": current.1,
-        });
-        // `CommandRunner` writes `JSON.stringify(data, null, 2)` without a newline.
-        let mut stdout = io::stdout().lock();
-        stdout.write_all(serde_json::to_string_pretty(&data)?.as_bytes())?;
-        stdout.flush()?;
-        history.end(true);
-        return Ok(Outcome::Exit(ExitCode::SUCCESS));
+        return emit_json(&root, args, &lanes, &current.1);
     }
     let report = Report {
-        data: report(&lanes, &current.0, Chalk::detect(args), details),
+        data: match merged {
+            Some(only_merged) => report_merged(&lanes, only_merged, Chalk::detect(args)),
+            None => report(&lanes, &current.0, Chalk::detect(args), details),
+        },
         code: 0,
         details: None,
     };
     workspace_command::execute_with(&root, args, "list", &report, |_| Ok(()))
+}
+
+fn emit_json(
+    root: &Path,
+    args: &[OsString],
+    lanes: &[LaneData],
+    current: &str,
+) -> io::Result<Outcome> {
+    let history = History::start(root, args);
+    let data = json!({
+        "lanes": lanes.iter().map(LaneData::json).collect::<Vec<_>>(),
+        "currentLane": current,
+    });
+    // `CommandRunner` writes `JSON.stringify(data, null, 2)` without a newline.
+    let mut stdout = io::stdout().lock();
+    stdout.write_all(serde_json::to_string_pretty(&data)?.as_bytes())?;
+    stdout.flush()?;
+    history.end(true);
+    Ok(Outcome::Exit(ExitCode::SUCCESS))
+}
+
+fn parse(args: &[&str]) -> Option<(bool, bool, Option<bool>)> {
+    let (mut json, mut details, mut merged) = (false, false, None);
+    for arg in args {
+        match *arg {
+            "--json" | "-j" if !json => json = true,
+            "--details" | "-d" if !details => details = true,
+            "--merged" if merged.is_none() => merged = Some(true),
+            "--not-merged" if merged.is_none() => merged = Some(false),
+            _ => return None,
+        }
+    }
+    Some((json, details, merged))
+}
+
+fn report_merged(lanes: &[LaneData], merged: bool, chalk: Chalk) -> String {
+    let format = Formatter::new(chalk);
+    let selected = lanes
+        .iter()
+        .filter(|lane| {
+            lane.is_merged == Some(merged) || !merged && lane.is_merged.is_none()
+        });
+    let items = selected
+        .map(|lane| format.item(lane.id["name"].as_str().unwrap_or_default()))
+        .collect::<Vec<_>>();
+    if items.is_empty() {
+        return format.hint(if merged {
+            "none of the lanes is merged"
+        } else {
+            "all lanes are merged"
+        });
+    }
+    format.section(if merged { "merged lanes" } else { "unmerged lanes" }, "", &items)
 }
 
 /// The lanes `scope.json` tracks: `localLane` per remote lane.
@@ -154,11 +205,16 @@ impl Tracking {
 /// The lanes then main, and the current lane's id with
 /// `getCurrentLaneNameOrAlias()`.
 pub(super) fn read(root: &Path) -> io::Result<(Vec<LaneData>, (Value, String))> {
+    read_with_merge(root, false)
+}
+
+fn read_with_merge(root: &Path, merge_data: bool) -> io::Result<(Vec<LaneData>, (Value, String))> {
     let scope = scope(root)?;
     let tracking = Tracking::read(&scope);
     let bitmap = bitmap::read(root)?;
     let mut engine = Engine::new()?;
-    let listed: Value = engine.request(&json!({"kind": "laneList", "root": root}))?;
+    let listed: Value =
+        engine.request(&json!({"kind": "laneList", "root": root, "mergeData": merge_data}))?;
     let mut lanes = array(listed.get("lanes"), "lanes")?
         .iter()
         .map(|row| lane(row, &tracking))
@@ -168,6 +224,9 @@ pub(super) fn read(root: &Path) -> io::Result<(Vec<LaneData>, (Value, String))> 
         id: main_id.clone(),
         alias: None,
         components: main_components(&mut engine, root, &bitmap.entries)?,
+        update_dependents: None,
+        readme_component: None,
+        is_merged: None,
         lane: None,
     });
     let current = bitmap.lane.unwrap_or(main_id);
@@ -199,15 +258,6 @@ fn lane(row: &Value, tracking: &Tracking) -> io::Result<LaneData> {
     if value["schema"] != DELETED_DATA_SCHEMA {
         return Err(decline("a lane Node migrates to record deleted components"));
     }
-    if value
-        .get("readmeComponent")
-        .is_some_and(|readme| !readme.is_null())
-        || value
-            .get("updateDependents")
-            .is_some_and(|ids| !ids.is_null() && ids != &json!([]))
-    {
-        return Err(decline("a lane with a readme component or update-dependents"));
-    }
     let name = text(value.get("name"))?;
     let scope = text(value.get("scope"))?;
     let components = array(value.get("components"), "lane components")?
@@ -221,12 +271,17 @@ fn lane(row: &Value, tracking: &Tracking) -> io::Result<LaneData> {
             }))
         })
         .collect::<io::Result<Vec<_>>>()?;
+    let update_dependents = updates(value)?;
+    let readme_component = readme(value)?;
     Ok(LaneData {
         id: json!({"name": name, "scope": scope}),
         alias: tracking
             .alias(name, scope)
             .filter(|alias| alias != name),
         components,
+        update_dependents,
+        readme_component,
+        is_merged: row["isMerged"].as_bool(),
         lane: Some((value["log"].clone(), text(row.get("hash"))?.to_string())),
     })
 }
@@ -301,7 +356,8 @@ fn report_current(
         },
         LaneData::label,
     );
-    let current_output = format!("current lane - {}", chalk.green(&current_label));
+    let readme = current_lane.map_or_else(String::new, |lane| readme_report(lane, chalk));
+    let current_output = format!("current lane - {}{readme}", chalk.green(&current_label));
     if !details || current_lane.is_none() {
         return current_output;
     }
@@ -320,35 +376,22 @@ fn report_others(
         .iter()
         .filter(|lane| lane.id != *current)
         .map(|lane| {
+            let readme = readme_report(lane, chalk);
             if details {
                 return format!(
-                    "> {}\n{}",
+                    "> {}{readme}\n{}",
                     chalk.bold(&lane.label()),
                     components_report(lane, format),
                 );
             }
             format.item(&format!(
-                "{} ({} components)",
+                "{} ({} components){readme}",
                 chalk.green(&lane.label()),
                 lane.components.len(),
             ))
         })
         .collect();
     if details { items.join("\n\n") } else { format.section("available lanes", "", &items) }
-}
-
-pub(super) fn components_report(lane: &LaneData, format: &Formatter) -> String {
-    let items: Vec<_> = lane.components
-        .iter()
-        .map(|component| {
-            format.item(&format!(
-                "{} - {}",
-                component["id"].as_str().unwrap_or_default(),
-                component["head"].as_str().unwrap_or_default(),
-            ))
-        })
-        .collect();
-    format.section("components", "", &items)
 }
 
 #[cfg(test)]

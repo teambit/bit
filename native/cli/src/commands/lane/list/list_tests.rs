@@ -34,6 +34,9 @@ fn reports_the_current_lane_and_the_others() {
         id: json!({"name": "main", "scope": "local"}),
         alias: None,
         components: vec![json!({}), json!({})],
+        update_dependents: None,
+        readme_component: None,
+        is_merged: None,
         lane: None,
     };
     let dev = lane(&row("1.0.0"), &Tracking(Vec::new())).unwrap();
@@ -51,6 +54,9 @@ fn detailed_list_preserves_the_blank_line_after_an_empty_current_lane() {
         id: json!({"name": "main", "scope": "s"}),
         alias: None,
         components: Vec::new(),
+        update_dependents: None,
+        readme_component: None,
+        is_merged: None,
         lane: None,
     };
     let dev = lane(&row("1.0.0"), &Tracking(Vec::new())).unwrap();
@@ -68,6 +74,9 @@ fn shows_main_and_serializes_an_exported_lane() {
         id: json!({"name": "main", "scope": "s"}),
         alias: None,
         components: vec![json!({"id":"s/a@1.0.0","head":"1.0.0"})],
+        update_dependents: None,
+        readme_component: None,
+        is_merged: None,
         lane: None,
     };
     assert_eq!(
@@ -77,4 +86,39 @@ fn shows_main_and_serializes_an_exported_lane() {
     let dev = lane(&row("1.0.0"), &Tracking(Vec::new())).unwrap();
     assert_eq!(dev.json()["components"], json!([{"id":"s/a","head":"x"}]));
     assert_eq!(dev.json()["remote"], "s/dev");
+}
+
+#[test]
+fn keeps_hidden_updates_and_readme_separate_from_visible_components() {
+    let mut row = row("1.0.0");
+    row["lane"]["updateDependents"] = json!(["s/hidden@abcdef"]);
+    row["lane"]["readmeComponent"] = json!({
+        "id": {"scope": "s", "name": "docs/readme"}, "head": "123456"
+    });
+    let lane = lane(&row, &Tracking(Vec::new())).unwrap();
+    assert_eq!(lane.components.len(), 1);
+    assert_eq!(lane.json()["updateDependents"], json!([{"id":"s/hidden","head":"abcdef"}]));
+    assert_eq!(lane.json()["readmeComponent"], json!({"id":"s/docs/readme","head":"123456"}));
+    let main = LaneData {
+        id: json!({"name":"main","scope":"s"}),
+        alias: None,
+        components: Vec::new(),
+        update_dependents: None,
+        readme_component: None,
+        is_merged: None,
+        lane: None,
+    };
+    let output =
+        report(&[lane, main], &json!({"name":"main","scope":"s"}), Chalk::new(false), false);
+    assert!(output.contains("s/dev (1 components) readme: s/docs/readme - 123456"));
+}
+
+#[test]
+fn unsnapped_readme_has_the_node_warning_and_snap_hint() {
+    let mut row = row("1.0.0");
+    row["lane"]["readmeComponent"] = json!({"id":{"scope":"s","name":"docs/readme"}});
+    let lane = lane(&row, &Tracking(Vec::new())).unwrap();
+    assert_eq!(lane.json()["readmeComponent"], json!({"id":"s/docs/readme"}));
+    let output = report(&[lane], &json!({"name":"dev","scope":"s"}), Chalk::new(false), false);
+    assert!(output.contains(r#"⚠ readme: s/docs/readme - (unsnapped) - use "bit snap docs/readme" to snap before exporting"#));
 }

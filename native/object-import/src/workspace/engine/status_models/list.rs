@@ -72,6 +72,8 @@ pub(in crate::workspace::engine) fn read(
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Lanes {
     root: PathBuf,
+    #[serde(default)]
+    merge_data: bool,
 }
 
 /// `laneList`: each lane of the index (`listLanes`), in its order, with the
@@ -96,10 +98,66 @@ pub(in crate::workspace::engine) fn lanes(request: &Lanes) -> io::Result<(usize,
         .iter()
         .map(|row| {
             let hash = row["hash"].as_str().ok_or_else(|| invalid("list lane hash"))?;
-            Ok(json!({ "hash": hash, "lane": reader.read(hash, "Lane")? }))
+            let lane = reader.read(hash, "Lane")?;
+            let mut result = json!({ "hash": hash, "lane": lane });
+            if request.merge_data {
+                result["isMerged"] = json!(fully_merged(&reader, &index, &lane)?);
+            }
+            Ok(result)
         })
         .collect::<io::Result<Vec<_>>>()?;
     Ok((lanes.len(), json!({ "lanes": lanes })))
+}
+
+/// `Lane.isFullyMerged`: every visible lane head is in its component's
+/// main-head ancestry. Hidden update-dependents do not participate.
+fn fully_merged(reader: &Reader<'_>, index: &Value, lane: &Value) -> io::Result<bool> {
+    let components =
+        lane["components"].as_array().ok_or_else(|| invalid("list lane components"))?;
+    let indexed = index["components"].as_array().ok_or_else(|| invalid("list component index"))?;
+    for component in components {
+        let id = &component["id"];
+        let Some(model_row) = indexed
+            .iter()
+            .find(|row| row["id"] == *id)
+        else {
+            return Ok(false);
+        };
+        let hash = model_row["hash"].as_str().ok_or_else(|| invalid("list component hash"))?;
+        let model = reader.read(hash, "Component")?;
+        let Some(main_head) = model["head"].as_str() else { return Ok(false) };
+        let lane_head = component["head"].as_str().ok_or_else(|| invalid("list lane head"))?;
+        crate::merge_history::hash(lane_head)?;
+        if !head_contains(reader, main_head, lane_head)? {
+            return Ok(false);
+        }
+    }
+    Ok(true)
+}
+
+fn head_contains(reader: &Reader<'_>, main_head: &str, lane_head: &str) -> io::Result<bool> {
+    let mut pending = vec![main_head.to_owned()];
+    let mut seen = std::collections::HashSet::new();
+    while let Some(hash) = pending.pop() {
+        if hash == lane_head {
+            return Ok(true);
+        }
+        if !seen.insert(hash.clone()) {
+            continue;
+        }
+        if seen.len() > 4096 {
+            return Err(invalid("list merged history budget"));
+        }
+        let version = reader.read(&hash, "Version")?;
+        let parents =
+            version["parents"].as_array().ok_or_else(|| invalid("list merged parents"))?;
+        for parent in parents {
+            let parent = parent.as_str().ok_or_else(|| invalid("list merged parent"))?;
+            crate::merge_history::hash(parent)?;
+            pending.push(parent.to_owned());
+        }
+    }
+    Ok(false)
 }
 
 /// `.bit/index.json`, empty when the scope has none.

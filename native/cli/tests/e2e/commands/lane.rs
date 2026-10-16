@@ -1,8 +1,90 @@
 //! Client-side lane creation from a clean main workspace.
-use crate::helper::{Helper, parse};
+use crate::helper::{Helper, parse, setup};
 use flate2::read::ZlibDecoder;
 use sha1::{Digest, Sha1};
 use std::{ffi::OsStr, fs, io::Read, path::Path};
+
+#[test]
+fn lane_inspection_keeps_hidden_update_dependents_out_of_visible_components() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.populate_components(2, true, "");
+    helper.run("tag");
+    helper.run("export");
+    helper.run("lane create dev");
+    helper.run("snap comp2 --skip-auto-snap --unmodified --message lane");
+    helper.run("export");
+    helper.seed_hidden_update_dependent(
+        &format!("{}/comp1", helper.scopes.remote),
+        &format!("{}/dev", helper.scopes.remote),
+    );
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    helper.run(&format!("lane import {}/dev -x", helper.scopes.remote));
+    for command in ["lane list", "lane list --details", "lane list --json", "lane show dev --json"]
+    {
+        let node = Helper::cmd_in_with(
+            &helper.scopes.local_path,
+            command,
+            &[("BIT_NATIVE", OsStr::new("off"))],
+        );
+        let native = helper.native_run(command);
+        assert!(native.native, "{command}: {}", native.trace);
+        assert_eq!(native.status.code(), node.status.code(), "{command}");
+        if command.ends_with("--json") {
+            assert_eq!(parse(&native.stdout), parse(&node.stdout), "{command}");
+        } else {
+            assert_eq!(native.stdout, node.stdout, "{command}");
+        }
+        assert_eq!(native.stderr, node.stderr, "{command}");
+    }
+}
+
+#[test]
+fn lane_merged_filters_follow_main_head_ancestry() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("module.exports = () => 'foo';");
+    helper.add_component_bar_foo();
+    helper.run("tag bar/foo --message base");
+    helper.run("export");
+    helper.run("lane create dev");
+    assert_lane_filters_match_node(&helper);
+    helper.run("snap --unmodified --message lane");
+    if let Some(destination) = std::env::var_os("BIT_NATIVE_LANE_LIST_BENCH_FIXTURE") {
+        let destination = std::path::PathBuf::from(destination);
+        assert!(!destination.exists());
+        setup::copy_dir(&helper.scopes.local_path, &destination);
+    }
+    assert_lane_filters_match_node(&helper);
+    helper.run("switch main");
+    helper.run("lane merge dev -x");
+    assert_lane_filters_match_node(&helper);
+}
+
+fn assert_lane_filters_match_node(helper: &Helper) {
+    for command in [
+        "lane list --merged",
+        "lane list --not-merged",
+        "lane list --merged --json",
+        "lane list --not-merged --json",
+    ] {
+        let node = Helper::cmd_in_with(
+            &helper.scopes.local_path,
+            command,
+            &[("BIT_NATIVE", OsStr::new("off"))],
+        );
+        let native = helper.native_run(command);
+        assert!(native.native, "{command}: {}", native.trace);
+        assert_eq!(native.status.code(), node.status.code(), "{command}");
+        if command.ends_with("--json") {
+            assert_eq!(parse(&native.stdout), parse(&node.stdout), "{command}");
+        } else {
+            assert_eq!(native.stdout, node.stdout, "{command}");
+        }
+        assert_eq!(native.stderr, node.stderr, "{command}");
+    }
+}
 
 fn object(root: &Path, hash: &str, kind: &str) -> serde_json::Value {
     let path = root
