@@ -304,13 +304,16 @@ export class GitHubClient implements GitHostProvider {
 
 /**
  * The registrable GitHub provider: resolves its `GitHubClient` from the environment lazily, since
- * registration happens at aspect load, before credentials are known. A resolved client is memoized;
- * an unresolved one is retried so a later call that does carry the remote URL can still succeed.
+ * registration happens at aspect load, before credentials are known. A resolved client is memoized per
+ * remote; an unresolved one is retried so a later call that does carry the remote URL can still succeed.
  */
 export class GitHubHostProvider implements GitHostProvider {
   readonly name = 'github';
 
   private client: GitHubClient | undefined;
+
+  /** The remote `client` was resolved for. */
+  private clientRemote: string | undefined;
 
   /** The last `origin` URL seen, so a PR method can still recover `owner/repo` from it. */
   private remoteHint: string | undefined;
@@ -369,7 +372,12 @@ export class GitHubHostProvider implements GitHostProvider {
   }
 
   private resolveClient(remoteUrl?: string): GitHubClient | undefined {
-    if (!this.client) this.client = GitHubClient.fromEnv(remoteUrl ?? this.remoteHint, this.warnOnce);
+    const remote = remoteUrl ?? this.remoteHint;
+    // The client pins the remote's repository and API, so another remote needs its own client.
+    if (!this.client || this.clientRemote !== remote) {
+      this.client = GitHubClient.fromEnv(remote, this.warnOnce);
+      this.clientRemote = remote;
+    }
     return this.client;
   }
 

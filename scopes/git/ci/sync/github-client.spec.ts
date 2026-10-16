@@ -615,6 +615,27 @@ describe('GitHub Enterprise Server', () => {
       });
     });
 
+    it('one provider reused for an enterprise origin and then a github.com origin talks to each one', async () => {
+      const realFetch = globalThis.fetch;
+      const { calls, fetchImpl } = recordingFetch();
+      globalThis.fetch = fetchImpl;
+      try {
+        const provider = new GitHubHostProvider();
+        // a PR call carries no remote: it follows the remote last selected
+        expect(provider.matchesRemote('git@ghe.corp.example:acme/store.git')).to.equal(true);
+        expect(provider.isConfigured('git@ghe.corp.example:acme/store.git')).to.equal(true);
+        await provider.findPrByBranch('lane-x');
+        expect(provider.isConfigured('git@github.com:acme/shop.git')).to.equal(true);
+        await provider.findPrByBranch('lane-x');
+      } finally {
+        globalThis.fetch = realFetch;
+      }
+      expect(calls.map((c) => c.url)).to.deep.equal([
+        `${GHES_API}/repos/acme/store/pulls?state=open&head=acme%3Alane-x`,
+        'https://api.github.com/repos/acme/shop/pulls?state=open&head=acme%3Alane-x',
+      ]);
+    });
+
     it('drops a trailing slash from GITHUB_API_URL', () => {
       process.env.GITHUB_API_URL = `${GHES_API}/`;
       expect(gitHubApiUrl()).to.deep.equal({ url: GHES_API });

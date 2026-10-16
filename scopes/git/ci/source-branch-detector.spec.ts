@@ -97,6 +97,27 @@ describe('SourceBranchDetector GitHub API lookup', () => {
       ]);
     });
 
+    it('prefers a github.com origin over GITHUB_REPOSITORY of the enterprise runner', async () => {
+      process.env.GITHUB_REPOSITORY = 'acme/store';
+      origin = 'https://github.com/acme/shop.git';
+      expect(await lookup()).to.equal('feature-x');
+      expect(calls).to.deep.equal([`https://api.github.com/repos/acme/shop/commits/${SHA}/pulls`]);
+    });
+
+    it('falls back to GITHUB_REPOSITORY on the enterprise host when origin is unreadable or not GitHub', async () => {
+      process.env.GITHUB_REPOSITORY = 'acme/store';
+      (git as any).raw = async () => {
+        throw new Error('no origin');
+      };
+      expect(await lookup()).to.equal('feature-x');
+      (git as any).raw = async () => 'https://gitlab.com/acme/shop.git';
+      expect(await lookup()).to.equal('feature-x');
+      expect(calls).to.deep.equal([
+        `https://ghe.corp.example/api/v3/repos/acme/store/commits/${SHA}/pulls`,
+        `https://ghe.corp.example/api/v3/repos/acme/store/commits/${SHA}/pulls`,
+      ]);
+    });
+
     it('derives <server>/api/v3 when GITHUB_API_URL is unset', async () => {
       delete process.env.GITHUB_API_URL;
       origin = 'https://ghe.corp.example/acme/store.git';
