@@ -173,7 +173,13 @@ other:   ${otherLaneHead.toString()}`);
     // a workspace re-detects the dependencies from the merged files. a bare scope can't, it merges the resolved ones.
     const dependenciesMergeResult = this.workspace
       ? undefined
-      : mergeDependencies(baseComponent, currentComponent, otherComponent, this.options.mergeStrategy);
+      : mergeDependencies(
+          baseComponent,
+          currentComponent,
+          otherComponent,
+          this.options.mergeStrategy,
+          this.currentLane?.toComponentIdsIncludeUpdateDependents()
+        );
     return {
       currentComponent,
       id,

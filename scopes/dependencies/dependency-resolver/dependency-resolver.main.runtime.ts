@@ -1238,9 +1238,9 @@ export class DependencyResolverMain {
   }
 
   /**
-   * when the env of the component is one of the given components and it has an env.jsonc, returns the policy of that
-   * env.jsonc. e.g. an env that is snapped along with the component, whose files (merged in memory) are not the stored
-   * ones that getComponentEnvPolicyFromExtension() reads.
+   * when the env of the component is one of the given components and it has an env.jsonc (or env.json), returns the
+   * policy of that file. e.g. an env that is snapped along with the component, whose files (merged in memory) are not
+   * the stored ones that getComponentEnvPolicyFromExtension() reads.
    */
   async getEnvPolicyFromComponents(
     configuredExtensions: ExtensionDataList,
@@ -1350,13 +1350,8 @@ export class DependencyResolverMain {
   ): Promise<EnvPolicy | undefined> {
     const isCoreEnv = this.envs.isCoreEnv(envId);
     if (isCoreEnv) return undefined;
-    if (legacyFiles) {
-      const envJsonc = legacyFiles.find((file) => file.basename === 'env.jsonc');
-      if (envJsonc) {
-        return this.getEnvManifest(undefined, legacyFiles, envExtendsDeps);
-      }
-      return undefined;
-    }
+    // returns undefined when the files have no env.jsonc (or env.json)
+    if (legacyFiles) return this.getEnvManifest(undefined, legacyFiles, envExtendsDeps);
     const envComponent = await this.envs.getEnvComponentByEnvId(envId, envId);
     return this.getEnvManifest(envComponent);
   }

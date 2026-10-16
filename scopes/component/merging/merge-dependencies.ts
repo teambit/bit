@@ -1,5 +1,6 @@
 import type { MergeStrategy } from '@teambit/component.modules.merge-helper';
 import { isEqual, union } from 'lodash';
+import type { ComponentIdList } from '@teambit/component-id';
 import { Dependencies, Dependency } from '@teambit/legacy.consumer-component';
 
 const COMPONENT_DEPS_FIELDS = ['dependencies', 'devDependencies', 'peerDependencies'] as const;
@@ -31,12 +32,17 @@ export type DependenciesSnapshot = { [field in ComponentDepsField]: Dependencies
  * when both sides changed the same dependency differently, "theirs" takes other, any other strategy keeps current
  * (in "manual", such a version conflict is reported by the config-merger, which stops the merge before the snap).
  * the returned component dependencies are copies, so they can be changed without changing the inputs.
+ *
+ * `laneComponentIds` are the components of the current lane. a dependency on one of them gets the lane's version
+ * anyway (see MergingMain.setLaneVersionsOfDeps), so its version is not compared. otherwise, the lane snap of it would
+ * look like a change on the lane, and a removal of it on the other side would be lost.
  */
 export function mergeDependencies(
   base: DependenciesSnapshot,
   current: DependenciesSnapshot,
   other: DependenciesSnapshot,
-  mergeStrategy?: MergeStrategy
+  mergeStrategy?: MergeStrategy,
+  laneComponentIds?: ComponentIdList
 ): DependenciesSnapshot {
   const componentDeps = (snapshot: DependenciesSnapshot) =>
     new Map(
@@ -47,7 +53,7 @@ export function mergeDependencies(
   // all the persisted data is compared (e.g. the import paths and the version range), not only the id, so a change of
   // any of them on one side is not lost. (no methods are called, a loaded component has the dependencies as plain objects)
   const isSameDep = (a: Dependency, b: Dependency) =>
-    a.id.isEqual(b.id) &&
+    (laneComponentIds?.hasWithoutVersion(a.id) ? a.id.isEqualWithoutVersion(b.id) : a.id.isEqual(b.id)) &&
     a.packageName === b.packageName &&
     a.versionRange === b.versionRange &&
     isEqual(a.relativePaths, b.relativePaths);

@@ -443,6 +443,13 @@ export class MergingMain {
         });
       }
     );
+    if (!this.workspace && currentLane) {
+      await Promise.all(
+        compact(succeededComponents.map((c) => c.dependenciesMergeResult)).map((dependenciesMergeResult) =>
+          this.setLaneVersionsOfDeps(dependenciesMergeResult, currentLane)
+        )
+      );
+    }
 
     if (this.workspace) {
       // Hidden lane updateDependents live only on the lane and in the scope. Writing them to
@@ -573,7 +580,6 @@ export class MergingMain {
       await this.prepareScopeComponentForMergeSnap(legacyComponent, {
         currentComponent: idToLoad === id ? currentComponent : undefined,
         dependenciesMergeResult,
-        currentLane,
       });
     }
     const files = legacyComponent.files;
@@ -646,11 +652,9 @@ export class MergingMain {
     {
       currentComponent,
       dependenciesMergeResult,
-      currentLane,
     }: {
       currentComponent?: ConsumerComponent | null; // set when legacyComponent was loaded from the same version
       dependenciesMergeResult?: DependenciesSnapshot;
-      currentLane?: Lane;
     }
   ) {
     if (currentComponent) {
@@ -660,22 +664,25 @@ export class MergingMain {
       // re-calculated either.
       legacyComponent.extensions = currentComponent.extensions.clone();
     }
-    if (!dependenciesMergeResult) return;
-    // a dependency on a component of the current lane gets the lane's version, same as a workspace gets it from .bitmap
-    // (or from the lane's hidden updateDependents, see updateDependenciesVersions)
-    if (currentLane) {
-      const { dependencies, devDependencies, peerDependencies } = dependenciesMergeResult;
-      const compDeps = [...dependencies.get(), ...devDependencies.get(), ...peerDependencies.get()];
-      await Promise.all(
-        compDeps.map(async (dep) => {
-          const onLane = currentLane.getComponent(dep.id) || currentLane.getUpdateDependentAsLaneComponent(dep.id);
-          if (!onLane) return;
-          const modelComponent = await this.scope.legacyScope.getModelComponentIfExist(dep.id.changeVersion(undefined));
-          dep.id = dep.id.changeVersion(modelComponent?.getTagOfRefIfExists(onLane.head) || onLane.head.toString());
-        })
-      );
-    }
-    Object.assign(legacyComponent, dependenciesMergeResult);
+    if (dependenciesMergeResult) Object.assign(legacyComponent, dependenciesMergeResult);
+  }
+
+  /**
+   * a dependency on a component of the current lane gets the lane's version, same as a workspace gets it from .bitmap
+   * (or from the lane's hidden updateDependents, see updateDependenciesVersions).
+   * call it once all the components were applied, so the lane has the new heads of the ones the merge updated.
+   */
+  private async setLaneVersionsOfDeps(dependenciesMergeResult: DependenciesSnapshot, currentLane: Lane) {
+    const { dependencies, devDependencies, peerDependencies } = dependenciesMergeResult;
+    const compDeps = [...dependencies.get(), ...devDependencies.get(), ...peerDependencies.get()];
+    await Promise.all(
+      compDeps.map(async (dep) => {
+        const onLane = currentLane.getComponent(dep.id) || currentLane.getUpdateDependentAsLaneComponent(dep.id);
+        if (!onLane) return;
+        const modelComponent = await this.scope.legacyScope.getModelComponentIfExist(dep.id.changeVersion(undefined));
+        dep.id = dep.id.changeVersion(modelComponent?.getTagOfRefIfExists(onLane.head) || onLane.head.toString());
+      })
+    );
   }
 
   private async abortMerge(pattern: string): Promise<ApplyVersionResults> {

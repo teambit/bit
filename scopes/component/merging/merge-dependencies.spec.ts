@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { ComponentID } from '@teambit/component-id';
+import { ComponentID, ComponentIdList } from '@teambit/component-id';
 import { Dependencies, Dependency } from '@teambit/legacy.consumer-component';
 import type { DependenciesSnapshot } from './merge-dependencies';
 import { mergeDependencies } from './merge-dependencies';
@@ -137,6 +137,19 @@ describe('mergeDependencies', () => {
     it('should take the version range of other', () => {
       const [merged] = mergeDependencies(base, current, other, 'manual').peerDependencies.get();
       expect(merged.versionRange).to.equal('^1.0.0 || ^2.0.0');
+    });
+  });
+  describe('a dependency on a lane component that other removed', () => {
+    // b was snapped on the lane, so current has the lane snap of it. other removed the dependency.
+    const base = snapshot({ comps: ['my-scope/b@0.0.1'] });
+    const current = snapshot({ comps: [`my-scope/b@${'a'.repeat(40)}`] });
+    const other = snapshot({});
+    it('should be removed when b is on the lane, as only its version changed on current', () => {
+      const laneIds = ComponentIdList.fromArray([ComponentID.fromString(`my-scope/b@${'a'.repeat(40)}`)]);
+      expect(idsOf(mergeDependencies(base, current, other, 'manual', laneIds).dependencies)).to.deep.equal([]);
+    });
+    it('should be kept when b is not on the lane, as both sides changed it', () => {
+      expect(mergeDependencies(base, current, other, 'manual').dependencies.get()).to.have.lengthOf(1);
     });
   });
 });
