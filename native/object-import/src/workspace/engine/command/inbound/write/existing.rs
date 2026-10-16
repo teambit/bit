@@ -14,6 +14,7 @@ pub(super) struct Input<'a> {
     pub(super) row: &'a Value,
     pub(super) policy: &'a HashMap<String, String>,
     pub(super) override_existing: bool,
+    pub(super) install_requested: bool,
 }
 
 pub(super) fn prepare(
@@ -56,8 +57,17 @@ fn versions(input: &Input<'_>, model: &Value) -> io::Result<(Value, String, Stri
     let current =
         input.row["version"].as_str().ok_or_else(|| invalid("inbound existing version"))?;
     let (_, current_hash) = version(model, current)?;
-    let old = details::local_object(input.root, &current_hash, "Version")?
-        .ok_or_else(|| invalid("inbound existing local Version"))?;
+    let old = if let Some(version) = details::local_object(input.root, &current_hash, "Version")? {
+        version
+    } else {
+        if input.install_requested {
+            return Err(invalid("inbound authored import installation requires canonical writer"));
+        }
+        input.imported.overlay
+            .read(&current_hash, "Version")?
+            .ok_or_else(|| invalid("inbound existing Version"))?
+            .clone()
+    };
     let (new_name, new_hash) = version(model, &input.target.version)?;
     Ok((old, new_hash, new_name))
 }
@@ -111,13 +121,7 @@ fn plan_old_file(
     compressed: &mut usize,
 ) -> io::Result<()> {
     let path = input.root.join(input.directory).join(relative);
-    let old_source = checkout::repository::source(
-        &input.root.join(".bit/objects"),
-        crate::merge_history::hash(old_hash)?,
-        32 * 1024 * 1024,
-        compressed,
-    )?;
-    let expected = checkout::eol::auto(old_source);
+    let expected = old_source(input, old_hash, compressed)?;
     let before = current_or_missing(input, &path, expected)?;
     if let Some(hash) = new_hash {
         let after = new_source(input, hash)?;
@@ -131,6 +135,19 @@ fn plan_old_file(
     }
     // ComponentWriter leaves files removed by the new Version in the workspace.
     Ok(())
+}
+
+fn old_source(input: &Input<'_>, hash: &str, compressed: &mut usize) -> io::Result<Vec<u8>> {
+    if let Some(source) = input.imported.overlay.source(hash) {
+        return Ok(checkout::eol::auto(source.to_vec()));
+    }
+    let source = checkout::repository::source(
+        &input.root.join(".bit/objects"),
+        crate::merge_history::hash(hash)?,
+        32 * 1024 * 1024,
+        compressed,
+    )?;
+    Ok(checkout::eol::auto(source))
 }
 
 fn current_or_missing(
@@ -183,7 +200,7 @@ fn new_source(input: &Input<'_>, hash: &str) -> io::Result<Vec<u8>> {
     Ok(checkout::eol::auto(source))
 }
 
-fn current_body(root: &Path, path: &Path) -> io::Result<Vec<u8>> {
+pub(super) fn current_body(root: &Path, path: &Path) -> io::Result<Vec<u8>> {
     let metadata = fs::symlink_metadata(path)?;
     if !metadata.is_file() || metadata.len() > super::MAX_WRITTEN_BYTES as u64 {
         return Err(invalid("inbound override workspace file type or size"));

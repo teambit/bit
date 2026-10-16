@@ -126,6 +126,7 @@ pub(in crate::workspace::engine) fn prepare(
             write::Options {
                 override_existing: input.options.override_existing,
                 path: input.options.path.as_deref(),
+                install_requested: !input.options.skip_dependency_installation,
             },
         )?)
     };

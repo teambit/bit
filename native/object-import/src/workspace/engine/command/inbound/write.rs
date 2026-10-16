@@ -24,6 +24,7 @@ pub(super) struct Prepared {
 pub(super) struct Options<'a> {
     pub(super) override_existing: bool,
     pub(super) path: Option<&'a str>,
+    pub(super) install_requested: bool,
 }
 #[derive(Default)]
 struct WorkspaceFiles {
@@ -86,6 +87,7 @@ fn prepare_targets(
         imported: import,
         policy: &policy,
         override_existing: options.override_existing,
+        install_requested: options.install_requested,
     };
     let mut directories = target_directories(template, targets, rows, options.path)?.into_iter();
     let mut changes = WorkspaceFiles::default();
@@ -138,6 +140,7 @@ struct Planning<'a> {
     imported: &'a PreparedImport,
     policy: &'a HashMap<String, String>,
     override_existing: bool,
+    install_requested: bool,
 }
 
 fn plan_target(
@@ -173,6 +176,7 @@ fn plan_target(
                 row: &row,
                 policy: context.policy,
                 override_existing: context.override_existing,
+                install_requested: context.install_requested,
             },
             rows,
             changes,
@@ -192,14 +196,24 @@ fn plan_new_target(
     if let Some(empty) = new_directory(context.root, directory, context.override_existing)? {
         changes.empty_directories.push(empty);
     }
-    changes.additions.extend(prepare_target(
-        context.root,
-        directory,
-        target,
-        context.imported,
-        rows,
-        context.policy,
-    )?);
+    let files =
+        prepare_target(context.root, directory, target, context.imported, rows, context.policy)?;
+    for (path, after) in files {
+        match fs::symlink_metadata(&path) {
+            Err(error) if error.kind() == io::ErrorKind::NotFound => {
+                safe_destination(context.root, &path)?;
+                changes.additions.push((path, after));
+            }
+            Ok(_) if context.override_existing => {
+                let before = existing::current_body(context.root, &path)?;
+                if before != after {
+                    changes.replacements.push(Replacement { path, before, after });
+                }
+            }
+            Ok(_) => return Err(invalid("inbound workspace destination occupied")),
+            Err(error) => return Err(error),
+        }
+    }
     Ok(())
 }
 
@@ -314,7 +328,6 @@ fn target_files(
         let source =
             import.overlay.source(hash).ok_or_else(|| invalid("inbound imported Source"))?;
         let path = root.join(directory).join(relative);
-        safe_destination(root, &path)?;
         files.push((path, crate::checkout::eol::auto(source.to_vec())));
     }
     if !seen.contains(main) {

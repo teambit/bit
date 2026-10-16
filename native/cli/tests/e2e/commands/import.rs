@@ -414,6 +414,112 @@ fn a_custom_directory_template_materializes_like_node() {
     );
 }
 
+#[test]
+fn an_authored_component_reimports_at_its_bitmap_paths_like_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo(FOO_FIXTURE);
+    helper.add_component_bar_foo();
+    helper.tag_without_build("", "");
+    helper.run("export bar/foo");
+    let bitmap = fs::read(helper.scopes.local_path.join(".bitmap")).unwrap();
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    fs::write(helper.scopes.local_path.join(".bitmap"), bitmap).unwrap();
+    if let Some(destination) = std::env::var_os("BIT_NATIVE_IMPORT_AUTHORED_FIXTURE") {
+        let destination = std::path::PathBuf::from(destination);
+        assert!(!destination.exists());
+        fs::create_dir_all(&destination).unwrap();
+        setup::copy_dir(&helper.scopes.local_path, &destination.join("workspace"));
+        setup::copy_dir(&helper.scopes.remote_path, &destination.join("remote"));
+    }
+    let node_root = helper.clone_workspace();
+    let command = format!("import {}/bar/foo -x", helper.scopes.remote);
+    let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{}", combined(&node));
+    let native = helper.native_run(&command);
+    assert!(native.native, "{}", native.trace);
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(without_progress_timing(&native.stdout), without_progress_timing(&node.stdout));
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(
+        fs::read(helper.scopes.local_path.join(".bitmap")).unwrap(),
+        fs::read(node_root.join(".bitmap")).unwrap(),
+    );
+    assert_eq!(
+        fs::read(helper.scopes.local_path.join("bar/foo.js")).unwrap(),
+        fs::read(node_root.join("bar/foo.js")).unwrap(),
+    );
+}
+
+#[test]
+fn a_local_tag_survives_reimport_like_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo(FOO_FIXTURE);
+    helper.add_component_bar_foo();
+    helper.tag_without_build("", "");
+    helper.run("export");
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    let remote = helper.scopes.remote.clone();
+    helper.run(&format!("import {remote}/bar/foo --path components/bar/foo -x"));
+    helper.output_file("components/bar/foo/foo.js", "v2");
+    assert!(helper.tag_without_build("", "").contains("0.0.2"));
+    // Bitmap history names have one-second resolution.
+    std::thread::sleep(std::time::Duration::from_millis(1100));
+    if let Some(destination) = std::env::var_os("BIT_NATIVE_IMPORT_LOCAL_TAG_FIXTURE") {
+        let destination = std::path::PathBuf::from(destination);
+        assert!(!destination.exists());
+        fs::create_dir_all(&destination).unwrap();
+        setup::copy_dir(&helper.scopes.local_path, &destination.join("workspace"));
+        setup::copy_dir(&helper.scopes.remote_path, &destination.join("remote"));
+    }
+    let node_root = helper.clone_workspace();
+    let command = format!("import {remote}/bar/foo -x");
+    let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{}", combined(&node));
+    let native = helper.native_run(&command);
+    assert!(native.native, "{}", native.trace);
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(without_progress_timing(&native.stdout), without_progress_timing(&node.stdout));
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(
+        fs::read(helper.scopes.local_path.join(".bitmap")).unwrap(),
+        fs::read(node_root.join(".bitmap")).unwrap(),
+    );
+    assert_eq!(
+        fs::read(helper.scopes.local_path.join("components/bar/foo/foo.js")).unwrap(),
+        fs::read(node_root.join("components/bar/foo/foo.js")).unwrap(),
+    );
+}
+
+#[test]
+fn an_overridden_destination_file_is_replaced_like_node() {
+    let helper = exported_simple();
+    let destination = simple_dir(&helper).join("simple.js");
+    fs::create_dir_all(destination.parent().unwrap()).unwrap();
+    fs::write(&destination, "pre-existing local body").unwrap();
+    let node_root = helper.clone_workspace();
+    let command = format!("import {}/global/simple --override -x", helper.scopes.remote);
+    let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{}", combined(&node));
+    let native = helper.native_run(&command);
+    assert!(native.native, "{}", native.trace);
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(without_progress_timing(&native.stdout), without_progress_timing(&node.stdout));
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(
+        fs::read(helper.scopes.local_path.join(".bitmap")).unwrap(),
+        fs::read(node_root.join(".bitmap")).unwrap(),
+    );
+    assert_eq!(
+        fs::read(&destination).unwrap(),
+        fs::read(node_root.join(destination.strip_prefix(&helper.scopes.local_path).unwrap()))
+            .unwrap(),
+    );
+}
+
 fn assert_override_import_matches_node(helper: &Helper) {
     let node_root = helper.clone_workspace();
     let command = format!("import {}/bar/foo --override -x", helper.scopes.remote);
@@ -435,8 +541,6 @@ fn assert_override_import_matches_node(helper: &Helper) {
     );
 }
 
-/// stand alone component (without dependencies) › with multiple files located in different
-/// directories › should write the internal files according to their relative paths
 #[test]
 fn files_keep_their_relative_paths() {
     let helper = exported_simple();
