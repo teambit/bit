@@ -40,6 +40,11 @@ pub struct Component {
     pub issues: Value,
 }
 
+/// Validate a public component-issue class name against the released native catalog.
+pub(in crate::commands) fn validate_name(name: &str) -> io::Result<()> {
+    Issue::parse(name).map(|_| ())
+}
+
 /// `None` where the native status declines: a dependency outside
 /// the workspace, or a model whose head is deprecated.
 pub fn collect(

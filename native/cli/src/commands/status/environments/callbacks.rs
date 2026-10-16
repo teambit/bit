@@ -15,6 +15,7 @@ pub(super) fn load(
     context: &Value,
     capture: &mut Capture,
     status: bool,
+    snapshot: bool,
 ) -> io::Result<bool> {
     capture.cache.retain_callback_startup(&host.take_stdout());
     let core = core_ids()?;
@@ -26,25 +27,33 @@ pub(super) fn load(
         .collect::<Vec<_>>();
     let info = host.call("statusCallbackInfo", &json!({"coreIds":core,"aspectIds":aspects}))?;
     capture.cache.retain_callback_startup(&host.take_stdout());
-    if info["onLoad"] != true && info["issues"] != true {
+    if !snapshot && info["onLoad"] != true && info["issues"] != true {
         return Ok(false);
     }
-    let components = capture.captured.iter().map(|row| {
-        let identity = text(row.get("identity"))?;
-        let issues = capture.components.iter().find(|component|component.identity.split('@').next() == Some(identity)).map_or_else(||json!([]), |component|component.issues.clone());
-        Ok(json!({"identity":identity,"version":row["version"],"directory":row["directory"],"files":row["files"],"current":row["current"],"issues":issues,"scope":scope_metadata(context,identity)?}))
-    }).collect::<io::Result<Vec<_>>>()?;
+    let components = component_rows(capture, context)?;
     let directory = tempfile::Builder::new().prefix("bit-native-callback-").tempdir()?;
     let rows = host.call(
         "statusLoadCallbacks",
-        &json!({"components":components,"status":status,"directory":directory.path()}),
+        &json!({"components":components,"status":status,"snapshot":snapshot,"directory":directory.path()}),
     )?;
     capture.cache.retain_callback_directory(directory);
     capture.cache.retain_callback_stdout(rows["stdout"].as_str().unwrap_or_default());
+    if snapshot {
+        capture.environment_facts["snapshotLoadOutput"] =
+            rows["value"][0]["snapshotLoadOutput"].clone();
+    }
     for row in array(rows.get("value"), "callback components")? {
         apply(capture, row)?;
     }
     Ok(info["issues"] == true)
+}
+
+fn component_rows(capture: &Capture, context: &Value) -> io::Result<Vec<Value>> {
+    capture.captured.iter().map(|row| {
+        let identity = text(row.get("identity"))?;
+        let issues = capture.components.iter().find(|component|component.identity.split('@').next() == Some(identity)).map_or_else(||json!([]), |component|component.issues.clone());
+        Ok(json!({"identity":identity,"version":row["version"],"directory":row["directory"],"files":row["files"],"current":row["current"],"issues":issues,"scoped":array(context.get("targets"),"callback targets")?.iter().find(|target|target["identity"]==identity).map(|target|target["scoped"].clone()),"scope":scope_metadata(context,identity)?}))
+    }).collect()
 }
 
 fn scope_metadata(context: &Value, identity: &str) -> io::Result<Value> {
@@ -69,7 +78,7 @@ fn scope_metadata(context: &Value, identity: &str) -> io::Result<Value> {
     Ok(json!({"model":model,"head":version}))
 }
 
-fn apply(capture: &mut Capture, row: &Value) -> io::Result<()> {
+pub(in crate::commands::status) fn apply(capture: &mut Capture, row: &Value) -> io::Result<()> {
     let identity = text(row.get("identity"))?;
     for target in capture.captured.iter_mut().chain(&mut capture.comparisons) {
         if target["identity"] == identity {
@@ -78,6 +87,9 @@ fn apply(capture: &mut Capture, row: &Value) -> io::Result<()> {
             target["sourceOverlayRoot"] = row["sourceOverlayRoot"].clone();
             target["sourceOverlays"] = row["sourceOverlays"].clone();
         }
+    }
+    if let Some(data) = row.get("snapshotData") {
+        capture.cache.retain_snapshot_data(identity, data.clone());
     }
     let component = capture.components
         .iter_mut()
@@ -120,10 +132,19 @@ pub(in crate::commands::status) fn issue_callbacks(
     rows: &[Value],
     context: &Value,
 ) -> io::Result<(Vec<Value>, String)> {
-    let ignored = context["workspace"]["teambit.component/issues"]
+    let mut ignored = context["workspace"]["teambit.component/issues"]
         .get("ignoreIssues")
         .cloned()
         .unwrap_or_else(|| json!([]));
+    if let Some(extra) = context["snapshotIgnoreIssues"].as_array() {
+        let mut combined = extra.clone();
+        for issue in ignored.as_array().into_iter().flatten() {
+            if !combined.contains(issue) {
+                combined.push(issue.clone());
+            }
+        }
+        ignored = json!(combined);
+    }
     let output = host.call(
         "statusIssueCallbacks",
         &json!({"rows":rows,"coreIds":core_ids()?,"ignored":ignored}),

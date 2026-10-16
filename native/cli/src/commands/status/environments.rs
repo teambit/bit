@@ -3,10 +3,13 @@
 pub(super) mod callbacks;
 pub(super) mod diagnostics;
 
+pub(in crate::commands) use context::{read_context, read_snapshot_context};
 pub(in crate::commands) use quick::run as quick;
 
+mod context;
 mod facts;
 mod quick;
+mod snapshot;
 
 use super::js::{array, decline, text};
 use crate::{
@@ -23,37 +26,29 @@ use std::{io, path::Path};
 pub(in crate::commands) struct Environments {
     host: Option<Host>,
     issue_facts: bool,
+    snapshot: bool,
+    snapshot_build: bool,
+    snapshot_loads: Vec<Value>,
 }
-/// Initialize configured providers, then capture controls after their canonical bootstrap writes.
-pub(in crate::commands) fn read_context(
-    engine: &mut crate::commands::engine::Engine,
-    root: &Path,
-    home: &Path,
-    history: bool,
-    pattern: Option<&str>,
-    startup: &mut super::autosync::Startup,
-) -> io::Result<(Value, Environments)> {
-    super::autosync::run(engine, root, startup)?;
-    let request = json!({"kind":"statusContext","root":root,"home":home,"history":history});
-    let mut context: Value = engine.request(&request)?;
-    let selected = crate::commands::diff::selection::select(
-        array(context.get("targets"), "environment targets")?,
-        pattern,
-    )?;
-    let mut environments = Environments::new();
-    if Environments::require_native_write_for(root, &context, &selected).is_err() {
-        startup.committed = true;
-    }
-    environments.bootstrap(root, &context, &selected)?;
-    if environments.host.is_some() {
-        context = engine.request(&request)?;
-    }
-    Ok((context, environments))
-}
-
 impl Environments {
     pub(super) fn new() -> Self {
-        Self { host: None, issue_facts: true }
+        Self {
+            host: None,
+            issue_facts: true,
+            snapshot: false,
+            snapshot_build: false,
+            snapshot_loads: Vec::new(),
+        }
+    }
+
+    pub(in crate::commands) fn for_snapshot_build(mut self, build: bool) -> Self {
+        self.snapshot = true;
+        self.snapshot_build = build;
+        self
+    }
+
+    pub(super) fn is_snapshot(&self) -> bool {
+        self.snapshot
     }
 
     pub(in crate::commands) fn with_issue_facts(mut self, enabled: bool) -> Self {
@@ -95,7 +90,7 @@ impl Environments {
         status: bool,
     ) -> io::Result<()> {
         if let Some(host) = &self.host {
-            callbacks::load(host, context, capture, status)?;
+            callbacks::load(host, context, capture, status, self.snapshot)?;
             capture.cache.retain_callback_host(self.host.take());
         }
         Ok(())
@@ -110,10 +105,7 @@ impl Environments {
     }
 
     fn require_native_write_for(root: &Path, context: &Value, targets: &[Value]) -> io::Result<()> {
-        let core: Vec<String> = serde_json::from_str(include_str!(
-            "../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json"
-        ))
-        .map_err(io::Error::other)?;
+        let core = core_ids()?;
         let aspects = root_aspects(context, &core);
         for target in targets {
             if needs_facts(&component(root, context, target)?, &core, &aspects) {
@@ -123,18 +115,6 @@ impl Environments {
             }
         }
         Ok(())
-    }
-
-    fn bootstrap(&mut self, root: &Path, context: &Value, targets: &[Value]) -> io::Result<()> {
-        let components = targets
-            .iter()
-            .map(|target| component(root, context, target))
-            .collect::<io::Result<Vec<_>>>()?;
-        let core: Vec<String> = serde_json::from_str(include_str!(
-            "../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json"
-        ))
-        .map_err(io::Error::other)?;
-        self.prime(root, &components, &core, &root_aspects(context, &core))
     }
 
     pub(super) fn context_for(
@@ -148,10 +128,7 @@ impl Environments {
             .iter()
             .map(|target| component(root, context, target))
             .collect::<io::Result<Vec<_>>>()?;
-        let core: Vec<String> = serde_json::from_str(include_str!(
-            "../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json"
-        ))
-        .map_err(io::Error::other)?;
+        let core = core_ids()?;
         let aspects = root_aspects(context, &core);
         let selected_components = components
             .iter()
@@ -177,30 +154,9 @@ impl Environments {
         if let Some(scope) = &reader.scope {
             proofs.extend(scope.read_set());
         }
+        enriched["environmentFacts"]["snapshotEnvironmentLoads"] = json!(self.snapshot_loads);
         enriched["environmentReadSet"] = json!(proofs);
         Ok(enriched)
-    }
-
-    fn prime(
-        &mut self,
-        root: &Path,
-        components: &[WorkspaceComponent],
-        core: &[String],
-        aspects: &[String],
-    ) -> io::Result<()> {
-        if components.iter().any(|component| needs_facts(component, core, aspects)) {
-            let mut ids = components
-                .iter()
-                .flat_map(|component| component.config.keys())
-                .chain(aspects.iter())
-                .filter(|id| !core.contains(id) && !bit_install::policy::is_core_env(id))
-                .collect::<Vec<_>>();
-            let mut seen = std::collections::HashSet::new();
-            ids.retain(|id| seen.insert(*id));
-            self.host(root)?
-                .call("dependencyPolicies", &json!({"extensionIds":ids}))?;
-        }
-        Ok(())
     }
 
     pub(super) fn parser(
@@ -412,4 +368,11 @@ fn selected(component: &WorkspaceComponent, targets: &[Value]) -> bool {
     targets
         .iter()
         .any(|target| target["identity"] == component.id.to_string_without_version())
+}
+
+fn core_ids() -> io::Result<Vec<String>> {
+    serde_json::from_str(include_str!(
+        "../../../../../scopes/harmony/testing/load-aspect/core-aspects-ids.json"
+    ))
+    .map_err(io::Error::other)
 }

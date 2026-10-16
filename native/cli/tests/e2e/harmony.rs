@@ -19,3 +19,5 @@ mod status_relative;
 mod status_graph_remote;
 
 mod status_autosync;
+
+mod snapshot_environments;

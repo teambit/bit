@@ -2,6 +2,7 @@
 //! All allocations are supplied by the caller before any object is published.
 pub(super) mod eligibility;
 pub(super) use eligibility::preflight;
+mod build;
 mod graph;
 mod history;
 mod lane;
@@ -62,6 +63,45 @@ pub(super) struct Snapshot {
 }
 
 impl Snapshot {
+    pub(super) fn accept_published(
+        &mut self,
+        files: &HashMap<std::path::PathBuf, Vec<u8>>,
+    ) -> io::Result<()> {
+        proof::accept_published(&mut self.proofs, files);
+        if let Some(repository) = &mut self.repository {
+            repository.accept_published(files)?;
+        }
+        self.validate()
+    }
+    pub(super) fn published_files(
+        &self,
+        root: &Path,
+    ) -> io::Result<HashMap<std::path::PathBuf, Vec<u8>>> {
+        let mut files = HashMap::new();
+        for object in self.staged_objects() {
+            let hash =
+                object["hash"].as_str().ok_or_else(|| invalid("snapshot staged object hash"))?;
+            crate::merge_history::hash(hash)?;
+            let expected = std::fs::read(
+                object["compressedPath"]
+                    .as_str()
+                    .ok_or_else(|| invalid("snapshot staged object path"))?,
+            )?;
+            let path = crate::scope_path(root)
+                .join("objects")
+                .join(&hash[..2])
+                .join(&hash[2..]);
+            if std::fs::read(&path)? != expected {
+                return Err(invalid("snapshot published object changed"));
+            }
+            files.insert(path, expected);
+        }
+        Ok(files)
+    }
+
+    pub fn staged_objects(&self) -> &[Value] {
+        &self.objects.staged_objects
+    }
     pub fn validate(&self) -> io::Result<()> {
         proof::verify(&self.proofs)?;
         if let Some(repository) = &self.repository {
@@ -82,38 +122,30 @@ pub(super) fn prepare(
     lane: Option<&Value>,
     receipt: &Value,
     snapshots: &snapshots::State,
+    ordinary_snapshot: bool,
 ) -> io::Result<Snapshot> {
-    preflight(root, materials, snapshots)?;
+    preflight(root, materials, snapshots, ordinary_snapshot)?;
     let hashes = allocations(materials, receipt)?;
     let versions_by_id = publication_versions(materials, &hashes, lane)?;
     let mut objects = Vec::new();
     let mut versions = Vec::new();
     let mut proofs = Vec::new();
+    let mut receipt = receipt.clone();
+    build::artifacts(&mut receipt, &mut objects, &mut proofs)?;
     let context = object::Context {
         root,
-        receipt,
+        receipt: &receipt,
         lane,
         hashes: &hashes,
         versions: &versions_by_id,
         snapshots,
+        ordinary_snapshot,
     };
     for material in materials {
         versions.push(object::prepare(&context, material, &mut objects, &mut proofs)?);
     }
     let mut seen = HashSet::new();
-    let repository = if lane.is_some()
-        || materials.iter().any(|material| material.version_state.tagged_version.is_some())
-    {
-        let mut repository = Repository::new(root, None);
-        if let Some(lane) = lane {
-            lane::lane_objects(lane, materials, receipt, &mut objects, &mut repository)?;
-        } else {
-            history::tag_histories(root, materials, &mut objects, &mut repository)?;
-        }
-        Some(repository)
-    } else {
-        None
-    };
+    let repository = history_repository(root, materials, lane, &receipt, &mut objects)?;
     objects.retain(|object| object["type"] != "Source" || seen.insert(object["hash"].clone()));
     Ok(Snapshot {
         objects: snapshot::prepare_objects(staging, objects)?,
@@ -121,6 +153,28 @@ pub(super) fn prepare(
         repository,
         versions,
     })
+}
+
+fn history_repository(
+    root: &Path,
+    materials: &[Material],
+    lane: Option<&Value>,
+    receipt: &Value,
+    objects: &mut Vec<Value>,
+) -> io::Result<Option<Repository>> {
+    if lane.is_some()
+        || materials.iter().any(|material| material.version_state.tagged_version.is_some())
+    {
+        let mut repository = Repository::new(root, None);
+        if let Some(lane) = lane {
+            lane::lane_objects(lane, materials, receipt, objects, &mut repository)?;
+        } else {
+            history::tag_histories(root, materials, objects, &mut repository)?;
+        }
+        Ok(Some(repository))
+    } else {
+        Ok(None)
+    }
 }
 
 fn publication_versions<'a>(

@@ -9,6 +9,7 @@ impl Prepared {
         context: &Value,
         versions: &[(String, String)],
         log: &Value,
+        component_logs: &Value,
         pre_release: Option<&str>,
     ) -> io::Result<()> {
         let bitmap = crate::recovery::jsonc::parse(&self.output)?;
@@ -25,7 +26,10 @@ impl Prepared {
             entry
                 .as_object_mut()
                 .ok_or_else(|| invalid("soft tag bitmap entry"))?
-                .insert("nextVersion".into(), next_version(version, log, pre_release));
+                .insert(
+                    "nextVersion".into(),
+                    next_version(version, component_logs.get(identity).unwrap_or(log), pre_release),
+                );
         }
         self.output =
             render_rows(entries, &bitmap["$schema-version"], lane::header(context, &bitmap)?)?;

@@ -2,6 +2,7 @@ pub(super) use addition::capture as addition;
 pub(super) use hidden::from_model;
 mod addition;
 mod hidden;
+mod normalized;
 use super::super::{invalid, read, status_models::comparison};
 use crate::workspace::snapshots;
 use serde_json::{Value, json};
@@ -20,16 +21,27 @@ pub(super) fn all(
     snapshots: &mut snapshots::State,
     pool: &rayon::ThreadPool,
 ) -> io::Result<Vec<Captured>> {
-    let targets = targets(inputs)?;
-    let paths = targets
-        .iter()
-        .flat_map(|target| {
-            target.files
-                .iter()
-                .map(|file| root.join(&target.directory).join(file))
-        })
-        .collect::<Vec<_>>();
-    let captured = read::read_with_budget(&paths, pool, snapshots::MAX_BYTES, read::canonical)?;
+    all_with(root, inputs, snapshots, pool, false)
+}
+
+pub(super) fn all_for_snapshot(
+    root: &Path,
+    inputs: Vec<Value>,
+    snapshots: &mut snapshots::State,
+    pool: &rayon::ThreadPool,
+) -> io::Result<Vec<Captured>> {
+    all_with(root, inputs, snapshots, pool, true)
+}
+
+fn all_with(
+    root: &Path,
+    inputs: Vec<Value>,
+    snapshots: &mut snapshots::State,
+    pool: &rayon::ThreadPool,
+    allow_root: bool,
+) -> io::Result<Vec<Captured>> {
+    let targets = targets(inputs, allow_root)?;
+    let captured = normalized::read(root, &targets, pool)?;
     let mut captured = captured.into_iter();
     targets.into_iter().map(|target| {
         let mut metadata = Vec::new();
@@ -42,8 +54,12 @@ pub(super) fn all(
                 contents: contents.into(),
             }).ok_or_else(|| invalid("command capture retention"))?;
             metadata.push(json!({"relativePath":file,"name":file.rsplit('/').next(),"test":false,"file":observed.linux_hash}));
-            files.push(json!({"relativePath":file,"path":observed.path,"rawHash":observed.hash,
-                "snapshotHash":observed.snapshot_hash,"readToken":token,"protected":false}));
+            let mut source = json!({"relativePath":file,"path":observed.path,"rawHash":observed.hash,
+                "snapshotHash":observed.snapshot_hash,"readToken":token,"protected":false});
+            if target.directory == "." && file == ".bitmap" {
+                source["bitmapSource"] = json!(true);
+            }
+            files.push(source);
         }
         Ok(Captured { added: false, hidden: false, target, metadata: Value::Array(metadata), files: Value::Array(files) })
     }).collect()
@@ -59,7 +75,7 @@ pub(super) fn lane_visibility(captured: &mut [Captured], context: &Value) -> io:
     }
     Ok(())
 }
-fn targets(inputs: Vec<Value>) -> io::Result<Vec<comparison::Target>> {
+fn targets(inputs: Vec<Value>, allow_root: bool) -> io::Result<Vec<comparison::Target>> {
     let mut seen = HashSet::new();
     inputs
         .into_iter()
@@ -71,7 +87,7 @@ fn targets(inputs: Vec<Value>) -> io::Result<Vec<comparison::Target>> {
             let target: comparison::Target =
                 serde_json::from_value(value).map_err(io::Error::other)?;
             comparison::capture::validate(&target)?;
-            if target.directory == "." || !seen.insert(target.identity.clone()) {
+            if (!allow_root && target.directory == ".") || !seen.insert(target.identity.clone()) {
                 return Err(invalid("command root or duplicate component"));
             }
             Ok(target)

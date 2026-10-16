@@ -8,7 +8,7 @@ fn write(root: &Path, name: &str, bytes: &[u8]) {
     fs::create_dir_all(path.parent().unwrap()).unwrap();
     fs::write(path, bytes).unwrap();
 }
-fn fixture() -> (Directory, Value) {
+pub(super) fn fixture() -> (Directory, Value) {
     let directory = Directory::create().unwrap();
     write(&directory.0, ".bit/index.json", b"{\"components\":[],\"lanes\":[]}");
     write(
@@ -102,6 +102,7 @@ fn lane_snapshot_stages_current_lane_config_and_validates_its_original_bytes() {
             semantic_version: None,
             version: &version,
         }],
+        false,
         &mut prepared,
     )
     .unwrap();
@@ -164,6 +165,7 @@ fn existing_lane_only_marker_is_retained_in_staged_configuration() {
             semantic_version: None,
             version: &version,
         }],
+        false,
         &mut prepared,
     )
     .unwrap();
@@ -366,7 +368,7 @@ fn a_scope_without_an_index_starts_an_empty_one() {
         semantic_version: None,
         version: &version,
     };
-    super::staged::prepare(&directory.0, &[input], &mut prepared).unwrap();
+    super::staged::prepare(&directory.0, &[input], false, &mut prepared).unwrap();
     let index = directory.0.join(".bit/index.json");
     let bytes = &prepared.writes
         .iter()

@@ -1,4 +1,5 @@
 //! Mainline semantic-version planning reuses retained ordinary snapshot materials.
+pub(in crate::workspace::engine) use published::{Overrides, apply as override_versions};
 pub(super) use report::report;
 
 use super::{
@@ -9,6 +10,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
 
+mod published;
 mod report;
 
 #[derive(Clone, Deserialize)]
@@ -35,6 +37,7 @@ pub(super) struct Options {
     pub soft: bool,
     #[serde(default)]
     pub persist: bool,
+    pub versions_file: Option<Value>,
 }
 
 pub(super) fn select(
@@ -49,20 +52,12 @@ pub(super) fn select(
     if options.persist {
         return select_persist(retained, &options, input);
     }
-    let snap = retained.snap
-        .as_ref()
-        .ok_or_else(|| invalid("tag snapshot options"))?
-        .clone();
-    let mut candidates = super::snap::candidates(retained, captured, &snap)?;
-    append_pending(retained, captured, &mut candidates)?;
+    let pending = candidate_selection(retained, captured)?;
+    let candidates = &pending.identities;
     let snapped = head_snaps(retained, captured)?;
-    for id in &snapped {
-        if !candidates.contains(id) {
-            candidates.push(id.clone());
-        }
-    }
+    let snap = retained.snap.as_ref().ok_or_else(|| invalid("tag snapshot options"))?;
     if !options.patterns.is_empty() {
-        return filter_patterns(captured, &candidates, &options.patterns, input);
+        return filter_patterns(captured, candidates, &options.patterns, input);
     }
     if input.tag_selections.is_some() {
         return Err(invalid("tag unexpected selection receipt"));
@@ -74,7 +69,39 @@ pub(super) fn select(
         return super::selection::select(&retained.record.targets, &retained.pending, None)
             .map(Selection::unique);
     }
-    Ok(Selection::unique(candidates))
+    Ok(pending)
+}
+
+pub(super) fn candidate_ids(
+    retained: &mut Retained,
+    captured: &[capture::Captured],
+) -> io::Result<Vec<String>> {
+    candidate_selection(retained, captured).map(|selection| selection.identities)
+}
+
+fn candidate_selection(
+    retained: &mut Retained,
+    captured: &[capture::Captured],
+) -> io::Result<Selection> {
+    let snap = retained.snap
+        .as_ref()
+        .ok_or_else(|| invalid("tag snapshot options"))?
+        .clone();
+    let mut candidates = super::snap::candidates(retained, captured, &snap)?;
+    append_pending(retained, captured, &mut candidates)?;
+    let snapped = head_snaps(retained, captured)?;
+    let load_count = candidates
+        .iter()
+        .filter(|id| !super::snap::local_only(retained, id))
+        .count()
+        + snapped.len();
+    for id in &snapped {
+        if !candidates.contains(id) {
+            candidates.push(id.clone());
+        }
+    }
+    candidates.retain(|identity| !super::snap::local_only(retained, identity));
+    Ok(Selection { identities: candidates, load_count })
 }
 
 fn select_persist(retained: &Retained, options: &Options, input: &Plan) -> io::Result<Selection> {
@@ -117,6 +144,9 @@ fn append_pending(
 fn head_snaps(retained: &Retained, captured: &[capture::Captured]) -> io::Result<Vec<String>> {
     let mut output = Vec::new();
     for current in captured {
+        if super::snap::local_only(retained, &current.target.identity) {
+            continue;
+        }
         if retained.pending
             .iter()
             .any(|row| {
@@ -189,7 +219,7 @@ fn selected_group(
     pattern: &str,
     matches: &[&str],
 ) -> io::Result<Vec<String>> {
-    let wildcard = pattern.contains('*') || pattern.contains(',');
+    let wildcard = pattern.contains(['*', ',', '!', '$', ':']);
     if !wildcard && matches.len() != 1 {
         return Err(invalid("tag literal pattern receipt"));
     }
@@ -229,7 +259,7 @@ pub(super) fn versions(
     let options = retained.tag.as_ref().ok_or_else(|| invalid("tag options absent"))?;
     let params = json!({"releaseType":options.release_type,"autoTagReleaseType":options.auto_tag_release_type,
         "incrementBy":options.increment_by,"exactVersion":options.exact_version,"preReleaseId":options.pre_release_id,
-        "soft":options.soft,"persist":options.persist,"hasTagData":false});
+        "soft":options.soft,"persist":options.persist,"hasTagData":options.versions_file.is_some(),"versionsFile":options.versions_file,"autoAddedWorkspaceRoot":super::root::added(retained)});
     let mut entered = serde_json::Map::new();
     for row in input.tag_selections.as_deref().unwrap_or_default() {
         let id = row["identity"].as_str().ok_or_else(|| invalid("tag selected identity"))?;

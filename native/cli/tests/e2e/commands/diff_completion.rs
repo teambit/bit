@@ -1,6 +1,10 @@
 //! Remaining workspace diff selection and presentation parity.
+mod sibling_order;
 
 mod http;
+mod remote_fixture;
+
+use remote_fixture::publish_remote_fixture;
 
 use crate::helper::Helper;
 use std::ffi::OsStr;
@@ -155,7 +159,10 @@ fn nested_files_and_crlf_match_node() {
     let actual = helper.cmd("diff bar/foo --json");
     assert!(actual.native, "{}", actual.trace);
     assert_eq!(actual.status.code(), expected.status.code());
-    assert_eq!(actual.stdout, expected.stdout);
+    assert_eq!(
+        sibling_order::normalize(&actual.stdout),
+        sibling_order::normalize(&expected.stdout),
+    );
     assert_eq!(actual.stderr, expected.stderr);
 }
 
@@ -190,16 +197,20 @@ fn color_run(root: &std::path::Path, node: bool) -> std::process::Output {
 }
 
 fn missing_remote_version() -> Helper {
+    remote_versions(publish_remote_fixture)
+}
+
+fn remote_versions(publish: fn(&Helper)) -> Helper {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("module.exports = 'one';");
     helper.add_component_bar_foo();
     helper.tag_without_build("", "");
-    helper.run("export");
+    publish(&helper);
     let first = helper.clone_workspace();
     helper.create_component_bar_foo("module.exports = 'two';");
     helper.tag_without_build("", "");
-    helper.run("export");
+    publish(&helper);
     helper.get_cloned_workspace(&first);
     helper
 }

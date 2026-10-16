@@ -17,6 +17,7 @@ mod resolve_dependencies;
 mod resolve_typescript;
 mod response;
 mod scan;
+mod snapshot_request;
 mod source_overlay;
 mod status;
 mod status_context;
@@ -78,10 +79,18 @@ enum Request {
     CommandOutboundFinalize(command::outbound::Finalize),
     CommandTagPrepare(command::resolve::Prepare),
     CommandTagPlan(command::resolve::Plan),
+    CommandTagVersionOverrides(command::resolve::TagOverrides),
+    CommandTagCandidates(command::resolve::Plan),
     CommandTagFinalize(command::resolve::Finalize),
     CommandTagApply(command::resolve::Apply),
     CommandSnapPrepare(command::resolve::Prepare),
     CommandSnapPlan(command::resolve::Plan),
+    CommandSnapshotValidate(command::resolve::Validate),
+    CommandSnapshotRefresh(command::resolve::Refresh),
+    CommandSnapshotStagePackages(command::resolve::StagePackages),
+    CommandSnapshotPackageFinalize(command::resolve::PackageFinalize),
+    CommandSnapshotStageBuild(command::resolve::StageBuild),
+    CommandSnapshotBuildFinalize(command::resolve::BuildFinalize),
     CommandSnapFinalize(command::resolve::Finalize),
     CommandSnapApply(command::resolve::Apply),
     CommandResolvePrepare(command::resolve::Prepare),

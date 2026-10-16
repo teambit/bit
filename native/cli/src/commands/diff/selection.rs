@@ -1,6 +1,7 @@
 //! `idsByPattern` selection for workspace and historical diffs.
 
 pub(super) use states::after_capture;
+pub(in crate::commands) use states::select_capture;
 
 use crate::commands::{
     inventory, patterns,
@@ -91,7 +92,7 @@ fn glob(targets: &[Value], pattern: &str) -> io::Result<Vec<Value>> {
         .collect())
 }
 
-fn stateful(pattern: &str) -> bool {
+pub(in crate::commands) fn stateful(pattern: &str) -> bool {
     patterns::split(pattern)
         .iter()
         .any(|part| part.starts_with('$') || part.contains(" AND "))

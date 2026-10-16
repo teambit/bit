@@ -36,3 +36,27 @@ fn retain(file: &Value, snapshots: &snapshots::State) -> io::Result<proof::Proof
 }
 #[cfg(test)]
 mod tests;
+
+pub(super) fn owned_paths(
+    root: &Path,
+    current: &[Value],
+    materials: &[super::super::resolve_snapshot::Material],
+) -> std::collections::HashSet<std::path::PathBuf> {
+    current
+        .iter()
+        .filter(|row| {
+            materials
+                .iter()
+                .any(|material| material.identity == row["identity"])
+        })
+        .flat_map(|row| {
+            let directory = root.join(row["directory"].as_str().unwrap_or(""));
+            row["files"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(Value::as_str)
+                .map(move |file| directory.join(file))
+        })
+        .collect()
+}

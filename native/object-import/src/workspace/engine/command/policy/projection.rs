@@ -1,7 +1,11 @@
+pub(in crate::workspace::engine::command) use callbacks::extensions as callback_extensions;
+
 use super::super::invalid;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
+
+mod callbacks;
 
 pub(super) const DEPRECATION: &str = "teambit.component/deprecation";
 pub(super) const REMOVAL: &str = "teambit.component/remove";
@@ -146,7 +150,7 @@ fn core(entry: &Value) -> io::Result<&str> {
         passive_removal(&entry["config"])?;
     } else if name == BUILDER {
         passive_builder(&entry["config"])?;
-    } else if !CORES.contains(&name) {
+    } else if name != "teambit.harmony/node" && !CORES.contains(&name) {
         return Err(invalid("command custom aspect"));
     }
     Ok(name)

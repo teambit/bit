@@ -36,14 +36,9 @@ pub fn parse(args: &[&str]) -> Option<Options> {
     Some(options)
 }
 
-/// A pattern without state selectors (`$…`) or `AND`.
+/// A bounded workspace pattern, including state predicates.
 fn pattern(text: &str) -> bool {
-    !text.is_empty()
-        && text.len() <= 4096
-        && !text.contains('\0')
-        && !text
-            .split(',')
-            .any(|part| part.trim().starts_with('$') || part.contains(" AND "))
+    !text.is_empty() && text.len() <= 4096 && !text.contains('\0')
 }
 
 impl Options {

@@ -21,6 +21,7 @@ pub(super) fn rewrite_batch_refs(
 fn update_object(fields: &mut Map<String, Value>, hashes: &HashMap<&str, &str>) -> io::Result<()> {
     update_scoped_id(fields, hashes);
     update_string_id(fields, hashes);
+    update_root(fields, hashes)?;
     for (key, child) in fields {
         if key == "version" {
             update_marker(child, hashes)?;
@@ -74,5 +75,21 @@ fn update_marker(child: &mut Value, hashes: &HashMap<&str, &str>) -> io::Result<
         return Ok(());
     };
     *child = json!(hashes.get(identity).ok_or_else(|| invalid("unallocated batch dependency"))?);
+    Ok(())
+}
+
+fn update_root(fields: &mut Map<String, Value>, versions: &HashMap<&str, &str>) -> io::Result<()> {
+    let Some((identity, version)) = fields
+        .get("root")
+        .and_then(Value::as_str)
+        .and_then(|root| root.rsplit_once('@'))
+    else {
+        return Ok(());
+    };
+    if version.strip_prefix("__bit_pending_snapshot__:") == Some(identity) {
+        let version =
+            versions.get(identity).ok_or_else(|| invalid("unallocated workspace root"))?;
+        fields.insert("root".into(), json!(format!("{identity}@{version}")));
+    }
     Ok(())
 }

@@ -7,18 +7,27 @@ use std::io;
 #[derive(Default)]
 pub(super) struct Callbacks {
     pub(super) host: Option<crate::host::Host>,
-    directory: Option<tempfile::TempDir>,
+    directories: Vec<tempfile::TempDir>,
+    pub(super) snapshot_data: std::collections::HashMap<String, Value>,
     pub(super) load_stdout: std::sync::Mutex<String>,
     pub(super) issue_stdout: std::sync::Mutex<String>,
     pub(super) startup_stdout: std::sync::Mutex<String>,
 }
 
 impl CacheWrites {
+    pub(in crate::commands::status) fn retain_snapshot_data(
+        &mut self,
+        identity: &str,
+        data: Value,
+    ) {
+        self.callbacks.snapshot_data.insert(identity.to_owned(), data);
+    }
+
     pub(in crate::commands::status) fn retain_callback_directory(
         &mut self,
         directory: tempfile::TempDir,
     ) {
-        self.callbacks.directory = Some(directory);
+        self.callbacks.directories.push(directory);
     }
 
     pub(in crate::commands::status) fn retain_callback_host(

@@ -5,8 +5,13 @@ use std::{fs, path::PathBuf};
 struct Fixture(PathBuf);
 impl Fixture {
     fn new() -> Self {
+        static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
         let root = std::env::temp_dir()
-            .join(format!("bit-command-private-capture-{}", std::process::id()));
+            .join(format!(
+                "bit-command-private-capture-{}-{}",
+                std::process::id(),
+                NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed),
+            ));
         fs::create_dir_all(root.join("component")).unwrap();
         Self(root)
     }
@@ -76,4 +81,39 @@ fn private_capture_retains_large_parallel_sources_without_expanding_the_wire_bud
         read::read_with_budget(&paths, &pool, snapshots::MAX_BYTES, |_, bytes| bytes.len())
             .is_err(),
     );
+}
+
+#[test]
+fn callback_sources_are_retained_at_private_paths_without_materializing_the_workspace() {
+    let fixture = Fixture::new();
+    let spool = fixture.0.join("spool");
+    fs::create_dir(&spool).unwrap();
+    fs::write(fixture.0.join("component/index.js"), b"original disk source").unwrap();
+    fs::write(spool.join("edited"), b"\xef\xbb\xbfcallback source\r\n").unwrap();
+    fs::write(spool.join("added"), b"virtual source").unwrap();
+    let input = json!({"identity":"scope/component","version":"1.0.0","directory":"component",
+        "files":["index.js","generated.js"],"current":{"mainFile":"index.js"},
+        "sourceOverlayRoot":spool,"sourceOverlays":{"index.js":spool.join("edited"),"generated.js":spool.join("added")}});
+    let pool = rayon::ThreadPoolBuilder::new()
+        .num_threads(2)
+        .build()
+        .unwrap();
+    let mut state = snapshots::State::default();
+    let captured = all(&fixture.0, vec![input], &mut state, &pool).unwrap();
+    let files = captured[0].files.as_array().unwrap();
+    for (index, expected) in
+        [b"callback source\r\n".as_slice(), b"virtual source"].iter().enumerate()
+    {
+        let file = &files[index];
+        let observation = state
+            .get(
+                file["readToken"].as_u64().unwrap(),
+                std::path::Path::new(file["path"].as_str().unwrap()),
+                file["rawHash"].as_str().unwrap(),
+            )
+            .unwrap();
+        assert_eq!(observation.contents.as_ref(), *expected);
+    }
+    assert_eq!(fs::read(fixture.0.join("component/index.js")).unwrap(), b"original disk source");
+    assert!(!fixture.0.join("component/generated.js").exists());
 }

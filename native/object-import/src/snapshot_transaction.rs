@@ -167,3 +167,12 @@ fn version_identity(input: Value) -> io::Result<Value> {
 
 #[cfg(test)]
 mod future_tests;
+
+/// The next npm version after a published tag, preserving its prerelease identifier.
+pub fn next_published_version(parts: &Value) -> io::Result<String> {
+    let prerelease =
+        parts["prerelease"].as_array().ok_or_else(|| invalid("registry semver parts"))?;
+    let identifier = prerelease.first().and_then(Value::as_str);
+    let release = if prerelease.is_empty() { "patch" } else { "prerelease" };
+    increment::format(&increment::increment(parts, release, identifier)?)
+}

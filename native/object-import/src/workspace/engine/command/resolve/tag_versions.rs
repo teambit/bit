@@ -1,4 +1,7 @@
 //! Compute semantic identities before allocating any Version object hashes.
+
+pub(super) use ranges::update as update_ranges;
+
 use super::super::{invalid, resolve_snapshot::Material};
 use serde_json::{Value, json};
 use std::{collections::HashMap, io};
@@ -10,25 +13,17 @@ pub(super) fn plan(
     semver: &Value,
     next: &HashMap<String, &Value>,
 ) -> io::Result<()> {
-    if params["hasTagData"] == true {
-        return Err(invalid("tag requires ordinary version planning"));
-    }
-    let components = materials
-        .iter()
-        .map(|material| {
-            let tags = material.model["versions"]
-                .as_object()
-                .ok_or_else(|| invalid("tag model versions"))?;
-            let pending = next
-                .get(&material.identity)
-                .copied()
-                .unwrap_or(&Value::Null);
-            Ok(json!({"versions":tags.keys().collect::<Vec<_>>(),
-            "isAutoTag":material.participation.automatic && !material.participation.selected,
-            "isAutoAddedRoot":false,"enteredVersion":entered.get(&material.identity),
-            "nextVersion":pending["version"],"nextPreRelease":pending["preRelease"]}))
-        })
-        .collect::<io::Result<Vec<_>>>()?;
+    let components = components(materials, params, entered, next)?;
+    let semver = file::semver(params.get("versionsFile"), semver)?;
+    let mut params = params.clone();
+    params
+        .as_object_mut()
+        .ok_or_else(|| invalid("tag version options"))?
+        .remove("versionsFile");
+    params
+        .as_object_mut()
+        .unwrap()
+        .remove("autoAddedWorkspaceRoot");
     let output = crate::snapshot_transaction::apply(
         "snapshotFutureVersions",
         json!({"components":components,"params":params,"semver":semver}),
@@ -49,6 +44,31 @@ pub(super) fn plan(
     if params["soft"] == true { Ok(()) } else { ranges::update(materials) }
 }
 
+fn components(
+    materials: &[Material],
+    params: &Value,
+    entered: &Value,
+    next: &HashMap<String, &Value>,
+) -> io::Result<Vec<Value>> {
+    materials
+        .iter()
+        .map(|material| {
+            let tags = material.model["versions"]
+                .as_object()
+                .ok_or_else(|| invalid("tag model versions"))?;
+            let pending = next
+                .get(&material.identity)
+                .copied()
+                .unwrap_or(&Value::Null);
+            Ok(json!({"versions":tags.keys().collect::<Vec<_>>(),
+            "isAutoTag":material.participation.automatic && !material.participation.selected,
+            "isAutoAddedRoot":params["autoAddedWorkspaceRoot"] == material.identity,"enteredVersion":entered.get(&material.identity),
+            "nextVersion":pending["version"],"nextPreRelease":pending["preRelease"],"tagData":file::for_component(params.get("versionsFile"),&material.identity,params["autoAddedWorkspaceRoot"] == material.identity)?}))
+        })
+        .collect::<io::Result<Vec<_>>>()
+}
+
+mod file;
 mod ranges;
 
 #[cfg(test)]

@@ -17,25 +17,32 @@ const BOOLEANS: [&str; 8] = [
     "--major",
     "--soft",
 ];
-const STRINGS: [&str; 6] = [
+const STRINGS: [&str; 7] = [
     "--message",
     "--ver",
     "--increment",
     "--auto-tag-increment",
     "--prerelease-id",
     "--increment-by",
+    "--versions-file",
 ];
 
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default, PartialEq)]
 pub struct Options {
     pub message: Option<String>,
     pub unmodified: bool,
     pub unmerged: bool,
-    pub patterns: Vec<String>,
+    pub selection: TagSelection,
     pub release: Release,
     pub snapped: bool,
     pub skip_auto_tag: bool,
     pub mode: Mode,
+}
+
+#[derive(Debug, Default, PartialEq, Eq)]
+pub struct TagSelection {
+    pub patterns: Vec<String>,
+    pub versions_file: Option<String>,
 }
 
 #[derive(Debug, Default, PartialEq, Eq)]
@@ -48,12 +55,12 @@ pub enum Mode {
 
 /// How the versions are bumped: `validateOptions`' release types,
 /// `--increment-by` and `--ver`.
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default, PartialEq)]
 pub struct Release {
     /// `releaseType`.
     pub level: String,
     pub auto_tag_release_type: Option<String>,
-    pub increment_by: u64,
+    pub increment_by: f64,
     pub exact_version: Option<String>,
     pub pre_release_id: Option<String>,
 }
@@ -101,6 +108,9 @@ fn option_value(argument: &str, next: Option<&str>) -> Option<(Value, bool)> {
     if BOOLEANS.contains(&argument) || argument == "--persist=skip-build" {
         return Some((json!(true), false));
     }
+    if argument == "--persist" {
+        return Some((json!(true), next == Some("skip-build")));
+    }
     if STRINGS.contains(&argument) {
         return Some((json!(next?), true));
     }
@@ -121,14 +131,9 @@ fn alias(argument: &str) -> &str {
     }
 }
 
-/// A pattern without state selectors (`$…`) or `AND`.
+/// A bounded workspace pattern, including state predicates.
 fn pattern(text: &str) -> Option<&str> {
-    let valid = !text.is_empty()
-        && text.len() <= 4096
-        && !text.contains('\0')
-        && !text
-            .split(',')
-            .any(|part| part.trim().starts_with('$') || part.contains(" AND "));
+    let valid = !text.is_empty() && text.len() <= 4096 && !text.contains('\0');
     valid.then_some(text)
 }
 
@@ -141,7 +146,10 @@ fn validate(flags: &Flags) -> Option<Options> {
         message: flags.string("--message").map(str::to_string),
         unmodified: flags.flag("--unmodified"),
         unmerged: flags.flag("--unmerged"),
-        patterns: flags.patterns.clone(),
+        selection: TagSelection {
+            patterns: flags.patterns.clone(),
+            versions_file: flags.string("--versions-file").map(str::to_owned),
+        },
         release: release(flags)?,
         snapped: flags.flag("--snapped"),
         skip_auto_tag: flags.flag("--skip-auto-tag"),
@@ -165,17 +173,17 @@ impl Flags {
     }
 }
 
-/// The release levels, `--increment-by` (a decimal from 1 to 4096) and
+/// The release levels, `--increment-by` (a finite count from 0 to 4096) and
 /// `--ver` (a semver version).
 fn release(flags: &Flags) -> Option<Release> {
-    let increment_by = match flags.string("--increment-by") {
-        None => 1,
-        Some(text) if text.bytes().all(|byte| byte.is_ascii_digit()) => text
-            .parse::<u64>()
-            .ok()
-            .filter(|count| (1..=4096).contains(count))?,
-        Some(_) => return None,
-    };
+    let increment_by = flags
+        .string("--increment-by")
+        .map_or(Some(1.0), |text| {
+            text.trim()
+                .parse::<f64>()
+                .ok()
+                .filter(|count| count.is_finite() && (0.0..=4096.0).contains(count))
+        })?;
     let exact_version = match flags.string("--ver") {
         None => None,
         Some(version) => Some(node_semver::npm::valid(version)?),
@@ -239,7 +247,8 @@ impl Options {
     /// `tagOptions` of `commandTagPrepare`.
     pub fn tag_options(&self) -> Value {
         let release = &self.release;
-        let mut options = json!({ "patterns": self.patterns, "releaseType": release.level });
+        let mut options =
+            json!({ "patterns": self.selection.patterns, "releaseType": release.level });
         if let Some(level) = &release.auto_tag_release_type {
             options["autoTagReleaseType"] = json!(level);
         }

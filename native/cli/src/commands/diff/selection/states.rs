@@ -22,12 +22,24 @@ pub(in crate::commands::diff) fn after_capture(
     let Some(pattern) = pattern.filter(|pattern| super::stateful(pattern)) else {
         return Ok((targets.to_vec(), Vec::new()));
     };
+    let (selected, loads) = select_capture(engine, root, context, targets, pattern, capture)?;
+    retain_capture(capture, &selected);
+    Ok((selected, loads))
+}
+
+/// Evaluate workspace predicates without removing candidates needed by write cascades.
+pub(in crate::commands) fn select_capture(
+    engine: &mut Engine,
+    root: &Path,
+    context: &Value,
+    targets: &[Value],
+    pattern: &str,
+    capture: &Capture,
+) -> io::Result<(Vec<Value>, Vec<usize>)> {
     let compared: Value =
         engine.request(&json!({"kind":"statusCompare","root":root,"targets":capture.comparisons}))?;
     let state = State { context, capture, compared: &compared };
-    let (selected, loads) = select_states(&state, targets, pattern)?;
-    retain_capture(capture, &selected);
-    Ok((selected, loads))
+    select_states(&state, targets, pattern)
 }
 
 fn select_states(

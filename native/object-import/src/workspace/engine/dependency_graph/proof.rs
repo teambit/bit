@@ -35,6 +35,11 @@ struct Metadata {
     kind: String,
     real_path: Option<PathBuf>,
 }
+impl Proof {
+    pub(in crate::workspace::engine) fn is_content(&self) -> bool {
+        self.exists.is_none() && self.metadata.is_none() && self.range.is_none()
+    }
+}
 impl Metadata {
     fn capture(file: &Path, metadata: Option<&fs::Metadata>) -> io::Result<Self> {
         let kind = match metadata {
@@ -92,6 +97,16 @@ fn verify_one(proof: &Proof) -> io::Result<usize> {
     Ok(content.as_ref().map_or(0, Vec::len))
 }
 fn verify_metadata(proof: &Proof, expected: &Metadata) -> io::Result<usize> {
+    if expected.kind == "symlink" {
+        if proof.hash.is_some()
+            || proof.exists.is_some()
+            || expected.real_path.is_none()
+            || fs::read_link(&proof.path).ok() != expected.real_path
+        {
+            return Err(invalid("symbolic link changed"));
+        }
+        return Ok(0);
+    }
     let metadata = match fs::metadata(&proof.path) {
         Ok(metadata) => Some(metadata),
         Err(error)
@@ -252,4 +267,25 @@ pub(in crate::workspace::engine) fn validate_restored_control(original: &Proof) 
         return Err(invalid("restored control cannot use a byte range"));
     }
     Ok(())
+}
+
+pub(in crate::workspace::engine) fn accept_published(
+    proofs: &mut [Proof],
+    files: &std::collections::HashMap<PathBuf, Vec<u8>>,
+) {
+    for proof in proofs {
+        if let Some(bytes) = files.get(&proof.path) {
+            *proof = content(&proof.path, bytes);
+        }
+    }
+}
+
+pub(in crate::workspace::engine) fn symlink(path: &Path) -> io::Result<Proof> {
+    Ok(Proof {
+        path: path.to_path_buf(),
+        hash: None,
+        exists: None,
+        metadata: Some(Metadata { kind: "symlink".into(), real_path: Some(fs::read_link(path)?) }),
+        range: None,
+    })
 }

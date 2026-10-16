@@ -27,11 +27,10 @@ pub fn selections(context: &Value, patterns: &[String]) -> io::Result<Option<Val
     let mut rows = Vec::new();
     for (index, pattern) in patterns.iter().enumerate() {
         let (pattern, version) = split(pattern)?;
-        let matches = if pattern.contains('*') || pattern.contains(',') {
-            component_patterns::matching(&identities, &component_patterns::split(pattern))?
-        } else {
-            vec![literal_match(&identities, pattern)?]
-        };
+        let matches = matches(&identities, pattern)?;
+        if matches.is_empty() {
+            return Err(decline("tag pattern has no matches"));
+        }
         for identity in matches {
             rows.push(json!({ "identity": identity, "version": version, "patternIndex": index }));
         }
@@ -40,6 +39,56 @@ pub fn selections(context: &Value, patterns: &[String]) -> io::Result<Option<Val
         }
     }
     Ok(Some(Value::Array(rows)))
+}
+
+fn matches<'i>(identities: &[&'i str], pattern: &str) -> io::Result<Vec<&'i str>> {
+    if pattern.contains(['*', ',', '!']) {
+        component_patterns::extended::matching(identities, &component_patterns::split(pattern))
+    } else {
+        Ok(vec![literal_match(identities, pattern)?])
+    }
+}
+
+/// State predicates share diff's evaluator but retain the complete write capture.
+pub fn selections_with_state(
+    engine: &mut crate::commands::engine::Engine,
+    root: &std::path::Path,
+    context: &Value,
+    patterns: &[String],
+    capture: &crate::commands::status::capture::Capture,
+) -> io::Result<(Option<Value>, Vec<usize>)> {
+    if patterns.is_empty() {
+        return Ok((None, Vec::new()));
+    }
+    let mut rows = Vec::new();
+    let mut loads = Vec::new();
+    for (index, entered) in patterns.iter().enumerate() {
+        let (pattern, version) = split(entered)?;
+        if crate::commands::diff::selection::stateful(pattern) {
+            let targets = array(context.get("targets"), "tag state targets")?;
+            let (matches, loading) = crate::commands::diff::selection::select_capture(
+                engine, root, context, targets, pattern, capture,
+            )?;
+            loads.extend(loading);
+            rows.extend(matches.iter().map(|target|json!({"identity":target["identity"],"version":version,"patternIndex":index})));
+        } else {
+            rows.extend(ordinary_selection(context, entered, index)?);
+        }
+    }
+    Ok((Some(Value::Array(rows)), loads))
+}
+
+fn ordinary_selection(context: &Value, entered: &str, index: usize) -> io::Result<Vec<Value>> {
+    let selected = selections(context, &[entered.to_string()])?
+        .ok_or_else(|| decline("tag selection absent"))?;
+    let mut rows = selected
+        .as_array()
+        .ok_or_else(|| decline("tag selection rows"))?
+        .clone();
+    for row in &mut rows {
+        row["patternIndex"] = json!(index);
+    }
+    Ok(rows)
 }
 
 /// `pattern[@version]`, the version a semver version or a release type.

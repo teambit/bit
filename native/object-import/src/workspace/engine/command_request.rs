@@ -1,5 +1,5 @@
 //! Route inbound and outbound commands while retaining their shared request state.
-use super::{Request, command, owned_command};
+use super::{Request, command};
 use crate::workspace::snapshots;
 use serde_json::Value;
 use std::io;
@@ -47,6 +47,6 @@ pub(super) fn dispatch(
         Request::CommandOutboundFinalize(input) => {
             pool.install(|| command::outbound::finalize(&input, &mut snapshots.command))
         }
-        request => owned_command(request, snapshots, pool),
+        request => super::snapshot_request::dispatch(request, snapshots, pool),
     }
 }

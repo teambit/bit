@@ -71,7 +71,7 @@ fn node_command(helper: &Helper) -> Command {
     command
 }
 
-fn node_binary(entry: &Path) -> PathBuf {
+pub(super) fn node_binary(entry: &Path) -> PathBuf {
     if let Some(node) = std::env::var_os("BIT_NODE_BINARY") {
         return node.into();
     }

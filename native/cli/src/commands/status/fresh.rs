@@ -80,6 +80,20 @@ impl Pending {
         &self.identity
     }
 
+    pub(in crate::commands::status) fn replace_source_proof(
+        &mut self,
+        before: &Value,
+        after: &Value,
+    ) {
+        if let Some(proofs) = self.read_set.as_array_mut() {
+            for proof in proofs {
+                if proof == before {
+                    *proof = after.clone();
+                }
+            }
+        }
+    }
+
     /// The files the detection read, which the engine checks again before writing.
     pub fn read_set(&self) -> &[Value] {
         self.read_set

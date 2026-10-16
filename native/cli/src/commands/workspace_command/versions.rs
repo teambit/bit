@@ -103,7 +103,12 @@ pub fn format(result: &Value, chalk: Chalk, labels: &Labels) -> io::Result<Repor
         return Ok(Report { data: chalk.yellow(labels.nothing), code: 0, details: None });
     }
     let versioned = hydrate(result, labels)?;
-    Ok(versioned.report(&Formatter::new(chalk)))
+    let root = result
+        .get("autoAddedWorkspaceRoot")
+        .filter(|root| !root.is_null())
+        .map(|root| Id::parse(text(Some(root))?))
+        .transpose()?;
+    Ok(versioned.report(&Formatter::new(chalk), root.as_ref()))
 }
 
 fn hydrate<'l>(value: &Value, labels: &'l Labels) -> io::Result<Versioned<'l>> {
@@ -146,6 +151,7 @@ fn header(map: &serde_json::Map<String, Value>, labels: &Labels) -> io::Result<u
         key == labels.versioned
             || key == labels.automatic
             || labels.others.contains(&key)
+            || key == "autoAddedWorkspaceRoot"
             || (labels.tag && key == "isSoftTag")
     };
     let lane = map.get("laneName").unwrap_or(&Value::Null);
@@ -257,23 +263,26 @@ impl Versioned<'_> {
     }
 
     /// `snapResultReport` / `tagResultReport`.
-    fn report(&self, format: &Formatter) -> Report {
+    fn report(&self, format: &Formatter, root: Option<&Id>) -> Report {
+        let verb = if self.labels.tag { "tagged" } else { "snapped" };
+        let root = root.map_or_else(String::new, |root|format.hint(&format!("({} is the workspace-root component. it was new or modified, so it was {verb} along: the other components record the root version they were {verb} with)",in_bold(format.chalk,root))));
         let footer = self.footer(format);
         let warnings = self.warnings(format);
         if self.automatic.is_empty() {
-            let data =
-                Formatter::join(&[self.sections(format, true), vec![warnings, footer]].concat());
+            let data = Formatter::join(
+                &[self.sections(format, true, &root), vec![warnings, footer]].concat(),
+            );
             return Report { data, code: 0, details: None };
         }
         let summary = vec![self.automatic_section(format), warnings.clone(), footer.clone()];
-        let data = Formatter::join(&[self.sections(format, false), summary].concat());
+        let data = Formatter::join(&[self.sections(format, false, &root), summary].concat());
         let details =
-            Formatter::join(&[self.sections(format, true), vec![warnings, footer]].concat());
+            Formatter::join(&[self.sections(format, true, &root), vec![warnings, footer]].concat());
         Report { data, code: 0, details: Some(details) }
     }
 
     /// The new and changed components, each with its dependents when `detailed`.
-    fn sections(&self, format: &Formatter, detailed: bool) -> Vec<String> {
+    fn sections(&self, format: &Formatter, detailed: bool, root: &str) -> Vec<String> {
         let added: HashSet<String> = self.added
             .iter()
             .map(Id::without_version)
@@ -304,6 +313,7 @@ impl Versioned<'_> {
         vec![
             format.section(new_title, new_desc, &new),
             format.section(changed_title, changed_desc, &changed),
+            root.to_string(),
             format.section("removed components", "", &removed),
         ]
     }

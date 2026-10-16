@@ -1,3 +1,6 @@
+pub(super) mod builder;
+pub(super) mod packages;
+
 use super::{
     super::{bitmap, invalid, proof, resolve_publication, resolve_snapshot, scratch},
     Apply, Finalize, Retained,
@@ -7,7 +10,7 @@ use serde_json::{Value, json};
 use std::{fs, io};
 
 pub(super) enum Phase {
-    Pending,
+    Pending(super::refresh::Callbacks),
     Noop,
     Soft(bitmap::Prepared),
     Prepared(Box<Prepared>),
@@ -17,6 +20,10 @@ pub(super) struct Prepared {
     _directory: scratch::Directory,
     snapshot: resolve_snapshot::Snapshot,
     publication: resolve_publication::Prepared,
+    receipt: Value,
+    staged_snaps: Option<Vec<u8>>,
+    objects_persisted: bool,
+    notifications: usize,
 }
 
 pub(super) fn finalize(
@@ -26,44 +33,32 @@ pub(super) fn finalize(
 ) -> io::Result<Value> {
     if retained.record.token != input.token
         || retained.materials.is_empty()
-        || !matches!(retained.finalized, Phase::Pending)
+        || !matches!(retained.finalized, Phase::Pending(_))
     {
         return Err(invalid("resolve finalize state"));
     }
     retained.record.proofs.extend(input.dependency_read_set);
     validate(retained)?;
     let mut receipt = input.snap_receipt;
+    validate_graph_receipt(retained, &receipt)?;
     receipt["log"]["message"] =
         json!(retained.record.request.options.message.as_deref().unwrap_or_default());
+    super::logs::apply(retained, &mut receipt)?;
     if retained.tag.as_ref().is_some_and(|options| options.soft) {
         return finalize_soft(retained, &receipt);
     }
-    let lane = lane_current(&retained.record.context);
-    let directory = scratch::Directory::create()?;
-    let snapshot = resolve_snapshot::prepare(
-        &retained.record.request.root,
-        &directory.0,
-        &retained.materials,
-        lane.as_ref(),
-        &receipt,
-        snapshots,
-    )?;
-    let publication = resolve_publication::prepare(
-        &retained.record.request.root,
-        &retained.record.context,
-        &retained.materials,
-        &snapshot.versions,
-        &retained.pending,
-        &receipt,
-        retained.record.repository.imported_index(),
-    )?;
-    publication.validate()?;
+    let prepared = prepare_snapshot(retained, receipt, snapshots)?;
     if retained.snap.is_some() && retained.tag.is_none() {
-        allocate_snap_report(&mut retained.result, &snapshot.versions)?;
+        allocate_snap_report(&mut retained.result, &prepared.snapshot.versions)?;
     }
-    retained.finalized =
-        Phase::Prepared(Box::new(Prepared { _directory: directory, snapshot, publication }));
-    Ok(json!({"token":retained.record.token,"result":retained.result}))
+    let package_manifest_plans =
+        prepared.publication.package_manifest_plans(&prepared.snapshot.versions)?;
+    let staged_objects = prepared.snapshot.staged_objects().to_vec();
+    let versions = prepared.snapshot.versions.clone();
+    retained.finalized = Phase::Prepared(Box::new(prepared));
+    Ok(
+        json!({"token":retained.record.token,"result":retained.result,"stagedObjects":staged_objects,"versions":versions,"packageManifestPlans":package_manifest_plans}),
+    )
 }
 
 fn finalize_soft(retained: &mut Retained, receipt: &Value) -> io::Result<Value> {
@@ -88,6 +83,7 @@ fn finalize_soft(retained: &mut Retained, receipt: &Value) -> io::Result<Value> 
         &retained.record.context,
         &versions,
         &receipt["log"],
+        &receipt["componentLogs"],
         retained.tag.as_ref().and_then(|options| options.pre_release_id.as_deref()),
     )?;
     bitmap.validate()?;
@@ -108,6 +104,16 @@ fn lane_current(context: &Value) -> Option<Value> {
 }
 
 fn allocate_snap_report(result: &mut Value, versions: &[Value]) -> io::Result<()> {
+    if let Some(root) = result["autoAddedWorkspaceRoot"].as_str() {
+        let version = versions
+            .iter()
+            .find(|version| version["identity"] == root)
+            .ok_or_else(|| invalid("snap root allocation"))?;
+        result["autoAddedWorkspaceRoot"] = json!(format!(
+            "{root}@{}",
+            version["hash"].as_str().ok_or_else(|| invalid("snap root allocation hash"))?
+        ));
+    }
     result["snappedComponents"] = json!(
         versions
             .iter()
@@ -164,13 +170,80 @@ pub(super) fn apply(input: &Apply, retained: &mut Retained) -> io::Result<Value>
     };
     prepared.snapshot.validate()?;
     prepared.publication.validate()?;
-    retained.record.repository.commit_import()?;
-    prepared.snapshot.commit(&retained.record.request.root)?;
-    let notifications = super::super::apply_command::notify(&retained.record.request.root);
+    if !prepared.objects_persisted {
+        retained.record.repository.commit_import()?;
+        prepared.snapshot.commit(&retained.record.request.root)?;
+        prepared.notifications = super::super::apply_command::notify(&retained.record.request.root);
+    }
+    let notifications = prepared.notifications;
     prepared.publication.commit(&input.file_id)?;
     Ok(json!({"applied":true,"result":retained.result,"postPersistNotifications":notifications}))
 }
-fn validate(retained: &Retained) -> io::Result<()> {
+pub(super) fn validate(retained: &Retained) -> io::Result<()> {
     proof::verify(&retained.record.proofs)?;
     retained.record.repository.validate()
+}
+
+impl Phase {
+    pub(super) fn callbacks_mut(&mut self) -> io::Result<&mut super::refresh::Callbacks> {
+        match self {
+            Self::Pending(callbacks) => Ok(callbacks),
+            _ => Err(invalid("snapshot callback phase")),
+        }
+    }
+}
+
+fn validate_graph_receipt(retained: &Retained, receipt: &Value) -> io::Result<()> {
+    if retained.snap.as_ref().is_some_and(|options| options.policy.no_lock_deps)
+        && receipt["versions"]
+            .as_array()
+            .is_some_and(|versions| {
+                versions
+                    .iter()
+                    .any(|version| !version["dependenciesGraph"].is_null())
+            })
+    {
+        return Err(invalid("snapshot no-lock-deps receipt includes a dependency graph"));
+    }
+    Ok(())
+}
+
+fn prepare_snapshot(
+    retained: &Retained,
+    receipt: Value,
+    snapshots: &snapshots::State,
+) -> io::Result<Prepared> {
+    let lane = lane_current(&retained.record.context);
+    let directory = scratch::Directory::create()?;
+    let snapshot = resolve_snapshot::prepare(
+        &retained.record.request.root,
+        &directory.0,
+        &retained.materials,
+        lane.as_ref(),
+        &receipt,
+        snapshots,
+        retained.snap.is_some(),
+    )?;
+    let publication = resolve_publication::prepare(
+        &retained.record.request.root,
+        &retained.record.context,
+        &retained.materials,
+        &snapshot.versions,
+        &retained.pending,
+        &receipt,
+        resolve_publication::Options {
+            imported_index: retained.record.repository.imported_index(),
+            snapshot: retained.snap.is_some(),
+        },
+    )?;
+    publication.validate()?;
+    Ok(Prepared {
+        _directory: directory,
+        snapshot,
+        publication,
+        receipt,
+        staged_snaps: None,
+        objects_persisted: false,
+        notifications: 0,
+    })
 }

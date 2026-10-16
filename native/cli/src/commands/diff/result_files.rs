@@ -30,11 +30,12 @@ fn one_file_diff(file: &Value, labels: &(String, String)) -> io::Result<Option<V
         return Ok(None);
     }
     let path = text(file.get("relativePath"))?;
+    let path = if cfg!(windows) { path.replace('/', r"\") } else { path.to_owned() };
     let raw = text(file.get("rawDiff"))?;
     let raw = raw
         .strip_suffix('\n')
         .map_or(raw, |raw| raw.strip_suffix('\r').unwrap_or(raw));
-    let diff = files::format(raw, &labels.0, &labels.1, path);
+    let diff = files::format(raw, &labels.0, &labels.1, &path);
     if diff.is_empty() {
         return Ok(None);
     }

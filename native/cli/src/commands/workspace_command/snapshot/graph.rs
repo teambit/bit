@@ -19,14 +19,12 @@ use pnpm_lockfile::{FilterByImportersOptions, IncludedDependencies, Lockfile, Pe
 use serde_json::{Map, Value};
 use std::{collections::HashSet, io, path::Path};
 
-/// `getComponentDirInBitRoots` for the built-in Node environment.
-const ROOT_DIR: &str = "node_modules/.bit_roots/teambit.harmony_node";
-
 /// One snapped component.
 pub struct Snapped<'s> {
     /// `componentMap.rootDir`.
     pub directory: &'s str,
     pub package_name: &'s str,
+    pub env_id: &'s str,
 }
 
 /// The serialized graph of each snapped component, `None` where the
@@ -36,18 +34,12 @@ pub fn graphs(
     snapped: &[Snapped<'_>],
     components: &[WorkspaceComponent<'_>],
 ) -> io::Result<Vec<Option<String>>> {
-    if cfg!(windows) {
-        return Err(decline("dependency graph importer paths on Windows"));
-    }
     let config = WorkspaceConfig::load(root)?;
-    let workspace = config.aspects.get("teambit.workspace/workspace");
-    if workspace.is_some_and(|workspace| {
-        workspace
-            .get("rootComponentsDirectory")
-            .is_some_and(|dir| !dir.is_null())
-    }) {
-        return Err(decline("a custom root components directory"));
-    }
+    let root_directory = config.aspects
+        .get("teambit.workspace/workspace")
+        .and_then(|workspace| workspace["rootComponentsDirectory"].as_str())
+        .unwrap_or("node_modules");
+    let roots = root.join(root_directory).join(".bit_roots");
     let loaded = Lockfile::load_from_path(&root.join(Lockfile::FILE_NAME))
         .map_err(|error| decline(format!("lockfile: {error}")))?;
     let Some(lockfile) = loaded else { return Ok(vec![None; snapped.len()]) };
@@ -58,7 +50,10 @@ pub fn graphs(
     let workspace = Replacer::new(components)?;
     snapped
         .iter()
-        .map(|component| graph(&lockfile, component, &workspace))
+        .map(|component| {
+            let environment = environment_importer(root, &roots, component.env_id)?;
+            graph(&lockfile, component, &workspace, &environment)
+        })
         .collect()
 }
 
@@ -68,20 +63,21 @@ fn graph(
     lockfile: &Value,
     component: &Snapped<'_>,
     workspace: &Replacer,
+    environment: &str,
 ) -> io::Result<Option<String>> {
     let importers = &lockfile["importers"];
     let importer = if component.directory.is_empty() { "." } else { component.directory };
     if importers.get(importer).is_none() {
         return Ok(None);
     }
-    let has_root = importers.get(ROOT_DIR).is_some();
+    let has_root = importers.get(environment).is_some();
     let mut ids = vec![importer.to_string()];
-    if has_root && ROOT_DIR != importer {
-        ids.push(ROOT_DIR.to_string());
+    if has_root && environment != importer {
+        ids.push(environment.to_string());
     }
     let narrowed = narrow(lockfile, &ids, importer, component, workspace);
     let partial = filter(narrowed, ids)?;
-    let root_dir = has_root.then_some(ROOT_DIR);
+    let root_dir = has_root.then_some(environment);
     let graph = convert::convert(partial, importer, root_dir, component.package_name, workspace)?;
     serde_json::to_string(&graph).map(Some).map_err(io::Error::other)
 }
@@ -248,3 +244,16 @@ fn snapshot_siblings(
 
 #[cfg(test)]
 mod graph_tests;
+
+fn environment_importer(root: &Path, roots: &Path, env_id: &str) -> io::Result<String> {
+    let unversioned =
+        roots.join(crate::commands::status::js::without_version(env_id).replace('/', "_"));
+    let directory =
+        if unversioned.try_exists()? { unversioned } else { roots.join(env_id.replace('/', "_")) };
+    let relative =
+        directory.strip_prefix(root).map_err(|_| decline("environment root outside workspace"))?;
+    relative
+        .to_str()
+        .map(|path| path.replace('\\', "/"))
+        .ok_or_else(|| decline("environment root encoding"))
+}

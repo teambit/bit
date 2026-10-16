@@ -28,8 +28,12 @@ pub(super) fn project(
         grammar: Vec::new(),
         metadata: Metadata::default(),
     };
-    for file in &request.files {
-        projection.file(file)?;
+    // The workspace-root is never installed or built. Canonical dependency loading
+    // skips its source imports; explicit resolver policy is applied by the next stage.
+    if request.component_root != request.root {
+        for file in &request.files {
+            projection.file(file)?;
+        }
     }
     projection.finish()
 }

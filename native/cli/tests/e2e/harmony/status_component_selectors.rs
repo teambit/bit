@@ -128,11 +128,11 @@ fn deleted_state_selector_matches_diff() {
     helper.set_workspace_with_remote_scope();
     helper.populate_components(2, true, "");
     helper.tag_without_build("", "");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     helper.run("delete comp2 --silent");
     helper.output_file("comp1/index.js", "");
     helper.tag_without_build("", "");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     helper.re_init_workspace();
     helper.add_remote_scope();
     helper.run(&format!("import {}/comp2 -x", helper.scopes.remote));

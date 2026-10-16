@@ -5,6 +5,8 @@
 //! Unsupported lane sections, a forked lane, or an issue whose data Node colors
 //! (`UntrackedDependencies`) when stdout has colors.
 
+pub(in crate::commands) use item::issue_output;
+
 mod item;
 mod lane_updates;
 mod render;

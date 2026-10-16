@@ -7,12 +7,18 @@ pub use callbacks::{
     workspace_issues,
 };
 pub use commit::commit;
+pub use snapshot::{
+    snapshot_build, snapshot_data, snapshot_editor, snapshot_package_manifests, snapshot_pre_snap,
+    snapshot_registry, snapshot_required, snapshot_workspace_issues,
+};
 
 mod bitmap;
 mod callbacks;
 mod commit;
 mod identities;
 mod missing;
+mod order;
+mod snapshot;
 mod target;
 
 use super::{
@@ -130,6 +136,16 @@ pub struct CaptureOptions {
 }
 
 impl CaptureOptions {
+    fn validate_targets(&self, targets: &[Value]) -> io::Result<()> {
+        if !self.missing_status_invalid
+            && !self.allow_special_states
+            && bitmap::has_special_state(targets)
+        {
+            return Err(decline("bitmap state requires the canonical workspace command"));
+        }
+        Ok(())
+    }
+
     fn scan_behavior(&self) -> ScanBehavior {
         ScanBehavior {
             verify: self.verify,
@@ -161,14 +177,11 @@ pub fn capture_with(
     targets: &[Value],
     mut capture_options: CaptureOptions,
 ) -> io::Result<Capture> {
-    if !capture_options.missing_status_invalid
-        && !capture_options.allow_special_states
-        && bitmap::has_special_state(targets)
-    {
-        return Err(decline("bitmap state requires the canonical workspace command"));
-    }
+    capture_options.validate_targets(targets)?;
     let context = policy::pending_context(root, context)?;
-    if !capture_options.missing_status_invalid && !capture_options.allow_special_states {
+    let snapshot = capture_options.environments.as_ref().is_some_and(Environments::is_snapshot);
+    if !snapshot && !capture_options.missing_status_invalid && !capture_options.allow_special_states
+    {
         Environments::require_native_write(root, &context)?;
     }
     let mut environments = capture_options.environments.take().unwrap_or_else(Environments::new);
@@ -177,7 +190,8 @@ pub fn capture_with(
     let options: Options =
         serde_json::from_value(context["options"].clone()).map_err(io::Error::other)?;
     let inventory = Inventory::new(&options)?;
-    let behavior = capture_options.scan_behavior();
+    let mut behavior = capture_options.scan_behavior();
+    behavior.callbacks |= snapshot;
     let mut captured = initialize(root, context, !targets.is_empty(), capture_options)?;
     let mut facts = None;
     for target in targets {
@@ -192,6 +206,9 @@ pub fn capture_with(
             behavior,
         };
         scan.target(target, &mut captured)?;
+    }
+    if snapshot {
+        order::snapshot(root, &mut captured)?;
     }
     if behavior.callbacks {
         environments.callbacks(context, &mut captured, behavior.missing_status_invalid)?;

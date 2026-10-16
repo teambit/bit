@@ -1,6 +1,9 @@
 #[cfg(test)]
+mod snapshot_tests;
+#[cfg(test)]
 mod tests;
 
+mod manifests;
 mod metadata;
 mod packages;
 mod staged;
@@ -33,7 +36,7 @@ pub(in crate::workspace::engine::command) fn prepare(
     root_components: bool,
     skip_packages: &[String],
 ) -> io::Result<Prepared> {
-    prepare_with(root, inputs, root_components, skip_packages, false)
+    prepare_with(root, inputs, root_components, skip_packages, false, false)
 }
 
 pub(in crate::workspace::engine::command) fn prepare_publication(
@@ -42,7 +45,15 @@ pub(in crate::workspace::engine::command) fn prepare_publication(
     root_components: bool,
     skip_packages: &[String],
 ) -> io::Result<Prepared> {
-    prepare_with(root, inputs, root_components, skip_packages, true)
+    prepare_with(root, inputs, root_components, skip_packages, true, false)
+}
+
+pub(in crate::workspace::engine::command) fn prepare_snapshot_publication(
+    root: &Path,
+    inputs: &[Input<'_>],
+    skip_packages: &[String],
+) -> io::Result<Prepared> {
+    prepare_with(root, inputs, true, skip_packages, true, true)
 }
 
 fn prepare_with(
@@ -51,6 +62,7 @@ fn prepare_with(
     root_components: bool,
     skip_packages: &[String],
     allow_missing_packages: bool,
+    snapshot: bool,
 ) -> io::Result<Prepared> {
     if inputs.len() > 4096 {
         return Err(invalid("merge finalization component budget"));
@@ -62,26 +74,59 @@ fn prepare_with(
         copies: Vec::new(),
         package_creates: Vec::new(),
     };
-    staged::prepare(root, inputs, &mut prepared)?;
+    staged::prepare(root, inputs, snapshot, &mut prepared)?;
     for input in inputs
         .iter()
         .filter(|input| {
             !input.directory.is_empty()
+                && input.directory != "."
                 && !skip_packages
                     .iter()
                     .any(|id| id == input.identity)
         })
     {
-        packages::prepare(root, input, root_components, allow_missing_packages, &mut prepared)?;
+        packages::prepare(
+            root,
+            input,
+            root_components,
+            allow_missing_packages,
+            snapshot,
+            &mut prepared,
+        )?;
     }
     #[cfg(not(unix))]
-    if !prepared.links.is_empty() {
+    if !snapshot && !prepared.links.is_empty() {
         return Err(invalid("merge native linking platform"));
     }
     prepared.validate()?;
     Ok(prepared)
 }
 impl Prepared {
+    pub(in crate::workspace::engine::command) fn accept_published(
+        &mut self,
+        files: &std::collections::HashMap<PathBuf, Vec<u8>>,
+    ) -> io::Result<()> {
+        proof::accept_published(&mut self.proofs, files);
+        self.validate()
+    }
+
+    pub(in crate::workspace::engine::command) fn stage_index(
+        &mut self,
+        root: &Path,
+    ) -> io::Result<(PathBuf, Vec<u8>)> {
+        self.validate()?;
+        let path = crate::scope_path(root).join("index.json");
+        let index = self.writes
+            .iter()
+            .position(|(destination, _)| *destination == path)
+            .ok_or_else(|| invalid("snapshot index write absent"))?;
+        let (_, bytes) = self.writes.remove(index);
+        self.write(&path, &bytes)?;
+        let files = std::collections::HashMap::from([(path.clone(), bytes.clone())]);
+        proof::accept_published(&mut self.proofs, &files);
+        Ok((path, bytes))
+    }
+
     pub(in crate::workspace::engine::command) fn mark_lane_new(
         &mut self,
         root: &Path,
@@ -102,6 +147,8 @@ impl Prepared {
             .iter()
             .filter(|input| {
                 !input.directory.is_empty()
+                    && input.directory != "."
+                    && !packages::tracked_manifest(input.version)
                     && !skip_packages
                         .iter()
                         .any(|id| id == input.identity)
@@ -134,7 +181,7 @@ impl Prepared {
         root: &Path,
         identities: impl Iterator<Item = &'a str>,
     ) -> io::Result<()> {
-        let path = root.join(".bit/index.json");
+        let path = crate::scope_path(root).join("index.json");
         let row = self.writes
             .iter_mut()
             .find(|(name, _)| *name == path)
@@ -165,13 +212,44 @@ impl Prepared {
         index: Option<&Value>,
     ) -> io::Result<()> {
         if let Some(index) = index {
-            let destination = root.join(".bit/index.json");
+            let destination = crate::scope_path(root).join("index.json");
             let row = self.writes
                 .iter_mut()
                 .find(|(path, _)| *path == destination)
                 .ok_or_else(|| invalid("merge staged index missing"))?;
             row.1 = pretty(index, true)?;
         }
+        Ok(())
+    }
+    pub(in crate::workspace::engine::command) fn stage_snaps(
+        &mut self,
+        root: &Path,
+    ) -> io::Result<Vec<u8>> {
+        self.validate()?;
+        let path = crate::scope_path(root).join("staged-snaps");
+        let index = self.writes
+            .iter()
+            .position(|(destination, _)| *destination == path)
+            .ok_or_else(|| invalid("snapshot staged-snaps write absent"))?;
+        let (_, bytes) = self.writes.remove(index);
+        fs::write(&path, &bytes)?;
+        for proof in &mut self.proofs {
+            if proof.path == path {
+                *proof = proof::content(&path, &bytes);
+            }
+        }
+        Ok(bytes)
+    }
+    pub(in crate::workspace::engine::command) fn keep_staged_snaps(
+        &mut self,
+        root: &Path,
+        bytes: &[u8],
+    ) -> io::Result<()> {
+        let path = crate::scope_path(root).join("staged-snaps");
+        if fs::read(&path)? != bytes {
+            return Err(invalid("snapshot staged-snaps changed"));
+        }
+        self.writes.retain(|(destination, _)| *destination != path);
         Ok(())
     }
     pub(in crate::workspace::engine::command) fn validate(&self) -> io::Result<()> {
@@ -183,8 +261,10 @@ impl Prepared {
         for (source, destination) in &self.links {
             fs::create_dir_all(destination.parent().ok_or_else(|| invalid("merge link parent"))?)?;
             #[cfg(unix)]
-            std::os::unix::fs::symlink(source, destination)?;
-            #[cfg(not(unix))]
+            unix_link(source, destination)?;
+            #[cfg(windows)]
+            windows_link(source, destination)?;
+            #[cfg(not(any(unix, windows)))]
             return Err(invalid("merge native linking platform"));
         }
         for (source, destination) in &self.copies {
@@ -237,4 +317,28 @@ fn pretty(value: &Value, newline: bool) -> io::Result<Vec<u8>> {
         bytes.push(b'\n');
     }
     Ok(bytes)
+}
+
+#[cfg(windows)]
+fn windows_link(source: &Path, destination: &Path) -> io::Result<()> {
+    if let Ok(metadata) = fs::symlink_metadata(destination) {
+        if metadata.is_dir() {
+            fs::remove_dir(destination)?;
+        } else {
+            fs::remove_file(destination)?;
+        }
+    }
+    if source.is_dir() {
+        return junction::create(source, destination);
+    }
+    std::os::windows::fs::symlink_file(source, destination)
+        .or_else(|_| fs::hard_link(source, destination))
+}
+
+#[cfg(unix)]
+fn unix_link(source: &Path, destination: &Path) -> io::Result<()> {
+    if fs::symlink_metadata(destination).is_ok() {
+        fs::remove_file(destination)?;
+    }
+    std::os::unix::fs::symlink(source, destination)
 }

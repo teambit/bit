@@ -12,6 +12,10 @@ use std::{fmt::Write as _, fs, io, path::Path, process::Command};
 pub(in crate::commands) struct Startup {
     pub(in crate::commands) committed: bool,
     pub(in crate::commands) stdout: String,
+    pub(in crate::commands) build_stdout: String,
+    pub(in crate::commands) build_progress: Option<Value>,
+    pub(in crate::commands) snapshot_events: Vec<(Value, String)>,
+    pub(in crate::commands) snapshot_tail: Option<Value>,
 }
 
 pub(in crate::commands) fn run(

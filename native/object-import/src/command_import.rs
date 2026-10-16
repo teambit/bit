@@ -12,6 +12,7 @@ mod history;
 mod merge;
 mod prepare;
 mod publish;
+mod retained;
 
 use capture::{Capture, Object};
 use serde_json::Value;

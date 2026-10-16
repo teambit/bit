@@ -177,7 +177,13 @@ pub(super) fn graphs(
                 .find(|target| target.get("identity").and_then(Value::as_str) == Some(identity))
                 .ok_or_else(|| decline("command snapshot target"))?;
             let directory = text(target.get("directory"))?;
-            Ok(graph::Snapped { directory, package_name: package_name(capture, identity)? })
+            Ok(graph::Snapped {
+                directory,
+                package_name: package_name(capture, identity)?,
+                env_id: context["environmentFacts"][identity]["envId"]
+                    .as_str()
+                    .unwrap_or("teambit.harmony/node"),
+            })
         })
         .collect::<io::Result<Vec<_>>>()?;
     let components = workspace_components(targets, needs_snap, hashes, capture)?;

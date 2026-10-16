@@ -20,6 +20,7 @@ pub use operation::plan as plan_import_operation;
 pub use recovery::jsonc::parse as parse_jsonc;
 pub use scope::path as scope_path;
 pub use session::WorkspaceSession;
+pub use snapshot_transaction::next_published_version;
 pub use workspace::engine::{
     effective_workspace_configuration,
     read_dependency_cache::{

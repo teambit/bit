@@ -73,13 +73,36 @@ fn scope_projection_preserves_specific_precedence_and_propagation() {
 }
 
 #[test]
-fn metadata_write_declines_unsupported_platform_before_changes() {
+fn metadata_write_validates_proofs_before_publishing_on_supported_platforms() {
     let fixture = Fixture::new();
     let path = fixture.0.join("component.json");
     fs::write(&path, b"original").unwrap();
-    let supported = validate_destination(&path);
-    assert_eq!(supported.is_ok(), cfg!(target_os = "linux"));
+    let mut proofs = Vec::new();
+    proof::read(&path, &mut proofs).unwrap();
+    let prepared = Prepared { proofs, writes: vec![(path.clone(), b"replacement\n".to_vec())] };
+    prepared.validate().unwrap();
     assert_eq!(fs::read(&path).unwrap(), b"original");
+    fs::write(&path, b"changed after capture").unwrap();
+    assert!(prepared.validate().is_err());
+    assert_eq!(fs::read(&path).unwrap(), b"changed after capture");
+    fs::write(&path, b"original").unwrap();
+    let mut proofs = Vec::new();
+    proof::read(&path, &mut proofs).unwrap();
+    let prepared = Prepared { proofs, writes: vec![(path.clone(), b"replacement\n".to_vec())] };
+    prepared.validate().unwrap();
+    prepared.commit().unwrap();
+    assert_eq!(fs::read(&path).unwrap(), b"replacement\n");
+    assert!(prepared.validate().is_err());
+}
+
+#[test]
+fn metadata_write_rejects_nonregular_destination_without_changes() {
+    let fixture = Fixture::new();
+    let path = fixture.0.join("component.json");
+    fs::create_dir(&path).unwrap();
+    fs::write(path.join("keep"), b"untouched").unwrap();
+    assert!(validate_destination(&path).is_err());
+    assert_eq!(fs::read(path.join("keep")).unwrap(), b"untouched");
 }
 
 #[cfg(target_os = "linux")]

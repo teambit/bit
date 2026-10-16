@@ -8,7 +8,7 @@ use std::{
 };
 
 /// Physical sources retain globby order; callback-created virtual files retain manifest order.
-pub(super) fn captured(
+pub(in crate::commands) fn captured(
     root: &Path,
     files: &[String],
     overlays: Option<&serde_json::Value>,

@@ -13,11 +13,11 @@ fn workspace() -> Helper {
     helper.create_component_bar_foo(FOO_FIXTURE);
     helper.add_component_bar_foo();
     helper.tag_without_build("bar/foo", "");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     let old = helper.clone_workspace();
     helper.append_file("bar/foo.js", "\n// remote update");
     helper.tag_without_build("bar/foo", "");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     helper.get_cloned_workspace(&old);
     enable(&helper);
     helper
@@ -42,7 +42,10 @@ fn enable(helper: &Helper) {
             "initial",
         ],
     ] {
+        // Git may detach automatic maintenance after commit. Keep this fixture's
+        // repository quiescent while clone_workspace takes its exact file snapshot.
         let output = Command::new("git")
+            .args(["-c", "maintenance.auto=false", "-c", "gc.auto=0"])
             .args(args)
             .current_dir(root)
             .output()
@@ -192,12 +195,12 @@ fn startup_autosync_keeps_original_version_dependency_closure() {
     helper.set_workspace_with_remote_scope();
     helper.populate_components(2, true, "");
     helper.tag_without_build("", "");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     let old = helper.clone_workspace();
     helper.append_file("comp1/index.js", "\n// remote root update");
     helper.append_file("comp2/index.js", "\n// remote dependency update");
     helper.tag_without_build("", "");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     let head = remote_head(&helper, "comp2");
     helper.get_cloned_workspace(&old);
     let path = helper.scopes.local_path.join(".bitmap");

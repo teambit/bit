@@ -26,7 +26,7 @@ pub(super) fn prepare(
     super::super::setup::component_controls(&ordinary, &context, &mut proofs)?;
     validate_extensions(&context)?;
     let pending = pending_rows(request)?;
-    pending_configuration(&mut context, &pending)?;
+    pending_configuration(&mut context, &pending, request.ordinary_snap)?;
     let targets = context["targets"]
         .as_array()
         .ok_or_else(|| invalid("resolve targets"))?
@@ -67,14 +67,14 @@ fn initial(
         selected,
         materials: Vec::new(),
         result: Value::Null,
-        finalized: super::publication::Phase::Pending,
+        finalized: super::publication::Phase::Pending(super::refresh::Callbacks::default()),
         snap: request.ordinary_snap.then(|| request.options.clone()),
         tag: request.tag_options.clone(),
     }
 }
 
 fn pending_rows(request: &Prepare) -> io::Result<Vec<Value>> {
-    let path = request.root.join(".bit/unmerged.json");
+    let path = crate::scope_path(&request.root).join("unmerged.json");
     if request.ordinary_snap && !path.try_exists()? {
         return Ok(Vec::new());
     }
@@ -89,18 +89,17 @@ fn metadata(
     pool: &rayon::ThreadPool,
 ) -> io::Result<(Value, command_import::PreparedImport)> {
     let bitmap = config::document(&request.root.join(".bitmap"))?;
-    if request.ordinary_snap
-        && bitmap
-            .as_object()
-            .is_some_and(|rows| {
-                rows.values()
-                    .any(|row| row["localOnly"] == true)
-            })
-    {
-        return Err(invalid("snap local-only selection requires canonical policy"));
-    }
-    let settings = config::configuration_for_command(&request.root, true)?;
-    let (structural, configs) = recovery::bitmap::project(&bitmap)?;
+    let workspace = if request.ordinary_snap {
+        crate::effective_workspace_configuration(&request.root, &request.home)?
+    } else {
+        config::document(&request.root.join("workspace.jsonc"))?
+    };
+    let settings = config::configuration_value(&request.root, &workspace, true)?;
+    let (structural, configs) = if request.ordinary_snap {
+        recovery::bitmap::project_snapshot(&bitmap)?
+    } else {
+        recovery::bitmap::project(&bitmap)?
+    };
     let mut context = status_context::metadata_for_recovery(
         &status_context::Request {
             root: request.root.clone(),
@@ -111,19 +110,49 @@ fn metadata(
         &settings,
         super::super::lane_context::visibility::targets(&structural, &settings)?,
     )?;
+    context["workspace"] = workspace;
     if request.tag_options.as_ref().is_some_and(|options| options.persist) {
         bind_next_versions(&bitmap, &mut context)?;
     }
+    attach_configuration(request, &mut context, &configs)?;
+    filter_pending_tag_targets(request, &mut context)?;
+    let imported = load_lane(request, &bitmap, &mut context)?;
+    Ok((context, imported))
+}
+
+fn filter_pending_tag_targets(request: &Prepare, context: &mut Value) -> io::Result<()> {
+    if request.tag_options
+        .as_ref()
+        .is_some_and(|options| options.soft || options.persist)
+    {
+        context["targets"]
+            .as_array_mut()
+            .ok_or_else(|| invalid("snapshot targets"))?
+            .retain(|target| {
+                target["locallyRemoved"] != true
+                    && target["bitmapConfig"]["teambit.component/remove"]["removed"] != true
+            });
+    }
+    Ok(())
+}
+
+fn attach_configuration(
+    request: &Prepare,
+    context: &mut Value,
+    configs: &std::collections::HashMap<String, Value>,
+) -> io::Result<()> {
     for target in context["targets"].as_array_mut().ok_or_else(|| invalid("resolve targets"))? {
         if let Some(config) = target["directory"]
             .as_str()
             .and_then(|path| configs.get(path))
         {
             target["bitmapConfig"] = config.clone();
+            if request.ordinary_snap {
+                target["componentConfig"] = config.clone();
+            }
         }
     }
-    let imported = load_lane(request, &bitmap, &mut context)?;
-    Ok((context, imported))
+    Ok(())
 }
 
 fn bind_next_versions(bitmap: &Value, context: &mut Value) -> io::Result<()> {
@@ -156,9 +185,10 @@ fn validate_request(request: &Prepare) -> io::Result<()> {
         return Err(invalid("resolve ordinary snapshot flags"));
     }
     if request.options.build
-        || request.home.join(".bitrc.jsonc").try_exists()?
-        || request.root.join(".bitTmp").try_exists()?
-        || request.root.join("merge-conflict").try_exists()?
+        || !request.ordinary_snap
+            && (request.home.join(".bitrc.jsonc").try_exists()?
+                || request.root.join(".bitTmp").try_exists()?
+                || request.root.join("merge-conflict").try_exists()?)
     {
         return Err(invalid("resolve requires canonical lifecycle"));
     }
@@ -177,7 +207,23 @@ fn control_proofs(request: &Prepare) -> io::Result<Vec<proof::Proof>> {
         ".bit/staged-snaps",
         "merge-conflict",
     ] {
-        proof::read(&request.root.join(name), &mut proofs)?;
+        let path = name
+            .strip_prefix(".bit/")
+            .map_or_else(
+                || request.root.join(name),
+                |name| crate::scope_path(&request.root).join(name),
+            );
+        proof::read(&path, &mut proofs)?;
+    }
+    if request.ordinary_snap {
+        proof::read(&request.home.join(".bitrc.jsonc"), &mut proofs)?;
+    }
+    if let Some(file) =
+        request.tag_options.as_ref().and_then(|options| options.versions_file.as_ref())
+    {
+        let receipt =
+            file.get("readProof").ok_or_else(|| invalid("tag versions file proof missing"))?;
+        proofs.push(serde_json::from_value(receipt.clone()).map_err(io::Error::other)?);
     }
     Ok(proofs)
 }
@@ -227,7 +273,7 @@ fn validate_extensions(context: &Value) -> io::Result<()> {
     Ok(())
 }
 
-fn pending_configuration(context: &mut Value, pending: &[Value]) -> io::Result<()> {
+fn pending_configuration(context: &mut Value, pending: &[Value], snapshot: bool) -> io::Result<()> {
     for target in context["targets"].as_array_mut().ok_or_else(|| invalid("resolve targets"))? {
         target["resolveConfig"] = json!(true);
         if let Some(row) = pending
@@ -239,9 +285,24 @@ fn pending_configuration(context: &mut Value, pending: &[Value]) -> io::Result<(
                 .get("mergedConfig")
                 .filter(|value| !value.is_null())
         {
-            validate_pending_config(config)?;
+            if snapshot {
+                validate_snapshot_config(config)?;
+            } else {
+                validate_pending_config(config)?;
+            }
             target["mergedConfig"] = config.clone();
         }
+    }
+    Ok(())
+}
+
+fn validate_snapshot_config(config: &Value) -> io::Result<()> {
+    let rows = config.as_object().ok_or_else(|| invalid("snapshot merged configuration"))?;
+    if rows
+        .iter()
+        .any(|(name, value)| !name.contains('/') || (!value.is_object() && value != "-"))
+    {
+        return Err(invalid("snapshot merged aspect configuration"));
     }
     Ok(())
 }

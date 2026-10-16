@@ -20,6 +20,7 @@ pub(in crate::workspace::engine::command) struct Snapshot {
     token: Value,
     proofs: Vec<proof::Proof>,
     pub versions: Vec<Value>,
+    pub staged_objects: Vec<Value>,
 }
 
 pub(in crate::workspace::engine::command) fn validate_application_files(
@@ -75,7 +76,16 @@ pub(in crate::workspace::engine::command) fn prepare_objects(
         json!({"objects":objects,"stagingDirectory":staging}),
         &mut state,
     )?;
-    Ok(Snapshot { state, token: result["token"].clone(), proofs: Vec::new(), versions: Vec::new() })
+    Ok(Snapshot {
+        state,
+        token: result["token"].clone(),
+        proofs: Vec::new(),
+        versions: Vec::new(),
+        staged_objects: result["objects"]
+            .as_array()
+            .ok_or_else(|| invalid("snapshot staged object manifest"))?
+            .clone(),
+    })
 }
 
 pub(in crate::workspace::engine::command) fn prepare(
@@ -110,7 +120,16 @@ pub(in crate::workspace::engine::command) fn prepare(
         json!({"objects":objects,"stagingDirectory":staging}),
         &mut state,
     )?;
-    Ok(Snapshot { state, token: result["token"].clone(), proofs, versions })
+    Ok(Snapshot {
+        state,
+        token: result["token"].clone(),
+        proofs,
+        versions,
+        staged_objects: result["objects"]
+            .as_array()
+            .ok_or_else(|| invalid("snapshot staged object manifest"))?
+            .clone(),
+    })
 }
 impl Snapshot {
     pub(in crate::workspace::engine::command) fn validate(&self) -> io::Result<()> {
@@ -120,7 +139,7 @@ impl Snapshot {
         self.validate()?;
         let result = crate::snapshot_transaction::apply(
             "snapshotCommit",
-            json!({"token":self.token,"objectsDirectory":root.join(".bit/objects")}),
+            json!({"token":self.token,"objectsDirectory":crate::scope_path(root).join("objects")}),
             &mut self.state,
         )?;
         if result["failed"] != false || result["completed"] != result["count"] {

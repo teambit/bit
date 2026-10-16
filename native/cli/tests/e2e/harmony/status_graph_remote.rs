@@ -14,7 +14,7 @@ fn missing_external_model_uses_saved_adjacency_like_node() {
     helper.set_workspace_with_remote_scope();
     helper.populate_components(2, true, "");
     helper.tag_without_build("", "");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     let bitmap_path = helper.scopes.local_path.join(".bitmap");
     let mut bitmap = read_jsonc(&bitmap_path);
     bitmap

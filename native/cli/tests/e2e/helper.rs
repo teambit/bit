@@ -3,6 +3,7 @@
 //! `native/` with the Node.js CLI behind it.
 
 pub(crate) mod config;
+pub(crate) mod remote;
 pub(crate) mod setup;
 pub use fixtures::FOO_FIXTURE;
 

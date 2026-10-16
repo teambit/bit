@@ -31,3 +31,20 @@ fn planned_versions_come_from_tagged_and_auto_tagged_ids() {
     assert_eq!(planned_versions(&result, &identities).unwrap(), ["0.0.2", "0.0.2"]);
     assert!(planned_versions(&result, &["s/three".to_string()]).is_err());
 }
+
+#[test]
+fn advanced_globs_preserve_component_order_and_per_pattern_versions() {
+    let context =
+        json!({"targets":[{"identity":"s/foo1"},{"identity":"s/foo2"},{"identity":"s/bar"}]});
+    let rows = selections(&context, &["s/foo[12]*@minor".into(), "!s/foo*@major".into()])
+        .unwrap()
+        .unwrap();
+    assert_eq!(
+        rows,
+        json!([
+            {"identity":"s/foo1","version":"minor","patternIndex":0},
+            {"identity":"s/foo2","version":"minor","patternIndex":0},
+            {"identity":"s/bar","version":"major","patternIndex":1}
+        ]),
+    );
+}

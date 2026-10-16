@@ -6,12 +6,12 @@
 //! declines run on the Node.js CLI.
 
 pub(super) mod git;
+pub(super) mod order;
 pub(super) mod selection;
 
 pub(super) mod files;
 mod metadata;
 mod options;
-mod order;
 mod parent;
 mod presentation;
 mod progress;

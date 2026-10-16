@@ -31,6 +31,8 @@ pub struct Progress {
     /// The imports of the dependencies graph step, for snap.
     graph_imports: Vec<Import>,
     snap_failed: bool,
+    skip_dependencies_graph: bool,
+    version_notice: String,
 }
 
 impl Progress {
@@ -49,31 +51,22 @@ impl Progress {
         let bitmap_count = value.get("bitmapCount").and_then(Value::as_u64);
         let bitmap_count = bitmap_count.ok_or_else(|| decline("native command progress receipt"))?;
         let loads = loads(value, snap)?;
-        let graph_imports = match value.get("graphImports") {
-            None | Some(Value::Null) => &[][..],
-            graph => array(graph, "graph imports")?,
-        };
-        let snap_failed = value.get("snapFailed").is_none_or(Value::is_boolean);
-        if (!snap && !graph_imports.is_empty()) || !snap_failed {
-            return Err(decline("native command progress receipt"));
-        }
-        let rows = value
-            .get("imports")
-            .and_then(Value::as_array)
-            .ok_or_else(|| decline("native command progress receipt"))?;
-        if rows.len() + graph_imports.len() > 16384 {
-            return Err(decline("native command import progress receipt"));
-        }
-        let imports = rows
-            .iter()
-            .map(import)
-            .collect::<io::Result<_>>()?;
-        let graph_imports = graph_imports
-            .iter()
-            .map(import)
-            .collect::<io::Result<_>>()?;
+        let (imports, graph_imports) = progress_imports(value, snap)?;
         let snap_failed = value.get("snapFailed") == Some(&Value::Bool(true));
-        Ok(Some(Self { bitmap_count, imports, loads, graph_imports, snap_failed }))
+        let skip_dependencies_graph = value["skipDependenciesGraph"] == true;
+        let version_notice = value["versionNotice"]
+            .as_str()
+            .unwrap_or_default()
+            .to_string();
+        Ok(Some(Self {
+            bitmap_count,
+            imports,
+            loads,
+            graph_imports,
+            snap_failed,
+            skip_dependencies_graph,
+            version_notice,
+        }))
     }
 
     /// Print the lines, as the loader does while merge runs.
@@ -84,12 +77,22 @@ impl Progress {
         for count in &self.loads {
             output.status(&format!("loading {count} component(s)"));
         }
+        self.render_graph(output);
+    }
+
+    /// Snapshot graph progress after extension issue and pre-snap callbacks.
+    pub fn render_graph(&self, output: &Output) {
+        if !self.version_notice.is_empty() {
+            output.raw(&self.version_notice);
+        }
         if !self.loads.is_empty() && !self.snap_failed {
             output.status("importing missing dependencies...");
             for row in &self.graph_imports {
                 render_import(output, row);
             }
-            output.status("adding dependencies graph...");
+            if !self.skip_dependencies_graph {
+                output.status("adding dependencies graph...");
+            }
         }
     }
 
@@ -247,7 +250,7 @@ fn loads(value: &Value, snap: bool) -> io::Result<Vec<u64>> {
         .filter_map(Value::as_u64)
         .filter(|count| *count <= 4096)
         .collect();
-    if counts.len() != loads.len() || loads.len() > if snap { 5 } else { 4 } {
+    if counts.len() != loads.len() || loads.len() > if snap { 4096 } else { 4 } {
         return Err(decline("native command progress receipt"));
     }
     Ok(counts)
@@ -357,4 +360,31 @@ fn without_version(id: &str) -> &str {
         Some(index) if index + 1 < id.len() => &id[..index],
         _ => id,
     }
+}
+
+fn progress_imports(value: &Value, snap: bool) -> io::Result<(Vec<Import>, Vec<Import>)> {
+    let graph_imports = match value.get("graphImports") {
+        None | Some(Value::Null) => &[][..],
+        graph => array(graph, "graph imports")?,
+    };
+    let snap_failed = value.get("snapFailed").is_none_or(Value::is_boolean);
+    if (!snap && !graph_imports.is_empty()) || !snap_failed {
+        return Err(decline("native command progress receipt"));
+    }
+    let rows = value
+        .get("imports")
+        .and_then(Value::as_array)
+        .ok_or_else(|| decline("native command progress receipt"))?;
+    if rows.len() + graph_imports.len() > 16384 {
+        return Err(decline("native command import progress receipt"));
+    }
+    let imports = rows
+        .iter()
+        .map(import)
+        .collect::<io::Result<_>>()?;
+    let graph_imports = graph_imports
+        .iter()
+        .map(import)
+        .collect::<io::Result<_>>()?;
+    Ok((imports, graph_imports))
 }

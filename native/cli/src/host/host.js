@@ -9,7 +9,7 @@ if (!process.env.BIT_NO_COMPILE_CACHE) {
 // using only modules the published `@teambit/bit` package ships. The Rust CLI passes it to the
 // Node.js CLI's own Node with `-e`. Changed in-memory sources are spooled only into Rust-owned temporary directories.
 //
-//   node -e <this script> <@teambit/bit dir> <Node.js CLI entry> <workspace root>
+//   node <private host.cjs> <@teambit/bit dir> <Node.js CLI entry> <workspace root>
 //
 // One JSON request per stdin line, `{id, method, params}`; one JSON response per stdout line,
 // `{id, result}` or `{id, error}`. Aspect output normally goes to stderr so stdout stays
@@ -23,6 +23,8 @@ const { createRequire } = require('module');
 const [bitDir, entry, root] = process.argv.slice(-3);
 const cliArguments = JSON.parse(process.env.BIT_NATIVE_HOST_ARGUMENTS ?? '[]');
 const readonlyStatus = ['status', 's', 'diff', 'd'].includes(cliArguments[0]);
+const snapshotCommandName = cliArguments[0] === 't' ? 'tag' : cliArguments[0];
+const snapshotCommand = ['snap', 'tag'].includes(snapshotCommandName);
 process.argv = [process.execPath, entry, ...cliArguments];
 require(path.join(bitDir, 'dist', 'hook-require.js'));
 const bitRequire = createRequire(path.join(bitDir, 'package.json'));
@@ -84,16 +86,17 @@ async function handle(line) {
     return;
   }
   try {
-    if (request.method === 'afterInstall' || readonlyStatus) capturedStdout = [];
+    if (request.method === 'afterInstall' || readonlyStatus || snapshotCommand) capturedStdout = [];
     const result = await handler(request.params ?? {});
     const output = capturedStdout?.join('');
     capturedStdout = null;
-    const value = ['afterInstall', 'statusLoadCallbacks', 'statusIssueCallbacks'].includes(request.method) ? { value: result ?? null, stdout: output } : result ?? null;
-    respond(`${JSON.stringify({ id: request.id, result: value, stdout: ['afterInstall', 'statusLoadCallbacks', 'statusIssueCallbacks'].includes(request.method) ? undefined : output })}\n`);
+    const value = ['afterInstall', 'statusLoadCallbacks', 'statusIssueCallbacks', 'snapshotPreSnap', 'snapshotEditor', 'snapshotBuild', 'registryPublished', 'snapshotPackageManifests'].includes(request.method) ? { value: result ?? null, stdout: output } : result ?? null;
+    respond(`${JSON.stringify({ id: request.id, result: value, stdout: ['afterInstall', 'statusLoadCallbacks', 'statusIssueCallbacks', 'snapshotPreSnap', 'snapshotEditor', 'snapshotBuild', 'registryPublished', 'snapshotPackageManifests'].includes(request.method) ? undefined : output })}\n`);
   } catch (error) {
-    if (capturedStdout) process.stderr.write(capturedStdout.join(''));
+    const output = capturedStdout?.join('');
+    if (output && !snapshotCommand) process.stderr.write(output);
     capturedStdout = null;
-    respond(`${JSON.stringify({ id: request.id, error: error?.message ?? String(error) })}\n`);
+    respond(`${JSON.stringify({ id: request.id, error:error?.message??String(error), stdout:snapshotCommand?output:undefined })}\n`);
   }
 }
 
@@ -112,14 +115,21 @@ const handlers = {
   },
   registeredEnvPolicy: ({ envId, aspectIds }) => registeredEnvPolicy(envId, aspectIds),
   devPatterns: ({ envId }) => devPatterns(envId),
-  dependencyPolicies: ({ extensionIds }) => dependencyPolicies(extensionIds),
+  dependencyPolicies: ({ extensionIds, bootstrap }) => dependencyPolicies(extensionIds, bootstrap),
   detectDependencies: ({ envId, files, componentDir, aspectIds }) =>
     detectDependencies(envId, files, componentDir, aspectIds),
   parseDependencies,
   statusCallbackInfo,
+  snapshotWorkspaceIssues: async () => (await loadHarmony()).get('teambit.workspace/workspace').getWorkspaceIssues({includeNonBlocking:false}).map((error)=>error.message),
   statusWorkspaceIssues: async () => (await loadHarmony()).get('teambit.workspace/workspace').getWorkspaceIssues().map((error) => error.message),
   statusLoadCallbacks,
   statusIssueCallbacks,
+  snapshotPreSnap,
+  snapshotEditor,
+  snapshotBuild,
+  registryPublished,
+  snapshotPackageManifests,
+  snapshotLoadFacts:()=>{const facts=snapshotLoads;snapshotLoads=[];return facts;},
   appTypes,
   packageJsonProps: ({ envId }) => packageJsonProps(envId),
   transformPackageJson: ({ component, manifest }) => transformPackageJson(component, manifest),
@@ -272,24 +282,48 @@ async function devPatterns(envId) {
  * The dependency policies aspects registered (`registerDependenciesPolicies`), as
  * `[[registrar, policy], ...]`, once the aspects the components configure are loaded.
  */
-async function dependencyPolicies(extensionIds) {
+const snapshotPrimedAspects=new Set();
+function snapshotFreshAspects(ids) {
+  if(!snapshotCommand)return ids;
+  return ids.filter((id)=>{const key=id.split('@')[0];if(snapshotPrimedAspects.has(key))return false;snapshotPrimedAspects.add(key);return true;});
+}
+
+let snapshotBootstrapProgress = false;
+async function dependencyPolicies(extensionIds, bootstrap) {
   const loaded = await loadHarmony();
   const workspace = loaded.get('teambit.workspace/workspace');
   captureBootstrapProgress(workspace);
-  await workspace.loadAspects(extensionIds, false, undefined, { ...workspaceAspectOptions(workspace), throwOnError: false, hideMissingModuleError: true });
+  extensionIds=snapshotFreshAspects(extensionIds);
+  snapshotBootstrapProgress = bootstrap === true && cliArguments[0] === 'tag';
+  try {
+    if(extensionIds.length) await workspace.loadAspects(extensionIds, false, undefined, { ...workspaceAspectOptions(workspace), throwOnError: false, hideMissingModuleError: true });
+  } finally {snapshotBootstrapProgress = false;}
   return loaded.get('teambit.dependencies/dependency-resolver').policiesRegistry.toArray();
 }
 
 function workspaceAspectOptions(workspace) {
-  return readonlyStatus ? { runSubscribers: false, skipDeps: !workspace.config.autoLoadAspectsDeps } : {};
+  return readonlyStatus || snapshotCommand ? { runSubscribers: false, skipDeps: !workspace.config.autoLoadAspectsDeps } : {};
 }
+
+let snapshotLoads=[];
 
 function captureBootstrapProgress(workspace) {
   const logger = workspace.componentLoader.logger;
   if (logger.__nativeCaptured) return;
   logger.__nativeCaptured = true;
+  logger.__nativeSetStatusLine = logger.setStatusLine;
+  let loadingDepth=0;
+  if(snapshotCommand) {
+    const getMany=workspace.componentLoader.getMany;
+    workspace.componentLoader.getMany=async function(...args) {
+      loadingDepth++;
+      try {return await getMany.apply(this,args);} finally {loadingDepth--;}
+    };
+  }
   logger.setStatusLine = (message) => {
-    if (process.env.BIT_NATIVE_HOST_PROGRESS === '1') process.stdout.write(`- ${message}\n`);
+    const count=/^loading (\d+) component\(s\)$/.exec(message);
+    if(snapshotCommand && count && loadingDepth===1) snapshotLoads.push(Number(count[1]));
+    if (process.env.BIT_NATIVE_HOST_PROGRESS === '1' || (snapshotBootstrapProgress && process.env.CI === undefined && count && loadingDepth === 1)) process.stdout.write(`- ${message}\n`);
   };
 }
 
@@ -324,7 +358,8 @@ async function loadWorkspaceAspects(aspectIds) {
   if (workspaceAspectsLoaded || !aspectIds?.length) return;
   workspaceAspectsLoaded = true;
   const workspace = (await loadHarmony()).get('teambit.workspace/workspace');
-  await workspace.loadAspects(aspectIds, false, undefined, { ...workspaceAspectOptions(workspace), throwOnError: false, hideMissingModuleError: true });
+  aspectIds=snapshotFreshAspects(aspectIds);
+  if(aspectIds.length) await workspace.loadAspects(aspectIds, false, undefined, { ...workspaceAspectOptions(workspace), throwOnError: false, hideMissingModuleError: true });
 }
 
 /**
@@ -618,6 +653,18 @@ async function statusCallbackInfo({ coreIds, aspectIds }) {
   };
 }
 
+// Native issue JSON contains the public ComponentID class shape, whereas legacy
+// issue deserializers accept ComponentID.serialize() objects.
+function serializedIssue(issue) {
+  const convert = (value) => {
+    if (Array.isArray(value)) return value.map(convert);
+    if (!value || typeof value !== 'object') return value;
+    if (value._legacy) return { ...value._legacy, ...(value._scope ? { scope: value._scope } : {}) };
+    return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, convert(entry)]));
+  };
+  return { type: issue.type, data: JSON.stringify(convert(typeof issue.data === 'string' ? JSON.parse(issue.data) : issue.data)) };
+}
+
 async function hydrateStatusComponent(row) {
   const { ComponentID } = bitRequire('@teambit/component-id');
   const { ConsumerComponent, Dependency } = bitRequire('@teambit/legacy.consumer-component');
@@ -626,10 +673,11 @@ async function hydrateStatusComponent(row) {
   const { IssuesList } = bitRequire('@teambit/component-issues');
   const workspace = (await loadHarmony()).get('teambit.workspace/workspace');
   const directory = path.join(root, row.directory);
-  const id = ComponentID.fromString(row.identity + (row.version ? `@${row.version}` : ''));
+  const parsedId = ComponentID.fromString(row.identity + (row.version ? `@${row.version}` : ''));
+  const id = row.scoped === false ? ComponentID.fromObject({name:parsedId.fullName,version:parsedId.version},parsedId.scope) : parsedId;
   const convert = (extension) => ({ ...extension, extensionId: extension.extensionId ? ComponentID.fromObject(extension.extensionId) : undefined });
   const consumer = await ConsumerComponent.fromObject({
-    ...row.current, name: id.fullName, scope: id.scope, version: row.version || undefined, schema: '2.0.0',
+    ...row.current, name: id.fullName, scope: row.scoped === false ? undefined : id.scope, version: row.version || undefined, schema: '2.0.0',
     dependencies: (row.current.dependencies ?? []).map((dependency) => Dependency.deserialize(dependency)),
     devDependencies: (row.current.devDependencies ?? []).map((dependency) => Dependency.deserialize(dependency)),
     extensions: row.current.extensions.map(convert),
@@ -637,7 +685,7 @@ async function hydrateStatusComponent(row) {
   });
   consumer.defaultScope = id.scope;
   consumer.writtenPath = directory;
-  consumer.issues = IssuesList.deserialize((row.issues ?? []).filter((issue) => issue.type));
+  consumer.issues = IssuesList.deserialize((row.issues ?? []).filter((issue) => issue.type).map(serializedIssue));
   const state = new State(new Config(consumer), await workspace.createAspectList(consumer.extensions), ComponentFS.fromVinyls(consumer.files), consumer.dependencies, consumer);
   const { WorkspaceComponent } = bitRequire('@teambit/workspace/dist/workspace-component/workspace-component.js');
   const headVersion = row.scope?.head;
@@ -645,35 +693,56 @@ async function hydrateStatusComponent(row) {
   const head = headVersion ? Snap.fromObject({ hash: headVersion[0], timestamp: log.date, parents: headVersion[1].parents, author: { displayName: log.username ?? '', email: log.email ?? '' }, message: log.message }) : null;
   const tags = TagMap.fromArray(Object.entries(row.scope?.model?.versions ?? {}).map(([version, hash]) => Tag.fromObject({version, hash})));
   const component = new WorkspaceComponent(id, head, state, tags, workspace);
+  component.__nativeRow = row;
+  component.__nativeCurrent = row.current;
   component.__nativeSourceProofs = sourceProofs(consumer.files);
   component.__nativeOriginalFiles = consumer.files.map((file) => file.relative);
   component.__nativeOriginalDependencyIds = [...consumer.dependencies.get(), ...consumer.devDependencies.get(), ...consumer.peerDependencies.get()].map((dependency) => dependency.id.toString());
   return component;
 }
 
-async function statusLoadCallbacks({ components, directory }) {
+async function statusLoadCallbacks({ components, directory, snapshot }) {
   const loaded = await loadHarmony();
   const workspace = loaded.get('teambit.workspace/workspace');
   const envs = loaded.get('teambit.envs/envs');
   const resolver = loaded.get('teambit.dependencies/dependency-resolver');
+  if (snapshot) await loaded.get('teambit.harmony/application').loadAllAppsAsAspects();
   statusComponents = [];
+  const loadOutput = [];
+  let outputStart = capturedStdout?.length ?? 0;
   for (const row of components) {
     const component = await hydrateStatusComponent(row);
     statusComponents.push(component);
+    // DependencyLoader's DevFiles adapter hydrates a separate Harmony class before
+    // the actual workspace load. Workspace-root explicitly skips source detection.
+    if (snapshot && row.directory !== '.') await statusApplyLoadCallbacks(await hydrateStatusComponent(row), { workspace, envs, resolver });
     await statusApplyLoadCallbacks(component, { workspace, envs, resolver });
   }
+  if (snapshot) loadOutput.push(capturedStdout?.slice(outputStart).join('') ?? '');
+  outputStart = capturedStdout?.length ?? 0;
   // Canonical modification checks reload tagged consumers, retaining in-memory SourceFile mutations.
-  for (const row of components.filter((row) => row.version)) {
+  for (const row of components.filter((row) => snapshot || row.version)) {
     const component = statusComponents.find((component) => component.id.toStringWithoutVersion() === row.identity);
+    // DependencyLoader's DevFiles adapter hydrates a separate Harmony class before
+    // the actual workspace load. Workspace-root explicitly skips source detection.
+    if (snapshot && row.directory !== '.') await statusApplyLoadCallbacks(await hydrateStatusComponent(row), { workspace, envs, resolver });
     await statusApplyLoadCallbacks(component, { workspace, envs, resolver });
   }
+  if (snapshot) loadOutput.push(capturedStdout?.slice(outputStart).join('') ?? '');
   const results = components.map((row) => {
     const component = statusComponents.find((component) => component.id.toStringWithoutVersion() === row.identity);
     const consumer = component.state._consumer;
     const sources = statusSourceOverlays(component, directory, 'current');
-    return { identity: row.identity, current: statusMetadata(row.current, consumer), files: consumer.files.map(statusRelative), sourceOverlays: sources.overlays, sourceOverlayRoot: directory, issues: statusIssues(consumer.issues), readSet: sources.proofs, originalDependencyIdentities: component.__nativeOriginalDependencyIds, dependencyIdentities: [...consumer.dependencies.get(), ...consumer.devDependencies.get(), ...consumer.peerDependencies.get()].map((dependency) => dependency.id.toString()) };
+    return { identity: row.identity, ...(snapshot ? {snapshotData: snapshotData(consumer), snapshotLoadOutput: loadOutput} : {}), current: statusMetadata(row.current, consumer), files: consumer.files.map(statusRelative), sourceOverlays: sources.overlays, sourceOverlayRoot: directory, issues: statusIssues(consumer.issues), readSet: sources.proofs, originalDependencyIdentities: component.__nativeOriginalDependencyIds, dependencyIdentities: [...consumer.dependencies.get(), ...consumer.devDependencies.get(), ...consumer.peerDependencies.get()].map((dependency) => dependency.id.toString()) };
   });
   return results;
+}
+
+function snapshotData(consumer) {
+  return { extensions: consumer.extensions.map((extension) => ({
+    ...(extension.name ? { name: extension.name } : { extensionId: extension.extensionId.serialize() }),
+    config: extension.rawConfig, data: extension.data,
+  })) };
 }
 
 function statusRelative(file) { return file.relative.split(path.sep).join('/'); }
@@ -736,14 +805,15 @@ function sourceProofs(files) {
 
 async function statusIssueCallbacks({ rows, coreIds, ignored }) {
   if (!statusComponents.length) return rows;
+  const components = snapshotCommand ? statusComponents.filter((component)=>rows.some((row)=>row.id===component.id.toStringWithoutVersion())) : statusComponents;
   const loaded = await loadHarmony();
   const { IssuesList, IssuesClasses } = bitRequire('@teambit/component-issues');
-  for (const component of statusComponents) {
+  for (const component of components) {
     const row = rows.find((row) => row.id === component.id.toStringWithoutVersion());
     const known = (row?.issues ?? []).filter((issue) => IssuesClasses[issue.type]);
     const existing = component.state.issues.getAllIssues();
     const extra = existing.filter((issue) => !IssuesClasses[issue.constructor.name]);
-    const hydrated = IssuesList.deserialize(known.map((issue) => ({ type: issue.type, data: JSON.stringify(issue.data) }))).getAllIssues().map((issue) => {
+    const hydrated = IssuesList.deserialize(known.map(serializedIssue)).getAllIssues().map((issue) => {
       const original = existing.find((entry) => entry.constructor.name === issue.constructor.name);
       if (!original) return issue;
       original.data = issue.data;
@@ -753,10 +823,10 @@ async function statusIssueCallbacks({ rows, coreIds, ignored }) {
   }
   const issues = loaded.get('teambit.component/issues');
   for (const [id, callback] of issues.addComponentsIssuesSlot.toArray()) {
-    if (!coreIds.includes(id.split('@')[0])) await callback(statusComponents, ignored);
+    if (!coreIds.includes(id.split('@')[0])) await callback(components, ignored);
   }
-  issues.removeIgnoredIssuesFromComponents(statusComponents);
-  return statusComponents.map((component) => ({ id: component.id.toStringWithoutVersion(), issues: statusIssues(component.state.issues) }));
+  issues.removeIgnoredIssuesFromComponents(components);
+  return components.map((component) => ({ id: component.id.toStringWithoutVersion(), issues: statusIssues(component.state.issues) }));
 }
 
 function statusIssues(issues) {

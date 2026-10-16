@@ -23,5 +23,9 @@ tokio = { version = "1", features = ["rt-multi-thread", "sync", "time"] }
 [target.'cfg(target_os = "linux")'.dependencies]
 xattr = "1.6.1"
 
+[target.'cfg(windows)'.dependencies]
+junction = "2.1"
+same-file = "1"
+
 [lints]
 workspace = true

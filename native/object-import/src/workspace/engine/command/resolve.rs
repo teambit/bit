@@ -1,12 +1,22 @@
+pub(in crate::workspace::engine) use publication::{
+    builder::{BuildFinalize, StageBuild},
+    packages::{PackageFinalize, StagePackages},
+};
+pub(in crate::workspace::engine) use refresh::{Refresh, Validate};
+pub(in crate::workspace::engine) use tag::{Overrides as TagOverrides, override_versions};
+
 mod cascade;
 mod context;
 mod graph;
 mod hidden;
 mod issue_graph;
 mod issue_heads;
+mod logs;
 mod planning;
 mod projection;
 mod publication;
+mod refresh;
+mod root;
 mod selection;
 mod snap;
 mod source_proofs;
@@ -46,6 +56,23 @@ struct Options {
     unmerged: bool,
     #[serde(default)]
     skip_auto_snap: bool,
+    #[serde(default)]
+    policy: Policy,
+}
+
+#[derive(Default, Clone, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(super) struct Policy {
+    #[serde(rename = "ignoreIssues")]
+    _ignore_issues: Option<String>,
+    #[serde(default)]
+    pub ignore_newest_version: bool,
+    #[serde(default)]
+    pub rebuild_deps_graph: bool,
+    #[serde(default)]
+    pub no_lock_deps: bool,
+    #[serde(default)]
+    pub skip_published_versions: bool,
 }
 
 struct Selection {
@@ -127,7 +154,7 @@ pub(in crate::workspace::engine) fn plan(
         snapshots.command.resolve.take().ok_or_else(|| invalid("resolve owner absent"))?;
     if retained.record.token != input.token
         || !retained.materials.is_empty()
-        || !matches!(retained.finalized, publication::Phase::Pending)
+        || !matches!(retained.finalized, publication::Phase::Pending(_))
     {
         return Err(invalid("resolve planning state"));
     }
@@ -135,6 +162,29 @@ pub(in crate::workspace::engine) fn plan(
     let count = retained.materials.len();
     snapshots.command.resolve = Some(retained);
     result.map(|value| (count, value))
+}
+
+pub(in crate::workspace::engine) fn tag_candidates(
+    input: Plan,
+    snapshots: &mut crate::workspace::snapshots::State,
+    pool: &rayon::ThreadPool,
+) -> io::Result<(usize, Value)> {
+    let mut retained =
+        snapshots.command.resolve.take().ok_or_else(|| invalid("resolve owner absent"))?;
+    let result = (|| {
+        if retained.record.token != input.token
+            || retained.tag.is_none()
+            || !retained.materials.is_empty()
+        {
+            return Err(invalid("tag candidates state"));
+        }
+        let captured =
+            super::capture::all(&retained.record.request.root, input.current, snapshots, pool)?;
+        let ids = tag::candidate_ids(&mut retained, &captured)?;
+        Ok((ids.len(), json!({"token":retained.record.token,"candidateIds":ids})))
+    })();
+    snapshots.command.resolve = Some(retained);
+    result
 }
 
 #[derive(Deserialize)]
@@ -171,4 +221,45 @@ pub(in crate::workspace::engine) fn apply(
     let mut retained = state.resolve.take().ok_or_else(|| invalid("resolve owner absent"))?;
     let result = publication::apply(input, &mut retained)?;
     Ok((retained.materials.len(), result))
+}
+
+pub(in crate::workspace::engine) fn validate_snapshot(
+    input: &Validate,
+    state: &mut State,
+) -> io::Result<(usize, Value)> {
+    refresh::validate(input, state)
+}
+pub(in crate::workspace::engine) fn refresh_snapshot(
+    input: Refresh,
+    snapshots: &mut crate::workspace::snapshots::State,
+    pool: &rayon::ThreadPool,
+) -> io::Result<(usize, Value)> {
+    refresh::apply(input, snapshots, pool)
+}
+
+pub(in crate::workspace::engine) fn stage_build(
+    input: &StageBuild,
+    state: &mut State,
+) -> io::Result<(usize, Value)> {
+    publication::builder::stage(input, state)
+}
+pub(in crate::workspace::engine) fn build_finalize(
+    input: BuildFinalize,
+    snapshots: &mut crate::workspace::snapshots::State,
+) -> io::Result<(usize, Value)> {
+    publication::builder::finalize(input, snapshots)
+}
+
+pub(in crate::workspace::engine) fn package_finalize(
+    input: PackageFinalize,
+    state: &mut State,
+) -> io::Result<(usize, Value)> {
+    publication::packages::finalize(input, state)
+}
+
+pub(in crate::workspace::engine) fn stage_packages(
+    input: &StagePackages,
+    state: &mut State,
+) -> io::Result<(usize, Value)> {
+    publication::packages::stage(input, state)
 }

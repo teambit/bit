@@ -115,27 +115,7 @@ impl Status<'_> {
     /// `formatIssues(issues)`: each issue's `outputForCLI`.
     pub(super) fn issues_text(&self, issues: &[Value]) -> String {
         let chalk = self.format.chalk;
-        let output: String = issues
-            .iter()
-            .map(|issue| {
-                if let Some(output) = issue["__callbackCLI"].as_str() {
-                    return output.to_owned();
-                }
-                let description = issue["description"].as_str().unwrap_or_default();
-                let solution = solution(issue);
-                let kind = issue["type"].as_str().unwrap_or_default();
-                let title_only = TITLE_ONLY.contains(&kind);
-                let colon = if title_only { "" } else { ":" };
-                let title = chalk.yellow(&format!("\n       {description} {solution}{colon} \n"));
-                if title_only {
-                    return title;
-                }
-                let mut output = title;
-                output.push_str(&chalk.white(&issue_data(issue, chalk)));
-                output
-            })
-            .collect();
-        format!("       {output}\n")
+        format!("       {}\n", issue_output(issues, chalk))
     }
 }
 
@@ -186,4 +166,29 @@ pub(super) fn issue_data(issue: &Value, chalk: Chalk) -> String {
         })
         .collect::<Vec<_>>()
         .join("\n")
+}
+
+/// Released `IssuesList.outputForCLI`, shared by status and snapshot blockers.
+pub(in crate::commands) fn issue_output(issues: &[Value], chalk: Chalk) -> String {
+    let output: String = issues
+        .iter()
+        .map(|issue| {
+            if let Some(output) = issue["__callbackCLI"].as_str() {
+                return output.to_owned();
+            }
+            let description = issue["description"].as_str().unwrap_or_default();
+            let solution = solution(issue);
+            let kind = issue["type"].as_str().unwrap_or_default();
+            let title_only = TITLE_ONLY.contains(&kind);
+            let colon = if title_only { "" } else { ":" };
+            let title = chalk.yellow(&format!("\n       {description} {solution}{colon} \n"));
+            if title_only {
+                return title;
+            }
+            let mut output = title;
+            output.push_str(&chalk.white(&issue_data(issue, chalk)));
+            output
+        })
+        .collect();
+    output
 }

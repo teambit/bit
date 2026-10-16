@@ -112,20 +112,24 @@ fn deprecated_dependencies_are_reported_and_self_deprecation_suppresses_them() {
 }
 
 fn merge_workspace() -> Helper {
+    merge_workspace_with(crate::helper::remote::publish)
+}
+
+fn merge_workspace_with(publish: fn(&Helper)) -> Helper {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.create_component_bar_foo("module.exports = 'base';");
     helper.add_component_bar_foo();
     helper.tag_without_build("", "");
-    helper.run("export");
+    publish(&helper);
     helper.run("lane create dev");
     helper.output_file("bar/foo.js", "module.exports = 'lane';");
     helper.run("snap --message lane");
-    helper.run("export");
+    publish(&helper);
     helper.run("switch main -x");
     helper.output_file("bar/foo.js", "module.exports = 'main';");
     helper.tag_without_build("", "");
-    helper.run("export");
+    publish(&helper);
     helper.run("lane merge dev --manual --no-snap -x");
     helper
 }
@@ -246,4 +250,29 @@ fn unresolved_workspace_merge_configuration_is_reported() {
     );
     compare(&helper, "status --json", &[]);
     compare(&helper, "status --warnings", &[]);
+}
+
+#[test]
+fn canonically_seeded_remote_lane_merge_status_and_diff_match_node() {
+    let helper = merge_workspace_with(crate::helper::remote::seed_after_node_export);
+    compare(&helper, "status --json", &[]);
+    compare(&helper, "diff bar/foo --json", &[]);
+}
+
+#[cfg(windows)]
+#[test]
+fn pinned_windows_node_export_still_completes_its_local_lifecycle() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("module.exports = 'export lifecycle';");
+    helper.add_component_bar_foo();
+    helper.tag_without_build("", "");
+    crate::helper::remote::node_export(&helper);
+    let status = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        "status --json",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    assert!(status.status.success(), "{}", status.stderr);
+    assert_eq!(parse(&status.stdout)["stagedComponents"], serde_json::json!([]));
 }

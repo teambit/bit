@@ -8,6 +8,7 @@ pub(in crate::workspace::engine::command) fn preflight(
     root: &Path,
     materials: &[Material],
     snapshots: &snapshots::State,
+    ordinary_snapshot: bool,
 ) -> io::Result<()> {
     if materials.is_empty() || materials.len() > 4096 {
         return Err(invalid("resolve material count"));
@@ -19,7 +20,7 @@ pub(in crate::workspace::engine::command) fn preflight(
             return Err(invalid("resolve duplicate material"));
         }
         validate_identity(material)?;
-        validate_projection(material)?;
+        validate_projection(material, ordinary_snapshot)?;
         validate_graph(root, material)?;
         bytes = bytes
             .checked_add(validate_files(material, snapshots)?)
@@ -53,12 +54,12 @@ fn validate_identity(material: &Material) -> io::Result<()> {
     Ok(())
 }
 
-fn validate_projection(material: &Material) -> io::Result<()> {
+fn validate_projection(material: &Material, ordinary_snapshot: bool) -> io::Result<()> {
     let projected = crate::workspace::engine::status_models::harmony::project(&material.version)?;
     if !projected["extensions"].is_array() || !projected["files"].is_array() {
         return Err(invalid("resolve Version projection"));
     }
-    snapshot::validate_application_files(&material.files)
+    if ordinary_snapshot { Ok(()) } else { snapshot::validate_application_files(&material.files) }
 }
 
 fn validate_graph(root: &Path, material: &Material) -> io::Result<()> {
@@ -68,8 +69,8 @@ fn validate_graph(root: &Path, material: &Material) -> io::Result<()> {
     let old =
         material.version["flattenedEdgesRef"].as_str().ok_or_else(|| invalid("resolve graph"))?;
     crate::merge_history::hash(old)?;
-    if !root
-        .join(".bit/objects")
+    if !crate::scope_path(root)
+        .join("objects")
         .join(&old[..2])
         .join(&old[2..])
         .try_exists()?

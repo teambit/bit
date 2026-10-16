@@ -263,6 +263,22 @@ impl Repository {
             Err(super::super::invalid("command lane import owner missing"))
         }
     }
+    pub(super) fn commit_import_retained(&mut self) -> io::Result<HashMap<PathBuf, Vec<u8>>> {
+        let files = self.imported
+            .as_mut()
+            .map(crate::command_import::PreparedImport::commit_retained)
+            .transpose()?
+            .unwrap_or_default();
+        proof::accept_published(&mut self.proofs, &files);
+        Ok(files)
+    }
+    pub(super) fn accept_published(&mut self, files: &HashMap<PathBuf, Vec<u8>>) -> io::Result<()> {
+        if let Some(imported) = &mut self.imported {
+            imported.accept_published(files)?;
+        }
+        proof::accept_published(&mut self.proofs, files);
+        self.validate()
+    }
     pub(super) fn commit_import(&self) -> io::Result<()> {
         if let Some(imported) = &self.imported {
             imported.commit()?;

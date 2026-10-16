@@ -8,6 +8,12 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[derive(Clone, Copy)]
+pub(super) struct Options<'a> {
+    pub imported_index: Option<&'a Value>,
+    pub snapshot: bool,
+}
+
 pub(super) struct Prepared {
     bitmap: bitmap::Prepared,
     finalization: finalization::Prepared,
@@ -28,6 +34,7 @@ pub(super) fn preflight(
     materials: &[resolve_snapshot::Material],
     pending: &[Value],
     imported_index: Option<&Value>,
+    snapshot: bool,
 ) -> io::Result<()> {
     let heads = materials
         .iter()
@@ -51,7 +58,16 @@ pub(super) fn preflight(
         })
         .collect::<io::Result<Vec<_>>>()?;
     let receipt = json!({"log":{"message":""}});
-    prepare(root, context, materials, &versions, pending, &receipt, imported_index)?.validate()
+    prepare(
+        root,
+        context,
+        materials,
+        &versions,
+        pending,
+        &receipt,
+        Options { imported_index, snapshot },
+    )?
+    .validate()
 }
 
 fn resolve_markers(value: &mut Value, heads: &HashMap<&str, &str>) -> io::Result<()> {
@@ -235,7 +251,7 @@ pub(super) fn prepare(
     versions: &[Value],
     pending: &[Value],
     receipt: &Value,
-    imported_index: Option<&Value>,
+    options: Options<'_>,
 ) -> io::Result<Prepared> {
     let batch = batch(context, materials, versions)?;
     let lane_new = lane_new_ids(context, materials);
@@ -251,15 +267,25 @@ pub(super) fn prepare(
                 .collect::<Vec<_>>(),
         )?;
     }
+    if options.snapshot {
+        bitmap.clear_config(
+            context,
+            &batch.updates
+                .iter()
+                .map(|update| update.identity.clone())
+                .collect::<Vec<_>>(),
+        )?;
+    }
     bitmap.mark_lane_new(context, &lane_new)?;
-    let mut finalization =
+    let mut finalization = if options.snapshot {
+        finalization::prepare_snapshot_publication(root, &batch.inputs, &batch.removed)
+    } else {
         finalization::prepare_publication(root, &batch.inputs, true, &batch.removed)
-            .map_err(|error| {
-                io::Error::new(error.kind(), format!("resolve finalization: {error}"))
-            })?;
+    }
+    .map_err(|error| io::Error::new(error.kind(), format!("resolve finalization: {error}")))?;
     finalization.mark_lane_new(root, &lane_new)?;
     finalization.resolve_licenses(root, &batch.inputs, &batch.removed)?;
-    finalization.imported_index(root, imported_index)?;
+    finalization.imported_index(root, options.imported_index)?;
     finalization.snapshot_index(
         root,
         materials
@@ -267,7 +293,7 @@ pub(super) fn prepare(
             .filter(|material| material.version_state.current_head.is_empty())
             .map(|material| material.identity.as_str()),
     )?;
-    let pending_path = root.join(".bit/unmerged.json");
+    let pending_path = crate::scope_path(root).join("unmerged.json");
     let mut proofs = Vec::new();
     proof::read(&pending_path, &mut proofs)?;
     let pending_bytes = pending_path
@@ -294,6 +320,57 @@ pub(super) fn prepare(
 }
 
 impl Prepared {
+    pub(super) fn accept_published(&mut self, files: &HashMap<PathBuf, Vec<u8>>) -> io::Result<()> {
+        proof::accept_published(&mut self.proofs, files);
+        self.finalization.accept_published(files)?;
+        self.validate()
+    }
+
+    pub(super) fn stage_index(&mut self, root: &Path) -> io::Result<(PathBuf, Vec<u8>)> {
+        self.finalization.stage_index(root)
+    }
+
+    pub(super) fn package_manifest_plans(&self, versions: &[Value]) -> io::Result<Vec<Value>> {
+        let mut plans = self.finalization.package_manifest_plans()?;
+        for plan in &mut plans {
+            let version = versions
+                .iter()
+                .find(|version| version["identity"] == plan["identity"])
+                .ok_or_else(|| invalid("snapshot package version absent"))?;
+            plan["versionData"] = version["version"].clone();
+        }
+        Ok(plans)
+    }
+    pub(super) fn package_manifests(
+        &mut self,
+        manifests: &[Value],
+        versions: &[Value],
+    ) -> io::Result<()> {
+        let aspects = versions
+            .iter()
+            .filter(|version| {
+                version["version"]["extensions"]
+                    .as_array()
+                    .is_some_and(|extensions| {
+                        extensions
+                            .iter()
+                            .any(|extension| {
+                                extension["name"] == "teambit.envs/envs"
+                                    && extension["data"]["type"] == "aspect"
+                            })
+                    })
+            })
+            .filter_map(|version| version["identity"].as_str().map(str::to_owned))
+            .collect();
+        self.finalization.package_manifests_with_aspects(manifests, &aspects)
+    }
+
+    pub(super) fn stage_snaps(&mut self, root: &Path) -> io::Result<Vec<u8>> {
+        self.finalization.stage_snaps(root)
+    }
+    pub(super) fn keep_staged_snaps(&mut self, root: &Path, bytes: &[u8]) -> io::Result<()> {
+        self.finalization.keep_staged_snaps(root, bytes)
+    }
     pub(super) fn validate(&self) -> io::Result<()> {
         self.bitmap.validate()?;
         self.finalization.validate()?;

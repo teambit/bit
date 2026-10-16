@@ -3,11 +3,11 @@
 use crate::helper::{FOO_FIXTURE, Helper, config, parse};
 use std::{ffi::OsStr, path::Path};
 
-fn bitmap(root: &Path) -> serde_json::Value {
+pub(super) fn bitmap(root: &Path) -> serde_json::Value {
     config::read_jsonc(&root.join(".bitmap"))
 }
 
-fn compare_command(helper: &Helper, node_workspace: &Path, command: &str) {
+pub(super) fn compare_command(helper: &Helper, node_workspace: &Path, command: &str) {
     let native = helper.native_run(command);
     let node = Helper::cmd_in_with(node_workspace, command, &[("BIT_NATIVE", OsStr::new("off"))]);
     assert!(!node.native, "{}", node.trace);
@@ -56,7 +56,7 @@ fn soft_tag_then_persist_matches_node() {
 }
 
 #[test]
-fn soft_prerelease_matches_node_and_persist_delegates() {
+fn soft_prerelease_persist_preserves_node_rejection() {
     let helper = Helper::new();
     helper.re_init_workspace_with(false);
     helper.create_component_bar_foo(FOO_FIXTURE);
@@ -80,6 +80,7 @@ fn soft_prerelease_matches_node_and_persist_delegates() {
         &[("BIT_NATIVE", OsStr::new("off"))],
     );
     assert!(!native.native, "{}", native.trace);
+    assert!(!node.status.success());
     assert_eq!(native.status.code(), node.status.code());
     assert_eq!(native.stderr, node.stderr);
     assert_eq!(bitmap(&helper.scopes.local_path), bitmap(&node_workspace));
@@ -116,4 +117,190 @@ fn exact_soft_tag_then_persist_matches_node() {
     assert_eq!(bitmap(&helper.scopes.local_path)["bar/foo"]["nextVersion"]["version"], "2.4.0");
     compare_command(&helper, &node_workspace, "tag --persist=skip-build");
     assert_eq!(bitmap(&helper.scopes.local_path)["bar/foo"]["version"], "2.4.0");
+}
+
+#[test]
+fn versions_file_explicit_and_default_apply_to_dependents() {
+    let helper = Helper::new();
+    helper.re_init_workspace_with(false);
+    helper.populate_components(2, true, "");
+    helper.run("tag --message initial");
+    helper.append_file("comp2/index.js", "\n// changed dependency");
+    std::fs::write(
+        helper.scopes.local_path.join("versions.txt"),
+        "my-scope/comp2: 2.3.0-beta.1\nDEFAULT: minor\n",
+    )
+    .unwrap();
+    let node_workspace = helper.clone_workspace();
+    compare_command(
+        &helper,
+        &node_workspace,
+        "tag comp2 --versions-file versions.txt --message versions",
+    );
+    let actual = bitmap(&helper.scopes.local_path);
+    assert_eq!(actual["comp2"]["version"], "2.3.0-beta.1");
+    assert_eq!(actual["comp1"]["version"], "0.1.0");
+}
+
+#[test]
+fn modified_state_selector_preserves_automatic_dependents() {
+    let helper = Helper::new();
+    helper.re_init_workspace_with(false);
+    helper.populate_components(2, true, "");
+    helper.run("tag --message initial");
+    helper.append_file("comp2/index.js", "\n// changed dependency");
+    let node_workspace = helper.clone_workspace();
+    compare_command(&helper, &node_workspace, r#"tag "$modified AND comp*" --message modified"#);
+    let actual = bitmap(&helper.scopes.local_path);
+    assert_eq!(actual["comp2"]["version"], "0.0.2");
+    assert_eq!(actual["comp1"]["version"], "0.0.2");
+}
+
+#[test]
+fn soft_versions_file_then_persist_matches_node() {
+    let helper = Helper::new();
+    helper.re_init_workspace_with(false);
+    helper.create_component_bar_foo(FOO_FIXTURE);
+    helper.add_component_bar_foo();
+    helper.run("link");
+    std::fs::write(helper.scopes.local_path.join("versions.txt"), "DEFAULT: 3.2.1\n").unwrap();
+    let node_workspace = helper.clone_workspace();
+    compare_command(
+        &helper,
+        &node_workspace,
+        "tag bar/foo --soft --versions-file versions.txt --message planned",
+    );
+    compare_command(&helper, &node_workspace, "tag --persist=skip-build");
+    assert_eq!(bitmap(&helper.scopes.local_path)["bar/foo"]["version"], "3.2.1");
+}
+
+#[test]
+fn dependency_graph_policy_flags_match_node() {
+    let helper = Helper::new();
+    helper.re_init_workspace_with(false);
+    helper.populate_components(2, true, "");
+    helper.run("tag --message initial");
+    helper.append_file("comp2/index.js", "\n// graph rebuilt");
+    let node_workspace = helper.clone_workspace();
+    compare_command(
+        &helper,
+        &node_workspace,
+        "tag --rebuild-deps-graph --no-lock-deps --message graph",
+    );
+    let native = parse(&helper.run("cat-component comp1@latest --json"));
+    let node = Helper::cmd_in_with(
+        &node_workspace,
+        "cat-component comp1@latest --json",
+        &[("BIT_NATIVE", OsStr::new("off"))],
+    );
+    let node = parse(&node.stdout);
+    assert!(native.get("dependenciesGraphRef").is_none());
+    assert_eq!(native["flattenedDependencies"], node["flattenedDependencies"]);
+}
+
+#[test]
+fn ignore_newest_version_allows_tagging_an_old_checkout() {
+    let helper = Helper::new();
+    helper.re_init_workspace_with(false);
+    helper.create_component_bar_foo(FOO_FIXTURE);
+    helper.add_component_bar_foo();
+    helper.run("tag --message first");
+    helper.append_file("bar/foo.js", "\n// second");
+    helper.run("tag --message second");
+    helper.run("checkout 0.0.1 bar/foo -x");
+    helper.append_file("bar/foo.js", "\n// hotfix");
+    let node_workspace = helper.clone_workspace();
+    compare_command(
+        &helper,
+        &node_workspace,
+        "tag bar/foo --ignore-newest-version --message hotfix",
+    );
+    assert_eq!(bitmap(&helper.scopes.local_path)["bar/foo"]["version"], "0.0.3");
+}
+
+#[test]
+fn ignored_missing_package_issue_matches_node() {
+    let helper = Helper::new();
+    helper.re_init_workspace_with(false);
+    helper.create_component_bar_foo("require('missing-snapshot-fixture-package');\n");
+    helper.add_component_bar_foo();
+    helper.run("link");
+    let node_workspace = helper.clone_workspace();
+    compare_command(
+        &helper,
+        &node_workspace,
+        "tag bar/foo -i MissingPackagesDependenciesOnFs --message ignored",
+    );
+    assert_eq!(bitmap(&helper.scopes.local_path)["bar/foo"]["version"], "0.0.1");
+}
+
+#[test]
+fn numeric_increment_by_matches_node() {
+    let helper = Helper::new();
+    helper.re_init_workspace_with(false);
+    helper.create_component_bar_foo(FOO_FIXTURE);
+    helper.add_component_bar_foo();
+    helper.run("tag --message initial");
+    for (count, expected) in [("1.5", "0.0.3"), ("0", "0.0.4"), ("1e1", "0.0.14")] {
+        helper.append_file("bar/foo.js", &format!("\n// increment {count}"));
+        let node_workspace = helper.clone_workspace();
+        compare_command(
+            &helper,
+            &node_workspace,
+            &format!("tag --increment-by {count} --message numeric"),
+        );
+        assert_eq!(bitmap(&helper.scopes.local_path)["bar/foo"]["version"], expected);
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn soft_editor_messages_survive_persist_per_component() {
+    use std::os::unix::fs::PermissionsExt;
+    let helper = Helper::new();
+    helper.re_init_workspace_with(false);
+    helper.populate_components(2, true, "");
+    helper.output_file(
+        "bin/vim",
+        r"#!/usr/bin/env node
+const fs=require('fs'); const file=process.argv.at(-1);
+let text=fs.readFileSync(file,'utf8');
+text=text.replace(/^my-scope\/comp1:.*$/m,'my-scope/comp1: first component message');
+text=text.replace(/^my-scope\/comp2:.*$/m,'my-scope/comp2: second component message');
+fs.writeFileSync(file,text);
+",
+    );
+    let executable = helper.scopes.local_path.join("bin/vim");
+    std::fs::set_permissions(executable, std::fs::Permissions::from_mode(0o755)).unwrap();
+    let paths = std::env::join_paths(
+        std::iter::once(helper.scopes.local_path.join("bin"))
+            .chain(std::env::split_paths(&std::env::var_os("PATH").unwrap())),
+    )
+    .unwrap();
+    let node_workspace = helper.clone_workspace();
+    let command = "tag --soft --editor vim";
+    let native =
+        Helper::cmd_in_with(&helper.scopes.local_path, command, &[("PATH", paths.as_os_str())]);
+    let node = Helper::cmd_in_with(
+        &node_workspace,
+        command,
+        &[("BIT_NATIVE", OsStr::new("off")), ("PATH", paths.as_os_str())],
+    );
+    assert!(native.native, "{}", native.trace);
+    assert_eq!(native.status.code(), node.status.code(), "{} {}", native.stderr, node.stderr);
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(bitmap(&helper.scopes.local_path), bitmap(&node_workspace));
+    assert_eq!(
+        bitmap(&helper.scopes.local_path)["comp1"]["nextVersion"]["message"],
+        "first component message",
+    );
+    compare_command(&helper, &node_workspace, "tag --persist=skip-build");
+    for id in ["comp1", "comp2"] {
+        let command = format!("cat-component {id}@latest --json");
+        let native = parse(&helper.run(&command));
+        let node =
+            Helper::cmd_in_with(&node_workspace, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+        assert_eq!(native["log"]["message"], parse(&node.stdout)["log"]["message"]);
+    }
 }

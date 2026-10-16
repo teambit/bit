@@ -17,6 +17,7 @@ pub(super) mod grammar;
 pub(super) mod issues;
 pub(super) mod js;
 pub(super) mod policy;
+pub(in crate::commands) mod report;
 
 pub(super) mod collate;
 pub(super) use delete::DeleteGraph;
@@ -25,7 +26,6 @@ mod delete;
 mod lane_refresh;
 mod loader;
 mod reading;
-mod report;
 mod sorting;
 mod workspace_issues;
 

@@ -41,3 +41,19 @@ fn filtered_snapshot_order_follows_pnpm_walker() {
         ["a@1.0.0", "x@1.0.0", "y@1.0.0", "z@1.0.0", "b@1.0.0"],
     );
 }
+
+#[test]
+fn component_environment_root_uses_configured_base_and_prefers_unversioned_directory() {
+    let directory = tempfile::tempdir().unwrap();
+    let root = directory.path();
+    let roots = root.join("custom/.bit_roots");
+    assert_eq!(
+        super::environment_importer(root, &roots, "scope/env@1.2.3").unwrap(),
+        "custom/.bit_roots/scope_env@1.2.3",
+    );
+    std::fs::create_dir_all(roots.join("scope_env")).unwrap();
+    assert_eq!(
+        super::environment_importer(root, &roots, "scope/env@1.2.3").unwrap(),
+        "custom/.bit_roots/scope_env",
+    );
+}
