@@ -25,12 +25,14 @@ pub(super) struct Options<'a> {
     pub(super) override_existing: bool,
     pub(super) path: Option<&'a str>,
     pub(super) install_requested: bool,
+    pub(super) merge_strategy: Option<&'a str>,
 }
 #[derive(Default)]
 struct WorkspaceFiles {
     additions: Vec<(PathBuf, Vec<u8>)>,
     replacements: Vec<Replacement>,
     empty_directories: Vec<PathBuf>,
+    conflicts: HashMap<String, Vec<String>>,
 }
 struct Replacement {
     path: PathBuf,
@@ -65,6 +67,12 @@ pub(super) fn prepare(
     Ok(Prepared { root: root.to_owned(), bitmap_before, bitmap_after, changes, history })
 }
 
+impl Prepared {
+    pub(super) fn conflicts(&self, id: &str) -> Option<&[String]> {
+        self.changes.conflicts.get(id).map(Vec::as_slice)
+    }
+}
+
 fn default_directory(root: &Path) -> io::Result<String> {
     config::configuration(root)?["defaultDirectory"]
         .as_str()
@@ -88,6 +96,7 @@ fn prepare_targets(
         policy: &policy,
         override_existing: options.override_existing,
         install_requested: options.install_requested,
+        merge_strategy: options.merge_strategy,
     };
     let mut directories = target_directories(template, targets, rows, options.path)?.into_iter();
     let mut changes = WorkspaceFiles::default();
@@ -141,6 +150,7 @@ struct Planning<'a> {
     policy: &'a HashMap<String, String>,
     override_existing: bool,
     install_requested: bool,
+    merge_strategy: Option<&'a str>,
 }
 
 fn plan_target(
@@ -175,8 +185,11 @@ fn plan_target(
                 imported: context.imported,
                 row: &row,
                 policy: context.policy,
-                override_existing: context.override_existing,
-                install_requested: context.install_requested,
+                resolution: existing::Resolution {
+                    override_existing: context.override_existing,
+                    install_requested: context.install_requested,
+                    merge_strategy: context.merge_strategy,
+                },
             },
             rows,
             changes,

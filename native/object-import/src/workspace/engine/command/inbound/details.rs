@@ -1,5 +1,5 @@
 //! The `importDetails` of an inbound receipt (`_getImportDetails`).
-use super::{Target, invalid};
+use super::{Target, invalid, write};
 use crate::command_import;
 use serde_json::{Value, json};
 use sha1::Digest;
@@ -49,13 +49,16 @@ pub(super) fn details(
     root: &Path,
     targets: &[Target],
     imported: &command_import::PreparedImport,
+    workspace: Option<&write::Prepared>,
 ) -> io::Result<Vec<Value>> {
     targets
         .iter()
         .map(|target| {
             let scope = target.scope.as_deref().ok_or_else(|| invalid("inbound scope"))?;
             let model = model(root, imported, scope, &target.name)?;
-            detail(root, scope, target, model.as_ref(), imported)
+            let id = format!("{scope}/{}", target.name);
+            let conflicts = workspace.and_then(|workspace| workspace.conflicts(&id));
+            detail(root, scope, target, model.as_ref(), imported, conflicts)
         })
         .collect()
 }
@@ -66,6 +69,7 @@ fn detail(
     target: &Target,
     model: &Value,
     imported: &command_import::PreparedImport,
+    conflicts: Option<&[String]>,
 ) -> io::Result<Value> {
     let versions = model["versions"].as_object().ok_or_else(|| invalid("inbound versions"))?;
     let previous = previous_versions(root, scope, &target.name)?;
@@ -81,8 +85,14 @@ fn detail(
     };
     let head = head_as_tag_or_hash(model)?;
     let latest = added.contains(&head).then_some(head);
+    let files_status = conflicts.map(|paths| {
+        paths
+            .iter()
+            .map(|path| (path.clone(), json!("manual")))
+            .collect::<serde_json::Map<String, Value>>()
+    });
     Ok(json!({"id":format!("{scope}/{}", target.name),"versions":added,
-        "latestVersion":latest,"status":status,"filesStatus":null,"missingDeps":[],
+        "latestVersion":latest,"status":status,"filesStatus":files_status,"missingDeps":[],
         "deprecated":deprecated(root, model, imported)?,"removed":false}))
 }
 

@@ -60,6 +60,26 @@ fn path_requires_one_explicit_component_write() {
 }
 
 #[test]
+fn merge_requires_one_explicit_component_write() {
+    for strategy in ["manual", "ours", "theirs"] {
+        let flag = format!("--merge={strategy}");
+        let options = parse(&["import", "s/a", &flag, "-x"]).unwrap();
+        assert_eq!(options.request()["mergeStrategy"], strategy);
+    }
+    for args in [
+        &["import", "--merge=manual"][..],
+        &["import", "s/a", "--merge=manual", "-o"],
+        &["import", "s/a", "s/b", "--merge=manual"],
+        &["import", "s/*", "--merge=manual"],
+        &["import", "s/a", "--merge=manual", "--override"],
+        &["import", "s/a", "--merge=invalid"],
+        &["import", "s/a", "--merge=manual", "--merge=ours"],
+    ] {
+        assert!(parse(args).is_none(), "{args:?}");
+    }
+}
+
+#[test]
 fn installing_imports_and_other_flags_are_left_to_node() {
     for args in [
         &["import", "**"][..],

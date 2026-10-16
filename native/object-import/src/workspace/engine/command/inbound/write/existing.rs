@@ -13,8 +13,14 @@ pub(super) struct Input<'a> {
     pub(super) imported: &'a PreparedImport,
     pub(super) row: &'a Value,
     pub(super) policy: &'a HashMap<String, String>,
+    pub(super) resolution: Resolution<'a>,
+}
+
+#[derive(Clone, Copy)]
+pub(super) struct Resolution<'a> {
     pub(super) override_existing: bool,
     pub(super) install_requested: bool,
+    pub(super) merge_strategy: Option<&'a str>,
 }
 
 pub(super) fn prepare(
@@ -34,7 +40,7 @@ pub(super) fn prepare(
         &local
     };
     let main = validate_new(input, new)?;
-    plan_files(input, &old, new, changes)?;
+    plan_files(input, &old, new, &name, changes)?;
     let bitmap =
         rows.get_mut(&input.target.name).ok_or_else(|| invalid("inbound existing bitmap"))?;
     bitmap["version"] = Value::String(name);
@@ -60,7 +66,7 @@ fn versions(input: &Input<'_>, model: &Value) -> io::Result<(Value, String, Stri
     let old = if let Some(version) = details::local_object(input.root, &current_hash, "Version")? {
         version
     } else {
-        if input.install_requested {
+        if input.resolution.install_requested {
             return Err(invalid("inbound authored import installation requires canonical writer"));
         }
         input.imported.overlay
@@ -84,11 +90,12 @@ fn plan_files(
     input: &Input<'_>,
     old: &Value,
     new: &Value,
+    incoming_version: &str,
     changes: &mut WorkspaceFiles,
 ) -> io::Result<()> {
     let old_files = files(old)?;
     let new_files = files(new)?;
-    plan_old(input, &old_files, &new_files, changes)?;
+    plan_old(input, &old_files, &new_files, incoming_version, changes)?;
     plan_new(input, &old_files, &new_files, changes)
 }
 
@@ -96,15 +103,20 @@ fn plan_old(
     input: &Input<'_>,
     old_files: &HashMap<String, String>,
     new_files: &HashMap<String, String>,
+    incoming_version: &str,
     changes: &mut WorkspaceFiles,
 ) -> io::Result<()> {
     let mut compressed = 0;
-    for (relative, old_hash) in old_files {
+    let mut paths = old_files.keys().collect::<Vec<_>>();
+    paths.sort();
+    for relative in paths {
+        let old_hash = &old_files[relative];
         plan_old_file(
             input,
             relative,
             old_hash,
             new_files.get(relative),
+            incoming_version,
             changes,
             &mut compressed,
         )?;
@@ -117,14 +129,30 @@ fn plan_old_file(
     relative: &str,
     old_hash: &str,
     new_hash: Option<&String>,
+    incoming_version: &str,
     changes: &mut WorkspaceFiles,
     compressed: &mut usize,
 ) -> io::Result<()> {
     let path = input.root.join(input.directory).join(relative);
     let expected = old_source(input, old_hash, compressed)?;
-    let before = current_or_missing(input, &path, expected)?;
+    let before = current_or_missing(input, &path, &expected)?;
     if let Some(hash) = new_hash {
         let after = new_source(input, hash)?;
+        let (after, conflicted) = resolve(
+            input,
+            before.as_deref(),
+            &expected,
+            after,
+            old_hash == hash,
+            incoming_version,
+        )?;
+        if conflicted {
+            let scope = input.target.scope.as_deref().ok_or_else(|| invalid("inbound scope"))?;
+            changes.conflicts
+                .entry(format!("{scope}/{}", input.target.name))
+                .or_default()
+                .push(relative.to_owned());
+        }
         match before {
             Some(before) if before != after => {
                 changes.replacements.push(Replacement { path, before, after });
@@ -135,6 +163,38 @@ fn plan_old_file(
     }
     // ComponentWriter leaves files removed by the new Version in the workspace.
     Ok(())
+}
+
+fn resolve(
+    input: &Input<'_>,
+    before: Option<&[u8]>,
+    base: &[u8],
+    incoming: Vec<u8>,
+    unchanged_source: bool,
+    incoming_version: &str,
+) -> io::Result<(Vec<u8>, bool)> {
+    let Some(strategy) = input.resolution.merge_strategy else { return Ok((incoming, false)) };
+    let Some(current) = before else { return Ok((incoming, false)) };
+    if current == base || unchanged_source {
+        return Ok((if unchanged_source { current.to_vec() } else { incoming }, false));
+    }
+    match strategy {
+        "ours" => Ok((current.to_vec(), false)),
+        "theirs" => Ok((incoming, false)),
+        "manual" => {
+            let current_version =
+                input.row["version"].as_str().ok_or_else(|| invalid("inbound current version"))?;
+            let labels = [format!("{current_version} modified"), incoming_version.to_owned()];
+            let (merged, conflict) = crate::merge_history::merge::git::workspace_merge(
+                current,
+                base,
+                &incoming,
+                [&labels[0], &labels[1]],
+            )?;
+            Ok((merged, conflict))
+        }
+        _ => Err(invalid("inbound merge strategy")),
+    }
 }
 
 fn old_source(input: &Input<'_>, hash: &str, compressed: &mut usize) -> io::Result<Vec<u8>> {
@@ -153,13 +213,18 @@ fn old_source(input: &Input<'_>, hash: &str, compressed: &mut usize) -> io::Resu
 fn current_or_missing(
     input: &Input<'_>,
     path: &Path,
-    expected: Vec<u8>,
+    expected: &[u8],
 ) -> io::Result<Option<Vec<u8>>> {
     match fs::symlink_metadata(path) {
-        Ok(_) if input.override_existing => current_body(input.root, path).map(Some),
+        Ok(_)
+            if input.resolution.override_existing
+                || input.resolution.merge_strategy.is_some() =>
+        {
+            current_body(input.root, path).map(Some)
+        }
         Ok(_) => {
-            check(input.root, path, &expected)?;
-            Ok(Some(expected))
+            check(input.root, path, expected)?;
+            Ok(Some(expected.to_vec()))
         }
         Err(error) if error.kind() == io::ErrorKind::NotFound => {
             safe_destination(input.root, path)?;

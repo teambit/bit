@@ -56,12 +56,21 @@ struct Options {
     all_history: bool,
     from_original_scope: bool,
     skip_dependency_installation: bool,
-    #[serde(default)]
-    override_existing: bool,
+    #[serde(flatten)]
+    resolution: Resolution,
     #[serde(default)]
     path: Option<String>,
     lanes: bool,
     components: bool,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct Resolution {
+    #[serde(default)]
+    override_existing: bool,
+    #[serde(default)]
+    merge_strategy: Option<String>,
 }
 
 /// `commandInboundList`: the remote listings of wildcard patterns, before
@@ -124,9 +133,10 @@ pub(in crate::workspace::engine) fn prepare(
             &import,
             input.bitmap_history_file_id.as_deref(),
             write::Options {
-                override_existing: input.options.override_existing,
+                override_existing: input.options.resolution.override_existing,
                 path: input.options.path.as_deref(),
                 install_requested: !input.options.skip_dependency_installation,
+                merge_strategy: input.options.resolution.merge_strategy.as_deref(),
             },
         )?)
     };
@@ -135,7 +145,7 @@ pub(in crate::workspace::engine) fn prepare(
     let receipt = if input.operation == "status" {
         json!({"token":token,"importedIds":[],"progress":[],"refreshCount":import.main_refresh.count,"refreshObjects":import.main_refresh.objects})
     } else {
-        receipt(&input.root, &targets, &import, &token)?
+        receipt(&input.root, &targets, &import, workspace.as_ref(), &token)?
     };
     let count = targets.len();
     state.inbound = Some(Retained { token, receipt: receipt.clone(), import, workspace });
@@ -168,13 +178,14 @@ fn receipt(
     root: &Path,
     targets: &[Target],
     import: &command_import::PreparedImport,
+    workspace: Option<&write::Prepared>,
     token: &str,
 ) -> io::Result<Value> {
     let imported_ids = targets
         .iter()
         .map(|target| imported_identity(root, target, import))
         .collect::<io::Result<Vec<_>>>()?;
-    let details = details::details(root, targets, import)?;
+    let details = details::details(root, targets, import, workspace)?;
     let progress = import.progress
         .iter()
         .map(|row| {
@@ -264,6 +275,7 @@ fn validate(input: &Prepare) -> io::Result<()> {
         return Err(invalid("inbound command requires canonical lifecycle"));
     }
     validate_override(input)?;
+    validate_merge(input)?;
     if input.options.lanes
         && (input.ids.is_empty() || input.ids.len() > 32 || input.options.all_history)
     {
@@ -275,7 +287,7 @@ fn validate(input: &Prepare) -> io::Result<()> {
     Ok(())
 }
 fn validate_override(input: &Prepare) -> io::Result<()> {
-    if input.options.override_existing
+    if input.options.resolution.override_existing
         && (input.operation != "import"
             || input.options.objects_only
             || input.ids.is_empty())
@@ -288,6 +300,20 @@ fn validate_override(input: &Prepare) -> io::Result<()> {
             || input.ids.len() != 1)
     {
         return Err(invalid("inbound path requires one explicit workspace import"));
+    }
+    Ok(())
+}
+fn validate_merge(input: &Prepare) -> io::Result<()> {
+    let Some(strategy) = input.options.resolution.merge_strategy.as_deref() else {
+        return Ok(());
+    };
+    if input.operation != "import"
+        || input.options.objects_only
+        || input.ids.len() != 1
+        || input.options.resolution.override_existing
+        || !matches!(strategy, "manual" | "ours" | "theirs")
+    {
+        return Err(invalid("inbound merge requires one explicit workspace import"));
     }
     Ok(())
 }

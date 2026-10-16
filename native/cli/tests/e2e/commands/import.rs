@@ -520,6 +520,94 @@ fn an_overridden_destination_file_is_replaced_like_node() {
     );
 }
 
+#[test]
+fn a_modified_import_merges_manually_like_node() {
+    let (helper, _) = modified_bar_foo();
+    if let Some(destination) = std::env::var_os("BIT_NATIVE_IMPORT_MERGE_FIXTURE") {
+        let destination = std::path::PathBuf::from(destination);
+        assert!(!destination.exists());
+        fs::create_dir_all(&destination).unwrap();
+        setup::copy_dir(&helper.scopes.local_path, &destination.join("workspace"));
+        setup::copy_dir(&helper.scopes.remote_path, &destination.join("remote"));
+    }
+    let node_root = helper.clone_workspace();
+    let command = format!("import {}/bar/foo --merge=manual -x", helper.scopes.remote);
+    let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert!(node.status.success(), "{}", combined(&node));
+    let native = helper.native_run(&command);
+    assert!(native.native, "{}", native.trace);
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(without_progress_timing(&native.stdout), without_progress_timing(&node.stdout));
+    assert_eq!(native.stderr, node.stderr);
+    assert_eq!(
+        fs::read(helper.scopes.local_path.join(".bitmap")).unwrap(),
+        fs::read(node_root.join(".bitmap")).unwrap(),
+    );
+    let relative = format!("{}/bar/foo/foo.js", helper.scopes.remote);
+    assert_eq!(
+        fs::read(helper.scopes.local_path.join(&relative)).unwrap(),
+        fs::read(node_root.join(&relative)).unwrap(),
+    );
+}
+
+#[test]
+fn a_newer_import_resolves_local_edits_like_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("module.exports = () => 'first';");
+    helper.add_component_bar_foo();
+    helper.tag_without_build("bar/foo", "");
+    helper.run("export");
+    let source = helper.clone_workspace();
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    helper.run(&format!("import {}/bar/foo -x", helper.scopes.remote));
+    helper.output_file(
+        &format!("{}/bar/foo/foo.js", helper.scopes.remote),
+        "module.exports = () => 'local edit';",
+    );
+    fs::write(source.join("bar/foo.js"), "module.exports = () => 'second';").unwrap();
+    for command in ["tag bar/foo --message second", "export"] {
+        let run = Helper::cmd_in_with(&source, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+        assert!(run.status.success(), "{command}: {}", combined(&run));
+    }
+    let baseline = helper.clone_workspace();
+    if let Some(destination) = std::env::var_os("BIT_NATIVE_IMPORT_NEWER_MERGE_FIXTURE") {
+        let destination = std::path::PathBuf::from(destination);
+        assert!(!destination.exists());
+        fs::create_dir_all(&destination).unwrap();
+        setup::copy_dir(&helper.scopes.local_path, &destination.join("workspace"));
+        setup::copy_dir(&helper.scopes.remote_path, &destination.join("remote"));
+    }
+    for strategy in ["manual", "ours", "theirs"] {
+        helper.get_cloned_workspace(&baseline);
+        let node_root = helper.clone_workspace();
+        let command = format!("import {}/bar/foo --merge={strategy} -x", helper.scopes.remote);
+        let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+        assert!(node.status.success(), "{strategy}: {}", combined(&node));
+        let native = helper.native_run(&command);
+        assert!(native.native, "{strategy}: {}", native.trace);
+        assert_eq!(native.status.code(), node.status.code(), "{strategy}");
+        assert_eq!(
+            without_progress_timing(&native.stdout),
+            without_progress_timing(&node.stdout),
+            "{strategy}",
+        );
+        assert_eq!(native.stderr, node.stderr, "{strategy}");
+        assert_eq!(
+            fs::read(helper.scopes.local_path.join(".bitmap")).unwrap(),
+            fs::read(node_root.join(".bitmap")).unwrap(),
+            "{strategy}",
+        );
+        let relative = format!("{}/bar/foo/foo.js", helper.scopes.remote);
+        assert_eq!(
+            fs::read(helper.scopes.local_path.join(&relative)).unwrap(),
+            fs::read(node_root.join(&relative)).unwrap(),
+            "{strategy}",
+        );
+    }
+}
+
 fn assert_override_import_matches_node(helper: &Helper) {
     let node_root = helper.clone_workspace();
     let command = format!("import {}/bar/foo --override -x", helper.scopes.remote);

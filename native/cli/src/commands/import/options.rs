@@ -23,6 +23,7 @@ pub struct WriteOptions {
     pub skip_dependency_installation: bool,
     pub override_existing: bool,
     pub path: Option<String>,
+    pub merge_strategy: Option<String>,
 }
 
 /// `args` starts with the command name.
@@ -103,6 +104,7 @@ fn fetch(ids: Vec<String>, flags: &[&str]) -> Option<Options> {
             skip_dependency_installation: false,
             override_existing: false,
             path: None,
+            merge_strategy: None,
         },
         lanes: lanes == 1,
         skip_write_config_files: false,
@@ -121,6 +123,10 @@ fn import(ids: Vec<String>, flags: &[&str], path: Option<String>) -> Option<Opti
         return None;
     }
     let objects_only = ids.is_empty() || has("--objects") || has("-o");
+    let merge_strategy = merge_strategy(flags)?;
+    if !valid_merge_mode(merge_strategy.as_deref(), &ids, objects_only, has("--override")) {
+        return None;
+    }
     if has("--override") && (objects_only || ids.iter().any(|id| has_wildcard(id))) {
         return None;
     }
@@ -136,11 +142,22 @@ fn import(ids: Vec<String>, flags: &[&str], path: Option<String>) -> Option<Opti
             skip_dependency_installation: has("--skip-dependency-installation") || has("-x"),
             override_existing: has("--override"),
             path,
+            merge_strategy,
         },
         lanes: false,
         skip_write_config_files: has("--skip-write-config-files"),
         include_deprecated: has("--include-deprecated"),
     })
+}
+
+fn valid_merge_mode(
+    strategy: Option<&str>,
+    ids: &[String],
+    objects_only: bool,
+    override_existing: bool,
+) -> bool {
+    strategy.is_none()
+        || !objects_only && ids.len() == 1 && !has_wildcard(&ids[0]) && !override_existing
 }
 
 fn valid_path(path: Option<&str>, ids: &[String], objects_only: bool) -> bool {
@@ -164,7 +181,23 @@ fn valid_import_flags(flags: &[&str]) -> bool {
     !both
         && flags
             .iter()
-            .all(|flag| allowed.contains(flag))
+            .all(|flag| {
+                allowed.contains(flag)
+                    || matches!(*flag, "--merge=manual" | "--merge=ours" | "--merge=theirs")
+            })
+}
+
+fn merge_strategy(flags: &[&str]) -> Option<Option<String>> {
+    let mut strategy = None;
+    for flag in flags {
+        if let Some(value) = flag.strip_prefix("--merge=") {
+            if strategy.is_some() {
+                return None;
+            }
+            strategy = Some(value.to_owned());
+        }
+    }
+    Some(strategy)
 }
 
 /// `hasWildcard`.
@@ -203,6 +236,7 @@ impl Options {
             "skipDependencyInstallation": self.write.skip_dependency_installation,
             "overrideExisting": self.write.override_existing,
             "path": self.write.path,
+            "mergeStrategy": self.write.merge_strategy,
             "lanes": self.lanes,
             "components": self.operation == "fetch" && !self.lanes,
         })

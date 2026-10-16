@@ -19,6 +19,7 @@ pub struct Details {
     status: String,
     deprecated: bool,
     removed: bool,
+    conflicts: Vec<String>,
 }
 
 /// The engine's receipt, validated: the imported ids and their details.
@@ -88,13 +89,17 @@ fn details_row(row: &Value) -> io::Result<Details> {
     let status = text(map.get("status"))?;
     let latest = map.get("latestVersion").unwrap_or(&Value::Null);
     let removed = map.get("removed");
+    let conflicts = conflict_paths(map.get("filesStatus"))?;
     let valid = matches!(status, "added" | "updated" | "up to date")
         && versions.len() <= 4096
         && versions
             .iter()
             .all(|version| version.len() <= 256)
         && (latest.is_null() || latest.is_string())
-        && map.get("filesStatus") == Some(&Value::Null)
+        && map
+            .get("filesStatus")
+            .and_then(Value::as_object)
+            .is_none_or(|files| files.len() == conflicts.len())
         && map
             .get("missingDeps")
             .and_then(Value::as_array)
@@ -111,7 +116,23 @@ fn details_row(row: &Value) -> io::Result<Details> {
         status: status.to_string(),
         deprecated: map.get("deprecated") == Some(&Value::Bool(true)),
         removed: removed == Some(&Value::Bool(true)),
+        conflicts,
     })
+}
+
+fn conflict_paths(value: Option<&Value>) -> io::Result<Vec<String>> {
+    match value {
+        Some(Value::Null) => Ok(Vec::new()),
+        Some(Value::Object(files)) if files.len() <= 4096 => Ok(files
+            .iter()
+            .filter_map(|(path, status)| {
+                (status == "manual" && !path.is_empty() && path.len() <= 4096).then_some(
+                    path.clone(),
+                )
+            })
+            .collect()),
+        _ => Err(decline("native inbound details")),
+    }
 }
 
 impl Receipt {
@@ -230,6 +251,7 @@ fn import_item(format: &Formatter, id: &Id, details: &Details) -> Option<String>
         chalk.green(&details.status),
         chalk.cyan(&id.without_version()),
         version_output(id, details),
+        conflict_output(chalk, details),
         format!("{deprecated}{removed}"),
     ];
     let line = parts
@@ -238,6 +260,18 @@ fn import_item(format: &Formatter, id: &Id, details: &Details) -> Option<String>
         .collect::<Vec<_>>()
         .join(" ");
     Some(Formatter::item_with(&chalk.dim(&line), &symbol))
+}
+
+fn conflict_output(chalk: Chalk, details: &Details) -> String {
+    if details.conflicts.is_empty() {
+        return String::new();
+    }
+    let names = details.conflicts
+        .iter()
+        .map(|name| chalk.bold(name))
+        .collect::<Vec<_>>()
+        .join(", ");
+    format!("(the following files were saved with conflicts {names}) ")
 }
 
 /// The new versions and the version in use.
