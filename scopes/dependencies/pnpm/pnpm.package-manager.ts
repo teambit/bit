@@ -23,6 +23,7 @@ import { ServerSendOutStream } from '@teambit/legacy.logger';
 import { join } from 'path';
 import {
   convertLockfileToGraph,
+  markOptionalOnlyEntries,
   convertGraphToLockfile,
   init as initLockfileDepsGraphConverter,
 } from './lockfile-deps-graph-converter';
@@ -100,6 +101,8 @@ export class PnpmPackageManager implements PackageManager {
       registries?: Registries;
       proxyConfig?: PackageManagerProxyConfig;
       networkConfig?: PackageManagerNetworkConfig;
+      /** The install's `excludeLinksFromLockfile`, recorded in the restored lockfile's settings. */
+      excludeLinksFromLockfile?: boolean;
     }
   ) {
     await initLockfileDepsGraphConverter();
@@ -113,6 +116,9 @@ export class PnpmPackageManager implements PackageManager {
     const graphLockfile: LockfileFile = await convertGraphToLockfile(dependenciesGraph, {
       ...opts,
       resolve,
+      onComponentPkgDropped: (pkgId, reason) => {
+        this.logger.debug(`the lockfile restored from the dependencies graph leaves out ${pkgId}: ${reason}`);
+      },
     });
     const nodeApi = loadNodeApi();
     // Merge the graph-derived subset into any existing wanted lockfile rather than
@@ -121,6 +127,14 @@ export class PnpmPackageManager implements PackageManager {
     // locked version must be preserved so pnpm doesn't re-resolve it to a newer
     // registry version.
     const existingLockfile = await nodeApi.readLockfile<LockfileFile>({ dir: opts.rootDir });
+    // Whether the lockfile lists `link:` dependencies is the install's choice,
+    // not the resolution's. The graph carries the setting of the workspace it
+    // was saved in, which excludes links, and an install that includes them
+    // (fusepm does) would reject the restored lockfile over that alone. Both
+    // sides take the install's value before the merge compares their settings,
+    // so a difference in it alone does not cost the settings block.
+    applyInstallLinkSetting(graphLockfile, opts.excludeLinksFromLockfile);
+    if (existingLockfile) applyInstallLinkSetting(existingLockfile, opts.excludeLinksFromLockfile);
     const mergedLockfile = existingLockfile
       ? mergeGraphLockfileIntoExisting(existingLockfile, graphLockfile)
       : graphLockfile;
@@ -174,6 +188,7 @@ export class PnpmPackageManager implements PackageManager {
           proxyConfig,
           networkConfig,
           cacheDir: config.cacheDir,
+          excludeLinksFromLockfile: installOptions.excludeLinksFromLockfile ?? true,
         });
       } catch (error) {
         this.logger.error((error as Error).message);
@@ -673,6 +688,8 @@ export function mergeGraphLockfileIntoExisting(existing: LockfileFile, graph: Lo
     };
   }
   pruneUnreachableLockfileEntries(merged);
+  // The merged importers decide which entries only optional edges reach.
+  markOptionalOnlyEntries(merged);
   return merged;
 }
 
@@ -700,6 +717,16 @@ function mergeEntryRecords<T extends object>(
   return merged;
 }
 
+/**
+ * Record the install's `excludeLinksFromLockfile` in a lockfile's settings,
+ * when it records settings at all. See `dependenciesGraphToLockfile`.
+ */
+export function applyInstallLinkSetting(lockfile: LockfileFile, excludeLinksFromLockfile?: boolean): void {
+  if (lockfile.settings && excludeLinksFromLockfile != null) {
+    lockfile.settings.excludeLinksFromLockfile = excludeLinksFromLockfile;
+  }
+}
+
 function pruneUnreachableLockfileEntries(lockfile: LockfileFile): void {
   const reachablePackages = new Set<string>();
   const reachableSnapshots = new Set<string>();
@@ -717,7 +744,9 @@ function pruneUnreachableLockfileEntries(lockfile: LockfileFile): void {
       if (!snapshot) continue;
       for (const depType of ['dependencies', 'optionalDependencies'] as const) {
         for (const [name, ref] of Object.entries(snapshot[depType] ?? {}) as Array<[string, string]>) {
-          if (ref.startsWith('link:') || ref.startsWith('file:')) continue;
+          // A `file:` ref names a workspace component's own snapshot, which
+          // is reachable through it like any other. A `link:` ref has none.
+          if (ref.startsWith('link:')) continue;
           stack.push(`${name}@${ref}`);
         }
       }
@@ -729,7 +758,7 @@ function pruneUnreachableLockfileEntries(lockfile: LockfileFile): void {
         [string, { version?: string } | string]
       >) {
         const version = typeof dep === 'string' ? dep : dep.version;
-        if (!version || version.startsWith('link:') || version.startsWith('file:')) continue;
+        if (!version || version.startsWith('link:')) continue;
         visit(`${name}@${version}`);
       }
     }

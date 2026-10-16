@@ -22,6 +22,8 @@ import type { DedupedDependencies } from './deduping';
 import { dedupeDependencies, getEmptyDedupedDependencies } from './deduping';
 import type { ManifestToJsonOptions, ManifestDependenciesObject, DepObjectValue } from './manifest';
 import { updateDependencyVersion } from './update-dependency-version';
+import type { DependenciesGraph } from '@teambit/objects';
+import { applyDependenciesGraph } from './dependencies-from-graph';
 import { WorkspaceManifest } from './workspace-manifest';
 
 export type DepsFilterFn = (dependencies: DependencyList) => DependencyList;
@@ -41,6 +43,12 @@ export type CreateFromComponentsOptions = {
   includeAllEnvPeers?: boolean;
   hasRootComponents?: boolean;
   excludeExtensionsDependencies?: boolean;
+  /**
+   * Each component's own dependencies graph, by component id. A component
+   * with one declares its dependencies at the versions the graph resolved
+   * them to. See `applyDependenciesGraph`.
+   */
+  dependenciesGraphs?: Map<string, DependenciesGraph>;
 };
 
 const DEFAULT_CREATE_OPTIONS: CreateFromComponentsOptions = {
@@ -79,6 +87,7 @@ export class WorkspaceManifestFactory {
       referenceLocalPackages: optsWithDefaults.referenceLocalPackages && hasRootComponents,
       includeAllEnvPeers: optsWithDefaults.includeAllEnvPeers,
       rootDependencies: hasRootComponents ? rootPolicy.toManifest().dependencies : undefined,
+      dependenciesGraphs: optsWithDefaults.dependenciesGraphs,
     });
     let dedupedDependencies = getEmptyDedupedDependencies();
     if (hasRootComponents) {
@@ -391,6 +400,7 @@ export class WorkspaceManifestFactory {
       includeAllEnvPeers,
       rootDependencies,
       rootPolicy,
+      dependenciesGraphs,
     }: {
       dependencyFilterFn?: DepsFilterFn;
       filterComponentsFromManifests?: boolean;
@@ -399,6 +409,7 @@ export class WorkspaceManifestFactory {
       includeAllEnvPeers?: boolean;
       rootDependencies?: Record<string, string>;
       rootPolicy?: WorkspacePolicy;
+      dependenciesGraphs?: Map<string, DependenciesGraph>;
     }
   ): Promise<ComponentDependenciesMap> {
     const packageNames = components.map((component) => this.dependencyResolver.getPackageName(component));
@@ -497,6 +508,29 @@ export class WorkspaceManifestFactory {
             peerDepsForManifest['react-dom'] = envPeerDependencies['react-dom'];
           }
         }
+      }
+
+      // The component's graph records what it was resolved and tested with.
+      // A capsule that declares those versions is satisfied by the lockfile
+      // restored from the same graph, so its install needs no resolution. The
+      // components installed alongside are linked, and the core packages the
+      // install removes stay out, whatever the graph holds for them.
+      const dependenciesGraph = dependenciesGraphs?.get(component.id.toString());
+      if (dependenciesGraph && !dependenciesGraph.isEmpty()) {
+        const applied = applyDependenciesGraph({
+          graph: dependenciesGraph,
+          declared: {
+            ...depManifest,
+            dependencies: { ...unresolvedRuntimeMissingRootDeps, ...depManifest.dependencies },
+            devDependencies: { ...unresolvedDevMissingRootDeps, ...depManifest.devDependencies },
+          },
+          envPeers: peerDepsForManifest,
+          exclude: new Set([...packageNames, '@teambit/legacy', '@teambit/harmony']),
+        });
+        depManifest.dependencies = applied.dependencies;
+        depManifest.devDependencies = applied.devDependencies;
+        depManifest.optionalDependencies = applied.optionalDependencies;
+        peerDepsForManifest = applied.envPeers;
       }
 
       depManifest.dependencies = {
