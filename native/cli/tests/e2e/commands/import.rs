@@ -731,6 +731,58 @@ fn file_remote_wildcards_filter_and_report_empty_matches_like_node() {
     }
 }
 
+#[test]
+fn imported_dependency_traversal_matches_node() {
+    let helper = chain();
+    helper.re_init_workspace();
+    helper.add_remote_scope();
+    if let Some(destination) = std::env::var_os("BIT_NATIVE_IMPORT_DEPS_FIXTURE") {
+        let destination = std::path::PathBuf::from(destination);
+        assert!(!destination.exists());
+        fs::create_dir_all(&destination).unwrap();
+        setup::copy_dir(&helper.scopes.local_path, &destination.join("workspace"));
+        setup::copy_dir(&helper.scopes.remote_path, &destination.join("remote"));
+    }
+    let baseline = helper.clone_workspace();
+    for (root, flags) in [
+        ("comp1@0.0.1", "--dependencies --dependencies-depth 1"),
+        ("comp1@0.0.1", "--dependencies --dependencies-depth 2"),
+        ("comp1@0.0.1", "--dependencies"),
+        ("comp1@0.0.1", "--dependencies-head"),
+        ("comp1@0.0.1", "--dependencies-head --dependencies-depth 1"),
+        ("comp1", "--dependencies --dependencies-depth 1"),
+    ] {
+        helper.get_cloned_workspace(&baseline);
+        let node_root = helper.clone_workspace();
+        let command = format!("import {}/{root} {flags} -x", helper.scopes.remote);
+        let node = Helper::cmd_in_with(&node_root, &command, &[("BIT_NATIVE", OsStr::new("off"))]);
+        assert!(node.status.success(), "{command}: {}", combined(&node));
+        let native = helper.native_run(&command);
+        assert!(native.native, "{command}: {}", native.trace);
+        assert_eq!(native.status.code(), node.status.code(), "{command}");
+        assert_eq!(
+            without_progress_timing(&native.stdout),
+            without_progress_timing(&node.stdout),
+            "{command}",
+        );
+        assert_eq!(native.stderr, node.stderr, "{command}");
+        assert_eq!(
+            fs::read(helper.scopes.local_path.join(".bitmap")).unwrap(),
+            fs::read(node_root.join(".bitmap")).unwrap(),
+            "{command}",
+        );
+        for number in 1..=4 {
+            let relative = format!("{}/comp{number}/index.js", helper.scopes.remote);
+            let native_file = helper.scopes.local_path.join(&relative);
+            let node_file = node_root.join(&relative);
+            assert_eq!(native_file.exists(), node_file.exists(), "{command}: {relative}");
+            if native_file.exists() {
+                assert_eq!(fs::read(native_file).unwrap(), fs::read(node_file).unwrap());
+            }
+        }
+    }
+}
+
 /// Source-suite cases that may still delegate when installation or unsupported
 /// component layouts are involved: authored components, some merge layouts,
 /// and dependency traversal flags.

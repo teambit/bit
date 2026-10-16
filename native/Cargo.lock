@@ -449,6 +449,7 @@ dependencies = [
  "bit-dependency-scanner",
  "flate2",
  "futures-util",
+ "node-semver",
  "rayon",
  "regress",
  "ryu-js",

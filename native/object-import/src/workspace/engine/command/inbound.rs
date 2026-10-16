@@ -12,9 +12,12 @@ use std::{
     io,
     path::{Path, PathBuf},
 };
+mod dependencies;
 mod details;
 mod lanes;
+mod progress;
 mod remote;
+mod validation;
 mod write;
 
 #[cfg(test)]
@@ -58,8 +61,8 @@ struct Options {
     skip_dependency_installation: bool,
     #[serde(flatten)]
     resolution: Resolution,
-    #[serde(default)]
-    path: Option<String>,
+    #[serde(flatten)]
+    dependencies: Traversal,
     lanes: bool,
     components: bool,
 }
@@ -71,6 +74,19 @@ struct Resolution {
     override_existing: bool,
     #[serde(default)]
     merge_strategy: Option<String>,
+    #[serde(default)]
+    path: Option<String>,
+}
+
+#[derive(Default, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct Traversal {
+    #[serde(default)]
+    import_dependencies: bool,
+    #[serde(default)]
+    import_head_dependencies: bool,
+    #[serde(default)]
+    dependencies_depth: Option<usize>,
 }
 
 /// `commandInboundList`: the remote listings of wildcard patterns, before
@@ -112,44 +128,88 @@ pub(super) struct Retained {
     workspace: Option<write::Prepared>,
 }
 
+struct ReceiptRoots<'a> {
+    roots: &'a [Target],
+    prefetched: &'a [Target],
+    head_dependencies: bool,
+}
+
 pub(in crate::workspace::engine) fn prepare(
     input: &Prepare,
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
     state.inbound = None;
-    validate(input)?;
+    validation::validate(input)?;
     if input.options.lanes {
         return lanes::prepare(input, state);
     }
-    let targets = targets(input)?;
-    let virtual_remotes = remote::objects(input, &targets)?;
-    let import = prepare_import(input, &targets, &virtual_remotes)?;
-    let workspace = if input.options.objects_only {
-        None
-    } else {
-        Some(write::prepare(
-            &input.root,
-            &targets,
-            &import,
-            input.bitmap_history_file_id.as_deref(),
-            write::Options {
-                override_existing: input.options.resolution.override_existing,
-                path: input.options.path.as_deref(),
-                install_requested: !input.options.skip_dependency_installation,
-                merge_strategy: input.options.resolution.merge_strategy.as_deref(),
-            },
-        )?)
-    };
+    let roots = targets(input)?;
+    let (targets, import) = prepare_targets(input, &roots)?;
+    let workspace = prepare_workspace(input, &targets, &import)?;
     state.sequence = state.sequence.wrapping_add(1);
     let token = format!("inbound-{}", state.sequence);
     let receipt = if input.operation == "status" {
         json!({"token":token,"importedIds":[],"progress":[],"refreshCount":import.main_refresh.count,"refreshObjects":import.main_refresh.objects})
     } else {
-        receipt(&input.root, &targets, &import, workspace.as_ref(), &token)?
+        let prefetched = if input.options.dependencies.dependencies_depth.is_some() {
+            roots.as_slice()
+        } else {
+            &[]
+        };
+        receipt(
+            &input.root,
+            &targets,
+            &import,
+            workspace.as_ref(),
+            &ReceiptRoots {
+                roots: &roots,
+                prefetched,
+                head_dependencies: input.options.dependencies.import_head_dependencies,
+            },
+            &token,
+        )?
     };
     let count = targets.len();
     state.inbound = Some(Retained { token, receipt: receipt.clone(), import, workspace });
     Ok((count, receipt))
+}
+
+fn prepare_targets(
+    input: &Prepare,
+    roots: &[Target],
+) -> io::Result<(Vec<Target>, command_import::PreparedImport)> {
+    let virtual_remotes = remote::objects(input, roots)?;
+    let initial = prepare_import(input, roots, &virtual_remotes)?;
+    let targets = dependencies::expand(input, roots, &initial)?;
+    if targets.len() == roots.len() {
+        return Ok((targets, initial));
+    }
+    let virtual_remotes = remote::objects(input, &targets)?;
+    let import = prepare_import(input, &targets, &virtual_remotes)?;
+    Ok((targets, import))
+}
+
+fn prepare_workspace(
+    input: &Prepare,
+    targets: &[Target],
+    import: &command_import::PreparedImport,
+) -> io::Result<Option<write::Prepared>> {
+    if input.options.objects_only {
+        return Ok(None);
+    }
+    write::prepare(
+        &input.root,
+        targets,
+        import,
+        input.bitmap_history_file_id.as_deref(),
+        write::Options {
+            override_existing: input.options.resolution.override_existing,
+            path: input.options.resolution.path.as_deref(),
+            install_requested: !input.options.skip_dependency_installation,
+            merge_strategy: input.options.resolution.merge_strategy.as_deref(),
+        },
+    )
+    .map(Some)
 }
 
 fn prepare_import(
@@ -179,23 +239,20 @@ fn receipt(
     targets: &[Target],
     import: &command_import::PreparedImport,
     workspace: Option<&write::Prepared>,
+    selection: &ReceiptRoots<'_>,
     token: &str,
 ) -> io::Result<Value> {
     let imported_ids = targets
         .iter()
         .map(|target| imported_identity(root, target, import))
         .collect::<io::Result<Vec<_>>>()?;
-    let details = details::details(root, targets, import, workspace)?;
-    let progress = import.progress
-        .iter()
-        .map(|row| {
-            json!({
-                "reason":row.reason,"ids":row.ids,
-                "components":row.components.len(),"objects":row.objects.len(),
-                "objectRequest":row.object_request,
-            })
-        })
-        .collect::<Vec<_>>();
+    let details = details::details(root, targets, import, workspace, selection.prefetched)?;
+    let progress = progress::rows(
+        import,
+        selection.roots,
+        !selection.prefetched.is_empty(),
+        selection.head_dependencies,
+    );
     Ok(json!({
         "token":token,"owner":"rust","importedIds":imported_ids,
         "importDetails":details,"progress":progress,
@@ -257,92 +314,6 @@ pub(in crate::workspace::engine) fn lane_updates(
         return Err(invalid("status inbound owner token"));
     }
     super::super::status_models::lane_updates::read(input, &retained.import.overlay, pool)
-}
-
-fn validate(input: &Prepare) -> io::Result<()> {
-    for path in
-        [&input.root, &input.home, &input.global_remotes_file, &input.transport.global_config_dir]
-    {
-        super::super::path(path)?;
-    }
-    if !input.transport.node_executable.is_absolute()
-        || input.transport.bit_version.is_empty()
-        || input.ids.len() > 4096
-    {
-        return Err(invalid("inbound command requires canonical lifecycle"));
-    }
-    if input.options.from_original_scope || !valid_operation(input) {
-        return Err(invalid("inbound command requires canonical lifecycle"));
-    }
-    validate_override(input)?;
-    validate_merge(input)?;
-    if input.options.lanes
-        && (input.ids.is_empty() || input.ids.len() > 32 || input.options.all_history)
-    {
-        return Err(invalid("inbound lanes require explicit IDs"));
-    }
-    if !valid_write_mode(input) || input.root.join(".bitTmp").try_exists()? {
-        return Err(invalid("inbound command requires canonical lifecycle"));
-    }
-    Ok(())
-}
-fn validate_override(input: &Prepare) -> io::Result<()> {
-    if input.options.resolution.override_existing
-        && (input.operation != "import"
-            || input.options.objects_only
-            || input.ids.is_empty())
-    {
-        return Err(invalid("inbound override requires explicit workspace import"));
-    }
-    if input.options.path.is_some()
-        && (input.operation != "import"
-            || input.options.objects_only
-            || input.ids.len() != 1)
-    {
-        return Err(invalid("inbound path requires one explicit workspace import"));
-    }
-    Ok(())
-}
-fn validate_merge(input: &Prepare) -> io::Result<()> {
-    let Some(strategy) = input.options.resolution.merge_strategy.as_deref() else {
-        return Ok(());
-    };
-    if input.operation != "import"
-        || input.options.objects_only
-        || input.ids.len() != 1
-        || input.options.resolution.override_existing
-        || !matches!(strategy, "manual" | "ours" | "theirs")
-    {
-        return Err(invalid("inbound merge requires one explicit workspace import"));
-    }
-    Ok(())
-}
-fn valid_operation(input: &Prepare) -> bool {
-    match input.operation.as_str() {
-        "fetch" => {
-            (input.options.components || input.options.lanes)
-                && input.options.components != input.options.lanes
-                && input.options.objects_only
-        }
-        "import" => !input.options.components,
-        "status" => {
-            input.options.objects_only
-                && !input.options.components
-                && !input.ids.is_empty()
-                && (input.options.all_history != input.options.lanes)
-        }
-        _ => false,
-    }
-}
-/// Objects-only imports write no bitmap history. A write keeps one; the caller
-/// installs dependencies after publication unless they are skipped.
-fn valid_write_mode(input: &Prepare) -> bool {
-    if input.options.objects_only {
-        !input.options.skip_dependency_installation
-            && input.bitmap_history_file_id.is_none()
-    } else {
-        input.bitmap_history_file_id.is_some()
-    }
 }
 
 fn targets(input: &Prepare) -> io::Result<Vec<Target>> {

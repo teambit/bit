@@ -34,7 +34,14 @@ pub(super) fn prepare(input: &Prepare, state: &mut State) -> io::Result<(usize, 
     let mut receipt = if input.operation == "status" {
         json!({"token":token,"importedIds":[],"progress":[],"refreshCount":targets.len()})
     } else {
-        receipt(&input.root, &targets, &import, None, &token)?
+        receipt(
+            &input.root,
+            &targets,
+            &import,
+            None,
+            &super::ReceiptRoots { roots: &[], prefetched: &[], head_dependencies: false },
+            &token,
+        )?
     };
     receipt["laneFetch"] = json!(true);
     if selection.lanes.len() > 1 {

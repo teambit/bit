@@ -111,19 +111,7 @@ fn render(
             .render_lane_groups(output, &counts, started)?;
         return Ok(());
     }
-    if let Some(progress) = &planned.progress {
-        // The wildcard listing already printed the first `importing components`.
-        if options.wildcards().is_empty() {
-            progress.render_inbound(
-                output,
-                options.operation == "fetch",
-                !options.ids.is_empty(),
-                false,
-            );
-        } else {
-            progress.render_inbound(output, false, false, true);
-        }
-    }
+    render_progress(planned, options, output);
     if let Some(installer) = installer {
         let ids = planned.receipt.ids.clone();
         if let Err(error) = installer.install(root, options.skip_write_config_files, &ids) {
@@ -141,6 +129,33 @@ fn render(
     Ok(())
 }
 
+fn render_progress(planned: &Planned, options: &options::Options, output: &Output) {
+    if let Some(progress) = &planned.progress {
+        // The wildcard listing already printed the first `importing components`.
+        if options.wildcards().is_empty() {
+            progress.render_inbound(
+                output,
+                options.operation == "fetch",
+                !options.ids.is_empty(),
+                options.write.dependencies.depth.is_some()
+                    && (options.write.dependencies.import_head_dependencies
+                        || options.ids
+                            .iter()
+                            .any(|id| !id.contains('@'))),
+                options.write.dependencies.depth.map(|_| planned.prefetch_count),
+            );
+        } else {
+            progress.render_inbound(
+                output,
+                false,
+                false,
+                true,
+                options.write.dependencies.depth.map(|_| planned.prefetch_count),
+            );
+        }
+    }
+}
+
 /// The engine's prepared import and what it prints.
 struct Planned {
     engine: Engine,
@@ -149,6 +164,7 @@ struct Planned {
     report: String,
     progress: Option<Progress>,
     chalk: Chalk,
+    prefetch_count: usize,
 }
 
 impl Planned {
@@ -173,7 +189,7 @@ impl Planned {
         };
         let rows = json!({ "bitmapCount": 0, "imports": prepared["progress"], "loads": [] });
         let progress = Progress::parse(Some(&rows))?;
-        Ok(Self { engine, prepared, receipt, report, progress, chalk })
+        Ok(Self { engine, prepared, receipt, report, progress, chalk, prefetch_count: ids.len() })
     }
 
     /// `commandInboundApply`: the publication must be the planned one.
@@ -253,6 +269,7 @@ pub(super) fn prepare_status_refresh(
             override_existing: false,
             path: None,
             merge_strategy: None,
+            dependencies: options::DependencyOptions::default(),
         },
         lanes: false,
         skip_write_config_files: false,
@@ -276,6 +293,7 @@ pub(super) fn prepare_status_forked_refresh(
             override_existing: false,
             path: None,
             merge_strategy: None,
+            dependencies: options::DependencyOptions::default(),
         },
         lanes: true,
         skip_write_config_files: false,

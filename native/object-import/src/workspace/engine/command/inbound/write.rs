@@ -375,7 +375,7 @@ fn unique_name(rows: &Map<String, Value>, name: &str) -> io::Result<()> {
     Ok(())
 }
 
-fn version(model: &Value, requested: &str) -> io::Result<(String, String)> {
+pub(super) fn version(model: &Value, requested: &str) -> io::Result<(String, String)> {
     let hash = if requested == "latest" {
         model["head"].as_str()
     } else if crate::merge_history::hash(requested).is_ok() {

@@ -50,6 +50,7 @@ pub(super) fn details(
     targets: &[Target],
     imported: &command_import::PreparedImport,
     workspace: Option<&write::Prepared>,
+    prefetched: &[Target],
 ) -> io::Result<Vec<Value>> {
     targets
         .iter()
@@ -58,7 +59,10 @@ pub(super) fn details(
             let model = model(root, imported, scope, &target.name)?;
             let id = format!("{scope}/{}", target.name);
             let conflicts = workspace.and_then(|workspace| workspace.conflicts(&id));
-            detail(root, scope, target, model.as_ref(), imported, conflicts)
+            let prefetched = prefetched
+                .iter()
+                .any(|root| root.scope == target.scope && root.name == target.name);
+            detail(root, scope, target, model.as_ref(), imported, conflicts, prefetched)
         })
         .collect()
 }
@@ -70,12 +74,13 @@ fn detail(
     model: &Value,
     imported: &command_import::PreparedImport,
     conflicts: Option<&[String]>,
+    prefetched: bool,
 ) -> io::Result<Value> {
     let versions = model["versions"].as_object().ok_or_else(|| invalid("inbound versions"))?;
     let previous = previous_versions(root, scope, &target.name)?;
     let added = versions
         .keys()
-        .filter(|key| !previous.contains(*key))
+        .filter(|key| !prefetched && !previous.contains(*key))
         .cloned()
         .collect::<Vec<_>>();
     let status = match (added.is_empty(), previous.is_empty()) {

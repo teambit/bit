@@ -106,7 +106,14 @@ impl Progress {
     /// Print the lines of `bit import` and `bit fetch` (`importer`): the
     /// latest heads, then the missing versions, which `importMany` fetches
     /// only when components are missing.
-    pub fn render_inbound(&self, output: &Output, fetch: bool, with_ids: bool, wildcard: bool) {
+    pub fn render_inbound(
+        &self,
+        output: &Output,
+        fetch: bool,
+        with_ids: bool,
+        wildcard: bool,
+        prefetch: Option<usize>,
+    ) {
         if fetch {
             output.status("fetching objects...");
         }
@@ -114,6 +121,14 @@ impl Progress {
         if with_ids {
             output.status("importing components");
         }
+        if let Some(count) = prefetch {
+            output.restart(&format!("importing {count} components"));
+            output.restart(&format!("successfully imported {count} components"));
+        }
+        self.render_inbound_rows(output, wildcard);
+    }
+
+    fn render_inbound_rows(&self, output: &Output, wildcard: bool) {
         // `importMany` is called with the ids the latest-heads import requested.
         let requested = self.imports
             .iter()
