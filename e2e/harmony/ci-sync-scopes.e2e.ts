@@ -262,13 +262,13 @@ describe('bit ci sync: lanes whose scopes differ from this repository', function
       expect(branchTipSha(LANE)).to.equal(tip);
     });
 
-    // A branch name carries no scope, so this resolves against `defaultScope`, mismatches the pointer,
-    // and reads `inherited-or-none` — the safe direction of the Stage-0 trade.
-    it('the same branch reached by NAME: should leave it alone rather than retire it', () => {
+    // A branch name carries no scope, but its committed `.bitmap` pointer does: the run resolves the
+    // branch against the foreign host and reads the pair as converged — never as "lane gone".
+    it('the same branch reached by NAME: should resolve it through its .bitmap pointer, converged and untouched', () => {
       const shaBefore = branchTipSha(LANE);
       const { output, exitCode } = syncRun(`--branch ${LANE}`);
       expect(exitCode, `bit ci sync output:\n${output}`).to.equal(0);
-      expect(output).to.include(`${LANE} -> noop`);
+      expect(output).to.include(`${LANE} -> noop (converged)`);
       expect(output).to.not.include('close-pr');
       expect(remoteBranchExists(LANE)).to.be.true;
       expect(branchTipSha(LANE)).to.equal(shaBefore);
@@ -299,6 +299,60 @@ describe('bit ci sync: lanes whose scopes differ from this repository', function
       expect(fileOnBranch(LANE, 'comp1/index.js')).to.include('hosted-elsewhere-snap');
       // The rival lane's content never reached the branch.
       expect(fileOnBranch(LANE, 'comp2/index.js')).to.not.include('rival-lane-snap');
+    });
+  });
+
+  // `--all` cannot see a lane another scope hosts unless `laneScopes` names that scope; once mirrored,
+  // the branch's `.bitmap` pointer is what lets a later `--all` find the lane again — including after
+  // the host archived it, with no `laneScopes` at all.
+  describe('--all discovers a lane hosted on another scope, and retires it once the host removes it', () => {
+    const LANE = 'discovered-elsewhere';
+    let hostScope: string;
+
+    before(() => {
+      helper.scopeHelper.setWorkspaceWithRemoteScope();
+      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope('-lane-host');
+      hostScope = scopeName;
+      helper.scopeHelper.addRemoteScope(scopePath);
+      helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
+      setupGitRemote();
+      setSyncConfig({ lanes: ['*'] });
+      setupComponentsAndInitialCommit();
+      createLaneWithSnap(
+        LANE,
+        { 'comp1/index.js': comp1Src('discovered-snap') },
+        'snap on a foreign-hosted lane',
+        `--scope ${hostScope}`
+      );
+    });
+
+    it('should list the host scope only when laneScopes names it, then mirror the lane from --all', () => {
+      const without = syncRun('--all');
+      expect(without.exitCode, `bit ci sync --all output:\n${without.output}`).to.equal(0);
+      expect(without.output).to.include('Reconciling 0 mapped lane(s)');
+      expect(remoteBranchExists(LANE)).to.be.false;
+
+      setSyncConfig({ lanes: ['*'], laneScopes: [hostScope] });
+      const { output, exitCode } = syncRun('--all');
+      expect(exitCode, `bit ci sync --all output:\n${output}`).to.equal(0);
+      expect(output).to.include(`Reconciling 1 mapped lane(s) of ${helper.scopes.remote}: ${hostScope}/${LANE}`);
+      expect(output).to.include(`${LANE} -> import-lane`);
+      expect(fileOnBranch(LANE, '.bitmap')).to.include(hostScope);
+      expect(fileOnBranch(LANE, 'comp1/index.js')).to.include('discovered-snap');
+      expect(branchTipMessage(LANE)).to.include(`sync lane ${hostScope}/${LANE}`);
+    });
+
+    it('should close the PR and delete the branch once the host removes the lane, with no laneScopes', () => {
+      helper.command.runCmd(`bit lane remove ${hostScope}/${LANE} --remote --force --silent`);
+      setSyncConfig({ lanes: ['*'] });
+      const { output, exitCode } = syncRun('--all');
+      expect(exitCode, `bit ci sync --all output:\n${output}`).to.equal(0);
+      // Found through the branch side alone, and resolved against the host its pointer names.
+      expect(output).to.include(`Reconciling 1 mapped lane(s) of ${helper.scopes.remote}: ${hostScope}/${LANE}`);
+      expect(output).to.include(`${LANE} -> close-pr`);
+      expect(output).to.include(`branch ${LANE} deleted`);
+      expect(remoteBranchExists(LANE)).to.be.false;
     });
   });
 });

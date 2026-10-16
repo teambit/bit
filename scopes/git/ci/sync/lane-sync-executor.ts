@@ -1545,7 +1545,11 @@ export class LaneSyncExecutor {
     return undefined;
   }
 
-  private async fetchOnce() {
+  /**
+   * Fetch `origin`'s heads once per run. Public so enumeration can read the branches' committed
+   * `.bitmap` lane pointers before the first lane is visited; the lanes then reuse the same fetch.
+   */
+  async fetchOnce() {
     if (this.fetched) return;
     await fetchRemoteHeads();
     this.fetched = true;

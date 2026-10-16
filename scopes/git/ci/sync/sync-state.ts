@@ -223,6 +223,15 @@ export function parseDevCommitCount(raw: string): boolean {
 }
 
 /**
+ * The scope-qualified lane id `origin/<branch>`'s committed `.bitmap` points at, or undefined (no
+ * pointer, an unexported one, or an unreadable file). Assumes `git fetch origin` already ran. Fail-safe:
+ * every failure answers undefined, which resolves the branch against `defaultScope` as before.
+ */
+export async function readBranchLanePointer(branch: string, defaultScope: string): Promise<string | undefined> {
+  return parseBranchBitmap(await readFileAtRef(`origin/${branch}`, BIT_MAP), defaultScope)?.laneIdStr;
+}
+
+/**
  * Read a remote branch's sync state from its committed `.bitmap`. Assumes `git fetch origin` already ran.
  * `--first-parent` is a correctness requirement: `git log` orders across all parents, so a `.bitmap`
  * change that arrived through a merge would otherwise be picked as this branch's own state commit.
