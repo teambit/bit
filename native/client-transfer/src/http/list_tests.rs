@@ -81,6 +81,33 @@ fn lists_a_remote_scope_with_node_fetch_headers() {
 }
 
 #[test]
+fn lists_remote_lanes_with_node_projection() {
+    let (url, server) = serve_once(
+        r#"{"data":{"lanes":{"list":[{"id":{"name":"dev","scope":"acme.ui"},"components":[{"name":"button","scope":"acme.ui","version":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}]},{"id":{"name":"main","scope":"acme.ui"},"components":[]}]}}}"#,
+    );
+    let network = Network::new(&GlobalConfig::new(), "1.0.0", Some("local"), None).unwrap();
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+    let lanes = runtime
+        .block_on(network.list_lanes(&url, None))
+        .unwrap();
+    let request = server.join().unwrap();
+    assert!(request.starts_with("POST /graphql "), "{request}");
+    assert!(request.contains("x-verb: read\r\n"), "{request}");
+    assert!(request.contains("laneComponentIds"), "{request}");
+    assert_eq!(
+        lanes[0],
+        serde_json::json!({
+            "id": {"name":"dev","scope":"acme.ui"},
+            "components": [{"id":"acme.ui/button@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","head":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}],
+        }),
+    );
+    assert_eq!(lanes[1]["id"]["name"], "main");
+}
+
+#[test]
 fn a_list_error_is_reported() {
     let (url, server) =
         serve_once(r#"{"errors":[{"message":"access denied"}],"data":{"scope":null}}"#);

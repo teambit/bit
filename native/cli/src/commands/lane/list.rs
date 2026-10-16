@@ -6,7 +6,7 @@
 //! deleted components run on the Node.js CLI.
 
 pub(super) use metadata::components_report;
-pub(super) use remote::read as read_remote;
+pub(super) use remote::{http as read_http, project as project_http, read as read_remote};
 
 use crate::{
     commands::{
@@ -112,11 +112,10 @@ pub(super) fn run(args: &[OsString], list_args: &[&str]) -> io::Result<Outcome> 
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".to_string()));
     };
-    let read = match remote {
-        Some(scope) => remote::read(&root, scope, merged.is_some()),
-        None => read_with_merge(&root, merged.is_some()),
-    };
-    let (lanes, current) = match read {
+    if let Some(scope) = remote {
+        return remote::run(&root, args, scope, json, details, merged);
+    }
+    let (lanes, current) = match read_with_merge(&root, merged.is_some()) {
         Ok(read) => read,
         Err(error) => return Ok(Outcome::Declined(format!("lane list: {error}"))),
     };
@@ -126,10 +125,7 @@ pub(super) fn run(args: &[OsString], list_args: &[&str]) -> io::Result<Outcome> 
     let report = Report {
         data: match merged {
             Some(only_merged) => merged::report(&lanes, only_merged, Chalk::detect(args)),
-            None => match remote {
-                Some(_) => remote::report(&lanes, &current.0, Chalk::detect(args), details),
-                None => report(&lanes, &current.0, Chalk::detect(args), details),
-            },
+            None => report(&lanes, &current.0, Chalk::detect(args), details),
         },
         code: 0,
         details: None,

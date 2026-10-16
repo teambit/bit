@@ -2,6 +2,8 @@
 //! with a tar response, `POST <url>/graphql` for the remote scope's component list, and
 //! symphony GraphQL for hub scope resolution.
 
+mod lane;
+
 use crate::{GlobalConfig, fetch::FetchOptions, invalid, tar::ObjectItem};
 use futures_util::StreamExt;
 use reqwest::{Certificate, Client, NoProxy, Proxy, RequestBuilder, Response};

@@ -4,6 +4,7 @@
 //! On a lane, a component's head is its head on the lane, when the lane has
 //! it (`getHeadRegardlessOfLane` after `populateLocalAndRemoteHeads`).
 
+pub(in crate::workspace::engine) mod http_lanes;
 use super::{Reader, index, invalid};
 use crate::read_budget::Budget;
 use bit_client_transfer::remotes::Remote;
@@ -124,20 +125,9 @@ pub(in crate::workspace::engine) fn lanes(request: &Lanes) -> io::Result<(usize,
 }
 
 fn remote_repository(request: &Lanes, scope: &str) -> io::Result<PathBuf> {
-    if scope.is_empty() || scope.contains('/') || scope == "." || scope == ".." {
-        return Err(invalid("list remote scope"));
-    }
-    let local = read_json_file(&request.root.join(".bit/scope.json"))?;
-    let host = local["remotes"][scope]
-        .as_str()
-        .map(str::to_owned)
-        .or_else(|| {
-            let path = request.global_remotes_file.as_ref()?;
-            let global = read_json_file(path).ok()?;
-            global[scope].as_str().map(str::to_owned)
-        })
-        .ok_or_else(|| invalid("list unconfigured remote"))?;
-    let Remote::File(path) = Remote::from_host(&host)? else {
+    let Remote::File(path) =
+        configured_remote(&request.root, scope, request.global_remotes_file.as_deref())?
+    else {
         return Err(invalid("list HTTP remote requires canonical adapter"));
     };
     super::super::path(&path)?;
@@ -148,6 +138,27 @@ fn remote_repository(request: &Lanes, scope: &str) -> io::Result<PathBuf> {
     Ok(path)
 }
 
+pub(super) fn configured_remote(
+    root: &Path,
+    scope: &str,
+    global_remotes_file: Option<&Path>,
+) -> io::Result<Remote> {
+    if scope.is_empty() || scope.contains('/') || scope == "." || scope == ".." {
+        return Err(invalid("list remote scope"));
+    }
+    let local = read_json_file(&root.join(".bit/scope.json"))?;
+    let host = local["remotes"][scope]
+        .as_str()
+        .map(str::to_owned)
+        .or_else(|| {
+            let path = global_remotes_file?;
+            let global = read_json_file(path).ok()?;
+            global[scope].as_str().map(str::to_owned)
+        })
+        .ok_or_else(|| invalid("list unconfigured remote"))?;
+    Remote::from_host(&host)
+}
+
 fn read_bare_index(root: &Path) -> io::Result<Value> {
     let index = read_json_file(&root.join("index.json"))?;
     if !index["lanes"].is_array() || !index["components"].is_array() {
@@ -156,7 +167,7 @@ fn read_bare_index(root: &Path) -> io::Result<Value> {
     Ok(index)
 }
 
-fn read_json_file(path: &Path) -> io::Result<Value> {
+pub(super) fn read_json_file(path: &Path) -> io::Result<Value> {
     serde_json::from_slice(&Budget::new(4 * 1024 * 1024).read(File::open(path)?)?)
         .map_err(io::Error::other)
 }

@@ -1,8 +1,105 @@
 //! Client-side lane creation from a clean main workspace.
-use crate::helper::{Helper, parse, setup};
+use crate::helper::{Helper, config, parse, setup};
 use flate2::read::ZlibDecoder;
 use sha1::{Digest, Sha1};
-use std::{ffi::OsStr, fs, io::Read, path::Path};
+use std::{
+    ffi::OsStr,
+    fs,
+    io::Read,
+    net::{TcpListener, TcpStream},
+    path::Path,
+    process::{Child, Stdio},
+    thread,
+    time::Duration,
+};
+
+struct RemoteScopeServer(Child);
+
+impl Drop for RemoteScopeServer {
+    fn drop(&mut self) {
+        let _ = self.0.kill();
+        let _ = self.0.wait();
+    }
+}
+
+#[test]
+fn http_remote_lane_inspection_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("module.exports = () => 'foo';");
+    helper.add_component_bar_foo();
+    helper.run("tag bar/foo --message base");
+    helper.run("export");
+    helper.run("lane create dev");
+    helper.run("snap --unmodified --message lane");
+    helper.run("export");
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let port = listener.local_addr().unwrap().port();
+    drop(listener);
+    let server = setup::bit_command(setup::shared(), &helper.scopes.remote_path)
+        .args([
+            "start",
+            "--port",
+            &port.to_string(),
+            "--skip-ui-build",
+            "--no-browser",
+            "--skip-compilation",
+        ])
+        .env("BIT_NATIVE", "off")
+        .env("CI", "1")
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+        .unwrap();
+    let mut server = RemoteScopeServer(server);
+    let ready = (0..300).any(|_| {
+        if server.0.try_wait().unwrap().is_some() {
+            return false;
+        }
+        if TcpStream::connect(("127.0.0.1", port)).is_ok() {
+            return true;
+        }
+        thread::sleep(Duration::from_millis(100));
+        false
+    });
+    assert!(ready);
+    config::update_scope_json(&helper.scopes.local_path.join(".bit/scope.json"), |scope| {
+        scope["remotes"][&helper.scopes.remote] =
+            serde_json::json!(format!("http://127.0.0.1:{port}"));
+    });
+    if let Some(destination) = std::env::var_os("BIT_NATIVE_HTTP_LANE_BENCH_FIXTURE") {
+        let destination = std::path::PathBuf::from(destination);
+        assert!(!destination.exists());
+        fs::create_dir_all(&destination).unwrap();
+        setup::copy_dir(&helper.scopes.local_path, &destination.join("workspace"));
+        setup::copy_dir(&helper.scopes.remote_path, &destination.join("remote"));
+        setup::copy_dir(&setup::shared().root.join("home"), &destination.join("home"));
+        setup::copy_dir(&setup::shared().root.join("globals"), &destination.join("globals"));
+    }
+    for command in [
+        format!("lane list --remote {} --json", helper.scopes.remote),
+        format!("lane list --remote {}", helper.scopes.remote),
+        format!("lane list --remote {} --details", helper.scopes.remote),
+        format!("lane list --remote {} --merged --json", helper.scopes.remote),
+        format!("lane list --remote {} --merged", helper.scopes.remote),
+        format!("lane list --remote {} --not-merged", helper.scopes.remote),
+        "lane show dev --remote --json".to_owned(),
+        "lane show dev --remote".to_owned(),
+    ] {
+        let node = Helper::cmd_in_with(
+            &helper.scopes.local_path,
+            &command,
+            &[("BIT_NATIVE", OsStr::new("off"))],
+        );
+        assert!(node.status.success());
+        let native = helper.native_run(&command);
+        assert!(native.native, "{command}: {}", native.trace);
+        assert_eq!(native.status.code(), node.status.code(), "{command}");
+        assert_eq!(native.stdout, node.stdout, "{command}");
+        assert_eq!(native.stderr, node.stderr, "{command}");
+    }
+}
 
 #[test]
 fn configured_file_remote_lane_inspection_matches_node() {

@@ -1,6 +1,6 @@
 //! Native `bit lane show` for a local lane or main.
 
-use super::list::{LaneData, components_report, read, read_remote};
+use super::list::{LaneData, components_report, project_http, read, read_http, read_remote};
 use crate::{
     commands::{
         color::Chalk,
@@ -36,17 +36,32 @@ pub(super) fn show(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome>
         return Ok(Outcome::Declined("lane show name is absent or ambiguous".into()));
     };
     if json {
-        return emit_json(&root, args, &lane);
+        return match &lane {
+            Selected::File(lane) => emit_json(&root, args, &lane.json()),
+            Selected::Http(row) => emit_json(&root, args, row),
+        };
     }
+    let lane = match lane {
+        Selected::File(lane) => lane,
+        Selected::Http(row) => Box::new(project_http(&row)?),
+    };
     let report = Report { data: show_report(&lane, Chalk::detect(args))?, code: 0, details: None };
     workspace_command::execute_with(&root, args, "show", &report, |_| Ok(()))
 }
 
-fn select_lane(root: &Path, name: Option<&str>, remote: bool) -> io::Result<Option<LaneData>> {
+enum Selected {
+    File(Box<LaneData>),
+    Http(Value),
+}
+
+fn select_lane(root: &Path, name: Option<&str>, remote: bool) -> io::Result<Option<Selected>> {
     let (local, (current, _)) = read(root)?;
     let target = name.unwrap_or_else(|| current["name"].as_str().unwrap_or("main"));
     if !remote {
-        return Ok(find(&local, target).cloned());
+        return Ok(find(&local, target)
+            .cloned()
+            .map(Box::new)
+            .map(Selected::File));
     }
     let scope = target
         .split_once('/')
@@ -57,8 +72,21 @@ fn select_lane(root: &Path, name: Option<&str>, remote: bool) -> io::Result<Opti
                 .map(str::to_owned)
         });
     let scope = scope.ok_or_else(|| io::Error::other("remote lane identity"))?;
-    let (lanes, _) = read_remote(root, &scope, false)?;
-    Ok(find(&lanes, target).cloned())
+    if let Ok((lanes, _)) = read_remote(root, &scope, false) {
+        return Ok(find(&lanes, target)
+            .cloned()
+            .map(Box::new)
+            .map(Selected::File));
+    }
+    let name = target.rsplit_once('/').map_or(target, |(_, name)| name);
+    let rows = read_http(root, &scope, Some(name))?;
+    let lane = rows
+        .into_iter()
+        .find(|row| {
+            row["id"]["name"] == target
+                || format!("{scope}/{}", row["id"]["name"].as_str().unwrap_or_default()) == target
+        });
+    Ok(lane.map(Selected::Http))
 }
 
 fn parse<'a>(args: &[&'a str]) -> Option<(Option<&'a str>, bool, bool)> {
@@ -91,10 +119,10 @@ pub(super) fn find<'a>(lanes: &'a [LaneData], target: &str) -> Option<&'a LaneDa
     (matches.len() == 1).then(|| matches[0])
 }
 
-fn emit_json(root: &Path, args: &[OsString], lane: &LaneData) -> io::Result<Outcome> {
+fn emit_json(root: &Path, args: &[OsString], lane: &Value) -> io::Result<Outcome> {
     let history = History::start(root, args);
     let mut stdout = io::stdout().lock();
-    stdout.write_all(serde_json::to_string_pretty(&lane.json())?.as_bytes())?;
+    stdout.write_all(serde_json::to_string_pretty(lane)?.as_bytes())?;
     stdout.flush()?;
     history.end(true);
     Ok(Outcome::Exit(ExitCode::SUCCESS))
