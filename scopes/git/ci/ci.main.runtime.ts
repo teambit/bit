@@ -1840,13 +1840,20 @@ export class CiMain {
    * Compare lane Version extensions with main Version extensions for each component.
    * Any config differences (e.g. env-set, deps-set) are saved to .bitmap so they survive
    * the switch from lane to main and get included in the subsequent tag.
+   *
+   * Only components this workspace tracks are restored. A lane can carry components of several
+   * scopes while this workspace (e.g. a repository that mirrors one scope) tracks only its own slice
+   * in .bitmap; the rest are released by the repositories that track them, and have no .bitmap
+   * entry here to write config into.
    */
   private async restoreLaneConfigChanges(laneComponents: LaneComponent[]) {
     const scope = this.workspace.scope.legacyScope;
     const repo = scope.objects;
     let hasChanges = false;
 
-    const activeComponents = laneComponents.filter((c) => !c.isDeleted);
+    const activeComponents = laneComponents.filter(
+      (c) => !c.isDeleted && this.workspace.bitMap.getBitmapEntryIfExist(c.id, { ignoreVersion: true })
+    );
     await Promise.all(
       activeComponents.map(async (laneComp) => {
         const laneVersion = (await repo.load(laneComp.head)) as Version;
