@@ -18936,6 +18936,9 @@ importers:
       '@teambit/harmony':
         specifier: 0.4.12
         version: 0.4.12
+      '@teambit/legacy-bit-id':
+        specifier: 1.1.4
+        version: 1.1.4
       '@testing-library/react':
         specifier: ^14.3.1
         version: 14.3.1(@types/react@19.2.18)(react-dom@19.2.7)(react@19.2.7)
@@ -18988,6 +18991,9 @@ importers:
       '@types/mocha':
         specifier: 9.1.0
         version: 9.1.0
+      sinon:
+        specifier: 17.0.1
+        version: 17.0.1
 
   scopes/envs/ui/env-icon:
     dependencies:
@@ -68396,6 +68402,7 @@ snapshots:
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/harmony.testing.load-aspect': file:scopes/harmony/testing/load-aspect(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/legacy-bit-id': 1.1.4
       '@teambit/legacy.consumer-component': file:components/legacy/consumer-component(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/legacy.extension-data': file:components/legacy/extension-data
       '@teambit/toolbox.array.duplications-finder': file:scopes/toolbox/array/duplications-finder
@@ -68479,6 +68486,7 @@ snapshots:
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/harmony.testing.load-aspect': file:scopes/harmony/testing/load-aspect(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/legacy-bit-id': 1.1.4
       '@teambit/legacy.consumer-component': file:components/legacy/consumer-component(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/legacy.extension-data': file:components/legacy/extension-data
       '@teambit/toolbox.array.duplications-finder': file:scopes/toolbox/array/duplications-finder
@@ -68562,6 +68570,7 @@ snapshots:
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/harmony.testing.load-aspect': file:scopes/harmony/testing/load-aspect(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/legacy-bit-id': 1.1.4
       '@teambit/legacy.consumer-component': file:components/legacy/consumer-component(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/legacy.extension-data': file:components/legacy/extension-data
       '@teambit/toolbox.array.duplications-finder': file:scopes/toolbox/array/duplications-finder
@@ -68645,6 +68654,7 @@ snapshots:
       '@teambit/harmony': 0.4.12
       '@teambit/harmony.modules.runtimes': file:scopes/harmony/modules/runtimes
       '@teambit/harmony.testing.load-aspect': file:scopes/harmony/testing/load-aspect(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
+      '@teambit/legacy-bit-id': 1.1.4
       '@teambit/legacy.consumer-component': file:components/legacy/consumer-component(domexception@4.0.0)(graphql@15.8.0)(supports-color@9.4.0)
       '@teambit/legacy.extension-data': file:components/legacy/extension-data
       '@teambit/toolbox.array.duplications-finder': file:scopes/toolbox/array/duplications-finder
