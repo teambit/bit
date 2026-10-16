@@ -270,7 +270,7 @@ fn exported_lane_multiple_snaps_delete_matches_node() {
 }
 
 #[test]
-fn exported_lane_with_another_component_delegates_before_deletion() {
+fn exported_lane_with_dependent_pins_main_version_like_node() {
     let helper = Helper::new();
     exported_lane_setup(&helper, false);
     helper.output_file(
@@ -278,6 +278,11 @@ fn exported_lane_with_another_component_delegates_before_deletion() {
         &format!("module.exports = require('@{}/bar.foo');", helper.scopes.remote),
     );
     helper.run("add baz -i baz/qux");
+    compare_dependency_delete(&helper);
+}
+
+fn compare_dependency_delete(helper: &Helper) {
+    let before = fs::read(helper.scopes.local_path.join("workspace.jsonc")).unwrap();
     let node_root = helper.clone_workspace();
     let remote = helper.clone_remote_scope();
     let command = "delete bar/foo --lane --silent";
@@ -285,8 +290,7 @@ fn exported_lane_with_another_component_delegates_before_deletion() {
     let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
     helper.restore_remote_scope(&remote);
     let actual = helper.cmd(command);
-    assert!(!actual.native, "{}", actual.trace);
-    assert!(actual.trace.contains("lane dependency policy needs the Node CLI"), "{}", actual.trace);
+    assert!(actual.native, "{}", actual.trace);
     assert_eq!(actual.status.code(), node.status.code());
     assert_eq!(actual.stdout, node.stdout);
     assert_eq!(actual.stderr, node.stderr);
@@ -298,6 +302,116 @@ fn exported_lane_with_another_component_delegates_before_deletion() {
         );
     }
     assert_eq!(scope_objects(&helper.scopes.local_path), scope_objects(&node_root));
+    let history = helper.scopes.local_path.join(".bit/workspace-config-history");
+    let node_history = node_root.join(".bit/workspace-config-history");
+    assert_eq!(history.join("metadata.txt").exists(), node_history.join("metadata.txt").exists());
+    if node_history.join("metadata.txt").exists() {
+        for directory in [history, node_history] {
+            let metadata = fs::read_to_string(directory.join("metadata.txt")).unwrap();
+            let last = metadata.lines().last().unwrap();
+            let (file_id, reason) = last.split_once(' ').unwrap();
+            assert_eq!(reason, "delete (pin deleted-on-lane deps to main)");
+            assert_eq!(fs::read(directory.join("files").join(file_id)).unwrap(), before);
+        }
+    }
+}
+
+#[test]
+fn exported_lane_independent_component_delete_matches_node() {
+    let helper = Helper::new();
+    exported_lane_setup(&helper, false);
+    helper.output_file("baz/qux.js", "module.exports = 'independent';");
+    helper.run("add baz -i baz/qux");
+    compare_dependency_delete(&helper);
+}
+
+#[test]
+fn exported_lane_only_dependency_delete_without_main_tag_matches_node() {
+    let helper = Helper::new();
+    exported_lane_only_setup(&helper);
+    helper.output_file(
+        "baz/qux.js",
+        &format!("module.exports = require('@{}/bar.foo');", helper.scopes.remote),
+    );
+    helper.run("add baz -i baz/qux");
+    compare_dependency_delete(&helper);
+}
+
+#[test]
+fn exported_lane_delete_preserves_existing_peer_policy_like_node() {
+    let helper = Helper::new();
+    exported_lane_setup(&helper, false);
+    helper.output_file(
+        "baz/qux.js",
+        &format!("module.exports = require('@{}/bar.foo');", helper.scopes.remote),
+    );
+    helper.run("add baz -i baz/qux");
+    let path = helper.scopes.local_path.join("workspace.jsonc");
+    let mut document =
+        bit_install::jsonc::Document::parse(&fs::read_to_string(&path).unwrap()).unwrap();
+    document.set(
+        &["teambit.dependencies/dependency-resolver", "policy", "peerDependencies"],
+        &serde_json::json!({format!("@{}/bar.foo", helper.scopes.remote): "~0.0.1"}),
+    );
+    fs::write(path, format!("{document}\n")).unwrap();
+    compare_dependency_delete(&helper);
+}
+
+#[test]
+fn exported_lane_delete_uses_configured_save_prefix_like_node() {
+    let helper = Helper::new();
+    exported_lane_setup(&helper, false);
+    helper.output_file(
+        "baz/qux.js",
+        &format!("module.exports = require('@{}/bar.foo');", helper.scopes.remote),
+    );
+    helper.run("add baz -i baz/qux");
+    let path = helper.scopes.local_path.join("workspace.jsonc");
+    let mut document =
+        bit_install::jsonc::Document::parse(&fs::read_to_string(&path).unwrap()).unwrap();
+    document.set(
+        &["teambit.dependencies/dependency-resolver", "savePrefix"],
+        &serde_json::json!("~"),
+    );
+    fs::write(path, format!("{document}\n")).unwrap();
+    compare_dependency_delete(&helper);
+}
+
+#[test]
+fn exported_lane_dependency_delete_ci_color_output_matches_node() {
+    let helper = Helper::new();
+    exported_lane_setup(&helper, false);
+    helper.output_file(
+        "baz/qux.js",
+        &format!("module.exports = require('@{}/bar.foo');", helper.scopes.remote),
+    );
+    helper.run("add baz -i baz/qux");
+    let node_root = helper.clone_workspace();
+    let command = "delete bar/foo --lane --silent";
+    let node = Helper::cmd_in_with(
+        &node_root,
+        command,
+        &[
+            ("BIT_NATIVE", OsStr::new("off")),
+            ("CI", OsStr::new("1")),
+            ("FORCE_COLOR", OsStr::new("1")),
+            ("NODE_NO_WARNINGS", OsStr::new("1")),
+        ],
+    );
+    let native = Helper::cmd_in_with(
+        &helper.scopes.local_path,
+        command,
+        &[
+            ("CI", OsStr::new("1")),
+            ("FORCE_COLOR", OsStr::new("1")),
+            ("NODE_NO_WARNINGS", OsStr::new("1")),
+        ],
+    );
+    assert!(native.native, "{}", native.trace);
+    assert!(native.status.success());
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
 }
 
 #[test]

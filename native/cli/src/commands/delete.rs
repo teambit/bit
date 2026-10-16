@@ -1,12 +1,15 @@
 //! Native soft deletion of a tracked mainline or exported-lane component.
 
+mod policy;
+
 use super::{
     color::Chalk,
+    status,
     workspace_command::{self, format::Formatter, results::Report},
 };
 use crate::{commands::Command, native::Outcome, workspace};
 use bit_object_import::component_delete::{Plan, Scope};
-use std::{env, ffi::OsString, io};
+use std::{env, ffi::OsString, io, path::Path};
 
 pub const COMMAND: Command = Command { name: "delete", aliases: &[], run };
 
@@ -20,14 +23,15 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".into()));
     };
-    let plan = match if lane {
-        Plan::prepare_lane(&root, name, scope)
-    } else {
-        Plan::prepare(&root, name, scope)
-    } {
-        Ok(plan) => plan,
+    let prepared = match Prepared::prepare(&root, name, scope, lane) {
+        Ok(prepared) => prepared,
         Err(error) => return Ok(Outcome::Declined(format!("delete: {error}"))),
     };
+    execute(&root, args, prepared)
+}
+
+fn execute(root: &Path, args: &[OsString], mut prepared: Prepared) -> io::Result<Outcome> {
+    let plan = &prepared.plan;
     let format = Formatter::new(Chalk::detect(args));
     let items = if plan.entire() { format.item(plan.full_id()) } else { String::new() };
     let report = Report {
@@ -40,10 +44,56 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         details: None,
     };
     let file_id = workspace_command::file_id();
-    workspace_command::execute_with(&root, args, "delete", &report, |output| {
+    workspace_command::execute_with(root, args, "delete", &report, |output| {
+        prepared.validate(root)?;
         output.status("loading 1 component(s)");
-        plan.commit(&file_id)
+        if prepared.plan.policy_loaded() {
+            output.status("loading 1 component(s)");
+        }
+        prepared.plan.commit(&file_id)?;
+        if let Some(policy) = &prepared.policy
+            && policy.commit(root, &file_id).is_ok()
+        {
+            output.console(&policy.report(&format));
+        }
+        Ok(())
     })
+}
+
+struct Prepared {
+    plan: Plan,
+    graph: Option<status::DeleteGraph>,
+    policy: Option<policy::Policy>,
+}
+
+impl Prepared {
+    fn prepare(root: &Path, name: &str, scope: Scope, lane: bool) -> io::Result<Self> {
+        let graph = if lane && matches!(scope, Scope::Entire) && Plan::needs_dependency_graph(root)?
+        {
+            Some(status::DeleteGraph::read(root)?)
+        } else {
+            None
+        };
+        let plan = match &graph {
+            Some(graph) => {
+                Plan::prepare_lane_with_dependencies(root, name, scope, &graph.components)?
+            }
+            None if lane => Plan::prepare_lane(root, name, scope)?,
+            None => Plan::prepare(root, name, scope)?,
+        };
+        let policy = policy::Policy::prepare(root, plan.pin())?;
+        Ok(Self { plan, graph, policy })
+    }
+
+    fn validate(&mut self, root: &Path) -> io::Result<()> {
+        if let Some(graph) = &mut self.graph {
+            graph.validate()?;
+        }
+        if let Some(policy) = &self.policy {
+            policy.validate(root)?;
+        }
+        Ok(())
+    }
 }
 
 #[derive(Default)]

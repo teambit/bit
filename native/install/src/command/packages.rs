@@ -2,10 +2,11 @@
 //! resolution with the save prefix (`_addPackages`, `getVersionWithSavePrefix`)
 //! and the `workspace.jsonc` policy update (`addToRootPolicy`, `updateConfigPolicy`).
 
+pub(super) mod policy_edit;
+
 pub use names::{extract_package_name, is_valid_package_name};
 
 mod names;
-mod policy_edit;
 
 use super::session::{Loaded, Session};
 use crate::{engine, manifests::semver};

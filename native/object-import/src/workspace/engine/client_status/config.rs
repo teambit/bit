@@ -148,7 +148,7 @@ fn extensions(config: &Value) -> io::Result<()> {
         ("teambit.generator/generator", &["envs"][..]),
         (
             "teambit.dependencies/dependency-resolver",
-            &["policy", "allowScripts", "rootComponents", "linkCoreAspects"][..],
+            &["policy", "allowScripts", "rootComponents", "linkCoreAspects", "savePrefix"][..],
         ),
         ("teambit.workspace/workspace-config-files", &["enableWorkspaceConfigWrite"][..]),
         (PREVIEW, &["disabled"][..]),

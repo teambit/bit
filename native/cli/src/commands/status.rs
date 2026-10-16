@@ -17,6 +17,9 @@ pub(super) mod js;
 pub(super) mod policy;
 
 pub(super) mod collate;
+pub(super) use delete::DeleteGraph;
+
+mod delete;
 mod lane_refresh;
 mod loader;
 mod report;
