@@ -11,6 +11,7 @@ mod import;
 mod list;
 mod manage;
 mod options;
+mod remove;
 mod show;
 
 use super::{
@@ -38,6 +39,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Some("history") => history::run(args, &argv[2..]),
         Some("show") => show::show(args, &argv[2..]),
         Some("import") => import::run(args, &argv),
+        Some("remove") => remove::run(args, &argv[2..]),
         Some("merge") => merge(args, &argv),
         Some("merge-abort") => super::recovery::parse_lane(&argv[2..])
             .map_or_else(

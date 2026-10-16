@@ -105,6 +105,93 @@ fn lane_import_from_another_lane_matches_node() {
 }
 
 #[test]
+fn local_lane_remove_moves_lane_to_trash_like_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.create_component_bar_foo("module.exports = () => 'foo';");
+    helper.add_component_bar_foo();
+    helper.run("tag bar/foo --message base");
+    helper.run("export");
+    helper.run("lane create dev");
+    helper.run("snap --unmodified --message lane");
+    helper.run("switch main -x");
+    let node_root = helper.clone_workspace();
+    let before_index: serde_json::Value = serde_json::from_slice(
+        &fs::read(helper.scopes.local_path.join(".bit/index.json")).unwrap(),
+    )
+    .unwrap();
+    let hash = before_index["lanes"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|lane| lane["id"]["name"] == "dev")
+        .unwrap()["hash"]
+        .as_str()
+        .unwrap();
+    let command = "lane remove dev --silent --force";
+    let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    let native = helper.native_run(command);
+    assert!(native.native, "{}", native.trace);
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    assert!(native.status.success());
+    assert_eq!(
+        fs::read(helper.scopes.local_path.join(".bit/index.json")).unwrap(),
+        fs::read(node_root.join(".bit/index.json")).unwrap(),
+    );
+    let native_lanes = helper.native_run("lane list --json");
+    let node_lanes =
+        Helper::cmd_in_with(&node_root, "lane list --json", &[("BIT_NATIVE", OsStr::new("off"))]);
+    assert_eq!(parse(&native_lanes.stdout), parse(&node_lanes.stdout));
+    let trash = format!(".bit/trash/{}/{}", &hash[..2], &hash[2..]);
+    assert_eq!(
+        fs::read(helper.scopes.local_path.join(&trash)).unwrap(),
+        fs::read(node_root.join(trash)).unwrap(),
+    );
+    assert_eq!(
+        fs::read(helper.scopes.local_path.join(".bitmap")).unwrap(),
+        fs::read(node_root.join(".bitmap")).unwrap(),
+    );
+}
+
+#[test]
+fn local_lane_remove_merged_batch_matches_node() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    for name in ["first", "second"] {
+        helper.run(&format!("lane create {name}"));
+        helper.run("switch main -x");
+    }
+    let node_root = helper.clone_workspace();
+    let command = "lane remove first second --silent";
+    let node = Helper::cmd_in_with(&node_root, command, &[("BIT_NATIVE", OsStr::new("off"))]);
+    let native = helper.native_run(command);
+    assert!(native.native, "{}", native.trace);
+    assert_eq!(native.status.code(), node.status.code());
+    assert_eq!(native.stdout, node.stdout);
+    assert_eq!(native.stderr, node.stderr);
+    assert!(native.status.success());
+    assert_eq!(
+        fs::read(helper.scopes.local_path.join(".bit/index.json")).unwrap(),
+        fs::read(node_root.join(".bit/index.json")).unwrap(),
+    );
+}
+
+#[test]
+fn local_lane_remove_current_lane_declines_without_writing() {
+    let helper = Helper::new();
+    helper.set_workspace_with_remote_scope();
+    helper.run("lane create dev");
+    let before = fs::read(helper.scopes.local_path.join(".bit/index.json")).unwrap();
+    let command = "lane remove dev --silent --force";
+    let result = helper.cmd(command);
+    assert!(!result.native, "{}", result.trace);
+    assert!(!result.status.success());
+    assert_eq!(fs::read(helper.scopes.local_path.join(".bit/index.json")).unwrap(), before);
+}
+
+#[test]
 fn http_remote_lane_inspection_matches_node() {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();

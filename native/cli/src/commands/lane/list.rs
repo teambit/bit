@@ -202,7 +202,10 @@ pub(super) fn read(root: &Path) -> io::Result<(Vec<LaneData>, (Value, String))> 
     read_with_merge(root, false)
 }
 
-fn read_with_merge(root: &Path, merge_data: bool) -> io::Result<(Vec<LaneData>, (Value, String))> {
+pub(super) fn read_with_merge(
+    root: &Path,
+    merge_data: bool,
+) -> io::Result<(Vec<LaneData>, (Value, String))> {
     let scope = scope(root)?;
     let tracking = Tracking::read(&scope);
     let bitmap = bitmap::read(root)?;
