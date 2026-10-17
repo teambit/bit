@@ -111,10 +111,9 @@ impl Environments {
         aspects: &[String],
     ) -> io::Result<()> {
         if components.iter().any(|component| needs_facts(component, core, aspects)) {
-            let mut ids = components
+            let mut ids = aspects
                 .iter()
-                .flat_map(|component| component.config.keys())
-                .chain(aspects.iter())
+                .chain(components.iter().flat_map(|component| component.config.keys()))
                 .filter(|id| !core.contains(id) && !bit_install::policy::is_core_env(id))
                 .collect::<Vec<_>>();
             let mut seen = std::collections::HashSet::new();

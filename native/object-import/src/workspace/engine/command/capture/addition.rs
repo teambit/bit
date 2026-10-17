@@ -25,6 +25,7 @@ pub(in crate::workspace::engine::command) fn capture(
     Ok(Captured {
         added: true,
         hidden: false,
+        model_backed: false,
         target: comparison::Target {
             source_overlays: std::collections::HashMap::new(),
             source_overlay_root: None,

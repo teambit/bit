@@ -38,6 +38,17 @@ impl Engine {
 
     /// One request; a failed or skipped request is an error.
     pub fn request<Output: DeserializeOwned>(&mut self, input: &Value) -> io::Result<Output> {
+        let started = std::time::Instant::now();
+        let result = self.request_owned(input);
+        crate::trace::log(format!(
+            "engine {} took {} ms",
+            input["kind"].as_str().unwrap_or("request"),
+            started.elapsed().as_millis(),
+        ));
+        result
+    }
+
+    fn request_owned<Output: DeserializeOwned>(&mut self, input: &Value) -> io::Result<Output> {
         let body = serde_json::to_vec(input)?;
         if body.len() > MAX_REQUEST {
             return Err(io::Error::other("status input limit"));
@@ -94,4 +105,9 @@ pub(super) fn is_canonical(error: &io::Error) -> bool {
         cause = error.source();
     }
     false
+}
+
+/// Preserve a published command error without delegating the invocation again.
+pub(super) fn canonical_error(message: String) -> io::Error {
+    io::Error::other(CanonicalError(message))
 }

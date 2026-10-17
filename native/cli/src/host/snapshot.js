@@ -92,6 +92,7 @@ async function snapshotBuild({ stagedObjects, versions, params, directory }) {
     const visible = consumers.filter((consumer)=>workspace.consumer.bitMap.getComponentIfExist(consumer.id,{ignoreVersion:true}));
     const hidden = consumers.filter((consumer)=>!workspace.consumer.bitMap.getComponentIfExist(consumer.id,{ignoreVersion:true}));
     const components = [...await workspace.getManyByLegacy(visible),...await scope.getManyByLegacy(hidden)];
+    snapshotBuiltComponents = components;
     const builder = loaded.get('teambit.pipelines/builder');
     await scope.reloadAspectsWithNewVersion(consumers);
     const { builderDataMap } = await builder.tagListener(components.filter((component)=>!component.isDeleted()), {
@@ -139,6 +140,7 @@ async function registryPublished({ candidates }) {
   return {published:await Promise.all(candidates.map((candidate)=>query(candidate.packageName,candidate.version,candidate.registryUrl)))};
 }
 
+let snapshotBuiltComponents = [];
 async function snapshotPackageManifests({ plans }) {
   const loaded=await loadHarmony();
   const { ComponentID }=bitRequire('@teambit/component-id');
@@ -152,13 +154,14 @@ async function snapshotPackageManifests({ plans }) {
   const result=[];
   for(const plan of plans) {
     const id=ComponentID.fromObject(plan.manifest.componentId);
-    let component=statusComponents.find((candidate)=>candidate.id.toStringWithoutVersion()===plan.identity)??await scope.get(id);
+    const built=snapshotBuiltComponents.find((candidate)=>candidate.id.toStringWithoutVersion()===plan.identity);
+    let component=built??statusComponents.find((candidate)=>candidate.id.toStringWithoutVersion()===plan.identity)??await scope.get(id);
     if(!component)throw new Error(`package callback component was not hydrated: ${plan.identity}`);
-    if(component.__nativeRow) component=await hydrateStatusComponent({...component.__nativeRow,version:id.version});
+    if(!built && component.__nativeRow) component=await hydrateStatusComponent({...component.__nativeRow,version:id.version});
     component.id=component.id.changeVersion(id.version);
     component.state._consumer.version=id.version;
     if(plan.versionData) await snapshotBindMetadata(component,plan.versionData,loaded);
-    await statusApplyLoadCallbacks(component,{workspace:loaded.get('teambit.workspace/workspace'),envs:loaded.get('teambit.envs/envs'),resolver:loaded.get('teambit.dependencies/dependency-resolver')});
+    if(!built) await statusApplyLoadCallbacks(component,{workspace:loaded.get('teambit.workspace/workspace'),envs:loaded.get('teambit.envs/envs'),resolver:loaded.get('teambit.dependencies/dependency-resolver')});
     const {name,version,...rest}=plan.manifest;
     delete rest._bit_local;delete rest.source;
     const homepage=component.state._consumer._getHomepage();

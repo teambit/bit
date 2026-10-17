@@ -15,7 +15,7 @@ use std::io;
 
 /// `FILE_CHANGES_CHECKOUT_MSG`.
 pub const FILE_CHANGES: &str = "components with file changes";
-const RESULT_KEYS: [&str; 12] = [
+const RESULT_KEYS: [&str; 13] = [
     "components",
     "failedComponents",
     "version",
@@ -27,6 +27,7 @@ const RESULT_KEYS: [&str; 12] = [
     "newFromLane",
     "newFromLaneAdded",
     "workspaceConfigUpdateResult",
+    "configMergeResults",
     "newFromScope",
 ];
 

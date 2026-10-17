@@ -14,7 +14,8 @@ pub fn read(root: &Path, lane_hash: &str) -> io::Result<Value> {
         return Err(invalid());
     }
     let hash = hash(lane_hash);
-    let value = outbound::read_object(&root.join(".bit/objects"), &hash, "LaneHistory")?;
+    let value =
+        outbound::read_object(&crate::scope_path(root).join("objects"), &hash, "LaneHistory")?;
     // A rename or scope change preserves the Lane hash and the history object's
     // original name/scope, so only the stable identity can be checked here.
     if value["laneHash"] != lane_hash {

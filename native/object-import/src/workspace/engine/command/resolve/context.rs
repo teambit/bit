@@ -17,6 +17,7 @@ pub(super) fn prepare(
     validate_request(request)?;
     let mut proofs = control_proofs(request)?;
     let (mut context, imported) = metadata(request, pool)?;
+    context["callbackLifecycle"] = json!(request.options.callback_lifecycle);
     let ordinary: input::Prepare = serde_json::from_value(json!({"root":request.root,"home":request.home,
         "globalRemotesFile":request.global_remotes_file,"operation":"merge","options":{"skipDependencyInstallation":true,"pattern":request.options.pattern,"message":request.options.message},"dependencyGrammar":request.dependency_grammar})).map_err(io::Error::other)?;
     if request.ordinary_tag && !context["lane"]["current"].is_null() {
@@ -25,17 +26,7 @@ pub(super) fn prepare(
     load_models(request, pool, &mut context, &imported)?;
     super::super::setup::component_controls(&ordinary, &context, &mut proofs)?;
     validate_extensions(&context)?;
-    let pending = pending_rows(request)?;
-    pending_configuration(&mut context, &pending, request.ordinary_snap)?;
-    let targets = context["targets"]
-        .as_array()
-        .ok_or_else(|| invalid("resolve targets"))?
-        .clone();
-    let selected = if request.ordinary_snap {
-        Vec::new()
-    } else {
-        selection::select(&targets, &pending, None)?
-    };
+    let (targets, pending, selected) = selection_state(request, &mut context)?;
     let mut repository = repository::Repository::new(&request.root, Some(imported));
     bind_models(&context, &mut repository)?;
     context["resolveIssueHeads"] = super::issue_heads::capture(&context, &mut repository)?;
@@ -53,6 +44,28 @@ pub(super) fn prepare(
         history: history::State::default(),
     };
     Ok(initial(record, pending, selected, request))
+}
+
+fn selection_state(
+    request: &Prepare,
+    context: &mut Value,
+) -> io::Result<(Vec<Value>, Vec<Value>, Vec<String>)> {
+    let pending = pending_rows(request)?;
+    pending_configuration(
+        context,
+        &pending,
+        request.ordinary_snap || request.options.callback_lifecycle,
+    )?;
+    let targets = context["targets"]
+        .as_array()
+        .ok_or_else(|| invalid("resolve targets"))?
+        .clone();
+    let selected = if request.ordinary_snap {
+        Vec::new()
+    } else {
+        selection::select(&targets, &pending, None)?
+    };
+    Ok((targets, pending, selected))
 }
 
 fn initial(
@@ -89,13 +102,13 @@ fn metadata(
     pool: &rayon::ThreadPool,
 ) -> io::Result<(Value, command_import::PreparedImport)> {
     let bitmap = config::document(&request.root.join(".bitmap"))?;
-    let workspace = if request.ordinary_snap {
+    let workspace = if request.ordinary_snap || request.options.callback_lifecycle {
         crate::effective_workspace_configuration(&request.root, &request.home)?
     } else {
         config::document(&request.root.join("workspace.jsonc"))?
     };
     let settings = config::configuration_value(&request.root, &workspace, true)?;
-    let (structural, configs) = if request.ordinary_snap {
+    let (structural, configs) = if request.ordinary_snap || request.options.callback_lifecycle {
         recovery::bitmap::project_snapshot(&bitmap)?
     } else {
         recovery::bitmap::project(&bitmap)?
@@ -185,7 +198,7 @@ fn validate_request(request: &Prepare) -> io::Result<()> {
         return Err(invalid("resolve ordinary snapshot flags"));
     }
     if request.options.build
-        || !request.ordinary_snap
+        || !(request.ordinary_snap || request.options.callback_lifecycle)
             && (request.home.join(".bitrc.jsonc").try_exists()?
                 || request.root.join(".bitTmp").try_exists()?
                 || request.root.join("merge-conflict").try_exists()?)

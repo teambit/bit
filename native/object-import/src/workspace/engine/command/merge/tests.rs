@@ -17,7 +17,11 @@ fn select_options(distance: &Value, modified: bool, target_as_diverged: bool) ->
             model: Some(&model),
             incoming: &version,
             current: &version,
-            options: super::SelectionOptions { modified, target_as_diverged },
+            options: super::SelectionOptions {
+                modified,
+                target_as_diverged,
+                resolve_unrelated: None,
+            },
             lane: None,
             distance,
         })

@@ -16,13 +16,14 @@ pub(super) fn callbacks(
     selected: &Value,
     needs_snap: &[String],
     ignored: &Value,
+    resolving: bool,
     mut startup: Option<&mut crate::commands::status::autosync::Startup>,
 ) -> io::Result<()> {
     let selected = array(Some(selected), "snapshot issue selection")?
         .iter()
         .map(|id| text(Some(id)).map(str::to_owned))
         .collect::<io::Result<Vec<_>>>()?;
-    let result = callback_batch(resolved, rows, &selected, ignored);
+    let result = callback_batch(resolved, rows, &selected, ignored, resolving);
     if let Some(startup) = startup.as_mut() {
         super::lifecycle::callback_output(
             startup,
@@ -43,7 +44,7 @@ pub(super) fn callbacks(
         .cloned()
         .collect::<Vec<_>>();
     if !automatic.is_empty() {
-        let result = callback_batch(resolved, rows, &automatic, ignored);
+        let result = callback_batch(resolved, rows, &automatic, ignored, resolving);
         if let Some(startup) = startup.as_mut() {
             super::lifecycle::callback_output(
                 startup,
@@ -75,6 +76,7 @@ fn callback_batch(
     rows: &[Value],
     ids: &[String],
     ignored: &Value,
+    resolving: bool,
 ) -> io::Result<()> {
     let rows = ids
         .iter()
@@ -91,8 +93,11 @@ fn callback_batch(
             .filter(|name| !name.is_empty())
             .collect::<Vec<_>>()
     );
-    let rows =
+    let mut rows =
         crate::commands::status::capture::issue_callbacks(&context, resolved.capture, &rows)?;
+    if resolving {
+        display_ids(&mut rows, resolved.context);
+    }
     validate(&rows, ids, ignored)?;
     let messages = crate::commands::status::capture::snapshot_workspace_issues(
         resolved.capture,
@@ -136,7 +141,7 @@ pub(super) fn validate(rows: &[Value], selected: &[String], ignored: &Value) -> 
         if !blockers.is_empty() {
             components.push(format!(
                 "{}\n       {}\n",
-                chalk.underline(&chalk.cyan(id)),
+                chalk.underline(&chalk.cyan(row["displayId"].as_str().unwrap_or(id))),
                 issue_output(&blockers, chalk),
             ));
         }
@@ -148,4 +153,21 @@ pub(super) fn validate(rows: &[Value], selected: &[String], ignored: &Value) -> 
         "error: issues found with the following components\n\n{}\n\nto get the list of component-issues names and suggestions how to resolve them, run \"bit component-issues\".\n",
         components.join("\n"),
     )))
+}
+
+fn display_ids(rows: &mut [Value], context: &Value) {
+    for row in rows {
+        let target = context["targets"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .find(|target| target["identity"] == row["id"]);
+        if let Some(version) = target
+            .and_then(|target| target["version"].as_str())
+            .filter(|version| !version.is_empty())
+        {
+            row["displayId"] =
+                serde_json::json!(format!("{}@{version}", row["id"].as_str().unwrap()));
+        }
+    }
 }

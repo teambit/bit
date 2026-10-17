@@ -8,6 +8,7 @@ pub(in crate::commands) use quick::run as quick;
 
 mod context;
 mod facts;
+mod modes;
 mod quick;
 mod snapshot;
 
@@ -41,30 +42,6 @@ impl Environments {
             snapshot_loads: Vec::new(),
             checkout: false,
         }
-    }
-
-    pub(in crate::commands) fn for_snapshot_build(mut self, build: bool) -> Self {
-        self.snapshot = true;
-        self.snapshot_build = build;
-        self
-    }
-
-    pub(super) fn is_snapshot(&self) -> bool {
-        self.snapshot
-    }
-
-    pub(in crate::commands) fn for_checkout(mut self) -> Self {
-        self.checkout = true;
-        self
-    }
-
-    pub(super) fn is_checkout(&self) -> bool {
-        self.checkout
-    }
-
-    pub(in crate::commands) fn with_issue_facts(mut self, enabled: bool) -> Self {
-        self.issue_facts = enabled;
-        self
     }
 
     fn component_facts(

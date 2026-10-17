@@ -8,6 +8,7 @@ use std::{
     path::Path,
 };
 use transfer::receive;
+mod checkout;
 mod dependencies;
 mod lane;
 mod remote;

@@ -1,3 +1,4 @@
+mod checkout_import;
 mod checkout_lane;
 mod checkout_scope;
 use super::input::{Operation, Prepare};
@@ -58,6 +59,9 @@ fn prepare_checkout_import(
     context: &Value,
 ) -> io::Result<command_import::PreparedImport> {
     let targets = import_targets(request)?;
+    if let Some(imported) = checkout_import::lane(request, context, &targets)? {
+        return Ok(imported);
+    }
     let local_target = request.options.to
         .as_deref()
         .is_some_and(|to| {
@@ -139,7 +143,8 @@ pub(super) fn extend_models(
 fn validate(request: &Prepare) -> io::Result<()> {
     validate_revert(request)?;
     if request.defer_checkout_pattern
-        && (request.operation != Operation::Checkout || request.options.pattern.is_none())
+        && (!matches!(request.operation, Operation::Checkout | Operation::Merge)
+            || request.options.pattern.is_none())
     {
         return Err(invalid("command deferred checkout selection"));
     }
@@ -165,9 +170,7 @@ fn invalid_lifecycle_options(request: &Prepare) -> io::Result<bool> {
     let invalid_workspace_only = options.workspace_only
         && (request.operation != Operation::Checkout || options.to.as_deref() != Some("head"));
     let conflicting_forces = options.force_ours && options.force_theirs;
-    let interrupted = (!matches!(request.operation, Operation::Checkout | Operation::Switch)
-        && request.root.join(".bitTmp").try_exists()?)
-        || request.root.join("merge-conflict").try_exists()?;
+    let interrupted = request.root.join("merge-conflict").try_exists()?;
     Ok(!options.skip_dependency_installation
         || options.include_new_from_scope
             && (request.operation != Operation::Checkout || options.to.as_deref() != Some("head"))

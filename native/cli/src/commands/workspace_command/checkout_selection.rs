@@ -23,7 +23,8 @@ pub(super) struct Prepared<'a> {
 }
 
 pub(super) fn deferred(request: &Request<'_>) -> bool {
-    request.operation == "checkout"
+    matches!(request.operation, "checkout" | "merge")
+        && request.options.get("lane").is_none()
         && request.options["pattern"]
             .as_str()
             .is_some_and(|pattern| {
@@ -48,7 +49,7 @@ pub(super) fn select(
         return Ok((prepared.targets.to_vec(), Vec::new(), None));
     }
     let pattern = text(request.options.get("pattern"))?;
-    let pool = pool(prepared.targets, request.to);
+    let pool = pool(prepared.targets, request.to, request.operation);
     let Selected {
         targets: selected,
         loads,
@@ -78,10 +79,14 @@ pub(super) fn select(
     Ok((array(result.get("targets"), "checkout selected targets")?.to_vec(), loads, captured))
 }
 
-fn pool(targets: &[Value], to: Option<&str>) -> Vec<Value> {
+fn pool(targets: &[Value], to: Option<&str>, operation: &str) -> Vec<Value> {
     targets
         .iter()
-        .filter(|target| matches!(to, Some("head" | "reset")) || target["locallyRemoved"] != true)
+        .filter(|target| {
+            operation == "merge"
+                || matches!(to, Some("head" | "reset"))
+                || target["locallyRemoved"] != true
+        })
         .cloned()
         .collect()
 }

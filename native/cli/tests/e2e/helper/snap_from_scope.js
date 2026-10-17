@@ -17,6 +17,12 @@ const { SnappingAspect } = require(path.join(modules, '@teambit/snapping'));
     build: false,
     disableTagAndSnapPipelines: true,
   });
+  if (process.platform === 'win32') {
+    const { publishObjects } = require('./publish_objects');
+    const scope = await require(path.join(modules, '@teambit/legacy.scope')).loadScope(scopePath);
+    const remotePath = new URL(scope.scopeJson.remotes[laneId.split('/')[0]]);
+    await publishObjects(nodeCli, scopePath, require('node:url').fileURLToPath(remotePath), laneId);
+  }
 })().catch((error) => {
   console.error(error);
   process.exitCode = 1;

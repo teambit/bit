@@ -1,5 +1,10 @@
 //! Native component and lane merge abort through the workspace recovery plan.
 //! All validation and file restoration stay in the Rust workspace engine.
+mod failure;
+mod interactive;
+mod report;
+
+use report::format_result;
 
 #[cfg(test)]
 mod tests;
@@ -9,11 +14,12 @@ use super::{
     color::Chalk,
     engine::Engine,
     ids::Id,
-    install::confirm,
     installation::{self, Installer},
     status::{
+        autosync::Startup,
         cache,
         capture::{self, Capture},
+        environments,
         fresh::dependency_grammar,
         grammar,
         js::{array, decline, object, text},
@@ -115,19 +121,50 @@ pub(super) fn run(args: &[OsString], options: &Options) -> io::Result<Outcome> {
             }
         }
     };
-    let prepared = match Prepared::plan(&root, options) {
+    if options.kind == Kind::Lane && !options.silent {
+        return interactive::run(&root, args, options, installer);
+    }
+    let mut startup = Startup::default();
+    let prepared = match Prepared::plan(&root, options, &mut startup) {
         Ok(prepared) => prepared,
+        Err(error) if failure::result(&error).is_some() => {
+            return workspace_command::execute_then(&root, args, "merge-abort", |_output| {
+                workspace_command::checkout_lifecycle::before(&startup)?;
+                workspace_command::checkout_lifecycle::loaded(&startup);
+                format_result(failure::result(&error).unwrap(), Kind::Lane, Chalk::detect(args))
+            });
+        }
+        Err(error) if startup.committed => {
+            let command = if options.kind == Kind::Lane { "merge-abort" } else { "merge" };
+            return workspace_command::checkout_lifecycle::failure(
+                &root, args, command, &startup, error,
+            );
+        }
         Err(error) => return Ok(Outcome::Declined(format!("merge recovery: {error}"))),
     };
+    execute_prepared(&root, args, options, &startup, prepared, installer)
+}
+
+fn execute_prepared(
+    root: &Path,
+    args: &[OsString],
+    options: &Options,
+    startup: &Startup,
+    prepared: Prepared,
+    installer: Option<Installer>,
+) -> io::Result<Outcome> {
     let command = if options.kind == Kind::Lane { "merge-abort" } else { "merge" };
-    workspace_command::execute_then(&root, args, command, |output| {
-        if options.kind == Kind::Lane && !options.silent {
-            output.stop();
-            if !confirm(&prepared.prompt(Chalk::detect(args)))? {
-                return Err(io::Error::other("operation aborted"));
-            }
+    if options.kind == Kind::Component {
+        workspace_command::checkout_lifecycle::before(startup)?;
+    }
+    workspace_command::execute_then(root, args, command, |output| {
+        if options.kind == Kind::Lane {
+            workspace_command::checkout_lifecycle::before(startup)?;
         }
-        execute(&root, args, output, prepared, installer)
+        workspace_command::checkout_lifecycle::loaded(startup);
+        let report = execute(root, args, output, prepared, installer)?;
+        super::status::cleanup_temporary(root)?;
+        Ok(report)
     })
 }
 
@@ -139,7 +176,6 @@ struct Prepared {
     progress: Option<Progress>,
     ids: Vec<String>,
     kind: Kind,
-    removed_directories: Option<String>,
 }
 
 impl Prepared {
@@ -151,23 +187,23 @@ impl Prepared {
             reason = "Existing CLI orchestration is retained until its operation is decomposed"
         )
     )]
-    fn plan(root: &Path, options: &Options) -> io::Result<Self> {
+    fn plan(root: &Path, options: &Options, startup: &mut Startup) -> io::Result<Self> {
         let home = workspace_command::home();
         let mut engine = Engine::new()?;
-        let operation = if options.kind == Kind::Lane { "laneAbort" } else { "componentAbort" };
-        let mut request = json!({
-            "kind":"commandRecoveryPrepare","root":root,"home":home,
-            "globalRemotesFile":cache::cache_root().join("config/global-remotes.json"),
-            "operation":operation,"dependencyGrammar":dependency_grammar()?,
-            "options":{"silent":options.kind==Kind::Lane,"verbose":options.verbose,
-                "skipDependencyInstallation":true},
-        });
-        if let Some(pattern) = &options.pattern {
-            request["options"]["pattern"] = json!(pattern);
-        }
+        let request = prepare_request(root, &home, options)?;
+        preflight(&request)?;
+        let environments = if options.kind == Kind::Component {
+            Some(
+                environments::read_context(&mut engine, root, &home, false, None, startup)?
+                    .1
+                    .for_checkout(),
+            )
+        } else {
+            None
+        };
         let prepared: Value = engine.request(&request)?;
         let token = text(prepared.get("token"))?.to_string();
-        let context = prepared
+        let mut context = prepared
             .get("context")
             .filter(|value| value.is_object())
             .ok_or_else(|| decline("recovery context"))?
@@ -176,17 +212,43 @@ impl Prepared {
         if targets.len() > 4096 {
             return Err(decline("recovery target limit"));
         }
-        let capture = capture::capture_with(
+        if options.kind == Kind::Lane {
+            startup.committed = true;
+            let file_id = workspace_command::file_id();
+            let _: Value = engine.request(
+                &json!({"kind":"commandRecoveryRestore","token":token,"fileId":file_id}),
+            )?;
+            context["recoveryRestoredFileId"] = json!(file_id);
+        }
+        let environments = match environments {
+            Some(environment) => environment,
+            None => environments::read_context(&mut engine, root, &home, false, None, startup)?
+                .1
+                .for_checkout(),
+        };
+        let captured = capture::capture_with(
             &mut engine,
             root,
             &home,
             &context,
             targets,
             capture::CaptureOptions {
+                environments: Some(environments),
                 incomplete_reset: options.kind == Kind::Component,
                 ..Default::default()
             },
-        )?;
+        );
+        let capture = match captured {
+            Ok(capture) => capture,
+            Err(error) if context["recoveryRestoredFileId"].is_string() => {
+                failure::retain(startup, &error);
+                let applied:Value=engine.request(&json!({"kind":"commandRecoveryApply","token":token,
+                    "fileId":context["recoveryRestoredFileId"],"checkoutError":{"message":error.to_string()}}))?;
+                return Err(failure::restored(applied["result"].clone()));
+            }
+            Err(error) => return Err(error),
+        };
+        workspace_command::checkout_lifecycle::retain(Some(startup), &capture);
         let versions = workspace_command::semver_values(Some("reset"), &context)?;
         let semver = grammar::snapshot(versions.iter().map(String::as_str))
             .ok_or_else(|| decline("recovery semver grammar"))?;
@@ -204,48 +266,16 @@ impl Prepared {
         format_result(&result, options.kind, Chalk::detect(&[]))?;
         let progress = Progress::parse(plan.get("progress"))?;
         let ids = install_ids(&result, options.kind)?;
-        let removed_directories = if options.kind == Kind::Lane {
-            array(result.get("restoredItems"), "restored items")?
-                .iter()
-                .filter_map(Value::as_str)
-                .find_map(|item| {
-                    item.strip_prefix("deleted components directories: ").map(str::to_string)
-                })
-        } else {
-            None
-        };
-        Ok(Self {
-            engine,
-            token,
-            context,
-            capture,
-            progress,
-            ids,
-            kind: options.kind,
-            removed_directories,
-        })
-    }
-
-    fn prompt(&self, chalk: Chalk) -> String {
-        let directories = self.removed_directories
-            .as_ref()
-            .map(|dirs| {
-                format!(
-                    "\nThe following directories introduced by the merge will be deleted: {dirs}",
-                )
-            })
-            .unwrap_or_default();
-        format!(
-            "Code changes that were done since the last lane-merge will be lost.{directories}\nThe .bitmap and workspace.jsonc files will be restored to the state before the merge.\nThis action is irreversible.\n{}",
-            chalk.bold("Do you want to continue? [yes(y)/no(n)]"),
-        )
+        Ok(Self { engine, token, context, capture, progress, ids, kind: options.kind })
     }
 
     fn commit(&mut self, root: &Path) -> io::Result<Value> {
         capture::commit(&mut self.engine, root, &self.context, &self.capture)?;
-        let file_id = workspace_command::file_id();
+        let file_id = self.context["recoveryRestoredFileId"]
+            .as_str()
+            .map_or_else(workspace_command::file_id, str::to_owned);
         let mut read_set = self.capture.dependency_read_set();
-        if self.kind == Kind::Lane {
+        if self.kind == Kind::Lane && self.context["recoveryRestoredFileId"].is_null() {
             let restored: Value = self.engine.request(&json!({
                 "kind":"commandRecoveryRestore","token":self.token,"fileId":file_id,
                 "dependencyReadSet":read_set,
@@ -267,6 +297,30 @@ impl Prepared {
             .get("result")
             .ok_or_else(|| io::Error::other("recovery apply result"))?
             .clone())
+    }
+}
+
+fn prepare_request(root: &Path, home: &Path, options: &Options) -> io::Result<Value> {
+    let operation = if options.kind == Kind::Lane { "laneAbort" } else { "componentAbort" };
+    let mut request = json!({
+        "kind":"commandRecoveryPrepare","root":root,"home":home,
+        "globalRemotesFile":cache::cache_root().join("config/global-remotes.json"),
+        "operation":operation,"dependencyGrammar":dependency_grammar()?,
+        "options":{"silent":options.kind==Kind::Lane,"verbose":options.verbose,
+            "skipDependencyInstallation":true,"callbackLifecycle":true},
+    });
+    if let Some(pattern) = &options.pattern {
+        request["options"]["pattern"] = json!(pattern);
+    }
+    Ok(request)
+}
+
+fn preflight(request: &Value) -> io::Result<()> {
+    let mut engine = Engine::new()?;
+    let result = engine.request::<Value>(request);
+    match result {
+        Err(error) if !super::engine::is_canonical(&error) => Err(error),
+        _ => Ok(()),
     }
 }
 
@@ -292,7 +346,7 @@ fn execute(
     installer: Option<Installer>,
 ) -> io::Result<Report> {
     if let Some(progress) = &prepared.progress {
-        progress.render_checkout(output);
+        progress.render_merge(output);
     }
     let result = prepared.commit(root)?;
     let mut report = format_result(&result, prepared.kind, Chalk::detect(args))?;
@@ -308,76 +362,4 @@ fn execute(
         ]);
     }
     Ok(report)
-}
-
-fn format_result(result: &Value, kind: Kind, chalk: Chalk) -> io::Result<Report> {
-    if kind == Kind::Lane { format_lane(result, chalk) } else { format_component(result, chalk) }
-}
-
-fn format_component(result: &Value, chalk: Chalk) -> io::Result<Report> {
-    let map = object(result)?;
-    let rows = array(map.get("abortedComponents"), "aborted components")?;
-    if map
-        .keys()
-        .any(|key| key != "abortedComponents")
-        || rows.len() > 4096
-    {
-        return Err(decline("merge abort result"));
-    }
-    let format = Formatter::new(chalk);
-    let items = rows
-        .iter()
-        .map(|row| Id::parse(text(row.get("id"))?).map(|id| format.item(&id.without_version())))
-        .collect::<io::Result<Vec<_>>>()?;
-    Ok(Report { data: format.section("merge aborted", "", &items), code: 0, details: None })
-}
-
-#[cfg_attr(
-    dylint_lib = "perfectionist",
-    expect(
-        perfectionist::too_many_local_bindings,
-        reason = "Existing CLI orchestration is retained until its operation is decomposed"
-    )
-)]
-fn format_lane(result: &Value, chalk: Chalk) -> io::Result<Report> {
-    let map = object(result)?;
-    let items = array(map.get("restoredItems"), "restored items")?;
-    if map
-        .keys()
-        .any(|key| !matches!(key.as_str(), "checkoutResults" | "restoredItems" | "checkoutError"))
-        || items.len() > 4096
-    {
-        return Err(decline("lane recovery result"));
-    }
-    let format = Formatter::new(chalk);
-    let restored = items
-        .iter()
-        .map(|item| text(Some(item)).map(|item| format.item(item)))
-        .collect::<io::Result<Vec<_>>>()?;
-    let summary = format!(
-        "{}\n{}",
-        format.success_summary("The following have been restored successfully"),
-        restored.join("\n"),
-    );
-    let checkout = match map
-        .get("checkoutResults")
-        .filter(|value| !value.is_null())
-    {
-        Some(result) => {
-            let options = checkout::options::parse(&["reset", "--all", "-x"])
-                .ok_or_else(|| decline("recovery checkout options"))?;
-            checkout::report::format(result, &options, chalk)?
-        }
-        None => Report { data: String::new(), code: 0, details: None },
-    };
-    let error = map.get("checkoutError").filter(|value| !value.is_null())
-        .map(|value| text(value.get("message")))
-        .transpose()?
-        .map(|message| chalk.red(&format!("\n\nFailed to change component files to the pre-merge state due to an error:\n{message}\nplease fix the error and then run \"bit checkout reset --all\" to revert the components to the pre-merge state")))
-        .unwrap_or_default();
-    Ok(Report {
-        data: Formatter::join(&[checkout.data, summary.clone(), error.clone()]),
-        code: checkout.code,
-        details: checkout.details.map(|details| Formatter::join(&[details, summary, error])),
-    })
 }

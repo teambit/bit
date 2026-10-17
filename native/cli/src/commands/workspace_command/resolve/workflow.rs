@@ -119,10 +119,16 @@ impl Workflow {
             "exitOnFirstFailedTask": self.pipeline.fail_fast,
             "loose": self.pipeline.loose,
         });
+        if kind == Kind::Resolve {
+            params
+                .as_object_mut()
+                .unwrap()
+                .remove("editor");
+        }
         if let Some(tasks) = &self.pipeline.skip_tasks {
             params["skipTasks"] = json!(tasks);
         }
-        if kind == Kind::Snap {
+        if matches!(kind, Kind::Snap | Kind::Resolve) {
             params["isSnap"] = json!(true);
         }
         params

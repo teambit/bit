@@ -62,12 +62,26 @@ fn direct(source: &Value, version: &Value) -> io::Result<Vec<Value>> {
             }
         }
     }
+    extension_edges(source, version, &mut edges)?;
+    Ok(edges)
+}
+
+fn extension_edges(source: &Value, version: &Value, edges: &mut Vec<Value>) -> io::Result<()> {
     for extension in projection::array(&version["extensions"])? {
-        if extension.get("extensionId").is_some() {
-            return Err(invalid("command custom dependency graph aspect"));
+        if let Some(id) = extension.get("extensionId") {
+            key(id)?;
+            let edge = json!({"source":source,"target":id,"type":"ext"});
+            if let Some(existing) = edges
+                .iter_mut()
+                .find(|edge| edge["target"] == *id)
+            {
+                *existing = edge;
+            } else {
+                edges.push(edge);
+            }
         }
     }
-    Ok(edges)
+    Ok(())
 }
 
 fn load(repository: &mut Repository, id: &Value) -> io::Result<Value> {

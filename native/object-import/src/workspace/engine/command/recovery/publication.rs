@@ -11,11 +11,16 @@ pub(super) fn restore(input: &Restore, state: &mut State) -> io::Result<(usize, 
     {
         return Err(invalid("recovery restoration state"));
     }
-    let prepared =
-        retained.record.planned.as_ref().ok_or_else(|| invalid("recovery plan absent"))?;
+    if let Some(prepared) = retained.record.planned.as_ref() {
+        reset::validate(&retained.record, prepared)?;
+    } else if retained.record.context["callbackLifecycle"] == true {
+        proof::verify(&retained.record.proofs)?;
+        retained.record.repository.validate()?;
+    } else {
+        return Err(invalid("recovery plan absent"));
+    }
     proof::verify(&input.dependency_read_set)?;
     retained.restore.validate_dependencies(&input.dependency_read_set)?;
-    reset::validate(&retained.record, prepared)?;
     retained.restore.validate()?;
     let controls = retained.restore.controls();
     controls.validate(&input.dependency_read_set)?;
@@ -62,6 +67,23 @@ pub(super) fn validate_apply(
     };
     if error.message.len() > 16384 {
         return Err(invalid("recovery checkout error limit"));
+    }
+    Ok(Some(
+        json!({"restoredItems":retained.restore.items,"checkoutError":{"message":error.message}}),
+    ))
+}
+
+pub(super) fn failed_checkout(
+    input: &super::Apply,
+    retained: &super::Retained,
+) -> io::Result<Option<Value>> {
+    let Some(error) = &input.checkout_error else { return Ok(None) };
+    if retained.operation != Operation::LaneAbort
+        || !retained.restored
+        || retained.restored_file_id.as_deref() != Some(&input.file_id)
+        || error.message.len() > 16384
+    {
+        return Err(invalid("recovery checkout error receipt"));
     }
     Ok(Some(
         json!({"restoredItems":retained.restore.items,"checkoutError":{"message":error.message}}),

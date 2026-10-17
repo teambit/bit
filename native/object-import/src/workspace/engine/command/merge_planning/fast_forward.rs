@@ -19,7 +19,10 @@ pub(super) fn prepare(
         if selected.action != Action::Target {
             continue;
         }
-        if planned.captured[index].hidden && !prepared.pending.is_empty() {
+        if planned.captured[index].hidden
+            && !prepared.pending.is_empty()
+            && !record.request.internal_snapshot_preview
+        {
             return Err(invalid("hidden fast-forward with snapshot reload requires native policy"));
         }
         add_material(record, planned, selected, index, snapshots)?;
@@ -76,7 +79,7 @@ fn add_material(
         .as_array_mut()
         .ok_or_else(|| invalid("command fast-forward results"))?
         .push(material.output.clone());
-    if !planned.captured[index].hidden {
+    if !planned.captured[index].hidden && selected.distance["shouldBeRemoved"] != true {
         planned.materials.push(material);
     }
     planned.directories.push(directory);

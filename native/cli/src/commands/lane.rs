@@ -14,13 +14,8 @@ mod options;
 mod remove;
 mod show;
 
-use super::{
-    color::Chalk,
-    merge::{force_local_build, install, report},
-    workspace_command::{self, Request, progress::Progress},
-};
+use super::{merge::report, workspace_command};
 use crate::{commands::Command, native::Outcome, workspace};
-use serde_json::Value;
 use std::{env, ffi::OsString, io};
 
 pub const COMMAND: Command = Command { name: "lane", aliases: &["l"], run };
@@ -50,105 +45,26 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     }
 }
 
-#[cfg_attr(
-    dylint_lib = "perfectionist",
-    expect(
-        perfectionist::excessive_cognitive_complexity,
-        perfectionist::overly_long_function,
-        perfectionist::too_many_local_bindings,
-        reason = "The lane merge CLI coordinates preview, materialization, and direct removal snapshots"
-    )
-)]
 fn merge(args: &[OsString], argv: &[&str]) -> io::Result<Outcome> {
-    let Some(options) = options::parse(&argv[2..]) else {
-        return Ok(Outcome::Declined("outside the native lane merge grammar".to_string()));
+    let Some((workflow, grammar)) = super::merge::lifecycle::workflow(&argv[2..]) else {
+        return Ok(Outcome::Declined("outside the native lane tooling grammar".into()));
+    };
+    let Some(options) = options::parse(&grammar) else {
+        return Ok(Outcome::Declined("outside the native lane merge grammar".into()));
     };
     let Some(root) = workspace::root(&env::current_dir()?) else {
-        return Ok(Outcome::Declined("not inside a workspace".to_string()));
+        return Ok(Outcome::Declined("not inside a workspace".into()));
     };
-    if force_local_build(&root) {
-        return Ok(Outcome::Declined("force_local_build may be set".to_string()));
-    }
-    let installer = match install::start(&root, argv, options.skip_install) {
-        Ok(installer) => installer,
-        Err(error) => return Ok(Outcome::Declined(format!("lane merge installation: {error}"))),
-    };
-    let request =
-        Request { operation: "merge", options: options.request(), to: None, verify_fresh: true };
-    let mode = report::Mode { verbose: options.verbose, lane: true };
-    let planned = if options.no_snap() {
-        workspace_command::plan(&root, &request).map(|planned| (planned, None))
-    } else {
-        let mut no_snap = options.request();
-        no_snap["noSnap"] = Value::Bool(true);
-        no_snap
-            .as_object_mut()
-            .unwrap()
-            .remove("message");
-        let no_snap_request =
-            Request { operation: "merge", options: no_snap, to: None, verify_fresh: true };
-        std::thread::scope(|scope| {
-            let preview = scope.spawn(|| workspace_command::plan_snapshot_preview(&root, &request));
-            let materialized = workspace_command::plan_internal_no_snap(&root, &no_snap_request);
-            let preview = preview
-                .join()
-                .map_err(|_| io::Error::other("merge snapshot preview thread panicked"))??;
-            Ok::<_, io::Error>((preview, Some(materialized?)))
-        })
-    };
-    let prepared = planned.and_then(|(planned, materialized)| {
-        let report = report::format(&planned.plan["result"], mode, Chalk::detect(args))?;
-        let progress = Progress::parse(planned.plan.get("progress"))?;
-        Ok((planned, materialized, report, progress))
-    });
-    let (planned, materialized, report, progress) = match prepared {
-        Ok(prepared) => prepared,
-        Err(error) => return Ok(Outcome::Declined(format!("lane merge: {error}"))),
-    };
-    if planned.plan["result"]["removedComponents"]
-        .as_array()
-        .is_some_and(|rows| !rows.is_empty())
-        && installer.is_none()
-    {
-        let (direct, direct_report, direct_progress) =
-            match workspace_command::plan(&root, &request)
-                .and_then(|direct| {
-                    let report = report::format(&direct.plan["result"], mode, Chalk::detect(args))?;
-                    let progress = Progress::parse(direct.plan.get("progress"))?;
-                    Ok((direct, report, progress))
-                }) {
-                Ok(direct) => direct,
-                Err(error) => {
-                    return Ok(Outcome::Declined(format!("removed lane merge: {error}")));
-                }
-            };
-        return workspace_command::execute(
-            &root,
-            args,
-            "merge",
-            direct,
-            &direct_report,
-            |output| {
-                if let Some(progress) = &direct_progress {
-                    progress.render_merge(output);
-                }
-            },
-        );
-    }
-    if !options.no_snap() && planned.plan.get("needsSnap").is_some() {
-        return install::execute_snapping(
-            &root,
-            args,
-            install::Snapping {
-                options: options.request(),
-                message: options.message.as_deref(),
-                mode,
-                planned: &planned,
-                progress: progress.as_ref(),
-                installer,
-                materialized,
-            },
-        );
-    }
-    install::execute(&root, args, planned, report, progress.as_ref(), installer)
+    super::merge::lifecycle::run(
+        &root,
+        args,
+        argv,
+        super::merge::lifecycle::Options {
+            request: options.request(),
+            mode: report::Mode { verbose: options.verbose, lane: true },
+            message: options.message,
+            skip_install: options.skip_install,
+            workflow,
+        },
+    )
 }

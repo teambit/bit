@@ -29,6 +29,7 @@ pub struct Snaps {
 pub struct SnapError {
     /// Each component and the packages of each of its issues.
     pub components: Vec<(Id, Vec<Vec<String>>)>,
+    message: Option<String>,
 }
 
 /// An object with no keys outside `keys`.
@@ -75,6 +76,13 @@ pub fn snaps(value: Option<&Value>) -> io::Result<Option<Snaps>> {
 
 pub fn snap_error(value: Option<&Value>) -> io::Result<Option<SnapError>> {
     let Some(value) = value else { return Ok(None) };
+    if value.get("kind").and_then(Value::as_str) == Some("message") {
+        let map = record(value, &["kind", "message"])?;
+        return Ok(Some(SnapError {
+            components: Vec::new(),
+            message: Some(text(map.get("message"))?.to_owned()),
+        }));
+    }
     let map = record(value, &["kind", "components"])?;
     if map.get("kind").and_then(Value::as_str) != Some("componentsHaveIssues") {
         return Err(decline("native command snap error kind"));
@@ -96,7 +104,7 @@ pub fn snap_error(value: Option<&Value>) -> io::Result<Option<SnapError>> {
     if components.is_empty() {
         return Err(decline("native command snap error components absent"));
     }
-    Ok(Some(SnapError { components }))
+    Ok(Some(SnapError { components, message: None }))
 }
 
 /// The packages of one `MissingManuallyConfiguredPackages` issue.
@@ -165,6 +173,9 @@ impl SnapError {
 
     /// `ComponentsHaveIssues.message`.
     fn message(&self, format: &Formatter) -> String {
+        if let Some(message) = &self.message {
+            return message.clone();
+        }
         let chalk = format.chalk;
         let title = chalk.yellow(&format!(
             "\n       {}: \n",

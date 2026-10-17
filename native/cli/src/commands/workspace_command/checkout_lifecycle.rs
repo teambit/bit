@@ -54,7 +54,7 @@ fn preflight(
     Ok(())
 }
 
-pub(super) fn retain(startup: Option<&mut Startup>, capture: &capture::Capture) {
+pub(in crate::commands) fn retain(startup: Option<&mut Startup>, capture: &capture::Capture) {
     if let Some(startup) = startup {
         startup.stdout.push_str(&capture::callback_startup_stdout(capture));
         startup.build_stdout.push_str(&capture::callback_load_stdout(capture));
@@ -88,6 +88,11 @@ pub(in crate::commands) fn failure(
         callback.map_or_else(String::new, |callback| callback.output.clone());
     let progress = super::progress::Progress::parse(startup.build_progress.as_ref())?;
     super::execute_then(root, args, command, |output| {
+        if command == "merge"
+            && let Some(progress) = &progress
+        {
+            progress.render_merge(output);
+        }
         if matches!(command, "checkout" | "revert")
             && let Some(progress) = progress
         {

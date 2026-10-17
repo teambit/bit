@@ -178,7 +178,9 @@ pub(in crate::workspace::engine::command) fn preflight(
         bytes += serialized_size("Version", Some(hash), version.clone())? + 4096;
         bytes += serialized_size("Component", None, metadata::snapshot_model(input, hash)?)?;
         versions.push(version);
-        bytes += source_size(input)?;
+        bytes = bytes
+            .checked_add(source_size(&input.material.files)?)
+            .ok_or_else(|| invalid("snap preflight size"))?;
         if bytes > 32 * 1024 * 1024 || objects.len() + inputs.len() * 2 > 4096 {
             return Err(invalid("snap preflight budget"));
         }
@@ -199,13 +201,16 @@ fn preflight_head<'a>(input: &'a Input<'_>) -> io::Result<&'a str> {
         .ok_or_else(|| invalid("snap preflight head"))
 }
 
-fn source_size(input: &Input<'_>) -> io::Result<usize> {
-    input.material.files
+fn source_size(files: &[Value]) -> io::Result<usize> {
+    files
         .iter()
-        .map(|file| file["source"]["bytes"].as_u64().unwrap_or(u64::MAX))
-        .try_fold(0_usize, |bytes, value| {
+        .try_fold(0_usize, |bytes, file| {
+            let size = file["source"]["bytes"]
+                .as_u64()
+                .filter(|size| *size <= 32 * 1024 * 1024)
+                .ok_or_else(|| invalid("snap preflight source size"))?;
             bytes
-                .checked_add(usize::try_from(value).map_err(io::Error::other)?)
+                .checked_add(usize::try_from(size).map_err(io::Error::other)?)
                 .ok_or_else(|| invalid("snap preflight size"))
         })
 }

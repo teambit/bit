@@ -110,7 +110,7 @@ fn validate_current_inner(
         {
             return Err(invalid("command capture target changed"));
         }
-        if recovery_reset {
+        if recovery_reset && record.context["callbackLifecycle"] != true {
             super::reset_config::validate_target(target)?;
         }
     }
@@ -216,7 +216,7 @@ pub(super) fn prepare_one(
 pub(super) fn validate_sources(plan: &Planned) -> io::Result<()> {
     let files = plan.captured
         .iter()
-        .filter(|captured| !captured.hidden || !captured.target.directory.is_empty())
+        .filter(|captured| !captured.model_backed)
         .flat_map(|captured| {
             captured.files
                 .as_array()

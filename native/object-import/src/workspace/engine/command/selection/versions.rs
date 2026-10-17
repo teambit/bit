@@ -27,7 +27,7 @@ pub(super) fn resolve(
         return Ok(head.to_owned());
     }
     if let Some(count) = to.strip_prefix("head~") {
-        return ancestor(model, count.parse().map_err(io::Error::other)?, repository);
+        return ancestor(selection, count.parse().map_err(io::Error::other)?, repository);
     }
     if to == "latest"
         && let Some(tag) = latest(model, selection.semver)?
@@ -37,11 +37,16 @@ pub(super) fn resolve(
     if matches!(to, "head" | "latest") {
         return recent(selection, repository);
     }
-    explicit(model, to, repository)
+    explicit(selection, to, repository)
 }
 
-fn explicit(model: &Value, to: &str, repository: &mut Repository) -> io::Result<String> {
-    if short(to) && has(model, to, repository)? {
+fn explicit(
+    selection: &Selection<'_>,
+    to: &str,
+    repository: &mut Repository,
+) -> io::Result<String> {
+    let model = selection.model.ok_or_else(|| invalid("command checkout model"))?;
+    if short(to) && has(model, to, repository, selection.lane_head)? {
         return repository.resolve_short(to);
     }
     Ok(to.to_owned())
@@ -111,7 +116,7 @@ fn recent(selection: &Selection<'_>, repository: &mut Repository) -> io::Result<
     if local == remote {
         return Ok(label(model, local));
     }
-    let rows = records(&[local, remote], repository)?;
+    let rows = records(&[local, remote], repository, true)?;
     let distance = crate::merge_history::status::distance(&rows, Some(local), Some(remote))?;
     if distance["noCommon"] == true {
         return Err(invalid("command unrelated checkout histories"));
@@ -122,7 +127,12 @@ fn recent(selection: &Selection<'_>, repository: &mut Repository) -> io::Result<
     Ok(label(model, if ahead { remote } else { local }))
 }
 
-pub(super) fn has(model: &Value, version: &str, repository: &mut Repository) -> io::Result<bool> {
+pub(super) fn has(
+    model: &Value,
+    version: &str,
+    repository: &mut Repository,
+    lane_head: Option<&str>,
+) -> io::Result<bool> {
     if model["versions"].get(version).is_some() || model["orphanedVersions"].get(version).is_some()
     {
         return Ok(true);
@@ -130,10 +140,10 @@ pub(super) fn has(model: &Value, version: &str, repository: &mut Repository) -> 
     if crate::merge_history::hash(version).is_err() && !short(version) {
         return Ok(false);
     }
-    let Some(head) = model["head"].as_str() else {
+    let Some(head) = lane_head.or_else(|| model["head"].as_str()) else {
         return Ok(false);
     };
-    let rows = records(&[head], repository)?;
+    let rows = records(&[head], repository, false)?;
     Ok(rows
         .as_array()
         .is_some_and(|rows| {
@@ -146,11 +156,16 @@ pub(super) fn has(model: &Value, version: &str, repository: &mut Repository) -> 
         }))
 }
 
-fn ancestor(model: &Value, count: usize, repository: &mut Repository) -> io::Result<String> {
+fn ancestor(
+    selection: &Selection<'_>,
+    count: usize,
+    repository: &mut Repository,
+) -> io::Result<String> {
+    let model = selection.model.ok_or_else(|| invalid("command checkout model"))?;
     if count == 0 || count > 4096 {
         return Err(invalid("command checkout ancestor count"));
     }
-    let mut hash = head(model)?.to_owned();
+    let mut hash = selection.lane_head.map_or_else(|| head(model), Ok)?.to_owned();
     for _ in 0..count {
         let version = repository.read(&hash, "Version")?;
         parents(&version)?
@@ -164,19 +179,11 @@ fn ancestor(model: &Value, count: usize, repository: &mut Repository) -> io::Res
 }
 
 fn parents(version: &Value) -> io::Result<&Vec<Value>> {
-    if version
-        .get("unrelated")
-        .is_some_and(|value| !value.is_null())
-        || version
-            .get("squashed")
-            .is_some_and(|value| !value.is_null())
-    {
-        return Err(invalid("command checkout complex history"));
-    }
+    crate::read_version::parents(version)?;
     version["parents"].as_array().ok_or_else(|| invalid("command checkout parents"))
 }
 
-fn records(heads: &[&str], repository: &mut Repository) -> io::Result<Value> {
+fn records(heads: &[&str], repository: &mut Repository, full: bool) -> io::Result<Value> {
     let mut pending = heads
         .iter()
         .map(|hash| (*hash).to_owned())
@@ -191,21 +198,51 @@ fn records(heads: &[&str], repository: &mut Repository) -> io::Result<Value> {
             return Err(invalid("command checkout history limit"));
         }
         let version = repository.read(&hash, "Version")?;
-        let parents = parents(&version)?;
-        if parents.len() > 16 {
-            return Err(invalid("command checkout parent limit"));
-        }
-        for parent in parents {
-            pending.push(
-                parent
-                    .as_str()
-                    .ok_or_else(|| invalid("command checkout parent hash"))?
-                    .to_owned(),
-            );
-        }
-        rows.push(json!({"hash":hash,"parents":parents}));
+        rows.push(record(&hash, &version, full, &mut pending)?);
     }
     Ok(Value::Array(rows))
+}
+
+fn record(hash: &str, version: &Value, full: bool, pending: &mut Vec<String>) -> io::Result<Value> {
+    let parents = parents(version)?;
+    if parents.len() > 16 {
+        return Err(invalid("command checkout parent limit"));
+    }
+    for parent in parents {
+        pending.push(
+            parent
+                .as_str()
+                .ok_or_else(|| invalid("command checkout parent hash"))?
+                .to_owned(),
+        );
+    }
+    let mut row = json!({"hash":hash,"parents":parents});
+    if full {
+        auxiliary(version, &mut row, pending);
+    }
+    Ok(row)
+}
+
+fn auxiliary(version: &Value, row: &mut Value, pending: &mut Vec<String>) {
+    for (field, value) in [
+        ("unrelated", &version["unrelated"]["head"]),
+        ("squashed", &version["squashed"]["previousParents"]),
+    ] {
+        if value.is_null() {
+            continue;
+        }
+        row[field] = value.clone();
+        match value {
+            Value::String(reference) => pending.push(reference.clone()),
+            Value::Array(references) => pending.extend(
+                references
+                    .iter()
+                    .filter_map(Value::as_str)
+                    .map(str::to_owned),
+            ),
+            _ => {}
+        }
+    }
 }
 
 fn short(version: &str) -> bool {

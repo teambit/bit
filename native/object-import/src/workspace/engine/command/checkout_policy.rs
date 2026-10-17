@@ -28,6 +28,14 @@ impl Prepared {
         Ok(Self { input: receipt, publication, ready: false })
     }
 
+    pub(super) fn merged(root: &Path, plan: &Value) -> io::Result<Self> {
+        let mut prepared = Self::new(root, Value::Null)?;
+        prepared.publication.prepare(&json!({"updates":plan["updates"],
+            "conflicts":plan["conflicts"],"logs":[],"hasDeps":true,"merge":true}))?;
+        prepared.ready = true;
+        Ok(prepared)
+    }
+
     pub(super) fn validate(&self) -> io::Result<()> {
         if !self.ready {
             return Err(invalid("command checkout policy incomplete"));

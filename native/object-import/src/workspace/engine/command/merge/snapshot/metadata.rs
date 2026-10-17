@@ -22,7 +22,13 @@ pub(super) fn receipt(value: &Value, inputs: &[Input<'_>]) -> io::Result<()> {
 }
 pub(super) fn version(input: &Input<'_>, receipt: &Value, message: &str) -> io::Result<Value> {
     let mut version = base_version(input, receipt, message)?;
-    apply_squash(input, receipt, &mut version)?;
+    if let Some(relation) = input.material.unrelated_relation() {
+        version["parents"] = json!([relation["headOnCurrentLane"]]);
+        version["unrelated"] =
+            json!({"head":relation["unrelatedHead"],"laneId":relation["unrelatedLaneId"]});
+    } else {
+        apply_squash(input, receipt, &mut version)?;
+    }
     apply_origin(input, &mut version)?;
     let extensions =
         version["extensions"].as_array_mut().ok_or_else(|| invalid("command snap extensions"))?;

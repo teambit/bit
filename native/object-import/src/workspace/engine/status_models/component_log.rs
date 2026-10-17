@@ -1,4 +1,5 @@
 //! Local `bit log` history: validated model and Version reads, following parents from main's head.
+mod control;
 
 use super::{Reader, Request as ModelsRequest, invalid, lane, load};
 use crate::{merge_history, read_budget::Budget, read_version};
@@ -19,6 +20,7 @@ pub(in crate::workspace::engine) struct Request {
     identity: String,
     #[serde(default)]
     lane: Option<LaneId>,
+    deprecation: Option<Value>,
 }
 
 #[derive(Deserialize)]
@@ -39,31 +41,10 @@ pub(in crate::workspace::engine) fn read(
         return Ok((0, json!({"versions":[]})));
     };
     merge_history::hash(head)?;
-    let main_refs = if lane.is_some() {
-        main.map(|head| {
-            traverse(&crate::scope_path(&request.root).join("objects"), head, &tags(&model)?, None)
-        })
-        .transpose()?
-        .unwrap_or_default()
-        .into_iter()
-        .filter_map(|row| row["hash"].as_str().map(str::to_owned))
-        .collect::<HashSet<_>>()
-    } else {
-        HashSet::new()
-    };
-    let output = traverse(
-        &crate::scope_path(&request.root).join("objects"),
-        head,
-        &tags(&model)?,
-        lane.as_ref().map(|_| &main_refs),
-    )?;
-    if main.is_some_and(|head| {
-        lane.is_some()
-            && !output
-                .iter()
-                .any(|row| row["hash"] == head)
-    }) {
-        return Err(invalid("component log diverged lane history"));
+    let mut output =
+        traverse(&crate::scope_path(&request.root).join("objects"), head, &tags(&model)?, main)?;
+    if let Some(config) = &request.deprecation {
+        control::staged(&mut output, config);
     }
     Ok((output.len(), json!({"versions":output})))
 }
@@ -105,9 +86,6 @@ fn model(request: &Request, pool: &ThreadPool) -> io::Result<Value> {
             identity == request.identity
         })
         .ok_or_else(|| invalid("component log model absent"))?;
-    if model["deprecated"] == true {
-        return Err(invalid("component log deprecation overlay"));
-    }
     Ok(model)
 }
 
@@ -115,12 +93,14 @@ fn traverse(
     directory: &Path,
     head: &str,
     tags: &HashMap<String, String>,
-    main_refs: Option<&HashSet<String>>,
+    main: Option<&str>,
 ) -> io::Result<Vec<Value>> {
     let mut reader = read_version::Reader::query(directory)?;
     let mut queue = VecDeque::from([head.to_string()]);
     let mut seen = HashSet::new();
     let mut output = Vec::new();
+    let mut found_on_main = Some(head) == main;
+    let mut controls = control::Control::default();
     while let Some(reference) = queue.pop_front() {
         if !seen.insert(reference.clone()) {
             continue;
@@ -130,12 +110,15 @@ fn traverse(
         }
         let version = reader.read(&reference)?;
         let (mut row, parents) = row(&reference, &version, tags)?;
-        if let Some(main_refs) = main_refs {
-            row["onLane"] = json!(!main_refs.contains(&reference));
+        if reference == head {
+            controls = control::Control::read(&version);
         }
+        found_on_main |= Some(reference.as_str()) == main;
+        row["onLane"] = json!(!found_on_main);
         queue.extend(parents);
         output.push(row);
     }
+    controls.apply(&mut output);
     Ok(output)
 }
 
@@ -144,9 +127,6 @@ fn row(
     version: &Value,
     tags: &HashMap<String, String>,
 ) -> io::Result<(Value, Vec<String>)> {
-    if has_control_aspect(version) {
-        return Err(invalid("component log removal or deprecation overlay"));
-    }
     let parents = version["parents"]
         .as_array()
         .map_or(&[][..], Vec::as_slice);
@@ -181,20 +161,6 @@ fn row(
         row["hidden"] = hidden.clone();
     }
     Ok((row, parents))
-}
-
-fn has_control_aspect(version: &Value) -> bool {
-    version["extensions"]
-        .as_array()
-        .is_some_and(|extensions| {
-            extensions
-                .iter()
-                .any(|extension| {
-                    let name = extension["name"].as_str();
-                    name == Some("teambit.component/remove")
-                        || name == Some("teambit.component/deprecation")
-                })
-        })
 }
 
 /// Read the same validated Component and Version objects from a configured
@@ -236,7 +202,7 @@ pub(in crate::workspace::engine) fn read_file_remote(
         return Err(invalid("file remote log model identity"));
     }
     let Some(head) = model["head"].as_str() else { return Ok(Vec::new()) };
-    let mut rows = traverse(&directory, head, &tags(&model)?, None)?;
+    let mut rows = traverse(&directory, head, &tags(&model)?, Some(head))?;
     rows.sort_by(file_date_order);
     rows.iter()
         .map(file_remote_row)
@@ -262,6 +228,9 @@ fn file_remote_row(row: &Value) -> io::Result<Value> {
     }
     for key in ["hash", "parents", "onLane", "deleted"] {
         log.insert(key.into(), row[key].clone());
+    }
+    if let Some(deprecated) = row.get("deprecated") {
+        log.insert("deprecated".into(), deprecated.clone());
     }
     if let Some(hidden) = row.get("hidden") {
         log.insert("hidden".into(), hidden.clone());

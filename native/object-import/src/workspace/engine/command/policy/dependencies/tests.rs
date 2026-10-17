@@ -13,13 +13,14 @@ fn row(fast_forward: bool) -> Row {
             current: json!({}),
             versions: [Value::Null, Value::Null, Value::Null],
             package_name: "@scope/component".into(),
+            scope_only: false,
         },
         files: Vec::new(),
         merged: json!({}),
         projected: json!({}),
         ours_conflict: false,
         fast_forward,
-        detected: None,
+        receipts: super::super::Receipts::default(),
     }
 }
 
@@ -89,12 +90,13 @@ fn cascade_row(identity: &str, fast_forward: bool) -> super::super::Row {
             current: serde_json::Value::Null,
             versions: [serde_json::Value::Null, serde_json::Value::Null, serde_json::Value::Null],
             package_name: String::new(),
+            scope_only: false,
         },
         files: Vec::new(),
         merged: json!({}),
         projected: serde_json::Value::Null,
         ours_conflict: false,
         fast_forward,
-        detected: None,
+        receipts: super::super::Receipts::default(),
     }
 }

@@ -41,7 +41,7 @@ impl Prepared {
         let mut text = if mapped.is_empty() {
             original
         } else {
-            render_updates(&original, &mapped, cfg!(windows))?
+            render_updates_kind(&original, &mapped, cfg!(windows), plan["merge"] != true)?
         };
         if !conflicts.is_empty() {
             text = crate::config_merge::render_workspace_conflict(&text, &plan["conflicts"])?;
@@ -108,10 +108,11 @@ fn ordinary(path: &PathBuf) -> io::Result<()> {
     Ok(())
 }
 
-fn render_updates(
+fn render_updates_kind(
     original: &str,
     updates: &Map<String, Value>,
     windows: bool,
+    defaults: bool,
 ) -> io::Result<String> {
     let mut document = crate::jsonc::Document::parse(original)?;
     if !document
@@ -130,7 +131,7 @@ fn render_updates(
         (vec![RESOLVER, "policy", "peerDependencies"], json!({})),
         (vec![RESOLVER, "linkCoreAspects"], json!(true)),
     ] {
-        if document.get(&path).is_none() {
+        if defaults && document.get(&path).is_none() {
             document.set(&path, &value);
         }
     }

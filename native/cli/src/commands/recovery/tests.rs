@@ -1,4 +1,4 @@
-use super::{Kind, format_component, parse_component, parse_lane};
+use super::{Kind, parse_component, parse_lane, report::format_component};
 use crate::commands::color::Chalk;
 use serde_json::json;
 

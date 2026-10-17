@@ -222,7 +222,7 @@ fn prepare_snapshot(
         lane.as_ref(),
         &receipt,
         snapshots,
-        retained.snap.is_some(),
+        retained.snap.is_some() || retained.record.context["callbackLifecycle"] == true,
     )?;
     let publication = resolve_publication::prepare(
         &retained.record.request.root,
@@ -233,7 +233,8 @@ fn prepare_snapshot(
         &receipt,
         resolve_publication::Options {
             imported_index: retained.record.repository.imported_index(),
-            snapshot: retained.snap.is_some(),
+            snapshot: retained.snap.is_some()
+                || retained.record.context["callbackLifecycle"] == true,
         },
     )?;
     publication.validate()?;

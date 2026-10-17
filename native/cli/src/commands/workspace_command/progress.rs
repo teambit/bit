@@ -81,6 +81,32 @@ impl Progress {
         self.render_graph(output);
     }
 
+    /// Lane providers start after fetching lane heads and before divergence imports.
+    pub fn render_merge_startup(&self, output: &Output, startup: &str, loaded: &str) {
+        let split = self.imports
+            .iter()
+            .position(|row| {
+                row.reason
+                    .as_deref()
+                    .is_some_and(|reason| {
+                        reason.starts_with("for getting the common-snap between ")
+                            || reason.starts_with("for filling the gap between ")
+                    })
+            })
+            .unwrap_or(self.imports.len());
+        for row in &self.imports[..split] {
+            render_import(output, row);
+        }
+        print!("{startup}{loaded}");
+        for row in &self.imports[split..] {
+            render_import(output, row);
+        }
+        for count in &self.loads {
+            output.status(&format!("loading {count} component(s)"));
+        }
+        self.render_graph(output);
+    }
+
     /// Snapshot graph progress after extension issue and pre-snap callbacks.
     pub fn render_graph(&self, output: &Output) {
         if !self.version_notice.is_empty() {
@@ -189,28 +215,16 @@ impl Progress {
         Ok(())
     }
 
-    /// Print the lines, as the loader does while checkout runs.
-    pub fn render_checkout(&self, output: &Output) {
-        self.render_checkout_with(output, false, false);
-    }
-
-    /// `checkout main` has already imported its target objects during the
-    /// initial latest-on-main fetch; Harmony does not print the second import.
-    pub fn render_checkout_with(&self, output: &Output, main: bool, revert: bool) {
-        output.status(if revert {
-            "reverting components..."
-        } else {
-            "switching component version..."
-        });
-        output.status("importing components");
-        let started = Instant::now();
+    fn render_checkout_initial(&self, output: &Output) {
         let fetching = [REASONS[0], REASONS[1]];
         for row in self.imports
             .iter()
             .filter(|row| {
                 row.reason
                     .as_deref()
-                    .is_some_and(|reason| fetching.contains(&reason))
+                    .is_some_and(|reason| {
+                        fetching.contains(&reason) || reason.starts_with("of their latest on lane ")
+                    })
             })
         {
             if row.reason.as_deref() == Some(REASONS[1]) {
@@ -221,6 +235,20 @@ impl Progress {
             }
             render_import(output, row);
         }
+    }
+
+    /// Print the lines, as the loader does while checkout runs.
+    /// `checkout main` has already imported its target objects during the
+    /// initial latest-on-main fetch; Harmony does not print the second import.
+    pub fn render_checkout_with(&self, output: &Output, main: bool, revert: bool) {
+        output.status(if revert {
+            "reverting components..."
+        } else {
+            "switching component version..."
+        });
+        output.status("importing components");
+        let started = Instant::now();
+        self.render_checkout_initial(output);
         output.success("importing components", Some(started));
         for count in &self.loads {
             output.status(&format!("loading {count} component(s)"));

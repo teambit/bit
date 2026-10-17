@@ -41,6 +41,7 @@ fn changed_lifecycles_and_deleted_imports_rebuild_depth_first_edges_with_reposit
             current: Value::Null,
             versions: [Value::Null, Value::Null, Value::Null],
             package_name: "@scope/a".into(),
+            scope_only: false,
         },
         files: vec![],
         merged: json!({}),
@@ -48,7 +49,7 @@ fn changed_lifecycles_and_deleted_imports_rebuild_depth_first_edges_with_reposit
             "flattenedDependencies":[{"scope":"scope","name":"removed","version":"old"}],"flattenedEdgesRef":"obsolete"}),
         ours_conflict: false,
         fast_forward: false,
-        detected: None,
+        receipts: super::super::Receipts::default(),
     };
     let mut repository = Repository::new(&directory.0, None);
     project(&mut row, &mut repository).unwrap();

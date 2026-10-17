@@ -9,6 +9,11 @@ const RESOLVER: &str = "teambit.dependencies/dependency-resolver";
 /// Effective aspect settings using the released global/workspace precedence.
 pub fn effective(root: &Path, home: &Path) -> io::Result<Value> {
     let workspace = config::document(&root.join("workspace.jsonc"))?;
+    effective_value(workspace, home)
+}
+
+/// Apply global aspect settings to an already retained workspace document.
+pub(crate) fn effective_value(workspace: Value, home: &Path) -> io::Result<Value> {
     let path = home.join(".bitrc.jsonc");
     if !path.try_exists()? {
         return Ok(workspace);

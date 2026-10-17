@@ -12,7 +12,7 @@ fn workspace() -> Helper {
     helper
 }
 
-fn version(root: &std::path::Path) -> Value {
+pub(super) fn version(root: &std::path::Path) -> Value {
     let run = Helper::cmd_in_with(
         root,
         "cat-component bar/foo@latest --json",

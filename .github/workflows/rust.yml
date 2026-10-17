@@ -183,6 +183,8 @@ jobs:
             filters: commands::snap commands::tag snapshot_environments
           - group: checkout
             filters: checkout_platform checkout_local checkout_callbacks checkout_policy checkout_selection reset_selection harmony::revert
+          - group: merge-history
+            filters: merge_history merge_lifecycle merge_callbacks merge_policy merge_recovery
     timeout-minutes: 60
     defaults:
       run:

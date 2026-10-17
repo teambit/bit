@@ -8,6 +8,7 @@ pub(super) mod resolve;
 
 pub(super) mod checkout_pattern;
 pub(super) mod checkout_policy;
+pub(super) mod merge_defer;
 
 mod apply_command;
 mod bitmap;

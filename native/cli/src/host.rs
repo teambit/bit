@@ -166,7 +166,9 @@ impl Session {
         let id = self.next_id;
         let request = json!({ "id": id, "method": method, "params": params });
         let stdin = self.stdin.as_mut().ok_or_else(|| io::Error::other("host stdin closed"))?;
-        writeln!(stdin, "{request}")?;
+        let mut frame = serde_json::to_vec(&request)?;
+        frame.push(b'\n');
+        stdin.write_all(&frame)?;
         stdin.flush()?;
         loop {
             let mut line = String::new();

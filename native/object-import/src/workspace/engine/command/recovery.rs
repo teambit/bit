@@ -30,6 +30,8 @@ enum Operation {
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Options {
+    #[serde(default)]
+    callback_lifecycle: bool,
     pattern: Option<String>,
     #[serde(default)]
     silent: bool,
@@ -88,7 +90,7 @@ pub(in crate::workspace::engine) fn prepare(
     let retained = context::prepare(request, state, pool)?;
     let targets = &retained.record.targets;
     let output = json!({"token":retained.record.token,"context":retained.record.context,
-        "targets":targets,"captureTargets":targets.iter().filter(|row|row["missingRoot"]!=true).collect::<Vec<_>>()});
+        "restoredItems":retained.restore.items,"targets":targets,"captureTargets":targets.iter().filter(|row|row["missingRoot"]!=true).collect::<Vec<_>>()});
     let count = targets.len();
     state.recovery = Some(retained);
     Ok((count, output))
@@ -137,6 +139,9 @@ pub(in crate::workspace::engine) fn apply(
     if retained.record.token != input.token {
         return Err(invalid("recovery token changed"));
     }
+    if let Some(result) = publication::failed_checkout(input, &retained)? {
+        return Ok((retained.record.targets.len(), json!({"applied":true,"result":result})));
+    }
     let mut prepared =
         retained.record.planned.take().ok_or_else(|| invalid("recovery plan absent"))?;
     if let Some(result) = publication::validate_apply(input, &retained, &prepared)? {
@@ -159,7 +164,7 @@ pub(in crate::workspace::engine) fn apply(
 fn write_pending(root: &std::path::Path, pending: &Value) -> io::Result<()> {
     // UnmergedComponents.write uses JSON.stringify(..., null, 2).
     std::fs::write(
-        root.join(".bit/unmerged.json"),
+        crate::scope_path(root).join("unmerged.json"),
         serde_json::to_vec_pretty(pending).map_err(io::Error::other)?,
     )
 }

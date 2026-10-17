@@ -19,17 +19,14 @@ pub(super) fn prepare(
 ) -> io::Result<Retained> {
     validate(request)?;
     let mut proofs = controls(request)?;
+    if request.options.callback_lifecycle {
+        proof::read(&request.home.join(".bitrc.jsonc"), &mut proofs)?;
+    }
     let restore = restore::prepare(&request.root, request.operation, &mut proofs)?;
-    let (context, ordinary, imported) = metadata(request, &restore, pool)?;
-    let pending = proof::read(&request.root.join(".bit/unmerged.json"), &mut proofs)?
-        .map(|bytes| serde_json::from_slice::<Value>(&bytes).map_err(io::Error::other))
-        .transpose()?
-        .unwrap_or(json!([]));
+    let (mut context, ordinary, imported) = metadata(request, &restore, pool)?;
+    context["callbackLifecycle"] = json!(request.options.callback_lifecycle);
     command_prepare::selected(&ordinary, &context)?;
-    let (mut targets, remaining) = select(&context, &pending, request)?;
-    validate_pending_configuration(request, &targets, &pending)?;
-    let pending = remaining;
-    capture_controls(request, &mut targets, &mut proofs)?;
+    let (targets, pending) = capture_targets(request, &context, &mut proofs)?;
     proof::verify(&proofs)?;
     state.sequence = state.sequence.checked_add(1).ok_or_else(|| invalid("recovery sequence"))?;
     let token = crate::workspace::engine::hash(
@@ -57,13 +54,30 @@ pub(super) fn prepare(
         restored_file_id: None,
     })
 }
+fn capture_targets(
+    request: &Prepare,
+    context: &Value,
+    proofs: &mut Vec<proof::Proof>,
+) -> io::Result<(Vec<Value>, Value)> {
+    let pending = proof::read(&crate::scope_path(&request.root).join("unmerged.json"), proofs)?
+        .map(|bytes| serde_json::from_slice::<Value>(&bytes).map_err(io::Error::other))
+        .transpose()?
+        .unwrap_or(json!([]));
+    let (mut targets, remaining) = select(context, &pending, request)?;
+    validate_pending_configuration(request, &targets, &pending)?;
+    let pending = remaining;
+    capture_controls(request, &mut targets, proofs)?;
+    Ok((targets, pending))
+}
+
 fn validate(request: &Prepare) -> io::Result<()> {
     for path in [&request.root, &request.home, &request.global_remotes_file] {
         crate::workspace::engine::path(path)?;
     }
     if !request.options.skip_dependency_installation
-        || request.home.join(".bitrc.jsonc").try_exists()?
-        || request.root.join(".bitTmp").try_exists()?
+        || !request.options.callback_lifecycle
+            && (request.home.join(".bitrc.jsonc").try_exists()?
+                || request.root.join(".bitTmp").try_exists()?)
         || (request.operation == Operation::LaneAbort && !request.options.silent)
     {
         return Err(invalid("recovery requires canonical lifecycle"));
@@ -72,16 +86,11 @@ fn validate(request: &Prepare) -> io::Result<()> {
 }
 fn controls(request: &Prepare) -> io::Result<Vec<proof::Proof>> {
     let mut proofs = Vec::new();
-    for name in [
-        ".bitmap",
-        "workspace.jsonc",
-        "package.json",
-        ".bit/scope.json",
-        ".bit/index.json",
-        ".bit/unmerged.json",
-        "merge-conflict",
-    ] {
+    for name in [".bitmap", "workspace.jsonc", "package.json", "merge-conflict"] {
         proof::read(&request.root.join(name), &mut proofs)?;
+    }
+    for name in ["scope.json", "index.json", "unmerged.json"] {
+        proof::read(&crate::scope_path(&request.root).join(name), &mut proofs)?;
     }
     Ok(proofs)
 }
@@ -91,9 +100,20 @@ fn metadata(
     pool: &rayon::ThreadPool,
 ) -> io::Result<(Value, input::Prepare, command_import::PreparedImport)> {
     let bitmap = jsonc::parse(&restore.bitmap)?;
-    let workspace = jsonc::parse(&restore.workspace)?;
+    let workspace = if request.options.callback_lifecycle {
+        crate::workspace::engine::status_context::configuration::effective_value(
+            jsonc::parse(&restore.workspace)?,
+            &request.home,
+        )?
+    } else {
+        jsonc::parse(&restore.workspace)?
+    };
     let settings = config::configuration_value(&request.root, &workspace, true)?;
-    let (structural_bitmap, bitmap_configs) = super::bitmap::project(&bitmap)?;
+    let (structural_bitmap, bitmap_configs) = if request.options.callback_lifecycle {
+        super::bitmap::project_snapshot(&bitmap)?
+    } else {
+        super::bitmap::project(&bitmap)?
+    };
     let targets = super::super::lane_context::visibility::targets(&structural_bitmap, &settings)?;
     let mut context = status_context::metadata_for_recovery(
         &status_context::Request {
@@ -135,6 +155,7 @@ fn attach(
             .and_then(|directory| bitmap_configs.get(directory))
         {
             target["bitmapConfig"] = config.clone();
+            target["componentConfig"] = config.clone();
         }
     }
     Ok(())
@@ -227,7 +248,7 @@ fn validate_pending_configuration(
     targets: &[Value],
     pending: &Value,
 ) -> io::Result<()> {
-    if request.operation == Operation::LaneAbort {
+    if request.operation == Operation::LaneAbort || request.options.callback_lifecycle {
         return Ok(());
     }
     if request.root.join("merge-conflict").try_exists()? {

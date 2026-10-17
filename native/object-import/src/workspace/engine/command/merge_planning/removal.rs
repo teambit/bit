@@ -10,6 +10,9 @@ pub(super) struct Removed {
 pub(super) fn validate(root: &Path, removed: &[Removed]) -> io::Result<()> {
     for row in removed {
         crate::checkout::plan::relative_path(&row.directory)?;
+        if row.directory == "." {
+            return Err(invalid("command removed workspace root"));
+        }
         let mut path = root.to_path_buf();
         for segment in row.directory.split('/') {
             path.push(segment);

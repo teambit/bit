@@ -147,7 +147,7 @@ impl PreparedImport {
     }
 }
 
-fn receive_closure(
+pub(super) fn receive_closure(
     plan: &mut PreparedImport,
     directory: &Path,
     target: &Target,
@@ -303,7 +303,11 @@ fn missing_objects(plan: &mut PreparedImport, hashes: &[String]) -> io::Result<V
     Ok(missing)
 }
 
-fn remote_lane_hash(plan: &mut PreparedImport, directory: &Path, id: &Id) -> io::Result<String> {
+pub(super) fn remote_lane_hash(
+    plan: &mut PreparedImport,
+    directory: &Path,
+    id: &Id,
+) -> io::Result<String> {
     let index = plan.capture
         .json(
             &directory

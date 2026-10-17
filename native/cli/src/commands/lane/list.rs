@@ -231,7 +231,8 @@ pub(super) fn read_with_merge(
 }
 
 fn scope(root: &Path) -> io::Result<Value> {
-    serde_json::from_slice(&fs::read(root.join(".bit/scope.json"))?).map_err(io::Error::from)
+    serde_json::from_slice(&fs::read(bit_object_import::scope_path(root).join("scope.json"))?)
+        .map_err(io::Error::from)
 }
 
 pub(super) fn read_current(root: &Path) -> io::Result<(Value, String)> {

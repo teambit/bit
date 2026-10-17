@@ -46,6 +46,8 @@ pub(in crate::workspace::engine) struct Prepare {
 #[derive(Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Options {
+    #[serde(default)]
+    callback_lifecycle: bool,
     pattern: Option<String>,
     message: Option<String>,
     #[serde(default)]

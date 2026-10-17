@@ -9,6 +9,7 @@ fn model_only_projection_preserves_resolver_data_and_hydrates_package_names() {
     let captured = Captured {
         added: false,
         hidden: true,
+        model_backed: false,
         target: Target {
             source_overlays: std::collections::HashMap::new(),
             source_overlay_root: None,
@@ -22,18 +23,11 @@ fn model_only_projection_preserves_resolver_data_and_hydrates_package_names() {
         files: json!([]),
     };
     let mut output = version.clone();
-    prepare_hidden_metadata(
-        &captured,
-        &[version.clone(), version.clone(), version.clone()],
-        &mut output,
-    )
-    .unwrap();
+    prepare_hidden_metadata(&captured, &mut output).unwrap();
     assert_eq!(output["dependencies"][0]["packageName"], "@scope/dep");
     assert_eq!(output["extensions"], version["extensions"]);
-    let mut changed = version.clone();
+    let mut changed = version;
     changed["extensions"][1]["config"] = json!({"policy":{"dependencies":{"pkg":"1"}}});
-    assert!(
-        prepare_hidden_metadata(&captured, &[version.clone(), version, changed], &mut output)
-            .is_err(),
-    );
+    prepare_hidden_metadata(&captured, &mut changed).unwrap();
+    assert_eq!(changed["extensions"][1]["config"]["policy"]["dependencies"]["pkg"], "1");
 }

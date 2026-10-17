@@ -34,7 +34,7 @@ pub(super) fn prepare(
     Ok(Some(Lane { snapshot, _directory: directory, id: format!("{scope}/{name}") }))
 }
 fn read_backup(root: &Path, proofs: &mut Vec<proof::Proof>) -> io::Result<(String, Value)> {
-    let bytes = proof::read(&root.join(".bit/last-merged/lane"), proofs)?
+    let bytes = proof::read(&crate::scope_path(root).join("last-merged/lane"), proofs)?
         .ok_or_else(|| invalid("recovery Lane backup absent"))?;
     let mut raw = Vec::new();
     ZlibDecoder::new(bytes.as_slice())
@@ -64,7 +64,7 @@ fn validate_index(
     proofs: &mut Vec<proof::Proof>,
 ) -> io::Result<()> {
     let index: Value = serde_json::from_slice(
-        &proof::read(&root.join(".bit/index.json"), proofs)?
+        &proof::read(&crate::scope_path(root).join("index.json"), proofs)?
             .ok_or_else(|| invalid("recovery index"))?,
     )
     .map_err(io::Error::other)?;

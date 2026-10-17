@@ -2,6 +2,8 @@
 //! it writes. New hashes and a batch id (`newSnapHash`, `newSnapBatchId`),
 //! the user's log (`getBasicLog`) and the Node.js CLI's version.
 
+mod identity;
+
 use crate::{
     commands::status::{cache::cache_root, js::decline},
     discovery::{self, Target},
@@ -66,6 +68,7 @@ pub fn snapshot(root: &Path, snapped: &Snapped<'_>, lane_log: bool) -> io::Resul
 }
 
 /// `getIdentity()`: the user's name and email.
+#[derive(Clone)]
 pub struct User {
     username: Option<String>,
     email: Option<String>,
@@ -75,6 +78,10 @@ impl User {
     /// `getBitCloudUsername() || getConfig('user.name')` and
     /// `getConfig('user.email')`, the git config being the last layer.
     pub fn load(root: &Path) -> io::Result<Self> {
+        identity::load(|| Self::read(root))
+    }
+
+    fn read(root: &Path) -> io::Result<Self> {
         let global = load_global_config(&cache_root().join("config"))?;
         let scope = ScopeJson::load(&scope_path(root))?;
         let workspace = WorkspaceConfig::load(root)?;

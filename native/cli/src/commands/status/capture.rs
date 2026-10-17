@@ -2,14 +2,16 @@
 //! workspace commands: each selected component's files and
 //! dependencies, and the commit that writes what the command staged.
 
+pub(in crate::commands) use callbacks::take_callback_environment;
 pub use callbacks::{
     callback_issue_stdout, callback_load_stdout, callback_startup_stdout, issue_callbacks,
     workspace_issues,
 };
 pub use commit::{commit, commit_checkout_dependencies};
 pub use snapshot::{
-    snapshot_build, snapshot_data, snapshot_editor, snapshot_package_manifests, snapshot_pre_snap,
-    snapshot_registry, snapshot_required, snapshot_workspace_issues,
+    snapshot_build, snapshot_control_reads, snapshot_data, snapshot_editor,
+    snapshot_package_manifests, snapshot_pre_snap, snapshot_registry, snapshot_required,
+    snapshot_workspace_issues,
 };
 
 mod bitmap;

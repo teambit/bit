@@ -161,17 +161,18 @@ fn targets(value: &Value, context: &Value) -> io::Result<Vec<Value>> {
     let originals = array(context.get("targets"), "targets")?;
     let rows = value
         .as_array()
-        .filter(|rows| !rows.is_empty() && rows.len() <= originals.len());
+        .filter(|rows| !rows.is_empty() && rows.len() <= 4096);
     let rows = rows.ok_or_else(|| decline("command dependency target receipt"))?;
     let mut seen = Vec::new();
     for row in rows {
         let identity = row.get("identity").and_then(Value::as_str);
-        let known = originals
-            .iter()
-            .any(|original| {
-                original.get("identity").and_then(Value::as_str) == identity
-                    && original.get("directory") == row.get("directory")
-            });
+        let known = row["scopeOnly"] == true
+            || originals
+                .iter()
+                .any(|original| {
+                    original.get("identity").and_then(Value::as_str) == identity
+                        && original.get("directory") == row.get("directory")
+                });
         let files = row.get("files").and_then(Value::as_array);
         let files_ok =
             files.is_some_and(|files| files.len() <= 4096 && files.iter().all(Value::is_string));
@@ -193,6 +194,11 @@ fn files(row: &Value) -> io::Result<Vec<String>> {
 /// One `commandPolicyPrepare` component.
 fn policy_component(row: &Value, original: &Value, capture: &Capture) -> io::Result<Value> {
     let identity = text(row.get("identity"))?;
+    if row["scopeOnly"] == true {
+        let semver = grammar::config_inputs(&json!([row, original["workspace"]]))
+            .ok_or_else(|| decline("command scope configuration grammar"))?;
+        return Ok(json!({"identity":identity,"semver":semver}));
+    }
     let fast_forward = truthy(row.get("fastForward"));
     let added = original["lane"]["addedTargets"]
         .as_array()
@@ -211,7 +217,7 @@ fn policy_component(row: &Value, original: &Value, capture: &Capture) -> io::Res
     let projected = if fast_forward { row.get("otherVersion") } else { None };
     let policy = policy::projected_policy(original, target, projected)?;
     let default_node = defaults::receipt(target, &policy, &files(row)?)?;
-    let semver = grammar::config_inputs(&json!([row, default_node]))
+    let semver = grammar::config_inputs(&json!([row, default_node, original["workspace"]]))
         .ok_or_else(|| decline("command configuration grammar"))?;
     let mut component =
         json!({ "identity": identity, "defaultNode": default_node, "semver": semver });

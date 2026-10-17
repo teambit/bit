@@ -85,10 +85,13 @@ fn observe(
     match observation {
         "unmerged" => Ok(json!(false)),
         "resolveTarget" => versions::resolve(options, selection, repository).map(Value::String),
-        "hasVersion" => {
-            versions::has(model, directive["version"].as_str().unwrap_or_default(), repository)
-                .map(Value::Bool)
-        }
+        "hasVersion" => versions::has(
+            model,
+            directive["version"].as_str().unwrap_or_default(),
+            repository,
+            selection.lane_head,
+        )
+        .map(Value::Bool),
         "currentVersion" => Ok(json!({"value":selection.target["version"],"hasBitmap":true})),
         "mergePending" => Ok(json!(selection.merge_pending)),
         "modified" => Ok(json!({"modified":selection.modified,"isRemoved":false})),

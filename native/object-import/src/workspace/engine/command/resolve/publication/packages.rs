@@ -18,7 +18,9 @@ pub(in crate::workspace::engine::command::resolve) fn finalize(
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
     let retained = state.resolve.as_mut().ok_or_else(|| invalid("snapshot package owner"))?;
-    if retained.record.token != input.token || retained.snap.is_none() {
+    if retained.record.token != input.token
+        || (retained.snap.is_none() && retained.record.context["callbackLifecycle"] != true)
+    {
         return Err(invalid("snapshot package token"));
     }
     proof::verify(&input.dependency_read_set)?;
@@ -46,7 +48,9 @@ pub(in crate::workspace::engine::command::resolve) fn stage(
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
     let retained = state.resolve.as_mut().ok_or_else(|| invalid("snapshot package owner"))?;
-    if retained.record.token != input.token || retained.snap.is_none() {
+    if retained.record.token != input.token
+        || (retained.snap.is_none() && retained.record.context["callbackLifecycle"] != true)
+    {
         return Err(invalid("snapshot package token"));
     }
     super::validate(retained)?;
@@ -61,11 +65,14 @@ pub(in crate::workspace::engine::command::resolve) fn stage(
     if prepared.staged_snaps.is_none() {
         super::builder::stage_prepared(retained)?;
     }
-    persist(retained)?;
-    Ok((retained.materials.len(), json!({"token":retained.record.token,"staged":true})))
+    let controls = persist(retained)?;
+    Ok((
+        retained.materials.len(),
+        json!({"token":retained.record.token,"staged":true,"controlReadSet":controls}),
+    ))
 }
 
-fn persist(retained: &mut super::Retained) -> io::Result<()> {
+fn persist(retained: &mut super::Retained) -> io::Result<Vec<proof::Proof>> {
     let mut files = retained.record.repository.commit_import_retained()?;
     let Phase::Prepared(prepared) = &mut retained.finalized else {
         return Err(invalid("snapshot package phase"));
@@ -79,7 +86,14 @@ fn persist(retained: &mut super::Retained) -> io::Result<()> {
     proof::accept_published(&mut retained.record.proofs, &files);
     retained.record.repository.accept_published(&files)?;
     prepared.snapshot.accept_published(&files)?;
+    let controls = prepared.publication.stage_controls()?;
+    retained.record.proofs.retain(|before| {
+        !controls
+            .iter()
+            .any(|after| before.path == after.path)
+    });
+    retained.record.proofs.extend(controls.iter().cloned());
     prepared.objects_persisted = true;
     prepared.notifications = super::super::super::apply_command::notify(root);
-    Ok(())
+    Ok(controls)
 }

@@ -75,40 +75,22 @@ pub struct Request<'r> {
     pub verify_fresh: bool,
 }
 
-/// `commandPrepare`, the capture and `commandPlan`.
-pub fn plan(root: &Path, request: &Request<'_>) -> io::Result<Planned> {
-    plan_with(root, request, false, false, None)
-}
-
 /// Provider startup and component callbacks precede checkout's authoritative read set.
 pub fn plan_with_startup(
     root: &Path,
     request: &Request<'_>,
     startup: &mut super::status::autosync::Startup,
 ) -> io::Result<Planned> {
-    plan_with(root, request, false, false, Some(startup))
+    plan_with(root, request, false, false, Some(startup), false)
 }
 
-/// Validate a merge's snapshot step without allocating or serializing the
-/// snapshot. The caller may then materialize a separate no-snap plan, install,
-/// and create the real snapshot from the installed workspace.
-pub fn plan_snapshot_preview(root: &Path, request: &Request<'_>) -> io::Result<Planned> {
-    if request.operation != "merge" {
-        return Err(decline("snapshot preview operation"));
-    }
-    plan_with(root, request, true, false, None)
-}
-
-/// The materialization half of a default lane merge that will install and
-/// snap in the same invocation. Direct `--no-snap` still follows Node's guard.
-pub fn plan_internal_no_snap(root: &Path, request: &Request<'_>) -> io::Result<Planned> {
-    if request.operation != "merge"
-        || request.options["noSnap"] != true
-        || request.options.get("lane").is_none()
-    {
-        return Err(decline("internal lane materialization options"));
-    }
-    plan_with(root, request, false, true, None)
+/// Capture providers once, materialize the merge, then snap its retained pending identities.
+pub fn plan_merge(
+    root: &Path,
+    request: &Request<'_>,
+    startup: &mut super::status::autosync::Startup,
+) -> io::Result<Planned> {
+    plan_with(root, request, request.options["noSnap"] != true, true, Some(startup), true)
 }
 
 fn plan_with(
@@ -117,6 +99,7 @@ fn plan_with(
     preview_snapshot: bool,
     internal_materialization: bool,
     startup: Option<&mut super::status::autosync::Startup>,
+    defer_snapshot: bool,
 ) -> io::Result<Planned> {
     let preparation::Prepared {
         mut engine,
@@ -148,7 +131,15 @@ fn plan_with(
     }
     let mut steps =
         Steps { engine: &mut engine, root, home: &home, token: &token, context: &context };
-    let capture = steps.stages(&mut plan, capture, request, preview_snapshot)?;
+    let capture = steps.stages(&mut plan, capture, request, preview_snapshot, defer_snapshot)?;
+    if defer_snapshot {
+        let deferred: Value =
+            engine.request(&json!({"kind":"commandMergeDeferSnapshot","token":token}))?;
+        plan["mergeSnapshotSeeds"] = deferred["identities"].clone();
+        plan.as_object_mut()
+            .unwrap()
+            .remove("needsSnap");
+    }
     Ok(Planned { engine, token, context, capture, plan, apply: "commandApply" })
 }
 
@@ -169,6 +160,7 @@ impl Steps<'_> {
         capture: Capture,
         request: &Request<'_>,
         preview_snapshot: bool,
+        defer_snapshot: bool,
     ) -> io::Result<Capture> {
         self.checkout_policy(plan)?;
         let mut caches = Vec::new();
@@ -181,7 +173,7 @@ impl Steps<'_> {
             caches = prepared.caches;
         }
         let snap_failed = plan.get("snapFailed") == Some(&Value::Bool(true));
-        let mut capture = if plan.get("needsSnap").is_some() || snap_failed {
+        let mut capture = if !defer_snapshot && (plan.get("needsSnap").is_some() || snap_failed) {
             self.prepare_snapshot(plan, &caches, request, preview_snapshot)?
         } else {
             capture

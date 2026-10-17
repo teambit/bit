@@ -35,3 +35,15 @@ fn other_lane_merges_are_left_to_node() {
         assert!(parse(args).is_none(), "{args:?}");
     }
 }
+
+#[test]
+fn unrelated_resolution_defaults_and_both_valued_spellings() {
+    for args in
+        [vec!["dev", "--resolve-unrelated", "-x"], vec!["dev", "--resolve-unrelated", "ours"]]
+    {
+        assert_eq!(parse(&args).unwrap().resolve_unrelated.as_deref(), Some("ours"));
+    }
+    let options = parse(&["dev", "--resolve-unrelated=theirs"]).unwrap();
+    assert_eq!(options.request()["lane"]["resolveUnrelated"], "theirs");
+    assert!(parse(&["dev", "--resolve-unrelated=invalid"]).is_none());
+}

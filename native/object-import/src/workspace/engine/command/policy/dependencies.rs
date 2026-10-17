@@ -1,4 +1,5 @@
 mod issues;
+mod overlay;
 
 use super::{
     super::{Record, State, invalid, planning},
@@ -52,19 +53,27 @@ pub(in crate::workspace::engine) fn detect(
         return Err(invalid("command dependency token"));
     }
     let mut prepared = record.planned.take().ok_or_else(|| invalid("command dependency plan"))?;
-    let overlay = overlay(&record, &prepared.plan)?;
+    let overlay = overlay::prepare(&record, &prepared.plan)?;
     let policy = prepared.plan.merge
         .as_mut()
         .and_then(|merge| merge.policy.as_mut())
         .ok_or_else(|| invalid("command dependency policy"))?;
     if !policy.config_ready
         || policy.overlay.is_some()
-        || input.components.len() != policy.rows.len()
+        || input.components.len()
+            != policy.rows
+                .iter()
+                .filter(|row| !row.baseline.scope_only)
+                .count()
     {
         return Err(invalid("command dependency detect phase"));
     }
     let mut output = Vec::new();
-    for (row, receipt) in policy.rows.iter_mut().zip(input.components) {
+    for (row, receipt) in policy.rows
+        .iter_mut()
+        .filter(|row| !row.baseline.scope_only)
+        .zip(input.components)
+    {
         output.push(detect_row(row, &receipt, &record, pool, &overlay)?);
     }
     policy.overlay = Some(overlay);
@@ -96,7 +105,7 @@ fn detect_row(
         .remove("grammarInputs")
         .unwrap_or_else(|| json!([]));
     let output = json!({"identity":row.identity,"grammarInputs":grammar});
-    row.detected = Some(capture);
+    row.receipts.dependencies = Some(capture);
     Ok(output)
 }
 
@@ -138,7 +147,12 @@ fn complete_rows(
     record: &mut Record,
     pool: &rayon::ThreadPool,
 ) -> io::Result<Completion> {
-    if receipts.len() != policy.rows.len() {
+    if receipts.len()
+        != policy.rows
+            .iter()
+            .filter(|row| !row.baseline.scope_only)
+            .count()
+    {
         return Err(invalid("command dependency completion count"));
     }
     if !policy.config_ready || policy.dependencies_ready {
@@ -146,19 +160,23 @@ fn complete_rows(
     }
     let overlay =
         policy.overlay.as_ref().ok_or_else(|| invalid("command dependency overlay absent"))?;
-    let changed = snapshot_identities(&policy.rows);
-    for row in &policy.rows {
-        let files = row.files
-            .iter()
-            .map(|path| json!({"relativePath":path}))
-            .collect::<Vec<_>>();
-        super::super::merge::snapshot::validate_application_files(&files)?;
-    }
+    // The retained public snapshot owner allocates and rewrites related IDs together.
+    // Legacy inline finalization still requires an unchanged dependency identity.
+    let changed = if record.request.internal_snapshot_preview {
+        HashSet::new()
+    } else {
+        snapshot_identities(&policy.rows)
+    };
+    validate_application_files(&policy.rows)?;
     super::graph::validate_previous(&policy.rows, &mut record.repository)?;
     let mut caches = Vec::new();
     let mut issue_targets = Vec::new();
     let mut issues = Vec::new();
-    for (row, receipt) in policy.rows.iter_mut().zip(receipts) {
+    for (row, receipt) in policy.rows
+        .iter_mut()
+        .filter(|row| !row.baseline.scope_only)
+        .zip(receipts)
+    {
         let (cache, target) =
             complete_row(row, &receipt, record, pool, overlay, &changed, &mut issues)?;
         caches.push(cache);
@@ -171,6 +189,17 @@ fn complete_rows(
         .collect::<HashSet<_>>();
     policy.dependencies_ready = true;
     Ok(Completion { caches, issue_targets, issues, visible })
+}
+
+fn validate_application_files(rows: &[super::Row]) -> io::Result<()> {
+    for row in rows {
+        let files = row.files
+            .iter()
+            .map(|path| json!({"relativePath":path}))
+            .collect::<Vec<_>>();
+        super::super::merge::snapshot::validate_application_files(&files)?;
+    }
+    Ok(())
 }
 
 fn snapshot_identities(rows: &[super::Row]) -> HashSet<String> {
@@ -193,9 +222,8 @@ fn complete_plan(
     } = completion;
     let merge = plan.merge.as_mut().ok_or_else(|| invalid("command dependency merge"))?;
     merge.apply_policy_configs()?;
-    if issues.is_empty() {
-        merge.validate_policy_final(record, &plan.materials, &plan.captured)?;
-    } else {
+    let failed = !issues.is_empty() && !record.request.internal_snapshot_preview;
+    if failed {
         caches.retain(|cache| {
             cache["identity"]
                 .as_str()
@@ -203,6 +231,8 @@ fn complete_plan(
         });
         merge.cancel_snap();
         plan.result["mergeSnapError"] = json!({"kind":"componentsHaveIssues","components":issues});
+    } else {
+        merge.validate_policy_final(record, &plan.materials, &plan.captured)?;
     }
     record.proofs = crate::workspace::engine::dependency_graph::proof::unique(std::mem::take(
         &mut record.proofs,
@@ -213,7 +243,7 @@ fn complete_plan(
     if let Some(pending) = merge.needs_snap() {
         result["needsSnap"] = json!(pending);
     }
-    if !issues.is_empty() {
+    if failed {
         result["snapFailed"] = json!(true);
         let mut progress = record.repository.progress();
         progress["loads"] =
@@ -236,8 +266,9 @@ fn complete_row(
     if row.identity != receipt.identity {
         return Err(invalid("command dependency completion identity"));
     }
-    let capture =
-        row.detected.take().ok_or_else(|| invalid("command dependency capture absent"))?;
+    let capture = row.receipts.dependencies
+        .take()
+        .ok_or_else(|| invalid("command dependency capture absent"))?;
     let request = serde_json::from_value(json!({"root":record.request.root,"componentRoot":record.request.root.join(&row.baseline.directory),
             "capture":capture,"policies":receipt.policies,"finish":receipt.finish,"resolution":receipt.resolution})).map_err(io::Error::other)?;
     let (_, output) = fresh::apply_overlay(&request, pool, overlay)?;
@@ -261,61 +292,6 @@ fn complete_row(
         json!({"identity":format!("{}@{}",row.identity,row.baseline.version),"rawData":output["rawData"],"cacheable":output["cacheable"],"readSet":read_set}),
         issues::target(row, &output["state"], &output["issues"])?,
     ))
-}
-
-fn overlay(record: &Record, planned: &planning::Planned) -> io::Result<SourceOverlay> {
-    let merge = planned.merge.as_ref().ok_or_else(|| invalid("command dependency merge"))?;
-    let policy = merge.policy.as_ref().ok_or_else(|| invalid("command dependency rows"))?;
-    let mut overlay = SourceOverlay::new(&record.request.root)?;
-    for row in &policy.rows {
-        let files = overlay_files(row, planned)?;
-        let root = record.request.root.join(&row.baseline.directory);
-        for file in files {
-            overlay.insert_source(
-                &root.join(
-                    file["relativePath"].as_str().ok_or_else(|| invalid("command overlay path"))?,
-                ),
-                &file["source"],
-            )?;
-        }
-        let current = planned.captured
-            .iter()
-            .find(|current| current.target.identity == row.identity)
-            .ok_or_else(|| invalid("command overlay capture"))?;
-        for file in &current.target.files {
-            if !row.files.contains(file) {
-                overlay.remove(&root.join(file))?;
-            }
-        }
-    }
-    overlay.seal()
-}
-
-fn overlay_files<'a>(
-    row: &super::Row,
-    planned: &'a planning::Planned,
-) -> io::Result<&'a Vec<Value>> {
-    let matches = |output: &Value| {
-        output["id"]
-            .as_str()
-            .and_then(|id| id.rsplit_once('@'))
-            .is_some_and(|(id, _)| id == row.identity)
-    };
-    if row.fast_forward {
-        return planned.materials
-            .iter()
-            .find(|material| matches(&material.output))
-            .map(|material| &material.files)
-            .ok_or_else(|| invalid("command FF overlay"));
-    }
-    planned.merge
-        .as_ref()
-        .ok_or_else(|| invalid("command merge overlay"))?
-        .materials
-        .iter()
-        .find(|material| matches(&material.output))
-        .map(|material| &material.files)
-        .ok_or_else(|| invalid("command merge overlay"))
 }
 
 fn project(

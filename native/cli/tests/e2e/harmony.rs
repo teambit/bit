@@ -1,4 +1,9 @@
 //! `e2e/harmony/`.
+mod merge_callbacks;
+mod merge_history;
+mod merge_lifecycle;
+mod merge_policy;
+mod merge_recovery;
 
 mod bitmap_states;
 mod checkout_callbacks;

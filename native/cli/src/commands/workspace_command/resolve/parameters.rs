@@ -42,7 +42,11 @@ pub(super) fn snapshot(root: &Path, request: &ResolveRequest<'_>, workflow: &Wor
             params["skipPublishedVersions"] =
                 json!(request.options["policy"]["skipPublishedVersions"] == true);
         }
-        Selection::Resolve { .. } => {}
+        Selection::Resolve { .. } => {
+            params["skipAutoTag"] = json!(false);
+            params["persist"] = json!(true);
+            params["soft"] = json!(false);
+        }
     }
     params
 }

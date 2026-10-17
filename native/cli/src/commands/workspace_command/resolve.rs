@@ -83,12 +83,6 @@ pub struct ResolveRequest<'r> {
     pub selection: Selection<'r>,
 }
 
-/// `bit snap` and `bit tag` up to the commit:
-/// the plan, and unless there is nothing to do, the finalized versions.
-pub fn plan(root: &Path, request: &ResolveRequest<'_>) -> io::Result<Planned> {
-    complete(Session::prepare(root, request, None, false)?, request, None)
-}
-
 /// Plan snapshot tooling around the native transaction and retain all publication state.
 pub fn plan_snapshot(
     root: &Path,
@@ -116,9 +110,41 @@ pub fn plan_snapshot(
     {
         return Err(decline("tag editor options require canonical validation"));
     }
-    let session = Session::prepare(root, request, Some(startup), workflow.build && !soft)?;
+    let session = Session::prepare(root, request, Some(startup), workflow.build && !soft, None)?;
     startup.stdout.push_str(&capture::callback_startup_stdout(&session.capture));
     complete(session, request, Some((workflow, startup)))
+}
+
+/// Continue a materialized merge using its existing provider session.
+pub(in crate::commands) fn plan_continuation(
+    root: &Path,
+    request: &ResolveRequest<'_>,
+    startup: &mut Startup,
+    workflow: &workflow::Workflow,
+    environment: Option<environments::Environments>,
+) -> io::Result<Planned> {
+    let session = Session::prepare(root, request, Some(startup), workflow.build, environment)?;
+    startup.stdout.push_str(&capture::callback_startup_stdout(&session.capture));
+    complete(session, request, Some((workflow, startup)))
+}
+
+fn session_environment(
+    engine: &mut Engine,
+    root: &Path,
+    home: &Path,
+    startup: Option<&mut Startup>,
+    build: bool,
+    inherited: Option<environments::Environments>,
+) -> io::Result<Option<environments::Environments>> {
+    if let Some(environment) = inherited {
+        return environment.continue_snapshot(build).map(Some);
+    }
+    startup
+        .map(|startup| {
+            environments::read_snapshot_context(engine, root, home, build, startup)
+                .map(|(_, environments)| environments)
+        })
+        .transpose()
 }
 
 fn complete(
@@ -171,16 +197,13 @@ impl<'r> Session<'r> {
         request: &ResolveRequest<'_>,
         startup: Option<&mut Startup>,
         build: bool,
+        inherited: Option<environments::Environments>,
     ) -> io::Result<Self> {
         let home = home();
         let mut engine = Engine::new()?;
-        let environments = startup
-            .map(|startup| {
-                environments::read_snapshot_context(&mut engine, root, &home, build, startup)
-                    .map(|(_, environments)| environments)
-            })
-            .transpose()?;
-        let prepared = preparation(&mut engine, root, &home, request)?;
+        let environments =
+            session_environment(&mut engine, root, &home, startup, build, inherited)?;
+        let prepared = preparation(&mut engine, root, &home, request, environments.is_some())?;
         let context = prepared["context"].clone();
         let targets = array(prepared.get("targets"), "targets")?;
         let pending_tag = matches!(&request.selection, Selection::Tag { tag_options, .. } if tag_options["persist"] == true || tag_options["soft"] == true);
@@ -378,6 +401,7 @@ fn preparation(
     root: &Path,
     home: &Path,
     request: &ResolveRequest<'_>,
+    callbacks: bool,
 ) -> io::Result<Value> {
     let mut prepare = json!({
         "kind": request.kind.request("Prepare"),
@@ -387,6 +411,9 @@ fn preparation(
         "dependencyGrammar": dependency_grammar()?,
         "globalRemotesFile": cache::cache_root().join("config").join("global-remotes.json"),
     });
+    if callbacks && request.kind == Kind::Resolve {
+        prepare["options"]["callbackLifecycle"] = json!(true);
+    }
     if let Selection::Tag { tag_options, .. } = &request.selection {
         prepare["tagOptions"] = tag_options.clone();
     }
@@ -663,6 +690,7 @@ impl Resolved<'_> {
         issue_graph: Option<&Value>,
         ignored: &Value,
         selected: &Value,
+        resolving: bool,
         startup: Option<&mut Startup>,
     ) -> io::Result<()> {
         if ignored == "*" {
@@ -679,7 +707,7 @@ impl Resolved<'_> {
             graph,
         )?
         .ok_or_else(|| decline("resolve issue callback requires canonical loading"))?;
-        blockers::callbacks(self, &found, selected, needs_snap, ignored, startup)
+        blockers::callbacks(self, &found, selected, needs_snap, ignored, resolving, startup)
     }
 
     /// `resolveSnapshotReceipt` with the dependency graphs and lane squash logs.
@@ -749,3 +777,10 @@ fn squash_logs(receipt: &mut Value, rows: &[Value]) -> io::Result<()> {
 
 #[cfg(test)]
 mod resolve_tests;
+
+impl Planned {
+    /// Move configured callbacks across native merge materialization and resolution.
+    pub(in crate::commands) fn take_environment(&mut self) -> Option<environments::Environments> {
+        capture::take_callback_environment(&mut self.capture)
+    }
+}

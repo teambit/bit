@@ -108,6 +108,7 @@ enum Request {
     CommandRecoveryApply(command::recovery::Apply),
     CommandRecoveryRestore(command::recovery::Restore),
     CommandPlan(command::Plan),
+    CommandMergeDeferSnapshot(command::merge_defer::Request),
     CommandCheckoutPolicyComplete(command::checkout_policy::Complete),
     CommandPolicyPrepare(command::policy::Prepare),
     CommandDependencyDetect(command::policy::dependencies::Detect),

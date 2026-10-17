@@ -24,9 +24,10 @@ const [bitDir, entry, root] = process.argv.slice(-3);
 const cliArguments = JSON.parse(process.env.BIT_NATIVE_HOST_ARGUMENTS ?? '[]');
 const readonlyStatus = ['status', 's', 'diff', 'd'].includes(cliArguments[0]);
 const snapshotCommandName = cliArguments[0] === 't' ? 'tag' : cliArguments[0];
-const snapshotCommand = ['snap', 'tag'].includes(snapshotCommandName);
-const checkoutCommand = ['checkout', 'U', 'revert', 'switch'].includes(cliArguments[0]) || (cliArguments[0] === 'lane' && cliArguments[1] === 'import');
-const bufferedCommand = snapshotCommand || checkoutCommand;
+let snapshotCommand = ['snap', 'tag'].includes(snapshotCommandName) || (cliArguments[0] === 'merge' && cliArguments.includes('--resolve'));
+const checkoutCommand = (cliArguments[0] === 'merge' && cliArguments.includes('--abort')) || (cliArguments[0] === 'lane' && cliArguments[1] === 'merge-abort') || ['checkout', 'U', 'revert', 'switch'].includes(cliArguments[0]) || (cliArguments[0] === 'lane' && cliArguments[1] === 'import');
+const mergeCommand = (cliArguments[0] === 'merge' && !cliArguments.includes('--abort') && !cliArguments.includes('--resolve')) || (cliArguments[0] === 'lane' && cliArguments[1] === 'merge');
+const bufferedCommand = snapshotCommand || checkoutCommand || mergeCommand;
 process.argv = [process.execPath, entry, ...cliArguments];
 require(path.join(bitDir, 'dist', 'hook-require.js'));
 const bitRequire = createRequire(path.join(bitDir, 'package.json'));
@@ -126,6 +127,14 @@ const handlers = {
   statusWorkspaceIssues: async () => (await loadHarmony()).get('teambit.workspace/workspace').getWorkspaceIssues().map((error) => error.message),
   statusLoadCallbacks,
   statusIssueCallbacks,
+  snapshotContinuation: async () => {
+    snapshotCommand = true;
+    snapshotContinuation = true;
+    snapshotLoads = [];
+    statusComponents = [];
+    await (await loadHarmony()).get('teambit.workspace/workspace')._reloadConsumer();
+    return true;
+  },
   snapshotPreSnap,
   snapshotEditor,
   snapshotBuild,
@@ -292,11 +301,12 @@ function snapshotFreshAspects(ids) {
 
 let snapshotBootstrapProgress = false;
 async function dependencyPolicies(extensionIds, bootstrap) {
+  snapshotBootstrapProgress = bootstrap === true && (['tag', 'checkout'].includes(cliArguments[0]) || cliArguments[0] === 'merge');
   const loaded = await loadHarmony();
   const workspace = loaded.get('teambit.workspace/workspace');
   captureBootstrapProgress(workspace);
   extensionIds=snapshotFreshAspects(extensionIds);
-  snapshotBootstrapProgress = bootstrap === true && ['tag', 'checkout'].includes(cliArguments[0]);
+  snapshotBootstrapProgress = bootstrap === true && (['tag', 'checkout'].includes(cliArguments[0]) || cliArguments[0] === 'merge');
   try {
     if(extensionIds.length) await workspace.loadAspects(extensionIds, false, undefined, { ...workspaceAspectOptions(workspace), throwOnError: false, hideMissingModuleError: true });
   } finally {snapshotBootstrapProgress = false;}
@@ -308,6 +318,7 @@ function workspaceAspectOptions(workspace) {
 }
 
 let snapshotLoads=[];
+let snapshotContinuation=false;
 
 function captureBootstrapProgress(workspace) {
   const logger = workspace.componentLoader.logger;
@@ -325,7 +336,7 @@ function captureBootstrapProgress(workspace) {
   logger.setStatusLine = (message) => {
     const count=/^loading (\d+) component\(s\)$/.exec(message);
     if(snapshotCommand && count && loadingDepth===1) snapshotLoads.push(Number(count[1]));
-    if (process.env.BIT_NATIVE_HOST_PROGRESS === '1' || (snapshotBootstrapProgress && process.env.CI === undefined && count && loadingDepth === 1)) process.stdout.write(`- ${message}\n`);
+    if (process.env.BIT_NATIVE_HOST_PROGRESS === '1' || (snapshotBootstrapProgress && process.env.CI === undefined && count)) process.stdout.write(`- ${message}\n`);
   };
 }
 
@@ -717,8 +728,10 @@ async function statusLoadCallbacks({ components, directory, snapshot, checkout }
     statusComponents.push(component);
     // DependencyLoader's DevFiles adapter hydrates a separate Harmony class before
     // the actual workspace load. Workspace-root explicitly skips source detection.
-    if ((snapshot || (checkout && row.dependencyCacheMiss)) && row.directory !== '.') await statusApplyLoadCallbacks(await hydrateStatusComponent(row), { workspace, envs, resolver });
-    await statusApplyLoadCallbacks(component, { workspace, envs, resolver });
+    if (!snapshotContinuation) {
+      if ((snapshot || (checkout && row.dependencyCacheMiss)) && row.directory !== '.') await statusApplyLoadCallbacks(await hydrateStatusComponent(row), { workspace, envs, resolver });
+      await statusApplyLoadCallbacks(component, { workspace, envs, resolver });
+    }
   }
   if (snapshot) loadOutput.push(capturedStdout?.slice(outputStart).join('') ?? '');
   outputStart = capturedStdout?.length ?? 0;

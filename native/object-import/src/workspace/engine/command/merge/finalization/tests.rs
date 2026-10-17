@@ -24,7 +24,7 @@ pub(super) fn fixture() -> (Directory, Value) {
     (directory, version)
 }
 #[test]
-fn new_links_are_planned_without_writes_or_declined_before_writes_on_non_unix() {
+fn new_links_are_planned_without_writes_on_supported_platforms() {
     let (directory, version) = fixture();
     let manifest = directory.0.join("node_modules/@scope/alpha/package.json");
     let before = fs::read(&manifest).unwrap();
@@ -40,8 +40,15 @@ fn new_links_are_planned_without_writes_or_declined_before_writes_on_non_unix() 
         false,
         &[],
     );
-    if cfg!(unix) {
-        assert_eq!(result.unwrap().links.len(), 1);
+    if cfg!(any(unix, windows)) {
+        let prepared = result.unwrap();
+        assert_eq!(
+            prepared.links,
+            vec![(
+                directory.0.join("alpha/index.js"),
+                directory.0.join("node_modules/@scope/alpha/index.js"),
+            )],
+        );
     } else {
         assert!(result.is_err());
     }

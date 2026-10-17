@@ -1,13 +1,13 @@
 //! `ComponentWriter`'s existing config file replacement, excluding local component/variant overrides.
 use super::{Record, invalid};
-use crate::workspace::engine::command::materialization;
 use serde_json::{Map, Value, json};
 use std::{collections::HashSet, io};
 
 pub(super) fn document(
     record: &Record,
     target: &Value,
-    material: &materialization::Prepared,
+    version: &Value,
+    version_name: &str,
     original: &Value,
 ) -> io::Result<Value> {
     let identity =
@@ -22,9 +22,8 @@ pub(super) fn document(
         &record.context["pendingConfigurations"][identity]["config"],
         record,
     )?;
-    let rows = material.version["extensions"]
-        .as_array()
-        .ok_or_else(|| invalid("checkout config extensions"))?;
+    let rows =
+        version["extensions"].as_array().ok_or_else(|| invalid("checkout config extensions"))?;
     for specific in [true, false] {
         if !specific && original["propagate"] != true {
             continue;
@@ -39,7 +38,7 @@ pub(super) fn document(
     }
     strip_local_env(&mut extensions, record);
     Ok(
-        json!({"componentId":{"scope":scope,"name":name,"version":material.version_name},"propagate":false,"extensions":extensions}),
+        json!({"componentId":{"scope":scope,"name":name,"version":version_name},"propagate":false,"extensions":extensions}),
     )
 }
 

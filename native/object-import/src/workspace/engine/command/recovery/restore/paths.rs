@@ -43,7 +43,10 @@ fn validate(root: &Path, directory: &str, previous: &Value) -> io::Result<()> {
     }
     if root
         .join(directory)
-        .starts_with(root.join(".bit"))
+        .starts_with(crate::scope_path(root))
+        || root
+            .join(directory)
+            .starts_with(root.join(".git"))
     {
         return Err(invalid("recovery scope removal"));
     }

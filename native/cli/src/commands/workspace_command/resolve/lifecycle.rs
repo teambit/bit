@@ -17,7 +17,7 @@ pub(super) fn before_snapshot(
     lifecycle: &mut Option<(&Workflow, &mut Startup)>,
 ) -> io::Result<Value> {
     if let Some((_, startup)) = lifecycle.as_mut() {
-        issue_progress(plan, &session.capture, startup)?;
+        issue_progress(plan, &session.capture, startup, request.kind == super::Kind::Resolve)?;
     }
     super::Resolved { root: session.root, context: &session.context, capture: &session.capture }
         .validate_issues(
@@ -25,6 +25,7 @@ pub(super) fn before_snapshot(
             plan.get("issueGraph"),
             &request.options["policy"]["ignoreIssues"],
             &plan["selectedIds"],
+            request.kind == super::Kind::Resolve,
             lifecycle.as_mut().map(|(_, startup)| &mut **startup),
         )?;
     if let Some((_, startup)) = lifecycle.as_mut()
@@ -58,14 +59,17 @@ pub(super) fn issue_progress(
     plan: &Value,
     capture: &capture::Capture,
     startup: &mut Startup,
+    resolving: bool,
 ) -> io::Result<()> {
     let mut prefix = plan["progress"].clone();
     let loads = array(prefix.get("loads"), "snapshot issue progress")?;
-    let Some((last, before)) = loads.split_last() else {
+    if loads.is_empty() {
         return Ok(());
-    };
+    }
+    let split = if resolving { 2.min(loads.len()) } else { loads.len() - 1 };
+    let (before, after) = loads.split_at(split);
     let mut tail = prefix.clone();
-    tail["loads"] = json!([last]);
+    tail["loads"] = json!(after);
     tail["imports"] = json!([]);
     tail["snapFailed"] = json!(true);
     tail["versionNotice"] = json!("");
@@ -138,6 +142,7 @@ pub(super) fn packages(
         &json!({"kind":"commandSnapshotStagePackages", "token":session.token}),
     )?;
     check_token(&staged, &session.token)?;
+    capture::snapshot_control_reads(&mut session.capture, &staged["controlReadSet"])?;
     let before = capture::callback_load_stdout(&session.capture).len();
     let manifests = capture::snapshot_package_manifests(&session.capture, &json!(plans));
     startup.build_stdout.push_str(&capture::callback_load_stdout(&session.capture)[before..]);

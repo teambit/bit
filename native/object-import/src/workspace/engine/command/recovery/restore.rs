@@ -33,7 +33,7 @@ pub(super) fn prepare(
     proofs: &mut Vec<proof::Proof>,
 ) -> io::Result<Prepared> {
     let lane = operation == Operation::LaneAbort;
-    let backup = root.join(".bit/last-merged");
+    let backup = crate::scope_path(root).join("last-merged");
     let bitmap_path = if lane { backup.join("bitmap") } else { root.join(".bitmap") };
     let workspace_path =
         if lane { backup.join("workspace.jsonc") } else { root.join("workspace.jsonc") };
@@ -102,20 +102,20 @@ fn report_items(prepared: &mut Prepared) {
 }
 fn staged_controls(prepared: &mut Prepared, proofs: &mut Vec<proof::Proof>) -> io::Result<()> {
     let root = &prepared.root;
-    let backup = root.join(".bit/last-merged");
+    let backup = crate::scope_path(root).join("last-merged");
     let staged_config = format!(
-        ".bit/staged-config/{}.json",
+        "staged-config/{}.json",
         prepared.object.as_ref().map_or("main", |lane| lane.id.as_str()),
     );
     for (source, destination) in
-        [("staged-snaps", ".bit/staged-snaps"), ("staged-config.json", staged_config.as_str())]
+        [("staged-snaps", "staged-snaps"), ("staged-config.json", staged_config.as_str())]
     {
         let source = backup.join(source);
-        let destination = root.join(destination);
+        let destination = crate::scope_path(root).join(destination);
         paths::staged(&prepared.root, &destination, proofs)?;
         proof::read(&destination, proofs)?;
         let bytes = proof::read(&source, proofs)?;
-        if destination == root.join(".bit/staged-snaps") {
+        if destination == crate::scope_path(root).join("staged-snaps") {
             prepared.staged_snaps.clone_from(&bytes);
         }
         prepared.mutations.staged_bytes.push(bytes.clone());
@@ -188,7 +188,7 @@ impl Prepared {
             }
         }
         if self.lane {
-            crate::workspace::actions::remove(&self.root.join(".bit/last-merged"))?;
+            crate::workspace::actions::remove(&crate::scope_path(&self.root).join("last-merged"))?;
         }
         Ok(())
     }

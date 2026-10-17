@@ -2,12 +2,14 @@
 //! state are snapped by the engine's `commandResolve*` requests, and reported like `MergeCmd`'s resolved
 //! components.
 
-use super::force_local_build;
 use crate::{
     commands::{
         color::Chalk,
         ids::Id,
-        status::js::{array, decline, object, text},
+        status::{
+            autosync::Startup,
+            js::{array, decline, object, text},
+        },
         workspace_command::{
             self, format::Formatter, progress::Progress, resolve, results::Report,
         },
@@ -16,12 +18,19 @@ use crate::{
     workspace,
 };
 use serde_json::{Value, json};
-use std::{collections::HashSet, env, ffi::OsString, io};
+use std::{
+    collections::HashSet,
+    env,
+    ffi::OsString,
+    io::{self, Write},
+    path::Path,
+};
 
 /// `--resolve` with an optional pattern,
 /// `--message` and `-x`.
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct Options {
+    pub build: bool,
     pub pattern: Option<String>,
     pub message: Option<String>,
 }
@@ -50,11 +59,14 @@ pub fn parse(args: &[&str]) -> Option<Options> {
     flags.contains(&"--resolve").then_some(options)
 }
 
-const FLAGS: [&str; 3] = ["--message", "--resolve", "--skip-dependency-installation"];
+const FLAGS: [&str; 4] = ["--message", "--resolve", "--skip-dependency-installation", "--build"];
 
 impl Options {
     /// One flag; the number of values it consumed.
     fn flag(&mut self, flag: &str, next: Option<&str>) -> Option<usize> {
+        if flag == "--build" {
+            self.build = true;
+        }
         if flag != "--message" {
             return Some(0);
         }
@@ -74,46 +86,90 @@ impl Options {
         self.pattern = Some(text.to_string());
         Some(())
     }
-
-    /// The engine's resolve options.
-    fn request(&self) -> Value {
-        let mut options = json!({});
-        if let Some(pattern) = &self.pattern {
-            options["pattern"] = json!(pattern);
-        }
-        if let Some(message) = &self.message {
-            options["message"] = json!(message);
-        }
-        options
-    }
 }
 
 pub fn run(args: &[OsString], options: &Options) -> io::Result<Outcome> {
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".to_string()));
     };
-    if force_local_build(&root) {
-        return Ok(Outcome::Declined("force_local_build may be set".to_string()));
-    }
-    let request = resolve::ResolveRequest {
-        kind: resolve::Kind::Resolve,
-        options: options.request(),
-        selection: resolve::Selection::Resolve { pattern: options.pattern.as_deref() },
-    };
-    let prepared = resolve::plan(&root, &request)
-        .and_then(|planned| {
-            let report = format(&planned.plan["result"], Chalk::detect(args))?;
-            let progress = Progress::parse(planned.plan.get("progress"))?;
-            Ok((planned, report, progress))
-        });
-    let (planned, report, progress) = match prepared {
-        Ok(prepared) => prepared,
+    let argv = workspace_command::utf8_args(args).ok_or_else(|| decline("resolve arguments"))?;
+    let mut workflow = resolve::workflow::Workflow::default();
+    workflow.build = options.build;
+    workflow.configure(&root, &argv[1..], resolve::Kind::Resolve)?;
+    let mut startup = Startup::default();
+    let planned = plan_with_workflow(
+        &root,
+        options.pattern.as_deref(),
+        options.message.as_deref(),
+        &mut startup,
+        &workflow,
+    );
+    let mut planned = match planned {
+        Ok(planned) => planned,
+        Err(error) if startup.committed => return failure(&root, args, &startup, error),
         Err(error) => return Ok(Outcome::Declined(format!("merge --resolve: {error}"))),
     };
-    workspace_command::execute(&root, args, "merge", planned, &report, |output| {
+    let report = format(&planned.plan["result"], Chalk::detect(args))?;
+    let progress = Progress::parse_snap(planned.plan.get("progress"))?;
+    io::stdout().write_all(startup.stdout.as_bytes())?;
+    workspace_command::execute_then(&root, args, "merge", |output| {
+        resolve::render_events(output, &startup)?;
         if let Some(progress) = &progress {
-            progress.render_merge(output);
+            if startup.snapshot_events.is_empty() {
+                progress.render_merge(output);
+            } else {
+                progress.render_graph(output);
+            }
         }
+        resolve::render_build_output(output, &startup, false)?;
+        workspace_command::commit(&mut planned, &root)?;
+        crate::commands::status::cleanup_temporary(&root)?;
+        Ok(report)
+    })
+}
+
+pub(in crate::commands) fn plan_with_workflow(
+    root: &Path,
+    pattern: Option<&str>,
+    message: Option<&str>,
+    startup: &mut Startup,
+    workflow: &resolve::workflow::Workflow,
+) -> io::Result<workspace_command::Planned> {
+    let options = json!({"pattern":pattern,"message":message});
+    let request = resolve::ResolveRequest {
+        kind: resolve::Kind::Resolve,
+        options,
+        selection: resolve::Selection::Resolve { pattern },
+    };
+    resolve::plan_snapshot(root, &request, startup, workflow)
+}
+
+pub(in crate::commands) fn plan_continuation(
+    root: &Path,
+    pattern: Option<&str>,
+    message: Option<&str>,
+    startup: &mut Startup,
+    workflow: &resolve::workflow::Workflow,
+    environment: Option<crate::commands::status::environments::Environments>,
+) -> io::Result<workspace_command::Planned> {
+    let request = resolve::ResolveRequest {
+        kind: resolve::Kind::Resolve,
+        options: json!({"pattern":pattern,"message":message}),
+        selection: resolve::Selection::Resolve { pattern },
+    };
+    resolve::plan_continuation(root, &request, startup, workflow, environment)
+}
+
+fn failure(
+    root: &Path,
+    args: &[OsString],
+    startup: &Startup,
+    error: io::Error,
+) -> io::Result<Outcome> {
+    io::stdout().write_all(startup.stdout.as_bytes())?;
+    workspace_command::execute_then(root, args, "merge", |output| {
+        resolve::render_build_output(output, startup, true)?;
+        Err(error)
     })
 }
 

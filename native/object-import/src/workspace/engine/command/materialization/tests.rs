@@ -41,6 +41,7 @@ fn empty_checkout_target_declines_before_reading_or_materializing_sources() {
     let captured = Captured {
         added: false,
         hidden: false,
+        model_backed: false,
         target: serde_json::from_value(json!({"identity":"scope/alpha","version":"1.0.0",
             "directory":"alpha","files":["index.js"],"current":{"mainFile":"index.js"}}))
         .unwrap(),

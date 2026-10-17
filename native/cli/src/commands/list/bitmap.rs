@@ -15,6 +15,7 @@ pub(in crate::commands) struct Entry {
     pub version: Option<String>,
     pub root_dir: String,
     pub staged_deprecation: bool,
+    pub deprecation: Option<Value>,
     removed: bool,
     available: bool,
 }
@@ -95,6 +96,9 @@ fn entry(value: &Value) -> io::Result<Entry> {
         version: text("version").map(str::to_string),
         root_dir: root_dir.to_string(),
         staged_deprecation,
+        deprecation: value["config"]["teambit.component/deprecation"]
+            .as_object()
+            .map(|config| Value::Object(config.clone())),
         removed,
         available,
     })

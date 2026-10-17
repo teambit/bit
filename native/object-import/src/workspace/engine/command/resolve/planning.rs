@@ -246,6 +246,9 @@ fn progress(retained: &Retained, selected: usize, auto_loaded: bool) -> Value {
         output["graphImports"] = retained.record.repository.progress()["imports"].clone();
         output["skipDependenciesGraph"] = json!(options.policy.no_lock_deps);
     }
+    if retained.record.context["callbackLifecycle"] == true {
+        output["graphImports"] = retained.record.repository.progress()["imports"].clone();
+    }
     output["loads"] = json!(loads);
     output
 }
@@ -366,7 +369,7 @@ pub(super) fn preflight(
         &retained.record.request.root,
         materials,
         snapshots,
-        retained.snap.is_some(),
+        retained.snap.is_some() || retained.record.context["callbackLifecycle"] == true,
     )?;
     super::super::resolve_publication::preflight(
         &retained.record.request.root,
@@ -374,7 +377,7 @@ pub(super) fn preflight(
         materials,
         &retained.pending,
         retained.record.repository.imported_index(),
-        retained.snap.is_some(),
+        retained.snap.is_some() || retained.record.context["callbackLifecycle"] == true,
     )?;
     Ok(())
 }
@@ -385,7 +388,7 @@ fn project_materials(
     materials: &mut [Material],
     snapshots: &snapshots::State,
 ) -> io::Result<()> {
-    if retained.snap.is_some() {
+    if retained.snap.is_some() || retained.record.context["callbackLifecycle"] == true {
         super::snap::prepare_graph_imports(retained, materials)?;
     }
     if retained.tag.is_some() {
@@ -404,7 +407,7 @@ pub(super) fn capture_for_snapshot(
     snapshots: &mut snapshots::State,
     pool: &rayon::ThreadPool,
 ) -> io::Result<Vec<capture::Captured>> {
-    if retained.snap.is_some() {
+    if retained.snap.is_some() || retained.record.context["callbackLifecycle"] == true {
         capture::all_for_snapshot(&retained.record.request.root, current, snapshots, pool)
     } else {
         capture::all(&retained.record.request.root, current, snapshots, pool)

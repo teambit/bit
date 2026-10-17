@@ -148,7 +148,7 @@ fn read(root: &Path, options: &Options<'_>) -> io::Result<Vec<Value>> {
         .filter(|entry| {
             entry.identity == id
                 || entry.identity
-                    .rsplit_once('/')
+                    .split_once('/')
                     .is_some_and(|(_, name)| name == id)
         })
         .collect();
@@ -156,16 +156,13 @@ fn read(root: &Path, options: &Options<'_>) -> io::Result<Vec<Value>> {
         return Err(decline("log identity absent or ambiguous"));
     }
     let target = matches[0];
-    if target.staged_deprecation {
-        return Err(decline("staged deprecation changes log metadata"));
-    }
     if target.version.is_none() {
         return Ok(Vec::new());
     }
     let mut engine = Engine::new()?;
     let result: Value = engine.request(&json!({
         "kind":"componentLog", "root":root, "identity":target.identity,
-        "lane":bitmap.lane,
+        "lane":bitmap.lane,"deprecation":target.deprecation,
     }))?;
     let rows = array(result.get("versions"), "component log versions")?;
     let mut raw = rows.to_vec();
@@ -197,6 +194,23 @@ pub(super) fn normalize(row: &Value) -> io::Result<Value> {
             normalized.insert("date".into(), json!(date.format("%Y-%m-%d %H:%M:%S").to_string()));
         }
     }
+    normalize_author(&mut normalized);
+    if let Some(tag) = row.get("tag") {
+        normalized.insert("tag".into(), tag.clone());
+    }
+    for key in ["hash", "parents", "onLane", "deleted"] {
+        normalized.insert(key.into(), row[key].clone());
+    }
+    if let Some(deprecated) = row.get("deprecated") {
+        normalized.insert("deprecated".into(), deprecated.clone());
+    }
+    if let Some(hidden) = row.get("hidden") {
+        normalized.insert("hidden".into(), hidden.clone());
+    }
+    Ok(Value::Object(normalized))
+}
+
+fn normalize_author(normalized: &mut Map<String, Value>) {
     for key in ["username", "email"] {
         if normalized
             .get(key)
@@ -206,16 +220,6 @@ pub(super) fn normalize(row: &Value) -> io::Result<Value> {
             normalized.insert(key.into(), json!("unknown"));
         }
     }
-    if let Some(tag) = row.get("tag") {
-        normalized.insert("tag".into(), tag.clone());
-    }
-    for key in ["hash", "parents", "onLane", "deleted"] {
-        normalized.insert(key.into(), row[key].clone());
-    }
-    if let Some(hidden) = row.get("hidden") {
-        normalized.insert("hidden".into(), hidden.clone());
-    }
-    Ok(Value::Object(normalized))
 }
 
 pub(super) fn raw_date_order(left: &Value, right: &Value) -> std::cmp::Ordering {
@@ -292,10 +296,14 @@ fn paint(row: &Value, chalk: Chalk) -> io::Result<String> {
         Some(tag) => format!("tag {tag} ({})", text(row.get("hash"))?),
         None => format!("snap {}", text(row.get("hash"))?),
     };
-    if row["deleted"] == true || row["deprecated"] == true {
-        return Err(decline("log removal or deprecation"));
-    }
-    let mut output = format!("{}\n", chalk.yellow(&title));
+    let suffix = if row["deleted"] == true {
+        format!(" {}", chalk.red(&format!("{} deleted", chalk.red("✖"))))
+    } else if row["deprecated"] == true {
+        format!(" {}", chalk.yellow(&format!("{} deprecated", chalk.yellow("⚠"))))
+    } else {
+        String::new()
+    };
+    let mut output = format!("{}{suffix}\n", chalk.yellow(&title));
     let username = row
         .get("username")
         .and_then(Value::as_str)

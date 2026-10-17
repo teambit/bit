@@ -75,6 +75,9 @@ pub(super) fn options(
             == true;
     Ok(super::merge::SelectionOptions {
         modified,
+        resolve_unrelated: record.request.options.lane
+            .as_ref()
+            .and_then(|lane| lane.resolve_unrelated.clone()),
         target_as_diverged: record.request.options.lane.is_some()
             && record.request.options.no_snap,
     })

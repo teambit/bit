@@ -10,6 +10,7 @@ use std::{collections::HashSet, io, path::Path};
 
 pub(super) struct Captured {
     pub(super) hidden: bool,
+    pub(super) model_backed: bool,
     pub(super) added: bool,
     pub(super) target: comparison::Target,
     pub(super) metadata: Value,
@@ -79,7 +80,7 @@ fn all_with(
             }
             files.push(source);
         }
-        Ok(Captured { added: false, hidden: false, target, metadata: Value::Array(metadata), files: Value::Array(files) })
+        Ok(Captured { added: false, hidden: false, model_backed: false, target, metadata: Value::Array(metadata), files: Value::Array(files) })
     }).collect()
 }
 pub(super) fn lane_visibility(captured: &mut [Captured], context: &Value) -> io::Result<()> {

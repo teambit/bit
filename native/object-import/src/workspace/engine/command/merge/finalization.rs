@@ -94,7 +94,7 @@ fn prepare_with(
             &mut prepared,
         )?;
     }
-    #[cfg(not(unix))]
+    #[cfg(not(any(unix, windows)))]
     if !snapshot && !prepared.links.is_empty() {
         return Err(invalid("merge native linking platform"));
     }

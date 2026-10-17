@@ -11,11 +11,14 @@ pub(super) fn owned_command(
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
     match request {
-        Request::ReadSetValidate { proofs } => {
+        Request::ReadSetValidate { proofs } => pool.install(|| {
             dependency_graph::proof::verify(&proofs)?;
             Ok((proofs.len(), serde_json::json!({"valid":true})))
+        }),
+        Request::CommandPlan(input) => pool.install(|| command::plan(&input, snapshots, pool)),
+        Request::CommandMergeDeferSnapshot(input) => {
+            command::merge_defer::run(&input, &mut snapshots.command)
         }
-        Request::CommandPlan(input) => command::plan(&input, snapshots, pool),
         Request::CommandCheckoutPolicyComplete(input) => {
             command::checkout_policy::complete(input, &mut snapshots.command)
         }

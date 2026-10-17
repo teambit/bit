@@ -80,7 +80,13 @@ fn build(flags: &[(&str, Value)], positionals: &[&str]) -> Option<Options> {
         return None;
     }
     let pattern = positionals.first().copied();
-    let grammar = |pattern: &str| pattern == "**" || pattern.chars().all(pattern_char);
+    let grammar = |pattern: &str| {
+        !pattern.is_empty()
+            && pattern.len() <= 4096
+            && !pattern.chars().any(char::is_control)
+            && (crate::commands::diff::selection::stateful(pattern)
+                || pattern.chars().all(pattern_char))
+    };
     if pattern.is_some_and(|pattern| !grammar(pattern)) {
         return None;
     }
@@ -96,7 +102,9 @@ fn build(flags: &[(&str, Value)], positionals: &[&str]) -> Option<Options> {
 
 /// `[a-z0-9_./-]`.
 fn pattern_char(character: char) -> bool {
-    character.is_ascii_lowercase() || character.is_ascii_digit() || "_./-".contains(character)
+    character.is_ascii_lowercase()
+        || character.is_ascii_digit()
+        || "_./-*?!,[]{}@()+".contains(character)
 }
 
 impl Options {

@@ -108,3 +108,10 @@ pub fn callback_startup_stdout(capture: &Capture) -> String {
         .unwrap_or_else(std::sync::PoisonError::into_inner)
         .clone()
 }
+
+/// Transfer the retained provider session to a later native operation in the same command.
+pub(in crate::commands) fn take_callback_environment(
+    capture: &mut Capture,
+) -> Option<super::super::environments::Environments> {
+    capture.cache.callbacks.host.take().map(super::super::environments::Environments::from_host)
+}

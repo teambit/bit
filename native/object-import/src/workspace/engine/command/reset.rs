@@ -32,7 +32,7 @@ pub(super) fn plan(
     }
     plan_command::validate_versions(record)?;
     let plan = pool.install(|| planning::checkout_reset(record, current, semver, snapshots, pool))?;
-    let configuration = reset_config::prepare(record, &plan)?;
+    let configuration = configuration(record, &plan)?;
     let mut bitmap = plan_command::prepare_bitmap_bytes(record, &plan, bitmap_bytes)?;
     let identities = plan.materials
         .iter()
@@ -57,6 +57,14 @@ pub(super) fn plan(
 }
 
 /// Check retained live inputs before recovery begins changing workspace controls.
+fn configuration(record: &Record, plan: &planning::Planned) -> io::Result<reset_config::Prepared> {
+    if record.context["callbackLifecycle"] == true {
+        reset_config::checkout(record, plan)
+    } else {
+        reset_config::prepare(record, plan)
+    }
+}
+
 pub(super) fn validate(record: &Record, prepared: &PreparedPlan) -> io::Result<()> {
     proof::verify(&record.proofs)?;
     validate_inputs(record, prepared)

@@ -1,6 +1,6 @@
 //! Published pre-snapshot callback facts, without JavaScript VCS publication.
 
-use super::{Capture, Engine, Value, array, decline, io, json};
+use super::{super::js::text, Capture, Engine, Value, array, decline, io, json};
 
 /// Per-component aspect data returned by hydrated snapshot callbacks.
 pub fn snapshot_data<'a>(capture: &'a Capture, identity: &str) -> Option<&'a Value> {
@@ -168,4 +168,23 @@ pub fn snapshot_workspace_issues(
         }
     }
     Ok(issues)
+}
+
+/// Adopt control proofs returned by the native retained publication owner.
+pub fn snapshot_control_reads(capture: &mut Capture, reads: &Value) -> io::Result<()> {
+    for after in array(Some(reads), "published control reads")? {
+        let path = text(after.get("path"))?;
+        let before = capture
+            .dependency_read_set()
+            .into_iter()
+            .filter(|proof| proof["path"] == path)
+            .collect::<Vec<_>>();
+        for before in before {
+            replace_source_proofs(
+                capture,
+                &json!({"changedWorkspaceSources":[{"before":before,"after":after}]}),
+            )?;
+        }
+    }
+    Ok(())
 }

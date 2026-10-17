@@ -77,7 +77,7 @@ fn passive_deprecation_preserves_config_without_adding_a_default_callback_slot()
     assert_eq!(super::configuration_cores().len(), 11);
     assert!(super::entries(&stored).is_ok());
     let ranged = json!([{"name":"teambit.component/deprecation","config":{"range":"*"}}]);
-    assert!(super::entries(&ranged).is_err());
+    assert_eq!(super::entries(&ranged).unwrap()[0]["config"], ranged[0]["config"]);
     let mut invalid_defaults = defaults();
     invalid_defaults.slot_data.push(
         json!({"id":"teambit.component/deprecation","data":{},"undefinedKeys":[]}),
@@ -86,12 +86,12 @@ fn passive_deprecation_preserves_config_without_adding_a_default_callback_slot()
 }
 
 #[test]
-fn removal_aspect_requires_a_supported_soft_remove_configuration() {
+fn removal_and_recovery_configuration_remain_passive_merge_inputs() {
     let removed = json!([{"name":"teambit.component/remove","config":{"removed":true},"data":{}}]);
     assert!(super::entries(&removed).is_ok());
-    let unsupported =
+    let recovered =
         json!([{"name":"teambit.component/remove","config":{"removed":false},"data":{}}]);
-    assert!(super::entries(&unsupported).is_err());
+    assert_eq!(super::entries(&recovered).unwrap()[0]["config"], recovered[0]["config"]);
 }
 
 #[test]
@@ -102,7 +102,7 @@ fn stored_builder_artifacts_are_passive_metadata_not_a_load_callback() {
     assert_eq!(output[0], stored[0]);
     assert!(super::entries(&stored).is_ok());
     let configured = json!([{"name":"teambit.pipelines/builder","config":{"pipeline":"custom"}}]);
-    assert!(super::entries(&configured).is_err());
+    assert_eq!(super::entries(&configured).unwrap()[0]["config"], configured[0]["config"]);
     let mut callbacks = defaults();
     callbacks.slot_data.push(
         json!({"id":"teambit.pipelines/builder","data":{},"undefinedKeys":[]}),

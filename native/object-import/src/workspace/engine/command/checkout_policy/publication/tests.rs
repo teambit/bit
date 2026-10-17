@@ -121,7 +121,8 @@ fn policy_jsonc_writer_uses_platform_eols_independently_of_original_newlines() {
     for input in [original.to_owned(), original.replace('\n', "\r\n")] {
         for windows in [false, true] {
             let actual =
-                super::render_updates(&input, updates.as_object().unwrap(), windows).unwrap();
+                super::render_updates_kind(&input, updates.as_object().unwrap(), windows, true)
+                    .unwrap();
             let expected =
                 if windows { expected.replace('\n', "\r\n") } else { expected.to_owned() };
             assert_eq!(actual, expected);

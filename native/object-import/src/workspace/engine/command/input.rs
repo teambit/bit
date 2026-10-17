@@ -42,6 +42,13 @@ pub(super) struct Options {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct LaneOptions {
     pub(super) name: String,
+    #[serde(flatten)]
+    pub(super) flags: LaneFlags,
+}
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(super) struct LaneFlags {
+    pub(super) resolve_unrelated: Option<String>,
     #[serde(default)]
     pub(super) no_auto_snap: bool,
     #[serde(default)]
@@ -56,6 +63,12 @@ pub(super) struct LaneOptions {
     pub(super) workspace_only: bool,
     #[serde(default)]
     pub(super) exclude_non_lane_comps: bool,
+}
+impl std::ops::Deref for LaneOptions {
+    type Target = LaneFlags;
+    fn deref(&self) -> &Self::Target {
+        &self.flags
+    }
 }
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]

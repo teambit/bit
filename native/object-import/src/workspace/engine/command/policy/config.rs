@@ -9,12 +9,14 @@ pub(super) fn merge(
     workspace: &Value,
     strategy: Option<&str>,
     semver: &Value,
-) -> io::Result<Value> {
-    let input = json!({"compIdStr":identity,"current":projection::entries(current)?,
-        "base":projection::entries(&versions[0]["extensions"])?,
-        "other":projection::entries(&versions[2]["extensions"])?,
+    labels: &Value,
+) -> io::Result<(Value, Value)> {
+    let entries = projection::entries;
+    let input = json!({"compIdStr":identity,"current":entries(current)?,
+        "base":entries(&versions[0]["extensions"])?,
+        "other":entries(&versions[2]["extensions"])?,
         "coreNames":projection::configuration_cores(),"workspaceIds":workspace,"otherLaneIds":[],
-        "strategy":strategy,"currentLabel":"current","otherLabel":"incoming",
+        "strategy":strategy,"currentLabel":labels["current"],"otherLabel":labels["other"],
         "semver":semver,"shouldMergeAspectsData":false});
     let result = crate::config_merge::apply("configComponent", &input)?;
     let mut merged = merged_config(&input, &result)?;
@@ -22,21 +24,15 @@ pub(super) fn merge(
         &mut merged,
         &versions[if strategy == Some("theirs") { 2 } else { 1 }]["extensions"],
     )?;
-    Ok(merged)
+    Ok((merged, json!({"input":input,"result":result})))
 }
 
 fn merged_config(input: &Value, result: &Value) -> io::Result<Value> {
     let mut merged = serde_json::Map::new();
     for row in projection::array(&result["configRows"])? {
-        if row.get("conflict").is_some() {
-            return Err(invalid("command unresolved configuration conflict"));
-        }
         let Some(value) = row.get("merged") else { continue };
         let config = resolve(input, value)?;
         let id = row["id"].as_str().ok_or_else(|| invalid("command merged config identity"))?;
-        if config == "-" {
-            return Err(invalid("command removed core aspect"));
-        }
         if !config.is_null() && config != false {
             merged.insert(id.to_owned(), config);
         }
@@ -44,7 +40,7 @@ fn merged_config(input: &Value, result: &Value) -> io::Result<Value> {
     Ok(Value::Object(merged))
 }
 
-fn resolve(input: &Value, value: &Value) -> io::Result<Value> {
+pub(super) fn resolve(input: &Value, value: &Value) -> io::Result<Value> {
     if let Some(value) = value.get("value") {
         return Ok(value.clone());
     }
@@ -131,33 +127,6 @@ fn scope_fields(current: &Value) -> io::Result<Vec<Value>> {
     }).collect::<io::Result<Vec<_>>>()
 }
 
-pub(super) fn apply_configs(extensions: &Value, merged: &Value) -> io::Result<Value> {
-    let original = projection::array(extensions)?;
-    let merged = normalized(merged)?;
-    let configs = merged.as_object().ok_or_else(|| invalid("command merged configuration"))?;
-    let mut output = Vec::new();
-    for (name, config) in configs {
-        let mut value = original
-            .iter()
-            .find(|entry| entry["name"] == name.as_str())
-            .cloned()
-            .unwrap_or_else(|| json!({"name":name,"data":{}}));
-        value["config"] = config.clone();
-        output.push(value);
-    }
-    output.extend(
-        original
-            .iter()
-            .filter(|entry| {
-                entry["name"]
-                    .as_str()
-                    .is_none_or(|name| !configs.contains_key(name))
-            })
-            .cloned(),
-    );
-    Ok(Value::Array(output))
-}
-
 pub(super) fn automatic(merged: &Value) -> io::Result<Value> {
     ["dependencies", "devDependencies", "peerDependencies"]
         .iter()
@@ -181,7 +150,7 @@ fn selected_policy(value: &Value, forced: bool) -> io::Result<Value> {
     Ok(Value::Object(output))
 }
 
-fn normalized(merged: &Value) -> io::Result<Value> {
+pub(super) fn normalized(merged: &Value) -> io::Result<Value> {
     let mut output = merged.clone();
     let Some(policy) = output
         .get_mut(projection::RESOLVER)

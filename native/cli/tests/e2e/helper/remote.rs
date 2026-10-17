@@ -1,7 +1,7 @@
 //! Remote fixtures remain independent of the pinned Windows pending-object glob bug.
 use super::{Helper, config, setup};
 use serde_json::Value;
-use std::{collections::HashSet, ffi::OsStr, fs};
+use std::{collections::HashSet, ffi::OsStr, process::Command};
 
 pub(crate) fn publish(helper: &Helper) {
     if cfg!(windows) {
@@ -11,7 +11,7 @@ pub(crate) fn publish(helper: &Helper) {
     }
 }
 
-/// Run the published local export lifecycle, then seed its canonical object bytes remotely.
+/// Run the published local export lifecycle, then merge its canonical objects through the published remote writer.
 /// Node's Windows server acknowledges no IDs because Repository.listRefs misses pending files;
 /// its client still clears model state, synchronizes remote refs and marks the lane exported.
 /// Complete only the fixture's bitmap/staged-config promotion omitted with that empty ID list.
@@ -19,8 +19,22 @@ pub(crate) fn seed_after_node_export(helper: &Helper) {
     node_export(helper);
     let scope = bit_object_import::scope_path(&helper.scopes.local_path);
     promote_workspace(helper, &scope);
-    setup::copy_dir(&scope.join("objects"), &helper.scopes.remote_path.join("objects"));
-    fs::copy(scope.join("index.json"), helper.scopes.remote_path.join("index.json")).unwrap();
+    let shared = setup::shared();
+    let output = Command::new("node")
+        .arg(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/e2e/helper/publish_objects.js"))
+        .arg(&shared.node_cli)
+        .arg(&scope)
+        .arg(&helper.scopes.remote_path)
+        .arg(
+            config::read_jsonc(&helper.scopes.local_path.join(".bitmap"))["_bit_lane"]["id"]
+                .to_string(),
+        )
+        .env("HOME", shared.root.join("home"))
+        .env("USERPROFILE", shared.root.join("home"))
+        .env("BIT_GLOBALS_DIR", shared.root.join("globals"))
+        .output()
+        .unwrap();
+    assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
 }
 
 pub(crate) fn node_export(helper: &Helper) {

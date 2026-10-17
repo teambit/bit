@@ -74,6 +74,30 @@ fn prepare_with(record: &Record, plan: &planning::Planned, checkout: bool) -> io
     Ok(prepared)
 }
 
+pub(super) fn merge(record: &Record, rows: &[super::policy::Row]) -> io::Result<Prepared> {
+    let mut prepared = Prepared { proofs: Vec::new(), writes: Vec::new() };
+    for row in rows.iter().filter(|row| !row.baseline.scope_only) {
+        let target = configuration_target(record, &row.identity)?;
+        let path = record.request.root.join(&row.baseline.directory).join("component.json");
+        let Some(bytes) = proof::read(&path, &mut prepared.proofs)? else { continue };
+        let original: Value = serde_json::from_slice(&bytes).map_err(io::Error::other)?;
+        if original != target["config"] {
+            return Err(invalid("merge configuration changed"));
+        }
+        paths::capture(&record.request.root, &path, &mut prepared.proofs)?;
+        validate_destination(&path)?;
+        let version_name =
+            target["version"].as_str().ok_or_else(|| invalid("merge config version"))?;
+        let output =
+            checkout::document(record, target, &row.baseline.current, version_name, &original)?;
+        let mut bytes = serde_json::to_vec_pretty(&output).map_err(io::Error::other)?;
+        bytes.push(b'\n');
+        prepared.writes.push((path, bytes));
+    }
+    prepared.validate()?;
+    Ok(prepared)
+}
+
 fn configuration_target<'a>(record: &'a Record, identity: &str) -> io::Result<&'a Value> {
     record.targets
         .iter()
@@ -101,7 +125,13 @@ fn projected_document(
     checkout: bool,
 ) -> io::Result<Value> {
     if checkout {
-        return checkout::document(record, target, material, original);
+        return checkout::document(
+            record,
+            target,
+            &material.version,
+            &material.version_name,
+            original,
+        );
     }
     let identity =
         target["identity"].as_str().ok_or_else(|| invalid("reset configuration identity"))?;
