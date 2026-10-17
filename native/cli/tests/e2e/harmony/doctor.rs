@@ -168,7 +168,11 @@ fn default_diagnoses_match_node_offline_without_creating_a_fresh_index() {
     helper.set_workspace_with_remote_scope();
     let oracle = helper.clone_workspace();
     let proxy = proxy::Proxy::new();
-    let environment = [("BVM_https_proxy", OsStr::new(&proxy.url))];
+    let certificate = proxy::certificate();
+    let environment = [
+        ("BVM_https_proxy", OsStr::new(&proxy.url)),
+        ("NODE_EXTRA_CA_CERTS", certificate.as_os_str()),
+    ];
     let before = fs::read(helper.scopes.local_path.join(".bit/index.json")).ok();
     for command in ["doctor --json", "doctor", r#"doctor "validate bit version" --json"#] {
         compare(&helper, &oracle, command, &environment);
@@ -291,7 +295,11 @@ fn failed_builtin_checks_preserve_default_json_quietness_and_text_errors() {
     helper.set_workspace_with_remote_scope();
     let oracle = helper.clone_workspace();
     let proxy = proxy::Proxy::empty();
-    let environment = [("BVM_https_proxy", OsStr::new(&proxy.url))];
+    let certificate = proxy::certificate();
+    let environment = [
+        ("BVM_https_proxy", OsStr::new(&proxy.url)),
+        ("NODE_EXTRA_CA_CERTS", certificate.as_os_str()),
+    ];
     compare(&helper, &oracle, "doctor --json", &environment);
     compare(&helper, &oracle, "doctor", &environment);
     assert_eq!(proxy.requests(), 4);

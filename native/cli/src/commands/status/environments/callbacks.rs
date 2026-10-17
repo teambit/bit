@@ -53,7 +53,9 @@ fn component_rows(capture: &Capture, context: &Value) -> io::Result<Vec<Value>> 
     capture.captured.iter().map(|row| {
         let identity = text(row.get("identity"))?;
         let issues = capture.components.iter().find(|component|component.identity.split('@').next() == Some(identity)).map_or_else(||json!([]), |component|component.issues.clone());
-        Ok(json!({"identity":identity,"version":row["version"],"directory":row["directory"],"files":row["files"],"current":row["current"],"issues":issues,"scoped":array(context.get("targets"),"callback targets")?.iter().find(|target|target["identity"]==identity).map(|target|target["scoped"].clone()),"scope":scope_metadata(context,identity)?,"dependencyCacheMiss":capture.environment_facts["checkoutCacheMisses"][identity]}))
+        let mut result=json!({"identity":identity,"version":row["version"],"directory":row["directory"],"files":row["files"],"current":row["current"],"issues":issues,"scoped":array(context.get("targets"),"callback targets")?.iter().find(|target|target["identity"]==identity).map(|target|target["scoped"].clone()),"scope":scope_metadata(context,identity)?,"dependencyCacheMiss":capture.environment_facts["checkoutCacheMisses"][identity]});
+        if let Some(version)=row.get("trackingVersion"){result["trackingVersion"]=version.clone();}
+        Ok(result)
     }).collect()
 }
 

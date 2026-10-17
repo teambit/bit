@@ -208,9 +208,13 @@ fn yn(value: &str) -> bool {
     )
 }
 
-struct JsHost(Arc<Host>, bool);
+pub(in crate::commands) struct JsHost(Arc<Host>, bool);
 
 impl JsHost {
+    pub(in crate::commands) fn new(host: Arc<Host>, quiet: bool) -> Self {
+        Self(host, quiet)
+    }
+
     async fn call<Response: DeserializeOwned>(
         &self,
         method: &'static str,

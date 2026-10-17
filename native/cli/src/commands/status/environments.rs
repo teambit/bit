@@ -11,6 +11,7 @@ mod facts;
 mod modes;
 mod quick;
 mod snapshot;
+mod tracking;
 
 use super::js::{array, decline, text};
 use crate::{

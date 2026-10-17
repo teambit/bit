@@ -145,6 +145,7 @@ Each host method is removed once its behavior is ported to Rust.
 | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `init [path]`, `--bare [name]`, naming/default-directory/default-scope/generator options, `--shared`, `--standalone`, package-manager and reset options, `--agent` | `bit-cli`, `bit-workspace-config`: provisioning and repair/reset plans, scope selection, permissions, package/configuration rendering, agent instructions and MCP | Published package templates and instruction assets are read as files; no ordinary Harmony host | Fresh Git initialization requiring the interactive wizard, malformed workspace configuration, unavailable published assets, unsupported syntax or paths decline before effects; started filesystem failures remain owned |
 | `config`, `config get/set/del/list`, `--local`, `--local-track`, `--origin`, `--detailed`, list `--json` | `bit-cli`, `bit-workspace-config`: store precedence, native persistence, JSON/text/color reports and workspace history | none; Git supplies the released user-name/email fallback | Unknown grammar/origins, unavailable stores, malformed or unsupported store shapes, versioned workspace config-store mutations and `__proto__` mutations decline before effects; write failures remain owned |
+| `add [paths...]`, `a`, identity/namespace/scope/main/env options, `--override`, `--root`, and `--json` | Rust resolves selectors and ignores, validates ownership and main files, retains a projected bitmap, prepares component package links and publishes bitmap history only after linking succeeds | Published environment resolution, component-load and package transformers, and bounded remote-existence facts; source inventory, tracking decisions and persistence remain native | Unknown grammar, unscoped vendor components, unsafe or unsupported filesystem/model/configuration inputs and explicit resource limits decline before effects; provider or link failures after ownership remain native errors |
 | `stash save` / `s`, `list`, `load [stash-id]` / `pop`, messages, `--include-new`, manual/ours/theirs merge and force options | Rust detached Version/Source capture, dependency graphs, retained stash storage, checkout and batch cleanup | Permitted environment/load/dependency facts and component-add/compile callbacks | Unknown grammar, the published boolean pattern option and empty-message conversion, unsafe/corrupt metadata, missing/re-added tracked components or paths requiring canonical recovery, unavailable dependency objects and explicit resource limits; declines precede publication |
 | `doctor [diagnosis]`, `--list`, `--json`, `--save`, `--archive`, archive inclusion/exclusion flags, `--remote` | `bit-cli`, `bit-workspace-config`, `bit-object-import`, `bit-client-transfer`: eight built-in diagnoses, reports/archives and file/HTTP remote diagnostics | Published BVM latest-version fact and configured JavaScript remote resolvers | Unknown grammar, unavailable published metadata, stores requiring canonical repair, corrupt or over-budget objects and error presentations requiring the released CLI stack decline before effects |
 | `install`, `in`                                                                                                                   | `bit-install` ([details](rust/native-install.md))                                                                                                                                                                                                                                                                         | `hostInfo`, `envPolicy`, `appTypes`, `packageJsonProps`, `transformPackageJson`, `afterInstall` | `--help`, outside a workspace, non-UTF-8 arguments, the yarn package manager, a Node.js CLI found only as a wrapper script                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
@@ -290,6 +291,60 @@ by `scripts/rust/bench-provisioning.py` with explicit pinned Node/CLI and releas
 An additional 45 pairs verified status, checkout and export against the same release artifact;
 the [regression measurements](../scripts/rust/benchmarks/consolidation-regressions.json) include
 the exact commands, fixture fingerprints and complete-state verifier.
+
+### Component tracking
+
+Native `add` retains one tracking plan through component loading and linking. Rust
+owns selectors, ignores, component identities and scopes, main-file selection,
+root ownership, package/source links and bitmap/history publication. Directory
+variants reuse the installer’s scope resolver. Re-adding a component preserves the
+published history write even when the rendered bitmap is unchanged.
+
+Environment resolution, semantic documentation parsing, component-load hooks and
+package transforms use the published Harmony providers. Dependency receipts are
+validated before caches are published. All package transforms finish before
+manifests are written; source links precede bitmap publication. A failure preserves
+the published output and filesystem prefix, including earlier cache and manifest
+writes. Root components skip dependency auto-detection at the same early boundary
+as the published loader while retaining explicit dependency policy.
+
+Unsupported inputs delegate before effects. CI errors whose published diagnostic
+includes a JavaScript stack also delegate before providers or publication;
+successful CI adds remain native. These delegated error cases are covered for
+parity and excluded from native performance claims.
+
+The Linux release qualification in [`add.json`](../scripts/rust/benchmarks/add.json)
+compares six complete commands against Node 22.22.0 / Bit 2.2.94 with five
+alternating pairs per non-TTY, TTY and CI mode (90 pairs: 80 native and 10 delegated
+CI errors). Output, exit status, workspace/repository files, modes, links,
+checksum-validated caches, bitmap histories and the actual file remote matched.
+Non-TTY medians in milliseconds were:
+
+| Workload | Node | Rust |
+| --- | ---: | ---: |
+| Add one component | 441.148 | 269.232 |
+| Add 100 components / 1,100 files | 1565.424 | 1161.509 |
+| Add workspace root | 353.013 | 280.176 |
+| Re-add with a new main file | 442.237 | 274.692 |
+| Fully ignored input (native error) | 225.821 | 2.049 |
+| Blocked package link (native error) | 414.086 | 262.987 |
+
+Every native median was faster across the three modes; delegated CI error rows
+are excluded from speed claims. These timing records identify measured commit
+`e3ae55f49`. The subsequent outside-workspace diagnostics, filesystem-aware main-file casing
+and platform-specific test changes passed another 135 parity pairs; their
+[`add-final-contended.json`](../scripts/rust/benchmarks/add-final-contended.json) and
+[`add-regressions-final-contended.json`](../scripts/rust/benchmarks/add-regressions-final-contended.json)
+records are excluded from timing claims because peak host load exceeded 80%. These are controlled file-remote, warm builtin
+metadata fixtures, not first-use, network-remote or cross-platform performance
+claims. Records include source, binary, helper and fixture fingerprints and exact
+normalizations. A further 45 pairs in
+[`add-regressions.json`](../scripts/rust/benchmarks/add-regressions.json) qualify
+status, checkout and export using the same release binary. Peak aggregate CPU use
+was 16.5%, sampled every 0.5 seconds after a quiet-minute start gate. A representative
+contended trial is retained with `performance_valid: false` and excluded from timing
+evidence. Reproduce with `scripts/rust/bench-add.py`; fixture preparation and remote
+restoration happen outside each measured command.
 
 ### Stash publication and restoration
 

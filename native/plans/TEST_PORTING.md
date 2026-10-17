@@ -212,22 +212,22 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/commands/add.e2e.ts`
 
-- [ ] `e2e/commands/add.e2e.ts:27` bit add command › add before running "bit init" › Should return message to run "bit init"
-- [ ] `e2e/commands/add.e2e.ts:35` bit add command › bit add without bitmap and .git/bit initialized › Should find local scope inside .git/bit and add component
-- [ ] `e2e/commands/add.e2e.ts:52` bit add command › add one component › Should print tracking component: id
-- [ ] `e2e/commands/add.e2e.ts:57` bit add command › add one component › Should print warning when trying to add file that is already tracked with different id and not add it as a new one
-- [ ] `e2e/commands/add.e2e.ts:65` bit add command › add one component › Should add component with namespace flag to bitmap with correct name
-- [ ] `e2e/commands/add.e2e.ts:71` bit add command › add one component › Should throw error msg if -i and -n flag are used with bit add
-- [ ] `e2e/commands/add.e2e.ts:78` bit add command › add one component › Should throw InvalidName when the id given with -i is not a valid component name
-- [ ] `e2e/commands/add.e2e.ts:83` bit add command › add one component › Define dynamic main file
-- [ ] `e2e/commands/add.e2e.ts:93` bit add command › add one component › should add component with id contains only one level
-- [ ] `e2e/commands/add.e2e.ts:107` bit add command › add component/s with gitignore › Should show warning msg in case there are no files to add because of gitignore
-- [ ] `e2e/commands/add.e2e.ts:130` bit add command › ignore specific files inside component › Should contain inside bitmap only files that are not inside gitignore
-- [ ] `e2e/commands/add.e2e.ts:142` bit add command › add component when id includes a version › should throw an VersionShouldBeRemoved exception
-- [ ] `e2e/commands/add.e2e.ts:154` bit add command › add component when the main file is a directory › should throw an exception MainFileIsDir
-- [ ] `e2e/commands/add.e2e.ts:175` bit add command › add the main file when it was removed before › should add the main file successfully
-- [ ] `e2e/commands/add.e2e.ts:186` bit add command › directory is with upper case and test/main flags are written with lower case › should throw an error for case sensitive filesystem saying the file was not found. for other system, it should work
-- [ ] `e2e/commands/add.e2e.ts:210` bit add command › adding a directory outside the consumer dir › should throw PathOutsideConsumer error
+- [x] `e2e/commands/add.e2e.ts:27` bit add command › add before running "bit init" › Should return message to run "bit init" — `native/cli/tests/e2e/commands/add.rs::failures::add_before_init_reports_the_released_workspace_error`
+- [ ] `e2e/commands/add.e2e.ts:35` bit add command › bit add without bitmap and .git/bit initialized › Should find local scope inside .git/bit and add component — Original successful recovery remains unported: the strict paired fixture `commands::add::embedded_scope_without_bitmap_is_recovered_before_tracking` preserves the pinned Bit 2.2.94 fatal outcome and verifies that no `.bit` is created.
+- [x] `e2e/commands/add.e2e.ts:52` bit add command › add one component › Should print tracking component: id — `native/cli/tests/e2e/commands/add.rs::tracks_named_namespaced_and_single_level_components`
+- [x] `e2e/commands/add.e2e.ts:57` bit add command › add one component › Should print warning when trying to add file that is already tracked with different id and not add it as a new one — `native/cli/tests/e2e/commands/add.rs::already_owned_files_warn_without_creating_a_second_identity`
+- [x] `e2e/commands/add.e2e.ts:65` bit add command › add one component › Should add component with namespace flag to bitmap with correct name — `native/cli/tests/e2e/commands/add.rs::tracks_named_namespaced_and_single_level_components`
+- [x] `e2e/commands/add.e2e.ts:71` bit add command › add one component › Should throw error msg if -i and -n flag are used with bit add — `native/cli/tests/e2e/commands/add.rs::errors::invalid_id_version_and_conflicting_name_flags_leave_state_unchanged`
+- [x] `e2e/commands/add.e2e.ts:78` bit add command › add one component › Should throw InvalidName when the id given with -i is not a valid component name — `native/cli/tests/e2e/commands/add.rs::errors::invalid_id_version_and_conflicting_name_flags_leave_state_unchanged`
+- [x] `e2e/commands/add.e2e.ts:83` bit add command › add one component › Define dynamic main file — `native/cli/tests/e2e/commands/add.rs::main_file::dynamic_parent_main_file_and_missing_directory_main_match_node`
+- [x] `e2e/commands/add.e2e.ts:93` bit add command › add one component › should add component with id contains only one level — `native/cli/tests/e2e/commands/add.rs::tracks_named_namespaced_and_single_level_components`
+- [x] `e2e/commands/add.e2e.ts:107` bit add command › add component/s with gitignore › Should show warning msg in case there are no files to add because of gitignore — `native/cli/tests/e2e/commands/add.rs::ignored_files_and_fully_ignored_directories_match_node`
+- [x] `e2e/commands/add.e2e.ts:130` bit add command › ignore specific files inside component › Should contain inside bitmap only files that are not inside gitignore — `native/cli/tests/e2e/commands/add.rs::ignored_files_and_fully_ignored_directories_match_node`
+- [x] `e2e/commands/add.e2e.ts:142` bit add command › add component when id includes a version › should throw an VersionShouldBeRemoved exception — `native/cli/tests/e2e/commands/add.rs::errors::invalid_id_version_and_conflicting_name_flags_leave_state_unchanged`
+- [x] `e2e/commands/add.e2e.ts:154` bit add command › add component when the main file is a directory › should throw an exception MainFileIsDir — `native/cli/tests/e2e/commands/add.rs::main_file::dynamic_parent_main_file_and_missing_directory_main_match_node`
+- [x] `e2e/commands/add.e2e.ts:175` bit add command › add the main file when it was removed before › should add the main file successfully — `native/cli/tests/e2e/commands/add.rs::main_file::removed_main_can_be_replaced_by_a_new_explicit_main`
+- [x] `e2e/commands/add.e2e.ts:186` bit add command › directory is with upper case and test/main flags are written with lower case › should throw an error for case sensitive filesystem saying the file was not found. for other system, it should work — `native/cli/tests/e2e/commands/add.rs::main_file::platform_case_sensitivity_controls_explicit_main_lookup`
+- [x] `e2e/commands/add.e2e.ts:210` bit add command › adding a directory outside the consumer dir › should throw PathOutsideConsumer error — `native/cli/tests/e2e/commands/add.rs::errors::individual_files_and_missing_or_outside_paths_match_errors`
 
 ### `e2e/commands/cat.e2e.ts`
 
@@ -922,29 +922,29 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/add-harmony.e2e.ts`
 
-- [ ] `e2e/harmony/add-harmony.e2e.ts:24` add command on Harmony › adding files when workspace is new › should throw an error AddingIndividualFiles
-- [ ] `e2e/harmony/add-harmony.e2e.ts:36` add command on Harmony › add a directory inside an existing component › should throw a descriptive error about parent-dir is tracked
-- [ ] `e2e/harmony/add-harmony.e2e.ts:53` add command on Harmony › adding the workspace root as a component › should save "." as the rootDir
-- [ ] `e2e/harmony/add-harmony.e2e.ts:56` add command on Harmony › adding the workspace root as a component › should own the root files, including files added after it was tracked
-- [ ] `e2e/harmony/add-harmony.e2e.ts:60` add command on Harmony › adding the workspace root as a component › should not claim the files of the component nested inside it
-- [ ] `e2e/harmony/add-harmony.e2e.ts:63` add command on Harmony › adding the workspace root as a component › should track .bitmap, so a git-free workspace can be restored from the scope
-- [ ] `e2e/harmony/add-harmony.e2e.ts:66` add command on Harmony › adding the workspace root as a component › should not claim the local scope directory
-- [ ] `e2e/harmony/add-harmony.e2e.ts:69` add command on Harmony › adding the workspace root as a component › should not be linked into node_modules, unlike a regular component
+- [x] `e2e/harmony/add-harmony.e2e.ts:24` add command on Harmony › adding files when workspace is new › should throw an error AddingIndividualFiles — `commands::add::errors::individual_files_and_missing_or_outside_paths_match_errors`
+- [x] `e2e/harmony/add-harmony.e2e.ts:36` add command on Harmony › add a directory inside an existing component › should throw a descriptive error about parent-dir is tracked — `commands::add::errors::tracking_inside_an_existing_component_reports_parent_owner`
+- [x] `e2e/harmony/add-harmony.e2e.ts:53` add command on Harmony › adding the workspace root as a component › should save "." as the rootDir — `harmony::add::root::root_tracking_keeps_nested_ownership_bitmap_and_scope_boundaries`
+- [x] `e2e/harmony/add-harmony.e2e.ts:56` add command on Harmony › adding the workspace root as a component › should own the root files, including files added after it was tracked — `harmony::add::root::root_tracking_keeps_nested_ownership_bitmap_and_scope_boundaries`
+- [x] `e2e/harmony/add-harmony.e2e.ts:60` add command on Harmony › adding the workspace root as a component › should not claim the files of the component nested inside it — `harmony::add::root::root_tracking_keeps_nested_ownership_bitmap_and_scope_boundaries`
+- [x] `e2e/harmony/add-harmony.e2e.ts:63` add command on Harmony › adding the workspace root as a component › should track .bitmap, so a git-free workspace can be restored from the scope — `harmony::add::root::root_tracking_keeps_nested_ownership_bitmap_and_scope_boundaries`
+- [x] `e2e/harmony/add-harmony.e2e.ts:66` add command on Harmony › adding the workspace root as a component › should not claim the local scope directory — `harmony::add::root::root_tracking_keeps_nested_ownership_bitmap_and_scope_boundaries`
+- [x] `e2e/harmony/add-harmony.e2e.ts:69` add command on Harmony › adding the workspace root as a component › should not be linked into node_modules, unlike a regular component — `harmony::add::root::root_tracking_keeps_nested_ownership_bitmap_and_scope_boundaries`
 - [ ] `e2e/harmony/add-harmony.e2e.ts:89` add command on Harmony › workspace-root component and .bitmap › should not be modified right after snapping, despite tracking .bitmap
 - [ ] `e2e/harmony/add-harmony.e2e.ts:94` add command on Harmony › workspace-root component and .bitmap › should not be modified on the quick-status path either, which hashes the files on disk
-- [ ] `e2e/harmony/add-harmony.e2e.ts:98` add command on Harmony › workspace-root component and .bitmap › should record on the nested component the root it was snapped in, at the version the root got in that snap
-- [ ] `e2e/harmony/add-harmony.e2e.ts:107` add command on Harmony › workspace-root component and .bitmap › should mark the root component itself as such in its aspect data
+- [x] `e2e/harmony/add-harmony.e2e.ts:98` add command on Harmony › workspace-root component and .bitmap › should record on the nested component the root it was snapped in, at the version the root got in that snap — `commands::tag::root::modified_root_snap_records_allocated_hash_without_package_materialization`
+- [x] `e2e/harmony/add-harmony.e2e.ts:107` add command on Harmony › workspace-root component and .bitmap › should mark the root component itself as such in its aspect data — `commands::tag::root::explicit_member_version_brings_modified_root_with_its_own_patch`
 - [ ] `e2e/harmony/add-harmony.e2e.ts:121` add command on Harmony › workspace-root component and .bitmap › adding a new component inside the workspace root › should let the new component take the files from the root component
 - [ ] `e2e/harmony/add-harmony.e2e.ts:125` add command on Harmony › workspace-root component and .bitmap › adding a new component inside the workspace root › should mark the root component as modified, because the map changed
 - [ ] `e2e/harmony/add-harmony.e2e.ts:133` add command on Harmony › workspace-root component and .bitmap › adding a new component inside the workspace root › snapping only the new component › should snap the modified root along, and say so
 - [ ] `e2e/harmony/add-harmony.e2e.ts:138` add command on Harmony › workspace-root component and .bitmap › adding a new component inside the workspace root › snapping only the new component › should record the root on the new component at the version it got in that snap
 - [ ] `e2e/harmony/add-harmony.e2e.ts:145` add command on Harmony › workspace-root component and .bitmap › adding a new component inside the workspace root › snapping only the new component › should converge again
-- [ ] `e2e/harmony/add-harmony.e2e.ts:156` add command on Harmony › workspace-root component and .bitmap › tagging a member with an explicit version while the root is modified › should give the root a patch bump of its own rather than the version meant for the member
+- [x] `e2e/harmony/add-harmony.e2e.ts:156` add command on Harmony › workspace-root component and .bitmap › tagging a member with an explicit version while the root is modified › should give the root a patch bump of its own rather than the version meant for the member — `commands::tag::root::explicit_member_version_brings_modified_root_with_its_own_patch`
 - [ ] `e2e/harmony/add-harmony.e2e.ts:177` add command on Harmony › removing the workspace-root component › should not drop a package.json dependency that shares its derived package name
 - [ ] `e2e/harmony/add-harmony.e2e.ts:183` add command on Harmony › removing the workspace-root component › should not delete the workspace
 - [ ] `e2e/harmony/add-harmony.e2e.ts:191` add command on Harmony › removing the workspace-root component › should keep the other component tracked
 - [ ] `e2e/harmony/add-harmony.e2e.ts:194` add command on Harmony › removing the workspace-root component › should not delete a dependency that shares its derived package name
-- [ ] `e2e/harmony/add-harmony.e2e.ts:214` add command on Harmony › writing the workspace-root component to the filesystem › should check out an earlier version of it without throwing
+- [x] `e2e/harmony/add-harmony.e2e.ts:214` add command on Harmony › writing the workspace-root component to the filesystem › should check out an earlier version of it without throwing — `harmony::checkout_platform::root_checkout_restores_readme_without_rewinding_live_bitmap_or_nested_components`
 - [ ] `e2e/harmony/add-harmony.e2e.ts:225` add command on Harmony › writing the workspace-root component to the filesystem › importing it into another workspace › should not write a .bitmap outside the workspace root
 - [ ] `e2e/harmony/add-harmony.e2e.ts:231` add command on Harmony › writing the workspace-root component to the filesystem › importing it into another workspace › should not be modified by the map it left behind
 - [ ] `e2e/harmony/add-harmony.e2e.ts:243` add command on Harmony › writing the workspace-root component to the filesystem › importing it onto the root of an empty workspace › should write its files at the workspace root
@@ -962,14 +962,14 @@ row's fields, object path, header, logical identity, and remote index stay exact
 - [ ] `e2e/harmony/add-harmony.e2e.ts:356` add command on Harmony › a member imported on its own into a workspace that has no root › should not bring the root component along, the pointer is provenance and not a dependency
 - [ ] `e2e/harmony/add-harmony.e2e.ts:364` add command on Harmony › a member imported on its own into a workspace that has no root › tagging it here, where there is no root to record › should drop the root of the workspace it came from, not carry it into the new version
 - [ ] `e2e/harmony/add-harmony.e2e.ts:370` add command on Harmony › a member imported on its own into a workspace that has no root › tagging it here, where there is no root to record › should leave the version it was imported at untouched
-- [ ] `e2e/harmony/add-harmony.e2e.ts:390` add command on Harmony › env of the workspace-root component › should be tracked with the empty env, not the regular default env
-- [ ] `e2e/harmony/add-harmony.e2e.ts:395` add command on Harmony › env of the workspace-root component › should record that env in .bitmap as explicit config
-- [ ] `e2e/harmony/add-harmony.e2e.ts:399` add command on Harmony › env of the workspace-root component › should get no dependency policy from an env, unlike a regular component
-- [ ] `e2e/harmony/add-harmony.e2e.ts:408` add command on Harmony › env of the workspace-root component › should leave the env of a regular component alone
-- [ ] `e2e/harmony/add-harmony.e2e.ts:411` add command on Harmony › env of the workspace-root component › should not report compiler-derived issues, while a regular component still does
-- [ ] `e2e/harmony/add-harmony.e2e.ts:416` add command on Harmony › env of the workspace-root component › should not report missing links from node_modules, it is never linked there
-- [ ] `e2e/harmony/add-harmony.e2e.ts:420` add command on Harmony › env of the workspace-root component › should not report a duplicate component-and-package issue for the root, it is not a package
-- [ ] `e2e/harmony/add-harmony.e2e.ts:432` add command on Harmony › env of the workspace-root component › when a root file has a relative import into a component and requires a missing package › should report no issue, the root files are not parsed for dependencies
+- [x] `e2e/harmony/add-harmony.e2e.ts:390` add command on Harmony › env of the workspace-root component › should be tracked with the empty env, not the regular default env — `harmony::add::policy::native_root_tracking_keeps_environment_policy_and_dependency_issues_empty`
+- [x] `e2e/harmony/add-harmony.e2e.ts:395` add command on Harmony › env of the workspace-root component › should record that env in .bitmap as explicit config — `harmony::add::policy::root_env_is_explicit_empty_while_regular_component_keeps_default_env`
+- [x] `e2e/harmony/add-harmony.e2e.ts:399` add command on Harmony › env of the workspace-root component › should get no dependency policy from an env, unlike a regular component — `harmony::add::policy::native_root_tracking_keeps_environment_policy_and_dependency_issues_empty`
+- [x] `e2e/harmony/add-harmony.e2e.ts:408` add command on Harmony › env of the workspace-root component › should leave the env of a regular component alone — `harmony::add::policy::native_root_tracking_keeps_environment_policy_and_dependency_issues_empty`
+- [x] `e2e/harmony/add-harmony.e2e.ts:411` add command on Harmony › env of the workspace-root component › should not report compiler-derived issues, while a regular component still does — `harmony::add::policy::native_root_tracking_keeps_environment_policy_and_dependency_issues_empty`
+- [x] `e2e/harmony/add-harmony.e2e.ts:416` add command on Harmony › env of the workspace-root component › should not report missing links from node_modules, it is never linked there — `harmony::add::policy::native_root_tracking_keeps_environment_policy_and_dependency_issues_empty`
+- [x] `e2e/harmony/add-harmony.e2e.ts:420` add command on Harmony › env of the workspace-root component › should not report a duplicate component-and-package issue for the root, it is not a package — `harmony::add::policy::native_root_tracking_keeps_environment_policy_and_dependency_issues_empty`
+- [x] `e2e/harmony/add-harmony.e2e.ts:432` add command on Harmony › env of the workspace-root component › when a root file has a relative import into a component and requires a missing package › should report no issue, the root files are not parsed for dependencies — `harmony::add::policy::native_root_tracking_keeps_environment_policy_and_dependency_issues_empty`
 - [ ] `e2e/harmony/add-harmony.e2e.ts:437` add command on Harmony › env of the workspace-root component › when a root file has a relative import into a component and requires a missing package › should snap with no dependencies
 - [ ] `e2e/harmony/add-harmony.e2e.ts:474` add command on Harmony › trackAllFiles: tracking the files bit treats as generated › cloning the workspace from its root component › should report the root version and the number of components
 - [ ] `e2e/harmony/add-harmony.e2e.ts:478` add command on Harmony › trackAllFiles: tracking the files bit treats as generated › cloning the workspace from its root component › should write the root files, the manifests included, so the workspace can be installed and built

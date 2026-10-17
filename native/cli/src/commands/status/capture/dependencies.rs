@@ -47,8 +47,9 @@ impl Scan<'_> {
         policy: &policy::Policy,
         captured: &mut Capture,
     ) -> io::Result<Value> {
-        let mut dependencies = if captured.cache.no_fs_cache
-            || (captured.cache.reset && directory != ".")
+        let mut dependencies = if directory == "."
+            || captured.cache.no_fs_cache
+            || captured.cache.reset
             || (!self.environments.is_checkout()
                 && !self.context["environmentFacts"][text(target.get("identity"))?].is_null())
         {
@@ -119,7 +120,11 @@ impl Scan<'_> {
         }
         let facts = self.facts.as_ref().ok_or_else(|| decline("status facts"))?;
         let detection = fresh::Detection { root: self.root, context: self.context, facts };
-        let custom = self.environments.detectors(self.root, self.context, target, files)?;
+        let custom = if target["directory"] == "." {
+            Value::Null
+        } else {
+            self.environments.detectors(self.root, self.context, target, files)?
+        };
         match detection.read_with_detectors(self.engine, target, files, policy, custom.clone()) {
             Err(error)
                 if error

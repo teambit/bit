@@ -28,12 +28,13 @@ let snapshotCommand = ['snap', 'tag'].includes(snapshotCommandName) || (cliArgum
 const checkoutCommand = (cliArguments[0] === 'merge' && cliArguments.includes('--abort')) || (cliArguments[0] === 'lane' && cliArguments[1] === 'merge-abort') || ['checkout', 'U', 'revert', 'switch'].includes(cliArguments[0]) || (cliArguments[0] === 'lane' && cliArguments[1] === 'import');
 const mergeCommand = (cliArguments[0] === 'merge' && !cliArguments.includes('--abort') && !cliArguments.includes('--resolve')) || (cliArguments[0] === 'lane' && cliArguments[1] === 'merge');
 const exportCommand = ['export', 'e', 'resume-export'].includes(cliArguments[0]);
-const bufferedCommand = snapshotCommand || checkoutCommand || mergeCommand || exportCommand || cliArguments[0] === 'stash';
+const bufferedCommand = snapshotCommand || checkoutCommand || mergeCommand || exportCommand || ['stash', 'add', 'a'].includes(cliArguments[0]);
 process.argv = [process.execPath, entry, ...cliArguments];
 require(path.join(bitDir, 'dist', 'hook-require.js'));
 const bitRequire = createRequire(path.join(bitDir, 'package.json'));
 const respond = process.stdout.write.bind(process.stdout);
 let capturedStdout = null;
+const trackingDocumentation = new Map();
 process.stdout.write = (chunk, encoding, callback) => {
   if (capturedStdout) {
     capturedStdout.push(Buffer.isBuffer(chunk) ? chunk.toString(typeof encoding === 'string' ? encoding : undefined) : chunk);
@@ -134,6 +135,73 @@ const handlers = {
   snapshotWorkspaceIssues: async () => (await loadHarmony()).get('teambit.workspace/workspace').getWorkspaceIssues({includeNonBlocking:false}).map((error)=>error.message),
   statusWorkspaceIssues: async () => (await loadHarmony()).get('teambit.workspace/workspace').getWorkspaceIssues().map((error) => error.message),
   statusLoadCallbacks,
+  trackingDocs: async ({ components }) => {
+    const workspace = (await loadHarmony()).get('teambit.workspace/workspace');
+    const { SourceFile } = bitRequire('@teambit/component.sources');
+    const { parser } = bitRequire('@teambit/semantics.doc-parser');
+    const cache = workspace.consumer.componentFsCache;
+    const writes = [];
+    for (const component of components) {
+      const directory = path.join(root, component.directory);
+      for (const entry of component.files) {
+        if (entry.test) continue;
+        const filename = path.join(directory, entry.relativePath);
+        const file = SourceFile.load(filename, directory, root);
+        const docs = await parser(file, {
+          getDocsFromCache: (key) => cache.getDocsFromCache(key),
+          saveDocsInCache: async (key, value) => { writes.push({path:key,docs:value}); },
+        });
+        trackingDocumentation.set(filename, docs);
+      }
+    }
+    return writes;
+  },
+  trackingEnvConfig: async ({ env }) => {
+    const workspace = (await loadHarmony()).get('teambit.workspace/workspace');
+    const id = await workspace.resolveComponentId(env);
+    let configuredId;
+    try {
+      configuredId = await workspace.resolveEnvIdWithPotentialVersionForConfig(id);
+    } catch {
+      configuredId = id.toStringWithoutVersion();
+    }
+    return { resolvedId: id.toStringWithoutVersion(), configuredId };
+  },
+  trackingRemoteExistence: async ({ ids }) => {
+    if (!ids.length) return [];
+    try {
+      const harmony = await loadHarmony();
+      const { ComponentID } = bitRequire('@teambit/component-id');
+      const candidates = ids.map((identity) => ComponentID.fromString(identity));
+      // This published metadata helper owns the fetch-concurrency limit and the
+      // exact five-second best-effort race; it never tracks or publishes anything.
+      const existing = await harmony.get('teambit.component/tracker').getIdsExistingOnRemote(candidates);
+      return existing.map((id) => id.toStringWithoutVersion());
+    } catch {
+      return [];
+    }
+  },
+  trackingProjectBitmap: async ({ bitmap, components }) => {
+    const workspace = (await loadHarmony()).get('teambit.workspace/workspace');
+    const { BitMap: LegacyBitMap } = bitRequire('@teambit/legacy.bit-map');
+    const { BitMap: WorkspaceBitMap } = bitRequire('@teambit/workspace/dist/bit-map.js');
+    const projected = LegacyBitMap.loadFromContentWithoutLoadingFiles(
+      Buffer.from(JSON.stringify(bitmap)), workspace.consumer.bitMap.mapPath, root,
+      workspace.consumer.defaultScope
+    );
+    for (const componentMap of projected.components) {
+      const receipt = components.find((component) => component.directory === componentMap.rootDir);
+      if (!receipt || receipt.mainFile !== componentMap.mainFile) {
+        throw new Error('native tracking component inventory mismatch');
+      }
+      componentMap.files = receipt.files.map((file) => ({ ...file }));
+      if(Object.hasOwn(receipt,'trackingVersion')) componentMap.id=componentMap.id.changeVersion(receipt.trackingVersion??undefined);
+    }
+    workspace.clearAllComponentsCache();
+    workspace.consumer.bitMap = projected;
+    workspace.bitMap = new WorkspaceBitMap(projected, workspace.consumer);
+    return true;
+  },
   stashAdded: async ({ ids }) => {
     const workspace = (await loadHarmony()).get('teambit.workspace/workspace');
     await workspace._reloadConsumer();
@@ -375,12 +443,12 @@ function snapshotFreshAspects(ids) {
 let snapshotBootstrapProgress = false;
 async function dependencyPolicies(extensionIds, bootstrap) {
   await loadInstallComponents();
-  snapshotBootstrapProgress = bootstrap === true && (['tag', 'checkout'].includes(cliArguments[0]) || cliArguments[0] === 'merge');
+  snapshotBootstrapProgress = bootstrap === true && (['tag', 'checkout', 'add', 'a'].includes(cliArguments[0]) || cliArguments[0] === 'merge');
   const loaded = await loadHarmony();
   const workspace = loaded.get('teambit.workspace/workspace');
   captureBootstrapProgress(workspace);
   extensionIds=snapshotFreshAspects(extensionIds);
-  snapshotBootstrapProgress = bootstrap === true && (['tag', 'checkout'].includes(cliArguments[0]) || cliArguments[0] === 'merge');
+  snapshotBootstrapProgress = bootstrap === true && (['tag', 'checkout', 'add', 'a'].includes(cliArguments[0]) || cliArguments[0] === 'merge');
   try {
     if(!beforePackageManager && extensionIds.length) await workspace.loadAspects(extensionIds, false, undefined, { ...workspaceAspectOptions(workspace), throwOnError: false, hideMissingModuleError: true });
   } finally {snapshotBootstrapProgress = false;}
@@ -569,7 +637,7 @@ async function packageJsonProps(envId) {
 async function transformPackageJson(componentId, manifest) {
   const loaded = await loadHarmony();
   const workspace = loaded.get('teambit.workspace/workspace');
-  const component = await workspace.get(await workspace.resolveComponentId(componentId));
+  const component = (['add','a'].includes(cliArguments[0]) && statusComponents.find((component)=>component.id.toStringWithoutVersion()===componentId)) || await workspace.get(await workspace.resolveComponentId(componentId));
   const env = loaded.get('teambit.envs/envs').getOrCalculateEnv(component).env;
   return env.modifyPackageJson(component, manifest);
 }
@@ -767,10 +835,11 @@ async function hydrateStatusComponent(row) {
   const workspace = (await loadHarmony()).get('teambit.workspace/workspace');
   const directory = path.join(root, row.directory);
   const parsedId = ComponentID.fromString(row.identity + (row.version ? `@${row.version}` : ''));
-  const id = row.scoped === false ? ComponentID.fromObject({name:parsedId.fullName,version:parsedId.version},parsedId.scope) : parsedId;
+  let id = row.scoped === false ? ComponentID.fromObject({name:parsedId.fullName,version:parsedId.version},parsedId.scope) : parsedId;
+  if(Object.hasOwn(row,'trackingVersion')) id=id.changeVersion(row.trackingVersion??undefined);
   const convert = (extension) => ({ ...extension, extensionId: extension.extensionId ? ComponentID.fromObject(extension.extensionId) : undefined });
   const consumer = await ConsumerComponent.fromObject({
-    ...row.current, name: id.fullName, scope: row.scoped === false ? undefined : id.scope, version: row.version || undefined, schema: '2.0.0',
+    ...row.current, name: id.fullName, scope: row.scoped === false ? undefined : id.scope, version: Object.hasOwn(row,'trackingVersion') ? row.trackingVersion??undefined : row.version || undefined, schema: '2.0.0',
     dependencies: (row.current.dependencies ?? []).map((dependency) => Dependency.deserialize(dependency)),
     devDependencies: (row.current.devDependencies ?? []).map((dependency) => Dependency.deserialize(dependency)),
     extensions: row.current.extensions.map(convert),
@@ -780,6 +849,9 @@ async function hydrateStatusComponent(row) {
     for (const field of ['log', 'docs', 'buildStatus', 'packageJsonChangedProps']) {
       if (Object.hasOwn(row.scope.currentVersion, field)) consumer[field] = row.scope.currentVersion[field];
     }
+  }
+  if (['add','a'].includes(cliArguments[0]) && trackingDocumentation.size) {
+    consumer.docs = row.files.flatMap((file) => trackingDocumentation.get(path.join(directory, file)) ?? []);
   }
   consumer.defaultScope = id.scope;
   consumer.writtenPath = directory;
@@ -808,13 +880,19 @@ async function statusLoadCallbacks({ components, directory, snapshot, checkout }
   statusComponents = [];
   const loadOutput = [];
   let outputStart = capturedStdout?.length ?? 0;
+  const tracking=['add','a'].includes(cliArguments[0]);
+  if(tracking && !snapshotContinuation) {
+    for(const row of components) {
+      if(checkout && row.dependencyCacheMiss && row.directory!=='.') await statusApplyLoadCallbacks(await hydrateStatusComponent(row),{workspace,envs,resolver});
+    }
+  }
   for (const row of components) {
     const component = await hydrateStatusComponent(row);
     statusComponents.push(component);
     // DependencyLoader's DevFiles adapter hydrates a separate Harmony class before
     // the actual workspace load. Workspace-root explicitly skips source detection.
     if (!snapshotContinuation) {
-      if ((snapshot || (checkout && row.dependencyCacheMiss)) && row.directory !== '.') await statusApplyLoadCallbacks(await hydrateStatusComponent(row), { workspace, envs, resolver });
+      if (!tracking && (snapshot || (checkout && row.dependencyCacheMiss)) && row.directory !== '.') await statusApplyLoadCallbacks(await hydrateStatusComponent(row), { workspace, envs, resolver });
       await statusApplyLoadCallbacks(component, { workspace, envs, resolver });
     }
   }

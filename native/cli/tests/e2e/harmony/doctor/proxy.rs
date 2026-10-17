@@ -1,99 +1,72 @@
-//! An offline HTTP proxy serving the real published BVM catalog request.
+//! An offline CONNECT proxy serving the published BVM request over real HTTPS.
+use crate::helper::setup;
 use std::{
-    io::{self, Read, Write},
-    net::{TcpListener, TcpStream},
-    sync::{
-        Arc,
-        atomic::{AtomicBool, AtomicUsize, Ordering},
-    },
-    thread::{self, JoinHandle},
-    time::Duration,
+    fs,
+    io::{BufRead, BufReader},
+    path::PathBuf,
+    process::{Child, Command, Stdio},
 };
 pub(super) struct Proxy {
     pub url: String,
-    address: std::net::SocketAddr,
-    stopped: Arc<AtomicBool>,
-    requests: Arc<AtomicUsize>,
-    worker: Option<JoinHandle<io::Result<()>>>,
+    child: Child,
+    journal: tempfile::TempDir,
 }
 impl Proxy {
     pub fn new() -> Self {
-        Self::catalog(br#"[{"version":"99.0.0","stable":true,"date":"2026-01-01"}]"#)
+        Self::catalog(r#"[{"version":"99.0.0","stable":true,"date":"2026-01-01"}]"#)
     }
     pub fn empty() -> Self {
-        Self::catalog(b"[]")
+        Self::catalog("[]")
     }
-    fn catalog(body: &'static [u8]) -> Self {
-        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
-        let address = listener.local_addr().unwrap();
-        let stopped = Arc::new(AtomicBool::new(false));
-        let requests = Arc::new(AtomicUsize::new(0));
-        let stop = Arc::clone(&stopped);
-        let count = Arc::clone(&requests);
-        let worker = thread::spawn(move || serve(&listener, &stop, &count, body));
-        Self { url: format!("http://{address}"), address, stopped, requests, worker: Some(worker) }
+    fn catalog(body: &str) -> Self {
+        let journal = tempfile::tempdir().unwrap();
+        fs::write(journal.path().join("requests"), []).unwrap();
+        let mut child = spawn(body, &journal);
+        let mut output = BufReader::new(child.stdout.take().unwrap());
+        let mut port = String::new();
+        output.read_line(&mut port).unwrap();
+        let port: u16 = port
+            .trim()
+            .parse()
+            .expect("catalog proxy did not announce its port");
+        Self { url: format!("http://127.0.0.1:{port}"), child, journal }
     }
     pub fn requests(&self) -> usize {
-        self.requests.load(Ordering::Acquire)
+        fs::read(self.journal.path().join("requests")).unwrap().len()
     }
 }
 impl Drop for Proxy {
     fn drop(&mut self) {
-        self.stopped.store(true, Ordering::Release);
-        let _wake = TcpStream::connect(self.address);
-        if let Some(worker) = self.worker.take() {
-            let result = worker.join();
-            if !thread::panicking() {
-                result.expect("catalog proxy worker panicked").expect("catalog proxy failed");
-            }
-        }
+        let _ = self.child.kill();
+        let _ = self.child.wait();
     }
 }
-fn serve(
-    listener: &TcpListener,
-    stopped: &AtomicBool,
-    count: &AtomicUsize,
-    body: &[u8],
-) -> io::Result<()> {
-    loop {
-        let (mut socket, _) = listener.accept()?;
-        if stopped.load(Ordering::Acquire) {
-            return Ok(());
-        }
-        socket.set_nonblocking(false)?;
-        socket.set_read_timeout(Some(Duration::from_secs(10)))?;
-        let request = headers(&mut socket)?;
-        if request.is_empty() {
-            continue;
-        }
-        if !request.starts_with("CONNECT bvm.bit.dev:443 HTTP/1.1\r\n") {
-            return Err(io::Error::other("unexpected BVM catalog request"));
-        }
-        // The published proxy agent replays non-200 responses to node-fetch,
-        // and BVM parses their JSON without checking the HTTP status.
-        let header = format!(
-            "HTTP/1.1 502 Fixture\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
-            body.len(),
-        );
-        // The published proxy agent replays only the bytes buffered when
-        // the headers arrive. Deliver the small catalog in the same write.
-        let mut response = header.into_bytes();
-        response.extend_from_slice(body);
-        socket.write_all(&response)?;
-        count.fetch_add(1, Ordering::Release);
-    }
+fn spawn(body: &str, journal: &tempfile::TempDir) -> Child {
+    let directory = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let fixtures = directory.join("../client-transfer/src/http/fixtures");
+    Command::new(node())
+        .arg(directory.join("tests/e2e/harmony/doctor/catalog.cjs"))
+        .arg(fixtures.join("server-key.pem"))
+        .arg(certificate())
+        .arg(body)
+        .arg(journal.path().join("requests"))
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::inherit())
+        .spawn()
+        .unwrap()
 }
-fn headers(socket: &mut TcpStream) -> io::Result<String> {
-    let mut bytes = Vec::new();
-    while !bytes.ends_with(b"\r\n\r\n") {
-        let mut byte = [0];
-        if socket.read(&mut byte)? == 0 {
-            break;
-        }
-        bytes.push(byte[0]);
-        if bytes.len() > 16384 {
-            return Err(io::Error::other("oversized proxy headers"));
-        }
+pub(super) fn certificate() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/e2e/harmony/doctor/catalog-cert.pem")
+}
+fn node() -> PathBuf {
+    if let Some(binary) = std::env::var_os("BIT_NODE_BINARY") {
+        return binary.into();
     }
-    String::from_utf8(bytes).map_err(io::Error::other)
+    let executable = if cfg!(windows) { "node.exe" } else { "bin/node" };
+    setup::shared().node_cli
+        .ancestors()
+        .map(|directory| directory.join("nodejs/22.22.0").join(executable))
+        .find(|path| path.is_file())
+        .unwrap_or_else(|| PathBuf::from("node"))
 }

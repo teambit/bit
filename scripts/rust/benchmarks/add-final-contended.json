@@ -1,0 +1,2487 @@
+{
+  "stage": "/var/tmp/add-file-remote-benchmark",
+  "platform": "Linux-7.2.5-200.fc44.x86_64-x86_64-with-glibc2.43",
+  "native_source": {
+    "sha256": "9254c096337cec0216bff291b53416f34699916d4e081d8bad620eb396608b47",
+    "file_count": 1432
+  },
+  "rust_sha256": "7ee70e219d7c1f6ece748d9ee07137d3dda2538e05ce58388c28229fef92853b",
+  "node_binary_sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31",
+  "node_cli_sha256": "71b324e03c4c9fb01cd3decb053ca4c3781c27ce06a8af53f7ad09d0ae42d033",
+  "node_version": "v22.22.0",
+  "bit_version": "2.2.94",
+  "fixtures": {
+    "workloads": {
+      "single": "/var/tmp/add-file-remote-benchmark/baseline-single",
+      "batch": "/var/tmp/add-file-remote-benchmark/baseline-batch",
+      "root": "/var/tmp/add-file-remote-benchmark/baseline-root",
+      "readd": "/var/tmp/add-file-remote-benchmark/baseline-readd",
+      "ignored": "/var/tmp/add-file-remote-benchmark/baseline-ignored",
+      "link-failure": "/var/tmp/add-file-remote-benchmark/baseline-link-failure"
+    },
+    "home": "/var/tmp/add-file-remote-benchmark/baseline-home",
+    "globals": "/var/tmp/add-file-remote-benchmark/baseline-globals",
+    "remote": "/var/tmp/add-file-remote-benchmark/baseline-remote",
+    "remote_path": "/var/tmp/add-file-remote-benchmark/remote",
+    "builtin_facts_prewarming": {
+      "method": "actual native status --json in isolated disposable workspace/home/globals",
+      "command": [
+        "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+        "status",
+        "--json"
+      ],
+      "exit_status": 0,
+      "copied_only": "native-cli/node-builtins-a2c7991a3e586fb608213bf8f120f6fcb0d0f515.json",
+      "schema": "deduplicated ordered string array; builtinModules plus node: forms",
+      "source": "pinned Node require('module').builtinModules",
+      "fact_count": 136,
+      "cache_sha256": "46cd63c2c2531da08fe2a6727607773cd0c8f86e507105686d1ab9562cf0249b",
+      "cache_mode": 420,
+      "node_binary_sha256": "1bec56ef7cfa9a76f3e0b7c0a87f220eb73f23102b9c0b4c7529a3f7c3ce7c31",
+      "prewarming_rust_sha256": "5ed783d2fe295f7c331ad193155d077109487b4f483bb53b123ebc218f92d122",
+      "timing_model": "warm metadata fixture for both implementations; no first-use performance claim"
+    }
+  },
+  "fixture_sha256": {
+    "single": "0ca54f07f6ce50e1dbd43a6a31415e431ff9a314d180253ee682d7fcf1c04748",
+    "batch": "05ea569929d4b815e6ce82b0b2917599789849370875750f9552bf4ff800de2a",
+    "root": "bf0d7f07f6e347cf55ba9c864853191cf551ad9f06761010314597742f15eec1",
+    "readd": "91f09cd24769552e8b98edf72994fc4690061cac98b54f4200b37ae95fd36075",
+    "ignored": "3997923ef3798d8f529b78e797bf495184b5653abe9113747251fb2806763ce9",
+    "link-failure": "b1814d4ec52e43184ac18ce0151d788c3721a9ed7f45faf593f91e4ee6a7d3a4"
+  },
+  "common_fixture_sha256": {
+    "home": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "globals": "c077e014705c64c36337641f36147944a4b6bb26c39916892c6753768e2e5925",
+    "remote": "6af4f5c04f00aa075894973d792322d06da653a04e568336b5a2fdf8a5551eec"
+  },
+  "helper_sha256": {
+    "bench-add.py": "a9e913bfc8d71382a18354819e1bb5c0fffe676ee6ebc6b467b1d20cb4e2b670",
+    "prepare-add-benchmark.py": "fc5d46a0279f8972f0ca3ec2c5b42325b69d0f99a9925f6e975ef154ea43157d",
+    "prepare-stash-benchmark.py": "b5bdaeab9ad8db99e9951de44e55b8874d6191b89d8cf6f7ea4e28b4bf2a7bf3",
+    "bench-stash.py": "6c907e247264d119c934a03fc6da69b34623f3a730543e990870896ff6b0839a",
+    "stash-benchmark-state.py": "2d0cfe777d6d5ff55c54018499be09cd1167c491ad099b721152fae83a699287"
+  },
+  "normalization": [
+    "native trace",
+    "completed-in durations",
+    "validated command-history ISO timestamps/PIDs",
+    "validated bitmap/config history timestamps with full snapshots/reasons",
+    "checksum-validated cache-index receipt timestamps"
+  ],
+  "excluded_implementation_state": [
+    "exact workspace-root debug.log",
+    "exact globals/logs subtree"
+  ],
+  "ownership_note": "CI ignored and link-failure delegate before effects; no native speed claim for these rows.",
+  "native_pairs": 80,
+  "delegated_pairs": 10,
+  "verified_pairs": 90,
+  "verified": [
+    {
+      "workload": "single",
+      "mode": "timed",
+      "pair": 0,
+      "native_ownership": true
+    },
+    {
+      "workload": "single",
+      "mode": "timed",
+      "pair": 1,
+      "native_ownership": true
+    },
+    {
+      "workload": "single",
+      "mode": "timed",
+      "pair": 2,
+      "native_ownership": true
+    },
+    {
+      "workload": "single",
+      "mode": "timed",
+      "pair": 3,
+      "native_ownership": true
+    },
+    {
+      "workload": "single",
+      "mode": "timed",
+      "pair": 4,
+      "native_ownership": true
+    },
+    {
+      "workload": "single",
+      "mode": "ci",
+      "pair": 0,
+      "native_ownership": true
+    },
+    {
+      "workload": "single",
+      "mode": "ci",
+      "pair": 1,
+      "native_ownership": true
+    },
+    {
+      "workload": "single",
+      "mode": "ci",
+      "pair": 2,
+      "native_ownership": true
+    },
+    {
+      "workload": "single",
+      "mode": "ci",
+      "pair": 3,
+      "native_ownership": true
+    },
+    {
+      "workload": "single",
+      "mode": "ci",
+      "pair": 4,
+      "native_ownership": true
+    },
+    {
+      "workload": "single",
+      "mode": "tty",
+      "pair": 0,
+      "native_ownership": true
+    },
+    {
+      "workload": "single",
+      "mode": "tty",
+      "pair": 1,
+      "native_ownership": true
+    },
+    {
+      "workload": "single",
+      "mode": "tty",
+      "pair": 2,
+      "native_ownership": true
+    },
+    {
+      "workload": "single",
+      "mode": "tty",
+      "pair": 3,
+      "native_ownership": true
+    },
+    {
+      "workload": "single",
+      "mode": "tty",
+      "pair": 4,
+      "native_ownership": true
+    },
+    {
+      "workload": "batch",
+      "mode": "timed",
+      "pair": 0,
+      "native_ownership": true
+    },
+    {
+      "workload": "batch",
+      "mode": "timed",
+      "pair": 1,
+      "native_ownership": true
+    },
+    {
+      "workload": "batch",
+      "mode": "timed",
+      "pair": 2,
+      "native_ownership": true
+    },
+    {
+      "workload": "batch",
+      "mode": "timed",
+      "pair": 3,
+      "native_ownership": true
+    },
+    {
+      "workload": "batch",
+      "mode": "timed",
+      "pair": 4,
+      "native_ownership": true
+    },
+    {
+      "workload": "batch",
+      "mode": "ci",
+      "pair": 0,
+      "native_ownership": true
+    },
+    {
+      "workload": "batch",
+      "mode": "ci",
+      "pair": 1,
+      "native_ownership": true
+    },
+    {
+      "workload": "batch",
+      "mode": "ci",
+      "pair": 2,
+      "native_ownership": true
+    },
+    {
+      "workload": "batch",
+      "mode": "ci",
+      "pair": 3,
+      "native_ownership": true
+    },
+    {
+      "workload": "batch",
+      "mode": "ci",
+      "pair": 4,
+      "native_ownership": true
+    },
+    {
+      "workload": "batch",
+      "mode": "tty",
+      "pair": 0,
+      "native_ownership": true
+    },
+    {
+      "workload": "batch",
+      "mode": "tty",
+      "pair": 1,
+      "native_ownership": true
+    },
+    {
+      "workload": "batch",
+      "mode": "tty",
+      "pair": 2,
+      "native_ownership": true
+    },
+    {
+      "workload": "batch",
+      "mode": "tty",
+      "pair": 3,
+      "native_ownership": true
+    },
+    {
+      "workload": "batch",
+      "mode": "tty",
+      "pair": 4,
+      "native_ownership": true
+    },
+    {
+      "workload": "root",
+      "mode": "timed",
+      "pair": 0,
+      "native_ownership": true
+    },
+    {
+      "workload": "root",
+      "mode": "timed",
+      "pair": 1,
+      "native_ownership": true
+    },
+    {
+      "workload": "root",
+      "mode": "timed",
+      "pair": 2,
+      "native_ownership": true
+    },
+    {
+      "workload": "root",
+      "mode": "timed",
+      "pair": 3,
+      "native_ownership": true
+    },
+    {
+      "workload": "root",
+      "mode": "timed",
+      "pair": 4,
+      "native_ownership": true
+    },
+    {
+      "workload": "root",
+      "mode": "ci",
+      "pair": 0,
+      "native_ownership": true
+    },
+    {
+      "workload": "root",
+      "mode": "ci",
+      "pair": 1,
+      "native_ownership": true
+    },
+    {
+      "workload": "root",
+      "mode": "ci",
+      "pair": 2,
+      "native_ownership": true
+    },
+    {
+      "workload": "root",
+      "mode": "ci",
+      "pair": 3,
+      "native_ownership": true
+    },
+    {
+      "workload": "root",
+      "mode": "ci",
+      "pair": 4,
+      "native_ownership": true
+    },
+    {
+      "workload": "root",
+      "mode": "tty",
+      "pair": 0,
+      "native_ownership": true
+    },
+    {
+      "workload": "root",
+      "mode": "tty",
+      "pair": 1,
+      "native_ownership": true
+    },
+    {
+      "workload": "root",
+      "mode": "tty",
+      "pair": 2,
+      "native_ownership": true
+    },
+    {
+      "workload": "root",
+      "mode": "tty",
+      "pair": 3,
+      "native_ownership": true
+    },
+    {
+      "workload": "root",
+      "mode": "tty",
+      "pair": 4,
+      "native_ownership": true
+    },
+    {
+      "workload": "readd",
+      "mode": "timed",
+      "pair": 0,
+      "native_ownership": true
+    },
+    {
+      "workload": "readd",
+      "mode": "timed",
+      "pair": 1,
+      "native_ownership": true
+    },
+    {
+      "workload": "readd",
+      "mode": "timed",
+      "pair": 2,
+      "native_ownership": true
+    },
+    {
+      "workload": "readd",
+      "mode": "timed",
+      "pair": 3,
+      "native_ownership": true
+    },
+    {
+      "workload": "readd",
+      "mode": "timed",
+      "pair": 4,
+      "native_ownership": true
+    },
+    {
+      "workload": "readd",
+      "mode": "ci",
+      "pair": 0,
+      "native_ownership": true
+    },
+    {
+      "workload": "readd",
+      "mode": "ci",
+      "pair": 1,
+      "native_ownership": true
+    },
+    {
+      "workload": "readd",
+      "mode": "ci",
+      "pair": 2,
+      "native_ownership": true
+    },
+    {
+      "workload": "readd",
+      "mode": "ci",
+      "pair": 3,
+      "native_ownership": true
+    },
+    {
+      "workload": "readd",
+      "mode": "ci",
+      "pair": 4,
+      "native_ownership": true
+    },
+    {
+      "workload": "readd",
+      "mode": "tty",
+      "pair": 0,
+      "native_ownership": true
+    },
+    {
+      "workload": "readd",
+      "mode": "tty",
+      "pair": 1,
+      "native_ownership": true
+    },
+    {
+      "workload": "readd",
+      "mode": "tty",
+      "pair": 2,
+      "native_ownership": true
+    },
+    {
+      "workload": "readd",
+      "mode": "tty",
+      "pair": 3,
+      "native_ownership": true
+    },
+    {
+      "workload": "readd",
+      "mode": "tty",
+      "pair": 4,
+      "native_ownership": true
+    },
+    {
+      "workload": "ignored",
+      "mode": "timed",
+      "pair": 0,
+      "native_ownership": true
+    },
+    {
+      "workload": "ignored",
+      "mode": "timed",
+      "pair": 1,
+      "native_ownership": true
+    },
+    {
+      "workload": "ignored",
+      "mode": "timed",
+      "pair": 2,
+      "native_ownership": true
+    },
+    {
+      "workload": "ignored",
+      "mode": "timed",
+      "pair": 3,
+      "native_ownership": true
+    },
+    {
+      "workload": "ignored",
+      "mode": "timed",
+      "pair": 4,
+      "native_ownership": true
+    },
+    {
+      "workload": "ignored",
+      "mode": "ci",
+      "pair": 0,
+      "native_ownership": false
+    },
+    {
+      "workload": "ignored",
+      "mode": "ci",
+      "pair": 1,
+      "native_ownership": false
+    },
+    {
+      "workload": "ignored",
+      "mode": "ci",
+      "pair": 2,
+      "native_ownership": false
+    },
+    {
+      "workload": "ignored",
+      "mode": "ci",
+      "pair": 3,
+      "native_ownership": false
+    },
+    {
+      "workload": "ignored",
+      "mode": "ci",
+      "pair": 4,
+      "native_ownership": false
+    },
+    {
+      "workload": "ignored",
+      "mode": "tty",
+      "pair": 0,
+      "native_ownership": true
+    },
+    {
+      "workload": "ignored",
+      "mode": "tty",
+      "pair": 1,
+      "native_ownership": true
+    },
+    {
+      "workload": "ignored",
+      "mode": "tty",
+      "pair": 2,
+      "native_ownership": true
+    },
+    {
+      "workload": "ignored",
+      "mode": "tty",
+      "pair": 3,
+      "native_ownership": true
+    },
+    {
+      "workload": "ignored",
+      "mode": "tty",
+      "pair": 4,
+      "native_ownership": true
+    },
+    {
+      "workload": "link-failure",
+      "mode": "timed",
+      "pair": 0,
+      "native_ownership": true
+    },
+    {
+      "workload": "link-failure",
+      "mode": "timed",
+      "pair": 1,
+      "native_ownership": true
+    },
+    {
+      "workload": "link-failure",
+      "mode": "timed",
+      "pair": 2,
+      "native_ownership": true
+    },
+    {
+      "workload": "link-failure",
+      "mode": "timed",
+      "pair": 3,
+      "native_ownership": true
+    },
+    {
+      "workload": "link-failure",
+      "mode": "timed",
+      "pair": 4,
+      "native_ownership": true
+    },
+    {
+      "workload": "link-failure",
+      "mode": "ci",
+      "pair": 0,
+      "native_ownership": false
+    },
+    {
+      "workload": "link-failure",
+      "mode": "ci",
+      "pair": 1,
+      "native_ownership": false
+    },
+    {
+      "workload": "link-failure",
+      "mode": "ci",
+      "pair": 2,
+      "native_ownership": false
+    },
+    {
+      "workload": "link-failure",
+      "mode": "ci",
+      "pair": 3,
+      "native_ownership": false
+    },
+    {
+      "workload": "link-failure",
+      "mode": "ci",
+      "pair": 4,
+      "native_ownership": false
+    },
+    {
+      "workload": "link-failure",
+      "mode": "tty",
+      "pair": 0,
+      "native_ownership": true
+    },
+    {
+      "workload": "link-failure",
+      "mode": "tty",
+      "pair": 1,
+      "native_ownership": true
+    },
+    {
+      "workload": "link-failure",
+      "mode": "tty",
+      "pair": 2,
+      "native_ownership": true
+    },
+    {
+      "workload": "link-failure",
+      "mode": "tty",
+      "pair": 3,
+      "native_ownership": true
+    },
+    {
+      "workload": "link-failure",
+      "mode": "tty",
+      "pair": 4,
+      "native_ownership": true
+    }
+  ],
+  "workloads": {
+    "single": {
+      "timed": {
+        "native_ownership": true,
+        "speed_claim_eligible": true,
+        "runs_ms": {
+          "rust": [
+            272.051,
+            279.586,
+            266.741,
+            276.623,
+            278.746
+          ],
+          "node": [
+            467.135,
+            449.98,
+            443.807,
+            452.976,
+            451.727
+          ]
+        },
+        "median_ms": {
+          "rust": 276.623,
+          "node": 451.727
+        }
+      },
+      "ci": {
+        "native_ownership": true,
+        "speed_claim_eligible": true,
+        "runs_ms": {
+          "rust": [
+            272.506,
+            271.544,
+            268.706,
+            266.735,
+            267.502
+          ],
+          "node": [
+            442.805,
+            455.266,
+            437.82,
+            437.225,
+            435.038
+          ]
+        },
+        "median_ms": {
+          "rust": 268.706,
+          "node": 437.82
+        }
+      },
+      "tty": {
+        "native_ownership": true,
+        "speed_claim_eligible": true,
+        "runs_ms": {
+          "rust": [
+            288.351,
+            286.44,
+            292.391,
+            367.969,
+            291.258
+          ],
+          "node": [
+            432.215,
+            449.0,
+            446.639,
+            459.387,
+            447.389
+          ]
+        },
+        "median_ms": {
+          "rust": 291.258,
+          "node": 447.389
+        }
+      }
+    },
+    "batch": {
+      "timed": {
+        "native_ownership": true,
+        "speed_claim_eligible": true,
+        "runs_ms": {
+          "rust": [
+            1204.376,
+            1147.039,
+            1207.195,
+            1227.148,
+            1168.323
+          ],
+          "node": [
+            1609.844,
+            1614.902,
+            1613.047,
+            1683.24,
+            1694.223
+          ]
+        },
+        "median_ms": {
+          "rust": 1204.376,
+          "node": 1614.902
+        }
+      },
+      "ci": {
+        "native_ownership": true,
+        "speed_claim_eligible": true,
+        "runs_ms": {
+          "rust": [
+            1220.822,
+            1224.949,
+            1211.844,
+            1194.412,
+            1181.979
+          ],
+          "node": [
+            1647.197,
+            1681.533,
+            1661.411,
+            1679.621,
+            1665.144
+          ]
+        },
+        "median_ms": {
+          "rust": 1211.844,
+          "node": 1665.144
+        }
+      },
+      "tty": {
+        "native_ownership": true,
+        "speed_claim_eligible": true,
+        "runs_ms": {
+          "rust": [
+            1251.942,
+            1201.404,
+            1217.711,
+            1205.578,
+            1240.517
+          ],
+          "node": [
+            1680.743,
+            1642.422,
+            1678.158,
+            1653.602,
+            1654.622
+          ]
+        },
+        "median_ms": {
+          "rust": 1217.711,
+          "node": 1654.622
+        }
+      }
+    },
+    "root": {
+      "timed": {
+        "native_ownership": true,
+        "speed_claim_eligible": true,
+        "runs_ms": {
+          "rust": [
+            294.337,
+            300.347,
+            287.348,
+            282.781,
+            297.594
+          ],
+          "node": [
+            344.457,
+            348.117,
+            349.331,
+            352.569,
+            349.34
+          ]
+        },
+        "median_ms": {
+          "rust": 294.337,
+          "node": 349.331
+        }
+      },
+      "ci": {
+        "native_ownership": true,
+        "speed_claim_eligible": true,
+        "runs_ms": {
+          "rust": [
+            291.36,
+            284.724,
+            281.953,
+            296.418,
+            288.656
+          ],
+          "node": [
+            352.481,
+            351.357,
+            367.184,
+            363.783,
+            347.689
+          ]
+        },
+        "median_ms": {
+          "rust": 288.656,
+          "node": 352.481
+        }
+      },
+      "tty": {
+        "native_ownership": true,
+        "speed_claim_eligible": true,
+        "runs_ms": {
+          "rust": [
+            303.081,
+            318.741,
+            300.351,
+            312.489,
+            312.944
+          ],
+          "node": [
+            375.045,
+            353.183,
+            353.839,
+            355.306,
+            369.97
+          ]
+        },
+        "median_ms": {
+          "rust": 312.489,
+          "node": 355.306
+        }
+      }
+    },
+    "readd": {
+      "timed": {
+        "native_ownership": true,
+        "speed_claim_eligible": true,
+        "runs_ms": {
+          "rust": [
+            286.504,
+            275.434,
+            283.138,
+            283.238,
+            275.106
+          ],
+          "node": [
+            466.998,
+            431.646,
+            436.597,
+            446.773,
+            452.808
+          ]
+        },
+        "median_ms": {
+          "rust": 283.138,
+          "node": 446.773
+        }
+      },
+      "ci": {
+        "native_ownership": true,
+        "speed_claim_eligible": true,
+        "runs_ms": {
+          "rust": [
+            280.148,
+            298.367,
+            287.202,
+            285.653,
+            281.023
+          ],
+          "node": [
+            445.023,
+            445.478,
+            437.367,
+            438.273,
+            433.35
+          ]
+        },
+        "median_ms": {
+          "rust": 285.653,
+          "node": 438.273
+        }
+      },
+      "tty": {
+        "native_ownership": true,
+        "speed_claim_eligible": true,
+        "runs_ms": {
+          "rust": [
+            290.192,
+            290.612,
+            301.238,
+            296.262,
+            292.363
+          ],
+          "node": [
+            458.665,
+            451.863,
+            440.641,
+            451.803,
+            462.438
+          ]
+        },
+        "median_ms": {
+          "rust": 292.363,
+          "node": 451.863
+        }
+      }
+    },
+    "ignored": {
+      "timed": {
+        "native_ownership": true,
+        "speed_claim_eligible": true,
+        "runs_ms": {
+          "rust": [
+            2.442,
+            2.023,
+            2.25,
+            2.306,
+            2.5
+          ],
+          "node": [
+            230.377,
+            240.118,
+            227.432,
+            226.014,
+            232.095
+          ]
+        },
+        "median_ms": {
+          "rust": 2.306,
+          "node": 230.377
+        }
+      },
+      "ci": {
+        "native_ownership": false,
+        "speed_claim_eligible": false,
+        "runs_ms": {
+          "rust": [
+            227.362,
+            225.811,
+            237.229,
+            236.077,
+            235.3
+          ],
+          "node": [
+            233.989,
+            229.031,
+            236.956,
+            228.332,
+            232.832
+          ]
+        },
+        "median_ms": {
+          "rust": 235.3,
+          "node": 232.832
+        }
+      },
+      "tty": {
+        "native_ownership": true,
+        "speed_claim_eligible": true,
+        "runs_ms": {
+          "rust": [
+            20.908,
+            21.049,
+            21.244,
+            21.535,
+            21.357
+          ],
+          "node": [
+            255.46,
+            240.849,
+            242.939,
+            238.025,
+            239.343
+          ]
+        },
+        "median_ms": {
+          "rust": 21.244,
+          "node": 240.849
+        }
+      }
+    },
+    "link-failure": {
+      "timed": {
+        "native_ownership": true,
+        "speed_claim_eligible": true,
+        "runs_ms": {
+          "rust": [
+            278.546,
+            282.13,
+            265.369,
+            266.485,
+            264.865
+          ],
+          "node": [
+            412.387,
+            418.037,
+            421.008,
+            418.932,
+            414.466
+          ]
+        },
+        "median_ms": {
+          "rust": 266.485,
+          "node": 418.037
+        }
+      },
+      "ci": {
+        "native_ownership": false,
+        "speed_claim_eligible": false,
+        "runs_ms": {
+          "rust": [
+            430.737,
+            427.699,
+            411.12,
+            404.864,
+            439.565
+          ],
+          "node": [
+            419.114,
+            420.026,
+            419.176,
+            590.453,
+            537.942
+          ]
+        },
+        "median_ms": {
+          "rust": 427.699,
+          "node": 420.026
+        }
+      },
+      "tty": {
+        "native_ownership": true,
+        "speed_claim_eligible": true,
+        "runs_ms": {
+          "rust": [
+            279.336,
+            275.524,
+            303.638,
+            288.841,
+            288.989
+          ],
+          "node": [
+            442.205,
+            435.343,
+            560.769,
+            433.501,
+            437.259
+          ]
+        },
+        "median_ms": {
+          "rust": 288.841,
+          "node": 437.259
+        }
+      }
+    }
+  },
+  "performance_valid": false,
+  "correctness_valid": true,
+  "performance_exclusion": "Current-source command parity passed, but full-run host-load peak exceeded the predeclared 80% limit; excluded from speed claims.",
+  "host_load": {
+    "start_gate": {
+      "consecutive_seconds": 20,
+      "host_busy_below_percent": 30
+    },
+    "validity_rule": "full-run sampled peak must remain below 80 percent",
+    "method": "aggregate /proc/stat busy excluding idle and iowait; sampled every 0.5 seconds outside command timing",
+    "reproduce_argv": [
+      "python3",
+      "scripts/rust/bench-add.py",
+      "--rust",
+      "/var/home/zoltan/src/bit/bit-rust-status-remote-lanes/native/target/release/bit",
+      "--node-binary",
+      "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+      "--node-cli",
+      "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+      "--output",
+      "scripts/rust/benchmarks/add.json",
+      "--stage",
+      "/var/tmp/add-file-remote-benchmark",
+      "--runs",
+      "5"
+    ],
+    "host_busy_peak_percent": 92.308,
+    "performance_valid": false,
+    "samples": [
+      {
+        "monotonic": 277884.068340609,
+        "host_busy_percent": 10.938
+      },
+      {
+        "monotonic": 277884.568629483,
+        "host_busy_percent": 11.491
+      },
+      {
+        "monotonic": 277885.068846358,
+        "host_busy_percent": 9.412
+      },
+      {
+        "monotonic": 277885.569053544,
+        "host_busy_percent": 8.598
+      },
+      {
+        "monotonic": 277886.069264599,
+        "host_busy_percent": 8.995
+      },
+      {
+        "monotonic": 277886.569567984,
+        "host_busy_percent": 12.035
+      },
+      {
+        "monotonic": 277887.069869348,
+        "host_busy_percent": 12.119
+      },
+      {
+        "monotonic": 277887.570154982,
+        "host_busy_percent": 9.721
+      },
+      {
+        "monotonic": 277888.070373877,
+        "host_busy_percent": 11.772
+      },
+      {
+        "monotonic": 277888.570595472,
+        "host_busy_percent": 11.648
+      },
+      {
+        "monotonic": 277889.070854437,
+        "host_busy_percent": 8.836
+      },
+      {
+        "monotonic": 277889.571089822,
+        "host_busy_percent": 11.359
+      },
+      {
+        "monotonic": 277890.071386217,
+        "host_busy_percent": 11.249
+      },
+      {
+        "monotonic": 277890.571617402,
+        "host_busy_percent": 12.002
+      },
+      {
+        "monotonic": 277891.071846697,
+        "host_busy_percent": 11.739
+      },
+      {
+        "monotonic": 277891.572131471,
+        "host_busy_percent": 8.08
+      },
+      {
+        "monotonic": 277892.072341937,
+        "host_busy_percent": 8.52
+      },
+      {
+        "monotonic": 277892.572639381,
+        "host_busy_percent": 11.725
+      },
+      {
+        "monotonic": 277893.072868716,
+        "host_busy_percent": 11.94
+      },
+      {
+        "monotonic": 277893.573143751,
+        "host_busy_percent": 9.82
+      },
+      {
+        "monotonic": 277894.073416835,
+        "host_busy_percent": 8.639
+      },
+      {
+        "monotonic": 277894.57369186,
+        "host_busy_percent": 8.836
+      },
+      {
+        "monotonic": 277895.073910025,
+        "host_busy_percent": 8.468
+      },
+      {
+        "monotonic": 277895.57415461,
+        "host_busy_percent": 14.71
+      },
+      {
+        "monotonic": 277896.074469054,
+        "host_busy_percent": 19.207
+      },
+      {
+        "monotonic": 277896.574876827,
+        "host_busy_percent": 35.963
+      },
+      {
+        "monotonic": 277897.075125162,
+        "host_busy_percent": 27.84
+      },
+      {
+        "monotonic": 277897.575390877,
+        "host_busy_percent": 9.553
+      },
+      {
+        "monotonic": 277898.075614392,
+        "host_busy_percent": 8.696
+      },
+      {
+        "monotonic": 277898.575832127,
+        "host_busy_percent": 8.644
+      },
+      {
+        "monotonic": 277899.076135842,
+        "host_busy_percent": 12.547
+      },
+      {
+        "monotonic": 277899.576453726,
+        "host_busy_percent": 11.911
+      },
+      {
+        "monotonic": 277900.076687101,
+        "host_busy_percent": 9.13
+      },
+      {
+        "monotonic": 277900.576959005,
+        "host_busy_percent": 7.272
+      },
+      {
+        "monotonic": 277901.077150941,
+        "host_busy_percent": 7.788
+      },
+      {
+        "monotonic": 277901.577437755,
+        "host_busy_percent": 9.435
+      },
+      {
+        "monotonic": 277902.0776801,
+        "host_busy_percent": 11.283
+      },
+      {
+        "monotonic": 277902.577962755,
+        "host_busy_percent": 16.894
+      },
+      {
+        "monotonic": 277903.07819208,
+        "host_busy_percent": 8.204
+      },
+      {
+        "monotonic": 277903.578474834,
+        "host_busy_percent": 10.821
+      },
+      {
+        "monotonic": 277904.078750199,
+        "host_busy_percent": 7.988
+      },
+      {
+        "monotonic": 277904.578962914,
+        "host_busy_percent": 8.09
+      },
+      {
+        "monotonic": 277905.079269838,
+        "host_busy_percent": 11.816
+      },
+      {
+        "monotonic": 277905.579567583,
+        "host_busy_percent": 12.002
+      },
+      {
+        "monotonic": 277906.079841037,
+        "host_busy_percent": 9.323
+      },
+      {
+        "monotonic": 277906.580110072,
+        "host_busy_percent": 8.173
+      },
+      {
+        "monotonic": 277907.080312707,
+        "host_busy_percent": 8.339
+      },
+      {
+        "monotonic": 277907.580532492,
+        "host_busy_percent": 9.559
+      },
+      {
+        "monotonic": 277908.080763358,
+        "host_busy_percent": 10.236
+      },
+      {
+        "monotonic": 277908.580987353,
+        "host_busy_percent": 9.373
+      },
+      {
+        "monotonic": 277909.081254207,
+        "host_busy_percent": 7.463
+      },
+      {
+        "monotonic": 277909.581547242,
+        "host_busy_percent": 11.809
+      },
+      {
+        "monotonic": 277910.081771347,
+        "host_busy_percent": 9.311
+      },
+      {
+        "monotonic": 277910.581988672,
+        "host_busy_percent": 8.375
+      },
+      {
+        "monotonic": 277911.082260497,
+        "host_busy_percent": 8.032
+      },
+      {
+        "monotonic": 277911.582547771,
+        "host_busy_percent": 10.379
+      },
+      {
+        "monotonic": 277912.082821886,
+        "host_busy_percent": 9.808
+      },
+      {
+        "monotonic": 277912.583023451,
+        "host_busy_percent": 7.864
+      },
+      {
+        "monotonic": 277913.083280616,
+        "host_busy_percent": 8.022
+      },
+      {
+        "monotonic": 277913.583505211,
+        "host_busy_percent": 8.893
+      },
+      {
+        "monotonic": 277914.083727626,
+        "host_busy_percent": 10.0
+      },
+      {
+        "monotonic": 277914.583954582,
+        "host_busy_percent": 9.689
+      },
+      {
+        "monotonic": 277915.084137007,
+        "host_busy_percent": 7.945
+      },
+      {
+        "monotonic": 277915.584395702,
+        "host_busy_percent": 7.592
+      },
+      {
+        "monotonic": 277916.084676106,
+        "host_busy_percent": 8.769
+      },
+      {
+        "monotonic": 277916.584912651,
+        "host_busy_percent": 9.651
+      },
+      {
+        "monotonic": 277917.085134317,
+        "host_busy_percent": 10.323
+      },
+      {
+        "monotonic": 277917.585386572,
+        "host_busy_percent": 7.453
+      },
+      {
+        "monotonic": 277918.085654146,
+        "host_busy_percent": 7.592
+      },
+      {
+        "monotonic": 277918.585944041,
+        "host_busy_percent": 8.939
+      },
+      {
+        "monotonic": 277919.086165146,
+        "host_busy_percent": 8.421
+      },
+      {
+        "monotonic": 277919.58642241,
+        "host_busy_percent": 7.888
+      },
+      {
+        "monotonic": 277920.086660696,
+        "host_busy_percent": 9.832
+      },
+      {
+        "monotonic": 277920.58694742,
+        "host_busy_percent": 9.565
+      },
+      {
+        "monotonic": 277921.087161505,
+        "host_busy_percent": 9.447
+      },
+      {
+        "monotonic": 277921.58744007,
+        "host_busy_percent": 8.147
+      },
+      {
+        "monotonic": 277922.087653025,
+        "host_busy_percent": 8.085
+      },
+      {
+        "monotonic": 277922.5878876,
+        "host_busy_percent": 8.437
+      },
+      {
+        "monotonic": 277923.088099695,
+        "host_busy_percent": 9.994
+      },
+      {
+        "monotonic": 277923.58835518,
+        "host_busy_percent": 7.998
+      },
+      {
+        "monotonic": 277924.088617365,
+        "host_busy_percent": 7.726
+      },
+      {
+        "monotonic": 277924.58886103,
+        "host_busy_percent": 9.255
+      },
+      {
+        "monotonic": 277925.089107045,
+        "host_busy_percent": 8.529
+      },
+      {
+        "monotonic": 277925.58930389,
+        "host_busy_percent": 8.132
+      },
+      {
+        "monotonic": 277926.089525706,
+        "host_busy_percent": 8.515
+      },
+      {
+        "monotonic": 277926.58980703,
+        "host_busy_percent": 9.204
+      },
+      {
+        "monotonic": 277927.090080945,
+        "host_busy_percent": 9.876
+      },
+      {
+        "monotonic": 277927.59029897,
+        "host_busy_percent": 9.926
+      },
+      {
+        "monotonic": 277928.090493396,
+        "host_busy_percent": 7.09
+      },
+      {
+        "monotonic": 277928.59078459,
+        "host_busy_percent": 8.468
+      },
+      {
+        "monotonic": 277929.091018585,
+        "host_busy_percent": 9.396
+      },
+      {
+        "monotonic": 277929.59125736,
+        "host_busy_percent": 9.758
+      },
+      {
+        "monotonic": 277930.091533165,
+        "host_busy_percent": 9.029
+      },
+      {
+        "monotonic": 277930.591795519,
+        "host_busy_percent": 7.516
+      },
+      {
+        "monotonic": 277931.092021365,
+        "host_busy_percent": 8.385
+      },
+      {
+        "monotonic": 277931.592310539,
+        "host_busy_percent": 8.644
+      },
+      {
+        "monotonic": 277932.092668572,
+        "host_busy_percent": 10.458
+      },
+      {
+        "monotonic": 277932.592892027,
+        "host_busy_percent": 15.184
+      },
+      {
+        "monotonic": 277933.093120173,
+        "host_busy_percent": 8.566
+      },
+      {
+        "monotonic": 277933.593327558,
+        "host_busy_percent": 11.042
+      },
+      {
+        "monotonic": 277934.093579373,
+        "host_busy_percent": 7.745
+      },
+      {
+        "monotonic": 277934.593860698,
+        "host_busy_percent": 8.214
+      },
+      {
+        "monotonic": 277935.094157542,
+        "host_busy_percent": 10.199
+      },
+      {
+        "monotonic": 277935.594388897,
+        "host_busy_percent": 9.465
+      },
+      {
+        "monotonic": 277936.094618644,
+        "host_busy_percent": 9.695
+      },
+      {
+        "monotonic": 277936.59481076,
+        "host_busy_percent": 7.903
+      },
+      {
+        "monotonic": 277937.095024036,
+        "host_busy_percent": 7.774
+      },
+      {
+        "monotonic": 277937.595250831,
+        "host_busy_percent": 9.689
+      },
+      {
+        "monotonic": 277938.095462906,
+        "host_busy_percent": 10.677
+      },
+      {
+        "monotonic": 277938.595735852,
+        "host_busy_percent": 9.249
+      },
+      {
+        "monotonic": 277939.095979648,
+        "host_busy_percent": 7.072
+      },
+      {
+        "monotonic": 277939.596244452,
+        "host_busy_percent": 8.09
+      },
+      {
+        "monotonic": 277940.096463988,
+        "host_busy_percent": 9.068
+      },
+      {
+        "monotonic": 277940.596684243,
+        "host_busy_percent": 7.926
+      },
+      {
+        "monotonic": 277941.096880229,
+        "host_busy_percent": 8.401
+      },
+      {
+        "monotonic": 277941.597180763,
+        "host_busy_percent": 8.882
+      },
+      {
+        "monotonic": 277942.097478867,
+        "host_busy_percent": 9.142
+      },
+      {
+        "monotonic": 277942.597700442,
+        "host_busy_percent": 9.509
+      },
+      {
+        "monotonic": 277943.097959297,
+        "host_busy_percent": 7.988
+      },
+      {
+        "monotonic": 277943.598172152,
+        "host_busy_percent": 7.783
+      },
+      {
+        "monotonic": 277944.098434527,
+        "host_busy_percent": 10.552
+      },
+      {
+        "monotonic": 277944.598638412,
+        "host_busy_percent": 8.741
+      },
+      {
+        "monotonic": 277945.098842808,
+        "host_busy_percent": 7.787
+      },
+      {
+        "monotonic": 277945.599044963,
+        "host_busy_percent": 8.085
+      },
+      {
+        "monotonic": 277946.099269398,
+        "host_busy_percent": 9.181
+      },
+      {
+        "monotonic": 277946.599477544,
+        "host_busy_percent": 8.261
+      },
+      {
+        "monotonic": 277947.099737129,
+        "host_busy_percent": 8.736
+      },
+      {
+        "monotonic": 277947.600023003,
+        "host_busy_percent": 8.344
+      },
+      {
+        "monotonic": 277948.100316547,
+        "host_busy_percent": 10.075
+      },
+      {
+        "monotonic": 277948.600537123,
+        "host_busy_percent": 10.193
+      },
+      {
+        "monotonic": 277949.100752538,
+        "host_busy_percent": 8.65
+      },
+      {
+        "monotonic": 277949.600934464,
+        "host_busy_percent": 7.778
+      },
+      {
+        "monotonic": 277950.101171169,
+        "host_busy_percent": 8.318
+      },
+      {
+        "monotonic": 277950.601395094,
+        "host_busy_percent": 10.484
+      },
+      {
+        "monotonic": 277951.101683028,
+        "host_busy_percent": 9.04
+      },
+      {
+        "monotonic": 277951.601908923,
+        "host_busy_percent": 8.509
+      },
+      {
+        "monotonic": 277952.102119799,
+        "host_busy_percent": 7.96
+      },
+      {
+        "monotonic": 277952.602340214,
+        "host_busy_percent": 8.582
+      },
+      {
+        "monotonic": 277953.102591349,
+        "host_busy_percent": 9.198
+      },
+      {
+        "monotonic": 277953.602848963,
+        "host_busy_percent": 9.232
+      },
+      {
+        "monotonic": 277954.103069439,
+        "host_busy_percent": 7.898
+      },
+      {
+        "monotonic": 277954.603280844,
+        "host_busy_percent": 9.08
+      },
+      {
+        "monotonic": 277955.103491449,
+        "host_busy_percent": 7.988
+      },
+      {
+        "monotonic": 277955.603737334,
+        "host_busy_percent": 7.578
+      },
+      {
+        "monotonic": 277956.10396017,
+        "host_busy_percent": 7.841
+      },
+      {
+        "monotonic": 277956.604175205,
+        "host_busy_percent": 11.228
+      },
+      {
+        "monotonic": 277957.10440072,
+        "host_busy_percent": 11.699
+      },
+      {
+        "monotonic": 277957.604626855,
+        "host_busy_percent": 9.453
+      },
+      {
+        "monotonic": 277958.104820011,
+        "host_busy_percent": 8.137
+      },
+      {
+        "monotonic": 277958.605050066,
+        "host_busy_percent": 8.474
+      },
+      {
+        "monotonic": 277959.105268401,
+        "host_busy_percent": 9.373
+      },
+      {
+        "monotonic": 277959.605487757,
+        "host_busy_percent": 10.268
+      },
+      {
+        "monotonic": 277960.105719432,
+        "host_busy_percent": 13.114
+      },
+      {
+        "monotonic": 277960.605932327,
+        "host_busy_percent": 11.512
+      },
+      {
+        "monotonic": 277961.106661076,
+        "host_busy_percent": 11.574
+      },
+      {
+        "monotonic": 277961.60692,
+        "host_busy_percent": 9.894
+      },
+      {
+        "monotonic": 277962.107223525,
+        "host_busy_percent": 14.206
+      },
+      {
+        "monotonic": 277962.60743676,
+        "host_busy_percent": 10.765
+      },
+      {
+        "monotonic": 277963.107722665,
+        "host_busy_percent": 9.627
+      },
+      {
+        "monotonic": 277963.60795702,
+        "host_busy_percent": 10.474
+      },
+      {
+        "monotonic": 277964.108151165,
+        "host_busy_percent": 8.842
+      },
+      {
+        "monotonic": 277964.60837013,
+        "host_busy_percent": 8.899
+      },
+      {
+        "monotonic": 277965.108628265,
+        "host_busy_percent": 9.198
+      },
+      {
+        "monotonic": 277965.60885025,
+        "host_busy_percent": 8.593
+      },
+      {
+        "monotonic": 277966.109079645,
+        "host_busy_percent": 9.627
+      },
+      {
+        "monotonic": 277966.609322781,
+        "host_busy_percent": 8.401
+      },
+      {
+        "monotonic": 277967.109542506,
+        "host_busy_percent": 9.012
+      },
+      {
+        "monotonic": 277967.609810441,
+        "host_busy_percent": 8.525
+      },
+      {
+        "monotonic": 277968.110029736,
+        "host_busy_percent": 8.893
+      },
+      {
+        "monotonic": 277968.61030275,
+        "host_busy_percent": 8.52
+      },
+      {
+        "monotonic": 277969.110534595,
+        "host_busy_percent": 8.566
+      },
+      {
+        "monotonic": 277969.61082542,
+        "host_busy_percent": 10.89
+      },
+      {
+        "monotonic": 277970.111060005,
+        "host_busy_percent": 9.695
+      },
+      {
+        "monotonic": 277970.611334949,
+        "host_busy_percent": 8.842
+      },
+      {
+        "monotonic": 277971.111569004,
+        "host_busy_percent": 8.442
+      },
+      {
+        "monotonic": 277971.61179034,
+        "host_busy_percent": 9.136
+      },
+      {
+        "monotonic": 277972.112021905,
+        "host_busy_percent": 8.842
+      },
+      {
+        "monotonic": 277972.612213401,
+        "host_busy_percent": 9.683
+      },
+      {
+        "monotonic": 277973.112416176,
+        "host_busy_percent": 8.69
+      },
+      {
+        "monotonic": 277973.612615422,
+        "host_busy_percent": 8.536
+      },
+      {
+        "monotonic": 277974.112811207,
+        "host_busy_percent": 8.442
+      },
+      {
+        "monotonic": 277974.613010542,
+        "host_busy_percent": 8.644
+      },
+      {
+        "monotonic": 277975.113223598,
+        "host_busy_percent": 8.271
+      },
+      {
+        "monotonic": 277975.613440413,
+        "host_busy_percent": 9.147
+      },
+      {
+        "monotonic": 277976.113667118,
+        "host_busy_percent": 8.515
+      },
+      {
+        "monotonic": 277976.613889604,
+        "host_busy_percent": 8.904
+      },
+      {
+        "monotonic": 277977.114108249,
+        "host_busy_percent": 9.001
+      },
+      {
+        "monotonic": 277977.614321154,
+        "host_busy_percent": 8.701
+      },
+      {
+        "monotonic": 277978.114540799,
+        "host_busy_percent": 8.525
+      },
+      {
+        "monotonic": 277978.614775704,
+        "host_busy_percent": 8.701
+      },
+      {
+        "monotonic": 277979.11498911,
+        "host_busy_percent": 10.118
+      },
+      {
+        "monotonic": 277979.615275574,
+        "host_busy_percent": 9.334
+      },
+      {
+        "monotonic": 277980.115497159,
+        "host_busy_percent": 9.26
+      },
+      {
+        "monotonic": 277980.615763284,
+        "host_busy_percent": 11.849
+      },
+      {
+        "monotonic": 277981.116053488,
+        "host_busy_percent": 8.452
+      },
+      {
+        "monotonic": 277981.616271624,
+        "host_busy_percent": 8.893
+      },
+      {
+        "monotonic": 277982.116558458,
+        "host_busy_percent": 9.944
+      },
+      {
+        "monotonic": 277982.616804633,
+        "host_busy_percent": 8.577
+      },
+      {
+        "monotonic": 277983.117040308,
+        "host_busy_percent": 8.644
+      },
+      {
+        "monotonic": 277983.617269473,
+        "host_busy_percent": 8.577
+      },
+      {
+        "monotonic": 277984.117543538,
+        "host_busy_percent": 8.639
+      },
+      {
+        "monotonic": 277984.617797383,
+        "host_busy_percent": 8.634
+      },
+      {
+        "monotonic": 277985.118026348,
+        "host_busy_percent": 9.408
+      },
+      {
+        "monotonic": 277985.618316532,
+        "host_busy_percent": 8.463
+      },
+      {
+        "monotonic": 277986.118549117,
+        "host_busy_percent": 8.701
+      },
+      {
+        "monotonic": 277986.618764372,
+        "host_busy_percent": 9.142
+      },
+      {
+        "monotonic": 277987.118981078,
+        "host_busy_percent": 8.085
+      },
+      {
+        "monotonic": 277987.619152313,
+        "host_busy_percent": 7.96
+      },
+      {
+        "monotonic": 277988.119377869,
+        "host_busy_percent": 8.639
+      },
+      {
+        "monotonic": 277988.619628043,
+        "host_busy_percent": 11.187
+      },
+      {
+        "monotonic": 277989.119848389,
+        "host_busy_percent": 9.074
+      },
+      {
+        "monotonic": 277989.620047224,
+        "host_busy_percent": 8.042
+      },
+      {
+        "monotonic": 277990.120263519,
+        "host_busy_percent": 9.87
+      },
+      {
+        "monotonic": 277990.620478755,
+        "host_busy_percent": 8.701
+      },
+      {
+        "monotonic": 277991.120761639,
+        "host_busy_percent": 8.09
+      },
+      {
+        "monotonic": 277991.621023424,
+        "host_busy_percent": 10.349
+      },
+      {
+        "monotonic": 277992.121269069,
+        "host_busy_percent": 12.547
+      },
+      {
+        "monotonic": 277992.621480064,
+        "host_busy_percent": 10.454
+      },
+      {
+        "monotonic": 277993.121726089,
+        "host_busy_percent": 8.266
+      },
+      {
+        "monotonic": 277993.622007134,
+        "host_busy_percent": 10.093
+      },
+      {
+        "monotonic": 277994.122208459,
+        "host_busy_percent": 8.375
+      },
+      {
+        "monotonic": 277994.622446124,
+        "host_busy_percent": 8.328
+      },
+      {
+        "monotonic": 277995.122723929,
+        "host_busy_percent": 9.888
+      },
+      {
+        "monotonic": 277995.623028193,
+        "host_busy_percent": 8.219
+      },
+      {
+        "monotonic": 277996.123248768,
+        "host_busy_percent": 8.95
+      },
+      {
+        "monotonic": 277996.623469523,
+        "host_busy_percent": 7.836
+      },
+      {
+        "monotonic": 277997.123681379,
+        "host_busy_percent": 9.012
+      },
+      {
+        "monotonic": 277997.623919634,
+        "host_busy_percent": 9.21
+      },
+      {
+        "monotonic": 277998.124151779,
+        "host_busy_percent": 9.373
+      },
+      {
+        "monotonic": 277998.624443053,
+        "host_busy_percent": 8.411
+      },
+      {
+        "monotonic": 277999.124692438,
+        "host_busy_percent": 8.313
+      },
+      {
+        "monotonic": 277999.624979132,
+        "host_busy_percent": 8.52
+      },
+      {
+        "monotonic": 278000.125251627,
+        "host_busy_percent": 8.012
+      },
+      {
+        "monotonic": 278000.625478142,
+        "host_busy_percent": 9.503
+      },
+      {
+        "monotonic": 278001.125699198,
+        "host_busy_percent": 9.272
+      },
+      {
+        "monotonic": 278001.625979655,
+        "host_busy_percent": 9.204
+      },
+      {
+        "monotonic": 278002.12626497,
+        "host_busy_percent": 8.825
+      },
+      {
+        "monotonic": 278002.626545355,
+        "host_busy_percent": 8.769
+      },
+      {
+        "monotonic": 278003.12676773,
+        "host_busy_percent": 8.401
+      },
+      {
+        "monotonic": 278003.627050074,
+        "host_busy_percent": 9.838
+      },
+      {
+        "monotonic": 278004.12727261,
+        "host_busy_percent": 8.509
+      },
+      {
+        "monotonic": 278004.627479816,
+        "host_busy_percent": 9.074
+      },
+      {
+        "monotonic": 278005.127735101,
+        "host_busy_percent": 9.305
+      },
+      {
+        "monotonic": 278005.628014116,
+        "host_busy_percent": 9.583
+      },
+      {
+        "monotonic": 278006.128237781,
+        "host_busy_percent": 11.063
+      },
+      {
+        "monotonic": 278006.628458916,
+        "host_busy_percent": 8.276
+      },
+      {
+        "monotonic": 278007.128726181,
+        "host_busy_percent": 8.566
+      },
+      {
+        "monotonic": 278007.629012115,
+        "host_busy_percent": 8.774
+      },
+      {
+        "monotonic": 278008.129228901,
+        "host_busy_percent": 9.006
+      },
+      {
+        "monotonic": 278008.629492906,
+        "host_busy_percent": 8.623
+      },
+      {
+        "monotonic": 278009.129930968,
+        "host_busy_percent": 77.029
+      },
+      {
+        "monotonic": 278009.630198643,
+        "host_busy_percent": 70.753
+      },
+      {
+        "monotonic": 278010.130466537,
+        "host_busy_percent": 43.381
+      },
+      {
+        "monotonic": 278010.630684793,
+        "host_busy_percent": 19.429
+      },
+      {
+        "monotonic": 278011.130888218,
+        "host_busy_percent": 12.283
+      },
+      {
+        "monotonic": 278011.631162553,
+        "host_busy_percent": 8.214
+      },
+      {
+        "monotonic": 278012.131447617,
+        "host_busy_percent": 8.504
+      },
+      {
+        "monotonic": 278012.631696942,
+        "host_busy_percent": 25.357
+      },
+      {
+        "monotonic": 278013.131997686,
+        "host_busy_percent": 59.179
+      },
+      {
+        "monotonic": 278013.632272611,
+        "host_busy_percent": 26.799
+      },
+      {
+        "monotonic": 278014.132493956,
+        "host_busy_percent": 19.615
+      },
+      {
+        "monotonic": 278014.632718791,
+        "host_busy_percent": 18.979
+      },
+      {
+        "monotonic": 278015.132945696,
+        "host_busy_percent": 15.04
+      },
+      {
+        "monotonic": 278015.633185381,
+        "host_busy_percent": 20.186
+      },
+      {
+        "monotonic": 278016.133409446,
+        "host_busy_percent": 15.561
+      },
+      {
+        "monotonic": 278016.633606662,
+        "host_busy_percent": 9.344
+      },
+      {
+        "monotonic": 278017.133797788,
+        "host_busy_percent": 6.905
+      },
+      {
+        "monotonic": 278017.633987303,
+        "host_busy_percent": 7.836
+      },
+      {
+        "monotonic": 278018.134261698,
+        "host_busy_percent": 15.136
+      },
+      {
+        "monotonic": 278018.634460324,
+        "host_busy_percent": 7.96
+      },
+      {
+        "monotonic": 278019.134716338,
+        "host_busy_percent": 25.155
+      },
+      {
+        "monotonic": 278019.634913394,
+        "host_busy_percent": 34.496
+      },
+      {
+        "monotonic": 278020.135156259,
+        "host_busy_percent": 11.235
+      },
+      {
+        "monotonic": 278020.635375214,
+        "host_busy_percent": 16.243
+      },
+      {
+        "monotonic": 278021.135796347,
+        "host_busy_percent": 25.124
+      },
+      {
+        "monotonic": 278021.636086651,
+        "host_busy_percent": 79.538
+      },
+      {
+        "monotonic": 278022.136324856,
+        "host_busy_percent": 34.122
+      },
+      {
+        "monotonic": 278022.63664902,
+        "host_busy_percent": 30.025
+      },
+      {
+        "monotonic": 278023.136858865,
+        "host_busy_percent": 13.089
+      },
+      {
+        "monotonic": 278023.637058351,
+        "host_busy_percent": 19.226
+      },
+      {
+        "monotonic": 278024.137332545,
+        "host_busy_percent": 9.783
+      },
+      {
+        "monotonic": 278024.63759819,
+        "host_busy_percent": 14.161
+      },
+      {
+        "monotonic": 278025.137840105,
+        "host_busy_percent": 14.596
+      },
+      {
+        "monotonic": 278025.63805386,
+        "host_busy_percent": 25.389
+      },
+      {
+        "monotonic": 278026.138309795,
+        "host_busy_percent": 31.308
+      },
+      {
+        "monotonic": 278026.63852861,
+        "host_busy_percent": 12.57
+      },
+      {
+        "monotonic": 278027.138751516,
+        "host_busy_percent": 19.291
+      },
+      {
+        "monotonic": 278027.638953921,
+        "host_busy_percent": 9.023
+      },
+      {
+        "monotonic": 278028.139129757,
+        "host_busy_percent": 7.955
+      },
+      {
+        "monotonic": 278028.639314593,
+        "host_busy_percent": 9.001
+      },
+      {
+        "monotonic": 278029.139539618,
+        "host_busy_percent": 11.443
+      },
+      {
+        "monotonic": 278029.639805542,
+        "host_busy_percent": 25.887
+      },
+      {
+        "monotonic": 278030.140006118,
+        "host_busy_percent": 18.199
+      },
+      {
+        "monotonic": 278030.640221473,
+        "host_busy_percent": 11.622
+      },
+      {
+        "monotonic": 278031.140437089,
+        "host_busy_percent": 11.333
+      },
+      {
+        "monotonic": 278031.640622704,
+        "host_busy_percent": 10.89
+      },
+      {
+        "monotonic": 278032.140920348,
+        "host_busy_percent": 11.823
+      },
+      {
+        "monotonic": 278032.641144424,
+        "host_busy_percent": 11.228
+      },
+      {
+        "monotonic": 278033.141368209,
+        "host_busy_percent": 12.267
+      },
+      {
+        "monotonic": 278033.641622734,
+        "host_busy_percent": 10.667
+      },
+      {
+        "monotonic": 278034.141841099,
+        "host_busy_percent": 11.567
+      },
+      {
+        "monotonic": 278034.642043954,
+        "host_busy_percent": 11.09
+      },
+      {
+        "monotonic": 278035.14226825,
+        "host_busy_percent": 12.027
+      },
+      {
+        "monotonic": 278035.642503075,
+        "host_busy_percent": 15.399
+      },
+      {
+        "monotonic": 278036.1427276,
+        "host_busy_percent": 15.983
+      },
+      {
+        "monotonic": 278036.642964155,
+        "host_busy_percent": 30.846
+      },
+      {
+        "monotonic": 278037.14317142,
+        "host_busy_percent": 43.079
+      },
+      {
+        "monotonic": 278037.643452655,
+        "host_busy_percent": 48.102
+      },
+      {
+        "monotonic": 278038.143762119,
+        "host_busy_percent": 31.635
+      },
+      {
+        "monotonic": 278038.643996204,
+        "host_busy_percent": 28.307
+      },
+      {
+        "monotonic": 278039.144309958,
+        "host_busy_percent": 29.591
+      },
+      {
+        "monotonic": 278039.644545133,
+        "host_busy_percent": 19.614
+      },
+      {
+        "monotonic": 278040.144806688,
+        "host_busy_percent": 17.143
+      },
+      {
+        "monotonic": 278040.645075392,
+        "host_busy_percent": 17.859
+      },
+      {
+        "monotonic": 278041.145304218,
+        "host_busy_percent": 24.613
+      },
+      {
+        "monotonic": 278041.645536973,
+        "host_busy_percent": 34.33
+      },
+      {
+        "monotonic": 278042.145814667,
+        "host_busy_percent": 32.775
+      },
+      {
+        "monotonic": 278042.646033942,
+        "host_busy_percent": 24.782
+      },
+      {
+        "monotonic": 278043.146264758,
+        "host_busy_percent": 17.837
+      },
+      {
+        "monotonic": 278043.646521562,
+        "host_busy_percent": 16.988
+      },
+      {
+        "monotonic": 278044.146783417,
+        "host_busy_percent": 14.757
+      },
+      {
+        "monotonic": 278044.647069991,
+        "host_busy_percent": 13.619
+      },
+      {
+        "monotonic": 278045.147371866,
+        "host_busy_percent": 22.996
+      },
+      {
+        "monotonic": 278045.647600771,
+        "host_busy_percent": 26.803
+      },
+      {
+        "monotonic": 278046.147846866,
+        "host_busy_percent": 35.99
+      },
+      {
+        "monotonic": 278046.648073391,
+        "host_busy_percent": 30.678
+      },
+      {
+        "monotonic": 278047.148362895,
+        "host_busy_percent": 31.203
+      },
+      {
+        "monotonic": 278047.64862939,
+        "host_busy_percent": 56.227
+      },
+      {
+        "monotonic": 278048.148905794,
+        "host_busy_percent": 37.104
+      },
+      {
+        "monotonic": 278048.649273518,
+        "host_busy_percent": 23.836
+      },
+      {
+        "monotonic": 278049.150290813,
+        "host_busy_percent": 35.812
+      },
+      {
+        "monotonic": 278049.65355655,
+        "host_busy_percent": 92.308
+      },
+      {
+        "monotonic": 278050.153835525,
+        "host_busy_percent": 60.297
+      },
+      {
+        "monotonic": 278050.654104329,
+        "host_busy_percent": 20.797
+      },
+      {
+        "monotonic": 278051.154319185,
+        "host_busy_percent": 21.753
+      },
+      {
+        "monotonic": 278051.65450661,
+        "host_busy_percent": 18.035
+      },
+      {
+        "monotonic": 278052.154706796,
+        "host_busy_percent": 23.445
+      },
+      {
+        "monotonic": 278052.65498119,
+        "host_busy_percent": 21.517
+      },
+      {
+        "monotonic": 278053.155184006,
+        "host_busy_percent": 25.652
+      },
+      {
+        "monotonic": 278053.655418871,
+        "host_busy_percent": 25.841
+      },
+      {
+        "monotonic": 278054.155622906,
+        "host_busy_percent": 25.76
+      },
+      {
+        "monotonic": 278054.655817692,
+        "host_busy_percent": 18.595
+      },
+      {
+        "monotonic": 278055.156011338,
+        "host_busy_percent": 14.916
+      },
+      {
+        "monotonic": 278055.656273482,
+        "host_busy_percent": 15.184
+      },
+      {
+        "monotonic": 278056.156532337,
+        "host_busy_percent": 15.246
+      },
+      {
+        "monotonic": 278056.656741802,
+        "host_busy_percent": 15.724
+      },
+      {
+        "monotonic": 278057.156960988,
+        "host_busy_percent": 26.973
+      }
+    ]
+  }
+}

@@ -196,3 +196,34 @@ fn installed_external_component_retains_package_identity_and_freshness() {
     let peer = Fixture::run(request).unwrap();
     assert_eq!(peer["detected"]["allDependencies"]["peerDependencies"][0]["peerVersionRange"], "*");
 }
+
+#[test]
+fn workspace_root_skips_source_graph_and_custom_detector_facts() {
+    let fixture = Fixture::new();
+    fixture.write("workspace.jsonc", r#"{"scripts":{"ignored":"require('missing')"}}"#);
+    fixture.write("README.md", "import 'missing-package'; require('./comp/private');\n");
+    fixture.write("script.js", "require('uninstalled'); import './comp/private';\n");
+    let mut request = fixture.request(&[]);
+    request["componentRoot"] = json!(fixture.0);
+    request["files"] = json!([
+        fixture.0.join("workspace.jsonc"),
+        fixture.0.join("README.md"),
+        fixture.0.join("script.js"),
+    ]);
+    request["detection"]["graph"]["custom"] =
+        json!({"unused":"root detectors must not be evaluated"});
+    let output = Fixture::run(request).unwrap();
+    assert_eq!(
+        output["detected"]["allDependencies"],
+        json!({"dependencies":[],"devDependencies":[],"peerDependencies":[]}),
+    );
+    assert_eq!(
+        output["detected"]["allPackagesDependencies"],
+        json!({"packageDependencies":{},"devPackageDependencies":{},"peerPackageDependencies":{}}),
+    );
+    assert_eq!(output["detected"]["issues"], json!([]));
+    let read_set: Vec<proof::Proof> = serde_json::from_value(output["readSet"].clone()).unwrap();
+    proof::verify(&read_set).unwrap();
+    fixture.write("workspace.jsonc", "{}\n");
+    assert!(proof::verify(&read_set).is_err());
+}

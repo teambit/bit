@@ -1,5 +1,6 @@
 //! `e2e/commands/`.
 
+pub(crate) mod add;
 mod delete;
 mod diff;
 mod diff_completion;

@@ -3,6 +3,10 @@
 pub use prepared::{link_prepared_component, prepared_package_manifest};
 
 mod prepared;
+mod tracking;
+mod write;
+
+use write::package as write_package_json;
 
 use super::{
     link_fs::{LinkKind, create_link_or_symlink, hard_link_directory, is_symlink, remove_path},
@@ -74,15 +78,39 @@ pub async fn link_components(
     host: &dyn Host,
     options: &ComponentLinkOptions<'_>,
 ) -> io::Result<LinkResult> {
+    link_components_with(root, components, host, options, false).await
+}
+
+/// Track newly added components without inventing a legacy `latest` version.
+pub async fn link_tracking_components(
+    root: &Path,
+    components: &[WorkspaceComponent],
+    host: &dyn Host,
+    options: &ComponentLinkOptions<'_>,
+) -> io::Result<LinkResult> {
+    link_components_with(root, components, host, options, true).await
+}
+
+async fn link_components_with(
+    root: &Path,
+    components: &[WorkspaceComponent],
+    host: &dyn Host,
+    options: &ComponentLinkOptions<'_>,
+    tracking: bool,
+) -> io::Result<LinkResult> {
     let components: Vec<_> = components
         .iter()
         .filter(|comp| comp.root_dir != ".")
         .collect();
     let injected = read_injected_deps(root)?;
     let envs = env_props(&components, host).await?;
-    let mut result = LinkResult::default();
+    let manifests =
+        tracking::prepare(&components, host, options, &injected, &envs, tracking).await?;
+    let prepared_changes =
+        if tracking { tracking::persist(root, &components, &manifests)? } else { false };
+    let mut result = LinkResult { package_json_changed: prepared_changes, ..Default::default() };
     for component in &components {
-        let context = LinkContext { host, options, injected: &injected, envs: &envs };
+        let context = LinkContext { host, options, injected: &injected, envs: &envs, tracking };
         let (links, changed) = link_component(root, component, &context).await?;
         result.components.push(links);
         result.package_json_changed |= changed;
@@ -133,6 +161,7 @@ struct LinkContext<'a> {
     options: &'a ComponentLinkOptions<'a>,
     injected: &'a InjectedDeps,
     envs: &'a IndexMap<String, EnvProps>,
+    tracking: bool,
 }
 
 async fn link_component(
@@ -141,13 +170,15 @@ async fn link_component(
     context: &LinkContext<'_>,
 ) -> io::Result<(ComponentLinks, bool)> {
     let LinkContext { options, injected, .. } = *context;
-    let package_dir = root.join("node_modules").join(&component.package_name);
+    let package_dir = root
+        .join("node_modules")
+        .join(Path::new(&component.package_name).components().collect::<std::path::PathBuf>());
     let (new_links, existing) = plan_file_links(root, component, &package_dir);
     if is_symlink(&package_dir) {
         remove_path(&package_dir)?;
     }
     let mut changed = false;
-    if !component.has_package_json {
+    if !component.has_package_json && !context.tracking {
         let manifest = package_json(component, context).await?;
         changed = write_package_json(&package_dir.join("package.json"), &manifest)?;
     }
@@ -203,6 +234,9 @@ async fn package_json(
         is_aspect: options.aspect_env_ids.iter().any(|env| env_matches(env, &component.env_id)),
     };
     let mut manifest = transformed(component, &package_context);
+    if context.tracking {
+        tracking::version(&mut manifest, component, &package_context);
+    }
     if env.is_some_and(|env| env.modifies) {
         let id = component.id.to_string_without_version();
         let modified = context.host.transform_package_json(&id, Value::Object(manifest)).await?;
@@ -251,35 +285,6 @@ fn env_matches(env: &str, component_env: &str) -> bool {
         || component_env
             .split_once('@')
             .is_some_and(|(id, _)| id == env)
-}
-
-/// `JsonVinyl.write` with the `stringify-package` format, atomically. Returns whether the
-/// content differs from what was there (`packageJsonCreated`).
-fn write_package_json(path: &Path, manifest: &Manifest) -> io::Result<bool> {
-    if is_symlink(path) {
-        let message = format!(
-            r#"fatal: trying to write a package.json file into a symlink file at "{}""#,
-            path.display(),
-        );
-        return Err(io::Error::new(io::ErrorKind::InvalidInput, message));
-    }
-    let compact = serde_json::to_string(manifest).map_err(io::Error::other)?;
-    let changed =
-        fs::read_to_string(path).ok().and_then(|text| compact_json(&text)) != Some(compact);
-    let mut text = serde_json::to_string_pretty(manifest).map_err(io::Error::other)?;
-    text.push('\n');
-    let directory = path.parent().unwrap_or_else(|| Path::new(""));
-    fs::create_dir_all(directory)?;
-    let temporary = directory.join(format!(".package.json.{}.tmp", std::process::id()));
-    fs::write(&temporary, text)?;
-    fs::rename(&temporary, path)?;
-    Ok(changed)
-}
-
-/// `JSON.stringify(JSON.parse(text))`.
-fn compact_json(text: &str) -> Option<String> {
-    let value: serde_json::Value = serde_json::from_str(text).ok()?;
-    serde_json::to_string(&value).ok()
 }
 
 /// `getInjectedDirs`: each injected copy of the package gets its `package.json` hard linked

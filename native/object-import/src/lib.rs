@@ -4,6 +4,7 @@
 pub mod component_delete;
 pub mod component_recover;
 pub mod component_remove;
+pub mod component_tracking;
 pub mod export_actions;
 pub mod export_progress;
 pub mod lane_create;

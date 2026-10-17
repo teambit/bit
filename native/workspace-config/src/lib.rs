@@ -1,8 +1,10 @@
 #![cfg_attr(dylint_lib = "perfectionist", feature(register_tool))]
 #![cfg_attr(dylint_lib = "perfectionist", register_tool(perfectionist))]
 //! Published `ConfigGetter` layering shared by native commands, installation and transport.
+pub mod glob;
 pub mod jsonc;
 pub mod package_json;
+pub mod variants;
 
 pub use global::{config_string, read_global_config, read_global_config_with};
 pub use paths::{cache_root, global_config_dir};

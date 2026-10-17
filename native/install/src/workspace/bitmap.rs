@@ -106,22 +106,26 @@ impl Bitmap {
     pub fn load(root: &Path, default_scope: Option<&str>) -> io::Result<Self> {
         let Some(path) = location(root) else { return Ok(Self::default()) };
         let text = fs::read_to_string(&path)?;
-        let Value::Object(mut json) =
-            jsonc::parse(&text).map_err(|error| invalid(&path, &error.to_string()))?
-        else {
-            return Err(invalid(&path, "not an object"));
+        let value = jsonc::parse(&text).map_err(|error| invalid(&path, &error.to_string()))?;
+        Self::projected(&path, &value, default_scope)
+    }
+
+    /// Read a retained in-memory bitmap without publishing it to disk.
+    pub fn projected(path: &Path, value: &Value, default_scope: Option<&str>) -> io::Result<Self> {
+        let Value::Object(mut json) = value.clone() else {
+            return Err(invalid(path, "not an object"));
         };
         let schema = json
             .remove(SCHEMA_FIELD)
             .or_else(|| json.remove("version"))
             .and_then(|schema| schema.as_str().map(str::to_owned));
         let lane = json.remove(LANE_KEY).and_then(|lane| lane_info(&lane));
-        throw_for_duplicate_root_dirs(&path, &json)?;
+        throw_for_duplicate_root_dirs(path, &json)?;
         let entries = json
             .iter()
-            .map(|(key, value)| entry(&path, key, value, default_scope))
+            .map(|(key, value)| entry(path, key, value, default_scope))
             .collect::<io::Result<Vec<_>>>()?;
-        Ok(Self { path: Some(path), schema, lane, entries })
+        Ok(Self { path: Some(path.to_owned()), schema, lane, entries })
     }
 }
 

@@ -10,14 +10,7 @@ pub fn commit(
     context: &Value,
     capture: &Capture,
 ) -> io::Result<()> {
-    if !capture.cache.environment_reads.is_empty() {
-        let result: Value = engine.request(
-            &json!({"kind":"dependencyFreshValidate","readSet":capture.cache.environment_reads}),
-        )?;
-        if result["fresh"] != true {
-            return Err(decline("environment facts changed"));
-        }
-    }
+    engine.validate_read_set(&capture.cache.environment_reads, "environment facts changed")?;
     let plans = array(context.get("pendingHistory"), "history plans")?;
     if !plans.is_empty() {
         let validated: Value = engine.request(

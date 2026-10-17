@@ -70,6 +70,11 @@ impl Pending {
         })
     }
 
+    /// Keep source receipts validated while suppressing a cache-blocked detection write.
+    pub(in crate::commands) fn block_cache(&mut self) {
+        self.cacheable = false;
+    }
+
     /// The same entry under another identity.
     pub fn renamed(&self, identity: String) -> Self {
         Self { identity, ..self.clone() }
@@ -234,13 +239,12 @@ pub fn commit(
     reset: bool,
     write_cache: bool,
 ) -> io::Result<()> {
-    for entry in pending {
-        let validation: Value =
-            engine.request(&json!({"kind": "dependencyFreshValidate", "readSet": entry.read_set}))?;
-        if validation.get("fresh") != Some(&Value::Bool(true)) {
-            return Err(decline("status fresh dependencies changed"));
-        }
-    }
+    let proofs = pending
+        .iter()
+        .flat_map(Pending::read_set)
+        .cloned()
+        .collect::<Vec<_>>();
+    engine.validate_read_set(&proofs, "status fresh dependencies changed")?;
     if !write_cache {
         return Ok(());
     }

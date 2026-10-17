@@ -1,4 +1,5 @@
 //! `e2e/harmony/`.
+mod add;
 mod merge_callbacks;
 mod merge_history;
 mod merge_lifecycle;

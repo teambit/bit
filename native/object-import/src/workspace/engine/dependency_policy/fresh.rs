@@ -42,13 +42,19 @@ fn detect_view(
     let object = graph.as_object_mut().ok_or_else(|| invalid("fresh dependency graph grammar"))?;
     for (key, value) in [
         ("root", json!(request.component_root)),
-        ("files", json!(request.files)),
+        (
+            "files",
+            if request.component_root == request.root { json!([]) } else { json!(request.files) },
+        ),
         ("includeNpm", json!(true)),
         ("visited", json!({})),
     ] {
         if object.insert(key.to_owned(), value).is_some() {
             return Err(invalid("fresh graph ownership"));
         }
+    }
+    if request.component_root == request.root {
+        object.insert("custom".to_owned(), Value::Null);
     }
     let graph = serde_json::from_value(graph).map_err(io::Error::other)?;
     let (_, mut captured) = match overlay {

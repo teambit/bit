@@ -126,6 +126,7 @@ enum Request {
     CommandFinalize(command::Finalize),
     CommandLaneFinalize(command::LaneFinalize),
     StatusContext(status_context::Request),
+    TrackingContext(status_context::tracking::Request),
     StatusGraph(status_graph::Request),
     StatusResult(status_result::Request),
     StatusModels(status_models::Request),
@@ -298,6 +299,7 @@ fn failure(id: u32) -> Response {
 fn apply(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value)> {
     match request {
         Request::StatusContext(request) => status_context::read(&request, pool),
+        Request::TrackingContext(request) => status_context::tracking::read(&request, pool),
         Request::StatusGraph(request) => status_graph::read(&request),
         Request::StatusResult(request) => status_result::read(&request),
         Request::StatusModels(request) => status_models::read(&request, pool),

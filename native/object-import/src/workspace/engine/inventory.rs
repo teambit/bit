@@ -202,3 +202,32 @@ fn relative(root: &Path, file: &Path) -> io::Result<String> {
 
 #[cfg(test)]
 mod tests;
+
+/// Share the bounded inventory scanner with component tracking.
+pub(crate) fn tracking_scan(
+    root: &Path,
+    excluded: &[PathBuf],
+    workspace_root: bool,
+) -> io::Result<Vec<String>> {
+    scan::scan(root, excluded, workspace_root)
+}
+
+/// Compile and evaluate the same node-ignore rules as ordinary component inventory.
+pub(crate) fn tracking_filter(paths: &[String], patterns: &[String]) -> io::Result<Vec<String>> {
+    let mut compiler = bit_ignore::Ignore::new();
+    compiler
+        .add(patterns.iter().map(String::as_str))
+        .map_err(io::Error::other)?;
+    let policy = serde_json::from_value(serde_json::json!({"rules":compiler.rules()}))
+        .map_err(io::Error::other)?;
+    let mut matcher = Matcher::new(policy)?;
+    Ok(paths
+        .iter()
+        .filter(|path| matcher.keep(path))
+        .cloned()
+        .collect())
+}
+
+pub(crate) fn tracking_ignore(root: &Path) -> io::Result<Vec<String>> {
+    patterns::own(root)
+}

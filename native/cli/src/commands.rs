@@ -1,6 +1,7 @@
 //! The commands implemented in Rust. A command is looked up by its name or
 //! one of its aliases, exactly as the Node.js CLI spells them.
 
+mod add;
 mod checkout;
 mod color;
 mod config;
@@ -46,6 +47,7 @@ pub struct Command {
 }
 
 pub const COMMANDS: &[Command] = &[
+    add::COMMAND,
     checkout::COMMAND,
     checkout::REVERT,
     config::COMMAND,

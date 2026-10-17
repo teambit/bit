@@ -81,6 +81,18 @@ pub struct CacheWrites {
 }
 
 impl CacheWrites {
+    /// Tracking loads can acquire link issues before their generated packages exist.
+    pub(in crate::commands) fn block_dependencies(
+        &mut self,
+        identities: &std::collections::HashSet<String>,
+    ) {
+        for entry in self.pending.iter_mut().chain(self.replacements.iter_mut()) {
+            if identities.contains(base_identity(entry.identity())) {
+                entry.block_cache();
+            }
+        }
+    }
+
     /// `forceDependencyCacheReset`: the whole cache is replaced on commit.
     pub fn force_reset(&mut self) {
         self.reset = true;
@@ -343,13 +355,16 @@ fn record(
         .get("version")
         .cloned()
         .unwrap_or(Value::Null);
-    let entry = json!({
+    let mut entry = json!({
         "identity": target["identity"],
         "version": version,
         "directory": directory,
         "files": files,
         "current": current,
     });
+    if let Some(version) = target.get("trackingVersion") {
+        entry["trackingVersion"] = version.clone();
+    }
     captured.dependency_states.insert(
         text(target.get("identity"))?.to_string(),
         dependencies["state"].clone(),

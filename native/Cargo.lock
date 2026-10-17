@@ -454,6 +454,7 @@ dependencies = [
  "base64 0.22.1",
  "bit-client-transfer",
  "bit-dependency-scanner",
+ "bit-ignore",
  "bit-workspace-config",
  "flate2",
  "futures-util",

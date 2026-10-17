@@ -27,6 +27,7 @@ mod env_packages;
 mod env_type;
 mod files;
 mod first_env;
+#[cfg(test)]
 mod glob;
 mod ignore;
 mod package_name;
@@ -134,6 +135,30 @@ impl Workspace {
         core_aspect_ids: &[String],
     ) -> io::Result<Self> {
         let bitmap = Bitmap::load(root, config.workspace.default_scope.as_deref())?;
+        Self::from_bitmap(root, config, core_aspect_ids, bitmap)
+    }
+
+    /// Load component inventory and effective configuration from a retained bitmap.
+    pub fn load_projected(
+        root: &Path,
+        config: &WorkspaceConfig,
+        core_aspect_ids: &[String],
+        projected: &Value,
+    ) -> io::Result<Self> {
+        let bitmap = Bitmap::projected(
+            &root.join(BITMAP),
+            projected,
+            config.workspace.default_scope.as_deref(),
+        )?;
+        Self::from_bitmap(root, config, core_aspect_ids, bitmap)
+    }
+
+    fn from_bitmap(
+        root: &Path,
+        config: &WorkspaceConfig,
+        core_aspect_ids: &[String],
+        bitmap: Bitmap,
+    ) -> io::Result<Self> {
         let merge_config = MergeConfig::load(root)?;
         let scope_path = scope_path(root);
         let ignored = config.workspace.ignored_files.clone().unwrap_or_default();

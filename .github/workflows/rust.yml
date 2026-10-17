@@ -193,6 +193,8 @@ jobs:
             filters: commands::init harmony::config harmony::doctor
           - group: stash
             filters: harmony::stash
+          - group: tracking
+            filters: commands::add harmony::add
     timeout-minutes: 60
     defaults:
       run:

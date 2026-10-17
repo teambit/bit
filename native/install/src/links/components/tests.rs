@@ -1,3 +1,5 @@
+mod tracking;
+
 use super::{ComponentLinkOptions, link_components};
 use crate::{
     host::{AfterInstall, AfterInstallResult, Host},
@@ -15,6 +17,8 @@ use std::{
 #[derive(Default)]
 struct FakeHost {
     calls: Mutex<Vec<String>>,
+    transforms: Mutex<Vec<String>>,
+    reject: Option<String>,
 }
 
 #[async_trait]
@@ -32,10 +36,19 @@ impl Host for FakeHost {
             .lock()
             .unwrap()
             .push(component.to_owned());
-        Ok(json!({ "props": { "main": "dist/{main}.js" } }))
+        Ok(
+            json!({ "props": { "main": "dist/{main}.js" }, "modifiesPackageJson": self.reject.is_some() }),
+        )
     }
 
-    async fn transform_package_json(&self, _component: &str, manifest: Value) -> io::Result<Value> {
+    async fn transform_package_json(&self, component: &str, manifest: Value) -> io::Result<Value> {
+        self.transforms
+            .lock()
+            .unwrap()
+            .push(component.to_owned());
+        if self.reject.as_deref() == Some(component) {
+            return Err(io::Error::other("fixture rejected package"));
+        }
         Ok(manifest)
     }
 
