@@ -1,0 +1,83 @@
+//! The commands implemented in Rust. A command is looked up by its name or
+//! one of its aliases, exactly as the Node.js CLI spells them.
+
+mod add;
+mod checkout;
+mod color;
+mod config;
+mod delete;
+mod diff;
+mod doctor;
+mod engine;
+mod export;
+mod file_history;
+mod ids;
+mod import;
+mod init;
+mod install;
+mod installation;
+mod inventory;
+mod lane;
+mod list;
+mod log;
+mod merge;
+mod mini_status;
+mod patterns;
+mod recover;
+mod recovery;
+mod remove;
+mod reset;
+mod snap;
+mod stash;
+mod status;
+mod switch;
+mod tag;
+#[cfg(test)]
+mod test_support;
+mod workspace_command;
+
+use crate::native::Outcome;
+use std::{ffi::OsString, io};
+
+pub struct Command {
+    pub name: &'static str,
+    pub aliases: &'static [&'static str],
+    /// Receives every argument after the executable, starting with the command name.
+    pub run: fn(&[OsString]) -> io::Result<Outcome>,
+}
+
+pub const COMMANDS: &[Command] = &[
+    add::COMMAND,
+    checkout::COMMAND,
+    checkout::REVERT,
+    config::COMMAND,
+    delete::COMMAND,
+    doctor::COMMAND,
+    file_history::BLAME,
+    diff::COMMAND,
+    export::COMMAND,
+    file_history::LOG_FILE,
+    import::FETCH,
+    import::IMPORT,
+    init::COMMAND,
+    install::COMMAND,
+    lane::COMMAND,
+    list::COMMAND,
+    log::COMMAND,
+    merge::COMMAND,
+    mini_status::COMMAND,
+    recover::COMMAND,
+    remove::COMMAND,
+    reset::COMMAND,
+    snap::COMMAND,
+    stash::COMMAND,
+    status::COMMAND,
+    switch::COMMAND,
+    tag::COMMAND,
+];
+
+pub fn find(name: &str) -> Option<&'static Command> {
+    COMMANDS
+        .iter()
+        .find(|command| command.name == name || command.aliases.contains(&name))
+}

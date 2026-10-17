@@ -1,0 +1,55 @@
+[package]
+name = "bit-cli"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "The bit command line: commands implemented in Rust run in process, every other command runs the Node.js CLI"
+
+[[bin]]
+name = "bit"
+path = "src/main.rs"
+
+[features]
+# The ported e2e cases (`tests/e2e`), which need the Node.js CLI of `tests/e2e/bit-version`.
+e2e = []
+
+[[test]]
+name = "e2e"
+path = "tests/e2e/main.rs"
+required-features = ["e2e"]
+
+[dependencies]
+bit-client-transfer = { path = "../client-transfer" }
+bit-ignore = { path = "../ignore" }
+bit-workspace-config = { path = "../workspace-config" }
+diff = "0.1.13"
+tar = "0.4"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+getrandom = "0.3"
+bit-install = { path = "../install" }
+bit-object-import = { path = "../object-import" }
+node-semver = "2"
+regress = "=0.12.0"
+reqwest = { version = "0.13", default-features = false, features = ["json", "rustls"] }
+async-trait = "0.1"
+pnpm-deps-path = { workspace = true }
+pnpm-diagnostics = { workspace = true }
+pnpm-lockfile = { workspace = true }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+sha1 = "0.10"
+tempfile = "3"
+tokio = { version = "1", features = ["rt-multi-thread", "sync"] }
+unicode-width = "0.2"
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_System_Console"] }
+
+[dev-dependencies]
+flate2 = "1"
+
+[lints]
+workspace = true

@@ -1,0 +1,17 @@
+[package]
+name = "bit-ignore"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "The rule compiler of node-ignore 3.3.10, the .gitignore implementation Bit's workspace inventory uses"
+
+[dependencies]
+regress = "=0.12.0"
+serde = { version = "1", features = ["derive"] }
+
+[dev-dependencies]
+pretty_assertions = "1"
+serde_json = "1"
+
+[lints]
+workspace = true
