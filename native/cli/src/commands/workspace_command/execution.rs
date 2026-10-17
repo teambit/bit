@@ -81,7 +81,7 @@ fn execute_mode(
 
 /// Bit's loader on stdout: ora draws a spinner on an interactive terminal
 /// and prints plain lines elsewhere; `BIT_DISABLE_SPINNER` turns it off.
-fn loader_output(chalk: Chalk, quiet: bool) -> Output {
+pub(in crate::commands) fn loader_output(chalk: Chalk, quiet: bool) -> Output {
     let interactive = io::stdout().is_terminal()
         && env::var("TERM").map_or(true, |term| term != "dumb")
         && env::var_os("CI").is_none();

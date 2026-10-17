@@ -55,7 +55,7 @@ impl Plan {
     }
 
     pub fn commit(&self) -> io::Result<()> {
-        let store = Store::new(self.root.join(".bit/objects"), None)?;
+        let store = Store::new(bit_workspace_config::scope_path(&self.root).join("objects"), None)?;
         self.objects.persist(&store)?;
         self.documents.persist(&self.root, &store)
     }
@@ -73,8 +73,12 @@ impl Plan {
 impl Documents {
     fn read(root: &Path) -> io::Result<Self> {
         Ok(Self {
-            index: serde_json::from_slice(&fs::read(root.join(".bit/index.json"))?)?,
-            scope_json: serde_json::from_slice(&fs::read(root.join(".bit/scope.json"))?)?,
+            index: serde_json::from_slice(&fs::read(
+                bit_workspace_config::scope_path(root).join("index.json"),
+            )?)?,
+            scope_json: serde_json::from_slice(&fs::read(
+                bit_workspace_config::scope_path(root).join("scope.json"),
+            )?)?,
             bitmap: recovery::jsonc::parse(&fs::read(root.join(".bitmap"))?)?,
         })
     }
@@ -201,7 +205,7 @@ impl Documents {
         index.push(b'\n');
         store.write_index(&index)?;
         fs::write(
-            root.join(".bit/scope.json"),
+            bit_workspace_config::scope_path(root).join("scope.json"),
             serde_json::to_string_pretty(&self.scope_json)?.as_bytes(),
         )?;
         fs::write(root.join(".bitmap"), inspection::render_bitmap(&self.bitmap)?)
@@ -210,7 +214,11 @@ impl Documents {
 
 impl Objects {
     fn read(root: &Path, lane_hash: &str, original: &Original) -> io::Result<Self> {
-        let lane = outbound::read_object(&root.join(".bit/objects"), lane_hash, "Lane")?;
+        let lane = outbound::read_object(
+            &bit_workspace_config::scope_path(root).join("objects"),
+            lane_hash,
+            "Lane",
+        )?;
         if lane["name"] != original.name || lane["scope"] != original.scope {
             return Err(invalid());
         }

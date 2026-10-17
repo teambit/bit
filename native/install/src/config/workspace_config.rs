@@ -1,3 +1,5 @@
+pub(super) use bit_workspace_config::config_string;
+
 use super::DependencyResolverConfig;
 use crate::jsonc;
 use indexmap::IndexMap;
@@ -183,15 +185,6 @@ impl WorkspaceConfig {
             .as_deref()
             .map_or_else(|| root.join("node_modules"), |dir| root.join(dir));
         base.join(".bit_roots")
-    }
-}
-
-/// Config store values are strings; other JSON scalars are stringified as `String(value)` would.
-pub(super) fn config_string(value: &Value) -> Option<String> {
-    match value {
-        Value::String(value) => Some(value.clone()),
-        Value::Bool(_) | Value::Number(_) => Some(value.to_string()),
-        _ => None,
     }
 }
 

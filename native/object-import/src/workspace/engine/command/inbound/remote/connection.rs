@@ -30,7 +30,7 @@ pub(super) fn with_home(
     let global = bit_client_transfer::config::effective(
         global_config(transport)?,
         &scope["config"],
-        &workspace["teambit.harmony/config-store"],
+        &Value::Object(bit_workspace_config::workspace_values(&workspace)),
     );
     let resolver = Resolver::configured(
         &scope,
@@ -47,9 +47,6 @@ pub(super) fn with_home(
 }
 
 pub(super) fn global_config(transport: &Transport) -> io::Result<GlobalConfig> {
-    match fs::read(transport.global_config_dir.join("config.json")) {
-        Ok(bytes) => serde_json::from_slice(&bytes).map_err(io::Error::other),
-        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(GlobalConfig::new()),
-        Err(error) => Err(error),
-    }
+    serde_json::from_value(bit_workspace_config::read_global_config(&transport.global_config_dir)?)
+        .map_err(io::Error::other)
 }

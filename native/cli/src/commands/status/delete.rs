@@ -20,13 +20,16 @@ pub(crate) struct DeleteGraph {
 }
 impl DeleteGraph {
     pub(crate) fn read(root: &Path) -> io::Result<Self> {
-        let controls = [".bitmap", "workspace.jsonc", ".bit/index.json", ".bit/scope.json"]
-            .iter()
-            .map(|name| {
-                let path = root.join(name);
-                fs::read(&path).map(|bytes| (path, bytes))
-            })
-            .collect::<io::Result<Vec<_>>>()?;
+        let scope = bit_workspace_config::scope_path(root);
+        let controls = [
+            root.join(".bitmap"),
+            root.join("workspace.jsonc"),
+            scope.join("index.json"),
+            scope.join("scope.json"),
+        ]
+        .into_iter()
+        .map(|path| fs::read(&path).map(|bytes| (path, bytes)))
+        .collect::<io::Result<Vec<_>>>()?;
         let home =
             env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).unwrap_or_default();
         let mut engine = Engine::new()?;

@@ -96,11 +96,10 @@ fn resolve_hub(input: &Prepare, local: &Value, scope: &str) -> io::Result<String
 }
 
 pub(in super::super) fn global(input: &Prepare) -> io::Result<GlobalConfig> {
-    let global = match fs::read(input.transport.global_config_dir.join("config.json")) {
-        Ok(bytes) => serde_json::from_slice(&bytes).map_err(io::Error::other)?,
-        Err(error) if error.kind() == io::ErrorKind::NotFound => GlobalConfig::new(),
-        Err(error) => return Err(error),
-    };
+    let global = serde_json::from_value(bit_workspace_config::read_global_config(
+        &input.transport.global_config_dir,
+    )?)
+    .map_err(io::Error::other)?;
     let scope: Value =
         serde_json::from_slice(&fs::read(crate::scope_path(&input.root).join("scope.json"))?)?;
     let workspace =
@@ -108,6 +107,6 @@ pub(in super::super) fn global(input: &Prepare) -> io::Result<GlobalConfig> {
     Ok(bit_client_transfer::config::effective(
         global,
         &scope["config"],
-        &workspace["teambit.harmony/config-store"],
+        &Value::Object(bit_workspace_config::workspace_values(&workspace)),
     ))
 }

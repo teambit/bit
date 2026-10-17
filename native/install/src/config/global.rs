@@ -70,24 +70,20 @@ use super::workspace_config::config_string;
 use crate::model::GlobalConfig;
 use indexmap::IndexMap;
 use serde_json::Value;
-use std::{env, fs, io, path::Path};
+use std::{io, path::Path};
 
 /// `<dir>/config.json`, Bit's global config (`GlobalConfig.load`). A missing
 /// file is an empty config; Bit would create it, install does not need to.
 pub fn load_global_config(dir: &Path) -> io::Result<GlobalConfig> {
-    let path = dir.join("config.json");
-    let text = match fs::read_to_string(&path) {
-        Ok(text) => text,
-        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(GlobalConfig::new()),
-        Err(error) => return Err(error),
-    };
-    match serde_json::from_str(&text) {
-        Ok(Value::Object(map)) => Ok(map.into_iter().collect()),
-        Ok(_) => Ok(GlobalConfig::new()),
-        Err(error) => Err(io::Error::new(
+    let value = bit_workspace_config::read_global_config_with(dir, |path, error| {
+        io::Error::new(
             io::ErrorKind::InvalidData,
             format!("failed parsing {}: {error}", path.display()),
-        )),
+        )
+    })?;
+    match value {
+        Value::Object(map) => Ok(map.into_iter().collect()),
+        _ => Ok(GlobalConfig::new()),
     }
 }
 
@@ -106,27 +102,33 @@ impl EffectiveConfig {
         scope: &IndexMap<String, String>,
         workspace: &IndexMap<String, String>,
     ) -> Self {
-        let mut store: IndexMap<String, String> = global
-            .iter()
-            .filter_map(|(key, value)| Some((key.clone(), config_string(value)?)))
+        let global = Value::Object(
+            global
+                .iter()
+                .filter_map(|(key, value)| {
+                    Some((key.clone(), Value::String(config_string(value)?)))
+                })
+                .collect(),
+        );
+        let layer = |values: &IndexMap<String, String>| {
+            Value::Object(
+                values
+                    .iter()
+                    .map(|(key, value)| (key.clone(), Value::String(value.clone())))
+                    .collect(),
+            )
+        };
+        let store = bit_workspace_config::merge_layers(&global, &layer(scope), &layer(workspace))
+            .into_iter()
+            .filter_map(|(key, value)| Some((key, config_string(&value)?)))
             .collect();
-        store.extend(
-            scope
-                .iter()
-                .map(|(key, value)| (key.clone(), value.clone())),
-        );
-        store.extend(
-            workspace
-                .iter()
-                .map(|(key, value)| (key.clone(), value.clone())),
-        );
         Self { store }
     }
 
     /// `BIT_CONFIG_<KEY>`: dots become underscores, upper-cased.
     #[must_use]
     pub fn env_variable_name(key: &str) -> String {
-        format!("BIT_CONFIG_{}", key.replace('.', "_").to_uppercase())
+        bit_workspace_config::environment_key(key)
     }
 
     /// `getConfig(key)`. An empty environment variable does not count, as in JavaScript.
@@ -135,9 +137,7 @@ impl EffectiveConfig {
         if key.is_empty() {
             return None;
         }
-        if let Ok(value) = env::var(Self::env_variable_name(key))
-            && !value.is_empty()
-        {
+        if let Some(value) = bit_workspace_config::environment_value(key) {
             return Some(value);
         }
         self.store.get(key).cloned()

@@ -187,6 +187,8 @@ jobs:
             filters: commands::import commands::export export_completion export_hub export_callbacks
           - group: merge-history
             filters: merge_history merge_lifecycle merge_callbacks merge_policy merge_recovery
+          - group: provisioning
+            filters: commands::init harmony::config harmony::doctor
     timeout-minutes: 60
     defaults:
       run:

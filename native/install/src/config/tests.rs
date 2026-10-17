@@ -203,3 +203,22 @@ fn merge_config_entries() {
     );
     assert!(MergeConfig::parse("[*] a\nnot json").component("a").is_err());
 }
+
+#[test]
+fn effective_layer_order_filters_unsupported_globals_before_scope_overrides() {
+    let global = GlobalConfig::from_iter([
+        ("first".to_owned(), json!(["unsupported"])),
+        ("last".to_owned(), json!("retained")),
+    ]);
+    let scope = IndexMap::from_iter([("first".to_owned(), "scope".to_owned())]);
+    let config = EffectiveConfig::new(&global, &scope, &IndexMap::new());
+    assert_eq!(
+        config
+            .merged()
+            .keys()
+            .take(2)
+            .map(String::as_str)
+            .collect::<Vec<_>>(),
+        vec!["last", "first"],
+    );
+}

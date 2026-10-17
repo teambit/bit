@@ -3,13 +3,16 @@
 
 mod checkout;
 mod color;
+mod config;
 mod delete;
 mod diff;
+mod doctor;
 mod engine;
 mod export;
 mod file_history;
 mod ids;
 mod import;
+mod init;
 mod install;
 mod installation;
 mod inventory;
@@ -44,13 +47,16 @@ pub struct Command {
 pub const COMMANDS: &[Command] = &[
     checkout::COMMAND,
     checkout::REVERT,
+    config::COMMAND,
     delete::COMMAND,
+    doctor::COMMAND,
     file_history::BLAME,
     diff::COMMAND,
     export::COMMAND,
     file_history::LOG_FILE,
     import::FETCH,
     import::IMPORT,
+    init::COMMAND,
     install::COMMAND,
     lane::COMMAND,
     list::COMMAND,

@@ -6,6 +6,7 @@ mod diff_completion;
 mod export;
 mod import;
 mod import_all;
+mod init;
 mod lane;
 mod list;
 mod recover;

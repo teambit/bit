@@ -74,11 +74,7 @@ impl PreparedImport {
         if !append_switch_tracking(&mut scope, id)? {
             return Ok(());
         }
-        let mut output = Vec::new();
-        let formatter = serde_json::ser::PrettyFormatter::with_indent(b"    ");
-        let mut serializer = serde_json::Serializer::with_formatter(&mut output, formatter);
-        scope.serialize(&mut serializer).map_err(io::Error::other)?;
-        self.writes.switch_tracking = Some(output);
+        self.writes.switch_tracking = Some(bit_workspace_config::render_scope_json(&scope)?);
         Ok(())
     }
 

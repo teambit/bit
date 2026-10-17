@@ -37,34 +37,20 @@ pub fn effective(global: GlobalConfig, scope: &Value, workspace: &Value) -> Glob
 }
 
 fn layers(
-    mut global: GlobalConfig,
+    global: GlobalConfig,
     scope: &Value,
     workspace: &Value,
     environment: impl Fn(&str) -> Option<String>,
 ) -> GlobalConfig {
-    for layer in [scope, workspace] {
-        if let Some(settings) = layer.as_object() {
-            global.extend(
-                settings
-                    .iter()
-                    .map(|(key, value)| (key.clone(), value.clone())),
-            );
-        }
-    }
-    let keys = global
-        .keys()
-        .cloned()
-        .chain(TRANSPORT_KEYS.iter().map(|key| (*key).to_owned()))
-        .collect::<std::collections::BTreeSet<_>>();
-    for key in keys {
-        if let Some(value) =
-            environment(&format!("BIT_CONFIG_{}", key.replace('.', "_").to_uppercase()))
-                .filter(|value| !value.is_empty())
-        {
-            global.insert(key, Value::String(value));
-        }
-    }
-    global
+    bit_workspace_config::effective_with_environment(
+        &Value::Object(global.into_iter().collect()),
+        scope,
+        workspace,
+        TRANSPORT_KEYS,
+        environment,
+    )
+    .into_iter()
+    .collect()
 }
 
 #[cfg(test)]

@@ -330,9 +330,11 @@ name = "bit-cli"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "bit-client-transfer",
  "bit-ignore",
  "bit-install",
  "bit-object-import",
+ "bit-workspace-config",
  "chrono",
  "diff",
  "flate2",
@@ -347,6 +349,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha1",
+ "tar",
  "tempfile",
  "tokio",
  "unicode-width 0.2.2",
@@ -357,6 +360,7 @@ dependencies = [
 name = "bit-client-transfer"
 version = "0.1.0"
 dependencies = [
+ "bit-workspace-config",
  "futures-util",
  "getrandom 0.3.4",
  "indexmap",
@@ -402,6 +406,7 @@ dependencies = [
  "bit-client-transfer",
  "bit-dependency-scanner",
  "bit-object-import",
+ "bit-workspace-config",
  "flate2",
  "futures-util",
  "getrandom 0.3.4",
@@ -449,6 +454,7 @@ dependencies = [
  "base64 0.22.1",
  "bit-client-transfer",
  "bit-dependency-scanner",
+ "bit-workspace-config",
  "flate2",
  "futures-util",
  "indexmap",
@@ -466,6 +472,17 @@ dependencies = [
  "tokio",
  "winapi-util",
  "xattr",
+]
+
+[[package]]
+name = "bit-workspace-config"
+version = "0.1.0"
+dependencies = [
+ "indexmap",
+ "pretty_assertions",
+ "ryu-js",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

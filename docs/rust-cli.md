@@ -108,6 +108,19 @@ lints (`cargo dylint`) use the nightly toolchain `cargo-dylint` installs.
 They run the `bit` binary against the released Node.js CLI that
 `native/cli/tests/e2e/bit-version` names, which `bvm install <version>` provides.
 
+`bit-workspace-config` supplies the shared comment-preserving JSONC document, scope and
+workspace discovery, global config paths/readers, environment-key mapping and store layering.
+Installation, status/diff, snapshot/checkout/merge, transfer, provisioning and diagnostics reuse
+these readers and renderers; repository object reads use the bounded Rust object reader.
+Prepared scope documents share the published four-space/no-final-newline serializer, and package
+manifest edits share the existing newline, indentation and field-order formatter.
+
+Configuration lookup gives nonempty `BIT_CONFIG_*` values precedence over workspace, scope and
+global stores. Lists retain stored values and omit environment overrides. The native config
+command preserves the published origin order, including global-first deletion when no origin
+is given, JSON/text rendering, comment-preserving workspace backups and private global-file
+permissions. It also retains the released non-string and inherited-property getter behavior.
+
 ## The JavaScript host
 
 Some behavior is still implemented by aspects in JavaScript, for example an
@@ -130,6 +143,9 @@ Each host method is removed once its behavior is ported to Rust.
 
 | Command                                                                                                                           | Crate                                                                                                                                                                                                                                                                                                                     | Host methods                                                                                    | Declines when                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `init [path]`, `--bare [name]`, naming/default-directory/default-scope/generator options, `--shared`, `--standalone`, package-manager and reset options, `--agent` | `bit-cli`, `bit-workspace-config`: provisioning and repair/reset plans, scope selection, permissions, package/configuration rendering, agent instructions and MCP | Published package templates and instruction assets are read as files; no ordinary Harmony host | Fresh Git initialization requiring the interactive wizard, malformed workspace configuration, unavailable published assets, unsupported syntax or paths decline before effects; started filesystem failures remain owned |
+| `config`, `config get/set/del/list`, `--local`, `--local-track`, `--origin`, `--detailed`, list `--json` | `bit-cli`, `bit-workspace-config`: store precedence, native persistence, JSON/text/color reports and workspace history | none; Git supplies the released user-name/email fallback | Unknown grammar/origins, unavailable stores, malformed or unsupported store shapes, versioned workspace config-store mutations and `__proto__` mutations decline before effects; write failures remain owned |
+| `doctor [diagnosis]`, `--list`, `--json`, `--save`, `--archive`, archive inclusion/exclusion flags, `--remote` | `bit-cli`, `bit-workspace-config`, `bit-object-import`, `bit-client-transfer`: eight built-in diagnoses, reports/archives and file/HTTP remote diagnostics | Published BVM latest-version fact and configured JavaScript remote resolvers | Unknown grammar, unavailable published metadata, stores requiring canonical repair, corrupt or over-budget objects and error presentations requiring the released CLI stack decline before effects |
 | `install`, `in`                                                                                                                   | `bit-install` ([details](rust/native-install.md))                                                                                                                                                                                                                                                                         | `hostInfo`, `envPolicy`, `appTypes`, `packageJsonProps`, `transformPackageJson`, `afterInstall` | `--help`, outside a workspace, non-UTF-8 arguments, the yarn package manager, a Node.js CLI found only as a wrapper script                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `mini-status`, `ms`, with or without `--json`; `status --quick [--json]` | Rust status inventory, `bit-ignore` and shared scope/configuration readers | none | Component patterns and `--show-issues` on the private `mini-status` command, invalid arguments, unsafe paths, malformed legacy data or explicit inventory limits |
 | `status --json`, `s -j`, and text output with warnings, verbose, strict, fail-on-error, expand, lanes and ignore-circular-dependencies flags | Shared Rust inventory, policy/configuration projection, repository comparison, dependency diagnostics and lane/history engines | Harmony environment policies, dependency detectors and custom load/issue callbacks; Intl ordering for tailored locales | Invalid arguments, unsafe or corrupt data, unavailable remote objects, explicit resource limits |
@@ -244,6 +260,35 @@ the actual Harmony/extension bootstrap dominates the callback path. The
 intermediate implementations and the final artifact. Reproduce the fixtures with
 `scripts/rust/prepare-transfer-benchmark.py` and measure all seven with
 `scripts/rust/bench-transfer-suite.py`; both require disposable remotes.
+
+### Provisioning, configuration and diagnostics
+
+`doctor` runs its fixed eight read-only diagnoses concurrently, retains registration order in
+results, and gathers runtime metadata after the checks. Named diagnoses retain their individual
+execution path. Workspace command history uses the resolved scope, including invocations from
+component subdirectories.
+
+Release qualification checked 120 fresh-copy pairs across eight init/config/doctor workloads:
+five alternating pairs each in non-TTY, real TTY and CI modes. Every pair compares output,
+status, files, directories, modes, global stores, HOME state and native ownership. These Linux
+fixtures use Node 22.22.0 / Bit 2.2.94, disabled analytics and `log_level=fatal`.
+
+| Complete command | Node median, non-TTY | Rust release median, non-TTY |
+| --- | ---: | ---: |
+| `init --standalone` | 208 ms | 1.8 ms |
+| `config get benchmark.value` | 340 ms | 3.1 ms |
+| `doctor --list` | 228 ms | 1.5 ms |
+| `doctor "validate git exec" --json` | 397 ms | 157 ms |
+| `doctor --json` | 507 ms | 275 ms |
+
+The full doctor command measured 1.8× lower medians across the three modes; the published
+BVM lookup and external npm/yarn metadata remain part of the command. These are local fixture
+measurements, without a general or cross-platform speed guarantee. The
+[samples, fingerprints and settings](../scripts/rust/benchmarks/consolidation.json) are reproduced
+by `scripts/rust/bench-provisioning.py` with explicit pinned Node/CLI and release binary paths.
+An additional 45 pairs verified status, checkout and export against the same release artifact;
+the [regression measurements](../scripts/rust/benchmarks/consolidation-regressions.json) include
+the exact commands, fixture fingerprints and complete-state verifier.
 
 ### Write commands
 

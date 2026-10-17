@@ -67,7 +67,7 @@ impl Plan {
 
     /// Publish the validated `Lane` and `LaneHistory` before their metadata references.
     pub fn commit(&self) -> io::Result<()> {
-        let store = Store::new(self.root.join(".bit/objects"), None)?;
+        let store = Store::new(bit_workspace_config::scope_path(&self.root).join("objects"), None)?;
         self.objects.persist(&store)?;
         self.documents.publish(&self.root, &store)
     }
@@ -85,14 +85,16 @@ impl Plan {
 
 impl Documents {
     fn read(root: &Path) -> io::Result<Self> {
-        let index = match fs::read(root.join(".bit/index.json")) {
+        let index = match fs::read(bit_workspace_config::scope_path(root).join("index.json")) {
             Ok(bytes) => serde_json::from_slice(&bytes)?,
             Err(error) if error.kind() == io::ErrorKind::NotFound => {
                 json!({"components":[],"lanes":[]})
             }
             Err(error) => return Err(error),
         };
-        let scope_json: Value = serde_json::from_slice(&fs::read(root.join(".bit/scope.json"))?)?;
+        let scope_json: Value = serde_json::from_slice(&fs::read(
+            bit_workspace_config::scope_path(root).join("scope.json"),
+        )?)?;
         let bitmap = recovery::jsonc::parse(&fs::read(root.join(".bitmap"))?)?;
         if scope_json["lanes"]["current"] != "main" {
             return Err(invalid());
@@ -132,7 +134,7 @@ impl Documents {
         store.write_index(&index)?;
         let mut scope_json = serde_json::to_vec_pretty(&self.scope_json)?;
         scope_json.push(b'\n');
-        fs::write(root.join(".bit/scope.json"), scope_json)?;
+        fs::write(bit_workspace_config::scope_path(root).join("scope.json"), scope_json)?;
         fs::write(root.join(".bitmap"), inspection::render_bitmap(&self.bitmap)?)?;
         Ok(())
     }
@@ -170,7 +172,11 @@ impl Origin {
             .find(|row| row["id"] == *parent_id)
             .ok_or_else(invalid)?;
         let hash = row["hash"].as_str().ok_or_else(invalid)?;
-        let lane = outbound::read_object(&root.join(".bit/objects"), hash, "Lane")?;
+        let lane = outbound::read_object(
+            &bit_workspace_config::scope_path(root).join("objects"),
+            hash,
+            "Lane",
+        )?;
         let components = lane["components"]
             .as_array()
             .ok_or_else(invalid)?
@@ -226,7 +232,11 @@ impl Objects {
 fn check_main_staged(root: &Path, index: &Value) -> io::Result<()> {
     for row in index["components"].as_array().ok_or_else(invalid)? {
         let hash = row["hash"].as_str().ok_or_else(invalid)?;
-        let model = outbound::read_object(&root.join(".bit/objects"), hash, "Component")?;
+        let model = outbound::read_object(
+            &bit_workspace_config::scope_path(root).join("objects"),
+            hash,
+            "Component",
+        )?;
         if model["state"]["versions"]
             .as_object()
             .is_some_and(|rows| {

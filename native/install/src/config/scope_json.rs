@@ -1,20 +1,9 @@
+pub use bit_workspace_config::scope_path;
+
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::{
-    fs, io,
-    path::{Path, PathBuf},
-};
-
-/// The local scope of a workspace (`Consumer._getScopePath`): `.bit`, or the
-/// scope embedded in a real `.git` directory when `.bit` does not exist. In a
-/// git worktree or submodule `.git` is a file, so `.bit` is used.
-#[must_use]
-pub fn scope_path(root: &Path) -> PathBuf {
-    let hidden = root.join(".bit");
-    let git = root.join(".git");
-    if git.is_dir() && !hidden.exists() { git.join("bit") } else { hidden }
-}
+use std::{fs, io, path::Path};
 
 /// A lane tracked against a remote lane (`scope.json` `lanes.tracking`).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

@@ -5,6 +5,7 @@
 pub use hub::HubReply;
 
 mod configuration;
+mod doctor;
 mod hub;
 mod lane;
 mod stream;

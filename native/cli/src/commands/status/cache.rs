@@ -3,10 +3,10 @@
 //! `dependencyCacheNeedsInvalidation` lives with the dependency cache in
 //! `bit_install::dependencies::cache::invalidation`.
 
-use std::{
-    env, fs,
-    path::{Path, PathBuf},
-};
+pub use bit_workspace_config::cache_root;
+
+use bit_workspace_config::global_config_dir;
+use std::{env, fs, path::Path};
 
 const NO_FS_CACHE: &str = "no-fs-cache";
 
@@ -31,32 +31,6 @@ pub fn no_fs_cache(root: &Path) -> bool {
         || files
             .iter()
             .any(|file| fs::read_to_string(file).is_ok_and(|text| text.contains(NO_FS_CACHE)))
-}
-
-/// `GLOBAL_CONFIG` of `@teambit/legacy.constants`.
-fn global_config_dir() -> PathBuf {
-    cache_root().join("config")
-}
-
-/// `CACHE_ROOT` of `@teambit/legacy.constants`.
-pub fn cache_root() -> PathBuf {
-    let home = || {
-        PathBuf::from(
-            env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).unwrap_or_default(),
-        )
-    };
-    if let Some(dir) = env::var_os("BIT_GLOBALS_DIR").filter(|dir| !dir.is_empty()) {
-        PathBuf::from(dir)
-    } else if cfg!(any(target_os = "linux", target_os = "macos")) {
-        home()
-            .join("Library")
-            .join("Caches")
-            .join("Bit")
-    } else if let Some(local) = env::var_os("LOCALAPPDATA").filter(|_| cfg!(windows)) {
-        PathBuf::from(local).join("Bit")
-    } else {
-        home().join(".bit")
-    }
 }
 
 pub fn hex(bytes: &[u8]) -> String {

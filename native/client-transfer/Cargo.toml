@@ -5,6 +5,7 @@ edition = "2024"
 publish = false
 
 [dependencies]
+bit-workspace-config = { path = "../workspace-config" }
 getrandom = "0.3"
 indexmap = { version = "2", features = ["serde"] }
 futures-util = "0.3"

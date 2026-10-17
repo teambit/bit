@@ -20,12 +20,17 @@ pub struct History {
 impl History {
     /// Record the start of the command `args` (starting at the command name).
     pub fn start(root: &Path, args: &[OsString]) -> Self {
+        Self::start_scope(&workspace::scope_path(root), args)
+    }
+
+    /// Record a command using the actual consumer scope directory.
+    pub fn start_scope(scope: &Path, args: &[OsString]) -> Self {
         let command = args
             .iter()
             .map(|arg| arg.to_string_lossy())
             .collect::<Vec<_>>()
             .join(" ");
-        let history = Self { file: workspace::scope_path(root).join("command-history"), command };
+        let history = Self { file: scope.join("command-history"), command };
         history.write("started");
         history
     }

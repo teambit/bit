@@ -47,9 +47,15 @@ impl Policy {
         Ok(())
     }
     pub(super) fn commit(&self, root: &Path, file_id: &str) -> io::Result<()> {
-        edit_workspace_config(root, &root.join(".bit"), file_id, REASON, |document| {
-            *document = self.document.clone();
-        })
+        edit_workspace_config(
+            root,
+            &bit_workspace_config::scope_path(root),
+            file_id,
+            REASON,
+            |document| {
+                *document = self.document.clone();
+            },
+        )
     }
     pub(super) fn report(&self, format: &Formatter) -> String {
         format.section("pinned deleted components to their main version", "these components were deleted from the lane but still have dependents in the workspace, so they were added to the workspace policy to be installed from main", &[format.item(&self.item)])

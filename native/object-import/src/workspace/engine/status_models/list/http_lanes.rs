@@ -30,12 +30,10 @@ pub(in crate::workspace::engine) fn read(request: &Request) -> io::Result<(usize
     };
     let scope = read_json_file(&crate::scope_path(&request.root).join("scope.json"))?;
     let local = scope["name"].as_str().ok_or_else(|| invalid("remote lane local scope"))?;
-    let config = request.global_config_dir.join("config.json");
-    let global: GlobalConfig = match read_json_file(&config) {
-        Ok(value) => serde_json::from_value(value).map_err(io::Error::other)?,
-        Err(error) if error.kind() == io::ErrorKind::NotFound => GlobalConfig::new(),
-        Err(error) => return Err(error),
-    };
+    let global: GlobalConfig = serde_json::from_value(bit_workspace_config::read_global_config(
+        &request.global_config_dir,
+    )?)
+    .map_err(io::Error::other)?;
     let network = Network::new(&global, &request.bit_version, Some(local), None)?;
     let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
     let id = request.name

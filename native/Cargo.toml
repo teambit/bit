@@ -1,5 +1,5 @@
 [workspace]
-members = ["cli", "client-transfer", "dependency-scanner", "ignore", "install", "object-import"]
+members = ["cli", "client-transfer", "dependency-scanner", "ignore", "install", "object-import", "workspace-config"]
 resolver = "3"
 
 # pnpm's engine (pacquet) at the commit that released `@pnpm/napi` 12.10.1, the

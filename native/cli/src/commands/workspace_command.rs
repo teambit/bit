@@ -14,6 +14,7 @@ pub mod resolve;
 pub mod results;
 pub mod versions;
 
+pub(in crate::commands) use execution::loader_output;
 pub use execution::{execute_json, execute_then, execute_with};
 pub use snapshot::receipt::NodeCli;
 pub(crate) use snapshot::receipt::{User, uuid_v4};

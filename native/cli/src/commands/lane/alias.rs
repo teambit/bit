@@ -36,7 +36,10 @@ pub(super) fn run(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> 
         details: None,
     };
     workspace_command::execute_with(&root, args, "alias", &report, |_| {
-        fs::write(root.join(".bit/scope.json"), serde_json::to_string_pretty(&config)?.as_bytes())
+        fs::write(
+            bit_workspace_config::scope_path(&root).join("scope.json"),
+            serde_json::to_string_pretty(&config)?.as_bytes(),
+        )
     })
 }
 
@@ -49,7 +52,9 @@ fn prepare(root: &std::path::Path, name: &str, alias: &str) -> io::Result<(Value
     else {
         return Err(invalid());
     };
-    let mut config: Value = serde_json::from_slice(&fs::read(root.join(".bit/scope.json"))?)?;
+    let mut config: Value = serde_json::from_slice(&fs::read(
+        bit_workspace_config::scope_path(root).join("scope.json"),
+    )?)?;
     let Some(tracking) = config["lanes"]["tracking"].as_array_mut() else {
         return Err(invalid());
     };

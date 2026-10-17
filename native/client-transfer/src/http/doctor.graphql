@@ -1,0 +1,29 @@
+
+      query doctor($diagnosisName: String) {
+        scope {
+          doctor(diagnosisName: $diagnosisName) {
+            examineResults {
+              diagnosisMetaData {
+                name
+                description
+                category
+              }
+              bareResult {
+                valid
+                data
+              }
+              formattedSymptoms
+              formattedManualTreat
+            }
+            metaData {
+              nodeVersion
+              runningTimestamp
+              platform
+              bitVersion
+              npmVersion
+              yarnVersion
+              userDetails
+            }
+          }
+        }
+      }

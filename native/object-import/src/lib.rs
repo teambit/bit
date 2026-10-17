@@ -6,7 +6,6 @@ pub mod component_recover;
 pub mod component_remove;
 pub mod export_actions;
 pub mod export_progress;
-pub mod jsonc;
 pub mod lane_create;
 pub mod lane_history;
 pub mod lane_manage;
@@ -16,11 +15,13 @@ pub mod reset_main;
 pub mod reset_never_exported;
 pub mod reset_soft;
 
+pub use bit_workspace_config::jsonc;
+/// Bit's JSONC reader (comments and trailing commas), used for `.bitmap`.
+pub use bit_workspace_config::parse_jsonc;
 pub use json_stringify::stringify_json;
 /// Native import merge decisions (`kind: component | version | versionHistory | ...`).
 pub use operation::plan as plan_import_operation;
-/// Bit's JSONC reader (comments and trailing commas), used for `.bitmap`.
-pub use recovery::jsonc::parse as parse_jsonc;
+pub use repository::read_scope_object;
 pub use scope::path as scope_path;
 pub use session::WorkspaceSession;
 pub use snapshot_transaction::next_published_version;
@@ -50,6 +51,7 @@ mod protocol;
 mod read_budget;
 mod read_version;
 mod recovery;
+mod repository;
 mod reset_config;
 mod scope;
 mod session;
@@ -60,3 +62,8 @@ mod store;
 mod transfer;
 mod validate;
 mod workspace;
+
+/// Serialize workspace component rows with the published bitmap header and property order.
+pub fn render_workspace_bitmap(value: &serde_json::Value) -> std::io::Result<Vec<u8>> {
+    inspection::render_workspace_bitmap(value)
+}

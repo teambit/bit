@@ -51,11 +51,7 @@ pub(super) fn export_scope(before: &[u8], name: &str) -> io::Result<Vec<u8>> {
         return Err(invalid("outbound lane scope bounds"));
     }
     new.retain(|entry| entry != name);
-    let mut output = Vec::new();
-    let formatter = serde_json::ser::PrettyFormatter::with_indent(b"    ");
-    let mut serializer = serde_json::Serializer::with_formatter(&mut output, formatter);
-    serde::Serialize::serialize(&scope, &mut serializer)?;
-    Ok(output)
+    bit_workspace_config::render_scope_json(&scope)
 }
 
 pub(super) fn export_staged_config(

@@ -391,46 +391,46 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/commands/init.e2e.ts`
 
-- [ ] `e2e/commands/init.e2e.ts:29` run bit init › running bit init with path › should init Bit at that path
-- [ ] `e2e/commands/init.e2e.ts:40` run bit init › automatic bit init when .bit.map.json already exists › should not tell you there is already a scope when running "bit init"
-- [ ] `e2e/commands/init.e2e.ts:44` run bit init › automatic bit init when .bit.map.json already exists › bitmap should contain version"
-- [ ] `e2e/commands/init.e2e.ts:52` run bit init › init .bit › when .git exists and bit already initialized with .bit › should not create bit inside .git
-- [ ] `e2e/commands/init.e2e.ts:72` run bit init › git integration › when .git exists › should nest the bit folder inside .git by default
-- [ ] `e2e/commands/init.e2e.ts:79` run bit init › git integration › when .git exists › should not nest the bit folder inside .git if --standalone provided
-- [ ] `e2e/commands/init.e2e.ts:103` run bit init › when scope.json is missing › running bit init › should show a success message
-- [ ] `e2e/commands/init.e2e.ts:106` run bit init › when scope.json is missing › running bit init › should recreate scope.json file
+- [x] `e2e/commands/init.e2e.ts:29` run bit init › running bit init with path › should init Bit at that path — `commands::init::explicit_destination_and_agent_targets_match_node`
+- [x] `e2e/commands/init.e2e.ts:40` run bit init › automatic bit init when .bit.map.json already exists › should not tell you there is already a scope when running "bit init" — `commands::init::legacy_bitmap_and_existing_standalone_git_paths_match_node`
+- [x] `e2e/commands/init.e2e.ts:44` run bit init › automatic bit init when .bit.map.json already exists › bitmap should contain version" — `commands::init::legacy_bitmap_and_existing_standalone_git_paths_match_node`
+- [x] `e2e/commands/init.e2e.ts:52` run bit init › init .bit › when .git exists and bit already initialized with .bit › should not create bit inside .git — `commands::init::legacy_bitmap_and_existing_standalone_git_paths_match_node`
+- [x] `e2e/commands/init.e2e.ts:72` run bit init › git integration › when .git exists › should nest the bit folder inside .git by default — `commands::init::git_directory_pointer_and_standalone_scope_paths_match_node`
+- [x] `e2e/commands/init.e2e.ts:79` run bit init › git integration › when .git exists › should not nest the bit folder inside .git if --standalone provided — `commands::init::git_directory_pointer_and_standalone_scope_paths_match_node`
+- [x] `e2e/commands/init.e2e.ts:103` run bit init › when scope.json is missing › running bit init › should show a success message — `commands::init::reinitialization_and_scope_repair_match_node`
+- [x] `e2e/commands/init.e2e.ts:106` run bit init › when scope.json is missing › running bit init › should recreate scope.json file — `commands::init::reinitialization_and_scope_repair_match_node`
 - [ ] `e2e/commands/init.e2e.ts:120` run bit init › bit init --reset › when bitMap file is invalid › bit status should throw an exception InvalidBitMap
-- [ ] `e2e/commands/init.e2e.ts:125` run bit init › bit init --reset › when bitMap file is invalid › should create a new bitMap file
+- [x] `e2e/commands/init.e2e.ts:125` run bit init › bit init --reset › when bitMap file is invalid › should create a new bitMap file — `commands::init::reset_repairs_corrupt_bitmap`
 - [ ] `e2e/commands/init.e2e.ts:136` run bit init › bit init --reset › when workspace.jsonc file is invalid › bit status should throw a descriptive error
-- [ ] `e2e/commands/init.e2e.ts:161` run bit init › an existing environment with model and with modified bitMap › bit init › should not change BitMap file
-- [ ] `e2e/commands/init.e2e.ts:166` run bit init › an existing environment with model and with modified bitMap › bit init › should not change .bit directory
-- [ ] `e2e/commands/init.e2e.ts:176` run bit init › an existing environment with model and with modified bitMap › bit init --reset › should not change BitMap file
-- [ ] `e2e/commands/init.e2e.ts:181` run bit init › an existing environment with model and with modified bitMap › bit init --reset › should not change .bit directory
-- [ ] `e2e/commands/init.e2e.ts:191` run bit init › an existing environment with model and with modified bitMap › bit init --reset-hard › should recreate the BitMap file
-- [ ] `e2e/commands/init.e2e.ts:196` run bit init › an existing environment with model and with modified bitMap › bit init --reset-hard › should recreate .bit directory
-- [ ] `e2e/commands/init.e2e.ts:200` run bit init › an existing environment with model and with modified bitMap › bit init --reset-hard › .bit/objects directory should be empty
-- [ ] `e2e/commands/init.e2e.ts:204` run bit init › an existing environment with model and with modified bitMap › bit init --reset-hard › should not delete the user files
+- [x] `e2e/commands/init.e2e.ts:161` run bit init › an existing environment with model and with modified bitMap › bit init › should not change BitMap file — `commands::init::tracked_reinitialization_and_reset_variants_match_node`
+- [x] `e2e/commands/init.e2e.ts:166` run bit init › an existing environment with model and with modified bitMap › bit init › should not change .bit directory — `commands::init::tracked_reinitialization_and_reset_variants_match_node`
+- [x] `e2e/commands/init.e2e.ts:176` run bit init › an existing environment with model and with modified bitMap › bit init --reset › should not change BitMap file — `commands::init::tracked_reinitialization_and_reset_variants_match_node`
+- [x] `e2e/commands/init.e2e.ts:181` run bit init › an existing environment with model and with modified bitMap › bit init --reset › should not change .bit directory — `commands::init::tracked_reinitialization_and_reset_variants_match_node`
+- [x] `e2e/commands/init.e2e.ts:191` run bit init › an existing environment with model and with modified bitMap › bit init --reset-hard › should recreate the BitMap file — `commands::init::tracked_reinitialization_and_reset_variants_match_node`
+- [x] `e2e/commands/init.e2e.ts:196` run bit init › an existing environment with model and with modified bitMap › bit init --reset-hard › should recreate .bit directory — `commands::init::tracked_reinitialization_and_reset_variants_match_node`
+- [x] `e2e/commands/init.e2e.ts:200` run bit init › an existing environment with model and with modified bitMap › bit init --reset-hard › .bit/objects directory should be empty — `commands::init::tracked_reinitialization_and_reset_variants_match_node`
+- [x] `e2e/commands/init.e2e.ts:204` run bit init › an existing environment with model and with modified bitMap › bit init --reset-hard › should not delete the user files — `commands::init::tracked_reinitialization_and_reset_variants_match_node`
 - [ ] `e2e/commands/init.e2e.ts:207` run bit init › an existing environment with model and with modified bitMap › bit init --reset-hard › bit status should show nothing-to-tag
-- [ ] `e2e/commands/init.e2e.ts:219` run bit init › when a project has package.json file › without --standalone flag › should preserve the default npm indentation of 2
-- [ ] `e2e/commands/init.e2e.ts:223` run bit init › when a project has package.json file › without --standalone flag › should preserve the new line at the end of json as it was created by npm
-- [ ] `e2e/commands/init.e2e.ts:234` run bit init › when a project has package.json file › with --standalone flag › should not write the "bit" prop into the package.json file
-- [ ] `e2e/commands/init.e2e.ts:238` run bit init › when a project has package.json file › with --standalone flag › should create workspace.jsonc file
-- [ ] `e2e/commands/init.e2e.ts:251` run bit init › when a project has package.json file › with an indentation of 4 › should preserve the original indentation and keep it as 4
+- [x] `e2e/commands/init.e2e.ts:219` run bit init › when a project has package.json file › without --standalone flag › should preserve the default npm indentation of 2 — `commands::init::package_indentation_and_newlines_match_node`
+- [x] `e2e/commands/init.e2e.ts:223` run bit init › when a project has package.json file › without --standalone flag › should preserve the new line at the end of json as it was created by npm — `commands::init::package_indentation_and_newlines_match_node`
+- [x] `e2e/commands/init.e2e.ts:234` run bit init › when a project has package.json file › with --standalone flag › should not write the "bit" prop into the package.json file — `commands::init::git_directory_pointer_and_standalone_scope_paths_match_node`
+- [x] `e2e/commands/init.e2e.ts:238` run bit init › when a project has package.json file › with --standalone flag › should create workspace.jsonc file — `commands::init::git_directory_pointer_and_standalone_scope_paths_match_node`
+- [x] `e2e/commands/init.e2e.ts:251` run bit init › when a project has package.json file › with an indentation of 4 › should preserve the original indentation and keep it as 4 — `commands::init::package_indentation_and_newlines_match_node`
 - [ ] `e2e/commands/init.e2e.ts:264` run bit init › when there is .bitmap, bit.json but not .bit dir › when .bit located directly on workspace root › bit ls (or any other command) should not throw an error and should rebuild .bit dir
 - [ ] `e2e/commands/init.e2e.ts:278` run bit init › when there is .bitmap, bit.json but not .bit dir › when bit located on .git › bit ls (or any other command) should not throw an error and should rebuild .bit dir
-- [ ] `e2e/commands/init.e2e.ts:291` run bit init › external package manager mode › bit init --external-package-manager › should set externalPackageManager to true in dependency-resolver config
-- [ ] `e2e/commands/init.e2e.ts:298` run bit init › external package manager mode › bit init --external-package-manager › should set rootComponent to false in dependency-resolver config
-- [ ] `e2e/commands/init.e2e.ts:302` run bit init › external package manager mode › bit init --external-package-manager › should set enableWorkspaceConfigWrite and useDefaultDirectory to true
-- [ ] `e2e/commands/init.e2e.ts:313` run bit init › external package manager mode › bit init --external-package-manager › should create package.json with type module
-- [ ] `e2e/commands/init.e2e.ts:317` run bit init › external package manager mode › bit init --external-package-manager › should create package.json with postinstall script
+- [x] `e2e/commands/init.e2e.ts:291` run bit init › external package manager mode › bit init --external-package-manager › should set externalPackageManager to true in dependency-resolver config — `commands::init::workspace_defaults_generators_and_external_manager_match_node`
+- [x] `e2e/commands/init.e2e.ts:298` run bit init › external package manager mode › bit init --external-package-manager › should set rootComponent to false in dependency-resolver config — `commands::init::workspace_defaults_generators_and_external_manager_match_node`
+- [x] `e2e/commands/init.e2e.ts:302` run bit init › external package manager mode › bit init --external-package-manager › should set enableWorkspaceConfigWrite and useDefaultDirectory to true — `commands::init::workspace_defaults_generators_and_external_manager_match_node`
+- [x] `e2e/commands/init.e2e.ts:313` run bit init › external package manager mode › bit init --external-package-manager › should create package.json with type module — `commands::init::workspace_defaults_generators_and_external_manager_match_node`
+- [x] `e2e/commands/init.e2e.ts:317` run bit init › external package manager mode › bit init --external-package-manager › should create package.json with postinstall script — `commands::init::workspace_defaults_generators_and_external_manager_match_node`
 - [ ] `e2e/commands/init.e2e.ts:328` run bit init › external package manager mode › bit install in external package manager mode › should throw error when answering no to prompt
 - [ ] `e2e/commands/init.e2e.ts:332` run bit init › external package manager mode › bit install in external package manager mode › should switch to Bit package manager when answering yes to prompt
 - [ ] `e2e/commands/init.e2e.ts:382` run bit init › external package manager mode › validation of conflicting settings › should throw error when manually setting rootComponent to true
-- [ ] `e2e/commands/init.e2e.ts:406` run bit init › external package manager mode › preserving existing package.json › should preserve existing package.json properties
-- [ ] `e2e/commands/init.e2e.ts:411` run bit init › external package manager mode › preserving existing package.json › should preserve existing scripts and add postinstall
-- [ ] `e2e/commands/init.e2e.ts:417` run bit init › external package manager mode › preserving existing package.json › should not add type module to existing package.json
-- [ ] `e2e/commands/init.e2e.ts:431` run bit init › interactive mode › when git repository exists and workspace is not initialized › should skip interactive mode with --skip-interactive flag
-- [ ] `e2e/commands/init.e2e.ts:439` run bit init › interactive mode › when git repository exists and workspace is not initialized › should skip interactive mode with --external-package-manager and with --standalone
+- [x] `e2e/commands/init.e2e.ts:406` run bit init › external package manager mode › preserving existing package.json › should preserve existing package.json properties — `commands::init::existing_package_options_preserve_properties_like_node`
+- [x] `e2e/commands/init.e2e.ts:411` run bit init › external package manager mode › preserving existing package.json › should preserve existing scripts and add postinstall — `commands::init::existing_package_options_preserve_properties_like_node`
+- [x] `e2e/commands/init.e2e.ts:417` run bit init › external package manager mode › preserving existing package.json › should not add type module to existing package.json — `commands::init::existing_package_options_preserve_properties_like_node`
+- [x] `e2e/commands/init.e2e.ts:431` run bit init › interactive mode › when git repository exists and workspace is not initialized › should skip interactive mode with --skip-interactive flag — `commands::init::git_directory_pointer_and_standalone_scope_paths_match_node`
+- [x] `e2e/commands/init.e2e.ts:439` run bit init › interactive mode › when git repository exists and workspace is not initialized › should skip interactive mode with --external-package-manager and with --standalone — `commands::init::git_directory_pointer_and_standalone_scope_paths_match_node`
 - [ ] `e2e/commands/init.e2e.ts:451` run bit init › interactive mode › when git repository exists and workspace is not initialized › should run interactive mode by default in git repository
 
 ### `e2e/commands/list.e2e.ts`
@@ -601,34 +601,34 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/doctor/doctor-git-exec.e2e.ts`
 
-- [ ] `e2e/doctor/doctor-git-exec.e2e.ts:27` bit doctor - git exec validation › without configuration changes › should run the correct diagnosis
-- [ ] `e2e/doctor/doctor-git-exec.e2e.ts:30` bit doctor - git exec validation › without configuration changes › should pass the diagnosis
-- [ ] `e2e/doctor/doctor-git-exec.e2e.ts:55` bit doctor - git exec validation › with wrong git path › should fail the diagnosis
-- [ ] `e2e/doctor/doctor-git-exec.e2e.ts:58` bit doctor - git exec validation › with wrong git path › should show the symptoms correctly
-- [ ] `e2e/doctor/doctor-git-exec.e2e.ts:62` bit doctor - git exec validation › with wrong git path › should show the suggestion for fix correctly
+- [x] `e2e/doctor/doctor-git-exec.e2e.ts:27` bit doctor - git exec validation › without configuration changes › should run the correct diagnosis — `native/cli/tests/e2e/harmony/doctor.rs::git_diagnosis_matches_node_success_failure_and_treatment`; exact published Node parity
+- [x] `e2e/doctor/doctor-git-exec.e2e.ts:30` bit doctor - git exec validation › without configuration changes › should pass the diagnosis — `native/cli/tests/e2e/harmony/doctor.rs::git_diagnosis_matches_node_success_failure_and_treatment`; exact published Node parity
+- [x] `e2e/doctor/doctor-git-exec.e2e.ts:55` bit doctor - git exec validation › with wrong git path › should fail the diagnosis — `native/cli/tests/e2e/harmony/doctor.rs::git_diagnosis_matches_node_success_failure_and_treatment`; exact published Node parity
+- [x] `e2e/doctor/doctor-git-exec.e2e.ts:58` bit doctor - git exec validation › with wrong git path › should show the symptoms correctly — `native/cli/tests/e2e/harmony/doctor.rs::git_diagnosis_matches_node_success_failure_and_treatment`; exact published Node parity
+- [x] `e2e/doctor/doctor-git-exec.e2e.ts:62` bit doctor - git exec validation › with wrong git path › should show the suggestion for fix correctly — `native/cli/tests/e2e/harmony/doctor.rs::git_diagnosis_matches_node_success_failure_and_treatment`; exact published Node parity
 
 ### `e2e/doctor/doctor-infra.e2e.ts`
 
-- [ ] `e2e/doctor/doctor-infra.e2e.ts:49` bit doctor infra › run all diagnoses › should return all the fields for each check
-- [ ] `e2e/doctor/doctor-infra.e2e.ts:62` bit doctor infra › run all diagnoses › save results as tar file › with default file name › should print the output file name
-- [ ] `e2e/doctor/doctor-infra.e2e.ts:66` bit doctor infra › run all diagnoses › save results as tar file › with default file name › should create a non empty tar file in the file system
-- [ ] `e2e/doctor/doctor-infra.e2e.ts:80` bit doctor infra › run all diagnoses › save results as tar file › with provided file name › should print the output file name with tar extension
-- [ ] `e2e/doctor/doctor-infra.e2e.ts:83` bit doctor infra › run all diagnoses › save results as tar file › with provided file name › should create a non empty tar file in the file system
-- [ ] `e2e/doctor/doctor-infra.e2e.ts:92` bit doctor infra › run one diagnosis › should show error when the diagnosis not exist
-- [ ] `e2e/doctor/doctor-infra.e2e.ts:113` bit doctor infra › archive with --exclude-local-scope flag › should exclude .bit/objects contents
-- [ ] `e2e/doctor/doctor-infra.e2e.ts:117` bit doctor infra › archive with --exclude-local-scope flag › should exclude .bit/cache contents
-- [ ] `e2e/doctor/doctor-infra.e2e.ts:121` bit doctor infra › archive with --exclude-local-scope flag › should exclude .bit/tmp contents
-- [ ] `e2e/doctor/doctor-infra.e2e.ts:125` bit doctor infra › archive with --exclude-local-scope flag › should include .bit/command-history
-- [ ] `e2e/doctor/doctor-infra.e2e.ts:129` bit doctor infra › archive with --exclude-local-scope flag › should include .bit/scope.json
-- [ ] `e2e/doctor/doctor-infra.e2e.ts:148` bit doctor infra › archive should exclude previously created doctor-results archives › should create the first archive on disk
-- [ ] `e2e/doctor/doctor-infra.e2e.ts:151` bit doctor infra › archive should exclude previously created doctor-results archives › should archive workspace files (sanity check)
-- [ ] `e2e/doctor/doctor-infra.e2e.ts:155` bit doctor infra › archive should exclude previously created doctor-results archives › should not include the previously created doctor-results archive
-- [ ] `e2e/doctor/doctor-infra.e2e.ts:169` bit doctor infra › list all checks › should return all the fields for each check item
-- [ ] `e2e/doctor/doctor-infra.e2e.ts:192` bit doctor infra › validate scope objects diagnosis › when all objects are present › should pass the diagnosis
-- [ ] `e2e/doctor/doctor-infra.e2e.ts:195` bit doctor infra › validate scope objects diagnosis › when all objects are present › should have empty symptoms when valid
-- [ ] `e2e/doctor/doctor-infra.e2e.ts:211` bit doctor infra › validate scope objects diagnosis › when head version object is missing › should fail the diagnosis
-- [ ] `e2e/doctor/doctor-infra.e2e.ts:214` bit doctor infra › validate scope objects diagnosis › when head version object is missing › should show the component with missing head in symptoms
-- [ ] `e2e/doctor/doctor-infra.e2e.ts:218` bit doctor infra › validate scope objects diagnosis › when head version object is missing › should suggest restoring from backups
+- [x] `e2e/doctor/doctor-infra.e2e.ts:49` bit doctor infra › run all diagnoses › should return all the fields for each check — `native/cli/tests/e2e/harmony/doctor.rs::default_diagnoses_match_node_offline_without_creating_a_fresh_index`; exact published Node parity
+- [x] `e2e/doctor/doctor-infra.e2e.ts:62` bit doctor infra › run all diagnoses › save results as tar file › with default file name › should print the output file name — `native/cli/tests/e2e/harmony/doctor.rs::default_save_filename_matches_its_metadata_timestamp_and_canonical_contents`; exact published Node parity
+- [x] `e2e/doctor/doctor-infra.e2e.ts:66` bit doctor infra › run all diagnoses › save results as tar file › with default file name › should create a non empty tar file in the file system — `native/cli/tests/e2e/harmony/doctor.rs::default_save_filename_matches_its_metadata_timestamp_and_canonical_contents`; exact published Node parity
+- [x] `e2e/doctor/doctor-infra.e2e.ts:80` bit doctor infra › run all diagnoses › save results as tar file › with provided file name › should print the output file name with tar extension — `native/cli/tests/e2e/harmony/doctor.rs::save_and_archive_retain_canonical_entries_and_scope_exclusions`; exact published Node parity
+- [x] `e2e/doctor/doctor-infra.e2e.ts:83` bit doctor infra › run all diagnoses › save results as tar file › with provided file name › should create a non empty tar file in the file system — `native/cli/tests/e2e/harmony/doctor.rs::save_and_archive_retain_canonical_entries_and_scope_exclusions`; exact published Node parity
+- [x] `e2e/doctor/doctor-infra.e2e.ts:92` bit doctor infra › run one diagnosis › should show error when the diagnosis not exist — `native/cli/tests/e2e/harmony/doctor.rs::diagnosis_listing_matches_node_text_json_and_colors`; exact published Node parity
+- [x] `e2e/doctor/doctor-infra.e2e.ts:113` bit doctor infra › archive with --exclude-local-scope flag › should exclude .bit/objects contents — `native/cli/tests/e2e/harmony/doctor.rs::save_and_archive_retain_canonical_entries_and_scope_exclusions`; exact published Node parity
+- [x] `e2e/doctor/doctor-infra.e2e.ts:117` bit doctor infra › archive with --exclude-local-scope flag › should exclude .bit/cache contents — `native/cli/tests/e2e/harmony/doctor.rs::save_and_archive_retain_canonical_entries_and_scope_exclusions`; exact published Node parity
+- [x] `e2e/doctor/doctor-infra.e2e.ts:121` bit doctor infra › archive with --exclude-local-scope flag › should exclude .bit/tmp contents — `native/cli/tests/e2e/harmony/doctor.rs::save_and_archive_retain_canonical_entries_and_scope_exclusions`; exact published Node parity
+- [x] `e2e/doctor/doctor-infra.e2e.ts:125` bit doctor infra › archive with --exclude-local-scope flag › should include .bit/command-history — `native/cli/tests/e2e/harmony/doctor.rs::save_and_archive_retain_canonical_entries_and_scope_exclusions`; exact published Node parity
+- [x] `e2e/doctor/doctor-infra.e2e.ts:129` bit doctor infra › archive with --exclude-local-scope flag › should include .bit/scope.json — `native/cli/tests/e2e/harmony/doctor.rs::save_and_archive_retain_canonical_entries_and_scope_exclusions`; exact published Node parity
+- [x] `e2e/doctor/doctor-infra.e2e.ts:148` bit doctor infra › archive should exclude previously created doctor-results archives › should create the first archive on disk — `native/cli/tests/e2e/harmony/doctor.rs::save_and_archive_retain_canonical_entries_and_scope_exclusions`; exact published Node parity
+- [x] `e2e/doctor/doctor-infra.e2e.ts:151` bit doctor infra › archive should exclude previously created doctor-results archives › should archive workspace files (sanity check) — `native/cli/tests/e2e/harmony/doctor.rs::save_and_archive_retain_canonical_entries_and_scope_exclusions`; exact published Node parity
+- [x] `e2e/doctor/doctor-infra.e2e.ts:155` bit doctor infra › archive should exclude previously created doctor-results archives › should not include the previously created doctor-results archive — `native/cli/tests/e2e/harmony/doctor.rs::save_and_archive_retain_canonical_entries_and_scope_exclusions`; exact published Node parity
+- [x] `e2e/doctor/doctor-infra.e2e.ts:169` bit doctor infra › list all checks › should return all the fields for each check item — `native/cli/tests/e2e/harmony/doctor.rs::diagnosis_listing_matches_node_text_json_and_colors`; exact published Node parity
+- [x] `e2e/doctor/doctor-infra.e2e.ts:192` bit doctor infra › validate scope objects diagnosis › when all objects are present › should pass the diagnosis — `native/cli/tests/e2e/harmony/doctor.rs::scope_integrity_matches_node_healthy_and_missing_head`; exact published Node parity
+- [x] `e2e/doctor/doctor-infra.e2e.ts:195` bit doctor infra › validate scope objects diagnosis › when all objects are present › should have empty symptoms when valid — `native/cli/tests/e2e/harmony/doctor.rs::scope_integrity_matches_node_healthy_and_missing_head`; exact published Node parity
+- [x] `e2e/doctor/doctor-infra.e2e.ts:211` bit doctor infra › validate scope objects diagnosis › when head version object is missing › should fail the diagnosis — `native/cli/tests/e2e/harmony/doctor.rs::scope_integrity_matches_node_healthy_and_missing_head`; exact published Node parity
+- [x] `e2e/doctor/doctor-infra.e2e.ts:214` bit doctor infra › validate scope objects diagnosis › when head version object is missing › should show the component with missing head in symptoms — `native/cli/tests/e2e/harmony/doctor.rs::scope_integrity_matches_node_healthy_and_missing_head`; exact published Node parity
+- [x] `e2e/doctor/doctor-infra.e2e.ts:218` bit doctor infra › validate scope objects diagnosis › when head version object is missing › should suggest restoring from backups — `native/cli/tests/e2e/harmony/doctor.rs::scope_integrity_matches_node_healthy_and_missing_head`; exact published Node parity
 
 ### `e2e/flows/big-file.e2e.ts`
 
