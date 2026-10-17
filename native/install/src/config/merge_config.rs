@@ -86,6 +86,22 @@ impl MergeConfig {
         }
     }
 
+    /// The parsed component entry before environment and auto-policy normalization.
+    pub fn raw_component(&self, id: &str) -> io::Result<Option<Value>> {
+        self.parsed(id)
+    }
+
+    /// Whether an entry is unparseable because merge markers remain.
+    #[must_use]
+    pub fn has_conflict(&self, id: &str) -> bool {
+        self.conflicts
+            .get(id)
+            .is_some_and(|content| {
+                serde_json::from_str::<Value>(content).is_err()
+                    && (content.contains("<<<<<<<") || content.contains(">>>>>>>"))
+            })
+    }
+
     /// The entry of a component, by id without version.
     pub fn component(&self, id: &str) -> io::Result<Option<MergeConfigComponent>> {
         let Some(Value::Object(mut config)) = self.parsed(id)? else { return Ok(None) };

@@ -1,6 +1,7 @@
 //! The engine's command result with the ids and versions it reports, and the `merge-output` helpers of
 //! `@teambit/component.modules.merge-helper` that checkout and merge share.
 
+mod binary;
 mod snaps;
 
 use super::format::Formatter;
@@ -14,7 +15,7 @@ use std::io;
 
 /// `FILE_CHANGES_CHECKOUT_MSG`.
 pub const FILE_CHANGES: &str = "components with file changes";
-const RESULT_KEYS: [&str; 10] = [
+const RESULT_KEYS: [&str; 13] = [
     "components",
     "failedComponents",
     "version",
@@ -25,6 +26,9 @@ const RESULT_KEYS: [&str; 10] = [
     "mergeSnapError",
     "newFromLane",
     "newFromLaneAdded",
+    "workspaceConfigUpdateResult",
+    "configMergeResults",
+    "newFromScope",
 ];
 
 /// The command's `Report`: what is printed, the exit code, and the details
@@ -46,6 +50,7 @@ pub struct Changed {
 pub enum Status {
     Merged,
     Manual,
+    BinaryConflict,
     Updated,
     Added,
     Removed,
@@ -56,11 +61,11 @@ pub enum Status {
 }
 
 impl Status {
-    /// `binaryConflict` needs `is-binary-path`'s extension list: it declines.
     fn parse(name: &str) -> io::Result<Self> {
         Ok(match name {
             "merged" => Self::Merged,
             "manual" => Self::Manual,
+            "binaryConflict" => Self::BinaryConflict,
             "updated" => Self::Updated,
             "added" => Self::Added,
             "removed" => Self::Removed,
@@ -76,6 +81,7 @@ impl Status {
         match self {
             Self::Merged => chalk.green("auto-merged"),
             Self::Manual => chalk.red("CONFLICT"),
+            Self::BinaryConflict => chalk.red("unchanged-BINARY-CONFLICT"),
             Self::Updated => chalk.green("updated"),
             Self::Added => chalk.green("added"),
             Self::Removed => chalk.green("removed"),
@@ -103,6 +109,7 @@ pub struct Results {
 
 /// Component ID lists reported separately from changed file results.
 pub struct Lists {
+    pub scope: Vec<Id>,
     pub removed: Vec<Id>,
     pub added: Vec<Id>,
     pub lane: LaneAdditions,
@@ -147,11 +154,8 @@ pub fn hydrate(value: &Value) -> io::Result<Results> {
             .map(skipped)
             .collect::<io::Result<_>>()?,
         version,
-        lists: Lists {
-            removed: ids(map.get("removedComponents"))?,
-            added: ids(map.get("addedComponents"))?,
-            lane: LaneAdditions { ids: ids(map.get("newFromLane"))?, added: new_from_lane_added },
-        },
+        lists: component_lists(map, new_from_lane_added)?,
+
         conflicts,
         snaps: snaps::snaps(map.get("mergeSnapResults"))?,
         snap_error: snaps::snap_error(map.get("mergeSnapError"))?,
@@ -187,6 +191,15 @@ fn changed(row: &Value) -> io::Result<Changed> {
             .map(|(file, status)| Ok((file.clone(), Status::parse(text(Some(status))?)?)))
             .collect::<io::Result<_>>()?;
     Ok(Changed { id: Id::parse(text(map.get("id"))?)?, files })
+}
+
+fn component_lists(map: &serde_json::Map<String, Value>, added: bool) -> io::Result<Lists> {
+    Ok(Lists {
+        scope: ids(map.get("newFromScope"))?,
+        removed: ids(map.get("removedComponents"))?,
+        added: ids(map.get("addedComponents"))?,
+        lane: LaneAdditions { ids: ids(map.get("newFromLane"))?, added },
+    })
 }
 
 /// Only components left unchanged for a legitimate reason reach the report.
@@ -229,7 +242,7 @@ impl Results {
                             "{tab}{} {} {}",
                             status.label(chalk),
                             chalk.bold(file),
-                            note(chalk, *status),
+                            note(chalk, *status, file),
                         )
                     })
                     .collect();
@@ -272,7 +285,10 @@ impl Results {
 }
 
 /// `getFileStatusNote`.
-fn note(chalk: Chalk, status: Status) -> String {
+fn note(chalk: Chalk, status: Status, file: &str) -> String {
+    if status == Status::BinaryConflict {
+        return chalk.white(binary::note(file));
+    }
     if status == Status::Manual {
         return chalk.white(
             r#"automatic merge failed. please fix conflicts manually and then run "bit install""#,

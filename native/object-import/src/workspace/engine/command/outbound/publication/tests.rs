@@ -17,7 +17,6 @@ fn selected(scope: &str, name: &str, head: &str) -> Selected {
             bytes: Vec::new(),
         },
         head: head.to_owned(),
-        version: "1.0.0".to_owned(),
         labels: vec!["1.0.0".to_owned()],
         objects: Vec::new(),
     }

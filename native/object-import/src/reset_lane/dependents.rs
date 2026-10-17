@@ -7,8 +7,9 @@ use std::{collections::HashSet, fs, io, path::Path};
 pub(super) fn validate(root: &Path, identity: &str, removed: &[String]) -> io::Result<()> {
     let (scope, name) =
         identity.split_once('/').ok_or_else(|| invalid("lane dependent identity"))?;
-    let index: Value = serde_json::from_slice(&fs::read(root.join(".bit/index.json"))?)?;
-    let objects = root.join(".bit/objects");
+    let index: Value =
+        serde_json::from_slice(&fs::read(crate::scope_path(root).join("index.json"))?)?;
+    let objects = crate::scope_path(root).join("objects");
     let removed = removed
         .iter()
         .map(String::as_str)

@@ -74,6 +74,31 @@ impl PreparedImport {
     pub(crate) fn prepare_versions(&mut self, targets: &[Target]) -> io::Result<()> {
         self.prepare_versions_with_reason(targets, None)
     }
+    pub(crate) fn prepare_diff_versions(&mut self, targets: &[Target]) -> io::Result<()> {
+        self.prepare_versions_with_reason(targets, Some("to show diff"))?;
+        let ids = self.progress
+            .last()
+            .ok_or_else(|| invalid("diff import progress"))?
+            .ids
+            .clone();
+        for scope in targets.iter().filter_map(|target| target.scope.as_deref()) {
+            if self.environment.remote_overrides.contains_key(scope)
+                && ids
+                    .iter()
+                    .any(|id| id.starts_with(&format!("{scope}/")))
+            {
+                let hash = object_hash(scope);
+                self.overlay.objects
+                    .entry(hash.clone())
+                    .or_insert(super::super::publish::object(
+                        &hash,
+                        "ScopeMeta",
+                        json!({"name":scope}),
+                    )?);
+            }
+        }
+        Ok(())
+    }
     pub(crate) fn prepare_merge_gap(&mut self, targets: &[Target]) -> io::Result<()> {
         let reason = self.cache.lane_reason
             .clone()
@@ -83,7 +108,13 @@ impl PreparedImport {
     pub(crate) fn prepare_lane_pattern_versions(&mut self, targets: &[Target]) -> io::Result<()> {
         self.prepare_versions_with_reason(targets, Some("import all history of given patterns components to check whether they have dependencies on the lane"))
     }
-    fn prepare_versions_with_reason(
+    pub(crate) fn prepare_scope_additions(&mut self, targets: &[Target]) -> io::Result<()> {
+        self.prepare_versions_with_reason(
+            targets,
+            Some("to import new components from the defaultScope"),
+        )
+    }
+    pub(super) fn prepare_versions_with_reason(
         &mut self,
         targets: &[Target],
         reason: Option<&str>,
@@ -140,6 +171,11 @@ impl PreparedImport {
             .map(|hash| read_version(self, hash))
             .transpose()?
             .flatten();
+        // The preceding switch refresh primes the published importer's cache.
+        // Its subsequent cached checkout import keeps an available pending Version.
+        if self.cache.switch_existing_versions && version.is_some() {
+            return Ok(true);
+        }
         let first_unbuilt = version
             .as_ref()
             .is_some_and(|version| {

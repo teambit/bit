@@ -9,6 +9,9 @@ use std::{
     path::Path,
 };
 
+mod aggregate;
+mod selection;
+
 struct Selection {
     lanes: Vec<(lane::Id, Option<String>)>,
     virtual_remotes: Vec<VirtualRemote>,
@@ -18,6 +21,11 @@ struct Selection {
 /// existing lane importer owns component closure and remote refs without
 /// publishing the Lane object into the local index.
 pub(super) fn prepare(input: &Prepare, state: &mut State) -> io::Result<(usize, Value)> {
+    if input.operation == "fetch"
+        && (input.ids.is_empty() || input.ids.iter().any(|id| id == "main"))
+    {
+        return aggregate::prepare(input, state);
+    }
     let selection = select(input)?;
     let mut import = if selection.virtual_remotes.is_empty() {
         command_import::prepare_lane(&input.root, &input.global_remotes_file)?
@@ -31,9 +39,23 @@ pub(super) fn prepare(input: &Prepare, state: &mut State) -> io::Result<(usize, 
     let (targets, groups) = receive_lanes(input, &selection.lanes, &mut import)?;
     state.sequence = state.sequence.wrapping_add(1);
     let token = format!("inbound-{}", state.sequence);
-    let mut receipt = receipt(&input.root, &targets, &import, &token)?;
+    let mut receipt = if input.operation == "status" {
+        json!({"token":token,"importedIds":[],"progress":[],"refreshCount":targets.len()})
+    } else {
+        receipt(
+            &input.root,
+            &targets,
+            &import,
+            None,
+            &super::ReceiptRoots { roots: &[], prefetched: &[], head_dependencies: false },
+            &token,
+        )?
+    };
     receipt["laneFetch"] = json!(true);
-    if selection.lanes.len() > 1 {
+    if input.operation == "laneImport" {
+        receipt["laneImport"] = json!(true);
+    }
+    if selection.lanes.len() > 1 || input.operation == "fetch" {
         receipt["laneGroups"] = json!(groups);
     }
     let count = targets.len();
@@ -45,7 +67,7 @@ fn select(input: &Prepare) -> io::Result<Selection> {
     let mut lanes = Vec::new();
     let mut seen = HashSet::new();
     let mut virtual_remotes: HashMap<String, VirtualRemote> = HashMap::new();
-    for text in &input.ids {
+    for text in &selection::ids(input)? {
         let id = parse_id(text, &mut seen)?;
         let fetched = remote::lane_objects(input, &id)?;
         let hash = if let Some((remote, hash)) = fetched {
@@ -70,7 +92,7 @@ fn parse_id(text: &str, seen: &mut HashSet<String>) -> io::Result<lane::Id> {
     Ok(id)
 }
 
-fn merge_remote(
+pub(super) fn merge_remote(
     remotes: &mut HashMap<String, VirtualRemote>,
     remote: VirtualRemote,
 ) -> io::Result<()> {
@@ -94,7 +116,7 @@ fn merge_remote(
     Ok(())
 }
 
-fn validate_virtual_bounds(remotes: &HashMap<String, VirtualRemote>) -> io::Result<()> {
+pub(super) fn validate_virtual_bounds(remotes: &HashMap<String, VirtualRemote>) -> io::Result<()> {
     let mut virtual_bytes = 0usize;
     for remote in remotes.values() {
         for (_, bytes) in &remote.objects {
@@ -124,8 +146,25 @@ fn receive_lanes(
     let mut groups = Vec::new();
     for (id, hash) in lanes {
         let start = import.progress.len();
-        let lane_targets = fetch_lane_targets(import, id, hash.as_deref())?;
-        append_lane_dependency_progress(&input.root, import, &lane_targets)?;
+        let lane_targets = if input.operation == "fetch" {
+            import.prepare_fetch_lane(
+                &input.root,
+                id,
+                hash.as_deref(),
+                &super::bitmap_targets(&input.root)?,
+                input.options.all_history,
+            )?
+        } else {
+            let targets =
+                fetch_lane_targets(import, id, hash.as_deref(), input.operation == "laneImport")?;
+            if input.options.all_history {
+                import.collect_lane_history(id, &targets)?;
+            }
+            if input.operation != "laneImport" {
+                append_lane_dependency_progress(&input.root, import, &targets)?;
+            }
+            targets
+        };
         groups.push(import.progress.len() - start);
         targets.extend(lane_targets);
     }
@@ -136,11 +175,21 @@ fn fetch_lane_targets(
     import: &mut command_import::PreparedImport,
     id: &lane::Id,
     hash: Option<&str>,
+    publish: bool,
 ) -> io::Result<Vec<Target>> {
-    let record = import.fetch_lane_contents_at_hash(id, hash)?;
-    import.retain_remote_lane_refs(&record)?;
+    let record = if publish {
+        import.fetch_lane_components_at_hash(id, hash)?
+    } else {
+        import.fetch_lane_contents_at_hash(id, hash)?
+    };
+    if publish {
+        import.publish_imported_lane(id, &record)?;
+    } else {
+        import.retain_remote_lane_refs(&record)?;
+    }
     if let Some(progress) = import.progress.last_mut() {
-        progress.reason = Some(format!("of their latest on lane {}/{}", id.scope, id.name));
+        let reason = if publish { "for fetching lane" } else { "of their latest on lane" };
+        progress.reason = Some(format!("{reason} {}/{}", id.scope, id.name));
     }
     lane::entries(&record.value)?
         .into_iter()
@@ -167,8 +216,8 @@ fn append_lane_dependency_progress(
         let Some(version) = import.overlay.read(&target.version, "Version")? else { continue };
         if let Some(graph) = version["flattenedEdgesRef"].as_str() {
             crate::merge_history::hash(graph)?;
-            if !root
-                .join(".bit/objects")
+            if !crate::scope_path(root)
+                .join("objects")
                 .join(&graph[..2])
                 .join(&graph[2..])
                 .try_exists()?

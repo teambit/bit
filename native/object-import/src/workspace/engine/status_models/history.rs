@@ -133,14 +133,22 @@ fn distances(
 }
 
 fn ordinary_merge_state(root: &Path) -> io::Result<()> {
-    let file = match File::open(root.join(".bit/unmerged.json")) {
+    let file = match File::open(crate::scope_path(root).join("unmerged.json")) {
         Ok(file) => file,
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),
         Err(error) => return Err(error),
     };
     let bytes = crate::read_budget::Budget::new(1024 * 1024).read(file)?;
     let value: Value = serde_json::from_slice(&bytes).map_err(io::Error::other)?;
-    if !value.as_array().is_some_and(Vec::is_empty) {
+    if !value
+        .as_array()
+        .is_some_and(|rows| {
+            rows.len() <= 4096
+                && rows
+                    .iter()
+                    .all(|row| row["id"]["scope"].is_string() && row["id"]["name"].is_string())
+        })
+    {
         return Err(invalid("status unresolved merge state requires canonical history"));
     }
     Ok(())
@@ -153,8 +161,8 @@ fn remote_proofs(root: &Path, models: &[Value], lane: Option<&Lane>) -> io::Resu
         let scope = model["scope"].as_str().ok_or_else(|| invalid("status history scope"))?;
         if seen.insert(scope) {
             super::super::dependency_graph::proof::read(
-                &root
-                    .join(".bit/refs/remotes")
+                &crate::scope_path(root)
+                    .join("refs/remotes")
                     .join(scope)
                     .join("main"),
                 &mut proofs,
@@ -163,12 +171,24 @@ fn remote_proofs(root: &Path, models: &[Value], lane: Option<&Lane>) -> io::Resu
     }
     if let Some(lane) = lane {
         super::super::dependency_graph::proof::read(
-            &root
-                .join(".bit/refs/remotes")
+            &crate::scope_path(root)
+                .join("refs/remotes")
                 .join(&lane.scope)
                 .join(&lane.name),
             &mut proofs,
         )?;
+        if let Some((scope, name)) = lane.forked_from
+            .as_deref()
+            .and_then(|id| id.split_once('/'))
+        {
+            super::super::dependency_graph::proof::read(
+                &crate::scope_path(root)
+                    .join("refs/remotes")
+                    .join(scope)
+                    .join(name),
+                &mut proofs,
+            )?;
+        }
     }
     proofs
         .into_iter()

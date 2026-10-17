@@ -1,8 +1,7 @@
 //! `e2e/commands/import-all.e2e.ts`.
 
-/// Native `bit import` declines `--merge`, `--override` and `--merge=manual` (outside the
-/// native import grammar), and `bit import` without ids when the workspace holds an imported
-/// model (`commandInboundPrepare: inbound imported model`).
+/// Native `bit import` leaves merge modes and `--override` without explicit ids to Node.
+/// Some implicit imports also need the canonical scope and bitmap lifecycle.
 mod known_failures {
     use crate::{
         allow_known_failure,
@@ -21,7 +20,7 @@ mod known_failures {
         helper.add_component_bar_foo();
         helper.tag_component_bar_foo();
         if export {
-            helper.run("export bar/foo");
+            crate::helper::remote::publish(&helper);
         }
         let bitmap = fs::read(helper.scopes.local_path.join(".bitmap")).unwrap();
         helper.re_init_workspace();

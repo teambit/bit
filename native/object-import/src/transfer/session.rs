@@ -1,10 +1,10 @@
 use std::{
     collections::{HashMap, HashSet},
-    io,
+    fs, io,
     path::PathBuf,
 };
 
-use serde_json::Value;
+use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 
 use super::{invalid, owned, transaction};
@@ -19,6 +19,45 @@ pub(crate) struct State {
 }
 
 impl State {
+    pub(super) fn cancel(&mut self, input: &Value) -> io::Result<Value> {
+        if input
+            .as_object()
+            .is_none_or(|input| !input.is_empty())
+        {
+            return Err(invalid("unsupported transfer cancellation"));
+        }
+        let collections = self.collections.len();
+        let plans = self.plans.len();
+        self.collections.clear();
+        self.plans.clear();
+        self.transaction = None;
+        self.cleanup_unused()?;
+        Ok(json!({"cancelled":true,"releasedCollections":collections,"releasedPlans":plans}))
+    }
+
+    pub(super) fn cleanup_unused(&mut self) -> io::Result<()> {
+        let retained = self.collections
+            .values()
+            .flatten()
+            .chain(self.plans.values().flat_map(|plan| plan.entries.iter()))
+            .filter_map(|entry| entry.path.as_ref())
+            .collect::<HashSet<_>>();
+        let paths = self.spool_paths
+            .iter()
+            .filter(|path| !retained.contains(path))
+            .cloned()
+            .collect::<Vec<_>>();
+        for path in paths {
+            match fs::remove_file(&path) {
+                Ok(()) => {}
+                Err(error) if error.kind() == io::ErrorKind::NotFound => {}
+                Err(error) => return Err(error),
+            }
+            self.spool_paths.remove(&path);
+        }
+        Ok(())
+    }
+
     pub(super) fn token(&mut self, bytes: &[u8]) -> io::Result<String> {
         self.revision =
             self.revision.checked_add(1).ok_or_else(|| invalid("transfer identity limit"))?;

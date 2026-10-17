@@ -72,3 +72,31 @@ fn imported_manifest_mismatch_and_aggregate_limits_decline() {
         body(Path::new("/unused"), hash, &mut 0, &mut compressed_limit, Some(&overlay)).is_err(),
     );
 }
+
+#[test]
+fn filtered_manifest_retains_complete_version_proof() {
+    let (overlay, mut version) = fixture();
+    version.proof_files = Some(version.files.clone());
+    version.files.clear();
+    let loaded = super::super::load_with_overlay(
+        Path::new("/unused"),
+        &version,
+        &mut 0,
+        &mut 0,
+        Some(&overlay),
+    )
+    .unwrap();
+    assert!(loaded.is_empty());
+    version.files = version.proof_files.clone().unwrap();
+    version.files[0].relative_path = "tampered.js".into();
+    assert!(
+        super::super::load_with_overlay(
+            Path::new("/unused"),
+            &version,
+            &mut 0,
+            &mut 0,
+            Some(&overlay),
+        )
+        .is_err(),
+    );
+}

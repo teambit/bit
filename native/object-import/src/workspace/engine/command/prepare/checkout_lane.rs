@@ -36,7 +36,11 @@ pub(super) fn metadata(
     if bitmap.get("_bit_lane").is_none() {
         return status_context::metadata(input, pool);
     }
-    let settings = config::configuration_for_command(&request.root, true)?;
+    let settings = config::configuration_value(
+        &request.root,
+        &status_context::configuration::effective(&request.root, &request.home)?,
+        true,
+    )?;
     let visible = super::super::lane_context::visibility::targets(&bitmap, &settings)?;
     status_context::metadata_with_targets(input, pool, &settings, visible)
 }
@@ -90,7 +94,11 @@ fn inactive_targets(
     current: &command_import::lane::Record,
     pool: &rayon::ThreadPool,
 ) -> io::Result<Vec<Value>> {
-    let settings = config::configuration_for_command(&request.root, true)?;
+    let settings = config::configuration_value(
+        &request.root,
+        &status_context::configuration::effective(&request.root, &request.home)?,
+        true,
+    )?;
     let heads = command_import::lane::entries(&current.value)?
         .into_iter()
         .map(|entry| entry.identity)
@@ -132,7 +140,11 @@ fn additions(
         .into_iter()
         .filter_map(|target| target["identity"].as_str().map(str::to_owned))
         .collect::<std::collections::HashSet<_>>();
-    let settings = config::configuration_for_command(&request.root, true)?;
+    let settings = config::configuration_value(
+        &request.root,
+        &status_context::configuration::effective(&request.root, &request.home)?,
+        true,
+    )?;
     let bitmap = super::super::lane_context::visibility::identity_bitmap(bitmap, &settings)?;
     let candidates = Candidates {
         root: &request.root,

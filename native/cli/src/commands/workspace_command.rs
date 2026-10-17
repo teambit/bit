@@ -6,21 +6,28 @@
 //! CLI. After it starts, failures are the command's own, reported as the
 //! Node.js CLI reports them.
 
+pub(super) mod checkout_lifecycle;
+pub(crate) mod checkout_policy;
 pub mod format;
 pub mod progress;
 pub mod resolve;
 pub mod results;
 pub mod versions;
 
+pub use execution::{execute_json, execute_then, execute_with};
 pub use snapshot::receipt::NodeCli;
+pub(crate) use snapshot::receipt::{User, uuid_v4};
 
+mod checkout_scope;
+mod checkout_selection;
 mod defaults;
+mod execution;
 mod lane;
 mod policy;
+mod preparation;
 mod snapshot;
 
 use super::{
-    color::Chalk,
     engine::Engine,
     status::{
         cache,
@@ -30,18 +37,15 @@ use super::{
         js::{array, decline, object, text, truthy},
     },
 };
-use crate::{history::History, native::Outcome};
+use crate::native::Outcome;
 use bit_install::output::Output;
 use results::Report;
 use serde_json::{Value, json};
 use std::{
     env,
     ffi::OsString,
-    fs,
-    io::{self, IsTerminal, Write},
+    io,
     path::{Path, PathBuf},
-    process::ExitCode,
-    sync::Arc,
 };
 
 /// Everything decided before the first write.
@@ -69,31 +73,22 @@ pub struct Request<'r> {
     pub verify_fresh: bool,
 }
 
-/// `commandPrepare`, the capture and `commandPlan`.
-pub fn plan(root: &Path, request: &Request<'_>) -> io::Result<Planned> {
-    plan_with(root, request, false, false)
+/// Provider startup and component callbacks precede checkout's authoritative read set.
+pub fn plan_with_startup(
+    root: &Path,
+    request: &Request<'_>,
+    startup: &mut super::status::autosync::Startup,
+) -> io::Result<Planned> {
+    plan_with(root, request, false, false, Some(startup), false)
 }
 
-/// Validate a merge's snapshot step without allocating or serializing the
-/// snapshot. The caller may then materialize a separate no-snap plan, install,
-/// and create the real snapshot from the installed workspace.
-pub fn plan_snapshot_preview(root: &Path, request: &Request<'_>) -> io::Result<Planned> {
-    if request.operation != "merge" {
-        return Err(decline("snapshot preview operation"));
-    }
-    plan_with(root, request, true, false)
-}
-
-/// The materialization half of a default lane merge that will install and
-/// snap in the same invocation. Direct `--no-snap` still follows Node's guard.
-pub fn plan_internal_no_snap(root: &Path, request: &Request<'_>) -> io::Result<Planned> {
-    if request.operation != "merge"
-        || request.options["noSnap"] != true
-        || request.options.get("lane").is_none()
-    {
-        return Err(decline("internal lane materialization options"));
-    }
-    plan_with(root, request, false, true)
+/// Capture providers once, materialize the merge, then snap its retained pending identities.
+pub fn plan_merge(
+    root: &Path,
+    request: &Request<'_>,
+    startup: &mut super::status::autosync::Startup,
+) -> io::Result<Planned> {
+    plan_with(root, request, request.options["noSnap"] != true, true, Some(startup), true)
 }
 
 fn plan_with(
@@ -101,19 +96,17 @@ fn plan_with(
     request: &Request<'_>,
     preview_snapshot: bool,
     internal_materialization: bool,
+    startup: Option<&mut super::status::autosync::Startup>,
+    defer_snapshot: bool,
 ) -> io::Result<Planned> {
-    if cache::no_fs_cache(root) {
-        return Err(decline("no-fs-cache may be enabled"));
-    }
-    let home = home();
-    let mut engine = Engine::new()?;
-    let (token, context, targets) = prepare(&mut engine, root, &home, request, preview_snapshot)?;
-    let verified = capture::CaptureOptions {
-        verify: request.verify_fresh,
-        missing_checkout_reset: request.operation == "checkout" && request.to == Some("reset"),
-        ..Default::default()
-    };
-    let capture = capture::capture_with(&mut engine, root, &home, &context, &targets, verified)?;
+    let preparation::Prepared {
+        mut engine,
+        home,
+        token,
+        context,
+        capture,
+        selector_loads,
+    } = preparation::capture(root, request, preview_snapshot, startup)?;
     let semver = grammar::snapshot(semver_values(request.to, &context)?.iter().map(String::as_str))
         .ok_or_else(|| decline("semver grammar limits"))?;
     let mut plan_request = json!({
@@ -128,12 +121,23 @@ fn plan_with(
         plan_request["lanePatternIds"] = json!(ids);
     }
     let mut plan: Value = engine.request(&plan_request)?;
+    if !selector_loads.is_empty() {
+        plan["progress"]["loads"] = json!(selector_loads);
+    }
     if plan.get("token").and_then(Value::as_str) != Some(token.as_str()) {
         return Err(decline("command plan token"));
     }
     let mut steps =
         Steps { engine: &mut engine, root, home: &home, token: &token, context: &context };
-    let capture = steps.stages(&mut plan, capture, request, preview_snapshot)?;
+    let capture = steps.stages(&mut plan, capture, request, preview_snapshot, defer_snapshot)?;
+    if defer_snapshot {
+        let deferred: Value =
+            engine.request(&json!({"kind":"commandMergeDeferSnapshot","token":token}))?;
+        plan["mergeSnapshotSeeds"] = deferred["identities"].clone();
+        plan.as_object_mut()
+            .unwrap()
+            .remove("needsSnap");
+    }
     Ok(Planned { engine, token, context, capture, plan, apply: "commandApply" })
 }
 
@@ -154,7 +158,9 @@ impl Steps<'_> {
         capture: Capture,
         request: &Request<'_>,
         preview_snapshot: bool,
+        defer_snapshot: bool,
     ) -> io::Result<Capture> {
+        self.checkout_policy(plan)?;
         let mut caches = Vec::new();
         if plan.get("policyPreparation").is_some() {
             if request.operation != "merge" {
@@ -165,7 +171,7 @@ impl Steps<'_> {
             caches = prepared.caches;
         }
         let snap_failed = plan.get("snapFailed") == Some(&Value::Bool(true));
-        let mut capture = if plan.get("needsSnap").is_some() || snap_failed {
+        let mut capture = if !defer_snapshot && (plan.get("needsSnap").is_some() || snap_failed) {
             self.prepare_snapshot(plan, &caches, request, preview_snapshot)?
         } else {
             capture
@@ -194,14 +200,20 @@ fn prepare(
     request: &Request<'_>,
     preview_snapshot: bool,
 ) -> io::Result<(String, Value, Vec<Value>)> {
+    let mut options = request.options.clone();
+    if options["includeNewFromScope"] == true {
+        options["scopeCandidates"] =
+            json!(checkout_scope::candidates(engine, root, home, request)?);
+    }
     let prepared: Value = engine.request(&json!({
         "kind": "commandPrepare",
         "root": root,
         "home": home,
         "operation": request.operation,
         "internalSnapshotPreview": preview_snapshot,
+        "deferCheckoutPattern": checkout_selection::deferred(request),
         "dependencyGrammar": dependency_grammar()?,
-        "options": request.options,
+        "options": options,
         "globalRemotesFile": cache::cache_root().join("config").join("global-remotes.json"),
     }))?;
     let token = text(prepared.get("token"))?.to_string();
@@ -209,7 +221,8 @@ fn prepare(
         .get("context")
         .filter(|context| truthy(Some(context)))
         .cloned();
-    let context = context.ok_or_else(|| decline("command context"))?;
+    let mut context = context.ok_or_else(|| decline("command context"))?;
+    context["commandProgress"] = prepared["progress"].clone();
     let targets = array(prepared.get("targets"), "command targets")?.to_vec();
     Ok((token, context, targets))
 }
@@ -235,47 +248,6 @@ pub fn execute(
         progress(output);
         commit(&mut planned, root)
     })
-}
-
-/// The loader's `running command` line, `work`, then the report; a failure
-/// of `work` is the command's own, printed in red with exit code 1.
-pub fn execute_with(
-    root: &Path,
-    args: &[OsString],
-    command: &str,
-    report: &Report,
-    work: impl FnOnce(&Output) -> io::Result<()>,
-) -> io::Result<Outcome> {
-    execute_then(root, args, command, |output| {
-        work(output)?;
-        Ok(Report { data: report.data.clone(), code: report.code, details: report.details.clone() })
-    })
-}
-
-/// [`execute_with`] for a command whose report depends on its work.
-pub fn execute_then(
-    root: &Path,
-    args: &[OsString],
-    command: &str,
-    work: impl FnOnce(&Output) -> io::Result<Report>,
-) -> io::Result<Outcome> {
-    let chalk = Chalk::detect(args);
-    let history = History::start(root, args);
-    let output = loader_output(chalk);
-    output.restart(&format!(r#"running command "{command}"..."#));
-    let report = match work(&output) {
-        Ok(report) => report,
-        Err(error) => {
-            output.stop();
-            history.end(false);
-            eprintln!("{}", chalk.red(&error.to_string()));
-            return Ok(Outcome::Exit(ExitCode::FAILURE));
-        }
-    };
-    output.stop();
-    print(&report, command)?;
-    history.end(report.code == 0);
-    Ok(Outcome::Exit(ExitCode::from(u8::try_from(report.code).unwrap_or(1))))
 }
 
 /// `[options.to ?? '', ...model versions, ...orphaned versions]`.
@@ -322,49 +294,4 @@ pub fn file_id() -> String {
         now.minute(),
         now.second(),
     )
-}
-
-/// Bit's loader on stdout: ora draws a spinner on an interactive terminal
-/// and prints plain lines elsewhere; `BIT_DISABLE_SPINNER` turns it off.
-fn loader_output(chalk: Chalk) -> Output {
-    let interactive = io::stdout().is_terminal()
-        && env::var("TERM").map_or(true, |term| term != "dumb")
-        && env::var_os("CI").is_none();
-    let disabled = env::var("BIT_DISABLE_SPINNER")
-        .is_ok_and(|value| {
-            matches!(
-                value
-                    .trim()
-                    .to_ascii_lowercase()
-                    .as_str(),
-                "true" | "1" | "yes" | "y" | "on",
-            )
-        });
-    let sink: bit_install::output::Sink = Arc::new(|text: &str| {
-        let mut stdout = io::stdout().lock();
-        let _ = stdout.write_all(text.as_bytes());
-        let _ = stdout.flush();
-    });
-    // `logger.setStatusLine` prints nothing while `process.env.CI` is set.
-    let ci = env::var_os("CI").is_some_and(|ci| !ci.is_empty());
-    Output::new(chalk.enabled(), interactive, !disabled, sink).with_ci(ci)
-}
-
-/// `runReportHandler`: the report and a newline; details are kept for `bit details`.
-fn print(report: &Report, command: &str) -> io::Result<()> {
-    if let Some(details) = &report.details {
-        let _ = persist_details(details, command);
-    }
-    let mut stdout = io::stdout().lock();
-    stdout.write_all(format!("{}\n", report.data).as_bytes())?;
-    stdout.flush()
-}
-
-/// `persistDetails`: `<CACHE_ROOT>/last-command-details/{content,meta.json}`.
-fn persist_details(details: &str, command: &str) -> io::Result<()> {
-    let dir = cache::cache_root().join("last-command-details");
-    fs::create_dir_all(&dir)?;
-    let meta = json!({ "command": command, "timestamp": crate::history::iso_now() });
-    fs::write(dir.join("content"), details)?;
-    fs::write(dir.join("meta.json"), serde_json::to_string(&meta)?)
 }

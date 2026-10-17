@@ -3,6 +3,7 @@
 
 mod checkout;
 mod color;
+mod delete;
 mod diff;
 mod engine;
 mod export;
@@ -18,7 +19,9 @@ mod log;
 mod merge;
 mod mini_status;
 mod patterns;
+mod recover;
 mod recovery;
+mod remove;
 mod reset;
 mod snap;
 mod status;
@@ -41,6 +44,7 @@ pub struct Command {
 pub const COMMANDS: &[Command] = &[
     checkout::COMMAND,
     checkout::REVERT,
+    delete::COMMAND,
     file_history::BLAME,
     diff::COMMAND,
     export::COMMAND,
@@ -53,6 +57,8 @@ pub const COMMANDS: &[Command] = &[
     log::COMMAND,
     merge::COMMAND,
     mini_status::COMMAND,
+    recover::COMMAND,
+    remove::COMMAND,
     reset::COMMAND,
     snap::COMMAND,
     status::COMMAND,

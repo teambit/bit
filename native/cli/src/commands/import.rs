@@ -4,6 +4,7 @@
 //! unless `-x` is given.
 
 mod options;
+mod output;
 mod patterns;
 mod report;
 
@@ -42,18 +43,15 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
         Err(error) => return Ok(Outcome::Declined(format!("{}: {error}", options.operation))),
     };
     if selection.ids.is_empty() && !options.ids.is_empty() {
-        return workspace_command::execute_then(&root, args, options.operation, |output| {
-            render_selection(&options, &selection, output);
-            Ok(Report { data: chalk.yellow("nothing to import"), code: 0, details: None })
-        });
+        return output::empty(&root, args, &options, &selection, chalk);
     }
     let mut planned = match Planned::plan(&root, &options, &selection.ids, chalk) {
         Ok(planned) => planned,
         Err(error) => return Ok(Outcome::Declined(format!("{}: {error}", options.operation))),
     };
-    workspace_command::execute_then(&root, args, options.operation, |output| {
+    output::execute(&root, args, &options, |output| {
         let started = Instant::now();
-        render_selection(&options, &selection, output);
+        output::selection(&options, &selection, output);
         planned.apply()?;
         render(&mut planned, &options, output, started, installer, &root)?;
         Ok(Report { data: planned.report.clone(), code: 0, details: None })
@@ -70,20 +68,6 @@ fn start_installer(
         return Ok(None);
     }
     installation::Installer::start(root, argv).map(Some)
-}
-
-/// `listing remote components` per pattern, then `NoIdMatchWildcard` warnings.
-fn render_selection(options: &options::Options, selection: &patterns::Selection, output: &Output) {
-    if options.wildcards().is_empty() {
-        return;
-    }
-    output.status("importing components");
-    for _ in options.wildcards() {
-        output.status("listing remote components");
-    }
-    for warning in &selection.warnings {
-        output.warning(warning);
-    }
 }
 
 fn render(
@@ -104,23 +88,19 @@ fn render(
         planned.progress
             .as_ref()
             .ok_or_else(|| io::Error::other("native inbound progress"))?
-            .render_lane_groups(output, &counts, started)?;
+            .render_fetch_groups(output, &counts, planned.prepared["mainFetch"] == true, started)?;
         return Ok(());
     }
-    if let Some(progress) = &planned.progress {
-        // The wildcard listing already printed the first `importing components`.
-        if options.wildcards().is_empty() {
-            progress.render_inbound(output, options.operation == "fetch", !options.ids.is_empty());
-        } else {
-            progress.render_inbound(output, false, false);
-        }
-    }
+    render_progress(planned, options, output);
     if let Some(installer) = installer {
         let ids = planned.receipt.ids.clone();
-        if let Err(error) = installer.install(root, options.skip_write_config_files, &ids) {
+        if let Err(error) = installer.install(root, options.write.skip_write_config_files, &ids) {
             output.failure(&format!("installation failed with the following error: {error}"));
-            planned.report =
-                planned.receipt.import_report(planned.chalk, Some(&error.to_string()))?;
+            planned.report = if options.output.json {
+                output::json_report(&planned.prepared, true)?
+            } else {
+                planned.receipt.import_report(planned.chalk, Some(&error.to_string()))?
+            };
         }
     }
     output.success("importing components", Some(started));
@@ -132,6 +112,35 @@ fn render(
     Ok(())
 }
 
+fn render_progress(planned: &Planned, options: &options::Options, output: &Output) {
+    if let Some(progress) = &planned.progress {
+        // The wildcard listing already printed the first `importing components`.
+        if options.wildcards().is_empty() {
+            progress.render_inbound(
+                output,
+                options.operation == "fetch",
+                !options.ids.is_empty(),
+                options.write.dependencies.depth.is_some()
+                    && (options.write.dependencies.import_head_dependencies
+                        || options.ids
+                            .iter()
+                            .any(|id| !id.contains('@'))),
+                options.write.dependencies.depth.map(|_| planned.prefetch_count),
+                planned.prepared["currentLane"].is_string(),
+            );
+        } else {
+            progress.render_inbound(
+                output,
+                false,
+                false,
+                true,
+                options.write.dependencies.depth.map(|_| planned.prefetch_count),
+                planned.prepared["currentLane"].is_string(),
+            );
+        }
+    }
+}
+
 /// The engine's prepared import and what it prints.
 struct Planned {
     engine: Engine,
@@ -140,6 +149,7 @@ struct Planned {
     report: String,
     progress: Option<Progress>,
     chalk: Chalk,
+    prefetch_count: usize,
 }
 
 impl Planned {
@@ -149,22 +159,29 @@ impl Planned {
         ids: &[String],
         chalk: Chalk,
     ) -> io::Result<Self> {
-        let (engine, prepared) = prepare(root, options, ids)?;
+        let (mut engine, mut prepared) = prepare(root, options, ids)?;
+        if let Some(receipt) = prepared.get("checkoutPolicyPreparation") {
+            let semver = workspace_command::checkout_policy::semver(receipt)?;
+            prepared = engine.request(&json!({"kind":"commandInboundPolicyComplete",
+                "token":prepared["token"],"semver":semver}))?;
+        }
         if prepared["laneFetch"] == true && !options.lanes
             || prepared["laneFetch"] != true && options.lanes
         {
             return Err(io::Error::other("native inbound lane receipt"));
         }
         let receipt = report::validate(&prepared)?;
-        validate_lane_groups(&prepared, options)?;
-        let report = if options.operation == "fetch" {
+        output::validate_lane_groups(&prepared, options)?;
+        let report = if options.output.json {
+            output::json_report(&prepared, false)?
+        } else if options.operation == "fetch" {
             receipt.fetch_report(chalk)?
         } else {
             receipt.import_report(chalk, None)?
         };
         let rows = json!({ "bitmapCount": 0, "imports": prepared["progress"], "loads": [] });
         let progress = Progress::parse(Some(&rows))?;
-        Ok(Self { engine, prepared, receipt, report, progress, chalk })
+        Ok(Self { engine, prepared, receipt, report, progress, chalk, prefetch_count: ids.len() })
     }
 
     /// `commandInboundApply`: the publication must be the planned one.
@@ -187,41 +204,130 @@ impl Planned {
     }
 }
 
-fn validate_lane_groups(prepared: &Value, options: &options::Options) -> io::Result<()> {
-    let Some(groups) = prepared.get("laneGroups") else {
-        if options.lanes && options.ids.len() > 1 {
-            return Err(io::Error::other("native inbound lane groups"));
-        }
-        return Ok(());
+/// `commandInboundPrepare`: the engine fetches, and plans the writes.
+fn prepare(root: &Path, options: &options::Options, ids: &[String]) -> io::Result<(Engine, Value)> {
+    let mut engine = Engine::new()?;
+    let prepared = prepare_into(&mut engine, root, options, ids)?;
+    Ok((engine, prepared))
+}
+
+/// Retain a main-component refresh for `status --lanes` until its complete
+/// report has passed preflight. The same inbound transfer serves `bit fetch`.
+pub(super) fn prepare_status_refresh(
+    engine: &mut Engine,
+    root: &Path,
+    ids: &[String],
+) -> io::Result<Value> {
+    let options = options::Options {
+        operation: "status",
+        ids: Vec::new(),
+        objects_only: true,
+        all_history: true,
+        write: options::WriteOptions {
+            skip_write_config_files: false,
+            skip_dependency_installation: false,
+            override_existing: false,
+            path: None,
+            merge_strategy: None,
+            dependencies: options::DependencyOptions::default(),
+        },
+        lanes: false,
+        output: options::OutputOptions::default(),
+        selection: options::SelectionOptions::default(),
     };
-    let rows = prepared["progress"]
-        .as_array()
-        .ok_or_else(|| io::Error::other("native inbound progress"))?;
-    let counts = groups.as_array().ok_or_else(|| io::Error::other("native inbound lane groups"))?;
-    if !options.lanes
-        || counts.len() != options.ids.len()
-        || counts.len() < 2
-        || counts.len() > 32
-        || counts
-            .iter()
-            .any(|count| {
-                count
-                    .as_u64()
-                    .is_none_or(|count| count == 0)
-            })
-        || counts
-            .iter()
-            .filter_map(Value::as_u64)
-            .sum::<u64>()
-            != rows.len() as u64
-    {
-        return Err(io::Error::other("native inbound lane groups"));
+    prepare_into(engine, root, &options, ids)
+}
+
+pub(super) fn prepare_diff_refresh(
+    engine: &mut Engine,
+    root: &Path,
+    ids: &[String],
+) -> io::Result<Value> {
+    let options = options::Options {
+        operation: "diff",
+        ids: Vec::new(),
+        objects_only: true,
+        all_history: false,
+        write: options::WriteOptions {
+            skip_write_config_files: false,
+            skip_dependency_installation: false,
+            override_existing: false,
+            path: None,
+            merge_strategy: None,
+            dependencies: options::DependencyOptions::default(),
+        },
+        lanes: false,
+        output: options::OutputOptions::default(),
+        selection: options::SelectionOptions::default(),
+    };
+    prepare_into(engine, root, &options, ids)
+}
+
+pub(super) fn prepare_status_forked_refresh(
+    engine: &mut Engine,
+    root: &Path,
+    lane: &str,
+) -> io::Result<Value> {
+    let options = options::Options {
+        operation: "status",
+        ids: Vec::new(),
+        objects_only: true,
+        all_history: false,
+        write: options::WriteOptions {
+            skip_write_config_files: false,
+            skip_dependency_installation: false,
+            override_existing: false,
+            path: None,
+            merge_strategy: None,
+            dependencies: options::DependencyOptions::default(),
+        },
+        lanes: true,
+        output: options::OutputOptions::default(),
+        selection: options::SelectionOptions::default(),
+    };
+    prepare_into(engine, root, &options, &[lane.to_owned()])
+}
+
+/// Fetch and publish one remote Lane without materializing workspace files.
+pub(super) fn prepare_lane_import(
+    engine: &mut Engine,
+    root: &Path,
+    lane: &str,
+) -> io::Result<Value> {
+    let options = options::Options {
+        operation: "laneImport",
+        ids: Vec::new(),
+        objects_only: true,
+        all_history: false,
+        write: options::WriteOptions {
+            skip_write_config_files: false,
+            skip_dependency_installation: false,
+            override_existing: false,
+            path: None,
+            merge_strategy: None,
+            dependencies: options::DependencyOptions::default(),
+        },
+        lanes: true,
+        output: options::OutputOptions::default(),
+        selection: options::SelectionOptions::default(),
+    };
+    prepare_into(engine, root, &options, &[lane.to_owned()])
+}
+
+pub(super) fn apply_status_refresh(engine: &mut Engine, token: &Value) -> io::Result<()> {
+    let applied: Value = engine.request(&json!({"kind":"commandInboundApply","token":token}))?;
+    if applied["applied"] != true || applied["token"] != *token {
+        return Err(io::Error::other("status main refresh publication"));
     }
     Ok(())
 }
 
-/// `commandInboundPrepare`: the engine fetches, and plans the writes.
-fn prepare(root: &Path, options: &options::Options, ids: &[String]) -> io::Result<(Engine, Value)> {
+fn prepare_into(
+    engine: &mut Engine,
+    root: &Path,
+    options: &options::Options,
+    ids: &[String],
+) -> io::Result<Value> {
     let cli = NodeCli::find()?;
     let config = cache_root().join("config");
     let mut request = json!({
@@ -240,7 +346,5 @@ fn prepare(root: &Path, options: &options::Options, ids: &[String]) -> io::Resul
     if !options.objects_only {
         request["bitmapHistoryFileId"] = json!(workspace_command::file_id());
     }
-    let mut engine = Engine::new()?;
-    let prepared: Value = engine.request(&request)?;
-    Ok((engine, prepared))
+    engine.request(&request)
 }

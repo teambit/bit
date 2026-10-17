@@ -15,12 +15,14 @@ impl Network {
     pub async fn log(&self, url: &str, id: &str) -> io::Result<Vec<Value>> {
         let endpoint = format!("{url}/graphql");
         let body = json!({"query": LOG_QUERY, "variables": {"id": id}});
-        let response = self.send(|| {
-            self.headers(self.client.post(&endpoint), "read")
-                .json(&body)
-        })
+        let response = self.send(
+            self.headers(self.client.post(&endpoint), "read")?
+                .json(&body),
+        )
         .await?;
-        let bytes = bounded_body(throw_for_status(response).await?).await?;
+        let bytes =
+            self.cancellation.run(async { bounded_body(throw_for_status(response).await?).await })
+                .await??;
         parse(&bytes, &endpoint)
     }
 }

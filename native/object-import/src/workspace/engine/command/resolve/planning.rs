@@ -16,10 +16,9 @@ pub(super) fn prepare(
     pool: &rayon::ThreadPool,
 ) -> io::Result<Value> {
     validate_capture(retained, &input)?;
-    let captured =
-        capture::all(&retained.record.request.root, input.current.clone(), snapshots, pool)?;
-    let Selection { identities: selected, load_count } = selected(retained, &captured, &input)?;
-    retained.record.proofs.extend(super::source_proofs::capture(&captured, snapshots)?);
+    let captured = capture_for_snapshot(retained, input.current.clone(), snapshots, pool)?;
+    let Selection { identities: selected, load_count } =
+        select_current(retained, &captured, &input, snapshots)?;
     if selected.is_empty() {
         retain_proofs(retained, input.dependency_read_set)?;
         retained.finalized = super::publication::Phase::Noop;
@@ -29,13 +28,7 @@ pub(super) fn prepare(
     }
     let (mut materials, automatic, auto_loaded) =
         materials(retained, &selected, &captured, &input, snapshots)?;
-    if retained.snap.is_some() {
-        super::snap::prepare_graph_imports(retained, &materials)?;
-    }
-    if retained.tag.is_some() {
-        super::tag::versions(retained, &input, &mut materials)?;
-    }
-    preflight(retained, &mut materials, snapshots)?;
+    project_materials(retained, &input, &mut materials, snapshots)?;
     let issue_graph = super::issue_graph::capture(
         &input.components,
         &input.current,
@@ -43,16 +36,49 @@ pub(super) fn prepare(
         &mut retained.record.repository,
     )?;
     retain_proofs(retained, input.dependency_read_set)?;
-    let result = report(retained, &input.semver, &selected, &materials, &automatic)?;
+    let mut result = report(retained, &input.semver, &selected, &materials, &automatic)?;
+    super::root::report(retained, &materials, &mut result);
     let mut output = response(retained, &selected, &materials, &result, (auto_loaded, load_count));
     if retained.snap.is_none() && retained.tag.is_none() {
         output["autoSnapResults"] = json!(automatic);
     }
     output["issueGraph"] = issue_graph;
+    snapshot_metadata(retained, &materials, &mut output);
+    retained.finalized.callbacks_mut()?.paths = super::source_proofs::owned_paths(
+        &retained.record.request.root,
+        &input.current,
+        &materials,
+    );
     retained.selected = selected;
     retained.materials = materials;
     retained.result = result;
     Ok(output)
+}
+
+fn select_current(
+    retained: &mut Retained,
+    captured: &[capture::Captured],
+    input: &Plan,
+    snapshots: &snapshots::State,
+) -> io::Result<Selection> {
+    let Selection {
+        identities: mut selected,
+        mut load_count,
+    } = selected(retained, captured, input)?;
+    if super::root::include(retained, captured, &mut selected)? {
+        load_count += 1;
+    }
+    retained.record.proofs.extend(super::source_proofs::capture(captured, snapshots)?);
+    Ok(Selection { identities: selected, load_count })
+}
+
+fn snapshot_metadata(retained: &Retained, materials: &[Material], output: &mut Value) {
+    if let Some(root) = super::root::added(retained) {
+        output["autoAddedWorkspaceRoot"] = json!(root);
+    }
+    if retained.snap.as_ref().is_some_and(|options| options.policy.skip_published_versions) {
+        output["tagRegistryVersions"] = json!(materials.iter().map(|material|json!({"identity":material.identity,"extensions":material.version["extensions"],"bindingPrefix":material.model["bindingPrefix"]})).collect::<Vec<_>>());
+    }
 }
 
 fn report(
@@ -171,7 +197,7 @@ fn auto_seeds(
         .collect()
 }
 
-fn bind_new(
+pub(super) fn bind_new(
     retained: &Retained,
     selected: &[String],
     captured: &[capture::Captured],
@@ -212,10 +238,15 @@ fn progress(retained: &Retained, selected: usize, auto_loaded: bool) -> Value {
         if !auto_loaded {
             loads.pop();
         }
+        let persist = retained.tag.as_ref().is_some_and(|tag| tag.persist);
         // Tag loads the pending workspace set even with --unmerged; snap skips it.
-        if !options.unmodified && (!options.unmerged || retained.tag.is_some()) {
+        if !persist && !options.unmodified && (!options.unmerged || retained.tag.is_some()) {
             loads.insert(0, count);
         }
+        output["graphImports"] = retained.record.repository.progress()["imports"].clone();
+        output["skipDependenciesGraph"] = json!(options.policy.no_lock_deps);
+    }
+    if retained.record.context["callbackLifecycle"] == true {
         output["graphImports"] = retained.record.repository.progress()["imports"].clone();
     }
     output["loads"] = json!(loads);
@@ -240,11 +271,18 @@ fn select(retained: &Retained, input: &Plan) -> io::Result<Vec<String>> {
 }
 
 fn validate_capture(retained: &Retained, input: &Plan) -> io::Result<()> {
+    validate_current(retained, &input.current, input.components.len())
+}
+pub(super) fn validate_current(
+    retained: &Retained,
+    current: &[Value],
+    component_count: usize,
+) -> io::Result<()> {
     let targets = &retained.record.targets;
-    if input.current.len() != targets.len() || input.components.len() != targets.len() {
+    if current.len() != targets.len() || component_count != targets.len() {
         return Err(invalid("resolve capture count"));
     }
-    for (current, target) in input.current.iter().zip(targets) {
+    for (current, target) in current.iter().zip(targets) {
         if current["identity"] != target["identity"]
             || current["version"] != target["version"]
             || current["directory"] != target["directory"]
@@ -255,7 +293,7 @@ fn validate_capture(retained: &Retained, input: &Plan) -> io::Result<()> {
     Ok(())
 }
 
-fn material(
+pub(super) fn material(
     retained: &mut Retained,
     identity: &String,
     participation: Participation,
@@ -280,7 +318,9 @@ fn material(
     let version =
         projection::version(&stored, &current.target.current, &current.metadata, receipt)?;
     let head = current_head(retained, identity, &model)?;
-    if reference != head {
+    if reference != head
+        && !retained.snap.as_ref().is_some_and(|options| options.policy.ignore_newest_version)
+    {
         return Err(invalid("resolve detached component"));
     }
     Ok(Material {
@@ -291,7 +331,7 @@ fn material(
             .as_array()
             .ok_or_else(|| invalid("resolve files"))?
             .clone(),
-        version_state: VersionState { current_head: head, tagged_version: None },
+        version_state: VersionState { current_head: reference, tagged_version: None },
         pending: retained.pending
             .iter()
             .find(|row| selection::identity(&row["id"]).ok().as_ref() == Some(identity))
@@ -315,19 +355,61 @@ fn current_head(retained: &Retained, identity: &str, model: &Value) -> io::Resul
     Ok(head)
 }
 
-fn preflight(
+pub(super) fn preflight(
     retained: &mut Retained,
     materials: &mut [Material],
     snapshots: &snapshots::State,
 ) -> io::Result<()> {
-    graph::project(materials, &mut retained.record.repository)?;
-    super::super::resolve_snapshot::preflight(&retained.record.request.root, materials, snapshots)?;
+    if retained.snap.as_ref().is_some_and(|options| options.policy.rebuild_deps_graph) {
+        graph::rebuild(materials, &mut retained.record.repository)?;
+    } else {
+        graph::project(materials, &mut retained.record.repository)?;
+    }
+    super::super::resolve_snapshot::preflight(
+        &retained.record.request.root,
+        materials,
+        snapshots,
+        retained.snap.is_some() || retained.record.context["callbackLifecycle"] == true,
+    )?;
     super::super::resolve_publication::preflight(
         &retained.record.request.root,
         &retained.record.context,
         materials,
         &retained.pending,
         retained.record.repository.imported_index(),
+        retained.snap.is_some() || retained.record.context["callbackLifecycle"] == true,
     )?;
     Ok(())
+}
+
+fn project_materials(
+    retained: &mut Retained,
+    input: &Plan,
+    materials: &mut [Material],
+    snapshots: &snapshots::State,
+) -> io::Result<()> {
+    if retained.snap.is_some() || retained.record.context["callbackLifecycle"] == true {
+        super::snap::prepare_graph_imports(retained, materials)?;
+    }
+    if retained.tag.is_some() {
+        super::tag::versions(retained, input, materials)?;
+    }
+    super::root::provenance(retained, materials)?;
+    if !retained.tag.as_ref().is_some_and(|options| options.soft) {
+        preflight(retained, materials, snapshots)?;
+    }
+    Ok(())
+}
+
+pub(super) fn capture_for_snapshot(
+    retained: &Retained,
+    current: Vec<Value>,
+    snapshots: &mut snapshots::State,
+    pool: &rayon::ThreadPool,
+) -> io::Result<Vec<capture::Captured>> {
+    if retained.snap.is_some() || retained.record.context["callbackLifecycle"] == true {
+        capture::all_for_snapshot(&retained.record.request.root, current, snapshots, pool)
+    } else {
+        capture::all(&retained.record.request.root, current, snapshots, pool)
+    }
 }

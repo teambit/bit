@@ -33,15 +33,15 @@ fn read(
         .ok_or_else(|| invalid("resolve graph ref"))?;
     let digest = crate::merge_history::hash(old)?;
     proof::read(
-        &root
-            .join(".bit/objects")
+        &crate::scope_path(root)
+            .join("objects")
             .join(&old[..2])
             .join(&old[2..]),
         proofs,
     )?;
     let mut compressed = 0;
     let body = crate::checkout::repository::source(
-        &root.join(".bit/objects"),
+        &crate::scope_path(root).join("objects"),
         digest,
         4 * 1024 * 1024,
         &mut compressed,

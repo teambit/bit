@@ -14,11 +14,17 @@ struct Replay {
     visited: Map<String, Value>,
     added: Map<String, Value>,
     path_map: Vec<Value>,
-    missing: Map<String, Value>,
+    diagnostics: Diagnostics,
     npm: HashMap<String, Vec<String>>,
     registered: Vec<String>,
     scanned: Vec<String>,
     receipts: Receipts,
+}
+#[derive(Default)]
+struct Diagnostics {
+    missing: Map<String, Value>,
+    missing_packages: Map<String, Value>,
+    errors: Map<String, Value>,
 }
 pub(super) fn finish(
     request: &Request,
@@ -82,9 +88,7 @@ impl Replay {
                 .collect();
             tree.insert(file.clone(), json!(dependencies));
             self.record(&file, cached["pathMap"].clone(), false)?;
-            if let Some(value) = cached.get("missing") {
-                self.missing.insert(file, value.clone());
-            }
+            self.diagnostics.cached(&file, &cached);
             for dependency in dependencies {
                 if !tree.contains_key(&dependency) {
                     stack.push(dependency);
@@ -113,11 +117,29 @@ impl Replay {
         }
         let value = serde_json::to_value(&row.path_map).map_err(io::Error::other)?;
         self.record(file, value.clone(), true)?;
-        let cache = json!({"pathMap":value});
+        let mut cache = json!({"pathMap":value});
+        self.record_diagnostics(row, &mut cache);
         self.visited.insert(file.clone(), cache.clone());
         self.added.insert(file.clone(), cache);
         self.registered.extend(row.registered.iter().cloned());
         Ok(dependencies)
+    }
+    fn record_diagnostics(&mut self, row: &Row, cache: &mut Value) {
+        let file = &row.path_map.file;
+        if let Some(error) = &row.error {
+            self.diagnostics.errors.insert(file.clone(), error.clone());
+            cache["error"] = error.clone();
+        }
+        if !row.missing.is_empty() {
+            let missing = json!(row.missing);
+            self.diagnostics.missing.insert(file.clone(), missing.clone());
+            cache["missing"] = missing;
+        }
+        if !row.missing_packages.is_empty() {
+            let missing = json!(row.missing_packages);
+            self.diagnostics.missing_packages.insert(file.clone(), missing.clone());
+            cache["missingPackages"] = missing;
+        }
     }
     fn record(&mut self, file: &str, value: Value, fresh: bool) -> io::Result<()> {
         self.receipts.bytes += serde_json::to_vec(&value).map_err(io::Error::other)?.len();
@@ -146,7 +168,17 @@ impl Replay {
             }
         }
         Ok(
-            json!({"tree":tree,"pathMap":self.path_map,"pathMapOrigins":self.receipts.origins,"missing":self.missing,"errors":{},"visited":self.added,"registeredPaths":self.registered,"scannedPaths":self.scanned}),
+            json!({"tree":tree,"pathMap":self.path_map,"pathMapOrigins":self.receipts.origins,"missing":self.diagnostics.missing,"missingPackages":self.diagnostics.missing_packages,"errors":self.diagnostics.errors,"visited":self.added,"registeredPaths":self.registered,"scannedPaths":self.scanned}),
         )
+    }
+}
+impl Diagnostics {
+    fn cached(&mut self, file: &str, cached: &Value) {
+        if let Some(value) = cached.get("missing") {
+            self.missing.insert(file.to_owned(), value.clone());
+        }
+        if let Some(value) = cached.get("missingPackages") {
+            self.missing_packages.insert(file.to_owned(), value.clone());
+        }
     }
 }

@@ -16,6 +16,12 @@ pub(super) struct Request {
     models: Vec<Value>,
     histories: Vec<Value>,
     semver: Value,
+    #[serde(default)]
+    unavailable_on_main: Vec<String>,
+    #[serde(default)]
+    update_dependents: Vec<String>,
+    #[serde(default)]
+    during_merge: Vec<String>,
 }
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -26,12 +32,26 @@ struct Target {
     issues: Vec<Value>,
     dependencies: Vec<String>,
     #[serde(default)]
+    bitmap_state: BitmapState,
+    #[serde(default)]
     invalid: Option<Value>,
+}
+#[derive(Default, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct BitmapState {
+    #[serde(default)]
+    local_only: bool,
+    #[serde(default)]
+    soft_tagged: bool,
+    #[serde(default)]
+    locally_removed: bool,
 }
 
 pub(super) fn read(request: &Request) -> io::Result<(usize, Value)> {
     validate(request)?;
     let mut output = empty(&request.current_lane_id);
+    output["unavailableOnMain"] = json!(request.unavailable_on_main);
+    output["componentsDuringMergeState"] = json!(request.during_merge);
     for target in &request.targets {
         current(&mut output, target);
     }
@@ -43,6 +63,9 @@ pub(super) fn read(request: &Request) -> io::Result<(usize, Value)> {
 }
 fn current(output: &mut Value, target: &Target) {
     if let Some(error) = &target.invalid {
+        if error["name"] == "ComponentsPendingImport" {
+            push(output, "importPendingComponents", json!(target.identity));
+        }
         push(output, "invalidComponents", json!({"id":target.identity,"error":error}));
         return;
     }
@@ -54,11 +77,19 @@ fn current(output: &mut Value, target: &Target) {
     if !target.issues.is_empty() {
         push(output, "componentsWithIssues", json!({"id":target.identity,"issues":target.issues}));
     }
+    if target.bitmap_state.local_only {
+        push(output, "localOnly", json!(target.identity));
+    }
+    if target.bitmap_state.soft_tagged {
+        push(output, "softTaggedComponents", json!(target.identity));
+    }
+    if target.bitmap_state.locally_removed {
+        push(output, "locallySoftRemoved", json!(target.identity));
+    }
 }
 fn empty(lane: &str) -> Value {
     let mut output = json!({});
-    // Complex lane states still decline during context loading. These sections
-    // are empty for ordinary current lanes as well as the main lane.
+    // Populate every status section; lane-specific rows are filled later.
     for field in [
         "newComponents",
         "modifiedComponents",
@@ -136,7 +167,13 @@ fn models(request: &Request) -> io::Result<()> {
     }
     if request.targets
         .iter()
-        .any(|target| !target.version.is_empty() && !known.contains(&target.identity))
+        .any(|target| {
+            !target.version.is_empty()
+                && !known.contains(&target.identity)
+                && target.invalid
+                    .as_ref()
+                    .is_none_or(|error| error["name"] != "ComponentsPendingImport")
+        })
     {
         return Err(invalid("status missing imported model requires canonical errors"));
     }

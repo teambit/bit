@@ -1,7 +1,11 @@
+pub(in crate::workspace::engine::command) use callbacks::extensions as callback_extensions;
+
 use super::super::invalid;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::{collections::HashSet, io};
+
+mod callbacks;
 
 pub(super) const DEPRECATION: &str = "teambit.component/deprecation";
 pub(super) const REMOVAL: &str = "teambit.component/remove";
@@ -37,7 +41,7 @@ pub(in crate::workspace::engine::command) fn extensions(
     defaults: &Defaults,
     package_name: &str,
 ) -> io::Result<Value> {
-    if defaults.env["id"] != "teambit.harmony/node" || !defaults.env["data"].is_object() {
+    if !defaults.env["id"].is_string() || !defaults.env["data"].is_object() {
         return Err(invalid("command default Node descriptor"));
     }
     let mut entries = configured_entries(stored, configs)?;
@@ -95,13 +99,11 @@ fn apply_slots(entries: &mut Vec<Value>, defaults: &Defaults) -> io::Result<()> 
 fn configured_entries(stored: &Value, configs: &Value) -> io::Result<Vec<Value>> {
     let mut entries = Vec::new();
     for config in array(configs)? {
-        let name = core(config)?;
+        let identity = super::scope::identity(config)?;
         let mut entry = config.clone();
-        entry["data"] = stored
-            .as_array()
-            .into_iter()
-            .flatten()
-            .find(|row| row["name"] == name)
+        entry["data"] = array(stored)?
+            .iter()
+            .find(|row| super::scope::identity(row).is_ok_and(|id| id == identity))
             .and_then(|row| row.get("data"))
             .cloned()
             .unwrap_or_else(|| json!({}));
@@ -126,69 +128,7 @@ fn upsert(entries: &mut Vec<Value>, name: &str, data: &Value) -> io::Result<()> 
 }
 
 pub(super) fn entries(extensions: &Value) -> io::Result<Value> {
-    array(extensions)?.iter().map(|entry| {
-        let name = core(entry)?;
-        let mut config = entry.get("config").cloned().unwrap_or_else(|| json!({}));
-        if let Some(config) = config.as_object_mut() { config.remove("__specific"); }
-        if !config.is_object() && config != "-" { return Err(invalid("command aspect config")); }
-        Ok(json!({"name":name,"stringId":name,"idWithoutVersion":name,
-            "configJson":serde_json::to_string(&config).map_err(io::Error::other)?,
-            "configPretty":serde_json::to_string_pretty(&config).map_err(io::Error::other)?,
-            "config":config,"data":entry.get("data").cloned().unwrap_or_else(|| json!({})),"dataUndefinedKeys":[]}))
-    }).collect::<io::Result<Vec<_>>>().map(Value::Array)
-}
-
-fn core(entry: &Value) -> io::Result<&str> {
-    let name = entry["name"].as_str().ok_or_else(|| invalid("command aspect identity"))?;
-    if name == DEPRECATION {
-        passive_deprecation(&entry["config"])?;
-    } else if name == REMOVAL {
-        passive_removal(&entry["config"])?;
-    } else if name == BUILDER {
-        passive_builder(&entry["config"])?;
-    } else if !CORES.contains(&name) {
-        return Err(invalid("command custom aspect"));
-    }
-    Ok(name)
-}
-
-fn passive_builder(config: &Value) -> io::Result<()> {
-    let fields = config.as_object().ok_or_else(|| invalid("command builder configuration"))?;
-    if fields
-        .iter()
-        .any(|(name, value)| name != "__specific" || !value.is_boolean())
-    {
-        return Err(invalid("command unsupported builder configuration"));
-    }
-    Ok(())
-}
-
-fn passive_deprecation(config: &Value) -> io::Result<()> {
-    let fields = config.as_object().ok_or_else(|| invalid("command deprecation configuration"))?;
-    if fields
-        .iter()
-        .any(|(name, value)| {
-            !matches!(name.as_str(), "deprecate" | "__specific") || !value.is_boolean()
-        })
-    {
-        return Err(invalid("command unsupported deprecation configuration"));
-    }
-    Ok(())
-}
-
-fn passive_removal(config: &Value) -> io::Result<()> {
-    let fields = config.as_object().ok_or_else(|| invalid("command removal configuration"))?;
-    if fields
-        .iter()
-        .any(|(name, value)| {
-            !matches!(name.as_str(), "removed" | "removeOnMain" | "__specific")
-                || !value.is_boolean()
-        })
-        || fields.get("removed") != Some(&Value::Bool(true))
-    {
-        return Err(invalid("command unsupported removal configuration"));
-    }
-    Ok(())
+    super::scope::entries(extensions)
 }
 
 pub(super) fn configuration_cores() -> Vec<&'static str> {

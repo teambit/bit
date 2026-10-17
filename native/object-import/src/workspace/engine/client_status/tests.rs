@@ -108,17 +108,28 @@ fn models_and_workspace_bytes_are_owned_by_rust() {
     assert_eq!(inspect(&fixture).unwrap()["modified"], json!(["test.scope/alpha"]));
 }
 #[test]
-fn unsupported_configuration_and_incomplete_plans_cannot_publish() {
+fn effective_configuration_still_requires_a_complete_inventory_before_publication() {
     let fixture = Fixture::new();
     let mut state = State::default();
     fixture.prepare(&mut state).unwrap();
     assert!(complete(&mut state).is_err());
     assert!(complete(&mut state).is_err());
     fs::write(fixture.0.join("home/.bitrc.jsonc"), b"{}").unwrap();
+    assert!(fixture.prepare(&mut state).is_ok());
+    assert!(complete(&mut state).is_err());
+    fs::write(fixture.0.join("home/.bitrc.jsonc"), b"[]").unwrap();
     assert!(fixture.prepare(&mut state).is_err());
     fs::remove_file(fixture.0.join("home/.bitrc.jsonc")).unwrap();
-    fs::write(fixture.0.join("workspace.jsonc"), br#"{"custom.scope/hook":{}}"#).unwrap();
+    fs::write(
+        fixture.0.join("workspace.jsonc"),
+        br#"{"teambit.workspace/workspace":{"defaultScope":"test.scope"},"custom.scope/hook":{}}"#,
+    )
+    .unwrap();
+    assert!(fixture.prepare(&mut state).is_ok());
+    assert!(complete(&mut state).is_err());
+    fs::write(fixture.0.join("workspace.jsonc"), br#"{"teambit.workspace/workspace":{"defaultScope":"test.scope"},"custom.scope/hook":true}"#).unwrap();
     assert!(fixture.prepare(&mut state).is_err());
+    assert!(!fixture.0.join(".bit/cache").exists());
 }
 
 #[test]

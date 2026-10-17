@@ -88,6 +88,13 @@ impl PreparedImport {
         merge::remote_refs(self, record)
     }
 
+    /// Lane import retains the fetched Lane in the local index as well as its refs.
+    pub(crate) fn publish_imported_lane(&mut self, id: &Id, incoming: &Record) -> io::Result<()> {
+        let old = self.load_lane(id)?;
+        merge::merge(self, old.as_ref(), incoming)?;
+        Ok(())
+    }
+
     pub(crate) fn fetched_lane(&self) -> Option<&Record> {
         self.cache.fetched_lane.as_ref()
     }
@@ -363,7 +370,7 @@ fn hidden_entry(row: &Value) -> io::Result<Entry> {
     crate::merge_history::hash(&head)?;
     Ok(Entry { identity, head, hidden: true })
 }
-fn component_identity(value: &Value) -> io::Result<String> {
+pub(crate) fn component_identity(value: &Value) -> io::Result<String> {
     let scope = text(value, "scope")?;
     let name = text(value, "name")?;
     if scope.is_empty()
@@ -397,7 +404,7 @@ fn component_identity(value: &Value) -> io::Result<String> {
     }
     Ok(format!("{scope}/{name}"))
 }
-pub(super) fn validate_value(id: &Id, value: &Value) -> io::Result<()> {
+pub(crate) fn validate_value(id: &Id, value: &Value) -> io::Result<()> {
     if value["scope"] != id.scope || value["name"] != id.name {
         return Err(invalid("command lane object identity"));
     }

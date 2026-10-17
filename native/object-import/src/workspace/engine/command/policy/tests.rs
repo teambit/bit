@@ -10,13 +10,14 @@ fn row(identity: &str, ours_conflict: bool) -> Row {
             current: Value::Null,
             versions: [Value::Null, Value::Null, Value::Null],
             package_name: identity.into(),
+            scope_only: false,
         },
         files: Vec::new(),
         merged: json!({}),
         projected: Value::Null,
         ours_conflict,
         fast_forward: false,
-        detected: None,
+        receipts: super::Receipts::default(),
     }
 }
 

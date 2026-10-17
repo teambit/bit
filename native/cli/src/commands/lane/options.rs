@@ -7,6 +7,7 @@ pub struct Options {
     pub name: String,
     pub pattern: Option<String>,
     pub strategy: Option<String>,
+    pub resolve_unrelated: Option<String>,
     pub message: Option<String>,
     pub verbose: bool,
     pub skip_install: bool,
@@ -42,10 +43,17 @@ pub fn parse(args: &[&str]) -> Option<Options> {
     if strategy.is_some_and(|strategy| !matches!(strategy, "ours" | "theirs" | "manual")) {
         return None;
     }
+    if read
+        .value("--resolve-unrelated")
+        .is_some_and(|value| !matches!(value, "ours" | "theirs"))
+    {
+        return None;
+    }
     Some(Options {
         name: name.clone(),
         pattern: pattern.map(str::to_string),
         strategy: strategy.map(str::to_string),
+        resolve_unrelated: read.value("--resolve-unrelated").map(str::to_string),
         message: read.value("--message").map(str::to_string),
         verbose: read.has("--verbose"),
         skip_install: read.has("--skip-dependency-installation"),
@@ -100,6 +108,11 @@ impl Read {
         if self.has(flag) || self.values.contains_key(flag) {
             return None;
         }
+        if flag == "--resolve-unrelated" {
+            let value = next.filter(|value| !value.starts_with('-'));
+            self.values.insert(flag.to_owned(), json!(value.unwrap_or("ours")));
+            return Some(usize::from(value.is_some()));
+        }
         if BOOLEANS.contains(&flag) {
             self.flags.push(flag.to_string());
             return Some(0);
@@ -125,6 +138,10 @@ fn read(args: &[&str]) -> Option<Read> {
             other => other,
         };
         index += 1;
+        if let Some(value) = arg.strip_prefix("--resolve-unrelated=") {
+            read.flag("--resolve-unrelated", Some(value))?;
+            continue;
+        }
         if arg.starts_with('-') {
             index += read.flag(arg, args.get(index).copied())?;
         } else {
@@ -167,10 +184,6 @@ impl Options {
             .any(|known| known == flag)
     }
 
-    pub fn no_snap(&self) -> bool {
-        self.has("--no-snap")
-    }
-
     /// The engine's command options without `operation`, as `JSON.stringify`
     /// writes them.
     pub fn request(&self) -> Value {
@@ -190,6 +203,9 @@ impl Options {
         }
         if let Some(strategy) = &self.strategy {
             options["strategy"] = json!(strategy);
+        }
+        if let Some(strategy) = &self.resolve_unrelated {
+            options["lane"]["resolveUnrelated"] = json!(strategy);
         }
         options["noSnap"] = json!(self.has("--no-snap"));
         if let Some(message) = &self.message {

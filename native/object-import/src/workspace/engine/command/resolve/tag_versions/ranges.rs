@@ -4,7 +4,7 @@ use std::{collections::HashMap, io};
 
 // Workspace-level range policy is guarded by context eligibility. This retained
 // projection carries the canonical stored/current resolver prefix.
-pub(super) fn update(materials: &mut [Material]) -> io::Result<()> {
+pub(in super::super) fn update(materials: &mut [Material]) -> io::Result<()> {
     let versions = materials
         .iter()
         .map(|material| {

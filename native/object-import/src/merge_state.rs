@@ -82,6 +82,7 @@ enum Request {
     TransferInitialize(Value),
     TransferArchive(Value),
     TransferRelease(Value),
+    TransferCancel(Value),
     TransferPending(Value),
     TransferTransactionInitialize(Value),
     TransferTransactionReceipt(Value),
@@ -330,6 +331,7 @@ fn metadata(request: Request, state: &mut State, bytes: &[u8]) -> io::Result<Val
         | Request::TransferInitialize(_)
         | Request::TransferArchive(_)
         | Request::TransferRelease(_)
+        | Request::TransferCancel(_)
         | Request::TransferPending(_)
         | Request::TransferTransactionInitialize(_)
         | Request::TransferTransactionReceipt(_)) => {
@@ -391,6 +393,7 @@ fn transfer_request(request: Request, state: &mut crate::transfer::State) -> io:
         Request::TransferArchive(input) => crate::transfer::apply("transferArchive", &input, state),
         Request::TransferPending(input) => crate::transfer::apply("transferPending", &input, state),
         Request::TransferRelease(input) => crate::transfer::apply("transferRelease", &input, state),
+        Request::TransferCancel(input) => crate::transfer::apply("transferCancel", &input, state),
         Request::TransferTransactionInitialize(input) => {
             crate::transfer::apply("transferTransactionInitialize", &input, state)
         }

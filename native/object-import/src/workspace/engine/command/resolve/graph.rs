@@ -8,7 +8,19 @@ use std::{
 };
 
 pub(super) fn project(materials: &mut [Material], repository: &mut Repository) -> io::Result<()> {
-    let saved = saved::capture(materials, repository)?;
+    project_with_saved(materials, repository, true)
+}
+
+pub(super) fn rebuild(materials: &mut [Material], repository: &mut Repository) -> io::Result<()> {
+    project_with_saved(materials, repository, false)
+}
+
+fn project_with_saved(
+    materials: &mut [Material],
+    repository: &mut Repository,
+    reuse: bool,
+) -> io::Result<()> {
+    let saved = if reuse { saved::capture(materials, repository)? } else { HashMap::new() };
     let versions: HashMap<_, _> = materials
         .iter()
         .map(|material| (material.identity.clone(), material.version.clone()))

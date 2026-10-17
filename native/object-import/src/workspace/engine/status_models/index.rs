@@ -21,7 +21,7 @@ struct Id {
 /// The scope's component index. A scope that never stored a component has
 /// none, which `ComponentsIndex` reads as empty.
 pub(super) fn read(root: &Path) -> io::Result<Vec<Item>> {
-    let file = match File::open(root.join(".bit/index.json")) {
+    let file = match File::open(crate::scope_path(root).join("index.json")) {
         Ok(file) => file,
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(Vec::new()),
         Err(error) => return Err(error),

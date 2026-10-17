@@ -18,6 +18,7 @@ use std::{
 pub struct Batch {
     root: PathBuf,
     head_only: bool,
+    selected: Option<Selected>,
     items: Vec<Plan>,
     objects: Vec<ObjectChange>,
     bitmap_before: Vec<u8>,
@@ -25,12 +26,48 @@ pub struct Batch {
     index: Option<BytesChange>,
 }
 
+#[derive(Clone)]
+struct Selected {
+    identities: Vec<String>,
+    force: bool,
+}
+
 impl Batch {
     pub fn prepare(root: &Path, head_only: bool) -> io::Result<Self> {
-        let identities = candidates(root)?;
+        Self::prepare_with(root, head_only, None)
+    }
+
+    pub fn prepare_selected(
+        root: &Path,
+        identities: &[String],
+        head_only: bool,
+        force: bool,
+    ) -> io::Result<Self> {
+        Self::prepare_with(
+            root,
+            head_only,
+            Some(Selected { identities: identities.to_vec(), force }),
+        )
+    }
+
+    fn prepare_with(root: &Path, head_only: bool, selected: Option<Selected>) -> io::Result<Self> {
+        let mut identities = candidates(root)?;
+        if let Some(selected) = &selected {
+            identities.retain(|id| selected.identities.contains(id));
+            if identities.is_empty() {
+                return Err(invalid("no selected lane components found to reset"));
+            }
+        }
         let items = identities
             .iter()
-            .map(|id| Plan::prepare(root, id, head_only, true))
+            .map(|id| {
+                Plan::prepare(
+                    root,
+                    id,
+                    head_only,
+                    selected.as_ref().is_none_or(|selected| selected.force),
+                )
+            })
             .collect::<io::Result<Vec<_>>>()?;
         let objects = project_objects(root, &items)?;
         let (bitmap_before, bitmap_after) = project_bitmap(root, &items)?;
@@ -38,6 +75,7 @@ impl Batch {
         Ok(Self {
             root: root.to_owned(),
             head_only,
+            selected,
             items,
             objects,
             bitmap_before,
@@ -54,7 +92,7 @@ impl Batch {
 
     pub fn commit(&self, file_id: &str) -> io::Result<()> {
         crate::reset_main::validate_file_id(file_id)?;
-        let fresh = Self::prepare(&self.root, self.head_only)?;
+        let fresh = Self::prepare_with(&self.root, self.head_only, self.selected.clone())?;
         if self.objects != fresh.objects
             || self.bitmap_before != fresh.bitmap_before
             || self.bitmap_after != fresh.bitmap_after
@@ -63,7 +101,7 @@ impl Batch {
             return Err(invalid("lane reset batch changed during preparation"));
         }
         for object in &self.objects {
-            let path = object_path(&self.root.join(".bit/objects"), &object.hash);
+            let path = object_path(&crate::scope_path(&self.root).join("objects"), &object.hash);
             if let Some(after) = &object.after {
                 fs::create_dir_all(
                     path.parent().ok_or_else(|| invalid("lane batch object path"))?,
@@ -74,7 +112,7 @@ impl Batch {
             }
         }
         if let Some(index) = &self.index {
-            fs::write(self.root.join(".bit/index.json"), &index.after)?;
+            fs::write(crate::scope_path(&self.root).join("index.json"), &index.after)?;
         }
         crate::reset_main::backup_bitmap(&self.root, file_id)?;
         fs::write(self.root.join(".bitmap"), &self.bitmap_after)
@@ -83,9 +121,10 @@ impl Batch {
 
 fn candidates(root: &Path) -> io::Result<Vec<String>> {
     let (scope, name, exported) = lane_context(root)?;
-    let index: Value = serde_json::from_slice(&fs::read(root.join(".bit/index.json"))?)?;
+    let index: Value =
+        serde_json::from_slice(&fs::read(crate::scope_path(root).join("index.json"))?)?;
     let hash = indexed_hash(&index, "lanes", &scope, &name)?;
-    let objects = root.join(".bit/objects");
+    let objects = crate::scope_path(root).join("objects");
     let lane = outbound::read_object(&objects, &hash, "Lane")?;
     let rows = lane["components"].as_array().ok_or_else(|| invalid("lane batch components"))?;
     let mut selected = Vec::new();
@@ -136,7 +175,7 @@ fn candidate(
 }
 
 fn project_objects(root: &Path, items: &[Plan]) -> io::Result<Vec<ObjectChange>> {
-    let objects = root.join(".bit/objects");
+    let objects = crate::scope_path(root).join("objects");
     let first = items.first().ok_or_else(|| invalid("lane batch empty"))?;
     let lane_hash = &first.objects[2].hash;
     let history_hash = &first.objects[1].hash;
@@ -250,7 +289,7 @@ fn project_index(root: &Path, items: &[Plan]) -> io::Result<Option<BytesChange>>
     if items.iter().all(|item| item.index.is_none()) {
         return Ok(None);
     }
-    let before = fs::read(root.join(".bit/index.json"))?;
+    let before = fs::read(crate::scope_path(root).join("index.json"))?;
     let mut index: Value = serde_json::from_slice(&before)?;
     let rows =
         index["components"].as_array_mut().ok_or_else(|| invalid("lane batch index components"))?;

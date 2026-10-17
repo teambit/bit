@@ -2,9 +2,31 @@
 //! workspace commands: each selected component's files and
 //! dependencies, and the commit that writes what the command staged.
 
+pub(in crate::commands) use callbacks::take_callback_environment;
+pub use callbacks::{
+    callback_issue_stdout, callback_load_stdout, callback_startup_stdout, issue_callbacks,
+    workspace_issues,
+};
+pub use commit::{commit, commit_checkout_dependencies};
+pub use snapshot::{
+    snapshot_build, snapshot_control_reads, snapshot_data, snapshot_editor,
+    snapshot_package_manifests, snapshot_pre_snap, snapshot_registry, snapshot_required,
+    snapshot_workspace_issues,
+};
+
+mod bitmap;
+mod callbacks;
+mod commit;
+mod dependencies;
+mod identities;
 mod missing;
+mod order;
+mod snapshot;
+mod target;
 
 use super::{
+    cache,
+    environments::Environments,
     fresh,
     issues::Component,
     js::{self, array, decline, full_identity, text},
@@ -15,6 +37,7 @@ use crate::commands::{
     inventory::{Inventory, Options},
 };
 use bit_install::dependencies::cache::invalidation::{deps_dir, needs_invalidation};
+use identities::{base_identity, dependency_identities, peer_identities};
 use serde_json::{Value, json};
 use std::{collections::HashMap, io, path::Path};
 
@@ -24,6 +47,12 @@ pub struct Capture {
     pub captured: Vec<Value>,
     pub comparisons: Vec<Value>,
     pub components: Vec<Component>,
+    /// Environment callbacks used by the native diagnostic checks.
+    pub environment_facts: Value,
+    /// Workspace components whose current model version is removed remotely.
+    pub remotely_removed: Vec<String>,
+    /// Bitmap targets whose directory is absent from the workspace.
+    pub invalid: HashMap<String, Value>,
     /// `retainDependencyState`: each target's dependency state, by identity.
     pub dependency_states: HashMap<String, Value>,
     /// What the commit writes to the dependency cache.
@@ -45,6 +74,10 @@ pub struct CacheWrites {
     pub replacements_only: bool,
     /// `dependencyCacheVersions`: the version a pending entry is written under.
     versions: HashMap<String, String>,
+    /// Validate fresh reads, but never read from or write to the FS dependency cache.
+    no_fs_cache: bool,
+    environment_reads: Vec<Value>,
+    callbacks: callbacks::Callbacks,
 }
 
 impl CacheWrites {
@@ -86,6 +119,10 @@ impl CacheWrites {
 /// The `captureOptions` of the write commands.
 #[derive(Default)]
 pub struct CaptureOptions {
+    /// A read-only aspect session initialized before the authoritative context snapshot.
+    pub(in crate::commands) environments: Option<Environments>,
+    /// Permit read-only consumers to capture soft-tagged and local-only components normally.
+    pub allow_special_states: bool,
     /// `verifyFreshDependencies`: cached dependencies are detected again,
     /// and any difference declines.
     pub verify: bool,
@@ -97,6 +134,30 @@ pub struct CaptureOptions {
     pub incomplete_reset: bool,
     /// A missing tracked directory is an empty current tree for `checkout reset`.
     pub missing_checkout_reset: bool,
+    /// Status reports a missing tracked directory as an invalid component.
+    pub missing_status_invalid: bool,
+}
+
+impl CaptureOptions {
+    fn validate_targets(&self, targets: &[Value]) -> io::Result<()> {
+        if !self.missing_status_invalid
+            && !self.allow_special_states
+            && bitmap::has_special_state(targets)
+        {
+            return Err(decline("bitmap state requires the canonical workspace command"));
+        }
+        Ok(())
+    }
+
+    fn scan_behavior(&self) -> ScanBehavior {
+        ScanBehavior {
+            verify: self.verify,
+            callbacks: self.missing_status_invalid || self.allow_special_states,
+            incomplete_reset: self.incomplete_reset,
+            missing_checkout_reset: self.missing_checkout_reset,
+            missing_status_invalid: self.missing_status_invalid,
+        }
+    }
 }
 
 impl Capture {
@@ -105,52 +166,47 @@ impl Capture {
         self.cache.pending
             .iter()
             .flat_map(|entry| entry.read_set().iter().cloned())
+            .chain(self.cache.environment_reads.iter().cloned())
             .collect()
     }
 }
 
-/// `captureRustClientCurrent(root, context, request, targets)`: each selected
-/// component's files and dependencies, from the cache or detected afresh.
-pub fn capture(
-    engine: &mut Engine,
-    root: &Path,
-    home: &Path,
-    context: &Value,
-    targets: &[Value],
-) -> io::Result<Capture> {
-    capture_with(engine, root, home, context, targets, CaptureOptions::default())
-}
-
-/// The capture with the write commands' options.
+/// Capture files and dependencies using the caller's read and cache policy.
 pub fn capture_with(
     engine: &mut Engine,
     root: &Path,
     home: &Path,
     context: &Value,
     targets: &[Value],
-    capture_options: CaptureOptions,
+    mut capture_options: CaptureOptions,
 ) -> io::Result<Capture> {
+    let mut environments = capture_options.environments.take().unwrap_or_else(Environments::new);
+    capture_environment(engine, root, home, context, targets, capture_options, &mut environments)
+        .map_err(|error| environments.failure(error))
+}
+
+fn capture_environment(
+    engine: &mut Engine,
+    root: &Path,
+    home: &Path,
+    context: &Value,
+    targets: &[Value],
+    capture_options: CaptureOptions,
+    environments: &mut Environments,
+) -> io::Result<Capture> {
+    capture_options.validate_targets(targets)?;
+    let context = policy::pending_context(root, context)?;
+    let snapshot = environments.is_snapshot();
+    let checkout = environments.is_checkout();
+    validate_write(root, &context, &capture_options, environments)?;
+    let context = environments.context_for(root, &context, targets)?;
+    let context = &context;
     let options: Options =
         serde_json::from_value(context["options"].clone()).map_err(io::Error::other)?;
     let inventory = Inventory::new(&options)?;
-    let reset = !targets.is_empty()
-        && (capture_options.reset || needs_invalidation(root, &deps_dir(root))?);
-    let behavior = ScanBehavior {
-        verify: capture_options.verify,
-        incomplete_reset: capture_options.incomplete_reset,
-        missing_checkout_reset: capture_options.missing_checkout_reset,
-    };
-    let mut captured = Capture {
-        captured: Vec::new(),
-        comparisons: Vec::new(),
-        components: Vec::new(),
-        dependency_states: HashMap::new(),
-        cache: CacheWrites {
-            reset,
-            versions: capture_options.cache_versions,
-            ..CacheWrites::default()
-        },
-    };
+    let mut behavior = capture_options.scan_behavior();
+    behavior.callbacks |= snapshot || checkout;
+    let mut captured = initialize(root, context, !targets.is_empty(), capture_options)?;
     let mut facts = None;
     for target in targets {
         let scan = Scan {
@@ -160,11 +216,69 @@ pub fn capture_with(
             context,
             inventory: &inventory,
             facts: &mut facts,
+            environments,
             behavior,
         };
         scan.target(target, &mut captured)?;
     }
+    if snapshot {
+        order::snapshot(root, &mut captured)?;
+    }
+    if behavior.callbacks {
+        environments.callbacks(context, &mut captured, behavior.missing_status_invalid)?;
+    }
     Ok(captured)
+}
+
+fn validate_write(
+    root: &Path,
+    context: &Value,
+    options: &CaptureOptions,
+    environments: &Environments,
+) -> io::Result<()> {
+    if !environments.is_snapshot()
+        && !environments.is_checkout()
+        && !options.missing_status_invalid
+        && !options.allow_special_states
+    {
+        Environments::require_native_write(root, context)?;
+    }
+    Ok(())
+}
+
+fn initialize(
+    root: &Path,
+    context: &Value,
+    has_targets: bool,
+    capture_options: CaptureOptions,
+) -> io::Result<Capture> {
+    let no_fs_cache = cache::no_fs_cache(root);
+    let reset = !no_fs_cache
+        && has_targets
+        && (capture_options.reset || needs_invalidation(root, &deps_dir(root))?);
+    Ok(Capture {
+        captured: Vec::new(),
+        comparisons: Vec::new(),
+        components: Vec::new(),
+        environment_facts: {
+            let mut facts = context["environmentFacts"].clone();
+            facts["checkoutCacheMisses"] = json!({});
+            facts
+        },
+        remotely_removed: Vec::new(),
+        invalid: HashMap::new(),
+        dependency_states: HashMap::new(),
+        cache: CacheWrites {
+            reset,
+            no_fs_cache,
+            versions: capture_options.cache_versions,
+            environment_reads: context["environmentReadSet"]
+                .as_array()
+                .cloned()
+                .unwrap_or_default(),
+            ..CacheWrites::default()
+        },
+    })
 }
 
 struct Scan<'s> {
@@ -176,141 +290,19 @@ struct Scan<'s> {
     /// Loaded on the first fresh detection: it may run Node once.
     facts: &'s mut Option<fresh::Facts>,
     behavior: ScanBehavior,
+    environments: &'s mut Environments,
 }
 
 #[derive(Clone, Copy)]
 struct ScanBehavior {
+    callbacks: bool,
     verify: bool,
     incomplete_reset: bool,
     missing_checkout_reset: bool,
+    missing_status_invalid: bool,
 }
 
 impl Scan<'_> {
-    /// One target: its policy, its files, its dependencies.
-    fn target(mut self, target: &Value, captured: &mut Capture) -> io::Result<()> {
-        let policy = policy::status_policy(self.context, target)?;
-        let directory = text(target.get("directory"))?;
-        if missing::capture(
-            self.root,
-            self.behavior.missing_checkout_reset,
-            target,
-            directory,
-            captured,
-        )? {
-            return Ok(());
-        }
-        let files = self.files(directory)?;
-        if missing::main_file(
-            self.root,
-            self.behavior.missing_checkout_reset,
-            target,
-            directory,
-            &files,
-            captured,
-        )? {
-            return Ok(());
-        }
-        let Some(dependencies) = self.dependencies(target, directory, &files, &policy, captured)?
-        else {
-            return Ok(());
-        };
-        record(target, directory, &files, &policy, &dependencies, captured)
-    }
-
-    fn dependencies(
-        &mut self,
-        target: &Value,
-        directory: &str,
-        files: &[String],
-        policy: &policy::Policy,
-        captured: &mut Capture,
-    ) -> io::Result<Option<Value>> {
-        let mut dependencies = if captured.cache.reset && directory != "." {
-            json!({ "needsDetection": true })
-        } else {
-            self.cached(target, directory, files, policy)?
-        };
-        if dependencies.get("needsDetection") == Some(&Value::Bool(true)) {
-            let (detected, pending) = match self.detect(target, files, policy) {
-                Ok(value) => value,
-                Err(error)
-                    if self.behavior.incomplete_reset
-                        && error
-                            .to_string()
-                            .contains(
-                                "dependency graph extraction requires canonical fallback",
-                            ) =>
-                {
-                    missing::record_incomplete(target, directory, files, captured)?;
-                    return Ok(None);
-                }
-                Err(error) => return Err(error),
-            };
-            dependencies = detected;
-            captured.cache.pending.push(pending);
-        } else if self.behavior.verify {
-            let (detected, pending) = self.verified(target, files, policy, &dependencies)?;
-            dependencies = detected;
-            captured.cache.pending.push(pending);
-        }
-        Ok(Some(dependencies))
-    }
-
-    /// `verifyFreshDependencies`: the cached dependencies detected again;
-    /// any difference in metadata or issues declines.
-    fn verified(
-        &mut self,
-        target: &Value,
-        files: &[String],
-        policy: &policy::Policy,
-        cached: &Value,
-    ) -> io::Result<(Value, fresh::Pending)> {
-        let (detected, pending) = self.detect(target, files, policy)?;
-        let current = |deps: &Value| {
-            policy::current_metadata(target, policy, deps).map(|meta| meta.to_string())
-        };
-        let issues = |deps: &Value| deps.get("issues").map(Value::to_string);
-        if current(&detected)? != current(cached)? || issues(&detected) != issues(cached) {
-            return Err(decline("cached dependencies differ from a fresh detection"));
-        }
-        Ok((detected, pending))
-    }
-
-    /// `dependencyPolicyCached`.
-    fn cached(
-        &mut self,
-        target: &Value,
-        directory: &str,
-        files: &[String],
-        policy: &policy::Policy,
-    ) -> io::Result<Value> {
-        let component_root = self.root.join(directory);
-        let mut request = json!({
-            "kind": "dependencyPolicyCached",
-            "root": self.root,
-            "componentRoot": component_root,
-            "identity": full_identity(target)?,
-            "files": files.iter().map(|file| component_root.join(file)).collect::<Vec<_>>(),
-        });
-        spread(&mut request, &policy.input)?;
-        self.engine.request(&request)
-    }
-
-    /// `readFreshDependencies`.
-    fn detect(
-        &mut self,
-        target: &Value,
-        files: &[String],
-        policy: &policy::Policy,
-    ) -> io::Result<(Value, fresh::Pending)> {
-        if self.facts.is_none() {
-            *self.facts = Some(fresh::Facts::new(self.home)?);
-        }
-        let facts = self.facts.as_ref().ok_or_else(|| decline("status facts"))?;
-        let detection = fresh::Detection { root: self.root, context: self.context, facts };
-        detection.read(self.engine, target, files, policy)
-    }
-
     /// The component's files, relative to its directory.
     fn files(&mut self, directory: &str) -> io::Result<Vec<String>> {
         let others: Vec<_> = if directory == "." {
@@ -369,13 +361,11 @@ fn record(
         captured.comparisons.push(entry);
     }
     captured.components.push(Component {
+        ignored: policy.ignored_issues()?,
         identity: full_identity(target)?,
         package_name: policy.package_name.clone(),
         dependencies: dependency_identities(dependencies)?,
-        issues: dependencies
-            .get("issues")
-            .cloned()
-            .unwrap_or(Value::Null),
+        issues: policy.issues(dependencies)?,
     });
     Ok(())
 }
@@ -385,81 +375,6 @@ pub fn spread(request: &mut Value, input: &Value) -> io::Result<()> {
     let request = request.as_object_mut().ok_or_else(|| decline("status request"))?;
     for (key, value) in input.as_object().ok_or_else(|| decline("status policy input"))? {
         request.insert(key.clone(), value.clone());
-    }
-    Ok(())
-}
-
-/// The identities of the peer lifecycle.
-fn peer_identities(dependencies: &Value) -> io::Result<Vec<String>> {
-    let state = &dependencies["state"];
-    let entries = array(state.get("entries"), "dependency entries")?;
-    let lifecycles = array(state.get("components"), "dependency lifecycles")?;
-    let peers = array(lifecycles.get(2), "peer dependencies")?;
-    peers
-        .iter()
-        .map(|index| {
-            let entry = index
-                .as_u64()
-                .and_then(|index| entries.get(index as usize));
-            let entry = entry.ok_or_else(|| decline("status dependency entry"))?;
-            text(entry.get("identity")).map(str::to_string)
-        })
-        .collect()
-}
-
-/// Every dependency identity, in lifecycle order.
-fn dependency_identities(dependencies: &Value) -> io::Result<Vec<String>> {
-    let state = &dependencies["state"];
-    let entries = array(state.get("entries"), "dependency entries")?;
-    let mut identities = Vec::new();
-    for indices in array(state.get("components"), "dependency lifecycles")? {
-        for index in array(Some(indices), "dependency indices")? {
-            let entry = index
-                .as_u64()
-                .and_then(|index| entries.get(index as usize));
-            let entry = entry.ok_or_else(|| decline("status dependency entry"))?;
-            identities.push(text(entry.get("identity"))?.to_string());
-        }
-    }
-    Ok(identities)
-}
-
-/// The identity without its `@version`.
-fn base_identity(identity: &str) -> &str {
-    identity
-        .rfind('@')
-        .map_or(identity, |separator| &identity[..separator])
-}
-
-/// `capture.commit()`: staged histories validated, dependency caches written,
-/// then the histories written.
-pub fn commit(
-    engine: &mut Engine,
-    root: &Path,
-    context: &Value,
-    capture: &Capture,
-) -> io::Result<()> {
-    let plans = array(context.get("pendingHistory"), "history plans")?;
-    if !plans.is_empty() {
-        let validated: Value = engine.request(
-            &json!({"kind": "statusHistoryValidate", "root": root, "plans": plans}),
-        )?;
-        if validated.get("fresh") != Some(&Value::Bool(true)) {
-            return Err(decline("status history changed"));
-        }
-    }
-    if !capture.cache.is_empty() {
-        let entries = capture.cache.entries();
-        fresh::commit(engine, root, &entries, capture.cache.reset)?;
-    }
-    if plans.is_empty() {
-        return Ok(());
-    }
-    let committed: Value =
-        engine.request(&json!({"kind": "statusHistoryCommit", "root": root, "plans": plans}))?;
-    let written = committed.get("written").and_then(Value::as_u64);
-    if written.is_none_or(|written| written > plans.len() as u64) {
-        return Err(decline("status history commit receipt"));
     }
     Ok(())
 }

@@ -1,6 +1,9 @@
 //! Retained public inbound transfer. Prepare performs remote I/O and validates
 //! the complete import without touching the user's repository; Apply publishes.
 
+pub(in crate::workspace::engine) mod autosync;
+pub(in crate::workspace::engine) mod policy;
+
 use super::{
     super::{client_status::config, invalid},
     State,
@@ -12,9 +15,13 @@ use std::{
     io,
     path::{Path, PathBuf},
 };
+mod dependencies;
 mod details;
+mod lane_workspace;
 mod lanes;
+mod progress;
 mod remote;
+mod validation;
 mod write;
 
 #[cfg(test)]
@@ -56,8 +63,36 @@ struct Options {
     all_history: bool,
     from_original_scope: bool,
     skip_dependency_installation: bool,
+    #[serde(flatten)]
+    resolution: Resolution,
+    #[serde(flatten)]
+    dependencies: Traversal,
     lanes: bool,
     components: bool,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct Resolution {
+    #[serde(default)]
+    override_existing: bool,
+    #[serde(default)]
+    merge_strategy: Option<String>,
+    #[serde(default)]
+    path: Option<String>,
+}
+
+#[derive(Default, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct Traversal {
+    #[serde(default)]
+    import_dependencies: bool,
+    #[serde(default)]
+    fetch_deps: bool,
+    #[serde(default)]
+    import_head_dependencies: bool,
+    #[serde(default)]
+    dependencies_depth: Option<usize>,
 }
 
 /// `commandInboundList`: the remote listings of wildcard patterns, before
@@ -68,6 +103,8 @@ pub(in crate::workspace::engine) struct List {
     root: PathBuf,
     /// `<scope>/<namespaces with wildcards>`.
     patterns: Vec<String>,
+    #[serde(default)]
+    lane_only: bool,
     #[serde(flatten)]
     transport: Transport,
 }
@@ -99,62 +136,153 @@ pub(super) struct Retained {
     workspace: Option<write::Prepared>,
 }
 
+struct ReceiptRoots<'a> {
+    roots: &'a [Target],
+    prefetched: &'a [Target],
+    head_dependencies: bool,
+}
+
 pub(in crate::workspace::engine) fn prepare(
     input: &Prepare,
     state: &mut State,
 ) -> io::Result<(usize, Value)> {
     state.inbound = None;
-    validate(input)?;
+    validation::validate(input)?;
     if input.options.lanes {
         return lanes::prepare(input, state);
     }
-    let targets = targets(input)?;
-    let virtual_remotes = remote::objects(input, &targets)?;
-    let import = command_import::prepare_with_virtual(
-        &input.root,
-        &input.global_remotes_file,
-        &targets,
-        &virtual_remotes,
-    )?;
-    let workspace = if input.options.objects_only {
-        None
+    let roots = targets(input)?;
+    let (targets, mut import) = prepare_targets(input, &roots)?;
+    let workspace = prepare_workspace(input, &targets, &mut import)?;
+    state.sequence = state.sequence.wrapping_add(1);
+    let token = format!("inbound-{}", state.sequence);
+    let mut receipt = if matches!(input.operation.as_str(), "status" | "diff") {
+        json!({"token":token,"importedIds":[],"progress":[],"refreshCount":import.main_refresh.count,"refreshObjects":import.main_refresh.objects})
     } else {
-        Some(write::prepare(
+        let prefetched = if input.options.dependencies.dependencies_depth.is_some() {
+            roots.as_slice()
+        } else {
+            &[]
+        };
+        receipt(
             &input.root,
             &targets,
             &import,
-            input.bitmap_history_file_id.as_deref(),
-        )?)
+            workspace.as_ref(),
+            &ReceiptRoots {
+                roots: &roots,
+                prefetched,
+                head_dependencies: input.options.dependencies.import_head_dependencies,
+            },
+            &token,
+        )?
     };
-    state.sequence = state.sequence.wrapping_add(1);
-    let token = format!("inbound-{}", state.sequence);
-    let receipt = receipt(&input.root, &targets, &import, &token)?;
+    if let Some(policy) = workspace.as_ref().and_then(write::Prepared::policy_input) {
+        receipt["checkoutPolicyPreparation"] = policy.clone();
+    }
+    if let Some(lane) = remote::active_lane(&input.root)? {
+        receipt["currentLane"] = json!(format!("{}/{}", lane.scope, lane.name));
+    }
     let count = targets.len();
     state.inbound = Some(Retained { token, receipt: receipt.clone(), import, workspace });
     Ok((count, receipt))
+}
+
+fn prepare_targets(
+    input: &Prepare,
+    roots: &[Target],
+) -> io::Result<(Vec<Target>, command_import::PreparedImport)> {
+    if input.operation == "import"
+        && let Some(lane) = remote::active_lane(&input.root)?
+    {
+        return lane_workspace::prepare(input, roots, &lane);
+    }
+    let virtual_remotes = remote::objects(input, roots)?;
+    let initial = prepare_import(input, roots, &virtual_remotes)?;
+    let targets = dependencies::expand(input, roots, &initial)?;
+    if targets.len() == roots.len() {
+        return Ok((targets, initial));
+    }
+    let virtual_remotes = remote::objects(input, &targets)?;
+    let import = prepare_import(input, &targets, &virtual_remotes)?;
+    Ok((targets, import))
+}
+
+fn prepare_workspace(
+    input: &Prepare,
+    targets: &[Target],
+    import: &mut command_import::PreparedImport,
+) -> io::Result<Option<write::Prepared>> {
+    if input.options.objects_only {
+        return Ok(None);
+    }
+    write::prepare(
+        &input.root,
+        targets,
+        import,
+        input.bitmap_history_file_id.as_deref(),
+        write::Options {
+            override_existing: input.options.resolution.override_existing,
+            path: input.options.resolution.path.as_deref(),
+            install_requested: !input.options.skip_dependency_installation,
+            merge_strategy: input.options.resolution.merge_strategy.as_deref(),
+        },
+    )
+    .map(Some)
+}
+
+fn prepare_import(
+    input: &Prepare,
+    targets: &[Target],
+    virtual_remotes: &[command_import::VirtualRemote],
+) -> io::Result<command_import::PreparedImport> {
+    if input.operation == "diff" {
+        let mut imported = command_import::prepare_lane_with_virtual(
+            &input.root,
+            &input.global_remotes_file,
+            virtual_remotes,
+        )?;
+        imported.prepare_diff_versions(targets)?;
+        return Ok(imported);
+    }
+    if input.operation == "status" {
+        command_import::prepare_status_with_virtual(
+            &input.root,
+            &input.global_remotes_file,
+            targets,
+            virtual_remotes,
+        )
+    } else {
+        command_import::prepare_inbound_with_virtual(
+            &input.root,
+            &input.global_remotes_file,
+            targets,
+            virtual_remotes,
+            input.options.all_history,
+            input.options.dependencies.fetch_deps,
+        )
+    }
 }
 
 fn receipt(
     root: &Path,
     targets: &[Target],
     import: &command_import::PreparedImport,
+    workspace: Option<&write::Prepared>,
+    selection: &ReceiptRoots<'_>,
     token: &str,
 ) -> io::Result<Value> {
     let imported_ids = targets
         .iter()
-        .map(|target| imported_identity(target, import))
+        .map(|target| imported_identity(root, target, import))
         .collect::<io::Result<Vec<_>>>()?;
-    let details = details::details(root, targets, import)?;
-    let progress = import.progress
-        .iter()
-        .map(|row| {
-            json!({
-                "reason":row.reason,"ids":row.ids,
-                "components":row.components.len(),"objects":row.objects.len(),
-                "objectRequest":row.object_request,
-            })
-        })
-        .collect::<Vec<_>>();
+    let details = details::details(root, targets, import, workspace, selection.prefetched)?;
+    let progress = progress::rows(
+        import,
+        selection.roots,
+        !selection.prefetched.is_empty(),
+        selection.head_dependencies,
+    );
     Ok(json!({
         "token":token,"owner":"rust","importedIds":imported_ids,
         "importDetails":details,"progress":progress,
@@ -194,6 +322,9 @@ pub(in crate::workspace::engine) fn apply(
     if input.token != retained.token {
         return Err(invalid("inbound owner token"));
     }
+    if let Some(workspace) = &retained.workspace {
+        workspace.validate_policy()?;
+    }
     retained.import.commit()?;
     if let Some(workspace) = retained.workspace {
         workspace.commit()?;
@@ -204,51 +335,18 @@ pub(in crate::workspace::engine) fn apply(
     Ok((count, receipt))
 }
 
-fn validate(input: &Prepare) -> io::Result<()> {
-    for path in
-        [&input.root, &input.home, &input.global_remotes_file, &input.transport.global_config_dir]
-    {
-        super::super::path(path)?;
+/// Compare the current lane with main using the retained remote import before
+/// publishing it. The status command can still decline without changing scope.
+pub(in crate::workspace::engine) fn lane_updates(
+    input: &super::super::status_models::lane_updates::Request,
+    state: &State,
+    pool: &rayon::ThreadPool,
+) -> io::Result<(usize, Value)> {
+    let retained = state.inbound.as_ref().ok_or_else(|| invalid("status inbound owner missing"))?;
+    if input.token != retained.token {
+        return Err(invalid("status inbound owner token"));
     }
-    if !input.transport.node_executable.is_absolute()
-        || input.transport.bit_version.is_empty()
-        || input.ids.len() > 4096
-    {
-        return Err(invalid("inbound command requires canonical lifecycle"));
-    }
-    if input.options.from_original_scope || !valid_operation(input) {
-        return Err(invalid("inbound command requires canonical lifecycle"));
-    }
-    if input.options.lanes
-        && (input.ids.is_empty() || input.ids.len() > 32 || input.options.all_history)
-    {
-        return Err(invalid("inbound lanes require explicit IDs"));
-    }
-    if !valid_write_mode(input) || input.root.join(".bitTmp").try_exists()? {
-        return Err(invalid("inbound command requires canonical lifecycle"));
-    }
-    Ok(())
-}
-fn valid_operation(input: &Prepare) -> bool {
-    match input.operation.as_str() {
-        "fetch" => {
-            (input.options.components || input.options.lanes)
-                && input.options.components != input.options.lanes
-                && input.options.objects_only
-        }
-        "import" => !input.options.components,
-        _ => false,
-    }
-}
-/// Objects-only imports write no bitmap history. A write keeps one; the caller
-/// installs dependencies after publication unless they are skipped.
-fn valid_write_mode(input: &Prepare) -> bool {
-    if input.options.objects_only {
-        !input.options.skip_dependency_installation
-            && input.bitmap_history_file_id.is_none()
-    } else {
-        input.bitmap_history_file_id.is_some()
-    }
+    super::super::status_models::lane_updates::read(input, &retained.import.overlay, pool)
 }
 
 fn targets(input: &Prepare) -> io::Result<Vec<Target>> {
@@ -301,19 +399,30 @@ fn identity(target: &Target) -> io::Result<String> {
 }
 
 fn imported_identity(
+    root: &Path,
     target: &Target,
     imported: &command_import::PreparedImport,
 ) -> io::Result<String> {
     let scope = target.scope.as_deref().ok_or_else(|| invalid("inbound target scope"))?;
-    let model = imported.overlay
-        .models()
-        .into_iter()
-        .find(|model| model["scope"] == scope && model["name"] == target.name)
-        .ok_or_else(|| invalid("inbound imported model"))?;
+    let model = details::model(root, imported, scope, &target.name)?;
     let version = if target.version == "latest" {
-        details::head_as_tag_or_hash(model)?
+        details::head_as_tag_or_hash(model.as_ref())?
     } else {
         target.version.clone()
     };
     Ok(format!("{scope}/{}@{version}", target.name))
+}
+
+/// The validated, unpublished object view retained by an inbound command.
+pub(in crate::workspace::engine) fn overlay<'a>(
+    state: &'a State,
+    token: Option<&str>,
+) -> io::Result<Option<&'a command_import::Overlay>> {
+    let Some(token) = token else { return Ok(None) };
+    let retained = state.inbound.as_ref().ok_or_else(|| invalid("diff inbound owner missing"))?;
+    if token != retained.token {
+        return Err(invalid("diff inbound owner token"));
+    }
+    retained.import.validate()?;
+    Ok(Some(&retained.import.overlay))
 }

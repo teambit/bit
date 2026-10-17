@@ -8,7 +8,7 @@
 //! this module cannot match like Node run on the Node.js CLI.
 
 pub(in crate::commands) mod bitmap;
-mod table;
+pub(super) mod table;
 
 use super::{color::Chalk, engine::Engine, status::collate, workspace_command};
 use crate::{commands::Command, history::History, native::Outcome, workspace};

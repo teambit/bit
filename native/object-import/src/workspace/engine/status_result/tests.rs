@@ -28,6 +28,21 @@ fn clean_main_and_modified_dependency_autotag() {
     assert_eq!(output["autoTagPendingComponents"], json!(["scope/beta"]));
 }
 #[test]
+fn invalid_component_is_reported_without_entering_the_autotag_graph() {
+    let mut input = fixture();
+    input["targets"][0]["modified"] = json!(true);
+    input["targets"][1]["invalid"] = json!({"name":"ComponentNotFoundInPath","code":127,
+        "isUserError":true,"path":"beta"});
+    let output = result(input);
+    assert_eq!(output["modifiedComponents"], json!(["scope/alpha"]));
+    assert_eq!(output["autoTagPendingComponents"], json!([]));
+    let expected = json!([
+        {"id":"scope/beta","error":
+            {"name":"ComponentNotFoundInPath","code":127,"isUserError":true,"path":"beta"}},
+    ]);
+    assert_eq!(output["invalidComponents"], expected);
+}
+#[test]
 fn detached_staged_labels_union_main_lineage_in_canonical_order() {
     let mut input = fixture();
     input["models"][0]["detachedHeads"] = json!({"heads":["ccc"]});

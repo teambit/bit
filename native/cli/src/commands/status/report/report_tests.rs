@@ -8,14 +8,18 @@ fn parses_the_report_flags() {
     assert_eq!(
         parse(&["-w", "--verbose", "--strict", "--fail-on-error", "--expand"]),
         Some(Flags {
+            lanes: false,
             verbose: true,
             warnings: true,
             strict: true,
             fail_on_error: true,
-            expand: true
+            expand: true,
+            ignore_circular: false,
         }),
     );
-    for args in [&["-c"][..], &["--quick"], &["--lanes"], &["-w", "--warnings"], &["-j", "-w"]] {
+    assert_eq!(parse(&["--lanes"]), Some(Flags { lanes: true, ..Flags::default() }));
+    assert_eq!(parse(&["-c"]), Some(Flags { ignore_circular: true, ..Flags::default() }));
+    for args in [&["--quick"][..], &["-w", "--warnings"], &["-j", "-w"]] {
         assert_eq!(parse(args), None, "{args:?}");
     }
 }
@@ -158,6 +162,6 @@ fn collapses_auto_tag_pending_components() {
 
 #[test]
 fn declines_sections_left_to_node() {
-    let fields = json!({"localOnly": ["remote/one"]});
+    let fields = json!({"pendingUpdatesFromMain": ["remote/one"]});
     assert!(report(&result(&fields), &context(), &Flags::default(), Chalk::new(false)).is_err());
 }

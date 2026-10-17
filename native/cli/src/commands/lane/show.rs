@@ -1,6 +1,6 @@
 //! Native `bit lane show` for a local lane or main.
 
-use super::list::{LaneData, components_report, read};
+use super::list::{LaneData, components_report, project_http, read, read_http, read_remote};
 use crate::{
     commands::{
         color::Chalk,
@@ -20,43 +20,94 @@ use std::{
     process::ExitCode,
 };
 
-/// `LaneShowCmd` for a local lane or main. Remote reads still use Node.
+/// `LaneShowCmd` for a local lane, main, or a configured file remote.
 pub(super) fn show(args: &[OsString], lane_args: &[&str]) -> io::Result<Outcome> {
-    let Some((name, json)) = parse(lane_args) else {
+    let Some((name, json, remote)) = parse(lane_args) else {
         return Ok(Outcome::Declined("lane show flags outside the native grammar".into()));
     };
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".into()));
     };
-    let (lanes, (current, _)) = match read(&root) {
-        Ok(data) => data,
+    let lane = match select_lane(&root, name, remote) {
+        Ok(lane) => lane,
         Err(error) => return Ok(Outcome::Declined(format!("lane show: {error}"))),
     };
-    let target = name.unwrap_or_else(|| current["name"].as_str().unwrap_or("main"));
-    let Some(lane) = find(&lanes, target) else {
+    let Some(lane) = lane else {
         return Ok(Outcome::Declined("lane show name is absent or ambiguous".into()));
     };
     if json {
-        return emit_json(&root, args, lane);
+        return match &lane {
+            Selected::File(lane) => emit_json(&root, args, &lane.json()),
+            Selected::Http(row) => emit_json(&root, args, row),
+        };
     }
-    let report = Report { data: show_report(lane, Chalk::detect(args))?, code: 0, details: None };
+    let lane = match lane {
+        Selected::File(lane) => lane,
+        Selected::Http(row) => Box::new(project_http(&row)?),
+    };
+    let report = Report { data: show_report(&lane, Chalk::detect(args))?, code: 0, details: None };
     workspace_command::execute_with(&root, args, "show", &report, |_| Ok(()))
 }
 
-fn parse<'a>(args: &[&'a str]) -> Option<(Option<&'a str>, bool)> {
+enum Selected {
+    File(Box<LaneData>),
+    Http(Value),
+}
+
+fn select_lane(root: &Path, name: Option<&str>, remote: bool) -> io::Result<Option<Selected>> {
+    let (local, (current, _)) = read(root)?;
+    let target = name.unwrap_or_else(|| current["name"].as_str().unwrap_or("main"));
+    if !remote {
+        return Ok(find(&local, target)
+            .cloned()
+            .map(Box::new)
+            .map(Selected::File));
+    }
+    let scope = target
+        .split_once('/')
+        .map(|(scope, _)| scope.to_owned())
+        .or_else(|| {
+            find(&local, target)
+                .and_then(|lane| lane.id["scope"].as_str())
+                .map(str::to_owned)
+        });
+    let scope = scope.ok_or_else(|| io::Error::other("remote lane identity"))?;
+    if let Ok((lanes, _)) = read_remote(root, &scope, false) {
+        return Ok(find(&lanes, target)
+            .cloned()
+            .map(Box::new)
+            .map(Selected::File));
+    }
+    let name = target.rsplit_once('/').map_or(target, |(_, name)| name);
+    let rows = read_http(root, &scope, Some(name))?;
+    let lane = rows
+        .into_iter()
+        .find(|row| {
+            row["id"]["name"] == target
+                || format!("{scope}/{}", row["id"]["name"].as_str().unwrap_or_default()) == target
+        });
+    Ok(lane.map(Selected::Http))
+}
+
+fn parse<'a>(args: &[&'a str]) -> Option<(Option<&'a str>, bool, bool)> {
     let mut json = false;
+    let mut remote = false;
     let mut name = None;
     for arg in args {
         match *arg {
             "--json" | "-j" if !json => json = true,
+            "--remote" | "-r" if !remote => remote = true,
             value if !value.starts_with('-') && name.is_none() => name = Some(value),
             _ => return None,
         }
     }
-    Some((name, json))
+    if remote && name.is_none() {
+        return None;
+    }
+    Some((name, json, remote))
 }
 
-fn find<'a>(lanes: &'a [LaneData], target: &str) -> Option<&'a LaneData> {
+pub(super) fn find<'a>(lanes: &'a [LaneData], target: &str) -> Option<&'a LaneData> {
     let matches: Vec<_> = lanes
         .iter()
         .filter(|lane| {
@@ -68,10 +119,10 @@ fn find<'a>(lanes: &'a [LaneData], target: &str) -> Option<&'a LaneData> {
     (matches.len() == 1).then(|| matches[0])
 }
 
-fn emit_json(root: &Path, args: &[OsString], lane: &LaneData) -> io::Result<Outcome> {
+fn emit_json(root: &Path, args: &[OsString], lane: &Value) -> io::Result<Outcome> {
     let history = History::start(root, args);
     let mut stdout = io::stdout().lock();
-    stdout.write_all(serde_json::to_string_pretty(&lane.json())?.as_bytes())?;
+    stdout.write_all(serde_json::to_string_pretty(lane)?.as_bytes())?;
     stdout.flush()?;
     history.end(true);
     Ok(Outcome::Exit(ExitCode::SUCCESS))

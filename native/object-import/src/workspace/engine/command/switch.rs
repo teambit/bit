@@ -38,6 +38,11 @@ pub(super) fn context(
         return Err(invalid("switch staged main components require export or reset"));
     }
     attach_versions(&mut context)?;
+    context["switchImportCount"] = json!(progress::import_count(
+        &request.root,
+        &context,
+        context["targets"].as_array().unwrap(),
+    )?);
     selection.imported.validate()?;
     Ok((context, Some(selection.imported)))
 }
@@ -341,7 +346,7 @@ pub(super) fn plan(
 }
 
 fn staged_main(root: &std::path::Path, context: &Value) -> io::Result<bool> {
-    let bytes = match std::fs::read(root.join(".bit/staged-snaps")) {
+    let bytes = match std::fs::read(crate::scope_path(root).join("staged-snaps")) {
         Ok(bytes) => bytes,
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(false),
         Err(error) => return Err(error),

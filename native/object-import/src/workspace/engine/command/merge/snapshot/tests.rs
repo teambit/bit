@@ -114,3 +114,14 @@ fn main_merge_message_uses_component_scope_in_cross_scope_lane_workspace() {
     );
     assert_eq!(metadata::message_text(&model, Some(&lane), "custom").unwrap(), "custom");
 }
+
+#[test]
+fn preflight_source_sizes_reject_absent_and_oversized_receipts() {
+    assert!(super::source_size(&[json!({"source":{}})]).is_err());
+    assert!(super::source_size(&[json!({"source":{"bytes":u64::MAX}})]).is_err());
+    assert_eq!(
+        super::source_size(&[json!({"source":{"bytes":7}}), json!({"source":{"bytes":11}})])
+            .unwrap(),
+        18,
+    );
+}

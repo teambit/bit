@@ -7,6 +7,7 @@ use std::path::PathBuf;
 fn patch_limit_is_shared_across_components_and_allows_empty_batches() {
     let request = Request {
         root: PathBuf::from("/"),
+        import_token: None,
         targets: Vec::new(),
         git_executable: "git".into(),
         color: false,
@@ -19,7 +20,7 @@ fn patch_limit_is_shared_across_components_and_allows_empty_batches() {
     };
     let unlimited =
         Budgets { raw: Budget::new(1024), packed: Budget::new(1024), output: Budget::new(8192) };
-    let first = read(&request, vec![source()], None, &unlimited).unwrap();
+    let first = read(&request, vec![source()], None, &unlimited, None).unwrap();
     let size = first[0]["rawDiff"]
         .as_str()
         .unwrap()
@@ -30,7 +31,7 @@ fn patch_limit_is_shared_across_components_and_allows_empty_batches() {
         packed: Budget::new(1024),
         output: Budget::new(size + 64),
     };
-    assert!(read(&request, vec![source()], None, &budgets).is_ok());
-    assert!(read(&request, vec![], None, &budgets).is_ok());
-    assert!(read(&request, vec![source()], None, &budgets).is_err());
+    assert!(read(&request, vec![source()], None, &budgets, None).is_ok());
+    assert!(read(&request, vec![], None, &budgets, None).is_ok());
+    assert!(read(&request, vec![source()], None, &budgets, None).is_err());
 }

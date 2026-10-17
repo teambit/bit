@@ -47,30 +47,38 @@ pub(in crate::workspace::engine) fn reference(model: &Value, version: &str) -> i
 pub(super) fn read(
     reader: &Reader<'_>,
     references: &[String],
+    required: &[String],
     pool: &rayon::ThreadPool,
 ) -> io::Result<Vec<(String, Value)>> {
     pool.install(|| {
         references
             .par_iter()
             .map(|reference| {
-                let value = reader.read(reference, "Version")?;
+                let value = match reader.read(reference, "Version") {
+                    Ok(value) => value,
+                    Err(error)
+                        if error.kind() == io::ErrorKind::NotFound
+                            && !required.contains(reference) =>
+                    {
+                        return Ok(None);
+                    }
+                    Err(error) => return Err(error),
+                };
                 crate::history_query::validate_version(&value)?;
                 crate::read_version::parents(&value)?;
                 if matches!(value["schema"].as_str(), Some("1.0.0" | "2.0.0")) {
                     super::harmony::validate(&value)?;
                 }
-                Ok((reference.clone(), value))
+                Ok(Some((reference.clone(), value)))
             })
-            .collect()
+            .collect::<io::Result<Vec<_>>>()
+            .map(|values| values.into_iter().flatten().collect())
     })
 }
 
 pub(super) fn include_heads(models: &[Value], references: &mut Vec<String>) -> io::Result<()> {
     let mut seen: HashSet<_> = references.iter().cloned().collect();
     for model in models {
-        if model["deprecated"].as_bool().unwrap_or(false) {
-            return Err(invalid("status deprecated model requires canonical issues"));
-        }
         if let Some(head) = model
             .get("head")
             .filter(|head| !head.is_null())

@@ -9,6 +9,7 @@ pub(super) fn sources(
     material: &Material,
     snapshots: &snapshots::State,
     objects: &mut Vec<Value>,
+    preserve_order: bool,
 ) -> io::Result<()> {
     let mut files = Vec::new();
     for file in &material.files {
@@ -16,18 +17,20 @@ pub(super) fn sources(
         files.push(row);
         objects.push(source);
     }
-    files.sort_by(|a, b| {
-        a["relativePath"]
-            .as_str()
-            .unwrap()
-            .encode_utf16()
-            .cmp(
-                b["relativePath"]
-                    .as_str()
-                    .unwrap()
-                    .encode_utf16(),
-            )
-    });
+    if !preserve_order {
+        files.sort_by(|a, b| {
+            a["relativePath"]
+                .as_str()
+                .unwrap()
+                .encode_utf16()
+                .cmp(
+                    b["relativePath"]
+                        .as_str()
+                        .unwrap()
+                        .encode_utf16(),
+                )
+        });
+    }
     version["files"] = json!(files);
     Ok(())
 }
@@ -41,7 +44,12 @@ fn capture_file(
     let observation = observation(file, snapshots)?;
     let bytes = observation.contents.as_ref();
     let bytes = if bytes.starts_with(&[239, 187, 191]) { &bytes[3..] } else { bytes };
-    let normalized = crate::checkout::eol::normalize(bytes.to_vec(), false);
+    let bytes = if file["bitmapSource"] == true {
+        crate::inspection::normalize_bitmap(bytes)?
+    } else {
+        bytes.to_vec()
+    };
+    let normalized = crate::checkout::eol::normalize(bytes, false);
     let digest = crate::validate::hexadecimal(&Sha1::digest(&normalized));
     let test = version["files"]
         .as_array()

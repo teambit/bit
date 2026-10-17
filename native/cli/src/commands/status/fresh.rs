@@ -55,6 +55,21 @@ impl Pending {
         })
     }
 
+    fn detected(target: &Value, dependencies: &Value, read_set: Value) -> io::Result<Self> {
+        let raw_data = dependencies.get("rawData").and_then(Value::as_str);
+        let cacheable = dependencies.get("cacheable").and_then(Value::as_bool);
+        let (Some(raw_data), Some(cacheable), true) = (raw_data, cacheable, read_set.is_array())
+        else {
+            return Err(decline("status fresh dependency cache receipt"));
+        };
+        Ok(Self {
+            identity: full_identity(target)?,
+            raw_data: raw_data.to_string(),
+            cacheable,
+            read_set,
+        })
+    }
+
     /// The same entry under another identity.
     pub fn renamed(&self, identity: String) -> Self {
         Self { identity, ..self.clone() }
@@ -63,6 +78,20 @@ impl Pending {
     /// `<id>@<version>`.
     pub fn identity(&self) -> &str {
         &self.identity
+    }
+
+    pub(in crate::commands::status) fn replace_source_proof(
+        &mut self,
+        before: &Value,
+        after: &Value,
+    ) {
+        if let Some(proofs) = self.read_set.as_array_mut() {
+            for proof in proofs {
+                if proof == before {
+                    *proof = after.clone();
+                }
+            }
+        }
     }
 
     /// The files the detection read, which the engine checks again before writing.
@@ -77,6 +106,7 @@ impl Pending {
 pub struct Facts {
     graph: Value,
     core_packages: Vec<String>,
+    core_aspect_ids: Vec<String>,
 }
 
 impl Facts {
@@ -88,7 +118,7 @@ impl Facts {
             .iter()
             .map(|id| core_package_name(id))
             .collect();
-        Ok(Self { graph, core_packages })
+        Ok(Self { graph, core_packages, core_aspect_ids: ids })
     }
 }
 
@@ -119,50 +149,56 @@ pub struct Detection<'d> {
 
 impl Detection<'_> {
     /// `readFreshDependencies`: the dependency state and the pending cache entry.
-    pub fn read(
+    pub fn read_with_detectors(
         &self,
         engine: &mut Engine,
         target: &Value,
         files: &[String],
         policy: &Policy,
+        custom: Value,
     ) -> io::Result<(Value, Pending)> {
         let component_root = self.root.join(text(target.get("directory"))?);
+        let mut detection = self.detection(files, policy)?;
+        detection["graph"]["custom"] = custom;
+        detection["devFiles"] =
+            json!(super::environments::dev_files(self.root, self.context, target, files)?);
         let capture: Value = engine.request(&json!({
             "kind": "dependencyDetectFresh",
             "root": self.root,
             "componentRoot": component_root,
             "identity": full_identity(target)?,
             "files": files.iter().map(|file| component_root.join(file)).collect::<Vec<_>>(),
-            "detection": self.detection(files, policy)?,
+            "detection": detection,
         }))?;
-        let mut receipt = capture
-            .as_object()
-            .cloned()
-            .ok_or_else(|| decline("status capture"))?;
-        let grammar_inputs = receipt.remove("grammarInputs").unwrap_or(Value::Null);
-        let read_set = receipt
-            .get("readSet")
-            .cloned()
-            .unwrap_or(Value::Null);
+        let (receipt, grammar_inputs, read_set) = self.receipt(&capture)?;
         let mut request = json!({ "kind": "dependencyPolicyDetected", "root": self.root,
             "componentRoot": component_root, "capture": receipt });
         super::capture::spread(&mut request, &policy.input)?;
         request["resolution"]["grammar"] =
             grammar::dependency(&json!([policy.input, grammar_inputs]));
         let dependencies: Value = engine.request(&request)?;
-        let raw_data = dependencies.get("rawData").and_then(Value::as_str);
-        let cacheable = dependencies.get("cacheable").and_then(Value::as_bool);
-        let (Some(raw_data), Some(cacheable), true) = (raw_data, cacheable, read_set.is_array())
-        else {
-            return Err(decline("status fresh dependency cache receipt"));
-        };
-        let pending = Pending {
-            identity: full_identity(target)?,
-            raw_data: raw_data.to_string(),
-            cacheable,
-            read_set,
-        };
+        let pending = Pending::detected(target, &dependencies, read_set)?;
         Ok((dependencies, pending))
+    }
+
+    fn receipt(&self, capture: &Value) -> io::Result<(Value, Value, Value)> {
+        let mut receipt = capture
+            .as_object()
+            .cloned()
+            .ok_or_else(|| decline("status capture"))?;
+        let grammar_inputs = receipt.remove("grammarInputs").unwrap_or(Value::Null);
+        if let Some(proofs) = self.context["environmentReadSet"].as_array() {
+            receipt
+                .get_mut("readSet")
+                .and_then(Value::as_array_mut)
+                .ok_or_else(|| decline("environment proof receipt"))?
+                .extend(proofs.iter().cloned());
+        }
+        let read_set = receipt
+            .get("readSet")
+            .cloned()
+            .unwrap_or(Value::Null);
+        Ok((Value::Object(receipt), grammar_inputs, read_set))
     }
 
     /// `freshDependencyDetection(context, files, policy)`.
@@ -184,6 +220,7 @@ impl Detection<'_> {
             "modelPackages": policy.model_packages,
             "workspacePolicy": [field("dependencies"), field("devDependencies"), field("peerDependencies")],
             "corePackages": self.facts.core_packages,
+            "coreAspectIds": self.facts.core_aspect_ids,
             "workspaceComponents": components,
         }))
     }
@@ -195,6 +232,7 @@ pub fn commit(
     root: &Path,
     pending: &[Pending],
     reset: bool,
+    write_cache: bool,
 ) -> io::Result<()> {
     for entry in pending {
         let validation: Value =
@@ -203,8 +241,10 @@ pub fn commit(
             return Err(decline("status fresh dependencies changed"));
         }
     }
-    let cache = root
-        .join(".bit")
+    if !write_cache {
+        return Ok(());
+    }
+    let cache = bit_object_import::scope_path(root)
         .join("cache")
         .join("components")
         .join("deps");

@@ -68,6 +68,9 @@ pub(crate) fn conflict_commit(input: &Value, state: &mut Option<Conflict>) -> io
     validate::fields(input, &["token", "path"])?;
     conflict::commit(input, state)
 }
+pub(crate) fn render_workspace_conflict(contents: &str, conflicts: &Value) -> io::Result<String> {
+    conflict::render(contents, conflicts)
+}
 fn text<'a>(input: &'a Value, field: &str) -> io::Result<&'a str> {
     input[field]
         .as_str()

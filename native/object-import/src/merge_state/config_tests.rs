@@ -88,19 +88,34 @@ fn nonempty_private_candidate_declines_without_mutation() {
 fn windows_owned_candidate_recreation_keeps_hardlink_alias_and_public_target_untouched() {
     let directory = Directory::new();
     let input = directory.input();
-    let alias = directory.0.join("empty-alias");
-    std::fs::hard_link(directory.0.join("fallback.jsonc"), &alias).unwrap();
+    std::fs::hard_link(directory.0.join("fallback.jsonc"), directory.0.join("empty-alias"))
+        .unwrap();
     let source = std::fs::read(directory.0.join("workspace.jsonc")).unwrap();
     let mut state = State::default();
     let response = state_request(&mut state, input);
     assert_eq!(response["failed"], false);
-    assert!(std::fs::read(alias).unwrap().is_empty());
+    assert!(std::fs::read(directory.0.join("empty-alias")).unwrap().is_empty());
     let candidate = std::fs::read(directory.0.join("fallback.jsonc")).unwrap();
     assert!(!candidate.is_empty());
-    let commit = json!({"kind":"configWorkspaceConflictCommit","path":directory.0.join("workspace.jsonc"),"token":response["data"]["token"]});
-    assert_eq!(state_request(&mut state, commit)["failed"], true);
-    assert_eq!(std::fs::read(directory.0.join("workspace.jsonc")).unwrap(), source);
+    let path = directory.0.join("workspace.jsonc");
+    let public_alias = directory.0.join("public-alias");
+    std::fs::hard_link(&path, &public_alias).unwrap();
+    let commit = json!({"kind":"configWorkspaceConflictCommit","path":path,"token":response["data"]["token"]});
+    assert_eq!(state_request(&mut state, &commit)["failed"], true);
+    assert_eq!(std::fs::read(&path).unwrap(), source);
+    assert_eq!(std::fs::read(&public_alias).unwrap(), source);
     assert_eq!(std::fs::read(directory.0.join("fallback.jsonc")).unwrap(), candidate);
+    std::fs::remove_file(public_alias).unwrap();
+    let original = std::fs::File::open(&path).unwrap();
+    let before = winapi_util::file::information(&original).unwrap();
+    assert_eq!(state_request(&mut state, &commit)["data"], json!({"saved":true}));
+    let after = winapi_util::file::information(&std::fs::File::open(&path).unwrap()).unwrap();
+    assert_eq!(before.volume_serial_number(), after.volume_serial_number());
+    assert_eq!(before.file_index(), after.file_index());
+    assert_eq!(std::fs::read(&path).unwrap(), candidate);
+    assert!(std::fs::read(directory.0.join("empty-alias")).unwrap().is_empty());
+    assert_eq!(std::fs::read(directory.0.join("fallback.jsonc")).unwrap(), candidate);
+    assert_eq!(state_request(&mut state, commit)["failed"], true);
 }
 
 #[cfg(unix)]

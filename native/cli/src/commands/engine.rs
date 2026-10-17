@@ -26,6 +26,8 @@ struct Response {
     data: Value,
     #[serde(default)]
     error: Option<String>,
+    #[serde(rename = "canonicalError")]
+    canonical_error: Option<bool>,
 }
 
 impl Engine {
@@ -36,6 +38,37 @@ impl Engine {
 
     /// One request; a failed or skipped request is an error.
     pub fn request<Output: DeserializeOwned>(&mut self, input: &Value) -> io::Result<Output> {
+        let started = std::time::Instant::now();
+        let result = self.request_owned(input);
+        crate::trace::log(format!(
+            "engine {} took {} ms",
+            input["kind"].as_str().unwrap_or("request"),
+            started.elapsed().as_millis(),
+        ));
+        result
+    }
+
+    /// Deliver operation metadata while a native request retains its state and transfer ownership.
+    pub fn request_with_progress<Output: DeserializeOwned + Send>(
+        &mut self,
+        input: &Value,
+        mut observe: impl FnMut(bit_object_import::export_progress::Event),
+    ) -> io::Result<Output> {
+        let (sender, receiver) = std::sync::mpsc::sync_channel(32);
+        let actions = bit_object_import::export_actions::current();
+        thread::scope(|threads| {
+            let request = threads.spawn(move || {
+                let _actions = bit_object_import::export_actions::bind(actions);
+                bit_object_import::export_progress::scope(&sender, || self.request(input))
+            });
+            for event in receiver {
+                observe(event);
+            }
+            request.join().unwrap_or_else(|panic| std::panic::resume_unwind(panic))
+        })
+    }
+
+    fn request_owned<Output: DeserializeOwned>(&mut self, input: &Value) -> io::Result<Output> {
         let body = serde_json::to_vec(input)?;
         if body.len() > MAX_REQUEST {
             return Err(io::Error::other("status input limit"));
@@ -56,6 +89,11 @@ impl Engine {
         let failed = response.failed.is_some_and(|failed| !failed.is_null() && failed != false);
         let skipped = response.skipped.is_some_and(|skipped| !skipped.is_empty());
         if response.version != 1 || response.id != self.next_id || failed || skipped {
+            if response.canonical_error == Some(true)
+                && let Some(message) = response.error
+            {
+                return Err(io::Error::other(CanonicalError(message)));
+            }
             let kind = input
                 .get("kind")
                 .and_then(Value::as_str)
@@ -65,4 +103,31 @@ impl Engine {
         }
         serde_json::from_value(response.data).map_err(io::Error::other)
     }
+}
+
+#[derive(Debug)]
+struct CanonicalError(String);
+impl std::fmt::Display for CanonicalError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(formatter)
+    }
+}
+impl std::error::Error for CanonicalError {}
+
+pub(super) fn is_canonical(error: &io::Error) -> bool {
+    let mut cause = error
+        .get_ref()
+        .map(|error| error as &dyn std::error::Error);
+    while let Some(error) = cause {
+        if error.is::<CanonicalError>() {
+            return true;
+        }
+        cause = error.source();
+    }
+    false
+}
+
+/// Preserve a published command error without delegating the invocation again.
+pub(super) fn canonical_error(message: String) -> io::Error {
+    io::Error::other(CanonicalError(message))
 }

@@ -1,4 +1,7 @@
 //! Publish all original-scope export batches locally after remote `ExportPersist`.
+mod reconcile;
+mod removed;
+
 use super::{Prepare, invalid, model::Selected};
 use crate::store::Store;
 use serde_json::{Value, json};
@@ -10,6 +13,7 @@ use std::{
 };
 
 struct Component {
+    unchanged: bool,
     model_hash: String,
     model_before: Vec<u8>,
     model_after: Vec<u8>,
@@ -25,6 +29,10 @@ struct Preimage {
 struct Output {
     refs: BTreeMap<String, Vec<u8>>,
     staged_config: Vec<u8>,
+    staged: bool,
+    updated_ids: Vec<String>,
+    non_existing_ids: Vec<String>,
+    removed_ids: Vec<String>,
 }
 
 pub(super) struct Prepared {
@@ -53,12 +61,12 @@ pub(super) fn prepare(
             Ok((scope.clone(), prepare_refs(before.as_deref(), scope, selected)?))
         })
         .collect::<io::Result<BTreeMap<_, _>>>()?;
-    let output =
-        Output { refs, staged_config: prepare_staged_config(&preimage.staged_config, selected)? };
+    let output = prepare_output(input, selected, &preimage, refs)?;
     let expected_ids = expected_ids(selected)?;
     let components = selected
         .iter()
         .map(|item| Component {
+            unchanged: item.labels.is_empty(),
             model_hash: item.model.hash.clone(),
             model_before: item.model.before.clone(),
             model_after: item.model.after.clone(),
@@ -74,6 +82,26 @@ pub(super) fn prepare(
         bitmap,
         file_id: input.transport.bitmap_history_file_id.clone(),
         expected_ids,
+    })
+}
+
+fn prepare_output(
+    input: &Prepare,
+    selected: &[Selected],
+    preimage: &Preimage,
+    refs: BTreeMap<String, Vec<u8>>,
+) -> io::Result<Output> {
+    Ok(Output {
+        staged: false,
+        updated_ids: Vec::new(),
+        non_existing_ids: Vec::new(),
+        removed_ids: removed::read(&preimage.staged_config)?,
+        refs,
+        staged_config: prepare_staged_config(
+            &preimage.staged_config,
+            selected,
+            !(input.options.all || input.options.all_versions),
+        )?,
     })
 }
 
@@ -125,15 +153,19 @@ fn prepare_bitmap(
     selected: &[Selected],
 ) -> io::Result<super::super::bitmap::Prepared> {
     let original = fs::read(input.root.join(".bitmap"))?;
+    let bitmap = crate::recovery::jsonc::parse(&original)?;
     let identities = selected
         .iter()
+        .filter(|item| {
+            !item.labels.is_empty() && reconcile::present(&bitmap, &item.scope, &item.name)
+        })
         .map(|item| (item.scope.clone(), item.name.clone()))
         .collect::<Vec<_>>();
     super::super::bitmap::prepare_export_scopes(&input.root, original, &identities)
 }
 
 fn prepare_preimage(root: &Path, scopes: &[String]) -> io::Result<Preimage> {
-    let staged = read_optional(&root.join(".bit/staged-snaps"))?;
+    let staged = read_optional(&crate::scope_path(root).join("staged-snaps"))?;
     if staged
         .as_ref()
         .is_some_and(|bytes| bytes.len() > 4 * 1024 * 1024)
@@ -145,68 +177,66 @@ fn prepare_preimage(root: &Path, scopes: &[String]) -> io::Result<Preimage> {
         .map(|scope| Ok((scope.clone(), read_optional(&refs_path(root, scope))?)))
         .collect::<io::Result<BTreeMap<_, _>>>()?;
     Ok(Preimage {
-        index: fs::read(root.join(".bit/index.json"))?,
+        index: fs::read(crate::scope_path(root).join("index.json"))?,
         refs,
         staged,
-        staged_config: fs::read(root.join(".bit/staged-config/main.json"))?,
+        staged_config: fs::read(crate::scope_path(root).join("staged-config/main.json"))?,
     })
 }
 
 impl Prepared {
-    pub(super) fn resume_acknowledgement(
-        &mut self,
-        selected: &[(String, String, String)],
-        exported_ids: &[String],
-    ) -> io::Result<()> {
-        let selected_ids = selected
-            .iter()
-            .map(|(scope, name, version)| format!("{scope}/{name}@{version}"))
-            .collect::<HashSet<_>>();
-        if selected_ids != self.expected_ids {
-            return Err(invalid("outbound resume selection changed"));
-        }
-        let acknowledged = exported_ids
-            .iter()
-            .cloned()
-            .collect::<HashSet<_>>();
-        if acknowledged.len() != exported_ids.len() || !acknowledged.is_subset(&selected_ids) {
-            return Err(invalid("outbound resume acknowledgement"));
-        }
-        let promotions = selected
-            .iter()
-            .filter(|(scope, name, version)| {
-                acknowledged.contains(&format!("{scope}/{name}@{version}"))
-            })
-            .map(|(scope, name, _)| (scope.clone(), name.clone()))
-            .collect::<Vec<_>>();
-        self.bitmap.select_export_promotions(&promotions)?;
-        self.output.staged_config =
-            prepare_staged_config_ids(&self.preimage.staged_config, &promotions)?;
-        self.expected_ids = acknowledged;
-        Ok(())
+    pub(super) fn removed_ids(&self) -> &[String] {
+        &self.output.removed_ids
+    }
+
+    pub(super) fn non_existing_ids(&self) -> &[String] {
+        &self.output.non_existing_ids
     }
 
     pub(super) fn stage_history(&self) -> io::Result<()> {
-        let store = Store::new(self.root.join(".bit/objects"), None)?;
-        for item in &self.components {
+        let store = Store::new(crate::scope_path(&self.root).join("objects"), None)?;
+        for item in self.components.iter().filter(|item| !item.unchanged) {
             store.write(&item.history_hash, &item.history)?;
         }
         Ok(())
     }
 
-    pub(super) fn commit(self, exported_ids: &[String]) -> io::Result<()> {
+    pub(super) fn commit(mut self, exported_ids: &[String]) -> io::Result<()> {
+        self.stage(exported_ids)?;
+        self.finish()
+    }
+
+    pub(super) fn stage(&mut self, exported_ids: &[String]) -> io::Result<Vec<String>> {
+        if self.output.staged {
+            return Ok(self.output.updated_ids.clone());
+        }
         self.validate_acknowledgement(exported_ids)?;
+        self.reconcile(exported_ids)?;
         self.validate_preimage()?;
-        self.publish()
+        let store = Store::new(crate::scope_path(&self.root).join("objects"), None)?;
+        self.write_objects(&store)?;
+        for item in self.components.iter_mut().filter(|item| !item.unchanged) {
+            item.model_before.clone_from(&item.model_after);
+        }
+        for (scope, refs) in &self.output.refs {
+            write_refs(&refs_path(&self.root, scope), refs)?;
+            self.preimage.refs.insert(scope.clone(), Some(refs.clone()));
+        }
+        self.output.staged = true;
+        Ok(self.output.updated_ids.clone())
+    }
+
+    pub(super) fn finish(self) -> io::Result<()> {
+        if !self.output.staged {
+            return Err(invalid("outbound scope publication not staged"));
+        }
+        self.validate_preimage()?;
+        self.publish_controls()
     }
 
     fn validate_acknowledgement(&self, exported_ids: &[String]) -> io::Result<()> {
-        if exported_ids.len() != self.expected_ids.len()
-            || exported_ids
-                .iter()
-                .collect::<HashSet<_>>()
-                .len()
-                != exported_ids.len()
+        let ids = exported_ids.iter().collect::<HashSet<_>>();
+        if ids.len() != exported_ids.len()
             || exported_ids
                 .iter()
                 .any(|id| !self.expected_ids.contains(id))
@@ -217,12 +247,14 @@ impl Prepared {
     }
 
     fn validate_preimage(&self) -> io::Result<()> {
-        if fs::read(self.root.join(".bit/index.json"))? != self.preimage.index {
+        if fs::read(crate::scope_path(&self.root).join("index.json"))?
+            != self.preimage.index
+        {
             return Err(invalid("outbound local index changed"));
         }
         for item in &self.components {
-            let object = self.root
-                .join(".bit/objects")
+            let object = crate::scope_path(&self.root)
+                .join("objects")
                 .join(&item.model_hash[..2])
                 .join(&item.model_hash[2..]);
             if fs::read(object)? != item.model_before {
@@ -230,8 +262,9 @@ impl Prepared {
             }
         }
         self.bitmap.validate()?;
-        if read_optional(&self.root.join(".bit/staged-snaps"))? != self.preimage.staged
-            || fs::read(self.root.join(".bit/staged-config/main.json"))?
+        if read_optional(&crate::scope_path(&self.root).join("staged-snaps"))?
+            != self.preimage.staged
+            || fs::read(crate::scope_path(&self.root).join("staged-config/main.json"))?
                 != self.preimage.staged_config
         {
             return Err(invalid("outbound staged or remote state changed"));
@@ -244,33 +277,35 @@ impl Prepared {
         Ok(())
     }
 
-    fn publish(self) -> io::Result<()> {
-        let store = Store::new(self.root.join(".bit/objects"), None)?;
-        for item in &self.components {
-            store.write(&item.model_hash, &item.model_after)?;
-            store.write(&item.history_hash, &item.history)?;
-        }
-        for (scope, refs) in &self.output.refs {
-            write_refs(&refs_path(&self.root, scope), refs)?;
-        }
-        fs::write(self.root.join(".bit/staged-config/main.json"), self.output.staged_config)?;
+    fn publish_controls(self) -> io::Result<()> {
+        fs::write(
+            crate::scope_path(&self.root).join("staged-config/main.json"),
+            self.output.staged_config,
+        )?;
         if self.preimage.staged.is_some() {
-            fs::remove_file(self.root.join(".bit/staged-snaps"))?;
+            fs::remove_file(crate::scope_path(&self.root).join("staged-snaps"))?;
         }
+        let last_merged = crate::scope_path(&self.root).join("last-merged");
+        crate::workspace::actions::remove(&last_merged)?;
         let _ = self.bitmap.commit(&self.file_id, "export")?;
         Ok(())
     }
 }
 
-fn prepare_staged_config(bytes: &[u8], selected: &[Selected]) -> io::Result<Vec<u8>> {
+fn prepare_staged_config(bytes: &[u8], selected: &[Selected], strict: bool) -> io::Result<Vec<u8>> {
     let identities = selected
         .iter()
+        .filter(|item| !item.labels.is_empty())
         .map(|item| (item.scope.clone(), item.name.clone()))
         .collect::<Vec<_>>();
-    prepare_staged_config_ids(bytes, &identities)
+    prepare_staged_config_ids(bytes, &identities, strict)
 }
 
-fn prepare_staged_config_ids(bytes: &[u8], selected: &[(String, String)]) -> io::Result<Vec<u8>> {
+fn prepare_staged_config_ids(
+    bytes: &[u8],
+    selected: &[(String, String)],
+    strict: bool,
+) -> io::Result<Vec<u8>> {
     if selected.is_empty() {
         return Ok(bytes.to_vec());
     }
@@ -290,7 +325,7 @@ fn prepare_staged_config_ids(bytes: &[u8], selected: &[(String, String)]) -> io:
             true
         }
     });
-    if found.len() != selected.len() {
+    if strict && found.len() != selected.len() {
         return Err(invalid("outbound staged configuration lifecycle"));
     }
     serde_json::to_vec_pretty(&rows).map_err(io::Error::other)
@@ -338,7 +373,8 @@ fn read_optional(path: &Path) -> io::Result<Option<Vec<u8>>> {
     }
 }
 fn refs_path(root: &Path, scope: &str) -> PathBuf {
-    root.join(".bit/refs/remotes")
+    crate::scope_path(root)
+        .join("refs/remotes")
         .join(scope)
         .join("main")
 }

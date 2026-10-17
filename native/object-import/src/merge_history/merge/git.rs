@@ -74,6 +74,45 @@ fn execute(
     }
     Ok((status, stdout, stderr))
 }
+
+/// Merge an already verified workspace body against its imported Version.
+pub(crate) fn workspace_merge(
+    current: &[u8],
+    base: &[u8],
+    other: &[u8],
+    labels: [&str; 2],
+) -> io::Result<(Vec<u8>, bool)> {
+    workspace_merge_for_platform(current, base, other, labels, cfg!(windows))
+}
+
+fn workspace_merge_for_platform(
+    current: &[u8],
+    base: &[u8],
+    other: &[u8],
+    labels: [&str; 2],
+    windows: bool,
+) -> io::Result<(Vec<u8>, bool)> {
+    if current.len() + base.len() + other.len() > MAX_RAW {
+        return Err(invalid("import merge input limit"));
+    }
+    let directory = Directory::new()?;
+    let paths = [directory.0.join("current"), directory.0.join("base"), directory.0.join("other")];
+    for (path, bytes) in paths.iter().zip([current, base, other]) {
+        // `threeWayMerge` compares LF source objects with LF-normalized workspace files.
+        fs::write(path, crate::checkout::eol::normalize(bytes.to_vec(), false))?;
+    }
+    let (status, stdout, stderr) = execute(labels, paths)?;
+    let merged = interpret(status, &stdout, &stderr)?;
+    if merged["isBinaryConflict"] == true {
+        return Err(invalid("inbound binary merge conflict"));
+    }
+    let conflict = merged["conflict"].as_str();
+    let output = merged["output"]
+        .as_str()
+        .or(conflict)
+        .ok_or_else(|| invalid("inbound merge output"))?;
+    Ok((crate::checkout::eol::normalize(output.as_bytes().to_vec(), windows), conflict.is_some()))
+}
 fn interpret(status: std::process::ExitStatus, stdout: &[u8], stderr: &[u8]) -> io::Result<Value> {
     let stdout = String::from_utf8_lossy(stdout).into_owned();
     if status.success() {
@@ -116,3 +155,6 @@ pub(crate) fn config_conflict(paths: [PathBuf; 3]) -> io::Result<String> {
         .filter(|text| !text.is_empty())
         .ok_or_else(|| invalid("config Git merge has no conflict"))
 }
+
+#[cfg(test)]
+mod tests;

@@ -8,7 +8,7 @@ pub(in super::super) struct Controls {
 }
 impl Prepared {
     pub(in super::super) fn validate_dependencies(&self, rows: &[proof::Proof]) -> io::Result<()> {
-        let backup = self.root.join(".bit/last-merged");
+        let backup = crate::scope_path(&self.root).join("last-merged");
         for row in rows {
             if row.path.starts_with(&backup)
                 || self.mutations.removals
@@ -24,7 +24,7 @@ impl Prepared {
         let mut expected = BTreeMap::from([
             (self.root.join(".bitmap"), Some(self.bitmap.clone())),
             (self.root.join("workspace.jsonc"), Some(self.workspace.clone())),
-            (self.root.join(".bit/unmerged.json"), Some(b"[]".to_vec())),
+            (crate::scope_path(&self.root).join("unmerged.json"), Some(b"[]".to_vec())),
             (self.root.join("merge-conflict"), None),
         ]);
         for ((_, destination), bytes) in
@@ -34,7 +34,7 @@ impl Prepared {
         }
         Controls {
             expected,
-            backup: self.root.join(".bit/last-merged"),
+            backup: crate::scope_path(&self.root).join("last-merged"),
             removals: self.mutations.removals.clone(),
         }
     }

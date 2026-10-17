@@ -1,8 +1,52 @@
 //! Missing current directories and intentionally incomplete reset captures.
 
-use super::{Capture, decline, text};
+use super::{Capture, Component, decline, full_identity, text};
 use serde_json::{Value, json};
 use std::{io, path::Path};
+
+pub(super) fn status_removed(target: &Value, captured: &mut Capture) -> io::Result<bool> {
+    if target["locallyRemoved"] != true {
+        return Ok(false);
+    }
+    captured.components.push(Component {
+        ignored: Vec::new(),
+        identity: full_identity(target)?,
+        package_name: String::new(),
+        dependencies: Vec::new(),
+        issues: Value::Null,
+    });
+    Ok(true)
+}
+
+pub(super) fn status_pending(
+    context: &Value,
+    target: &Value,
+    captured: &mut Capture,
+) -> io::Result<bool> {
+    if target["scoped"] != true || target["version"].as_str().is_none_or(str::is_empty) {
+        return Ok(false);
+    }
+    let identity = text(target.get("identity"))?;
+    let models = context["models"].as_array().ok_or_else(|| decline("status models"))?;
+    if models
+        .iter()
+        .any(|model| {
+            let (Some(scope), Some(name)) = (model["scope"].as_str(), model["name"].as_str())
+            else {
+                return false;
+            };
+            format!("{scope}/{name}") == identity
+        })
+    {
+        return Ok(false);
+    }
+    record_status_invalid(
+        target,
+        json!({"isUserError":true,"name":"ComponentsPendingImport"}),
+        captured,
+    )?;
+    Ok(true)
+}
 
 pub(super) fn capture(
     root: &Path,
@@ -16,6 +60,62 @@ pub(super) fn capture(
     }
     record_incomplete(target, directory, &[], captured)?;
     Ok(true)
+}
+
+pub(super) fn status_invalid(
+    root: &Path,
+    target: &Value,
+    directory: &str,
+    captured: &mut Capture,
+) -> io::Result<bool> {
+    if directory == "." || !missing(&root.join(directory))? {
+        return Ok(false);
+    }
+    record_status_invalid(target, component_not_found(directory), captured)?;
+    Ok(true)
+}
+
+pub(super) fn status_invalid_files(
+    root: &Path,
+    target: &Value,
+    directory: &str,
+    files: &[String],
+    captured: &mut Capture,
+) -> io::Result<bool> {
+    if directory != "." && files.is_empty() {
+        record_status_invalid(target, component_not_found(directory), captured)?;
+        return Ok(true);
+    }
+    let main = text(target.get("mainFile"))?;
+    if files.iter().any(|file| file == main) || !missing(&root.join(directory).join(main))? {
+        return Ok(false);
+    }
+    record_status_invalid(
+        target,
+        json!({
+            "isUserError":true,"name":"MainFileRemoved","mainFile":main,
+            "id":text(target.get("identity"))?,
+        }),
+        captured,
+    )?;
+    Ok(true)
+}
+
+fn component_not_found(directory: &str) -> Value {
+    json!({"isUserError":true,"name":"ComponentNotFoundInPath","code":127,"path":directory})
+}
+
+fn record_status_invalid(target: &Value, error: Value, captured: &mut Capture) -> io::Result<()> {
+    let identity = text(target.get("identity"))?;
+    captured.invalid.insert(identity.to_owned(), error);
+    captured.components.push(Component {
+        ignored: Vec::new(),
+        identity: full_identity(target)?,
+        package_name: String::new(),
+        dependencies: Vec::new(),
+        issues: Value::Null,
+    });
+    Ok(())
 }
 
 pub(super) fn main_file(

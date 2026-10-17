@@ -30,11 +30,12 @@ fn one_file_diff(file: &Value, labels: &(String, String)) -> io::Result<Option<V
         return Ok(None);
     }
     let path = text(file.get("relativePath"))?;
+    let path = if cfg!(windows) { path.replace('/', r"\") } else { path.to_owned() };
     let raw = text(file.get("rawDiff"))?;
     let raw = raw
         .strip_suffix('\n')
         .map_or(raw, |raw| raw.strip_suffix('\r').unwrap_or(raw));
-    let diff = files::format(raw, &labels.0, &labels.1, path);
+    let diff = files::format(raw, &labels.0, &labels.1, &path);
     if diff.is_empty() {
         return Ok(None);
     }
@@ -46,4 +47,20 @@ fn one_file_diff(file: &Value, labels: &(String, String)) -> io::Result<Option<V
         "MODIFIED"
     };
     Ok(Some(json!({ "filePath": path, "status": status, "diffOutput": diff })))
+}
+
+/// The comparisons to report: without a pattern, new components, then modified ones.
+pub(super) fn rows(result: &Value, all: bool) -> io::Result<Vec<&Value>> {
+    let rows = array(result.get("comparisons"), "comparisons")?;
+    if all {
+        return Ok(rows.iter().collect());
+    }
+    let has_model = |row: &&Value| truthy(row.get("model"));
+    let new = rows
+        .iter()
+        .filter(|row| !has_model(row));
+    let modified = rows
+        .iter()
+        .filter(|row| has_model(row) && truthy(row.get("modified")));
+    Ok(new.chain(modified).collect())
 }

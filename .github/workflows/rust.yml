@@ -169,3 +169,78 @@ jobs:
         run: node ../scripts/rust/prepare-pnpm-engine.mjs
       - name: Run the ported e2e cases
         run: cargo test --locked -p bit-cli --features e2e --test e2e
+
+  status-diff-windows:
+    name: Workspace VCS parity (Windows, ${{ matrix.group }})
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - group: status
+            filters: diff_completion status_completion status_component_policy status_environments status_relative status_component_selectors status_graph_remote status_autosync
+          - group: snapshot
+            filters: commands::snap commands::tag snapshot_environments
+          - group: checkout
+            filters: checkout_platform checkout_local checkout_callbacks checkout_policy checkout_selection reset_selection harmony::revert
+          - group: transfer
+            filters: commands::import commands::export export_completion export_hub export_callbacks
+          - group: merge-history
+            filters: merge_history merge_lifecycle merge_callbacks merge_policy merge_recovery
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: native
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set the BVM cache directory
+        run: echo "BVM_GLOBALS_DIR=$RUNNER_TEMP/bit-bvm" >> "$GITHUB_ENV"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+      - name: Read the pinned Node.js CLI version
+        id: bit
+        run: echo "version=$(tr -d '[:space:]' < cli/tests/e2e/bit-version)" >> "$GITHUB_OUTPUT"
+      - name: Cache dependencies and build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            native/target/debug
+          key: rust-status-diff-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('native/rust-toolchain.toml', 'native/Cargo.lock') }}
+          restore-keys: |
+            rust-status-diff-${{ runner.os }}-${{ runner.arch }}-
+            rust-test-${{ runner.os }}-${{ runner.arch }}-
+      - name: Cache the Node.js CLI
+        id: bvm-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.BVM_GLOBALS_DIR }}/versions/${{ steps.bit.outputs.version }}
+          key: bvm-status-diff-${{ runner.os }}-${{ runner.arch }}-${{ steps.bit.outputs.version }}
+      - name: Install pinned Rust
+        run: rustup show
+      - name: Install the Node.js CLI
+        if: steps.bvm-cache.outputs.cache-hit != 'true'
+        working-directory: ${{ runner.temp }}
+        env:
+          BIT_VERSION: ${{ steps.bit.outputs.version }}
+        run: |
+          npx -y @teambit/bvm@3.1.4 config set RELEASE_TYPE nightly
+          npx -y @teambit/bvm@3.1.4 install "$BIT_VERSION" --skip-update-path
+      - name: Prepare pinned pnpm engine sources
+        run: node ../scripts/rust/prepare-pnpm-engine.mjs
+      - name: Compare native workspace VCS with the pinned Node.js CLI
+        env:
+          PARITY_FILTERS: ${{ matrix.filters }}
+        run: |
+          parity_failed=0
+          for parity_filter in $PARITY_FILTERS; do
+            if ! cargo test --locked -p bit-cli --features e2e --test e2e "$parity_filter" -- --nocapture; then
+              parity_failed=1
+            fi
+          done
+          exit "$parity_failed"

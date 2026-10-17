@@ -7,6 +7,8 @@
 //! and the package name. Nothing is filtered out: [`BitmapEntry`] says whether
 //! an entry is removed or unavailable on the current lane.
 
+pub mod aspects;
+
 pub use aspects::{AspectEntry, CORE_ENVS, DEFAULT_ENV};
 pub use bitmap::{BITMAP, Bitmap, BitmapEntry, LaneFlags, LaneInfo, WORKSPACE_ROOT_DIR};
 pub use env_packages::external_env_packages;
@@ -20,7 +22,6 @@ pub use package_name::{binding_prefix_by_default_scope, component_package_name};
 pub use scope_model::{ModelData, ScopeObjects, sha1_hex};
 pub use variants::{VariantConfig, by_root_dir_and_name};
 
-mod aspects;
 mod bitmap;
 mod env_packages;
 mod env_type;

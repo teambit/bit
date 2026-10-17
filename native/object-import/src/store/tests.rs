@@ -141,3 +141,18 @@ fn replacement_preserves_mode_and_existing_owner() {
     assert_eq!((after.uid(), after.gid()), (before.uid(), before.gid()));
     assert_eq!(fs::read(path).unwrap(), b"new");
 }
+
+#[test]
+fn metadata_publication_replaces_contents_and_rejects_nonregular_targets() {
+    let directory = Directory::new();
+    let path = directory.0.join("scope.json");
+    Store::validate_metadata_write(&path).unwrap();
+    Store::write_metadata(&path, br#"{"name":"scope"}"#).unwrap();
+    Store::write_metadata(&path, b"{}\n").unwrap();
+    assert_eq!(fs::read(&path).unwrap(), b"{}\n");
+    let invalid = directory.0.join("directory");
+    fs::create_dir(&invalid).unwrap();
+    assert!(Store::validate_metadata_write(&invalid).is_err());
+    assert!(Store::write_metadata(&invalid, b"rejected").is_err());
+    assert_eq!(fs::read_dir(&invalid).unwrap().count(), 0);
+}

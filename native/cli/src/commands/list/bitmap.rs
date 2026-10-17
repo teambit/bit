@@ -15,6 +15,7 @@ pub(in crate::commands) struct Entry {
     pub version: Option<String>,
     pub root_dir: String,
     pub staged_deprecation: bool,
+    pub deprecation: Option<Value>,
     removed: bool,
     available: bool,
 }
@@ -23,7 +24,12 @@ impl Entry {
     /// `isIdOnCurrentLane`: not removed, and available on the lane or one of
     /// its components. On main, `lane` is empty.
     pub fn on_current_lane(&self, lane: &[String]) -> bool {
-        !self.removed && (self.available || lane.contains(&self.identity))
+        !self.removed && self.on_current_lane_including_removed(lane)
+    }
+
+    /// `idsByPattern` with `includeDeleted`: availability still follows the lane.
+    pub fn on_current_lane_including_removed(&self, lane: &[String]) -> bool {
+        self.available || lane.contains(&self.identity)
     }
 }
 
@@ -90,6 +96,9 @@ fn entry(value: &Value) -> io::Result<Entry> {
         version: text("version").map(str::to_string),
         root_dir: root_dir.to_string(),
         staged_deprecation,
+        deprecation: value["config"]["teambit.component/deprecation"]
+            .as_object()
+            .map(|config| Value::Object(config.clone())),
         removed,
         available,
     })

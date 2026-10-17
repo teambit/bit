@@ -18,7 +18,13 @@ pub(super) fn run(input: &Apply, state: &mut State) -> io::Result<(usize, Value)
     record.repository.commit_import()?;
     prepared.plan.history.commit(&record.request.root)?;
     publish_sources(&mut prepared.plan, &record.request.root)?;
+    if let Some(config) = &prepared.reset_config {
+        config.commit()?;
+    }
     let (warning, notifications) = publish_bitmap(&mut prepared, &record, &input.file_id)?;
+    if let Some(policy) = &prepared.checkout_policy {
+        policy.commit()?;
+    }
     let count = prepared.plan.result["components"].as_array().map_or(0, Vec::len);
     Ok((count, json!({"applied":true,"warning":warning,"postPersistNotifications":notifications})))
 }
@@ -26,12 +32,18 @@ fn validate(record: &Record, prepared: &PreparedPlan) -> io::Result<()> {
     proof::verify(&record.proofs)?;
     record.repository.validate()?;
     prepared.bitmap.validate()?;
+    if let Some(config) = &prepared.reset_config {
+        config.validate()?;
+    }
     planning::validate_sources(&prepared.plan)?;
     for material in &prepared.plan.materials {
         materialization::validate(material, &record.request.root)?;
     }
     if let Some(merge) = &prepared.plan.merge {
         merge.validate(&record.request.root)?;
+    }
+    if let Some(policy) = &prepared.checkout_policy {
+        policy.validate()?;
     }
     Ok(())
 }
@@ -99,7 +111,7 @@ pub(super) fn publish_bitmap(
 // Canonical Repository.persist invokes its hook without awaiting completion. Native
 // publication records each invocation and performs the same best-effort notification.
 pub(super) fn notify(root: &std::path::Path) -> usize {
-    let directory = root.join(".bit/events");
+    let directory = crate::scope_path(root).join("events");
     let _notification = std::fs::create_dir_all(&directory)
         .and_then(|()| std::fs::write(directory.join("onPostObjectsPersist"), b""));
     1

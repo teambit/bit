@@ -1,18 +1,18 @@
-use super::parse;
+use super::{Mode, parse};
 use serde_json::json;
 
 #[test]
 fn release_types_and_versions() {
     let options = parse(&["remote/two", "-m", "x"]).unwrap();
     assert_eq!(options.release.level, "patch");
-    assert_eq!(options.patterns, ["remote/two"]);
+    assert_eq!(options.selection.patterns, ["remote/two"]);
     assert_eq!(
         options.request(),
         json!({ "message": "x", "unmodified": false, "unmerged": false, "build": false }),
     );
     assert_eq!(
         options.tag_options(),
-        json!({ "patterns": ["remote/two"], "releaseType": "patch", "incrementBy": 1, "snapped": false, "skipAutoTag": false }),
+        json!({ "patterns": ["remote/two"], "releaseType": "patch", "incrementBy": 1.0, "snapped": false, "skipAutoTag": false }),
     );
     assert_eq!(parse(&["--minor"]).unwrap().release.level, "minor");
     assert_eq!(
@@ -30,23 +30,36 @@ fn release_types_and_versions() {
     );
     assert_eq!(parse(&["--pre-release"]).unwrap().release.pre_release_id, None);
     assert_eq!(parse(&["-v", "v1.2.3"]).unwrap().release.exact_version.as_deref(), Some("1.2.3"));
-    assert_eq!(parse(&["--increment-by", "3"]).unwrap().release.increment_by, 3);
+    assert_eq!(
+        parse(&["--increment-by", "3"]).unwrap().release.increment_by.to_bits(),
+        3.0_f64.to_bits(),
+    );
+    assert_eq!(parse(&["--soft"]).unwrap().mode, Mode::Soft);
+    assert_eq!(parse(&["--persist=skip-build"]).unwrap().mode, Mode::Persist);
 }
 
 #[test]
 fn invalid_or_canonical_flags_are_left_to_node() {
     for args in [
         &["--build"][..],
-        &["--soft"],
+        &["--soft", "--persist=skip-build"],
         &["--minor", "--major"],
         &["--prerelease-id", "beta"],
         &["--increment", "huge"],
         &["--auto-tag-increment", "minor", "--skip-auto-tag"],
         &["--ver", "nope"],
-        &["--increment-by", "0"],
         &["-m"],
-        &["$modified"],
     ] {
         assert!(parse(args).is_none(), "{args:?}");
     }
+}
+
+#[test]
+fn persist_optional_build_argument_and_state_patterns() {
+    assert!(parse(&["--persist"]).is_some());
+    assert!(
+        parse(&["--persist", "skip-build"])
+            .is_some_and(|options| options.selection.patterns.is_empty()),
+    );
+    assert!(parse(&["$modified AND comp*"]).is_some());
 }

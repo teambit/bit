@@ -108,16 +108,17 @@ fn other_flags_decline() {
 }
 
 #[test]
-fn workspaces_the_engine_does_not_own_decline() {
+fn mini_inventory_does_not_load_harmony_aspects() {
     let workspace = Workspace::new();
     write(
         &workspace.root().join("workspace.jsonc"),
         r#"{ "teambit.workspace/workspace": { "defaultScope": "my.scope" }, "my.org/aspect": {} }"#,
     );
     let output = workspace.bit(&workspace.root(), &["ms", "-j"]);
-    assert_eq!(stdout(&output), r#"["ms","-j"]"#);
-    let history = workspace.root().join(".bit/command-history");
-    assert!(!history.exists());
+    let result: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(result["newComps"], serde_json::json!(["my.scope/alpha", "my.scope/beta"]));
+    assert_eq!(result["modified"], serde_json::json!([]));
+    assert_eq!(result["compWithIssues"], serde_json::json!([]));
 }
 
 #[test]

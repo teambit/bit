@@ -2,20 +2,24 @@
 //! prints while checkout runs. The receipt is validated before anything is
 //! printed or written.
 
+mod inbound;
+
 use crate::commands::status::js::{array, decline, text};
 use bit_install::output::Output;
 use serde_json::Value;
 use std::{collections::HashSet, io, time::Instant};
 
-const REASONS: [&str; 4] = [
+const REASONS: [&str; 5] = [
     "of their latest on main",
     "for getting missing versions and dependencies",
     "for making sure the new components are really new and are not out-of-sync",
     "import all history of given patterns components to check whether they have dependencies on the lane",
+    "to import new components from the defaultScope",
 ];
 
 /// One import the engine ran: why, which ids, and how much it fetched.
 struct Import {
+    requested: Option<u64>,
     reason: Option<String>,
     ids: Vec<String>,
     objects_only: bool,
@@ -31,6 +35,8 @@ pub struct Progress {
     /// The imports of the dependencies graph step, for snap.
     graph_imports: Vec<Import>,
     snap_failed: bool,
+    skip_dependencies_graph: bool,
+    version_notice: String,
 }
 
 impl Progress {
@@ -49,31 +55,22 @@ impl Progress {
         let bitmap_count = value.get("bitmapCount").and_then(Value::as_u64);
         let bitmap_count = bitmap_count.ok_or_else(|| decline("native command progress receipt"))?;
         let loads = loads(value, snap)?;
-        let graph_imports = match value.get("graphImports") {
-            None | Some(Value::Null) => &[][..],
-            graph => array(graph, "graph imports")?,
-        };
-        let snap_failed = value.get("snapFailed").is_none_or(Value::is_boolean);
-        if (!snap && !graph_imports.is_empty()) || !snap_failed {
-            return Err(decline("native command progress receipt"));
-        }
-        let rows = value
-            .get("imports")
-            .and_then(Value::as_array)
-            .ok_or_else(|| decline("native command progress receipt"))?;
-        if rows.len() + graph_imports.len() > 16384 {
-            return Err(decline("native command import progress receipt"));
-        }
-        let imports = rows
-            .iter()
-            .map(import)
-            .collect::<io::Result<_>>()?;
-        let graph_imports = graph_imports
-            .iter()
-            .map(import)
-            .collect::<io::Result<_>>()?;
+        let (imports, graph_imports) = progress_imports(value, snap)?;
         let snap_failed = value.get("snapFailed") == Some(&Value::Bool(true));
-        Ok(Some(Self { bitmap_count, imports, loads, graph_imports, snap_failed }))
+        let skip_dependencies_graph = value["skipDependenciesGraph"] == true;
+        let version_notice = value["versionNotice"]
+            .as_str()
+            .unwrap_or_default()
+            .to_string();
+        Ok(Some(Self {
+            bitmap_count,
+            imports,
+            loads,
+            graph_imports,
+            snap_failed,
+            skip_dependencies_graph,
+            version_notice,
+        }))
     }
 
     /// Print the lines, as the loader does while merge runs.
@@ -84,92 +81,71 @@ impl Progress {
         for count in &self.loads {
             output.status(&format!("loading {count} component(s)"));
         }
+        self.render_graph(output);
+    }
+
+    /// Lane providers start after fetching lane heads and before divergence imports.
+    pub fn render_merge_startup(&self, output: &Output, startup: &str, loaded: &str) {
+        let split = self.imports
+            .iter()
+            .position(|row| {
+                row.reason
+                    .as_deref()
+                    .is_some_and(|reason| {
+                        reason.starts_with("for getting the common-snap between ")
+                            || reason.starts_with("for filling the gap between ")
+                    })
+            })
+            .unwrap_or(self.imports.len());
+        for row in &self.imports[..split] {
+            render_import(output, row);
+        }
+        print!("{startup}{loaded}");
+        for row in &self.imports[split..] {
+            render_import(output, row);
+        }
+        for count in &self.loads {
+            output.status(&format!("loading {count} component(s)"));
+        }
+        self.render_graph(output);
+    }
+
+    /// Snapshot graph progress after extension issue and pre-snap callbacks.
+    pub fn render_graph(&self, output: &Output) {
+        if !self.version_notice.is_empty() {
+            output.raw(&self.version_notice);
+        }
         if !self.loads.is_empty() && !self.snap_failed {
             output.status("importing missing dependencies...");
             for row in &self.graph_imports {
                 render_import(output, row);
             }
-            output.status("adding dependencies graph...");
+            if !self.skip_dependencies_graph {
+                output.status("adding dependencies graph...");
+            }
         }
     }
 
-    /// Print the lines of `bit import` and `bit fetch` (`importer`): the
-    /// latest heads, then the missing versions, which `importMany` fetches
-    /// only when components are missing.
-    pub fn render_inbound(&self, output: &Output, fetch: bool, with_ids: bool) {
-        if fetch {
-            output.status("fetching objects...");
-        }
-        output.status("importing components");
-        if with_ids {
-            output.status("importing components");
-        }
-        // `importMany` is called with the ids the latest-heads import requested.
-        let requested = self.imports
-            .iter()
-            .find(|row| row.reason.as_deref() == Some(REASONS[0]));
+    /// Soft tags load component state but do not import dependencies or create a graph.
+    pub fn render_soft_tag(&self, output: &Output) {
         for row in &self.imports {
-            if row.reason.as_deref() == Some(REASONS[1]) {
-                output.status(&format!(
-                    "import {} components with their dependencies (if missing)",
-                    requested.unwrap_or(row).ids.len(),
-                ));
-                if row.components == 0 {
-                    continue;
-                }
-            }
             render_import(output, row);
         }
-    }
-
-    /// Workspace lane fetch leaves the dependency result as its final loader
-    /// status after the command-level success line.
-    pub fn render_lane_fetch_tail(&self, output: &Output) {
-        render_lane_tail(self.imports.last(), output);
-    }
-
-    pub fn render_lane_groups(
-        &self,
-        output: &Output,
-        groups: &[usize],
-        started: Instant,
-    ) -> io::Result<()> {
-        if groups.iter().sum::<usize>() != self.imports.len() {
-            return Err(decline("native inbound lane groups"));
+        for count in &self.loads {
+            output.status(&format!("loading {count} component(s)"));
         }
-        output.status("fetching objects...");
-        let mut offset = 0;
-        for &count in groups {
-            output.status("importing components");
-            output.status("importing components");
-            for row in &self.imports[offset..offset + count] {
-                render_import(output, row);
-            }
-            output.success("importing components", Some(started));
-            render_lane_tail(self.imports[offset..offset + count].last(), output);
-            offset += count;
-        }
-        Ok(())
     }
 
-    /// Print the lines, as the loader does while checkout runs.
-    pub fn render_checkout(&self, output: &Output) {
-        self.render_checkout_with(output, false);
-    }
-
-    /// `checkout main` has already imported its target objects during the
-    /// initial latest-on-main fetch; Harmony does not print the second import.
-    pub fn render_checkout_with(&self, output: &Output, main: bool) {
-        output.status("switching component version...");
-        output.status("importing components");
-        let started = Instant::now();
+    fn render_checkout_initial(&self, output: &Output) {
         let fetching = [REASONS[0], REASONS[1]];
         for row in self.imports
             .iter()
             .filter(|row| {
                 row.reason
                     .as_deref()
-                    .is_some_and(|reason| fetching.contains(&reason))
+                    .is_some_and(|reason| {
+                        fetching.contains(&reason) || reason.starts_with("of their latest on lane ")
+                    })
             })
         {
             if row.reason.as_deref() == Some(REASONS[1]) {
@@ -180,11 +156,33 @@ impl Progress {
             }
             render_import(output, row);
         }
+    }
+
+    /// Print the lines, as the loader does while checkout runs.
+    /// `checkout main` has already imported its target objects during the
+    /// initial latest-on-main fetch; Harmony does not print the second import.
+    pub fn render_checkout_with(&self, output: &Output, main: bool, revert: bool) {
+        output.status(if revert {
+            "reverting components..."
+        } else {
+            "switching component version..."
+        });
+        output.status("importing components");
+        let started = Instant::now();
+        self.render_checkout_initial(output);
         output.success("importing components", Some(started));
+        for count in &self.loads {
+            output.status(&format!("loading {count} component(s)"));
+        }
+
         for row in self.imports
             .iter()
             .filter(|row| {
-                !main && (row.reason.is_none() || row.reason.as_deref() == Some(REASONS[2]))
+                !main
+                    && (row.reason.is_none()
+                        || row.reason
+                            .as_deref()
+                            .is_some_and(|reason| [REASONS[2], REASONS[4]].contains(&reason)))
             })
         {
             render_import(output, row);
@@ -193,6 +191,16 @@ impl Progress {
 }
 
 fn render_lane_tail(row: Option<&Import>, output: &Output) {
+    if let Some(row) = row
+        && row.ids.is_empty()
+        && let Some(count) = row.requested
+    {
+        output.success(
+            &format!("import {count} components with their dependencies (if missing)"),
+            None,
+        );
+        return;
+    }
     if let Some(row) = row
         && !row.ids.is_empty()
         && let Some(reason) = &row.reason
@@ -214,7 +222,7 @@ fn loads(value: &Value, snap: bool) -> io::Result<Vec<u64>> {
         .filter_map(Value::as_u64)
         .filter(|count| *count <= 4096)
         .collect();
-    if counts.len() != loads.len() || loads.len() > if snap { 5 } else { 4 } {
+    if counts.len() != loads.len() || loads.len() > if snap { 4096 } else { 4 } {
         return Err(decline("native command progress receipt"));
     }
     Ok(counts)
@@ -244,11 +252,21 @@ fn import(row: &Value) -> io::Result<Import> {
     if ids.len() > 16384 || objects > 16384 {
         return Err(decline("native command import progress receipt"));
     }
-    Ok(Import { reason, ids, objects_only, components, objects })
+    let requested = row.get("requested").and_then(Value::as_u64);
+    if requested.is_some_and(|count| count > 16384) {
+        return Err(decline("native command import requested count"));
+    }
+    Ok(Import { requested, reason, ids, objects_only, components, objects })
 }
 
 /// `importReason`: the fixed reasons, and the lane and history templates.
 fn known_reason(reason: &str) -> bool {
+    if matches!(
+        reason,
+        "for getting all dependencies" | "for getting all dependencies - missing dependencies",
+    ) {
+        return true;
+    }
     REASONS.contains(&reason)
         || reason.strip_prefix("for fetching lane ").is_some_and(lane_name)
         || reason.strip_prefix("of their latest on lane ").is_some_and(lane_name)
@@ -324,4 +342,31 @@ fn without_version(id: &str) -> &str {
         Some(index) if index + 1 < id.len() => &id[..index],
         _ => id,
     }
+}
+
+fn progress_imports(value: &Value, snap: bool) -> io::Result<(Vec<Import>, Vec<Import>)> {
+    let graph_imports = match value.get("graphImports") {
+        None | Some(Value::Null) => &[][..],
+        graph => array(graph, "graph imports")?,
+    };
+    let snap_failed = value.get("snapFailed").is_none_or(Value::is_boolean);
+    if (!snap && !graph_imports.is_empty()) || !snap_failed {
+        return Err(decline("native command progress receipt"));
+    }
+    let rows = value
+        .get("imports")
+        .and_then(Value::as_array)
+        .ok_or_else(|| decline("native command progress receipt"))?;
+    if rows.len() + graph_imports.len() > 16384 {
+        return Err(decline("native command import progress receipt"));
+    }
+    let imports = rows
+        .iter()
+        .map(import)
+        .collect::<io::Result<_>>()?;
+    let graph_imports = graph_imports
+        .iter()
+        .map(import)
+        .collect::<io::Result<_>>()?;
+    Ok((imports, graph_imports))
 }

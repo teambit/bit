@@ -94,14 +94,57 @@ fn separate_root_caches_preserve_distinct_path_map_objects() {
     assert_eq!(shared["pathMapOrigins"], json!([0, 1, 2, 1]));
 }
 #[test]
-fn declines_missing_parse_errors_and_unsupported_detectives() {
+fn captures_missing_files_and_packages_without_losing_replay_metadata() {
     let fixture = Fixture::new();
-    for (name, source) in [
-        ("missing.js", "import './absent';"),
-        ("invalid.ts", "export = ;"),
-        ("style.css", "body{}"),
-        ("numeric.js", "require('10'); require('2');"),
-    ] {
+    fixture.write("a.js", "require('./absent'); require('not-installed');");
+    let first = fixture
+        .run(&["a.js"], Some(json!({})))
+        .unwrap();
+    let file = fixture.0
+        .join("a.js")
+        .to_string_lossy()
+        .into_owned();
+    assert_eq!(first["missing"][&file], json!(["./absent"]));
+    assert_eq!(first["missingPackages"][&file], json!(["not-installed"]));
+    let cached = first["visited"][&file].clone();
+    let mut visited = serde_json::Map::new();
+    visited.insert(file.clone(), cached);
+    let replayed = fixture
+        .run(&["a.js"], Some(Value::Object(visited)))
+        .unwrap();
+    assert_eq!(replayed["missing"][&file], first["missing"][&file]);
+    assert_eq!(replayed["missingPackages"][&file], first["missingPackages"][&file]);
+}
+#[test]
+fn resolves_unbuilt_local_component_package_from_its_source() {
+    let fixture = Fixture::new();
+    fixture.write("a.js", "require('@my-scope/comp2');");
+    fixture.write("node_modules/@my-scope/comp2/comp2.ts", "export const n = 1;");
+    fixture.write("node_modules/@my-scope/comp2/package.json", r#"{"name":"@my-scope/comp2","main":"dist/comp2.js","_bit_local":true,"componentId":{"scope":"my-scope","name":"comp2"},"source":"comp2.ts"}"#);
+    let output = fixture
+        .run(&["a.js"], Some(json!({})))
+        .unwrap();
+    assert_eq!(
+        output["tree"][fixture.0.join("a.js").to_str().unwrap()][0],
+        json!(
+            fixture.0
+                .join("node_modules")
+                .join("@my-scope")
+                .join("comp2")
+                .join("comp2.ts")
+        ),
+    );
+    fixture.write("node_modules/@my-scope/comp2/package.json", r#"{"name":"@my-scope/comp2","_bit_local":true,"componentId":{"scope":"my-scope","name":"comp2"},"source":"../outside.ts"}"#);
+    assert!(
+        fixture
+            .run(&["a.js"], Some(json!({})))
+            .is_err(),
+    );
+}
+#[test]
+fn declines_parse_errors_and_unsupported_detectives() {
+    let fixture = Fixture::new();
+    for (name, source) in [("invalid.ts", "export = ;"), ("style.css", "body{}")] {
         fixture.write(name, source);
         assert!(
             fixture
@@ -188,4 +231,41 @@ fn detector_receipts_exclude_no_check_early_returns() {
         .run(&["a.js", "ignored.js", "ignored.txt"], Some(json!({})))
         .unwrap();
     assert_eq!(output["scannedPaths"], json!([fixture.0.join("a.js")]));
+}
+
+#[test]
+fn custom_detectors_override_builtin_scanning_with_source_receipts() {
+    use sha1::{Digest, Sha1};
+    let fixture = Fixture::new();
+    fixture.write("widget.vue", "opaque custom format");
+    fixture.write("helper.js", "module.exports = 1;");
+    let file = fixture.0.join("widget.vue");
+    let request: Request = serde_json::from_value(json!({
+        "root":fixture.0,"files":[file],"builtins":[],"detectorExtensions":[".js"],"typescript":true,"includeNpm":true,
+        "custom":{file.to_str().unwrap():{"dependencies":["./helper.js"],"typescript":false,"sourceHash":format!("{:x}",Sha1::digest(b"opaque custom format"))},},
+    })).unwrap();
+    let pool = rayon::ThreadPoolBuilder::new()
+        .num_threads(2)
+        .build()
+        .unwrap();
+    let (_, output) = apply(&request, &pool).unwrap();
+    assert!(
+        output["pathMap"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|row| row["file"] == file.to_string_lossy().as_ref()
+                && row["dependencies"][0]["resolvedDep"]
+                    == fixture.0
+                        .join("helper.js")
+                        .to_string_lossy()
+                        .as_ref()),
+    );
+    fixture.write("widget.vue", "changed after detector callback");
+    assert!(
+        apply(&request, &pool)
+            .unwrap_err()
+            .to_string()
+            .contains("custom detector source changed"),
+    );
 }

@@ -167,10 +167,11 @@ impl Heads {
 
 impl Repository {
     fn load(root: &Path, bitmap: &BitmapState, scope: &str, name: &str) -> io::Result<Self> {
-        let index: Value = serde_json::from_slice(&fs::read(root.join(".bit/index.json"))?)?;
+        let index: Value =
+            serde_json::from_slice(&fs::read(crate::scope_path(root).join("index.json"))?)?;
         let lane_hash = indexed_hash(&index, "lanes", &bitmap.lane_scope, &bitmap.lane_name)?;
         let model_hash = indexed_hash(&index, "components", scope, name)?;
-        let objects = root.join(".bit/objects");
+        let objects = crate::scope_path(root).join("objects");
         let model = outbound::read_object(&objects, &model_hash, "Component")?;
         if model["scope"] != scope || model["name"] != name {
             return Err(invalid("lane reset Component identity"));
@@ -300,7 +301,7 @@ impl Plan {
             return Err(invalid("lane reset changed during preparation"));
         }
         for object in &self.objects {
-            let path = object_path(&self.root.join(".bit/objects"), &object.hash);
+            let path = object_path(&crate::scope_path(&self.root).join("objects"), &object.hash);
             if let Some(after) = &object.after {
                 fs::create_dir_all(
                     path.parent().ok_or_else(|| invalid("lane reset object path"))?,
@@ -311,7 +312,7 @@ impl Plan {
             }
         }
         if let Some(index) = &self.index {
-            fs::write(self.root.join(".bit/index.json"), &index.after)?;
+            fs::write(crate::scope_path(&self.root).join("index.json"), &index.after)?;
         }
         crate::reset_main::backup_bitmap(&self.root, file_id)?;
         fs::write(self.root.join(".bitmap"), &self.bitmap.after)

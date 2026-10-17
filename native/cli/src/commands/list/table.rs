@@ -4,7 +4,7 @@
 use std::{env, ffi::OsString, io::IsTerminal};
 
 /// `colors.supportsColor` of `colors` 1.0.3.
-pub(super) fn colors(args: &[OsString]) -> bool {
+pub(crate) fn colors(args: &[OsString]) -> bool {
     let has = |flag: &str| args.iter().any(|arg| arg == flag);
     if has("--no-color") || has("--color=false") {
         return false;
@@ -52,7 +52,7 @@ fn strlen(text: &str) -> usize {
 }
 
 /// `/\u001b\[(?:\d*;){0,5}\d*m/g` replaced with nothing.
-fn strip_sgr(text: &str) -> String {
+pub(crate) fn strip_sgr(text: &str) -> String {
     let mut output = String::with_capacity(text.len());
     let mut rest = text;
     while let Some(start) = rest.find("\u{1b}[") {
@@ -90,7 +90,7 @@ fn sgr_length(text: &str) -> Option<usize> {
 }
 
 /// `Table.toString()` with `head` and `rows`.
-pub(super) fn render(head: &[&str], rows: &[Vec<String>], colors: bool) -> String {
+pub(crate) fn render(head: &[&str], rows: &[Vec<String>], colors: bool) -> String {
     let head: Vec<String> = head
         .iter()
         .map(|cell| (*cell).to_string())

@@ -37,7 +37,10 @@ pub(in crate::workspace::engine::command) fn from_model(
     Ok(Captured {
         added: false,
         hidden: true,
+        model_backed: true,
         target: comparison::Target {
+            source_overlays: std::collections::HashMap::new(),
+            source_overlay_root: None,
             identity: identity.into(),
             version: version.into(),
             directory: String::new(),

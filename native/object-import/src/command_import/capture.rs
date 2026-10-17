@@ -33,6 +33,13 @@ pub(super) struct Capture {
     raw_bytes: usize,
 }
 impl Capture {
+    pub(super) fn accept_known(&mut self, path: &Path, bytes: &[u8]) {
+        if let Some(proof) = self.proofs.get_mut(path) {
+            *proof = Some(Sha256::digest(bytes).into());
+            self.virtual_files.remove(path);
+        }
+    }
+
     pub(super) fn virtual_file(&mut self, path: PathBuf, bytes: Vec<u8>) -> io::Result<()> {
         if self.virtual_files.len() >= MAX_RECORDS
             || bytes.len() > MAX_BYTES.saturating_sub(self.virtual_bytes)

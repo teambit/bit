@@ -75,11 +75,13 @@ fn warns_for_deprecated_explicit_all_on_head_and_latest() {
 }
 
 #[test]
-fn declines_binary_conflicts_and_illegitimate_failures() {
+fn reports_binary_conflicts_and_declines_illegitimate_failures() {
     let options = parse(&["head", "-x"]).unwrap();
     let binary =
         json!({ "components": [{ "id": "s/a@1", "filesStatus": { "x.png": "binaryConflict" } }] });
-    assert!(format(&binary, &options, Chalk::new(false)).is_err());
+    let report = format(&binary, &options, Chalk::new(false)).unwrap();
+    assert!(report.data.contains("unchanged-BINARY-CONFLICT"));
+    assert!(report.data.contains("binary files cannot be merged"));
     let failed = json!({ "failedComponents": [{ "id": "s/a", "unchangedMessage": "x", "unchangedLegitimately": false }] });
     assert!(format(&failed, &options, Chalk::new(false)).is_err());
 }

@@ -1,3 +1,5 @@
+mod overlay;
+
 use super::{Request, Target, invalid};
 use crate::workspace::engine::read;
 use serde_json::{Value, json};
@@ -5,22 +7,25 @@ use std::{collections::HashSet, io, path::Path};
 
 pub(super) fn all(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Vec<Value>> {
     let mut paths = Vec::new();
+    let mut bitmaps = HashSet::new();
     let mut identities = HashSet::new();
     for target in &request.targets {
         validate(target)?;
         if !identities.insert(&target.identity) {
             return Err(invalid("status comparison duplicate identity"));
         }
-        paths.extend(
-            target.files
-                .iter()
-                .map(|file| request.root.join(&target.directory).join(file)),
-        );
+        for file in &target.files {
+            let source = source_path(&request.root, target, file)?;
+            if target.directory == "." && file == ".bitmap" {
+                bitmaps.insert(source.clone());
+            }
+            paths.push(source);
+        }
     }
-    let bitmap = request.root.join(".bitmap");
-    let captured = read::read_with(&paths, pool, |path, bytes| capture(path, bytes, &bitmap))?
-        .into_iter()
-        .collect::<io::Result<Vec<_>>>()?;
+    let captured =
+        read::read_with(&paths, pool, |path, bytes| capture(path, bytes, bitmaps.contains(path)))?
+            .into_iter()
+            .collect::<io::Result<Vec<_>>>()?;
     if captured
         .iter()
         .map(|file| file.raw_bytes)
@@ -35,13 +40,10 @@ pub(super) fn all(request: &Request, pool: &rayon::ThreadPool) -> io::Result<Vec
         json!({"relativePath":file,"name":file.rsplit('/').next(),"test":false,"file":metadata.linux_hash})
     }).collect())).collect())
 }
-fn capture(path: &Path, bytes: Vec<u8>, bitmap: &Path) -> io::Result<read::Metadata> {
+fn capture(path: &Path, bytes: Vec<u8>, bitmap: bool) -> io::Result<read::Metadata> {
     let original = bytes.len();
-    let bytes = if path == bitmap {
-        crate::inspection::normalize_bitmap(&read::strip_bom(bytes))?
-    } else {
-        bytes
-    };
+    let bytes =
+        if bitmap { crate::inspection::normalize_bitmap(&read::strip_bom(bytes))? } else { bytes };
     let mut metadata = read::canonical(path, bytes).0;
     metadata.raw_bytes = metadata.raw_bytes.max(original);
     Ok(metadata)
@@ -58,6 +60,7 @@ pub(in crate::workspace::engine) fn validate(target: &Target) -> io::Result<()> 
             return Err(invalid("status comparison duplicate file"));
         }
     }
+    overlay::validate(target)?;
     let fields =
         target.current.as_object().ok_or_else(|| invalid("status comparison current fields"))?;
     if fields
@@ -97,4 +100,13 @@ fn relative(value: &str) -> io::Result<()> {
         return Err(invalid("status comparison relative path"));
     }
     Ok(())
+}
+
+/// Read mutated callback contents from Rust-owned temporary files, retaining logical inventory paths.
+pub(in crate::workspace::engine) fn source_path(
+    root: &Path,
+    target: &Target,
+    file: &str,
+) -> io::Result<std::path::PathBuf> {
+    overlay::source_path(root, target, file)
 }

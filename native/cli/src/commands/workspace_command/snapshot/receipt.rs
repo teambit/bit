@@ -2,6 +2,8 @@
 //! it writes. New hashes and a batch id (`newSnapHash`, `newSnapBatchId`),
 //! the user's log (`getBasicLog`) and the Node.js CLI's version.
 
+mod identity;
+
 use crate::{
     commands::status::{cache::cache_root, js::decline},
     discovery::{self, Target},
@@ -66,6 +68,7 @@ pub fn snapshot(root: &Path, snapped: &Snapped<'_>, lane_log: bool) -> io::Resul
 }
 
 /// `getIdentity()`: the user's name and email.
+#[derive(Clone)]
 pub struct User {
     username: Option<String>,
     email: Option<String>,
@@ -75,6 +78,10 @@ impl User {
     /// `getBitCloudUsername() || getConfig('user.name')` and
     /// `getConfig('user.email')`, the git config being the last layer.
     pub fn load(root: &Path) -> io::Result<Self> {
+        identity::load(|| Self::read(root))
+    }
+
+    fn read(root: &Path) -> io::Result<Self> {
         let global = load_global_config(&cache_root().join("config"))?;
         let scope = ScopeJson::load(&scope_path(root))?;
         let workspace = WorkspaceConfig::load(root)?;
@@ -227,9 +234,22 @@ fn absolute_node(node: &Path) -> Option<PathBuf> {
         return Some(node.to_path_buf());
     }
     let path = std::env::var_os("PATH")?;
-    std::env::split_paths(&path)
-        .map(|dir| dir.join(node))
-        .find(|candidate| candidate.is_file())
+    node_in_paths(node, std::env::split_paths(&path), cfg!(windows))
+}
+
+fn node_in_paths(
+    node: &Path,
+    mut paths: impl Iterator<Item = PathBuf>,
+    windows: bool,
+) -> Option<PathBuf> {
+    paths.find_map(|directory| {
+        let candidate = directory.join(node);
+        if candidate.is_file() {
+            return Some(candidate);
+        }
+        let executable = candidate.with_extension("exe");
+        (windows && node.extension().is_none() && executable.is_file()).then_some(executable)
+    })
 }
 
 /// `getBitVersion()`: the version of the `@teambit/bit` package the Node.js

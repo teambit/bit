@@ -2,11 +2,19 @@
 //! with a tar response, `POST <url>/graphql` for the remote scope's component list, and
 //! symphony GraphQL for hub scope resolution.
 
-use crate::{GlobalConfig, fetch::FetchOptions, invalid, tar::ObjectItem};
-use futures_util::StreamExt;
-use reqwest::{Certificate, Client, NoProxy, Proxy, RequestBuilder, Response};
+pub use hub::HubReply;
+
+mod configuration;
+mod hub;
+mod lane;
+mod stream;
+
+use configuration::{config_str, proxy, sockets, tls};
+
+use crate::{Cancellation, GlobalConfig, fetch::FetchOptions, invalid, tar::ObjectItem};
+use reqwest::{Client, RequestBuilder, Response};
 use serde_json::{Value, json};
-use std::{fs, io, time::Duration};
+use std::{io, time::Duration};
 
 const CFG_USER_TOKEN: &str = "user.token";
 /// `@pnpm/node-fetch`'s default. bit.cloud's edge answers requests without
@@ -94,22 +102,32 @@ pub struct Network {
     client_version: String,
     local_scope: Option<String>,
     retry: Retry,
+    cancellation: Cancellation,
 }
 
 impl Network {
+    /// Attach the operation's cancellation owner before issuing any remote request.
+    #[must_use]
+    pub fn with_cancellation(mut self, cancellation: Cancellation) -> Self {
+        self.cancellation = cancellation;
+        self
+    }
+
     /// Run a canonical scope server action. Unlike fetch, Bit's `Http.action`
     /// makes a single request; export persistence retries at the caller level.
     pub async fn action(&self, url: &str, name: &str, options: &Value) -> io::Result<Value> {
         let endpoint = format!("{url}/api/scope/action");
         let body = json!({"name": name, "options": options});
-        let response = self
-            .headers(self.client.post(&endpoint), "write")
-            .json(&body)
-            .send()
-            .await
+        let response = self.cancellation
+            .run(
+                self.headers(self.client.post(&endpoint), "write")?
+                    .json(&body)
+                    .send(),
+            )
+            .await?
             .map_err(|error| network_error(&error))?;
-        let response = throw_for_action_status(response).await?;
-        response.json().await.map_err(|_| {
+        let response = self.cancellation.run(throw_for_action_status(response)).await??;
+        self.cancellation.run(response.json()).await?.map_err(|_| {
             invalid(&format!(
                 "fatal: failed parsing http json response, please make sure the response is a valid json object. url: {endpoint}",
             ))
@@ -126,14 +144,17 @@ impl Network {
     ) -> io::Result<Vec<String>> {
         let endpoint = format!("{url}/api/scope/put");
         let options = json!({"clientId":client_id}).to_string();
-        let response = self.send(|| {
-            self.headers(self.client.post(&endpoint), "write")
-                .header("push-options", &options)
-                .body(archive.clone())
-        })
-        .await?;
-        let response = throw_for_status(response).await?;
-        response.json().await.map_err(io::Error::other)
+        let response = self.cancellation
+            .run(
+                self.headers(self.client.post(&endpoint), "write")?
+                    .header("push-options", &options)
+                    .body(archive)
+                    .send(),
+            )
+            .await?
+            .map_err(|error| network_error(&error))?;
+        let response = self.cancellation.run(throw_for_status(response)).await??;
+        self.cancellation.run(response.json()).await?.map_err(io::Error::other)
     }
     /// `token` is the `--token` flag, which wins over `user.token`.
     pub fn new(
@@ -142,6 +163,8 @@ impl Network {
         local_scope: Option<&str>,
         token: Option<&str>,
     ) -> io::Result<Self> {
+        let global = crate::config::effective(global.clone(), &Value::Null, &Value::Null);
+        let global = &global;
         let builder = sockets(Client::builder().user_agent(USER_AGENT), global)?;
         let builder = proxy(builder, global)?;
         let client = tls(builder, global)?.build().map_err(io::Error::other)?;
@@ -154,33 +177,39 @@ impl Network {
             client_version: client_version.to_string(),
             local_scope: local_scope.map(str::to_string),
             retry: Retry::from_config(global),
+            cancellation: Cancellation::current(),
         })
     }
 
     /// `Http.getHeaders()`.
-    fn headers(&self, request: RequestBuilder, verb: &str) -> RequestBuilder {
+    fn headers(&self, request: RequestBuilder, verb: &str) -> io::Result<RequestBuilder> {
         let request = request
             .header("x-verb", verb)
             .header("connection", "keep-alive")
-            .header("x-client-version", &self.client_version);
+            .header("x-client-version", &self.client_version)
+            .header("x-request-id", request_id()?);
         let request = match &self.token {
             Some(token) => request.header("Authorization", format!("Bearer {token}")),
             None => request,
         };
-        match &self.local_scope {
+        let request = match std::env::var("__CUSTOM_ORIGIN") {
+            Ok(origin) if !origin.is_empty() => request.header("x-custom-origin", origin),
+            _ => request,
+        };
+        Ok(match &self.local_scope {
             Some(scope) => request.header("x-request-scope", scope),
             None => request,
-        }
+        })
     }
 
     /// POST a symphony GraphQL query.
     pub async fn graphql(&self, url: &str, body: &Value) -> io::Result<Value> {
-        let response = self.send(|| {
-            self.headers(self.client.post(url), "read")
-                .json(body)
-        })
+        let response = self.send(
+            self.headers(self.client.post(url), "read")?
+                .json(body),
+        )
         .await?;
-        response.json().await.map_err(|_| invalid(&format!("fatal: failed parsing http json response, please make sure the response is a valid json object. url: {url}")))
+        self.cancellation.run(response.json()).await?.map_err(|_| invalid(&format!("fatal: failed parsing http json response, please make sure the response is a valid json object. url: {url}")))
     }
 
     /// `Http.fetch()`: the objects of `ids` as a tar of `[scope/]hash` entries.
@@ -204,22 +233,16 @@ impl Network {
     ) -> io::Result<Vec<ObjectItem>> {
         let endpoint = format!("{url}/api/scope/fetch");
         let body = json!({ "ids": ids, "fetchOptions": options });
-        let response = self.send(|| {
-            self.headers(self.client.post(&endpoint), "read")
-                .json(&body)
-        })
-        .await?;
-        let response = throw_for_status(response).await?;
-        let mut stream = response.bytes_stream();
-        let mut bytes = Vec::new();
-        while let Some(chunk) = stream.next().await {
-            let chunk = chunk.map_err(|error| network_error(&error))?;
-            if chunk.len() > max_bytes.saturating_sub(bytes.len()) {
-                return Err(invalid("remote fetch archive exceeds bounds"));
-            }
-            bytes.extend_from_slice(&chunk);
-        }
-        super::tar::read_bounded(&bytes, max_bytes)
+        let mut bytes = [0; 4];
+        getrandom::fill(&mut bytes).map_err(|error| io::Error::other(error.to_string()))?;
+        let request_id = u32::from_ne_bytes(bytes) % 1_000_000;
+        let request = self
+            .headers(self.client.post(&endpoint), "read")?
+            .header("x-bit-request-id", request_id.to_string())
+            .json(&body);
+        let response = self.send(request).await?;
+        let response = self.cancellation.run(throw_for_status(response)).await??;
+        stream::read(response, max_bytes, &self.cancellation).await
     }
 
     /// `Http.list()` without deleted components (`listBackwardCompatible`): the
@@ -231,13 +254,13 @@ impl Network {
             "variables": { "namespaces": namespaces.map(|namespaces| [namespaces]) },
         });
         let endpoint = format!("{url}/graphql");
-        let response = self.send(|| {
-            self.headers(self.client.post(&endpoint), "read")
-                .json(&body)
-        })
+        let response = self.send(
+            self.headers(self.client.post(&endpoint), "read")?
+                .json(&body),
+        )
         .await?;
-        let response = throw_for_status(response).await?;
-        let parsed: Value = response.json().await.map_err(|_| {
+        let response = self.cancellation.run(throw_for_status(response)).await??;
+        let parsed: Value = self.cancellation.run(response.json()).await?.map_err(|_| {
             invalid(&format!("fatal: failed parsing http json response, please make sure the response is a valid json object. url: {endpoint}"))
         })?;
         if let Some(message) = parsed["errors"][0]["message"].as_str() {
@@ -252,14 +275,17 @@ impl Network {
     }
 
     /// Retry network failures (not HTTP error statuses), like `retry(_fetch)`.
-    async fn send(&self, request: impl Fn() -> RequestBuilder) -> io::Result<Response> {
+    async fn send(&self, request: RequestBuilder) -> io::Result<Response> {
         let mut attempt = 0;
         loop {
-            match request().send().await {
+            let request = request
+                .try_clone()
+                .ok_or_else(|| invalid("remote request body cannot be replayed"))?;
+            match self.cancellation.run(request.send()).await? {
                 Ok(response) => return Ok(response),
                 Err(error) if attempt >= self.retry.retries => return Err(network_error(&error)),
                 Err(_) => {
-                    tokio::time::sleep(self.retry.delay(attempt)).await;
+                    self.cancellation.run(tokio::time::sleep(self.retry.delay(attempt))).await?;
                     attempt += 1;
                 }
             }
@@ -311,7 +337,10 @@ async fn throw_for_status(response: Response) -> io::Result<Response> {
         .as_str()
         .or_else(|| parsed["message"].as_str())
         .map(str::to_string);
-    Err(remote_error(error["code"].as_u64(), &error, &url, message.unwrap_or(fallback)))
+    let message = message.unwrap_or_else(|| {
+        if crate::tar::truthy(&error) { "unknown error".to_owned() } else { fallback }
+    });
+    Err(remote_error(error["code"].as_u64(), &error, &url, message))
 }
 
 fn remote_error(code: Option<u64>, error: &Value, url: &str, message: String) -> io::Error {
@@ -332,7 +361,7 @@ fn remote_error(code: Option<u64>, error: &Value, url: &str, message: String) ->
             format!(r#"error: remote scope "{}" was not found."#, text("name")),
         ),
         Some(132 | 133) => io::Error::other(message),
-        _ => unexpected(&message),
+        _ => io::Error::new(io::ErrorKind::ConnectionAborted, message),
     }
 }
 
@@ -348,85 +377,31 @@ fn network_error(error: &reqwest::Error) -> io::Error {
     unexpected(&error.to_string())
 }
 
-/// `Http.getNetworkConfig()` socket settings: `network.fetch_timeout` (default
-/// 60000 ms, the whole request), `network.local_address` and
-/// `network.max_sockets` (default 15, the agent's per-host socket pool).
-fn sockets(
-    builder: reqwest::ClientBuilder,
-    global: &GlobalConfig,
-) -> io::Result<reqwest::ClientBuilder> {
-    let number = |key: &str| config_str(global, key).and_then(|value| value.parse::<u64>().ok());
-    let timeout = number("network.fetch_timeout").unwrap_or(60_000);
-    let max_sockets = usize::try_from(number("network.max_sockets").unwrap_or(15)).unwrap_or(15);
-    let mut builder = builder
-        .connect_timeout(Duration::from_mins(1))
-        .timeout(Duration::from_millis(timeout))
-        .pool_max_idle_per_host(max_sockets.max(1));
-    if let Some(address) = config_str(global, "network.local_address") {
-        let address: std::net::IpAddr = address
-            .parse()
-            .map_err(|_| invalid(&format!("invalid network.local_address: {address}")))?;
-        builder = builder.local_address(address);
-    }
-    Ok(builder)
-}
-
-/// `Http.getProxyConfig()`: `proxy`, `https_proxy` (falls back to `proxy`), `proxy.no_proxy`.
-fn proxy(
-    builder: reqwest::ClientBuilder,
-    global: &GlobalConfig,
-) -> io::Result<reqwest::ClientBuilder> {
-    let http = config_str(global, "proxy");
-    let https = config_str(global, "https_proxy").or(http);
-    let no_proxy = config_str(global, "proxy.no_proxy").and_then(NoProxy::from_string);
-    let mut builder = builder;
-    if let Some(url) = http {
-        builder =
-            builder.proxy(Proxy::http(url).map_err(io::Error::other)?.no_proxy(no_proxy.clone()));
-    }
-    if let Some(url) = https {
-        builder = builder.proxy(Proxy::https(url).map_err(io::Error::other)?.no_proxy(no_proxy));
-    }
-    Ok(builder)
-}
-
-/// `strictSSL`, `ca` and `cafile` from `network.*` with the legacy `proxy.*` fallbacks.
-fn tls(
-    builder: reqwest::ClientBuilder,
-    global: &GlobalConfig,
-) -> io::Result<reqwest::ClientBuilder> {
-    let strict = ["network.strict-ssl", "network.strict_ssl", "proxy.strict_ssl"]
-        .iter()
-        .find_map(|key| global.get(*key))
-        .map(|value| {
-            value
-                .as_bool()
-                .unwrap_or_else(|| value.as_str() == Some("true"))
-        });
-    let mut pem = config_str(global, "network.ca")
-        .or_else(|| config_str(global, "proxy.ca"))
-        .map(|ca| ca.as_bytes().to_vec());
-    if pem.is_none()
-        && let Some(file) =
-            config_str(global, "network.cafile").or_else(|| config_str(global, "proxy.cafile"))
-    {
-        pem = Some(fs::read(file)?);
-    }
-    let builder = builder.tls_danger_accept_invalid_certs(strict == Some(false));
-    let Some(pem) = pem else { return Ok(builder) };
-    let certificates = Certificate::from_pem_bundle(&pem).map_err(io::Error::other)?;
-    Ok(builder.tls_certs_merge(certificates))
-}
-
-fn config_str<'a>(global: &'a GlobalConfig, key: &str) -> Option<&'a str> {
-    global
-        .get(key)
-        .and_then(Value::as_str)
-        .filter(|value| !value.is_empty())
-}
-
 #[cfg(test)]
 mod action_tests;
 #[cfg(test)]
+mod fetch_tests;
+#[cfg(test)]
 mod list_tests;
 mod log;
+#[cfg(test)]
+mod push_tests;
+#[cfg(test)]
+mod status_tests;
+#[cfg(test)]
+mod tls_tests;
+
+fn request_id() -> io::Result<String> {
+    let mut bytes = [0; 16];
+    getrandom::fill(&mut bytes).map_err(|error| io::Error::other(error.to_string()))?;
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    const HEX: &[u8] = b"0123456789abcdef";
+    let hex = bytes
+        .into_iter()
+        .flat_map(|byte| {
+            [char::from(HEX[usize::from(byte >> 4)]), char::from(HEX[usize::from(byte & 15)])]
+        })
+        .collect::<String>();
+    Ok(format!("{}-{}-{}-{}-{}", &hex[..8], &hex[8..12], &hex[12..16], &hex[16..20], &hex[20..]))
+}

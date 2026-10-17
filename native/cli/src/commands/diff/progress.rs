@@ -49,7 +49,7 @@ fn exported_target(root: &Path, result: &Value) -> bool {
 }
 
 /// `scope/name` of the `.bitmap` entries with their own scope.
-fn exported_ids(root: &Path) -> Vec<String> {
+pub(super) fn exported_ids(root: &Path) -> Vec<String> {
     let bitmap = fs::read_to_string(root.join(".bitmap"))
         .ok()
         .and_then(|text| bit_install::jsonc::parse(&text).ok())
@@ -68,7 +68,7 @@ fn exported_ids(root: &Path) -> Vec<String> {
 }
 
 fn foreign_tagged_target(root: &Path, result: &Value) -> bool {
-    let Some(scope) = fs::read(root.join(".bit/scope.json"))
+    let Some(scope) = fs::read(bit_object_import::scope_path(root).join("scope.json"))
         .ok()
         .and_then(|body| serde_json::from_slice::<Value>(&body).ok())
         .and_then(|value| value["name"].as_str().map(str::to_string))

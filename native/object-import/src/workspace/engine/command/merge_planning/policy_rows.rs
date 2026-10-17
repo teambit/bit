@@ -66,6 +66,7 @@ fn append_fast_forward(
         .push(super::super::policy::Row {
             identity: identity.into(),
             baseline: super::super::policy::Baseline {
+                scope_only: current.hidden,
                 directory: current.target.directory.clone(),
                 version: material.version_name.clone(),
                 current: current.target.current.clone(),
@@ -81,7 +82,7 @@ fn append_fast_forward(
             projected: Value::Null,
             ours_conflict: false,
             fast_forward: true,
-            detected: None,
+            receipts: super::super::policy::Receipts::default(),
         });
     Ok(())
 }
@@ -91,6 +92,8 @@ pub(super) fn divergent(
     selected: &Selected,
     current: &capture::Captured,
     material: &merge::Prepared,
+    scope_only: bool,
+    labels: &Value,
 ) -> io::Result<()> {
     let prefix = current.target.current["bindingPrefix"]
         .as_str()
@@ -102,6 +105,7 @@ pub(super) fn divergent(
         .push(super::super::policy::Row {
             identity: current.target.identity.clone(),
             baseline: super::super::policy::Baseline {
+                scope_only,
                 directory: current.target.directory.clone(),
                 version: current.target.version.clone(),
                 current: current.target.current.clone(),
@@ -117,7 +121,10 @@ pub(super) fn divergent(
             projected: Value::Null,
             ours_conflict: material.no_write(),
             fast_forward: false,
-            detected: None,
+            receipts: super::super::policy::Receipts {
+                dependencies: None,
+                configuration: json!({"labels":labels}),
+            },
         });
     Ok(())
 }

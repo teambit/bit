@@ -175,24 +175,9 @@ fn extension_configs(
     Ok(output)
 }
 
-/// `JSON.stringify(value)` or `JSON.stringify(value, undefined, 2)` for
-/// configurations: floats, whose text JavaScript writes differently, decline.
+/// `JSON.stringify(value)` or `JSON.stringify(value, undefined, 2)`.
 fn stringify(value: &Value, pretty: bool) -> io::Result<String> {
-    if has_float(value) {
-        return Err(decline("configuration with a non-integer number"));
-    }
-    if pretty { serde_json::to_string_pretty(value) } else { serde_json::to_string(value) }.map_err(
-        io::Error::other,
-    )
-}
-
-fn has_float(value: &Value) -> bool {
-    match value {
-        Value::Number(number) => !number.is_i64() && !number.is_u64(),
-        Value::Array(items) => items.iter().any(has_float),
-        Value::Object(map) => map.values().any(has_float),
-        _ => false,
-    }
+    bit_object_import::stringify_json(value, pretty)
 }
 
 #[cfg(test)]

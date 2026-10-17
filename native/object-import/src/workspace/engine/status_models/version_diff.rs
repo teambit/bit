@@ -1,6 +1,6 @@
 //! Compare two validated local Version objects without visiting workspace files.
 
-use super::{Request as ModelsRequest, Target, invalid, load, versions};
+use super::{Request as ModelsRequest, Target, invalid, load_overlay, versions};
 use crate::{
     checkout::repository,
     read_budget::Budget,
@@ -18,6 +18,8 @@ use std::{
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Request {
+    #[serde(default)]
+    pub(in crate::workspace::engine) import_token: Option<String>,
     root: PathBuf,
     identity: String,
     from_version: String,
@@ -32,16 +34,28 @@ pub(in crate::workspace::engine) fn read(
     request: &Request,
     pool: &ThreadPool,
 ) -> io::Result<(usize, Value)> {
-    let (from, to) = load_pair(request, pool)?;
-    let files = compare_files(request, pool, &from, &to)?;
+    read_overlay(request, pool, None)
+}
+
+pub(in crate::workspace::engine) fn read_overlay(
+    request: &Request,
+    pool: &rayon::ThreadPool,
+    overlay: Option<&crate::command_import::Overlay>,
+) -> io::Result<(usize, Value)> {
+    let (from, to) = load_pair(request, pool, overlay)?;
+    let files = compare_files(request, pool, &from, &to, overlay)?;
     Ok((
         1,
         json!({"identity":request.identity,"model":if request.no_parent { Value::Null } else { from },"current":to,"files":files,"modified":true}),
     ))
 }
 
-fn load_pair(request: &Request, pool: &ThreadPool) -> io::Result<(Value, Value)> {
-    let snapshot = load(
+fn load_pair(
+    request: &Request,
+    pool: &ThreadPool,
+    overlay: Option<&crate::command_import::Overlay>,
+) -> io::Result<(Value, Value)> {
+    let snapshot = load_overlay(
         &ModelsRequest {
             root: request.root.clone(),
             targets: target_versions(request),
@@ -52,6 +66,7 @@ fn load_pair(request: &Request, pool: &ThreadPool) -> io::Result<(Value, Value)>
         },
         pool,
         false,
+        overlay,
     )?;
     let (scope, name) =
         request.identity.split_once('/').ok_or_else(|| invalid("version diff identity"))?;
@@ -88,11 +103,12 @@ fn compare_files(
     pool: &ThreadPool,
     from: &Value,
     to: &Value,
+    overlay: Option<&crate::command_import::Overlay>,
 ) -> io::Result<Vec<Value>> {
     let raw = Budget::new(MAX_RAW);
     let packed = Budget::new(MAX_RAW);
-    let left = sources(&request.root, from, &raw, &packed)?;
-    let right = sources(&request.root, to, &raw, &packed)?;
+    let left = sources(&request.root, from, &raw, &packed, overlay)?;
+    let right = sources(&request.root, to, &raw, &packed, overlay)?;
     let files = join_sources(left, right);
     let output = Budget::new(MAX_OUTPUT);
     pool.install(|| diff::frozen(files, &request.git_executable, request.color))?
@@ -133,6 +149,7 @@ fn sources(
     version: &Value,
     raw: &Budget,
     packed: &Budget,
+    overlay: Option<&crate::command_import::Overlay>,
 ) -> io::Result<Vec<(String, Vec<u8>)>> {
     let files = version["files"].as_array().ok_or_else(|| invalid("version diff files"))?;
     if files.len() > 4096 {
@@ -148,9 +165,18 @@ fn sources(
             }
             let reference =
                 file["file"].as_str().ok_or_else(|| invalid("version diff source ref"))?;
+            if let Some(source) = overlay.and_then(|overlay| overlay.source(reference)) {
+                raw.reserve(source.len())?;
+                overlay.expect("source belongs to overlay").trace_source(reference)?;
+                return Ok((path.to_string(), source.to_vec()));
+            }
             let reference = crate::merge_history::hash(reference)?;
-            let source =
-                repository::read_source_shared(&root.join(".bit/objects"), reference, raw, packed)?;
+            let source = repository::read_source_shared(
+                &crate::scope_path(root).join("objects"),
+                reference,
+                raw,
+                packed,
+            )?;
             crate::merge_transaction::reads::source(reference, &source)?;
             Ok((path.to_string(), source.body))
         })

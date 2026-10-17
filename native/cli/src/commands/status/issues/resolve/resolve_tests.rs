@@ -5,6 +5,7 @@ const HEAD: &str = "0123456789abcdef0123456789abcdef01234567";
 
 fn component(identity: &str, dependencies: &[&str]) -> Component {
     Component {
+        ignored: Vec::new(),
         identity: identity.to_string(),
         package_name: String::new(),
         dependencies: dependencies

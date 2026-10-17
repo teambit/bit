@@ -38,7 +38,7 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
             Some(Report { data: report(summary, chalk), code: 0, details: None })
         }
     };
-    print(args, report, serde_json::to_string_pretty)
+    print(args, report, serde_json::to_string_pretty, false)
 }
 
 /// `bit status --quick`: `StatusCmd.reportQuick`, or with `--json` the
@@ -51,11 +51,16 @@ pub(super) fn quick(args: &[OsString], json: bool) -> io::Result<Outcome> {
             Some(Report { data: quick_report(summary, chalk), code: 0, details: None })
         }
     };
-    print(args, report, |summary| {
-        serde_json::to_string_pretty(
-            &json!({"modified": summary.modified, "newComponents": summary.new_comps}),
-        )
-    })
+    print(
+        args,
+        report,
+        |summary| {
+            serde_json::to_string_pretty(
+                &json!({"modified": summary.modified, "newComponents": summary.new_comps}),
+            )
+        },
+        true,
+    )
 }
 
 /// Read the summary, then print the report after the loader's line, or the
@@ -64,6 +69,7 @@ fn print(
     args: &[OsString],
     report: impl FnOnce(&Summary, Chalk) -> Option<Report>,
     json: impl FnOnce(&Summary) -> serde_json::Result<String>,
+    load_aspects: bool,
 ) -> io::Result<Outcome> {
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".to_string()));
@@ -71,10 +77,9 @@ fn print(
     let Some(home) = home_dir() else {
         return Ok(Outcome::Declined("no home directory".to_string()));
     };
-    let summary = match summarize(&root, &home) {
-        Ok(Some(summary)) => summary,
-        Ok(None) => return Ok(Outcome::Declined("workspace outside the engine's limits".into())),
-        Err(error) => return Ok(Outcome::Declined(format!("status engine: {error}"))),
+    let summary = match initialized_summary(&root, &home, load_aspects)? {
+        Ok(summary) => summary,
+        Err(reason) => return Ok(Outcome::Declined(reason)),
     };
     if let Some(report) = report(&summary, Chalk::detect(args)) {
         let command = if args[0] == "status" || args[0] == "s" { "status" } else { "mini-status" };
@@ -87,6 +92,41 @@ fn print(
     stdout.flush()?;
     history.end(true);
     Ok(Outcome::Exit(ExitCode::SUCCESS))
+}
+
+fn initialized_summary(
+    root: &Path,
+    home: &Path,
+    enabled: bool,
+) -> io::Result<Result<Summary, String>> {
+    let (result, startup) = summarize_with_startup(root, home, enabled);
+    io::stdout().write_all(startup.stdout.as_bytes())?;
+    match result {
+        Err(error) if startup.committed => Err(error),
+        Ok(None) if startup.committed => Err(io::Error::other(
+            "status workspace outside engine limits after startup publication",
+        )),
+        Ok(Some(summary)) => Ok(Ok(summary)),
+        Ok(None) => Ok(Err("workspace outside the engine's limits".into())),
+        Err(error) => Ok(Err(format!("status engine: {error}"))),
+    }
+}
+
+fn summarize_with_startup(
+    root: &Path,
+    home: &Path,
+    enabled: bool,
+) -> (io::Result<Option<Summary>>, super::status::autosync::Startup) {
+    let mut startup = super::status::autosync::Startup::default();
+    let result = (|| {
+        if enabled {
+            let mut engine = Engine::new()?;
+            super::status::autosync::run(&mut engine, root, &mut startup)?;
+            super::status::environments::quick(root, home, &mut startup)?;
+        }
+        summarize(root, home)
+    })();
+    (result, startup)
 }
 
 /// `MiniStatusCmd.report` without `--show-issues`.

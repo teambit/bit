@@ -1,5 +1,6 @@
-//! The `no-fs-cache` feature, under which native commands decline, and Bit's cache
-//! root. `dependencyCacheNeedsInvalidation` lives with the dependency cache, in
+//! The `no-fs-cache` feature, which makes the native capture detect dependencies
+//! afresh without cache writes, and Bit's cache root.
+//! `dependencyCacheNeedsInvalidation` lives with the dependency cache in
 //! `bit_install::dependencies::cache::invalidation`.
 
 use std::{
@@ -23,7 +24,7 @@ pub fn no_fs_cache(root: &Path) -> bool {
         .any(|name| env::var(name).is_ok_and(|value| mentions(&value)));
     let files = [
         root.join("workspace.jsonc"),
-        root.join(".bit").join("scope.json"),
+        crate::workspace::scope_path(root).join("scope.json"),
         global_config_dir().join("config.json"),
     ];
     from_env

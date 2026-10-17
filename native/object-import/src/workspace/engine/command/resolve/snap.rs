@@ -42,7 +42,8 @@ pub(super) fn candidates(
 ) -> io::Result<Vec<String>> {
     let mut rows = Vec::new();
     for current in captured {
-        if eligible(retained, current, options)? {
+        if !local_only(retained, &current.target.identity) && eligible(retained, current, options)?
+        {
             rows.push(current);
         }
     }
@@ -100,15 +101,11 @@ fn pattern_set<'a>(known: &[String], pattern: &'a [String]) -> io::Result<HashSe
     Ok(seen)
 }
 
-fn eligible(
+pub(super) fn eligible(
     retained: &mut Retained,
     current: &capture::Captured,
     options: &Options,
 ) -> io::Result<bool> {
-    // Unsupported local-only and workspace-root selection must stay canonical.
-    if current.target.directory == "." {
-        return Err(invalid("snap workspace root component"));
-    }
     let model = repository::model(&retained.record.context, &current.target.identity)?;
     let Some(model) = model else { return Ok(true) };
     if options.unmodified {
@@ -171,7 +168,12 @@ pub(super) fn prepare_graph_imports(
     retained: &mut Retained,
     materials: &[super::super::resolve_snapshot::Material],
 ) -> io::Result<()> {
-    let mut known = known_previous(materials, &mut retained.record.repository)?;
+    let mut known =
+        if retained.snap.as_ref().is_some_and(|options| options.policy.rebuild_deps_graph) {
+            HashSet::new()
+        } else {
+            known_previous(materials, &mut retained.record.repository)?
+        };
     let mut targets = Vec::new();
     for material in materials {
         let source = serde_json::json!({"scope":material.model["scope"],"name":material.model["name"],"version":material.version_state.current_head});
@@ -284,3 +286,9 @@ pub(super) fn new_material(
 
 #[cfg(test)]
 mod tests;
+
+pub(super) fn local_only(retained: &Retained, identity: &str) -> bool {
+    retained.record.targets
+        .iter()
+        .any(|target| target["identity"] == identity && target["localOnly"] == true)
+}

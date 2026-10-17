@@ -11,7 +11,15 @@ pub(in crate::command_import) fn settings_for_lane(
     let fields = value.as_object().ok_or_else(|| invalid("import scope settings"))?;
     if fields
         .keys()
-        .any(|key| !matches!(key.as_str(), "name" | "remotes" | "version" | "lanes" | "groupName"))
+        .any(|key| {
+            !matches!(
+                key.as_str(),
+                "name" | "remotes" | "version" | "lanes" | "groupName" | "config",
+            )
+        })
+        || value
+            .get("config")
+            .is_some_and(|config| !config.is_object())
         || (!allow_lane
             && value["lanes"]["current"]
                 .as_str()

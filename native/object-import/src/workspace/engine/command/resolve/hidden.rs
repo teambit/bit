@@ -79,7 +79,7 @@ fn material(
     let model = repository::model(&retained.record.context, &entry.identity)?
         .ok_or_else(|| invalid("resolve hidden model"))?;
     let captured = capture::from_model(
-        &retained.record.request.root.join(".bit/native-resolve-retained"),
+        &crate::scope_path(&retained.record.request.root).join("native-resolve-retained"),
         &entry.identity,
         &entry.head,
         version,

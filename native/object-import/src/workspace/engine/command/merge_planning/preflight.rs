@@ -29,6 +29,9 @@ pub(super) fn validate(
             prepared.proofs.extend(cache_guard::verify(record, captured, target, identity)?);
         }
     }
+    if record.request.internal_snapshot_preview {
+        return Ok(());
+    }
     validate_dependents(record, &identities)?;
     let snapshots = prepared.pending
         .iter()

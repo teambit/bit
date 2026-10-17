@@ -1,3 +1,5 @@
+mod fetch;
+
 use super::{PreparedImport, Target, invalid, read_model, receive, remote};
 use crate::command_import::lane::{Id, Record, entries};
 use std::{collections::HashSet, io, path::Path};
@@ -104,50 +106,39 @@ impl PreparedImport {
     pub(crate) fn fetch_lane_contents(&mut self, id: &Id) -> io::Result<Record> {
         self.fetch_lane_contents_at_hash(id, None)
     }
-    pub(crate) fn fetch_lane_contents_at_hash(
-        &mut self,
-        id: &Id,
-        supplied_hash: Option<&str>,
-    ) -> io::Result<Record> {
-        id.validate()?;
-        let remotes = self.environment.remotes.clone();
-        let directory = remote(self, &remotes, &id.scope)?;
-        let hash = if let Some(hash) = supplied_hash {
-            crate::merge_history::hash(hash)?;
-            hash.to_owned()
-        } else {
-            remote_lane_hash(self, &directory, id)?
-        };
-        let record = self.capture
-            .object(&directory, &hash, "Lane")?
-            .ok_or_else(|| invalid("remote Lane missing"))?;
-        let value = record.value
-            .as_ref()
-            .ok_or_else(|| invalid("remote Lane body"))?
-            .clone();
-        super::super::lane::validate_value(id, &value)?;
-        self.progress.push(super::super::Progress {
-            reason: Some(format!("for fetching lane {}/{}", id.scope, id.name)),
-            ..Default::default()
-        });
-        self.progress
-            .last_mut()
-            .unwrap()
-            .objects
-            .insert(super::super::object_hash(&id.scope));
-        let mut visited = HashSet::new();
-        for entry in entries(&value)? {
-            let (scope, name) =
-                entry.identity.split_once('/').ok_or_else(|| invalid("lane component scope"))?;
-            let target =
-                Target { scope: Some(scope.into()), name: name.into(), version: entry.head };
-            receive_closure(self, &directory, &target, &mut visited)?;
-        }
-        Ok(Record { hash, value, is_new: false })
-    }
 }
 
-fn receive_closure(
+fn receive_prefer_graph(
+    plan: &mut PreparedImport,
+    directory: &Path,
+    target: &Target,
+    visited: &mut HashSet<String>,
+) -> io::Result<()> {
+    let key = format!("{}@{}", super::identity(target)?, target.version);
+    if !visited.insert(key.clone()) {
+        return Ok(());
+    }
+    let hash = receive_counted(plan, directory, target, key)?;
+    let version =
+        super::read_version(plan, &hash)?.ok_or_else(|| invalid("lane fetched Version absent"))?;
+    if super::dependencies::has_edges(plan, &version)? {
+        return Ok(());
+    }
+    for dependency in version["flattenedDependencies"]
+        .as_array()
+        .ok_or_else(|| invalid("lane flattened dependencies"))?
+    {
+        receive_closure(
+            plan,
+            directory,
+            &super::dependencies::dependency_target(dependency)?,
+            visited,
+        )?;
+    }
+    Ok(())
+}
+
+pub(super) fn receive_closure(
     plan: &mut PreparedImport,
     directory: &Path,
     target: &Target,
@@ -303,7 +294,11 @@ fn missing_objects(plan: &mut PreparedImport, hashes: &[String]) -> io::Result<V
     Ok(missing)
 }
 
-fn remote_lane_hash(plan: &mut PreparedImport, directory: &Path, id: &Id) -> io::Result<String> {
+pub(super) fn remote_lane_hash(
+    plan: &mut PreparedImport,
+    directory: &Path,
+    id: &Id,
+) -> io::Result<String> {
     let index = plan.capture
         .json(
             &directory

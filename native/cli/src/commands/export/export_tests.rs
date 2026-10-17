@@ -3,18 +3,48 @@ use super::{parse, persist_failure, validation_failure};
 #[test]
 fn parses_the_native_flags() {
     let empty = parse(&[]).unwrap();
-    assert!(empty.ids.is_empty() && !empty.origin_directly && empty.resume.is_none());
-    let selected =
-        parse(&["s/a@1.0.0", "s/b", "--origin-directly", "--resume", "client-1"]).unwrap();
+    assert!(
+        empty.ids.is_empty()
+            && !empty.origin_directly
+            && !empty.all
+            && !empty.all_versions
+            && !empty.head_only
+            && !empty.fork_lane_new_scope
+            && empty.resume.is_none(),
+    );
+    assert!(parse(&["-e"]).unwrap().lifecycle.eject);
+    assert!(parse(&["--json", "--head-only", "--all"]).unwrap().json);
+    assert!(parse(&["--verbose", "--ignore-missing-artifacts"]).unwrap().verbose);
+    let selected = parse(&[
+        "s/a@1.0.0",
+        "s/b",
+        "--origin-directly",
+        "--all",
+        "--all-versions",
+        "--fork-lane-new-scope",
+        "--resume",
+        "client-1",
+    ])
+    .unwrap();
     assert_eq!(selected.ids, ["s/a@1.0.0", "s/b"]);
     assert!(selected.origin_directly);
+    assert!(selected.all && selected.all_versions);
+    assert!(!selected.head_only);
+    assert!(parse(&["--head-only"]).unwrap().head_only);
+    assert!(selected.fork_lane_new_scope);
     assert_eq!(selected.resume.as_deref(), Some("client-1"));
     for args in [
         &["--resume"][..],
         &["--resume", "bad:id"],
-        &["--all"],
-        &["-e"],
+        &["--all", "--all"],
+        &["--all-versions", "--all-versions"],
+        &["--head-only", "--head-only"],
+        &["--head-only", "--all"],
+        &["--head-only", "--all-versions"],
+        &["--head-only", "--fork-lane-new-scope"],
+        &["--head-only", "--resume", "client-1"],
         &["s/a", "--origin-directly", "--origin-directly"],
+        &["--fork-lane-new-scope", "--fork-lane-new-scope"],
     ] {
         assert!(parse(args).is_none(), "{args:?}");
     }

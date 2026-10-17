@@ -43,6 +43,25 @@ fn inventory_is_owned_bounded_and_tokens_cannot_be_reused() {
     assert_eq!(finish(next, &mut owner)["failed"], true);
 }
 #[test]
+fn a_missing_component_directory_is_empty_but_the_workspace_root_must_exist() {
+    let directory = Directory::new();
+    let missing = directory.0.join("deleted-component");
+    let mut owner = State::default();
+    let input = json!({"kind":"inventoryBegin","root":missing,"workspace":directory.0,
+        "excludeDirs":[],"rootPolicy":{"rules":[]}});
+    let started = request(&input, &mut owner);
+    assert_eq!(started["failed"], false);
+    assert_eq!(started["completed"], 0);
+    let token = started["data"]["token"].as_u64().unwrap();
+    assert_eq!(finish(token, &mut owner)["data"]["files"], json!([]));
+    let absent_workspace = request(
+        &json!({"kind":"inventoryBegin","root":missing,
+        "workspace":missing,"excludeDirs":[],"rootPolicy":{"rules":[]}}),
+        &mut owner,
+    );
+    assert_eq!(absent_workspace["failed"], true);
+}
+#[test]
 fn inventory_failure_releases_retained_paths_and_unicode_declines_before_publication() {
     let directory = Directory::new();
     directory.write("main.js", b"x");

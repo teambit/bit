@@ -1,6 +1,8 @@
 //! `bit install` orchestration: `install.cmd.tsx` and `InstallMain.install`.
 
+pub use packages::policy_edit::update_document as add_root_policy_entries;
 pub use restore::stored_graphs;
+pub use workspace_jsonc::edit as edit_workspace_config;
 
 mod calculate;
 mod external;

@@ -11,6 +11,7 @@ pub struct WorkspaceSession {
     pool: Arc<rayon::ThreadPool>,
     checkout: crate::checkout::cache::State,
     merge: crate::merge_state::State,
+    cancellation: bit_client_transfer::Cancellation,
 }
 
 impl WorkspaceSession {
@@ -24,11 +25,32 @@ impl WorkspaceSession {
             pool: shared_pool(threads)?,
             checkout: crate::checkout::cache::State::default(),
             merge,
+            cancellation: bit_client_transfer::Cancellation::current(),
         })
+    }
+
+    /// Bind transport work to a caller-owned cancellation token, independently of other sessions.
+    #[must_use]
+    pub fn with_cancellation(mut self, cancellation: bit_client_transfer::Cancellation) -> Self {
+        self.cancellation = cancellation;
+        self
     }
 
     /// Dispatch one existing workspace frame. An error retires the owning session.
     pub fn request(&mut self, frame: &[u8]) -> io::Result<Vec<u8>> {
+        let pool = Arc::clone(&self.pool);
+        let cancellation = self.cancellation.clone();
+        let progress = crate::export_progress::current();
+        let actions = crate::export_actions::current();
+        pool.install(|| {
+            let _actions = crate::export_actions::bind(actions);
+            crate::export_progress::with_sender(progress, || {
+                bit_client_transfer::Cancellation::scope(&cancellation, || self.dispatch(frame))
+            })
+        })
+    }
+
+    fn dispatch(&mut self, frame: &[u8]) -> io::Result<Vec<u8>> {
         if frame.len() > crate::protocol::MAX_BATCH_BYTES {
             return Err(io::Error::other("workspace frame exceeds byte limit"));
         }

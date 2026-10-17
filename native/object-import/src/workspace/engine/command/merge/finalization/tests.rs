@@ -8,7 +8,7 @@ fn write(root: &Path, name: &str, bytes: &[u8]) {
     fs::create_dir_all(path.parent().unwrap()).unwrap();
     fs::write(path, bytes).unwrap();
 }
-fn fixture() -> (Directory, Value) {
+pub(super) fn fixture() -> (Directory, Value) {
     let directory = Directory::create().unwrap();
     write(&directory.0, ".bit/index.json", b"{\"components\":[],\"lanes\":[]}");
     write(
@@ -24,7 +24,7 @@ fn fixture() -> (Directory, Value) {
     (directory, version)
 }
 #[test]
-fn new_links_are_planned_without_writes_or_declined_before_writes_on_non_unix() {
+fn new_links_are_planned_without_writes_on_supported_platforms() {
     let (directory, version) = fixture();
     let manifest = directory.0.join("node_modules/@scope/alpha/package.json");
     let before = fs::read(&manifest).unwrap();
@@ -40,8 +40,15 @@ fn new_links_are_planned_without_writes_or_declined_before_writes_on_non_unix() 
         false,
         &[],
     );
-    if cfg!(unix) {
-        assert_eq!(result.unwrap().links.len(), 1);
+    if cfg!(any(unix, windows)) {
+        let prepared = result.unwrap();
+        assert_eq!(
+            prepared.links,
+            vec![(
+                directory.0.join("alpha/index.js"),
+                directory.0.join("node_modules/@scope/alpha/index.js"),
+            )],
+        );
     } else {
         assert!(result.is_err());
     }
@@ -87,6 +94,7 @@ fn lane_snapshot_stages_current_lane_config_and_validates_its_original_bytes() {
     write(&directory.0, ".bit/staged-config/main.json", b"[]");
     write(&directory.0, ".bit/staged-config/scope/feature.json", b"[]");
     let mut prepared = super::Prepared {
+        package_creates: Vec::new(),
         proofs: Vec::new(),
         writes: Vec::new(),
         links: Vec::new(),
@@ -101,6 +109,7 @@ fn lane_snapshot_stages_current_lane_config_and_validates_its_original_bytes() {
             semantic_version: None,
             version: &version,
         }],
+        false,
         &mut prepared,
     )
     .unwrap();
@@ -148,6 +157,7 @@ fn existing_lane_only_marker_is_retained_in_staged_configuration() {
     bitmap["alpha"]["onLanesOnly"] = json!(true);
     fs::write(bitmap_path, serde_json::to_vec(&bitmap).unwrap()).unwrap();
     let mut prepared = super::Prepared {
+        package_creates: Vec::new(),
         proofs: Vec::new(),
         writes: Vec::new(),
         links: Vec::new(),
@@ -162,6 +172,7 @@ fn existing_lane_only_marker_is_retained_in_staged_configuration() {
             semantic_version: None,
             version: &version,
         }],
+        false,
         &mut prepared,
     )
     .unwrap();
@@ -321,6 +332,7 @@ fn env_root_packages_linked_into_the_pnpm_store_are_written_through_the_link() {
     )
     .unwrap();
     let mut output = super::Prepared {
+        package_creates: Vec::new(),
         proofs: Vec::new(),
         writes: Vec::new(),
         links: Vec::new(),
@@ -350,6 +362,7 @@ fn a_scope_without_an_index_starts_an_empty_one() {
     );
     let version = json!({"files":[]});
     let mut prepared = super::Prepared {
+        package_creates: Vec::new(),
         proofs: Vec::new(),
         writes: Vec::new(),
         links: Vec::new(),
@@ -362,7 +375,7 @@ fn a_scope_without_an_index_starts_an_empty_one() {
         semantic_version: None,
         version: &version,
     };
-    super::staged::prepare(&directory.0, &[input], &mut prepared).unwrap();
+    super::staged::prepare(&directory.0, &[input], false, &mut prepared).unwrap();
     let index = directory.0.join(".bit/index.json");
     let bytes = &prepared.writes
         .iter()

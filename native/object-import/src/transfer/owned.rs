@@ -11,6 +11,7 @@ use super::{Body, Descriptor, MAX_BYTES, MAX_OBJECTS, State, collection, invalid
 
 mod archive;
 mod freezer;
+mod spool;
 mod wire;
 
 #[derive(Clone)]
@@ -20,7 +21,7 @@ pub(super) struct Entry {
     pub(super) kind: String,
     pub(super) compressed: std::sync::Arc<[u8]>,
     pub(super) raw: usize,
-    path: Option<PathBuf>,
+    pub(super) path: Option<PathBuf>,
 }
 
 pub(super) struct Plan {
@@ -59,14 +60,7 @@ pub(super) fn collect(state: &mut State, input: &Value) -> io::Result<Value> {
     if serde_json::to_vec(&output).map_err(io::Error::other)?.len() > 4 * 1024 * 1024 {
         return Err(invalid("collection output budget"));
     }
-    for entry in &entries {
-        spool(entry)?;
-    }
-    for entry in &entries {
-        if let Some(path) = &entry.path {
-            state.spool_paths.insert(path.clone());
-        }
-    }
+    state.spool_paths.extend(spool::write(&entries)?);
     state.collections.insert(token, entries);
     Ok(output)
 }
@@ -128,16 +122,6 @@ fn staging(path: &Path, state: &State) -> io::Result<()> {
         }
     }
     Ok(())
-}
-
-fn spool(entry: &Entry) -> io::Result<()> {
-    use std::io::Write;
-    let path = entry.path.as_ref().ok_or_else(|| invalid("missing private spool path"))?;
-    let mut file = fs::OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .open(path)?;
-    file.write_all(&entry.compressed)
 }
 
 fn describe(token: &str, entries: &[Entry]) -> Value {

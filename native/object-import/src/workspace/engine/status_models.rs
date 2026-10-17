@@ -2,6 +2,7 @@ pub(super) mod comparison;
 pub(super) mod component_log;
 pub(super) mod file_history;
 pub(super) mod harmony;
+pub(in crate::workspace::engine) mod lane_updates;
 pub(super) mod list;
 pub(super) mod parent_diff;
 pub(super) mod version_diff;
@@ -19,7 +20,7 @@ use super::invalid;
 use crate::{checkout::repository, read_budget::Budget};
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::{Value, json};
 use std::{
     io,
     path::{Path, PathBuf},
@@ -48,6 +49,11 @@ struct Target {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct Snapshot {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    forked_from: Option<String>,
+    #[serde(skip_serializing_if = "std::collections::HashMap::is_empty")]
+    lane_heads: std::collections::HashMap<String, String>,
+    update_dependents: Vec<String>,
     models: Vec<Value>,
     versions: Vec<(String, Value)>,
     semantics: Vec<String>,
@@ -86,7 +92,7 @@ fn load_overlay(
     if request.targets.len() > 4096 {
         return Err(invalid("status model target limit"));
     }
-    let directory = request.root.join(".bit/objects");
+    let directory = crate::scope_path(&request.root).join("objects");
     let reader = Reader {
         directory: &directory,
         overlay,
@@ -101,16 +107,83 @@ fn load_overlay(
     let mut models = indexed_models(&reader, &request.root, pool)?;
     replace_models(&mut models, overlay);
     let references = selected_references(request, &models, lane.as_ref())?;
-    let versions = versions::read(&reader, &references, pool)?;
+    let required = versions::references(&models, &request.targets)?;
+    let versions = versions::read(&reader, &references, &required, pool)?;
     let semantics = stored_semantics(&versions, pool, stored_hashes)?;
-    let (histories, pending_history) = if request.history {
-        let (histories, pending) = history::read(&reader, &models, request, lane.as_ref(), pool)?;
-        (Some(histories), pending)
-    } else {
-        (None, Vec::new())
-    };
-    Ok(Snapshot { models, versions, semantics, histories, pending_history })
+    let (histories, pending_history) = histories(&reader, &models, request, lane.as_ref(), pool)?;
+    Ok(Snapshot {
+        forked_from: lane.as_ref().and_then(|lane| lane.forked_from.clone()),
+        lane_heads: lane_heads(lane.as_ref()),
+        update_dependents: lane.map_or_else(Vec::new, |lane| lane.update_dependents),
+        models,
+        versions,
+        semantics,
+        histories,
+        pending_history,
+    })
 }
+fn histories(
+    reader: &Reader<'_>,
+    models: &[Value],
+    request: &Request,
+    lane: Option<&lane::Lane>,
+    pool: &rayon::ThreadPool,
+) -> io::Result<(Option<Vec<Value>>, Vec<Value>)> {
+    if !request.history {
+        return Ok((None, Vec::new()));
+    }
+    let selected = relevant_models(request, models, lane);
+    let (mut histories, pending) = history::read(reader, &selected, request, lane, pool)?;
+    for model in models {
+        let identity = format!(
+            "{}/{}",
+            model["scope"].as_str().unwrap_or_default(),
+            model["name"].as_str().unwrap_or_default(),
+        );
+        if !histories
+            .iter()
+            .any(|row| row["identity"] == identity)
+        {
+            let empty = json!({"sourceOnly":[],"targetOnly":[],"noCommon":false});
+            histories.push(json!({"identity":identity,"remoteHead":model["head"],"status":empty,"merge":empty}));
+        }
+    }
+    Ok((Some(histories), pending))
+}
+
+fn relevant_models(request: &Request, models: &[Value], lane: Option<&lane::Lane>) -> Vec<Value> {
+    models
+        .iter()
+        .filter(|model| {
+            let identity = format!(
+                "{}/{}",
+                model["scope"].as_str().unwrap_or_default(),
+                model["name"].as_str().unwrap_or_default(),
+            );
+            locally_changed(model)
+                || request.targets
+                    .iter()
+                    .any(|target| target.identity == identity)
+                || lane.is_some_and(|lane| lane.update_dependents.contains(&identity))
+        })
+        .cloned()
+        .collect()
+}
+
+fn locally_changed(model: &Value) -> bool {
+    model["state"]["versions"]
+        .as_object()
+        .is_some_and(|versions| {
+            versions
+                .values()
+                .any(|version| version["local"] == true)
+        })
+}
+
+fn lane_heads(lane: Option<&lane::Lane>) -> std::collections::HashMap<String, String> {
+    lane.map_or_else(std::collections::HashMap::new, |lane| lane.heads.clone())
+}
+
 fn indexed_models(
     reader: &Reader<'_>,
     root: &Path,
@@ -130,12 +203,23 @@ fn selected_references(
     lane: Option<&lane::Lane>,
 ) -> io::Result<Vec<String>> {
     let mut references = versions::references(models, &request.targets)?;
-    if request.include_heads {
-        versions::include_heads(models, &mut references)?;
-        if let Some(lane) = lane {
-            versions::include_lane_heads(&lane.heads, &mut references)?;
-        }
+    if !request.include_heads {
+        return Ok(references);
     }
+    if let Some(lane) = lane {
+        let heads = lane.heads
+            .iter()
+            .filter(|(id, _)| {
+                request.targets
+                    .iter()
+                    .any(|target| &target.identity == *id)
+            })
+            .map(|(id, head)| (id.clone(), head.clone()))
+            .collect();
+        versions::include_lane_heads(&heads, &mut references)?;
+    }
+    let selected = relevant_models(request, models, lane);
+    versions::include_heads(&selected, &mut references)?;
     Ok(references)
 }
 fn replace_models(models: &mut Vec<Value>, overlay: Option<&crate::command_import::Overlay>) {
@@ -184,7 +268,10 @@ impl Reader<'_> {
             return Ok(value.clone());
         }
         let hash = crate::merge_history::hash(reference)?;
-        let bytes = repository::read_shared(self.directory, hash, &self.raw, &self.packed)?;
+        let bytes = repository::read_shared(self.directory, hash, &self.raw, &self.packed)
+            .map_err(|error| {
+                io::Error::new(error.kind(), format!("status {kind} {reference}: {error}"))
+            })?;
         let (size, body) = repository::split(&bytes, hash, kind)?;
         size.parse::<usize>().map_err(|_| invalid("status model header size"))?;
         serde_json::from_slice(body).map_err(io::Error::other)

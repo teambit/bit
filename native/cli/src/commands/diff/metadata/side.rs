@@ -34,7 +34,7 @@ impl Side {
 pub struct Component<'c> {
     pub target: &'c Value,
     pub model: Option<&'c Value>,
-    pub package_name: &'c str,
+    pub verbose: bool,
 }
 
 impl Component<'_> {
@@ -45,21 +45,18 @@ impl Component<'_> {
         peer_dependencies: &[Value],
         current: bool,
     ) -> io::Result<Side> {
-        let extensions = array(value.get("extensions"), "extensions")?;
-        if !current && extensions.iter().any(custom_package_name) {
-            return Err(decline("stored custom package name requires canonical diff"));
-        }
+        let extensions = named_extensions(array(value.get("extensions"), "extensions")?)?;
         let ids = [
             ids_of(value.get("dependencies"))?,
             ids_of(value.get("devDependencies"))?,
             ids_of(Some(&Value::Array(peer_dependencies.to_vec())))?,
-            Vec::new(),
+            extension_ids(&extensions)?,
         ];
         let peers = Id::unique(
             ids[2]
                 .iter()
                 .cloned()
-                .chain(data_peers(extensions)?),
+                .chain(data_peers(&extensions)?),
         );
         let packages = PACKAGE_FIELDS.map(|field| {
             value
@@ -69,12 +66,12 @@ impl Component<'_> {
                 .unwrap_or_default()
         });
         Ok(Side {
-            printable: self.printable(value, extensions, current)?,
+            printable: self.printable(value, &extensions, current)?,
             version: text(self.target.get("version"))?.to_string(),
             packages,
             ids,
             peers,
-            configs: configs(extensions, true)?,
+            configs: configs(&extensions, true)?,
         })
     }
 
@@ -85,7 +82,7 @@ impl Component<'_> {
         current: bool,
     ) -> io::Result<Map<String, Value>> {
         let mut printable = Map::new();
-        printable.insert("packageName".into(), json!(self.package_name));
+        printable.insert("packageName".into(), json!(self.package_name(extensions)?));
         printable.insert("language".into(), self.language(current));
         printable.insert("bindingPrefix".into(), self.binding_prefix()?);
         let main = value
@@ -109,7 +106,35 @@ impl Component<'_> {
         let deprecated =
             if self.stored("deprecated").is_some() { json!("True") } else { Value::Null };
         printable.insert("deprecated".into(), deprecated);
+        if self.verbose {
+            verbose_fields(&mut printable, value)?;
+        }
         Ok(printable)
+    }
+
+    fn package_name(&self, extensions: &[Value]) -> io::Result<String> {
+        let configured = extensions
+            .iter()
+            .find(|extension| extension["name"] == "teambit.pkg/pkg")
+            .and_then(|extension| extension.get("config"));
+        let identity = text(self.target.get("identity"))?;
+        let (scope, name) =
+            identity.split_once('/').ok_or_else(|| decline("diff package identity"))?;
+        let id = bit_install::model::ComponentId {
+            scope: Some(scope.to_string()),
+            default_scope: None,
+            name: name.to_string(),
+            version: None,
+        };
+        let aspects = configured
+            .map(|config| ("teambit.pkg/pkg".to_string(), config.clone()))
+            .into_iter()
+            .collect();
+        Ok(bit_install::workspace::component_package_name(
+            &id,
+            self.binding_prefix()?.as_str(),
+            &aspects,
+        ))
     }
 
     /// A truthy field of the stored model.
@@ -158,16 +183,6 @@ fn file_list(files: &[Value], tests: bool) -> io::Result<Value> {
         .map(|file| Ok(json!(text(file.get("relativePath"))?.replace('\\', "/"))))
         .collect::<io::Result<Vec<_>>>()?;
     Ok(Value::Array(paths))
-}
-
-fn custom_package_name(extension: &Value) -> bool {
-    extension.get("name").and_then(Value::as_str) == Some("teambit.pkg/pkg")
-        && truthy(
-            extension
-                .get("config")
-                .and_then(|c| c.get("packageJson"))
-                .and_then(|p| p.get("name")),
-        )
 }
 
 /// `ComponentIdList` of stored rows (`{ id: {...} }`) or id strings.
@@ -256,4 +271,84 @@ fn name(extension: &Value) -> &str {
 /// JavaScript's default string order: UTF-16 code units.
 fn utf16_cmp(left: &str, right: &str) -> Ordering {
     left.encode_utf16().cmp(right.encode_utf16())
+}
+
+/// The override fields `componentToPrintableForDiffCommand` retains in verbose mode.
+fn verbose_fields(printable: &mut Map<String, Value>, value: &Value) -> io::Result<()> {
+    let overrides = value
+        .get("overrides")
+        .and_then(Value::as_object)
+        .cloned()
+        .unwrap_or_default();
+    for (key, name) in [
+        ("dependencies", "overridesDependencies"),
+        ("devDependencies", "overridesDevDependencies"),
+        ("peerDependencies", "overridesPeerDependencies"),
+    ] {
+        printable.insert(name.to_string(), override_packages(overrides.get(key)));
+    }
+    let mut properties = overrides;
+    for key in [
+        "dependencies",
+        "devDependencies",
+        "peerDependencies",
+        "propagate",
+        "exclude",
+        "env",
+        "defaultScope",
+        "extensions",
+    ] {
+        properties.remove(key);
+    }
+    printable.insert(
+        "overridesPackageJsonProps".to_string(),
+        json!(super::stringify(&Value::Object(properties), false)?),
+    );
+    Ok(())
+}
+
+fn override_packages(value: Option<&Value>) -> Value {
+    let entries = value
+        .and_then(Value::as_object)
+        .map(|packages| {
+            packages
+                .iter()
+                .map(|(name, version)| format!("{name}@{}", version.as_str().unwrap_or("")))
+                .collect::<Vec<_>>()
+        })
+        .filter(|entries| !entries.is_empty());
+    entries.map_or(Value::Null, |entries| json!(entries))
+}
+
+fn extension_ids(extensions: &[Value]) -> io::Result<Vec<Id>> {
+    extensions
+        .iter()
+        .filter_map(|extension| extension.get("extensionId"))
+        .map(extension_id)
+        .collect()
+}
+
+fn extension_id(value: &Value) -> io::Result<Id> {
+    let id = match value {
+        Value::String(id) => Id::parse(id)?,
+        _ => Id::from_object(value)?,
+    };
+    Ok(if id.version.is_none() { id.with_version(Some("latest".to_owned())) } else { id })
+}
+
+fn named_extensions(extensions: &[Value]) -> io::Result<Vec<Value>> {
+    extensions
+        .iter()
+        .map(|extension| {
+            let mut extension = extension.clone();
+            if let Some(id) = extension.get("extensionId") {
+                let id = match id {
+                    Value::String(id) => Id::parse(id)?,
+                    _ => Id::from_object(id)?,
+                };
+                extension["name"] = json!(id.display());
+            }
+            Ok(extension)
+        })
+        .collect()
 }

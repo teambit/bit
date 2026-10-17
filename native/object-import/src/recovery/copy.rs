@@ -1,3 +1,6 @@
+#[cfg(windows)]
+mod windows;
+
 use super::invalid;
 use std::{fs, io, path::Path};
 
@@ -17,8 +20,8 @@ pub(crate) fn validate(source: &Path, destination: &Path) -> io::Result<()> {
         Err(error) => return Err(error),
     };
     let source_metadata = regular(source)?;
-    if existing.as_ref().is_some_and(|destination| same(&source_metadata, destination)) {
-        return Err(invalid("copy source and destination are identical"));
+    if let Some(metadata) = &existing {
+        distinct(source, destination, &source_metadata, metadata)?;
     }
     acl(source)?;
     if existing.is_some() {
@@ -30,9 +33,10 @@ pub(crate) fn validate(source: &Path, destination: &Path) -> io::Result<()> {
 }
 fn regular(path: &Path) -> io::Result<fs::Metadata> {
     let metadata = fs::symlink_metadata(path)?;
-    if !metadata.is_file() || metadata.len() > 32 * 1024 * 1024 || !single(&metadata) {
+    if !metadata.is_file() || metadata.len() > 32 * 1024 * 1024 {
         return Err(invalid("unsupported recovery copy metadata"));
     }
+    links(path, &metadata)?;
     Ok(metadata)
 }
 fn ancestors(path: &Path) -> io::Result<()> {
@@ -46,22 +50,57 @@ fn ancestors(path: &Path) -> io::Result<()> {
     Ok(())
 }
 #[cfg(unix)]
-fn single(metadata: &fs::Metadata) -> bool {
+fn links(_path: &Path, metadata: &fs::Metadata) -> io::Result<()> {
     use std::os::unix::fs::MetadataExt;
-    metadata.nlink() == 1
+    if metadata.nlink() != 1 {
+        return Err(invalid("unsupported recovery copy metadata"));
+    }
+    Ok(())
 }
-#[cfg(not(unix))]
-fn single(_metadata: &fs::Metadata) -> bool {
-    false
+#[cfg(windows)]
+fn links(path: &Path, _metadata: &fs::Metadata) -> io::Result<()> {
+    if !windows::single(path)? {
+        return Err(invalid("unsupported recovery copy metadata"));
+    }
+    Ok(())
+}
+#[cfg(not(any(unix, windows)))]
+fn links(_path: &Path, _metadata: &fs::Metadata) -> io::Result<()> {
+    Err(invalid("unqualified recovery copy platform"))
 }
 #[cfg(unix)]
-fn same(left: &fs::Metadata, right: &fs::Metadata) -> bool {
+fn distinct(
+    _source: &Path,
+    _destination: &Path,
+    left: &fs::Metadata,
+    right: &fs::Metadata,
+) -> io::Result<()> {
     use std::os::unix::fs::MetadataExt;
-    left.dev() == right.dev() && left.ino() == right.ino()
+    if left.dev() == right.dev() && left.ino() == right.ino() {
+        return Err(invalid("copy source and destination are identical"));
+    }
+    Ok(())
 }
-#[cfg(not(unix))]
-fn same(_left: &fs::Metadata, _right: &fs::Metadata) -> bool {
-    false
+#[cfg(windows)]
+fn distinct(
+    source: &Path,
+    destination: &Path,
+    _left: &fs::Metadata,
+    _right: &fs::Metadata,
+) -> io::Result<()> {
+    if same_file::is_same_file(source, destination)? {
+        return Err(invalid("copy source and destination are identical"));
+    }
+    Ok(())
+}
+#[cfg(not(any(unix, windows)))]
+fn distinct(
+    _source: &Path,
+    _destination: &Path,
+    _left: &fs::Metadata,
+    _right: &fs::Metadata,
+) -> io::Result<()> {
+    Err(invalid("unqualified recovery copy platform"))
 }
 
 #[cfg(target_os = "linux")]
@@ -71,7 +110,13 @@ fn acl(path: &Path) -> io::Result<()> {
     }
     Ok(())
 }
-#[cfg(not(target_os = "linux"))]
+#[cfg(windows)]
+fn acl(_path: &Path) -> io::Result<()> {
+    // Node's fs.copyFile and std::fs::copy both use the Win32 copy API:
+    // the destination security descriptor stays in place (or is inherited).
+    Ok(())
+}
+#[cfg(not(any(target_os = "linux", windows)))]
 fn acl(_path: &Path) -> io::Result<()> {
     Err(invalid("unqualified recovery copy platform"))
 }

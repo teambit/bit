@@ -335,7 +335,9 @@ dependencies = [
  "bit-object-import",
  "chrono",
  "diff",
+ "flate2",
  "getrandom 0.3.4",
+ "libc",
  "node-semver",
  "pnpm-deps-path",
  "pnpm-diagnostics",
@@ -356,6 +358,7 @@ name = "bit-client-transfer"
 version = "0.1.0"
 dependencies = [
  "futures-util",
+ "getrandom 0.3.4",
  "indexmap",
  "reqwest",
  "serde",
@@ -448,14 +451,20 @@ dependencies = [
  "bit-dependency-scanner",
  "flate2",
  "futures-util",
+ "indexmap",
+ "junction 2.1.0",
+ "node-semver",
+ "pretty_assertions",
  "rayon",
  "regress",
  "ryu-js",
+ "same-file",
  "serde",
  "serde_json",
  "sha1",
  "sha2",
  "tokio",
+ "winapi-util",
  "xattr",
 ]
 

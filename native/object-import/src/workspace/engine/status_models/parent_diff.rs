@@ -1,6 +1,6 @@
 //! The first-parent chain used by `bit diff --parent`, with tags and file identity.
 
-use super::{Request as ModelsRequest, invalid, load, versions};
+use super::{Request as ModelsRequest, invalid, load_overlay, versions};
 use crate::{merge_history, read_version};
 use rayon::ThreadPool;
 use serde::Deserialize;
@@ -14,6 +14,8 @@ use std::{
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::workspace::engine) struct Request {
+    #[serde(default)]
+    pub(in crate::workspace::engine) import_token: Option<String>,
     root: PathBuf,
     identity: String,
     target_version: String,
@@ -23,12 +25,20 @@ pub(in crate::workspace::engine) fn read(
     request: &Request,
     pool: &ThreadPool,
 ) -> io::Result<(usize, Value)> {
-    let model = model(request, pool)?;
+    read_overlay(request, pool, None)
+}
+
+pub(in crate::workspace::engine) fn read_overlay(
+    request: &Request,
+    pool: &rayon::ThreadPool,
+    overlay: Option<&crate::command_import::Overlay>,
+) -> io::Result<(usize, Value)> {
+    let model = model(request, pool, overlay)?;
     let target_ref = versions::reference(&model, &request.target_version)?;
     let tags = tags(&model)?;
-    let directory = request.root.join(".bit/objects");
+    let directory = crate::scope_path(&request.root).join("objects");
     let mut reader = read_version::Reader::query(&directory)?;
-    let target = reader.read(&target_ref)?;
+    let target = read_version(&mut reader, overlay, &target_ref)?;
     let mut parent = first_parent(&target)?;
     let mut seen = HashSet::from([target_ref]);
     let mut rows = Vec::new();
@@ -36,7 +46,7 @@ pub(in crate::workspace::engine) fn read(
         if !seen.insert(reference.clone()) || rows.len() >= 4096 {
             return Err(invalid("version parent chain cycle or limit"));
         }
-        let version = reader.read(&reference)?;
+        let version = read_version(&mut reader, overlay, &reference)?;
         rows.push(json!({
             "reference":reference,
             "tag":tags.get(&reference),
@@ -48,8 +58,12 @@ pub(in crate::workspace::engine) fn read(
     Ok((rows.len(), json!({"parents":rows})))
 }
 
-fn model(request: &Request, pool: &ThreadPool) -> io::Result<Value> {
-    let snapshot = load(
+fn model(
+    request: &Request,
+    pool: &ThreadPool,
+    overlay: Option<&crate::command_import::Overlay>,
+) -> io::Result<Value> {
+    let snapshot = load_overlay(
         &ModelsRequest {
             root: request.root.clone(),
             targets: Vec::new(),
@@ -60,6 +74,7 @@ fn model(request: &Request, pool: &ThreadPool) -> io::Result<Value> {
         },
         pool,
         false,
+        overlay,
     )?;
     snapshot.models
         .into_iter()
@@ -119,4 +134,20 @@ fn same_files(left: &Value, right: &Value) -> io::Result<bool> {
         Ok(entries)
     }
     Ok(entries(left)? == entries(right)?)
+}
+
+fn read_version(
+    reader: &mut crate::read_version::Reader<'_>,
+    overlay: Option<&crate::command_import::Overlay>,
+    reference: &str,
+) -> io::Result<Value> {
+    if let Some(value) = overlay
+        .map(|overlay| overlay.read(reference, "Version"))
+        .transpose()?
+        .flatten()
+    {
+        crate::history_query::validate_version(value)?;
+        return Ok(value.clone());
+    }
+    reader.read(reference)
 }

@@ -92,12 +92,16 @@ fn extglob_end(pattern: &[char]) -> Option<usize> {
 fn extglob(kind: char, body: &[char], rest: &[char], text: &[char]) -> bool {
     let alternatives = split_alternatives(body);
     match kind {
-        '!' => (0..=text.len()).any(|split| {
+        '!' => {
             !alternatives
                 .iter()
-                .any(|alternative| glob(alternative, &text[..split]))
-                && glob(rest, &text[split..])
-        }),
+                .any(|alternative| {
+                    let mut excluded = alternative.clone();
+                    excluded.extend_from_slice(rest);
+                    glob(&excluded, text)
+                })
+                && (0..=text.len()).any(|split| glob(rest, &text[split..]))
+        }
         '?' => glob(rest, text) || one_then(&alternatives, rest, text),
         '@' => one_then(&alternatives, rest, text),
         '*' => glob(rest, text) || repeat(&alternatives, rest, text),
@@ -157,17 +161,29 @@ fn class(pattern: &[char], text: &[char]) -> bool {
         '!' | '^' => (true, &pattern[2..end]),
         _ => (false, &pattern[1..end]),
     };
-    let found = body
-        .iter()
-        .enumerate()
-        .any(|(index, start)| {
-            if body.get(index + 1) == Some(&'-') && index + 2 < body.len() {
-                (*start..=body[index + 2]).contains(&character)
-            } else {
-                *start == character
-            }
-        });
+    let Some(found) = in_class(body, character) else {
+        return literal(&pattern[1..], '[', text);
+    };
     found != negated && glob(&pattern[end + 1..], &text[1..])
+}
+
+fn in_class(body: &[char], character: char) -> Option<bool> {
+    let mut index = 0;
+    let mut found = false;
+    while let Some(start) = body.get(index) {
+        if body.get(index + 1) == Some(&'-') && index + 2 < body.len() {
+            let end = body[index + 2];
+            if *start > end {
+                return None;
+            }
+            found |= (*start..=end).contains(&character);
+            index += 3;
+        } else {
+            found |= *start == character;
+            index += 1;
+        }
+    }
+    Some(found)
 }
 
 /// `{a,b}` brace expansion, applied before matching.

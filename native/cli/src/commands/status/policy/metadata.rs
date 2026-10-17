@@ -38,8 +38,24 @@ pub fn current_metadata(target: &Value, policy: &Policy, output: &Value) -> io::
     }
     metadata.insert("bindingPrefix".into(), json!(policy.binding_prefix));
     metadata.insert("overrides".into(), policy.overrides.clone());
-    metadata.insert("extensions".into(), json!(policy.extensions));
+    metadata.insert("extensions".into(), projected_extensions(policy, output)?);
     Ok(Value::Object(metadata))
+}
+
+fn projected_extensions(policy: &Policy, output: &Value) -> io::Result<Value> {
+    let ids = array(output.get("extensions"), "extension versions")?;
+    let mut extensions = policy.extensions.clone();
+    let mut selected = ids.iter();
+    for extension in &mut extensions {
+        if extension.get("extensionId").is_some() {
+            let id = selected.next().ok_or_else(|| decline("status extension versions"))?;
+            extension["extensionId"] = super::projection::extension_id(text(Some(id))?)?;
+        }
+    }
+    if selected.next().is_some() {
+        return Err(decline("status extra extension versions"));
+    }
+    Ok(json!(extensions))
 }
 
 fn metadata_dependencies(indices: &Value, entries: &[Value]) -> io::Result<Value> {

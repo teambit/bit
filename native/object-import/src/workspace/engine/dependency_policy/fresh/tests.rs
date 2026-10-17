@@ -85,11 +85,12 @@ fn linked_component_versions_are_returned_for_semver_receipts() {
     assert!(proof::verify(&read_set).is_err());
 }
 #[test]
-fn rejects_untracked_sources_and_core_package_imports() {
+fn detects_untracked_sources_and_rejects_incomplete_core_package_mapping() {
     let fixture = Fixture::new();
     fixture.write("comp/index.js", "require('./untracked');");
     fixture.write("comp/untracked.js", "module.exports = 1;");
-    assert!(Fixture::run(fixture.request(&["index.js"])).is_err());
+    let detected = Fixture::run(fixture.request(&["index.js"])).unwrap();
+    assert_eq!(detected["detected"]["issues"][0]["type"], "UntrackedDependencies");
     fixture.write("comp/index.js", "require('@teambit/example');");
     fixture.write(
         "node_modules/@teambit/example/package.json",
@@ -192,5 +193,6 @@ fn installed_external_component_retains_package_identity_and_freshness() {
     proof::verify(&read_set).unwrap();
     fixture.write("node_modules/@external/aspect/package.json", r#"{"name":"@external/aspect","version":"0.4.13","main":"index.js","componentId":{"scope":"external.scope","name":"aspect","version":"0.4.13"},"bit":{"peer":true}}"#);
     assert!(proof::verify(&read_set).is_err());
-    assert!(Fixture::run(request).is_err());
+    let peer = Fixture::run(request).unwrap();
+    assert_eq!(peer["detected"]["allDependencies"]["peerDependencies"][0]["peerVersionRange"], "*");
 }

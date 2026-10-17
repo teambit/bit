@@ -137,14 +137,17 @@ impl Output {
     /// `chalk.<style>(text)`; plain text when colors are off.
     #[must_use]
     pub fn paint(&self, style: Style, text: &str) -> String {
-        if !self.color {
+        if !self.color || text.is_empty() {
             return text.to_string();
         }
         let (open, close) = style.codes();
         // chalk re-opens the outer style after a nested style closes it.
         let nested =
             text.replace(&format!("\u{1b}[{close}m"), &format!("\u{1b}[{close}m\u{1b}[{open}m"));
-        format!("\u{1b}[{open}m{nested}\u{1b}[{close}m")
+        let open = format!("\u{1b}[{open}m");
+        let close = format!("\u{1b}[{close}m");
+        let nested = encase_line_breaks(&nested, &close, &open);
+        format!("{open}{nested}{close}")
     }
 
     /// `logger.setStatusLine(text)`: restart the loader with `text`; not on CI.
@@ -301,6 +304,25 @@ pub fn pretty_time(duration: Duration) -> String {
         .find(|(_, size)| nanos >= *size)
         .unwrap_or(&UNITS[5]);
     format!("{}{unit}", (nanos + size / 2) / size)
+}
+
+/// Chalk closes and reopens styles around LF and CRLF without coloring the line ending.
+fn encase_line_breaks(text: &str, close: &str, open: &str) -> String {
+    let mut output = String::with_capacity(text.len());
+    let mut lines = text.split('\n').peekable();
+    while let Some(line) = lines.next() {
+        if lines.peek().is_none() {
+            output.push_str(line);
+            break;
+        }
+        let (line, ending) = line
+            .strip_suffix('\r')
+            .map_or((line, "\n"), |line| (line, "\r\n"));
+        for part in [line, close, ending, open] {
+            output.push_str(part);
+        }
+    }
+    output
 }
 
 #[cfg(test)]

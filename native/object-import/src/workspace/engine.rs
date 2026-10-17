@@ -5,9 +5,13 @@ pub(crate) mod diff;
 pub(crate) mod inventory;
 pub(crate) mod read_dependency_cache;
 
+pub use status_context::configuration::effective as effective_workspace_configuration;
+
 mod command_request;
 mod dependency_graph;
+mod owned;
 mod read;
+use owned::owned_command;
 mod read_raw;
 #[cfg(test)]
 mod request_tests;
@@ -15,12 +19,15 @@ mod resolve_dependencies;
 mod resolve_typescript;
 mod response;
 mod scan;
+mod snapshot_request;
 mod source_overlay;
 mod status;
 mod status_context;
+mod status_graph;
 mod status_history;
 mod status_models;
 mod status_result;
+mod validation;
 
 use crate::protocol;
 use serde::{Deserialize, Serialize};
@@ -28,8 +35,9 @@ use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{
     io::{self, Read, Write},
-    path::{Path, PathBuf},
+    path::PathBuf,
 };
+use validation::{count, expected_hash, hash, invalid, path};
 
 const MAX_INPUT: usize = 4 * 1024 * 1024;
 const MAX_OUTPUT: usize = 32 * 1024 * 1024;
@@ -62,19 +70,36 @@ enum Request {
     DependencyScan {
         request: Value,
     },
+    ReadSetValidate {
+        proofs: Vec<dependency_graph::proof::Proof>,
+    },
     CommandPrepare(command::input::Prepare),
+    CommandCheckoutSelect(command::checkout_pattern::Request),
     CommandInboundPrepare(command::inbound::Prepare),
     CommandInboundList(command::inbound::List),
     CommandInboundApply(command::inbound::Apply),
+    CommandInboundPolicyComplete(command::inbound::policy::Complete),
+    CommandAutoSyncFinalize(command::inbound::autosync::Request),
+    StatusLaneUpdates(status_models::lane_updates::Request),
+    CommandOutboundCandidates(command::outbound::Candidates),
     CommandOutboundPrepare(command::outbound::Prepare),
     CommandOutboundApply(command::outbound::Apply),
+    CommandOutboundStage(command::outbound::Finalize),
     CommandOutboundFinalize(command::outbound::Finalize),
     CommandTagPrepare(command::resolve::Prepare),
     CommandTagPlan(command::resolve::Plan),
+    CommandTagVersionOverrides(command::resolve::TagOverrides),
+    CommandTagCandidates(command::resolve::Plan),
     CommandTagFinalize(command::resolve::Finalize),
     CommandTagApply(command::resolve::Apply),
     CommandSnapPrepare(command::resolve::Prepare),
     CommandSnapPlan(command::resolve::Plan),
+    CommandSnapshotValidate(command::resolve::Validate),
+    CommandSnapshotRefresh(command::resolve::Refresh),
+    CommandSnapshotStagePackages(command::resolve::StagePackages),
+    CommandSnapshotPackageFinalize(command::resolve::PackageFinalize),
+    CommandSnapshotStageBuild(command::resolve::StageBuild),
+    CommandSnapshotBuildFinalize(command::resolve::BuildFinalize),
     CommandSnapFinalize(command::resolve::Finalize),
     CommandSnapApply(command::resolve::Apply),
     CommandResolvePrepare(command::resolve::Prepare),
@@ -86,6 +111,8 @@ enum Request {
     CommandRecoveryApply(command::recovery::Apply),
     CommandRecoveryRestore(command::recovery::Restore),
     CommandPlan(command::Plan),
+    CommandMergeDeferSnapshot(command::merge_defer::Request),
+    CommandCheckoutPolicyComplete(command::checkout_policy::Complete),
     CommandPolicyPrepare(command::policy::Prepare),
     CommandDependencyDetect(command::policy::dependencies::Detect),
     CommandDependencyComplete(command::policy::dependencies::Complete),
@@ -93,10 +120,12 @@ enum Request {
     CommandFinalize(command::Finalize),
     CommandLaneFinalize(command::LaneFinalize),
     StatusContext(status_context::Request),
+    StatusGraph(status_graph::Request),
     StatusResult(status_result::Request),
     StatusModels(status_models::Request),
     ScopeList(status_models::list::Request),
     LaneList(status_models::list::Lanes),
+    HttpLaneList(status_models::list::http_lanes::Request),
     StatusCompare(status_models::comparison::Request),
     WorkspaceDiff(status_models::workspace_diff::Request),
     VersionDiff(status_models::version_diff::Request),
@@ -152,6 +181,8 @@ struct Response {
     /// Why a request failed, for diagnostics; callers decide on `failed`.
     #[serde(skip_serializing_if = "Option::is_none")]
     error: Option<String>,
+    #[serde(rename = "canonicalError", skip_serializing_if = "Option::is_none")]
+    canonical_error: Option<bool>,
 }
 use response::Output;
 
@@ -183,13 +214,13 @@ pub(crate) fn serve(
             failed: false,
             data: Some(data),
             error: None,
+            canonical_error: None,
         },
-        Err(error) => {
-            if std::env::var_os("BIT_RUST_INBOUND_DIAGNOSTIC").is_some() {
-                eprintln!("native inbound diagnostic: {error}");
-            }
-            Response { error: Some(error.to_string()), ..failure(id) }
-        }
+        Err(error) => Response {
+            error: Some(error.to_string()),
+            canonical_error: response::is_canonical(&error).then_some(true),
+            ..failure(id)
+        },
     };
     let mut output = Output(Vec::new());
     if serde_json::to_writer(&mut output, &response).is_err() {
@@ -246,44 +277,6 @@ fn owned(
         request => command_request::dispatch(request, snapshots, pool),
     }
 }
-fn owned_command(
-    request: Request,
-    snapshots: &mut super::snapshots::State,
-    pool: &rayon::ThreadPool,
-) -> io::Result<(usize, Value)> {
-    match request {
-        Request::CommandPlan(input) => command::plan(input, snapshots, pool),
-        Request::CommandPolicyPrepare(input) => {
-            pool.install(|| command::policy::prepare(input, &mut snapshots.command))
-        }
-        Request::CommandDependencyDetect(input) => pool.install(|| {
-            command::policy::dependencies::detect(input, &mut snapshots.command, pool)
-        }),
-        Request::CommandDependencyComplete(input) => pool.install(|| {
-            command::policy::dependencies::complete(input, &mut snapshots.command, pool)
-        }),
-        Request::CommandLaneFinalize(input) => {
-            pool.install(|| command::finalize_lane(&input, &mut snapshots.command))
-        }
-        Request::CommandFinalize(input) => {
-            pool.install(|| command::finalize(&input, &mut snapshots.command))
-        }
-        Request::CommandApply(input) => {
-            pool.install(|| command::apply(&input, &mut snapshots.command))
-        }
-        Request::CommandPrepare(input) => {
-            pool.install(|| command::prepare(input, &mut snapshots.command, pool))
-        }
-        Request::StatusPrepare(input) => client_status::prepare(input, &mut snapshots.status),
-        Request::StatusScan(input) => client_status::scan(&input, &mut snapshots.status, pool),
-        Request::StatusFinish(input) => client_status::finish(&input, &mut snapshots.status, pool),
-        Request::StatusComplete => client_status::complete(&mut snapshots.status),
-        Request::InventoryBegin(input) => inventory::begin(input, &mut snapshots.inventory, pool),
-        Request::InventoryFinish(input) => inventory::finish(input, &mut snapshots.inventory, pool),
-        Request::InventoryCancel { token } => inventory::cancel(token, &mut snapshots.inventory),
-        request => apply(request, pool),
-    }
-}
 fn failure(id: u32) -> Response {
     Response {
         version: 1,
@@ -293,15 +286,18 @@ fn failure(id: u32) -> Response {
         failed: true,
         data: None,
         error: None,
+        canonical_error: None,
     }
 }
 fn apply(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value)> {
     match request {
         Request::StatusContext(request) => status_context::read(&request, pool),
+        Request::StatusGraph(request) => status_graph::read(&request),
         Request::StatusResult(request) => status_result::read(&request),
         Request::StatusModels(request) => status_models::read(&request, pool),
         Request::ScopeList(request) => status_models::list::read(&request, pool),
         Request::LaneList(request) => status_models::list::lanes(&request),
+        Request::HttpLaneList(request) => status_models::list::http_lanes::read(&request),
         Request::StatusCompare(request) => status_models::comparison::read(&request, pool),
         Request::WorkspaceDiff(request) => status_models::workspace_diff::read(&request, pool),
         Request::VersionDiff(request) => status_models::version_diff::read(&request, pool),
@@ -370,37 +366,6 @@ fn dependencies(request: Request, pool: &rayon::ThreadPool) -> io::Result<(usize
         | Request::InventoryCancel { .. } => Err(invalid("inventory operation requires an owner")),
         _ => Err(invalid("unsupported dependency operation")),
     }
-}
-fn invalid(message: &str) -> io::Error {
-    io::Error::new(io::ErrorKind::InvalidData, message)
-}
-fn path(path: &Path) -> io::Result<()> {
-    let name = path.to_str().ok_or_else(|| invalid("workspace non-UTF8 path"))?;
-    if !path.is_absolute() || name.len() > 32768 || name.contains('\0') {
-        return Err(invalid("workspace invalid absolute path"));
-    }
-    Ok(())
-}
-fn count(count: usize) -> io::Result<()> {
-    if count > MAX_FILES { Err(invalid("workspace file count limit")) } else { Ok(()) }
-}
-fn hash(bytes: &[u8]) -> String {
-    crate::validate::hexadecimal(&Sha1::digest(bytes))
-}
-fn expected_hash(hash: &str) -> io::Result<[u8; 20]> {
-    if hash.len() != 40
-        || !hash
-            .bytes()
-            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
-    {
-        return Err(invalid("workspace invalid hash"));
-    }
-    let mut output = [0; 20];
-    for (index, byte) in output.iter_mut().enumerate() {
-        *byte = u8::from_str_radix(&hash[index * 2..index * 2 + 2], 16)
-            .map_err(|_| invalid("workspace invalid hash"))?;
-    }
-    Ok(output)
 }
 #[cfg(test)]
 mod tests;

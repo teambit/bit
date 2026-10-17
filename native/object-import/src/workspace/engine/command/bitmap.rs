@@ -2,6 +2,7 @@
 pub(super) use export::prepare_export_scopes;
 mod export;
 mod lane;
+mod soft;
 #[cfg(test)]
 mod switch_tests;
 use crate::workspace::engine::invalid;
@@ -136,6 +137,38 @@ pub(super) fn prepare_bytes(
     let output = render_rows(rows, &bitmap["$schema-version"], header)?;
     Ok(Prepared { root: root.to_owned(), original, output, changed })
 }
+/// Startup reconciliation changes IDs only, preserving the tracked files/config.
+pub(super) fn auto_sync(
+    root: &Path,
+    updates: &[(String, String)],
+) -> io::Result<(Prepared, usize)> {
+    let original = fs::read(root.join(".bitmap"))?;
+    let bitmap = crate::recovery::jsonc::parse(&original)?;
+    let mut entries = rows(&bitmap)?;
+    let mut count = 0;
+    for entry in &mut entries {
+        let current = identity(entry)?;
+        if let Some((_, version)) = updates
+            .iter()
+            .find(|(id, _)| id == &current)
+        {
+            let (scope, _) = current.split_once('/').ok_or_else(|| invalid("auto-sync scope"))?;
+            if entry["version"].as_str() == Some(version) && entry["scope"] == scope {
+                continue;
+            }
+            count += 1;
+            entry
+                .as_object_mut()
+                .ok_or_else(|| invalid("auto-sync bitmap entry"))?
+                .shift_remove("defaultScope");
+            entry["scope"] = Value::String(scope.to_owned());
+            entry["version"] = Value::String(version.clone());
+        }
+    }
+    let output = render_rows(entries, &bitmap["$schema-version"], None)?;
+    Ok((Prepared { root: root.to_owned(), original, output, changed: count > 0 }, count))
+}
+
 /// Promote every selected export row in one bitmap write and one history entry.
 fn validate_updates(original: &[u8], updates: &[Update]) -> io::Result<()> {
     let mut identities = HashSet::new();
@@ -225,7 +258,7 @@ fn render_rows(rows: Vec<Value>, schema: &Value, lane: Option<Value>) -> io::Res
     for entry in rows {
         let name = entry["name"].as_str().ok_or_else(|| invalid("command bitmap name"))?;
         let key = if names[name] > 1 { identity(&entry)? } else { name.to_owned() };
-        keyed.push((key, plain(&entry)?));
+        keyed.push((key, crate::inspection::component_row(&entry)?));
     }
     keyed.sort_by(|(left, _), (right, _)| left.encode_utf16().cmp(right.encode_utf16()));
     let mut output = Map::new();
@@ -239,55 +272,6 @@ fn render_rows(rows: Vec<Value>, schema: &Value, lane: Option<Value>) -> io::Res
         output.insert("_bit_lane".into(), lane);
     }
     crate::inspection::render_bitmap(&Value::Object(output))
-}
-fn plain(entry: &Value) -> io::Result<Value> {
-    let mut result = Map::new();
-    for key in [
-        "name",
-        "scope",
-        "version",
-        "defaultScope",
-        "mainFile",
-        "rootDir",
-        "wrapDir",
-        "exported",
-        "onLanesOnly",
-        "isAvailableOnCurrentLane",
-        "nextVersion",
-        "localOnly",
-        "config",
-    ] {
-        let Some(value) = entry
-            .get(key)
-            .filter(|value| !value.is_null())
-        else {
-            continue;
-        };
-        if !included(entry, key, value) {
-            continue;
-        }
-        let value = clean_value(key, value)?;
-        result.insert(key.into(), value);
-    }
-    Ok(Value::Object(result))
-}
-fn included(entry: &Value, key: &str, value: &Value) -> bool {
-    if matches!(key, "onLanesOnly" | "localOnly") && value == false {
-        return false;
-    }
-    !(key == "isAvailableOnCurrentLane" && value == true && entry["onLanesOnly"] != true)
-}
-fn clean_value(key: &str, value: &Value) -> io::Result<Value> {
-    let mut value = value.clone();
-    if key == "config" {
-        let config = value.as_object_mut().ok_or_else(|| invalid("command bitmap config"))?;
-        for aspect in config.values_mut() {
-            if let Some(aspect) = aspect.as_object_mut() {
-                aspect.shift_remove("__specific");
-            }
-        }
-    }
-    Ok(value)
 }
 fn tag(context: &Value, identity: &str, version: &str) -> io::Result<String> {
     if crate::merge_history::hash(version).is_err() {
@@ -343,13 +327,13 @@ impl Prepared {
         }
         validate_history_file_id(file_id)?;
         let backup = (|| -> io::Result<()> {
-            let directory = self.root.join(".bit/bitmap-history");
+            let directory = crate::scope_path(&self.root).join("bitmap-history");
             fs::create_dir_all(&directory)?;
             fs::copy(self.root.join(".bitmap"), directory.join(format!(".bitmap-{file_id}")))?;
             let mut metadata = fs::OpenOptions::new()
                 .create(true)
                 .append(true)
-                .open(self.root.join(".bit/bitmap-history-metadata.txt"))?;
+                .open(crate::scope_path(&self.root).join("bitmap-history-metadata.txt"))?;
             writeln!(metadata, "{file_id} {reason}")?;
             metadata.sync_all()
         })();

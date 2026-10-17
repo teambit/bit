@@ -81,22 +81,35 @@ pub fn read_bounded(bytes: &[u8], max_bytes: usize) -> io::Result<Vec<ObjectItem
     if max_bytes > MAX_ARCHIVE_BYTES || bytes.len() > max_bytes {
         return Err(invalid("remote fetch archive exceeds bounds"));
     }
-    let mut archive = ::tar::Archive::new(bytes);
+    read_from(bytes, max_bytes)
+}
+
+/// Read tar entries incrementally; the transport separately bounds the complete archive.
+pub fn read_from(reader: impl Read, max_bytes: usize) -> io::Result<Vec<ObjectItem>> {
+    if max_bytes > MAX_ARCHIVE_BYTES {
+        return Err(invalid("remote fetch archive exceeds bounds"));
+    }
+    let mut archive = ::tar::Archive::new(reader);
     let mut items = Vec::new();
     let mut start: Option<Value> = None;
     let mut ended = false;
     let mut total_bytes = 0usize;
     for entry in archive.entries()? {
-        if items.len() >= MAX_OBJECTS {
-            return Err(invalid("remote fetch object count exceeds bounds"));
-        }
         let mut entry = entry?;
         let (name, data) = read_entry(&mut entry, max_bytes, &mut total_bytes)?;
         match name.as_str() {
             ERROR => return Err(io::Error::other(String::from_utf8_lossy(&data).into_owned())),
-            START => start = serde_json::from_slice(&data).ok(),
-            END => ended = true,
-            _ => items.push(item(&name, data)?),
+            START => start = Some(serde_json::from_slice(&data).map_err(io::Error::other)?),
+            END => {
+                let value: Value = serde_json::from_slice(&data).map_err(io::Error::other)?;
+                ended = truthy(&value);
+            }
+            _ => {
+                if items.len() >= MAX_OBJECTS {
+                    return Err(invalid("remote fetch object count exceeds bounds"));
+                }
+                items.push(item(&name, data)?);
+            }
         }
     }
     require_end(start, ended)?;
@@ -145,3 +158,16 @@ fn item(name: &str, compressed: Vec<u8>) -> io::Result<ObjectItem> {
     }
     Ok(ObjectItem { hash: hash.to_string(), compressed, scope })
 }
+
+pub(crate) fn truthy(value: &Value) -> bool {
+    match value {
+        Value::Null => false,
+        Value::Bool(value) => *value,
+        Value::Number(value) => value.as_f64() != Some(0.0),
+        Value::String(value) => !value.is_empty(),
+        Value::Array(_) | Value::Object(_) => true,
+    }
+}
+
+#[cfg(test)]
+mod tests;

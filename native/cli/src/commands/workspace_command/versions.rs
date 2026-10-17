@@ -52,6 +52,39 @@ pub const TAG: Labels = Labels {
     tag: true,
 };
 
+pub const SOFT_TAG: Labels = Labels {
+    versioned: "taggedComponents",
+    automatic: "autoTaggedResults",
+    others: &["newComponents", "warnings", "totalComponentsCount"],
+    nothing: "nothing to tag",
+    dependents: "auto-tagged dependents",
+    verb: "soft-tagged",
+    explanation: "(use \"bit tag --persist\" to persist the soft-tagged changes as a fully tagged version)\n(use \"bit reset --soft\" to remove the soft-tags)",
+    tag: true,
+};
+
+pub const PERSIST_TAG: Labels = Labels { nothing: "no soft-tag found", ..TAG };
+
+impl Labels {
+    fn soft(&self) -> bool {
+        self.verb == "soft-tagged"
+    }
+    fn section(&self, new: bool) -> (&'static str, &'static str) {
+        match (self.soft(), new) {
+            (true, true) => (
+                "soft-tagged new components",
+                "set to be tagged with first version for components when persisted",
+            ),
+            (true, false) => (
+                "soft-tagged changed components",
+                "components that are set to get a version bump when persisted",
+            ),
+            (false, true) => ("new components", "first version for components"),
+            (false, false) => ("changed components", "components that got a version bump"),
+        }
+    }
+}
+
 /// The engine's result, validated.
 struct Versioned<'l> {
     labels: &'l Labels,
@@ -70,7 +103,12 @@ pub fn format(result: &Value, chalk: Chalk, labels: &Labels) -> io::Result<Repor
         return Ok(Report { data: chalk.yellow(labels.nothing), code: 0, details: None });
     }
     let versioned = hydrate(result, labels)?;
-    Ok(versioned.report(&Formatter::new(chalk)))
+    let root = result
+        .get("autoAddedWorkspaceRoot")
+        .filter(|root| !root.is_null())
+        .map(|root| Id::parse(text(Some(root))?))
+        .transpose()?;
+    Ok(versioned.report(&Formatter::new(chalk), root.as_ref()))
 }
 
 fn hydrate<'l>(value: &Value, labels: &'l Labels) -> io::Result<Versioned<'l>> {
@@ -113,10 +151,11 @@ fn header(map: &serde_json::Map<String, Value>, labels: &Labels) -> io::Result<u
         key == labels.versioned
             || key == labels.automatic
             || labels.others.contains(&key)
+            || key == "autoAddedWorkspaceRoot"
             || (labels.tag && key == "isSoftTag")
     };
     let lane = map.get("laneName").unwrap_or(&Value::Null);
-    let soft = labels.tag && map.get("isSoftTag") != Some(&Value::Bool(false));
+    let soft = labels.tag && map.get("isSoftTag") != Some(&Value::Bool(labels.soft()));
     if map.keys().any(|key| !known(key)) || !(lane.is_null() || lane.is_string()) || soft {
         return Err(decline("native snap report"));
     }
@@ -134,7 +173,7 @@ fn versions(ids: Vec<Id>, labels: &Labels) -> io::Result<Vec<Id>> {
             .as_deref()
             .is_some_and(|version| node_semver::npm::valid(version).is_some())
     };
-    if labels.tag && !ids.iter().all(semver) {
+    if labels.tag && !labels.soft() && !ids.iter().all(semver) {
         return Err(decline("native tag version"));
     }
     Ok(ids)
@@ -224,23 +263,26 @@ impl Versioned<'_> {
     }
 
     /// `snapResultReport` / `tagResultReport`.
-    fn report(&self, format: &Formatter) -> Report {
+    fn report(&self, format: &Formatter, root: Option<&Id>) -> Report {
+        let verb = if self.labels.tag { "tagged" } else { "snapped" };
+        let root = root.map_or_else(String::new, |root|format.hint(&format!("({} is the workspace-root component. it was new or modified, so it was {verb} along: the other components record the root version they were {verb} with)",in_bold(format.chalk,root))));
         let footer = self.footer(format);
         let warnings = self.warnings(format);
         if self.automatic.is_empty() {
-            let data =
-                Formatter::join(&[self.sections(format, true), vec![warnings, footer]].concat());
+            let data = Formatter::join(
+                &[self.sections(format, true, &root), vec![warnings, footer]].concat(),
+            );
             return Report { data, code: 0, details: None };
         }
         let summary = vec![self.automatic_section(format), warnings.clone(), footer.clone()];
-        let data = Formatter::join(&[self.sections(format, false), summary].concat());
+        let data = Formatter::join(&[self.sections(format, false, &root), summary].concat());
         let details =
-            Formatter::join(&[self.sections(format, true), vec![warnings, footer]].concat());
+            Formatter::join(&[self.sections(format, true, &root), vec![warnings, footer]].concat());
         Report { data, code: 0, details: Some(details) }
     }
 
     /// The new and changed components, each with its dependents when `detailed`.
-    fn sections(&self, format: &Formatter, detailed: bool) -> Vec<String> {
+    fn sections(&self, format: &Formatter, detailed: bool, root: &str) -> Vec<String> {
         let added: HashSet<String> = self.added
             .iter()
             .map(Id::without_version)
@@ -266,9 +308,12 @@ impl Versioned<'_> {
             .iter()
             .map(|id| Formatter::item_with(&id.without_version(), &format.warn_symbol()))
             .collect();
+        let (new_title, new_desc) = self.labels.section(true);
+        let (changed_title, changed_desc) = self.labels.section(false);
         vec![
-            format.section("new components", "first version for components", &new),
-            format.section("changed components", "components that got a version bump", &changed),
+            format.section(new_title, new_desc, &new),
+            format.section(changed_title, changed_desc, &changed),
+            root.to_string(),
             format.section("removed components", "", &removed),
         ]
     }
@@ -342,7 +387,12 @@ impl Versioned<'_> {
             "{} component(s) {}{lane}",
             self.total, self.labels.verb,
         ));
-        format!("{summary}\n{}", format.hint(self.labels.explanation))
+        let explanation = format.hint(self.labels.explanation);
+        if self.labels.soft() {
+            format!("{summary}\n{explanation}\n{}", format.chalk.bold("keep in mind that this is a soft-tag (changes recorded to be tagged), to persist the changes use --persist flag"))
+        } else {
+            format!("{summary}\n{explanation}")
+        }
     }
 }
 

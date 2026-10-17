@@ -5,6 +5,30 @@ use std::{collections::HashMap, io};
 pub(in crate::workspace::engine::command) fn project(
     bitmap: &Value,
 ) -> io::Result<(Value, HashMap<String, Value>)> {
+    project_with(bitmap, validate)
+}
+
+pub(in crate::workspace::engine::command) fn project_snapshot(
+    bitmap: &Value,
+) -> io::Result<(Value, HashMap<String, Value>)> {
+    project_with(bitmap, validate_snapshot)
+}
+
+fn validate_snapshot(config: &Value) -> io::Result<()> {
+    let rows = config.as_object().ok_or_else(|| invalid("snapshot bitmap configuration"))?;
+    if rows
+        .iter()
+        .any(|(name, value)| !name.contains('/') || (!value.is_object() && value != "-"))
+    {
+        return Err(invalid("snapshot bitmap aspect configuration"));
+    }
+    Ok(())
+}
+
+fn project_with(
+    bitmap: &Value,
+    validate: fn(&Value) -> io::Result<()>,
+) -> io::Result<(Value, HashMap<String, Value>)> {
     let mut projected = bitmap.clone();
     let mut configs = HashMap::new();
     for (key, row) in projected.as_object_mut().ok_or_else(|| invalid("recovery bitmap"))? {

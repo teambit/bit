@@ -46,7 +46,7 @@ struct Cache {
 }
 
 fn rows(root: &Path, file: &str, logs: &[Value]) -> io::Result<Vec<Value>> {
-    let directory = root.join(".bit/objects");
+    let directory = crate::scope_path(root).join("objects");
     let mut reader = read_version::Reader::query(&directory)?;
     let mut cache = Cache {
         versions: HashMap::new(),

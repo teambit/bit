@@ -39,10 +39,30 @@ pub(super) struct Request {
     home: Option<PathBuf>,
     builtins: Vec<String>,
     detector_extensions: Vec<String>,
-    typescript: bool,
+    #[serde(flatten)]
+    detector: DetectorOptions,
     include_npm: bool,
     #[serde(default)]
     visited: Option<serde_json::Map<String, Value>>,
+}
+
+#[derive(Deserialize)]
+struct DetectorOptions {
+    typescript: bool,
+    #[serde(default)]
+    custom: Option<HashMap<String, CustomDetection>>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct CustomDetection {
+    dependencies: Vec<String>,
+    typescript: bool,
+    source_hash: String,
+    #[serde(default)]
+    error: Option<Value>,
+    #[serde(default)]
+    lookups: HashMap<String, Option<PathBuf>>,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -61,8 +81,11 @@ struct PathMap {
 }
 struct Row {
     path_map: PathMap,
+    missing: Vec<String>,
+    missing_packages: Vec<String>,
     registered: Vec<String>,
     detector_scanned: bool,
+    error: Option<Value>,
 }
 
 pub(super) fn apply(request: &Request, pool: &rayon::ThreadPool) -> io::Result<(usize, Value)> {

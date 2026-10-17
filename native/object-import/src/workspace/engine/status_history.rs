@@ -30,7 +30,7 @@ pub(super) fn validate(request: &Request) -> io::Result<(usize, Value)> {
 }
 pub(super) fn commit(request: &Request) -> io::Result<(usize, Value)> {
     let objects = prepare(request)?;
-    let store = Store::new(request.root.join(".bit/objects"), None)?;
+    let store = Store::new(crate::scope_path(&request.root).join("objects"), None)?;
     for (hash, bytes) in &objects {
         mutable_store::persist_serialized(&store, hash, bytes, false)?;
     }

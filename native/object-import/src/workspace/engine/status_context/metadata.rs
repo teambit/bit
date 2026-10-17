@@ -78,14 +78,45 @@ fn extension_configuration(name: &str, value: &Value, recovery: bool) -> io::Res
     if recovery && empty_core(name, value) {
         return Ok(());
     }
-    if name != "teambit.dependencies/dependency-resolver" {
-        return Err(invalid("status context extension requires Harmony"));
+    if name == "teambit.envs/envs" {
+        let config =
+            value.as_object().ok_or_else(|| invalid("status environment configuration"))?;
+        if config
+            .get("env")
+            .is_some_and(|env| !env.is_string())
+        {
+            return Err(invalid("status environment identifier"));
+        }
+        return Ok(());
     }
-    let fields = value.as_object().ok_or_else(|| invalid("status context resolver"))?;
-    if fields.keys().any(|key| key != "policy") {
-        return Err(invalid("status context resolver requires Harmony"));
+    if value.as_object().is_some_and(serde_json::Map::is_empty) && name.contains('/') {
+        return Ok(());
     }
+    if name == "teambit.component/issues" {
+        return issue_configuration(value);
+    }
+    value.as_object().ok_or_else(|| invalid("status context aspect configuration"))?;
     Ok(())
+}
+
+fn issue_configuration(value: &Value) -> io::Result<()> {
+    let fields = value.as_object().ok_or_else(|| invalid("status issue configuration"))?;
+    let names = value
+        .get("ignoreIssues")
+        .is_none_or(|value| {
+            value
+                .as_array()
+                .is_some_and(|names| names.iter().all(Value::is_string))
+        });
+    if fields
+        .keys()
+        .all(|key| key == "ignoreIssues")
+        && names
+    {
+        Ok(())
+    } else {
+        Err(invalid("status issue configuration"))
+    }
 }
 
 fn empty_core(name: &str, value: &Value) -> bool {
@@ -104,12 +135,8 @@ fn empty_core(name: &str, value: &Value) -> bool {
 }
 
 pub(super) fn scope(scope: &Value) -> io::Result<()> {
-    let fields = scope.as_object().ok_or_else(|| invalid("status context scope"))?;
-    if fields
-        .keys()
-        .any(|key| !matches!(key.as_str(), "name" | "version" | "remotes" | "lanes" | "groupName"))
-        || scope["name"].as_str().is_none_or(str::is_empty)
-    {
+    scope.as_object().ok_or_else(|| invalid("status context scope"))?;
+    if scope["name"].as_str().is_none_or(str::is_empty) {
         return Err(invalid("status context scope configuration requires canonical lifecycle"));
     }
     Ok(())

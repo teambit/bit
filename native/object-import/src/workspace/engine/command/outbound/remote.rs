@@ -1,6 +1,6 @@
 //! Direct client-side pending transfer and canonical remote server actions.
 use super::{Pending, Prepare, Retained, invalid};
-use bit_client_transfer::{GlobalConfig, http::Network, remotes::Remote, tar};
+use bit_client_transfer::{http::Network, remotes::Remote, tar};
 use serde_json::{Value, json};
 use std::{
     fs,
@@ -34,6 +34,9 @@ impl Actions {
         match Remote::from_host(&pending.host)? {
             Remote::File(path) => {
                 check_file_remote(&path, &pending.scope)?;
+                if let Some(adapter) = crate::export_actions::current() {
+                    return adapter.call(&path, name, options);
+                }
                 if self.file.is_none() {
                     self.file = Some(FileBridge::spawn(
                         &retained.network.node_executable,
@@ -64,19 +67,7 @@ pub(super) fn host(input: &Prepare, scope: &str) -> io::Result<String> {
 }
 
 pub(super) fn configured_host(input: &Prepare, scope: &str) -> io::Result<String> {
-    let local: Value = serde_json::from_slice(&fs::read(input.root.join(".bit/scope.json"))?)?;
-    if let Some(host) = local["remotes"][scope].as_str() {
-        return Ok(host.to_owned());
-    }
-    let globals: Value = match fs::read(&input.global_remotes_file) {
-        Ok(bytes) => serde_json::from_slice(&bytes)?,
-        Err(error) if error.kind() == io::ErrorKind::NotFound => Value::Null,
-        Err(error) => return Err(error),
-    };
-    globals[scope]
-        .as_str()
-        .map(str::to_owned)
-        .ok_or_else(|| invalid("outbound unconfigured or hub remote"))
+    Ok(super::hub::resolve(input, scope)?.host)
 }
 
 fn check_file_remote(path: &Path, scope: &str) -> io::Result<()> {
@@ -233,18 +224,14 @@ impl Actions {
     }
 }
 
-fn network(retained: &Retained) -> io::Result<Network> {
-    let config: GlobalConfig =
-        match fs::read(retained.network.global_config_dir.join("config.json")) {
-            Ok(bytes) => serde_json::from_slice(&bytes)?,
-            Err(error) if error.kind() == io::ErrorKind::NotFound => GlobalConfig::new(),
-            Err(error) => return Err(error),
-        };
-    let local: Value =
-        serde_json::from_slice(&fs::read(retained.network.root.join(".bit/scope.json"))?)?;
+pub(super) fn network(retained: &Retained) -> io::Result<Network> {
+    let config = &retained.network.global;
+    let local: Value = serde_json::from_slice(&fs::read(
+        crate::scope_path(&retained.network.root).join("scope.json"),
+    )?)?;
     let local_name = local["name"].as_str().ok_or_else(|| invalid("outbound local scope"))?;
     Network::new(
-        &config,
+        config,
         &retained.network.bit_version,
         Some(local_name),
         retained.network.auth_token.as_deref(),

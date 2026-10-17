@@ -14,6 +14,25 @@ const FIELDS: [&str; 2] = ["dependencies", "peerDependencies"];
 /// One `WorkspacePolicyEntry`: field index (0 runtime, 1 peer), name, config value.
 type Entry = (usize, String, Value);
 
+/// Add runtime entries to a comment-preserving document using `WorkspacePolicy.add` semantics.
+pub fn update_document(
+    document: &mut Document,
+    entries: &[(String, String)],
+    existing: ExistingEntries,
+) -> io::Result<()> {
+    let initial = document
+        .get(&[DEPENDENCY_RESOLVER_ASPECT, "policy"])
+        .unwrap_or(Value::Null);
+    let mut policy = config_entries(&initial);
+    for (name, version) in entries {
+        if admits(&policy, name, existing)? {
+            policy.push((0, name.clone(), json!(version)));
+        }
+    }
+    update_config_policy(document, &to_config_object(&policy));
+    Ok(())
+}
+
 /// Add `entries` (`[name, version]`) with `updateExisting` and write `workspace.jsonc`.
 pub fn add_to_root_policy(
     session: &Session<'_>,

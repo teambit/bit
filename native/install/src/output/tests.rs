@@ -62,3 +62,14 @@ fn status_lines_are_not_shown_on_ci() {
     output.success("done", None);
     assert_eq!(*written.lock().unwrap(), "✔ done\n");
 }
+
+#[test]
+fn multiline_warning_colors_reopen_after_lf_and_crlf() {
+    let (sink, _) = recorder();
+    let output = Output::new(true, false, true, sink);
+    assert_eq!(
+        output.paint(Style::Yellow, "one\r\n\ntwo"),
+        "\u{1b}[33mone\u{1b}[39m\r\n\u{1b}[33m\u{1b}[39m\n\u{1b}[33mtwo\u{1b}[39m",
+    );
+    assert_eq!(output.paint(Style::Yellow, ""), "");
+}

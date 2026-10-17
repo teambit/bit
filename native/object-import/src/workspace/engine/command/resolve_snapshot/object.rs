@@ -10,6 +10,7 @@ pub(super) struct Context<'a> {
     pub versions: &'a HashMap<&'a str, &'a str>,
     pub hashes: &'a HashMap<&'a str, &'a str>,
     pub snapshots: &'a snapshots::State,
+    pub ordinary_snapshot: bool,
 }
 
 pub(super) fn prepare(
@@ -19,15 +20,23 @@ pub(super) fn prepare(
     proofs: &mut Vec<proof::Proof>,
 ) -> io::Result<Value> {
     let hash = context.hashes[material.identity.as_str()];
-    let mut version = metadata(material, context.receipt, context.lane, context.versions)?;
     let allocation = context.receipt["versions"]
         .as_array()
         .unwrap()
         .iter()
         .find(|row| row["identity"] == material.identity)
         .ok_or_else(|| invalid("resolve allocation absent"))?;
+    let mut version = metadata(material, context.receipt, context.lane, context.versions)?;
+    component_message(&mut version, allocation, material.participation.automatic)?;
+    super::build::metadata(&mut version, allocation)?;
     reconciliation::reconcile(&mut version, material, allocation)?;
-    sources::sources(&mut version, material, context.snapshots, objects)?;
+    sources::sources(
+        &mut version,
+        material,
+        context.snapshots,
+        objects,
+        context.ordinary_snapshot,
+    )?;
     snapshot::dependencies_graph(allocation, &mut version, objects)?;
     graph::graph(
         context.root,
@@ -59,9 +68,6 @@ fn metadata(
     version["schema"] = json!("2.0.0");
     references::rewrite_batch_refs(&mut version, hashes)?;
     version["log"] = receipt["log"].clone();
-    if material.participation.automatic {
-        auto_message(&mut version);
-    }
     version["batchId"] = receipt["batchId"].clone();
     version["bitVersion"] = receipt["bitVersion"].clone();
     version["buildStatus"] = json!(if super::is_removed(&version) { "skipped" } else { "pending" });
@@ -142,4 +148,24 @@ pub(super) fn local_model(material: &Material, hash: &str) -> io::Result<Value> 
         .ok_or_else(|| invalid("tag local version"))?
         .insert("local".into(), json!(true));
     Ok(model)
+}
+
+fn component_message(version: &mut Value, allocation: &Value, automatic: bool) -> io::Result<()> {
+    if let Some(log) = allocation.get("log") {
+        component_log(version, log)?;
+    }
+    if automatic && allocation["logResolved"] != true {
+        auto_message(version);
+    }
+    Ok(())
+}
+
+fn component_log(version: &mut Value, log: &Value) -> io::Result<()> {
+    for field in ["message", "username", "email"] {
+        if let Some(value) = log.get(field) {
+            version["log"][field] =
+                json!(value.as_str().ok_or_else(|| invalid("snapshot component log field"))?);
+        }
+    }
+    Ok(())
 }

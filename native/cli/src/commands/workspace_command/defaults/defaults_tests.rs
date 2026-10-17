@@ -11,6 +11,7 @@ fn app_files() {
 
 fn policy() -> crate::commands::status::policy::Policy {
     crate::commands::status::policy::Policy {
+        merge_conflict: false,
         input: serde_json::json!({ "resolution": { "prefix": "^" } }),
         extensions: Vec::new(),
         model_packages: Default::default(),

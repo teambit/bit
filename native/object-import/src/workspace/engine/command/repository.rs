@@ -1,3 +1,5 @@
+mod short_refs;
+
 use super::super::dependency_graph::proof;
 use crate::{checkout::repository, command_import, read_budget::Budget};
 use serde_json::Value;
@@ -7,26 +9,58 @@ use std::{
     path::{Path, PathBuf},
 };
 
-pub(super) struct Repository {
+pub(in crate::workspace::engine) struct Repository {
     directory: PathBuf,
     imported: Option<command_import::PreparedImport>,
     raw: Budget,
     packed: Budget,
     values: HashMap<(String, String), Value>,
     proofs: Vec<proof::Proof>,
+    checkout_license: HashMap<String, String>,
+    short_refs: HashMap<String, Vec<String>>,
 }
 impl Repository {
-    pub(super) fn new(root: &Path, imported: Option<command_import::PreparedImport>) -> Self {
+    pub(in crate::workspace::engine) fn new(
+        root: &Path,
+        imported: Option<command_import::PreparedImport>,
+    ) -> Self {
         Self {
-            directory: root.join(".bit/objects"),
+            directory: crate::scope_path(root).join("objects"),
             imported,
             raw: Budget::new(32 * 1024 * 1024),
             packed: Budget::new(32 * 1024 * 1024),
             values: HashMap::new(),
             proofs: Vec::new(),
+            checkout_license: HashMap::new(),
+            short_refs: HashMap::new(),
         }
     }
-    pub(super) fn read(&mut self, reference: &str, kind: &str) -> io::Result<Value> {
+    pub(super) fn prepare_checkout_license(&mut self, scope: &str) -> io::Result<()> {
+        let metadata = match self.read(&super::super::hash(scope.as_bytes()), "ScopeMeta") {
+            Ok(metadata) => metadata,
+            Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),
+            Err(error) => return Err(error),
+        };
+        match metadata.get("license") {
+            None | Some(Value::Null) => {}
+            Some(Value::String(text)) => {
+                if !text.is_empty() {
+                    self.checkout_license.insert(scope.to_owned(), text.clone());
+                }
+            }
+            _ => return Err(super::super::invalid("command scope license shape")),
+        }
+        Ok(())
+    }
+    pub(super) fn checkout_license(&self, identity: &str) -> Option<&str> {
+        let (scope, _) = identity.split_once('/')?;
+        self.checkout_license.get(scope).map(String::as_str)
+    }
+    pub(in crate::workspace::engine) fn read(
+        &mut self,
+        reference: &str,
+        kind: &str,
+    ) -> io::Result<Value> {
         let hash = crate::merge_history::hash(reference)?;
         if let Some(imported) = &self.imported
             && let Some(value) = imported.overlay.read(reference, kind)?
@@ -47,6 +81,24 @@ impl Repository {
         proof::verify(&self.proofs[self.proofs.len() - 1..])?;
         self.values.insert(key, value.clone());
         Ok(value)
+    }
+    pub(super) fn resolve_short(&mut self, prefix: &str) -> io::Result<String> {
+        let refs = self.matching_short(prefix)?;
+        let resolved = short_refs::unique(prefix, &refs)?;
+        self.short_refs.insert(prefix.to_string(), refs);
+        Ok(resolved)
+    }
+
+    fn matching_short(&self, prefix: &str) -> io::Result<Vec<String>> {
+        let overlay = self.imported
+            .as_ref()
+            .into_iter()
+            .flat_map(|imported| imported.overlay.object_references())
+            .map(str::to_string);
+        short_refs::matching(&self.directory, prefix, overlay)
+    }
+    pub(in crate::workspace::engine) fn read_set(&self) -> &[proof::Proof] {
+        &self.proofs
     }
     pub(super) fn source_batch(&mut self, references: &[String]) -> io::Result<Vec<Vec<u8>>> {
         use rayon::prelude::*;
@@ -83,7 +135,10 @@ impl Repository {
         proof::verify(&self.proofs[start..])?;
         Ok(contents)
     }
-    pub(super) fn source_json(&mut self, reference: &str) -> io::Result<Value> {
+    pub(in crate::workspace::engine) fn source_json(
+        &mut self,
+        reference: &str,
+    ) -> io::Result<Value> {
         crate::merge_history::hash(reference)?;
         if let Some(source) = self.imported
             .as_ref()
@@ -106,9 +161,16 @@ impl Repository {
         }
         Ok(())
     }
-    pub(super) fn validate(&self) -> io::Result<()> {
+    pub(in crate::workspace::engine) fn validate(&self) -> io::Result<()> {
         if let Some(imported) = &self.imported {
             imported.validate()?;
+        }
+        for (prefix, expected) in &self.short_refs {
+            if &self.matching_short(prefix)? != expected {
+                return Err(super::super::invalid(
+                    "checkout short reference changed during planning",
+                ));
+            }
         }
         proof::verify(&self.proofs)
     }
@@ -249,6 +311,22 @@ impl Repository {
         } else {
             Err(super::super::invalid("command lane import owner missing"))
         }
+    }
+    pub(super) fn commit_import_retained(&mut self) -> io::Result<HashMap<PathBuf, Vec<u8>>> {
+        let files = self.imported
+            .as_mut()
+            .map(crate::command_import::PreparedImport::commit_retained)
+            .transpose()?
+            .unwrap_or_default();
+        proof::accept_published(&mut self.proofs, &files);
+        Ok(files)
+    }
+    pub(super) fn accept_published(&mut self, files: &HashMap<PathBuf, Vec<u8>>) -> io::Result<()> {
+        if let Some(imported) = &mut self.imported {
+            imported.accept_published(files)?;
+        }
+        proof::accept_published(&mut self.proofs, files);
+        self.validate()
     }
     pub(super) fn commit_import(&self) -> io::Result<()> {
         if let Some(imported) = &self.imported {

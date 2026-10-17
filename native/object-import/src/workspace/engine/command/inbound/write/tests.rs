@@ -1,4 +1,6 @@
-use super::{History, Prepared, Target, safe_destination, unique_name};
+use super::{
+    History, Prepared, Replacement, Target, WorkspaceFiles, safe_destination, unique_name,
+};
 use serde_json::json;
 use std::{
     fs,
@@ -35,10 +37,18 @@ fn writer_rolls_back_partial_files_when_later_destination_conflicts() {
     let root = root();
     fs::write(root.join(".bitmap"), b"before").unwrap();
     let plan = Prepared {
+        policy: None,
+        policy_input: None,
         root: root.clone(),
         bitmap_before: b"before".to_vec(),
         bitmap_after: b"after".to_vec(),
-        files: vec![(root.join("a"), b"first".to_vec()), (root.join("a/b"), b"second".to_vec())],
+        changes: WorkspaceFiles {
+            additions: vec![
+                (root.join("a"), b"first".to_vec()),
+                (root.join("a/b"), b"second".to_vec()),
+            ],
+            ..WorkspaceFiles::default()
+        },
         history: history(&root),
     };
     assert!(plan.commit().is_err());
@@ -51,10 +61,12 @@ fn bitmap_replacement_preserves_old_bytes_in_history() {
     let root = root();
     fs::write(root.join(".bitmap"), b"before").unwrap();
     let plan = Prepared {
+        policy: None,
+        policy_input: None,
         root: root.clone(),
         bitmap_before: b"before".to_vec(),
         bitmap_after: b"after".to_vec(),
-        files: Vec::new(),
+        changes: WorkspaceFiles::default(),
         history: history(&root),
     };
     plan.commit().unwrap();
@@ -67,6 +79,41 @@ fn bitmap_replacement_preserves_old_bytes_in_history() {
         fs::read(root.join(".bit/bitmap-history-metadata.txt")).unwrap(),
         b"2026-1-2-3-4-5 import\n",
     );
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn writer_restores_an_existing_file_after_a_later_replacement_fails() {
+    let root = root();
+    let file = root.join("existing.js");
+    fs::write(root.join(".bitmap"), b"before").unwrap();
+    fs::write(&file, b"original").unwrap();
+    let plan = Prepared {
+        policy: None,
+        policy_input: None,
+        root: root.clone(),
+        bitmap_before: b"before".to_vec(),
+        bitmap_after: b"after".to_vec(),
+        changes: WorkspaceFiles {
+            replacements: vec![
+                Replacement {
+                    path: file.clone(),
+                    before: b"original".to_vec(),
+                    after: b"first".to_vec(),
+                },
+                Replacement {
+                    path: file.clone(),
+                    before: b"original".to_vec(),
+                    after: b"second".to_vec(),
+                },
+            ],
+            ..WorkspaceFiles::default()
+        },
+        history: history(&root),
+    };
+    assert!(plan.commit().is_err());
+    assert_eq!(fs::read(&file).unwrap(), b"original");
+    assert_eq!(fs::read(root.join(".bitmap")).unwrap(), b"before");
     fs::remove_dir_all(root).unwrap();
 }
 #[cfg(unix)]
@@ -116,4 +163,29 @@ fn equal_directories_move_under_their_owner() {
     let mut directories = owned(&["ui/button", "ui/button"]);
     super::directories::fix_dirs_if_equal(&targets, &mut directories);
     assert_eq!(directories, ["org1/ui/button", "org2/ui/button"]);
+}
+
+#[test]
+fn incomplete_policy_prevents_any_workspace_publication() {
+    let root = root();
+    fs::write(root.join(".bitmap"), b"before").unwrap();
+    fs::write(root.join("workspace.jsonc"), b"{}").unwrap();
+    let input = json!({"workspaceEntries":[],"componentDeps":[],"strategy":null});
+    let policy = super::super::super::checkout_policy::Prepared::new(&root, input.clone()).unwrap();
+    let plan = Prepared {
+        policy: Some(policy),
+        policy_input: Some(input),
+        root: root.clone(),
+        bitmap_before: b"before".to_vec(),
+        bitmap_after: b"after".to_vec(),
+        changes: WorkspaceFiles {
+            additions: vec![(root.join("source.js"), b"new".to_vec())],
+            ..WorkspaceFiles::default()
+        },
+        history: history(&root),
+    };
+    assert!(plan.commit().is_err());
+    assert_eq!(fs::read(root.join(".bitmap")).unwrap(), b"before");
+    assert!(!root.join("source.js").exists());
+    fs::remove_dir_all(root).unwrap();
 }

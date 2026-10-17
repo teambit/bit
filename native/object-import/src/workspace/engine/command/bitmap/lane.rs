@@ -160,13 +160,11 @@ fn prepared_addition<'a>(
     if update.keep_ours {
         return Err(invalid("command bitmap cannot preserve an absent component"));
     }
-    let addition = context["lane"]["additions"]
-        .as_array()
-        .and_then(|entries| {
-            entries
-                .iter()
-                .find(|row| identity(row).is_ok_and(|id| id == update.identity))
-        })
+    let addition = [context["lane"]["additions"].as_array(), context["scopeAdditions"].as_array()]
+        .into_iter()
+        .flatten()
+        .flatten()
+        .find(|row| identity(row).is_ok_and(|id| id == update.identity))
         .ok_or_else(|| invalid("command bitmap missing prepared addition"))?;
     validate_addition(addition, rows)?;
     Ok(addition)

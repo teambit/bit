@@ -3,8 +3,11 @@ pub(super) mod graph;
 pub(super) mod projection;
 
 mod config;
+mod conflicts;
+mod scope;
 #[cfg(test)]
 mod tests;
+mod workspace;
 
 use super::{Record, invalid};
 use serde::Deserialize;
@@ -17,6 +20,7 @@ pub(super) struct Baseline {
     pub(super) current: Value,
     pub(super) versions: [Value; 3],
     pub(super) package_name: String,
+    pub(super) scope_only: bool,
 }
 
 pub(super) struct Row {
@@ -27,13 +31,20 @@ pub(super) struct Row {
     pub(super) projected: Value,
     pub(super) ours_conflict: bool,
     pub(super) fast_forward: bool,
-    pub(super) detected: Option<Value>,
+    pub(super) receipts: Receipts,
+}
+
+#[derive(Default)]
+pub(super) struct Receipts {
+    pub(super) dependencies: Option<Value>,
+    pub(super) configuration: Value,
 }
 
 pub(super) struct Prepared {
     pub(super) rows: Vec<Row>,
     pub(super) config_ready: bool,
     pub(super) dependencies_ready: bool,
+    conflicts: Option<conflicts::File>,
     pub(super) overlay: Option<super::super::source_overlay::SourceOverlay>,
 }
 
@@ -48,24 +59,39 @@ pub(in crate::workspace::engine) struct Prepare {
 struct Component {
     identity: String,
     semver: Value,
-    default_node: projection::Defaults,
+    default_node: Option<projection::Defaults>,
     #[serde(default)]
     dependency_state: Value,
 }
 
 impl Prepared {
     pub(super) fn new() -> Self {
-        Self { rows: Vec::new(), config_ready: false, dependencies_ready: false, overlay: None }
+        Self {
+            rows: Vec::new(),
+            config_ready: false,
+            dependencies_ready: false,
+            conflicts: None,
+            overlay: None,
+        }
     }
     pub(super) fn receipt(&self) -> Value {
         json!({"targets":self.rows.iter().map(|row| json!({"identity":row.identity,
             "directory":row.baseline.directory,"version":row.baseline.version,"files":row.files,
             "currentMetadata":row.baseline.current,"currentVersion":row.baseline.versions[1],
-            "baseVersion":row.baseline.versions[0],"otherVersion":row.baseline.versions[2],"packageName":row.baseline.package_name,"fastForward":row.fast_forward})).collect::<Vec<_>>()})
+            "baseVersion":row.baseline.versions[0],"otherVersion":row.baseline.versions[2],"packageName":row.baseline.package_name,"fastForward":row.fast_forward,"scopeOnly":row.baseline.scope_only})).collect::<Vec<_>>()})
     }
     pub(super) fn validate(&self, needs_snap: bool) -> io::Result<()> {
         if !self.config_ready || needs_snap && !self.dependencies_ready {
             return Err(invalid("command merge policy preparation incomplete"));
+        }
+        if let Some(file) = &self.conflicts {
+            file.validate()?;
+        }
+        Ok(())
+    }
+    pub(super) fn commit_configs(&self) -> io::Result<()> {
+        if let Some(file) = &self.conflicts {
+            file.commit()?;
         }
         Ok(())
     }
@@ -83,18 +109,73 @@ pub(in crate::workspace::engine) fn prepare(
     let merge = planned.plan.merge.as_mut().ok_or_else(|| invalid("command policy nonmerge"))?;
     let policy =
         merge.policy.as_mut().ok_or_else(|| invalid("command policy preparation absent"))?;
-    prepare_components(policy, input.components, &record)?;
-    let context = projected_context(policy, &record)?;
-    let targets = projected_targets(policy, &context)?;
+    let Preparation {
+        workspace,
+        conflicts,
+        context,
+        targets,
+    } = prepare_projection(policy, input.components, &record)?;
+    planned.reset_config = Some(super::reset_config::merge(&record, &policy.rows)?);
     merge.apply_policy_configs()?;
-    let needs_snap = merge.needs_snap().is_some();
+    if !conflicts.is_empty() {
+        merge.cancel_snap();
+        planned.plan.result["configMergeResults"] = json!(conflicts);
+    }
+    let needs_snap = merge.needs_snap().is_some() && !targets.is_empty();
+    if let Some((publication, report)) = workspace {
+        planned.checkout_policy = Some(publication);
+        planned.plan.result["workspaceConfigUpdateResult"] = report;
+    }
     let output = json!({"token":record.token,"result":planned.plan.result,
         "dependencyPreparation":if needs_snap {json!({"context":context,"targets":targets})} else {Value::Null}});
-    record.repository.validate()?;
-    super::proof::verify(&record.proofs)?;
+    validate_preparation(&record, &mut planned)?;
     record.planned = Some(planned);
     state.record = Some(record);
     Ok((targets.len(), output))
+}
+
+fn validate_preparation(record: &Record, prepared: &mut super::PreparedPlan) -> io::Result<()> {
+    record.repository.validate()?;
+    super::proof::verify(&record.proofs)?;
+    if record.request.internal_snapshot_preview {
+        super::planning::validate_sources(&prepared.plan)?;
+        prepared.plan.merge
+            .as_mut()
+            .and_then(|merge| merge.policy.as_mut())
+            .ok_or_else(|| invalid("command merge policy preparation absent"))?
+            .dependencies_ready = true;
+    }
+    Ok(())
+}
+
+struct Preparation {
+    workspace: Option<(super::checkout_policy::Prepared, Value)>,
+    conflicts: Vec<Value>,
+    context: Value,
+    targets: Vec<Value>,
+}
+
+fn prepare_projection(
+    policy: &mut Prepared,
+    components: Vec<Component>,
+    record: &Record,
+) -> io::Result<Preparation> {
+    let semver =
+        components.first().map_or(Value::Null, |component| component.semver.clone());
+    prepare_components(policy, components, record)?;
+    let workspace = workspace::prepare(policy, record, &semver)?;
+    let conflicts = conflicts::prepare(policy, &record.request.root)?;
+    // The retained snapshot owner detects dependencies from the materialized tree
+    // after installation. Inline previews are not consumed by that lifecycle.
+    if record.request.internal_snapshot_preview {
+        return Ok(Preparation { workspace, conflicts, context: Value::Null, targets: Vec::new() });
+    }
+    let context = projected_context(policy, record)?;
+    let targets = projected_targets(policy, &context)?;
+    if targets.is_empty() {
+        policy.dependencies_ready = true;
+    }
+    Ok(Preparation { workspace, conflicts, context, targets })
 }
 
 fn prepare_row(
@@ -107,15 +188,21 @@ fn prepare_row(
         row.projected = row.baseline.versions[2].clone();
         return Ok(());
     }
-    let extensions = row.baseline.loaded_extensions(component)?;
-    let merged = config::merge(
+    let extensions = if row.baseline.scope_only {
+        row.baseline.current["extensions"].clone()
+    } else {
+        row.baseline.loaded_extensions(component)?
+    };
+    let (merged, configuration) = config::merge(
         &row.identity,
         &row.baseline.versions,
         &extensions,
         workspace,
         strategy,
         &component.semver,
+        &row.receipts.configuration["labels"],
     )?;
+    row.receipts.configuration = configuration;
     row.merged = if row.ours_conflict { json!({}) } else { merged };
     row.projected = row.baseline.versions[1].clone();
     for field in [
@@ -130,7 +217,7 @@ fn prepare_row(
     ] {
         row.projected[field] = row.baseline.current[field].clone();
     }
-    row.projected["extensions"] = config::apply_configs(&extensions, &row.merged)?;
+    row.projected["extensions"] = scope::apply(&extensions, &row.merged, &row.baseline.versions)?;
     Ok(())
 }
 
@@ -199,6 +286,7 @@ fn activate_inactive(policy: &Prepared, context: &mut Value) -> io::Result<()> {
 fn projected_targets(policy: &Prepared, context: &Value) -> io::Result<Vec<Value>> {
     policy.rows
         .iter()
+        .filter(|row| !row.baseline.scope_only)
         .map(|row| {
             let mut target = projection::array(&context["targets"])?
                 .iter()
@@ -244,31 +332,8 @@ fn prepare_components(
             return Err(invalid("command policy identity"));
         }
         prepare_row(row, &component, &workspace, record.request.options.strategy.as_deref())?;
-        validate_workspace_policy(&record.context, &row.merged)?;
     }
     policy.config_ready = true;
-    Ok(())
-}
-
-fn validate_workspace_policy(context: &Value, merged: &Value) -> io::Result<()> {
-    let workspace_policy = &context["workspace"][projection::RESOLVER]["policy"];
-    if workspace_policy
-        .as_object()
-        .is_some_and(|fields| {
-            fields
-                .values()
-                .any(|field| {
-                    field
-                        .as_object()
-                        .is_none_or(|entries| !entries.is_empty())
-                })
-        })
-        && merged[projection::RESOLVER]["policy"]
-            .as_object()
-            .is_some_and(|policy| !policy.is_empty())
-    {
-        return Err(invalid("command workspace dependency policy update requires canonical merge"));
-    }
     Ok(())
 }
 
@@ -278,7 +343,9 @@ impl Baseline {
             &self.versions[1]["extensions"],
             &self.current["extensions"],
             &component.dependency_state,
-            &component.default_node,
+            component.default_node
+                .as_ref()
+                .ok_or_else(|| invalid("command workspace environment defaults"))?,
             &self.package_name,
         )
     }

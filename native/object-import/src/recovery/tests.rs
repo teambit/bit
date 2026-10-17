@@ -180,14 +180,19 @@ fn reinitializing_identical_plan_invalidates_previous_token() {
     assert!(state.advance(&first, 1).is_err());
     assert_eq!(fs::read(path).unwrap(), b"body");
 }
-#[cfg(not(target_os = "linux"))]
 #[test]
-fn unqualified_copy_platform_declines_without_mutation() {
+fn copy_platform_qualification_preserves_supported_and_declined_results() {
     let fixture = Fixture::new();
     let source = fixture.file("source", b"fresh");
     let destination = fixture.file("destination", b"keep");
-    assert!(super::copy::file(&source, &destination).is_err());
-    assert_eq!(fs::read(destination).unwrap(), b"keep");
+    let result = super::copy::file(&source, &destination);
+    if cfg!(any(target_os = "linux", windows)) {
+        result.unwrap();
+        assert_eq!(fs::read(destination).unwrap(), b"fresh");
+    } else {
+        assert!(result.is_err());
+        assert_eq!(fs::read(destination).unwrap(), b"keep");
+    }
 }
 
 #[test]
@@ -225,4 +230,30 @@ fn copy_extended_acl_declines_without_mutating_destination() {
     }
     assert!(super::copy::file(&source, &destination).is_err());
     assert_eq!(fs::read(destination).unwrap(), b"keep");
+}
+
+#[cfg(windows)]
+#[test]
+fn windows_copy_updates_regular_files_and_rejects_identical_paths() {
+    let fixture = Fixture::new();
+    let source = fixture.file("source", b"fresh");
+    let destination = fixture.file("destination", b"old");
+    super::copy::file(&source, &destination).unwrap();
+    assert_eq!(fs::read(&destination).unwrap(), b"fresh");
+    assert!(super::copy::file(&source, &source).is_err());
+    assert_eq!(fs::read(&source).unwrap(), b"fresh");
+}
+#[cfg(windows)]
+#[test]
+fn windows_copy_rejects_source_and_destination_hardlinks_before_mutation() {
+    let fixture = Fixture::new();
+    let source = fixture.file("source", b"fresh");
+    let destination = fixture.file("destination", b"keep");
+    let source_link = fixture.0.join("source-link");
+    fs::hard_link(&source, &source_link).unwrap();
+    assert!(super::copy::file(&source, &destination).is_err());
+    fs::remove_file(source_link).unwrap();
+    fs::hard_link(&destination, fixture.0.join("destination-link")).unwrap();
+    assert!(super::copy::file(&source, &destination).is_err());
+    assert_eq!(fs::read(&destination).unwrap(), b"keep");
 }

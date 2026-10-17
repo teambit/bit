@@ -4,6 +4,7 @@ use serde_json::{Value, json};
 #[test]
 fn root_issue_setting_ignores_only_missing_manually_configured_packages() {
     let component = Component {
+        ignored: Vec::new(),
         identity: "scope/alpha@1.0.0".into(),
         package_name: "@scope/alpha".into(),
         dependencies: vec![],

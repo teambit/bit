@@ -4,6 +4,8 @@
 //! removed and conflict sections stay empty. `bit lane merge` gets the
 //! whole result (`MergeLaneCmd`).
 
+mod policy;
+
 use crate::commands::{
     color::Chalk,
     workspace_command::{
@@ -27,7 +29,19 @@ pub struct Mode {
 
 pub fn format(result: &Value, mode: Mode, chalk: Chalk) -> io::Result<Report> {
     let results = hydrate(result)?;
-    let report = Merge { results: &results, mode, format: Formatter::new(chalk) };
+    let workspace = if mode.lane {
+        policy::format(result.get("workspaceConfigUpdateResult"), chalk)?
+    } else {
+        String::new()
+    };
+    let config_conflicts = policy::conflicted(result, mode.lane)?;
+    let report = Merge {
+        results: &results,
+        mode,
+        format: Formatter::new(chalk),
+        workspace,
+        config_conflicts,
+    };
     let others = report.other_skipped();
     let hidden = !others.is_empty() && !mode.verbose;
     let detailed = report.join(&report.skipped_detailed());
@@ -43,6 +57,8 @@ struct Merge<'r> {
     results: &'r Results,
     mode: Mode,
     format: Formatter,
+    workspace: String,
+    config_conflicts: Vec<String>,
 }
 
 impl Merge<'_> {
@@ -54,6 +70,8 @@ impl Merge<'_> {
             skipped.to_string(),
             self.removed(),
             self.snaps(),
+            policy::conflict_section(&self.config_conflicts, &self.format),
+            self.workspace.clone(),
             self.conflict_summary(),
             self.summary(),
         ])
@@ -162,8 +180,17 @@ impl Merge<'_> {
         let removed = if self.mode.lane { self.results.lists.removed.len() } else { 0 };
         let conflicted =
             if self.with_conflicts() { self.results.conflict_lines(self.chalk()).len() } else { 0 };
-        let conflicts =
-            if conflicted == 0 { "none".to_string() } else { format!("{conflicted} components") };
+        let mut conflicts = Vec::new();
+        if conflicted > 0 {
+            conflicts.push(format!("{conflicted} components"));
+        }
+        if self.workspace.contains("workspace.jsonc has conflicts") {
+            conflicts.push("workspace.jsonc file".into());
+        }
+        if !self.config_conflicts.is_empty() {
+            conflicts.push("merge-conflict file".into());
+        }
+        let conflicts = if conflicts.is_empty() { "none".into() } else { conflicts.join(", ") };
         format!(
             "{}\nTotal Merged: {}\nTotal Unchanged: {}\nTotal Snapped: {}\nTotal Removed: {}\nConflicts: {}",
             self.format.title("Merge Summary"),

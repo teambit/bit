@@ -22,7 +22,13 @@ pub(super) fn receipt(value: &Value, inputs: &[Input<'_>]) -> io::Result<()> {
 }
 pub(super) fn version(input: &Input<'_>, receipt: &Value, message: &str) -> io::Result<Value> {
     let mut version = base_version(input, receipt, message)?;
-    apply_squash(input, receipt, &mut version)?;
+    if let Some(relation) = input.material.unrelated_relation() {
+        version["parents"] = json!([relation["headOnCurrentLane"]]);
+        version["unrelated"] =
+            json!({"head":relation["unrelatedHead"],"laneId":relation["unrelatedLaneId"]});
+    } else {
+        apply_squash(input, receipt, &mut version)?;
+    }
     apply_origin(input, &mut version)?;
     let extensions =
         version["extensions"].as_array_mut().ok_or_else(|| invalid("command snap extensions"))?;
@@ -197,6 +203,7 @@ pub(super) fn object(kind: &str, hash: Option<&str>, mut fields: Value) -> io::R
             .ok_or_else(|| invalid("command snapshot extensions"))?
         {
             extension["rawConfig"] = extension["config"].clone();
+            builder_artifacts(extension)?;
         }
     } else if kind == "Component" {
         fields["scopesList"] = fields["remotes"].clone();
@@ -280,6 +287,29 @@ pub(super) fn no_application_files(files: &[Value]) -> io::Result<()> {
         {
             return Err(invalid("snap application registration unsupported"));
         }
+    }
+    Ok(())
+}
+
+fn builder_artifacts(extension: &mut Value) -> io::Result<()> {
+    if extension["name"] != "teambit.pipelines/builder" {
+        return Ok(());
+    }
+    let Some(artifacts) = extension["data"].get_mut("artifacts") else { return Ok(()) };
+    for artifact in artifacts.as_array_mut().ok_or_else(|| invalid("snapshot builder artifacts"))? {
+        let files =
+            artifact["files"].as_array().ok_or_else(|| invalid("snapshot builder files"))?;
+        let refs = files
+            .iter()
+            .map(|file| {
+                let mut reference = json!({"relativePath":file["relativePath"],"ref":file["file"]});
+                if let Some(url) = file.get("url") {
+                    reference["url"] = url.clone();
+                }
+                reference
+            })
+            .collect::<Vec<_>>();
+        artifact["files"] = json!({"snapshotArtifactFiles":true,"refs":refs});
     }
     Ok(())
 }

@@ -15,7 +15,7 @@ use std::{
 /// `<root>/.bit/cache/components/deps`, the workspace's dependency cache.
 #[must_use]
 pub fn deps_dir(root: &Path) -> PathBuf {
-    root.join(".bit")
+    crate::config::scope_path(root)
         .join("cache")
         .join("components")
         .join("deps")

@@ -22,6 +22,12 @@ fn everything_else_is_left_to_node() {
     assert!(parse(&["-m", "--unmodified"]).is_none());
     assert!(parse(&["a", "b"]).is_none());
     assert!(parse(&["-u", "--unmodified"]).is_none());
-    assert!(parse(&["$modified"]).is_none());
-    assert!(parse(&["a AND b"]).is_none());
+}
+
+#[test]
+fn component_selector_grammar_is_retained_for_native_selection() {
+    for pattern in ["$modified", "a* AND !b*", "{foo,bar}/*", "@(foo|bar)/*"] {
+        let options = parse(&[pattern]).unwrap();
+        assert_eq!(options.pattern.as_deref(), Some(pattern));
+    }
 }

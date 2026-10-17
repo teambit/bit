@@ -1,5 +1,7 @@
 //! `filterDiffResults` and `outputDiffResultsFormatted` of component-diff.
 
+mod tables;
+
 use super::options::Options;
 use crate::commands::{
     color::Chalk,
@@ -18,22 +20,26 @@ pub(super) fn filtered(result: &Value, options: &Options) -> io::Result<Value> {
 
 fn filter_one(row: &Value, options: &Options) -> io::Result<Value> {
     let mut row = row.clone();
+    if options.output.table {
+        tables::format(&mut row)?;
+    }
     let files = array(row.get("filesDiff"), "diff files")?;
-    let files = if options.configs_only { Vec::new() } else { selected_files(files, options) };
+    let files =
+        if options.output.configs_only { Vec::new() } else { selected_files(files, options) };
     row["filesDiff"] = json!(
         files
             .into_iter()
             .map(|file| project_file(file, options))
             .collect::<io::Result<Vec<_>>>()?
     );
-    if options.files_only || !options.files.is_empty() {
+    if options.output.files_only || !options.output.files.is_empty() {
         row["fieldsDiff"] = Value::Null;
     }
     Ok(row)
 }
 
 fn selected_files(files: &[Value], options: &Options) -> Vec<Value> {
-    if options.files.is_empty() {
+    if options.output.files.is_empty() {
         return files.to_vec();
     }
     files
@@ -41,21 +47,23 @@ fn selected_files(files: &[Value], options: &Options) -> Vec<Value> {
         .filter(|file| {
             file["filePath"]
                 .as_str()
-                .is_some_and(|path| options.files.iter().any(|filter| matches_file(path, filter)))
+                .is_some_and(|path| {
+                    options.output.files.iter().any(|filter| matches_file(path, filter))
+                })
         })
         .cloned()
         .collect()
 }
 
 fn project_file(mut file: Value, options: &Options) -> io::Result<Value> {
-    if options.stat {
+    if options.output.stat {
         let (additions, deletions) = counts(file["diffOutput"].as_str().unwrap_or(""));
         file.as_object_mut()
             .ok_or_else(|| decline("diff file"))?
             .remove("diffOutput");
         file["additions"] = json!(additions);
         file["deletions"] = json!(deletions);
-    } else if options.name_only {
+    } else if options.output.name_only {
         file.as_object_mut()
             .ok_or_else(|| decline("diff file"))?
             .remove("diffOutput");
@@ -114,7 +122,7 @@ fn one(row: &Value, chalk: Chalk, options: &Options) -> io::Result<String> {
     let id = text(row.get("id"))?;
     if row["hasDiff"] != true {
         let id = text(row.get("_fullId"))?;
-        let suffix = if options.name_only || options.stat {
+        let suffix = if options.output.name_only || options.output.stat {
             ""
         } else {
             " (consider running with --verbose)"
@@ -122,8 +130,8 @@ fn one(row: &Value, chalk: Chalk, options: &Options) -> io::Result<String> {
         return Ok(format!("no diff for {}{suffix}", chalk.bold(id)));
     }
     let title = format!("showing diff for {}", chalk.bold(id));
-    if options.name_only || options.stat {
-        return summary(row, &title, options.stat);
+    if options.output.name_only || options.output.stat {
+        return summary(row, &title, options.output.stat);
     }
     let separator = "-".repeat(title.len());
     let title = chalk.cyan(&format!("{separator}\n{title}\n{separator}"));

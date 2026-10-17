@@ -35,3 +35,30 @@ fn git_config_values_end_at_the_next_equals_sign_and_the_last_wins() {
     assert_eq!(config.get("user.email").map(String::as_str), Some("a@b.c"));
     assert!(!config.contains_key("core.x"));
 }
+
+#[test]
+fn node_path_lookup_uses_windows_executables_and_preserves_path_precedence() {
+    use std::{fs, path::Path};
+    let directory = std::env::temp_dir().join(super::uuid_v4().unwrap());
+    let first = directory.join("first");
+    let second = directory.join("second");
+    fs::create_dir_all(&first).unwrap();
+    fs::create_dir_all(&second).unwrap();
+    fs::write(first.join("node.exe"), b"windows executable").unwrap();
+    fs::write(second.join("node"), b"unix executable").unwrap();
+    let lookup = |windows| {
+        super::node_in_paths(
+            Path::new("node"),
+            [first.clone(), second.clone()].into_iter(),
+            windows,
+        )
+    };
+    assert_eq!(lookup(true), Some(first.join("node.exe")));
+    assert_eq!(lookup(false), Some(second.join("node")));
+    assert_eq!(
+        super::node_in_paths(Path::new("node.exe"), [first.clone()].into_iter(), true),
+        Some(first.join("node.exe")),
+    );
+    assert_eq!(super::node_in_paths(Path::new("missing"), [first].into_iter(), true), None);
+    fs::remove_dir_all(directory).unwrap();
+}

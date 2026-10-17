@@ -5,6 +5,7 @@ edition = "2024"
 publish = false
 
 [dependencies]
+getrandom = "0.3"
 indexmap = { version = "2", features = ["serde"] }
 futures-util = "0.3"
 reqwest = { version = "0.13", default-features = false, features = ["gzip", "json", "rustls", "stream"] }

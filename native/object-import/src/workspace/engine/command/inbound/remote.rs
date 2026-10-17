@@ -1,25 +1,27 @@
-//! Bounded HTTP scope acquisition and listing. File scopes stay in the
-//! deferred importer.
-
+//! Bounded scope acquisition and listing across HTTP and file remotes.
+mod connection;
+mod file_list;
+mod lane_list;
 mod missing;
-use super::{List, Prepare, RemoteLog, Target, Transport, identity, invalid};
+#[cfg(test)]
+mod tests;
+use super::{List, Prepare, RemoteLog, Target, config, identity, invalid};
 use crate::{
     command_import::{VirtualRemote, lane},
     workspace::engine::status_models::component_log,
 };
 use bit_client_transfer::{
-    GlobalConfig,
     fetch::{self, FetchOptions},
     http::{Listed, Network},
     remotes::{Remote, Remotes},
-    resolver::Resolver,
     tar::ObjectItem,
 };
+use connection::{connect, global_config};
 use futures_util::{StreamExt, TryStreamExt, stream};
 use serde_json::{Value, json};
 use std::{
     collections::{BTreeMap, HashMap},
-    fs, io,
+    io,
     path::Path,
 };
 
@@ -35,44 +37,19 @@ pub(super) fn lane_objects(
     id: &lane::Id,
 ) -> io::Result<Option<(VirtualRemote, String)>> {
     id.validate()?;
-    let (remotes, network, _, _) = connection(input)?;
+    let (remotes, network, _, _) =
+        connection::with_home(&input.root, &input.transport, &input.home)?;
     let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
     runtime.block_on(async {
         let Remote::Http(url) = remotes.resolve(&id.scope, &network).await? else {
             return Ok(None);
         };
-        let (items, hash) = fetch_lane(&network, &url, id).await?;
+        let (items, hash) = fetch_lane(&network, &url, id, input.options.all_history).await?;
         let (mut remotes, _) =
             collect((Vec::new(), 0), &input.root, id.scope.clone(), Some(items))?;
         let remote = remotes.pop().ok_or_else(|| invalid("inbound lane remote"))?;
         Ok(Some((remote, hash)))
     })
-}
-
-fn connection(input: &Prepare) -> io::Result<(Remotes, Network, GlobalConfig, String)> {
-    connect(&input.root, &input.transport)
-}
-
-fn connect(
-    root: &Path,
-    transport: &Transport,
-) -> io::Result<(Remotes, Network, GlobalConfig, String)> {
-    let scope: Value =
-        serde_json::from_slice(&fs::read(root.join(".bit/scope.json"))?).map_err(io::Error::other)?;
-    let local = scope["name"].as_str().ok_or_else(|| invalid("inbound local scope"))?;
-    let global = global_config(transport)?;
-    let resolver = Resolver::configured(
-        &scope,
-        transport.node_executable.clone(),
-        transport.bit_dir.clone(),
-        local,
-        &global,
-    );
-    let remotes =
-        Remotes::load(&scope, &transport.global_config_dir, &global)?.with_resolver(resolver);
-    let network =
-        Network::new(&global, &transport.bit_version, Some(local), transport.token.as_deref())?;
-    Ok((remotes, network, global, local.to_owned()))
 }
 
 /// `Lister.remoteList` for each pattern: the components of `<scope>` whose
@@ -82,19 +59,95 @@ pub(super) fn list(input: &List) -> io::Result<Vec<(String, Vec<Listed>)>> {
     let (remotes, network, _, _) = connect(&input.root, &input.transport)?;
     let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
     runtime.block_on(async {
+        let lane_rows = listed_lane(input, &remotes, &network).await?;
         let mut lists = Vec::with_capacity(input.patterns.len());
         for pattern in &input.patterns {
-            let (scope, namespaces) = pattern
-                .split_once('/')
-                .filter(|(scope, _)| !scope.is_empty())
-                .ok_or_else(|| invalid("inbound list pattern"))?;
-            let Remote::Http(url) = remotes.resolve(scope, &network).await? else {
-                return Err(invalid("inbound list of a file remote"));
-            };
-            lists.push((pattern.clone(), network.list(&url, Some(namespaces)).await?));
+            lists.push(
+                list_pattern(pattern, input.lane_only, &lane_rows, &remotes, &network).await?,
+            );
         }
         Ok(lists)
     })
+}
+
+async fn listed_lane(
+    input: &List,
+    remotes: &Remotes,
+    network: &Network,
+) -> io::Result<Vec<Listed>> {
+    let Some(id) = active_lane(&input.root)? else {
+        if input.lane_only {
+            return Err(invalid("inbound lane-only needs an active lane"));
+        }
+        return Ok(Vec::new());
+    };
+    match remotes.resolve(&id.scope, network).await? {
+        Remote::File(path) => file_list::lane(&path, &id),
+        Remote::Http(url) => http_lane(network, &url, &id).await,
+    }
+}
+
+async fn http_lane(network: &Network, url: &str, id: &lane::Id) -> io::Result<Vec<Listed>> {
+    let lane_id = format!("{}/{}", id.scope, id.name);
+    let items =
+        network.fetch_bounded(url, &[lane_id], &FetchOptions::lanes(), MAX_INBOUND_BYTES).await?;
+    let (_, entries) = remote_lane(id, &items)?;
+    lane_list::visible(entries)
+}
+
+async fn list_pattern(
+    pattern: &str,
+    lane_only: bool,
+    lane_rows: &[Listed],
+    remotes: &Remotes,
+    network: &Network,
+) -> io::Result<(String, Vec<Listed>)> {
+    let (scope, namespaces) = pattern
+        .split_once('/')
+        .filter(|(scope, _)| !scope.is_empty())
+        .ok_or_else(|| invalid("inbound list pattern"))?;
+    let matcher = file_list::matcher(scope, namespaces)?;
+    let mut listed = lane_rows
+        .iter()
+        .filter(|entry| {
+            matcher
+                .find(&format!("{}/{}", entry.scope, entry.name))
+                .is_some()
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+    if !lane_only {
+        let main = match remotes.resolve(scope, network).await? {
+            Remote::Http(url) => network.list(&url, Some(namespaces)).await?,
+            Remote::File(path) => file_list::list(&path, scope, namespaces)?,
+        };
+        let mut seen = listed
+            .iter()
+            .map(|entry| format!("{}/{}", entry.scope, entry.name))
+            .collect::<std::collections::HashSet<_>>();
+        listed.extend(
+            main.into_iter()
+                .filter(|entry| seen.insert(format!("{}/{}", entry.scope, entry.name))),
+        );
+    }
+    Ok((pattern.to_owned(), listed))
+}
+
+pub(super) fn active_lane(root: &Path) -> io::Result<Option<lane::Id>> {
+    let bitmap = config::document(&root.join(".bitmap"))?;
+    let Some(row) = bitmap.get("_bit_lane") else { return Ok(None) };
+    let id = lane::Id {
+        scope: row["id"]["scope"]
+            .as_str()
+            .unwrap_or_default()
+            .to_owned(),
+        name: row["id"]["name"]
+            .as_str()
+            .unwrap_or_default()
+            .to_owned(),
+    };
+    id.validate()?;
+    Ok(Some(id))
 }
 
 pub(super) fn log(input: &RemoteLog) -> io::Result<(usize, Value)> {
@@ -134,6 +187,7 @@ async fn fetch_lane(
     network: &Network,
     url: &str,
     id: &lane::Id,
+    all_history: bool,
 ) -> io::Result<(Vec<ObjectItem>, String)> {
     let lane_id = format!("{}/{}", id.scope, id.name);
     let mut items = network.fetch_bounded(
@@ -145,19 +199,26 @@ async fn fetch_lane(
     .await?;
     let (hash, components) = lane_targets(id, &items)?;
     if !components.is_empty() {
-        let mut more = network.fetch_bounded(
-            url,
-            &components,
-            &FetchOptions::with_dependencies(Some(lane_id), false),
-            MAX_INBOUND_BYTES,
-        )
-        .await?;
+        let mut options = FetchOptions::with_dependencies(Some(lane_id), false);
+        options.traversal.collect_parents = all_history;
+        let mut more = network.fetch_bounded(url, &components, &options, MAX_INBOUND_BYTES).await?;
         items.append(&mut more);
     }
     Ok((items, hash))
 }
 
 fn lane_targets(id: &lane::Id, items: &[ObjectItem]) -> io::Result<(String, Vec<String>)> {
+    let (hash, entries) = remote_lane(id, items)?;
+    Ok((
+        hash,
+        entries
+            .into_iter()
+            .map(|entry| format!("{}@{}", entry.identity, entry.head))
+            .collect(),
+    ))
+}
+
+fn remote_lane(id: &lane::Id, items: &[ObjectItem]) -> io::Result<(String, Vec<lane::Entry>)> {
     let mut selected = None;
     for item in items {
         let raw = crate::checkout::repository::inflate(&item.compressed, 32 * 1024 * 1024)?;
@@ -173,23 +234,33 @@ fn lane_targets(id: &lane::Id, items: &[ObjectItem]) -> io::Result<(String, Vec<
         if value["scope"] != id.scope || value["name"] != id.name || selected.is_some() {
             return Err(invalid("inbound HTTP Lane identity"));
         }
+        lane::validate_value(id, &value)?;
         let entries = lane::entries(&value)?;
         if entries.len() > 4096 {
             return Err(invalid("inbound HTTP Lane component limit"));
         }
-        selected = Some((
-            item.hash.clone(),
-            entries
-                .into_iter()
-                .map(|entry| format!("{}@{}", entry.identity, entry.head))
-                .collect(),
-        ));
+        selected = Some((item.hash.clone(), entries));
     }
     selected.ok_or_else(|| invalid("inbound HTTP Lane missing"))
 }
 
+pub(super) fn lane_entries(
+    remote: &VirtualRemote,
+    hash: &str,
+    id: &lane::Id,
+) -> io::Result<Vec<lane::Entry>> {
+    let compressed = remote.objects
+        .iter()
+        .find(|(item_hash, _)| item_hash == hash)
+        .map(|(_, bytes)| bytes.clone())
+        .ok_or_else(|| invalid("inbound HTTP Lane capture"))?;
+    let item = ObjectItem { hash: hash.to_owned(), compressed, scope: None };
+    remote_lane(id, &[item]).map(|(_, entries)| entries)
+}
+
 pub(super) fn objects(input: &Prepare, targets: &[Target]) -> io::Result<Vec<VirtualRemote>> {
-    let (remotes, network, global, local) = connection(input)?;
+    let (remotes, network, global, local) =
+        connection::with_home(&input.root, &input.transport, &input.home)?;
     let groups = group_targets(targets, &local)?;
     let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build()?;
     runtime.block_on(fetch_groups(
@@ -199,14 +270,6 @@ pub(super) fn objects(input: &Prepare, targets: &[Target]) -> io::Result<Vec<Vir
         &network,
         fetch::concurrency(&global).min(4),
     ))
-}
-
-fn global_config(transport: &Transport) -> io::Result<GlobalConfig> {
-    match fs::read(transport.global_config_dir.join("config.json")) {
-        Ok(bytes) => serde_json::from_slice(&bytes).map_err(io::Error::other),
-        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(GlobalConfig::new()),
-        Err(error) => Err(error),
-    }
 }
 
 fn group_targets(targets: &[Target], local: &str) -> io::Result<BTreeMap<String, Vec<String>>> {
@@ -231,9 +294,7 @@ async fn fetch_groups(
     limit: usize,
 ) -> io::Result<Vec<VirtualRemote>> {
     let (remotes, _) = stream::iter(groups)
-        .map(|(scope, ids)| {
-            fetch_one(&input.root, scope, ids, input.options.all_history, remotes, network)
-        })
+        .map(|(scope, ids)| fetch_one(input, scope, ids, remotes, network))
         .buffered(limit)
         .try_fold((Vec::new(), 0usize), |retained, (scope, items)| async move {
             collect(retained, &input.root, scope, items)
@@ -243,22 +304,29 @@ async fn fetch_groups(
 }
 
 async fn fetch_one(
-    root: &Path,
+    input: &Prepare,
     scope: String,
     ids: Vec<String>,
-    all_history: bool,
     remotes: &Remotes,
     network: &Network,
 ) -> io::Result<(String, Option<Vec<ObjectItem>>)> {
+    let all_history = input.options.all_history;
+    let fetch_dependencies = input.options.dependencies.fetch_deps;
+    let without_dependencies = input.operation == "diff";
     let remote = remotes.resolve(&scope, network).await?;
     let Remote::Http(url) = remote else { return Ok((scope, None)) };
-    if all_history {
-        let mut options = FetchOptions::with_dependencies(None, false);
-        options.traversal.collect_parents = true;
-        let items = network.fetch_bounded(&url, &ids, &options, MAX_INBOUND_BYTES).await?;
-        return Ok((scope, Some(items)));
+    if !all_history && !fetch_dependencies && !without_dependencies {
+        return Ok((scope, Some(fetch_in_two_steps(&input.root, &url, &ids, network).await?)));
     }
-    Ok((scope, Some(fetch_in_two_steps(root, &url, &ids, network).await?)))
+    let mut options = if without_dependencies {
+        FetchOptions::without_dependencies(None)
+    } else {
+        FetchOptions::with_dependencies(None, false)
+    };
+    options.traversal.collect_parents = all_history;
+    options.traversal.prefer_dependency_graph = !fetch_dependencies;
+    let items = network.fetch_bounded(&url, &ids, &options, MAX_INBOUND_BYTES).await?;
+    Ok((scope, Some(items)))
 }
 
 /// `importWithoutDeps`, then `importMany` for the components whose dependencies are
@@ -308,7 +376,7 @@ fn collect(
         }
     }
     retained.push(VirtualRemote {
-        path: root.join(".bit/.rust-inbound-virtual").join(&scope),
+        path: crate::scope_path(root).join(".rust-inbound-virtual").join(&scope),
         scope,
         objects: objects.into_iter().collect(),
     });

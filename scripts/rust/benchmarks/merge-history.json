@@ -1,0 +1,787 @@
+{
+  "measured_at_utc": "2026-10-17 00:05:10 UTC",
+  "platform": "Linux 7.2.5-200.fc44.x86_64; AMD Ryzen 9 9950X3D2 16-Core Processor",
+  "node_version": "22.22.0",
+  "bit_reference_version": "2.2.94",
+  "build": "RUSTFLAGS=-D warnings cargo build --locked --release --workspace",
+  "native_source": {
+    "algorithm": "sha256 of sorted git ls-files -co --exclude-standard -z native, unique regular files: path NUL bytes NUL",
+    "file_count": 1205,
+    "native_source_sha256": "1f43f08af17514ea093ef6027050201a6e59bc1ee705908b76cb290c356a2218",
+    "native_git_tree": "948da1d9ccc3ed3529d251ae8e2a3d5d2ae25dd4"
+  },
+  "sha256": {
+    "release_bit": "d052c10ba448594b708ad8d2b701bdb76356468a0c925ecfdfdce93ca3ac5cbf",
+    "benchmark_helper": "98d7461483d6f42f100af75c363ede19a310341998e3a9e332b87c56f23cdad7",
+    "shared_fingerprint_helper": "4ea79082ea31c4e9829de770faf7fca3fe67a4e0b322a12fc6c8fc63f1aaf1e9",
+    "shared_output_verifier": "85ccb4f5be14859ee0c83db63ad635da9cece20d75c5047574c536ddbfa2223b",
+    "node_wrapper": "d18f9f4aa2c224871e8872c5804c64d98941152e957919a1631fd46addf05d3d",
+    "node_cli_entry": "71b324e03c4c9fb01cd3decb053ca4c3781c27ce06a8af53f7ad09d0ae42d033",
+    "published_identity_implementation": "18df943dec3d3df1886b5146ae1b0462137b0481a6da2d4c3fd37a5c13d67ed9"
+  },
+  "environment": {
+    "BIT_NODE_CLI": "/var/home/zoltan/.bvm/versions/2.2.94/bit-2.2.94/node_modules/@teambit/bit/bin/bit",
+    "BIT_NODE_BINARY": "/var/home/zoltan/.bvm/nodejs/22.22.0/bin/node",
+    "BIT_NATIVE_TRACE": "1",
+    "NODE_NO_WARNINGS": "1",
+    "TMPDIR": "/var/tmp"
+  },
+  "method": {
+    "pairs_per_workload_per_mode": 5,
+    "modes": [
+      "timed non-TTY",
+      "real TTY (TERM=dumb, FORCE_COLOR=1)",
+      "CI=1"
+    ],
+    "order": "Alternating Node/Rust and Rust/Node on fresh workspace copies; isolated file remote restored before every invocation.",
+    "timing": "Complete process elapsed; workspace/remote copies and canonical metadata inspection excluded. Serial execution with no other builds/tests.",
+    "parity": "All 60 pairs match exit status, stdout/stderr including ANSI, workspace files/symlinks, bitmap, current Version/flattened graph and pending-control bytes.",
+    "normalization": [
+      "Native BIT_NATIVE_TRACE lines",
+      "Explicit elapsed-duration fields",
+      "Only newly allocated staged snap references",
+      "Batch IDs, log dates and modified dates only on newly allocated Versions",
+      "Current workspace path in metadata; existing references and dates remain exact"
+    ],
+    "scope": "Local canonical fixtures including live configured cloud identity. Not a general or cross-platform speed guarantee."
+  },
+  "fixtures": {
+    "automatic_and_pending": {
+      "constructor": "native/cli/tests/e2e/harmony/merge_lifecycle.rs::divergent",
+      "workspace": "/var/tmp/merge-history-benchmark-ordinary",
+      "remote": "/var/tmp/merge-history-benchmark-ordinary-remote"
+    },
+    "callbacks": {
+      "constructor": "native/cli/tests/e2e/harmony/merge_callbacks/fixture.rs::lane",
+      "workspace": "/var/tmp/merge-history-benchmark-callbacks/workspace",
+      "remote": "/var/tmp/merge-history-benchmark-callbacks/remote"
+    },
+    "history": {
+      "constructor": "canonical Node result of the ordinary automatic-merge smoke verification",
+      "workspace": "/var/tmp/merge-history-bench-ca7byhux/timed-0-node"
+    }
+  },
+  "qualification": {
+    "local_formal_gates": "all seven passed; release build passed",
+    "workspace_tests_passed": 1227,
+    "workspace_existing_ignored": 1,
+    "e2e_passed": 448,
+    "platform_ci": "All exact-head Linux and Windows PR checks must pass before merge.",
+    "source_note": "Benchmark source is commit 062869cf5815ec77354dfd3caf1041d6490cf016. Qualification adds only a test of supported versus declined recovery-copy platforms. The rebuilt release binary SHA256 remains identical."
+  },
+  "gates": [
+    {
+      "gate": "format",
+      "command": [
+        "node",
+        "../scripts/rust/rustfmt.mjs",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "environment": {},
+      "exit": 0,
+      "seconds": 0.933,
+      "log": "/var/tmp/merge-qualified-format.log"
+    },
+    {
+      "gate": "clippy",
+      "command": [
+        "cargo",
+        "clippy",
+        "--locked",
+        "--workspace",
+        "--all-targets",
+        "--features",
+        "bit-cli/e2e",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "environment": {},
+      "exit": 0,
+      "seconds": 7.172,
+      "log": "/var/tmp/merge-qualified-clippy.log"
+    },
+    {
+      "gate": "dylint",
+      "command": [
+        "cargo",
+        "dylint",
+        "--all",
+        "--",
+        "--all-targets",
+        "--workspace",
+        "--features",
+        "bit-cli/e2e"
+      ],
+      "environment": {
+        "RUSTFLAGS": "-D warnings"
+      },
+      "exit": 0,
+      "seconds": 6.942,
+      "log": "/var/tmp/merge-qualified-dylint.log"
+    },
+    {
+      "gate": "doc",
+      "command": [
+        "cargo",
+        "doc",
+        "--locked",
+        "--workspace",
+        "--no-deps"
+      ],
+      "environment": {
+        "RUSTDOCFLAGS": "-D warnings"
+      },
+      "exit": 0,
+      "seconds": 2.667,
+      "log": "/var/tmp/merge-qualified-doc.log"
+    },
+    {
+      "gate": "workspace",
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "--workspace",
+        "--no-fail-fast"
+      ],
+      "environment": {},
+      "exit": 0,
+      "seconds": 9.709,
+      "log": "/var/tmp/merge-qualified-workspace.log"
+    },
+    {
+      "gate": "e2e",
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "bit-cli",
+        "--features",
+        "e2e",
+        "--test",
+        "e2e"
+      ],
+      "environment": {},
+      "exit": 0,
+      "seconds": 138.604,
+      "log": "/var/tmp/merge-qualified-e2e.log"
+    },
+    {
+      "gate": "plan",
+      "command": [
+        "node",
+        "../scripts/rust/e2e-port-plan.mjs",
+        "--check"
+      ],
+      "environment": {},
+      "exit": 0,
+      "seconds": 0.136,
+      "log": "/var/tmp/merge-qualified-plan.log"
+    },
+    {
+      "gate": "release",
+      "command": [
+        "cargo",
+        "build",
+        "--locked",
+        "--release",
+        "--workspace"
+      ],
+      "environment": {
+        "RUSTFLAGS": "-D warnings"
+      },
+      "exit": 0,
+      "seconds": 0.175,
+      "log": "/var/tmp/merge-qualified-release.log"
+    }
+  ],
+  "before_optimization": {
+    "callbacks": {
+      "stage": "/var/tmp/merge-history-bench-de3uai_5",
+      "source": "/var/tmp/merge-history-benchmark-callbacks/workspace",
+      "source_sha256": "d72aa179bb2b5b28bf865503f7301e75bd366fdd6a371914c4a9656041322d34",
+      "remote": "/var/tmp/merge-history-benchmark-callbacks/remote",
+      "remote_sha256": "4937e3b8c47b9fb4dc00e825e32b6ce56bfa914212bcfb162a0bb6cc4ce2e704",
+      "command": [
+        "lane",
+        "merge",
+        "dev",
+        "--auto-merge-resolve",
+        "theirs",
+        "-m",
+        "merged",
+        "-x"
+      ],
+      "runs_ms": {
+        "node": [
+          1094.869,
+          1067.804,
+          1092.672,
+          1078.874,
+          1109.98
+        ],
+        "rust": [
+          1271.8,
+          1300.539,
+          1256.885,
+          1299.781,
+          1267.736
+        ]
+      },
+      "verified": [
+        {
+          "mode": "timed",
+          "run": 0,
+          "workspace_files": 8
+        },
+        {
+          "mode": "timed",
+          "run": 1,
+          "workspace_files": 8
+        },
+        {
+          "mode": "timed",
+          "run": 2,
+          "workspace_files": 8
+        },
+        {
+          "mode": "timed",
+          "run": 3,
+          "workspace_files": 8
+        },
+        {
+          "mode": "timed",
+          "run": 4,
+          "workspace_files": 8
+        },
+        {
+          "mode": "tty",
+          "run": 0,
+          "workspace_files": 8
+        },
+        {
+          "mode": "tty",
+          "run": 1,
+          "workspace_files": 8
+        },
+        {
+          "mode": "tty",
+          "run": 2,
+          "workspace_files": 8
+        },
+        {
+          "mode": "tty",
+          "run": 3,
+          "workspace_files": 8
+        },
+        {
+          "mode": "tty",
+          "run": 4,
+          "workspace_files": 8
+        },
+        {
+          "mode": "ci",
+          "run": 0,
+          "workspace_files": 8
+        },
+        {
+          "mode": "ci",
+          "run": 1,
+          "workspace_files": 8
+        },
+        {
+          "mode": "ci",
+          "run": 2,
+          "workspace_files": 8
+        },
+        {
+          "mode": "ci",
+          "run": 3,
+          "workspace_files": 8
+        },
+        {
+          "mode": "ci",
+          "run": 4,
+          "workspace_files": 8
+        }
+      ],
+      "median_ms": {
+        "node": 1092.672,
+        "rust": 1271.8
+      }
+    },
+    "artifact": {
+      "native_source": {
+        "algorithm": "sha256 of sorted git ls-files -co --exclude-standard -z native, unique regular files: path NUL bytes NUL",
+        "file_count": 1199,
+        "native_source_sha256": "7e220a090e0893e9705211469bdbb78f39f1ae92792875842293bafcaae6dd9c",
+        "native_git_tree": "bdfa8d532da6856abb125b59f868c30abca2f4be"
+      },
+      "release_bit_sha256": "da0621f2b9db5ed18b849bb35cc2d0f697bce1c91338ed2306fe7bff26002d6f",
+      "release_bit_mtime": 1792192230.9565043
+    },
+    "diagnosis": "Repeated cloud identity lookups dominated two ~240 ms gaps; pinned Node caches getIdentity per process. Also batched host pipe writes, removed unused native dependency previews and kept graph validation on the configured Rayon pool."
+  },
+  "runs": {
+    "callbacks": {
+      "stage": "/var/tmp/merge-history-bench-oamq8mew",
+      "source": "/var/tmp/merge-history-benchmark-callbacks/workspace",
+      "source_sha256": "d72aa179bb2b5b28bf865503f7301e75bd366fdd6a371914c4a9656041322d34",
+      "remote": "/var/tmp/merge-history-benchmark-callbacks/remote",
+      "remote_sha256": "4937e3b8c47b9fb4dc00e825e32b6ce56bfa914212bcfb162a0bb6cc4ce2e704",
+      "command": [
+        "lane",
+        "merge",
+        "dev",
+        "--auto-merge-resolve",
+        "theirs",
+        "-m",
+        "merged",
+        "-x"
+      ],
+      "runs_ms": {
+        "node": [
+          1205.529,
+          1078.736,
+          1127.264,
+          1100.013,
+          1061.145
+        ],
+        "rust": [
+          1026.896,
+          1043.538,
+          1033.606,
+          992.522,
+          1274.995
+        ]
+      },
+      "verified": [
+        {
+          "mode": "timed",
+          "run": 0,
+          "workspace_files": 8
+        },
+        {
+          "mode": "timed",
+          "run": 1,
+          "workspace_files": 8
+        },
+        {
+          "mode": "timed",
+          "run": 2,
+          "workspace_files": 8
+        },
+        {
+          "mode": "timed",
+          "run": 3,
+          "workspace_files": 8
+        },
+        {
+          "mode": "timed",
+          "run": 4,
+          "workspace_files": 8
+        },
+        {
+          "mode": "tty",
+          "run": 0,
+          "workspace_files": 8
+        },
+        {
+          "mode": "tty",
+          "run": 1,
+          "workspace_files": 8
+        },
+        {
+          "mode": "tty",
+          "run": 2,
+          "workspace_files": 8
+        },
+        {
+          "mode": "tty",
+          "run": 3,
+          "workspace_files": 8
+        },
+        {
+          "mode": "tty",
+          "run": 4,
+          "workspace_files": 8
+        },
+        {
+          "mode": "ci",
+          "run": 0,
+          "workspace_files": 8
+        },
+        {
+          "mode": "ci",
+          "run": 1,
+          "workspace_files": 8
+        },
+        {
+          "mode": "ci",
+          "run": 2,
+          "workspace_files": 8
+        },
+        {
+          "mode": "ci",
+          "run": 3,
+          "workspace_files": 8
+        },
+        {
+          "mode": "ci",
+          "run": 4,
+          "workspace_files": 8
+        }
+      ],
+      "median_ms": {
+        "node": 1100.013,
+        "rust": 1033.606
+      }
+    },
+    "automatic": {
+      "stage": "/var/tmp/merge-history-bench-i06atrzh",
+      "source": "/var/tmp/merge-history-benchmark-ordinary",
+      "source_sha256": "e810aac3405ff2cc01a3ea3aba82323991a99323d45efa6b3aa4a14be7d5438a",
+      "remote": "/var/tmp/merge-history-benchmark-ordinary-remote",
+      "remote_sha256": "267ac371d59af15a5f6b6576f36bf5f3c53336c1c9612087eba0996fe8478c8f",
+      "command": [
+        "lane",
+        "merge",
+        "dev",
+        "--auto-merge-resolve",
+        "theirs",
+        "-m",
+        "merged",
+        "-x"
+      ],
+      "runs_ms": {
+        "node": [
+          844.381,
+          861.492,
+          850.916,
+          848.34,
+          837.622
+        ],
+        "rust": [
+          315.706,
+          287.797,
+          307.784,
+          291.484,
+          283.929
+        ]
+      },
+      "verified": [
+        {
+          "mode": "timed",
+          "run": 0,
+          "workspace_files": 5
+        },
+        {
+          "mode": "timed",
+          "run": 1,
+          "workspace_files": 5
+        },
+        {
+          "mode": "timed",
+          "run": 2,
+          "workspace_files": 5
+        },
+        {
+          "mode": "timed",
+          "run": 3,
+          "workspace_files": 5
+        },
+        {
+          "mode": "timed",
+          "run": 4,
+          "workspace_files": 5
+        },
+        {
+          "mode": "tty",
+          "run": 0,
+          "workspace_files": 5
+        },
+        {
+          "mode": "tty",
+          "run": 1,
+          "workspace_files": 5
+        },
+        {
+          "mode": "tty",
+          "run": 2,
+          "workspace_files": 5
+        },
+        {
+          "mode": "tty",
+          "run": 3,
+          "workspace_files": 5
+        },
+        {
+          "mode": "tty",
+          "run": 4,
+          "workspace_files": 5
+        },
+        {
+          "mode": "ci",
+          "run": 0,
+          "workspace_files": 5
+        },
+        {
+          "mode": "ci",
+          "run": 1,
+          "workspace_files": 5
+        },
+        {
+          "mode": "ci",
+          "run": 2,
+          "workspace_files": 5
+        },
+        {
+          "mode": "ci",
+          "run": 3,
+          "workspace_files": 5
+        },
+        {
+          "mode": "ci",
+          "run": 4,
+          "workspace_files": 5
+        }
+      ],
+      "median_ms": {
+        "node": 848.34,
+        "rust": 291.484
+      }
+    },
+    "pending": {
+      "stage": "/var/tmp/merge-history-bench-oawl8qzx",
+      "source": "/var/tmp/merge-history-benchmark-ordinary",
+      "source_sha256": "e810aac3405ff2cc01a3ea3aba82323991a99323d45efa6b3aa4a14be7d5438a",
+      "remote": "/var/tmp/merge-history-benchmark-ordinary-remote",
+      "remote_sha256": "267ac371d59af15a5f6b6576f36bf5f3c53336c1c9612087eba0996fe8478c8f",
+      "command": [
+        "lane",
+        "merge",
+        "dev",
+        "--auto-merge-resolve",
+        "theirs",
+        "--no-auto-snap",
+        "-x"
+      ],
+      "runs_ms": {
+        "node": [
+          750.606,
+          739.402,
+          740.182,
+          763.238,
+          755.453
+        ],
+        "rust": [
+          279.652,
+          290.969,
+          275.785,
+          272.538,
+          261.971
+        ]
+      },
+      "verified": [
+        {
+          "mode": "timed",
+          "run": 0,
+          "workspace_files": 5
+        },
+        {
+          "mode": "timed",
+          "run": 1,
+          "workspace_files": 5
+        },
+        {
+          "mode": "timed",
+          "run": 2,
+          "workspace_files": 5
+        },
+        {
+          "mode": "timed",
+          "run": 3,
+          "workspace_files": 5
+        },
+        {
+          "mode": "timed",
+          "run": 4,
+          "workspace_files": 5
+        },
+        {
+          "mode": "tty",
+          "run": 0,
+          "workspace_files": 5
+        },
+        {
+          "mode": "tty",
+          "run": 1,
+          "workspace_files": 5
+        },
+        {
+          "mode": "tty",
+          "run": 2,
+          "workspace_files": 5
+        },
+        {
+          "mode": "tty",
+          "run": 3,
+          "workspace_files": 5
+        },
+        {
+          "mode": "tty",
+          "run": 4,
+          "workspace_files": 5
+        },
+        {
+          "mode": "ci",
+          "run": 0,
+          "workspace_files": 5
+        },
+        {
+          "mode": "ci",
+          "run": 1,
+          "workspace_files": 5
+        },
+        {
+          "mode": "ci",
+          "run": 2,
+          "workspace_files": 5
+        },
+        {
+          "mode": "ci",
+          "run": 3,
+          "workspace_files": 5
+        },
+        {
+          "mode": "ci",
+          "run": 4,
+          "workspace_files": 5
+        }
+      ],
+      "median_ms": {
+        "node": 750.606,
+        "rust": 275.785
+      }
+    },
+    "history": {
+      "stage": "/var/tmp/merge-history-bench-p50v49v2",
+      "source": "/var/tmp/merge-history-bench-ca7byhux/timed-0-node",
+      "source_sha256": "5fe2bc7007712198efd6c270b766e70c68ee5a32a6e0b62ba4916553a5ab7ad0",
+      "remote": "/var/tmp/merge-history-benchmark-ordinary-remote",
+      "remote_sha256": "267ac371d59af15a5f6b6576f36bf5f3c53336c1c9612087eba0996fe8478c8f",
+      "command": [
+        "log",
+        "bar/foo",
+        "--parents"
+      ],
+      "runs_ms": {
+        "node": [
+          263.788,
+          264.627,
+          262.402,
+          263.347,
+          259.889
+        ],
+        "rust": [
+          1.897,
+          2.269,
+          2.271,
+          1.871,
+          2.146
+        ]
+      },
+      "verified": [
+        {
+          "mode": "timed",
+          "run": 0,
+          "workspace_files": 5
+        },
+        {
+          "mode": "timed",
+          "run": 1,
+          "workspace_files": 5
+        },
+        {
+          "mode": "timed",
+          "run": 2,
+          "workspace_files": 5
+        },
+        {
+          "mode": "timed",
+          "run": 3,
+          "workspace_files": 5
+        },
+        {
+          "mode": "timed",
+          "run": 4,
+          "workspace_files": 5
+        },
+        {
+          "mode": "tty",
+          "run": 0,
+          "workspace_files": 5
+        },
+        {
+          "mode": "tty",
+          "run": 1,
+          "workspace_files": 5
+        },
+        {
+          "mode": "tty",
+          "run": 2,
+          "workspace_files": 5
+        },
+        {
+          "mode": "tty",
+          "run": 3,
+          "workspace_files": 5
+        },
+        {
+          "mode": "tty",
+          "run": 4,
+          "workspace_files": 5
+        },
+        {
+          "mode": "ci",
+          "run": 0,
+          "workspace_files": 5
+        },
+        {
+          "mode": "ci",
+          "run": 1,
+          "workspace_files": 5
+        },
+        {
+          "mode": "ci",
+          "run": 2,
+          "workspace_files": 5
+        },
+        {
+          "mode": "ci",
+          "run": 3,
+          "workspace_files": 5
+        },
+        {
+          "mode": "ci",
+          "run": 4,
+          "workspace_files": 5
+        }
+      ],
+      "median_ms": {
+        "node": 263.347,
+        "rust": 2.146
+      }
+    }
+  },
+  "qualified_native_source": {
+    "algorithm": "sha256 of sorted git ls-files -co --exclude-standard -z native, unique regular files: path NUL bytes NUL",
+    "file_count": 1205,
+    "native_source_sha256": "5109e1373d3aca68798aff3fa49099abbcd14e4bc74dddfdfcafbbbc4dd77be5",
+    "native_git_tree": "4298e8c9569d719ab1765bca6458792e4db67116"
+  }
+}

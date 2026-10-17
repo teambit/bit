@@ -19,6 +19,21 @@ pub fn write_json(path: &Path, value: &Value, indent: &[u8]) {
     fs::write(path, out).unwrap();
 }
 
+/// Exact bitmap configuration written by `env set`, without registry access during setup.
+pub fn set_component_env(root: &Path, component: &str, env: &str) {
+    let path = root.join(".bitmap");
+    let mut bitmap = read_jsonc(&path);
+    let old = bitmap[component]["config"]["teambit.envs/envs"]["env"].as_str().map(str::to_owned);
+    if let Some(old) = old.filter(|old| old != env)
+        && let Some(config) = bitmap[component]["config"].as_object_mut()
+    {
+        config.remove(&old);
+    }
+    bitmap[component]["config"][env] = serde_json::json!({});
+    bitmap[component]["config"]["teambit.envs/envs"] = serde_json::json!({"env":env});
+    write_json(&path, &bitmap, b"    ");
+}
+
 /// `addKeyVal`: `key` at the root of `workspace.jsonc`.
 pub fn set_workspace_key(root: &Path, key: &str, value: Value) {
     let path = root.join("workspace.jsonc");

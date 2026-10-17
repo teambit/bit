@@ -107,8 +107,7 @@ impl Store {
         }
         #[cfg(not(target_os = "linux"))]
         {
-            let _ = path;
-            Err(io::Error::other("metadata preservation is supported on Linux"))
+            in_place_target(path)
         }
     }
 

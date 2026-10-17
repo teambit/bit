@@ -102,3 +102,77 @@ fn normalize_entry(value: &mut Value) -> io::Result<bool> {
     entry.shift_remove("nextVersion");
     Ok(false)
 }
+
+/// Reproduce `ComponentMap.toPlainObject` field ordering and omitted fields.
+pub(crate) fn component_row(entry: &Value) -> io::Result<Value> {
+    let mut result = Map::new();
+    for key in [
+        "name",
+        "scope",
+        "version",
+        "defaultScope",
+        "mainFile",
+        "rootDir",
+        "wrapDir",
+        "exported",
+        "onLanesOnly",
+        "isAvailableOnCurrentLane",
+        "nextVersion",
+        "localOnly",
+        "config",
+    ] {
+        let Some(value) = entry
+            .get(key)
+            .filter(|value| !value.is_null())
+        else {
+            continue;
+        };
+        if !included(entry, key, value) {
+            continue;
+        }
+        let value = clean_value(key, value)?;
+        result.insert(key.into(), value);
+    }
+    Ok(Value::Object(result))
+}
+fn included(entry: &Value, key: &str, value: &Value) -> bool {
+    if matches!(key, "onLanesOnly" | "localOnly") && value == false {
+        return false;
+    }
+    !(key == "isAvailableOnCurrentLane" && value == true && entry["onLanesOnly"] != true)
+}
+fn clean_value(key: &str, value: &Value) -> io::Result<Value> {
+    let mut value = value.clone();
+    if key == "config" {
+        let config = value.as_object_mut().ok_or_else(|| invalid("command bitmap config"))?;
+        for aspect in config.values_mut() {
+            if let Some(aspect) = aspect.as_object_mut() {
+                aspect.shift_remove("__specific");
+            }
+        }
+    }
+    Ok(value)
+}
+
+/// Reproduce the component ordering and row serialization of `BitMap.write`.
+pub(crate) fn render_workspace(value: &Value) -> io::Result<Vec<u8>> {
+    let rows = value.as_object().ok_or_else(|| invalid("workspace bitmap object"))?;
+    let schema = rows.get("$schema-version").ok_or_else(|| invalid("workspace bitmap schema"))?;
+    let mut keys = rows
+        .keys()
+        .filter(|key| !key.starts_with('$') && *key != "_bit_lane")
+        .collect::<Vec<_>>();
+    keys.sort_by(|left, right| left.encode_utf16().cmp(right.encode_utf16()));
+    let mut output = Map::new();
+    for key in keys {
+        output.insert(key.clone(), component_row(&rows[key])?);
+    }
+    output.insert("$schema-version".into(), schema.clone());
+    if let Some(lane) = rows
+        .get("_bit_lane")
+        .filter(|lane| !lane.is_null())
+    {
+        output.insert("_bit_lane".into(), lane.clone());
+    }
+    render(&Value::Object(output))
+}

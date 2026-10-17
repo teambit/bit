@@ -10,21 +10,58 @@ use std::{
 pub struct Batch {
     root: PathBuf,
     head_only: bool,
+    selected: Option<Selected>,
     items: Vec<Plan>,
     bitmap: BytesChange,
     index: Option<BytesChange>,
 }
 
+#[derive(Clone)]
+struct Selected {
+    identities: Vec<String>,
+    force: bool,
+}
+
 impl Batch {
     pub fn prepare(root: &Path, head_only: bool) -> io::Result<Self> {
-        let ids = candidates(root)?;
+        Self::prepare_with(root, head_only, None)
+    }
+
+    pub fn prepare_selected(
+        root: &Path,
+        identities: &[String],
+        head_only: bool,
+        force: bool,
+    ) -> io::Result<Self> {
+        Self::prepare_with(
+            root,
+            head_only,
+            Some(Selected { identities: identities.to_vec(), force }),
+        )
+    }
+
+    fn prepare_with(root: &Path, head_only: bool, selected: Option<Selected>) -> io::Result<Self> {
+        let mut ids = candidates(root)?;
+        if let Some(selected) = &selected {
+            ids.retain(|id| selected.identities.contains(id));
+            if ids.is_empty() {
+                return Err(invalid("no selected components found to reset"));
+            }
+        }
         let items = ids
             .iter()
-            .map(|id| Plan::prepare(root, id, head_only, true))
+            .map(|id| {
+                Plan::prepare(
+                    root,
+                    id,
+                    head_only,
+                    selected.as_ref().is_none_or(|selected| selected.force),
+                )
+            })
             .collect::<io::Result<Vec<_>>>()?;
         let bitmap = project_bitmap(root, &items)?;
         let index = project_index(root, &items)?;
-        Ok(Self { root: root.to_owned(), head_only, items, bitmap, index })
+        Ok(Self { root: root.to_owned(), head_only, selected, items, bitmap, index })
     }
 
     pub fn results(&self) -> impl Iterator<Item = (&str, &[String])> {
@@ -35,7 +72,7 @@ impl Batch {
 
     pub fn commit(&self, file_id: &str) -> io::Result<()> {
         super::validate_file_id(file_id)?;
-        let fresh = Self::prepare(&self.root, self.head_only)?;
+        let fresh = Self::prepare_with(&self.root, self.head_only, self.selected.clone())?;
         if self.bitmap != fresh.bitmap
             || self.index != fresh.index
             || self.items
@@ -64,7 +101,7 @@ impl Batch {
             }
         }
         if let Some(index) = &self.index {
-            fs::write(self.root.join(".bit/index.json"), &index.after)?;
+            fs::write(crate::scope_path(&self.root).join("index.json"), &index.after)?;
         }
         super::backup_bitmap(&self.root, file_id)?;
         fs::write(self.root.join(".bitmap"), &self.bitmap.after)
@@ -72,12 +109,14 @@ impl Batch {
 }
 
 fn candidates(root: &Path) -> io::Result<Vec<String>> {
-    let index: Value = serde_json::from_slice(&fs::read(root.join(".bit/index.json"))?)?;
+    let index: Value =
+        serde_json::from_slice(&fs::read(crate::scope_path(root).join("index.json"))?)?;
     let rows = index["components"].as_array().ok_or_else(|| invalid("reset batch index"))?;
     let mut selected = Vec::new();
     for row in rows {
         let hash = row["hash"].as_str().ok_or_else(|| invalid("reset batch model hash"))?;
-        let model = outbound::read_object(&root.join(".bit/objects"), hash, "Component")?;
+        let model =
+            outbound::read_object(&crate::scope_path(root).join("objects"), hash, "Component")?;
         if model["state"]["versions"]
             .as_object()
             .is_some_and(|state| {
@@ -129,7 +168,7 @@ fn project_index(root: &Path, items: &[Plan]) -> io::Result<Option<BytesChange>>
     if items.iter().all(|item| item.index.is_none()) {
         return Ok(None);
     }
-    let before = fs::read(root.join(".bit/index.json"))?;
+    let before = fs::read(crate::scope_path(root).join("index.json"))?;
     let mut index: Value = serde_json::from_slice(&before)?;
     let rows = index["components"].as_array_mut().ok_or_else(|| invalid("reset batch index"))?;
     for item in items.iter().filter(|item| item.index.is_some()) {

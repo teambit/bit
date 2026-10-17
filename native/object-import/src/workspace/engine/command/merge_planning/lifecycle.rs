@@ -51,6 +51,19 @@ impl Prepared {
         }
         Ok(())
     }
+    pub(in crate::workspace::engine::command) fn defer_snapshot(
+        &mut self,
+    ) -> io::Result<Vec<String>> {
+        if self.finalized.is_some() {
+            return Err(invalid("command merge snapshot already finalized"));
+        }
+        let identities = self.pending
+            .iter()
+            .map(|row| row.identity.clone())
+            .collect();
+        self.pending.clear();
+        Ok(identities)
+    }
     pub(in crate::workspace::engine::command) fn cancel_snap(&mut self) {
         self.pending.clear();
     }
@@ -237,6 +250,9 @@ impl Prepared {
         &mut self,
         root: &Path,
     ) -> io::Result<usize> {
+        if let Some(policy) = &self.policy {
+            policy.commit_configs()?;
+        }
         if let Some(models) = &mut self.publication.fast_forward {
             models.commit(root)?;
         }
@@ -245,7 +261,7 @@ impl Prepared {
         }
         if !self.materials.is_empty() {
             fs::write(
-                root.join(".bit/unmerged.json"),
+                crate::scope_path(root).join("unmerged.json"),
                 serde_json::to_vec_pretty(&self.unmerged).map_err(io::Error::other)?,
             )?;
         }
@@ -263,7 +279,7 @@ impl Prepared {
             }
             notifications += super::super::apply_command::notify(root);
             finalized.files.commit()?;
-            fs::write(root.join(".bit/unmerged.json"), b"[]")?;
+            fs::write(crate::scope_path(root).join("unmerged.json"), b"[]")?;
         }
         Ok(notifications)
     }
@@ -288,7 +304,7 @@ impl Prepared {
         }
         self.validate_materials(root)?;
         super::removal::validate(root, &self.publication.removed)?;
-        if root.join(".bit/unmerged.json").is_symlink() {
+        if crate::scope_path(root).join("unmerged.json").is_symlink() {
             return Err(invalid("command unmerged symlink"));
         }
         Ok(())

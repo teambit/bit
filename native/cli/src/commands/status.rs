@@ -3,28 +3,39 @@
 //! this module computes the policy, ignore and semver inputs Node computed.
 //! Without `--json`, `report` formats the same result like `StatusCmd.report`.
 //!
-//! It runs only on a warm dependency cache. A component whose dependencies
-//! need fresh detection, an invalidated cache, the `no-fs-cache` feature,
-//! component-level dependency policies, other environments and every other
-//! input this module cannot prove declines to the Node.js CLI, which then
-//! writes the cache for the next run.
+//! It reuses valid dependency cache entries or detects dependencies afresh.
+//! With `no-fs-cache` it always detects afresh and writes no cache entries.
+//! Harmony callbacks supply extension facts while Rust owns repository state,
+//! inventory, dependency projection and comparison.
 
+pub(super) mod autosync;
 pub(super) mod cache;
 pub(super) mod capture;
+pub(super) mod environments;
 pub(super) mod fresh;
 pub(super) mod grammar;
 pub(super) mod issues;
 pub(super) mod js;
 pub(super) mod policy;
+pub(in crate::commands) mod report;
 
 pub(super) mod collate;
-mod report;
+pub(super) use delete::DeleteGraph;
+
+mod delete;
+mod lane_refresh;
+mod loader;
+mod reading;
+mod sorting;
+mod workspace_issues;
 
 use super::{color::Chalk, engine::Engine, workspace_command};
 use crate::{commands::Command, history::History, native::Outcome, workspace};
 use issues::Component;
 use js::{array, decline, text};
+use reading::{ReadFailure, local_result, read};
 use serde_json::{Value, json};
+use sorting::sort_rows;
 use std::{
     env,
     ffi::OsString,
@@ -37,28 +48,31 @@ pub const COMMAND: Command = Command { name: "status", aliases: &["s"], run };
 
 /// `--json`, or the report with its flags.
 enum Mode {
-    Json,
+    Json(report::Flags),
     Report(report::Flags),
     /// `--quick`, with `--json` or not.
     Quick(bool),
 }
 
 fn mode(args: &[OsString]) -> Option<Mode> {
-    if matches!(args, [_, flag] if flag == "--json" || flag == "-j") {
-        return Some(Mode::Json);
-    }
-    let json = |flag: &OsString| flag == "--json" || flag == "-j";
-    match args {
-        [_, flag] if flag == "--quick" => return Some(Mode::Quick(false)),
-        [_, first, second]
-            if (first == "--quick" && json(second)) || (json(first) && second == "--quick") =>
-        {
-            return Some(Mode::Quick(true));
-        }
-        _ => {}
-    }
     let arguments = workspace_command::utf8_args(args)?;
-    report::parse(&arguments[1..]).map(Mode::Report)
+    let json = arguments
+        .iter()
+        .any(|arg| matches!(*arg, "--json" | "-j"));
+    let quick = arguments.contains(&"--quick");
+    let report_args = arguments[1..]
+        .iter()
+        .copied()
+        .filter(|arg| !matches!(*arg, "--json" | "-j" | "--quick"))
+        .collect::<Vec<_>>();
+    let flags = report::parse(&report_args)?;
+    if quick {
+        Some(Mode::Quick(json))
+    } else if json {
+        Some(Mode::Json(flags))
+    } else {
+        Some(Mode::Report(flags))
+    }
 }
 
 fn run(args: &[OsString]) -> io::Result<Outcome> {
@@ -68,12 +82,9 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
     let Some(root) = workspace::root(&env::current_dir()?) else {
         return Ok(Outcome::Declined("not inside a workspace".to_string()));
     };
-    if !collate::root_locale() {
-        return Ok(Outcome::Declined("the locale may collate ids differently".to_string()));
-    }
     let home = env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).unwrap_or_default();
     match mode {
-        Mode::Json => json_status(&root, Path::new(&home), args),
+        Mode::Json(flags) => json_status(&root, Path::new(&home), args, &flags),
         Mode::Report(flags) => report_status(&root, Path::new(&home), args, &flags),
         // `statusMini`: the file changes only.
         Mode::Quick(json) => super::mini_status::quick(args, json),
@@ -81,13 +92,25 @@ fn run(args: &[OsString]) -> io::Result<Outcome> {
 }
 
 /// `bit status --json`.
-fn json_status(root: &Path, home: &Path, args: &[OsString]) -> io::Result<Outcome> {
-    let result = match read(root, home, |_, _| Ok(())) {
-        Ok((result, ())) => result,
-        Err(error) => return Ok(Outcome::Declined(format!("status: {error}"))),
+fn json_status(
+    root: &Path,
+    home: &Path,
+    args: &[OsString],
+    flags: &report::Flags,
+) -> io::Result<Outcome> {
+    let (mut result, progress) = match read(root, home, flags, |_, _| Ok(())) {
+        Ok((result, (), progress)) => (result, progress),
+        Err(ReadFailure::Declined(error)) => {
+            return Ok(Outcome::Declined(format!("status: {error}")));
+        }
+        Err(ReadFailure::Committed(error)) => return Err(error),
     };
+    report::color_issue_data(&mut result, Chalk::detect(args));
     let history = History::start(root, args);
     let mut stdout = io::stdout().lock();
+    stdout.write_all(progress.startup_stdout.as_bytes())?;
+    stdout.write_all(progress.load_stdout.as_bytes())?;
+    stdout.write_all(progress.issue_stdout.as_bytes())?;
     stdout.write_all(serde_json::to_string_pretty(&result)?.as_bytes())?;
     stdout.flush()?;
     history.end(true);
@@ -101,82 +124,128 @@ fn report_status(
     args: &[OsString],
     flags: &report::Flags,
 ) -> io::Result<Outcome> {
-    let chalk = Chalk::detect(args);
-    let read = read(root, home, |result, context| {
-        let output = report::report(result, context, flags, chalk)?;
-        let loaded = array(context.get("targets"), "targets")?.len();
-        let modified = !array(result.get("modifiedComponents"), "modified")?.is_empty();
-        Ok((output, loaded, modified))
-    });
-    let (output, loaded, modified) = match read {
-        Ok((_, prepared)) => prepared,
-        Err(error) => return Ok(Outcome::Declined(format!("status: {error}"))),
+    let (output, loaded, loads, progress) = match read(root, home, flags, |result, context| {
+        prepare_report(result, context, flags, Chalk::detect(args))
+    }) {
+        Ok((_, (output, loaded, loads), progress)) => (output, loaded, loads, progress),
+        Err(ReadFailure::Declined(error)) => {
+            return Ok(Outcome::Declined(format!("status: {error}")));
+        }
+        Err(ReadFailure::Committed(error)) => return Err(error),
     };
     let report =
         workspace_command::results::Report { data: output.data, code: output.code, details: None };
-    workspace_command::execute_with(root, args, "status", &report, |loader| {
-        loader.status("fetching status");
-        // `getMany` of the workspace: listing, new and modified components,
-        // and the auto-tag check once a component is modified.
-        let loads = if loaded == 0 { 0 } else { 3 + usize::from(modified) };
-        for _ in 0..loads {
-            loader.status(&format!("loading {loaded} component(s)"));
-        }
-        Ok(())
+    io::stdout().write_all(progress.startup_stdout.as_bytes())?;
+    workspace_command::execute_with(root, args, "status", &report, |output| {
+        loader::render(output, loaded, loads, &progress)
     })
 }
 
-/// The status result, after its history plans are
-/// committed. `prepare` runs on the result and the context before the commit.
-fn read<Prepared>(
+fn prepare_report(
+    result: &Value,
+    context: &Value,
+    flags: &report::Flags,
+    chalk: Chalk,
+) -> io::Result<(report::Output, usize, usize)> {
+    let output = report::report(result, context, flags, chalk)?;
+    let loaded = array(context.get("targets"), "targets")?
+        .iter()
+        .filter(|target| target["locallyRemoved"] != true)
+        .count();
+    let loads = if loaded == 0 {
+        0
+    } else {
+        3 + usize::from(!array(result.get("modifiedComponents"), "modified")?.is_empty())
+    };
+    Ok((output, loaded, loads))
+}
+
+/// Inspect a staged component for local removal without committing status caches.
+pub(super) fn clean_staged_component(root: &Path, identity: &str) -> io::Result<bool> {
+    clean_component_for_remove(root, identity, true)
+}
+
+pub(super) fn clean_imported_component(root: &Path, identity: &str) -> io::Result<bool> {
+    clean_component_for_remove(root, identity, false)
+}
+
+fn clean_component_for_remove(
+    root: &Path,
+    identity: &str,
+    staged_required: bool,
+) -> io::Result<bool> {
+    let home = env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).unwrap_or_default();
+    let mut engine = Engine::new()?;
+    let context: Value = engine.request(&json!({
+        "kind": "statusContext",
+        "root": root,
+        "home": Path::new(&home),
+    }))?;
+    let (result, _, _) = local_result(&mut engine, root, Path::new(&home), &context, None)?;
+    let staged = array(result.get("stagedComponents"), "staged")?;
+    let modified = array(result.get("modifiedComponents"), "modified")?;
+    let invalid = array(result.get("invalidComponents"), "invalid")?;
+    Ok((staged
+        .iter()
+        .any(|row| row["id"] == identity)
+        == staged_required)
+        && !modified
+            .iter()
+            .any(|row| row == identity)
+        && invalid.is_empty())
+}
+
+fn active_components(
+    context: &Value,
+    components: &[issues::Component],
+) -> io::Result<Vec<issues::Component>> {
+    Ok(array(context.get("targets"), "targets")?
+        .iter()
+        .zip(components)
+        .filter(|(target, _)| target["locallyRemoved"] != true)
+        .map(|(_, component)| component.clone())
+        .collect())
+}
+
+fn current_lane_id(context: &Value) -> io::Result<String> {
+    if let Some(id) = context.get("currentLaneId") {
+        return Ok(text(Some(id))?.to_string());
+    }
+    let scope = text(
+        context
+            .get("scope")
+            .and_then(|scope| scope.get("name")),
+    )?;
+    Ok(format!("{scope}/main"))
+}
+
+fn status_capture(
+    engine: &mut Engine,
     root: &Path,
     home: &Path,
-    prepare: impl FnOnce(&Value, &Value) -> io::Result<Prepared>,
-) -> io::Result<(Value, Prepared)> {
-    if cache::no_fs_cache(root) {
-        return Err(decline("no-fs-cache may be enabled"));
-    }
-    let mut engine = Engine::new()?;
-    let context: Value =
-        engine.request(&json!({"kind": "statusContext", "root": root, "home": home}))?;
+    context: &Value,
+    environments: Option<environments::Environments>,
+) -> io::Result<capture::Capture> {
     let targets = array(context.get("targets"), "targets")?;
-    let capture = capture::capture(&mut engine, root, home, &context, targets)?;
-    let compared: Value = engine.request(
-        &json!({"kind": "statusCompare", "root": root, "targets": capture.comparisons}),
-    )?;
-    let issues = issues::collect(root, &context, &capture.components)?
-        .ok_or_else(|| decline("status issues need canonical loading"))?;
-    let targets = result_targets(&context, &capture.components, &compared, &issues)?;
-    let semver = grammar::snapshot(semver_values(&context, &targets)?.iter().map(String::as_str))
-        .ok_or_else(|| decline("status semver grammar limits"))?;
-    let current_lane_id = if let Some(id) = context.get("currentLaneId") {
-        text(Some(id))?.to_string()
-    } else {
-        let scope = text(
-            context
-                .get("scope")
-                .and_then(|scope| scope.get("name")),
-        )?;
-        format!("{scope}/main")
-    };
-    let mut result: Value = engine.request(&json!({
-        "kind": "statusResult",
-        "currentLaneId": current_lane_id,
-        "targets": targets,
-        "models": context["models"],
-        "histories": context["histories"],
-        "semver": semver,
-    }))?;
-    sort_rows(&mut result)?;
-    let prepared = prepare(&result, &context)?;
-    capture::commit(&mut engine, root, &context, &capture)?;
-    Ok((result, prepared))
+    capture::capture_with(
+        engine,
+        root,
+        home,
+        context,
+        targets,
+        capture::CaptureOptions {
+            environments,
+            missing_status_invalid: true,
+            ..Default::default()
+        },
+    )
 }
 
 /// The rows `statusResult` reports, one per bitmap target.
 fn result_targets(
     context: &Value,
     components: &[Component],
+    invalid: &std::collections::HashMap<String, Value>,
     compared: &Value,
     issues: &[Value],
 ) -> io::Result<Vec<Value>> {
@@ -197,13 +266,25 @@ fn result_targets(
                 .iter()
                 .find(|row| row["id"] == *identity)
                 .map_or_else(|| json!([]), |row| row["issues"].clone());
-            Ok(json!({
+            let mut row = json!({
                 "identity": identity,
                 "version": target["version"],
                 "modified": modified,
                 "dependencies": component.dependencies,
                 "issues": issues,
-            }))
+                "bitmapState": {
+                    "localOnly": target["localOnly"],
+                    "softTagged": target["softTagged"],
+                    "locallyRemoved": target["locallyRemoved"],
+                },
+            });
+            if let Some(error) = identity
+                .as_str()
+                .and_then(|id| invalid.get(id))
+            {
+                row["invalid"] = error.clone();
+            }
+            Ok(row)
         })
         .collect()
 }
@@ -254,38 +335,15 @@ fn nullish_text(value: Option<&Value>) -> io::Result<String> {
     }
 }
 
-/// Every array of the result except `importPendingComponents`, sorted by id
-/// with `localeCompare`.
-fn sort_rows(result: &mut Value) -> io::Result<()> {
-    let result = result.as_object_mut().ok_or_else(|| decline("status result"))?;
-    for (key, rows) in result.iter_mut() {
-        let Some(rows) = rows
-            .as_array_mut()
-            .filter(|_| key != "importPendingComponents")
-        else {
-            continue;
-        };
-        let ids = rows
-            .iter()
-            .map(sort_id)
-            .collect::<io::Result<Vec<_>>>()?;
-        if !ids.iter().all(|id| collate::supported(id)) {
-            return Err(decline("status ids outside the native collation"));
+/// Consumer.onDestroy removes temporary versioning output after a completed read.
+pub(super) fn cleanup_temporary(root: &Path) -> io::Result<()> {
+    let path = root.join(".bitTmp");
+    match std::fs::symlink_metadata(&path) {
+        Ok(metadata) if metadata.is_dir() && !metadata.file_type().is_symlink() => {
+            std::fs::remove_dir_all(path)
         }
-        let mut order: Vec<usize> = (0..rows.len()).collect();
-        order.sort_by(|&left, &right| collate::compare(&ids[left], &ids[right]));
-        *rows = order
-            .into_iter()
-            .map(|index| rows[index].clone())
-            .collect();
-    }
-    Ok(())
-}
-
-/// `typeof row === 'string' ? row : row.id`.
-fn sort_id(row: &Value) -> io::Result<String> {
-    match row {
-        Value::String(id) => Ok(id.clone()),
-        _ => text(row.get("id")).map(str::to_string),
+        Ok(_) => std::fs::remove_file(path),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
+        Err(error) => Err(error),
     }
 }

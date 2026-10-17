@@ -4,14 +4,15 @@ pub(crate) mod lane;
 #[cfg(test)]
 pub(crate) mod tests;
 pub(crate) use prepare::{
-    VirtualRemote, prepare, prepare_cached, prepare_lane, prepare_lane_with_virtual,
-    prepare_with_virtual,
+    VirtualRemote, options::prepare_inbound_with_virtual, prepare, prepare_cached, prepare_lane,
+    prepare_lane_with_virtual, prepare_status_with_virtual,
 };
 mod capture;
 mod history;
 mod merge;
 mod prepare;
 mod publish;
+mod retained;
 
 use capture::{Capture, Object};
 use serde_json::Value;
@@ -31,6 +32,9 @@ pub(crate) struct Overlay {
     lane_refs: HashMap<(String, String), Value>,
 }
 impl Overlay {
+    pub(crate) fn object_references(&self) -> impl Iterator<Item = &str> {
+        self.objects.keys().map(String::as_str)
+    }
     pub(crate) fn read(&self, hash: &str, kind: &str) -> io::Result<Option<&Value>> {
         self.objects
             .get(hash)
@@ -70,12 +74,19 @@ impl Overlay {
             .and_then(Value::as_array)
             .map(Vec::as_slice)
     }
+    pub(crate) fn lane_refs(&self, scope: &str, name: &str) -> Option<&[Value]> {
+        self.lane_refs
+            .get(&(scope.to_owned(), name.to_owned()))
+            .and_then(Value::as_array)
+            .map(Vec::as_slice)
+    }
     pub(crate) fn compressed(&self, hash: &str) -> Option<&[u8]> {
         self.objects.get(hash).map(|record| record.bytes.as_slice())
     }
 }
 #[derive(Default)]
 pub(crate) struct Progress {
+    pub(crate) requested: Option<usize>,
     pub(crate) object_request: bool,
     pub(crate) reason: Option<String>,
     pub(crate) ids: Vec<String>,
@@ -86,10 +97,22 @@ pub(crate) struct PreparedImport {
     pub(crate) overlay: Overlay,
     pub(crate) progress: Vec<Progress>,
     pub(crate) bitmap_count: usize,
+    pub(crate) main_refresh: MainRefresh,
     capture: Capture,
     environment: Environment,
     cache: Cache,
     writes: Writes,
+}
+#[derive(Default)]
+pub(crate) struct MainRefresh {
+    pub(crate) count: usize,
+    pub(crate) objects: usize,
+}
+impl MainRefresh {
+    fn observe(&mut self, model: &Value) {
+        self.count += 1;
+        self.objects += usize::from(model["head"].is_null());
+    }
 }
 impl PreparedImport {
     pub(crate) fn all_external_targets_unmapped(
@@ -119,7 +142,7 @@ impl PreparedImport {
         root: &std::path::Path,
         bytes: Option<&[u8]>,
     ) -> io::Result<()> {
-        self.capture.accept_restored(&root.join(".bit/staged-snaps"), bytes)
+        self.capture.accept_restored(&crate::scope_path(root).join("staged-snaps"), bytes)
     }
     pub(crate) fn planned_index(&self) -> &Value {
         &self.writes.index
@@ -138,6 +161,7 @@ struct Environment {
 struct Cache {
     staged: String,
     only_if_built: bool,
+    fetch_all_dependencies: bool,
     unbuilt: std::collections::HashSet<String>,
     lane_sources: HashMap<String, String>,
     lane_reason: Option<String>,

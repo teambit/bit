@@ -1,9 +1,12 @@
 //! Freeze the ordinary current lane, its component models, and the local
 //! Version closure before the export transaction starts.
 use super::{Prepare, invalid, model, remote};
+mod exhaustive;
+mod readme;
+mod staged;
 use crate::transfer;
 use bit_client_transfer::tar::ObjectItem;
-use serde_json::Value;
+use serde_json::{Value, json};
 use sha1::{Digest, Sha1};
 use std::{
     collections::HashSet,
@@ -19,10 +22,23 @@ pub(super) struct LaneSelected {
     pub(super) name: String,
     pub(super) hashes: LaneHashes,
     pub(super) lane: Value,
+    pub(super) components: SelectedComponents,
+    pub(super) fork_history: Option<ForkHistory>,
+}
+
+pub(super) struct SelectedComponents {
     pub(super) objects: Vec<ObjectItem>,
-    pub(super) component_ids: Vec<String>,
+    pub(super) ids: Vec<String>,
     pub(super) expected_ids: Vec<String>,
     pub(super) models: Vec<model::ModelBytes>,
+    pub(super) histories: Vec<model::HistoryBytes>,
+}
+
+#[derive(Clone)]
+pub(super) struct ForkHistory {
+    pub(super) parent: String,
+    pub(super) external_count: usize,
+    pub(super) candidate_count: usize,
 }
 
 pub(super) struct LaneHashes {
@@ -36,6 +52,18 @@ pub(super) fn select(input: &Prepare) -> io::Result<Option<LaneSelected>> {
     };
     let loaded = load_lane(input, &scope, &name)?;
     let mut selected = select_components(input, &scope, &name, &loaded)?;
+    let candidate_count = lane_entries(&loaded.lane)?.len();
+    let fork_history = loaded.forked_from
+        .as_ref()
+        .filter(|(parent_scope, _)| *parent_scope != scope)
+        .map(|(parent_scope, parent_name)| ForkHistory {
+            parent: format!("{parent_scope}/{parent_name}"),
+            external_count: selected.component_ids
+                .iter()
+                .filter(|id| !id.starts_with(&format!("{scope}/")))
+                .count(),
+            candidate_count,
+        });
     for hash in [&loaded.history_hash, &loaded.hash] {
         selected.append(ObjectItem {
             hash: hash.clone(),
@@ -48,10 +76,14 @@ pub(super) fn select(input: &Prepare) -> io::Result<Option<LaneSelected>> {
         name,
         hashes: LaneHashes { lane: loaded.hash, history: loaded.history_hash },
         lane: loaded.lane,
-        objects: selected.objects,
-        component_ids: selected.component_ids,
-        expected_ids: selected.expected_ids,
-        models: selected.models,
+        components: SelectedComponents {
+            objects: selected.objects,
+            ids: selected.component_ids,
+            expected_ids: selected.expected_ids,
+            models: selected.models,
+            histories: selected.histories,
+        },
+        fork_history,
     }))
 }
 
@@ -60,8 +92,8 @@ fn current_identity(input: &Prepare) -> io::Result<Option<(String, String)>> {
     let Some(current) = bitmap.get("_bit_lane") else {
         return Ok(None);
     };
-    if !input.ids.is_empty() || input.options.resume.is_some() {
-        return Err(invalid("outbound lane explicit ids or resume"));
+    if !input.ids.is_empty() {
+        return Err(invalid("outbound explicit lane IDs require canonical stack"));
     }
     let scope = current["id"]["scope"]
         .as_str()
@@ -82,10 +114,12 @@ struct Loaded {
     hash: String,
     history_hash: String,
     dir: PathBuf,
+    forked_from: Option<(String, String)>,
 }
 
 fn load_lane(input: &Prepare, scope: &str, name: &str) -> io::Result<Loaded> {
-    let index: Value = serde_json::from_slice(&fs::read(input.root.join(".bit/index.json"))?)?;
+    let index: Value =
+        serde_json::from_slice(&fs::read(crate::scope_path(&input.root).join("index.json"))?)?;
     let lane_row = index["lanes"]
         .as_array()
         .ok_or_else(|| invalid("outbound lane index"))?
@@ -96,30 +130,47 @@ fn load_lane(input: &Prepare, scope: &str, name: &str) -> io::Result<Loaded> {
         .as_str()
         .ok_or_else(|| invalid("outbound lane hash"))?
         .to_owned();
-    let dir = input.root.join(".bit/objects");
+    let dir = crate::scope_path(&input.root).join("objects");
     let lane = model::read_object(&dir, &hash, "Lane")?;
     if lane["scope"] != scope || lane["name"] != name {
         return Err(invalid("outbound lane identity"));
     }
-    if lane
-        .get("readmeComponent")
-        .is_some_and(|value| !value.is_null())
-        || lane
-            .get("forkedFrom")
-            .is_some_and(|value| !value.is_null())
-        || lane["updateDependents"]
-            .as_array()
-            .is_some_and(|rows| !rows.is_empty())
-    {
-        return Err(invalid("outbound complex lane export"));
-    }
+    let forked_from = forked_from(&lane, scope, input.options.fork_lane_new_scope)?;
+    readme::validate(&lane, name)?;
     let history_hash =
         crate::validate::hexadecimal(&Sha1::digest(format!("{hash}:LaneHistory").as_bytes()));
     let history = model::read_object(&dir, &history_hash, "LaneHistory")?;
-    if history["scope"] != scope || history["name"] != name || history["laneHash"] != hash {
+    // LaneHistory keeps its original name/scope after a local rename or scope change.
+    if history["laneHash"] != hash {
         return Err(invalid("outbound LaneHistory identity"));
     }
-    Ok(Loaded { index, lane, hash, history_hash, dir })
+    Ok(Loaded { index, lane, hash, history_hash, dir, forked_from })
+}
+
+fn forked_from(lane: &Value, scope: &str, new_scope: bool) -> io::Result<Option<(String, String)>> {
+    let forked_from = lane
+        .get("forkedFrom")
+        .filter(|value| !value.is_null())
+        .map(|parent| {
+            let parent_scope = parent["scope"]
+                .as_str()
+                .filter(|scope| !scope.is_empty());
+            let parent_name = parent["name"]
+                .as_str()
+                .filter(|name| !name.is_empty());
+            parent_scope
+                .zip(parent_name)
+                .map(|(scope, name)| (scope.to_owned(), name.to_owned()))
+                .ok_or_else(|| invalid("outbound lane fork identity"))
+        })
+        .transpose()?;
+    let cross_scope = forked_from
+        .as_ref()
+        .is_some_and(|(parent_scope, _)| parent_scope != scope);
+    if cross_scope != new_scope {
+        return Err(invalid("outbound cross-scope lane fork flag"));
+    }
+    Ok(forked_from)
 }
 
 struct Selection {
@@ -129,6 +180,7 @@ struct Selection {
     component_ids: Vec<String>,
     expected_ids: Vec<String>,
     models: Vec<model::ModelBytes>,
+    histories: Vec<model::HistoryBytes>,
 }
 
 impl Selection {
@@ -140,6 +192,7 @@ impl Selection {
             component_ids: Vec::new(),
             expected_ids: Vec::new(),
             models: Vec::new(),
+            histories: Vec::new(),
         }
     }
     fn append(&mut self, item: ObjectItem) -> io::Result<()> {
@@ -163,11 +216,7 @@ fn select_components(
     name: &str,
     loaded: &Loaded,
 ) -> io::Result<Selection> {
-    let rows =
-        loaded.lane["components"].as_array().ok_or_else(|| invalid("outbound lane components"))?;
-    if rows.len() > MAX_OBJECTS {
-        return Err(invalid("outbound lane component budget"));
-    }
+    let (rows, exhaustive) = selection_rows(input, loaded)?;
     let component_rows =
         loaded.index["components"].as_array().ok_or_else(|| invalid("outbound component index"))?;
     let remote_heads = remote_heads(&input.root, scope, name)?;
@@ -175,7 +224,7 @@ fn select_components(
     let context = ComponentContext { input, loaded, scope, name, host: &host };
     let mut seen_ids = HashSet::new();
     let mut selected = Selection::new();
-    for entry in rows {
+    for entry in &rows {
         let component = ComponentId::parse(entry)?;
         if !seen_ids.insert(component.id.clone()) {
             return Err(invalid("outbound duplicate lane component"));
@@ -184,16 +233,60 @@ fn select_components(
             .iter()
             .find(|row| component.matches(row))
             .and_then(|row| row["head"].as_str());
-        if previous_head == Some(component.head) {
+        if (!exhaustive || input.options.head_only)
+            && previous_head == Some(component.head)
+            && !(input.options.fork_lane_new_scope
+                && staged::missing_remote_head(&host, component.head)?)
+        {
             continue;
         }
         let row = component_rows
             .iter()
             .find(|row| component.matches(row))
             .ok_or_else(|| invalid("outbound lane component model missing"))?;
-        select_component(&context, &component, row, previous_head, &mut selected)?;
+        select_component(&context, &component, row, previous_head, exhaustive, &mut selected)?;
     }
     Ok(selected)
+}
+
+fn selection_rows(input: &Prepare, loaded: &Loaded) -> io::Result<(Vec<Value>, bool)> {
+    let mut rows = lane_entries(&loaded.lane)?;
+    let exhaustive =
+        input.options.all || input.options.all_versions || input.options.head_only;
+    if exhaustive || input.options.fork_lane_new_scope {
+        let extra = exhaustive::workspace_entries(input, loaded, &rows)?;
+        rows.extend(extra);
+    }
+    if rows.len() > MAX_OBJECTS {
+        return Err(invalid("outbound lane component budget"));
+    }
+    Ok((rows, exhaustive))
+}
+
+pub(super) fn lane_entries(lane: &Value) -> io::Result<Vec<Value>> {
+    let mut entries = lane["components"]
+        .as_array()
+        .ok_or_else(|| invalid("outbound lane components"))?
+        .clone();
+    let updates = match lane.get("updateDependents") {
+        None | Some(Value::Null) => &[][..],
+        Some(Value::Array(updates)) => updates.as_slice(),
+        Some(_) => return Err(invalid("outbound lane update-dependents")),
+    };
+    for update in updates {
+        let id = update.as_str().ok_or_else(|| invalid("outbound lane update-dependent"))?;
+        let (identity, head) =
+            id.rsplit_once('@').ok_or_else(|| invalid("outbound lane update-dependent id"))?;
+        let (scope, name) = identity
+            .split_once('/')
+            .ok_or_else(|| invalid("outbound lane update-dependent identity"))?;
+        crate::merge_history::hash(head)?;
+        if scope.is_empty() || name.is_empty() {
+            return Err(invalid("outbound lane update-dependent identity"));
+        }
+        entries.push(json!({"id":{"scope":scope,"name":name},"head":head}));
+    }
+    Ok(entries)
 }
 
 struct ComponentId<'a> {
@@ -205,9 +298,6 @@ struct ComponentId<'a> {
 
 impl<'a> ComponentId<'a> {
     fn parse(entry: &'a Value) -> io::Result<Self> {
-        if entry["isDeleted"] == true {
-            return Err(invalid("outbound deleted lane component"));
-        }
         let scope = entry["id"]["scope"]
             .as_str()
             .filter(|scope| !scope.is_empty())
@@ -238,6 +328,7 @@ fn select_component(
     id: &ComponentId<'_>,
     row: &Value,
     previous_head: Option<&str>,
+    exhaustive: bool,
     selected: &mut Selection,
 ) -> io::Result<()> {
     let hash = row["hash"].as_str().ok_or_else(|| invalid("outbound component model hash"))?;
@@ -254,13 +345,20 @@ fn select_component(
         &context.input.transport.export_date,
     )?;
     let after = model::encode(hash, "Component", &component)?;
-    let versions = lane_versions(dir, id.head, previous_head, context.scope, context.name)?;
+    let versions = staged::selected_versions(context, id, &component, previous_head, exhaustive)?;
+    selected.histories.push(model::prepare_history(dir, id.scope, id.name, id.head)?);
     selected.expected_ids.extend(
         versions
             .iter()
             .map(|version| format!("{}@{version}", id.id)),
     );
-    for object in model::collect(dir, hash, &after, &versions)? {
+    for object in model::collect(
+        dir,
+        hash,
+        &after,
+        &versions,
+        context.input.options.ignore_missing_artifacts,
+    )? {
         selected.append(object)?;
     }
     selected.models.push(model::ModelBytes { hash: hash.to_owned(), before, after });
@@ -272,8 +370,8 @@ fn remote_heads(root: &Path, scope: &str, name: &str) -> io::Result<Vec<Value>> 
     if scope.contains('/') || name.contains('/') || scope == ".." || name == ".." {
         return Err(invalid("outbound lane ref path"));
     }
-    let path = root
-        .join(".bit/refs/remotes")
+    let path = crate::scope_path(root)
+        .join("refs/remotes")
         .join(scope)
         .join(name);
     match fs::read(path) {
@@ -285,61 +383,6 @@ fn remote_heads(root: &Path, scope: &str, name: &str) -> io::Result<Vec<Value>> 
 
 fn read_compressed(dir: &Path, hash: &str) -> io::Result<Vec<u8>> {
     transfer::object::repository(dir, crate::merge_history::hash(hash)?, MAX_BYTES)
-}
-
-/// Keep the lane head and any preceding snaps made on this lane. A main-lane
-/// parent is already on the component's home scope and does not need sending.
-fn lane_versions(
-    dir: &Path,
-    head: &str,
-    previous_head: Option<&str>,
-    scope: &str,
-    name: &str,
-) -> io::Result<Vec<String>> {
-    let mut output = Vec::new();
-    let mut pending = vec![head.to_owned()];
-    let mut seen = HashSet::new();
-    while let Some(hash) = pending.pop() {
-        if !seen.insert(hash.clone()) || Some(hash.as_str()) == previous_head {
-            continue;
-        }
-        if seen.len() > MAX_OBJECTS {
-            return Err(invalid("outbound lane version budget"));
-        }
-        if let Some(parents) = selected_parents(dir, &hash, head, scope, name)? {
-            output.push(hash);
-            pending.extend(parents.into_iter().rev());
-        }
-    }
-    output.reverse();
-    Ok(output)
-}
-
-fn selected_parents(
-    dir: &Path,
-    hash: &str,
-    head: &str,
-    scope: &str,
-    name: &str,
-) -> io::Result<Option<Vec<String>>> {
-    let version = model::read_object(dir, hash, "Version")?;
-    if version["unrelated"] == true || version["squashed"] == true {
-        return Err(invalid("outbound rewritten lane history"));
-    }
-    let origin = &version["origin"]["lane"];
-    if hash != head && (origin["scope"] != scope || origin["name"] != name) {
-        return Ok(None);
-    }
-    let parents = version["parents"].as_array().ok_or_else(|| invalid("outbound lane parents"))?;
-    parents
-        .iter()
-        .map(|parent| {
-            let hash = parent.as_str().ok_or_else(|| invalid("outbound lane parent"))?;
-            crate::merge_history::hash(hash)?;
-            Ok(hash.to_owned())
-        })
-        .collect::<io::Result<Vec<_>>>()
-        .map(Some)
 }
 
 #[cfg(test)]

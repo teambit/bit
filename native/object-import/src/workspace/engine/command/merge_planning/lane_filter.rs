@@ -148,11 +148,15 @@ pub(super) fn capture_hidden(
 }
 
 pub(super) fn capture_additions(
-    record: &Record,
+    record: &mut Record,
     planned: &mut planning::Planned,
+    snapshots: &mut crate::workspace::snapshots::State,
 ) -> io::Result<()> {
-    let Some(additions) = record.context["lane"]["additions"].as_array() else { return Ok(()) };
-    for destination in additions {
+    let Some(additions) = record.context["lane"]["additions"].as_array().cloned() else {
+        return Ok(());
+    };
+    let private = super::scratch::Directory::create()?;
+    for destination in &additions {
         let identity = format!(
             "{}/{}",
             destination["scope"].as_str().ok_or_else(|| invalid("lane addition scope"))?,
@@ -164,19 +168,48 @@ pub(super) fn capture_additions(
         {
             continue;
         }
-        let target = record.context["lane"]["targets"]
-            .as_array()
-            .and_then(|rows| {
-                rows.iter()
-                    .find(|row| row["identity"] == identity)
-            })
-            .ok_or_else(|| invalid("lane addition target"))?;
-        if target["currentIdPresent"] != false {
-            return Err(invalid("lane inactive model-backed addition requires canonical loading"));
-        }
-        planned.captured.push(super::capture::addition(&identity, destination)?);
+        let captured = addition(record, &identity, destination, &private.0, snapshots)?;
+        planned.captured.push(captured);
     }
+    planned.directories.push(private);
     Ok(())
+}
+
+fn addition(
+    record: &mut Record,
+    identity: &str,
+    destination: &Value,
+    private: &std::path::Path,
+    snapshots: &mut crate::workspace::snapshots::State,
+) -> io::Result<super::capture::Captured> {
+    let target = record.context["lane"]["targets"]
+        .as_array()
+        .and_then(|rows| {
+            rows.iter()
+                .find(|row| row["identity"] == identity)
+        })
+        .ok_or_else(|| invalid("lane addition target"))?;
+    if target["currentIdPresent"] == false {
+        super::capture::addition(identity, destination)
+    } else {
+        let head =
+            target["currentHead"].as_str().ok_or_else(|| invalid("lane inactive current head"))?;
+        let version = record.repository.read(head, "Version")?;
+        let mut captured = super::capture::from_model(
+            private,
+            identity,
+            head,
+            &version,
+            &mut record.repository,
+            snapshots,
+        )?;
+        captured.hidden = false;
+        destination["rootDir"]
+            .as_str()
+            .ok_or_else(|| invalid("lane inactive destination"))?
+            .clone_into(&mut captured.target.directory);
+        Ok(captured)
+    }
 }
 
 pub(super) fn gap_targets(
@@ -226,4 +259,11 @@ fn gap_versions(row: &Selected, include_history: bool) -> io::Result<Vec<String>
         }
     }
     Ok(versions)
+}
+
+pub(super) fn scope_only(record: &Record, current: &super::capture::Captured) -> bool {
+    current.hidden
+        || !record.targets
+            .iter()
+            .any(|target| target["identity"] == current.target.identity)
 }

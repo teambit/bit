@@ -87,6 +87,125 @@ native CLI does today:
 
 The rest follow as their commands are ported.
 
+## Additional native snapshot and platform qualification
+
+These released-CLI parity cases supplement the TypeScript case inventory below:
+
+- `commands::snap::sources::tracked_package_json_is_linked_without_generated_metadata_matching_node`
+  checks tracked package manifests, source links, stdout/stderr, bitmap publication and exact
+  inflated Source objects and their logical hashes against Node.js 2.2.94.
+- `commands::diff_completion::remote_fixture::canonically_seeded_remote_versions_diff_matches_node`
+  qualifies remote-only version fetching from a scope seeded with canonical existing objects
+  and its index; Windows remote diff fixtures use this setup independently of export.
+- `commands::diff_completion::remote_fixture::pinned_windows_repository_list_refs_omits_existing_pending_objects`
+  runs only on Windows and characterizes the pinned repository's pending-object enumeration
+  limitation directly. It does not relax export acknowledgement checks.
+
+Windows status fixtures that require exported main or lane history run the pinned
+Node export's local lifecycle, then seed canonical existing repository objects and
+index into the remote. Bitmap scope promotion and the current lane's staged-config
+cleanup complete the fixture state omitted by the pinned server's empty ID list.
+`status_completion::pinned_windows_node_export_still_completes_its_local_lifecycle`
+characterizes that published behavior; the all-platform seeded lane-merge case
+checks actual status and diff against Node. Linux setup retains real native export.
+
+The nested-file diff fixture permits only the two sibling directory batches
+`a/deep.js` and `z/deep.js` to swap, including their matching Files summary order.
+The pinned fast-glob walker reads sibling directories concurrently and emits each
+completed scandir batch immediately. Root and deeper-file placement, exact file
+identities, within-directory order, statuses and diff bytes remain checked.
+
+Snapshot engine unit tests additionally cover builder failure staging without object publication,
+artifact confinement and raw-byte hashes, exact callback-owned source proof replacement,
+post-publication proof retention, configured staging, dangling source links, root package
+suppression, and package metadata callback normalization. Windows snapshot link and IDE types
+semantics have a platform-only unit case and the dedicated released-CLI workflow.
+
+## Additional native checkout qualification
+
+`harmony::checkout_callbacks` checks compiled providers and onLoad callbacks for
+checkout, its `U` alias, revert, and lane switches. It compares complete output,
+source and bitmap state, temporary-directory cleanup, and the dependency-cache
+prefix retained after a merge conflict, including subsequent forced switches.
+Unsupported HTTP transports decline before configured providers run.
+
+
+`harmony::checkout_platform` compares complete released Node/native checkout,
+reset, revert and lane-switch commands. It checks obsolete file deletion, missing
+directory restoration, CRLF and binary source bytes, unchanged versions on revert,
+corrupt Source rejection before workspace publication, and workspace-root checkout
+without replacing the live bitmap or nested components. An embedded `.git/bit`
+repository case verifies source lookup and bitmap history use the actual scope
+without creating a shadow `.bit` directory. Only measured import
+durations and the exact workspace prefix in corrupt-object diagnostics are normalized.
+The Windows oracle includes this group, existing local checkout cases, and revert;
+file-remote setup uses the documented canonical fixture helper on Windows.
+
+`harmony::checkout_platform::license` compares the generated LICENSE bytes and
+package metadata against the pinned CLI. LICENSE comes from the component's
+ScopeMeta, not an unrelated local workspace scope. Binary conflict qualification
+covers manual/ours/theirs, case-insensitive binary extensions, and NUL-containing
+text files with their distinct published diagnostics. The extension classifier
+uses the released `binary-extensions` 2.3.0 list and its accompanying MIT license.
+`harmony::checkout_policy` also compares exact workspace JSONC bytes with interior,
+block, trailing-property and trailing-document comments through the shared native
+comment-json writer; the install API re-exports the same implementation.
+
+
+## Additional merge history qualification
+
+`harmony::merge_history` checks unrelated lane source choices, pending merge
+relations and completed snap ancestry against the released CLI, including reuse
+of a relation already resolved on main. Old parent, unrelated and Source refs
+remain exact. Independently allocated snap/batch IDs and dates use the existing
+snapshot oracle; import elapsed durations are normalized. Its reader fixtures
+compare divergent lane histories, staged and stored range metadata, colored log
+views and historical checkout after squashed/unrelated publication. Embedded
+`.git/bit` fixtures exercise both lane history and component logs.
+
+The merge history fixture `canonical_remote_seed_preserves_independent_lanes_and_native_historical_checkout` forces the published remote object writer on every platform, preserves independently exported remote Lane indexes and qualifies actual native historical checkout. Windows fixture publication bypasses only the pinned pending-object enumeration bug; the published `saveObjects` owns model/Lane merging and index/history publication.
+
+`harmony::merge_lifecycle` compares automatic lane snapshots and component
+merge globs/state predicates through materialization and final Version metadata.
+`harmony::merge_policy` checks hidden components, removed versions, workspace
+policy updates and configuration conflicts against fresh canonical fixtures.
+`harmony::merge_recovery` checks retained callbacks, failed pre-snap prefixes,
+interactive and silent aborts, and recovery with an embedded scope. The configured
+`harmony::merge_callbacks` fixtures compare provider/pre-snap/build counters and
+publication state, including failures after materialization. Every group runs in
+the Windows parity matrix as well as the complete Linux suite.
+
+## Additional inbound transfer qualification
+
+`commands::import::policy` compares imported automatic dependencies against the
+released CLI: workspace range updates, conflict markers, file merge strategies,
+verbose output and JSON output, with and without dependency installation. The
+workspace JSONC bytes, bitmap, exit status and report remain exact; only reported
+completion durations are normalized. `commands::import::history` checks advanced
+remote lane publication during historical checkout and `fetch --all-history`
+parent Version and Source retention. `commands::import::fetch_deps` checks forced
+dependency object imports without adding dependency components to the bitmap.
+
+## Additional outbound transfer qualification
+
+`harmony::export_completion` compares exact text and JSON bytes, exit status,
+bitmap and staged controls for multiple pending versions, verbose reporting,
+the JSON handler's ignored `--head-only` flag, empty exports, legacy regular
+expression wildcard selection, unmatched wildcards and embedded `.git/bit`
+scopes. Main and lane resume fixtures stage canonical `ObjectList` values through
+the published server's `writeObjectsToPendingDir` before running both clients.
+A valid snapped lane readme exports natively; unsnapped readmes and explicit
+IDs on a lane decline before effects so the released CLI retains its observable
+error stack. Missing-bitmap staged exports, staged removals, and independently
+missing artifacts produced by the published TypeScript builder are also covered.
+Generated package bytes and source-link shapes are compared for these exports,
+including promoted component dependency packages and stale generated properties.
+No JSON newline or component-ID serialization is normalized. Local histories
+remain exact. Remote `VersionHistory.versions` rows alone are sorted by hash
+for comparison: repeated explicit pinned-Node exports from fresh workspace
+copies into restored remotes produced both ancestor-row permutations. Every
+row's fields, object path, header, logical identity, and remote index stay exact.
+
 ## Cases
 
 <!-- e2e-port-plan:begin (generated by scripts/rust/e2e-port-plan.mjs; edit only the boxes and notes) -->
@@ -200,20 +319,20 @@ The rest follow as their commands are ported.
 ### `e2e/commands/export.e2e.ts`
 
 - [x] `e2e/commands/export.e2e.ts:27` bit export command › with no components to export › should print nothing to export — `commands::export::known_failures::nothing_to_export` (known failure)
-- [x] `e2e/commands/export.e2e.ts:42` bit export command › with multiple versions › should export it with no errors — `commands::export::known_failures::multiple_versions_are_exported` (known failure)
-- [x] `e2e/commands/export.e2e.ts:69` bit export command › imported (v1), exported (v2) and then exported again (v3) › should export it with no errors — `commands::export::known_failures::an_imported_component_is_exported_twice` (known failure)
+- [x] `e2e/commands/export.e2e.ts:42` bit export command › with multiple versions › should export it with no errors — `commands::export::multiple_versions_are_exported`
+- [x] `e2e/commands/export.e2e.ts:69` bit export command › imported (v1), exported (v2) and then exported again (v3) › should export it with no errors — `commands::export::an_imported_component_is_exported_twice`
 - [x] `e2e/commands/export.e2e.ts:90` bit export command › with a PNG file › should export it with no errors — `commands::export::known_failures::a_png_file_keeps_its_size` (known failure)
 - [x] `e2e/commands/export.e2e.ts:99` bit export command › with a PNG file › after importing the file › the size of the binary file should not be changed — `commands::export::known_failures::a_png_file_keeps_its_size` (known failure)
-- [x] `e2e/commands/export.e2e.ts:117` bit export command › export a component, do not modify it and export again to the same scope › should not export the component — `commands::export::known_failures::an_unmodified_component_is_not_exported_again` (known failure)
+- [x] `e2e/commands/export.e2e.ts:117` bit export command › export a component, do not modify it and export again to the same scope › should not export the component — `commands::export::selected_unmodified_component_matches_node`
 - [x] `e2e/commands/export.e2e.ts:132` bit export command › export a component when the checked out version is not the latest › .bitmap should keep the current version and do not update to the latest version — `commands::export::exporting_an_older_checked_out_version_keeps_it`
 - [x] `e2e/commands/export.e2e.ts:136` bit export command › export a component when the checked out version is not the latest › bit show should display the component with the current version, not the latest — `commands::export::exporting_an_older_checked_out_version_keeps_it`
 - [x] `e2e/commands/export.e2e.ts:141` bit export command › export a component when the checked out version is not the latest › the file content should not be changed — `commands::export::exporting_an_older_checked_out_version_keeps_it`
 - [x] `e2e/commands/export.e2e.ts:166` bit export command › applying permissions on the remote scope when was init with shared flag › when the group name does not exist › should throw an error indicating that the group does not exist (unless it is Windows) — `commands::export::known_failures::a_missing_shared_group_fails_the_export` (known failure)
 - [x] `e2e/commands/export.e2e.ts:187` bit export command › applying permissions on the remote scope when was init with shared flag › when the group exists and the current user has permission to that group › should export the component successfully and change the owner to that group — `commands::export::known_failures::an_existing_shared_group_owns_the_export` (known failure)
 - [x] `e2e/commands/export.e2e.ts:203` bit export command › export after re-creating the remote › export without any flag › should show a message that nothing to export — `commands::export::a_recreated_remote_has_nothing_to_export`
-- [x] `e2e/commands/export.e2e.ts:213` bit export command › export after re-creating the remote › export with --all flag › should export them successfully — `commands::export::known_failures::all_exports_to_a_recreated_remote` (known failure)
-- [x] `e2e/commands/export.e2e.ts:223` bit export command › export after re-creating the remote › export with --all-versions flag › should export them successfully — `commands::export::known_failures::all_versions_exports_to_a_recreated_remote` (known failure)
-- [x] `e2e/commands/export.e2e.ts:243` bit export command › re-export using the component name without the scope name › should not show the "fork" prompt — `commands::export::known_failures::reexporting_by_name_without_scope` (known failure)
+- [x] `e2e/commands/export.e2e.ts:213` bit export command › export after re-creating the remote › export with --all flag › should export them successfully — `commands::export::all_exports_to_a_recreated_remote`
+- [x] `e2e/commands/export.e2e.ts:223` bit export command › export after re-creating the remote › export with --all-versions flag › should export them successfully — `commands::export::all_versions_exports_to_a_recreated_remote`
+- [x] `e2e/commands/export.e2e.ts:243` bit export command › re-export using the component name without the scope name › should not show the "fork" prompt — `commands::export::reexporting_by_name_without_scope`
 
 ### `e2e/commands/import-all.e2e.ts`
 
@@ -453,19 +572,19 @@ The rest follow as their commands are ported.
 ### `e2e/commands/tag.e2e.ts`
 
 - [x] `e2e/commands/tag.e2e.ts:35` bit tag command › tag component with invalid mainFile in bitmap › should not tag the component — `commands::tag::known_failures::an_invalid_main_file_is_not_tagged` (known failure)
-- [x] `e2e/commands/tag.e2e.ts:52` bit tag command › semver flags › tag specific component › Should not allow invalid semver — `commands::tag::known_failures::release_type_flags_bump_the_version` (known failure)
-- [x] `e2e/commands/tag.e2e.ts:61` bit tag command › semver flags › tag specific component › Should increment the patch version when no version type specified — `commands::tag::known_failures::release_type_flags_bump_the_version` (known failure)
-- [x] `e2e/commands/tag.e2e.ts:65` bit tag command › semver flags › tag specific component › Should increment the patch version when --patch flag specified — `commands::tag::known_failures::release_type_flags_bump_the_version` (known failure)
-- [x] `e2e/commands/tag.e2e.ts:69` bit tag command › semver flags › tag specific component › Should increment the minor version when --minor flag specified — `commands::tag::known_failures::release_type_flags_bump_the_version` (known failure)
-- [x] `e2e/commands/tag.e2e.ts:73` bit tag command › semver flags › tag specific component › Should increment the major version when --major flag specified — `commands::tag::known_failures::release_type_flags_bump_the_version` (known failure)
-- [x] `e2e/commands/tag.e2e.ts:77` bit tag command › semver flags › tag specific component › Should set the exact version when specified on new component — `commands::tag::known_failures::an_exact_version_tags_a_new_component` (known failure)
-- [x] `e2e/commands/tag.e2e.ts:83` bit tag command › semver flags › tag specific component › Should increment patch version of dependent when using other flag on tag dependency — `commands::tag::known_failures::a_dependent_gets_a_patch_bump` (known failure)
+- [x] `e2e/commands/tag.e2e.ts:52` bit tag command › semver flags › tag specific component › Should not allow invalid semver — `commands::tag::known_failures::invalid_semver_is_rejected` (known failure)
+- [x] `e2e/commands/tag.e2e.ts:61` bit tag command › semver flags › tag specific component › Should increment the patch version when no version type specified — `commands::tag::qualification::release_type_flags_bump_the_version`
+- [x] `e2e/commands/tag.e2e.ts:65` bit tag command › semver flags › tag specific component › Should increment the patch version when --patch flag specified — `commands::tag::qualification::release_type_flags_bump_the_version`
+- [x] `e2e/commands/tag.e2e.ts:69` bit tag command › semver flags › tag specific component › Should increment the minor version when --minor flag specified — `commands::tag::qualification::release_type_flags_bump_the_version`
+- [x] `e2e/commands/tag.e2e.ts:73` bit tag command › semver flags › tag specific component › Should increment the major version when --major flag specified — `commands::tag::qualification::release_type_flags_bump_the_version`
+- [x] `e2e/commands/tag.e2e.ts:77` bit tag command › semver flags › tag specific component › Should set the exact version when specified on new component — `commands::tag::qualification::an_exact_version_tags_a_new_component`
+- [x] `e2e/commands/tag.e2e.ts:83` bit tag command › semver flags › tag specific component › Should increment patch version of dependent when using other flag on tag dependency — `commands::tag::qualification::a_dependent_gets_a_patch_bump`
 - [x] `e2e/commands/tag.e2e.ts:109` bit tag command › semver flags › tag specific component › Should throw error when the version already exists — `commands::tag::known_failures::an_existing_version_is_not_tagged_again` (known failure)
 - [x] `e2e/commands/tag.e2e.ts:124` bit tag command › with removed file/files › Should not let you tag with a non-existing dependency — `commands::tag::known_failures::a_missing_dependency_file_blocks_the_tag` (known failure)
-- [x] `e2e/commands/tag.e2e.ts:148` bit tag command › with Windows end-of-line characters › should write the file to the model with Linux EOL characters — `commands::tag::known_failures::windows_line_endings_are_stored_as_linux` (known failure)
+- [x] `e2e/commands/tag.e2e.ts:148` bit tag command › with Windows end-of-line characters › should write the file to the model with Linux EOL characters — `commands::tag::qualification::windows_line_endings_are_stored_as_linux`
 - [x] `e2e/commands/tag.e2e.ts:164` bit tag command › tag a component without its dependencies › should show a descriptive error message — `commands::tag::known_failures::a_dependency_left_out_of_the_tag_is_explained` (known failure)
-- [x] `e2e/commands/tag.e2e.ts:174` bit tag command › tag with an empty string › should not throw an error — `commands::tag::known_failures::an_empty_message_tags` (known failure)
-- [x] `e2e/commands/tag.e2e.ts:199` bit tag command › component count display when new component depends on existing tagged component › should correctly display 2 components tagged, not 3 — `commands::tag::known_failures::a_new_dependent_is_counted_once` (known failure)
+- [x] `e2e/commands/tag.e2e.ts:174` bit tag command › tag with an empty string › should not throw an error — `commands::tag::qualification::an_empty_message_tags`
+- [x] `e2e/commands/tag.e2e.ts:199` bit tag command › component count display when new component depends on existing tagged component › should correctly display 2 components tagged, not 3 — `commands::tag::qualification::a_new_dependent_is_counted_once`
 - [x] `e2e/commands/tag.e2e.ts:234` bit tag command › tag component with auto-tag should validate component issues › should throw an error about component issues, not about relativePaths in Version object — `commands::tag::known_failures::an_auto_tagged_dependent_is_validated` (known failure)
 
 ### `e2e/commands/watch.e2e.ts`
@@ -902,8 +1021,8 @@ The rest follow as their commands are ported.
 
 ### `e2e/harmony/binary-files.e2e.ts`
 
-- [ ] `e2e/harmony/binary-files.e2e.ts:35` handling binary files in Bit › checkout with a binary file › when there is a conflict › should checkout with no errors and leave the file as is indicating there was a conflict
-- [ ] `e2e/harmony/binary-files.e2e.ts:46` handling binary files in Bit › checkout with a binary file › when there is no conflict › should checkout with no errors and show the binary file as updated
+- [x] `e2e/harmony/binary-files.e2e.ts:35` handling binary files in Bit › checkout with a binary file › when there is a conflict › should checkout with no errors and leave the file as is indicating there was a conflict — `harmony::checkout_platform::binary_conflict_strategies_match_node_for_binary_and_text_extensions`
+- [x] `e2e/harmony/binary-files.e2e.ts:46` handling binary files in Bit › checkout with a binary file › when there is no conflict › should checkout with no errors and show the binary file as updated — `harmony::checkout_platform::checkout_stored_sources_preserves_binary_and_platform_eol_and_removes_obsolete_files`
 
 ### `e2e/harmony/bit-ignore.e2e.ts`
 
@@ -952,7 +1071,7 @@ The rest follow as their commands are ported.
 - [ ] `e2e/harmony/checkout-harmony.e2e.ts:152` bit checkout command › components with dependencies with multiple versions › switching to a previous version of the main component › should show the main component as modified because its dependencies are now having different version
 - [ ] `e2e/harmony/checkout-harmony.e2e.ts:156` bit checkout command › components with dependencies with multiple versions › switching to a previous version of the main component › should not write package.json and package-lock.json files
 - [ ] `e2e/harmony/checkout-harmony.e2e.ts:174` bit checkout command › components with dependencies with multiple versions › missing the latest Version object from the filesystem › should not throw an error
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:190` bit checkout command › when the current version has new files › should delete the new files
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:190` bit checkout command › when the current version has new files › should delete the new files — `harmony::checkout_platform::checkout_stored_sources_preserves_binary_and_platform_eol_and_removes_obsolete_files`
 - [ ] `e2e/harmony/checkout-harmony.e2e.ts:207` bit checkout command › when the component is modified and a file was changed in the checked out version › should update the file according to the checked out version
 - [ ] `e2e/harmony/checkout-harmony.e2e.ts:233` bit checkout command › when a file was deleted locally but not in the base and the new version › bit checkout head › should leave the file deleted
 - [ ] `e2e/harmony/checkout-harmony.e2e.ts:243` bit checkout command › when a file was deleted locally but not in the base and the new version › bit checkout reset › should re-create the file
@@ -990,12 +1109,12 @@ The rest follow as their commands are ported.
 - [ ] `e2e/harmony/checkout-harmony.e2e.ts:548` bit checkout command › modified component without conflicts › without any flag should merge successfully
 - [ ] `e2e/harmony/checkout-harmony.e2e.ts:555` bit checkout command › modified component without conflicts › with --force-ours flag, should keep the file as is
 - [ ] `e2e/harmony/checkout-harmony.e2e.ts:563` bit checkout command › modified component without conflicts › with --force-theirs flag, should write the files according to the head
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:601` bit checkout command › checkout head with deps having different versions than workspace.jsonc › if the ws has a lower range, it should update workspace.jsonc with the new range
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:607` bit checkout command › checkout head with deps having different versions than workspace.jsonc › if the ws has a higher range, it should not update
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:613` bit checkout command › checkout head with deps having different versions than workspace.jsonc › if the ws has a lower exact version, it should write a conflict
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:622` bit checkout command › checkout head with deps having different versions than workspace.jsonc › if the ws has a lower exact version, and merge strategy is "theirs" it should update according to the head
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:628` bit checkout command › checkout head with deps having different versions than workspace.jsonc › if the ws has a lower exact version, and merge strategy is "ours" it should keep the workspace.jsonc intact
-- [ ] `e2e/harmony/checkout-harmony.e2e.ts:636` bit checkout command › checkout head with deps having different versions than workspace.jsonc › if the ws has an exact version higher than the comp range, it should not throw
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:601` bit checkout command › checkout head with deps having different versions than workspace.jsonc › if the ws has a lower range, it should update workspace.jsonc with the new range
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:607` bit checkout command › checkout head with deps having different versions than workspace.jsonc › if the ws has a higher range, it should not update
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:613` bit checkout command › checkout head with deps having different versions than workspace.jsonc › if the ws has a lower exact version, it should write a conflict
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:622` bit checkout command › checkout head with deps having different versions than workspace.jsonc › if the ws has a lower exact version, and merge strategy is "theirs" it should update according to the head
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:628` bit checkout command › checkout head with deps having different versions than workspace.jsonc › if the ws has a lower exact version, and merge strategy is "ours" it should keep the workspace.jsonc intact
+- [x] `e2e/harmony/checkout-harmony.e2e.ts:636` bit checkout command › checkout head with deps having different versions than workspace.jsonc › if the ws has an exact version higher than the comp range, it should not throw
 - [ ] `e2e/harmony/checkout-harmony.e2e.ts:656` bit checkout command › checkout reset with changes in component.json › status should not show the component as modified
 - [ ] `e2e/harmony/checkout-harmony.e2e.ts:672` bit checkout command › checkout with a short hash › bitmap should contain the full hash, not the short one
 - [ ] `e2e/harmony/checkout-harmony.e2e.ts:676` bit checkout command › checkout with a short hash › bit status should not throw an error
@@ -2064,7 +2183,7 @@ The rest follow as their commands are ported.
 - [ ] `e2e/harmony/lanes/bit-remove-on-lanes.e2e.ts:30` bit lane command › remove components when on a lane › as an intermediate step, make sure the snapped components are part of the lane
 - [ ] `e2e/harmony/lanes/bit-remove-on-lanes.e2e.ts:39` bit lane command › remove components when on a lane › removing a component that has no dependents › should remove the component from .bitmap
 - [ ] `e2e/harmony/lanes/bit-remove-on-lanes.e2e.ts:43` bit lane command › remove components when on a lane › removing a component that has no dependents › should delete the files from the filesystem
-- [ ] `e2e/harmony/lanes/bit-remove-on-lanes.e2e.ts:61` bit lane command › soft remove on lane › bit status should be clean
+- [x] `e2e/harmony/lanes/bit-remove-on-lanes.e2e.ts:61` bit lane command › soft remove on lane › bit status should be clean — `cli/tests/e2e/harmony/status_lanes.rs::soft_removed_component_on_lane_matches_node`
 - [ ] `e2e/harmony/lanes/bit-remove-on-lanes.e2e.ts:70` bit lane command › soft remove on lane › merge a lane with removed component to main › should not merge the removed component
 - [ ] `e2e/harmony/lanes/bit-remove-on-lanes.e2e.ts:75` bit lane command › soft remove on lane › merge a lane with removed component to main › should explain why it was not merged
 - [ ] `e2e/harmony/lanes/bit-remove-on-lanes.e2e.ts:85` bit lane command › soft remove on lane › importing the lane to a new workspace › should not bring the removed components
@@ -2148,7 +2267,7 @@ The rest follow as their commands are ported.
 
 ### `e2e/harmony/lanes/diverged-from-forked.e2e.ts`
 
-- [ ] `e2e/harmony/lanes/diverged-from-forked.e2e.ts:37` lane-b was forked from lane-a and they are now diverged › bit status should have the diverged component in the updatesFromForked section
+- [x] `e2e/harmony/lanes/diverged-from-forked.e2e.ts:37` lane-b was forked from lane-a and they are now diverged › bit status should have the diverged component in the updatesFromForked section — `cli/tests/e2e/harmony/status_lanes.rs::forked_lane_updates_match_node`
 - [ ] `e2e/harmony/lanes/diverged-from-forked.e2e.ts:42` lane-b was forked from lane-a and they are now diverged › the file added on lane-a should not be on the filesystem while on lane-b
 - [ ] `e2e/harmony/lanes/diverged-from-forked.e2e.ts:52` lane-b was forked from lane-a and they are now diverged › merging lane-a into lane-b › should keep both parents (current lane first, merged lane second) and record no squash data
 - [ ] `e2e/harmony/lanes/diverged-from-forked.e2e.ts:61` lane-b was forked from lane-a and they are now diverged › merging lane-a into lane-b › should write the file that was newly added on lane-a
@@ -2283,9 +2402,9 @@ The rest follow as their commands are ported.
 
 ### `e2e/harmony/lanes/lane-export.e2e.ts`
 
-- [ ] `e2e/harmony/lanes/lane-export.e2e.ts:29` bit lane export operations › exporting the lane › should export components on that lane
-- [ ] `e2e/harmony/lanes/lane-export.e2e.ts:33` bit lane export operations › exporting the lane › bit status should show a clean state
-- [ ] `e2e/harmony/lanes/lane-export.e2e.ts:36` bit lane export operations › exporting the lane › should change .bitmap to have the remote lane
+- [x] `e2e/harmony/lanes/lane-export.e2e.ts:29` bit lane export operations › exporting the lane › should export components on that lane — `cli/tests/e2e/commands/export.rs::fresh_lane_component_export_matches_node`
+- [x] `e2e/harmony/lanes/lane-export.e2e.ts:33` bit lane export operations › exporting the lane › bit status should show a clean state — `cli/tests/e2e/commands/export.rs::fresh_lane_component_export_matches_node`
+- [x] `e2e/harmony/lanes/lane-export.e2e.ts:36` bit lane export operations › exporting the lane › should change .bitmap to have the remote lane — `cli/tests/e2e/commands/export.rs::fresh_lane_component_export_matches_node`
 - [ ] `e2e/harmony/lanes/lane-export.e2e.ts:40` bit lane export operations › exporting the lane › bit lane --remote should show the exported lane
 - [ ] `e2e/harmony/lanes/lane-export.e2e.ts:49` bit lane export operations › exporting the lane › importing the component › should not set the onLaneOnly to true as it exists also on main
 - [ ] `e2e/harmony/lanes/lane-export.e2e.ts:73` bit lane export operations › exporting a lane to a different scope than the component scope › bit import in a new workspace should not throw an error
@@ -2668,12 +2787,12 @@ The rest follow as their commands are ported.
 - [ ] `e2e/harmony/lanes/merge-lanes-unrelated.e2e.ts:209` merge lanes - unrelated components › multiple scopes when a component in the origin is different than on the lane › bit lane merge after soft-removed the unrelated component › should not throw
 - [ ] `e2e/harmony/lanes/merge-lanes-unrelated.e2e.ts:230` merge lanes - unrelated components › multiple scopes when a component in the origin is different than on the lane › when the resolved unrelated is not a direct parent › bit status should not throw
 - [ ] `e2e/harmony/lanes/merge-lanes-unrelated.e2e.ts:262` merge lanes - unrelated components › multiple scopes when a component in the origin is different than on the lane and the lane is forked › should not throw during bit-import because it tries to import comp1 from the original scope instead of the lane scope
-- [ ] `e2e/harmony/lanes/merge-lanes-unrelated.e2e.ts:292` merge lanes - unrelated components › merge unrelated between two lanes with --resolve-unrelated › without specifying strategy, which defaults to "ours" › should resolve by default by ours
-- [ ] `e2e/harmony/lanes/merge-lanes-unrelated.e2e.ts:297` merge lanes - unrelated components › merge unrelated between two lanes with --resolve-unrelated › without specifying strategy, which defaults to "ours" › should populate the unrelated property correctly on the Version object
-- [ ] `e2e/harmony/lanes/merge-lanes-unrelated.e2e.ts:302` merge lanes - unrelated components › merge unrelated between two lanes with --resolve-unrelated › without specifying strategy, which defaults to "ours" › should populate the parents according to the current lane
-- [ ] `e2e/harmony/lanes/merge-lanes-unrelated.e2e.ts:312` merge lanes - unrelated components › merge unrelated between two lanes with --resolve-unrelated › with strategy theirs › should get the file content according to their
-- [ ] `e2e/harmony/lanes/merge-lanes-unrelated.e2e.ts:317` merge lanes - unrelated components › merge unrelated between two lanes with --resolve-unrelated › with strategy theirs › should populate the unrelated property correctly on the Version object
-- [ ] `e2e/harmony/lanes/merge-lanes-unrelated.e2e.ts:322` merge lanes - unrelated components › merge unrelated between two lanes with --resolve-unrelated › with strategy theirs › should populate the parents according to the other lane
+- [x] `e2e/harmony/lanes/merge-lanes-unrelated.e2e.ts:292` merge lanes - unrelated components › merge unrelated between two lanes with --resolve-unrelated › without specifying strategy, which defaults to "ours" › should resolve by default by ours — `harmony::merge_history::unrelated_merge_automatically_snaps_canonical_ancestry`
+- [x] `e2e/harmony/lanes/merge-lanes-unrelated.e2e.ts:297` merge lanes - unrelated components › merge unrelated between two lanes with --resolve-unrelated › without specifying strategy, which defaults to "ours" › should populate the unrelated property correctly on the Version object — `harmony::merge_history::unrelated_merge_automatically_snaps_canonical_ancestry`
+- [x] `e2e/harmony/lanes/merge-lanes-unrelated.e2e.ts:302` merge lanes - unrelated components › merge unrelated between two lanes with --resolve-unrelated › without specifying strategy, which defaults to "ours" › should populate the parents according to the current lane — `harmony::merge_history::unrelated_merge_automatically_snaps_canonical_ancestry`
+- [x] `e2e/harmony/lanes/merge-lanes-unrelated.e2e.ts:312` merge lanes - unrelated components › merge unrelated between two lanes with --resolve-unrelated › with strategy theirs › should get the file content according to their — `harmony::merge_history::unrelated_merge_automatically_snaps_canonical_ancestry`
+- [x] `e2e/harmony/lanes/merge-lanes-unrelated.e2e.ts:317` merge lanes - unrelated components › merge unrelated between two lanes with --resolve-unrelated › with strategy theirs › should populate the unrelated property correctly on the Version object — `harmony::merge_history::unrelated_merge_automatically_snaps_canonical_ancestry`
+- [x] `e2e/harmony/lanes/merge-lanes-unrelated.e2e.ts:322` merge lanes - unrelated components › merge unrelated between two lanes with --resolve-unrelated › with strategy theirs › should populate the parents according to the other lane — `harmony::merge_history::unrelated_merge_automatically_snaps_canonical_ancestry`
 - [ ] `e2e/harmony/lanes/merge-lanes-unrelated.e2e.ts:346` merge lanes - unrelated components › merge lanes when local-lane has soft-removed components and the other lane is behind › should not bring the removed components
 - [ ] `e2e/harmony/lanes/merge-lanes-unrelated.e2e.ts:372` merge lanes - unrelated components › merge lanes when local-lane has soft-removed components and the other lane is diverge › bit log should not show duplications
 
@@ -3424,7 +3543,7 @@ The rest follow as their commands are ported.
 
 ### `e2e/harmony/status-harmony.e2e.ts`
 
-- [x] `e2e/harmony/status-harmony.e2e.ts:24` status command on Harmony › main filename is not index and dists are missing › should not show an issue of missing-packages — `harmony::status_harmony::known_failures::a_linked_package_is_not_missing` (known failure)
+- [x] `e2e/harmony/status-harmony.e2e.ts:24` status command on Harmony › main filename is not index and dists are missing › should not show an issue of missing-packages — `harmony::status_harmony::a_linked_package_is_not_missing`
 - [x] `e2e/harmony/status-harmony.e2e.ts:40` status command on Harmony › dists dir is deleted after caching the components › should show an issue of missing-dists — `harmony::status_harmony::deleted_dists_after_the_cache_are_missing`
 - [x] `e2e/harmony/status-harmony.e2e.ts:43` status command on Harmony › dists dir is deleted after caching the components › should exit with non zero exit-code if --strict flag is used — `harmony::status_harmony::deleted_dists_after_the_cache_are_missing`
 - [x] `e2e/harmony/status-harmony.e2e.ts:63` status command on Harmony › package dir is deleted from node-modules › should show an issue of missing-links-from-node-modules-to-src — `harmony::status_harmony::a_deleted_package_dir_is_a_missing_link`
@@ -3432,10 +3551,10 @@ The rest follow as their commands are ported.
 - [x] `e2e/harmony/status-harmony.e2e.ts:89` status command on Harmony › components that imports itself › should not add itself as a dependency — `harmony::status_harmony::known_failures::a_component_importing_itself_is_not_its_own_dependency` (known failure)
 - [x] `e2e/harmony/status-harmony.e2e.ts:101` status command on Harmony › status --quick flag › should show new and modified components — `harmony::status_harmony::quick_status_shows_new_and_modified`
 - [x] `e2e/harmony/status-harmony.e2e.ts:109` status command on Harmony › status --quick flag › should return new and modified in json format — `harmony::status_harmony::quick_status_json_lists_new_and_modified`
-- [x] `e2e/harmony/status-harmony.e2e.ts:125` status command on Harmony › deleting a dependency from the filesystem when the record is still in bitmap › bit status should not throw — `harmony::status_harmony::known_failures::a_deleted_dependency_directory_does_not_throw` (known failure)
-- [x] `e2e/harmony/status-harmony.e2e.ts:146` status command on Harmony › when a component is created and added without its dependencies › Should show missing dependencies — `harmony::status_harmony::known_failures::missing_dependency_files_are_shown` (known failure)
+- [x] `e2e/harmony/status-harmony.e2e.ts:125` status command on Harmony › deleting a dependency from the filesystem when the record is still in bitmap › bit status should not throw — `harmony::status_harmony::a_deleted_dependency_directory_does_not_throw`
+- [x] `e2e/harmony/status-harmony.e2e.ts:146` status command on Harmony › when a component is created and added without its dependencies › Should show missing dependencies — `harmony::status_harmony::missing_dependency_files_are_shown`
 - [x] `e2e/harmony/status-harmony.e2e.ts:165` status command on Harmony › dynamic import › status should not show the component as missing packages — `harmony::status_harmony::a_dynamic_import_is_not_a_missing_package`
-- [x] `e2e/harmony/status-harmony.e2e.ts:178` status command on Harmony › import from the index file › should show an ImportFromDirectory issue — `harmony::status_harmony::known_failures::importing_the_index_directory_is_an_issue` (known failure)
+- [x] `e2e/harmony/status-harmony.e2e.ts:178` status command on Harmony › import from the index file › should show an ImportFromDirectory issue — `harmony::status_harmony::importing_the_index_directory_is_an_issue`
 
 ### `e2e/harmony/tag-harmony.e2e.ts`
 
@@ -3447,15 +3566,15 @@ The rest follow as their commands are ported.
 - [ ] `e2e/harmony/tag-harmony.e2e.ts:71` tag components on Harmony › tag on Harmony › should not show the dependency with an older version
 - [ ] `e2e/harmony/tag-harmony.e2e.ts:77` tag components on Harmony › tag on Harmony › should not save the build data twice
 - [ ] `e2e/harmony/tag-harmony.e2e.ts:88` tag components on Harmony › tag on Harmony › auto-tag › should save the artifacts/dists to the auto-tagged components
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:103` tag components on Harmony › soft tag › should add a property of nextVersion in .bitmap file
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:111` tag components on Harmony › soft tag › bit status should show the new components as soft tagged
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:119` tag components on Harmony › soft tag › tagging with --persist flag › should tag and remove the nextVersion property in .bitmap file
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:128` tag components on Harmony › soft tag › tagging with --persist flag › bit status should not show as soft-tagged
+- [x] `e2e/harmony/tag-harmony.e2e.ts:103` tag components on Harmony › soft tag › should add a property of nextVersion in .bitmap file — `commands::tag::soft::soft_tag_then_persist_matches_node`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:111` tag components on Harmony › soft tag › bit status should show the new components as soft tagged — `commands::tag::soft::soft_tag_then_persist_matches_node`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:119` tag components on Harmony › soft tag › tagging with --persist flag › should tag and remove the nextVersion property in .bitmap file — `commands::tag::soft::soft_tag_then_persist_matches_node`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:128` tag components on Harmony › soft tag › tagging with --persist flag › bit status should not show as soft-tagged — `commands::tag::soft::soft_tag_then_persist_matches_node`
 - [ ] `e2e/harmony/tag-harmony.e2e.ts:137` tag components on Harmony › soft tag › tagging with --persist flag › modify a component that has dependents and soft-tag it › should save the nextVersion data into potential auto-tag bitmap entries
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:148` tag components on Harmony › soft tag › soft tag with specific version and message › should save the version and the message into the .bitmap file
+- [x] `e2e/harmony/tag-harmony.e2e.ts:148` tag components on Harmony › soft tag › soft tag with specific version and message › should save the version and the message into the .bitmap file — `commands::tag::soft::exact_soft_tag_then_persist_matches_node`
 - [ ] `e2e/harmony/tag-harmony.e2e.ts:164` tag components on Harmony › soft tag › soft tag with specific version attached to a component-id › should save the version into the .bitmap file
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:177` tag components on Harmony › soft tag › soft tag after soft tag › should show the output according to the new soft-tag
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:181` tag components on Harmony › soft tag › soft tag after soft tag › should save the version and the message into the .bitmap file
+- [x] `e2e/harmony/tag-harmony.e2e.ts:177` tag components on Harmony › soft tag › soft tag after soft tag › should show the output according to the new soft-tag — `commands::tag::soft::repeated_soft_tag_replaces_pending_version_and_message`
+- [x] `e2e/harmony/tag-harmony.e2e.ts:181` tag components on Harmony › soft tag › soft tag after soft tag › should save the version and the message into the .bitmap file — `commands::tag::soft::repeated_soft_tag_replaces_pending_version_and_message`
 - [ ] `e2e/harmony/tag-harmony.e2e.ts:194` tag components on Harmony › soft tag › untag › should remove the nextVersion from the .bitmap file
 - [ ] `e2e/harmony/tag-harmony.e2e.ts:218` tag components on Harmony › tag scope › without version › should bump each component by patch
 - [ ] `e2e/harmony/tag-harmony.e2e.ts:230` tag components on Harmony › tag scope › without version and --minor flag › should bump each component by patch
@@ -3479,7 +3598,7 @@ The rest follow as their commands are ported.
 - [ ] `e2e/harmony/tag-harmony.e2e.ts:464` tag components on Harmony › invalid pre-release after normal tag › should throw an error
 - [ ] `e2e/harmony/tag-harmony.e2e.ts:467` tag components on Harmony › invalid pre-release after normal tag › should not create a new version
 - [ ] `e2e/harmony/tag-harmony.e2e.ts:473` tag components on Harmony › invalid pre-release after normal tag › should update package.json on the workspace with the new tag
-- [ ] `e2e/harmony/tag-harmony.e2e.ts:488` tag components on Harmony › soft-tag pre-release › should save the pre-release name in the .bitmap file
+- [x] `e2e/harmony/tag-harmony.e2e.ts:488` tag components on Harmony › soft-tag pre-release › should save the pre-release name in the .bitmap file — `commands::tag::soft::soft_prerelease_matches_node_and_persist_delegates`
 - [ ] `e2e/harmony/tag-harmony.e2e.ts:498` tag components on Harmony › soft-tag pre-release › persist the soft-tag › should use the data in the .bitmap file and tag as a pre-release version
 - [ ] `e2e/harmony/tag-harmony.e2e.ts:511` tag components on Harmony › soft tag --minor with auto-tag › should not bump the auto-tagged with minor but with patch
 - [ ] `e2e/harmony/tag-harmony.e2e.ts:529` tag components on Harmony › with tiny cache › should not throw

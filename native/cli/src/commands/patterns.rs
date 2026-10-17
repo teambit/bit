@@ -3,6 +3,8 @@
 //! 3.1.5 over the ids. The globs `*`, `?` and `**` and `!` negation are
 //! ported; classes, braces and extglobs are left to Node.
 
+pub mod extended;
+
 use super::status::js::decline;
 use std::io;
 

@@ -20,6 +20,10 @@ pub(in crate::workspace::engine) struct Target {
     pub(in crate::workspace::engine) directory: String,
     pub(in crate::workspace::engine) files: Vec<String>,
     pub(in crate::workspace::engine) current: Value,
+    #[serde(default)]
+    pub(in crate::workspace::engine) source_overlays: HashMap<String, PathBuf>,
+    #[serde(default)]
+    pub(in crate::workspace::engine) source_overlay_root: Option<PathBuf>,
 }
 
 /// Own both sides of a full semantic comparison. Source bytes, parsed Version
@@ -104,5 +108,24 @@ pub(in crate::workspace::engine) fn compare(
         target.directory == ".",
     )?;
     Ok(json!({"identity":target.identity,"modified":result["modified"],
+        "codeModified":code_modified(files,model)?,
         "modelHash":result["leftHash"],"currentHash":result["rightHash"]}))
+}
+
+/// `CompFiles.isModified`: empty model files are never code-modified.
+fn code_modified(current: &Value, model: &Value) -> io::Result<bool> {
+    let model = model["files"].as_array().ok_or_else(|| invalid("status model files"))?;
+    let current = current.as_array().ok_or_else(|| invalid("status current files"))?;
+    if model.is_empty() {
+        return Ok(false);
+    }
+    Ok(model.len() != current.len()
+        || current
+            .iter()
+            .any(|file| {
+                model
+                    .iter()
+                    .find(|stored| stored["relativePath"] == file["relativePath"])
+                    .is_none_or(|stored| stored["file"] != file["file"])
+            }))
 }

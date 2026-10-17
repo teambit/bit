@@ -8,6 +8,8 @@ use std::{collections::HashSet, io};
 pub(super) struct Component {
     pub(super) identity: String,
     extensions: Value,
+    #[serde(default)]
+    callback_extensions: Option<Value>,
     package_name: String,
     default_node: policy::projection::Defaults,
     pub(super) dependency_state: Value,
@@ -28,6 +30,27 @@ pub(super) fn version(
     version["files"] = files.clone();
     let state = &receipt.dependency_state;
     component_dependencies(&mut version, state)?;
+    package_dependencies(&mut version, current, receipt)?;
+    version["extensions"] = if let Some(callbacks) = &receipt.callback_extensions {
+        policy::projection::callback_extensions(callbacks)?
+    } else {
+        policy::projection::extensions(
+            &stored["extensions"],
+            &receipt.extensions,
+            state,
+            &receipt.default_node,
+            &receipt.package_name,
+        )?
+    };
+    Ok(version)
+}
+
+fn package_dependencies(
+    version: &mut Value,
+    current: &Value,
+    receipt: &Component,
+) -> io::Result<()> {
+    let state = &receipt.dependency_state;
     for (index, field) in
         ["packageDependencies", "devPackageDependencies", "peerPackageDependencies"]
             .iter()
@@ -36,16 +59,16 @@ pub(super) fn version(
         if !state["packages"][index].is_object() {
             return Err(invalid("resolve package dependency state"));
         }
-        version[*field] = state["packages"][index].clone();
+        version[*field] = if receipt.callback_extensions.is_some() {
+            current
+                .get(*field)
+                .cloned()
+                .unwrap_or_else(|| state["packages"][index].clone())
+        } else {
+            state["packages"][index].clone()
+        };
     }
-    version["extensions"] = policy::projection::extensions(
-        &stored["extensions"],
-        &receipt.extensions,
-        state,
-        &receipt.default_node,
-        &receipt.package_name,
-    )?;
-    Ok(version)
+    Ok(())
 }
 
 fn component_dependencies(version: &mut Value, state: &Value) -> io::Result<()> {

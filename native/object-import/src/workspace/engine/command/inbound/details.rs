@@ -1,9 +1,34 @@
 //! The `importDetails` of an inbound receipt (`_getImportDetails`).
-use super::{Target, invalid};
+use super::{Target, invalid, write};
 use crate::command_import;
 use serde_json::{Value, json};
 use sha1::Digest;
-use std::{io, path::Path};
+use std::{borrow::Cow, io, path::Path};
+
+/// The remote model when transferred, or the validated local model when the
+/// remote reports this component is already up to date.
+pub(super) fn model<'a>(
+    root: &Path,
+    imported: &'a command_import::PreparedImport,
+    scope: &str,
+    name: &str,
+) -> io::Result<Cow<'a, Value>> {
+    if let Some(model) = imported.overlay
+        .models()
+        .into_iter()
+        .find(|model| model["scope"] == scope && model["name"] == name)
+    {
+        return Ok(Cow::Borrowed(model));
+    }
+    let hash =
+        crate::validate::hexadecimal(&sha1::Sha1::digest(format!("{scope}/{name}").as_bytes()));
+    let model = local_object(root, &hash, "Component")?
+        .ok_or_else(|| invalid("inbound existing local model"))?;
+    if model["scope"] != scope || model["name"] != name {
+        return Err(invalid("inbound existing local model identity"));
+    }
+    Ok(Cow::Owned(model))
+}
 
 pub(super) fn head_as_tag_or_hash(model: &Value) -> io::Result<String> {
     let head = model["head"].as_str().ok_or_else(|| invalid("inbound model head"))?;
@@ -24,18 +49,20 @@ pub(super) fn details(
     root: &Path,
     targets: &[Target],
     imported: &command_import::PreparedImport,
+    workspace: Option<&write::Prepared>,
+    prefetched: &[Target],
 ) -> io::Result<Vec<Value>> {
-    let models = imported.overlay.models();
     targets
         .iter()
         .map(|target| {
             let scope = target.scope.as_deref().ok_or_else(|| invalid("inbound scope"))?;
-            let model = models
+            let model = model(root, imported, scope, &target.name)?;
+            let id = format!("{scope}/{}", target.name);
+            let conflicts = workspace.and_then(|workspace| workspace.conflicts(&id));
+            let prefetched = prefetched
                 .iter()
-                .copied()
-                .find(|model| model["scope"] == scope && model["name"] == target.name)
-                .ok_or_else(|| invalid("inbound imported model absent"))?;
-            detail(root, scope, target, model, imported)
+                .any(|root| root.scope == target.scope && root.name == target.name);
+            detail(root, scope, target, model.as_ref(), imported, conflicts, prefetched)
         })
         .collect()
 }
@@ -46,12 +73,14 @@ fn detail(
     target: &Target,
     model: &Value,
     imported: &command_import::PreparedImport,
+    conflicts: Option<&[String]>,
+    prefetched: bool,
 ) -> io::Result<Value> {
     let versions = model["versions"].as_object().ok_or_else(|| invalid("inbound versions"))?;
     let previous = previous_versions(root, scope, &target.name)?;
     let added = versions
         .keys()
-        .filter(|key| !previous.contains(*key))
+        .filter(|key| !prefetched && !previous.contains(*key))
         .cloned()
         .collect::<Vec<_>>();
     let status = match (added.is_empty(), previous.is_empty()) {
@@ -59,10 +88,20 @@ fn detail(
         (false, true) => "added",
         (false, false) => "updated",
     };
-    let head = head_as_tag_or_hash(model)?;
+    let head = if model["head"].is_null() && crate::merge_history::hash(&target.version).is_ok() {
+        target.version.clone()
+    } else {
+        head_as_tag_or_hash(model)?
+    };
     let latest = added.contains(&head).then_some(head);
+    let files_status = conflicts.map(|paths| {
+        paths
+            .iter()
+            .map(|path| (path.clone(), json!("manual")))
+            .collect::<serde_json::Map<String, Value>>()
+    });
     Ok(json!({"id":format!("{scope}/{}", target.name),"versions":added,
-        "latestVersion":latest,"status":status,"filesStatus":null,"missingDeps":[],
+        "latestVersion":latest,"status":status,"filesStatus":files_status,"missingDeps":[],
         "deprecated":deprecated(root, model, imported)?,"removed":false}))
 }
 
@@ -108,11 +147,11 @@ fn deprecated(
 }
 
 /// A local object of the workspace scope, or `None` when it is absent.
-fn local_object(root: &Path, hash: &str, kind: &str) -> io::Result<Option<Value>> {
+pub(super) fn local_object(root: &Path, hash: &str, kind: &str) -> io::Result<Option<Value>> {
     let identity = crate::merge_history::hash(hash)?;
     let mut total = 0;
     let raw = match crate::checkout::repository::read(
-        &root.join(".bit/objects"),
+        &crate::scope_path(root).join("objects"),
         identity,
         32 * 1024 * 1024,
         &mut total,
@@ -128,7 +167,7 @@ fn local_object(root: &Path, hash: &str, kind: &str) -> io::Result<Option<Value>
 fn previous_versions(root: &Path, scope: &str, name: &str) -> io::Result<Vec<String>> {
     let hash =
         crate::validate::hexadecimal(&sha1::Sha1::digest(format!("{scope}/{name}").as_bytes()));
-    let directory = root.join(".bit/objects");
+    let directory = crate::scope_path(root).join("objects");
     let mut total = 0;
     let raw = match crate::checkout::repository::read(
         &directory,

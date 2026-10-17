@@ -1,4 +1,5 @@
 //! Filesystem publication for an ordinary merge-resolution snapshot.
+mod controls;
 use super::{bitmap, invalid, merge::finalization, resolve_snapshot};
 use crate::workspace::engine::dependency_graph::proof;
 use serde_json::{Value, json};
@@ -8,11 +9,16 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[derive(Clone, Copy)]
+pub(super) struct Options<'a> {
+    pub imported_index: Option<&'a Value>,
+    pub snapshot: bool,
+}
+
 pub(super) struct Prepared {
     bitmap: bitmap::Prepared,
     finalization: finalization::Prepared,
-    pending_path: PathBuf,
-    pending_bytes: Option<Vec<u8>>,
+    controls: controls::Prepared,
     proofs: Vec<proof::Proof>,
     reason: String,
     removed_root: PathBuf,
@@ -28,6 +34,7 @@ pub(super) fn preflight(
     materials: &[resolve_snapshot::Material],
     pending: &[Value],
     imported_index: Option<&Value>,
+    snapshot: bool,
 ) -> io::Result<()> {
     let heads = materials
         .iter()
@@ -51,7 +58,16 @@ pub(super) fn preflight(
         })
         .collect::<io::Result<Vec<_>>>()?;
     let receipt = json!({"log":{"message":""}});
-    prepare(root, context, materials, &versions, pending, &receipt, imported_index)?.validate()
+    prepare(
+        root,
+        context,
+        materials,
+        &versions,
+        pending,
+        &receipt,
+        Options { imported_index, snapshot },
+    )?
+    .validate()
 }
 
 fn resolve_markers(value: &mut Value, heads: &HashMap<&str, &str>) -> io::Result<()> {
@@ -180,22 +196,6 @@ fn directory<'a>(context: &'a Value, material: &resolve_snapshot::Material) -> i
         .ok_or_else(|| invalid("resolve publication directory"))
 }
 
-fn pending_bytes(pending: &[Value], identities: &HashSet<&str>) -> io::Result<Vec<u8>> {
-    let remaining = pending
-        .iter()
-        .filter(|row| {
-            let id = &row["id"];
-            let identity = format!(
-                "{}/{}",
-                id["scope"].as_str().unwrap_or_default(),
-                id["name"].as_str().unwrap_or_default(),
-            );
-            !identities.contains(identity.as_str())
-        })
-        .collect::<Vec<_>>();
-    serde_json::to_vec_pretty(&remaining).map_err(io::Error::other)
-}
-
 fn reason(receipt: &Value, tag: bool) -> String {
     let message = receipt["log"]["message"].as_str().unwrap_or_default();
     format!(
@@ -235,19 +235,41 @@ pub(super) fn prepare(
     versions: &[Value],
     pending: &[Value],
     receipt: &Value,
-    imported_index: Option<&Value>,
+    options: Options<'_>,
 ) -> io::Result<Prepared> {
     let batch = batch(context, materials, versions)?;
     let lane_new = lane_new_ids(context, materials);
     let original = fs::read(root.join(".bitmap"))?;
     let mut bitmap = bitmap::prepare_bytes(root, original, context, &batch.updates, &batch.removed)
         .map_err(|error| io::Error::new(error.kind(), format!("resolve bitmap: {error}")))?;
+    if materials.iter().any(|material| material.version_state.tagged_version.is_some()) {
+        bitmap.clear_next_versions(
+            context,
+            &batch.updates
+                .iter()
+                .map(|update| update.identity.clone())
+                .collect::<Vec<_>>(),
+        )?;
+    }
+    if options.snapshot {
+        bitmap.clear_config(
+            context,
+            &batch.updates
+                .iter()
+                .map(|update| update.identity.clone())
+                .collect::<Vec<_>>(),
+        )?;
+    }
     bitmap.mark_lane_new(context, &lane_new)?;
-    let mut finalization = finalization::prepare(root, &batch.inputs, true, &batch.removed)
-        .map_err(|error| io::Error::new(error.kind(), format!("resolve finalization: {error}")))?;
+    let mut finalization = if options.snapshot {
+        finalization::prepare_snapshot_publication(root, &batch.inputs, &batch.removed)
+    } else {
+        finalization::prepare_publication(root, &batch.inputs, true, &batch.removed)
+    }
+    .map_err(|error| io::Error::new(error.kind(), format!("resolve finalization: {error}")))?;
     finalization.mark_lane_new(root, &lane_new)?;
     finalization.resolve_licenses(root, &batch.inputs, &batch.removed)?;
-    finalization.imported_index(root, imported_index)?;
+    finalization.imported_index(root, options.imported_index)?;
     finalization.snapshot_index(
         root,
         materials
@@ -255,18 +277,12 @@ pub(super) fn prepare(
             .filter(|material| material.version_state.current_head.is_empty())
             .map(|material| material.identity.as_str()),
     )?;
-    let pending_path = root.join(".bit/unmerged.json");
     let mut proofs = Vec::new();
-    proof::read(&pending_path, &mut proofs)?;
-    let pending_bytes = pending_path
-        .try_exists()?
-        .then(|| pending_bytes(pending, &batch.identities))
-        .transpose()?;
+    let controls = controls::prepare(root, pending, &batch.identities, &mut proofs)?;
     let output = Prepared {
         bitmap,
         finalization,
-        pending_path,
-        pending_bytes,
+        controls,
         proofs,
         reason: reason(
             receipt,
@@ -280,7 +296,71 @@ pub(super) fn prepare(
     output.validate()?;
     Ok(output)
 }
+
 impl Prepared {
+    pub(super) fn stage_controls(&mut self) -> io::Result<Vec<proof::Proof>> {
+        self.validate()?;
+        let proofs = self.controls.stage()?;
+        self.proofs.retain(|before| {
+            !proofs
+                .iter()
+                .any(|after| before.path == after.path)
+        });
+        self.proofs.extend(proofs.iter().cloned());
+        Ok(proofs)
+    }
+
+    pub(super) fn accept_published(&mut self, files: &HashMap<PathBuf, Vec<u8>>) -> io::Result<()> {
+        proof::accept_published(&mut self.proofs, files);
+        self.finalization.accept_published(files)?;
+        self.validate()
+    }
+
+    pub(super) fn stage_index(&mut self, root: &Path) -> io::Result<(PathBuf, Vec<u8>)> {
+        self.finalization.stage_index(root)
+    }
+
+    pub(super) fn package_manifest_plans(&self, versions: &[Value]) -> io::Result<Vec<Value>> {
+        let mut plans = self.finalization.package_manifest_plans()?;
+        for plan in &mut plans {
+            let version = versions
+                .iter()
+                .find(|version| version["identity"] == plan["identity"])
+                .ok_or_else(|| invalid("snapshot package version absent"))?;
+            plan["versionData"] = version["version"].clone();
+        }
+        Ok(plans)
+    }
+    pub(super) fn package_manifests(
+        &mut self,
+        manifests: &[Value],
+        versions: &[Value],
+    ) -> io::Result<()> {
+        let aspects = versions
+            .iter()
+            .filter(|version| {
+                version["version"]["extensions"]
+                    .as_array()
+                    .is_some_and(|extensions| {
+                        extensions
+                            .iter()
+                            .any(|extension| {
+                                extension["name"] == "teambit.envs/envs"
+                                    && extension["data"]["type"] == "aspect"
+                            })
+                    })
+            })
+            .filter_map(|version| version["identity"].as_str().map(str::to_owned))
+            .collect();
+        self.finalization.package_manifests_with_aspects(manifests, &aspects)
+    }
+
+    pub(super) fn stage_snaps(&mut self, root: &Path) -> io::Result<Vec<u8>> {
+        self.finalization.stage_snaps(root)
+    }
+    pub(super) fn keep_staged_snaps(&mut self, root: &Path, bytes: &[u8]) -> io::Result<()> {
+        self.finalization.keep_staged_snaps(root, bytes)
+    }
     pub(super) fn validate(&self) -> io::Result<()> {
         self.bitmap.validate()?;
         self.finalization.validate()?;
@@ -299,6 +379,7 @@ impl Prepared {
     pub(super) fn commit(&self, file_id: &str) -> io::Result<()> {
         self.validate()?;
         bitmap::validate_history_file_id(file_id)?;
+        self.controls.commit()?;
         self.finalization.commit()?;
         for directory in &self.removed {
             fs::remove_dir_all(self.removed_root.join(directory))?;
@@ -306,9 +387,6 @@ impl Prepared {
         let backup = self.bitmap.commit(file_id, &self.reason)?;
         if backup.is_some() {
             return Err(invalid("resolve bitmap history backup"));
-        }
-        if let Some(bytes) = &self.pending_bytes {
-            fs::write(&self.pending_path, bytes)?;
         }
         Ok(())
     }

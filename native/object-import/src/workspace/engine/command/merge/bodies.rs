@@ -1,9 +1,12 @@
+mod paths;
 mod reload;
+mod unrelated;
 use super::{
     super::{capture::Captured, input::Options},
     State, invalid,
 };
 use crate::workspace::engine::status_models::harmony;
+use paths::validate as validate_path;
 use serde_json::{Value, json};
 use std::{
     fs, io,
@@ -44,6 +47,7 @@ enum Conflict {
     Resolved,
     Ours,
     Manual,
+    Unrelated(Value),
 }
 impl Conflict {
     fn from_plan(input: &BodyInput<'_>, plan: &Value) -> Self {
@@ -59,7 +63,7 @@ impl Conflict {
 }
 
 impl BodyInput<'_> {
-    fn labels(&self) -> io::Result<Value> {
+    pub(in crate::workspace::engine::command) fn labels(&self) -> io::Result<Value> {
         let name = |lane: &Value, field: &str| -> io::Result<String> {
             if lane[field].is_null() {
                 return Ok("main".into());
@@ -94,7 +98,7 @@ impl BodyInput<'_> {
         let current =
             self.current.files.as_array().ok_or_else(|| invalid("command merge current files"))?;
         Ok(
-            json!({"index":self.index,"objectsDirectory":self.root.join(".bit/objects"),"snapshotDirectory":self.directory,
+            json!({"index":self.index,"objectsDirectory":crate::scope_path(self.root).join("objects"),"snapshotDirectory":self.directory,
                 "base":manifest(&self.sides[0])?,"target":manifest(&self.sides[2])?,
                 "current":current.iter().map(|file| json!({"relativePath":file["relativePath"],"workspace":{
                     "path":file["path"],"rawHash":file["rawHash"],"snapshotHash":file["snapshotHash"],"readToken":file["readToken"]}})).collect::<Vec<_>>(),
@@ -134,7 +138,7 @@ impl State {
 
 impl Prepared {
     pub(in crate::workspace::engine::command) fn no_write(&self) -> bool {
-        matches!(self.conflict, Conflict::Ours)
+        matches!(self.conflict, Conflict::Ours | Conflict::Unrelated(_))
     }
     pub(in crate::workspace::engine::command) fn has_conflicts(&self) -> bool {
         matches!(self.conflict, Conflict::Manual)
@@ -257,26 +261,6 @@ fn manifest(side: &VersionSide<'_>) -> io::Result<Value> {
         })
         .collect::<Vec<_>>();
     Ok(json!({"hash":side.hash,"files":files}))
-}
-
-fn validate_path(root: &Path, path: &Path) -> io::Result<()> {
-    let relative = path.strip_prefix(root).map_err(io::Error::other)?;
-    crate::checkout::plan::relative_path(
-        relative.to_str().ok_or_else(|| invalid("merge nonUTF8 path"))?,
-    )?;
-    let mut current = root.to_path_buf();
-    for component in relative.components() {
-        current.push(component);
-        match fs::symlink_metadata(&current) {
-            Ok(metadata)
-                if current == path && metadata.is_file()
-                    || current != path && metadata.is_dir() => {}
-            Err(error) if error.kind() == io::ErrorKind::NotFound => {}
-            Err(error) => return Err(error),
-            _ => return Err(invalid("merge nonordinary destination")),
-        }
-    }
-    Ok(())
 }
 
 fn conflict_paths(input: &BodyInput<'_>, plan: &Value) -> io::Result<Vec<String>> {

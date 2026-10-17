@@ -1,3 +1,5 @@
+mod relative;
+
 use super::{invalid, wire::Complete};
 use serde_json::Value;
 use std::io;
@@ -7,11 +9,102 @@ pub(super) fn detected(request: &Complete) -> io::Result<Value> {
         return Err(invalid("fresh dependency identity receipt"));
     }
     let mut detected = request.capture.detected.clone();
-    if detected["issues"] != serde_json::json!([])
-        || detected["coreAspects"] != serde_json::json!([])
+    if !detected["coreAspects"]
+        .as_array()
+        .is_some_and(|ids| ids.len() <= 4096 && ids.iter().all(Value::is_string))
     {
         return Err(invalid("fresh detection issue boundary"));
     }
+    validate_issues(&detected["issues"])?;
+    apply_versions(&mut detected, request)?;
+    Ok(detected)
+}
+fn validate_issues(value: &Value) -> io::Result<()> {
+    let issues = value.as_array().ok_or_else(|| invalid("fresh detection issues"))?;
+    if issues.len() > 8 {
+        return Err(invalid("fresh detection issue count"));
+    }
+    for issue in issues {
+        validate_issue(issue)?;
+    }
+    Ok(())
+}
+fn validate_issue(issue: &Value) -> io::Result<()> {
+    if !matches!(
+        issue["type"].as_str(),
+        Some(
+            "MissingDependenciesOnFs"
+                | "ImportFromDirectory"
+                | "MissingPackagesDependenciesOnFs"
+                | "ParseErrors"
+                | "UntrackedDependencies"
+                | "RelativeComponentsAuthored"
+                | "SelfReference"
+                | "ImportNonMainFiles",
+        ),
+    ) {
+        return Err(invalid("fresh detection issue boundary"));
+    }
+    let data = issue["data"].as_str().ok_or_else(|| invalid("fresh detection issue data"))?;
+    if matches!(
+        issue["type"].as_str(),
+        Some("UntrackedDependencies" | "RelativeComponentsAuthored"),
+    ) {
+        relative::validate(issue["type"].as_str().expect("matched type"), data)?;
+    } else if issue["type"] == "MissingPackagesDependenciesOnFs" {
+        validate_missing_packages(data)?;
+    } else if matches!(issue["type"].as_str(), Some("ParseErrors" | "SelfReference")) {
+        let entries: serde_json::Map<String, Value> =
+            serde_json::from_str(data).map_err(io::Error::other)?;
+        if entries.len() > 4096 || !entries.values().all(Value::is_string) {
+            return Err(invalid("fresh parse error data"));
+        }
+    } else {
+        validate_file_issue(data)?;
+    }
+    Ok(())
+}
+fn validate_missing_packages(data: &str) -> io::Result<()> {
+    let rows: Vec<Value> = serde_json::from_str(data).map_err(io::Error::other)?;
+    if rows.len() > 4096 || rows.iter().any(invalid_missing_package_row) {
+        return Err(invalid("fresh detection missing packages"));
+    }
+    Ok(())
+}
+fn invalid_missing_package_row(row: &Value) -> bool {
+    !row["filePath"].is_string()
+        || !row["isDevFile"].is_boolean()
+        || row["missingPackages"]
+            .as_array()
+            .is_none_or(|names| {
+                names.len() > 4096
+                    || names
+                        .iter()
+                        .any(|name| !name.is_string())
+            })
+}
+fn validate_file_issue(data: &str) -> io::Result<()> {
+    let parsed: serde_json::Map<String, Value> =
+        serde_json::from_str(data).map_err(io::Error::other)?;
+    if parsed.len() > 4096
+        || parsed
+            .values()
+            .any(|value| {
+                value
+                    .as_array()
+                    .is_none_or(|items| {
+                        items.len() > 4096
+                            || items
+                                .iter()
+                                .any(|item| !item.is_string())
+                    })
+            })
+    {
+        return Err(invalid("fresh detection issue data"));
+    }
+    Ok(())
+}
+fn apply_versions(detected: &mut Value, request: &Complete) -> io::Result<()> {
     for version in &request.capture.component_versions {
         let field = ["dependencies", "devDependencies", "peerDependencies"]
             .get(version.field)
@@ -29,7 +122,7 @@ pub(super) fn detected(request: &Complete) -> io::Result<Value> {
             id.insert("version".to_owned(), Value::String(version));
         }
     }
-    Ok(detected)
+    Ok(())
 }
 fn select(version: Option<&str>, grammar: &Value) -> io::Result<Option<String>> {
     let Some(version) = version.filter(|version| !version.is_empty()) else { return Ok(None) };

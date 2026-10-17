@@ -1,11 +1,15 @@
 //! Shared client transport for file and HTTP Bit scopes.
 //! The transport keeps tar and compressed object bodies inside Rust.
 
+pub mod cancellation;
+pub mod config;
 pub mod fetch;
 pub mod http;
 pub mod remotes;
 pub mod resolver;
 pub mod tar;
+
+pub use cancellation::Cancellation;
 
 pub type GlobalConfig = indexmap::IndexMap<String, serde_json::Value>;
 

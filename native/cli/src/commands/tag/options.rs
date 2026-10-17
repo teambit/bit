@@ -1,5 +1,5 @@
 //! The native tag grammar, with `validateOptions` of `@teambit/snapping`:
-//! ordinary persisted tags only. Editor, build, soft and publish flags stay
+//! ordinary and soft tags. Editor, build and publish flags stay
 //! with the Node.js CLI.
 
 use serde_json::{Map, Value, json};
@@ -7,36 +7,60 @@ use serde_json::{Map, Value, json};
 const RELEASE_TYPES: [&str; 7] =
     ["major", "premajor", "minor", "preminor", "patch", "prepatch", "prerelease"];
 const PRE_RELEASE_TYPES: [&str; 4] = ["prepatch", "prerelease", "preminor", "premajor"];
-const BOOLEANS: [&str; 7] =
-    ["--unmodified", "--unmerged", "--snapped", "--skip-auto-tag", "--patch", "--minor", "--major"];
-const STRINGS: [&str; 6] = [
+const BOOLEANS: [&str; 8] = [
+    "--unmodified",
+    "--unmerged",
+    "--snapped",
+    "--skip-auto-tag",
+    "--patch",
+    "--minor",
+    "--major",
+    "--soft",
+];
+const STRINGS: [&str; 7] = [
     "--message",
     "--ver",
     "--increment",
     "--auto-tag-increment",
     "--prerelease-id",
     "--increment-by",
+    "--versions-file",
 ];
 
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default, PartialEq)]
 pub struct Options {
     pub message: Option<String>,
     pub unmodified: bool,
     pub unmerged: bool,
-    pub patterns: Vec<String>,
+    pub selection: TagSelection,
     pub release: Release,
     pub snapped: bool,
     pub skip_auto_tag: bool,
+    pub mode: Mode,
+}
+
+#[derive(Debug, Default, PartialEq, Eq)]
+pub struct TagSelection {
+    pub patterns: Vec<String>,
+    pub versions_file: Option<String>,
+}
+
+#[derive(Debug, Default, PartialEq, Eq)]
+pub enum Mode {
+    #[default]
+    Ordinary,
+    Soft,
+    Persist,
 }
 
 /// How the versions are bumped: `validateOptions`' release types,
 /// `--increment-by` and `--ver`.
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default, PartialEq)]
 pub struct Release {
     /// `releaseType`.
     pub level: String,
     pub auto_tag_release_type: Option<String>,
-    pub increment_by: u64,
+    pub increment_by: f64,
     pub exact_version: Option<String>,
     pub pre_release_id: Option<String>,
 }
@@ -65,27 +89,35 @@ fn read(args: &[&str]) -> Option<Flags> {
             flags.patterns.push(pattern(argument)?.to_string());
             continue;
         }
-        if flags.values.contains_key(argument) {
+        let key = if argument == "--persist=skip-build" { "--persist" } else { argument };
+        if flags.values.contains_key(key) {
             return None;
         }
         let next = args
             .get(index)
             .copied()
             .filter(|value| !value.starts_with('-'));
-        let value = if BOOLEANS.contains(&argument) {
-            json!(true)
-        } else if STRINGS.contains(&argument) {
-            index += 1;
-            json!(next?)
-        } else if argument == "--pre-release" {
-            index += usize::from(next.is_some());
-            next.map_or(json!(true), |value| json!(value))
-        } else {
-            return None;
-        };
-        flags.values.insert(argument.to_string(), value);
+        let (value, consume_next) = option_value(argument, next)?;
+        index += usize::from(consume_next);
+        flags.values.insert(key.to_string(), value);
     }
     Some(flags)
+}
+
+fn option_value(argument: &str, next: Option<&str>) -> Option<(Value, bool)> {
+    if BOOLEANS.contains(&argument) || argument == "--persist=skip-build" {
+        return Some((json!(true), false));
+    }
+    if argument == "--persist" {
+        return Some((json!(true), next == Some("skip-build")));
+    }
+    if STRINGS.contains(&argument) {
+        return Some((json!(next?), true));
+    }
+    if argument == "--pre-release" {
+        return Some((next.map_or(json!(true), |value| json!(value)), next.is_some()));
+    }
+    None
 }
 
 fn alias(argument: &str) -> &str {
@@ -99,27 +131,35 @@ fn alias(argument: &str) -> &str {
     }
 }
 
-/// A pattern without state selectors (`$…`) or `AND`.
+/// A bounded workspace pattern, including state predicates.
 fn pattern(text: &str) -> Option<&str> {
-    let valid = !text.is_empty()
-        && text.len() <= 4096
-        && !text.contains('\0')
-        && !text
-            .split(',')
-            .any(|part| part.trim().starts_with('$') || part.contains(" AND "));
+    let valid = !text.is_empty() && text.len() <= 4096 && !text.contains('\0');
     valid.then_some(text)
 }
 
 /// `validateOptions`, and the increment and exact version checks.
 fn validate(flags: &Flags) -> Option<Options> {
+    if flags.flag("--soft") && flags.flag("--persist") {
+        return None;
+    }
     Some(Options {
         message: flags.string("--message").map(str::to_string),
         unmodified: flags.flag("--unmodified"),
         unmerged: flags.flag("--unmerged"),
-        patterns: flags.patterns.clone(),
+        selection: TagSelection {
+            patterns: flags.patterns.clone(),
+            versions_file: flags.string("--versions-file").map(str::to_owned),
+        },
         release: release(flags)?,
         snapped: flags.flag("--snapped"),
         skip_auto_tag: flags.flag("--skip-auto-tag"),
+        mode: if flags.flag("--soft") {
+            Mode::Soft
+        } else if flags.flag("--persist") {
+            Mode::Persist
+        } else {
+            Mode::Ordinary
+        },
     })
 }
 
@@ -133,17 +173,17 @@ impl Flags {
     }
 }
 
-/// The release levels, `--increment-by` (a decimal from 1 to 4096) and
+/// The release levels, `--increment-by` (a finite count from 0 to 4096) and
 /// `--ver` (a semver version).
 fn release(flags: &Flags) -> Option<Release> {
-    let increment_by = match flags.string("--increment-by") {
-        None => 1,
-        Some(text) if text.bytes().all(|byte| byte.is_ascii_digit()) => text
-            .parse::<u64>()
-            .ok()
-            .filter(|count| (1..=4096).contains(count))?,
-        Some(_) => return None,
-    };
+    let increment_by = flags
+        .string("--increment-by")
+        .map_or(Some(1.0), |text| {
+            text.trim()
+                .parse::<f64>()
+                .ok()
+                .filter(|count| count.is_finite() && (0.0..=4096.0).contains(count))
+        })?;
     let exact_version = match flags.string("--ver") {
         None => None,
         Some(version) => Some(node_semver::npm::valid(version)?),
@@ -207,7 +247,8 @@ impl Options {
     /// `tagOptions` of `commandTagPrepare`.
     pub fn tag_options(&self) -> Value {
         let release = &self.release;
-        let mut options = json!({ "patterns": self.patterns, "releaseType": release.level });
+        let mut options =
+            json!({ "patterns": self.selection.patterns, "releaseType": release.level });
         if let Some(level) = &release.auto_tag_release_type {
             options["autoTagReleaseType"] = json!(level);
         }
@@ -220,6 +261,12 @@ impl Options {
         }
         options["snapped"] = json!(self.snapped);
         options["skipAutoTag"] = json!(self.skip_auto_tag);
+        if self.mode == Mode::Soft {
+            options["soft"] = json!(true);
+        }
+        if self.mode == Mode::Persist {
+            options["persist"] = json!(true);
+        }
         options
     }
 }

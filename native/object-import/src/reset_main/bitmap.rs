@@ -65,10 +65,7 @@ pub(super) fn find_key(
 }
 
 fn validate_row(row: &Value) -> io::Result<()> {
-    if row["isAvailableOnCurrentLane"] == false
-        || row["onLanesOnly"] == true
-        || row["config"]["teambit.component/remove"]["removed"] == true
-    {
+    if row["isAvailableOnCurrentLane"] == false || row["onLanesOnly"] == true {
         return Err(invalid("reset component unavailable on main"));
     }
     Ok(())

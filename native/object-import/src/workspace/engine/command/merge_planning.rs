@@ -1,3 +1,6 @@
+pub(super) use candidates::select_targets;
+
+mod candidates;
 mod fast_forward;
 mod lane_filter;
 mod lifecycle;
@@ -6,11 +9,10 @@ mod pending;
 mod policy_rows;
 mod preflight;
 mod removal;
+mod unrelated;
 use super::{
     super::{dependency_graph::proof, invalid},
-    Record, capture, history,
-    input::{Operation, Prepare},
-    merge, planning,
+    Record, capture, history, merge, planning,
     repository::{Repository, model},
     scratch, selection,
 };
@@ -45,43 +47,6 @@ struct Finalized {
     files: merge::finalization::Prepared,
 }
 
-pub(super) fn select_targets(
-    request: &Prepare,
-    context: &Value,
-    targets: Vec<Value>,
-    repository: &mut Repository,
-    history: &mut history::State,
-) -> io::Result<Vec<Value>> {
-    if request.operation != Operation::Merge
-        || request.options.pattern.is_some()
-        || request.options.lane.is_some()
-    {
-        return Ok(targets);
-    }
-    let mut selected = Vec::new();
-    for target in targets {
-        let identity =
-            target["identity"].as_str().ok_or_else(|| invalid("command merge identity"))?;
-        let Some(model) = model(context, identity)? else {
-            continue;
-        };
-        let remote = repository.remote_head(identity)?;
-        let distance = history.distance(
-            &request.root,
-            identity,
-            &model,
-            [model["head"].as_str(), remote.as_deref()],
-            repository,
-        )?;
-        if !distance["sourceOnly"].as_array().is_some_and(Vec::is_empty)
-            && !distance["targetOnly"].as_array().is_some_and(Vec::is_empty)
-        {
-            selected.push(target);
-        }
-    }
-    Ok(selected)
-}
-
 pub(super) fn plan(
     record: &mut Record,
     current: Vec<Value>,
@@ -102,7 +67,7 @@ pub(super) fn plan(
         merge: None,
     };
     lane_filter::capture_hidden(record, &mut planned, snapshots)?;
-    lane_filter::capture_additions(record, &mut planned)?;
+    lane_filter::capture_additions(record, &mut planned, snapshots)?;
     lane_filter::validate_captures(record, &planned)?;
     let mut state = merge::State::new(planned.captured.len())?;
     let mut selected = Vec::new();
@@ -111,12 +76,6 @@ pub(super) fn plan(
     }
     loading::import_gap(record, &mut selected)?;
     lane_filter::apply(record, &mut planned, &mut selected, lane_pattern)?;
-    if selected
-        .iter()
-        .any(|row| row.distance["shouldBeRemoved"] == true && row.action != Action::Merge)
-    {
-        return Err(invalid("command removed fast-forward requires canonical transition"));
-    }
     prepare_materials(record, &mut planned, state, &selected, snapshots)?;
     Ok(planned)
 }
@@ -137,6 +96,7 @@ enum Action {
     Unchanged,
     Merge,
     Target,
+    Unrelated,
 }
 
 fn select(
@@ -147,18 +107,10 @@ fn select(
 ) -> io::Result<Selected> {
     let captured = &planned.captured[index];
     let mut selected = loading::load_selected(record, captured)?;
-    let distance = planned.history.distance(
-        &record.request.root,
-        &captured.target.identity,
-        &selected.model,
-        [
-            (!selected.current_head.is_empty()).then_some(selected.current_head.as_str()),
-            Some(&selected.remote),
-        ],
-        &mut record.repository,
-    )?;
+    let distance = select_distance(record, &mut planned.history, captured, &selected)?;
     selected.distance = distance.clone();
     let mut target = record.targets.iter().find(|target| target["identity"] == captured.target.identity).cloned().unwrap_or_else(|| json!({"identity":captured.target.identity,"version":captured.target.version,"hidden":captured.hidden}));
+    target["currentVersion"] = json!(captured.target.version);
     target["version"] = json!(selected.remote);
     target["bitmapPresent"] = json!(!captured.added && !captured.target.directory.is_empty());
     let outcome = state.select(&merge::Input {
@@ -181,6 +133,25 @@ fn select(
     selected.distance["importGap"] = json!(selected.action != Action::Unchanged);
     Ok(selected)
 }
+fn select_distance(
+    record: &mut Record,
+    history: &mut history::State,
+    captured: &capture::Captured,
+    selected: &Selected,
+) -> io::Result<Value> {
+    let mut distance = history.distance(
+        &record.request.root,
+        &captured.target.identity,
+        &selected.model,
+        [
+            (!selected.current_head.is_empty()).then_some(selected.current_head.as_str()),
+            Some(&selected.remote),
+        ],
+        &mut record.repository,
+    )?;
+    unrelated::distance(record, history, selected, &captured.target.identity, &mut distance)?;
+    Ok(distance)
+}
 fn apply_selection(
     selected: &mut Selected,
     outcome: &Value,
@@ -188,16 +159,25 @@ fn apply_selection(
     identity: &str,
     result: &mut Value,
 ) -> io::Result<()> {
-    if outcome["action"] == "unchanged" && outcome["legitimate"] == true {
-        result["failedComponents"].as_array_mut().unwrap().push(json!({"id":format!("{identity}@{}",selected.remote),"unchangedMessage":outcome["message"],"unchangedLegitimately":true}));
+    if outcome["action"] == "unchanged" {
+        result["failedComponents"].as_array_mut().unwrap().push(json!({"id":format!("{identity}@{}",selected.remote),"unchangedMessage":outcome["message"],"unchangedLegitimately":outcome["legitimate"]}));
         return Ok(());
     }
     selected.distance["shouldBeRemoved"] = outcome["shouldBeRemoved"].clone();
     selected.action = match outcome["action"].as_str() {
         Some("merge") => Action::Merge,
         Some("target") => Action::Target,
+        Some("unrelated") => {
+            selected.distance["unrelated"] = outcome["unrelated"].clone();
+            Action::Unrelated
+        }
         _ => return Err(invalid("command merge requires canonical transition")),
     };
+    // MergeStatusProvider's reconstructed divergent result does not retain its
+    // preliminary shouldBeRemoved marker. The merged removal config is snapped later.
+    if selected.action != Action::Target {
+        selected.distance["shouldBeRemoved"] = json!(false);
+    }
     if let Some(common) = distance["common"].as_str() {
         selected.base = common.into();
     } else if selected.action == Action::Merge {
@@ -257,13 +237,14 @@ fn prepare_materials(
         let own = directory.0.join(index.to_string());
         add_material(record, planned, &mut prepared, selected, index, &own, &plan)?;
     }
+    unrelated::prepare(record, planned, &mut prepared, selected, snapshots)?;
+    if record.request.internal_snapshot_preview && planned.result["leftUnresolvedConflicts"] == true
+    {
+        prepared.cancel_snap();
+    }
     prepare_lane_targets(record, &mut prepared, selected)?;
     fast_forward::prepare(record, planned, &mut prepared, selected, snapshots)?;
-    if !record.request.options.no_snap
-        && !record.request.options.lane.as_ref().is_some_and(|lane| lane.no_auto_snap)
-    {
-        removal::prepare(planned, &mut prepared, selected)?;
-    }
+    removal::prepare(planned, &mut prepared, selected)?;
     policy_rows::fast_forward(&mut prepared, planned, &record.context)?;
     if prepared.policy.as_ref().is_some_and(|policy| policy.rows.is_empty()) {
         prepared.policy = None;
@@ -343,10 +324,17 @@ fn add_material(
         return Err(invalid("command unresolved removed merge"));
     }
     if current.hidden {
-        lane_filter::prepare_hidden_metadata(current, &selected.versions, &mut material.version)?;
-    } else {
-        policy_rows::divergent(prepared, selected, current, &material)?;
+        lane_filter::prepare_hidden_metadata(current, &mut material.version)?;
     }
+    let scope_only = lane_filter::scope_only(record, current);
+    policy_rows::divergent(
+        prepared,
+        selected,
+        current,
+        &material,
+        scope_only,
+        &body(record, selected, current, directory, index).labels()?,
+    )?;
     retain_snapshot(record, prepared, selected, current, &material)?;
     planned.result["components"]
         .as_array_mut()

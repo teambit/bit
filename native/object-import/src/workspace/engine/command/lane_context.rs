@@ -135,8 +135,13 @@ pub(super) fn validate_additions(
     proofs: &mut Vec<crate::workspace::engine::dependency_graph::proof::Proof>,
 ) -> io::Result<()> {
     use crate::workspace::engine::dependency_graph::proof;
-    let Some(rows) = context["lane"]["additions"].as_array() else { return Ok(()) };
-    for row in rows {
+    let lane = context["lane"]["additions"]
+        .as_array()
+        .map_or(&[][..], Vec::as_slice);
+    let scope = context["scopeAdditions"]
+        .as_array()
+        .map_or(&[][..], Vec::as_slice);
+    for row in lane.iter().chain(scope) {
         let relative = row["rootDir"].as_str().ok_or_else(|| invalid("lane addition directory"))?;
         let added = context["lane"]["addedTargets"]
             .as_array()
@@ -144,7 +149,10 @@ pub(super) fn validate_additions(
                 targets
                     .iter()
                     .any(|target| target["directory"] == relative)
-            });
+            })
+            || scope
+                .iter()
+                .any(|candidate| candidate["rootDir"] == relative);
         if added && directory_metadata(&root.join(relative))?.is_some() {
             return Err(invalid("lane new destination already exists"));
         }

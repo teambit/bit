@@ -35,11 +35,11 @@ fn revert_from_a_lane_to_main() {
     helper.set_workspace_with_remote_scope();
     helper.populate_components(2, true, "");
     helper.run("tag");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     helper.run("lane create lane-a");
     helper.populate_components(2, true, "version2");
     helper.run("snap");
-    helper.run("export");
+    crate::helper::remote::publish(&helper);
     helper.native_output_or_known(r#"revert "**" main"#).native();
     for comp in ["comp1", "comp2"] {
         assert!(!read_file(&helper, &format!("{comp}/index.js")).contains("version2"));

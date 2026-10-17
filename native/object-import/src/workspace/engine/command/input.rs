@@ -13,6 +13,8 @@ pub(in crate::workspace::engine) struct Prepare {
     pub(super) options: Options,
     #[serde(default)]
     pub(super) dependency_grammar: serde_json::Value,
+    #[serde(default)]
+    pub(super) defer_checkout_pattern: bool,
 }
 #[derive(Clone, Copy, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -29,6 +31,10 @@ pub(super) struct Options {
     pub(super) strategy: Option<String>,
     pub(super) message: Option<String>,
     pub(super) lane: Option<LaneOptions>,
+    #[serde(default)]
+    pub(super) include_new_from_scope: bool,
+    #[serde(default)]
+    pub(super) scope_candidates: Vec<String>,
     #[serde(flatten)]
     flags: Flags,
 }
@@ -36,6 +42,13 @@ pub(super) struct Options {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct LaneOptions {
     pub(super) name: String,
+    #[serde(flatten)]
+    pub(super) flags: LaneFlags,
+}
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(super) struct LaneFlags {
+    pub(super) resolve_unrelated: Option<String>,
     #[serde(default)]
     pub(super) no_auto_snap: bool,
     #[serde(default)]
@@ -50,6 +63,12 @@ pub(super) struct LaneOptions {
     pub(super) workspace_only: bool,
     #[serde(default)]
     pub(super) exclude_non_lane_comps: bool,
+}
+impl std::ops::Deref for LaneOptions {
+    type Target = LaneFlags;
+    fn deref(&self) -> &Self::Target {
+        &self.flags
+    }
 }
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]

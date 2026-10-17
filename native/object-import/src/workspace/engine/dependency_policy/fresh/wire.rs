@@ -21,6 +21,8 @@ pub(super) struct Detection {
     pub(super) model_packages: Packages,
     pub(super) workspace_policy: Packages,
     pub(super) core_packages: Vec<String>,
+    #[serde(default)]
+    pub(super) core_aspect_ids: Vec<String>,
     pub(super) workspace_components: Vec<String>,
 }
 #[derive(Deserialize)]

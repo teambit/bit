@@ -23,7 +23,7 @@ pub(super) fn requests(items: &[ObjectItem], ids: &[String], root: &Path) -> Vec
             .iter()
             .map(|item| (item.hash.as_str(), item.compressed.as_slice()))
             .collect(),
-        local: &root.join(".bit/objects"),
+        local: &crate::scope_path(root).join("objects"),
     };
     ids.iter()
         .filter(|id| objects.misses_dependencies(id))

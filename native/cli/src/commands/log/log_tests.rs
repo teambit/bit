@@ -94,3 +94,21 @@ fn parents_view_orders_a_merge_before_both_parents() {
         .collect();
     assert_eq!(hashes, ["merge", "right", "left", "root"]);
 }
+
+#[test]
+fn deleted_and_deprecated_titles_keep_nested_published_symbol_colors() {
+    let mut row = json!({"tag":"1.0.0","hash":"hash","message":"","deprecated":true});
+    assert_eq!(paint(&row, Chalk::new(false)).unwrap(), "tag 1.0.0 (hash) ⚠ deprecated\n");
+    assert!(
+        paint(&row, Chalk::new(true))
+            .unwrap()
+            .contains(" \u{1b}[33m\u{1b}[33m⚠\u{1b}[39m\u{1b}[33m deprecated\u{1b}[39m"),
+    );
+    row["deleted"] = json!(true);
+    assert_eq!(paint(&row, Chalk::new(false)).unwrap(), "tag 1.0.0 (hash) ✖ deleted\n");
+    assert!(
+        paint(&row, Chalk::new(true))
+            .unwrap()
+            .contains(" \u{1b}[31m\u{1b}[31m✖\u{1b}[39m\u{1b}[31m deleted\u{1b}[39m"),
+    );
+}

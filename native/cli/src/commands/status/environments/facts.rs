@@ -1,0 +1,108 @@
+//! Raw registered environment policies and callback facts.
+
+use super::{EnvJsoncReader, Host, Value, WorkspaceComponent, io, json};
+
+pub(super) fn read(
+    host: &Host,
+    reader: &EnvJsoncReader<'_>,
+    component: &WorkspaceComponent,
+    core: &[String],
+    aspects: &[String],
+    needs_issues: bool,
+) -> io::Result<Value> {
+    let configured = component.config
+        .keys()
+        .filter(|id| !core.contains(id) && !bit_install::policy::is_core_env(id))
+        .collect::<Vec<_>>();
+    let registrations = if configured.is_empty() {
+        json!([])
+    } else {
+        host.call("dependencyPolicies", &json!({"extensionIds":configured}))?
+    };
+    let (env_id, multiple) = selected_env(host, component)?;
+    let manifest = reader.resolved(&env_id)?;
+    let env_policy = match &manifest {
+        Some(manifest) => manifest
+            .get("policy")
+            .cloned()
+            .unwrap_or_else(|| json!({})),
+        None => host.call("envPolicy", &json!({"envId":env_id}))?,
+    };
+    let dev_patterns = host.call("devPatterns", &json!({"envId":env_id}))?;
+    Ok(json!({"envId":env_id,"envPolicy":if env_policy.is_null(){json!({})}else{env_policy},
+        "compiler":if needs_issues {host.call("compilerFacts", &json!({"envId":env_id}))?} else {Value::Null},"nonLoaded":dev_patterns.is_null(),"devPatterns":dev_patterns,"multiple":multiple,
+        "manifestPatterns":manifest.as_ref().and_then(|manifest|manifest.get("patterns")),
+        "registeredEnvPolicy":registered(component,&registrations),"aspectIds":aspects,
+        "envOwnPolicy":own_policy(reader,component,host,aspects)?,
+    }))
+}
+
+fn selected_env(host: &Host, component: &WorkspaceComponent) -> io::Result<(String, Value)> {
+    let envs =
+        host.call("environmentIds", &json!({"ids":component.config.keys().collect::<Vec<_>>()}))?;
+    let explicit = component.config
+        .get("teambit.envs/envs")
+        .and_then(|config| config["env"].as_str());
+    let selected = explicit
+        .map_or_else(
+            || {
+                envs.get(0)
+                    .and_then(Value::as_str)
+                    .unwrap_or(&component.env_id)
+            },
+            |env| {
+                component.config
+                    .keys()
+                    .find(|id| {
+                        bit_install::policy::split_version(id).0
+                            == bit_install::policy::split_version(env).0
+                    })
+                    .map_or(env, String::as_str)
+            },
+        )
+        .to_owned();
+    Ok((selected, if explicit.is_some() { json!([]) } else { envs }))
+}
+
+fn registered(component: &WorkspaceComponent, registrations: &Value) -> Vec<Value> {
+    component.config
+        .keys()
+        .filter_map(|id| {
+            registrations
+                .as_array()?
+                .iter()
+                .find(|entry| {
+                    entry[0]
+                        .as_str()
+                        .is_some_and(|registrar| registrar == id || registrar.contains(id.as_str()))
+                })
+                .map(|entry| entry[1].clone())
+        })
+        .collect()
+}
+
+fn own_policy(
+    reader: &EnvJsoncReader<'_>,
+    component: &WorkspaceComponent,
+    host: &Host,
+    aspects: &[String],
+) -> io::Result<Value> {
+    if !component.is_env && component.env_id != "teambit.envs/env" {
+        return Ok(json!({}));
+    }
+    let policy = if let Some(manifest) = reader.resolved(&component.id.to_string_without_version())?
+    {
+        bit_install::policy::env::from_config(&manifest["policy"], false)?
+    } else {
+        let raw = host.call(
+            "registeredEnvPolicy",
+            &json!({"envId":component.id.to_string_without_version(),"aspectIds":aspects}),
+        )?;
+        bit_install::policy::env::from_config(&raw, true)?
+    };
+    let dependencies = policy.self_policy
+        .into_iter()
+        .map(|entry| (entry.name, json!(entry.version)))
+        .collect::<serde_json::Map<_, _>>();
+    Ok(json!({"dependencies":dependencies}))
+}

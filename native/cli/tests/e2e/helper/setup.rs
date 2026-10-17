@@ -162,7 +162,9 @@ pub fn copy_dir(from: &Path, to: &Path) {
         } else if kind.is_symlink() {
             copy_link(&entry.path(), &target);
         } else {
-            fs::copy(entry.path(), &target).unwrap();
+            let source = entry.path();
+            fs::copy(&source, &target)
+                .unwrap_or_else(|error| panic!("copy fixture {source:?} -> {target:?}: {error}"));
         }
     }
 }

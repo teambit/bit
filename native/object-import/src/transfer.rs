@@ -169,6 +169,7 @@ pub(crate) fn apply(
         "transferTransactionInitialize" => state.transaction(input),
         "transferTransactionReceipt" => state.receipt(input),
         "transferRelease" => release(state, input),
+        "transferCancel" => state.cancel(input),
         "transferPending" => pending::write(state, input),
         _ => Err(invalid("unknown transfer operation")),
     }
@@ -179,13 +180,11 @@ fn release(state: &mut State, input: &serde_json::Value) -> io::Result<serde_jso
         .get("token")
         .and_then(serde_json::Value::as_str)
         .ok_or_else(|| invalid("missing transfer release token"))?;
-    let removed = state.collections.remove(token).is_some();
-    if state.plans.remove(token).is_some() {
-        return Ok(serde_json::json!({"released":true}));
+    let collection = state.collections.remove(token).is_some();
+    let plan = state.plans.remove(token).is_some();
+    if !collection && !plan {
+        return Err(invalid("unknown transfer release token"));
     }
-    if removed {
-        Ok(serde_json::json!({"released":true}))
-    } else {
-        Err(invalid("unknown transfer release token"))
-    }
+    state.cleanup_unused()?;
+    Ok(serde_json::json!({"released":true}))
 }

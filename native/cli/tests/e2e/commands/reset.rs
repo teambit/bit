@@ -204,12 +204,20 @@ fn env_after_snaps(between: &str) -> Helper {
     let helper = Helper::new();
     helper.set_workspace_with_remote_scope();
     helper.populate_components(1, true, "");
-    helper.run("envs set comp1 teambit.react/react");
+    crate::helper::config::set_component_env(
+        &helper.scopes.local_path,
+        "comp1",
+        "teambit.react/react",
+    );
     snap_all(&helper, "");
     if between.is_empty() {
         snap_all(&helper, "--unmodified");
     } else {
-        helper.run(between);
+        if let Some(env) = between.strip_prefix("envs set comp1 ") {
+            crate::helper::config::set_component_env(&helper.scopes.local_path, "comp1", env);
+        } else {
+            helper.run(between);
+        }
         snap_all(&helper, "");
     }
     helper
