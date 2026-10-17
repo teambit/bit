@@ -1434,15 +1434,17 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/custom-aspects.e2e.ts`
 
-- [ ] `e2e/harmony/custom-aspects.e2e.ts:67` custom aspects › should load the env correctly and use it for the consuming component
-- [ ] `e2e/harmony/custom-aspects.e2e.ts:75` custom aspects › when the aspect dependency is loaded from the workspace but the main dependency is loaded from the scope › should load the env correctly and use it for the consuming component
-- [ ] `e2e/harmony/custom-aspects.e2e.ts:106` custom aspects › aspect with another aspect as regular dep › when the dep aspect is not configured in workspace.jsonc › should run main aspect provider
-- [ ] `e2e/harmony/custom-aspects.e2e.ts:109` custom aspects › aspect with another aspect as regular dep › when the dep aspect is not configured in workspace.jsonc › should not load nor run aspect which is static dep but not configured in workspace.jsonc
-- [ ] `e2e/harmony/custom-aspects.e2e.ts:113` custom aspects › aspect with another aspect as regular dep › when the dep aspect is not configured in workspace.jsonc › should not load nor run aspect which is regular dep provider
-- [ ] `e2e/harmony/custom-aspects.e2e.ts:124` custom aspects › aspect with another aspect as regular dep › when the dep aspect is configured in workspace.jsonc › should run main aspect provider
-- [ ] `e2e/harmony/custom-aspects.e2e.ts:127` custom aspects › aspect with another aspect as regular dep › when the dep aspect is configured in workspace.jsonc › should load and run aspect dep provider
-- [ ] `e2e/harmony/custom-aspects.e2e.ts:131` custom aspects › aspect with another aspect as regular dep › when the dep aspect is configured in workspace.jsonc › should not load nor run aspect which is regular dep provider
-- [ ] `e2e/harmony/custom-aspects.e2e.ts:163` custom aspects › bit use › should save the aspect in the workspace.jsonc with a version
+- [ ] `e2e/harmony/custom-aspects.e2e.ts:70` custom aspects › should load the env correctly and use it for the consuming component
+- [ ] `e2e/harmony/custom-aspects.e2e.ts:78` custom aspects › when the aspect dependency is loaded from the workspace but the main dependency is loaded from the scope › should load the env correctly and use it for the consuming component
+- [ ] `e2e/harmony/custom-aspects.e2e.ts:109` custom aspects › aspect with another aspect as regular dep › when the dep aspect is not configured in workspace.jsonc › should run main aspect provider
+- [ ] `e2e/harmony/custom-aspects.e2e.ts:112` custom aspects › aspect with another aspect as regular dep › when the dep aspect is not configured in workspace.jsonc › should not load nor run aspect which is static dep but not configured in workspace.jsonc
+- [ ] `e2e/harmony/custom-aspects.e2e.ts:116` custom aspects › aspect with another aspect as regular dep › when the dep aspect is not configured in workspace.jsonc › should not load nor run aspect which is regular dep provider
+- [ ] `e2e/harmony/custom-aspects.e2e.ts:127` custom aspects › aspect with another aspect as regular dep › when the dep aspect is configured in workspace.jsonc › should run main aspect provider
+- [ ] `e2e/harmony/custom-aspects.e2e.ts:130` custom aspects › aspect with another aspect as regular dep › when the dep aspect is configured in workspace.jsonc › should load and run aspect dep provider
+- [ ] `e2e/harmony/custom-aspects.e2e.ts:134` custom aspects › aspect with another aspect as regular dep › when the dep aspect is configured in workspace.jsonc › should not load nor run aspect which is regular dep provider
+- [ ] `e2e/harmony/custom-aspects.e2e.ts:166` custom aspects › bit use › should save the aspect in the workspace.jsonc with a version
+- [ ] `e2e/harmony/custom-aspects.e2e.ts:228` custom aspects › should load slot-owner once, in the version app-aspect depends on
+- [ ] `e2e/harmony/custom-aspects.e2e.ts:232` custom aspects › should let app-aspect read what registrar registered
 
 ### `e2e/harmony/custom-env-operations.e2e.ts`
 
@@ -1477,23 +1479,26 @@ row's fields, object path, header, logical identity, and remote index stay exact
 - [ ] `e2e/harmony/custom-env.e2e.ts:114` custom env › custom env with 3 components › out-of-sync scenario where the id is changed during the process › bit status should not throw ComponentNotFound error
 - [ ] `e2e/harmony/custom-env.e2e.ts:131` custom env › change an env after tag › bit status should show it as an issue because the previous env was not removed
 - [ ] `e2e/harmony/custom-env.e2e.ts:152` custom env › change an env after tag2 and then change it back to the custom-env in the workspace › should have the correct env
-- [ ] `e2e/harmony/custom-env.e2e.ts:203` custom env › should load the env without issue
-- [ ] `e2e/harmony/custom-env.e2e.ts:209` custom env › should have the env installed in its root
-- [ ] `e2e/harmony/custom-env.e2e.ts:217` custom env › should not create scope aspect capsule
-- [ ] `e2e/harmony/custom-env.e2e.ts:253` custom env › setting up the external env without a version › should show a descriptive error when tagging the component
-- [ ] `e2e/harmony/custom-env.e2e.ts:266` custom env › set up the env using bit env set without a version › should save it with the latest version in root
-- [ ] `e2e/harmony/custom-env.e2e.ts:278` custom env › set up the env using bit env set with a version › should save it with a version in root but without version in envs/envs
-- [ ] `e2e/harmony/custom-env.e2e.ts:290` custom env › set up the env using bit create --env with a version › should save it with a version in root but without version in envs/envs
-- [ ] `e2e/harmony/custom-env.e2e.ts:304` custom env › set up the env and then unset it › should remove the env not only from envs/envs but also from root
-- [ ] `e2e/harmony/custom-env.e2e.ts:319` custom env › set up the env and then replace it with another env without mentioning the version › should save it with a version in root but without version in envs/envs
-- [ ] `e2e/harmony/custom-env.e2e.ts:335` custom env › set up the same env with two different versions, then replace with another env › should replace the env for both components
-- [ ] `e2e/harmony/custom-env.e2e.ts:352` custom env › tag and change the env version › bit status should show it as modified
-- [ ] `e2e/harmony/custom-env.e2e.ts:370` custom env › snapping the env on the lane and then deleting it › bit status should show the RemovedEnv issue
-- [ ] `e2e/harmony/custom-env.e2e.ts:373` custom env › snapping the env on the lane and then deleting it › bit envs should show the env as deleted
-- [ ] `e2e/harmony/custom-env.e2e.ts:378` custom env › snapping the env on the lane and then deleting it › replacing the env should fix the issue
-- [ ] `e2e/harmony/custom-env.e2e.ts:395` custom env › missing modules in the env capsule › should re-create the capsule dir and should not show any warning/error about loading the env
-- [ ] `e2e/harmony/custom-env.e2e.ts:399` custom env › missing modules in the env capsule › bit show should show the correct env
-- [ ] `e2e/harmony/custom-env.e2e.ts:416` custom env › core-env was set in previous tag and another non-core env is set now › bit status should not show it as an issue
+- [ ] `e2e/harmony/custom-env.e2e.ts:204` custom env › should load the env without issue
+- [ ] `e2e/harmony/custom-env.e2e.ts:210` custom env › should have the env installed in its root
+- [ ] `e2e/harmony/custom-env.e2e.ts:218` custom env › should not create scope aspect capsule
+- [ ] `e2e/harmony/custom-env.e2e.ts:229` custom env › another component uses an env version that is not installed › bit status should show the NonLoadedEnv issue rather than loading the installed 0.0.1 as 0.0.2
+- [ ] `e2e/harmony/custom-env.e2e.ts:232` custom env › another component uses an env version that is not installed › bit snap should be blocked
+- [ ] `e2e/harmony/custom-env.e2e.ts:236` custom env › another component uses an env version that is not installed › bit install should install the requested version and fix the issue
+- [ ] `e2e/harmony/custom-env.e2e.ts:273` custom env › setting up the external env without a version › should show a descriptive error when tagging the component
+- [ ] `e2e/harmony/custom-env.e2e.ts:286` custom env › set up the env using bit env set without a version › should save it with the latest version in root
+- [ ] `e2e/harmony/custom-env.e2e.ts:298` custom env › set up the env using bit env set with a version › should save it with a version in root but without version in envs/envs
+- [ ] `e2e/harmony/custom-env.e2e.ts:310` custom env › set up the env using bit create --env with a version › should save it with a version in root but without version in envs/envs
+- [ ] `e2e/harmony/custom-env.e2e.ts:324` custom env › set up the env and then unset it › should remove the env not only from envs/envs but also from root
+- [ ] `e2e/harmony/custom-env.e2e.ts:339` custom env › set up the env and then replace it with another env without mentioning the version › should save it with a version in root but without version in envs/envs
+- [ ] `e2e/harmony/custom-env.e2e.ts:355` custom env › set up the same env with two different versions, then replace with another env › should replace the env for both components
+- [ ] `e2e/harmony/custom-env.e2e.ts:372` custom env › tag and change the env version › bit status should show it as modified
+- [ ] `e2e/harmony/custom-env.e2e.ts:390` custom env › snapping the env on the lane and then deleting it › bit status should show the RemovedEnv issue
+- [ ] `e2e/harmony/custom-env.e2e.ts:393` custom env › snapping the env on the lane and then deleting it › bit envs should show the env as deleted
+- [ ] `e2e/harmony/custom-env.e2e.ts:398` custom env › snapping the env on the lane and then deleting it › replacing the env should fix the issue
+- [ ] `e2e/harmony/custom-env.e2e.ts:415` custom env › missing modules in the env capsule › should re-create the capsule dir and should not show any warning/error about loading the env
+- [ ] `e2e/harmony/custom-env.e2e.ts:419` custom env › missing modules in the env capsule › bit show should show the correct env
+- [ ] `e2e/harmony/custom-env.e2e.ts:436` custom env › core-env was set in previous tag and another non-core env is set now › bit status should not show it as an issue
 
 ### `e2e/harmony/debug-load.e2e.ts`
 
@@ -2979,9 +2984,10 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 - [ ] `e2e/harmony/local-head-not-found.e2e.ts:37` local head Version object is missing from scope › head ref points to a missing snap while bitmap is pinned to a valid older version › bit status should surface LocalHeadNotFound with actionable "bit import --objects" instead of the raw graph error
 - [ ] `e2e/harmony/local-head-not-found.e2e.ts:42` local head Version object is missing from scope › head ref points to a missing snap while bitmap is pinned to a valid older version › bit checkout head should fail early with LocalHeadNotFound (not a later ComponentNotFound) and suggest "bit import --objects"
-- [ ] `e2e/harmony/local-head-not-found.e2e.ts:64` local head Version object is missing from scope › the head Version object is missing locally while the remote has it › should fetch the missing Version object rather than fail
-- [ ] `e2e/harmony/local-head-not-found.e2e.ts:68` local head Version object is missing from scope › the head Version object is missing locally while the remote has it › should write the fetched Version object to the local scope
-- [ ] `e2e/harmony/local-head-not-found.e2e.ts:78` local head Version object is missing from scope › bit envs with a component on a core env › should not fetch the core env component into the local scope, it ships with bit
+- [ ] `e2e/harmony/local-head-not-found.e2e.ts:68` local head Version object is missing from scope › the head Version object is missing locally while the remote has it › should fetch the missing Version object rather than fail
+- [ ] `e2e/harmony/local-head-not-found.e2e.ts:72` local head Version object is missing from scope › the head Version object is missing locally while the remote has it › should write the fetched Version object to the local scope
+- [ ] `e2e/harmony/local-head-not-found.e2e.ts:86` local head Version object is missing from scope › the head Version object is missing locally while the remote has it › and the remote head has moved on since › should load the version it fetched rather than fail on the newer head
+- [ ] `e2e/harmony/local-head-not-found.e2e.ts:97` local head Version object is missing from scope › bit envs with a component on a core env › should not fetch the core env component into the local scope, it ships with bit
 
 ### `e2e/harmony/log.e2e.ts`
 

@@ -595,9 +595,7 @@ export class Component {
     const files = await getLoadedFiles(consumer, componentMap, id, compDirAbs);
     const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || undefined;
     const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : undefined;
-    const docsP = _getDocsForFiles(files, consumer.componentFsCache);
-    const docs = await Promise.all(docsP);
-    const flattenedDocs = docs ? flatten(docs) : [];
+    const flattenedDocs = await getDocsFromFiles(files, consumer.componentFsCache);
     // probably componentConfig.defaultScope is not needed. try to remove it.
     // once we changed BitId to ComponentId, the defaultScope is always part of the id.
     const defaultScope = id.hasScope() ? componentConfig.defaultScope : id.scope;
@@ -656,6 +654,13 @@ async function getLoadedFiles(
   return sourceFiles;
 }
 
-function _getDocsForFiles(files: SourceFile[], componentFsCache: FsCache): Array<Promise<Doclet[]>> {
-  return files.map((file) => (file.test ? Promise.resolve([]) : docsParser(file, componentFsCache)));
+/**
+ * parse the docs (JSDoc) of the component files, except test files.
+ * `componentFsCache` is relevant for files on the filesystem (a workspace), see the doc-parser.
+ */
+export async function getDocsFromFiles(files: SourceFile[], componentFsCache?: FsCache): Promise<Doclet[]> {
+  const docs = await Promise.all(
+    files.map((file) => (file.test ? Promise.resolve([]) : docsParser(file, componentFsCache)))
+  );
+  return flatten(docs);
 }
