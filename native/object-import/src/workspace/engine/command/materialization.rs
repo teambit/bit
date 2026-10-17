@@ -39,21 +39,7 @@ pub(super) fn prepare(
         return Err(invalid("command checkout target has no files"));
     }
     let workspace_root = input.current.target.directory == ".";
-    let nested = if workspace_root { root::nested_directories(input.root)? } else { Vec::new() };
-    let mut target = manifest(input.reference, input.version)?;
-    if workspace_root {
-        root::validate_version(input.version)?;
-        root::filter(&mut target, &nested)?;
-    }
-    let mut base = input.base.map(|(hash, value)| manifest(hash, value)).transpose()?;
-    if workspace_root && let Some(base) = base.as_mut() {
-        root::filter(base, &nested)?;
-    }
-    let request = json!({
-        "objectsDirectory":crate::scope_path(input.root).join("objects"),"snapshotDirectory":input.directory,
-        "target":target,"current":input.current.files,"base":base,
-        "labels":input.base.map(|_|json!({"current":format!("{} modified",input.current.target.version),"other":input.selection["version"]})),
-    });
+    let request = transition_request(input)?;
     let plan = match repository.overlay() {
         Some(overlay) => {
             checkout_transition::prepare_with_overlay(&request, state, Some(snapshots), overlay)?
@@ -244,6 +230,25 @@ fn validate_path(path: &Path, root: &Path) -> io::Result<()> {
         }
     }
     Ok(())
+}
+
+fn transition_request(input: &Input<'_>) -> io::Result<Value> {
+    let workspace_root = input.current.target.directory == ".";
+    let nested = if workspace_root { root::nested_directories(input.root)? } else { Vec::new() };
+    let mut target = manifest(input.reference, input.version)?;
+    if workspace_root {
+        root::validate_version(input.version)?;
+        root::filter(&mut target, &nested)?;
+    }
+    let mut base = input.base.map(|(hash, value)| manifest(hash, value)).transpose()?;
+    if workspace_root && let Some(base) = base.as_mut() {
+        root::filter(base, &nested)?;
+    }
+    Ok(json!({
+        "objectsDirectory":crate::scope_path(input.root).join("objects"),"snapshotDirectory":input.directory,
+        "target":target,"current":input.current.files,"base":base,
+        "labels":input.base.map(|_|json!({"current":format!("{} modified",input.current.target.version),"other":if super::checkout_stash::loading(input.options){json!("stash")}else{input.selection["version"].clone()}})),
+    }))
 }
 
 #[cfg(test)]

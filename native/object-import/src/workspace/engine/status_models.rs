@@ -38,6 +38,8 @@ pub(super) struct Request {
     #[serde(default)]
     stage_history: bool,
     #[serde(default)]
+    history_targets_only: bool,
+    #[serde(default)]
     current_lane_id: Option<String>,
 }
 #[derive(Deserialize)]
@@ -160,11 +162,12 @@ fn relevant_models(request: &Request, models: &[Value], lane: Option<&lane::Lane
                 model["scope"].as_str().unwrap_or_default(),
                 model["name"].as_str().unwrap_or_default(),
             );
-            locally_changed(model)
+            (!request.history_targets_only && locally_changed(model))
                 || request.targets
                     .iter()
                     .any(|target| target.identity == identity)
-                || lane.is_some_and(|lane| lane.update_dependents.contains(&identity))
+                || (!request.history_targets_only
+                    && lane.is_some_and(|lane| lane.update_dependents.contains(&identity)))
         })
         .cloned()
         .collect()

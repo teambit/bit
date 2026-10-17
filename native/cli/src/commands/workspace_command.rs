@@ -12,6 +12,7 @@ pub mod format;
 pub mod progress;
 pub mod resolve;
 pub mod results;
+pub(in crate::commands) mod stash;
 pub mod versions;
 
 pub(in crate::commands) use execution::loader_output;
@@ -80,7 +81,7 @@ pub fn plan_with_startup(
     request: &Request<'_>,
     startup: &mut super::status::autosync::Startup,
 ) -> io::Result<Planned> {
-    plan_with(root, request, false, false, Some(startup), false)
+    plan_with(root, request, false, false, Some(startup), false, None)
 }
 
 /// Capture providers once, materialize the merge, then snap its retained pending identities.
@@ -89,16 +90,17 @@ pub fn plan_merge(
     request: &Request<'_>,
     startup: &mut super::status::autosync::Startup,
 ) -> io::Result<Planned> {
-    plan_with(root, request, request.options["noSnap"] != true, true, Some(startup), true)
+    plan_with(root, request, request.options["noSnap"] != true, true, Some(startup), true, None)
 }
 
-fn plan_with(
+pub(super) fn plan_with(
     root: &Path,
     request: &Request<'_>,
     preview_snapshot: bool,
     internal_materialization: bool,
     startup: Option<&mut super::status::autosync::Startup>,
     defer_snapshot: bool,
+    inherited: Option<super::status::environments::Environments>,
 ) -> io::Result<Planned> {
     let preparation::Prepared {
         mut engine,
@@ -107,7 +109,7 @@ fn plan_with(
         context,
         capture,
         selector_loads,
-    } = preparation::capture(root, request, preview_snapshot, startup)?;
+    } = preparation::capture(root, request, preview_snapshot, startup, inherited)?;
     let semver = grammar::snapshot(semver_values(request.to, &context)?.iter().map(String::as_str))
         .ok_or_else(|| decline("semver grammar limits"))?;
     let mut plan_request = json!({

@@ -73,6 +73,12 @@ enum Request {
     ReadSetValidate {
         proofs: Vec<dependency_graph::proof::Proof>,
     },
+    CommandStashPrepare(command::stash::Prepare),
+    CommandStashPlan(command::stash::Plan),
+    CommandStashStageHistory(command::stash::StageHistory),
+    CommandStashFinalize(command::stash::Finalize),
+    CommandStashStageGraph(command::stash::Persist),
+    CommandStashPersist(command::stash::Persist),
     CommandPrepare(command::input::Prepare),
     CommandCheckoutSelect(command::checkout_pattern::Request),
     CommandInboundPrepare(command::inbound::Prepare),

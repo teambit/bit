@@ -108,8 +108,18 @@ fn plan_output(record: &Record, planned: &planning::Planned) -> io::Result<Value
             &record.targets
         )?);
     }
+    if super::checkout_stash::loading(&record.request.options) {
+        output["stashAdded"] = json!(
+            planned.captured
+                .iter()
+                .filter(|current| current.added)
+                .map(|current| current.target.identity.clone())
+                .collect::<Vec<_>>()
+        );
+    }
     snap_receipt(&mut output, planned)?;
     if record.request.operation == input::Operation::Checkout
+        && !super::checkout_stash::new_only(&record.request.options)
         && let Some(receipt) = checkout_policy::receipt(
             &record.context,
             &planned.materials,
@@ -171,6 +181,12 @@ pub(super) fn prepare_bitmap_bytes(
     planned: &planning::Planned,
     original: Vec<u8>,
 ) -> io::Result<bitmap::Prepared> {
+    if super::checkout_stash::loading(&record.request.options) {
+        let mut bitmap =
+            bitmap::prepare_bytes(&record.request.root, original, &record.context, &[], &[])?;
+        bitmap.restore_stash(&record.context)?;
+        return Ok(bitmap);
+    }
     if record.request.options.revert {
         // Revert writes the selected Version's files while retaining every
         // bitmap field, including the current component version and main file.

@@ -133,7 +133,15 @@ fn license_scopes(context: &Value) -> io::Result<std::collections::HashSet<&str>
     let scope = context["scopeAddedTargets"]
         .as_array()
         .map_or(&[][..], Vec::as_slice);
-    for target in visible.iter().chain(lane).chain(scope) {
+    let stash = context["stashAddedTargets"]
+        .as_array()
+        .map_or(&[][..], Vec::as_slice);
+    for target in visible
+        .iter()
+        .chain(lane)
+        .chain(scope)
+        .chain(stash)
+    {
         let identity =
             target["identity"].as_str().ok_or_else(|| invalid("command target identity"))?;
         scopes.insert(identity.split_once('/').ok_or_else(|| invalid("command scoped target"))?.0);

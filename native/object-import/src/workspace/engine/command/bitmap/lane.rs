@@ -187,7 +187,7 @@ fn validate_addition(addition: &Value, rows: &[Value]) -> io::Result<()> {
     validate_roots(directory, rows)
 }
 
-fn validate_roots(directory: &str, rows: &[Value]) -> io::Result<()> {
+pub(super) fn validate_roots(directory: &str, rows: &[Value]) -> io::Result<()> {
     for row in rows {
         if row["isAvailableOnCurrentLane"] == false
             || row["config"]["teambit.component/remove"]["removed"] == true

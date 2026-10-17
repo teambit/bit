@@ -1,6 +1,7 @@
 //! The ordinary (non-merge-command) snapshot produced by `merge --resolve`.
 //! All allocations are supplied by the caller before any object is published.
 pub(super) mod eligibility;
+pub(super) mod sources;
 pub(super) use eligibility::preflight;
 mod build;
 mod graph;
@@ -9,7 +10,6 @@ mod lane;
 mod object;
 mod reconciliation;
 mod references;
-mod sources;
 use super::{invalid, merge::snapshot, repository::Repository};
 use crate::workspace::{engine::dependency_graph::proof, snapshots};
 use serde_json::Value;

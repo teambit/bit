@@ -3533,19 +3533,19 @@ row's fields, object path, header, logical identity, and remote index stay exact
 
 ### `e2e/harmony/stash.e2e.ts`
 
-- [ ] `e2e/harmony/stash.e2e.ts:25` bit stash command › basic stash › should change the code to the last tag
-- [ ] `e2e/harmony/stash.e2e.ts:29` bit stash command › basic stash › should create a stash-file
-- [ ] `e2e/harmony/stash.e2e.ts:33` bit stash command › basic stash › should checkout-reset the component
-- [ ] `e2e/harmony/stash.e2e.ts:41` bit stash command › basic stash › stash load › should return the code that was stashed before
-- [ ] `e2e/harmony/stash.e2e.ts:45` bit stash command › basic stash › stash load › bit status should show the component as modified
-- [ ] `e2e/harmony/stash.e2e.ts:49` bit stash command › basic stash › stash load › should delete the stash file
-- [ ] `e2e/harmony/stash.e2e.ts:66` bit stash command › stash and local have conflicting modification › should save the file with conflicts markers
-- [ ] `e2e/harmony/stash.e2e.ts:85` bit stash command › stash the modification from 0.0.1 then tag 0.0.2 › should use 0.0.1 as the "base-version", find the modification from 0.0.1 and apply them on top of 0.0.2
-- [ ] `e2e/harmony/stash.e2e.ts:103` bit stash command › stash and local have modification with a shared base - 0.0.1 › should use 0.0.1 as the "base-version", find the modification from 0.0.1 and apply them on the local modifications
-- [ ] `e2e/harmony/stash.e2e.ts:118` bit stash command › stash new components along with modified › should stash both of them
-- [ ] `e2e/harmony/stash.e2e.ts:122` bit stash command › stash new components along with modified › should remove the new component from .bitmap
-- [ ] `e2e/harmony/stash.e2e.ts:131` bit stash command › stash new components along with modified › stash load them › should re-create the new component
-- [ ] `e2e/harmony/stash.e2e.ts:135` bit stash command › stash new components along with modified › stash load them › should re-create it with its rootDir, which is what its files are loaded from
+- [x] `e2e/harmony/stash.e2e.ts:25` bit stash command › basic stash › should change the code to the last tag — `native/cli/tests/e2e/harmony/stash.rs::basic_save_and_load_restore_sources_without_advancing_heads`
+- [x] `e2e/harmony/stash.e2e.ts:29` bit stash command › basic stash › should create a stash-file — `native/cli/tests/e2e/harmony/stash.rs::basic_save_and_load_restore_sources_without_advancing_heads`
+- [x] `e2e/harmony/stash.e2e.ts:33` bit stash command › basic stash › should checkout-reset the component — `native/cli/tests/e2e/harmony/stash.rs::basic_save_and_load_restore_sources_without_advancing_heads`
+- [x] `e2e/harmony/stash.e2e.ts:41` bit stash command › basic stash › stash load › should return the code that was stashed before — `native/cli/tests/e2e/harmony/stash.rs::basic_save_and_load_restore_sources_without_advancing_heads`
+- [x] `e2e/harmony/stash.e2e.ts:45` bit stash command › basic stash › stash load › bit status should show the component as modified — `native/cli/tests/e2e/harmony/stash.rs::basic_save_and_load_restore_sources_without_advancing_heads`
+- [x] `e2e/harmony/stash.e2e.ts:49` bit stash command › basic stash › stash load › should delete the stash file — `native/cli/tests/e2e/harmony/stash.rs::basic_save_and_load_restore_sources_without_advancing_heads`
+- [x] `e2e/harmony/stash.e2e.ts:66` bit stash command › stash and local have conflicting modification › should save the file with conflicts markers — `native/cli/tests/e2e/harmony/stash.rs::manual_load_preserves_the_published_conflict_labels`
+- [x] `e2e/harmony/stash.e2e.ts:85` bit stash command › stash the modification from 0.0.1 then tag 0.0.2 › should use 0.0.1 as the "base-version", find the modification from 0.0.1 and apply them on top of 0.0.2 — `native/cli/tests/e2e/harmony/stash.rs::stash_parent_remains_the_merge_base_after_a_new_tag`
+- [x] `e2e/harmony/stash.e2e.ts:103` bit stash command › stash and local have modification with a shared base - 0.0.1 › should use 0.0.1 as the "base-version", find the modification from 0.0.1 and apply them on the local modifications — `native/cli/tests/e2e/harmony/stash.rs::independent_local_edits_merge_using_the_saved_parent`
+- [x] `e2e/harmony/stash.e2e.ts:118` bit stash command › stash new components along with modified › should stash both of them — `native/cli/tests/e2e/harmony/stash.rs::included_new_components_are_removed_and_restored_at_the_saved_root`
+- [x] `e2e/harmony/stash.e2e.ts:122` bit stash command › stash new components along with modified › should remove the new component from .bitmap — `native/cli/tests/e2e/harmony/stash.rs::included_new_components_are_removed_and_restored_at_the_saved_root`
+- [x] `e2e/harmony/stash.e2e.ts:131` bit stash command › stash new components along with modified › stash load them › should re-create the new component — `native/cli/tests/e2e/harmony/stash.rs::included_new_components_are_removed_and_restored_at_the_saved_root`
+- [x] `e2e/harmony/stash.e2e.ts:135` bit stash command › stash new components along with modified › stash load them › should re-create it with its rootDir, which is what its files are loaded from — `native/cli/tests/e2e/harmony/stash.rs::included_new_components_are_removed_and_restored_at_the_saved_root`
 
 ### `e2e/harmony/status-harmony.e2e.ts`
 
@@ -3774,3 +3774,5 @@ row's fields, object path, header, logical identity, and remote index stay exact
 - [ ] `e2e/typescript/typescript.e2e.ts:88` typescript › auto recognizing @types packages › when the types package set to be ignored in the overrides › should not show the @types package anymore
 
 <!-- e2e-port-plan:end -->
+
+- Native stash checkout edge qualification: `native/cli/tests/e2e/harmony/stash/checkout_edges.rs::embedded_scope_restores_new_components_without_creating_model_heads` and `existing_new_identity_is_skipped_without_replacing_its_root_or_sources` compare exact released CLI output, bitmap/history, restored Sources and embedded-scope index preservation.

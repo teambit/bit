@@ -2,6 +2,23 @@
 use super::{Environments, Host, io, json};
 
 impl Environments {
+    pub(in crate::commands) fn for_stash_callbacks() -> Self {
+        Self::new()
+    }
+
+    /// Invoke registered add/compile callbacks after Rust restores stashed sources and bitmap.
+    pub(in crate::commands) fn stash_added(
+        &mut self,
+        root: &std::path::Path,
+        ids: &[String],
+    ) -> io::Result<String> {
+        if ids.is_empty() {
+            return Ok(String::new());
+        }
+        let host = self.host(root)?;
+        host.call("stashAdded", &json!({"ids":ids}))?;
+        Ok(host.take_stdout())
+    }
     pub(in crate::commands::status) fn from_host(host: Host) -> Self {
         Self { host: Some(host), ..Self::new() }
     }

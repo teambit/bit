@@ -45,7 +45,7 @@ pub(super) fn prepare_if_enabled(
     plan: &mut Planned,
     snapshots: &snapshots::State,
 ) -> io::Result<()> {
-    if record.request.options.include_new_from_scope {
+    if record.request.options.scope.include_new_from_scope {
         prepare(record, plan, snapshots)?;
     }
     Ok(())

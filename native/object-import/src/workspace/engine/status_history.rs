@@ -63,6 +63,11 @@ fn prepare(request: &Request) -> io::Result<Vec<(String, Vec<u8>)>> {
     }
     Ok(objects)
 }
+pub(super) fn serialized_plan(value: &Value) -> io::Result<(String, Vec<u8>)> {
+    let plan = serde_json::from_value(value.clone()).map_err(io::Error::other)?;
+    serialize(&plan)
+}
+
 fn serialize(plan: &Plan) -> io::Result<(String, Vec<u8>)> {
     let history = &plan.history;
     let name = history["name"].as_str().ok_or_else(|| invalid("status history name"))?;

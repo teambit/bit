@@ -35,7 +35,7 @@ pub(super) fn sources(
     Ok(())
 }
 
-fn capture_file(
+pub(in crate::workspace::engine::command) fn capture_file(
     version: &Value,
     file: &Value,
     snapshots: &snapshots::State,

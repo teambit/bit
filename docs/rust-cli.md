@@ -145,6 +145,7 @@ Each host method is removed once its behavior is ported to Rust.
 | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `init [path]`, `--bare [name]`, naming/default-directory/default-scope/generator options, `--shared`, `--standalone`, package-manager and reset options, `--agent` | `bit-cli`, `bit-workspace-config`: provisioning and repair/reset plans, scope selection, permissions, package/configuration rendering, agent instructions and MCP | Published package templates and instruction assets are read as files; no ordinary Harmony host | Fresh Git initialization requiring the interactive wizard, malformed workspace configuration, unavailable published assets, unsupported syntax or paths decline before effects; started filesystem failures remain owned |
 | `config`, `config get/set/del/list`, `--local`, `--local-track`, `--origin`, `--detailed`, list `--json` | `bit-cli`, `bit-workspace-config`: store precedence, native persistence, JSON/text/color reports and workspace history | none; Git supplies the released user-name/email fallback | Unknown grammar/origins, unavailable stores, malformed or unsupported store shapes, versioned workspace config-store mutations and `__proto__` mutations decline before effects; write failures remain owned |
+| `stash save` / `s`, `list`, `load [stash-id]` / `pop`, messages, `--include-new`, manual/ours/theirs merge and force options | Rust detached Version/Source capture, dependency graphs, retained stash storage, checkout and batch cleanup | Permitted environment/load/dependency facts and component-add/compile callbacks | Unknown grammar, the published boolean pattern option and empty-message conversion, unsafe/corrupt metadata, missing/re-added tracked components or paths requiring canonical recovery, unavailable dependency objects and explicit resource limits; declines precede publication |
 | `doctor [diagnosis]`, `--list`, `--json`, `--save`, `--archive`, archive inclusion/exclusion flags, `--remote` | `bit-cli`, `bit-workspace-config`, `bit-object-import`, `bit-client-transfer`: eight built-in diagnoses, reports/archives and file/HTTP remote diagnostics | Published BVM latest-version fact and configured JavaScript remote resolvers | Unknown grammar, unavailable published metadata, stores requiring canonical repair, corrupt or over-budget objects and error presentations requiring the released CLI stack decline before effects |
 | `install`, `in`                                                                                                                   | `bit-install` ([details](rust/native-install.md))                                                                                                                                                                                                                                                                         | `hostInfo`, `envPolicy`, `appTypes`, `packageJsonProps`, `transformPackageJson`, `afterInstall` | `--help`, outside a workspace, non-UTF-8 arguments, the yarn package manager, a Node.js CLI found only as a wrapper script                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `mini-status`, `ms`, with or without `--json`; `status --quick [--json]` | Rust status inventory, `bit-ignore` and shared scope/configuration readers | none | Component patterns and `--show-issues` on the private `mini-status` command, invalid arguments, unsafe paths, malformed legacy data or explicit inventory limits |
@@ -289,6 +290,49 @@ by `scripts/rust/bench-provisioning.py` with explicit pinned Node/CLI and releas
 An additional 45 pairs verified status, checkout and export against the same release artifact;
 the [regression measurements](../scripts/rust/benchmarks/consolidation-regressions.json) include
 the exact commands, fixture fingerprints and complete-state verifier.
+
+### Stash publication and restoration
+
+Stash first populates missing existing version histories while checking component status,
+including when no components need stashing. It saves detached Versions and file Sources,
+then the stash manifest, before resetting
+modified components and removing included new components. Component models, heads and bitmap
+versions do not advance. Metadata uses the published four-space JSON and lexical stash filename
+selection, including its double-digit numbering behavior. Graph references retain the
+published pre-allocation component IDs and omitted graph Source behavior.
+
+Load restores new components at their saved roots before merging tracked components. The
+three-way base is the detached Version's first parent, including after the current component
+has advanced. Tracked bitmap versions remain unchanged. Registered add/compile callbacks run
+after native materialization. The stash is consumed only after checkout succeeds; intermediate
+failures retain the published persistence prefix.
+
+The Linux release qualification in
+[`scripts/rust/benchmarks/stash.json`](../scripts/rust/benchmarks/stash.json)
+compares six complete workloads against Node 22.22.0 / Bit 2.2.94, with five
+alternating pairs in each of non-TTY, TTY and CI modes (90 pairs). All compared
+output, workspace, repository, package and retained global state matched. On these
+controlled warm-metadata fixtures, non-TTY medians in milliseconds were:
+
+| Workload | Node | Rust |
+| --- | ---: | ---: |
+| Save modified | 422.519 | 22.623 |
+| Save including new | 443.106 | 23.830 |
+| List | 216.531 | 1.544 |
+| Load tracked | 422.973 | 7.670 |
+| Load with manual conflict | 427.957 | 8.541 |
+| Restore new components | 517.330 | 477.524 |
+
+New-component restoration still invokes the published add/compile callbacks; its
+measured gain was only 1.01–1.08× across modes, which is near parity. These results do not establish
+first-use, cross-platform or large-workspace performance. The record includes
+source, binary, helper and fixture fingerprints, exact normalizations and
+validated builtin-metadata prewarming shared by both implementations. A further
+45 pairs in [`stash-regressions.json`](../scripts/rust/benchmarks/stash-regressions.json)
+qualify status, checkout and export using the same release binary. Host load was sampled
+every 0.5 seconds; peak aggregate CPU use was 17.3%. A separate contended trial
+is retained with `performance_valid: false` and is excluded from speedup evidence.
+Linux CI also repeats three lane-import regressions with a 1 MiB main-stack limit.
 
 ### Write commands
 

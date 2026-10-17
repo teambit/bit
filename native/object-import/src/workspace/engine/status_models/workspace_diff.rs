@@ -92,6 +92,7 @@ fn model_request(request: &Request) -> super::Request {
             .collect(),
         history: false,
         stage_history: false,
+        history_targets_only: false,
         include_heads: false,
     }
 }

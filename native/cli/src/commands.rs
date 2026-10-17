@@ -27,6 +27,7 @@ mod recovery;
 mod remove;
 mod reset;
 mod snap;
+mod stash;
 mod status;
 mod switch;
 mod tag;
@@ -67,6 +68,7 @@ pub const COMMANDS: &[Command] = &[
     remove::COMMAND,
     reset::COMMAND,
     snap::COMMAND,
+    stash::COMMAND,
     status::COMMAND,
     switch::COMMAND,
     tag::COMMAND,

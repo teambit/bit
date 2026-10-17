@@ -70,6 +70,7 @@ fn model(
             history: false,
             include_heads: false,
             stage_history: false,
+            history_targets_only: false,
             current_lane_id: None,
         },
         pool,

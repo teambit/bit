@@ -63,14 +63,16 @@ fn begin(options: &Options, selection: &Selection<'_>) -> io::Result<Value> {
         .map(str::parse::<usize>)
         .transpose()
         .map_err(io::Error::other)?;
-    let exact = !matches!(to, "head" | "latest" | "reset" | "main") && ancestor.is_none();
+    let load_stash = super::checkout_stash::loading(options);
+    let exact =
+        !load_stash && !matches!(to, "head" | "latest" | "reset" | "main") && ancestor.is_none();
     Ok(json!({
         "component":{"id":if version.is_empty(){identity.to_owned()}else{format!("{identity}@{version}")},
             "idWithoutVersion":identity,"componentVersion":version,"hasBitmap":true,"currentExists":true,"isRemoved":false},
         "model":selection.model.map(|model|json!({"hasMainHead":model["head"].is_string()})),
-        "options":{"reset":to=="reset","head":to=="head","main":to=="main","latest":to=="latest",
-            "forceOurs":options.force_ours,"forceTheirs":options.force_theirs,"revert":options.revert,"loadStash":false,
-            "ancestor":ancestor,"version":exact.then_some(to),"versionPerId":selection.target.get("switchVersion").map(|_|json!({}))},
+        "options":{"reset":to=="reset","head":to=="head" && !load_stash,"main":to=="main","latest":to=="latest",
+            "forceOurs":options.force_ours,"forceTheirs":options.force_theirs,"revert":options.revert,"loadStash":load_stash,
+            "ancestor":ancestor,"version":exact.then_some(to),"versionPerId":(load_stash || selection.target.get("switchVersion").is_some()).then(||json!({}))},
     }))
 }
 

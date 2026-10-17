@@ -113,6 +113,12 @@ fn configuration_target<'a>(record: &'a Record, identity: &str) -> io::Result<&'
                 .into_iter()
                 .flatten(),
         )
+        .chain(
+            record.context["stashAddedTargets"]
+                .as_array()
+                .into_iter()
+                .flatten(),
+        )
         .find(|target| target["identity"] == identity)
         .ok_or_else(|| invalid("reset configuration target"))
 }

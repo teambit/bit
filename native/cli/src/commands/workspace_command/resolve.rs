@@ -581,7 +581,7 @@ impl Versions {
 
 /// `resolveComponentReceipts`: each captured component's extensions,
 /// package name, environment defaults and dependency state.
-fn component_receipts(context: &Value, capture: &Capture) -> io::Result<Vec<Value>> {
+pub(super) fn component_receipts(context: &Value, capture: &Capture) -> io::Result<Vec<Value>> {
     let targets = array(context.get("targets"), "targets")?;
     capture.captured
         .iter()

@@ -63,6 +63,9 @@ pub(super) fn publish_sources(plan: &mut planning::Planned, root: &Path) -> io::
     Ok(())
 }
 fn reason(record: &Record, plan: &planning::Planned) -> io::Result<String> {
+    if super::checkout_stash::loading(&record.request.options) {
+        return Ok(String::new());
+    }
     if record.request.operation == input::Operation::Merge {
         // ComponentWriter persists the changed bitmap before the later lane-specific
         // write, which is already clean and therefore creates no history entry.

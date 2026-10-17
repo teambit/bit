@@ -1,3 +1,5 @@
+pub(super) mod projection;
+pub(super) mod source_proofs;
 pub(in crate::workspace::engine) use publication::{
     builder::{BuildFinalize, StageBuild},
     packages::{PackageFinalize, StagePackages},
@@ -13,13 +15,11 @@ mod issue_graph;
 mod issue_heads;
 mod logs;
 mod planning;
-mod projection;
 mod publication;
 mod refresh;
 mod root;
 mod selection;
 mod snap;
-mod source_proofs;
 mod tag;
 mod tag_versions;
 

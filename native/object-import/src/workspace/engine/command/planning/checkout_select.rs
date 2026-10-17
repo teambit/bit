@@ -13,7 +13,9 @@ pub(super) fn select(
     recovery_reset: bool,
 ) -> io::Result<Value> {
     let identity = &captured.target.identity;
-    if let Some(selected) = tracked_head(record, captured) {
+    if !super::super::checkout_stash::loading(&record.request.options)
+        && let Some(selected) = tracked_head(record, captured)
+    {
         return Ok(selected);
     }
     let model = repository::model(&record.context, identity)?;
@@ -40,16 +42,7 @@ pub(super) fn select(
         &mut record.repository,
         state,
     )?;
-    if record.request.operation != input::Operation::Switch {
-        history_replay::replay(
-            record,
-            identity,
-            model.as_ref(),
-            remote.as_deref(),
-            &selected,
-            histories,
-        )?;
-    }
+    replay_selected(record, identity, model.as_ref(), remote.as_deref(), &selected, histories)?;
     Ok(selected)
 }
 
@@ -70,4 +63,20 @@ fn remote_head(record: &mut Record, identity: &str) -> io::Result<Option<String>
     } else {
         record.repository.remote_head(identity)
     }
+}
+
+fn replay_selected(
+    record: &mut Record,
+    identity: &str,
+    model: Option<&Value>,
+    remote: Option<&str>,
+    selected: &Value,
+    histories: &mut history::State,
+) -> io::Result<()> {
+    if record.request.operation != input::Operation::Switch
+        && !super::super::checkout_stash::loading(&record.request.options)
+    {
+        history_replay::replay(record, identity, model, remote, selected, histories)?;
+    }
+    Ok(())
 }

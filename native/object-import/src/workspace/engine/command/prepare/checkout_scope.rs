@@ -16,11 +16,11 @@ struct Candidate {
 }
 
 fn candidates(request: &Prepare) -> io::Result<Vec<Candidate>> {
-    if request.options.scope_candidates.len() > 4096 {
+    if request.options.scope.scope_candidates.len() > 4096 {
         return Err(invalid("checkout scope candidate limit"));
     }
     let mut seen = HashSet::new();
-    request.options.scope_candidates
+    request.options.scope.scope_candidates
         .iter()
         .map(|text| {
             let (identity, version) =
@@ -62,7 +62,7 @@ pub(super) fn attach(
     context: &mut Value,
     imported: Option<&mut PreparedImport>,
 ) -> io::Result<()> {
-    if !request.options.include_new_from_scope {
+    if !request.options.scope.include_new_from_scope {
         return Ok(());
     }
     let imported = imported.ok_or_else(|| invalid("checkout scope import owner"))?;

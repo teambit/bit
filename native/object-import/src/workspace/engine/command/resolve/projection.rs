@@ -5,17 +5,17 @@ use std::{collections::HashSet, io};
 
 #[derive(Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub(super) struct Component {
-    pub(super) identity: String,
+pub(in crate::workspace::engine::command) struct Component {
+    pub(in crate::workspace::engine::command) identity: String,
     extensions: Value,
     #[serde(default)]
     callback_extensions: Option<Value>,
     package_name: String,
     default_node: policy::projection::Defaults,
-    pub(super) dependency_state: Value,
+    pub(in crate::workspace::engine::command) dependency_state: Value,
 }
 
-pub(super) fn version(
+pub(in crate::workspace::engine::command) fn version(
     stored: &Value,
     current: &Value,
     files: &Value,

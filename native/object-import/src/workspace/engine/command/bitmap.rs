@@ -3,6 +3,7 @@ pub(super) use export::prepare_export_scopes;
 mod export;
 mod lane;
 mod soft;
+mod stash;
 #[cfg(test)]
 mod switch_tests;
 use crate::workspace::engine::invalid;
@@ -31,6 +32,10 @@ pub(super) struct Prepared {
     changed: bool,
 }
 impl Prepared {
+    pub(super) fn restore_stash(&mut self, context: &Value) -> io::Result<()> {
+        stash::append(self, context)
+    }
+
     /// `switch` changes the active lane even when every component was skipped.
     /// Re-render from the prepared bytes so component updates and the lane header
     /// are published in the same bitmap history entry.

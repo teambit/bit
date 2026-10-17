@@ -3,7 +3,7 @@ use crate::workspace::snapshots;
 use serde_json::Value;
 use std::{io, path::Path};
 
-pub(super) fn capture(
+pub(in crate::workspace::engine::command) fn capture(
     current: &[Captured],
     snapshots: &snapshots::State,
 ) -> io::Result<Vec<proof::Proof>> {

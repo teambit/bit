@@ -169,6 +169,8 @@ jobs:
         run: node ../scripts/rust/prepare-pnpm-engine.mjs
       - name: Run the ported e2e cases
         run: cargo test --locked -p bit-cli --features e2e --test e2e
+      - name: Check lane imports with the Windows main-stack budget
+        run: python3 ../scripts/rust/check-native-stack.py
 
   status-diff-windows:
     name: Workspace VCS parity (Windows, ${{ matrix.group }})
@@ -189,6 +191,8 @@ jobs:
             filters: merge_history merge_lifecycle merge_callbacks merge_policy merge_recovery
           - group: provisioning
             filters: commands::init harmony::config harmony::doctor
+          - group: stash
+            filters: harmony::stash
     timeout-minutes: 60
     defaults:
       run:

@@ -14,6 +14,7 @@ pub mod reset_lane;
 pub mod reset_main;
 pub mod reset_never_exported;
 pub mod reset_soft;
+pub mod stash_store;
 
 pub use bit_workspace_config::jsonc;
 /// Bit's JSONC reader (comments and trailing commas), used for `.bitmap`.

@@ -76,7 +76,29 @@ fn scope_metadata(context: &Value, identity: &str) -> io::Result<Value> {
     let version = array(context.get("versions"), "callback versions")?
         .iter()
         .find(|row| &row[0] == head);
-    Ok(json!({"model":model,"head":version}))
+    let current = current_version(context, model, identity)?;
+    Ok(json!({"model":model,"head":version,"currentVersion":current}))
+}
+
+fn current_version(context: &Value, model: &Value, identity: &str) -> io::Result<Option<Value>> {
+    let selected = context["targets"]
+        .as_array()
+        .and_then(|rows| {
+            rows.iter()
+                .find(|row| row["identity"] == identity)
+        })
+        .and_then(|row| row["version"].as_str());
+    let reference = selected.and_then(|selected| {
+        model["versions"]
+            .get(selected)
+            .and_then(Value::as_str)
+            .or(Some(selected))
+    });
+    let current = array(context.get("versions"), "callback versions")?
+        .iter()
+        .find(|row| row[0].as_str() == reference)
+        .map(|row| row[1].clone());
+    Ok(current)
 }
 
 pub(in crate::commands::status) fn apply(capture: &mut Capture, row: &Value) -> io::Result<()> {

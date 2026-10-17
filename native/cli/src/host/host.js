@@ -28,7 +28,7 @@ let snapshotCommand = ['snap', 'tag'].includes(snapshotCommandName) || (cliArgum
 const checkoutCommand = (cliArguments[0] === 'merge' && cliArguments.includes('--abort')) || (cliArguments[0] === 'lane' && cliArguments[1] === 'merge-abort') || ['checkout', 'U', 'revert', 'switch'].includes(cliArguments[0]) || (cliArguments[0] === 'lane' && cliArguments[1] === 'import');
 const mergeCommand = (cliArguments[0] === 'merge' && !cliArguments.includes('--abort') && !cliArguments.includes('--resolve')) || (cliArguments[0] === 'lane' && cliArguments[1] === 'merge');
 const exportCommand = ['export', 'e', 'resume-export'].includes(cliArguments[0]);
-const bufferedCommand = snapshotCommand || checkoutCommand || mergeCommand || exportCommand;
+const bufferedCommand = snapshotCommand || checkoutCommand || mergeCommand || exportCommand || cliArguments[0] === 'stash';
 process.argv = [process.execPath, entry, ...cliArguments];
 require(path.join(bitDir, 'dist', 'hook-require.js'));
 const bitRequire = createRequire(path.join(bitDir, 'package.json'));
@@ -134,6 +134,26 @@ const handlers = {
   snapshotWorkspaceIssues: async () => (await loadHarmony()).get('teambit.workspace/workspace').getWorkspaceIssues({includeNonBlocking:false}).map((error)=>error.message),
   statusWorkspaceIssues: async () => (await loadHarmony()).get('teambit.workspace/workspace').getWorkspaceIssues().map((error) => error.message),
   statusLoadCallbacks,
+  stashAdded: async ({ ids }) => {
+    const workspace = (await loadHarmony()).get('teambit.workspace/workspace');
+    await workspace._reloadConsumer();
+    captureBootstrapProgress(workspace);
+    const previousProgress = snapshotBootstrapProgress;
+    snapshotBootstrapProgress = true;
+    try {
+      for (const identity of ids) {
+        const id = await workspace.resolveComponentId(identity);
+        // addNewComponents keeps the detached consumer's versionless identity before onAdd.
+        // Reloading our already-published bitmap otherwise substitutes legacy "latest".
+        const component = await workspace.get(id);
+        component.state._consumer.version = undefined;
+        await workspace.triggerOnComponentAdd(id, { compile: true });
+      }
+    } finally {
+      snapshotBootstrapProgress = previousProgress;
+    }
+    return true;
+  },
   statusIssueCallbacks,
   snapshotContinuation: async () => {
     snapshotCommand = true;
@@ -756,6 +776,11 @@ async function hydrateStatusComponent(row) {
     extensions: row.current.extensions.map(convert),
     files: row.files.map((file) => SourceFile.load(path.join(directory, file), directory, root)),
   });
+  if (cliArguments[0] === 'stash' && row.scope?.currentVersion) {
+    for (const field of ['log', 'docs', 'buildStatus', 'packageJsonChangedProps']) {
+      if (Object.hasOwn(row.scope.currentVersion, field)) consumer[field] = row.scope.currentVersion[field];
+    }
+  }
   consumer.defaultScope = id.scope;
   consumer.writtenPath = directory;
   consumer.issues = IssuesList.deserialize((row.issues ?? []).filter((issue) => issue.type).map(serializedIssue));
@@ -814,7 +839,11 @@ async function statusLoadCallbacks({ components, directory, snapshot, checkout }
 }
 
 function snapshotData(consumer) {
-  return { extensions: consumer.extensions.map((extension) => ({
+  return { consumerMetadata: {
+    log: consumer.log, docs: consumer.docs, buildStatus: consumer.buildStatus,
+    packageJsonChangedProps: consumer.packageJsonChangedProps,
+    ...(consumer.dependenciesGraph ? {dependenciesGraph: consumer.dependenciesGraph.serialize()} : {}),
+  }, extensions: consumer.extensions.map((extension) => ({
     ...(extension.name ? { name: extension.name } : { extensionId: extension.extensionId.serialize() }),
     config: extension.rawConfig, data: extension.data,
   })) };

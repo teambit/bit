@@ -1,14 +1,16 @@
+pub(super) mod checkout_pattern;
+pub(super) mod checkout_policy;
 pub(super) mod inbound;
 pub(super) mod input;
+pub(super) mod merge_defer;
 pub(crate) mod outbound;
 pub(super) mod policy;
 pub(super) mod recovery;
 pub(super) mod repository;
 pub(super) mod resolve;
+pub(super) mod stash;
 
-pub(super) mod checkout_pattern;
-pub(super) mod checkout_policy;
-pub(super) mod merge_defer;
+mod checkout_stash;
 
 mod apply_command;
 mod bitmap;
@@ -50,6 +52,7 @@ pub(crate) struct State {
     resolve: Option<resolve::Retained>,
     inbound: Option<inbound::Retained>,
     outbound: Option<outbound::Retained>,
+    stash: Option<Box<stash::Retained>>,
 }
 struct Record {
     request: Prepare,

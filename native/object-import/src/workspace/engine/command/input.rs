@@ -31,12 +31,34 @@ pub(super) struct Options {
     pub(super) strategy: Option<String>,
     pub(super) message: Option<String>,
     pub(super) lane: Option<LaneOptions>,
+    #[serde(flatten)]
+    pub(super) scope: ScopeOptions,
+    pub(super) stash: Option<StashOptions>,
+    #[serde(flatten)]
+    flags: Flags,
+}
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(super) struct ScopeOptions {
     #[serde(default)]
     pub(super) include_new_from_scope: bool,
     #[serde(default)]
     pub(super) scope_candidates: Vec<String>,
-    #[serde(flatten)]
-    flags: Flags,
+}
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(super) struct StashOptions {
+    #[serde(default)]
+    pub(super) versions: Vec<StashVersion>,
+    #[serde(default)]
+    pub(super) bitmap_entries: Vec<serde_json::Value>,
+    pub(super) reset_ids: Option<Vec<String>>,
+}
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(super) struct StashVersion {
+    pub(super) identity: String,
+    pub(super) version: String,
 }
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

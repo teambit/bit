@@ -141,7 +141,10 @@ pub(super) fn validate_additions(
     let scope = context["scopeAdditions"]
         .as_array()
         .map_or(&[][..], Vec::as_slice);
-    for row in lane.iter().chain(scope) {
+    let stash = context["stashAdditions"]
+        .as_array()
+        .map_or(&[][..], Vec::as_slice);
+    for row in lane.iter().chain(scope).chain(stash) {
         let relative = row["rootDir"].as_str().ok_or_else(|| invalid("lane addition directory"))?;
         let added = context["lane"]["addedTargets"]
             .as_array()
@@ -151,6 +154,9 @@ pub(super) fn validate_additions(
                     .any(|target| target["directory"] == relative)
             })
             || scope
+                .iter()
+                .any(|candidate| candidate["rootDir"] == relative)
+            || stash
                 .iter()
                 .any(|candidate| candidate["rootDir"] == relative);
         if added && directory_metadata(&root.join(relative))?.is_some() {

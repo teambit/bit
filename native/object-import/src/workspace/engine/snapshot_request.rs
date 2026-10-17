@@ -9,27 +9,34 @@ pub(super) fn dispatch(
     snapshots: &mut snapshots::State,
     pool: &rayon::ThreadPool,
 ) -> io::Result<(usize, Value)> {
+    let state = &mut snapshots.command;
     match request {
+        Request::CommandStashPrepare(input) => command::stash::prepare(input, state, pool),
+        Request::CommandStashPlan(input) => command::stash::plan(input, snapshots, pool),
+        Request::CommandStashStageHistory(input) => {
+            command::stash::stage_history(&input, state, pool)
+        }
+        Request::CommandStashFinalize(input) => command::stash::finalize(input, snapshots),
+        Request::CommandStashStageGraph(input) => command::stash::stage_graph(&input, state),
+        Request::CommandStashPersist(input) => command::stash::persist(&input, state),
         Request::CommandSnapshotStagePackages(input) => {
-            command::resolve::stage_packages(&input, &mut snapshots.command)
+            command::resolve::stage_packages(&input, state)
         }
         Request::CommandSnapshotPackageFinalize(input) => {
-            command::resolve::package_finalize(input, &mut snapshots.command)
+            command::resolve::package_finalize(input, state)
         }
-        Request::CommandSnapshotStageBuild(input) => {
-            command::resolve::stage_build(&input, &mut snapshots.command)
-        }
+        Request::CommandSnapshotStageBuild(input) => command::resolve::stage_build(&input, state),
         Request::CommandSnapshotBuildFinalize(input) => {
             command::resolve::build_finalize(input, snapshots)
         }
         Request::CommandSnapshotValidate(input) => {
-            command::resolve::validate_snapshot(&input, &mut snapshots.command)
+            command::resolve::validate_snapshot(&input, state)
         }
         Request::CommandSnapshotRefresh(input) => {
             command::resolve::refresh_snapshot(input, snapshots, pool)
         }
         Request::CommandTagVersionOverrides(input) => {
-            command::resolve::override_versions(&input, &mut snapshots.command)
+            command::resolve::override_versions(&input, state)
         }
 
         Request::CommandTagCandidates(input) => {

@@ -7,6 +7,11 @@ pub(super) fn resolve(
     selection: &Selection<'_>,
     repository: &mut Repository,
 ) -> io::Result<String> {
+    let identity =
+        selection.target["identity"].as_str().ok_or_else(|| invalid("stash target identity"))?;
+    if let Some(version) = super::super::checkout_stash::version(options, identity) {
+        return Ok(version.to_owned());
+    }
     let model = selection.model.ok_or_else(|| invalid("command checkout model"))?;
     if let Some(version) = selection.target["switchVersion"].as_str() {
         return Ok(version.to_owned());

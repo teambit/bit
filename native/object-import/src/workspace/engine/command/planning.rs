@@ -61,20 +61,12 @@ fn checkout_captured(
         directories: Vec::new(),
         result: json!({"components":[],"failedComponents":[],"removedComponents":[]}),
     };
-    let mut selections = Vec::new();
-    for (index, captured) in plan.captured.iter().enumerate() {
-        selections.push(checkout_select::select(
-            record,
-            index,
-            captured,
-            semver,
-            &mut plan.history,
-            &mut plan.transitions,
-            recovery_reset,
-        )?);
-    }
+    let selections = select_captured(record, &mut plan, semver, recovery_reset)?;
     import_selected(record, &selections)?;
     prepare_selections(record, &mut plan, &selections, snapshots)?;
+    if super::checkout_stash::loading(&record.request.options) {
+        super::checkout_stash::materialize(record, &mut plan, snapshots)?;
+    }
     missing_reset::report_if_applicable(record, &mut plan, recovery_reset)?;
     if record.request.operation == input::Operation::Checkout
         && record.request.options.to.as_deref() == Some("head")
@@ -125,6 +117,12 @@ fn lane_head<'a>(context: &'a Value, identity: &str) -> Option<&'a str> {
         .and_then(|row| row["head"].as_str())
 }
 fn import_selected(record: &mut Record, selections: &[Value]) -> io::Result<()> {
+    // Stash snapshots are detached local Versions, never published model ancestry.
+    // Read Version/Source objects through the retained repository instead of trying
+    // to resolve a remote for a hash intentionally absent from ModelComponent.
+    if super::checkout_stash::loading(&record.request.options) {
+        return Ok(());
+    }
     let targets = record.targets
         .iter()
         .zip(selections)
@@ -182,7 +180,7 @@ pub(super) fn prepare_one(
         selected["version"].as_str().ok_or_else(|| invalid("command selected Version"))?,
     )?;
     let version = record.repository.read(&reference, "Version")?;
-    let base = load_base(record, &model, current, selected["merge"] == true)?;
+    let base = load_base(record, &model, current, selected["merge"] == true, &version)?;
     let directory = scratch::Directory::create()?;
     let material = materialization::prepare(
         &materialization::Input {
@@ -259,11 +257,23 @@ fn load_base(
     model: &Value,
     current: &capture::Captured,
     merge: bool,
+    target: &Value,
 ) -> io::Result<Option<(String, Value)>> {
     if !merge {
         return Ok(None);
     }
-    let hash = selection::versions::reference(model, &current.target.version)?;
+    let hash = if super::checkout_stash::loading(&record.request.options) {
+        match target["parents"]
+            .as_array()
+            .and_then(|parents| parents.first())
+            .and_then(Value::as_str)
+        {
+            Some(parent) => parent.to_owned(),
+            None => selection::versions::reference(model, &current.target.version)?,
+        }
+    } else {
+        selection::versions::reference(model, &current.target.version)?
+    };
     let version = record.repository.read(&hash, "Version")?;
     Ok(Some((hash, version)))
 }
@@ -349,4 +359,25 @@ fn switch_modification(
     let modified =
         comparison::compare(&captured.target, &captured.metadata, &version)?["modified"] == true;
     Ok((modified, false))
+}
+
+fn select_captured(
+    record: &mut Record,
+    plan: &mut Planned,
+    semver: &Value,
+    recovery_reset: bool,
+) -> io::Result<Vec<Value>> {
+    let mut selections = Vec::new();
+    for (index, captured) in plan.captured.iter().enumerate() {
+        selections.push(checkout_select::select(
+            record,
+            index,
+            captured,
+            semver,
+            &mut plan.history,
+            &mut plan.transitions,
+            recovery_reset,
+        )?);
+    }
+    Ok(selections)
 }

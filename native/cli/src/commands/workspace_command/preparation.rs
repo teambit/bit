@@ -21,8 +21,10 @@ pub(super) fn capture(
     request: &Request<'_>,
     preview_snapshot: bool,
     mut startup: Option<&mut Startup>,
+    inherited: Option<crate::commands::status::environments::Environments>,
 ) -> io::Result<Prepared> {
-    let mut reader = Reader::new(root, request, preview_snapshot, startup.as_deref_mut())?;
+    let mut reader =
+        Reader::new(root, request, preview_snapshot, startup.as_deref_mut(), inherited)?;
     if let Some(startup) = startup.as_deref_mut() {
         let mut progress = reader.context["commandProgress"].clone();
         progress["switchImportCount"] = reader.context["switchImportCount"].clone();
@@ -74,11 +76,16 @@ impl Reader {
         request: &Request<'_>,
         preview: bool,
         startup: Option<&mut Startup>,
+        inherited: Option<crate::commands::status::environments::Environments>,
     ) -> io::Result<Self> {
         let home = home();
         let mut engine = Engine::new()?;
-        let environments =
-            checkout_lifecycle::bootstrap(&mut engine, root, &home, startup, request, preview)?;
+        let environments = match inherited {
+            Some(environment) => Some(environment.for_checkout()),
+            None => {
+                checkout_lifecycle::bootstrap(&mut engine, root, &home, startup, request, preview)?
+            }
+        };
         let (token, context, targets) =
             prepare_owned(&mut engine, root, &home, request, preview, environments.as_ref())?;
         Ok(Self { engine, home, token, context, targets, environments })

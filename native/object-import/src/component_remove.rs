@@ -1,9 +1,11 @@
 //! Untrack a workspace component with the bitmap and file lifecycle of
 //! local `bit remove`.
 
+pub use batch::NewBatch;
 pub(crate) use lane::Lane;
 pub use versioned::VersionedPlan;
 
+mod batch;
 mod lane;
 mod row;
 mod versioned;
@@ -378,13 +380,14 @@ pub(crate) fn validate_file_id(value: &str) -> io::Result<()> {
 
 pub(crate) fn backup_bitmap(root: &Path, file_id: &str, operation: &str) -> io::Result<()> {
     use std::io::Write;
-    let directory = root.join(".bit/bitmap-history");
+    let scope = crate::scope_path(root);
+    let directory = scope.join("bitmap-history");
     fs::create_dir_all(&directory)?;
     fs::copy(root.join(".bitmap"), directory.join(format!(".bitmap-{file_id}")))?;
     let mut metadata = fs::OpenOptions::new()
         .create(true)
         .append(true)
-        .open(root.join(".bit/bitmap-history-metadata.txt"))?;
+        .open(scope.join("bitmap-history-metadata.txt"))?;
     writeln!(metadata, "{file_id} {operation}")
 }
 

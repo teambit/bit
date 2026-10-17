@@ -52,12 +52,16 @@ pub(super) fn context(
     checkout_lane::attach(request, &mut context, imported.as_mut(), pool)?;
     checkout_scope::attach(request, &mut context, imported.as_mut())?;
     extend_models(request, pool, &mut context, imported.as_ref())?;
+    super::checkout_stash::context(request, &mut context)?;
     Ok((context, imported))
 }
 fn prepare_checkout_import(
     request: &Prepare,
     context: &Value,
 ) -> io::Result<command_import::PreparedImport> {
+    if request.options.stash.is_some() {
+        return command_import::prepare_cached(&request.root, &request.global_remotes_file);
+    }
     let targets = import_targets(request)?;
     if let Some(imported) = checkout_import::lane(request, context, &targets)? {
         return Ok(imported);
@@ -141,6 +145,7 @@ pub(super) fn extend_models(
     Ok(())
 }
 fn validate(request: &Prepare) -> io::Result<()> {
+    super::checkout_stash::validate(request)?;
     validate_revert(request)?;
     if request.defer_checkout_pattern
         && (!matches!(request.operation, Operation::Checkout | Operation::Merge)
@@ -172,9 +177,10 @@ fn invalid_lifecycle_options(request: &Prepare) -> io::Result<bool> {
     let conflicting_forces = options.force_ours && options.force_theirs;
     let interrupted = request.root.join("merge-conflict").try_exists()?;
     Ok(!options.skip_dependency_installation
-        || options.include_new_from_scope
+        || options.scope.include_new_from_scope
             && (request.operation != Operation::Checkout || options.to.as_deref() != Some("head"))
-        || !options.include_new_from_scope && !options.scope_candidates.is_empty()
+        || !options.scope.include_new_from_scope
+            && !options.scope.scope_candidates.is_empty()
         || invalid_workspace_only
         || conflicting_forces
         || invalid_strategy
@@ -227,6 +233,9 @@ fn import_targets(request: &Prepare) -> io::Result<Vec<command_import::Target>> 
 pub(super) fn selected(request: &Prepare, context: &Value) -> io::Result<Vec<Value>> {
     let targets = context["targets"].as_array().ok_or_else(|| invalid("command targets"))?;
     validate_roots(targets)?;
+    if let Some(selected) = super::checkout_stash::selected(&request.options, targets)? {
+        return Ok(selected);
+    }
     if request.operation == Operation::Switch {
         return Ok(targets.clone());
     }
